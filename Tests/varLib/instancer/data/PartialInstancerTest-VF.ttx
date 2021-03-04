@@ -479,6 +479,9 @@
     <namerecord nameID="296" platformID="3" platEncID="1" langID="0x409">
       TestVariableFont-XCdBd
     </namerecord>
+    <namerecord nameID="297" platformID="3" platEncID="1" langID="0x409">
+      Normal
+    </namerecord>
   </name>
 
   <post>
@@ -763,6 +766,15 @@
         <ValueNameID value="295"/>  <!-- Upright -->
         <Value value="0.0"/>
         <LinkedValue value="1.0"/>
+      </AxisValue>
+      <AxisValue index="3" Format="4">
+        <!-- AxisCount=1 -->
+        <Flags value="2"/>
+        <ValueNameID value="297"/>  <!-- Normal -->
+        <AxisValueRecord index="0">
+          <AxisIndex value="1"/>
+          <Value value="100.0"/>
+        </AxisValueRecord>
       </AxisValue>
     </AxisValueArray>
     <ElidedFallbackNameID value="2"/>  <!-- Regular -->

@@ -59,14 +59,20 @@ def buildConverters(tableSpec, tableNamespace):
 				converterClass = Struct
 			else:
 				converterClass = eval(tp, tableNamespace, converterMapping)
-		if tp in ('MortChain', 'MortSubtable', 'MorxChain'):
+
+		conv = converterClass(name, repeat, aux)
+
+		if conv.tableClass:
+			# A "template" such as OffsetTo(AType) knowss the table class already
+			tableClass = conv.tableClass
+		elif tp in ('MortChain', 'MortSubtable', 'MorxChain'):
 			tableClass = tableNamespace.get(tp)
 		else:
 			tableClass = tableNamespace.get(tableName)
-		if tableClass is not None:
-			conv = converterClass(name, repeat, aux, tableClass=tableClass)
-		else:
-			conv = converterClass(name, repeat, aux)
+
+		if not conv.tableClass:
+			conv.tableClass = tableClass
+
 		if name in ["SubTable", "ExtSubTable", "SubStruct"]:
 			conv.lookupTypes = tableNamespace['lookupTypes']
 			# also create reverse mapping
@@ -332,6 +338,18 @@ class NameID(UShort):
 					log.warning("name id %d missing from name table" % value)
 		xmlWriter.newline()
 
+class STATFlags(UShort):
+	def xmlWrite(self, xmlWriter, font, value, name, attrs):
+		xmlWriter.simpletag(name, attrs + [("value", value)])
+		flags = []
+		if value & 0x01:
+			flags.append("OlderSiblingFontAttribute")
+		if value & 0x02:
+			flags.append("ElidableAxisValueName")
+		if flags:
+			xmlWriter.write("  ")
+			xmlWriter.comment(" ".join(flags))
+		xmlWriter.newline()
 
 class FloatValue(SimpleValue):
 	@staticmethod
@@ -1739,7 +1757,6 @@ converterMapping = {
 	"int8":		Int8,
 	"int16":	Short,
 	"uint8":	UInt8,
-	"uint8":	UInt8,
 	"uint16":	UShort,
 	"uint24":	UInt24,
 	"uint32":	ULong,
@@ -1764,6 +1781,7 @@ converterMapping = {
 	"LookupFlag": LookupFlag,
 	"ExtendMode": ExtendMode,
 	"CompositeMode": CompositeMode,
+	"STATFlags": STATFlags,
 
 	# AAT
 	"CIDGlyphMap":	CIDGlyphMap,

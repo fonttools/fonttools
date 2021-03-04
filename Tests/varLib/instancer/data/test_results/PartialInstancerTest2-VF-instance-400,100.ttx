@@ -14,7 +14,7 @@
     <!-- Most of this table will be recalculated by the compiler -->
     <tableVersion value="1.0"/>
     <fontRevision value="2.001"/>
-    <checkSumAdjustment value="0x39ab2622"/>
+    <checkSumAdjustment value="0x4b2d3480"/>
     <magicNumber value="0x5f0f3cf5"/>
     <flags value="00000000 00000011"/>
     <unitsPerEm value="1000"/>
@@ -22,8 +22,8 @@
     <modified value="Thu Oct 17 14:43:10 2019"/>
     <xMin value="0"/>
     <yMin value="0"/>
-    <xMax value="496"/>
-    <yMax value="930"/>
+    <xMax value="638"/>
+    <yMax value="944"/>
     <macStyle value="00000000 00000000"/>
     <lowestRecPPEM value="6"/>
     <fontDirectionHint value="2"/>
@@ -36,10 +36,10 @@
     <ascent value="1069"/>
     <descent value="-293"/>
     <lineGap value="0"/>
-    <advanceWidthMax value="595"/>
+    <advanceWidthMax value="639"/>
     <minLeftSideBearing value="0"/>
-    <minRightSideBearing value="0"/>
-    <xMaxExtent value="496"/>
+    <minRightSideBearing value="1"/>
+    <xMaxExtent value="638"/>
     <caretSlopeRise value="1"/>
     <caretSlopeRun value="0"/>
     <caretOffset value="0"/>
@@ -76,7 +76,7 @@
     <version value="4"/>
     <xAvgCharWidth value="577"/>
     <usWeightClass value="400"/>
-    <usWidthClass value="2"/>
+    <usWidthClass value="5"/>
     <fsType value="00000000 00000000"/>
     <ySubscriptXSize value="650"/>
     <ySubscriptYSize value="600"/>
@@ -116,7 +116,7 @@
     <usWinDescent value="293"/>
     <ulCodePageRange1 value="00000000 00000000 00000001 10011111"/>
     <ulCodePageRange2 value="00000000 00000000 00000000 00000000"/>
-    <sxHeight value="537"/>
+    <sxHeight value="536"/>
     <sCapHeight value="714"/>
     <usDefaultChar value="0"/>
     <usBreakChar value="32"/>
@@ -124,11 +124,11 @@
   </OS_2>
 
   <hmtx>
-    <mtx name=".notdef" width="595" lsb="85"/>
-    <mtx name="A" width="450" lsb="0"/>
-    <mtx name="Agrave" width="450" lsb="0"/>
-    <mtx name="T" width="381" lsb="10"/>
-    <mtx name="grave" width="266" lsb="40"/>
+    <mtx name=".notdef" width="600" lsb="94"/>
+    <mtx name="A" width="639" lsb="0"/>
+    <mtx name="Agrave" width="639" lsb="0"/>
+    <mtx name="T" width="556" lsb="10"/>
+    <mtx name="grave" width="281" lsb="40"/>
   </hmtx>
 
   <cmap>
@@ -154,82 +154,82 @@
     <!-- The xMin, yMin, xMax and yMax values
          will be recalculated by the compiler. -->
 
-    <TTGlyph name=".notdef" xMin="85" yMin="0" xMax="496" yMax="714">
+    <TTGlyph name=".notdef" xMin="94" yMin="0" xMax="505" yMax="714">
       <contour>
-        <pt x="85" y="0" on="1" overlap="1"/>
-        <pt x="85" y="714" on="1"/>
-        <pt x="496" y="714" on="1"/>
-        <pt x="496" y="0" on="1"/>
+        <pt x="94" y="0" on="1" overlap="1"/>
+        <pt x="94" y="714" on="1"/>
+        <pt x="505" y="714" on="1"/>
+        <pt x="505" y="0" on="1"/>
       </contour>
       <contour>
-        <pt x="136" y="51" on="1"/>
-        <pt x="445" y="51" on="1"/>
-        <pt x="445" y="663" on="1"/>
-        <pt x="136" y="663" on="1"/>
+        <pt x="145" y="51" on="1"/>
+        <pt x="454" y="51" on="1"/>
+        <pt x="454" y="663" on="1"/>
+        <pt x="145" y="663" on="1"/>
       </contour>
       <instructions/>
     </TTGlyph>
 
-    <TTGlyph name="A" xMin="0" yMin="0" xMax="450" yMax="714">
+    <TTGlyph name="A" xMin="0" yMin="0" xMax="638" yMax="717">
       <contour>
-        <pt x="361" y="0" on="1" overlap="1"/>
-        <pt x="309" y="223" on="1"/>
-        <pt x="142" y="223" on="1"/>
-        <pt x="90" y="0" on="1"/>
+        <pt x="545" y="0" on="1" overlap="1"/>
+        <pt x="459" y="221" on="1"/>
+        <pt x="176" y="221" on="1"/>
+        <pt x="91" y="0" on="1"/>
         <pt x="0" y="0" on="1"/>
-        <pt x="173" y="714" on="1"/>
-        <pt x="274" y="714" on="1"/>
-        <pt x="450" y="0" on="1"/>
+        <pt x="279" y="717" on="1"/>
+        <pt x="360" y="717" on="1"/>
+        <pt x="638" y="0" on="1"/>
       </contour>
       <contour>
-        <pt x="293" y="301" on="1"/>
-        <pt x="240" y="535" on="1"/>
-        <pt x="237" y="554" on="0"/>
-        <pt x="230" y="589" on="0"/>
-        <pt x="225" y="623" on="0"/>
-        <pt x="223" y="638" on="1"/>
-        <pt x="222" y="623" on="0"/>
-        <pt x="217" y="589" on="0"/>
-        <pt x="210" y="554" on="0"/>
-        <pt x="206" y="536" on="1"/>
-        <pt x="155" y="301" on="1"/>
+        <pt x="432" y="301" on="1"/>
+        <pt x="352" y="517" on="1"/>
+        <pt x="349" y="525" on="0"/>
+        <pt x="335" y="567" on="0"/>
+        <pt x="322" y="612" on="0"/>
+        <pt x="318" y="624" on="1"/>
+        <pt x="313" y="604" on="0"/>
+        <pt x="302" y="563" on="0"/>
+        <pt x="291" y="529" on="0"/>
+        <pt x="287" y="517" on="1"/>
+        <pt x="206" y="301" on="1"/>
       </contour>
       <instructions/>
     </TTGlyph>
 
-    <TTGlyph name="Agrave" xMin="0" yMin="0" xMax="450" yMax="930">
+    <TTGlyph name="Agrave" xMin="0" yMin="0" xMax="638" yMax="944">
       <component glyphName="A" x="0" y="0" flags="0x604"/>
-      <component glyphName="grave" x="32" y="164" flags="0x4"/>
+      <component glyphName="grave" x="147" y="178" flags="0x4"/>
     </TTGlyph>
 
-    <TTGlyph name="T" xMin="10" yMin="0" xMax="370" yMax="714">
+    <TTGlyph name="T" xMin="10" yMin="0" xMax="545" yMax="714">
       <contour>
-        <pt x="232" y="0" on="1" overlap="1"/>
-        <pt x="148" y="0" on="1"/>
-        <pt x="148" y="638" on="1"/>
-        <pt x="10" y="638" on="1"/>
+        <pt x="323" y="0" on="1" overlap="1"/>
+        <pt x="233" y="0" on="1"/>
+        <pt x="233" y="635" on="1"/>
+        <pt x="10" y="635" on="1"/>
         <pt x="10" y="714" on="1"/>
-        <pt x="370" y="714" on="1"/>
-        <pt x="370" y="638" on="1"/>
-        <pt x="232" y="638" on="1"/>
+        <pt x="545" y="714" on="1"/>
+        <pt x="545" y="635" on="1"/>
+        <pt x="323" y="635" on="1"/>
       </contour>
       <instructions/>
     </TTGlyph>
 
-    <TTGlyph name="grave" xMin="40" yMin="606" xMax="226" yMax="766">
+    <TTGlyph name="grave" xMin="40" yMin="606" xMax="241" yMax="766">
       <contour>
-        <pt x="137" y="766" on="1" overlap="1"/>
-        <pt x="148" y="743" on="0"/>
-        <pt x="179" y="688" on="0"/>
-        <pt x="212" y="636" on="0"/>
-        <pt x="226" y="617" on="1"/>
-        <pt x="226" y="606" on="1"/>
-        <pt x="174" y="606" on="1"/>
-        <pt x="159" y="619" on="0"/>
-        <pt x="121" y="657" on="0"/>
-        <pt x="82" y="700" on="0"/>
-        <pt x="50" y="741" on="0"/>
-        <pt x="40" y="757" on="1"/>
+        <pt x="145" y="766" on="1" overlap="1"/>
+        <pt x="156" y="744" on="0"/>
+        <pt x="189" y="689" on="0"/>
+        <pt x="226" y="637" on="0"/>
+        <pt x="241" y="618" on="1"/>
+        <pt x="241" y="606" on="1"/>
+        <pt x="182" y="606" on="1"/>
+        <pt x="165" y="620" on="0"/>
+        <pt x="123" y="659" on="0"/>
+        <pt x="82" y="702" on="0"/>
+        <pt x="49" y="742" on="0"/>
+        <pt x="40" y="756" on="1"/>
         <pt x="40" y="766" on="1"/>
       </contour>
       <instructions/>
@@ -246,9 +246,6 @@
     </namerecord>
     <namerecord nameID="261" platformID="1" platEncID="0" langID="0x0" unicode="True">
       Regular
-    </namerecord>
-    <namerecord nameID="288" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      ExtraCondensed
     </namerecord>
     <namerecord nameID="0" platformID="3" platEncID="1" langID="0x409">
       Copyright 2015 Google Inc. All Rights Reserved.
@@ -303,9 +300,6 @@
     </namerecord>
     <namerecord nameID="261" platformID="3" platEncID="1" langID="0x409">
       Regular
-    </namerecord>
-    <namerecord nameID="288" platformID="3" platEncID="1" langID="0x409">
-      ExtraCondensed
     </namerecord>
   </name>
 
@@ -445,7 +439,7 @@
               <Value1 XAdvance="0"/>
             </Class2Record>
             <Class2Record index="2">
-              <Value1 XAdvance="-17"/>
+              <Value1 XAdvance="-70"/>
             </Class2Record>
           </Class1Record>
           <Class1Record index="1">
@@ -453,10 +447,10 @@
               <Value1 XAdvance="0"/>
             </Class2Record>
             <Class2Record index="1">
-              <Value1 XAdvance="-17"/>
+              <Value1 XAdvance="-70"/>
             </Class2Record>
             <Class2Record index="2">
-              <Value1 XAdvance="12"/>
+              <Value1 XAdvance="20"/>
             </Class2Record>
           </Class1Record>
         </PairPos>
@@ -525,18 +519,18 @@
     <AxisValueArray>
       <AxisValue index="0" Format="3">
         <AxisIndex value="0"/>
-        <Flags value="2"/>
+        <Flags value="2"/>  <!-- ElidableAxisValueName -->
         <ValueNameID value="261"/>  <!-- Regular -->
         <Value value="400.0"/>
         <LinkedValue value="700.0"/>
       </AxisValue>
       <AxisValue index="1" Format="2">
         <AxisIndex value="1"/>
-        <Flags value="0"/>
-        <ValueNameID value="288"/>  <!-- ExtraCondensed -->
-        <NominalValue value="62.5"/>
-        <RangeMinValue value="62.5"/>
-        <RangeMaxValue value="68.75"/>
+        <Flags value="2"/>  <!-- ElidableAxisValueName -->
+        <ValueNameID value="261"/>  <!-- Regular -->
+        <NominalValue value="100.0"/>
+        <RangeMinValue value="93.75"/>
+        <RangeMaxValue value="100.0"/>
       </AxisValue>
     </AxisValueArray>
     <ElidedFallbackNameID value="2"/>  <!-- Regular -->

@@ -11,7 +11,7 @@ from fontTools.ttLib import (TTFont, TTLibError, getTableModule, getTableClass,
 from fontTools.ttLib.sfnt import (SFNTReader, SFNTWriter, DirectoryEntry,
 	WOFFFlavorData, sfntDirectoryFormat, sfntDirectorySize, SFNTDirectoryEntry,
 	sfntDirectoryEntrySize, calcChecksum)
-from fontTools.ttLib.tables import ttProgram
+from fontTools.ttLib.tables import ttProgram, _g_l_y_f
 import logging
 
 
@@ -19,7 +19,10 @@ log = logging.getLogger("fontTools.ttLib.woff2")
 
 haveBrotli = False
 try:
-	import brotli
+	try:
+		import brotlicffi as brotli
+	except ImportError:
+		import brotli
 	haveBrotli = True
 except ImportError:
 	pass
@@ -931,7 +934,7 @@ class WOFF2GlyfTable(getTableClass('glyf')):
 		flags = array.array('B')
 		triplets = array.array('B')
 		for i in range(len(coordinates)):
-			onCurve = glyph.flags[i]
+			onCurve = glyph.flags[i] & _g_l_y_f.flagOnCurve
 			x, y = coordinates[i]
 			absX = abs(x)
 			absY = abs(y)

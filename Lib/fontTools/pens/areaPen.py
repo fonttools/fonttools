@@ -1,6 +1,5 @@
 """Calculate the area of a glyph."""
 
-from fontTools.misc.py23 import *
 from fontTools.pens.basePen import BasePen
 
 

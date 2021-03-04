@@ -17,7 +17,7 @@
     <!-- Most of this table will be recalculated by the compiler -->
     <tableVersion value="1.0"/>
     <fontRevision value="1.0"/>
-    <checkSumAdjustment value="0xa69ed898"/>
+    <checkSumAdjustment value="0xa6bcdc24"/>
     <magicNumber value="0x5f0f3cf5"/>
     <flags value="00000000 00001111"/>
     <unitsPerEm value="1000"/>
@@ -142,15 +142,9 @@
     <cmap_format_4 platformID="0" platEncID="3" language="0">
       <map code="0x2b" name="plus"/><!-- PLUS SIGN -->
     </cmap_format_4>
-    <cmap_format_12 platformID="0" platEncID="4" format="12" reserved="0" length="28" language="0" nGroups="1">
-      <map code="0x2b" name="plus"/><!-- PLUS SIGN -->
-    </cmap_format_12>
     <cmap_format_4 platformID="3" platEncID="1" language="0">
       <map code="0x2b" name="plus"/><!-- PLUS SIGN -->
     </cmap_format_4>
-    <cmap_format_12 platformID="3" platEncID="10" format="12" reserved="0" length="28" language="0" nGroups="1">
-      <map code="0x2b" name="plus"/><!-- PLUS SIGN -->
-    </cmap_format_12>
   </cmap>
 
   <loca>

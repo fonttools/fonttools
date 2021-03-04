@@ -1,0 +1,84 @@
+table name {
+    nameid 25 "TestFont";
+    nameid 256 "Roman";
+} name;
+table STAT {
+    ElidedFallbackNameID 256;
+    DesignAxis opsz 0 {
+        name "Optical Size";
+    };
+    DesignAxis wdth 1 {
+        name "Width";
+    };
+    DesignAxis wght 2 {
+        name "Weight";
+    };
+    DesignAxis ital 3 {
+        name "Italic";
+    };  # here comment
+    AxisValue {
+        location opsz 8;  # comment here
+        location wdth 400; # another comment
+        name "Caption"; # more comments
+    };
+    AxisValue {
+        location opsz 11 9 12;
+        name "Text";
+        flag OlderSiblingFontAttribute ElidableAxisValueName;
+    };
+    AxisValue {
+        location opsz 16.7 12 24;
+        name "Subhead";
+    };
+    AxisValue {
+        location opsz 72 24 72;
+        name "Display";
+    };
+    AxisValue {
+        location wdth 80 80 89;
+        name "Condensed";
+    };
+    AxisValue {
+        location wdth 90 90 96;
+        name "Semicondensed";
+    };
+    AxisValue {
+        location wdth 100 97 101;
+        name "Normal";
+        flag ElidableAxisValueName;
+    };
+    AxisValue {
+        location wdth 125 102 125;
+        name "Extended";
+    };
+    AxisValue {
+        location wght 300 300 349;
+        name "Light";
+    };
+    AxisValue {
+        location wght 400 350 449;
+        name "Regular";
+        flag ElidableAxisValueName;
+    };
+    AxisValue {
+        location wght 500 450 549;
+        name "Medium";
+    };
+    AxisValue {
+        location wght 600 550 649;
+        name "Semibold";
+    };
+    AxisValue {
+        location wght 700 650 749;
+        name "Bold";
+    };
+    AxisValue {
+        location wght 900 750 900;
+        name "Black";
+    };
+    AxisValue {
+        location ital 0;
+        name "Roman";
+        flag ElidableAxisValueName; # flag comment
+    };
+} STAT;

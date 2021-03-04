@@ -11,8 +11,11 @@ steps through all the points in a call from glyph.drawPoints().
 This allows the caller to provide more data for each point.
 For instance, whether or not a point is smooth, and its name.
 """
-from fontTools.pens.basePen import AbstractPen
+
 import math
+from typing import Any, List, Optional, Tuple
+
+from fontTools.pens.basePen import AbstractPen
 
 __all__ = [
 	"AbstractPointPen",
@@ -24,26 +27,36 @@ __all__ = [
 ]
 
 
-class AbstractPointPen(object):
-	"""
-	Baseclass for all PointPens.
-	"""
+class AbstractPointPen:
+	"""Baseclass for all PointPens."""
 
-	def beginPath(self, identifier=None, **kwargs):
+	def beginPath(self, identifier: Optional[str] = None, **kwargs: Any) -> None:
 		"""Start a new sub path."""
 		raise NotImplementedError
 
-	def endPath(self):
+	def endPath(self) -> None:
 		"""End the current sub path."""
 		raise NotImplementedError
 
-	def addPoint(self, pt, segmentType=None, smooth=False, name=None,
-				 identifier=None, **kwargs):
+	def addPoint(
+		self,
+		pt: Tuple[float, float],
+		segmentType: Optional[str] = None,
+		smooth: bool = False,
+		name: Optional[str] = None,
+		identifier: Optional[str] = None,
+		**kwargs: Any
+	) -> None:
 		"""Add a point to the current sub path."""
 		raise NotImplementedError
 
-	def addComponent(self, baseGlyphName, transformation, identifier=None,
-					 **kwargs):
+	def addComponent(
+		self,
+		baseGlyphName: str,
+		transformation: Tuple[float, float, float, float, float, float],
+		identifier: Optional[str] = None,
+		**kwargs: Any
+	) -> None:
 		"""Add a sub glyph."""
 		raise NotImplementedError
 

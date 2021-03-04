@@ -2,7 +2,7 @@ import io
 import struct
 from fontTools.misc.fixedTools import floatToFixed
 from fontTools.misc.testTools import getXML
-from fontTools.otlLib import builder
+from fontTools.otlLib import builder, error
 from fontTools import ttLib
 from fontTools.ttLib.tables import otTables
 import pytest
@@ -1101,6 +1101,12 @@ class ClassDefBuilderTest(object):
         assert not b.canAdd({"d", "e", "f"})
         assert not b.canAdd({"f"})
 
+    def test_add_exception(self):
+        b = builder.ClassDefBuilder(useClass0=True)
+        b.add({"a", "b", "c"})
+        with pytest.raises(error.OpenTypeLibError):
+            b.add({"a", "d"})
+
 
 buildStatTable_test_data = [
     ([
@@ -1132,7 +1138,7 @@ buildStatTable_test_data = [
         '      </AxisValue>',
         '      <AxisValue index="1" Format="1">',
         '        <AxisIndex value="0"/>',
-        '        <Flags value="2"/>',
+        '        <Flags value="2"/>  <!-- ElidableAxisValueName -->',
         '        <ValueNameID value="256"/>  <!-- Regular -->',
         '        <Value value="400.0"/>',
         '      </AxisValue>',
@@ -1187,7 +1193,7 @@ buildStatTable_test_data = [
         '      </AxisValue>',
         '      <AxisValue index="1" Format="1">',
         '        <AxisIndex value="0"/>',
-        '        <Flags value="2"/>',
+        '        <Flags value="2"/>  <!-- ElidableAxisValueName -->',
         '        <ValueNameID value="258"/>  <!-- Regular -->',
         '        <Value value="400.0"/>',
         '      </AxisValue>',
@@ -1205,7 +1211,7 @@ buildStatTable_test_data = [
         '      </AxisValue>',
         '      <AxisValue index="4" Format="1">',
         '        <AxisIndex value="1"/>',
-        '        <Flags value="2"/>',
+        '        <Flags value="2"/>  <!-- ElidableAxisValueName -->',
         '        <ValueNameID value="258"/>  <!-- Regular -->',
         '        <Value value="100.0"/>',
         '      </AxisValue>',
@@ -1240,7 +1246,7 @@ buildStatTable_test_data = [
         '    <AxisValueArray>',
         '      <AxisValue index="0" Format="1">',
         '        <AxisIndex value="0"/>',
-        '        <Flags value="2"/>',
+        '        <Flags value="2"/>  <!-- ElidableAxisValueName -->',
         '        <ValueNameID value="257"/>  <!-- Regular -->',
         '        <Value value="400.0"/>',
         '      </AxisValue>',
@@ -1285,7 +1291,7 @@ buildStatTable_test_data = [
         '      </AxisValue>',
         '      <AxisValue index="1" Format="2">',
         '        <AxisIndex value="0"/>',
-        '        <Flags value="2"/>',
+        '        <Flags value="2"/>  <!-- ElidableAxisValueName -->',
         '        <ValueNameID value="258"/>  <!-- Text -->',
         '        <NominalValue value="14.0"/>',
         '        <RangeMinValue value="10.0"/>',
@@ -1348,7 +1354,7 @@ buildStatTable_test_data = [
         '      </AxisValue>',
         '      <AxisValue index="1" Format="1">',
         '        <AxisIndex value="1"/>',
-        '        <Flags value="2"/>',
+        '        <Flags value="2"/>  <!-- ElidableAxisValueName -->',
         '        <ValueNameID value="258"/>  <!-- Regular -->',
         '        <Value value="100.0"/>',
         '      </AxisValue>',

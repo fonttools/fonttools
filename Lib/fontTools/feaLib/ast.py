@@ -4,6 +4,7 @@ from fontTools.feaLib.location import FeatureLibLocation
 from fontTools.misc.encodingTools import getEncoding
 from collections import OrderedDict
 import itertools
+from typing import NamedTuple
 
 SHIFT = " " * 4
 
@@ -28,12 +29,15 @@ __all__ = [
     "Anchor",
     "AnchorDefinition",
     "AttachStatement",
+    "AxisValueLocationStatement",
     "BaseAxis",
     "CVParametersNameStatement",
     "ChainContextPosStatement",
     "ChainContextSubstStatement",
     "CharacterStatement",
     "CursivePosStatement",
+    "ElidedFallbackName",
+    "ElidedFallbackNameID",
     "Expression",
     "FeatureNameStatement",
     "FeatureReferenceStatement",
@@ -62,6 +66,9 @@ __all__ = [
     "SingleSubstStatement",
     "SizeParameters",
     "Statement",
+    "STATAxisValueStatement",
+    "STATDesignAxisStatement",
+    "STATNameStatement",
     "SubtableStatement",
     "TableBlock",
     "ValueRecord",
@@ -188,6 +195,21 @@ class Comment(Element):
         return self.text
 
 
+class NullGlyph(Expression):
+    """The NULL glyph, used in glyph deletion substitutions."""
+
+    def __init__(self, location=None):
+        Expression.__init__(self, location)
+        #: The name itself as a string
+
+    def glyphSet(self):
+        """The glyphs in this class as a tuple of :class:`GlyphName` objects."""
+        return ()
+
+    def asFea(self, indent=""):
+        return "NULL"
+
+
 class GlyphName(Expression):
     """A single glyph name, such as ``cedilla``."""
 
@@ -237,7 +259,7 @@ class GlyphClass(Expression):
 
     def add_range(self, start, end, glyphs):
         """Add a range (e.g. ``A-Z``) to the class. ``start`` and ``end``
-        are either :class:`GlyphName` objects or strings representing the 
+        are either :class:`GlyphName` objects or strings representing the
         start and end glyphs in the class, and ``glyphs`` is the full list of
         :class:`GlyphName` objects in the range."""
         if self.curr < len(self.glyphs):
@@ -532,7 +554,7 @@ class MarkClass(object):
 
 
 class MarkClassDefinition(Statement):
-    """A single ``markClass`` statement. The ``markClass`` should be a 
+    """A single ``markClass`` statement. The ``markClass`` should be a
     :class:`MarkClass` object, the ``anchor`` an :class:`Anchor` object,
     and the ``glyphs`` parameter should be a `glyph-containing object`_ .
 
@@ -834,7 +856,7 @@ class IgnorePosStatement(Statement):
     """An ``ignore pos`` statement, containing `one or more` contexts to ignore.
 
     ``chainContexts`` should be a list of ``(prefix, glyphs, suffix)`` tuples,
-    with each of ``prefix``, ``glyphs`` and ``suffix`` being 
+    with each of ``prefix``, ``glyphs`` and ``suffix`` being
     `glyph-containing objects`_ ."""
 
     def __init__(self, chainContexts, location=None):
@@ -1131,7 +1153,7 @@ class MarkBasePosStatement(Statement):
     def asFea(self, indent=""):
         res = "pos base {}".format(self.base.asFea())
         for a, m in self.marks:
-            res += " {} mark @{}".format(a.asFea(), m.name)
+            res += "\n" + indent + SHIFT + "{} mark @{}".format(a.asFea(), m.name)
         res += ";"
         return res
 
@@ -1150,7 +1172,7 @@ class MarkLigPosStatement(Statement):
         # ... add definitions to mark classes...
 
         glyph = GlyphName("lam_meem_jeem")
-        marks = [ 
+        marks = [
             [ (Anchor(625,1800), m1) ], # Attachments on 1st component (lam)
             [ (Anchor(376,-378), m2) ], # Attachments on 2nd component (meem)
             [ ]                         # No attachments on the jeem
@@ -1177,10 +1199,15 @@ class MarkLigPosStatement(Statement):
         for l in self.marks:
             temp = ""
             if l is None or not len(l):
-                temp = " <anchor NULL>"
+                temp = "\n" + indent + SHIFT * 2 + "<anchor NULL>"
             else:
                 for a, m in l:
-                    temp += " {} mark @{}".format(a.asFea(), m.name)
+                    temp += (
+                        "\n"
+                        + indent
+                        + SHIFT * 2
+                        + "{} mark @{}".format(a.asFea(), m.name)
+                    )
             ligs.append(temp)
         res += ("\n" + indent + SHIFT + "ligComponent").join(ligs)
         res += ";"
@@ -1203,7 +1230,7 @@ class MarkMarkPosStatement(Statement):
     def asFea(self, indent=""):
         res = "pos mark {}".format(self.baseMarks.asFea())
         for a, m in self.marks:
-            res += " {} mark @{}".format(a.asFea(), m.name)
+            res += "\n" + indent + SHIFT + "{} mark @{}".format(a.asFea(), m.name)
         res += ";"
         return res
 
@@ -1246,8 +1273,9 @@ class MultipleSubstStatement(Statement):
                 res += " " + " ".join(map(asFea, self.suffix))
         else:
             res += asFea(self.glyph)
+        replacement = self.replacement or [NullGlyph()]
         res += " by "
-        res += " ".join(map(asFea, self.replacement))
+        res += " ".join(map(asFea, replacement))
         res += ";"
         return res
 
@@ -1683,6 +1711,16 @@ class FeatureNameStatement(NameRecord):
         return '{} {}"{}";'.format(tag, plat, self.string)
 
 
+class STATNameStatement(NameRecord):
+    """Represents a STAT table ``name`` statement."""
+
+    def asFea(self, indent=""):
+        plat = simplify_name_attributes(self.platformID, self.platEncID, self.langID)
+        if plat != "":
+            plat += " "
+        return 'name {}"{}";'.format(plat, self.string)
+
+
 class SizeParameters(Statement):
     """A ``parameters`` statement."""
 
@@ -1861,3 +1899,132 @@ class VheaField(Statement):
         fields = ("VertTypoAscender", "VertTypoDescender", "VertTypoLineGap")
         keywords = dict([(x.lower(), x) for x in fields])
         return "{} {};".format(keywords[self.key], self.value)
+
+
+class STATDesignAxisStatement(Statement):
+    """A STAT table Design Axis
+
+    Args:
+        tag (str): a 4 letter axis tag
+        axisOrder (int): an int
+        names (list): a list of :class:`STATNameStatement` objects
+    """
+
+    def __init__(self, tag, axisOrder, names, location=None):
+        Statement.__init__(self, location)
+        self.tag = tag
+        self.axisOrder = axisOrder
+        self.names = names
+        self.location = location
+
+    def build(self, builder):
+        builder.addDesignAxis(self, self.location)
+
+    def asFea(self, indent=""):
+        indent += SHIFT
+        res = f"DesignAxis {self.tag} {self.axisOrder} {{ \n"
+        res += ("\n" + indent).join([s.asFea(indent=indent) for s in self.names]) + "\n"
+        res += "};"
+        return res
+
+
+class ElidedFallbackName(Statement):
+    """STAT table ElidedFallbackName
+
+    Args:
+        names: a list of :class:`STATNameStatement` objects
+    """
+
+    def __init__(self, names, location=None):
+        Statement.__init__(self, location)
+        self.names = names
+        self.location = location
+
+    def build(self, builder):
+        builder.setElidedFallbackName(self.names, self.location)
+
+    def asFea(self, indent=""):
+        indent += SHIFT
+        res = "ElidedFallbackName { \n"
+        res += ("\n" + indent).join([s.asFea(indent=indent) for s in self.names]) + "\n"
+        res += "};"
+        return res
+
+
+class ElidedFallbackNameID(Statement):
+    """STAT table ElidedFallbackNameID
+
+    Args:
+        value: an int pointing to an existing name table name ID
+    """
+
+    def __init__(self, value, location=None):
+        Statement.__init__(self, location)
+        self.value = value
+        self.location = location
+
+    def build(self, builder):
+        builder.setElidedFallbackName(self.value, self.location)
+
+    def asFea(self, indent=""):
+        return f"ElidedFallbackNameID {self.value};"
+
+
+class STATAxisValueStatement(Statement):
+    """A STAT table Axis Value Record
+
+    Args:
+        names (list): a list of :class:`STATNameStatement` objects
+        locations (list): a list of :class:`AxisValueLocationStatement` objects
+        flags (int): an int
+    """
+
+    def __init__(self, names, locations, flags, location=None):
+        Statement.__init__(self, location)
+        self.names = names
+        self.locations = locations
+        self.flags = flags
+
+    def build(self, builder):
+        builder.addAxisValueRecord(self, self.location)
+
+    def asFea(self, indent=""):
+        res = "AxisValue {\n"
+        for location in self.locations:
+            res += location.asFea()
+
+        for nameRecord in self.names:
+            res += nameRecord.asFea()
+            res += "\n"
+
+        if self.flags:
+            flags = ["OlderSiblingFontAttribute", "ElidableAxisValueName"]
+            flagStrings = []
+            curr = 1
+            for i in range(len(flags)):
+                if self.flags & curr != 0:
+                    flagStrings.append(flags[i])
+                curr = curr << 1
+            res += f"flag {' '.join(flagStrings)};\n"
+        res += "};"
+        return res
+
+
+class AxisValueLocationStatement(Statement):
+    """
+    A STAT table Axis Value Location
+
+    Args:
+        tag (str): a 4 letter axis tag
+        values (list): a list of ints and/or floats
+    """
+
+    def __init__(self, tag, values, location=None):
+        Statement.__init__(self, location)
+        self.tag = tag
+        self.values = values
+
+    def asFea(self, res=""):
+        res += f"location {self.tag} "
+        res += f"{' '.join(str(i) for i in self.values)};\n"
+        return res

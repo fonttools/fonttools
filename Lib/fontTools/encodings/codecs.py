@@ -16,43 +16,29 @@ class ExtendCodec(codecs.Codec):
 		self.info = codecs.CodecInfo(name=self.name, encode=self.encode, decode=self.decode)
 		codecs.register_error(name, self.error)
 
-	def encode(self, input, errors='strict'):
-		assert errors == 'strict'
-		#return codecs.encode(input, self.base_encoding, self.name), len(input)
-
-		# The above line could totally be all we needed, relying on the error
-		# handling to replace the unencodable Unicode characters with our extended
-		# byte sequences.
-		#
-		# However, there seems to be a design bug in Python (probably intentional):
-		# the error handler for encoding is supposed to return a **Unicode** character,
-		# that then needs to be encodable itself...  Ugh.
-		#
-		# So we implement what codecs.encode() should have been doing: which is expect
-		# error handler to return bytes() to be added to the output.
-		#
-		# This seems to have been fixed in Python 3.3.  We should try using that and
-		# use fallback only if that failed.
-		# https://docs.python.org/3.3/library/codecs.html#codecs.register_error
-
+	def _map(self, mapper, output_type, exc_type, input, errors):
+		base_error_handler = codecs.lookup_error(errors)
 		length = len(input)
-		out = b''
+		out = output_type()
 		while input:
+			# first try to use self.error as the error handler
 			try:
-				part = codecs.encode(input, self.base_encoding)
+				part = mapper(input, self.base_encoding, errors=self.name)
 				out += part
-				input = '' # All converted
-			except UnicodeEncodeError as e:
-				# Convert the correct part
-				out += codecs.encode(input[:e.start], self.base_encoding)
-				replacement, pos = self.error(e)
+				break  # All converted
+			except exc_type as e:
+				# else convert the correct part, handle error as requested and continue
+				out += mapper(input[:e.start], self.base_encoding, self.name)
+				replacement, pos = base_error_handler(e)
 				out += replacement
 				input = input[pos:]
 		return out, length
 
+	def encode(self, input, errors='strict'):
+		return self._map(codecs.encode, bytes, UnicodeEncodeError, input, errors)
+
 	def decode(self, input, errors='strict'):
-		assert errors == 'strict'
-		return codecs.decode(input, self.base_encoding, self.name), len(input)
+		return self._map(codecs.decode, str, UnicodeDecodeError, input, errors)
 
 	def error(self, e):
 		if isinstance(e, UnicodeDecodeError):

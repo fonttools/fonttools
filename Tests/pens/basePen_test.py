@@ -1,6 +1,6 @@
-from fontTools.misc.py23 import *
 from fontTools.pens.basePen import \
-    BasePen, decomposeSuperBezierSegment, decomposeQuadraticSegment
+    AbstractPen, BasePen, decomposeSuperBezierSegment, decomposeQuadraticSegment
+from fontTools.pens.pointPen import AbstractPointPen
 from fontTools.misc.loggingTools import CapturingLogHandler
 import unittest
 

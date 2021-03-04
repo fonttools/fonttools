@@ -1,3 +1,100 @@
+4.21.1 (released 2021-02-26)
+----------------------------
+
+- [pens] Reverted breaking change that turned ``AbstractPen`` and ``AbstractPointPen``
+  into abstract base classes (#2164, #2198).
+
+4.21.0 (released 2021-02-26)
+----------------------------
+
+- [feaLib] Indent anchor statements in ``asFea()`` to make them more legible and
+  diff-able (#2193).
+- [pens] Turn ``AbstractPen`` and ``AbstractPointPen`` into abstract base classes
+  (#2164).
+- [feaLib] Added support for parsing and building ``STAT`` table from AFDKO feature
+  files (#2039).
+- [instancer] Added option to update name table of generated instance using ``STAT``
+  table's axis values (#2189).
+- [bezierTools] Added functions to compute bezier point-at-time, as well as line-line,
+  curve-line and curve-curve intersections (#2192).
+
+4.20.0 (released 2021-02-15)
+----------------------------
+
+- [COLRv1] Added ``unbuildColrV1`` to deconstruct COLRv1 otTables to raw json-able
+  data structure; it does the reverse of ``buildColrV1`` (#2171).
+- [feaLib] Allow ``sub X by NULL`` sequence to delete a glyph (#2170).
+- [arrayTools] Fixed ``Vector`` division (#2173).
+- [COLRv1] Define new ``PaintSweepGradient`` (#2172).
+- [otTables] Moved ``Paint.Format`` enum class outside of ``Paint`` class definition,
+  now named ``PaintFormat``. It was clashing with paint instance ``Format`` attribute
+  and thus was breaking lazy load of COLR table which relies on magic ``__getattr__``
+  (#2175).
+- [COLRv1] Replace hand-coded builder functions with otData-driven dynamic
+  implementation (#2181).
+- [COLRv1] Define additional static (non-variable) Paint formats (#2181).
+- [subset] Added support for subsetting COLR v1 and CPAL tables (#2174, #2177).
+- [fontBuilder] Allow ``setupFvar`` to optionally take ``designspaceLib.AxisDescriptor``
+  objects. Added new ``setupAvar`` method. Support localised names for axes and
+  named instances (#2185).
+
+4.19.1 (released 2021-01-28)
+----------------------------
+
+- [woff2] An initial off-curve point with an overlap flag now stays an off-curve
+  point after compression.
+
+4.19.0 (released 2021-01-25)
+----------------------------
+
+- [codecs] Handle ``errors`` parameter different from 'strict' for the custom
+  extended mac encodings (#2137, #2132).
+- [featureVars] Raise better error message when a script is missing the required
+  default language system (#2154).
+- [COLRv1] Avoid abrupt change caused by rounding ``PaintRadialGradient.c0`` when
+  the start circle almost touches the end circle's perimeter (#2148).
+- [COLRv1] Support building unlimited lists of paints as 255-ary trees of
+  ``PaintColrLayers`` tables (#2153).
+- [subset] Prune redundant format-12 cmap subtables when all non-BMP characters
+  are dropped (#2146).
+- [basePen] Raise ``MissingComponentError`` instead of bare ``KeyError`` when a
+  referenced component is missing (#2145).
+
+4.18.2 (released 2020-12-16)
+----------------------------
+
+- [COLRv1] Implemented ``PaintTranslate`` paint format (#2129).
+- [varLib.cff] Fixed unbound local variable error (#1787).
+- [otlLib] Don't crash when creating OpenType class definitions if some glyphs
+  occur more than once (#2125).
+
+4.18.1 (released 2020-12-09)
+----------------------------
+
+- [colorLib] Speed optimization for ``LayerV1ListBuilder`` (#2119).
+- [mutator] Fixed missing tab in ``interpolate_cff2_metrics`` (0957dc7a).
+
+4.18.0 (released 2020-12-04)
+----------------------------
+
+- [COLRv1] Update to latest draft: added ``PaintRotate`` and ``PaintSkew`` (#2118).
+- [woff2] Support new ``brotlicffi`` bindings for PyPy (#2117).
+- [glifLib] Added ``expectContentsFile`` parameter to ``GlyphSet``, for use when
+  reading existing UFOs, to comply with the specification stating that a
+  ``contents.plist`` file must exist in a glyph set (#2114).
+- [subset] Allow ``LangSys`` tags in ``--layout-scripts`` option (#2112). For example:
+  ``--layout-scripts=arab.dflt,arab.URD,latn``; this will keep ``DefaultLangSys``
+  and ``URD`` language for ``arab`` script, and all languages for ``latn`` script.
+- [varLib.interpolatable] Allow UFOs to be checked; report open paths, non existant
+  glyphs; add a ``--json`` option to produce a machine-readable list of
+  incompatibilities
+- [pens] Added ``QuartzPen`` to create ``CGPath`` from glyph outlines on macOS.
+  Requires pyobjc (#2107).
+- [feaLib] You can export ``FONTTOOLS_LOOKUP_DEBUGGING=1`` to enable feature file
+  debugging info stored in ``Debg`` table (#2106).
+- [otlLib] Build more efficient format 1 and format 2 contextual lookups whenever
+  possible (#2101).
+
 4.17.1 (released 2020-11-16)
 ----------------------------
 

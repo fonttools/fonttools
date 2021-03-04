@@ -6,6 +6,7 @@ import collections
 import copy
 import enum
 from functools import partial
+from math import ceil, log
 from typing import (
     Any,
     Dict,
@@ -24,7 +25,6 @@ from fontTools.misc.fixedTools import fixedToFloat
 from fontTools.ttLib.tables import C_O_L_R_
 from fontTools.ttLib.tables import C_P_A_L_
 from fontTools.ttLib.tables import _n_a_m_e
-from fontTools.ttLib.tables.otBase import BaseTable
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables.otTables import (
     ExtendMode,
@@ -34,6 +34,12 @@ from fontTools.ttLib.tables.otTables import (
     VariableInt,
 )
 from .errors import ColorLibError
+from .geometry import round_start_circle_stable_containment
+from .table_builder import (
+    convertTupleClass,
+    BuildCallback,
+    TableBuilder,
+)
 
 
 # TODO move type aliases to colorLib.types?
@@ -43,21 +49,87 @@ _PaintInput = Union[int, _Kwargs, ot.Paint, Tuple[str, "_PaintInput"]]
 _PaintInputList = Sequence[_PaintInput]
 _ColorGlyphsDict = Dict[str, Union[_PaintInputList, _PaintInput]]
 _ColorGlyphsV0Dict = Dict[str, Sequence[Tuple[str, int]]]
-_Number = Union[int, float]
-_ScalarInput = Union[_Number, VariableValue, Tuple[_Number, int]]
-_ColorStopTuple = Tuple[_ScalarInput, int]
-_ColorStopInput = Union[_ColorStopTuple, _Kwargs, ot.ColorStop]
-_ColorStopsList = Sequence[_ColorStopInput]
-_ExtendInput = Union[int, str, ExtendMode]
-_CompositeInput = Union[int, str, CompositeMode]
-_ColorLineInput = Union[_Kwargs, ot.ColorLine]
-_PointTuple = Tuple[_ScalarInput, _ScalarInput]
-_AffineTuple = Tuple[
-    _ScalarInput, _ScalarInput, _ScalarInput, _ScalarInput, _ScalarInput, _ScalarInput
-]
-_AffineInput = Union[_AffineTuple, ot.Affine2x3]
+
 
 MAX_PAINT_COLR_LAYER_COUNT = 255
+_DEFAULT_ALPHA = VariableFloat(1.0)
+_MAX_REUSE_LEN = 32
+
+
+def _beforeBuildPaintVarRadialGradient(paint, source, srcMapFn=lambda v: v):
+    # normalize input types (which may or may not specify a varIdx)
+    x0 = convertTupleClass(VariableFloat, source["x0"])
+    y0 = convertTupleClass(VariableFloat, source["y0"])
+    r0 = convertTupleClass(VariableFloat, source["r0"])
+    x1 = convertTupleClass(VariableFloat, source["x1"])
+    y1 = convertTupleClass(VariableFloat, source["y1"])
+    r1 = convertTupleClass(VariableFloat, source["r1"])
+
+    # TODO apparently no builder_test confirms this works (?)
+
+    # avoid abrupt change after rounding when c0 is near c1's perimeter
+    c = round_start_circle_stable_containment(
+        (x0.value, y0.value), r0.value, (x1.value, y1.value), r1.value
+    )
+    x0, y0 = x0._replace(value=c.centre[0]), y0._replace(value=c.centre[1])
+    r0 = r0._replace(value=c.radius)
+
+    # update source to ensure paint is built with corrected values
+    source["x0"] = srcMapFn(x0)
+    source["y0"] = srcMapFn(y0)
+    source["r0"] = srcMapFn(r0)
+    source["x1"] = srcMapFn(x1)
+    source["y1"] = srcMapFn(y1)
+    source["r1"] = srcMapFn(r1)
+
+    return paint, source
+
+
+def _beforeBuildPaintRadialGradient(paint, source):
+    return _beforeBuildPaintVarRadialGradient(paint, source, lambda v: v.value)
+
+
+def _defaultColorIndex():
+    colorIndex = ot.ColorIndex()
+    colorIndex.Alpha = _DEFAULT_ALPHA.value
+    return colorIndex
+
+
+def _defaultVarColorIndex():
+    colorIndex = ot.VarColorIndex()
+    colorIndex.Alpha = _DEFAULT_ALPHA
+    return colorIndex
+
+
+def _defaultColorLine():
+    colorLine = ot.ColorLine()
+    colorLine.Extend = ExtendMode.PAD
+    return colorLine
+
+
+def _defaultVarColorLine():
+    colorLine = ot.VarColorLine()
+    colorLine.Extend = ExtendMode.PAD
+    return colorLine
+
+
+def _buildPaintCallbacks():
+    return {
+        (
+            BuildCallback.BEFORE_BUILD,
+            ot.Paint,
+            ot.PaintFormat.PaintRadialGradient,
+        ): _beforeBuildPaintRadialGradient,
+        (
+            BuildCallback.BEFORE_BUILD,
+            ot.Paint,
+            ot.PaintFormat.PaintVarRadialGradient,
+        ): _beforeBuildPaintVarRadialGradient,
+        (BuildCallback.CREATE_DEFAULT, ot.ColorIndex): _defaultColorIndex,
+        (BuildCallback.CREATE_DEFAULT, ot.VarColorIndex): _defaultVarColorIndex,
+        (BuildCallback.CREATE_DEFAULT, ot.ColorLine): _defaultColorLine,
+        (BuildCallback.CREATE_DEFAULT, ot.VarColorLine): _defaultVarColorLine,
+    }
 
 
 def populateCOLRv0(
@@ -110,7 +182,6 @@ def buildCOLR(
     varStore: Optional[ot.VarStore] = None,
 ) -> C_O_L_R_.table_C_O_L_R_:
     """Build COLR table from color layers mapping.
-
     Args:
         colorGlyphs: map of base glyph name to, either list of (layer glyph name,
             color palette index) tuples for COLRv0; or a single Paint (dict) or
@@ -122,7 +193,6 @@ def buildCOLR(
         glyphMap: a map from glyph names to glyph indices, as returned from
             TTFont.getReverseGlyphMap(), to optionally sort base records by GID.
         varStore: Optional ItemVarationStore for deltas associated with v1 layer.
-
     Return:
         A new COLR table.
     """
@@ -159,7 +229,7 @@ def buildCOLR(
     self.version = colr.Version = version
 
     if version == 0:
-        self._fromOTTable(colr)
+        self.ColorLayers = self._decompileColorLayersV0(colr)
     else:
         colr.VarStore = varStore
         self.table = colr
@@ -293,8 +363,6 @@ def buildCPAL(
 # COLR v1 tables
 # See draft proposal at: https://github.com/googlefonts/colr-gradients-spec
 
-_DEFAULT_ALPHA = VariableFloat(1.0)
-
 
 def _is_colrv0_layer(layer: Any) -> bool:
     # Consider as COLRv0 layer any sequence of length 2 (be it tuple or list) in which
@@ -326,138 +394,15 @@ def _split_color_glyphs_by_version(
     return colorGlyphsV0, colorGlyphsV1
 
 
-def _to_variable_value(
-    value: _ScalarInput,
-    minValue: _Number,
-    maxValue: _Number,
-    cls: Type[VariableValue],
-) -> VariableValue:
-    if not isinstance(value, cls):
-        try:
-            it = iter(value)
-        except TypeError:  # not iterable
-            value = cls(value)
-        else:
-            value = cls._make(it)
-    if value.value < minValue:
-        raise OverflowError(f"{cls.__name__}: {value.value} < {minValue}")
-    if value.value > maxValue:
-        raise OverflowError(f"{cls.__name__}: {value.value} < {maxValue}")
-    return value
-
-
-_to_variable_f16dot16_float = partial(
-    _to_variable_value,
-    cls=VariableFloat,
-    minValue=-(2 ** 15),
-    maxValue=fixedToFloat(2 ** 31 - 1, 16),
-)
-_to_variable_f2dot14_float = partial(
-    _to_variable_value,
-    cls=VariableFloat,
-    minValue=-2.0,
-    maxValue=fixedToFloat(2 ** 15 - 1, 14),
-)
-_to_variable_int16 = partial(
-    _to_variable_value,
-    cls=VariableInt,
-    minValue=-(2 ** 15),
-    maxValue=2 ** 15 - 1,
-)
-_to_variable_uint16 = partial(
-    _to_variable_value,
-    cls=VariableInt,
-    minValue=0,
-    maxValue=2 ** 16,
-)
-
-
-def buildColorIndex(
-    paletteIndex: int, alpha: _ScalarInput = _DEFAULT_ALPHA
-) -> ot.ColorIndex:
-    self = ot.ColorIndex()
-    self.PaletteIndex = int(paletteIndex)
-    self.Alpha = _to_variable_f2dot14_float(alpha)
-    return self
-
-
-def buildColorStop(
-    offset: _ScalarInput,
-    paletteIndex: int,
-    alpha: _ScalarInput = _DEFAULT_ALPHA,
-) -> ot.ColorStop:
-    self = ot.ColorStop()
-    self.StopOffset = _to_variable_f2dot14_float(offset)
-    self.Color = buildColorIndex(paletteIndex, alpha)
-    return self
-
-
-def _to_enum_value(v: Union[str, int, T], enumClass: Type[T]) -> T:
-    if isinstance(v, enumClass):
-        return v
-    elif isinstance(v, str):
-        try:
-            return getattr(enumClass, v.upper())
-        except AttributeError:
-            raise ValueError(f"{v!r} is not a valid {enumClass.__name__}")
-    return enumClass(v)
-
-
-def _to_extend_mode(v: _ExtendInput) -> ExtendMode:
-    return _to_enum_value(v, ExtendMode)
-
-
-def _to_composite_mode(v: _CompositeInput) -> CompositeMode:
-    return _to_enum_value(v, CompositeMode)
-
-
-def buildColorLine(
-    stops: _ColorStopsList, extend: _ExtendInput = ExtendMode.PAD
-) -> ot.ColorLine:
-    self = ot.ColorLine()
-    self.Extend = _to_extend_mode(extend)
-    self.StopCount = len(stops)
-    self.ColorStop = [
-        stop
-        if isinstance(stop, ot.ColorStop)
-        else buildColorStop(**stop)
-        if isinstance(stop, collections.abc.Mapping)
-        else buildColorStop(*stop)
-        for stop in stops
-    ]
-    return self
-
-
-def _to_color_line(obj):
-    if isinstance(obj, ot.ColorLine):
-        return obj
-    elif isinstance(obj, collections.abc.Mapping):
-        return buildColorLine(**obj)
-    raise TypeError(obj)
-
-
-def _as_tuple(obj) -> Tuple[Any, ...]:
-    # start simple, who even cares about cyclic graphs or interesting field types
-    def _tuple_safe(value):
-        if isinstance(value, enum.Enum):
-            return value
-        elif hasattr(value, "__dict__"):
-            return tuple((k, _tuple_safe(v)) for k, v in value.__dict__.items())
-        elif isinstance(value, collections.abc.MutableSequence):
-            return tuple(_tuple_safe(e) for e in value)
-        return value
-
-    return tuple(_tuple_safe(obj))
-
-
 def _reuse_ranges(num_layers: int) -> Generator[Tuple[int, int], None, None]:
     # TODO feels like something itertools might have already
     for lbound in range(num_layers):
-        # TODO may want a max length to limit scope of search
         # Reuse of very large #s of layers is relatively unlikely
         # +2: we want sequences of at least 2
         # otData handles single-record duplication
-        for ubound in range(lbound + 2, num_layers + 1):
+        for ubound in range(
+            lbound + 2, min(num_layers + 1, lbound + 2 + _MAX_REUSE_LEN)
+        ):
             yield (lbound, ubound)
 
 
@@ -465,193 +410,139 @@ class LayerV1ListBuilder:
     slices: List[ot.Paint]
     layers: List[ot.Paint]
     reusePool: Mapping[Tuple[Any, ...], int]
+    tuples: Mapping[int, Tuple[Any, ...]]
+    keepAlive: List[ot.Paint]  # we need id to remain valid
 
     def __init__(self):
         self.slices = []
         self.layers = []
         self.reusePool = {}
+        self.tuples = {}
+        self.keepAlive = []
 
-    def buildPaintSolid(
-        self, paletteIndex: int, alpha: _ScalarInput = _DEFAULT_ALPHA
-    ) -> ot.Paint:
-        ot_paint = ot.Paint()
-        ot_paint.Format = int(ot.Paint.Format.PaintSolid)
-        ot_paint.Color = buildColorIndex(paletteIndex, alpha)
-        return ot_paint
+        # We need to intercept construction of PaintColrLayers
+        callbacks = _buildPaintCallbacks()
+        callbacks[
+            (
+                BuildCallback.BEFORE_BUILD,
+                ot.Paint,
+                ot.PaintFormat.PaintColrLayers,
+            )
+        ] = self._beforeBuildPaintColrLayers
+        self.tableBuilder = TableBuilder(callbacks)
 
-    def buildPaintLinearGradient(
-        self,
-        colorLine: _ColorLineInput,
-        p0: _PointTuple,
-        p1: _PointTuple,
-        p2: Optional[_PointTuple] = None,
-    ) -> ot.Paint:
-        ot_paint = ot.Paint()
-        ot_paint.Format = int(ot.Paint.Format.PaintLinearGradient)
-        ot_paint.ColorLine = _to_color_line(colorLine)
+    def _paint_tuple(self, paint: ot.Paint):
+        # start simple, who even cares about cyclic graphs or interesting field types
+        def _tuple_safe(value):
+            if isinstance(value, enum.Enum):
+                return value
+            elif hasattr(value, "__dict__"):
+                return tuple(
+                    (k, _tuple_safe(v)) for k, v in sorted(value.__dict__.items())
+                )
+            elif isinstance(value, collections.abc.MutableSequence):
+                return tuple(_tuple_safe(e) for e in value)
+            return value
 
-        if p2 is None:
-            p2 = copy.copy(p1)
-        for i, (x, y) in enumerate((p0, p1, p2)):
-            setattr(ot_paint, f"x{i}", _to_variable_int16(x))
-            setattr(ot_paint, f"y{i}", _to_variable_int16(y))
+        # Cache the tuples for individual Paint instead of the whole sequence
+        # because the seq could be a transient slice
+        result = self.tuples.get(id(paint), None)
+        if result is None:
+            result = _tuple_safe(paint)
+            self.tuples[id(paint)] = result
+            self.keepAlive.append(paint)
+        return result
 
-        return ot_paint
+    def _as_tuple(self, paints: Sequence[ot.Paint]) -> Tuple[Any, ...]:
+        return tuple(self._paint_tuple(p) for p in paints)
 
-    def buildPaintRadialGradient(
-        self,
-        colorLine: _ColorLineInput,
-        c0: _PointTuple,
-        c1: _PointTuple,
-        r0: _ScalarInput,
-        r1: _ScalarInput,
-    ) -> ot.Paint:
+    # COLR layers is unusual in that it modifies shared state
+    # so we need a callback into an object
+    def _beforeBuildPaintColrLayers(self, dest, source):
+        paint = ot.Paint()
+        paint.Format = int(ot.PaintFormat.PaintColrLayers)
+        self.slices.append(paint)
 
-        ot_paint = ot.Paint()
-        ot_paint.Format = int(ot.Paint.Format.PaintRadialGradient)
-        ot_paint.ColorLine = _to_color_line(colorLine)
+        # Sketchy gymnastics: a sequence input will have dropped it's layers
+        # into NumLayers; get it back
+        if isinstance(source.get("NumLayers", None), collections.abc.Sequence):
+            layers = source["NumLayers"]
+        else:
+            layers = source["Layers"]
 
-        for i, (x, y), r in [(0, c0, r0), (1, c1, r1)]:
-            setattr(ot_paint, f"x{i}", _to_variable_int16(x))
-            setattr(ot_paint, f"y{i}", _to_variable_int16(y))
-            setattr(ot_paint, f"r{i}", _to_variable_uint16(r))
+        # Convert maps seqs or whatever into typed objects
+        layers = [self.buildPaint(l) for l in layers]
 
-        return ot_paint
-
-    def buildPaintGlyph(self, glyph: str, paint: _PaintInput) -> ot.Paint:
-        ot_paint = ot.Paint()
-        ot_paint.Format = int(ot.Paint.Format.PaintGlyph)
-        ot_paint.Glyph = glyph
-        ot_paint.Paint = self.buildPaint(paint)
-        return ot_paint
-
-    def buildPaintColrGlyph(self, glyph: str) -> ot.Paint:
-        ot_paint = ot.Paint()
-        ot_paint.Format = int(ot.Paint.Format.PaintColrGlyph)
-        ot_paint.Glyph = glyph
-        return ot_paint
-
-    def buildPaintTransform(
-        self, transform: _AffineInput, paint: _PaintInput
-    ) -> ot.Paint:
-        ot_paint = ot.Paint()
-        ot_paint.Format = int(ot.Paint.Format.PaintTransform)
-        if not isinstance(transform, ot.Affine2x3):
-            transform = buildAffine2x3(transform)
-        ot_paint.Transform = transform
-        ot_paint.Paint = self.buildPaint(paint)
-        return ot_paint
-
-    def buildPaintComposite(
-        self,
-        mode: _CompositeInput,
-        source: _PaintInput,
-        backdrop: _PaintInput,
-    ):
-        ot_paint = ot.Paint()
-        ot_paint.Format = int(ot.Paint.Format.PaintComposite)
-        ot_paint.SourcePaint = self.buildPaint(source)
-        ot_paint.CompositeMode = _to_composite_mode(mode)
-        ot_paint.BackdropPaint = self.buildPaint(backdrop)
-        return ot_paint
-
-    def buildColrLayers(self, paints: List[_PaintInput]) -> ot.Paint:
-        ot_paint = ot.Paint()
-        ot_paint.Format = int(ot.Paint.Format.PaintColrLayers)
-        self.slices.append(ot_paint)
-
-        paints = [self.buildPaint(p) for p in paints]
+        # No reason to have a colr layers with just one entry
+        if len(layers) == 1:
+            return layers[0], {}
 
         # Look for reuse, with preference to longer sequences
+        # This may make the layer list smaller
         found_reuse = True
         while found_reuse:
             found_reuse = False
 
             ranges = sorted(
-                _reuse_ranges(len(paints)),
+                _reuse_ranges(len(layers)),
                 key=lambda t: (t[1] - t[0], t[1], t[0]),
                 reverse=True,
             )
             for lbound, ubound in ranges:
-                reuse_lbound = self.reusePool.get(_as_tuple(paints[lbound:ubound]), -1)
+                reuse_lbound = self.reusePool.get(
+                    self._as_tuple(layers[lbound:ubound]), -1
+                )
                 if reuse_lbound == -1:
                     continue
                 new_slice = ot.Paint()
-                new_slice.Format = int(ot.Paint.Format.PaintColrLayers)
+                new_slice.Format = int(ot.PaintFormat.PaintColrLayers)
                 new_slice.NumLayers = ubound - lbound
                 new_slice.FirstLayerIndex = reuse_lbound
-                paints = paints[:lbound] + [new_slice] + paints[ubound:]
+                layers = layers[:lbound] + [new_slice] + layers[ubound:]
                 found_reuse = True
                 break
 
-        ot_paint.NumLayers = len(paints)
-        ot_paint.FirstLayerIndex = len(self.layers)
-        self.layers.extend(paints)
+        # The layer list is now final; if it's too big we need to tree it
+        is_tree = len(layers) > MAX_PAINT_COLR_LAYER_COUNT
+        layers = _build_n_ary_tree(layers, n=MAX_PAINT_COLR_LAYER_COUNT)
 
-        # Register our parts for reuse
-        for lbound, ubound in _reuse_ranges(len(paints)):
-            self.reusePool[_as_tuple(paints[lbound:ubound])] = (
-                lbound + ot_paint.FirstLayerIndex
-            )
+        # We now have a tree of sequences with Paint leaves.
+        # Convert the sequences into PaintColrLayers.
+        def listToColrLayers(layer):
+            if isinstance(layer, collections.abc.Sequence):
+                return self.buildPaint(
+                    {
+                        "Format": ot.PaintFormat.PaintColrLayers,
+                        "Layers": [listToColrLayers(l) for l in layer],
+                    }
+                )
+            return layer
 
-        return ot_paint
+        layers = [listToColrLayers(l) for l in layers]
+
+        paint.NumLayers = len(layers)
+        paint.FirstLayerIndex = len(self.layers)
+        self.layers.extend(layers)
+
+        # Register our parts for reuse provided we aren't a tree
+        # If we are a tree the leaves registered for reuse and that will suffice
+        if not is_tree:
+            for lbound, ubound in _reuse_ranges(len(layers)):
+                self.reusePool[self._as_tuple(layers[lbound:ubound])] = (
+                    lbound + paint.FirstLayerIndex
+                )
+
+        # we've fully built dest; empty source prevents generalized build from kicking in
+        return paint, {}
 
     def buildPaint(self, paint: _PaintInput) -> ot.Paint:
-        if isinstance(paint, ot.Paint):
-            return paint
-        elif isinstance(paint, int):
-            paletteIndex = paint
-            return self.buildPaintSolid(paletteIndex)
-        elif isinstance(paint, tuple):
-            layerGlyph, paint = paint
-            return self.buildPaintGlyph(layerGlyph, paint)
-        elif isinstance(paint, list):
-            # implicit PaintColrLayers for a list of > 1
-            if len(paint) == 0:
-                raise ValueError("An empty list is hard to paint")
-            elif len(paint) == 1:
-                return self.buildPaint(paint[0])
-            else:
-                return self.buildColrLayers(paint)
-        elif isinstance(paint, collections.abc.Mapping):
-            kwargs = dict(paint)
-            fmt = kwargs.pop("format")
-            try:
-                return LayerV1ListBuilder._buildFunctions[fmt](self, **kwargs)
-            except KeyError:
-                raise NotImplementedError(fmt)
-        raise TypeError(f"Not sure what to do with {type(paint).__name__}: {paint!r}")
+        return self.tableBuilder.build(ot.Paint, paint)
 
     def build(self) -> ot.LayerV1List:
         layers = ot.LayerV1List()
         layers.LayerCount = len(self.layers)
         layers.Paint = self.layers
         return layers
-
-
-LayerV1ListBuilder._buildFunctions = {
-    pf.value: getattr(LayerV1ListBuilder, "build" + pf.name)
-    for pf in ot.Paint.Format
-    if pf != ot.Paint.Format.PaintColrLayers
-}
-
-
-def buildAffine2x3(transform: _AffineTuple) -> ot.Affine2x3:
-    if len(transform) != 6:
-        raise ValueError(f"Expected 6-tuple of floats, found: {transform!r}")
-    self = ot.Affine2x3()
-    # COLRv1 Affine2x3 uses the same column-major order to serialize a 2D
-    # Affine Transformation as the one used by fontTools.misc.transform.
-    # However, for historical reasons, the labels 'xy' and 'yx' are swapped.
-    # Their fundamental meaning is the same though.
-    # COLRv1 Affine2x3 follows the names found in FreeType and Cairo.
-    # In all case, the second element in the 6-tuple correspond to the
-    # y-part of the x basis vector, and the third to the x-part of the y
-    # basis vector.
-    # See https://github.com/googlefonts/colr-gradients-spec/pull/85
-    for i, attr in enumerate(("xx", "yx", "xy", "yy", "dx", "dy")):
-        setattr(self, attr, _to_variable_f16dot16_float(transform[i]))
-    return self
 
 
 def buildBaseGlyphV1Record(
@@ -702,3 +593,45 @@ def buildColrV1(
     glyphs.BaseGlyphCount = len(baseGlyphs)
     glyphs.BaseGlyphV1Record = baseGlyphs
     return (layers, glyphs)
+
+
+def _build_n_ary_tree(leaves, n):
+    """Build N-ary tree from sequence of leaf nodes.
+
+    Return a list of lists where each non-leaf node is a list containing
+    max n nodes.
+    """
+    if not leaves:
+        return []
+
+    assert n > 1
+
+    depth = ceil(log(len(leaves), n))
+
+    if depth <= 1:
+        return list(leaves)
+
+    # Fully populate complete subtrees of root until we have enough leaves left
+    root = []
+    unassigned = None
+    full_step = n ** (depth - 1)
+    for i in range(0, len(leaves), full_step):
+        subtree = leaves[i : i + full_step]
+        if len(subtree) < full_step:
+            unassigned = subtree
+            break
+        while len(subtree) > n:
+            subtree = [subtree[k : k + n] for k in range(0, len(subtree), n)]
+        root.append(subtree)
+
+    if unassigned:
+        # Recurse to fill the last subtree, which is the only partially populated one
+        subtree = _build_n_ary_tree(unassigned, n)
+        if len(subtree) <= n - len(root):
+            # replace last subtree with its children if they can still fit
+            root.extend(subtree)
+        else:
+            root.append(subtree)
+        assert len(root) <= n
+
+    return root

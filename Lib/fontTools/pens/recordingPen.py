@@ -1,5 +1,4 @@
 """Pen recording operations that can be accessed or replayed."""
-from fontTools.misc.py23 import *
 from fontTools.pens.basePen import AbstractPen, DecomposingPen
 from fontTools.pens.pointPen import AbstractPointPen
 

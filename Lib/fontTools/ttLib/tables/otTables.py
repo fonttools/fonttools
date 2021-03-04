@@ -1324,21 +1324,34 @@ class CompositeMode(IntEnum):
 	HSL_LUMINOSITY = 26
 
 
-class Paint(getFormatSwitchingBaseTableClass("uint8")):
+class PaintFormat(IntEnum):
+	PaintColrLayers = 1
+	PaintSolid = 2
+	PaintVarSolid = 3,
+	PaintLinearGradient = 4
+	PaintVarLinearGradient = 5
+	PaintRadialGradient = 6
+	PaintVarRadialGradient = 7
+	PaintSweepGradient = 8
+	PaintVarSweepGradient = 9
+	PaintGlyph = 10
+	PaintColrGlyph = 11
+	PaintTransform = 12
+	PaintVarTransform = 13
+	PaintTranslate = 14
+	PaintVarTranslate = 15
+	PaintRotate = 16
+	PaintVarRotate = 17
+	PaintSkew = 18
+	PaintVarSkew = 19
+	PaintComposite = 20
 
-	class Format(IntEnum):
-		PaintColrLayers = 1
-		PaintSolid = 2
-		PaintLinearGradient = 3
-		PaintRadialGradient = 4
-		PaintGlyph = 5
-		PaintColrGlyph = 6
-		PaintTransform = 7
-		PaintComposite = 8
+
+class Paint(getFormatSwitchingBaseTableClass("uint8")):
 
 	def getFormatName(self):
 		try:
-			return self.__class__.Format(self.Format).name
+			return PaintFormat(self.Format).name
 		except ValueError:
 			raise NotImplementedError(f"Unknown Paint format: {self.Format}")
 
@@ -1353,6 +1366,40 @@ class Paint(getFormatSwitchingBaseTableClass("uint8")):
 		self.toXML2(xmlWriter, font)
 		xmlWriter.endtag(tableName)
 		xmlWriter.newline()
+
+	def getChildren(self, colr):
+		if self.Format == PaintFormat.PaintColrLayers:
+			return colr.LayerV1List.Paint[
+				self.FirstLayerIndex : self.FirstLayerIndex + self.NumLayers
+			]
+
+		if self.Format == PaintFormat.PaintColrGlyph:
+			for record in colr.BaseGlyphV1List.BaseGlyphV1Record:
+				if record.BaseGlyph == self.Glyph:
+					return [record.Paint]
+			else:
+				raise KeyError(f"{self.Glyph!r} not in colr.BaseGlyphV1List")
+
+		children = []
+		for conv in self.getConverters():
+			if conv.tableClass is not None and issubclass(conv.tableClass, type(self)):
+				children.append(getattr(self, conv.name))
+
+		return children
+
+	def traverse(self, colr: COLR, callback):
+		"""Depth-first traversal of graph rooted at self, callback on each node."""
+		if not callable(callback):
+			raise TypeError("callback must be callable")
+		stack = [self]
+		visited = set()
+		while stack:
+			current = stack.pop()
+			if id(current) in visited:
+				continue
+			callback(current)
+			visited.add(id(current))
+			stack.extend(reversed(current.getChildren(colr)))
 
 
 # For each subtable format there is a class. However, we don't really distinguish

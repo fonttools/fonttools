@@ -1,5 +1,3 @@
-from fontTools.misc.py23 import *
-from fontTools.misc.loggingTools import CapturingLogHandler
 import unittest
 
 from fontTools.pens.basePen import AbstractPen
@@ -43,7 +41,7 @@ def _reprKwargs(kwargs):
     items = []
     for key in sorted(kwargs):
         value = kwargs[key]
-        if isinstance(value, basestring):
+        if isinstance(value, str):
             items.append("%s='%s'" % (key, value))
         else:
             items.append("%s=%s" % (key, value))

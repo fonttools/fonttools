@@ -1,6 +1,7 @@
 from fontTools.misc.py23 import *
 from fontTools import ttLib
 from fontTools.ttLib import woff2
+from fontTools.ttLib.tables import _g_l_y_f
 from fontTools.ttLib.woff2 import (
 	WOFF2Reader, woff2DirectorySize, woff2DirectoryFormat,
 	woff2FlagsSize, woff2UnknownTagSize, woff2Base128MaxSize, WOFF2DirectoryEntry,
@@ -21,7 +22,10 @@ import pytest
 
 haveBrotli = False
 try:
-	import brotli
+	try:
+		import brotlicffi as brotli
+	except ImportError:
+		import brotli
 	haveBrotli = True
 except ImportError:
 	pass
@@ -200,7 +204,7 @@ def normalise_font(font, padding=4):
 	# drop DSIG but keep a copy
 	DSIG_copy = copy.deepcopy(font['DSIG'])
 	del font['DSIG']
-	# ovverride TTFont attributes
+	# override TTFont attributes
 	origFlavor = font.flavor
 	origRecalcBBoxes = font.recalcBBoxes
 	origRecalcTimestamp = font.recalcTimestamp
@@ -1217,6 +1221,20 @@ class WOFF2RoundtripTest(object):
 		assert tmp.getvalue() == tmp2.getvalue()
 		assert ttFont.flavor == "woff2"
 
+	def test_roundtrip_off_curve_despite_overlap_bit(self):
+		ttx = os.path.join(data_dir, "woff2_overlap_offcurve_in.ttx")
+		ttFont = ttLib.TTFont()
+		ttFont.importXML(ttx)
+
+		assert ttFont["glyf"]["A"].flags[0] == _g_l_y_f.flagOverlapSimple
+
+		ttFont.flavor = "woff2"
+		tmp = BytesIO()
+		ttFont.save(tmp)
+
+		_, ttFont2 = self.roundtrip(tmp)
+		assert ttFont2.flavor == "woff2"
+		assert ttFont2["glyf"]["A"].flags[0] == 0
 
 class MainTest(object):
 

@@ -5,6 +5,9 @@ markClass macron <anchor 2 2 contourpoint 22> @TOP_MARKS;
 markClass [cedilla] <anchor 3 3 contourpoint 33> @BOTTOM_MARKS;
 
 feature test {
-    pos mark [acute grave macron ogonek] <anchor 500 200> mark @TOP_MARKS <anchor 500 -80> mark @BOTTOM_MARKS;
-    pos mark [dieresis caron] <anchor 500 200> mark @TOP_MARKS;
+    pos mark [acute grave macron ogonek]
+        <anchor 500 200> mark @TOP_MARKS
+        <anchor 500 -80> mark @BOTTOM_MARKS;
+    pos mark [dieresis caron]
+        <anchor 500 200> mark @TOP_MARKS;
 } test;

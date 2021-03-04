@@ -700,6 +700,13 @@ class _TTGlyphSet(object):
 	"""
 
 	def __init__(self, ttFont, glyphs, glyphType):
+		"""Construct a new glyphset.
+
+		Args:
+			font (TTFont): The font object (used to get metrics).
+			glyphs (dict): A dictionary mapping glyph names to ``_TTGlyph`` objects.
+			glyphType (class): Either ``_TTGlyphCFF`` or ``_TTGlyphGlyf``.
+		"""
 		self._glyphs = glyphs
 		self._hmtx = ttFont['hmtx']
 		self._vmtx = ttFont['vmtx'] if 'vmtx' in ttFont else None
@@ -740,6 +747,13 @@ class _TTGlyph(object):
 	"""
 
 	def __init__(self, glyphset, glyph, horizontalMetrics, verticalMetrics=None):
+		"""Construct a new _TTGlyph.
+
+		Args:
+			glyphset (_TTGlyphSet): A glyphset object used to resolve components.
+			glyph (ttLib.tables._g_l_y_f.Glyph): The glyph object.
+			horizontalMetrics (int, int): The glyph's width and left sidebearing.
+		"""
 		self._glyphset = glyphset
 		self._glyph = glyph
 		self.width, self.lsb = horizontalMetrics
@@ -749,7 +763,7 @@ class _TTGlyph(object):
 			self.height, self.tsb = None, None
 
 	def draw(self, pen):
-		"""Draw the glyph onto Pen. See fontTools.pens.basePen for details
+		"""Draw the glyph onto ``pen``. See fontTools.pens.basePen for details
 		how that works.
 		"""
 		self._glyph.draw(pen)

@@ -11,6 +11,7 @@ include Lib/fontTools/ttLib/tables/table_API_readme.txt
 
 include *requirements.txt
 include tox.ini
+include mypy.ini
 include run-tests.sh
 
 recursive-include Lib/fontTools py.typed
@@ -39,3 +40,5 @@ recursive-include Tests *.txt README
 recursive-include Tests *.lwfn *.pfa *.pfb
 recursive-include Tests *.xml *.designspace *.bin
 recursive-include Tests *.afm
+recursive-include Tests *.json
+recursive-include Tests *.ufoz

@@ -1,4 +1,3 @@
-
 __all__ = ["FontBuilder"]
 
 """
@@ -136,192 +135,192 @@ from .ttLib.tables._c_m_a_p import cmap_classes
 from .ttLib.tables._n_a_m_e import NameRecord, makeName
 from .misc.timeTools import timestampNow
 import struct
+from collections import OrderedDict
 
 
 _headDefaults = dict(
-    tableVersion = 1.0,
-    fontRevision = 1.0,
-    checkSumAdjustment = 0,
-    magicNumber = 0x5F0F3CF5,
-    flags = 0x0003,
-    unitsPerEm = 1000,
-    created = 0,
-    modified = 0,
-    xMin = 0,
-    yMin = 0,
-    xMax = 0,
-    yMax = 0,
-    macStyle = 0,
-    lowestRecPPEM = 3,
-    fontDirectionHint = 2,
-    indexToLocFormat = 0,
-    glyphDataFormat = 0,
+    tableVersion=1.0,
+    fontRevision=1.0,
+    checkSumAdjustment=0,
+    magicNumber=0x5F0F3CF5,
+    flags=0x0003,
+    unitsPerEm=1000,
+    created=0,
+    modified=0,
+    xMin=0,
+    yMin=0,
+    xMax=0,
+    yMax=0,
+    macStyle=0,
+    lowestRecPPEM=3,
+    fontDirectionHint=2,
+    indexToLocFormat=0,
+    glyphDataFormat=0,
 )
 
 _maxpDefaultsTTF = dict(
-    tableVersion = 0x00010000,
-    numGlyphs = 0,
-    maxPoints = 0,
-    maxContours = 0,
-    maxCompositePoints = 0,
-    maxCompositeContours = 0,
-    maxZones = 2,
-    maxTwilightPoints = 0,
-    maxStorage = 0,
-    maxFunctionDefs = 0,
-    maxInstructionDefs = 0,
-    maxStackElements = 0,
-    maxSizeOfInstructions = 0,
-    maxComponentElements = 0,
-    maxComponentDepth = 0,
+    tableVersion=0x00010000,
+    numGlyphs=0,
+    maxPoints=0,
+    maxContours=0,
+    maxCompositePoints=0,
+    maxCompositeContours=0,
+    maxZones=2,
+    maxTwilightPoints=0,
+    maxStorage=0,
+    maxFunctionDefs=0,
+    maxInstructionDefs=0,
+    maxStackElements=0,
+    maxSizeOfInstructions=0,
+    maxComponentElements=0,
+    maxComponentDepth=0,
 )
 _maxpDefaultsOTF = dict(
-    tableVersion = 0x00005000,
-    numGlyphs = 0,
+    tableVersion=0x00005000,
+    numGlyphs=0,
 )
 
 _postDefaults = dict(
-    formatType = 3.0,
-    italicAngle = 0,
-    underlinePosition = 0,
-    underlineThickness = 0,
-    isFixedPitch = 0,
-    minMemType42 = 0,
-    maxMemType42 = 0,
-    minMemType1 = 0,
-    maxMemType1 = 0,
+    formatType=3.0,
+    italicAngle=0,
+    underlinePosition=0,
+    underlineThickness=0,
+    isFixedPitch=0,
+    minMemType42=0,
+    maxMemType42=0,
+    minMemType1=0,
+    maxMemType1=0,
 )
 
 _hheaDefaults = dict(
-    tableVersion = 0x00010000,
-    ascent = 0,
-    descent = 0,
-    lineGap = 0,
-    advanceWidthMax = 0,
-    minLeftSideBearing = 0,
-    minRightSideBearing = 0,
-    xMaxExtent = 0,
-    caretSlopeRise = 1,
-    caretSlopeRun = 0,
-    caretOffset = 0,
-    reserved0 = 0,
-    reserved1 = 0,
-    reserved2 = 0,
-    reserved3 = 0,
-    metricDataFormat = 0,
-    numberOfHMetrics = 0,
+    tableVersion=0x00010000,
+    ascent=0,
+    descent=0,
+    lineGap=0,
+    advanceWidthMax=0,
+    minLeftSideBearing=0,
+    minRightSideBearing=0,
+    xMaxExtent=0,
+    caretSlopeRise=1,
+    caretSlopeRun=0,
+    caretOffset=0,
+    reserved0=0,
+    reserved1=0,
+    reserved2=0,
+    reserved3=0,
+    metricDataFormat=0,
+    numberOfHMetrics=0,
 )
 
 _vheaDefaults = dict(
-    tableVersion = 0x00010000,
-    ascent = 0,
-    descent = 0,
-    lineGap = 0,
-    advanceHeightMax = 0,
-    minTopSideBearing = 0,
-    minBottomSideBearing = 0,
-    yMaxExtent = 0,
-    caretSlopeRise = 0,
-    caretSlopeRun = 0,
-    reserved0 = 0,
-    reserved1 = 0,
-    reserved2 = 0,
-    reserved3 = 0,
-    reserved4 = 0,
-    metricDataFormat = 0,
-    numberOfVMetrics = 0,
+    tableVersion=0x00010000,
+    ascent=0,
+    descent=0,
+    lineGap=0,
+    advanceHeightMax=0,
+    minTopSideBearing=0,
+    minBottomSideBearing=0,
+    yMaxExtent=0,
+    caretSlopeRise=0,
+    caretSlopeRun=0,
+    reserved0=0,
+    reserved1=0,
+    reserved2=0,
+    reserved3=0,
+    reserved4=0,
+    metricDataFormat=0,
+    numberOfVMetrics=0,
 )
 
 _nameIDs = dict(
-                         copyright = 0,
-                        familyName = 1,
-                         styleName = 2,
-              uniqueFontIdentifier = 3,
-                          fullName = 4,
-                           version = 5,
-                            psName = 6,
-                         trademark = 7,
-                      manufacturer = 8,
-                          designer = 9,
-                       description = 10,
-                         vendorURL = 11,
-                       designerURL = 12,
-                licenseDescription = 13,
-                    licenseInfoURL = 14,
-                        # reserved = 15,
-                 typographicFamily = 16,
-              typographicSubfamily = 17,
-                compatibleFullName = 18,
-                        sampleText = 19,
-         postScriptCIDFindfontName = 20,
-                     wwsFamilyName = 21,
-                  wwsSubfamilyName = 22,
-            lightBackgroundPalette = 23,
-             darkBackgroundPalette = 24,
-    variationsPostScriptNamePrefix = 25,
+    copyright=0,
+    familyName=1,
+    styleName=2,
+    uniqueFontIdentifier=3,
+    fullName=4,
+    version=5,
+    psName=6,
+    trademark=7,
+    manufacturer=8,
+    designer=9,
+    description=10,
+    vendorURL=11,
+    designerURL=12,
+    licenseDescription=13,
+    licenseInfoURL=14,
+    # reserved = 15,
+    typographicFamily=16,
+    typographicSubfamily=17,
+    compatibleFullName=18,
+    sampleText=19,
+    postScriptCIDFindfontName=20,
+    wwsFamilyName=21,
+    wwsSubfamilyName=22,
+    lightBackgroundPalette=23,
+    darkBackgroundPalette=24,
+    variationsPostScriptNamePrefix=25,
 )
 
 # to insert in setupNameTable doc string:
 # print("\n".join(("%s (nameID %s)" % (k, v)) for k, v in sorted(_nameIDs.items(), key=lambda x: x[1])))
 
 _panoseDefaults = dict(
-    bFamilyType = 0,
-    bSerifStyle = 0,
-    bWeight = 0,
-    bProportion = 0,
-    bContrast = 0,
-    bStrokeVariation = 0,
-    bArmStyle = 0,
-    bLetterForm = 0,
-    bMidline = 0,
-    bXHeight = 0,
+    bFamilyType=0,
+    bSerifStyle=0,
+    bWeight=0,
+    bProportion=0,
+    bContrast=0,
+    bStrokeVariation=0,
+    bArmStyle=0,
+    bLetterForm=0,
+    bMidline=0,
+    bXHeight=0,
 )
 
 _OS2Defaults = dict(
-    version = 3,
-    xAvgCharWidth = 0,
-    usWeightClass = 400,
-    usWidthClass = 5,
-    fsType = 0x0004,  # default: Preview & Print embedding
-    ySubscriptXSize = 0,
-    ySubscriptYSize = 0,
-    ySubscriptXOffset = 0,
-    ySubscriptYOffset = 0,
-    ySuperscriptXSize = 0,
-    ySuperscriptYSize = 0,
-    ySuperscriptXOffset = 0,
-    ySuperscriptYOffset = 0,
-    yStrikeoutSize = 0,
-    yStrikeoutPosition = 0,
-    sFamilyClass = 0,
-    panose = _panoseDefaults,
-    ulUnicodeRange1 = 0,
-    ulUnicodeRange2 = 0,
-    ulUnicodeRange3 = 0,
-    ulUnicodeRange4 = 0,
-    achVendID = "????",
-    fsSelection = 0,
-    usFirstCharIndex = 0,
-    usLastCharIndex = 0,
-    sTypoAscender = 0,
-    sTypoDescender = 0,
-    sTypoLineGap = 0,
-    usWinAscent = 0,
-    usWinDescent = 0,
-    ulCodePageRange1 = 0,
-    ulCodePageRange2 = 0,
-    sxHeight = 0,
-    sCapHeight = 0,
-    usDefaultChar = 0,  # .notdef
-    usBreakChar = 32,   # space
-    usMaxContext = 0,
-    usLowerOpticalPointSize = 0,
-    usUpperOpticalPointSize = 0,
+    version=3,
+    xAvgCharWidth=0,
+    usWeightClass=400,
+    usWidthClass=5,
+    fsType=0x0004,  # default: Preview & Print embedding
+    ySubscriptXSize=0,
+    ySubscriptYSize=0,
+    ySubscriptXOffset=0,
+    ySubscriptYOffset=0,
+    ySuperscriptXSize=0,
+    ySuperscriptYSize=0,
+    ySuperscriptXOffset=0,
+    ySuperscriptYOffset=0,
+    yStrikeoutSize=0,
+    yStrikeoutPosition=0,
+    sFamilyClass=0,
+    panose=_panoseDefaults,
+    ulUnicodeRange1=0,
+    ulUnicodeRange2=0,
+    ulUnicodeRange3=0,
+    ulUnicodeRange4=0,
+    achVendID="????",
+    fsSelection=0,
+    usFirstCharIndex=0,
+    usLastCharIndex=0,
+    sTypoAscender=0,
+    sTypoDescender=0,
+    sTypoLineGap=0,
+    usWinAscent=0,
+    usWinDescent=0,
+    ulCodePageRange1=0,
+    ulCodePageRange2=0,
+    sxHeight=0,
+    sCapHeight=0,
+    usDefaultChar=0,  # .notdef
+    usBreakChar=32,  # space
+    usMaxContext=0,
+    usLowerOpticalPointSize=0,
+    usUpperOpticalPointSize=0,
 )
 
 
 class FontBuilder(object):
-
     def __init__(self, unitsPerEm=None, font=None, isTTF=True):
         """Initialize a FontBuilder instance.
 
@@ -395,7 +394,7 @@ class FontBuilder(object):
         """
         subTables = []
         highestUnicode = max(cmapping)
-        if highestUnicode > 0xffff:
+        if highestUnicode > 0xFFFF:
             cmapping_3_1 = dict((k, v) for k, v in cmapping.items() if k < 0x10000)
             subTable_3_10 = buildCmapSubTable(cmapping, 12, 3, 10)
             subTables.append(subTable_3_10)
@@ -408,7 +407,9 @@ class FontBuilder(object):
         except struct.error:
             # format 4 overflowed, fall back to format 12
             if not allowFallback:
-                raise ValueError("cmap format 4 subtable overflowed; sort glyph order by unicode to fix.")
+                raise ValueError(
+                    "cmap format 4 subtable overflowed; sort glyph order by unicode to fix."
+                )
             format = 12
             subTable_3_1 = buildCmapSubTable(cmapping_3_1, format, 3, 1)
         subTables.append(subTable_3_1)
@@ -489,17 +490,33 @@ class FontBuilder(object):
         """
         if "xAvgCharWidth" not in values:
             gs = self.font.getGlyphSet()
-            widths = [gs[glyphName].width for glyphName in gs.keys() if gs[glyphName].width > 0]
+            widths = [
+                gs[glyphName].width
+                for glyphName in gs.keys()
+                if gs[glyphName].width > 0
+            ]
             values["xAvgCharWidth"] = int(round(sum(widths) / float(len(widths))))
         self._initTableWithValues("OS/2", _OS2Defaults, values)
-        if not ("ulUnicodeRange1" in values or "ulUnicodeRange2" in values or
-                "ulUnicodeRange3" in values or "ulUnicodeRange3" in values):
-            assert "cmap" in self.font, "the 'cmap' table must be setup before the 'OS/2' table"
+        if not (
+            "ulUnicodeRange1" in values
+            or "ulUnicodeRange2" in values
+            or "ulUnicodeRange3" in values
+            or "ulUnicodeRange3" in values
+        ):
+            assert (
+                "cmap" in self.font
+            ), "the 'cmap' table must be setup before the 'OS/2' table"
             self.font["OS/2"].recalcUnicodeRanges(self.font)
 
     def setupCFF(self, psName, fontInfo, charStringsDict, privateDict):
-        from .cffLib import CFFFontSet, TopDictIndex, TopDict, CharStrings, \
-                GlobalSubrsIndex, PrivateDict
+        from .cffLib import (
+            CFFFontSet,
+            TopDictIndex,
+            TopDict,
+            CharStrings,
+            GlobalSubrsIndex,
+            PrivateDict,
+        )
 
         assert not self.isTTF
         self.font.sfntVersion = "OTTO"
@@ -528,7 +545,9 @@ class FontBuilder(object):
             scale = 1 / self.font["head"].unitsPerEm
             topDict.FontMatrix = [scale, 0, 0, scale, 0, 0]
 
-        charStrings = CharStrings(None, topDict.charset, globalSubrs, private, fdSelect, fdArray)
+        charStrings = CharStrings(
+            None, topDict.charset, globalSubrs, private, fdSelect, fdArray
+        )
         for glyphName, charString in charStringsDict.items():
             charString.private = private
             charString.globalSubrs = globalSubrs
@@ -541,8 +560,16 @@ class FontBuilder(object):
         self.font["CFF "].cff = fontSet
 
     def setupCFF2(self, charStringsDict, fdArrayList=None, regions=None):
-        from .cffLib import CFFFontSet, TopDictIndex, TopDict, CharStrings, \
-                GlobalSubrsIndex, PrivateDict, FDArrayIndex, FontDict
+        from .cffLib import (
+            CFFFontSet,
+            TopDictIndex,
+            TopDict,
+            CharStrings,
+            GlobalSubrsIndex,
+            PrivateDict,
+            FDArrayIndex,
+            FontDict,
+        )
 
         assert not self.isTTF
         self.font.sfntVersion = "OTTO"
@@ -628,10 +655,40 @@ class FontBuilder(object):
             self.calcGlyphBounds()
 
     def setupFvar(self, axes, instances):
+        """Adds an font variations table to the font.
+
+        Args:
+            axes (list): See below.
+            instances (list): See below.
+
+        ``axes`` should be a list of axes, with each axis either supplied as
+        a py:class:`.designspaceLib.AxisDescriptor` object, or a tuple in the
+        format ```tupletag, minValue, defaultValue, maxValue, name``.
+        The ``name`` is either a string, or a dict, mapping language codes
+        to strings, to allow localized name table entries.
+
+        ```instances`` should be a list of instances, with each instance either
+        supplied as a py:class:`.designspaceLib.InstanceDescriptor` object, or a
+        dict with keys ``location`` (mapping of axis tags to float values),
+        ``stylename`` and (optionally) ``postscriptfontname``.
+        The ``stylename`` is either a string, or a dict, mapping language codes
+        to strings, to allow localized name table entries.
+        """
+
         addFvar(self.font, axes, instances)
 
+    def setupAvar(self, axes):
+        """Adds an axis variations table to the font.
+
+        Args:
+            axes (list): A list of py:class:`.designspaceLib.AxisDescriptor` objects.
+        """
+        from .varLib import _add_avar
+
+        _add_avar(self.font, OrderedDict(enumerate(axes)))  # Only values are used
+
     def setupGvar(self, variations):
-        gvar = self.font["gvar"] = newTable('gvar')
+        gvar = self.font["gvar"] = newTable("gvar")
         gvar.version = 1
         gvar.reserved = 0
         gvar.variations = variations
@@ -650,7 +707,7 @@ class FontBuilder(object):
         The `metrics` argument must be a dict, mapping glyph names to
         `(width, leftSidebearing)` tuples.
         """
-        self.setupMetrics('hmtx', metrics)
+        self.setupMetrics("hmtx", metrics)
 
     def setupVerticalMetrics(self, metrics):
         """Create a new `vmtx` table, for horizontal metrics.
@@ -658,7 +715,7 @@ class FontBuilder(object):
         The `metrics` argument must be a dict, mapping glyph names to
         `(height, topSidebearing)` tuples.
         """
-        self.setupMetrics('vmtx', metrics)
+        self.setupMetrics("vmtx", metrics)
 
     def setupMetrics(self, tableTag, metrics):
         """See `setupHorizontalMetrics()` and `setupVerticalMetrics()`."""
@@ -699,8 +756,14 @@ class FontBuilder(object):
                     bag[vorg] = 1
                 else:
                     bag[vorg] += 1
-            defaultVerticalOrigin = sorted(bag, key=lambda vorg: bag[vorg], reverse=True)[0]
-        self._initTableWithValues("VORG", {}, dict(VOriginRecords={}, defaultVertOriginY=defaultVerticalOrigin))
+            defaultVerticalOrigin = sorted(
+                bag, key=lambda vorg: bag[vorg], reverse=True
+            )[0]
+        self._initTableWithValues(
+            "VORG",
+            {},
+            dict(VOriginRecords={}, defaultVertOriginY=defaultVerticalOrigin),
+        )
         vorgTable = self.font["VORG"]
         vorgTable.majorVersion = 1
         vorgTable.minorVersion = 0
@@ -711,7 +774,7 @@ class FontBuilder(object):
         """Create a new `post` table and initialize it with default values,
         which can be overridden by keyword arguments.
         """
-        isCFF2 = 'CFF2' in self.font
+        isCFF2 = "CFF2" in self.font
         postTable = self._initTableWithValues("post", _postDefaults, values)
         if (self.isTTF or isCFF2) and keepGlyphNames:
             postTable.formatType = 2.0
@@ -735,10 +798,10 @@ class FontBuilder(object):
         happy. This does not properly sign the font.
         """
         values = dict(
-            ulVersion = 1,
-            usFlag = 0,
-            usNumSigs = 0,
-            signatureRecords = [],
+            ulVersion=1,
+            usFlag=0,
+            usNumSigs=0,
+            signatureRecords=[],
         )
         self._initTableWithValues("DSIG", {}, values)
 
@@ -754,7 +817,10 @@ class FontBuilder(object):
         `fontTools.feaLib` for details.
         """
         from .feaLib.builder import addOpenTypeFeaturesFromString
-        addOpenTypeFeaturesFromString(self.font, features, filename=filename, tables=tables)
+
+        addOpenTypeFeaturesFromString(
+            self.font, features, filename=filename, tables=tables
+        )
 
     def addFeatureVariations(self, conditionalSubstitutions, featureTag="rvrn"):
         """Add conditional substitutions to a Variable Font.
@@ -770,14 +836,17 @@ class FontBuilder(object):
             self.font, conditionalSubstitutions, featureTag=featureTag
         )
 
-    def setupCOLR(self, colorLayers):
+    def setupCOLR(self, colorLayers, version=None, varStore=None):
         """Build new COLR table using color layers dictionary.
 
         Cf. `fontTools.colorLib.builder.buildCOLR`.
         """
         from fontTools.colorLib.builder import buildCOLR
 
-        self.font["COLR"] = buildCOLR(colorLayers)
+        glyphMap = self.font.getReverseGlyphMap()
+        self.font["COLR"] = buildCOLR(
+            colorLayers, version=version, glyphMap=glyphMap, varStore=varStore
+        )
 
     def setupCPAL(
         self,
@@ -800,7 +869,7 @@ class FontBuilder(object):
             paletteTypes=paletteTypes,
             paletteLabels=paletteLabels,
             paletteEntryLabels=paletteEntryLabels,
-            nameTable=self.font.get("name")
+            nameTable=self.font.get("name"),
         )
 
     def setupStat(self, axes, locations=None, elidedFallbackName=2):
@@ -810,6 +879,7 @@ class FontBuilder(object):
         the arguments.
         """
         from .otlLib.builder import buildStatTable
+
         buildStatTable(self.font, axes, locations, elidedFallbackName)
 
 
@@ -823,32 +893,58 @@ def buildCmapSubTable(cmapping, format, platformID, platEncID):
 
 
 def addFvar(font, axes, instances):
-    from .misc.py23 import Tag, tounicode
     from .ttLib.tables._f_v_a_r import Axis, NamedInstance
+    from .designspaceLib import AxisDescriptor
 
     assert axes
 
-    fvar = newTable('fvar')
-    nameTable = font['name']
+    fvar = newTable("fvar")
+    nameTable = font["name"]
 
-    for tag, minValue, defaultValue, maxValue, name in axes:
+    for axis_def in axes:
         axis = Axis()
-        axis.axisTag = Tag(tag)
-        axis.minValue, axis.defaultValue, axis.maxValue = minValue, defaultValue, maxValue
-        axis.axisNameID = nameTable.addName(tounicode(name))
+
+        if isinstance(axis_def, tuple):
+            (
+                axis.axisTag,
+                axis.minValue,
+                axis.defaultValue,
+                axis.maxValue,
+                name,
+            ) = axis_def
+        else:
+            (axis.axisTag, axis.minValue, axis.defaultValue, axis.maxValue, name) = (
+                axis_def.tag,
+                axis_def.minimum,
+                axis_def.default,
+                axis_def.maximum,
+                axis_def.name,
+            )
+
+        if isinstance(name, str):
+            name = dict(en=name)
+
+        axis.axisNameID = nameTable.addMultilingualName(name, ttFont=font)
         fvar.axes.append(axis)
 
     for instance in instances:
-        coordinates = instance['location']
-        name = tounicode(instance['stylename'])
-        psname = instance.get('postscriptfontname')
+        if isinstance(instance, dict):
+            coordinates = instance["location"]
+            name = instance["stylename"]
+            psname = instance.get("postscriptfontname")
+        else:
+            coordinates = instance.location
+            name = instance.localisedStyleName or instance.styleName
+            psname = instance.postScriptFontName
+
+        if isinstance(name, str):
+            name = dict(en=name)
 
         inst = NamedInstance()
-        inst.subfamilyNameID = nameTable.addName(name)
+        inst.subfamilyNameID = nameTable.addMultilingualName(name, ttFont=font)
         if psname is not None:
-            psname = tounicode(psname)
             inst.postscriptNameID = nameTable.addName(psname)
         inst.coordinates = coordinates
         fvar.instances.append(inst)
 
-    font['fvar'] = fvar
+    font["fvar"] = fvar

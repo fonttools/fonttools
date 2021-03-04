@@ -543,7 +543,7 @@ def load(
     if not hasattr(fp, "read"):
         raise AttributeError("'%s' object has no attribute 'read'" % type(fp).__name__)
     target = PlistTarget(use_builtin_types=use_builtin_types, dict_type=dict_type)
-    parser = etree.XMLParser(target=target)  # type: ignore
+    parser = etree.XMLParser(target=target)
     result = etree.parse(fp, parser=parser)
     # lxml returns the target object directly, while ElementTree wraps
     # it as the root of an ElementTree object
