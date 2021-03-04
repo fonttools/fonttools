@@ -2,8 +2,8 @@
 
 from fontTools.varLib.models import VariationModel, supportScalar
 from fontTools.designspaceLib import DesignSpaceDocument
-from mpl_toolkits.mplot3d import axes3d
 from matplotlib import pyplot
+from mpl_toolkits.mplot3d import axes3d
 from itertools import cycle
 import math
 import logging
@@ -68,10 +68,10 @@ def plotLocations(locations, fig, names=None, **kwargs):
 
 
 def _plotLocations2D(model, axis, fig, cols, rows, names, **kwargs):
+	subplot = fig.add_subplot(111)
 	for i, (support, color, name) in enumerate(
 		zip(model.supports, cycle(pyplot.cm.Set1.colors), cycle(names))
 	):
-		subplot = fig.add_subplot(rows, cols, i + 1)
 		if name is not None:
 			subplot.set_title(name)
 		subplot.set_xlabel(axis)
@@ -91,10 +91,10 @@ def _plotLocations2D(model, axis, fig, cols, rows, names, **kwargs):
 def _plotLocations3D(model, axes, fig, rows, cols, names, **kwargs):
 	ax1, ax2 = axes
 
+	axis3D = fig.add_subplot(111, projection='3d')
 	for i, (support, color, name) in enumerate(
 		zip(model.supports, cycle(pyplot.cm.Set1.colors), cycle(names))
 	):
-		axis3D = fig.add_subplot(rows, cols, i + 1, projection='3d')
 		if name is not None:
 			axis3D.set_title(name)
 		axis3D.set_xlabel(ax1)

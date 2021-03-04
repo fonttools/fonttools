@@ -1,4 +1,4 @@
-from fontTools.misc.fixedTools import otRound
+from fontTools.misc.roundTools import noRound, otRound
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.varLib.models import supportScalar
 from fontTools.varLib.builder import (buildVarRegionList, buildVarStore,
@@ -83,15 +83,12 @@ class OnlineVarStoreBuilder(object):
 
 
 	def storeMasters(self, master_values):
-		deltas = self._model.getDeltas(master_values)
-		base = otRound(deltas.pop(0))
-		return base, self.storeDeltas(deltas)
+		deltas = self._model.getDeltas(master_values, round=round)
+		base = deltas.pop(0)
+		return base, self.storeDeltas(deltas, round=noRound)
 
-	def storeDeltas(self, deltas):
-		# Pity that this exists here, since VarData_addItem
-		# does the same.  But to look into our cache, it's
-		# good to adjust deltas here as well...
-		deltas = [otRound(d) for d in deltas]
+	def storeDeltas(self, deltas, *, round=round):
+		deltas = [round(d) for d in deltas]
 		if len(deltas) == len(self._supports) + 1:
 			deltas = tuple(deltas[1:])
 		else:
@@ -109,14 +106,14 @@ class OnlineVarStoreBuilder(object):
 			# Full array. Start new one.
 			self._add_VarData()
 			return self.storeDeltas(deltas)
-		self._data.addItem(deltas)
+		self._data.addItem(deltas, round=noRound)
 
 		varIdx = (self._outer << 16) + inner
 		self._cache[deltas] = varIdx
 		return varIdx
 
-def VarData_addItem(self, deltas):
-	deltas = [otRound(d) for d in deltas]
+def VarData_addItem(self, deltas, *, round=round):
+	deltas = [round(d) for d in deltas]
 
 	countUs = self.VarRegionCount
 	countThem = len(deltas)

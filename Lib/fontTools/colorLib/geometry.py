@@ -1,7 +1,7 @@
 """Helpers for manipulating 2D points and vectors in COLR table."""
 
 from math import copysign, cos, hypot, pi
-from fontTools.misc.fixedTools import otRound
+from fontTools.misc.roundTools import otRound
 
 
 def _vector_between(origin, target):

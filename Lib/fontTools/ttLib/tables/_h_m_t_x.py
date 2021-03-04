@@ -1,5 +1,5 @@
 from fontTools.misc.py23 import *
-from fontTools.misc.fixedTools import otRound
+from fontTools.misc.roundTools import otRound
 from fontTools import ttLib
 from fontTools.misc.textTools import safeEval
 from . import DefaultTable
