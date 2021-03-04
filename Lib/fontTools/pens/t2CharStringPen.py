@@ -20,15 +20,14 @@ def t2c_round(number, tolerance=0.5):
         # else return the value un-rounded
         return number
 
-def makeRoundFunc(tolerance):
+def roundFunc(tolerance):
     if tolerance < 0:
         raise ValueError("Rounding tolerance must be positive")
 
-    def roundPoint(point):
-        x, y = point
-        return t2c_round(x, tolerance), t2c_round(y, tolerance)
+    def round(v):
+        return t2c_round(v, tolerance)
 
-    return roundPoint
+    return round
 
 
 class T2CharStringPen(BasePen):
@@ -44,7 +43,7 @@ class T2CharStringPen(BasePen):
 
     def __init__(self, width, glyphSet, roundTolerance=0.5, CFF2=False):
         super(T2CharStringPen, self).__init__(glyphSet)
-        self.roundPoint = makeRoundFunc(roundTolerance)
+        self.round = roundFunc(roundTolerance)
         self._CFF2 = CFF2
         self._width = width
         self._commands = []
@@ -52,7 +51,7 @@ class T2CharStringPen(BasePen):
 
     def _p(self, pt):
         p0 = self._p0
-        pt = self._p0 = self.roundPoint(pt)
+        pt = self._p0 = (self.round(pt[0]), self.round(pt[1]))
         return [pt[0]-p0[0], pt[1]-p0[1]]
 
     def _moveTo(self, pt):
