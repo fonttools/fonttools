@@ -35,11 +35,6 @@ def test_Vector():
     assert v1.dot(v2) == 18
     v = Vector((2, 4))
     assert round(v / 3) == (1, 1)
-    with pytest.raises(
-        AttributeError,
-        match="'Vector' object has no attribute 'newAttr'",
-    ):
-        v.newAttr = 12
 
 
 def test_deprecated():
