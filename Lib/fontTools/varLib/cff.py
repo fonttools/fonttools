@@ -22,7 +22,9 @@ from fontTools.misc.psCharStrings import T2CharString, T2OutlineExtractor
 from fontTools.pens.t2CharStringPen import T2CharStringPen
 from functools import partial
 
-from .errors import VarLibCFFDictMergeError, VarLibCFFPointTypeMergeError, VarLibMergeError
+from .errors import (
+	VarLibCFFDictMergeError, VarLibCFFPointTypeMergeError,
+	VarLibCFFHintTypeMergeError,VarLibMergeError)
 
 
 # Backwards compatibility
@@ -531,7 +533,7 @@ class CFF2CharStringMergePen(T2CharStringPen):
 		else:
 			cmd = self._commands[self.pt_index]
 			if cmd[0] != hint_type:
-				raise VarLibCFFPointTypeMergeError(hint_type, self.pt_index, len(cmd[1]),
+				raise VarLibCFFHintTypeMergeError(hint_type, self.pt_index, len(cmd[1]),
 					cmd[0], self.glyphName)
 			cmd[1].append(args)
 		self.pt_index += 1
@@ -540,14 +542,14 @@ class CFF2CharStringMergePen(T2CharStringPen):
 		# For hintmask, fonttools.cffLib.specializer.py expects
 		# each of these to be represented by two sequential commands:
 		# first holding only the operator name, with an empty arg list,
-		# second with an empty string as the op name, and  the mask arg list.
+		# second with an empty string as the op name, and the mask arg list.
 		if self.m_index == 0:
 			self._commands.append([hint_type, []])
 			self._commands.append(["", [abs_args]])
 		else:
 			cmd = self._commands[self.pt_index]
 			if cmd[0] != hint_type:
-				raise VarLibCFFPointTypeMergeError(hint_type, self.pt_index, len(cmd[1]),
+				raise VarLibCFFHintTypeMergeError(hint_type, self.pt_index, len(cmd[1]),
 					cmd[0], self.glyphName)
 			self.pt_index += 1
 			cmd = self._commands[self.pt_index]
