@@ -197,12 +197,13 @@ class VariationModel(object):
 	  7: 0.6666666666666667}]
 	"""
 
-	def __init__(self, locations, axisOrder=None):
+	def __init__(self, locations, axisOrder=None, preferSimpleRegions=False):
 		if len(set(tuple(sorted(l.items())) for l in locations)) != len(locations):
 			raise VariationModelError("Locations must be unique.")
 
 		self.origLocations = locations
 		self.axisOrder = axisOrder if axisOrder is not None else []
+		self.preferSimpleRegions = preferSimpleRegions
 
 		locations = [{k:v for k,v in loc.items() if v != 0.} for loc in locations]
 		keyFunc = self.getMasterLocationsSortKeyFunc(locations, axisOrder=self.axisOrder)
@@ -212,7 +213,11 @@ class VariationModel(object):
 		self.mapping = [self.locations.index(l) for l in locations]
 		self.reverseMapping = [locations.index(l) for l in self.locations]
 
-		self._computeMasterSupports(keyFunc.axisPoints)
+		if preferSimpleRegions and self._isSimpleModel(locations, keyFunc.axisPoints):
+			self._computeMasterSupportsSimple(keyFunc.axisPoints)
+		else:
+			self._computeMasterSupports(keyFunc.axisPoints)
+		self._computeDeltaWeights()
 		self._subModels = {}
 
 	def getSubModel(self, items):
@@ -221,7 +226,11 @@ class VariationModel(object):
 		key = tuple(v is not None for v in items)
 		subModel = self._subModels.get(key)
 		if subModel is None:
-			subModel = VariationModel(subList(key, self.origLocations), self.axisOrder)
+			subModel = VariationModel(
+				subList(key, self.origLocations),
+				self.axisOrder,
+				self.preferSimpleRegions,
+			)
 			self._subModels[key] = subModel
 		return subModel, subList(key, items)
 
@@ -280,6 +289,42 @@ class VariationModel(object):
 		self._subModels = {}
 		return new_list
 
+	@staticmethod
+	def _isSimpleModel(locations, axisPoints):
+		numLocations = 1
+		for points in axisPoints.values():
+			numLocations *= len(points)
+		if numLocations != len(locations):
+			return False
+		allAxisPoints = {}
+		for loc in locations:
+			for axis, value in loc.items():
+				if axis not in allAxisPoints:
+					allAxisPoints[axis] = {0.0}
+				allAxisPoints[axis].add(value)
+		return allAxisPoints == axisPoints
+
+	def _computeMasterSupportsSimple(self, axisPoints):
+		axisPoints = {axis: sorted(points) for axis, points in axisPoints.items()}
+		supports = []
+		for i, loc in enumerate(self.locations):
+			region = {}
+			for axis, peak in loc.items():
+				assert peak != 0
+				points = axisPoints[axis]
+				peakIndex = points.index(peak)
+				if peakIndex == 0:
+					minimum = peak
+				else:
+					minimum = points[peakIndex - 1]
+				if peakIndex == len(points) - 1:
+					maximum = peak
+				else:
+					maximum = points[peakIndex + 1]
+				region[axis] = (minimum, peak, maximum)
+			supports.append(region)
+		self.supports = supports
+
 	def _computeMasterSupports(self, axisPoints):
 		supports = []
 		regions = self._locationsToRegions()
@@ -332,7 +377,6 @@ class VariationModel(object):
 					region[axis] = triple
 			supports.append(region)
 		self.supports = supports
-		self._computeDeltaWeights()
 
 	def _locationsToRegions(self):
 		locations = self.locations
