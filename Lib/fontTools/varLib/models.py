@@ -313,14 +313,8 @@ class VariationModel(object):
 				assert peak != 0
 				points = axisPoints[axis]
 				peakIndex = points.index(peak)
-				if peakIndex == 0:
-					lower = peak
-				else:
-					lower = points[peakIndex - 1]
-				if peakIndex == len(points) - 1:
-					upper = peak
-				else:
-					upper = points[peakIndex + 1]
+				lower = peak if peakIndex == 0 else points[peakIndex - 1]
+				upper = peak if peakIndex == len(points) - 1 else points[peakIndex + 1]
 				region[axis] = (lower, peak, upper)
 			supports.append(region)
 		self.supports = supports
