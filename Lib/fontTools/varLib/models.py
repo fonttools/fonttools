@@ -5,6 +5,7 @@ __all__ = ['nonNone', 'allNone', 'allEqual', 'allEqualTo', 'subList',
 	   'supportScalar',
 	   'VariationModel']
 
+from collections import defaultdict
 from fontTools.misc.roundTools import noRound
 from .errors import VariationModelError
 
@@ -213,8 +214,8 @@ class VariationModel(object):
 		self.mapping = [self.locations.index(l) for l in locations]
 		self.reverseMapping = [locations.index(l) for l in self.locations]
 
-		if preferSimpleRegions and self._isSimpleModel(locations, keyFunc.axisPoints):
-			self._computeMasterSupportsSimple(keyFunc.axisPoints)
+		if preferSimpleRegions and self._isSimpleModel(locations):
+			self._computeMasterSupportsSimple()
 		else:
 			self._computeMasterSupports(keyFunc.axisPoints)
 		self._computeDeltaWeights()
@@ -290,21 +291,32 @@ class VariationModel(object):
 		return new_list
 
 	@staticmethod
-	def _isSimpleModel(locations, axisPoints):
-		numLocations = 1
-		for points in axisPoints.values():
-			numLocations *= len(points)
-		if numLocations != len(locations):
-			return False
-		allAxisPoints = {}
+	def _isSimpleModel(locations):
+		#
+		# A model is "simple" when any two axes that actively cooperate
+		# (ie. have masters at non-zero positions for both axes) have a
+		# complete set of intermediates. For example, if axes "a" and "b"
+		# cooperate, and axis "a" has masters at 0, 0.5 and 1 from the
+		# neutral master, it must have those intermediates at all values
+		# for axis "b" as well.
+		#
+		# This property allows us to use a simpler algorithm to compute
+		# the master supports, which will have fewer overlapping regions.
+		#
+		axisPoints = defaultdict(lambda: defaultdict(lambda: {0.0}))
 		for loc in locations:
 			for axis, value in loc.items():
-				if axis not in allAxisPoints:
-					allAxisPoints[axis] = {0.0}
-				allAxisPoints[axis].add(value)
-		return allAxisPoints == axisPoints
+				offAxisLoc = loc.copy()
+				offAxisLoc.pop(axis)
+				offAxisLoc = tuple(sorted(offAxisLoc.items()))
+				axisPoints[axis][offAxisLoc].add(value)
+		return all(allEqual(sorted(vv) for vv in v.values()) for v in axisPoints.values())
 
-	def _computeMasterSupportsSimple(self, axisPoints):
+	def _computeMasterSupportsSimple(self):
+		axisPoints = defaultdict(lambda: {0.0})
+		for loc in self.locations:
+			for axis, value in loc.items():
+				axisPoints[axis].add(value)
 		axisPoints = {axis: sorted(points) for axis, points in axisPoints.items()}
 		supports = []
 		for i, loc in enumerate(self.locations):

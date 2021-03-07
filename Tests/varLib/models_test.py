@@ -142,11 +142,17 @@ class VariationModelTest(object):
                     {'foo': 0.5},
                     {'foo': 0.75},
                     {'foo': 1.0},
+                    {'bar': 0.25},
+                    {'bar': 0.75},
+                    {'bar': 1.0},
                 ],
                 None,
                 False,
                 [
                     {},
+                    {'bar': 0.25},
+                    {'bar': 0.75},
+                    {'bar': 1.0},
                     {'foo': 0.25},
                     {'foo': 0.5},
                     {'foo': 0.75},
@@ -154,6 +160,9 @@ class VariationModelTest(object):
                 ],
                 [
                     {},
+                    {'bar': (0, 0.25, 1.0)},
+                    {'bar': (0.25, 0.75, 1.0)},
+                    {'bar': (0.75, 1.0, 1.0)},
                     {'foo': (0, 0.25, 1.0)},
                     {'foo': (0.25, 0.5, 1.0)},
                     {'foo': (0.5, 0.75, 1.0)},
@@ -162,8 +171,11 @@ class VariationModelTest(object):
                 [
                     {},
                     {0: 1.0},
-                    {0: 1.0, 1: 0.6666666666666666},
-                    {0: 1.0, 1: 0.3333333333333333, 2: 0.5},
+                    {0: 1.0, 1: 0.3333333333333333},
+                    {0: 1.0},
+                    {0: 1.0},
+                    {0: 1.0, 4: 0.6666666666666666},
+                    {0: 1.0, 4: 0.3333333333333333, 5: 0.5},
                     {0: 1.0},
                 ],
             ),
@@ -174,11 +186,17 @@ class VariationModelTest(object):
                     {'foo': 0.5},
                     {'foo': 0.75},
                     {'foo': 1.0},
+                    {'bar': 0.25},
+                    {'bar': 0.75},
+                    {'bar': 1.0},
                 ],
                 None,
                 True,
                 [
                     {},
+                    {'bar': 0.25},
+                    {'bar': 0.75},
+                    {'bar': 1.0},
                     {'foo': 0.25},
                     {'foo': 0.5},
                     {'foo': 0.75},
@@ -186,6 +204,9 @@ class VariationModelTest(object):
                 ],
                 [
                     {},
+                    {'bar': (0, 0.25, 0.75)},
+                    {'bar': (0.25, 0.75, 1.0)},
+                    {'bar': (0.75, 1.0, 1.0)},
                     {'foo': (0, 0.25, 0.5)},
                     {'foo': (0.25, 0.5, 0.75)},
                     {'foo': (0.5, 0.75, 1.0)},
@@ -193,6 +214,9 @@ class VariationModelTest(object):
                 ],
                 [
                     {},
+                    {0: 1.0},
+                    {0: 1.0},
+                    {0: 1.0},
                     {0: 1.0},
                     {0: 1.0},
                     {0: 1.0},
@@ -222,41 +246,37 @@ class VariationModelTest(object):
                 ]
             )
 
-    @staticmethod
-    def _make_test_locations(axisPoints, steps):
-        locations = [[]]
-        for axis, points in axisPoints.items():
-            minValue = min(points)
-            extent = max(points) - minValue
-            values = [
-                (axis, minValue + extent * i / (steps - 1))
-                for i in range(steps)
-            ]
-            locations = [loc + [v] for loc in locations for v in values]
-        return [dict(loc) for loc in locations]
-
     def test_equivalency_of_simple_regions(self):
-        from random import seed, randint
+        from random import seed, randint, random
         axisPoints = dict(
-            a=[0, 0.25, 0.75, 1],
-            b=[-1, -0.75, -0.25, 0],
+            a=[0, 0.3, 0.8, 1],
+            b=[-1, -0.7, -0.2, 0],
             c=[-1, 0, 1],
+            d=[0],
+            e=[0],
         )
         locations = [[]]
         for axis, points in axisPoints.items():
             locations = [loc + [(axis, v)] for loc in locations for v in points]
         locations = [dict(loc) for loc in locations]
+        # Add a disconnected sub-system
+        locations.extend([dict(d=1), dict(e=1), dict(d=1, e=1)])
         genericModel = VariationModel(locations)
         simpleModel = VariationModel(locations, preferSimpleRegions=True)
         assert genericModel.locations == simpleModel.locations
         assert genericModel.supports != simpleModel.supports
         assert genericModel.deltaWeights != simpleModel.deltaWeights
-        testLocations = self._make_test_locations(axisPoints, 5)
         seed(0)
+        testLocations = locations + [
+            dict(a=random(), b=random() - 1, c=2 * random() - 1, d=random(), e=random())
+            for _ in range(100)
+        ]
         masterValues = [randint(0, 100) for _ in range(len(locations))]
         deltas1 = genericModel.getDeltas(masterValues)
         deltas2 = simpleModel.getDeltas(masterValues)
+        import time
+        t = time.time()
         for loc in testLocations:
             value1 = genericModel.interpolateFromDeltas(loc, deltas1)
             value2 = simpleModel.interpolateFromDeltas(loc, deltas2)
-            assert math.isclose(value1, value2)
+            assert math.isclose(value1, value2, abs_tol=1e-09)
