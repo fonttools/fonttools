@@ -782,6 +782,14 @@ class LigatureSubstBuilder(LookupBuilder):
     def equals(self, other):
         return LookupBuilder.equals(self, other) and self.ligatures == other.ligatures
 
+    def inferGlyphClasses(self):
+        result = {
+            glyph: 2
+            for glyph in self.ligatures.values()
+            if glyph != self.SUBTABLE_BREAK_
+        }
+        return result
+
     def build(self):
         """Build the lookup.
 
