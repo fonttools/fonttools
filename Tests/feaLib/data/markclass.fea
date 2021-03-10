@@ -1,0 +1,18 @@
+languagesystem DFLT dflt;
+
+markClass [acute] <anchor 350 0> @TOP_MARKS;
+
+feature foo {
+    markClass [grave] <anchor 350 0> @TOP_MARKS;
+    markClass cedilla <anchor 300 0> @BOTTOM_MARKS;
+} foo;
+
+feature bar {
+    markClass [dieresis breve] <anchor 400 0> @TOP_MARKS;
+} bar;
+
+feature baz {
+    pos base a
+        <anchor 250 450> mark @TOP_MARKS
+        <anchor 250 0> mark @BOTTOM_MARKS;
+} baz;

@@ -53,7 +53,7 @@ def makeTTFont():
 class BuilderTest(unittest.TestCase):
     # Feature files in data/*.fea; output gets compared to data/*.ttx.
     TEST_FEATURE_FILES = """
-        Attach cid_range enum markClass language_required
+        Attach cid_range enum unused_markClass markclass language_required
         GlyphClassDef LigatureCaretByIndex LigatureCaretByPos
         lookup lookupflag feature_aalt ignore_pos
         GPOS_1 GPOS_1_zero GPOS_2 GPOS_2b GPOS_3 GPOS_4 GPOS_5 GPOS_6 GPOS_8
