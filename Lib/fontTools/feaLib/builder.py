@@ -776,12 +776,15 @@ class Builder(object):
                     )
                 )
                 classes.update(lookup.inferGlyphClasses())
-            markClassesUsed = 3 in classes.values()
-            for markClass in self.parseTree.markClasses.values():
-                for markClassDef in markClass.definitions:
-                    for glyph in markClassDef.glyphSet():
-                        classes[glyph] = 3
-            if not markClassesUsed and not ignoreClassFlagsUsed:
+            # Only infer glyph classes if mark classes are used or if ignore
+            # flags are used.
+            if 3 in classes.values() or ignoreClassFlagsUsed:
+                # Prefer mark glyph class to other glyph class
+                for markClass in self.parseTree.markClasses.values():
+                    for markClassDef in markClass.definitions:
+                        for glyph in markClassDef.glyphSet():
+                            classes[glyph] = 3
+            else:
                 classes.clear()
         if classes:
             result = otTables.GlyphClassDef()
