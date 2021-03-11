@@ -1054,7 +1054,7 @@ def axisValuesFromAxisLimits(stat, axisLimits):
             if dropAxisValueTable:
                 continue
         else:
-            log.warn("Unknown AxisValue table format (%s); ignored", axisValueFormat)
+            log.warning("Unknown AxisValue table format (%s); ignored", axisValueFormat)
         newAxisValueTables.append(axisValueTable)
     return newAxisValueTables
 
