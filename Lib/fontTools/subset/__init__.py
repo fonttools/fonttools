@@ -9,7 +9,6 @@ from fontTools.otlLib.maxContextCalc import maxCtxFont
 from fontTools.pens.basePen import NullPen
 from fontTools.misc.loggingTools import Timer
 from fontTools.subset.cff import *
-from fontTools.varLib import varStore
 import sys
 import struct
 import array
@@ -1877,7 +1876,7 @@ def subset_glyphs(self, s):
 		table.RsbMap.mapping = _dict_subset(table.RsbMap.mapping, s.glyphs)
 		used.update(table.RsbMap.mapping.values())
 
-	varidx_map = varStore.VarStore_subset_varidxes(table.VarStore, used, retainFirstMap=retainAdvMap, advIdxes=advIdxes_)
+	varidx_map = table.VarStore.subset_varidxes(used, retainFirstMap=retainAdvMap, advIdxes=advIdxes_)
 
 	if table.AdvWidthMap:
 		table.AdvWidthMap.mapping = _remap_index_map(s, varidx_map, table.AdvWidthMap)
@@ -1915,7 +1914,7 @@ def subset_glyphs(self, s):
 		table.VOrgMap.mapping = _dict_subset(table.VOrgMap.mapping, s.glyphs)
 		used.update(table.VOrgMap.mapping.values())
 
-	varidx_map = varStore.VarStore_subset_varidxes(table.VarStore, used, retainFirstMap=retainAdvMap, advIdxes=advIdxes_)
+	varidx_map = table.VarStore.subset_varidxes(used, retainFirstMap=retainAdvMap, advIdxes=advIdxes_)
 
 	if table.AdvHeightMap:
 		table.AdvHeightMap.mapping = _remap_index_map(s, varidx_map, table.AdvHeightMap)
