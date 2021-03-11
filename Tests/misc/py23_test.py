@@ -389,35 +389,6 @@ class IsCloseTests(unittest.TestCase):
 		self.assertAllNotClose(fraction_examples, rel_tol=1e-9)
 
 
-@unittest.skipUnless(
-	(sys.version_info[0] == 2 and sys.maxunicode < 0x10FFFF),
-	"requires 'narrow' Python 2.7 build")
-class NarrowUnicodeBuildTest(unittest.TestCase):
-
-	def test_unichr(self):
-		from __builtin__ import unichr as narrow_unichr
-
-		self.assertRaises(
-			ValueError,
-			narrow_unichr, 0xFFFF + 1)
-
-		self.assertEqual(unichr(1114111), u'\U0010FFFF')
-
-		self.assertRaises(
-			ValueError,
-			unichr, 0x10FFFF + 1)
-
-	def test_byteord(self):
-		from __builtin__ import ord as narrow_ord
-
-		self.assertRaises(
-			TypeError,
-			narrow_ord, u'\U00010000')
-
-		self.assertEqual(byteord(u'\U00010000'), 0xFFFF + 1)
-		self.assertEqual(byteord(u'\U0010FFFF'), 1114111)
-
-
 class TestRedirectStream:
 
     redirect_stream = None
