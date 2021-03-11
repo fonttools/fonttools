@@ -24,12 +24,24 @@ class VarLibCFFDictMergeError(VarLibMergeError):
 
 
 class VarLibCFFPointTypeMergeError(VarLibMergeError):
-    """Raised when a CFF glyph cannot be merged."""
+    """Raised when a CFF glyph cannot be merged because of point type differences."""
 
     def __init__(self, point_type, pt_index, m_index, default_type, glyph_name):
         error_msg = (
             f"Glyph '{glyph_name}': '{point_type}' at point index {pt_index} in "
             f"master index {m_index} differs from the default font point type "
+            f"'{default_type}'"
+        )
+        self.args = (error_msg,)
+
+
+class VarLibCFFHintTypeMergeError(VarLibMergeError):
+    """Raised when a CFF glyph cannot be merged because of hint type differences."""
+
+    def __init__(self, hint_type, cmd_index, m_index, default_type, glyph_name):
+        error_msg = (
+            f"Glyph '{glyph_name}': '{hint_type}' at index {cmd_index} in "
+            f"master index {m_index} differs from the default font hint type "
             f"'{default_type}'"
         )
         self.args = (error_msg,)
