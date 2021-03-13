@@ -1,3 +1,22 @@
+from enum import Enum, auto
+import textwrap
+
+
+class VarLibMergeFailure(Enum):
+    ShouldBeConstant = "some values were different, but should have been the same"
+    MismatchedTypes = "data had inconsistent types"
+    LengthsDiffer = "a list of objects had inconsistent lengths"
+    KeysDiffer = "a list of objects had different keys"
+    InconsistentGlyphOrder = "the glyph order was inconsistent between masters"
+    FoundANone = "one of the values in a list was empty when it shouldn't have been"
+    NotANone = "one of the values in a list was not empty when it should have been"
+    UnsupportedFormat = "an OpenType subtable (%s) had a format I didn't expect"
+    InconsistentFormat = (
+        "an OpenType subtable (%s) had inconsistent formats between masters"
+    )
+    InconsistentExtensions = "the masters use extension lookups in inconsistent ways"
+
+
 class VarLibError(Exception):
     """Base exception for the varLib module."""
 
@@ -8,6 +27,45 @@ class VarLibValidationError(VarLibError):
 
 class VarLibMergeError(VarLibError):
     """Raised when input data cannot be merged into a variable font."""
+
+    def __init__(self, merger, args):
+        self.merger = merger
+        self.args = args
+
+    def __str__(self):
+        cause, stack = self.args[0], self.args[1:]
+        fontnames = [
+            ttf["name"].getDebugName(1) + " " + ttf["name"].getDebugName(2)
+            for ttf in self.merger.ttfs
+        ]
+        context = "".join(reversed(stack))
+        details = ""
+        reason = cause["reason"].value
+        if reason == VarLibMergeFailure.FoundANone:
+            offender = [x is None for x in cause["got"]].index(True)
+            details = (
+                f"\n\nThe problem is likely to be in {fontnames[offender]}:\n"
+                f"{stack[0]}=={cause['got']}\n"
+            )
+        elif "expected" in cause and "got" in cause:
+            offender = [x == cause["expected"] for x in cause["got"]].index(False)
+            got = cause["got"][offender]
+            details = (
+                f"\n\nThe problem is likely to be in {fontnames[offender]}:\n"
+                f"Expected to see {stack[0]}=={cause['expected']}, instead saw {got}\n"
+            )
+
+        if (
+            reason == VarLibMergeFailure.UnsupportedFormat
+            or reason == VarLibMergeFailure.InconsistentFormat
+        ):
+            reason = reason % cause["subtable"]
+        basic = textwrap.fill(
+            f"Couldn't merge the fonts, because {reason}. "
+            f"This happened while performing the following operation: {context}",
+            width=78,
+        )
+        return "\n\n" + basic + details
 
 
 class VarLibCFFDictMergeError(VarLibMergeError):
