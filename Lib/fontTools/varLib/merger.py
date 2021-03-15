@@ -123,8 +123,12 @@ class Merger(object):
 		self.ttfs = master_ttfs  # For error reporting
 		for tag in tableTags:
 			if tag not in font: continue
-			self.mergeThings(font[tag], [m[tag] if tag in m else None
-						     for m in master_ttfs])
+			try:
+				self.mergeThings(font[tag], [m[tag] if tag in m else None
+							     for m in master_ttfs])
+			except Exception as e:
+				e.args = e.args + (tag,)
+				raise
 
 #
 # Aligning merger
