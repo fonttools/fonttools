@@ -32,7 +32,8 @@ class VarLibMergeError(VarLibError):
         self.merger = merger
         self.args = args
 
-    def _master_name(self, ttf, ix):
+    def _master_name(self, ix):
+        ttf = self.merger.ttfs[ix]
         if "name" in ttf:
             return ttf["name"].getDebugName(1) + " " + ttf["name"].getDebugName(2)
         elif hasattr(ttf.reader, "file") and hasattr(ttf.reader.file, "name"):
@@ -40,31 +41,36 @@ class VarLibMergeError(VarLibError):
         else:
             return "master number %i" % ix
 
+    def _offender(self, cause):
+        reason = cause["reason"].value
+        if "expected" in cause and "got" in cause:
+            index = [x == cause["expected"] for x in cause["got"]].index(False)
+            return index, self._master_name(index)
+        if reason == VarLibMergeFailure.FoundANone:
+            index = [x is None for x in cause["got"]].index(True)
+            return index, self._master_name(index)
+        return None, None
+
     def __str__(self):
         cause, stack = self.args[0], self.args[1:]
-        fontnames = [
-            self._master_name(ttf, ix) for ix, ttf in enumerate(self.merger.ttfs)
-        ]
         context = "".join(reversed(stack))
         details = ""
         reason = cause["reason"].value
-        if reason == VarLibMergeFailure.FoundANone:
-            offender = [x is None for x in cause["got"]].index(True)
-            details = (
-                f"\n\nThe problem is likely to be in {fontnames[offender]}:\n"
-                f"{stack[0]}=={cause['got']}\n"
-            )
+        offender_index, offender = self._offender(cause)
+        if offender:
+            details = f"\n\nThe problem is likely to be in {offender}:\n"
+        if cause["reason"] == VarLibMergeFailure.FoundANone:
+            details = details + f"{stack[0]}=={cause['got']}\n"
         elif "expected" in cause and "got" in cause:
             offender = [x == cause["expected"] for x in cause["got"]].index(False)
             got = cause["got"][offender]
-            details = (
-                f"\n\nThe problem is likely to be in {fontnames[offender]}:\n"
+            details = details + (
                 f"Expected to see {stack[0]}=={cause['expected']}, instead saw {got}\n"
             )
 
         if (
-            reason == VarLibMergeFailure.UnsupportedFormat
-            or reason == VarLibMergeFailure.InconsistentFormat
+            cause["reason"] == VarLibMergeFailure.UnsupportedFormat
+            or cause["reason"] == VarLibMergeFailure.InconsistentFormat
         ):
             reason = reason % cause["subtable"]
         basic = textwrap.fill(
