@@ -1029,7 +1029,7 @@ class MarkMarkPosBuilder(LookupBuilder):
         builder.marks["acute"]     = (0, a1)
         builder.marks["grave"]     = (0, a1)
         builder.marks["cedilla"]   = (1, a2)
-        builder.baseMarks["acute"] = (0, a3)
+        builder.baseMarks["acute"] = {0: a3}
 
     Attributes:
         font (``fontTools.TTLib.TTFont``): A font object.
