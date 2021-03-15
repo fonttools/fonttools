@@ -1037,8 +1037,8 @@ class MarkMarkPosBuilder(LookupBuilder):
             source which produced this lookup.
         marks: An dictionary mapping a glyph name to a two-element
             tuple containing a mark class ID and ``otTables.Anchor`` object.
-        baseMarks: An dictionary mapping a glyph name to a two-element
-            tuple containing a mark class ID and ``otTables.Anchor`` object.
+        baseMarks: An dictionary mapping a glyph name to a dictionary
+            containing one item: a mark class ID and a ``otTables.Anchor`` object.
         lookupflag (int): The lookup's flag
         markFilterSet: Either ``None`` if no mark filtering set is used, or
             an integer representing the filtering set to be used for this
