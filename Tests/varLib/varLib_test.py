@@ -1,7 +1,7 @@
 from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont, newTable
 from fontTools.varLib import build, load_designspace
-from fontTools.varLib.errors import VarLibValidationError
+from fontTools.varLib.errors import VarLibValidationError, VarLibMergeError
 from fontTools.varLib.mutator import instantiateVariableFont
 from fontTools.varLib import main as varLib_main, load_masters
 from fontTools.varLib import set_default_weight_width_slant
@@ -813,7 +813,32 @@ class BuildTest(unittest.TestCase):
 
         assert ds_loaded.instances[0].location == {"weight": 0, "width": 50}
 
+    def test_varlib_build_incompatible_features(self):
+        try:
+            self._run_varlib_build_test(
+                designspace_name="IncompatibleFeatures",
+                font_name="IncompatibleFeatures",
+                tables=["GPOS"],
+                expected_ttx_name="IncompatibleFeatures",
+                save_before_dump=True,
+            )
+        except VarLibMergeError as e:
+            assert str(e) == """
 
+Couldn't merge the fonts, because some values were different, but should have
+been the same. This happened while performing the following operation:
+GPOS.table.FeatureList.FeatureCount
+
+The problem is likely to be in Simple Two Axis Bold:
+
+Incompatible features between masters.
+Expected: kern, mark.
+Got: kern.
+"""
+        except Exception:
+           self.fail('unexpected exception raised')
+        else:
+           self.fail('ExpectedException not raised')
 def test_load_masters_layerName_without_required_font():
     ds = DesignSpaceDocument()
     s = SourceDescriptor()
