@@ -32,11 +32,18 @@ class VarLibMergeError(VarLibError):
         self.merger = merger
         self.args = args
 
+    def _master_name(self, ttf, ix):
+        if "name" in ttf:
+            return ttf["name"].getDebugName(1) + " " + ttf["name"].getDebugName(2)
+        elif hasattr(ttf.reader, "file") and hasattr(ttf.reader.file, "name"):
+            return ttf.reader.file.name
+        else:
+            return "master number %i" % ix
+
     def __str__(self):
         cause, stack = self.args[0], self.args[1:]
         fontnames = [
-            ttf["name"].getDebugName(1) + " " + ttf["name"].getDebugName(2)
-            for ttf in self.merger.ttfs
+            self._master_name(ttf, ix) for ix, ttf in enumerate(self.merger.ttfs)
         ]
         context = "".join(reversed(stack))
         details = ""
