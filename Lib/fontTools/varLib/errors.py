@@ -51,6 +51,23 @@ class VarLibMergeError(VarLibError):
             return index, self._master_name(index)
         return None, None
 
+    def _incompatible_features(self, offender_index):
+        cause, stack = self.args[0], self.args[1:]
+        bad_ttf = self.merger.ttfs[offender_index]
+        good_ttf = self.merger.ttfs[offender_index - 1]
+
+        good_features = [
+            x.FeatureTag for x in good_ttf[stack[-1]].table.FeatureList.FeatureRecord
+        ]
+        bad_features = [
+            x.FeatureTag for x in bad_ttf[stack[-1]].table.FeatureList.FeatureRecord
+        ]
+        return (
+            "\nIncompatible features between masters.\n"
+            f"Expected: {', '.join(good_features)}.\n"
+            f"Got: {', '.join(bad_features)}.\n"
+        )
+
     def __str__(self):
         cause, stack = self.args[0], self.args[1:]
         context = "".join(reversed(stack))
@@ -61,6 +78,9 @@ class VarLibMergeError(VarLibError):
             details = f"\n\nThe problem is likely to be in {offender}:\n"
         if cause["reason"] == VarLibMergeFailure.FoundANone:
             details = details + f"{stack[0]}=={cause['got']}\n"
+        elif cause["reason"] == VarLibMergeFailure.ShouldBeConstant:
+            # Common case
+            details = details + self._incompatible_features(offender_index)
         elif "expected" in cause and "got" in cause:
             offender = [x == cause["expected"] for x in cause["got"]].index(False)
             got = cause["got"][offender]
