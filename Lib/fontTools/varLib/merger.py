@@ -120,10 +120,10 @@ class Merger(object):
 					"got": lst},))
 
 	def mergeTables(self, font, master_ttfs, tableTags):
-		self.ttfs = master_ttfs  # For error reporting
 		for tag in tableTags:
 			if tag not in font: continue
 			try:
+				self.ttfs = [m for m in master_ttfs if tag in m]
 				self.mergeThings(font[tag], [m[tag] if tag in m else None
 							     for m in master_ttfs])
 			except Exception as e:
