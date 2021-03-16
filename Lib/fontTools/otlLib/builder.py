@@ -1029,7 +1029,7 @@ class MarkMarkPosBuilder(LookupBuilder):
         builder.marks["acute"]     = (0, a1)
         builder.marks["grave"]     = (0, a1)
         builder.marks["cedilla"]   = (1, a2)
-        builder.baseMarks["acute"] = (0, a3)
+        builder.baseMarks["acute"] = {0: a3}
 
     Attributes:
         font (``fontTools.TTLib.TTFont``): A font object.
@@ -1037,8 +1037,8 @@ class MarkMarkPosBuilder(LookupBuilder):
             source which produced this lookup.
         marks: An dictionary mapping a glyph name to a two-element
             tuple containing a mark class ID and ``otTables.Anchor`` object.
-        baseMarks: An dictionary mapping a glyph name to a two-element
-            tuple containing a mark class ID and ``otTables.Anchor`` object.
+        baseMarks: An dictionary mapping a glyph name to a dictionary
+            containing one item: a mark class ID and a ``otTables.Anchor`` object.
         lookupflag (int): The lookup's flag
         markFilterSet: Either ``None`` if no mark filtering set is used, or
             an integer representing the filtering set to be used for this
