@@ -50,7 +50,7 @@ class VarLibMergeError(VarLibError):
         if "expected" in cause and "got" in cause:
             index = [x == cause["expected"] for x in cause["got"]].index(False)
             return index, self._master_name(index)
-        if reason == VarLibMergeFailure.FoundANone:
+        if reason is VarLibMergeFailure.FoundANone:
             index = [x is None for x in cause["got"]].index(True)
             return index, self._master_name(index)
         return None, None
@@ -80,10 +80,10 @@ class VarLibMergeError(VarLibError):
         offender_index, offender = self._offender(cause)
         if offender:
             details = f"\n\nThe problem is likely to be in {offender}:\n"
-        if cause["reason"] == VarLibMergeFailure.FoundANone:
+        if cause["reason"] is VarLibMergeFailure.FoundANone:
             details = details + f"{stack[0]}=={cause['got']}\n"
         elif (
-            cause["reason"] == VarLibMergeFailure.ShouldBeConstant
+            cause["reason"] is VarLibMergeFailure.ShouldBeConstant
             and stack[0] == ".FeatureCount"
         ):
             # Common case
@@ -96,8 +96,8 @@ class VarLibMergeError(VarLibError):
             )
 
         if (
-            cause["reason"] == VarLibMergeFailure.UnsupportedFormat
-            or cause["reason"] == VarLibMergeFailure.InconsistentFormat
+            cause["reason"] is VarLibMergeFailure.UnsupportedFormat
+            or cause["reason"] is VarLibMergeFailure.InconsistentFormat
         ):
             reason = reason % cause["subtable"]
         basic = textwrap.fill(
