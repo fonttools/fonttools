@@ -82,7 +82,10 @@ class VarLibMergeError(VarLibError):
             details = f"\n\nThe problem is likely to be in {offender}:\n"
         if cause["reason"] == VarLibMergeFailure.FoundANone:
             details = details + f"{stack[0]}=={cause['got']}\n"
-        elif cause["reason"] == VarLibMergeFailure.ShouldBeConstant:
+        elif (
+            cause["reason"] == VarLibMergeFailure.ShouldBeConstant
+            and stack[0] == ".FeatureCount"
+        ):
             # Common case
             details = details + self._incompatible_features(offender_index)
         elif "expected" in cause and "got" in cause:
