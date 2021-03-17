@@ -82,7 +82,7 @@ class Merger(object):
 				values = [getattr(table, key) for table in lst]
 				mergerFunc = mergers.get(key, defaultMerger)
 				mergerFunc(self, value, values)
-		except Exception as e:
+		except VarLibMergeError as e:
 			e.args = e.args + ('.'+key,)
 			raise
 
@@ -95,7 +95,7 @@ class Merger(object):
 		for i,(value,values) in enumerate(zip(out, zip(*lst))):
 			try:
 				self.mergeThings(value, values)
-			except Exception as e:
+			except VarLibMergeError as e:
 				e.args = e.args + ('[%d]' % i,)
 				raise
 
@@ -126,7 +126,7 @@ class Merger(object):
 				self.ttfs = [m for m in master_ttfs if tag in m]
 				self.mergeThings(font[tag], [m[tag] if tag in m else None
 							     for m in master_ttfs])
-			except Exception as e:
+			except VarLibMergeError as e:
 				e.args = e.args + (tag,)
 				raise
 
