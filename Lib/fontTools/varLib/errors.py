@@ -34,7 +34,11 @@ class VarLibMergeError(VarLibError):
 
     def _master_name(self, ix):
         ttf = self.merger.ttfs[ix]
-        if "name" in ttf:
+        if (
+            "name" in ttf
+            and ttf["name"].getDebugName(1)
+            and ttf["name"].getDebugName(2)
+        ):
             return ttf["name"].getDebugName(1) + " " + ttf["name"].getDebugName(2)
         elif hasattr(ttf.reader, "file") and hasattr(ttf.reader.file, "name"):
             return ttf.reader.file.name
