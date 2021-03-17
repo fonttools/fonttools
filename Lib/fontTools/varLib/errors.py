@@ -89,8 +89,7 @@ class VarLibMergeError(VarLibError):
             # Common case
             details = details + self._incompatible_features(offender_index)
         elif "expected" in cause and "got" in cause:
-            offender = [x == cause["expected"] for x in cause["got"]].index(False)
-            got = cause["got"][offender]
+            got = cause["got"][offender_index]
             details = details + (
                 f"Expected to see {stack[0]}=={cause['expected']}, instead saw {got}\n"
             )
