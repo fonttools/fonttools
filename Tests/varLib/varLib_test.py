@@ -814,16 +814,9 @@ class BuildTest(unittest.TestCase):
         assert ds_loaded.instances[0].location == {"weight": 0, "width": 50}
 
     def test_varlib_build_incompatible_features(self):
-        try:
-            self._run_varlib_build_test(
-                designspace_name="IncompatibleFeatures",
-                font_name="IncompatibleFeatures",
-                tables=["GPOS"],
-                expected_ttx_name="IncompatibleFeatures",
-                save_before_dump=True,
-            )
-        except VarLibMergeError as e:
-            assert str(e) == """
+        with pytest.raises(
+            VarLibMergeError,
+            match = """
 
 Couldn't merge the fonts, because some values were different, but should have
 been the same. This happened while performing the following operation:
@@ -834,11 +827,16 @@ The problem is likely to be in Simple Two Axis Bold:
 Incompatible features between masters.
 Expected: kern, mark.
 Got: kern.
-"""
-        except Exception:
-           self.fail('unexpected exception raised')
-        else:
-           self.fail('ExpectedException not raised')
+"""):
+
+            self._run_varlib_build_test(
+                designspace_name="IncompatibleFeatures",
+                font_name="IncompatibleFeatures",
+                tables=["GPOS"],
+                expected_ttx_name="IncompatibleFeatures",
+                save_before_dump=True,
+            )
+
 def test_load_masters_layerName_without_required_font():
     ds = DesignSpaceDocument()
     s = SourceDescriptor()
