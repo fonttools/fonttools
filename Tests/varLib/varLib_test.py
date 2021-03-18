@@ -1,7 +1,8 @@
 from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont, newTable
 from fontTools.varLib import build, load_designspace
-from fontTools.varLib.errors import VarLibValidationError, VarLibMergeError
+from fontTools.varLib.errors import VarLibValidationError
+import fontTools.varLib.errors as varLibErrors
 from fontTools.varLib.mutator import instantiateVariableFont
 from fontTools.varLib import main as varLib_main, load_masters
 from fontTools.varLib import set_default_weight_width_slant
@@ -815,7 +816,7 @@ class BuildTest(unittest.TestCase):
 
     def test_varlib_build_incompatible_features(self):
         with pytest.raises(
-            VarLibMergeError,
+            varLibErrors.ShouldBeConstant,
             match = """
 
 Couldn't merge the fonts, because some values were different, but should have
@@ -834,6 +835,39 @@ Got: kern.
                 font_name="IncompatibleFeatures",
                 tables=["GPOS"],
                 expected_ttx_name="IncompatibleFeatures",
+                save_before_dump=True,
+            )
+
+    def test_varlib_build_incompatible_lookup_types(self):
+        with pytest.raises(
+            varLibErrors.MismatchedTypes,
+            match = r"MarkBasePos, instead saw PairPos"
+        ):
+            self._run_varlib_build_test(
+                designspace_name="IncompatibleLookupTypes",
+                font_name="IncompatibleLookupTypes",
+                tables=["GPOS"],
+                expected_ttx_name="IncompatibleLookupTypes",
+                save_before_dump=True,
+            )
+
+    def test_varlib_build_incompatible_arrays(self):
+        with pytest.raises(
+            varLibErrors.ShouldBeConstant,
+            match = """
+
+Couldn't merge the fonts, because some values were different, but should have
+been the same. This happened while performing the following operation:
+GPOS.table.ScriptList.ScriptCount
+
+The problem is likely to be in Simple Two Axis Bold:
+Expected to see .ScriptCount==1, instead saw 0"""
+        ):
+            self._run_varlib_build_test(
+                designspace_name="IncompatibleArrays",
+                font_name="IncompatibleArrays",
+                tables=["GPOS"],
+                expected_ttx_name="IncompatibleArrays",
                 save_before_dump=True,
             )
 
