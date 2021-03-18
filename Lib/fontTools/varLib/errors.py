@@ -78,7 +78,7 @@ class ShouldBeConstant(VarLibMergeError):
     @property
     def details(self):
         if self.stack[0] != ".FeatureCount":
-            return super()
+            return super().details
         offender_index, offender = self.offender
         bad_ttf = self.merger.ttfs[offender_index]
         good_ttf = self.merger.ttfs[offender_index - 1]
