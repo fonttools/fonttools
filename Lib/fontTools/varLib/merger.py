@@ -15,15 +15,15 @@ from functools import reduce
 from fontTools.otlLib.builder import buildSinglePos
 
 from .errors import (
-    VarLibMergeFailureShouldBeConstant,
-    VarLibMergeFailureFoundANone,
-    VarLibMergeFailureMismatchedTypes,
-    VarLibMergeFailureLengthsDiffer,
-    VarLibMergeFailureKeysDiffer,
-    VarLibMergeFailureInconsistentGlyphOrder,
-    VarLibMergeFailureInconsistentExtensions,
-    VarLibMergeFailureUnsupportedFormat,
-    VarLibMergeFailureUnsupportedFormat,
+    ShouldBeConstant,
+    FoundANone,
+    MismatchedTypes,
+    LengthsDiffer,
+    KeysDiffer,
+    InconsistentGlyphOrder,
+    InconsistentExtensions,
+    UnsupportedFormat,
+    UnsupportedFormat,
     VarLibMergeError,
 )
 
@@ -79,7 +79,7 @@ class Merger(object):
 				item.ensureDecompiled()
 		keys = sorted(vars(out).keys())
 		if not all(keys == sorted(vars(v).keys()) for v in lst):
-			raise VarLibMergeFailureKeysDiffer(self, ({
+			raise KeysDiffer(self, ({
 						"expected": keys,
 						"got": [sorted(vars(v).keys()) for v in lst]},))
 		mergers = self.mergersFor(out)
@@ -97,7 +97,7 @@ class Merger(object):
 
 	def mergeLists(self, out, lst):
 		if not allEqualTo(out, lst, len):
-			raise VarLibMergeFailureLengthsDiffer(self, ({
+			raise LengthsDiffer(self, ({
 						"expected": len(out),
 						"got": [len(x) for x in lst]},))
 		for i,(value,values) in enumerate(zip(out, zip(*lst))):
@@ -109,7 +109,7 @@ class Merger(object):
 
 	def mergeThings(self, out, lst):
 		if not allEqualTo(out, lst, type):
-			raise VarLibMergeFailureMismatchedTypes(self, ({
+			raise MismatchedTypes(self, ({
 					"expected": type(out),
 					"got": [type(x) for x in lst]},))
 		mergerFunc = self.mergersFor(out).get(None, None)
@@ -121,7 +121,7 @@ class Merger(object):
 			self.mergeLists(out, lst)
 		else:
 			if not allEqualTo(out, lst):
-				raise VarLibMergeFailureShouldBeConstant(self, ({
+				raise ShouldBeConstant(self, ({
 					"expected": out,
 					"got": lst},))
 
@@ -146,7 +146,7 @@ class AligningMerger(Merger):
 def merge(merger, self, lst):
 	if self is None:
 		if not allNone(lst):
-			raise VarLibMergeFailureNotANone(self, ({
+			raise NotANone(self, ({
 				"expected": None,
 				"got": lst
 			},))
@@ -162,7 +162,7 @@ def merge(merger, self, lst):
 	for k in allKeys:
 		allValues = nonNone(l.get(k) for l in lst)
 		if not allEqual(allValues):
-			raise VarLibMergeFailureShouldBeConstant(self, ({
+			raise ShouldBeConstant(self, ({
 				"expected": allValues[0],
 				"got": lst,
 			}, "."+k))
@@ -202,7 +202,7 @@ def _merge_GlyphOrders(font, lst, values_lst=None, default=None):
 	order = sorted(combined, key=sortKey)
 	# Make sure all input glyphsets were in proper order
 	if not all(sorted(vs, key=sortKey) == vs for vs in lst):
-		raise VarLibMergeFailureInconsistentGlyphOrder(self, ({
+		raise InconsistentGlyphOrder(self, ({
 		},))
 	del combined
 
@@ -230,7 +230,7 @@ def _Lookup_SinglePos_get_effective_value(subtables, glyph):
 		elif self.Format == 2:
 			return self.Value[self.Coverage.glyphs.index(glyph)]
 		else:
-			raise VarLibMergeFailureUnsupportedFormat(self, ({
+			raise UnsupportedFormat(self, ({
 				"subtable": "single positioning lookup"
 			},))
 	return None
@@ -254,7 +254,7 @@ def _Lookup_PairPos_get_effective_value_pair(subtables, firstGlyph, secondGlyph)
 			klass2 = self.ClassDef2.classDefs.get(secondGlyph, 0)
 			return self.Class1Record[klass1].Class2Record[klass2]
 		else:
-			raise VarLibMergeFailureUnsupportedFormat(self, ({
+			raise UnsupportedFormat(self, ({
 				"subtable": "pair positioning lookup"
 			},))
 	return None
@@ -263,7 +263,7 @@ def _Lookup_PairPos_get_effective_value_pair(subtables, firstGlyph, secondGlyph)
 def merge(merger, self, lst):
 	self.ValueFormat = valueFormat = reduce(int.__or__, [l.ValueFormat for l in lst], 0)
 	if not (len(lst) == 1 or (valueFormat & ~0xF == 0)):
-		raise VarLibMergeFailureUnsupportedFormat(self, ({
+		raise UnsupportedFormat(self, ({
 				"subtable": "single positioning lookup"
 			},))
 
@@ -552,7 +552,7 @@ def merge(merger, self, lst):
 	elif self.Format == 2:
 		_PairPosFormat2_merge(self, lst, merger)
 	else:
-		raise VarLibMergeFailureUnsupportedFormat(self, ({
+		raise UnsupportedFormat(self, ({
 				"subtable": "pair positioning lookup"
 			},))
 
@@ -669,28 +669,28 @@ def _MarkBasePosFormat1_merge(self, lst, merger, Mark='Mark', Base='Base'):
 @AligningMerger.merger(ot.MarkBasePos)
 def merge(merger, self, lst):
 	if not allEqualTo(self.Format, (l.Format for l in lst)):
-		raise VarLibMergeFailureInconsistentFormats(self, ({
+		raise InconsistentFormats(self, ({
 			"subtable": "mark-to-base positioning lookup",
 			"expected": self.Format,
 			"got": [l.Format for l in lst]},))
 	if self.Format == 1:
 		_MarkBasePosFormat1_merge(self, lst, merger)
 	else:
-		raise VarLibMergeFailureUnsupportedFormat(self, ({
+		raise UnsupportedFormat(self, ({
 			"subtable": "mark-to-base positioning lookup",
 		}))
 
 @AligningMerger.merger(ot.MarkMarkPos)
 def merge(merger, self, lst):
 	if not allEqualTo(self.Format, (l.Format for l in lst)):
-		raise VarLibMergeFailureInconsistentFormats(self, ({
+		raise InconsistentFormats(self, ({
 			"subtable": "mark-to-mark positioning lookup",
 			"expected": self.Format,
 			"got": [l.Format for l in lst]},))
 	if self.Format == 1:
 		_MarkBasePosFormat1_merge(self, lst, merger, 'Mark1', 'Mark2')
 	else:
-		raise VarLibMergeFailureUnsupportedFormat(self, ({
+		raise UnsupportedFormat(self, ({
 			"subtable": "mark-to-mark positioning lookup",
 		}))
 
@@ -822,12 +822,12 @@ def merge(merger, self, lst):
 			continue
 		if sts[0].__class__.__name__.startswith('Extension'):
 			if not allEqual([st.__class__ for st in sts]):
-				raise VarLibMergeFailureInconsistentExtensions(self, ({
+				raise InconsistentExtensions(self, ({
 					"expected": "Extension",
 					"got": [st.__class__.__name__ for st in sts]
 				},))
 			if not allEqual([st.ExtensionLookupType for st in sts]):
-				raise VarLibMergeFailureInconsistentExtensions(self, ({
+				raise InconsistentExtensions(self, ({
 				},))
 			l.LookupType = sts[0].ExtensionLookupType
 			new_sts = [st.ExtSubTable for st in sts]
@@ -1057,7 +1057,7 @@ class VariationMerger(AligningMerger):
 		if None in lst:
 			if allNone(lst):
 				if out is not None:
-					raise VarLibMergeFailureFoundANone(self, ({
+					raise FoundANone(self, ({
 						"got": lst
 					},))
 				return
@@ -1080,7 +1080,7 @@ def buildVarDevTable(store_builder, master_values):
 @VariationMerger.merger(ot.BaseCoord)
 def merge(merger, self, lst):
 	if self.Format != 1:
-		raise VarLibMergeFailureUnsupportedFormat(self, ({
+		raise UnsupportedFormat(self, ({
 			"subtable": "a baseline coordinate"
 		},))
 	self.Coordinate, DeviceTable = buildVarDevTable(merger.store_builder, [a.Coordinate for a in lst])
@@ -1091,7 +1091,7 @@ def merge(merger, self, lst):
 @VariationMerger.merger(ot.CaretValue)
 def merge(merger, self, lst):
 	if self.Format != 1:
-		raise VarLibMergeFailureUnsupportedFormat(self, ({
+		raise UnsupportedFormat(self, ({
 			"subtable": "a caret"
 		},))
 	self.Coordinate, DeviceTable = buildVarDevTable(merger.store_builder, [a.Coordinate for a in lst])
@@ -1102,7 +1102,7 @@ def merge(merger, self, lst):
 @VariationMerger.merger(ot.Anchor)
 def merge(merger, self, lst):
 	if self.Format != 1:
-		raise VarLibMergeFailureUnsupportedFormat(self, ({
+		raise UnsupportedFormat(self, ({
 			"subtable": "an anchor"
 		},))
 	self.XCoordinate, XDeviceTable = buildVarDevTable(merger.store_builder, [a.XCoordinate for a in lst])
