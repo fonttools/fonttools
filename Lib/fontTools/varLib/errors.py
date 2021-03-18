@@ -72,7 +72,7 @@ class VarLibMergeError(VarLibError):
         return "\n\n" + basic + location + self.details
 
 
-class VarLibMergeFailureShouldBeConstant(VarLibMergeError):
+class ShouldBeConstant(VarLibMergeError):
     """some values were different, but should have been the same"""
 
     @property
@@ -98,7 +98,7 @@ class VarLibMergeFailureShouldBeConstant(VarLibMergeError):
         )
 
 
-class VarLibMergeFailureFoundANone(VarLibMergeError):
+class FoundANone(VarLibMergeError):
     """one of the values in a list was empty when it shouldn't have been"""
 
     @property
@@ -113,37 +113,37 @@ class VarLibMergeFailureFoundANone(VarLibMergeError):
         return f"{stack[0]}=={cause['got']}\n"
 
 
-class VarLibMergeFailureMismatchedTypes(VarLibMergeError):
+class MismatchedTypes(VarLibMergeError):
     """data had inconsistent types"""
 
     pass
 
 
-class VarLibMergeFailureLengthsDiffer(VarLibMergeError):
+class LengthsDiffer(VarLibMergeError):
     """a list of objects had inconsistent lengths"""
 
     pass
 
 
-class VarLibMergeFailureKeysDiffer(VarLibMergeError):
+class KeysDiffer(VarLibMergeError):
     """a list of objects had different keys"""
 
     pass
 
 
-class VarLibMergeFailureInconsistentGlyphOrder(VarLibMergeError):
+class InconsistentGlyphOrder(VarLibMergeError):
     """the glyph order was inconsistent between masters"""
 
     pass
 
 
-class VarLibMergeFailureInconsistentExtensions(VarLibMergeError):
+class InconsistentExtensions(VarLibMergeError):
     """the masters use extension lookups in inconsistent ways"""
 
     pass
 
 
-class VarLibMergeFailureUnsupportedFormat(VarLibMergeError):
+class UnsupportedFormat(VarLibMergeError):
     """an OpenType subtable (%s) had a format I didn't expect"""
 
     @property
@@ -152,7 +152,7 @@ class VarLibMergeFailureUnsupportedFormat(VarLibMergeError):
         return self.__doc__ % cause["subtable"]
 
 
-class VarLibMergeFailureUnsupportedFormat(VarLibMergeFailureUnsupportedFormat):
+class UnsupportedFormat(UnsupportedFormat):
     """an OpenType subtable (%s) had inconsistent formats between masters"""
 
     pass
