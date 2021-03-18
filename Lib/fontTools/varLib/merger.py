@@ -110,8 +110,8 @@ class Merger(object):
 	def mergeThings(self, out, lst):
 		if not allEqualTo(out, lst, type):
 			raise MismatchedTypes(self, ({
-					"expected": type(out),
-					"got": [type(x) for x in lst]},))
+					"expected": type(out).__name__,
+					"got": [type(x).__name__ for x in lst]},))
 		mergerFunc = self.mergersFor(out).get(None, None)
 		if mergerFunc is not None:
 			mergerFunc(self, out, lst)
