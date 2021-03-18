@@ -2,10 +2,11 @@ from fontTools.misc.loggingTools import CapturingLogHandler
 from fontTools.feaLib.builder import Builder, addOpenTypeFeatures, \
         addOpenTypeFeaturesFromString
 from fontTools.feaLib.error import FeatureLibError
-from fontTools.ttLib import TTFont
+from fontTools.ttLib import TTFont, newTable
 from fontTools.feaLib.parser import Parser
 from fontTools.feaLib import ast
 from fontTools.feaLib.lexer import Lexer
+from fontTools.fontBuilder import addFvar
 import difflib
 from io import StringIO
 import os
@@ -75,7 +76,13 @@ class BuilderTest(unittest.TestCase):
         SingleSubstSubtable aalt_chain_contextual_subst AlternateChained 
         MultipleLookupsPerGlyph MultipleLookupsPerGlyph2 GSUB_6_formats
         GSUB_5_formats delete_glyph STAT_test STAT_test_elidedFallbackNameID
+        variable_scalar_valuerecord variable_scalar_anchor
     """.split()
+
+    VARFONT_AXES = [
+        ("wght", 200, 200, 1000, "Weight"),
+        ("wdth", 100, 100, 200, "Width")
+    ]
 
     def __init__(self, methodName):
         unittest.TestCase.__init__(self, methodName)
@@ -139,6 +146,10 @@ class BuilderTest(unittest.TestCase):
 
     def check_feature_file(self, name):
         font = makeTTFont()
+        if name.startswith("variable_"):
+            font["name"] = newTable("name")
+            addFvar(font, self.VARFONT_AXES, [])
+            del font["name"]
         feapath = self.getpath("%s.fea" % name)
         addOpenTypeFeatures(font, feapath)
         self.expect_ttx(font, self.getpath("%s.ttx" % name))
