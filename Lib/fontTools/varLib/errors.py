@@ -1,20 +1,4 @@
-from enum import Enum, auto
 import textwrap
-
-
-class VarLibMergeFailure(Enum):
-    ShouldBeConstant = "some values were different, but should have been the same"
-    MismatchedTypes = "data had inconsistent types"
-    LengthsDiffer = "a list of objects had inconsistent lengths"
-    KeysDiffer = "a list of objects had different keys"
-    InconsistentGlyphOrder = "the glyph order was inconsistent between masters"
-    FoundANone = "one of the values in a list was empty when it shouldn't have been"
-    NotANone = "one of the values in a list was not empty when it should have been"
-    UnsupportedFormat = "an OpenType subtable (%s) had a format I didn't expect"
-    InconsistentFormat = (
-        "an OpenType subtable (%s) had inconsistent formats between masters"
-    )
-    InconsistentExtensions = "the masters use extension lookups in inconsistent ways"
 
 
 class VarLibError(Exception):
@@ -32,6 +16,18 @@ class VarLibMergeError(VarLibError):
         self.merger = merger
         self.args = args
 
+    @property
+    def cause(self):
+        return self.args[0]
+
+    @property
+    def stack(self):
+        return self.args[1:]
+
+    @property
+    def reason(self):
+        return self.__doc__
+
     def _master_name(self, ix):
         ttf = self.merger.ttfs[ix]
         if (
@@ -45,26 +41,55 @@ class VarLibMergeError(VarLibError):
         else:
             return "master number %i" % ix
 
-    def _offender(self, cause):
-        reason = cause["reason"].value
-        if "expected" in cause and "got" in cause:
-            index = [x == cause["expected"] for x in cause["got"]].index(False)
-            return index, self._master_name(index)
-        if reason is VarLibMergeFailure.FoundANone:
-            index = [x is None for x in cause["got"]].index(True)
+    @property
+    def offender(self):
+        if "expected" in self.cause and "got" in self.cause:
+            index = [x == self.cause["expected"] for x in self.cause["got"]].index(
+                False
+            )
             return index, self._master_name(index)
         return None, None
 
-    def _incompatible_features(self, offender_index):
-        cause, stack = self.args[0], self.args[1:]
+    @property
+    def details(self):
+        if "expected" in self.cause and "got" in self.cause:
+            offender_index, offender = self.offender
+            got = self.cause["got"][offender_index]
+            return f"Expected to see {self.stack[0]}=={self.cause['expected']}, instead saw {got}\n"
+        return ""
+
+    def __str__(self):
+        offender_index, offender = self.offender
+        location = ""
+        if offender:
+            location = f"\n\nThe problem is likely to be in {offender}:\n"
+        context = "".join(reversed(self.stack))
+        basic = textwrap.fill(
+            f"Couldn't merge the fonts, because {self.reason}. "
+            f"This happened while performing the following operation: {context}",
+            width=78,
+        )
+        return "\n\n" + basic + location + self.details
+
+
+class VarLibMergeFailureShouldBeConstant(VarLibMergeError):
+    """some values were different, but should have been the same"""
+
+    @property
+    def details(self):
+        if self.stack[0] != ".FeatureCount":
+            return super()
+        offender_index, offender = self.offender
         bad_ttf = self.merger.ttfs[offender_index]
         good_ttf = self.merger.ttfs[offender_index - 1]
 
         good_features = [
-            x.FeatureTag for x in good_ttf[stack[-1]].table.FeatureList.FeatureRecord
+            x.FeatureTag
+            for x in good_ttf[self.stack[-1]].table.FeatureList.FeatureRecord
         ]
         bad_features = [
-            x.FeatureTag for x in bad_ttf[stack[-1]].table.FeatureList.FeatureRecord
+            x.FeatureTag
+            for x in bad_ttf[self.stack[-1]].table.FeatureList.FeatureRecord
         ]
         return (
             "\nIncompatible features between masters.\n"
@@ -72,39 +97,65 @@ class VarLibMergeError(VarLibError):
             f"Got: {', '.join(bad_features)}.\n"
         )
 
-    def __str__(self):
-        cause, stack = self.args[0], self.args[1:]
-        context = "".join(reversed(stack))
-        details = ""
-        reason = cause["reason"].value
-        offender_index, offender = self._offender(cause)
-        if offender:
-            details = f"\n\nThe problem is likely to be in {offender}:\n"
-        if cause["reason"] is VarLibMergeFailure.FoundANone:
-            details = details + f"{stack[0]}=={cause['got']}\n"
-        elif (
-            cause["reason"] is VarLibMergeFailure.ShouldBeConstant
-            and stack[0] == ".FeatureCount"
-        ):
-            # Common case
-            details = details + self._incompatible_features(offender_index)
-        elif "expected" in cause and "got" in cause:
-            got = cause["got"][offender_index]
-            details = details + (
-                f"Expected to see {stack[0]}=={cause['expected']}, instead saw {got}\n"
-            )
 
-        if (
-            cause["reason"] is VarLibMergeFailure.UnsupportedFormat
-            or cause["reason"] is VarLibMergeFailure.InconsistentFormat
-        ):
-            reason = reason % cause["subtable"]
-        basic = textwrap.fill(
-            f"Couldn't merge the fonts, because {reason}. "
-            f"This happened while performing the following operation: {context}",
-            width=78,
-        )
-        return "\n\n" + basic + details
+class VarLibMergeFailureFoundANone(VarLibMergeError):
+    """one of the values in a list was empty when it shouldn't have been"""
+
+    @property
+    def offender(self):
+        cause = self.argv[0]
+        index = [x is None for x in cause["got"]].index(True)
+        return index, self._master_name(index)
+
+    @property
+    def details(self):
+        cause, stack = self.args[0], self.args[1:]
+        return f"{stack[0]}=={cause['got']}\n"
+
+
+class VarLibMergeFailureMismatchedTypes(VarLibMergeError):
+    """data had inconsistent types"""
+
+    pass
+
+
+class VarLibMergeFailureLengthsDiffer(VarLibMergeError):
+    """a list of objects had inconsistent lengths"""
+
+    pass
+
+
+class VarLibMergeFailureKeysDiffer(VarLibMergeError):
+    """a list of objects had different keys"""
+
+    pass
+
+
+class VarLibMergeFailureInconsistentGlyphOrder(VarLibMergeError):
+    """the glyph order was inconsistent between masters"""
+
+    pass
+
+
+class VarLibMergeFailureInconsistentExtensions(VarLibMergeError):
+    """the masters use extension lookups in inconsistent ways"""
+
+    pass
+
+
+class VarLibMergeFailureUnsupportedFormat(VarLibMergeError):
+    """an OpenType subtable (%s) had a format I didn't expect"""
+
+    @property
+    def reason(self):
+        cause, stack = self.args[0], self.args[1:]
+        return self.__doc__ % cause["subtable"]
+
+
+class VarLibMergeFailureUnsupportedFormat(VarLibMergeFailureUnsupportedFormat):
+    """an OpenType subtable (%s) had inconsistent formats between masters"""
+
+    pass
 
 
 class VarLibCFFDictMergeError(VarLibMergeError):
