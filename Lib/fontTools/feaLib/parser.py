@@ -1,5 +1,6 @@
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.feaLib.lexer import Lexer, IncludingLexer, NonIncludingLexer
+from fontTools.feaLib.variableScalar import VariableScalar
 from fontTools.misc.encodingTools import getEncoding
 from fontTools.misc.textTools import bytechr, tobytes, tostr
 import fontTools.feaLib.ast as ast
@@ -152,7 +153,7 @@ class Parser(object):
                 location=location,
             )
 
-        x, y = self.expect_number_(), self.expect_number_()
+        x, y = self.expect_number_(variable=True), self.expect_number_(variable=True)
 
         contourpoint = None
         if self.next_token_ == "contourpoint":  # Format B
@@ -1616,10 +1617,10 @@ class Parser(object):
             xAdvance, yAdvance = (value.xAdvance, value.yAdvance)
         else:
             xPlacement, yPlacement, xAdvance, yAdvance = (
-                self.expect_number_(),
-                self.expect_number_(),
-                self.expect_number_(),
-                self.expect_number_(),
+                self.expect_number_(variable=True),
+                self.expect_number_(variable=True),
+                self.expect_number_(variable=True),
+                self.expect_number_(variable=True),
             )
 
         if self.next_token_ == "<":
@@ -2080,11 +2081,46 @@ class Parser(object):
             return self.cur_token_
         raise FeatureLibError("Expected a name", self.cur_token_location_)
 
-    def expect_number_(self):
+    def expect_number_(self, variable=False):
         self.advance_lexer_()
         if self.cur_token_type_ is Lexer.NUMBER:
             return self.cur_token_
+        if variable and self.cur_token_type_ is Lexer.SYMBOL and self.cur_token_ == "(":
+            return self.expect_variable_scalar_()
         raise FeatureLibError("Expected a number", self.cur_token_location_)
+
+    def expect_variable_scalar_(self):
+        self.advance_lexer_() # "("
+        scalar = VariableScalar()
+        while True:
+            if self.cur_token_type_ == Lexer.SYMBOL and self.cur_token_ == ")":
+                break
+            location, value = self.expect_master_()
+            scalar.add_value(location, value)
+        return scalar
+
+    def expect_master_(self):
+        location = {}
+        while True:
+            if self.cur_token_type_ is not Lexer.NAME:
+                raise FeatureLibError("Expected an axis name", self.cur_token_location_)
+            axis = self.cur_token_
+            self.advance_lexer_()
+            if not (self.cur_token_type_ is Lexer.SYMBOL and self.cur_token_ == "="):
+                raise FeatureLibError("Expected an equals sign", self.cur_token_location_)
+            value = self.expect_number_()
+            location[axis] = value
+            if self.next_token_type_ is Lexer.NAME and self.next_token_[0] == ":":
+                # Lexer has just read the value as a glyph name. We'll correct it later
+                break
+            self.advance_lexer_()
+            if not(self.cur_token_type_ is Lexer.SYMBOL and self.cur_token_ == ","):
+                raise FeatureLibError("Expected an comma or an equals sign", self.cur_token_location_)
+            self.advance_lexer_()
+        self.advance_lexer_()
+        value = int(self.cur_token_[1:])
+        self.advance_lexer_()
+        return location, value
 
     def expect_any_number_(self):
         self.advance_lexer_()

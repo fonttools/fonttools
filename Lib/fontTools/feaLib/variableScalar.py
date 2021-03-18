@@ -1,0 +1,78 @@
+from fontTools.varLib.models import VariationModel, normalizeValue
+
+
+class Location(dict):
+    def __hash__(self):
+        return hash(frozenset(self))
+
+
+class VariableScalar:
+    """A scalar with different values at different points in the designspace."""
+
+    def __init__(self, location_value={}):
+        self.values = {}
+        self.axes = {}
+        for location, value in location_value.items():
+            self.add_value(location, value)
+
+    def __repr__(self):
+        items = []
+        for location,value in self.values.items():
+            loc = ",".join(["%s=%i" % (ax,loc) for ax,loc in location.items()])
+            items.append("%s:%i" % (loc, value))
+        return "("+(" ".join(items))+")"
+
+    @property
+    def axes_dict(self):
+        if not self.axes:
+            raise ValueError(".axes must be defined on variable scalar before interpolating")
+        return {ax.tag: ax for ax in self.axes}
+
+    def _normalized_location(self, location):
+        normalized_location = {}
+        for axtag in location.keys():
+            if axtag not in self.axes_dict:
+                raise ValueError("Unknown axis %s in %s" % axtag, location)
+            axis = self.axes_dict[axtag]
+            normalized_location[axtag] = normalizeValue(
+                location[axtag], (axis.minimum, axis.default, axis.maximum)
+            )
+
+        for ax in self.axes:
+            if ax.tag not in normalized_location:
+                normalized_location[ax.tag] = 0
+
+        return Location(normalized_location)
+
+    def add_value(self, location, value):
+        self.values[Location(location)] = value
+
+    @property
+    def default(self):
+        key = {ax.tag: ax.default for ax in self.axes}
+        if key not in self.values:
+            raise ValueError("Default value could not be found")
+            # I *guess* we could interpolate one, but I don't know how.
+        return self.values[key]
+
+    def value_at_location(self, location):
+        loc = location
+        if loc in self.values.keys():
+            return self.values[loc]
+        values = list(self.values.values())
+        return self.model.interpolateFromMasters(loc, values)
+
+    @property
+    def model(self):
+        locations = [self._normalized_location(k) for k in self.values.keys()]
+        return VariationModel(locations)
+
+    def get_deltas_and_supports(self):
+        values = list(self.values.values())
+        return self.model.getDeltasAndSupports(values)
+
+    def add_to_variation_store(self, store_builder):
+        deltas, supports = self.get_deltas_and_supports()
+        store_builder.setSupports(supports)
+        index = store_builder.storeDeltas(deltas)
+        return int(self.default), index

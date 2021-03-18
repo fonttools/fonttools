@@ -172,6 +172,14 @@ class ParserTest(unittest.TestCase):
             "    position cursive A <anchor UnknownName> <anchor NULL>;"
             "} test;")
 
+    def test_anchor_variable_scalar(self):
+        doc = self.parse(
+            "feature test {"
+            "    pos cursive A <anchor (wght=200:-100 wght=900:-150 wght=900,wdth=150:-120) -20> <anchor NULL>;"
+            "} test;")
+        anchor = doc.statements[0].statements[0].entryAnchor
+        self.assertEqual(anchor.asFea(), "<anchor (wght=200:-100 wght=900:-150 wght=900,wdth=150:-120) -20>")
+
     def test_anchordef(self):
         [foo] = self.parse("anchorDef 123 456 foo;").statements
         self.assertEqual(type(foo), ast.AnchorDefinition)
@@ -1803,6 +1811,11 @@ class ParserTest(unittest.TestCase):
         value = doc.statements[0].statements[0].value
         self.assertFalse(value)
         self.assertEqual(value.asFea(), "<NULL>")
+
+    def test_valuerecord_variable_scalar(self):
+        doc = self.parse("feature test {valueRecordDef <0 (wght=200:-100 wght=900:-150 wght=900,wdth=150:-120) 0 0> foo;} test;")
+        value = doc.statements[0].statements[0].value
+        self.assertEqual(value.asFea(), "<0 (wght=200:-100 wght=900:-150 wght=900,wdth=150:-120) 0 0>")
 
     def test_valuerecord_named(self):
         doc = self.parse("valueRecordDef <1 2 3 4> foo;"
