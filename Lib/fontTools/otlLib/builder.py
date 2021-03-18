@@ -959,12 +959,19 @@ class MarkBasePosBuilder(LookupBuilder):
             positioning lookup.
         """
         markClasses = self.buildMarkClasses_(self.marks)
-        marks = {
-            mark: (markClasses[mc], anchor) for mark, (mc, anchor) in self.marks.items()
-        }
+        marks = {}
+        for mark, (mc, anchor) in self.marks.items():
+            if mc not in markClasses:
+                raise ValueError("Mark class %s not found for mark glyph %s" % (mc, mark))
+            marks[mark] = (markClasses[mc], anchor)
         bases = {}
         for glyph, anchors in self.bases.items():
-            bases[glyph] = {markClasses[mc]: anchor for (mc, anchor) in anchors.items()}
+            bases[glyph] = {}
+            for mc, anchor in anchors.items():
+                if mc not in markClasses:
+                    import IPython;IPython.embed()
+                    raise ValueError("Mark class %s not found for base glyph %s" % (mc, mark))
+                bases[glyph][markClasses[mc]] = anchor
         subtables = buildMarkBasePos(marks, bases, self.glyphMap)
         return self.buildLookup_(subtables)
 

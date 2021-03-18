@@ -26,30 +26,40 @@ class VariableScalar:
     def axes_dict(self):
         if not self.axes:
             raise ValueError(".axes must be defined on variable scalar before interpolating")
-        return {ax.tag: ax for ax in self.axes}
+        return {ax.axisTag: ax for ax in self.axes}
 
     def _normalized_location(self, location):
+        location = self.fix_location(location)
         normalized_location = {}
         for axtag in location.keys():
             if axtag not in self.axes_dict:
                 raise ValueError("Unknown axis %s in %s" % axtag, location)
             axis = self.axes_dict[axtag]
             normalized_location[axtag] = normalizeValue(
-                location[axtag], (axis.minimum, axis.default, axis.maximum)
+                location[axtag], (axis.minValue, axis.defaultValue, axis.maxValue)
             )
-
-        for ax in self.axes:
-            if ax.tag not in normalized_location:
-                normalized_location[ax.tag] = 0
 
         return Location(normalized_location)
 
+    def fix_location(self, location):
+        for tag, axis in self.axes_dict.items():
+            if tag not in location:
+                location[tag] = axis.defaultValue
+        return location
+
     def add_value(self, location, value):
+        if self.axes:
+            location = self.fix_location(location)
+
         self.values[Location(location)] = value
+
+    def fix_all_locations(self):
+        self.values = {self.fix_location(l): v for l,v in self.values.items()}
 
     @property
     def default(self):
-        key = {ax.tag: ax.default for ax in self.axes}
+        self.fix_all_locations()
+        key = Location({ax.axisTag: ax.defaultValue for ax in self.axes})
         if key not in self.values:
             raise ValueError("Default value could not be found")
             # I *guess* we could interpolate one, but I don't know how.
