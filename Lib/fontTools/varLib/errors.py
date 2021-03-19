@@ -156,8 +156,11 @@ class UnsupportedFormat(UnsupportedFormat):
 
     pass
 
+class VarLibCFFMergeError(VarLibError):
+    pass
 
-class VarLibCFFDictMergeError(VarLibMergeError):
+
+class VarLibCFFDictMergeError(VarLibCFFMergeError):
     """Raised when a CFF PrivateDict cannot be merged."""
 
     def __init__(self, key, value, values):
@@ -170,7 +173,7 @@ class VarLibCFFDictMergeError(VarLibMergeError):
         self.args = (error_msg,)
 
 
-class VarLibCFFPointTypeMergeError(VarLibMergeError):
+class VarLibCFFPointTypeMergeError(VarLibCFFMergeError):
     """Raised when a CFF glyph cannot be merged because of point type differences."""
 
     def __init__(self, point_type, pt_index, m_index, default_type, glyph_name):
@@ -182,7 +185,7 @@ class VarLibCFFPointTypeMergeError(VarLibMergeError):
         self.args = (error_msg,)
 
 
-class VarLibCFFHintTypeMergeError(VarLibMergeError):
+class VarLibCFFHintTypeMergeError(VarLibCFFMergeError):
     """Raised when a CFF glyph cannot be merged because of hint type differences."""
 
     def __init__(self, hint_type, cmd_index, m_index, default_type, glyph_name):
