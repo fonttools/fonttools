@@ -12,17 +12,16 @@ class VarLibValidationError(VarLibError):
 class VarLibMergeError(VarLibError):
     """Raised when input data cannot be merged into a variable font."""
 
-    def __init__(self, merger, args):
+    def __init__(self, merger, **kwargs):
         self.merger = merger
-        self.args = args
-
-    @property
-    def cause(self):
-        return self.args[0]
-
-    @property
-    def stack(self):
-        return self.args[1:]
+        if not kwargs:
+            kwargs = {}
+        if "stack" in kwargs:
+            self.stack = kwargs["stack"]
+            del kwargs["stack"]
+        else:
+            self.stack = []
+        self.cause = kwargs
 
     @property
     def reason(self):
