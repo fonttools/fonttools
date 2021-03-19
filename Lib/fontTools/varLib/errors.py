@@ -115,31 +115,21 @@ class FoundANone(VarLibMergeError):
 class MismatchedTypes(VarLibMergeError):
     """data had inconsistent types"""
 
-    pass
-
 
 class LengthsDiffer(VarLibMergeError):
     """a list of objects had inconsistent lengths"""
-
-    pass
 
 
 class KeysDiffer(VarLibMergeError):
     """a list of objects had different keys"""
 
-    pass
-
 
 class InconsistentGlyphOrder(VarLibMergeError):
     """the glyph order was inconsistent between masters"""
 
-    pass
-
 
 class InconsistentExtensions(VarLibMergeError):
     """the masters use extension lookups in inconsistent ways"""
-
-    pass
 
 
 class UnsupportedFormat(VarLibMergeError):
@@ -154,7 +144,6 @@ class UnsupportedFormat(VarLibMergeError):
 class UnsupportedFormat(UnsupportedFormat):
     """an OpenType subtable (%s) had inconsistent formats between masters"""
 
-    pass
 
 class VarLibCFFMergeError(VarLibError):
     pass
