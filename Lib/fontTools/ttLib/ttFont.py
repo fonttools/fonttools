@@ -636,7 +636,7 @@ class TTFont(object):
 				log.debug("reusing '%s' table", tag)
 				writer.setEntry(tag, entry)
 				return
-		log.debug("writing '%s' table to disk", tag)
+		log.debug("Writing '%s' table to disk", tag)
 		writer[tag] = tabledata
 		if tableCache is not None:
 			tableCache[(Tag(tag), tabledata)] = writer[tag]
@@ -646,7 +646,7 @@ class TTFont(object):
 		"""
 		tag = Tag(tag)
 		if self.isLoaded(tag):
-			log.debug("compiling '%s' table", tag)
+			log.debug("Compiling '%s' table", tag)
 			return self.tables[tag].compile(self)
 		elif self.reader and tag in self.reader:
 			log.debug("Reading '%s' table from disk", tag)
