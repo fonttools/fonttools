@@ -9,7 +9,7 @@ from io import StringIO as UnicodeIO
 from types import SimpleNamespace
 
 warnings.warn(
-    "The py23 module has been deprecated and will be removed in the next release. "
+    "The py23 module has been deprecated and will be removed in a future release. "
     "Please update your code.",
     DeprecationWarning,
 )
