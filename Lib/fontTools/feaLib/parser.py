@@ -1586,11 +1586,11 @@ class Parser(object):
         return result
 
     def is_next_value_(self):
-        return self.next_token_type_ is Lexer.NUMBER or self.next_token_ == "<"
+        return self.next_token_type_ is Lexer.NUMBER or self.next_token_ == "<" or self.next_token_ == "("
 
     def parse_valuerecord_(self, vertical):
-        if self.next_token_type_ is Lexer.NUMBER:
-            number, location = self.expect_number_(), self.cur_token_location_
+        if (self.next_token_type_ is Lexer.SYMBOL and self.next_token_ == "(") or self.next_token_type_ is Lexer.NUMBER:
+            number, location = self.expect_number_(variable=True), self.cur_token_location_
             if vertical:
                 val = self.ast.ValueRecord(
                     yAdvance=number, vertical=vertical, location=location
