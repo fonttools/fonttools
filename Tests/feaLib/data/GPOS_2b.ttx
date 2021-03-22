@@ -50,6 +50,7 @@
           <!-- Class2Count=2 -->
           <Class1Record index="0">
             <Class2Record index="0">
+              <Value1 XAdvance="0"/>
             </Class2Record>
             <Class2Record index="1">
               <Value1 XAdvance="1"/>
@@ -79,6 +80,7 @@
           <!-- Class2Count=3 -->
           <Class1Record index="0">
             <Class2Record index="0">
+              <Value1 XAdvance="0"/>
             </Class2Record>
             <Class2Record index="1">
               <Value1 XAdvance="4"/>
@@ -89,8 +91,10 @@
           </Class1Record>
           <Class1Record index="1">
             <Class2Record index="0">
+              <Value1 XAdvance="0"/>
             </Class2Record>
             <Class2Record index="1">
+              <Value1 XAdvance="0"/>
             </Class2Record>
             <Class2Record index="2">
               <Value1 XAdvance="2"/>
@@ -114,6 +118,7 @@
           <!-- Class2Count=2 -->
           <Class1Record index="0">
             <Class2Record index="0">
+              <Value1 XPlacement="0" YPlacement="0" XAdvance="0" YAdvance="0"/>
             </Class2Record>
             <Class2Record index="1">
               <Value1 XPlacement="5" YPlacement="5" XAdvance="5" YAdvance="5"/>
