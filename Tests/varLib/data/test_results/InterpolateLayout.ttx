@@ -117,7 +117,7 @@
         <LookupType value="3"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <AlternateSubst index="0" Format="1">
+        <AlternateSubst index="0">
           <AlternateSet glyph="a">
             <Alternate glyph="a.alt"/>
             <Alternate glyph="A.sc"/>
