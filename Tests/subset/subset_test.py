@@ -762,6 +762,37 @@ class SubsetTest(unittest.TestCase):
         subsetfont = TTFont(subsetpath)
         self.expect_ttx(subsetfont, self.getpath("CmapSubsetTest.subset.ttx"), ["cmap"])
 
+    def test_GPOS_PairPos_Format2_useClass0(self):
+        # Check two things related to class 0 ('every other glyph'):
+        # 1) that it's reused for ClassDef1 when it becomes empty as the subset glyphset
+        #    is intersected with the table's Coverage
+        # 2) that it is never reused for ClassDef2 even when it happens to become empty
+        #    because of the subset glyphset. In this case, we don't keep a PairPosClass2
+        #    subtable if only ClassDef2's class0 survived subsetting.
+        # The test font (from Harfbuzz test suite) is constructed to trigger these two
+        # situations depending on the input subset --text.
+        # https://github.com/fonttools/fonttools/pull/2221
+        _, fontpath = self.compile_font(
+            self.getpath("GPOS_PairPos_Format2_PR_2221.ttx"), ".ttf"
+        )
+        subsetpath = self.temp_path(".ttf")
+
+        for n, text in enumerate("!#", start=1):
+            expected_ttx = self.getpath(
+                f"GPOS_PairPos_Format2_ClassDef{n}_useClass0.subset.ttx"
+            )
+            with self.subTest(text=text, expected_ttx=expected_ttx):
+                subset.main(
+                    [
+                        fontpath,
+                        f"--text='{text}'",
+                        "--layout-features+=test",
+                        "--output-file=%s" % subsetpath,
+                    ]
+                )
+                subsetfont = TTFont(subsetpath)
+                self.expect_ttx(subsetfont, expected_ttx, ["GPOS"])
+
 
 @pytest.fixture
 def featureVarsTestFont():
