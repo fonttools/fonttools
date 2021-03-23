@@ -102,7 +102,7 @@
         <ContextPos index="0" Format="3">
           <!-- GlyphCount=1 -->
           <!-- PosCount=1 -->
-          <Coverage index="0" Format="1">
+          <Coverage index="0">
             <Glyph value="g20"/>
           </Coverage>
           <PosLookupRecord index="0">

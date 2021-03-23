@@ -243,7 +243,7 @@
     <MarkGlyphSetsDef>
       <MarkSetTableFormat value="1"/>
       <!-- MarkSetCount=1 -->
-      <Coverage index="0" Format="1">
+      <Coverage index="0">
       </Coverage>
     </MarkGlyphSetsDef>
   </GDEF>

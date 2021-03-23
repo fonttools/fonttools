@@ -15,7 +15,7 @@
           <Glyph value="zayf2"/>
         </Coverage>
         <!-- BacktrackGlyphCount=1 -->
-        <BacktrackCoverage index="0" Format="2">
+        <BacktrackCoverage index="0">
           <Glyph value="bayi1"/>
           <Glyph value="jeemi1"/>
           <Glyph value="kafi1"/>
@@ -40,7 +40,7 @@
           <Glyph value="yehf2"/>
         </Coverage>
         <!-- BacktrackGlyphCount=1 -->
-        <BacktrackCoverage index="0" Format="1">
+        <BacktrackCoverage index="0">
           <Glyph value="bayi1"/>
           <Glyph value="kafi1"/>
           <Glyph value="ghafi1"/>
@@ -65,7 +65,7 @@
         </Coverage>
         <!-- BacktrackGlyphCount=0 -->
         <!-- LookAheadGlyphCount=1 -->
-        <LookAheadCoverage index="0" Format="2">
+        <LookAheadCoverage index="0">
           <Glyph value="ray"/>
           <Glyph value="rey"/>
           <Glyph value="zay"/>

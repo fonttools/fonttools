@@ -141,11 +141,11 @@
         <ChainContextSubst index="0" Format="3">
           <!-- BacktrackGlyphCount=0 -->
           <!-- InputGlyphCount=1 -->
-          <InputCoverage index="0" Format="1">
+          <InputCoverage index="0">
             <Glyph value="a"/>
           </InputCoverage>
           <!-- LookAheadGlyphCount=1 -->
-          <LookAheadCoverage index="0" Format="1">
+          <LookAheadCoverage index="0">
             <Glyph value="t"/>
           </LookAheadCoverage>
           <!-- SubstCount=1 -->
