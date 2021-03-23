@@ -80,18 +80,18 @@
         <!-- SubTableCount=1 -->
         <ChainContextSubst index="0" Format="3">
           <!-- BacktrackGlyphCount=1 -->
-          <BacktrackCoverage index="0" Format="1">
+          <BacktrackCoverage index="0">
             <Glyph value="g22"/>
           </BacktrackCoverage>
           <!-- InputGlyphCount=2 -->
-          <InputCoverage index="0" Format="1">
+          <InputCoverage index="0">
             <Glyph value="g21"/>
           </InputCoverage>
-          <InputCoverage index="1" Format="1">
+          <InputCoverage index="1">
             <Glyph value="g22"/>
           </InputCoverage>
           <!-- LookAheadGlyphCount=1 -->
-          <LookAheadCoverage index="0" Format="1">
+          <LookAheadCoverage index="0">
             <Glyph value="g21"/>
           </LookAheadCoverage>
           <!-- SubstCount=1 -->

@@ -101,18 +101,18 @@
         <!-- SubTableCount=1 -->
         <ChainContextPos index="0" Format="3">
           <!-- BacktrackGlyphCount=1 -->
-          <BacktrackCoverage index="0" Format="1">
+          <BacktrackCoverage index="0">
             <Glyph value="g20"/>
           </BacktrackCoverage>
           <!-- InputGlyphCount=1 -->
-          <InputCoverage index="0" Format="1">
+          <InputCoverage index="0">
             <Glyph value="g21"/>
           </InputCoverage>
           <!-- LookAheadGlyphCount=2 -->
-          <LookAheadCoverage index="0" Format="1">
+          <LookAheadCoverage index="0">
             <Glyph value="g22"/>
           </LookAheadCoverage>
-          <LookAheadCoverage index="1" Format="1">
+          <LookAheadCoverage index="1">
             <Glyph value="g23"/>
           </LookAheadCoverage>
           <!-- PosCount=1 -->

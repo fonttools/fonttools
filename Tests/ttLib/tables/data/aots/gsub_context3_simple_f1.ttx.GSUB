@@ -81,13 +81,13 @@
         <ContextSubst index="0" Format="3">
           <!-- GlyphCount=3 -->
           <!-- SubstCount=3 -->
-          <Coverage index="0" Format="1">
+          <Coverage index="0">
             <Glyph value="g20"/>
           </Coverage>
-          <Coverage index="1" Format="1">
+          <Coverage index="1">
             <Glyph value="g21"/>
           </Coverage>
-          <Coverage index="2" Format="1">
+          <Coverage index="2">
             <Glyph value="g22"/>
           </Coverage>
           <SubstLookupRecord index="0">
