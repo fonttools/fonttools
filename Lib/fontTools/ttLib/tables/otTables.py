@@ -1686,7 +1686,6 @@ def splitMarkBasePos(oldSubTable, newSubTable, overflowRecord):
 
 	oldSubTable.MarkCoverage.glyphs = oldMarkCoverage
 	newSubTable.MarkCoverage = oldSubTable.MarkCoverage.__class__()
-	newSubTable.MarkCoverage.Format = oldSubTable.MarkCoverage.Format
 	newSubTable.MarkCoverage.glyphs = newMarkCoverage
 
 	# share the same BaseCoverage in both halves

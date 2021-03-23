@@ -599,7 +599,6 @@ def test_splitMarkBasePos():
 	glyphMap = {g: i for i, g in enumerate(glyphOrder)}
 
 	oldSubTable = buildMarkBasePosSubtable(marks, bases, glyphMap)
-	oldSubTable.MarkCoverage.Format = oldSubTable.BaseCoverage.Format = 1
 	newSubTable = otTables.MarkBasePos()
 
 	ok = otTables.splitMarkBasePos(oldSubTable, newSubTable, overflowRecord=None)
