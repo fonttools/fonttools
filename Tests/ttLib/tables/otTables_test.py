@@ -169,7 +169,7 @@ class MultipleSubstTest(unittest.TestCase):
         table = otTables.MultipleSubst()
         table.Format = 1
         for name, attrs, content in parseXML(
-                '<Coverage Format="1">'
+                '<Coverage>'
                 '  <Glyph value="o"/>'
                 '  <Glyph value="l"/>'
                 '</Coverage>'
@@ -608,11 +608,11 @@ def test_splitMarkBasePos():
 
 	assert getXML(oldSubTable.toXML) == [
 		'<MarkBasePos Format="1">',
-		'  <MarkCoverage Format="1">',
+		'  <MarkCoverage>',
 		'    <Glyph value="acutecomb"/>',
 		'    <Glyph value="gravecomb"/>',
 		'  </MarkCoverage>',
-		'  <BaseCoverage Format="1">',
+		'  <BaseCoverage>',
 		'    <Glyph value="a"/>',
 		'    <Glyph value="c"/>',
 		'  </BaseCoverage>',
@@ -654,10 +654,10 @@ def test_splitMarkBasePos():
 
 	assert getXML(newSubTable.toXML) == [
 		'<MarkBasePos Format="1">',
-		'  <MarkCoverage Format="1">',
+		'  <MarkCoverage>',
 		'    <Glyph value="cedillacomb"/>',
 		'  </MarkCoverage>',
-		'  <BaseCoverage Format="1">',
+		'  <BaseCoverage>',
 		'    <Glyph value="a"/>',
 		'    <Glyph value="c"/>',
 		'  </BaseCoverage>',

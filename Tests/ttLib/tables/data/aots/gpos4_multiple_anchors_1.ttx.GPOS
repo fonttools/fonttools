@@ -34,13 +34,13 @@
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <MarkBasePos index="0" Format="1">
-          <MarkCoverage Format="1">
+          <MarkCoverage>
             <Glyph value="g19"/>
             <Glyph value="g20"/>
             <Glyph value="g21"/>
             <Glyph value="g22"/>
           </MarkCoverage>
-          <BaseCoverage Format="1">
+          <BaseCoverage>
             <Glyph value="g17"/>
             <Glyph value="g18"/>
           </BaseCoverage>

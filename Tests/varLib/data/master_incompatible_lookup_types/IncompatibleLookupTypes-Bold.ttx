@@ -501,7 +501,7 @@
 
   <GDEF>
     <Version value="0x00010000"/>
-    <GlyphClassDef Format="2">
+    <GlyphClassDef>
       <ClassDef glyph="A" class="1"/>
       <ClassDef glyph="Aacute" class="1"/>
       <ClassDef glyph="acutecomb" class="3"/>
@@ -549,7 +549,7 @@
         <LookupFlag value="8"/><!-- ignoreMarks -->
         <!-- SubTableCount=1 -->
         <PairPos index="0" Format="1">
-          <Coverage Format="1">
+          <Coverage>
             <Glyph value="A"/>
             <Glyph value="Aacute"/>
             <Glyph value="V"/>
@@ -585,7 +585,7 @@
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <PairPos index="0" Format="1">
-          <Coverage Format="1">
+          <Coverage>
             <Glyph value="A"/>
             <Glyph value="Aacute"/>
             <Glyph value="V"/>

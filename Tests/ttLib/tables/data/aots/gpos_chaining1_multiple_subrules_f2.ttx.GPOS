@@ -34,7 +34,7 @@
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <SinglePos index="0" Format="1">
-          <Coverage Format="1">
+          <Coverage>
             <Glyph value="g20"/>
             <Glyph value="g21"/>
             <Glyph value="g22"/>
@@ -55,7 +55,7 @@
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <PairPos index="0" Format="1">
-          <Coverage Format="1">
+          <Coverage>
             <Glyph value="g21"/>
           </Coverage>
           <ValueFormat1 value="1"/>
@@ -75,7 +75,7 @@
         <LookupFlag value="8"/><!-- ignoreMarks -->
         <!-- SubTableCount=1 -->
         <PairPos index="0" Format="1">
-          <Coverage Format="1">
+          <Coverage>
             <Glyph value="g21"/>
           </Coverage>
           <ValueFormat1 value="1"/>
@@ -100,7 +100,7 @@
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <ChainContextPos index="0" Format="1">
-          <Coverage Format="1">
+          <Coverage>
             <Glyph value="g21"/>
           </Coverage>
           <!-- ChainPosRuleSetCount=1 -->

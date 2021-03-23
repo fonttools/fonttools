@@ -2,7 +2,7 @@
 <GDEF>
   <Version value="0x00010000"/>
   <AttachList>
-    <Coverage Format="1">
+    <Coverage>
       <Glyph value="A"/>
       <Glyph value="B"/>
     </Coverage>

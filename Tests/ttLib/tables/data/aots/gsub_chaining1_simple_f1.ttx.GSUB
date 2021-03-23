@@ -79,7 +79,7 @@
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <ChainContextSubst index="0" Format="1">
-          <Coverage Format="1">
+          <Coverage>
             <Glyph value="g21"/>
           </Coverage>
           <!-- ChainSubRuleSetCount=1 -->

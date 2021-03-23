@@ -3,7 +3,7 @@
 
   <GDEF>
     <Version value="0x00010000"/>
-    <GlyphClassDef Format="2">
+    <GlyphClassDef>
       <ClassDef glyph="g24" class="1"/>
     </GlyphClassDef>
   </GDEF>
