@@ -766,7 +766,7 @@
         <LookupType value="1"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <SingleSubst index="0" Format="1">
+        <SingleSubst index="0">
           <Substitution in="A" out="A.sc"/>
         </SingleSubst>
       </Lookup>
@@ -774,7 +774,7 @@
         <LookupType value="1"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <SingleSubst index="0" Format="1">
+        <SingleSubst index="0">
           <Substitution in="a" out="a.alt"/>
         </SingleSubst>
       </Lookup>

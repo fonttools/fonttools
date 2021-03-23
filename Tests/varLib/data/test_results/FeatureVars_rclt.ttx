@@ -71,7 +71,7 @@
         <LookupType value="1"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <SingleSubst index="0" Format="1">
+        <SingleSubst index="0">
           <Substitution in="uni0041" out="uni0061"/>
         </SingleSubst>
       </Lookup>
@@ -79,7 +79,7 @@
         <LookupType value="1"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <SingleSubst index="0" Format="1">
+        <SingleSubst index="0">
           <Substitution in="uni0041" out="uni0061"/>
         </SingleSubst>
       </Lookup>
@@ -87,7 +87,7 @@
         <LookupType value="1"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <SingleSubst index="0" Format="1">
+        <SingleSubst index="0">
           <Substitution in="uni0024" out="uni0024.nostroke"/>
         </SingleSubst>
       </Lookup>
@@ -95,7 +95,7 @@
         <LookupType value="1"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <SingleSubst index="0" Format="1">
+        <SingleSubst index="0">
           <Substitution in="uni0041" out="uni0061"/>
         </SingleSubst>
       </Lookup>
@@ -103,7 +103,7 @@
         <LookupType value="1"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <SingleSubst index="0" Format="1">
+        <SingleSubst index="0">
           <Substitution in="uni0061" out="uni0041"/>
         </SingleSubst>
       </Lookup>
