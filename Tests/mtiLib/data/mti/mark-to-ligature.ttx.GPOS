@@ -8,7 +8,7 @@
       <LookupFlag value="0"/>
       <!-- SubTableCount=1 -->
       <MarkLigPos index="0" Format="1">
-        <MarkCoverage Format="2">
+        <MarkCoverage>
           <Glyph value="AlefSuperiorNS"/>
           <Glyph value="DammaNS"/>
           <Glyph value="DammaRflxNS"/>
@@ -37,7 +37,7 @@
           <Glyph value="UltapeshNS"/>
           <Glyph value="WaslaNS"/>
         </MarkCoverage>
-        <LigatureCoverage Format="2">
+        <LigatureCoverage>
           <Glyph value="AinIni.12m_MeemFin.02"/>
           <Glyph value="AinIni_YehBarreeFin"/>
           <Glyph value="AinMed_YehBarreeFin"/>

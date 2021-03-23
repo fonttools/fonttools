@@ -79,11 +79,11 @@
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <ContextSubst index="0" Format="2">
-          <Coverage Format="1">
+          <Coverage>
             <Glyph value="g20"/>
             <Glyph value="g21"/>
           </Coverage>
-          <ClassDef Format="2">
+          <ClassDef>
             <ClassDef glyph="g20" class="1"/>
             <ClassDef glyph="g21" class="1"/>
             <ClassDef glyph="g22" class="1"/>

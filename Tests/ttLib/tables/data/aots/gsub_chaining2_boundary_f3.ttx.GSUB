@@ -79,7 +79,7 @@
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <ChainContextSubst index="0" Format="2">
-          <Coverage Format="1">
+          <Coverage>
             <Glyph value="g20"/>
             <Glyph value="g21"/>
             <Glyph value="g22"/>
@@ -88,7 +88,7 @@
             <Glyph value="g25"/>
             <Glyph value="g26"/>
           </Coverage>
-          <BacktrackClassDef Format="2">
+          <BacktrackClassDef>
             <ClassDef glyph="g20" class="20"/>
             <ClassDef glyph="g21" class="21"/>
             <ClassDef glyph="g22" class="22"/>
@@ -97,7 +97,7 @@
             <ClassDef glyph="g25" class="25"/>
             <ClassDef glyph="g26" class="26"/>
           </BacktrackClassDef>
-          <InputClassDef Format="2">
+          <InputClassDef>
             <ClassDef glyph="g20" class="20"/>
             <ClassDef glyph="g21" class="21"/>
             <ClassDef glyph="g22" class="22"/>
@@ -106,7 +106,7 @@
             <ClassDef glyph="g25" class="25"/>
             <ClassDef glyph="g26" class="26"/>
           </InputClassDef>
-          <LookAheadClassDef Format="2">
+          <LookAheadClassDef>
             <ClassDef glyph="g20" class="20"/>
             <ClassDef glyph="g21" class="21"/>
             <ClassDef glyph="g22" class="22"/>

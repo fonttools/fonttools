@@ -34,7 +34,7 @@
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <PairPos index="0" Format="1">
-          <Coverage Format="1">
+          <Coverage>
             <Glyph value="A"/>
             <Glyph value="a"/>
           </Coverage>

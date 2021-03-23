@@ -355,7 +355,7 @@
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <ContextSubst index="0" Format="2">
-          <Coverage Format="1">
+          <Coverage>
             <Glyph value=".notdef"/>
             <Glyph value="g1"/>
             <Glyph value="g2"/>
@@ -457,7 +457,7 @@
             <Glyph value="g98"/>
             <Glyph value="g99"/>
           </Coverage>
-          <ClassDef Format="2">
+          <ClassDef>
             <ClassDef glyph="g18" class="2"/>
             <ClassDef glyph="g19" class="2"/>
             <ClassDef glyph="g20" class="2"/>

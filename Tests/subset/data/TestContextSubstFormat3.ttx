@@ -328,7 +328,7 @@
 
   <GDEF>
     <Version value="0x00010000"/>
-    <GlyphClassDef Format="2">
+    <GlyphClassDef>
       <ClassDef glyph=".notdef" class="1"/>
       <ClassDef glyph="glyph00002" class="1"/>
       <ClassDef glyph="glyph00003" class="1"/>
@@ -430,17 +430,17 @@
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <ChainContextSubst index="0" Format="2">
-          <Coverage Format="1">
+          <Coverage>
             <Glyph value="plus"/>
           </Coverage>
-          <BacktrackClassDef Format="1">
+          <BacktrackClassDef>
             <ClassDef glyph="glyph00005" class="1"/>
             <ClassDef glyph="glyph00007" class="1"/>
           </BacktrackClassDef>
-          <InputClassDef Format="1">
+          <InputClassDef>
             <ClassDef glyph="plus" class="1"/>
           </InputClassDef>
-          <LookAheadClassDef Format="2">
+          <LookAheadClassDef>
           </LookAheadClassDef>
           <!-- ChainSubClassSetCount=2 -->
           <ChainSubClassSet index="0" empty="1"/>

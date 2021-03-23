@@ -490,7 +490,7 @@ This license is available with a FAQ at: http://scripts.sil.org/OFL
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <PairPos index="0" Format="1">
-          <Coverage Format="2">
+          <Coverage>
             <Glyph value="one"/>
             <Glyph value="three"/>
             <Glyph value="two"/>

@@ -539,7 +539,7 @@
 
   <GDEF>
     <Version value="0x00010003"/>
-    <GlyphClassDef Format="1">
+    <GlyphClassDef>
       <ClassDef glyph="A" class="1"/>
       <ClassDef glyph="Agrave" class="1"/>
       <ClassDef glyph="T" class="1"/>
@@ -652,7 +652,7 @@
         <LookupFlag value="8"/><!-- ignoreMarks -->
         <!-- SubTableCount=1 -->
         <PairPos index="0" Format="2">
-          <Coverage Format="1">
+          <Coverage>
             <Glyph value="A"/>
             <Glyph value="T"/>
             <Glyph value="Agrave"/>
