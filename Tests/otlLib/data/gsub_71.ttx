@@ -87,7 +87,7 @@
         <!-- SubTableCount=1 -->
         <ExtensionSubst index="0" Format="1">
           <ExtensionLookupType value="1"/>
-          <SingleSubst Format="1">
+          <SingleSubst>
             <Substitution in="g18" out="g23"/>
             <Substitution in="g19" out="g24"/>
           </SingleSubst>
