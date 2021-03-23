@@ -39,9 +39,9 @@
           </Coverage>
           <ValueFormat1 value="4"/>
           <ValueFormat2 value="0"/>
-          <ClassDef1 Format="2">
+          <ClassDef1>
           </ClassDef1>
-          <ClassDef2 Format="1">
+          <ClassDef2>
             <ClassDef glyph="a" class="1"/>
           </ClassDef2>
           <!-- Class1Count=1 -->

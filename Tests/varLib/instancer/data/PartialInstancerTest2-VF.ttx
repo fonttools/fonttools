@@ -659,12 +659,12 @@
           </Coverage>
           <ValueFormat1 value="68"/>
           <ValueFormat2 value="0"/>
-          <ClassDef1 Format="1">
+          <ClassDef1>
             <ClassDef glyph="A" class="1"/>
             <ClassDef glyph="Agrave" class="1"/>
             <ClassDef glyph="T" class="2"/>
           </ClassDef1>
-          <ClassDef2 Format="1">
+          <ClassDef2>
             <ClassDef glyph="A" class="1"/>
             <ClassDef glyph="Agrave" class="1"/>
             <ClassDef glyph="T" class="2"/>
