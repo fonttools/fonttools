@@ -922,6 +922,7 @@ class BuilderTest(object):
             },
             self.GLYPHMAP,
         )
+
         assert getXML(subtable.toXML) == [
             '<PairPos Format="1">',
             "  <Coverage>",
@@ -935,11 +936,12 @@ class BuilderTest(object):
             "    <!-- PairValueCount=2 -->",
             '    <PairValueRecord index="0">',
             '      <SecondGlyph value="zero"/>',
-            '      <Value1/>',
+            '      <Value1 XPlacement="0" YPlacement="0"/>',
             '      <Value2 XPlacement="-50"/>',
             "    </PairValueRecord>",
             '    <PairValueRecord index="1">',
             '      <SecondGlyph value="one"/>',
+            '      <Value1 XPlacement="0" YPlacement="0"/>',
             '      <Value2 XPlacement="-20"/>',
             "    </PairValueRecord>",
             "  </PairSet>",
