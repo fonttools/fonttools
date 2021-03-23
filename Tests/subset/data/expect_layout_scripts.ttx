@@ -89,7 +89,7 @@
         <LookupType value="1"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <SingleSubst index="0" Format="2">
+        <SingleSubst index="0">
           <Substitution in="uni06F4" out="uni06F4.urd"/>
           <Substitution in="uni06F6" out="uni06F6.urd"/>
           <Substitution in="uni06F7" out="uni06F7.urd"/>
@@ -99,7 +99,7 @@
         <LookupType value="1"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <SingleSubst index="0" Format="1">
+        <SingleSubst index="0">
           <Substitution in="uni06F0" out="uni06F0.numr"/>
           <Substitution in="uni06F1" out="uni06F1.numr"/>
           <Substitution in="uni06F2" out="uni06F2.numr"/>
@@ -119,7 +119,7 @@
         <LookupType value="1"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <SingleSubst index="0" Format="1">
+        <SingleSubst index="0">
           <Substitution in="i" out="i.TRK"/>
         </SingleSubst>
       </Lookup>

@@ -568,7 +568,7 @@
         <LookupType value="1"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <SingleSubst index="0" Format="1">
+        <SingleSubst index="0">
           <Substitution in="plus" out="glyph00005"/>
         </SingleSubst>
       </Lookup>
@@ -576,7 +576,7 @@
         <LookupType value="1"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <SingleSubst index="0" Format="1">
+        <SingleSubst index="0">
           <Substitution in="plus" out="glyph00004"/>
         </SingleSubst>
       </Lookup>
@@ -584,7 +584,7 @@
         <LookupType value="1"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <SingleSubst index="0" Format="1">
+        <SingleSubst index="0">
           <Substitution in="plus" out="glyph00002"/>
         </SingleSubst>
       </Lookup>
@@ -592,7 +592,7 @@
         <LookupType value="1"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <SingleSubst index="0" Format="2">
+        <SingleSubst index="0">
           <Substitution in="glyph00002" out="glyph00003"/>
           <Substitution in="glyph00005" out="glyph00006"/>
           <Substitution in="plus" out="glyph00007"/>
