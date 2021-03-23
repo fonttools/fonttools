@@ -340,10 +340,10 @@
           </Coverage>
           <ValueFormat1 value="4"/>
           <ValueFormat2 value="0"/>
-          <ClassDef1 Format="1">
+          <ClassDef1>
             <ClassDef glyph="Idieresis" class="1"/>
           </ClassDef1>
-          <ClassDef2 Format="2">
+          <ClassDef2>
           </ClassDef2>
           <!-- Class1Count=2 -->
           <!-- Class2Count=1 -->
