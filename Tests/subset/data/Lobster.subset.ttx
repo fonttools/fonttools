@@ -625,7 +625,7 @@ This license is available with a FAQ at: http://scripts.sil.org/OFL
         <LookupType value="4"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <LigatureSubst index="0" Format="1">
+        <LigatureSubst index="0">
           <LigatureSet glyph="I">
             <Ligature components="J" glyph="IJ"/>
           </LigatureSet>
