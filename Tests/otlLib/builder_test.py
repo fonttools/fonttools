@@ -861,7 +861,7 @@ class BuilderTest(object):
             '      <Value2 XPlacement="-20"/>',
             "    </Class2Record>",
             '    <Class2Record index="2">',
-            "      <Value1/>",
+            '      <Value1 XPlacement="0" YPlacement="0"/>',
             '      <Value2 XPlacement="-50"/>',
             "    </Class2Record>",
             "  </Class1Record>",
@@ -922,6 +922,7 @@ class BuilderTest(object):
             },
             self.GLYPHMAP,
         )
+
         assert getXML(subtable.toXML) == [
             '<PairPos Format="1">',
             "  <Coverage>",
@@ -935,11 +936,12 @@ class BuilderTest(object):
             "    <!-- PairValueCount=2 -->",
             '    <PairValueRecord index="0">',
             '      <SecondGlyph value="zero"/>',
-            '      <Value1/>',
+            '      <Value1 XPlacement="0" YPlacement="0"/>',
             '      <Value2 XPlacement="-50"/>',
             "    </PairValueRecord>",
             '    <PairValueRecord index="1">',
             '      <SecondGlyph value="one"/>',
+            '      <Value1 XPlacement="0" YPlacement="0"/>',
             '      <Value2 XPlacement="-20"/>',
             "    </PairValueRecord>",
             "  </PairSet>",
@@ -1040,8 +1042,8 @@ class BuilderTest(object):
             "  </Coverage>",
             '  <ValueFormat value="3"/>',
             "  <!-- ValueCount=2 -->",
-            '  <Value index="0" XPlacement="777"/>',
-            '  <Value index="1" YPlacement="-888"/>',
+            '  <Value index="0" XPlacement="777" YPlacement="0"/>',
+            '  <Value index="1" XPlacement="0" YPlacement="-888"/>',
             "</SinglePos>",
         ]
 
