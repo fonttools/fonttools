@@ -811,6 +811,7 @@ class MultipleSubst(FormatSwitchingBaseTable):
 		else:
 			assert 0, "unknown format: %s" % self.Format
 		self.mapping = mapping
+		del self.Format # Don't need this anymore
 
 	def preWrite(self, font):
 		mapping = getattr(self, "mapping", None)
