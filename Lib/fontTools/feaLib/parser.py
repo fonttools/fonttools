@@ -971,8 +971,8 @@ class Parser(object):
         location = self.cur_token_location_
         DesignSize = self.expect_decipoint_()
         SubfamilyID = self.expect_number_()
-        RangeStart = 0
-        RangeEnd = 0
+        RangeStart = 0.
+        RangeEnd = 0.
         if self.next_token_type_ in (Lexer.NUMBER, Lexer.FLOAT) or SubfamilyID != 0:
             RangeStart = self.expect_decipoint_()
             RangeEnd = self.expect_decipoint_()
