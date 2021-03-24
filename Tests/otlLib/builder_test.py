@@ -861,7 +861,7 @@ class BuilderTest(object):
             '      <Value2 XPlacement="-20"/>',
             "    </Class2Record>",
             '    <Class2Record index="2">',
-            "      <Value1/>",
+            '      <Value1 XPlacement="0" YPlacement="0"/>',
             '      <Value2 XPlacement="-50"/>',
             "    </Class2Record>",
             "  </Class1Record>",
