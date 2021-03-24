@@ -11,6 +11,7 @@ from fontTools.ttLib.tables.otBase import (
 from fontTools.ttLib.tables import otBase
 from fontTools.feaLib.ast import STATNameStatement
 from fontTools.otlLib.error import OpenTypeLibError
+from functools import reduce
 import logging
 import copy
 
@@ -2312,10 +2313,8 @@ def buildSinglePosSubtable(values, glyphMap):
     """
     self = ot.SinglePos()
     self.Coverage = buildCoverage(values.keys(), glyphMap)
-    valueRecords = [values[g] for g in self.Coverage.glyphs]
-    self.ValueFormat = 0
-    for v in valueRecords:
-        self.ValueFormat |= v.getFormat()
+    valueFormat = self.ValueFormat = reduce(int.__or__, [v.getFormat() for v in values.values()], 0)
+    valueRecords = [ValueRecord(src=values[g], valueFormat=valueFormat) for g in self.Coverage.glyphs]
     if all(v == valueRecords[0] for v in valueRecords):
         self.Format = 1
         if self.ValueFormat != 0:

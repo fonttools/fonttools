@@ -1042,8 +1042,8 @@ class BuilderTest(object):
             "  </Coverage>",
             '  <ValueFormat value="3"/>',
             "  <!-- ValueCount=2 -->",
-            '  <Value index="0" XPlacement="777"/>',
-            '  <Value index="1" YPlacement="-888"/>',
+            '  <Value index="0" XPlacement="777" YPlacement="0"/>',
+            '  <Value index="1" XPlacement="0" YPlacement="-888"/>',
             "</SinglePos>",
         ]
 
