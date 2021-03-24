@@ -12,7 +12,6 @@ include Lib/fontTools/ttLib/tables/table_API_readme.txt
 include *requirements.txt
 include tox.ini
 include mypy.ini
-include run-tests.sh
 
 recursive-include Lib/fontTools py.typed
 

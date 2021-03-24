@@ -14,7 +14,7 @@ uninstall:
 	pip uninstall --yes fonttools
 
 check: all
-	./run-tests.sh
+	pytest
 
 clean:
 	./setup.py clean --all
