@@ -1097,7 +1097,7 @@
         <LookupType value="2"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <MultipleSubst index="0" Format="1">
+        <MultipleSubst index="0">
           <Substitution in="ampersand" out="a,n,d"/>
         </MultipleSubst>
       </Lookup>
