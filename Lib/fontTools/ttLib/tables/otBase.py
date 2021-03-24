@@ -654,9 +654,15 @@ class BaseTable(object):
 
 	def compile(self, writer, font):
 		self.ensureDecompiled()
+		# TODO Following hack to be removed by rewriting how FormatSwitching tables
+		# are handled.
+		# https://github.com/fonttools/fonttools/pull/2238#issuecomment-805192631
 		if hasattr(self, 'preWrite'):
+			deleteFormat = not hasattr(self, 'Format')
 			table = self.preWrite(font)
+			deleteFormat = deleteFormat and hasattr(self, 'Format')
 		else:
+			deleteFormat = False
 			table = self.__dict__.copy()
 
 		# some count references may have been initialized in a custom preWrite; we set
@@ -739,6 +745,9 @@ class BaseTable(object):
 					raise
 				if conv.isPropagated:
 					writer[conv.name] = value
+
+		if deleteFormat:
+			del self.Format
 
 	def readFormat(self, reader):
 		pass
