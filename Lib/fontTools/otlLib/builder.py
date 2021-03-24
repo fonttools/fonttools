@@ -2089,9 +2089,9 @@ def buildPairPosClassesSubtable(pairs, glyphMap, valueFormat1=None, valueFormat2
         self.Class1Record.append(rec1)
         for c2 in classes2:
             rec2 = ot.Class2Record()
-            rec2.Value1, rec2.Value2 = pairs.get((c1, c2), (None, None))
-            if valueFormat1 and rec2.Value1 is None: rec2.Value1 = ValueRecord(valueFormat1)
-            if valueFormat2 and rec2.Value2 is None: rec2.Value2 = ValueRecord(valueFormat2)
+            val1, val2 = pairs.get((c1, c2), (None, None))
+            rec2.Value1 = ValueRecord(src=val1, valueFormat=valueFormat1) if valueFormat1 else None
+            rec2.Value2 = ValueRecord(src=val2, valueFormat=valueFormat2) if valueFormat2 else None
             rec1.Class2Record.append(rec2)
     self.Class1Count = len(self.Class1Record)
     self.Class2Count = len(classes2)
