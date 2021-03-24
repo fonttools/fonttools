@@ -558,6 +558,7 @@ class Coverage(FormatSwitchingBaseTable):
 		else:
 			self.glyphs = []
 			log.warning("Unknown Coverage format: %s", self.Format)
+		del self.Format # Don't need this anymore
 
 	def preWrite(self, font):
 		glyphs = getattr(self, "glyphs", None)
@@ -739,6 +740,7 @@ class SingleSubst(FormatSwitchingBaseTable):
 		else:
 			assert 0, "unknown format: %s" % self.Format
 		self.mapping = mapping
+		del self.Format # Don't need this anymore
 
 	def preWrite(self, font):
 		mapping = getattr(self, "mapping", None)
@@ -809,6 +811,7 @@ class MultipleSubst(FormatSwitchingBaseTable):
 		else:
 			assert 0, "unknown format: %s" % self.Format
 		self.mapping = mapping
+		del self.Format # Don't need this anymore
 
 	def preWrite(self, font):
 		mapping = getattr(self, "mapping", None)
@@ -927,6 +930,7 @@ class ClassDef(FormatSwitchingBaseTable):
 		else:
 			log.warning("Unknown ClassDef format: %s", self.Format)
 		self.classDefs = classDefs
+		del self.Format # Don't need this anymore
 
 	def _getClassRanges(self, font):
 		classDefs = getattr(self, "classDefs", None)
@@ -1015,6 +1019,7 @@ class AlternateSubst(FormatSwitchingBaseTable):
 		else:
 			assert 0, "unknown format: %s" % self.Format
 		self.alternates = alternates
+		del self.Format # Don't need this anymore
 
 	def preWrite(self, font):
 		self.Format = 1
@@ -1085,6 +1090,7 @@ class LigatureSubst(FormatSwitchingBaseTable):
 		else:
 			assert 0, "unknown format: %s" % self.Format
 		self.ligatures = ligatures
+		del self.Format # Don't need this anymore
 
 	def preWrite(self, font):
 		self.Format = 1
@@ -1681,7 +1687,6 @@ def splitMarkBasePos(oldSubTable, newSubTable, overflowRecord):
 
 	oldSubTable.MarkCoverage.glyphs = oldMarkCoverage
 	newSubTable.MarkCoverage = oldSubTable.MarkCoverage.__class__()
-	newSubTable.MarkCoverage.Format = oldSubTable.MarkCoverage.Format
 	newSubTable.MarkCoverage.glyphs = newMarkCoverage
 
 	# share the same BaseCoverage in both halves

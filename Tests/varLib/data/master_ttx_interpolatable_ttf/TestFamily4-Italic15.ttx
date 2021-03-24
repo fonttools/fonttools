@@ -455,7 +455,7 @@
 
   <GDEF>
     <Version value="0x00010002"/>
-    <GlyphClassDef Format="2">
+    <GlyphClassDef>
       <ClassDef glyph="N" class="1"/>
       <ClassDef glyph="O" class="1"/>
       <ClassDef glyph="Odieresis" class="1"/>
@@ -467,7 +467,7 @@
     <MarkGlyphSetsDef>
       <MarkSetTableFormat value="1"/>
       <!-- MarkSetCount=1 -->
-      <Coverage index="0" Format="1">
+      <Coverage index="0">
         <Glyph value="uni0308"/>
       </Coverage>
     </MarkGlyphSetsDef>
@@ -545,7 +545,7 @@
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <SinglePos index="0" Format="1">
-          <Coverage Format="1">
+          <Coverage>
             <Glyph value="N"/>
             <Glyph value="O"/>
             <Glyph value="Odieresis"/>
@@ -559,10 +559,10 @@
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <MarkBasePos index="0" Format="1">
-          <MarkCoverage Format="1">
+          <MarkCoverage>
             <Glyph value="uni0308"/>
           </MarkCoverage>
-          <BaseCoverage Format="2">
+          <BaseCoverage>
             <Glyph value="N"/>
             <Glyph value="O"/>
             <Glyph value="Odieresis"/>
@@ -627,10 +627,10 @@
         <LookupFlag value="16"/><!-- useMarkFilteringSet -->
         <!-- SubTableCount=1 -->
         <MarkMarkPos index="0" Format="1">
-          <Mark1Coverage Format="1">
+          <Mark1Coverage>
             <Glyph value="uni0308"/>
           </Mark1Coverage>
-          <Mark2Coverage Format="1">
+          <Mark2Coverage>
             <Glyph value="uni0308"/>
           </Mark2Coverage>
           <!-- ClassCount=1 -->

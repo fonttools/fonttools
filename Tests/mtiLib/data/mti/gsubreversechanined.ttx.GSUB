@@ -8,14 +8,14 @@
       <LookupFlag value="9"/><!-- rightToLeft ignoreMarks -->
       <!-- SubTableCount=3 -->
       <ReverseChainSingleSubst index="0" Format="1">
-        <Coverage Format="2">
+        <Coverage>
           <Glyph value="rayf2"/>
           <Glyph value="reyf2"/>
           <Glyph value="yayf2"/>
           <Glyph value="zayf2"/>
         </Coverage>
         <!-- BacktrackGlyphCount=1 -->
-        <BacktrackCoverage index="0" Format="2">
+        <BacktrackCoverage index="0">
           <Glyph value="bayi1"/>
           <Glyph value="jeemi1"/>
           <Glyph value="kafi1"/>
@@ -33,14 +33,14 @@
         <Substitute index="3" value="zayf1"/>
       </ReverseChainSingleSubst>
       <ReverseChainSingleSubst index="1" Format="1">
-        <Coverage Format="2">
+        <Coverage>
           <Glyph value="ayehf2"/>
           <Glyph value="hamzayeharabf2"/>
           <Glyph value="hamzayehf2"/>
           <Glyph value="yehf2"/>
         </Coverage>
         <!-- BacktrackGlyphCount=1 -->
-        <BacktrackCoverage index="0" Format="1">
+        <BacktrackCoverage index="0">
           <Glyph value="bayi1"/>
           <Glyph value="kafi1"/>
           <Glyph value="ghafi1"/>
@@ -58,14 +58,14 @@
         <Substitute index="3" value="yehf1"/>
       </ReverseChainSingleSubst>
       <ReverseChainSingleSubst index="2" Format="1">
-        <Coverage Format="1">
+        <Coverage>
           <Glyph value="dal"/>
           <Glyph value="del"/>
           <Glyph value="zal"/>
         </Coverage>
         <!-- BacktrackGlyphCount=0 -->
         <!-- LookAheadGlyphCount=1 -->
-        <LookAheadCoverage index="0" Format="2">
+        <LookAheadCoverage index="0">
           <Glyph value="ray"/>
           <Glyph value="rey"/>
           <Glyph value="zay"/>

@@ -409,28 +409,12 @@ def _ClassDef_merge_classify(lst, allGlyphses=None):
 
 	return self, classes
 
-# It's stupid that we need to do this here.  Just need to, to match test
-# expecatation results, since ttx prints out format of ClassDef (and Coverage)
-# even though it should not.
-def _ClassDef_calculate_Format(self, font):
-	fmt = 2
-	ranges = self._getClassRanges(font)
-	if ranges:
-		startGlyph = ranges[0][1]
-		endGlyph = ranges[-1][3]
-		glyphCount = endGlyph - startGlyph + 1
-		if len(ranges) * 3 >= glyphCount + 1:
-			# Format 1 is more compact
-			fmt = 1
-	self.Format = fmt
-
 def _PairPosFormat2_align_matrices(self, lst, font, transparent=False):
 
 	matrices = [l.Class1Record for l in lst]
 
 	# Align first classes
 	self.ClassDef1, classes = _ClassDef_merge_classify([l.ClassDef1 for l in lst], [l.Coverage.glyphs for l in lst])
-	_ClassDef_calculate_Format(self.ClassDef1, font)
 	self.Class1Count = len(classes)
 	new_matrices = []
 	for l,matrix in zip(lst, matrices):
@@ -469,7 +453,6 @@ def _PairPosFormat2_align_matrices(self, lst, font, transparent=False):
 
 	# Align second classes
 	self.ClassDef2, classes = _ClassDef_merge_classify([l.ClassDef2 for l in lst])
-	_ClassDef_calculate_Format(self.ClassDef2, font)
 	self.Class2Count = len(classes)
 	new_matrices = []
 	for l,matrix in zip(lst, matrices):
@@ -676,7 +659,6 @@ def merge(merger, self, lst):
 def _PairSet_flatten(lst, font):
 	self = ot.PairSet()
 	self.Coverage = ot.Coverage()
-	self.Coverage.Format = 1
 
 	# Align them
 	glyphs, padded = _merge_GlyphOrders(font,
@@ -702,7 +684,6 @@ def _Lookup_PairPosFormat1_subtables_flatten(lst, font):
 	self = ot.PairPos()
 	self.Format = 1
 	self.Coverage = ot.Coverage()
-	self.Coverage.Format = 1
 	self.ValueFormat1 = reduce(int.__or__, [l.ValueFormat1 for l in lst], 0)
 	self.ValueFormat2 = reduce(int.__or__, [l.ValueFormat2 for l in lst], 0)
 
@@ -723,7 +704,6 @@ def _Lookup_PairPosFormat2_subtables_flatten(lst, font):
 	self = ot.PairPos()
 	self.Format = 2
 	self.Coverage = ot.Coverage()
-	self.Coverage.Format = 1
 	self.ValueFormat1 = reduce(int.__or__, [l.ValueFormat1 for l in lst], 0)
 	self.ValueFormat2 = reduce(int.__or__, [l.ValueFormat2 for l in lst], 0)
 

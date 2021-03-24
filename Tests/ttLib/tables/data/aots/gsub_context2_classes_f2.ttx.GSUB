@@ -33,7 +33,7 @@
         <LookupType value="1"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <SingleSubst index="0" Format="1">
+        <SingleSubst index="0">
           <Substitution in="g20" out="g60"/>
           <Substitution in="g21" out="g61"/>
           <Substitution in="g22" out="g62"/>
@@ -50,7 +50,7 @@
         <LookupType value="4"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <LigatureSubst index="0" Format="1">
+        <LigatureSubst index="0">
           <LigatureSet glyph="g21">
             <Ligature components="g22" glyph="g61"/>
           </LigatureSet>
@@ -60,7 +60,7 @@
         <LookupType value="4"/>
         <LookupFlag value="8"/><!-- ignoreMarks -->
         <!-- SubTableCount=1 -->
-        <LigatureSubst index="0" Format="1">
+        <LigatureSubst index="0">
           <LigatureSet glyph="g21">
             <Ligature components="g22" glyph="g61"/>
           </LigatureSet>
@@ -70,7 +70,7 @@
         <LookupType value="2"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <MultipleSubst index="0" Format="1">
+        <MultipleSubst index="0">
           <Substitution in="g21" out="g61,g62,g63"/>
         </MultipleSubst>
       </Lookup>
@@ -79,13 +79,13 @@
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <ContextSubst index="0" Format="2">
-          <Coverage Format="1">
+          <Coverage>
             <Glyph value="g20"/>
             <Glyph value="g21"/>
             <Glyph value="g22"/>
             <Glyph value="g24"/>
           </Coverage>
-          <ClassDef Format="2">
+          <ClassDef>
             <ClassDef glyph="g20" class="1"/>
             <ClassDef glyph="g21" class="1"/>
             <ClassDef glyph="g22" class="1"/>

@@ -766,7 +766,7 @@
         <LookupType value="1"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <SingleSubst index="0" Format="1">
+        <SingleSubst index="0">
           <Substitution in="A" out="A.sc"/>
         </SingleSubst>
       </Lookup>
@@ -774,7 +774,7 @@
         <LookupType value="1"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <SingleSubst index="0" Format="1">
+        <SingleSubst index="0">
           <Substitution in="a" out="a.alt"/>
         </SingleSubst>
       </Lookup>
@@ -782,7 +782,7 @@
         <LookupType value="2"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <MultipleSubst index="0" Format="1">
+        <MultipleSubst index="0">
           <Substitution in="ampersand" out="a,n,d"/>
         </MultipleSubst>
       </Lookup>
@@ -790,7 +790,7 @@
         <LookupType value="3"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <AlternateSubst index="0" Format="1">
+        <AlternateSubst index="0">
           <AlternateSet glyph="a">
             <Alternate glyph="a.alt"/>
             <Alternate glyph="A.sc"/>
@@ -801,7 +801,7 @@
         <LookupType value="4"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <LigatureSubst index="0" Format="1">
+        <LigatureSubst index="0">
           <LigatureSet glyph="f">
             <Ligature components="t" glyph="f_t"/>
           </LigatureSet>
@@ -814,11 +814,11 @@
         <ChainContextSubst index="0" Format="3">
           <!-- BacktrackGlyphCount=0 -->
           <!-- InputGlyphCount=1 -->
-          <InputCoverage index="0" Format="1">
+          <InputCoverage index="0">
             <Glyph value="a"/>
           </InputCoverage>
           <!-- LookAheadGlyphCount=1 -->
-          <LookAheadCoverage index="0" Format="1">
+          <LookAheadCoverage index="0">
             <Glyph value="t"/>
           </LookAheadCoverage>
           <!-- SubstCount=1 -->

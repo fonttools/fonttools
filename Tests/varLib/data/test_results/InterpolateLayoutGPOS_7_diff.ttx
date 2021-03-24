@@ -34,7 +34,7 @@
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <PairPos index="0" Format="1">
-          <Coverage Format="1">
+          <Coverage>
             <Glyph value="A"/>
           </Coverage>
           <ValueFormat1 value="4"/>
@@ -54,10 +54,10 @@
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <MarkBasePos index="0" Format="1">
-          <MarkCoverage Format="1">
+          <MarkCoverage>
             <Glyph value="uni0303"/>
           </MarkCoverage>
-          <BaseCoverage Format="1">
+          <BaseCoverage>
             <Glyph value="a"/>
           </BaseCoverage>
           <!-- ClassCount=1 -->
@@ -87,7 +87,7 @@
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <ContextPos index="0" Format="1">
-          <Coverage Format="1">
+          <Coverage>
             <Glyph value="A"/>
           </Coverage>
           <!-- PosRuleSetCount=1 -->

@@ -33,7 +33,7 @@
         <LookupType value="4"/>
         <LookupFlag value="8"/><!-- ignoreMarks -->
         <!-- SubTableCount=1 -->
-        <LigatureSubst index="0" Format="1">
+        <LigatureSubst index="0">
           <LigatureSet glyph="g18">
             <Ligature components="g19,g20" glyph="g23"/>
           </LigatureSet>

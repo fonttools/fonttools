@@ -8,7 +8,7 @@
       <LookupFlag value="0"/>
       <!-- SubTableCount=2 -->
       <PairPos index="0" Format="1">
-        <Coverage Format="1">
+        <Coverage>
           <Glyph value="Acircumflex"/>
           <Glyph value="T"/>
         </Coverage>
@@ -31,7 +31,7 @@
         </PairSet>
       </PairPos>
       <PairPos index="1" Format="2">
-        <Coverage Format="1">
+        <Coverage>
           <Glyph value="A"/>
           <Glyph value="Acircumflex"/>
           <Glyph value="T"/>
@@ -44,7 +44,7 @@
         </Coverage>
         <ValueFormat1 value="4"/>
         <ValueFormat2 value="0"/>
-        <ClassDef1 Format="2">
+        <ClassDef1>
           <ClassDef glyph="A" class="1"/>
           <ClassDef glyph="Aacute" class="1"/>
           <ClassDef glyph="Acircumflex" class="1"/>
@@ -55,7 +55,7 @@
           <ClassDef glyph="Ograve" class="2"/>
           <ClassDef glyph="T" class="3"/>
         </ClassDef1>
-        <ClassDef2 Format="2">
+        <ClassDef2>
           <ClassDef glyph="V" class="1"/>
           <ClassDef glyph="a" class="2"/>
           <ClassDef glyph="aacute" class="2"/>

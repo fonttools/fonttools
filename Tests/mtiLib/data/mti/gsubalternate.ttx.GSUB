@@ -7,7 +7,7 @@
       <LookupType value="3"/>
       <LookupFlag value="0"/>
       <!-- SubTableCount=1 -->
-      <AlternateSubst index="0" Format="1">
+      <AlternateSubst index="0">
         <AlternateSet glyph="eight">
           <Alternate glyph="uniF738"/>
           <Alternate glyph="uniE0C0"/>

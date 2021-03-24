@@ -8,7 +8,7 @@
       <LookupFlag value="512"/><!-- markAttachmentType[2] -->
       <!-- SubTableCount=1 -->
       <ChainContextPos index="0" Format="1">
-        <Coverage Format="1">
+        <Coverage>
           <Glyph value="uuvowelsignsinh"/>
           <Glyph value="uvowelsignsinh"/>
         </Coverage>

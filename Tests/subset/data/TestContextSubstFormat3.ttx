@@ -328,7 +328,7 @@
 
   <GDEF>
     <Version value="0x00010000"/>
-    <GlyphClassDef Format="2">
+    <GlyphClassDef>
       <ClassDef glyph=".notdef" class="1"/>
       <ClassDef glyph="glyph00002" class="1"/>
       <ClassDef glyph="glyph00003" class="1"/>
@@ -430,17 +430,17 @@
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <ChainContextSubst index="0" Format="2">
-          <Coverage Format="1">
+          <Coverage>
             <Glyph value="plus"/>
           </Coverage>
-          <BacktrackClassDef Format="1">
+          <BacktrackClassDef>
             <ClassDef glyph="glyph00005" class="1"/>
             <ClassDef glyph="glyph00007" class="1"/>
           </BacktrackClassDef>
-          <InputClassDef Format="1">
+          <InputClassDef>
             <ClassDef glyph="plus" class="1"/>
           </InputClassDef>
-          <LookAheadClassDef Format="2">
+          <LookAheadClassDef>
           </LookAheadClassDef>
           <!-- ChainSubClassSetCount=2 -->
           <ChainSubClassSet index="0" empty="1"/>
@@ -527,13 +527,13 @@
         <ContextSubst index="0" Format="3">
           <!-- GlyphCount=3 -->
           <!-- SubstCount=2 -->
-          <Coverage index="0" Format="1">
+          <Coverage index="0">
             <Glyph value="glyph00002"/>
           </Coverage>
-          <Coverage index="1" Format="1">
+          <Coverage index="1">
             <Glyph value="glyph00004"/>
           </Coverage>
-          <Coverage index="2" Format="1">
+          <Coverage index="2">
             <Glyph value="glyph00005"/>
           </Coverage>
           <SubstLookupRecord index="0">
@@ -548,10 +548,10 @@
         <ContextSubst index="1" Format="3">
           <!-- GlyphCount=2 -->
           <!-- SubstCount=2 -->
-          <Coverage index="0" Format="1">
+          <Coverage index="0">
             <Glyph value="glyph00002"/>
           </Coverage>
-          <Coverage index="1" Format="1">
+          <Coverage index="1">
             <Glyph value="glyph00005"/>
           </Coverage>
           <SubstLookupRecord index="0">
@@ -568,7 +568,7 @@
         <LookupType value="1"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <SingleSubst index="0" Format="1">
+        <SingleSubst index="0">
           <Substitution in="plus" out="glyph00005"/>
         </SingleSubst>
       </Lookup>
@@ -576,7 +576,7 @@
         <LookupType value="1"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <SingleSubst index="0" Format="1">
+        <SingleSubst index="0">
           <Substitution in="plus" out="glyph00004"/>
         </SingleSubst>
       </Lookup>
@@ -584,7 +584,7 @@
         <LookupType value="1"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <SingleSubst index="0" Format="1">
+        <SingleSubst index="0">
           <Substitution in="plus" out="glyph00002"/>
         </SingleSubst>
       </Lookup>
@@ -592,7 +592,7 @@
         <LookupType value="1"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <SingleSubst index="0" Format="2">
+        <SingleSubst index="0">
           <Substitution in="glyph00002" out="glyph00003"/>
           <Substitution in="glyph00005" out="glyph00006"/>
           <Substitution in="plus" out="glyph00007"/>
