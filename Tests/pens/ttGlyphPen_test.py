@@ -7,16 +7,19 @@ from fontTools.pens.ttGlyphPen import TTGlyphPen, MAX_F2DOT14
 
 
 class TTGlyphPenTest:
-
     def runEndToEnd(self, filename):
         font = ttLib.TTFont()
         ttx_path = os.path.join(
             os.path.abspath(os.path.dirname(os.path.realpath(__file__))),
-            '..', 'ttLib', 'data', filename)
+            "..",
+            "ttLib",
+            "data",
+            filename,
+        )
         font.importXML(ttx_path)
 
         glyphSet = font.getGlyphSet()
-        glyfTable = font['glyf']
+        glyfTable = font["glyf"]
         pen = TTGlyphPen(font.getGlyphSet())
 
         for name in font.getGlyphOrder():
@@ -25,16 +28,16 @@ class TTGlyphPenTest:
             oldGlyph = oldGlyph._glyph
             newGlyph = pen.glyph()
 
-            if hasattr(oldGlyph, 'program'):
+            if hasattr(oldGlyph, "program"):
                 newGlyph.program = oldGlyph.program
 
             assert oldGlyph.compile(glyfTable) == newGlyph.compile(glyfTable)
 
     def test_e2e_linesAndSimpleComponents(self):
-        self.runEndToEnd('TestTTF-Regular.ttx')
+        self.runEndToEnd("TestTTF-Regular.ttx")
 
     def test_e2e_curvesAndComponentTransforms(self):
-        self.runEndToEnd('TestTTFComplex-Regular.ttx')
+        self.runEndToEnd("TestTTFComplex-Regular.ttx")
 
     def test_moveTo_errorWithinContour(self):
         pen = TTGlyphPen(None)
@@ -74,7 +77,7 @@ class TTGlyphPenTest:
             pen.glyph()
 
     def test_glyph_decomposes(self):
-        componentName = 'a'
+        componentName = "a"
         glyphSet = {}
         pen = TTGlyphPen(glyphSet)
 
@@ -134,7 +137,7 @@ class TTGlyphPenTest:
         assert pen.points[0] == (0, 0)
 
     def test_within_range_component_transform(self):
-        componentName = 'a'
+        componentName = "a"
         glyphSet = {}
         pen = TTGlyphPen(glyphSet)
 
@@ -155,7 +158,7 @@ class TTGlyphPenTest:
         assert expectedGlyph == compositeGlyph
 
     def test_clamp_to_almost_2_component_transform(self):
-        componentName = 'a'
+        componentName = "a"
         glyphSet = {}
         pen = TTGlyphPen(glyphSet)
 
@@ -183,7 +186,7 @@ class TTGlyphPenTest:
         assert expectedGlyph == compositeGlyph
 
     def test_out_of_range_transform_decomposed(self):
-        componentName = 'a'
+        componentName = "a"
         glyphSet = {}
         pen = TTGlyphPen(glyphSet)
 
@@ -215,7 +218,7 @@ class TTGlyphPenTest:
         assert expectedGlyph == compositeGlyph
 
     def test_no_handle_overflowing_transform(self):
-        componentName = 'a'
+        componentName = "a"
         glyphSet = {}
         pen = TTGlyphPen(glyphSet, handleOverflowingTransforms=False)
 
@@ -232,7 +235,7 @@ class TTGlyphPenTest:
         assert compositeGlyph.components[0].transform == ((3, 0), (0, 1))
 
         with pytest.raises(struct.error):
-            compositeGlyph.compile({'a': baseGlyph})
+            compositeGlyph.compile({"a": baseGlyph})
 
     def assertGlyphBoundsEqual(self, glyph, bounds):
         assert (glyph.xMin, glyph.yMin, glyph.xMax, glyph.yMax) == bounds
@@ -250,7 +253,7 @@ class TTGlyphPenTest:
         simpleGlyph.recalcBounds(glyphSet)
         self.assertGlyphBoundsEqual(simpleGlyph, (0, 0, 368, 1))
 
-        componentName = 'a'
+        componentName = "a"
         glyphSet[componentName] = simpleGlyph
 
         pen.addComponent(componentName, (1, 0, 0, 1, -86.4, 0))
