@@ -1,13 +1,12 @@
 import os
-import unittest
+import pytest
 import struct
 
 from fontTools import ttLib
-from fontTools.misc.testTools import TestCase
 from fontTools.pens.ttGlyphPen import TTGlyphPen, MAX_F2DOT14
 
 
-class TTGlyphPenTest(TestCase):
+class TTGlyphPenTest:
 
     def runEndToEnd(self, filename):
         font = ttLib.TTFont()
@@ -29,8 +28,7 @@ class TTGlyphPenTest(TestCase):
             if hasattr(oldGlyph, 'program'):
                 newGlyph.program = oldGlyph.program
 
-            self.assertEqual(
-                oldGlyph.compile(glyfTable), newGlyph.compile(glyfTable))
+            assert oldGlyph.compile(glyfTable) == newGlyph.compile(glyfTable)
 
     def test_e2e_linesAndSimpleComponents(self):
         self.runEndToEnd('TestTTF-Regular.ttx')
@@ -41,16 +39,16 @@ class TTGlyphPenTest(TestCase):
     def test_moveTo_errorWithinContour(self):
         pen = TTGlyphPen(None)
         pen.moveTo((0, 0))
-        with self.assertRaises(AssertionError):
+        with pytest.raises(AssertionError):
             pen.moveTo((1, 0))
 
     def test_closePath_ignoresAnchors(self):
         pen = TTGlyphPen(None)
         pen.moveTo((0, 0))
         pen.closePath()
-        self.assertFalse(pen.points)
-        self.assertFalse(pen.types)
-        self.assertFalse(pen.endPts)
+        assert not pen.points
+        assert not pen.types
+        assert not pen.endPts
 
     def test_endPath_sameAsClosePath(self):
         pen = TTGlyphPen(None)
@@ -67,12 +65,12 @@ class TTGlyphPenTest(TestCase):
         pen.endPath()
         endPathGlyph = pen.glyph()
 
-        self.assertEqual(closePathGlyph, endPathGlyph)
+        assert closePathGlyph == endPathGlyph
 
     def test_glyph_errorOnUnendedContour(self):
         pen = TTGlyphPen(None)
         pen.moveTo((0, 0))
-        with self.assertRaises(AssertionError):
+        with pytest.raises(AssertionError):
             pen.glyph()
 
     def test_glyph_decomposes(self):
@@ -104,7 +102,7 @@ class TTGlyphPenTest(TestCase):
         pen.closePath()
         plainGlyph = pen.glyph()
 
-        self.assertEqual(plainGlyph, compositeGlyph)
+        assert plainGlyph == compositeGlyph
 
     def test_remove_extra_move_points(self):
         pen = TTGlyphPen(None)
@@ -112,8 +110,8 @@ class TTGlyphPenTest(TestCase):
         pen.lineTo((100, 0))
         pen.qCurveTo((100, 50), (50, 100), (0, 0))
         pen.closePath()
-        self.assertEqual(len(pen.points), 4)
-        self.assertEqual(pen.points[0], (0, 0))
+        assert len(pen.points) == 4
+        assert pen.points[0] == (0, 0)
 
     def test_keep_move_point(self):
         pen = TTGlyphPen(None)
@@ -122,8 +120,8 @@ class TTGlyphPenTest(TestCase):
         pen.qCurveTo((100, 50), (50, 100), (30, 30))
         # when last and move pts are different, closePath() implies a lineTo
         pen.closePath()
-        self.assertEqual(len(pen.points), 5)
-        self.assertEqual(pen.points[0], (0, 0))
+        assert len(pen.points) == 5
+        assert pen.points[0] == (0, 0)
 
     def test_keep_duplicate_end_point(self):
         pen = TTGlyphPen(None)
@@ -132,8 +130,8 @@ class TTGlyphPenTest(TestCase):
         pen.qCurveTo((100, 50), (50, 100), (0, 0))
         pen.lineTo((0, 0))  # the duplicate point is not removed
         pen.closePath()
-        self.assertEqual(len(pen.points), 5)
-        self.assertEqual(pen.points[0], (0, 0))
+        assert len(pen.points) == 5
+        assert pen.points[0] == (0, 0)
 
     def test_within_range_component_transform(self):
         componentName = 'a'
@@ -154,7 +152,7 @@ class TTGlyphPenTest(TestCase):
         pen.addComponent(componentName, (1, 0, 0, -1.5, 0, 0))
         expectedGlyph = pen.glyph()
 
-        self.assertEqual(expectedGlyph, compositeGlyph)
+        assert expectedGlyph == compositeGlyph
 
     def test_clamp_to_almost_2_component_transform(self):
         componentName = 'a'
@@ -182,7 +180,7 @@ class TTGlyphPenTest(TestCase):
         pen.addComponent(componentName, (-2, 0, 0, -2, 0, 0))
         expectedGlyph = pen.glyph()
 
-        self.assertEqual(expectedGlyph, compositeGlyph)
+        assert expectedGlyph == compositeGlyph
 
     def test_out_of_range_transform_decomposed(self):
         componentName = 'a'
@@ -214,7 +212,7 @@ class TTGlyphPenTest(TestCase):
         pen.closePath()
         expectedGlyph = pen.glyph()
 
-        self.assertEqual(expectedGlyph, compositeGlyph)
+        assert expectedGlyph == compositeGlyph
 
     def test_no_handle_overflowing_transform(self):
         componentName = 'a'
@@ -231,14 +229,13 @@ class TTGlyphPenTest(TestCase):
         pen.addComponent(componentName, (3, 0, 0, 1, 0, 0))
         compositeGlyph = pen.glyph()
 
-        self.assertEqual(compositeGlyph.components[0].transform,
-                         ((3, 0), (0, 1)))
+        assert compositeGlyph.components[0].transform == ((3, 0), (0, 1))
 
-        with self.assertRaises(struct.error):
+        with pytest.raises(struct.error):
             compositeGlyph.compile({'a': baseGlyph})
 
     def assertGlyphBoundsEqual(self, glyph, bounds):
-        self.assertEqual((glyph.xMin, glyph.yMin, glyph.xMax, glyph.yMax), bounds)
+        assert (glyph.xMin, glyph.yMin, glyph.xMax, glyph.yMax) == bounds
 
     def test_round_float_coordinates_and_component_offsets(self):
         glyphSet = {}
@@ -299,8 +296,3 @@ class _TestGlyph(object):
         for point in self.coordinates[1:]:
             pen.lineTo(point)
         pen.closePath()
-
-
-if __name__ == '__main__':
-    import sys
-    sys.exit(unittest.main())
