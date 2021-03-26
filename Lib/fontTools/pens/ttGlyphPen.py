@@ -60,7 +60,7 @@ class TTGlyphBasePen:
         self.endPts = []
         self.types = []
         self.components = []
-        self.current_path = None
+        self.currentPath = None
 
     def addComponent(
         self,
@@ -234,19 +234,19 @@ class TTGlyphPointPen(TTGlyphBasePen, LogMixin, AbstractPointPen):
         """
         Start a new sub path.
         """
-        assert self.current_path is None
-        self.current_path = []
+        assert self.currentPath is None
+        self.currentPath = []
 
     def endPath(self) -> None:
         """
         End the current sub path.
         """
         # TrueType contours are always "closed"
-        assert self.current_path is not None
-        if self.current_path:
+        assert self.currentPath is not None
+        if self.currentPath:
             endPt = len(self.points) - 1
             self.endPts.append(endPt)
-        self.current_path = None
+        self.currentPath = None
 
     def addPoint(
         self,
@@ -260,7 +260,7 @@ class TTGlyphPointPen(TTGlyphBasePen, LogMixin, AbstractPointPen):
         """
         Add a point to the current sub path.
         """
-        assert self.current_path is not None
+        assert self.currentPath is not None
         if segmentType is None:
             self.types.append(0)  # offcurve
         elif segmentType in ("qcurve", "line"):
@@ -269,12 +269,12 @@ class TTGlyphPointPen(TTGlyphBasePen, LogMixin, AbstractPointPen):
             # cubic curves are not supported
             raise NotImplementedError
 
-        self.current_path.append(pt)
+        self.currentPath.append(pt)
         self.points.append(pt)
 
     def glyph(self, componentFlags: int = 0x4) -> Glyph:
         """
         Returns a :py:class:`~._g_l_y_f.Glyph` object representing the glyph.
         """
-        assert self.current_path is None
+        assert self.currentPath is None
         return self._glyph(componentFlags=componentFlags)
