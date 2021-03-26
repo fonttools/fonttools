@@ -4,8 +4,7 @@ import struct
 
 from fontTools import ttLib
 from fontTools.misc.testTools import TestCase
-from fontTools.pens.ttGlyphPointPen import TTGlyphPointPen, MAX_F2DOT14
-from fontTools.ttLib.tables import ttProgram
+from fontTools.pens.ttGlyphPen import TTGlyphPointPen, MAX_F2DOT14
 
 
 class TTGlyphPointPenTest(TestCase):
