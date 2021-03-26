@@ -36,7 +36,7 @@
         <ExtensionPos index="0" Format="1">
           <ExtensionLookupType value="1"/>
           <SinglePos Format="1">
-            <Coverage Format="1">
+            <Coverage>
               <Glyph value="g18"/>
               <Glyph value="g20"/>
             </Coverage>
@@ -47,7 +47,7 @@
         <ExtensionPos index="1" Format="1">
           <ExtensionLookupType value="1"/>
           <SinglePos Format="1">
-            <Coverage Format="1">
+            <Coverage>
               <Glyph value="g19"/>
               <Glyph value="g21"/>
             </Coverage>

@@ -76,6 +76,7 @@
           <!-- Class2Count=2 -->
           <Class1Record index="0">
             <Class2Record index="0">
+              <Value1 XAdvance="0"/>
             </Class2Record>
             <Class2Record index="1">
               <Value1 XAdvance="-12"/>
@@ -105,8 +106,10 @@
           <!-- Class2Count=3 -->
           <Class1Record index="0">
             <Class2Record index="0">
+              <Value1 XAdvance="0"/>
             </Class2Record>
             <Class2Record index="1">
+              <Value1 XAdvance="0"/>
             </Class2Record>
             <Class2Record index="2">
               <Value1 XAdvance="-20"/>
@@ -114,11 +117,13 @@
           </Class1Record>
           <Class1Record index="1">
             <Class2Record index="0">
+              <Value1 XAdvance="0"/>
             </Class2Record>
             <Class2Record index="1">
               <Value1 XAdvance="-10"/>
             </Class2Record>
             <Class2Record index="2">
+              <Value1 XAdvance="0"/>
             </Class2Record>
           </Class1Record>
         </PairPos>

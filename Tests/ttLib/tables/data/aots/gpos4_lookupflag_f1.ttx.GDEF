@@ -3,13 +3,13 @@
 
   <GDEF>
     <Version value="0x00010000"/>
-    <GlyphClassDef Format="2">
+    <GlyphClassDef>
       <ClassDef glyph="g17" class="1"/>
       <ClassDef glyph="g18" class="1"/>
       <ClassDef glyph="g19" class="3"/>
       <ClassDef glyph="g20" class="3"/>
     </GlyphClassDef>
-    <MarkAttachClassDef Format="2">
+    <MarkAttachClassDef>
       <ClassDef glyph="g19" class="1"/>
       <ClassDef glyph="g20" class="2"/>
     </MarkAttachClassDef>

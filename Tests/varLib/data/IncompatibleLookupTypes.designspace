@@ -1,0 +1,22 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<designspace format="4.1">
+  <axes>
+    <axis tag="wght" name="Weight" minimum="200" maximum="700" default="200"/>
+  </axes>
+  <sources>
+    <source filename="master_incompatible_lookup_types/IncompatibleLookupTypes-Regular.ttx" name="Simple Two Axis Regular" familyname="Simple Two Axis" stylename="Regular">
+      <lib copy="1"/>
+      <groups copy="1"/>
+      <features copy="1"/>
+      <info copy="1"/>
+      <location>
+        <dimension name="Weight" xvalue="200"/>
+      </location>
+    </source>
+    <source filename="master_incompatible_lookup_types/IncompatibleLookupTypes-Bold.ttx" name="Simple Two Axis Bold" familyname="Simple Two Axis" stylename="Bold">
+      <location>
+        <dimension name="Weight" xvalue="700"/>
+      </location>
+    </source>
+  </sources>
+</designspace>

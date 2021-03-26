@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <GDEF>
   <Version value="0x00010000"/>
-  <GlyphClassDef Format="1">
+  <GlyphClassDef>
     <ClassDef glyph="A" class="1"/>
     <ClassDef glyph="C" class="1"/>
     <ClassDef glyph="acute" class="3"/>

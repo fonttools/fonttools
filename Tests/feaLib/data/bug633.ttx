@@ -52,6 +52,7 @@
           <!-- Class2Count=3 -->
           <Class1Record index="0">
             <Class2Record index="0">
+              <Value1 XAdvance="0"/>
             </Class2Record>
             <Class2Record index="1">
               <Value1 XAdvance="0"/>

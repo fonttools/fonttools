@@ -169,7 +169,7 @@ class MultipleSubstTest(unittest.TestCase):
         table = otTables.MultipleSubst()
         table.Format = 1
         for name, attrs, content in parseXML(
-                '<Coverage Format="1">'
+                '<Coverage>'
                 '  <Glyph value="o"/>'
                 '  <Glyph value="l"/>'
                 '</Coverage>'
@@ -599,7 +599,6 @@ def test_splitMarkBasePos():
 	glyphMap = {g: i for i, g in enumerate(glyphOrder)}
 
 	oldSubTable = buildMarkBasePosSubtable(marks, bases, glyphMap)
-	oldSubTable.MarkCoverage.Format = oldSubTable.BaseCoverage.Format = 1
 	newSubTable = otTables.MarkBasePos()
 
 	ok = otTables.splitMarkBasePos(oldSubTable, newSubTable, overflowRecord=None)
@@ -608,11 +607,11 @@ def test_splitMarkBasePos():
 
 	assert getXML(oldSubTable.toXML) == [
 		'<MarkBasePos Format="1">',
-		'  <MarkCoverage Format="1">',
+		'  <MarkCoverage>',
 		'    <Glyph value="acutecomb"/>',
 		'    <Glyph value="gravecomb"/>',
 		'  </MarkCoverage>',
-		'  <BaseCoverage Format="1">',
+		'  <BaseCoverage>',
 		'    <Glyph value="a"/>',
 		'    <Glyph value="c"/>',
 		'  </BaseCoverage>',
@@ -654,10 +653,10 @@ def test_splitMarkBasePos():
 
 	assert getXML(newSubTable.toXML) == [
 		'<MarkBasePos Format="1">',
-		'  <MarkCoverage Format="1">',
+		'  <MarkCoverage>',
 		'    <Glyph value="cedillacomb"/>',
 		'  </MarkCoverage>',
-		'  <BaseCoverage Format="1">',
+		'  <BaseCoverage>',
 		'    <Glyph value="a"/>',
 		'    <Glyph value="c"/>',
 		'  </BaseCoverage>',

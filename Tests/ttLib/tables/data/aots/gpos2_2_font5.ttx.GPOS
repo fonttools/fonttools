@@ -34,15 +34,15 @@
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <PairPos index="0" Format="2">
-          <Coverage Format="1">
+          <Coverage>
             <Glyph value="g18"/>
           </Coverage>
           <ValueFormat1 value="1"/>
           <ValueFormat2 value="0"/>
-          <ClassDef1 Format="2">
+          <ClassDef1>
             <ClassDef glyph="g18" class="1"/>
           </ClassDef1>
-          <ClassDef2 Format="2">
+          <ClassDef2>
             <ClassDef glyph="g18" class="1"/>
           </ClassDef2>
           <!-- Class1Count=2 -->

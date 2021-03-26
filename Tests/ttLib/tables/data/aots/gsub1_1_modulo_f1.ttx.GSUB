@@ -34,11 +34,11 @@
         <LookupType value="1"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=2 -->
-        <SingleSubst index="0" Format="1">
+        <SingleSubst index="0">
           <Substitution in="g21" out="glyph32787"/>
           <Substitution in="g22" out="glyph32788"/>
         </SingleSubst>
-        <SingleSubst index="1" Format="1">
+        <SingleSubst index="1">
           <Substitution in="g19" out="glyph32789"/>
           <Substitution in="g20" out="glyph32790"/>
         </SingleSubst>
@@ -47,16 +47,16 @@
         <LookupType value="1"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=4 -->
-        <SingleSubst index="0" Format="1">
+        <SingleSubst index="0">
           <Substitution in="glyph32787" out="g23"/>
         </SingleSubst>
-        <SingleSubst index="1" Format="1">
+        <SingleSubst index="1">
           <Substitution in="glyph32788" out="g18"/>
         </SingleSubst>
-        <SingleSubst index="2" Format="1">
+        <SingleSubst index="2">
           <Substitution in="glyph32789" out="g17"/>
         </SingleSubst>
-        <SingleSubst index="3" Format="1">
+        <SingleSubst index="3">
           <Substitution in="glyph32790" out="g24"/>
         </SingleSubst>
       </Lookup>

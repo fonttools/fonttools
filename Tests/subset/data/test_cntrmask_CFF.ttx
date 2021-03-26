@@ -237,13 +237,13 @@
 
   <GDEF>
     <Version value="0x00010002"/>
-    <GlyphClassDef Format="1">
+    <GlyphClassDef>
       <ClassDef glyph="Idieresis" class="1"/>
     </GlyphClassDef>
     <MarkGlyphSetsDef>
       <MarkSetTableFormat value="1"/>
       <!-- MarkSetCount=1 -->
-      <Coverage index="0" Format="1">
+      <Coverage index="0">
       </Coverage>
     </MarkGlyphSetsDef>
   </GDEF>
@@ -335,15 +335,15 @@
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <PairPos index="0" Format="2">
-          <Coverage Format="1">
+          <Coverage>
             <Glyph value="Idieresis"/>
           </Coverage>
           <ValueFormat1 value="4"/>
           <ValueFormat2 value="0"/>
-          <ClassDef1 Format="1">
+          <ClassDef1>
             <ClassDef glyph="Idieresis" class="1"/>
           </ClassDef1>
-          <ClassDef2 Format="2">
+          <ClassDef2>
           </ClassDef2>
           <!-- Class1Count=2 -->
           <!-- Class2Count=1 -->

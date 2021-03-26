@@ -1,4 +1,4 @@
-from fontTools.misc.fixedTools import otRound
+from fontTools.misc.roundTools import otRound
 from fontTools.misc.transform import Transform
 from fontTools.pens.filterPen import FilterPen, FilterPointPen
 

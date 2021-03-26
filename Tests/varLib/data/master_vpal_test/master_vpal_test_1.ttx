@@ -424,7 +424,7 @@
         <LookupFlag value="0"/>
         <!-- SubTableCount=3 -->
         <SinglePos index="0" Format="2">
-          <Coverage Format="1">
+          <Coverage>
             <Glyph value="uni3001"/>
             <Glyph value="uni30FB"/>
             <Glyph value="uniFF1A"/>
@@ -436,7 +436,7 @@
           <Value index="2" XPlacement="-250" XAdvance="-500"/>
         </SinglePos>
         <SinglePos index="1" Format="2">
-          <Coverage Format="1">
+          <Coverage>
             <Glyph value="uni3073"/>
             <Glyph value="uni3074"/>
           </Coverage>
@@ -446,7 +446,7 @@
           <Value index="1" XAdvance="-30"/>
         </SinglePos>
         <SinglePos index="2" Format="2">
-          <Coverage Format="1">
+          <Coverage>
             <Glyph value="uniFF2D"/>
             <Glyph value="uni307B"/>
           </Coverage>

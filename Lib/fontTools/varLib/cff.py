@@ -17,10 +17,14 @@ from fontTools.cffLib.specializer import (
 from fontTools.ttLib import newTable
 from fontTools import varLib
 from fontTools.varLib.models import allEqual
+from fontTools.misc.roundTools import roundFunc
 from fontTools.misc.psCharStrings import T2CharString, T2OutlineExtractor
-from fontTools.pens.t2CharStringPen import T2CharStringPen, t2c_round
+from fontTools.pens.t2CharStringPen import T2CharStringPen
+from functools import partial
 
-from .errors import VarLibCFFDictMergeError, VarLibCFFPointTypeMergeError, VarLibMergeError
+from .errors import (
+	VarLibCFFDictMergeError, VarLibCFFPointTypeMergeError,
+	VarLibCFFHintTypeMergeError,VarLibMergeError)
 
 
 # Backwards compatibility
@@ -422,16 +426,6 @@ def merge_charstrings(glyphOrder, num_masters, top_dicts, masterModel):
 	return cvData
 
 
-def makeRoundNumberFunc(tolerance):
-	if tolerance < 0:
-		raise ValueError("Rounding tolerance must be positive")
-
-	def roundNumber(val):
-		return t2c_round(val, tolerance)
-
-	return roundNumber
-
-
 class CFFToCFF2OutlineExtractor(T2OutlineExtractor):
 	""" This class is used to remove the initial width from the CFF
 	charstring without trying to add the width to self.nominalWidthX,
@@ -518,7 +512,7 @@ class CFF2CharStringMergePen(T2CharStringPen):
 		self.prev_move_idx = 0
 		self.seen_moveto = False
 		self.glyphName = glyphName
-		self.roundNumber = makeRoundNumberFunc(roundTolerance)
+		self.round = roundFunc(roundTolerance, round=round)
 
 	def add_point(self, point_type, pt_coords):
 		if self.m_index == 0:
@@ -539,7 +533,7 @@ class CFF2CharStringMergePen(T2CharStringPen):
 		else:
 			cmd = self._commands[self.pt_index]
 			if cmd[0] != hint_type:
-				raise VarLibCFFPointTypeMergeError(hint_type, self.pt_index, len(cmd[1]),
+				raise VarLibCFFHintTypeMergeError(hint_type, self.pt_index, len(cmd[1]),
 					cmd[0], self.glyphName)
 			cmd[1].append(args)
 		self.pt_index += 1
@@ -548,14 +542,14 @@ class CFF2CharStringMergePen(T2CharStringPen):
 		# For hintmask, fonttools.cffLib.specializer.py expects
 		# each of these to be represented by two sequential commands:
 		# first holding only the operator name, with an empty arg list,
-		# second with an empty string as the op name, and  the mask arg list.
+		# second with an empty string as the op name, and the mask arg list.
 		if self.m_index == 0:
 			self._commands.append([hint_type, []])
 			self._commands.append(["", [abs_args]])
 		else:
 			cmd = self._commands[self.pt_index]
 			if cmd[0] != hint_type:
-				raise VarLibCFFPointTypeMergeError(hint_type, self.pt_index, len(cmd[1]),
+				raise VarLibCFFHintTypeMergeError(hint_type, self.pt_index, len(cmd[1]),
 					cmd[0], self.glyphName)
 			self.pt_index += 1
 			cmd = self._commands[self.pt_index]
@@ -594,7 +588,7 @@ class CFF2CharStringMergePen(T2CharStringPen):
 	def getCommands(self):
 		return self._commands
 
-	def reorder_blend_args(self, commands, get_delta_func, round_func):
+	def reorder_blend_args(self, commands, get_delta_func):
 		"""
 		We first re-order the master coordinate values.
 		For a moveto to lineto, the args are now arranged as:
@@ -637,8 +631,6 @@ class CFF2CharStringMergePen(T2CharStringPen):
 					else:
 						# convert to deltas
 						deltas = get_delta_func(coord)[1:]
-						if round_func:
-							deltas = [round_func(delta) for delta in deltas]
 						coord = [coord[0]] + deltas
 						new_coords.append(coord)
 				cmd[1] = new_coords
@@ -649,8 +641,7 @@ class CFF2CharStringMergePen(T2CharStringPen):
 					self, private=None, globalSubrs=None,
 					var_model=None, optimize=True):
 		commands = self._commands
-		commands = self.reorder_blend_args(commands, var_model.getDeltas,
-											self.roundNumber)
+		commands = self.reorder_blend_args(commands, partial (var_model.getDeltas, round=self.round))
 		if optimize:
 			commands = specializeCommands(
 						commands, generalizeFirst=False,

@@ -1,7 +1,7 @@
 from fontTools.misc import psCharStrings
 from fontTools import ttLib
 from fontTools.pens.basePen import NullPen
-from fontTools.misc.fixedTools import otRound
+from fontTools.misc.roundTools import otRound
 from fontTools.varLib.varStore import VarStoreInstancer
 
 def _add_method(*clazzes):

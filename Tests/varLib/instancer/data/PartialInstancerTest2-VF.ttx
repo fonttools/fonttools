@@ -539,7 +539,7 @@
 
   <GDEF>
     <Version value="0x00010003"/>
-    <GlyphClassDef Format="1">
+    <GlyphClassDef>
       <ClassDef glyph="A" class="1"/>
       <ClassDef glyph="Agrave" class="1"/>
       <ClassDef glyph="T" class="1"/>
@@ -547,13 +547,13 @@
     <MarkGlyphSetsDef>
       <MarkSetTableFormat value="1"/>
       <!-- MarkSetCount=4 -->
-      <Coverage index="0" Format="1">
+      <Coverage index="0">
       </Coverage>
-      <Coverage index="1" Format="1">
+      <Coverage index="1">
       </Coverage>
-      <Coverage index="2" Format="1">
+      <Coverage index="2">
       </Coverage>
-      <Coverage index="3" Format="1">
+      <Coverage index="3">
       </Coverage>
     </MarkGlyphSetsDef>
     <VarStore Format="1">
@@ -652,19 +652,19 @@
         <LookupFlag value="8"/><!-- ignoreMarks -->
         <!-- SubTableCount=1 -->
         <PairPos index="0" Format="2">
-          <Coverage Format="1">
+          <Coverage>
             <Glyph value="A"/>
             <Glyph value="T"/>
             <Glyph value="Agrave"/>
           </Coverage>
           <ValueFormat1 value="68"/>
           <ValueFormat2 value="0"/>
-          <ClassDef1 Format="1">
+          <ClassDef1>
             <ClassDef glyph="A" class="1"/>
             <ClassDef glyph="Agrave" class="1"/>
             <ClassDef glyph="T" class="2"/>
           </ClassDef1>
-          <ClassDef2 Format="1">
+          <ClassDef2>
             <ClassDef glyph="A" class="1"/>
             <ClassDef glyph="Agrave" class="1"/>
             <ClassDef glyph="T" class="2"/>

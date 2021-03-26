@@ -11,6 +11,7 @@ from fontTools.ttLib.tables.otBase import (
 from fontTools.ttLib.tables import otBase
 from fontTools.feaLib.ast import STATNameStatement
 from fontTools.otlLib.error import OpenTypeLibError
+from functools import reduce
 import logging
 import copy
 
@@ -1029,7 +1030,7 @@ class MarkMarkPosBuilder(LookupBuilder):
         builder.marks["acute"]     = (0, a1)
         builder.marks["grave"]     = (0, a1)
         builder.marks["cedilla"]   = (1, a2)
-        builder.baseMarks["acute"] = (0, a3)
+        builder.baseMarks["acute"] = {0: a3}
 
     Attributes:
         font (``fontTools.TTLib.TTFont``): A font object.
@@ -1037,8 +1038,8 @@ class MarkMarkPosBuilder(LookupBuilder):
             source which produced this lookup.
         marks: An dictionary mapping a glyph name to a two-element
             tuple containing a mark class ID and ``otTables.Anchor`` object.
-        baseMarks: An dictionary mapping a glyph name to a two-element
-            tuple containing a mark class ID and ``otTables.Anchor`` object.
+        baseMarks: An dictionary mapping a glyph name to a dictionary
+            containing one item: a mark class ID and a ``otTables.Anchor`` object.
         lookupflag (int): The lookup's flag
         markFilterSet: Either ``None`` if no mark filtering set is used, or
             an integer representing the filtering set to be used for this
@@ -2075,8 +2076,8 @@ def buildPairPosClassesSubtable(pairs, glyphMap, valueFormat1=None, valueFormat2
         classDef2.add(gc2)
     self = ot.PairPos()
     self.Format = 2
-    self.ValueFormat1 = _getValueFormat(valueFormat1, pairs.values(), 0)
-    self.ValueFormat2 = _getValueFormat(valueFormat2, pairs.values(), 1)
+    valueFormat1 = self.ValueFormat1 = _getValueFormat(valueFormat1, pairs.values(), 0)
+    valueFormat2 = self.ValueFormat2 = _getValueFormat(valueFormat2, pairs.values(), 1)
     self.Coverage = buildCoverage(coverage, glyphMap)
     self.ClassDef1 = classDef1.build()
     self.ClassDef2 = classDef2.build()
@@ -2089,7 +2090,9 @@ def buildPairPosClassesSubtable(pairs, glyphMap, valueFormat1=None, valueFormat2
         self.Class1Record.append(rec1)
         for c2 in classes2:
             rec2 = ot.Class2Record()
-            rec2.Value1, rec2.Value2 = pairs.get((c1, c2), (None, None))
+            val1, val2 = pairs.get((c1, c2), (None, None))
+            rec2.Value1 = ValueRecord(src=val1, valueFormat=valueFormat1) if valueFormat1 else None
+            rec2.Value2 = ValueRecord(src=val2, valueFormat=valueFormat2) if valueFormat2 else None
             rec1.Class2Record.append(rec2)
     self.Class1Count = len(self.Class1Record)
     self.Class2Count = len(classes2)
@@ -2174,8 +2177,8 @@ def buildPairPosGlyphsSubtable(pairs, glyphMap, valueFormat1=None, valueFormat2=
     """
     self = ot.PairPos()
     self.Format = 1
-    self.ValueFormat1 = _getValueFormat(valueFormat1, pairs.values(), 0)
-    self.ValueFormat2 = _getValueFormat(valueFormat2, pairs.values(), 1)
+    valueFormat1 = self.ValueFormat1 = _getValueFormat(valueFormat1, pairs.values(), 0)
+    valueFormat2 = self.ValueFormat2 = _getValueFormat(valueFormat2, pairs.values(), 1)
     p = {}
     for (glyphA, glyphB), (valA, valB) in pairs.items():
         p.setdefault(glyphA, []).append((glyphB, valA, valB))
@@ -2188,8 +2191,8 @@ def buildPairPosGlyphsSubtable(pairs, glyphMap, valueFormat1=None, valueFormat2=
         for glyph2, val1, val2 in sorted(p[glyph], key=lambda x: glyphMap[x[0]]):
             pvr = ot.PairValueRecord()
             pvr.SecondGlyph = glyph2
-            pvr.Value1 = val1 if val1 and val1.getFormat() != 0 else None
-            pvr.Value2 = val2 if val2 and val2.getFormat() != 0 else None
+            pvr.Value1 = ValueRecord(src=val1, valueFormat=valueFormat1) if valueFormat1 else None
+            pvr.Value2 = ValueRecord(src=val2, valueFormat=valueFormat2) if valueFormat2 else None
             ps.PairValueRecord.append(pvr)
         ps.PairValueCount = len(ps.PairValueRecord)
     self.PairSetCount = len(self.PairSet)
@@ -2310,10 +2313,8 @@ def buildSinglePosSubtable(values, glyphMap):
     """
     self = ot.SinglePos()
     self.Coverage = buildCoverage(values.keys(), glyphMap)
-    valueRecords = [values[g] for g in self.Coverage.glyphs]
-    self.ValueFormat = 0
-    for v in valueRecords:
-        self.ValueFormat |= v.getFormat()
+    valueFormat = self.ValueFormat = reduce(int.__or__, [v.getFormat() for v in values.values()], 0)
+    valueRecords = [ValueRecord(src=values[g], valueFormat=valueFormat) for g in self.Coverage.glyphs]
     if all(v == valueRecords[0] for v in valueRecords):
         self.Format = 1
         if self.ValueFormat != 0:

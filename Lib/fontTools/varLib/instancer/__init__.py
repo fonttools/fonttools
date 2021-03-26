@@ -1054,7 +1054,7 @@ def axisValuesFromAxisLimits(stat, axisLimits):
             if dropAxisValueTable:
                 continue
         else:
-            log.warn("Unknown AxisValue table format (%s); ignored", axisValueFormat)
+            log.warning("Unknown AxisValue table format (%s); ignored", axisValueFormat)
         newAxisValueTables.append(axisValueTable)
     return newAxisValueTables
 
@@ -1315,7 +1315,7 @@ def parseArgs(args):
         "locargs",
         metavar="AXIS=LOC",
         nargs="*",
-        help="List of space separated locations. A location consist in "
+        help="List of space separated locations. A location consists of "
         "the tag of a variation axis, followed by '=' and one of number, "
         "number:number or the literal string 'drop'. "
         "E.g.: wdth=100 or wght=75.0:125.0 or wght=drop",

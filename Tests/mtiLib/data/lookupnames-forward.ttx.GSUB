@@ -40,11 +40,11 @@
       <LookupFlag value="0"/>
       <!-- SubTableCount=1 -->
       <ChainContextSubst index="0" Format="2">
-        <Coverage Format="1">
+        <Coverage>
           <Glyph value="uvowelsignkannada"/>
           <Glyph value="uuvowelsignkannada"/>
         </Coverage>
-        <BacktrackClassDef Format="2">
+        <BacktrackClassDef>
           <ClassDef glyph="pakannada" class="1"/>
           <ClassDef glyph="pevowelkannada" class="1"/>
           <ClassDef glyph="phakannada" class="1"/>
@@ -52,7 +52,7 @@
           <ClassDef glyph="vakannada" class="1"/>
           <ClassDef glyph="vevowelkannada" class="1"/>
         </BacktrackClassDef>
-        <InputClassDef Format="1">
+        <InputClassDef>
           <ClassDef glyph="uuvowelsignkannada" class="1"/>
           <ClassDef glyph="uvowelsignkannada" class="1"/>
         </InputClassDef>
@@ -78,7 +78,7 @@
       <LookupType value="1"/>
       <LookupFlag value="0"/>
       <!-- SubTableCount=1 -->
-      <SingleSubst index="0" Format="1">
+      <SingleSubst index="0">
         <Substitution in="uuvowelsignkannada" out="uuvowelsignaltkannada"/>
         <Substitution in="uvowelsignkannada" out="uvowelsignaltkannada"/>
       </SingleSubst>

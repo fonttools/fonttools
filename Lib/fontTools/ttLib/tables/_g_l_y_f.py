@@ -1506,12 +1506,12 @@ class GlyphCoordinates(object):
 			p = self._checkFloat(p)
 			self._a.extend(p)
 
-	def toInt(self):
+	def toInt(self, *, round=otRound):
 		if not self.isFloat():
 			return
 		a = array.array("h")
 		for n in self._a:
-			a.append(otRound(n))
+			a.append(round(n))
 		self._a = a
 
 	def relativeToAbsolute(self):
@@ -1626,13 +1626,9 @@ class GlyphCoordinates(object):
 		for i in range(len(a)):
 			a[i] = -a[i]
 		return r
-	def __round__(self):
-		"""
-		Note: This is Python 3 only.  Python 2 does not call __round__.
-		As such, we cannot test this method either. :(
-		"""
+	def __round__(self, *, round=otRound):
 		r = self.copy()
-		r.toInt()
+		r.toInt(round=round)
 		return r
 
 	def __add__(self, other): return self.copy().__iadd__(other)

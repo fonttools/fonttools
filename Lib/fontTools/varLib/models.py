@@ -5,6 +5,7 @@ __all__ = ['nonNone', 'allNone', 'allEqual', 'allEqualTo', 'subList',
 	   'supportScalar',
 	   'VariationModel']
 
+from fontTools.misc.roundTools import noRound
 from .errors import VariationModelError
 
 
@@ -281,34 +282,18 @@ class VariationModel(object):
 
 	def _computeMasterSupports(self, axisPoints):
 		supports = []
-		deltaWeights = []
-		locations = self.locations
-		# Compute min/max across each axis, use it as total range.
-		# TODO Take this as input from outside?
-		minV = {}
-		maxV = {}
-		for l in locations:
-			for k,v in l.items():
-				minV[k] = min(v, minV.get(k, v))
-				maxV[k] = max(v, maxV.get(k, v))
-		for i,loc in enumerate(locations):
-			box = {}
-			for axis,locV in loc.items():
-				if locV > 0:
-					box[axis] = (0, locV, maxV[axis])
-				else:
-					box[axis] = (minV[axis], locV, 0)
-
-			locAxes = set(loc.keys())
+		regions = self._locationsToRegions()
+		for i,region in enumerate(regions):
+			locAxes = set(region.keys())
 			# Walk over previous masters now
-			for j,m in enumerate(locations[:i]):
+			for j,prev_region in enumerate(regions[:i]):
 				# Master with extra axes do not participte
-				if not set(m.keys()).issubset(locAxes):
+				if not set(prev_region.keys()).issubset(locAxes):
 					continue
 				# If it's NOT in the current box, it does not participate
 				relevant = True
-				for axis, (lower,peak,upper) in box.items():
-					if axis not in m or not (m[axis] == peak or lower < m[axis] < upper):
+				for axis, (lower,peak,upper) in region.items():
+					if axis not in prev_region or not (prev_region[axis][1] == peak or lower < prev_region[axis][1] < upper):
 						relevant = False
 						break
 				if not relevant:
@@ -323,10 +308,10 @@ class VariationModel(object):
 
 				bestAxes = {}
 				bestRatio = -1
-				for axis in m.keys():
-					val = m[axis]
-					assert axis in box
-					lower,locV,upper = box[axis]
+				for axis in prev_region.keys():
+					val = prev_region[axis][1]
+					assert axis in region
+					lower,locV,upper = region[axis]
 					newLower, newUpper = lower, upper
 					if val < locV:
 						newLower = val
@@ -344,21 +329,46 @@ class VariationModel(object):
 						bestAxes[axis] = (newLower, locV, newUpper)
 
 				for axis,triple in bestAxes.items ():
-					box[axis] = triple
-			supports.append(box)
+					region[axis] = triple
+			supports.append(region)
+		self.supports = supports
+		self._computeDeltaWeights()
 
+	def _locationsToRegions(self):
+		locations = self.locations
+		# Compute min/max across each axis, use it as total range.
+		# TODO Take this as input from outside?
+		minV = {}
+		maxV = {}
+		for l in locations:
+			for k,v in l.items():
+				minV[k] = min(v, minV.get(k, v))
+				maxV[k] = max(v, maxV.get(k, v))
+
+		regions = []
+		for i,loc in enumerate(locations):
+			region = {}
+			for axis,locV in loc.items():
+				if locV > 0:
+					region[axis] = (0, locV, maxV[axis])
+				else:
+					region[axis] = (minV[axis], locV, 0)
+			regions.append(region)
+		return regions
+
+	def _computeDeltaWeights(self):
+		deltaWeights = []
+		for i,loc in enumerate(self.locations):
 			deltaWeight = {}
 			# Walk over previous masters now, populate deltaWeight
-			for j,m in enumerate(locations[:i]):
-				scalar = supportScalar(loc, supports[j])
+			for j,m in enumerate(self.locations[:i]):
+				scalar = supportScalar(loc, self.supports[j])
 				if scalar:
 					deltaWeight[j] = scalar
 			deltaWeights.append(deltaWeight)
-
-		self.supports = supports
 		self.deltaWeights = deltaWeights
 
-	def getDeltas(self, masterValues):
+	def getDeltas(self, masterValues, *, round=noRound):
 		assert len(masterValues) == len(self.deltaWeights)
 		mapping = self.reverseMapping
 		out = []
@@ -366,12 +376,12 @@ class VariationModel(object):
 			delta = masterValues[mapping[i]]
 			for j,weight in weights.items():
 				delta -= out[j] * weight
-			out.append(delta)
+			out.append(round(delta))
 		return out
 
-	def getDeltasAndSupports(self, items):
+	def getDeltasAndSupports(self, items, *, round=noRound):
 		model, items = self.getSubModel(items)
-		return model.getDeltas(items), model.supports
+		return model.getDeltas(items, round=round), model.supports
 
 	def getScalars(self, loc):
 		return [supportScalar(loc, support) for support in self.supports]
@@ -393,12 +403,12 @@ class VariationModel(object):
 		scalars = self.getScalars(loc)
 		return self.interpolateFromDeltasAndScalars(deltas, scalars)
 
-	def interpolateFromMasters(self, loc, masterValues):
-		deltas = self.getDeltas(masterValues)
+	def interpolateFromMasters(self, loc, masterValues, *, round=noRound):
+		deltas = self.getDeltas(masterValues, round=round)
 		return self.interpolateFromDeltas(loc, deltas)
 
-	def interpolateFromMastersAndScalars(self, masterValues, scalars):
-		deltas = self.getDeltas(masterValues)
+	def interpolateFromMastersAndScalars(self, masterValues, scalars, *, round=noRound):
+		deltas = self.getDeltas(masterValues, round=round)
 		return self.interpolateFromDeltasAndScalars(deltas, scalars)
 
 
