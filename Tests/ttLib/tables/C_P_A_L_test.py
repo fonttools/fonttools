@@ -1,4 +1,3 @@
-from fontTools.misc.py23 import *
 from fontTools.misc.testTools import getXML, parseXML
 from fontTools.misc.textTools import deHexStr
 from fontTools.ttLib import getTableModule, newTable

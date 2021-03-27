@@ -1,4 +1,3 @@
-from fontTools.misc.py23 import *
 from fontTools.misc.testTools import parseXML
 from fontTools.misc.timeTools import timestampSinceEpoch
 from fontTools.ttLib import TTFont, TTLibError

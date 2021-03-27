@@ -1,5 +1,3 @@
-# coding: utf-8
-from fontTools.misc.py23 import *
 from fontTools.misc.loggingTools import CapturingLogHandler
 from fontTools.misc.testTools import FakeFont, makeXMLWriter
 from fontTools.misc.textTools import deHexStr

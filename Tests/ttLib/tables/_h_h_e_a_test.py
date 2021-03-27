@@ -1,4 +1,3 @@
-from fontTools.misc.py23 import *
 from fontTools.misc.loggingTools import CapturingLogHandler
 from fontTools.misc.testTools import parseXML, getXML
 from fontTools.misc.textTools import deHexStr
