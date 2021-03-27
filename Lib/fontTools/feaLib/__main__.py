@@ -1,4 +1,3 @@
-from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont
 from fontTools.feaLib.builder import addOpenTypeFeatures, Builder
 from fontTools.feaLib.error import FeatureLibError

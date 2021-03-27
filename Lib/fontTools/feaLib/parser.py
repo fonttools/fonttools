@@ -1,7 +1,7 @@
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.feaLib.lexer import Lexer, IncludingLexer, NonIncludingLexer
 from fontTools.misc.encodingTools import getEncoding
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import bytechr, tobytes, tostr
 import fontTools.feaLib.ast as ast
 import logging
 import os
@@ -1222,12 +1222,12 @@ class Parser(object):
         # We convert surrogates to actual Unicode by round-tripping through
         # Python's UTF-16 codec in a special mode.
         utf16 = tobytes(s, "utf_16_be", "surrogatepass")
-        return tounicode(utf16, "utf_16_be")
+        return tostr(utf16, "utf_16_be")
 
     @staticmethod
     def unescape_unichr_(match):
         n = match.group(0)[1:]
-        return unichr(int(n, 16))
+        return chr(int(n, 16))
 
     @staticmethod
     def unescape_byte_(match, encoding):

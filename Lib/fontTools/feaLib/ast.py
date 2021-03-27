@@ -1,10 +1,9 @@
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import byteord, tobytes
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.feaLib.location import FeatureLibLocation
 from fontTools.misc.encodingTools import getEncoding
 from collections import OrderedDict
 import itertools
-from typing import NamedTuple
 
 SHIFT = " " * 4
 
@@ -1669,7 +1668,7 @@ class NameRecord(Statement):
         def escape(c, escape_pattern):
             # Also escape U+0022 QUOTATION MARK and U+005C REVERSE SOLIDUS
             if c >= 0x20 and c <= 0x7E and c not in (0x22, 0x5C):
-                return unichr(c)
+                return chr(c)
             else:
                 return escape_pattern % c
 
