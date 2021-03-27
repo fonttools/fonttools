@@ -16,7 +16,7 @@ def _makeunicodes(f):
 class _UnicodeCustom(object):
 
 	def __init__(self, f):
-		if isinstance(f, basestring):
+		if isinstance(f, str):
 			with open(f) as fd:
 				codes = _makeunicodes(fd)
 		else:
