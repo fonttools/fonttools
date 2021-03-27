@@ -111,8 +111,7 @@ MomentXYPen = partial(GreenPen, func=x*y)
 def printGreenPen(penName, funcs, file=sys.stdout):
 
 	print(
-'''from fontTools.misc.py23 import *
-from fontTools.pens.basePen import BasePen
+'''from fontTools.pens.basePen import BasePen
 
 class %s(BasePen):
 
