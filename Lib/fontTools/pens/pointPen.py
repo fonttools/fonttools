@@ -13,7 +13,7 @@ For instance, whether or not a point is smooth, and its name.
 """
 
 import math
-from typing import Any, List, Optional, Tuple
+from typing import Any, Optional, Tuple
 
 from fontTools.pens.basePen import AbstractPen
 

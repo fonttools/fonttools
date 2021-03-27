@@ -36,7 +36,7 @@ Coordinates are usually expressed as (x, y) tuples, but generally any
 sequence of length 2 will do.
 """
 
-from typing import Any, Tuple
+from typing import Tuple
 
 from fontTools.misc.loggingTools import LogMixin
 
