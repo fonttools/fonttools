@@ -11,7 +11,7 @@ or subclasses built-in ElementTree classes to add features that are
 only availble in lxml, like OrderedDict for attributes, pretty_print and
 iterwalk.
 """
-from fontTools.misc.py23 import unicode, tounicode
+from fontTools.misc.py23 import unicode, tostr
 
 
 XML_DECLARATION = """<?xml version='1.0' encoding='%s'?>"""
@@ -242,7 +242,7 @@ except ImportError:
         Reject all bytes input that contains non-ASCII characters.
         """
         try:
-            s = tounicode(s, encoding="ascii", errors="strict")
+            s = tostr(s, encoding="ascii", errors="strict")
         except UnicodeDecodeError:
             raise ValueError(
                 "Bytes strings can only contain ASCII characters. "
