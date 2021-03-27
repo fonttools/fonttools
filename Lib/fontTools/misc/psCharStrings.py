@@ -1043,7 +1043,8 @@ class T2CharString(object):
 		self.program = None
 
 	def getToken(self, index,
-			len=len, byteord=byteord, isinstance=isinstance):
+			len=len, byteord=byteord, basestring=str,
+			isinstance=isinstance):
 		if self.bytecode is not None:
 			if index >= len(self.bytecode):
 				return None, 0, 0
