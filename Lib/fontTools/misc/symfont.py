@@ -1,4 +1,3 @@
-from fontTools.misc.py23 import *
 from fontTools.pens.basePen import BasePen
 from functools import partial
 from itertools import count
