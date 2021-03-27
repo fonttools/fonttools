@@ -1,4 +1,3 @@
-from fontTools.misc.py23 import *
 from fontTools.misc.py23 import round3
 from fontTools.misc.arrayTools import (
     calcBounds, calcIntBounds, updateBounds, pointInRect, pointsInRect,

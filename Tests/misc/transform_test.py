@@ -1,4 +1,3 @@
-from fontTools.misc.py23 import *
 from fontTools.misc.transform import Transform, Identity, Offset, Scale
 import math
 import pytest

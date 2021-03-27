@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-from fontTools.misc.py23 import *
 import fontTools.misc.testTools as testTools
 import unittest
 

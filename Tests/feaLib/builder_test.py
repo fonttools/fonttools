@@ -1,4 +1,3 @@
-from fontTools.misc.py23 import *
 from fontTools.misc.loggingTools import CapturingLogHandler
 from fontTools.feaLib.builder import Builder, addOpenTypeFeatures, \
         addOpenTypeFeaturesFromString
@@ -8,6 +7,7 @@ from fontTools.feaLib.parser import Parser
 from fontTools.feaLib import ast
 from fontTools.feaLib.lexer import Lexer
 import difflib
+from io import StringIO
 import os
 import re
 import shutil
@@ -775,7 +775,7 @@ class BuilderTest(unittest.TestCase):
         self.assertRaises(NotImplementedError, self.build, "", tables={"FOO"})
 
     def test_build_pre_parsed_ast_featurefile(self):
-        f = UnicodeIO("feature liga {sub f i by f_i;} liga;")
+        f = StringIO("feature liga {sub f i by f_i;} liga;")
         tree = Parser(f).parse()
         font = makeTTFont()
         addOpenTypeFeatures(font, tree)

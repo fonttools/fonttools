@@ -1,4 +1,3 @@
-from fontTools.misc.py23 import *
 from fontTools.misc.bezierTools import (
     calcQuadraticBounds, calcCubicBounds, segmentPointAtT, splitLine, splitQuadratic,
     splitCubic, splitQuadraticAtT, splitCubicAtT, solveCubic)
