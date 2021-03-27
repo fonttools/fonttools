@@ -478,7 +478,7 @@ class FontBuilder(object):
                 nameID = nameName
             else:
                 nameID = _nameIDs[nameName]
-            if isinstance(nameValue, basestring):
+            if isinstance(nameValue, str):
                 nameValue = dict(en=nameValue)
             nameTable.addMultilingualName(
                 nameValue, ttFont=self.font, nameID=nameID, windows=windows, mac=mac

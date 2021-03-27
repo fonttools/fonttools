@@ -18,7 +18,7 @@ from fontTools.cffLib import maxStackLimit
 
 
 def stringToProgram(string):
-	if isinstance(string, basestring):
+	if isinstance(string, str):
 		string = string.split()
 	program = []
 	for token in string:
@@ -70,7 +70,7 @@ def programToCommands(program, getNumRegions=None):
 	it = iter(program)
 
 	for token in it:
-		if not isinstance(token, basestring):
+		if not isinstance(token, str):
 			stack.append(token)
 			continue
 

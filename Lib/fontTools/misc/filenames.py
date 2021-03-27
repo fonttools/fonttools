@@ -16,7 +16,7 @@ by Tal Leming and is copyright (c) 2005-2016, The RoboFab Developers:
 -	Tal Leming
 -	Just van Rossum
 """
-from fontTools.misc.py23 import basestring, unicode
+from fontTools.misc.py23 import unicode
 
 illegalCharacters = r"\" * + / : < > ? [ \ ] | \0".split(" ")
 illegalCharacters += [chr(i) for i in range(1, 32)]

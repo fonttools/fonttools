@@ -68,7 +68,7 @@ def pack(fmt, obj):
 		if name in fixes:
 			# fixed point conversion
 			value = fl2fi(value, fixes[name])
-		elif isinstance(value, basestring):
+		elif isinstance(value, str):
 			value = tobytes(value)
 		elements.append(value)
 	data = struct.pack(*(formatstring,) + tuple(elements))
