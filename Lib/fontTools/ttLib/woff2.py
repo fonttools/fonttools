@@ -1,4 +1,5 @@
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import Tag, bytechr, byteord, bytesjoin
+from io import BytesIO
 import sys
 import array
 import struct

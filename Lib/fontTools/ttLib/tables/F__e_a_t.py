@@ -1,8 +1,6 @@
-from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc.fixedTools import floatToFixedToStr
 from fontTools.misc.textTools import safeEval
-from .otBase import BaseTTXConverter
 from . import DefaultTable
 from . import grUtils
 import struct

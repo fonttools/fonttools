@@ -1,5 +1,5 @@
 """ttLib.macUtils.py -- Various Mac-specific stuff."""
-from fontTools.misc.py23 import *
+from io import BytesIO
 from fontTools.misc.macRes import ResourceReader, ResourceError
 
 

@@ -1,4 +1,3 @@
-from fontTools.misc.py23 import *
 from fontTools.ttLib import getSearchRange
 from fontTools.misc.textTools import safeEval, readHex
 from fontTools.misc.fixedTools import (

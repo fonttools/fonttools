@@ -1,7 +1,7 @@
-from fontTools.misc.py23 import *
+# from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
-from fontTools.misc.textTools import readHex
-from .sbixGlyph import *
+from fontTools.misc.textTools import safeEval
+from .sbixGlyph import Glyph
 import struct
 
 sbixStrikeHeaderFormat = """

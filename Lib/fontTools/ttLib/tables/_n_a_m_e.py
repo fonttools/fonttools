@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import bytechr, byteord, bytesjoin, strjoin, tobytes, tostr
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
 from fontTools.misc.encodingTools import getEncoding
@@ -133,7 +133,7 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		"""
 		if not hasattr(self, 'names'):
 			self.names = []
-		if not isinstance(string, unicode):
+		if not isinstance(string, str):
 			if isinstance(string, bytes):
 				log.warning(
 					"name string is bytes, ensure it's correctly encoded: %r", string)
@@ -310,10 +310,9 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 			"'platforms' must contain at least one (platformID, platEncID, langID) tuple"
 		if not hasattr(self, 'names'):
 			self.names = []
-		if not isinstance(string, unicode):
+		if not isinstance(string, str):
 			raise TypeError(
-				"expected %s, found %s: %r" % (
-					unicode.__name__, type(string).__name__,string ))
+				"expected str, found %s: %r" % (type(string).__name__, string))
 		nameID = self._findUnusedNameID(minNameID + 1)
 		for platformID, platEncID, langID in platforms:
 			self.names.append(makeName(string, nameID, platformID, platEncID, langID))
@@ -457,7 +456,7 @@ class NameRecord(object):
 			elif byteord(string[0]) == 0 and all(isascii(byteord(b)) for b in string[1:]):
 				string = bytesjoin(b'\0'+bytechr(byteord(b)) for b in string[1:])
 
-		string = tounicode(string, encoding=encoding, errors=errors)
+		string = tostr(string, encoding=encoding, errors=errors)
 
 		# If decoded strings still looks like UTF-16BE, it suggests a double-encoding.
 		# Fix it up.

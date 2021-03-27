@@ -1,4 +1,3 @@
-from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
 from . import DefaultTable

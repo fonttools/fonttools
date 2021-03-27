@@ -1,4 +1,4 @@
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import bytechr, byteord, tobytes, tostr
 from fontTools import ttLib
 from fontTools.ttLib.standardGlyphOrder import standardGlyphOrder
 from fontTools.misc import sstruct
