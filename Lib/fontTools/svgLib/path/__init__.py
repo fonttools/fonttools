@@ -1,4 +1,4 @@
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import tostr
 
 from fontTools.pens.transformPen import TransformPen
 from fontTools.misc import etree
