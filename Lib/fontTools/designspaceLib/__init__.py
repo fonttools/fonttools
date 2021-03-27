@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import tobytes, tostr
 from fontTools.misc.loggingTools import LogMixin
 import collections
+from io import BytesIO, StringIO
 import os
 import posixpath
 from fontTools.misc import etree as ET
@@ -290,25 +291,25 @@ class InstanceDescriptor(SimpleDescriptor):
     filename = posixpath_property("_filename")
 
     def setStyleName(self, styleName, languageCode="en"):
-        self.localisedStyleName[languageCode] = tounicode(styleName)
+        self.localisedStyleName[languageCode] = tostr(styleName)
 
     def getStyleName(self, languageCode="en"):
         return self.localisedStyleName.get(languageCode)
 
     def setFamilyName(self, familyName, languageCode="en"):
-        self.localisedFamilyName[languageCode] = tounicode(familyName)
+        self.localisedFamilyName[languageCode] = tostr(familyName)
 
     def getFamilyName(self, languageCode="en"):
         return self.localisedFamilyName.get(languageCode)
 
     def setStyleMapStyleName(self, styleMapStyleName, languageCode="en"):
-        self.localisedStyleMapStyleName[languageCode] = tounicode(styleMapStyleName)
+        self.localisedStyleMapStyleName[languageCode] = tostr(styleMapStyleName)
 
     def getStyleMapStyleName(self, languageCode="en"):
         return self.localisedStyleMapStyleName.get(languageCode)
 
     def setStyleMapFamilyName(self, styleMapFamilyName, languageCode="en"):
-        self.localisedStyleMapFamilyName[languageCode] = tounicode(styleMapFamilyName)
+        self.localisedStyleMapFamilyName[languageCode] = tostr(styleMapFamilyName)
 
     def getStyleMapFamilyName(self, languageCode="en"):
         return self.localisedStyleMapFamilyName.get(languageCode)
@@ -823,7 +824,7 @@ class BaseDocReader(LogMixin):
                 # '{http://www.w3.org/XML/1998/namespace}lang'
                 for key, lang in labelNameElement.items():
                     if key == XML_LANG:
-                        axisObject.labelNames[lang] = tounicode(labelNameElement.text)
+                        axisObject.labelNames[lang] = tostr(labelNameElement.text)
             self.documentObject.axes.append(axisObject)
             self.axisDefaults[axisObject.name] = axisObject.default
 
@@ -1099,10 +1100,10 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
         return self
 
     def tostring(self, encoding=None):
-        if encoding is unicode or (
+        if encoding is str or (
             encoding is not None and encoding.lower() == "unicode"
         ):
-            f = UnicodeIO()
+            f = StringIO()
             xml_declaration = False
         elif encoding is None or encoding == "utf-8":
             f = BytesIO()
