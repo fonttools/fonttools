@@ -1,4 +1,3 @@
-from fontTools.misc.py23 import *
 import sys
 import logging
 import timeit
