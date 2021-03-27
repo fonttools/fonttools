@@ -173,7 +173,7 @@ class table_M_E_T_A_(DefaultTable.DefaultTable):
 			glyphRec = GlyphRecord()
 			self.glyphRecords.append(glyphRec)
 			for element in content:
-				if isinstance(element, basestring):
+				if isinstance(element, str):
 					continue
 				name, attrs, content = element
 				glyphRec.fromXML(name, attrs, content, ttFont)
@@ -207,7 +207,7 @@ class GlyphRecord(object):
 			stringRec = StringRecord()
 			self.stringRecs.append(stringRec)
 			for element in content:
-				if isinstance(element, basestring):
+				if isinstance(element, str):
 					continue
 				stringRec.fromXML(name, attrs, content, ttFont)
 			stringRec.stringLen = len(stringRec.string)
@@ -281,7 +281,7 @@ class StringRecord(object):
 
 	def fromXML(self, name, attrs, content, ttFont):
 		for element in content:
-			if isinstance(element, basestring):
+			if isinstance(element, str):
 				continue
 			name, attrs, content = element
 			value = attrs["value"]
