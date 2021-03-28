@@ -5,7 +5,6 @@ import sys
 import pytest
 import warnings
 
-from fontTools.misc.py23 import open
 from fontTools.misc import plistlib
 from fontTools.designspaceLib import (
     DesignSpaceDocument, SourceDescriptor, AxisDescriptor, RuleDescriptor,
