@@ -34,7 +34,7 @@ class XMLWriter(object):
 			self.totype = tobytes
 		except TypeError:
 			# This better not fail.
-			self.file.write(tostr(''))
+			self.file.write('')
 			self.totype = tostr
 		self.indentwhite = self.totype(indentwhite)
 		if newlinestr is None:
