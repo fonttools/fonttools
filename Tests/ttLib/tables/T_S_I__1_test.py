@@ -1,4 +1,4 @@
-from fontTools.misc.py23 import unichr, tobytes
+from fontTools.misc.py23 import tobytes
 from fontTools.misc.loggingTools import CapturingLogHandler
 from fontTools.ttLib import TTFont, TTLibError
 from fontTools.ttLib.tables.T_S_I__0 import table_T_S_I__0
@@ -33,7 +33,7 @@ def font(indextable):
     # ['a', 'b', 'c', ...]
     ch = 0x61
     n = len(indextable.indices)
-    font.glyphOrder = [unichr(i) for i in range(ch, ch+n)]
+    font.glyphOrder = [chr(i) for i in range(ch, ch+n)]
     font['TSI0'] = indextable
     return font
 

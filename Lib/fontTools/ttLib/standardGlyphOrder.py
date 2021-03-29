@@ -1,5 +1,3 @@
-from fontTools.misc.py23 import *
-
 #
 # 'post' table formats 1.0 and 2.0 rely on this list of "standard"
 # glyphs.

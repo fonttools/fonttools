@@ -1,5 +1,3 @@
-from fontTools.misc.py23 import *
-
 StandardEncoding = [
 		'.notdef', '.notdef', '.notdef', '.notdef', '.notdef',
 		'.notdef', '.notdef', '.notdef', '.notdef', '.notdef',

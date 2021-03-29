@@ -1,4 +1,4 @@
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import byteord, tostr
 
 import re
 from bisect import bisect_right
@@ -50,7 +50,7 @@ def script(char):
     'Latn'
     >>> script(",")
     'Zyyy'
-    >>> script(unichr(0x10FFFF))
+    >>> script(chr(0x10FFFF))
     'Zzzz'
     """
     code = byteord(char)
@@ -73,9 +73,9 @@ def script_extension(char):
 
     >>> script_extension("a") == {'Latn'}
     True
-    >>> script_extension(unichr(0x060C)) == {'Rohg', 'Syrc', 'Yezi', 'Arab', 'Thaa'}
+    >>> script_extension(chr(0x060C)) == {'Rohg', 'Syrc', 'Yezi', 'Arab', 'Thaa'}
     True
-    >>> script_extension(unichr(0x10FFFF)) == {'Zzzz'}
+    >>> script_extension(chr(0x10FFFF)) == {'Zzzz'}
     True
     """
     code = byteord(char)
@@ -219,9 +219,9 @@ def block(char):
 
     >>> block("a")
     'Basic Latin'
-    >>> block(unichr(0x060C))
+    >>> block(chr(0x060C))
     'Arabic'
-    >>> block(unichr(0xEFFFF))
+    >>> block(chr(0xEFFFF))
     'No_Block'
     """
     code = byteord(char)

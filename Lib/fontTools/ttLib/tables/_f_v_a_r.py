@@ -1,4 +1,4 @@
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import Tag, bytesjoin
 from fontTools.misc import sstruct
 from fontTools.misc.fixedTools import (
     fixedToFloat as fi2fl,
@@ -6,7 +6,7 @@ from fontTools.misc.fixedTools import (
     floatToFixedToStr as fl2str,
     strToFixedToFloat as str2fl,
 )
-from fontTools.misc.textTools import safeEval, num2binary, binary2num
+from fontTools.misc.textTools import safeEval
 from fontTools.ttLib import TTLibError
 from . import DefaultTable
 import struct

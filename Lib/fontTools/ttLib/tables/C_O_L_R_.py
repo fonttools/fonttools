@@ -2,7 +2,6 @@
 #
 # Google Author(s): Behdad Esfahbod
 
-from fontTools.misc.py23 import *
 from fontTools.misc.textTools import safeEval
 from . import DefaultTable
 

@@ -1,6 +1,5 @@
 """Misc dict tools."""
 
-from fontTools.misc.py23 import *
 
 __all__ = ['hashdict']
 

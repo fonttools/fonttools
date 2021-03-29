@@ -1,4 +1,4 @@
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import Tag
 from fontTools.misc.fixedTools import floatToFixedToFloat
 from fontTools import ttLib
 from fontTools import designspaceLib
@@ -14,9 +14,11 @@ from fontTools.varLib import featureVars
 from fontTools.varLib import models
 import collections
 from copy import deepcopy
+from io import BytesIO, StringIO
 import logging
 import os
 import re
+from types import SimpleNamespace
 import pytest
 
 

@@ -1,4 +1,3 @@
-from fontTools.misc.py23 import *
 import logging
 from fontTools.misc.loggingTools import configLogger
 

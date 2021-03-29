@@ -1,4 +1,4 @@
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import bytesjoin, tobytes, tostr
 from fontTools.misc.fixedTools import (
 	fixedToFloat as fi2fl,
 	floatToFixed as fl2fi,
@@ -424,8 +424,8 @@ class Char64(SimpleValue):
 		zeroPos = data.find(b"\0")
 		if zeroPos >= 0:
 			data = data[:zeroPos]
-		s = tounicode(data, encoding="ascii", errors="replace")
-		if s != tounicode(data, encoding="ascii", errors="ignore"):
+		s = tostr(data, encoding="ascii", errors="replace")
+		if s != tostr(data, encoding="ascii", errors="ignore"):
 			log.warning('replaced non-ASCII characters in "%s"' %
 			            s)
 		return s

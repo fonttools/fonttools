@@ -2,7 +2,6 @@
 #
 # Google Author(s): Behdad Esfahbod, Roozbeh Pournader
 
-from fontTools.misc.py23 import *
 from fontTools.misc.timeTools import timestampNow
 from fontTools import ttLib, cffLib
 from fontTools.ttLib.tables import otTables, _h_e_a_d

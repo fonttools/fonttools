@@ -1,4 +1,3 @@
-from fontTools.misc.py23 import *
 from fontTools.misc.fixedTools import (
     fixedToFloat,
     floatToFixed,

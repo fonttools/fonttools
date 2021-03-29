@@ -1,6 +1,6 @@
 """xmlWriter.py -- Simple XML authoring class"""
 
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import byteord, strjoin, tobytes, tostr
 import sys
 import os
 import string
@@ -34,8 +34,8 @@ class XMLWriter(object):
 			self.totype = tobytes
 		except TypeError:
 			# This better not fail.
-			self.file.write(tounicode(''))
-			self.totype = tounicode
+			self.file.write('')
+			self.totype = tostr
 		self.indentwhite = self.totype(indentwhite)
 		if newlinestr is None:
 			self.newlinestr = self.totype(os.linesep)
@@ -156,7 +156,7 @@ class XMLWriter(object):
 			return ""
 		data = ""
 		for attr, value in attributes:
-			if not isinstance(value, (bytes, unicode)):
+			if not isinstance(value, (bytes, str)):
 				value = str(value)
 			data = data + ' %s="%s"' % (attr, escapeattr(value))
 		return data

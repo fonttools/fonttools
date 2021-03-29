@@ -1,12 +1,13 @@
 """Helpers for writing unit tests."""
 
 from collections.abc import Iterable
+from io import BytesIO
 import os
 import shutil
 import sys
 import tempfile
 from unittest import TestCase as _TestCase
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import tobytes
 from fontTools.misc.xmlWriter import XMLWriter
 
 
@@ -25,7 +26,7 @@ def parseXML(xmlSnippet):
     xml = b"<root>"
     if isinstance(xmlSnippet, bytes):
         xml += xmlSnippet
-    elif isinstance(xmlSnippet, unicode):
+    elif isinstance(xmlSnippet, str):
         xml += tobytes(xmlSnippet, 'utf-8')
     elif isinstance(xmlSnippet, Iterable):
         xml += b"".join(tobytes(s, 'utf-8') for s in xmlSnippet)

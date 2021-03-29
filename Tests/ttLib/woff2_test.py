@@ -1,4 +1,4 @@
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import Tag, bytechr, byteord
 from fontTools import ttLib
 from fontTools.ttLib import woff2
 from fontTools.ttLib.tables import _g_l_y_f
@@ -12,6 +12,7 @@ import unittest
 from fontTools.misc import sstruct
 from fontTools import fontBuilder
 from fontTools.pens.ttGlyphPen import TTGlyphPen
+from io import BytesIO
 import struct
 import os
 import random

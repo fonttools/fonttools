@@ -10,7 +10,6 @@
 # getEncoding() of subtable and use that encoding to map the
 # characters to Unicode...  TODO: Extend this script to do that.
 
-from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables._c_m_a_p import CmapSubtable
 import sys

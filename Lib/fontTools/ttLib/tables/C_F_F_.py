@@ -1,4 +1,4 @@
-from fontTools.misc.py23 import *
+from io import BytesIO
 from fontTools import cffLib
 from . import DefaultTable
 

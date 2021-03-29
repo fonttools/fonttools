@@ -3,7 +3,6 @@ tool to store its hinting source data.
 
 TSI5 contains the VTT character groups.
 """
-from fontTools.misc.py23 import *
 from fontTools.misc.textTools import safeEval
 from . import DefaultTable
 import sys

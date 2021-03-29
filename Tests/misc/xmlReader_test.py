@@ -1,6 +1,5 @@
-# -*- coding: utf-8 -*-
-
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import strjoin
+from io import BytesIO
 import os
 import unittest
 from fontTools.ttLib import TTFont

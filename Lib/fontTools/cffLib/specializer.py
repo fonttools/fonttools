@@ -13,7 +13,6 @@ and specific forms of the operation.
 
 """
 
-from fontTools.misc.py23 import *
 from fontTools.cffLib import maxStackLimit
 
 

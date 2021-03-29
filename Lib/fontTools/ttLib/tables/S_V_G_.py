@@ -1,12 +1,12 @@
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import bytesjoin, strjoin, tobytes, tostr
 from fontTools.misc import sstruct
 from . import DefaultTable
 try:
 	import xml.etree.cElementTree as ET
 except ImportError:
 	import xml.etree.ElementTree as ET
+from io import BytesIO
 import struct
-import re
 import logging
 
 

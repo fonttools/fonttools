@@ -1,5 +1,3 @@
-
-from fontTools.misc.py23 import *
 from fontTools.svgLib.path import shapes
 from fontTools.misc import etree
 import pytest

@@ -1,7 +1,6 @@
 """fontTools.misc.timeTools.py -- tools for working with OpenType timestamps.
 """
 
-from fontTools.misc.py23 import *
 import os
 import time
 from datetime import datetime, timezone

@@ -1,4 +1,3 @@
-from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont, newTable
 from fontTools.varLib import build, load_designspace
 from fontTools.varLib.errors import VarLibValidationError
@@ -11,6 +10,7 @@ from fontTools.designspaceLib import (
 )
 from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
 import difflib
+from io import BytesIO
 import os
 import shutil
 import sys

@@ -1,4 +1,3 @@
-from fontTools.misc.py23 import *
 from fontTools.varLib.models import (
     normalizeLocation, supportScalar, VariationModel, VariationModelError)
 import pytest

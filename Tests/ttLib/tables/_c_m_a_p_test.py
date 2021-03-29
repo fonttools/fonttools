@@ -1,7 +1,6 @@
 import io
 import os
 import re
-from fontTools.misc.py23 import *
 from fontTools import ttLib
 from fontTools.fontBuilder import FontBuilder
 import unittest

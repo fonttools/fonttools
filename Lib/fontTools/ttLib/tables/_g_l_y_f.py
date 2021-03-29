@@ -1,7 +1,7 @@
 """_g_l_y_f.py -- Converter classes for the 'glyf' table."""
 
 from collections import namedtuple
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import bytechr, byteord, bytesjoin, tostr
 from fontTools.misc import sstruct
 from fontTools import ttLib
 from fontTools import version
@@ -152,7 +152,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			if glyph.numberOfContours:
 				if splitGlyphs:
 					glyphPath = userNameToFileName(
-						tounicode(glyphName, 'utf-8'),
+						tostr(glyphName, 'utf-8'),
 						existingGlyphFiles,
 						prefix=path + ".",
 						suffix=ext)
