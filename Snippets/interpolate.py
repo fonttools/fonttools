@@ -21,7 +21,6 @@
 # $ ./interpolate.py && open Roboto.ttf
 
 
-from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables._n_a_m_e import NameRecord
 from fontTools.ttLib.tables._f_v_a_r import table__f_v_a_r, Axis, NamedInstance

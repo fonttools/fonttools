@@ -1,7 +1,6 @@
 """ fontTools.misc.classifyTools.py -- tools for classifying things.
 """
 
-from fontTools.misc.py23 import *
 
 class Classifier(object):
 

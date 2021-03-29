@@ -26,7 +26,7 @@ This is used by fontTools when it has to construct glyph names for a font which
 doesn't include any (e.g. format 3.0 post tables).
 """
 
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import tostr
 import re
 
 
@@ -5140,7 +5140,7 @@ def _glyphComponentToUnicode(component, isZapfDingbats):
 	# to the corresponding character in that list.
 	uchars = LEGACY_AGL2UV.get(component)
 	if uchars:
-		return "".join(map(unichr, uchars))
+		return "".join(map(chr, uchars))
 
 	# Otherwise, if the component is of the form "uni" (U+0075,
 	# U+006E, and U+0069) followed by a sequence of uppercase
@@ -5210,7 +5210,7 @@ def _uniToUnicode(component):
 	if any(c >= 0xD800 and c <= 0xDFFF for c in chars):
 		# The AGL specification explicitly excluded surrogate pairs.
 		return None
-	return ''.join([unichr(c) for c in chars])
+	return ''.join([chr(c) for c in chars])
 
 
 _re_u = re.compile("^u([0-9A-F]{4,6})$")
@@ -5228,5 +5228,5 @@ def _uToUnicode(component):
 		return None
 	if ((value >= 0x0000 and value <= 0xD7FF) or
 	    (value >= 0xE000 and value <= 0x10FFFF)):
-		return unichr(value)
+		return chr(value)
 	return None

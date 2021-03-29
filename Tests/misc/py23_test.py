@@ -1,6 +1,7 @@
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import tobytes
 from fontTools.misc.textTools import deHexStr
 import filecmp
+from io import StringIO
 import tempfile
 from subprocess import check_call
 import sys

@@ -1,4 +1,5 @@
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import bytesjoin, tostr
+from io import BytesIO
 import struct
 from fontTools.misc import sstruct
 from collections import OrderedDict

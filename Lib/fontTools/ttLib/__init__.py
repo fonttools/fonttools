@@ -41,7 +41,6 @@ Dumping 'prep' table...
 
 """
 
-from fontTools.misc.py23 import *
 from fontTools.misc.loggingTools import deprecateFunction
 import logging
 

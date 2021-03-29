@@ -129,10 +129,8 @@ fb.save("test.otf")
 ```
 """
 
-from .misc.py23 import *
 from .ttLib import TTFont, newTable
 from .ttLib.tables._c_m_a_p import cmap_classes
-from .ttLib.tables._n_a_m_e import NameRecord, makeName
 from .misc.timeTools import timestampNow
 import struct
 from collections import OrderedDict
@@ -894,7 +892,6 @@ def buildCmapSubTable(cmapping, format, platformID, platEncID):
 
 def addFvar(font, axes, instances):
     from .ttLib.tables._f_v_a_r import Axis, NamedInstance
-    from .designspaceLib import AxisDescriptor
 
     assert axes
 

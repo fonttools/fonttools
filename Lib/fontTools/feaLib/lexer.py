@@ -1,4 +1,3 @@
-from fontTools.misc.py23 import *
 from fontTools.feaLib.error import FeatureLibError, IncludedFeaNotFound
 from fontTools.feaLib.location import FeatureLibLocation
 import re

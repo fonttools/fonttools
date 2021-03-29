@@ -1,7 +1,6 @@
 """Extend the Python codecs module with a few encodings that are used in OpenType (name table)
 but missing from Python.  See https://github.com/fonttools/fonttools/issues/236 for details."""
 
-from fontTools.misc.py23 import *
 import codecs
 import encodings
 
@@ -57,35 +56,35 @@ class ExtendCodec(codecs.Codec):
 
 _extended_encodings = {
 	"x_mac_japanese_ttx": ("shift_jis", {
-					b"\xFC": unichr(0x007C),
-					b"\x7E": unichr(0x007E),
-					b"\x80": unichr(0x005C),
-					b"\xA0": unichr(0x00A0),
-					b"\xFD": unichr(0x00A9),
-					b"\xFE": unichr(0x2122),
-					b"\xFF": unichr(0x2026),
+					b"\xFC": chr(0x007C),
+					b"\x7E": chr(0x007E),
+					b"\x80": chr(0x005C),
+					b"\xA0": chr(0x00A0),
+					b"\xFD": chr(0x00A9),
+					b"\xFE": chr(0x2122),
+					b"\xFF": chr(0x2026),
 				}),
 	"x_mac_trad_chinese_ttx": ("big5", {
-					b"\x80": unichr(0x005C),
-					b"\xA0": unichr(0x00A0),
-					b"\xFD": unichr(0x00A9),
-					b"\xFE": unichr(0x2122),
-					b"\xFF": unichr(0x2026),
+					b"\x80": chr(0x005C),
+					b"\xA0": chr(0x00A0),
+					b"\xFD": chr(0x00A9),
+					b"\xFE": chr(0x2122),
+					b"\xFF": chr(0x2026),
 				}),
 	"x_mac_korean_ttx": ("euc_kr", {
-					b"\x80": unichr(0x00A0),
-					b"\x81": unichr(0x20A9),
-					b"\x82": unichr(0x2014),
-					b"\x83": unichr(0x00A9),
-					b"\xFE": unichr(0x2122),
-					b"\xFF": unichr(0x2026),
+					b"\x80": chr(0x00A0),
+					b"\x81": chr(0x20A9),
+					b"\x82": chr(0x2014),
+					b"\x83": chr(0x00A9),
+					b"\xFE": chr(0x2122),
+					b"\xFF": chr(0x2026),
 				}),
 	"x_mac_simp_chinese_ttx": ("gb2312", {
-					b"\x80": unichr(0x00FC),
-					b"\xA0": unichr(0x00A0),
-					b"\xFD": unichr(0x00A9),
-					b"\xFE": unichr(0x2122),
-					b"\xFF": unichr(0x2026),
+					b"\x80": chr(0x00FC),
+					b"\xA0": chr(0x00A0),
+					b"\xFD": chr(0x00A9),
+					b"\xFE": chr(0x2122),
+					b"\xFF": chr(0x2026),
 				}),
 }
 

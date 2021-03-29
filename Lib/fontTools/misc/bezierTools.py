@@ -3,8 +3,7 @@
 """
 
 from fontTools.misc.arrayTools import calcBounds, sectRect, rectArea
-from fontTools.misc.transform import Offset, Identity
-from fontTools.misc.py23 import *
+from fontTools.misc.transform import Identity
 import math
 from collections import namedtuple
 

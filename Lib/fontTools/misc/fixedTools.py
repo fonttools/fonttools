@@ -17,9 +17,7 @@ functions for converting between fixed-point, float and string representations.
 	The maximum value that can still fit in an F2Dot14. (1.99993896484375)
 """
 
-from fontTools.misc.py23 import *
 from .roundTools import otRound
-import math
 import logging
 
 log = logging.getLogger(__name__)

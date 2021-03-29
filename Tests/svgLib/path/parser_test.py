@@ -1,5 +1,3 @@
-
-from fontTools.misc.py23 import *
 from fontTools.pens.recordingPen import RecordingPen
 from fontTools.svgLib import parse_path
 

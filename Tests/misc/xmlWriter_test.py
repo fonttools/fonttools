@@ -1,4 +1,5 @@
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import bytesjoin, tobytes
+from io import BytesIO
 import os
 import unittest
 from fontTools.misc.xmlWriter import XMLWriter

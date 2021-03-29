@@ -1,4 +1,3 @@
-from fontTools.misc.py23 import *
 from fontTools.misc.loggingTools import CapturingLogHandler
 from fontTools.misc.testTools import parseXML
 from fontTools.misc.textTools import deHexStr, hexStr
@@ -6,6 +5,7 @@ from fontTools.misc.xmlWriter import XMLWriter
 from fontTools.ttLib.tables.TupleVariation import \
 	log, TupleVariation, compileSharedTuples, decompileSharedTuples, \
 	compileTupleVariationStore, decompileTupleVariationStore, inferRegion_
+from io import BytesIO
 import random
 import unittest
 

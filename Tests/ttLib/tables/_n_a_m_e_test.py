@@ -1,9 +1,9 @@
-# -*- coding: utf-8 -*-
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import bytesjoin, tostr
 from fontTools.misc import sstruct
 from fontTools.misc.loggingTools import CapturingLogHandler
 from fontTools.misc.testTools import FakeFont
 from fontTools.misc.xmlWriter import XMLWriter
+from io import BytesIO
 import struct
 import unittest
 from fontTools.ttLib import newTable
@@ -338,7 +338,7 @@ class NameRecordTest(unittest.TestCase):
 	def test_toUnicode_macromanian(self):
 		name = makeName(b"Foo Italic\xfb", 222, 1, 0, 37)  # Mac Romanian
 		self.assertEqual("mac_romanian", name.getEncoding())
-		self.assertEqual("Foo Italic"+unichr(0x02DA), name.toUnicode())
+		self.assertEqual("Foo Italic"+chr(0x02DA), name.toUnicode())
 
 	def test_toUnicode_UnicodeDecodeError(self):
 		name = makeName(b"\1", 111, 0, 2, 7)
@@ -430,7 +430,7 @@ class NameRecordTest(unittest.TestCase):
 
 	def test_extended_mac_encodings(self):
 		name = makeName(b'\xfe', 123, 1, 1, 0) # Mac Japanese
-		self.assertEqual(name.toUnicode(), unichr(0x2122))
+		self.assertEqual(name.toUnicode(), chr(0x2122))
 
 	def test_extended_mac_encodings_errors(self):
 		s = "汉仪彩云体简"

@@ -5,7 +5,7 @@ import codecs
 import collections
 from io import BytesIO
 from numbers import Integral
-from fontTools.misc.py23 import tounicode
+from fontTools.misc.py23 import tostr
 from fontTools.misc import etree
 from fontTools.misc import plistlib
 from fontTools.ufoLib.plistlib import (
@@ -421,7 +421,7 @@ def test_fromtree(parametrized_pl):
 
 def _strip(txt):
     return (
-        "".join(l.strip() for l in tounicode(txt, "utf-8").splitlines())
+        "".join(l.strip() for l in tostr(txt, "utf-8").splitlines())
         if txt is not None
         else ""
     )

@@ -11,7 +11,7 @@ the demands of variable fonts. This module parses both original CFF and CFF2.
 
 """
 
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import bytechr, byteord, bytesjoin, tobytes, tostr
 from fontTools.misc import sstruct
 from fontTools.misc import psCharStrings
 from fontTools.misc.arrayTools import unionRect, intRect
@@ -20,6 +20,7 @@ from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables.otBase import OTTableWriter
 from fontTools.ttLib.tables.otBase import OTTableReader
 from fontTools.ttLib.tables import otTables as ot
+from io import BytesIO
 import struct
 import logging
 import re
@@ -1245,7 +1246,7 @@ class ASCIIConverter(SimpleConverter):
 		return tobytes(value, encoding='ascii')
 
 	def xmlWrite(self, xmlWriter, name, value):
-		xmlWriter.simpletag(name, value=tounicode(value, encoding="ascii"))
+		xmlWriter.simpletag(name, value=tostr(value, encoding="ascii"))
 		xmlWriter.newline()
 
 	def xmlRead(self, name, attrs, content, parent):
@@ -1261,7 +1262,7 @@ class Latin1Converter(SimpleConverter):
 		return tobytes(value, encoding='latin1')
 
 	def xmlWrite(self, xmlWriter, name, value):
-		value = tounicode(value, encoding="latin1")
+		value = tostr(value, encoding="latin1")
 		if name in ['Notice', 'Copyright']:
 			value = re.sub(r"[\r\n]\s+", " ", value)
 		xmlWriter.simpletag(name, value=value)

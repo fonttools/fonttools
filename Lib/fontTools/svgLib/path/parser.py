@@ -7,7 +7,6 @@
 # Copyright (c) 2013-2014 Lennart Regebro
 # License: MIT
 
-from fontTools.misc.py23 import *
 from .arc import EllipticalArc
 import re
 

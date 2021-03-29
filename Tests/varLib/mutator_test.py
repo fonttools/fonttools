@@ -1,4 +1,3 @@
-from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont
 from fontTools.varLib import build
 from fontTools.varLib.mutator import main as mutator

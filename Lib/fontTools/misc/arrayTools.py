@@ -2,7 +2,6 @@
 so on.
 """
 
-from fontTools.misc.py23 import *
 from fontTools.misc.roundTools import otRound
 from fontTools.misc.vector import Vector as _Vector
 import math

@@ -1,4 +1,3 @@
-from fontTools.misc.py23 import *
 import unittest
 import os
 from fontTools import afmLib

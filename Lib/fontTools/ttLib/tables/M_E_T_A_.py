@@ -1,4 +1,4 @@
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import byteord
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
 from . import DefaultTable
@@ -229,7 +229,7 @@ class GlyphRecord(object):
 # XXX The following two functions are really broken around UTF-8 vs Unicode
 
 def mapXMLToUTF8(string):
-	uString = unicode()
+	uString = str()
 	strLen = len(string)
 	i = 0
 	while i < strLen:
@@ -245,9 +245,9 @@ def mapXMLToUTF8(string):
 				i = i+1
 			valStr = string[j:i]
 
-			uString = uString + unichr(eval('0x' + valStr))
+			uString = uString + chr(eval('0x' + valStr))
 		else:
-			uString = uString + unichr(byteord(string[i]))
+			uString = uString + chr(byteord(string[i]))
 		i = i +1
 
 	return uString.encode('utf_8')

@@ -1,4 +1,3 @@
-from fontTools.misc.py23 import *
 from fontTools.varLib.featureVars import (
     overlayFeatureVariations)
 

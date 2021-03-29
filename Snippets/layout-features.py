@@ -1,6 +1,5 @@
 #! /usr/bin/env python3
 
-from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables import otTables
 import sys

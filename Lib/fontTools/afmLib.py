@@ -46,7 +46,6 @@ Here is an example of using `afmLib` to read, modify and write an AFM file:
 """
 
 
-from fontTools.misc.py23 import *
 import re
 
 # every single line starts with a "word"
