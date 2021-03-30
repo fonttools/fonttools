@@ -91,6 +91,8 @@
             <StdVW>
                 <blend value="85 -51 87"/>
             </StdVW>
+            <LanguageGroup value="0"/>
+            <ExpansionFactor value="0.06"/>
           </Private>
         </FontDict>
       </FDArray>
