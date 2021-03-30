@@ -36,6 +36,8 @@
             <StdVW>
                 <blend value="34 51"/>
             </StdVW>
+            <LanguageGroup value="0"/>
+            <ExpansionFactor value="0.06"/>
           </Private>
         </FontDict>
       </FDArray>

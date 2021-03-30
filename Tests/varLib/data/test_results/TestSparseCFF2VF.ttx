@@ -138,6 +138,8 @@
             <BlueFuzz value="0"/>
             <StdHW value="1"/>
             <StdVW value="1"/>
+            <LanguageGroup value="1"/>
+            <ExpansionFactor value="0.06"/>
           </Private>
         </FontDict>
         <FontDict index="1">
@@ -148,6 +150,8 @@
             <BlueFuzz value="0"/>
             <StdHW value="1"/>
             <StdVW value="1"/>
+            <LanguageGroup value="1"/>
+            <ExpansionFactor value="0.06"/>
           </Private>
         </FontDict>
         <FontDict index="2">
@@ -156,6 +160,8 @@
             <BlueScale value="0.039625"/>
             <BlueShift value="7"/>
             <BlueFuzz value="1"/>
+            <LanguageGroup value="0"/>
+            <ExpansionFactor value="0.06"/>
           </Private>
         </FontDict>
       </FDArray>
