@@ -1,6 +1,21 @@
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import bytechr, byteord, bytesjoin, tobytes, tostr
 from fontTools.misc import eexec
-from .psOperators import *
+from .psOperators import (
+	PSOperators,
+	ps_StandardEncoding,
+	ps_array,
+	ps_boolean,
+	ps_dict,
+	ps_integer,
+	ps_literal,
+	ps_mark,
+	ps_name,
+	ps_operator,
+	ps_procedure,
+	ps_procmark,
+	ps_real,
+	ps_string,
+)
 import re
 from collections.abc import Callable
 from string import whitespace

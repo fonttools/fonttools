@@ -1,4 +1,4 @@
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import bytesjoin, tobytes
 from fontTools.misc.textTools import safeEval
 from . import DefaultTable
 import struct

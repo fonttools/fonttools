@@ -1,5 +1,4 @@
 # coding: utf-8
-from fontTools.misc.py23 import *
 from .otBase import BaseTTXConverter
 
 

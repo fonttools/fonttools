@@ -1,10 +1,9 @@
 import io
 import itertools
-from fontTools.misc.py23 import *
 from fontTools import ttLib
 from fontTools.ttLib.tables._g_l_y_f import Glyph
 from fontTools.fontBuilder import FontBuilder
-from fontTools.merge import *
+from fontTools.merge import Merger
 import unittest
 import pytest
 

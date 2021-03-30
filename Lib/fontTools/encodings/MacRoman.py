@@ -1,5 +1,3 @@
-from fontTools.misc.py23 import *
-
 MacRoman = [
 		'NUL', 'Eth', 'eth', 'Lslash', 'lslash', 'Scaron', 'scaron', 'Yacute',
 		'yacute', 'HT', 'LF', 'Thorn', 'thorn', 'CR', 'Zcaron', 'zcaron', 'DLE', 'DC1',

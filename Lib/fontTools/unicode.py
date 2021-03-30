@@ -1,7 +1,4 @@
-from fontTools.misc.py23 import *
-
 def _makeunicodes(f):
-	import re
 	lines = iter(f.readlines())
 	unicodes = {}
 	for line in lines:
@@ -16,7 +13,7 @@ def _makeunicodes(f):
 class _UnicodeCustom(object):
 
 	def __init__(self, f):
-		if isinstance(f, basestring):
+		if isinstance(f, str):
 			with open(f) as fd:
 				codes = _makeunicodes(fd)
 		else:
@@ -39,7 +36,7 @@ class _UnicodeBuiltin(object):
 		except ImportError: 
 			import unicodedata
 		try:
-			return unicodedata.name(unichr(charCode))
+			return unicodedata.name(chr(charCode))
 		except ValueError:
 			return "????"
 

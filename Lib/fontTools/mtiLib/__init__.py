@@ -6,7 +6,6 @@
 # http://monotype.github.io/OpenType_Table_Source/otl_source.html
 # https://github.com/Monotype/OpenType_Table_Source/
 
-from fontTools.misc.py23 import *
 from fontTools import ttLib
 from fontTools.ttLib.tables._c_m_a_p import cmap_classes
 from fontTools.ttLib.tables import otTables as ot

@@ -1,7 +1,6 @@
 """fontTools.misc.encodingTools.py -- tools for working with OpenType encodings.
 """
 
-from fontTools.misc.py23 import *
 import fontTools.encodings.codecs
 
 # Map keyed by platformID, then platEncID, then possibly langID

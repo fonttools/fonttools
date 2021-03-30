@@ -1,5 +1,4 @@
 import collections.abc
-import sys
 import re
 from typing import (
     Any,
@@ -24,10 +23,8 @@ from functools import singledispatch
 
 from fontTools.misc import etree
 
-from fontTools.misc.py23 import (
-    tounicode,
-    tobytes,
-)
+from fontTools.misc.py23 import tostr
+
 
 # By default, we
 #  - deserialize <data> elements as bytes and
@@ -368,7 +365,7 @@ def _dict_element(d: Mapping[str, PlistEncodable], ctx: SimpleNamespace) -> etre
                 continue
             raise TypeError("keys must be strings")
         k = etree.SubElement(el, "key")
-        k.text = tounicode(key, "utf-8")
+        k.text = tostr(key, "utf-8")
         el.append(_make_element(value, ctx))
     ctx.indent_level -= 1
     return el

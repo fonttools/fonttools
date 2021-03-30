@@ -1,4 +1,3 @@
-from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont
 from fontTools.varLib.interpolatable import main as interpolatable_main
 import os

@@ -8,7 +8,7 @@ converter objects from otConverters.py.
 from enum import IntEnum
 import itertools
 from collections import namedtuple
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import bytesjoin
 from fontTools.misc.roundTools import otRound
 from fontTools.misc.textTools import pad, safeEval
 from .otBase import (

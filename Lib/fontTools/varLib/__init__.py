@@ -18,7 +18,7 @@ Then you can make a variable-font this way:
 
 API *will* change in near future.
 """
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import Tag, tostr
 from fontTools.misc.roundTools import noRound, otRound
 from fontTools.misc.vector import Vector
 from fontTools.ttLib import TTFont, newTable
@@ -91,7 +91,7 @@ def _add_fvar(font, axes, instances):
 					"stylename element with an 'xml:lang=\"en\"' attribute)."
 				)
 			localisedStyleName = dict(instance.localisedStyleName)
-			localisedStyleName["en"] = tounicode(instance.styleName)
+			localisedStyleName["en"] = tostr(instance.styleName)
 		else:
 			localisedStyleName = instance.localisedStyleName
 
@@ -100,7 +100,7 @@ def _add_fvar(font, axes, instances):
 		inst = NamedInstance()
 		inst.subfamilyNameID = nameTable.addMultilingualName(localisedStyleName)
 		if psname is not None:
-			psname = tounicode(psname)
+			psname = tostr(psname)
 			inst.postscriptNameID = nameTable.addName(psname)
 		inst.coordinates = {axes[k].tag:axes[k].map_backward(v) for k,v in coordinates.items()}
 		#inst.coordinates = {axes[k].tag:v for k,v in coordinates.items()}
@@ -751,7 +751,7 @@ def load_designspace(designspace):
 			if not axis.tag:
 				raise VarLibValidationError(f"Axis at index {axis_index} needs a tag.")
 			if not axis.labelNames:
-				axis.labelNames["en"] = tounicode(axis_name)
+				axis.labelNames["en"] = tostr(axis_name)
 
 		axes[axis_name] = axis
 	log.info("Axes:\n%s", pformat([axis.asdict() for axis in axes.values()]))

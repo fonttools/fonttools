@@ -1,7 +1,7 @@
-from fontTools.misc.py23 import *
 from fontTools.voltLib import ast
 from fontTools.voltLib.error import VoltLibError
 from fontTools.voltLib.parser import Parser
+from io import StringIO
 import unittest
 
 
@@ -1223,12 +1223,12 @@ class ParserTest(unittest.TestCase):
             '\nDEF_GLYPH ".notdef" ID 0 TYPE BASE END_GLYPH END\n')
 
     def parse_(self, text):
-        return Parser(UnicodeIO(text)).parse()
+        return Parser(StringIO(text)).parse()
 
     def parse(self, text):
         doc = self.parse_(text)
         self.assertEqual('\n'.join(str(s) for s in doc.statements), text)
-        return Parser(UnicodeIO(text)).parse()
+        return Parser(StringIO(text)).parse()
 
 if __name__ == "__main__":
     import sys

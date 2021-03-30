@@ -1,5 +1,5 @@
 """ttLib.macUtils.py -- Various Mac-specific stuff."""
-from fontTools.misc.py23 import *
+from io import BytesIO
 from fontTools.misc.macRes import ResourceReader, ResourceError
 
 
@@ -40,7 +40,7 @@ class SFNTResourceReader(BytesIO):
 	def __init__(self, path, res_name_or_index):
 		from fontTools import ttLib
 		reader = ResourceReader(path)
-		if isinstance(res_name_or_index, basestring):
+		if isinstance(res_name_or_index, str):
 			rsrc = reader.getNamedResource('sfnt', res_name_or_index)
 		else:
 			rsrc = reader.getIndResource('sfnt', res_name_or_index)

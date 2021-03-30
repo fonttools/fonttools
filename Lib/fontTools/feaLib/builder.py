@@ -1,4 +1,4 @@
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import Tag, tostr
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import binary2num, safeEval
 from fontTools.feaLib.error import FeatureLibError
@@ -33,6 +33,7 @@ from fontTools.otlLib.builder import (
 from fontTools.otlLib.error import OpenTypeLibError
 from collections import defaultdict
 import itertools
+from io import StringIO
 import logging
 import warnings
 import os
@@ -78,7 +79,7 @@ def addOpenTypeFeaturesFromString(
 
     """
 
-    featurefile = UnicodeIO(tounicode(features))
+    featurefile = StringIO(tostr(features))
     if filename:
         featurefile.name = filename
     addOpenTypeFeatures(font, featurefile, tables=tables, debug=debug)

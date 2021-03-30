@@ -1,7 +1,7 @@
 """cffLib_test.py -- unit test for Adobe CFF fonts."""
 
-from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont, newTable
+from io import StringIO
 import re
 import os
 import unittest
@@ -31,7 +31,7 @@ class CFFTableTest(unittest.TestCase):
         font = TTFont(sfntVersion='OTTO')
         cffTable = font['CFF '] = newTable('CFF ')
         cffTable.decompile(self.cffData, font)
-        out = UnicodeIO()
+        out = StringIO()
         font.saveXML(out)
         cffXML = strip_ttLibVersion(out.getvalue()).splitlines()
         self.assertEqual(cffXML, self.cffXML)

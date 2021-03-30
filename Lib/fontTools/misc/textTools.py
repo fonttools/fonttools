@@ -1,7 +1,7 @@
 """fontTools.misc.textTools.py -- miscellaneous routines."""
 
 
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import bytechr, byteord, bytesjoin, strjoin, tobytes
 import ast
 import string
 
@@ -12,7 +12,7 @@ safeEval = ast.literal_eval
 
 def readHex(content):
 	"""Convert a list of hex strings to binary data."""
-	return deHexStr(strjoin(chunk for chunk in content if isinstance(chunk, basestring)))
+	return deHexStr(strjoin(chunk for chunk in content if isinstance(chunk, str)))
 
 
 def deHexStr(hexdata):

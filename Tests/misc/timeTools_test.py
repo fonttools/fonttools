@@ -1,4 +1,3 @@
-from fontTools.misc.py23 import *
 from fontTools.misc.timeTools import asctime, timestampNow, timestampToString, timestampFromString, epoch_diff
 import os
 import time
@@ -7,7 +6,7 @@ import pytest
 
 
 def test_asctime():
-    assert isinstance(asctime(), basestring)
+    assert isinstance(asctime(), str)
     assert asctime(time.gmtime(0)) == 'Thu Jan  1 00:00:00 1970'
 
 

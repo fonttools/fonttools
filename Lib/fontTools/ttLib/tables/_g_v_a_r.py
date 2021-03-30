@@ -1,8 +1,6 @@
-from fontTools.misc.py23 import *
-from fontTools import ttLib
+from fontTools.misc.py23 import bytesjoin
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
-from fontTools.ttLib import TTLibError
 from . import DefaultTable
 import array
 import itertools

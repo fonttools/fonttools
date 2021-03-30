@@ -1,4 +1,4 @@
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import Tag
 from fontTools.ttLib import getClassTag
 
 class DefaultTable(object):

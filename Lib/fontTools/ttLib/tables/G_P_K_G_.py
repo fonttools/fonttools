@@ -1,4 +1,4 @@
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import bytesjoin
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval, readHex
 from . import DefaultTable
@@ -106,7 +106,7 @@ class table_G_P_K_G_(DefaultTable.DefaultTable):
 			if not hasattr(self, "GMAPs"):
 				self.GMAPs = []
 			for element in content:
-				if isinstance(element, basestring):
+				if isinstance(element, str):
 					continue
 				itemName, itemAttrs, itemContent = element
 				if itemName == "hexdata":
@@ -115,7 +115,7 @@ class table_G_P_K_G_(DefaultTable.DefaultTable):
 			if not hasattr(self, "glyphlets"):
 				self.glyphlets = []
 			for element in content:
-				if isinstance(element, basestring):
+				if isinstance(element, str):
 					continue
 				itemName, itemAttrs, itemContent = element
 				if itemName == "hexdata":

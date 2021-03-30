@@ -2,7 +2,7 @@
 CFF dictionary data and Type1/Type2 CharStrings.
 """
 
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import bytechr, byteord, bytesjoin, strjoin
 from fontTools.misc.fixedTools import (
 	fixedToFloat, floatToFixed, floatToFixedToStr, strToFixedToFloat,
 )
@@ -997,7 +997,7 @@ class T2CharString(object):
 			# If present, remove return and endchar operators.
 			if program and program[-1] in ("return", "endchar"):
 				program = program[:-1]
-		elif program and not isinstance(program[-1], basestring):
+		elif program and not isinstance(program[-1], str):
 			raise CharStringCompileError(
 				"T2CharString or Subr has items on the stack after last operator."
 			)
@@ -1010,7 +1010,7 @@ class T2CharString(object):
 		while i < end:
 			token = program[i]
 			i = i + 1
-			if isinstance(token, basestring):
+			if isinstance(token, str):
 				try:
 					bytecode.extend(bytechr(b) for b in opcodes[token])
 				except KeyError:
@@ -1043,8 +1043,7 @@ class T2CharString(object):
 		self.program = None
 
 	def getToken(self, index,
-			len=len, byteord=byteord, basestring=basestring,
-			isinstance=isinstance):
+			len=len, byteord=byteord, isinstance=isinstance):
 		if self.bytecode is not None:
 			if index >= len(self.bytecode):
 				return None, 0, 0
@@ -1057,7 +1056,7 @@ class T2CharString(object):
 				return None, 0, 0
 			token = self.program[index]
 			index = index + 1
-		isOperator = isinstance(token, basestring)
+		isOperator = isinstance(token, str)
 		return token, isOperator, index
 
 	def getBytes(self, index, nBytes):

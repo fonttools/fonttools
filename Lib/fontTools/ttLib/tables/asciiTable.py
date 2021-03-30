@@ -1,4 +1,4 @@
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import strjoin, tobytes, tostr
 from . import DefaultTable
 
 

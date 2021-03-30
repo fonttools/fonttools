@@ -1,5 +1,5 @@
-from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont, tagToXML
+from io import StringIO
 import os
 import sys
 import re
@@ -253,13 +253,13 @@ def read_expected_ttx(testfile, tableTag):
 
 
 def dump_ttx(font, tableTag):
-    f = UnicodeIO()
+    f = StringIO()
     font.saveXML(f, newlinestr='\n', tables=[tableTag])
     return ttLibVersion_RE.sub('', f.getvalue())
 
 
 def load_ttx(ttx):
-    f = UnicodeIO()
+    f = StringIO()
     f.write(ttx)
     f.seek(0)
     font = TTFont()

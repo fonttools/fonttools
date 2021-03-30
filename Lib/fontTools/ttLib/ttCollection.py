@@ -1,6 +1,6 @@
-from fontTools.misc.py23 import *
 from fontTools.ttLib.ttFont import TTFont
 from fontTools.ttLib.sfnt import readTTCHeader, writeTTCHeader
+from io import BytesIO
 import struct
 import logging
 
@@ -104,7 +104,7 @@ class TTCollection(object):
 		return self.fonts[item]
 
 	def __setitem__(self, item, value):
-		self.fonts[item] = values
+		self.fonts[item] = value
 
 	def __delitem__(self, item):
 		return self.fonts[item]

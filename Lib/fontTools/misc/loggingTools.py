@@ -1,4 +1,3 @@
-from fontTools.misc.py23 import *
 import sys
 import logging
 import timeit
@@ -60,7 +59,7 @@ class LevelFormatter(logging.Formatter):
 				"only '%' percent style is supported in both python 2 and 3")
 		if fmt is None:
 			fmt = DEFAULT_FORMATS
-		if isinstance(fmt, basestring):
+		if isinstance(fmt, str):
 			default_format = fmt
 			custom_formats = {}
 		elif isinstance(fmt, Mapping):
@@ -151,7 +150,7 @@ def configLogger(**kwargs):
 		handlers = [h]
 	# By default, the top-level library logger is configured.
 	logger = kwargs.pop("logger", "fontTools")
-	if not logger or isinstance(logger, basestring):
+	if not logger or isinstance(logger, str):
 		# empty "" or None means the 'root' logger
 		logger = logging.getLogger(logger)
 	# before (re)configuring, reset named logger and its children (if exist)
@@ -436,7 +435,7 @@ class CapturingLogHandler(logging.Handler):
 	def __init__(self, logger, level):
 		super(CapturingLogHandler, self).__init__(level=level)
 		self.records = []
-		if isinstance(logger, basestring):
+		if isinstance(logger, str):
 			self.logger = logging.getLogger(logger)
 		else:
 			self.logger = logger

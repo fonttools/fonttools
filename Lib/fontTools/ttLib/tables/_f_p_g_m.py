@@ -1,4 +1,3 @@
-from fontTools.misc.py23 import *
 from . import DefaultTable
 from . import ttProgram
 

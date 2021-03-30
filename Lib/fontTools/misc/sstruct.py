@@ -46,7 +46,7 @@ calcsize(fmt)
 	it returns the size of the data in bytes.
 """
 
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import tobytes, tostr
 from fontTools.misc.fixedTools import fixedToFloat as fi2fl, floatToFixed as fl2fi
 import struct
 import re
@@ -68,7 +68,7 @@ def pack(fmt, obj):
 		if name in fixes:
 			# fixed point conversion
 			value = fl2fi(value, fixes[name])
-		elif isinstance(value, basestring):
+		elif isinstance(value, str):
 			value = tobytes(value)
 		elements.append(value)
 	data = struct.pack(*(formatstring,) + tuple(elements))

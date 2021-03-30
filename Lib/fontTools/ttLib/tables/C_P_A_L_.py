@@ -2,7 +2,7 @@
 #
 # Google Author(s): Behdad Esfahbod
 
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import bytesjoin
 from fontTools.misc.textTools import safeEval
 from . import DefaultTable
 import array
@@ -208,7 +208,7 @@ class table_C_P_A_L_(DefaultTable.DefaultTable):
 			self.paletteTypes.append(int(attrs.get("type", self.DEFAULT_PALETTE_TYPE)))
 			palette = []
 			for element in content:
-				if isinstance(element, basestring):
+				if isinstance(element, str):
 					continue
 				attrs = element[1]
 				color = Color.fromHex(attrs["value"])
@@ -217,7 +217,7 @@ class table_C_P_A_L_(DefaultTable.DefaultTable):
 		elif name == "paletteEntryLabels":
 			colorLabels = {}
 			for element in content:
-				if isinstance(element, basestring):
+				if isinstance(element, str):
 					continue
 				elementName, elementAttr, _ = element
 				if elementName == "label":

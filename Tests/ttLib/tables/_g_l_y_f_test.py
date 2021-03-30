@@ -1,4 +1,3 @@
-from fontTools.misc.py23 import *
 from fontTools.misc.fixedTools import otRound
 from fontTools.misc.testTools import getXML, parseXML
 from fontTools.pens.ttGlyphPen import TTGlyphPen
@@ -19,6 +18,7 @@ from fontTools.ttLib.tables._g_l_y_f import (
 from fontTools.ttLib.tables import ttProgram
 import sys
 import array
+from io import StringIO
 import itertools
 import pytest
 import re
@@ -225,7 +225,7 @@ class GlyfTableTest(unittest.TestCase):
         font['head'].decompile(self.headData, font)
         font['loca'].decompile(self.locaData, font)
         glyfTable.decompile(self.glyfData, font)
-        out = UnicodeIO()
+        out = StringIO()
         font.saveXML(out)
         glyfXML = strip_ttLibVersion(out.getvalue()).splitlines()
         self.assertEqual(glyfXML, self.glyfXML)

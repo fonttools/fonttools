@@ -11,7 +11,7 @@ the demands of variable fonts. This module parses both original CFF and CFF2.
 
 """
 
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import bytechr, byteord, bytesjoin, tobytes, tostr
 from fontTools.misc import sstruct
 from fontTools.misc import psCharStrings
 from fontTools.misc.arrayTools import unionRect, intRect
@@ -20,6 +20,7 @@ from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables.otBase import OTTableWriter
 from fontTools.ttLib.tables.otBase import OTTableReader
 from fontTools.ttLib.tables import otTables as ot
+from io import BytesIO
 import struct
 import logging
 import re
@@ -118,7 +119,7 @@ class CFFFontSet(object):
 		"""
 		if hasattr(nameOrIndex, "__index__"):
 			index = nameOrIndex.__index__()
-		elif isinstance(nameOrIndex, basestring):
+		elif isinstance(nameOrIndex, str):
 			name = nameOrIndex
 			try:
 				index = self.fontNames.index(name)
@@ -261,7 +262,7 @@ class CFFFontSet(object):
 				self.topDictIndex = TopDictIndex(None, cff2GetGlyphOrder, None)
 			self.topDictIndex.append(topDict)
 			for element in content:
-				if isinstance(element, basestring):
+				if isinstance(element, str):
 					continue
 				name, attrs, content = element
 				topDict.fromXML(name, attrs, content)
@@ -277,7 +278,7 @@ class CFFFontSet(object):
 			if not hasattr(self, "GlobalSubrs"):
 				self.GlobalSubrs = GlobalSubrsIndex()
 			for element in content:
-				if isinstance(element, basestring):
+				if isinstance(element, str):
 					continue
 				name, attrs, content = element
 				subr = subrCharStringClass()
@@ -879,7 +880,7 @@ class FDArrayIndex(Index):
 			return
 		fontDict = FontDict()
 		for element in content:
-			if isinstance(element, basestring):
+			if isinstance(element, str):
 				continue
 			name, attrs, content = element
 			fontDict.fromXML(name, attrs, content)
@@ -1106,7 +1107,7 @@ class CharStrings(object):
 
 	def fromXML(self, name, attrs, content):
 		for element in content:
-			if isinstance(element, basestring):
+			if isinstance(element, str):
 				continue
 			name, attrs, content = element
 			if name != "CharString":
@@ -1245,7 +1246,7 @@ class ASCIIConverter(SimpleConverter):
 		return tobytes(value, encoding='ascii')
 
 	def xmlWrite(self, xmlWriter, name, value):
-		xmlWriter.simpletag(name, value=tounicode(value, encoding="ascii"))
+		xmlWriter.simpletag(name, value=tostr(value, encoding="ascii"))
 		xmlWriter.newline()
 
 	def xmlRead(self, name, attrs, content, parent):
@@ -1261,7 +1262,7 @@ class Latin1Converter(SimpleConverter):
 		return tobytes(value, encoding='latin1')
 
 	def xmlWrite(self, xmlWriter, name, value):
-		value = tounicode(value, encoding="latin1")
+		value = tostr(value, encoding="latin1")
 		if name in ['Notice', 'Copyright']:
 			value = re.sub(r"[\r\n]\s+", " ", value)
 		xmlWriter.simpletag(name, value=value)
@@ -1282,7 +1283,7 @@ def parseNum(s):
 def parseBlendList(s):
 	valueList = []
 	for element in s:
-		if isinstance(element, basestring):
+		if isinstance(element, str):
 			continue
 		name, attrs, content = element
 		blendList = attrs["value"].split()
@@ -1358,7 +1359,7 @@ class TableConverter(SimpleConverter):
 	def xmlRead(self, name, attrs, content, parent):
 		ob = self.getClass()()
 		for element in content:
-			if isinstance(element, basestring):
+			if isinstance(element, str):
 				continue
 			name, attrs, content = element
 			ob.fromXML(name, attrs, content)
@@ -1650,7 +1651,7 @@ def parseCharset(numGlyphs, file, strings, isCID, fmt):
 class EncodingCompiler(object):
 
 	def __init__(self, strings, encoding, parent):
-		assert not isinstance(encoding, basestring)
+		assert not isinstance(encoding, str)
 		data0 = packEncoding0(parent.dictObj.charset, encoding, parent.strings)
 		data1 = packEncoding1(parent.dictObj.charset, encoding, parent.strings)
 		if len(data0) < len(data1):
@@ -1721,7 +1722,7 @@ class EncodingConverter(SimpleConverter):
 			return attrs["name"]
 		encoding = [".notdef"] * 256
 		for element in content:
-			if isinstance(element, basestring):
+			if isinstance(element, str):
 				continue
 			name, attrs, content = element
 			code = safeEval(attrs["code"])
@@ -1833,7 +1834,7 @@ class FDArrayConverter(TableConverter):
 	def xmlRead(self, name, attrs, content, parent):
 		fdArray = FDArrayIndex()
 		for element in content:
-			if isinstance(element, basestring):
+			if isinstance(element, str):
 				continue
 			name, attrs, content = element
 			fdArray.fromXML(name, attrs, content)
@@ -2332,7 +2333,7 @@ class TopDictCompiler(DictCompiler):
 					self.rawDict["charset"] = charsetCode
 			if hasattr(self.dictObj, "Encoding") and self.dictObj.Encoding:
 				encoding = self.dictObj.Encoding
-				if not isinstance(encoding, basestring):
+				if not isinstance(encoding, str):
 					children.append(EncodingCompiler(strings, encoding, self))
 		else:
 			if hasattr(self.dictObj, "VarStore"):

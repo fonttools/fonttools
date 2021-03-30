@@ -16,7 +16,7 @@ by Tal Leming and is copyright (c) 2005-2016, The RoboFab Developers:
 -	Tal Leming
 -	Just van Rossum
 """
-from fontTools.misc.py23 import basestring, unicode
+
 
 illegalCharacters = r"\" * + / : < > ? [ \ ] | \0".split(" ")
 illegalCharacters += [chr(i) for i in range(1, 32)]
@@ -95,9 +95,9 @@ def userNameToFileName(userName, existing=[], prefix="", suffix=""):
 		>>> userNameToFileName("alt.con") == "alt._con"
 		True
 	"""
-	# the incoming name must be a unicode string
-	if not isinstance(userName, unicode):
-		raise ValueError("The value for userName must be a unicode string.")
+	# the incoming name must be a str
+	if not isinstance(userName, str):
+		raise ValueError("The value for userName must be a string.")
 	# establish the prefix and suffix lengths
 	prefixLength = len(prefix)
 	suffixLength = len(suffix)

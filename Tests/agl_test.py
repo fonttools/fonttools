@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-from fontTools.misc.py23 import *
 from fontTools import agl
 import unittest
 
