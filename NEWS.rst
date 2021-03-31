@@ -1,3 +1,21 @@
+- [ttLib] Remove .Format from Coverage, ClassDef, SingleSubst, LigatureSubst,
+  AlternateSubst, MultipleSubst (#2238).
+  ATTENTION: This will change your TTX dumps!
+- [misc.arrayTools] move Vector to its own submodule, and rewrite as a tuple
+  subclass (#2201).
+- [docs] Added a terminology section for varLib (#2209).
+- [varLib] Move rounding to VariationModel, to avoid error accumulation from
+  multiple deltas (#2214)
+- [varLib] Explain merge errors in more human-friendly terms (#2223, #2226)
+- [otlLib] Correct some documentation (#2225)
+- [varLib/otlLib] Allow merging into VariationFont without first saving GPOS
+  PairPos2 (#2229)
+- [subset] Improve PairPosFormat2 subsetting (#2221)
+- [ttLib] TTFont.save: create file on disk as late as possible (#2253)
+- [cffLib] Add missing CFF2 dict operators LanguageGroup and ExpansionFactor
+  (#2249)
+  ATTENTION: This will change your TTX dumps!
+
 4.21.1 (released 2021-02-26)
 ----------------------------
 
