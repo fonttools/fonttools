@@ -161,22 +161,17 @@ class TTFont(object):
 			if self.lazy and self.reader.file.name == file:
 				raise TTLibError(
 					"Can't overwrite TTFont when 'lazy' attribute is True")
-			closeStream = True
-			file = open(file, "wb")
+			createStream = True
 		else:
 			# assume "file" is a writable file object
-			closeStream = False
+			createStream = False
 
 		tmp = BytesIO()
 
 		writer_reordersTables = self._save(tmp)
 
-		if (reorderTables is None or writer_reordersTables or
+		if not (reorderTables is None or writer_reordersTables or
 				(reorderTables is False and self.reader is None)):
-			# don't reorder tables and save as is
-			file.write(tmp.getvalue())
-			tmp.close()
-		else:
 			if reorderTables is False:
 				# sort tables using the original font's order
 				tableOrder = list(self.reader.keys())
@@ -186,12 +181,17 @@ class TTFont(object):
 			tmp.flush()
 			tmp2 = BytesIO()
 			reorderFontTables(tmp, tmp2, tableOrder)
-			file.write(tmp2.getvalue())
 			tmp.close()
-			tmp2.close()
+			tmp = tmp2
 
-		if closeStream:
-			file.close()
+		if createStream:
+			# "file" is a path
+			with open(file, "wb") as file:
+				file.write(tmp.getvalue())
+		else:
+			file.write(tmp.getvalue())
+
+		tmp.close()
 
 	def _save(self, file, tableCache=None):
 		"""Internal function, to be shared by save() and TTCollection.save()"""
