@@ -6,6 +6,7 @@ from fontTools.ttLib.sfnt import SFNTReader, SFNTWriter
 from io import BytesIO, StringIO
 import os
 import logging
+import traceback
 
 log = logging.getLogger(__name__)
 
@@ -368,45 +369,46 @@ class TTFont(object):
 
 	def __getitem__(self, tag):
 		tag = Tag(tag)
-		try:
-			return self.tables[tag]
-		except KeyError:
+		table = self.tables.get(tag)
+		if table is None:
 			if tag == "GlyphOrder":
 				table = GlyphOrder(tag)
 				self.tables[tag] = table
-				return table
-			if self.reader is not None:
-				import traceback
-				log.debug("Reading '%s' table from disk", tag)
-				data = self.reader[tag]
-				if self._tableCache is not None:
-					table = self._tableCache.get((Tag(tag), data))
-					if table is not None:
-						return table
-				tableClass = getTableClass(tag)
-				table = tableClass(tag)
-				self.tables[tag] = table
-				log.debug("Decompiling '%s' table", tag)
-				try:
-					table.decompile(data, self)
-				except:
-					if not self.ignoreDecompileErrors:
-						raise
-					# fall back to DefaultTable, retaining the binary table data
-					log.exception(
-						"An exception occurred during the decompilation of the '%s' table", tag)
-					from .tables.DefaultTable import DefaultTable
-					file = StringIO()
-					traceback.print_exc(file=file)
-					table = DefaultTable(tag)
-					table.ERROR = file.getvalue()
-					self.tables[tag] = table
-					table.decompile(data, self)
-				if self._tableCache is not None:
-					self._tableCache[(Tag(tag), data)] = table
-				return table
+			elif self.reader is not None:
+				table = self._readTable(tag)
 			else:
 				raise KeyError("'%s' table not found" % tag)
+		return table
+
+	def _readTable(self, tag):
+		log.debug("Reading '%s' table from disk", tag)
+		data = self.reader[tag]
+		if self._tableCache is not None:
+			table = self._tableCache.get((tag, data))
+			if table is not None:
+				return table
+		tableClass = getTableClass(tag)
+		table = tableClass(tag)
+		self.tables[tag] = table
+		log.debug("Decompiling '%s' table", tag)
+		try:
+			table.decompile(data, self)
+		except Exception:
+			if not self.ignoreDecompileErrors:
+				raise
+			# fall back to DefaultTable, retaining the binary table data
+			log.exception(
+				"An exception occurred during the decompilation of the '%s' table", tag)
+			from .tables.DefaultTable import DefaultTable
+			file = StringIO()
+			traceback.print_exc(file=file)
+			table = DefaultTable(tag)
+			table.ERROR = file.getvalue()
+			self.tables[tag] = table
+			table.decompile(data, self)
+		if self._tableCache is not None:
+			self._tableCache[(tag, data)] = table
+		return table
 
 	def __setitem__(self, tag, table):
 		self.tables[Tag(tag)] = table
