@@ -1,3 +1,6 @@
+4.22.0 (released 2021-04-01)
+----------------------------
+
 - [ttLib] Remove .Format from Coverage, ClassDef, SingleSubst, LigatureSubst,
   AlternateSubst, MultipleSubst (#2238).
   ATTENTION: This will change your TTX dumps!
