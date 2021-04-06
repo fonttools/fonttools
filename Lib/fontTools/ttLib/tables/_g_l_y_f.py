@@ -1536,6 +1536,8 @@ class GlyphCoordinates(object):
 		>>> GlyphCoordinates([(1,2)]).translate((.5,0))
 		"""
 		(x,y) = self._checkFloat(p)
+		if x == 0 and y == 0:
+			return
 		a = self._a
 		for i in range(len(a) // 2):
 			self[i] = (a[2*i] + x, a[2*i+1] + y)
@@ -1545,6 +1547,8 @@ class GlyphCoordinates(object):
 		>>> GlyphCoordinates([(1,2)]).scale((.5,0))
 		"""
 		(x,y) = self._checkFloat(p)
+		if x == 1 and y == 1:
+			return
 		a = self._a
 		for i in range(len(a) // 2):
 			self[i] = (a[2*i] * x, a[2*i+1] * y)
@@ -1704,8 +1708,6 @@ class GlyphCoordinates(object):
 		if isinstance(other, Number):
 			other = (other, other)
 		if isinstance(other, tuple):
-			if other == (1,1):
-				return self
 			assert len(other) ==  2
 			self.scale(other)
 			return self
