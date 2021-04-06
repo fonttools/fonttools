@@ -1659,8 +1659,8 @@ class GlyphCoordinates(object):
 			other = other._a
 			a = self._a
 			assert len(a) == len(other)
-			for i in range(len(a) // 2):
-				self[i] = (a[2*i] + other[2*i], a[2*i+1] + other[2*i+1])
+			for i in range(len(a)):
+				a[i] += other[i]
 			return self
 		return NotImplemented
 
@@ -1684,8 +1684,8 @@ class GlyphCoordinates(object):
 			other = other._a
 			a = self._a
 			assert len(a) == len(other)
-			for i in range(len(a) // 2):
-				self[i] = (a[2*i] - other[2*i], a[2*i+1] - other[2*i+1])
+			for i in range(len(a)):
+				a[i] -= other[i]
 			return self
 		return NotImplemented
 
