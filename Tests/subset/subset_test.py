@@ -1076,7 +1076,8 @@ def colrv1_path(tmp_path):
             },
             "uniE004": [
                 ("glyph00016", 1),
-                ("glyph00017", 2),
+                ("glyph00017", 0xFFFF),  # special palette index for foreground text
+                ("glyph00018", 2),
             ],
         },
     )
@@ -1130,6 +1131,7 @@ def test_subset_COLRv1_and_CPAL(colrv1_path):
     assert "uniE004" in glyph_set
     assert "glyph00016" in glyph_set
     assert "glyph00017" in glyph_set
+    assert "glyph00018" in glyph_set
 
     assert "COLR" in subset_font
     colr = subset_font["COLR"].table
@@ -1151,10 +1153,11 @@ def test_subset_COLRv1_and_CPAL(colrv1_path):
     baseRecV0 = colr.BaseGlyphRecordArray.BaseGlyphRecord[0]
     assert baseRecV0.BaseGlyph == "uniE004"
     layersV0 = colr.LayerRecordArray.LayerRecord
-    assert len(layersV0) == 2
-    # check v0 palette indices were remapped
+    assert len(layersV0) == 3
+    # check v0 palette indices were remapped (except for 0xFFFF)
     assert layersV0[0].PaletteIndex == 0
-    assert layersV0[1].PaletteIndex == 1
+    assert layersV0[1].PaletteIndex == 0xFFFF
+    assert layersV0[2].PaletteIndex == 1
 
     assert "CPAL" in subset_font
     cpal = subset_font["CPAL"]
@@ -1208,6 +1211,7 @@ def test_subset_COLRv1_downgrade_version(colrv1_path):
         "uniE004",
         "glyph00016",
         "glyph00017",
+        "glyph00018",
     }
 
     assert "COLR" in subset_font

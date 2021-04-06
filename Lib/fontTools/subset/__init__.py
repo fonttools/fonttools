@@ -2087,7 +2087,9 @@ def prune_post_subset(self, font, options):
 		for record in colr.table.BaseGlyphV1List.BaseGlyphV1Record:
 			record.Paint.traverse(colr.table, collect_colors_by_index)
 
-	retained_palette_indices = set(colors_by_index.keys())
+	# don't remap palette entry index 0xFFFF, this is always the foreground color
+	# https://github.com/fonttools/fonttools/issues/2257
+	retained_palette_indices = set(colors_by_index.keys()) - {0xFFFF}
 	for palette in self.palettes:
 		palette[:] = [c for i, c in enumerate(palette) if i in retained_palette_indices]
 		assert len(palette) == len(retained_palette_indices)
