@@ -1705,11 +1705,17 @@ class GlyphCoordinates(object):
 		>>> g
 		GlyphCoordinates([(2, 4)])
 		"""
-		if isinstance(other, Number):
-			other = (other, other)
 		if isinstance(other, tuple):
 			assert len(other) ==  2
 			self.scale(other)
+			return self
+		if isinstance(other, Number):
+			if other == 1.0: return self
+			if other == int(other): other = int(other)
+			if isinstance(other, float): self._ensureFloat()
+			a = self._a
+			for i in range(len(a)):
+				a[i] *= other
 			return self
 		return NotImplemented
 
