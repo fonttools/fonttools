@@ -375,7 +375,10 @@ class VariationModel(object):
 		for i,weights in enumerate(self.deltaWeights):
 			delta = masterValues[mapping[i]]
 			for j,weight in weights.items():
-				delta -= out[j] * weight
+				if weight == 1:
+					delta -= out[j]
+				else:
+					delta -= out[j] * weight
 			out.append(round(delta))
 		return out
 
