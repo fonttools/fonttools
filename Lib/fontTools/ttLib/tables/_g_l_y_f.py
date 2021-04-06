@@ -1446,8 +1446,7 @@ class GlyphCoordinates(object):
 	def _ensureFloat(self):
 		if self.isFloat():
 			return
-		# The conversion to list() is to work around Jython bug
-		self._a = array.array("d", list(self._a))
+		self._a = array.array("d", self._a)
 
 	def _checkFloat(self, p):
 		if self.isFloat():
