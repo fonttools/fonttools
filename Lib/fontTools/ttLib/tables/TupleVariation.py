@@ -310,11 +310,14 @@ class TupleVariation(object):
 				deltaX.append(c)
 			elif c is not None:
 				raise TypeError("invalid type of delta: %s" % type(c))
-		return self.compileDeltaValues_(deltaX) + self.compileDeltaValues_(deltaY)
+		bytearr = bytearray()
+		self.compileDeltaValues_(deltaX, bytearr)
+		self.compileDeltaValues_(deltaY, bytearr)
+		return bytearr
 
 	@staticmethod
-	def compileDeltaValues_(deltas):
-		"""[value1, value2, value3, ...] --> bytestring
+	def compileDeltaValues_(deltas, bytearr=None):
+		"""[value1, value2, value3, ...] --> bytearray
 
 		Emits a sequence of runs. Each run starts with a
 		byte-sized header whose 6 least significant bits
@@ -329,20 +332,21 @@ class TupleVariation(object):
 		bytes; if (header & 0x40) is set, the delta values are
 		signed 16-bit integers.
 		"""  # Explaining the format because the 'gvar' spec is hard to understand.
-		stream = io.BytesIO()
+		if bytearr is None:
+			bytearr = bytearray()
 		pos = 0
 		while pos < len(deltas):
 			value = deltas[pos]
 			if value == 0:
-				pos = TupleVariation.encodeDeltaRunAsZeroes_(deltas, pos, stream)
+				pos = TupleVariation.encodeDeltaRunAsZeroes_(deltas, pos, bytearr)
 			elif value >= -128 and value <= 127:
-				pos = TupleVariation.encodeDeltaRunAsBytes_(deltas, pos, stream)
+				pos = TupleVariation.encodeDeltaRunAsBytes_(deltas, pos, bytearr)
 			else:
-				pos = TupleVariation.encodeDeltaRunAsWords_(deltas, pos, stream)
-		return stream.getvalue()
+				pos = TupleVariation.encodeDeltaRunAsWords_(deltas, pos, bytearr)
+		return bytearr
 
 	@staticmethod
-	def encodeDeltaRunAsZeroes_(deltas, offset, stream):
+	def encodeDeltaRunAsZeroes_(deltas, offset, bytearr):
 		runLength = 0
 		pos = offset
 		numDeltas = len(deltas)
@@ -350,11 +354,11 @@ class TupleVariation(object):
 			pos += 1
 			runLength += 1
 		assert runLength >= 1 and runLength <= 64
-		stream.write(bytechr(DELTAS_ARE_ZERO | (runLength - 1)))
+		bytearr.append(DELTAS_ARE_ZERO | (runLength - 1))
 		return pos
 
 	@staticmethod
-	def encodeDeltaRunAsBytes_(deltas, offset, stream):
+	def encodeDeltaRunAsBytes_(deltas, offset, bytearr):
 		runLength = 0
 		pos = offset
 		numDeltas = len(deltas)
@@ -375,13 +379,13 @@ class TupleVariation(object):
 			pos += 1
 			runLength += 1
 		assert runLength >= 1 and runLength <= 64
-		stream.write(bytechr(runLength - 1))
+		bytearr.append(runLength - 1)
 		for i in range(offset, pos):
-			stream.write(struct.pack('b', otRound(deltas[i])))
+			bytearr.extend(struct.pack('b', otRound(deltas[i])))
 		return pos
 
 	@staticmethod
-	def encodeDeltaRunAsWords_(deltas, offset, stream):
+	def encodeDeltaRunAsWords_(deltas, offset, bytearr):
 		runLength = 0
 		pos = offset
 		numDeltas = len(deltas)
@@ -409,9 +413,9 @@ class TupleVariation(object):
 			pos += 1
 			runLength += 1
 		assert runLength >= 1 and runLength <= 64
-		stream.write(bytechr(DELTAS_ARE_WORDS | (runLength - 1)))
+		bytearr.append(DELTAS_ARE_WORDS | (runLength - 1))
 		for i in range(offset, pos):
-			stream.write(struct.pack('>h', otRound(deltas[i])))
+			bytearr.extend(struct.pack('>h', otRound(deltas[i])))
 		return pos
 
 	@staticmethod
