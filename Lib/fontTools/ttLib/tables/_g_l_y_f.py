@@ -1442,12 +1442,12 @@ class GlyphCoordinates(object):
 		return self._a
 
 	def isFloat(self):
-		return self._a.typecode == 'd'
+		return self._a.typecode == 'f'
 
 	def _ensureFloat(self):
 		if self.isFloat():
 			return
-		self._a = array.array("d", self._a)
+		self._a = array.array("f", self._a)
 
 	def _checkFloat(self, p):
 		if self.isFloat():
