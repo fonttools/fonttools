@@ -380,8 +380,7 @@ class TupleVariation(object):
 			runLength += 1
 		assert runLength >= 1 and runLength <= 64
 		bytearr.append(runLength - 1)
-		for i in range(offset, pos):
-			bytearr.extend(struct.pack('b', deltas[i]))
+		bytearr.extend(array.array('b', deltas[offset:pos]))
 		return pos
 
 	@staticmethod
@@ -414,8 +413,9 @@ class TupleVariation(object):
 			runLength += 1
 		assert runLength >= 1 and runLength <= 64
 		bytearr.append(DELTAS_ARE_WORDS | (runLength - 1))
-		for i in range(offset, pos):
-			bytearr.extend(struct.pack('>h', deltas[i]))
+		a = array.array('h', deltas[offset:pos])
+		if sys.byteorder != "big": a.byteswap()
+		bytearr.extend(a)
 		return pos
 
 	@staticmethod
