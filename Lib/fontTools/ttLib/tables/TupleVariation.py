@@ -352,7 +352,6 @@ class TupleVariation(object):
 		while pos < numDeltas and runLength < 64 and deltas[pos] == 0:
 			pos += 1
 			runLength += 1
-		assert runLength >= 1 and runLength <= 64
 		bytearr.append(DELTAS_ARE_ZERO | (runLength - 1))
 		return pos
 
@@ -377,7 +376,6 @@ class TupleVariation(object):
 				break
 			pos += 1
 			runLength += 1
-		assert runLength >= 1 and runLength <= 64
 		bytearr.append(runLength - 1)
 		bytearr.extend(array.array('b', deltas[offset:pos]))
 		return pos
@@ -410,7 +408,6 @@ class TupleVariation(object):
 				break
 			pos += 1
 			runLength += 1
-		assert runLength >= 1 and runLength <= 64
 		bytearr.append(DELTAS_ARE_WORDS | (runLength - 1))
 		a = array.array('h', deltas[offset:pos])
 		if sys.byteorder != "big": a.byteswap()
