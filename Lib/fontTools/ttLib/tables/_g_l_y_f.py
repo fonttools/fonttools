@@ -744,11 +744,13 @@ class Glyph(object):
 		assert yIndex == len(yCoordinates)
 		coordinates.relativeToAbsolute()
 		# discard all flags except "keepFlags"
-		self.flags = array.array("B", (f & keepFlags for f in flags))
+		for i in range(len(flags)):
+			flags[i] &= keepFlags
+		self.flags = flags
 
 	def decompileCoordinatesRaw(self, nCoordinates, data):
 		# unpack flags and prepare unpacking of coordinates
-		flags = array.array("B", [0] * nCoordinates)
+		flags = bytearray(nCoordinates)
 		# Warning: deep Python trickery going on. We use the struct module to unpack
 		# the coordinates. We build a format string based on the flags, so we can
 		# unpack the coordinates in one struct.unpack() call.
