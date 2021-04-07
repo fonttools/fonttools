@@ -411,8 +411,7 @@ class TupleVariation(object):
 			# [0x6666, 2, 0x7777] becomes 7 bytes when storing
 			# the value literally (42 66 66 00 02 77 77), but 8 bytes
 			# when starting a new run (40 66 66 00 02 40 77 77).
-			isByteEncodable = lambda value: value >= -128 and value <= 127
-			if isByteEncodable(value) and pos+1 < numDeltas and isByteEncodable(deltas[pos+1]):
+			if (-128 <= value <= 127) and pos+1 < numDeltas and (-128 <= deltas[pos+1] <= 127):
 				break
 			pos += 1
 		runLength = pos - offset
