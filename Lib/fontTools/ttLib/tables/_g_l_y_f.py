@@ -488,8 +488,7 @@ def flagEncodeCoord(flag, mask, coord, coordBytes):
 	elif byteCount == -1:
 		coordBytes.append(-coord)
 	elif byteCount == 2:
-		coordBytes.append((coord >> 8) & 0xFF)
-		coordBytes.append(coord & 0xFF)
+		coordBytes.extend(struct.pack('>h', coord))
 
 def flagEncodeCoords(flag, x, y, xBytes, yBytes):
 	flagEncodeCoord(flag, flagXsame|flagXShort, x, xBytes)
@@ -819,14 +818,14 @@ class Glyph(object):
 		#deltas = self.compileDeltasOptimal(self.flags, deltas)
 
 		data.extend(deltas)
-		return bytesjoin(data)
+		return b''.join(data)
 
 	def compileDeltasGreedy(self, flags, deltas):
 		# Implements greedy algorithm for packing coordinate deltas:
 		# uses shortest representation one coordinate at a time.
-		compressedflags = []
-		xPoints = []
-		yPoints = []
+		compressedFlags = bytearray()
+		compressedXs = bytearray()
+		compressedYs = bytearray()
 		lastflag = None
 		repeat = 0
 		for flag,(x,y) in zip(flags, deltas):
@@ -840,9 +839,9 @@ class Glyph(object):
 					flag = flag | flagXsame
 				else:
 					x = -x
-				xPoints.append(bytechr(x))
+				compressedXs.append(x)
 			else:
-				xPoints.append(struct.pack(">h", x))
+				compressedXs.extend(struct.pack('>h', x))
 			# do y
 			if y == 0:
 				flag = flag | flagYsame
@@ -852,24 +851,21 @@ class Glyph(object):
 					flag = flag | flagYsame
 				else:
 					y = -y
-				yPoints.append(bytechr(y))
+				compressedYs.append(y)
 			else:
-				yPoints.append(struct.pack(">h", y))
+				compressedYs.extend(struct.pack('>h', y))
 			# handle repeating flags
 			if flag == lastflag and repeat != 255:
 				repeat = repeat + 1
 				if repeat == 1:
-					compressedflags.append(flag)
+					compressedFlags.append(flag)
 				else:
-					compressedflags[-2] = flag | flagRepeat
-					compressedflags[-1] = repeat
+					compressedFlags[-2] = flag | flagRepeat
+					compressedFlags[-1] = repeat
 			else:
 				repeat = 0
-				compressedflags.append(flag)
+				compressedFlags.append(flag)
 			lastflag = flag
-		compressedFlags = array.array("B", compressedflags).tobytes()
-		compressedXs = bytesjoin(xPoints)
-		compressedYs = bytesjoin(yPoints)
 		return (compressedFlags, compressedXs, compressedYs)
 
 	def compileDeltasOptimal(self, flags, deltas):
@@ -900,9 +896,9 @@ class Glyph(object):
 			flags.append(flag)
 		flags.reverse()
 
-		compressedFlags = array.array("B")
-		compressedXs = array.array("B")
-		compressedYs = array.array("B")
+		compressedFlags = bytearray()
+		compressedXs = bytearray()
+		compressedYs = bytearray()
 		coords = iter(deltas)
 		ff = []
 		for flag in flags:
@@ -922,9 +918,6 @@ class Glyph(object):
 			raise Exception("internal error")
 		except StopIteration:
 			pass
-		compressedFlags = compressedFlags.tobytes()
-		compressedXs = compressedXs.tobytes()
-		compressedYs = compressedYs.tobytes()
 
 		return (compressedFlags, compressedXs, compressedYs)
 
