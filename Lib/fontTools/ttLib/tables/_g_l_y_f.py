@@ -607,7 +607,7 @@ class Glyph(object):
 				raise ttLib.TTLibError("can't mix composites and contours in glyph")
 			self.numberOfContours = self.numberOfContours + 1
 			coordinates = GlyphCoordinates()
-			flags = []
+			flags = bytearray()
 			for element in content:
 				if not isinstance(element, tuple):
 					continue
@@ -615,11 +615,10 @@ class Glyph(object):
 				if name != "pt":
 					continue  # ignore anything but "pt"
 				coordinates.append((safeEval(attrs["x"]), safeEval(attrs["y"])))
-				flag = not not safeEval(attrs["on"])
+				flag = bool(safeEval(attrs["on"]))
 				if "overlap" in attrs and bool(safeEval(attrs["overlap"])):
 					flag |= flagOverlapSimple
 				flags.append(flag)
-			flags = array.array("B", flags)
 			if not hasattr(self, "coordinates"):
 				self.coordinates = coordinates
 				self.flags = flags
@@ -996,7 +995,7 @@ class Glyph(object):
 		elif self.isComposite():
 			# it's a composite
 			allCoords = GlyphCoordinates()
-			allFlags = array.array("B")
+			allFlags = bytearray()
 			allEndPts = []
 			for compo in self.components:
 				g = glyfTable[compo.glyphName]
@@ -1041,7 +1040,7 @@ class Glyph(object):
 				allFlags.extend(flags)
 			return allCoords, allEndPts, allFlags
 		else:
-			return GlyphCoordinates(), [], array.array("B")
+			return GlyphCoordinates(), [], bytearray()
 
 	def getComponentNames(self, glyfTable):
 		if not hasattr(self, "data"):
