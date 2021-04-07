@@ -689,25 +689,19 @@ class Glyph(object):
 					len(data))
 
 	def decompileCoordinates(self, data):
-		# Slicing small bytes() object is faster than slicing memoryview;
-		# Cutoff empirically determined.
-		if len(data) >= 128:
-			data = memoryview(data)
 		endPtsOfContours = array.array("h")
 		endPtsOfContours.frombytes(data[:2*self.numberOfContours])
 		if sys.byteorder != "big": endPtsOfContours.byteswap()
 		self.endPtsOfContours = endPtsOfContours.tolist()
 
-		data = data[2*self.numberOfContours:]
-
-		instructionLength, = struct.unpack(">h", data[:2])
-		data = data[2:]
+		pos = 2*self.numberOfContours
+		instructionLength, = struct.unpack(">h", data[pos:pos+2])
 		self.program = ttProgram.Program()
-		self.program.fromBytecode(data[:instructionLength])
-		data = data[instructionLength:]
+		self.program.fromBytecode(data[pos+2:pos+2+instructionLength])
+		pos += 2 + instructionLength
 		nCoordinates = self.endPtsOfContours[-1] + 1
 		flags, xCoordinates, yCoordinates = \
-				self.decompileCoordinatesRaw(nCoordinates, data)
+				self.decompileCoordinatesRaw(nCoordinates, data, pos)
 
 		# fill in repetitions and apply signs
 		self.coordinates = coordinates = GlyphCoordinates.zeros(nCoordinates)
@@ -748,7 +742,7 @@ class Glyph(object):
 			flags[i] &= keepFlags
 		self.flags = flags
 
-	def decompileCoordinatesRaw(self, nCoordinates, data):
+	def decompileCoordinatesRaw(self, nCoordinates, data, pos=0):
 		# unpack flags and prepare unpacking of coordinates
 		flags = bytearray(nCoordinates)
 		# Warning: deep Python trickery going on. We use the struct module to unpack
@@ -756,14 +750,14 @@ class Glyph(object):
 		# unpack the coordinates in one struct.unpack() call.
 		xFormat = ">" # big endian
 		yFormat = ">" # big endian
-		i = j = 0
+		j = 0
 		while True:
-			flag = data[i]
-			i = i + 1
+			flag = data[pos]
+			pos += 1
 			repeat = 1
 			if flag & flagRepeat:
-				repeat = data[i] + 1
-				i = i + 1
+				repeat = data[pos] + 1
+				pos += 1
 			for k in range(repeat):
 				if flag & flagXShort:
 					xFormat = xFormat + 'B'
@@ -778,15 +772,14 @@ class Glyph(object):
 			if j >= nCoordinates:
 				break
 		assert j == nCoordinates, "bad glyph flags"
-		data = data[i:]
 		# unpack raw coordinates, krrrrrr-tching!
 		xDataLen = struct.calcsize(xFormat)
 		yDataLen = struct.calcsize(yFormat)
-		if len(data) - (xDataLen + yDataLen) >= 4:
+		if len(data) - pos - (xDataLen + yDataLen) >= 4:
 			log.warning(
-				"too much glyph data: %d excess bytes", len(data) - (xDataLen + yDataLen))
-		xCoordinates = struct.unpack(xFormat, data[:xDataLen])
-		yCoordinates = struct.unpack(yFormat, data[xDataLen:xDataLen+yDataLen])
+				"too much glyph data: %d excess bytes", len(data) - pos - (xDataLen + yDataLen))
+		xCoordinates = struct.unpack(xFormat, data[pos:pos+xDataLen])
+		yCoordinates = struct.unpack(yFormat, data[pos+xDataLen:pos+xDataLen+yDataLen])
 		return flags, xCoordinates, yCoordinates
 
 	def compileComponents(self, glyfTable):
