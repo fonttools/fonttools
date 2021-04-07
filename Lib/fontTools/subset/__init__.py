@@ -2247,7 +2247,7 @@ def prune_pre_subset(self, font, options):
 		g = self[self.glyphOrder[0]]
 		# Yay, easy!
 		g.__dict__.clear()
-		g.data = ""
+		g.data = b''
 	return True
 
 @_add_method(ttLib.getTableClass('glyf'))
@@ -2262,7 +2262,7 @@ def subset_glyphs(self, s):
 	Glyph = ttLib.getTableModule('glyf').Glyph
 	for g in s.glyphs_emptied:
 		self.glyphs[g] = Glyph()
-		self.glyphs[g].data = ''
+		self.glyphs[g].data = b''
 	self.glyphOrder = [g for g in self.glyphOrder if g in s.glyphs or g in s.glyphs_emptied]
 	# Don't drop empty 'glyf' tables, otherwise 'loca' doesn't get subset.
 	return True
