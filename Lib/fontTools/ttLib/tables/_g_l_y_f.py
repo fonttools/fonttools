@@ -811,9 +811,7 @@ class Glyph(object):
 		data.append(instructions)
 
 		deltas = self.coordinates.copy()
-		if deltas.isFloat():
-			# Warn?
-			deltas.toInt()
+		deltas.toInt()
 		deltas.absoluteToRelative()
 
 		# TODO(behdad): Add a configuration option for this?
@@ -1442,9 +1440,6 @@ class GlyphCoordinates(object):
 	@property
 	def array(self):
 		return self._a
-
-	def isFloat(self):
-		return self._a.typecode == 'f'
 
 	@staticmethod
 	def zeros(count):
