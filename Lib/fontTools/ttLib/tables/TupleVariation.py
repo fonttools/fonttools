@@ -154,15 +154,15 @@ class TupleVariation(object):
 			auxData = self.compilePoints(points, numPointsInGlyph) + self.compileDeltas(points)
 			usesSharedPoints = False
 
-		tupleData = struct.pack('>HH', len(auxData), flags) + bytesjoin(tupleData)
-		return (tupleData, auxData, usesSharedPoints)
+		tupleData.insert(0, struct.pack('>HH', len(auxData), flags))
+		return (b''.join(tupleData), auxData, usesSharedPoints)
 
 	def compileCoord(self, axisTags):
 		result = []
 		for axis in axisTags:
 			_minValue, value, _maxValue = self.axes.get(axis, (0.0, 0.0, 0.0))
 			result.append(struct.pack(">h", fl2fi(value, 14)))
-		return bytesjoin(result)
+		return b''.join(result)
 
 	def compileIntermediateCoord(self, axisTags):
 		needed = False
@@ -175,13 +175,13 @@ class TupleVariation(object):
 				break
 		if not needed:
 			return None
-		minCoords = []
-		maxCoords = []
+		minCoords = bytearray()
+		maxCoords = bytearray()
 		for axis in axisTags:
 			minValue, value, maxValue = self.axes.get(axis, (0.0, 0.0, 0.0))
-			minCoords.append(struct.pack(">h", fl2fi(minValue, 14)))
-			maxCoords.append(struct.pack(">h", fl2fi(maxValue, 14)))
-		return bytesjoin(minCoords + maxCoords)
+			minCoords.extend(struct.pack(">h", fl2fi(minValue, 14)))
+			maxCoords.extend(struct.pack(">h", fl2fi(maxValue, 14)))
+		return minCoords + maxCoords
 
 	@staticmethod
 	def decompileCoord_(axisTags, data, offset):
