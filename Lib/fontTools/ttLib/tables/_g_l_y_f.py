@@ -1732,20 +1732,6 @@ class GlyphCoordinates(object):
 	__nonzero__ = __bool__
 
 
-def reprflag(flag):
-	bin = ""
-	if isinstance(flag, str):
-		flag = byteord(flag)
-	while flag:
-		if flag & 0x01:
-			bin = "1" + bin
-		else:
-			bin = "0" + bin
-		flag = flag >> 1
-	bin = (14 - len(bin)) * "0" + bin
-	return bin
-
-
 if __name__ == "__main__":
 	import doctest, sys
 	sys.exit(doctest.testmod().failed)
