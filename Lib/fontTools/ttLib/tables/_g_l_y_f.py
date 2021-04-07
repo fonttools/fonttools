@@ -689,6 +689,10 @@ class Glyph(object):
 					len(data))
 
 	def decompileCoordinates(self, data):
+		# Slicing small bytes() object is faster than slicing memoryview;
+		# Cutoff empirically determined.
+		if len(data) >= 128:
+			data = memoryview(data)
 		endPtsOfContours = array.array("h")
 		endPtsOfContours.frombytes(data[:2*self.numberOfContours])
 		if sys.byteorder != "big": endPtsOfContours.byteswap()
