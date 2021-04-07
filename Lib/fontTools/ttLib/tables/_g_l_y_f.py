@@ -1460,6 +1460,12 @@ class GlyphCoordinates(object):
 
 	@staticmethod
 	def zeros(count):
+		g = GlyphCoordinates()
+		a = g._a
+		for i in range(count):
+			a.append(0)
+			a.append(0)
+		return g
 		return GlyphCoordinates([(0,0)] * count)
 
 	def copy(self):
