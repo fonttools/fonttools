@@ -346,9 +346,8 @@ class TupleVariation(object):
 		return bytearr
 
 	@staticmethod
-	def encodeDeltaRunAsZeroes_(deltas, offset, bytearr):
+	def encodeDeltaRunAsZeroes_(deltas, pos, bytearr):
 		runLength = 0
-		pos = offset
 		numDeltas = len(deltas)
 		while pos < numDeltas and runLength < 64 and deltas[pos] == 0:
 			pos += 1
