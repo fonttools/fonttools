@@ -758,11 +758,11 @@ class Glyph(object):
 		yFormat = ">" # big endian
 		i = j = 0
 		while True:
-			flag = byteord(data[i])
+			flag = data[i]
 			i = i + 1
 			repeat = 1
 			if flag & flagRepeat:
-				repeat = byteord(data[i]) + 1
+				repeat = data[i] + 1
 				i = i + 1
 			for k in range(repeat):
 				if flag & flagXShort:
