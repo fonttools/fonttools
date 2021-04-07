@@ -1,7 +1,7 @@
 """_g_l_y_f.py -- Converter classes for the 'glyf' table."""
 
 from collections import namedtuple
-from fontTools.misc.py23 import bytechr, byteord, bytesjoin, tostr
+from fontTools.misc.py23 import tostr
 from fontTools.misc import sstruct
 from fontTools import ttLib
 from fontTools import version
@@ -117,7 +117,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 					currentLocation += len(glyphData)
 				locations[len(dataList)] = currentLocation
 
-		data = bytesjoin(dataList)
+		data = b''.join(dataList)
 		if 'loca' in ttFont:
 			ttFont['loca'].set(locations)
 		if 'maxp' in ttFont:
@@ -556,7 +556,7 @@ class Glyph(object):
 			else:
 				return self.data
 		if self.numberOfContours == 0:
-			return ""
+			return b''
 		if recalcBBoxes:
 			self.recalcBounds(glyfTable)
 		data = sstruct.pack(glyphHeaderFormat, self)
