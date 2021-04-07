@@ -2203,7 +2203,7 @@ def subset_glyphs(self, s):
 def remapComponentsFast(self, glyphidmap):
 	if not self.data or struct.unpack(">h", self.data[:2])[0] >= 0:
 		return	# Not composite
-	data = array.array("B", self.data)
+	data = self.data = bytearray(self.data)
 	i = 10
 	more = 1
 	while more:
@@ -2222,8 +2222,6 @@ def remapComponentsFast(self, glyphidmap):
 		elif flags & 0x0040: i += 4	# WE_HAVE_AN_X_AND_Y_SCALE
 		elif flags & 0x0080: i += 8	# WE_HAVE_A_TWO_BY_TWO
 		more = flags & 0x0020	# MORE_COMPONENTS
-
-	self.data = data.tobytes()
 
 @_add_method(ttLib.getTableClass('glyf'))
 def closure_glyphs(self, s):
