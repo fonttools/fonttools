@@ -346,21 +346,24 @@ class TupleVariation(object):
 		return bytearr
 
 	@staticmethod
-	def encodeDeltaRunAsZeroes_(deltas, pos, bytearr):
-		runLength = 0
+	def encodeDeltaRunAsZeroes_(deltas, offset, bytearr):
+		pos = offset
 		numDeltas = len(deltas)
-		while pos < numDeltas and runLength < 64 and deltas[pos] == 0:
+		while pos < numDeltas and deltas[pos] == 0:
 			pos += 1
-			runLength += 1
-		bytearr.append(DELTAS_ARE_ZERO | (runLength - 1))
+		runLength = pos - offset
+		while runLength >= 64:
+			bytearr.append(DELTAS_ARE_ZERO | 63)
+			runLength -= 64
+		if runLength:
+			bytearr.append(DELTAS_ARE_ZERO | (runLength - 1))
 		return pos
 
 	@staticmethod
 	def encodeDeltaRunAsBytes_(deltas, offset, bytearr):
-		runLength = 0
 		pos = offset
 		numDeltas = len(deltas)
-		while pos < numDeltas and runLength < 64:
+		while pos < numDeltas:
 			value = deltas[pos]
 			if value < -128 or value > 127:
 				break
@@ -375,17 +378,22 @@ class TupleVariation(object):
 			if value == 0 and pos+1 < numDeltas and deltas[pos+1] == 0:
 				break
 			pos += 1
-			runLength += 1
-		bytearr.append(runLength - 1)
-		bytearr.extend(array.array('b', deltas[offset:pos]))
+		runLength = pos - offset
+		while runLength >= 64:
+			bytearr.append(63)
+			bytearr.extend(array.array('b', deltas[offset:offset+64]))
+			offset += 64
+			runLength -= 64
+		if runLength:
+			bytearr.append(runLength - 1)
+			bytearr.extend(array.array('b', deltas[offset:pos]))
 		return pos
 
 	@staticmethod
 	def encodeDeltaRunAsWords_(deltas, offset, bytearr):
-		runLength = 0
 		pos = offset
 		numDeltas = len(deltas)
-		while pos < numDeltas and runLength < 64:
+		while pos < numDeltas:
 			value = deltas[pos]
 			# Within a word-encoded run of deltas, it is easiest
 			# to start a new run (with a different encoding)
@@ -407,11 +415,19 @@ class TupleVariation(object):
 			if isByteEncodable(value) and pos+1 < numDeltas and isByteEncodable(deltas[pos+1]):
 				break
 			pos += 1
-			runLength += 1
-		bytearr.append(DELTAS_ARE_WORDS | (runLength - 1))
-		a = array.array('h', deltas[offset:pos])
-		if sys.byteorder != "big": a.byteswap()
-		bytearr.extend(a)
+		runLength = pos - offset
+		while runLength >= 64:
+			bytearr.append(DELTAS_ARE_WORDS | 63)
+			a = array.array('h', deltas[offset:offset+64])
+			if sys.byteorder != "big": a.byteswap()
+			bytearr.extend(a)
+			offset += 64
+			runLength -= 64
+		if runLength:
+			bytearr.append(DELTAS_ARE_WORDS | (runLength - 1))
+			a = array.array('h', deltas[offset:pos])
+			if sys.byteorder != "big": a.byteswap()
+			bytearr.extend(a)
 		return pos
 
 	@staticmethod
