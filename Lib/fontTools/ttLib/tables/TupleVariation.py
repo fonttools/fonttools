@@ -209,19 +209,24 @@ class TupleVariation(object):
 		points.sort()
 		numPoints = len(points)
 
+		result = bytearray()
 		# The binary representation starts with the total number of points in the set,
 		# encoded into one or two bytes depending on the value.
 		if numPoints < 0x80:
-			result = [bytechr(numPoints)]
+			result.append(numPoints)
 		else:
-			result = [bytechr((numPoints >> 8) | 0x80) + bytechr(numPoints & 0xff)]
+			result.append((numPoints >> 8) | 0x80)
+			result.append(numPoints & 0xff)
 
 		MAX_RUN_LENGTH = 127
 		pos = 0
 		lastValue = 0
 		while pos < numPoints:
-			run = io.BytesIO()
 			runLength = 0
+
+			headerPos = len(result)
+			result.append(0)
+
 			useByteEncoding = None
 			while pos < numPoints and runLength <= MAX_RUN_LENGTH:
 				curValue = points[pos]
@@ -234,21 +239,19 @@ class TupleVariation(object):
 				# TODO This never switches back to a byte-encoding from a short-encoding.
 				# That's suboptimal.
 				if useByteEncoding:
-					run.write(bytechr(delta))
+					result.append(delta)
 				else:
-					run.write(bytechr(delta >> 8))
-					run.write(bytechr(delta & 0xff))
+					result.append(delta >> 8)
+					result.append(delta & 0xff)
 				lastValue = curValue
 				pos += 1
 				runLength += 1
 			if useByteEncoding:
-				runHeader = bytechr(runLength - 1)
+				result[headerPos] = runLength - 1
 			else:
-				runHeader = bytechr((runLength - 1) | POINTS_ARE_WORDS)
-			result.append(runHeader)
-			result.append(run.getvalue())
+				result[headerPos] = (runLength - 1) | POINTS_ARE_WORDS
 
-		return bytesjoin(result)
+		return result
 
 	@staticmethod
 	def decompilePoints_(numPoints, data, offset, tableTag):
