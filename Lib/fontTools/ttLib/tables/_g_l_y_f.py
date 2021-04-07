@@ -1091,7 +1091,7 @@ class Glyph(object):
 		if not self.data:
 			return
 		numContours = struct.unpack(">h", self.data[:2])[0]
-		data = array.array("B", self.data)
+		data = bytearray(self.data)
 		i = 10
 		if numContours >= 0:
 			i += 2 * numContours # endPtsOfContours
@@ -1160,7 +1160,7 @@ class Glyph(object):
 			# Remove padding
 			data = data[:i]
 
-		self.data = data.tobytes()
+		self.data = data
 
 	def removeHinting(self):
 		self.trim (remove_hinting=True)
