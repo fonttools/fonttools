@@ -38,7 +38,7 @@ class TupleVariation(object):
 
 	def __init__(self, axes, coordinates):
 		self.axes = axes.copy()
-		self.coordinates = coordinates[:]
+		self.coordinates = list(coordinates)
 
 	def __repr__(self):
 		axes = ",".join(sorted(["%s=%s" % (name, value) for (name, value) in self.axes.items()]))
