@@ -1430,11 +1430,13 @@ class GlyphComponent(object):
 		result = self.__eq__(other)
 		return result if result is NotImplemented else not result
 
+def _i(v):
+	return int(v) if int(v) == v else v
+
 class GlyphCoordinates(object):
 
-	def __init__(self, iterable=[], typecode='i'):
-		if typecode == 'h': typecode = 'i'
-		self._a = array.array(typecode)
+	def __init__(self, iterable=[]):
+		self._a = array.array('f')
 		self.extend(iterable)
 
 	@property
@@ -1444,20 +1446,6 @@ class GlyphCoordinates(object):
 	def isFloat(self):
 		return self._a.typecode == 'f'
 
-	def _ensureFloat(self):
-		if self.isFloat():
-			return
-		self._a = array.array("f", self._a)
-
-	def _checkFloat(self, p):
-		if self.isFloat():
-			return p
-		if any(isinstance(v, float) for v in p):
-			p = [int(v) if int(v) == v else v for v in p]
-			if any(isinstance(v, float) for v in p):
-				self._ensureFloat()
-		return p
-
 	@staticmethod
 	def zeros(count):
 		g = GlyphCoordinates()
@@ -1465,7 +1453,7 @@ class GlyphCoordinates(object):
 		return g
 
 	def copy(self):
-		c = GlyphCoordinates(typecode=self._a.typecode)
+		c = GlyphCoordinates()
 		c._a.extend(self._a)
 		return c
 
@@ -1476,7 +1464,7 @@ class GlyphCoordinates(object):
 		if isinstance(k, slice):
 			indices = range(*k.indices(len(self)))
 			return [self[i] for i in indices]
-		return self._a[2*k],self._a[2*k+1]
+		return _i(self._a[2*k]),_i(self._a[2*k+1])
 
 	def __setitem__(self, k, v):
 		if isinstance(k, slice):
@@ -1485,7 +1473,6 @@ class GlyphCoordinates(object):
 			for j,i in enumerate(indices):
 				self[i] = v[j]
 			return
-		v = self._checkFloat(v)
 		self._a[2*k],self._a[2*k+1] = v
 
 	def __delitem__(self, i):
@@ -1497,73 +1484,71 @@ class GlyphCoordinates(object):
 		return 'GlyphCoordinates(['+','.join(str(c) for c in self)+'])'
 
 	def append(self, p):
-		p = self._checkFloat(p)
 		self._a.extend(tuple(p))
 
 	def extend(self, iterable):
 		for p in iterable:
-			p = self._checkFloat(p)
 			self._a.extend(p)
 
 	def toInt(self, *, round=otRound):
-		if not self.isFloat():
-			return
-		a = array.array("i")
-		for n in self._a:
-			a.append(round(n))
-		self._a = a
+		a = self._a
+		for i in range(len(a)):
+			a[i] = round(a[i])
 
 	def relativeToAbsolute(self):
 		a = self._a
 		x,y = 0,0
-		for i in range(len(a) // 2):
-			x = a[2*i  ] + x
-			y = a[2*i+1] + y
-			self[i] = (x, y)
+		for i in range(0, len(a), 2):
+			a[i  ] = x = a[i  ] + x
+			a[i+1] = y = a[i+1] + y
 
 	def absoluteToRelative(self):
 		a = self._a
 		x,y = 0,0
-		for i in range(len(a) // 2):
-			dx = a[2*i  ] - x
-			dy = a[2*i+1] - y
-			x = a[2*i  ]
-			y = a[2*i+1]
-			self[i] = (dx, dy)
+		for i in range(0, len(a), 2):
+			nx = a[i  ]
+			ny = a[i+1]
+			a[i]   = nx - x
+			a[i+1] = ny - y
+			x = nx
+			y = ny
 
 	def translate(self, p):
 		"""
 		>>> GlyphCoordinates([(1,2)]).translate((.5,0))
 		"""
-		(x,y) = self._checkFloat(p)
+		x,y = p
 		if x == 0 and y == 0:
 			return
 		a = self._a
-		for i in range(len(a) // 2):
-			self[i] = (a[2*i] + x, a[2*i+1] + y)
+		for i in range(0, len(a), 2):
+			a[i]   += x
+			a[i+1] += y
 
 	def scale(self, p):
 		"""
 		>>> GlyphCoordinates([(1,2)]).scale((.5,0))
 		"""
-		(x,y) = self._checkFloat(p)
+		x,y = p
 		if x == 1 and y == 1:
 			return
 		a = self._a
-		for i in range(len(a) // 2):
-			self[i] = (a[2*i] * x, a[2*i+1] * y)
+		for i in range(0, len(a), 2):
+			a[i]   *= x
+			a[i+1] *= y
 
 	def transform(self, t):
 		"""
 		>>> GlyphCoordinates([(1,2)]).transform(((.5,0),(.2,.5)))
 		"""
 		a = self._a
-		for i in range(len(a) // 2):
-			x = a[2*i  ]
-			y = a[2*i+1]
+		for i in range(0, len(a), 2):
+			x = a[i  ]
+			y = a[i+1]
 			px = x * t[0][0] + y * t[1][0]
 			py = x * t[0][1] + y * t[1][1]
-			self[i] = (px, py)
+			a[i]   = px
+			a[i+1] = py
 
 	def __eq__(self, other):
 		"""
@@ -1648,18 +1633,17 @@ class GlyphCoordinates(object):
 		>>> g = GlyphCoordinates([(1,2)])
 		>>> g += (.5,0)
 		>>> g
-		GlyphCoordinates([(1.5, 2.0)])
+		GlyphCoordinates([(1.5, 2)])
 		>>> g2 = GlyphCoordinates([(3,4)])
 		>>> g += g2
 		>>> g
-		GlyphCoordinates([(4.5, 6.0)])
+		GlyphCoordinates([(4.5, 6)])
 		"""
 		if isinstance(other, tuple):
 			assert len(other) ==  2
 			self.translate(other)
 			return self
 		if isinstance(other, GlyphCoordinates):
-			if other.isFloat(): self._ensureFloat()
 			other = other._a
 			a = self._a
 			assert len(a) == len(other)
@@ -1673,18 +1657,17 @@ class GlyphCoordinates(object):
 		>>> g = GlyphCoordinates([(1,2)])
 		>>> g -= (.5,0)
 		>>> g
-		GlyphCoordinates([(0.5, 2.0)])
+		GlyphCoordinates([(0.5, 2)])
 		>>> g2 = GlyphCoordinates([(3,4)])
 		>>> g -= g2
 		>>> g
-		GlyphCoordinates([(-2.5, -2.0)])
+		GlyphCoordinates([(-2.5, -2)])
 		"""
 		if isinstance(other, tuple):
 			assert len(other) ==  2
 			self.translate((-other[0],-other[1]))
 			return self
 		if isinstance(other, GlyphCoordinates):
-			if other.isFloat(): self._ensureFloat()
 			other = other._a
 			a = self._a
 			assert len(a) == len(other)
@@ -1699,7 +1682,7 @@ class GlyphCoordinates(object):
 		>>> g *= (2,.5)
 		>>> g *= 2
 		>>> g
-		GlyphCoordinates([(4.0, 2.0)])
+		GlyphCoordinates([(4, 2)])
 		>>> g = GlyphCoordinates([(1,2)])
 		>>> g *= 2
 		>>> g
@@ -1710,9 +1693,7 @@ class GlyphCoordinates(object):
 			self.scale(other)
 			return self
 		if isinstance(other, Number):
-			if other == 1.0: return self
-			if other == int(other): other = int(other)
-			if isinstance(other, float): self._ensureFloat()
+			if other == 1: return self
 			a = self._a
 			for i in range(len(a)):
 				a[i] *= other
@@ -1725,7 +1706,7 @@ class GlyphCoordinates(object):
 		>>> g /= (.5,1.5)
 		>>> g /= 2
 		>>> g
-		GlyphCoordinates([(1.0, 1.0)])
+		GlyphCoordinates([(1, 1)])
 		"""
 		if isinstance(other, Number):
 			other = (other, other)
