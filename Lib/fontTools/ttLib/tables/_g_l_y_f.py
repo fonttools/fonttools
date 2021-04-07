@@ -1432,7 +1432,8 @@ class GlyphComponent(object):
 
 class GlyphCoordinates(object):
 
-	def __init__(self, iterable=[], typecode="h"):
+	def __init__(self, iterable=[], typecode='i'):
+		if typecode == 'h': typecode = 'i'
 		self._a = array.array(typecode)
 		self.extend(iterable)
 
@@ -1450,9 +1451,6 @@ class GlyphCoordinates(object):
 
 	def _checkFloat(self, p):
 		if self.isFloat():
-			return p
-		if any(v > 0x7FFF or v < -0x8000 for v in p):
-			self._ensureFloat()
 			return p
 		if any(isinstance(v, float) for v in p):
 			p = [int(v) if int(v) == v else v for v in p]
@@ -1508,7 +1506,7 @@ class GlyphCoordinates(object):
 	def toInt(self, *, round=otRound):
 		if not self.isFloat():
 			return
-		a = array.array("h")
+		a = array.array("i")
 		for n in self._a:
 			a.append(round(n))
 		self._a = a

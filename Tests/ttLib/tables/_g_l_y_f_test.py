@@ -173,10 +173,9 @@ class GlyphCoordinatesTest(object):
         assert g[0][0] == otRound(afloat)
 
     def test__checkFloat_overflow(self):
-        g = GlyphCoordinates([(1, 1)], typecode="h")
+        g = GlyphCoordinates([(1, 1)])
         g.append((0x8000, 0))
-        assert g.array.typecode == "d"
-        assert g.array == array.array("d", [1.0, 1.0, 32768.0, 0.0])
+        assert list(g.array) == [1.0, 1.0, 32768.0, 0.0]
 
 
 CURR_DIR = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
