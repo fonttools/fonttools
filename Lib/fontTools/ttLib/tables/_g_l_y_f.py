@@ -515,7 +515,7 @@ CompositeMaxpValues = namedtuple('CompositeMaxpValues', ['nPoints', 'nContours',
 
 class Glyph(object):
 
-	def __init__(self, data=""):
+	def __init__(self, data=b""):
 		if not data:
 			# empty char
 			self.numberOfContours = 0
