@@ -1454,7 +1454,7 @@ class GlyphCoordinates(object):
 	def __len__(self):
 		return len(self._a) // 2
 
-	def __getitem__(self, k):
+	def __getitem__(self, k, *, _i=_i):
 		if isinstance(k, slice):
 			indices = range(*k.indices(len(self)))
 			return [self[i] for i in indices]
