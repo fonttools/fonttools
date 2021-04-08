@@ -1429,6 +1429,12 @@ class GlyphCoordinates(object):
 	def array(self):
 		return self._a
 
+	def isFloat(self):
+		import warnings
+		warnings.warn('GlyphCoordinates.isFloat() is deprecated.',
+			      category=DeprecationWarning)
+		return True
+
 	@staticmethod
 	def zeros(count):
 		g = GlyphCoordinates()
