@@ -122,10 +122,15 @@ class TupleVariation(object):
 				log.warning("bad delta format: %s" %
 				            ", ".join(sorted(attrs.keys())))
 
-	def compile(self, axisTags, sharedCoordIndices={}, sharedPoints=None):
-		tupleData = []
-
+	def compile(self, axisTags, sharedCoordIndices={}, pointData=None):
 		assert set(self.axes.keys()) <= set(axisTags), ("Unknown axis tag found.", self.axes.keys(), axisTags)
+
+		tupleData = []
+		auxData = []
+
+		if pointData is None:
+			points = self.getUsedPoints()
+			pointData = self.compilePoints(points, len(self.coordinates))
 
 		coord = self.compileCoord(axisTags)
 		flags = sharedCoordIndices.get(coord)
@@ -138,19 +143,18 @@ class TupleVariation(object):
 			flags |= INTERMEDIATE_REGION
 			tupleData.append(intermediateCoord)
 
-		points = self.getUsedPoints()
-		if sharedPoints == points:
-			# Only use the shared points if they are identical to the actually used points
-			auxData = self.compileDeltas(sharedPoints)
+		if pointData is NotImplemented:
 			usesSharedPoints = True
 		else:
 			flags |= PRIVATE_POINT_NUMBERS
-			numPointsInGlyph = len(self.coordinates)
-			auxData = self.compilePoints(points, numPointsInGlyph) + self.compileDeltas(points)
+			auxData.append(pointData)
 			usesSharedPoints = False
 
+		auxData.append(self.compileDeltas())
+		auxData = b''.join(auxData)
+
 		tupleData.insert(0, struct.pack('>HH', len(auxData), flags))
-		return (b''.join(tupleData), auxData, usesSharedPoints)
+		return b''.join(tupleData), auxData, usesSharedPoints
 
 	def compileCoord(self, axisTags):
 		result = bytearray()
@@ -300,11 +304,12 @@ class TupleVariation(object):
 			            (",".join(sorted(badPoints)), tableTag))
 		return (result, pos)
 
-	def compileDeltas(self, points):
+	def compileDeltas(self):
 		deltaX = []
 		deltaY = []
-		for p in sorted(list(points)):
-			c = self.coordinates[p]
+		for c in self.coordinates:
+			if c is None:
+				continue
 			if type(c) is tuple and len(c) == 2:
 				deltaX.append(c[0])
 				deltaY.append(c[1])
@@ -621,21 +626,21 @@ def compileTupleVariationStore(variations, pointCount,
 	tuples = []
 	data = []
 
-	pointSitu = []
+	pointDatas = []
+	# Compile all points and figure out sharing if desired
+	sharedPoints = None
+
+	# Collect and count all pointSets
+	pointSetCount = defaultdict(int)
+	for v in variations:
+		usedPoints = v.getUsedPoints()
+		pointSetCount[usedPoints] += 1
+		pointDatas.append(usedPoints)
+
+	compiledPoints = {pointSet:TupleVariation.compilePoints(pointSet, n)
+			  for pointSet in pointSetCount}
+
 	if useSharedPoints:
-		# Figure out point-sharing
-		sharedPoints = None
-
-		# Collect and count all pointSets
-		pointSetCount = defaultdict(int)
-		for v in variations:
-			usedPoints = v.getUsedPoints()
-			pointSetCount[usedPoints] += 1
-			pointSitu.append(usedPoints)
-
-		compiledPoints = {pointSet:TupleVariation.compilePoints(pointSet, n)
-				  for pointSet in pointSetCount}
-
 		# Find point-set which saves most bytes.
 		def key(pn):
 			pointSet = pn[0]
@@ -646,16 +651,12 @@ def compileTupleVariationStore(variations, pointCount,
 		data.append(compiledPoints[sharedPoints])
 		tupleVariationCount |= TUPLES_SHARE_POINT_NUMBERS
 
-		# Only allowed to reuse one set.
-		pointSitu = [sharedPoints if sharedPoints == points else None
-			     for points in pointSitu]
+	# NotImplemented means "use shared points"
+	pointDatas = [compiledPoints[points] if points != sharedPoints else NotImplemented
+		     for points in pointDatas]
 
-		del pointSetCount
-	else:
-		pointSitu = [None] * len(variations)
-
-	for v,p in zip(variations, pointSitu):
-		thisTuple, thisData, _ = v.compile(axisTags, sharedTupleIndices, sharedPoints=p)
+	for v,p in zip(variations, pointDatas):
+		thisTuple, thisData, _ = v.compile(axisTags, sharedTupleIndices, pointData=p)
 
 		tuples.append(thisTuple)
 		data.append(thisData)
