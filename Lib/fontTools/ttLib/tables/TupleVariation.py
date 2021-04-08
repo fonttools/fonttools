@@ -342,7 +342,8 @@ class TupleVariation(object):
 		if bytearr is None:
 			bytearr = bytearray()
 		pos = 0
-		while pos < len(deltas):
+		numDeltas = len(deltas)
+		while pos < numDeltas:
 			value = deltas[pos]
 			if value == 0:
 				pos = TupleVariation.encodeDeltaRunAsZeroes_(deltas, pos, bytearr)
