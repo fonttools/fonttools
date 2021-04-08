@@ -1420,7 +1420,7 @@ class GlyphComponent(object):
 		return result if result is NotImplemented else not result
 
 def _i(v):
-	return int(v) if int(v) == v else v
+	return int(v) if v.is_integer() else v
 
 class GlyphCoordinates(object):
 
