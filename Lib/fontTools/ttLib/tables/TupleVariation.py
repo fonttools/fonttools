@@ -130,7 +130,7 @@ class TupleVariation(object):
 	def compile(self, axisTags, sharedCoordIndices={}, sharedPoints=None):
 		tupleData = []
 
-		assert all(tag in axisTags for tag in self.axes.keys()), ("Unknown axis tag found.", self.axes.keys(), axisTags)
+		assert set(self.axes.keys()) <= set(axisTags), ("Unknown axis tag found.", self.axes.keys(), axisTags)
 
 		coord = self.compileCoord(axisTags)
 		flags = sharedCoordIndices.get(coord)
