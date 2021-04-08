@@ -1,4 +1,4 @@
-from fontTools.misc.py23 import bytechr, byteord, bytesjoin
+from fontTools.misc.py23 import byteord
 from fontTools.misc.fixedTools import (
     fixedToFloat as fi2fl,
     floatToFixed as fl2fi,
@@ -670,10 +670,10 @@ def compileTupleVariationStore(variations, pointCount,
 			data.append(privateData)
 	if someTuplesSharePoints:
 		# Use the last of the variations that share points for compiling the packed point data
-		data = sharedPointVariation.compilePoints(usedPoints, len(sharedPointVariation.coordinates)) + bytesjoin(data)
+		data = sharedPointVariation.compilePoints(usedPoints, len(sharedPointVariation.coordinates)) + b''.join(data)
 		tupleVariationCount = TUPLES_SHARE_POINT_NUMBERS | len(tuples)
 	else:
-		data = bytesjoin(data)
+		data = b''.join(data)
 		tupleVariationCount = len(tuples)
 	tuples = b''.join(tuples)
 	return tupleVariationCount, tuples, data
