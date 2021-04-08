@@ -1419,9 +1419,6 @@ class GlyphComponent(object):
 		result = self.__eq__(other)
 		return result if result is NotImplemented else not result
 
-def _i(v):
-	return int(v) if v.is_integer() else v
-
 class GlyphCoordinates(object):
 
 	def __init__(self, iterable=[]):
@@ -1446,11 +1443,15 @@ class GlyphCoordinates(object):
 	def __len__(self):
 		return len(self._a) // 2
 
-	def __getitem__(self, k, *, _i=_i):
+	def __getitem__(self, k):
 		if isinstance(k, slice):
 			indices = range(*k.indices(len(self)))
 			return [self[i] for i in indices]
-		return _i(self._a[2*k]),_i(self._a[2*k+1])
+		a = self._a
+		x = a[2*k]
+		y = a[2*k+1]
+		return (int(x) if x.is_integer() else x,
+			int(y) if y.is_integer() else y)
 
 	def __setitem__(self, k, v):
 		if isinstance(k, slice):
