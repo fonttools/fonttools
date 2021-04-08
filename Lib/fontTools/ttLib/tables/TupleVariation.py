@@ -342,7 +342,7 @@ class TupleVariation(object):
 			value = deltas[pos]
 			if value == 0:
 				pos = TupleVariation.encodeDeltaRunAsZeroes_(deltas, pos, bytearr)
-			elif value >= -128 and value <= 127:
+			elif -128 <= value <= 127:
 				pos = TupleVariation.encodeDeltaRunAsBytes_(deltas, pos, bytearr)
 			else:
 				pos = TupleVariation.encodeDeltaRunAsWords_(deltas, pos, bytearr)
@@ -368,7 +368,7 @@ class TupleVariation(object):
 		numDeltas = len(deltas)
 		while pos < numDeltas:
 			value = deltas[pos]
-			if value < -128 or value > 127:
+			if not (-128 <= value <= 127):
 				break
 			# Within a byte-encoded run of deltas, a single zero
 			# is best stored literally as 0x00 value. However,
