@@ -675,7 +675,7 @@ def compileTupleVariationStore(variations, pointCount,
 	else:
 		data = bytesjoin(data)
 		tupleVariationCount = len(tuples)
-	tuples = bytesjoin(tuples)
+	tuples = b''.join(tuples)
 	return tupleVariationCount, tuples, data
 
 
