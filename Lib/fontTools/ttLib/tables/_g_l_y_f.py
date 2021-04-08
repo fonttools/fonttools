@@ -1679,7 +1679,8 @@ class GlyphCoordinates(object):
 			self.scale(other)
 			return self
 		if isinstance(other, Number):
-			if other == 1: return self
+			if other == 1:
+				return self
 			a = self._a
 			for i in range(len(a)):
 				a[i] *= other
