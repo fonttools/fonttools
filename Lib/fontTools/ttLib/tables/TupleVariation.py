@@ -1,4 +1,3 @@
-from fontTools.misc.py23 import byteord
 from fontTools.misc.fixedTools import (
     fixedToFloat as fi2fl,
     floatToFixed as fl2fi,
@@ -262,17 +261,17 @@ class TupleVariation(object):
 		"""(numPoints, data, offset, tableTag) --> ([point1, point2, ...], newOffset)"""
 		assert tableTag in ('cvar', 'gvar')
 		pos = offset
-		numPointsInData = byteord(data[pos])
+		numPointsInData = data[pos]
 		pos += 1
 		if (numPointsInData & POINTS_ARE_WORDS) != 0:
-			numPointsInData = (numPointsInData & POINT_RUN_COUNT_MASK) << 8 | byteord(data[pos])
+			numPointsInData = (numPointsInData & POINT_RUN_COUNT_MASK) << 8 | data[pos]
 			pos += 1
 		if numPointsInData == 0:
 			return (range(numPoints), pos)
 
 		result = []
 		while len(result) < numPointsInData:
-			runHeader = byteord(data[pos])
+			runHeader = data[pos]
 			pos += 1
 			numPointsInRun = (runHeader & POINT_RUN_COUNT_MASK) + 1
 			point = 0
@@ -443,7 +442,7 @@ class TupleVariation(object):
 		result = []
 		pos = offset
 		while len(result) < numDeltas:
-			runHeader = byteord(data[pos])
+			runHeader = data[pos]
 			pos += 1
 			numDeltasInRun = (runHeader & DELTA_RUN_COUNT_MASK) + 1
 			if (runHeader & DELTAS_ARE_ZERO) != 0:
