@@ -126,15 +126,14 @@ class TupleVariation(object):
 				log.warning("bad delta format: %s" %
 				            ", ".join(sorted(attrs.keys())))
 
-	def compile(self, axisTags, sharedCoordIndices, sharedPoints):
+	def compile(self, axisTags, sharedCoordIndices={}, sharedPoints=None):
 		tupleData = []
 
 		assert all(tag in axisTags for tag in self.axes.keys()), ("Unknown axis tag found.", self.axes.keys(), axisTags)
 
 		coord = self.compileCoord(axisTags)
-		if coord in sharedCoordIndices:
-			flags = sharedCoordIndices[coord]
-		else:
+		flags = sharedCoordIndices.get(coord)
+		if flags is None:
 			flags = EMBEDDED_PEAK_TUPLE
 			tupleData.append(coord)
 
@@ -541,9 +540,9 @@ class TupleVariation(object):
 
 			# Shouldn't matter that this is different from fvar...?
 			axisTags = sorted(self.axes.keys())
-			tupleData, auxData, _ = self.compile(axisTags, [], None)
+			tupleData, auxData, _ = self.compile(axisTags)
 			unoptimizedLength = len(tupleData) + len(auxData)
-			tupleData, auxData, _ = varOpt.compile(axisTags, [], None)
+			tupleData, auxData, _ = varOpt.compile(axisTags)
 			optimizedLength = len(tupleData) + len(auxData)
 
 			if optimizedLength < unoptimizedLength:
