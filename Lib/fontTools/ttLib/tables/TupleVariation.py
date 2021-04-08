@@ -157,11 +157,11 @@ class TupleVariation(object):
 		return (b''.join(tupleData), auxData, usesSharedPoints)
 
 	def compileCoord(self, axisTags):
-		result = []
+		result = bytearray()
 		for axis in axisTags:
 			_minValue, value, _maxValue = self.axes.get(axis, (0.0, 0.0, 0.0))
-			result.append(struct.pack(">h", fl2fi(value, 14)))
-		return b''.join(result)
+			result.extend(struct.pack(">h", fl2fi(value, 14)))
+		return bytes(result)
 
 	def compileIntermediateCoord(self, axisTags):
 		needed = False
