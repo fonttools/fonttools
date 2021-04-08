@@ -655,18 +655,20 @@ def compileTupleVariationStore(variations, pointCount,
 	someTuplesSharePoints = False
 	sharedPointVariation = None # To keep track of a variation that uses shared points
 	for v in variations:
-		privateTuple, privateData, _ = v.compile(
+		thisTuple, thisData, _ = v.compile(
 			axisTags, sharedTupleIndices, sharedPoints=None)
-		sharedTuple, sharedData, usesSharedPoints = v.compile(
-			axisTags, sharedTupleIndices, sharedPoints=usedPoints)
-		if useSharedPoints and (len(sharedTuple) + len(sharedData)) < (len(privateTuple) + len(privateData)):
-			tuples.append(sharedTuple)
-			data.append(sharedData)
-			someTuplesSharePoints |= usesSharedPoints
-			sharedPointVariation = v
-		else:
-			tuples.append(privateTuple)
-			data.append(privateData)
+
+		if useSharedPoints:
+			sharedTuple, sharedData, usesSharedPoints = v.compile(
+				axisTags, sharedTupleIndices, sharedPoints=usedPoints)
+			if len(sharedTuple) + len(sharedData) < len(thisTuple) + len(thisData):
+				someTuplesSharePoints = True
+				sharedPointVariation = v
+				thisTuple = sharedTuple
+				thisData = sharedData
+
+		tuples.append(thisTuple)
+		data.append(thisData)
 
 	tupleVariationCount = len(tuples)
 	if someTuplesSharePoints:
