@@ -158,9 +158,13 @@ class TupleVariation(object):
 
 	def compileCoord(self, axisTags):
 		result = bytearray()
+		axes = self.axes
 		for axis in axisTags:
-			_minValue, value, _maxValue = self.axes.get(axis, (0.0, 0.0, 0.0))
-			result.extend(struct.pack(">h", fl2fi(value, 14)))
+			triple = axes.get(axis)
+			if triple is None:
+				result.extend(b'\0\0')
+			else:
+				result.extend(struct.pack(">h", fl2fi(triple[1], 14)))
 		return bytes(result)
 
 	def compileIntermediateCoord(self, axisTags):
