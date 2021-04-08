@@ -667,14 +667,14 @@ def compileTupleVariationStore(variations, pointCount,
 		else:
 			tuples.append(privateTuple)
 			data.append(privateData)
+
+	tupleVariationCount = len(tuples)
 	if someTuplesSharePoints:
-		# Use the last of the variations that share points for compiling the packed point data
-		data = sharedPointVariation.compilePoints(usedPoints, len(sharedPointVariation.coordinates)) + b''.join(data)
-		tupleVariationCount = TUPLES_SHARE_POINT_NUMBERS | len(tuples)
-	else:
-		data = b''.join(data)
-		tupleVariationCount = len(tuples)
+		data.insert(0, sharedPointVariation.compilePoints(usedPoints, len(sharedPointVariation.coordinates)))
+		tupleVariationCount |= TUPLES_SHARE_POINT_NUMBERS
+
 	tuples = b''.join(tuples)
+	data = b''.join(data)
 	return tupleVariationCount, tuples, data
 
 
