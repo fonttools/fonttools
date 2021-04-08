@@ -633,15 +633,17 @@ def compileTupleVariationStore(variations, pointCount,
 			pointSetCount[usedPoints] += 1
 			pointSitu.append(usedPoints)
 
+		compiledPoints = {pointSet:TupleVariation.compilePoints(pointSet, n)
+				  for pointSet in pointSetCount}
+
 		# Find point-set which saves most bytes.
 		def key(pn):
 			pointSet = pn[0]
 			count = pn[1]
-			data = TupleVariation.compilePoints(pointSet, n)
-			return len(data) * (count - 1)
+			return len(compiledPoints[pointSet]) * (count - 1)
 		sharedPoints = max(pointSetCount.items(), key=key)[0]
 
-		data.append(TupleVariation.compilePoints(sharedPoints, n))
+		data.append(compiledPoints[sharedPoints])
 		tupleVariationCount |= TUPLES_SHARE_POINT_NUMBERS
 
 		# Only allowed to reuse one set.
