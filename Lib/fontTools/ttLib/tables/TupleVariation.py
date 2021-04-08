@@ -48,7 +48,7 @@ class TupleVariation(object):
 		return self.coordinates == other.coordinates and self.axes == other.axes
 
 	def getUsedPoints(self):
-		return set([i for i,p in enumerate(self.coordinates) if p is not None])
+		return frozenset([i for i,p in enumerate(self.coordinates) if p is not None])
 
 	def hasImpact(self):
 		"""Returns True if this TupleVariation has any visible impact.
@@ -614,66 +614,49 @@ def compileTupleVariationStore(variations, pointCount,
 	if len(variations) == 0:
 		return (0, b"", b"")
 
-	# Each glyph variation tuples modifies a set of control points. To
-	# indicate which exact points are getting modified, a single tuple
-	# can either refer to a shared set of points, or the tuple can
-	# supply its private point numbers.  Because the impact of sharing
-	# can be positive (no need for a private point list) or negative
-	# (need to supply 0,0 deltas for unused points), it is not obvious
-	# how to determine which tuples should take their points from the
-	# shared pool versus have their own. Perhaps we should resort to
-	# brute force, and try all combinations? However, if a glyph has n
-	# variation tuples, we would need to try 2^n combinations (because
-	# each tuple may or may not be part of the shared set). How many
-	# variations tuples do glyphs have?
-	#
-	#   Skia.ttf: {3: 1, 5: 11, 6: 41, 7: 62, 8: 387, 13: 1, 14: 3}
-	#   JamRegular.ttf: {3: 13, 4: 122, 5: 1, 7: 4, 8: 1, 9: 1, 10: 1}
-	#   BuffaloGalRegular.ttf: {1: 16, 2: 13, 4: 2, 5: 4, 6: 19, 7: 1, 8: 3, 9: 8}
-	#   (Reading example: In Skia.ttf, 41 glyphs have 6 variation tuples).
-	#
+	n = len(variations[0].coordinates)
+	assert all(len(v.coordinates) == n for v in variations), "Variation sets have different sizes"
 
-	# Is this even worth optimizing? If we never use a shared point
-	# list, the private lists will consume 112K for Skia, 5K for
-	# BuffaloGalRegular, and 15K for JamRegular. If we always use a
-	# shared point list, the shared lists will consume 16K for Skia,
-	# 3K for BuffaloGalRegular, and 10K for JamRegular. However, in
-	# the latter case the delta arrays will become larger, but I
-	# haven't yet measured by how much. From gut feeling (which may be
-	# wrong), the optimum is to share some but not all points;
-	# however, then we would need to try all combinations.
-	#
-	# For the time being, we try two variants and then pick the better one:
-	# (a) each tuple supplies its own private set of points;
-	# (b) all tuples refer to a shared set of points, which consists of
-	#     "every control point in the glyph that has explicit deltas".
-	usedPoints = set()
-	for v in variations:
-		usedPoints |= v.getUsedPoints()
+	tupleVariationCount = len(variations)
 	tuples = []
 	data = []
-	someTuplesSharePoints = False
-	sharedPointVariation = None # To keep track of a variation that uses shared points
-	for v in variations:
-		thisTuple, thisData, _ = v.compile(
-			axisTags, sharedTupleIndices, sharedPoints=None)
 
-		if useSharedPoints:
-			sharedTuple, sharedData, usesSharedPoints = v.compile(
-				axisTags, sharedTupleIndices, sharedPoints=usedPoints)
-			if len(sharedTuple) + len(sharedData) < len(thisTuple) + len(thisData):
-				someTuplesSharePoints = True
-				sharedPointVariation = v
-				thisTuple = sharedTuple
-				thisData = sharedData
+	pointSitu = []
+	if useSharedPoints:
+		# Figure out point-sharing
+		sharedPoints = None
+
+		# Collect and count all pointSets
+		pointSetCount = defaultdict(int)
+		for v in variations:
+			usedPoints = v.getUsedPoints()
+			pointSetCount[usedPoints] += 1
+			pointSitu.append(usedPoints)
+
+		# Find point-set which saves most bytes.
+		def key(pn):
+			pointSet = pn[0]
+			count = pn[1]
+			data = TupleVariation.compilePoints(pointSet, n)
+			return len(data) * (count - 1)
+		sharedPoints = max(pointSetCount.items(), key=key)[0]
+
+		data.append(TupleVariation.compilePoints(sharedPoints, n))
+		tupleVariationCount |= TUPLES_SHARE_POINT_NUMBERS
+
+		# Only allowed to reuse one set.
+		pointSitu = [sharedPoints if sharedPoints == points else None
+			     for points in pointSitu]
+
+		del pointSetCount
+	else:
+		pointSitu = [None] * len(variations)
+
+	for v,p in zip(variations, pointSitu):
+		thisTuple, thisData, _ = v.compile(axisTags, sharedTupleIndices, sharedPoints=p)
 
 		tuples.append(thisTuple)
 		data.append(thisData)
-
-	tupleVariationCount = len(tuples)
-	if someTuplesSharePoints:
-		data.insert(0, sharedPointVariation.compilePoints(usedPoints, len(sharedPointVariation.coordinates)))
-		tupleVariationCount |= TUPLES_SHARE_POINT_NUMBERS
 
 	tuples = b''.join(tuples)
 	data = b''.join(data)
