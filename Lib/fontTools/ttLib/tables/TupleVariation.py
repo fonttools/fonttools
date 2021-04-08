@@ -129,8 +129,8 @@ class TupleVariation(object):
 		auxData = []
 
 		if pointData is None:
-			points = self.getUsedPoints()
-			pointData = self.compilePoints(points, len(self.coordinates))
+			points = self.getUsedPoints() if None in self.coordinates else frozenset()
+			pointData = self.compilePoints(points)
 
 		coord = self.compileCoord(axisTags)
 		flags = sharedCoordIndices.get(coord)
@@ -196,11 +196,13 @@ class TupleVariation(object):
 		return coord, pos
 
 	@staticmethod
-	def compilePoints(points, numPointsInGlyph):
+	def compilePoints(points):
 		# If the set consists of all points in the glyph, it gets encoded with
 		# a special encoding: a single zero byte.
-		if len(points) == numPointsInGlyph:
-			return b"\0"
+		#
+		# To use this optimization, points passed in must be empty set.
+		if not points:
+			return b'\0'
 
 		# In the 'gvar' table, the packing of point numbers is a little surprising.
 		# It consists of multiple runs, each being a delta-encoded list of integers.
@@ -633,11 +635,11 @@ def compileTupleVariationStore(variations, pointCount,
 	# Collect and count all pointSets
 	pointSetCount = defaultdict(int)
 	for v in variations:
-		usedPoints = v.getUsedPoints()
-		pointSetCount[usedPoints] += 1
-		pointDatas.append(usedPoints)
+		points = v.getUsedPoints() if None in v.coordinates else frozenset()
+		pointSetCount[points] += 1
+		pointDatas.append(points)
 
-	compiledPoints = {pointSet:TupleVariation.compilePoints(pointSet, n)
+	compiledPoints = {pointSet:TupleVariation.compilePoints(pointSet)
 			  for pointSet in pointSetCount}
 
 	if useSharedPoints:
