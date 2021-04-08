@@ -48,11 +48,7 @@ class TupleVariation(object):
 		return self.coordinates == other.coordinates and self.axes == other.axes
 
 	def getUsedPoints(self):
-		result = set()
-		for i, point in enumerate(self.coordinates):
-			if point is not None:
-				result.add(i)
-		return result
+		return set([i for i,p in enumerate(self.coordinates) if p is not None])
 
 	def hasImpact(self):
 		"""Returns True if this TupleVariation has any visible impact.
