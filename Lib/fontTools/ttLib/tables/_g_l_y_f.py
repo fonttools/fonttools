@@ -1422,7 +1422,7 @@ class GlyphComponent(object):
 class GlyphCoordinates(object):
 
 	def __init__(self, iterable=[]):
-		self._a = array.array('f')
+		self._a = array.array('d')
 		self.extend(iterable)
 
 	@property
