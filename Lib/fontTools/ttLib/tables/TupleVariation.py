@@ -145,18 +145,15 @@ class TupleVariation(object):
 			flags |= INTERMEDIATE_REGION
 			tupleData.append(intermediateCoord)
 
-		if pointData is NotImplemented:
-			usesSharedPoints = True
-		else:
+		if pointData is not NotImplemented:
 			flags |= PRIVATE_POINT_NUMBERS
 			auxData.append(pointData)
-			usesSharedPoints = False
 
 		auxData.append(self.compileDeltas())
 		auxData = b''.join(auxData)
 
 		tupleData.insert(0, struct.pack('>HH', len(auxData), flags))
-		return b''.join(tupleData), auxData, usesSharedPoints
+		return b''.join(tupleData), auxData
 
 	def compileCoord(self, axisTags):
 		result = bytearray()
@@ -553,9 +550,9 @@ class TupleVariation(object):
 
 			# Shouldn't matter that this is different from fvar...?
 			axisTags = sorted(self.axes.keys())
-			tupleData, auxData, _ = self.compile(axisTags)
+			tupleData, auxData = self.compile(axisTags)
 			unoptimizedLength = len(tupleData) + len(auxData)
-			tupleData, auxData, _ = varOpt.compile(axisTags)
+			tupleData, auxData = varOpt.compile(axisTags)
 			optimizedLength = len(tupleData) + len(auxData)
 
 			if optimizedLength < unoptimizedLength:
@@ -661,7 +658,7 @@ def compileTupleVariationStore(variations, pointCount,
 		     for points in pointDatas]
 
 	for v,p in zip(variations, pointDatas):
-		thisTuple, thisData, _ = v.compile(axisTags, sharedTupleIndices, pointData=p)
+		thisTuple, thisData = v.compile(axisTags, sharedTupleIndices, pointData=p)
 
 		tuples.append(thisTuple)
 		data.append(thisData)
