@@ -231,7 +231,7 @@ class TupleVariationTest(unittest.TestCase):
 			[(7,4), (8,5), (9,6)])
 		axisTags = ["wght", "wdth"]
 		sharedPeakIndices = { var.compileCoord(axisTags): 0x77 }
-		tup, deltas = var.compile(axisTags, sharedPeakIndices, pointData=NotImplemented)
+		tup, deltas = var.compile(axisTags, sharedPeakIndices, pointData=b'')
 		# len(deltas)=8; flags=None; tupleIndex=0x77
 		# embeddedPeaks=[]; intermediateCoord=[]
 		self.assertEqual("00 08 00 77", hexencode(tup))
@@ -245,7 +245,7 @@ class TupleVariationTest(unittest.TestCase):
 			[(7,4), (8,5), (9,6)])
 		axisTags = ["wght", "wdth"]
 		sharedPeakIndices = { var.compileCoord(axisTags): 0x77 }
-		tup, deltas = var.compile(axisTags, sharedPeakIndices, pointData=NotImplemented)
+		tup, deltas = var.compile(axisTags, sharedPeakIndices, pointData=b'')
 		# len(deltas)=8; flags=INTERMEDIATE_REGION; tupleIndex=0x77
 		# embeddedPeak=[]; intermediateCoord=[(0.3, 0.1), (0.7, 0.9)]
 		self.assertEqual("00 08 40 77 13 33 06 66 2C CD 39 9A", hexencode(tup))
@@ -288,7 +288,7 @@ class TupleVariationTest(unittest.TestCase):
 		var = TupleVariation(
 			{"wght": (0.0, 0.5, 0.5), "wdth": (0.0, 0.8, 0.8)},
 			[(7,4), (8,5), (9,6)])
-		tup, deltas = var.compile(axisTags=["wght", "wdth"], pointData=NotImplemented)
+		tup, deltas = var.compile(axisTags=["wght", "wdth"], pointData=b'')
 		# len(deltas)=8; flags=EMBEDDED_PEAK_TUPLE
 		# embeddedPeak=[(0.5, 0.8)]; intermediateCoord=[]
 		self.assertEqual("00 08 80 00 20 00 33 33", hexencode(tup))
@@ -300,7 +300,7 @@ class TupleVariationTest(unittest.TestCase):
 		var = TupleVariation(
 			{"wght": (0.0, 0.5, 0.5), "wdth": (0.0, 0.8, 0.8)},
 			[3, 1, 4])
-		tup, deltas = var.compile(axisTags=["wght", "wdth"], pointData=NotImplemented)
+		tup, deltas = var.compile(axisTags=["wght", "wdth"], pointData=b'')
 		# len(deltas)=4; flags=EMBEDDED_PEAK_TUPLE
 		# embeddedPeak=[(0.5, 0.8)]; intermediateCoord=[]
 		self.assertEqual("00 04 80 00 20 00 33 33", hexencode(tup))
@@ -311,7 +311,7 @@ class TupleVariationTest(unittest.TestCase):
 		var = TupleVariation(
 			{"wght": (0.0, 0.5, 1.0), "wdth": (0.0, 0.8, 0.8)},
 			[(7,4), (8,5), (9,6)])
-		tup, deltas = var.compile(axisTags=["wght", "wdth"], pointData=NotImplemented)
+		tup, deltas = var.compile(axisTags=["wght", "wdth"], pointData=b'')
 		# len(deltas)=8; flags=EMBEDDED_PEAK_TUPLE
 		# embeddedPeak=[(0.5, 0.8)]; intermediateCoord=[(0.0, 0.0), (1.0, 0.8)]
 		self.assertEqual("00 08 C0 00 20 00 33 33 00 00 00 00 40 00 33 33",

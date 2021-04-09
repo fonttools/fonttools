@@ -145,7 +145,8 @@ class TupleVariation(object):
 			flags |= INTERMEDIATE_REGION
 			tupleData.append(intermediateCoord)
 
-		if pointData is not NotImplemented:
+		# pointData of b'' implies "use shared points".
+		if pointData:
 			flags |= PRIVATE_POINT_NUMBERS
 			auxData.append(pointData)
 
@@ -653,8 +654,8 @@ def compileTupleVariationStore(variations, pointCount,
 		data.append(compiledPoints[sharedPoints])
 		tupleVariationCount |= TUPLES_SHARE_POINT_NUMBERS
 
-	# NotImplemented means "use shared points"
-	pointDatas = [compiledPoints[points] if points != sharedPoints else NotImplemented
+	# b'' implies "use shared points"
+	pointDatas = [compiledPoints[points] if points != sharedPoints else b''
 		     for points in pointDatas]
 
 	for v,p in zip(variations, pointDatas):
