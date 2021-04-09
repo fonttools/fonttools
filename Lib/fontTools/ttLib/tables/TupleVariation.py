@@ -309,16 +309,17 @@ class TupleVariation(object):
 	def compileDeltas(self):
 		deltaX = []
 		deltaY = []
-		for c in self.coordinates:
-			if c is None:
-				continue
-			if type(c) is tuple and len(c) == 2:
+		if self.getCoordWidth() == 2:
+			for c in self.coordinates:
+				if c is None:
+					continue
 				deltaX.append(c[0])
 				deltaY.append(c[1])
-			elif type(c) is int:
+		else:
+			for c in self.coordinates:
+				if c is None:
+					continue
 				deltaX.append(c)
-			elif c is not None:
-				raise TypeError("invalid type of delta: %s" % type(c))
 		bytearr = bytearray()
 		self.compileDeltaValues_(deltaX, bytearr)
 		self.compileDeltaValues_(deltaY, bytearr)
