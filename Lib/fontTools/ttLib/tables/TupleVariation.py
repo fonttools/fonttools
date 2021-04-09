@@ -48,6 +48,7 @@ class TupleVariation(object):
 		return self.coordinates == other.coordinates and self.axes == other.axes
 
 	def getUsedPoints(self):
+		# Empty set means "all points used".
 		if None not in self.coordinates:
 			return frozenset()
 		return frozenset([i for i,p in enumerate(self.coordinates) if p is not None])
@@ -131,8 +132,7 @@ class TupleVariation(object):
 		auxData = []
 
 		if pointData is None:
-			points = self.getUsedPoints()
-			pointData = self.compilePoints(points)
+			pointData = self.compilePoints(self.getUsedPoints())
 
 		coord = self.compileCoord(axisTags)
 		flags = sharedCoordIndices.get(coord)
@@ -203,6 +203,8 @@ class TupleVariation(object):
 		# a special encoding: a single zero byte.
 		#
 		# To use this optimization, points passed in must be empty set.
+		# The following two lines are not strictly necessary as the main code
+		# below would emit the same. But this is most common and faster.
 		if not points:
 			return b'\0'
 
