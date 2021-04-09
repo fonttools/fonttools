@@ -7,7 +7,7 @@ from fontTools.misc.fixedTools import (
 )
 from fontTools.misc.textTools import safeEval
 import array
-from collections import defaultdict
+from collections import Counter, defaultdict
 import io
 import logging
 import struct
@@ -607,16 +607,14 @@ def decompileSharedTuples(axisTags, sharedTupleCount, data, offset):
 	return result
 
 
-def compileSharedTuples(axisTags, variations):
-	coordCount = defaultdict(int)
+def compileSharedTuples(axisTags, variations,
+			MAX_NUM_SHARED_COORDS = TUPLE_INDEX_MASK + 1):
+	coordCount = Counter()
 	for var in variations:
 		coord = var.compileCoord(axisTags)
 		coordCount[coord] += 1
-	sharedCoords = [(count, coord) for (coord, count) in coordCount.items() if count > 1]
-	sharedCoords.sort(reverse=True)
-	MAX_NUM_SHARED_COORDS = TUPLE_INDEX_MASK + 1
-	sharedCoords = sharedCoords[:MAX_NUM_SHARED_COORDS]
-	return [c[1] for c in sharedCoords]  # Strip off counts.
+	sharedCoords = coordCount.most_common(MAX_NUM_SHARED_COORDS)
+	return [c[0] for c in sharedCoords if c[1] > 1]
 
 
 def compileTupleVariationStore(variations, pointCount,
