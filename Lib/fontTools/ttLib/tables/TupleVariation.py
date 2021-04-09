@@ -51,7 +51,9 @@ class TupleVariation(object):
 		# Empty set means "all points used".
 		if None not in self.coordinates:
 			return frozenset()
-		return frozenset([i for i,p in enumerate(self.coordinates) if p is not None])
+		used = frozenset([i for i,p in enumerate(self.coordinates) if p is not None])
+		# Return None if no points used.
+		return used if used else None
 
 	def hasImpact(self):
 		"""Returns True if this TupleVariation has any visible impact.
@@ -132,7 +134,10 @@ class TupleVariation(object):
 		auxData = []
 
 		if pointData is None:
-			pointData = self.compilePoints(self.getUsedPoints())
+			usedPoints = self.getUsedPoints()
+			if usedPoints is None: # Nothing to encode
+				return b'', b''
+			pointData = self.compilePoints(usedPoints)
 
 		coord = self.compileCoord(axisTags)
 		flags = sharedCoordIndices.get(coord)
@@ -618,30 +623,35 @@ def compileSharedTuples(axisTags, variations,
 def compileTupleVariationStore(variations, pointCount,
                                axisTags, sharedTupleIndices,
                                useSharedPoints=True):
-	variations = [v for v in variations if v.hasImpact()]
-	if len(variations) == 0:
+	newVariations = []
+	pointDatas = []
+	# Compile all points and figure out sharing if desired
+	sharedPoints = None
+
+	# Collect, count, and compile point-sets for all variation sets
+	pointSetCount = defaultdict(int)
+	for v in variations:
+		points = v.getUsedPoints()
+		if points is None: # Empty variations
+			continue
+		pointSetCount[points] += 1
+		newVariations.append(v)
+		pointDatas.append(points)
+	variations = newVariations
+	del newVariations
+
+	if not variations:
 		return (0, b"", b"")
 
 	n = len(variations[0].coordinates)
 	assert all(len(v.coordinates) == n for v in variations), "Variation sets have different sizes"
 
+	compiledPoints = {pointSet:TupleVariation.compilePoints(pointSet)
+			  for pointSet in pointSetCount}
+
 	tupleVariationCount = len(variations)
 	tuples = []
 	data = []
-
-	pointDatas = []
-	# Compile all points and figure out sharing if desired
-	sharedPoints = None
-
-	# Collect and count all pointSets
-	pointSetCount = defaultdict(int)
-	for v in variations:
-		points = v.getUsedPoints()
-		pointSetCount[points] += 1
-		pointDatas.append(points)
-
-	compiledPoints = {pointSet:TupleVariation.compilePoints(pointSet)
-			  for pointSet in pointSetCount}
 
 	if useSharedPoints:
 		# Find point-set which saves most bytes.
