@@ -284,9 +284,9 @@ def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
 					var_opt = TupleVariation(support, delta_opt)
 
 					axis_tags = sorted(support.keys()) # Shouldn't matter that this is different from fvar...?
-					tupleData, auxData, _ = var.compile(axis_tags, [], None)
+					tupleData, auxData = var.compile(axis_tags)
 					unoptimized_len = len(tupleData) + len(auxData)
-					tupleData, auxData, _ = var_opt.compile(axis_tags, [], None)
+					tupleData, auxData = var_opt.compile(axis_tags)
 					optimized_len = len(tupleData) + len(auxData)
 
 					if optimized_len < unoptimized_len:

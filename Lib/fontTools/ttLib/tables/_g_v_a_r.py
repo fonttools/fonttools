@@ -1,4 +1,3 @@
-from fontTools.misc.py23 import bytesjoin
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
 from . import DefaultTable
@@ -76,7 +75,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		result = [compiledHeader, compiledOffsets]
 		result.extend(sharedTuples)
 		result.extend(compiledGlyphs)
-		return bytesjoin(result)
+		return b''.join(result)
 
 	def compileGlyphs_(self, ttFont, axisTags, sharedCoordIndices):
 		result = []
@@ -214,12 +213,14 @@ def compileGlyph_(variations, pointCount, axisTags, sharedCoordIndices):
 		variations, pointCount, axisTags, sharedCoordIndices)
 	if tupleVariationCount == 0:
 		return b""
-	result = (
-		struct.pack(">HH", tupleVariationCount, 4 + len(tuples)) + tuples + data
-	)
-	if len(result) % 2 != 0:
-		result = result + b"\0"  # padding
-	return result
+	result = [
+		struct.pack(">HH", tupleVariationCount, 4 + len(tuples)),
+		tuples,
+		data
+	]
+	if (len(tuples) + len(data)) % 2 != 0:
+		result.append(b"\0")  # padding
+	return b''.join(result)
 
 
 def decompileGlyph_(pointCount, sharedTuples, axisTags, data):

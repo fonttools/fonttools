@@ -1,7 +1,7 @@
 """_g_l_y_f.py -- Converter classes for the 'glyf' table."""
 
 from collections import namedtuple
-from fontTools.misc.py23 import bytechr, byteord, bytesjoin, tostr
+from fontTools.misc.py23 import tostr
 from fontTools.misc import sstruct
 from fontTools import ttLib
 from fontTools import version
@@ -117,7 +117,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 					currentLocation += len(glyphData)
 				locations[len(dataList)] = currentLocation
 
-		data = bytesjoin(dataList)
+		data = b''.join(dataList)
 		if 'loca' in ttFont:
 			ttFont['loca'].set(locations)
 		if 'maxp' in ttFont:
@@ -488,8 +488,7 @@ def flagEncodeCoord(flag, mask, coord, coordBytes):
 	elif byteCount == -1:
 		coordBytes.append(-coord)
 	elif byteCount == 2:
-		coordBytes.append((coord >> 8) & 0xFF)
-		coordBytes.append(coord & 0xFF)
+		coordBytes.extend(struct.pack('>h', coord))
 
 def flagEncodeCoords(flag, x, y, xBytes, yBytes):
 	flagEncodeCoord(flag, flagXsame|flagXShort, x, xBytes)
@@ -516,7 +515,7 @@ CompositeMaxpValues = namedtuple('CompositeMaxpValues', ['nPoints', 'nContours',
 
 class Glyph(object):
 
-	def __init__(self, data=""):
+	def __init__(self, data=b""):
 		if not data:
 			# empty char
 			self.numberOfContours = 0
@@ -557,7 +556,7 @@ class Glyph(object):
 			else:
 				return self.data
 		if self.numberOfContours == 0:
-			return ""
+			return b''
 		if recalcBBoxes:
 			self.recalcBounds(glyfTable)
 		data = sstruct.pack(glyphHeaderFormat, self)
@@ -608,7 +607,7 @@ class Glyph(object):
 				raise ttLib.TTLibError("can't mix composites and contours in glyph")
 			self.numberOfContours = self.numberOfContours + 1
 			coordinates = GlyphCoordinates()
-			flags = []
+			flags = bytearray()
 			for element in content:
 				if not isinstance(element, tuple):
 					continue
@@ -616,11 +615,10 @@ class Glyph(object):
 				if name != "pt":
 					continue  # ignore anything but "pt"
 				coordinates.append((safeEval(attrs["x"]), safeEval(attrs["y"])))
-				flag = not not safeEval(attrs["on"])
+				flag = bool(safeEval(attrs["on"]))
 				if "overlap" in attrs and bool(safeEval(attrs["overlap"])):
 					flag |= flagOverlapSimple
 				flags.append(flag)
-			flags = array.array("B", flags)
 			if not hasattr(self, "coordinates"):
 				self.coordinates = coordinates
 				self.flags = flags
@@ -695,16 +693,14 @@ class Glyph(object):
 		if sys.byteorder != "big": endPtsOfContours.byteswap()
 		self.endPtsOfContours = endPtsOfContours.tolist()
 
-		data = data[2*self.numberOfContours:]
-
-		instructionLength, = struct.unpack(">h", data[:2])
-		data = data[2:]
+		pos = 2*self.numberOfContours
+		instructionLength, = struct.unpack(">h", data[pos:pos+2])
 		self.program = ttProgram.Program()
-		self.program.fromBytecode(data[:instructionLength])
-		data = data[instructionLength:]
+		self.program.fromBytecode(data[pos+2:pos+2+instructionLength])
+		pos += 2 + instructionLength
 		nCoordinates = self.endPtsOfContours[-1] + 1
 		flags, xCoordinates, yCoordinates = \
-				self.decompileCoordinatesRaw(nCoordinates, data)
+				self.decompileCoordinatesRaw(nCoordinates, data, pos)
 
 		# fill in repetitions and apply signs
 		self.coordinates = coordinates = GlyphCoordinates.zeros(nCoordinates)
@@ -741,24 +737,26 @@ class Glyph(object):
 		assert yIndex == len(yCoordinates)
 		coordinates.relativeToAbsolute()
 		# discard all flags except "keepFlags"
-		self.flags = array.array("B", (f & keepFlags for f in flags))
+		for i in range(len(flags)):
+			flags[i] &= keepFlags
+		self.flags = flags
 
-	def decompileCoordinatesRaw(self, nCoordinates, data):
+	def decompileCoordinatesRaw(self, nCoordinates, data, pos=0):
 		# unpack flags and prepare unpacking of coordinates
-		flags = array.array("B", [0] * nCoordinates)
+		flags = bytearray(nCoordinates)
 		# Warning: deep Python trickery going on. We use the struct module to unpack
 		# the coordinates. We build a format string based on the flags, so we can
 		# unpack the coordinates in one struct.unpack() call.
 		xFormat = ">" # big endian
 		yFormat = ">" # big endian
-		i = j = 0
+		j = 0
 		while True:
-			flag = byteord(data[i])
-			i = i + 1
+			flag = data[pos]
+			pos += 1
 			repeat = 1
 			if flag & flagRepeat:
-				repeat = byteord(data[i]) + 1
-				i = i + 1
+				repeat = data[pos] + 1
+				pos += 1
 			for k in range(repeat):
 				if flag & flagXShort:
 					xFormat = xFormat + 'B'
@@ -773,15 +771,14 @@ class Glyph(object):
 			if j >= nCoordinates:
 				break
 		assert j == nCoordinates, "bad glyph flags"
-		data = data[i:]
 		# unpack raw coordinates, krrrrrr-tching!
 		xDataLen = struct.calcsize(xFormat)
 		yDataLen = struct.calcsize(yFormat)
-		if len(data) - (xDataLen + yDataLen) >= 4:
+		if len(data) - pos - (xDataLen + yDataLen) >= 4:
 			log.warning(
-				"too much glyph data: %d excess bytes", len(data) - (xDataLen + yDataLen))
-		xCoordinates = struct.unpack(xFormat, data[:xDataLen])
-		yCoordinates = struct.unpack(yFormat, data[xDataLen:xDataLen+yDataLen])
+				"too much glyph data: %d excess bytes", len(data) - pos - (xDataLen + yDataLen))
+		xCoordinates = struct.unpack(xFormat, data[pos:pos+xDataLen])
+		yCoordinates = struct.unpack(yFormat, data[pos+xDataLen:pos+xDataLen+yDataLen])
 		return flags, xCoordinates, yCoordinates
 
 	def compileComponents(self, glyfTable):
@@ -811,9 +808,7 @@ class Glyph(object):
 		data.append(instructions)
 
 		deltas = self.coordinates.copy()
-		if deltas.isFloat():
-			# Warn?
-			deltas.toInt()
+		deltas.toInt()
 		deltas.absoluteToRelative()
 
 		# TODO(behdad): Add a configuration option for this?
@@ -821,14 +816,14 @@ class Glyph(object):
 		#deltas = self.compileDeltasOptimal(self.flags, deltas)
 
 		data.extend(deltas)
-		return bytesjoin(data)
+		return b''.join(data)
 
 	def compileDeltasGreedy(self, flags, deltas):
 		# Implements greedy algorithm for packing coordinate deltas:
 		# uses shortest representation one coordinate at a time.
-		compressedflags = []
-		xPoints = []
-		yPoints = []
+		compressedFlags = bytearray()
+		compressedXs = bytearray()
+		compressedYs = bytearray()
 		lastflag = None
 		repeat = 0
 		for flag,(x,y) in zip(flags, deltas):
@@ -842,9 +837,9 @@ class Glyph(object):
 					flag = flag | flagXsame
 				else:
 					x = -x
-				xPoints.append(bytechr(x))
+				compressedXs.append(x)
 			else:
-				xPoints.append(struct.pack(">h", x))
+				compressedXs.extend(struct.pack('>h', x))
 			# do y
 			if y == 0:
 				flag = flag | flagYsame
@@ -854,24 +849,21 @@ class Glyph(object):
 					flag = flag | flagYsame
 				else:
 					y = -y
-				yPoints.append(bytechr(y))
+				compressedYs.append(y)
 			else:
-				yPoints.append(struct.pack(">h", y))
+				compressedYs.extend(struct.pack('>h', y))
 			# handle repeating flags
 			if flag == lastflag and repeat != 255:
 				repeat = repeat + 1
 				if repeat == 1:
-					compressedflags.append(flag)
+					compressedFlags.append(flag)
 				else:
-					compressedflags[-2] = flag | flagRepeat
-					compressedflags[-1] = repeat
+					compressedFlags[-2] = flag | flagRepeat
+					compressedFlags[-1] = repeat
 			else:
 				repeat = 0
-				compressedflags.append(flag)
+				compressedFlags.append(flag)
 			lastflag = flag
-		compressedFlags = array.array("B", compressedflags).tobytes()
-		compressedXs = bytesjoin(xPoints)
-		compressedYs = bytesjoin(yPoints)
 		return (compressedFlags, compressedXs, compressedYs)
 
 	def compileDeltasOptimal(self, flags, deltas):
@@ -902,9 +894,9 @@ class Glyph(object):
 			flags.append(flag)
 		flags.reverse()
 
-		compressedFlags = array.array("B")
-		compressedXs = array.array("B")
-		compressedYs = array.array("B")
+		compressedFlags = bytearray()
+		compressedXs = bytearray()
+		compressedYs = bytearray()
 		coords = iter(deltas)
 		ff = []
 		for flag in flags:
@@ -924,9 +916,6 @@ class Glyph(object):
 			raise Exception("internal error")
 		except StopIteration:
 			pass
-		compressedFlags = compressedFlags.tobytes()
-		compressedXs = compressedXs.tobytes()
-		compressedYs = compressedYs.tobytes()
 
 		return (compressedFlags, compressedXs, compressedYs)
 
@@ -1006,7 +995,7 @@ class Glyph(object):
 		elif self.isComposite():
 			# it's a composite
 			allCoords = GlyphCoordinates()
-			allFlags = array.array("B")
+			allFlags = bytearray()
 			allEndPts = []
 			for compo in self.components:
 				g = glyfTable[compo.glyphName]
@@ -1051,7 +1040,7 @@ class Glyph(object):
 				allFlags.extend(flags)
 			return allCoords, allEndPts, allFlags
 		else:
-			return GlyphCoordinates(), [], array.array("B")
+			return GlyphCoordinates(), [], bytearray()
 
 	def getComponentNames(self, glyfTable):
 		if not hasattr(self, "data"):
@@ -1101,7 +1090,7 @@ class Glyph(object):
 		if not self.data:
 			return
 		numContours = struct.unpack(">h", self.data[:2])[0]
-		data = array.array("B", self.data)
+		data = bytearray(self.data)
 		i = 10
 		if numContours >= 0:
 			i += 2 * numContours # endPtsOfContours
@@ -1170,7 +1159,7 @@ class Glyph(object):
 			# Remove padding
 			data = data[:i]
 
-		self.data = data.tobytes()
+		self.data = data
 
 	def removeHinting(self):
 		self.trim (remove_hinting=True)
@@ -1432,41 +1421,22 @@ class GlyphComponent(object):
 
 class GlyphCoordinates(object):
 
-	def __init__(self, iterable=[], typecode="h"):
-		self._a = array.array(typecode)
+	def __init__(self, iterable=[]):
+		self._a = array.array('d')
 		self.extend(iterable)
 
 	@property
 	def array(self):
 		return self._a
 
-	def isFloat(self):
-		return self._a.typecode == 'd'
-
-	def _ensureFloat(self):
-		if self.isFloat():
-			return
-		# The conversion to list() is to work around Jython bug
-		self._a = array.array("d", list(self._a))
-
-	def _checkFloat(self, p):
-		if self.isFloat():
-			return p
-		if any(v > 0x7FFF or v < -0x8000 for v in p):
-			self._ensureFloat()
-			return p
-		if any(isinstance(v, float) for v in p):
-			p = [int(v) if int(v) == v else v for v in p]
-			if any(isinstance(v, float) for v in p):
-				self._ensureFloat()
-		return p
-
 	@staticmethod
 	def zeros(count):
-		return GlyphCoordinates([(0,0)] * count)
+		g = GlyphCoordinates()
+		g._a.frombytes(bytes(count * 2 * g._a.itemsize))
+		return g
 
 	def copy(self):
-		c = GlyphCoordinates(typecode=self._a.typecode)
+		c = GlyphCoordinates()
 		c._a.extend(self._a)
 		return c
 
@@ -1477,7 +1447,11 @@ class GlyphCoordinates(object):
 		if isinstance(k, slice):
 			indices = range(*k.indices(len(self)))
 			return [self[i] for i in indices]
-		return self._a[2*k],self._a[2*k+1]
+		a = self._a
+		x = a[2*k]
+		y = a[2*k+1]
+		return (int(x) if x.is_integer() else x,
+			int(y) if y.is_integer() else y)
 
 	def __setitem__(self, k, v):
 		if isinstance(k, slice):
@@ -1486,7 +1460,6 @@ class GlyphCoordinates(object):
 			for j,i in enumerate(indices):
 				self[i] = v[j]
 			return
-		v = self._checkFloat(v)
 		self._a[2*k],self._a[2*k+1] = v
 
 	def __delitem__(self, i):
@@ -1498,69 +1471,71 @@ class GlyphCoordinates(object):
 		return 'GlyphCoordinates(['+','.join(str(c) for c in self)+'])'
 
 	def append(self, p):
-		p = self._checkFloat(p)
 		self._a.extend(tuple(p))
 
 	def extend(self, iterable):
 		for p in iterable:
-			p = self._checkFloat(p)
 			self._a.extend(p)
 
 	def toInt(self, *, round=otRound):
-		if not self.isFloat():
-			return
-		a = array.array("h")
-		for n in self._a:
-			a.append(round(n))
-		self._a = a
+		a = self._a
+		for i in range(len(a)):
+			a[i] = round(a[i])
 
 	def relativeToAbsolute(self):
 		a = self._a
 		x,y = 0,0
-		for i in range(len(a) // 2):
-			x = a[2*i  ] + x
-			y = a[2*i+1] + y
-			self[i] = (x, y)
+		for i in range(0, len(a), 2):
+			a[i  ] = x = a[i  ] + x
+			a[i+1] = y = a[i+1] + y
 
 	def absoluteToRelative(self):
 		a = self._a
 		x,y = 0,0
-		for i in range(len(a) // 2):
-			dx = a[2*i  ] - x
-			dy = a[2*i+1] - y
-			x = a[2*i  ]
-			y = a[2*i+1]
-			self[i] = (dx, dy)
+		for i in range(0, len(a), 2):
+			nx = a[i  ]
+			ny = a[i+1]
+			a[i]   = nx - x
+			a[i+1] = ny - y
+			x = nx
+			y = ny
 
 	def translate(self, p):
 		"""
 		>>> GlyphCoordinates([(1,2)]).translate((.5,0))
 		"""
-		(x,y) = self._checkFloat(p)
+		x,y = p
+		if x == 0 and y == 0:
+			return
 		a = self._a
-		for i in range(len(a) // 2):
-			self[i] = (a[2*i] + x, a[2*i+1] + y)
+		for i in range(0, len(a), 2):
+			a[i]   += x
+			a[i+1] += y
 
 	def scale(self, p):
 		"""
 		>>> GlyphCoordinates([(1,2)]).scale((.5,0))
 		"""
-		(x,y) = self._checkFloat(p)
+		x,y = p
+		if x == 1 and y == 1:
+			return
 		a = self._a
-		for i in range(len(a) // 2):
-			self[i] = (a[2*i] * x, a[2*i+1] * y)
+		for i in range(0, len(a), 2):
+			a[i]   *= x
+			a[i+1] *= y
 
 	def transform(self, t):
 		"""
 		>>> GlyphCoordinates([(1,2)]).transform(((.5,0),(.2,.5)))
 		"""
 		a = self._a
-		for i in range(len(a) // 2):
-			x = a[2*i  ]
-			y = a[2*i+1]
+		for i in range(0, len(a), 2):
+			x = a[i  ]
+			y = a[i+1]
 			px = x * t[0][0] + y * t[1][0]
 			py = x * t[0][1] + y * t[1][1]
-			self[i] = (px, py)
+			a[i]   = px
+			a[i+1] = py
 
 	def __eq__(self, other):
 		"""
@@ -1645,23 +1620,22 @@ class GlyphCoordinates(object):
 		>>> g = GlyphCoordinates([(1,2)])
 		>>> g += (.5,0)
 		>>> g
-		GlyphCoordinates([(1.5, 2.0)])
+		GlyphCoordinates([(1.5, 2)])
 		>>> g2 = GlyphCoordinates([(3,4)])
 		>>> g += g2
 		>>> g
-		GlyphCoordinates([(4.5, 6.0)])
+		GlyphCoordinates([(4.5, 6)])
 		"""
 		if isinstance(other, tuple):
 			assert len(other) ==  2
 			self.translate(other)
 			return self
 		if isinstance(other, GlyphCoordinates):
-			if other.isFloat(): self._ensureFloat()
 			other = other._a
 			a = self._a
 			assert len(a) == len(other)
-			for i in range(len(a) // 2):
-				self[i] = (a[2*i] + other[2*i], a[2*i+1] + other[2*i+1])
+			for i in range(len(a)):
+				a[i] += other[i]
 			return self
 		return NotImplemented
 
@@ -1670,23 +1644,22 @@ class GlyphCoordinates(object):
 		>>> g = GlyphCoordinates([(1,2)])
 		>>> g -= (.5,0)
 		>>> g
-		GlyphCoordinates([(0.5, 2.0)])
+		GlyphCoordinates([(0.5, 2)])
 		>>> g2 = GlyphCoordinates([(3,4)])
 		>>> g -= g2
 		>>> g
-		GlyphCoordinates([(-2.5, -2.0)])
+		GlyphCoordinates([(-2.5, -2)])
 		"""
 		if isinstance(other, tuple):
 			assert len(other) ==  2
 			self.translate((-other[0],-other[1]))
 			return self
 		if isinstance(other, GlyphCoordinates):
-			if other.isFloat(): self._ensureFloat()
 			other = other._a
 			a = self._a
 			assert len(a) == len(other)
-			for i in range(len(a) // 2):
-				self[i] = (a[2*i] - other[2*i], a[2*i+1] - other[2*i+1])
+			for i in range(len(a)):
+				a[i] -= other[i]
 			return self
 		return NotImplemented
 
@@ -1696,19 +1669,22 @@ class GlyphCoordinates(object):
 		>>> g *= (2,.5)
 		>>> g *= 2
 		>>> g
-		GlyphCoordinates([(4.0, 2.0)])
+		GlyphCoordinates([(4, 2)])
 		>>> g = GlyphCoordinates([(1,2)])
 		>>> g *= 2
 		>>> g
 		GlyphCoordinates([(2, 4)])
 		"""
-		if isinstance(other, Number):
-			other = (other, other)
 		if isinstance(other, tuple):
-			if other == (1,1):
-				return self
 			assert len(other) ==  2
 			self.scale(other)
+			return self
+		if isinstance(other, Number):
+			if other == 1:
+				return self
+			a = self._a
+			for i in range(len(a)):
+				a[i] *= other
 			return self
 		return NotImplemented
 
@@ -1718,7 +1694,7 @@ class GlyphCoordinates(object):
 		>>> g /= (.5,1.5)
 		>>> g /= 2
 		>>> g
-		GlyphCoordinates([(1.0, 1.0)])
+		GlyphCoordinates([(1, 1)])
 		"""
 		if isinstance(other, Number):
 			other = (other, other)
@@ -1748,20 +1724,6 @@ class GlyphCoordinates(object):
 		return bool(self._a)
 
 	__nonzero__ = __bool__
-
-
-def reprflag(flag):
-	bin = ""
-	if isinstance(flag, str):
-		flag = byteord(flag)
-	while flag:
-		if flag & 0x01:
-			bin = "1" + bin
-		else:
-			bin = "0" + bin
-		flag = flag >> 1
-	bin = (14 - len(bin)) * "0" + bin
-	return bin
 
 
 if __name__ == "__main__":
