@@ -48,6 +48,8 @@ class TupleVariation(object):
 		return self.coordinates == other.coordinates and self.axes == other.axes
 
 	def getUsedPoints(self):
+		if None not in self.coordinates:
+			return frozenset()
 		return frozenset([i for i,p in enumerate(self.coordinates) if p is not None])
 
 	def hasImpact(self):
@@ -129,7 +131,7 @@ class TupleVariation(object):
 		auxData = []
 
 		if pointData is None:
-			points = self.getUsedPoints() if None in self.coordinates else frozenset()
+			points = self.getUsedPoints()
 			pointData = self.compilePoints(points)
 
 		coord = self.compileCoord(axisTags)
@@ -636,7 +638,7 @@ def compileTupleVariationStore(variations, pointCount,
 	# Collect and count all pointSets
 	pointSetCount = defaultdict(int)
 	for v in variations:
-		points = v.getUsedPoints() if None in v.coordinates else frozenset()
+		points = v.getUsedPoints()
 		pointSetCount[points] += 1
 		pointDatas.append(points)
 
