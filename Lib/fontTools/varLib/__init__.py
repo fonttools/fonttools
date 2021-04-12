@@ -223,14 +223,12 @@ def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
 	glyf = font['glyf']
 	defaultMasterIndex = masterModel.reverseMapping[0]
 
-	# use hhea.ascent of base master as default vertical origin when vmtx is missing
-	baseAscent = font['hhea'].ascent
 	for glyph in font.getGlyphOrder():
 
 		isComposite = glyf[glyph].isComposite()
 
 		allData = [
-			m["glyf"].getCoordinatesAndControls(glyph, m, defaultVerticalOrigin=baseAscent)
+			m["glyf"].getCoordinatesAndControls(glyph, m)
 			for m in master_ttfs
 		]
 
