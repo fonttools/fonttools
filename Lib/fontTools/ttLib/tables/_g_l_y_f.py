@@ -254,17 +254,13 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		assert len(self.glyphOrder) == len(self.glyphs)
 		return len(self.glyphs)
 
-	def getPhantomPoints(self, glyphName, ttFont, defaultVerticalOrigin=None):
+	def getPhantomPoints(self, glyphName, ttFont):
 		"""Compute the four "phantom points" for the given glyph from its bounding box
 		and the horizontal and vertical advance widths and sidebearings stored in the
 		ttFont's "hmtx" and "vmtx" tables.
 
-		If the ttFont doesn't contain a "vmtx" table, the hhea.ascent is used as the
-		vertical origin, and the head.unitsPerEm as the vertical advance.
-
-		The "defaultVerticalOrigin" (Optional[int]) is needed when the ttFont contains
-		neither a "vmtx" nor an "hhea" table, as may happen with 'sparse' masters.
-		The value should be the hhea.ascent of the default master.
+		If the ttFont doesn't contain a "vmtx" table, vertical phantom points are set
+		to the zero coordinate.
 
 		https://docs.microsoft.com/en-us/typography/opentype/spec/tt_instructing_glyphs#phantoms
 		"""
@@ -278,25 +274,9 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		if "vmtx" in ttFont:
 			verticalAdvanceWidth, topSideBearing = ttFont["vmtx"].metrics[glyphName]
 			topSideY = topSideBearing + glyph.yMax
+			bottomSideY = topSideY - verticalAdvanceWidth
 		else:
-			# without vmtx, use ascent as vertical origin and UPEM as vertical advance
-			# like HarfBuzz does
-			verticalAdvanceWidth = ttFont["head"].unitsPerEm
-			if "hhea" in ttFont:
-				topSideY = ttFont["hhea"].ascent
-			else:
-				# sparse masters may not contain an hhea table; use the ascent
-				# of the default master as the vertical origin
-				if defaultVerticalOrigin is not None:
-					topSideY = defaultVerticalOrigin
-				else:
-					log.warning(
-						"font is missing both 'vmtx' and 'hhea' tables, "
-						"and no 'defaultVerticalOrigin' was provided; "
-						"the vertical phantom points may be incorrect."
-					)
-					topSideY = verticalAdvanceWidth
-		bottomSideY = topSideY - verticalAdvanceWidth
+			bottomSideY = topSideY = 0
 		return [
 			(leftSideX, 0),
 			(rightSideX, 0),
@@ -304,7 +284,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			(0, bottomSideY),
 		]
 
-	def getCoordinatesAndControls(self, glyphName, ttFont, defaultVerticalOrigin=None):
+	def getCoordinatesAndControls(self, glyphName, ttFont):
 		"""Return glyph coordinates and controls as expected by "gvar" table.
 
 		The coordinates includes four "phantom points" for the glyph metrics,
@@ -320,8 +300,8 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			- components: list of base glyph names (str) for each component in
 			composite glyphs (None for simple glyphs).
 
-		The "ttFont" and "defaultVerticalOrigin" args are used to compute the
-		"phantom points" (see "getPhantomPoints" method).
+		The "ttFont" is used to compute the "phantom points" (see
+		the "getPhantomPoints" method).
 
 		Return None if the requested glyphName is not present.
 		"""
@@ -348,9 +328,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 				components=None,
 			)
 		# Add phantom points for (left, right, top, bottom) positions.
-		phantomPoints = self.getPhantomPoints(
-			glyphName, ttFont, defaultVerticalOrigin=defaultVerticalOrigin
-		)
+		phantomPoints = self.getPhantomPoints(glyphName, ttFont)
 		coords.extend(phantomPoints)
 		return coords, controls
 
