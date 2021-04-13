@@ -349,8 +349,6 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		into "hmtx" and "vmtx" tables if desired.  (see the "getPhantomPoints"
 		method).
 		"""
-		# TODO: Create new glyph if not already present
-		assert glyphName in self.glyphs
 		glyph = self[glyphName]
 
 		# Handle phantom points for (left, right, top, bottom) positions.
