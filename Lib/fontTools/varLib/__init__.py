@@ -212,6 +212,7 @@ def _add_stat(font, axes):
 	axes = [dict(tag=a.axisTag, name=a.axisNameID) for a in fvarTable.axes]
 	buildStatTable(font, axes)
 
+_MasterData = namedtuple('_MasterData', ['glyf', 'hMetrics', 'vMetrics'])
 
 def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
 	if tolerance < 0:
@@ -223,13 +224,18 @@ def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
 	glyf = font['glyf']
 	defaultMasterIndex = masterModel.reverseMapping[0]
 
+	master_datas = [_MasterData(m['glyf'],
+				    m['hmtx'].metrics,
+				    m['vmtx'].metrics if 'vmtx' in m else None)
+			for m in master_ttfs]
+
 	for glyph in font.getGlyphOrder():
 
 		isComposite = glyf[glyph].isComposite()
 
 		allData = [
-			m["glyf"].getCoordinatesAndControls(glyph, m)
-			for m in master_ttfs
+			m.glyf.getCoordinatesAndControls(glyph, m.hMetrics, m.vMetrics)
+			for m in master_datas
 		]
 
 		if allData[defaultMasterIndex][1].numberOfContours != 0:
