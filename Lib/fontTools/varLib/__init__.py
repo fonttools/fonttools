@@ -303,9 +303,10 @@ def _remove_TTHinting(font):
 	for tag in ("cvar", "cvt ", "fpgm", "prep"):
 		if tag in font:
 			del font[tag]
+	maxp = font['maxp']
 	for attr in ("maxTwilightPoints", "maxStorage", "maxFunctionDefs", "maxInstructionDefs", "maxStackElements", "maxSizeOfInstructions"):
-		setattr(font["maxp"], attr, 0)
-	font["maxp"].maxZones = 1
+		setattr(maxp, attr, 0)
+	maxp.maxZones = 1
 	font["glyf"].removeHinting()
 	# TODO: Modify gasp table to deactivate gridfitting for all ranges?
 
@@ -320,12 +321,9 @@ def _merge_TTHinting(font, masterModel, master_ttfs):
 
 	for tag in ("fpgm", "prep"):
 		all_pgms = [m[tag].program for m in master_ttfs if tag in m]
-		if len(all_pgms) == 0:
+		if not all_pgms:
 			continue
-		if tag in font:
-			font_pgm = font[tag].program
-		else:
-			font_pgm = Program()
+		font_pgm = font[tag].program if tag in font else None
 		if any(pgm != font_pgm for pgm in all_pgms):
 			log.warning("Masters have incompatible %s tables, hinting is discarded." % tag)
 			_remove_TTHinting(font)
@@ -333,20 +331,18 @@ def _merge_TTHinting(font, masterModel, master_ttfs):
 
 	# glyf table
 
+	font_glyf = font['glyf']
 	master_glyfs = [m['glyf'] for m in master_ttfs]
-	for name, glyph in font["glyf"].glyphs.items():
+	for name, glyph in font_glyf.glyphs.items():
 		all_pgms = [
-			glyf[name].program
+			getattr(glyf[name], 'program', None)
 			for glyf in master_glyfs
-			if name in glyf and hasattr(glyf[name], "program")
+			if name in glyf
 		]
 		if not any(all_pgms):
 			continue
-		glyph.expand(font["glyf"])
-		if hasattr(glyph, "program"):
-			font_pgm = glyph.program
-		else:
-			font_pgm = Program()
+		glyph.expand(font_glyf)
+		font_pgm = getattr(glyph, 'program', None)
 		if any(pgm != font_pgm for pgm in all_pgms if pgm):
 			log.warning("Masters have incompatible glyph programs in glyph '%s', hinting is discarded." % name)
 			# TODO Only drop hinting from this glyph.
