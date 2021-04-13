@@ -333,11 +333,12 @@ def _merge_TTHinting(font, masterModel, master_ttfs):
 
 	# glyf table
 
+	master_glyfs = [m['glyf'] for m in master_ttfs]
 	for name, glyph in font["glyf"].glyphs.items():
 		all_pgms = [
-			m["glyf"][name].program
-			for m in master_ttfs
-			if name in m['glyf'] and hasattr(m["glyf"][name], "program")
+			glyf[name].program
+			for glyf in master_glyfs
+			if name in glyf and hasattr(glyf[name], "program")
 		]
 		if not any(all_pgms):
 			continue
