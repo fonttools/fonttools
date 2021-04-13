@@ -335,9 +335,8 @@ def _merge_TTHinting(font, masterModel, master_ttfs):
 	master_glyfs = [m['glyf'] for m in master_ttfs]
 	for name, glyph in font_glyf.glyphs.items():
 		all_pgms = [
-			getattr(glyf[name], 'program', None)
+			getattr(glyf.get(name), 'program', None)
 			for glyf in master_glyfs
-			if name in glyf
 		]
 		if not any(all_pgms):
 			continue

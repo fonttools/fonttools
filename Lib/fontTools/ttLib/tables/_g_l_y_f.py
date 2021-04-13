@@ -145,10 +145,10 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			path, ext = os.path.splitext(writer.file.name)
 			existingGlyphFiles = set()
 		for glyphName in glyphNames:
-			if glyphName not in self:
+			glyph = self.get(glyphName)
+			if glyph is None:
 				log.warning("glyph '%s' does not exist in glyf table", glyphName)
 				continue
-			glyph = self[glyphName]
 			if glyph.numberOfContours:
 				if splitGlyphs:
 					glyphPath = userNameToFileName(
@@ -236,6 +236,12 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 
 	__contains__ = has_key
 
+	def get(self, glyphName):
+		glyph = self.glyphs.get(glyphName)
+		if glyph is not None:
+			glyph.expand(self)
+		return glyph
+
 	def __getitem__(self, glyphName):
 		glyph = self.glyphs[glyphName]
 		glyph.expand(self)
@@ -309,9 +315,9 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 
 		Return None if the requested glyphName is not present.
 		"""
-		if glyphName not in self.glyphs:
+		glyph = self.get(glyphName)
+		if glyph is None:
 			return None
-		glyph = self[glyphName]
 		if glyph.isComposite():
 			coords = GlyphCoordinates(
 				[(getattr(c, 'x', 0), getattr(c, 'y', 0)) for c in glyph.components]
