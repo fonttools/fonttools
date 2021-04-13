@@ -323,14 +323,11 @@ def limitTupleVariationAxisRange(var, axisTag, axisRange):
         return [var, newVar]
 
 
-def instantiateGvarGlyph(varfont, glyphname, axisLimits, optimize=True):
-    glyf = varfont["glyf"]
-    coordinates, ctrl = glyf.getCoordinatesAndControls(glyphname, varfont)
+def _instantiateGvarGlyph(glyphname, glyf, gvar, hMetrics, vMetrics, axisLimits, optimize=True):
+    coordinates, ctrl = glyf.getCoordinatesAndControls(glyphname, hMetrics, vMetrics)
     endPts = ctrl.endPts
 
-    gvar = varfont["gvar"]
-    # when exporting to TTX, a glyph with no variations is omitted; thus when loading
-    # a TTFont from TTX, a glyph that's present in glyf table may be missing from gvar.
+    # Not every glyph may have variations
     tupleVarStore = gvar.variations.get(glyphname)
 
     if tupleVarStore:
@@ -350,7 +347,7 @@ def instantiateGvarGlyph(varfont, glyphname, axisLimits, optimize=True):
     # gvar table is empty; however, the composite's base glyph may have deltas
     # applied, hence the composite's bbox and left/top sidebearings may need updating
     # in the instanced font.
-    glyf.setCoordinates(glyphname, coordinates, varfont)
+    glyf.setCoordinates(glyphname, coordinates, hMetrics, vMetrics)
 
     if not tupleVarStore:
         if glyphname in gvar.variations:
@@ -368,6 +365,8 @@ def instantiateGvar(varfont, axisLimits, optimize=True):
 
     gvar = varfont["gvar"]
     glyf = varfont["glyf"]
+    hMetrics = varfont['hmtx'].metrics
+    vMetrics = varfont['vmtx'].metrics if 'vmtx' in varfont else None
     # Get list of glyph names sorted by component depth.
     # If a composite glyph is processed before its base glyph, the bounds may
     # be calculated incorrectly because deltas haven't been applied to the
@@ -382,7 +381,7 @@ def instantiateGvar(varfont, axisLimits, optimize=True):
         ),
     )
     for glyphname in glyphnames:
-        instantiateGvarGlyph(varfont, glyphname, axisLimits, optimize=optimize)
+        _instantiateGvarGlyph(glyphname, glyf, gvar, hMetrics, vMetrics, axisLimits, optimize=optimize)
 
     if not gvar.variations:
         del varfont["gvar"]
