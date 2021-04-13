@@ -6,7 +6,7 @@ from fontTools.misc import sstruct
 from fontTools import ttLib
 from fontTools import version
 from fontTools.misc.textTools import safeEval, pad
-from fontTools.misc.arrayTools import calcBounds, calcIntBounds, pointInRect
+from fontTools.misc.arrayTools import calcIntBounds, pointInRect
 from fontTools.misc.bezierTools import calcQuadraticBounds
 from fontTools.misc.fixedTools import (
 	fixedToFloat as fi2fl,
@@ -910,61 +910,7 @@ class Glyph(object):
 
 	def recalcBounds(self, glyfTable):
 		coords, endPts, flags = self.getCoordinates(glyfTable)
-		if len(coords) > 0:
-			if 0:
-				# This branch calculates exact glyph outline bounds
-				# analytically, handling cases without on-curve
-				# extremas, etc.  However, the glyf table header
-				# simply says that the bounds should be min/max x/y
-				# "for coordinate data", so I suppose that means no
-				# fancy thing here, just get extremas of all coord
-				# points (on and off).  As such, this branch is
-				# disabled.
-
-				# Collect on-curve points
-				onCurveCoords = [coords[j] for j in range(len(coords))
-								if flags[j] & flagOnCurve]
-				# Add implicit on-curve points
-				start = 0
-				for end in endPts:
-					last = end
-					for j in range(start, end + 1):
-						if not ((flags[j] | flags[last]) & flagOnCurve):
-							x = (coords[last][0] + coords[j][0]) / 2
-							y = (coords[last][1] + coords[j][1]) / 2
-							onCurveCoords.append((x,y))
-						last = j
-					start = end + 1
-				# Add bounds for curves without an explicit extrema
-				start = 0
-				for end in endPts:
-					last = end
-					for j in range(start, end + 1):
-						if not (flags[j] & flagOnCurve):
-							next = j + 1 if j < end else start
-							bbox = calcBounds([coords[last], coords[next]])
-							if not pointInRect(coords[j], bbox):
-								# Ouch!
-								log.warning("Outline has curve with implicit extrema.")
-								# Ouch!  Find analytical curve bounds.
-								pthis = coords[j]
-								plast = coords[last]
-								if not (flags[last] & flagOnCurve):
-									plast = ((pthis[0]+plast[0])/2, (pthis[1]+plast[1])/2)
-								pnext = coords[next]
-								if not (flags[next] & flagOnCurve):
-									pnext = ((pthis[0]+pnext[0])/2, (pthis[1]+pnext[1])/2)
-								bbox = calcQuadraticBounds(plast, pthis, pnext)
-								onCurveCoords.append((bbox[0],bbox[1]))
-								onCurveCoords.append((bbox[2],bbox[3]))
-						last = j
-					start = end + 1
-
-				self.xMin, self.yMin, self.xMax, self.yMax = calcIntBounds(onCurveCoords)
-			else:
-				self.xMin, self.yMin, self.xMax, self.yMax = calcIntBounds(coords)
-		else:
-			self.xMin, self.yMin, self.xMax, self.yMax = (0, 0, 0, 0)
+		self.xMin, self.yMin, self.xMax, self.yMax = calcIntBounds(coords)
 
 	def isComposite(self):
 		"""Can be called on compact or expanded glyph."""
