@@ -265,7 +265,6 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		https://docs.microsoft.com/en-us/typography/opentype/spec/tt_instructing_glyphs#phantoms
 		"""
 		glyph = self[glyphName]
-		assert glyphName in ttFont["hmtx"].metrics, ttFont["hmtx"].metrics
 		horizontalAdvanceWidth, leftSideBearing = ttFont["hmtx"].metrics[glyphName]
 		if not hasattr(glyph, 'xMin'):
 			glyph.recalcBounds(self)
