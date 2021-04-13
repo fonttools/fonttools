@@ -79,8 +79,9 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 
 	def compileGlyphs_(self, ttFont, axisTags, sharedCoordIndices):
 		result = []
+		glyf = ttFont['glyf']
 		for glyphName in ttFont.getGlyphOrder():
-			glyph = ttFont["glyf"][glyphName]
+			glyph = glyf[glyphName]
 			pointCount = self.getNumPoints_(glyph)
 			variations = self.variations.get(glyphName, [])
 			result.append(compileGlyph_(variations, pointCount,
@@ -98,9 +99,10 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			axisTags, self.sharedTupleCount, data, self.offsetToSharedTuples)
 		self.variations = {}
 		offsetToData = self.offsetToGlyphVariationData
+		glyf = ttFont['glyf']
 		for i in range(self.glyphCount):
 			glyphName = glyphs[i]
-			glyph = ttFont["glyf"][glyphName]
+			glyph = glyf[glyphName]
 			numPointsInGlyph = self.getNumPoints_(glyph)
 			gvarData = data[offsetToData + offsets[i] : offsetToData + offsets[i + 1]]
 			try:
