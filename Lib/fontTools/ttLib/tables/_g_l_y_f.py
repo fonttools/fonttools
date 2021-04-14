@@ -236,8 +236,8 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 
 	__contains__ = has_key
 
-	def get(self, glyphName):
-		glyph = self.glyphs.get(glyphName)
+	def get(self, glyphName, default=None):
+		glyph = self.glyphs.get(glyphName, default)
 		if glyph is not None:
 			glyph.expand(self)
 		return glyph
