@@ -156,7 +156,7 @@ def instantiateTupleVariationStore(
         axisLimits: Dict[str, Union[float, NormalizedAxisRange]]: axes' coordinates for
             the full or partial instance, or ranges for restricting an axis' min/max.
         origCoords: GlyphCoordinates: default instance's coordinates for computing 'gvar'
-            inferred points (cf. table__g_l_y_f.getCoordinatesAndControls).
+            inferred points (cf. table__g_l_y_f._getCoordinatesAndControls).
         endPts: List[int]: indices of contour end points, for inferring 'gvar' deltas.
 
     Returns:
@@ -324,7 +324,7 @@ def limitTupleVariationAxisRange(var, axisTag, axisRange):
 
 
 def _instantiateGvarGlyph(glyphname, glyf, gvar, hMetrics, vMetrics, axisLimits, optimize=True):
-    coordinates, ctrl = glyf.getCoordinatesAndControls(glyphname, hMetrics, vMetrics)
+    coordinates, ctrl = glyf._getCoordinatesAndControls(glyphname, hMetrics, vMetrics)
     endPts = ctrl.endPts
 
     # Not every glyph may have variations
@@ -338,7 +338,7 @@ def _instantiateGvarGlyph(glyphname, glyf, gvar, hMetrics, vMetrics, axisLimits,
         if defaultDeltas:
             coordinates += _g_l_y_f.GlyphCoordinates(defaultDeltas)
 
-    # setCoordinates also sets the hmtx/vmtx advance widths and sidebearings from
+    # _setCoordinates also sets the hmtx/vmtx advance widths and sidebearings from
     # the four phantom points and glyph bounding boxes.
     # We call it unconditionally even if a glyph has no variations or no deltas are
     # applied at this location, in case the glyph's xMin and in turn its sidebearing
@@ -347,7 +347,7 @@ def _instantiateGvarGlyph(glyphname, glyf, gvar, hMetrics, vMetrics, axisLimits,
     # gvar table is empty; however, the composite's base glyph may have deltas
     # applied, hence the composite's bbox and left/top sidebearings may need updating
     # in the instanced font.
-    glyf.setCoordinates(glyphname, coordinates, hMetrics, vMetrics)
+    glyf._setCoordinates(glyphname, coordinates, hMetrics, vMetrics)
 
     if not tupleVarStore:
         if glyphname in gvar.variations:

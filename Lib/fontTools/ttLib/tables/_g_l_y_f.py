@@ -260,7 +260,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		assert len(self.glyphOrder) == len(self.glyphs)
 		return len(self.glyphs)
 
-	def getPhantomPoints(self, glyphName, hMetrics, vMetrics=None):
+	def _getPhantomPoints(self, glyphName, hMetrics, vMetrics=None):
 		"""Compute the four "phantom points" for the given glyph from its bounding box
 		and the horizontal and vertical advance widths and sidebearings stored in the
 		ttFont's "hmtx" and "vmtx" tables.
@@ -294,7 +294,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			(0, bottomSideY),
 		]
 
-	def getCoordinatesAndControls(self, glyphName, hMetrics, vMetrics=None):
+	def _getCoordinatesAndControls(self, glyphName, hMetrics, vMetrics=None):
 		"""Return glyph coordinates and controls as expected by "gvar" table.
 
 		The coordinates includes four "phantom points" for the glyph metrics,
@@ -311,7 +311,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			composite glyphs (None for simple glyphs).
 
 		The "hMetrics" and vMetrics are used to compute the "phantom points" (see
-		the "getPhantomPoints" method).
+		the "_getPhantomPoints" method).
 
 		Return None if the requested glyphName is not present.
 		"""
@@ -338,11 +338,11 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 				components=None,
 			)
 		# Add phantom points for (left, right, top, bottom) positions.
-		phantomPoints = self.getPhantomPoints(glyphName, hMetrics, vMetrics)
+		phantomPoints = self._getPhantomPoints(glyphName, hMetrics, vMetrics)
 		coords.extend(phantomPoints)
 		return coords, controls
 
-	def setCoordinates(self, glyphName, coord, hMetrics, vMetrics=None):
+	def _setCoordinates(self, glyphName, coord, hMetrics, vMetrics=None):
 		"""Set coordinates and metrics for the given glyph.
 
 		"coord" is an array of GlyphCoordinates which must include the "phantom
@@ -352,7 +352,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		and "vmtx" tables (if any) are updated from four phantom points and
 		the glyph's bounding boxes.
 		The "hMetrics" and vMetrics are used to propagate "phantom points"
-		into "hmtx" and "vmtx" tables if desired.  (see the "getPhantomPoints"
+		into "hmtx" and "vmtx" tables if desired.  (see the "_getPhantomPoints"
 		method).
 		"""
 		glyph = self[glyphName]

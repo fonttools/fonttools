@@ -234,7 +234,7 @@ def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
 		isComposite = glyf[glyph].isComposite()
 
 		allData = [
-			m.glyf.getCoordinatesAndControls(glyph, m.hMetrics, m.vMetrics)
+			m.glyf._getCoordinatesAndControls(glyph, m.hMetrics, m.vMetrics)
 			for m in master_datas
 		]
 
