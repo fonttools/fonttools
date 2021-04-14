@@ -366,7 +366,7 @@ def instantiateGvar(varfont, axisLimits, optimize=True):
     gvar = varfont["gvar"]
     glyf = varfont["glyf"]
     hMetrics = varfont['hmtx'].metrics
-    vMetrics = varfont['vmtx'].metrics if 'vmtx' in varfont else None
+    vMetrics = getattr(varfont.get('vmtx'), 'metrics', None)
     # Get list of glyph names sorted by component depth.
     # If a composite glyph is processed before its base glyph, the bounds may
     # be calculated incorrectly because deltas haven't been applied to the

@@ -226,7 +226,7 @@ def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
 
 	master_datas = [_MasterData(m['glyf'],
 				    m['hmtx'].metrics,
-				    m['vmtx'].metrics if 'vmtx' in m else None)
+				    getattr(m.get('vmtx'), 'metrics', None))
 			for m in master_ttfs]
 
 	for glyph in font.getGlyphOrder():
@@ -323,7 +323,7 @@ def _merge_TTHinting(font, masterModel, master_ttfs):
 		all_pgms = [m[tag].program for m in master_ttfs if tag in m]
 		if not all_pgms:
 			continue
-		font_pgm = font[tag].program if tag in font else None
+		font_pgm = getattr(font.get(tag), 'program', None)
 		if any(pgm != font_pgm for pgm in all_pgms):
 			log.warning("Masters have incompatible %s tables, hinting is discarded." % tag)
 			_remove_TTHinting(font)

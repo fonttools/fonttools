@@ -186,7 +186,7 @@ def instantiateVariableFont(varfont, location, inplace=False, overlap=True):
 		gvar = varfont['gvar']
 		glyf = varfont['glyf']
 		hMetrics = varfont['hmtx'].metrics
-		vMetrics = varfont['vmtx'].metrics if 'vmtx' in varfont else None
+		vMetrics = getattr(varfont.get('vmtx'), 'metrics', None)
 		# get list of glyph names in gvar sorted by component depth
 		glyphnames = sorted(
 			gvar.variations.keys(),
