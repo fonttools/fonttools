@@ -351,6 +351,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		Both the horizontal/vertical advances and left/top sidebearings in "hmtx"
 		and "vmtx" tables (if any) are updated from four phantom points and
 		the glyph's bounding boxes.
+
 		The "hMetrics" and vMetrics are used to propagate "phantom points"
 		into "hmtx" and "vmtx" tables if desired.  (see the "_getPhantomPoints"
 		method).
@@ -393,6 +394,47 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 				verticalAdvanceWidth = 0
 			topSideBearing = otRound(topSideY - glyph.yMax)
 			vMetrics[glyphName] = verticalAdvanceWidth, topSideBearing
+
+
+	# Deprecated
+
+	def _synthesizeVMetrics(self, glyphname, ttFont, defaultVerticalOrigin):
+		"""This method is wrong and deprecated.
+		For rationale see:
+		https://github.com/fonttools/fonttools/pull/2266/files#r613569473
+		"""
+		vMetrics = getattr(ttFont.get('vmtx'), 'metrics', None)
+		if vMetrics is None:
+			verticalAdvanceWidth = ttFont["head"].unitsPerEm
+			topSideY = getattr(ttFont.get('hhea'), 'ascent', None)
+			if topSideY is None:
+				if defaultVerticalOrigin is not None:
+					topSideY = defaultVerticalOrigin
+				else:
+					topSideY = verticalAdvanceWidth
+			vMetrics = {glyphName: (verticalAdvanceWidth, topSideBearing)}
+		return vMetrics
+
+	def getPhantomPoints(self, glyphName, ttFont, defaultVerticalOrigin=None):
+		"""Old public name for self._getPhantomPoints().
+		See: https://github.com/fonttools/fonttools/pull/2266"""
+		hMetrics = ttFont['hmtx'].metrics
+		vMetrics = self._synthesizeVMetrics(glyphName, ttFont, defaultVerticalOrigin)
+		return self._getPhantomPoints(glyphname, hMetrics, vMetrics)
+
+	def getCoordinatesAndControls(self, glyphName, ttFont, defaultVerticalOrigin=None):
+		"""Old public name for self._getCoordinatesAndControls().
+		See: https://github.com/fonttools/fonttools/pull/2266"""
+		hMetrics = ttFont['hmtx'].metrics
+		vMetrics = self._synthesizeVMetrics(glyphName, ttFont, defaultVerticalOrigin)
+		return self._getCoordinatesAndControls(glyphName, hMetrics, vMetrics)
+
+	def setCoordinates(self, glyphName, ttFont):
+		"""Old public name for self._setCoordinates().
+		See: https://github.com/fonttools/fonttools/pull/2266"""
+		hMetrics = ttFont['hmtx'].metrics
+		vMetrics = getattr(ttFont.get('vmtx'), 'metrics', None)
+		self._setCoordinates(glyphName, hMetrics, vMetrics)
 
 
 _GlyphControls = namedtuple(
