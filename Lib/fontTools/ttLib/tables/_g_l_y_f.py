@@ -6,7 +6,7 @@ from fontTools.misc import sstruct
 from fontTools import ttLib
 from fontTools import version
 from fontTools.misc.textTools import safeEval, pad
-from fontTools.misc.arrayTools import calcBounds, calcIntBounds, pointInRect
+from fontTools.misc.arrayTools import calcIntBounds, pointInRect
 from fontTools.misc.bezierTools import calcQuadraticBounds
 from fontTools.misc.fixedTools import (
 	fixedToFloat as fi2fl,
@@ -145,10 +145,10 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			path, ext = os.path.splitext(writer.file.name)
 			existingGlyphFiles = set()
 		for glyphName in glyphNames:
-			if glyphName not in self:
+			glyph = self.get(glyphName)
+			if glyph is None:
 				log.warning("glyph '%s' does not exist in glyf table", glyphName)
 				continue
-			glyph = self[glyphName]
 			if glyph.numberOfContours:
 				if splitGlyphs:
 					glyphPath = userNameToFileName(
@@ -236,6 +236,12 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 
 	__contains__ = has_key
 
+	def get(self, glyphName, default=None):
+		glyph = self.glyphs.get(glyphName, default)
+		if glyph is not None:
+			glyph.expand(self)
+		return glyph
+
 	def __getitem__(self, glyphName):
 		glyph = self.glyphs[glyphName]
 		glyph.expand(self)
@@ -254,49 +260,33 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		assert len(self.glyphOrder) == len(self.glyphs)
 		return len(self.glyphs)
 
-	def getPhantomPoints(self, glyphName, ttFont, defaultVerticalOrigin=None):
+	def _getPhantomPoints(self, glyphName, hMetrics, vMetrics=None):
 		"""Compute the four "phantom points" for the given glyph from its bounding box
 		and the horizontal and vertical advance widths and sidebearings stored in the
 		ttFont's "hmtx" and "vmtx" tables.
 
-		If the ttFont doesn't contain a "vmtx" table, the hhea.ascent is used as the
-		vertical origin, and the head.unitsPerEm as the vertical advance.
+		'hMetrics' should be ttFont['hmtx'].metrics.
 
-		The "defaultVerticalOrigin" (Optional[int]) is needed when the ttFont contains
-		neither a "vmtx" nor an "hhea" table, as may happen with 'sparse' masters.
-		The value should be the hhea.ascent of the default master.
+		'vMetrics' should be ttFont['vmtx'].metrics if there is "vmtx" or None otherwise.
+		If there is no vMetrics passed in, vertical phantom points are set to the zero coordinate.
 
 		https://docs.microsoft.com/en-us/typography/opentype/spec/tt_instructing_glyphs#phantoms
 		"""
 		glyph = self[glyphName]
-		assert glyphName in ttFont["hmtx"].metrics, ttFont["hmtx"].metrics
-		horizontalAdvanceWidth, leftSideBearing = ttFont["hmtx"].metrics[glyphName]
 		if not hasattr(glyph, 'xMin'):
 			glyph.recalcBounds(self)
+
+		horizontalAdvanceWidth, leftSideBearing = hMetrics[glyphName]
 		leftSideX = glyph.xMin - leftSideBearing
 		rightSideX = leftSideX + horizontalAdvanceWidth
-		if "vmtx" in ttFont:
-			verticalAdvanceWidth, topSideBearing = ttFont["vmtx"].metrics[glyphName]
+
+		if vMetrics:
+			verticalAdvanceWidth, topSideBearing = vMetrics[glyphName]
 			topSideY = topSideBearing + glyph.yMax
+			bottomSideY = topSideY - verticalAdvanceWidth
 		else:
-			# without vmtx, use ascent as vertical origin and UPEM as vertical advance
-			# like HarfBuzz does
-			verticalAdvanceWidth = ttFont["head"].unitsPerEm
-			if "hhea" in ttFont:
-				topSideY = ttFont["hhea"].ascent
-			else:
-				# sparse masters may not contain an hhea table; use the ascent
-				# of the default master as the vertical origin
-				if defaultVerticalOrigin is not None:
-					topSideY = defaultVerticalOrigin
-				else:
-					log.warning(
-						"font is missing both 'vmtx' and 'hhea' tables, "
-						"and no 'defaultVerticalOrigin' was provided; "
-						"the vertical phantom points may be incorrect."
-					)
-					topSideY = verticalAdvanceWidth
-		bottomSideY = topSideY - verticalAdvanceWidth
+			bottomSideY = topSideY = 0
+
 		return [
 			(leftSideX, 0),
 			(rightSideX, 0),
@@ -304,7 +294,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			(0, bottomSideY),
 		]
 
-	def getCoordinatesAndControls(self, glyphName, ttFont, defaultVerticalOrigin=None):
+	def _getCoordinatesAndControls(self, glyphName, hMetrics, vMetrics=None):
 		"""Return glyph coordinates and controls as expected by "gvar" table.
 
 		The coordinates includes four "phantom points" for the glyph metrics,
@@ -320,14 +310,14 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			- components: list of base glyph names (str) for each component in
 			composite glyphs (None for simple glyphs).
 
-		The "ttFont" and "defaultVerticalOrigin" args are used to compute the
-		"phantom points" (see "getPhantomPoints" method).
+		The "hMetrics" and vMetrics are used to compute the "phantom points" (see
+		the "_getPhantomPoints" method).
 
 		Return None if the requested glyphName is not present.
 		"""
-		if glyphName not in self.glyphs:
+		glyph = self.get(glyphName)
+		if glyph is None:
 			return None
-		glyph = self[glyphName]
 		if glyph.isComposite():
 			coords = GlyphCoordinates(
 				[(getattr(c, 'x', 0), getattr(c, 'y', 0)) for c in glyph.components]
@@ -348,13 +338,11 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 				components=None,
 			)
 		# Add phantom points for (left, right, top, bottom) positions.
-		phantomPoints = self.getPhantomPoints(
-			glyphName, ttFont, defaultVerticalOrigin=defaultVerticalOrigin
-		)
+		phantomPoints = self._getPhantomPoints(glyphName, hMetrics, vMetrics)
 		coords.extend(phantomPoints)
 		return coords, controls
 
-	def setCoordinates(self, glyphName, coord, ttFont):
+	def _setCoordinates(self, glyphName, coord, hMetrics, vMetrics=None):
 		"""Set coordinates and metrics for the given glyph.
 
 		"coord" is an array of GlyphCoordinates which must include the "phantom
@@ -363,9 +351,11 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		Both the horizontal/vertical advances and left/top sidebearings in "hmtx"
 		and "vmtx" tables (if any) are updated from four phantom points and
 		the glyph's bounding boxes.
+
+		The "hMetrics" and vMetrics are used to propagate "phantom points"
+		into "hmtx" and "vmtx" tables if desired.  (see the "_getPhantomPoints"
+		method).
 		"""
-		# TODO: Create new glyph if not already present
-		assert glyphName in self.glyphs
 		glyph = self[glyphName]
 
 		# Handle phantom points for (left, right, top, bottom) positions.
@@ -396,14 +386,55 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			# https://github.com/fonttools/fonttools/pull/1198
 			horizontalAdvanceWidth = 0
 		leftSideBearing = otRound(glyph.xMin - leftSideX)
-		ttFont["hmtx"].metrics[glyphName] = horizontalAdvanceWidth, leftSideBearing
+		hMetrics[glyphName] = horizontalAdvanceWidth, leftSideBearing
 
-		if "vmtx" in ttFont:
+		if vMetrics is not None:
 			verticalAdvanceWidth = otRound(topSideY - bottomSideY)
 			if verticalAdvanceWidth < 0:  # unlikely but do the same as horizontal
 				verticalAdvanceWidth = 0
 			topSideBearing = otRound(topSideY - glyph.yMax)
-			ttFont["vmtx"].metrics[glyphName] = verticalAdvanceWidth, topSideBearing
+			vMetrics[glyphName] = verticalAdvanceWidth, topSideBearing
+
+
+	# Deprecated
+
+	def _synthesizeVMetrics(self, glyphname, ttFont, defaultVerticalOrigin):
+		"""This method is wrong and deprecated.
+		For rationale see:
+		https://github.com/fonttools/fonttools/pull/2266/files#r613569473
+		"""
+		vMetrics = getattr(ttFont.get('vmtx'), 'metrics', None)
+		if vMetrics is None:
+			verticalAdvanceWidth = ttFont["head"].unitsPerEm
+			topSideY = getattr(ttFont.get('hhea'), 'ascent', None)
+			if topSideY is None:
+				if defaultVerticalOrigin is not None:
+					topSideY = defaultVerticalOrigin
+				else:
+					topSideY = verticalAdvanceWidth
+			vMetrics = {glyphName: (verticalAdvanceWidth, topSideBearing)}
+		return vMetrics
+
+	def getPhantomPoints(self, glyphName, ttFont, defaultVerticalOrigin=None):
+		"""Old public name for self._getPhantomPoints().
+		See: https://github.com/fonttools/fonttools/pull/2266"""
+		hMetrics = ttFont['hmtx'].metrics
+		vMetrics = self._synthesizeVMetrics(glyphName, ttFont, defaultVerticalOrigin)
+		return self._getPhantomPoints(glyphname, hMetrics, vMetrics)
+
+	def getCoordinatesAndControls(self, glyphName, ttFont, defaultVerticalOrigin=None):
+		"""Old public name for self._getCoordinatesAndControls().
+		See: https://github.com/fonttools/fonttools/pull/2266"""
+		hMetrics = ttFont['hmtx'].metrics
+		vMetrics = self._synthesizeVMetrics(glyphName, ttFont, defaultVerticalOrigin)
+		return self._getCoordinatesAndControls(glyphName, hMetrics, vMetrics)
+
+	def setCoordinates(self, glyphName, ttFont):
+		"""Old public name for self._setCoordinates().
+		See: https://github.com/fonttools/fonttools/pull/2266"""
+		hMetrics = ttFont['hmtx'].metrics
+		vMetrics = getattr(ttFont.get('vmtx'), 'metrics', None)
+		self._setCoordinates(glyphName, hMetrics, vMetrics)
 
 
 _GlyphControls = namedtuple(
@@ -921,61 +952,7 @@ class Glyph(object):
 
 	def recalcBounds(self, glyfTable):
 		coords, endPts, flags = self.getCoordinates(glyfTable)
-		if len(coords) > 0:
-			if 0:
-				# This branch calculates exact glyph outline bounds
-				# analytically, handling cases without on-curve
-				# extremas, etc.  However, the glyf table header
-				# simply says that the bounds should be min/max x/y
-				# "for coordinate data", so I suppose that means no
-				# fancy thing here, just get extremas of all coord
-				# points (on and off).  As such, this branch is
-				# disabled.
-
-				# Collect on-curve points
-				onCurveCoords = [coords[j] for j in range(len(coords))
-								if flags[j] & flagOnCurve]
-				# Add implicit on-curve points
-				start = 0
-				for end in endPts:
-					last = end
-					for j in range(start, end + 1):
-						if not ((flags[j] | flags[last]) & flagOnCurve):
-							x = (coords[last][0] + coords[j][0]) / 2
-							y = (coords[last][1] + coords[j][1]) / 2
-							onCurveCoords.append((x,y))
-						last = j
-					start = end + 1
-				# Add bounds for curves without an explicit extrema
-				start = 0
-				for end in endPts:
-					last = end
-					for j in range(start, end + 1):
-						if not (flags[j] & flagOnCurve):
-							next = j + 1 if j < end else start
-							bbox = calcBounds([coords[last], coords[next]])
-							if not pointInRect(coords[j], bbox):
-								# Ouch!
-								log.warning("Outline has curve with implicit extrema.")
-								# Ouch!  Find analytical curve bounds.
-								pthis = coords[j]
-								plast = coords[last]
-								if not (flags[last] & flagOnCurve):
-									plast = ((pthis[0]+plast[0])/2, (pthis[1]+plast[1])/2)
-								pnext = coords[next]
-								if not (flags[next] & flagOnCurve):
-									pnext = ((pthis[0]+pnext[0])/2, (pthis[1]+pnext[1])/2)
-								bbox = calcQuadraticBounds(plast, pthis, pnext)
-								onCurveCoords.append((bbox[0],bbox[1]))
-								onCurveCoords.append((bbox[2],bbox[3]))
-						last = j
-					start = end + 1
-
-				self.xMin, self.yMin, self.xMax, self.yMax = calcIntBounds(onCurveCoords)
-			else:
-				self.xMin, self.yMin, self.xMax, self.yMax = calcIntBounds(coords)
-		else:
-			self.xMin, self.yMin, self.xMax, self.yMax = (0, 0, 0, 0)
+		self.xMin, self.yMin, self.xMax, self.yMax = calcIntBounds(coords)
 
 	def isComposite(self):
 		"""Can be called on compact or expanded glyph."""

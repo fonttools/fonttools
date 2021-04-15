@@ -156,7 +156,7 @@ def instantiateTupleVariationStore(
         axisLimits: Dict[str, Union[float, NormalizedAxisRange]]: axes' coordinates for
             the full or partial instance, or ranges for restricting an axis' min/max.
         origCoords: GlyphCoordinates: default instance's coordinates for computing 'gvar'
-            inferred points (cf. table__g_l_y_f.getCoordinatesAndControls).
+            inferred points (cf. table__g_l_y_f._getCoordinatesAndControls).
         endPts: List[int]: indices of contour end points, for inferring 'gvar' deltas.
 
     Returns:
@@ -323,14 +323,11 @@ def limitTupleVariationAxisRange(var, axisTag, axisRange):
         return [var, newVar]
 
 
-def instantiateGvarGlyph(varfont, glyphname, axisLimits, optimize=True):
-    glyf = varfont["glyf"]
-    coordinates, ctrl = glyf.getCoordinatesAndControls(glyphname, varfont)
+def _instantiateGvarGlyph(glyphname, glyf, gvar, hMetrics, vMetrics, axisLimits, optimize=True):
+    coordinates, ctrl = glyf._getCoordinatesAndControls(glyphname, hMetrics, vMetrics)
     endPts = ctrl.endPts
 
-    gvar = varfont["gvar"]
-    # when exporting to TTX, a glyph with no variations is omitted; thus when loading
-    # a TTFont from TTX, a glyph that's present in glyf table may be missing from gvar.
+    # Not every glyph may have variations
     tupleVarStore = gvar.variations.get(glyphname)
 
     if tupleVarStore:
@@ -341,7 +338,7 @@ def instantiateGvarGlyph(varfont, glyphname, axisLimits, optimize=True):
         if defaultDeltas:
             coordinates += _g_l_y_f.GlyphCoordinates(defaultDeltas)
 
-    # setCoordinates also sets the hmtx/vmtx advance widths and sidebearings from
+    # _setCoordinates also sets the hmtx/vmtx advance widths and sidebearings from
     # the four phantom points and glyph bounding boxes.
     # We call it unconditionally even if a glyph has no variations or no deltas are
     # applied at this location, in case the glyph's xMin and in turn its sidebearing
@@ -350,7 +347,7 @@ def instantiateGvarGlyph(varfont, glyphname, axisLimits, optimize=True):
     # gvar table is empty; however, the composite's base glyph may have deltas
     # applied, hence the composite's bbox and left/top sidebearings may need updating
     # in the instanced font.
-    glyf.setCoordinates(glyphname, coordinates, varfont)
+    glyf._setCoordinates(glyphname, coordinates, hMetrics, vMetrics)
 
     if not tupleVarStore:
         if glyphname in gvar.variations:
@@ -362,12 +359,22 @@ def instantiateGvarGlyph(varfont, glyphname, axisLimits, optimize=True):
         for var in tupleVarStore:
             var.optimize(coordinates, endPts, isComposite)
 
+def instantiateGvarGlyph(varfont, glyphname, axisLimits, optimize=True):
+    """Remove?
+    https://github.com/fonttools/fonttools/pull/2266"""
+    gvar = varfont["gvar"]
+    glyf = varfont["glyf"]
+    hMetrics = varfont['hmtx'].metrics
+    vMetrics = getattr(varfont.get('vmtx'), 'metrics', None)
+    _instantiateGvarGlyph(glyphname, glyf, gvar, hMetrics, vMetrics, axisLimits, optimize=optimize)
 
 def instantiateGvar(varfont, axisLimits, optimize=True):
     log.info("Instantiating glyf/gvar tables")
 
     gvar = varfont["gvar"]
     glyf = varfont["glyf"]
+    hMetrics = varfont['hmtx'].metrics
+    vMetrics = getattr(varfont.get('vmtx'), 'metrics', None)
     # Get list of glyph names sorted by component depth.
     # If a composite glyph is processed before its base glyph, the bounds may
     # be calculated incorrectly because deltas haven't been applied to the
@@ -382,7 +389,7 @@ def instantiateGvar(varfont, axisLimits, optimize=True):
         ),
     )
     for glyphname in glyphnames:
-        instantiateGvarGlyph(varfont, glyphname, axisLimits, optimize=optimize)
+        _instantiateGvarGlyph(glyphname, glyf, gvar, hMetrics, vMetrics, axisLimits, optimize=optimize)
 
     if not gvar.variations:
         del varfont["gvar"]
