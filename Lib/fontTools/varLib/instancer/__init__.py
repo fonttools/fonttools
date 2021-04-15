@@ -366,7 +366,7 @@ def instantiateGvarGlyph(varfont, glyphname, axisLimits, optimize=True):
     glyf = varfont["glyf"]
     hMetrics = varfont['hmtx'].metrics
     vMetrics = getattr(varfont.get('vmtx'), 'metrics', None)
-    _instantiateGvarGlyph(glyphname, glyf, gvar, hMetrics, vMetrics, axisLimits, optimize=True)
+    _instantiateGvarGlyph(glyphname, glyf, gvar, hMetrics, vMetrics, axisLimits, optimize=optimize)
 
 def instantiateGvar(varfont, axisLimits, optimize=True):
     log.info("Instantiating glyf/gvar tables")
