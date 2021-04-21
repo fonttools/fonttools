@@ -970,6 +970,13 @@ class ValueRecord(object):
 			format = format | valueRecordFormatDict[name][0]
 		return format
 
+	def getEffectiveFormat(self):
+		format = 0
+		for name,value in self.__dict__.items():
+			if value:
+				format = format | valueRecordFormatDict[name][0]
+		return format
+
 	def toXML(self, xmlWriter, font, valueName, attrs=None):
 		if attrs is None:
 			simpleItems = []
