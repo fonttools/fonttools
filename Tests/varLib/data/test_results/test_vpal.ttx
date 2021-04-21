@@ -38,17 +38,17 @@
             <Glyph value="uniFF1A"/>
             <Glyph value="uni3074"/>
           </Coverage>
-          <ValueFormat value="7"/>
+          <ValueFormat value="5"/>
           <!-- ValueCount=2 -->
-          <Value index="0" XPlacement="-250" YPlacement="0" XAdvance="-500"/>
-          <Value index="1" XPlacement="0" YPlacement="0" XAdvance="-30"/>
+          <Value index="0" XPlacement="-250" XAdvance="-500"/>
+          <Value index="1" XPlacement="0" XAdvance="-30"/>
         </SinglePos>
         <SinglePos index="1" Format="1">
           <Coverage>
             <Glyph value="uni3001"/>
           </Coverage>
-          <ValueFormat value="23"/>
-          <Value XPlacement="-9" YPlacement="0" XAdvance="-500">
+          <ValueFormat value="21"/>
+          <Value XPlacement="-9" XAdvance="-500">
             <XPlaDevice>
               <StartSize value="0"/>
               <EndSize value="4"/>
@@ -73,8 +73,8 @@
           <Coverage>
             <Glyph value="uniFF2D"/>
           </Coverage>
-          <ValueFormat value="87"/>
-          <Value XPlacement="12" YPlacement="0" XAdvance="23">
+          <ValueFormat value="85"/>
+          <Value XPlacement="12" XAdvance="23">
             <XPlaDevice>
               <StartSize value="0"/>
               <EndSize value="1"/>
@@ -91,8 +91,8 @@
           <Coverage>
             <Glyph value="uni3073"/>
           </Coverage>
-          <ValueFormat value="71"/>
-          <Value XPlacement="0" YPlacement="0" XAdvance="-36">
+          <ValueFormat value="68"/>
+          <Value XAdvance="-36">
             <XAdvDevice>
               <StartSize value="0"/>
               <EndSize value="3"/>
@@ -104,8 +104,8 @@
           <Coverage>
             <Glyph value="uni307B"/>
           </Coverage>
-          <ValueFormat value="23"/>
-          <Value XPlacement="11" YPlacement="0" XAdvance="0">
+          <ValueFormat value="17"/>
+          <Value XPlacement="11">
             <XPlaDevice>
               <StartSize value="0"/>
               <EndSize value="2"/>
