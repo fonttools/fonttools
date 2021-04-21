@@ -571,7 +571,7 @@ class BaseTable(object):
 			countValue = 1
 			if conv.repeat:
 				if conv.repeat in reader:
-					countValue = reader[conv.repeat]
+					countValue = reader[conv.repeat] + conv.aux
 				else:
 					return NotImplemented
 			totalSize += size * countValue
