@@ -1,0 +1,11 @@
+# https://github.com/fonttools/fonttools/issues/2276
+lookup EMPTY {
+    # pass
+} EMPTY;
+feature ss01 {
+    sub a by a.alt1;
+    lookup EMPTY;
+} ss01;
+feature aalt {
+    feature ss01;
+} aalt;
