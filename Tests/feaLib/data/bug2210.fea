@@ -1,0 +1,13 @@
+languagesystem DFLT dflt;
+
+markClass dieresis <anchor 350 0> @TOP_MARKS;
+
+feature liga {
+    sub f f i by f_f_i;
+    sub f i by f_i;
+} liga;
+
+feature foo {
+    lookupflag IgnoreLigatures;
+    pos T -60 a <-40 0 -40 0>;
+} foo;
