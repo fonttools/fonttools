@@ -829,6 +829,15 @@ class BuilderTest(unittest.TestCase):
                 "} test;")
         captor.assertRegex('Already defined position for pair A V at')
 
+    def test_ignore_empty_lookup_block(self):
+        # https://github.com/fonttools/fonttools/pull/2277
+        font = self.build(
+            "lookup EMPTY { ; } EMPTY;"
+            "feature ss01 { lookup EMPTY; } ss01;"
+        )
+        assert "GPOS" not in font
+        assert "GSUB" not in font
+
 
 def generate_feature_file_test(name):
     return lambda self: self.check_feature_file(name)
