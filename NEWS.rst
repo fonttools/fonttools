@@ -1,3 +1,19 @@
+- [feaLib] Skip references to named lookups if the lookup block definition
+  is empty, similarly to makeotf. This also fixes an ``AttributeError`` while
+  generating ``aalt`` feature (#2276, #2277).
+- [subset] Fixed bug with ``--no-hinting`` implementation for Device tables (#2272,
+  #2275). The previous code was alwyas dropping Device tables if no-hinting was
+  requested, but some Device tables (DeltaFormat=0x8000) are also used to encode
+  variation indices and need to be retained.
+- [otBase] Fixed bug in getting the ValueRecordSize when decompiling ``MVAR``
+  table with ``lazy=True`` (#2273, #2274).
+- [varLib/glyf/gvar] Optimized and simplified ``GlyphCoordinates`` and
+  ``TupleVariation`` classes, use ``bytearray`` where possible, refactored
+  phantom-points calculations. We measured about 30% speedup in total time
+  of loading master ttfs, building gvar, and saving (#2261, #2266).
+- [subset] Fixed ``AssertionError`` while pruning unused CPAL palettes when
+  ``0xFFFF`` is present (#2257, #2259).
+
 4.22.0 (released 2021-04-01)
 ----------------------------
 
