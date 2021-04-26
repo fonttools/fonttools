@@ -1005,7 +1005,8 @@ class Builder(object):
         assert lookup_name in self.named_lookups_, lookup_name
         self.cur_lookup_ = None
         lookup = self.named_lookups_[lookup_name]
-        self.add_lookup_to_feature_(lookup, self.cur_feature_name_)
+        if lookup is not None:  # skip empty named lookup
+            self.add_lookup_to_feature_(lookup, self.cur_feature_name_)
 
     def set_font_revision(self, location, revision):
         self.fontRevision_ = revision
