@@ -1,3 +1,6 @@
+4.22.1 (released 2021-04-26)
+----------------------------
+
 - [feaLib] Skip references to named lookups if the lookup block definition
   is empty, similarly to makeotf. This also fixes an ``AttributeError`` while
   generating ``aalt`` feature (#2276, #2277).
