@@ -1170,7 +1170,8 @@ def instantiateVariableFont(
             If the value is `None`, the default coordinate as per 'fvar' table for
             that axis is used.
             The limit values can also be (min, max) tuples for restricting an
-            axis's variation range, but this is not implemented yet.
+            axis's variation range. The default axis value must be included in
+            the new range.
         inplace (bool): whether to modify input TTFont object in-place instead of
             returning a distinct object.
         optimize (bool): if False, do not perform IUP-delta optimization on the
