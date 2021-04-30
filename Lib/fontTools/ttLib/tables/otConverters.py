@@ -1596,12 +1596,10 @@ class VarDataValue(BaseConverter):
 		regionCount = tableDict["VarRegionCount"]
 		shortCount = tableDict["NumShorts"]
 
-		for i in range(min(regionCount, shortCount)):
-			values.append(reader.readShort())
-		for i in range(min(regionCount, shortCount), regionCount):
-			values.append(reader.readInt8())
-		for i in range(regionCount, shortCount):
-			reader.readInt8()
+		n1, n2 = min(regionCount, shortCount), max(regionCount, shortCount)
+		values.extend(reader.readShortArray(n1))
+		values.extend(reader.readInt8Array(n2 - n1))
+		del values[regionCount:]
 
 		return values
 
