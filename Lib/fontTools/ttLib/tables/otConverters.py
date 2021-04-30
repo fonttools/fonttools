@@ -1575,20 +1575,15 @@ class VarIdxMapValue(BaseConverter):
 		outerShift = 16 - innerBits
 
 		entrySize = 1 + ((fmt & 0x0030) >> 4)
-		read = {
-			1: reader.readUInt8,
-			2: reader.readUShort,
-			3: reader.readUInt24,
-			4: reader.readULong,
+		readArray = {
+			1: reader.readUInt8Array,
+			2: reader.readUShortArray,
+			3: reader.readUInt24Array,
+			4: reader.readULongArray,
 		}[entrySize]
 
-		mapping = []
-		for i in range(nItems):
-			raw = read()
-			idx = ((raw & outerMask) << outerShift) | (raw & innerMask)
-			mapping.append(idx)
-
-		return mapping
+		return [(((raw & outerMask) << outerShift) | (raw & innerMask))
+			for raw in readArray(nItems)]
 
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		fmt = tableDict['EntryFormat']
@@ -1600,16 +1595,15 @@ class VarIdxMapValue(BaseConverter):
 		outerShift = 16 - innerBits
 
 		entrySize = 1 + ((fmt & 0x0030) >> 4)
-		write = {
-			1: writer.writeUInt8,
-			2: writer.writeUShort,
-			3: writer.writeUInt24,
-			4: writer.writeULong,
+		writeArray = {
+			1: writer.writeUInt8Array,
+			2: writer.writeUShortArray,
+			3: writer.writeUInt24Array,
+			4: writer.writeULongArray,
 		}[entrySize]
 
-		for idx in mapping:
-			raw = ((idx & 0xFFFF0000) >> outerShift) | (idx & innerMask)
-			write(raw)
+		writeArray([(((idx & 0xFFFF0000) >> outerShift) | (idx & innerMask))
+			    for idx in mapping])
 
 
 class VarDataValue(BaseConverter):
