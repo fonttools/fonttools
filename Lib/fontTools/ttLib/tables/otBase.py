@@ -140,10 +140,6 @@ class OTTableReader(object):
 		value, = struct.unpack(f">{typecode}", self.data[pos:newpos])
 		self.pos = newpos
 		return value
-
-	def readUShort(self):
-		return self.readValue("H", staticSize=2)
-
 	def readArray(self, typecode, staticSize, count):
 		pos = self.pos
 		newpos = pos + count * staticSize
@@ -152,20 +148,35 @@ class OTTableReader(object):
 		self.pos = newpos
 		return value
 
-	def readUShortArray(self, count):
-		return self.readArray("H", staticSize=2, count=count)
-
 	def readInt8(self):
 		return self.readValue("b", staticSize=1)
+	def readInt8Array(self, count):
+		return self.readArray("b", staticSize=1, count=count)
 
 	def readShort(self):
 		return self.readValue("h", staticSize=2)
+	def readShortArray(self, count):
+		return self.readArray("h", staticSize=2, count=count)
 
 	def readLong(self):
 		return self.readValue("l", staticSize=4)
+	def readLongArray(self, count):
+		return self.readArray("l", staticSize=4, count=count)
 
 	def readUInt8(self):
 		return self.readValue("B", staticSize=1)
+	def readUInt8Array(self, count):
+		return self.readArray("B", staticSize=1, count=count)
+
+	def readUShort(self):
+		return self.readValue("H", staticSize=2)
+	def readUShortArray(self, count):
+		return self.readArray("H", staticSize=2, count=count)
+
+	def readULong(self):
+		return self.readValue("L", staticSize=4)
+	def readULongArray(self, count):
+		return self.readArray("L", staticSize=4, count=count)
 
 	def readUInt24(self):
 		pos = self.pos
@@ -174,8 +185,6 @@ class OTTableReader(object):
 		self.pos = newpos
 		return value
 
-	def readULong(self):
-		return self.readValue("L", staticSize=4)
 
 	def readTag(self):
 		pos = self.pos
