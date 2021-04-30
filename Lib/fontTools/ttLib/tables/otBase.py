@@ -184,7 +184,8 @@ class OTTableReader(object):
 		value, = struct.unpack(">l", b'\0'+self.data[pos:newpos])
 		self.pos = newpos
 		return value
-
+	def readUInt24Array(self, count):
+		return [self.readUInt24() for _ in range(count)]
 
 	def readTag(self):
 		pos = self.pos
@@ -433,11 +434,11 @@ class OTTableWriter(object):
 		if sys.byteorder != "big": a.byteswap()
 		self.items.append(a.tobytes())
 
-	def writeUShort(self, value):
-		assert 0 <= value < 0x10000, value
-		self.items.append(struct.pack(">H", value))
-	def writeUShortArray(self, values):
-		self.writeArray('H', values)
+	def writeInt8(self, value):
+		assert -128 <= value < 128, value
+		self.items.append(struct.pack(">b", value))
+	def writeInt8Array(self, values):
+		self.writeArray('b', values)
 
 	def writeShort(self, value):
 		assert -32768 <= value < 32768, value
@@ -445,28 +446,35 @@ class OTTableWriter(object):
 	def writeShortArray(self, values):
 		self.writeArray('h', values)
 
+	def writeLong(self, value):
+		self.items.append(struct.pack(">l", value))
+	def writeLongArray(self, values):
+		self.writeArray('l', values)
+
 	def writeUInt8(self, value):
 		assert 0 <= value < 256, value
 		self.items.append(struct.pack(">B", value))
 	def writeUInt8Array(self, values):
 		self.writeArray('B', values)
 
-	def writeInt8(self, value):
-		assert -128 <= value < 128, value
-		self.items.append(struct.pack(">b", value))
-	def writeInt8Array(self, values):
-		self.writeArray('b', values)
+	def writeUShort(self, value):
+		assert 0 <= value < 0x10000, value
+		self.items.append(struct.pack(">H", value))
+	def writeUShortArray(self, values):
+		self.writeArray('H', values)
+
+	def writeULong(self, value):
+		self.items.append(struct.pack(">L", value))
+	def writeULongArray(self, values):
+		self.writeArray('L', values)
 
 	def writeUInt24(self, value):
 		assert 0 <= value < 0x1000000, value
 		b = struct.pack(">L", value)
 		self.items.append(b[1:])
-
-	def writeLong(self, value):
-		self.items.append(struct.pack(">l", value))
-
-	def writeULong(self, value):
-		self.items.append(struct.pack(">L", value))
+	def writeUInt24Array(self, values):
+		for value in values:
+			self.writeUInt24(value)
 
 	def writeTag(self, tag):
 		tag = Tag(tag).tobytes()
