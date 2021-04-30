@@ -234,6 +234,8 @@ class Long(IntValue):
 		return reader.readLongArray(count)
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeLong(value)
+	def writeArray(self, writer, font, tableDict, values):
+		writer.writeLongArray(values)
 
 class ULong(IntValue):
 	staticSize = 4
@@ -243,6 +245,8 @@ class ULong(IntValue):
 		return reader.readULongArray(count)
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeULong(value)
+	def writeArray(self, writer, font, tableDict, values):
+		writer.writeULongArray(values)
 
 class Flags32(ULong):
 	@staticmethod
@@ -257,6 +261,8 @@ class Short(IntValue):
 		return reader.readShortArray(count)
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeShort(value)
+	def writeArray(self, writer, font, tableDict, values):
+		writer.writeShortArray(values)
 
 class UShort(IntValue):
 	staticSize = 2
@@ -266,6 +272,8 @@ class UShort(IntValue):
 		return reader.readUShortArray(count)
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeUShort(value)
+	def writeArray(self, writer, font, tableDict, values):
+		writer.writeUShortArray(values)
 
 class Int8(IntValue):
 	staticSize = 1
@@ -275,6 +283,8 @@ class Int8(IntValue):
 		return reader.readInt8Array(count)
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeInt8(value)
+	def writeArray(self, writer, font, tableDict, values):
+		writer.writeInt8Array(values)
 
 class UInt8(IntValue):
 	staticSize = 1
@@ -284,6 +294,8 @@ class UInt8(IntValue):
 		return reader.readUInt8Array(count)
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeUInt8(value)
+	def writeArray(self, writer, font, tableDict, values):
+		writer.writeUInt8Array(values)
 
 class UInt24(IntValue):
 	staticSize = 3

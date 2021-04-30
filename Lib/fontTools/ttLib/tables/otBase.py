@@ -428,22 +428,34 @@ class OTTableWriter(object):
 
 	def writeValue(self, typecode, value):
 		self.items.append(struct.pack(f">{typecode}", value))
+	def writeArray(self, typecode, values):
+		a = array.array(typecode, values)
+		if sys.byteorder != "big": a.byteswap()
+		self.items.append(a.tobytes())
 
 	def writeUShort(self, value):
 		assert 0 <= value < 0x10000, value
 		self.items.append(struct.pack(">H", value))
+	def writeUShortArray(self, values):
+		self.writeArray('H', values)
 
 	def writeShort(self, value):
 		assert -32768 <= value < 32768, value
 		self.items.append(struct.pack(">h", value))
+	def writeShortArray(self, values):
+		self.writeArray('h', values)
 
 	def writeUInt8(self, value):
 		assert 0 <= value < 256, value
 		self.items.append(struct.pack(">B", value))
+	def writeUInt8Array(self, values):
+		self.writeArray('B', values)
 
 	def writeInt8(self, value):
 		assert -128 <= value < 128, value
 		self.items.append(struct.pack(">b", value))
+	def writeInt8Array(self, values):
+		self.writeArray('b', values)
 
 	def writeUInt24(self, value):
 		assert 0 <= value < 0x1000000, value
