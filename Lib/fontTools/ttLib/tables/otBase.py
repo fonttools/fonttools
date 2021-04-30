@@ -146,7 +146,7 @@ class OTTableReader(object):
 		value = array.array(typecode, self.data[pos:newpos])
 		if sys.byteorder != "big": value.byteswap()
 		self.pos = newpos
-		return value
+		return value.tolist()
 
 	def readInt8(self):
 		return self.readValue("b", staticSize=1)
