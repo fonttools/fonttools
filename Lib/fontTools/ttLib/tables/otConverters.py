@@ -1627,16 +1627,14 @@ class VarDataValue(BaseConverter):
 
 		return values
 
-	def write(self, writer, font, tableDict, value, repeatIndex=None):
+	def write(self, writer, font, tableDict, values, repeatIndex=None):
 		regionCount = tableDict["VarRegionCount"]
 		shortCount = tableDict["NumShorts"]
 
-		for i in range(min(regionCount, shortCount)):
-			writer.writeShort(value[i])
-		for i in range(min(regionCount, shortCount), regionCount):
-			writer.writeInt8(value[i])
-		for i in range(regionCount, shortCount):
-			writer.writeInt8(0)
+		n1, n2 = min(regionCount, shortCount), max(regionCount, shortCount)
+		writer.writeShortArray(values[:n1])
+		writer.writeInt8Array(values[n1:regionCount])
+		writer.writeInt8Array([0] * (n2 - regionCount))
 
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
 		xmlWriter.simpletag(name, attrs + [("value", value)])
