@@ -338,6 +338,14 @@ class GlyphID(SimpleValue):
 		return l
 	def read(self, reader, font, tableDict):
 		return font.getGlyphName(reader.readValue(self.typecode, self.staticSize))
+	def writeArray(self, writer, font, tableDict, values):
+		glyphMap = font.getReverseGlyphMap()
+		try:
+			values = [glyphMap[glyphname] for glyphname in values]
+		except KeyError:
+			# Slower, but will not throw a KeyError on an out-of-range glyph name.
+			values = [font.getGlyphID(glyphname) for glyphname in values]
+		writer.writeArray(self.typecode, values)
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeValue(self.typecode, font.getGlyphID(value))
 
