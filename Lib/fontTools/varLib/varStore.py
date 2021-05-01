@@ -374,11 +374,10 @@ class _Encoding(object):
 		as a VarData."""
 		c = 6
 		while chars:
-			if chars & 3:
+			if chars & 15:
 				c += 2
-			chars >>= 2
+			chars >>= 4
 		return c
-
 
 	def _find_yourself_best_new_encoding(self, done_by_width):
 		self.best_new_encoding = None
@@ -404,6 +403,8 @@ class _EncodingDict(dict):
 	@staticmethod
 	def _row_characteristics(row):
 		"""Returns encoding characteristics for a row."""
+		longWords = False
+
 		chars = 0
 		i = 1
 		for v in row:
@@ -411,7 +412,22 @@ class _EncodingDict(dict):
 				chars += i
 			if not (-128 <= v <= 127):
 				chars += i * 2
-			i <<= 2
+			if not (-32768 <= v <= 32767):
+				longWords = True
+				break
+			i <<= 4
+
+		if longWords:
+			# Redo; only allow 2byte/4byte encoding
+			chars = 0
+			i = 1
+			for v in row:
+				if v:
+					chars += i * 3 # 3 = 2 | 1
+				if not (-32768 <= v <= 32767):
+					chars += i * 12 # 12 = 8 | 4
+				i <<= 4
+
 		return chars
 
 
