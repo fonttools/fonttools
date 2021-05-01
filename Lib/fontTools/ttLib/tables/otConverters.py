@@ -1622,9 +1622,18 @@ class VarDataValue(BaseConverter):
 		regionCount = tableDict["VarRegionCount"]
 		wordCount = tableDict["NumShorts"]
 
+		# https://github.com/fonttools/fonttools/issues/2279
+		longWords = bool(wordCount & 0x8000)
+		wordCount = wordCount & 0x7FFF
+
+		(readBigArray, readSmallArray) = {
+			False: (reader.readShortArray, reader.readInt8Array),
+			True:  (reader.readLongArray,  reader.readShortArray),
+		}[longWords]
+
 		n1, n2 = min(regionCount, wordCount), max(regionCount, wordCount)
-		values.extend(reader.readShortArray(n1))
-		values.extend(reader.readInt8Array(n2 - n1))
+		values.extend(readBigArray(n1))
+		values.extend(readSmallArray(n2 - n1))
 		if n2 > regionCount: # Padding
 			del values[regionCount:]
 
@@ -1634,11 +1643,20 @@ class VarDataValue(BaseConverter):
 		regionCount = tableDict["VarRegionCount"]
 		wordCount = tableDict["NumShorts"]
 
+		# https://github.com/fonttools/fonttools/issues/2279
+		longWords = bool(wordCount & 0x8000)
+		wordCount = wordCount & 0x7FFF
+
+		(writeBigArray, writeSmallArray) = {
+			False: (writer.writeShortArray, writer.writeInt8Array),
+			True:  (writer.writeLongArray,  writer.writeShortArray),
+		}[longWords]
+
 		n1, n2 = min(regionCount, wordCount), max(regionCount, wordCount)
-		writer.writeShortArray(values[:n1])
-		writer.writeInt8Array(values[n1:regionCount])
+		writeBigArray(values[:n1])
+		writeSmallArray(values[n1:regionCount])
 		if n2 > regionCount: # Padding
-			writer.writeInt8Array([0] * (n2 - regionCount))
+			writer.writeSmallArray([0] * (n2 - regionCount))
 
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
 		xmlWriter.simpletag(name, attrs + [("value", value)])
