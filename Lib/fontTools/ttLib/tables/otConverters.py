@@ -1620,9 +1620,9 @@ class VarDataValue(BaseConverter):
 		values = []
 
 		regionCount = tableDict["VarRegionCount"]
-		shortCount = tableDict["NumShorts"]
+		wordCount = tableDict["NumShorts"]
 
-		n1, n2 = min(regionCount, shortCount), max(regionCount, shortCount)
+		n1, n2 = min(regionCount, wordCount), max(regionCount, wordCount)
 		values.extend(reader.readShortArray(n1))
 		values.extend(reader.readInt8Array(n2 - n1))
 		if n2 > regionCount: # Padding
@@ -1632,9 +1632,9 @@ class VarDataValue(BaseConverter):
 
 	def write(self, writer, font, tableDict, values, repeatIndex=None):
 		regionCount = tableDict["VarRegionCount"]
-		shortCount = tableDict["NumShorts"]
+		wordCount = tableDict["NumShorts"]
 
-		n1, n2 = min(regionCount, shortCount), max(regionCount, shortCount)
+		n1, n2 = min(regionCount, wordCount), max(regionCount, wordCount)
 		writer.writeShortArray(values[:n1])
 		writer.writeInt8Array(values[n1:regionCount])
 		if n2 > regionCount: # Padding
