@@ -277,7 +277,7 @@ class SegmentToPointPen(AbstractPen):
 
 	def curveTo(self, *pts):
 		if not pts:
-			raise PenError("Must pass in at least one point")
+			raise TypeError("Must pass in at least one point")
 		if self.contour is None:
 			raise PenError("Contour missing required initial moveTo")
 		for pt in pts[:-1]:
@@ -286,7 +286,7 @@ class SegmentToPointPen(AbstractPen):
 
 	def qCurveTo(self, *pts):
 		if not pts:
-			raise PenError("Must pass in at least one point")
+			raise TypeError("Must pass in at least one point")
 		if pts[-1] is None:
 			self.contour = []
 		else:
