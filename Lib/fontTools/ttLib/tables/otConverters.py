@@ -1625,7 +1625,8 @@ class VarDataValue(BaseConverter):
 		n1, n2 = min(regionCount, shortCount), max(regionCount, shortCount)
 		values.extend(reader.readShortArray(n1))
 		values.extend(reader.readInt8Array(n2 - n1))
-		del values[regionCount:]
+		if n2 > regionCount: # Padding
+			del values[regionCount:]
 
 		return values
 
@@ -1636,7 +1637,8 @@ class VarDataValue(BaseConverter):
 		n1, n2 = min(regionCount, shortCount), max(regionCount, shortCount)
 		writer.writeShortArray(values[:n1])
 		writer.writeInt8Array(values[n1:regionCount])
-		writer.writeInt8Array([0] * (n2 - regionCount))
+		if n2 > regionCount: # Padding
+			writer.writeInt8Array([0] * (n2 - regionCount))
 
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
 		xmlWriter.simpletag(name, attrs + [("value", value)])
