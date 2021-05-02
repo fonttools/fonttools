@@ -138,7 +138,7 @@ def interpolate_cff2_metrics(varfont, topDict, glyphOrder, loc):
 			# Happens with non-marking glyphs
 			lsb_delta = 0
 		else:
-			lsb = boundsPen.bounds[0]
+			lsb = otRound(boundsPen.bounds[0])
 			lsb_delta = entry[1] - lsb
 
 		if lsb_delta or width_delta:
