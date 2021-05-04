@@ -161,7 +161,7 @@ class OTTableReader(object):
 	def readLong(self):
 		return self.readValue("l", staticSize=4)
 	def readLongArray(self, count):
-		return self.readArray("l", staticSize=4, count=count)
+		return self.readArray("i", staticSize=4, count=count)
 
 	def readUInt8(self):
 		return self.readValue("B", staticSize=1)
@@ -176,7 +176,7 @@ class OTTableReader(object):
 	def readULong(self):
 		return self.readValue("L", staticSize=4)
 	def readULongArray(self, count):
-		return self.readArray("L", staticSize=4, count=count)
+		return self.readArray("I", staticSize=4, count=count)
 
 	def readUInt24(self):
 		pos = self.pos
@@ -449,7 +449,7 @@ class OTTableWriter(object):
 	def writeLong(self, value):
 		self.items.append(struct.pack(">l", value))
 	def writeLongArray(self, values):
-		self.writeArray('l', values)
+		self.writeArray('i', values)
 
 	def writeUInt8(self, value):
 		assert 0 <= value < 256, value
@@ -466,7 +466,7 @@ class OTTableWriter(object):
 	def writeULong(self, value):
 		self.items.append(struct.pack(">L", value))
 	def writeULongArray(self, values):
-		self.writeArray('L', values)
+		self.writeArray('I', values)
 
 	def writeUInt24(self, value):
 		assert 0 <= value < 0x1000000, value
