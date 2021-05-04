@@ -18,6 +18,10 @@ import pathops
 __all__ = ["removeOverlaps"]
 
 
+class RemoveOverlapsError(Exception):
+    pass
+
+
 log = logging.getLogger("fontTools.ttLib.removeOverlaps")
 
 _TTGlyphMapping = Mapping[str, ttFont._TTGlyph]
@@ -93,7 +97,12 @@ def removeTTGlyphOverlaps(
         path = skPathFromGlyph(glyphName, glyphSet)
 
         # remove overlaps
-        path2 = pathops.simplify(path, clockwise=path.clockwise)
+        try:
+            path2 = pathops.simplify(path, clockwise=path.clockwise)
+        except pathops.PathOpsError as e:
+            raise RemoveOverlapsError(
+                f"Failed to remove overlaps from glyph {glyphName!r}"
+            ) from e
 
         # replace TTGlyph if simplified path is different (ignoring contour order)
         if {tuple(c) for c in path.contours} != {tuple(c) for c in path2.contours}:
