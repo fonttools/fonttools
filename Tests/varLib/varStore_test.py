@@ -58,18 +58,15 @@ def test_onlineVarStoreBuilder(locations, masterValues):
     mapping = varStore.optimize()
     varIdxs = [mapping[varIdx] for varIdx in varIdxs]
 
-    font = TTFont()
-    fvarAxes = [buildAxis(axisTag) for axisTag in axisTags]
-    font["fvar"] = newTable("fvar")
-    font["fvar"].axes = fvarAxes
-
+    dummyFont = TTFont()
     writer = OTTableWriter()
-    varStore.compile(writer, font)
+    varStore.compile(writer, dummyFont)
     data = writer.getAllData()
     reader = OTTableReader(data)
     varStore = VarStore()
-    varStore.decompile(reader, font)
+    varStore.decompile(reader, dummyFont)
 
+    fvarAxes = [buildAxis(axisTag) for axisTag in axisTags]
     instancer = VarStoreInstancer(varStore, fvarAxes)
     for masters, varIdx in zip(masterValues, varIdxs):
         base, *rest = masters
