@@ -8,12 +8,20 @@ import pytest
     ([0], [[128]], 1),
     ([0, 1, 2], [[128, 1, 2], [3, -129, 5], [6, 7, 8]], 2),
     ([0, 1, 2], [[0, 128, 2], [3, 4, 5], [6, 7, -129]], 3),
+    ([0], [[32768]], 0x8001),
+    ([0, 1, 2], [[32768, 1, 2], [3, -129, 5], [6, 7, 8]], 0x8001),
+    ([0, 1, 2], [[32768, 1, 2], [3, -32769, 5], [6, 7, 8]], 0x8002),
+    ([0, 1, 2], [[0, 32768, 2], [3, 4, 5], [6, 7, -32769]], 0x8003),
 ], ids=[
     "0_regions_0_deltas",
     "1_region_1_uint8",
     "1_region_1_short",
     "3_regions_2_shorts_ordered",
     "3_regions_2_shorts_unordered",
+    "1_region_1_long",
+    "3_regions_1_long_ordered",
+    "3_regions_2_longs_ordered",
+    "3_regions_2_longs_unordered",
 ])
 def test_buildVarData_no_optimize(region_indices, items, expected_num_shorts):
     data = buildVarData(region_indices, items, optimize=False)
