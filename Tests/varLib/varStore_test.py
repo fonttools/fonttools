@@ -20,7 +20,23 @@ from fontTools.ttLib.tables._f_v_a_r import Axis
             [
                 [10, 20, 40, 60],
                 [100, 2000, 400, 6000],
-                [100, 22000, 4000, 30000],
+                [177100, 22000, 4000, 30000],
+            ],
+        ),
+        (
+            [{}, {"a": 1}],
+            [
+                [10, 20],
+                [42000, 100],
+                [100, 52000],
+            ],
+        ),
+        (
+            [{}, {"a": 1}, {"b": 1}, {"a": 1, "b": 1}],
+            [
+                [10, 20, 40, 60],
+                [40000, 42000, 400, 6000],
+                [100, 22000, 4000, 173000],
             ],
         ),
     ],
@@ -30,26 +46,18 @@ def test_onlineVarStoreBuilder(locations, masterValues):
     model = VariationModel(locations)
     builder = OnlineVarStoreBuilder(axisTags)
     builder.setModel(model)
-    expectedDeltasAndVarIdxs = []
+    varIdxs = []
     for masters in masterValues:
-        base, *deltas = model.getDeltas(masters)
-        varIdx = builder.storeDeltas(deltas)
-        expectedDeltasAndVarIdxs.append((deltas, varIdx))
+        _, varIdx = builder.storeMasters(masters)
+        varIdxs.append(varIdx)
 
     varStore = builder.finish()
     mapping = varStore.optimize()
-    expectedDeltasAndVarIdxs = [
-        (deltas, mapping[varIdx]) for deltas, varIdx in expectedDeltasAndVarIdxs
-    ]
-
-    for deltas, varIdx in expectedDeltasAndVarIdxs:
-        major, minor = varIdx >> 16, varIdx & 0xFFFF
-        storedDeltas = varStore.VarData[major].Item[minor]
-        assert deltas == storedDeltas
+    varIdxs = [mapping[varIdx] for varIdx in varIdxs]
 
     fvarAxes = [buildAxis(axisTag) for axisTag in axisTags]
     instancer = VarStoreInstancer(varStore, fvarAxes)
-    for masters, (deltas, varIdx) in zip(masterValues, expectedDeltasAndVarIdxs):
+    for masters, varIdx in zip(masterValues, varIdxs):
         base, *rest = masters
         for expectedValue, loc in zip(masters, locations):
             instancer.setLocation(loc)
