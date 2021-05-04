@@ -37,11 +37,14 @@ def test_onlineVarStoreBuilder(locations, masterValues):
         expectedDeltasAndVarIdxs.append((deltas, varIdx))
 
     varStore = builder.finish()
-    varData = varStore.VarData
+    mapping = varStore.optimize()
+    expectedDeltasAndVarIdxs = [
+        (deltas, mapping[varIdx]) for deltas, varIdx in expectedDeltasAndVarIdxs
+    ]
 
     for deltas, varIdx in expectedDeltasAndVarIdxs:
         major, minor = varIdx >> 16, varIdx & 0xFFFF
-        storedDeltas = varData[major].Item[minor]
+        storedDeltas = varStore.VarData[major].Item[minor]
         assert deltas == storedDeltas
 
     fvarAxes = [buildAxis(axisTag) for axisTag in axisTags]
