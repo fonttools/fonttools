@@ -1,5 +1,5 @@
 from array import array
-from typing import Any, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 from fontTools.misc.fixedTools import MAX_F2DOT14, floatToFixedToFloat
 from fontTools.misc.loggingTools import LogMixin
 from fontTools.pens.pointPen import AbstractPointPen
@@ -26,7 +26,7 @@ class TTGlyphBasePen:
     """
 
     def __init__(
-        self, glyphSet: _TTGlyphSet, handleOverflowingTransforms: bool = True
+        self, glyphSet: Dict[str, Any], handleOverflowingTransforms: bool = True
     ) -> None:
         """
         Construct a new pen.
