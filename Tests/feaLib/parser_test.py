@@ -881,6 +881,24 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(glyphstr(pos.prefix), "[A B]")
         self.assertEqual(glyphstr(pos.suffix), "comma a")
 
+    def test_gpos_type_1_chained_exception1(self):
+        with self.assertRaisesRegex(FeatureLibError, "Positioning values are allowed"):
+            doc = self.parse("feature kern {"
+                             "    pos [A B]' [T Y]' comma a <0 0 0 0>;"
+                             "} kern;")
+
+    def test_gpos_type_1_chained_exception2(self):
+        with self.assertRaisesRegex(FeatureLibError, "Positioning values are allowed"):
+            doc = self.parse("feature kern {"
+                             "    pos [A B]' <0 0 0 0> [T Y]' comma a <0 0 0 0>;"
+                             "} kern;")
+
+    def test_gpos_type_1_chained_exception3(self):
+        with self.assertRaisesRegex(FeatureLibError, "Positioning cannot be applied"):
+            doc = self.parse("feature kern {"
+                             "    pos [A B] <0 0 0 0> [T Y]' comma a <0 0 0 0>;"
+                             "} kern;")
+
     def test_gpos_type_2_format_a(self):
         doc = self.parse("feature kern {"
                          "    pos [T V] -60 [a b c] <1 2 3 4>;"
