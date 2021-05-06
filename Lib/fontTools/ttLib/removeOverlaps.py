@@ -81,6 +81,37 @@ def ttfGlyphFromSkPath(path: pathops.Path) -> _g_l_y_f.Glyph:
     return glyph
 
 
+def _simplify(path: pathops.Path, debugGlyphName: str) -> pathops.Path:
+    # skia-pathops has a bug where it sometimes fails to simplify paths when there
+    # are float coordinates and control points are very close to one another.
+    # Rounding coordinates to integers works around the bug.
+    # Since we are going to round glyf coordinates later on anyway, here it is
+    # ok(-ish) to also round before simplify. Better than failing the whole process
+    # for the entire font.
+    # https://bugs.chromium.org/p/skia/issues/detail?id=11958
+    # https://github.com/google/fonts/issues/3365
+    try:
+        path2 = pathops.simplify(path, clockwise=path.clockwise)
+    except pathops.PathOpsError:
+        path2 = pathops.Path()
+        for verb, points in path:
+            path2.add(verb, *((otRound(p[0]), otRound(p[1])) for p in points))
+        try:
+            path2.simplify(clockwise=path.clockwise)
+        except pathops.PathOpsError as e:
+            path.dump()
+            raise RemoveOverlapsError(
+                f"Failed to remove overlaps from glyph {debugGlyphName!r}"
+            ) from e
+        else:
+            log.debug(
+                "skia-pathops failed to simplify '%s' with float coordinates, "
+                "but succeded using rounded integer coordinates",
+                debugGlyphName,
+            )
+    return path2
+
+
 def removeTTGlyphOverlaps(
     glyphName: str,
     glyphSet: _TTGlyphMapping,
@@ -98,33 +129,7 @@ def removeTTGlyphOverlaps(
         path = skPathFromGlyph(glyphName, glyphSet)
 
         # remove overlaps
-        try:
-            path2 = pathops.simplify(path, clockwise=path.clockwise)
-        except pathops.PathOpsError:
-            # skia-pathops has a bug where it sometimes fails to simplify paths when
-            # there are float coordinates and control points are very close to one
-            # another. Rounding coordinates to integers works around the bug.
-            # Since we are going to round glyf coordinates later on anyway, here
-            # it is ok(-ish) to also round before simplify. Better than failing the
-            # whole process for the entire font.
-            # https://bugs.chromium.org/p/skia/issues/detail?id=11958
-            # https://github.com/google/fonts/issues/3365
-            path2 = pathops.Path()
-            for verb, points in path:
-                path2.add(verb, *((otRound(p[0]), otRound(p[1])) for p in points))
-            try:
-                path2.simplify(clockwise=path.clockwise)
-            except pathops.PathOpsError as e:
-                path.dump()
-                raise RemoveOverlapsError(
-                    f"Failed to remove overlaps from glyph {glyphName!r}"
-                ) from e
-            else:
-                log.debug(
-                    "skia-pathops failed to simplify '%s' with float coordinates, "
-                    "but succeded using rounded integer coordinates",
-                    glyphName,
-                )
+        path2 = _simplify(path, glyphName)
 
         # replace TTGlyph if simplified path is different (ignoring contour order)
         if {tuple(c) for c in path.contours} != {tuple(c) for c in path2.contours}:
