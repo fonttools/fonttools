@@ -1,7 +1,9 @@
 import logging
-from fontTools.ttLib.removeOverlaps import _simplify
-import pathops
 import pytest
+
+pathops = pytest.importorskip("pathops")
+
+from fontTools.ttLib.removeOverlaps import _simplify
 
 
 def test_pathops_simplify_bug_workaround(caplog):
