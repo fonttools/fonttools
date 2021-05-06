@@ -571,7 +571,7 @@ class BaseTable(object):
 			countValue = 1
 			if conv.repeat:
 				if conv.repeat in reader:
-					countValue = reader[conv.repeat]
+					countValue = reader[conv.repeat] + conv.aux
 				else:
 					return NotImplemented
 			totalSize += size * countValue
@@ -968,6 +968,13 @@ class ValueRecord(object):
 		format = 0
 		for name in self.__dict__.keys():
 			format = format | valueRecordFormatDict[name][0]
+		return format
+
+	def getEffectiveFormat(self):
+		format = 0
+		for name,value in self.__dict__.items():
+			if value:
+				format = format | valueRecordFormatDict[name][0]
 		return format
 
 	def toXML(self, xmlWriter, font, valueName, attrs=None):

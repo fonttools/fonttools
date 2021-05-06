@@ -24,6 +24,8 @@
             <BlueFuzz value="0"/>
             <StdHW value="28"/>
             <StdVW value="34"/>
+            <LanguageGroup value="0"/>
+            <ExpansionFactor value="0.06"/>
           </Private>
         </FontDict>
       </FDArray>

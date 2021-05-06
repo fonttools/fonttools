@@ -14,6 +14,7 @@ import struct
 import array
 import logging
 from collections import Counter, defaultdict
+from functools import reduce
 from types import MethodType
 
 __usage__ = "pyftsubset font-file [glyph...] [--option=value]..."
@@ -527,6 +528,17 @@ def subset_glyphs(self, s):
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
+@_add_method(otTables.Device)
+def is_hinting(self):
+	return self.DeltaFormat in (1,2,3)
+
+@_add_method(otTables.ValueRecord)
+def prune_hints(self):
+	for name in ['XPlaDevice', 'YPlaDevice', 'XAdvDevice', 'YAdvDevice']:
+		v = getattr(self, name, None)
+		if v is not None and v.is_hinting():
+			delattr(self, name)
+
 @_add_method(otTables.SinglePos)
 def subset_glyphs(self, s):
 	if self.Format == 1:
@@ -543,15 +555,24 @@ def subset_glyphs(self, s):
 
 @_add_method(otTables.SinglePos)
 def prune_post_subset(self, font, options):
-	if not options.hinting:
-		# Drop device tables
-		self.ValueFormat &= ~0x00F0
+	# Shrink ValueFormat
+	if self.Format == 1:
+		if not options.hinting:
+			self.Value.prune_hints()
+		self.ValueFormat = self.Value.getEffectiveFormat()
+	elif self.Format == 2:
+		if not options.hinting:
+			for v in self.Value:
+				v.prune_hints()
+		self.ValueFormat = reduce(int.__or__, [v.getEffectiveFormat() for v in self.Value], 0)
+
 	# Downgrade to Format 1 if all ValueRecords are the same
 	if self.Format == 2 and all(v == self.Value[0] for v in self.Value):
 		self.Format = 1
 		self.Value = self.Value[0] if self.ValueFormat != 0 else None
 		del self.ValueCount
-	return True
+
+	return bool(self.ValueFormat)
 
 @_add_method(otTables.PairPos)
 def subset_glyphs(self, s):
@@ -587,10 +608,22 @@ def subset_glyphs(self, s):
 @_add_method(otTables.PairPos)
 def prune_post_subset(self, font, options):
 	if not options.hinting:
-		# Drop device tables
-		self.ValueFormat1 &= ~0x00F0
-		self.ValueFormat2 &= ~0x00F0
-	return True
+		attr1, attr2 = {
+			1: ('PairSet', 'PairValueRecord'),
+			2: ('Class1Record', 'Class2Record'),
+		}[self.Format]
+
+		self.ValueFormat1 = self.ValueFormat2 = 0
+		for row in getattr(self, attr1):
+			for r in getattr(row, attr2):
+				if r.Value1:
+					r.Value1.prune_hints()
+					self.ValueFormat1 |= r.Value1.getEffectiveFormat()
+				if r.Value2:
+					r.Value2.prune_hints()
+					self.ValueFormat2 |= r.Value2.getEffectiveFormat()
+
+	return bool(self.ValueFormat1 | self.ValueFormat2)
 
 @_add_method(otTables.CursivePos)
 def subset_glyphs(self, s):
@@ -606,9 +639,15 @@ def subset_glyphs(self, s):
 
 @_add_method(otTables.Anchor)
 def prune_hints(self):
-	# Drop device tables / contour anchor point
-	self.ensureDecompiled()
-	self.Format = 1
+	if self.Format == 2:
+		self.Format = 1
+	elif self.Format == 3:
+		for name in ('XDeviceTable', 'YDeviceTable'):
+			v = getattr(self, name, None)
+			if v is not None and v.is_hinting():
+				setattr(self, name, None)
+		if self.XDeviceTable is None and self.YDeviceTable is None:
+			self.Format = 1
 
 @_add_method(otTables.CursivePos)
 def prune_post_subset(self, font, options):
@@ -713,7 +752,6 @@ def subset_glyphs(self, s):
 @_add_method(otTables.MarkMarkPos)
 def prune_post_subset(self, font, options):
 		if not options.hinting:
-			# Drop device tables or contour anchor point
 			for m in self.Mark1Array.MarkRecord:
 				if m.MarkAnchor:
 					m.MarkAnchor.prune_hints()
@@ -2087,7 +2125,9 @@ def prune_post_subset(self, font, options):
 		for record in colr.table.BaseGlyphV1List.BaseGlyphV1Record:
 			record.Paint.traverse(colr.table, collect_colors_by_index)
 
-	retained_palette_indices = set(colors_by_index.keys())
+	# don't remap palette entry index 0xFFFF, this is always the foreground color
+	# https://github.com/fonttools/fonttools/issues/2257
+	retained_palette_indices = set(colors_by_index.keys()) - {0xFFFF}
 	for palette in self.palettes:
 		palette[:] = [c for i, c in enumerate(palette) if i in retained_palette_indices]
 		assert len(palette) == len(retained_palette_indices)
@@ -2201,7 +2241,7 @@ def subset_glyphs(self, s):
 def remapComponentsFast(self, glyphidmap):
 	if not self.data or struct.unpack(">h", self.data[:2])[0] >= 0:
 		return	# Not composite
-	data = array.array("B", self.data)
+	data = self.data = bytearray(self.data)
 	i = 10
 	more = 1
 	while more:
@@ -2220,8 +2260,6 @@ def remapComponentsFast(self, glyphidmap):
 		elif flags & 0x0040: i += 4	# WE_HAVE_AN_X_AND_Y_SCALE
 		elif flags & 0x0080: i += 8	# WE_HAVE_A_TWO_BY_TWO
 		more = flags & 0x0020	# MORE_COMPONENTS
-
-	self.data = data.tobytes()
 
 @_add_method(ttLib.getTableClass('glyf'))
 def closure_glyphs(self, s):
@@ -2245,7 +2283,7 @@ def prune_pre_subset(self, font, options):
 		g = self[self.glyphOrder[0]]
 		# Yay, easy!
 		g.__dict__.clear()
-		g.data = ""
+		g.data = b''
 	return True
 
 @_add_method(ttLib.getTableClass('glyf'))
@@ -2260,7 +2298,7 @@ def subset_glyphs(self, s):
 	Glyph = ttLib.getTableModule('glyf').Glyph
 	for g in s.glyphs_emptied:
 		self.glyphs[g] = Glyph()
-		self.glyphs[g].data = ''
+		self.glyphs[g].data = b''
 	self.glyphOrder = [g for g in self.glyphOrder if g in s.glyphs or g in s.glyphs_emptied]
 	# Don't drop empty 'glyf' tables, otherwise 'loca' doesn't get subset.
 	return True

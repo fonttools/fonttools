@@ -71,10 +71,10 @@ def strjoin(iterable, joiner=""):
 
 
 def tobytes(s, encoding="ascii", errors="strict"):
-    if not isinstance(s, bytes):
+    if isinstance(s, str):
         return s.encode(encoding, errors)
     else:
-        return s
+        return bytes(s)
 
 
 def tounicode(s, encoding="ascii", errors="strict"):

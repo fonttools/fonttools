@@ -1,3 +1,43 @@
+4.22.1 (released 2021-04-26)
+----------------------------
+
+- [feaLib] Skip references to named lookups if the lookup block definition
+  is empty, similarly to makeotf. This also fixes an ``AttributeError`` while
+  generating ``aalt`` feature (#2276, #2277).
+- [subset] Fixed bug with ``--no-hinting`` implementation for Device tables (#2272,
+  #2275). The previous code was alwyas dropping Device tables if no-hinting was
+  requested, but some Device tables (DeltaFormat=0x8000) are also used to encode
+  variation indices and need to be retained.
+- [otBase] Fixed bug in getting the ValueRecordSize when decompiling ``MVAR``
+  table with ``lazy=True`` (#2273, #2274).
+- [varLib/glyf/gvar] Optimized and simplified ``GlyphCoordinates`` and
+  ``TupleVariation`` classes, use ``bytearray`` where possible, refactored
+  phantom-points calculations. We measured about 30% speedup in total time
+  of loading master ttfs, building gvar, and saving (#2261, #2266).
+- [subset] Fixed ``AssertionError`` while pruning unused CPAL palettes when
+  ``0xFFFF`` is present (#2257, #2259).
+
+4.22.0 (released 2021-04-01)
+----------------------------
+
+- [ttLib] Remove .Format from Coverage, ClassDef, SingleSubst, LigatureSubst,
+  AlternateSubst, MultipleSubst (#2238).
+  ATTENTION: This will change your TTX dumps!
+- [misc.arrayTools] move Vector to its own submodule, and rewrite as a tuple
+  subclass (#2201).
+- [docs] Added a terminology section for varLib (#2209).
+- [varLib] Move rounding to VariationModel, to avoid error accumulation from
+  multiple deltas (#2214)
+- [varLib] Explain merge errors in more human-friendly terms (#2223, #2226)
+- [otlLib] Correct some documentation (#2225)
+- [varLib/otlLib] Allow merging into VariationFont without first saving GPOS
+  PairPos2 (#2229)
+- [subset] Improve PairPosFormat2 subsetting (#2221)
+- [ttLib] TTFont.save: create file on disk as late as possible (#2253)
+- [cffLib] Add missing CFF2 dict operators LanguageGroup and ExpansionFactor
+  (#2249)
+  ATTENTION: This will change your TTX dumps!
+
 4.21.1 (released 2021-02-26)
 ----------------------------
 

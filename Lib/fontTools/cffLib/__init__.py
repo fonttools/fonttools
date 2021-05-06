@@ -2106,6 +2106,8 @@ privateDictOperators2 = [
 	(11,		'StdVW',		'number',	None,	None),
 	((12, 12),	'StemSnapH',		'delta',	None,	None),
 	((12, 13),	'StemSnapV',		'delta',	None,	None),
+	((12, 17),	'LanguageGroup',	'number',	0,	None),
+	((12, 18),	'ExpansionFactor',	'number',	0.06,	None),
 	(19,		'Subrs',		'number',	None,	SubrsConverter()),
 ]
 
