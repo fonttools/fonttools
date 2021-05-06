@@ -489,7 +489,7 @@ class Parser(object):
                         self.cur_token_location_
                     )
                 values = marked_values
-            else:
+            elif values and values[-1]:
                 if len(glyphs) > 1 or any(values[:-1]):
                     raise FeatureLibError(
                         "Positioning values are allowed only in the marked glyph "
