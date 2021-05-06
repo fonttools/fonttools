@@ -473,14 +473,31 @@ class Parser(object):
             assert lookups == []
             return ([], prefix, [None] * len(prefix), values, [], hasMarks)
         else:
-            assert not any(values[: len(prefix)]), values
-            format1 = values[len(prefix) :][: len(glyphs)]
-            format2 = values[(len(prefix) + len(glyphs)) :][: len(suffix)]
-            values = (
-                format2
-                if format2 and isinstance(format2[0], self.ast.ValueRecord)
-                else format1
-            )
+            if any(values[: len(prefix)]):
+                raise FeatureLibError(
+                    "Positioning cannot be applied in the bactrack glyph sequence, "
+                    "before the marked glyph sequence.",
+                    self.cur_token_location_
+                )
+            marked_values = values[len(prefix) : len(prefix) + len(glyphs)]
+            if any(marked_values):
+                if any(values[len(prefix) + len(glyphs) :]):
+                    raise FeatureLibError(
+                        "Positioning values are allowed only in the marked glyph "
+                        "sequence, or after the final glyph node when only one glyph "
+                        "node is marked.",
+                        self.cur_token_location_
+                    )
+                values = marked_values
+            else:
+                if len(glyphs) > 1 or any(values[:-1]):
+                    raise FeatureLibError(
+                        "Positioning values are allowed only in the marked glyph "
+                        "sequence, or after the final glyph node when only one glyph "
+                        "node is marked.",
+                        self.cur_token_location_
+                    )
+                values = values[-1:]
             return (prefix, glyphs, lookups, values, suffix, hasMarks)
 
     def parse_chain_context_(self):
