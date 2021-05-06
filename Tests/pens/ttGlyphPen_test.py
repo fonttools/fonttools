@@ -398,14 +398,17 @@ class TTGlyphPointPenTest:
 
         assert plainGlyph == compositeGlyph
 
-    # def test_remove_extra_move_points(self):
-    #     pen = TTGlyphPointPen(None)
-    #     pen.moveTo((0, 0))
-    #     pen.lineTo((100, 0))
-    #     pen.qCurveTo((100, 50), (50, 100), (0, 0))
-    #     pen.closePath()
-    #     assert len(pen.points) == 4
-    #     assert pen.points[0] == (0, 0)
+    def test_remove_extra_move_points(self):
+        pen = TTGlyphPointPen(None)
+        pen.beginPath()
+        pen.addPoint((0, 0), "line")
+        pen.addPoint((100, 0), "line")
+        pen.addPoint((100, 50))
+        pen.addPoint((50, 100))
+        pen.addPoint((0, 0), "qcurve")
+        pen.endPath()
+        assert len(pen.points) == 4
+        assert pen.points[0] == (0, 0)
 
     # def test_keep_move_point(self):
     #     pen = TTGlyphPointPen(None)
