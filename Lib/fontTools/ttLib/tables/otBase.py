@@ -106,6 +106,10 @@ class BaseTTXConverter(DefaultTable):
 		self.table.populateDefaults()
 
 
+# https://github.com/fonttools/fonttools/pull/2285#issuecomment-834652928
+assert len(struct.pack('i', 0)) == 4
+assert array.array('i').itemsize == 4, "Oops, file a bug against fonttools."
+
 class OTTableReader(object):
 
 	"""Helper class to retrieve data from an OpenType table."""
@@ -159,7 +163,7 @@ class OTTableReader(object):
 		return self.readArray("h", staticSize=2, count=count)
 
 	def readLong(self):
-		return self.readValue("l", staticSize=4)
+		return self.readValue("i", staticSize=4)
 	def readLongArray(self, count):
 		return self.readArray("i", staticSize=4, count=count)
 
@@ -174,7 +178,7 @@ class OTTableReader(object):
 		return self.readArray("H", staticSize=2, count=count)
 
 	def readULong(self):
-		return self.readValue("L", staticSize=4)
+		return self.readValue("I", staticSize=4)
 	def readULongArray(self, count):
 		return self.readArray("I", staticSize=4, count=count)
 
@@ -447,7 +451,7 @@ class OTTableWriter(object):
 		self.writeArray('h', values)
 
 	def writeLong(self, value):
-		self.items.append(struct.pack(">l", value))
+		self.items.append(struct.pack(">i", value))
 	def writeLongArray(self, values):
 		self.writeArray('i', values)
 
@@ -464,7 +468,7 @@ class OTTableWriter(object):
 		self.writeArray('H', values)
 
 	def writeULong(self, value):
-		self.items.append(struct.pack(">L", value))
+		self.items.append(struct.pack(">I", value))
 	def writeULongArray(self, values):
 		self.writeArray('I', values)
 
@@ -561,11 +565,11 @@ def packUShort(value):
 
 def packULong(value):
 	assert 0 <= value < 0x100000000, value
-	return struct.pack(">L", value)
+	return struct.pack(">I", value)
 
 def packUInt24(value):
 	assert 0 <= value < 0x1000000, value
-	return struct.pack(">L", value)[1:]
+	return struct.pack(">I", value)[1:]
 
 
 class BaseTable(object):
