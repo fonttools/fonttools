@@ -192,8 +192,12 @@ class BaseConverter(object):
 		raise NotImplementedError(self)
 
 	def writeArray(self, writer, font, tableDict, values):
-		for i, value in enumerate(values):
-			self.write(writer, font, tableDict, value, i)
+		try:
+			for i, value in enumerate(values):
+				self.write(writer, font, tableDict, value, i)
+		except Exception as e:
+			e.args = e.args + (i,)
+			raise
 
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		"""Write a value to the writer."""

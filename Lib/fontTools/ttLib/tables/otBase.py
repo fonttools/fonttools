@@ -727,12 +727,10 @@ class BaseTable(object):
 				else:
 					# conv.repeat is a propagated count
 					writer[conv.repeat].setValue(countValue)
-				values = value
 				try:
-					conv.writeArray(writer, font, table, values)
+					conv.writeArray(writer, font, table, value)
 				except Exception as e:
-					name = value.__class__.__name__ if value is not None else conv.name
-					e.args = e.args + (name+'[]',)
+					e.args = e.args + (conv.name+'[]',)
 					raise
 			elif conv.isCount:
 				# Special-case Count values.
