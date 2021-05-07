@@ -1630,10 +1630,10 @@ class VarDataValue(BaseConverter):
 		longWords = bool(wordCount & 0x8000)
 		wordCount = wordCount & 0x7FFF
 
-		(readBigArray, readSmallArray) = {
-			False: (reader.readShortArray, reader.readInt8Array),
-			True:  (reader.readLongArray,  reader.readShortArray),
-		}[longWords]
+		if longWords:
+			readBigArray, readSmallArray = reader.readLongArray, reader.readShortArray
+		else:
+			readBigArray, readSmallArray = reader.readShortArray, reader.readInt8Array
 
 		n1, n2 = min(regionCount, wordCount), max(regionCount, wordCount)
 		values.extend(readBigArray(n1))
