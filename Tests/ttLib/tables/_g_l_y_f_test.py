@@ -362,6 +362,23 @@ class GlyfTableTest(unittest.TestCase):
         self.assertEqual(font["glyf"][".notdef"].numberOfContours, 0)
         self.assertEqual(font["glyf"]["space"].numberOfContours, 0)
 
+    def test_getPhantomPoints(self):
+        # https://github.com/fonttools/fonttools/issues/2295
+        font = TTFont()
+        glyphNames = [".notdef"]
+        font.setGlyphOrder(glyphNames)
+        font["loca"] = newTable("loca")
+        font["loca"].locations = [0] * (len(glyphNames) + 1)
+        font["glyf"] = newTable("glyf")
+        font["glyf"].decompile(b"\x00", font)
+        font["hmtx"] = newTable("hmtx")
+        font["hmtx"].metrics = {".notdef": (100,0)}
+        font["head"] = newTable("head")
+        font["head"].unitsPerEm = 1000
+        self.assertEqual(
+            font["glyf"].getPhantomPoints(".notdef", font, 0), 
+            [(0, 0), (100, 0), (0, 0), (0, -1000)]
+        )
 
 class GlyphTest:
 
