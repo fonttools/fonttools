@@ -5,7 +5,7 @@ Requires https://github.com/fonttools/skia-pathops
 
 import itertools
 import logging
-from typing import Iterable, Optional, Mapping
+from typing import Callable, Iterable, Optional, Mapping
 
 from fontTools.misc.roundTools import otRound
 from fontTools.ttLib import ttFont
@@ -81,6 +81,15 @@ def ttfGlyphFromSkPath(path: pathops.Path) -> _g_l_y_f.Glyph:
     return glyph
 
 
+def _round_path(
+    path: pathops.Path, round: Callable[[float], float] = otRound
+) -> pathops.Path:
+    rounded_path = pathops.Path()
+    for verb, points in path:
+        rounded_path.add(verb, *((round(p[0]), round(p[1])) for p in points))
+    return rounded_path
+
+
 def _simplify(path: pathops.Path, debugGlyphName: str) -> pathops.Path:
     # skia-pathops has a bug where it sometimes fails to simplify paths when there
     # are float coordinates and control points are very close to one another.
@@ -90,26 +99,28 @@ def _simplify(path: pathops.Path, debugGlyphName: str) -> pathops.Path:
     # for the entire font.
     # https://bugs.chromium.org/p/skia/issues/detail?id=11958
     # https://github.com/google/fonts/issues/3365
+    # TODO(anthrotype): remove once this Skia bug is fixed
     try:
-        path2 = pathops.simplify(path, clockwise=path.clockwise)
+        return pathops.simplify(path, clockwise=path.clockwise)
     except pathops.PathOpsError:
-        path2 = pathops.Path()
-        for verb, points in path:
-            path2.add(verb, *((otRound(p[0]), otRound(p[1])) for p in points))
-        try:
-            path2.simplify(clockwise=path.clockwise)
-        except pathops.PathOpsError as e:
-            path.dump()
-            raise RemoveOverlapsError(
-                f"Failed to remove overlaps from glyph {debugGlyphName!r}"
-            ) from e
-        else:
-            log.debug(
-                "skia-pathops failed to simplify '%s' with float coordinates, "
-                "but succeded using rounded integer coordinates",
-                debugGlyphName,
-            )
-    return path2
+        pass
+
+    path = _round_path(path)
+    try:
+        path = pathops.simplify(path, clockwise=path.clockwise)
+        log.debug(
+            "skia-pathops failed to simplify '%s' with float coordinates, "
+            "but succeded using rounded integer coordinates",
+            debugGlyphName,
+        )
+        return path
+    except pathops.PathOpsError as e:
+        path.dump()
+        raise RemoveOverlapsError(
+            f"Failed to remove overlaps from glyph {debugGlyphName!r}"
+        ) from e
+
+    raise AssertionError("Unreachable")
 
 
 def removeTTGlyphOverlaps(

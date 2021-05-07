@@ -3,7 +3,7 @@ import pytest
 
 pathops = pytest.importorskip("pathops")
 
-from fontTools.ttLib.removeOverlaps import _simplify
+from fontTools.ttLib.removeOverlaps import _simplify, _round_path
 
 
 def test_pathops_simplify_bug_workaround(caplog):
@@ -48,8 +48,4 @@ def test_pathops_simplify_bug_workaround(caplog):
     expected.lineTo(713, 0)
     expected.close()
 
-    rounded_result = pathops.Path()
-    for verb, pts in result:
-        rounded_result.add(verb, *((round(p[0], 3), round(p[1], 3)) for p in pts))
-
-    assert expected == rounded_result
+    assert expected == _round_path(result, round=lambda v: round(v, 3))
