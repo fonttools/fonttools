@@ -374,7 +374,7 @@ class _Encoding(object):
 		as a VarData."""
 		c = 6
 		while chars:
-			if chars & 15:
+			if chars & 0b1111:
 				c += 2
 			chars >>= 4
 		return c
@@ -411,7 +411,7 @@ class _EncodingDict(dict):
 			if v:
 				chars += i
 			if not (-128 <= v <= 127):
-				chars += i * 2
+				chars += i * 0b0010
 			if not (-32768 <= v <= 32767):
 				longWords = True
 				break
@@ -423,9 +423,9 @@ class _EncodingDict(dict):
 			i = 1
 			for v in row:
 				if v:
-					chars += i * 3 # 3 = 2 | 1
+					chars += i * 0b0011
 				if not (-32768 <= v <= 32767):
-					chars += i * 12 # 12 = 8 | 4
+					chars += i * 0b1100
 				i <<= 4
 
 		return chars
