@@ -498,6 +498,13 @@ class Parser(object):
                         self.cur_token_location_
                     )
                 values = values[-1:]
+            elif any(values):
+                raise FeatureLibError(
+                    "Positioning values are allowed only in the marked glyph "
+                    "sequence, or after the final glyph node when only one glyph "
+                    "node is marked.",
+                    self.cur_token_location_
+                )
             return (prefix, glyphs, lookups, values, suffix, hasMarks)
 
     def parse_chain_context_(self):

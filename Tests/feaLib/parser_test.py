@@ -899,6 +899,12 @@ class ParserTest(unittest.TestCase):
                              "    pos [A B] <0 0 0 0> [T Y]' comma a <0 0 0 0>;"
                              "} kern;")
 
+    def test_gpos_type_1_chained_exception4(self):
+        with self.assertRaisesRegex(FeatureLibError, "Positioning values are allowed"):
+            doc = self.parse("feature kern {"
+                             "    pos a' b c 123 d;"
+                             "} kern;")
+
     def test_gpos_type_2_format_a(self):
         doc = self.parse("feature kern {"
                          "    pos [T V] -60 [a b c] <1 2 3 4>;"
