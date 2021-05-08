@@ -870,6 +870,41 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(glyphstr(pos.prefix), "[A B]")
         self.assertEqual(glyphstr(pos.suffix), "comma")
 
+    def test_gpos_type_1_chained_special_kern_format_valuerecord_format_b_bug2293(self):
+        # https://github.com/fonttools/fonttools/issues/2293
+        doc = self.parse("feature kern {pos [A B] [T Y]' comma a <0 0 0 0>;} kern;")
+        pos = doc.statements[0].statements[0]
+        self.assertIsInstance(pos, ast.SinglePosStatement)
+        [(glyphs, value)] = pos.pos
+        self.assertEqual(glyphstr([glyphs]), "[T Y]")
+        self.assertEqual(value.asFea(), "<0 0 0 0>")
+        self.assertEqual(glyphstr(pos.prefix), "[A B]")
+        self.assertEqual(glyphstr(pos.suffix), "comma a")
+
+    def test_gpos_type_1_chained_exception1(self):
+        with self.assertRaisesRegex(FeatureLibError, "Positioning values are allowed"):
+            doc = self.parse("feature kern {"
+                             "    pos [A B]' [T Y]' comma a <0 0 0 0>;"
+                             "} kern;")
+
+    def test_gpos_type_1_chained_exception2(self):
+        with self.assertRaisesRegex(FeatureLibError, "Positioning values are allowed"):
+            doc = self.parse("feature kern {"
+                             "    pos [A B]' <0 0 0 0> [T Y]' comma a <0 0 0 0>;"
+                             "} kern;")
+
+    def test_gpos_type_1_chained_exception3(self):
+        with self.assertRaisesRegex(FeatureLibError, "Positioning cannot be applied"):
+            doc = self.parse("feature kern {"
+                             "    pos [A B] <0 0 0 0> [T Y]' comma a <0 0 0 0>;"
+                             "} kern;")
+
+    def test_gpos_type_1_chained_exception4(self):
+        with self.assertRaisesRegex(FeatureLibError, "Positioning values are allowed"):
+            doc = self.parse("feature kern {"
+                             "    pos a' b c 123 d;"
+                             "} kern;")
+
     def test_gpos_type_2_format_a(self):
         doc = self.parse("feature kern {"
                          "    pos [T V] -60 [a b c] <1 2 3 4>;"
