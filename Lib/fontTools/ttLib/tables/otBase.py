@@ -106,6 +106,10 @@ class BaseTTXConverter(DefaultTable):
 		self.table.populateDefaults()
 
 
+# https://github.com/fonttools/fonttools/pull/2285#issuecomment-834652928
+assert len(struct.pack('i', 0)) == 4
+assert array.array('i').itemsize == 4, "Oops, file a bug against fonttools."
+
 class OTTableReader(object):
 
 	"""Helper class to retrieve data from an OpenType table."""
@@ -140,32 +144,43 @@ class OTTableReader(object):
 		value, = struct.unpack(f">{typecode}", self.data[pos:newpos])
 		self.pos = newpos
 		return value
-
-	def readUShort(self):
-		return self.readValue("H", staticSize=2)
-
 	def readArray(self, typecode, staticSize, count):
 		pos = self.pos
 		newpos = pos + count * staticSize
 		value = array.array(typecode, self.data[pos:newpos])
 		if sys.byteorder != "big": value.byteswap()
 		self.pos = newpos
-		return value
-
-	def readUShortArray(self, count):
-		return self.readArray("H", staticSize=2, count=count)
+		return value.tolist()
 
 	def readInt8(self):
 		return self.readValue("b", staticSize=1)
+	def readInt8Array(self, count):
+		return self.readArray("b", staticSize=1, count=count)
 
 	def readShort(self):
 		return self.readValue("h", staticSize=2)
+	def readShortArray(self, count):
+		return self.readArray("h", staticSize=2, count=count)
 
 	def readLong(self):
-		return self.readValue("l", staticSize=4)
+		return self.readValue("i", staticSize=4)
+	def readLongArray(self, count):
+		return self.readArray("i", staticSize=4, count=count)
 
 	def readUInt8(self):
 		return self.readValue("B", staticSize=1)
+	def readUInt8Array(self, count):
+		return self.readArray("B", staticSize=1, count=count)
+
+	def readUShort(self):
+		return self.readValue("H", staticSize=2)
+	def readUShortArray(self, count):
+		return self.readArray("H", staticSize=2, count=count)
+
+	def readULong(self):
+		return self.readValue("I", staticSize=4)
+	def readULongArray(self, count):
+		return self.readArray("I", staticSize=4, count=count)
 
 	def readUInt24(self):
 		pos = self.pos
@@ -173,9 +188,8 @@ class OTTableReader(object):
 		value, = struct.unpack(">l", b'\0'+self.data[pos:newpos])
 		self.pos = newpos
 		return value
-
-	def readULong(self):
-		return self.readValue("L", staticSize=4)
+	def readUInt24Array(self, count):
+		return [self.readUInt24() for _ in range(count)]
 
 	def readTag(self):
 		pos = self.pos
@@ -419,33 +433,52 @@ class OTTableWriter(object):
 
 	def writeValue(self, typecode, value):
 		self.items.append(struct.pack(f">{typecode}", value))
-
-	def writeUShort(self, value):
-		assert 0 <= value < 0x10000, value
-		self.items.append(struct.pack(">H", value))
-
-	def writeShort(self, value):
-		assert -32768 <= value < 32768, value
-		self.items.append(struct.pack(">h", value))
-
-	def writeUInt8(self, value):
-		assert 0 <= value < 256, value
-		self.items.append(struct.pack(">B", value))
+	def writeArray(self, typecode, values):
+		a = array.array(typecode, values)
+		if sys.byteorder != "big": a.byteswap()
+		self.items.append(a.tobytes())
 
 	def writeInt8(self, value):
 		assert -128 <= value < 128, value
 		self.items.append(struct.pack(">b", value))
+	def writeInt8Array(self, values):
+		self.writeArray('b', values)
+
+	def writeShort(self, value):
+		assert -32768 <= value < 32768, value
+		self.items.append(struct.pack(">h", value))
+	def writeShortArray(self, values):
+		self.writeArray('h', values)
+
+	def writeLong(self, value):
+		self.items.append(struct.pack(">i", value))
+	def writeLongArray(self, values):
+		self.writeArray('i', values)
+
+	def writeUInt8(self, value):
+		assert 0 <= value < 256, value
+		self.items.append(struct.pack(">B", value))
+	def writeUInt8Array(self, values):
+		self.writeArray('B', values)
+
+	def writeUShort(self, value):
+		assert 0 <= value < 0x10000, value
+		self.items.append(struct.pack(">H", value))
+	def writeUShortArray(self, values):
+		self.writeArray('H', values)
+
+	def writeULong(self, value):
+		self.items.append(struct.pack(">I", value))
+	def writeULongArray(self, values):
+		self.writeArray('I', values)
 
 	def writeUInt24(self, value):
 		assert 0 <= value < 0x1000000, value
 		b = struct.pack(">L", value)
 		self.items.append(b[1:])
-
-	def writeLong(self, value):
-		self.items.append(struct.pack(">l", value))
-
-	def writeULong(self, value):
-		self.items.append(struct.pack(">L", value))
+	def writeUInt24Array(self, values):
+		for value in values:
+			self.writeUInt24(value)
 
 	def writeTag(self, tag):
 		tag = Tag(tag).tobytes()
@@ -532,11 +565,11 @@ def packUShort(value):
 
 def packULong(value):
 	assert 0 <= value < 0x100000000, value
-	return struct.pack(">L", value)
+	return struct.pack(">I", value)
 
 def packUInt24(value):
 	assert 0 <= value < 0x1000000, value
-	return struct.pack(">L", value)[1:]
+	return struct.pack(">I", value)[1:]
 
 
 class BaseTable(object):
@@ -698,14 +731,11 @@ class BaseTable(object):
 				else:
 					# conv.repeat is a propagated count
 					writer[conv.repeat].setValue(countValue)
-				values = value
-				for i, value in enumerate(values):
-					try:
-						conv.write(writer, font, table, value, i)
-					except Exception as e:
-						name = value.__class__.__name__ if value is not None else conv.name
-						e.args = e.args + (name+'['+str(i)+']',)
-						raise
+				try:
+					conv.writeArray(writer, font, table, value)
+				except Exception as e:
+					e.args = e.args + (conv.name+'[]',)
+					raise
 			elif conv.isCount:
 				# Special-case Count values.
 				# Assumption: a Count field will *always* precede

@@ -1261,7 +1261,7 @@ class VariableValue(namedtuple("VariableValue", ["value", "varIdx"])):
 
 	_value_mapper = None
 
-	def __new__(cls, value, varIdx=0):
+	def __new__(cls, value, varIdx=0xFFFFFFFF):
 		return super().__new__(
 			cls,
 			cls._value_mapper(value) if cls._value_mapper else value,
