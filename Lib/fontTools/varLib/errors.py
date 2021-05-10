@@ -12,7 +12,7 @@ class VarLibValidationError(VarLibError):
 class VarLibMergeError(VarLibError):
     """Raised when input data cannot be merged into a variable font."""
 
-    def __init__(self, merger, **kwargs):
+    def __init__(self, merger=None, **kwargs):
         self.merger = merger
         if not kwargs:
             kwargs = {}
@@ -28,17 +28,17 @@ class VarLibMergeError(VarLibError):
         return self.__doc__
 
     def _master_name(self, ix):
-        ttf = self.merger.ttfs[ix]
-        if (
-            "name" in ttf
-            and ttf["name"].getDebugName(1)
-            and ttf["name"].getDebugName(2)
-        ):
-            return ttf["name"].getDebugName(1) + " " + ttf["name"].getDebugName(2)
-        elif hasattr(ttf.reader, "file") and hasattr(ttf.reader.file, "name"):
-            return ttf.reader.file.name
-        else:
-            return "master number %i" % ix
+        if self.merger is not None:
+            ttf = self.merger.ttfs[ix]
+            if (
+                "name" in ttf
+                and ttf["name"].getDebugName(1)
+                and ttf["name"].getDebugName(2)
+            ):
+                return ttf["name"].getDebugName(1) + " " + ttf["name"].getDebugName(2)
+            elif hasattr(ttf.reader, "file") and hasattr(ttf.reader.file, "name"):
+                return ttf.reader.file.name
+        return f"master number {ix}"
 
     @property
     def offender(self):
@@ -76,7 +76,7 @@ class ShouldBeConstant(VarLibMergeError):
 
     @property
     def details(self):
-        if self.stack[0] != ".FeatureCount":
+        if self.stack[0] != ".FeatureCount" or self.merger is None:
             return super().details
         offender_index, offender = self.offender
         bad_ttf = self.merger.ttfs[offender_index]
