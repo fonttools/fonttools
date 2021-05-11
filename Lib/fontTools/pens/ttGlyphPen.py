@@ -54,12 +54,18 @@ class TTGlyphBasePen:
         self.handleOverflowingTransforms = handleOverflowingTransforms
         self.init()
 
+    def _isClosed(self):
+        """
+        Check if the current path is closed.
+        """
+        raise NotImplementedError
+
     def init(self) -> None:
         self.points = []
         self.endPts = []
         self.types = []
         self.components = []
-        self.currentPath = None
+        self._currentContourStartIndex = None
 
     def addComponent(
         self,
@@ -227,25 +233,26 @@ class TTGlyphPointPen(TTGlyphBasePen, LogMixin, AbstractPointPen):
         tpen = TransformPointPen(self, transformation)
         self.glyphSet[glyphName].drawPoints(tpen)
 
+    def _isClosed(self) -> bool:
+        return self._currentContourStartIndex is None
+
     def beginPath(
         self, identifier: Optional[str] = None, **kwargs: Any
     ) -> None:
         """
         Start a new sub path.
         """
-        assert self.currentPath is None
-        self.currentPath = []
+        assert self._isClosed()
+        self._currentContourStartIndex = len(self.points)
 
     def endPath(self) -> None:
         """
         End the current sub path.
         """
         # TrueType contours are always "closed"
-        assert self.currentPath is not None
-        if self.currentPath:
-            endPt = len(self.points) - 1
-            self.endPts.append(endPt)
-        self.currentPath = None
+        assert not self._isClosed()
+        self.endPts.append(len(self.points) - 1)
+        self._currentContourStartIndex = None
 
     def addPoint(
         self,
@@ -259,7 +266,7 @@ class TTGlyphPointPen(TTGlyphBasePen, LogMixin, AbstractPointPen):
         """
         Add a point to the current sub path.
         """
-        assert self.currentPath is not None
+        assert not self._isClosed()
         if segmentType is None:
             self.types.append(0)  # offcurve
         elif segmentType in ("qcurve", "line"):
@@ -268,12 +275,11 @@ class TTGlyphPointPen(TTGlyphBasePen, LogMixin, AbstractPointPen):
             # cubic curves are not supported
             raise NotImplementedError
 
-        self.currentPath.append(pt)
         self.points.append(pt)
 
     def glyph(self, componentFlags: int = 0x4) -> Glyph:
         """
         Returns a :py:class:`~._g_l_y_f.Glyph` object representing the glyph.
         """
-        assert self.currentPath is None
+        assert self._isClosed()
         return self._glyph(componentFlags=componentFlags)
