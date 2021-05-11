@@ -348,14 +348,6 @@ class TTGlyphPointPenTest:
         with pytest.raises(AssertionError):
             pen.beginPath()
 
-    def test_closePath_ignoresAnchors(self):
-        pen = TTGlyphPointPen(None)
-        pen.beginPath()
-        pen.endPath()
-        assert not pen.points
-        assert not pen.types
-        assert not pen.endPts
-
     def test_glyph_errorOnUnendedContour(self):
         pen = TTGlyphPointPen(None)
         pen.beginPath()
