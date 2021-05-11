@@ -3,6 +3,7 @@ import pytest
 import struct
 
 from fontTools import ttLib
+from fontTools.pens.basePen import PenError
 from fontTools.pens.ttGlyphPen import TTGlyphPen, TTGlyphPointPen, MAX_F2DOT14
 
 
@@ -47,7 +48,7 @@ class TTGlyphPenTest(TTGlyphPenTestBase):
     def test_moveTo_errorWithinContour(self):
         pen = TTGlyphPen(None)
         pen.moveTo((0, 0))
-        with pytest.raises(AssertionError):
+        with pytest.raises(PenError):
             pen.moveTo((1, 0))
 
     def test_closePath_ignoresAnchors(self):
@@ -78,7 +79,7 @@ class TTGlyphPenTest(TTGlyphPenTestBase):
     def test_glyph_errorOnUnendedContour(self):
         pen = TTGlyphPen(None)
         pen.moveTo((0, 0))
-        with pytest.raises(AssertionError):
+        with pytest.raises(PenError):
             pen.glyph()
 
     def test_glyph_decomposes(self):
@@ -321,14 +322,14 @@ class TTGlyphPointPenTest(TTGlyphPenTestBase):
         pen = TTGlyphPointPen(None)
         pen.beginPath()
         pen.addPoint((0, 0))
-        with pytest.raises(AssertionError):
+        with pytest.raises(PenError):
             pen.beginPath()
 
     def test_glyph_errorOnUnendedContour(self):
         pen = TTGlyphPointPen(None)
         pen.beginPath()
         pen.addPoint((0, 0))
-        with pytest.raises(AssertionError):
+        with pytest.raises(PenError):
             pen.glyph()
 
     def test_glyph_decomposes(self):

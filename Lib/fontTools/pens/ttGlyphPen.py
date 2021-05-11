@@ -4,7 +4,7 @@ from fontTools.misc.fixedTools import MAX_F2DOT14, floatToFixedToFloat
 from fontTools.misc.loggingTools import LogMixin
 from fontTools.pens.pointPen import AbstractPointPen
 from fontTools.misc.roundTools import otRound
-from fontTools.pens.basePen import LoggingPen
+from fontTools.pens.basePen import LoggingPen, PenError
 from fontTools.pens.transformPen import TransformPen, TransformPointPen
 from fontTools.ttLib.tables import ttProgram
 from fontTools.ttLib.tables._g_l_y_f import Glyph
@@ -128,7 +128,8 @@ class TTGlyphBasePen:
         """
         Returns a :py:class:`~._g_l_y_f.Glyph` object representing the glyph.
         """
-        assert self._isClosed(), "Didn't close last contour."
+        if not self._isClosed():
+            raise PenError("Didn't close last contour.")
         components = self._buildComponents(componentFlags)
 
         glyph = Glyph()
@@ -175,7 +176,8 @@ class TTGlyphPen(TTGlyphBasePen, LoggingPen):
         self._addPoint(pt, 1)
 
     def moveTo(self, pt: Tuple[float, float]) -> None:
-        assert self._isClosed(), '"move"-type point must begin a new contour.'
+        if not self._isClosed():
+            raise PenError('"move"-type point must begin a new contour.')
         self._addPoint(pt, 1)
 
     def curveTo(self, *points) -> None:
@@ -239,7 +241,8 @@ class TTGlyphPointPen(TTGlyphBasePen, LogMixin, AbstractPointPen):
         """
         Start a new sub path.
         """
-        assert self._isClosed()
+        if not self._isClosed():
+            raise PenError("Didn't close previous contour.")
         self._currentContourStartIndex = len(self.points)
 
     def endPath(self) -> None:
@@ -247,7 +250,8 @@ class TTGlyphPointPen(TTGlyphBasePen, LogMixin, AbstractPointPen):
         End the current sub path.
         """
         # TrueType contours are always "closed"
-        assert not self._isClosed()
+        if self._isClosed():
+            raise PenError("Contour is already closed.")
         self.endPts.append(len(self.points) - 1)
         self._currentContourStartIndex = None
 
@@ -263,7 +267,8 @@ class TTGlyphPointPen(TTGlyphBasePen, LogMixin, AbstractPointPen):
         """
         Add a point to the current sub path.
         """
-        assert not self._isClosed()
+        if self._isClosed():
+            raise PenError("Can't add a point to a closed contour.")
         if segmentType is None:
             self.types.append(0)  # offcurve
         elif segmentType in ("qcurve", "line"):
