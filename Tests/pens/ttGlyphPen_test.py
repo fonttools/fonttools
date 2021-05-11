@@ -6,7 +6,7 @@ from fontTools import ttLib
 from fontTools.pens.ttGlyphPen import TTGlyphPen, TTGlyphPointPen, MAX_F2DOT14
 
 
-class TTGlyphPenTest:
+class TTGlyphPenTestBase:
     def runEndToEnd(self, filename):
         font = ttLib.TTFont()
         ttx_path = os.path.join(
@@ -20,11 +20,11 @@ class TTGlyphPenTest:
 
         glyphSet = font.getGlyphSet()
         glyfTable = font["glyf"]
-        pen = TTGlyphPen(font.getGlyphSet())
+        pen = self.penClass(font.getGlyphSet())
 
         for name in font.getGlyphOrder():
             oldGlyph = glyphSet[name]
-            oldGlyph.draw(pen)
+            getattr(oldGlyph, self.drawMethod)(pen)
             oldGlyph = oldGlyph._glyph
             newGlyph = pen.glyph()
 
@@ -38,6 +38,11 @@ class TTGlyphPenTest:
 
     def test_e2e_curvesAndComponentTransforms(self):
         self.runEndToEnd("TestTTFComplex-Regular.ttx")
+
+
+class TTGlyphPenTest(TTGlyphPenTestBase):
+    penClass = TTGlyphPen
+    drawMethod = "draw"
 
     def test_moveTo_errorWithinContour(self):
         pen = TTGlyphPen(None)
@@ -290,38 +295,9 @@ class TTGlyphPenTest:
         self.assertGlyphBoundsEqual(uni0302_uni0300, (-278, 745, 148, 1025))
 
 
-class TTGlyphPointPenTest:
-    def runEndToEnd(self, filename):
-        font = ttLib.TTFont()
-        ttx_path = os.path.join(
-            os.path.abspath(os.path.dirname(os.path.realpath(__file__))),
-            "..",
-            "ttLib",
-            "data",
-            filename,
-        )
-        font.importXML(ttx_path)
-
-        glyphSet = font.getGlyphSet()
-        glyfTable = font["glyf"]
-        pen = TTGlyphPointPen(font.getGlyphSet())
-
-        for name in font.getGlyphOrder():
-            oldGlyph = glyphSet[name]
-            oldGlyph.drawPoints(pen)
-            oldGlyph = oldGlyph._glyph
-            newGlyph = pen.glyph()
-
-            if hasattr(oldGlyph, "program"):
-                newGlyph.program = oldGlyph.program
-
-            assert oldGlyph.compile(glyfTable) == newGlyph.compile(glyfTable)
-
-    def test_e2e_linesAndSimpleComponents(self):
-        self.runEndToEnd("TestTTF-Regular.ttx")
-
-    def test_e2e_curvesAndComponentTransforms(self):
-        self.runEndToEnd("TestTTFComplex-Regular.ttx")
+class TTGlyphPointPenTest(TTGlyphPenTestBase):
+    penClass = TTGlyphPointPen
+    drawMethod = "drawPoints"
 
     def test_glyph_simple(self):
         pen = TTGlyphPointPen(None)
