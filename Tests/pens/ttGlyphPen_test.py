@@ -271,7 +271,7 @@ class TTGlyphPenTest:
         pen.lineTo((-55, 745))
         pen.lineTo((-231, 745))
         pen.closePath()
-        glyphSet["gravecomb"] = gravecomb = pen.glyph()
+        glyphSet["gravecomb"] = pen.glyph()
 
         pen = TTGlyphPen(glyphSet)
         pen.moveTo((-278, 939))
@@ -279,7 +279,7 @@ class TTGlyphPenTest:
         pen.lineTo((8, 745))
         pen.lineTo((-278, 745))
         pen.closePath()
-        glyphSet["circumflexcomb"] = circumflexcomb = pen.glyph()
+        glyphSet["circumflexcomb"] = pen.glyph()
 
         pen = TTGlyphPen(glyphSet)
         pen.addComponent("circumflexcomb", (1, 0, 0, 1, 0, 0))
@@ -546,7 +546,7 @@ class TTGlyphPointPenTest:
         pen.addPoint((-55, 745), "line")
         pen.addPoint((-231, 745), "line")
         pen.endPath()
-        glyphSet["gravecomb"] = gravecomb = pen.glyph()
+        glyphSet["gravecomb"] = pen.glyph()
 
         pen = TTGlyphPointPen(glyphSet)
         pen.beginPath()
@@ -555,7 +555,7 @@ class TTGlyphPointPenTest:
         pen.addPoint((8, 745), "line")
         pen.addPoint((-278, 745), "line")
         pen.endPath()
-        glyphSet["circumflexcomb"] = circumflexcomb = pen.glyph()
+        glyphSet["circumflexcomb"] = pen.glyph()
 
         pen = TTGlyphPointPen(glyphSet)
         pen.addComponent("circumflexcomb", (1, 0, 0, 1, 0, 0))
