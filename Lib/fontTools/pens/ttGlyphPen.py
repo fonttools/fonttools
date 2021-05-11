@@ -99,10 +99,6 @@ class TTGlyphBasePen:
                 self.handleOverflowingTransforms and overflowing
             ):
                 # can't have both coordinates and components, so decompose
-                self.log.warning(
-                    f"decomposing component '{glyphName}' because contours are "
-                    "present in glyph."
-                )
                 self._decompose(glyphName, transformation)
                 continue
 
@@ -144,6 +140,8 @@ class TTGlyphBasePen:
         self.init()
 
         if components:
+            # If both components and contours were present, they have by now
+            # been decomposed by _buildComponents.
             glyph.components = components
             glyph.numberOfContours = -1
         else:
