@@ -6,7 +6,6 @@ from fontTools.pens.pointPen import AbstractPointPen
 from fontTools.misc.roundTools import otRound
 from fontTools.pens.basePen import LoggingPen
 from fontTools.pens.transformPen import TransformPen, TransformPointPen
-from fontTools.ttLib.ttFont import _TTGlyphSet
 from fontTools.ttLib.tables import ttProgram
 from fontTools.ttLib.tables._g_l_y_f import Glyph
 from fontTools.ttLib.tables._g_l_y_f import GlyphComponent
