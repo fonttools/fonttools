@@ -1351,6 +1351,10 @@ class PaintFormat(IntEnum):
 	PaintSkew = 18
 	PaintVarSkew = 19
 	PaintComposite = 20
+	PaintScale = 21
+	PaintVarScale = 22
+	PaintLocation = 23
+	PaintVarLocation = 24
 
 
 class Paint(getFormatSwitchingBaseTableClass("uint8")):

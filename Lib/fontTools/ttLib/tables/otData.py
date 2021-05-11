@@ -1640,6 +1640,15 @@ otData = [
 		('VarColorStop', 'ColorStop', 'StopCount', 0, 'Array of Color stops.'),
 	]),
 
+	('LocationCoordinate', [
+	    ('uint16', 'AxisIndex', None, None, ''),
+	    ('F2Dot14', 'AxisValue', None, None, ''),
+	]),
+	('VarLocationCoordinate', [
+	    ('uint16', 'AxisIndex', None, None, ''),
+	    ('VarF2Dot14', 'AxisValue', None, None, ''),
+	]),
+
 	# PaintColrLayers
 	('PaintFormat1', [
 		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 1'),
@@ -1806,5 +1815,39 @@ otData = [
 		('LOffset24To(Paint)', 'SourcePaint', None, None, 'Offset (from beginning of PaintComposite table) to source Paint subtable.'),
 		('CompositeMode', 'CompositeMode', None, None, 'A CompositeMode enumeration value.'),
 		('LOffset24To(Paint)', 'BackdropPaint', None, None, 'Offset (from beginning of PaintComposite table) to backdrop Paint subtable.'),
+	]),
+
+	# PaintScale
+	('PaintFormat21', [
+		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 21'),
+		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintScale table) to Paint subtable.'),
+		('Fixed', 'xScale', None, None, ''),
+		('Fixed', 'yScale', None, None, ''),
+		('Fixed', 'centerX', None, None, ''),
+		('Fixed', 'centerY', None, None, ''),
+	]),
+	# PaintVarScale
+	('PaintFormat22', [
+		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 22'),
+		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintVarScale table) to Paint subtable.'),
+		('VarFixed', 'xScale', None, None, ''),
+		('VarFixed', 'yScale', None, None, ''),
+		('VarFixed', 'centerX', None, None, ''),
+		('VarFixed', 'centerY', None, None, ''),
+	]),
+
+	# PaintLocation
+	('PaintFormat23', [
+		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 23'),
+		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintLocation table) to Paint subtable.'),
+		('uint16', 'CoordinateCount', None, None, 'Number of Coordinate.'),
+		('LocationCoordinate', 'Coordinate', 'CoordinateCount', 0, 'Array of location coordinates.'),
+	]),
+	# PaintVarLocation
+	('PaintFormat24', [
+		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 24'),
+		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintVarLocation table) to Paint subtable.'),
+		('uint16', 'CoordinateCount', None, None, 'Number of Coordinate.'),
+		('VarLocationCoordinate', 'Coordinate', 'CoordinateCount', 0, 'Array of location coordinates.'),
 	]),
 ]
