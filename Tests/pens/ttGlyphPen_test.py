@@ -410,26 +410,6 @@ class TTGlyphPointPenTest:
         assert len(pen.points) == 4
         assert pen.points[0] == (0, 0)
 
-    # def test_keep_move_point(self):
-    #     pen = TTGlyphPointPen(None)
-    #     pen.moveTo((0, 0))
-    #     pen.lineTo((100, 0))
-    #     pen.qCurveTo((100, 50), (50, 100), (30, 30))
-    #     # when last and move pts are different, closePath() implies a lineTo
-    #     pen.closePath()
-    #     assert len(pen.points) == 5
-    #     assert pen.points[0] == (0, 0)
-
-    # def test_keep_duplicate_end_point(self):
-    #     pen = TTGlyphPointPen(None)
-    #     pen.moveTo((0, 0))
-    #     pen.lineTo((100, 0))
-    #     pen.qCurveTo((100, 50), (50, 100), (0, 0))
-    #     pen.lineTo((0, 0))  # the duplicate point is not removed
-    #     pen.closePath()
-    #     assert len(pen.points) == 5
-    #     assert pen.points[0] == (0, 0)
-
     def test_within_range_component_transform(self):
         componentName = "a"
         glyphSet = {}
