@@ -124,10 +124,11 @@ class TTGlyphBasePen:
             components.append(component)
         return components
 
-    def _glyph(self, componentFlags=0x4) -> Glyph:
+    def glyph(self, componentFlags: int = 0x4) -> Glyph:
         """
         Returns a :py:class:`~._g_l_y_f.Glyph` object representing the glyph.
         """
+        assert self._isClosed(), "Didn't close last contour."
         components = self._buildComponents(componentFlags)
 
         glyph = Glyph()
@@ -211,10 +212,6 @@ class TTGlyphPen(TTGlyphBasePen, LoggingPen):
         # TrueType contours are always "closed"
         self.closePath()
 
-    def glyph(self, componentFlags: int = 0x4) -> Glyph:
-        assert self._isClosed(), "Didn't close last contour."
-        return self._glyph(componentFlags=componentFlags)
-
 
 class TTGlyphPointPen(TTGlyphBasePen, LogMixin, AbstractPointPen):
     """
@@ -276,10 +273,3 @@ class TTGlyphPointPen(TTGlyphBasePen, LogMixin, AbstractPointPen):
             raise NotImplementedError
 
         self.points.append(pt)
-
-    def glyph(self, componentFlags: int = 0x4) -> Glyph:
-        """
-        Returns a :py:class:`~._g_l_y_f.Glyph` object representing the glyph.
-        """
-        assert self._isClosed()
-        return self._glyph(componentFlags=componentFlags)
