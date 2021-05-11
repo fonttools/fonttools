@@ -92,13 +92,17 @@ class TTGlyphBasePen:
         for glyphName, transformation in self.components:
             if glyphName not in self.glyphSet:
                 self.log.warning(
-                    "skipped non-existing component '%s'", glyphName
+                    f"skipped non-existing component '{glyphName}'"
                 )
                 continue
             if self.points or (
                 self.handleOverflowingTransforms and overflowing
             ):
                 # can't have both coordinates and components, so decompose
+                self.log.warning(
+                    f"decomposing component '{glyphName}' because contours are "
+                    "present in glyph."
+                )
                 self._decompose(glyphName, transformation)
                 continue
 
