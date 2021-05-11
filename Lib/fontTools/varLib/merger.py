@@ -156,7 +156,7 @@ def merge(merger, self, lst):
 	for k in allKeys:
 		allValues = nonNone(l.get(k) for l in lst)
 		if not allEqual(allValues):
-			raise ShouldBeConstant(self, expected=allValues[0], got=lst, stack="."+k)
+			raise ShouldBeConstant(self, expected=allValues[0], got=lst, stack=["." + k])
 		if not allValues:
 			self[k] = None
 		else:

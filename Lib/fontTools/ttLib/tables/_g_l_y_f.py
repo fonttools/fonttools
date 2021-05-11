@@ -398,7 +398,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 
 	# Deprecated
 
-	def _synthesizeVMetrics(self, glyphname, ttFont, defaultVerticalOrigin):
+	def _synthesizeVMetrics(self, glyphName, ttFont, defaultVerticalOrigin):
 		"""This method is wrong and deprecated.
 		For rationale see:
 		https://github.com/fonttools/fonttools/pull/2266/files#r613569473
@@ -420,7 +420,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		See: https://github.com/fonttools/fonttools/pull/2266"""
 		hMetrics = ttFont['hmtx'].metrics
 		vMetrics = self._synthesizeVMetrics(glyphName, ttFont, defaultVerticalOrigin)
-		return self._getPhantomPoints(glyphname, hMetrics, vMetrics)
+		return self._getPhantomPoints(glyphName, hMetrics, vMetrics)
 
 	def getCoordinatesAndControls(self, glyphName, ttFont, defaultVerticalOrigin=None):
 		"""Old public name for self._getCoordinatesAndControls().

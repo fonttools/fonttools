@@ -241,7 +241,7 @@ def test_buildVarColorIndex_Minimal():
     c = _build(ot.VarColorIndex, 1)
     assert c.PaletteIndex == 1
     assert c.Alpha.value == 1.0
-    assert c.Alpha.varIdx == 0
+    assert c.Alpha.varIdx == 0xFFFFFFFF
 
 
 def test_buildColorIndex():
