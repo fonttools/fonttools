@@ -390,7 +390,7 @@ class TTGlyphPointPenTest:
 
         assert plainGlyph == compositeGlyph
 
-    def test_remove_extra_move_points(self):
+    def test_keep_duplicate_end_point(self):
         pen = TTGlyphPointPen(None)
         pen.beginPath()
         pen.addPoint((0, 0), "line")
@@ -398,8 +398,9 @@ class TTGlyphPointPenTest:
         pen.addPoint((100, 50))
         pen.addPoint((50, 100))
         pen.addPoint((0, 0), "qcurve")
+        pen.addPoint((0, 0), "line")  # the duplicate point is not removed
         pen.endPath()
-        assert len(pen.points) == 4
+        assert len(pen.points) == 6
         assert pen.points[0] == (0, 0)
 
     def test_within_range_component_transform(self):
