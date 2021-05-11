@@ -332,6 +332,12 @@ class TTGlyphPointPenTest(TTGlyphPenTestBase):
         with pytest.raises(PenError):
             pen.glyph()
 
+    def test_glyph_errorOnEmptyContour(self):
+        pen = TTGlyphPointPen(None)
+        pen.beginPath()
+        with pytest.raises(PenError):
+            pen.endPath()
+
     def test_glyph_decomposes(self):
         componentName = "a"
         glyphSet = {}
