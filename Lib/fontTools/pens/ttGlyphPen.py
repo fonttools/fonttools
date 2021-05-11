@@ -31,7 +31,7 @@ class TTGlyphBasePen:
         Construct a new pen.
 
         Args:
-            glyphSet (ttLib.ttFont._TTGlyphSet): A glyphset object, used to resolve components.
+            glyphSet (Dict[str, Any]): A glyphset object, used to resolve components.
             handleOverflowingTransforms (bool): See below.
 
         If ``handleOverflowingTransforms`` is True, the components' transform values
