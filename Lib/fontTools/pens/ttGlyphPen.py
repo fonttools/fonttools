@@ -49,6 +49,9 @@ class TTGlyphBasePen:
         If False, no check is done and all components are translated unmodified
         into the glyf table, followed by an inevitable ``struct.error`` once an
         attempt is made to compile them.
+
+        If both contours and components are present in a glyph, the components
+        are decomposed.
         """
         self.glyphSet = glyphSet
         self.handleOverflowingTransforms = handleOverflowingTransforms
