@@ -285,7 +285,7 @@ class VariationModel(object):
 		for i,region in enumerate(regions):
 			locAxes = set(region.keys())
 			# Walk over previous masters now
-			for j,prev_region in enumerate(regions[:i]):
+			for prev_region in regions[:i]:
 				# Master with extra axes do not participte
 				if not set(prev_region.keys()).issubset(locAxes):
 					continue
