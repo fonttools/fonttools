@@ -892,16 +892,26 @@ class Parser(object):
                 old, new, old_prefix, old_suffix, forceChain=hasMarks, location=location
             )
 
+        # Glyph deletion, built as GSUB lookup type 2: Multiple substitution
+        # with empty replacement.
+        if is_deletion and len(old) == 1 and num_lookups == 0:
+            return self.ast.MultipleSubstStatement(
+                old_prefix,
+                old[0],
+                old_suffix,
+                (),
+                forceChain=hasMarks,
+                location=location,
+            )
+
         # GSUB lookup type 2: Multiple substitution.
         # Format: "substitute f_f_i by f f i;"
         if (
             not reverse
             and len(old) == 1
             and len(old[0].glyphSet()) == 1
-            and (
-                (len(new) > 1 and max([len(n.glyphSet()) for n in new]) == 1)
-                or len(new) == 0
-            )
+            and len(new) > 1
+            and max([len(n.glyphSet()) for n in new]) == 1
             and num_lookups == 0
         ):
             return self.ast.MultipleSubstStatement(
