@@ -280,7 +280,7 @@ class VariationModel(object):
 		return new_list
 
 	def _computeMasterSupports(self):
-		supports = []
+		self.supports = []
 		regions = self._locationsToRegions()
 		for i,region in enumerate(regions):
 			locAxes = set(region.keys())
@@ -329,8 +329,7 @@ class VariationModel(object):
 
 				for axis,triple in bestAxes.items ():
 					region[axis] = triple
-			supports.append(region)
-		self.supports = supports
+			self.supports.append(region)
 		self._computeDeltaWeights()
 
 	def _locationsToRegions(self):
@@ -356,7 +355,7 @@ class VariationModel(object):
 		return regions
 
 	def _computeDeltaWeights(self):
-		deltaWeights = []
+		self.deltaWeights = []
 		for i,loc in enumerate(self.locations):
 			deltaWeight = {}
 			# Walk over previous masters now, populate deltaWeight
@@ -364,8 +363,7 @@ class VariationModel(object):
 				scalar = supportScalar(loc, self.supports[j])
 				if scalar:
 					deltaWeight[j] = scalar
-			deltaWeights.append(deltaWeight)
-		self.deltaWeights = deltaWeights
+			self.deltaWeights.append(deltaWeight)
 
 	def getDeltas(self, masterValues, *, round=noRound):
 		assert len(masterValues) == len(self.deltaWeights)
