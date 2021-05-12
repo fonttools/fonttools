@@ -344,7 +344,7 @@ class VariationModel(object):
 				maxV[k] = max(v, maxV.get(k, v))
 
 		regions = []
-		for i,loc in enumerate(locations):
+		for loc in locations:
 			region = {}
 			for axis,locV in loc.items():
 				if locV > 0:
