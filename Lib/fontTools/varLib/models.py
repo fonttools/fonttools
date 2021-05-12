@@ -390,8 +390,8 @@ class VariationModel(object):
         for i, loc in enumerate(self.locations):
             deltaWeight = {}
             # Walk over previous masters now, populate deltaWeight
-            for j in range(len(self.locations[:i])):
-                scalar = supportScalar(loc, self.supports[j])
+            for j, support in enumerate(self.supports[:i]):
+                scalar = supportScalar(loc, support)
                 if scalar:
                     deltaWeight[j] = scalar
             self.deltaWeights.append(deltaWeight)
