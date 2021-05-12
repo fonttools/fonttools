@@ -212,7 +212,7 @@ class VariationModel(object):
 		self.mapping = [self.locations.index(l) for l in locations]
 		self.reverseMapping = [locations.index(l) for l in self.locations]
 
-		self._computeMasterSupports(keyFunc.axisPoints)
+		self._computeMasterSupports()
 		self._subModels = {}
 
 	def getSubModel(self, items):
@@ -265,7 +265,6 @@ class VariationModel(object):
 			return key
 
 		ret = getKey(axisPoints, axisOrder)
-		ret.axisPoints = axisPoints
 		return ret
 
 	def reorderMasters(self, master_list, mapping):
@@ -280,7 +279,7 @@ class VariationModel(object):
 		self._subModels = {}
 		return new_list
 
-	def _computeMasterSupports(self, axisPoints):
+	def _computeMasterSupports(self):
 		supports = []
 		regions = self._locationsToRegions()
 		for i,region in enumerate(regions):
