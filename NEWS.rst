@@ -1,3 +1,16 @@
+- [removeOverlaps] Retry pathops.simplify after rounding path coordinates to integers
+  if it fails the first time using floats, to work around a rare and hard to debug
+  Skia bug (#2288).
+- [varLib] Added support for building, reading, writing and optimizing 32-bit
+  ``ItemVariationStore`` as used in COLRv1 table (#2285).
+- [otBase/otConverters] Add array readers/writers for int types (#2285).
+- [feaLib] Allow more than one lookahead glyph/class in contextual positioning with
+  "value at end" (#2293, #2294).
+- [COLRv1] Default varIdx should be 0xFFFFFFFF (#2297, #2298).
+- [pens] Make RecordingPointPen actually pass on identifiers; replace asserts with
+  explicit ``PenError`` exception (#2284).
+- [mutator] Round lsb for CF2 fonts as well (#2286).
+
 4.22.1 (released 2021-04-26)
 ----------------------------
 
