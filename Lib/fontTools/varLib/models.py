@@ -27,9 +27,9 @@ def allNone(lst):
 def allEqualTo(ref, lst, mapper=None):
     if mapper is None:
         return all(ref == item for item in lst)
-    else:
-        mapped = mapper(ref)
-        return all(mapped == mapper(item) for item in lst)
+
+    mapped = mapper(ref)
+    return all(mapped == mapper(item) for item in lst)
 
 
 def allEqual(lst, mapper=None):
