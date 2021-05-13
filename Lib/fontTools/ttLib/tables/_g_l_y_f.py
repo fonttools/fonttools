@@ -412,6 +412,9 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 					topSideY = defaultVerticalOrigin
 				else:
 					topSideY = verticalAdvanceWidth
+			glyph = self[glyphName]
+			glyph.recalcBounds(self)
+			topSideBearing = otRound(topSideY - glyph.yMax)
 			vMetrics = {glyphName: (verticalAdvanceWidth, topSideBearing)}
 		return vMetrics
 
