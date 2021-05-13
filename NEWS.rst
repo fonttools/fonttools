@@ -1,3 +1,9 @@
+- [designspaceLib] Allow to use ``\\UNC`` absolute paths on Windows (#2299, #2306).
+- [varLib.merger] Fixed bug where ``VarLibMergeError`` was raised with incorrect
+  parameters (#2300).
+- [feaLib] Allow substituting a glyph class with ``NULL`` to delete multiple glyphs
+  (#2303).
+- [glyf] Fixed ``NameError`` exception in ``getPhantomPoints`` (#2295, #2305).
 - [removeOverlaps] Retry pathops.simplify after rounding path coordinates to integers
   if it fails the first time using floats, to work around a rare and hard to debug
   Skia bug (#2288).
