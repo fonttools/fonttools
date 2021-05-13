@@ -25,6 +25,7 @@ import logging
 import os
 from fontTools.misc import xmlWriter
 from fontTools.misc.filenames import userNameToFileName
+from fontTools.misc.loggingTools import deprecateFunction
 
 log = logging.getLogger(__name__)
 
@@ -412,9 +413,13 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 					topSideY = defaultVerticalOrigin
 				else:
 					topSideY = verticalAdvanceWidth
+			glyph = self[glyphName]
+			glyph.recalcBounds(self)
+			topSideBearing = otRound(topSideY - glyph.yMax)
 			vMetrics = {glyphName: (verticalAdvanceWidth, topSideBearing)}
 		return vMetrics
 
+	@deprecateFunction("use '_getPhantomPoints' instead", category=DeprecationWarning)
 	def getPhantomPoints(self, glyphName, ttFont, defaultVerticalOrigin=None):
 		"""Old public name for self._getPhantomPoints().
 		See: https://github.com/fonttools/fonttools/pull/2266"""
@@ -422,6 +427,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		vMetrics = self._synthesizeVMetrics(glyphName, ttFont, defaultVerticalOrigin)
 		return self._getPhantomPoints(glyphName, hMetrics, vMetrics)
 
+	@deprecateFunction("use '_getCoordinatesAndControls' instead", category=DeprecationWarning)
 	def getCoordinatesAndControls(self, glyphName, ttFont, defaultVerticalOrigin=None):
 		"""Old public name for self._getCoordinatesAndControls().
 		See: https://github.com/fonttools/fonttools/pull/2266"""
@@ -429,6 +435,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		vMetrics = self._synthesizeVMetrics(glyphName, ttFont, defaultVerticalOrigin)
 		return self._getCoordinatesAndControls(glyphName, hMetrics, vMetrics)
 
+	@deprecateFunction("use '_setCoordinates' instead", category=DeprecationWarning)
 	def setCoordinates(self, glyphName, ttFont):
 		"""Old public name for self._setCoordinates().
 		See: https://github.com/fonttools/fonttools/pull/2266"""
