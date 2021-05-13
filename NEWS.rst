@@ -1,3 +1,6 @@
+4.23.0 (released 2021-05-13)
+----------------------------
+
 - [designspaceLib] Allow to use ``\\UNC`` absolute paths on Windows (#2299, #2306).
 - [varLib.merger] Fixed bug where ``VarLibMergeError`` was raised with incorrect
   parameters (#2300).
