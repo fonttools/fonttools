@@ -33,6 +33,9 @@ def posix(path):
     if path.startswith('/'):
         # The above transformation loses absolute paths
         new_path = '/' + new_path
+    elif path.startswith(r'\\'):
+        # The above transformation loses leading slashes of UNC path mounts
+        new_path = '//' + new_path
     return new_path
 
 
