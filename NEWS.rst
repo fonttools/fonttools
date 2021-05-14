@@ -1,3 +1,9 @@
+- [subset] Fix ``KeyError`` after subsetting ``COLR`` table that initially contains
+  both v0 and v1 color glyphs when the subset only requested v1 glyphs; we were
+  not pruning the v0 portion of the table (#2308).
+- [colorLib] Set ``LayerV1List`` attribute to ``None`` when empty, it's optional
+  in CORLv1 (#2308).
+
 4.23.0 (released 2021-05-13)
 ----------------------------
 
