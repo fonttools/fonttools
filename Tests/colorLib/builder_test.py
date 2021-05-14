@@ -1144,8 +1144,7 @@ def test_build_layerv1list_empty():
     # 2 v1 glyphs, none in LayerV1List
     assert colr.table.BaseGlyphV1List.BaseGlyphCount == 2
     assert len(colr.table.BaseGlyphV1List.BaseGlyphV1Record) == 2
-    assert colr.table.LayerV1List.LayerCount == 0
-    assert len(colr.table.LayerV1List.Paint) == 0
+    assert colr.table.LayerV1List is None
 
 
 def _paint_names(paints) -> List[str]:
@@ -1528,7 +1527,7 @@ class BuildCOLRTest(object):
             },
         )
 
-        assert len(colr.table.LayerV1List.Paint) == 0, "PaintColrLayers should be gone"
+        assert colr.table.LayerV1List is None, "PaintColrLayers should be gone"
         assert colr.table.BaseGlyphV1List.BaseGlyphCount == 1
         paint = colr.table.BaseGlyphV1List.BaseGlyphV1Record[0].Paint
         assert paint.Format == ot.PaintFormat.PaintGlyph

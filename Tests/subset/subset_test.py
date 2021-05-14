@@ -1218,5 +1218,35 @@ def test_subset_COLRv1_downgrade_version(colrv1_path):
     assert subset_font["COLR"].version == 0
 
 
+def test_subset_COLRv1_drop_all_v0_glyphs(colrv1_path):
+    subset_path = colrv1_path.parent / (colrv1_path.name + ".subset")
+
+    subset.main(
+        [
+            str(colrv1_path),
+            "--glyph-names",
+            f"--output-file={subset_path}",
+            "--unicodes=E003",
+        ]
+    )
+    subset_font = TTFont(subset_path)
+
+    assert set(subset_font.getGlyphOrder()) == {
+        ".notdef",
+        "uniE001",
+        "uniE003",
+        "glyph00012",
+        "glyph00013",
+    }
+
+    assert "COLR" in subset_font
+    colr = subset_font["COLR"]
+    assert colr.version == 1
+    assert colr.table.BaseGlyphRecordCount == 0
+    assert colr.table.BaseGlyphRecordArray is None
+    assert colr.table.LayerRecordArray is None
+    assert colr.table.LayerRecordCount is 0
+
+
 if __name__ == "__main__":
     sys.exit(unittest.main())
