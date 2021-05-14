@@ -15,14 +15,6 @@ from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 __all__ = ["TTGlyphPen", "TTGlyphPointPen"]
 
 
-    """
-    Pen used for drawing to a TrueType glyph.
-
-    This pen can be used to construct or modify glyphs in a TrueType format
-    font. After using the pen to draw, use the ``.glyph()`` method to retrieve
-    a :py:class:`~._g_l_y_f.Glyph` object representing the glyph.
-    """
-
 class _TTGlyphBasePen:
     def __init__(
         self, glyphSet: Dict[str, Any], handleOverflowingTransforms: bool = True
@@ -156,6 +148,13 @@ class _TTGlyphBasePen:
 
 
 class TTGlyphPen(_TTGlyphBasePen, LoggingPen):
+    """
+    Pen used for drawing to a TrueType glyph.
+
+    This pen can be used to construct or modify glyphs in a TrueType format
+    font. After using the pen to draw, use the ``.glyph()`` method to retrieve
+    a :py:class:`~._g_l_y_f.Glyph` object representing the glyph.
+    """
     def _addPoint(self, pt: Tuple[float, float], onCurve: int) -> None:
         self.points.append(pt)
         self.types.append(onCurve)
@@ -222,11 +221,11 @@ class TTGlyphPen(_TTGlyphBasePen, LoggingPen):
 
 class TTGlyphPointPen(_TTGlyphBasePen, LogMixin, AbstractPointPen):
     """
-    Pen used for drawing to a TrueType glyph.
+    Point pen used for drawing to a TrueType glyph.
 
     This pen can be used to construct or modify glyphs in a TrueType format
-    font. After using the pen to draw points, use the ``.glyph()`` method to
-    retrieve a :py:class:`~._g_l_y_f.Glyph` object representing the glyph.
+    font. After using the pen to draw, use the ``.glyph()`` method to retrieve
+    a :py:class:`~._g_l_y_f.Glyph` object representing the glyph.
     """
 
     def _decompose(
