@@ -142,7 +142,7 @@ def populateCOLRv0(
     Args:
         table: a raw otTables.COLR() object (not ttLib's table_C_O_L_R_).
         colorGlyphsV0: map of base glyph names to lists of (layer glyph names,
-            color palette index) tuples.
+            color palette index) tuples. Can be empty.
         glyphMap: a map from glyph names to glyph indices, as returned from
             TTFont.getReverseGlyphMap(), to optionally sort base records by GID.
     """
@@ -167,11 +167,14 @@ def populateCOLRv0(
             layerRec.PaletteIndex = paletteIndex
             layerRecords.append(layerRec)
 
+    table.BaseGlyphRecordArray = table.LayerRecordArray = None
+    if baseGlyphRecords:
+        table.BaseGlyphRecordArray = ot.BaseGlyphRecordArray()
+        table.BaseGlyphRecordArray.BaseGlyphRecord = baseGlyphRecords
+    if layerRecords:
+        table.LayerRecordArray = ot.LayerRecordArray()
+        table.LayerRecordArray.LayerRecord = layerRecords
     table.BaseGlyphRecordCount = len(baseGlyphRecords)
-    table.BaseGlyphRecordArray = ot.BaseGlyphRecordArray()
-    table.BaseGlyphRecordArray.BaseGlyphRecord = baseGlyphRecords
-    table.LayerRecordArray = ot.LayerRecordArray()
-    table.LayerRecordArray.LayerRecord = layerRecords
     table.LayerRecordCount = len(layerRecords)
 
 
@@ -209,18 +212,13 @@ def buildCOLR(
     else:
         # unless explicitly requested for v1 or have variations, in which case
         # we encode all color glyph as v1
-        colorGlyphsV0, colorGlyphsV1 = None, colorGlyphs
+        colorGlyphsV0, colorGlyphsV1 = {}, colorGlyphs
 
     colr = ot.COLR()
 
-    if colorGlyphsV0:
-        populateCOLRv0(colr, colorGlyphsV0, glyphMap)
-    else:
-        colr.BaseGlyphRecordCount = colr.LayerRecordCount = 0
-        colr.BaseGlyphRecordArray = colr.LayerRecordArray = None
+    populateCOLRv0(colr, colorGlyphsV0, glyphMap)
 
-    if colorGlyphsV1:
-        colr.LayerV1List, colr.BaseGlyphV1List = buildColrV1(colorGlyphsV1, glyphMap)
+    colr.LayerV1List, colr.BaseGlyphV1List = buildColrV1(colorGlyphsV1, glyphMap)
 
     if version is None:
         version = 1 if (varStore or colorGlyphsV1) else 0
@@ -538,7 +536,9 @@ class LayerV1ListBuilder:
     def buildPaint(self, paint: _PaintInput) -> ot.Paint:
         return self.tableBuilder.build(ot.Paint, paint)
 
-    def build(self) -> ot.LayerV1List:
+    def build(self) -> Optional[ot.LayerV1List]:
+        if not self.layers:
+            return None
         layers = ot.LayerV1List()
         layers.LayerCount = len(self.layers)
         layers.Paint = self.layers
@@ -564,7 +564,7 @@ def _format_glyph_errors(errors: Mapping[str, Exception]) -> str:
 def buildColrV1(
     colorGlyphs: _ColorGlyphsDict,
     glyphMap: Optional[Mapping[str, int]] = None,
-) -> Tuple[ot.LayerV1List, ot.BaseGlyphV1List]:
+) -> Tuple[Optional[ot.LayerV1List], ot.BaseGlyphV1List]:
     if glyphMap is not None:
         colorGlyphItems = sorted(
             colorGlyphs.items(), key=lambda item: glyphMap[item[0]]
