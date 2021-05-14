@@ -60,7 +60,6 @@ class _TTGlyphBasePen:
         self.endPts = []
         self.types = []
         self.components = []
-        self._currentContourStartIndex = None
 
     def addComponent(
         self,
@@ -227,6 +226,9 @@ class TTGlyphPointPen(_TTGlyphBasePen, LogMixin, AbstractPointPen):
     font. After using the pen to draw, use the ``.glyph()`` method to retrieve
     a :py:class:`~._g_l_y_f.Glyph` object representing the glyph.
     """
+    def init(self) -> None:
+        super().init()
+        self._currentContourStartIndex = None
 
     def _decompose(
         self,
