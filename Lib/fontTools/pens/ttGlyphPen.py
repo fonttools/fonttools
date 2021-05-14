@@ -15,7 +15,6 @@ from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 __all__ = ["TTGlyphPen", "TTGlyphPointPen"]
 
 
-class TTGlyphBasePen:
     """
     Pen used for drawing to a TrueType glyph.
 
@@ -24,6 +23,7 @@ class TTGlyphBasePen:
     a :py:class:`~._g_l_y_f.Glyph` object representing the glyph.
     """
 
+class _TTGlyphBasePen:
     def __init__(
         self, glyphSet: Dict[str, Any], handleOverflowingTransforms: bool = True
     ) -> None:
@@ -155,7 +155,7 @@ class TTGlyphBasePen:
         return glyph
 
 
-class TTGlyphPen(TTGlyphBasePen, LoggingPen):
+class TTGlyphPen(_TTGlyphBasePen, LoggingPen):
     def _addPoint(self, pt: Tuple[float, float], onCurve: int) -> None:
         self.points.append(pt)
         self.types.append(onCurve)
@@ -220,7 +220,7 @@ class TTGlyphPen(TTGlyphBasePen, LoggingPen):
         self.closePath()
 
 
-class TTGlyphPointPen(TTGlyphBasePen, LogMixin, AbstractPointPen):
+class TTGlyphPointPen(_TTGlyphBasePen, LogMixin, AbstractPointPen):
     """
     Pen used for drawing to a TrueType glyph.
 
