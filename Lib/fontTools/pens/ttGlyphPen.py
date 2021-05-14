@@ -49,6 +49,14 @@ class _TTGlyphBasePen:
         self.handleOverflowingTransforms = handleOverflowingTransforms
         self.init()
 
+    def _decompose(
+        self,
+        glyphName: str,
+        transformation: Tuple[float, float, float, float, float, float],
+    ):
+        tpen = self.transformPen(self, transformation)
+        getattr(self.glyphSet[glyphName], self.drawMethod)(tpen)
+
     def _isClosed(self):
         """
         Check if the current path is closed.
@@ -154,6 +162,9 @@ class TTGlyphPen(_TTGlyphBasePen, LoggingPen):
     font. After using the pen to draw, use the ``.glyph()`` method to retrieve
     a :py:class:`~._g_l_y_f.Glyph` object representing the glyph.
     """
+    drawMethod = "draw"
+    transformPen = TransformPen
+
     def _addPoint(self, pt: Tuple[float, float], onCurve: int) -> None:
         self.points.append(pt)
         self.types.append(onCurve)
@@ -166,14 +177,6 @@ class TTGlyphPen(_TTGlyphBasePen, LoggingPen):
         return (not self.points) or (
             self.endPts and self.endPts[-1] == len(self.points) - 1
         )
-
-    def _decompose(
-        self,
-        glyphName: str,
-        transformation: Tuple[float, float, float, float, float, float],
-    ):
-        tpen = TransformPen(self, transformation)
-        self.glyphSet[glyphName].draw(tpen)
 
     def lineTo(self, pt: Tuple[float, float]) -> None:
         self._addPoint(pt, 1)
@@ -226,17 +229,12 @@ class TTGlyphPointPen(_TTGlyphBasePen, LogMixin, AbstractPointPen):
     font. After using the pen to draw, use the ``.glyph()`` method to retrieve
     a :py:class:`~._g_l_y_f.Glyph` object representing the glyph.
     """
+    drawMethod = "drawPoints"
+    transformPen = TransformPointPen
+
     def init(self) -> None:
         super().init()
         self._currentContourStartIndex = None
-
-    def _decompose(
-        self,
-        glyphName: str,
-        transformation: Tuple[float, float, float, float, float, float],
-    ):
-        tpen = TransformPointPen(self, transformation)
-        self.glyphSet[glyphName].drawPoints(tpen)
 
     def _isClosed(self) -> bool:
         return self._currentContourStartIndex is None
