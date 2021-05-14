@@ -2086,14 +2086,13 @@ def subset_glyphs(self, s):
 		del self.table
 		return bool(layersV0)
 
-	if layersV0:
-		populateCOLRv0(
-			self.table,
-			{
-				g: [(layer.name, layer.colorID) for layer in layersV0[g]]
-				for g in layersV0
-			},
-		)
+	populateCOLRv0(
+		self.table,
+		{
+			g: [(layer.name, layer.colorID) for layer in layersV0[g]]
+			for g in layersV0
+		},
+	)
 	del self.ColorLayers
 
 	# TODO: also prune ununsed varIndices in COLR.VarStore
