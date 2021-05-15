@@ -5,6 +5,8 @@ import os
 import sys
 from typing import Iterable, Iterator, List, Optional, Text, Tuple
 
+from rich.console import Console  # type: ignore
+
 from . import __version__
 from .color import color_unified_diff_line
 from .diff import external_diff, u_diff
@@ -105,6 +107,9 @@ def run(argv: List[Text]) -> None:
     #
     # /////////////////////////////////////////////////////////
 
+    # instantiate a rich Console
+    console = Console()
+
     # parse explicitly included or excluded tables in
     # the command line arguments
     # set as a Python list if it was defined on the command line
@@ -137,24 +142,25 @@ def run(argv: List[Text]) -> None:
             sys.exit(1)
 
         try:
-            ext_diff: Iterable[Tuple[Text, Optional[int]]] = external_diff(
-                args.external,
-                args.PREFILE,
-                args.POSTFILE,
-                include_tables=include_list,
-                exclude_tables=exclude_list,
-                use_multiprocess=use_mp,
-            )
+            with console.status("Processing...", spinner="dots10"):
+                ext_diff: Iterable[Tuple[Text, Optional[int]]] = external_diff(
+                    args.external,
+                    args.PREFILE,
+                    args.POSTFILE,
+                    include_tables=include_list,
+                    exclude_tables=exclude_list,
+                    use_multiprocess=use_mp,
+                )
 
-            # write stdout from external tool
-            for line, exit_code in ext_diff:
-                # format with color if color flag is entered on command line
-                if args.color:
-                    sys.stdout.write(color_unified_diff_line(line))
-                else:
-                    sys.stdout.write(line)
-                if exit_code is not None:
-                    sys.exit(exit_code)
+                # write stdout from external tool
+                for line, exit_code in ext_diff:
+                    # format with color if color flag is entered on command line
+                    if args.color:
+                        sys.stdout.write(color_unified_diff_line(line))
+                    else:
+                        sys.stdout.write(line)
+                    if exit_code is not None:
+                        sys.exit(exit_code)
         except Exception as e:
             sys.stderr.write(f"[*] ERROR: {e}{os.linesep}")
             sys.exit(1)
@@ -163,38 +169,39 @@ def run(argv: List[Text]) -> None:
         #  Unified diff
         # ---------------
         # perform the unified diff analysis
-        try:
-            uni_diff: Iterator[Text] = u_diff(
-                args.PREFILE,
-                args.POSTFILE,
-                context_lines=args.lines,
-                include_tables=include_list,
-                exclude_tables=exclude_list,
-                use_multiprocess=use_mp,
-            )
-        except Exception as e:
-            sys.stderr.write(f"[*] ERROR: {e}{os.linesep}")
-            sys.exit(1)
+        with console.status("Processing...", spinner="dots10"):
+            try:
+                uni_diff: Iterator[Text] = u_diff(
+                    args.PREFILE,
+                    args.POSTFILE,
+                    context_lines=args.lines,
+                    include_tables=include_list,
+                    exclude_tables=exclude_list,
+                    use_multiprocess=use_mp,
+                )
+            except Exception as e:
+                sys.stderr.write(f"[*] ERROR: {e}{os.linesep}")
+                sys.exit(1)
 
-        # re-define the line contents of the diff iterable
-        # if head or tail is requested
-        if args.head:
-            iterable = head(uni_diff, args.head)
-        elif args.tail:
-            iterable = tail(uni_diff, args.tail)
-        else:
-            iterable = uni_diff
+            # re-define the line contents of the diff iterable
+            # if head or tail is requested
+            if args.head:
+                iterable = head(uni_diff, args.head)
+            elif args.tail:
+                iterable = tail(uni_diff, args.tail)
+            else:
+                iterable = uni_diff
 
-        # print unified diff results to standard output stream
-        has_diff = False
-        if args.color:
-            for line in iterable:
-                has_diff = True
-                sys.stdout.write(color_unified_diff_line(line))
-        else:
-            for line in iterable:
-                has_diff = True
-                sys.stdout.write(line)
+            # print unified diff results to standard output stream
+            has_diff = False
+            if args.color:
+                for line in iterable:
+                    has_diff = True
+                    sys.stdout.write(color_unified_diff_line(line))
+            else:
+                for line in iterable:
+                    has_diff = True
+                    sys.stdout.write(line)
 
         # if no difference was found, tell the user instead of
         # simply closing with zero exit status code.
