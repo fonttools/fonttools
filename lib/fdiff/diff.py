@@ -12,8 +12,7 @@ from typing import Any, Iterable, Iterator, List, Optional, Text, Tuple
 from fontTools.ttLib import TTFont  # type: ignore
 
 from .exceptions import AIOError
-from .remote import (_get_filepath_from_url,
-                     create_async_get_request_session_and_run)
+from .remote import _get_filepath_from_url, create_async_get_request_session_and_run
 from .utils import get_file_modtime
 
 #
