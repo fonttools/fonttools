@@ -5,7 +5,7 @@ import os
 import sys
 from typing import Iterable, Iterator, List, Optional, Text, Tuple
 
-from rich.console import Console
+from rich.console import Console  # type: ignore
 
 from . import __version__
 from .color import color_unified_diff_line
