@@ -752,20 +752,17 @@ class SingleSubst(FormatSwitchingBaseTable):
 		sortableItems = sorted(zip(gidItems, items))
 
 		# figure out format
-		format = 2
-		delta = None
-		for inID, outID in gidItems:
-			if delta is None:
-				delta = (outID - inID) % 65536
-
-			if (inID + delta) % 65536 != outID:
-					break
+		if len(gidItems) == 0:
+			format = 2
 		else:
-			if delta is None:
-				# the mapping is empty, better use format 2
-				format = 2
-			else:
-				format = 1
+			format = 1
+			items = iter(gidItems)
+			firstInID, firstOutID = next(items)
+			delta = (firstOutID - firstInID) % 65536
+			for inID, outID in items:
+				if (inID + delta) % 65536 != outID:
+					format = 2
+					break
 
 		rawTable = {}
 		self.Format = format
