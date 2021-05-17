@@ -1,3 +1,6 @@
+4.24.0 (released 2021-05-17)
+----------------------------
+
 - [pens] Add ``ttGlyphPen.TTGlyphPointPen`` similar to ``TTGlyphPen`` (#2205).
 
 4.23.1 (released 2021-05-14)
