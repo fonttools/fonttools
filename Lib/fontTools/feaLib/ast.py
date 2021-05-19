@@ -708,7 +708,7 @@ class ChainContextPosStatement(Statement):
     ``lookups`` should be a list of elements representing what lookups
     to apply at each glyph position. Each element should be a
     :class:`LookupBlock` to apply a single chaining lookup at the given
-    position, a list of :class:`LookupBlock`\ s to apply multiple
+    position, a list of :class:`LookupBlock`\\ s to apply multiple
     lookups, or ``None`` to apply no lookup. The length of the outer
     list should equal the length of ``glyphs``; the inner lists can be
     of variable length."""
@@ -766,7 +766,7 @@ class ChainContextSubstStatement(Statement):
     ``lookups`` should be a list of elements representing what lookups
     to apply at each glyph position. Each element should be a
     :class:`LookupBlock` to apply a single chaining lookup at the given
-    position, a list of :class:`LookupBlock`\ s to apply multiple
+    position, a list of :class:`LookupBlock`\\ s to apply multiple
     lookups, or ``None`` to apply no lookup. The length of the outer
     list should equal the length of ``glyphs``; the inner lists can be
     of variable length."""
