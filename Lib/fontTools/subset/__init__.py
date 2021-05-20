@@ -555,8 +555,9 @@ def subset_glyphs(self, s):
 
 @_add_method(otTables.SinglePos)
 def prune_post_subset(self, font, options):
-	if not self.Value:
-		return False
+	if self.Value is None:
+		assert self.ValueFormat == 0
+		return True
 
 	# Shrink ValueFormat
 	if self.Format == 1:
@@ -575,7 +576,7 @@ def prune_post_subset(self, font, options):
 		self.Value = self.Value[0] if self.ValueFormat != 0 else None
 		del self.ValueCount
 
-	return bool(self.ValueFormat)
+	return True
 
 @_add_method(otTables.PairPos)
 def subset_glyphs(self, s):
