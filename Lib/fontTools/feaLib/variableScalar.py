@@ -23,6 +23,11 @@ class VariableScalar:
         return "("+(" ".join(items))+")"
 
     @property
+    def does_vary(self):
+        values = list(self.values.values())
+        return any(v != values[0] for v in values[1:])
+
+    @property
     def axes_dict(self):
         if not self.axes:
             raise ValueError(".axes must be defined on variable scalar before interpolating")
