@@ -206,7 +206,7 @@ are required to unlock the extra features named "ufo", etc.
     for generating PDFs and graphics.
 
 How to make a new release
-~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 1) Update ``NEWS.rst`` with all the changes since the last release. Write a
    changelog entry for each PR, with one or two short sentences summarizing it,
