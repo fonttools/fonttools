@@ -205,6 +205,31 @@ are required to unlock the extra features named "ufo", etc.
   * `reportlab <https://pypi.python.org/pypi/reportlab>`__: Python toolkit
     for generating PDFs and graphics.
 
+How to make a new release
+~~~~~~~~~~~~~~~~~~~~~
+
+1) Update ``NEWS.rst`` with all the changes since the last release. Write a
+   changelog entry for each PR, with one or two short sentences summarizing it,
+   as well as links to the PR and relevant issues addressed by the PR.
+2) Use semantic versioning to decide whether the new release will be a 'major',
+   'minor' or 'patch' release. It's usually one of the latter two, depending on
+   whether new backward compatible APIs were added, or simply some bugs were fixed.
+3) Run ``python setup.py release`` command from the tip of the ``main`` branch.
+   This bumps the package version string, extracts the changes since the latest
+   version from ``NEWS.rst``, and uses that text to create an annotated git tag.
+   It also commits an additional version bump which opens the main branch for
+   the subsequent developmental cycle
+4) Push both the tag and commit to the upstream repository, by running the command
+   ``git push --follow-tags``.
+5) Let the CI build the wheel and source distribution packages and verify both
+   get uploaded to the Python Package Index (PyPI).
+6) [Optional] Go to fonttools `Github Releases <https://github.com/fonttools/fonttools/releases>`__
+   page and create a new release, copy-pasting the content of the git tag
+   message. This way, the release notes are nicely formatted as markdown, and
+   users watching the repo will get an email notification. One day we shall
+   automate that too.
+
+
 Acknowledgements
 ~~~~~~~~~~~~~~~~
 
