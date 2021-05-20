@@ -104,6 +104,8 @@ class Parser(object):
                 statements.append(self.parse_feature_block_())
             elif self.is_cur_keyword_("conditionset"):
                 statements.append(self.parse_conditionset_())
+            elif self.is_cur_keyword_("variation"):
+                statements.append(self.parse_feature_block_(variation=True))
             elif self.is_cur_keyword_("table"):
                 statements.append(self.parse_table_())
             elif self.is_cur_keyword_("valueRecordDef"):
@@ -1682,8 +1684,11 @@ class Parser(object):
         self.expect_symbol_(";")
         return self.ast.LanguageSystemStatement(script, language, location=location)
 
-    def parse_feature_block_(self):
-        assert self.cur_token_ == "feature"
+    def parse_feature_block_(self, variation=False):
+        if variation:
+            assert self.cur_token_ == "variation"
+        else:
+            assert self.cur_token_ == "feature"
         location = self.cur_token_location_
         tag = self.expect_tag_()
         vertical = tag in {"vkrn", "vpal", "vhal", "valt"}
@@ -1698,14 +1703,22 @@ class Parser(object):
         elif tag == "size":
             size_feature = True
 
+        if variation:
+            conditionset = self.expect_name_()
+
         use_extension = False
         if self.next_token_ == "useExtension":
             self.expect_keyword_("useExtension")
             use_extension = True
 
-        block = self.ast.FeatureBlock(
-            tag, use_extension=use_extension, location=location
-        )
+        if variation:
+            block = self.ast.VariationBlock(
+                tag, conditionset, use_extension=use_extension, location=location
+            )
+        else:
+            block = self.ast.FeatureBlock(
+                tag, use_extension=use_extension, location=location
+            )
         self.parse_block_(block, vertical, stylisticset, size_feature, cv_feature)
         return block
 

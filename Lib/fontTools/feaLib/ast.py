@@ -2060,3 +2060,36 @@ class ConditionsetStatement(Statement):
             res += f"   {tag} {minvalue} {maxvalue};\n"
         res += "}" + f" {self.name};\n"
         return res
+
+class VariationBlock(Block):
+    """A named feature block."""
+
+    def __init__(self, name, conditionset, use_extension=False, location=None):
+        Block.__init__(self, location)
+        self.name, self.conditionset, self.use_extension = name, conditionset, use_extension
+
+    def build(self, builder):
+        """Call the ``start_feature`` callback on the builder object, visit
+        all the statements in this feature, and then call ``end_feature``."""
+        builder.start_feature(self.location, self.name, conditionset=self.conditionset)
+        # language exclude_dflt statements modify builder.features_
+        # limit them to this block with temporary builder.features_
+        features = builder.features_
+        builder.features_ = {}
+        Block.build(self, builder)
+        for key, value in builder.features_.items():
+            features.setdefault(key, []).extend(value)
+        builder.features_ = features
+        builder.end_feature()
+
+    def asFea(self, indent=""):
+        res = indent + "variation %s " % self.name.strip()
+        res += self.conditionset
+        if self.use_extension:
+            res += "useExtension "
+        res += "{\n"
+        res += Block.asFea(self, indent=indent)
+        res += indent + "} %s;\n" % self.name.strip()
+        return res
+
+
