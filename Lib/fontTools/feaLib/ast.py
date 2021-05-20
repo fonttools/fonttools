@@ -700,7 +700,7 @@ class AttachStatement(Statement):
 
 
 class ChainContextPosStatement(Statement):
-    """A chained contextual positioning statement.
+    r"""A chained contextual positioning statement.
 
     ``prefix``, ``glyphs``, and ``suffix`` should be lists of
     `glyph-containing objects`_ .
@@ -758,7 +758,7 @@ class ChainContextPosStatement(Statement):
 
 
 class ChainContextSubstStatement(Statement):
-    """A chained contextual substitution statement.
+    r"""A chained contextual substitution statement.
 
     ``prefix``, ``glyphs``, and ``suffix`` should be lists of
     `glyph-containing objects`_ .
