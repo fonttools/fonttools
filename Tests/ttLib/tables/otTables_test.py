@@ -512,8 +512,11 @@ class InsertionMorphActionTest(unittest.TestCase):
         for name, attrs, content in parseXML(self.MORPH_ACTION_XML):
             a.fromXML(name, attrs, content, self.font)
         writer = OTTableWriter()
-        a.compile(writer, self.font,
-	          actionIndex={('B', 'C'): 9, ('B', 'A', 'D'): 7})
+        a.compile(
+            writer,
+            self.font,
+            actionIndex={('B', 'C'): 9, ('B', 'A', 'D'): 7},
+        )
         self.assertEqual(hexStr(writer.getAllData()), "1234fc4300090007")
 
     def testCompileActions_empty(self):
@@ -575,113 +578,113 @@ class SplitMultipleSubstTest:
 
 
 def test_splitMarkBasePos():
-	from fontTools.otlLib.builder import buildAnchor, buildMarkBasePosSubtable
+    from fontTools.otlLib.builder import buildAnchor, buildMarkBasePosSubtable
 
-	marks = {
-		"acutecomb": (0, buildAnchor(0, 600)),
-		"gravecomb": (0, buildAnchor(0, 590)),
-		"cedillacomb": (1, buildAnchor(0, 0)),
-	}
-	bases = {
-		"a": {
-			0: buildAnchor(350, 500),
-			1: None,
-		},
-		"c": {
-			0: buildAnchor(300, 700),
-			1: buildAnchor(300, 0),
-		},
-	}
-	glyphOrder = ["a", "c", "acutecomb", "gravecomb", "cedillacomb"]
-	glyphMap = {g: i for i, g in enumerate(glyphOrder)}
+    marks = {
+        "acutecomb": (0, buildAnchor(0, 600)),
+        "gravecomb": (0, buildAnchor(0, 590)),
+        "cedillacomb": (1, buildAnchor(0, 0)),
+    }
+    bases = {
+        "a": {
+            0: buildAnchor(350, 500),
+            1: None,
+        },
+        "c": {
+            0: buildAnchor(300, 700),
+            1: buildAnchor(300, 0),
+        },
+    }
+    glyphOrder = ["a", "c", "acutecomb", "gravecomb", "cedillacomb"]
+    glyphMap = {g: i for i, g in enumerate(glyphOrder)}
 
-	oldSubTable = buildMarkBasePosSubtable(marks, bases, glyphMap)
-	newSubTable = otTables.MarkBasePos()
+    oldSubTable = buildMarkBasePosSubtable(marks, bases, glyphMap)
+    newSubTable = otTables.MarkBasePos()
 
-	ok = otTables.splitMarkBasePos(oldSubTable, newSubTable, overflowRecord=None)
+    ok = otTables.splitMarkBasePos(oldSubTable, newSubTable, overflowRecord=None)
 
-	assert ok
+    assert ok
 
-	assert getXML(oldSubTable.toXML) == [
-		'<MarkBasePos Format="1">',
-		'  <MarkCoverage>',
-		'    <Glyph value="acutecomb"/>',
-		'    <Glyph value="gravecomb"/>',
-		'  </MarkCoverage>',
-		'  <BaseCoverage>',
-		'    <Glyph value="a"/>',
-		'    <Glyph value="c"/>',
-		'  </BaseCoverage>',
-		'  <!-- ClassCount=1 -->',
-		'  <MarkArray>',
-		'    <!-- MarkCount=2 -->',
-		'    <MarkRecord index="0">',
-		'      <Class value="0"/>',
-		'      <MarkAnchor Format="1">',
-		'        <XCoordinate value="0"/>',
-		'        <YCoordinate value="600"/>',
-		'      </MarkAnchor>',
-		'    </MarkRecord>',
-		'    <MarkRecord index="1">',
-		'      <Class value="0"/>',
-		'      <MarkAnchor Format="1">',
-		'        <XCoordinate value="0"/>',
-		'        <YCoordinate value="590"/>',
-		'      </MarkAnchor>',
-		'    </MarkRecord>',
-		'  </MarkArray>',
-		'  <BaseArray>',
-		'    <!-- BaseCount=2 -->',
-		'    <BaseRecord index="0">',
-		'      <BaseAnchor index="0" Format="1">',
-		'        <XCoordinate value="350"/>',
-		'        <YCoordinate value="500"/>',
-		'      </BaseAnchor>',
-		'    </BaseRecord>',
-		'    <BaseRecord index="1">',
-		'      <BaseAnchor index="0" Format="1">',
-		'        <XCoordinate value="300"/>',
-		'        <YCoordinate value="700"/>',
-		'      </BaseAnchor>',
-		'    </BaseRecord>',
-		'  </BaseArray>',
-		'</MarkBasePos>',
-	]
+    assert getXML(oldSubTable.toXML) == [
+        '<MarkBasePos Format="1">',
+        '  <MarkCoverage>',
+        '    <Glyph value="acutecomb"/>',
+        '    <Glyph value="gravecomb"/>',
+        '  </MarkCoverage>',
+        '  <BaseCoverage>',
+        '    <Glyph value="a"/>',
+        '    <Glyph value="c"/>',
+        '  </BaseCoverage>',
+        '  <!-- ClassCount=1 -->',
+        '  <MarkArray>',
+        '    <!-- MarkCount=2 -->',
+        '    <MarkRecord index="0">',
+        '      <Class value="0"/>',
+        '      <MarkAnchor Format="1">',
+        '        <XCoordinate value="0"/>',
+        '        <YCoordinate value="600"/>',
+        '      </MarkAnchor>',
+        '    </MarkRecord>',
+        '    <MarkRecord index="1">',
+        '      <Class value="0"/>',
+        '      <MarkAnchor Format="1">',
+        '        <XCoordinate value="0"/>',
+        '        <YCoordinate value="590"/>',
+        '      </MarkAnchor>',
+        '    </MarkRecord>',
+        '  </MarkArray>',
+        '  <BaseArray>',
+        '    <!-- BaseCount=2 -->',
+        '    <BaseRecord index="0">',
+        '      <BaseAnchor index="0" Format="1">',
+        '        <XCoordinate value="350"/>',
+        '        <YCoordinate value="500"/>',
+        '      </BaseAnchor>',
+        '    </BaseRecord>',
+        '    <BaseRecord index="1">',
+        '      <BaseAnchor index="0" Format="1">',
+        '        <XCoordinate value="300"/>',
+        '        <YCoordinate value="700"/>',
+        '      </BaseAnchor>',
+        '    </BaseRecord>',
+        '  </BaseArray>',
+        '</MarkBasePos>',
+    ]
 
-	assert getXML(newSubTable.toXML) == [
-		'<MarkBasePos Format="1">',
-		'  <MarkCoverage>',
-		'    <Glyph value="cedillacomb"/>',
-		'  </MarkCoverage>',
-		'  <BaseCoverage>',
-		'    <Glyph value="a"/>',
-		'    <Glyph value="c"/>',
-		'  </BaseCoverage>',
-		'  <!-- ClassCount=1 -->',
-		'  <MarkArray>',
-		'    <!-- MarkCount=1 -->',
-		'    <MarkRecord index="0">',
-		'      <Class value="0"/>',
-		'      <MarkAnchor Format="1">',
-		'        <XCoordinate value="0"/>',
-		'        <YCoordinate value="0"/>',
-		'      </MarkAnchor>',
-		'    </MarkRecord>',
-		'  </MarkArray>',
-		'  <BaseArray>',
-		'    <!-- BaseCount=2 -->',
-		'    <BaseRecord index="0">',
-		'      <BaseAnchor index="0" empty="1"/>',
-		'    </BaseRecord>',
-		'    <BaseRecord index="1">',
-		'      <BaseAnchor index="0" Format="1">',
-		'        <XCoordinate value="300"/>',
-		'        <YCoordinate value="0"/>',
-		'      </BaseAnchor>',
-		'    </BaseRecord>',
-		'  </BaseArray>',
-		'</MarkBasePos>',
-	]
+    assert getXML(newSubTable.toXML) == [
+        '<MarkBasePos Format="1">',
+        '  <MarkCoverage>',
+        '    <Glyph value="cedillacomb"/>',
+        '  </MarkCoverage>',
+        '  <BaseCoverage>',
+        '    <Glyph value="a"/>',
+        '    <Glyph value="c"/>',
+        '  </BaseCoverage>',
+        '  <!-- ClassCount=1 -->',
+        '  <MarkArray>',
+        '    <!-- MarkCount=1 -->',
+        '    <MarkRecord index="0">',
+        '      <Class value="0"/>',
+        '      <MarkAnchor Format="1">',
+        '        <XCoordinate value="0"/>',
+        '        <YCoordinate value="0"/>',
+        '      </MarkAnchor>',
+        '    </MarkRecord>',
+        '  </MarkArray>',
+        '  <BaseArray>',
+        '    <!-- BaseCount=2 -->',
+        '    <BaseRecord index="0">',
+        '      <BaseAnchor index="0" empty="1"/>',
+        '    </BaseRecord>',
+        '    <BaseRecord index="1">',
+        '      <BaseAnchor index="0" Format="1">',
+        '        <XCoordinate value="300"/>',
+        '        <YCoordinate value="0"/>',
+        '      </BaseAnchor>',
+        '    </BaseRecord>',
+        '  </BaseArray>',
+        '</MarkBasePos>',
+    ]
 
 
 if __name__ == "__main__":
