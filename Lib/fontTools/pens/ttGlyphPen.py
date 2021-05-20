@@ -18,7 +18,7 @@ __all__ = ["TTGlyphPen", "TTGlyphPointPen"]
 class _TTGlyphBasePen:
     def __init__(
         self,
-        glyphSet: Optional[Dict[str, Any]] = None,
+        glyphSet: Optional[Dict[str, Any]],
         handleOverflowingTransforms: bool = True,
     ) -> None:
         """
