@@ -2071,14 +2071,19 @@ class VariationBlock(Block):
     def build(self, builder):
         """Call the ``start_feature`` callback on the builder object, visit
         all the statements in this feature, and then call ``end_feature``."""
-        builder.start_feature(self.location, self.name, conditionset=self.conditionset)
-        # language exclude_dflt statements modify builder.features_
-        # limit them to this block with temporary builder.features_
+        builder.start_feature(self.location, self.name)
+        if self.conditionset != "NULL" and self.conditionset not in builder.conditionsets_:
+            raise FeatureLibError(
+                f"variation block used undefined conditionset {self.conditionset}",
+                self.location,
+            )
+
         features = builder.features_
         builder.features_ = {}
         Block.build(self, builder)
         for key, value in builder.features_.items():
-            features.setdefault(key, []).extend(value)
+            items = builder.conditionalFeatures_.setdefault(key,{}).setdefault(self.conditionset,[])
+            items.extend(value)
         builder.features_ = features
         builder.end_feature()
 
