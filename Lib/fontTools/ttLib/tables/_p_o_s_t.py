@@ -7,7 +7,9 @@ from . import DefaultTable
 import sys
 import struct
 import array
+import logging
 
+log = logging.getLogger(__name__)
 
 postFormat = """
 	>
@@ -85,7 +87,12 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 		indices.frombytes(data[:2*numGlyphs])
 		if sys.byteorder != "big": indices.byteswap()
 		data = data[2*numGlyphs:]
-		self.extraNames = extraNames = unpackPStrings(data)
+
+		maxIndex = 0
+		for i in range(numGlyphs):
+			if indices[i] > maxIndex: maxIndex = indices [i]
+
+		self.extraNames = extraNames = unpackPStrings(data, maxIndex-257)
 		self.glyphOrder = glyphOrder = [""] * int(ttFont['maxp'].numGlyphs)
 		for glyphID in range(numGlyphs):
 			index = indices[glyphID]
@@ -252,14 +259,17 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 			self.data = readHex(content)
 
 
-def unpackPStrings(data):
+def unpackPStrings(data, nbStrings):
 	strings = []
 	index = 0
-	dataLen = len(data)
-	while index < dataLen:
+	while nbStrings > 0:
 		length = byteord(data[index])
 		strings.append(tostr(data[index+1:index+1+length], encoding="latin1"))
 		index = index + 1 + length
+		nbStrings = nbStrings - 1
+	dataLen = len(data)
+	if (index < dataLen):
+	        log.warning("%d extra bytes in post.stringData array", dataLen - index)
 	return strings
 
 
