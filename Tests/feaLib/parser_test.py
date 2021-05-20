@@ -1866,6 +1866,10 @@ class ParserTest(unittest.TestCase):
             self.parse,
             "conditionset heavy { wght 700 900; wght 100 200; } heavy;")
 
+    def test_variation(self):
+        doc = self.parse("variation rvrn heavy { sub a by b; } rvrn;")
+        value = doc.statements[0]
+
     def test_languagesystem(self):
         [langsys] = self.parse("languagesystem latn DEU;").statements
         self.assertEqual(langsys.script, "latn")
