@@ -551,13 +551,11 @@ class SplitMultipleSubstTest:
         from fontTools.ttLib.tables.otBase import OverflowErrorRecord
 
         oldSubTable = buildMultipleSubstSubtable({'e': 1, 'a': 2, 'b': 3, 'c': 4, 'd': 5})
-        oldSubTable.Format = 1
         newSubTable = otTables.MultipleSubst()
 
         ok = otTables.splitMultipleSubst(oldSubTable, newSubTable, OverflowErrorRecord((None, None, None, itemName, itemRecord)))
 
         assert ok
-        assert oldSubTable.Format == newSubTable.Format
         return oldSubTable.mapping, newSubTable.mapping
 
     def test_Coverage(self):
