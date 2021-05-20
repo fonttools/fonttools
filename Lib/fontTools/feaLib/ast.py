@@ -2054,11 +2054,11 @@ class ConditionsetStatement(Statement):
     def build(self, builder):
         builder.add_conditionset(self.name, self.conditions)
 
-    def asFea(self, res=""):
-        res += f"conditionset {self.name} " + "{\n"
+    def asFea(self, res="", indent=""):
+        res += indent + f"conditionset {self.name} " + "{\n"
         for tag, (minvalue, maxvalue) in self.conditions.items():
-            res += f"   {tag} {minvalue} {maxvalue};\n"
-        res += "}" + f" {self.name};\n"
+            res += indent + f"   {tag} {minvalue} {maxvalue};\n"
+        res += indent + "}" + f" {self.name};\n"
         return res
 
 class VariationBlock(Block):
@@ -2084,7 +2084,7 @@ class VariationBlock(Block):
 
     def asFea(self, indent=""):
         res = indent + "variation %s " % self.name.strip()
-        res += self.conditionset
+        res += self.conditionset + " "
         if self.use_extension:
             res += "useExtension "
         res += "{\n"
