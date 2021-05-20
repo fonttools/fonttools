@@ -17,7 +17,9 @@ __all__ = ["TTGlyphPen", "TTGlyphPointPen"]
 
 class _TTGlyphBasePen:
     def __init__(
-        self, glyphSet: Dict[str, Any], handleOverflowingTransforms: bool = True
+        self,
+        glyphSet: Optional[Dict[str, Any]] = None,
+        handleOverflowingTransforms: bool = True,
     ) -> None:
         """
         Construct a new pen.
@@ -45,7 +47,7 @@ class _TTGlyphBasePen:
         If both contours and components are present in a glyph, the components
         are decomposed.
         """
-        self.glyphSet = glyphSet
+        self.glyphSet = glyphSet if glyphSet is not None else {}
         self.handleOverflowingTransforms = handleOverflowingTransforms
         self.init()
 
