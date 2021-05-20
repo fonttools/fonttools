@@ -1,3 +1,6 @@
+4.24.1 (released 2021-05-20)
+----------------------------
+
 - [subset] Fixed AttributeError when SinglePos subtable has None Value (ValueFormat 0)
   (#2312, #2313).
 
