@@ -215,8 +215,13 @@ How to make a new release
    'minor' or 'patch' release. It's usually one of the latter two, depending on
    whether new backward compatible APIs were added, or simply some bugs were fixed.
 3) Run ``python setup.py release`` command from the tip of the ``main`` branch.
+   By default this bumps the third or 'patch' digit only, unless you pass ``--major``
+   or ``--minor`` to bump respectively the first or second digit.
    This bumps the package version string, extracts the changes since the latest
-   version from ``NEWS.rst``, and uses that text to create an annotated git tag.
+   version from ``NEWS.rst``, and uses that text to create an annotated git tag
+   (or a signed git tag if you pass the ``--sign`` option and your git and Github
+   account are configured for `signing commits <https://docs.github.com/en/github/authenticating-to-github/managing-commit-signature-verification/signing-commits>`__
+   using a GPG key).
    It also commits an additional version bump which opens the main branch for
    the subsequent developmental cycle
 4) Push both the tag and commit to the upstream repository, by running the command
