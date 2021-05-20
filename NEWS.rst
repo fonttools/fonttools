@@ -1,3 +1,6 @@
+4.24.2 (released 2021-05-20)
+----------------------------
+
 - [ttGlyphPen] Fixed typing annotation of TTGlyphPen glyphSet parameter (#2315).
 - Fixed two instances of DeprecationWarning: invalid escape sequence (#2311).
 
