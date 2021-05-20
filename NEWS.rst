@@ -1,3 +1,7 @@
+- [otTables] Fixed ``AttributeError`` in methods that split LigatureSubst,
+  MultipleSubst and AlternateSubst subtables when an offset overflow occurs.
+  The ``Format`` attribute was removed in v4.22.0 (#2319).
+
 4.24.2 (released 2021-05-20)
 ----------------------------
 
