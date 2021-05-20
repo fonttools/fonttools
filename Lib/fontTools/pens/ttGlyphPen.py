@@ -47,7 +47,7 @@ class _TTGlyphBasePen:
         If both contours and components are present in a glyph, the components
         are decomposed.
         """
-        self.glyphSet = glyphSet if glyphSet is not None else {}
+        self.glyphSet = glyphSet
         self.handleOverflowingTransforms = handleOverflowingTransforms
         self.init()
 
