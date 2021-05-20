@@ -17,7 +17,9 @@ __all__ = ["TTGlyphPen", "TTGlyphPointPen"]
 
 class _TTGlyphBasePen:
     def __init__(
-        self, glyphSet: Dict[str, Any], handleOverflowingTransforms: bool = True
+        self,
+        glyphSet: Optional[Dict[str, Any]],
+        handleOverflowingTransforms: bool = True,
     ) -> None:
         """
         Construct a new pen.
@@ -74,7 +76,7 @@ class _TTGlyphBasePen:
         baseGlyphName: str,
         transformation: Tuple[float, float, float, float, float, float],
         identifier: Optional[str] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> None:
         """
         Add a sub glyph.
@@ -93,13 +95,9 @@ class _TTGlyphBasePen:
         components = []
         for glyphName, transformation in self.components:
             if glyphName not in self.glyphSet:
-                self.log.warning(
-                    f"skipped non-existing component '{glyphName}'"
-                )
+                self.log.warning(f"skipped non-existing component '{glyphName}'")
                 continue
-            if self.points or (
-                self.handleOverflowingTransforms and overflowing
-            ):
+            if self.points or (self.handleOverflowingTransforms and overflowing):
                 # can't have both coordinates and components, so decompose
                 self._decompose(glyphName, transformation)
                 continue
@@ -162,6 +160,7 @@ class TTGlyphPen(_TTGlyphBasePen, LoggingPen):
     font. After using the pen to draw, use the ``.glyph()`` method to retrieve
     a :py:class:`~._g_l_y_f.Glyph` object representing the glyph.
     """
+
     drawMethod = "draw"
     transformPen = TransformPen
 
@@ -229,6 +228,7 @@ class TTGlyphPointPen(_TTGlyphBasePen, LogMixin, AbstractPointPen):
     font. After using the pen to draw, use the ``.glyph()`` method to retrieve
     a :py:class:`~._g_l_y_f.Glyph` object representing the glyph.
     """
+
     drawMethod = "drawPoints"
     transformPen = TransformPointPen
 
@@ -239,9 +239,7 @@ class TTGlyphPointPen(_TTGlyphBasePen, LogMixin, AbstractPointPen):
     def _isClosed(self) -> bool:
         return self._currentContourStartIndex is None
 
-    def beginPath(
-        self, identifier: Optional[str] = None, **kwargs: Any
-    ) -> None:
+    def beginPath(self, identifier: Optional[str] = None, **kwargs: Any) -> None:
         """
         Start a new sub path.
         """
@@ -268,7 +266,7 @@ class TTGlyphPointPen(_TTGlyphBasePen, LogMixin, AbstractPointPen):
         smooth: bool = False,
         name: Optional[str] = None,
         identifier: Optional[str] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> None:
         """
         Add a point to the current sub path.
