@@ -1,0 +1,689 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="4.24">
+
+  <GlyphOrder>
+    <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
+    <GlyphID id="0" name=".notdef"/>
+    <GlyphID id="1" name="ra-sidd"/>
+    <GlyphID id="2" name="ra-sidd.ini"/>
+    <GlyphID id="3" name="ra-sidd.iniThird"/>
+    <GlyphID id="4" name="r-sidd.med.ra"/>
+  </GlyphOrder>
+
+  <head>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="1.0"/>
+    <fontRevision value="2.001"/>
+    <checkSumAdjustment value="0x78efacfb"/>
+    <magicNumber value="0x5f0f3cf5"/>
+    <flags value="00000000 00000011"/>
+    <unitsPerEm value="1000"/>
+    <created value="Mon Feb 11 05:00:43 2019"/>
+    <modified value="Fri Dec 25 13:11:40 2020"/>
+    <xMin value="-220"/>
+    <yMin value="-1025"/>
+    <xMax value="1053"/>
+    <yMax value="995"/>
+    <macStyle value="00000000 00000000"/>
+    <lowestRecPPEM value="6"/>
+    <fontDirectionHint value="2"/>
+    <indexToLocFormat value="0"/>
+    <glyphDataFormat value="0"/>
+  </head>
+
+  <hhea>
+    <tableVersion value="0x00010000"/>
+    <ascent value="1000"/>
+    <descent value="-1030"/>
+    <lineGap value="0"/>
+    <advanceWidthMax value="1083"/>
+    <minLeftSideBearing value="-220"/>
+    <minRightSideBearing value="-842"/>
+    <xMaxExtent value="1053"/>
+    <caretSlopeRise value="1"/>
+    <caretSlopeRun value="0"/>
+    <caretOffset value="0"/>
+    <reserved0 value="0"/>
+    <reserved1 value="0"/>
+    <reserved2 value="0"/>
+    <reserved3 value="0"/>
+    <metricDataFormat value="0"/>
+    <numberOfHMetrics value="5"/>
+  </hhea>
+
+  <maxp>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="0x10000"/>
+    <numGlyphs value="5"/>
+    <maxPoints value="288"/>
+    <maxContours value="22"/>
+    <maxCompositePoints value="0"/>
+    <maxCompositeContours value="0"/>
+    <maxZones value="1"/>
+    <maxTwilightPoints value="0"/>
+    <maxStorage value="0"/>
+    <maxFunctionDefs value="0"/>
+    <maxInstructionDefs value="0"/>
+    <maxStackElements value="0"/>
+    <maxSizeOfInstructions value="0"/>
+    <maxComponentElements value="0"/>
+    <maxComponentDepth value="0"/>
+  </maxp>
+
+  <OS_2>
+    <!-- The fields 'usFirstCharIndex' and 'usLastCharIndex'
+         will be recalculated by the compiler -->
+    <version value="4"/>
+    <xAvgCharWidth value="625"/>
+    <usWeightClass value="400"/>
+    <usWidthClass value="5"/>
+    <fsType value="00000000 00000000"/>
+    <ySubscriptXSize value="650"/>
+    <ySubscriptYSize value="600"/>
+    <ySubscriptXOffset value="0"/>
+    <ySubscriptYOffset value="75"/>
+    <ySuperscriptXSize value="650"/>
+    <ySuperscriptYSize value="600"/>
+    <ySuperscriptXOffset value="0"/>
+    <ySuperscriptYOffset value="350"/>
+    <yStrikeoutSize value="50"/>
+    <yStrikeoutPosition value="410"/>
+    <sFamilyClass value="0"/>
+    <panose>
+      <bFamilyType value="2"/>
+      <bSerifStyle value="11"/>
+      <bWeight value="5"/>
+      <bProportion value="2"/>
+      <bContrast value="4"/>
+      <bStrokeVariation value="5"/>
+      <bArmStyle value="4"/>
+      <bLetterForm value="2"/>
+      <bMidline value="2"/>
+      <bXHeight value="4"/>
+    </panose>
+    <ulUnicodeRange1 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange2 value="00000010 00000000 00000000 00000000"/>
+    <ulUnicodeRange3 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange4 value="00000000 00000000 00000000 00000000"/>
+    <achVendID value="GOOG"/>
+    <fsSelection value="00000001 01000000"/>
+    <usFirstCharIndex value="65535"/>
+    <usLastCharIndex value="65535"/>
+    <sTypoAscender value="1000"/>
+    <sTypoDescender value="-1030"/>
+    <sTypoLineGap value="0"/>
+    <usWinAscent value="1000"/>
+    <usWinDescent value="1030"/>
+    <ulCodePageRange1 value="00000000 00000000 00000000 00000001"/>
+    <ulCodePageRange2 value="00000000 00000000 00000000 00000000"/>
+    <sxHeight value="683"/>
+    <sCapHeight value="714"/>
+    <usDefaultChar value="0"/>
+    <usBreakChar value="32"/>
+    <usMaxContext value="9"/>
+  </OS_2>
+
+  <hmtx>
+    <mtx name=".notdef" width="600" lsb="94"/>
+    <mtx name="r-sidd.med.ra" width="0" lsb="41"/>
+    <mtx name="ra-sidd" width="501" lsb="38"/>
+    <mtx name="ra-sidd.ini" width="522" lsb="41"/>
+    <mtx name="ra-sidd.iniThird" width="522" lsb="41"/>
+  </hmtx>
+
+  <cmap>
+    <tableVersion version="0"/>
+    <cmap_format_12 platformID="0" platEncID="4" format="12" reserved="0" length="28" language="0" nGroups="1">
+      <map code="0x115a8" name="ra-sidd"/><!-- SIDDHAM LETTER RA -->
+    </cmap_format_12>
+    <cmap_format_12 platformID="3" platEncID="10" format="12" reserved="0" length="28" language="0" nGroups="1">
+      <map code="0x115a8" name="ra-sidd"/><!-- SIDDHAM LETTER RA -->
+    </cmap_format_12>
+  </cmap>
+
+  <loca>
+    <!-- The 'loca' table will be calculated by the compiler -->
+  </loca>
+
+  <glyf>
+
+    <!-- The xMin, yMin, xMax and yMax values
+         will be recalculated by the compiler. -->
+
+    <TTGlyph name=".notdef"/><!-- contains no outline data -->
+
+    <TTGlyph name="r-sidd.med.ra" xMin="41" yMin="205" xMax="482" yMax="483">
+      <contour>
+        <pt x="213" y="252" on="1"/>
+        <pt x="213" y="291" on="1"/>
+        <pt x="140" y="338" on="0"/>
+        <pt x="66" y="395" on="0"/>
+        <pt x="41" y="430" on="0"/>
+        <pt x="41" y="443" on="1"/>
+        <pt x="41" y="457" on="0"/>
+        <pt x="53" y="464" on="1"/>
+        <pt x="74" y="451" on="0"/>
+        <pt x="98" y="442" on="1"/>
+        <pt x="116" y="471" on="0"/>
+        <pt x="151" y="471" on="1"/>
+        <pt x="181" y="471" on="0"/>
+        <pt x="233" y="450" on="0"/>
+        <pt x="269" y="450" on="1"/>
+        <pt x="302" y="450" on="0"/>
+        <pt x="367" y="467" on="0"/>
+        <pt x="392" y="483" on="1"/>
+        <pt x="482" y="420" on="1"/>
+        <pt x="466" y="398" on="0"/>
+        <pt x="407" y="367" on="0"/>
+        <pt x="346" y="339" on="0"/>
+        <pt x="303" y="304" on="0"/>
+        <pt x="303" y="276" on="1"/>
+        <pt x="303" y="218" on="1"/>
+        <pt x="303" y="205" on="0"/>
+        <pt x="293" y="205" on="1"/>
+        <pt x="282" y="205" on="0"/>
+        <pt x="243" y="221" on="0"/>
+        <pt x="213" y="243" on="0"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="ra-sidd" xMin="38" yMin="-103" xMax="481" yMax="683">
+      <contour>
+        <pt x="40" y="643" on="1"/>
+        <pt x="40" y="657" on="0"/>
+        <pt x="52" y="664" on="1"/>
+        <pt x="73" y="651" on="0"/>
+        <pt x="97" y="642" on="1"/>
+        <pt x="115" y="671" on="0"/>
+        <pt x="150" y="671" on="1"/>
+        <pt x="180" y="671" on="0"/>
+        <pt x="232" y="650" on="0"/>
+        <pt x="268" y="650" on="1"/>
+        <pt x="301" y="650" on="0"/>
+        <pt x="366" y="667" on="0"/>
+        <pt x="391" y="683" on="1"/>
+        <pt x="481" y="620" on="1"/>
+        <pt x="465" y="598" on="0"/>
+        <pt x="406" y="567" on="0"/>
+        <pt x="345" y="539" on="0"/>
+        <pt x="302" y="504" on="0"/>
+        <pt x="302" y="476" on="1"/>
+        <pt x="302" y="142" on="1"/>
+        <pt x="302" y="78" on="0"/>
+        <pt x="277" y="50" on="1"/>
+        <pt x="458" y="-74" on="1"/>
+        <pt x="439" y="-103" on="1"/>
+        <pt x="245" y="29" on="1"/>
+        <pt x="232" y="25" on="0"/>
+        <pt x="215" y="25" on="1"/>
+        <pt x="186" y="25" on="0"/>
+        <pt x="123" y="53" on="0"/>
+        <pt x="83" y="86" on="1"/>
+        <pt x="58" y="108" on="0"/>
+        <pt x="38" y="138" on="0"/>
+        <pt x="38" y="151" on="1"/>
+        <pt x="38" y="173" on="0"/>
+        <pt x="64" y="173" on="1"/>
+        <pt x="81" y="173" on="0"/>
+        <pt x="128" y="152" on="0"/>
+        <pt x="170" y="123" on="1"/>
+        <pt x="183" y="114" on="1"/>
+        <pt x="198" y="115" on="0"/>
+        <pt x="212" y="134" on="0"/>
+        <pt x="212" y="159" on="1"/>
+        <pt x="212" y="491" on="1"/>
+        <pt x="139" y="538" on="0"/>
+        <pt x="65" y="595" on="0"/>
+        <pt x="40" y="630" on="0"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="ra-sidd.ini" xMin="41" yMin="405" xMax="482" yMax="683">
+      <contour>
+        <pt x="213" y="452" on="1"/>
+        <pt x="213" y="491" on="1"/>
+        <pt x="140" y="538" on="0"/>
+        <pt x="66" y="595" on="0"/>
+        <pt x="41" y="630" on="0"/>
+        <pt x="41" y="643" on="1"/>
+        <pt x="41" y="657" on="0"/>
+        <pt x="53" y="664" on="1"/>
+        <pt x="74" y="651" on="0"/>
+        <pt x="98" y="642" on="1"/>
+        <pt x="116" y="671" on="0"/>
+        <pt x="151" y="671" on="1"/>
+        <pt x="181" y="671" on="0"/>
+        <pt x="233" y="650" on="0"/>
+        <pt x="269" y="650" on="1"/>
+        <pt x="302" y="650" on="0"/>
+        <pt x="367" y="667" on="0"/>
+        <pt x="392" y="683" on="1"/>
+        <pt x="482" y="620" on="1"/>
+        <pt x="466" y="598" on="0"/>
+        <pt x="407" y="567" on="0"/>
+        <pt x="346" y="539" on="0"/>
+        <pt x="303" y="504" on="0"/>
+        <pt x="303" y="476" on="1"/>
+        <pt x="303" y="418" on="1"/>
+        <pt x="303" y="405" on="0"/>
+        <pt x="293" y="405" on="1"/>
+        <pt x="282" y="405" on="0"/>
+        <pt x="243" y="421" on="0"/>
+        <pt x="213" y="443" on="0"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="ra-sidd.iniThird" xMin="41" yMin="405" xMax="482" yMax="683">
+      <contour>
+        <pt x="213" y="452" on="1"/>
+        <pt x="213" y="491" on="1"/>
+        <pt x="140" y="538" on="0"/>
+        <pt x="66" y="595" on="0"/>
+        <pt x="41" y="630" on="0"/>
+        <pt x="41" y="643" on="1"/>
+        <pt x="41" y="657" on="0"/>
+        <pt x="53" y="664" on="1"/>
+        <pt x="74" y="651" on="0"/>
+        <pt x="98" y="642" on="1"/>
+        <pt x="116" y="671" on="0"/>
+        <pt x="151" y="671" on="1"/>
+        <pt x="181" y="671" on="0"/>
+        <pt x="233" y="650" on="0"/>
+        <pt x="269" y="650" on="1"/>
+        <pt x="302" y="650" on="0"/>
+        <pt x="367" y="667" on="0"/>
+        <pt x="392" y="683" on="1"/>
+        <pt x="482" y="620" on="1"/>
+        <pt x="466" y="598" on="0"/>
+        <pt x="407" y="567" on="0"/>
+        <pt x="346" y="539" on="0"/>
+        <pt x="303" y="504" on="0"/>
+        <pt x="303" y="476" on="1"/>
+        <pt x="303" y="418" on="1"/>
+        <pt x="303" y="405" on="0"/>
+        <pt x="293" y="405" on="1"/>
+        <pt x="282" y="405" on="0"/>
+        <pt x="243" y="421" on="0"/>
+        <pt x="213" y="443" on="0"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+  </glyf>
+
+  <name>
+    <namerecord nameID="0" platformID="3" platEncID="1" langID="0x409">
+      Copyright 2019 Google Inc. All Rights Reserved.
+    </namerecord>
+    <namerecord nameID="1" platformID="3" platEncID="1" langID="0x409">
+      Noto Sans Siddham
+    </namerecord>
+    <namerecord nameID="2" platformID="3" platEncID="1" langID="0x409">
+      Regular
+    </namerecord>
+    <namerecord nameID="3" platformID="3" platEncID="1" langID="0x409">
+      2.001;GOOG;NotoSansSiddham-Regular
+    </namerecord>
+    <namerecord nameID="4" platformID="3" platEncID="1" langID="0x409">
+      Noto Sans Siddham Regular
+    </namerecord>
+    <namerecord nameID="5" platformID="3" platEncID="1" langID="0x409">
+      Version 2.001
+    </namerecord>
+    <namerecord nameID="6" platformID="3" platEncID="1" langID="0x409">
+      NotoSansSiddham-Regular
+    </namerecord>
+  </name>
+
+  <post>
+    <formatType value="2.0"/>
+    <italicAngle value="0.0"/>
+    <underlinePosition value="-100"/>
+    <underlineThickness value="50"/>
+    <isFixedPitch value="0"/>
+    <minMemType42 value="0"/>
+    <maxMemType42 value="0"/>
+    <minMemType1 value="0"/>
+    <maxMemType1 value="0"/>
+    <psNames>
+      <!-- This file uses unique glyph names based on the information
+           found in the 'post' table. Since these names might not be unique,
+           we have to invent artificial names in case of clashes. In order to
+           be able to retain the original information, we need a name to
+           ps name mapping for those cases where they differ. That's what
+           you see below.
+            -->
+    </psNames>
+    <extraNames>
+      <!-- following are the name that are not taken from the standard Mac glyph order -->
+      <psName name="ra-sidd"/>
+      <psName name="ra-sidd.ini"/>
+      <psName name="ra-sidd.iniThird"/>
+      <psName name="r-sidd.med.ra"/>
+    </extraNames>
+  </post>
+
+  <GDEF>
+    <Version value="0x00010002"/>
+    <GlyphClassDef>
+      <ClassDef glyph="r-sidd.med.ra" class="3"/>
+      <ClassDef glyph="ra-sidd" class="1"/>
+      <ClassDef glyph="ra-sidd.ini" class="1"/>
+      <ClassDef glyph="ra-sidd.iniThird" class="1"/>
+    </GlyphClassDef>
+    <MarkGlyphSetsDef>
+      <MarkSetTableFormat value="1"/>
+      <!-- MarkSetCount=3 -->
+      <Coverage index="0">
+        <Glyph value="r-sidd.med.ra"/>
+      </Coverage>
+      <Coverage index="1">
+      </Coverage>
+      <Coverage index="2">
+        <Glyph value="r-sidd.med.ra"/>
+      </Coverage>
+    </MarkGlyphSetsDef>
+  </GDEF>
+
+  <GPOS>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=2 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=3 -->
+            <FeatureIndex index="0" value="1"/>
+            <FeatureIndex index="1" value="3"/>
+            <FeatureIndex index="2" value="4"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+      <ScriptRecord index="1">
+        <ScriptTag value="sidd"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=4 -->
+            <FeatureIndex index="0" value="0"/>
+            <FeatureIndex index="1" value="2"/>
+            <FeatureIndex index="2" value="3"/>
+            <FeatureIndex index="3" value="4"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=5 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="dist"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="2"/>
+        </Feature>
+      </FeatureRecord>
+      <FeatureRecord index="1">
+        <FeatureTag value="kern"/>
+        <Feature>
+          <!-- LookupCount=2 -->
+          <LookupListIndex index="0" value="0"/>
+          <LookupListIndex index="1" value="2"/>
+        </Feature>
+      </FeatureRecord>
+      <FeatureRecord index="2">
+        <FeatureTag value="kern"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="0"/>
+        </Feature>
+      </FeatureRecord>
+      <FeatureRecord index="3">
+        <FeatureTag value="mark"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="3"/>
+        </Feature>
+      </FeatureRecord>
+      <FeatureRecord index="4">
+        <FeatureTag value="mkmk"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="4"/>
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=5 -->
+      <Lookup index="0">
+        <LookupType value="8"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <ChainContextPos index="0" Format="3">
+          <!-- BacktrackGlyphCount=0 -->
+          <!-- InputGlyphCount=1 -->
+          <InputCoverage index="0">
+            <Glyph value="ra-sidd.ini"/>
+            <Glyph value="ra-sidd.iniThird"/>
+          </InputCoverage>
+          <!-- LookAheadGlyphCount=1 -->
+          <LookAheadCoverage index="0">
+            <Glyph value="r-sidd.med.ra"/>
+          </LookAheadCoverage>
+          <!-- PosCount=1 -->
+          <PosLookupRecord index="0">
+            <SequenceIndex value="0"/>
+            <LookupListIndex value="1"/>
+          </PosLookupRecord>
+        </ChainContextPos>
+      </Lookup>
+      <Lookup index="1">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SinglePos index="0" Format="1">
+          <Coverage>
+            <Glyph value="ra-sidd.ini"/>
+            <Glyph value="ra-sidd.iniThird"/>
+          </Coverage>
+          <ValueFormat value="0"/>
+        </SinglePos>
+      </Lookup>
+      <Lookup index="2">
+        <LookupType value="2"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <PairPos index="0" Format="2">
+          <Coverage>
+            <Glyph value="ra-sidd"/>
+          </Coverage>
+          <ValueFormat1 value="4"/>
+          <ValueFormat2 value="0"/>
+          <ClassDef1>
+          </ClassDef1>
+          <ClassDef2>
+            <ClassDef glyph="r-sidd.med.ra" class="1"/>
+            <ClassDef glyph="ra-sidd" class="1"/>
+            <ClassDef glyph="ra-sidd.ini" class="1"/>
+            <ClassDef glyph="ra-sidd.iniThird" class="1"/>
+          </ClassDef2>
+          <!-- Class1Count=1 -->
+          <!-- Class2Count=2 -->
+          <Class1Record index="0">
+            <Class2Record index="0">
+              <Value1 XAdvance="0"/>
+            </Class2Record>
+            <Class2Record index="1">
+              <Value1 XAdvance="0"/>
+            </Class2Record>
+          </Class1Record>
+        </PairPos>
+      </Lookup>
+      <Lookup index="3">
+        <LookupType value="4"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <MarkBasePos index="0" Format="1">
+          <MarkCoverage>
+            <Glyph value="r-sidd.med.ra"/>
+          </MarkCoverage>
+          <BaseCoverage>
+            <Glyph value="ra-sidd"/>
+            <Glyph value="ra-sidd.ini"/>
+            <Glyph value="ra-sidd.iniThird"/>
+          </BaseCoverage>
+          <!-- ClassCount=1 -->
+          <MarkArray>
+            <!-- MarkCount=1 -->
+            <MarkRecord index="0">
+              <Class value="0"/>
+              <MarkAnchor Format="1">
+                <XCoordinate value="258"/>
+                <YCoordinate value="435"/>
+              </MarkAnchor>
+            </MarkRecord>
+          </MarkArray>
+          <BaseArray>
+            <!-- BaseCount=3 -->
+            <BaseRecord index="0">
+              <BaseAnchor index="0" Format="1">
+                <XCoordinate value="257"/>
+                <YCoordinate value="-53"/>
+              </BaseAnchor>
+            </BaseRecord>
+            <BaseRecord index="1">
+              <BaseAnchor index="0" Format="1">
+                <XCoordinate value="258"/>
+                <YCoordinate value="435"/>
+              </BaseAnchor>
+            </BaseRecord>
+            <BaseRecord index="2">
+              <BaseAnchor index="0" Format="1">
+                <XCoordinate value="258"/>
+                <YCoordinate value="435"/>
+              </BaseAnchor>
+            </BaseRecord>
+          </BaseArray>
+        </MarkBasePos>
+      </Lookup>
+      <Lookup index="4">
+        <LookupType value="6"/>
+        <LookupFlag value="16"/><!-- useMarkFilteringSet -->
+        <!-- SubTableCount=1 -->
+        <MarkMarkPos index="0" Format="1">
+          <Mark1Coverage>
+            <Glyph value="r-sidd.med.ra"/>
+          </Mark1Coverage>
+          <Mark2Coverage>
+            <Glyph value="r-sidd.med.ra"/>
+          </Mark2Coverage>
+          <!-- ClassCount=1 -->
+          <Mark1Array>
+            <!-- MarkCount=1 -->
+            <MarkRecord index="0">
+              <Class value="0"/>
+              <MarkAnchor Format="1">
+                <XCoordinate value="258"/>
+                <YCoordinate value="435"/>
+              </MarkAnchor>
+            </MarkRecord>
+          </Mark1Array>
+          <Mark2Array>
+            <!-- Mark2Count=1 -->
+            <Mark2Record index="0">
+              <Mark2Anchor index="0" Format="1">
+                <XCoordinate value="258"/>
+                <YCoordinate value="235"/>
+              </Mark2Anchor>
+            </Mark2Record>
+          </Mark2Array>
+        </MarkMarkPos>
+        <MarkFilteringSet value="0"/>
+      </Lookup>
+    </LookupList>
+  </GPOS>
+
+  <GSUB>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=2 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=0 -->
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+      <ScriptRecord index="1">
+        <ScriptTag value="sidd"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=2 -->
+            <FeatureIndex index="0" value="0"/>
+            <FeatureIndex index="1" value="1"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=2 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="pref"/>
+        <Feature>
+          <!-- LookupCount=0 -->
+        </Feature>
+      </FeatureRecord>
+      <FeatureRecord index="1">
+        <FeatureTag value="psts"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="0"/>
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=2 -->
+      <Lookup index="0">
+        <LookupType value="6"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <ChainContextSubst index="0" Format="3">
+          <!-- BacktrackGlyphCount=0 -->
+          <!-- InputGlyphCount=1 -->
+          <InputCoverage index="0">
+            <Glyph value="ra-sidd.ini"/>
+          </InputCoverage>
+          <!-- LookAheadGlyphCount=1 -->
+          <LookAheadCoverage index="0">
+            <Glyph value="r-sidd.med.ra"/>
+          </LookAheadCoverage>
+          <!-- SubstCount=1 -->
+          <SubstLookupRecord index="0">
+            <SequenceIndex value="0"/>
+            <LookupListIndex value="1"/>
+          </SubstLookupRecord>
+        </ChainContextSubst>
+      </Lookup>
+      <Lookup index="1">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SingleSubst index="0">
+          <Substitution in="ra-sidd.ini" out="ra-sidd.iniThird"/>
+        </SingleSubst>
+      </Lookup>
+    </LookupList>
+  </GSUB>
+
+</ttFont>

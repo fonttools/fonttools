@@ -793,6 +793,19 @@ class SubsetTest(unittest.TestCase):
                 subsetfont = TTFont(subsetpath)
                 self.expect_ttx(subsetfont, expected_ttx, ["GPOS"])
 
+    def test_GPOS_SinglePos_prune_post_subset_no_value(self):
+        _, fontpath = self.compile_font(
+            self.getpath("GPOS_SinglePos_no_value_issue_2312.ttx"), ".ttf"
+        )
+        subsetpath = self.temp_path(".ttf")
+        subset.main([fontpath, "*", "--glyph-names", "--output-file=%s" % subsetpath])
+        subsetfont = TTFont(subsetpath)
+        self.expect_ttx(
+            subsetfont,
+            self.getpath("GPOS_SinglePos_no_value_issue_2312.subset.ttx"),
+            ["GlyphOrder", "GPOS"],
+        )
+
 
 @pytest.fixture
 def featureVarsTestFont():
