@@ -172,6 +172,8 @@ class Builder(object):
         self.vhea_ = {}
         # for table 'STAT'
         self.stat_ = {}
+        # for conditionsets
+        self.conditionsets_ = {}
 
     def build(self, tables=None, debug=False):
         if self.parseTree is None:
@@ -1466,6 +1468,9 @@ class Builder(object):
 
     def add_vhea_field(self, key, value):
         self.vhea_[key] = value
+
+    def add_conditionset(self, key, value):
+        self.conditionsets_[key] = value
 
     def makeOpenTypeAnchor(self, location, anchor):
         """ast.Anchor --> otTables.Anchor"""

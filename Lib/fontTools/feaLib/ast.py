@@ -34,6 +34,7 @@ __all__ = [
     "ChainContextPosStatement",
     "ChainContextSubstStatement",
     "CharacterStatement",
+    "ConditionsetStatement",
     "CursivePosStatement",
     "ElidedFallbackName",
     "ElidedFallbackNameID",
@@ -2032,4 +2033,30 @@ class AxisValueLocationStatement(Statement):
     def asFea(self, res=""):
         res += f"location {self.tag} "
         res += f"{' '.join(str(i) for i in self.values)};\n"
+        return res
+
+
+class ConditionsetStatement(Statement):
+    """
+    A variable layout conditionset
+
+    Args:
+        name (str): the name of this conditionset
+        conditions (dict): a dictionary mapping axis tags to a
+            tuple of (min,max) userspace coordinates.
+    """
+
+    def __init__(self, name, conditions, location=None):
+        Statement.__init__(self, location)
+        self.name = name
+        self.conditions = conditions
+
+    def build(self, builder):
+        builder.add_conditionset(self.name, self.conditions)
+
+    def asFea(self, res=""):
+        res += f"conditionset {self.name} " + "{\n"
+        for tag, (minvalue, maxvalue) in self.conditions.items():
+            res += f"   {tag} {minvalue} {maxvalue};\n"
+        res += "}" + f" {self.name};\n"
         return res

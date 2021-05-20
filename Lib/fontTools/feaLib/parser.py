@@ -102,6 +102,8 @@ class Parser(object):
                 statements.append(self.parse_markClass_())
             elif self.is_cur_keyword_("feature"):
                 statements.append(self.parse_feature_block_())
+            elif self.is_cur_keyword_("conditionset"):
+                statements.append(self.parse_conditionset_())
             elif self.is_cur_keyword_("table"):
                 statements.append(self.parse_table_())
             elif self.is_cur_keyword_("valueRecordDef"):
@@ -1850,6 +1852,36 @@ class Parser(object):
         if version <= 0:
             raise FeatureLibError("Font revision numbers must be positive", location)
         return self.ast.FontRevisionStatement(version, location=location)
+
+    def parse_conditionset_(self):
+        name = self.expect_name_()
+
+        conditions = {}
+        self.expect_symbol_("{")
+
+        while self.next_token_ != "}":
+            self.advance_lexer_()
+            if self.cur_token_type_ is not Lexer.NAME:
+                raise FeatureLibError("Expected an axis name", self.cur_token_location_)
+
+            axis = self.cur_token_
+            if axis in conditions:
+                raise FeatureLibError(f"Repeated condition for axis {axis}", self.cur_token_location_)
+
+            min_value = self.expect_number_(variable=False)
+            max_value = self.expect_number_(variable=False)
+            self.expect_symbol_(";")
+
+            conditions[axis] = (min_value, max_value)
+
+        self.expect_symbol_("}")
+
+        finalname = self.expect_name_()
+        if finalname != name:
+            raise FeatureLibError(
+                'Expected "%s"' % name, self.cur_token_location_
+            )
+        return self.ast.ConditionsetStatement(name, conditions)
 
     def parse_block_(
         self, block, vertical, stylisticset=None, size_feature=False, cv_feature=None

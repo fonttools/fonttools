@@ -1848,6 +1848,24 @@ class ParserTest(unittest.TestCase):
             "valueRecordDef <1 2 3 4 <device NULL> <device NULL> "
             "<device NULL> <device 11 128>> foo;")
 
+    def test_conditionset(self):
+        doc = self.parse("conditionset heavy { wght 700 900; } heavy;")
+        value = doc.statements[0]
+        self.assertEqual(value.conditions["wght"], (700, 900))
+        self.assertEqual(value.asFea(), "conditionset heavy {\n   wght 700 900;\n} heavy;\n")
+
+        doc = self.parse("conditionset heavy { wght 700 900; opsz 17 18;} heavy;")
+        value = doc.statements[0]
+        self.assertEqual(value.conditions["wght"], (700, 900))
+        self.assertEqual(value.conditions["opsz"], (17, 18))
+        self.assertEqual(value.asFea(), "conditionset heavy {\n   wght 700 900;\n   opsz 17 18;\n} heavy;\n")
+
+    def test_conditionset_same_axis(self):
+        self.assertRaisesRegex(
+            FeatureLibError, r"Repeated condition for axis wght",
+            self.parse,
+            "conditionset heavy { wght 700 900; wght 100 200; } heavy;")
+
     def test_languagesystem(self):
         [langsys] = self.parse("languagesystem latn DEU;").statements
         self.assertEqual(langsys.script, "latn")
