@@ -1503,7 +1503,6 @@ def fixLookupOverFlows(ttf, overflowRecord):
 
 def splitMultipleSubst(oldSubTable, newSubTable, overflowRecord):
 	ok = 1
-	newSubTable.Format = oldSubTable.Format
 	oldMapping = sorted(oldSubTable.mapping.items())
 	oldLen = len(oldMapping)
 
@@ -1529,7 +1528,6 @@ def splitMultipleSubst(oldSubTable, newSubTable, overflowRecord):
 
 def splitAlternateSubst(oldSubTable, newSubTable, overflowRecord):
 	ok = 1
-	newSubTable.Format = oldSubTable.Format
 	if hasattr(oldSubTable, 'sortCoverageLast'):
 		newSubTable.sortCoverageLast = oldSubTable.sortCoverageLast
 
@@ -1559,7 +1557,6 @@ def splitAlternateSubst(oldSubTable, newSubTable, overflowRecord):
 
 def splitLigatureSubst(oldSubTable, newSubTable, overflowRecord):
 	ok = 1
-	newSubTable.Format = oldSubTable.Format
 	oldLigs = sorted(oldSubTable.ligatures.items())
 	oldLen = len(oldLigs)
 
