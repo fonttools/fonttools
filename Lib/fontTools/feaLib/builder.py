@@ -34,6 +34,7 @@ from fontTools.otlLib.builder import (
 from fontTools.otlLib.error import OpenTypeLibError
 from fontTools.varLib.varStore import OnlineVarStoreBuilder
 from fontTools.varLib.builder import buildVarDevTable
+from fontTools.varLib.models import normalizeValue
 from collections import defaultdict
 import itertools
 from io import StringIO
@@ -1471,6 +1472,25 @@ class Builder(object):
         self.vhea_[key] = value
 
     def add_conditionset(self, key, value):
+        if not "fvar" in self.font:
+            raise FeatureLibError(
+                "Cannot add feature variations to a font without an 'fvar' table"
+            )
+
+        # Normalize
+        axisMap = {
+            axis.axisTag: (axis.minValue, axis.defaultValue, axis.maxValue)
+            for axis in self.font["fvar"].axes
+        }
+
+        value = {
+            tag: (
+                normalizeValue(bottom, axisMap[tag]),
+                normalizeValue(top, axisMap[tag]),
+            )
+            for tag, (bottom, top) in value.items()
+        }
+
         self.conditionsets_[key] = value
 
     def makeOpenTypeAnchor(self, location, anchor):
