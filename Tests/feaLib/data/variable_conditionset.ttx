@@ -39,8 +39,10 @@
     </LookupList>
     <FeatureVariations>
       <Version value="0x00010000"/>
+      <!-- FeatureVariationCount=1 -->
       <FeatureVariationRecord index="0">
         <ConditionSet>
+          <!-- ConditionCount=1 -->
           <ConditionTable index="0" Format="1">
             <AxisIndex value="0"/>
             <FilterRangeMinValue value="0.625"/>
@@ -52,6 +54,7 @@
           <SubstitutionRecord index="0">
             <FeatureIndex value="0"/>
             <Feature>
+              <!-- LookupCount=1 -->
               <LookupListIndex index="0" value="0"/>
             </Feature>
           </SubstitutionRecord>
