@@ -136,7 +136,7 @@ class Builder(object):
         self.lookup_locations = {"GSUB": {}, "GPOS": {}}
         self.features_ = {}  # ('latn', 'DEU ', 'smcp') --> [LookupBuilder*]
         self.required_features_ = {}  # ('latn', 'DEU ') --> 'scmp'
-        self.conditionalFeatures_ = {}
+        self.feature_variations_ = {}
         # for feature 'aalt'
         self.aalt_features_ = []  # [(location, featureName)*], for 'aalt'
         self.aalt_location_ = None

@@ -2082,7 +2082,7 @@ class VariationBlock(Block):
         builder.features_ = {}
         Block.build(self, builder)
         for key, value in builder.features_.items():
-            items = builder.conditionalFeatures_.setdefault(key,{}).setdefault(self.conditionset,[])
+            items = builder.feature_variations_.setdefault(key,{}).setdefault(self.conditionset,[])
             items.extend(value)
         builder.features_ = features
         builder.end_feature()
