@@ -62,7 +62,7 @@ def addFeatureVariations(font, conditionalSubstitutions, featureTag='rvrn'):
     for conditionSet, substitutions in conditionalSubstitutions:
         conditionsAndLookups.append((conditionSet, [lookupMap[s] for s in substitutions]))
 
-    addFeatureVariationsRaw(font,
+    addFeatureVariationsRaw(font, font["GSUB"].table,
                             conditionsAndLookups,
                             featureTag)
 
@@ -279,7 +279,7 @@ def cleanupBox(box):
 # Low level implementation
 #
 
-def addFeatureVariationsRaw(font, conditionalSubstitutions, featureTag='rvrn'):
+def addFeatureVariationsRaw(font, table, conditionalSubstitutions, featureTag='rvrn'):
     """Low level implementation of addFeatureVariations that directly
     models the possibilities of the FeatureVariations table."""
 
@@ -291,31 +291,25 @@ def addFeatureVariationsRaw(font, conditionalSubstitutions, featureTag='rvrn'):
     # make lookups
     # add feature variations
     #
+    if table.Version < 0x00010001:
+        table.Version = 0x00010001  # allow table.FeatureVariations
 
-    if "GSUB" not in font:
-        font["GSUB"] = buildGSUB()
-
-    gsub = font["GSUB"].table
-
-    if gsub.Version < 0x00010001:
-        gsub.Version = 0x00010001  # allow gsub.FeatureVariations
-
-    gsub.FeatureVariations = None  # delete any existing FeatureVariations
+    table.FeatureVariations = None  # delete any existing FeatureVariations
 
     varFeatureIndices = []
-    for index, feature in enumerate(gsub.FeatureList.FeatureRecord):
+    for index, feature in enumerate(table.FeatureList.FeatureRecord):
         if feature.FeatureTag == featureTag:
             varFeatureIndices.append(index)
 
     if not varFeatureIndices:
         varFeature = buildFeatureRecord(featureTag, [])
-        gsub.FeatureList.FeatureRecord.append(varFeature)
-        gsub.FeatureList.FeatureCount = len(gsub.FeatureList.FeatureRecord)
+        table.FeatureList.FeatureRecord.append(varFeature)
+        table.FeatureList.FeatureCount = len(table.FeatureList.FeatureRecord)
 
-        sortFeatureList(gsub)
-        varFeatureIndex = gsub.FeatureList.FeatureRecord.index(varFeature)
+        sortFeatureList(table)
+        varFeatureIndex = table.FeatureList.FeatureRecord.index(varFeature)
 
-        for scriptRecord in gsub.ScriptList.ScriptRecord:
+        for scriptRecord in table.ScriptList.ScriptRecord:
             if scriptRecord.Script.DefaultLangSys is None:
                 raise VarLibError(
                     "Feature variations require that the script "
@@ -341,11 +335,11 @@ def addFeatureVariationsRaw(font, conditionalSubstitutions, featureTag='rvrn'):
             conditionTable.append(ct)
         records = []
         for varFeatureIndex in varFeatureIndices:
-            existingLookupIndices = gsub.FeatureList.FeatureRecord[varFeatureIndex].Feature.LookupListIndex
+            existingLookupIndices = table.FeatureList.FeatureRecord[varFeatureIndex].Feature.LookupListIndex
             records.append(buildFeatureTableSubstitutionRecord(varFeatureIndex, existingLookupIndices + lookupIndices))
         featureVariationRecords.append(buildFeatureVariationRecord(conditionTable, records))
 
-    gsub.FeatureVariations = buildFeatureVariations(featureVariationRecords)
+    table.FeatureVariations = buildFeatureVariations(featureVariationRecords)
 
 
 #
