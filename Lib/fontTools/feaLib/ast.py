@@ -2084,6 +2084,8 @@ class VariationBlock(Block):
         for key, value in builder.features_.items():
             items = builder.feature_variations_.setdefault(key,{}).setdefault(self.conditionset,[])
             items.extend(value)
+            if key not in features:
+                features[key] = []  # Ensure we make a feature record
         builder.features_ = features
         builder.end_feature()
 

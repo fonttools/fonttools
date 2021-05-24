@@ -33,6 +33,7 @@ from fontTools.otlLib.builder import (
 from fontTools.otlLib.error import OpenTypeLibError
 from fontTools.varLib.varStore import OnlineVarStoreBuilder
 from fontTools.varLib.builder import buildVarDevTable
+from fontTools.varLib.featureVars import addFeatureVariationsRaw
 from fontTools.varLib.models import normalizeValue
 from collections import defaultdict
 import itertools
@@ -210,6 +211,8 @@ class Builder(object):
             if tag not in tables:
                 continue
             table = self.makeTable(tag)
+            if self.feature_variations_:
+                self.makeFeatureVariations(table, tag)
             if (
                 table.ScriptList.ScriptCount > 0
                 or table.FeatureList.FeatureCount > 0
@@ -873,7 +876,8 @@ class Builder(object):
             )
 
             size_feature = tag == "GPOS" and feature_tag == "size"
-            if len(lookup_indices) == 0 and not size_feature:
+            force_feature = self.any_feature_variations(feature_tag, tag)
+            if len(lookup_indices) == 0 and not size_feature and not force_feature:
                 continue
 
             for ix in lookup_indices:
@@ -938,6 +942,42 @@ class Builder(object):
         table.FeatureList.FeatureCount = len(table.FeatureList.FeatureRecord)
         table.LookupList.LookupCount = len(table.LookupList.Lookup)
         return table
+
+    def makeFeatureVariations(self, table, table_tag):
+        feature_vars = {}
+        has_any_variations = False
+        # Sort out which lookups to build, gather their indices
+        for (
+            script_,
+            language,
+            feature_tag,
+        ), variations in self.feature_variations_.items():
+            feature_vars[feature_tag] = []
+            for conditionset, builders in variations.items():
+                raw_conditionset = self.conditionsets_[conditionset]
+                indices = []
+                for b in builders:
+                    if b.table != table_tag:
+                        continue
+                    assert b.lookup_index is not None
+                    indices.append(b.lookup_index)
+                    has_any_variations = True
+                feature_vars[feature_tag].append((raw_conditionset, indices))
+
+        if has_any_variations:
+            for feature_tag, conditions_and_lookups in feature_vars.items():
+                addFeatureVariationsRaw(
+                    self.font, table, conditions_and_lookups, feature_tag
+                )
+
+    def any_feature_variations(self, feature_tag, table_tag):
+        for (_, _, feature), variations in self.feature_variations_.items():
+            if feature != feature_tag:
+                continue
+            for conditionset, builders in variations.items():
+                if any(b.table == table_tag for b in builders):
+                    return True
+        return False
 
     def get_lookup_name_(self, lookup):
         rev = {v: k for k, v in self.named_lookups_.items()}
@@ -1479,7 +1519,7 @@ class Builder(object):
         # Normalize
         axisMap = {
             axis.axisTag: (axis.minValue, axis.defaultValue, axis.maxValue)
-            for axis in self.font["fvar"].axes
+            for axis in self.axes
         }
 
         value = {
