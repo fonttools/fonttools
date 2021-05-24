@@ -76,7 +76,7 @@ class BuilderTest(unittest.TestCase):
         SingleSubstSubtable aalt_chain_contextual_subst AlternateChained 
         MultipleLookupsPerGlyph MultipleLookupsPerGlyph2 GSUB_6_formats
         GSUB_5_formats delete_glyph STAT_test STAT_test_elidedFallbackNameID
-        variable_scalar_valuerecord variable_scalar_anchor
+        variable_scalar_valuerecord variable_scalar_anchor variable_conditionset
     """.split()
 
     VARFONT_AXES = [
