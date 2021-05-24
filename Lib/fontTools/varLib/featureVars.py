@@ -44,8 +44,26 @@ def addFeatureVariations(font, conditionalSubstitutions, featureTag='rvrn'):
     # >>> f.save(dstPath)
     """
 
+
+    substitutions = overlayFeatureVariations(conditionalSubstitutions)
+
+    # turn substitution dicts into tuples of tuples, so they are hashable
+    conditionalSubstitutions, allSubstitutions = makeSubstitutionsHashable(substitutions)
+    if "GSUB" not in font:
+        font["GSUB"] = buildGSUB()
+
+    # setup lookups
+    lookupMap = buildSubstitutionLookups(font["GSUB"].table, allSubstitutions)
+
+    # addFeatureVariationsRaw takes a list of
+    #  ( {condition}, [ lookup indices ] )
+    # so rearrange our lookups to match
+    conditionsAndLookups = []
+    for conditionSet, substitutions in conditionalSubstitutions:
+        conditionsAndLookups.append((conditionSet, [lookupMap[s] for s in substitutions]))
+
     addFeatureVariationsRaw(font,
-                            overlayFeatureVariations(conditionalSubstitutions),
+                            conditionsAndLookups,
                             featureTag)
 
 def overlayFeatureVariations(conditionalSubstitutions):
@@ -309,17 +327,10 @@ def addFeatureVariationsRaw(font, conditionalSubstitutions, featureTag='rvrn'):
 
         varFeatureIndices = [varFeatureIndex]
 
-    # setup lookups
-
-    # turn substitution dicts into tuples of tuples, so they are hashable
-    conditionalSubstitutions, allSubstitutions = makeSubstitutionsHashable(conditionalSubstitutions)
-
-    lookupMap = buildSubstitutionLookups(gsub, allSubstitutions)
-
     axisIndices = {axis.axisTag: axisIndex for axisIndex, axis in enumerate(font["fvar"].axes)}
 
     featureVariationRecords = []
-    for conditionSet, substitutions in conditionalSubstitutions:
+    for conditionSet, lookupIndices in conditionalSubstitutions:
         conditionTable = []
         for axisTag, (minValue, maxValue) in sorted(conditionSet.items()):
             if minValue > maxValue:
@@ -328,8 +339,6 @@ def addFeatureVariationsRaw(font, conditionalSubstitutions, featureTag='rvrn'):
                 )
             ct = buildConditionTable(axisIndices[axisTag], minValue, maxValue)
             conditionTable.append(ct)
-
-        lookupIndices = [lookupMap[subst] for subst in substitutions]
         records = []
         for varFeatureIndex in varFeatureIndices:
             existingLookupIndices = gsub.FeatureList.FeatureRecord[varFeatureIndex].Feature.LookupListIndex
