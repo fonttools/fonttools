@@ -416,6 +416,7 @@ def buildFeatureVariations(featureVariationRecords):
     fv = ot.FeatureVariations()
     fv.Version = 0x00010000
     fv.FeatureVariationRecord = featureVariationRecords
+    fv.FeatureVariationCount = len(featureVariationRecords)
     return fv
 
 
@@ -434,9 +435,11 @@ def buildFeatureVariationRecord(conditionTable, substitutionRecords):
     fvr = ot.FeatureVariationRecord()
     fvr.ConditionSet = ot.ConditionSet()
     fvr.ConditionSet.ConditionTable = conditionTable
+    fvr.ConditionSet.ConditionCount = len(conditionTable)
     fvr.FeatureTableSubstitution = ot.FeatureTableSubstitution()
     fvr.FeatureTableSubstitution.Version = 0x00010000
     fvr.FeatureTableSubstitution.SubstitutionRecord = substitutionRecords
+    fvr.FeatureTableSubstitution.SubstitutionCount = len(substitutionRecords)
     return fvr
 
 
@@ -446,6 +449,7 @@ def buildFeatureTableSubstitutionRecord(featureIndex, lookupListIndices):
     ftsr.FeatureIndex = featureIndex
     ftsr.Feature = ot.Feature()
     ftsr.Feature.LookupListIndex = lookupListIndices
+    ftsr.Feature.LookupCount = len(lookupListIndices)
     return ftsr
 
 
