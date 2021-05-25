@@ -993,7 +993,7 @@ def merge(merger, self, lst):
 		varidx = (dev.StartSize << 16) + dev.EndSize
 		delta = otRound(instancer[varidx])
 
-		setattr(self, name, getattr(self, name) + delta)
+		setattr(self, name, getattr(self, name, 0) + delta)
 
 
 #
