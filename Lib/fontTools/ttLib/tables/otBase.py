@@ -358,13 +358,13 @@ class OTTableWriter(object):
 			tables, extTables, done = extTables, None, {}
 
 		# add Coverage table if it is sorted last.
-		sortCoverageLast = 0
+		sortCoverageLast = False
 		if hasattr(self, "sortCoverageLast"):
 			# Find coverage table
 			for i in range(numItems):
 				item = self.items[i]
-				if hasattr(item, "name") and (item.name == "Coverage"):
-					sortCoverageLast = 1
+				if getattr(item, 'name', None) == "Coverage":
+					sortCoverageLast = True
 					break
 			if id(item) not in done:
 				item._gatherTables(tables, extTables, done)
@@ -377,7 +377,7 @@ class OTTableWriter(object):
 			if not hasattr(item, "getData"):
 				continue
 
-			if sortCoverageLast and (i==1) and item.name == 'Coverage':
+			if sortCoverageLast and (i==1) and getattr(item, 'name', None) == 'Coverage':
 				# we've already 'gathered' it above
 				continue
 
