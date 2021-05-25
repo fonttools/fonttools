@@ -936,6 +936,30 @@ class InstantiateOTLTest(object):
         assert not hasattr(valueRec1, "XAdvDevice")
         assert valueRec1.XAdvance == v2
 
+    def test_GPOS_ValueRecord_XAdvDevice_wtihout_XAdvance(self):
+        # Test VF contains a PairPos adjustment in which the default instance
+        # has no XAdvance but there are deltas in XAdvDevice (VariationIndex).
+        vf = ttLib.TTFont()
+        vf.importXML(os.path.join(TESTDATA, "PartialInstancerTest4-VF.ttx"))
+        pairPos = vf["GPOS"].table.LookupList.Lookup[0].SubTable[0]
+        assert pairPos.ValueFormat1 == 0x40
+        valueRec1 = pairPos.PairSet[0].PairValueRecord[0].Value1
+        assert not hasattr(valueRec1, "XAdvance")
+        assert valueRec1.XAdvDevice.DeltaFormat == 0x8000
+        outer = valueRec1.XAdvDevice.StartSize
+        inner = valueRec1.XAdvDevice.EndSize
+        assert vf["GDEF"].table.VarStore.VarData[outer].Item[inner] == [-50]
+
+        # check that MutatorMerger for ValueRecord doesn't raise AttributeError
+        # when XAdvDevice is present but there's no corresponding XAdvance.
+        instancer.instantiateOTL(vf, {"wght": 0.5})
+
+        pairPos = vf["GPOS"].table.LookupList.Lookup[0].SubTable[0]
+        assert pairPos.ValueFormat1 == 0x4
+        valueRec1 = pairPos.PairSet[0].PairValueRecord[0].Value1
+        assert not hasattr(valueRec1, "XAdvDevice")
+        assert valueRec1.XAdvance == -25
+
 
 class InstantiateAvarTest(object):
     @pytest.mark.parametrize("location", [{"wght": 0.0}, {"wdth": 0.0}])
