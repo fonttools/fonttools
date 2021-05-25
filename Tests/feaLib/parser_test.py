@@ -1866,6 +1866,12 @@ class ParserTest(unittest.TestCase):
             self.parse,
             "conditionset heavy { wght 700 900; wght 100 200; } heavy;")
 
+    def test_conditionset_float(self):
+        doc = self.parse("conditionset heavy { wght 700.0 900.0; } heavy;")
+        value = doc.statements[0]
+        self.assertEqual(value.conditions["wght"], (700.0, 900.0))
+        self.assertEqual(value.asFea(), "conditionset heavy {\n   wght 700.0 900.0;\n} heavy;\n")
+
     def test_variation(self):
         doc = self.parse("variation rvrn heavy { sub a by b; } rvrn;")
         value = doc.statements[0]

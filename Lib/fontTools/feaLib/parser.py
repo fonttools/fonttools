@@ -1881,8 +1881,15 @@ class Parser(object):
             if axis in conditions:
                 raise FeatureLibError(f"Repeated condition for axis {axis}", self.cur_token_location_)
 
-            min_value = self.expect_number_(variable=False)
-            max_value = self.expect_number_(variable=False)
+            if self.next_token_type_ is Lexer.FLOAT:
+                min_value = self.expect_float_()
+            elif self.next_token_type_ is Lexer.NUMBER:
+                min_value = self.expect_number_(variable=False)
+
+            if self.next_token_type_ is Lexer.FLOAT:
+                max_value = self.expect_float_()
+            elif self.next_token_type_ is Lexer.NUMBER:
+                max_value = self.expect_number_(variable=False)
             self.expect_symbol_(";")
 
             conditions[axis] = (min_value, max_value)
