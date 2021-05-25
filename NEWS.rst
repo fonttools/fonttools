@@ -1,3 +1,6 @@
+4.24.4 (released 2021-05-25)
+----------------------------
+
 - [subset/instancer] Fixed ``AttributeError`` when instantiating a VF that
   contains GPOS ValueRecords with ``Device`` tables but without the respective
   non-Device values (e.g. ``XAdvDevice`` without ``XAdvance``). When not
