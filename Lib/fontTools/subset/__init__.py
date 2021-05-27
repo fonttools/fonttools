@@ -1308,7 +1308,13 @@ def subset_lookups(self, lookup_indices):
 	self.LookupListIndex = [lookup_indices.index(l)
 				for l in self.LookupListIndex]
 	self.LookupCount = len(self.LookupListIndex)
-	return self.LookupCount or self.FeatureParams
+	# keep 'size' feature even if it contains no lookups; but drop any other
+	# empty feature (e.g. FeatureParams for stylistic set names)
+	# https://github.com/fonttools/fonttools/issues/2324
+	return (
+	  self.LookupCount or
+	  isinstance(self.FeatureParams, otTables.FeatureParamsSize)
+	)
 
 @_add_method(otTables.FeatureList)
 def subset_lookups(self, lookup_indices):
