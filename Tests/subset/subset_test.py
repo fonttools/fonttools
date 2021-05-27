@@ -1261,5 +1261,58 @@ def test_subset_COLRv1_drop_all_v0_glyphs(colrv1_path):
     assert colr.table.LayerRecordCount is 0
 
 
+def test_subset_keep_size_drop_empty_stylistic_set():
+    fb = FontBuilder(unitsPerEm=1000, isTTF=True)
+    glyph_order = [".notdef", "a", "b", "b.ss01"]
+    fb.setupGlyphOrder(glyph_order)
+    fb.setupGlyf({g: TTGlyphPen(None).glyph() for g in glyph_order})
+    fb.setupCharacterMap({ord("a"): "a", ord("b"): "b"})
+    fb.setupHorizontalMetrics({g: (500, 0) for g in glyph_order})
+    fb.setupHorizontalHeader()
+    fb.setupOS2()
+    fb.setupPost()
+    fb.setupNameTable({"familyName": "TestKeepSizeFeature", "styleName": "Regular"})
+    fb.addOpenTypeFeatures("""
+        feature size {
+          parameters 10.0 0;
+        } size;
+        feature ss01 {
+          featureNames {
+            name "Alternate b";
+          };
+          sub b by b.ss01;
+        } ss01;
+    """)
+
+    buf = io.BytesIO()
+    fb.save(buf)
+    buf.seek(0)
+
+    font = TTFont(buf)
+
+    gpos_features = font["GPOS"].table.FeatureList.FeatureRecord
+    assert gpos_features[0].FeatureTag == "size"
+    assert isinstance(gpos_features[0].Feature.FeatureParams, ot.FeatureParamsSize)
+    assert gpos_features[0].Feature.LookupCount == 0
+    gsub_features = font["GSUB"].table.FeatureList.FeatureRecord
+    assert gsub_features[0].FeatureTag == "ss01"
+    assert isinstance(
+        gsub_features[0].Feature.FeatureParams, ot.FeatureParamsStylisticSet
+    )
+
+    options = subset.Options(layout_features=["*"])
+    subsetter = subset.Subsetter(options)
+    subsetter.populate(unicodes=[ord("a")])
+    subsetter.subset(font)
+
+    # empty size feature was kept
+    gpos_features = font["GPOS"].table.FeatureList.FeatureRecord
+    assert gpos_features[0].FeatureTag == "size"
+    assert isinstance(gpos_features[0].Feature.FeatureParams, ot.FeatureParamsSize)
+    assert gpos_features[0].Feature.LookupCount == 0
+    # empty ss01 feature was dropped
+    assert font["GSUB"].table.FeatureList.FeatureCount == 0
+
+
 if __name__ == "__main__":
     sys.exit(unittest.main())
