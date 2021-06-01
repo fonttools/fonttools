@@ -87,7 +87,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 		indices.frombytes(data[:2*numGlyphs])
 		if sys.byteorder != "big": indices.byteswap()
 		data = data[2*numGlyphs:]
-		maxIndex = max(indices[:numGlyphs])
+		maxIndex = max(indices)
 		self.extraNames = extraNames = unpackPStrings(data, maxIndex-257)
 		self.glyphOrder = glyphOrder = [""] * int(ttFont['maxp'].numGlyphs)
 		for glyphID in range(numGlyphs):
@@ -264,23 +264,23 @@ def unpackPStrings(data, n):
 	dataLen = len(data)
 
 	for _ in range(n):
-		if (dataLen <= index):
+		if dataLen <= index:
 			length = 0
 		else:
 			length = byteord(data[index])
 		index += 1
 
-		if (dataLen <= index + length - 1):
+		if dataLen <= index + length - 1:
 			name = ""
 		else:
 			name = tostr(data[index:index+length], encoding="latin1")
 		strings.append (name)
 		index += length
 
-	if (index < dataLen):
+	if index < dataLen:
 		log.warning("%d extra bytes in post.stringData array", dataLen - index)
 
-	elif (dataLen < index):
+	elif dataLen < index:
 		log.warning("not enough data in post.stringData array")
 
 	return strings
