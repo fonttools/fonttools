@@ -106,7 +106,6 @@ class TTFont(object):
 			self.flavorData = None
 			return
 		if not hasattr(file, "read"):
-			closeStream = True
 			# assume file is a string
 			if res_name_or_index is not None:
 				# see if it contains 'sfnt' resources in the resource or data fork
@@ -122,20 +121,9 @@ class TTFont(object):
 			else:
 				file = open(file, "rb")
 		else:
-			# assume "file" is a readable file object
-			closeStream = False
+			# assume "file" is a readable, seekable file object
 			file.seek(0)
 
-		if not self.lazy:
-			# read input file in memory and wrap a stream around it to allow overwriting
-			file.seek(0)
-			tmp = BytesIO(file.read())
-			if hasattr(file, 'name'):
-				# save reference to input file name
-				tmp.name = file.name
-			if closeStream:
-				file.close()
-			file = tmp
 		self._tableCache = _tableCache
 		self.reader = SFNTReader(file, checkChecksums, fontNumber=fontNumber)
 		self.sfntVersion = self.reader.sfntVersion
