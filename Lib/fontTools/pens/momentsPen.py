@@ -294,4 +294,10 @@ if __name__ == '__main__':
 		      ('momentXX', x**2),
 		      ('momentXY', x*y),
 		      ('momentYY', y**2),
+		      ('momentXXX', x**3),
+		      ('momentYYY', y**3),
+		      ('momentXXXX', x**4),
+		      ('momentYYYY', y**4),
+		      ('momentXXYY', x*x*y*y),
+		      ('momentPolar4', 2*x*x*y*y+x**4+y**4),
 		     ])
