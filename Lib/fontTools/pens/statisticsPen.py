@@ -36,6 +36,7 @@ class StatisticsPen(MomentsPen):
 		self.covariance = 0
 		self.correlation = 0
 		self.slant = 0
+		self.moment4thPolar = 0
 
 	def __update(self):
 
@@ -66,6 +67,10 @@ class StatisticsPen(MomentsPen):
 
 		slant = covariance / varianceY
 		self.slant = slant if abs(slant) > 1e-3 else 0
+		
+		# Polar 4th moment: IntInt( r^4 )dA = IntInt( (x^2 + y^2)^2 )dA 
+		#                   = Ixxxx + 2*Ixxyy + Iyyyy
+		self.moment4thPolar = self.momentXXXX + self.momentYYYY + 2*self.momentXXYY
 
 
 def _test(glyphset, upem, glyphs):
@@ -81,7 +86,7 @@ def _test(glyphset, upem, glyphs):
 		pen = StatisticsPen(glyphset=glyphset)
 		transformer = TransformPen(pen, Scale(1./upem))
 		glyph.draw(transformer)
-		for item in ['area', 'momentX', 'momentY', 'momentXX', 'momentYY', 'momentXY', 'meanX', 'meanY', 'varianceX', 'varianceY', 'stddevX', 'stddevY', 'covariance', 'correlation', 'slant']:
+		for item in ['area', 'momentX', 'momentY', 'momentXX', 'momentYY', 'momentXY', 'meanX', 'meanY', 'varianceX', 'varianceY', 'stddevX', 'stddevY', 'covariance', 'correlation', 'slant', 'momentXXX', 'momentYYY', 'momentXXXX', 'momentYYYY', 'momentXXYY', 'moment4thPolar']:
 			if item[0] == '_': continue
 			print ("%s: %g" % (item, getattr(pen, item)))
 
