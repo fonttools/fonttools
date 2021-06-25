@@ -330,8 +330,9 @@ class GuessSmoothPointPen(AbstractPointPen):
 	should be "smooth", ie. that it's a "tangent" point or a "curve" point.
 	"""
 
-	def __init__(self, outPen):
+	def __init__(self, outPen, error=0.05):
 		self._outPen = outPen
+		self._error = error
 		self._points = None
 
 	def _flushContour(self):
@@ -368,7 +369,7 @@ class GuessSmoothPointPen(AbstractPointPen):
 				dx2, dy2 = nextPt[0] - pt[0], nextPt[1] - pt[1]
 				a1 = math.atan2(dx1, dy1)
 				a2 = math.atan2(dx2, dy2)
-				if abs(a1 - a2) < 0.05:
+				if abs(a1 - a2) < self._error:
 					points[i] = pt, segmentType, True, name, kwargs
 
 		for pt, segmentType, smooth, name, kwargs in points:
