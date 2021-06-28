@@ -1150,11 +1150,11 @@ def test_subset_COLRv1_and_CPAL(colrv1_path):
     colr = subset_font["COLR"].table
     assert colr.Version == 1
     assert len(colr.BaseGlyphRecordArray.BaseGlyphRecord) == 1
-    assert len(colr.BaseGlyphV1List.BaseGlyphV1Record) == 3  # was 4
+    assert len(colr.BaseGlyphList.BaseGlyphPaintRecord) == 3  # was 4
 
-    base = colr.BaseGlyphV1List.BaseGlyphV1Record[0]
+    base = colr.BaseGlyphList.BaseGlyphPaintRecord[0]
     assert base.BaseGlyph == "uniE001"
-    layers = colr.LayerV1List.Paint[
+    layers = colr.LayerList.Paint[
         base.Paint.FirstLayerIndex: base.Paint.FirstLayerIndex + base.Paint.NumLayers
     ]
     assert len(layers) == 2

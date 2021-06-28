@@ -2055,7 +2055,7 @@ def closure_glyphs(self, s):
 		self.ColorLayers = self._decompileColorLayersV0(self.table)
 		self.ColorLayersV1 = {
 			rec.BaseGlyph: rec.Paint
-			for rec in self.table.BaseGlyphV1List.BaseGlyphV1Record
+			for rec in self.table.BaseGlyphList.BaseGlyphPaintRecord
 		}
 
 	decompose = s.glyphs
@@ -2083,14 +2083,14 @@ def subset_glyphs(self, s):
 	if self.version == 0:
 		return bool(self.ColorLayers)
 
-	colorGlyphsV1 = unbuildColrV1(self.table.LayerV1List, self.table.BaseGlyphV1List)
-	self.table.LayerV1List, self.table.BaseGlyphV1List = buildColrV1(
+	colorGlyphsV1 = unbuildColrV1(self.table.LayerList, self.table.BaseGlyphList)
+	self.table.LayerList, self.table.BaseGlyphList = buildColrV1(
 		{g: colorGlyphsV1[g] for g in colorGlyphsV1 if g in s.glyphs}
 	)
 	del self.ColorLayersV1
 
 	layersV0 = self.ColorLayers
-	if not self.table.BaseGlyphV1List.BaseGlyphV1Record:
+	if not self.table.BaseGlyphList.BaseGlyphPaintRecord:
 		# no more COLRv1 glyphs: downgrade to version 0
 		self.version = 0
 		del self.table
@@ -2131,7 +2131,7 @@ def prune_post_subset(self, font, options):
 		if colr.table.LayerRecordArray:
 			for layer in colr.table.LayerRecordArray.LayerRecord:
 				colors_by_index[layer.PaletteIndex].append(layer)
-		for record in colr.table.BaseGlyphV1List.BaseGlyphV1Record:
+		for record in colr.table.BaseGlyphList.BaseGlyphPaintRecord:
 			record.Paint.traverse(colr.table, collect_colors_by_index)
 
 	# don't remap palette entry index 0xFFFF, this is always the foreground color

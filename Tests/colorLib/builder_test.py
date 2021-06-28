@@ -2,7 +2,7 @@ from fontTools.ttLib import newTable
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.colorLib import builder
 from fontTools.colorLib.geometry import round_start_circle_stable_containment, Circle
-from fontTools.colorLib.builder import LayerV1ListBuilder, _build_n_ary_tree
+from fontTools.colorLib.builder import LayerListBuilder, _build_n_ary_tree
 from fontTools.colorLib.table_builder import TableBuilder
 from fontTools.colorLib.errors import ColorLibError
 import pytest
@@ -10,11 +10,11 @@ from typing import List
 
 
 def _build(cls, source):
-    return LayerV1ListBuilder().tableBuilder.build(cls, source)
+    return LayerListBuilder().tableBuilder.build(cls, source)
 
 
 def _buildPaint(source):
-    return LayerV1ListBuilder().buildPaint(source)
+    return LayerListBuilder().buildPaint(source)
 
 
 def test_buildCOLR_v0():
@@ -994,15 +994,15 @@ def test_buildColrV1():
     # TODO(anthrotype) should we split into two tests? - seems two distinct validations
     layers, baseGlyphs = builder.buildColrV1(colorGlyphs, glyphMap)
     assert baseGlyphs.BaseGlyphCount == len(colorGlyphs)
-    assert baseGlyphs.BaseGlyphV1Record[0].BaseGlyph == "d"
-    assert baseGlyphs.BaseGlyphV1Record[1].BaseGlyph == "a"
-    assert baseGlyphs.BaseGlyphV1Record[2].BaseGlyph == "g"
+    assert baseGlyphs.BaseGlyphPaintRecord[0].BaseGlyph == "d"
+    assert baseGlyphs.BaseGlyphPaintRecord[1].BaseGlyph == "a"
+    assert baseGlyphs.BaseGlyphPaintRecord[2].BaseGlyph == "g"
 
     layers, baseGlyphs = builder.buildColrV1(colorGlyphs)
     assert baseGlyphs.BaseGlyphCount == len(colorGlyphs)
-    assert baseGlyphs.BaseGlyphV1Record[0].BaseGlyph == "a"
-    assert baseGlyphs.BaseGlyphV1Record[1].BaseGlyph == "d"
-    assert baseGlyphs.BaseGlyphV1Record[2].BaseGlyph == "g"
+    assert baseGlyphs.BaseGlyphPaintRecord[0].BaseGlyph == "a"
+    assert baseGlyphs.BaseGlyphPaintRecord[1].BaseGlyph == "d"
+    assert baseGlyphs.BaseGlyphPaintRecord[2].BaseGlyph == "g"
 
 
 def test_buildColrV1_more_than_255_paints():
@@ -1037,16 +1037,16 @@ def test_buildColrV1_more_than_255_paints():
     )
 
     assert baseGlyphs.BaseGlyphCount == len(colorGlyphs)
-    assert baseGlyphs.BaseGlyphV1Record[0].BaseGlyph == "a"
+    assert baseGlyphs.BaseGlyphPaintRecord[0].BaseGlyph == "a"
     assert (
-        baseGlyphs.BaseGlyphV1Record[0].Paint.Format == ot.PaintFormat.PaintColrLayers
+        baseGlyphs.BaseGlyphPaintRecord[0].Paint.Format == ot.PaintFormat.PaintColrLayers
     )
-    assert baseGlyphs.BaseGlyphV1Record[0].Paint.FirstLayerIndex == 255
-    assert baseGlyphs.BaseGlyphV1Record[0].Paint.NumLayers == num_paints + 1 - 255
+    assert baseGlyphs.BaseGlyphPaintRecord[0].Paint.FirstLayerIndex == 255
+    assert baseGlyphs.BaseGlyphPaintRecord[0].Paint.NumLayers == num_paints + 1 - 255
 
 
 def test_split_color_glyphs_by_version():
-    layerBuilder = LayerV1ListBuilder()
+    layerBuilder = LayerListBuilder()
     colorGlyphs = {
         "a": [
             ("b", 0),
@@ -1141,15 +1141,15 @@ def test_build_layerv1list_empty():
     assertIsColrV1(colr)
     assertNoV0Content(colr)
 
-    # 2 v1 glyphs, none in LayerV1List
-    assert colr.table.BaseGlyphV1List.BaseGlyphCount == 2
-    assert len(colr.table.BaseGlyphV1List.BaseGlyphV1Record) == 2
-    assert colr.table.LayerV1List is None
+    # 2 v1 glyphs, none in LayerList
+    assert colr.table.BaseGlyphList.BaseGlyphCount == 2
+    assert len(colr.table.BaseGlyphList.BaseGlyphPaintRecord) == 2
+    assert colr.table.LayerList is None
 
 
 def _paint_names(paints) -> List[str]:
     # prints a predictable string from a paint list to enable
-    # semi-readable assertions on a LayerV1List order.
+    # semi-readable assertions on a LayerList order.
     result = []
     for paint in paints:
         if paint.Format == int(ot.PaintFormat.PaintGlyph):
@@ -1181,7 +1181,7 @@ def test_build_layerv1list_simple():
         "Glyph": "b_fore",
     }
 
-    # list => PaintColrLayers, contents should land in LayerV1List
+    # list => PaintColrLayers, contents should land in LayerList
     colr = builder.buildCOLR(
         {
             "a": (
@@ -1205,12 +1205,12 @@ def test_build_layerv1list_simple():
     assertIsColrV1(colr)
     assertNoV0Content(colr)
 
-    # 2 v1 glyphs, 4 paints in LayerV1List
+    # 2 v1 glyphs, 4 paints in LayerList
     # A single shared backdrop isn't worth accessing by slice
-    assert colr.table.BaseGlyphV1List.BaseGlyphCount == 2
-    assert len(colr.table.BaseGlyphV1List.BaseGlyphV1Record) == 2
-    assert colr.table.LayerV1List.LayerCount == 4
-    assert _paint_names(colr.table.LayerV1List.Paint) == [
+    assert colr.table.BaseGlyphList.BaseGlyphCount == 2
+    assert len(colr.table.BaseGlyphList.BaseGlyphPaintRecord) == 2
+    assert colr.table.LayerList.LayerCount == 4
+    assert _paint_names(colr.table.LayerList.Paint) == [
         "back",
         "a_fore",
         "back",
@@ -1254,7 +1254,7 @@ def test_build_layerv1list_with_sharing():
         "Glyph": "c_back",
     }
 
-    # list => PaintColrLayers, which means contents should be in LayerV1List
+    # list => PaintColrLayers, which means contents should be in LayerList
     colr = builder.buildCOLR(
         {
             "a": (ot.PaintFormat.PaintColrLayers, backdrop + [a_foreground]),
@@ -1270,17 +1270,17 @@ def test_build_layerv1list_with_sharing():
     assertIsColrV1(colr)
     assertNoV0Content(colr)
 
-    # 2 v1 glyphs, 4 paints in LayerV1List
+    # 2 v1 glyphs, 4 paints in LayerList
     # A single shared backdrop isn't worth accessing by slice
-    baseGlyphs = colr.table.BaseGlyphV1List.BaseGlyphV1Record
-    assert colr.table.BaseGlyphV1List.BaseGlyphCount == 3
+    baseGlyphs = colr.table.BaseGlyphList.BaseGlyphPaintRecord
+    assert colr.table.BaseGlyphList.BaseGlyphCount == 3
     assert len(baseGlyphs) == 3
     assert _paint_names([b.Paint for b in baseGlyphs]) == [
         "Layers[0:3]",
         "Layers[3:6]",
         "Layers[6:8]",
     ]
-    assert _paint_names(colr.table.LayerV1List.Paint) == [
+    assert _paint_names(colr.table.LayerList.Paint) == [
         "back1",
         "back2",
         "a_fore",
@@ -1290,7 +1290,7 @@ def test_build_layerv1list_with_sharing():
         "c_back",
         "Layers[0:2]",
     ]
-    assert colr.table.LayerV1List.LayerCount == 8
+    assert colr.table.LayerList.LayerCount == 8
 
 
 def test_build_layerv1list_with_overlaps():
@@ -1306,7 +1306,7 @@ def test_build_layerv1list_with_overlaps():
         for c in "abcdefghi"
     ]
 
-    # list => PaintColrLayers, which means contents should be in LayerV1List
+    # list => PaintColrLayers, which means contents should be in LayerList
     colr = builder.buildCOLR(
         {
             "a": (ot.PaintFormat.PaintColrLayers, paints[0:4]),
@@ -1319,10 +1319,10 @@ def test_build_layerv1list_with_overlaps():
     assertIsColrV1(colr)
     assertNoV0Content(colr)
 
-    baseGlyphs = colr.table.BaseGlyphV1List.BaseGlyphV1Record
-    # assert colr.table.BaseGlyphV1List.BaseGlyphCount == 2
+    baseGlyphs = colr.table.BaseGlyphList.BaseGlyphPaintRecord
+    # assert colr.table.BaseGlyphList.BaseGlyphCount == 2
 
-    assert _paint_names(colr.table.LayerV1List.Paint) == [
+    assert _paint_names(colr.table.LayerList.Paint) == [
         "a",
         "b",
         "c",
@@ -1340,7 +1340,7 @@ def test_build_layerv1list_with_overlaps():
         "Layers[4:7]",
         "Layers[7:11]",
     ]
-    assert colr.table.LayerV1List.LayerCount == 11
+    assert colr.table.LayerList.LayerCount == 11
 
 
 def test_explicit_version_1():
@@ -1469,14 +1469,14 @@ class BuildCOLRTest(object):
         assert colr.table.LayerRecordCount == 2
         assert isinstance(colr.table.LayerRecordArray, ot.LayerRecordArray)
 
-        assert isinstance(colr.table.BaseGlyphV1List, ot.BaseGlyphV1List)
-        assert colr.table.BaseGlyphV1List.BaseGlyphCount == 1
+        assert isinstance(colr.table.BaseGlyphList, ot.BaseGlyphList)
+        assert colr.table.BaseGlyphList.BaseGlyphCount == 1
         assert isinstance(
-            colr.table.BaseGlyphV1List.BaseGlyphV1Record[0], ot.BaseGlyphV1Record
+            colr.table.BaseGlyphList.BaseGlyphPaintRecord[0], ot.BaseGlyphPaintRecord
         )
-        assert colr.table.BaseGlyphV1List.BaseGlyphV1Record[0].BaseGlyph == "d"
-        assert isinstance(colr.table.LayerV1List, ot.LayerV1List)
-        assert colr.table.LayerV1List.Paint[0].Glyph == "e"
+        assert colr.table.BaseGlyphList.BaseGlyphPaintRecord[0].BaseGlyph == "d"
+        assert isinstance(colr.table.LayerList, ot.LayerList)
+        assert colr.table.LayerList.Paint[0].Glyph == "e"
 
     def test_explicit_version_0(self):
         colr = builder.buildCOLR({"a": [("b", 0), ("c", 1)]}, version=0)
@@ -1527,9 +1527,9 @@ class BuildCOLRTest(object):
             },
         )
 
-        assert colr.table.LayerV1List is None, "PaintColrLayers should be gone"
-        assert colr.table.BaseGlyphV1List.BaseGlyphCount == 1
-        paint = colr.table.BaseGlyphV1List.BaseGlyphV1Record[0].Paint
+        assert colr.table.LayerList is None, "PaintColrLayers should be gone"
+        assert colr.table.BaseGlyphList.BaseGlyphCount == 1
+        paint = colr.table.BaseGlyphList.BaseGlyphPaintRecord[0].Paint
         assert paint.Format == ot.PaintFormat.PaintGlyph
         assert paint.Paint.Format == ot.PaintFormat.PaintSolid
 

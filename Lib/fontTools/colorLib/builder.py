@@ -218,7 +218,7 @@ def buildCOLR(
 
     populateCOLRv0(colr, colorGlyphsV0, glyphMap)
 
-    colr.LayerV1List, colr.BaseGlyphV1List = buildColrV1(colorGlyphsV1, glyphMap)
+    colr.LayerList, colr.BaseGlyphList = buildColrV1(colorGlyphsV1, glyphMap)
 
     if version is None:
         version = 1 if (varStore or colorGlyphsV1) else 0
@@ -404,7 +404,7 @@ def _reuse_ranges(num_layers: int) -> Generator[Tuple[int, int], None, None]:
             yield (lbound, ubound)
 
 
-class LayerV1ListBuilder:
+class LayerListBuilder:
     slices: List[ot.Paint]
     layers: List[ot.Paint]
     reusePool: Mapping[Tuple[Any, ...], int]
@@ -536,19 +536,19 @@ class LayerV1ListBuilder:
     def buildPaint(self, paint: _PaintInput) -> ot.Paint:
         return self.tableBuilder.build(ot.Paint, paint)
 
-    def build(self) -> Optional[ot.LayerV1List]:
+    def build(self) -> Optional[ot.LayerList]:
         if not self.layers:
             return None
-        layers = ot.LayerV1List()
+        layers = ot.LayerList()
         layers.LayerCount = len(self.layers)
         layers.Paint = self.layers
         return layers
 
 
-def buildBaseGlyphV1Record(
-    baseGlyph: str, layerBuilder: LayerV1ListBuilder, paint: _PaintInput
-) -> ot.BaseGlyphV1List:
-    self = ot.BaseGlyphV1Record()
+def buildBaseGlyphPaintRecord(
+    baseGlyph: str, layerBuilder: LayerListBuilder, paint: _PaintInput
+) -> ot.BaseGlyphList:
+    self = ot.BaseGlyphPaintRecord()
     self.BaseGlyph = baseGlyph
     self.Paint = layerBuilder.buildPaint(paint)
     return self
@@ -564,7 +564,7 @@ def _format_glyph_errors(errors: Mapping[str, Exception]) -> str:
 def buildColrV1(
     colorGlyphs: _ColorGlyphsDict,
     glyphMap: Optional[Mapping[str, int]] = None,
-) -> Tuple[Optional[ot.LayerV1List], ot.BaseGlyphV1List]:
+) -> Tuple[Optional[ot.LayerList], ot.BaseGlyphList]:
     if glyphMap is not None:
         colorGlyphItems = sorted(
             colorGlyphs.items(), key=lambda item: glyphMap[item[0]]
@@ -574,24 +574,24 @@ def buildColrV1(
 
     errors = {}
     baseGlyphs = []
-    layerBuilder = LayerV1ListBuilder()
+    layerBuilder = LayerListBuilder()
     for baseGlyph, paint in colorGlyphItems:
         try:
-            baseGlyphs.append(buildBaseGlyphV1Record(baseGlyph, layerBuilder, paint))
+            baseGlyphs.append(buildBaseGlyphPaintRecord(baseGlyph, layerBuilder, paint))
 
         except (ColorLibError, OverflowError, ValueError, TypeError) as e:
             errors[baseGlyph] = e
 
     if errors:
         failed_glyphs = _format_glyph_errors(errors)
-        exc = ColorLibError(f"Failed to build BaseGlyphV1List:\n{failed_glyphs}")
+        exc = ColorLibError(f"Failed to build BaseGlyphList:\n{failed_glyphs}")
         exc.errors = errors
         raise exc from next(iter(errors.values()))
 
     layers = layerBuilder.build()
-    glyphs = ot.BaseGlyphV1List()
+    glyphs = ot.BaseGlyphList()
     glyphs.BaseGlyphCount = len(baseGlyphs)
-    glyphs.BaseGlyphV1Record = baseGlyphs
+    glyphs.BaseGlyphPaintRecord = baseGlyphs
     return (layers, glyphs)
 
 

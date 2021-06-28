@@ -1546,8 +1546,8 @@ otData = [
 		('LOffset', 'BaseGlyphRecordArray', None, None, 'Offset (from beginning of COLR table) to Base Glyph records.'),
 		('LOffset', 'LayerRecordArray', None, None, 'Offset (from beginning of COLR table) to Layer Records.'),
 		('uint16', 'LayerRecordCount', None, None, 'Number of Layer Records.'),
-		('LOffset', 'BaseGlyphV1List', None, 'Version >= 1', 'Offset (from beginning of COLR table) to array of Version-1 Base Glyph records.'),
-		('LOffset', 'LayerV1List', None, 'Version >= 1', 'Offset (from beginning of COLR table) to LayerV1List.'),
+		('LOffset', 'BaseGlyphList', None, 'Version >= 1', 'Offset (from beginning of COLR table) to array of Version-1 Base Glyph records.'),
+		('LOffset', 'LayerList', None, 'Version >= 1', 'Offset (from beginning of COLR table) to LayerList.'),
 		('LOffset', 'VarStore', None, 'Version >= 1', 'Offset to variation store (may be NULL)'),
 	]),
 
@@ -1570,19 +1570,19 @@ otData = [
 		('uint16', 'PaletteIndex', None, None, 'Index value to use with a selected color palette.'),
 	]),
 
-	('BaseGlyphV1List', [
+	('BaseGlyphList', [
 		('uint32', 'BaseGlyphCount', None, None, 'Number of Version-1 Base Glyph records'),
-		('struct', 'BaseGlyphV1Record', 'BaseGlyphCount', 0, 'Array of Version-1 Base Glyph records'),
+		('struct', 'BaseGlyphPaintRecord', 'BaseGlyphCount', 0, 'Array of Version-1 Base Glyph records'),
 	]),
 
-	('BaseGlyphV1Record', [
+	('BaseGlyphPaintRecord', [
 		('GlyphID', 'BaseGlyph', None, None, 'Glyph ID of reference glyph.'),
-		('LOffset', 'Paint', None, None, 'Offset (from beginning of BaseGlyphV1Record) to Paint, typically a PaintColrLayers.'),
+		('LOffset', 'Paint', None, None, 'Offset (from beginning of BaseGlyphPaintRecord) to Paint, typically a PaintColrLayers.'),
 	]),
 
-	('LayerV1List', [
+	('LayerList', [
 		('uint32', 'LayerCount', None, None, 'Number of Version-1 Layers'),
-		('LOffset', 'Paint', 'LayerCount', 0, 'Array of offsets to Paint tables, from the start of the LayerV1List table.'),
+		('LOffset', 'Paint', 'LayerCount', 0, 'Array of offsets to Paint tables, from the start of the LayerList table.'),
 	]),
 
 	# COLRv1 Affine2x3 uses the same column-major order to serialize a 2D
@@ -1643,8 +1643,8 @@ otData = [
 	# PaintColrLayers
 	('PaintFormat1', [
 		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 1'),
-		('uint8', 'NumLayers', None, None, 'Number of offsets to Paint to read from LayerV1List.'),
-		('uint32', 'FirstLayerIndex', None, None, 'Index into LayerV1List.'),
+		('uint8', 'NumLayers', None, None, 'Number of offsets to Paint to read from LayerList.'),
+		('uint32', 'FirstLayerIndex', None, None, 'Index into LayerList.'),
 	]),
 
 	# PaintSolid
@@ -1733,7 +1733,7 @@ otData = [
 	# PaintColrGlyph
 	('PaintFormat11', [
 		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 11'),
-		('GlyphID', 'Glyph', None, None, 'Virtual glyph ID for a BaseGlyphV1List base glyph.'),
+		('GlyphID', 'Glyph', None, None, 'Virtual glyph ID for a BaseGlyphList base glyph.'),
 	]),
 
 	# PaintTransform
