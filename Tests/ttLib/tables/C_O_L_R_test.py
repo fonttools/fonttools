@@ -50,7 +50,9 @@ def diff_binary_fragments(font_bytes, expected_fragments):
     for expected_bytes, description in expected_fragments:
         actual_bytes = font_bytes[pos : pos + len(expected_bytes)]
         if actual_bytes != expected_bytes:
-            print(f'{description} (previous "{prev_desc}", actual_bytes: {"".join("%02x" % v for v in actual_bytes)} bytes: {str(font_bytes[pos:pos+16])}')
+            print(
+                f'{description} (previous "{prev_desc}", actual_bytes: {"".join("%02x" % v for v in actual_bytes)} bytes: {str(font_bytes[pos:pos+16])}'
+            )
             errors += 1
         pos += len(expected_bytes)
         prev_desc = description
@@ -141,7 +143,7 @@ COLR_V1_SAMPLE = (
     (b"\x04", "BaseGlyphPaintRecord[0].Paint.NumLayers (4)"),
     (b"\x00\x00\x00\x00", "BaseGlyphPaintRecord[0].Paint.FirstLayerIndex (0)"),
     # BaseGlyphPaintRecord[1]
-    (b"\x14", "BaseGlyphPaintRecord[1].Paint.Format (20)"),
+    (b"\x20", "BaseGlyphPaintRecord[1].Paint.Format (32)"),
     (b"\x00\x00<", "Offset to SourcePaint from beginning of PaintComposite (60)"),
     (b"\x03", "BaseGlyphPaintRecord[1].Paint.CompositeMode [SRC_OVER] (3)"),
     (b"\x00\x00\x08", "Offset to BackdropPaint from beginning of PaintComposite (8)"),
@@ -256,19 +258,23 @@ COLR_V1_SAMPLE = (
     (b"\x00\x00\x0c", "Offset to Paint subtable from beginning of PaintTranslate (12)"),
     (b"\x01\x01\x00\x00", "dx (257)"),
     (b"\x01\x02\x00\x00", "dy (258)"),
-    # PaintRotate
-    (b"\x10", "LayerList.Paint[3].Paint.Format (16)"),
-    (b"\x00\x00\x10", "Offset to Paint subtable from beginning of PaintRotate (16)"),
+    # PaintRotateAroundCenter
+    (b"\x1a", "LayerList.Paint[3].Paint.Format (26)"),
+    (
+        b"\x00\x00\x10",
+        "Offset to Paint subtable from beginning of PaintRotateAroundCenter (16)",
+    ),
     (b"\x00\x2d\x00\x00", "angle (45)"),
     (b"\x00\xff\x00\x00", "centerX (255)"),
     (b"\x01\x00\x00\x00", "centerY (256)"),
     # PaintSkew
-    (b"\x12", "LayerList.Paint[3].Paint.Paint.Format (18)"),
-    (b"\x00\x00\x14", "Offset to Paint subtable from beginning of PaintSkew (20)"),
+    (b"\x1c", "LayerList.Paint[3].Paint.Paint.Format (28)"),
+    (
+        b"\x00\x00\x0c",
+        "Offset to Paint subtable from beginning of PaintSkew (12)",
+    ),
     (b"\xff\xf5\x00\x00", "xSkewAngle (-11)"),
     (b"\x00\x05\x00\x00", "ySkewAngle (5)"),
-    (b"\x00\xfd\x00\x00", "centerX.value (253)"),
-    (b"\x00\xfe\x00\x00", "centerY.value (254)"),
     # PaintGlyph
     (b"\x0a", "LayerList.Paint[3].Paint.Paint.Paint.Format (10)"),
     (b"\x00\x00\x06", "Offset to Paint subtable from beginning of PaintGlyph (6)"),
@@ -317,7 +323,7 @@ COLR_V1_XML = [
     "  </BaseGlyphPaintRecord>",
     '  <BaseGlyphPaintRecord index="1">',
     '    <BaseGlyph value="glyph00014"/>',
-    '    <Paint Format="20"><!-- PaintComposite -->',
+    '    <Paint Format="32"><!-- PaintComposite -->',
     '      <SourcePaint Format="11"><!-- PaintColrGlyph -->',
     '        <Glyph value="glyph00010"/>',
     "      </SourcePaint>",
@@ -455,8 +461,8 @@ COLR_V1_XML = [
     '    <Glyph value="glyph00013"/>',
     "  </Paint>",
     '  <Paint index="3" Format="14"><!-- PaintTranslate -->',
-    '    <Paint Format="16"><!-- PaintRotate -->',
-    '      <Paint Format="18"><!-- PaintSkew -->',
+    '    <Paint Format="26"><!-- PaintRotateAroundCenter -->',
+    '      <Paint Format="28"><!-- PaintSkew -->',
     '        <Paint Format="10"><!-- PaintGlyph -->',
     '          <Paint Format="2"><!-- PaintSolid -->',
     "            <Color>",
@@ -468,8 +474,6 @@ COLR_V1_XML = [
     "        </Paint>",
     '        <xSkewAngle value="-11.0"/>',
     '        <ySkewAngle value="5.0"/>',
-    '        <centerX value="253.0"/>',
-    '        <centerY value="254.0"/>',
     "      </Paint>",
     '      <angle value="45.0"/>',
     '      <centerX value="255.0"/>',

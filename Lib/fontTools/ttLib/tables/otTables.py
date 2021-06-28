@@ -1346,11 +1346,23 @@ class PaintFormat(IntEnum):
 	PaintVarTransform = 13
 	PaintTranslate = 14
 	PaintVarTranslate = 15
-	PaintRotate = 16
-	PaintVarRotate = 17
-	PaintSkew = 18
-	PaintVarSkew = 19
-	PaintComposite = 20
+	PaintScale = 16
+	PaintVarScale = 17
+	PaintScaleAroundCenter = 18
+	PaintVarScaleAroundCenter = 19
+	PaintScaleUniform = 20
+	PaintVarScaleUniform = 21
+	PaintScaleUniformAroundCenter = 22
+	PaintVarScaleUniformAroundCenter = 23
+	PaintRotate = 24
+	PaintVarRotate = 25
+	PaintRotateAroundCenter = 26
+	PaintVarRotateAroundCenter = 27
+	PaintSkew = 28
+	PaintVarSkew = 29
+	PaintSkewAroundCenter = 30
+	PaintVarSkewAroundCenter = 31
+	PaintComposite = 32
 
 
 class Paint(getFormatSwitchingBaseTableClass("uint8")):

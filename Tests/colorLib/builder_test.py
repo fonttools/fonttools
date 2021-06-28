@@ -394,6 +394,14 @@ def _is_var(fmt):
     return fmt.name.startswith("PaintVar")
 
 
+def _is_around_center(fmt):
+    return fmt.name.endswith("AroundCenter")
+
+
+def _is_uniform_scale(fmt):
+    return "ScaleUniform" in fmt.name
+
+
 def checkBuildPaintLinearGradient(fmt):
     if _is_var(fmt):
         inputMapFn = builder.VariableInt
@@ -855,43 +863,155 @@ def test_buildPaintVarTranslate():
     checkBuildPaintTranslate(ot.PaintFormat.PaintVarTranslate)
 
 
+def checkBuildPaintScale(fmt):
+    if _is_var(fmt):
+        inputMapFn = builder.VariableInt
+        outputMapFn = lambda v: v.value
+    else:
+        inputMapFn = outputMapFn = lambda v: v
+    around_center = _is_around_center(fmt)
+    uniform = _is_uniform_scale(fmt)
+
+    source = {
+        "Format": fmt,
+        "Paint": (
+            ot.PaintFormat.PaintGlyph,
+            (ot.PaintFormat.PaintSolid, (0, 1.0)),
+            "a",
+        ),
+    }
+    if uniform:
+        source["scale"] = 1.5
+    else:
+        source["scaleX"] = 1.0
+        source["scaleY"] = 2.0
+    if around_center:
+        source["centerX"] = 127
+        source["centerY"] = 129
+
+    paint = _build(ot.Paint, source)
+
+    assert paint.Format == fmt
+    assert paint.Paint.Format == ot.PaintFormat.PaintGlyph
+    if uniform:
+        assert outputMapFn(paint.scale) == 1.5
+    else:
+        assert outputMapFn(paint.scaleX) == 1.0
+        assert outputMapFn(paint.scaleY) == 2.0
+    if around_center:
+        assert outputMapFn(paint.centerX) == 127
+        assert outputMapFn(paint.centerY) == 129
+
+
+def test_buildPaintScale():
+    assert not _is_var(ot.PaintFormat.PaintScale)
+    assert not _is_uniform_scale(ot.PaintFormat.PaintScale)
+    assert not _is_around_center(ot.PaintFormat.PaintScale)
+    checkBuildPaintScale(ot.PaintFormat.PaintScale)
+
+
+def test_buildPaintVarScale():
+    assert _is_var(ot.PaintFormat.PaintVarScale)
+    assert not _is_uniform_scale(ot.PaintFormat.PaintVarScale)
+    assert not _is_around_center(ot.PaintFormat.PaintVarScale)
+    checkBuildPaintScale(ot.PaintFormat.PaintVarScale)
+
+
+def test_buildPaintScaleAroundCenter():
+    assert not _is_var(ot.PaintFormat.PaintScaleAroundCenter)
+    assert not _is_uniform_scale(ot.PaintFormat.PaintScaleAroundCenter)
+    assert _is_around_center(ot.PaintFormat.PaintScaleAroundCenter)
+    checkBuildPaintScale(ot.PaintFormat.PaintScaleAroundCenter)
+
+
+def test_buildPaintVarScaleAroundCenter():
+    assert _is_var(ot.PaintFormat.PaintVarScaleAroundCenter)
+    assert not _is_uniform_scale(ot.PaintFormat.PaintScaleAroundCenter)
+    assert _is_around_center(ot.PaintFormat.PaintVarScaleAroundCenter)
+    checkBuildPaintScale(ot.PaintFormat.PaintVarScaleAroundCenter)
+
+
+def test_buildPaintScaleUniform():
+    assert not _is_var(ot.PaintFormat.PaintScaleUniform)
+    assert _is_uniform_scale(ot.PaintFormat.PaintScaleUniform)
+    assert not _is_around_center(ot.PaintFormat.PaintScaleUniform)
+    checkBuildPaintScale(ot.PaintFormat.PaintScaleUniform)
+
+
+def test_buildPaintVarScaleUniform():
+    assert _is_var(ot.PaintFormat.PaintVarScaleUniform)
+    assert _is_uniform_scale(ot.PaintFormat.PaintVarScaleUniform)
+    assert not _is_around_center(ot.PaintFormat.PaintVarScaleUniform)
+    checkBuildPaintScale(ot.PaintFormat.PaintVarScaleUniform)
+
+
+def test_buildPaintScaleUniformAroundCenter():
+    assert not _is_var(ot.PaintFormat.PaintScaleUniformAroundCenter)
+    assert _is_uniform_scale(ot.PaintFormat.PaintScaleUniformAroundCenter)
+    assert _is_around_center(ot.PaintFormat.PaintScaleUniformAroundCenter)
+    checkBuildPaintScale(ot.PaintFormat.PaintScaleUniformAroundCenter)
+
+
+def test_buildPaintVarScaleUniformAroundCenter():
+    assert _is_var(ot.PaintFormat.PaintVarScaleUniformAroundCenter)
+    assert _is_uniform_scale(ot.PaintFormat.PaintVarScaleUniformAroundCenter)
+    assert _is_around_center(ot.PaintFormat.PaintVarScaleUniformAroundCenter)
+    checkBuildPaintScale(ot.PaintFormat.PaintVarScaleUniformAroundCenter)
+
+
 def checkBuildPaintRotate(fmt):
     if _is_var(fmt):
         inputMapFn = builder.VariableInt
         outputMapFn = lambda v: v.value
     else:
         inputMapFn = outputMapFn = lambda v: v
+    around_center = _is_around_center(fmt)
 
-    paint = _build(
-        ot.Paint,
-        {
-            "Format": fmt,
-            "Paint": (
-                ot.PaintFormat.PaintGlyph,
-                (ot.PaintFormat.PaintSolid, (0, 1.0)),
-                "a",
-            ),
-            "angle": 15,
-            "centerX": 127,
-            "centerY": 129,
-        },
-    )
+    source = {
+        "Format": fmt,
+        "Paint": (
+            ot.PaintFormat.PaintGlyph,
+            (ot.PaintFormat.PaintSolid, (0, 1.0)),
+            "a",
+        ),
+        "angle": 15,
+    }
+    if around_center:
+        source["centerX"] = 127
+        source["centerY"] = 129
+
+    paint = _build(ot.Paint, source)
 
     assert paint.Format == fmt
     assert paint.Paint.Format == ot.PaintFormat.PaintGlyph
     assert outputMapFn(paint.angle) == 15
-    assert outputMapFn(paint.centerX) == 127
-    assert outputMapFn(paint.centerY) == 129
+    if around_center:
+        assert outputMapFn(paint.centerX) == 127
+        assert outputMapFn(paint.centerY) == 129
 
 
 def test_buildPaintRotate():
     assert not _is_var(ot.PaintFormat.PaintRotate)
+    assert not _is_around_center(ot.PaintFormat.PaintRotate)
     checkBuildPaintRotate(ot.PaintFormat.PaintRotate)
 
 
 def test_buildPaintVarRotate():
     assert _is_var(ot.PaintFormat.PaintVarRotate)
+    assert not _is_around_center(ot.PaintFormat.PaintVarRotate)
     checkBuildPaintRotate(ot.PaintFormat.PaintVarRotate)
+
+
+def test_buildPaintRotateAroundCenter():
+    assert not _is_var(ot.PaintFormat.PaintRotateAroundCenter)
+    assert _is_around_center(ot.PaintFormat.PaintRotateAroundCenter)
+    checkBuildPaintRotate(ot.PaintFormat.PaintRotateAroundCenter)
+
+
+def test_buildPaintVarRotateAroundCenter():
+    assert _is_var(ot.PaintFormat.PaintVarRotateAroundCenter)
+    assert _is_around_center(ot.PaintFormat.PaintVarRotateAroundCenter)
+    checkBuildPaintRotate(ot.PaintFormat.PaintVarRotateAroundCenter)
 
 
 def checkBuildPaintSkew(fmt):
@@ -900,39 +1020,55 @@ def checkBuildPaintSkew(fmt):
         outputMapFn = lambda v: v.value
     else:
         inputMapFn = outputMapFn = lambda v: v
+    around_center = _is_around_center(fmt)
 
-    paint = _build(
-        ot.Paint,
-        {
-            "Format": fmt,
-            "Paint": (
-                ot.PaintFormat.PaintGlyph,
-                (ot.PaintFormat.PaintSolid, (0, 1.0)),
-                "a",
-            ),
-            "xSkewAngle": 15,
-            "ySkewAngle": 42,
-            "centerX": 127,
-            "centerY": 129,
-        },
-    )
+    source = {
+        "Format": fmt,
+        "Paint": (
+            ot.PaintFormat.PaintGlyph,
+            (ot.PaintFormat.PaintSolid, (0, 1.0)),
+            "a",
+        ),
+        "xSkewAngle": 15,
+        "ySkewAngle": 42,
+    }
+    if around_center:
+        source["centerX"] = 127
+        source["centerY"] = 129
+
+    paint = _build(ot.Paint, source)
 
     assert paint.Format == fmt
     assert paint.Paint.Format == ot.PaintFormat.PaintGlyph
     assert outputMapFn(paint.xSkewAngle) == 15
     assert outputMapFn(paint.ySkewAngle) == 42
-    assert outputMapFn(paint.centerX) == 127
-    assert outputMapFn(paint.centerY) == 129
+    if around_center:
+        assert outputMapFn(paint.centerX) == 127
+        assert outputMapFn(paint.centerY) == 129
 
 
 def test_buildPaintSkew():
     assert not _is_var(ot.PaintFormat.PaintSkew)
+    assert not _is_around_center(ot.PaintFormat.PaintSkew)
     checkBuildPaintSkew(ot.PaintFormat.PaintSkew)
 
 
 def test_buildPaintVarSkew():
     assert _is_var(ot.PaintFormat.PaintVarSkew)
+    assert not _is_around_center(ot.PaintFormat.PaintVarSkew)
     checkBuildPaintSkew(ot.PaintFormat.PaintVarSkew)
+
+
+def test_buildPaintSkewAroundCenter():
+    assert not _is_var(ot.PaintFormat.PaintSkewAroundCenter)
+    assert _is_around_center(ot.PaintFormat.PaintSkewAroundCenter)
+    checkBuildPaintSkew(ot.PaintFormat.PaintSkewAroundCenter)
+
+
+def test_buildPaintVarSkewAroundCenter():
+    assert _is_var(ot.PaintFormat.PaintVarSkewAroundCenter)
+    assert _is_around_center(ot.PaintFormat.PaintVarSkewAroundCenter)
+    checkBuildPaintSkew(ot.PaintFormat.PaintVarSkewAroundCenter)
 
 
 def test_buildColrV1():
@@ -1039,7 +1175,8 @@ def test_buildColrV1_more_than_255_paints():
     assert baseGlyphs.BaseGlyphCount == len(colorGlyphs)
     assert baseGlyphs.BaseGlyphPaintRecord[0].BaseGlyph == "a"
     assert (
-        baseGlyphs.BaseGlyphPaintRecord[0].Paint.Format == ot.PaintFormat.PaintColrLayers
+        baseGlyphs.BaseGlyphPaintRecord[0].Paint.Format
+        == ot.PaintFormat.PaintColrLayers
     )
     assert baseGlyphs.BaseGlyphPaintRecord[0].Paint.FirstLayerIndex == 255
     assert baseGlyphs.BaseGlyphPaintRecord[0].Paint.NumLayers == num_paints + 1 - 255

@@ -1764,36 +1764,128 @@ otData = [
 		('VarFixed', 'dy', None, None, 'Translation in y direction.'),
 	]),
 
-	# PaintRotate
+	# PaintScale
 	('PaintFormat16', [
 		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 16'),
+		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintScale table) to Paint subtable.'),
+		('Fixed', 'scaleX', None, None, ''),
+		('Fixed', 'scaleY', None, None, ''),
+	]),
+	# PaintVarScale
+	('PaintFormat17', [
+		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 17'),
+		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintVarScale table) to Paint subtable.'),
+		('VarFixed', 'scaleX', None, None, ''),
+		('VarFixed', 'scaleY', None, None, ''),
+	]),
+
+	# PaintScaleAroundCenter
+	('PaintFormat18', [
+		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 18'),
+		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintScaleAroundCenter table) to Paint subtable.'),
+		('Fixed', 'scaleX', None, None, ''),
+		('Fixed', 'scaleY', None, None, ''),
+		('Fixed', 'centerX', None, None, ''),
+		('Fixed', 'centerY', None, None, ''),
+	]),
+	# PaintVarScaleAroundCenter
+	('PaintFormat19', [
+		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 19'),
+		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintVarScaleAroundCenter table) to Paint subtable.'),
+		('VarFixed', 'scaleX', None, None, ''),
+		('VarFixed', 'scaleY', None, None, ''),
+		('VarFixed', 'centerX', None, None, ''),
+		('VarFixed', 'centerY', None, None, ''),
+	]),
+
+	# PaintScaleUniform
+	('PaintFormat20', [
+		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 20'),
+		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintScaleUniform table) to Paint subtable.'),
+		('Fixed', 'scale', None, None, ''),
+	]),
+	# PaintVarScaleUniform
+	('PaintFormat21', [
+		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 21'),
+		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintVarScaleUniform table) to Paint subtable.'),
+		('VarFixed', 'scale', None, None, ''),
+	]),
+
+	# PaintScaleUniformAroundCenter
+	('PaintFormat22', [
+		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 22'),
+		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintScaleUniformAroundCenter table) to Paint subtable.'),
+		('Fixed', 'scale', None, None, ''),
+		('Fixed', 'centerX', None, None, ''),
+		('Fixed', 'centerY', None, None, ''),
+	]),
+	# PaintVarScaleUniformAroundCenter
+	('PaintFormat23', [
+		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 23'),
+		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintVarScaleUniformAroundCenter table) to Paint subtable.'),
+		('VarFixed', 'scale', None, None, ''),
+		('VarFixed', 'centerX', None, None, ''),
+		('VarFixed', 'centerY', None, None, ''),
+	]),
+
+	# PaintRotate
+	('PaintFormat24', [
+		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 24'),
 		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintRotate table) to Paint subtable.'),
+		('Fixed', 'angle', None, None, ''),
+	]),
+	# PaintVarRotate
+	('PaintFormat25', [
+		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 25'),
+		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintVarRotate table) to Paint subtable.'),
+		('VarFixed', 'angle', None, None, ''),
+	]),
+
+	# PaintRotateAroundCenter
+	('PaintFormat26', [
+		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 26'),
+		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintRotateAroundCenter table) to Paint subtable.'),
 		('Fixed', 'angle', None, None, ''),
 		('Fixed', 'centerX', None, None, ''),
 		('Fixed', 'centerY', None, None, ''),
 	]),
-	# PaintVarRotate
-	('PaintFormat17', [
-		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 17'),
-		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintVarRotate table) to Paint subtable.'),
+	# PaintVarRotateAroundCenter
+	('PaintFormat27', [
+		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 27'),
+		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintVarRotateAroundCenter table) to Paint subtable.'),
 		('VarFixed', 'angle', None, None, ''),
 		('VarFixed', 'centerX', None, None, ''),
 		('VarFixed', 'centerY', None, None, ''),
 	]),
 
 	# PaintSkew
-	('PaintFormat18', [
-		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 18'),
+	('PaintFormat28', [
+		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 28'),
 		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintSkew table) to Paint subtable.'),
+		('Fixed', 'xSkewAngle', None, None, ''),
+		('Fixed', 'ySkewAngle', None, None, ''),
+	]),
+	# PaintVarSkew
+	('PaintFormat29', [
+		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 29'),
+		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintVarSkew table) to Paint subtable.'),
+		('VarFixed', 'xSkewAngle', None, None, ''),
+		('VarFixed', 'ySkewAngle', None, None, ''),
+	]),
+
+	# PaintSkewAroundCenter
+	('PaintFormat30', [
+		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 30'),
+		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintSkewAroundCenter table) to Paint subtable.'),
 		('Fixed', 'xSkewAngle', None, None, ''),
 		('Fixed', 'ySkewAngle', None, None, ''),
 		('Fixed', 'centerX', None, None, ''),
 		('Fixed', 'centerY', None, None, ''),
 	]),
-	# PaintVarSkew
-	('PaintFormat19', [
-		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 19'),
-		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintVarSkew table) to Paint subtable.'),
+	# PaintVarSkewAroundCenter
+	('PaintFormat31', [
+		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 31'),
+		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintVarSkewAroundCenter table) to Paint subtable.'),
 		('VarFixed', 'xSkewAngle', None, None, ''),
 		('VarFixed', 'ySkewAngle', None, None, ''),
 		('VarFixed', 'centerX', None, None, ''),
@@ -1801,8 +1893,8 @@ otData = [
 	]),
 
 	# PaintComposite
-	('PaintFormat20', [
-		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 20'),
+	('PaintFormat32', [
+		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 32'),
 		('LOffset24To(Paint)', 'SourcePaint', None, None, 'Offset (from beginning of PaintComposite table) to source Paint subtable.'),
 		('CompositeMode', 'CompositeMode', None, None, 'A CompositeMode enumeration value.'),
 		('LOffset24To(Paint)', 'BackdropPaint', None, None, 'Offset (from beginning of PaintComposite table) to backdrop Paint subtable.'),

@@ -1078,7 +1078,7 @@ def colrv1_path(tmp_path):
                 ],
             ),
             "uniE003": {
-                "Format": ot.PaintFormat.PaintRotate,
+                "Format": ot.PaintFormat.PaintRotateAroundCenter,
                 "Paint": {
                     "Format": ot.PaintFormat.PaintColrGlyph,
                     "Glyph": "uniE001",
