@@ -1245,11 +1245,11 @@ class BaseGlyphRecordArray(BaseTable):
 		return self.__dict__.copy()
 
 
-class BaseGlyphV1List(BaseTable):
+class BaseGlyphList(BaseTable):
 
 	def preWrite(self, font):
-		self.BaseGlyphV1Record = sorted(
-			self.BaseGlyphV1Record,
+		self.BaseGlyphPaintRecord = sorted(
+			self.BaseGlyphPaintRecord,
 			key=lambda rec: font.getGlyphID(rec.BaseGlyph)
 		)
 		return self.__dict__.copy()
@@ -1375,16 +1375,16 @@ class Paint(getFormatSwitchingBaseTableClass("uint8")):
 
 	def getChildren(self, colr):
 		if self.Format == PaintFormat.PaintColrLayers:
-			return colr.LayerV1List.Paint[
+			return colr.LayerList.Paint[
 				self.FirstLayerIndex : self.FirstLayerIndex + self.NumLayers
 			]
 
 		if self.Format == PaintFormat.PaintColrGlyph:
-			for record in colr.BaseGlyphV1List.BaseGlyphV1Record:
+			for record in colr.BaseGlyphList.BaseGlyphPaintRecord:
 				if record.BaseGlyph == self.Glyph:
 					return [record.Paint]
 			else:
-				raise KeyError(f"{self.Glyph!r} not in colr.BaseGlyphV1List")
+				raise KeyError(f"{self.Glyph!r} not in colr.BaseGlyphList")
 
 		children = []
 		for conv in self.getConverters():

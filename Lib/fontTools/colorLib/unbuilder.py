@@ -3,10 +3,10 @@ from .table_builder import TableUnbuilder
 
 
 def unbuildColrV1(layerV1List, baseGlyphV1List):
-    unbuilder = LayerV1ListUnbuilder(layerV1List.Paint)
+    unbuilder = LayerListUnbuilder(layerV1List.Paint)
     return {
         rec.BaseGlyph: unbuilder.unbuildPaint(rec.Paint)
-        for rec in baseGlyphV1List.BaseGlyphV1Record
+        for rec in baseGlyphV1List.BaseGlyphPaintRecord
     }
 
 
@@ -18,7 +18,7 @@ def _flatten(lst):
             yield el
 
 
-class LayerV1ListUnbuilder:
+class LayerListUnbuilder:
     def __init__(self, layers):
         self.layers = layers
 
@@ -71,8 +71,8 @@ if __name__ == "__main__":
         sys.exit(f"error: No COLR table version=1 found in {fontfile}")
 
     colorGlyphs = unbuildColrV1(
-        colr.table.LayerV1List,
-        colr.table.BaseGlyphV1List,
+        colr.table.LayerList,
+        colr.table.BaseGlyphList,
         ignoreVarIdx=not colr.table.VarStore,
     )
 
