@@ -128,7 +128,9 @@ def _getClassRanges(glyphIDs: Iterable[int]):
 
 # Adapted from https://github.com/fonttools/fonttools/blob/f64f0b42f2d1163b2d85194e0979def539f5dca3/Lib/fontTools/ttLib/tables/otTables.py#L960-L989
 def _classDef_bytes(
-    class_data: List[Tuple[List[Tuple[int, int]], int, int]], class_ids: List[int], coverage=False
+    class_data: List[Tuple[List[Tuple[int, int]], int, int]],
+    class_ids: List[int],
+    coverage=False,
 ):
     if not class_ids:
         return 0
@@ -152,6 +154,10 @@ def cluster_pairs_by_class2_coverage_custom_cost(
     pairs: Pairs,
     compression: int = 5,
 ) -> List[Pairs]:
+    if not pairs:
+        # The subtable was actually empty?
+        return [pairs]
+
     # Sorted for reproducibility/determinism
     all_class1 = sorted(set(pair[0] for pair in pairs))
     all_class2 = sorted(set(pair[1] for pair in pairs))
@@ -229,10 +235,13 @@ def cluster_pairs_by_class2_coverage_custom_cost(
         @property
         def cost(self):
             if self._cost is None:
-                # From: https://docs.microsoft.com/en-us/typography/opentype/spec/gpos#pair-adjustment-positioning-format-2-class-pair-adjustment
                 self._cost = (
-                    # uint16	posFormat	Format identifier: format = 2
+                    # 2 bytes to store the offset to this subtable in the Lookup table above
                     2
+                    # Contents of the subtable
+                    # From: https://docs.microsoft.com/en-us/typography/opentype/spec/gpos#pair-adjustment-positioning-format-2-class-pair-adjustment
+                    # uint16	posFormat	Format identifier: format = 2
+                    + 2
                     # Offset16	coverageOffset	Offset to Coverage table, from beginning of PairPos subtable.
                     + 2
                     + self.coverage_bytes
@@ -267,7 +276,9 @@ def cluster_pairs_by_class2_coverage_custom_cost(
                 # uint16	glyphArray[glyphCount]	Array of glyph IDs — in numerical order
                 + sum(len(all_class1[i]) for i in self.indices) * 2
             )
-            ranges = sorted(chain.from_iterable(all_class1_data[i][0] for i in self.indices))
+            ranges = sorted(
+                chain.from_iterable(all_class1_data[i][0] for i in self.indices)
+            )
             merged_range_count = 0
             last = None
             for (start, end) in ranges:
