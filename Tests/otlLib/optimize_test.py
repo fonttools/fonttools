@@ -7,10 +7,12 @@ from fontTools.fontBuilder import FontBuilder
 
 def test_main(tmpdir: Path):
     """Check that calling the main function on an input TTF works."""
-    glyphs = ".notdef space A B".split()
+    glyphs = ".notdef space A Aacute B D".split()
     features = """
+    @A = [A Aacute];
+    @B = [B D];
     feature kern {
-        pos A B -50;
+        pos @A @B -50;
     } kern;
     """
     fb = FontBuilder(1000)
@@ -31,4 +33,22 @@ def test_main(tmpdir: Path):
         ],
         check=True,
     )
+    assert output.exists()
+
+
+def test_off_by_default(tmpdir: Path):
+    """Check that calling the main function on an input TTF works."""
+    glyphs = ".notdef space A B".split()
+    features = """
+    feature kern {
+        pos A B -50;
+    } kern;
+    """
+    fb = FontBuilder(1000)
+    fb.setupGlyphOrder(glyphs)
+    addOpenTypeFeaturesFromString(fb.font, features)
+    input = tmpdir / "in.ttf"
+    fb.save(str(input))
+    output = tmpdir / "out.ttf"
+    run(["fonttools", "otlLib.optimize", str(input), "-o", str(output)], check=True)
     assert output.exists()

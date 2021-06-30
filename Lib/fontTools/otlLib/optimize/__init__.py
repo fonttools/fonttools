@@ -51,7 +51,8 @@ def main(args=None):
     )
 
     font = TTFont(options.font)
-    compact(font, options.gpos_compact_mode)
+    # TODO: switch everything to have type(mode) = int when using the Config class
+    compact(font, str(options.gpos_compact_mode))
     font.save(options.outfile or options.font)
 
 
