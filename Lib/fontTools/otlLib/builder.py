@@ -1378,6 +1378,8 @@ class PairPosBuilder(LookupBuilder):
         lookup = self.buildLookup_(subtables)
 
         # Compact the lookup
+        # This is a good moment to do it because the compaction should create
+        # smaller subtables, which may prevent overflows from happening.
         mode = os.environ.get(GPOS_COMPACT_MODE_ENV_KEY, GPOS_COMPACT_MODE_DEFAULT)
         if mode and mode != "0":
             log.info("Compacting GPOS...")

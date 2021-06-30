@@ -380,7 +380,7 @@ def cluster_pairs_by_class2_coverage_custom_cost(
         del clusters[best_other_index]
         clusters[best_cluster_index] = best_merged
 
-    # All clusters are in done; turn bitmasks back into the "Pairs" format
+    # All clusters are final; turn bitmasks back into the "Pairs" format
     pairs_by_class1: Dict[Tuple[str, ...], Pairs] = defaultdict(dict)
     for pair, values in pairs.items():
         pairs_by_class1[pair[0]][pair] = values
