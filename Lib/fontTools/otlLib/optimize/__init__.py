@@ -35,6 +35,7 @@ def main(args=None):
         ),
         default=int(GPOS_COMPACT_MODE_DEFAULT),
         choices=list(range(10)),
+        type=int,
     )
     logging_group = parser.add_mutually_exclusive_group(required=False)
     logging_group.add_argument(
