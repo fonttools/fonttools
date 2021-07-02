@@ -1740,13 +1740,13 @@ otData = [
 	('PaintFormat12', [
 		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 12'),
 		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintTransform table) to Paint subtable.'),
-		('Affine2x3', 'Transform', None, None, '2x3 matrix for 2D affine transformations.'),
+		('LOffset24To(Affine2x3)', 'Transform', None, None, '2x3 matrix for 2D affine transformations.'),
 	]),
 	# PaintVarTransform
 	('PaintFormat13', [
 		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 13'),
 		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintVarTransform table) to Paint subtable.'),
-		('VarAffine2x3', 'Transform', None, None, '2x3 matrix for 2D affine transformations.'),
+		('LOffset24To(VarAffine2x3)', 'Transform', None, None, '2x3 matrix for 2D affine transformations.'),
 	]),
 
 	# PaintTranslate
@@ -1785,8 +1785,8 @@ otData = [
 		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintScaleAroundCenter table) to Paint subtable.'),
 		('F2Dot14', 'scaleX', None, None, ''),
 		('F2Dot14', 'scaleY', None, None, ''),
-		('Fixed', 'centerX', None, None, ''),
-		('Fixed', 'centerY', None, None, ''),
+		('int16', 'centerX', None, None, ''),
+		('int16', 'centerY', None, None, ''),
 	]),
 	# PaintVarScaleAroundCenter
 	('PaintFormat19', [
@@ -1794,8 +1794,8 @@ otData = [
 		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintVarScaleAroundCenter table) to Paint subtable.'),
 		('VarF2Dot14', 'scaleX', None, None, ''),
 		('VarF2Dot14', 'scaleY', None, None, ''),
-		('VarFixed', 'centerX', None, None, ''),
-		('VarFixed', 'centerY', None, None, ''),
+		('VarInt16', 'centerX', None, None, ''),
+		('VarInt16', 'centerY', None, None, ''),
 	]),
 
 	# PaintScaleUniform
@@ -1816,16 +1816,16 @@ otData = [
 		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 22'),
 		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintScaleUniformAroundCenter table) to Paint subtable.'),
 		('F2Dot14', 'scale', None, None, ''),
-		('Fixed', 'centerX', None, None, ''),
-		('Fixed', 'centerY', None, None, ''),
+		('int16', 'centerX', None, None, ''),
+		('int16', 'centerY', None, None, ''),
 	]),
 	# PaintVarScaleUniformAroundCenter
 	('PaintFormat23', [
 		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 23'),
 		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintVarScaleUniformAroundCenter table) to Paint subtable.'),
 		('VarF2Dot14', 'scale', None, None, ''),
-		('VarFixed', 'centerX', None, None, ''),
-		('VarFixed', 'centerY', None, None, ''),
+		('VarInt16', 'centerX', None, None, ''),
+		('VarInt16', 'centerY', None, None, ''),
 	]),
 
 	# PaintRotate
@@ -1846,16 +1846,16 @@ otData = [
 		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 26'),
 		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintRotateAroundCenter table) to Paint subtable.'),
 		('Angle', 'angle', None, None, ''),
-		('Fixed', 'centerX', None, None, ''),
-		('Fixed', 'centerY', None, None, ''),
+		('int16', 'centerX', None, None, ''),
+		('int16', 'centerY', None, None, ''),
 	]),
 	# PaintVarRotateAroundCenter
 	('PaintFormat27', [
 		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 27'),
 		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintVarRotateAroundCenter table) to Paint subtable.'),
 		('VarAngle', 'angle', None, None, ''),
-		('VarFixed', 'centerX', None, None, ''),
-		('VarFixed', 'centerY', None, None, ''),
+		('VarInt16', 'centerX', None, None, ''),
+		('VarInt16', 'centerY', None, None, ''),
 	]),
 
 	# PaintSkew
@@ -1879,8 +1879,8 @@ otData = [
 		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintSkewAroundCenter table) to Paint subtable.'),
 		('Angle', 'xSkewAngle', None, None, ''),
 		('Angle', 'ySkewAngle', None, None, ''),
-		('Fixed', 'centerX', None, None, ''),
-		('Fixed', 'centerY', None, None, ''),
+		('int16', 'centerX', None, None, ''),
+		('int16', 'centerY', None, None, ''),
 	]),
 	# PaintVarSkewAroundCenter
 	('PaintFormat31', [
@@ -1888,8 +1888,8 @@ otData = [
 		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintVarSkewAroundCenter table) to Paint subtable.'),
 		('VarAngle', 'xSkewAngle', None, None, ''),
 		('VarAngle', 'ySkewAngle', None, None, ''),
-		('VarFixed', 'centerX', None, None, ''),
-		('VarFixed', 'centerY', None, None, ''),
+		('VarInt16', 'centerX', None, None, ''),
+		('VarInt16', 'centerY', None, None, ''),
 	]),
 
 	# PaintComposite
