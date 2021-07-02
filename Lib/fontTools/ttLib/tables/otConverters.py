@@ -7,6 +7,7 @@ from fontTools.misc.fixedTools import (
 	ensureVersionIsLong as fi2ve,
 	versionToFixed as ve2fi,
 )
+from fontTools.misc.roundTools import nearestMultipleShortestRepr, otRound
 from fontTools.misc.textTools import pad, safeEval
 from fontTools.ttLib import getSearchRange
 from .otBase import (CountReference, FormatSwitchingBaseTable,
@@ -16,6 +17,7 @@ from .otTables import (lookupTypes, AATStateTable, AATState, AATAction,
                        InsertionMorphAction, MorxSubtable, VariableFloat,
                        VariableInt, ExtendMode as _ExtendMode,
                        CompositeMode as _CompositeMode)
+import math
 from itertools import zip_longest
 from functools import partial
 import struct
@@ -425,6 +427,27 @@ class F2Dot14(FloatValue):
 	@staticmethod
 	def toString(value):
 		return fl2str(value, 14)
+
+class Angle(F2Dot14):
+	factor = 1.0/(1<<14) * 180  # 0.010986328125
+	@staticmethod
+	def wrapAround(angle):
+		# Upon compile/dump, normalize angles that span beyond a full circle.
+		# We want to keep the orientation after modulo: e.g. -415 => -55, not 305
+		return angle % math.copysign(360, angle)
+	def read(self, reader, font, tableDict):
+		return super().read(reader, font, tableDict) * 180
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
+		value = self.wrapAround(value)
+		super().write(writer, font, tableDict, value / 180, repeatIndex=repeatIndex)
+	@classmethod
+	def fromString(cls, value):
+		# quantize to nearest multiples of minimum fixed-precision angle
+		return otRound(float(value) / cls.factor) * cls.factor
+	@classmethod
+	def toString(cls, value):
+		value = cls.wrapAround(value)
+		return nearestMultipleShortestRepr(value, cls.factor)
 
 class Version(SimpleValue):
 	staticSize = 4
@@ -1777,6 +1800,11 @@ class VarUInt16(_NamedTupleConverter):
 	converterClasses = [UShort, ULong]
 
 
+class VarAngle(_NamedTupleConverter):
+	tupleClass = VariableFloat
+	converterClasses = [F2Dot14, ULong]
+
+
 class _UInt8Enum(UInt8):
 	enumClass = NotImplemented
 
@@ -1816,6 +1844,7 @@ converterMapping = {
 	"DeciPoints":	DeciPoints,
 	"Fixed":	Fixed,
 	"F2Dot14":	F2Dot14,
+	"Angle":	Angle,
 	"struct":	Struct,
 	"Offset":	Table,
 	"LOffset":	LTable,
@@ -1850,4 +1879,5 @@ converterMapping = {
 	"VarF2Dot14": VarF2Dot14,
 	"VarInt16": VarInt16,
 	"VarUInt16": VarUInt16,
+	"VarAngle": VarAngle,
 }
