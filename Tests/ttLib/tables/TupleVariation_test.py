@@ -559,8 +559,12 @@ class TupleVariationTest(unittest.TestCase):
 			self.assertListEqual(deltas, decompile(compile(deltas)))
 
 	def test_compileSharedTuples(self):
-		# Below, the peak coordinate {"wght": 1.0, "wdth": 0.7} appears
-		# three times; {"wght": 1.0, "wdth": 0.8} appears twice.
+		# Below, the peak coordinate {"wght": 1.0, "wdth": 0.8} appears
+		# three times (most frequent sorted first); {"wght": 1.0, "wdth": 0.5}
+		# and {"wght": 1.0, "wdth": 0.7} both appears two times (tie) and
+		# are sorted alphanumerically to ensure determinism.
+		# The peak coordinate {"wght": 1.0, "wdth": 0.9} appears only once
+		# and is thus ignored.
 		# Because the start and end of variation ranges is not encoded
 		# into the shared pool, they should get ignored.
 		deltas = [None] * 4
@@ -579,7 +583,7 @@ class TupleVariationTest(unittest.TestCase):
 			}, deltas),
 			TupleVariation({
 				"wght": (1.0, 1.0, 1.0),
-				"wdth": (0.3, 0.7, 1.0)
+				"wdth": (0.3, 0.5, 1.0)
 			}, deltas),
 			TupleVariation({
 				"wght": (1.0, 1.0, 1.0),
@@ -588,11 +592,19 @@ class TupleVariationTest(unittest.TestCase):
 			TupleVariation({
 				"wght": (1.0, 1.0, 1.0),
 				"wdth": (0.3, 0.9, 1.0)
-            }, deltas)
+			}, deltas),
+			TupleVariation({
+				"wght": (1.0, 1.0, 1.0),
+				"wdth": (0.4, 0.8, 1.0)
+			}, deltas),
+			TupleVariation({
+				"wght": (1.0, 1.0, 1.0),
+				"wdth": (0.5, 0.5, 1.0)
+			}, deltas),
 		]
 		result = compileSharedTuples(["wght", "wdth"], variations)
 		self.assertEqual([hexencode(c) for c in result],
-		                 ["40 00 2C CD", "40 00 33 33"])
+		                 ["40 00 33 33", "40 00 20 00", "40 00 2C CD"])
 
 	def test_decompileSharedTuples_Skia(self):
 		sharedTuples = decompileSharedTuples(
