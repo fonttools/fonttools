@@ -17,7 +17,7 @@ functions for converting between fixed-point, float and string representations.
 	The maximum value that can still fit in an F2Dot14. (1.99993896484375)
 """
 
-from .roundTools import otRound
+from .roundTools import otRound, nearestMultipleShortestRepr
 import logging
 
 log = logging.getLogger(__name__)
@@ -125,6 +125,7 @@ def fixedToStr(value, precisionBits):
 	This is pretty slow compared to the simple division used in ``fixedToFloat``.
 	Use sporadically when you need to serialize or print the fixed-point number in
 	a human-readable form.
+	It uses nearestMultipleShortestRepr under the hood.
 
 	Args:
 		value (int): The fixed-point value to convert.
@@ -133,27 +134,8 @@ def fixedToStr(value, precisionBits):
 	Returns:
 		str: A string representation of the value.
 	"""
-	if not value: return "0.0"
-
 	scale = 1 << precisionBits
-	value /= scale
-	eps = .5 / scale
-	lo = value - eps
-	hi = value + eps
-	# If the range of valid choices spans an integer, return the integer.
-	if int(lo) != int(hi):
-		return str(float(round(value)))
-	fmt = "%.8f"
-	lo = fmt % lo
-	hi = fmt % hi
-	assert len(lo) == len(hi) and lo != hi
-	for i in range(len(lo)):
-		if lo[i] != hi[i]:
-			break
-	period = lo.find('.')
-	assert period < i
-	fmt = "%%.%df" % (i - period)
-	return fmt % value
+	return nearestMultipleShortestRepr(value/scale, factor=1.0/scale)
 
 
 def strToFixed(string, precisionBits):
@@ -214,7 +196,7 @@ def floatToFixedToStr(value, precisionBits):
 	This uses the shortest decimal representation (ie. the least
 	number of fractional decimal digits) to represent the equivalent
 	fixed-point number with ``precisionBits`` fractional binary digits.
-	It uses fixedToStr under the hood.
+	It uses nearestMultipleShortestRepr under the hood.
 
 	>>> floatToFixedToStr(-0.61883544921875, precisionBits=14)
 	'-0.61884'
@@ -227,8 +209,8 @@ def floatToFixedToStr(value, precisionBits):
 		str: A string representation of the value.
 
 	"""
-	fixed = otRound(value * (1 << precisionBits))
-	return fixedToStr(fixed, precisionBits)
+	scale = 1 << precisionBits
+	return nearestMultipleShortestRepr(value, factor=1.0/scale)
 
 
 def ensureVersionIsLong(value):
