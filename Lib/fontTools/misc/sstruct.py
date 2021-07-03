@@ -112,7 +112,7 @@ _elementRE = re.compile(
 		r"\s*"							# whitespace
 		r"([A-Za-z_][A-Za-z_0-9]*)"		# name (python identifier)
 		r"\s*:\s*"						# whitespace : whitespace
-		r"([cbBhHiIlLqQfd]|"			# formatchar...
+		r"([cbB?hHiIlLqQfd]|"			# formatchar...
 			r"[0-9]+[ps]|"				# ...formatchar...
 			r"([0-9]+)\.([0-9]+)(F))"	# ...formatchar
 		r"\s*"							# whitespace
@@ -183,6 +183,7 @@ def _test():
 		astr: 5s
 		afloat: f; adouble: d	# multiple "statements" are allowed
 		afixed: 16.16F
+		abool: ?
 	"""
 
 	print('size:', calcsize(fmt))
@@ -200,6 +201,7 @@ def _test():
 	i.afloat = 0.5
 	i.adouble = 0.5
 	i.afixed = 1.5
+	i.abool = True
 
 	data = pack(fmt, i)
 	print('data:', repr(data))
