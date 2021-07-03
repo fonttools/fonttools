@@ -112,7 +112,8 @@ _elementRE = re.compile(
 		r"\s*"							# whitespace
 		r"([A-Za-z_][A-Za-z_0-9]*)"		# name (python identifier)
 		r"\s*:\s*"						# whitespace : whitespace
-		r"([cbBhHiIlLqQfd]|[0-9]+[ps]|"	# formatchar...
+		r"([cbBhHiIlLqQfd]|"			# formatchar...
+			r"[0-9]+[ps]|"				# ...formatchar...
 			r"([0-9]+)\.([0-9]+)(F))"	# ...formatchar
 		r"\s*"							# whitespace
 		r"(#.*)?$"						# [comment] + end of string
