@@ -1,5 +1,5 @@
 import logging
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 from functools import reduce
 from itertools import chain
 from math import log2
@@ -156,6 +156,143 @@ def _classDef_bytes(
     return min(format1_bytes, format2_bytes)
 
 
+ClusteringContext = namedtuple(
+    "ClusteringContext",
+    [
+        "lines",
+        "all_class1",
+        "all_class1_data",
+        "all_class2_data",
+        "valueFormat1_bytes",
+        "valueFormat2_bytes",
+    ],
+)
+
+
+class Cluster:
+    # TODO(Python 3.7): Turn this into a dataclass
+    # ctx: ClusteringContext
+    # indices: int
+    # Caches
+    # TODO(Python 3.8): use functools.cached_property instead of the
+    # manually cached properties, and remove the cache fields listed below.
+    # _indices: Optional[List[int]] = None
+    # _column_indices: Optional[List[int]] = None
+    # _cost: Optional[int] = None
+
+    __slots__ = "ctx", "indices_bitmask", "_indices", "_column_indices", "_cost"
+
+    def __init__(self, ctx: ClusteringContext, indices_bitmask: int):
+        self.ctx = ctx
+        self.indices_bitmask = indices_bitmask
+        self._indices = None
+        self._column_indices = None
+        self._cost = None
+
+    @property
+    def indices(self):
+        if self._indices is None:
+            self._indices = bit_indices(self.indices_bitmask)
+        return self._indices
+
+    @property
+    def column_indices(self):
+        if self._column_indices is None:
+            # Indices of columns that have a 1 in at least 1 line
+            #   => binary OR all the lines
+            bitmask = reduce(int.__or__, (self.ctx.lines[i] for i in self.indices))
+            self._column_indices = bit_indices(bitmask)
+        return self._column_indices
+
+    @property
+    def width(self):
+        # Add 1 because Class2=0 cannot be used but needs to be encoded.
+        return len(self.column_indices) + 1
+
+    @property
+    def cost(self):
+        if self._cost is None:
+            self._cost = (
+                # 2 bytes to store the offset to this subtable in the Lookup table above
+                2
+                # Contents of the subtable
+                # From: https://docs.microsoft.com/en-us/typography/opentype/spec/gpos#pair-adjustment-positioning-format-2-class-pair-adjustment
+                # uint16	posFormat	Format identifier: format = 2
+                + 2
+                # Offset16	coverageOffset	Offset to Coverage table, from beginning of PairPos subtable.
+                + 2
+                + self.coverage_bytes
+                # uint16	valueFormat1	ValueRecord definition — for the first glyph of the pair (may be zero).
+                + 2
+                # uint16	valueFormat2	ValueRecord definition — for the second glyph of the pair (may be zero).
+                + 2
+                # Offset16	classDef1Offset	Offset to ClassDef table, from beginning of PairPos subtable — for the first glyph of the pair.
+                + 2
+                + self.classDef1_bytes
+                # Offset16	classDef2Offset	Offset to ClassDef table, from beginning of PairPos subtable — for the second glyph of the pair.
+                + 2
+                + self.classDef2_bytes
+                # uint16	class1Count	Number of classes in classDef1 table — includes Class 0.
+                + 2
+                # uint16	class2Count	Number of classes in classDef2 table — includes Class 0.
+                + 2
+                # Class1Record	class1Records[class1Count]	Array of Class1 records, ordered by classes in classDef1.
+                + (self.ctx.valueFormat1_bytes + self.ctx.valueFormat2_bytes)
+                * len(self.indices)
+                * self.width
+            )
+        return self._cost
+
+    @property
+    def coverage_bytes(self):
+        format1_bytes = (
+            # From https://docs.microsoft.com/en-us/typography/opentype/spec/chapter2#coverage-format-1
+            # uint16	coverageFormat	Format identifier — format = 1
+            # uint16	glyphCount	Number of glyphs in the glyph array
+            4
+            # uint16	glyphArray[glyphCount]	Array of glyph IDs — in numerical order
+            + sum(len(self.ctx.all_class1[i]) for i in self.indices) * 2
+        )
+        ranges = sorted(
+            chain.from_iterable(self.ctx.all_class1_data[i][0] for i in self.indices)
+        )
+        merged_range_count = 0
+        last = None
+        for (start, end) in ranges:
+            if last is not None and start != last + 1:
+                merged_range_count += 1
+            last = end
+        format2_bytes = (
+            # From https://docs.microsoft.com/en-us/typography/opentype/spec/chapter2#coverage-format-2
+            # uint16	coverageFormat	Format identifier — format = 2
+            # uint16	rangeCount	Number of RangeRecords
+            4
+            # RangeRecord	rangeRecords[rangeCount]	Array of glyph ranges — ordered by startGlyphID.
+            # uint16	startGlyphID	First glyph ID in the range
+            # uint16	endGlyphID	Last glyph ID in the range
+            # uint16	startCoverageIndex	Coverage Index of first glyph ID in range
+            + merged_range_count * 6
+        )
+        return min(format1_bytes, format2_bytes)
+
+    @property
+    def classDef1_bytes(self):
+        # We can skip encoding one of the Class1 definitions, and use
+        # Class1=0 to represent it instead, because Class1 is gated by the
+        # Coverage definition. Use Class1=0 for the highest byte savings.
+        # Going through all options takes too long, pick the biggest class
+        # = what happens in otlLib.builder.ClassDefBuilder.classes()
+        biggest_index = max(self.indices, key=lambda i: len(self.ctx.all_class1[i]))
+        return _classDef_bytes(
+            self.ctx.all_class1_data, [i for i in self.indices if i != biggest_index]
+        )
+
+    @property
+    def classDef2_bytes(self):
+        # All Class2 need to be encoded because we can't use Class2=0
+        return _classDef_bytes(self.ctx.all_class2_data, self.column_indices)
+
+
 def cluster_pairs_by_class2_coverage_custom_cost(
     font: TTFont,
     pairs: Pairs,
@@ -196,134 +333,14 @@ def cluster_pairs_by_class2_coverage_custom_cost(
     valueFormat1_bytes = bit_count(format1) * 2
     valueFormat2_bytes = bit_count(format2) * 2
 
-    # Agglomerative clustering by hand, checking the cost gain of the new
-    # cluster against the previously separate clusters
-    # Start with 1 cluster per line
-    # cluster = set of lines = new subtable
-    # The class is here so it has a closure over the data above (lines, etc.)
-    class Cluster:
-        # TODO(Python 3.7): Turn this into a dataclass
-        # indices: int
-        # Caches
-        # TODO(Python 3.8): use functools.cached_property instead of the
-        # manually cached properties, and remove the cache fields listed below.
-        # _indices: Optional[List[int]] = None
-        # _column_indices: Optional[List[int]] = None
-        # _cost: Optional[int] = None
-
-        __slots__ = "indices_bitmask", "_indices", "_column_indices", "_cost"
-
-        def __init__(self, indices_bitmask: int):
-            self.indices_bitmask = indices_bitmask
-            self._indices = None
-            self._column_indices = None
-            self._cost = None
-
-        @property
-        def indices(self):
-            if self._indices is None:
-                self._indices = bit_indices(self.indices_bitmask)
-            return self._indices
-
-        @property
-        def column_indices(self):
-            if self._column_indices is None:
-                # Indices of columns that have a 1 in at least 1 line
-                #   => binary OR all the lines
-                bitmask = reduce(int.__or__, (lines[i] for i in self.indices))
-                self._column_indices = bit_indices(bitmask)
-            return self._column_indices
-
-        @property
-        def width(self):
-            # Add 1 because Class2=0 cannot be used but needs to be encoded.
-            return len(self.column_indices) + 1
-
-        @property
-        def cost(self):
-            if self._cost is None:
-                self._cost = (
-                    # 2 bytes to store the offset to this subtable in the Lookup table above
-                    2
-                    # Contents of the subtable
-                    # From: https://docs.microsoft.com/en-us/typography/opentype/spec/gpos#pair-adjustment-positioning-format-2-class-pair-adjustment
-                    # uint16	posFormat	Format identifier: format = 2
-                    + 2
-                    # Offset16	coverageOffset	Offset to Coverage table, from beginning of PairPos subtable.
-                    + 2
-                    + self.coverage_bytes
-                    # uint16	valueFormat1	ValueRecord definition — for the first glyph of the pair (may be zero).
-                    + 2
-                    # uint16	valueFormat2	ValueRecord definition — for the second glyph of the pair (may be zero).
-                    + 2
-                    # Offset16	classDef1Offset	Offset to ClassDef table, from beginning of PairPos subtable — for the first glyph of the pair.
-                    + 2
-                    + self.classDef1_bytes
-                    # Offset16	classDef2Offset	Offset to ClassDef table, from beginning of PairPos subtable — for the second glyph of the pair.
-                    + 2
-                    + self.classDef2_bytes
-                    # uint16	class1Count	Number of classes in classDef1 table — includes Class 0.
-                    + 2
-                    # uint16	class2Count	Number of classes in classDef2 table — includes Class 0.
-                    + 2
-                    # Class1Record	class1Records[class1Count]	Array of Class1 records, ordered by classes in classDef1.
-                    + (valueFormat1_bytes + valueFormat2_bytes)
-                    * len(self.indices)
-                    * self.width
-                )
-            return self._cost
-
-        @property
-        def coverage_bytes(self):
-            format1_bytes = (
-                # From https://docs.microsoft.com/en-us/typography/opentype/spec/chapter2#coverage-format-1
-                # uint16	coverageFormat	Format identifier — format = 1
-                # uint16	glyphCount	Number of glyphs in the glyph array
-                4
-                # uint16	glyphArray[glyphCount]	Array of glyph IDs — in numerical order
-                + sum(len(all_class1[i]) for i in self.indices) * 2
-            )
-            ranges = sorted(
-                chain.from_iterable(all_class1_data[i][0] for i in self.indices)
-            )
-            merged_range_count = 0
-            last = None
-            for (start, end) in ranges:
-                if last is not None and start != last + 1:
-                    merged_range_count += 1
-                last = end
-            format2_bytes = (
-                # From https://docs.microsoft.com/en-us/typography/opentype/spec/chapter2#coverage-format-2
-                # uint16	coverageFormat	Format identifier — format = 2
-                # uint16	rangeCount	Number of RangeRecords
-                4
-                # RangeRecord	rangeRecords[rangeCount]	Array of glyph ranges — ordered by startGlyphID.
-                # uint16	startGlyphID	First glyph ID in the range
-                # uint16	endGlyphID	Last glyph ID in the range
-                # uint16	startCoverageIndex	Coverage Index of first glyph ID in range
-                + merged_range_count * 6
-            )
-            return min(format1_bytes, format2_bytes)
-
-        @property
-        def classDef1_bytes(self):
-            # We can skip encoding one of the Class1 definitions, and use
-            # Class1=0 to represent it instead, because Class1 is gated by the
-            # Coverage definition. Use Class1=0 for the highest byte savings.
-            # Going through all options takes too long, pick the biggest class
-            # = what happens in otlLib.builder.ClassDefBuilder.classes()
-            biggest_index = max(self.indices, key=lambda i: len(all_class1[i]))
-            return _classDef_bytes(
-                all_class1_data, [i for i in self.indices if i != biggest_index]
-            )
-
-        @property
-        def classDef2_bytes(self):
-            # All Class2 need to be encoded because we can't use Class2=0
-            return _classDef_bytes(all_class2_data, self.column_indices)
-
-        def merge(self, other: "Cluster") -> "Cluster":
-            return make_cluster(self.indices_bitmask | other.indices_bitmask)
+    ctx = ClusteringContext(
+        lines,
+        all_class1,
+        all_class1_data,
+        all_class2_data,
+        valueFormat1_bytes,
+        valueFormat2_bytes,
+    )
 
     cluster_cache: Dict[int, Cluster] = {}
 
@@ -331,10 +348,17 @@ def cluster_pairs_by_class2_coverage_custom_cost(
         cluster = cluster_cache.get(indices, None)
         if cluster is not None:
             return cluster
-        cluster = Cluster(indices)
+        cluster = Cluster(ctx, indices)
         cluster_cache[indices] = cluster
         return cluster
 
+    def merge(cluster: Cluster, other: Cluster) -> Cluster:
+        return make_cluster(cluster.indices_bitmask | other.indices_bitmask)
+
+    # Agglomerative clustering by hand, checking the cost gain of the new
+    # cluster against the previously separate clusters
+    # Start with 1 cluster per line
+    # cluster = set of lines = new subtable
     clusters = [make_cluster(1 << i) for i in range(len(lines))]
 
     # Cost of 1 cluster with everything
@@ -349,7 +373,7 @@ def cluster_pairs_by_class2_coverage_custom_cost(
         best_merged = None
         for i, cluster in enumerate(clusters):
             for j, other in enumerate(clusters[i + 1 :]):
-                merged = cluster.merge(other)
+                merged = merge(cluster, other)
                 cost_change = merged.cost - cluster.cost - other.cost
                 if lowest_cost_change is None or cost_change < lowest_cost_change:
                     lowest_cost_change = cost_change
