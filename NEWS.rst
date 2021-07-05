@@ -1,3 +1,6 @@
+4.25.0 (released 2021-07-05)
+----------------------------
+
 - [tfmLib] Added new library for parsing TeX Font Metric (TFM) files (#2354).
 - [TupleVariation] Make shared tuples order deterministic on python < 3.7 where
   Counter (subclass of dict) doesn't remember insertion order (#2351, #2353).
