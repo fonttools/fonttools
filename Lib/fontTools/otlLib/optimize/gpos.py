@@ -16,12 +16,19 @@ log = logging.getLogger("fontTools.otlLib.optimize.gpos")
 
 
 def compact(font: TTFont, mode: str) -> TTFont:
-    # Plan:
+    # Ideal plan:
     #  1. Find lookups of Lookup Type 2: Pair Adjustment Positioning Subtable
     #     https://docs.microsoft.com/en-us/typography/opentype/spec/gpos#lookup-type-2-pair-adjustment-positioning-subtable
     #  2. Extract glyph-glyph kerning and class-kerning from all present subtables
     #  3. Regroup into different subtable arrangements
     #  4. Put back into the lookup
+    #
+    # Actual implementation:
+    #  2. Only class kerning is optimized currently
+    #  3. If the input kerning is already in several subtables, the subtables
+    #     are not grouped together first; instead each subtable is treated
+    #     independently, so currently this step is:
+    #     Split existing subtables into more smaller subtables
     gpos = font["GPOS"]
     for lookup in gpos.table.LookupList.Lookup:
         if lookup.LookupType == 2:
