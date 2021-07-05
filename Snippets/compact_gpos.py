@@ -1,3 +1,23 @@
+#! /usr/bin/env python3
+
+"""
+Sample script to use the otlLib.optimize.gpos functions to compact GPOS tables
+of existing fonts. This script takes one or more TTF files as arguments and
+will create compacted copies of the fonts using all available modes of the GPOS
+compaction algorithm. For each copy, it will measure the new size of the GPOS
+table and also the new size of the font in WOFF2 format. All results will be
+printed to stdout in CSV format, so the savings provided by the algorithm in
+each mode can be inspected.
+
+This was initially made to debug the algorithm but can also be used to choose
+a mode value for a specific font (trade-off between bytes saved in TTF format
+vs more bytes in WOFF2 format and more subtables).
+
+Run:
+
+python Snippets/compact_gpos.py MyFont.ttf > results.csv
+"""
+
 import argparse
 from collections import defaultdict
 import csv
