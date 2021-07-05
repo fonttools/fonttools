@@ -1,3 +1,21 @@
+- [tfmLib] Added new library for parsing TeX Font Metric (TFM) files (#2354).
+- [TupleVariation] Make shared tuples order deterministic on python < 3.7 where
+  Counter (subclass of dict) doesn't remember insertion order (#2351, #2353).
+- [otData] Renamed COLRv1 structs to remove 'v1' suffix and match the updated draft
+  spec: 'LayerV1List' -> 'LayerList', 'BaseGlyphV1List' -> 'BaseGlyphList',
+  'BaseGlyphV1Record' -> 'BaseGlyphPaintRecord' (#2346).
+  Added 8 new ``PaintScale*`` tables: with/without centers, uniform vs non-uniform.
+  Added ``*AroundCenter`` variants to ``PaintRotate`` and ``PaintSkew``: the default
+  versions no longer have centerX/Y, but default to origin.
+  ``PaintRotate``, ``PaintSkew`` and ``PaintComposite`` formats were re-numbered.
+  NOTE: these are breaking changes; clients using the experimental COLRv1 API will
+  have to be updated (#2348).
+- [pointPens] Allow ``GuessSmoothPointPen`` to accept a tolerance. Fixed call to
+  ``math.atan2`` with x/y parameters inverted. Sync the code with fontPens (#2344).
+- [post] Fixed parsing ``post`` table format 2.0 when it contains extra garbage
+  at the end of the stringData array (#2314).
+- [subset] drop empty features unless 'size' with FeatureParams table (#2324).
+
 4.24.4 (released 2021-05-25)
 ----------------------------
 
