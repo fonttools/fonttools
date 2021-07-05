@@ -9,6 +9,9 @@ from fontTools.misc.intTools import bit_count, bit_indices
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables import otBase, otTables
 
+# NOTE: activating this optimization via the environment variable is
+# experimental and may not be supported once an alternative mechanism
+# is in place. See: https://github.com/fonttools/fonttools/issues/2349
 GPOS_COMPACT_MODE_ENV_KEY = "FONTTOOLS_GPOS_COMPACT_MODE"
 GPOS_COMPACT_MODE_DEFAULT = "0"
 

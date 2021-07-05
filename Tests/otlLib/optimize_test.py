@@ -163,6 +163,9 @@ def test_optimization_mode(
 
     env = {}
     if mode is not None:
+        # NOTE: activating this optimization via the environment variable is
+        # experimental and may not be supported once an alternative mechanism
+        # is in place. See: https://github.com/fonttools/fonttools/issues/2349
         env["FONTTOOLS_GPOS_COMPACT_MODE"] = str(mode)
     with set_env(**env):
         fb = FontBuilder(1000)
