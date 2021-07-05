@@ -1,4 +1,5 @@
 from collections import namedtuple, OrderedDict
+import os
 from fontTools.misc.fixedTools import fixedToFloat
 from fontTools import ttLib
 from fontTools.ttLib.tables import otTables as ot
@@ -10,6 +11,7 @@ from fontTools.ttLib.tables.otBase import (
 )
 from fontTools.ttLib.tables import otBase
 from fontTools.feaLib.ast import STATNameStatement
+from fontTools.otlLib.optimize.gpos import GPOS_COMPACT_MODE_DEFAULT, GPOS_COMPACT_MODE_ENV_KEY, compact_lookup
 from fontTools.otlLib.error import OpenTypeLibError
 from functools import reduce
 import logging
@@ -1373,7 +1375,17 @@ class PairPosBuilder(LookupBuilder):
             subtables.extend(buildPairPosGlyphs(self.glyphPairs, self.glyphMap))
         for key in sorted(builders.keys()):
             subtables.extend(builders[key].subtables())
-        return self.buildLookup_(subtables)
+        lookup = self.buildLookup_(subtables)
+
+        # Compact the lookup
+        # This is a good moment to do it because the compaction should create
+        # smaller subtables, which may prevent overflows from happening.
+        mode = os.environ.get(GPOS_COMPACT_MODE_ENV_KEY, GPOS_COMPACT_MODE_DEFAULT)
+        if mode and mode != "0":
+            log.info("Compacting GPOS...")
+            compact_lookup(self.font, mode, lookup)
+
+        return lookup
 
 
 class SinglePosBuilder(LookupBuilder):

@@ -1,8 +1,10 @@
 """
 Merge OpenType Layout tables (GDEF / GPOS / GSUB).
 """
+import os
 import copy
 from operator import ior
+import logging
 from fontTools.misc import classifyTools
 from fontTools.misc.roundTools import otRound
 from fontTools.ttLib.tables import otTables as ot
@@ -13,6 +15,13 @@ from fontTools.varLib.models import nonNone, allNone, allEqual, allEqualTo
 from fontTools.varLib.varStore import VarStoreInstancer
 from functools import reduce
 from fontTools.otlLib.builder import buildSinglePos
+from fontTools.otlLib.optimize.gpos import (
+    compact_pair_pos,
+    GPOS_COMPACT_MODE_DEFAULT,
+    GPOS_COMPACT_MODE_ENV_KEY,
+)
+
+log = logging.getLogger("fontTools.varLib.merger")
 
 from .errors import (
     ShouldBeConstant,
@@ -837,6 +846,15 @@ def merge(merger, self, lst):
 			self.SubTable.pop(-1)
 			self.SubTableCount -= 1
 
+		# Compact the merged subtables
+		# This is a good moment to do it because the compaction should create
+		# smaller subtables, which may prevent overflows from happening.
+		mode = os.environ.get(GPOS_COMPACT_MODE_ENV_KEY, GPOS_COMPACT_MODE_DEFAULT)
+		if mode and mode != "0":
+			log.info("Compacting GPOS...")
+			self.SubTable = compact_pair_pos(merger.font, mode, self.SubTable)
+			self.SubTableCount = len(self.SubTable)
+
 	elif isSinglePos and flattened:
 		singlePosTable = self.SubTable[0]
 		glyphs = singlePosTable.Coverage.glyphs
@@ -850,7 +868,6 @@ def merge(merger, self, lst):
 	merger.mergeObjects(self, lst, exclude=['SubTable', 'SubTableCount'])
 
 	del merger.lookup_subtables
-
 
 #
 # InstancerMerger
