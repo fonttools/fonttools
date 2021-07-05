@@ -15,6 +15,11 @@
 - [post] Fixed parsing ``post`` table format 2.0 when it contains extra garbage
   at the end of the stringData array (#2314).
 - [subset] drop empty features unless 'size' with FeatureParams table (#2324).
+- [otlLib] Added ``otlLib.optimize`` module; added GPOS compaction algorithm.
+  The compaction can be run on existing fonts with ``fonttools otlLib.optimize``
+  or using the snippet ``compact_gpos.py``. There's experimental support for
+  compacting fonts at compilation time using an environment variable, but that
+  might be removed later (#2326).
 
 4.24.4 (released 2021-05-25)
 ----------------------------
@@ -498,7 +503,7 @@
   instance, correctly map the value forward.
 - [varLib] The avar table can now contain mapping output values that are greater than
   OR EQUAL to the preceeding value, as the avar specification allows this.
-- [varLib] The errors of the module are now ordered hierarchically below VarLibError. 
+- [varLib] The errors of the module are now ordered hierarchically below VarLibError.
   See #1821.
 
 4.3.0 (released 2020-02-03)
@@ -792,13 +797,13 @@
 - [mutator] Set ``OVERLAP_SIMPLE`` and ``OVERLAP_COMPOUND`` glyf flags by
   default in ``instantiateVariableFont``. Added ``--no-overlap`` cli option
   to disable this (#1518).
-- [subset] Fixed subsetting ``VVAR`` table (#1516, #1517).  
+- [subset] Fixed subsetting ``VVAR`` table (#1516, #1517).
   Fixed subsetting an ``HVAR`` table that has an ``AdvanceWidthMap`` when the
   option ``--retain-gids`` is used.
-- [feaLib] Added ``forceChained`` in MultipleSubstStatement (#1511).  
-  Fixed double indentation of ``subtable`` statement (#1512).  
+- [feaLib] Added ``forceChained`` in MultipleSubstStatement (#1511).
+  Fixed double indentation of ``subtable`` statement (#1512).
   Added support for ``subtable`` statement in more places than just PairPos
-  lookups (#1520).  
+  lookups (#1520).
   Handle lookupflag 0 and lookupflag without a value (#1540).
 - [varLib] In ``load_designspace``, provide a default English name for the
   ``ital`` axis tag.
