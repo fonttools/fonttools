@@ -618,6 +618,73 @@ class Coverage(FormatSwitchingBaseTable):
 		glyphs.append(attrs["value"])
 
 
+class DeltaSetIndexMap(getFormatSwitchingBaseTableClass("uint8")):
+
+	def populateDefaults(self, propagator=None):
+		if not hasattr(self, 'mapping'):
+			self.mapping = []
+
+	def postRead(self, rawTable, font):
+		assert (rawTable['EntryFormat'] & 0xFFC0) == 0
+		self.mapping = rawTable['mapping']
+
+	@staticmethod
+	def getEntryFormat(mapping):
+		ored = 0
+		for idx in mapping:
+			ored |= idx
+
+		inner = ored & 0xFFFF
+		innerBits = 0
+		while inner:
+			innerBits += 1
+			inner >>= 1
+		innerBits = max(innerBits, 1)
+		assert innerBits <= 16
+
+		ored = (ored >> (16-innerBits)) | (ored & ((1<<innerBits)-1))
+		if   ored <= 0x000000FF:
+			entrySize = 1
+		elif ored <= 0x0000FFFF:
+			entrySize = 2
+		elif ored <= 0x00FFFFFF:
+			entrySize = 3
+		else:
+			entrySize = 4
+
+		return ((entrySize - 1) << 4) | (innerBits - 1)
+
+	def preWrite(self, font):
+		mapping = getattr(self, "mapping", None)
+		if mapping is None:
+			mapping = self.mapping = []
+		self.Format = 1 if len(mapping) > 0xFFFF else 0
+		rawTable = self.__dict__.copy()
+		rawTable['MappingCount'] = len(mapping)
+		rawTable['EntryFormat'] = self.getEntryFormat(mapping)
+		return rawTable
+
+	def toXML2(self, xmlWriter, font):
+		for i, value in enumerate(getattr(self, "mapping", [])):
+			attrs = (
+				('index', i),
+				('outer', value >> 16),
+				('inner', value & 0xFFFF),
+			)
+			xmlWriter.simpletag("Map", attrs)
+			xmlWriter.newline()
+
+	def fromXML(self, name, attrs, content, font):
+		mapping = getattr(self, "mapping", None)
+		if mapping is None:
+			self.mapping = mapping = []
+		index = safeEval(attrs['index'])
+		outer = safeEval(attrs['outer'])
+		inner = safeEval(attrs['inner'])
+		assert inner <= 0xFFFF
+		mapping.insert(index, (outer << 16) | inner)
+
+
 class VarIdxMap(BaseTable):
 
 	def populateDefaults(self, propagator=None):
@@ -641,34 +708,9 @@ class VarIdxMap(BaseTable):
 		while len(mapping) > 1 and mapping[-2] == mapping[-1]:
 			del mapping[-1]
 
-		rawTable = { 'mapping': mapping }
+		rawTable = {'mapping': mapping}
 		rawTable['MappingCount'] = len(mapping)
-
-		ored = 0
-		for idx in mapping:
-			ored |= idx
-
-		inner = ored & 0xFFFF
-		innerBits = 0
-		while inner:
-			innerBits += 1
-			inner >>= 1
-		innerBits = max(innerBits, 1)
-		assert innerBits <= 16
-
-		ored = (ored >> (16-innerBits)) | (ored & ((1<<innerBits)-1))
-		if   ored <= 0x000000FF:
-			entrySize = 1
-		elif ored <= 0x0000FFFF:
-			entrySize = 2
-		elif ored <= 0x00FFFFFF:
-			entrySize = 3
-		else:
-			entrySize = 4
-
-		entryFormat = ((entrySize - 1) << 4) | (innerBits - 1)
-
-		rawTable['EntryFormat'] = entryFormat
+		rawTable['EntryFormat'] = DeltaSetIndexMap.getEntryFormat(mapping)
 		return rawTable
 
 	def toXML2(self, xmlWriter, font):

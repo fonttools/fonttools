@@ -183,6 +183,7 @@ def buildCOLR(
     version: Optional[int] = None,
     glyphMap: Optional[Mapping[str, int]] = None,
     varStore: Optional[ot.VarStore] = None,
+    varIndexMap: Optional[ot.DeltaSetIndexMap] = None,
 ) -> C_O_L_R_.table_C_O_L_R_:
     """Build COLR table from color layers mapping.
     Args:
@@ -196,6 +197,7 @@ def buildCOLR(
         glyphMap: a map from glyph names to glyph indices, as returned from
             TTFont.getReverseGlyphMap(), to optionally sort base records by GID.
         varStore: Optional ItemVarationStore for deltas associated with v1 layer.
+        varIndexMap: Optional DeltaSetIndexMap for deltas associated with v1 layer.
     Return:
         A new COLR table.
     """
@@ -229,6 +231,7 @@ def buildCOLR(
     if version == 0:
         self.ColorLayers = self._decompileColorLayersV0(colr)
     else:
+        colr.VarIndexMap = varIndexMap
         colr.VarStore = varStore
         self.table = colr
 
