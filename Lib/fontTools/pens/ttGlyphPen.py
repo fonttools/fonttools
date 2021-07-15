@@ -275,10 +275,11 @@ class TTGlyphPointPen(_TTGlyphBasePen, LogMixin, AbstractPointPen):
             raise PenError("Can't add a point to a closed contour.")
         if segmentType is None:
             self.types.append(0)  # offcurve
-        elif segmentType in ("qcurve", "line"):
+        elif segmentType in ("qcurve", "line", "move"):
             self.types.append(1)  # oncurve
+        elif segmentType == "curve":
+            raise NotImplementedError("cubic curves are not supported")
         else:
-            # cubic curves are not supported
-            raise NotImplementedError
+            raise AssertionError(segmentType)
 
         self.points.append(pt)
