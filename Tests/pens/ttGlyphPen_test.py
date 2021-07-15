@@ -549,6 +549,32 @@ class TTGlyphPointPenTest(TTGlyphPenTestBase):
         uni0302_uni0300.recalcBounds(glyphSet)
         self.assertGlyphBoundsEqual(uni0302_uni0300, (-278, 745, 148, 1025))
 
+    def test_open_path_starting_with_move(self):
+        # when a contour starts with a 'move' point, it signifies the beginnig
+        # of an open contour.
+        # https://unifiedfontobject.org/versions/ufo3/glyphs/glif/#point-types
+        pen1 = TTGlyphPointPen(None)
+        pen1.beginPath()
+        pen1.addPoint((0, 0), "move")  # contour is open
+        pen1.addPoint((10, 10), "line")
+        pen1.addPoint((20, 20))
+        pen1.addPoint((20, 0), "qcurve")
+        pen1.endPath()
+
+        pen2 = TTGlyphPointPen(None)
+        pen2.beginPath()
+        pen2.addPoint((0, 0), "line")  # contour is closed
+        pen2.addPoint((10, 10), "line")
+        pen2.addPoint((20, 20))
+        pen2.addPoint((20, 0), "qcurve")
+        pen2.endPath()
+
+        # Since TrueType contours are always implicitly closed, the pen will
+        # interpret both these paths as equivalent
+        assert pen1.points == pen2.points == [(0, 0), (10, 10), (20, 20), (20, 0)]
+        assert pen1.types == pen2.types == [1, 1, 0, 1]
+
+
 
 class _TestGlyph(object):
     def __init__(self, glyph):
