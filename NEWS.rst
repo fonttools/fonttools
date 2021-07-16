@@ -1,3 +1,6 @@
+4.25.1 (released 2021-07-16)
+----------------------------
+
 - [ttGlyphPen] Fixed bug in ``TTGlyphPointPen``, whereby open contours (i.e. starting
   with segmentType "move") would throw ``NotImplementedError``. They are now treated
   as if they are closed, like with the ``TTGlyphPen`` (#2364, #2366).
