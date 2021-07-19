@@ -67,11 +67,11 @@ class PointSegmentPointTest(RuleBasedStateMachine):
         e2 = None
         try:
             self.pen1.beginPath(identifier, **kwargs)
-        except Exception as e:
+        except (Exception, ArithmeticError) as e:
             e1 = e
         try:
             self.pen2.beginPath(identifier, **kwargs)
-        except Exception as e:
+        except (Exception, ArithmeticError) as e:
             e2 = e
         if e1 is not None or e2 is not None:
             assert e1 == e2
@@ -86,11 +86,11 @@ class PointSegmentPointTest(RuleBasedStateMachine):
         e2 = None
         try:
             self.pen1.endPath()
-        except Exception as e:
+        except (Exception, ArithmeticError) as e:
             e1 = e
         try:
             self.pen2.endPath()
-        except Exception as e:
+        except (Exception, ArithmeticError) as e:
             e2 = e
         if e1 is not None or e2 is not None:
             assert e1 == e2
@@ -116,11 +116,11 @@ class PointSegmentPointTest(RuleBasedStateMachine):
         e2 = None
         try:
             self.pen1.addPoint(pt, name=name, identifier=identifier, **kwargs)
-        except Exception as e:
+        except (Exception, ArithmeticError) as e:
             e1 = e
         try:
             self.pen2.addPoint(pt, name=name, identifier=identifier, **kwargs)
-        except Exception as e:
+        except (Exception, ArithmeticError) as e:
             e2 = e
         if e1 is not None or e2 is not None:
             assert e1 == e2
@@ -147,11 +147,11 @@ class PointSegmentPointTest(RuleBasedStateMachine):
         e2 = None
         try:
             self.pen1.addPoint(pt, "move", smooth, name, identifier, **kwargs)
-        except Exception as e:
+        except (Exception, ArithmeticError) as e:
             e1 = e
         try:
             self.pen2.addPoint(pt, "move", smooth, name, identifier, **kwargs)
-        except Exception as e:
+        except (Exception, ArithmeticError) as e:
             e2 = e
         if e1 is not None or e2 is not None:
             assert e1 == e2
@@ -178,11 +178,11 @@ class PointSegmentPointTest(RuleBasedStateMachine):
         e2 = None
         try:
             self.pen1.addPoint(pt, "line", smooth, name, identifier, **kwargs)
-        except Exception as e:
+        except (Exception, ArithmeticError) as e:
             e1 = e
         try:
             self.pen2.addPoint(pt, "line", smooth, name, identifier, **kwargs)
-        except Exception as e:
+        except (Exception, ArithmeticError) as e:
             e2 = e
         if e1 is not None or e2 is not None:
             assert e1 == e2
@@ -209,11 +209,11 @@ class PointSegmentPointTest(RuleBasedStateMachine):
         e2 = None
         try:
             self.pen1.addPoint(pt, "qcurve", smooth, name, identifier, **kwargs)
-        except Exception as e:
+        except (Exception, ArithmeticError) as e:
             e1 = e
         try:
             self.pen2.addPoint(pt, "qcurve", smooth, name, identifier, **kwargs)
-        except Exception as e:
+        except (Exception, ArithmeticError) as e:
             e2 = e
         if e1 is not None or e2 is not None:
             assert e1 == e2
@@ -240,11 +240,11 @@ class PointSegmentPointTest(RuleBasedStateMachine):
         e2 = None
         try:
             self.pen1.addPoint(pt, "curve", smooth, name, identifier, **kwargs)
-        except Exception as e:
+        except (Exception, ArithmeticError) as e:
             e1 = e
         try:
             self.pen2.addPoint(pt, "curve", smooth, name, identifier, **kwargs)
-        except Exception as e:
+        except (Exception, ArithmeticError) as e:
             e2 = e
         if e1 is not None or e2 is not None:
             assert e1 == e2
@@ -263,11 +263,11 @@ class PointSegmentPointTest(RuleBasedStateMachine):
         self.components[baseGlyphName] = Glyph()
         try:
             self.pen1.addComponent(baseGlyphName, transformation)
-        except Exception as e:
+        except (Exception, ArithmeticError) as e:
             e1 = e
         try:
             self.pen2.addComponent(baseGlyphName, transformation)
-        except Exception as e:
+        except (Exception, ArithmeticError) as e:
             e2 = e
         if e1 is not None or e2 is not None:
             assert e1 == e2
