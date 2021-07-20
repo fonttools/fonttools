@@ -89,16 +89,16 @@ def _beforeBuildPaintRadialGradient(paint, source):
     return _beforeBuildPaintVarRadialGradient(paint, source, lambda v: v.value)
 
 
-def _defaultColorIndex():
-    colorIndex = ot.ColorIndex()
-    colorIndex.Alpha = _DEFAULT_ALPHA.value
-    return colorIndex
+def _defaultColorStop():
+    colorStop = ot.ColorStop()
+    colorStop.Alpha = _DEFAULT_ALPHA.value
+    return colorStop
 
 
-def _defaultVarColorIndex():
-    colorIndex = ot.VarColorIndex()
-    colorIndex.Alpha = _DEFAULT_ALPHA
-    return colorIndex
+def _defaultVarColorStop():
+    colorStop = ot.VarColorStop()
+    colorStop.Alpha = _DEFAULT_ALPHA.value
+    return colorStop
 
 
 def _defaultColorLine():
@@ -113,6 +113,12 @@ def _defaultVarColorLine():
     return colorLine
 
 
+def _defaultPaintSolid():
+    paint = ot.Paint()
+    paint.Alpha = _DEFAULT_ALPHA.value
+    return paint
+
+
 def _buildPaintCallbacks():
     return {
         (
@@ -125,10 +131,13 @@ def _buildPaintCallbacks():
             ot.Paint,
             ot.PaintFormat.PaintVarRadialGradient,
         ): _beforeBuildPaintVarRadialGradient,
-        (BuildCallback.CREATE_DEFAULT, ot.ColorIndex): _defaultColorIndex,
-        (BuildCallback.CREATE_DEFAULT, ot.VarColorIndex): _defaultVarColorIndex,
+        (BuildCallback.CREATE_DEFAULT, ot.ColorStop): _defaultColorStop,
+        (BuildCallback.CREATE_DEFAULT, ot.VarColorStop): _defaultVarColorStop,
         (BuildCallback.CREATE_DEFAULT, ot.ColorLine): _defaultColorLine,
         (BuildCallback.CREATE_DEFAULT, ot.VarColorLine): _defaultVarColorLine,
+        (BuildCallback.CREATE_DEFAULT, ot.VarColorLine): _defaultVarColorLine,
+        (BuildCallback.CREATE_DEFAULT, ot.Paint, ot.PaintFormat.PaintSolid): _defaultPaintSolid,
+        (BuildCallback.CREATE_DEFAULT, ot.Paint, ot.PaintFormat.PaintVarSolid): _defaultPaintSolid,
     }
 
 

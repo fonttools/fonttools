@@ -1627,23 +1627,15 @@ otData = [
 		('uint32', 'VarIndexBase', None, None, 'Base index into DeltaSetIndexMap.'),
 	]),
 
-	('ColorIndex', [
-		('uint16', 'PaletteIndex', None, None, 'Index value to use with a selected color palette.'),
-		('F2Dot14', 'Alpha', None, None, 'Values outsided [0.,1.] reserved'),
-	]),
-	('VarColorIndex', [
-		('uint16', 'PaletteIndex', None, None, 'Index value to use with a selected color palette.'),
-		('F2Dot14', 'Alpha', None, None, 'Values outsided [0.,1.] reserved'),
-		('uint32', 'VarIndexBase', None, None, 'Base index into DeltaSetIndexMap.'),
-	]),
-
 	('ColorStop', [
 		('F2Dot14', 'StopOffset', None, None, ''),
-		('ColorIndex', 'Color', None, None, ''),
+		('uint16', 'PaletteIndex', None, None, 'Index for a CPAL palette entry.'),
+		('F2Dot14', 'Alpha', None, None, 'Values outsided [0.,1.] reserved'),
 	]),
 	('VarColorStop', [
-		('F2Dot14', 'StopOffset', None, None, ''),
-		('VarColorIndex', 'Color', None, None, ''),
+		('F2Dot14', 'StopOffset', None, None, 'VarIndexBase + 0'),
+		('uint16', 'PaletteIndex', None, None, 'Index for a CPAL palette entry.'),
+		('F2Dot14', 'Alpha', None, None, 'Values outsided [0.,1.] reserved. VarIndexBase + 1'),
 		('uint32', 'VarIndexBase', None, None, 'Base index into DeltaSetIndexMap.'),
 	]),
 
@@ -1668,12 +1660,15 @@ otData = [
 	# PaintSolid
 	('PaintFormat2', [
 		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 2'),
-		('ColorIndex', 'Color', None, None, 'A solid color paint.'),
+		('uint16', 'PaletteIndex', None, None, 'Index for a CPAL palette entry.'),
+		('F2Dot14', 'Alpha', None, None, 'Values outsided [0.,1.] reserved'),
 	]),
 	# PaintVarSolid
 	('PaintFormat3', [
 		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 3'),
-		('VarColorIndex', 'Color', None, None, 'A solid color paint.'),
+		('uint16', 'PaletteIndex', None, None, 'Index for a CPAL palette entry.'),
+		('F2Dot14', 'Alpha', None, None, 'Values outsided [0.,1.] reserved. VarIndexBase + 0'),
+		('uint32', 'VarIndexBase', None, None, 'Base index into DeltaSetIndexMap.'),
 	]),
 
 	# PaintLinearGradient

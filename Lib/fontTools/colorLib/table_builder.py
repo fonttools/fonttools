@@ -39,7 +39,7 @@ class BuildCallback(enum.Enum):
     """
     AFTER_BUILD = enum.auto()
 
-    """Keyed on (CREATE_DEFAULT, class).
+    """Keyed on (CREATE_DEFAULT, class[, Format if available]).
     Receives no arguments.
     Should return a new instance of class.
     """
@@ -62,25 +62,25 @@ def _isNonStrSequence(value):
     return isinstance(value, collections.abc.Sequence) and not isinstance(value, str)
 
 
-def _set_format(dest, source):
+def _split_format(cls, source):
     if _isNonStrSequence(source):
-        assert len(source) > 0, f"{type(dest)} needs at least format from {source}"
-        dest.Format = source[0]
-        source = source[1:]
+        assert len(source) > 0, f"{cls} needs at least format from {source}"
+        fmt, remainder = source[0], source[1:]
     elif isinstance(source, collections.abc.Mapping):
-        assert "Format" in source, f"{type(dest)} needs at least Format from {source}"
-        dest.Format = source["Format"]
+        assert "Format" in source, f"{cls} needs at least Format from {source}"
+        remainder = source.copy()
+        fmt = remainder.pop("Format")
     else:
-        raise ValueError(f"Not sure how to populate {type(dest)} from {source}")
+        raise ValueError(f"Not sure how to populate {cls} from {source}")
 
     assert isinstance(
-        dest.Format, collections.abc.Hashable
-    ), f"{type(dest)} Format is not hashable: {dest.Format}"
+        fmt, collections.abc.Hashable
+    ), f"{cls} Format is not hashable: {fmt!r}"
     assert (
-        dest.Format in dest.convertersByName
-    ), f"{dest.Format} invalid Format of {cls}"
+        fmt in cls.convertersByName
+    ), f"{cls} invalid Format: {fmt!r}"
 
-    return source
+    return fmt, remainder
 
 
 class TableBuilder:
@@ -140,6 +140,11 @@ class TableBuilder:
             return source
 
         callbackKey = (cls,)
+        fmt = None
+        if issubclass(cls, FormatSwitchingBaseTable):
+            fmt, source = _split_format(cls, source)
+            callbackKey = (cls, fmt)
+
         dest = self._callbackTable.get(
             (BuildCallback.CREATE_DEFAULT,) + callbackKey, lambda: cls()
         )()
@@ -150,11 +155,9 @@ class TableBuilder:
 
         # For format switchers we need to resolve converters based on format
         if issubclass(cls, FormatSwitchingBaseTable):
-            source = _set_format(dest, source)
-
+            dest.Format = fmt
             convByName = _assignable(convByName[dest.Format])
             skippedFields.add("Format")
-            callbackKey = (cls, dest.Format)
 
         # Convert sequence => mapping so before thunk only has to handle one format
         if _isNonStrSequence(source):
