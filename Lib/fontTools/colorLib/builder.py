@@ -26,20 +26,10 @@ from fontTools.ttLib.tables import C_O_L_R_
 from fontTools.ttLib.tables import C_P_A_L_
 from fontTools.ttLib.tables import _n_a_m_e
 from fontTools.ttLib.tables import otTables as ot
-from fontTools.ttLib.tables.otTables import (
-    ExtendMode,
-    CompositeMode,
-    VariableValue,
-    VariableFloat,
-    VariableInt,
-)
+from fontTools.ttLib.tables.otTables import ExtendMode, CompositeMode
 from .errors import ColorLibError
 from .geometry import round_start_circle_stable_containment
-from .table_builder import (
-    convertTupleClass,
-    BuildCallback,
-    TableBuilder,
-)
+from .table_builder import BuildCallback, TableBuilder
 
 
 # TODO move type aliases to colorLib.types?
@@ -52,52 +42,45 @@ _ColorGlyphsV0Dict = Dict[str, Sequence[Tuple[str, int]]]
 
 
 MAX_PAINT_COLR_LAYER_COUNT = 255
-_DEFAULT_ALPHA = VariableFloat(1.0)
+_DEFAULT_ALPHA = 1.0
 _MAX_REUSE_LEN = 32
 
 
-def _beforeBuildPaintVarRadialGradient(paint, source, srcMapFn=lambda v: v):
-    # normalize input types (which may or may not specify a varIdx)
-    x0 = convertTupleClass(VariableFloat, source["x0"])
-    y0 = convertTupleClass(VariableFloat, source["y0"])
-    r0 = convertTupleClass(VariableFloat, source["r0"])
-    x1 = convertTupleClass(VariableFloat, source["x1"])
-    y1 = convertTupleClass(VariableFloat, source["y1"])
-    r1 = convertTupleClass(VariableFloat, source["r1"])
+def _beforeBuildPaintRadialGradient(paint, source):
+    x0 = source["x0"]
+    y0 = source["y0"]
+    r0 = source["r0"]
+    x1 = source["x1"]
+    y1 = source["y1"]
+    r1 = source["r1"]
 
     # TODO apparently no builder_test confirms this works (?)
 
     # avoid abrupt change after rounding when c0 is near c1's perimeter
-    c = round_start_circle_stable_containment(
-        (x0.value, y0.value), r0.value, (x1.value, y1.value), r1.value
-    )
-    x0, y0 = x0._replace(value=c.centre[0]), y0._replace(value=c.centre[1])
-    r0 = r0._replace(value=c.radius)
+    c = round_start_circle_stable_containment((x0, y0), r0, (x1, y1), r1)
+    x0, y0 = c.centre
+    r0 = c.radius
 
     # update source to ensure paint is built with corrected values
-    source["x0"] = srcMapFn(x0)
-    source["y0"] = srcMapFn(y0)
-    source["r0"] = srcMapFn(r0)
-    source["x1"] = srcMapFn(x1)
-    source["y1"] = srcMapFn(y1)
-    source["r1"] = srcMapFn(r1)
+    source["x0"] = x0
+    source["y0"] = y0
+    source["r0"] = r0
+    source["x1"] = x1
+    source["y1"] = y1
+    source["r1"] = r1
 
     return paint, source
 
 
-def _beforeBuildPaintRadialGradient(paint, source):
-    return _beforeBuildPaintVarRadialGradient(paint, source, lambda v: v.value)
-
-
 def _defaultColorStop():
     colorStop = ot.ColorStop()
-    colorStop.Alpha = _DEFAULT_ALPHA.value
+    colorStop.Alpha = _DEFAULT_ALPHA
     return colorStop
 
 
 def _defaultVarColorStop():
     colorStop = ot.VarColorStop()
-    colorStop.Alpha = _DEFAULT_ALPHA.value
+    colorStop.Alpha = _DEFAULT_ALPHA
     return colorStop
 
 
@@ -115,7 +98,7 @@ def _defaultVarColorLine():
 
 def _defaultPaintSolid():
     paint = ot.Paint()
-    paint.Alpha = _DEFAULT_ALPHA.value
+    paint.Alpha = _DEFAULT_ALPHA
     return paint
 
 
@@ -130,14 +113,21 @@ def _buildPaintCallbacks():
             BuildCallback.BEFORE_BUILD,
             ot.Paint,
             ot.PaintFormat.PaintVarRadialGradient,
-        ): _beforeBuildPaintVarRadialGradient,
+        ): _beforeBuildPaintRadialGradient,
         (BuildCallback.CREATE_DEFAULT, ot.ColorStop): _defaultColorStop,
         (BuildCallback.CREATE_DEFAULT, ot.VarColorStop): _defaultVarColorStop,
         (BuildCallback.CREATE_DEFAULT, ot.ColorLine): _defaultColorLine,
         (BuildCallback.CREATE_DEFAULT, ot.VarColorLine): _defaultVarColorLine,
-        (BuildCallback.CREATE_DEFAULT, ot.VarColorLine): _defaultVarColorLine,
-        (BuildCallback.CREATE_DEFAULT, ot.Paint, ot.PaintFormat.PaintSolid): _defaultPaintSolid,
-        (BuildCallback.CREATE_DEFAULT, ot.Paint, ot.PaintFormat.PaintVarSolid): _defaultPaintSolid,
+        (
+            BuildCallback.CREATE_DEFAULT,
+            ot.Paint,
+            ot.PaintFormat.PaintSolid,
+        ): _defaultPaintSolid,
+        (
+            BuildCallback.CREATE_DEFAULT,
+            ot.Paint,
+            ot.PaintFormat.PaintVarSolid,
+        ): _defaultPaintSolid,
     }
 
 

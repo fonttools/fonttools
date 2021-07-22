@@ -17,8 +17,6 @@ from fontTools.ttLib.tables.otConverters import (
     Short,
     UInt8,
     UShort,
-    VarInt16,
-    VarUInt16,
     IntValue,
     FloatValue,
 )
@@ -48,14 +46,6 @@ class BuildCallback(enum.Enum):
 
 def _assignable(convertersByName):
     return {k: v for k, v in convertersByName.items() if not isinstance(v, ComputedInt)}
-
-
-def convertTupleClass(tupleClass, value):
-    if isinstance(value, tupleClass):
-        return value
-    if isinstance(value, tuple):
-        return tupleClass(*value)
-    return tupleClass(value)
 
 
 def _isNonStrSequence(value):
@@ -97,13 +87,9 @@ class TableBuilder:
         self._callbackTable = callbackTable
 
     def _convert(self, dest, field, converter, value):
-        tupleClass = getattr(converter, "tupleClass", None)
         enumClass = getattr(converter, "enumClass", None)
 
-        if tupleClass:
-            value = convertTupleClass(tupleClass, value)
-
-        elif enumClass:
+        if enumClass:
             if isinstance(value, enumClass):
                 pass
             elif isinstance(value, str):
@@ -213,11 +199,8 @@ class TableUnbuilder:
                 continue
             value = getattr(table, converter.name)
 
-            tupleClass = getattr(converter, "tupleClass", None)
             enumClass = getattr(converter, "enumClass", None)
-            if tupleClass:
-                source[converter.name] = tuple(value)
-            elif enumClass:
+            if enumClass:
                 source[converter.name] = value.name.lower()
             elif isinstance(converter, Struct):
                 if converter.repeat:
