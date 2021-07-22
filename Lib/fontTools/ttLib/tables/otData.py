@@ -1624,7 +1624,7 @@ otData = [
 		('Fixed', 'yy', None, None, 'y-part of y basis vector'),
 		('Fixed', 'dx', None, None, 'Translation in x direction'),
 		('Fixed', 'dy', None, None, 'Translation in y direction'),
-		('uint32', 'VarIndexBase', None, None, 'Base index into DeltaSetIndexMap.'),
+		('VarIndex', 'VarIndexBase', None, None, 'Base index into DeltaSetIndexMap.'),
 	]),
 
 	('ColorStop', [
@@ -1636,7 +1636,7 @@ otData = [
 		('F2Dot14', 'StopOffset', None, None, 'VarIndexBase + 0'),
 		('uint16', 'PaletteIndex', None, None, 'Index for a CPAL palette entry.'),
 		('F2Dot14', 'Alpha', None, None, 'Values outsided [0.,1.] reserved. VarIndexBase + 1'),
-		('uint32', 'VarIndexBase', None, None, 'Base index into DeltaSetIndexMap.'),
+		('VarIndex', 'VarIndexBase', None, None, 'Base index into DeltaSetIndexMap.'),
 	]),
 
 	('ColorLine', [
@@ -1668,7 +1668,7 @@ otData = [
 		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 3'),
 		('uint16', 'PaletteIndex', None, None, 'Index for a CPAL palette entry.'),
 		('F2Dot14', 'Alpha', None, None, 'Values outsided [0.,1.] reserved. VarIndexBase + 0'),
-		('uint32', 'VarIndexBase', None, None, 'Base index into DeltaSetIndexMap.'),
+		('VarIndex', 'VarIndexBase', None, None, 'Base index into DeltaSetIndexMap.'),
 	]),
 
 	# PaintLinearGradient
@@ -1692,7 +1692,7 @@ otData = [
 		('int16', 'y1', None, None, ''),
 		('int16', 'x2', None, None, ''),
 		('int16', 'y2', None, None, ''),
-		('uint32', 'VarIndexBase', None, None, 'Base index into DeltaSetIndexMap.'),
+		('VarIndex', 'VarIndexBase', None, None, 'Base index into DeltaSetIndexMap.'),
 	]),
 
 	# PaintRadialGradient
@@ -1716,7 +1716,7 @@ otData = [
 		('int16', 'x1', None, None, ''),
 		('int16', 'y1', None, None, ''),
 		('uint16', 'r1', None, None, ''),
-		('uint32', 'VarIndexBase', None, None, 'Base index into DeltaSetIndexMap.'),
+		('VarIndex', 'VarIndexBase', None, None, 'Base index into DeltaSetIndexMap.'),
 	]),
 
 	# PaintSweepGradient
@@ -1736,7 +1736,7 @@ otData = [
 		('int16', 'centerY', None, None, 'Center y coordinate.'),
 		('Angle', 'startAngle', None, None, 'Start of the angular range of the gradient.'),
 		('Angle', 'endAngle', None, None, 'End of the angular range of the gradient.'),
-		('uint32', 'VarIndexBase', None, None, 'Base index into DeltaSetIndexMap.'),
+		('VarIndex', 'VarIndexBase', None, None, 'Base index into DeltaSetIndexMap.'),
 	]),
 
 	# PaintGlyph
@@ -1778,7 +1778,7 @@ otData = [
 		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintVarTranslate table) to Paint subtable.'),
 		('int16', 'dx', None, None, 'Translation in x direction.'),
 		('int16', 'dy', None, None, 'Translation in y direction.'),
-		('uint32', 'VarIndexBase', None, None, 'Base index into DeltaSetIndexMap.'),
+		('VarIndex', 'VarIndexBase', None, None, 'Base index into DeltaSetIndexMap.'),
 	]),
 
 	# PaintScale
@@ -1794,7 +1794,7 @@ otData = [
 		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintVarScale table) to Paint subtable.'),
 		('F2Dot14', 'scaleX', None, None, ''),
 		('F2Dot14', 'scaleY', None, None, ''),
-		('uint32', 'VarIndexBase', None, None, 'Base index into DeltaSetIndexMap.'),
+		('VarIndex', 'VarIndexBase', None, None, 'Base index into DeltaSetIndexMap.'),
 	]),
 
 	# PaintScaleAroundCenter
@@ -1814,7 +1814,7 @@ otData = [
 		('F2Dot14', 'scaleY', None, None, ''),
 		('int16', 'centerX', None, None, ''),
 		('int16', 'centerY', None, None, ''),
-		('uint32', 'VarIndexBase', None, None, 'Base index into DeltaSetIndexMap.'),
+		('VarIndex', 'VarIndexBase', None, None, 'Base index into DeltaSetIndexMap.'),
 	]),
 
 	# PaintScaleUniform
@@ -1828,7 +1828,7 @@ otData = [
 		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 21'),
 		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintVarScaleUniform table) to Paint subtable.'),
 		('F2Dot14', 'scale', None, None, ''),
-		('uint32', 'VarIndexBase', None, None, 'Base index into DeltaSetIndexMap.'),
+		('VarIndex', 'VarIndexBase', None, None, 'Base index into DeltaSetIndexMap.'),
 	]),
 
 	# PaintScaleUniformAroundCenter
@@ -1846,7 +1846,7 @@ otData = [
 		('F2Dot14', 'scale', None, None, ''),
 		('int16', 'centerX', None, None, ''),
 		('int16', 'centerY', None, None, ''),
-		('uint32', 'VarIndexBase', None, None, 'Base index into DeltaSetIndexMap.'),
+		('VarIndex', 'VarIndexBase', None, None, 'Base index into DeltaSetIndexMap.'),
 	]),
 
 	# PaintRotate
@@ -1860,7 +1860,7 @@ otData = [
 		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 25'),
 		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintVarRotate table) to Paint subtable.'),
 		('Angle', 'angle', None, None, ''),
-		('uint32', 'VarIndexBase', None, None, 'Base index into DeltaSetIndexMap.'),
+		('VarIndex', 'VarIndexBase', None, None, 'Base index into DeltaSetIndexMap.'),
 	]),
 
 	# PaintRotateAroundCenter
@@ -1878,7 +1878,7 @@ otData = [
 		('Angle', 'angle', None, None, ''),
 		('int16', 'centerX', None, None, ''),
 		('int16', 'centerY', None, None, ''),
-		('uint32', 'VarIndexBase', None, None, 'Base index into DeltaSetIndexMap.'),
+		('VarIndex', 'VarIndexBase', None, None, 'Base index into DeltaSetIndexMap.'),
 	]),
 
 	# PaintSkew
@@ -1894,7 +1894,7 @@ otData = [
 		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintVarSkew table) to Paint subtable.'),
 		('Angle', 'xSkewAngle', None, None, ''),
 		('Angle', 'ySkewAngle', None, None, ''),
-		('uint32', 'VarIndexBase', None, None, 'Base index into DeltaSetIndexMap.'),
+		('VarIndex', 'VarIndexBase', None, None, 'Base index into DeltaSetIndexMap.'),
 	]),
 
 	# PaintSkewAroundCenter
@@ -1914,7 +1914,7 @@ otData = [
 		('Angle', 'ySkewAngle', None, None, ''),
 		('int16', 'centerX', None, None, ''),
 		('int16', 'centerY', None, None, ''),
-		('uint32', 'VarIndexBase', None, None, 'Base index into DeltaSetIndexMap.'),
+		('VarIndex', 'VarIndexBase', None, None, 'Base index into DeltaSetIndexMap.'),
 	]),
 
 	# PaintComposite

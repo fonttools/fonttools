@@ -19,6 +19,7 @@ from fontTools.ttLib.tables.otConverters import (
     UShort,
     IntValue,
     FloatValue,
+    OptionalValue,
 )
 from fontTools.misc.roundTools import otRound
 
@@ -170,6 +171,10 @@ class TableBuilder:
         else:
             # let's try as a 1-tuple
             dest = self.build(cls, (source,))
+
+        for field, conv in convByName.items():
+            if not hasattr(dest, field) and isinstance(conv, OptionalValue):
+                setattr(dest, field, conv.DEFAULT)
 
         dest = self._callbackTable.get(
             (BuildCallback.AFTER_BUILD,) + callbackKey, lambda d: d

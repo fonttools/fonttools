@@ -226,6 +226,18 @@ class SimpleValue(BaseConverter):
 	def xmlRead(self, attrs, content, font):
 		return self.fromString(attrs["value"])
 
+class OptionalValue(SimpleValue):
+	DEFAULT = None
+	def xmlWrite(self, xmlWriter, font, value, name, attrs):
+		if value != self.DEFAULT:
+			attrs.append(("value", self.toString(value)))
+		xmlWriter.simpletag(name, attrs)
+		xmlWriter.newline()
+	def xmlRead(self, attrs, content, font):
+		if "value" in attrs:
+			return self.fromString(attrs["value"])
+		return self.DEFAULT
+
 class IntValue(SimpleValue):
 	@staticmethod
 	def fromString(value):
@@ -257,6 +269,9 @@ class Flags32(ULong):
 	@staticmethod
 	def toString(value):
 		return "0x%08X" % value
+
+class VarIndex(OptionalValue, ULong):
+	DEFAULT = 0xFFFFFFFF
 
 class Short(IntValue):
 	staticSize = 2
@@ -1732,6 +1747,7 @@ converterMapping = {
 	"uint32":	ULong,
 	"char64":	Char64,
 	"Flags32":	Flags32,
+	"VarIndex":	VarIndex,
 	"Version":	Version,
 	"Tag":		Tag,
 	"GlyphID":	GlyphID,

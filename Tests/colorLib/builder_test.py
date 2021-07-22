@@ -335,9 +335,7 @@ def test_buildVarColorLine_StopMap():
 
 
 def checkBuildAffine2x3(cls, variable=False):
-    matrix = _build(
-        cls, (1.5, 0, 0.5, 2.0, 1.0, -3.0) + ((0xFFFFFFFF,) if variable else ())
-    )
+    matrix = _build(cls, (1.5, 0, 0.5, 2.0, 1.0, -3.0))
     assert matrix.xx == 1.5
     assert matrix.yx == 0.0
     assert matrix.xy == 0.5
@@ -955,8 +953,6 @@ def checkBuildPaintRotate(fmt):
     if around_center:
         source["centerX"] = 127
         source["centerY"] = 129
-    if variable:
-        source["VarIndexBase"] = 0xFFFFFFFF
 
     paint = _build(ot.Paint, source)
 
