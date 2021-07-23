@@ -7,6 +7,7 @@ from fontTools.misc.fixedTools import (
 	ensureVersionIsLong as fi2ve,
 	versionToFixed as ve2fi,
 )
+from fontTools.misc.roundTools import nearestMultipleShortestRepr, otRound
 from fontTools.misc.textTools import pad, safeEval
 from fontTools.ttLib import getSearchRange
 from .otBase import (CountReference, FormatSwitchingBaseTable,
@@ -425,6 +426,22 @@ class F2Dot14(FloatValue):
 	@staticmethod
 	def toString(value):
 		return fl2str(value, 14)
+
+class Angle(F2Dot14):
+	# angles are specified in degrees, and encoded as F2Dot14 fractions of half
+	# circle: e.g. 1.0 => 180, -0.5 => -90, -2.0 => -360, etc.
+	factor = 1.0/(1<<14) * 180  # 0.010986328125
+	def read(self, reader, font, tableDict):
+		return super().read(reader, font, tableDict) * 180
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
+		super().write(writer, font, tableDict, value / 180, repeatIndex=repeatIndex)
+	@classmethod
+	def fromString(cls, value):
+		# quantize to nearest multiples of minimum fixed-precision angle
+		return otRound(float(value) / cls.factor) * cls.factor
+	@classmethod
+	def toString(cls, value):
+		return nearestMultipleShortestRepr(value, cls.factor)
 
 class Version(SimpleValue):
 	staticSize = 4
@@ -1777,6 +1794,11 @@ class VarUInt16(_NamedTupleConverter):
 	converterClasses = [UShort, ULong]
 
 
+class VarAngle(_NamedTupleConverter):
+	tupleClass = VariableFloat
+	converterClasses = [F2Dot14, ULong]
+
+
 class _UInt8Enum(UInt8):
 	enumClass = NotImplemented
 
@@ -1816,6 +1838,7 @@ converterMapping = {
 	"DeciPoints":	DeciPoints,
 	"Fixed":	Fixed,
 	"F2Dot14":	F2Dot14,
+	"Angle":	Angle,
 	"struct":	Struct,
 	"Offset":	Table,
 	"LOffset":	LTable,
@@ -1850,4 +1873,5 @@ converterMapping = {
 	"VarF2Dot14": VarF2Dot14,
 	"VarInt16": VarInt16,
 	"VarUInt16": VarUInt16,
+	"VarAngle": VarAngle,
 }
