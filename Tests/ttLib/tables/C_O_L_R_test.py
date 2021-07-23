@@ -159,7 +159,7 @@ COLR_V1_SAMPLE = (
     (b"\x00\x01\x00\x00", "VarAffine2x3.yy (1.0)"),
     (b"\x01\x2c\x00\x00", "VarAffine2x3.dx (300.0)"),
     (b"\x00\x00\x00\x00", "VarAffine2x3.dy (0.0)"),
-    (b"\xff\xff\xff\xff", "VarIndexBase (0xFFFFFFF)"),
+    (b"\x00\x00\x00\x00", "VarIndexBase (0)"),
     (b"\x0a", "BaseGlyphPaintRecord[1].Paint.SourcePaint.Format (10)"),
     (b"\x00\x00\x06", "Offset to Paint subtable from beginning of PaintGlyph (6)"),
     (b"\x00\x0b", "BaseGlyphPaintRecord[1].Paint.SourcePaint.Glyph (11)"),
@@ -203,7 +203,7 @@ COLR_V1_SAMPLE = (
     (b"\x03", "LayerList.Paint[0].Paint.Format (3)"),
     (b"\x00\x02", "Paint.PaletteIndex (2)"),
     (b" \x00", "Paint.Alpha.value (0.5)"),
-    (b"\xff\xff\xff\xff", "VarIndexBase (0xFFFFFFFF)"),
+    (b"\x00\x00\x00\x06", "VarIndexBase (6)"),
     # PaintGlyph glyph00012
     (b"\x0a", "LayerList.Paint[1].Format (10)"),
     (b"\x00\x00\x06", "Offset to Paint subtable from beginning of PaintGlyph (6)"),
@@ -248,12 +248,12 @@ COLR_V1_SAMPLE = (
     (b"\x00\x00", "ColorLine.ColorStop[0].StopOffset.value (0.0)"),
     (b"\x00\x06", "ColorLine.ColorStop[0].PaletteIndex (6)"),
     (b"@\x00", "ColorLine.ColorStop[0].Alpha.value (1.0)"),
-    (b"\x00\x00\x00\x00", "VarIndexBase (0)"),
+    (b"\xff\xff\xff\xff", "VarIndexBase (0xFFFFFFFF)"),
     (b"@\x00", "ColorLine.ColorStop[1].StopOffset.value (1.0)"),
     (b"\x00\x07", "ColorLine.ColorStop[1].PaletteIndex (7)"),
     (b"\x19\x9a", "ColorLine.ColorStop[1].Alpha.value (0.4)"),
-    (b"\x00\x00\x00\x01", "VarIndexBase (1)"),
 
+    (b"\x00\x00\x00\x07", "VarIndexBase (7)"),
     (b"\xff\xf3\x00\x00", "Affine2x3.xx (-13)"),
     (b"\x00\x0e\x00\x00", "Affine2x3.xy (14)"),
     (b"\x00\x0f\x00\x00", "Affine2x3.yx (15)"),
@@ -351,7 +351,7 @@ COLR_V1_XML = [
     '          <yy value="1.0"/>',
     '          <dx value="300.0"/>',
     '          <dy value="0.0"/>',
-    '          <VarIndexBase/>',
+    '          <VarIndexBase value="0"/>',
     "        </Transform>",
     "      </BackdropPaint>",
     "    </Paint>",
@@ -389,7 +389,7 @@ COLR_V1_XML = [
     '    <Paint Format="3"><!-- PaintVarSolid -->',
     '      <PaletteIndex value="2"/>',
     '      <Alpha value="0.5"/>',
-    '      <VarIndexBase/>',
+    '      <VarIndexBase value="6"/>',
     "    </Paint>",
     '    <Glyph value="glyph00011"/>',
     "  </Paint>",
@@ -433,13 +433,13 @@ COLR_V1_XML = [
     '            <StopOffset value="0.0"/>',
     '            <PaletteIndex value="6"/>',
     '            <Alpha value="1.0"/>',
-    '            <VarIndexBase value="0"/>',
+    "            <VarIndexBase/>",
     "          </ColorStop>",
     '          <ColorStop index="1">',
     '            <StopOffset value="1.0"/>',
     '            <PaletteIndex value="7"/>',
     '            <Alpha value="0.4"/>',
-    '            <VarIndexBase value="1"/>',
+    '            <VarIndexBase value="7"/>',
     "          </ColorStop>",
     "        </ColorLine>",
     '        <x0 value="7"/>',
@@ -448,7 +448,7 @@ COLR_V1_XML = [
     '        <x1 value="10"/>',
     '        <y1 value="11"/>',
     '        <r1 value="12"/>',
-    '        <VarIndexBase/>',
+    "        <VarIndexBase/>",
     "      </Paint>",
     "      <Transform>",
     '        <xx value="-13.0"/>',
@@ -484,6 +484,52 @@ COLR_V1_XML = [
     "</LayerList>",
 ]
 
+COLR_V1_VAR_XML = [
+    '<VarIndexMap Format="0">',
+    '  <Map index="0" outer="1" inner="1"/>',
+    '  <Map index="1" outer="1" inner="0"/>',
+    '  <Map index="2" outer="1" inner="0"/>',
+    '  <Map index="3" outer="1" inner="1"/>',
+    '  <Map index="4" outer="1" inner="0"/>',
+    '  <Map index="5" outer="1" inner="0"/>',
+    '  <Map index="6" outer="0" inner="2"/>',
+    '  <Map index="7" outer="0" inner="0"/>',
+    '  <Map index="8" outer="0" inner="1"/>',
+    "</VarIndexMap>",
+    '<VarStore Format="1">',
+    '  <Format value="1"/>',
+    "  <VarRegionList>",
+    "    <!-- RegionAxisCount=1 -->",
+    "    <!-- RegionCount=1 -->",
+    '    <Region index="0">',
+    '      <VarRegionAxis index="0">',
+    '        <StartCoord value="0.0"/>',
+    '        <PeakCoord value="1.0"/>',
+    '        <EndCoord value="1.0"/>',
+    "      </VarRegionAxis>",
+    "    </Region>",
+    "  </VarRegionList>",
+    "  <!-- VarDataCount=2 -->",
+    '  <VarData index="0">',
+    "    <!-- ItemCount=3 -->",
+    '    <NumShorts value="1"/>',
+    "    <!-- VarRegionCount=1 -->",
+    '    <VarRegionIndex index="0" value="0"/>',
+    '    <Item index="0" value="[-3277]"/>',
+    '    <Item index="1" value="[6553]"/>',
+    '    <Item index="2" value="[8192]"/>',
+    "  </VarData>",
+    '  <VarData index="1">',
+    "    <!-- ItemCount=2 -->",
+    '    <NumShorts value="32769"/>',
+    "    <!-- VarRegionCount=1 -->",
+    '    <VarRegionIndex index="0" value="0"/>',
+    '    <Item index="0" value="[0]"/>',
+    '    <Item index="1" value="[65536]"/>',
+    "  </VarData>",
+    "</VarStore>",
+]
+
 
 class COLR_V1_Test(object):
     def test_decompile_and_compile(self, font):
@@ -513,3 +559,16 @@ class COLR_V1_Test(object):
         colr = table_C_O_L_R_()
         colr.decompile(compiled, font)
         assert getXML(colr.toXML, font) == COLR_V1_XML
+
+
+class COLR_V1_Variable_Test(object):
+    def test_round_trip_xml(self, font):
+        colr = table_C_O_L_R_()
+        xml = COLR_V1_XML + COLR_V1_VAR_XML
+        for name, attrs, content in parseXML(xml):
+            colr.fromXML(name, attrs, content, font)
+        compiled = colr.compile(font)
+
+        colr = table_C_O_L_R_()
+        colr.decompile(compiled, font)
+        assert getXML(colr.toXML, font) == xml
