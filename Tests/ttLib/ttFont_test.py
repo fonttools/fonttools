@@ -46,3 +46,35 @@ def test_registerCustomTableClassStandardName():
         assert font[TABLETAG].compile(font) == b"\x04\x05\x06"
     finally:
         unregisterCustomTableClass(TABLETAG)
+
+
+ttxTTF = r"""<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="4.9.0">
+  <hmtx>
+    <mtx name=".notdef" width="300" lsb="0"/>
+  </hmtx>
+</ttFont>
+"""
+
+
+ttxOTF = """<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="OTTO" ttLibVersion="4.9.0">
+  <hmtx>
+    <mtx name=".notdef" width="300" lsb="0"/>
+  </hmtx>
+</ttFont>
+"""
+
+
+def test_sfntVersionFromTTX():
+    # https://github.com/fonttools/fonttools/issues/2370
+    font = TTFont()
+    assert font.sfntVersion == "\x00\x01\x00\x00"
+    ttx = io.StringIO(ttxOTF)
+    # Font is "empty", TTX file will determine sfntVersion
+    font.importXML(ttx)
+    assert font.sfntVersion == "OTTO"
+    ttx = io.StringIO(ttxTTF)
+    # Font is not "empty", sfntVersion in TTX file will be ignored
+    font.importXML(ttx)
+    assert font.sfntVersion == "OTTO"
