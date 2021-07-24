@@ -71,10 +71,10 @@ def test_sfntVersionFromTTX():
     font = TTFont()
     assert font.sfntVersion == "\x00\x01\x00\x00"
     ttx = io.StringIO(ttxOTF)
+    # Font is "empty", TTX file will determine sfntVersion
     font.importXML(ttx)
-    # Font is "empty", TTX file sets sfntVersion
     assert font.sfntVersion == "OTTO"
     ttx = io.StringIO(ttxTTF)
+    # Font is not "empty", sfntVersion in TTX file will be ignored
     font.importXML(ttx)
-    # Font is not empty, TTX file does not set sfntVersion
     assert font.sfntVersion == "OTTO"
