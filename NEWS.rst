@@ -1,3 +1,6 @@
+4.25.2 (released 2021-07-26)
+----------------------------
+
 - [COLRv1] Various changes to sync with the latest CORLv1 draft spec. In particular:  
   define COLR.VarIndexMap, remove/inline ColorIndex struct, add VarIndexBase to ``PaintVar*`` tables (#2372);  
   add reduced-precicion specialized transform Paints;  
