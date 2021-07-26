@@ -1,3 +1,11 @@
+- [COLRv1] Various changes to sync with the latest CORLv1 draft spec. In particular:  
+  define COLR.VarIndexMap, remove/inline ColorIndex struct, add VarIndexBase to ``PaintVar*`` tables (#2372);  
+  add reduced-precicion specialized transform Paints;  
+  define Angle as fraction of half circle encoded as F2Dot14;  
+  use FWORD (int16) for all Paint center coordinates;  
+  change PaintTransform to have an offset to Affine2x3;  
+- [ttLib] when importing XML, only set sfntVersion if the font has no reader and is empty (#2376)
+
 4.25.1 (released 2021-07-16)
 ----------------------------
 
