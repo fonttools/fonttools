@@ -1013,7 +1013,7 @@ def colrv1_path(tmp_path):
                     },
                     {
                         "Format": ot.PaintFormat.PaintGlyph,
-                        "Paint": (ot.PaintFormat.PaintSolid, (2, 0.3)),
+                        "Paint": (ot.PaintFormat.PaintSolid, 2, 0.3),
                         "Glyph": "glyph00011",
                     },
                 ],
@@ -1044,7 +1044,7 @@ def colrv1_path(tmp_path):
                     },
                     {
                         "Format": ot.PaintFormat.PaintGlyph,
-                        "Paint": (ot.PaintFormat.PaintSolid, (1, 0.5)),
+                        "Paint": (ot.PaintFormat.PaintSolid, 1, 0.5),
                         "Glyph": "glyph00013",
                     },
                 ],
@@ -1159,9 +1159,9 @@ def test_subset_COLRv1_and_CPAL(colrv1_path):
     ]
     assert len(layers) == 2
     # check v1 palette indices were remapped
-    assert layers[0].Paint.Paint.ColorLine.ColorStop[0].Color.PaletteIndex == 0
-    assert layers[0].Paint.Paint.ColorLine.ColorStop[1].Color.PaletteIndex == 1
-    assert layers[1].Paint.Color.PaletteIndex == 0
+    assert layers[0].Paint.Paint.ColorLine.ColorStop[0].PaletteIndex == 0
+    assert layers[0].Paint.Paint.ColorLine.ColorStop[1].PaletteIndex == 1
+    assert layers[1].Paint.PaletteIndex == 0
 
     baseRecV0 = colr.BaseGlyphRecordArray.BaseGlyphRecord[0]
     assert baseRecV0.BaseGlyph == "uniE004"

@@ -2117,11 +2117,11 @@ def prune_post_subset(self, font, options):
 	colors_by_index = defaultdict(list)
 
 	def collect_colors_by_index(paint):
-		if hasattr(paint, "Color"):  # either solid colors...
-			colors_by_index[paint.Color.PaletteIndex].append(paint.Color)
+		if hasattr(paint, "PaletteIndex"):  # either solid colors...
+			colors_by_index[paint.PaletteIndex].append(paint)
 		elif hasattr(paint, "ColorLine"):  # ... or gradient color stops
 			for stop in paint.ColorLine.ColorStop:
-				colors_by_index[stop.Color.PaletteIndex].append(stop.Color)
+				colors_by_index[stop.PaletteIndex].append(stop)
 
 	if colr.version == 0:
 		for layers in colr.ColorLayers.values():

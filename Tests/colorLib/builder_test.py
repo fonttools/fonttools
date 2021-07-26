@@ -231,92 +231,63 @@ def test_buildCPAL_invalid_color():
         builder.buildCPAL([[(0, 0, 0, 0)], [(1, 1, -1, 2)]])
 
 
-def test_buildColorIndex_Minimal():
-    c = _build(ot.ColorIndex, 1)
-    assert c.PaletteIndex == 1
-    assert c.Alpha == 1.0
-
-
-def test_buildVarColorIndex_Minimal():
-    c = _build(ot.VarColorIndex, 1)
-    assert c.PaletteIndex == 1
-    assert c.Alpha.value == 1.0
-    assert c.Alpha.varIdx == 0xFFFFFFFF
-
-
-def test_buildColorIndex():
-    c = _build(ot.ColorIndex, (1, 0.5))
-    assert c.PaletteIndex == 1
-    assert c.Alpha == 0.5
-
-
-def test_buildVarColorIndex():
-    c = _build(ot.VarColorIndex, (3, builder.VariableFloat(0.5, varIdx=2)))
-    assert c.PaletteIndex == 3
-    assert c.Alpha.value == 0.5
-    assert c.Alpha.varIdx == 2
-
-
 def test_buildPaintSolid():
     p = _buildPaint((ot.PaintFormat.PaintSolid, 0))
     assert p.Format == ot.PaintFormat.PaintSolid
-    assert p.Color.PaletteIndex == 0
-    assert p.Color.Alpha == 1.0
+    assert p.PaletteIndex == 0
+    assert p.Alpha == 1.0
 
 
 def test_buildPaintSolid_Alpha():
-    p = _buildPaint((ot.PaintFormat.PaintSolid, (1, 0.5)))
+    p = _buildPaint((ot.PaintFormat.PaintSolid, 1, 0.5))
     assert p.Format == ot.PaintFormat.PaintSolid
-    assert p.Color.PaletteIndex == 1
-    assert p.Color.Alpha == 0.5
+    assert p.PaletteIndex == 1
+    assert p.Alpha == 0.5
 
 
 def test_buildPaintVarSolid():
-    p = _buildPaint(
-        (ot.PaintFormat.PaintVarSolid, (3, builder.VariableFloat(0.5, varIdx=2)))
-    )
+    p = _buildPaint((ot.PaintFormat.PaintVarSolid, 3, 0.5, 2))
     assert p.Format == ot.PaintFormat.PaintVarSolid
-    assert p.Color.PaletteIndex == 3
-    assert p.Color.Alpha.value == 0.5
-    assert p.Color.Alpha.varIdx == 2
+    assert p.PaletteIndex == 3
+    assert p.Alpha == 0.5
+    assert p.VarIndexBase == 2
 
 
 def test_buildVarColorStop_DefaultAlpha():
     s = _build(ot.ColorStop, (0.1, 2))
     assert s.StopOffset == 0.1
-    assert s.Color.PaletteIndex == 2
-    assert s.Color.Alpha == builder._DEFAULT_ALPHA.value
+    assert s.PaletteIndex == 2
+    assert s.Alpha == builder._DEFAULT_ALPHA
 
 
 def test_buildVarColorStop_DefaultAlpha():
     s = _build(ot.VarColorStop, (0.1, 2))
-    assert s.StopOffset == builder.VariableFloat(0.1)
-    assert s.Color.PaletteIndex == 2
-    assert s.Color.Alpha == builder._DEFAULT_ALPHA
+    assert s.StopOffset == 0.1
+    assert s.PaletteIndex == 2
+    assert s.Alpha == builder._DEFAULT_ALPHA
 
 
 def test_buildColorStop():
-    s = _build(
-        ot.ColorStop, {"StopOffset": 0.2, "Color": {"PaletteIndex": 3, "Alpha": 0.4}}
-    )
+    s = _build(ot.ColorStop, {"StopOffset": 0.2, "PaletteIndex": 3, "Alpha": 0.4})
     assert s.StopOffset == 0.2
-    assert s.Color == _build(ot.ColorIndex, (3, 0.4))
+    assert s.PaletteIndex == 3
+    assert s.Alpha == 0.4
 
 
 def test_buildColorStop_Variable():
     s = _build(
         ot.VarColorStop,
         {
-            "StopOffset": builder.VariableFloat(0.0, varIdx=1),
-            "Color": {
-                "PaletteIndex": 0,
-                "Alpha": builder.VariableFloat(0.3, varIdx=2),
-            },
+            "StopOffset": 0.0,
+            "PaletteIndex": 0,
+            "Alpha": 0.3,
+            "VarIndexBase": 1,
         },
     )
-    assert s.StopOffset == builder.VariableFloat(0.0, varIdx=1)
-    assert s.Color.PaletteIndex == 0
-    assert s.Color.Alpha == builder.VariableFloat(0.3, varIdx=2)
+    assert s.StopOffset == 0.0
+    assert s.PaletteIndex == 0
+    assert s.Alpha == 0.3
+    assert s.VarIndexBase == 1
 
 
 def test_buildColorLine_StopList():
@@ -325,7 +296,7 @@ def test_buildColorLine_StopList():
     cline = _build(ot.ColorLine, {"ColorStop": stops})
     assert cline.Extend == builder.ExtendMode.PAD
     assert cline.StopCount == 3
-    assert [(cs.StopOffset, cs.Color.PaletteIndex) for cs in cline.ColorStop] == stops
+    assert [(cs.StopOffset, cs.PaletteIndex) for cs in cline.ColorStop] == stops
 
     cline = _build(ot.ColorLine, {"Extend": "pad", "ColorStop": stops})
     assert cline.Extend == builder.ExtendMode.PAD
@@ -343,51 +314,57 @@ def test_buildColorLine_StopList():
     cline = _build(
         ot.ColorLine, {"ColorStop": [_build(ot.ColorStop, s) for s in stops]}
     )
-    assert [(cs.StopOffset, cs.Color.PaletteIndex) for cs in cline.ColorStop] == stops
+    assert [(cs.StopOffset, cs.PaletteIndex) for cs in cline.ColorStop] == stops
 
 
 def test_buildVarColorLine_StopMap():
     stops = [
-        {"StopOffset": (0.0, (1,)), "Color": {"PaletteIndex": 0, "Alpha": (0.5, 2)}},
-        {"StopOffset": (1.0, (3,)), "Color": {"PaletteIndex": 1, "Alpha": (0.3, 4)}},
+        {"StopOffset": 0.0, "PaletteIndex": 0, "Alpha": 0.5, "VarIndexBase": 1},
+        {"StopOffset": 1.0, "PaletteIndex": 1, "Alpha": 0.3, "VarIndexBase": 3},
     ]
     cline = _build(ot.VarColorLine, {"ColorStop": stops})
     assert [
         {
             "StopOffset": cs.StopOffset,
-            "Color": {
-                "PaletteIndex": cs.Color.PaletteIndex,
-                "Alpha": cs.Color.Alpha,
-            },
+            "PaletteIndex": cs.PaletteIndex,
+            "Alpha": cs.Alpha,
+            "VarIndexBase": cs.VarIndexBase,
         }
         for cs in cline.ColorStop
     ] == stops
 
 
-def checkBuildAffine2x3(cls, resultMapFn):
+def checkBuildAffine2x3(cls, variable=False):
     matrix = _build(cls, (1.5, 0, 0.5, 2.0, 1.0, -3.0))
-    assert matrix.xx == resultMapFn(1.5)
-    assert matrix.yx == resultMapFn(0.0)
-    assert matrix.xy == resultMapFn(0.5)
-    assert matrix.yy == resultMapFn(2.0)
-    assert matrix.dx == resultMapFn(1.0)
-    assert matrix.dy == resultMapFn(-3.0)
+    assert matrix.xx == 1.5
+    assert matrix.yx == 0.0
+    assert matrix.xy == 0.5
+    assert matrix.yy == 2.0
+    assert matrix.dx == 1.0
+    assert matrix.dy == -3.0
+    if variable:
+        assert matrix.VarIndexBase == 0xFFFFFFFF
 
 
 def test_buildAffine2x3():
-    checkBuildAffine2x3(ot.Affine2x3, lambda v: v)
+    checkBuildAffine2x3(ot.Affine2x3)
 
 
 def test_buildVarAffine2x3():
-    checkBuildAffine2x3(ot.VarAffine2x3, builder.VariableFloat)
+    checkBuildAffine2x3(ot.VarAffine2x3, variable=True)
 
 
-def _sample_stops(cls):
-    return [
-        _build(cls, (0.0, 0)),
-        _build(cls, (0.5, 1)),
-        _build(cls, (1.0, (2, 0.8))),
+def _sample_stops(variable):
+    cls = ot.ColorStop if not variable else ot.VarColorStop
+    stop_sources = [
+        {"StopOffset": 0.0, "PaletteIndex": 0},
+        {"StopOffset": 0.5, "PaletteIndex": 1},
+        {"StopOffset": 1.0, "PaletteIndex": 2, "Alpha": 0.8},
     ]
+    if variable:
+        for i, src in enumerate(stop_sources, start=123):
+            src["VarIndexBase"] = i
+    return [_build(cls, src) for src in stop_sources]
 
 
 def _is_var(fmt):
@@ -403,34 +380,32 @@ def _is_uniform_scale(fmt):
 
 
 def checkBuildPaintLinearGradient(fmt):
-    if _is_var(fmt):
-        inputMapFn = builder.VariableInt
-        outputMapFn = lambda v: v.value
-        color_stops = _sample_stops(ot.VarColorStop)
-    else:
-        inputMapFn = outputMapFn = lambda v: v
-        color_stops = _sample_stops(ot.ColorStop)
+    variable = _is_var(fmt)
+    color_stops = _sample_stops(variable)
 
-    x0, y0, x1, y1, x2, y2 = tuple(inputMapFn(v) for v in (1, 2, 3, 4, 5, 6))
-    gradient = _buildPaint(
-        {
-            "Format": fmt,
-            "ColorLine": {"ColorStop": color_stops},
-            "x0": x0,
-            "y0": y0,
-            "x1": x1,
-            "y1": y1,
-            "x2": x2,
-            "y2": y2,
-        },
-    )
+    x0, y0, x1, y1, x2, y2 = (1, 2, 3, 4, 5, 6)
+    source = {
+        "Format": fmt,
+        "ColorLine": {"ColorStop": color_stops},
+        "x0": x0,
+        "y0": y0,
+        "x1": x1,
+        "y1": y1,
+        "x2": x2,
+        "y2": y2,
+    }
+    if variable:
+        source["VarIndexBase"] = 7
+    gradient = _buildPaint(source)
     assert gradient.ColorLine.Extend == builder.ExtendMode.PAD
     assert gradient.ColorLine.ColorStop == color_stops
 
     gradient = _buildPaint(gradient)
-    assert (outputMapFn(gradient.x0), outputMapFn(gradient.y0)) == (1, 2)
-    assert (outputMapFn(gradient.x1), outputMapFn(gradient.y1)) == (3, 4)
-    assert (outputMapFn(gradient.x2), outputMapFn(gradient.y2)) == (5, 6)
+    assert (gradient.x0, gradient.y0) == (1, 2)
+    assert (gradient.x1, gradient.y1) == (3, 4)
+    assert (gradient.x2, gradient.y2) == (5, 6)
+    if variable:
+        assert gradient.VarIndexBase == 7
 
 
 def test_buildPaintLinearGradient():
@@ -438,57 +413,60 @@ def test_buildPaintLinearGradient():
     checkBuildPaintLinearGradient(ot.PaintFormat.PaintLinearGradient)
 
 
-def test_buildVarPaintLinearGradient():
+def test_buildPaintVarLinearGradient():
     assert _is_var(ot.PaintFormat.PaintVarLinearGradient)
     checkBuildPaintLinearGradient(ot.PaintFormat.PaintVarLinearGradient)
 
 
 def checkBuildPaintRadialGradient(fmt):
-    if _is_var(fmt):
-        inputMapFn = builder.VariableInt
-        outputMapFn = lambda v: v
-        color_stops = _sample_stops(ot.VarColorStop)
-        line_cls = ot.VarColorLine
-    else:
-        inputMapFn = outputMapFn = lambda v: v
-        color_stops = _sample_stops(ot.ColorStop)
-        line_cls = ot.ColorLine
+    variable = _is_var(fmt)
+    color_stops = _sample_stops(variable)
+    line_cls = ot.VarColorLine if variable else ot.ColorLine
 
     color_line = _build(
         line_cls, {"ColorStop": color_stops, "Extend": builder.ExtendMode.REPEAT}
     )
-    c0 = (inputMapFn(100), inputMapFn(200))
-    c1 = (inputMapFn(150), inputMapFn(250))
-    r0 = inputMapFn(10)
-    r1 = inputMapFn(5)
+    c0 = (100, 200)
+    c1 = (150, 250)
+    r0 = 10
+    r1 = 5
+    varIndexBase = 0
 
-    gradient = _build(ot.Paint, (fmt, color_line, *c0, r0, *c1, r1))
+    source = [fmt, color_line, *c0, r0, *c1, r1]
+    if variable:
+        source.append(varIndexBase)
+
+    gradient = _build(ot.Paint, tuple(source))
     assert gradient.Format == fmt
     assert gradient.ColorLine == color_line
-    assert (outputMapFn(gradient.x0), outputMapFn(gradient.y0)) == c0
-    assert (outputMapFn(gradient.x1), outputMapFn(gradient.y1)) == c1
-    assert outputMapFn(gradient.r0) == r0
-    assert outputMapFn(gradient.r1) == r1
+    assert (gradient.x0, gradient.y0) == c0
+    assert (gradient.x1, gradient.y1) == c1
+    assert gradient.r0 == r0
+    assert gradient.r1 == r1
+    if variable:
+        assert gradient.VarIndexBase == varIndexBase
 
-    gradient = _build(
-        ot.Paint,
-        {
-            "Format": fmt,
-            "ColorLine": {"ColorStop": color_stops},
-            "x0": c0[0],
-            "y0": c0[1],
-            "x1": c1[0],
-            "y1": c1[1],
-            "r0": r0,
-            "r1": r1,
-        },
-    )
+    source = {
+        "Format": fmt,
+        "ColorLine": {"ColorStop": color_stops},
+        "x0": c0[0],
+        "y0": c0[1],
+        "x1": c1[0],
+        "y1": c1[1],
+        "r0": r0,
+        "r1": r1,
+    }
+    if variable:
+        source["VarIndexBase"] = varIndexBase
+    gradient = _build(ot.Paint, source)
     assert gradient.ColorLine.Extend == builder.ExtendMode.PAD
     assert gradient.ColorLine.ColorStop == color_stops
-    assert (outputMapFn(gradient.x0), outputMapFn(gradient.y0)) == c0
-    assert (outputMapFn(gradient.x1), outputMapFn(gradient.y1)) == c1
-    assert outputMapFn(gradient.r0) == r0
-    assert outputMapFn(gradient.r1) == r1
+    assert (gradient.x0, gradient.y0) == c0
+    assert (gradient.x1, gradient.y1) == c1
+    assert gradient.r0 == r0
+    assert gradient.r1 == r1
+    if variable:
+        assert gradient.VarIndexBase == varIndexBase
 
 
 def test_buildPaintRadialGradient():
@@ -502,33 +480,26 @@ def test_buildPaintVarRadialGradient():
 
 
 def checkPaintSweepGradient(fmt):
-    if _is_var(fmt):
-        outputMapFn = lambda v: v.value
-    else:
-        outputMapFn = lambda v: v
-
-    paint = _buildPaint(
-        {
-            "Format": fmt,
-            "ColorLine": {
-                "ColorStop": (
-                    (0.0, 0),
-                    (0.5, 1),
-                    (1.0, (2, 0.8)),
-                )
-            },
-            "centerX": 127,
-            "centerY": 129,
-            "startAngle": 15,
-            "endAngle": 42,
-        }
-    )
+    variable = _is_var(fmt)
+    source = {
+        "Format": fmt,
+        "ColorLine": {"ColorStop": _sample_stops(variable)},
+        "centerX": 127,
+        "centerY": 129,
+        "startAngle": 15,
+        "endAngle": 42,
+    }
+    if variable:
+        source["VarIndexBase"] = 666
+    paint = _buildPaint(source)
 
     assert paint.Format == fmt
-    assert outputMapFn(paint.centerX) == 127
-    assert outputMapFn(paint.centerY) == 129
-    assert outputMapFn(paint.startAngle) == 15
-    assert outputMapFn(paint.endAngle) == 42
+    assert paint.centerX == 127
+    assert paint.centerY == 129
+    assert paint.startAngle == 15
+    assert paint.endAngle == 42
+    if variable:
+        assert paint.VarIndexBase == 666
 
 
 def test_buildPaintSweepGradient():
@@ -556,22 +527,19 @@ def test_buildPaintGlyph_Solid():
     assert layer.Format == ot.PaintFormat.PaintGlyph
     assert layer.Glyph == "a"
     assert layer.Paint.Format == ot.PaintFormat.PaintSolid
-    assert layer.Paint.Color.PaletteIndex == 2
+    assert layer.Paint.PaletteIndex == 2
 
     layer = _build(
         ot.Paint,
         (
             ot.PaintFormat.PaintGlyph,
-            (
-                ot.PaintFormat.PaintSolid,
-                (3, 0.9),
-            ),
+            (ot.PaintFormat.PaintSolid, 3, 0.9),
             "a",
         ),
     )
     assert layer.Paint.Format == ot.PaintFormat.PaintSolid
-    assert layer.Paint.Color.PaletteIndex == 3
-    assert layer.Paint.Color.Alpha == 0.9
+    assert layer.Paint.PaletteIndex == 3
+    assert layer.Paint.Alpha == 0.9
 
 
 def test_buildPaintGlyph_VarLinearGradient():
@@ -594,14 +562,14 @@ def test_buildPaintGlyph_VarLinearGradient():
     assert layer.Format == ot.PaintFormat.PaintGlyph
     assert layer.Glyph == "a"
     assert layer.Paint.Format == ot.PaintFormat.PaintVarLinearGradient
-    assert layer.Paint.ColorLine.ColorStop[0].StopOffset.value == 0.0
-    assert layer.Paint.ColorLine.ColorStop[0].Color.PaletteIndex == 3
-    assert layer.Paint.ColorLine.ColorStop[1].StopOffset.value == 1.0
-    assert layer.Paint.ColorLine.ColorStop[1].Color.PaletteIndex == 4
-    assert layer.Paint.x0.value == 100
-    assert layer.Paint.y0.value == 200
-    assert layer.Paint.x1.value == 150
-    assert layer.Paint.y1.value == 250
+    assert layer.Paint.ColorLine.ColorStop[0].StopOffset == 0.0
+    assert layer.Paint.ColorLine.ColorStop[0].PaletteIndex == 3
+    assert layer.Paint.ColorLine.ColorStop[1].StopOffset == 1.0
+    assert layer.Paint.ColorLine.ColorStop[1].PaletteIndex == 4
+    assert layer.Paint.x0 == 100
+    assert layer.Paint.y0 == 200
+    assert layer.Paint.x1 == 150
+    assert layer.Paint.y1 == 250
 
 
 def test_buildPaintGlyph_RadialGradient():
@@ -615,7 +583,7 @@ def test_buildPaintGlyph_RadialGradient():
                     "pad",
                     [
                         (0.0, 5),
-                        {"StopOffset": 0.5, "Color": {"PaletteIndex": 6, "Alpha": 0.8}},
+                        {"StopOffset": 0.5, "PaletteIndex": 6, "Alpha": 0.8},
                         (1.0, 7),
                     ],
                 ),
@@ -632,12 +600,12 @@ def test_buildPaintGlyph_RadialGradient():
     assert layer.Format == ot.PaintFormat.PaintGlyph
     assert layer.Paint.Format == ot.PaintFormat.PaintRadialGradient
     assert layer.Paint.ColorLine.ColorStop[0].StopOffset == 0.0
-    assert layer.Paint.ColorLine.ColorStop[0].Color.PaletteIndex == 5
+    assert layer.Paint.ColorLine.ColorStop[0].PaletteIndex == 5
     assert layer.Paint.ColorLine.ColorStop[1].StopOffset == 0.5
-    assert layer.Paint.ColorLine.ColorStop[1].Color.PaletteIndex == 6
-    assert layer.Paint.ColorLine.ColorStop[1].Color.Alpha == 0.8
+    assert layer.Paint.ColorLine.ColorStop[1].PaletteIndex == 6
+    assert layer.Paint.ColorLine.ColorStop[1].Alpha == 0.8
     assert layer.Paint.ColorLine.ColorStop[2].StopOffset == 1.0
-    assert layer.Paint.ColorLine.ColorStop[2].Color.PaletteIndex == 7
+    assert layer.Paint.ColorLine.ColorStop[2].PaletteIndex == 7
     assert layer.Paint.x0 == 50
     assert layer.Paint.y0 == 50
     assert layer.Paint.r0 == 30
@@ -659,7 +627,7 @@ def test_buildPaintGlyph_Dict_Solid():
     assert layer.Format == ot.PaintFormat.PaintGlyph
     assert layer.Glyph == "a"
     assert layer.Paint.Format == ot.PaintFormat.PaintSolid
-    assert layer.Paint.Color.PaletteIndex == 1
+    assert layer.Paint.PaletteIndex == 1
 
 
 def test_buildPaintGlyph_Dict_VarLinearGradient():
@@ -681,7 +649,7 @@ def test_buildPaintGlyph_Dict_VarLinearGradient():
     assert layer.Format == ot.PaintFormat.PaintGlyph
     assert layer.Glyph == "a"
     assert layer.Paint.Format == ot.PaintFormat.PaintVarLinearGradient
-    assert layer.Paint.ColorLine.ColorStop[0].StopOffset.value == 0.0
+    assert layer.Paint.ColorLine.ColorStop[0].StopOffset == 0.0
 
 
 def test_buildPaintGlyph_Dict_RadialGradient():
@@ -712,19 +680,21 @@ def test_buildPaintColrGlyph():
 
 
 def checkBuildPaintTransform(fmt):
-    if _is_var(fmt):
-        inputMapFn = builder.VariableFloat
-        outputMapFn = lambda v: v.value
+    variable = _is_var(fmt)
+    if variable:
         affine_cls = ot.VarAffine2x3
     else:
-        inputMapFn = outputMapFn = lambda v: v
         affine_cls = ot.Affine2x3
+
+    affine_src = [1, 2, 3, 4, 5, 6]
+    if variable:
+        affine_src.append(7)
 
     paint = _buildPaint(
         (
             int(fmt),
-            (ot.PaintFormat.PaintGlyph, (ot.PaintFormat.PaintSolid, (0, 1.0)), "a"),
-            _build(affine_cls, (1, 2, 3, 4, 5, 6)),
+            (ot.PaintFormat.PaintGlyph, (ot.PaintFormat.PaintSolid, 0, 1.0), "a"),
+            _build(affine_cls, tuple(affine_src)),
         ),
     )
 
@@ -732,18 +702,23 @@ def checkBuildPaintTransform(fmt):
     assert paint.Paint.Format == ot.PaintFormat.PaintGlyph
     assert paint.Paint.Paint.Format == ot.PaintFormat.PaintSolid
 
-    assert outputMapFn(paint.Transform.xx) == 1.0
-    assert outputMapFn(paint.Transform.yx) == 2.0
-    assert outputMapFn(paint.Transform.xy) == 3.0
-    assert outputMapFn(paint.Transform.yy) == 4.0
-    assert outputMapFn(paint.Transform.dx) == 5.0
-    assert outputMapFn(paint.Transform.dy) == 6.0
+    assert paint.Transform.xx == 1.0
+    assert paint.Transform.yx == 2.0
+    assert paint.Transform.xy == 3.0
+    assert paint.Transform.yy == 4.0
+    assert paint.Transform.dx == 5.0
+    assert paint.Transform.dy == 6.0
+    if variable:
+        assert paint.Transform.VarIndexBase == 7
 
+    affine_src = [1, 2, 3, 0.3333, 10, 10]
+    if variable:
+        affine_src.append(456)  # VarIndexBase
     paint = _build(
         ot.Paint,
         {
             "Format": fmt,
-            "Transform": (1, 2, 3, 0.3333, 10, 10),
+            "Transform": tuple(affine_src),
             "Paint": {
                 "Format": int(ot.PaintFormat.PaintRadialGradient),
                 "ColorLine": {"ColorStop": [(0.0, 0), (1.0, 1)]},
@@ -758,12 +733,14 @@ def checkBuildPaintTransform(fmt):
     )
 
     assert paint.Format == fmt
-    assert outputMapFn(paint.Transform.xx) == 1.0
-    assert outputMapFn(paint.Transform.yx) == 2.0
-    assert outputMapFn(paint.Transform.xy) == 3.0
-    assert outputMapFn(paint.Transform.yy) == 0.3333
-    assert outputMapFn(paint.Transform.dx) == 10
-    assert outputMapFn(paint.Transform.dy) == 10
+    assert paint.Transform.xx == 1.0
+    assert paint.Transform.yx == 2.0
+    assert paint.Transform.xy == 3.0
+    assert paint.Transform.yy == 0.3333
+    assert paint.Transform.dx == 10
+    assert paint.Transform.dy == 10
+    if variable:
+        assert paint.Transform.VarIndexBase == 456
     assert paint.Paint.Format == ot.PaintFormat.PaintRadialGradient
 
 
@@ -802,7 +779,8 @@ def test_buildPaintComposite():
                 "Glyph": "a",
                 "Paint": {
                     "Format": ot.PaintFormat.PaintSolid,
-                    "Color": (0, 1.0),
+                    "PaletteIndex": 0,
+                    "Alpha": 0.5,
                 },
             },
         },
@@ -813,44 +791,44 @@ def test_buildPaintComposite():
     assert composite.SourcePaint.SourcePaint.Format == ot.PaintFormat.PaintGlyph
     assert composite.SourcePaint.SourcePaint.Glyph == "c"
     assert composite.SourcePaint.SourcePaint.Paint.Format == ot.PaintFormat.PaintSolid
-    assert composite.SourcePaint.SourcePaint.Paint.Color.PaletteIndex == 2
+    assert composite.SourcePaint.SourcePaint.Paint.PaletteIndex == 2
     assert composite.SourcePaint.CompositeMode == ot.CompositeMode.SRC_OVER
     assert composite.SourcePaint.BackdropPaint.Format == ot.PaintFormat.PaintGlyph
     assert composite.SourcePaint.BackdropPaint.Glyph == "b"
     assert composite.SourcePaint.BackdropPaint.Paint.Format == ot.PaintFormat.PaintSolid
-    assert composite.SourcePaint.BackdropPaint.Paint.Color.PaletteIndex == 1
+    assert composite.SourcePaint.BackdropPaint.Paint.PaletteIndex == 1
     assert composite.CompositeMode == ot.CompositeMode.SRC_OVER
     assert composite.BackdropPaint.Format == ot.PaintFormat.PaintGlyph
     assert composite.BackdropPaint.Glyph == "a"
     assert composite.BackdropPaint.Paint.Format == ot.PaintFormat.PaintSolid
-    assert composite.BackdropPaint.Paint.Color.PaletteIndex == 0
+    assert composite.BackdropPaint.Paint.PaletteIndex == 0
+    assert composite.BackdropPaint.Paint.Alpha == 0.5
 
 
 def checkBuildPaintTranslate(fmt):
-    if _is_var(fmt):
-        inputMapFn = builder.VariableInt
-        outputMapFn = lambda v: v.value
-    else:
-        inputMapFn = outputMapFn = lambda v: v
+    variable = _is_var(fmt)
 
-    paint = _build(
-        ot.Paint,
-        {
-            "Format": fmt,
-            "Paint": (
-                ot.PaintFormat.PaintGlyph,
-                (ot.PaintFormat.PaintSolid, (0, 1.0)),
-                "a",
-            ),
-            "dx": 123,
-            "dy": -345,
-        },
-    )
+    source = {
+        "Format": fmt,
+        "Paint": (
+            ot.PaintFormat.PaintGlyph,
+            (ot.PaintFormat.PaintSolid, 0, 1.0),
+            "a",
+        ),
+        "dx": 123,
+        "dy": -345,
+    }
+    if variable:
+        source["VarIndexBase"] = 678
+
+    paint = _build(ot.Paint, source)
 
     assert paint.Format == fmt
     assert paint.Paint.Format == ot.PaintFormat.PaintGlyph
-    assert outputMapFn(paint.dx) == 123
-    assert outputMapFn(paint.dy) == -345
+    assert paint.dx == 123
+    assert paint.dy == -345
+    if variable:
+        assert paint.VarIndexBase == 678
 
 
 def test_buildPaintTranslate():
@@ -864,11 +842,7 @@ def test_buildPaintVarTranslate():
 
 
 def checkBuildPaintScale(fmt):
-    if _is_var(fmt):
-        inputMapFn = builder.VariableInt
-        outputMapFn = lambda v: v.value
-    else:
-        inputMapFn = outputMapFn = lambda v: v
+    variable = _is_var(fmt)
     around_center = _is_around_center(fmt)
     uniform = _is_uniform_scale(fmt)
 
@@ -876,7 +850,7 @@ def checkBuildPaintScale(fmt):
         "Format": fmt,
         "Paint": (
             ot.PaintFormat.PaintGlyph,
-            (ot.PaintFormat.PaintSolid, (0, 1.0)),
+            (ot.PaintFormat.PaintSolid, 0, 1.0),
             "a",
         ),
     }
@@ -888,19 +862,23 @@ def checkBuildPaintScale(fmt):
     if around_center:
         source["centerX"] = 127
         source["centerY"] = 129
+    if variable:
+        source["VarIndexBase"] = 666
 
     paint = _build(ot.Paint, source)
 
     assert paint.Format == fmt
     assert paint.Paint.Format == ot.PaintFormat.PaintGlyph
     if uniform:
-        assert outputMapFn(paint.scale) == 1.5
+        assert paint.scale == 1.5
     else:
-        assert outputMapFn(paint.scaleX) == 1.0
-        assert outputMapFn(paint.scaleY) == 2.0
+        assert paint.scaleX == 1.0
+        assert paint.scaleY == 2.0
     if around_center:
-        assert outputMapFn(paint.centerX) == 127
-        assert outputMapFn(paint.centerY) == 129
+        assert paint.centerX == 127
+        assert paint.centerY == 129
+    if variable:
+        assert paint.VarIndexBase == 666
 
 
 def test_buildPaintScale():
@@ -960,18 +938,14 @@ def test_buildPaintVarScaleUniformAroundCenter():
 
 
 def checkBuildPaintRotate(fmt):
-    if _is_var(fmt):
-        inputMapFn = builder.VariableInt
-        outputMapFn = lambda v: v.value
-    else:
-        inputMapFn = outputMapFn = lambda v: v
+    variable = _is_var(fmt)
     around_center = _is_around_center(fmt)
 
     source = {
         "Format": fmt,
         "Paint": (
             ot.PaintFormat.PaintGlyph,
-            (ot.PaintFormat.PaintSolid, (0, 1.0)),
+            (ot.PaintFormat.PaintSolid, 0, 1.0),
             "a",
         ),
         "angle": 15,
@@ -984,10 +958,12 @@ def checkBuildPaintRotate(fmt):
 
     assert paint.Format == fmt
     assert paint.Paint.Format == ot.PaintFormat.PaintGlyph
-    assert outputMapFn(paint.angle) == 15
+    assert paint.angle == 15
     if around_center:
-        assert outputMapFn(paint.centerX) == 127
-        assert outputMapFn(paint.centerY) == 129
+        assert paint.centerX == 127
+        assert paint.centerY == 129
+    if variable:
+        assert paint.VarIndexBase == 0xFFFFFFFF
 
 
 def test_buildPaintRotate():
@@ -1015,18 +991,14 @@ def test_buildPaintVarRotateAroundCenter():
 
 
 def checkBuildPaintSkew(fmt):
-    if _is_var(fmt):
-        inputMapFn = builder.VariableInt
-        outputMapFn = lambda v: v.value
-    else:
-        inputMapFn = outputMapFn = lambda v: v
+    variable = _is_var(fmt)
     around_center = _is_around_center(fmt)
 
     source = {
         "Format": fmt,
         "Paint": (
             ot.PaintFormat.PaintGlyph,
-            (ot.PaintFormat.PaintSolid, (0, 1.0)),
+            (ot.PaintFormat.PaintSolid, 0, 1.0),
             "a",
         ),
         "xSkewAngle": 15,
@@ -1035,16 +1007,20 @@ def checkBuildPaintSkew(fmt):
     if around_center:
         source["centerX"] = 127
         source["centerY"] = 129
+    if variable:
+        source["VarIndexBase"] = 0
 
     paint = _build(ot.Paint, source)
 
     assert paint.Format == fmt
     assert paint.Paint.Format == ot.PaintFormat.PaintGlyph
-    assert outputMapFn(paint.xSkewAngle) == 15
-    assert outputMapFn(paint.ySkewAngle) == 42
+    assert paint.xSkewAngle == 15
+    assert paint.ySkewAngle == 42
     if around_center:
-        assert outputMapFn(paint.centerX) == 127
-        assert outputMapFn(paint.centerY) == 129
+        assert paint.centerX == 127
+        assert paint.centerY == 129
+    if variable:
+        assert paint.VarIndexBase == 0
 
 
 def test_buildPaintSkew():
@@ -1087,7 +1063,8 @@ def test_buildColrV1():
                     ot.PaintFormat.PaintGlyph,
                     {
                         "Format": int(ot.PaintFormat.PaintSolid),
-                        "Color": {"PaletteIndex": 2, "Alpha": 0.8},
+                        "PaletteIndex": 2,
+                        "Alpha": 0.8,
                     },
                     "e",
                 ),
@@ -1250,7 +1227,7 @@ def test_build_layerv1list_empty():
             # BaseGlyph, tuple form
             "a": (
                 int(ot.PaintFormat.PaintGlyph),
-                (2, (2, 0.8)),
+                (int(ot.PaintFormat.PaintSolid), 2, 0.8),
                 "b",
             ),
             # BaseGlyph, map form
@@ -1301,7 +1278,11 @@ def _paint_names(paints) -> List[str]:
 def test_build_layerv1list_simple():
     # Two colr glyphs, each with two layers the first of which is common
     # All layers use the same solid paint
-    solid_paint = {"Format": 2, "Color": {"PaletteIndex": 2, "Alpha": 0.8}}
+    solid_paint = {
+        "Format": int(ot.PaintFormat.PaintSolid),
+        "PaletteIndex": 2,
+        "Alpha": 0.8,
+    }
     backdrop = {
         "Format": int(ot.PaintFormat.PaintGlyph),
         "Paint": solid_paint,
@@ -1357,7 +1338,11 @@ def test_build_layerv1list_simple():
 
 def test_build_layerv1list_with_sharing():
     # Three colr glyphs, each with two layers in common
-    solid_paint = {"Format": 2, "Color": (2, 0.8)}
+    solid_paint = {
+        "Format": int(ot.PaintFormat.PaintSolid),
+        "PaletteIndex": 2,
+        "Alpha": 0.8,
+    }
     backdrop = [
         {
             "Format": int(ot.PaintFormat.PaintGlyph),
@@ -1436,7 +1421,8 @@ def test_build_layerv1list_with_overlaps():
             "Format": ot.PaintFormat.PaintGlyph,
             "Paint": {
                 "Format": ot.PaintFormat.PaintSolid,
-                "Color": {"PaletteIndex": 2, "Alpha": 0.8},
+                "PaletteIndex": 2,
+                "Alpha": 0.8,
             },
             "Glyph": c,
         }
@@ -1533,7 +1519,11 @@ class BuildCOLRTest(object):
                         ),
                         (
                             ot.PaintFormat.PaintGlyph,
-                            {"Format": 2, "Color": {"PaletteIndex": 2, "Alpha": 0.8}},
+                            {
+                                "Format": ot.PaintFormat.PaintSolid,
+                                "PaletteIndex": 2,
+                                "Alpha": 0.8,
+                            },
                             "c",
                         ),
                     ],
@@ -1591,7 +1581,7 @@ class BuildCOLRTest(object):
                         ),
                         (
                             ot.PaintFormat.PaintGlyph,
-                            (ot.PaintFormat.PaintSolid, (2, 0.8)),
+                            (ot.PaintFormat.PaintSolid, 2, 0.8),
                             "f",
                         ),
                     ],

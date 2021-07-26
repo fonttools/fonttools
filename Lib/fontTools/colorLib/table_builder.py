@@ -17,10 +17,9 @@ from fontTools.ttLib.tables.otConverters import (
     Short,
     UInt8,
     UShort,
-    VarInt16,
-    VarUInt16,
     IntValue,
     FloatValue,
+    OptionalValue,
 )
 from fontTools.misc.roundTools import otRound
 
@@ -39,7 +38,7 @@ class BuildCallback(enum.Enum):
     """
     AFTER_BUILD = enum.auto()
 
-    """Keyed on (CREATE_DEFAULT, class).
+    """Keyed on (CREATE_DEFAULT, class[, Format if available]).
     Receives no arguments.
     Should return a new instance of class.
     """
@@ -50,37 +49,29 @@ def _assignable(convertersByName):
     return {k: v for k, v in convertersByName.items() if not isinstance(v, ComputedInt)}
 
 
-def convertTupleClass(tupleClass, value):
-    if isinstance(value, tupleClass):
-        return value
-    if isinstance(value, tuple):
-        return tupleClass(*value)
-    return tupleClass(value)
-
-
 def _isNonStrSequence(value):
     return isinstance(value, collections.abc.Sequence) and not isinstance(value, str)
 
 
-def _set_format(dest, source):
+def _split_format(cls, source):
     if _isNonStrSequence(source):
-        assert len(source) > 0, f"{type(dest)} needs at least format from {source}"
-        dest.Format = source[0]
-        source = source[1:]
+        assert len(source) > 0, f"{cls} needs at least format from {source}"
+        fmt, remainder = source[0], source[1:]
     elif isinstance(source, collections.abc.Mapping):
-        assert "Format" in source, f"{type(dest)} needs at least Format from {source}"
-        dest.Format = source["Format"]
+        assert "Format" in source, f"{cls} needs at least Format from {source}"
+        remainder = source.copy()
+        fmt = remainder.pop("Format")
     else:
-        raise ValueError(f"Not sure how to populate {type(dest)} from {source}")
+        raise ValueError(f"Not sure how to populate {cls} from {source}")
 
     assert isinstance(
-        dest.Format, collections.abc.Hashable
-    ), f"{type(dest)} Format is not hashable: {dest.Format}"
+        fmt, collections.abc.Hashable
+    ), f"{cls} Format is not hashable: {fmt!r}"
     assert (
-        dest.Format in dest.convertersByName
-    ), f"{dest.Format} invalid Format of {cls}"
+        fmt in cls.convertersByName
+    ), f"{cls} invalid Format: {fmt!r}"
 
-    return source
+    return fmt, remainder
 
 
 class TableBuilder:
@@ -97,13 +88,9 @@ class TableBuilder:
         self._callbackTable = callbackTable
 
     def _convert(self, dest, field, converter, value):
-        tupleClass = getattr(converter, "tupleClass", None)
         enumClass = getattr(converter, "enumClass", None)
 
-        if tupleClass:
-            value = convertTupleClass(tupleClass, value)
-
-        elif enumClass:
+        if enumClass:
             if isinstance(value, enumClass):
                 pass
             elif isinstance(value, str):
@@ -140,6 +127,11 @@ class TableBuilder:
             return source
 
         callbackKey = (cls,)
+        fmt = None
+        if issubclass(cls, FormatSwitchingBaseTable):
+            fmt, source = _split_format(cls, source)
+            callbackKey = (cls, fmt)
+
         dest = self._callbackTable.get(
             (BuildCallback.CREATE_DEFAULT,) + callbackKey, lambda: cls()
         )()
@@ -150,11 +142,9 @@ class TableBuilder:
 
         # For format switchers we need to resolve converters based on format
         if issubclass(cls, FormatSwitchingBaseTable):
-            source = _set_format(dest, source)
-
+            dest.Format = fmt
             convByName = _assignable(convByName[dest.Format])
             skippedFields.add("Format")
-            callbackKey = (cls, dest.Format)
 
         # Convert sequence => mapping so before thunk only has to handle one format
         if _isNonStrSequence(source):
@@ -181,6 +171,10 @@ class TableBuilder:
         else:
             # let's try as a 1-tuple
             dest = self.build(cls, (source,))
+
+        for field, conv in convByName.items():
+            if not hasattr(dest, field) and isinstance(conv, OptionalValue):
+                setattr(dest, field, conv.DEFAULT)
 
         dest = self._callbackTable.get(
             (BuildCallback.AFTER_BUILD,) + callbackKey, lambda d: d
@@ -210,11 +204,8 @@ class TableUnbuilder:
                 continue
             value = getattr(table, converter.name)
 
-            tupleClass = getattr(converter, "tupleClass", None)
             enumClass = getattr(converter, "enumClass", None)
-            if tupleClass:
-                source[converter.name] = tuple(value)
-            elif enumClass:
+            if enumClass:
                 source[converter.name] = value.name.lower()
             elif isinstance(converter, Struct):
                 if converter.repeat:
