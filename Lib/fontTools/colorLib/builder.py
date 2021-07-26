@@ -21,6 +21,7 @@ from typing import (
     TypeVar,
     Union,
 )
+from fontTools.misc.arrayTools import intRect
 from fontTools.misc.fixedTools import fixedToFloat
 from fontTools.ttLib.tables import C_O_L_R_
 from fontTools.ttLib.tables import C_P_A_L_
@@ -39,6 +40,11 @@ _PaintInput = Union[int, _Kwargs, ot.Paint, Tuple[str, "_PaintInput"]]
 _PaintInputList = Sequence[_PaintInput]
 _ColorGlyphsDict = Dict[str, Union[_PaintInputList, _PaintInput]]
 _ColorGlyphsV0Dict = Dict[str, Sequence[Tuple[str, int]]]
+_ClipBoxInput = Union[
+    Tuple[int, int, int, int, int],  # format 1, variable
+    Tuple[int, int, int, int],  # format 0, non-variable
+    ot.ClipBox,
+]
 
 
 MAX_PAINT_COLR_LAYER_COUNT = 255
@@ -183,6 +189,7 @@ def buildCOLR(
     glyphMap: Optional[Mapping[str, int]] = None,
     varStore: Optional[ot.VarStore] = None,
     varIndexMap: Optional[ot.DeltaSetIndexMap] = None,
+    clipBoxes: Optional[Dict[str, _ClipBoxInput]] = None,
 ) -> C_O_L_R_.table_C_O_L_R_:
     """Build COLR table from color layers mapping.
     Args:
@@ -197,6 +204,8 @@ def buildCOLR(
             TTFont.getReverseGlyphMap(), to optionally sort base records by GID.
         varStore: Optional ItemVarationStore for deltas associated with v1 layer.
         varIndexMap: Optional DeltaSetIndexMap for deltas associated with v1 layer.
+        clipBoxes: Optional map of base glyph name to clip box 4- or 5-tuples:
+            (xMin, yMin, xMax, yMax) or (xMin, yMin, xMax, yMax, varIndexBase).
     Return:
         A new COLR table.
     """
@@ -230,11 +239,37 @@ def buildCOLR(
     if version == 0:
         self.ColorLayers = self._decompileColorLayersV0(colr)
     else:
+        clipBoxes = {
+            name: clipBoxes[name] for name in clipBoxes or {} if name in colorGlyphsV1
+        }
+        colr.ClipList = buildClipList(clipBoxes) if clipBoxes else None
         colr.VarIndexMap = varIndexMap
         colr.VarStore = varStore
         self.table = colr
 
     return self
+
+
+def buildClipList(clipBoxes: Dict[str, _ClipBoxInput]) -> ot.ClipList:
+    clipList = ot.ClipList()
+    clipList.clips = {name: buildClipBox(box) for name, box in clipBoxes.items()}
+    return clipList
+
+
+def buildClipBox(clipBox: _ClipBoxInput) -> ot.ClipBox:
+    if isinstance(clipBox, ot.ClipBox):
+        return clipBox
+    n = len(clipBox)
+    clip = ot.ClipBox()
+    if n < 4 or n > 5:
+        raise ValueError(f"Invalid ClipBox: expected 4 or 5 values, found {n}")
+    clip.xMin, clip.yMin, clip.xMax, clip.yMax = intRect(clipBox[:4])
+    if n == 5:
+        clip.Format = 1
+        clip.VarIndexBase = int(clipBox[4])
+    else:
+        clip.Format = 0
+    return clip
 
 
 class ColorPaletteType(enum.IntFlag):
