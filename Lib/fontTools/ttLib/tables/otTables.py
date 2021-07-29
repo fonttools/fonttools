@@ -1317,21 +1317,42 @@ class ClipList(BaseTable):
 		clips = {}
 		glyphOrder = font.getGlyphOrder()
 		for i, rec in enumerate(rawTable["ClipRecord"]):
-			rangesOverlap = False
+			if rec.StartGlyphID > rec.EndGlyphID:
+				log.warning(
+					"invalid ClipRecord[%i].StartGlyphID (%i) > "
+					"EndGlyphID (%i); skipped",
+					i,
+					rec.StartGlyphID,
+					rec.EndGlyphID,
+				)
+				continue
+			redefinedGlyphs = []
+			missingGlyphs = []
 			for glyphID in range(rec.StartGlyphID, rec.EndGlyphID + 1):
 				try:
 					glyph = glyphOrder[glyphID]
 				except IndexError:
-					continue
+					missingGlyphs.append(glyphID)
 				if glyph not in clips:
 					clips[glyph] = copy.copy(rec.ClipBox)
 				else:
-					rangesOverlap = True
-			if rangesOverlap:
+					redefinedGlyphs.append(glyphID)
+			if redefinedGlyphs:
 				log.warning(
-					"ClipRecord %i overlap previous records; "
-					"redefined clip boxes are skipped",
+					"ClipRecord[%i] overlaps previous records; "
+					"ignoring redefined clip boxes for the "
+					"following glyph ID range: [%i-%i]",
 					i,
+					min(redefinedGlyphs),
+					max(redefinedGlyphs),
+				)
+			if missingGlyphs:
+				log.warning(
+					"ClipRecord[%i] range references missing "
+					"glyph IDs: [%i-%i]",
+					i,
+					min(missingGlyphs),
+					max(missingGlyphs),
 				)
 		self.clips = clips
 
@@ -1339,7 +1360,7 @@ class ClipList(BaseTable):
 		glyphsByClip = defaultdict(list)
 		uniqueClips = {}
 		for glyphName, clipBox in self.clips.items():
-			key = hash(clipBox.as_tuple())
+			key = clipBox.as_tuple()
 			glyphsByClip[key].append(glyphName)
 			if key not in uniqueClips:
 				uniqueClips[key] = clipBox
