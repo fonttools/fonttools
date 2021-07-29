@@ -1601,7 +1601,8 @@ otData = [
 		('LOffset', 'Paint', 'LayerCount', 0, 'Array of offsets to Paint tables, from the start of the LayerList table.'),
 	]),
 
-	('ClipList', [
+	('ClipListFormat0', [
+		('uint8', 'Format', None, None, 'Format for ClipList with 16bit glyph IDs: 0'),
 		('uint32', 'ClipCount', None, None, 'Number of Clip records.'),
 		('struct', 'ClipRecord', 'ClipCount', 0, 'Array of Clip records sorted by glyph ID.'),
 	]),

@@ -1307,7 +1307,7 @@ class ClipBox(getFormatSwitchingBaseTableClass("uint8")):
 		return f"{self.__class__.__name__}{self.as_tuple()}"
 
 
-class ClipList(BaseTable):
+class ClipList(getFormatSwitchingBaseTableClass("uint8")):
 
 	def populateDefaults(self, propagator=None):
 		if not hasattr(self, "clips"):
@@ -1410,6 +1410,8 @@ class ClipList(BaseTable):
 		tableName = name if name else self.__class__.__name__
 		if attrs is None:
 			attrs = []
+		if hasattr(self, "Format"):
+			attrs.append(("Format", self.Format))
 		xmlWriter.begintag(tableName, attrs)
 		xmlWriter.newline()
 		# sort clips alphabetically to ensure deterministic XML dump

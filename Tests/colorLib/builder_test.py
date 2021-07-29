@@ -1681,6 +1681,7 @@ class BuildCOLRTest(object):
             },
         )
 
+        assert colr.table.ClipList.Format == 0
         clipBoxes = colr.table.ClipList.clips
         assert [
             (baseGlyph, clipBox.as_tuple()) for baseGlyph, clipBox in clipBoxes.items()

@@ -298,13 +298,14 @@ COLR_V1_SAMPLE = (
     (b" \x00", "Paint.Alpha (0.5)"),
 
     # ClipList
+    (b'\x00', "ClipList.Format (0)"),
     (b'\x00\x00\x00\x02', "ClipList.ClipCount (2)"),
     (b'\x00\x0a', "ClipRecord[0].StartGlyphID (10)"),
     (b'\x00\x0a', "ClipRecord[0].EndGlyphID (10)"),
-    (b'\x00\x00\x12', "Offset to ClipBox subtable from beginning of ClipList (18)"),
+    (b'\x00\x00\x13', "Offset to ClipBox subtable from beginning of ClipList (19)"),
     (b'\x00\x0e', "ClipRecord[1].StartGlyphID (14)"),
     (b'\x00\x0f', "ClipRecord[1].EndGlyphID (15)"),
-    (b'\x00\x00\x1f', "Offset to ClipBox subtable from beginning of ClipList (31)"),
+    (b'\x00\x00\x20', "Offset to ClipBox subtable from beginning of ClipList (32)"),
 
     (b'\x01', "ClipBox.Format (1)"),
     (b'\x00\x00', "ClipBox.xMin (0)"),
@@ -505,7 +506,7 @@ COLR_V1_XML = [
     '    <dy value="258"/>',
     "  </Paint>",
     "</LayerList>",
-    "<ClipList>",
+    '<ClipList Format="0">',
     "  <Clip>",
     '    <Glyph value="glyph00010"/>',
     '    <ClipBox Format="1">',
