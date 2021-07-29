@@ -127,6 +127,7 @@ class OverlapMode(IntEnum):
     KEEP_AND_DONT_SET_FLAGS = 0
     KEEP_AND_SET_FLAGS = 1
     REMOVE = 2
+    REMOVE_AND_IGNORE_ERRORS = 3
 
 
 def instantiateTupleVariationStore(
@@ -1185,7 +1186,8 @@ def instantiateVariableFont(
             on all glyphs to maximise cross-compatibility of the generated instance.
             You can disable this by passing OverlapMode.KEEP_AND_DONT_SET_FLAGS.
             If you want to remove the overlaps altogether and merge overlapping
-            contours and components, you can pass OverlapMode.REMOVE. Note that this
+            contours and components, you can pass OverlapMode.REMOVE (or
+            REMOVE_AND_IGNORE_ERRORS to not hard-fail on tricky glyphs). Note that this
             requires the skia-pathops package (available to pip install).
             The overlap parameter only has effect when generating full static instances.
         updateFontNames (bool): if True, update the instantiated font's name table using
@@ -1244,11 +1246,14 @@ def instantiateVariableFont(
         if "glyf" in varfont:
             if overlap == OverlapMode.KEEP_AND_SET_FLAGS:
                 setMacOverlapFlags(varfont["glyf"])
-            elif overlap == OverlapMode.REMOVE:
+            elif overlap in (OverlapMode.REMOVE, OverlapMode.REMOVE_AND_IGNORE_ERRORS):
                 from fontTools.ttLib.removeOverlaps import removeOverlaps
 
                 log.info("Removing overlaps from glyf table")
-                removeOverlaps(varfont)
+                removeOverlaps(
+                    varfont,
+                    ignoreErrors=(overlap == OverlapMode.REMOVE_AND_IGNORE_ERRORS),
+                )
 
     varLib.set_default_weight_width_slant(
         varfont,
@@ -1356,6 +1361,12 @@ def parseArgs(args):
         "when generating a full instance). Requires skia-pathops",
     )
     parser.add_argument(
+        "--ignore-overlap-errors",
+        dest="ignore_overlap_errors",
+        action="store_true",
+        help="Don't crash if the remove-overlaps operation fails for some glyphs.",
+    )
+    parser.add_argument(
         "--update-name-table",
         action="store_true",
         help="Update the instantiated font's `name` table. Input font must have "
@@ -1371,7 +1382,10 @@ def parseArgs(args):
     options = parser.parse_args(args)
 
     if options.remove_overlaps:
-        options.overlap = OverlapMode.REMOVE
+        if options.ignore_overlap_errors:
+            options.overlap = OverlapMode.REMOVE_AND_IGNORE_ERRORS
+        else:
+            options.overlap = OverlapMode.REMOVE
     else:
         options.overlap = OverlapMode(int(options.overlap))
 
