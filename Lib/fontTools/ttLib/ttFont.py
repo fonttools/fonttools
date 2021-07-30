@@ -271,8 +271,7 @@ class TTFont(object):
 			tag = tables[i]
 			if splitTables:
 				tablePath = fileNameTemplate % tagToIdentifier(tag)
-				tableWriter = xmlWriter.XMLWriter(tablePath,
-						newlinestr=writer.newlinestr)
+				tableWriter = xmlWriter.XMLWriter(tablePath)
 				tableWriter.begintag("ttFont", ttLibVersion=version)
 				tableWriter.newline()
 				tableWriter.newline()

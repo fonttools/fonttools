@@ -4,6 +4,7 @@ from fontTools.misc.py23 import byteord, strjoin, tobytes, tostr
 import sys
 import os
 import string
+import warnings
 
 INDENT = "  "
 
@@ -37,10 +38,12 @@ class XMLWriter(object):
 			self.file.write('')
 			self.totype = tostr
 		self.indentwhite = self.totype(indentwhite)
-		if newlinestr is None:
-			self.newlinestr = self.totype(os.linesep)
-		else:
-			self.newlinestr = self.totype(newlinestr)
+		if newlinestr != "\n":
+			warnings.warn(
+				'Setting "newlinestr" is deprecated and will be ignored.',
+				DeprecationWarning,
+			)
+		self.newlinestr = self.totype("\n")
 		self.indentlevel = 0
 		self.stack = []
 		self.needindent = 1
