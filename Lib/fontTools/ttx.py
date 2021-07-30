@@ -122,7 +122,7 @@ class Options(object):
 	ignoreDecompileErrors = True
 	bitmapGlyphDataFormat = 'raw'
 	unicodedata = None
-	newlinestr = None
+	newlinestr = "\n"
 	recalcTimestamp = None
 	flavor = None
 	useZopfli = False

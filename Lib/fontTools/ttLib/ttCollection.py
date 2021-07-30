@@ -76,7 +76,7 @@ class TTCollection(object):
 			final.write(file.getvalue())
 		file.close()
 
-	def saveXML(self, fileOrPath, newlinestr=None, writeVersion=True, **kwargs):
+	def saveXML(self, fileOrPath, newlinestr="\n", writeVersion=True, **kwargs):
 
 		from fontTools.misc import xmlWriter
 		writer = xmlWriter.XMLWriter(fileOrPath, newlinestr=newlinestr)
