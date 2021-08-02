@@ -1601,8 +1601,8 @@ otData = [
 		('LOffset', 'Paint', 'LayerCount', 0, 'Array of offsets to Paint tables, from the start of the LayerList table.'),
 	]),
 
-	('ClipListFormat0', [
-		('uint8', 'Format', None, None, 'Format for ClipList with 16bit glyph IDs: 0'),
+	('ClipListFormat1', [
+		('uint8', 'Format', None, None, 'Format for ClipList with 16bit glyph IDs: 1'),
 		('uint32', 'ClipCount', None, None, 'Number of Clip records.'),
 		('struct', 'ClipRecord', 'ClipCount', 0, 'Array of Clip records sorted by glyph ID.'),
 	]),
@@ -1613,16 +1613,16 @@ otData = [
 		('Offset24', 'ClipBox', None, None, 'Offset to a ClipBox table.'),
 	]),
 
-	('ClipBoxFormat0', [
-		('uint8', 'Format', None, None, 'Format for ClipBox without variation: set to 0.'),
+	('ClipBoxFormat1', [
+		('uint8', 'Format', None, None, 'Format for ClipBox without variation: set to 1.'),
 		('int16', 'xMin', None, None, 'Minimum x of clip box.'),
 		('int16', 'yMin', None, None, 'Minimum y of clip box.'),
 		('int16', 'xMax', None, None, 'Maximum x of clip box.'),
 		('int16', 'yMax', None, None, 'Maximum y of clip box.'),
 	]),
 
-	('ClipBoxFormat1', [
-		('uint8', 'Format', None, None, 'Format for variable ClipBox: set to 1.'),
+	('ClipBoxFormat2', [
+		('uint8', 'Format', None, None, 'Format for variable ClipBox: set to 2.'),
 		('int16', 'xMin', None, None, 'Minimum x of clip box.'),
 		('int16', 'yMin', None, None, 'Minimum y of clip box.'),
 		('int16', 'xMax', None, None, 'Maximum x of clip box.'),

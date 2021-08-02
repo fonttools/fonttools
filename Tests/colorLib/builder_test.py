@@ -1681,7 +1681,7 @@ class BuildCOLRTest(object):
             },
         )
 
-        assert colr.table.ClipList.Format == 0
+        assert colr.table.ClipList.Format == 1
         clipBoxes = colr.table.ClipList.clips
         assert [
             (baseGlyph, clipBox.as_tuple()) for baseGlyph, clipBox in clipBoxes.items()
@@ -1689,8 +1689,8 @@ class BuildCOLRTest(object):
             ("a", (0, 0, 1000, 1000, 0)),
             ("c", (-101, -201, 1101, 1201)),
         ]
-        assert clipBoxes["a"].Format == 1
-        assert clipBoxes["c"].Format == 0
+        assert clipBoxes["a"].Format == 2
+        assert clipBoxes["c"].Format == 1
 
 
 class TrickyRadialGradientTest:
