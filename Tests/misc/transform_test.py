@@ -23,6 +23,14 @@ class TransformTest(object):
             [(0, 0), (0, 100), (100, 100), (100, 0)]
         ) == [(0, 0), (0, 300), (200, 300), (200, 0)]
 
+    def test_transformVector(self):
+        t = Transform(2, 0, 0, 3, -10, 30)
+        assert t.transformVector((-4, 5)) == (-8, 15)
+
+    def test_transformVectors(self):
+        t = Transform(2, 0, 0, 3, -10, 30)
+        assert t.transformVectors([(-4, 5), (-6, 7)]) == [(-8, 15), (-12, 21)]
+
     def test_translate(self):
         t = Transform()
         assert t.translate(20, 30) == Transform(1, 0, 0, 1, 20, 30)

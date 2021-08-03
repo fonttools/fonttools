@@ -171,6 +171,31 @@ class Transform(NamedTuple):
 		xx, xy, yx, yy, dx, dy = self
 		return [(xx*x + yx*y + dx, xy*x + yy*y + dy) for x, y in points]
 
+	def transformVector(self, v):
+		"""Transform an (dx, dy) vector, treating translation as zero.
+
+		Example:
+			>>> t = Transform(2, 0, 0, 2, 10, 20)
+			>>> t.transformVector((3, -4))
+			(6, -8)
+			>>>
+		"""
+		(dx, dy) = v
+		xx, xy, yx, yy = self[:4]
+		return (xx*dx + yx*dy, xy*dx + yy*dy)
+
+	def transformVectors(self, vectors):
+		"""Transform a list of (dx, dy) vector, treating translation as zero.
+
+		Example:
+			>>> t = Transform(2, 0, 0, 2, 10, 20)
+			>>> t.transformVectors([(3, -4), (5, -6)])
+			[(6, -8), (10, -12)]
+			>>>
+		"""
+		xx, xy, yx, yy = self[:4]
+		return [(xx*dx + yx*dy, xy*dx + yy*dy) for dx, dy in vectors]
+
 	def translate(self, x=0, y=0):
 		"""Return a new transformation, translated (offset) by x, y.
 
