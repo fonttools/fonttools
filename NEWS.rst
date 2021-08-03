@@ -1,3 +1,6 @@
+4.26.1 (released 2021-08-03)
+----------------------------
+
 - [transform] Added ``transformVector`` and ``transformVectors`` methods to the
   ``Transform`` class. Similar to ``transformPoint`` but ignore the translation
   part (#2386).
