@@ -452,6 +452,21 @@ def test_options_unicodedata():
     assert tto.unicodedata == "UnicodeData.txt"
 
 
+def test_options_newline_lf():
+    tto = ttx.Options([("--newline", "LF")], 1)
+    assert tto.newlinestr == "\n"
+
+
+def test_options_newline_cr():
+    tto = ttx.Options([("--newline", "CR")], 1)
+    assert tto.newlinestr == "\r"
+
+
+def test_options_newline_crlf():
+    tto = ttx.Options([("--newline", "CRLF")], 1)
+    assert tto.newlinestr == "\r\n"
+
+
 def test_options_newline_invalid():
     with pytest.raises(getopt.GetoptError):
         ttx.Options([("--newline", "BOGUS")], 1)

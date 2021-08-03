@@ -65,6 +65,9 @@ usage: ttx [options] inputfile1 [... inputfileN]
        starting from 0.
     --unicodedata <UnicodeData.txt> Use custom database file to write
        character names in the comments of the cmap TTX output.
+    --newline <value> Control how line endings are written in the XML
+       file. It can be 'LF', 'CR', or 'CRLF'. If not specified, the
+       default platform-specific line endings are used.
 
     Compile options:
     -m Merge with TrueType-input-file: specify a TrueType or OpenType
@@ -119,6 +122,7 @@ class Options(object):
 	ignoreDecompileErrors = True
 	bitmapGlyphDataFormat = 'raw'
 	unicodedata = None
+	newlinestr = "\n"
 	recalcTimestamp = None
 	flavor = None
 	useZopfli = False
@@ -189,9 +193,11 @@ class Options(object):
 			elif option == "--newline":
 				validOptions = ('LF', 'CR', 'CRLF')
 				if value == "LF":
-					pass
-				elif value in validOptions:
-					print('WARNING: The "--newline" option is deprecated and will be ignored')
+					self.newlinestr = "\n"
+				elif value == "CR":
+					self.newlinestr = "\r"
+				elif value == "CRLF":
+					self.newlinestr = "\r\n"
 				else:
 					raise getopt.GetoptError(
 						"Invalid choice for --newline: %r (choose from %s)"
@@ -261,7 +267,8 @@ def ttDump(input, output, options):
 			splitTables=options.splitTables,
 			splitGlyphs=options.splitGlyphs,
 			disassembleInstructions=options.disassembleInstructions,
-			bitmapGlyphDataFormat=options.bitmapGlyphDataFormat)
+			bitmapGlyphDataFormat=options.bitmapGlyphDataFormat,
+			newlinestr=options.newlinestr)
 	ttf.close()
 
 
