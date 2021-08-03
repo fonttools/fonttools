@@ -1,3 +1,6 @@
+4.26.0 (released 2021-08-03)
+----------------------------
+
 - [xmlWriter] Default to ``"\n"`` for ``newlinestr`` instead of platform-specific
   ``os.linesep`` (#2384).
 - [otData] Define COLRv1 ClipList and ClipBox (#2379).
