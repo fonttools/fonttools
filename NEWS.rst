@@ -3,6 +3,8 @@
 - [otData] Define COLRv1 ClipList and ClipBox (#2379).
 - [removeOverlaps/instancer] Added --ignore-overlap-errors option to work around
   Skia PathOps.Simplify bug (#2382, #2363, google/fonts#3365).
+- NOTE: This will be the last version to support Python 3.6. FontTools will require
+  Python 3.7 or above from the next release (#2350)
 
 4.25.2 (released 2021-07-26)
 ----------------------------
