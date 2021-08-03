@@ -1562,6 +1562,7 @@ otData = [
 		('uint16', 'LayerRecordCount', None, None, 'Number of Layer Records.'),
 		('LOffset', 'BaseGlyphList', None, 'Version >= 1', 'Offset (from beginning of COLR table) to array of Version-1 Base Glyph records.'),
 		('LOffset', 'LayerList', None, 'Version >= 1', 'Offset (from beginning of COLR table) to LayerList.'),
+		('LOffset', 'ClipList', None, 'Version >= 1', 'Offset to ClipList table (may be NULL)'),
 		('LOffsetTo(DeltaSetIndexMap)', 'VarIndexMap', None, 'Version >= 1', 'Offset to DeltaSetIndexMap table (may be NULL)'),
 		('LOffset', 'VarStore', None, 'Version >= 1', 'Offset to variation store (may be NULL)'),
 	]),
@@ -1598,6 +1599,35 @@ otData = [
 	('LayerList', [
 		('uint32', 'LayerCount', None, None, 'Number of Version-1 Layers'),
 		('LOffset', 'Paint', 'LayerCount', 0, 'Array of offsets to Paint tables, from the start of the LayerList table.'),
+	]),
+
+	('ClipListFormat1', [
+		('uint8', 'Format', None, None, 'Format for ClipList with 16bit glyph IDs: 1'),
+		('uint32', 'ClipCount', None, None, 'Number of Clip records.'),
+		('struct', 'ClipRecord', 'ClipCount', 0, 'Array of Clip records sorted by glyph ID.'),
+	]),
+
+	('ClipRecord', [
+		('uint16', 'StartGlyphID', None, None, 'First glyph ID in the range.'),
+		('uint16', 'EndGlyphID', None, None, 'Last glyph ID in the range.'),
+		('Offset24', 'ClipBox', None, None, 'Offset to a ClipBox table.'),
+	]),
+
+	('ClipBoxFormat1', [
+		('uint8', 'Format', None, None, 'Format for ClipBox without variation: set to 1.'),
+		('int16', 'xMin', None, None, 'Minimum x of clip box.'),
+		('int16', 'yMin', None, None, 'Minimum y of clip box.'),
+		('int16', 'xMax', None, None, 'Maximum x of clip box.'),
+		('int16', 'yMax', None, None, 'Maximum y of clip box.'),
+	]),
+
+	('ClipBoxFormat2', [
+		('uint8', 'Format', None, None, 'Format for variable ClipBox: set to 2.'),
+		('int16', 'xMin', None, None, 'Minimum x of clip box.'),
+		('int16', 'yMin', None, None, 'Minimum y of clip box.'),
+		('int16', 'xMax', None, None, 'Maximum x of clip box.'),
+		('int16', 'yMax', None, None, 'Maximum y of clip box.'),
+		('VarIndex', 'VarIndexBase', None, None, 'Base index into DeltaSetIndexMap.'),
 	]),
 
 	# COLRv1 Affine2x3 uses the same column-major order to serialize a 2D

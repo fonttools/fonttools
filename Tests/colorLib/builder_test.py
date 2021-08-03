@@ -1660,6 +1660,38 @@ class BuildCOLRTest(object):
         assert paint.Format == ot.PaintFormat.PaintGlyph
         assert paint.Paint.Format == ot.PaintFormat.PaintSolid
 
+    def test_build_clip_list(self):
+        colr = builder.buildCOLR(
+            {
+                "a": (
+                    ot.PaintFormat.PaintGlyph,
+                    (ot.PaintFormat.PaintSolid, 0),
+                    "b",
+                ),
+                "c": (
+                    ot.PaintFormat.PaintGlyph,
+                    (ot.PaintFormat.PaintSolid, 1),
+                    "d",
+                ),
+            },
+            clipBoxes={
+                "a": (0, 0, 1000, 1000, 0),  # optional 5th: varIndexBase
+                "c": (-100.8, -200.4, 1100.1, 1200.5),  # floats get rounded
+                "e": (0, 0, 10, 10),  # missing base glyph 'e' is ignored
+            },
+        )
+
+        assert colr.table.ClipList.Format == 1
+        clipBoxes = colr.table.ClipList.clips
+        assert [
+            (baseGlyph, clipBox.as_tuple()) for baseGlyph, clipBox in clipBoxes.items()
+        ] == [
+            ("a", (0, 0, 1000, 1000, 0)),
+            ("c", (-101, -201, 1101, 1201)),
+        ]
+        assert clipBoxes["a"].Format == 2
+        assert clipBoxes["c"].Format == 1
+
 
 class TrickyRadialGradientTest:
     @staticmethod
