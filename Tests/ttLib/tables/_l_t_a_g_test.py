@@ -1,7 +1,6 @@
 from fontTools.misc.testTools import parseXML
 from fontTools.misc.xmlWriter import XMLWriter
 from io import BytesIO
-import os
 import struct
 import unittest
 from fontTools.ttLib import newTable
@@ -46,14 +45,14 @@ class Test_l_t_a_g(unittest.TestCase):
 		table = newTable("ltag")
 		table.decompile(self.DATA_, ttFont=None)
 		table.toXML(writer, ttFont=None)
-		expected = os.linesep.join([
+		expected = "\n".join([
 			'<?xml version="1.0" encoding="UTF-8"?>',
 			'<version value="1"/>',
 			'<flags value="0"/>',
 			'<LanguageTag tag="en"/>',
 			'<LanguageTag tag="zh-Hant"/>',
 			'<LanguageTag tag="zh"/>'
-		]) + os.linesep
+		]) + "\n"
 		self.assertEqual(expected.encode("utf_8"), writer.file.getvalue())
 
 

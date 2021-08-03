@@ -1411,7 +1411,7 @@ def _dump_ttx(ttFont):
     tmp.seek(0)
     ttFont2 = ttLib.TTFont(tmp, recalcBBoxes=False, recalcTimestamp=False)
     s = StringIO()
-    ttFont2.saveXML(s, newlinestr="\n")
+    ttFont2.saveXML(s)
     return _strip_ttLibVersion(s.getvalue())
 
 

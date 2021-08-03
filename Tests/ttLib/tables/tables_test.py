@@ -254,7 +254,7 @@ def read_expected_ttx(testfile, tableTag):
 
 def dump_ttx(font, tableTag):
     f = StringIO()
-    font.saveXML(f, newlinestr='\n', tables=[tableTag])
+    font.saveXML(f, tables=[tableTag])
     return ttLibVersion_RE.sub('', f.getvalue())
 
 

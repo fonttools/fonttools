@@ -215,7 +215,7 @@ class TTFont(object):
 
 		return writer.reordersTables()
 
-	def saveXML(self, fileOrPath, newlinestr=None, **kwargs):
+	def saveXML(self, fileOrPath, newlinestr="\n", **kwargs):
 		"""Export the font as TTX (an XML-based text file), or as a series of text
 		files when splitTables is true. In the latter case, the 'fileOrPath'
 		argument should be a path to a directory.
