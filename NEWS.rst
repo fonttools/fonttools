@@ -1,3 +1,9 @@
+- [xmlWriter] Default to ``"\n"`` for ``newlinestr`` instead of platform-specific
+  ``os.linesep`` (#2384).
+- [otData] Define COLRv1 ClipList and ClipBox (#2379).
+- [removeOverlaps/instancer] Added --ignore-overlap-errors option to work around
+  Skia PathOps.Simplify bug (#2382, #2363, google/fonts#3365).
+
 4.25.2 (released 2021-07-26)
 ----------------------------
 
