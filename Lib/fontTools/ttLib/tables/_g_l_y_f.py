@@ -159,7 +159,8 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 						suffix=ext)
 					existingGlyphFiles.add(glyphPath.lower())
 					glyphWriter = xmlWriter.XMLWriter(
-						glyphPath, idlefunc=writer.idlefunc)
+						glyphPath, idlefunc=writer.idlefunc,
+						newlinestr=writer.newlinestr)
 					glyphWriter.begintag("ttFont", ttLibVersion=version)
 					glyphWriter.newline()
 					glyphWriter.begintag("glyf")

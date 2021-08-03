@@ -115,7 +115,7 @@ class TestXMLWriter(unittest.TestCase):
 			writer.write("world")
 			writer.newline()
 
-			linesep = tobytes('\n')
+			linesep = tobytes(os.linesep) if nls is None else tobytes(nls)
 
 			self.assertEqual(
 				header + linesep + b"hello" + linesep + b"world" + linesep,

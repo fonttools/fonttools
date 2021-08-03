@@ -354,7 +354,7 @@ class NameRecordTest(unittest.TestCase):
 		writer = XMLWriter(BytesIO())
 		name.toXML(writer, ttFont=None)
 		xml = writer.file.getvalue().decode("utf_8").strip()
-		return xml.split("\n")[1:]
+		return xml.split(writer.newlinestr.decode("utf_8"))[1:]
 
 	def test_toXML_utf16be(self):
 		name = makeName("Foo Bold", 111, 0, 2, 7)
