@@ -1,3 +1,6 @@
+4.26.2 (released 2021-08-09)
+----------------------------
+
 - [otTables] Added missing ``CompositeMode.PLUS`` operator (#2390).
 
 4.26.1 (released 2021-08-03)
