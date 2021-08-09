@@ -1333,6 +1333,7 @@ class ClipList(getFormatSwitchingBaseTableClass("uint8")):
 					glyph = glyphOrder[glyphID]
 				except IndexError:
 					missingGlyphs.append(glyphID)
+					continue
 				if glyph not in clips:
 					clips[glyph] = copy.copy(rec.ClipBox)
 				else:
@@ -1480,21 +1481,22 @@ class CompositeMode(IntEnum):
 	SRC_ATOP = 9
 	DEST_ATOP = 10
 	XOR = 11
-	SCREEN = 12
-	OVERLAY = 13
-	DARKEN = 14
-	LIGHTEN = 15
-	COLOR_DODGE = 16
-	COLOR_BURN = 17
-	HARD_LIGHT = 18
-	SOFT_LIGHT = 19
-	DIFFERENCE = 20
-	EXCLUSION = 21
-	MULTIPLY = 22
-	HSL_HUE = 23
-	HSL_SATURATION = 24
-	HSL_COLOR = 25
-	HSL_LUMINOSITY = 26
+	PLUS = 12
+	SCREEN = 13
+	OVERLAY = 14
+	DARKEN = 15
+	LIGHTEN = 16
+	COLOR_DODGE = 17
+	COLOR_BURN = 18
+	HARD_LIGHT = 19
+	SOFT_LIGHT = 20
+	DIFFERENCE = 21
+	EXCLUSION = 22
+	MULTIPLY = 23
+	HSL_HUE = 24
+	HSL_SATURATION = 25
+	HSL_COLOR = 26
+	HSL_LUMINOSITY = 27
 
 
 class PaintFormat(IntEnum):
