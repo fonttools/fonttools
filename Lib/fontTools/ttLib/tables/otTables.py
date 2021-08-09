@@ -1333,6 +1333,7 @@ class ClipList(getFormatSwitchingBaseTableClass("uint8")):
 					glyph = glyphOrder[glyphID]
 				except IndexError:
 					missingGlyphs.append(glyphID)
+					continue
 				if glyph not in clips:
 					clips[glyph] = copy.copy(rec.ClipBox)
 				else:
