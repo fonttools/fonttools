@@ -2089,6 +2089,9 @@ def subset_glyphs(self, s):
 	)
 	del self.ColorLayersV1
 
+	clips = self.table.ClipList.clips
+	self.table.ClipList.clips = {g: clips[g] for g in clips if g in s.glyphs}
+
 	layersV0 = self.ColorLayers
 	if not self.table.BaseGlyphList.BaseGlyphPaintRecord:
 		# no more COLRv1 glyphs: downgrade to version 0
