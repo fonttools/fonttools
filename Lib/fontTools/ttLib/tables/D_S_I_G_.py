@@ -1,5 +1,4 @@
-from fontTools.misc.py23 import bytesjoin, strjoin, tobytes, tostr
-from fontTools.misc.textTools import safeEval
+from fontTools.misc.textTools import bytesjoin, strjoin, tobytes, tostr, safeEval
 from fontTools.misc import sstruct
 from . import DefaultTable
 import base64

@@ -1,7 +1,6 @@
-from fontTools.misc.py23 import byteord
 from fontTools.misc import sstruct
 from fontTools.misc.fixedTools import floatToFixedToStr
-from fontTools.misc.textTools import safeEval
+from fontTools.misc.textTools import byteord, safeEval
 # from itertools import *
 from . import DefaultTable
 from . import grUtils

@@ -1,4 +1,4 @@
-from fontTools.misc.py23 import bytechr, byteord, bytesjoin, tobytes, tostr
+from fontTools.misc.textTools import bytechr, byteord, bytesjoin, tobytes, tostr
 from fontTools.misc import eexec
 from .psOperators import (
 	PSOperators,

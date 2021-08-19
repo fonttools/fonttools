@@ -15,9 +15,9 @@ write(path, data, kind='OTHER', dohex=False)
 	part should be written as hexadecimal or binary, but only if kind
 	is 'OTHER'.
 """
-from fontTools.misc.py23 import bytechr, byteord, bytesjoin
 from fontTools.misc import eexec
 from fontTools.misc.macCreatorType import getMacCreatorAndType
+from fontTools.misc.textTools import bytechr, byteord, bytesjoin
 import os
 import re
 

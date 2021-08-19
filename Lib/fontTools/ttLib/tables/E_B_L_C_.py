@@ -1,7 +1,6 @@
-from fontTools.misc.py23 import bytesjoin
 from fontTools.misc import sstruct
 from . import DefaultTable
-from fontTools.misc.textTools import safeEval
+from fontTools.misc.textTools import bytesjoin, safeEval
 from .BitmapGlyphMetrics import BigGlyphMetrics, bigGlyphMetricsFormat, SmallGlyphMetrics, smallGlyphMetricsFormat
 import struct
 import itertools

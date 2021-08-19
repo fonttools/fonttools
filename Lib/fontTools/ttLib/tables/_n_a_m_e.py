@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-from fontTools.misc.py23 import bytechr, byteord, bytesjoin, strjoin, tobytes, tostr
 from fontTools.misc import sstruct
-from fontTools.misc.textTools import safeEval
+from fontTools.misc.textTools import bytechr, byteord, bytesjoin, strjoin, tobytes, tostr, safeEval
 from fontTools.misc.encodingTools import getEncoding
 from fontTools.ttLib import newTable
 from . import DefaultTable

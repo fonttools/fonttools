@@ -11,7 +11,7 @@ or subclasses built-in ElementTree classes to add features that are
 only availble in lxml, like OrderedDict for attributes, pretty_print and
 iterwalk.
 """
-from fontTools.misc.py23 import unicode, tostr
+from fontTools.misc.textTools import tostr
 
 
 XML_DECLARATION = """<?xml version='1.0' encoding='%s'?>"""
@@ -150,9 +150,7 @@ except ImportError:
                 )
                 return
 
-            if encoding is unicode or (
-                encoding is not None and encoding.lower() == "unicode"
-            ):
+            if encoding is not None and encoding.lower() == "unicode":
                 if xml_declaration:
                     raise ValueError(
                         "Serialisation to unicode must not request an XML declaration"

@@ -2,10 +2,10 @@
 CFF dictionary data and Type1/Type2 CharStrings.
 """
 
-from fontTools.misc.py23 import bytechr, byteord, bytesjoin, strjoin
 from fontTools.misc.fixedTools import (
 	fixedToFloat, floatToFixed, floatToFixedToStr, strToFixedToFloat,
 )
+from fontTools.misc.textTools import bytechr, byteord, bytesjoin, strjoin
 from fontTools.pens.boundsPen import BoundsPen
 import struct
 import logging

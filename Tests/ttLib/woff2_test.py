@@ -1,4 +1,3 @@
-from fontTools.misc.py23 import Tag, bytechr, byteord
 from fontTools import ttLib
 from fontTools.ttLib import woff2
 from fontTools.ttLib.tables import _g_l_y_f
@@ -10,6 +9,7 @@ from fontTools.ttLib.woff2 import (
 	WOFF2HmtxTable, WOFF2Writer, unpackBase128, unpack255UShort, pack255UShort)
 import unittest
 from fontTools.misc import sstruct
+from fontTools.misc.textTools import Tag, bytechr, byteord
 from fontTools import fontBuilder
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 from io import BytesIO

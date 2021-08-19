@@ -1,6 +1,5 @@
-from fontTools.misc.py23 import Tag, tostr
 from fontTools.misc import sstruct
-from fontTools.misc.textTools import binary2num, safeEval
+from fontTools.misc.textTools import Tag, tostr, binary2num, safeEval
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.feaLib.lookupDebugInfo import (
     LookupDebugInfo,

@@ -5,9 +5,9 @@ import codecs
 import collections
 from io import BytesIO
 from numbers import Integral
-from fontTools.misc.py23 import tostr
 from fontTools.misc import etree
 from fontTools.misc import plistlib
+from fontTools.misc.textTools import tostr
 from fontTools.ufoLib.plistlib import (
     readPlist, readPlistFromString, writePlist, writePlistToString,
 )

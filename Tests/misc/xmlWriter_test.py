@@ -1,7 +1,7 @@
-from fontTools.misc.py23 import bytesjoin, tobytes
 from io import BytesIO
 import os
 import unittest
+from fontTools.misc.textTools import bytesjoin, tobytes
 from fontTools.misc.xmlWriter import XMLWriter
 
 HEADER = b'<?xml version="1.0" encoding="UTF-8"?>\n'

@@ -1,5 +1,5 @@
-from fontTools.misc.py23 import Tag
 from fontTools.misc.fixedTools import floatToFixedToFloat
+from fontTools.misc.textTools import Tag
 from fontTools import ttLib
 from fontTools import designspaceLib
 from fontTools.feaLib.builder import addOpenTypeFeaturesFromString

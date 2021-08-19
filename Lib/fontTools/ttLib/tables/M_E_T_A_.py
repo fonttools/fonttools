@@ -1,6 +1,5 @@
-from fontTools.misc.py23 import byteord
 from fontTools.misc import sstruct
-from fontTools.misc.textTools import safeEval
+from fontTools.misc.textTools import byteord, safeEval
 from . import DefaultTable
 import pdb
 import struct

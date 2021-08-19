@@ -12,7 +12,7 @@ the new key at the end of the operation.
 
 """
 
-from fontTools.misc.py23 import bytechr, bytesjoin, byteord
+from fontTools.misc.textTools import bytechr, bytesjoin, byteord
 
 
 def _decryptChar(cipher, R):

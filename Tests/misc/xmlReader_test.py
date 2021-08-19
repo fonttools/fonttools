@@ -1,8 +1,8 @@
-from fontTools.misc.py23 import strjoin
 from io import BytesIO
 import os
 import unittest
 from fontTools.ttLib import TTFont
+from fontTools.misc.textTools import strjoin
 from fontTools.misc.xmlReader import XMLReader, ProgressPrinter, BUFSIZE
 import tempfile
 

@@ -1,7 +1,7 @@
-from fontTools.misc.py23 import bytesjoin, tostr
 from io import BytesIO
 import struct
 from fontTools.misc import sstruct
+from fontTools.misc.textTools import bytesjoin, tostr
 from collections import OrderedDict
 from collections.abc import MutableMapping
 

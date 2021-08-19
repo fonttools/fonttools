@@ -1,5 +1,5 @@
-from fontTools.misc.py23 import bytechr, byteord, strjoin
 from fontTools.misc import sstruct
+from fontTools.misc.textTools import bytechr, byteord, strjoin
 from . import DefaultTable
 import array
 from collections.abc import Mapping
