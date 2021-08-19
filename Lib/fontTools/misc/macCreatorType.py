@@ -1,4 +1,4 @@
-from fontTools.misc.py23 import Tag, bytesjoin, strjoin
+from fontTools.misc._py23 import Tag, bytesjoin, strjoin
 try:
 	import xattr
 except ImportError:

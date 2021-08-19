@@ -46,7 +46,7 @@ calcsize(fmt)
 	it returns the size of the data in bytes.
 """
 
-from fontTools.misc.py23 import tobytes, tostr
+from fontTools.misc._py23 import tobytes, tostr
 from fontTools.misc.fixedTools import fixedToFloat as fi2fl, floatToFixed as fl2fi
 import struct
 import re

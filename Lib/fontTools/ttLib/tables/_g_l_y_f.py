@@ -1,7 +1,7 @@
 """_g_l_y_f.py -- Converter classes for the 'glyf' table."""
 
 from collections import namedtuple
-from fontTools.misc.py23 import tostr
+from fontTools.misc._py23 import tostr
 from fontTools.misc import sstruct
 from fontTools import ttLib
 from fontTools import version

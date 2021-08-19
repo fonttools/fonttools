@@ -1,4 +1,4 @@
-from fontTools.misc.py23 import bytesjoin, tostr
+from fontTools.misc._py23 import bytesjoin, tostr
 from fontTools.misc import sstruct
 from fontTools.misc.loggingTools import CapturingLogHandler
 from fontTools.misc.testTools import FakeFont

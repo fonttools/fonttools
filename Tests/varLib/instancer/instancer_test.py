@@ -1,4 +1,4 @@
-from fontTools.misc.py23 import Tag
+from fontTools.misc._py23 import Tag
 from fontTools.misc.fixedTools import floatToFixedToFloat
 from fontTools import ttLib
 from fontTools import designspaceLib

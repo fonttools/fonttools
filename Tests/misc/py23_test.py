@@ -1,4 +1,4 @@
-from fontTools.misc.py23 import tobytes
+from fontTools.misc._py23 import tobytes
 from fontTools.misc.textTools import deHexStr
 import filecmp
 from io import StringIO
@@ -8,8 +8,9 @@ import sys
 import os
 import unittest
 
-from fontTools.misc.py23 import (
-	round2, round3, isclose, redirect_stdout, redirect_stderr)
+from contextlib import redirect_stderr, redirect_stdout
+
+from fontTools.misc._py23 import (round2, round3, isclose)
 
 
 PIPE_SCRIPT = """\
@@ -53,7 +54,7 @@ class OpenFuncWrapperTest(unittest.TestCase):
 
 	def test_binary_pipe_py23_open_wrapper(self):
 		if self.diff_piped(
-				TEST_BIN_DATA, "from fontTools.misc.py23 import open"):
+				TEST_BIN_DATA, "from fontTools.misc._py23 import open"):
 			self.fail("Input and output data differ!")
 
 	def test_binary_pipe_built_in_io_open(self):

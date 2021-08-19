@@ -1,4 +1,4 @@
-from fontTools.misc.py23 import tostr
+from fontTools.misc._py23 import tostr
 from fontTools.ufoLib import UFOReader, UFOWriter, UFOFileStructure
 from fontTools.ufoLib.errors import UFOLibError, GlifLibError
 from fontTools.misc import plistlib

@@ -1,4 +1,4 @@
-from fontTools.misc.py23 import tobytes
+from fontTools.misc._py23 import tobytes
 from fontTools.feaLib.error import FeatureLibError, IncludedFeaNotFound
 from fontTools.feaLib.lexer import IncludingLexer, Lexer
 from io import StringIO

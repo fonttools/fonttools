@@ -1,4 +1,4 @@
-from fontTools.misc.py23 import Tag, bytesjoin
+from fontTools.misc._py23 import Tag, bytesjoin
 from .DefaultTable import DefaultTable
 import sys
 import array

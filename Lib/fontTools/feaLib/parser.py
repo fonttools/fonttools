@@ -1,7 +1,7 @@
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.feaLib.lexer import Lexer, IncludingLexer, NonIncludingLexer
 from fontTools.misc.encodingTools import getEncoding
-from fontTools.misc.py23 import bytechr, tobytes, tostr
+from fontTools.misc._py23 import bytechr, tobytes, tostr
 import fontTools.feaLib.ast as ast
 import logging
 import os

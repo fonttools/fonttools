@@ -1,4 +1,4 @@
-from fontTools.misc.py23 import tobytes
+from fontTools.misc._py23 import tobytes
 from fontTools.misc.loggingTools import CapturingLogHandler
 from fontTools.ttLib import TTFont, TTLibError
 from fontTools.ttLib.tables.T_S_I__0 import table_T_S_I__0

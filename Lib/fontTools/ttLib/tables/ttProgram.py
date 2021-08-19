@@ -1,6 +1,6 @@
 """ttLib.tables.ttProgram.py -- Assembler/disassembler for TrueType bytecode programs."""
 
-from fontTools.misc.py23 import strjoin
+from fontTools.misc._py23 import strjoin
 from fontTools.misc.textTools import num2binary, binary2num, readHex
 import array
 from io import StringIO

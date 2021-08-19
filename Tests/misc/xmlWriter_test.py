@@ -1,4 +1,4 @@
-from fontTools.misc.py23 import bytesjoin, tobytes
+from fontTools.misc._py23 import bytesjoin, tobytes
 from io import BytesIO
 import os
 import unittest

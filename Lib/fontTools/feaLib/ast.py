@@ -1,4 +1,4 @@
-from fontTools.misc.py23 import byteord, tobytes
+from fontTools.misc._py23 import byteord, tobytes
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.feaLib.location import FeatureLibLocation
 from fontTools.misc.encodingTools import getEncoding

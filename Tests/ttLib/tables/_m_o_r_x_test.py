@@ -1,4 +1,4 @@
-from fontTools.misc.py23 import bytechr, bytesjoin
+from fontTools.misc._py23 import bytechr, bytesjoin
 from fontTools.misc.testTools import FakeFont, getXML, parseXML
 from fontTools.misc.textTools import deHexStr, hexStr
 from fontTools.ttLib import newTable

@@ -1,5 +1,5 @@
 from fontTools.misc import xmlWriter
-from fontTools.misc.py23 import Tag, byteord, tostr
+from fontTools.misc._py23 import Tag, byteord, tostr
 from fontTools.misc.loggingTools import deprecateArgument
 from fontTools.ttLib import TTLibError
 from fontTools.ttLib.sfnt import SFNTReader, SFNTWriter

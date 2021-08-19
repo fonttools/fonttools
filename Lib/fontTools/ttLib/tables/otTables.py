@@ -9,7 +9,7 @@ import copy
 from enum import IntEnum
 import itertools
 from collections import defaultdict, namedtuple
-from fontTools.misc.py23 import bytesjoin
+from fontTools.misc._py23 import bytesjoin
 from fontTools.misc.roundTools import otRound
 from fontTools.misc.textTools import pad, safeEval
 from .otBase import (

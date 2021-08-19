@@ -1,5 +1,5 @@
 import io
-from fontTools.misc.py23 import tobytes, tostr
+from fontTools.misc._py23 import tobytes, tostr
 from fontTools.misc.testTools import getXML
 from fontTools import subset
 from fontTools.fontBuilder import FontBuilder

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from fontTools.misc.py23 import bytechr, byteord, bytesjoin, strjoin, tobytes, tostr
+from fontTools.misc._py23 import bytechr, byteord, bytesjoin, strjoin, tobytes, tostr
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
 from fontTools.misc.encodingTools import getEncoding

@@ -11,7 +11,7 @@ or subclasses built-in ElementTree classes to add features that are
 only availble in lxml, like OrderedDict for attributes, pretty_print and
 iterwalk.
 """
-from fontTools.misc.py23 import unicode, tostr
+from fontTools.misc._py23 import unicode, tostr
 
 
 XML_DECLARATION = """<?xml version='1.0' encoding='%s'?>"""

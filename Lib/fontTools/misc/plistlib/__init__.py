@@ -23,7 +23,7 @@ from functools import singledispatch
 
 from fontTools.misc import etree
 
-from fontTools.misc.py23 import tostr
+from fontTools.misc._py23 import tostr
 
 
 # By default, we

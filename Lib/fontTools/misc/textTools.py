@@ -1,7 +1,7 @@
 """fontTools.misc.textTools.py -- miscellaneous routines."""
 
 
-from fontTools.misc.py23 import bytechr, byteord, bytesjoin, strjoin, tobytes
+from fontTools.misc._py23 import bytechr, byteord, bytesjoin, strjoin, tobytes
 import ast
 import string
 

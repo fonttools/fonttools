@@ -1,4 +1,4 @@
-from fontTools.misc.py23 import strjoin
+from fontTools.misc._py23 import strjoin
 from io import BytesIO
 import os
 import unittest

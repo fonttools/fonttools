@@ -1,4 +1,4 @@
-from fontTools.misc.py23 import bytesjoin, tobytes, tostr
+from fontTools.misc._py23 import bytesjoin, tobytes, tostr
 from fontTools.misc.fixedTools import (
 	fixedToFloat as fi2fl,
 	floatToFixed as fl2fi,

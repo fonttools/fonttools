@@ -1,4 +1,4 @@
-from fontTools.misc.py23 import Tag, bytechr, byteord
+from fontTools.misc._py23 import Tag, bytechr, byteord
 from fontTools import ttLib
 from fontTools.ttLib import woff2
 from fontTools.ttLib.tables import _g_l_y_f
