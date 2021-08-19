@@ -1,8 +1,0 @@
-####
-py23
-####
-
-.. automodule:: fontTools.misc.py23
-   :inherited-members:
-   :members:
-   :undoc-members:
