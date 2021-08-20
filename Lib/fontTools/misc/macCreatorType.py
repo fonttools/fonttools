@@ -1,4 +1,4 @@
-from fontTools.misc.py23 import Tag, bytesjoin, strjoin
+from fontTools.misc.textTools import Tag, bytesjoin, strjoin
 try:
 	import xattr
 except ImportError:
@@ -18,7 +18,7 @@ def getMacCreatorAndType(path):
 		path (str): A file path.
 
 	Returns:
-		A tuple of two :py:class:`fontTools.py23.Tag` objects, the first
+		A tuple of two :py:class:`fontTools.textTools.Tag` objects, the first
 		representing the file creator and the second representing the
 		file type.
 	"""

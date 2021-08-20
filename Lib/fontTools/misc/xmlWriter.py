@@ -1,6 +1,6 @@
 """xmlWriter.py -- Simple XML authoring class"""
 
-from fontTools.misc.py23 import byteord, strjoin, tobytes, tostr
+from fontTools.misc.textTools import byteord, strjoin, tobytes, tostr
 import sys
 import os
 import string

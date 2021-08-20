@@ -1,4 +1,4 @@
-from fontTools.misc.py23 import byteord, tostr
+from fontTools.misc.textTools import byteord, tostr
 
 import re
 from bisect import bisect_right

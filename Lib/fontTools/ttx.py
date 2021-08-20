@@ -86,10 +86,10 @@ usage: ttx [options] inputfile1 [... inputfileN]
 """
 
 
-from fontTools.misc.py23 import Tag, tostr
 from fontTools.ttLib import TTFont, TTLibError
 from fontTools.misc.macCreatorType import getMacCreatorAndType
 from fontTools.unicode import setUnicodeData
+from fontTools.misc.textTools import Tag, tostr
 from fontTools.misc.timeTools import timestampSinceEpoch
 from fontTools.misc.loggingTools import Timer
 from fontTools.misc.cliTools import makeOutputFileName

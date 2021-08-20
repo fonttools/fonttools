@@ -1,4 +1,3 @@
-from fontTools.misc.py23 import bytesjoin, tobytes, tostr
 from fontTools.misc.fixedTools import (
 	fixedToFloat as fi2fl,
 	floatToFixed as fl2fi,
@@ -8,7 +7,7 @@ from fontTools.misc.fixedTools import (
 	versionToFixed as ve2fi,
 )
 from fontTools.misc.roundTools import nearestMultipleShortestRepr, otRound
-from fontTools.misc.textTools import pad, safeEval
+from fontTools.misc.textTools import bytesjoin, tobytes, tostr, pad, safeEval
 from fontTools.ttLib import getSearchRange
 from .otBase import (CountReference, FormatSwitchingBaseTable,
                      OTTableReader, OTTableWriter, ValueRecordFactory)

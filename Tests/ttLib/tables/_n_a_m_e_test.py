@@ -1,7 +1,7 @@
-from fontTools.misc.py23 import bytesjoin, tostr
 from fontTools.misc import sstruct
 from fontTools.misc.loggingTools import CapturingLogHandler
 from fontTools.misc.testTools import FakeFont
+from fontTools.misc.textTools import bytesjoin, tostr
 from fontTools.misc.xmlWriter import XMLWriter
 from io import BytesIO
 import struct

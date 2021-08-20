@@ -1,4 +1,3 @@
-from fontTools.misc.py23 import Tag, bytechr, byteord, bytesjoin
 from io import BytesIO
 import sys
 import array
@@ -6,7 +5,7 @@ import struct
 from collections import OrderedDict
 from fontTools.misc import sstruct
 from fontTools.misc.arrayTools import calcIntBounds
-from fontTools.misc.textTools import pad
+from fontTools.misc.textTools import Tag, bytechr, byteord, bytesjoin, pad
 from fontTools.ttLib import (TTFont, TTLibError, getTableModule, getTableClass,
 	getSearchRange)
 from fontTools.ttLib.sfnt import (SFNTReader, SFNTWriter, DirectoryEntry,

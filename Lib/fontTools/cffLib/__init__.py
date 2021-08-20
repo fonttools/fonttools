@@ -11,11 +11,10 @@ the demands of variable fonts. This module parses both original CFF and CFF2.
 
 """
 
-from fontTools.misc.py23 import bytechr, byteord, bytesjoin, tobytes, tostr
 from fontTools.misc import sstruct
 from fontTools.misc import psCharStrings
 from fontTools.misc.arrayTools import unionRect, intRect
-from fontTools.misc.textTools import safeEval
+from fontTools.misc.textTools import bytechr, byteord, bytesjoin, tobytes, tostr, safeEval
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables.otBase import OTTableWriter
 from fontTools.ttLib.tables.otBase import OTTableReader

@@ -18,9 +18,9 @@ Then you can make a variable-font this way:
 
 API *will* change in near future.
 """
-from fontTools.misc.py23 import Tag, tostr
-from fontTools.misc.roundTools import noRound, otRound
 from fontTools.misc.vector import Vector
+from fontTools.misc.roundTools import noRound, otRound
+from fontTools.misc.textTools import Tag, tostr
 from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables._f_v_a_r import Axis, NamedInstance
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates

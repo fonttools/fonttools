@@ -14,7 +14,7 @@ a table's length chages you need to rewrite the whole file anyway.
 
 from io import BytesIO
 from types import SimpleNamespace
-from fontTools.misc.py23 import Tag
+from fontTools.misc.textTools import Tag
 from fontTools.misc import sstruct
 from fontTools.ttLib import TTLibError
 import struct

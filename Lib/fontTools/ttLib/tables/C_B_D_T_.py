@@ -3,7 +3,7 @@
 # Google Author(s): Matt Fontaine
 
 
-from fontTools.misc.py23 import bytesjoin
+from fontTools.misc.textTools import bytesjoin
 from fontTools.misc import sstruct
 from . import E_B_D_T_
 from .BitmapGlyphMetrics import BigGlyphMetrics, bigGlyphMetricsFormat, SmallGlyphMetrics, smallGlyphMetricsFormat

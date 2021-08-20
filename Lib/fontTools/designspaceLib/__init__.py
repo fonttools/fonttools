@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from fontTools.misc.py23 import tobytes, tostr
 from fontTools.misc.loggingTools import LogMixin
+from fontTools.misc.textTools import tobytes, tostr
 import collections
 from io import BytesIO, StringIO
 import os

@@ -7,7 +7,7 @@ import shutil
 import sys
 import tempfile
 from unittest import TestCase as _TestCase
-from fontTools.misc.py23 import tobytes
+from fontTools.misc.textTools import tobytes
 from fontTools.misc.xmlWriter import XMLWriter
 
 

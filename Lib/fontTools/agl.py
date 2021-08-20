@@ -26,7 +26,7 @@ This is used by fontTools when it has to construct glyph names for a font which
 doesn't include any (e.g. format 3.0 post tables).
 """
 
-from fontTools.misc.py23 import tostr
+from fontTools.misc.textTools import tostr
 import re
 
 

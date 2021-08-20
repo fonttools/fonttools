@@ -1,6 +1,5 @@
-from fontTools.misc.py23 import bytesjoin, strjoin
 from fontTools.misc import sstruct
-from fontTools.misc.textTools import readHex
+from fontTools.misc.textTools import bytesjoin, strjoin, readHex
 from fontTools.ttLib import TTLibError
 from . import DefaultTable
 

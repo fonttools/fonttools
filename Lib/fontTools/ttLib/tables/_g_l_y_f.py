@@ -1,11 +1,10 @@
 """_g_l_y_f.py -- Converter classes for the 'glyf' table."""
 
 from collections import namedtuple
-from fontTools.misc.py23 import tostr
 from fontTools.misc import sstruct
 from fontTools import ttLib
 from fontTools import version
-from fontTools.misc.textTools import safeEval, pad
+from fontTools.misc.textTools import tostr, safeEval, pad
 from fontTools.misc.arrayTools import calcIntBounds, pointInRect
 from fontTools.misc.bezierTools import calcQuadraticBounds
 from fontTools.misc.fixedTools import (

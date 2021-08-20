@@ -1,6 +1,6 @@
-from fontTools.misc.py23 import tobytes
 from fontTools.feaLib.error import FeatureLibError, IncludedFeaNotFound
 from fontTools.feaLib.lexer import IncludingLexer, Lexer
+from fontTools.misc.textTools import tobytes
 from io import StringIO
 import os
 import shutil

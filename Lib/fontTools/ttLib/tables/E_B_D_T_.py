@@ -1,6 +1,5 @@
-from fontTools.misc.py23 import bytechr, byteord, bytesjoin, strjoin
 from fontTools.misc import sstruct
-from fontTools.misc.textTools import safeEval, readHex, hexStr, deHexStr
+from fontTools.misc.textTools import bytechr, byteord, bytesjoin, strjoin, safeEval, readHex, hexStr, deHexStr
 from .BitmapGlyphMetrics import BigGlyphMetrics, bigGlyphMetricsFormat, SmallGlyphMetrics, smallGlyphMetricsFormat
 from . import DefaultTable
 import itertools

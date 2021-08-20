@@ -25,7 +25,6 @@ utilities by fontTools, but some of which may be more generally useful.
    psCharStrings
    psLib
    psOperators
-   py23
    sstruct
    symfont
    testTools
