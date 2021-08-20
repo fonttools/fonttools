@@ -425,8 +425,7 @@ class InsertionMorphAction(AATAction):
 			return []
 		reader = actionReader.getSubReader(
 			actionReader.pos + index * 2)
-		return [font.getGlyphName(glyphID)
-		        for glyphID in reader.readUShortArray(count)]
+		return font.getGlyphNameMany(reader.readUShortArray(count))
 
 	def toXML(self, xmlWriter, font, attrs, name):
 		xmlWriter.begintag(name, **attrs)
@@ -538,8 +537,7 @@ class Coverage(FormatSwitchingBaseTable):
 				end = r.End
 				startID = font.getGlyphID(start)
 				endID = font.getGlyphID(end) + 1
-				for glyphID in range(startID, endID):
-					glyphs.append(font.getGlyphName(glyphID))
+				glyphs.extend(font.getGlyphNameMany(range(startID, endID)))
 		else:
 			self.glyphs = []
 			log.warning("Unknown Coverage format: %s", self.Format)
@@ -755,7 +753,7 @@ class SingleSubst(FormatSwitchingBaseTable):
 			delta = rawTable["DeltaGlyphID"]
 			inputGIDS =  [ font.getGlyphID(name) for name in input ]
 			outGIDS = [ (glyphID + delta) % 65536 for glyphID in inputGIDS ]
-			outNames = [ font.getGlyphName(glyphID) for glyphID in outGIDS ]
+			outNames = font.getGlyphNameMany(outGIDS)
 			for inp, out in zip(input, outNames):
 				mapping[inp] = out
 		elif self.Format == 2:
@@ -915,9 +913,10 @@ class ClassDef(FormatSwitchingBaseTable):
 			classList = rawTable["ClassValueArray"]
 			startID = font.getGlyphID(start)
 			endID = startID + len(classList)
-			for glyphID, cls in zip(range(startID, endID), classList):
+			glyphNames = font.getGlyphNameMany(range(startID, endID))
+			for glyphName, cls in zip(glyphNames, classList):
 				if cls:
-					classDefs[font.getGlyphName(glyphID)] = cls
+					classDefs[glyphName] = cls
 
 		elif self.Format == 2:
 			records = rawTable["ClassRangeRecord"]
@@ -927,9 +926,10 @@ class ClassDef(FormatSwitchingBaseTable):
 				cls = rec.Class
 				startID = font.getGlyphID(start)
 				endID = font.getGlyphID(end) + 1
-				for glyphID in range(startID, endID):
-					if cls:
-						classDefs[font.getGlyphName(glyphID)] = cls
+				glyphNames = font.getGlyphNameMany(range(startID, endID))
+				if cls:
+					for glyphName in glyphNames:
+						classDefs[glyphName] = cls
 		else:
 			log.warning("Unknown ClassDef format: %s", self.Format)
 		self.classDefs = classDefs

@@ -533,6 +533,11 @@ class TTFont(object):
 			return self.getGlyphOrder()[glyphID]
 		except IndexError:
 			return "glyph%.5d" % glyphID
+	def getGlyphNameMany(self, lst):
+		glyphOrder = self.getGlyphOrder();
+		cnt = len(glyphOrder)
+		return [glyphOrder[gid] if gid < cnt else "glyph%.5d" % gid
+			for gid in lst]
 
 	def getGlyphID(self, glyphName):
 		if not hasattr(self, "_reverseGlyphOrderDict"):

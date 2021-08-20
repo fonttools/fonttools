@@ -14,15 +14,12 @@ log = logging.getLogger(__name__)
 
 def _make_map(font, chars, gids):
 	assert len(chars) == len(gids)
+	glyphNames = font.getGlyphNameMany(gids)
 	cmap = {}
 	glyphOrder = font.getGlyphOrder()
-	for char,gid in zip(chars,gids):
+	for char,gid,name in zip(chars,gids,glyphNames):
 		if gid == 0:
 			continue
-		try:
-			name = glyphOrder[gid]
-		except IndexError:
-			name = font.getGlyphName(gid)
 		cmap[char] = name
 	return cmap
 
