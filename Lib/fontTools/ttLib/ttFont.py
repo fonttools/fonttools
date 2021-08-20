@@ -544,11 +544,11 @@ class TTFont(object):
 		from fontTools.misc import textTools
 		return textTools.caselessSort(self.getGlyphOrder())
 
-	def getGlyphName(self, glyphID, requireReal=False):
+	def getGlyphName(self, glyphID):
 		try:
 			return self.getGlyphOrder()[glyphID]
 		except IndexError:
-			if requireReal or not self.allowVID:
+			if not self.allowVID:
 				# XXX The ??.W8.otf font that ships with OSX uses higher glyphIDs in
 				# the cmap table than there are glyphs. I don't think it's legal...
 				return "glyph%.5d" % glyphID
@@ -563,7 +563,7 @@ class TTFont(object):
 					self.VIDDict[glyphID] = glyphName
 				return glyphName
 
-	def getGlyphID(self, glyphName, requireReal=False):
+	def getGlyphID(self, glyphName):
 		if not hasattr(self, "_reverseGlyphOrderDict"):
 			self._buildReverseGlyphOrderDict()
 		glyphOrder = self.getGlyphOrder()
@@ -573,9 +573,7 @@ class TTFont(object):
 				self._buildReverseGlyphOrderDict()
 				return self.getGlyphID(glyphName)
 			else:
-				if requireReal:
-					raise KeyError(glyphName)
-				elif not self.allowVID:
+				if not self.allowVID:
 					# Handle glyphXXX only
 					if glyphName[:5] == "glyph":
 						try:

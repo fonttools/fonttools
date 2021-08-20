@@ -136,7 +136,7 @@ class MockFont(object):
         self._reverseGlyphOrder = AllocatingDict({'.notdef': 0})
         self.lazy = False
 
-    def getGlyphID(self, glyph, requireReal=None):
+    def getGlyphID(self, glyph):
         gid = self._reverseGlyphOrder[glyph]
         return gid
 
