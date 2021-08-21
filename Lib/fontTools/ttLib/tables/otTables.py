@@ -549,10 +549,9 @@ class Coverage(FormatSwitchingBaseTable):
 			glyphs = self.glyphs = []
 		format = 1
 		rawTable = {"GlyphArray": glyphs}
-		getGlyphID = font.getGlyphID
 		if glyphs:
 			# find out whether Format 2 is more compact or not
-			glyphIDs = [getGlyphID(glyphName) for glyphName in glyphs ]
+			glyphIDs = font.getGlyphIDMany(glyphs)
 			brokenOrder = sorted(glyphIDs) != glyphIDs
 
 			last = glyphIDs[0]
@@ -751,7 +750,7 @@ class SingleSubst(FormatSwitchingBaseTable):
 		input = _getGlyphsFromCoverageTable(rawTable["Coverage"])
 		if self.Format == 1:
 			delta = rawTable["DeltaGlyphID"]
-			inputGIDS =  [ font.getGlyphID(name) for name in input ]
+			inputGIDS = font.getGlyphIDMany(input)
 			outGIDS = [ (glyphID + delta) % 65536 for glyphID in inputGIDS ]
 			outNames = font.getGlyphNameMany(outGIDS)
 			for inp, out in zip(input, outNames):

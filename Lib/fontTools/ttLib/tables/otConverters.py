@@ -347,18 +347,11 @@ class GlyphID(SimpleValue):
 	staticSize = 2
 	typecode = "H"
 	def readArray(self, reader, font, tableDict, count):
-		gids = reader.readArray(self.typecode, self.staticSize, count)
-		return font.getGlyphNameMany(gids)
+		return font.getGlyphNameMany(reader.readArray(self.typecode, self.staticSize, count))
 	def read(self, reader, font, tableDict):
 		return font.getGlyphName(reader.readValue(self.typecode, self.staticSize))
 	def writeArray(self, writer, font, tableDict, values):
-		glyphMap = font.getReverseGlyphMap()
-		try:
-			values = [glyphMap[glyphname] for glyphname in values]
-		except KeyError:
-			# Slower, but will not throw a KeyError on an out-of-range glyph name.
-			values = [font.getGlyphID(glyphname) for glyphname in values]
-		writer.writeArray(self.typecode, values)
+		writer.writeArray(self.typecode, font.getGlyphIDMany(values))
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeValue(self.typecode, font.getGlyphID(value))
 

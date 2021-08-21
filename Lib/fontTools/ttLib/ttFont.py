@@ -533,6 +533,7 @@ class TTFont(object):
 			return self.getGlyphOrder()[glyphID]
 		except IndexError:
 			return "glyph%.5d" % glyphID
+
 	def getGlyphNameMany(self, lst):
 		glyphOrder = self.getGlyphOrder();
 		cnt = len(glyphOrder)
@@ -540,14 +541,15 @@ class TTFont(object):
 			for gid in lst]
 
 	def getGlyphID(self, glyphName):
-		if not hasattr(self, "_reverseGlyphOrderDict"):
-			self._buildReverseGlyphOrderDict()
 		glyphOrder = self.getGlyphOrder()
-		d = self._reverseGlyphOrderDict
-		if glyphName not in d:
+		d = self.getReverseGlyphMap()
+
+		glyphID = d.get(glyphName)
+
+		if glyphID is None:
+			# TODO This check is really expensive
 			if glyphName in glyphOrder:
-				self._buildReverseGlyphOrderDict()
-				return self.getGlyphID(glyphName)
+				return self._buildReverseGlyphOrderDict()[glyphName]
 			else:
 				# Handle glyphXXX only
 				if glyphName[:5] == "glyph":
@@ -556,11 +558,21 @@ class TTFont(object):
 					except (NameError, ValueError):
 						raise KeyError(glyphName)
 
-		glyphID = d[glyphName]
 		if glyphName != glyphOrder[glyphID]:
-			self._buildReverseGlyphOrderDict()
-			return self.getGlyphID(glyphName)
+			return self._buildReverseGlyphOrderDict()[glyphName]
+
 		return glyphID
+
+	def getGlyphIDMany(self, lst):
+		d = self.getReverseGlyphMap()
+
+		glyphIDs = [d.get(glyphName) for glyphName in lst]
+
+		if any(glyphID is None for glyphID in glyphIDs):
+			getGlyphID = self.getGlyphID
+			return [getGlyphID(glyphName) for glyphName in lst]
+
+		return glyphIDs
 
 	def getReverseGlyphMap(self, rebuild=False):
 		if rebuild or not hasattr(self, "_reverseGlyphOrderDict"):
@@ -570,8 +582,9 @@ class TTFont(object):
 	def _buildReverseGlyphOrderDict(self):
 		self._reverseGlyphOrderDict = d = {}
 		glyphOrder = self.getGlyphOrder()
-		for glyphID in range(len(glyphOrder)):
-			d[glyphOrder[glyphID]] = glyphID
+		for glyphID,glyphName in enumerate(self.getGlyphOrder()):
+			d[glyphName] = glyphID
+		return d
 
 	def _writeTable(self, tag, writer, done, tableCache=None):
 		"""Internal helper function for self.save(). Keeps track of

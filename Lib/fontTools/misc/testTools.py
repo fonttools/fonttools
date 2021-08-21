@@ -57,6 +57,9 @@ class FakeFont:
     def getGlyphID(self, name):
         return self.reverseGlyphOrderDict_[name]
 
+    def getGlyphIDMany(self, lst):
+        return [self.getGlyphID(gid) for gid in lst]
+
     def getGlyphName(self, glyphID):
         if glyphID < len(self.glyphOrder_):
             return self.glyphOrder_[glyphID]
