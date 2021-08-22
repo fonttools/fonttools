@@ -1209,7 +1209,7 @@ class STXHeader(BaseConverter):
 	def _readLigatures(self, reader, font):
 		limit = len(reader.data)
 		numLigatureGlyphs = (limit - reader.pos) // 2
-		return font.getGlyphNameMany (reader.readUShortArray(numLigatureGlyphs))
+		return font.getGlyphNameMany(reader.readUShortArray(numLigatureGlyphs))
 
 	def _countPerGlyphLookups(self, table):
 		# Somewhat annoyingly, the morx table does not encode

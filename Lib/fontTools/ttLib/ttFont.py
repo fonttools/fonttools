@@ -569,6 +569,7 @@ class TTFont(object):
 		glyphIDs = [d.get(glyphName) for glyphName in lst]
 
 		if any(glyphID is None for glyphID in glyphIDs):
+			# TODO Add something faster
 			getGlyphID = self.getGlyphID
 			return [getGlyphID(glyphName) for glyphName in lst]
 
@@ -581,7 +582,6 @@ class TTFont(object):
 
 	def _buildReverseGlyphOrderDict(self):
 		self._reverseGlyphOrderDict = d = {}
-		glyphOrder = self.getGlyphOrder()
 		for glyphID,glyphName in enumerate(self.getGlyphOrder()):
 			d[glyphName] = glyphID
 		return d

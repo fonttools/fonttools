@@ -16,7 +16,6 @@ def _make_map(font, chars, gids):
 	assert len(chars) == len(gids)
 	glyphNames = font.getGlyphNameMany(gids)
 	cmap = {}
-	glyphOrder = font.getGlyphOrder()
 	for char,gid,name in zip(chars,gids,glyphNames):
 		if gid == 0:
 			continue

@@ -920,15 +920,16 @@ class ClassDef(FormatSwitchingBaseTable):
 		elif self.Format == 2:
 			records = rawTable["ClassRangeRecord"]
 			for rec in records:
+				cls = rec.Class
+				if not cls:
+					continue
 				start = rec.Start
 				end = rec.End
-				cls = rec.Class
 				startID = font.getGlyphID(start)
 				endID = font.getGlyphID(end) + 1
 				glyphNames = font.getGlyphNameMany(range(startID, endID))
-				if cls:
-					for glyphName in glyphNames:
-						classDefs[glyphName] = cls
+				for glyphName in glyphNames:
+					classDefs[glyphName] = cls
 		else:
 			log.warning("Unknown ClassDef format: %s", self.Format)
 		self.classDefs = classDefs
