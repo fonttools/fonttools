@@ -414,7 +414,7 @@ class TTFont(object):
 	def setGlyphOrder(self, glyphOrder):
 		self.glyphOrder = glyphOrder
 		if hasattr(self, '_reverseGlyphOrderDict'):
-			delattr(self, '_reverseGlyphOrderDict')
+			del self._reverseGlyphOrderDict
 
 	def getGlyphOrder(self):
 		try:
@@ -543,7 +543,6 @@ class TTFont(object):
 			for gid in lst]
 
 	def getGlyphID(self, glyphName):
-		glyphOrder = self.getGlyphOrder()
 		try:
 			return self.getReverseGlyphMap()[glyphName]
 		except KeyError:
