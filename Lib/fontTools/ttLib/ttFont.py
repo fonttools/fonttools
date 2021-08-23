@@ -544,38 +544,22 @@ class TTFont(object):
 
 	def getGlyphID(self, glyphName):
 		glyphOrder = self.getGlyphOrder()
-		d = self.getReverseGlyphMap()
-
-		glyphID = d.get(glyphName)
-
-		if glyphID is None:
-			# TODO This check is really expensive
-			if glyphName in glyphOrder:
-				return self._buildReverseGlyphOrderDict()[glyphName]
-			else:
-				# Handle glyphXXX only
-				if glyphName[:5] == "glyph":
-					try:
-						return int(glyphName[5:])
-					except (NameError, ValueError):
-						raise KeyError(glyphName)
-
-		if glyphName != glyphOrder[glyphID]:
-			return self._buildReverseGlyphOrderDict()[glyphName]
-
-		return glyphID
+		try:
+			return self.getReverseGlyphMap()[glyphName]
+		except KeyError:
+			if glyphName[:5] == "glyph":
+				try:
+					return int(glyphName[5:])
+				except (NameError, ValueError):
+					raise KeyError(glyphName)
 
 	def getGlyphIDMany(self, lst):
 		d = self.getReverseGlyphMap()
-
-		glyphIDs = [d.get(glyphName) for glyphName in lst]
-
-		if any(glyphID is None for glyphID in glyphIDs):
-			# TODO Add something faster
+		try:
+			return [d[glyphName] for glyphName in lst]
+		except KeyError:
 			getGlyphID = self.getGlyphID
 			return [getGlyphID(glyphName) for glyphName in lst]
-
-		return glyphIDs
 
 	def getReverseGlyphMap(self, rebuild=False):
 		if rebuild or not hasattr(self, "_reverseGlyphOrderDict"):
@@ -791,9 +775,9 @@ class GlyphOrder(object):
 	def fromXML(self, name, attrs, content, ttFont):
 		if not hasattr(self, "glyphOrder"):
 			self.glyphOrder = []
-			ttFont.setGlyphOrder(self.glyphOrder)
 		if name == "GlyphID":
 			self.glyphOrder.append(attrs["name"])
+		ttFont.setGlyphOrder(self.glyphOrder)
 
 
 def getTableModule(tag):
