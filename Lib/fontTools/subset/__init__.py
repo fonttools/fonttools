@@ -2864,7 +2864,6 @@ class Subsetter(object):
 				glyphOrder = [g for g in glyphOrder if font.getGlyphID(g) <= self.last_retained_order]
 
 			font.setGlyphOrder(glyphOrder)
-			font._buildReverseGlyphOrderDict()
 
 
 	def _prune_post_subset(self, font):

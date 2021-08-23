@@ -413,6 +413,8 @@ class TTFont(object):
 
 	def setGlyphOrder(self, glyphOrder):
 		self.glyphOrder = glyphOrder
+		if hasattr(self, '_reverseGlyphOrderDict'):
+			delattr(self, '_reverseGlyphOrderDict')
 
 	def getGlyphOrder(self):
 		try:
