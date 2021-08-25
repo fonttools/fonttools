@@ -2912,13 +2912,11 @@ class Subsetter(object):
 @timer("load font")
 def load_font(fontFile,
 	      options,
-	      allowVID=False,
 	      checkChecksums=0,
 	      dontLoadGlyphNames=False,
 	      lazy=True):
 
 	font = ttLib.TTFont(fontFile,
-			    allowVID=allowVID,
 			    checkChecksums=checkChecksums,
 			    recalcBBoxes=options.recalc_bounds,
 			    recalcTimestamp=options.recalc_timestamp,
