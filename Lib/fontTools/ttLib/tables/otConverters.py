@@ -347,24 +347,11 @@ class GlyphID(SimpleValue):
 	staticSize = 2
 	typecode = "H"
 	def readArray(self, reader, font, tableDict, count):
-		glyphOrder = font.getGlyphOrder()
-		gids = reader.readArray(self.typecode, self.staticSize, count)
-		try:
-			l = [glyphOrder[gid] for gid in gids]
-		except IndexError:
-			# Slower, but will not throw an IndexError on an invalid glyph id.
-			l = [font.getGlyphName(gid) for gid in gids]
-		return l
+		return font.getGlyphNameMany(reader.readArray(self.typecode, self.staticSize, count))
 	def read(self, reader, font, tableDict):
 		return font.getGlyphName(reader.readValue(self.typecode, self.staticSize))
 	def writeArray(self, writer, font, tableDict, values):
-		glyphMap = font.getReverseGlyphMap()
-		try:
-			values = [glyphMap[glyphname] for glyphname in values]
-		except KeyError:
-			# Slower, but will not throw a KeyError on an out-of-range glyph name.
-			values = [font.getGlyphID(glyphname) for glyphname in values]
-		writer.writeArray(self.typecode, values)
+		writer.writeArray(self.typecode, font.getGlyphIDMany(values))
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeValue(self.typecode, font.getGlyphID(value))
 
@@ -1222,8 +1209,7 @@ class STXHeader(BaseConverter):
 	def _readLigatures(self, reader, font):
 		limit = len(reader.data)
 		numLigatureGlyphs = (limit - reader.pos) // 2
-		return [font.getGlyphName(g)
-		        for g in reader.readUShortArray(numLigatureGlyphs)]
+		return font.getGlyphNameMany(reader.readUShortArray(numLigatureGlyphs))
 
 	def _countPerGlyphLookups(self, table):
 		# Somewhat annoyingly, the morx table does not encode

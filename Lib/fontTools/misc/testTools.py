@@ -57,11 +57,16 @@ class FakeFont:
     def getGlyphID(self, name):
         return self.reverseGlyphOrderDict_[name]
 
+    def getGlyphIDMany(self, lst):
+        return [self.getGlyphID(gid) for gid in lst]
+
     def getGlyphName(self, glyphID):
         if glyphID < len(self.glyphOrder_):
             return self.glyphOrder_[glyphID]
         else:
             return "glyph%.5d" % glyphID
+    def getGlyphNameMany(self, lst):
+        return [self.getGlyphName(gid) for gid in lst]
 
     def getGlyphOrder(self):
         return self.glyphOrder_
@@ -136,7 +141,7 @@ class MockFont(object):
         self._reverseGlyphOrder = AllocatingDict({'.notdef': 0})
         self.lazy = False
 
-    def getGlyphID(self, glyph, requireReal=None):
+    def getGlyphID(self, glyph):
         gid = self._reverseGlyphOrder[glyph]
         return gid
 

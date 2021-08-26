@@ -1,6 +1,10 @@
 import io
+import os
+import re
 from fontTools.ttLib import TTFont, newTable, registerCustomTableClass, unregisterCustomTableClass
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
+
+DATA_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "data")
 
 
 class CustomTableClass(DefaultTable):
@@ -18,6 +22,13 @@ table_C_U_S_T_ = CustomTableClass  # alias for testing
 
 
 TABLETAG = "CUST"
+
+
+def normalize_TTX(string):
+    string = re.sub(' ttLibVersion=".*"', "", string)
+    string = re.sub('checkSumAdjustment value=".*"', "", string)
+    string = re.sub('modified value=".*"', "", string)
+    return string
 
 
 def test_registerCustomTableClass():
@@ -78,3 +89,32 @@ def test_sfntVersionFromTTX():
     # Font is not "empty", sfntVersion in TTX file will be ignored
     font.importXML(ttx)
     assert font.sfntVersion == "OTTO"
+
+
+def test_virtualGlyphId():
+    otfpath = os.path.join(DATA_DIR, "TestVGID-Regular.otf")
+    ttxpath = os.path.join(DATA_DIR, "TestVGID-Regular.ttx")
+
+    otf = TTFont(otfpath)
+
+    ttx = TTFont()
+    ttx.importXML(ttxpath)
+
+    with open(ttxpath, encoding="utf-8") as fp:
+        xml = normalize_TTX(fp.read()).splitlines()
+
+    for font in (otf, ttx):
+        GSUB = font["GSUB"].table
+        assert GSUB.LookupList.LookupCount == 37
+        lookup = GSUB.LookupList.Lookup[32]
+        assert lookup.LookupType == 8
+        subtable = lookup.SubTable[0]
+        assert subtable.LookAheadGlyphCount == 1
+        lookahead = subtable.LookAheadCoverage[0]
+        assert len(lookahead.glyphs) == 46
+        assert "glyph00453" in lookahead.glyphs
+
+        out = io.StringIO()
+        font.saveXML(out)
+        outxml = normalize_TTX(out.getvalue()).splitlines()
+        assert xml == outxml

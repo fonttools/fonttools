@@ -118,7 +118,6 @@ class Options(object):
 	disassembleInstructions = True
 	mergeFile = None
 	recalcBBoxes = True
-	allowVID = False
 	ignoreDecompileErrors = True
 	bitmapGlyphDataFormat = 'raw'
 	unicodedata = None
@@ -184,8 +183,6 @@ class Options(object):
 				self.mergeFile = value
 			elif option == "-b":
 				self.recalcBBoxes = False
-			elif option == "-a":
-				self.allowVID = True
 			elif option == "-e":
 				self.ignoreDecompileErrors = False
 			elif option == "--unicodedata":
@@ -258,7 +255,7 @@ def ttDump(input, output, options):
 	log.info('Dumping "%s" to "%s"...', input, output)
 	if options.unicodedata:
 		setUnicodeData(options.unicodedata)
-	ttf = TTFont(input, 0, allowVID=options.allowVID,
+	ttf = TTFont(input, 0,
 			ignoreDecompileErrors=options.ignoreDecompileErrors,
 			fontNumber=options.fontNumber)
 	ttf.saveXML(output,
@@ -280,8 +277,7 @@ def ttCompile(input, output, options):
 		sfnt.USE_ZOPFLI = True
 	ttf = TTFont(options.mergeFile, flavor=options.flavor,
 			recalcBBoxes=options.recalcBBoxes,
-			recalcTimestamp=options.recalcTimestamp,
-			allowVID=options.allowVID)
+			recalcTimestamp=options.recalcTimestamp)
 	ttf.importXML(input)
 
 	if options.recalcTimestamp is None and 'head' in ttf:

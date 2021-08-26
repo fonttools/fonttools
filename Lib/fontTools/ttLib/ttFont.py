@@ -20,7 +20,7 @@ class TTFont(object):
 
 	def __init__(self, file=None, res_name_or_index=None,
 			sfntVersion="\000\001\000\000", flavor=None, checkChecksums=0,
-			verbose=None, recalcBBoxes=True, allowVID=False, ignoreDecompileErrors=False,
+			verbose=None, recalcBBoxes=True, allowVID=NotImplemented, ignoreDecompileErrors=False,
 			recalcTimestamp=True, fontNumber=-1, lazy=None, quiet=None,
 			_tableCache=None):
 
@@ -61,16 +61,6 @@ class TTFont(object):
 		If the recalcTimestamp argument is false, the modified timestamp in the
 		'head' table will *not* be recalculated upon save/compile.
 
-		If the allowVID argument is set to true, then virtual GID's are
-		supported. Asking for a glyph ID with a glyph name or GID that is not in
-		the font will return a virtual GID.   This is valid for GSUB and cmap
-		tables. For SING glyphlets, the cmap table is used to specify Unicode
-		values for virtual GI's used in GSUB/GPOS rules. If the gid N is requested
-		and does not exist in the font, or the glyphname has the form glyphN
-		and does not exist in the font, then N is used as the virtual GID.
-		Else, the first virtual GID is assigned as 0x1000 -1; for subsequent new
-		virtual GIDs, the next is one less than the previous.
-
 		If ignoreDecompileErrors is set to True, exceptions raised in
 		individual tables during decompilation will be ignored, falling
 		back to the DefaultTable implementation, which simply keeps the
@@ -92,12 +82,6 @@ class TTFont(object):
 		self.recalcTimestamp = recalcTimestamp
 		self.tables = {}
 		self.reader = None
-
-		# Permit the user to reference glyphs that are not int the font.
-		self.last_vid = 0xFFFE # Can't make it be 0xFFFF, as the world is full unsigned short integer counters that get incremented after the last seen GID value.
-		self.reverseVIDDict = {}
-		self.VIDDict = {}
-		self.allowVID = allowVID
 		self.ignoreDecompileErrors = ignoreDecompileErrors
 
 		if not file:
@@ -429,6 +413,8 @@ class TTFont(object):
 
 	def setGlyphOrder(self, glyphOrder):
 		self.glyphOrder = glyphOrder
+		if hasattr(self, '_reverseGlyphOrderDict'):
+			del self._reverseGlyphOrderDict
 
 	def getGlyphOrder(self):
 		try:
@@ -544,67 +530,35 @@ class TTFont(object):
 		from fontTools.misc import textTools
 		return textTools.caselessSort(self.getGlyphOrder())
 
-	def getGlyphName(self, glyphID, requireReal=False):
+	def getGlyphName(self, glyphID):
 		try:
 			return self.getGlyphOrder()[glyphID]
 		except IndexError:
-			if requireReal or not self.allowVID:
-				# XXX The ??.W8.otf font that ships with OSX uses higher glyphIDs in
-				# the cmap table than there are glyphs. I don't think it's legal...
-				return "glyph%.5d" % glyphID
-			else:
-				# user intends virtual GID support
+			return "glyph%.5d" % glyphID
+
+	def getGlyphNameMany(self, lst):
+		glyphOrder = self.getGlyphOrder();
+		cnt = len(glyphOrder)
+		return [glyphOrder[gid] if gid < cnt else "glyph%.5d" % gid
+			for gid in lst]
+
+	def getGlyphID(self, glyphName):
+		try:
+			return self.getReverseGlyphMap()[glyphName]
+		except KeyError:
+			if glyphName[:5] == "glyph":
 				try:
-					glyphName = self.VIDDict[glyphID]
-				except KeyError:
-					glyphName  ="glyph%.5d" % glyphID
-					self.last_vid = min(glyphID, self.last_vid )
-					self.reverseVIDDict[glyphName] = glyphID
-					self.VIDDict[glyphID] = glyphName
-				return glyphName
-
-	def getGlyphID(self, glyphName, requireReal=False):
-		if not hasattr(self, "_reverseGlyphOrderDict"):
-			self._buildReverseGlyphOrderDict()
-		glyphOrder = self.getGlyphOrder()
-		d = self._reverseGlyphOrderDict
-		if glyphName not in d:
-			if glyphName in glyphOrder:
-				self._buildReverseGlyphOrderDict()
-				return self.getGlyphID(glyphName)
-			else:
-				if requireReal:
+					return int(glyphName[5:])
+				except (NameError, ValueError):
 					raise KeyError(glyphName)
-				elif not self.allowVID:
-					# Handle glyphXXX only
-					if glyphName[:5] == "glyph":
-						try:
-							return int(glyphName[5:])
-						except (NameError, ValueError):
-							raise KeyError(glyphName)
-				else:
-					# user intends virtual GID support
-					try:
-						glyphID = self.reverseVIDDict[glyphName]
-					except KeyError:
-						# if name is in glyphXXX format, use the specified name.
-						if glyphName[:5] == "glyph":
-							try:
-								glyphID = int(glyphName[5:])
-							except (NameError, ValueError):
-								glyphID = None
-						if glyphID is None:
-							glyphID = self.last_vid -1
-							self.last_vid = glyphID
-						self.reverseVIDDict[glyphName] = glyphID
-						self.VIDDict[glyphID] = glyphName
-					return glyphID
 
-		glyphID = d[glyphName]
-		if glyphName != glyphOrder[glyphID]:
-			self._buildReverseGlyphOrderDict()
-			return self.getGlyphID(glyphName)
-		return glyphID
+	def getGlyphIDMany(self, lst):
+		d = self.getReverseGlyphMap()
+		try:
+			return [d[glyphName] for glyphName in lst]
+		except KeyError:
+			getGlyphID = self.getGlyphID
+			return [getGlyphID(glyphName) for glyphName in lst]
 
 	def getReverseGlyphMap(self, rebuild=False):
 		if rebuild or not hasattr(self, "_reverseGlyphOrderDict"):
@@ -613,9 +567,9 @@ class TTFont(object):
 
 	def _buildReverseGlyphOrderDict(self):
 		self._reverseGlyphOrderDict = d = {}
-		glyphOrder = self.getGlyphOrder()
-		for glyphID in range(len(glyphOrder)):
-			d[glyphOrder[glyphID]] = glyphID
+		for glyphID,glyphName in enumerate(self.getGlyphOrder()):
+			d[glyphName] = glyphID
+		return d
 
 	def _writeTable(self, tag, writer, done, tableCache=None):
 		"""Internal helper function for self.save(). Keeps track of
@@ -820,9 +774,9 @@ class GlyphOrder(object):
 	def fromXML(self, name, attrs, content, ttFont):
 		if not hasattr(self, "glyphOrder"):
 			self.glyphOrder = []
-			ttFont.setGlyphOrder(self.glyphOrder)
 		if name == "GlyphID":
 			self.glyphOrder.append(attrs["name"])
+		ttFont.setGlyphOrder(self.glyphOrder)
 
 
 def getTableModule(tag):

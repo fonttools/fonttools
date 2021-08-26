@@ -2864,7 +2864,6 @@ class Subsetter(object):
 				glyphOrder = [g for g in glyphOrder if font.getGlyphID(g) <= self.last_retained_order]
 
 			font.setGlyphOrder(glyphOrder)
-			font._buildReverseGlyphOrderDict()
 
 
 	def _prune_post_subset(self, font):
@@ -2913,13 +2912,11 @@ class Subsetter(object):
 @timer("load font")
 def load_font(fontFile,
 	      options,
-	      allowVID=False,
 	      checkChecksums=0,
 	      dontLoadGlyphNames=False,
 	      lazy=True):
 
 	font = ttLib.TTFont(fontFile,
-			    allowVID=allowVID,
 			    checkChecksums=checkChecksums,
 			    recalcBBoxes=options.recalc_bounds,
 			    recalcTimestamp=options.recalc_timestamp,

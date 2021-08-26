@@ -425,8 +425,7 @@ class InsertionMorphAction(AATAction):
 			return []
 		reader = actionReader.getSubReader(
 			actionReader.pos + index * 2)
-		return [font.getGlyphName(glyphID)
-		        for glyphID in reader.readUShortArray(count)]
+		return font.getGlyphNameMany(reader.readUShortArray(count))
 
 	def toXML(self, xmlWriter, font, attrs, name):
 		xmlWriter.begintag(name, **attrs)
@@ -521,12 +520,10 @@ class Coverage(FormatSwitchingBaseTable):
 
 	def postRead(self, rawTable, font):
 		if self.Format == 1:
-			# TODO only allow glyphs that are valid?
 			self.glyphs = rawTable["GlyphArray"]
 		elif self.Format == 2:
 			glyphs = self.glyphs = []
 			ranges = rawTable["RangeRecord"]
-			glyphOrder = font.getGlyphOrder()
 			# Some SIL fonts have coverage entries that don't have sorted
 			# StartCoverageIndex.  If it is so, fixup and warn.  We undo
 			# this when writing font out.
@@ -536,25 +533,11 @@ class Coverage(FormatSwitchingBaseTable):
 				ranges = sorted_ranges
 			del sorted_ranges
 			for r in ranges:
-				assert r.StartCoverageIndex == len(glyphs), \
-					(r.StartCoverageIndex, len(glyphs))
 				start = r.Start
 				end = r.End
-				try:
-					startID = font.getGlyphID(start, requireReal=True)
-				except KeyError:
-					log.warning("Coverage table has start glyph ID out of range: %s.", start)
-					continue
-				try:
-					endID = font.getGlyphID(end, requireReal=True) + 1
-				except KeyError:
-					# Apparently some tools use 65535 to "match all" the range
-					if end != 'glyph65535':
-						log.warning("Coverage table has end glyph ID out of range: %s.", end)
-					# NOTE: We clobber out-of-range things here.  There are legit uses for those,
-					# but none that we have seen in the wild.
-					endID = len(glyphOrder)
-				glyphs.extend(glyphOrder[glyphID] for glyphID in range(startID, endID))
+				startID = font.getGlyphID(start)
+				endID = font.getGlyphID(end) + 1
+				glyphs.extend(font.getGlyphNameMany(range(startID, endID)))
 		else:
 			self.glyphs = []
 			log.warning("Unknown Coverage format: %s", self.Format)
@@ -566,10 +549,9 @@ class Coverage(FormatSwitchingBaseTable):
 			glyphs = self.glyphs = []
 		format = 1
 		rawTable = {"GlyphArray": glyphs}
-		getGlyphID = font.getGlyphID
 		if glyphs:
 			# find out whether Format 2 is more compact or not
-			glyphIDs = [getGlyphID(glyphName) for glyphName in glyphs ]
+			glyphIDs = font.getGlyphIDMany(glyphs)
 			brokenOrder = sorted(glyphIDs) != glyphIDs
 
 			last = glyphIDs[0]
@@ -768,9 +750,9 @@ class SingleSubst(FormatSwitchingBaseTable):
 		input = _getGlyphsFromCoverageTable(rawTable["Coverage"])
 		if self.Format == 1:
 			delta = rawTable["DeltaGlyphID"]
-			inputGIDS =  [ font.getGlyphID(name) for name in input ]
+			inputGIDS = font.getGlyphIDMany(input)
 			outGIDS = [ (glyphID + delta) % 65536 for glyphID in inputGIDS ]
-			outNames = [ font.getGlyphName(glyphID) for glyphID in outGIDS ]
+			outNames = font.getGlyphNameMany(outGIDS)
 			for inp, out in zip(input, outNames):
 				mapping[inp] = out
 		elif self.Format == 2:
@@ -924,51 +906,30 @@ class ClassDef(FormatSwitchingBaseTable):
 
 	def postRead(self, rawTable, font):
 		classDefs = {}
-		glyphOrder = font.getGlyphOrder()
 
 		if self.Format == 1:
 			start = rawTable["StartGlyph"]
 			classList = rawTable["ClassValueArray"]
-			try:
-				startID = font.getGlyphID(start, requireReal=True)
-			except KeyError:
-				log.warning("ClassDef table has start glyph ID out of range: %s.", start)
-				startID = len(glyphOrder)
+			startID = font.getGlyphID(start)
 			endID = startID + len(classList)
-			if endID > len(glyphOrder):
-				log.warning("ClassDef table has entries for out of range glyph IDs: %s,%s.",
-					start, len(classList))
-				# NOTE: We clobber out-of-range things here.  There are legit uses for those,
-				# but none that we have seen in the wild.
-				endID = len(glyphOrder)
-
-			for glyphID, cls in zip(range(startID, endID), classList):
+			glyphNames = font.getGlyphNameMany(range(startID, endID))
+			for glyphName, cls in zip(glyphNames, classList):
 				if cls:
-					classDefs[glyphOrder[glyphID]] = cls
+					classDefs[glyphName] = cls
 
 		elif self.Format == 2:
 			records = rawTable["ClassRangeRecord"]
 			for rec in records:
+				cls = rec.Class
+				if not cls:
+					continue
 				start = rec.Start
 				end = rec.End
-				cls = rec.Class
-				try:
-					startID = font.getGlyphID(start, requireReal=True)
-				except KeyError:
-					log.warning("ClassDef table has start glyph ID out of range: %s.", start)
-					continue
-				try:
-					endID = font.getGlyphID(end, requireReal=True) + 1
-				except KeyError:
-					# Apparently some tools use 65535 to "match all" the range
-					if end != 'glyph65535':
-						log.warning("ClassDef table has end glyph ID out of range: %s.", end)
-					# NOTE: We clobber out-of-range things here.  There are legit uses for those,
-					# but none that we have seen in the wild.
-					endID = len(glyphOrder)
-				for glyphID in range(startID, endID):
-					if cls:
-						classDefs[glyphOrder[glyphID]] = cls
+				startID = font.getGlyphID(start)
+				endID = font.getGlyphID(end) + 1
+				glyphNames = font.getGlyphNameMany(range(startID, endID))
+				for glyphName in glyphNames:
+					classDefs[glyphName] = cls
 		else:
 			log.warning("Unknown ClassDef format: %s", self.Format)
 		self.classDefs = classDefs
