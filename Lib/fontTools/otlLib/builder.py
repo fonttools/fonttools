@@ -377,6 +377,12 @@ class ChainContextualBuilder(LookupBuilder):
             candidates = [None, None, None, []]
             for rule in ruleset.rules:
                 candidates[3].append(self.buildFormat3Subtable(rule, chaining))
+            # Check we can build it
+            try:
+                self.getCompiledSize_(candidates[3])
+            except Exception as e:
+                log.warning("Contextual format 3 at %s overflowed" % str(self.location))
+                candidates[3] = None
 
             # Can we express the whole ruleset as a format 2 subtable?
             classdefs = ruleset.format2ClassDefs()
@@ -384,11 +390,26 @@ class ChainContextualBuilder(LookupBuilder):
                 candidates[2] = [
                     self.buildFormat2Subtable(ruleset, classdefs, chaining)
                 ]
+                # Check we can build it
+                try:
+                    self.getCompiledSize_(candidates[2])
+                except Exception as e:
+                    log.warning("Contextual format 2 at %s overflowed (%s)" % (str(self.location), e))
+                    candidates[2] = None
 
             if not ruleset.hasAnyGlyphClasses:
                 candidates[1] = [self.buildFormat1Subtable(ruleset, chaining)]
+                # Check we can build it
+                try:
+                    self.getCompiledSize_(candidates[1])
+                except Exception as e:
+                    log.warning("Contextual format 1 at %s overflowed" % str(self.location))
+                    candidates[1] = None
 
             candidates = [x for x in candidates if x is not None]
+            if not candidates:
+                raise OpenTypeLibError("All candidates overflowed", self.location)
+
             winner = min(candidates, key=self.getCompiledSize_)
             subtables.extend(winner)
 
