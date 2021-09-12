@@ -34,7 +34,7 @@
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <SinglePos index="0" Format="1">
-          <Coverage Format="1">
+          <Coverage>
             <Glyph value="g20"/>
             <Glyph value="g21"/>
             <Glyph value="g22"/>
@@ -55,7 +55,7 @@
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <PairPos index="0" Format="1">
-          <Coverage Format="1">
+          <Coverage>
             <Glyph value="g21"/>
           </Coverage>
           <ValueFormat1 value="1"/>
@@ -72,10 +72,10 @@
       </Lookup>
       <Lookup index="2">
         <LookupType value="2"/>
-        <LookupFlag value="8"/>
+        <LookupFlag value="8"/><!-- ignoreMarks -->
         <!-- SubTableCount=1 -->
         <PairPos index="0" Format="1">
-          <Coverage Format="1">
+          <Coverage>
             <Glyph value="g21"/>
           </Coverage>
           <ValueFormat1 value="1"/>
@@ -101,18 +101,18 @@
         <!-- SubTableCount=1 -->
         <ChainContextPos index="0" Format="3">
           <!-- BacktrackGlyphCount=1 -->
-          <BacktrackCoverage index="0" Format="1">
+          <BacktrackCoverage index="0">
             <Glyph value="g20"/>
           </BacktrackCoverage>
           <!-- InputGlyphCount=2 -->
-          <InputCoverage index="0" Format="1">
+          <InputCoverage index="0">
             <Glyph value="g21"/>
           </InputCoverage>
-          <InputCoverage index="1" Format="1">
+          <InputCoverage index="1">
             <Glyph value="g22"/>
           </InputCoverage>
           <!-- LookAheadGlyphCount=1 -->
-          <LookAheadCoverage index="0" Format="1">
+          <LookAheadCoverage index="0">
             <Glyph value="g23"/>
           </LookAheadCoverage>
           <!-- PosCount=0 -->

@@ -1,0 +1,544 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="3.41">
+
+  <GlyphOrder>
+    <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
+    <GlyphID id="0" name=".notdef"/>
+    <GlyphID id="1" name="A"/>
+    <GlyphID id="2" name="T"/>
+    <GlyphID id="3" name="grave"/>
+    <GlyphID id="4" name="Agrave"/>
+  </GlyphOrder>
+
+  <head>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="1.0"/>
+    <fontRevision value="2.001"/>
+    <checkSumAdjustment value="0x7f9149e4"/>
+    <magicNumber value="0x5f0f3cf5"/>
+    <flags value="00000000 00000011"/>
+    <unitsPerEm value="1000"/>
+    <created value="Tue Mar 15 19:50:39 2016"/>
+    <modified value="Thu Oct 17 14:43:10 2019"/>
+    <xMin value="0"/>
+    <yMin value="0"/>
+    <xMax value="574"/>
+    <yMax value="927"/>
+    <macStyle value="00000000 00000000"/>
+    <lowestRecPPEM value="6"/>
+    <fontDirectionHint value="2"/>
+    <indexToLocFormat value="0"/>
+    <glyphDataFormat value="0"/>
+  </head>
+
+  <hhea>
+    <tableVersion value="0x00010000"/>
+    <ascent value="1069"/>
+    <descent value="-293"/>
+    <lineGap value="0"/>
+    <advanceWidthMax value="582"/>
+    <minLeftSideBearing value="0"/>
+    <minRightSideBearing value="0"/>
+    <xMaxExtent value="574"/>
+    <caretSlopeRise value="1"/>
+    <caretSlopeRun value="0"/>
+    <caretOffset value="0"/>
+    <reserved0 value="0"/>
+    <reserved1 value="0"/>
+    <reserved2 value="0"/>
+    <reserved3 value="0"/>
+    <metricDataFormat value="0"/>
+    <numberOfHMetrics value="5"/>
+  </hhea>
+
+  <maxp>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="0x10000"/>
+    <numGlyphs value="5"/>
+    <maxPoints value="19"/>
+    <maxContours value="2"/>
+    <maxCompositePoints value="32"/>
+    <maxCompositeContours value="3"/>
+    <maxZones value="1"/>
+    <maxTwilightPoints value="0"/>
+    <maxStorage value="0"/>
+    <maxFunctionDefs value="0"/>
+    <maxInstructionDefs value="0"/>
+    <maxStackElements value="0"/>
+    <maxSizeOfInstructions value="0"/>
+    <maxComponentElements value="2"/>
+    <maxComponentDepth value="1"/>
+  </maxp>
+
+  <OS_2>
+    <!-- The fields 'usFirstCharIndex' and 'usLastCharIndex'
+         will be recalculated by the compiler -->
+    <version value="4"/>
+    <xAvgCharWidth value="577"/>
+    <usWeightClass value="900"/>
+    <usWidthClass value="2"/>
+    <fsType value="00000000 00000000"/>
+    <ySubscriptXSize value="650"/>
+    <ySubscriptYSize value="600"/>
+    <ySubscriptXOffset value="0"/>
+    <ySubscriptYOffset value="75"/>
+    <ySuperscriptXSize value="650"/>
+    <ySuperscriptYSize value="600"/>
+    <ySuperscriptXOffset value="0"/>
+    <ySuperscriptYOffset value="350"/>
+    <yStrikeoutSize value="50"/>
+    <yStrikeoutPosition value="332"/>
+    <sFamilyClass value="0"/>
+    <panose>
+      <bFamilyType value="2"/>
+      <bSerifStyle value="11"/>
+      <bWeight value="5"/>
+      <bProportion value="2"/>
+      <bContrast value="4"/>
+      <bStrokeVariation value="5"/>
+      <bArmStyle value="4"/>
+      <bLetterForm value="2"/>
+      <bMidline value="2"/>
+      <bXHeight value="4"/>
+    </panose>
+    <ulUnicodeRange1 value="11100000 00000000 00000010 11111111"/>
+    <ulUnicodeRange2 value="01000000 00000000 00100000 00011111"/>
+    <ulUnicodeRange3 value="00001000 00000000 00000000 00101001"/>
+    <ulUnicodeRange4 value="00000000 00010000 00000000 00000000"/>
+    <achVendID value="GOOG"/>
+    <fsSelection value="00000001 01000000"/>
+    <usFirstCharIndex value="65"/>
+    <usLastCharIndex value="192"/>
+    <sTypoAscender value="1069"/>
+    <sTypoDescender value="-293"/>
+    <sTypoLineGap value="0"/>
+    <usWinAscent value="1069"/>
+    <usWinDescent value="293"/>
+    <ulCodePageRange1 value="00000000 00000000 00000001 10011111"/>
+    <ulCodePageRange2 value="00000000 00000000 00000000 00000000"/>
+    <sxHeight value="553"/>
+    <sCapHeight value="714"/>
+    <usDefaultChar value="0"/>
+    <usBreakChar value="32"/>
+    <usMaxContext value="4"/>
+  </OS_2>
+
+  <hmtx>
+    <mtx name=".notdef" width="582" lsb="85"/>
+    <mtx name="A" width="574" lsb="0"/>
+    <mtx name="Agrave" width="574" lsb="0"/>
+    <mtx name="T" width="460" lsb="17"/>
+    <mtx name="grave" width="340" lsb="40"/>
+  </hmtx>
+
+  <cmap>
+    <tableVersion version="0"/>
+    <cmap_format_4 platformID="0" platEncID="3" language="0">
+      <map code="0x41" name="A"/><!-- LATIN CAPITAL LETTER A -->
+      <map code="0x54" name="T"/><!-- LATIN CAPITAL LETTER T -->
+      <map code="0xc0" name="Agrave"/><!-- LATIN CAPITAL LETTER A WITH GRAVE -->
+    </cmap_format_4>
+    <cmap_format_4 platformID="3" platEncID="1" language="0">
+      <map code="0x41" name="A"/><!-- LATIN CAPITAL LETTER A -->
+      <map code="0x54" name="T"/><!-- LATIN CAPITAL LETTER T -->
+      <map code="0xc0" name="Agrave"/><!-- LATIN CAPITAL LETTER A WITH GRAVE -->
+    </cmap_format_4>
+  </cmap>
+
+  <loca>
+    <!-- The 'loca' table will be calculated by the compiler -->
+  </loca>
+
+  <glyf>
+
+    <!-- The xMin, yMin, xMax and yMax values
+         will be recalculated by the compiler. -->
+
+    <TTGlyph name=".notdef" xMin="85" yMin="0" xMax="496" yMax="714">
+      <contour>
+        <pt x="85" y="0" on="1" overlap="1"/>
+        <pt x="85" y="714" on="1"/>
+        <pt x="496" y="714" on="1"/>
+        <pt x="496" y="0" on="1"/>
+      </contour>
+      <contour>
+        <pt x="136" y="51" on="1"/>
+        <pt x="445" y="51" on="1"/>
+        <pt x="445" y="663" on="1"/>
+        <pt x="136" y="663" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="A" xMin="0" yMin="0" xMax="574" yMax="714">
+      <contour>
+        <pt x="392" y="0" on="1" overlap="1"/>
+        <pt x="365" y="139" on="1"/>
+        <pt x="211" y="139" on="1"/>
+        <pt x="184" y="0" on="1"/>
+        <pt x="0" y="0" on="1"/>
+        <pt x="174" y="714" on="1"/>
+        <pt x="398" y="714" on="1"/>
+        <pt x="574" y="0" on="1"/>
+      </contour>
+      <contour>
+        <pt x="339" y="285" on="1"/>
+        <pt x="310" y="445" on="1"/>
+        <pt x="305" y="472" on="0"/>
+        <pt x="297" y="522" on="0"/>
+        <pt x="291" y="569" on="0"/>
+        <pt x="288" y="589" on="1"/>
+        <pt x="286" y="570" on="0"/>
+        <pt x="280" y="524" on="0"/>
+        <pt x="271" y="474" on="0"/>
+        <pt x="266" y="447" on="1"/>
+        <pt x="236" y="285" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="Agrave" xMin="0" yMin="0" xMax="574" yMax="927">
+      <component glyphName="A" x="0" y="0" flags="0x604"/>
+      <component glyphName="grave" x="83" y="161" flags="0x4"/>
+    </TTGlyph>
+
+    <TTGlyph name="T" xMin="17" yMin="0" xMax="443" yMax="714">
+      <contour>
+        <pt x="315" y="0" on="1" overlap="1"/>
+        <pt x="146" y="0" on="1"/>
+        <pt x="146" y="567" on="1"/>
+        <pt x="17" y="567" on="1"/>
+        <pt x="17" y="714" on="1"/>
+        <pt x="443" y="714" on="1"/>
+        <pt x="443" y="567" on="1"/>
+        <pt x="315" y="567" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="grave" xMin="40" yMin="606" xMax="300" yMax="766">
+      <contour>
+        <pt x="222" y="766" on="1" overlap="1"/>
+        <pt x="231" y="747" on="0"/>
+        <pt x="261" y="688" on="0"/>
+        <pt x="291" y="634" on="0"/>
+        <pt x="300" y="620" on="1"/>
+        <pt x="300" y="606" on="1"/>
+        <pt x="181" y="606" on="1"/>
+        <pt x="169" y="617" on="0"/>
+        <pt x="130" y="657" on="0"/>
+        <pt x="87" y="703" on="0"/>
+        <pt x="50" y="744" on="0"/>
+        <pt x="40" y="756" on="1"/>
+        <pt x="40" y="766" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+  </glyf>
+
+  <name>
+    <namerecord nameID="256" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Weight
+    </namerecord>
+    <namerecord nameID="257" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Width
+    </namerecord>
+    <namerecord nameID="266" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Black
+    </namerecord>
+    <namerecord nameID="288" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      ExtraCondensed
+    </namerecord>
+    <namerecord nameID="0" platformID="3" platEncID="1" langID="0x409">
+      Copyright 2015 Google Inc. All Rights Reserved.
+    </namerecord>
+    <namerecord nameID="1" platformID="3" platEncID="1" langID="0x409">
+      Noto Sans
+    </namerecord>
+    <namerecord nameID="2" platformID="3" platEncID="1" langID="0x409">
+      Regular
+    </namerecord>
+    <namerecord nameID="3" platformID="3" platEncID="1" langID="0x409">
+      2.001;GOOG;NotoSans-Regular
+    </namerecord>
+    <namerecord nameID="4" platformID="3" platEncID="1" langID="0x409">
+      Noto Sans Regular
+    </namerecord>
+    <namerecord nameID="5" platformID="3" platEncID="1" langID="0x409">
+      Version 2.001
+    </namerecord>
+    <namerecord nameID="6" platformID="3" platEncID="1" langID="0x409">
+      NotoSans-Regular
+    </namerecord>
+    <namerecord nameID="7" platformID="3" platEncID="1" langID="0x409">
+      Noto is a trademark of Google Inc.
+    </namerecord>
+    <namerecord nameID="8" platformID="3" platEncID="1" langID="0x409">
+      Monotype Imaging Inc.
+    </namerecord>
+    <namerecord nameID="9" platformID="3" platEncID="1" langID="0x409">
+      Monotype Design Team
+    </namerecord>
+    <namerecord nameID="10" platformID="3" platEncID="1" langID="0x409">
+      Designed by Monotype design team.
+    </namerecord>
+    <namerecord nameID="11" platformID="3" platEncID="1" langID="0x409">
+      http://www.google.com/get/noto/
+    </namerecord>
+    <namerecord nameID="12" platformID="3" platEncID="1" langID="0x409">
+      http://www.monotype.com/studio
+    </namerecord>
+    <namerecord nameID="13" platformID="3" platEncID="1" langID="0x409">
+      This Font Software is licensed under the SIL Open Font License, Version 1.1. This Font Software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the SIL Open Font License for the specific language, permissions and limitations governing your use of this Font Software.
+    </namerecord>
+    <namerecord nameID="14" platformID="3" platEncID="1" langID="0x409">
+      http://scripts.sil.org/OFL
+    </namerecord>
+    <namerecord nameID="256" platformID="3" platEncID="1" langID="0x409">
+      Weight
+    </namerecord>
+    <namerecord nameID="257" platformID="3" platEncID="1" langID="0x409">
+      Width
+    </namerecord>
+    <namerecord nameID="266" platformID="3" platEncID="1" langID="0x409">
+      Black
+    </namerecord>
+    <namerecord nameID="288" platformID="3" platEncID="1" langID="0x409">
+      ExtraCondensed
+    </namerecord>
+  </name>
+
+  <post>
+    <formatType value="2.0"/>
+    <italicAngle value="0.0"/>
+    <underlinePosition value="-100"/>
+    <underlineThickness value="50"/>
+    <isFixedPitch value="0"/>
+    <minMemType42 value="0"/>
+    <maxMemType42 value="0"/>
+    <minMemType1 value="0"/>
+    <maxMemType1 value="0"/>
+    <psNames>
+      <!-- This file uses unique glyph names based on the information
+           found in the 'post' table. Since these names might not be unique,
+           we have to invent artificial names in case of clashes. In order to
+           be able to retain the original information, we need a name to
+           ps name mapping for those cases where they differ. That's what
+           you see below.
+            -->
+    </psNames>
+    <extraNames>
+      <!-- following are the name that are not taken from the standard Mac glyph order -->
+    </extraNames>
+  </post>
+
+  <GDEF>
+    <Version value="0x00010002"/>
+    <GlyphClassDef>
+      <ClassDef glyph="A" class="1"/>
+      <ClassDef glyph="Agrave" class="1"/>
+      <ClassDef glyph="T" class="1"/>
+    </GlyphClassDef>
+    <MarkGlyphSetsDef>
+      <MarkSetTableFormat value="1"/>
+      <!-- MarkSetCount=4 -->
+      <Coverage index="0">
+      </Coverage>
+      <Coverage index="1">
+      </Coverage>
+      <Coverage index="2">
+      </Coverage>
+      <Coverage index="3">
+      </Coverage>
+    </MarkGlyphSetsDef>
+  </GDEF>
+
+  <GPOS>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=4 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+      <ScriptRecord index="1">
+        <ScriptTag value="cyrl"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+      <ScriptRecord index="2">
+        <ScriptTag value="grek"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+      <ScriptRecord index="3">
+        <ScriptTag value="latn"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=1 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="kern"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="0"/>
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=1 -->
+      <Lookup index="0">
+        <LookupType value="2"/>
+        <LookupFlag value="8"/><!-- ignoreMarks -->
+        <!-- SubTableCount=1 -->
+        <PairPos index="0" Format="2">
+          <Coverage>
+            <Glyph value="A"/>
+            <Glyph value="T"/>
+            <Glyph value="Agrave"/>
+          </Coverage>
+          <ValueFormat1 value="4"/>
+          <ValueFormat2 value="0"/>
+          <ClassDef1>
+            <ClassDef glyph="T" class="1"/>
+          </ClassDef1>
+          <ClassDef2>
+            <ClassDef glyph="A" class="1"/>
+            <ClassDef glyph="Agrave" class="1"/>
+            <ClassDef glyph="T" class="2"/>
+          </ClassDef2>
+          <!-- Class1Count=2 -->
+          <!-- Class2Count=3 -->
+          <Class1Record index="0">
+            <Class2Record index="0">
+              <Value1 XAdvance="0"/>
+            </Class2Record>
+            <Class2Record index="1">
+              <Value1 XAdvance="0"/>
+            </Class2Record>
+            <Class2Record index="2">
+              <Value1 XAdvance="-17"/>
+            </Class2Record>
+          </Class1Record>
+          <Class1Record index="1">
+            <Class2Record index="0">
+              <Value1 XAdvance="0"/>
+            </Class2Record>
+            <Class2Record index="1">
+              <Value1 XAdvance="-17"/>
+            </Class2Record>
+            <Class2Record index="2">
+              <Value1 XAdvance="12"/>
+            </Class2Record>
+          </Class1Record>
+        </PairPos>
+      </Lookup>
+    </LookupList>
+  </GPOS>
+
+  <GSUB>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=4 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=0 -->
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+      <ScriptRecord index="1">
+        <ScriptTag value="cyrl"/>
+        <Script>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+      <ScriptRecord index="2">
+        <ScriptTag value="grek"/>
+        <Script>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+      <ScriptRecord index="3">
+        <ScriptTag value="latn"/>
+        <Script>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=0 -->
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=0 -->
+    </LookupList>
+  </GSUB>
+
+  <STAT>
+    <Version value="0x00010001"/>
+    <DesignAxisRecordSize value="8"/>
+    <!-- DesignAxisCount=2 -->
+    <DesignAxisRecord>
+      <Axis index="0">
+        <AxisTag value="wght"/>
+        <AxisNameID value="256"/>  <!-- Weight -->
+        <AxisOrdering value="1"/>
+      </Axis>
+      <Axis index="1">
+        <AxisTag value="wdth"/>
+        <AxisNameID value="257"/>  <!-- Width -->
+        <AxisOrdering value="0"/>
+      </Axis>
+    </DesignAxisRecord>
+    <!-- AxisValueCount=2 -->
+    <AxisValueArray>
+      <AxisValue index="0" Format="1">
+        <AxisIndex value="0"/>
+        <Flags value="0"/>
+        <ValueNameID value="266"/>  <!-- Black -->
+        <Value value="900.0"/>
+      </AxisValue>
+      <AxisValue index="1" Format="2">
+        <AxisIndex value="1"/>
+        <Flags value="0"/>
+        <ValueNameID value="288"/>  <!-- ExtraCondensed -->
+        <NominalValue value="62.5"/>
+        <RangeMinValue value="62.5"/>
+        <RangeMaxValue value="68.75"/>
+      </AxisValue>
+    </AxisValueArray>
+    <ElidedFallbackNameID value="2"/>  <!-- Regular -->
+  </STAT>
+
+</ttFont>

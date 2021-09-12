@@ -14,9 +14,12 @@ uninstall:
 	pip uninstall --yes fonttools
 
 check: all
-	./run-tests.sh
+	pytest
 
 clean:
 	./setup.py clean --all
 
-.PHONY: all dist install install-user uninstall check clean
+docs:
+	cd Doc && $(MAKE) html
+
+.PHONY: all dist install install-user uninstall check clean docs

@@ -1,0 +1,656 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="3.34">
+
+  <GlyphOrder>
+    <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
+    <GlyphID id="0" name=".notdef"/>
+    <GlyphID id="1" name="N"/>
+    <GlyphID id="2" name="O"/>
+    <GlyphID id="3" name="Odieresis"/>
+    <GlyphID id="4" name="n"/>
+    <GlyphID id="5" name="o"/>
+    <GlyphID id="6" name="odieresis"/>
+    <GlyphID id="7" name="uni0308"/>
+  </GlyphOrder>
+
+  <head>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="1.0"/>
+    <fontRevision value="1.0"/>
+    <checkSumAdjustment value="0x20783e4b"/>
+    <magicNumber value="0x5f0f3cf5"/>
+    <flags value="00000000 00000011"/>
+    <unitsPerEm value="750"/>
+    <created value="Sat Oct 21 13:31:38 2017"/>
+    <modified value="Mon Dec 17 12:42:07 2018"/>
+    <xMin value="38"/>
+    <yMin value="-150"/>
+    <xMax value="354"/>
+    <yMax value="650"/>
+    <macStyle value="00000000 00000000"/>
+    <lowestRecPPEM value="6"/>
+    <fontDirectionHint value="2"/>
+    <indexToLocFormat value="0"/>
+    <glyphDataFormat value="0"/>
+  </head>
+
+  <hhea>
+    <tableVersion value="0x00010000"/>
+    <ascent value="750"/>
+    <descent value="-150"/>
+    <lineGap value="0"/>
+    <advanceWidthMax value="408"/>
+    <minLeftSideBearing value="38"/>
+    <minRightSideBearing value="-250"/>
+    <xMaxExtent value="354"/>
+    <caretSlopeRise value="1"/>
+    <caretSlopeRun value="0"/>
+    <caretOffset value="0"/>
+    <reserved0 value="0"/>
+    <reserved1 value="0"/>
+    <reserved2 value="0"/>
+    <reserved3 value="0"/>
+    <metricDataFormat value="0"/>
+    <numberOfHMetrics value="8"/>
+  </hhea>
+
+  <maxp>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="0x10000"/>
+    <numGlyphs value="8"/>
+    <maxPoints value="36"/>
+    <maxContours value="2"/>
+    <maxCompositePoints value="64"/>
+    <maxCompositeContours value="4"/>
+    <maxZones value="1"/>
+    <maxTwilightPoints value="0"/>
+    <maxStorage value="0"/>
+    <maxFunctionDefs value="0"/>
+    <maxInstructionDefs value="0"/>
+    <maxStackElements value="0"/>
+    <maxSizeOfInstructions value="0"/>
+    <maxComponentElements value="2"/>
+    <maxComponentDepth value="1"/>
+  </maxp>
+
+  <OS_2>
+    <!-- The fields 'usFirstCharIndex' and 'usLastCharIndex'
+         will be recalculated by the compiler -->
+    <version value="4"/>
+    <xAvgCharWidth value="375"/>
+    <usWeightClass value="400"/>
+    <usWidthClass value="5"/>
+    <fsType value="00000000 00001000"/>
+    <ySubscriptXSize value="488"/>
+    <ySubscriptYSize value="450"/>
+    <ySubscriptXOffset value="0"/>
+    <ySubscriptYOffset value="56"/>
+    <ySuperscriptXSize value="488"/>
+    <ySuperscriptYSize value="450"/>
+    <ySuperscriptXOffset value="0"/>
+    <ySuperscriptYOffset value="263"/>
+    <yStrikeoutSize value="50"/>
+    <yStrikeoutPosition value="210"/>
+    <sFamilyClass value="0"/>
+    <panose>
+      <bFamilyType value="0"/>
+      <bSerifStyle value="0"/>
+      <bWeight value="0"/>
+      <bProportion value="0"/>
+      <bContrast value="0"/>
+      <bStrokeVariation value="0"/>
+      <bArmStyle value="0"/>
+      <bLetterForm value="0"/>
+      <bMidline value="0"/>
+      <bXHeight value="0"/>
+    </panose>
+    <ulUnicodeRange1 value="00000000 00000000 00000000 01000011"/>
+    <ulUnicodeRange2 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange3 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange4 value="00000000 00000000 00000000 00000000"/>
+    <achVendID value="jens"/>
+    <fsSelection value="00000000 01000000"/>
+    <usFirstCharIndex value="78"/>
+    <usLastCharIndex value="776"/>
+    <sTypoAscender value="600"/>
+    <sTypoDescender value="-150"/>
+    <sTypoLineGap value="150"/>
+    <usWinAscent value="700"/>
+    <usWinDescent value="250"/>
+    <ulCodePageRange1 value="00000000 00000000 00000000 00000001"/>
+    <ulCodePageRange2 value="00000000 00000000 00000000 00000000"/>
+    <sxHeight value="350"/>
+    <sCapHeight value="500"/>
+    <usDefaultChar value="0"/>
+    <usBreakChar value="32"/>
+    <usMaxContext value="1"/>
+  </OS_2>
+
+  <hmtx>
+    <mtx name=".notdef" width="375" lsb="38"/>
+    <mtx name="N" width="408" lsb="54"/>
+    <mtx name="O" width="404" lsb="52"/>
+    <mtx name="Odieresis" width="404" lsb="52"/>
+    <mtx name="n" width="348" lsb="50"/>
+    <mtx name="o" width="342" lsb="46"/>
+    <mtx name="odieresis" width="342" lsb="46"/>
+    <mtx name="uni0308" width="0" lsb="50"/>
+  </hmtx>
+
+  <cmap>
+    <tableVersion version="0"/>
+    <cmap_format_4 platformID="0" platEncID="3" language="0">
+      <map code="0x4e" name="N"/><!-- LATIN CAPITAL LETTER N -->
+      <map code="0x4f" name="O"/><!-- LATIN CAPITAL LETTER O -->
+      <map code="0x6e" name="n"/><!-- LATIN SMALL LETTER N -->
+      <map code="0x6f" name="o"/><!-- LATIN SMALL LETTER O -->
+      <map code="0xd6" name="Odieresis"/><!-- LATIN CAPITAL LETTER O WITH DIAERESIS -->
+      <map code="0xf6" name="odieresis"/><!-- LATIN SMALL LETTER O WITH DIAERESIS -->
+      <map code="0x308" name="uni0308"/><!-- COMBINING DIAERESIS -->
+    </cmap_format_4>
+    <cmap_format_4 platformID="3" platEncID="1" language="0">
+      <map code="0x4e" name="N"/><!-- LATIN CAPITAL LETTER N -->
+      <map code="0x4f" name="O"/><!-- LATIN CAPITAL LETTER O -->
+      <map code="0x6e" name="n"/><!-- LATIN SMALL LETTER N -->
+      <map code="0x6f" name="o"/><!-- LATIN SMALL LETTER O -->
+      <map code="0xd6" name="Odieresis"/><!-- LATIN CAPITAL LETTER O WITH DIAERESIS -->
+      <map code="0xf6" name="odieresis"/><!-- LATIN SMALL LETTER O WITH DIAERESIS -->
+      <map code="0x308" name="uni0308"/><!-- COMBINING DIAERESIS -->
+    </cmap_format_4>
+  </cmap>
+
+  <loca>
+    <!-- The 'loca' table will be calculated by the compiler -->
+  </loca>
+
+  <glyf>
+
+    <!-- The xMin, yMin, xMax and yMax values
+         will be recalculated by the compiler. -->
+
+    <TTGlyph name=".notdef" xMin="38" yMin="-150" xMax="337" yMax="600">
+      <contour>
+        <pt x="38" y="-150" on="1"/>
+        <pt x="337" y="-150" on="1"/>
+        <pt x="337" y="600" on="1"/>
+        <pt x="38" y="600" on="1"/>
+      </contour>
+      <contour>
+        <pt x="76" y="-112" on="1"/>
+        <pt x="76" y="562" on="1"/>
+        <pt x="299" y="562" on="1"/>
+        <pt x="299" y="-112" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="N" xMin="54" yMin="-4" xMax="354" yMax="504">
+      <contour>
+        <pt x="79" y="-4" on="1"/>
+        <pt x="69" y="-4" on="0"/>
+        <pt x="54" y="11" on="0"/>
+        <pt x="54" y="21" on="1"/>
+        <pt x="54" y="479" on="1"/>
+        <pt x="54" y="490" on="0"/>
+        <pt x="69" y="504" on="0"/>
+        <pt x="79" y="504" on="1"/>
+        <pt x="88" y="504" on="0"/>
+        <pt x="98" y="496" on="0"/>
+        <pt x="101" y="491" on="1"/>
+        <pt x="304" y="119" on="1"/>
+        <pt x="304" y="479" on="1"/>
+        <pt x="304" y="490" on="0"/>
+        <pt x="319" y="504" on="0"/>
+        <pt x="329" y="504" on="1"/>
+        <pt x="340" y="504" on="0"/>
+        <pt x="354" y="490" on="0"/>
+        <pt x="354" y="479" on="1"/>
+        <pt x="354" y="21" on="1"/>
+        <pt x="354" y="11" on="0"/>
+        <pt x="340" y="-4" on="0"/>
+        <pt x="329" y="-4" on="1"/>
+        <pt x="320" y="-4" on="0"/>
+        <pt x="310" y="4" on="0"/>
+        <pt x="307" y="9" on="1"/>
+        <pt x="104" y="381" on="1"/>
+        <pt x="104" y="21" on="1"/>
+        <pt x="104" y="11" on="0"/>
+        <pt x="90" y="-4" on="0"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="O" xMin="52" yMin="-10" xMax="352" yMax="510">
+      <contour>
+        <pt x="202" y="-10" on="1"/>
+        <pt x="161" y="-10" on="0"/>
+        <pt x="93" y="31" on="0"/>
+        <pt x="52" y="99" on="0"/>
+        <pt x="52" y="140" on="1"/>
+        <pt x="52" y="360" on="1"/>
+        <pt x="52" y="401" on="0"/>
+        <pt x="93" y="469" on="0"/>
+        <pt x="161" y="510" on="0"/>
+        <pt x="202" y="510" on="1"/>
+        <pt x="243" y="510" on="0"/>
+        <pt x="311" y="469" on="0"/>
+        <pt x="352" y="401" on="0"/>
+        <pt x="352" y="360" on="1"/>
+        <pt x="352" y="140" on="1"/>
+        <pt x="352" y="99" on="0"/>
+        <pt x="311" y="31" on="0"/>
+        <pt x="243" y="-10" on="0"/>
+      </contour>
+      <contour>
+        <pt x="202" y="40" on="1"/>
+        <pt x="230" y="40" on="0"/>
+        <pt x="275" y="67" on="0"/>
+        <pt x="302" y="113" on="0"/>
+        <pt x="302" y="140" on="1"/>
+        <pt x="302" y="360" on="1"/>
+        <pt x="302" y="388" on="0"/>
+        <pt x="275" y="433" on="0"/>
+        <pt x="230" y="460" on="0"/>
+        <pt x="202" y="460" on="1"/>
+        <pt x="175" y="460" on="0"/>
+        <pt x="129" y="433" on="0"/>
+        <pt x="102" y="388" on="0"/>
+        <pt x="102" y="360" on="1"/>
+        <pt x="102" y="140" on="1"/>
+        <pt x="102" y="113" on="0"/>
+        <pt x="129" y="67" on="0"/>
+        <pt x="175" y="40" on="0"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="Odieresis" xMin="52" yMin="-10" xMax="352" yMax="650">
+      <component glyphName="O" x="0" y="0" flags="0x204"/>
+      <component glyphName="uni0308" x="52" y="150" flags="0x4"/>
+    </TTGlyph>
+
+    <TTGlyph name="n" xMin="50" yMin="-4" xMax="300" yMax="350">
+      <contour>
+        <pt x="75" y="-4" on="1"/>
+        <pt x="65" y="-4" on="0"/>
+        <pt x="50" y="11" on="0"/>
+        <pt x="50" y="21" on="1"/>
+        <pt x="50" y="325" on="1"/>
+        <pt x="50" y="350" on="0"/>
+        <pt x="75" y="350" on="1"/>
+        <pt x="198" y="350" on="1"/>
+        <pt x="228" y="350" on="0"/>
+        <pt x="274" y="324" on="0"/>
+        <pt x="300" y="278" on="0"/>
+        <pt x="300" y="248" on="1"/>
+        <pt x="300" y="21" on="1"/>
+        <pt x="300" y="11" on="0"/>
+        <pt x="286" y="-4" on="0"/>
+        <pt x="275" y="-4" on="1"/>
+        <pt x="265" y="-4" on="0"/>
+        <pt x="250" y="11" on="0"/>
+        <pt x="250" y="21" on="1"/>
+        <pt x="250" y="248" on="1"/>
+        <pt x="250" y="271" on="0"/>
+        <pt x="221" y="300" on="0"/>
+        <pt x="198" y="300" on="1"/>
+        <pt x="100" y="300" on="1"/>
+        <pt x="100" y="21" on="1"/>
+        <pt x="100" y="11" on="0"/>
+        <pt x="86" y="-4" on="0"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="o" xMin="46" yMin="-10" xMax="296" yMax="360">
+      <contour>
+        <pt x="171" y="-10" on="1"/>
+        <pt x="135" y="-10" on="0"/>
+        <pt x="78" y="23" on="0"/>
+        <pt x="46" y="80" on="0"/>
+        <pt x="46" y="117" on="1"/>
+        <pt x="46" y="233" on="1"/>
+        <pt x="46" y="270" on="0"/>
+        <pt x="78" y="327" on="0"/>
+        <pt x="135" y="360" on="0"/>
+        <pt x="171" y="360" on="1"/>
+        <pt x="208" y="360" on="0"/>
+        <pt x="264" y="327" on="0"/>
+        <pt x="296" y="270" on="0"/>
+        <pt x="296" y="233" on="1"/>
+        <pt x="296" y="117" on="1"/>
+        <pt x="296" y="80" on="0"/>
+        <pt x="264" y="23" on="0"/>
+        <pt x="208" y="-10" on="0"/>
+      </contour>
+      <contour>
+        <pt x="171" y="40" on="1"/>
+        <pt x="205" y="40" on="0"/>
+        <pt x="246" y="82" on="0"/>
+        <pt x="246" y="117" on="1"/>
+        <pt x="246" y="233" on="1"/>
+        <pt x="246" y="268" on="0"/>
+        <pt x="205" y="310" on="0"/>
+        <pt x="171" y="310" on="1"/>
+        <pt x="137" y="310" on="0"/>
+        <pt x="96" y="268" on="0"/>
+        <pt x="96" y="233" on="1"/>
+        <pt x="96" y="117" on="1"/>
+        <pt x="96" y="82" on="0"/>
+        <pt x="137" y="40" on="0"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="odieresis" xMin="46" yMin="-10" xMax="296" yMax="500">
+      <component glyphName="o" x="0" y="0" flags="0x204"/>
+      <component glyphName="uni0308" x="21" y="0" flags="0x4"/>
+    </TTGlyph>
+
+    <TTGlyph name="uni0308" xMin="50" yMin="425" xMax="250" yMax="500">
+      <contour>
+        <pt x="225" y="425" on="1"/>
+        <pt x="215" y="425" on="0"/>
+        <pt x="200" y="440" on="0"/>
+        <pt x="200" y="450" on="1"/>
+        <pt x="200" y="475" on="1"/>
+        <pt x="200" y="486" on="0"/>
+        <pt x="215" y="500" on="0"/>
+        <pt x="225" y="500" on="1"/>
+        <pt x="236" y="500" on="0"/>
+        <pt x="250" y="486" on="0"/>
+        <pt x="250" y="475" on="1"/>
+        <pt x="250" y="450" on="1"/>
+        <pt x="250" y="440" on="0"/>
+        <pt x="236" y="425" on="0"/>
+      </contour>
+      <contour>
+        <pt x="75" y="425" on="1"/>
+        <pt x="65" y="425" on="0"/>
+        <pt x="50" y="440" on="0"/>
+        <pt x="50" y="450" on="1"/>
+        <pt x="50" y="475" on="1"/>
+        <pt x="50" y="486" on="0"/>
+        <pt x="65" y="500" on="0"/>
+        <pt x="75" y="500" on="1"/>
+        <pt x="86" y="500" on="0"/>
+        <pt x="100" y="486" on="0"/>
+        <pt x="100" y="475" on="1"/>
+        <pt x="100" y="450" on="1"/>
+        <pt x="100" y="440" on="0"/>
+        <pt x="86" y="425" on="0"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+  </glyf>
+
+  <name>
+    <namerecord nameID="0" platformID="3" platEncID="1" langID="0x409">
+      Copyright 2017 by Jens Kutilek
+    </namerecord>
+    <namerecord nameID="1" platformID="3" platEncID="1" langID="0x409">
+      Test Family 4
+    </namerecord>
+    <namerecord nameID="2" platformID="3" platEncID="1" langID="0x409">
+      Regular
+    </namerecord>
+    <namerecord nameID="3" platformID="3" platEncID="1" langID="0x409">
+      1.000;jens;TestFamily4-Regular
+    </namerecord>
+    <namerecord nameID="4" platformID="3" platEncID="1" langID="0x409">
+      Test Family 4 Regular
+    </namerecord>
+    <namerecord nameID="5" platformID="3" platEncID="1" langID="0x409">
+      Version 1.000
+    </namerecord>
+    <namerecord nameID="6" platformID="3" platEncID="1" langID="0x409">
+      TestFamily4-Regular
+    </namerecord>
+    <namerecord nameID="8" platformID="3" platEncID="1" langID="0x409">
+      Jens Kutilek
+    </namerecord>
+    <namerecord nameID="9" platformID="3" platEncID="1" langID="0x409">
+      Jens Kutilek after the ISO 3098 standard
+    </namerecord>
+    <namerecord nameID="11" platformID="3" platEncID="1" langID="0x409">
+      https://www.kutilek.de/
+    </namerecord>
+    <namerecord nameID="12" platformID="3" platEncID="1" langID="0x409">
+      https://www.kutilek.de/
+    </namerecord>
+  </name>
+
+  <post>
+    <formatType value="2.0"/>
+    <italicAngle value="0.0"/>
+    <underlinePosition value="-100"/>
+    <underlineThickness value="50"/>
+    <isFixedPitch value="0"/>
+    <minMemType42 value="0"/>
+    <maxMemType42 value="0"/>
+    <minMemType1 value="0"/>
+    <maxMemType1 value="0"/>
+    <psNames>
+      <!-- This file uses unique glyph names based on the information
+           found in the 'post' table. Since these names might not be unique,
+           we have to invent artificial names in case of clashes. In order to
+           be able to retain the original information, we need a name to
+           ps name mapping for those cases where they differ. That's what
+           you see below.
+            -->
+    </psNames>
+    <extraNames>
+      <!-- following are the name that are not taken from the standard Mac glyph order -->
+      <psName name="dieresiscomb"/>
+      <psName name="uni0308"/>
+    </extraNames>
+  </post>
+
+  <GDEF>
+    <Version value="0x00010002"/>
+    <GlyphClassDef>
+      <ClassDef glyph="N" class="1"/>
+      <ClassDef glyph="O" class="1"/>
+      <ClassDef glyph="Odieresis" class="1"/>
+      <ClassDef glyph="n" class="1"/>
+      <ClassDef glyph="o" class="1"/>
+      <ClassDef glyph="odieresis" class="1"/>
+      <ClassDef glyph="uni0308" class="3"/>
+    </GlyphClassDef>
+    <MarkGlyphSetsDef>
+      <MarkSetTableFormat value="1"/>
+      <!-- MarkSetCount=1 -->
+      <Coverage index="0">
+        <Glyph value="uni0308"/>
+      </Coverage>
+    </MarkGlyphSetsDef>
+  </GDEF>
+
+  <GPOS>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=2 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=3 -->
+            <FeatureIndex index="0" value="0"/>
+            <FeatureIndex index="1" value="1"/>
+            <FeatureIndex index="2" value="2"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+      <ScriptRecord index="1">
+        <ScriptTag value="latn"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=3 -->
+            <FeatureIndex index="0" value="0"/>
+            <FeatureIndex index="1" value="1"/>
+            <FeatureIndex index="2" value="2"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=1 -->
+          <LangSysRecord index="0">
+            <LangSysTag value="NLD "/>
+            <LangSys>
+              <ReqFeatureIndex value="65535"/>
+              <!-- FeatureCount=3 -->
+              <FeatureIndex index="0" value="0"/>
+              <FeatureIndex index="1" value="1"/>
+              <FeatureIndex index="2" value="2"/>
+            </LangSys>
+          </LangSysRecord>
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=3 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="cpsp"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="0"/>
+        </Feature>
+      </FeatureRecord>
+      <FeatureRecord index="1">
+        <FeatureTag value="mark"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="1"/>
+        </Feature>
+      </FeatureRecord>
+      <FeatureRecord index="2">
+        <FeatureTag value="mkmk"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="2"/>
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=3 -->
+      <Lookup index="0">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SinglePos index="0" Format="1">
+          <Coverage>
+            <Glyph value="N"/>
+            <Glyph value="O"/>
+            <Glyph value="Odieresis"/>
+          </Coverage>
+          <ValueFormat value="5"/>
+          <Value XPlacement="25" XAdvance="50"/>
+        </SinglePos>
+      </Lookup>
+      <Lookup index="1">
+        <LookupType value="4"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <MarkBasePos index="0" Format="1">
+          <MarkCoverage>
+            <Glyph value="uni0308"/>
+          </MarkCoverage>
+          <BaseCoverage>
+            <Glyph value="N"/>
+            <Glyph value="O"/>
+            <Glyph value="Odieresis"/>
+            <Glyph value="n"/>
+            <Glyph value="o"/>
+            <Glyph value="odieresis"/>
+          </BaseCoverage>
+          <!-- ClassCount=1 -->
+          <MarkArray>
+            <!-- MarkCount=1 -->
+            <MarkRecord index="0">
+              <Class value="0"/>
+              <MarkAnchor Format="1">
+                <XCoordinate value="150"/>
+                <YCoordinate value="350"/>
+              </MarkAnchor>
+            </MarkRecord>
+          </MarkArray>
+          <BaseArray>
+            <!-- BaseCount=6 -->
+            <BaseRecord index="0">
+              <BaseAnchor index="0" Format="1">
+                <XCoordinate value="204"/>
+                <YCoordinate value="500"/>
+              </BaseAnchor>
+            </BaseRecord>
+            <BaseRecord index="1">
+              <BaseAnchor index="0" Format="1">
+                <XCoordinate value="202"/>
+                <YCoordinate value="500"/>
+              </BaseAnchor>
+            </BaseRecord>
+            <BaseRecord index="2">
+              <BaseAnchor index="0" Format="1">
+                <XCoordinate value="202"/>
+                <YCoordinate value="625"/>
+              </BaseAnchor>
+            </BaseRecord>
+            <BaseRecord index="3">
+              <BaseAnchor index="0" Format="1">
+                <XCoordinate value="175"/>
+                <YCoordinate value="350"/>
+              </BaseAnchor>
+            </BaseRecord>
+            <BaseRecord index="4">
+              <BaseAnchor index="0" Format="1">
+                <XCoordinate value="171"/>
+                <YCoordinate value="350"/>
+              </BaseAnchor>
+            </BaseRecord>
+            <BaseRecord index="5">
+              <BaseAnchor index="0" Format="1">
+                <XCoordinate value="171"/>
+                <YCoordinate value="475"/>
+              </BaseAnchor>
+            </BaseRecord>
+          </BaseArray>
+        </MarkBasePos>
+      </Lookup>
+      <Lookup index="2">
+        <LookupType value="6"/>
+        <LookupFlag value="16"/><!-- useMarkFilteringSet -->
+        <!-- SubTableCount=1 -->
+        <MarkMarkPos index="0" Format="1">
+          <Mark1Coverage>
+            <Glyph value="uni0308"/>
+          </Mark1Coverage>
+          <Mark2Coverage>
+            <Glyph value="uni0308"/>
+          </Mark2Coverage>
+          <!-- ClassCount=1 -->
+          <Mark1Array>
+            <!-- MarkCount=1 -->
+            <MarkRecord index="0">
+              <Class value="0"/>
+              <MarkAnchor Format="1">
+                <XCoordinate value="150"/>
+                <YCoordinate value="350"/>
+              </MarkAnchor>
+            </MarkRecord>
+          </Mark1Array>
+          <Mark2Array>
+            <!-- Mark2Count=1 -->
+            <Mark2Record index="0">
+              <Mark2Anchor index="0" Format="1">
+                <XCoordinate value="150"/>
+                <YCoordinate value="475"/>
+              </Mark2Anchor>
+            </Mark2Record>
+          </Mark2Array>
+        </MarkMarkPos>
+        <MarkFilteringSet value="0"/>
+      </Lookup>
+    </LookupList>
+  </GPOS>
+
+</ttFont>

@@ -1,7 +1,12 @@
-from __future__ import print_function, division, absolute_import
 from fontTools.cffLib.specializer import (programToString, stringToProgram,
-                                          generalizeProgram, specializeProgram)
+                                          generalizeProgram, specializeProgram,
+                                          programToCommands, commandsToProgram,
+                                          generalizeCommands,
+                                          specializeCommands)
+from fontTools.ttLib import TTFont
+import os
 import unittest
+from fontTools.misc.testTools import parseXML, DataFilesHandler
 
 # TODO
 # https://github.com/fonttools/fonttools/pull/959#commitcomment-22059841
@@ -904,13 +909,51 @@ class CFFSpecializeProgramTest(unittest.TestCase):
         xpct_charstr = '1 64 10 51 29 39 15 21 15 20 15 18 rlinecurve'
         self.assertEqual(get_specialized_charstr(test_charstr), xpct_charstr)
 
-# maxstack CFF=48
+# maxstack CFF=48, specializer uses up to 47
     def test_maxstack(self):
         operands = '1 2 3 4 5 6 '
         operator = 'rrcurveto '
         test_charstr = (operands + operator)*9
-        xpct_charstr = (operands + operator + operands*8 + operator).rstrip()
+        xpct_charstr = (operands*2 + operator + operands*7 + operator).rstrip()
         self.assertEqual(get_specialized_charstr(test_charstr), xpct_charstr)
+
+
+class CFF2VFTestSpecialize(DataFilesHandler):
+
+    def test_blend_round_trip(self):
+        ttx_path = self.getpath('TestSparseCFF2VF.ttx')
+        ttf_font = TTFont(recalcBBoxes=False, recalcTimestamp=False)
+        ttf_font.importXML(ttx_path)
+        fontGlyphList = ttf_font.getGlyphOrder()
+        topDict = ttf_font['CFF2'].cff.topDictIndex[0]
+        charstrings = topDict.CharStrings
+        for glyphName in fontGlyphList:
+            cs = charstrings[glyphName]
+            cs.decompile()
+            cmds = programToCommands(cs.program, getNumRegions=cs.getNumRegions)
+            cmds_g = generalizeCommands(cmds)
+            cmds = specializeCommands(cmds_g, generalizeFirst=False)
+            program = commandsToProgram(cmds)
+            self.assertEqual(program, cs.program)
+            program = specializeProgram(program, getNumRegions=cs.getNumRegions)
+            self.assertEqual(program, cs.program)
+            program_g = generalizeProgram(program, getNumRegions=cs.getNumRegions)
+            program = commandsToProgram(cmds_g)
+            self.assertEqual(program, program_g)
+
+    def test_blend_programToCommands(self):
+        ttx_path = self.getpath('TestCFF2Widths.ttx')
+        ttf_font = TTFont(recalcBBoxes=False, recalcTimestamp=False)
+        ttf_font.importXML(ttx_path)
+        fontGlyphList = ttf_font.getGlyphOrder()
+        topDict = ttf_font['CFF2'].cff.topDictIndex[0]
+        charstrings = topDict.CharStrings
+        for glyphName in fontGlyphList:
+            cs = charstrings[glyphName]
+            cs.decompile()
+            cmds = programToCommands(cs.program, getNumRegions=cs.getNumRegions)
+            program = commandsToProgram(cmds)
+            self.assertEqual(program, cs.program)
 
 
 if __name__ == "__main__":

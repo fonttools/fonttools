@@ -1,15 +1,16 @@
-from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import bytesjoin
 from fontTools.misc import sstruct
-from fontTools.misc.fixedTools import fixedToFloat as fi2fl, floatToFixed as fl2fi
+from fontTools.misc.fixedTools import (
+	fixedToFloat as fi2fl,
+	floatToFixed as fl2fi,
+	floatToFixedToStr as fl2str,
+	strToFixedToFloat as str2fl,
+)
 from fontTools.misc.textTools import safeEval
 from fontTools.ttLib import TTLibError
 from . import DefaultTable
 import struct
-try:
-	from collections.abc import MutableMapping
-except ImportError:
-	from UserDict import DictMixin as MutableMapping
+from collections.abc import MutableMapping
 
 
 # Apple's documentation of 'trak':
@@ -92,7 +93,7 @@ class table__t_r_a_k(DefaultTable.DefaultTable):
 				trackData.decompile(data, offset)
 			setattr(self, direction + 'Data', trackData)
 
-	def toXML(self, writer, ttFont, progress=None):
+	def toXML(self, writer, ttFont):
 		writer.simpletag('version', value=self.version)
 		writer.newline()
 		writer.simpletag('format', value=self.format)
@@ -194,7 +195,7 @@ class TrackData(MutableMapping):
 			self[entry.track] = entry
 			offset += TRACK_TABLE_ENTRY_FORMAT_SIZE
 
-	def toXML(self, writer, ttFont, progress=None):
+	def toXML(self, writer, ttFont):
 		nTracks = len(self)
 		nSizes = len(self.sizes())
 		writer.comment("nTracks=%d, nSizes=%d" % (nTracks, nSizes))
@@ -254,23 +255,23 @@ class TrackTableEntry(MutableMapping):
 		self.nameIndex = nameIndex
 		self._map = dict(values)
 
-	def toXML(self, writer, ttFont, progress=None):
+	def toXML(self, writer, ttFont):
 		name = ttFont["name"].getDebugName(self.nameIndex)
 		writer.begintag(
 			"trackEntry",
-			(('value', self.track), ('nameIndex', self.nameIndex)))
+			(('value', fl2str(self.track, 16)), ('nameIndex', self.nameIndex)))
 		writer.newline()
 		if name:
 			writer.comment(name)
 			writer.newline()
 		for size, perSizeValue in sorted(self.items()):
-			writer.simpletag("track", size=size, value=perSizeValue)
+			writer.simpletag("track", size=fl2str(size, 16), value=perSizeValue)
 			writer.newline()
 		writer.endtag("trackEntry")
 		writer.newline()
 
 	def fromXML(self, name, attrs, content, ttFont):
-		self.track = safeEval(attrs['value'])
+		self.track = str2fl(attrs['value'], 16)
 		self.nameIndex = safeEval(attrs['nameIndex'])
 		for element in content:
 			if not isinstance(element, tuple):
@@ -278,7 +279,7 @@ class TrackTableEntry(MutableMapping):
 			name, attrs, _ = element
 			if name != 'track':
 				continue
-			size = safeEval(attrs['size'])
+			size = str2fl(attrs['size'], 16)
 			self[size] = safeEval(attrs['value'])
 
 	def __getitem__(self, size):

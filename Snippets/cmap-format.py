@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
 # Sample script to convert legacy cmap subtables to format-4
 # subtables.  Note that this is rarely what one needs.  You
@@ -10,8 +10,6 @@
 # getEncoding() of subtable and use that encoding to map the
 # characters to Unicode...  TODO: Extend this script to do that.
 
-from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables._c_m_a_p import CmapSubtable
 import sys

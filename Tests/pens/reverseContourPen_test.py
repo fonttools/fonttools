@@ -278,6 +278,26 @@ TEST_DATA = [
             ('lineTo', ((848, 348),)),  # the duplicate point is kept
             ('closePath', ())
         ]
+    ),
+    # Test case from https://github.com/googlefonts/fontmake/issues/572
+    # An additional closing lineTo is required to disambiguate a duplicate
+    # point at the end of a contour from the implied closing line.
+    (
+        [
+            ('moveTo', ((0, 651),)),
+            ('lineTo', ((0, 101),)),
+            ('lineTo', ((0, 101),)),
+            ('lineTo', ((0, 651),)),
+            ('lineTo', ((0, 651),)),
+            ('closePath', ())
+        ],
+        [
+            ('moveTo', ((0, 651),)),
+            ('lineTo', ((0, 651),)),
+            ('lineTo', ((0, 101),)),
+            ('lineTo', ((0, 101),)),
+            ('closePath', ())
+        ]
     )
 ]
 
@@ -293,11 +313,8 @@ def test_reverse_pen(contour, expected):
 
 @pytest.mark.parametrize("contour, expected", TEST_DATA)
 def test_reverse_point_pen(contour, expected):
-    try:
-        from ufoLib.pointPen import (
-            ReverseContourPointPen, PointToSegmentPen, SegmentToPointPen)
-    except ImportError:
-        pytest.skip("ufoLib not installed")
+    from fontTools.ufoLib.pointPen import (
+        ReverseContourPointPen, PointToSegmentPen, SegmentToPointPen)
 
     recpen = RecordingPen()
     pt2seg = PointToSegmentPen(recpen, outputImpliedClosingLine=True)

@@ -1,7 +1,3 @@
-# coding: utf-8
-from __future__ import print_function, division, absolute_import, \
-    unicode_literals
-from fontTools.misc.py23 import *
 from fontTools.misc.loggingTools import CapturingLogHandler
 from fontTools.misc.testTools import FakeFont, makeXMLWriter
 from fontTools.misc.textTools import deHexStr
@@ -114,6 +110,7 @@ class NameIDTest(unittest.TestCase):
     def makeFont(self):
         nameTable = newTable('name')
         nameTable.setName(u"Demibold Condensed", 0x123, 3, 0, 0x409)
+        nameTable.setName(u"Copyright 2018", 0, 3, 0, 0x409)
         return {"name": nameTable}
 
     def test_read(self):
@@ -147,6 +144,14 @@ class NameIDTest(unittest.TestCase):
             xml,
             '<Entity attrib="val"'
             ' value="666"/>  <!-- missing from name table -->')
+
+    def test_xmlWrite_NULL(self):
+        writer = makeXMLWriter()
+        self.converter.xmlWrite(writer, self.makeFont(), 0,
+                                "FooNameID", [("attr", "val")])
+        xml = writer.file.getvalue().decode("utf-8").rstrip()
+        self.assertEqual(
+            xml, '<FooNameID attr="val" value="0"/>')
 
 
 class UInt8Test(unittest.TestCase):

@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont>
+
+  <GPOS>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=0 -->
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=0 -->
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=0 -->
+    </LookupList>
+  </GPOS>
+
+  <GSUB>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=2 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="arab"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="2"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=1 -->
+          <LangSysRecord index="0">
+            <LangSysTag value="URD "/>
+            <LangSys>
+              <ReqFeatureIndex value="65535"/>
+              <!-- FeatureCount=2 -->
+              <FeatureIndex index="0" value="1"/>
+              <FeatureIndex index="1" value="2"/>
+            </LangSys>
+          </LangSysRecord>
+        </Script>
+      </ScriptRecord>
+      <ScriptRecord index="1">
+        <ScriptTag value="latn"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="2"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=1 -->
+          <LangSysRecord index="0">
+            <LangSysTag value="TRK "/>
+            <LangSys>
+              <ReqFeatureIndex value="65535"/>
+              <!-- FeatureCount=2 -->
+              <FeatureIndex index="0" value="0"/>
+              <FeatureIndex index="1" value="2"/>
+            </LangSys>
+          </LangSysRecord>
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=3 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="locl"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="2"/>
+        </Feature>
+      </FeatureRecord>
+      <FeatureRecord index="1">
+        <FeatureTag value="locl"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="0"/>
+        </Feature>
+      </FeatureRecord>
+      <FeatureRecord index="2">
+        <FeatureTag value="numr"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="1"/>
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=3 -->
+      <Lookup index="0">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SingleSubst index="0">
+          <Substitution in="uni06F4" out="uni06F4.urd"/>
+          <Substitution in="uni06F6" out="uni06F6.urd"/>
+          <Substitution in="uni06F7" out="uni06F7.urd"/>
+        </SingleSubst>
+      </Lookup>
+      <Lookup index="1">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SingleSubst index="0">
+          <Substitution in="uni06F0" out="uni06F0.numr"/>
+          <Substitution in="uni06F1" out="uni06F1.numr"/>
+          <Substitution in="uni06F2" out="uni06F2.numr"/>
+          <Substitution in="uni06F3" out="uni06F3.numr"/>
+          <Substitution in="uni06F4" out="uni06F4.numr"/>
+          <Substitution in="uni06F4.urd" out="uni06F4.urd.numr"/>
+          <Substitution in="uni06F5" out="uni06F5.numr"/>
+          <Substitution in="uni06F6" out="uni06F6.numr"/>
+          <Substitution in="uni06F6.urd" out="uni06F6.urd.numr"/>
+          <Substitution in="uni06F7" out="uni06F7.numr"/>
+          <Substitution in="uni06F7.urd" out="uni06F7.urd.numr"/>
+          <Substitution in="uni06F8" out="uni06F8.numr"/>
+          <Substitution in="uni06F9" out="uni06F9.numr"/>
+        </SingleSubst>
+      </Lookup>
+      <Lookup index="2">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SingleSubst index="0">
+          <Substitution in="i" out="i.TRK"/>
+        </SingleSubst>
+      </Lookup>
+    </LookupList>
+  </GSUB>
+
+</ttFont>

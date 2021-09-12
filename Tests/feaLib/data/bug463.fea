@@ -1,4 +1,4 @@
-# https://github.com/behdad/fonttools/issues/463
+# https://github.com/fonttools/fonttools/issues/463
 feature ordn {
     @DIGIT = [zero one two three four five six seven eight nine];
     sub @DIGIT [A a]' by ordfeminine;

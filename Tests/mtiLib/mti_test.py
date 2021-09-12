@@ -1,10 +1,8 @@
-from __future__ import print_function, division, absolute_import
-from __future__ import unicode_literals
-from fontTools.misc.py23 import *
 from fontTools.misc.xmlWriter import XMLWriter
 from fontTools.ttLib import TTFont
 from fontTools import mtiLib
 import difflib
+from io import StringIO
 import os
 import sys
 import unittest
@@ -184,14 +182,14 @@ class MtiTest(unittest.TestCase):
         decompiled.decompile(blob, font)
 
         # XML from built object.
-        writer = XMLWriter(StringIO(), newlinestr='\n')
+        writer = XMLWriter(StringIO())
         writer.begintag(tableTag); writer.newline()
         table.toXML(writer, font)
         writer.endtag(tableTag); writer.newline()
         xml_built = writer.file.getvalue()
 
         # XML from decompiled object.
-        writer = XMLWriter(StringIO(), newlinestr='\n')
+        writer = XMLWriter(StringIO())
         writer.begintag(tableTag); writer.newline()
         decompiled.toXML(writer, font)
         writer.endtag(tableTag); writer.newline()
@@ -210,7 +208,7 @@ class MtiTest(unittest.TestCase):
         reader.read(rootless=True)
 
         # XML from object read from XML.
-        writer = XMLWriter(StringIO(), newlinestr='\n')
+        writer = XMLWriter(StringIO())
         writer.begintag(tableTag); writer.newline()
         font2[tableTag].toXML(writer, font)
         writer.endtag(tableTag); writer.newline()

@@ -1,0 +1,5 @@
+feature test {
+    sub A from [A.alt1 A.alt2];
+    subtable;
+    sub B from [B.alt1 B.alt2];
+} test;

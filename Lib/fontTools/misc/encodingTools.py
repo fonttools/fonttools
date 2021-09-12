@@ -1,8 +1,6 @@
 """fontTools.misc.encodingTools.py -- tools for working with OpenType encodings.
 """
 
-from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
 import fontTools.encodings.codecs
 
 # Map keyed by platformID, then platEncID, then possibly langID
@@ -18,7 +16,7 @@ _encodingMap = {
 	},
 	1: { # Macintosh
 		# See
-		# https://github.com/behdad/fonttools/issues/236
+		# https://github.com/fonttools/fonttools/issues/236
 		0: { # Macintosh, platEncID==0, keyed by langID
 			15: "mac_iceland",
 			17: "mac_turkish",

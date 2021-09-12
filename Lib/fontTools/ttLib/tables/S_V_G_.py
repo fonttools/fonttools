@@ -1,13 +1,12 @@
-from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import bytesjoin, strjoin, tobytes, tostr
 from fontTools.misc import sstruct
 from . import DefaultTable
 try:
 	import xml.etree.cElementTree as ET
 except ImportError:
 	import xml.etree.ElementTree as ET
+from io import BytesIO
 import struct
-import re
 import logging
 
 
@@ -285,7 +284,7 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 			writer.newline()
 			for uiNameID in self.colorPalettes.colorParamUINameIDs:
 				writer.begintag("colorParamUINameID")
-				writer.writeraw(str(uiNameID))
+				writer._writeraw(str(uiNameID))
 				writer.endtag("colorParamUINameID")
 				writer.newline()
 			for colorPalette in self.colorPalettes.colorPaletteList:
@@ -343,8 +342,7 @@ class ColorPalettes(object):
 
 	def fromXML(self, name, attrs, content, ttFont):
 		for element in content:
-			element = element.strip()
-			if not element:
+			if not isinstance(element, tuple):
 				continue
 			name, attrib, content = element
 			if name == "colorParamUINameID":
@@ -353,7 +351,7 @@ class ColorPalettes(object):
 			elif name == "colorPalette":
 				colorPalette = ColorPalette()
 				self.colorPaletteList.append(colorPalette)
-				colorPalette.fromXML((name, attrib, content), ttFont)
+				colorPalette.fromXML(name, attrib, content, ttFont)
 
 		self.numColorParams = len(self.colorParamUINameIDs)
 		self.numColorPalettes = len(self.colorPaletteList)

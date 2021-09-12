@@ -1,9 +1,9 @@
 """ttLib.tables.ttProgram.py -- Assembler/disassembler for TrueType bytecode programs."""
 
-from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import strjoin
 from fontTools.misc.textTools import num2binary, binary2num, readHex
 import array
+from io import StringIO
 import re
 import logging
 
@@ -63,6 +63,7 @@ instructions = [
 	(0x66,	'FLOOR',	0,	'Floor',		1, 1),	#                                    n        floor(n)
 	(0x46,	'GC',		1,	'GetCoordOnPVector',	1, 1),	#                                    p               c
 	(0x88,	'GETINFO',	0,	'GetInfo',		1, 1),	#                             selector          result
+        (0x91,  'GETVARIATION', 0,      'GetVariation',         0, -1), #                                    -        a1,..,an
 	(0x0d,	'GFV',		0,	'GetFVector',		0, 2),	#                                    -          px, py
 	(0x0c,	'GPV',		0,	'GetPVector',		0, 2),	#                                    -          px, py
 	(0x52,	'GT',		0,	'GreaterThan',		2, 1),	#                               e2, e1               b
@@ -158,7 +159,7 @@ def bitRepr(value, bits):
 	return s
 
 
-_mnemonicPat = re.compile("[A-Z][A-Z0-9]*$")
+_mnemonicPat = re.compile(r"[A-Z][A-Z0-9]*$")
 
 def _makeDict(instructionList):
 	opcodeDict = {}
@@ -194,8 +195,8 @@ _whiteRE = re.compile(r"\s*")
 
 _pushCountPat = re.compile(r"[A-Z][A-Z0-9]*\s*\[.*?\]\s*/\* ([0-9]+).*?\*/")
 
-_indentRE = re.compile("^FDEF|IF|ELSE\[ \]\t.+")
-_unindentRE = re.compile("^ELSE|ENDF|EIF\[ \]\t.+")
+_indentRE = re.compile(r"^FDEF|IF|ELSE\[ \]\t.+")
+_unindentRE = re.compile(r"^ELSE|ENDF|EIF\[ \]\t.+")
 
 def _skipWhite(data, pos):
 	m = _whiteRE.match(data, pos)
@@ -222,7 +223,7 @@ class Program(object):
 	def getBytecode(self):
 		if not hasattr(self, "bytecode"):
 			self._assemble()
-		return self.bytecode.tostring()
+		return self.bytecode.tobytes()
 
 	def getAssembly(self, preserve=True):
 		if not hasattr(self, "assembly"):

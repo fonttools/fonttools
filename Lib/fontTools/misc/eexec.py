@@ -1,9 +1,19 @@
-"""fontTools.misc.eexec.py -- Module implementing the eexec and
-charstring encryption algorithm as used by PostScript Type 1 fonts.
+"""
+PostScript Type 1 fonts make use of two types of encryption: charstring
+encryption and ``eexec`` encryption. Charstring encryption is used for
+the charstrings themselves, while ``eexec`` is used to encrypt larger
+sections of the font program, such as the ``Private`` and ``CharStrings``
+dictionaries. Despite the different names, the algorithm is the same,
+although ``eexec`` encryption uses a fixed initial key R=55665.
+
+The algorithm uses cipher feedback, meaning that the ciphertext is used
+to modify the key. Because of this, the routines in this module return
+the new key at the end of the operation.
+
 """
 
-from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import bytechr, bytesjoin, byteord
+
 
 def _decryptChar(cipher, R):
 	cipher = byteord(cipher)
@@ -20,12 +30,24 @@ def _encryptChar(plain, R):
 
 def decrypt(cipherstring, R):
 	r"""
-	>>> testStr = b"\0\0asdadads asds\265"
-	>>> decryptedStr, R = decrypt(testStr, 12321)
-	>>> decryptedStr == b'0d\nh\x15\xe8\xc4\xb2\x15\x1d\x108\x1a<6\xa1'
-	True
-	>>> R == 36142
-	True
+	Decrypts a string using the Type 1 encryption algorithm.
+
+	Args:
+		cipherstring: String of ciphertext.
+		R: Initial key.
+
+	Returns:
+		decryptedStr: Plaintext string.
+		R: Output key for subsequent decryptions.
+
+	Examples::
+
+		>>> testStr = b"\0\0asdadads asds\265"
+		>>> decryptedStr, R = decrypt(testStr, 12321)
+		>>> decryptedStr == b'0d\nh\x15\xe8\xc4\xb2\x15\x1d\x108\x1a<6\xa1'
+		True
+		>>> R == 36142
+		True
 	"""
 	plainList = []
 	for cipher in cipherstring:
@@ -36,6 +58,30 @@ def decrypt(cipherstring, R):
 
 def encrypt(plainstring, R):
 	r"""
+	Encrypts a string using the Type 1 encryption algorithm.
+
+	Note that the algorithm as described in the Type 1 specification requires the
+	plaintext to be prefixed with a number of random bytes. (For ``eexec`` the
+	number of random bytes is set to 4.) This routine does *not* add the random
+	prefix to its input.
+
+	Args:
+		plainstring: String of plaintext.
+		R: Initial key.
+
+	Returns:
+		cipherstring: Ciphertext string.
+		R: Output key for subsequent encryptions.
+
+	Examples::
+
+		>>> testStr = b"\0\0asdadads asds\265"
+		>>> decryptedStr, R = decrypt(testStr, 12321)
+		>>> decryptedStr == b'0d\nh\x15\xe8\xc4\xb2\x15\x1d\x108\x1a<6\xa1'
+		True
+		>>> R == 36142
+		True
+
 	>>> testStr = b'0d\nh\x15\xe8\xc4\xb2\x15\x1d\x108\x1a<6\xa1'
 	>>> encryptedStr, R = encrypt(testStr, 12321)
 	>>> encryptedStr == b"\0\0asdadads asds\265"

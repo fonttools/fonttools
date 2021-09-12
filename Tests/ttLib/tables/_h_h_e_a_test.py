@@ -1,5 +1,3 @@
-from __future__ import absolute_import, unicode_literals
-from fontTools.misc.py23 import *
 from fontTools.misc.loggingTools import CapturingLogHandler
 from fontTools.misc.testTools import parseXML, getXML
 from fontTools.misc.textTools import deHexStr
@@ -127,6 +125,18 @@ class HheaCompileOrToXMLTest(unittest.TestCase):
             len([r for r in captor.records
                  if "Table version value is a float" in r.msg]) == 1)
 
+    def test_aliases(self):
+        hhea = self.font['hhea']
+        self.assertEqual(hhea.ascent, hhea.ascender)
+        self.assertEqual(hhea.descent, hhea.descender)
+        hhea.ascender = 800
+        self.assertEqual(hhea.ascent, 800)
+        hhea.ascent = 750
+        self.assertEqual(hhea.ascender, 750)
+        hhea.descender = -300
+        self.assertEqual(hhea.descent, -300)
+        hhea.descent = -299
+        self.assertEqual(hhea.descender, -299)
 
 class HheaDecompileOrFromXMLTest(unittest.TestCase):
 

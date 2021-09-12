@@ -1,6 +1,4 @@
-from __future__ import (
-    print_function, division, absolute_import, unicode_literals)
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import byteord, tostr
 
 import re
 from bisect import bisect_right
@@ -13,7 +11,7 @@ except ImportError:  # pragma: no cover
     # fall back to built-in unicodedata (possibly outdated)
     from unicodedata import *
 
-from . import Blocks, Scripts, ScriptExtensions
+from . import Blocks, Scripts, ScriptExtensions, OTTags
 
 
 __all__ = [tostr(s) for s in (
@@ -38,6 +36,9 @@ __all__ = [tostr(s) for s in (
     "script_extension",
     "script_name",
     "script_code",
+    "script_horizontal_direction",
+    "ot_tags_from_script",
+    "ot_tag_to_script",
 )]
 
 
@@ -49,7 +50,7 @@ def script(char):
     'Latn'
     >>> script(",")
     'Zyyy'
-    >>> script(unichr(0x10FFFF))
+    >>> script(chr(0x10FFFF))
     'Zzzz'
     """
     code = byteord(char)
@@ -72,9 +73,9 @@ def script_extension(char):
 
     >>> script_extension("a") == {'Latn'}
     True
-    >>> script_extension(unichr(0x060C)) == {'Arab', 'Syrc', 'Thaa'}
+    >>> script_extension(chr(0x060C)) == {'Rohg', 'Syrc', 'Yezi', 'Arab', 'Thaa'}
     True
-    >>> script_extension(unichr(0x10FFFF)) == {'Zzzz'}
+    >>> script_extension(chr(0x10FFFF)) == {'Zzzz'}
     True
     """
     code = byteord(char)
@@ -133,17 +134,151 @@ def script_code(script_name, default=KeyError):
         return default
 
 
+# The data on script direction is taken from CLDR 37:
+# https://github.com/unicode-org/cldr/blob/release-37/common/properties/scriptMetadata.txt
+RTL_SCRIPTS = {
+    # Unicode-1.1 additions
+    'Arab',  # Arabic
+    'Hebr',  # Hebrew
+
+    # Unicode-3.0 additions
+    'Syrc',  # Syriac
+    'Thaa',  # Thaana
+
+    # Unicode-4.0 additions
+    'Cprt',  # Cypriot
+
+    # Unicode-4.1 additions
+    'Khar',  # Kharoshthi
+
+    # Unicode-5.0 additions
+    'Phnx',  # Phoenician
+    'Nkoo',  # Nko
+
+    # Unicode-5.1 additions
+    'Lydi',  # Lydian
+
+    # Unicode-5.2 additions
+    'Avst',  # Avestan
+    'Armi',  # Imperial Aramaic
+    'Phli',  # Inscriptional Pahlavi
+    'Prti',  # Inscriptional Parthian
+    'Sarb',  # Old South Arabian
+    'Orkh',  # Old Turkic
+    'Samr',  # Samaritan
+
+    # Unicode-6.0 additions
+    'Mand',  # Mandaic
+
+    # Unicode-6.1 additions
+    'Merc',  # Meroitic Cursive
+    'Mero',  # Meroitic Hieroglyphs
+
+    # Unicode-7.0 additions
+    'Mani',  # Manichaean
+    'Mend',  # Mende Kikakui
+    'Nbat',  # Nabataean
+    'Narb',  # Old North Arabian
+    'Palm',  # Palmyrene
+    'Phlp',  # Psalter Pahlavi
+
+    # Unicode-8.0 additions
+    'Hatr',  # Hatran
+    'Hung',  # Old Hungarian
+
+    # Unicode-9.0 additions
+    'Adlm',  # Adlam
+
+    # Unicode-11.0 additions
+    'Rohg',  # Hanifi Rohingya
+    'Sogo',  # Old Sogdian
+    'Sogd',  # Sogdian
+
+    # Unicode-12.0 additions
+    'Elym',  # Elymaic
+
+    # Unicode-13.0 additions
+    'Chrs',  # Chorasmian
+    'Yezi',  # Yezidi
+}
+
+def script_horizontal_direction(script_code, default=KeyError):
+    """ Return "RTL" for scripts that contain right-to-left characters
+    according to the Bidi_Class property. Otherwise return "LTR".
+    """
+    if script_code not in Scripts.NAMES:
+        if isinstance(default, type) and issubclass(default, KeyError):
+            raise default(script_code)
+        return default
+    return str("RTL") if script_code in RTL_SCRIPTS else str("LTR")
+
+
 def block(char):
     """ Return the block property assigned to the Unicode character 'char'
     as a string.
 
     >>> block("a")
     'Basic Latin'
-    >>> block(unichr(0x060C))
+    >>> block(chr(0x060C))
     'Arabic'
-    >>> block(unichr(0xEFFFF))
+    >>> block(chr(0xEFFFF))
     'No_Block'
     """
     code = byteord(char)
     i = bisect_right(Blocks.RANGES, code)
     return Blocks.VALUES[i-1]
+
+
+def ot_tags_from_script(script_code):
+    """ Return a list of OpenType script tags associated with a given
+    Unicode script code.
+    Return ['DFLT'] script tag for invalid/unknown script codes.
+    """
+    if script_code not in Scripts.NAMES:
+        return [OTTags.DEFAULT_SCRIPT]
+
+    script_tags = [
+        OTTags.SCRIPT_EXCEPTIONS.get(
+            script_code,
+            script_code[0].lower() + script_code[1:]
+        )
+    ]
+    if script_code in OTTags.NEW_SCRIPT_TAGS:
+        script_tags.extend(OTTags.NEW_SCRIPT_TAGS[script_code])
+        script_tags.reverse()  # last in, first out
+
+    return script_tags
+
+
+def ot_tag_to_script(tag):
+    """ Return the Unicode script code for the given OpenType script tag, or
+    None for "DFLT" tag or if there is no Unicode script associated with it.
+    Raises ValueError if the tag is invalid.
+    """
+    tag = tostr(tag).strip()
+    if not tag or " " in tag or len(tag) > 4:
+        raise ValueError("invalid OpenType tag: %r" % tag)
+
+    while len(tag) != 4:
+        tag += str(" ")  # pad with spaces
+
+    if tag == OTTags.DEFAULT_SCRIPT:
+        # it's unclear which Unicode script the "DFLT" OpenType tag maps to,
+        # so here we return None
+        return None
+
+    if tag in OTTags.NEW_SCRIPT_TAGS_REVERSED:
+        return OTTags.NEW_SCRIPT_TAGS_REVERSED[tag]
+
+    # This side of the conversion is fully algorithmic
+
+    # Any spaces at the end of the tag are replaced by repeating the last
+    # letter. Eg 'nko ' -> 'Nkoo'.
+    # Change first char to uppercase
+    script_code = tag[0].upper() + tag[1]
+    for i in range(2, 4):
+        script_code += (script_code[i-1] if tag[i] == " " else tag[i])
+
+    if script_code not in Scripts.NAMES:
+        return None
+    return script_code

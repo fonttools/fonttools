@@ -1,5 +1,3 @@
-from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
 from fontTools.misc.fixedTools import (
@@ -33,13 +31,13 @@ class table__v_h_e_a(DefaultTable.DefaultTable):
 
 	# Note: Keep in sync with table__h_h_e_a
 
-	dependencies = ['vmtx', 'glyf', 'CFF ']
+	dependencies = ['vmtx', 'glyf', 'CFF ', 'CFF2']
 
 	def decompile(self, data, ttFont):
 		sstruct.unpack(vheaFormat, data, self)
 
 	def compile(self, ttFont):
-		if ttFont.recalcBBoxes and (ttFont.isLoaded('glyf') or ttFont.isLoaded('CFF ')):
+		if ttFont.recalcBBoxes and (ttFont.isLoaded('glyf') or ttFont.isLoaded('CFF ') or ttFont.isLoaded('CFF2')):
 			self.recalc(ttFont)
 		self.tableVersion = fi2ve(self.tableVersion)
 		return sstruct.pack(vheaFormat, self)
@@ -61,11 +59,15 @@ class table__v_h_e_a(DefaultTable.DefaultTable):
 					# Calculate those.
 					g.recalcBounds(glyfTable)
 				boundsHeightDict[name] = g.yMax - g.yMin
-		elif 'CFF ' in ttFont:
-			topDict = ttFont['CFF '].cff.topDictIndex[0]
+		elif 'CFF ' in ttFont or 'CFF2' in ttFont:
+			if 'CFF ' in ttFont:
+				topDict = ttFont['CFF '].cff.topDictIndex[0]
+			else:
+				topDict = ttFont['CFF2'].cff.topDictIndex[0]
+			charStrings = topDict.CharStrings
 			for name in ttFont.getGlyphOrder():
-				cs = topDict.CharStrings[name]
-				bounds = cs.calcBounds()
+				cs = charStrings[name]
+				bounds = cs.calcBounds(charStrings)
 				if bounds is not None:
 					boundsHeightDict[name] = int(
 						math.ceil(bounds[3]) - math.floor(bounds[1]))

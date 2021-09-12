@@ -1,5 +1,3 @@
-from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
 from fontTools.misc.textTools import safeEval
 from . import DefaultTable
 import struct
@@ -19,7 +17,7 @@ class table_L_T_S_H_(DefaultTable.DefaultTable):
 		# ouch: the assertion is not true in Chicago!
 		#assert numGlyphs == ttFont['maxp'].numGlyphs
 		yPels = array.array("B")
-		yPels.fromstring(data)
+		yPels.frombytes(data)
 		self.yPels = {}
 		for i in range(numGlyphs):
 			self.yPels[ttFont.getGlyphName(i)] = yPels[i]
@@ -34,7 +32,7 @@ class table_L_T_S_H_(DefaultTable.DefaultTable):
 		for name in names:
 			yPels[ttFont.getGlyphID(name)] = self.yPels[name]
 		yPels = array.array("B", yPels)
-		return struct.pack(">HH", version, numGlyphs) + yPels.tostring()
+		return struct.pack(">HH", version, numGlyphs) + yPels.tobytes()
 
 	def toXML(self, writer, ttFont):
 		names = sorted(self.yPels.keys())

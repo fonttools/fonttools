@@ -1,0 +1,23 @@
+# automatic
+@Uppercase = [ N O Odieresis ];
+
+# Prefix: Languagesystems
+# automatic
+languagesystem DFLT dflt;
+languagesystem latn dflt;
+languagesystem latn NLD;
+
+
+feature cpsp {
+pos @Uppercase <25 0 50 0>;
+
+} cpsp;
+
+table GDEF {
+  # automatic
+  GlyphClassDef
+    [N O Odieresis n o odieresis], # Base
+    , # Liga
+    [dieresiscomb], # Mark
+    ;
+} GDEF;

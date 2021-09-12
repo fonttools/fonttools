@@ -1,6 +1,3 @@
-from __future__ import print_function, absolute_import, division
-
-from fontTools.misc.py23 import *
 from fontTools.pens.recordingPen import RecordingPen
 from fontTools.svgLib import parse_path
 
@@ -290,8 +287,150 @@ def test_invalid_implicit_command():
     assert exc_info.match("Unallowed implicit command")
 
 
-def test_arc_not_implemented():
-    pathdef = "M300,200 h-150 a150,150 0 1,0 150,-150 z"
-    with pytest.raises(NotImplementedError) as exc_info:
-        parse_path(pathdef, RecordingPen())
-    assert exc_info.match("arcs are not supported")
+def test_arc_to_cubic_bezier():
+    pen = RecordingPen()
+    parse_path("M300,200 h-150 a150,150 0 1,0 150,-150 z", pen)
+    expected = [
+        ('moveTo', ((300.0, 200.0),)),
+        ('lineTo', ((150.0, 200.0),)),
+        (
+            'curveTo',
+            (
+                (150.0, 282.842),
+                (217.157, 350.0),
+                (300.0, 350.0)
+            )
+        ),
+        (
+            'curveTo',
+            (
+                (382.842, 350.0),
+                (450.0, 282.842),
+                (450.0, 200.0)
+            )
+        ),
+        (
+            'curveTo',
+            (
+                (450.0, 117.157),
+                (382.842, 50.0),
+                (300.0, 50.0)
+            )
+        ),
+        ('lineTo', ((300.0, 200.0),)),
+        ('closePath', ())
+    ]
+
+    result = list(pen.value)
+    assert len(result) == len(expected)
+    for (cmd1, points1), (cmd2, points2) in zip(result, expected):
+        assert cmd1 == cmd2
+        assert len(points1) == len(points2)
+        for pt1, pt2 in zip(points1, points2):
+            assert pt1 == pytest.approx(pt2, rel=1e-5)
+
+
+
+class ArcRecordingPen(RecordingPen):
+
+    def arcTo(self, rx, ry, rotation, arc_large, arc_sweep, end_point):
+        self.value.append(
+            ("arcTo", (rx, ry, rotation, arc_large, arc_sweep, end_point))
+        )
+
+
+def test_arc_pen_with_arcTo():
+    pen = ArcRecordingPen()
+    parse_path("M300,200 h-150 a150,150 0 1,0 150,-150 z", pen)
+    expected = [
+        ('moveTo', ((300.0, 200.0),)),
+        ('lineTo', ((150.0, 200.0),)),
+        ('arcTo', (150.0, 150.0, 0.0, True, False, (300.0, 50.0))),
+        ('lineTo', ((300.0, 200.0),)),
+        ('closePath', ())
+    ]
+
+    assert pen.value == expected
+
+
+@pytest.mark.parametrize(
+    "path, expected",
+    [
+        (
+            "M1-2A3-4-1.0 01.5.7",
+            [
+                ("moveTo", ((1.0, -2.0),)),
+                ("arcTo", (3.0, -4.0, -1.0, False, True, (0.5, 0.7))),
+                ("endPath", ()),
+            ],
+        ),
+        (
+            "M21.58 7.19a2.51 2.51 0 10-1.77-1.77",
+            [
+                ("moveTo", ((21.58, 7.19),)),
+                ("arcTo", (2.51, 2.51, 0.0, True, False, (19.81, 5.42))),
+                ("endPath", ()),
+            ],
+        ),
+        (
+            "M22 12a25.87 25.87 0 00-.42-4.81",
+            [
+                ("moveTo", ((22.0, 12.0),)),
+                ("arcTo", (25.87, 25.87, 0.0, False, False, (21.58, 7.19))),
+                ("endPath", ()),
+            ],
+        ),
+        (
+            "M0,0 A1.2 1.2 0 012 15.8",
+            [
+                ("moveTo", ((0.0, 0.0),)),
+                ("arcTo", (1.2, 1.2, 0.0, False, True, (2.0, 15.8))),
+                ("endPath", ()),
+            ],
+        ),
+        (
+            "M12 7a5 5 0 105 5 5 5 0 00-5-5",
+            [
+
+                ("moveTo", ((12.0, 7.0),)),
+                ("arcTo", (5.0, 5.0, 0.0, True, False, (17.0, 12.0))),
+                ("arcTo", (5.0, 5.0, 0.0, False, False, (12.0, 7.0))),
+                ("endPath", ()),
+            ],
+        )
+    ],
+)
+def test_arc_flags_without_spaces(path, expected):
+    pen = ArcRecordingPen()
+    parse_path(path, pen)
+    assert pen.value == expected
+
+
+@pytest.mark.parametrize(
+    "path", ["A", "A0,0,0,0,0,0", "A 0 0 0 0 0 0 0 0 0 0 0 0 0"]
+)
+def test_invalid_arc_not_enough_args(path):
+    pen = ArcRecordingPen()
+    with pytest.raises(ValueError, match="Invalid arc command") as e:
+        parse_path(path, pen)
+
+    assert isinstance(e.value.__cause__, ValueError)
+    assert "Not enough arguments" in str(e.value.__cause__)
+
+
+def test_invalid_arc_argument_value():
+    pen = ArcRecordingPen()
+    with pytest.raises(ValueError, match="Invalid arc command") as e:
+        parse_path("M0,0 A0,0,0,2,0,0,0", pen)
+
+    cause = e.value.__cause__
+    assert isinstance(cause, ValueError)
+    assert "Invalid argument for 'large-arc-flag' parameter: '2'" in str(cause)
+
+    pen = ArcRecordingPen()
+    with pytest.raises(ValueError, match="Invalid arc command") as e:
+        parse_path("M0,0 A0,0,0,0,-2.0,0,0", pen)
+
+    cause = e.value.__cause__
+    assert isinstance(cause, ValueError)
+    assert "Invalid argument for 'sweep-flag' parameter: '-2.0'" in str(cause)

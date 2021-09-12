@@ -1,8 +1,13 @@
-from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
-from fontTools.misc.fixedTools import fixedToFloat, floatToFixed
+from fontTools.misc.fixedTools import (
+    fixedToFloat as fi2fl,
+    floatToFixed as fl2fi,
+    floatToFixedToStr as fl2str,
+    strToFixedToFloat as str2fl,
+    otRound,
+)
 from fontTools.misc.textTools import safeEval
 import array
+from collections import Counter, defaultdict
 import io
 import logging
 import struct
@@ -30,9 +35,10 @@ log = logging.getLogger(__name__)
 
 
 class TupleVariation(object):
+
 	def __init__(self, axes, coordinates):
 		self.axes = axes.copy()
-		self.coordinates = coordinates[:]
+		self.coordinates = list(coordinates)
 
 	def __repr__(self):
 		axes = ",".join(sorted(["%s=%s" % (name, value) for (name, value) in self.axes.items()]))
@@ -42,11 +48,12 @@ class TupleVariation(object):
 		return self.coordinates == other.coordinates and self.axes == other.axes
 
 	def getUsedPoints(self):
-		result = set()
-		for i, point in enumerate(self.coordinates):
-			if point is not None:
-				result.add(i)
-		return result
+		# Empty set means "all points used".
+		if None not in self.coordinates:
+			return frozenset()
+		used = frozenset([i for i,p in enumerate(self.coordinates) if p is not None])
+		# Return None if no points used.
+		return used if used else None
 
 	def hasImpact(self):
 		"""Returns True if this TupleVariation has any visible impact.
@@ -54,10 +61,7 @@ class TupleVariation(object):
 		If the result is False, the TupleVariation can be omitted from the font
 		without making any visible difference.
 		"""
-		for c in self.coordinates:
-			if c is not None:
-				return True
-		return False
+		return any(c is not None for c in self.coordinates)
 
 	def toXML(self, writer, axisTags):
 		writer.begintag("tuple")
@@ -65,13 +69,19 @@ class TupleVariation(object):
 		for axis in axisTags:
 			value = self.axes.get(axis)
 			if value is not None:
-				minValue, value, maxValue = (float(v) for v in value)
+				minValue, value, maxValue = value
 				defaultMinValue = min(value, 0.0)  # -0.3 --> -0.3; 0.7 --> 0.0
 				defaultMaxValue = max(value, 0.0)  # -0.3 -->  0.0; 0.7 --> 0.7
 				if minValue == defaultMinValue and maxValue == defaultMaxValue:
-					writer.simpletag("coord", axis=axis, value=value)
+					writer.simpletag("coord", axis=axis, value=fl2str(value, 14))
 				else:
-					writer.simpletag("coord", axis=axis, value=value, min=minValue, max=maxValue)
+					attrs = [
+						("axis", axis),
+						("min", fl2str(minValue, 14)),
+						("value", fl2str(value, 14)),
+						("max", fl2str(maxValue, 14)),
+				        ]
+					writer.simpletag("coord", attrs)
 				writer.newline()
 		wrote_any_deltas = False
 		for i, delta in enumerate(self.coordinates):
@@ -97,11 +107,11 @@ class TupleVariation(object):
 	def fromXML(self, name, attrs, _content):
 		if name == "coord":
 			axis = attrs["axis"]
-			value = float(attrs["value"])
+			value = str2fl(attrs["value"], 14)
 			defaultMinValue = min(value, 0.0)  # -0.3 --> -0.3; 0.7 --> 0.0
 			defaultMaxValue = max(value, 0.0)  # -0.3 -->  0.0; 0.7 --> 0.7
-			minValue = float(attrs.get("min", defaultMinValue))
-			maxValue = float(attrs.get("max", defaultMaxValue))
+			minValue = str2fl(attrs.get("min", defaultMinValue), 14)
+			maxValue = str2fl(attrs.get("max", defaultMaxValue), 14)
 			self.axes[axis] = (minValue, value, maxValue)
 		elif name == "delta":
 			if "pt" in attrs:
@@ -117,15 +127,21 @@ class TupleVariation(object):
 				log.warning("bad delta format: %s" %
 				            ", ".join(sorted(attrs.keys())))
 
-	def compile(self, axisTags, sharedCoordIndices, sharedPoints):
-		tupleData = []
+	def compile(self, axisTags, sharedCoordIndices={}, pointData=None):
+		assert set(self.axes.keys()) <= set(axisTags), ("Unknown axis tag found.", self.axes.keys(), axisTags)
 
-		assert all(tag in axisTags for tag in self.axes.keys()), ("Unknown axis tag found.", self.axes.keys(), axisTags)
+		tupleData = []
+		auxData = []
+
+		if pointData is None:
+			usedPoints = self.getUsedPoints()
+			if usedPoints is None: # Nothing to encode
+				return b'', b''
+			pointData = self.compilePoints(usedPoints)
 
 		coord = self.compileCoord(axisTags)
-		if coord in sharedCoordIndices:
-			flags = sharedCoordIndices[coord]
-		else:
+		flags = sharedCoordIndices.get(coord)
+		if flags is None:
 			flags = EMBEDDED_PEAK_TUPLE
 			tupleData.append(coord)
 
@@ -134,26 +150,27 @@ class TupleVariation(object):
 			flags |= INTERMEDIATE_REGION
 			tupleData.append(intermediateCoord)
 
-		points = self.getUsedPoints()
-		if sharedPoints == points:
-			# Only use the shared points if they are identical to the actually used points
-			auxData = self.compileDeltas(sharedPoints)
-			usesSharedPoints = True
-		else:
+		# pointData of b'' implies "use shared points".
+		if pointData:
 			flags |= PRIVATE_POINT_NUMBERS
-			numPointsInGlyph = len(self.coordinates)
-			auxData = self.compilePoints(points, numPointsInGlyph) + self.compileDeltas(points)
-			usesSharedPoints = False
+			auxData.append(pointData)
 
-		tupleData = struct.pack('>HH', len(auxData), flags) + bytesjoin(tupleData)
-		return (tupleData, auxData, usesSharedPoints)
+		auxData.append(self.compileDeltas())
+		auxData = b''.join(auxData)
+
+		tupleData.insert(0, struct.pack('>HH', len(auxData), flags))
+		return b''.join(tupleData), auxData
 
 	def compileCoord(self, axisTags):
-		result = []
+		result = bytearray()
+		axes = self.axes
 		for axis in axisTags:
-			_minValue, value, _maxValue = self.axes.get(axis, (0.0, 0.0, 0.0))
-			result.append(struct.pack(">h", floatToFixed(value, 14)))
-		return bytesjoin(result)
+			triple = axes.get(axis)
+			if triple is None:
+				result.extend(b'\0\0')
+			else:
+				result.extend(struct.pack(">h", fl2fi(triple[1], 14)))
+		return bytes(result)
 
 	def compileIntermediateCoord(self, axisTags):
 		needed = False
@@ -166,29 +183,33 @@ class TupleVariation(object):
 				break
 		if not needed:
 			return None
-		minCoords = []
-		maxCoords = []
+		minCoords = bytearray()
+		maxCoords = bytearray()
 		for axis in axisTags:
 			minValue, value, maxValue = self.axes.get(axis, (0.0, 0.0, 0.0))
-			minCoords.append(struct.pack(">h", floatToFixed(minValue, 14)))
-			maxCoords.append(struct.pack(">h", floatToFixed(maxValue, 14)))
-		return bytesjoin(minCoords + maxCoords)
+			minCoords.extend(struct.pack(">h", fl2fi(minValue, 14)))
+			maxCoords.extend(struct.pack(">h", fl2fi(maxValue, 14)))
+		return minCoords + maxCoords
 
 	@staticmethod
 	def decompileCoord_(axisTags, data, offset):
 		coord = {}
 		pos = offset
 		for axis in axisTags:
-			coord[axis] = fixedToFloat(struct.unpack(">h", data[pos:pos+2])[0], 14)
+			coord[axis] = fi2fl(struct.unpack(">h", data[pos:pos+2])[0], 14)
 			pos += 2
 		return coord, pos
 
 	@staticmethod
-	def compilePoints(points, numPointsInGlyph):
+	def compilePoints(points):
 		# If the set consists of all points in the glyph, it gets encoded with
 		# a special encoding: a single zero byte.
-		if len(points) == numPointsInGlyph:
-			return b"\0"
+		#
+		# To use this optimization, points passed in must be empty set.
+		# The following two lines are not strictly necessary as the main code
+		# below would emit the same. But this is most common and faster.
+		if not points:
+			return b'\0'
 
 		# In the 'gvar' table, the packing of point numbers is a little surprising.
 		# It consists of multiple runs, each being a delta-encoded list of integers.
@@ -200,19 +221,24 @@ class TupleVariation(object):
 		points.sort()
 		numPoints = len(points)
 
+		result = bytearray()
 		# The binary representation starts with the total number of points in the set,
 		# encoded into one or two bytes depending on the value.
 		if numPoints < 0x80:
-			result = [bytechr(numPoints)]
+			result.append(numPoints)
 		else:
-			result = [bytechr((numPoints >> 8) | 0x80) + bytechr(numPoints & 0xff)]
+			result.append((numPoints >> 8) | 0x80)
+			result.append(numPoints & 0xff)
 
 		MAX_RUN_LENGTH = 127
 		pos = 0
 		lastValue = 0
 		while pos < numPoints:
-			run = io.BytesIO()
 			runLength = 0
+
+			headerPos = len(result)
+			result.append(0)
+
 			useByteEncoding = None
 			while pos < numPoints and runLength <= MAX_RUN_LENGTH:
 				curValue = points[pos]
@@ -225,38 +251,36 @@ class TupleVariation(object):
 				# TODO This never switches back to a byte-encoding from a short-encoding.
 				# That's suboptimal.
 				if useByteEncoding:
-					run.write(bytechr(delta))
+					result.append(delta)
 				else:
-					run.write(bytechr(delta >> 8))
-					run.write(bytechr(delta & 0xff))
+					result.append(delta >> 8)
+					result.append(delta & 0xff)
 				lastValue = curValue
 				pos += 1
 				runLength += 1
 			if useByteEncoding:
-				runHeader = bytechr(runLength - 1)
+				result[headerPos] = runLength - 1
 			else:
-				runHeader = bytechr((runLength - 1) | POINTS_ARE_WORDS)
-			result.append(runHeader)
-			result.append(run.getvalue())
+				result[headerPos] = (runLength - 1) | POINTS_ARE_WORDS
 
-		return bytesjoin(result)
+		return result
 
 	@staticmethod
 	def decompilePoints_(numPoints, data, offset, tableTag):
 		"""(numPoints, data, offset, tableTag) --> ([point1, point2, ...], newOffset)"""
 		assert tableTag in ('cvar', 'gvar')
 		pos = offset
-		numPointsInData = byteord(data[pos])
+		numPointsInData = data[pos]
 		pos += 1
 		if (numPointsInData & POINTS_ARE_WORDS) != 0:
-			numPointsInData = (numPointsInData & POINT_RUN_COUNT_MASK) << 8 | byteord(data[pos])
+			numPointsInData = (numPointsInData & POINT_RUN_COUNT_MASK) << 8 | data[pos]
 			pos += 1
 		if numPointsInData == 0:
 			return (range(numPoints), pos)
 
 		result = []
 		while len(result) < numPointsInData:
-			runHeader = byteord(data[pos])
+			runHeader = data[pos]
 			pos += 1
 			numPointsInRun = (runHeader & POINT_RUN_COUNT_MASK) + 1
 			point = 0
@@ -266,9 +290,8 @@ class TupleVariation(object):
 			else:
 				points = array.array("B")
 				pointsSize = numPointsInRun
-			points.fromstring(data[pos:pos+pointsSize])
-			if sys.byteorder != "big":
-				points.byteswap()
+			points.frombytes(data[pos:pos+pointsSize])
+			if sys.byteorder != "big": points.byteswap()
 
 			assert len(points) == numPointsInRun
 			pos += pointsSize
@@ -290,23 +313,28 @@ class TupleVariation(object):
 			            (",".join(sorted(badPoints)), tableTag))
 		return (result, pos)
 
-	def compileDeltas(self, points):
+	def compileDeltas(self):
 		deltaX = []
 		deltaY = []
-		for p in sorted(list(points)):
-			c = self.coordinates[p]
-			if type(c) is tuple and len(c) == 2:
+		if self.getCoordWidth() == 2:
+			for c in self.coordinates:
+				if c is None:
+					continue
 				deltaX.append(c[0])
 				deltaY.append(c[1])
-			elif type(c) is int:
+		else:
+			for c in self.coordinates:
+				if c is None:
+					continue
 				deltaX.append(c)
-			elif c is not None:
-				raise ValueError("invalid type of delta: %s" % type(c))
-		return self.compileDeltaValues_(deltaX) + self.compileDeltaValues_(deltaY)
+		bytearr = bytearray()
+		self.compileDeltaValues_(deltaX, bytearr)
+		self.compileDeltaValues_(deltaY, bytearr)
+		return bytearr
 
 	@staticmethod
-	def compileDeltaValues_(deltas):
-		"""[value1, value2, value3, ...] --> bytestring
+	def compileDeltaValues_(deltas, bytearr=None):
+		"""[value1, value2, value3, ...] --> bytearray
 
 		Emits a sequence of runs. Each run starts with a
 		byte-sized header whose 6 least significant bits
@@ -321,38 +349,41 @@ class TupleVariation(object):
 		bytes; if (header & 0x40) is set, the delta values are
 		signed 16-bit integers.
 		"""  # Explaining the format because the 'gvar' spec is hard to understand.
-		stream = io.BytesIO()
+		if bytearr is None:
+			bytearr = bytearray()
 		pos = 0
-		while pos < len(deltas):
+		numDeltas = len(deltas)
+		while pos < numDeltas:
 			value = deltas[pos]
 			if value == 0:
-				pos = TupleVariation.encodeDeltaRunAsZeroes_(deltas, pos, stream)
-			elif value >= -128 and value <= 127:
-				pos = TupleVariation.encodeDeltaRunAsBytes_(deltas, pos, stream)
+				pos = TupleVariation.encodeDeltaRunAsZeroes_(deltas, pos, bytearr)
+			elif -128 <= value <= 127:
+				pos = TupleVariation.encodeDeltaRunAsBytes_(deltas, pos, bytearr)
 			else:
-				pos = TupleVariation.encodeDeltaRunAsWords_(deltas, pos, stream)
-		return stream.getvalue()
+				pos = TupleVariation.encodeDeltaRunAsWords_(deltas, pos, bytearr)
+		return bytearr
 
 	@staticmethod
-	def encodeDeltaRunAsZeroes_(deltas, offset, stream):
-		runLength = 0
+	def encodeDeltaRunAsZeroes_(deltas, offset, bytearr):
 		pos = offset
 		numDeltas = len(deltas)
-		while pos < numDeltas and runLength < 64 and deltas[pos] == 0:
+		while pos < numDeltas and deltas[pos] == 0:
 			pos += 1
-			runLength += 1
-		assert runLength >= 1 and runLength <= 64
-		stream.write(bytechr(DELTAS_ARE_ZERO | (runLength - 1)))
+		runLength = pos - offset
+		while runLength >= 64:
+			bytearr.append(DELTAS_ARE_ZERO | 63)
+			runLength -= 64
+		if runLength:
+			bytearr.append(DELTAS_ARE_ZERO | (runLength - 1))
 		return pos
 
 	@staticmethod
-	def encodeDeltaRunAsBytes_(deltas, offset, stream):
-		runLength = 0
+	def encodeDeltaRunAsBytes_(deltas, offset, bytearr):
 		pos = offset
 		numDeltas = len(deltas)
-		while pos < numDeltas and runLength < 64:
+		while pos < numDeltas:
 			value = deltas[pos]
-			if value < -128 or value > 127:
+			if not (-128 <= value <= 127):
 				break
 			# Within a byte-encoded run of deltas, a single zero
 			# is best stored literally as 0x00 value. However,
@@ -365,19 +396,22 @@ class TupleVariation(object):
 			if value == 0 and pos+1 < numDeltas and deltas[pos+1] == 0:
 				break
 			pos += 1
-			runLength += 1
-		assert runLength >= 1 and runLength <= 64
-		stream.write(bytechr(runLength - 1))
-		for i in range(offset, pos):
-			stream.write(struct.pack('b', round(deltas[i])))
+		runLength = pos - offset
+		while runLength >= 64:
+			bytearr.append(63)
+			bytearr.extend(array.array('b', deltas[offset:offset+64]))
+			offset += 64
+			runLength -= 64
+		if runLength:
+			bytearr.append(runLength - 1)
+			bytearr.extend(array.array('b', deltas[offset:pos]))
 		return pos
 
 	@staticmethod
-	def encodeDeltaRunAsWords_(deltas, offset, stream):
-		runLength = 0
+	def encodeDeltaRunAsWords_(deltas, offset, bytearr):
 		pos = offset
 		numDeltas = len(deltas)
-		while pos < numDeltas and runLength < 64:
+		while pos < numDeltas:
 			value = deltas[pos]
 			# Within a word-encoded run of deltas, it is easiest
 			# to start a new run (with a different encoding)
@@ -395,15 +429,22 @@ class TupleVariation(object):
 			# [0x6666, 2, 0x7777] becomes 7 bytes when storing
 			# the value literally (42 66 66 00 02 77 77), but 8 bytes
 			# when starting a new run (40 66 66 00 02 40 77 77).
-			isByteEncodable = lambda value: value >= -128 and value <= 127
-			if isByteEncodable(value) and pos+1 < numDeltas and isByteEncodable(deltas[pos+1]):
+			if (-128 <= value <= 127) and pos+1 < numDeltas and (-128 <= deltas[pos+1] <= 127):
 				break
 			pos += 1
-			runLength += 1
-		assert runLength >= 1 and runLength <= 64
-		stream.write(bytechr(DELTAS_ARE_WORDS | (runLength - 1)))
-		for i in range(offset, pos):
-			stream.write(struct.pack('>h', round(deltas[i])))
+		runLength = pos - offset
+		while runLength >= 64:
+			bytearr.append(DELTAS_ARE_WORDS | 63)
+			a = array.array('h', deltas[offset:offset+64])
+			if sys.byteorder != "big": a.byteswap()
+			bytearr.extend(a)
+			offset += 64
+			runLength -= 64
+		if runLength:
+			bytearr.append(DELTAS_ARE_WORDS | (runLength - 1))
+			a = array.array('h', deltas[offset:pos])
+			if sys.byteorder != "big": a.byteswap()
+			bytearr.extend(a)
 		return pos
 
 	@staticmethod
@@ -412,7 +453,7 @@ class TupleVariation(object):
 		result = []
 		pos = offset
 		while len(result) < numDeltas:
-			runHeader = byteord(data[pos])
+			runHeader = data[pos]
 			pos += 1
 			numDeltasInRun = (runHeader & DELTA_RUN_COUNT_MASK) + 1
 			if (runHeader & DELTAS_ARE_ZERO) != 0:
@@ -424,9 +465,8 @@ class TupleVariation(object):
 				else:
 					deltas = array.array("b")
 					deltasSize = numDeltasInRun
-				deltas.fromstring(data[pos:pos+deltasSize])
-				if sys.byteorder != "big":
-					deltas.byteswap()
+				deltas.frombytes(data[pos:pos+deltasSize])
+				if sys.byteorder != "big": deltas.byteswap()
 				assert len(deltas) == numDeltasInRun
 				pos += deltasSize
 				result.extend(deltas)
@@ -442,6 +482,125 @@ class TupleVariation(object):
 			size += axisCount * 4
 		return size
 
+	def getCoordWidth(self):
+		""" Return 2 if coordinates are (x, y) as in gvar, 1 if single values
+		as in cvar, or 0 if empty.
+		"""
+		firstDelta = next((c for c in self.coordinates if c is not None), None)
+		if firstDelta is None:
+			return 0  # empty or has no impact
+		if type(firstDelta) in (int, float):
+			return 1
+		if type(firstDelta) is tuple and len(firstDelta) == 2:
+			return 2
+		raise TypeError(
+			"invalid type of delta; expected (int or float) number, or "
+			"Tuple[number, number]: %r" % firstDelta
+		)
+
+	def scaleDeltas(self, scalar):
+		if scalar == 1.0:
+			return  # no change
+		coordWidth = self.getCoordWidth()
+		self.coordinates = [
+			None
+			if d is None
+			else d * scalar
+			if coordWidth == 1
+			else (d[0] * scalar, d[1] * scalar)
+			for d in self.coordinates
+		]
+
+	def roundDeltas(self):
+		coordWidth = self.getCoordWidth()
+		self.coordinates = [
+			None
+			if d is None
+			else otRound(d)
+			if coordWidth == 1
+			else (otRound(d[0]), otRound(d[1]))
+			for d in self.coordinates
+		]
+
+	def calcInferredDeltas(self, origCoords, endPts):
+		from fontTools.varLib.iup import iup_delta
+
+		if self.getCoordWidth() == 1:
+			raise TypeError(
+				"Only 'gvar' TupleVariation can have inferred deltas"
+			)
+		if None in self.coordinates:
+			if len(self.coordinates) != len(origCoords):
+				raise ValueError(
+					"Expected len(origCoords) == %d; found %d"
+					% (len(self.coordinates), len(origCoords))
+				)
+			self.coordinates = iup_delta(self.coordinates, origCoords, endPts)
+
+	def optimize(self, origCoords, endPts, tolerance=0.5, isComposite=False):
+		from fontTools.varLib.iup import iup_delta_optimize
+
+		if None in self.coordinates:
+			return  # already optimized
+
+		deltaOpt = iup_delta_optimize(
+		    self.coordinates, origCoords, endPts, tolerance=tolerance
+		)
+		if None in deltaOpt:
+			if isComposite and all(d is None for d in deltaOpt):
+				# Fix for macOS composites
+				# https://github.com/fonttools/fonttools/issues/1381
+				deltaOpt = [(0, 0)] + [None] * (len(deltaOpt) - 1)
+			# Use "optimized" version only if smaller...
+			varOpt = TupleVariation(self.axes, deltaOpt)
+
+			# Shouldn't matter that this is different from fvar...?
+			axisTags = sorted(self.axes.keys())
+			tupleData, auxData = self.compile(axisTags)
+			unoptimizedLength = len(tupleData) + len(auxData)
+			tupleData, auxData = varOpt.compile(axisTags)
+			optimizedLength = len(tupleData) + len(auxData)
+
+			if optimizedLength < unoptimizedLength:
+				self.coordinates = varOpt.coordinates
+
+	def __iadd__(self, other):
+		if not isinstance(other, TupleVariation):
+			return NotImplemented
+		deltas1 = self.coordinates
+		length = len(deltas1)
+		deltas2 = other.coordinates
+		if len(deltas2) != length:
+			raise ValueError(
+				"cannot sum TupleVariation deltas with different lengths"
+			)
+		# 'None' values have different meanings in gvar vs cvar TupleVariations:
+		# within the gvar, when deltas are not provided explicitly for some points,
+		# they need to be inferred; whereas for the 'cvar' table, if deltas are not
+		# provided for some CVT values, then no adjustments are made (i.e. None == 0).
+		# Thus, we cannot sum deltas for gvar TupleVariations if they contain
+		# inferred inferred deltas (the latter need to be computed first using
+		# 'calcInferredDeltas' method), but we can treat 'None' values in cvar
+		# deltas as if they are zeros.
+		if self.getCoordWidth() == 2:
+			for i, d2 in zip(range(length), deltas2):
+				d1 = deltas1[i]
+				try:
+					deltas1[i] = (d1[0] + d2[0], d1[1] + d2[1])
+				except TypeError:
+					raise ValueError(
+						"cannot sum gvar deltas with inferred points"
+					)
+		else:
+			for i, d2 in zip(range(length), deltas2):
+				d1 = deltas1[i]
+				if d1 is not None and d2 is not None:
+					deltas1[i] = d1 + d2
+				elif d1 is None and d2 is not None:
+					deltas1[i] = d2
+				# elif d2 is None do nothing
+		return self
+
 
 def decompileSharedTuples(axisTags, sharedTupleCount, data, offset):
 	result = []
@@ -451,87 +610,77 @@ def decompileSharedTuples(axisTags, sharedTupleCount, data, offset):
 	return result
 
 
-def compileSharedTuples(axisTags, variations):
-	coordCount = {}
+def compileSharedTuples(axisTags, variations,
+			MAX_NUM_SHARED_COORDS = TUPLE_INDEX_MASK + 1):
+	coordCount = Counter()
 	for var in variations:
 		coord = var.compileCoord(axisTags)
-		coordCount[coord] = coordCount.get(coord, 0) + 1
-	sharedCoords = [(count, coord)
-					for (coord, count) in coordCount.items() if count > 1]
-	sharedCoords.sort(reverse=True)
-	MAX_NUM_SHARED_COORDS = TUPLE_INDEX_MASK + 1
-	sharedCoords = sharedCoords[:MAX_NUM_SHARED_COORDS]
-	return [c[1] for c in sharedCoords]  # Strip off counts.
+		coordCount[coord] += 1
+	# In python < 3.7, most_common() ordering is non-deterministic
+	# so apply a sort to make sure the ordering is consistent.
+	sharedCoords = sorted(
+		coordCount.most_common(MAX_NUM_SHARED_COORDS),
+		key=lambda item: (-item[1], item[0]),
+	)
+	return [c[0] for c in sharedCoords if c[1] > 1]
 
 
 def compileTupleVariationStore(variations, pointCount,
                                axisTags, sharedTupleIndices,
                                useSharedPoints=True):
-	variations = [v for v in variations if v.hasImpact()]
-	if len(variations) == 0:
+	newVariations = []
+	pointDatas = []
+	# Compile all points and figure out sharing if desired
+	sharedPoints = None
+
+	# Collect, count, and compile point-sets for all variation sets
+	pointSetCount = defaultdict(int)
+	for v in variations:
+		points = v.getUsedPoints()
+		if points is None: # Empty variations
+			continue
+		pointSetCount[points] += 1
+		newVariations.append(v)
+		pointDatas.append(points)
+	variations = newVariations
+	del newVariations
+
+	if not variations:
 		return (0, b"", b"")
 
-	# Each glyph variation tuples modifies a set of control points. To
-	# indicate which exact points are getting modified, a single tuple
-	# can either refer to a shared set of points, or the tuple can
-	# supply its private point numbers.  Because the impact of sharing
-	# can be positive (no need for a private point list) or negative
-	# (need to supply 0,0 deltas for unused points), it is not obvious
-	# how to determine which tuples should take their points from the
-	# shared pool versus have their own. Perhaps we should resort to
-	# brute force, and try all combinations? However, if a glyph has n
-	# variation tuples, we would need to try 2^n combinations (because
-	# each tuple may or may not be part of the shared set). How many
-	# variations tuples do glyphs have?
-	#
-	#   Skia.ttf: {3: 1, 5: 11, 6: 41, 7: 62, 8: 387, 13: 1, 14: 3}
-	#   JamRegular.ttf: {3: 13, 4: 122, 5: 1, 7: 4, 8: 1, 9: 1, 10: 1}
-	#   BuffaloGalRegular.ttf: {1: 16, 2: 13, 4: 2, 5: 4, 6: 19, 7: 1, 8: 3, 9: 8}
-	#   (Reading example: In Skia.ttf, 41 glyphs have 6 variation tuples).
-	#
+	n = len(variations[0].coordinates)
+	assert all(len(v.coordinates) == n for v in variations), "Variation sets have different sizes"
 
-	# Is this even worth optimizing? If we never use a shared point
-	# list, the private lists will consume 112K for Skia, 5K for
-	# BuffaloGalRegular, and 15K for JamRegular. If we always use a
-	# shared point list, the shared lists will consume 16K for Skia,
-	# 3K for BuffaloGalRegular, and 10K for JamRegular. However, in
-	# the latter case the delta arrays will become larger, but I
-	# haven't yet measured by how much. From gut feeling (which may be
-	# wrong), the optimum is to share some but not all points;
-	# however, then we would need to try all combinations.
-	#
-	# For the time being, we try two variants and then pick the better one:
-	# (a) each tuple supplies its own private set of points;
-	# (b) all tuples refer to a shared set of points, which consists of
-	#     "every control point in the glyph that has explicit deltas".
-	usedPoints = set()
-	for v in variations:
-		usedPoints |= v.getUsedPoints()
+	compiledPoints = {pointSet:TupleVariation.compilePoints(pointSet)
+			  for pointSet in pointSetCount}
+
+	tupleVariationCount = len(variations)
 	tuples = []
 	data = []
-	someTuplesSharePoints = False
-	sharedPointVariation = None # To keep track of a variation that uses shared points
-	for v in variations:
-		privateTuple, privateData, _ = v.compile(
-			axisTags, sharedTupleIndices, sharedPoints=None)
-		sharedTuple, sharedData, usesSharedPoints = v.compile(
-			axisTags, sharedTupleIndices, sharedPoints=usedPoints)
-		if useSharedPoints and (len(sharedTuple) + len(sharedData)) < (len(privateTuple) + len(privateData)):
-			tuples.append(sharedTuple)
-			data.append(sharedData)
-			someTuplesSharePoints |= usesSharedPoints
-			sharedPointVariation = v
-		else:
-			tuples.append(privateTuple)
-			data.append(privateData)
-	if someTuplesSharePoints:
-		# Use the last of the variations that share points for compiling the packed point data
-		data = sharedPointVariation.compilePoints(usedPoints, len(sharedPointVariation.coordinates)) + bytesjoin(data)
-		tupleVariationCount = TUPLES_SHARE_POINT_NUMBERS | len(tuples)
-	else:
-		data = bytesjoin(data)
-		tupleVariationCount = len(tuples)
-	tuples = bytesjoin(tuples)
+
+	if useSharedPoints:
+		# Find point-set which saves most bytes.
+		def key(pn):
+			pointSet = pn[0]
+			count = pn[1]
+			return len(compiledPoints[pointSet]) * (count - 1)
+		sharedPoints = max(pointSetCount.items(), key=key)[0]
+
+		data.append(compiledPoints[sharedPoints])
+		tupleVariationCount |= TUPLES_SHARE_POINT_NUMBERS
+
+	# b'' implies "use shared points"
+	pointDatas = [compiledPoints[points] if points != sharedPoints else b''
+		     for points in pointDatas]
+
+	for v,p in zip(variations, pointDatas):
+		thisTuple, thisData = v.compile(axisTags, sharedTupleIndices, pointData=p)
+
+		tuples.append(thisTuple)
+		data.append(thisData)
+
+	tuples = b''.join(tuples)
+	data = b''.join(data)
 	return tupleVariationCount, tuples, data
 
 

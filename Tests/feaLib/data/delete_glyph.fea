@@ -1,0 +1,7 @@
+feature test {
+	sub a by NULL;
+} test;
+
+feature test {
+	sub [a b c] by NULL;
+} test;

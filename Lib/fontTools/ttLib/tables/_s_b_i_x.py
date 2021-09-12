@@ -1,10 +1,7 @@
-from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval, num2binary, binary2num
 from . import DefaultTable
-from .sbixGlyph import *
-from .sbixStrike import *
+from .sbixStrike import Strike
 
 
 sbixHeaderFormat = """
@@ -69,7 +66,7 @@ class table__s_b_i_x(DefaultTable.DefaultTable):
 		del self.numStrikes
 
 	def compile(self, ttFont):
-		sbixData = ""
+		sbixData = b""
 		self.numStrikes = len(self.strikes)
 		sbixHeader = sstruct.pack(sbixHeaderFormat, self)
 

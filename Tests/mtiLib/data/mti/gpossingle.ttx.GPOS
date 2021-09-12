@@ -8,7 +8,7 @@
       <LookupFlag value="0"/>
       <!-- SubTableCount=1 -->
       <SinglePos index="0" Format="1">
-        <Coverage Format="2">
+        <Coverage>
           <Glyph value="bsuperior"/>
           <Glyph value="isuperior"/>
           <Glyph value="vsuperior"/>

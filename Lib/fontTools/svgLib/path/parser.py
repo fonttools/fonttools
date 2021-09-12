@@ -7,27 +7,89 @@
 # Copyright (c) 2013-2014 Lennart Regebro
 # License: MIT
 
-from __future__ import (
-    print_function, division, absolute_import, unicode_literals)
-from fontTools.misc.py23 import *
+from .arc import EllipticalArc
 import re
 
+
 COMMANDS = set('MmZzLlHhVvCcSsQqTtAa')
+ARC_COMMANDS = set("Aa")
 UPPERCASE = set('MZLHVCSQTA')
 
 COMMAND_RE = re.compile("([MmZzLlHhVvCcSsQqTtAa])")
-FLOAT_RE = re.compile("[-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?")
+FLOAT_RE = re.compile(
+    r"[-+]?"  # optional sign
+    r"(?:"
+    r"(?:0|[1-9][0-9]*)(?:\.[0-9]+(?:[eE][-+]?[0-9]+)?)?"  # int/float
+    r"|"
+    r"(?:\.[0-9]+(?:[eE][-+]?[0-9]+)?)"  # float with leading dot (e.g. '.42')
+    r")"
+)
+BOOL_RE = re.compile("^[01]")
+SEPARATOR_RE = re.compile(f"[, \t]")
 
 
 def _tokenize_path(pathdef):
+    arc_cmd = None
     for x in COMMAND_RE.split(pathdef):
         if x in COMMANDS:
+            arc_cmd = x if x in ARC_COMMANDS else None
             yield x
-        for token in FLOAT_RE.findall(x):
-            yield token
+            continue
+
+        if arc_cmd:
+            try:
+                yield from _tokenize_arc_arguments(x)
+            except ValueError as e:
+                raise ValueError(f"Invalid arc command: '{arc_cmd}{x}'") from e
+        else:
+            for token in FLOAT_RE.findall(x):
+                yield token
 
 
-def parse_path(pathdef, pen, current_pos=(0, 0)):
+ARC_ARGUMENT_TYPES = (
+    ("rx", FLOAT_RE),
+    ("ry", FLOAT_RE),
+    ("x-axis-rotation", FLOAT_RE),
+    ("large-arc-flag", BOOL_RE),
+    ("sweep-flag", BOOL_RE),
+    ("x", FLOAT_RE),
+    ("y", FLOAT_RE),
+)
+
+
+def _tokenize_arc_arguments(arcdef):
+    raw_args = [s for s in SEPARATOR_RE.split(arcdef) if s]
+    if not raw_args:
+        raise ValueError(f"Not enough arguments: '{arcdef}'")
+    raw_args.reverse()
+
+    i = 0
+    while raw_args:
+        arg = raw_args.pop()
+
+        name, pattern = ARC_ARGUMENT_TYPES[i]
+        match = pattern.search(arg)
+        if not match:
+            raise ValueError(f"Invalid argument for '{name}' parameter: {arg!r}")
+
+        j, k = match.span()
+        yield arg[j:k]
+        arg = arg[k:]
+
+        if arg:
+            raw_args.append(arg)
+
+        # wrap around every 7 consecutive arguments
+        if i == 6:
+            i = 0
+        else:
+            i += 1
+
+    if i != 0:
+        raise ValueError(f"Not enough arguments: '{arcdef}'")
+
+
+def parse_path(pathdef, pen, current_pos=(0, 0), arc_class=EllipticalArc):
     """ Parse SVG path definition (i.e. "d" attribute of <path> elements)
     and call a 'pen' object's moveTo, lineTo, curveTo, qCurveTo and closePath
     methods.
@@ -35,8 +97,13 @@ def parse_path(pathdef, pen, current_pos=(0, 0)):
     If 'current_pos' (2-float tuple) is provided, the initial moveTo will
     be relative to that instead being absolute.
 
-    Arc segments (commands "A" or "a") are not currently supported, and raise
-    NotImplementedError.
+    If the pen has an "arcTo" method, it is called with the original values
+    of the elliptical arc curve commands:
+
+        pen.arcTo(rx, ry, rotation, arc_large, arc_sweep, (x, y))
+
+    Otherwise, the arcs are approximated by series of cubic Bezier segments
+    ("curveTo"), one every 90 degrees.
     """
     # In the SVG specs, initial movetos are absolute, even if
     # specified as 'm'. This is the default behavior here as well.
@@ -51,6 +118,8 @@ def parse_path(pathdef, pen, current_pos=(0, 0)):
     start_pos = None
     command = None
     last_control = None
+
+    have_arcTo = hasattr(pen, "arcTo")
 
     while elements:
 
@@ -209,7 +278,34 @@ def parse_path(pathdef, pen, current_pos=(0, 0)):
             last_control = control
 
         elif command == 'A':
-            raise NotImplementedError('arcs are not supported')
+            rx = float(elements.pop())
+            ry = float(elements.pop())
+            rotation = float(elements.pop())
+            arc_large = bool(int(elements.pop()))
+            arc_sweep = bool(int(elements.pop()))
+            end = float(elements.pop()) + float(elements.pop()) * 1j
+
+            if not absolute:
+                end += current_pos
+
+            # if the pen supports arcs, pass the values unchanged, otherwise
+            # approximate the arc with a series of cubic bezier curves
+            if have_arcTo:
+                pen.arcTo(
+                    rx,
+                    ry,
+                    rotation,
+                    arc_large,
+                    arc_sweep,
+                    (end.real, end.imag),
+                )
+            else:
+                arc = arc_class(
+                    current_pos, rx, ry, rotation, arc_large, arc_sweep, end
+                )
+                arc.draw(pen)
+
+            current_pos = end
 
     # no final Z command, it's an open path
     if start_pos is not None:

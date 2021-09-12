@@ -1,5 +1,3 @@
-from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
 from fontTools import ttLib
 from fontTools.misc.textTools import safeEval
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
@@ -18,7 +16,6 @@ BUFSIZE = 0x4000
 class XMLReader(object):
 
 	def __init__(self, fileOrPath, ttFont, progress=None, quiet=None, contentOnly=False):
-  
 		if fileOrPath == '-':
 			fileOrPath = sys.stdin
 		if not hasattr(fileOrPath, "read"):
@@ -96,11 +93,12 @@ class XMLReader(object):
 		if not stackSize:
 			if name != "ttFont":
 				raise TTXParseError("illegal root tag: %s" % name)
-			sfntVersion = attrs.get("sfntVersion")
-			if sfntVersion is not None:
-				if len(sfntVersion) != 4:
-					sfntVersion = safeEval('"' + sfntVersion + '"')
-				self.ttFont.sfntVersion = sfntVersion
+			if self.ttFont.reader is None and not self.ttFont.tables:
+				sfntVersion = attrs.get("sfntVersion")
+				if sfntVersion is not None:
+					if len(sfntVersion) != 4:
+						sfntVersion = safeEval('"' + sfntVersion + '"')
+					self.ttFont.sfntVersion = sfntVersion
 			self.contentStack.append([])
 		elif stackSize == 1:
 			if subFile is not None:

@@ -33,7 +33,7 @@
         <LookupType value="1"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <SingleSubst index="0" Format="1">
+        <SingleSubst index="0">
           <Substitution in=".notdef" out="g3"/>
           <Substitution in="g1" out="g4"/>
           <Substitution in="g10" out="g13"/>
@@ -140,7 +140,7 @@
         <LookupType value="1"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <SingleSubst index="0" Format="1">
+        <SingleSubst index="0">
           <Substitution in=".notdef" out="g4"/>
           <Substitution in="g1" out="g5"/>
           <Substitution in="g10" out="g14"/>
@@ -247,7 +247,7 @@
         <LookupType value="1"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <SingleSubst index="0" Format="1">
+        <SingleSubst index="0">
           <Substitution in=".notdef" out="g5"/>
           <Substitution in="g1" out="g6"/>
           <Substitution in="g10" out="g15"/>
@@ -355,7 +355,7 @@
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <ContextSubst index="0" Format="2">
-          <Coverage Format="1">
+          <Coverage>
             <Glyph value=".notdef"/>
             <Glyph value="g1"/>
             <Glyph value="g2"/>
@@ -457,7 +457,7 @@
             <Glyph value="g98"/>
             <Glyph value="g99"/>
           </Coverage>
-          <ClassDef Format="1">
+          <ClassDef>
             <ClassDef glyph="g18" class="2"/>
             <ClassDef glyph="g19" class="2"/>
             <ClassDef glyph="g20" class="2"/>

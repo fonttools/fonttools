@@ -1,7 +1,5 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
-from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables import otTables
 import sys
@@ -10,7 +8,11 @@ if len(sys.argv) != 2:
 	print("usage: layout-features.py fontfile.ttf")
 	sys.exit(1)
 fontfile = sys.argv[1]
-font = TTFont(fontfile)
+if fontfile.rsplit(".", 1)[-1] == "ttx":
+	font = TTFont()
+	font.importXML(fontfile)
+else:
+	font = TTFont(fontfile)
 
 for tag in ('GSUB', 'GPOS'):
 	if not tag in font: continue

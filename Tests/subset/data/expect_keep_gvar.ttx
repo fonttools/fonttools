@@ -131,6 +131,18 @@
     <namerecord nameID="2" platformID="3" platEncID="1" langID="0x409">
       Regular
     </namerecord>
+    <namerecord nameID="3" platformID="3" platEncID="1" langID="0x409">
+      1.000;UKWN;TestGVAR-Regular
+    </namerecord>
+    <namerecord nameID="4" platformID="3" platEncID="1" langID="0x409">
+      TestGVAR-Regular
+    </namerecord>
+    <namerecord nameID="5" platformID="3" platEncID="1" langID="0x409">
+      Version 1.000
+    </namerecord>
+    <namerecord nameID="6" platformID="3" platEncID="1" langID="0x409">
+      TestGVAR-Regular
+    </namerecord>
     <namerecord nameID="257" platformID="3" platEncID="1" langID="0x409">
       Weight
     </namerecord>

@@ -46,8 +46,7 @@ calcsize(fmt)
 	it returns the size of the data in bytes.
 """
 
-from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import tobytes, tostr
 from fontTools.misc.fixedTools import fixedToFloat as fi2fl, floatToFixed as fl2fi
 import struct
 import re
@@ -60,7 +59,7 @@ class Error(Exception):
 	pass
 
 def pack(fmt, obj):
-	formatstring, names, fixes = getformat(fmt)
+	formatstring, names, fixes = getformat(fmt, keep_pad_byte=True)
 	elements = []
 	if not isinstance(obj, dict):
 		obj = obj.__dict__
@@ -69,7 +68,7 @@ def pack(fmt, obj):
 		if name in fixes:
 			# fixed point conversion
 			value = fl2fi(value, fixes[name])
-		elif isinstance(value, basestring):
+		elif isinstance(value, str):
 			value = tobytes(value)
 		elements.append(value)
 	data = struct.pack(*(formatstring,) + tuple(elements))
@@ -110,20 +109,21 @@ def calcsize(fmt):
 
 # matches "name:formatchar" (whitespace is allowed)
 _elementRE = re.compile(
-		"\s*"							# whitespace
-		"([A-Za-z_][A-Za-z_0-9]*)"		# name (python identifier)
-		"\s*:\s*"						# whitespace : whitespace
-		"([cbBhHiIlLqQfd]|[0-9]+[ps]|"	# formatchar...
-			"([0-9]+)\.([0-9]+)(F))"	# ...formatchar
-		"\s*"							# whitespace
-		"(#.*)?$"						# [comment] + end of string
+		r"\s*"							# whitespace
+		r"([A-Za-z_][A-Za-z_0-9]*)"		# name (python identifier)
+		r"\s*:\s*"						# whitespace : whitespace
+		r"([xcbB?hHiIlLqQfd]|"			# formatchar...
+			r"[0-9]+[ps]|"				# ...formatchar...
+			r"([0-9]+)\.([0-9]+)(F))"	# ...formatchar
+		r"\s*"							# whitespace
+		r"(#.*)?$"						# [comment] + end of string
 	)
 
 # matches the special struct fmt chars and 'x' (pad byte)
-_extraRE = re.compile("\s*([x@=<>!])\s*(#.*)?$")
+_extraRE = re.compile(r"\s*([x@=<>!])\s*(#.*)?$")
 
 # matches an "empty" string, possibly containing whitespace and/or a comment
-_emptyRE = re.compile("\s*(#.*)?$")
+_emptyRE = re.compile(r"\s*(#.*)?$")
 
 _fixedpointmappings = {
 		8: "b",
@@ -132,7 +132,7 @@ _fixedpointmappings = {
 
 _formatcache = {}
 
-def getformat(fmt):
+def getformat(fmt, keep_pad_byte=False):
 	fmt = tostr(fmt, encoding="ascii")
 	try:
 		formatstring, names, fixes = _formatcache[fmt]
@@ -154,8 +154,9 @@ def getformat(fmt):
 				if not m:
 					raise Error("syntax error in fmt: '%s'" % line)
 				name = m.group(1)
-				names.append(name)
 				formatchar = m.group(2)
+				if keep_pad_byte or formatchar != "x":
+					names.append(name)
 				if m.group(3):
 					# fixed point
 					before = int(m.group(3))
@@ -183,6 +184,8 @@ def _test():
 		astr: 5s
 		afloat: f; adouble: d	# multiple "statements" are allowed
 		afixed: 16.16F
+		abool: ?
+		apad: x
 	"""
 
 	print('size:', calcsize(fmt))
@@ -200,6 +203,7 @@ def _test():
 	i.afloat = 0.5
 	i.adouble = 0.5
 	i.afixed = 1.5
+	i.abool = True
 
 	data = pack(fmt, i)
 	print('data:', repr(data))

@@ -1,7 +1,3 @@
-from __future__ import print_function, division, absolute_import
-from __future__ import unicode_literals
-
-
 class FeatureLibError(Exception):
     def __init__(self, message, location):
         Exception.__init__(self, message)
@@ -10,7 +6,17 @@ class FeatureLibError(Exception):
     def __str__(self):
         message = Exception.__str__(self)
         if self.location:
-            path, line, column = self.location
-            return "%s:%d:%d: %s" % (path, line, column, message)
+            return f"{self.location}: {message}"
         else:
             return message
+
+
+class IncludedFeaNotFound(FeatureLibError):
+    def __str__(self):
+        assert self.location is not None
+
+        message = (
+            "The following feature file should be included but cannot be found: "
+            f"{Exception.__str__(self)}"
+        )
+        return f"{self.location}: {message}"

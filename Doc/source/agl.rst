@@ -1,7 +1,6 @@
-###
-agl
-###
+######################################
+agl: Interface to the Adobe Glyph List
+######################################
 
 .. automodule:: fontTools.agl
-   :members:
-   :undoc-members:
+   :members: toUnicode, UV2AGL, AGL2UV

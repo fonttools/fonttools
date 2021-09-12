@@ -1,5 +1,4 @@
-from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import SimpleNamespace
+from types import SimpleNamespace
 from fontTools.misc.textTools import deHexStr
 from fontTools.misc.testTools import getXML
 from fontTools.ttLib.tables.T_S_I__0 import table_T_S_I__0

@@ -1,13 +1,10 @@
-from __future__ import print_function, division, absolute_import, unicode_literals
-from fontTools.misc.py23 import *
 from fontTools.misc.testTools import parseXML
 from fontTools.misc.textTools import deHexStr
 from fontTools.misc.xmlWriter import XMLWriter
 from fontTools.ttLib import TTLibError
 from fontTools.ttLib.tables._a_v_a_r import table__a_v_a_r
 from fontTools.ttLib.tables._f_v_a_r import table__f_v_a_r, Axis
-import collections
-import logging
+from io import BytesIO
 import unittest
 
 
@@ -18,6 +15,17 @@ TEST_DATA = deHexStr(
 
 
 class AxisVariationTableTest(unittest.TestCase):
+    def assertAvarAlmostEqual(self, segments1, segments2):
+        self.assertSetEqual(set(segments1.keys()), set(segments2.keys()))
+        for axisTag, mapping1 in segments1.items():
+            mapping2 = segments2[axisTag]
+            self.assertEqual(len(mapping1), len(mapping2))
+            for (k1, v1), (k2, v2) in zip(
+                sorted(mapping1.items()), sorted(mapping2.items())
+            ):
+                self.assertAlmostEqual(k1, k2)
+                self.assertAlmostEqual(v1, v2)
+
     def test_compile(self):
         avar = table__a_v_a_r()
         avar.segments["wdth"] = {-1.0: -1.0, 0.0: 0.0, 0.3: 0.8, 1.0: 1.0}
@@ -27,8 +35,8 @@ class AxisVariationTableTest(unittest.TestCase):
     def test_decompile(self):
         avar = table__a_v_a_r()
         avar.decompile(TEST_DATA, self.makeFont(["wdth", "wght"]))
-        self.assertEqual({
-            "wdth": {-1.0: -1.0, 0.0: 0.0, 0.3: 0.8, 1.0: 1.0},
+        self.assertAvarAlmostEqual({
+            "wdth": {-1.0: -1.0, 0.0: 0.0, 0.2999878: 0.7999878, 1.0: 1.0},
             "wght": {-1.0: -1.0, 0.0: 0.0, 1.0: 1.0}
         }, avar.segments)
 
@@ -39,7 +47,7 @@ class AxisVariationTableTest(unittest.TestCase):
 
     def test_toXML(self):
         avar = table__a_v_a_r()
-        avar.segments["opsz"] = {-1.0: -1.0, 0.0: 0.0, 0.3: 0.8, 1.0: 1.0}
+        avar.segments["opsz"] = {-1.0: -1.0, 0.0: 0.0, 0.2999878: 0.7999878, 1.0: 1.0}
         writer = XMLWriter(BytesIO())
         avar.toXML(writer, self.makeFont(["opsz"]))
         self.assertEqual([
@@ -61,8 +69,10 @@ class AxisVariationTableTest(unittest.TestCase):
                 '    <mapping from="1.0" to="1.0"/>'
                 '</segment>'):
             avar.fromXML(name, attrs, content, ttFont=None)
-        self.assertEqual({"wdth": {-1: -1, 0: 0, 0.7: 0.2, 1.0: 1.0}},
-                         avar.segments)
+        self.assertAvarAlmostEqual(
+            {"wdth": {-1: -1, 0: 0, 0.7000122: 0.2000122, 1.0: 1.0}},
+            avar.segments
+        )
 
     @staticmethod
     def makeFont(axisTags):

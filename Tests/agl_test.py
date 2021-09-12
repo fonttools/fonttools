@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import (print_function, division, absolute_import,
-                        unicode_literals)
-from fontTools.misc.py23 import *
 from fontTools import agl
 import unittest
 
@@ -9,21 +5,15 @@ import unittest
 class AglToUnicodeTest(unittest.TestCase):
     def test_spec_examples(self):
         # https://github.com/adobe-type-tools/agl-specification#3-examples
-        #
-        # TODO: Currently, we only handle AGLFN instead of legacy AGL names.
-        # Therefore, the test cases below use Iogonek instead of Lcommaaccent.
-        # Change Iogonek to Lcommaaccent as soon as the implementation has
-        # been fixed to also support legacy AGL names.
-        # https://github.com/fonttools/fonttools/issues/775
-        self.assertEqual(agl.toUnicode("Iogonek"), "Į")
+        self.assertEqual(agl.toUnicode("Lcommaaccent"), "Ļ")
         self.assertEqual(agl.toUnicode("uni20AC0308"), "\u20AC\u0308")
         self.assertEqual(agl.toUnicode("u1040C"), "\U0001040C")
         self.assertEqual(agl.toUnicode("uniD801DC0C"), "")
         self.assertEqual(agl.toUnicode("uni20ac"), "")
         self.assertEqual(
-            agl.toUnicode("Iogonek_uni20AC0308_u1040C.alternate"),
-            "\u012E\u20AC\u0308\U0001040C")
-        self.assertEqual(agl.toUnicode("Iogonek_uni012E_u012E"), "ĮĮĮ")
+            agl.toUnicode("Lcommaaccent_uni20AC0308_u1040C.alternate"),
+            "\u013B\u20AC\u0308\U0001040C")
+        self.assertEqual(agl.toUnicode("Lcommaaccent_uni013B_u013B"), "ĻĻĻ")
         self.assertEqual(agl.toUnicode("foo"), "")
         self.assertEqual(agl.toUnicode(".notdef"), "")
 

@@ -1,0 +1,545 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="4.2">
+
+  <GlyphOrder>
+    <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
+    <GlyphID id="0" name=".notdef"/>
+    <GlyphID id="1" name=".null"/>
+    <GlyphID id="2" name="A"/>
+    <GlyphID id="3" name="a"/>
+  </GlyphOrder>
+
+  <head>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="1.0"/>
+    <fontRevision value="1.0"/>
+    <checkSumAdjustment value="0x18e72247"/>
+    <magicNumber value="0x5f0f3cf5"/>
+    <flags value="00000000 00000011"/>
+    <unitsPerEm value="1024"/>
+    <created value="Thu Nov  1 20:29:01 2018"/>
+    <modified value="Thu Nov  1 20:29:01 2018"/>
+    <xMin value="50"/>
+    <yMin value="0"/>
+    <xMax value="500"/>
+    <yMax value="400"/>
+    <macStyle value="00000000 00000000"/>
+    <lowestRecPPEM value="3"/>
+    <fontDirectionHint value="2"/>
+    <indexToLocFormat value="0"/>
+    <glyphDataFormat value="0"/>
+  </head>
+
+  <hhea>
+    <tableVersion value="0x00010000"/>
+    <ascent value="824"/>
+    <descent value="200"/>
+    <lineGap value="0"/>
+    <advanceWidthMax value="600"/>
+    <minLeftSideBearing value="50"/>
+    <minRightSideBearing value="100"/>
+    <xMaxExtent value="500"/>
+    <caretSlopeRise value="1"/>
+    <caretSlopeRun value="0"/>
+    <caretOffset value="0"/>
+    <reserved0 value="0"/>
+    <reserved1 value="0"/>
+    <reserved2 value="0"/>
+    <reserved3 value="0"/>
+    <metricDataFormat value="0"/>
+    <numberOfHMetrics value="1"/>
+  </hhea>
+
+  <maxp>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="0x10000"/>
+    <numGlyphs value="4"/>
+    <maxPoints value="4"/>
+    <maxContours value="1"/>
+    <maxCompositePoints value="0"/>
+    <maxCompositeContours value="0"/>
+    <maxZones value="2"/>
+    <maxTwilightPoints value="0"/>
+    <maxStorage value="0"/>
+    <maxFunctionDefs value="0"/>
+    <maxInstructionDefs value="0"/>
+    <maxStackElements value="0"/>
+    <maxSizeOfInstructions value="0"/>
+    <maxComponentElements value="0"/>
+    <maxComponentDepth value="0"/>
+  </maxp>
+
+  <OS_2>
+    <!-- The fields 'usFirstCharIndex' and 'usLastCharIndex'
+         will be recalculated by the compiler -->
+    <version value="3"/>
+    <xAvgCharWidth value="600"/>
+    <usWeightClass value="400"/>
+    <usWidthClass value="5"/>
+    <fsType value="00000000 00000100"/>
+    <ySubscriptXSize value="0"/>
+    <ySubscriptYSize value="0"/>
+    <ySubscriptXOffset value="0"/>
+    <ySubscriptYOffset value="0"/>
+    <ySuperscriptXSize value="0"/>
+    <ySuperscriptYSize value="0"/>
+    <ySuperscriptXOffset value="0"/>
+    <ySuperscriptYOffset value="0"/>
+    <yStrikeoutSize value="0"/>
+    <yStrikeoutPosition value="0"/>
+    <sFamilyClass value="0"/>
+    <panose>
+      <bFamilyType value="0"/>
+      <bSerifStyle value="0"/>
+      <bWeight value="0"/>
+      <bProportion value="0"/>
+      <bContrast value="0"/>
+      <bStrokeVariation value="0"/>
+      <bArmStyle value="0"/>
+      <bLetterForm value="0"/>
+      <bMidline value="0"/>
+      <bXHeight value="0"/>
+    </panose>
+    <ulUnicodeRange1 value="00000000 00000000 00000000 00000001"/>
+    <ulUnicodeRange2 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange3 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange4 value="00000000 00000000 00000000 00000000"/>
+    <achVendID value="????"/>
+    <fsSelection value="00000000 00000000"/>
+    <usFirstCharIndex value="65"/>
+    <usLastCharIndex value="97"/>
+    <sTypoAscender value="0"/>
+    <sTypoDescender value="0"/>
+    <sTypoLineGap value="0"/>
+    <usWinAscent value="0"/>
+    <usWinDescent value="0"/>
+    <ulCodePageRange1 value="00000000 00000000 00000000 00000000"/>
+    <ulCodePageRange2 value="00000000 00000000 00000000 00000000"/>
+    <sxHeight value="0"/>
+    <sCapHeight value="0"/>
+    <usDefaultChar value="0"/>
+    <usBreakChar value="32"/>
+    <usMaxContext value="0"/>
+  </OS_2>
+
+  <hmtx>
+    <mtx name=".notdef" width="600" lsb="0"/>
+    <mtx name=".null" width="600" lsb="0"/>
+    <mtx name="A" width="600" lsb="100"/>
+    <mtx name="a" width="600" lsb="50"/>
+  </hmtx>
+
+  <cmap>
+    <tableVersion version="0"/>
+    <cmap_format_4 platformID="0" platEncID="3" language="0">
+      <map code="0x41" name="A"/><!-- LATIN CAPITAL LETTER A -->
+      <map code="0x61" name="a"/><!-- LATIN SMALL LETTER A -->
+    </cmap_format_4>
+    <cmap_format_4 platformID="3" platEncID="1" language="0">
+      <map code="0x41" name="A"/><!-- LATIN CAPITAL LETTER A -->
+      <map code="0x61" name="a"/><!-- LATIN SMALL LETTER A -->
+    </cmap_format_4>
+  </cmap>
+
+  <loca>
+    <!-- The 'loca' table will be calculated by the compiler -->
+  </loca>
+
+  <glyf>
+
+    <!-- The xMin, yMin, xMax and yMax values
+         will be recalculated by the compiler. -->
+
+    <TTGlyph name=".notdef"/><!-- contains no outline data -->
+
+    <TTGlyph name=".null"/><!-- contains no outline data -->
+
+    <TTGlyph name="A" xMin="100" yMin="0" xMax="500" yMax="400">
+      <contour>
+        <pt x="100" y="0" on="1"/>
+        <pt x="100" y="400" on="1"/>
+        <pt x="500" y="400" on="1"/>
+        <pt x="500" y="0" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="a" xMin="50" yMin="0" xMax="250" yMax="200">
+      <contour>
+        <pt x="50" y="0" on="1"/>
+        <pt x="50" y="200" on="1"/>
+        <pt x="250" y="200" on="1"/>
+        <pt x="250" y="0" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+  </glyf>
+
+  <name>
+    <namerecord nameID="1" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      HelloTestFont
+    </namerecord>
+    <namerecord nameID="2" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      TotallyNormal
+    </namerecord>
+    <namerecord nameID="6" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      HelloTestFont-TotallyNormal
+    </namerecord>
+    <namerecord nameID="256" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Left
+    </namerecord>
+    <namerecord nameID="257" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Right
+    </namerecord>
+    <namerecord nameID="258" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Up
+    </namerecord>
+    <namerecord nameID="259" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Down
+    </namerecord>
+    <namerecord nameID="260" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Right Up
+    </namerecord>
+    <namerecord nameID="261" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Neutral
+    </namerecord>
+    <namerecord nameID="1" platformID="1" platEncID="0" langID="0x4" unicode="True">
+      HalloTestFont
+    </namerecord>
+    <namerecord nameID="2" platformID="1" platEncID="0" langID="0x4" unicode="True">
+      TotaalNormaal
+    </namerecord>
+    <namerecord nameID="1" platformID="3" platEncID="1" langID="0x409">
+      HelloTestFont
+    </namerecord>
+    <namerecord nameID="2" platformID="3" platEncID="1" langID="0x409">
+      TotallyNormal
+    </namerecord>
+    <namerecord nameID="6" platformID="3" platEncID="1" langID="0x409">
+      HelloTestFont-TotallyNormal
+    </namerecord>
+    <namerecord nameID="256" platformID="3" platEncID="1" langID="0x409">
+      Left
+    </namerecord>
+    <namerecord nameID="257" platformID="3" platEncID="1" langID="0x409">
+      Right
+    </namerecord>
+    <namerecord nameID="258" platformID="3" platEncID="1" langID="0x409">
+      Up
+    </namerecord>
+    <namerecord nameID="259" platformID="3" platEncID="1" langID="0x409">
+      Down
+    </namerecord>
+    <namerecord nameID="260" platformID="3" platEncID="1" langID="0x409">
+      Right Up
+    </namerecord>
+    <namerecord nameID="261" platformID="3" platEncID="1" langID="0x409">
+      Neutral
+    </namerecord>
+    <namerecord nameID="1" platformID="3" platEncID="1" langID="0x413">
+      HalloTestFont
+    </namerecord>
+    <namerecord nameID="2" platformID="3" platEncID="1" langID="0x413">
+      TotaalNormaal
+    </namerecord>
+  </name>
+
+  <post>
+    <formatType value="2.0"/>
+    <italicAngle value="0.0"/>
+    <underlinePosition value="0"/>
+    <underlineThickness value="0"/>
+    <isFixedPitch value="0"/>
+    <minMemType42 value="0"/>
+    <maxMemType42 value="0"/>
+    <minMemType1 value="0"/>
+    <maxMemType1 value="0"/>
+    <psNames>
+      <!-- This file uses unique glyph names based on the information
+           found in the 'post' table. Since these names might not be unique,
+           we have to invent artificial names in case of clashes. In order to
+           be able to retain the original information, we need a name to
+           ps name mapping for those cases where they differ. That's what
+           you see below.
+            -->
+    </psNames>
+    <extraNames>
+      <!-- following are the name that are not taken from the standard Mac glyph order -->
+    </extraNames>
+  </post>
+
+  <GSUB>
+    <Version value="0x00010001"/>
+    <ScriptList>
+      <!-- ScriptCount=1 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=1 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="rclt"/>
+        <Feature>
+          <!-- LookupCount=0 -->
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=1 -->
+      <Lookup index="0">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SingleSubst index="0">
+          <Substitution in="A" out="a"/>
+        </SingleSubst>
+      </Lookup>
+    </LookupList>
+    <FeatureVariations>
+      <Version value="0x00010000"/>
+      <!-- FeatureVariationCount=2 -->
+      <FeatureVariationRecord index="0">
+        <ConditionSet>
+          <!-- ConditionCount=2 -->
+          <ConditionTable index="0" Format="1">
+            <AxisIndex value="3"/>
+            <FilterRangeMinValue value="0.8"/>
+            <FilterRangeMaxValue value="1.0"/>
+          </ConditionTable>
+          <ConditionTable index="1" Format="1">
+            <AxisIndex value="0"/>
+            <FilterRangeMinValue value="0.8"/>
+            <FilterRangeMaxValue value="1.0"/>
+          </ConditionTable>
+        </ConditionSet>
+        <FeatureTableSubstitution>
+          <Version value="0x00010000"/>
+          <!-- SubstitutionCount=1 -->
+          <SubstitutionRecord index="0">
+            <FeatureIndex value="0"/>
+            <Feature>
+              <!-- LookupCount=1 -->
+              <LookupListIndex index="0" value="0"/>
+            </Feature>
+          </SubstitutionRecord>
+        </FeatureTableSubstitution>
+      </FeatureVariationRecord>
+      <FeatureVariationRecord index="1">
+        <ConditionSet>
+          <!-- ConditionCount=2 -->
+          <ConditionTable index="0" Format="1">
+            <AxisIndex value="1"/>
+            <FilterRangeMinValue value="0.8"/>
+            <FilterRangeMaxValue value="1.0"/>
+          </ConditionTable>
+          <ConditionTable index="1" Format="1">
+            <AxisIndex value="2"/>
+            <FilterRangeMinValue value="0.8"/>
+            <FilterRangeMaxValue value="1.0"/>
+          </ConditionTable>
+        </ConditionSet>
+        <FeatureTableSubstitution>
+          <Version value="0x00010000"/>
+          <!-- SubstitutionCount=1 -->
+          <SubstitutionRecord index="0">
+            <FeatureIndex value="0"/>
+            <Feature>
+              <!-- LookupCount=1 -->
+              <LookupListIndex index="0" value="0"/>
+            </Feature>
+          </SubstitutionRecord>
+        </FeatureTableSubstitution>
+      </FeatureVariationRecord>
+    </FeatureVariations>
+  </GSUB>
+
+  <STAT>
+    <Version value="0x00010001"/>
+    <DesignAxisRecordSize value="8"/>
+    <!-- DesignAxisCount=4 -->
+    <DesignAxisRecord>
+      <Axis index="0">
+        <AxisTag value="LEFT"/>
+        <AxisNameID value="256"/>  <!-- Left -->
+        <AxisOrdering value="0"/>
+      </Axis>
+      <Axis index="1">
+        <AxisTag value="RGHT"/>
+        <AxisNameID value="257"/>  <!-- Right -->
+        <AxisOrdering value="1"/>
+      </Axis>
+      <Axis index="2">
+        <AxisTag value="UPPP"/>
+        <AxisNameID value="258"/>  <!-- Up -->
+        <AxisOrdering value="2"/>
+      </Axis>
+      <Axis index="3">
+        <AxisTag value="DOWN"/>
+        <AxisNameID value="259"/>  <!-- Down -->
+        <AxisOrdering value="3"/>
+      </Axis>
+    </DesignAxisRecord>
+    <!-- AxisValueCount=8 -->
+    <AxisValueArray>
+      <AxisValue index="0" Format="1">
+        <AxisIndex value="0"/>
+        <Flags value="2"/>  <!-- ElidableAxisValueName -->
+        <ValueNameID value="261"/>  <!-- Neutral -->
+        <Value value="0.0"/>
+      </AxisValue>
+      <AxisValue index="1" Format="1">
+        <AxisIndex value="0"/>
+        <Flags value="0"/>
+        <ValueNameID value="256"/>  <!-- Left -->
+        <Value value="100.0"/>
+      </AxisValue>
+      <AxisValue index="2" Format="1">
+        <AxisIndex value="1"/>
+        <Flags value="2"/>  <!-- ElidableAxisValueName -->
+        <ValueNameID value="261"/>  <!-- Neutral -->
+        <Value value="0.0"/>
+      </AxisValue>
+      <AxisValue index="3" Format="1">
+        <AxisIndex value="1"/>
+        <Flags value="0"/>
+        <ValueNameID value="257"/>  <!-- Right -->
+        <Value value="100.0"/>
+      </AxisValue>
+      <AxisValue index="4" Format="1">
+        <AxisIndex value="2"/>
+        <Flags value="2"/>  <!-- ElidableAxisValueName -->
+        <ValueNameID value="261"/>  <!-- Neutral -->
+        <Value value="0.0"/>
+      </AxisValue>
+      <AxisValue index="5" Format="1">
+        <AxisIndex value="2"/>
+        <Flags value="0"/>
+        <ValueNameID value="258"/>  <!-- Up -->
+        <Value value="100.0"/>
+      </AxisValue>
+      <AxisValue index="6" Format="1">
+        <AxisIndex value="3"/>
+        <Flags value="2"/>  <!-- ElidableAxisValueName -->
+        <ValueNameID value="261"/>  <!-- Neutral -->
+        <Value value="0.0"/>
+      </AxisValue>
+      <AxisValue index="7" Format="1">
+        <AxisIndex value="3"/>
+        <Flags value="0"/>
+        <ValueNameID value="259"/>  <!-- Down -->
+        <Value value="100.0"/>
+      </AxisValue>
+    </AxisValueArray>
+    <ElidedFallbackNameID value="2"/>  <!-- TotallyNormal -->
+  </STAT>
+
+  <fvar>
+
+    <!-- Left -->
+    <Axis>
+      <AxisTag>LEFT</AxisTag>
+      <Flags>0x0</Flags>
+      <MinValue>0.0</MinValue>
+      <DefaultValue>0.0</DefaultValue>
+      <MaxValue>100.0</MaxValue>
+      <AxisNameID>256</AxisNameID>
+    </Axis>
+
+    <!-- Right -->
+    <Axis>
+      <AxisTag>RGHT</AxisTag>
+      <Flags>0x0</Flags>
+      <MinValue>0.0</MinValue>
+      <DefaultValue>0.0</DefaultValue>
+      <MaxValue>100.0</MaxValue>
+      <AxisNameID>257</AxisNameID>
+    </Axis>
+
+    <!-- Up -->
+    <Axis>
+      <AxisTag>UPPP</AxisTag>
+      <Flags>0x0</Flags>
+      <MinValue>0.0</MinValue>
+      <DefaultValue>0.0</DefaultValue>
+      <MaxValue>100.0</MaxValue>
+      <AxisNameID>258</AxisNameID>
+    </Axis>
+
+    <!-- Down -->
+    <Axis>
+      <AxisTag>DOWN</AxisTag>
+      <Flags>0x0</Flags>
+      <MinValue>0.0</MinValue>
+      <DefaultValue>0.0</DefaultValue>
+      <MaxValue>100.0</MaxValue>
+      <AxisNameID>259</AxisNameID>
+    </Axis>
+
+    <!-- TotallyNormal -->
+    <NamedInstance flags="0x0" subfamilyNameID="2">
+      <coord axis="LEFT" value="0.0"/>
+      <coord axis="RGHT" value="0.0"/>
+      <coord axis="UPPP" value="0.0"/>
+      <coord axis="DOWN" value="0.0"/>
+    </NamedInstance>
+
+    <!-- Right Up -->
+    <NamedInstance flags="0x0" subfamilyNameID="260">
+      <coord axis="LEFT" value="0.0"/>
+      <coord axis="RGHT" value="100.0"/>
+      <coord axis="UPPP" value="100.0"/>
+      <coord axis="DOWN" value="0.0"/>
+    </NamedInstance>
+  </fvar>
+
+  <gvar>
+    <version value="1"/>
+    <reserved value="0"/>
+    <glyphVariations glyph="a">
+      <tuple>
+        <coord axis="RGHT" value="1.0"/>
+        <delta pt="0" x="0" y="0"/>
+        <delta pt="1" x="0" y="0"/>
+        <delta pt="2" x="200" y="0"/>
+        <delta pt="3" x="200" y="0"/>
+      </tuple>
+      <tuple>
+        <coord axis="LEFT" value="1.0"/>
+        <delta pt="0" x="-200" y="0"/>
+        <delta pt="1" x="-200" y="0"/>
+        <delta pt="2" x="0" y="0"/>
+        <delta pt="3" x="0" y="0"/>
+      </tuple>
+      <tuple>
+        <coord axis="UPPP" value="1.0"/>
+        <delta pt="0" x="0" y="0"/>
+        <delta pt="1" x="0" y="200"/>
+        <delta pt="2" x="0" y="200"/>
+        <delta pt="3" x="0" y="0"/>
+      </tuple>
+      <tuple>
+        <coord axis="DOWN" value="1.0"/>
+        <delta pt="0" x="0" y="-200"/>
+        <delta pt="1" x="0" y="0"/>
+        <delta pt="2" x="0" y="0"/>
+        <delta pt="3" x="0" y="-200"/>
+      </tuple>
+    </glyphVariations>
+  </gvar>
+
+  <DSIG>
+    <!-- note that the Digital Signature will be invalid after recompilation! -->
+    <tableHeader flag="0x0" numSigs="0" version="1"/>
+  </DSIG>
+
+</ttFont>

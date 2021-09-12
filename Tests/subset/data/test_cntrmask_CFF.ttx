@@ -1,0 +1,417 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="OTTO" ttLibVersion="3.41">
+
+  <GlyphOrder>
+    <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
+    <GlyphID id="0" name=".notdef"/>
+    <GlyphID id="1" name="Idieresis"/>
+  </GlyphOrder>
+
+  <head>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="1.0"/>
+    <fontRevision value="6.79999"/>
+    <checkSumAdjustment value="0xd2a3b881"/>
+    <magicNumber value="0x5f0f3cf5"/>
+    <flags value="00000000 00001011"/>
+    <unitsPerEm value="1000"/>
+    <created value="Thu Aug 24 21:44:22 2006"/>
+    <modified value="Thu Jan  1 00:00:00 1970"/>
+    <xMin value="-6275"/>
+    <yMin value="-256"/>
+    <xMax value="6171"/>
+    <yMax value="1125"/>
+    <macStyle value="00000000 00000000"/>
+    <lowestRecPPEM value="8"/>
+    <fontDirectionHint value="2"/>
+    <indexToLocFormat value="0"/>
+    <glyphDataFormat value="0"/>
+  </head>
+
+  <hhea>
+    <tableVersion value="0x00010000"/>
+    <ascent value="894"/>
+    <descent value="-246"/>
+    <lineGap value="0"/>
+    <advanceWidthMax value="6272"/>
+    <minLeftSideBearing value="-6275"/>
+    <minRightSideBearing value="-953"/>
+    <xMaxExtent value="6171"/>
+    <caretSlopeRise value="1"/>
+    <caretSlopeRun value="0"/>
+    <caretOffset value="0"/>
+    <reserved0 value="0"/>
+    <reserved1 value="0"/>
+    <reserved2 value="0"/>
+    <reserved3 value="0"/>
+    <metricDataFormat value="0"/>
+    <numberOfHMetrics value="2"/>
+  </hhea>
+
+  <maxp>
+    <tableVersion value="0x5000"/>
+    <numGlyphs value="2"/>
+  </maxp>
+
+  <OS_2>
+    <!-- The fields 'usFirstCharIndex' and 'usLastCharIndex'
+         will be recalculated by the compiler -->
+    <version value="4"/>
+    <xAvgCharWidth value="559"/>
+    <usWeightClass value="400"/>
+    <usWidthClass value="5"/>
+    <fsType value="00000000 00000000"/>
+    <ySubscriptXSize value="650"/>
+    <ySubscriptYSize value="700"/>
+    <ySubscriptXOffset value="0"/>
+    <ySubscriptYOffset value="140"/>
+    <ySuperscriptXSize value="650"/>
+    <ySuperscriptYSize value="700"/>
+    <ySuperscriptXOffset value="0"/>
+    <ySuperscriptYOffset value="480"/>
+    <yStrikeoutSize value="49"/>
+    <yStrikeoutPosition value="258"/>
+    <sFamilyClass value="261"/>
+    <panose>
+      <bFamilyType value="2"/>
+      <bSerifStyle value="0"/>
+      <bWeight value="5"/>
+      <bProportion value="3"/>
+      <bContrast value="0"/>
+      <bStrokeVariation value="0"/>
+      <bArmStyle value="0"/>
+      <bLetterForm value="0"/>
+      <bMidline value="0"/>
+      <bXHeight value="0"/>
+    </panose>
+    <ulUnicodeRange1 value="00000000 00000000 00000000 00000010"/>
+    <ulUnicodeRange2 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange3 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange4 value="00000000 00000000 00000000 00000000"/>
+    <achVendID value="ALIF"/>
+    <fsSelection value="00000000 11000000"/>
+    <usFirstCharIndex value="207"/>
+    <usLastCharIndex value="207"/>
+    <sTypoAscender value="894"/>
+    <sTypoDescender value="-246"/>
+    <sTypoLineGap value="0"/>
+    <usWinAscent value="894"/>
+    <usWinDescent value="246"/>
+    <ulCodePageRange1 value="01100000 00000000 00000001 10111111"/>
+    <ulCodePageRange2 value="00000000 00000000 00000000 00000000"/>
+    <sxHeight value="429"/>
+    <sCapHeight value="658"/>
+    <usDefaultChar value="32"/>
+    <usBreakChar value="32"/>
+    <usMaxContext value="12"/>
+  </OS_2>
+
+  <name>
+    <namerecord nameID="0" platformID="3" platEncID="1" langID="0x409">
+      Copyright © 2012-2019 The Libertinus Project Authors.
+    </namerecord>
+    <namerecord nameID="1" platformID="3" platEncID="1" langID="0x409">
+      Libertinus Serif
+    </namerecord>
+    <namerecord nameID="2" platformID="3" platEncID="1" langID="0x409">
+      Regular
+    </namerecord>
+    <namerecord nameID="3" platformID="3" platEncID="1" langID="0x409">
+      6.8;ALIF;LibertinusSerif-Regular
+    </namerecord>
+    <namerecord nameID="4" platformID="3" platEncID="1" langID="0x409">
+      Libertinus Serif Regular
+    </namerecord>
+    <namerecord nameID="5" platformID="3" platEncID="1" langID="0x409">
+      Version 6.8 
+    </namerecord>
+    <namerecord nameID="6" platformID="3" platEncID="1" langID="0x409">
+      LibertinusSerif-Regular
+    </namerecord>
+  </name>
+
+  <cmap>
+    <tableVersion version="0"/>
+    <cmap_format_4 platformID="0" platEncID="3" language="0">
+      <map code="0xcf" name="Idieresis"/><!-- LATIN CAPITAL LETTER I WITH DIAERESIS -->
+    </cmap_format_4>
+    <cmap_format_12 platformID="0" platEncID="4" format="12" reserved="0" length="28" language="0" nGroups="1">
+      <map code="0xcf" name="Idieresis"/><!-- LATIN CAPITAL LETTER I WITH DIAERESIS -->
+    </cmap_format_12>
+    <cmap_format_4 platformID="3" platEncID="1" language="0">
+      <map code="0xcf" name="Idieresis"/><!-- LATIN CAPITAL LETTER I WITH DIAERESIS -->
+    </cmap_format_4>
+    <cmap_format_12 platformID="3" platEncID="10" format="12" reserved="0" length="28" language="0" nGroups="1">
+      <map code="0xcf" name="Idieresis"/><!-- LATIN CAPITAL LETTER I WITH DIAERESIS -->
+    </cmap_format_12>
+  </cmap>
+
+  <post>
+    <formatType value="3.0"/>
+    <italicAngle value="0.0"/>
+    <underlinePosition value="-78"/>
+    <underlineThickness value="40"/>
+    <isFixedPitch value="0"/>
+    <minMemType42 value="0"/>
+    <maxMemType42 value="0"/>
+    <minMemType1 value="0"/>
+    <maxMemType1 value="0"/>
+  </post>
+
+  <CFF>
+    <major value="1"/>
+    <minor value="0"/>
+    <CFFFont name="LibertinusSerif-Regular">
+      <version value="6.8"/>
+      <Notice value="Copyright Â© 2012-2019 The Libertinus Project Authors."/>
+      <FullName value="Libertinus Serif Regular"/>
+      <FamilyName value="Libertinus Serif"/>
+      <Weight value="Regular"/>
+      <isFixedPitch value="0"/>
+      <ItalicAngle value="0"/>
+      <UnderlinePosition value="-98"/>
+      <UnderlineThickness value="40"/>
+      <PaintType value="0"/>
+      <CharstringType value="2"/>
+      <FontMatrix value="0.001 0 0 0.001 0 0"/>
+      <FontBBox value="-6275 -256 6171 1125"/>
+      <StrokeWidth value="0"/>
+      <!-- charset is dumped separately as the 'GlyphOrder' element -->
+      <Encoding name="StandardEncoding"/>
+      <Private>
+        <BlueValues value="-12 0 429 442 460 472 600 610 645 658 688 698"/>
+        <OtherBlues value="-238 -227"/>
+        <FamilyBlues value="-12 0 429 442 460 472 600 610 645 658 688 698"/>
+        <FamilyOtherBlues value="-238 -227"/>
+        <BlueScale value="0.0396"/>
+        <BlueShift value="6"/>
+        <BlueFuzz value="1"/>
+        <StdHW value="36"/>
+        <StdVW value="79"/>
+        <StemSnapH value="36"/>
+        <StemSnapV value="79 86"/>
+        <ForceBold value="0"/>
+        <LanguageGroup value="0"/>
+        <ExpansionFactor value="0.06"/>
+        <initialRandomSeed value="0"/>
+        <defaultWidthX value="0"/>
+        <nominalWidthX value="595"/>
+        <Subrs>
+          <!-- The 'index' attribute is only for humans; it is ignored when parsed. -->
+          <CharString index="0">
+            -26 22 -22 26 26 22 22 26 26 -22 22 -26 -26 -22 -22 -26 vhcurveto
+            return
+          </CharString>
+          <CharString index="1">
+            401 vlineto
+            0 83 17 5 70 3 6 6 0 21 -6 6 -44 -1 -47.5 -1 -38.5 0 -33.5 0 -48.5 1 -47 1 -6 -6 0 -21 6 -6 70 -3 17 -5 0 -83 rrcurveto
+            -401 vlineto
+            0 -83 -17 -5 -70 -3 -6 -6 0 -21 6 -6 45 1 48.7002 1 36.2998 0 35.59961 0 48.40039 -1 45 -1 6 6 0 21 -6 6 -70 3 -17 5 0 83 rrcurveto
+            return
+          </CharString>
+        </Subrs>
+      </Private>
+      <CharStrings>
+        <CharString name=".notdef">
+          -95 endchar
+        </CharString>
+        <CharString name="Idieresis">
+          -298 -2 33 583 33 62 96 hstem
+          6 96 4 85 4 96 vstem
+          cntrmask 00011100
+          191 122 rmoveto
+          -106 callsubr
+          4 635 rmoveto
+          -107 callsubr
+          -189 hmoveto
+          -107 callsubr
+          endchar
+        </CharString>
+      </CharStrings>
+    </CFFFont>
+
+    <GlobalSubrs>
+      <!-- The 'index' attribute is only for humans; it is ignored when parsed. -->
+    </GlobalSubrs>
+  </CFF>
+
+  <GDEF>
+    <Version value="0x00010002"/>
+    <GlyphClassDef>
+      <ClassDef glyph="Idieresis" class="1"/>
+    </GlyphClassDef>
+    <MarkGlyphSetsDef>
+      <MarkSetTableFormat value="1"/>
+      <!-- MarkSetCount=1 -->
+      <Coverage index="0">
+      </Coverage>
+    </MarkGlyphSetsDef>
+  </GDEF>
+
+  <GPOS>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=4 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+      <ScriptRecord index="1">
+        <ScriptTag value="cyrl"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="1"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+      <ScriptRecord index="2">
+        <ScriptTag value="grek"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="2"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+      <ScriptRecord index="3">
+        <ScriptTag value="latn"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="3"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=4 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="kern"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="0"/>
+        </Feature>
+      </FeatureRecord>
+      <FeatureRecord index="1">
+        <FeatureTag value="kern"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="0"/>
+        </Feature>
+      </FeatureRecord>
+      <FeatureRecord index="2">
+        <FeatureTag value="kern"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="0"/>
+        </Feature>
+      </FeatureRecord>
+      <FeatureRecord index="3">
+        <FeatureTag value="kern"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="0"/>
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=1 -->
+      <Lookup index="0">
+        <LookupType value="2"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <PairPos index="0" Format="2">
+          <Coverage>
+            <Glyph value="Idieresis"/>
+          </Coverage>
+          <ValueFormat1 value="4"/>
+          <ValueFormat2 value="0"/>
+          <ClassDef1>
+            <ClassDef glyph="Idieresis" class="1"/>
+          </ClassDef1>
+          <ClassDef2>
+          </ClassDef2>
+          <!-- Class1Count=2 -->
+          <!-- Class2Count=1 -->
+          <Class1Record index="0">
+            <Class2Record index="0">
+              <Value1 XAdvance="0"/>
+            </Class2Record>
+          </Class1Record>
+          <Class1Record index="1">
+            <Class2Record index="0">
+              <Value1 XAdvance="0"/>
+            </Class2Record>
+          </Class1Record>
+        </PairPos>
+      </Lookup>
+    </LookupList>
+  </GPOS>
+
+  <GSUB>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=5 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=0 -->
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+      <ScriptRecord index="1">
+        <ScriptTag value="cyrl"/>
+        <Script>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+      <ScriptRecord index="2">
+        <ScriptTag value="grek"/>
+        <Script>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+      <ScriptRecord index="3">
+        <ScriptTag value="hebr"/>
+        <Script>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+      <ScriptRecord index="4">
+        <ScriptTag value="latn"/>
+        <Script>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=0 -->
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=0 -->
+    </LookupList>
+  </GSUB>
+
+  <hmtx>
+    <mtx name=".notdef" width="500" lsb="0"/>
+    <mtx name="Idieresis" width="297" lsb="6"/>
+  </hmtx>
+
+</ttFont>

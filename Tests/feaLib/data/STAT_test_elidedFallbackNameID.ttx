@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="4.20">
+
+  <name>
+    <namerecord nameID="25" platformID="3" platEncID="1" langID="0x409">
+      TestFont
+    </namerecord>
+    <namerecord nameID="256" platformID="3" platEncID="1" langID="0x409">
+      Roman
+    </namerecord>
+    <namerecord nameID="257" platformID="3" platEncID="1" langID="0x409">
+      Optical Size
+    </namerecord>
+    <namerecord nameID="258" platformID="3" platEncID="1" langID="0x409">
+      Text
+    </namerecord>
+    <namerecord nameID="259" platformID="3" platEncID="1" langID="0x409">
+      Subhead
+    </namerecord>
+    <namerecord nameID="260" platformID="3" platEncID="1" langID="0x409">
+      Display
+    </namerecord>
+    <namerecord nameID="261" platformID="3" platEncID="1" langID="0x409">
+      Width
+    </namerecord>
+    <namerecord nameID="262" platformID="3" platEncID="1" langID="0x409">
+      Condensed
+    </namerecord>
+    <namerecord nameID="263" platformID="3" platEncID="1" langID="0x409">
+      Semicondensed
+    </namerecord>
+    <namerecord nameID="264" platformID="3" platEncID="1" langID="0x409">
+      Normal
+    </namerecord>
+    <namerecord nameID="265" platformID="3" platEncID="1" langID="0x409">
+      Extended
+    </namerecord>
+    <namerecord nameID="266" platformID="3" platEncID="1" langID="0x409">
+      Weight
+    </namerecord>
+    <namerecord nameID="267" platformID="3" platEncID="1" langID="0x409">
+      Light
+    </namerecord>
+    <namerecord nameID="268" platformID="3" platEncID="1" langID="0x409">
+      Regular
+    </namerecord>
+    <namerecord nameID="269" platformID="3" platEncID="1" langID="0x409">
+      Medium
+    </namerecord>
+    <namerecord nameID="270" platformID="3" platEncID="1" langID="0x409">
+      Semibold
+    </namerecord>
+    <namerecord nameID="271" platformID="3" platEncID="1" langID="0x409">
+      Bold
+    </namerecord>
+    <namerecord nameID="272" platformID="3" platEncID="1" langID="0x409">
+      Black
+    </namerecord>
+    <namerecord nameID="273" platformID="3" platEncID="1" langID="0x409">
+      Italic
+    </namerecord>
+    <namerecord nameID="274" platformID="3" platEncID="1" langID="0x409">
+      Roman
+    </namerecord>
+    <namerecord nameID="275" platformID="3" platEncID="1" langID="0x409">
+      Caption
+    </namerecord>
+  </name>
+
+  <STAT>
+    <Version value="0x00010002"/>
+    <DesignAxisRecordSize value="8"/>
+    <!-- DesignAxisCount=4 -->
+    <DesignAxisRecord>
+      <Axis index="0">
+        <AxisTag value="opsz"/>
+        <AxisNameID value="257"/>  <!-- Optical Size -->
+        <AxisOrdering value="0"/>
+      </Axis>
+      <Axis index="1">
+        <AxisTag value="wdth"/>
+        <AxisNameID value="261"/>  <!-- Width -->
+        <AxisOrdering value="1"/>
+      </Axis>
+      <Axis index="2">
+        <AxisTag value="wght"/>
+        <AxisNameID value="266"/>  <!-- Weight -->
+        <AxisOrdering value="2"/>
+      </Axis>
+      <Axis index="3">
+        <AxisTag value="ital"/>
+        <AxisNameID value="273"/>  <!-- Italic -->
+        <AxisOrdering value="3"/>
+      </Axis>
+    </DesignAxisRecord>
+    <!-- AxisValueCount=15 -->
+    <AxisValueArray>
+      <AxisValue index="0" Format="4">
+        <!-- AxisCount=2 -->
+        <Flags value="0"/>
+        <ValueNameID value="275"/>  <!-- Caption -->
+        <AxisValueRecord index="0">
+          <AxisIndex value="0"/>
+          <Value value="8.0"/>
+        </AxisValueRecord>
+        <AxisValueRecord index="1">
+          <AxisIndex value="1"/>
+          <Value value="400.0"/>
+        </AxisValueRecord>
+      </AxisValue>
+      <AxisValue index="1" Format="2">
+        <AxisIndex value="0"/>
+        <Flags value="3"/>  <!-- OlderSiblingFontAttribute ElidableAxisValueName -->
+        <ValueNameID value="258"/>  <!-- Text -->
+        <NominalValue value="11.0"/>
+        <RangeMinValue value="9.0"/>
+        <RangeMaxValue value="12.0"/>
+      </AxisValue>
+      <AxisValue index="2" Format="2">
+        <AxisIndex value="0"/>
+        <Flags value="0"/>
+        <ValueNameID value="259"/>  <!-- Subhead -->
+        <NominalValue value="16.7"/>
+        <RangeMinValue value="12.0"/>
+        <RangeMaxValue value="24.0"/>
+      </AxisValue>
+      <AxisValue index="3" Format="2">
+        <AxisIndex value="0"/>
+        <Flags value="0"/>
+        <ValueNameID value="260"/>  <!-- Display -->
+        <NominalValue value="72.0"/>
+        <RangeMinValue value="24.0"/>
+        <RangeMaxValue value="72.0"/>
+      </AxisValue>
+      <AxisValue index="4" Format="2">
+        <AxisIndex value="1"/>
+        <Flags value="0"/>
+        <ValueNameID value="262"/>  <!-- Condensed -->
+        <NominalValue value="80.0"/>
+        <RangeMinValue value="80.0"/>
+        <RangeMaxValue value="89.0"/>
+      </AxisValue>
+      <AxisValue index="5" Format="2">
+        <AxisIndex value="1"/>
+        <Flags value="0"/>
+        <ValueNameID value="263"/>  <!-- Semicondensed -->
+        <NominalValue value="90.0"/>
+        <RangeMinValue value="90.0"/>
+        <RangeMaxValue value="96.0"/>
+      </AxisValue>
+      <AxisValue index="6" Format="2">
+        <AxisIndex value="1"/>
+        <Flags value="2"/>  <!-- ElidableAxisValueName -->
+        <ValueNameID value="264"/>  <!-- Normal -->
+        <NominalValue value="100.0"/>
+        <RangeMinValue value="97.0"/>
+        <RangeMaxValue value="101.0"/>
+      </AxisValue>
+      <AxisValue index="7" Format="2">
+        <AxisIndex value="1"/>
+        <Flags value="0"/>
+        <ValueNameID value="265"/>  <!-- Extended -->
+        <NominalValue value="125.0"/>
+        <RangeMinValue value="102.0"/>
+        <RangeMaxValue value="125.0"/>
+      </AxisValue>
+      <AxisValue index="8" Format="2">
+        <AxisIndex value="2"/>
+        <Flags value="0"/>
+        <ValueNameID value="267"/>  <!-- Light -->
+        <NominalValue value="300.0"/>
+        <RangeMinValue value="300.0"/>
+        <RangeMaxValue value="349.0"/>
+      </AxisValue>
+      <AxisValue index="9" Format="2">
+        <AxisIndex value="2"/>
+        <Flags value="2"/>  <!-- ElidableAxisValueName -->
+        <ValueNameID value="268"/>  <!-- Regular -->
+        <NominalValue value="400.0"/>
+        <RangeMinValue value="350.0"/>
+        <RangeMaxValue value="449.0"/>
+      </AxisValue>
+      <AxisValue index="10" Format="2">
+        <AxisIndex value="2"/>
+        <Flags value="0"/>
+        <ValueNameID value="269"/>  <!-- Medium -->
+        <NominalValue value="500.0"/>
+        <RangeMinValue value="450.0"/>
+        <RangeMaxValue value="549.0"/>
+      </AxisValue>
+      <AxisValue index="11" Format="2">
+        <AxisIndex value="2"/>
+        <Flags value="0"/>
+        <ValueNameID value="270"/>  <!-- Semibold -->
+        <NominalValue value="600.0"/>
+        <RangeMinValue value="550.0"/>
+        <RangeMaxValue value="649.0"/>
+      </AxisValue>
+      <AxisValue index="12" Format="2">
+        <AxisIndex value="2"/>
+        <Flags value="0"/>
+        <ValueNameID value="271"/>  <!-- Bold -->
+        <NominalValue value="700.0"/>
+        <RangeMinValue value="650.0"/>
+        <RangeMaxValue value="749.0"/>
+      </AxisValue>
+      <AxisValue index="13" Format="2">
+        <AxisIndex value="2"/>
+        <Flags value="0"/>
+        <ValueNameID value="272"/>  <!-- Black -->
+        <NominalValue value="900.0"/>
+        <RangeMinValue value="750.0"/>
+        <RangeMaxValue value="900.0"/>
+      </AxisValue>
+      <AxisValue index="14" Format="1">
+        <AxisIndex value="3"/>
+        <Flags value="2"/>  <!-- ElidableAxisValueName -->
+        <ValueNameID value="274"/>  <!-- Roman -->
+        <Value value="0.0"/>
+      </AxisValue>
+    </AxisValueArray>
+    <ElidedFallbackNameID value="256"/>  <!-- Roman -->
+  </STAT>
+
+</ttFont>

@@ -1,12 +1,13 @@
-from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
-from fontTools import ttLib
+from fontTools.misc.py23 import bytesjoin
 from fontTools.misc import sstruct
-from fontTools.misc.fixedTools import fixedToFloat, floatToFixed
-from fontTools.misc.textTools import safeEval
+from fontTools.misc.fixedTools import (
+    fixedToFloat as fi2fl,
+    floatToFixed as fl2fi,
+    floatToFixedToStr as fl2str,
+    strToFixedToFloat as str2fl,
+)
 from fontTools.ttLib import TTLibError
 from . import DefaultTable
-import array
 import struct
 import logging
 
@@ -47,8 +48,8 @@ class table__a_v_a_r(DefaultTable.DefaultTable):
             mappings = sorted(self.segments[axis].items())
             result.append(struct.pack(">H", len(mappings)))
             for key, value in mappings:
-                fixedKey = floatToFixed(key, 14)
-                fixedValue = floatToFixed(value, 14)
+                fixedKey = fl2fi(key, 14)
+                fixedValue = fl2fi(value, 14)
                 result.append(struct.pack(">hh", fixedKey, fixedValue))
         return bytesjoin(result)
 
@@ -67,19 +68,17 @@ class table__a_v_a_r(DefaultTable.DefaultTable):
             pos = pos + 2
             for _ in range(numPairs):
                 fromValue, toValue = struct.unpack(">hh", data[pos:pos+4])
-                segments[fixedToFloat(fromValue, 14)] = fixedToFloat(toValue, 14)
+                segments[fi2fl(fromValue, 14)] = fi2fl(toValue, 14)
                 pos = pos + 4
 
-    def toXML(self, writer, ttFont, progress=None):
+    def toXML(self, writer, ttFont):
         axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
         for axis in axisTags:
             writer.begintag("segment", axis=axis)
             writer.newline()
             for key, value in sorted(self.segments[axis].items()):
-                # roundtrip float -> fixed -> float to normalize TTX output
-                # as dumped after decompiling or straight from varLib
-                key = fixedToFloat(floatToFixed(key, 14), 14)
-                value = fixedToFloat(floatToFixed(value, 14), 14)
+                key = fl2str(key, 14)
+                value = fl2str(value, 14)
                 writer.simpletag("mapping", **{"from": key, "to": value})
                 writer.newline()
             writer.endtag("segment")
@@ -93,8 +92,8 @@ class table__a_v_a_r(DefaultTable.DefaultTable):
                 if isinstance(element, tuple):
                     elementName, elementAttrs, _ = element
                     if elementName == "mapping":
-                        fromValue = safeEval(elementAttrs["from"])
-                        toValue = safeEval(elementAttrs["to"])
+                        fromValue = str2fl(elementAttrs["from"], 14)
+                        toValue = str2fl(elementAttrs["to"], 14)
                         if fromValue in segment:
                             log.warning("duplicate entry for %s in axis '%s'",
                                         fromValue, axis)

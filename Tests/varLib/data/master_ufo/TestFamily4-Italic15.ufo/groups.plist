@@ -1,0 +1,34 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>public.kern1.O</key>
+    <array>
+      <string>O</string>
+      <string>Odieresis</string>
+    </array>
+    <key>public.kern1.n</key>
+    <array>
+      <string>n</string>
+    </array>
+    <key>public.kern1.o</key>
+    <array>
+      <string>o</string>
+      <string>odieresis</string>
+    </array>
+    <key>public.kern2.O</key>
+    <array>
+      <string>O</string>
+      <string>Odieresis</string>
+    </array>
+    <key>public.kern2.n</key>
+    <array>
+      <string>n</string>
+    </array>
+    <key>public.kern2.o</key>
+    <array>
+      <string>o</string>
+      <string>odieresis</string>
+    </array>
+  </dict>
+</plist>

@@ -1,0 +1,93 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>ascender</key>
+    <real>600.0</real>
+    <key>capHeight</key>
+    <real>500.0</real>
+    <key>copyright</key>
+    <string>Copyright 2017 by Jens Kutilek</string>
+    <key>descender</key>
+    <real>-150.0</real>
+    <key>familyName</key>
+    <string>Test Family 4</string>
+    <key>guidelines</key>
+    <array>
+      <dict>
+        <key>angle</key>
+        <real>180.0</real>
+        <key>x</key>
+        <real>125.0</real>
+        <key>y</key>
+        <real>175.0</real>
+      </dict>
+    </array>
+    <key>italicAngle</key>
+    <real>-0.0</real>
+    <key>openTypeHeadCreated</key>
+    <string>2017/10/21 13:31:38</string>
+    <key>openTypeNameDesigner</key>
+    <string>Jens Kutilek after the ISO 3098 standard</string>
+    <key>openTypeNameDesignerURL</key>
+    <string>https://www.kutilek.de/</string>
+    <key>openTypeNameManufacturer</key>
+    <string>Jens Kutilek</string>
+    <key>openTypeNameManufacturerURL</key>
+    <string>https://www.kutilek.de/</string>
+    <key>openTypeOS2Type</key>
+    <array>
+      <integer>3</integer>
+    </array>
+    <key>openTypeOS2VendorID</key>
+    <string>jens</string>
+    <key>openTypeOS2WinAscent</key>
+    <integer>700</integer>
+    <key>openTypeOS2WinDescent</key>
+    <integer>250</integer>
+    <key>postscriptBlueValues</key>
+    <array>
+      <real>-10.0</real>
+      <real>0.0</real>
+      <real>350.0</real>
+      <real>360.0</real>
+      <real>500.0</real>
+      <real>510.0</real>
+    </array>
+    <key>postscriptFamilyBlues</key>
+    <array/>
+    <key>postscriptFamilyOtherBlues</key>
+    <array/>
+    <key>postscriptOtherBlues</key>
+    <array>
+      <real>-160.0</real>
+      <real>-150.0</real>
+    </array>
+    <key>postscriptStemSnapH</key>
+    <array>
+      <integer>50</integer>
+    </array>
+    <key>postscriptStemSnapV</key>
+    <array>
+      <integer>50</integer>
+    </array>
+    <key>postscriptUnderlinePosition</key>
+    <integer>-100</integer>
+    <key>postscriptUnderlineThickness</key>
+    <integer>50</integer>
+    <key>styleMapFamilyName</key>
+    <string>Test Family 4</string>
+    <key>styleMapStyleName</key>
+    <string>regular</string>
+    <key>styleName</key>
+    <string>Regular</string>
+    <key>unitsPerEm</key>
+    <integer>750</integer>
+    <key>versionMajor</key>
+    <integer>1</integer>
+    <key>versionMinor</key>
+    <integer>0</integer>
+    <key>xHeight</key>
+    <real>350.0</real>
+  </dict>
+</plist>

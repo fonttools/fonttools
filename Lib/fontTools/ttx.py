@@ -41,6 +41,7 @@ usage: ttx [options] inputfile1 [... inputfileN]
     -g Split glyf table: Save the glyf data into separate TTX files
        per glyph and write a small TTX for the glyf table which
        contains references to the individual TTGlyph elements.
+       NOTE: specifying -g implies -s (no need for -s together with -g)
     -i Do NOT disassemble TT instructions: when this option is given,
        all TrueType programs (glyph programs, the font program and the
        pre-program) will be written to the TTX file as hex data
@@ -76,6 +77,7 @@ usage: ttx [options] inputfile1 [... inputfileN]
        file as-is.
     --recalc-timestamp Set font 'modified' timestamp to current time.
        By default, the modification time of the TTX file will be used.
+    --no-recalc-timestamp Keep the original font 'modified' timestamp.
     --flavor <type> Specify flavor of output font file. May be 'woff'
       or 'woff2'. Note that WOFF2 requires the Brotli Python extension,
       available at https://github.com/google/brotli
@@ -84,8 +86,7 @@ usage: ttx [options] inputfile1 [... inputfileN]
 """
 
 
-from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import Tag, tostr
 from fontTools.ttLib import TTFont, TTLibError
 from fontTools.misc.macCreatorType import getMacCreatorAndType
 from fontTools.unicode import setUnicodeData
@@ -121,8 +122,8 @@ class Options(object):
 	ignoreDecompileErrors = True
 	bitmapGlyphDataFormat = 'raw'
 	unicodedata = None
-	newlinestr = None
-	recalcTimestamp = False
+	newlinestr = "\n"
+	recalcTimestamp = None
 	flavor = None
 	useZopfli = False
 
@@ -165,7 +166,9 @@ class Options(object):
 			elif option == "-s":
 				self.splitTables = True
 			elif option == "-g":
+				# -g implies (and forces) splitTables
 				self.splitGlyphs = True
+				self.splitTables = True
 			elif option == "-i":
 				self.disassembleInstructions = False
 			elif option == "-z":
@@ -201,6 +204,8 @@ class Options(object):
 						% (value, ", ".join(map(repr, validOptions))))
 			elif option == "--recalc-timestamp":
 				self.recalcTimestamp = True
+			elif option == "--no-recalc-timestamp":
+				self.recalcTimestamp = False
 			elif option == "--flavor":
 				self.flavor = value
 			elif option == "--with-zopfli":
@@ -215,7 +220,6 @@ class Options(object):
 			self.logLevel = logging.INFO
 		if self.mergeFile and self.flavor:
 			raise getopt.GetoptError("-m and --flavor options are mutually exclusive")
-			sys.exit(2)
 		if self.onlyTables and self.skipTables:
 			raise getopt.GetoptError("-t and -x options are mutually exclusive")
 		if self.mergeFile and numFiles > 1:
@@ -229,9 +233,9 @@ def ttList(input, output, options):
 	reader = ttf.reader
 	tags = sorted(reader.keys())
 	print('Listing table info for "%s":' % input)
-	format = "    %4s  %10s  %7s  %7s"
-	print(format % ("tag ", "  checksum", " length", " offset"))
-	print(format % ("----", "----------", "-------", "-------"))
+	format = "    %4s  %10s  %8s  %8s"
+	print(format % ("tag ", "  checksum", "  length", "  offset"))
+	print(format % ("----", "----------", "--------", "--------"))
 	for tag in tags:
 		entry = reader.tables[tag]
 		if ttf.flavor == "woff2":
@@ -280,7 +284,7 @@ def ttCompile(input, output, options):
 			allowVID=options.allowVID)
 	ttf.importXML(input)
 
-	if not options.recalcTimestamp and 'head' in ttf:
+	if options.recalcTimestamp is None and 'head' in ttf:
 		# use TTX file modification time for head "modified" timestamp
 		mtime = os.path.getmtime(input)
 		ttf['head'].modified = timestampSinceEpoch(mtime)
@@ -291,11 +295,11 @@ def ttCompile(input, output, options):
 def guessFileType(fileName):
 	base, ext = os.path.splitext(fileName)
 	try:
-		f = open(fileName, "rb")
+		with open(fileName, "rb") as f:
+			header = f.read(256)
 	except IOError:
 		return None
-	header = f.read(256)
-	f.close()
+
 	if header.startswith(b'\xef\xbb\xbf<?xml'):
 		header = header.lstrip(b'\xef\xbb\xbf')
 	cr, tp = getMacCreatorAndType(fileName)
@@ -326,8 +330,8 @@ def guessFileType(fileName):
 
 def parseOptions(args):
 	rawOptions, files = getopt.getopt(args, "ld:o:fvqht:x:sgim:z:baey:",
-			['unicodedata=', "recalc-timestamp", 'flavor=', 'version',
-			 'with-zopfli', 'newline='])
+			['unicodedata=', "recalc-timestamp", "no-recalc-timestamp",
+			 'flavor=', 'version', 'with-zopfli', 'newline='])
 
 	options = Options(rawOptions, len(files))
 	jobs = []
@@ -380,6 +384,7 @@ def waitForKeyPress():
 
 
 def main(args=None):
+	"""Convert OpenType fonts to XML and back"""
 	from fontTools import configLogger
 
 	if args is None:

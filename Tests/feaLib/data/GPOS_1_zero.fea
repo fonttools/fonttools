@@ -1,4 +1,4 @@
-# https://github.com/behdad/fonttools/issues/471
+# https://github.com/fonttools/fonttools/issues/471
 feature test {
     pos zero 0;
     pos four 500;

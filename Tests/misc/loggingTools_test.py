@@ -1,7 +1,11 @@
-from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
 from fontTools.misc.loggingTools import (
-    LevelFormatter, Timer, configLogger, ChannelsFilter, LogMixin)
+    LevelFormatter,
+    Timer,
+    configLogger,
+    ChannelsFilter,
+    LogMixin,
+)
+from io import StringIO
 import logging
 import textwrap
 import time
@@ -80,7 +84,7 @@ class TimerTest(object):
             time.sleep(0.01)
 
         assert re.match(
-            "Took [0-9]\.[0-9]{3}s to do something",
+            r"Took [0-9]\.[0-9]{3}s to do something",
             logger.handlers[0].stream.getvalue())
 
     def test_using_logger_calling_instance(self, logger):
@@ -89,7 +93,7 @@ class TimerTest(object):
             time.sleep(0.01)
 
         assert re.match(
-            "elapsed time: [0-9]\.[0-9]{3}s",
+            r"elapsed time: [0-9]\.[0-9]{3}s",
             logger.handlers[0].stream.getvalue())
 
         # do it again but with custom level
@@ -97,7 +101,7 @@ class TimerTest(object):
             time.sleep(0.02)
 
         assert re.search(
-            "WARNING: Took [0-9]\.[0-9]{3}s to redo it",
+            r"WARNING: Took [0-9]\.[0-9]{3}s to redo it",
             logger.handlers[0].stream.getvalue())
 
     def test_function_decorator(self, logger):
@@ -113,13 +117,13 @@ class TimerTest(object):
         test1()
 
         assert re.match(
-            "Took [0-9]\.[0-9]{3}s to run 'test1'",
+            r"Took [0-9]\.[0-9]{3}s to run 'test1'",
             logger.handlers[0].stream.getvalue())
 
         test2()
 
         assert re.search(
-            "Took [0-9]\.[0-9]{3}s to run test 2",
+            r"Took [0-9]\.[0-9]{3}s to run test 2",
             logger.handlers[0].stream.getvalue())
 
 

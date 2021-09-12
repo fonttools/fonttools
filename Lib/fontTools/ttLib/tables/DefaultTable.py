@@ -1,5 +1,4 @@
-from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import Tag
 from fontTools.ttLib import getClassTag
 
 class DefaultTable(object):
@@ -17,7 +16,7 @@ class DefaultTable(object):
 	def compile(self, ttFont):
 		return self.data
 
-	def toXML(self, writer, ttFont, progress=None):
+	def toXML(self, writer, ttFont, **kwargs):
 		if hasattr(self, "ERROR"):
 			writer.comment("An error occurred during the decompilation of this table")
 			writer.newline()

@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="4.0">
+
+  <GDEF>
+    <Version value="0x00010003"/>
+    <GlyphClassDef>
+      <ClassDef glyph="uni0024" class="1"/>
+      <ClassDef glyph="uni0024.nostroke" class="1"/>
+      <ClassDef glyph="uni0041" class="1"/>
+      <ClassDef glyph="uni0061" class="1"/>
+    </GlyphClassDef>
+  </GDEF>
+
+  <HVAR>
+    <Version value="0x00010000"/>
+    <VarStore Format="1">
+      <Format value="1"/>
+      <VarRegionList>
+        <!-- RegionAxisCount=1 -->
+        <!-- RegionCount=0 -->
+      </VarRegionList>
+      <!-- VarDataCount=1 -->
+      <VarData index="0">
+        <!-- ItemCount=6 -->
+        <NumShorts value="0"/>
+        <!-- VarRegionCount=0 -->
+        <Item index="0" value="[]"/>
+        <Item index="1" value="[]"/>
+        <Item index="2" value="[]"/>
+        <Item index="3" value="[]"/>
+        <Item index="4" value="[]"/>
+        <Item index="5" value="[]"/>
+      </VarData>
+    </VarStore>
+  </HVAR>
+
+  <STAT>
+    <Version value="0x00010001"/>
+    <DesignAxisRecordSize value="8"/>
+    <!-- DesignAxisCount=1 -->
+    <DesignAxisRecord>
+      <Axis index="0">
+        <AxisTag value="wght"/>
+        <AxisNameID value="256"/>  <!-- Weight -->
+        <AxisOrdering value="0"/>
+      </Axis>
+    </DesignAxisRecord>
+    <!-- AxisValueCount=0 -->
+    <ElidedFallbackNameID value="2"/>  <!-- Regular -->
+  </STAT>
+
+  <fvar>
+
+    <!-- Weight -->
+    <Axis>
+      <AxisTag>wght</AxisTag>
+      <Flags>0x0</Flags>
+      <MinValue>400.0</MinValue>
+      <DefaultValue>400.0</DefaultValue>
+      <MaxValue>400.0</MaxValue>
+      <AxisNameID>256</AxisNameID>
+    </Axis>
+  </fvar>
+
+  <gvar>
+    <version value="1"/>
+    <reserved value="0"/>
+  </gvar>
+
+  <name>
+    <namerecord nameID="256" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Weight
+    </namerecord>
+    <namerecord nameID="1" platformID="3" platEncID="1" langID="0x409">
+      Test Family
+    </namerecord>
+    <namerecord nameID="2" platformID="3" platEncID="1" langID="0x409">
+      Regular
+    </namerecord>
+    <namerecord nameID="3" platformID="3" platEncID="1" langID="0x409">
+      Version 1.001;ADBO;Test Family Regular
+    </namerecord>
+    <namerecord nameID="4" platformID="3" platEncID="1" langID="0x409">
+      Test Family
+    </namerecord>
+    <namerecord nameID="5" platformID="3" platEncID="1" langID="0x409">
+      Version 1.001
+    </namerecord>
+    <namerecord nameID="6" platformID="3" platEncID="1" langID="0x409">
+      TestFamily-Master0
+    </namerecord>
+    <namerecord nameID="9" platformID="3" platEncID="1" langID="0x409">
+      Frank Grießhammer
+    </namerecord>
+    <namerecord nameID="17" platformID="3" platEncID="1" langID="0x409">
+      Master 0
+    </namerecord>
+    <namerecord nameID="256" platformID="3" platEncID="1" langID="0x409">
+      Weight
+    </namerecord>
+  </name>
+
+</ttFont>

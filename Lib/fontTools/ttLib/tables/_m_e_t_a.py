@@ -1,5 +1,4 @@
-from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import bytesjoin, strjoin
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import readHex
 from fontTools.ttLib import TTLibError
@@ -74,7 +73,7 @@ class table__m_e_t_a(DefaultTable.DefaultTable):
             dataOffset += len(data)
         return bytesjoin([header] + dataMaps + dataBlocks)
 
-    def toXML(self, writer, ttFont, progress=None):
+    def toXML(self, writer, ttFont):
         for tag in sorted(self.data.keys()):
             if tag in ["dlng", "slng"]:
                 writer.begintag("text", tag=tag)
@@ -86,7 +85,11 @@ class table__m_e_t_a(DefaultTable.DefaultTable):
             else:
                 writer.begintag("hexdata", tag=tag)
                 writer.newline()
-                writer.dumphex(self.data[tag])
+                data = self.data[tag]
+                if min(data) >= 0x20 and max(data) <= 0x7E:
+                    writer.comment("ascii: " + data.decode("ascii"))
+                    writer.newline()
+                writer.dumphex(data)
                 writer.endtag("hexdata")
                 writer.newline()
 

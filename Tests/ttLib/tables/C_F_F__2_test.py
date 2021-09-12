@@ -1,9 +1,7 @@
 """cff2Lib_test.py -- unit test for Adobe CFF fonts."""
 
-from __future__ import print_function, division, absolute_import
-from __future__ import unicode_literals
-from fontTools.misc.py23 import *
-from fontTools.ttLib import TTFont, newTable
+from fontTools.ttLib import TTFont
+from io import StringIO
 import re
 import os
 import unittest
@@ -41,7 +39,7 @@ class CFFTableTest(unittest.TestCase):
         font = TTFont(file=CFF_BIN)
         cffTable = font['CFF2']
         cffData = cffTable.compile(font)
-        out = UnicodeIO()
+        out = StringIO()
         font.saveXML(out)
         cff2XML = out.getvalue()
         cff2XML = strip_VariableItems(cff2XML)

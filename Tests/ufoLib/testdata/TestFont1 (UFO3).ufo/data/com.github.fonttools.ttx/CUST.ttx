@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="3.13">
+
+  <CUST raw="True">
+    <hexdata>
+      0001beef
+    </hexdata>
+  </CUST>
+
+</ttFont>

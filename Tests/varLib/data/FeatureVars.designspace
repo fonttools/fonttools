@@ -1,0 +1,71 @@
+<?xml version='1.0' encoding='utf-8'?>
+<designspace format="3">
+    <axes>
+        <axis default="368.0" maximum="1000.0" minimum="0.0" name="weight" tag="wght" />
+        <axis default="0.0" maximum="100.0" minimum="0.0" name="contrast" tag="cntr">
+            <labelname xml:lang="en">Contrast</labelname>
+        </axis>
+    </axes>
+    <rules processing="last">
+        <rule name="dollar-stroke">
+            <conditionset>
+                <condition name="weight" minimum="500" /> <!-- intentionally omitted maximum -->
+            </conditionset>
+            <sub name="uni0024" with="uni0024.nostroke" />
+        </rule>
+        <rule name="to-lowercase">
+            <conditionset>
+                <condition name="contrast" minimum="75" maximum="100" />
+            </conditionset>
+            <sub name="uni0041" with="uni0061" />
+        </rule>
+        <rule name="to-uppercase">
+            <conditionset>
+                <condition name="weight" minimum="0" maximum="200" />
+                <condition name="contrast" minimum="0" maximum="25" />
+            </conditionset>
+            <sub name="uni0061" with="uni0041" />
+        </rule>
+    </rules>
+    <sources>
+        <source familyname="Test Family" filename="master_ufo/TestFamily-Master0.ufo" name="master_0" stylename="Master0">
+            <location>
+                <dimension name="weight" xvalue="0" />
+                <dimension name="contrast" xvalue="0" />
+            </location>
+        </source>
+        <source familyname="Test Family" filename="master_ufo/TestFamily-Master1.ufo" name="master_1" stylename="Master1">
+            <lib copy="1" />
+            <groups copy="1" />
+            <info copy="1" />
+            <location>
+                <dimension name="weight" xvalue="368" />
+                <dimension name="contrast" xvalue="0" />
+            </location>
+        </source>
+        <source familyname="Test Family" filename="master_ufo/TestFamily-Master2.ufo" name="master_2" stylename="Master2">
+            <location>
+                <dimension name="weight" xvalue="1000" />
+                <dimension name="contrast" xvalue="0" />
+            </location>
+        </source>
+        <source familyname="Test Family" filename="master_ufo/TestFamily-Master3.ufo" name="master_3" stylename="Master3">
+            <location>
+                <dimension name="weight" xvalue="1000" />
+                <dimension name="contrast" xvalue="100" />
+            </location>
+        </source>
+        <source familyname="Test Family" filename="master_ufo/TestFamily-Master0.ufo" name="master_0" stylename="Master0">
+            <location>
+                <dimension name="weight" xvalue="0" />
+                <dimension name="contrast" xvalue="100" />
+            </location>
+        </source>
+        <source familyname="Test Family" filename="master_ufo/TestFamily-Master4.ufo" name="master_4" stylename="Master4">
+            <location>
+                <dimension name="weight" xvalue="368" />
+                <dimension name="contrast" xvalue="100" />
+            </location>
+        </source>
+    </sources>
+</designspace>

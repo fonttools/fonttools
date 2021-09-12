@@ -9,7 +9,7 @@
       <!-- SubTableCount=1 -->
       <ChainContextSubst index="0" Format="3">
         <!-- BacktrackGlyphCount=1 -->
-        <BacktrackCoverage index="0" Format="2">
+        <BacktrackCoverage index="0">
           <Glyph value="zero"/>
           <Glyph value="one"/>
           <Glyph value="two"/>
@@ -22,11 +22,11 @@
           <Glyph value="nine"/>
         </BacktrackCoverage>
         <!-- InputGlyphCount=1 -->
-        <InputCoverage index="0" Format="1">
+        <InputCoverage index="0">
           <Glyph value="slash"/>
         </InputCoverage>
         <!-- LookAheadGlyphCount=1 -->
-        <LookAheadCoverage index="0" Format="2">
+        <LookAheadCoverage index="0">
           <Glyph value="zero"/>
           <Glyph value="one"/>
           <Glyph value="two"/>
@@ -49,7 +49,7 @@
       <LookupType value="1"/>
       <LookupFlag value="0"/>
       <!-- SubTableCount=1 -->
-      <SingleSubst index="0" Format="1">
+      <SingleSubst index="0">
         <Substitution in="slash" out="fraction"/>
       </SingleSubst>
     </Lookup>

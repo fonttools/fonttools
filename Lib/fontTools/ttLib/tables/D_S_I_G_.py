@@ -1,5 +1,4 @@
-from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import bytesjoin, strjoin, tobytes, tostr
 from fontTools.misc.textTools import safeEval
 from fontTools.misc import sstruct
 from . import DefaultTable

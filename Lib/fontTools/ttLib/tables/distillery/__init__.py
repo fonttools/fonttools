@@ -58,7 +58,7 @@ class Distillery(object):
 		#self.awaitS = ObjectSet()
 
 	def _itemPriority(self, item):
-		leashLen = (65536)**2 if item.longOffset else 65536
+		leashLen = (65536)**2 if item.offsetSize == 4 else 65536
 		packedParentsPos = [p.pos for p in item.parents if p in self.packedS]
 		leashStart = min(packedParentsPos) if packedParentsPos else (65536)**2 * 2
 		itemLen = len(item)

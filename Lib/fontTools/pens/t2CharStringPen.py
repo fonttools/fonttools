@@ -1,35 +1,10 @@
 # Copyright (c) 2009 Type Supply LLC
 # Author: Tal Leming
 
-from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
+from fontTools.misc.roundTools import otRound, roundFunc
 from fontTools.misc.psCharStrings import T2CharString
 from fontTools.pens.basePen import BasePen
 from fontTools.cffLib.specializer import specializeCommands, commandsToProgram
-
-
-def makeRoundFunc(tolerance):
-    if tolerance < 0:
-        raise ValueError("Rounding tolerance must be positive")
-
-    def _round(number):
-        if tolerance == 0:
-            return number  # no-op
-        rounded = round(number)
-        # return rounded integer if the tolerance >= 0.5, or if the absolute
-        # difference between the original float and the rounded integer is
-        # within the tolerance
-        if tolerance >= .5 or abs(rounded - number) <= tolerance:
-            return rounded
-        else:
-            # else return the value un-rounded
-            return number
-
-    def roundPoint(point):
-        x, y = point
-        return _round(x), _round(y)
-
-    return roundPoint
 
 
 class T2CharStringPen(BasePen):
@@ -45,7 +20,7 @@ class T2CharStringPen(BasePen):
 
     def __init__(self, width, glyphSet, roundTolerance=0.5, CFF2=False):
         super(T2CharStringPen, self).__init__(glyphSet)
-        self.roundPoint = makeRoundFunc(roundTolerance)
+        self.round = roundFunc(roundTolerance)
         self._CFF2 = CFF2
         self._width = width
         self._commands = []
@@ -53,7 +28,7 @@ class T2CharStringPen(BasePen):
 
     def _p(self, pt):
         p0 = self._p0
-        pt = self._p0 = self.roundPoint(pt)
+        pt = self._p0 = (self.round(pt[0]), self.round(pt[1]))
         return [pt[0]-p0[0], pt[1]-p0[1]]
 
     def _moveTo(self, pt):
@@ -82,7 +57,7 @@ class T2CharStringPen(BasePen):
         program = commandsToProgram(commands)
         if self._width is not None:
             assert not self._CFF2, "CFF2 does not allow encoding glyph width in CharString."
-            program.insert(0, round(self._width))
+            program.insert(0, otRound(self._width))
         if not self._CFF2:
             program.append('endchar')
         charString = T2CharString(

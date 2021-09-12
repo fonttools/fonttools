@@ -1,5 +1,3 @@
-from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
 from . import DefaultTable
@@ -107,6 +105,7 @@ class table__m_a_x_p(DefaultTable.DefaultTable):
 		self.maxContours = maxContours
 		self.maxCompositePoints = maxCompositePoints
 		self.maxCompositeContours = maxCompositeContours
+		self.maxComponentElements = maxComponentElements
 		self.maxComponentDepth = maxComponentDepth
 		if allXMinIsLsb:
 			headTable.flags = headTable.flags | 0x2

@@ -1,8 +1,7 @@
-from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval, num2binary, binary2num
 from fontTools.ttLib.tables import DefaultTable
+import bisect
 import logging
 
 
@@ -43,7 +42,7 @@ OS2_format_0 = """
 	xAvgCharWidth:          h       # average character width
 	usWeightClass:          H       # degree of thickness of strokes
 	usWidthClass:           H       # aspect ratio
-	fsType:                 h       # type flags
+	fsType:                 H       # type flags
 	ySubscriptXSize:        h       # subscript horizontal font size
 	ySubscriptYSize:        h       # subscript vertical font size
 	ySubscriptXOffset:      h       # subscript x offset
@@ -476,22 +475,19 @@ OS2_UNICODE_RANGES = (
 )
 
 
-_unicodeRangeSets = []
+_unicodeStarts = []
+_unicodeValues = [None]
 
-def _getUnicodeRangeSets():
-	# build the sets of codepoints for each unicode range bit, and cache result
-	if not _unicodeRangeSets:
-		for bit, blocks in enumerate(OS2_UNICODE_RANGES):
-			rangeset = set()
-			for _, (start, stop) in blocks:
-				rangeset.update(set(range(start, stop+1)))
-			if bit == 57:
-				# The spec says that bit 57 ("Non Plane 0") implies that there's
-				# at least one codepoint beyond the BMP; so I also include all
-				# the non-BMP codepoints here
-				rangeset.update(set(range(0x10000, 0x110000)))
-			_unicodeRangeSets.append(rangeset)
-	return _unicodeRangeSets
+def _getUnicodeRanges():
+	# build the ranges of codepoints for each unicode range bit, and cache result
+	if not _unicodeStarts:
+		unicodeRanges = [
+			(start, (stop, bit)) for bit, blocks in enumerate(OS2_UNICODE_RANGES)
+			for _, (start, stop) in blocks]
+		for start, (stop, bit) in sorted(unicodeRanges):
+			_unicodeStarts.append(start)
+			_unicodeValues.append((stop, bit))
+	return _unicodeStarts, _unicodeValues
 
 
 def intersectUnicodeRanges(unicodes, inverse=False):
@@ -505,15 +501,22 @@ def intersectUnicodeRanges(unicodes, inverse=False):
 	>>> intersectUnicodeRanges([0x0410, 0x1F000]) == {9, 57, 122}
 	True
 	>>> intersectUnicodeRanges([0x0410, 0x1F000], inverse=True) == (
-	...     set(range(123)) - {9, 57, 122})
+	...     set(range(len(OS2_UNICODE_RANGES))) - {9, 57, 122})
 	True
 	"""
 	unicodes = set(unicodes)
-	uniranges = _getUnicodeRangeSets()
-	bits = set([
-		bit for bit, unirange in enumerate(uniranges)
-		if not unirange.isdisjoint(unicodes) ^ inverse])
-	return bits
+	unicodestarts, unicodevalues = _getUnicodeRanges()
+	bits = set()
+	for code in unicodes:
+		stop, bit = unicodevalues[bisect.bisect(unicodestarts, code)]
+		if code <= stop:
+			bits.add(bit)
+	# The spec says that bit 57 ("Non Plane 0") implies that there's
+	# at least one codepoint beyond the BMP; so I also include all
+	# the non-BMP codepoints here
+	if any(0x10000 <= code < 0x110000 for code in unicodes):
+		bits.add(57)
+	return set(range(len(OS2_UNICODE_RANGES))) - bits if inverse else bits
 
 
 if __name__ == "__main__":

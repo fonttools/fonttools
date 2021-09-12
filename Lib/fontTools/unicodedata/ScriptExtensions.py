@@ -4,9 +4,9 @@
 # Source: https://unicode.org/Public/UNIDATA/ScriptExtensions.txt
 # License: http://unicode.org/copyright.html#License
 #
-# ScriptExtensions-10.0.0.txt
-# Date: 2017-05-31, 01:07:00 GMT [RP]
-# © 2017 Unicode®, Inc.
+# ScriptExtensions-13.0.0.txt
+# Date: 2020-01-22, 00:07:43 GMT
+# © 2020 Unicode®, Inc.
 # Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
 # For terms of use, see http://www.unicode.org/terms_of_use.html
 #
@@ -52,42 +52,41 @@ RANGES = [
     0x0484,  # .. 0x0484 ; {'Cyrl', 'Glag'}
     0x0485,  # .. 0x0486 ; {'Cyrl', 'Latn'}
     0x0487,  # .. 0x0487 ; {'Cyrl', 'Glag'}
-    0x0488,  # .. 0x0588 ; None
-    0x0589,  # .. 0x0589 ; {'Armn', 'Geor'}
-    0x058A,  # .. 0x060B ; None
-    0x060C,  # .. 0x060C ; {'Arab', 'Syrc', 'Thaa'}
+    0x0488,  # .. 0x060B ; None
+    0x060C,  # .. 0x060C ; {'Arab', 'Rohg', 'Syrc', 'Thaa', 'Yezi'}
     0x060D,  # .. 0x061A ; None
-    0x061B,  # .. 0x061C ; {'Arab', 'Syrc', 'Thaa'}
+    0x061B,  # .. 0x061B ; {'Arab', 'Rohg', 'Syrc', 'Thaa', 'Yezi'}
+    0x061C,  # .. 0x061C ; {'Arab', 'Syrc', 'Thaa'}
     0x061D,  # .. 0x061E ; None
-    0x061F,  # .. 0x061F ; {'Arab', 'Syrc', 'Thaa'}
+    0x061F,  # .. 0x061F ; {'Arab', 'Rohg', 'Syrc', 'Thaa', 'Yezi'}
     0x0620,  # .. 0x063F ; None
-    0x0640,  # .. 0x0640 ; {'Adlm', 'Arab', 'Mand', 'Mani', 'Phlp', 'Syrc'}
+    0x0640,  # .. 0x0640 ; {'Adlm', 'Arab', 'Mand', 'Mani', 'Phlp', 'Rohg', 'Sogd', 'Syrc'}
     0x0641,  # .. 0x064A ; None
     0x064B,  # .. 0x0655 ; {'Arab', 'Syrc'}
     0x0656,  # .. 0x065F ; None
-    0x0660,  # .. 0x0669 ; {'Arab', 'Thaa'}
+    0x0660,  # .. 0x0669 ; {'Arab', 'Thaa', 'Yezi'}
     0x066A,  # .. 0x066F ; None
     0x0670,  # .. 0x0670 ; {'Arab', 'Syrc'}
-    0x0671,  # .. 0x0950 ; None
-    0x0951,  # .. 0x0951 ; {'Beng', 'Deva', 'Gran', 'Gujr', 'Guru', 'Knda', 'Latn', 'Mlym', 'Orya', 'Shrd', 'Taml', 'Telu'}
-    0x0952,  # .. 0x0952 ; {'Beng', 'Deva', 'Gran', 'Gujr', 'Guru', 'Knda', 'Latn', 'Mlym', 'Orya', 'Taml', 'Telu'}
+    0x0671,  # .. 0x06D3 ; None
+    0x06D4,  # .. 0x06D4 ; {'Arab', 'Rohg'}
+    0x06D5,  # .. 0x0950 ; None
+    0x0951,  # .. 0x0951 ; {'Beng', 'Deva', 'Gran', 'Gujr', 'Guru', 'Knda', 'Latn', 'Mlym', 'Orya', 'Shrd', 'Taml', 'Telu', 'Tirh'}
+    0x0952,  # .. 0x0952 ; {'Beng', 'Deva', 'Gran', 'Gujr', 'Guru', 'Knda', 'Latn', 'Mlym', 'Orya', 'Taml', 'Telu', 'Tirh'}
     0x0953,  # .. 0x0963 ; None
-    0x0964,  # .. 0x0964 ; {'Beng', 'Deva', 'Gran', 'Gujr', 'Guru', 'Knda', 'Mahj', 'Mlym', 'Orya', 'Sind', 'Sinh', 'Sylo', 'Takr', 'Taml', 'Telu', 'Tirh'}
-    0x0965,  # .. 0x0965 ; {'Beng', 'Deva', 'Gran', 'Gujr', 'Guru', 'Knda', 'Limb', 'Mahj', 'Mlym', 'Orya', 'Sind', 'Sinh', 'Sylo', 'Takr', 'Taml', 'Telu', 'Tirh'}
-    0x0966,  # .. 0x096F ; {'Deva', 'Kthi', 'Mahj'}
+    0x0964,  # .. 0x0964 ; {'Beng', 'Deva', 'Dogr', 'Gong', 'Gonm', 'Gran', 'Gujr', 'Guru', 'Knda', 'Mahj', 'Mlym', 'Nand', 'Orya', 'Sind', 'Sinh', 'Sylo', 'Takr', 'Taml', 'Telu', 'Tirh'}
+    0x0965,  # .. 0x0965 ; {'Beng', 'Deva', 'Dogr', 'Gong', 'Gonm', 'Gran', 'Gujr', 'Guru', 'Knda', 'Limb', 'Mahj', 'Mlym', 'Nand', 'Orya', 'Sind', 'Sinh', 'Sylo', 'Takr', 'Taml', 'Telu', 'Tirh'}
+    0x0966,  # .. 0x096F ; {'Deva', 'Dogr', 'Kthi', 'Mahj'}
     0x0970,  # .. 0x09E5 ; None
     0x09E6,  # .. 0x09EF ; {'Beng', 'Cakm', 'Sylo'}
     0x09F0,  # .. 0x0A65 ; None
     0x0A66,  # .. 0x0A6F ; {'Guru', 'Mult'}
     0x0A70,  # .. 0x0AE5 ; None
     0x0AE6,  # .. 0x0AEF ; {'Gujr', 'Khoj'}
-    0x0AF0,  # .. 0x0BA9 ; None
-    0x0BAA,  # .. 0x0BAA ; {'Gran', 'Taml'}
-    0x0BAB,  # .. 0x0BB4 ; None
-    0x0BB5,  # .. 0x0BB5 ; {'Gran', 'Taml'}
-    0x0BB6,  # .. 0x0BE5 ; None
-    0x0BE6,  # .. 0x0BF2 ; {'Gran', 'Taml'}
-    0x0BF3,  # .. 0x103F ; None
+    0x0AF0,  # .. 0x0BE5 ; None
+    0x0BE6,  # .. 0x0BF3 ; {'Gran', 'Taml'}
+    0x0BF4,  # .. 0x0CE5 ; None
+    0x0CE6,  # .. 0x0CEF ; {'Knda', 'Nand'}
+    0x0CF0,  # .. 0x103F ; None
     0x1040,  # .. 0x1049 ; {'Cakm', 'Mymr', 'Tale'}
     0x104A,  # .. 0x10FA ; None
     0x10FB,  # .. 0x10FB ; {'Geor', 'Latn'}
@@ -98,27 +97,41 @@ RANGES = [
     0x1804,  # .. 0x1804 ; None
     0x1805,  # .. 0x1805 ; {'Mong', 'Phag'}
     0x1806,  # .. 0x1CCF ; None
-    0x1CD0,  # .. 0x1CD0 ; {'Deva', 'Gran'}
+    0x1CD0,  # .. 0x1CD0 ; {'Beng', 'Deva', 'Gran', 'Knda'}
     0x1CD1,  # .. 0x1CD1 ; {'Deva'}
-    0x1CD2,  # .. 0x1CD3 ; {'Deva', 'Gran'}
-    0x1CD4,  # .. 0x1CD6 ; {'Deva'}
+    0x1CD2,  # .. 0x1CD2 ; {'Beng', 'Deva', 'Gran', 'Knda'}
+    0x1CD3,  # .. 0x1CD3 ; {'Deva', 'Gran'}
+    0x1CD4,  # .. 0x1CD4 ; {'Deva'}
+    0x1CD5,  # .. 0x1CD6 ; {'Beng', 'Deva'}
     0x1CD7,  # .. 0x1CD7 ; {'Deva', 'Shrd'}
-    0x1CD8,  # .. 0x1CD8 ; {'Deva'}
+    0x1CD8,  # .. 0x1CD8 ; {'Beng', 'Deva'}
     0x1CD9,  # .. 0x1CD9 ; {'Deva', 'Shrd'}
-    0x1CDA,  # .. 0x1CDA ; {'Deva', 'Knda', 'Mlym', 'Taml', 'Telu'}
+    0x1CDA,  # .. 0x1CDA ; {'Deva', 'Knda', 'Mlym', 'Orya', 'Taml', 'Telu'}
     0x1CDB,  # .. 0x1CDB ; {'Deva'}
     0x1CDC,  # .. 0x1CDD ; {'Deva', 'Shrd'}
     0x1CDE,  # .. 0x1CDF ; {'Deva'}
     0x1CE0,  # .. 0x1CE0 ; {'Deva', 'Shrd'}
-    0x1CE1,  # .. 0x1CF1 ; {'Deva'}
-    0x1CF2,  # .. 0x1CF4 ; {'Deva', 'Gran'}
-    0x1CF5,  # .. 0x1CF5 ; {'Deva', 'Knda'}
-    0x1CF6,  # .. 0x1CF6 ; {'Deva'}
+    0x1CE1,  # .. 0x1CE1 ; {'Beng', 'Deva'}
+    0x1CE2,  # .. 0x1CE8 ; {'Deva'}
+    0x1CE9,  # .. 0x1CE9 ; {'Deva', 'Nand'}
+    0x1CEA,  # .. 0x1CEA ; {'Beng', 'Deva'}
+    0x1CEB,  # .. 0x1CEC ; {'Deva'}
+    0x1CED,  # .. 0x1CED ; {'Beng', 'Deva'}
+    0x1CEE,  # .. 0x1CF1 ; {'Deva'}
+    0x1CF2,  # .. 0x1CF2 ; {'Beng', 'Deva', 'Gran', 'Knda', 'Nand', 'Orya', 'Telu', 'Tirh'}
+    0x1CF3,  # .. 0x1CF3 ; {'Deva', 'Gran'}
+    0x1CF4,  # .. 0x1CF4 ; {'Deva', 'Gran', 'Knda'}
+    0x1CF5,  # .. 0x1CF6 ; {'Beng', 'Deva'}
     0x1CF7,  # .. 0x1CF7 ; {'Beng'}
     0x1CF8,  # .. 0x1CF9 ; {'Deva', 'Gran'}
-    0x1CFA,  # .. 0x1DBF ; None
+    0x1CFA,  # .. 0x1CFA ; {'Nand'}
+    0x1CFB,  # .. 0x1DBF ; None
     0x1DC0,  # .. 0x1DC1 ; {'Grek'}
-    0x1DC2,  # .. 0x20EF ; None
+    0x1DC2,  # .. 0x1DF7 ; None
+    0x1DF8,  # .. 0x1DF8 ; {'Cyrl', 'Syrc'}
+    0x1DF9,  # .. 0x202E ; None
+    0x202F,  # .. 0x202F ; {'Latn', 'Mong'}
+    0x2030,  # .. 0x20EF ; None
     0x20F0,  # .. 0x20F0 ; {'Deva', 'Gran', 'Latn'}
     0x20F1,  # .. 0x2E42 ; None
     0x2E43,  # .. 0x2E43 ; {'Cyrl', 'Glag'}
@@ -160,7 +173,9 @@ RANGES = [
     0x3280,  # .. 0x32B0 ; {'Hani'}
     0x32B1,  # .. 0x32BF ; None
     0x32C0,  # .. 0x32CB ; {'Hani'}
-    0x32CC,  # .. 0x3357 ; None
+    0x32CC,  # .. 0x32FE ; None
+    0x32FF,  # .. 0x32FF ; {'Hani'}
+    0x3300,  # .. 0x3357 ; None
     0x3358,  # .. 0x3370 ; {'Hani'}
     0x3371,  # .. 0x337A ; None
     0x337B,  # .. 0x337F ; {'Hani'}
@@ -168,9 +183,12 @@ RANGES = [
     0x33E0,  # .. 0x33FE ; {'Hani'}
     0x33FF,  # .. 0xA66E ; None
     0xA66F,  # .. 0xA66F ; {'Cyrl', 'Glag'}
-    0xA670,  # .. 0xA82F ; None
-    0xA830,  # .. 0xA835 ; {'Deva', 'Gujr', 'Guru', 'Knda', 'Kthi', 'Mahj', 'Modi', 'Sind', 'Takr', 'Tirh'}
-    0xA836,  # .. 0xA839 ; {'Deva', 'Gujr', 'Guru', 'Kthi', 'Mahj', 'Modi', 'Sind', 'Takr', 'Tirh'}
+    0xA670,  # .. 0xA6FF ; None
+    0xA700,  # .. 0xA707 ; {'Hani', 'Latn'}
+    0xA708,  # .. 0xA82F ; None
+    0xA830,  # .. 0xA832 ; {'Deva', 'Dogr', 'Gujr', 'Guru', 'Khoj', 'Knda', 'Kthi', 'Mahj', 'Mlym', 'Modi', 'Nand', 'Sind', 'Takr', 'Tirh'}
+    0xA833,  # .. 0xA835 ; {'Deva', 'Dogr', 'Gujr', 'Guru', 'Khoj', 'Knda', 'Kthi', 'Mahj', 'Modi', 'Nand', 'Sind', 'Takr', 'Tirh'}
+    0xA836,  # .. 0xA839 ; {'Deva', 'Dogr', 'Gujr', 'Guru', 'Khoj', 'Kthi', 'Mahj', 'Modi', 'Sind', 'Takr', 'Tirh'}
     0xA83A,  # .. 0xA8F0 ; None
     0xA8F1,  # .. 0xA8F1 ; {'Beng', 'Deva'}
     0xA8F2,  # .. 0xA8F2 ; None
@@ -203,9 +221,13 @@ RANGES = [
     0x11301,  # .. 0x11301 ; {'Gran', 'Taml'}
     0x11302,  # .. 0x11302 ; None
     0x11303,  # .. 0x11303 ; {'Gran', 'Taml'}
-    0x11304,  # .. 0x1133B ; None
-    0x1133C,  # .. 0x1133C ; {'Gran', 'Taml'}
-    0x1133D,  # .. 0x1BC9F ; None
+    0x11304,  # .. 0x1133A ; None
+    0x1133B,  # .. 0x1133C ; {'Gran', 'Taml'}
+    0x1133D,  # .. 0x11FCF ; None
+    0x11FD0,  # .. 0x11FD1 ; {'Gran', 'Taml'}
+    0x11FD2,  # .. 0x11FD2 ; None
+    0x11FD3,  # .. 0x11FD3 ; {'Gran', 'Taml'}
+    0x11FD4,  # .. 0x1BC9F ; None
     0x1BCA0,  # .. 0x1BCA3 ; {'Dupl'}
     0x1BCA4,  # .. 0x1D35F ; None
     0x1D360,  # .. 0x1D371 ; {'Hani'}
@@ -226,42 +248,41 @@ VALUES = [
     {'Cyrl', 'Glag'},                                          # 0484..0484
     {'Cyrl', 'Latn'},                                          # 0485..0486
     {'Cyrl', 'Glag'},                                          # 0487..0487
-    None,                                                      # 0488..0588
-    {'Armn', 'Geor'},                                          # 0589..0589
-    None,                                                      # 058A..060B
-    {'Arab', 'Syrc', 'Thaa'},                                  # 060C..060C
+    None,                                                      # 0488..060B
+    {'Arab', 'Rohg', 'Syrc', 'Thaa', 'Yezi'},                  # 060C..060C
     None,                                                      # 060D..061A
-    {'Arab', 'Syrc', 'Thaa'},                                  # 061B..061C
+    {'Arab', 'Rohg', 'Syrc', 'Thaa', 'Yezi'},                  # 061B..061B
+    {'Arab', 'Syrc', 'Thaa'},                                  # 061C..061C
     None,                                                      # 061D..061E
-    {'Arab', 'Syrc', 'Thaa'},                                  # 061F..061F
+    {'Arab', 'Rohg', 'Syrc', 'Thaa', 'Yezi'},                  # 061F..061F
     None,                                                      # 0620..063F
-    {'Adlm', 'Arab', 'Mand', 'Mani', 'Phlp', 'Syrc'},          # 0640..0640
+    {'Adlm', 'Arab', 'Mand', 'Mani', 'Phlp', 'Rohg', 'Sogd', 'Syrc'},  # 0640..0640
     None,                                                      # 0641..064A
     {'Arab', 'Syrc'},                                          # 064B..0655
     None,                                                      # 0656..065F
-    {'Arab', 'Thaa'},                                          # 0660..0669
+    {'Arab', 'Thaa', 'Yezi'},                                  # 0660..0669
     None,                                                      # 066A..066F
     {'Arab', 'Syrc'},                                          # 0670..0670
-    None,                                                      # 0671..0950
-    {'Beng', 'Deva', 'Gran', 'Gujr', 'Guru', 'Knda', 'Latn', 'Mlym', 'Orya', 'Shrd', 'Taml', 'Telu'},  # 0951..0951
-    {'Beng', 'Deva', 'Gran', 'Gujr', 'Guru', 'Knda', 'Latn', 'Mlym', 'Orya', 'Taml', 'Telu'},  # 0952..0952
+    None,                                                      # 0671..06D3
+    {'Arab', 'Rohg'},                                          # 06D4..06D4
+    None,                                                      # 06D5..0950
+    {'Beng', 'Deva', 'Gran', 'Gujr', 'Guru', 'Knda', 'Latn', 'Mlym', 'Orya', 'Shrd', 'Taml', 'Telu', 'Tirh'},  # 0951..0951
+    {'Beng', 'Deva', 'Gran', 'Gujr', 'Guru', 'Knda', 'Latn', 'Mlym', 'Orya', 'Taml', 'Telu', 'Tirh'},  # 0952..0952
     None,                                                      # 0953..0963
-    {'Beng', 'Deva', 'Gran', 'Gujr', 'Guru', 'Knda', 'Mahj', 'Mlym', 'Orya', 'Sind', 'Sinh', 'Sylo', 'Takr', 'Taml', 'Telu', 'Tirh'},  # 0964..0964
-    {'Beng', 'Deva', 'Gran', 'Gujr', 'Guru', 'Knda', 'Limb', 'Mahj', 'Mlym', 'Orya', 'Sind', 'Sinh', 'Sylo', 'Takr', 'Taml', 'Telu', 'Tirh'},  # 0965..0965
-    {'Deva', 'Kthi', 'Mahj'},                                  # 0966..096F
+    {'Beng', 'Deva', 'Dogr', 'Gong', 'Gonm', 'Gran', 'Gujr', 'Guru', 'Knda', 'Mahj', 'Mlym', 'Nand', 'Orya', 'Sind', 'Sinh', 'Sylo', 'Takr', 'Taml', 'Telu', 'Tirh'},  # 0964..0964
+    {'Beng', 'Deva', 'Dogr', 'Gong', 'Gonm', 'Gran', 'Gujr', 'Guru', 'Knda', 'Limb', 'Mahj', 'Mlym', 'Nand', 'Orya', 'Sind', 'Sinh', 'Sylo', 'Takr', 'Taml', 'Telu', 'Tirh'},  # 0965..0965
+    {'Deva', 'Dogr', 'Kthi', 'Mahj'},                          # 0966..096F
     None,                                                      # 0970..09E5
     {'Beng', 'Cakm', 'Sylo'},                                  # 09E6..09EF
     None,                                                      # 09F0..0A65
     {'Guru', 'Mult'},                                          # 0A66..0A6F
     None,                                                      # 0A70..0AE5
     {'Gujr', 'Khoj'},                                          # 0AE6..0AEF
-    None,                                                      # 0AF0..0BA9
-    {'Gran', 'Taml'},                                          # 0BAA..0BAA
-    None,                                                      # 0BAB..0BB4
-    {'Gran', 'Taml'},                                          # 0BB5..0BB5
-    None,                                                      # 0BB6..0BE5
-    {'Gran', 'Taml'},                                          # 0BE6..0BF2
-    None,                                                      # 0BF3..103F
+    None,                                                      # 0AF0..0BE5
+    {'Gran', 'Taml'},                                          # 0BE6..0BF3
+    None,                                                      # 0BF4..0CE5
+    {'Knda', 'Nand'},                                          # 0CE6..0CEF
+    None,                                                      # 0CF0..103F
     {'Cakm', 'Mymr', 'Tale'},                                  # 1040..1049
     None,                                                      # 104A..10FA
     {'Geor', 'Latn'},                                          # 10FB..10FB
@@ -272,27 +293,41 @@ VALUES = [
     None,                                                      # 1804..1804
     {'Mong', 'Phag'},                                          # 1805..1805
     None,                                                      # 1806..1CCF
-    {'Deva', 'Gran'},                                          # 1CD0..1CD0
+    {'Beng', 'Deva', 'Gran', 'Knda'},                          # 1CD0..1CD0
     {'Deva'},                                                  # 1CD1..1CD1
-    {'Deva', 'Gran'},                                          # 1CD2..1CD3
-    {'Deva'},                                                  # 1CD4..1CD6
+    {'Beng', 'Deva', 'Gran', 'Knda'},                          # 1CD2..1CD2
+    {'Deva', 'Gran'},                                          # 1CD3..1CD3
+    {'Deva'},                                                  # 1CD4..1CD4
+    {'Beng', 'Deva'},                                          # 1CD5..1CD6
     {'Deva', 'Shrd'},                                          # 1CD7..1CD7
-    {'Deva'},                                                  # 1CD8..1CD8
+    {'Beng', 'Deva'},                                          # 1CD8..1CD8
     {'Deva', 'Shrd'},                                          # 1CD9..1CD9
-    {'Deva', 'Knda', 'Mlym', 'Taml', 'Telu'},                  # 1CDA..1CDA
+    {'Deva', 'Knda', 'Mlym', 'Orya', 'Taml', 'Telu'},          # 1CDA..1CDA
     {'Deva'},                                                  # 1CDB..1CDB
     {'Deva', 'Shrd'},                                          # 1CDC..1CDD
     {'Deva'},                                                  # 1CDE..1CDF
     {'Deva', 'Shrd'},                                          # 1CE0..1CE0
-    {'Deva'},                                                  # 1CE1..1CF1
-    {'Deva', 'Gran'},                                          # 1CF2..1CF4
-    {'Deva', 'Knda'},                                          # 1CF5..1CF5
-    {'Deva'},                                                  # 1CF6..1CF6
+    {'Beng', 'Deva'},                                          # 1CE1..1CE1
+    {'Deva'},                                                  # 1CE2..1CE8
+    {'Deva', 'Nand'},                                          # 1CE9..1CE9
+    {'Beng', 'Deva'},                                          # 1CEA..1CEA
+    {'Deva'},                                                  # 1CEB..1CEC
+    {'Beng', 'Deva'},                                          # 1CED..1CED
+    {'Deva'},                                                  # 1CEE..1CF1
+    {'Beng', 'Deva', 'Gran', 'Knda', 'Nand', 'Orya', 'Telu', 'Tirh'},  # 1CF2..1CF2
+    {'Deva', 'Gran'},                                          # 1CF3..1CF3
+    {'Deva', 'Gran', 'Knda'},                                  # 1CF4..1CF4
+    {'Beng', 'Deva'},                                          # 1CF5..1CF6
     {'Beng'},                                                  # 1CF7..1CF7
     {'Deva', 'Gran'},                                          # 1CF8..1CF9
-    None,                                                      # 1CFA..1DBF
+    {'Nand'},                                                  # 1CFA..1CFA
+    None,                                                      # 1CFB..1DBF
     {'Grek'},                                                  # 1DC0..1DC1
-    None,                                                      # 1DC2..20EF
+    None,                                                      # 1DC2..1DF7
+    {'Cyrl', 'Syrc'},                                          # 1DF8..1DF8
+    None,                                                      # 1DF9..202E
+    {'Latn', 'Mong'},                                          # 202F..202F
+    None,                                                      # 2030..20EF
     {'Deva', 'Gran', 'Latn'},                                  # 20F0..20F0
     None,                                                      # 20F1..2E42
     {'Cyrl', 'Glag'},                                          # 2E43..2E43
@@ -334,7 +369,9 @@ VALUES = [
     {'Hani'},                                                  # 3280..32B0
     None,                                                      # 32B1..32BF
     {'Hani'},                                                  # 32C0..32CB
-    None,                                                      # 32CC..3357
+    None,                                                      # 32CC..32FE
+    {'Hani'},                                                  # 32FF..32FF
+    None,                                                      # 3300..3357
     {'Hani'},                                                  # 3358..3370
     None,                                                      # 3371..337A
     {'Hani'},                                                  # 337B..337F
@@ -342,9 +379,12 @@ VALUES = [
     {'Hani'},                                                  # 33E0..33FE
     None,                                                      # 33FF..A66E
     {'Cyrl', 'Glag'},                                          # A66F..A66F
-    None,                                                      # A670..A82F
-    {'Deva', 'Gujr', 'Guru', 'Knda', 'Kthi', 'Mahj', 'Modi', 'Sind', 'Takr', 'Tirh'},  # A830..A835
-    {'Deva', 'Gujr', 'Guru', 'Kthi', 'Mahj', 'Modi', 'Sind', 'Takr', 'Tirh'},  # A836..A839
+    None,                                                      # A670..A6FF
+    {'Hani', 'Latn'},                                          # A700..A707
+    None,                                                      # A708..A82F
+    {'Deva', 'Dogr', 'Gujr', 'Guru', 'Khoj', 'Knda', 'Kthi', 'Mahj', 'Mlym', 'Modi', 'Nand', 'Sind', 'Takr', 'Tirh'},  # A830..A832
+    {'Deva', 'Dogr', 'Gujr', 'Guru', 'Khoj', 'Knda', 'Kthi', 'Mahj', 'Modi', 'Nand', 'Sind', 'Takr', 'Tirh'},  # A833..A835
+    {'Deva', 'Dogr', 'Gujr', 'Guru', 'Khoj', 'Kthi', 'Mahj', 'Modi', 'Sind', 'Takr', 'Tirh'},  # A836..A839
     None,                                                      # A83A..A8F0
     {'Beng', 'Deva'},                                          # A8F1..A8F1
     None,                                                      # A8F2..A8F2
@@ -377,9 +417,13 @@ VALUES = [
     {'Gran', 'Taml'},                                          # 11301..11301
     None,                                                      # 11302..11302
     {'Gran', 'Taml'},                                          # 11303..11303
-    None,                                                      # 11304..1133B
-    {'Gran', 'Taml'},                                          # 1133C..1133C
-    None,                                                      # 1133D..1BC9F
+    None,                                                      # 11304..1133A
+    {'Gran', 'Taml'},                                          # 1133B..1133C
+    None,                                                      # 1133D..11FCF
+    {'Gran', 'Taml'},                                          # 11FD0..11FD1
+    None,                                                      # 11FD2..11FD2
+    {'Gran', 'Taml'},                                          # 11FD3..11FD3
+    None,                                                      # 11FD4..1BC9F
     {'Dupl'},                                                  # 1BCA0..1BCA3
     None,                                                      # 1BCA4..1D35F
     {'Hani'},                                                  # 1D360..1D371

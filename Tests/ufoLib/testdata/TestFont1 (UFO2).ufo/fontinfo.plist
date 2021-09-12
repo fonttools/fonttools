@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>ascender</key>
+	<integer>750</integer>
+	<key>capHeight</key>
+	<integer>750</integer>
+	<key>copyright</key>
+	<string>Copyright Some Foundry.</string>
+	<key>descender</key>
+	<integer>-250</integer>
+	<key>familyName</key>
+	<string>Some Font (Family Name)</string>
+	<key>italicAngle</key>
+	<real>-12.5</real>
+	<key>macintoshFONDFamilyID</key>
+	<integer>15000</integer>
+	<key>macintoshFONDName</key>
+	<string>SomeFont Regular (FOND Name)</string>
+	<key>note</key>
+	<string>A note.</string>
+	<key>openTypeHeadCreated</key>
+	<string>2000/01/01 00:00:00</string>
+	<key>openTypeHeadFlags</key>
+	<array>
+		<integer>0</integer>
+		<integer>1</integer>
+	</array>
+	<key>openTypeHeadLowestRecPPEM</key>
+	<integer>10</integer>
+	<key>openTypeHheaAscender</key>
+	<integer>750</integer>
+	<key>openTypeHheaCaretOffset</key>
+	<integer>0</integer>
+	<key>openTypeHheaCaretSlopeRise</key>
+	<integer>1</integer>
+	<key>openTypeHheaCaretSlopeRun</key>
+	<integer>0</integer>
+	<key>openTypeHheaDescender</key>
+	<integer>-250</integer>
+	<key>openTypeHheaLineGap</key>
+	<integer>200</integer>
+	<key>openTypeNameCompatibleFullName</key>
+	<string>Some Font Regular (Compatible Full Name)</string>
+	<key>openTypeNameDescription</key>
+	<string>Some Font by Some Designer for Some Foundry.</string>
+	<key>openTypeNameDesigner</key>
+	<string>Some Designer</string>
+	<key>openTypeNameDesignerURL</key>
+	<string>http://somedesigner.com</string>
+	<key>openTypeNameLicense</key>
+	<string>License info for Some Foundry.</string>
+	<key>openTypeNameLicenseURL</key>
+	<string>http://somefoundry.com/license</string>
+	<key>openTypeNameManufacturer</key>
+	<string>Some Foundry</string>
+	<key>openTypeNameManufacturerURL</key>
+	<string>http://somefoundry.com</string>
+	<key>openTypeNamePreferredFamilyName</key>
+	<string>Some Font (Preferred Family Name)</string>
+	<key>openTypeNamePreferredSubfamilyName</key>
+	<string>Regular (Preferred Subfamily Name)</string>
+	<key>openTypeNameSampleText</key>
+	<string>Sample Text for Some Font.</string>
+	<key>openTypeNameUniqueID</key>
+	<string>OpenType name Table Unique ID</string>
+	<key>openTypeNameVersion</key>
+	<string>OpenType name Table Version</string>
+	<key>openTypeNameWWSFamilyName</key>
+	<string>Some Font (WWS Family Name)</string>
+	<key>openTypeNameWWSSubfamilyName</key>
+	<string>Regular (WWS Subfamily Name)</string>
+	<key>openTypeOS2CodePageRanges</key>
+	<array>
+		<integer>0</integer>
+		<integer>1</integer>
+	</array>
+	<key>openTypeOS2Panose</key>
+	<array>
+		<integer>0</integer>
+		<integer>1</integer>
+		<integer>2</integer>
+		<integer>3</integer>
+		<integer>4</integer>
+		<integer>5</integer>
+		<integer>6</integer>
+		<integer>7</integer>
+		<integer>8</integer>
+		<integer>9</integer>
+	</array>
+	<key>openTypeOS2FamilyClass</key>
+	<array>
+		<integer>1</integer>
+		<integer>1</integer>
+	</array>
+	<key>openTypeOS2Selection</key>
+	<array>
+		<integer>3</integer>
+	</array>
+	<key>openTypeOS2StrikeoutPosition</key>
+	<integer>300</integer>
+	<key>openTypeOS2StrikeoutSize</key>
+	<integer>20</integer>
+	<key>openTypeOS2SubscriptXOffset</key>
+	<integer>0</integer>
+	<key>openTypeOS2SubscriptXSize</key>
+	<integer>200</integer>
+	<key>openTypeOS2SubscriptYOffset</key>
+	<integer>-100</integer>
+	<key>openTypeOS2SubscriptYSize</key>
+	<integer>400</integer>
+	<key>openTypeOS2SuperscriptXOffset</key>
+	<integer>0</integer>
+	<key>openTypeOS2SuperscriptXSize</key>
+	<integer>200</integer>
+	<key>openTypeOS2SuperscriptYOffset</key>
+	<integer>200</integer>
+	<key>openTypeOS2SuperscriptYSize</key>
+	<integer>400</integer>
+	<key>openTypeOS2Type</key>
+	<array>
+	</array>
+	<key>openTypeOS2TypoAscender</key>
+	<integer>750</integer>
+	<key>openTypeOS2TypoDescender</key>
+	<integer>-250</integer>
+	<key>openTypeOS2TypoLineGap</key>
+	<integer>200</integer>
+	<key>openTypeOS2UnicodeRanges</key>
+	<array>
+		<integer>0</integer>
+		<integer>1</integer>
+	</array>
+	<key>openTypeOS2VendorID</key>
+	<string>SOME</string>
+	<key>openTypeOS2WeightClass</key>
+	<integer>500</integer>
+	<key>openTypeOS2WidthClass</key>
+	<integer>5</integer>
+	<key>openTypeOS2WinAscent</key>
+	<integer>750</integer>
+	<key>openTypeOS2WinDescent</key>
+	<integer>-250</integer>
+	<key>openTypeVheaCaretOffset</key>
+	<integer>0</integer>
+	<key>openTypeVheaCaretSlopeRise</key>
+	<integer>0</integer>
+	<key>openTypeVheaCaretSlopeRun</key>
+	<integer>1</integer>
+	<key>openTypeVheaVertTypoAscender</key>
+	<integer>750</integer>
+	<key>openTypeVheaVertTypoDescender</key>
+	<integer>-250</integer>
+	<key>openTypeVheaVertTypoLineGap</key>
+	<integer>200</integer>
+	<key>postscriptBlueFuzz</key>
+	<integer>1</integer>
+	<key>postscriptBlueScale</key>
+	<real>0.039625</real>
+	<key>postscriptBlueShift</key>
+	<integer>7</integer>
+	<key>postscriptBlueValues</key>
+	<array>
+		<integer>500</integer>
+		<integer>510</integer>
+	</array>
+	<key>postscriptDefaultCharacter</key>
+	<string>.notdef</string>
+	<key>postscriptDefaultWidthX</key>
+	<integer>400</integer>
+	<key>postscriptFamilyBlues</key>
+	<array>
+		<integer>500</integer>
+		<integer>510</integer>
+	</array>
+	<key>postscriptFamilyOtherBlues</key>
+	<array>
+		<integer>-250</integer>
+		<integer>-260</integer>
+	</array>
+	<key>postscriptFontName</key>
+	<string>SomeFont-Regular (Postscript Font Name)</string>
+	<key>postscriptForceBold</key>
+	<true/>
+	<key>postscriptFullName</key>
+	<string>Some Font-Regular (Postscript Full Name)</string>
+	<key>postscriptIsFixedPitch</key>
+	<false/>
+	<key>postscriptNominalWidthX</key>
+	<integer>400</integer>
+	<key>postscriptOtherBlues</key>
+	<array>
+		<integer>-250</integer>
+		<integer>-260</integer>
+	</array>
+	<key>postscriptSlantAngle</key>
+	<real>-12.5</real>
+	<key>postscriptStemSnapH</key>
+	<array>
+		<integer>100</integer>
+		<integer>120</integer>
+	</array>
+	<key>postscriptStemSnapV</key>
+	<array>
+		<integer>80</integer>
+		<integer>90</integer>
+	</array>
+	<key>postscriptUnderlinePosition</key>
+	<integer>-200</integer>
+	<key>postscriptUnderlineThickness</key>
+	<integer>20</integer>
+	<key>postscriptUniqueID</key>
+	<integer>4000000</integer>
+	<key>postscriptWeightName</key>
+	<string>Medium</string>
+	<key>postscriptWindowsCharacterSet</key>
+	<integer>1</integer>
+	<key>styleMapFamilyName</key>
+	<string>Some Font Regular (Style Map Family Name)</string>
+	<key>styleMapStyleName</key>
+	<string>regular</string>
+	<key>styleName</key>
+	<string>Regular (Style Name)</string>
+	<key>trademark</key>
+	<string>Trademark Some Foundry</string>
+	<key>unitsPerEm</key>
+	<integer>1000</integer>
+	<key>versionMajor</key>
+	<integer>1</integer>
+	<key>versionMinor</key>
+	<integer>0</integer>
+	<key>xHeight</key>
+	<integer>500</integer>
+	<key>year</key>
+	<integer>2008</integer>
+</dict>
+</plist>
+

@@ -1,13 +1,12 @@
-from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
 from fontTools.pens.basePen import AbstractPen
+from fontTools.pens.pointPen import AbstractPointPen
 from fontTools.pens.recordingPen import RecordingPen
 
 
 class _PassThruComponentsMixin(object):
 
-    def addComponent(self, glyphName, transformation):
-        self._outPen.addComponent(glyphName, transformation)
+    def addComponent(self, glyphName, transformation, **kwargs):
+        self._outPen.addComponent(glyphName, transformation, **kwargs)
 
 
 class FilterPen(_PassThruComponentsMixin, AbstractPen):
@@ -119,3 +118,41 @@ class ContourFilterPen(_PassThruComponentsMixin, RecordingPen):
         Otherwise, the return value is drawn with the output pen.
         """
         return  # or return contour
+
+
+class FilterPointPen(_PassThruComponentsMixin, AbstractPointPen):
+    """ Baseclass for point pens that apply some transformation to the
+    coordinates they receive and pass them to another point pen.
+
+    You can override any of its methods. The default implementation does
+    nothing, but passes the commands unmodified to the other pen.
+
+    >>> from fontTools.pens.recordingPen import RecordingPointPen
+    >>> rec = RecordingPointPen()
+    >>> pen = FilterPointPen(rec)
+    >>> v = iter(rec.value)
+    >>> pen.beginPath(identifier="abc")
+    >>> next(v)
+    ('beginPath', (), {'identifier': 'abc'})
+    >>> pen.addPoint((1, 2), "line", False)
+    >>> next(v)
+    ('addPoint', ((1, 2), 'line', False, None), {})
+    >>> pen.addComponent("a", (2, 0, 0, 2, 10, -10), identifier="0001")
+    >>> next(v)
+    ('addComponent', ('a', (2, 0, 0, 2, 10, -10)), {'identifier': '0001'})
+    >>> pen.endPath()
+    >>> next(v)
+    ('endPath', (), {})
+    """
+
+    def __init__(self, outPointPen):
+        self._outPen = outPointPen
+
+    def beginPath(self, **kwargs):
+        self._outPen.beginPath(**kwargs)
+
+    def endPath(self):
+        self._outPen.endPath()
+
+    def addPoint(self, pt, segmentType=None, smooth=False, name=None, **kwargs):
+        self._outPen.addPoint(pt, segmentType, smooth, name, **kwargs)

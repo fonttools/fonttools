@@ -1,5 +1,3 @@
-from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
 from fontTools.pens.t2CharStringPen import T2CharStringPen
 import unittest
 
@@ -8,16 +6,12 @@ class T2CharStringPenTest(unittest.TestCase):
 
     def __init__(self, methodName):
         unittest.TestCase.__init__(self, methodName)
-        # Python 3 renamed assertRaisesRegexp to assertRaisesRegex,
-        # and fires deprecation warnings if a program uses the old name.
-        if not hasattr(self, "assertRaisesRegex"):
-            self.assertRaisesRegex = self.assertRaisesRegexp
 
     def assertAlmostEqualProgram(self, expected, actual):
         self.assertEqual(len(expected), len(actual))
         for i1, i2 in zip(expected, actual):
-            if isinstance(i1, basestring):
-                self.assertIsInstance(i2, basestring)
+            if isinstance(i1, str):
+                self.assertIsInstance(i2, str)
                 self.assertEqual(i1, i2)
             else:
                 self.assertAlmostEqual(i1, i2)
@@ -142,14 +136,14 @@ class T2CharStringPenTest(unittest.TestCase):
         pen = T2CharStringPen(100.1, {}, roundTolerance=0.5)
         pen.moveTo((0, 0))
         pen.curveTo((10.1, 0.1), (19.9, 9.9), (20.49, 20.49))
-        pen.curveTo((20.49, 30.49), (9.9, 39.9), (0.1, 40.1))
+        pen.curveTo((20.49, 30.5), (9.9, 39.9), (0.1, 40.1))
         pen.closePath()
         charstring = pen.getCharString(None, None)
 
         self.assertEqual(
             [100,
              0, 'hmoveto',
-             10, 10, 10, 10, 10, -10, 10, -10, 'hvcurveto',
+             10, 10, 10, 10, 11, -10, 9, -10, 'hvcurveto',
              'endchar'],
             charstring.program)
 

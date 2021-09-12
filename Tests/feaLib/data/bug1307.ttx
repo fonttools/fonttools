@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont>
+
+  <GSUB>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=2 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=2 -->
+            <FeatureIndex index="0" value="4"/>
+            <FeatureIndex index="1" value="6"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=2 -->
+          <LangSysRecord index="0">
+            <LangSysTag value="ABC "/>
+            <LangSys>
+              <ReqFeatureIndex value="65535"/>
+              <!-- FeatureCount=2 -->
+              <FeatureIndex index="0" value="0"/>
+              <FeatureIndex index="1" value="6"/>
+            </LangSys>
+          </LangSysRecord>
+          <LangSysRecord index="1">
+            <LangSysTag value="FRE "/>
+            <LangSys>
+              <ReqFeatureIndex value="65535"/>
+              <!-- FeatureCount=2 -->
+              <FeatureIndex index="0" value="2"/>
+              <FeatureIndex index="1" value="6"/>
+            </LangSys>
+          </LangSysRecord>
+        </Script>
+      </ScriptRecord>
+      <ScriptRecord index="1">
+        <ScriptTag value="latn"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=2 -->
+            <FeatureIndex index="0" value="5"/>
+            <FeatureIndex index="1" value="6"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=3 -->
+          <LangSysRecord index="0">
+            <LangSysTag value="ABC "/>
+            <LangSys>
+              <ReqFeatureIndex value="65535"/>
+              <!-- FeatureCount=2 -->
+              <FeatureIndex index="0" value="0"/>
+              <FeatureIndex index="1" value="6"/>
+            </LangSys>
+          </LangSysRecord>
+          <LangSysRecord index="1">
+            <LangSysTag value="DEF "/>
+            <LangSys>
+              <ReqFeatureIndex value="65535"/>
+              <!-- FeatureCount=1 -->
+              <FeatureIndex index="0" value="1"/>
+            </LangSys>
+          </LangSysRecord>
+          <LangSysRecord index="2">
+            <LangSysTag value="FRE "/>
+            <LangSys>
+              <ReqFeatureIndex value="65535"/>
+              <!-- FeatureCount=1 -->
+              <FeatureIndex index="0" value="3"/>
+            </LangSys>
+          </LangSysRecord>
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=7 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="liga"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="1"/>
+        </Feature>
+      </FeatureRecord>
+      <FeatureRecord index="1">
+        <FeatureTag value="liga"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="8"/>
+        </Feature>
+      </FeatureRecord>
+      <FeatureRecord index="2">
+        <FeatureTag value="liga"/>
+        <Feature>
+          <!-- LookupCount=4 -->
+          <LookupListIndex index="0" value="1"/>
+          <LookupListIndex index="1" value="2"/>
+          <LookupListIndex index="2" value="3"/>
+          <LookupListIndex index="3" value="4"/>
+        </Feature>
+      </FeatureRecord>
+      <FeatureRecord index="3">
+        <FeatureTag value="liga"/>
+        <Feature>
+          <!-- LookupCount=4 -->
+          <LookupListIndex index="0" value="1"/>
+          <LookupListIndex index="1" value="5"/>
+          <LookupListIndex index="2" value="6"/>
+          <LookupListIndex index="3" value="7"/>
+        </Feature>
+      </FeatureRecord>
+      <FeatureRecord index="4">
+        <FeatureTag value="liga"/>
+        <Feature>
+          <!-- LookupCount=3 -->
+          <LookupListIndex index="0" value="1"/>
+          <LookupListIndex index="1" value="2"/>
+          <LookupListIndex index="2" value="3"/>
+        </Feature>
+      </FeatureRecord>
+      <FeatureRecord index="5">
+        <FeatureTag value="liga"/>
+        <Feature>
+          <!-- LookupCount=3 -->
+          <LookupListIndex index="0" value="1"/>
+          <LookupListIndex index="1" value="5"/>
+          <LookupListIndex index="2" value="6"/>
+        </Feature>
+      </FeatureRecord>
+      <FeatureRecord index="6">
+        <FeatureTag value="smcp"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="0"/>
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=9 -->
+      <Lookup index="0">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SingleSubst index="0">
+          <Substitution in="a" out="A"/>
+        </SingleSubst>
+      </Lookup>
+      <Lookup index="1">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SingleSubst index="0">
+          <Substitution in="b" out="B"/>
+        </SingleSubst>
+      </Lookup>
+      <Lookup index="2">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SingleSubst index="0">
+          <Substitution in="c" out="C"/>
+        </SingleSubst>
+      </Lookup>
+      <Lookup index="3">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SingleSubst index="0">
+          <Substitution in="d" out="D"/>
+        </SingleSubst>
+      </Lookup>
+      <Lookup index="4">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SingleSubst index="0">
+          <Substitution in="e" out="E"/>
+        </SingleSubst>
+      </Lookup>
+      <Lookup index="5">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SingleSubst index="0">
+          <Substitution in="f" out="F"/>
+        </SingleSubst>
+      </Lookup>
+      <Lookup index="6">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SingleSubst index="0">
+          <Substitution in="g" out="G"/>
+        </SingleSubst>
+      </Lookup>
+      <Lookup index="7">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SingleSubst index="0">
+          <Substitution in="h" out="H"/>
+        </SingleSubst>
+      </Lookup>
+      <Lookup index="8">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SingleSubst index="0">
+          <Substitution in="i" out="I"/>
+        </SingleSubst>
+      </Lookup>
+    </LookupList>
+  </GSUB>
+
+</ttFont>

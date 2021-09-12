@@ -1,8 +1,8 @@
-from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import bytechr, byteord, strjoin
 from fontTools.misc import sstruct
 from . import DefaultTable
 import array
+from collections.abc import Mapping
 
 hdmxHeaderFormat = """
 	>   # big endian!
@@ -10,11 +10,6 @@ hdmxHeaderFormat = """
 	numRecords:	H
 	recordSize:	l
 """
-
-try:
-	from collections.abc import Mapping
-except:
-	from UserDict import DictMixin as Mapping
 
 class _GlyphnamedList(Mapping):
 

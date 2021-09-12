@@ -1,16 +1,11 @@
-from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
+from fontTools.misc.fixedTools import floatToFixedToStr
 from fontTools.misc.textTools import safeEval
-from itertools import *
+# from itertools import *
 from functools import partial
 from . import DefaultTable
 from . import grUtils
-import struct, operator, warnings
-try:
-    import lz4
-except: 
-    lz4 = None
+import struct
 
 
 Glat_format_0 = """
@@ -73,6 +68,7 @@ class table_G__l_a_t(DefaultTable.DefaultTable):
 
     def decompile(self, data, ttFont):
         sstruct.unpack2(Glat_format_0, data, self)
+        self.version = float(floatToFixedToStr(self.version, precisionBits=16))
         if self.version <= 1.9:
             decoder = partial(self.decompileAttributes12,fmt=Glat_format_1_entry)
         elif self.version <= 2.9:   
@@ -139,11 +135,11 @@ class table_G__l_a_t(DefaultTable.DefaultTable):
         return data
 
     def compileAttributes12(self, attrs, fmt):
-        data = []
+        data = b""
         for e in grUtils.entries(attrs):
-            data.extend(sstruct.pack(fmt, {'attNum' : e[0], 'num' : e[1]}))
-            data.extend(struct.pack(('>%dh' % len(e[2])), *e[2]))
-        return "".join(data)
+            data += sstruct.pack(fmt, {'attNum' : e[0], 'num' : e[1]}) + \
+                    struct.pack(('>%dh' % len(e[2])), *e[2])
+        return data
     
     def compileAttributes3(self, attrs):
         if self.hasOctaboxes:
@@ -168,7 +164,7 @@ class table_G__l_a_t(DefaultTable.DefaultTable):
                 vals = {}
                 for k in names:
                     if k == 'subboxBitmap': continue
-                    vals[k] = "{:.3f}%".format(getattr(o, k) * 100. / 256)
+                    vals[k] = "{:.3f}%".format(getattr(o, k) * 100. / 255)
                 vals['bitmap'] = "{:0X}".format(o.subboxBitmap)
                 writer.begintag('octaboxes', **vals)
                 writer.newline()
@@ -176,7 +172,7 @@ class table_G__l_a_t(DefaultTable.DefaultTable):
                 for s in o.subboxes:
                     vals = {}
                     for k in names:
-                        vals[k] = "{:.3f}%".format(getattr(s, k) * 100. / 256)
+                        vals[k] = "{:.3f}%".format(getattr(s, k) * 100. / 255)
                     writer.simpletag('octabox', **vals)
                     writer.newline()
                 writer.endtag('octaboxes')
@@ -190,6 +186,7 @@ class table_G__l_a_t(DefaultTable.DefaultTable):
     def fromXML(self, name, attrs, content, ttFont):
         if name == 'version' :
             self.version = float(safeEval(attrs['version']))
+            self.scheme = int(safeEval(attrs['compressionScheme']))
         if name != 'glyph' : return
         if not hasattr(self, 'attributes'):
             self.attributes = {}
@@ -209,13 +206,13 @@ class table_G__l_a_t(DefaultTable.DefaultTable):
                 o.subboxes = []
                 del attrs['bitmap']
                 for k, v in attrs.items():
-                    setattr(o, k, int(float(v[:-1]) * 256. / 100. + 0.5))
+                    setattr(o, k, int(float(v[:-1]) * 255. / 100. + 0.5))
                 for element in subcontent:
                     if not isinstance(element, tuple): continue
                     (tag, attrs, subcontent) = element
                     so = _Object()
                     for k, v in attrs.items():
-                        setattr(so, k, int(float(v[:-1]) * 256. / 100. + 0.5))
+                        setattr(so, k, int(float(v[:-1]) * 255. / 100. + 0.5))
                     o.subboxes.append(so)
                 attributes.octabox = o
         self.attributes[gname] = attributes

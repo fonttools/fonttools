@@ -1,5 +1,3 @@
-from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
 from fontTools.misc.fixedTools import (
@@ -34,13 +32,26 @@ class table__h_h_e_a(DefaultTable.DefaultTable):
 
 	# Note: Keep in sync with table__v_h_e_a
 
-	dependencies = ['hmtx', 'glyf', 'CFF ']
+	dependencies = ['hmtx', 'glyf', 'CFF ', 'CFF2']
+
+	# OpenType spec renamed these, add aliases for compatibility
+	@property
+	def ascender(self): return self.ascent
+
+	@ascender.setter
+	def ascender(self,value): self.ascent = value
+
+	@property
+	def descender(self): return self.descent
+
+	@descender.setter
+	def descender(self,value): self.descent = value
 
 	def decompile(self, data, ttFont):
 		sstruct.unpack(hheaFormat, data, self)
 
 	def compile(self, ttFont):
-		if ttFont.recalcBBoxes and (ttFont.isLoaded('glyf') or ttFont.isLoaded('CFF ')):
+		if ttFont.recalcBBoxes and (ttFont.isLoaded('glyf') or ttFont.isLoaded('CFF ') or ttFont.isLoaded('CFF2')):
 			self.recalc(ttFont)
 		self.tableVersion = fi2ve(self.tableVersion)
 		return sstruct.pack(hheaFormat, self)
@@ -62,11 +73,15 @@ class table__h_h_e_a(DefaultTable.DefaultTable):
 					# Calculate those.
 					g.recalcBounds(glyfTable)
 				boundsWidthDict[name] = g.xMax - g.xMin
-		elif 'CFF ' in ttFont:
-			topDict = ttFont['CFF '].cff.topDictIndex[0]
+		elif 'CFF ' in ttFont or 'CFF2' in ttFont:
+			if 'CFF ' in ttFont:
+				topDict = ttFont['CFF '].cff.topDictIndex[0]
+			else:
+				topDict = ttFont['CFF2'].cff.topDictIndex[0]
+			charStrings = topDict.CharStrings
 			for name in ttFont.getGlyphOrder():
-				cs = topDict.CharStrings[name]
-				bounds = cs.calcBounds()
+				cs = charStrings[name]
+				bounds = cs.calcBounds(charStrings)
 				if bounds is not None:
 					boundsWidthDict[name] = int(
 						math.ceil(bounds[2]) - math.floor(bounds[0]))

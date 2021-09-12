@@ -1,10 +1,9 @@
-# -*- coding: utf-8 -*-
-from __future__ import print_function, division, absolute_import, unicode_literals
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import bytesjoin, tostr
 from fontTools.misc import sstruct
 from fontTools.misc.loggingTools import CapturingLogHandler
 from fontTools.misc.testTools import FakeFont
 from fontTools.misc.xmlWriter import XMLWriter
+from io import BytesIO
 import struct
 import unittest
 from fontTools.ttLib import newTable
@@ -54,6 +53,26 @@ class NameTableTest(unittest.TestCase):
 		with self.assertRaises(TypeError):
 			table.setName(1.000, 5, 1, 0, 0)
 
+	def test_names_sort_bytes_str(self):
+		# Corner case: If a user appends a name record directly to `names`, the
+		# `__lt__` method on NameRecord may run into duplicate name records where
+		# one `string` is a str and the other one bytes, leading to an exception.
+		table = table__n_a_m_e()
+		table.names = [
+			makeName("Test", 25, 3, 1, 0x409),
+			makeName("Test".encode("utf-16be"), 25, 3, 1, 0x409),
+		]
+		table.compile(None)
+
+	def test_names_sort_bytes_str_encoding_error(self):
+		table = table__n_a_m_e()
+		table.names = [
+			makeName("Test寬", 25, 1, 0, 0),
+			makeName("Test鬆鬆", 25, 1, 0, 0),
+		]
+		with self.assertRaises(TypeError):
+			table.names.sort()
+
 	def test_addName(self):
 		table = table__n_a_m_e()
 		nameIDs = []
@@ -76,6 +95,111 @@ class NameTableTest(unittest.TestCase):
 		with self.assertRaises(TypeError):
 			table.addName(b"abc")  # must be unicode string
 
+	def test_removeNames(self):
+		table = table__n_a_m_e()
+		table.setName("Regular", 2, 1, 0, 0)
+		table.setName("Regular", 2, 3, 1, 0x409)
+		table.removeNames(nameID=2)
+		self.assertEqual(table.names, [])
+
+		table = table__n_a_m_e()
+		table.setName("FamilyName", 1, 1, 0, 0)
+		table.setName("Regular", 2, 1, 0, 0)
+		table.setName("FamilyName", 1, 3, 1, 0x409)
+		table.setName("Regular", 2, 3, 1, 0x409)
+		table.removeNames(platformID=1)
+		self.assertEqual(len(table.names), 2)
+		self.assertIsNone(table.getName(1, 1, 0, 0))
+		self.assertIsNone(table.getName(2, 1, 0, 0))
+		rec1 = table.getName(1, 3, 1, 0x409)
+		self.assertEqual(str(rec1), "FamilyName")
+		rec2 = table.getName(2, 3, 1, 0x409)
+		self.assertEqual(str(rec2), "Regular")
+
+		table = table__n_a_m_e()
+		table.setName("FamilyName", 1, 1, 0, 0)
+		table.setName("Regular", 2, 1, 0, 0)
+		table.removeNames(nameID=1)
+		self.assertEqual(len(table.names), 1)
+		self.assertIsNone(table.getName(1, 1, 0, 0))
+		rec = table.getName(2, 1, 0, 0)
+		self.assertEqual(str(rec), "Regular")
+
+		table = table__n_a_m_e()
+		table.setName("FamilyName", 1, 1, 0, 0)
+		table.setName("Regular", 2, 1, 0, 0)
+		table.removeNames(2, 1, 0, 0)
+		self.assertEqual(len(table.names), 1)
+		self.assertIsNone(table.getName(2, 1, 0, 0))
+		rec = table.getName(1, 1, 0, 0)
+		self.assertEqual(str(rec), "FamilyName")
+
+		table = table__n_a_m_e()
+		table.setName("FamilyName", 1, 1, 0, 0)
+		table.setName("Regular", 2, 1, 0, 0)
+		table.removeNames()
+		self.assertEqual(len(table.names), 2)
+		rec1 = table.getName(1, 1, 0, 0)
+		self.assertEqual(str(rec1), "FamilyName")
+		rec2 = table.getName(2, 1, 0, 0)
+		self.assertEqual(str(rec2), "Regular")
+
+	@staticmethod
+	def _get_test_names():
+		names = {
+			"en": "Width",
+			"de-CH": "Breite",
+			"gsw-LI": "Bräiti",
+		}
+		namesSubSet = names.copy()
+		del namesSubSet["gsw-LI"]
+		namesSuperSet = names.copy()
+		namesSuperSet["nl"] = "Breedte"
+		return names, namesSubSet, namesSuperSet
+
+	def test_findMultilingualName(self):
+		table = table__n_a_m_e()
+		names, namesSubSet, namesSuperSet = self._get_test_names()
+		nameID = table.addMultilingualName(names)
+		assert nameID is not None
+		self.assertEqual(nameID, table.findMultilingualName(names))
+		self.assertEqual(nameID, table.findMultilingualName(namesSubSet))
+		self.assertEqual(None, table.findMultilingualName(namesSuperSet))
+
+	def test_findMultilingualName_compiled(self):
+		table = table__n_a_m_e()
+		names, namesSubSet, namesSuperSet = self._get_test_names()
+		nameID = table.addMultilingualName(names)
+		assert nameID is not None
+		# After compile/decompile, name.string is a bytes sequence, which
+		# findMultilingualName() should also handle
+		data = table.compile(None)
+		table = table__n_a_m_e()
+		table.decompile(data, None)
+		self.assertEqual(nameID, table.findMultilingualName(names))
+		self.assertEqual(nameID, table.findMultilingualName(namesSubSet))
+		self.assertEqual(None, table.findMultilingualName(namesSuperSet))
+
+	def test_addMultilingualNameReuse(self):
+		table = table__n_a_m_e()
+		names, namesSubSet, namesSuperSet = self._get_test_names()
+		nameID = table.addMultilingualName(names)
+		assert nameID is not None
+		self.assertEqual(nameID, table.addMultilingualName(names))
+		self.assertEqual(nameID, table.addMultilingualName(namesSubSet))
+		self.assertNotEqual(None, table.addMultilingualName(namesSuperSet))
+
+	def test_findMultilingualNameNoMac(self):
+		table = table__n_a_m_e()
+		names, namesSubSet, namesSuperSet = self._get_test_names()
+		nameID = table.addMultilingualName(names, mac=False)
+		assert nameID is not None
+		self.assertEqual(nameID, table.findMultilingualName(names, mac=False))
+		self.assertEqual(None, table.findMultilingualName(names))
+		self.assertEqual(nameID, table.findMultilingualName(namesSubSet, mac=False))
+		self.assertEqual(None, table.findMultilingualName(namesSubSet))
+		self.assertEqual(None, table.findMultilingualName(namesSuperSet))
+
 	def test_addMultilingualName(self):
 		# Microsoft Windows has language codes for “English” (en)
 		# and for “Standard German as used in Switzerland” (de-CH).
@@ -93,12 +217,12 @@ class NameTableTest(unittest.TestCase):
 				"en": "Width",
 				"de-CH": "Breite",
 				"gsw-LI": "Bräiti",
-			}, ttFont=font)
+			}, ttFont=font, mac=False)
 			self.assertEqual(widthID, 256)
 			xHeightID = nameTable.addMultilingualName({
 				"en": "X-Height",
 				"gsw-LI": "X-Hööchi"
-			}, ttFont=font)
+			}, ttFont=font, mac=False)
 			self.assertEqual(xHeightID, 257)
 		captor.assertRegex("cannot add Windows name in language gsw-LI")
 		self.assertEqual(names(nameTable), [
@@ -170,8 +294,19 @@ class NameTableTest(unittest.TestCase):
 			nameTable.addMultilingualName({"en": "A", "la": "ⱾƤℚⱤ"})
 		captor.assertRegex("cannot store language la into 'ltag' table")
 
+	def test_addMultilingualName_minNameID(self):
+		table = table__n_a_m_e()
+		names, namesSubSet, namesSuperSet = self._get_test_names()
+		nameID = table.addMultilingualName(names, nameID=2)
+		self.assertEqual(nameID, 2)
+		nameID = table.addMultilingualName(names)
+		self.assertEqual(nameID, 2)
+		nameID = table.addMultilingualName(names, minNameID=256)
+		self.assertGreaterEqual(nameID, 256)
+		self.assertEqual(nameID, table.findMultilingualName(names, minNameID=256))
+
 	def test_decompile_badOffset(self):
-                # https://github.com/behdad/fonttools/issues/525
+                # https://github.com/fonttools/fonttools/issues/525
 		table = table__n_a_m_e()
 		badRecord = {
 			"platformID": 1,
@@ -182,7 +317,7 @@ class NameTableTest(unittest.TestCase):
 			"offset": 8765  # out of range
 		}
 		data = bytesjoin([
-                        struct.pack(">HHH", 1, 1, 6 + nameRecordSize),
+                        struct.pack(tostr(">HHH"), 1, 1, 6 + nameRecordSize),
                         sstruct.pack(nameRecordFormat, badRecord)])
 		table.decompile(data, ttFont=None)
 		self.assertEqual(table.names, [])
@@ -203,12 +338,17 @@ class NameRecordTest(unittest.TestCase):
 	def test_toUnicode_macromanian(self):
 		name = makeName(b"Foo Italic\xfb", 222, 1, 0, 37)  # Mac Romanian
 		self.assertEqual("mac_romanian", name.getEncoding())
-		self.assertEqual("Foo Italic"+unichr(0x02DA), name.toUnicode())
+		self.assertEqual("Foo Italic"+chr(0x02DA), name.toUnicode())
 
 	def test_toUnicode_UnicodeDecodeError(self):
 		name = makeName(b"\1", 111, 0, 2, 7)
 		self.assertEqual("utf_16_be", name.getEncoding())
 		self.assertRaises(UnicodeDecodeError, name.toUnicode)
+
+	def test_toUnicode_singleChar(self):
+		# https://github.com/fonttools/fonttools/issues/1997
+		name = makeName("A", 256, 3, 1, 0x409)
+		self.assertEqual(name.toUnicode(), "A")
 
 	def toXML(self, name):
 		writer = XMLWriter(BytesIO())
@@ -290,7 +430,19 @@ class NameRecordTest(unittest.TestCase):
 
 	def test_extended_mac_encodings(self):
 		name = makeName(b'\xfe', 123, 1, 1, 0) # Mac Japanese
-		self.assertEqual(name.toUnicode(), unichr(0x2122))
+		self.assertEqual(name.toUnicode(), chr(0x2122))
+
+	def test_extended_mac_encodings_errors(self):
+		s = "汉仪彩云体简"
+		name = makeName(s.encode("x_mac_simp_chinese_ttx"), 123, 1, 25, 0)
+		# first check we round-trip with 'strict'
+		self.assertEqual(name.toUnicode(errors="strict"), s)
+
+		# append an incomplete invalid sequence and check that we handle
+		# errors with the requested error handler
+		name.string += b"\xba"
+		self.assertEqual(name.toUnicode(errors="backslashreplace"), s + "\\xba")
+		self.assertEqual(name.toUnicode(errors="replace"), s + "�")
 
 	def test_extended_unknown(self):
 		name = makeName(b'\xfe', 123, 10, 11, 12)

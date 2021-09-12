@@ -1,12 +1,11 @@
-from __future__ import print_function, division, absolute_import
-from __future__ import unicode_literals
 from fontTools.feaLib.error import FeatureLibError
+from fontTools.feaLib.location import FeatureLibLocation
 import unittest
 
 
 class FeatureLibErrorTest(unittest.TestCase):
     def test_str(self):
-        err = FeatureLibError("Squeak!", ("foo.fea", 23, 42))
+        err = FeatureLibError("Squeak!", FeatureLibLocation("foo.fea", 23, 42))
         self.assertEqual(str(err), "foo.fea:23:42: Squeak!")
 
     def test_str_nolocation(self):

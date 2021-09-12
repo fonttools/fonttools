@@ -1,6 +1,5 @@
-from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
+from fontTools.misc.fixedTools import floatToFixedToStr
 from fontTools.misc.textTools import safeEval
 from . import DefaultTable
 from . import grUtils
@@ -19,6 +18,7 @@ class table_S__i_l_l(DefaultTable.DefaultTable):
 
     def decompile(self, data, ttFont):
         (_, data) = sstruct.unpack2(Sill_hdr, data, self)
+        self.version = float(floatToFixedToStr(self.version, precisionBits=16))
         numLangs, = struct.unpack('>H', data[:2])
         data = data[8:]
         maxsetting = 0
@@ -28,7 +28,7 @@ class table_S__i_l_l(DefaultTable.DefaultTable):
                                                         data[i * 8:(i+1) * 8])
             offset = int(offset / 8) - (numLangs + 1)
             langcode = langcode.replace(b'\000', b'')
-            langinfo.append((langcode, numsettings, offset))
+            langinfo.append((langcode.decode("utf-8"), numsettings, offset))
             maxsetting = max(maxsetting, offset + numsettings)
         data = data[numLangs * 8:]
         finfo = []
@@ -42,14 +42,15 @@ class table_S__i_l_l(DefaultTable.DefaultTable):
                 self.langs[c].append(finfo[i])
 
     def compile(self, ttFont):
-        ldat = ""
-        fdat = ""
-        offset = 0
+        ldat = b""
+        fdat = b""
+        offset = len(self.langs)
         for c, inf in sorted(self.langs.items()):
-            ldat += struct.pack(">4sHH", c.encode('utf8'), len(inf), 8 * (offset + len(self.langs) + 1))
+            ldat += struct.pack(">4sHH", c.encode('utf8'), len(inf), 8 * offset + 20)
             for fid, val in inf:
                 fdat += struct.pack(">LHH", fid, val, 0)
             offset += len(inf)
+        ldat += struct.pack(">LHH", 0x80808080, 0, 8 * offset + 20)
         return sstruct.pack(Sill_hdr, self) + grUtils.bininfo(len(self.langs)) + \
                 ldat + fdat
 

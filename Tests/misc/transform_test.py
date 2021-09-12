@@ -1,5 +1,3 @@
-from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
 from fontTools.misc.transform import Transform, Identity, Offset, Scale
 import math
 import pytest
@@ -24,6 +22,14 @@ class TransformTest(object):
         assert t.transformPoints(
             [(0, 0), (0, 100), (100, 100), (100, 0)]
         ) == [(0, 0), (0, 300), (200, 300), (200, 0)]
+
+    def test_transformVector(self):
+        t = Transform(2, 0, 0, 3, -10, 30)
+        assert t.transformVector((-4, 5)) == (-8, 15)
+
+    def test_transformVectors(self):
+        t = Transform(2, 0, 0, 3, -10, 30)
+        assert t.transformVectors([(-4, 5), (-6, 7)]) == [(-8, 15), (-12, 21)]
 
     def test_translate(self):
         t = Transform()

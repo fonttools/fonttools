@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='utf-8'?>
+<designspace format="3">
+    <axes>
+        <axis default="368.0" maximum="1000.0" minimum="0.0" name="weight" tag="wght" />
+    </axes>
+    <rules processing="last">
+        <rule name="always">
+            <conditionset>
+            </conditionset>
+            <sub name="uni0024" with="uni0024.nostroke" />
+        </rule>
+    </rules>
+    <sources>
+        <source familyname="Test Family" filename="master_ufo/TestFamily-Master0.ufo" name="master_0" stylename="Master0">
+            <location>
+                <dimension name="weight" xvalue="0" />
+            </location>
+        </source>
+        <source familyname="Test Family" filename="master_ufo/TestFamily-Master1.ufo" name="master_1" stylename="Master1">
+            <lib copy="1" />
+            <groups copy="1" />
+            <info copy="1" />
+            <location>
+                <dimension name="weight" xvalue="368" />
+            </location>
+        </source>
+        <source familyname="Test Family" filename="master_ufo/TestFamily-Master3.ufo" name="master_3" stylename="Master3">
+            <location>
+                <dimension name="weight" xvalue="1000" />
+            </location>
+        </source>
+    </sources>
+</designspace>

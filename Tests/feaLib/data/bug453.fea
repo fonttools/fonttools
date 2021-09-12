@@ -1,11 +1,13 @@
-# https://github.com/behdad/fonttools/issues/453
+# https://github.com/fonttools/fonttools/issues/453
 feature mark {
     lookup mark1 {
         markClass [acute] <anchor 150 -10> @TOP_MARKS;
-        pos base [e] <anchor 250 450> mark @TOP_MARKS;
+        pos base [e]
+            <anchor 250 450> mark @TOP_MARKS;
     } mark1;
     lookup mark2 {
         markClass [acute] <anchor 150 -20> @TOP_MARKS_2;
-        pos base [e] <anchor 250 450> mark @TOP_MARKS_2;
+        pos base [e]
+            <anchor 250 450> mark @TOP_MARKS_2;
     } mark2;
 } mark;

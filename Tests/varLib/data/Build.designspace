@@ -4,6 +4,8 @@
         <axis default="368.0" maximum="1000.0" minimum="0.0" name="weight" tag="wght" />
         <axis default="0.0" maximum="100.0" minimum="0.0" name="contrast" tag="cntr">
             <labelname xml:lang="en">Contrast</labelname>
+            <labelname xml:lang="de">Kontrast</labelname>
+            <labelname xml:lang="fa">کنتراست</labelname>
         </axis>
     </axes>
     <sources>

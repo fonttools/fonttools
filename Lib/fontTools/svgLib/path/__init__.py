@@ -1,14 +1,9 @@
-from __future__ import (
-    print_function, division, absolute_import, unicode_literals)
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import tostr
 
 from fontTools.pens.transformPen import TransformPen
+from fontTools.misc import etree
 from .parser import parse_path
-
-try:
-    from xml.etree import cElementTree as ElementTree  # python 2
-except ImportError:  # pragma nocover
-    from xml.etree import ElementTree  # python 3
+from .shapes import PathBuilder
 
 
 __all__ = [tostr(s) for s in ("SVGPath", "parse_path")]
@@ -39,20 +34,29 @@ class SVGPath(object):
 
     def __init__(self, filename=None, transform=None):
         if filename is None:
-            self.root = ElementTree.ElementTree()
+            self.root = etree.ElementTree()
         else:
-            tree = ElementTree.parse(filename)
+            tree = etree.parse(filename)
             self.root = tree.getroot()
         self.transform = transform
 
     @classmethod
     def fromstring(cls, data, transform=None):
         self = cls(transform=transform)
-        self.root = ElementTree.fromstring(data)
+        self.root = etree.fromstring(data)
         return self
 
     def draw(self, pen):
         if self.transform:
             pen = TransformPen(pen, self.transform)
-        for el in self.root.findall(".//{http://www.w3.org/2000/svg}path[@d]"):
-            parse_path(el.get("d"), pen)
+        pb = PathBuilder()
+        # xpath | doesn't seem to reliable work so just walk it
+        for el in self.root.iter():
+            pb.add_path_from_element(el)
+        original_pen = pen
+        for path, transform in zip(pb.paths, pb.transforms):
+            if transform:
+                pen = TransformPen(original_pen, transform)
+            else:
+                pen = original_pen
+            parse_path(path, pen)

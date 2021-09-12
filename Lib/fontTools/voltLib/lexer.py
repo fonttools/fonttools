@@ -1,5 +1,3 @@
-from __future__ import print_function, division, absolute_import
-from __future__ import unicode_literals
 from fontTools.voltLib.error import VoltLibError
 
 class Lexer(object):
@@ -39,10 +37,13 @@ class Lexer(object):
             if token_type not in {Lexer.NEWLINE}:
                 return (token_type, token, location)
 
+    def location_(self):
+        column = self.pos_ - self.line_start_ + 1
+        return (self.filename_ or "<volt>", self.line_, column)
+
     def next_(self):
         self.scan_over_(Lexer.CHAR_WHITESPACE_)
-        column = self.pos_ - self.line_start_ + 1
-        location = (self.filename_, self.line_, column)
+        location = self.location_()
         start = self.pos_
         text = self.text_
         limit = len(text)

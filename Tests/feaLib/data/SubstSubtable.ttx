@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont>
+
+  <GSUB>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=1 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=1 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="test"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="0"/>
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=5 -->
+      <Lookup index="0">
+        <LookupType value="5"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=4 -->
+        <ContextSubst index="0" Format="3">
+          <!-- GlyphCount=1 -->
+          <!-- SubstCount=1 -->
+          <Coverage index="0">
+            <Glyph value="G"/>
+          </Coverage>
+          <SubstLookupRecord index="0">
+            <SequenceIndex value="0"/>
+            <LookupListIndex value="1"/>
+          </SubstLookupRecord>
+        </ContextSubst>
+        <ContextSubst index="1" Format="3">
+          <!-- GlyphCount=1 -->
+          <!-- SubstCount=1 -->
+          <Coverage index="0">
+            <Glyph value="H"/>
+          </Coverage>
+          <SubstLookupRecord index="0">
+            <SequenceIndex value="0"/>
+            <LookupListIndex value="2"/>
+          </SubstLookupRecord>
+        </ContextSubst>
+        <ContextSubst index="2" Format="3">
+          <!-- GlyphCount=1 -->
+          <!-- SubstCount=1 -->
+          <Coverage index="0">
+            <Glyph value="G"/>
+          </Coverage>
+          <SubstLookupRecord index="0">
+            <SequenceIndex value="0"/>
+            <LookupListIndex value="3"/>
+          </SubstLookupRecord>
+        </ContextSubst>
+        <ContextSubst index="3" Format="3">
+          <!-- GlyphCount=1 -->
+          <!-- SubstCount=1 -->
+          <Coverage index="0">
+            <Glyph value="H"/>
+          </Coverage>
+          <SubstLookupRecord index="0">
+            <SequenceIndex value="0"/>
+            <LookupListIndex value="4"/>
+          </SubstLookupRecord>
+        </ContextSubst>
+      </Lookup>
+      <Lookup index="1">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SingleSubst index="0">
+          <Substitution in="G" out="G.swash"/>
+        </SingleSubst>
+      </Lookup>
+      <Lookup index="2">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SingleSubst index="0">
+          <Substitution in="H" out="H.swash"/>
+        </SingleSubst>
+      </Lookup>
+      <Lookup index="3">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SingleSubst index="0">
+          <Substitution in="G" out="g"/>
+        </SingleSubst>
+      </Lookup>
+      <Lookup index="4">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SingleSubst index="0">
+          <Substitution in="H" out="H.swash"/>
+        </SingleSubst>
+      </Lookup>
+    </LookupList>
+  </GSUB>
+
+</ttFont>

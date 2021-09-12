@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="OTTO" ttLibVersion="3.41">
+
+  <CFF>
+    <major value="1"/>
+    <minor value="0"/>
+    <CFFFont name="LibertinusSerif-Regular">
+      <version value="6.8"/>
+      <Notice value="Copyright Â© 2012-2019 The Libertinus Project Authors."/>
+      <FullName value="Libertinus Serif Regular"/>
+      <FamilyName value="Libertinus Serif"/>
+      <Weight value="Regular"/>
+      <isFixedPitch value="0"/>
+      <ItalicAngle value="0"/>
+      <UnderlinePosition value="-98"/>
+      <UnderlineThickness value="40"/>
+      <PaintType value="0"/>
+      <CharstringType value="2"/>
+      <FontMatrix value="0.001 0 0 0.001 0 0"/>
+      <FontBBox value="-6275 -256 6171 1125"/>
+      <StrokeWidth value="0"/>
+      <!-- charset is dumped separately as the 'GlyphOrder' element -->
+      <Encoding name="StandardEncoding"/>
+      <Private>
+        <BlueValues value="-12 0 429 442 460 472 600 610 645 658 688 698"/>
+        <OtherBlues value="-238 -227"/>
+        <FamilyBlues value="-12 0 429 442 460 472 600 610 645 658 688 698"/>
+        <FamilyOtherBlues value="-238 -227"/>
+        <BlueScale value="0.0396"/>
+        <BlueShift value="6"/>
+        <BlueFuzz value="1"/>
+        <StdHW value="36"/>
+        <StdVW value="79"/>
+        <StemSnapH value="36"/>
+        <StemSnapV value="79 86"/>
+        <ForceBold value="0"/>
+        <LanguageGroup value="0"/>
+        <ExpansionFactor value="0.06"/>
+        <initialRandomSeed value="0"/>
+        <defaultWidthX value="0"/>
+        <nominalWidthX value="595"/>
+      </Private>
+      <CharStrings>
+        <CharString name=".notdef">
+          -95 endchar
+        </CharString>
+        <CharString name="Idieresis">
+          -298 -2 33 583 33 62 96 hstem
+          6 96 4 85 4 96 vstem
+          cntrmask 00011100
+          191 122 rmoveto
+          401 vlineto
+          0 83 17 5 70 3 6 6 0 21 -6 6 -44 -1 -47.5 -1 -38.5 0 -33.5 0 -48.5 1 -47 1 -6 -6 0 -21 6 -6 70 -3 17 -5 0 -83 rrcurveto
+          -401 vlineto
+          0 -83 -17 -5 -70 -3 -6 -6 0 -21 6 -6 45 1 48.7002 1 36.2998 0 35.59961 0 48.40039 -1 45 -1 6 6 0 21 -6 6 -70 3 -17 5 0 83 rrcurveto
+          4 635 rmoveto
+          -26 22 -22 26 26 22 22 26 26 -22 22 -26 -26 -22 -22 -26 vhcurveto
+          -189 hmoveto
+          -26 22 -22 26 26 22 22 26 26 -22 22 -26 -26 -22 -22 -26 vhcurveto
+          endchar
+        </CharString>
+      </CharStrings>
+    </CFFFont>
+
+    <GlobalSubrs>
+      <!-- The 'index' attribute is only for humans; it is ignored when parsed. -->
+    </GlobalSubrs>
+  </CFF>
+
+</ttFont>

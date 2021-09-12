@@ -1,0 +1,57 @@
+# The cvParameters block must precede any of the rules in the feature.
+# The ParamUILabelNameID entry may be omitted or repeated as often as needed.
+# The other NameID types may be omitted, or defined only once.
+# The NameID entries must be specified in the order listed below.
+
+# Following the set of NameID entries, a series of 24-bit Unicode values may be specified.
+# These provide Unicode values for the base glyphs referenced by the feature.
+# The developer may specify none, some, or all of the Unicode values for the base glyphs.
+# The Unicode value may be written with either decimal or hexadecimal notation.
+# The value must be preceded by '0x' if it is a hexadecimal value.
+
+# NOTE: The ParamUILabelNameID entries are used when one base glyph is mapped to more than
+# one variant; the font designer may then specify one ParamUILabelNameID for each variant, in
+# order to uniquely describe that variant. If any ParamUILabelNameID entries are specified,
+# the number of ParamUILabelNameID entries must match the number of variants for each base
+# glyph. If the Character Variant feature specifies more than one base glyph, then the set
+# of NameID entries in the parameter block will be used for each base glyph and its variants.
+feature cv01 {
+	cvParameters {
+		FeatUILabelNameID {
+#test-fea2fea: name "uilabel simple a";
+			name 3 1 0x0409 "uilabel simple a"; # English US
+#test-fea2fea: name 1 "uilabel simple a";
+			name 1 0 0 "uilabel simple a"; # Mac English
+		};
+		FeatUITooltipTextNameID {
+#test-fea2fea: name "tool tip simple a";
+			name 3 1 0x0409 "tool tip simple a"; # English US
+#test-fea2fea: name 1 "tool tip simple a";
+			name 1 0 0 "tool tip simple a"; # Mac English
+		};
+		SampleTextNameID {
+#test-fea2fea: name "sample text simple a";
+			name 3 1 0x0409 "sample text simple a"; # English US
+#test-fea2fea: name 1 "sample text simple a";
+			name 1 0 0 "sample text simple a"; # Mac English
+		};
+		ParamUILabelNameID {
+#test-fea2fea: name "param1 text simple a";
+			name 3 1 0x0409 "param1 text simple a"; # English US
+#test-fea2fea: name 1 "param1 text simple a";
+			name 1 0 0 "param1 text simple a"; # Mac English
+		};
+		ParamUILabelNameID {
+#test-fea2fea: name "param2 text simple a";
+			name 3 1 0x0409 "param2 text simple a"; # English US
+#test-fea2fea: name 1 "param2 text simple a";
+			name 1 0 0 "param2 text simple a"; # Mac English
+		};
+#test-fea2fea: Character 0xa;
+		Character 10;
+#test-fea2fea: Character 0x5dde;
+		Character 0x5DDE;
+	};
+# --- rules for this feature ---
+    sub A by B;
+} cv01;

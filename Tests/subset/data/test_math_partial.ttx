@@ -1,0 +1,391 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="OTTO" ttLibVersion="3.41">
+
+  <GlyphOrder>
+    <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
+    <GlyphID id="0" name=".notdef"/>
+    <GlyphID id="1" name="A"/>
+  </GlyphOrder>
+
+  <head>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="1.0"/>
+    <fontRevision value="1.10799"/>
+    <checkSumAdjustment value="0x266835f6"/>
+    <magicNumber value="0x5f0f3cf5"/>
+    <flags value="00000000 00001011"/>
+    <unitsPerEm value="1000"/>
+    <created value="Sun Jan 10 17:35:12 2016"/>
+    <modified value="Sat Jun  8 23:59:34 2019"/>
+    <xMin value="-761"/>
+    <yMin value="-509"/>
+    <xMax value="3000"/>
+    <yMax value="2566"/>
+    <macStyle value="00000000 00000000"/>
+    <lowestRecPPEM value="8"/>
+    <fontDirectionHint value="2"/>
+    <indexToLocFormat value="0"/>
+    <glyphDataFormat value="0"/>
+  </head>
+
+  <hhea>
+    <tableVersion value="0x00010000"/>
+    <ascent value="750"/>
+    <descent value="-250"/>
+    <lineGap value="0"/>
+    <advanceWidthMax value="3000"/>
+    <minLeftSideBearing value="-761"/>
+    <minRightSideBearing value="-365"/>
+    <xMaxExtent value="3000"/>
+    <caretSlopeRise value="1"/>
+    <caretSlopeRun value="0"/>
+    <caretOffset value="0"/>
+    <reserved0 value="0"/>
+    <reserved1 value="0"/>
+    <reserved2 value="0"/>
+    <reserved3 value="0"/>
+    <metricDataFormat value="0"/>
+    <numberOfHMetrics value="2"/>
+  </hhea>
+
+  <maxp>
+    <tableVersion value="0x5000"/>
+    <numGlyphs value="2"/>
+  </maxp>
+
+  <OS_2>
+    <!-- The fields 'usFirstCharIndex' and 'usLastCharIndex'
+         will be recalculated by the compiler -->
+    <version value="4"/>
+    <xAvgCharWidth value="666"/>
+    <usWeightClass value="400"/>
+    <usWidthClass value="5"/>
+    <fsType value="00000000 00000000"/>
+    <ySubscriptXSize value="500"/>
+    <ySubscriptYSize value="500"/>
+    <ySubscriptXOffset value="0"/>
+    <ySubscriptYOffset value="250"/>
+    <ySuperscriptXSize value="500"/>
+    <ySuperscriptYSize value="500"/>
+    <ySuperscriptXOffset value="0"/>
+    <ySuperscriptYOffset value="500"/>
+    <yStrikeoutSize value="50"/>
+    <yStrikeoutPosition value="306"/>
+    <sFamilyClass value="0"/>
+    <panose>
+      <bFamilyType value="2"/>
+      <bSerifStyle value="0"/>
+      <bWeight value="5"/>
+      <bProportion value="3"/>
+      <bContrast value="0"/>
+      <bStrokeVariation value="0"/>
+      <bArmStyle value="0"/>
+      <bLetterForm value="0"/>
+      <bMidline value="0"/>
+      <bXHeight value="0"/>
+    </panose>
+    <ulUnicodeRange1 value="00000000 00000000 00000000 00000001"/>
+    <ulUnicodeRange2 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange3 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange4 value="00000000 00000000 00000000 00000000"/>
+    <achVendID value="STIX"/>
+    <fsSelection value="00000000 11000000"/>
+    <usFirstCharIndex value="65"/>
+    <usLastCharIndex value="65"/>
+    <sTypoAscender value="750"/>
+    <sTypoDescender value="-250"/>
+    <sTypoLineGap value="0"/>
+    <usWinAscent value="2598"/>
+    <usWinDescent value="918"/>
+    <ulCodePageRange1 value="01100000 00000000 00000000 10011111"/>
+    <ulCodePageRange2 value="11011111 11010111 00000000 00000000"/>
+    <sxHeight value="450"/>
+    <sCapHeight value="662"/>
+    <usDefaultChar value="0"/>
+    <usBreakChar value="32"/>
+    <usMaxContext value="2"/>
+  </OS_2>
+
+  <name>
+    <namerecord nameID="1" platformID="3" platEncID="1" langID="0x409">
+      XITS Math
+    </namerecord>
+    <namerecord nameID="2" platformID="3" platEncID="1" langID="0x409">
+      Regular
+    </namerecord>
+  </name>
+
+  <cmap>
+    <tableVersion version="0"/>
+    <cmap_format_4 platformID="0" platEncID="3" language="0">
+      <map code="0x41" name="A"/><!-- LATIN CAPITAL LETTER A -->
+    </cmap_format_4>
+    <cmap_format_12 platformID="0" platEncID="4" format="12" reserved="0" length="28" language="0" nGroups="1">
+      <map code="0x41" name="A"/><!-- LATIN CAPITAL LETTER A -->
+    </cmap_format_12>
+    <cmap_format_4 platformID="3" platEncID="1" language="0">
+      <map code="0x41" name="A"/><!-- LATIN CAPITAL LETTER A -->
+    </cmap_format_4>
+    <cmap_format_12 platformID="3" platEncID="10" format="12" reserved="0" length="28" language="0" nGroups="1">
+      <map code="0x41" name="A"/><!-- LATIN CAPITAL LETTER A -->
+    </cmap_format_12>
+  </cmap>
+
+  <post>
+    <formatType value="3.0"/>
+    <italicAngle value="0.0"/>
+    <underlinePosition value="-75"/>
+    <underlineThickness value="50"/>
+    <isFixedPitch value="0"/>
+    <minMemType42 value="0"/>
+    <maxMemType42 value="0"/>
+    <minMemType1 value="0"/>
+    <maxMemType1 value="0"/>
+  </post>
+
+  <CFF>
+    <major value="1"/>
+    <minor value="0"/>
+    <CFFFont name="XITSMath">
+      <version value="1.108"/>
+      <Notice value="Copyright (c) 2001-2011 by the STI Pub Companies, consisting of the American Chemical Society, the American Institute of Physics, the American Mathematical Society, the American Physical Society, Elsevier, Inc., and The Institute of Electrical and Electronic Engineers, Inc.  Portions copyright (c) 1998-2003 by MicroPress, Inc.  Portions copyright (c) 1990 by Elsevier, Inc.  Portions copyright (c) 2009-2012 by Khaled Hosny.  All rights reserved. "/>
+      <FullName value="XITS Math"/>
+      <FamilyName value="XITS Math"/>
+      <Weight value="Regular"/>
+      <isFixedPitch value="0"/>
+      <ItalicAngle value="0"/>
+      <UnderlinePosition value="-50"/>
+      <UnderlineThickness value="50"/>
+      <PaintType value="0"/>
+      <CharstringType value="2"/>
+      <FontMatrix value="0.001 0 0 0.001 0 0"/>
+      <FontBBox value="-761 -509 3000 2566"/>
+      <StrokeWidth value="0"/>
+      <!-- charset is dumped separately as the 'GlyphOrder' element -->
+      <Encoding name="StandardEncoding"/>
+      <Private>
+        <BlueValues value="-14 0 450 460 662 676"/>
+        <BlueScale value="0.039625"/>
+        <BlueShift value="6"/>
+        <BlueFuzz value="1"/>
+        <StdHW value="66"/>
+        <StdVW value="66"/>
+        <StemSnapH value="23 28 31 34 38 43 50 54 63 66"/>
+        <StemSnapV value="39 43 48 52 56 59 66 73 79 83"/>
+        <ForceBold value="0"/>
+        <LanguageGroup value="0"/>
+        <ExpansionFactor value="0.06"/>
+        <initialRandomSeed value="0"/>
+        <defaultWidthX value="685"/>
+        <nominalWidthX value="601"/>
+        <Subrs>
+          <!-- The 'index' attribute is only for humans; it is ignored when parsed. -->
+          <CharString index="0">
+            19 vlineto
+            -52 6 -14 21 -28 65 rrcurveto
+            -246 563 -20 0 -206 -488 rlineto
+            -59 -140 -9 -21 -58 -6 rrcurveto
+            -19 199 19 vlineto
+            -48 -22 10 31 hvcurveto
+            0 12 4 17 5 13 rrcurveto
+            46 114 262 0 41 -94 rlineto
+            12 -28 7 -27 0 -15 0 -9 -6 -11 -8 -4 -12 -7 -7 -2 -36 0 rrcurveto
+            -19 vlineto
+            return
+          </CharString>
+          <CharString index="1">
+            -231 0 115 275 rlineto
+            return
+          </CharString>
+        </Subrs>
+      </Private>
+      <CharStrings>
+        <CharString name=".notdef">
+          -351 endchar
+        </CharString>
+        <CharString name="A">
+          121 0 20 196 41 397 20 hstem
+          707 hmoveto
+          -107 callsubr
+          -5 257 rmoveto
+          -106 callsubr
+          endchar
+        </CharString>
+      </CharStrings>
+    </CFFFont>
+
+    <GlobalSubrs>
+      <!-- The 'index' attribute is only for humans; it is ignored when parsed. -->
+    </GlobalSubrs>
+  </CFF>
+
+  <MATH>
+    <Version value="0x00010000"/>
+    <MathConstants>
+      <ScriptPercentScaleDown value="75"/>
+      <ScriptScriptPercentScaleDown value="60"/>
+      <DelimitedSubFormulaMinHeight value="1500"/>
+      <DisplayOperatorMinHeight value="1450"/>
+      <MathLeading>
+        <Value value="150"/>
+      </MathLeading>
+      <AxisHeight>
+        <Value value="250"/>
+      </AxisHeight>
+      <AccentBaseHeight>
+        <Value value="450"/>
+      </AccentBaseHeight>
+      <FlattenedAccentBaseHeight>
+        <Value value="662"/>
+      </FlattenedAccentBaseHeight>
+      <SubscriptShiftDown>
+        <Value value="250"/>
+      </SubscriptShiftDown>
+      <SubscriptTopMax>
+        <Value value="400"/>
+      </SubscriptTopMax>
+      <SubscriptBaselineDropMin>
+        <Value value="50"/>
+      </SubscriptBaselineDropMin>
+      <SuperscriptShiftUp>
+        <Value value="400"/>
+      </SuperscriptShiftUp>
+      <SuperscriptShiftUpCramped>
+        <Value value="275"/>
+      </SuperscriptShiftUpCramped>
+      <SuperscriptBottomMin>
+        <Value value="125"/>
+      </SuperscriptBottomMin>
+      <SuperscriptBaselineDropMax>
+        <Value value="375"/>
+      </SuperscriptBaselineDropMax>
+      <SubSuperscriptGapMin>
+        <Value value="264"/>
+      </SubSuperscriptGapMin>
+      <SuperscriptBottomMaxWithSubscript>
+        <Value value="400"/>
+      </SuperscriptBottomMaxWithSubscript>
+      <SpaceAfterScript>
+        <Value value="41"/>
+      </SpaceAfterScript>
+      <UpperLimitGapMin>
+        <Value value="150"/>
+      </UpperLimitGapMin>
+      <UpperLimitBaselineRiseMin>
+        <Value value="300"/>
+      </UpperLimitBaselineRiseMin>
+      <LowerLimitGapMin>
+        <Value value="150"/>
+      </LowerLimitGapMin>
+      <LowerLimitBaselineDropMin>
+        <Value value="600"/>
+      </LowerLimitBaselineDropMin>
+      <StackTopShiftUp>
+        <Value value="480"/>
+      </StackTopShiftUp>
+      <StackTopDisplayStyleShiftUp>
+        <Value value="580"/>
+      </StackTopDisplayStyleShiftUp>
+      <StackBottomShiftDown>
+        <Value value="800"/>
+      </StackBottomShiftDown>
+      <StackBottomDisplayStyleShiftDown>
+        <Value value="900"/>
+      </StackBottomDisplayStyleShiftDown>
+      <StackGapMin>
+        <Value value="198"/>
+      </StackGapMin>
+      <StackDisplayStyleGapMin>
+        <Value value="462"/>
+      </StackDisplayStyleGapMin>
+      <StretchStackTopShiftUp>
+        <Value value="300"/>
+      </StretchStackTopShiftUp>
+      <StretchStackBottomShiftDown>
+        <Value value="600"/>
+      </StretchStackBottomShiftDown>
+      <StretchStackGapAboveMin>
+        <Value value="150"/>
+      </StretchStackGapAboveMin>
+      <StretchStackGapBelowMin>
+        <Value value="150"/>
+      </StretchStackGapBelowMin>
+      <FractionNumeratorShiftUp>
+        <Value value="480"/>
+      </FractionNumeratorShiftUp>
+      <FractionNumeratorDisplayStyleShiftUp>
+        <Value value="580"/>
+      </FractionNumeratorDisplayStyleShiftUp>
+      <FractionDenominatorShiftDown>
+        <Value value="480"/>
+      </FractionDenominatorShiftDown>
+      <FractionDenominatorDisplayStyleShiftDown>
+        <Value value="700"/>
+      </FractionDenominatorDisplayStyleShiftDown>
+      <FractionNumeratorGapMin>
+        <Value value="66"/>
+      </FractionNumeratorGapMin>
+      <FractionNumDisplayStyleGapMin>
+        <Value value="198"/>
+      </FractionNumDisplayStyleGapMin>
+      <FractionRuleThickness>
+        <Value value="66"/>
+      </FractionRuleThickness>
+      <FractionDenominatorGapMin>
+        <Value value="66"/>
+      </FractionDenominatorGapMin>
+      <FractionDenomDisplayStyleGapMin>
+        <Value value="198"/>
+      </FractionDenomDisplayStyleGapMin>
+      <SkewedFractionHorizontalGap>
+        <Value value="300"/>
+      </SkewedFractionHorizontalGap>
+      <SkewedFractionVerticalGap>
+        <Value value="66"/>
+      </SkewedFractionVerticalGap>
+      <OverbarVerticalGap>
+        <Value value="198"/>
+      </OverbarVerticalGap>
+      <OverbarRuleThickness>
+        <Value value="66"/>
+      </OverbarRuleThickness>
+      <OverbarExtraAscender>
+        <Value value="66"/>
+      </OverbarExtraAscender>
+      <UnderbarVerticalGap>
+        <Value value="198"/>
+      </UnderbarVerticalGap>
+      <UnderbarRuleThickness>
+        <Value value="66"/>
+      </UnderbarRuleThickness>
+      <UnderbarExtraDescender>
+        <Value value="66"/>
+      </UnderbarExtraDescender>
+      <RadicalVerticalGap>
+        <Value value="82"/>
+      </RadicalVerticalGap>
+      <RadicalDisplayStyleVerticalGap>
+        <Value value="186"/>
+      </RadicalDisplayStyleVerticalGap>
+      <RadicalRuleThickness>
+        <Value value="66"/>
+      </RadicalRuleThickness>
+      <RadicalExtraAscender>
+        <Value value="66"/>
+      </RadicalExtraAscender>
+      <RadicalKernBeforeDegree>
+        <Value value="277"/>
+      </RadicalKernBeforeDegree>
+      <RadicalKernAfterDegree>
+        <Value value="-555"/>
+      </RadicalKernAfterDegree>
+      <RadicalDegreeBottomRaisePercent value="70"/>
+    </MathConstants>
+  </MATH>
+
+  <hmtx>
+    <mtx name=".notdef" width="250" lsb="0"/>
+    <mtx name="A" width="722" lsb="15"/>
+  </hmtx>
+
+</ttFont>

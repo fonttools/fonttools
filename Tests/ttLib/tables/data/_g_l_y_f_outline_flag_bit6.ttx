@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="3.29">
+
+  <GlyphOrder>
+    <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
+    <GlyphID id="0" name=".notdef"/>
+    <GlyphID id="1" name="glyph00001"/>
+    <GlyphID id="2" name="glyph00002"/>
+    <GlyphID id="3" name="glyph00003"/>
+  </GlyphOrder>
+
+  <head>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="1.0"/>
+    <fontRevision value="1.0"/>
+    <checkSumAdjustment value="0x6e4f1ccf"/>
+    <magicNumber value="0x5f0f3cf5"/>
+    <flags value="00100000 00011011"/>
+    <unitsPerEm value="2048"/>
+    <created value="Thu Sep 13 14:22:20 2018"/>
+    <modified value="Fri Sep 14 09:25:13 2018"/>
+    <xMin value="12"/>
+    <yMin value="0"/>
+    <xMax value="1172"/>
+    <yMax value="1430"/>
+    <macStyle value="00000000 00000000"/>
+    <lowestRecPPEM value="9"/>
+    <fontDirectionHint value="2"/>
+    <indexToLocFormat value="0"/>
+    <glyphDataFormat value="0"/>
+  </head>
+
+  <maxp>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="0x10000"/>
+    <numGlyphs value="4"/>
+    <maxPoints value="11"/>
+    <maxContours value="2"/>
+    <maxCompositePoints value="0"/>
+    <maxCompositeContours value="0"/>
+    <maxZones value="1"/>
+    <maxTwilightPoints value="0"/>
+    <maxStorage value="0"/>
+    <maxFunctionDefs value="10"/>
+    <maxInstructionDefs value="0"/>
+    <maxStackElements value="512"/>
+    <maxSizeOfInstructions value="353"/>
+    <maxComponentElements value="0"/>
+    <maxComponentDepth value="0"/>
+  </maxp>
+
+  <loca>
+    <!-- The 'loca' table will be calculated by the compiler -->
+  </loca>
+
+  <glyf>
+
+    <!-- The xMin, yMin, xMax and yMax values
+         will be recalculated by the compiler. -->
+
+    <TTGlyph name=".notdef"/><!-- contains no outline data -->
+
+    <TTGlyph name="glyph00001"/><!-- contains no outline data -->
+
+    <TTGlyph name="glyph00002"/><!-- contains no outline data -->
+
+    <TTGlyph name="glyph00003" xMin="12" yMin="0" xMax="1172" yMax="1430">
+      <contour>
+        <pt x="501" y="1430" on="1" overlap="1"/>
+        <pt x="683" y="1430" on="1"/>
+        <pt x="1172" y="0" on="1"/>
+        <pt x="983" y="0" on="1"/>
+        <pt x="591" y="1193" on="1"/>
+        <pt x="199" y="0" on="1"/>
+        <pt x="12" y="0" on="1"/>
+      </contour>
+      <contour>
+        <pt x="249" y="514" on="1"/>
+        <pt x="935" y="514" on="1"/>
+        <pt x="935" y="352" on="1"/>
+        <pt x="249" y="352" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+  </glyf>
+
+</ttFont>

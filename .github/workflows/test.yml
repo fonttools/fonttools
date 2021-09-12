@@ -1,0 +1,91 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    # https://github.community/t/github-actions-does-not-respect-skip-ci/17325/8
+    if: "! contains(toJSON(github.event.commits.*.message), '[skip ci]')"
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.x
+      uses: actions/setup-python@v2
+      with:
+        python-version: "3.x"
+    - name: Install packages
+      run: pip install tox
+    - name: Run Tox
+      run: tox -e mypy,package_readme
+
+  test:
+    runs-on: ${{ matrix.platform }}
+    if: "! contains(toJSON(github.event.commits.*.message), '[skip ci]')"
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8, 3.9]
+        platform: [ubuntu-latest, macos-latest, windows-latest]
+        exclude: # Only test on the oldest and latest supported stable Python on macOS and Windows.
+          - platform: macos-latest
+            python-version: 3.7
+          - platform: macos-latest
+            python-version: 3.8
+          - platform: windows-latest
+            python-version: 3.7
+          - platform: windows-latest
+            python-version: 3.8
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install packages
+      run: pip install tox coverage
+    - name: Run Tox
+      run: tox -e py-cov
+    - name: Run Tox without lxml
+      run: tox -e py-cov-nolxml
+    - name: Produce coverage files
+      run: |
+        coverage combine
+        coverage xml
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v1
+      with:
+        file: coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: true
+
+  test-cython:
+    runs-on: ubuntu-latest
+    if: "! contains(toJSON(github.event.commits.*.message), '[skip ci]')"
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.x
+      uses: actions/setup-python@v2
+      with:
+        python-version: "3.x"
+    - name: Install packages
+      run: pip install tox
+    - name: Run Tox
+      run: tox -e py-cy-nolxml
+
+  test-pypy3:
+    runs-on: ubuntu-latest
+    if: "! contains(toJSON(github.event.commits.*.message), '[skip ci]')"
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python pypy3
+      uses: actions/setup-python@v2
+      with:
+        python-version: "pypy3"
+    - name: Install packages
+      run: pip install tox
+    - name: Run Tox
+      run: tox -e pypy3-nolxml

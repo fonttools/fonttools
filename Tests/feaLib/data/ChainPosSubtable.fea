@@ -1,0 +1,7 @@
+feature test {
+    pos X [A - B]' -40 B' -40 A' -40 Y;
+    subtable;
+    pos X A' -111 Y;
+    subtable;
+    pos X B' -40 A' -111 [A - C]' -40 Y;
+} test;

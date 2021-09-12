@@ -1,11 +1,9 @@
-from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
 from fontTools.misc.xmlWriter import XMLWriter
 from fontTools.ttLib.tables.ttProgram import Program
 from fontTools.misc.textTools import deHexStr
 import array
+from io import StringIO
 import os
-import re
 import unittest
 
 CURR_DIR = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
@@ -105,8 +103,8 @@ class ProgramTest(unittest.TestCase):
         p = Program()
         p.fromBytecode(BYTECODE)
         ttfont = TestFont()
-        buf = UnicodeIO()
-        writer = XMLWriter(buf, newlinestr='\n')
+        buf = StringIO()
+        writer = XMLWriter(buf)
         try:
             p.toXML(writer, ttfont)
         finally:

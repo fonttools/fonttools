@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="OTTO" ttLibVersion="3.37">
+
+  <CFF>
+    <major value="1"/>
+    <minor value="0"/>
+    <CFFFont name="SourceSerifPro-Regular">
+      <version value="1.0"/>
+      <Notice value="Source is a trademark of Adobe Systems Incorporated in the United States and/or other countries."/>
+      <Copyright value="Copyright 2014 Adobe Systems Incorporated. All Rights Reserved."/>
+      <FamilyName value="Source Serif Pro"/>
+      <isFixedPitch value="0"/>
+      <ItalicAngle value="0"/>
+      <UnderlinePosition value="-100"/>
+      <UnderlineThickness value="50"/>
+      <PaintType value="0"/>
+      <CharstringType value="2"/>
+      <FontMatrix value="0.001 0 0 0.001 0 0"/>
+      <FontBBox value="0 -249 560 758"/>
+      <StrokeWidth value="0"/>
+      <!-- charset is dumped separately as the 'GlyphOrder' element -->
+      <Encoding name="StandardEncoding"/>
+      <Private>
+        <BlueValues value="-15 0 475 488 527 540 549 563 646 659 669 684 729 749"/>
+        <OtherBlues value="-249 -239"/>
+        <FamilyBlues value="-15 0 475 488 527 540 549 563 646 659 669 684 729 749"/>
+        <FamilyOtherBlues value="-249 -239"/>
+        <BlueScale value="0.0375"/>
+        <BlueShift value="7"/>
+        <BlueFuzz value="0"/>
+        <StdHW value="56"/>
+        <StdVW value="85"/>
+        <StemSnapH value="41 56"/>
+        <StemSnapV value="85 95"/>
+        <ForceBold value="0"/>
+        <LanguageGroup value="0"/>
+        <ExpansionFactor value="0.06"/>
+        <initialRandomSeed value="0"/>
+        <defaultWidthX value="0"/>
+        <nominalWidthX value="604"/>
+      </Private>
+      <CharStrings>
+        <CharString name=".notdef">
+          36 0 50 569 50 hstem
+          80 60 360 60 vstem
+          80 hmoveto
+          480 669 -480 hlineto
+          240 -286 rmoveto
+          -148 236 rlineto
+          296 hlineto
+          32 -523 rmoveto
+          -149 239 149 238 rlineto
+          -360 -477 rmoveto
+          477 vlineto
+          150 -238 rlineto
+          -118 -285 rmoveto
+          148 236 148 -236 rlineto
+          endchar
+        </CharString>
+        <CharString name="y">
+          -92 -249 110 572 42 -40 40 -36 36 0 1 hstemhm
+          0 512 -195 195 vstemhm
+          92 -249 rmoveto
+          82 56 75 177 67 hvcurveto
+          161 425 54 11 rlineto
+          36 -195 vlineto
+          -36 vlineto
+          87 -12 -123 -340 rlineto
+          -125 341 88 10 rlineto
+          37 -240 vlineto
+          -36 vlineto
+          55 -8 181 -457 -4 -12 -19 -54 -29 -54 -42 -36 rlinecurve
+          -5 5 rlineto
+          28 -27 -21 10 -26 hhcurveto
+          -31 -29 -15 -29 -7 hvcurveto
+          -39 42 -27 50 vhcurveto
+          hintmask 11001000
+          endchar
+        </CharString>
+        <CharString name="yacute">
+          -92 -249 110 572 42 -40 40 -36 36 10 5 5 4 3 2 2 1 1 0 hstemhm
+          0 512 -195 195 vstemhm
+          92 -249 rmoveto
+          82 56 75 177 67 hvcurveto
+          161 425 54 11 rlineto
+          36 -195 vlineto
+          -36 vlineto
+          87 -12 -123 -340 rlineto
+          -125 341 88 10 rlineto
+          37 -240 vlineto
+          -36 vlineto
+          55 -8 181 -457 -4 -12 -19 -54 -29 -54 -42 -36 rlinecurve
+          -5 5 rlineto
+          28 -27 -21 10 -26 hhcurveto
+          -31 -29 -15 -29 -7 hvcurveto
+          -39 42 -27 50 vhcurveto
+          hintmask 1100100010000000
+          155 825 rmoveto
+          26 -19 41 36 39 35 41 37 rlinecurve
+          28 26 6 15 14 vvcurveto
+          26 -19 12 -19 -18 -17 -10 -31 -19 vhcurveto
+          -32 -48 -29 -46 -28 -47 rrcurveto
+          endchar
+        </CharString>
+      </CharStrings>
+    </CFFFont>
+
+    <GlobalSubrs>
+      <!-- The 'index' attribute is only for humans; it is ignored when parsed. -->
+    </GlobalSubrs>
+  </CFF>
+
+</ttFont>

@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
 from __future__ import print_function
 import io
@@ -6,7 +6,8 @@ import sys
 import os
 from os.path import isfile, join as pjoin
 from glob import glob
-from setuptools import setup, find_packages, Command
+from setuptools import setup, find_packages, Command, Extension
+from setuptools.command.build_ext import build_ext as _build_ext
 from distutils import log
 from distutils.util import convert_path
 import subprocess as sp
@@ -23,12 +24,112 @@ def doraise_py_compile(file, cfile=None, dfile=None, doraise=False):
 
 py_compile.compile = doraise_py_compile
 
-needs_pytest = {'pytest', 'test'}.intersection(sys.argv)
-pytest_runner = ['pytest_runner'] if needs_pytest else []
-needs_wheel = {'bdist_wheel'}.intersection(sys.argv)
-wheel = ['wheel'] if needs_wheel else []
-needs_bumpversion = {'release'}.intersection(sys.argv)
-bumpversion = ['bump2version'] if needs_bumpversion else []
+setup_requires = []
+
+if {'bdist_wheel'}.intersection(sys.argv):
+	setup_requires.append('wheel')
+
+if {'release'}.intersection(sys.argv):
+	setup_requires.append('bump2version')
+
+try:
+	__import__("cython")
+except ImportError:
+	has_cython = False
+else:
+	has_cython = True
+
+env_with_cython = os.environ.get("FONTTOOLS_WITH_CYTHON")
+with_cython = (
+	True if env_with_cython in {"1", "true", "yes"}
+	else False if env_with_cython in {"0", "false", "no"}
+	else None
+)
+# --with-cython/--without-cython options override environment variables
+opt_with_cython = {'--with-cython'}.intersection(sys.argv)
+opt_without_cython = {'--without-cython'}.intersection(sys.argv)
+if opt_with_cython and opt_without_cython:
+	sys.exit(
+		"error: the options '--with-cython' and '--without-cython' are "
+		"mutually exclusive"
+	)
+elif opt_with_cython:
+	sys.argv.remove("--with-cython")
+	with_cython = True
+elif opt_without_cython:
+	sys.argv.remove("--without-cython")
+	with_cython = False
+
+if with_cython and not has_cython:
+	setup_requires.append("cython")
+
+ext_modules = []
+if with_cython is True or (with_cython is None and has_cython):
+	ext_modules.append(
+		Extension("fontTools.cu2qu.cu2qu", ["Lib/fontTools/cu2qu/cu2qu.py"]),
+	)
+
+extras_require = {
+	# for fontTools.ufoLib: to read/write UFO fonts
+	"ufo": [
+		"fs >= 2.2.0, < 3",
+	],
+	# for fontTools.misc.etree and fontTools.misc.plistlib: use lxml to
+	# read/write XML files (faster/safer than built-in ElementTree)
+	"lxml": [
+		"lxml >= 4.0, < 5",
+	],
+	# for fontTools.sfnt and fontTools.woff2: to compress/uncompress
+	# WOFF 1.0 and WOFF 2.0 webfonts.
+	"woff": [
+		"brotli >= 1.0.1; platform_python_implementation == 'CPython'",
+		"brotlicffi >= 0.8.0; platform_python_implementation != 'CPython'",
+		"zopfli >= 0.1.4",
+	],
+	# for fontTools.unicode and fontTools.unicodedata: to use the latest version
+	# of the Unicode Character Database instead of the built-in unicodedata
+	# which varies between python versions and may be outdated.
+	"unicode": [
+		# the unicodedata2 extension module doesn't work on PyPy.
+		# Python 3.9 already has Unicode 13.0, so the backport is not needed.
+		(
+			"unicodedata2 >= 13.0.0; "
+			"python_version < '3.9' and platform_python_implementation != 'PyPy'"
+		),
+	],
+	# for graphite type tables in ttLib/tables (Silf, Glat, Gloc)
+	"graphite": [
+		"lz4 >= 1.7.4.2"
+	],
+	# for fontTools.interpolatable: to solve the "minimum weight perfect
+	# matching problem in bipartite graphs" (aka Assignment problem)
+	"interpolatable": [
+		# use pure-python alternative on pypy
+		"scipy; platform_python_implementation != 'PyPy'",
+		"munkres; platform_python_implementation == 'PyPy'",
+	],
+	# for fontTools.varLib.plot, to visualize DesignSpaceDocument and resulting
+	# VariationModel
+	"plot": [
+		# TODO: figure out the minimum version of matplotlib that we need
+		"matplotlib",
+	],
+	# for fontTools.misc.symfont, module for symbolic font statistics analysis
+	"symfont": [
+		"sympy",
+	],
+	# To get file creator and type of Macintosh PostScript Type 1 fonts (macOS only)
+	"type1": [
+		"xattr; sys_platform == 'darwin'",
+	],
+	# for fontTools.ttLib.removeOverlaps, to remove overlaps in TTF fonts
+	"pathops": [
+		"skia-pathops >= 0.5.0",
+	],
+}
+# use a special 'all' key as shorthand to includes all the extra dependencies
+extras_require["all"] = sum(extras_require.values(), [])
+
 
 # Trove classifiers for PyPI
 classifiers = {"classifiers": [
@@ -37,7 +138,7 @@ classifiers = {"classifiers": [
 	"Environment :: Other Environment",
 	"Intended Audience :: Developers",
 	"Intended Audience :: End Users/Desktop",
-	"License :: OSI Approved :: BSD License",
+	"License :: OSI Approved :: MIT License",
 	"Natural Language :: English",
 	"Operating System :: OS Independent",
 	"Programming Language :: Python",
@@ -198,7 +299,7 @@ class release(Command):
 		""" Run bumpversion.main() with the specified arguments, and return the
 		new computed version string (cf. 'bumpversion --help' for more info)
 		"""
-		import bumpversion
+		import bumpversion.cli
 
 		args = (
 			(['--verbose'] if self.verbose > 1 else []) +
@@ -211,7 +312,7 @@ class release(Command):
 		log.debug("$ bumpversion %s" % " ".join(a.replace(" ", "\\ ") for a in args))
 
 		with capture_logger("bumpversion.list") as out:
-			bumpversion.main(args)
+			bumpversion.cli.main(args)
 
 		last_line = out.getvalue().splitlines()[-1]
 		new_version = last_line.replace("new_version=", "")
@@ -242,26 +343,6 @@ class release(Command):
 				f.write(header + u"\n" + u"-"*len(header) + u"\n\n" + content)
 
 		return u"".join(changes)
-
-
-class PassCommand(Command):
-	""" This is used with Travis `dpl` tool so that it skips creating sdist
-	and wheel packages, but simply uploads to PyPI the files found in ./dist
-	folder, that were previously built inside the tox 'bdist' environment.
-	This ensures that the same files are uploaded to Github Releases and PyPI.
-	"""
-
-	description = "do nothing"
-	user_options = []
-
-	def initialize_options(self):
-		pass
-
-	def finalize_options(self):
-		pass
-
-	def run(self):
-		pass
 
 
 def find_data_files(manpath="share/man"):
@@ -307,38 +388,89 @@ def find_data_files(manpath="share/man"):
 	return data_files
 
 
-setup(
+class cython_build_ext(_build_ext):
+	"""Compile *.pyx source files to *.c using cythonize if Cython is
+	installed and there is a working C compiler, else fall back to pure python dist.
+	"""
+
+	def finalize_options(self):
+		from Cython.Build import cythonize
+
+		# optionally enable line tracing for test coverage support
+		linetrace = os.environ.get("CYTHON_TRACE") == "1"
+
+		self.distribution.ext_modules[:] = cythonize(
+			self.distribution.ext_modules,
+			force=linetrace or self.force,
+			annotate=os.environ.get("CYTHON_ANNOTATE") == "1",
+			quiet=not self.verbose,
+			compiler_directives={
+				"linetrace": linetrace,
+				"language_level": 3,
+				"embedsignature": True,
+			},
+		)
+
+		_build_ext.finalize_options(self)
+
+	def build_extensions(self):
+		try:
+			_build_ext.build_extensions(self)
+		except Exception as e:
+			if with_cython:
+				raise
+			from distutils.errors import DistutilsModuleError
+
+			# optional compilation failed: we delete 'ext_modules' and make sure
+			# the generated wheel is 'pure'
+			del self.distribution.ext_modules[:]
+			try:
+				bdist_wheel = self.get_finalized_command("bdist_wheel")
+			except DistutilsModuleError:
+				# 'bdist_wheel' command not available as wheel is not installed
+				pass
+			else:
+				bdist_wheel.root_is_pure = True
+			log.error('error: building extensions failed: %s' % e)
+
+cmdclass = {"release": release}
+
+if ext_modules:
+    cmdclass["build_ext"] = cython_build_ext
+
+
+setup_params = dict(
 	name="fonttools",
-	version="3.21.0.dev0",
+	version="4.26.3.dev0",
 	description="Tools to manipulate font files",
 	author="Just van Rossum",
 	author_email="just@letterror.com",
 	maintainer="Behdad Esfahbod",
 	maintainer_email="behdad@behdad.org",
 	url="http://github.com/fonttools/fonttools",
-	license="OpenSource, BSD-style",
+	license="MIT",
 	platforms=["Any"],
+	python_requires=">=3.6",
 	long_description=long_description,
 	package_dir={'': 'Lib'},
 	packages=find_packages("Lib"),
 	include_package_data=True,
 	data_files=find_data_files(),
-	setup_requires=pytest_runner + wheel + bumpversion,
-	tests_require=[
-		'pytest>=3.0',
-	],
+	ext_modules=ext_modules,
+	setup_requires=setup_requires,
+	extras_require=extras_require,
 	entry_points={
 		'console_scripts': [
 			"fonttools = fontTools.__main__:main",
 			"ttx = fontTools.ttx:main",
 			"pyftsubset = fontTools.subset:main",
 			"pyftmerge = fontTools.merge:main",
-			"pyftinspect = fontTools.inspect:main"
 		]
 	},
-	cmdclass={
-		"release": release,
-		'pass': PassCommand,
-	},
+	cmdclass=cmdclass,
 	**classifiers
 )
+
+
+if __name__ == "__main__":
+	setup(**setup_params)

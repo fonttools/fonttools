@@ -25,7 +25,7 @@
           <FeatureParamsSize>
             <DesignSize value="10.0"/>
             <SubfamilyID value="0"/>
-            <SubfamilyNameID value="0"/>  <!-- missing from name table -->
+            <SubfamilyNameID value="0"/>
             <RangeStart value="0.0"/>
             <RangeEnd value="0.0"/>
           </FeatureParamsSize>

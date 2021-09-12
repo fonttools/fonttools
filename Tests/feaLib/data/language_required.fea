@@ -18,5 +18,5 @@ feature liga {
 } liga;
 
 feature scmp {
-  sub [a-z] by [A.sc-Z.sc];
+  sub [a - z] by [A.sc - Z.sc];
 } scmp;

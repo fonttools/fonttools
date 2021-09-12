@@ -1,7 +1,6 @@
 """xmlWriter.py -- Simple XML authoring class"""
 
-from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import byteord, strjoin, tobytes, tostr
 import sys
 import os
 import string
@@ -12,27 +11,31 @@ INDENT = "  "
 class XMLWriter(object):
 
 	def __init__(self, fileOrPath, indentwhite=INDENT, idlefunc=None, encoding="utf_8",
-			newlinestr=None):
+			newlinestr="\n"):
 		if encoding.lower().replace('-','').replace('_','') != 'utf8':
 			raise Exception('Only UTF-8 encoding is supported.')
 		if fileOrPath == '-':
 			fileOrPath = sys.stdout
 		if not hasattr(fileOrPath, "write"):
+			self.filename = fileOrPath
 			self.file = open(fileOrPath, "wb")
+			self._closeStream = True
 		else:
+			self.filename = None
 			# assume writable file object
 			self.file = fileOrPath
+			self._closeStream = False
 
 		# Figure out if writer expects bytes or unicodes
 		try:
 			# The bytes check should be first.  See:
-			# https://github.com/behdad/fonttools/pull/233
+			# https://github.com/fonttools/fonttools/pull/233
 			self.file.write(b'')
 			self.totype = tobytes
 		except TypeError:
 			# This better not fail.
-			self.file.write(tounicode(''))
-			self.totype = tounicode
+			self.file.write('')
+			self.totype = tostr
 		self.indentwhite = self.totype(indentwhite)
 		if newlinestr is None:
 			self.newlinestr = self.totype(os.linesep)
@@ -46,8 +49,15 @@ class XMLWriter(object):
 		self._writeraw('<?xml version="1.0" encoding="UTF-8"?>')
 		self.newline()
 
+	def __enter__(self):
+		return self
+
+	def __exit__(self, exception_type, exception_value, traceback):
+		self.close()
+
 	def close(self):
-		self.file.close()
+		if self._closeStream:
+			self.file.close()
 
 	def write(self, string, indent=True):
 		"""Writes text."""
@@ -146,7 +156,7 @@ class XMLWriter(object):
 			return ""
 		data = ""
 		for attr, value in attributes:
-			if not isinstance(value, (bytes, unicode)):
+			if not isinstance(value, (bytes, str)):
 				value = str(value)
 			data = data + ' %s="%s"' % (attr, escapeattr(value))
 		return data

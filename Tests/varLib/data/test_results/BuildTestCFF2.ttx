@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="OTTO" ttLibVersion="3.42">
+
+  <fvar>
+
+    <!-- Weight -->
+    <Axis>
+      <AxisTag>wght</AxisTag>
+      <Flags>0x0</Flags>
+      <MinValue>200.0</MinValue>
+      <DefaultValue>400.0</DefaultValue>
+      <MaxValue>900.0</MaxValue>
+      <AxisNameID>256</AxisNameID>
+    </Axis>
+
+    <!-- ExtraLight -->
+    <!-- PostScript: TestCFF2Roman-ExtraLight -->
+    <NamedInstance flags="0x0" postscriptNameID="258" subfamilyNameID="257">
+      <coord axis="wght" value="200.0"/>
+    </NamedInstance>
+
+    <!-- Light -->
+    <!-- PostScript: TestCFF2Roman-Light -->
+    <NamedInstance flags="0x0" postscriptNameID="260" subfamilyNameID="259">
+      <coord axis="wght" value="300.0"/>
+    </NamedInstance>
+
+    <!-- Regular -->
+    <!-- PostScript: TestCFF2Roman-Regular -->
+    <NamedInstance flags="0x0" postscriptNameID="261" subfamilyNameID="2">
+      <coord axis="wght" value="400.0"/>
+    </NamedInstance>
+
+    <!-- Medium -->
+    <!-- PostScript: TestCFF2Roman-Medium -->
+    <NamedInstance flags="0x0" postscriptNameID="263" subfamilyNameID="262">
+      <coord axis="wght" value="500.0"/>
+    </NamedInstance>
+
+    <!-- Semibold -->
+    <!-- PostScript: TestCFF2Roman-Semibold -->
+    <NamedInstance flags="0x0" postscriptNameID="265" subfamilyNameID="264">
+      <coord axis="wght" value="600.0"/>
+    </NamedInstance>
+
+    <!-- Bold -->
+    <!-- PostScript: TestCFF2Roman-Bold -->
+    <NamedInstance flags="0x0" postscriptNameID="267" subfamilyNameID="266">
+      <coord axis="wght" value="700.0"/>
+    </NamedInstance>
+
+    <!-- Black -->
+    <!-- PostScript: TestCFF2Roman-Black -->
+    <NamedInstance flags="0x0" postscriptNameID="269" subfamilyNameID="268">
+      <coord axis="wght" value="900.0"/>
+    </NamedInstance>
+  </fvar>
+
+  <CFF2>
+    <major value="2"/>
+    <minor value="0"/>
+    <CFFFont name="CFF2Font">
+      <FontMatrix value="0.001 0 0 0.001 0 0"/>
+      <FDArray>
+        <FontDict index="0">
+          <Private>
+            <BlueValues>
+                <blend value="-12 0 0"/>
+                <blend value="0 0 0"/>
+                <blend value="486 -8 14"/>
+                <blend value="498 0 0"/>
+                <blend value="574 4 -8"/>
+                <blend value="586 0 0"/>
+                <blend value="638 6 -10"/>
+                <blend value="650 0 0"/>
+                <blend value="656 2 -2"/>
+                <blend value="668 0 0"/>
+                <blend value="712 6 -10"/>
+                <blend value="724 0 0"/>
+            </BlueValues>
+            <OtherBlues>
+                <blend value="-217 -17 29"/>
+                <blend value="-205 0 0"/>
+            </OtherBlues>
+            <BlueScale value="0.0625"/>
+            <BlueShift value="7"/>
+            <BlueFuzz value="0"/>
+            <StdHW>
+                <blend value="67 -39 67"/>
+            </StdHW>
+            <StdVW>
+                <blend value="85 -51 87"/>
+            </StdVW>
+            <LanguageGroup value="0"/>
+            <ExpansionFactor value="0.06"/>
+          </Private>
+        </FontDict>
+      </FDArray>
+      <CharStrings>
+        <CharString name=".notdef">
+          62 22 -38 1 blend
+          hmoveto
+          476 -44 76 1 blend
+          660 -476 44 -76 1 blend
+          -660 hlineto
+          109 59 -61 103 -27 45 2 blend
+          rmoveto
+          73 131 54 102 29 -47 45 -75 10 -18 4 -6 4 blend
+          4 0 52 -102 73 -131 10 -16 -4 6 27 -47 -45 75 4 blend
+          rlineto
+          -256 -76 128 1 blend
+          hlineto
+          -44 52 34 -56 -10 16 2 blend
+          rmoveto
+          461 75 -125 1 blend
+          vlineto
+          127 -232 -127 -229 27 -45 -38 64 -27 45 -37 61 4 blend
+          rlineto
+          171 277 5 -9 15 -25 2 blend
+          rmoveto
+          -50 93 -66 119 234 -6 10 -1 3 -28 48 49 -83 68 -114 5 blend
+          0 -65 -119 -49 -93 -29 47 -49 83 -5 9 1 -3 4 blend
+          rlineto
+          -4 hlineto
+          48 -48 -22 36 22 -36 2 blend
+          rmoveto
+          126 232 26 -44 38 -64 2 blend
+          0 -461 -126 229 -75 125 -26 44 37 -61 3 blend
+          rlineto
+        </CharString>
+        <CharString name="A">
+          31 19 -31 1 blend
+          hmoveto
+          86 -54 90 1 blend
+          hlineto
+          115 366 23 73 21 72 21 76 25 -42 30 -50 5 -9 7 -11 3 -4 -4 6 3 -7 6 -10 8 blend
+          rlinecurve
+          4 hlineto
+          20 -76 22 -72 23 -73 4 -6 -6 10 2 -3 4 -6 5 -9 -7 11 6 blend
+          rrcurveto
+          113 -366 90 25 -40 -30 50 -56 92 3 blend
+          0 -221 656 -96 -15 25 4 -6 68 -112 3 blend
+          0 -221 -656 -15 25 -4 6 2 blend
+          rlineto
+          117 199 -15 24 37 -61 2 blend
+          rmoveto
+          301 68 -301 -68 -8 15 -40 65 8 -15 40 -65 4 blend
+          hlineto
+        </CharString>
+        <CharString name="T">
+          258 26 -44 1 blend
+          hmoveto
+          84 585 217 71 -518 -71 217 -585 -52 88 47 -79 17 -30 -43 73 18 -28 43 -73 17 -30 -47 79 8 blend
+          hlineto
+        </CharString>
+        <CharString name="dollar">
+          248 35 -3 12 -28 4 2 blend
+          rmoveto
+          -39 -45 5 18 -46 -26 -26 6 17 10 6 32 6 0 -3 5 blend
+          hvcurveto
+          53 -36 -17 76 -17 36 -12 -17 -11 2 24 13 4 blend
+          rlineto
+          53 -12 -22 13 -24 -37 -1 8 3 10 0 -9 5 13 -19 5 blend
+          hhcurveto
+          -22 -14 -11 -20 -9 8 -4 6 -13 4 -3 6 -18 8 -5 5 blend
+          hvcurveto
+          -87 4 81 -59 107 2 -3 20 -4 -20 -10 8 5 0 32 5 blend
+          hhcurveto
+          136 82 76 107 82 -41 65 -135 47 -45 27 8 17 -23 8 4 10 -12 16 15 -17 1 3 1 -7 10 -2 9 blend
+          hvcurveto
+          -38 13 19 5 -5 -3 2 blend
+          rlineto
+          -71 23 -40 35 64 -22 -1 16 -1 -2 16 14 -11 4 -15 5 blend
+          vvcurveto
+          75 57 37 74 30 36 -5 -17 42 16 -14 3 -10 11 -14 14 -7 26 12 -1 -9 -9 1 -33 -7 2 10 9 blend
+          vhcurveto
+          -52 36 17 -76 14 -33 11 11 11 -7 -24 9 4 blend
+          rlineto
+          -52 12 25 -14 22 37 -23 -6 -1 -15 12 9 0 -11 17 5 blend
+          hhcurveto
+          19 17 10 21 8 -5 7 -9 12 -3 5 -7 20 -7 -3 5 blend
+          hvcurveto
+          86 -6 -80 60 -101 2 2 -18 -2 13 4 -12 -12 17 -20 5 blend
+          hhcurveto
+          -115 -83 -80 -102 -100 62 -54 105 -37 23 -43 1 -2 29 0 -6 -13 20 7 -17 4 1 -15 -13 16 -5 -2 9 blend
+          hvcurveto
+          37 -13 0 -5 -4 2 2 blend
+          rlineto
+          85 -30 36 -30 -63 29 -5 -22 2 -10 -13 -16 11 -2 10 5 blend
+          vvcurveto
+          -74 -53 -42 -82 -18 19 -12 10 -12 3 -8 10 4 blend
+          vhcurveto
+          31 287 -13 33 40 -12 2 blend
+          rmoveto
+          428 -40 -428 40 0 -11 18 -31 0 11 -18 31 4 blend
+          vlineto
+          -41 -437 19 -38 -12 8 2 blend
+          rmoveto
+          40 437 -40 -437 -18 31 12 -8 18 -31 -12 8 4 blend
+          hlineto
+        </CharString>
+        <CharString name="dollar.a">
+          304 7 -12 1 blend
+          34 rmoveto
+          125 86 65 96 -22 38 2 -3 -9 15 -2 4 4 blend
+          hvcurveto
+          183 -324 -21 110 1 -1 -14 22 -11 17 32 -54 4 blend
+          vvcurveto
+          50 42 32 67 68 36 -21 -36 47 18 -29 15 -24 12 -21 18 -31 8 -13 -2 3 -3 5 -2 4 -3 5 9 blend
+          vhcurveto
+          44 49 -24 40 -29 49 2 blend
+          rlineto
+          44 -46 -54 33 -89 -6 8 5 -7 9 -15 -1 3 4 -8 5 blend
+          hhcurveto
+          -115 -81 -59 -94 16 -26 3 -7 5 -9 6 -10 4 blend
+          hvcurveto
+          -174 324 22 -124 8 -14 14 -22 6 -10 -32 56 4 blend
+          vvcurveto
+          -51 -42 -35 -78 -76 -62 31 37 -52 -19 31 -14 23 -15 25 -25 41 -9 15 -4 7 7 -11 -3 3 12 -20 9 blend
+          vhcurveto
+          -39 -58 21 -35 36 -58 2 blend
+          rlineto
+          -43 52 84 -36 83 5 -11 -7 13 -11 17 -4 8 8 -13 5 blend
+          hhcurveto
+          -51 -147 -19 32 1 -3 2 blend
+          rmoveto
+          159 857 -56 7 -159 -858 56 -6 -1 1 3 -3 26 -44 -3 5 1 -1 -2 4 -26 44 2 -6 8 blend
+          rlineto
+        </CharString>
+      </CharStrings>
+      <VarStore Format="1">
+        <Format value="1"/>
+        <VarRegionList>
+          <!-- RegionAxisCount=1 -->
+          <!-- RegionCount=2 -->
+          <Region index="0">
+            <VarRegionAxis index="0">
+              <StartCoord value="-1.0"/>
+              <PeakCoord value="-1.0"/>
+              <EndCoord value="0.0"/>
+            </VarRegionAxis>
+          </Region>
+          <Region index="1">
+            <VarRegionAxis index="0">
+              <StartCoord value="0.0"/>
+              <PeakCoord value="1.0"/>
+              <EndCoord value="1.0"/>
+            </VarRegionAxis>
+          </Region>
+        </VarRegionList>
+        <!-- VarDataCount=1 -->
+        <VarData index="0">
+          <!-- ItemCount=0 -->
+          <NumShorts value="0"/>
+          <!-- VarRegionCount=2 -->
+          <VarRegionIndex index="0" value="0"/>
+          <VarRegionIndex index="1" value="1"/>
+        </VarData>
+      </VarStore>
+    </CFFFont>
+
+    <GlobalSubrs>
+      <!-- The 'index' attribute is only for humans; it is ignored when parsed. -->
+    </GlobalSubrs>
+  </CFF2>
+
+</ttFont>

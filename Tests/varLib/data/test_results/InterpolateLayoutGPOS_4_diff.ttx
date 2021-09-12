@@ -34,10 +34,10 @@
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <MarkBasePos index="0" Format="1">
-          <MarkCoverage Format="1">
+          <MarkCoverage>
             <Glyph value="uni0303"/>
           </MarkCoverage>
-          <BaseCoverage Format="1">
+          <BaseCoverage>
             <Glyph value="a"/>
           </BaseCoverage>
           <!-- ClassCount=1 -->
@@ -55,7 +55,7 @@
             <!-- BaseCount=1 -->
             <BaseRecord index="0">
               <BaseAnchor index="0" Format="1">
-                <XCoordinate value="272"/>
+                <XCoordinate value="273"/>
                 <YCoordinate value="510"/>
               </BaseAnchor>
             </BaseRecord>

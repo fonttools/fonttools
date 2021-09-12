@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>aBigInt</key>
+	<integer>9223372036854775764</integer>
+	<key>aBigInt2</key>
+	<integer>9223372036854775852</integer>
+	<key>aDate</key>
+	<date>2004-10-26T10:33:33Z</date>
+	<key>aDict</key>
+	<dict>
+		<key>aFalseValue</key>
+		<false/>
+		<key>aTrueValue</key>
+		<true/>
+		<key>aUnicodeValue</key>
+		<string>Mässig, Maß</string>
+		<key>anotherString</key>
+		<string>&lt;hello &amp; 'hi' there!&gt;</string>
+		<key>deeperDict</key>
+		<dict>
+			<key>a</key>
+			<integer>17</integer>
+			<key>b</key>
+			<real>32.5</real>
+			<key>c</key>
+			<array>
+				<integer>1</integer>
+				<integer>2</integer>
+				<string>text</string>
+			</array>
+		</dict>
+	</dict>
+	<key>aFloat</key>
+	<real>0.5</real>
+	<key>aList</key>
+	<array>
+		<string>A</string>
+		<string>B</string>
+		<integer>12</integer>
+		<real>32.5</real>
+		<array>
+			<integer>1</integer>
+			<integer>2</integer>
+			<integer>3</integer>
+		</array>
+	</array>
+	<key>aNegativeBigInt</key>
+	<integer>-80000000000</integer>
+	<key>aNegativeInt</key>
+	<integer>-5</integer>
+	<key>aString</key>
+	<string>Doodah</string>
+	<key>anEmptyDict</key>
+	<dict/>
+	<key>anEmptyList</key>
+	<array/>
+	<key>anInt</key>
+	<integer>728</integer>
+	<key>nestedData</key>
+	<array>
+		<data>
+		PGxvdHMgb2YgYmluYXJ5IGd1bms+AAECAzxsb3RzIG9mIGJpbmFyeSBndW5r
+		PgABAgM8bG90cyBvZiBiaW5hcnkgZ3Vuaz4AAQIDPGxvdHMgb2YgYmluYXJ5
+		IGd1bms+AAECAzxsb3RzIG9mIGJpbmFyeSBndW5rPgABAgM8bG90cyBvZiBi
+		aW5hcnkgZ3Vuaz4AAQIDPGxvdHMgb2YgYmluYXJ5IGd1bms+AAECAzxsb3Rz
+		IG9mIGJpbmFyeSBndW5rPgABAgM8bG90cyBvZiBiaW5hcnkgZ3Vuaz4AAQID
+		PGxvdHMgb2YgYmluYXJ5IGd1bms+AAECAw==
+		</data>
+	</array>
+	<key>someData</key>
+	<data>
+	PGJpbmFyeSBndW5rPg==
+	</data>
+	<key>someMoreData</key>
+	<data>
+	PGxvdHMgb2YgYmluYXJ5IGd1bms+AAECAzxsb3RzIG9mIGJpbmFyeSBndW5rPgABAgM8
+	bG90cyBvZiBiaW5hcnkgZ3Vuaz4AAQIDPGxvdHMgb2YgYmluYXJ5IGd1bms+AAECAzxs
+	b3RzIG9mIGJpbmFyeSBndW5rPgABAgM8bG90cyBvZiBiaW5hcnkgZ3Vuaz4AAQIDPGxv
+	dHMgb2YgYmluYXJ5IGd1bms+AAECAzxsb3RzIG9mIGJpbmFyeSBndW5rPgABAgM8bG90
+	cyBvZiBiaW5hcnkgZ3Vuaz4AAQIDPGxvdHMgb2YgYmluYXJ5IGd1bms+AAECAw==
+	</data>
+	<key>Åbenraa</key>
+	<string>That was a unicode key.</string>
+</dict>
+</plist>

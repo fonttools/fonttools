@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont>
+
+  <GSUB>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=1 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=1 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="test"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="0"/>
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=2 -->
+      <Lookup index="0">
+        <LookupType value="6"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <ChainContextSubst index="0" Format="3">
+          <!-- BacktrackGlyphCount=2 -->
+          <BacktrackCoverage index="0">
+            <Glyph value="B"/>
+          </BacktrackCoverage>
+          <BacktrackCoverage index="1">
+            <Glyph value="A"/>
+          </BacktrackCoverage>
+          <!-- InputGlyphCount=1 -->
+          <InputCoverage index="0">
+            <Glyph value="a"/>
+          </InputCoverage>
+          <!-- LookAheadGlyphCount=2 -->
+          <LookAheadCoverage index="0">
+            <Glyph value="Y"/>
+            <Glyph value="y"/>
+          </LookAheadCoverage>
+          <LookAheadCoverage index="1">
+            <Glyph value="Z"/>
+          </LookAheadCoverage>
+          <!-- SubstCount=1 -->
+          <SubstLookupRecord index="0">
+            <SequenceIndex value="0"/>
+            <LookupListIndex value="1"/>
+          </SubstLookupRecord>
+        </ChainContextSubst>
+      </Lookup>
+      <Lookup index="1">
+        <LookupType value="3"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <AlternateSubst index="0">
+          <AlternateSet glyph="a">
+            <Alternate glyph="a.alt1"/>
+            <Alternate glyph="a.alt2"/>
+            <Alternate glyph="a.alt3"/>
+          </AlternateSet>
+        </AlternateSubst>
+      </Lookup>
+    </LookupList>
+  </GSUB>
+
+</ttFont>

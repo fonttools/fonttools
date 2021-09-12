@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont>
+
+  <GSUB>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=1 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=1 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="zero"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="0"/>
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=1 -->
+      <Lookup index="0">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SingleSubst index="0">
+          <Substitution in="cid00800" out="zero"/>
+          <Substitution in="cid00801" out="zero"/>
+          <Substitution in="cid00802" out="zero"/>
+          <Substitution in="cid00803" out="zero"/>
+          <Substitution in="cid00804" out="zero"/>
+          <Substitution in="cid00805" out="zero"/>
+          <Substitution in="cid00806" out="zero"/>
+          <Substitution in="cid00807" out="zero"/>
+          <Substitution in="cid00808" out="zero"/>
+          <Substitution in="cid00809" out="zero"/>
+          <Substitution in="cid00810" out="zero"/>
+          <Substitution in="cid00811" out="zero"/>
+          <Substitution in="cid00812" out="zero"/>
+          <Substitution in="cid00813" out="zero"/>
+          <Substitution in="cid00814" out="zero"/>
+          <Substitution in="cid00815" out="zero"/>
+          <Substitution in="cid00816" out="zero"/>
+          <Substitution in="cid00817" out="zero"/>
+          <Substitution in="cid00818" out="zero"/>
+          <Substitution in="cid00819" out="zero"/>
+          <Substitution in="cid00820" out="zero"/>
+          <Substitution in="cid00821" out="zero"/>
+          <Substitution in="cid00822" out="zero"/>
+          <Substitution in="cid00823" out="zero"/>
+          <Substitution in="cid00824" out="zero"/>
+          <Substitution in="cid00825" out="zero"/>
+          <Substitution in="cid00826" out="zero"/>
+          <Substitution in="cid00827" out="zero"/>
+          <Substitution in="cid00828" out="zero"/>
+          <Substitution in="cid00829" out="zero"/>
+          <Substitution in="cid00830" out="zero"/>
+          <Substitution in="cid00831" out="zero"/>
+          <Substitution in="cid00832" out="zero"/>
+          <Substitution in="cid00833" out="zero"/>
+          <Substitution in="cid00834" out="zero"/>
+          <Substitution in="cid00835" out="zero"/>
+          <Substitution in="cid00836" out="zero"/>
+          <Substitution in="cid00837" out="zero"/>
+          <Substitution in="cid00838" out="zero"/>
+          <Substitution in="cid00839" out="zero"/>
+          <Substitution in="cid00840" out="zero"/>
+          <Substitution in="cid00841" out="zero"/>
+          <Substitution in="cid00842" out="zero"/>
+          <Substitution in="cid00843" out="zero"/>
+          <Substitution in="cid00844" out="zero"/>
+          <Substitution in="cid00845" out="zero"/>
+          <Substitution in="cid00846" out="zero"/>
+          <Substitution in="cid00847" out="zero"/>
+          <Substitution in="cid00848" out="zero"/>
+          <Substitution in="cid00849" out="zero"/>
+          <Substitution in="cid00850" out="zero"/>
+          <Substitution in="cid00851" out="zero"/>
+          <Substitution in="cid00852" out="zero"/>
+          <Substitution in="cid00853" out="zero"/>
+          <Substitution in="cid00854" out="zero"/>
+          <Substitution in="cid00855" out="zero"/>
+          <Substitution in="cid00856" out="zero"/>
+          <Substitution in="cid00857" out="zero"/>
+          <Substitution in="cid00858" out="zero"/>
+          <Substitution in="cid00859" out="zero"/>
+          <Substitution in="cid00860" out="zero"/>
+          <Substitution in="cid00861" out="zero"/>
+          <Substitution in="cid00862" out="zero"/>
+          <Substitution in="cid00863" out="zero"/>
+          <Substitution in="cid00864" out="zero"/>
+          <Substitution in="cid00865" out="zero"/>
+          <Substitution in="cid00866" out="zero"/>
+          <Substitution in="cid00867" out="zero"/>
+          <Substitution in="cid00868" out="zero"/>
+          <Substitution in="cid00869" out="zero"/>
+          <Substitution in="cid00870" out="zero"/>
+          <Substitution in="cid00871" out="zero"/>
+          <Substitution in="cid00872" out="zero"/>
+          <Substitution in="cid00873" out="zero"/>
+          <Substitution in="cid00874" out="zero"/>
+          <Substitution in="cid00875" out="zero"/>
+          <Substitution in="cid00876" out="zero"/>
+          <Substitution in="cid00877" out="zero"/>
+          <Substitution in="cid00878" out="zero"/>
+          <Substitution in="cid00879" out="zero"/>
+          <Substitution in="cid00880" out="zero"/>
+          <Substitution in="cid00881" out="zero"/>
+          <Substitution in="cid00882" out="zero"/>
+          <Substitution in="cid00883" out="zero"/>
+          <Substitution in="cid00884" out="zero"/>
+          <Substitution in="cid00885" out="zero"/>
+          <Substitution in="cid00886" out="zero"/>
+          <Substitution in="cid00887" out="zero"/>
+          <Substitution in="cid00888" out="zero"/>
+          <Substitution in="cid00889" out="zero"/>
+          <Substitution in="cid00890" out="zero"/>
+          <Substitution in="cid00891" out="zero"/>
+          <Substitution in="cid00892" out="zero"/>
+          <Substitution in="cid00893" out="zero"/>
+          <Substitution in="cid00894" out="zero"/>
+          <Substitution in="cid00895" out="zero"/>
+          <Substitution in="cid00896" out="zero"/>
+          <Substitution in="cid00897" out="zero"/>
+          <Substitution in="cid00898" out="zero"/>
+          <Substitution in="cid00899" out="zero"/>
+          <Substitution in="cid00900" out="zero"/>
+          <Substitution in="cid00901" out="zero"/>
+          <Substitution in="cid00902" out="zero"/>
+          <Substitution in="cid00903" out="zero"/>
+          <Substitution in="cid00904" out="zero"/>
+          <Substitution in="cid00905" out="zero"/>
+          <Substitution in="cid00906" out="zero"/>
+          <Substitution in="cid00907" out="zero"/>
+          <Substitution in="cid00908" out="zero"/>
+          <Substitution in="cid00909" out="zero"/>
+          <Substitution in="cid00910" out="zero"/>
+          <Substitution in="cid00911" out="zero"/>
+          <Substitution in="cid00912" out="zero"/>
+          <Substitution in="cid00913" out="zero"/>
+          <Substitution in="cid00914" out="zero"/>
+          <Substitution in="cid00915" out="zero"/>
+          <Substitution in="cid00916" out="zero"/>
+          <Substitution in="cid00917" out="zero"/>
+          <Substitution in="cid00918" out="zero"/>
+          <Substitution in="cid00919" out="zero"/>
+          <Substitution in="cid00920" out="zero"/>
+          <Substitution in="cid00921" out="zero"/>
+          <Substitution in="cid00922" out="zero"/>
+          <Substitution in="cid00923" out="zero"/>
+          <Substitution in="cid00924" out="zero"/>
+          <Substitution in="cid00925" out="zero"/>
+          <Substitution in="cid00926" out="zero"/>
+          <Substitution in="cid00927" out="zero"/>
+          <Substitution in="cid00928" out="zero"/>
+          <Substitution in="cid00929" out="zero"/>
+          <Substitution in="cid00930" out="zero"/>
+          <Substitution in="cid00931" out="zero"/>
+          <Substitution in="cid00932" out="zero"/>
+          <Substitution in="cid00933" out="zero"/>
+          <Substitution in="cid00934" out="zero"/>
+          <Substitution in="cid00935" out="zero"/>
+          <Substitution in="cid00936" out="zero"/>
+          <Substitution in="cid00937" out="zero"/>
+          <Substitution in="cid00938" out="zero"/>
+          <Substitution in="cid00939" out="zero"/>
+          <Substitution in="cid00940" out="zero"/>
+          <Substitution in="cid00941" out="zero"/>
+          <Substitution in="cid00942" out="zero"/>
+          <Substitution in="cid00943" out="zero"/>
+          <Substitution in="cid00944" out="zero"/>
+          <Substitution in="cid00945" out="zero"/>
+          <Substitution in="cid00946" out="zero"/>
+          <Substitution in="cid00947" out="zero"/>
+          <Substitution in="cid00948" out="zero"/>
+          <Substitution in="cid00949" out="zero"/>
+          <Substitution in="cid00950" out="zero"/>
+          <Substitution in="cid00951" out="zero"/>
+          <Substitution in="cid00952" out="zero"/>
+          <Substitution in="cid00953" out="zero"/>
+          <Substitution in="cid00954" out="zero"/>
+          <Substitution in="cid00955" out="zero"/>
+          <Substitution in="cid00956" out="zero"/>
+          <Substitution in="cid00957" out="zero"/>
+          <Substitution in="cid00958" out="zero"/>
+          <Substitution in="cid00959" out="zero"/>
+          <Substitution in="cid00960" out="zero"/>
+          <Substitution in="cid00961" out="zero"/>
+          <Substitution in="cid00962" out="zero"/>
+          <Substitution in="cid00963" out="zero"/>
+          <Substitution in="cid00964" out="zero"/>
+          <Substitution in="cid00965" out="zero"/>
+          <Substitution in="cid00966" out="zero"/>
+          <Substitution in="cid00967" out="zero"/>
+          <Substitution in="cid00968" out="zero"/>
+          <Substitution in="cid00969" out="zero"/>
+          <Substitution in="cid00970" out="zero"/>
+          <Substitution in="cid00971" out="zero"/>
+          <Substitution in="cid00972" out="zero"/>
+          <Substitution in="cid00973" out="zero"/>
+          <Substitution in="cid00974" out="zero"/>
+          <Substitution in="cid00975" out="zero"/>
+          <Substitution in="cid00976" out="zero"/>
+          <Substitution in="cid00977" out="zero"/>
+          <Substitution in="cid00978" out="zero"/>
+          <Substitution in="cid00979" out="zero"/>
+          <Substitution in="cid00980" out="zero"/>
+          <Substitution in="cid00981" out="zero"/>
+          <Substitution in="cid00982" out="zero"/>
+          <Substitution in="cid00983" out="zero"/>
+          <Substitution in="cid00984" out="zero"/>
+          <Substitution in="cid00985" out="zero"/>
+          <Substitution in="cid00986" out="zero"/>
+          <Substitution in="cid00987" out="zero"/>
+          <Substitution in="cid00988" out="zero"/>
+          <Substitution in="cid00989" out="zero"/>
+          <Substitution in="cid00990" out="zero"/>
+          <Substitution in="cid00991" out="zero"/>
+          <Substitution in="cid00992" out="zero"/>
+          <Substitution in="cid00993" out="zero"/>
+          <Substitution in="cid00994" out="zero"/>
+          <Substitution in="cid00995" out="zero"/>
+          <Substitution in="cid00996" out="zero"/>
+          <Substitution in="cid00997" out="zero"/>
+          <Substitution in="cid00998" out="zero"/>
+          <Substitution in="cid00999" out="zero"/>
+          <Substitution in="cid01000" out="zero"/>
+          <Substitution in="cid01001" out="zero"/>
+        </SingleSubst>
+      </Lookup>
+    </LookupList>
+  </GSUB>
+
+</ttFont>

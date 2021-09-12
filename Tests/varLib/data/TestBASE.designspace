@@ -1,0 +1,36 @@
+<?xml version='1.0' encoding='utf-8'?>
+<designspace format="3">
+	<axes>
+		<axis default="0" maximum="900" minimum="0" name="weight" tag="wght" />
+	</axes>
+	<sources>
+		<source filename="master_base_test/TestBASE.0.ufo" stylename="w0.00">
+			<info copy="1" />
+			<location>
+				<dimension name="weight" xvalue="0.00" />
+			</location>
+		</source>
+		<source filename="master_base_test/TestBASE.900.ufo" stylename="w900.00">
+			
+			<location>
+				<dimension name="weight" xvalue="900.00" />
+			</location>
+		</source>
+	</sources>
+	<instances>
+		<instance familyname="TestBASE" filename="instances/TestBASE-Thin.otf" postscriptfontname="TestBASE-Thin" stylename="ExtraLight">
+			<location>
+				<dimension name="weight" xvalue="0" />
+			</location>
+			<kerning />
+			<info />
+		</instance>
+		<instance familyname="TestBASE" filename="instances/TestBase-Black.otf" postscriptfontname="TestBASE-Black" stylename="Heavy">
+			<location>
+				<dimension name="weight" xvalue="900" />
+			</location>
+			<kerning />
+			<info />
+		</instance>
+	</instances>
+</designspace>

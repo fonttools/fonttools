@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont>
+
+  <GSUB>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=1 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=1 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="test"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="0"/>
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=1 -->
+      <Lookup index="0">
+        <LookupType value="3"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=2 -->
+        <AlternateSubst index="0">
+          <AlternateSet glyph="A">
+            <Alternate glyph="A.alt1"/>
+            <Alternate glyph="A.alt2"/>
+          </AlternateSet>
+        </AlternateSubst>
+        <AlternateSubst index="1">
+          <AlternateSet glyph="B">
+            <Alternate glyph="B.alt1"/>
+            <Alternate glyph="B.alt2"/>
+          </AlternateSet>
+        </AlternateSubst>
+      </Lookup>
+    </LookupList>
+  </GSUB>
+
+</ttFont>

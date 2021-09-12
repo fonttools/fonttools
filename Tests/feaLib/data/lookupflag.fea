@@ -95,3 +95,65 @@ feature test {
     lookup M;
     lookup N;
 } test;
+
+feature test {
+    lookupflag IgnoreMarks;
+    lookup O {
+        pos one 1;
+    } O;
+    lookup P {
+       pos one 1;
+    } P;
+} test;
+
+feature test {
+    lookup Q {
+         pos one 1;
+    } Q;
+    lookup R {
+         pos one 1;
+    } R;
+} test;
+
+feature test {
+    lookup S {
+        lookupflag IgnoreMarks;
+        pos one 1;
+    } S;
+    lookup T {
+        pos one 1;
+    } T;
+} test;
+
+feature test {
+    lookup U {
+        pos one 1;
+    } U;
+    lookup V {
+        lookupflag IgnoreMarks;
+        pos one 1;
+    } V;
+} test;
+
+feature test {
+    lookup W {
+        lookupflag IgnoreMarks;
+        script latn;
+        pos one 1;
+    } W;
+    lookup X {
+        lookupflag IgnoreMarks;
+        script latn;
+        pos two 2;
+    } X;
+} test;
+
+lookup Y {
+    lookupflag UseMarkFilteringSet [acute grave macron];
+    pos Y 1;
+} Y;
+
+lookup Z {
+    lookupflag MarkAttachmentType [acute grave macron];
+    pos Z 1;
+} Z;

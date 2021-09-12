@@ -56,7 +56,7 @@ def graph(font, tableTags, stream=sys.stdout):
 			for item in writer.items:
 				if not hasattr(item, "getData"):
 					continue
-				offsetSize = 4 if item.longOffset else 2
+				offsetSize = item.offsetSize
 				rhs = writerId(item)
 				f.write('  '+lhs+' -> '+rhs+';\n')
 

@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, division, absolute_import, unicode_literals
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import strjoin
+from io import BytesIO
 import os
 import unittest
 from fontTools.ttLib import TTFont
@@ -144,7 +142,7 @@ class TestXMLReader(unittest.TestCase):
 
 	def test_read_sub_file(self):
 		# Verifies that sub-file content is able to be read to a table.
-		expectedContent = u'testContent'
+		expectedContent = 'testContent'
 		expectedNameID = '1'
 		expectedPlatform = '3'
 		expectedLangId = '0x409'

@@ -1,5 +1,4 @@
-from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import Tag, bytesjoin
 from .DefaultTable import DefaultTable
 import sys
 import array
@@ -43,7 +42,7 @@ class BaseTTXConverter(DefaultTable):
 		self.table.decompile(reader, font)
 
 	def compile(self, font):
-		""" Create a top-level OTFWriter for the GPOS/GSUB table.
+		""" Create a top-level OTTableWriter for the GPOS/GSUB table.
 			Call the compile method for the the table
 				for each 'converter' record in the table converter list
 					call converter's write method for each item in the value.
@@ -89,7 +88,13 @@ class BaseTTXConverter(DefaultTable):
 					from .otTables import fixSubTableOverFlows
 					ok = fixSubTableOverFlows(font, overflowRecord)
 				if not ok:
-					raise
+					# Try upgrading lookup to Extension and hope
+					# that cross-lookup sharing not happening would
+					# fix overflow...
+					from .otTables import fixLookupOverFlows
+					ok = fixLookupOverFlows(font, overflowRecord)
+					if not ok:
+						raise
 
 	def toXML(self, writer, font):
 		self.table.toXML2(writer, font)
@@ -100,7 +105,12 @@ class BaseTTXConverter(DefaultTable):
 			tableClass = getattr(otTables, self.tableTag)
 			self.table = tableClass()
 		self.table.fromXML(name, attrs, content, font)
+		self.table.populateDefaults()
 
+
+# https://github.com/fonttools/fonttools/pull/2285#issuecomment-834652928
+assert len(struct.pack('i', 0)) == 4
+assert array.array('i').itemsize == 4, "Oops, file a bug against fonttools."
 
 class OTTableReader(object):
 
@@ -130,49 +140,49 @@ class OTTableReader(object):
 		offset = self.offset + offset
 		return self.__class__(self.data, self.localState, offset, self.tableTag)
 
-	def readUShort(self):
+	def readValue(self, typecode, staticSize):
 		pos = self.pos
-		newpos = pos + 2
-		value, = struct.unpack(">H", self.data[pos:newpos])
+		newpos = pos + staticSize
+		value, = struct.unpack(f">{typecode}", self.data[pos:newpos])
 		self.pos = newpos
 		return value
-
-	def readUShortArray(self, count):
+	def readArray(self, typecode, staticSize, count):
 		pos = self.pos
-		newpos = pos + count * 2
-		value = array.array("H", self.data[pos:newpos])
-		if sys.byteorder != "big":
-			value.byteswap()
+		newpos = pos + count * staticSize
+		value = array.array(typecode, self.data[pos:newpos])
+		if sys.byteorder != "big": value.byteswap()
 		self.pos = newpos
-		return value
+		return value.tolist()
 
 	def readInt8(self):
-		pos = self.pos
-		newpos = pos + 1
-		value, = struct.unpack(">b", self.data[pos:newpos])
-		self.pos = newpos
-		return value
+		return self.readValue("b", staticSize=1)
+	def readInt8Array(self, count):
+		return self.readArray("b", staticSize=1, count=count)
 
 	def readShort(self):
-		pos = self.pos
-		newpos = pos + 2
-		value, = struct.unpack(">h", self.data[pos:newpos])
-		self.pos = newpos
-		return value
+		return self.readValue("h", staticSize=2)
+	def readShortArray(self, count):
+		return self.readArray("h", staticSize=2, count=count)
 
 	def readLong(self):
-		pos = self.pos
-		newpos = pos + 4
-		value, = struct.unpack(">l", self.data[pos:newpos])
-		self.pos = newpos
-		return value
+		return self.readValue("i", staticSize=4)
+	def readLongArray(self, count):
+		return self.readArray("i", staticSize=4, count=count)
 
 	def readUInt8(self):
-		pos = self.pos
-		newpos = pos + 1
-		value, = struct.unpack(">B", self.data[pos:newpos])
-		self.pos = newpos
-		return value
+		return self.readValue("B", staticSize=1)
+	def readUInt8Array(self, count):
+		return self.readArray("B", staticSize=1, count=count)
+
+	def readUShort(self):
+		return self.readValue("H", staticSize=2)
+	def readUShortArray(self, count):
+		return self.readArray("H", staticSize=2, count=count)
+
+	def readULong(self):
+		return self.readValue("I", staticSize=4)
+	def readULongArray(self, count):
+		return self.readArray("I", staticSize=4, count=count)
 
 	def readUInt24(self):
 		pos = self.pos
@@ -180,13 +190,8 @@ class OTTableReader(object):
 		value, = struct.unpack(">l", b'\0'+self.data[pos:newpos])
 		self.pos = newpos
 		return value
-
-	def readULong(self):
-		pos = self.pos
-		newpos = pos + 4
-		value, = struct.unpack(">L", self.data[pos:newpos])
-		self.pos = newpos
-		return value
+	def readUInt24Array(self, count):
+		return [self.readUInt24() for _ in range(count)]
 
 	def readTag(self):
 		pos = self.pos
@@ -219,13 +224,14 @@ class OTTableWriter(object):
 
 	"""Helper class to gather and assemble data for OpenType tables."""
 
-	def __init__(self, localState=None, tableTag=None, name=''):
+	def __init__(self, localState=None, tableTag=None, name='', offsetSize=2):
 		self.localState = localState
 		self.tableTag = tableTag
 		self.name = name
-		self.longOffset = False
 		self.items = []
 		self.pos = None
+		self.offsetSize = offsetSize
+		self.parent = None
 
 	def __setitem__(self, name, value):
 		state = self.localState.copy() if self.localState else dict()
@@ -247,7 +253,7 @@ class OTTableWriter(object):
 			if hasattr(item, "getCountData"):
 				l += item.size
 			elif hasattr(item, "getData"):
-				l += 4 if item.longOffset else 2
+				l += item.offsetSize
 			else:
 				l = l + len(item)
 		return l
@@ -264,9 +270,9 @@ class OTTableWriter(object):
 		for i,item in enumerate(items):
 
 			if hasattr(item, "getData"):
-				if item.longOffset:
+				if item.offsetSize == 4:
 					items[i] = packULong(item.pos - pos)
-				else:
+				elif item.offsetSize == 2:
 					try:
 						items[i] = packUShort(item.pos - pos)
 					except struct.error:
@@ -274,6 +280,10 @@ class OTTableWriter(object):
 						overflowErrorRecord = self.getOverflowErrorRecord(item)
 
 						raise OTLOffsetOverflowError(overflowErrorRecord)
+				elif item.offsetSize == 3:
+					items[i] = packUInt24(item.pos - pos)
+				else:
+					raise ValueError(item.offsetSize)
 
 		return bytesjoin(items)
 
@@ -290,7 +300,9 @@ class OTTableWriter(object):
 	def __eq__(self, other):
 		if type(self) != type(other):
 			return NotImplemented
-		if len(self.items) != len(other.items) or self.longOffset != other.longOffset:
+		if len(self.items) != len(other.items):
+			return False
+		if self.offsetSize != other.offsetSize:
 			return False
 		return all(x is y if hasattr(x, 'getData') else x == y for x,y in zip(self.items, other.items))
 
@@ -311,12 +323,14 @@ class OTTableWriter(object):
 		# Certain versions of Uniscribe reject the font if the GSUB/GPOS top-level
 		# arrays (ScriptList, FeatureList, LookupList) point to the same, possibly
 		# empty, array.  So, we don't share those.
-		# See: https://github.com/behdad/fonttools/issues/518
+		# See: https://github.com/fonttools/fonttools/issues/518
 		dontShare = hasattr(self, 'DontShare')
 
 		items = self.items
 		for i in range(len(items)):
 			item = items[i]
+			if hasattr(item, "getCountData"):
+				items[i] = item.getCountData()
 			if not hasattr(item, "getData"):
 				continue
 
@@ -327,6 +341,60 @@ class OTTableWriter(object):
 					item = items[i] = internedItem
 				else:
 					internedTables[item] = item
+		self.items = tuple(items)
+
+	def _gatherTables(self, tables, extTables, done):
+		# Convert table references in self.items tree to a flat
+		# list of tables in depth-first traversal order.
+		# "tables" are OTTableWriter objects.
+		# We do the traversal in reverse order at each level, in order to
+		# resolve duplicate references to be the last reference in the list of tables.
+		# For extension lookups, duplicate references can be merged only within the
+		# writer tree under the  extension lookup.
+
+		done[id(self)] = True
+
+		numItems = len(self.items)
+		iRange = list(range(numItems))
+		iRange.reverse()
+
+		isExtension = hasattr(self, "Extension")
+
+		selfTables = tables
+
+		if isExtension:
+			assert extTables is not None, "Program or XML editing error. Extension subtables cannot contain extensions subtables"
+			tables, extTables, done = extTables, None, {}
+
+		# add Coverage table if it is sorted last.
+		sortCoverageLast = False
+		if hasattr(self, "sortCoverageLast"):
+			# Find coverage table
+			for i in range(numItems):
+				item = self.items[i]
+				if getattr(item, 'name', None) == "Coverage":
+					sortCoverageLast = True
+					break
+			if id(item) not in done:
+				item._gatherTables(tables, extTables, done)
+			else:
+				# We're a new parent of item
+				pass
+
+		for i in iRange:
+			item = self.items[i]
+			if not hasattr(item, "getData"):
+				continue
+
+			if sortCoverageLast and (i==1) and getattr(item, 'name', None) == 'Coverage':
+				# we've already 'gathered' it above
+				continue
+
+			if id(item) not in done:
+				item._gatherTables(tables, extTables, done)
+			else:
+				# Item is already written out by other parent
+				pass
 
 		self.items = tuple(items)
 
@@ -340,37 +408,63 @@ class OTTableWriter(object):
 
 	# interface for gathering data, as used by table.compile()
 
-	def getSubWriter(self, longOffset=False, name=''):
-		subwriter = self.__class__(self.localState, self.tableTag, name)
-		subwriter.longOffset = longOffset
+	def getSubWriter(self, offsetSize=2, name=''):
+		subwriter = self.__class__(self.localState, self.tableTag, name, offsetSize=offsetSize)
+		subwriter.offsetSize = offsetSize
+		subwriter.parent = self # because some subtables have idential values, we discard
+					# the duplicates under the getAllData method. Hence some
+					# subtable writers can have more than one parent writer.
+					# But we just care about first one right now.
 		return subwriter
 
-	def writeUShort(self, value):
-		assert 0 <= value < 0x10000, value
-		self.items.append(struct.pack(">H", value))
-
-	def writeShort(self, value):
-		assert -32768 <= value < 32768, value
-		self.items.append(struct.pack(">h", value))
-
-	def writeUInt8(self, value):
-		assert 0 <= value < 256, value
-		self.items.append(struct.pack(">B", value))
+	def writeValue(self, typecode, value):
+		self.items.append(struct.pack(f">{typecode}", value))
+	def writeArray(self, typecode, values):
+		a = array.array(typecode, values)
+		if sys.byteorder != "big": a.byteswap()
+		self.items.append(a.tobytes())
 
 	def writeInt8(self, value):
 		assert -128 <= value < 128, value
 		self.items.append(struct.pack(">b", value))
+	def writeInt8Array(self, values):
+		self.writeArray('b', values)
+
+	def writeShort(self, value):
+		assert -32768 <= value < 32768, value
+		self.items.append(struct.pack(">h", value))
+	def writeShortArray(self, values):
+		self.writeArray('h', values)
+
+	def writeLong(self, value):
+		self.items.append(struct.pack(">i", value))
+	def writeLongArray(self, values):
+		self.writeArray('i', values)
+
+	def writeUInt8(self, value):
+		assert 0 <= value < 256, value
+		self.items.append(struct.pack(">B", value))
+	def writeUInt8Array(self, values):
+		self.writeArray('B', values)
+
+	def writeUShort(self, value):
+		assert 0 <= value < 0x10000, value
+		self.items.append(struct.pack(">H", value))
+	def writeUShortArray(self, values):
+		self.writeArray('H', values)
+
+	def writeULong(self, value):
+		self.items.append(struct.pack(">I", value))
+	def writeULongArray(self, values):
+		self.writeArray('I', values)
 
 	def writeUInt24(self, value):
 		assert 0 <= value < 0x1000000, value
 		b = struct.pack(">L", value)
 		self.items.append(b[1:])
-
-	def writeLong(self, value):
-		self.items.append(struct.pack(">l", value))
-
-	def writeULong(self, value):
-		self.items.append(struct.pack(">L", value))
+	def writeUInt24Array(self, values):
+		for value in values:
+			self.writeUInt24(value)
 
 	def writeTag(self, tag):
 		tag = Tag(tag).tobytes()
@@ -441,6 +535,8 @@ class CountReference(object):
 			table[name] = value
 		else:
 			assert table[name] == value, (name, table[name], value)
+	def getValue(self):
+		return self.table[self.name]
 	def getCountData(self):
 		v = self.table[self.name]
 		if v is None: v = 0
@@ -455,7 +551,11 @@ def packUShort(value):
 
 def packULong(value):
 	assert 0 <= value < 0x100000000, value
-	return struct.pack(">L", value)
+	return struct.pack(">I", value)
+
+def packUInt24(value):
+	assert 0 <= value < 0x1000000, value
+	return struct.pack(">I", value)[1:]
 
 
 class BaseTable(object):
@@ -490,7 +590,7 @@ class BaseTable(object):
 			countValue = 1
 			if conv.repeat:
 				if conv.repeat in reader:
-					countValue = reader[conv.repeat]
+					countValue = reader[conv.repeat] + conv.aux
 				else:
 					return NotImplemented
 			totalSize += size * countValue
@@ -542,22 +642,27 @@ class BaseTable(object):
 			if conv.name == "SubStruct":
 				conv = conv.getConverter(reader.tableTag,
 				                         table["MorphType"])
-			if conv.repeat:
-				if isinstance(conv.repeat, int):
-					countValue = conv.repeat
-				elif conv.repeat in table:
-					countValue = table[conv.repeat]
+			try:
+				if conv.repeat:
+					if isinstance(conv.repeat, int):
+						countValue = conv.repeat
+					elif conv.repeat in table:
+						countValue = table[conv.repeat]
+					else:
+						# conv.repeat is a propagated count
+						countValue = reader[conv.repeat]
+					countValue += conv.aux
+					table[conv.name] = conv.readArray(reader, font, table, countValue)
 				else:
-					# conv.repeat is a propagated count
-					countValue = reader[conv.repeat]
-				countValue += conv.aux
-				table[conv.name] = conv.readArray(reader, font, table, countValue)
-			else:
-				if conv.aux and not eval(conv.aux, None, table):
-					continue
-				table[conv.name] = conv.read(reader, font, table)
-				if conv.isPropagated:
-					reader[conv.name] = table[conv.name]
+					if conv.aux and not eval(conv.aux, None, table):
+						continue
+					table[conv.name] = conv.read(reader, font, table)
+					if conv.isPropagated:
+						reader[conv.name] = table[conv.name]
+			except Exception as e:
+				name = conv.name
+				e.args = e.args + (name,)
+				raise
 
 		if hasattr(self, 'postRead'):
 			self.postRead(table, font)
@@ -568,10 +673,29 @@ class BaseTable(object):
 
 	def compile(self, writer, font):
 		self.ensureDecompiled()
+		# TODO Following hack to be removed by rewriting how FormatSwitching tables
+		# are handled.
+		# https://github.com/fonttools/fonttools/pull/2238#issuecomment-805192631
 		if hasattr(self, 'preWrite'):
+			deleteFormat = not hasattr(self, 'Format')
 			table = self.preWrite(font)
+			deleteFormat = deleteFormat and hasattr(self, 'Format')
 		else:
+			deleteFormat = False
 			table = self.__dict__.copy()
+
+		# some count references may have been initialized in a custom preWrite; we set
+		# these in the writer's state beforehand (instead of sequentially) so they will
+		# be propagated to all nested subtables even if the count appears in the current
+		# table only *after* the offset to the subtable that it is counting.
+		for conv in self.getConverters():
+			if conv.isCount and conv.isPropagated:
+				value = table.get(conv.name)
+				if isinstance(value, CountReference):
+					writer[conv.name] = value
+
+		if hasattr(self, 'sortCoverageLast'):
+			writer.sortCoverageLast = 1
 
 		if hasattr(self, 'DontShare'):
 			writer.DontShare = True
@@ -593,14 +717,11 @@ class BaseTable(object):
 				else:
 					# conv.repeat is a propagated count
 					writer[conv.repeat].setValue(countValue)
-				values = value
-				for i, value in enumerate(values):
-					try:
-						conv.write(writer, font, table, value, i)
-					except Exception as e:
-						name = value.__class__.__name__ if value is not None else conv.name
-						e.args = e.args + (name+'['+str(i)+']',)
-						raise
+				try:
+					conv.writeArray(writer, font, table, value)
+				except Exception as e:
+					e.args = e.args + (conv.name+'[]',)
+					raise
 			elif conv.isCount:
 				# Special-case Count values.
 				# Assumption: a Count field will *always* precede
@@ -609,8 +730,16 @@ class BaseTable(object):
 				# table. We will later store it here.
 				# We add a reference: by the time the data is assembled
 				# the Count value will be filled in.
-				ref = writer.writeCountReference(table, conv.name, conv.staticSize)
-				table[conv.name] = None
+				# We ignore the current count value since it will be recomputed,
+				# unless it's a CountReference that was already initialized in a custom preWrite.
+				if isinstance(value, CountReference):
+					ref = value
+					ref.size = conv.staticSize
+					writer.writeData(ref)
+					table[conv.name] = ref.getValue()
+				else:
+					ref = writer.writeCountReference(table, conv.name, conv.staticSize)
+					table[conv.name] = None
 				if conv.isPropagated:
 					writer[conv.name] = ref
 			elif conv.isLookupType:
@@ -632,6 +761,9 @@ class BaseTable(object):
 					raise
 				if conv.isPropagated:
 					writer[conv.name] = value
+
+		if deleteFormat:
+			del self.Format
 
 	def readFormat(self, reader):
 		pass
@@ -707,7 +839,7 @@ class FormatSwitchingBaseTable(BaseTable):
 		return NotImplemented
 
 	def getConverters(self):
-		return self.converters[self.Format]
+		return self.converters.get(self.Format, [])
 
 	def getConverterByName(self, name):
 		return self.convertersByName[self.Format][name]
@@ -720,6 +852,26 @@ class FormatSwitchingBaseTable(BaseTable):
 
 	def toXML(self, xmlWriter, font, attrs=None, name=None):
 		BaseTable.toXML(self, xmlWriter, font, attrs, name)
+
+
+class UInt8FormatSwitchingBaseTable(FormatSwitchingBaseTable):
+	def readFormat(self, reader):
+		self.Format = reader.readUInt8()
+
+	def writeFormat(self, writer):
+		writer.writeUInt8(self.Format)
+
+
+formatSwitchingBaseTables = {
+	"uint16": FormatSwitchingBaseTable,
+	"uint8": UInt8FormatSwitchingBaseTable,
+}
+
+def getFormatSwitchingBaseTableClass(formatType):
+	try:
+		return formatSwitchingBaseTables[formatType]
+	except KeyError:
+		raise TypeError(f"Unsupported format type: {formatType!r}")
 
 
 #
@@ -822,7 +974,8 @@ class ValueRecord(object):
 					setattr(self, name, None if isDevice else 0)
 			if src is not None:
 				for key,val in src.__dict__.items():
-					assert hasattr(self, key)
+					if not hasattr(self, key):
+						continue
 					setattr(self, key, val)
 		elif src is not None:
 			self.__dict__ = src.__dict__.copy()
@@ -831,6 +984,13 @@ class ValueRecord(object):
 		format = 0
 		for name in self.__dict__.keys():
 			format = format | valueRecordFormatDict[name][0]
+		return format
+
+	def getEffectiveFormat(self):
+		format = 0
+		for name,value in self.__dict__.items():
+			if value:
+				format = format | valueRecordFormatDict[name][0]
 		return format
 
 	def toXML(self, xmlWriter, font, valueName, attrs=None):

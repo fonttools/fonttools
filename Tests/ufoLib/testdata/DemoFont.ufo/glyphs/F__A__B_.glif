@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<glyph name="F_A_B" format="1">
+  <advance width="900"/>
+  <outline>
+    <component base="A"/>
+    <component base="B" xOffset="350"/>
+    <component base="F" xScale="0.965925826289" xyScale="-0.258819045103" yxScale="0.258819045103" yScale="0.965925826289" xOffset="-50" yOffset="500"/>
+  </outline>
+</glyph>

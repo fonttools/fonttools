@@ -1,7 +1,5 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
-from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont
 import sys
 

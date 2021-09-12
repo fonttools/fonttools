@@ -31,13 +31,13 @@
       <!-- LookupCount=1 -->
       <Lookup index="0">
         <LookupType value="4"/>
-        <LookupFlag value="2"/>
+        <LookupFlag value="2"/><!-- ignoreBaseGlyphs -->
         <!-- SubTableCount=1 -->
         <MarkBasePos index="0" Format="1">
-          <MarkCoverage Format="1">
+          <MarkCoverage>
             <Glyph value="g19"/>
           </MarkCoverage>
-          <BaseCoverage Format="1">
+          <BaseCoverage>
             <Glyph value="g18"/>
           </BaseCoverage>
           <!-- ClassCount=1 -->

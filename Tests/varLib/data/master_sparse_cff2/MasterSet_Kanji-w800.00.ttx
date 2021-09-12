@@ -1,0 +1,393 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="OTTO" ttLibVersion="3.41">
+
+  <GlyphOrder>
+    <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
+    <GlyphID id="0" name=".notdef"/>
+    <GlyphID id="1" name="cid13393"/>
+  </GlyphOrder>
+
+  <head>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="1.0"/>
+    <fontRevision value="1.002"/>
+    <checkSumAdjustment value="0xab041b5d"/>
+    <magicNumber value="0x5f0f3cf5"/>
+    <flags value="00000000 00000011"/>
+    <unitsPerEm value="1000"/>
+    <created value="Thu Dec 13 12:08:04 2018"/>
+    <modified value="Tue Apr 16 22:17:21 2019"/>
+    <xMin value="69"/>
+    <yMin value="-120"/>
+    <xMax value="991"/>
+    <yMax value="880"/>
+    <macStyle value="00000000 00000000"/>
+    <lowestRecPPEM value="3"/>
+    <fontDirectionHint value="2"/>
+    <indexToLocFormat value="0"/>
+    <glyphDataFormat value="0"/>
+  </head>
+
+  <hhea>
+    <tableVersion value="0x00010000"/>
+    <ascent value="1160"/>
+    <descent value="-317"/>
+    <lineGap value="0"/>
+    <advanceWidthMax value="1000"/>
+    <minLeftSideBearing value="69"/>
+    <minRightSideBearing value="9"/>
+    <xMaxExtent value="991"/>
+    <caretSlopeRise value="1"/>
+    <caretSlopeRun value="0"/>
+    <caretOffset value="0"/>
+    <reserved0 value="0"/>
+    <reserved1 value="0"/>
+    <reserved2 value="0"/>
+    <reserved3 value="0"/>
+    <metricDataFormat value="0"/>
+    <numberOfHMetrics value="1"/>
+  </hhea>
+
+  <maxp>
+    <tableVersion value="0x5000"/>
+    <numGlyphs value="2"/>
+  </maxp>
+
+  <OS_2>
+    <!-- The fields 'usFirstCharIndex' and 'usLastCharIndex'
+         will be recalculated by the compiler -->
+    <version value="3"/>
+    <xAvgCharWidth value="978"/>
+    <usWeightClass value="250"/>
+    <usWidthClass value="5"/>
+    <fsType value="00000000 00000100"/>
+    <ySubscriptXSize value="650"/>
+    <ySubscriptYSize value="600"/>
+    <ySubscriptXOffset value="0"/>
+    <ySubscriptYOffset value="75"/>
+    <ySuperscriptXSize value="650"/>
+    <ySuperscriptYSize value="600"/>
+    <ySuperscriptXOffset value="0"/>
+    <ySuperscriptYOffset value="350"/>
+    <yStrikeoutSize value="50"/>
+    <yStrikeoutPosition value="228"/>
+    <sFamilyClass value="0"/>
+    <panose>
+      <bFamilyType value="0"/>
+      <bSerifStyle value="0"/>
+      <bWeight value="3"/>
+      <bProportion value="0"/>
+      <bContrast value="0"/>
+      <bStrokeVariation value="0"/>
+      <bArmStyle value="0"/>
+      <bLetterForm value="0"/>
+      <bMidline value="0"/>
+      <bXHeight value="0"/>
+    </panose>
+    <ulUnicodeRange1 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange2 value="00100000 00000000 00000000 00000000"/>
+    <ulUnicodeRange3 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange4 value="00000000 00000000 00000000 00000000"/>
+    <achVendID value="ADBE"/>
+    <fsSelection value="00000000 00000000"/>
+    <usFirstCharIndex value="63964"/>
+    <usLastCharIndex value="63964"/>
+    <sTypoAscender value="880"/>
+    <sTypoDescender value="-120"/>
+    <sTypoLineGap value="200"/>
+    <usWinAscent value="1160"/>
+    <usWinDescent value="317"/>
+    <ulCodePageRange1 value="00100000 00000010 00000000 10011111"/>
+    <ulCodePageRange2 value="00000000 00000000 00000000 00000000"/>
+    <sxHeight value="380"/>
+    <sCapHeight value="760"/>
+    <usDefaultChar value="0"/>
+    <usBreakChar value="32"/>
+    <usMaxContext value="1"/>
+  </OS_2>
+
+  <name>
+    <namerecord nameID="0" platformID="3" platEncID="1" langID="0x409">
+      Copyright © 2018 Adobe systems Co., Ltd. All Rights Reserved.
+    </namerecord>
+    <namerecord nameID="1" platformID="3" platEncID="1" langID="0x409">
+      SHSansJPVF w800.00
+    </namerecord>
+    <namerecord nameID="2" platformID="3" platEncID="1" langID="0x409">
+      Regular
+    </namerecord>
+    <namerecord nameID="3" platformID="3" platEncID="1" langID="0x409">
+      1.002;ADBE;MasterSet_Kanji-w800.00
+    </namerecord>
+    <namerecord nameID="4" platformID="3" platEncID="1" langID="0x409">
+      SHSansJPVF w800.00
+    </namerecord>
+    <namerecord nameID="5" platformID="3" platEncID="1" langID="0x409">
+      Version 1.002;hotconv 1.0.109;makeotfexe 2.5.65596 DEVELOPMENT
+    </namerecord>
+    <namerecord nameID="6" platformID="3" platEncID="1" langID="0x409">
+      MasterSet_Kanji-w800.00
+    </namerecord>
+  </name>
+
+  <cmap>
+    <tableVersion version="0"/>
+    <cmap_format_4 platformID="0" platEncID="3" language="0">
+      <map code="0xf9dc" name="cid13393"/><!-- CJK COMPATIBILITY IDEOGRAPH-F9DC -->
+    </cmap_format_4>
+    <cmap_format_12 platformID="0" platEncID="4" format="12" reserved="0" length="28" language="0" nGroups="1">
+      <map code="0xf9dc" name="cid13393"/><!-- CJK COMPATIBILITY IDEOGRAPH-F9DC -->
+    </cmap_format_12>
+    <cmap_format_14 platformID="0" platEncID="5">
+      <map uv="0x9686" uvs="0xfe00" name="cid13393"/>
+      <map uv="0x9686" uvs="0xe0101" name="cid13393"/>
+    </cmap_format_14>
+    <cmap_format_4 platformID="3" platEncID="1" language="0">
+      <map code="0xf9dc" name="cid13393"/><!-- CJK COMPATIBILITY IDEOGRAPH-F9DC -->
+    </cmap_format_4>
+    <cmap_format_12 platformID="3" platEncID="10" format="12" reserved="0" length="28" language="0" nGroups="1">
+      <map code="0xf9dc" name="cid13393"/><!-- CJK COMPATIBILITY IDEOGRAPH-F9DC -->
+    </cmap_format_12>
+  </cmap>
+
+  <post>
+    <formatType value="3.0"/>
+    <italicAngle value="0.0"/>
+    <underlinePosition value="-75"/>
+    <underlineThickness value="50"/>
+    <isFixedPitch value="0"/>
+    <minMemType42 value="0"/>
+    <maxMemType42 value="0"/>
+    <minMemType1 value="0"/>
+    <maxMemType1 value="0"/>
+  </post>
+
+  <CFF>
+    <major value="1"/>
+    <minor value="0"/>
+    <CFFFont name="MasterSet_Kanji-w800.00">
+      <ROS Registry="Adobe" Order="Japan1" Supplement="6"/>
+      <Notice value="1997-2007, 2012 Adobe Systems Incorporated. All Rights Reserved. Kozuka Mincho is either a registered trademark or trademark of Adobe Systems Incorporated in the United States and/or other countries.&quot;"/>
+      <FullName value="Master Set Kanji w800.00"/>
+      <FamilyName value="Master Set Kanji"/>
+      <Weight value="ExtraLight"/>
+      <isFixedPitch value="0"/>
+      <ItalicAngle value="0"/>
+      <UnderlinePosition value="-100"/>
+      <UnderlineThickness value="50"/>
+      <PaintType value="0"/>
+      <CharstringType value="2"/>
+      <FontMatrix value="0.001 0 0 0.001 0 0"/>
+      <FontBBox value="69 -120 991 880"/>
+      <StrokeWidth value="0"/>
+      <XUID value="1119273886"/>
+      <CIDFontVersion value="6.004"/>
+      <CIDFontRevision value="0"/>
+      <CIDFontType value="0"/>
+      <CIDCount value="23058"/>
+      <!-- charset is dumped separately as the 'GlyphOrder' element -->
+      <FDSelect format="3"/>
+      <FDArray>
+        <FontDict index="0">
+          <FontName value="MasterSet_Kanji-w800.00-Generic"/>
+          <Private>
+            <BlueValues value="-250 -250 1100 1100"/>
+            <BlueScale value="0.039625"/>
+            <BlueShift value="7"/>
+            <BlueFuzz value="0"/>
+            <StdHW value="1"/>
+            <StdVW value="1"/>
+            <ForceBold value="0"/>
+            <LanguageGroup value="1"/>
+            <ExpansionFactor value="0.06"/>
+            <initialRandomSeed value="0"/>
+            <defaultWidthX value="1000"/>
+            <nominalWidthX value="607"/>
+          </Private>
+        </FontDict>
+        <FontDict index="1">
+          <FontName value="MasterSet_Kanji-w800.00-Kanji"/>
+          <Private>
+            <BlueValues value="-250 -250 1100 1100"/>
+            <BlueScale value="0.039625"/>
+            <BlueShift value="7"/>
+            <BlueFuzz value="0"/>
+            <StdHW value="1"/>
+            <StdVW value="1"/>
+            <ForceBold value="0"/>
+            <LanguageGroup value="1"/>
+            <ExpansionFactor value="0.06"/>
+            <initialRandomSeed value="0"/>
+            <defaultWidthX value="1000"/>
+            <nominalWidthX value="0"/>
+          </Private>
+        </FontDict>
+      </FDArray>
+      <CharStrings>
+        <CharString name=".notdef" fdSelectIndex="0">
+          393 -120 50 859 91 -50 50 hstemhm
+          100 50 700 50 hintmask 10111000
+          100 -120 rmoveto
+          800 0 rlineto
+          0 1000 rlineto
+          -800 0 rlineto
+          400 -459 rmoveto
+          -318 409 rlineto
+          636 0 rlineto
+          -286 -450 rmoveto
+          hintmask 11011000
+          318 409 rlineto
+          0 -818 rlineto
+          -668 -41 rmoveto
+          318 409 rlineto
+          318 -409 rlineto
+          -668 859 rmoveto
+          318 -409 rlineto
+          -318 -409 rlineto
+          endchar
+        </CharString>
+        <CharString name="cid13393" fdSelectIndex="1">
+          1000 -71 96 -27 27 50 85 -35 105 -23 86 -86 161 -8 84 248 88 -34 34 -13 42 hstemhm
+          69 107 88 108 -103 37 307 114 82 34 hintmask 1010101101110110
+          552 780 rmoveto
+          0 -88 rlineto
+          291 0 rlineto
+          0 88 rlineto
+          -382 -487 rmoveto
+          0 -86 rlineto
+          463 0 rlineto
+          0 86 rlineto
+          -426 151 rmoveto
+          0 -84 rlineto
+          349 0 rlineto
+          0 84 rlineto
+          -480 -419 rmoveto
+          0 -96 rlineto
+          597 0 rlineto
+          0 96 rlineto
+          -516 135 rmoveto
+          0 -85 rlineto
+          456 0 rlineto
+          0 85 rlineto
+          -95 620 rmoveto
+          0 -16 rlineto
+          -72 -134 -195 -99 -195 -40 rrcurveto
+          22 -23 25 -43 12 -27 rrcurveto
+          hintmask 0000000010000010
+          213 54 207 110 96 184 rrcurveto
+          hintmask 0100010100000110
+          -74 39 rlineto
+          -18 -5 rlineto
+          -268 -57 rmoveto
+          -93 -34 rlineto
+          94 -142 159 -95 200 -40 rrcurveto
+          15 29 30 44 24 22 rrcurveto
+          -191 29 -160 77 -78 110 rrcurveto
+          13 132 rmoveto
+          -38 -74 -73 -81 -110 -59 rrcurveto
+          24 -16 36 -39 16 -25 rrcurveto
+          123 76 80 93 58 104 rrcurveto
+          -239 -466 rmoveto
+          -21 -62 -36 -63 -46 -42 rrcurveto
+          24 -13 41 -27 20 -16 rrcurveto
+          46 48 45 76 26 75 rrcurveto
+          62 24 rmoveto
+          0 -370 rlineto
+          114 0 rlineto
+          0 370 rlineto
+          hintmask 0000000000101000
+          -658 441 rmoveto
+          0 -902 rlineto
+          107 0 rlineto
+          0 792 rlineto
+          130 0 rlineto
+          0 110 rlineto
+          -37 0 rmoveto
+          0 -36 rlineto
+          -14 -65 -32 -143 -29 -91 rrcurveto
+          hintmask 0001000000010000
+          57 -68 13 -64 0 -46 rrcurveto
+          0 -30 -5 -20 -12 -9 rrcurveto
+          -7 -6 -11 -3 -10 0 rrcurveto
+          -13 0 -13 0 -18 2 rrcurveto
+          18 -30 9 -46 1 -29 rrcurveto
+          23 -1 24 0 18 2 rrcurveto
+          22 4 20 7 16 12 rrcurveto
+          32 22 14 43 0 66 rrcurveto
+          0 59 -13 70 -62 78 rrcurveto
+          hintmask 0000000001001000
+          29 80 34 112 27 88 rrcurveto
+          hintmask 0000000000001000
+          -80 46 rlineto
+          -18 -4 rlineto
+          endchar
+        </CharString>
+      </CharStrings>
+    </CFFFont>
+
+    <GlobalSubrs>
+      <!-- The 'index' attribute is only for humans; it is ignored when parsed. -->
+    </GlobalSubrs>
+  </CFF>
+
+  <GSUB>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=1 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=0 -->
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=0 -->
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=0 -->
+    </LookupList>
+  </GSUB>
+
+  <VORG>
+    <majorVersion value="1"/>
+    <minorVersion value="0"/>
+    <defaultVertOriginY value="880"/>
+    <numVertOriginYMetrics value="0"/>
+  </VORG>
+
+  <hmtx>
+    <mtx name=".notdef" width="1000" lsb="100"/>
+    <mtx name="cid13393" width="1000" lsb="69"/>
+  </hmtx>
+
+  <vhea>
+    <tableVersion value="0x00011000"/>
+    <ascent value="500"/>
+    <descent value="-500"/>
+    <lineGap value="0"/>
+    <advanceHeightMax value="1000"/>
+    <minTopSideBearing value="0"/>
+    <minBottomSideBearing value="0"/>
+    <yMaxExtent value="1000"/>
+    <caretSlopeRise value="0"/>
+    <caretSlopeRun value="1"/>
+    <caretOffset value="0"/>
+    <reserved1 value="0"/>
+    <reserved2 value="0"/>
+    <reserved3 value="0"/>
+    <reserved4 value="0"/>
+    <metricDataFormat value="0"/>
+    <numberOfVMetrics value="1"/>
+  </vhea>
+
+  <vmtx>
+    <mtx name=".notdef" height="1000" tsb="0"/>
+    <mtx name="cid13393" height="1000" tsb="25"/>
+  </vmtx>
+
+</ttFont>

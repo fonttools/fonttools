@@ -1,0 +1,23 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<designspace format="4.0">
+  <axes>
+    <axis tag="wght" name="Weight" minimum="100" maximum="900" default="400"/>
+  </axes>
+  <sources>
+    <source filename="master_kerning_merging/0.ttf">
+      <location>
+        <dimension name="Weight" xvalue="100"/>
+      </location>
+    </source>
+    <source filename="master_kerning_merging/1.ttf">
+      <location>
+        <dimension name="Weight" xvalue="400"/>
+      </location>
+    </source>
+    <source filename="master_kerning_merging/2.ttf">
+      <location>
+        <dimension name="Weight" xvalue="900"/>
+      </location>
+    </source>
+  </sources>
+</designspace>

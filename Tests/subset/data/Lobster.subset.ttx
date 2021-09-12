@@ -490,7 +490,7 @@ This license is available with a FAQ at: http://scripts.sil.org/OFL
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <PairPos index="0" Format="1">
-          <Coverage Format="2">
+          <Coverage>
             <Glyph value="one"/>
             <Glyph value="three"/>
             <Glyph value="two"/>
@@ -616,7 +616,7 @@ This license is available with a FAQ at: http://scripts.sil.org/OFL
         <LookupType value="1"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <SingleSubst index="0" Format="1">
+        <SingleSubst index="0">
           <Substitution in="A" out="A.salt"/>
           <Substitution in="B" out="B.salt"/>
         </SingleSubst>
@@ -625,7 +625,7 @@ This license is available with a FAQ at: http://scripts.sil.org/OFL
         <LookupType value="4"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <LigatureSubst index="0" Format="1">
+        <LigatureSubst index="0">
           <LigatureSet glyph="I">
             <Ligature components="J" glyph="IJ"/>
           </LigatureSet>
@@ -635,7 +635,7 @@ This license is available with a FAQ at: http://scripts.sil.org/OFL
         <LookupType value="1"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <SingleSubst index="0" Format="1">
+        <SingleSubst index="0">
           <Substitution in="A" out="A.salt"/>
           <Substitution in="B" out="B.salt"/>
         </SingleSubst>

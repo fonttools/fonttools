@@ -483,17 +483,17 @@
       <!-- LookupCount=1 -->
       <Lookup index="0">
         <LookupType value="2"/>
-        <LookupFlag value="8"/>
+        <LookupFlag value="8"/><!-- ignoreMarks -->
         <!-- SubTableCount=1 -->
         <PairPos index="0" Format="2">
-          <Coverage Format="1">
+          <Coverage>
             <Glyph value="T"/>
           </Coverage>
           <ValueFormat1 value="4"/>
           <ValueFormat2 value="0"/>
-          <ClassDef1 Format="2">
+          <ClassDef1>
           </ClassDef1>
-          <ClassDef2 Format="1">
+          <ClassDef2>
             <ClassDef glyph="T" class="4"/>
             <ClassDef glyph="n" class="3"/>
             <ClassDef glyph="o" class="2"/>

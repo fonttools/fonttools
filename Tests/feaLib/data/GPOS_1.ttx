@@ -40,8 +40,26 @@
       <Lookup index="0">
         <LookupType value="1"/>
         <LookupFlag value="0"/>
-        <!-- SubTableCount=8 -->
-        <SinglePos index="0" Format="1">
+        <!-- SubTableCount=7 -->
+        <SinglePos index="0" Format="2">
+          <Coverage>
+            <Glyph value="four"/>
+            <Glyph value="six"/>
+            <Glyph value="seven"/>
+            <Glyph value="eight"/>
+            <Glyph value="nine"/>
+            <Glyph value="four.oldstyle"/>
+          </Coverage>
+          <ValueFormat value="4"/>
+          <!-- ValueCount=6 -->
+          <Value index="0" XAdvance="400"/>
+          <Value index="1" XAdvance="-200"/>
+          <Value index="2" XAdvance="-100"/>
+          <Value index="3" XAdvance="-100"/>
+          <Value index="4" XAdvance="-100"/>
+          <Value index="5" XAdvance="401"/>
+        </SinglePos>
+        <SinglePos index="1" Format="1">
           <Coverage>
             <Glyph value="one"/>
             <Glyph value="two"/>
@@ -51,28 +69,7 @@
           <ValueFormat value="5"/>
           <Value XPlacement="-80" XAdvance="-160"/>
         </SinglePos>
-        <SinglePos index="1" Format="2">
-          <Coverage>
-            <Glyph value="four"/>
-            <Glyph value="six"/>
-            <Glyph value="four.oldstyle"/>
-          </Coverage>
-          <ValueFormat value="4"/>
-          <!-- ValueCount=3 -->
-          <Value index="0" XAdvance="400"/>
-          <Value index="1" XAdvance="-200"/>
-          <Value index="2" XAdvance="401"/>
-        </SinglePos>
-        <SinglePos index="2" Format="1">
-          <Coverage>
-            <Glyph value="seven"/>
-            <Glyph value="eight"/>
-            <Glyph value="nine"/>
-          </Coverage>
-          <ValueFormat value="4"/>
-          <Value XAdvance="-100"/>
-        </SinglePos>
-        <SinglePos index="3" Format="2">
+        <SinglePos index="2" Format="2">
           <Coverage>
             <Glyph value="P"/>
             <Glyph value="Q"/>
@@ -84,7 +81,7 @@
           <Value index="1" XPlacement="1" XAdvance="801"/>
           <Value index="2" XPlacement="1" XAdvance="802"/>
         </SinglePos>
-        <SinglePos index="4" Format="2">
+        <SinglePos index="3" Format="2">
           <Coverage>
             <Glyph value="S"/>
             <Glyph value="T"/>
@@ -96,7 +93,7 @@
           <Value index="1" XPlacement="1" YPlacement="1" XAdvance="804"/>
           <Value index="2" XPlacement="1" YPlacement="1" XAdvance="805"/>
         </SinglePos>
-        <SinglePos index="5" Format="1">
+        <SinglePos index="4" Format="1">
           <Coverage>
             <Glyph value="A"/>
             <Glyph value="B"/>
@@ -123,13 +120,13 @@
             </XAdvDevice>
           </Value>
         </SinglePos>
-        <SinglePos index="6" Format="1">
+        <SinglePos index="5" Format="1">
           <Coverage>
             <Glyph value="zero"/>
           </Coverage>
           <ValueFormat value="0"/>
         </SinglePos>
-        <SinglePos index="7" Format="1">
+        <SinglePos index="6" Format="1">
           <Coverage>
             <Glyph value="C"/>
           </Coverage>

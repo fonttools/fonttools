@@ -34,10 +34,10 @@
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <MarkMarkPos index="0" Format="1">
-          <Mark1Coverage Format="1">
+          <Mark1Coverage>
             <Glyph value="uni0303"/>
           </Mark1Coverage>
-          <Mark2Coverage Format="1">
+          <Mark2Coverage>
             <Glyph value="uni0308"/>
           </Mark2Coverage>
           <!-- ClassCount=1 -->
@@ -56,7 +56,7 @@
             <Mark2Record index="0">
               <Mark2Anchor index="0" Format="1">
                 <XCoordinate value="0"/>
-                <YCoordinate value="702"/>
+                <YCoordinate value="703"/>
               </Mark2Anchor>
             </Mark2Record>
           </Mark2Array>

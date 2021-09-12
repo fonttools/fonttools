@@ -1,5 +1,3 @@
-from __future__ import print_function, division, absolute_import, unicode_literals
-from fontTools.misc.py23 import *
 from fontTools.misc.testTools import FakeFont, getXML, parseXML
 from fontTools.misc.textTools import deHexStr, hexStr
 from fontTools.ttLib import TTLibError, getTableClass, getTableModule, newTable
@@ -65,7 +63,7 @@ GVAR_VARIATIONS = {
     ],
     "space": [
         TupleVariation(
-            {"wdth": (0.0, 0.7, 0.7)},
+            {"wdth": (0.0, 0.7000122, 0.7000122)},
             [(1, 11), (2, 22), (3, 33), (4, 44)]),
     ],
     "I": [
@@ -73,7 +71,7 @@ GVAR_VARIATIONS = {
             {"wght": (0.0, 0.5, 1.0)},
             [(3,3), (1,1), (4,4), (1,1), (5,5), (9,9), (2,2), (6,6)]),
         TupleVariation(
-            {"wght": (-1.0, -1.0, 0.0), "wdth": (0.0, 0.8, 0.8)},
+            {"wght": (-1.0, -1.0, 0.0), "wdth": (0.0, 0.7999878, 0.7999878)},
             [(-8,-88), (7,77), None, None, (-4,44), (3,33), (-2,-22), (1,11)]),
     ],
 }
@@ -82,18 +80,9 @@ GVAR_VARIATIONS = {
 GVAR_XML = [
     '<version value="1"/>',
     '<reserved value="0"/>',
-    '<glyphVariations glyph="space">',
-    '  <tuple>',
-    '    <coord axis="wdth" value="0.7"/>',
-    '    <delta pt="0" x="1" y="11"/>',
-    '    <delta pt="1" x="2" y="22"/>',
-    '    <delta pt="2" x="3" y="33"/>',
-    '    <delta pt="3" x="4" y="44"/>',
-    '  </tuple>',
-    '</glyphVariations>',
     '<glyphVariations glyph="I">',
     '  <tuple>',
-    '    <coord axis="wght" max="1.0" min="0.0" value="0.5"/>',
+    '    <coord axis="wght" min="0.0" value="0.5" max="1.0"/>',
     '    <delta pt="0" x="3" y="3"/>',
     '    <delta pt="1" x="1" y="1"/>',
     '    <delta pt="2" x="4" y="4"/>',
@@ -112,6 +101,15 @@ GVAR_XML = [
     '    <delta pt="5" x="3" y="33"/>',
     '    <delta pt="6" x="-2" y="-22"/>',
     '    <delta pt="7" x="1" y="11"/>',
+    '  </tuple>',
+    '</glyphVariations>',
+    '<glyphVariations glyph="space">',
+    '  <tuple>',
+    '    <coord axis="wdth" value="0.7"/>',
+    '    <delta pt="0" x="1" y="11"/>',
+    '    <delta pt="1" x="2" y="22"/>',
+    '    <delta pt="2" x="3" y="33"/>',
+    '    <delta pt="3" x="4" y="44"/>',
     '  </tuple>',
     '</glyphVariations>',
 ]
@@ -133,6 +131,20 @@ def hexencode(s):
 
 
 class GVARTableTest(unittest.TestCase):
+	def assertVariationsAlmostEqual(self, vars1, vars2):
+		self.assertSetEqual(set(vars1.keys()), set(vars2.keys()))
+		for glyphName, variations1 in vars1.items():
+			variations2 = vars2[glyphName]
+			self.assertEqual(len(variations1), len(variations2))
+			for (v1, v2) in zip(variations1, variations2):
+				self.assertSetEqual(set(v1.axes), set(v2.axes))
+				for axisTag, support1 in v1.axes.items():
+					support2 = v2.axes[axisTag]
+					self.assertEqual(len(support1), len(support2))
+					for s1, s2 in zip(support1, support2):
+						self.assertAlmostEqual(s1, s2)
+				self.assertEqual(v1.coordinates, v2.coordinates)
+
 	def makeFont(self, variations):
 		glyphs=[".notdef", "space", "I"]
 		Axis = getTableModule("fvar").Axis
@@ -164,7 +176,7 @@ class GVARTableTest(unittest.TestCase):
 	def test_decompile(self):
 		font, gvar = self.makeFont({})
 		gvar.decompile(GVAR_DATA, font)
-		self.assertEqual(gvar.variations, GVAR_VARIATIONS)
+		self.assertVariationsAlmostEqual(gvar.variations, GVAR_VARIATIONS)
 
 	def test_decompile_noVariations(self):
 		font, gvar = self.makeFont({})
@@ -176,8 +188,10 @@ class GVARTableTest(unittest.TestCase):
 		font, gvar = self.makeFont({})
 		for name, attrs, content in parseXML(GVAR_XML):
 			gvar.fromXML(name, attrs, content, ttFont=font)
-		self.assertEqual(gvar.variations,
-                         {g:v for g,v in GVAR_VARIATIONS.items() if v})
+		self.assertVariationsAlmostEqual(
+			gvar.variations,
+			{g:v for g,v in GVAR_VARIATIONS.items() if v}
+		)
 
 	def test_toXML(self):
 		font, gvar = self.makeFont(GVAR_VARIATIONS)

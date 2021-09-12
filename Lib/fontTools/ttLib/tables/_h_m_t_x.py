@@ -1,5 +1,4 @@
-from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
+from fontTools.misc.roundTools import otRound
 from fontTools import ttLib
 from fontTools.misc.textTools import safeEval
 from . import DefaultTable
@@ -22,7 +21,11 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 
 	def decompile(self, data, ttFont):
 		numGlyphs = ttFont['maxp'].numGlyphs
-		numberOfMetrics = int(getattr(ttFont[self.headerTag], self.numberOfMetricsName))
+		headerTable = ttFont.get(self.headerTag)
+		if headerTable is not None:
+			numberOfMetrics = int(getattr(headerTable, self.numberOfMetricsName))
+		else:
+			numberOfMetrics = numGlyphs
 		if numberOfMetrics > numGlyphs:
 			log.warning("The %s.%s exceeds the maxp.numGlyphs" % (
 				self.headerTag, self.numberOfMetricsName))
@@ -39,8 +42,7 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 		sideBearings = array.array("h", data[:2 * numberOfSideBearings])
 		data = data[2 * numberOfSideBearings:]
 
-		if sys.byteorder != "big":
-			sideBearings.byteswap()
+		if sys.byteorder != "big": sideBearings.byteswap()
 		if data:
 			log.warning("too much '%s' table data" % self.tableTag)
 		self.metrics = {}
@@ -69,23 +71,30 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 					glyphName, self.advanceName))
 				hasNegativeAdvances = True
 			metrics.append([advanceWidth, sideBearing])
-		lastAdvance = metrics[-1][0]
-		lastIndex = len(metrics)
-		while metrics[lastIndex-2][0] == lastAdvance:
-			lastIndex -= 1
-			if lastIndex <= 1:
-				# all advances are equal
-				lastIndex = 1
-				break
-		additionalMetrics = metrics[lastIndex:]
-		additionalMetrics = [round(sb) for _, sb in additionalMetrics]
-		metrics = metrics[:lastIndex]
-		numberOfMetrics = len(metrics)
-		setattr(ttFont[self.headerTag], self.numberOfMetricsName, numberOfMetrics)
+
+		headerTable = ttFont.get(self.headerTag)
+		if headerTable is not None:
+			lastAdvance = metrics[-1][0]
+			lastIndex = len(metrics)
+			while metrics[lastIndex-2][0] == lastAdvance:
+				lastIndex -= 1
+				if lastIndex <= 1:
+					# all advances are equal
+					lastIndex = 1
+					break
+			additionalMetrics = metrics[lastIndex:]
+			additionalMetrics = [otRound(sb) for _, sb in additionalMetrics]
+			metrics = metrics[:lastIndex]
+			numberOfMetrics = len(metrics)
+			setattr(headerTable, self.numberOfMetricsName, numberOfMetrics)
+		else:
+			# no hhea/vhea, can't store numberOfMetrics; assume == numGlyphs
+			numberOfMetrics = ttFont["maxp"].numGlyphs
+			additionalMetrics = []
 
 		allMetrics = []
 		for advance, sb in metrics:
-			allMetrics.extend([round(advance), round(sb)])
+			allMetrics.extend([otRound(advance), otRound(sb)])
 		metricsFmt = ">" + self.longMetricFormat * numberOfMetrics
 		try:
 			data = struct.pack(metricsFmt, *allMetrics)
@@ -97,9 +106,8 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 			else:
 				raise
 		additionalMetrics = array.array("h", additionalMetrics)
-		if sys.byteorder != "big":
-			additionalMetrics.byteswap()
-		data = data + additionalMetrics.tostring()
+		if sys.byteorder != "big": additionalMetrics.byteswap()
+		data = data + additionalMetrics.tobytes()
 		return data
 
 	def toXML(self, writer, ttFont):

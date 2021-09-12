@@ -1,0 +1,20 @@
+lookup GSUB6f1 {
+    ignore sub one two three' four' five six seven;
+    ignore sub two one three' four' six five seven;
+} GSUB6f1;
+
+lookup GSUB6f2 {
+    ignore sub [A - H] [I - Z] [a - z]' [A - H]' [I - Z]';
+    ignore sub [I - Z] [A - H] [a - z]' [A - H]' [I - Z]';
+    ignore sub [A - H] [I - Z] [a - z]' [I - Z]' [A - H]';
+} GSUB6f2;
+
+lookup GSUB6f3 {
+    ignore sub [space comma semicolon] e';
+} GSUB6f3;
+
+feature test {
+    lookup GSUB6f1;
+    lookup GSUB6f2;
+    lookup GSUB6f3;
+} test;

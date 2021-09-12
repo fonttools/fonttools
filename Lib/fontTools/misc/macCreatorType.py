@@ -1,14 +1,8 @@
-from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
-import sys
+from fontTools.misc.py23 import Tag, bytesjoin, strjoin
 try:
 	import xattr
 except ImportError:
 	xattr = None
-try:
-	import MacOS
-except ImportError:
-	MacOS = None
 
 
 def _reverseString(s):
@@ -18,6 +12,16 @@ def _reverseString(s):
 
 
 def getMacCreatorAndType(path):
+	"""Returns file creator and file type codes for a path.
+
+	Args:
+		path (str): A file path.
+
+	Returns:
+		A tuple of two :py:class:`fontTools.py23.Tag` objects, the first
+		representing the file creator and the second representing the
+		file type.
+	"""
 	if xattr is not None:
 		try:
 			finderInfo = xattr.getxattr(path, 'com.apple.FinderInfo')
@@ -27,25 +31,24 @@ def getMacCreatorAndType(path):
 			fileType = Tag(finderInfo[:4])
 			fileCreator = Tag(finderInfo[4:8])
 			return fileCreator, fileType
-	if MacOS is not None:
-		fileCreator, fileType = MacOS.GetCreatorAndType(path)
-		if sys.version_info[:2] < (2, 7) and sys.byteorder == "little":
-			# work around bug in MacOS.GetCreatorAndType() on intel:
-			# http://bugs.python.org/issue1594
-			# (fixed with Python 2.7)
-			fileCreator = _reverseString(fileCreator)
-			fileType = _reverseString(fileType)
-		return fileCreator, fileType
-	else:
-		return None, None
+	return None, None
 
 
 def setMacCreatorAndType(path, fileCreator, fileType):
+	"""Set file creator and file type codes for a path.
+
+	Note that if the ``xattr`` module is not installed, no action is
+	taken but no error is raised.
+
+	Args:
+		path (str): A file path.
+		fileCreator: A four-character file creator tag.
+		fileType: A four-character file type tag.
+
+	"""
 	if xattr is not None:
 		from fontTools.misc.textTools import pad
 		if not all(len(s) == 4 for s in (fileCreator, fileType)):
 			raise TypeError('arg must be string of 4 chars')
 		finderInfo = pad(bytesjoin([fileType, fileCreator]), 32)
 		xattr.setxattr(path, 'com.apple.FinderInfo', finderInfo)
-	if MacOS is not None:
-		MacOS.SetCreatorAndType(path, fileCreator, fileType)

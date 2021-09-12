@@ -2,9 +2,10 @@
 CFF dictionary data and Type1/Type2 CharStrings.
 """
 
-from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
-from fontTools.misc.fixedTools import fixedToFloat
+from fontTools.misc.py23 import bytechr, byteord, bytesjoin, strjoin
+from fontTools.misc.fixedTools import (
+	fixedToFloat, floatToFixed, floatToFixedToStr, strToFixedToFloat,
+)
 from fontTools.pens.boundsPen import BoundsPen
 import struct
 import logging
@@ -199,8 +200,7 @@ def getIntEncoder(format):
 				# distinguish anymore between small ints that were supposed to
 				# be small fixed numbers and small ints that were just small
 				# ints. Hence the warning.
-				import sys
-				sys.stderr.write("Warning: 4-byte T2 number got passed to the "
+				log.warning("4-byte T2 number got passed to the "
 					"IntType handler. This should happen only when reading in "
 					"old XML files.\n")
 				code = bytechr(255) + pack(">l", value)
@@ -216,12 +216,23 @@ encodeIntT1 = getIntEncoder("t1")
 encodeIntT2 = getIntEncoder("t2")
 
 def encodeFixed(f, pack=struct.pack):
-	# For T2 only
-	return b"\xff" + pack(">l", round(f * 65536))
+	"""For T2 only"""
+	value = floatToFixed(f, precisionBits=16)
+	if value & 0xFFFF == 0:  # check if the fractional part is zero
+		return encodeIntT2(value >> 16)  # encode only the integer part
+	else:
+		return b"\xff" + pack(">l", value)  # encode the entire fixed point value
+
+
+realZeroBytes = bytechr(30) + bytechr(0xf)
 
 def encodeFloat(f):
 	# For CFF only, used in cffLib
-	s = str(f).upper()
+	if f == 0.0: # 0.0 == +0.0 == -0.0
+		return realZeroBytes
+	# Note: 14 decimal digits seems to be the limitation for CFF real numbers
+	# in macOS. However, we use 8 here to match the implementation of AFDKO.
+	s = "%.8G" % f
 	if s[:2] == "0.":
 		s = s[1:]
 	elif s[:3] == "-0.":
@@ -230,9 +241,13 @@ def encodeFloat(f):
 	while s:
 		c = s[0]
 		s = s[1:]
-		if c == "E" and s[:1] == "-":
-			s = s[1:]
-			c = "E-"
+		if c == "E":
+			c2 = s[:1]
+			if c2 == "-":
+				s = s[1:]
+				c = "E-"
+			elif c2 == "+":
+				s = s[1:]
 		nibbles.append(realNibblesDict[c])
 	nibbles.append(0xf)
 	if len(nibbles) % 2:
@@ -263,22 +278,6 @@ class SimpleT2Decompiler(object):
 		self.hintMaskBytes = 0
 		self.numRegions = 0
 
-	def check_program(self, program):
-		if not hasattr(self, 'private') or self.private is None:
-			# Type 1 charstrings don't have self.private.
-			# Type2 CFF charstrings may have self.private == None.
-			# In both cases, they are not CFF2 charstrings
-			isCFF2 = False
-		else:
-			isCFF2 = self.private._isCFF2
-		if isCFF2:
-			if program:
-				assert program[-1] not in ("seac",), "illegal CharString Terminator"
-		else:
-			assert program, "illegal CharString: decompiled to empty program"
-			assert program[-1] in ("endchar", "return", "callsubr", "callgsubr",
-					"seac"), "illegal CharString"
-
 	def execute(self, charString):
 		self.callingStack.append(charString)
 		needsDecompilation = charString.needsDecompilation()
@@ -307,7 +306,6 @@ class SimpleT2Decompiler(object):
 			else:
 				pushToStack(token)
 		if needsDecompilation:
-			self.check_program(program)
 			charString.setProgram(program)
 		del self.callingStack[-1]
 
@@ -419,8 +417,7 @@ class SimpleT2Decompiler(object):
 			self.numRegions = self.private.getNumRegions()
 		numBlends = self.pop()
 		numOps = numBlends * (self.numRegions + 1)
-		blendArgs = self.operandStack[-numOps:]
-		del self.operandStack[:-(numOps-numBlends)] # Leave the default operands on the stack.
+		del self.operandStack[-(numOps-numBlends):] # Leave the default operands on the stack.
 
 	def op_vsindex(self, index):
 		vi = self.pop()
@@ -459,8 +456,8 @@ t1Operators = [
 
 class T2WidthExtractor(SimpleT2Decompiler):
 
-	def __init__(self, localSubrs, globalSubrs, nominalWidthX, defaultWidthX):
-		SimpleT2Decompiler.__init__(self, localSubrs, globalSubrs)
+	def __init__(self, localSubrs, globalSubrs, nominalWidthX, defaultWidthX, private=None):
+		SimpleT2Decompiler.__init__(self, localSubrs, globalSubrs, private)
 		self.nominalWidthX = nominalWidthX
 		self.defaultWidthX = defaultWidthX
 
@@ -473,6 +470,8 @@ class T2WidthExtractor(SimpleT2Decompiler):
 		args = self.popall()
 		if not self.gotWidth:
 			if evenOdd ^ (len(args) % 2):
+				# For CFF2 charstrings, this should never happen
+				assert self.defaultWidthX is not None, "CFF2 CharStrings must not have an initial width value"
 				self.width = self.nominalWidthX + args[0]
 				args = args[1:]
 			else:
@@ -499,9 +498,9 @@ class T2WidthExtractor(SimpleT2Decompiler):
 
 class T2OutlineExtractor(T2WidthExtractor):
 
-	def __init__(self, pen, localSubrs, globalSubrs, nominalWidthX, defaultWidthX):
+	def __init__(self, pen, localSubrs, globalSubrs, nominalWidthX, defaultWidthX, private=None):
 		T2WidthExtractor.__init__(
-			self, localSubrs, globalSubrs, nominalWidthX, defaultWidthX)
+			self, localSubrs, globalSubrs, nominalWidthX, defaultWidthX, private)
 		self.pen = pen
 
 	def reset(self):
@@ -700,12 +699,6 @@ class T2OutlineExtractor(T2WidthExtractor):
 			dy6 = d6
 		self.rCurveTo((dx1, dy1), (dx2, dy2), (dx3, dy3))
 		self.rCurveTo((dx4, dy4), (dx5, dy5), (dx6, dy6))
-
-	#
-	# MultipleMaster. Well...
-	#
-	def op_blend(self, index):
-		self.popall()
 
 	# misc
 	def op_and(self, index):
@@ -943,8 +936,7 @@ class T2CharString(object):
 	operators, opcodes = buildOperatorDict(t2Operators)
 	decompilerClass = SimpleT2Decompiler
 	outlineExtractor = T2OutlineExtractor
-	isCFF2 = False
-	
+
 	def __init__(self, bytecode=None, program=None, private=None, globalSubrs=None):
 		if program is None:
 			program = []
@@ -952,6 +944,16 @@ class T2CharString(object):
 		self.program = program
 		self.private = private
 		self.globalSubrs = globalSubrs if globalSubrs is not None else []
+		self._cur_vsindex = None
+
+	def getNumRegions(self, vsindex=None):
+		pd = self.private
+		assert(pd is not None)
+		if vsindex is not None:
+			self._cur_vsindex = vsindex
+		elif self._cur_vsindex is None:
+			self._cur_vsindex = pd.vsindex if hasattr(pd, 'vsindex') else 0
+		return pd.getNumRegions(self._cur_vsindex)
 
 	def __repr__(self):
 		if self.bytecode is None:
@@ -975,29 +977,31 @@ class T2CharString(object):
 	def draw(self, pen):
 		subrs = getattr(self.private, "Subrs", [])
 		extractor = self.outlineExtractor(pen, subrs, self.globalSubrs,
-				self.private.nominalWidthX, self.private.defaultWidthX)
+				self.private.nominalWidthX, self.private.defaultWidthX,
+				self.private)
 		extractor.execute(self)
 		self.width = extractor.width
 
-	def calcBounds(self):
-		boundsPen = BoundsPen(None)
+	def calcBounds(self, glyphSet):
+		boundsPen = BoundsPen(glyphSet)
 		self.draw(boundsPen)
 		return boundsPen.bounds
-
-	def check_program(self, program, isCFF2=False):
-		if isCFF2:
-			if self.program:
-				assert self.program[-1] not in ("seac",), "illegal CFF2 CharString Termination"
-		else:
-			assert self.program, "illegal CharString: decompiled to empty program"
-			assert self.program[-1] in ("endchar", "return", "callsubr", "callgsubr", "seac"), "illegal CharString"
 
 	def compile(self, isCFF2=False):
 		if self.bytecode is not None:
 			return
 		opcodes = self.opcodes
 		program = self.program
-		self.check_program(program, isCFF2=isCFF2)
+
+		if isCFF2:
+			# If present, remove return and endchar operators.
+			if program and program[-1] in ("return", "endchar"):
+				program = program[:-1]
+		elif program and not isinstance(program[-1], str):
+			raise CharStringCompileError(
+				"T2CharString or Subr has items on the stack after last operator."
+			)
+
 		bytecode = []
 		encodeInt = self.getIntEncoder()
 		encodeFixed = self.getFixedEncoder()
@@ -1006,8 +1010,7 @@ class T2CharString(object):
 		while i < end:
 			token = program[i]
 			i = i + 1
-			tp = type(token)
-			if issubclass(tp, basestring):
+			if isinstance(token, str):
 				try:
 					bytecode.extend(bytechr(b) for b in opcodes[token])
 				except KeyError:
@@ -1015,23 +1018,18 @@ class T2CharString(object):
 				if token in ('hintmask', 'cntrmask'):
 					bytecode.append(program[i])  # hint mask
 					i = i + 1
-			elif tp == int:
+			elif isinstance(token, int):
 				bytecode.append(encodeInt(token))
-			elif tp == float:
+			elif isinstance(token, float):
 				bytecode.append(encodeFixed(token))
 			else:
-				assert 0, "unsupported type: %s" % tp
+				assert 0, "unsupported type: %s" % type(token)
 		try:
 			bytecode = bytesjoin(bytecode)
 		except TypeError:
 			log.error(bytecode)
 			raise
 		self.setBytecode(bytecode)
-
-		if isCFF2:
-			# If present, remove return and endchar operators.
-			if self.bytecode and (byteord(self.bytecode[-1]) in (11, 14)):
-				self.bytecode = self.bytecode[:-1]
 
 	def needsDecompilation(self):
 		return self.bytecode is not None
@@ -1045,8 +1043,7 @@ class T2CharString(object):
 		self.program = None
 
 	def getToken(self, index,
-			len=len, byteord=byteord, basestring=basestring,
-			isinstance=isinstance):
+			len=len, byteord=byteord, isinstance=isinstance):
 		if self.bytecode is not None:
 			if index >= len(self.bytecode):
 				return None, 0, 0
@@ -1059,7 +1056,7 @@ class T2CharString(object):
 				return None, 0, 0
 			token = self.program[index]
 			index = index + 1
-		isOperator = isinstance(token, basestring)
+		isOperator = isinstance(token, str)
 		return token, isOperator, index
 
 	def getBytes(self, index, nBytes):
@@ -1076,7 +1073,7 @@ class T2CharString(object):
 	def handle_operator(self, operator):
 		return operator
 
-	def toXML(self, xmlWriter):
+	def toXML(self, xmlWriter, ttFont=None):
 		from fontTools.misc.textTools import num2binary
 		if self.bytecode is not None:
 			xmlWriter.dumphex(self.bytecode)
@@ -1088,7 +1085,6 @@ class T2CharString(object):
 				if token is None:
 					break
 				if isOperator:
-					args = [str(arg) for arg in args]
 					if token in ('hintmask', 'cntrmask'):
 						hintMask, isOperator, index = self.getToken(index)
 						bits = []
@@ -1102,15 +1098,17 @@ class T2CharString(object):
 					xmlWriter.newline()
 					args = []
 				else:
+					if isinstance(token, float):
+						token = floatToFixedToStr(token, precisionBits=16)
+					else:
+						token = str(token)
 					args.append(token)
 			if args:
-				if self.isCFF2:
-					# CFF2Subr's can have numeric arguments on the stack after the last operator.
-					args = [str(arg) for arg in args]
-					line = ' '.join(args)
-					xmlWriter.write(line)
-				else:
-					assert 0, "T2Charstring or Subr has items on the stack after last operator."
+				# NOTE: only CFF2 charstrings/subrs can have numeric arguments on
+				# the stack after the last operator. Compiling this would fail if
+				# this is part of CFF 1.0 table.
+				line = ' '.join(args)
+				xmlWriter.write(line)
 
 	def fromXML(self, name, attrs, content):
 		from fontTools.misc.textTools import binary2num, readHex
@@ -1129,7 +1127,7 @@ class T2CharString(object):
 				token = int(token)
 			except ValueError:
 				try:
-					token = float(token)
+					token = strToFixedToFloat(token, precisionBits=16)
 				except ValueError:
 					program.append(token)
 					if token in ('hintmask', 'cntrmask'):
@@ -1145,19 +1143,13 @@ class T2CharString(object):
 				program.append(token)
 		self.setProgram(program)
 
-class CFF2Subr(T2CharString):
-	isCFF2 = True
-
 class T1CharString(T2CharString):
 
 	operandEncoding = t1OperandEncoding
 	operators, opcodes = buildOperatorDict(t1Operators)
 
 	def __init__(self, bytecode=None, program=None, subrs=None):
-		if program is None:
-			program = []
-		self.bytecode = bytecode
-		self.program = program
+		super().__init__(bytecode, program)
 		self.subrs = subrs
 
 	def getIntEncoder(self):
@@ -1259,12 +1251,12 @@ class DictDecompiler(object):
 		"""
 		There may be non-blend args at the top of the stack. We first calculate
 		where the blend args start in the stack. These are the last
-		numMasters*numBlends) +1 args. 
+		numMasters*numBlends) +1 args.
 		The blend args starts with numMasters relative coordinate values, the  BlueValues in the list from the default master font. This is followed by
 		numBlends list of values. Each of  value in one of these lists is the
 		Variable Font delta for the matching region.
-		
-		We re-arrange this to be a list of numMaster entries. Each entry starts with the corresponding default font relative value, and is followed by 
+
+		We re-arrange this to be a list of numMaster entries. Each entry starts with the corresponding default font relative value, and is followed by
 		the delta values. We then convert the default values, the first item in each entry, to an absolute value.
 		"""
 		vsindex = self.dict.get('vsindex', 0)

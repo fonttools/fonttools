@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont>
+
+  <name>
+    <namerecord nameID="256" platformID="3" platEncID="1" langID="0x409">
+      uilabel simple a
+    </namerecord>
+    <namerecord nameID="256" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      uilabel simple a
+    </namerecord>
+    <namerecord nameID="257" platformID="3" platEncID="1" langID="0x409">
+      tool tip simple a
+    </namerecord>
+    <namerecord nameID="257" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      tool tip simple a
+    </namerecord>
+    <namerecord nameID="258" platformID="3" platEncID="1" langID="0x409">
+      sample text simple a
+    </namerecord>
+    <namerecord nameID="258" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      sample text simple a
+    </namerecord>
+    <namerecord nameID="259" platformID="3" platEncID="1" langID="0x409">
+      param1 text simple a
+    </namerecord>
+    <namerecord nameID="259" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      param1 text simple a
+    </namerecord>
+    <namerecord nameID="260" platformID="3" platEncID="1" langID="0x409">
+      param2 text simple a
+    </namerecord>
+    <namerecord nameID="260" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      param2 text simple a
+    </namerecord>
+  </name>
+
+  <GSUB>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=1 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=1 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="cv01"/>
+        <Feature>
+          <FeatureParamsCharacterVariants Format="0">
+            <Format value="0"/>
+            <FeatUILabelNameID value="256"/>  <!-- uilabel simple a -->
+            <FeatUITooltipTextNameID value="257"/>  <!-- tool tip simple a -->
+            <SampleTextNameID value="258"/>  <!-- sample text simple a -->
+            <NumNamedParameters value="2"/>
+            <FirstParamUILabelNameID value="259"/>  <!-- param1 text simple a -->
+            <!-- CharCount=2 -->
+            <Character index="0" value="10"/>
+            <Character index="1" value="24030"/>
+          </FeatureParamsCharacterVariants>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="0"/>
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=1 -->
+      <Lookup index="0">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SingleSubst index="0">
+          <Substitution in="A" out="B"/>
+        </SingleSubst>
+      </Lookup>
+    </LookupList>
+  </GSUB>
+
+</ttFont>

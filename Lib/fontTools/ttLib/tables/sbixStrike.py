@@ -1,8 +1,6 @@
-from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
-from fontTools.misc.textTools import readHex
-from .sbixGlyph import *
+from fontTools.misc.textTools import safeEval
+from .sbixGlyph import Glyph
 import struct
 
 sbixStrikeHeaderFormat = """
@@ -65,8 +63,8 @@ class Strike(object):
 		del self.data
 
 	def compile(self, ttFont):
-		self.glyphDataOffsets = ""
-		self.bitmapData = ""
+		self.glyphDataOffsets = b""
+		self.bitmapData = b""
 
 		glyphOrder = ttFont.getGlyphOrder()
 

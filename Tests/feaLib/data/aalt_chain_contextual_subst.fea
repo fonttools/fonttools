@@ -1,0 +1,20 @@
+# https://github.com/googlefonts/fontmake/issues/648
+
+lookup CNTXT_LIGS {
+    sub f i by f_i;
+    sub c t by c_t;
+} CNTXT_LIGS;
+
+lookup CNTXT_SUB {
+    sub n by n.end;
+    sub s by s.end;
+} CNTXT_SUB;
+
+feature calt {
+    sub [a e i o u] f' lookup CNTXT_LIGS i' n' lookup CNTXT_SUB;
+    sub [a e i o u] c' lookup CNTXT_LIGS t' s' lookup CNTXT_SUB;
+} calt;
+
+feature aalt {
+    feature calt;
+} aalt;

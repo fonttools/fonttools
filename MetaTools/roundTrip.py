@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
 """usage: ttroundtrip [options] font1 ... fontN
 
@@ -31,9 +31,9 @@ def usage():
 
 def roundTrip(ttFile1, options, report):
 	fn = os.path.basename(ttFile1)
-	xmlFile1 = tempfile.mktemp(".%s.ttx1" % fn)
-	ttFile2 = tempfile.mktemp(".%s" % fn)
-	xmlFile2 = tempfile.mktemp(".%s.ttx2" % fn)
+	xmlFile1 = tempfile.mkstemp(".%s.ttx1" % fn)
+	ttFile2 = tempfile.mkstemp(".%s" % fn)
+	xmlFile2 = tempfile.mkstemp(".%s.ttx2" % fn)
 	
 	try:
 		ttx.ttDump(ttFile1, xmlFile1, options)
@@ -74,23 +74,22 @@ def main(args):
 	if not files:
 		usage()
 	
-	report = open("report.txt", "a+")
-	options = ttx.Options(rawOptions, len(files))
-	for ttFile in files:
-		try:
-			roundTrip(ttFile, options, report)
-		except KeyboardInterrupt:
-			print("(Cancelled)")
-			break
-		except:
-			print("*** round tripping aborted ***")
-			traceback.print_exc()
-			report.write("=============================================================\n")
-			report.write("  An exception occurred while round tripping")
-			report.write("  \"%s\"\n" % ttFile)
-			traceback.print_exc(file=report)
-			report.write("-------------------------------------------------------------\n")
-	report.close()
+	with open("report.txt", "a+") as report:
+		options = ttx.Options(rawOptions, len(files))
+		for ttFile in files:
+			try:
+				roundTrip(ttFile, options, report)
+			except KeyboardInterrupt:
+				print("(Cancelled)")
+				break
+			except:
+				print("*** round tripping aborted ***")
+				traceback.print_exc()
+				report.write("=============================================================\n")
+				report.write("  An exception occurred while round tripping")
+				report.write("  \"%s\"\n" % ttFile)
+				traceback.print_exc(file=report)
+				report.write("-------------------------------------------------------------\n")
 
 	
 main(sys.argv[1:])

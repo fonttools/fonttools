@@ -1,5 +1,3 @@
-from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
 from . import DefaultTable
 import sys
 import array
@@ -20,9 +18,8 @@ class table__l_o_c_a(DefaultTable.DefaultTable):
 		else:
 			format = "H"
 		locations = array.array(format)
-		locations.fromstring(data)
-		if sys.byteorder != "big":
-			locations.byteswap()
+		locations.frombytes(data)
+		if sys.byteorder != "big": locations.byteswap()
 		if not longFormat:
 			l = array.array("I")
 			for i in range(len(locations)):
@@ -47,9 +44,8 @@ class table__l_o_c_a(DefaultTable.DefaultTable):
 		else:
 			locations = array.array("I", self.locations)
 			ttFont['head'].indexToLocFormat = 1
-		if sys.byteorder != "big":
-			locations.byteswap()
-		return locations.tostring()
+		if sys.byteorder != "big": locations.byteswap()
+		return locations.tobytes()
 
 	def set(self, locations):
 		self.locations = array.array("I", locations)

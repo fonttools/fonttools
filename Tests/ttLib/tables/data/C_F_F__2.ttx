@@ -21,7 +21,7 @@
     <xMin value="51"/>
     <yMin value="-115"/>
     <xMax value="560"/>
-    <yMax value="762"/>
+    <yMax value="731"/>
     <macStyle value="00000000 00000000"/>
     <lowestRecPPEM value="3"/>
     <fontDirectionHint value="2"/>
@@ -106,6 +106,8 @@
                 <blend value="190 -110 -162 0 -110 -162"/>
                 <blend value="200 0 -6 0 0 -6"/>
             </StemSnapV>
+            <LanguageGroup value="0"/>
+            <ExpansionFactor value="0.06"/>
           </Private>
         </FontDict>
       </FDArray>

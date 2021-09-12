@@ -1,8 +1,0 @@
-<?xml version="1.0"?>
-<designspace format="3">
-    <!-- no <axes> element -->
-    <sources/><!-- empty <sources> element -->
-    <instances>
-        <instance/><!-- bare-bones <instance> element -->
-    </instances>
-</designspace>

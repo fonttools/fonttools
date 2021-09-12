@@ -11,7 +11,9 @@ include Lib/fontTools/ttLib/tables/table_API_readme.txt
 
 include *requirements.txt
 include tox.ini
-include run-tests.sh
+include mypy.ini
+
+recursive-include Lib/fontTools py.typed
 
 include .appveyor.yml
 include .codecov.yml
@@ -19,8 +21,13 @@ include .coveragerc
 include .travis.yml
 recursive-include .travis *.sh
 
+recursive-include Icons *.png *.pdf
+
 include Doc/Makefile
 include Doc/make.bat
+include Doc/docs-requirements.txt
+include Doc/README.md
+include Doc/source/assets/img/favicon.ico
 recursive-include Doc/man/man1 *.1
 recursive-include Doc/source *.py *.rst
 
@@ -31,3 +38,6 @@ recursive-include Tests *.glif *.plist
 recursive-include Tests *.txt README
 recursive-include Tests *.lwfn *.pfa *.pfb
 recursive-include Tests *.xml *.designspace *.bin
+recursive-include Tests *.afm
+recursive-include Tests *.json
+recursive-include Tests *.ufoz

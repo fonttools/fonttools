@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="OTTO" ttLibVersion="3.42">
+
+  <GPOS>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=1 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=1 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="vpal"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="0"/>
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=1 -->
+      <Lookup index="0">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=6 -->
+        <SinglePos index="0" Format="2">
+          <Coverage>
+            <Glyph value="uniFF1A"/>
+            <Glyph value="uni3074"/>
+          </Coverage>
+          <ValueFormat value="7"/>
+          <!-- ValueCount=2 -->
+          <Value index="0" XPlacement="-250" YPlacement="0" XAdvance="-500"/>
+          <Value index="1" XPlacement="0" YPlacement="0" XAdvance="-30"/>
+        </SinglePos>
+        <SinglePos index="1" Format="1">
+          <Coverage>
+            <Glyph value="uni3001"/>
+          </Coverage>
+          <ValueFormat value="23"/>
+          <Value XPlacement="-9" YPlacement="0" XAdvance="-500">
+            <XPlaDevice>
+              <StartSize value="0"/>
+              <EndSize value="4"/>
+              <DeltaFormat value="32768"/>
+            </XPlaDevice>
+          </Value>
+        </SinglePos>
+        <SinglePos index="2" Format="1">
+          <Coverage>
+            <Glyph value="uni30FB"/>
+          </Coverage>
+          <ValueFormat value="39"/>
+          <Value XPlacement="-250" YPlacement="1" XAdvance="-500">
+            <YPlaDevice>
+              <StartSize value="0"/>
+              <EndSize value="2"/>
+              <DeltaFormat value="32768"/>
+            </YPlaDevice>
+          </Value>
+        </SinglePos>
+        <SinglePos index="3" Format="1">
+          <Coverage>
+            <Glyph value="uniFF2D"/>
+          </Coverage>
+          <ValueFormat value="87"/>
+          <Value XPlacement="12" YPlacement="0" XAdvance="23">
+            <XPlaDevice>
+              <StartSize value="0"/>
+              <EndSize value="1"/>
+              <DeltaFormat value="32768"/>
+            </XPlaDevice>
+            <XAdvDevice>
+              <StartSize value="0"/>
+              <EndSize value="0"/>
+              <DeltaFormat value="32768"/>
+            </XAdvDevice>
+          </Value>
+        </SinglePos>
+        <SinglePos index="4" Format="1">
+          <Coverage>
+            <Glyph value="uni3073"/>
+          </Coverage>
+          <ValueFormat value="71"/>
+          <Value XPlacement="0" YPlacement="0" XAdvance="-36">
+            <XAdvDevice>
+              <StartSize value="0"/>
+              <EndSize value="3"/>
+              <DeltaFormat value="32768"/>
+            </XAdvDevice>
+          </Value>
+        </SinglePos>
+        <SinglePos index="5" Format="1">
+          <Coverage>
+            <Glyph value="uni307B"/>
+          </Coverage>
+          <ValueFormat value="23"/>
+          <Value XPlacement="11" YPlacement="0" XAdvance="0">
+            <XPlaDevice>
+              <StartSize value="0"/>
+              <EndSize value="2"/>
+              <DeltaFormat value="32768"/>
+            </XPlaDevice>
+          </Value>
+        </SinglePos>
+      </Lookup>
+    </LookupList>
+  </GPOS>
+
+</ttFont>
