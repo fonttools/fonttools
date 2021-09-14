@@ -1,3 +1,6 @@
+4.27.0 (released 2021-09-14)
+----------------------------
+
 - [ttLib/otTables] Cleaned up virtual GID handling: allow virtual GIDs in ``Coverage``
   and ``ClassDef`` readers; removed unused ``allowVID`` argument from ``TTFont``
   constructor, and ``requireReal`` argument in ``TTFont.getGlyphID`` method.
