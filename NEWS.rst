@@ -1,3 +1,13 @@
+- [ttLib/otTables] Cleaned up virtual GID handling: allow virtual GIDs in ``Coverage``
+  and ``ClassDef`` readers; removed unused ``allowVID`` argument from ``TTFont``
+  constructor, and ``requireReal`` argument in ``TTFont.getGlyphID`` method.
+  Make ``TTFont.setGlyphOrder`` clear reverse glyphOrder map, and assume ``glyphOrder``
+  internal attribute is never modified outside setGlyphOrder; added ``TTFont.getGlyphNameMany``
+  and ``getGlyphIDMany`` (#1536, #1654, #2334, #2398).
+- [py23] Dropped internal use of ``fontTools.py23`` module to fix deprecation warnings
+  in client code that imports from fontTools (#2234, #2399, #2400).
+- [subset] Fix subsetting COLRv1 clip boxes when font is loaded lazily (#2408).
+
 4.26.2 (released 2021-08-09)
 ----------------------------
 
