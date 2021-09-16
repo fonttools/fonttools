@@ -5,10 +5,12 @@ colorLib.table_builder: Generic helper for filling in BaseTable derivatives from
 
 import collections
 import enum
+import struct
 from fontTools.ttLib.tables.otBase import (
     BaseTable,
     FormatSwitchingBaseTable,
     UInt8FormatSwitchingBaseTable,
+    OTTableWriter,
 )
 from fontTools.ttLib.tables.otConverters import (
     ComputedInt,
@@ -86,6 +88,7 @@ class TableBuilder:
         if callbackTable is None:
             callbackTable = {}
         self._callbackTable = callbackTable
+        self._dummy_writer = OTTableWriter()
 
     def _convert(self, dest, field, converter, value):
         enumClass = getattr(converter, "enumClass", None)
@@ -117,6 +120,14 @@ class TableBuilder:
                 value = self.build(converter.tableClass, value)
         elif callable(converter):
             value = converter(value)
+
+        if isinstance(converter, (IntValue, FloatValue)):
+            try:
+                converter.write(
+                    self._dummy_writer, font=None, tableDict=None, value=value
+                )
+            except (AssertionError, struct.error) as e:
+                raise OverflowError(value) from e
 
         setattr(dest, field, value)
 
