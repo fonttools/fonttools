@@ -389,14 +389,15 @@ class ChainContextualBuilder(LookupBuilder):
                 candidates[1] = [self.buildFormat1Subtable(ruleset, chaining)]
 
             for i in [1, 2, 3]:
-                try:
-                    self.getCompiledSize_(candidates[i])
-                except Exception as e:
-                    log.warning(
-                        "Contextual format %i at %s overflowed (%s)"
-                        % (i, str(self.location), e)
-                    )
-                    candidates[i] = None
+                if candidates[i]:
+                    try:
+                        self.getCompiledSize_(candidates[i])
+                    except Exception as e:
+                        log.warning(
+                            "Contextual format %i at %s overflowed (%s)"
+                            % (i, str(self.location), e)
+                        )
+                        candidates[i] = None
 
             candidates = [x for x in candidates if x is not None]
             if not candidates:
