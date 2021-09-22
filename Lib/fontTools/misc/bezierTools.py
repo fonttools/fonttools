@@ -879,12 +879,14 @@ def _line_t_of_pt(s, e, pt):
     sx, sy = s
     ex, ey = e
     px, py = pt
-    if not math.isclose(sx, ex):
+    if abs(sx - ex) < epsilon and abs(sy - ey) < epsilon:
+        # Line is a point!
+        return -1
+    # Use the largest
+    if abs(sx - ex) > abs(sy - ex):
         return (px - sx) / (ex - sx)
-    if not math.isclose(sy, ey):
+    else:
         return (py - sy) / (ey - sy)
-    # Line is a point!
-    return -1
 
 
 def _both_points_are_on_same_side_of_origin(a, b, origin):
@@ -1024,7 +1026,11 @@ def curveLineIntersections(curve, line):
     intersections = []
     for t in _curve_line_intersections_t(curve, line):
         pt = pointFinder(*curve, t)
-        intersections.append(Intersection(pt=pt, t1=t, t2=_line_t_of_pt(*line, pt)))
+        # Back-project the point onto the line, to avoid problems with
+        # numerical accuracy in the case of vertical and horizontal lines
+        line_t = _line_t_of_pt(*line, pt)
+        pt = linePointAtT(*line, line_t)
+        intersections.append(Intersection(pt=pt, t1=t, t2=line_t))
     return intersections
 
 
