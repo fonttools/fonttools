@@ -916,7 +916,7 @@ def lineLineIntersections(s1, e1, s2, e2):
         >>> intersection.pt
         (374.44882952482897, 313.73458370177315)
         >>> (intersection.t1, intersection.t2)
-        (0.45069111555824454, 0.5408153767394238)
+        (0.45069111555824454, 0.5408153767394237)
     """
     s1x, s1y = s1
     e1x, e1y = e1
@@ -1015,7 +1015,7 @@ def curveLineIntersections(curve, line):
         >>> len(intersections)
         3
         >>> intersections[0].pt
-        (84.90010344084885, 189.87306176459828)
+        (84.90010344084885, 189.87304963022572)
     """
     if len(curve) == 3:
         pointFinder = quadraticPointAtT
@@ -1175,7 +1175,7 @@ def segmentSegmentIntersections(seg1, seg2):
         >>> len(intersections)
         3
         >>> intersections[0].pt
-        (84.90010344084885, 189.87306176459828)
+        (84.90010344084885, 189.87304963022572)
 
     """
     # Arrange by degree
