@@ -1,3 +1,6 @@
+4.27.1 (released 2021-09-23)
+----------------------------
+
 - [otlLib] Fixed error when chained contextual lookup builder overflows (#2404, #2411).
 - [bezierTools] Fixed two floating-point bugs: one when computing `t` for a point
   lying on an almost horizontal/vertical line; another when computing the intersection
