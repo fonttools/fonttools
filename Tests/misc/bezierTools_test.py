@@ -1,6 +1,8 @@
+import fontTools.misc.bezierTools as bezierTools
 from fontTools.misc.bezierTools import (
-    calcQuadraticBounds, calcCubicBounds, segmentPointAtT, splitLine, splitQuadratic,
-    splitCubic, splitQuadraticAtT, splitCubicAtT, solveCubic)
+    calcQuadraticBounds, calcCubicBounds, curveLineIntersections,
+    segmentPointAtT, splitLine, splitQuadratic, splitCubic, splitQuadraticAtT,
+    splitCubicAtT, solveCubic)
 import pytest
 
 
@@ -148,3 +150,17 @@ _segmentPointAtT_testData = [
 def test_segmentPointAtT(segment, t, expectedPoint):
     point = segmentPointAtT(segment, t)
     assert expectedPoint == point
+
+
+def test_intersections_straight_line():
+    curve = ((548, 183), (548, 289), (450, 366), (315, 366))
+    line1 = ((330, 376), (330, 286))
+    pt = curveLineIntersections(curve, line1)[0][0]
+    assert pt[0] == 330
+    line = (pt, (330, 286))
+    pt2 = (330.0001018806911, 295.5635754579425)
+    assert bezierTools._line_t_of_pt(*line, pt2) > 0
+    s = (19, 0)
+    e = (110, 0)
+    pt = (109.05194805194802, 0.0)
+    assert bezierTools._line_t_of_pt(s, e, pt) == pytest.approx(0.98958184)

@@ -879,12 +879,14 @@ def _line_t_of_pt(s, e, pt):
     sx, sy = s
     ex, ey = e
     px, py = pt
-    if not math.isclose(sx, ex):
+    if abs(sx - ex) < epsilon and abs(sy - ey) < epsilon:
+        # Line is a point!
+        return -1
+    # Use the largest
+    if abs(sx - ex) > abs(sy - ey):
         return (px - sx) / (ex - sx)
-    if not math.isclose(sy, ey):
+    else:
         return (py - sy) / (ey - sy)
-    # Line is a point!
-    return -1
 
 
 def _both_points_are_on_same_side_of_origin(a, b, origin):
@@ -914,7 +916,7 @@ def lineLineIntersections(s1, e1, s2, e2):
         >>> intersection.pt
         (374.44882952482897, 313.73458370177315)
         >>> (intersection.t1, intersection.t2)
-        (0.45069111555824454, 0.5408153767394238)
+        (0.45069111555824465, 0.5408153767394238)
     """
     s1x, s1y = s1
     e1x, e1y = e1
@@ -1013,7 +1015,7 @@ def curveLineIntersections(curve, line):
         >>> len(intersections)
         3
         >>> intersections[0].pt
-        (84.90010344084885, 189.87306176459828)
+        (84.9000930760723, 189.87306176459828)
     """
     if len(curve) == 3:
         pointFinder = quadraticPointAtT
@@ -1024,7 +1026,11 @@ def curveLineIntersections(curve, line):
     intersections = []
     for t in _curve_line_intersections_t(curve, line):
         pt = pointFinder(*curve, t)
-        intersections.append(Intersection(pt=pt, t1=t, t2=_line_t_of_pt(*line, pt)))
+        # Back-project the point onto the line, to avoid problems with
+        # numerical accuracy in the case of vertical and horizontal lines
+        line_t = _line_t_of_pt(*line, pt)
+        pt = linePointAtT(*line, line_t)
+        intersections.append(Intersection(pt=pt, t1=t, t2=line_t))
     return intersections
 
 
@@ -1169,7 +1175,7 @@ def segmentSegmentIntersections(seg1, seg2):
         >>> len(intersections)
         3
         >>> intersections[0].pt
-        (84.90010344084885, 189.87306176459828)
+        (84.9000930760723, 189.87306176459828)
 
     """
     # Arrange by degree
