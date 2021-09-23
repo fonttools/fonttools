@@ -160,3 +160,7 @@ def test_intersections_straight_line():
     line = (pt, (330, 286))
     pt2 = (330.0001018806911, 295.5635754579425)
     assert bezierTools._line_t_of_pt(*line, pt2) > 0
+    s = (19, 0)
+    e = (110, 0)
+    pt = (109.05194805194802, 0.0)
+    assert bezierTools._line_t_of_pt(s, e, pt) == pytest.approx(0.98958184)
