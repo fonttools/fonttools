@@ -830,7 +830,6 @@ def test_updatePaths(tmpdir):
     assert s1.filename == name2
 
 
-@pytest.mark.skipif(sys.version_info[:2] < (3, 6), reason="pathlib is only tested on 3.6 and up")
 def test_read_with_path_object():
     import pathlib
     source = (pathlib.Path(__file__) / "../data/test.designspace").resolve()
@@ -839,7 +838,6 @@ def test_read_with_path_object():
     doc.read(source)
 
 
-@pytest.mark.skipif(sys.version_info[:2] < (3, 6), reason="pathlib is only tested on 3.6 and up")
 def test_with_with_path_object(tmpdir):
     import pathlib
     tmpdir = str(tmpdir)

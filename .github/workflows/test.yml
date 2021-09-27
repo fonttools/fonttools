@@ -27,17 +27,17 @@ jobs:
     if: "! contains(toJSON(github.event.commits.*.message), '[skip ci]')"
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: [3.7, 3.8, 3.9]
         platform: [ubuntu-latest, macos-latest, windows-latest]
         exclude: # Only test on the oldest and latest supported stable Python on macOS and Windows.
           - platform: macos-latest
             python-version: 3.7
           - platform: macos-latest
-            python-version: 3.8
+            python-version: 3.9
           - platform: windows-latest
             python-version: 3.7
           - platform: windows-latest
-            python-version: 3.8
+            python-version: 3.9
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
