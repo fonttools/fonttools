@@ -1018,7 +1018,7 @@ def closure_glyphs(self, s, cur_glyphs):
 						chaos.update(range(seqi, len(getattr(r, c.Input))+2))
 					lookup.closure_glyphs(s, cur_glyphs=pos_glyphs)
 	elif self.Format == 3:
-		if not all(x.intersect(s.glyphs) for x in c.RuleData(self)):
+		if not all(x is not None and x.intersect(s.glyphs) for x in c.RuleData(self)):
 			return []
 		r = self
 		input_coverages = getattr(r, c.Input)
@@ -1113,7 +1113,7 @@ def subset_glyphs(self, s):
 
 		return bool(rss)
 	elif self.Format == 3:
-		return all(x.subset(s.glyphs) for x in c.RuleData(self))
+		return all(x is not None and x.subset(s.glyphs) for x in c.RuleData(self))
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
