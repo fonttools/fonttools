@@ -10,4 +10,4 @@ fs==2.4.13
 skia-pathops==0.7.1; platform_python_implementation != "PyPy"
 # this is only required to run Tests/cu2qu/{ufo,cli}_test.py
 ufoLib2==0.11.4
-pyobjc==6.2.2; sys_platform == "darwin"
+pyobjc==7.3; sys_platform == "darwin"
