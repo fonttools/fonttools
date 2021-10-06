@@ -58,7 +58,6 @@ class ReadWriteTest(unittest.TestCase):
 		data = self.write(font, 'OTHER', dohex=True)
 		self.assertEqual(font.getData(), data)
 
-	@unittest.skipIf(sys.version_info[:2] < (3, 6), "pathlib is only tested on 3.6 and up")
 	def test_read_with_path(self):
 		import pathlib
 		font = t1Lib.T1Font(pathlib.Path(PFB))

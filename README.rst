@@ -18,14 +18,8 @@ are available at `Read the Docs <https://fonttools.readthedocs.io/>`_.
 Installation
 ~~~~~~~~~~~~
 
-FontTools 4.x requires `Python <http://www.python.org/download/>`__ 3.6
-or later. FontTools 3.x requires Python 2.7 or later.
-
-**NOTE** From August 2019, until no later than January 1 2020, the support
-for *Python 2.7* will be limited to only critical bug fixes, and no new features
-will be added to the ``py27`` branch. You can read more `here <https://python3statement.org>`__
-and `here <https://github.com/fonttools/fonttools/issues/765>`__ for the
-reasons behind this decision.
+FontTools requires `Python <http://www.python.org/download/>`__ 3.7
+or later.
 
 The package is listed in the Python Package Index (PyPI), so you can
 install it with `pip <https://pip.pypa.io>`__:
