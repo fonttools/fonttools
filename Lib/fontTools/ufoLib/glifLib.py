@@ -10,6 +10,8 @@ in a folder. It offers two ways to read glyph data, and one way to write
 glyph data. See the class doc string for details.
 """
 
+from __future__ import annotations
+
 import logging
 import enum
 from warnings import warn
@@ -205,7 +207,7 @@ class GlyphSet(_UFOBaseIO):
 		self.glyphNameToFileName = glyphNameToFileNameFunc
 		self._validateRead = validateRead
 		self._validateWrite = validateWrite
-		self._existingFileNames = None
+		self._existingFileNames: set[str] | None = None
 		self._reverseContents = None
 
 		self.rebuildContents()
@@ -455,12 +457,12 @@ class GlyphSet(_UFOBaseIO):
 		fileName = self.contents.get(glyphName)
 		if fileName is None:
 			if self._existingFileNames is None:
-				self._existingFileNames = {}
-				for fileName in self.contents.values():
-					self._existingFileNames[fileName] = fileName.lower()
-			fileName = self.glyphNameToFileName(glyphName, self._existingFileNames.values())
+				self._existingFileNames = {
+					fileName.lower() for fileName in self.contents.values()
+				}
+			fileName = self.glyphNameToFileName(glyphName, self._existingFileNames)
 			self.contents[glyphName] = fileName
-			self._existingFileNames[fileName] = fileName.lower()
+			self._existingFileNames.add(fileName.lower())
 			if self._reverseContents is not None:
 				self._reverseContents[fileName.lower()] = glyphName
 		data = _writeGlyphToBytes(
@@ -485,9 +487,9 @@ class GlyphSet(_UFOBaseIO):
 		fileName = self.contents[glyphName]
 		self.fs.remove(fileName)
 		if self._existingFileNames is not None:
-			del self._existingFileNames[fileName]
+			self._existingFileNames.remove(fileName.lower())
 		if self._reverseContents is not None:
-			del self._reverseContents[self.contents[glyphName].lower()]
+			del self._reverseContents[fileName.lower()]
 		del self.contents[glyphName]
 
 	# dict-like support
@@ -573,9 +575,12 @@ class GlyphSet(_UFOBaseIO):
 def glyphNameToFileName(glyphName, existingFileNames):
 	"""
 	Wrapper around the userNameToFileName function in filenames.py
+
+	Note that existingFileNames should be a set for large glyphsets
+	or performance will suffer.
 	"""
 	if existingFileNames is None:
-		existingFileNames = []
+		existingFileNames = set()
 	return userNameToFileName(glyphName, existing=existingFileNames, suffix=".glif")
 
 # -----------------------
