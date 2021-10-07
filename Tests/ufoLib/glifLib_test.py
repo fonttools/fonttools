@@ -159,6 +159,8 @@ class FileNameTest:
 		dst.writeGlyph("a", glyph)
 		dst.writeGlyph("A", glyph)
 		dst.writeGlyph("a_", glyph)
+		dst.deleteGlyph("a_")
+		dst.writeGlyph("a_", glyph)
 		dst.writeGlyph("A_", glyph)
 		dst.writeGlyph("i_j", glyph)
 
