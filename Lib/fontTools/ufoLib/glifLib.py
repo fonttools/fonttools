@@ -457,7 +457,9 @@ class GlyphSet(_UFOBaseIO):
 		fileName = self.contents.get(glyphName)
 		if fileName is None:
 			if self._existingFileNames is None:
-				self._existingFileNames = set(fileName.lower() for fileName in self.contents.values())
+				self._existingFileNames = {
+					fileName.lower() for fileName in self.contents.values()
+				}
 			fileName = self.glyphNameToFileName(glyphName, self._existingFileNames)
 			self.contents[glyphName] = fileName
 			self._existingFileNames.add(fileName.lower())
