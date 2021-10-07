@@ -15,9 +15,9 @@ class NameTranslationError(Exception):
 	pass
 
 
-def userNameToFileName(userName: str, existing=set(), prefix="", suffix=""):
+def userNameToFileName(userName: str, existing=(), prefix="", suffix=""):
 	"""
-	existing should be a case-insensitive list
+	existing should be a case-insensitive set
 	of all existing file names.
 
 	>>> userNameToFileName("a") == "a"
