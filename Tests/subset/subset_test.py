@@ -1269,6 +1269,23 @@ def test_subset_COLRv1_drop_all_v0_glyphs(colrv1_path):
     assert colr.table.LayerRecordCount is 0
 
 
+def test_subset_COLRv1_no_ClipList(colrv1_path):
+    font = TTFont(colrv1_path)
+    font["COLR"].table.ClipList = None  # empty ClipList
+    font.save(colrv1_path)
+
+    subset_path = colrv1_path.parent / (colrv1_path.name + ".subset")
+    subset.main(
+        [
+            str(colrv1_path),
+            f"--output-file={subset_path}",
+            "--unicodes=*",
+        ]
+    )
+    subset_font = TTFont(subset_path)
+    assert subset_font["COLR"].table.ClipList is None
+
+
 def test_subset_keep_size_drop_empty_stylistic_set():
     fb = FontBuilder(unitsPerEm=1000, isTTF=True)
     glyph_order = [".notdef", "a", "b", "b.ss01"]
