@@ -124,7 +124,6 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 		return data
 
 	def toXML(self, writer, ttFont):
-		writer.newline()
 		for doc, startGID, endGID in self.docList:
 			writer.begintag("svgDoc", startGlyphID=startGID, endGlyphID=endGID)
 			writer.newline()
