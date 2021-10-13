@@ -92,8 +92,8 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 		datum = struct.pack(">H",numEntries)
 		entryList.append(datum)
 		curOffset = len(datum) + doc_index_entry_format_0Size*numEntries
+		seenDocs = {}
 		for doc, startGlyphID, endGlyphID in self.docList:
-			docOffset = curOffset
 			docBytes = tobytes(doc, encoding="utf_8")
 			if getattr(self, "compressed", False) and not docBytes.startswith(b"\x1f\x8b"):
 				import gzip
@@ -105,10 +105,15 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 					docBytes = gzipped
 				del gzipped, bytesIO
 			docLength = len(docBytes)
-			curOffset += docLength
+			if docBytes in seenDocs:
+				docOffset = seenDocs[docBytes]
+			else:
+				docOffset = curOffset
+				curOffset += docLength
+				seenDocs[docBytes] = docOffset
+				docList.append(docBytes)
 			entry = struct.pack(">HHLL", startGlyphID, endGlyphID, docOffset, docLength)
 			entryList.append(entry)
-			docList.append(docBytes)
 		entryList.extend(docList)
 		svgDocData = bytesjoin(entryList)
 
