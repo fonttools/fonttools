@@ -22,7 +22,8 @@ def main():
             description = imports.main.__doc__
             if description:
                 pkg = pkg.replace("fontTools.", "").replace(".__main__", "")
-                descriptions[pkg] = description
+                # show the docstring's first line only
+                descriptions[pkg] = description.splitlines()[0]
         except AttributeError as e:
             pass
     for pkg, description in descriptions.items():
