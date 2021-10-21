@@ -2692,7 +2692,7 @@ class Subsetter(object):
 	def _closure_glyphs(self, font):
 
 		realGlyphs = set(font.getGlyphOrder())
-		glyph_order = font.getGlyphOrder()
+		self.orig_glyph_order = glyph_order = font.getGlyphOrder()
 
 		self.glyphs_requested = set()
 		self.glyphs_requested.update(self.glyph_names_requested)
@@ -2811,6 +2811,24 @@ class Subsetter(object):
 
 		self.reverseEmptiedGlyphMap = {g:order[g] for g in self.glyphs_emptied}
 
+		if not self.options.retain_gids:
+			new_glyph_order = [
+				g for g in glyph_order if g in self.glyphs_retained
+			]
+		else:
+			new_glyph_order = [
+				g for g in glyph_order
+				if font.getGlyphID(g) <= self.last_retained_order
+			]
+		# We'll call font.setGlyphOrder() at the end of _subset_glyphs when all
+		# tables have been subsetted. Below, we use the new glyph order to get
+		# a map from old to new glyph indices, which can be useful when
+		# subsetting individual tables (e.g. SVG) that refer to GIDs.
+		self.new_glyph_order = new_glyph_order
+		self.glyph_index_map = {
+			order[new_glyph_order[i]]: i
+			for i in range(len(new_glyph_order))
+		}
 
 		log.info("Retaining %d glyphs", len(self.glyphs_retained))
 
@@ -2840,13 +2858,7 @@ class Subsetter(object):
 				del font[tag]
 
 		with timer("subset GlyphOrder"):
-			glyphOrder = font.getGlyphOrder()
-			if not self.options.retain_gids:
-				glyphOrder = [g for g in glyphOrder if g in self.glyphs_retained]
-			else:
-				glyphOrder = [g for g in glyphOrder if font.getGlyphID(g) <= self.last_retained_order]
-
-			font.setGlyphOrder(glyphOrder)
+			font.setGlyphOrder(self.new_glyph_order)
 
 
 	def _prune_post_subset(self, font):
