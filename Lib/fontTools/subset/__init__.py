@@ -10,6 +10,7 @@ from fontTools.pens.basePen import NullPen
 from fontTools.misc.loggingTools import Timer
 from fontTools.subset.util import _add_method, _uniq_sort
 from fontTools.subset.cff import *
+from fontTools.subset.svg import *
 import sys
 import struct
 import array
@@ -207,12 +208,12 @@ Font table options:
       Specify (=), add to (+=) or exclude from (-=) the comma-separated
       set of tables that will be be dropped.
       By default, the following tables are dropped:
-      'BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC', 'SVG ', 'PCLT', 'LTSH'
+      'BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC', 'PCLT', 'LTSH'
       and Graphite tables: 'Feat', 'Glat', 'Gloc', 'Silf', 'Sill'.
       The tool will attempt to subset the remaining tables.
       Examples:
-        --drop-tables-='SVG '
-            * Drop the default set of tables but keep 'SVG '.
+        --drop-tables-='BASE'
+            * Drop the default set of tables but keep 'BASE'.
         --drop-tables+=GSUB
             * Drop the default set of tables and 'GSUB'.
         --drop-tables=DSIG
@@ -2486,7 +2487,7 @@ class Options(object):
 
 	# spaces in tag names (e.g. "SVG ", "cvt ") are stripped by the argument parser
 	_drop_tables_default = ['BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC',
-				'EBSC', 'SVG', 'PCLT', 'LTSH']
+				'EBSC', 'PCLT', 'LTSH']
 	_drop_tables_default += ['Feat', 'Glat', 'Gloc', 'Silf', 'Sill']  # Graphite
 	_no_subset_tables_default = ['avar', 'fvar',
 				     'gasp', 'head', 'hhea', 'maxp',
