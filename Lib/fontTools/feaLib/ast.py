@@ -2062,7 +2062,7 @@ class ConditionsetStatement(Statement):
         return res
 
 class VariationBlock(Block):
-    """A named feature block."""
+    """A variation feature block, applicable in a given set of conditions."""
 
     def __init__(self, name, conditionset, use_extension=False, location=None):
         Block.__init__(self, location)
@@ -2078,6 +2078,8 @@ class VariationBlock(Block):
                 self.location,
             )
 
+        # language exclude_dflt statements modify builder.features_
+        # limit them to this block with temporary builder.features_
         features = builder.features_
         builder.features_ = {}
         Block.build(self, builder)

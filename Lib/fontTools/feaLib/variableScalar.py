@@ -1,9 +1,8 @@
 from fontTools.varLib.models import VariationModel, normalizeValue
 
 
-class Location(dict):
-    def __hash__(self):
-        return hash(frozenset(self))
+def Location(loc):
+    return tuple(sorted(loc.items()))
 
 
 class VariableScalar:
@@ -18,7 +17,7 @@ class VariableScalar:
     def __repr__(self):
         items = []
         for location,value in self.values.items():
-            loc = ",".join(["%s=%i" % (ax,loc) for ax,loc in location.items()])
+            loc = ",".join(["%s=%i" % (ax,loc) for ax,loc in location])
             items.append("%s:%i" % (loc, value))
         return "("+(" ".join(items))+")"
 
@@ -47,6 +46,7 @@ class VariableScalar:
         return Location(normalized_location)
 
     def fix_location(self, location):
+        location = dict(location)
         for tag, axis in self.axes_dict.items():
             if tag not in location:
                 location[tag] = axis.defaultValue
@@ -59,7 +59,7 @@ class VariableScalar:
         self.values[Location(location)] = value
 
     def fix_all_locations(self):
-        self.values = {self.fix_location(l): v for l,v in self.values.items()}
+        self.values = {Location(self.fix_location(l)): v for l,v in self.values.items()}
 
     @property
     def default(self):
@@ -79,7 +79,7 @@ class VariableScalar:
 
     @property
     def model(self):
-        locations = [self._normalized_location(k) for k in self.values.keys()]
+        locations = [dict(self._normalized_location(k)) for k in self.values.keys()]
         return VariationModel(locations)
 
     def get_deltas_and_supports(self):

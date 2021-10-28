@@ -175,10 +175,10 @@ class ParserTest(unittest.TestCase):
     def test_anchor_variable_scalar(self):
         doc = self.parse(
             "feature test {"
-            "    pos cursive A <anchor (wght=200:-100 wght=900:-150 wght=900,wdth=150:-120) -20> <anchor NULL>;"
+            "    pos cursive A <anchor (wght=200:-100 wght=900:-150 wdth=150,wght=900:-120) -20> <anchor NULL>;"
             "} test;")
         anchor = doc.statements[0].statements[0].entryAnchor
-        self.assertEqual(anchor.asFea(), "<anchor (wght=200:-100 wght=900:-150 wght=900,wdth=150:-120) -20>")
+        self.assertEqual(anchor.asFea(), "<anchor (wght=200:-100 wght=900:-150 wdth=150,wght=900:-120) -20>")
 
     def test_anchordef(self):
         [foo] = self.parse("anchorDef 123 456 foo;").statements
@@ -1813,9 +1813,9 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(value.asFea(), "<NULL>")
 
     def test_valuerecord_variable_scalar(self):
-        doc = self.parse("feature test {valueRecordDef <0 (wght=200:-100 wght=900:-150 wght=900,wdth=150:-120) 0 0> foo;} test;")
+        doc = self.parse("feature test {valueRecordDef <0 (wght=200:-100 wght=900:-150 wdth=150,wght=900:-120) 0 0> foo;} test;")
         value = doc.statements[0].statements[0].value
-        self.assertEqual(value.asFea(), "<0 (wght=200:-100 wght=900:-150 wght=900,wdth=150:-120) 0 0>")
+        self.assertEqual(value.asFea(), "<0 (wght=200:-100 wght=900:-150 wdth=150,wght=900:-120) 0 0>")
 
     def test_valuerecord_named(self):
         doc = self.parse("valueRecordDef <1 2 3 4> foo;"
@@ -1852,13 +1852,13 @@ class ParserTest(unittest.TestCase):
         doc = self.parse("conditionset heavy { wght 700 900; } heavy;")
         value = doc.statements[0]
         self.assertEqual(value.conditions["wght"], (700, 900))
-        self.assertEqual(value.asFea(), "conditionset heavy {\n   wght 700 900;\n} heavy;\n")
+        self.assertEqual(value.asFea(), "conditionset heavy {\n    wght 700 900;\n} heavy;\n")
 
         doc = self.parse("conditionset heavy { wght 700 900; opsz 17 18;} heavy;")
         value = doc.statements[0]
         self.assertEqual(value.conditions["wght"], (700, 900))
         self.assertEqual(value.conditions["opsz"], (17, 18))
-        self.assertEqual(value.asFea(), "conditionset heavy {\n   wght 700 900;\n   opsz 17 18;\n} heavy;\n")
+        self.assertEqual(value.asFea(), "conditionset heavy {\n    wght 700 900;\n    opsz 17 18;\n} heavy;\n")
 
     def test_conditionset_same_axis(self):
         self.assertRaisesRegex(
@@ -1870,7 +1870,7 @@ class ParserTest(unittest.TestCase):
         doc = self.parse("conditionset heavy { wght 700.0 900.0; } heavy;")
         value = doc.statements[0]
         self.assertEqual(value.conditions["wght"], (700.0, 900.0))
-        self.assertEqual(value.asFea(), "conditionset heavy {\n   wght 700.0 900.0;\n} heavy;\n")
+        self.assertEqual(value.asFea(), "conditionset heavy {\n    wght 700.0 900.0;\n} heavy;\n")
 
     def test_variation(self):
         doc = self.parse("variation rvrn heavy { sub a by b; } rvrn;")
