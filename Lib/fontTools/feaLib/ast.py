@@ -2057,7 +2057,7 @@ class ConditionsetStatement(Statement):
     def asFea(self, res="", indent=""):
         res += indent + f"conditionset {self.name} " + "{\n"
         for tag, (minvalue, maxvalue) in self.conditions.items():
-            res += indent + f"   {tag} {minvalue} {maxvalue};\n"
+            res += indent + SHIFT + f"{tag} {minvalue} {maxvalue};\n"
         res += indent + "}" + f" {self.name};\n"
         return res
 
