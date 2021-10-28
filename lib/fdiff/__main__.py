@@ -37,14 +37,7 @@ def run(argv: List[Text]) -> None:
     parser = argparse.ArgumentParser(description="An OpenType table diff tool for fonts.")
     parser.add_argument("--version", action="version", version=f"fdiff v{__version__}")
     parser.add_argument(
-        "-c",
-        "--color",
-        action="store_true",
-        default=False,
-        help="ANSI escape code colored diff",
-    )
-    parser.add_argument(
-        "-l", "--lines", type=int, default=3, help="Number of context lines (default 3)"
+        "-l", "--lines", type=int, default=3, help="Number of context lines (default: 3)"
     )
     parser.add_argument(
         "--include",
@@ -60,10 +53,25 @@ def run(argv: List[Text]) -> None:
     )
     parser.add_argument("--head", type=int, help="Display first n lines of output")
     parser.add_argument("--tail", type=int, help="Display last n lines of output")
-    parser.add_argument(
-        "--nomp", action="store_true", help="Do not use multi process optimizations"
-    )
     parser.add_argument("--external", type=str, help="Run external diff tool command")
+    parser.add_argument(
+        "-c",
+        "--color",
+        action="store_true",
+        default=False,
+        help="Force ANSI escape code color formatting in all environments",
+    )
+    parser.add_argument(
+        "--nomp",
+        action="store_true",
+        help="Do not use multi process optimizations (default: on)",
+    )
+    parser.add_argument(
+        "--nocolor",
+        action="store_true",
+        default=False,
+        help="Do not use ANSI escape code colored diff (default: on)",
+    )
     parser.add_argument("PREFILE", help="Font file path/URL 1")
     parser.add_argument("POSTFILE", help="Font file path/URL 2")
 
@@ -154,8 +162,12 @@ def run(argv: List[Text]) -> None:
 
                 # write stdout from external tool
                 for line, exit_code in ext_diff:
-                    # format with color if color flag is entered on command line
-                    if args.color:
+                    # format with color by default unless:
+                    #   (1) user entered the --nocolor option
+                    #   (2) we are not piping std output to a terminal
+                    # Force formatting with color in all environments if the user includes
+                    # the `-c` / `--color` option
+                    if (not args.nocolor and console.is_terminal) or args.color:
                         sys.stdout.write(color_unified_diff_line(line))
                     else:
                         sys.stdout.write(line)
@@ -194,7 +206,12 @@ def run(argv: List[Text]) -> None:
 
             # print unified diff results to standard output stream
             has_diff = False
-            if args.color:
+            # format with color by default unless:
+            #   (1) user entered the --nocolor option
+            #   (2) we are not piping std output to a terminal
+            # Force formatting with color in all environments if the user includes
+            # the `-c` / `--color` option
+            if (not args.nocolor and console.is_terminal) or args.color:
                 for line in iterable:
                     has_diff = True
                     sys.stdout.write(color_unified_diff_line(line))
@@ -203,7 +220,7 @@ def run(argv: List[Text]) -> None:
                     has_diff = True
                     sys.stdout.write(line)
 
-        # if no difference was found, tell the user instead of
-        # simply closing with zero exit status code.
+        # if no difference was found, tell the user in addition to the
+        # the zero exit status code.
         if not has_diff:
-            print("[*] There is no difference between the files.")
+            print("[*] There is no difference in the tested OpenType tables.")
