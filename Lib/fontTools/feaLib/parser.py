@@ -385,8 +385,7 @@ class Parser(object):
                     self.expect_symbol_("-")
                     range_end = self.expect_cid_()
                     self.check_glyph_name_in_glyph_set(
-                        f"cid{range_start:05d}",
-                        f"cid{range_end:05d}",
+                        f"cid{range_start:05d}", f"cid{range_end:05d}",
                     )
                     glyphs.add_cid_range(
                         range_start,
@@ -482,7 +481,7 @@ class Parser(object):
                 raise FeatureLibError(
                     "Positioning cannot be applied in the bactrack glyph sequence, "
                     "before the marked glyph sequence.",
-                    self.cur_token_location_
+                    self.cur_token_location_,
                 )
             marked_values = values[len(prefix) : len(prefix) + len(glyphs)]
             if any(marked_values):
@@ -491,7 +490,7 @@ class Parser(object):
                         "Positioning values are allowed only in the marked glyph "
                         "sequence, or after the final glyph node when only one glyph "
                         "node is marked.",
-                        self.cur_token_location_
+                        self.cur_token_location_,
                     )
                 values = marked_values
             elif values and values[-1]:
@@ -500,7 +499,7 @@ class Parser(object):
                         "Positioning values are allowed only in the marked glyph "
                         "sequence, or after the final glyph node when only one glyph "
                         "node is marked.",
-                        self.cur_token_location_
+                        self.cur_token_location_,
                     )
                 values = values[-1:]
             elif any(values):
@@ -508,7 +507,7 @@ class Parser(object):
                     "Positioning values are allowed only in the marked glyph "
                     "sequence, or after the final glyph node when only one glyph "
                     "node is marked.",
-                    self.cur_token_location_
+                    self.cur_token_location_,
                 )
             return (prefix, glyphs, lookups, values, suffix, hasMarks)
 
@@ -1010,8 +1009,8 @@ class Parser(object):
         location = self.cur_token_location_
         DesignSize = self.expect_decipoint_()
         SubfamilyID = self.expect_number_()
-        RangeStart = 0.
-        RangeEnd = 0.
+        RangeStart = 0.0
+        RangeEnd = 0.0
         if self.next_token_type_ in (Lexer.NUMBER, Lexer.FLOAT) or SubfamilyID != 0:
             RangeStart = self.expect_decipoint_()
             RangeEnd = self.expect_decipoint_()
@@ -1590,11 +1589,20 @@ class Parser(object):
         return result
 
     def is_next_value_(self):
-        return self.next_token_type_ is Lexer.NUMBER or self.next_token_ == "<" or self.next_token_ == "("
+        return (
+            self.next_token_type_ is Lexer.NUMBER
+            or self.next_token_ == "<"
+            or self.next_token_ == "("
+        )
 
     def parse_valuerecord_(self, vertical):
-        if (self.next_token_type_ is Lexer.SYMBOL and self.next_token_ == "(") or self.next_token_type_ is Lexer.NUMBER:
-            number, location = self.expect_number_(variable=True), self.cur_token_location_
+        if (
+            self.next_token_type_ is Lexer.SYMBOL and self.next_token_ == "("
+        ) or self.next_token_type_ is Lexer.NUMBER:
+            number, location = (
+                self.expect_number_(variable=True),
+                self.cur_token_location_,
+            )
             if vertical:
                 val = self.ast.ValueRecord(
                     yAdvance=number, vertical=vertical, location=location
@@ -1879,7 +1887,9 @@ class Parser(object):
 
             axis = self.cur_token_
             if axis in conditions:
-                raise FeatureLibError(f"Repeated condition for axis {axis}", self.cur_token_location_)
+                raise FeatureLibError(
+                    f"Repeated condition for axis {axis}", self.cur_token_location_
+                )
 
             if self.next_token_type_ is Lexer.FLOAT:
                 min_value = self.expect_float_()
@@ -1898,9 +1908,7 @@ class Parser(object):
 
         finalname = self.expect_name_()
         if finalname != name:
-            raise FeatureLibError(
-                'Expected "%s"' % name, self.cur_token_location_
-            )
+            raise FeatureLibError('Expected "%s"' % name, self.cur_token_location_)
         return self.ast.ConditionsetStatement(name, conditions)
 
     def parse_block_(
@@ -2142,7 +2150,7 @@ class Parser(object):
         raise FeatureLibError("Expected a number", self.cur_token_location_)
 
     def expect_variable_scalar_(self):
-        self.advance_lexer_() # "("
+        self.advance_lexer_()  # "("
         scalar = VariableScalar()
         while True:
             if self.cur_token_type_ == Lexer.SYMBOL and self.cur_token_ == ")":
@@ -2159,15 +2167,19 @@ class Parser(object):
             axis = self.cur_token_
             self.advance_lexer_()
             if not (self.cur_token_type_ is Lexer.SYMBOL and self.cur_token_ == "="):
-                raise FeatureLibError("Expected an equals sign", self.cur_token_location_)
+                raise FeatureLibError(
+                    "Expected an equals sign", self.cur_token_location_
+                )
             value = self.expect_number_()
             location[axis] = value
             if self.next_token_type_ is Lexer.NAME and self.next_token_[0] == ":":
                 # Lexer has just read the value as a glyph name. We'll correct it later
                 break
             self.advance_lexer_()
-            if not(self.cur_token_type_ is Lexer.SYMBOL and self.cur_token_ == ","):
-                raise FeatureLibError("Expected an comma or an equals sign", self.cur_token_location_)
+            if not (self.cur_token_type_ is Lexer.SYMBOL and self.cur_token_ == ","):
+                raise FeatureLibError(
+                    "Expected an comma or an equals sign", self.cur_token_location_
+                )
             self.advance_lexer_()
         self.advance_lexer_()
         value = int(self.cur_token_[1:])

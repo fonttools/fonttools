@@ -14,8 +14,9 @@ def glyphstr(glyphs):
         if len(x) == 1:
             return list(x)[0]
         else:
-            return '[%s]' % ' '.join(sorted(list(x)))
-    return ' '.join(f(g.glyphSet()) for g in glyphs)
+            return "[%s]" % " ".join(sorted(list(x)))
+
+    return " ".join(f(g.glyphSet()) for g in glyphs)
 
 
 def mapping(s):
@@ -30,7 +31,9 @@ def mapping(s):
     return dict(zip(b, c))
 
 
-GLYPHNAMES = ("""
+GLYPHNAMES = (
+    (
+        """
     .notdef space A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
     A.sc B.sc C.sc D.sc E.sc F.sc G.sc H.sc I.sc J.sc K.sc L.sc M.sc
     N.sc O.sc P.sc Q.sc R.sc S.sc T.sc U.sc V.sc W.sc X.sc Y.sc Z.sc
@@ -48,7 +51,10 @@ GLYPHNAMES = ("""
     cid00111 cid00222
     comma endash emdash figuredash damma hamza
     c_d d.alt n.end s.end f_f
-""").split() + ["foo.%d" % i for i in range(1, 200)]
+"""
+    ).split()
+    + ["foo.%d" % i for i in range(1, 200)]
+)
 
 
 class ParserTest(unittest.TestCase):
@@ -60,7 +66,7 @@ class ParserTest(unittest.TestCase):
             self.assertRaisesRegex = self.assertRaisesRegexp
 
     def test_glyphMap_deprecated(self):
-        glyphMap = {'a': 0, 'b': 1, 'c': 2}
+        glyphMap = {"a": 0, "b": 1, "c": 2}
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             parser = Parser(StringIO(), glyphMap=glyphMap)
@@ -68,22 +74,28 @@ class ParserTest(unittest.TestCase):
             self.assertEqual(len(w), 1)
             self.assertEqual(w[-1].category, UserWarning)
             self.assertIn("deprecated", str(w[-1].message))
-            self.assertEqual(parser.glyphNames_, {'a', 'b', 'c'})
+            self.assertEqual(parser.glyphNames_, {"a", "b", "c"})
 
             self.assertRaisesRegex(
-                TypeError, "mutually exclusive",
-                Parser, StringIO(), ("a",), glyphMap={"a": 0})
+                TypeError,
+                "mutually exclusive",
+                Parser,
+                StringIO(),
+                ("a",),
+                glyphMap={"a": 0},
+            )
 
             self.assertRaisesRegex(
-                TypeError, "unsupported keyword argument",
-                Parser, StringIO(), foo="bar")
+                TypeError, "unsupported keyword argument", Parser, StringIO(), foo="bar"
+            )
 
     def test_comments(self):
         doc = self.parse(
             """ # Initial
                 feature test {
                     sub A by B; # simple
-                } test;""")
+                } test;"""
+        )
         c1 = doc.statements[0]
         c2 = doc.statements[1].statements[1]
         self.assertEqual(type(c1), ast.Comment)
@@ -94,9 +106,11 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(doc.statements[1].name, "test")
 
     def test_only_comments(self):
-        doc = self.parse("""\
+        doc = self.parse(
+            """\
             # Initial
-        """)
+        """
+        )
         c1 = doc.statements[0]
         self.assertEqual(type(c1), ast.Comment)
         self.assertEqual(c1.text, "# Initial")
@@ -106,7 +120,8 @@ class ParserTest(unittest.TestCase):
         doc = self.parse(
             "feature test {"
             "    pos cursive A <anchor 120 -20> <anchor NULL>;"
-            "} test;")
+            "} test;"
+        )
         anchor = doc.statements[0].statements[0].entryAnchor
         self.assertEqual(type(anchor), ast.Anchor)
         self.assertEqual(anchor.x, 120)
@@ -119,7 +134,8 @@ class ParserTest(unittest.TestCase):
         doc = self.parse(
             "feature test {"
             "    pos cursive A <anchor 120 -20 contourpoint 5> <anchor NULL>;"
-            "} test;")
+            "} test;"
+        )
         anchor = doc.statements[0].statements[0].entryAnchor
         self.assertEqual(type(anchor), ast.Anchor)
         self.assertEqual(anchor.x, 120)
@@ -134,7 +150,8 @@ class ParserTest(unittest.TestCase):
             "    pos cursive A "
             "        <anchor 120 -20 <device 11 111, 12 112> <device NULL>>"
             "        <anchor NULL>;"
-            "} test;")
+            "} test;"
+        )
         anchor = doc.statements[0].statements[0].entryAnchor
         self.assertEqual(type(anchor), ast.Anchor)
         self.assertEqual(anchor.x, 120)
@@ -147,7 +164,8 @@ class ParserTest(unittest.TestCase):
         doc = self.parse(
             "feature test {"
             "    pos cursive A <anchor 120 -20> <anchor NULL>;"
-            "} test;")
+            "} test;"
+        )
         anchor = doc.statements[0].statements[0].exitAnchor
         self.assertIsNone(anchor)
 
@@ -156,7 +174,8 @@ class ParserTest(unittest.TestCase):
             "feature test {"
             "    anchorDef 120 -20 contourpoint 7 Foo;"
             "    pos cursive A <anchor Foo> <anchor NULL>;"
-            "} test;")
+            "} test;"
+        )
         anchor = doc.statements[0].statements[1].entryAnchor
         self.assertEqual(type(anchor), ast.Anchor)
         self.assertEqual(anchor.x, 120)
@@ -167,18 +186,25 @@ class ParserTest(unittest.TestCase):
 
     def test_anchor_format_e_undefined(self):
         self.assertRaisesRegex(
-            FeatureLibError, 'Unknown anchor "UnknownName"', self.parse,
+            FeatureLibError,
+            'Unknown anchor "UnknownName"',
+            self.parse,
             "feature test {"
             "    position cursive A <anchor UnknownName> <anchor NULL>;"
-            "} test;")
+            "} test;",
+        )
 
     def test_anchor_variable_scalar(self):
         doc = self.parse(
             "feature test {"
             "    pos cursive A <anchor (wght=200:-100 wght=900:-150 wdth=150,wght=900:-120) -20> <anchor NULL>;"
-            "} test;")
+            "} test;"
+        )
         anchor = doc.statements[0].statements[0].entryAnchor
-        self.assertEqual(anchor.asFea(), "<anchor (wght=200:-100 wght=900:-150 wdth=150,wght=900:-120) -20>")
+        self.assertEqual(
+            anchor.asFea(),
+            "<anchor (wght=200:-100 wght=900:-150 wdth=150,wght=900:-120) -20>",
+        )
 
     def test_anchordef(self):
         [foo] = self.parse("anchorDef 123 456 foo;").statements
@@ -211,8 +237,11 @@ class ParserTest(unittest.TestCase):
 
     def test_anon_missingBrace(self):
         self.assertRaisesRegex(
-            FeatureLibError, "Expected '} TEST;' to terminate anonymous block",
-            self.parse, "anon TEST { \n no end in sight")
+            FeatureLibError,
+            "Expected '} TEST;' to terminate anonymous block",
+            self.parse,
+            "anon TEST { \n no end in sight",
+        )
 
     def test_attach(self):
         doc = self.parse("table GDEF {Attach [a e] 2;} GDEF;")
@@ -230,8 +259,7 @@ class ParserTest(unittest.TestCase):
         [liga] = self.parse("feature liga useExtension {} liga;").statements
         self.assertEqual(liga.name, "liga")
         self.assertTrue(liga.use_extension)
-        self.assertEqual(liga.asFea(),
-                         "feature liga useExtension {\n    \n} liga;\n")
+        self.assertEqual(liga.asFea(), "feature liga useExtension {\n    \n} liga;\n")
 
     def test_feature_comment(self):
         [liga] = self.parse("feature liga { # Comment\n } liga;").statements
@@ -247,12 +275,16 @@ class ParserTest(unittest.TestCase):
 
     def test_FeatureNames_bad(self):
         self.assertRaisesRegex(
-            FeatureLibError, 'Expected "name"',
-            self.parse, "feature ss01 { featureNames { feature test; } ss01;")
+            FeatureLibError,
+            'Expected "name"',
+            self.parse,
+            "feature ss01 { featureNames { feature test; } ss01;",
+        )
 
     def test_FeatureNames_comment(self):
         [feature] = self.parse(
-            "feature ss01 { featureNames { # Comment\n }; } ss01;").statements
+            "feature ss01 { featureNames { # Comment\n }; } ss01;"
+        ).statements
         [featureNames] = feature.statements
         self.assertIsInstance(featureNames, ast.NestedBlock)
         [comment] = featureNames.statements
@@ -261,7 +293,8 @@ class ParserTest(unittest.TestCase):
 
     def test_FeatureNames_emptyStatements(self):
         [feature] = self.parse(
-            "feature ss01 { featureNames { ;;; }; } ss01;").statements
+            "feature ss01 { featureNames { ;;; }; } ss01;"
+        ).statements
         [featureNames] = feature.statements
         self.assertIsInstance(featureNames, ast.NestedBlock)
         self.assertEqual(featureNames.statements, [])
@@ -274,8 +307,11 @@ class ParserTest(unittest.TestCase):
 
     def test_FontRevision_negative(self):
         self.assertRaisesRegex(
-            FeatureLibError, "Font revision numbers must be positive",
-            self.parse, "table head {FontRevision -17.2;} head;")
+            FeatureLibError,
+            "Font revision numbers must be positive",
+            self.parse,
+            "table head {FontRevision -17.2;} head;",
+        )
 
     def test_strict_glyph_name_check(self):
         self.parse("@bad = [a b ccc];", glyphNames=("a", "b", "ccc"))
@@ -290,14 +326,19 @@ class ParserTest(unittest.TestCase):
 
     def test_glyphclass_glyphNameTooLong(self):
         self.assertRaisesRegex(
-            FeatureLibError, "must not be longer than 63 characters",
-            self.parse, "@GlyphClass = [%s];" % ("G" * 64))
+            FeatureLibError,
+            "must not be longer than 63 characters",
+            self.parse,
+            "@GlyphClass = [%s];" % ("G" * 64),
+        )
 
     def test_glyphclass_bad(self):
         self.assertRaisesRegex(
             FeatureLibError,
             "Expected glyph name, glyph range, or glyph class reference",
-            self.parse, "@bad = [a 123];")
+            self.parse,
+            "@bad = [a 123];",
+        )
 
     def test_glyphclass_duplicate(self):
         # makeotf accepts this, so we should too
@@ -320,9 +361,11 @@ class ParserTest(unittest.TestCase):
             "markClass [acute grave] <anchor 500 800> @TOP_MARKS;"
             "markClass cedilla <anchor 500 -100> @BOTTOM_MARKS;"
             "@MARKS = [@TOP_MARKS @BOTTOM_MARKS ogonek];"
-            "@ALL = @MARKS;")
-        self.assertEqual(doc.statements[-1].glyphSet(),
-                         ("acute", "grave", "cedilla", "ogonek"))
+            "@ALL = @MARKS;"
+        )
+        self.assertEqual(
+            doc.statements[-1].glyphSet(), ("acute", "grave", "cedilla", "ogonek")
+        )
 
     def test_glyphclass_range_cid(self):
         [gc] = self.parse(r"@GlyphClass = [\999-\1001];").statements
@@ -333,7 +376,9 @@ class ParserTest(unittest.TestCase):
         self.assertRaisesRegex(
             FeatureLibError,
             "Bad range: start should be less than limit",
-            self.parse, r"@bad = [\998-\995];")
+            self.parse,
+            r"@bad = [\998-\995];",
+        )
 
     def test_glyphclass_range_uppercase(self):
         [gc] = self.parse("@swashes = [X.swash-Z.swash];").statements
@@ -363,7 +408,9 @@ class ParserTest(unittest.TestCase):
         # https://github.com/fonttools/fonttools/issues/1768
         glyphNames = ()
         with CapturingLogHandler("fontTools.feaLib.parser", level="WARNING") as caplog:
-            [gc] = self.parse("@class = [A-foo.sc B-foo.sc C D];", glyphNames).statements
+            [gc] = self.parse(
+                "@class = [A-foo.sc B-foo.sc C D];", glyphNames
+            ).statements
         self.assertEqual(gc.glyphSet(), ("A-foo.sc", "B-foo.sc", "C", "D"))
         self.assertEqual(len(caplog.records), 2)
         caplog.assertRegex("Ambiguous glyph name that looks like a range:")
@@ -372,8 +419,7 @@ class ParserTest(unittest.TestCase):
         # The OpenType Feature File Specification v1.20 makes it clear
         # that if a dashed name could be interpreted either as a glyph name
         # or as a range, then the semantics should be the single dashed name.
-        glyphNames = (
-            "A-foo.sc-C-foo.sc A-foo.sc B-foo.sc C-foo.sc".split())
+        glyphNames = "A-foo.sc-C-foo.sc A-foo.sc B-foo.sc C-foo.sc".split()
         [gc] = self.parse("@range = [A-foo.sc-C-foo.sc];", glyphNames).statements
         self.assertEqual(gc.glyphSet(), ("A-foo.sc-C-foo.sc",))
 
@@ -383,7 +429,10 @@ class ParserTest(unittest.TestCase):
             FeatureLibError,
             'Ambiguous glyph range "A-B-C"; '
             'please use "A - B-C" or "A-B - C" to clarify what you mean',
-            self.parse, r"@bad = [A-B-C];", glyphNames)
+            self.parse,
+            r"@bad = [A-B-C];",
+            glyphNames,
+        )
 
     def test_glyphclass_range_digit1(self):
         [gc] = self.parse("@range = [foo.2-foo.5];").statements
@@ -400,36 +449,50 @@ class ParserTest(unittest.TestCase):
     def test_glyphclass_range_bad(self):
         self.assertRaisesRegex(
             FeatureLibError,
-            "Bad range: \"a\" and \"foobar\" should have the same length",
-            self.parse, "@bad = [a-foobar];")
+            'Bad range: "a" and "foobar" should have the same length',
+            self.parse,
+            "@bad = [a-foobar];",
+        )
         self.assertRaisesRegex(
-            FeatureLibError, "Bad range: \"A.swash-z.swash\"",
-            self.parse, "@bad = [A.swash-z.swash];")
+            FeatureLibError,
+            'Bad range: "A.swash-z.swash"',
+            self.parse,
+            "@bad = [A.swash-z.swash];",
+        )
         self.assertRaisesRegex(
-            FeatureLibError, "Start of range must be smaller than its end",
-            self.parse, "@bad = [B.swash-A.swash];")
+            FeatureLibError,
+            "Start of range must be smaller than its end",
+            self.parse,
+            "@bad = [B.swash-A.swash];",
+        )
         self.assertRaisesRegex(
-            FeatureLibError, "Bad range: \"foo.1234-foo.9876\"",
-            self.parse, "@bad = [foo.1234-foo.9876];")
+            FeatureLibError,
+            'Bad range: "foo.1234-foo.9876"',
+            self.parse,
+            "@bad = [foo.1234-foo.9876];",
+        )
 
     def test_glyphclass_range_mixed(self):
         [gc] = self.parse("@range = [a foo.09-foo.11 X.sc-Z.sc];").statements
-        self.assertEqual(gc.glyphSet(), (
-            "a", "foo.09", "foo.10", "foo.11", "X.sc", "Y.sc", "Z.sc"
-        ))
+        self.assertEqual(
+            gc.glyphSet(), ("a", "foo.09", "foo.10", "foo.11", "X.sc", "Y.sc", "Z.sc")
+        )
 
     def test_glyphclass_reference(self):
         [vowels_lc, vowels_uc, vowels] = self.parse(
             "@Vowels.lc = [a e i o u]; @Vowels.uc = [A E I O U];"
-            "@Vowels = [@Vowels.lc @Vowels.uc y Y];").statements
+            "@Vowels = [@Vowels.lc @Vowels.uc y Y];"
+        ).statements
         self.assertEqual(vowels_lc.glyphSet(), tuple("aeiou"))
         self.assertEqual(vowels_uc.glyphSet(), tuple("AEIOU"))
         self.assertEqual(vowels.glyphSet(), tuple("aeiouAEIOUyY"))
-        self.assertEqual(vowels.asFea(),
-            "@Vowels = [@Vowels.lc @Vowels.uc y Y];")
+        self.assertEqual(vowels.asFea(), "@Vowels = [@Vowels.lc @Vowels.uc y Y];")
         self.assertRaisesRegex(
-            FeatureLibError, "Unknown glyph class @unknown",
-            self.parse, "@bad = [@unknown];")
+            FeatureLibError,
+            "Unknown glyph class @unknown",
+            self.parse,
+            "@bad = [@unknown];",
+        )
 
     def test_glyphclass_scoping(self):
         [foo, liga, smcp] = self.parse(
@@ -447,8 +510,7 @@ class ParserTest(unittest.TestCase):
             "feature F1 { lookup L { @GLYPHCLASS = [A B C];} L; } F1;"
             "feature F2 { sub @GLYPHCLASS by D; } F2;"
         ).statements
-        self.assertEqual(list(f2.statements[0].glyphs[0].glyphSet()),
-                         ["A", "B", "C"])
+        self.assertEqual(list(f2.statements[0].glyphs[0].glyphSet()), ["A", "B", "C"])
 
     def test_GlyphClassDef(self):
         doc = self.parse("table GDEF {GlyphClassDef [b],[l],[m],[C c];} GDEF;")
@@ -481,9 +543,8 @@ class ParserTest(unittest.TestCase):
 
     def test_ignore_position(self):
         doc = self.parse(
-            "feature test {"
-            "    ignore position f [a e] d' [a u]' [e y];"
-            "} test;")
+            "feature test {" "    ignore position f [a e] d' [a u]' [e y];" "} test;"
+        )
         sub = doc.statements[0].statements[0]
         self.assertIsInstance(sub, ast.IgnorePosStatement)
         [(prefix, glyphs, suffix)] = sub.chainContexts
@@ -497,7 +558,8 @@ class ParserTest(unittest.TestCase):
             'No lookups can be specified for "ignore pos"',
             self.parse,
             "lookup L { pos [A A.sc] -100; } L;"
-            "feature test { ignore pos f' i', A' lookup L; } test;")
+            "feature test { ignore pos f' i', A' lookup L; } test;",
+        )
 
     def test_ignore_sub(self):
         doc = self.parse("feature test {ignore sub e t' c, q u' u' x;} test;")
@@ -513,9 +575,8 @@ class ParserTest(unittest.TestCase):
 
     def test_ignore_substitute(self):
         doc = self.parse(
-            "feature test {"
-            "    ignore substitute f [a e] d' [a u]' [e y];"
-            "} test;")
+            "feature test {" "    ignore substitute f [a e] d' [a u]' [e y];" "} test;"
+        )
         sub = doc.statements[0].statements[0]
         self.assertIsInstance(sub, ast.IgnoreSubstStatement)
         [(prefix, glyphs, suffix)] = sub.chainContexts
@@ -529,15 +590,19 @@ class ParserTest(unittest.TestCase):
             'No lookups can be specified for "ignore sub"',
             self.parse,
             "lookup L { sub [A A.sc] by a; } L;"
-            "feature test { ignore sub f' i', A' lookup L; } test;")
+            "feature test { ignore sub f' i', A' lookup L; } test;",
+        )
 
     def test_include_statement(self):
-        doc = self.parse("""\
+        doc = self.parse(
+            """\
             include(../family.fea);
             include # Comment
                 (foo)
                   ;
-            """, followIncludes=False)
+            """,
+            followIncludes=False,
+        )
         s1, s2, s3 = doc.statements
         self.assertEqual(type(s1), ast.IncludeStatement)
         self.assertEqual(s1.filename, "../family.fea")
@@ -549,9 +614,12 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(s3.text, "# Comment")
 
     def test_include_statement_no_semicolon(self):
-        doc = self.parse("""\
+        doc = self.parse(
+            """\
             include(../family.fea)
-            """, followIncludes=False)
+            """,
+            followIncludes=False,
+        )
         s1 = doc.statements[0]
         self.assertEqual(type(s1), ast.IncludeStatement)
         self.assertEqual(s1.filename, "../family.fea")
@@ -574,9 +642,9 @@ class ParserTest(unittest.TestCase):
         self.assertFalse(s.required)
 
     def test_language_exclude_dflt_required(self):
-        doc = self.parse("feature test {"
-                         "  language DEU exclude_dflt required;"
-                         "} test;")
+        doc = self.parse(
+            "feature test {" "  language DEU exclude_dflt required;" "} test;"
+        )
         s = doc.statements[0].statements[0]
         self.assertEqual(type(s), ast.LanguageStatement)
         self.assertEqual(s.language, "DEU ")
@@ -592,9 +660,9 @@ class ParserTest(unittest.TestCase):
         self.assertFalse(s.required)
 
     def test_language_include_dflt_required(self):
-        doc = self.parse("feature test {"
-                         "  language DEU include_dflt required;"
-                         "} test;")
+        doc = self.parse(
+            "feature test {" "  language DEU include_dflt required;" "} test;"
+        )
         s = doc.statements[0].statements[0]
         self.assertEqual(type(s), ast.LanguageStatement)
         self.assertEqual(s.language, "DEU ")
@@ -605,7 +673,9 @@ class ParserTest(unittest.TestCase):
         self.assertRaisesRegex(
             FeatureLibError,
             '"DFLT" is not a valid language tag; use "dflt" instead',
-            self.parse, "feature test { language DFLT; } test;")
+            self.parse,
+            "feature test { language DFLT; } test;",
+        )
 
     def test_ligatureCaretByIndex_glyphClass(self):
         doc = self.parse("table GDEF{LigatureCaretByIndex [c_t f_i] 2;}GDEF;")
@@ -644,20 +714,21 @@ class ParserTest(unittest.TestCase):
         [lookup] = self.parse("lookup Foo useExtension {} Foo;").statements
         self.assertEqual(lookup.name, "Foo")
         self.assertTrue(lookup.use_extension)
-        self.assertEqual(lookup.asFea(),
-                         "lookup Foo useExtension {\n    \n} Foo;\n")
+        self.assertEqual(lookup.asFea(), "lookup Foo useExtension {\n    \n} Foo;\n")
 
     def test_lookup_block_name_mismatch(self):
         self.assertRaisesRegex(
-            FeatureLibError, 'Expected "Foo"',
-            self.parse, "lookup Foo {} Bar;")
+            FeatureLibError, 'Expected "Foo"', self.parse, "lookup Foo {} Bar;"
+        )
 
     def test_lookup_block_with_horizontal_valueRecordDef(self):
-        doc = self.parse("feature liga {"
-                         "  lookup look {"
-                         "    valueRecordDef 123 foo;"
-                         "  } look;"
-                         "} liga;")
+        doc = self.parse(
+            "feature liga {"
+            "  lookup look {"
+            "    valueRecordDef 123 foo;"
+            "  } look;"
+            "} liga;"
+        )
         [liga] = doc.statements
         [look] = liga.statements
         [foo] = look.statements
@@ -665,11 +736,13 @@ class ParserTest(unittest.TestCase):
         self.assertIsNone(foo.value.yAdvance)
 
     def test_lookup_block_with_vertical_valueRecordDef(self):
-        doc = self.parse("feature vkrn {"
-                         "  lookup look {"
-                         "    valueRecordDef 123 foo;"
-                         "  } look;"
-                         "} vkrn;")
+        doc = self.parse(
+            "feature vkrn {"
+            "  lookup look {"
+            "    valueRecordDef 123 foo;"
+            "  } look;"
+            "} vkrn;"
+        )
         [vkrn] = doc.statements
         [look] = vkrn.statements
         [foo] = look.statements
@@ -683,15 +756,17 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(comment.text, "# Comment")
 
     def test_lookup_reference(self):
-        [foo, bar] = self.parse("lookup Foo {} Foo;"
-                                "feature Bar {lookup Foo;} Bar;").statements
+        [foo, bar] = self.parse(
+            "lookup Foo {} Foo;" "feature Bar {lookup Foo;} Bar;"
+        ).statements
         [ref] = bar.statements
         self.assertEqual(type(ref), ast.LookupReferenceStatement)
         self.assertEqual(ref.lookup, foo)
 
     def test_lookup_reference_to_lookup_inside_feature(self):
-        [qux, bar] = self.parse("feature Qux {lookup Foo {} Foo;} Qux;"
-                                "feature Bar {lookup Foo;} Bar;").statements
+        [qux, bar] = self.parse(
+            "feature Qux {lookup Foo {} Foo;} Qux;" "feature Bar {lookup Foo;} Bar;"
+        ).statements
         [foo] = qux.statements
         [ref] = bar.statements
         self.assertIsInstance(ref, ast.LookupReferenceStatement)
@@ -699,8 +774,11 @@ class ParserTest(unittest.TestCase):
 
     def test_lookup_reference_unknown(self):
         self.assertRaisesRegex(
-            FeatureLibError, 'Unknown lookup "Huh"',
-            self.parse, "feature liga {lookup Huh;} liga;")
+            FeatureLibError,
+            'Unknown lookup "Huh"',
+            self.parse,
+            "feature liga {lookup Huh;} liga;",
+        )
 
     def parse_lookupflag_(self, s):
         return self.parse("lookup L {%s} L;" % s).statements[0].statements[-1]
@@ -716,52 +794,59 @@ class ParserTest(unittest.TestCase):
     def test_lookupflag_format_A_MarkAttachmentType(self):
         flag = self.parse_lookupflag_(
             "@TOP_MARKS = [acute grave macron];"
-            "lookupflag RightToLeft MarkAttachmentType @TOP_MARKS;")
+            "lookupflag RightToLeft MarkAttachmentType @TOP_MARKS;"
+        )
         self.assertIsInstance(flag, ast.LookupFlagStatement)
         self.assertEqual(flag.value, 1)
         self.assertIsInstance(flag.markAttachment, ast.GlyphClassName)
-        self.assertEqual(flag.markAttachment.glyphSet(),
-                         ("acute", "grave", "macron"))
+        self.assertEqual(flag.markAttachment.glyphSet(), ("acute", "grave", "macron"))
         self.assertIsNone(flag.markFilteringSet)
-        self.assertEqual(flag.asFea(),
-            "lookupflag RightToLeft MarkAttachmentType @TOP_MARKS;")
+        self.assertEqual(
+            flag.asFea(), "lookupflag RightToLeft MarkAttachmentType @TOP_MARKS;"
+        )
 
     def test_lookupflag_format_A_MarkAttachmentType_glyphClass(self):
         flag = self.parse_lookupflag_(
-            "lookupflag RightToLeft MarkAttachmentType [acute grave macron];")
+            "lookupflag RightToLeft MarkAttachmentType [acute grave macron];"
+        )
         self.assertIsInstance(flag, ast.LookupFlagStatement)
         self.assertEqual(flag.value, 1)
         self.assertIsInstance(flag.markAttachment, ast.GlyphClass)
-        self.assertEqual(flag.markAttachment.glyphSet(),
-                         ("acute", "grave", "macron"))
+        self.assertEqual(flag.markAttachment.glyphSet(), ("acute", "grave", "macron"))
         self.assertIsNone(flag.markFilteringSet)
-        self.assertEqual(flag.asFea(),
-            "lookupflag RightToLeft MarkAttachmentType [acute grave macron];")
+        self.assertEqual(
+            flag.asFea(),
+            "lookupflag RightToLeft MarkAttachmentType [acute grave macron];",
+        )
 
     def test_lookupflag_format_A_UseMarkFilteringSet(self):
         flag = self.parse_lookupflag_(
             "@BOTTOM_MARKS = [cedilla ogonek];"
-            "lookupflag UseMarkFilteringSet @BOTTOM_MARKS IgnoreLigatures;")
+            "lookupflag UseMarkFilteringSet @BOTTOM_MARKS IgnoreLigatures;"
+        )
         self.assertIsInstance(flag, ast.LookupFlagStatement)
         self.assertEqual(flag.value, 4)
         self.assertIsNone(flag.markAttachment)
         self.assertIsInstance(flag.markFilteringSet, ast.GlyphClassName)
-        self.assertEqual(flag.markFilteringSet.glyphSet(),
-                         ("cedilla", "ogonek"))
-        self.assertEqual(flag.asFea(),
-            "lookupflag IgnoreLigatures UseMarkFilteringSet @BOTTOM_MARKS;")
+        self.assertEqual(flag.markFilteringSet.glyphSet(), ("cedilla", "ogonek"))
+        self.assertEqual(
+            flag.asFea(),
+            "lookupflag IgnoreLigatures UseMarkFilteringSet @BOTTOM_MARKS;",
+        )
 
     def test_lookupflag_format_A_UseMarkFilteringSet_glyphClass(self):
         flag = self.parse_lookupflag_(
-            "lookupflag UseMarkFilteringSet [cedilla ogonek] IgnoreLigatures;")
+            "lookupflag UseMarkFilteringSet [cedilla ogonek] IgnoreLigatures;"
+        )
         self.assertIsInstance(flag, ast.LookupFlagStatement)
         self.assertEqual(flag.value, 4)
         self.assertIsNone(flag.markAttachment)
         self.assertIsInstance(flag.markFilteringSet, ast.GlyphClass)
-        self.assertEqual(flag.markFilteringSet.glyphSet(),
-                         ("cedilla", "ogonek"))
-        self.assertEqual(flag.asFea(),
-            "lookupflag IgnoreLigatures UseMarkFilteringSet [cedilla ogonek];")
+        self.assertEqual(flag.markFilteringSet.glyphSet(), ("cedilla", "ogonek"))
+        self.assertEqual(
+            flag.asFea(),
+            "lookupflag IgnoreLigatures UseMarkFilteringSet [cedilla ogonek];",
+        )
 
     def test_lookupflag_format_B(self):
         flag = self.parse_lookupflag_("lookupflag 7;")
@@ -769,8 +854,9 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(flag.value, 7)
         self.assertIsNone(flag.markAttachment)
         self.assertIsNone(flag.markFilteringSet)
-        self.assertEqual(flag.asFea(),
-            "lookupflag RightToLeft IgnoreBaseGlyphs IgnoreLigatures;")
+        self.assertEqual(
+            flag.asFea(), "lookupflag RightToLeft IgnoreBaseGlyphs IgnoreLigatures;"
+        )
 
     def test_lookupflag_format_B_zero(self):
         flag = self.parse_lookupflag_("lookupflag 0;")
@@ -783,22 +869,26 @@ class ParserTest(unittest.TestCase):
     def test_lookupflag_no_value(self):
         self.assertRaisesRegex(
             FeatureLibError,
-            'lookupflag must have a value',
+            "lookupflag must have a value",
             self.parse,
-            "feature test {lookupflag;} test;")
+            "feature test {lookupflag;} test;",
+        )
 
     def test_lookupflag_repeated(self):
         self.assertRaisesRegex(
             FeatureLibError,
-            'RightToLeft can be specified only once',
+            "RightToLeft can be specified only once",
             self.parse,
-            "feature test {lookupflag RightToLeft RightToLeft;} test;")
+            "feature test {lookupflag RightToLeft RightToLeft;} test;",
+        )
 
     def test_lookupflag_unrecognized(self):
         self.assertRaisesRegex(
             FeatureLibError,
             '"IgnoreCookies" is not a recognized lookupflag',
-            self.parse, "feature test {lookupflag IgnoreCookies;} test;")
+            self.parse,
+            "feature test {lookupflag IgnoreCookies;} test;",
+        )
 
     def test_gpos_type_1_glyph(self):
         doc = self.parse("feature kern {pos one <1 2 3 4>;} kern;")
@@ -842,11 +932,15 @@ class ParserTest(unittest.TestCase):
         self.assertRaisesRegex(
             FeatureLibError,
             '"enumerate" is only allowed with pair positionings',
-            self.parse, "feature test {enum pos T 100;} test;")
+            self.parse,
+            "feature test {enum pos T 100;} test;",
+        )
         self.assertRaisesRegex(
             FeatureLibError,
             '"enumerate" is only allowed with pair positionings',
-            self.parse, "feature test {enumerate pos T 100;} test;")
+            self.parse,
+            "feature test {enumerate pos T 100;} test;",
+        )
 
     def test_gpos_type_1_chained(self):
         doc = self.parse("feature kern {pos [A B] [T Y]' 20 comma;} kern;")
@@ -891,32 +985,34 @@ class ParserTest(unittest.TestCase):
 
     def test_gpos_type_1_chained_exception1(self):
         with self.assertRaisesRegex(FeatureLibError, "Positioning values are allowed"):
-            doc = self.parse("feature kern {"
-                             "    pos [A B]' [T Y]' comma a <0 0 0 0>;"
-                             "} kern;")
+            doc = self.parse(
+                "feature kern {" "    pos [A B]' [T Y]' comma a <0 0 0 0>;" "} kern;"
+            )
 
     def test_gpos_type_1_chained_exception2(self):
         with self.assertRaisesRegex(FeatureLibError, "Positioning values are allowed"):
-            doc = self.parse("feature kern {"
-                             "    pos [A B]' <0 0 0 0> [T Y]' comma a <0 0 0 0>;"
-                             "} kern;")
+            doc = self.parse(
+                "feature kern {"
+                "    pos [A B]' <0 0 0 0> [T Y]' comma a <0 0 0 0>;"
+                "} kern;"
+            )
 
     def test_gpos_type_1_chained_exception3(self):
         with self.assertRaisesRegex(FeatureLibError, "Positioning cannot be applied"):
-            doc = self.parse("feature kern {"
-                             "    pos [A B] <0 0 0 0> [T Y]' comma a <0 0 0 0>;"
-                             "} kern;")
+            doc = self.parse(
+                "feature kern {"
+                "    pos [A B] <0 0 0 0> [T Y]' comma a <0 0 0 0>;"
+                "} kern;"
+            )
 
     def test_gpos_type_1_chained_exception4(self):
         with self.assertRaisesRegex(FeatureLibError, "Positioning values are allowed"):
-            doc = self.parse("feature kern {"
-                             "    pos a' b c 123 d;"
-                             "} kern;")
+            doc = self.parse("feature kern {" "    pos a' b c 123 d;" "} kern;")
 
     def test_gpos_type_2_format_a(self):
-        doc = self.parse("feature kern {"
-                         "    pos [T V] -60 [a b c] <1 2 3 4>;"
-                         "} kern;")
+        doc = self.parse(
+            "feature kern {" "    pos [T V] -60 [a b c] <1 2 3 4>;" "} kern;"
+        )
         pos = doc.statements[0].statements[0]
         self.assertEqual(type(pos), ast.PairPosStatement)
         self.assertFalse(pos.enumerated)
@@ -926,9 +1022,9 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(pos.valuerecord2.asFea(), "<1 2 3 4>")
 
     def test_gpos_type_2_format_a_enumerated(self):
-        doc = self.parse("feature kern {"
-                         "    enum pos [T V] -60 [a b c] <1 2 3 4>;"
-                         "} kern;")
+        doc = self.parse(
+            "feature kern {" "    enum pos [T V] -60 [a b c] <1 2 3 4>;" "} kern;"
+        )
         pos = doc.statements[0].statements[0]
         self.assertEqual(type(pos), ast.PairPosStatement)
         self.assertTrue(pos.enumerated)
@@ -938,9 +1034,9 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(pos.valuerecord2.asFea(), "<1 2 3 4>")
 
     def test_gpos_type_2_format_a_with_null_first(self):
-        doc = self.parse("feature kern {"
-                         "    pos [T V] <NULL> [a b c] <1 2 3 4>;"
-                         "} kern;")
+        doc = self.parse(
+            "feature kern {" "    pos [T V] <NULL> [a b c] <1 2 3 4>;" "} kern;"
+        )
         pos = doc.statements[0].statements[0]
         self.assertEqual(type(pos), ast.PairPosStatement)
         self.assertFalse(pos.enumerated)
@@ -952,9 +1048,9 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(pos.asFea(), "pos [T V] <NULL> [a b c] <1 2 3 4>;")
 
     def test_gpos_type_2_format_a_with_null_second(self):
-        doc = self.parse("feature kern {"
-                         "    pos [T V] <1 2 3 4> [a b c] <NULL>;"
-                         "} kern;")
+        doc = self.parse(
+            "feature kern {" "    pos [T V] <1 2 3 4> [a b c] <NULL>;" "} kern;"
+        )
         pos = doc.statements[0].statements[0]
         self.assertEqual(type(pos), ast.PairPosStatement)
         self.assertFalse(pos.enumerated)
@@ -965,9 +1061,7 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(pos.asFea(), "pos [T V] [a b c] <1 2 3 4>;")
 
     def test_gpos_type_2_format_b(self):
-        doc = self.parse("feature kern {"
-                         "    pos [T V] [a b c] <1 2 3 4>;"
-                         "} kern;")
+        doc = self.parse("feature kern {" "    pos [T V] [a b c] <1 2 3 4>;" "} kern;")
         pos = doc.statements[0].statements[0]
         self.assertEqual(type(pos), ast.PairPosStatement)
         self.assertFalse(pos.enumerated)
@@ -977,9 +1071,9 @@ class ParserTest(unittest.TestCase):
         self.assertIsNone(pos.valuerecord2)
 
     def test_gpos_type_2_format_b_enumerated(self):
-        doc = self.parse("feature kern {"
-                         "    enumerate position [T V] [a b c] <1 2 3 4>;"
-                         "} kern;")
+        doc = self.parse(
+            "feature kern {" "    enumerate position [T V] [a b c] <1 2 3 4>;" "} kern;"
+        )
         pos = doc.statements[0].statements[0]
         self.assertEqual(type(pos), ast.PairPosStatement)
         self.assertTrue(pos.enumerated)
@@ -989,9 +1083,11 @@ class ParserTest(unittest.TestCase):
         self.assertIsNone(pos.valuerecord2)
 
     def test_gpos_type_3(self):
-        doc = self.parse("feature kern {"
-                         "    position cursive A <anchor 12 -2> <anchor 2 3>;"
-                         "} kern;")
+        doc = self.parse(
+            "feature kern {"
+            "    position cursive A <anchor 12 -2> <anchor 2 3>;"
+            "} kern;"
+        )
         pos = doc.statements[0].statements[0]
         self.assertEqual(type(pos), ast.CursivePosStatement)
         self.assertEqual(pos.glyphclass.glyphSet(), ("A",))
@@ -1005,7 +1101,8 @@ class ParserTest(unittest.TestCase):
             self.parse,
             "feature kern {"
             "    enumerate position cursive A <anchor 12 -2> <anchor 2 3>;"
-            "} kern;")
+            "} kern;",
+        )
 
     def test_gpos_type_4(self):
         doc = self.parse(
@@ -1016,7 +1113,8 @@ class ParserTest(unittest.TestCase):
             "    position base [a e o u] "
             "        <anchor 250 450> mark @TOP_MARKS "
             "        <anchor 210 -10> mark @BOTTOM_MARKS;"
-            "} test;")
+            "} test;"
+        )
         pos = doc.statements[-1].statements[0]
         self.assertEqual(type(pos), ast.MarkBasePosStatement)
         self.assertEqual(pos.base.glyphSet(), ("a", "e", "o", "u"))
@@ -1027,21 +1125,24 @@ class ParserTest(unittest.TestCase):
     def test_gpos_type_4_enumerated(self):
         self.assertRaisesRegex(
             FeatureLibError,
-            '"enumerate" is not allowed with '
-            'mark-to-base attachment positioning',
+            '"enumerate" is not allowed with ' "mark-to-base attachment positioning",
             self.parse,
             "feature kern {"
             "    markClass cedilla <anchor 300 600> @BOTTOM_MARKS;"
             "    enumerate position base A <anchor 12 -2> mark @BOTTOM_MARKS;"
-            "} kern;")
+            "} kern;",
+        )
 
     def test_gpos_type_4_not_markClass(self):
         self.assertRaisesRegex(
-            FeatureLibError, "@MARKS is not a markClass", self.parse,
+            FeatureLibError,
+            "@MARKS is not a markClass",
+            self.parse,
             "@MARKS = [acute grave];"
             "feature test {"
             "    position base [a e o u] <anchor 250 450> mark @MARKS;"
-            "} test;")
+            "} test;",
+        )
 
     def test_gpos_type_5(self):
         doc = self.parse(
@@ -1058,7 +1159,8 @@ class ParserTest(unittest.TestCase):
             "            <anchor NULL> "
             "        ligComponent "
             "            <anchor 30 -10> mark @BOTTOM_MARKS;"
-            "} test;")
+            "} test;"
+        )
         pos = doc.statements[-1].statements[0]
         self.assertEqual(type(pos), ast.MarkLigPosStatement)
         self.assertEqual(pos.ligatures.glyphSet(), ("a_f_f_i", "o_f_f_i"))
@@ -1072,29 +1174,34 @@ class ParserTest(unittest.TestCase):
         self.assertRaisesRegex(
             FeatureLibError,
             '"enumerate" is not allowed with '
-            'mark-to-ligature attachment positioning',
+            "mark-to-ligature attachment positioning",
             self.parse,
             "feature test {"
             "    markClass cedilla <anchor 300 600> @MARKS;"
             "    enumerate position "
             "        ligature f_i <anchor 100 0> mark @MARKS"
             "        ligComponent <anchor NULL>;"
-            "} test;")
+            "} test;",
+        )
 
     def test_gpos_type_5_not_markClass(self):
         self.assertRaisesRegex(
-            FeatureLibError, "@MARKS is not a markClass", self.parse,
+            FeatureLibError,
+            "@MARKS is not a markClass",
+            self.parse,
             "@MARKS = [acute grave];"
             "feature test {"
             "    position ligature f_i <anchor 250 450> mark @MARKS;"
-            "} test;")
+            "} test;",
+        )
 
     def test_gpos_type_6(self):
         doc = self.parse(
             "markClass damma <anchor 189 -103> @MARK_CLASS_1;"
             "feature test {"
             "    position mark hamza <anchor 221 301> mark @MARK_CLASS_1;"
-            "} test;")
+            "} test;"
+        )
         pos = doc.statements[-1].statements[0]
         self.assertEqual(type(pos), ast.MarkMarkPosStatement)
         self.assertEqual(pos.baseMarks.glyphSet(), ("hamza",))
@@ -1104,28 +1211,32 @@ class ParserTest(unittest.TestCase):
     def test_gpos_type_6_enumerated(self):
         self.assertRaisesRegex(
             FeatureLibError,
-            '"enumerate" is not allowed with '
-            'mark-to-mark attachment positioning',
+            '"enumerate" is not allowed with ' "mark-to-mark attachment positioning",
             self.parse,
             "markClass damma <anchor 189 -103> @MARK_CLASS_1;"
             "feature test {"
             "    enum pos mark hamza <anchor 221 301> mark @MARK_CLASS_1;"
-            "} test;")
+            "} test;",
+        )
 
     def test_gpos_type_6_not_markClass(self):
         self.assertRaisesRegex(
-            FeatureLibError, "@MARKS is not a markClass", self.parse,
+            FeatureLibError,
+            "@MARKS is not a markClass",
+            self.parse,
             "@MARKS = [acute grave];"
             "feature test {"
             "    position mark cedilla <anchor 250 450> mark @MARKS;"
-            "} test;")
+            "} test;",
+        )
 
     def test_gpos_type_8(self):
         doc = self.parse(
             "lookup L1 {pos one 100;} L1; lookup L2 {pos two 200;} L2;"
             "feature test {"
             "    pos [A a] [B b] I' lookup L1 [N n]' lookup L2 P' [Y y] [Z z];"
-            "} test;")
+            "} test;"
+        )
         lookup1, lookup2 = doc.statements[0:2]
         pos = doc.statements[-1].statements[0]
         self.assertEqual(type(pos), ast.ChainContextPosStatement)
@@ -1142,7 +1253,8 @@ class ParserTest(unittest.TestCase):
             "lookup L1 {pos one 100;} L1;"
             "feature test {"
             "    pos A' lookup L1 B' 20;"
-            "} test;")
+            "} test;",
+        )
 
     def test_markClass(self):
         doc = self.parse("markClass [acute grave] <anchor 350 3> @MARKS;")
@@ -1153,8 +1265,7 @@ class ParserTest(unittest.TestCase):
         self.assertEqual((mc.anchor.x, mc.anchor.y), (350, 3))
 
     def test_nameid_windows_utf16(self):
-        doc = self.parse(
-            r'table name { nameid 9 "M\00fcller-Lanc\00e9"; } name;')
+        doc = self.parse(r'table name { nameid 9 "M\00fcller-Lanc\00e9"; } name;')
         name = doc.statements[0].statements[0]
         self.assertIsInstance(name, ast.NameRecord)
         self.assertEqual(name.nameID, 9)
@@ -1171,8 +1282,7 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(name.asFea(), r'nameid 9 "Back\005cslash";')
 
     def test_nameid_windows_utf16_quotation_mark(self):
-        doc = self.parse(
-            r'table name { nameid 9 "Quotation \0022Mark\0022"; } name;')
+        doc = self.parse(r'table name { nameid 9 "Quotation \0022Mark\0022"; } name;')
         name = doc.statements[0].statements[0]
         self.assertEqual(name.string, 'Quotation "Mark"')
         self.assertEqual(name.asFea(), r'nameid 9 "Quotation \0022Mark\0022";')
@@ -1184,8 +1294,7 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(name.asFea(), r'nameid 9 "Carrot \d83e\dd55";')
 
     def test_nameid_mac_roman(self):
-        doc = self.parse(
-            r'table name { nameid 9 1 "Joachim M\9fller-Lanc\8e"; } name;')
+        doc = self.parse(r'table name { nameid 9 1 "Joachim M\9fller-Lanc\8e"; } name;')
         name = doc.statements[0].statements[0]
         self.assertIsInstance(name, ast.NameRecord)
         self.assertEqual(name.nameID, 9)
@@ -1193,12 +1302,10 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(name.platEncID, 0)
         self.assertEqual(name.langID, 0)
         self.assertEqual(name.string, "Joachim Müller-Lancé")
-        self.assertEqual(name.asFea(),
-                         r'nameid 9 1 "Joachim M\9fller-Lanc\8e";')
+        self.assertEqual(name.asFea(), r'nameid 9 1 "Joachim M\9fller-Lanc\8e";')
 
     def test_nameid_mac_croatian(self):
-        doc = self.parse(
-            r'table name { nameid 9 1 0 18 "Jovica Veljovi\e6"; } name;')
+        doc = self.parse(r'table name { nameid 9 1 0 18 "Jovica Veljovi\e6"; } name;')
         name = doc.statements[0].statements[0]
         self.assertEqual(name.nameID, 9)
         self.assertEqual(name.platformID, 1)
@@ -1209,12 +1316,14 @@ class ParserTest(unittest.TestCase):
 
     def test_nameid_unsupported_platform(self):
         self.assertRaisesRegex(
-            FeatureLibError, "Expected platform id 1 or 3",
-            self.parse, 'table name { nameid 9 666 "Foo"; } name;')
+            FeatureLibError,
+            "Expected platform id 1 or 3",
+            self.parse,
+            'table name { nameid 9 666 "Foo"; } name;',
+        )
 
     def test_nameid_hexadecimal(self):
-        doc = self.parse(
-            r'table name { nameid 0x9 0x3 0x1 0x0409 "Test"; } name;')
+        doc = self.parse(r'table name { nameid 0x9 0x3 0x1 0x0409 "Test"; } name;')
         name = doc.statements[0].statements[0]
         self.assertEqual(name.nameID, 9)
         self.assertEqual(name.platformID, 3)
@@ -1222,8 +1331,7 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(name.langID, 0x0409)
 
     def test_nameid_octal(self):
-        doc = self.parse(
-            r'table name { nameid 011 03 012 02011 "Test"; } name;')
+        doc = self.parse(r'table name { nameid 011 03 012 02011 "Test"; } name;')
         name = doc.statements[0].statements[0]
         self.assertEqual(name.nameID, 9)
         self.assertEqual(name.platformID, 3)
@@ -1231,14 +1339,12 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(name.langID, 0o2011)
 
     def test_cv_hexadecimal(self):
-        doc = self.parse(
-            r'feature cv01 { cvParameters { Character 0x5DDE; }; } cv01;')
+        doc = self.parse(r"feature cv01 { cvParameters { Character 0x5DDE; }; } cv01;")
         cv = doc.statements[0].statements[0].statements[0]
         self.assertEqual(cv.character, 0x5DDE)
 
     def test_cv_octal(self):
-        doc = self.parse(
-            r'feature cv01 { cvParameters { Character 056736; }; } cv01;')
+        doc = self.parse(r"feature cv01 { cvParameters { Character 056736; }; } cv01;")
         cv = doc.statements[0].statements[0].statements[0]
         self.assertEqual(cv.character, 0o56736)
 
@@ -1255,8 +1361,7 @@ class ParserTest(unittest.TestCase):
         doc = self.parse(r"feature test {rsub \1 [\2 \3] \4' \5 by \6;} test;")
         rsub = doc.statements[0].statements[0]
         self.assertEqual(type(rsub), ast.ReverseChainSingleSubstStatement)
-        self.assertEqual(glyphstr(rsub.old_prefix),
-                         "cid00001 [cid00002 cid00003]")
+        self.assertEqual(glyphstr(rsub.old_prefix), "cid00001 [cid00002 cid00003]")
         self.assertEqual(rsub.glyphs[0].glyphSet(), ("cid00004",))
         self.assertEqual(rsub.replacements[0].glyphSet(), ("cid00006",))
         self.assertEqual(glyphstr(rsub.old_suffix), "cid00005")
@@ -1265,51 +1370,53 @@ class ParserTest(unittest.TestCase):
         doc = self.parse(
             "feature smcp {"
             "    reversesub A B [one.fitted one.oldstyle]' C [d D] by one;"
-            "} smcp;")
+            "} smcp;"
+        )
         rsub = doc.statements[0].statements[0]
         self.assertEqual(type(rsub), ast.ReverseChainSingleSubstStatement)
         self.assertEqual(glyphstr(rsub.old_prefix), "A B")
         self.assertEqual(glyphstr(rsub.old_suffix), "C [D d]")
-        self.assertEqual(mapping(rsub), {
-            "one.fitted": "one",
-            "one.oldstyle": "one"
-        })
+        self.assertEqual(mapping(rsub), {"one.fitted": "one", "one.oldstyle": "one"})
 
     def test_rsub_format_c(self):
         doc = self.parse(
             "feature test {"
             "    reversesub BACK TRACK [a-d]' LOOK AHEAD by [A.sc-D.sc];"
-            "} test;")
+            "} test;"
+        )
         rsub = doc.statements[0].statements[0]
         self.assertEqual(type(rsub), ast.ReverseChainSingleSubstStatement)
         self.assertEqual(glyphstr(rsub.old_prefix), "BACK TRACK")
         self.assertEqual(glyphstr(rsub.old_suffix), "LOOK AHEAD")
-        self.assertEqual(mapping(rsub), {
-            "a": "A.sc",
-            "b": "B.sc",
-            "c": "C.sc",
-            "d": "D.sc"
-        })
+        self.assertEqual(
+            mapping(rsub), {"a": "A.sc", "b": "B.sc", "c": "C.sc", "d": "D.sc"}
+        )
 
     def test_rsub_from(self):
         self.assertRaisesRegex(
             FeatureLibError,
             'Reverse chaining substitutions do not support "from"',
-            self.parse, "feature test {rsub a from [a.1 a.2 a.3];} test;")
+            self.parse,
+            "feature test {rsub a from [a.1 a.2 a.3];} test;",
+        )
 
     def test_rsub_nonsingle(self):
         self.assertRaisesRegex(
             FeatureLibError,
             "In reverse chaining single substitutions, only a single glyph "
             "or glyph class can be replaced",
-            self.parse, "feature test {rsub c d by c_d;} test;")
+            self.parse,
+            "feature test {rsub c d by c_d;} test;",
+        )
 
     def test_rsub_multiple_replacement_glyphs(self):
         self.assertRaisesRegex(
             FeatureLibError,
-            'In reverse chaining single substitutions, the replacement '
+            "In reverse chaining single substitutions, the replacement "
             r'\(after "by"\) must be a single glyph or glyph class',
-            self.parse, "feature test {rsub f_i by f i;} test;")
+            self.parse,
+            "feature test {rsub f_i by f i;} test;",
+        )
 
     def test_script(self):
         doc = self.parse("feature test {script cyrl;} test;")
@@ -1321,77 +1428,92 @@ class ParserTest(unittest.TestCase):
         self.assertRaisesRegex(
             FeatureLibError,
             '"dflt" is not a valid script tag; use "DFLT" instead',
-            self.parse, "feature test {script dflt;} test;")
+            self.parse,
+            "feature test {script dflt;} test;",
+        )
 
     def test_stat_design_axis(self):  # STAT DesignAxis
-        doc = self.parse('table STAT { DesignAxis opsz 0 '
-                         '{name "Optical Size";}; } STAT;')
+        doc = self.parse(
+            "table STAT { DesignAxis opsz 0 " '{name "Optical Size";}; } STAT;'
+        )
         da = doc.statements[0].statements[0]
         self.assertIsInstance(da, ast.STATDesignAxisStatement)
-        self.assertEqual(da.tag, 'opsz')
+        self.assertEqual(da.tag, "opsz")
         self.assertEqual(da.axisOrder, 0)
-        self.assertEqual(da.names[0].string, 'Optical Size')
+        self.assertEqual(da.names[0].string, "Optical Size")
 
     def test_stat_axis_value_format1(self):  # STAT AxisValue
-        doc = self.parse('table STAT { DesignAxis opsz 0 '
-                         '{name "Optical Size";}; '
-                         'AxisValue {location opsz 8; name "Caption";}; } '
-                         'STAT;')
+        doc = self.parse(
+            "table STAT { DesignAxis opsz 0 "
+            '{name "Optical Size";}; '
+            'AxisValue {location opsz 8; name "Caption";}; } '
+            "STAT;"
+        )
         avr = doc.statements[0].statements[1]
         self.assertIsInstance(avr, ast.STATAxisValueStatement)
-        self.assertEqual(avr.locations[0].tag, 'opsz')
+        self.assertEqual(avr.locations[0].tag, "opsz")
         self.assertEqual(avr.locations[0].values[0], 8)
-        self.assertEqual(avr.names[0].string, 'Caption')
+        self.assertEqual(avr.names[0].string, "Caption")
 
     def test_stat_axis_value_format2(self):  # STAT AxisValue
-        doc = self.parse('table STAT { DesignAxis opsz 0 '
-                         '{name "Optical Size";}; '
-                         'AxisValue {location opsz 8 6 10; name "Caption";}; } '
-                         'STAT;')
+        doc = self.parse(
+            "table STAT { DesignAxis opsz 0 "
+            '{name "Optical Size";}; '
+            'AxisValue {location opsz 8 6 10; name "Caption";}; } '
+            "STAT;"
+        )
         avr = doc.statements[0].statements[1]
         self.assertIsInstance(avr, ast.STATAxisValueStatement)
-        self.assertEqual(avr.locations[0].tag, 'opsz')
+        self.assertEqual(avr.locations[0].tag, "opsz")
         self.assertEqual(avr.locations[0].values, [8, 6, 10])
-        self.assertEqual(avr.names[0].string, 'Caption')
+        self.assertEqual(avr.names[0].string, "Caption")
 
     def test_stat_axis_value_format2_bad_range(self):  # STAT AxisValue
         self.assertRaisesRegex(
             FeatureLibError,
-            'Default value 5 is outside of specified range 6-10.',
-            self.parse, 'table STAT { DesignAxis opsz 0 '
-                        '{name "Optical Size";}; '
-                        'AxisValue {location opsz 5 6 10; name "Caption";}; } '
-                        'STAT;')
+            "Default value 5 is outside of specified range 6-10.",
+            self.parse,
+            "table STAT { DesignAxis opsz 0 "
+            '{name "Optical Size";}; '
+            'AxisValue {location opsz 5 6 10; name "Caption";}; } '
+            "STAT;",
+        )
 
     def test_stat_axis_value_format4(self):  # STAT AxisValue
         self.assertRaisesRegex(
             FeatureLibError,
-            'Only one value is allowed in a Format 4 Axis Value Record, but 3 were found.',
-            self.parse, 'table STAT { '
-                         'DesignAxis opsz 0 {name "Optical Size";}; '
-                         'DesignAxis wdth 0 {name "Width";}; '
-                         'AxisValue {'
-                         'location opsz 8 6 10; '
-                         'location wdth 400; '
-                         'name "Caption";}; } '
-                         'STAT;')
+            "Only one value is allowed in a Format 4 Axis Value Record, but 3 were found.",
+            self.parse,
+            "table STAT { "
+            'DesignAxis opsz 0 {name "Optical Size";}; '
+            'DesignAxis wdth 0 {name "Width";}; '
+            "AxisValue {"
+            "location opsz 8 6 10; "
+            "location wdth 400; "
+            'name "Caption";}; } '
+            "STAT;",
+        )
 
     def test_stat_elidedfallbackname(self):  # STAT ElidedFallbackName
-        doc = self.parse('table STAT { ElidedFallbackName {name "Roman"; '
-                         'name 3 1 0x0411 "ローマン"; }; '
-                         '} STAT;')
+        doc = self.parse(
+            'table STAT { ElidedFallbackName {name "Roman"; '
+            'name 3 1 0x0411 "ローマン"; }; '
+            "} STAT;"
+        )
         nameRecord = doc.statements[0].statements[0]
         self.assertIsInstance(nameRecord, ast.ElidedFallbackName)
-        self.assertEqual(nameRecord.names[0].string, 'Roman')
-        self.assertEqual(nameRecord.names[1].string, 'ローマン')
+        self.assertEqual(nameRecord.names[0].string, "Roman")
+        self.assertEqual(nameRecord.names[1].string, "ローマン")
 
     def test_stat_elidedfallbacknameid(self):  # STAT ElidedFallbackNameID
-        doc = self.parse('table name { nameid 278 "Roman"; } name; '
-                         'table STAT { ElidedFallbackNameID 278; '
-                         '} STAT;')
+        doc = self.parse(
+            'table name { nameid 278 "Roman"; } name; '
+            "table STAT { ElidedFallbackNameID 278; "
+            "} STAT;"
+        )
         nameRecord = doc.statements[0].statements[0]
         self.assertIsInstance(nameRecord, ast.NameRecord)
-        self.assertEqual(nameRecord.string, 'Roman')
+        self.assertEqual(nameRecord.string, "Roman")
 
     def test_sub_single_format_a(self):  # GSUB LookupType 1
         doc = self.parse("feature smcp {substitute a by a.sc;} smcp;")
@@ -1421,13 +1543,11 @@ class ParserTest(unittest.TestCase):
         doc = self.parse(
             "feature smcp {"
             "    substitute [one.fitted one.oldstyle] by one;"
-            "} smcp;")
+            "} smcp;"
+        )
         sub = doc.statements[0].statements[0]
         self.assertIsInstance(sub, ast.SingleSubstStatement)
-        self.assertEqual(mapping(sub), {
-            "one.fitted": "one",
-            "one.oldstyle": "one"
-        })
+        self.assertEqual(mapping(sub), {"one.fitted": "one", "one.oldstyle": "one"})
         self.assertEqual(glyphstr(sub.prefix), "")
         self.assertEqual(glyphstr(sub.suffix), "")
 
@@ -1435,45 +1555,35 @@ class ParserTest(unittest.TestCase):
         doc = self.parse(
             "feature smcp {"
             "    substitute PRE FIX [one.fitted one.oldstyle]' SUF FIX by one;"
-            "} smcp;")
+            "} smcp;"
+        )
         sub = doc.statements[0].statements[0]
         self.assertIsInstance(sub, ast.SingleSubstStatement)
-        self.assertEqual(mapping(sub), {
-            "one.fitted": "one",
-            "one.oldstyle": "one"
-        })
+        self.assertEqual(mapping(sub), {"one.fitted": "one", "one.oldstyle": "one"})
         self.assertEqual(glyphstr(sub.prefix), "PRE FIX")
         self.assertEqual(glyphstr(sub.suffix), "SUF FIX")
 
     def test_sub_single_format_c(self):  # GSUB LookupType 1
         doc = self.parse(
-            "feature smcp {"
-            "    substitute [a-d] by [A.sc-D.sc];"
-            "} smcp;")
+            "feature smcp {" "    substitute [a-d] by [A.sc-D.sc];" "} smcp;"
+        )
         sub = doc.statements[0].statements[0]
         self.assertIsInstance(sub, ast.SingleSubstStatement)
-        self.assertEqual(mapping(sub), {
-            "a": "A.sc",
-            "b": "B.sc",
-            "c": "C.sc",
-            "d": "D.sc"
-        })
+        self.assertEqual(
+            mapping(sub), {"a": "A.sc", "b": "B.sc", "c": "C.sc", "d": "D.sc"}
+        )
         self.assertEqual(glyphstr(sub.prefix), "")
         self.assertEqual(glyphstr(sub.suffix), "")
 
     def test_sub_single_format_c_chained(self):  # chain to GSUB LookupType 1
         doc = self.parse(
-            "feature smcp {"
-            "    substitute [a-d]' X Y [Z z] by [A.sc-D.sc];"
-            "} smcp;")
+            "feature smcp {" "    substitute [a-d]' X Y [Z z] by [A.sc-D.sc];" "} smcp;"
+        )
         sub = doc.statements[0].statements[0]
         self.assertIsInstance(sub, ast.SingleSubstStatement)
-        self.assertEqual(mapping(sub), {
-            "a": "A.sc",
-            "b": "B.sc",
-            "c": "C.sc",
-            "d": "D.sc"
-        })
+        self.assertEqual(
+            mapping(sub), {"a": "A.sc", "b": "B.sc", "c": "C.sc", "d": "D.sc"}
+        )
         self.assertEqual(glyphstr(sub.prefix), "")
         self.assertEqual(glyphstr(sub.suffix), "X Y [Z z]")
 
@@ -1481,14 +1591,18 @@ class ParserTest(unittest.TestCase):
         self.assertRaisesRegex(
             FeatureLibError,
             'Expected a glyph class with 4 elements after "by", '
-            'but found a glyph class with 26 elements',
-            self.parse, "feature smcp {sub [a-d] by [A.sc-Z.sc];} smcp;")
+            "but found a glyph class with 26 elements",
+            self.parse,
+            "feature smcp {sub [a-d] by [A.sc-Z.sc];} smcp;",
+        )
 
     def test_sub_with_values(self):
         self.assertRaisesRegex(
             FeatureLibError,
             "Substitution statements cannot contain values",
-            self.parse, "feature smcp {sub A' 20 by A.sc;} smcp;")
+            self.parse,
+            "feature smcp {sub A' 20 by A.sc;} smcp;",
+        )
 
     def test_substitute_multiple(self):  # GSUB LookupType 2
         doc = self.parse("lookup Look {substitute f_f_i by f f i;} Look;")
@@ -1518,52 +1632,59 @@ class ParserTest(unittest.TestCase):
             "Direct substitution of multiple glyphs by multiple glyphs "
             "is not supported",
             self.parse,
-            "lookup MxM {sub a b c by d e f;} MxM;")
+            "lookup MxM {sub a b c by d e f;} MxM;",
+        )
 
     def test_split_marked_glyphs_runs(self):
         self.assertRaisesRegex(
             FeatureLibError,
             "Unsupported contextual target sequence",
-            self.parse, "feature test{"
-                        "    ignore pos a' x x A';"
-                        "} test;")
+            self.parse,
+            "feature test{" "    ignore pos a' x x A';" "} test;",
+        )
         self.assertRaisesRegex(
             FeatureLibError,
             "Unsupported contextual target sequence",
-            self.parse, "lookup shift {"
-                        "    pos a <0 -10 0 0>;"
-                        "    pos A <0 10 0 0>;"
-                        "} shift;"
-                        "feature test {"
-                        "    sub a' lookup shift x x A' lookup shift;"
-                        "} test;")
+            self.parse,
+            "lookup shift {"
+            "    pos a <0 -10 0 0>;"
+            "    pos A <0 10 0 0>;"
+            "} shift;"
+            "feature test {"
+            "    sub a' lookup shift x x A' lookup shift;"
+            "} test;",
+        )
         self.assertRaisesRegex(
             FeatureLibError,
             "Unsupported contextual target sequence",
-            self.parse, "feature test {"
-                        "    ignore sub a' x x A';"
-                        "} test;")
+            self.parse,
+            "feature test {" "    ignore sub a' x x A';" "} test;",
+        )
         self.assertRaisesRegex(
             FeatureLibError,
             "Unsupported contextual target sequence",
-            self.parse, "lookup upper {"
-                        "    sub a by A;"
-                        "} upper;"
-                        "lookup lower {"
-                        "    sub A by a;"
-                        "} lower;"
-                        "feature test {"
-                        "    sub a' lookup upper x x A' lookup lower;"
-                        "} test;")
+            self.parse,
+            "lookup upper {"
+            "    sub a by A;"
+            "} upper;"
+            "lookup lower {"
+            "    sub A by a;"
+            "} lower;"
+            "feature test {"
+            "    sub a' lookup upper x x A' lookup lower;"
+            "} test;",
+        )
 
     def test_substitute_mix_single_multiple(self):
-        doc = self.parse("lookup Look {"
-                         "  sub f_f   by f f;"
-                         "  sub f     by f;"
-                         "  sub f_f_i by f f i;"
-                         "  sub [a a.sc] by a;"
-                         "  sub [a a.sc] by [b b.sc];"
-                         "} Look;")
+        doc = self.parse(
+            "lookup Look {"
+            "  sub f_f   by f f;"
+            "  sub f     by f;"
+            "  sub f_f_i by f f i;"
+            "  sub [a a.sc] by a;"
+            "  sub [a a.sc] by [b b.sc];"
+            "} Look;"
+        )
         statements = doc.statements[0].statements
         for sub in statements:
             self.assertIsInstance(sub, ast.MultipleSubstStatement)
@@ -1579,9 +1700,9 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(statements[6].replacement, ["b.sc"])
 
     def test_substitute_from(self):  # GSUB LookupType 3
-        doc = self.parse("feature test {"
-                         "  substitute a from [a.1 a.2 a.3];"
-                         "} test;")
+        doc = self.parse(
+            "feature test {" "  substitute a from [a.1 a.2 a.3];" "} test;"
+        )
         sub = doc.statements[0].statements[0]
         self.assertIsInstance(sub, ast.AlternateSubstStatement)
         self.assertEqual(glyphstr(sub.prefix), "")
@@ -1590,9 +1711,9 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(glyphstr([sub.replacement]), "[a.1 a.2 a.3]")
 
     def test_substitute_from_chained(self):  # chain to GSUB LookupType 3
-        doc = self.parse("feature test {"
-                         "  substitute A B a' [Y y] Z from [a.1 a.2 a.3];"
-                         "} test;")
+        doc = self.parse(
+            "feature test {" "  substitute A B a' [Y y] Z from [a.1 a.2 a.3];" "} test;"
+        )
         sub = doc.statements[0].statements[0]
         self.assertIsInstance(sub, ast.AlternateSubstStatement)
         self.assertEqual(glyphstr(sub.prefix), "A B")
@@ -1601,9 +1722,9 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(glyphstr([sub.replacement]), "[a.1 a.2 a.3]")
 
     def test_substitute_from_cid(self):  # GSUB LookupType 3
-        doc = self.parse(r"feature test {"
-                         r"  substitute \7 from [\111 \222];"
-                         r"} test;")
+        doc = self.parse(
+            r"feature test {" r"  substitute \7 from [\111 \222];" r"} test;"
+        )
         sub = doc.statements[0].statements[0]
         self.assertIsInstance(sub, ast.AlternateSubstStatement)
         self.assertEqual(glyphstr(sub.prefix), "")
@@ -1612,17 +1733,18 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(glyphstr([sub.replacement]), "[cid00111 cid00222]")
 
     def test_substitute_from_glyphclass(self):  # GSUB LookupType 3
-        doc = self.parse("feature test {"
-                         "  @Ampersands = [ampersand.1 ampersand.2];"
-                         "  substitute ampersand from @Ampersands;"
-                         "} test;")
+        doc = self.parse(
+            "feature test {"
+            "  @Ampersands = [ampersand.1 ampersand.2];"
+            "  substitute ampersand from @Ampersands;"
+            "} test;"
+        )
         [glyphclass, sub] = doc.statements[0].statements
         self.assertIsInstance(sub, ast.AlternateSubstStatement)
         self.assertEqual(glyphstr(sub.prefix), "")
         self.assertEqual(glyphstr([sub.glyph]), "ampersand")
         self.assertEqual(glyphstr(sub.suffix), "")
-        self.assertEqual(glyphstr([sub.replacement]),
-                         "[ampersand.1 ampersand.2]")
+        self.assertEqual(glyphstr([sub.replacement]), "[ampersand.1 ampersand.2]")
 
     def test_substitute_ligature(self):  # GSUB LookupType 4
         doc = self.parse("feature liga {substitute f f i by f_f_i;} liga;")
@@ -1652,13 +1774,15 @@ class ParserTest(unittest.TestCase):
         self.assertRaisesRegex(
             FeatureLibError,
             'Expected "by", "from" or explicit lookup references',
-            self.parse, "feature liga {substitute f f i;} liga;")
-    
+            self.parse,
+            "feature liga {substitute f f i;} liga;",
+        )
+
     def test_substitute_invalid_statement(self):
         self.assertRaisesRegex(
             FeatureLibError,
             "Invalid substitution statement",
-            Parser(self.getpath("GSUB_error.fea"), GLYPHNAMES).parse
+            Parser(self.getpath("GSUB_error.fea"), GLYPHNAMES).parse,
         )
 
     def test_subtable(self):
@@ -1668,8 +1792,11 @@ class ParserTest(unittest.TestCase):
 
     def test_table_badEnd(self):
         self.assertRaisesRegex(
-            FeatureLibError, 'Expected "GDEF"', self.parse,
-            "table GDEF {LigatureCaretByPos f_i 400;} ABCD;")
+            FeatureLibError,
+            'Expected "GDEF"',
+            self.parse,
+            "table GDEF {LigatureCaretByPos f_i 400;} ABCD;",
+        )
 
     def test_table_comment(self):
         for table in "BASE GDEF OS/2 head hhea name vhea".split():
@@ -1680,8 +1807,11 @@ class ParserTest(unittest.TestCase):
 
     def test_table_unsupported(self):
         self.assertRaisesRegex(
-            FeatureLibError, '"table Foo" is not supported', self.parse,
-            "table Foo {LigatureCaretByPos f_i 400;} Foo;")
+            FeatureLibError,
+            '"table Foo" is not supported',
+            self.parse,
+            "table Foo {LigatureCaretByPos f_i 400;} Foo;",
+        )
 
     def test_valuerecord_format_a_horizontal(self):
         doc = self.parse("feature liga {valueRecordDef 123 foo;} liga;")
@@ -1745,12 +1875,13 @@ class ParserTest(unittest.TestCase):
 
     def test_valuerecord_format_a_vertical_contexts_(self):
         for tag in "vkrn vpal vhal valt".split():
-            doc = self.parse(
-                "feature %s {valueRecordDef 77 foo;} %s;" % (tag, tag))
+            doc = self.parse("feature %s {valueRecordDef 77 foo;} %s;" % (tag, tag))
             value = doc.statements[0].statements[0].value
             if value.yAdvance != 77:
-                self.fail(msg="feature %s should be a vertical context "
-                          "for ValueRecord format A" % tag)
+                self.fail(
+                    msg="feature %s should be a vertical context "
+                    "for ValueRecord format A" % tag
+                )
 
     def test_valuerecord_format_b(self):
         doc = self.parse("feature liga {valueRecordDef <1 2 3 4> foo;} liga;")
@@ -1792,7 +1923,8 @@ class ParserTest(unittest.TestCase):
             "        <device NULL>"
             "        <device 33 -113, 44 -114, 55 115>"
             "    > foo;"
-            "} liga;")
+            "} liga;"
+        )
         value = doc.statements[0].statements[0].value
         self.assertEqual(value.xPlacement, 1)
         self.assertEqual(value.yPlacement, 2)
@@ -1802,9 +1934,11 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(value.yPlaDevice, ((11, 111), (12, 112)))
         self.assertIsNone(value.xAdvDevice)
         self.assertEqual(value.yAdvDevice, ((33, -113), (44, -114), (55, 115)))
-        self.assertEqual(value.asFea(),
-                         "<1 2 3 4 <device 8 88> <device 11 111, 12 112>"
-                         " <device NULL> <device 33 -113, 44 -114, 55 115>>")
+        self.assertEqual(
+            value.asFea(),
+            "<1 2 3 4 <device 8 88> <device 11 111, 12 112>"
+            " <device NULL> <device 33 -113, 44 -114, 55 115>>",
+        )
 
     def test_valuerecord_format_d(self):
         doc = self.parse("feature test {valueRecordDef <NULL> foo;} test;")
@@ -1813,13 +1947,20 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(value.asFea(), "<NULL>")
 
     def test_valuerecord_variable_scalar(self):
-        doc = self.parse("feature test {valueRecordDef <0 (wght=200:-100 wght=900:-150 wdth=150,wght=900:-120) 0 0> foo;} test;")
+        doc = self.parse(
+            "feature test {valueRecordDef <0 (wght=200:-100 wght=900:-150 wdth=150,wght=900:-120) 0 0> foo;} test;"
+        )
         value = doc.statements[0].statements[0].value
-        self.assertEqual(value.asFea(), "<0 (wght=200:-100 wght=900:-150 wdth=150,wght=900:-120) 0 0>")
+        self.assertEqual(
+            value.asFea(),
+            "<0 (wght=200:-100 wght=900:-150 wdth=150,wght=900:-120) 0 0>",
+        )
 
     def test_valuerecord_named(self):
-        doc = self.parse("valueRecordDef <1 2 3 4> foo;"
-                         "feature liga {valueRecordDef <foo> bar;} liga;")
+        doc = self.parse(
+            "valueRecordDef <1 2 3 4> foo;"
+            "feature liga {valueRecordDef <foo> bar;} liga;"
+        )
         value = doc.statements[1].statements[0].value
         self.assertEqual(value.xPlacement, 1)
         self.assertEqual(value.yPlacement, 2)
@@ -1828,8 +1969,11 @@ class ParserTest(unittest.TestCase):
 
     def test_valuerecord_named_unknown(self):
         self.assertRaisesRegex(
-            FeatureLibError, "Unknown valueRecordDef \"unknown\"",
-            self.parse, "valueRecordDef <unknown> foo;")
+            FeatureLibError,
+            'Unknown valueRecordDef "unknown"',
+            self.parse,
+            "valueRecordDef <unknown> foo;",
+        )
 
     def test_valuerecord_scoping(self):
         [foo, liga, smcp] = self.parse(
@@ -1843,34 +1987,45 @@ class ParserTest(unittest.TestCase):
 
     def test_valuerecord_device_value_out_of_range(self):
         self.assertRaisesRegex(
-            FeatureLibError, r"Device value out of valid range \(-128..127\)",
+            FeatureLibError,
+            r"Device value out of valid range \(-128..127\)",
             self.parse,
             "valueRecordDef <1 2 3 4 <device NULL> <device NULL> "
-            "<device NULL> <device 11 128>> foo;")
+            "<device NULL> <device 11 128>> foo;",
+        )
 
     def test_conditionset(self):
         doc = self.parse("conditionset heavy { wght 700 900; } heavy;")
         value = doc.statements[0]
         self.assertEqual(value.conditions["wght"], (700, 900))
-        self.assertEqual(value.asFea(), "conditionset heavy {\n    wght 700 900;\n} heavy;\n")
+        self.assertEqual(
+            value.asFea(), "conditionset heavy {\n    wght 700 900;\n} heavy;\n"
+        )
 
         doc = self.parse("conditionset heavy { wght 700 900; opsz 17 18;} heavy;")
         value = doc.statements[0]
         self.assertEqual(value.conditions["wght"], (700, 900))
         self.assertEqual(value.conditions["opsz"], (17, 18))
-        self.assertEqual(value.asFea(), "conditionset heavy {\n    wght 700 900;\n    opsz 17 18;\n} heavy;\n")
+        self.assertEqual(
+            value.asFea(),
+            "conditionset heavy {\n    wght 700 900;\n    opsz 17 18;\n} heavy;\n",
+        )
 
     def test_conditionset_same_axis(self):
         self.assertRaisesRegex(
-            FeatureLibError, r"Repeated condition for axis wght",
+            FeatureLibError,
+            r"Repeated condition for axis wght",
             self.parse,
-            "conditionset heavy { wght 700 900; wght 100 200; } heavy;")
+            "conditionset heavy { wght 700 900; wght 100 200; } heavy;",
+        )
 
     def test_conditionset_float(self):
         doc = self.parse("conditionset heavy { wght 700.0 900.0; } heavy;")
         value = doc.statements[0]
         self.assertEqual(value.conditions["wght"], (700.0, 900.0))
-        self.assertEqual(value.asFea(), "conditionset heavy {\n    wght 700.0 900.0;\n} heavy;\n")
+        self.assertEqual(
+            value.asFea(), "conditionset heavy {\n    wght 700.0 900.0;\n} heavy;\n"
+        )
 
     def test_variation(self):
         doc = self.parse("variation rvrn heavy { sub a by b; } rvrn;")
@@ -1886,20 +2041,30 @@ class ParserTest(unittest.TestCase):
         self.assertRaisesRegex(
             FeatureLibError,
             '"dflt" is not a valid script tag; use "DFLT" instead',
-            self.parse, "languagesystem dflt dflt;")
+            self.parse,
+            "languagesystem dflt dflt;",
+        )
         self.assertRaisesRegex(
             FeatureLibError,
             '"DFLT" is not a valid language tag; use "dflt" instead',
-            self.parse, "languagesystem latn DFLT;")
+            self.parse,
+            "languagesystem latn DFLT;",
+        )
         self.assertRaisesRegex(
-            FeatureLibError, "Expected ';'",
-            self.parse, "languagesystem latn DEU")
+            FeatureLibError, "Expected ';'", self.parse, "languagesystem latn DEU"
+        )
         self.assertRaisesRegex(
-            FeatureLibError, "longer than 4 characters",
-            self.parse, "languagesystem foobar DEU;")
+            FeatureLibError,
+            "longer than 4 characters",
+            self.parse,
+            "languagesystem foobar DEU;",
+        )
         self.assertRaisesRegex(
-            FeatureLibError, "longer than 4 characters",
-            self.parse, "languagesystem latn FOOBAR;")
+            FeatureLibError,
+            "longer than 4 characters",
+            self.parse,
+            "languagesystem latn FOOBAR;",
+        )
 
     def test_empty_statement_ignored(self):
         doc = self.parse("feature test {;} test;")
@@ -1945,4 +2110,5 @@ class SymbolTableTest(unittest.TestCase):
 
 if __name__ == "__main__":
     import sys
+
     sys.exit(unittest.main())

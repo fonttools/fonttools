@@ -1262,11 +1262,21 @@ class MultipleSubstStatement(Statement):
         if not self.replacement and hasattr(self.glyph, "glyphSet"):
             for glyph in self.glyph.glyphSet():
                 builder.add_multiple_subst(
-                    self.location, prefix, glyph, suffix, self.replacement, self.forceChain
+                    self.location,
+                    prefix,
+                    glyph,
+                    suffix,
+                    self.replacement,
+                    self.forceChain,
                 )
         else:
             builder.add_multiple_subst(
-                self.location, prefix, self.glyph, suffix, self.replacement, self.forceChain
+                self.location,
+                prefix,
+                self.glyph,
+                suffix,
+                self.replacement,
+                self.forceChain,
             )
 
     def asFea(self, indent=""):
@@ -2061,18 +2071,26 @@ class ConditionsetStatement(Statement):
         res += indent + "}" + f" {self.name};\n"
         return res
 
+
 class VariationBlock(Block):
     """A variation feature block, applicable in a given set of conditions."""
 
     def __init__(self, name, conditionset, use_extension=False, location=None):
         Block.__init__(self, location)
-        self.name, self.conditionset, self.use_extension = name, conditionset, use_extension
+        self.name, self.conditionset, self.use_extension = (
+            name,
+            conditionset,
+            use_extension,
+        )
 
     def build(self, builder):
         """Call the ``start_feature`` callback on the builder object, visit
         all the statements in this feature, and then call ``end_feature``."""
         builder.start_feature(self.location, self.name)
-        if self.conditionset != "NULL" and self.conditionset not in builder.conditionsets_:
+        if (
+            self.conditionset != "NULL"
+            and self.conditionset not in builder.conditionsets_
+        ):
             raise FeatureLibError(
                 f"variation block used undefined conditionset {self.conditionset}",
                 self.location,
@@ -2084,7 +2102,9 @@ class VariationBlock(Block):
         builder.features_ = {}
         Block.build(self, builder)
         for key, value in builder.features_.items():
-            items = builder.feature_variations_.setdefault(key,{}).setdefault(self.conditionset,[])
+            items = builder.feature_variations_.setdefault(key, {}).setdefault(
+                self.conditionset, []
+            )
             items.extend(value)
             if key not in features:
                 features[key] = []  # Ensure we make a feature record
@@ -2100,5 +2120,3 @@ class VariationBlock(Block):
         res += Block.asFea(self, indent=indent)
         res += indent + "} %s;\n" % self.name.strip()
         return res
-
-
