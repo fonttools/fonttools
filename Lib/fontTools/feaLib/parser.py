@@ -1,5 +1,6 @@
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.feaLib.lexer import Lexer, IncludingLexer, NonIncludingLexer
+from fontTools.feaLib.variableScalar import VariableScalar
 from fontTools.misc.encodingTools import getEncoding
 from fontTools.misc.textTools import bytechr, tobytes, tostr
 import fontTools.feaLib.ast as ast
@@ -101,6 +102,10 @@ class Parser(object):
                 statements.append(self.parse_markClass_())
             elif self.is_cur_keyword_("feature"):
                 statements.append(self.parse_feature_block_())
+            elif self.is_cur_keyword_("conditionset"):
+                statements.append(self.parse_conditionset_())
+            elif self.is_cur_keyword_("variation"):
+                statements.append(self.parse_feature_block_(variation=True))
             elif self.is_cur_keyword_("table"):
                 statements.append(self.parse_table_())
             elif self.is_cur_keyword_("valueRecordDef"):
@@ -152,7 +157,7 @@ class Parser(object):
                 location=location,
             )
 
-        x, y = self.expect_number_(), self.expect_number_()
+        x, y = self.expect_number_(variable=True), self.expect_number_(variable=True)
 
         contourpoint = None
         if self.next_token_ == "contourpoint":  # Format B
@@ -380,8 +385,7 @@ class Parser(object):
                     self.expect_symbol_("-")
                     range_end = self.expect_cid_()
                     self.check_glyph_name_in_glyph_set(
-                        f"cid{range_start:05d}",
-                        f"cid{range_end:05d}",
+                        f"cid{range_start:05d}", f"cid{range_end:05d}",
                     )
                     glyphs.add_cid_range(
                         range_start,
@@ -477,7 +481,7 @@ class Parser(object):
                 raise FeatureLibError(
                     "Positioning cannot be applied in the bactrack glyph sequence, "
                     "before the marked glyph sequence.",
-                    self.cur_token_location_
+                    self.cur_token_location_,
                 )
             marked_values = values[len(prefix) : len(prefix) + len(glyphs)]
             if any(marked_values):
@@ -486,7 +490,7 @@ class Parser(object):
                         "Positioning values are allowed only in the marked glyph "
                         "sequence, or after the final glyph node when only one glyph "
                         "node is marked.",
-                        self.cur_token_location_
+                        self.cur_token_location_,
                     )
                 values = marked_values
             elif values and values[-1]:
@@ -495,7 +499,7 @@ class Parser(object):
                         "Positioning values are allowed only in the marked glyph "
                         "sequence, or after the final glyph node when only one glyph "
                         "node is marked.",
-                        self.cur_token_location_
+                        self.cur_token_location_,
                     )
                 values = values[-1:]
             elif any(values):
@@ -503,7 +507,7 @@ class Parser(object):
                     "Positioning values are allowed only in the marked glyph "
                     "sequence, or after the final glyph node when only one glyph "
                     "node is marked.",
-                    self.cur_token_location_
+                    self.cur_token_location_,
                 )
             return (prefix, glyphs, lookups, values, suffix, hasMarks)
 
@@ -1005,8 +1009,8 @@ class Parser(object):
         location = self.cur_token_location_
         DesignSize = self.expect_decipoint_()
         SubfamilyID = self.expect_number_()
-        RangeStart = 0.
-        RangeEnd = 0.
+        RangeStart = 0.0
+        RangeEnd = 0.0
         if self.next_token_type_ in (Lexer.NUMBER, Lexer.FLOAT) or SubfamilyID != 0:
             RangeStart = self.expect_decipoint_()
             RangeEnd = self.expect_decipoint_()
@@ -1585,11 +1589,20 @@ class Parser(object):
         return result
 
     def is_next_value_(self):
-        return self.next_token_type_ is Lexer.NUMBER or self.next_token_ == "<"
+        return (
+            self.next_token_type_ is Lexer.NUMBER
+            or self.next_token_ == "<"
+            or self.next_token_ == "("
+        )
 
     def parse_valuerecord_(self, vertical):
-        if self.next_token_type_ is Lexer.NUMBER:
-            number, location = self.expect_number_(), self.cur_token_location_
+        if (
+            self.next_token_type_ is Lexer.SYMBOL and self.next_token_ == "("
+        ) or self.next_token_type_ is Lexer.NUMBER:
+            number, location = (
+                self.expect_number_(variable=True),
+                self.cur_token_location_,
+            )
             if vertical:
                 val = self.ast.ValueRecord(
                     yAdvance=number, vertical=vertical, location=location
@@ -1616,10 +1629,10 @@ class Parser(object):
             xAdvance, yAdvance = (value.xAdvance, value.yAdvance)
         else:
             xPlacement, yPlacement, xAdvance, yAdvance = (
-                self.expect_number_(),
-                self.expect_number_(),
-                self.expect_number_(),
-                self.expect_number_(),
+                self.expect_number_(variable=True),
+                self.expect_number_(variable=True),
+                self.expect_number_(variable=True),
+                self.expect_number_(variable=True),
             )
 
         if self.next_token_ == "<":
@@ -1679,8 +1692,11 @@ class Parser(object):
         self.expect_symbol_(";")
         return self.ast.LanguageSystemStatement(script, language, location=location)
 
-    def parse_feature_block_(self):
-        assert self.cur_token_ == "feature"
+    def parse_feature_block_(self, variation=False):
+        if variation:
+            assert self.cur_token_ == "variation"
+        else:
+            assert self.cur_token_ == "feature"
         location = self.cur_token_location_
         tag = self.expect_tag_()
         vertical = tag in {"vkrn", "vpal", "vhal", "valt"}
@@ -1695,14 +1711,22 @@ class Parser(object):
         elif tag == "size":
             size_feature = True
 
+        if variation:
+            conditionset = self.expect_name_()
+
         use_extension = False
         if self.next_token_ == "useExtension":
             self.expect_keyword_("useExtension")
             use_extension = True
 
-        block = self.ast.FeatureBlock(
-            tag, use_extension=use_extension, location=location
-        )
+        if variation:
+            block = self.ast.VariationBlock(
+                tag, conditionset, use_extension=use_extension, location=location
+            )
+        else:
+            block = self.ast.FeatureBlock(
+                tag, use_extension=use_extension, location=location
+            )
         self.parse_block_(block, vertical, stylisticset, size_feature, cv_feature)
         return block
 
@@ -1849,6 +1873,43 @@ class Parser(object):
         if version <= 0:
             raise FeatureLibError("Font revision numbers must be positive", location)
         return self.ast.FontRevisionStatement(version, location=location)
+
+    def parse_conditionset_(self):
+        name = self.expect_name_()
+
+        conditions = {}
+        self.expect_symbol_("{")
+
+        while self.next_token_ != "}":
+            self.advance_lexer_()
+            if self.cur_token_type_ is not Lexer.NAME:
+                raise FeatureLibError("Expected an axis name", self.cur_token_location_)
+
+            axis = self.cur_token_
+            if axis in conditions:
+                raise FeatureLibError(
+                    f"Repeated condition for axis {axis}", self.cur_token_location_
+                )
+
+            if self.next_token_type_ is Lexer.FLOAT:
+                min_value = self.expect_float_()
+            elif self.next_token_type_ is Lexer.NUMBER:
+                min_value = self.expect_number_(variable=False)
+
+            if self.next_token_type_ is Lexer.FLOAT:
+                max_value = self.expect_float_()
+            elif self.next_token_type_ is Lexer.NUMBER:
+                max_value = self.expect_number_(variable=False)
+            self.expect_symbol_(";")
+
+            conditions[axis] = (min_value, max_value)
+
+        self.expect_symbol_("}")
+
+        finalname = self.expect_name_()
+        if finalname != name:
+            raise FeatureLibError('Expected "%s"' % name, self.cur_token_location_)
+        return self.ast.ConditionsetStatement(name, conditions)
 
     def parse_block_(
         self, block, vertical, stylisticset=None, size_feature=False, cv_feature=None
@@ -2080,11 +2141,50 @@ class Parser(object):
             return self.cur_token_
         raise FeatureLibError("Expected a name", self.cur_token_location_)
 
-    def expect_number_(self):
+    def expect_number_(self, variable=False):
         self.advance_lexer_()
         if self.cur_token_type_ is Lexer.NUMBER:
             return self.cur_token_
+        if variable and self.cur_token_type_ is Lexer.SYMBOL and self.cur_token_ == "(":
+            return self.expect_variable_scalar_()
         raise FeatureLibError("Expected a number", self.cur_token_location_)
+
+    def expect_variable_scalar_(self):
+        self.advance_lexer_()  # "("
+        scalar = VariableScalar()
+        while True:
+            if self.cur_token_type_ == Lexer.SYMBOL and self.cur_token_ == ")":
+                break
+            location, value = self.expect_master_()
+            scalar.add_value(location, value)
+        return scalar
+
+    def expect_master_(self):
+        location = {}
+        while True:
+            if self.cur_token_type_ is not Lexer.NAME:
+                raise FeatureLibError("Expected an axis name", self.cur_token_location_)
+            axis = self.cur_token_
+            self.advance_lexer_()
+            if not (self.cur_token_type_ is Lexer.SYMBOL and self.cur_token_ == "="):
+                raise FeatureLibError(
+                    "Expected an equals sign", self.cur_token_location_
+                )
+            value = self.expect_number_()
+            location[axis] = value
+            if self.next_token_type_ is Lexer.NAME and self.next_token_[0] == ":":
+                # Lexer has just read the value as a glyph name. We'll correct it later
+                break
+            self.advance_lexer_()
+            if not (self.cur_token_type_ is Lexer.SYMBOL and self.cur_token_ == ","):
+                raise FeatureLibError(
+                    "Expected an comma or an equals sign", self.cur_token_location_
+                )
+            self.advance_lexer_()
+        self.advance_lexer_()
+        value = int(self.cur_token_[1:])
+        self.advance_lexer_()
+        return location, value
 
     def expect_any_number_(self):
         self.advance_lexer_()

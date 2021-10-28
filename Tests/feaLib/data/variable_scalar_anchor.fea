@@ -1,0 +1,4 @@
+languagesystem DFLT dflt;
+feature kern {
+     pos cursive one <anchor 0 (wght=200:12 wght=900:22 wdth=150,wght=900:42)> <anchor NULL>;
+} kern;

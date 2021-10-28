@@ -1,0 +1,13 @@
+languagesystem DFLT dflt;
+
+lookup symbols_heavy {
+	sub a by b;
+} symbols_heavy;
+
+conditionset heavy {
+	wght 700 900;
+} heavy;
+
+variation rvrn heavy {
+     lookup symbols_heavy;
+} rvrn;

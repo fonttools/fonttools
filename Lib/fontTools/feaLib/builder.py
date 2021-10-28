@@ -8,6 +8,7 @@ from fontTools.feaLib.lookupDebugInfo import (
 )
 from fontTools.feaLib.parser import Parser
 from fontTools.feaLib.ast import FeatureFile
+from fontTools.feaLib.variableScalar import VariableScalar
 from fontTools.otlLib import builder as otl
 from fontTools.otlLib.maxContextCalc import maxCtxFont
 from fontTools.ttLib import newTable, getTableModule
@@ -30,6 +31,10 @@ from fontTools.otlLib.builder import (
     ChainContextualRule,
 )
 from fontTools.otlLib.error import OpenTypeLibError
+from fontTools.varLib.varStore import OnlineVarStoreBuilder
+from fontTools.varLib.builder import buildVarDevTable
+from fontTools.varLib.featureVars import addFeatureVariationsRaw
+from fontTools.varLib.models import normalizeValue
 from collections import defaultdict
 import itertools
 from io import StringIO
@@ -111,6 +116,12 @@ class Builder(object):
         else:
             self.parseTree, self.file = None, featurefile
         self.glyphMap = font.getReverseGlyphMap()
+        self.varstorebuilder = None
+        if "fvar" in font:
+            self.axes = font["fvar"].axes
+            self.varstorebuilder = OnlineVarStoreBuilder(
+                [ax.axisTag for ax in self.axes]
+            )
         self.default_language_systems_ = set()
         self.script_ = None
         self.lookupflag_ = 0
@@ -125,6 +136,7 @@ class Builder(object):
         self.lookup_locations = {"GSUB": {}, "GPOS": {}}
         self.features_ = {}  # ('latn', 'DEU ', 'smcp') --> [LookupBuilder*]
         self.required_features_ = {}  # ('latn', 'DEU ') --> 'scmp'
+        self.feature_variations_ = {}
         # for feature 'aalt'
         self.aalt_features_ = []  # [(location, featureName)*], for 'aalt'
         self.aalt_location_ = None
@@ -162,6 +174,8 @@ class Builder(object):
         self.vhea_ = {}
         # for table 'STAT'
         self.stat_ = {}
+        # for conditionsets
+        self.conditionsets_ = {}
 
     def build(self, tables=None, debug=False):
         if self.parseTree is None:
@@ -197,6 +211,8 @@ class Builder(object):
             if tag not in tables:
                 continue
             table = self.makeTable(tag)
+            if self.feature_variations_:
+                self.makeFeatureVariations(table, tag)
             if (
                 table.ScriptList.ScriptCount > 0
                 or table.FeatureList.FeatureCount > 0
@@ -214,6 +230,8 @@ class Builder(object):
                 self.font["GDEF"] = gdef
             elif "GDEF" in self.font:
                 del self.font["GDEF"]
+        elif self.varstorebuilder:
+            raise FeatureLibError("Must save GDEF when compiling a variable font")
         if "BASE" in tables:
             base = self.buildBASE()
             if base:
@@ -744,6 +762,16 @@ class Builder(object):
         gdef.MarkAttachClassDef = self.buildGDEFMarkAttachClassDef_()
         gdef.MarkGlyphSetsDef = self.buildGDEFMarkGlyphSetsDef_()
         gdef.Version = 0x00010002 if gdef.MarkGlyphSetsDef else 0x00010000
+        if self.varstorebuilder:
+            store = self.varstorebuilder.finish()
+            if store.VarData:
+                gdef.Version = 0x00010003
+                gdef.VarStore = store
+                varidx_map = store.optimize()
+
+                gdef.remap_device_varidxes(varidx_map)
+                if 'GPOS' in self.font:
+                    self.font['GPOS'].table.remap_device_varidxes(varidx_map)
         if any(
             (
                 gdef.GlyphClassDef,
@@ -752,7 +780,7 @@ class Builder(object):
                 gdef.MarkAttachClassDef,
                 gdef.MarkGlyphSetsDef,
             )
-        ):
+        ) or hasattr(gdef, "VarStore"):
             result = newTable("GDEF")
             result.table = gdef
             return result
@@ -848,7 +876,8 @@ class Builder(object):
             )
 
             size_feature = tag == "GPOS" and feature_tag == "size"
-            if len(lookup_indices) == 0 and not size_feature:
+            force_feature = self.any_feature_variations(feature_tag, tag)
+            if len(lookup_indices) == 0 and not size_feature and not force_feature:
                 continue
 
             for ix in lookup_indices:
@@ -913,6 +942,42 @@ class Builder(object):
         table.FeatureList.FeatureCount = len(table.FeatureList.FeatureRecord)
         table.LookupList.LookupCount = len(table.LookupList.Lookup)
         return table
+
+    def makeFeatureVariations(self, table, table_tag):
+        feature_vars = {}
+        has_any_variations = False
+        # Sort out which lookups to build, gather their indices
+        for (
+            script_,
+            language,
+            feature_tag,
+        ), variations in self.feature_variations_.items():
+            feature_vars[feature_tag] = []
+            for conditionset, builders in variations.items():
+                raw_conditionset = self.conditionsets_[conditionset]
+                indices = []
+                for b in builders:
+                    if b.table != table_tag:
+                        continue
+                    assert b.lookup_index is not None
+                    indices.append(b.lookup_index)
+                    has_any_variations = True
+                feature_vars[feature_tag].append((raw_conditionset, indices))
+
+        if has_any_variations:
+            for feature_tag, conditions_and_lookups in feature_vars.items():
+                addFeatureVariationsRaw(
+                    self.font, table, conditions_and_lookups, feature_tag
+                )
+
+    def any_feature_variations(self, feature_tag, table_tag):
+        for (_, _, feature), variations in self.feature_variations_.items():
+            if feature != feature_tag:
+                continue
+            for conditionset, builders in variations.items():
+                if any(b.table == table_tag for b in builders):
+                    return True
+        return False
 
     def get_lookup_name_(self, lookup):
         rev = {v: k for k, v in self.named_lookups_.items()}
@@ -1298,8 +1363,8 @@ class Builder(object):
         lookup.add_attachment(
             location,
             glyphclass,
-            makeOpenTypeAnchor(entryAnchor),
-            makeOpenTypeAnchor(exitAnchor),
+            self.makeOpenTypeAnchor(location, entryAnchor),
+            self.makeOpenTypeAnchor(location, exitAnchor),
         )
 
     def add_marks_(self, location, lookupBuilder, marks):
@@ -1308,7 +1373,7 @@ class Builder(object):
             for markClassDef in markClass.definitions:
                 for mark in markClassDef.glyphs.glyphSet():
                     if mark not in lookupBuilder.marks:
-                        otMarkAnchor = makeOpenTypeAnchor(markClassDef.anchor)
+                        otMarkAnchor = self.makeOpenTypeAnchor(location, markClassDef.anchor)
                         lookupBuilder.marks[mark] = (markClass.name, otMarkAnchor)
                     else:
                         existingMarkClass = lookupBuilder.marks[mark][0]
@@ -1323,7 +1388,7 @@ class Builder(object):
         builder = self.get_lookup_(location, MarkBasePosBuilder)
         self.add_marks_(location, builder, marks)
         for baseAnchor, markClass in marks:
-            otBaseAnchor = makeOpenTypeAnchor(baseAnchor)
+            otBaseAnchor = self.makeOpenTypeAnchor(location, baseAnchor)
             for base in bases:
                 builder.bases.setdefault(base, {})[markClass.name] = otBaseAnchor
 
@@ -1334,7 +1399,7 @@ class Builder(object):
             anchors = {}
             self.add_marks_(location, builder, marks)
             for ligAnchor, markClass in marks:
-                anchors[markClass.name] = makeOpenTypeAnchor(ligAnchor)
+                anchors[markClass.name] = self.makeOpenTypeAnchor(location, ligAnchor)
             componentAnchors.append(anchors)
         for glyph in ligatures:
             builder.ligatures[glyph] = componentAnchors
@@ -1343,7 +1408,7 @@ class Builder(object):
         builder = self.get_lookup_(location, MarkMarkPosBuilder)
         self.add_marks_(location, builder, marks)
         for baseAnchor, markClass in marks:
-            otBaseAnchor = makeOpenTypeAnchor(baseAnchor)
+            otBaseAnchor = self.makeOpenTypeAnchor(location, baseAnchor)
             for baseMark in baseMarks:
                 builder.baseMarks.setdefault(baseMark, {})[
                     markClass.name
@@ -1351,8 +1416,8 @@ class Builder(object):
 
     def add_class_pair_pos(self, location, glyphclass1, value1, glyphclass2, value2):
         lookup = self.get_lookup_(location, PairPosBuilder)
-        v1 = makeOpenTypeValueRecord(value1, pairPosContext=True)
-        v2 = makeOpenTypeValueRecord(value2, pairPosContext=True)
+        v1 = self.makeOpenTypeValueRecord(location, value1, pairPosContext=True)
+        v2 = self.makeOpenTypeValueRecord(location, value2, pairPosContext=True)
         lookup.addClassPair(location, glyphclass1, v1, glyphclass2, v2)
 
     def add_subtable_break(self, location):
@@ -1360,8 +1425,8 @@ class Builder(object):
 
     def add_specific_pair_pos(self, location, glyph1, value1, glyph2, value2):
         lookup = self.get_lookup_(location, PairPosBuilder)
-        v1 = makeOpenTypeValueRecord(value1, pairPosContext=True)
-        v2 = makeOpenTypeValueRecord(value2, pairPosContext=True)
+        v1 = self.makeOpenTypeValueRecord(location, value1, pairPosContext=True)
+        v2 = self.makeOpenTypeValueRecord(location, value2, pairPosContext=True)
         lookup.addGlyphPair(location, glyph1, v1, glyph2, v2)
 
     def add_single_pos(self, location, prefix, suffix, pos, forceChain):
@@ -1370,7 +1435,7 @@ class Builder(object):
         else:
             lookup = self.get_lookup_(location, SinglePosBuilder)
             for glyphs, value in pos:
-                otValueRecord = makeOpenTypeValueRecord(value, pairPosContext=False)
+                otValueRecord = self.makeOpenTypeValueRecord(location, value, pairPosContext=False)
                 for glyph in glyphs:
                     try:
                         lookup.add_pos(location, glyph, otValueRecord)
@@ -1388,7 +1453,7 @@ class Builder(object):
             if value is None:
                 subs.append(None)
                 continue
-            otValue = makeOpenTypeValueRecord(value, pairPosContext=False)
+            otValue = self.makeOpenTypeValueRecord(location, value, pairPosContext=False)
             sub = chain.find_chainable_single_pos(targets, glyphs, otValue)
             if sub is None:
                 sub = self.get_chained_lookup_(location, SinglePosBuilder)
@@ -1445,37 +1510,98 @@ class Builder(object):
     def add_vhea_field(self, key, value):
         self.vhea_[key] = value
 
+    def add_conditionset(self, key, value):
+        if not "fvar" in self.font:
+            raise FeatureLibError(
+                "Cannot add feature variations to a font without an 'fvar' table"
+            )
 
-def makeOpenTypeAnchor(anchor):
-    """ast.Anchor --> otTables.Anchor"""
-    if anchor is None:
-        return None
-    deviceX, deviceY = None, None
-    if anchor.xDeviceTable is not None:
-        deviceX = otl.buildDevice(dict(anchor.xDeviceTable))
-    if anchor.yDeviceTable is not None:
-        deviceY = otl.buildDevice(dict(anchor.yDeviceTable))
-    return otl.buildAnchor(anchor.x, anchor.y, anchor.contourpoint, deviceX, deviceY)
+        # Normalize
+        axisMap = {
+            axis.axisTag: (axis.minValue, axis.defaultValue, axis.maxValue)
+            for axis in self.axes
+        }
+
+        value = {
+            tag: (
+                normalizeValue(bottom, axisMap[tag]),
+                normalizeValue(top, axisMap[tag]),
+            )
+            for tag, (bottom, top) in value.items()
+        }
+
+        self.conditionsets_[key] = value
+
+    def makeOpenTypeAnchor(self, location, anchor):
+        """ast.Anchor --> otTables.Anchor"""
+        if anchor is None:
+            return None
+        variable = False
+        deviceX, deviceY = None, None
+        if anchor.xDeviceTable is not None:
+            deviceX = otl.buildDevice(dict(anchor.xDeviceTable))
+        if anchor.yDeviceTable is not None:
+            deviceY = otl.buildDevice(dict(anchor.yDeviceTable))
+        for dim in ("x", "y"):
+            if not isinstance(getattr(anchor, dim), VariableScalar):
+                continue
+            if getattr(anchor, dim+"DeviceTable") is not None:
+                raise FeatureLibError("Can't define a device coordinate and variable scalar", location)
+            if not self.varstorebuilder:
+                raise FeatureLibError("Can't define a variable scalar in a non-variable font", location)
+            varscalar = getattr(anchor,dim)
+            varscalar.axes = self.axes
+            default, index = varscalar.add_to_variation_store(self.varstorebuilder)
+            setattr(anchor, dim, default)
+            if index is not None and index != 0xFFFFFFFF:
+                if dim == "x":
+                    deviceX = buildVarDevTable(index)
+                else:
+                    deviceY = buildVarDevTable(index)
+                variable = True
+
+        otlanchor = otl.buildAnchor(anchor.x, anchor.y, anchor.contourpoint, deviceX, deviceY)
+        if variable:
+            otlanchor.Format = 3
+        return otlanchor
+
+    _VALUEREC_ATTRS = {
+        name[0].lower() + name[1:]: (name, isDevice)
+        for _, name, isDevice, _ in otBase.valueRecordFormat
+        if not name.startswith("Reserved")
+    }
 
 
-_VALUEREC_ATTRS = {
-    name[0].lower() + name[1:]: (name, isDevice)
-    for _, name, isDevice, _ in otBase.valueRecordFormat
-    if not name.startswith("Reserved")
-}
+    def makeOpenTypeValueRecord(self, location, v, pairPosContext):
+        """ast.ValueRecord --> otBase.ValueRecord"""
+        if not v:
+            return None
 
+        vr = {}
+        variable = False
+        for astName, (otName, isDevice) in self._VALUEREC_ATTRS.items():
+            val = getattr(v, astName, None)
+            if not val:
+                continue
+            if isDevice:
+                vr[otName] = otl.buildDevice(dict(val))
+            elif isinstance(val, VariableScalar):
+                otDeviceName = otName[0:4] + "Device"
+                feaDeviceName = otDeviceName[0].lower() + otDeviceName[1:]
+                if getattr(v, feaDeviceName):
+                    raise FeatureLibError("Can't define a device coordinate and variable scalar", location)
+                if not self.varstorebuilder:
+                    raise FeatureLibError("Can't define a variable scalar in a non-variable font", location)
+                val.axes = self.axes
+                default, index = val.add_to_variation_store(self.varstorebuilder)
+                vr[otName] = default
+                if index is not None and index != 0xFFFFFFFF:
+                    vr[otDeviceName] = buildVarDevTable(index)
+                    variable = True
+            else:
+                vr[otName] = val
 
-def makeOpenTypeValueRecord(v, pairPosContext):
-    """ast.ValueRecord --> otBase.ValueRecord"""
-    if not v:
-        return None
-
-    vr = {}
-    for astName, (otName, isDevice) in _VALUEREC_ATTRS.items():
-        val = getattr(v, astName, None)
-        if val:
-            vr[otName] = otl.buildDevice(dict(val)) if isDevice else val
-    if pairPosContext and not vr:
-        vr = {"YAdvance": 0} if v.vertical else {"XAdvance": 0}
-    valRec = otl.buildValue(vr)
-    return valRec
+        if pairPosContext and not vr:
+            vr = {"YAdvance": 0} if v.vertical else {"XAdvance": 0}
+        valRec = otl.buildValue(vr)
+        return valRec

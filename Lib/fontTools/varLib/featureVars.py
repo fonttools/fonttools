@@ -44,8 +44,26 @@ def addFeatureVariations(font, conditionalSubstitutions, featureTag='rvrn'):
     # >>> f.save(dstPath)
     """
 
-    addFeatureVariationsRaw(font,
-                            overlayFeatureVariations(conditionalSubstitutions),
+
+    substitutions = overlayFeatureVariations(conditionalSubstitutions)
+
+    # turn substitution dicts into tuples of tuples, so they are hashable
+    conditionalSubstitutions, allSubstitutions = makeSubstitutionsHashable(substitutions)
+    if "GSUB" not in font:
+        font["GSUB"] = buildGSUB()
+
+    # setup lookups
+    lookupMap = buildSubstitutionLookups(font["GSUB"].table, allSubstitutions)
+
+    # addFeatureVariationsRaw takes a list of
+    #  ( {condition}, [ lookup indices ] )
+    # so rearrange our lookups to match
+    conditionsAndLookups = []
+    for conditionSet, substitutions in conditionalSubstitutions:
+        conditionsAndLookups.append((conditionSet, [lookupMap[s] for s in substitutions]))
+
+    addFeatureVariationsRaw(font, font["GSUB"].table,
+                            conditionsAndLookups,
                             featureTag)
 
 def overlayFeatureVariations(conditionalSubstitutions):
@@ -261,7 +279,7 @@ def cleanupBox(box):
 # Low level implementation
 #
 
-def addFeatureVariationsRaw(font, conditionalSubstitutions, featureTag='rvrn'):
+def addFeatureVariationsRaw(font, table, conditionalSubstitutions, featureTag='rvrn'):
     """Low level implementation of addFeatureVariations that directly
     models the possibilities of the FeatureVariations table."""
 
@@ -273,31 +291,25 @@ def addFeatureVariationsRaw(font, conditionalSubstitutions, featureTag='rvrn'):
     # make lookups
     # add feature variations
     #
+    if table.Version < 0x00010001:
+        table.Version = 0x00010001  # allow table.FeatureVariations
 
-    if "GSUB" not in font:
-        font["GSUB"] = buildGSUB()
-
-    gsub = font["GSUB"].table
-
-    if gsub.Version < 0x00010001:
-        gsub.Version = 0x00010001  # allow gsub.FeatureVariations
-
-    gsub.FeatureVariations = None  # delete any existing FeatureVariations
+    table.FeatureVariations = None  # delete any existing FeatureVariations
 
     varFeatureIndices = []
-    for index, feature in enumerate(gsub.FeatureList.FeatureRecord):
+    for index, feature in enumerate(table.FeatureList.FeatureRecord):
         if feature.FeatureTag == featureTag:
             varFeatureIndices.append(index)
 
     if not varFeatureIndices:
         varFeature = buildFeatureRecord(featureTag, [])
-        gsub.FeatureList.FeatureRecord.append(varFeature)
-        gsub.FeatureList.FeatureCount = len(gsub.FeatureList.FeatureRecord)
+        table.FeatureList.FeatureRecord.append(varFeature)
+        table.FeatureList.FeatureCount = len(table.FeatureList.FeatureRecord)
 
-        sortFeatureList(gsub)
-        varFeatureIndex = gsub.FeatureList.FeatureRecord.index(varFeature)
+        sortFeatureList(table)
+        varFeatureIndex = table.FeatureList.FeatureRecord.index(varFeature)
 
-        for scriptRecord in gsub.ScriptList.ScriptRecord:
+        for scriptRecord in table.ScriptList.ScriptRecord:
             if scriptRecord.Script.DefaultLangSys is None:
                 raise VarLibError(
                     "Feature variations require that the script "
@@ -309,17 +321,10 @@ def addFeatureVariationsRaw(font, conditionalSubstitutions, featureTag='rvrn'):
 
         varFeatureIndices = [varFeatureIndex]
 
-    # setup lookups
-
-    # turn substitution dicts into tuples of tuples, so they are hashable
-    conditionalSubstitutions, allSubstitutions = makeSubstitutionsHashable(conditionalSubstitutions)
-
-    lookupMap = buildSubstitutionLookups(gsub, allSubstitutions)
-
     axisIndices = {axis.axisTag: axisIndex for axisIndex, axis in enumerate(font["fvar"].axes)}
 
     featureVariationRecords = []
-    for conditionSet, substitutions in conditionalSubstitutions:
+    for conditionSet, lookupIndices in conditionalSubstitutions:
         conditionTable = []
         for axisTag, (minValue, maxValue) in sorted(conditionSet.items()):
             if minValue > maxValue:
@@ -328,15 +333,13 @@ def addFeatureVariationsRaw(font, conditionalSubstitutions, featureTag='rvrn'):
                 )
             ct = buildConditionTable(axisIndices[axisTag], minValue, maxValue)
             conditionTable.append(ct)
-
-        lookupIndices = [lookupMap[subst] for subst in substitutions]
         records = []
         for varFeatureIndex in varFeatureIndices:
-            existingLookupIndices = gsub.FeatureList.FeatureRecord[varFeatureIndex].Feature.LookupListIndex
+            existingLookupIndices = table.FeatureList.FeatureRecord[varFeatureIndex].Feature.LookupListIndex
             records.append(buildFeatureTableSubstitutionRecord(varFeatureIndex, existingLookupIndices + lookupIndices))
         featureVariationRecords.append(buildFeatureVariationRecord(conditionTable, records))
 
-    gsub.FeatureVariations = buildFeatureVariations(featureVariationRecords)
+    table.FeatureVariations = buildFeatureVariations(featureVariationRecords)
 
 
 #
@@ -413,6 +416,7 @@ def buildFeatureVariations(featureVariationRecords):
     fv = ot.FeatureVariations()
     fv.Version = 0x00010000
     fv.FeatureVariationRecord = featureVariationRecords
+    fv.FeatureVariationCount = len(featureVariationRecords)
     return fv
 
 
@@ -431,9 +435,11 @@ def buildFeatureVariationRecord(conditionTable, substitutionRecords):
     fvr = ot.FeatureVariationRecord()
     fvr.ConditionSet = ot.ConditionSet()
     fvr.ConditionSet.ConditionTable = conditionTable
+    fvr.ConditionSet.ConditionCount = len(conditionTable)
     fvr.FeatureTableSubstitution = ot.FeatureTableSubstitution()
     fvr.FeatureTableSubstitution.Version = 0x00010000
     fvr.FeatureTableSubstitution.SubstitutionRecord = substitutionRecords
+    fvr.FeatureTableSubstitution.SubstitutionCount = len(substitutionRecords)
     return fvr
 
 
@@ -443,6 +449,7 @@ def buildFeatureTableSubstitutionRecord(featureIndex, lookupListIndices):
     ftsr.FeatureIndex = featureIndex
     ftsr.Feature = ot.Feature()
     ftsr.Feature.LookupListIndex = lookupListIndices
+    ftsr.Feature.LookupCount = len(lookupListIndices)
     return ftsr
 
 
