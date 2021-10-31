@@ -198,7 +198,7 @@ def test_block():
     assert unicodedata.block("\x7F") == "Basic Latin"
     assert unicodedata.block("\x80") == "Latin-1 Supplement"
     assert unicodedata.block("\u1c90") == "Georgian Extended"
-    assert unicodedata.block("\u0870") == "No_Block"
+    assert unicodedata.block("\u0870") == "Arabic Extended-B"
 
 
 def test_ot_tags_from_script():
