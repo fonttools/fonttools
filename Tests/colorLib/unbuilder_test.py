@@ -221,11 +221,16 @@ TEST_COLOR_GLYPHS = {
                 "Glyph": "glyph00012",
             },
         ],
-    },
+    }
 }
 
 
 def test_unbuildColrV1():
-    layersV1, baseGlyphsV1 = buildColrV1(TEST_COLOR_GLYPHS)
-    colorGlyphs = unbuildColrV1(layersV1, baseGlyphsV1)
+    layers, baseGlyphs = buildColrV1(TEST_COLOR_GLYPHS)
+    colorGlyphs = unbuildColrV1(layers, baseGlyphs)
     assert colorGlyphs == TEST_COLOR_GLYPHS
+
+def test_unbuildColrV1_noLayers():
+    _, baseGlyphsV1 = buildColrV1(TEST_COLOR_GLYPHS)
+    # Just looking to see we don't crash
+    unbuildColrV1(None, baseGlyphsV1)
