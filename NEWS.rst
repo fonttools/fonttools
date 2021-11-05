@@ -1,3 +1,6 @@
+4.28.0 (released 2021-11-05)
+----------------------------
+
 - Dropped support for EOL Python 3.6, require Python 3.7 (#2417).
 - [ufoLib/glifLib] Make filename-clash checks faster by using a set instead of a list (#2422).
 - [subset] Don't crash if optional ClipList and LayerList are ``None`` (empty) (#2424, 2439).
