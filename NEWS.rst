@@ -1,3 +1,13 @@
+- Dropped support for EOL Python 3.6, require Python 3.7 (#2417).
+- [ufoLib/glifLib] Make filename-clash checks faster by using a set instead of a list (#2422).
+- [subset] Don't crash if optional ClipList and LayerList are ``None`` (empty) (#2424, 2439).
+- [OT-SVG] Removed support for old deprecated version 1 and embedded color palettes,
+  which were never officially part of the OpenType SVG spec. Upon compile, reuse offsets
+  to SVG documents that are identical (#2430).
+- [feaLib] Added support for Variable Feature File syntax. This is experimental and subject
+  to change until it is finalized in the Adobe FEA spec (#2432).
+- [unicodedata] Update Scripts/ScriptExtensions/Blocks to UnicodeData 14.0 (#2437).
+
 4.27.1 (released 2021-09-23)
 ----------------------------
 
