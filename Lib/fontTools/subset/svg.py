@@ -1,9 +1,16 @@
 import re
 from itertools import groupby
 
-from fontTools.subset.util import _add_method
-from fontTools.misc import etree
+try:
+    from lxml import etree
+except ModuleNotFoundError:
+    etree = None
+
 from fontTools import ttLib
+from fontTools.subset.util import _add_method
+
+
+__all__ = ["subset_glyphs"]
 
 
 GID_RE = re.compile("^glyph(\d+)$")
@@ -72,6 +79,9 @@ def ranges(ints):
 
 @_add_method(ttLib.getTableClass("SVG "))
 def subset_glyphs(self, s):
+    if etree is None:
+        raise ModuleNotFoundError("No module named 'lxml', required to subset SVG")
+
     # ordered list of glyph names (before subsetting)
     glyph_order = s.orig_glyph_order
     # map from glyph names to original glyph indices
