@@ -38,6 +38,14 @@ def parseXML(xmlSnippet):
     return reader.root[2]
 
 
+def parseXmlInto(font, parseInto, xmlSnippet):
+    parsed_xml = [e for e in parseXML(xmlSnippet.strip()) if not isinstance(e, str)]
+    for name, attrs, content in parsed_xml:
+      parseInto.fromXML(name, attrs, content, font)
+    parseInto.populateDefaults()
+    return parseInto
+
+
 class FakeFont:
     def __init__(self, glyphs):
         self.glyphOrder_ = glyphs

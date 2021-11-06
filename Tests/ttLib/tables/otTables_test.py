@@ -1,4 +1,4 @@
-from fontTools.misc.testTools import getXML, parseXML, FakeFont
+from fontTools.misc.testTools import getXML, parseXML, parseXmlInto, FakeFont
 from fontTools.misc.textTools import deHexStr, hexStr
 from fontTools.misc.xmlWriter import XMLWriter
 from fontTools.ttLib.tables.otBase import OTTableReader, OTTableWriter
@@ -685,6 +685,33 @@ def test_splitMarkBasePos():
         '  </BaseArray>',
         '</MarkBasePos>',
     ]
+
+
+class ColrV1Test(unittest.TestCase):
+  def setUp(self):
+    self.font = FakeFont(['.notdef', 'meh'])
+
+  def test_traverseEmptyPaintColrLayersNeedsNoLayerList(self):
+    colr = parseXmlInto(self.font, otTables.COLR(),
+      '''
+      <Version value="1"/>
+      <BaseGlyphList>
+        <BaseGlyphPaintRecord index="0">
+          <BaseGlyph value="meh"/>
+          <Paint Format="1"><!-- PaintColrLayers -->
+            <NumLayers value="0"/>
+            <FirstLayerIndex value="42"/>
+          </Paint>
+        </BaseGlyphPaintRecord>
+      </BaseGlyphList>
+      ''')
+    paint = colr.BaseGlyphList.BaseGlyphPaintRecord[0].Paint
+
+    # Just want to confirm we don't crash
+    visited = []
+    paint.traverse(colr, lambda p: visited.append(p))
+    assert len(visited) == 1
+
 
 
 if __name__ == "__main__":
