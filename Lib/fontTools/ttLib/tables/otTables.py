@@ -1516,7 +1516,11 @@ class Paint(getFormatSwitchingBaseTableClass("uint8")):
 
 	def getChildren(self, colr):
 		if self.Format == PaintFormat.PaintColrLayers:
-			return colr.LayerList.Paint[
+			# https://github.com/fonttools/fonttools/issues/2438: don't die when no LayerList exists
+			layers = []
+			if colr.LayerList is not None:
+				layers = colr.LayerList.Paint
+			return layers[
 				self.FirstLayerIndex : self.FirstLayerIndex + self.NumLayers
 			]
 
