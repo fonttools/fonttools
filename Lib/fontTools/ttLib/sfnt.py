@@ -8,8 +8,8 @@ Defines two public classes:
 used automatically by ttLib.TTFont.)
 
 The reading and writing of sfnt files is separated in two distinct
-classes, since whenever to number of tables changes or whenever
-a table's length chages you need to rewrite the whole file anyway.
+classes, since whenever the number of tables changes or whenever
+a table's length changes you need to rewrite the whole file anyway.
 """
 
 from io import BytesIO
