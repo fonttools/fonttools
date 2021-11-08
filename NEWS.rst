@@ -1,3 +1,6 @@
+- [subset] Fixed AttributeError while traversing a color glyph's Paint graph when there is no
+  LayerList, which is optional (#2441).
+
 4.28.0 (released 2021-11-05)
 ----------------------------
 
