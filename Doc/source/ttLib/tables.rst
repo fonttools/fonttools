@@ -113,8 +113,8 @@ _a_n_k_r
    :members:
    :undoc-members:
 
-_a_v_a_r
---------
+``avar``: Axis Variations Table
+-------------------------------
 
 .. automodule:: fontTools.ttLib.tables._a_v_a_r
    :inherited-members:
