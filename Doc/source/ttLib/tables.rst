@@ -198,16 +198,6 @@ DefaultTable
    :members:
    :undoc-members:
 
-
-grUtils
--------
-
-.. automodule:: fontTools.ttLib.tables.grUtils
-   :inherited-members:
-   :members:
-   :undoc-members:
-
-
 otBase
 ------
 
