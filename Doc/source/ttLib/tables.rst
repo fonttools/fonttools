@@ -189,14 +189,6 @@ asciiTable
    :members:
    :undoc-members:
 
-BitmapGlyphMetrics
-------------------
-
-.. automodule:: fontTools.ttLib.tables.BitmapGlyphMetrics
-   :inherited-members:
-   :members:
-   :undoc-members:
-
 
 DefaultTable
 ------------
