@@ -8,7 +8,7 @@
 
 
 BitmapGlyphMetrics
-------------------
+^^^^^^^^^^^^^^^^^^
 
 .. automodule:: fontTools.ttLib.tables.BitmapGlyphMetrics
    :inherited-members:

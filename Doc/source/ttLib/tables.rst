@@ -107,7 +107,7 @@ additional methods::
 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    tables/B_A_S_E_
    tables/C_B_D_T_

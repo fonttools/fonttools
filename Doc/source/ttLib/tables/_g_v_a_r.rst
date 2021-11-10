@@ -8,7 +8,7 @@
 
 
 TupleVariation
---------------
+^^^^^^^^^^^^^^
 
 .. automodule:: fontTools.ttLib.tables.TupleVariation
    :inherited-members:

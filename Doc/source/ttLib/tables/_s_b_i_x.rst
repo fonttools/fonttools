@@ -9,7 +9,7 @@
 
 
 sbixGlyph
----------
+^^^^^^^^^
 
 .. automodule:: fontTools.ttLib.tables.sbixGlyph
    :inherited-members:
@@ -17,7 +17,7 @@ sbixGlyph
    :undoc-members:
 
 sbixStrike
-----------
+^^^^^^^^^^
 
 .. automodule:: fontTools.ttLib.tables.sbixStrike
    :inherited-members:
