@@ -416,6 +416,11 @@ class Parser(object):
                     self.next_token_location_,
                 )
         self.expect_symbol_("]")
+        if not glyphs.glyphSet():
+            raise FeatureLibError(
+                    "Glyph class cannot be empty",
+                    self.cur_token_location_,
+                )
         return glyphs
 
     def parse_glyph_pattern_(self, vertical):
