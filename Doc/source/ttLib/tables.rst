@@ -109,74 +109,74 @@ additional methods::
 .. toctree::
    :maxdepth: 1
 
+   tables/_a_n_k_r
+   tables/_a_v_a_r
    tables/B_A_S_E_
+   tables/_b_s_l_n
    tables/C_B_D_T_
    tables/C_B_L_C_
    tables/C_F_F_
    tables/C_F_F__2
-   tables/C_O_L_R_
-   tables/_a_n_k_r
-   tables/_a_v_a_r
-   tables/_b_s_l_n
    tables/_c_i_d_g
    tables/_c_m_a_p
+   tables/C_O_L_R_
+   tables/C_P_A_L_
    tables/_c_v_a_r
    tables/_c_v_t
+   tables/D_S_I_G_
+   tables/E_B_D_T_
+   tables/E_B_L_C_
+   tables/F__e_a_t
    tables/_f_e_a_t
+   tables/F_F_T_M_
    tables/_f_p_g_m
    tables/_f_v_a_r
    tables/_g_a_s_p
    tables/_g_c_i_d
+   tables/G_D_E_F_
+   tables/G__l_a_t
+   tables/G__l_o_c
    tables/_g_l_y_f
+   tables/G_M_A_P_
+   tables/G_P_K_G_
+   tables/G_P_O_S_
+   tables/G_S_U_B_
    tables/_g_v_a_r
    tables/_h_d_m_x
    tables/_h_e_a_d
    tables/_h_h_e_a
    tables/_h_m_t_x
+   tables/H_V_A_R_
+   tables/J_S_T_F_
    tables/_k_e_r_n
    tables/_l_c_a_r
    tables/_l_o_c_a
    tables/_l_t_a_g
+   tables/L_T_S_H_
+   tables/M_A_T_H_
    tables/_m_a_x_p
+   tables/M_E_T_A_
    tables/_m_e_t_a
    tables/_m_o_r_t
    tables/_m_o_r_x
+   tables/M_V_A_R_
    tables/_n_a_m_e
    tables/_o_p_b_d
+   tables/O_S_2f_2
    tables/_p_o_s_t
    tables/_p_r_e_p
    tables/_p_r_o_p
    tables/_s_b_i_x
-   tables/_t_r_a_k
-   tables/_v_h_e_a
-   tables/_v_m_t_x
-   tables/C_P_A_L_
-   tables/D_S_I_G_
-   tables/E_B_D_T_
-   tables/E_B_L_C_
-   tables/F__e_a_t
-   tables/F_F_T_M_
-   tables/G__l_a_t
-   tables/G__l_o_c
-   tables/G_D_E_F_
-   tables/G_M_A_P_
-   tables/G_P_K_G_
-   tables/G_P_O_S_
-   tables/G_S_U_B_
-   tables/H_V_A_R_
-   tables/J_S_T_F_
-   tables/L_T_S_H_
-   tables/M_A_T_H_
-   tables/M_E_T_A_
-   tables/M_V_A_R_
-   tables/O_S_2f_2
    tables/S__i_l_f
    tables/S__i_l_l
    tables/S_I_N_G_
    tables/S_T_A_T_
    tables/S_V_G_
+   tables/_t_r_a_k
    tables/T_T_F_A_
    tables/V_D_M_X
+   tables/_v_h_e_a
+   tables/_v_m_t_x
    tables/V_O_R_G_
    tables/VTT_related
    tables/V_V_A_R_
