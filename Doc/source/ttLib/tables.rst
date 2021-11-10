@@ -174,7 +174,7 @@ additional methods::
    tables/S_V_G_
    tables/_t_r_a_k
    tables/T_T_F_A_
-   tables/V_D_M_X
+   tables/V_D_M_X_
    tables/_v_h_e_a
    tables/_v_m_t_x
    tables/V_O_R_G_
