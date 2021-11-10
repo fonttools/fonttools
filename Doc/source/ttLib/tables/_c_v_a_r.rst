@@ -5,3 +5,12 @@
    :inherited-members:
    :members:
    :undoc-members:
+
+
+TupleVariation
+--------------
+
+.. automodule:: fontTools.ttLib.tables.TupleVariation
+   :inherited-members:
+   :members:
+   :undoc-members:
