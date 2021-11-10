@@ -1312,6 +1312,7 @@ class Builder(object):
             raise FeatureLibError(
                 'Already defined alternates for glyph "%s"' % glyph, location
             )
+        # We allow empty replacement glyphs here.
         lookup.alternates[glyph] = replacement
 
     # GSUB 4
@@ -1325,6 +1326,9 @@ class Builder(object):
         else:
             lookup = self.get_lookup_(location, LigatureSubstBuilder)
 
+        if not all(glyphs):
+            raise FeatureLibError("Empty glyph class in substitution", location)
+
         # OpenType feature file syntax, section 5.d, "Ligature substitution":
         # "Since the OpenType specification does not allow ligature
         # substitutions to be specified on target sequences that contain
@@ -1335,6 +1339,8 @@ class Builder(object):
 
     # GSUB 5/6
     def add_chain_context_subst(self, location, prefix, glyphs, suffix, lookups):
+        if not all(glyphs) or not all(prefix) or not all(suffix):
+            raise FeatureLibError("Empty glyph class in contextual substitution", location)
         lookup = self.get_lookup_(location, ChainContextSubstBuilder)
         lookup.rules.append(
             ChainContextualRule(
@@ -1343,6 +1349,8 @@ class Builder(object):
         )
 
     def add_single_subst_chained_(self, location, prefix, suffix, mapping):
+        if not mapping or not all(prefix) or not all(suffix):
+            raise FeatureLibError("Empty glyph class in contextual substitution", location)
         # https://github.com/fonttools/fonttools/issues/512
         chain = self.get_lookup_(location, ChainContextSubstBuilder)
         sub = chain.find_chainable_single_subst(set(mapping.keys()))
@@ -1355,6 +1363,8 @@ class Builder(object):
 
     # GSUB 8
     def add_reverse_chain_single_subst(self, location, old_prefix, old_suffix, mapping):
+        if not mapping:
+            raise FeatureLibError("Empty glyph class in substitution", location)
         lookup = self.get_lookup_(location, ReverseChainSingleSubstBuilder)
         lookup.rules.append((old_prefix, old_suffix, mapping))
 
@@ -1367,6 +1377,8 @@ class Builder(object):
         else:
             lookup = self.get_lookup_(location, SinglePosBuilder)
             for glyphs, value in pos:
+                if not glyphs:
+                    raise FeatureLibError("Empty glyph class in positioning rule", location)
                 otValueRecord = self.makeOpenTypeValueRecord(location, value, pairPosContext=False)
                 for glyph in glyphs:
                     try:
@@ -1376,12 +1388,18 @@ class Builder(object):
 
     # GPOS 2
     def add_class_pair_pos(self, location, glyphclass1, value1, glyphclass2, value2):
+        if not glyphclass1 or not glyphclass2:
+            raise FeatureLibError(
+                "Empty glyph class in positioning rule", location
+            )
         lookup = self.get_lookup_(location, PairPosBuilder)
         v1 = self.makeOpenTypeValueRecord(location, value1, pairPosContext=True)
         v2 = self.makeOpenTypeValueRecord(location, value2, pairPosContext=True)
         lookup.addClassPair(location, glyphclass1, v1, glyphclass2, v2)
 
     def add_specific_pair_pos(self, location, glyph1, value1, glyph2, value2):
+        if not glyph1 or not glyph2:
+            raise FeatureLibError("Empty glyph class in positioning rule", location)
         lookup = self.get_lookup_(location, PairPosBuilder)
         v1 = self.makeOpenTypeValueRecord(location, value1, pairPosContext=True)
         v2 = self.makeOpenTypeValueRecord(location, value2, pairPosContext=True)
@@ -1389,6 +1407,8 @@ class Builder(object):
 
     # GPOS 3
     def add_cursive_pos(self, location, glyphclass, entryAnchor, exitAnchor):
+        if not glyphclass:
+            raise FeatureLibError("Empty glyph class in positioning rule", location)
         lookup = self.get_lookup_(location, CursivePosBuilder)
         lookup.add_attachment(
             location,
@@ -1401,6 +1421,8 @@ class Builder(object):
     def add_mark_base_pos(self, location, bases, marks):
         builder = self.get_lookup_(location, MarkBasePosBuilder)
         self.add_marks_(location, builder, marks)
+        if not bases:
+            raise FeatureLibError("Empty glyph class in positioning rule", location)
         for baseAnchor, markClass in marks:
             otBaseAnchor = self.makeOpenTypeAnchor(location, baseAnchor)
             for base in bases:
@@ -1410,6 +1432,8 @@ class Builder(object):
     def add_mark_lig_pos(self, location, ligatures, components):
         builder = self.get_lookup_(location, MarkLigPosBuilder)
         componentAnchors = []
+        if not ligatures:
+            raise FeatureLibError("Empty glyph class in positioning rule", location)
         for marks in components:
             anchors = {}
             self.add_marks_(location, builder, marks)
@@ -1423,6 +1447,8 @@ class Builder(object):
     def add_mark_mark_pos(self, location, baseMarks, marks):
         builder = self.get_lookup_(location, MarkMarkPosBuilder)
         self.add_marks_(location, builder, marks)
+        if not baseMarks:
+            raise FeatureLibError("Empty glyph class in positioning rule", location)
         for baseAnchor, markClass in marks:
             otBaseAnchor = self.makeOpenTypeAnchor(location, baseAnchor)
             for baseMark in baseMarks:
@@ -1432,6 +1458,8 @@ class Builder(object):
 
     # GPOS 7/8
     def add_chain_context_pos(self, location, prefix, glyphs, suffix, lookups):
+        if not all(glyphs) or not all(prefix) or not all(suffix):
+            raise FeatureLibError("Empty glyph class in contextual positioning rule", location)
         lookup = self.get_lookup_(location, ChainContextPosBuilder)
         lookup.rules.append(
             ChainContextualRule(
@@ -1440,6 +1468,8 @@ class Builder(object):
         )
 
     def add_single_pos_chained_(self, location, prefix, suffix, pos):
+        if not pos or not all(prefix) or not all(suffix):
+            raise FeatureLibError("Empty glyph class in contextual positioning rule", location)
         # https://github.com/fonttools/fonttools/issues/514
         chain = self.get_lookup_(location, ChainContextPosBuilder)
         targets = []
