@@ -181,58 +181,9 @@ additional methods::
    tables/VTT_related
    tables/V_V_A_R_
 
-asciiTable
-----------
 
-.. automodule:: fontTools.ttLib.tables.asciiTable
-   :inherited-members:
-   :members:
-   :undoc-members:
-
-
-DefaultTable
-------------
-
-.. automodule:: fontTools.ttLib.tables.DefaultTable
-   :inherited-members:
-   :members:
-   :undoc-members:
-
-otBase
-------
-
-.. automodule:: fontTools.ttLib.tables.otBase
-   :inherited-members:
-   :members:
-   :undoc-members:
-
-otConverters
-------------
-
-.. automodule:: fontTools.ttLib.tables.otConverters
-   :inherited-members:
-   :members:
-   :undoc-members:
-
-otData
-------
-
-.. automodule:: fontTools.ttLib.tables.otData
-   :inherited-members:
-   :members:
-   :undoc-members:
-
-otTables
---------
-
-.. automodule:: fontTools.ttLib.tables.otTables
-   :inherited-members:
-   :members:
-   :undoc-members:
-
-
-ttProgram
----------
+ttProgram: TrueType bytecode assembler/disassembler
+---------------------------------------------------
 
 .. automodule:: fontTools.ttLib.tables.ttProgram
    :inherited-members:
