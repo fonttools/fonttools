@@ -33,7 +33,7 @@ class table__a_v_a_r(DefaultTable.DefaultTable):
     This class represents the ``avar`` table of a variable font. The object has one
     substantive attribute, ``segments``, which maps axis tags to a segments dictionary::
 
-        >>>> font["avar"].segments   # doctest: +SKIP
+        >>> font["avar"].segments   # doctest: +SKIP
         {'wght': {-1.0: -1.0,
           0.0: 0.0,
           0.125: 0.11444091796875,
