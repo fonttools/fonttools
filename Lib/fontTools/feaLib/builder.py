@@ -1195,39 +1195,6 @@ class Builder(object):
         for glyph in glyphs:
             self.attachPoints_.setdefault(glyph, set()).update(contourPoints)
 
-    def add_chain_context_pos(self, location, prefix, glyphs, suffix, lookups):
-        lookup = self.get_lookup_(location, ChainContextPosBuilder)
-        lookup.rules.append(
-            ChainContextualRule(
-                prefix, glyphs, suffix, self.find_lookup_builders_(lookups)
-            )
-        )
-
-    def add_chain_context_subst(self, location, prefix, glyphs, suffix, lookups):
-        lookup = self.get_lookup_(location, ChainContextSubstBuilder)
-        lookup.rules.append(
-            ChainContextualRule(
-                prefix, glyphs, suffix, self.find_lookup_builders_(lookups)
-            )
-        )
-
-    def add_alternate_subst(self, location, prefix, glyph, suffix, replacement):
-        if self.cur_feature_name_ == "aalt":
-            alts = self.aalt_alternates_.setdefault(glyph, set())
-            alts.update(replacement)
-            return
-        if prefix or suffix:
-            chain = self.get_lookup_(location, ChainContextSubstBuilder)
-            lookup = self.get_chained_lookup_(location, AlternateSubstBuilder)
-            chain.rules.append(ChainContextualRule(prefix, [{glyph}], suffix, [lookup]))
-        else:
-            lookup = self.get_lookup_(location, AlternateSubstBuilder)
-        if glyph in lookup.alternates:
-            raise FeatureLibError(
-                'Already defined alternates for glyph "%s"' % glyph, location
-            )
-        lookup.alternates[glyph] = replacement
-
     def add_feature_reference(self, location, featureName):
         if self.cur_feature_name_ != "aalt":
             raise FeatureLibError(
@@ -1272,53 +1239,9 @@ class Builder(object):
             key = (script, lang, self.cur_feature_name_)
             self.features_.setdefault(key, [])
 
-    def add_ligature_subst(
-        self, location, prefix, glyphs, suffix, replacement, forceChain
-    ):
-        if prefix or suffix or forceChain:
-            chain = self.get_lookup_(location, ChainContextSubstBuilder)
-            lookup = self.get_chained_lookup_(location, LigatureSubstBuilder)
-            chain.rules.append(ChainContextualRule(prefix, glyphs, suffix, [lookup]))
-        else:
-            lookup = self.get_lookup_(location, LigatureSubstBuilder)
+    # GSUB rules
 
-        # OpenType feature file syntax, section 5.d, "Ligature substitution":
-        # "Since the OpenType specification does not allow ligature
-        # substitutions to be specified on target sequences that contain
-        # glyph classes, the implementation software will enumerate
-        # all specific glyph sequences if glyph classes are detected"
-        for g in sorted(itertools.product(*glyphs)):
-            lookup.ligatures[g] = replacement
-
-    def add_multiple_subst(
-        self, location, prefix, glyph, suffix, replacements, forceChain=False
-    ):
-        if prefix or suffix or forceChain:
-            chain = self.get_lookup_(location, ChainContextSubstBuilder)
-            sub = self.get_chained_lookup_(location, MultipleSubstBuilder)
-            sub.mapping[glyph] = replacements
-            chain.rules.append(ChainContextualRule(prefix, [{glyph}], suffix, [sub]))
-            return
-        lookup = self.get_lookup_(location, MultipleSubstBuilder)
-        if glyph in lookup.mapping:
-            if replacements == lookup.mapping[glyph]:
-                log.info(
-                    "Removing duplicate multiple substitution from glyph"
-                    ' "%s" to %s%s',
-                    glyph,
-                    replacements,
-                    f" at {location}" if location else "",
-                )
-            else:
-                raise FeatureLibError(
-                    'Already defined substitution for glyph "%s"' % glyph, location
-                )
-        lookup.mapping[glyph] = replacements
-
-    def add_reverse_chain_single_subst(self, location, old_prefix, old_suffix, mapping):
-        lookup = self.get_lookup_(location, ReverseChainSingleSubstBuilder)
-        lookup.rules.append((old_prefix, old_suffix, mapping))
-
+    # GSUB 1
     def add_single_subst(self, location, prefix, suffix, mapping, forceChain):
         if self.cur_feature_name_ == "aalt":
             for (from_glyph, to_glyph) in mapping.items():
@@ -1347,6 +1270,78 @@ class Builder(object):
                     )
             lookup.mapping[from_glyph] = to_glyph
 
+    # GSUB 2
+    def add_multiple_subst(
+        self, location, prefix, glyph, suffix, replacements, forceChain=False
+    ):
+        if prefix or suffix or forceChain:
+            chain = self.get_lookup_(location, ChainContextSubstBuilder)
+            sub = self.get_chained_lookup_(location, MultipleSubstBuilder)
+            sub.mapping[glyph] = replacements
+            chain.rules.append(ChainContextualRule(prefix, [{glyph}], suffix, [sub]))
+            return
+        lookup = self.get_lookup_(location, MultipleSubstBuilder)
+        if glyph in lookup.mapping:
+            if replacements == lookup.mapping[glyph]:
+                log.info(
+                    "Removing duplicate multiple substitution from glyph"
+                    ' "%s" to %s%s',
+                    glyph,
+                    replacements,
+                    f" at {location}" if location else "",
+                )
+            else:
+                raise FeatureLibError(
+                    'Already defined substitution for glyph "%s"' % glyph, location
+                )
+        lookup.mapping[glyph] = replacements
+
+    # GSUB 3
+    def add_alternate_subst(self, location, prefix, glyph, suffix, replacement):
+        if self.cur_feature_name_ == "aalt":
+            alts = self.aalt_alternates_.setdefault(glyph, set())
+            alts.update(replacement)
+            return
+        if prefix or suffix:
+            chain = self.get_lookup_(location, ChainContextSubstBuilder)
+            lookup = self.get_chained_lookup_(location, AlternateSubstBuilder)
+            chain.rules.append(ChainContextualRule(prefix, [{glyph}], suffix, [lookup]))
+        else:
+            lookup = self.get_lookup_(location, AlternateSubstBuilder)
+        if glyph in lookup.alternates:
+            raise FeatureLibError(
+                'Already defined alternates for glyph "%s"' % glyph, location
+            )
+        lookup.alternates[glyph] = replacement
+
+    # GSUB 4
+    def add_ligature_subst(
+        self, location, prefix, glyphs, suffix, replacement, forceChain
+    ):
+        if prefix or suffix or forceChain:
+            chain = self.get_lookup_(location, ChainContextSubstBuilder)
+            lookup = self.get_chained_lookup_(location, LigatureSubstBuilder)
+            chain.rules.append(ChainContextualRule(prefix, glyphs, suffix, [lookup]))
+        else:
+            lookup = self.get_lookup_(location, LigatureSubstBuilder)
+
+        # OpenType feature file syntax, section 5.d, "Ligature substitution":
+        # "Since the OpenType specification does not allow ligature
+        # substitutions to be specified on target sequences that contain
+        # glyph classes, the implementation software will enumerate
+        # all specific glyph sequences if glyph classes are detected"
+        for g in sorted(itertools.product(*glyphs)):
+            lookup.ligatures[g] = replacement
+
+    # GSUB 5/6
+    def add_chain_context_subst(self, location, prefix, glyphs, suffix, lookups):
+        lookup = self.get_lookup_(location, ChainContextSubstBuilder)
+        lookup.rules.append(
+            ChainContextualRule(
+                prefix, glyphs, suffix, self.find_lookup_builders_(lookups)
+            )
+        )
+
     def add_single_subst_chained_(self, location, prefix, suffix, mapping):
         # https://github.com/fonttools/fonttools/issues/512
         chain = self.get_lookup_(location, ChainContextSubstBuilder)
@@ -1358,77 +1353,14 @@ class Builder(object):
             ChainContextualRule(prefix, [list(mapping.keys())], suffix, [sub])
         )
 
-    def add_cursive_pos(self, location, glyphclass, entryAnchor, exitAnchor):
-        lookup = self.get_lookup_(location, CursivePosBuilder)
-        lookup.add_attachment(
-            location,
-            glyphclass,
-            self.makeOpenTypeAnchor(location, entryAnchor),
-            self.makeOpenTypeAnchor(location, exitAnchor),
-        )
+    # GSUB 8
+    def add_reverse_chain_single_subst(self, location, old_prefix, old_suffix, mapping):
+        lookup = self.get_lookup_(location, ReverseChainSingleSubstBuilder)
+        lookup.rules.append((old_prefix, old_suffix, mapping))
 
-    def add_marks_(self, location, lookupBuilder, marks):
-        """Helper for add_mark_{base,liga,mark}_pos."""
-        for _, markClass in marks:
-            for markClassDef in markClass.definitions:
-                for mark in markClassDef.glyphs.glyphSet():
-                    if mark not in lookupBuilder.marks:
-                        otMarkAnchor = self.makeOpenTypeAnchor(location, markClassDef.anchor)
-                        lookupBuilder.marks[mark] = (markClass.name, otMarkAnchor)
-                    else:
-                        existingMarkClass = lookupBuilder.marks[mark][0]
-                        if markClass.name != existingMarkClass:
-                            raise FeatureLibError(
-                                "Glyph %s cannot be in both @%s and @%s"
-                                % (mark, existingMarkClass, markClass.name),
-                                location,
-                            )
+    # GPOS rules
 
-    def add_mark_base_pos(self, location, bases, marks):
-        builder = self.get_lookup_(location, MarkBasePosBuilder)
-        self.add_marks_(location, builder, marks)
-        for baseAnchor, markClass in marks:
-            otBaseAnchor = self.makeOpenTypeAnchor(location, baseAnchor)
-            for base in bases:
-                builder.bases.setdefault(base, {})[markClass.name] = otBaseAnchor
-
-    def add_mark_lig_pos(self, location, ligatures, components):
-        builder = self.get_lookup_(location, MarkLigPosBuilder)
-        componentAnchors = []
-        for marks in components:
-            anchors = {}
-            self.add_marks_(location, builder, marks)
-            for ligAnchor, markClass in marks:
-                anchors[markClass.name] = self.makeOpenTypeAnchor(location, ligAnchor)
-            componentAnchors.append(anchors)
-        for glyph in ligatures:
-            builder.ligatures[glyph] = componentAnchors
-
-    def add_mark_mark_pos(self, location, baseMarks, marks):
-        builder = self.get_lookup_(location, MarkMarkPosBuilder)
-        self.add_marks_(location, builder, marks)
-        for baseAnchor, markClass in marks:
-            otBaseAnchor = self.makeOpenTypeAnchor(location, baseAnchor)
-            for baseMark in baseMarks:
-                builder.baseMarks.setdefault(baseMark, {})[
-                    markClass.name
-                ] = otBaseAnchor
-
-    def add_class_pair_pos(self, location, glyphclass1, value1, glyphclass2, value2):
-        lookup = self.get_lookup_(location, PairPosBuilder)
-        v1 = self.makeOpenTypeValueRecord(location, value1, pairPosContext=True)
-        v2 = self.makeOpenTypeValueRecord(location, value2, pairPosContext=True)
-        lookup.addClassPair(location, glyphclass1, v1, glyphclass2, v2)
-
-    def add_subtable_break(self, location):
-        self.cur_lookup_.add_subtable_break(location)
-
-    def add_specific_pair_pos(self, location, glyph1, value1, glyph2, value2):
-        lookup = self.get_lookup_(location, PairPosBuilder)
-        v1 = self.makeOpenTypeValueRecord(location, value1, pairPosContext=True)
-        v2 = self.makeOpenTypeValueRecord(location, value2, pairPosContext=True)
-        lookup.addGlyphPair(location, glyph1, v1, glyph2, v2)
-
+    # GPOS 1
     def add_single_pos(self, location, prefix, suffix, pos, forceChain):
         if prefix or suffix or forceChain:
             self.add_single_pos_chained_(location, prefix, suffix, pos)
@@ -1441,6 +1373,71 @@ class Builder(object):
                         lookup.add_pos(location, glyph, otValueRecord)
                     except OpenTypeLibError as e:
                         raise FeatureLibError(str(e), e.location) from e
+
+    # GPOS 2
+    def add_class_pair_pos(self, location, glyphclass1, value1, glyphclass2, value2):
+        lookup = self.get_lookup_(location, PairPosBuilder)
+        v1 = self.makeOpenTypeValueRecord(location, value1, pairPosContext=True)
+        v2 = self.makeOpenTypeValueRecord(location, value2, pairPosContext=True)
+        lookup.addClassPair(location, glyphclass1, v1, glyphclass2, v2)
+
+    def add_specific_pair_pos(self, location, glyph1, value1, glyph2, value2):
+        lookup = self.get_lookup_(location, PairPosBuilder)
+        v1 = self.makeOpenTypeValueRecord(location, value1, pairPosContext=True)
+        v2 = self.makeOpenTypeValueRecord(location, value2, pairPosContext=True)
+        lookup.addGlyphPair(location, glyph1, v1, glyph2, v2)
+
+    # GPOS 3
+    def add_cursive_pos(self, location, glyphclass, entryAnchor, exitAnchor):
+        lookup = self.get_lookup_(location, CursivePosBuilder)
+        lookup.add_attachment(
+            location,
+            glyphclass,
+            self.makeOpenTypeAnchor(location, entryAnchor),
+            self.makeOpenTypeAnchor(location, exitAnchor),
+        )
+
+    # GPOS 4
+    def add_mark_base_pos(self, location, bases, marks):
+        builder = self.get_lookup_(location, MarkBasePosBuilder)
+        self.add_marks_(location, builder, marks)
+        for baseAnchor, markClass in marks:
+            otBaseAnchor = self.makeOpenTypeAnchor(location, baseAnchor)
+            for base in bases:
+                builder.bases.setdefault(base, {})[markClass.name] = otBaseAnchor
+
+    # GPOS 5
+    def add_mark_lig_pos(self, location, ligatures, components):
+        builder = self.get_lookup_(location, MarkLigPosBuilder)
+        componentAnchors = []
+        for marks in components:
+            anchors = {}
+            self.add_marks_(location, builder, marks)
+            for ligAnchor, markClass in marks:
+                anchors[markClass.name] = self.makeOpenTypeAnchor(location, ligAnchor)
+            componentAnchors.append(anchors)
+        for glyph in ligatures:
+            builder.ligatures[glyph] = componentAnchors
+
+    # GPOS 6
+    def add_mark_mark_pos(self, location, baseMarks, marks):
+        builder = self.get_lookup_(location, MarkMarkPosBuilder)
+        self.add_marks_(location, builder, marks)
+        for baseAnchor, markClass in marks:
+            otBaseAnchor = self.makeOpenTypeAnchor(location, baseAnchor)
+            for baseMark in baseMarks:
+                builder.baseMarks.setdefault(baseMark, {})[
+                    markClass.name
+                ] = otBaseAnchor
+
+    # GPOS 7/8
+    def add_chain_context_pos(self, location, prefix, glyphs, suffix, lookups):
+        lookup = self.get_lookup_(location, ChainContextPosBuilder)
+        lookup.rules.append(
+            ChainContextualRule(
+                prefix, glyphs, suffix, self.find_lookup_builders_(lookups)
+            )
+        )
 
     def add_single_pos_chained_(self, location, prefix, suffix, pos):
         # https://github.com/fonttools/fonttools/issues/514
@@ -1465,6 +1462,26 @@ class Builder(object):
         chain.rules.append(
             ChainContextualRule(prefix, [g for g, v in pos], suffix, subs)
         )
+
+    def add_marks_(self, location, lookupBuilder, marks):
+        """Helper for add_mark_{base,liga,mark}_pos."""
+        for _, markClass in marks:
+            for markClassDef in markClass.definitions:
+                for mark in markClassDef.glyphs.glyphSet():
+                    if mark not in lookupBuilder.marks:
+                        otMarkAnchor = self.makeOpenTypeAnchor(location, markClassDef.anchor)
+                        lookupBuilder.marks[mark] = (markClass.name, otMarkAnchor)
+                    else:
+                        existingMarkClass = lookupBuilder.marks[mark][0]
+                        if markClass.name != existingMarkClass:
+                            raise FeatureLibError(
+                                "Glyph %s cannot be in both @%s and @%s"
+                                % (mark, existingMarkClass, markClass.name),
+                                location,
+                            )
+
+    def add_subtable_break(self, location):
+        self.cur_lookup_.add_subtable_break(location)
 
     def setGlyphClass_(self, location, glyph, glyphClass):
         oldClass, oldLocation = self.glyphClassDefs_.get(glyph, (None, None))
