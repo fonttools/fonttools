@@ -329,6 +329,9 @@ Other font-specific options:
       Don't change the 'OS/2 usMaxContext' field. [default]
   --font-number=<number>
       Select font number for TrueType Collection (.ttc/.otc), starting from 0.
+  --pretty-svg
+      When subsetting SVG table, use lxml pretty_print=True option to indent
+      the XML output (only recommended for debugging purposes).
 
 Application options:
   --verbose
@@ -2554,6 +2557,7 @@ class Options(object):
 		self.timing = False
 		self.xml = False
 		self.font_number = -1
+		self.pretty_svg = False
 
 		self.set(**kwargs)
 
