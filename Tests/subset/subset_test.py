@@ -7,6 +7,7 @@ from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.misc.loggingTools import CapturingLogHandler
+from fontTools.subset.svg import etree
 import difflib
 import logging
 import os
@@ -1337,6 +1338,18 @@ def test_subset_keep_size_drop_empty_stylistic_set():
     assert gpos_features[0].Feature.LookupCount == 0
     # empty ss01 feature was dropped
     assert font["GSUB"].table.FeatureList.FeatureCount == 0
+
+
+@pytest.mark.skipif(etree is not None, reason="lxml is installed")
+def test_subset_svg_missing_lxml(ttf_path):
+    # add dummy SVG table and confirm we raise ImportError upon trying to subset it
+    font = TTFont(ttf_path)
+    font["SVG "] = newTable("SVG ")
+    font["SVG "].docList = [('<svg><g id="glyph1"/></svg>', 1, 1)]
+    font.save(ttf_path)
+
+    with pytest.raises(ModuleNotFoundError):
+        subset.main([str(ttf_path), "--gids=0,1"])
 
 
 if __name__ == "__main__":
