@@ -120,7 +120,10 @@ def subset_elements(el: etree.Element, ids: Set[str]) -> bool:
         keep |= subset_elements(e, ids)
     if keep:
         return True
-    el.getparent().remove(el)
+    assert len(el) == 0
+    parent = el.getparent()
+    if parent is not None:
+        parent.remove(el)
     return False
 
 
@@ -213,7 +216,9 @@ def subset_glyphs(self, s) -> bool:
         gids = {rev_orig_glyph_map[g] for g in glyphs}
         element_ids = {f"glyph{i}" for i in gids}
         closure_element_ids(elements, element_ids)
-        subset_elements(svg, element_ids)
+
+        if not subset_elements(svg, element_ids):
+            continue
 
         if not s.options.retain_gids:
             id_map = remap_glyph_ids(elements, glyph_index_map)
