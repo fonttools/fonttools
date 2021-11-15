@@ -18,7 +18,7 @@ from fontTools.subset.util import _add_method
 __all__ = ["subset_glyphs"]
 
 
-GID_RE = re.compile("^glyph(\d+)$")
+GID_RE = re.compile(r"^glyph(\d+)$")
 
 NAMESPACES = {
     "svg": "http://www.w3.org/2000/svg",
