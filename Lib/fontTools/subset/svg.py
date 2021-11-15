@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 from itertools import chain, count, groupby
-from typing import Dict, Iterable, Iterator, List, Set, Tuple
+from typing import Dict, Iterable, Iterator, List, Optional, Set, Tuple
 
 try:
     from lxml import etree
@@ -70,12 +70,9 @@ def parse_css_declarations(style_attr: str) -> Dict[str, str]:
 def iter_referenced_ids(tree: etree.Element) -> Iterator[str]:
     # Yield all the ids that can be reached via references from within this element tree
     for el in chain([tree], find_svg_elements_with_references(tree)):
-        if XLINK_HREF in el.attrib:
-            href = el.attrib[XLINK_HREF]
-            if href.startswith("#"):
-                ref_id = href[1:]
-                assert ref_id
-                yield ref_id
+        ref_id = href_local_target(el)
+        if ref_id is not None:
+            yield ref_id
 
         attrs = el.attrib
         if "style" in attrs:
@@ -159,10 +156,19 @@ def remap_glyph_ids(
     return id_map
 
 
+def href_local_target(el: etree.Element) -> Optional[str]:
+    if XLINK_HREF in el.attrib:
+        href = el.attrib[XLINK_HREF]
+        if href.startswith("#") and len(href) > 1:
+            return href[1:]  # drop the leading #
+    return None
+
+
 def update_glyph_href_links(svg: etree.Element, id_map: Dict[str, str]) -> None:
     # update all xlink:href="#glyph..." attributes to point to the new glyph ids
     for el in find_svg_elements_with_glyph_href(svg):
-        old_id = el.attrib[XLINK_HREF][1:]
+        old_id = href_local_target(el)
+        assert old_id is not None
         if old_id in id_map:
             new_id = id_map[old_id]
             el.attrib[XLINK_HREF] = f"#{new_id}"
