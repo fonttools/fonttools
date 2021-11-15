@@ -29,8 +29,14 @@ def _cpu_count():
         return 1
 
 
+def open_ufo(path):
+    if hasattr(ufo_module.Font, "open"):  # ufoLib2
+        return ufo_module.Font.open(path)
+    return ufo_module.Font(path)  # defcon
+
+
 def _font_to_quadratic(input_path, output_path=None, **kwargs):
-    ufo = ufo_module.Font(input_path)
+    ufo = open_ufo(input_path)
     logger.info('Converting curves for %s', input_path)
     if font_to_quadratic(ufo, **kwargs):
         logger.info("Saving %s", output_path)
@@ -152,7 +158,7 @@ def main(args=None):
 
     if options.interpolatable:
         logger.info('Converting curves compatibly')
-        ufos = [ufo_module.Font(infile) for infile in options.infiles]
+        ufos = [open_ufo(infile) for infile in options.infiles]
         if fonts_to_quadratic(ufos, **kwargs):
             for ufo, output_path in zip(ufos, output_paths):
                 logger.info("Saving %s", output_path)
