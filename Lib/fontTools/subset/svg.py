@@ -107,17 +107,17 @@ def closure_element_ids(
         unvisited = referenced
 
 
-def subset_elements(el: etree.Element, ids: Set[str]) -> bool:
+def subset_elements(el: etree.Element, retained_ids: Set[str]) -> bool:
     # Keep elements if their id is in the subset, or any of their children's id is.
     # Drop elements whose id is not in the subset, and either have no children,
     # or all their children are being dropped.
     el_id = el.attrib.get("id")
-    if el_id is not None and el_id in ids:
+    if el_id is not None and el_id in retained_ids:
         # if id is in the set, don't recurse; keep whole subtree
         return True
     keep = False
     for e in el:
-        keep |= subset_elements(e, ids)
+        keep |= subset_elements(e, retained_ids)
     if keep:
         return True
     assert len(el) == 0
