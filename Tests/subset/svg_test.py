@@ -1,4 +1,5 @@
 from string import ascii_letters
+import textwrap
 
 from fontTools.misc.testTools import getXML
 from fontTools import subset
@@ -111,3 +112,344 @@ def test_subset_svg_simple(empty_svg_font, tmp_path):
         '  <![CDATA[<svg xmlns="http://www.w3.org/2000/svg"><path id="glyph6" d="M6,6"/></svg>]]>',
         "</svgDoc>",
     ]
+
+
+# This contains a bunch of cross-references between glyphs, paths, gradients, etc.
+# Note the path coordinates are completely made up and not meant to be rendered.
+# We only care about the tree structure, not it's visual content.
+COMPLEX_SVG = """\
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <linearGradient id="lg1" x1="50" x2="50" y1="80" y2="80" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#A47B62" offset="0"/>
+      <stop stop-color="#AD8264" offset="1.0"/>
+    </linearGradient>
+    <radialGradient id="rg2" cx="50" cy="50" r="10" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#A47B62" offset="0"/>
+      <stop stop-color="#AD8264" offset="1.0"/>
+    </radialGradient>
+    <radialGradient id="rg3" xlink:href="#rg2" r="20"/>
+    <radialGradient id="rg4" xlink:href="#rg3" cy="100"/>
+    <path id="p1" d="M3,3"/>
+    <clipPath id="c1">
+      <circle cx="10" cy="10" r="1"/>
+    </clipPath>
+  </defs>
+  <g id="glyph1">
+    <g id="glyph2">
+      <path d="M0,0"/>
+    </g>
+    <g>
+      <path d="M1,1" fill="url(#lg1)"/>
+      <path d="M2,2"/>
+    </g>
+  </g>
+  <g id="glyph3">
+    <use xlink:href="#p1"/>
+  </g>
+  <use id="glyph4" xlink:href="#glyph1" x="10"/>
+  <use id="glyph5" xlink:href="#glyph2" y="-10"/>
+  <g id="glyph6">
+    <use xlink:href="#p1" transform="scale(2, 1)"/>
+  </g>
+  <g id="group1">
+    <g id="glyph7">
+      <path d="M4,4"/>
+    </g>
+    <g id="glyph8">
+      <g id=".glyph8">
+        <path id="p2" d="M5,5"/>
+        <path id="p3" d="M6,6"/>
+      </g>
+      <path d="M7,7"/>
+    </g>
+    <g id="glyph9">
+      <use xlink:href="#p2"/>
+    </g>
+    <g id="glyph10">
+      <use xlink:href="#p3"/>
+    </g>
+  </g>
+  <g id="glyph11">
+    <path d="M7,7" fill="url(#rg4)"/>
+  </g>
+  <g id="glyph12">
+    <path d="M7,7" style="fill:url(#lg1);stroke:red;clip-path:url(#c1)"/>
+  </g>
+</svg>
+"""
+
+
+def _lines(s):
+    return textwrap.dedent(s).splitlines()
+
+
+@pytest.mark.parametrize(
+    "subset_gids, expected_xml",
+    [
+        # we only keep gid=2, with 'glyph2' defined inside 'glyph1': 'glyph2'
+        # is renamed 'glyph1' to match the new subset indices, and the old 'glyph1'
+        # is kept (as it contains 'glyph2') but renamed '.glyph1' to avoid clash
+        (
+            "2",
+            _lines(
+                """\
+                <svgDoc endGlyphID="1" startGlyphID="1">
+                  <![CDATA[<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                  <g id=".glyph1">
+                    <g id="glyph1">
+                      <path d="M0,0"/>
+                    </g>
+                  </g>
+                </svg>
+                ]]>
+                </svgDoc>
+                """
+            ),
+        ),
+        # we keep both gid 1 and 2: the glyph elements' ids stay as they are (only the
+        # range endGlyphID change); a gradient is kept since it's referenced by glyph1
+        (
+            "1,2",
+            _lines(
+                """\
+                <svgDoc endGlyphID="2" startGlyphID="1">
+                  <![CDATA[<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                  <defs>
+                    <linearGradient id="lg1" x1="50" x2="50" y1="80" y2="80" gradientUnits="userSpaceOnUse">
+                      <stop stop-color="#A47B62" offset="0"/>
+                      <stop stop-color="#AD8264" offset="1.0"/>
+                    </linearGradient>
+                  </defs>
+                  <g id="glyph1">
+                    <g id="glyph2">
+                      <path d="M0,0"/>
+                    </g>
+                    <g>
+                      <path d="M1,1" fill="url(#lg1)"/>
+                      <path d="M2,2"/>
+                    </g>
+                  </g>
+                </svg>
+                ]]>
+                </svgDoc>
+                """
+            ),
+        ),
+        (
+            # both gid 3 and 6 refer (via <use xlink:href="#...") to path 'p1', which
+            # is thus kept in <defs>; the glyph ids and range start/end are renumbered.
+            "3,6",
+            _lines(
+                """\
+                <svgDoc endGlyphID="2" startGlyphID="1">
+                  <![CDATA[<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                  <defs>
+                    <path id="p1" d="M3,3"/>
+                  </defs>
+                  <g id="glyph1">
+                    <use xlink:href="#p1"/>
+                  </g>
+                  <g id="glyph2">
+                    <use xlink:href="#p1" transform="scale(2, 1)"/>
+                  </g>
+                </svg>
+                ]]>
+                </svgDoc>
+                """
+            ),
+        ),
+        (
+            # 'glyph4' uses the whole 'glyph1' element (translated); we keep the latter
+            # renamed to avoid clashes with new gids
+            "3-4",
+            _lines(
+                """\
+                <svgDoc endGlyphID="2" startGlyphID="1">
+                  <![CDATA[<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                  <defs>
+                    <linearGradient id="lg1" x1="50" x2="50" y1="80" y2="80" gradientUnits="userSpaceOnUse">
+                      <stop stop-color="#A47B62" offset="0"/>
+                      <stop stop-color="#AD8264" offset="1.0"/>
+                    </linearGradient>
+                    <path id="p1" d="M3,3"/>
+                  </defs>
+                  <g id=".glyph1">
+                    <g id=".glyph2">
+                      <path d="M0,0"/>
+                    </g>
+                    <g>
+                      <path d="M1,1" fill="url(#lg1)"/>
+                      <path d="M2,2"/>
+                    </g>
+                  </g>
+                  <g id="glyph1">
+                    <use xlink:href="#p1"/>
+                  </g>
+                  <use id="glyph2" xlink:href="#.glyph1" x="10"/>
+                </svg>
+                ]]>
+                </svgDoc>
+                """
+            ),
+        ),
+        (
+            # 'glyph9' uses a path 'p2' defined inside 'glyph8', the latter is excluded
+            # from our subset, as such its id is renamed with a '.' prefix; but (edge
+            # case!) there already is an id=".glyph8" in the doc (for whatever reason,
+            # it's still a valid id), so we append a .{digit} suffix to disambiguate.
+            "7,9",
+            _lines(
+                """\
+                <svgDoc endGlyphID="2" startGlyphID="1">
+                  <![CDATA[<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                  <g id="group1">
+                    <g id="glyph1">
+                      <path d="M4,4"/>
+                    </g>
+                    <g id=".glyph8.1">
+                      <g id=".glyph8">
+                        <path id="p2" d="M5,5"/>
+                      </g>
+                    </g>
+                    <g id="glyph2">
+                      <use xlink:href="#p2"/>
+                    </g>
+                  </g>
+                </svg>
+                ]]>
+                </svgDoc>
+                """
+            ),
+        ),
+        (
+            # 'glyph11' uses gradient 'rg4' which inherits from 'rg3', which inherits
+            # from 'rg2', etc.
+            "11",
+            _lines(
+                """\
+                <svgDoc endGlyphID="1" startGlyphID="1">
+                  <![CDATA[<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                  <defs>
+                    <radialGradient id="rg2" cx="50" cy="50" r="10" gradientUnits="userSpaceOnUse">
+                      <stop stop-color="#A47B62" offset="0"/>
+                      <stop stop-color="#AD8264" offset="1.0"/>
+                    </radialGradient>
+                    <radialGradient id="rg3" xlink:href="#rg2" r="20"/>
+                    <radialGradient id="rg4" xlink:href="#rg3" cy="100"/>
+                  </defs>
+                  <g id="glyph1">
+                    <path d="M7,7" fill="url(#rg4)"/>
+                  </g>
+                </svg>
+                ]]>
+                </svgDoc>
+                """
+            ),
+        ),
+        (
+            # 'glyph12' contains a style attribute with inline CSS declarations that
+            # contains references to a gradient fill and a clipPath: we keep those
+            "12",
+            _lines(
+                """\
+                <svgDoc endGlyphID="1" startGlyphID="1">
+                  <![CDATA[<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                  <defs>
+                    <linearGradient id="lg1" x1="50" x2="50" y1="80" y2="80" gradientUnits="userSpaceOnUse">
+                      <stop stop-color="#A47B62" offset="0"/>
+                      <stop stop-color="#AD8264" offset="1.0"/>
+                    </linearGradient>
+                    <clipPath id="c1">
+                      <circle cx="10" cy="10" r="1"/>
+                    </clipPath>
+                  </defs>
+                  <g id="glyph1">
+                    <path d="M7,7" style="fill:url(#lg1);stroke:red;clip-path:url(#c1)"/>
+                  </g>
+                </svg>
+                ]]>
+                </svgDoc>
+                """
+            ),
+        ),
+    ],
+)
+def test_subset_svg_with_references(
+    empty_svg_font, tmp_path, subset_gids, expected_xml
+):
+    font = empty_svg_font
+
+    font["SVG "].docList.append((COMPLEX_SVG, 1, 12))
+    svg_font_path = tmp_path / "TestSVG.ttf"
+    font.save(svg_font_path)
+    subset_path = svg_font_path.with_suffix(".subset.ttf")
+
+    subset.main(
+        [
+            str(svg_font_path),
+            f"--output-file={subset_path}",
+            f"--gids={subset_gids}",
+            "--pretty-svg",
+        ]
+    )
+    subset_font = TTFont(subset_path)
+
+    if expected_xml is not None:
+        assert getXML(subset_font["SVG "].toXML, subset_font) == expected_xml
+    else:
+        assert "SVG " not in subset_font
+
+
+def test_subset_svg_empty_table(empty_svg_font, tmp_path):
+    font = empty_svg_font
+
+    svg = new_svg()
+    etree.SubElement(svg, "rect", {"id": "glyph1", "x": "1", "y": "2"})
+    font["SVG "].docList.append((etree.tostring(svg).decode(), 1, 1))
+
+    svg_font_path = tmp_path / "TestSVG.ttf"
+    font.save(svg_font_path)
+    subset_path = svg_font_path.with_suffix(".subset.ttf")
+
+    # there's no gid=2 in SVG table, drop the empty table
+    subset.main([str(svg_font_path), f"--output-file={subset_path}", f"--gids=2"])
+
+    assert "SVG " not in TTFont(subset_path)
+
+
+def test_subset_svg_missing_glyph(empty_svg_font, tmp_path):
+    font = empty_svg_font
+
+    svg = new_svg()
+    etree.SubElement(svg, "rect", {"id": "glyph1", "x": "1", "y": "2"})
+    font["SVG "].docList.append(
+        (
+            etree.tostring(svg).decode(),
+            1,
+            # the range endGlyphID=2 declares two glyphs however our svg contains
+            # only one glyph element with id="glyph1", the "glyph2" one is absent.
+            # Techically this would be invalid according to the OT-SVG spec.
+            2,
+        )
+    )
+    svg_font_path = tmp_path / "TestSVG.ttf"
+    font.save(svg_font_path)
+    subset_path = svg_font_path.with_suffix(".subset.ttf")
+
+    # make sure we don't crash when we don't find the expected "glyph2" element
+    subset.main([str(svg_font_path), f"--output-file={subset_path}", f"--gids=1"])
+
+    subset_font = TTFont(subset_path)
+    assert getXML(subset_font["SVG "].toXML, subset_font) == [
+        '<svgDoc endGlyphID="1" startGlyphID="1">',
+        '  <![CDATA[<svg xmlns="http://www.w3.org/2000/svg"><rect id="glyph1" x="1" y="2"/></svg>]]>',
+        "</svgDoc>",
+    ]
+
+    # ignore the missing gid even if included in the subset; in this test case we
+    # end up with an empty svg document--which is dropped, along with the empty table
+    subset.main([str(svg_font_path), f"--output-file={subset_path}", f"--gids=2"])
+
+    assert "SVG " not in TTFont(subset_path)
