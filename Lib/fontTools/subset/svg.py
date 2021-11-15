@@ -200,7 +200,9 @@ def subset_glyphs(self, s) -> bool:
             continue
 
         svg = etree.fromstring(
-            doc,
+            # encode because fromstring dislikes xml encoding decl if input is str.
+            # SVG xml encoding must be utf-8 as per OT spec.
+            doc.encode("utf-8"),
             parser=etree.XMLParser(
                 # Disable libxml2 security restrictions to support very deep trees.
                 # Without this we would get an error like this:
@@ -225,7 +227,7 @@ def subset_glyphs(self, s) -> bool:
             id_map = remap_glyph_ids(elements, glyph_index_map)
             update_glyph_href_links(svg, id_map)
 
-        new_doc = etree.tostring(svg, pretty_print=s.options.pretty_svg)
+        new_doc = etree.tostring(svg, pretty_print=s.options.pretty_svg).decode("utf-8")
 
         new_gids = (glyph_index_map[i] for i in gids)
         for start, end in ranges(new_gids):
