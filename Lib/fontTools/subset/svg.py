@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 from functools import lru_cache
-from itertools import chain, count, groupby
+from itertools import chain, count
 from typing import Dict, Iterable, Iterator, List, Optional, Set, Tuple
 
 try:
@@ -172,14 +172,19 @@ def update_glyph_href_links(svg: etree.Element, id_map: Dict[str, str]) -> None:
 
 
 def ranges(ints: Iterable[int]) -> Iterator[Tuple[int, int]]:
-    # Yield (min, max) ranges of consecutive integers from the input set
-    sorted_ints = sorted(set(ints))
-    # to group together consecutive ints, we use as 'key' the difference
-    # between their index in the (sorted) list and themselves, which stays
-    # the same for consecutive numbers
-    for _key, group in groupby(enumerate(sorted_ints), lambda i: i[0] - i[1]):
-        consecutive_ints = [v for _i, v in group]
-        yield (consecutive_ints[0], consecutive_ints[-1])
+    # Yield sorted, non-overlapping (min, max) ranges of consecutive integers
+    sorted_ints = iter(sorted(set(ints)))
+    try:
+        start = end = next(sorted_ints)
+    except StopIteration:
+        return
+    for v in sorted_ints:
+        if v - 1 == end:
+            end = v
+        else:
+            yield (start, end)
+            start = end = v
+    yield (start, end)
 
 
 @_add_method(ttLib.getTableClass("SVG "))

@@ -6,7 +6,7 @@ from fontTools import subset
 from fontTools.fontBuilder import FontBuilder
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.ttLib import TTFont, newTable
-from fontTools.subset.svg import NAMESPACES
+from fontTools.subset.svg import NAMESPACES, ranges
 
 import pytest
 
@@ -453,3 +453,19 @@ def test_subset_svg_missing_glyph(empty_svg_font, tmp_path):
     subset.main([str(svg_font_path), f"--output-file={subset_path}", f"--gids=2"])
 
     assert "SVG " not in TTFont(subset_path)
+
+
+@pytest.mark.parametrize(
+    "ints, expected_ranges",
+    [
+        ((), []),
+        ((0,), [(0, 0)]),
+        ((0, 1), [(0, 1)]),
+        ((1, 1, 1, 1), [(1, 1)]),
+        ((1, 3), [(1, 1), (3, 3)]),
+        ((4, 2, 1, 3), [(1, 4)]),
+        ((1, 2, 4, 5, 6, 9, 13, 14, 15), [(1, 2), (4, 6), (9, 9), (13, 15)]),
+    ],
+)
+def test_ranges(ints, expected_ranges):
+    assert list(ranges(ints)) == expected_ranges
