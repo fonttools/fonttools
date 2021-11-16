@@ -47,8 +47,60 @@ def new_svg(**attrs):
     return etree.Element("svg", {"xmlns": NAMESPACES["svg"], **attrs})
 
 
-def test_subset_svg_simple(empty_svg_font, tmp_path):
-    # 'simple' as in one glyph per svg doc
+def _lines(s):
+    return textwrap.dedent(s).splitlines()
+
+
+@pytest.mark.parametrize(
+    "gids, retain_gids, expected_xml",
+    [
+        # keep four glyphs in total, don't retain gids, which thus get remapped
+        (
+            "2,4-6",
+            False,
+            _lines(
+                """\
+                <svgDoc endGlyphID="1" startGlyphID="1">
+                  <![CDATA[<svg xmlns="http://www.w3.org/2000/svg"><path id="glyph1" d="M2,2"/></svg>]]>
+                </svgDoc>
+                <svgDoc endGlyphID="2" startGlyphID="2">
+                  <![CDATA[<svg xmlns="http://www.w3.org/2000/svg"><path id="glyph2" d="M4,4"/></svg>]]>
+                </svgDoc>
+                <svgDoc endGlyphID="3" startGlyphID="3">
+                  <![CDATA[<svg xmlns="http://www.w3.org/2000/svg"><path id="glyph3" d="M5,5"/></svg>]]>
+                </svgDoc>
+                <svgDoc endGlyphID="4" startGlyphID="4">
+                  <![CDATA[<svg xmlns="http://www.w3.org/2000/svg"><path id="glyph4" d="M6,6"/></svg>]]>
+                </svgDoc>
+                """
+            ),
+        ),
+        # same four glyphs, but we now retain gids
+        (
+            "2,4-6",
+            True,
+            _lines(
+                """\
+                <svgDoc endGlyphID="2" startGlyphID="2">
+                  <![CDATA[<svg xmlns="http://www.w3.org/2000/svg"><path id="glyph2" d="M2,2"/></svg>]]>
+                </svgDoc>
+                <svgDoc endGlyphID="4" startGlyphID="4">
+                  <![CDATA[<svg xmlns="http://www.w3.org/2000/svg"><path id="glyph4" d="M4,4"/></svg>]]>
+                </svgDoc>
+                <svgDoc endGlyphID="5" startGlyphID="5">
+                  <![CDATA[<svg xmlns="http://www.w3.org/2000/svg"><path id="glyph5" d="M5,5"/></svg>]]>
+                </svgDoc>
+                <svgDoc endGlyphID="6" startGlyphID="6">
+                  <![CDATA[<svg xmlns="http://www.w3.org/2000/svg"><path id="glyph6" d="M6,6"/></svg>]]>
+                </svgDoc>
+                """
+            ),
+        ),
+    ],
+)
+def test_subset_single_glyph_per_svg(
+    empty_svg_font, tmp_path, gids, retain_gids, expected_xml
+):
     font = empty_svg_font
 
     svg_docs = font["SVG "].docList
@@ -62,56 +114,17 @@ def test_subset_svg_simple(empty_svg_font, tmp_path):
 
     subset_path = svg_font_path.with_suffix(".subset.ttf")
 
-    # keep four glyphs in total, don't retain gids, which thus get remapped
     subset.main(
         [
             str(svg_font_path),
             f"--output-file={subset_path}",
-            "--gids=2,4-6",
+            f"--gids={gids}",
+            "--retain_gids" if retain_gids else "--no-retain_gids",
         ]
     )
     subset_font = TTFont(subset_path)
 
-    assert getXML(subset_font["SVG "].toXML, subset_font) == [
-        '<svgDoc endGlyphID="1" startGlyphID="1">',
-        '  <![CDATA[<svg xmlns="http://www.w3.org/2000/svg"><path id="glyph1" d="M2,2"/></svg>]]>',
-        "</svgDoc>",
-        '<svgDoc endGlyphID="2" startGlyphID="2">',
-        '  <![CDATA[<svg xmlns="http://www.w3.org/2000/svg"><path id="glyph2" d="M4,4"/></svg>]]>',
-        "</svgDoc>",
-        '<svgDoc endGlyphID="3" startGlyphID="3">',
-        '  <![CDATA[<svg xmlns="http://www.w3.org/2000/svg"><path id="glyph3" d="M5,5"/></svg>]]>',
-        "</svgDoc>",
-        '<svgDoc endGlyphID="4" startGlyphID="4">',
-        '  <![CDATA[<svg xmlns="http://www.w3.org/2000/svg"><path id="glyph4" d="M6,6"/></svg>]]>',
-        "</svgDoc>",
-    ]
-
-    # same four glyphs, now retain gids
-    subset.main(
-        [
-            str(svg_font_path),
-            f"--output-file={subset_path}",
-            "--gids=2,4-6",
-            "--retain-gids",
-        ]
-    )
-    subset_font = TTFont(subset_path)
-
-    assert getXML(subset_font["SVG "].toXML, subset_font) == [
-        '<svgDoc endGlyphID="2" startGlyphID="2">',
-        '  <![CDATA[<svg xmlns="http://www.w3.org/2000/svg"><path id="glyph2" d="M2,2"/></svg>]]>',
-        "</svgDoc>",
-        '<svgDoc endGlyphID="4" startGlyphID="4">',
-        '  <![CDATA[<svg xmlns="http://www.w3.org/2000/svg"><path id="glyph4" d="M4,4"/></svg>]]>',
-        "</svgDoc>",
-        '<svgDoc endGlyphID="5" startGlyphID="5">',
-        '  <![CDATA[<svg xmlns="http://www.w3.org/2000/svg"><path id="glyph5" d="M5,5"/></svg>]]>',
-        "</svgDoc>",
-        '<svgDoc endGlyphID="6" startGlyphID="6">',
-        '  <![CDATA[<svg xmlns="http://www.w3.org/2000/svg"><path id="glyph6" d="M6,6"/></svg>]]>',
-        "</svgDoc>",
-    ]
+    assert getXML(subset_font["SVG "].toXML, subset_font) == expected_xml
 
 
 # This contains a bunch of cross-references between glyphs, paths, gradients, etc.
@@ -179,10 +192,6 @@ COMPLEX_SVG = """\
   </g>
 </svg>
 """
-
-
-def _lines(s):
-    return textwrap.dedent(s).splitlines()
 
 
 @pytest.mark.parametrize(
