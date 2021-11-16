@@ -571,9 +571,6 @@ class WOFFFlavorData():
 
 def calcChecksum(data):
 	"""Calculate the checksum for an arbitrary block of data.
-	Optionally takes a 'start' argument, which allows you to
-	calculate a checksum in chunks by feeding it a previous
-	result.
 
 	If the data length is not a multiple of four, it assumes
 	it is to be padded with null byte.
