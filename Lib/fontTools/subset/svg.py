@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from functools import lru_cache
 from itertools import chain, count, groupby
 from typing import Dict, Iterable, Iterator, List, Optional, Set, Tuple
 
@@ -26,31 +27,16 @@ NAMESPACES = {
 }
 XLINK_HREF = f'{{{NAMESPACES["xlink"]}}}href'
 
-if etree is not None:
-    # it's more efficient to compile XPath objects upfront than calling the same
-    # Element.xpath() several times
-    find_svg_elements_with_id = etree.XPath(".//svg:*[@id]", namespaces=NAMESPACES)
 
-    # We currently support xlink:href (as used by <use> and gradient templates),
-    # and local url(#...) links found in fill or clip-path attributes
-    # TODO(anthrotype): Check we aren't missing other supported kinds of reference
-    find_svg_elements_with_references = etree.XPath(
-        ".//svg:*[ "
-        "starts-with(@xlink:href, '#') "
-        "or starts-with(@fill, 'url(#') "
-        "or starts-with(@clip-path, 'url(#') "
-        "or contains(@style, ':url(#') "
-        "]",
-        namespaces=NAMESPACES,
-    )
-
-    find_svg_elements_with_glyph_href = etree.XPath(
-        ".//svg:*[starts-with(@xlink:href, '#glyph')]", namespaces=NAMESPACES
-    )
+# TODO(antrotype): Replace with functools.cache once we are 3.9+
+@lru_cache(maxsize=None)
+def xpath(path):
+    # compile XPath upfront, caching result to reuse on multiple elements
+    return etree.XPath(path, namespaces=NAMESPACES)
 
 
 def group_elements_by_id(tree: etree.Element) -> Dict[str, etree.Element]:
-    return {el.attrib["id"]: el for el in find_svg_elements_with_id(tree)}
+    return {el.attrib["id"]: el for el in xpath(".//svg:*[@id]")(tree)}
 
 
 def parse_css_declarations(style_attr: str) -> Dict[str, str]:
@@ -68,7 +54,18 @@ def parse_css_declarations(style_attr: str) -> Dict[str, str]:
 
 
 def iter_referenced_ids(tree: etree.Element) -> Iterator[str]:
-    # Yield all the ids that can be reached via references from within this element tree
+    # Yield all the ids that can be reached via references from this element tree.
+    # We currently support xlink:href (as used by <use> and gradient templates),
+    # and local url(#...) links found in fill or clip-path attributes
+    # TODO(anthrotype): Check we aren't missing other supported kinds of reference
+    find_svg_elements_with_references = xpath(
+        ".//svg:*[ "
+        "starts-with(@xlink:href, '#') "
+        "or starts-with(@fill, 'url(#') "
+        "or starts-with(@clip-path, 'url(#') "
+        "or contains(@style, ':url(#') "
+        "]",
+    )
     for el in chain([tree], find_svg_elements_with_references(tree)):
         ref_id = href_local_target(el)
         if ref_id is not None:
@@ -166,7 +163,7 @@ def href_local_target(el: etree.Element) -> Optional[str]:
 
 def update_glyph_href_links(svg: etree.Element, id_map: Dict[str, str]) -> None:
     # update all xlink:href="#glyph..." attributes to point to the new glyph ids
-    for el in find_svg_elements_with_glyph_href(svg):
+    for el in xpath(".//svg:*[starts-with(@xlink:href, '#glyph')]")(svg):
         old_id = href_local_target(el)
         assert old_id is not None
         if old_id in id_map:
