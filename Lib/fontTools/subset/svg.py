@@ -108,12 +108,10 @@ def subset_elements(el: etree.Element, retained_ids: Set[str]) -> bool:
     if el.attrib.get("id") in retained_ids:
         # if id is in the set, don't recurse; keep whole subtree
         return True
-    # recursively subset all the children; we don't want to short-circuit
-    # because our function has side effects, hence we avoid using any().
-    keep = False
-    for e in el:
-        keep |= subset_elements(e, retained_ids)
-    if keep:
+    # recursively subset all the children; we use a list comprehension instead
+    # of a parentheses-less generator expression because we don't want any() to
+    # short-circuit, as our function has a side effect of dropping empty elements.
+    if any([subset_elements(e, retained_ids) for e in el]):
         return True
     assert len(el) == 0
     parent = el.getparent()
