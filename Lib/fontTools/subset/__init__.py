@@ -8,7 +8,9 @@ from fontTools.ttLib.tables import otTables
 from fontTools.otlLib.maxContextCalc import maxCtxFont
 from fontTools.pens.basePen import NullPen
 from fontTools.misc.loggingTools import Timer
+from fontTools.subset.util import _add_method, _uniq_sort
 from fontTools.subset.cff import *
+from fontTools.subset.svg import *
 import sys
 import struct
 import array
@@ -206,12 +208,12 @@ Font table options:
       Specify (=), add to (+=) or exclude from (-=) the comma-separated
       set of tables that will be be dropped.
       By default, the following tables are dropped:
-      'BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC', 'SVG ', 'PCLT', 'LTSH'
+      'BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC', 'PCLT', 'LTSH'
       and Graphite tables: 'Feat', 'Glat', 'Gloc', 'Silf', 'Sill'.
       The tool will attempt to subset the remaining tables.
       Examples:
-        --drop-tables-='SVG '
-            * Drop the default set of tables but keep 'SVG '.
+        --drop-tables-='BASE'
+            * Drop the default set of tables but keep 'BASE'.
         --drop-tables+=GSUB
             * Drop the default set of tables and 'GSUB'.
         --drop-tables=DSIG
@@ -327,6 +329,9 @@ Other font-specific options:
       Don't change the 'OS/2 usMaxContext' field. [default]
   --font-number=<number>
       Select font number for TrueType Collection (.ttc/.otc), starting from 0.
+  --pretty-svg
+      When subsetting SVG table, use lxml pretty_print=True option to indent
+      the XML output (only recommended for debugging purposes).
 
 Application options:
   --verbose
@@ -362,26 +367,6 @@ log.glyphs = MethodType(_log_glyphs, log)
 # main module's logger
 timer = Timer(logger=logging.getLogger("fontTools.subset.timer"))
 
-
-def _add_method(*clazzes):
-	"""Returns a decorator function that adds a new method to one or
-	more classes."""
-	def wrapper(method):
-		done = []
-		for clazz in clazzes:
-			if clazz in done: continue # Support multiple names of a clazz
-			done.append(clazz)
-			assert clazz.__name__ != 'DefaultTable', \
-					'Oops, table class not found.'
-			assert not hasattr(clazz, method.__name__), \
-					"Oops, class '%s' has method '%s'." % (clazz.__name__,
-									       method.__name__)
-			setattr(clazz, method.__name__, method)
-		return None
-	return wrapper
-
-def _uniq_sort(l):
-	return sorted(set(l))
 
 def _dict_subset(d, glyphs):
 	return {g:d[g] for g in glyphs}
@@ -2505,7 +2490,7 @@ class Options(object):
 
 	# spaces in tag names (e.g. "SVG ", "cvt ") are stripped by the argument parser
 	_drop_tables_default = ['BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC',
-				'EBSC', 'SVG', 'PCLT', 'LTSH']
+				'EBSC', 'PCLT', 'LTSH']
 	_drop_tables_default += ['Feat', 'Glat', 'Gloc', 'Silf', 'Sill']  # Graphite
 	_no_subset_tables_default = ['avar', 'fvar',
 				     'gasp', 'head', 'hhea', 'maxp',
@@ -2572,6 +2557,7 @@ class Options(object):
 		self.timing = False
 		self.xml = False
 		self.font_number = -1
+		self.pretty_svg = False
 
 		self.set(**kwargs)
 
@@ -2710,7 +2696,7 @@ class Subsetter(object):
 	def _closure_glyphs(self, font):
 
 		realGlyphs = set(font.getGlyphOrder())
-		glyph_order = font.getGlyphOrder()
+		self.orig_glyph_order = glyph_order = font.getGlyphOrder()
 
 		self.glyphs_requested = set()
 		self.glyphs_requested.update(self.glyph_names_requested)
@@ -2829,6 +2815,24 @@ class Subsetter(object):
 
 		self.reverseEmptiedGlyphMap = {g:order[g] for g in self.glyphs_emptied}
 
+		if not self.options.retain_gids:
+			new_glyph_order = [
+				g for g in glyph_order if g in self.glyphs_retained
+			]
+		else:
+			new_glyph_order = [
+				g for g in glyph_order
+				if font.getGlyphID(g) <= self.last_retained_order
+			]
+		# We'll call font.setGlyphOrder() at the end of _subset_glyphs when all
+		# tables have been subsetted. Below, we use the new glyph order to get
+		# a map from old to new glyph indices, which can be useful when
+		# subsetting individual tables (e.g. SVG) that refer to GIDs.
+		self.new_glyph_order = new_glyph_order
+		self.glyph_index_map = {
+			order[new_glyph_order[i]]: i
+			for i in range(len(new_glyph_order))
+		}
 
 		log.info("Retaining %d glyphs", len(self.glyphs_retained))
 
@@ -2858,13 +2862,7 @@ class Subsetter(object):
 				del font[tag]
 
 		with timer("subset GlyphOrder"):
-			glyphOrder = font.getGlyphOrder()
-			if not self.options.retain_gids:
-				glyphOrder = [g for g in glyphOrder if g in self.glyphs_retained]
-			else:
-				glyphOrder = [g for g in glyphOrder if font.getGlyphID(g) <= self.last_retained_order]
-
-			font.setGlyphOrder(glyphOrder)
+			font.setGlyphOrder(self.new_glyph_order)
 
 
 	def _prune_post_subset(self, font):
