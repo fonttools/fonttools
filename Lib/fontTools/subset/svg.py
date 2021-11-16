@@ -121,10 +121,11 @@ def subset_elements(el: etree.Element, retained_ids: Set[str]) -> bool:
 
 
 def remap_glyph_ids(
-    elements: Dict[str, etree.Element], glyph_index_map: Dict[int, int]
+    svg: etree.Element, glyph_index_map: Dict[int, int]
 ) -> Dict[str, str]:
     # Given {old_gid: new_gid} map, rename all elements containing id="glyph{gid}"
     # special attributes
+    elements = group_elements_by_id(svg)
     id_map = {}
     for el_id, el in elements.items():
         m = GID_RE.match(el_id)
@@ -230,7 +231,7 @@ def subset_glyphs(self, s) -> bool:
             continue
 
         if not s.options.retain_gids:
-            id_map = remap_glyph_ids(elements, glyph_index_map)
+            id_map = remap_glyph_ids(svg, glyph_index_map)
             update_glyph_href_links(svg, id_map)
 
         new_doc = etree.tostring(svg, pretty_print=s.options.pretty_svg).decode("utf-8")

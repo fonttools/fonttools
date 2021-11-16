@@ -168,12 +168,15 @@ COMPLEX_SVG = """\
   </g>
   <g id="group1">
     <g id="glyph7">
+      <path id="p2" d="M4,4"/>
+    </g>
+    <g id=".glyph7">
       <path d="M4,4"/>
     </g>
     <g id="glyph8">
       <g id=".glyph8">
-        <path id="p2" d="M5,5"/>
-        <path id="p3" d="M6,6"/>
+        <path id="p3" d="M5,5"/>
+        <path id="M6,6"/>
       </g>
       <path d="M7,7"/>
     </g>
@@ -304,26 +307,31 @@ COMPLEX_SVG = """\
             ),
         ),
         (
-            # 'glyph9' uses a path 'p2' defined inside 'glyph8', the latter is excluded
-            # from our subset, as such its id is renamed with a '.' prefix; but (edge
-            # case!) there already is an id=".glyph8" in the doc (for whatever reason,
-            # it's still a valid id), so we append a .{digit} suffix to disambiguate.
-            "7,9",
+            # 'glyph9' uses a path 'p2' defined inside 'glyph7', the latter is excluded
+            # from our subset, thus gets renamed '.glyph7'; an unrelated element with
+            # same id=".glyph7" doesn't clash because it was dropped.
+            # Similarly 'glyph10' uses path 'p3' defined inside 'glyph8', also excluded
+            # from subset and prefixed with '.'. But since an id=".glyph8" is already
+            # used in the doc, we append a .{digit} suffix to disambiguate.
+            "9,10",
             _lines(
                 """\
                 <svgDoc endGlyphID="2" startGlyphID="1">
                   <![CDATA[<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
                   <g id="group1">
-                    <g id="glyph1">
-                      <path d="M4,4"/>
+                    <g id=".glyph7">
+                      <path id="p2" d="M4,4"/>
                     </g>
                     <g id=".glyph8.1">
                       <g id=".glyph8">
-                        <path id="p2" d="M5,5"/>
+                        <path id="p3" d="M5,5"/>
                       </g>
                     </g>
-                    <g id="glyph2">
+                    <g id="glyph1">
                       <use xlink:href="#p2"/>
+                    </g>
+                    <g id="glyph2">
+                      <use xlink:href="#p3"/>
                     </g>
                   </g>
                 </svg>
