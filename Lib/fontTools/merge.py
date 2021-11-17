@@ -1057,17 +1057,15 @@ class Merger(object):
 			A :class:`fontTools.ttLib.TTFont` object. Call the ``save`` method on
 			this to write it out to an OTF file.
 		"""
-		# Take first input file sfntVersion
-		sfntVersion = ttLib.TTFont(fontfiles[0]).sfntVersion
-		mega = ttLib.TTFont(sfntVersion=sfntVersion)
-
 		#
 		# Settle on a mega glyph order.
 		#
 		fonts = [ttLib.TTFont(fontfile) for fontfile in fontfiles]
-
 		glyphOrders = [font.getGlyphOrder() for font in fonts]
 		megaGlyphOrder = self._mergeGlyphOrders(glyphOrders)
+
+		# Take first input file sfntVersion
+		sfntVersion = fonts[0].sfntVersion
 
 		cffTables = []
 		if sfntVersion == "OTTO":
@@ -1080,7 +1078,7 @@ class Merger(object):
 		# it's safer, in case tables were loaded to provide glyph names.
 		fonts = [ttLib.TTFont(fontfile) for fontfile in fontfiles]
 
-		if len(cffTables):
+		if sfntVersion == "OTTO":
 			for font, glyphOrder, cffTable in zip(fonts, glyphOrders, cffTables):
 				font.setGlyphOrder(glyphOrder)
 				# Rename CFF CharStrings to match the new glyphOrder.
@@ -1090,6 +1088,7 @@ class Merger(object):
 			for font, glyphOrder in zip(fonts, glyphOrders):
 				font.setGlyphOrder(glyphOrder)
 
+		mega = ttLib.TTFont(sfntVersion=sfntVersion)
 		mega.setGlyphOrder(megaGlyphOrder)
 
 		for font in fonts:
