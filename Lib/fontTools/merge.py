@@ -1100,16 +1100,13 @@ class Merger(object):
 		allTags = reduce(set.union, (list(font.keys()) for font in fonts), set())
 		allTags.remove('GlyphOrder')
 
-		# Make sure we process CFF before cmap, and cmap before GSUB as we have a dependency there.
+		# Make sure we process cmap before GSUB as we have a dependency there.
 		if 'GSUB' in allTags:
 			allTags.remove('GSUB')
 			allTags = ['GSUB'] + list(allTags)
 		if 'cmap' in allTags:
 			allTags.remove('cmap')
 			allTags = ['cmap'] + list(allTags)
-		if 'CFF ' in allTags:
-			allTags.remove('CFF ')
-			allTags = ['CFF '] + list(allTags)
 
 		for tag in allTags:
 			with timer("merge '%s'" % tag):
