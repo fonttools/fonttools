@@ -1067,26 +1067,23 @@ class Merger(object):
 		# Take first input file sfntVersion
 		sfntVersion = fonts[0].sfntVersion
 
-		cffTables = []
+		cffTables = [None] * len(fonts)
 		if sfntVersion == "OTTO":
 			for i, font in enumerate(fonts):
 				font['CFF '].cff.desubroutinize()
-				cffTables.append(font['CFF '])
+				cffTables[i] = font['CFF ']
 
 		# Reload fonts and set new glyph names on them.
 		# TODO Is it necessary to reload font?  I think it is.  At least
 		# it's safer, in case tables were loaded to provide glyph names.
 		fonts = [ttLib.TTFont(fontfile) for fontfile in fontfiles]
-
-		if sfntVersion == "OTTO":
-			for font, glyphOrder, cffTable in zip(fonts, glyphOrders, cffTables):
-				font.setGlyphOrder(glyphOrder)
+		for font, glyphOrder, cffTable in zip(fonts, glyphOrders, cffTables):
+			font.setGlyphOrder(glyphOrder)
+			if cffTable:
 				# Rename CFF CharStrings to match the new glyphOrder.
+				# Using cffTable from before reloading the fonts, because reasons.
 				self._renameCFFCharStrings(glyphOrder, cffTable)
 				font['CFF '] = cffTable
-		else:
-			for font, glyphOrder in zip(fonts, glyphOrders):
-				font.setGlyphOrder(glyphOrder)
 
 		mega = ttLib.TTFont(sfntVersion=sfntVersion)
 		mega.setGlyphOrder(megaGlyphOrder)
