@@ -1066,16 +1066,14 @@ class Merger(object):
 		#
 		fonts = [ttLib.TTFont(fontfile) for fontfile in fontfiles]
 
+		glyphOrders = [font.getGlyphOrder() for font in fonts]
+		megaGlyphOrder = self._mergeGlyphOrders(glyphOrders)
+
 		cffTables = []
 		if sfntVersion == "OTTO":
 			for i, font in enumerate(fonts):
 				font['CFF '].cff.desubroutinize()
 				cffTables.append(font['CFF '])
-
-		glyphOrders = [font.getGlyphOrder() for font in fonts]
-
-		# Handle glyphOrder merging and cff glyphs renaming together
-		megaGlyphOrder = self._mergeGlyphOrders(glyphOrders, cffTables)
 
 		# Reload fonts and set new glyph names on them.
 		# TODO Is it necessary to reload font?  I think it is.  At least
@@ -1085,6 +1083,8 @@ class Merger(object):
 		if len(cffTables):
 			for font, glyphOrder, cffTable in zip(fonts, glyphOrders, cffTables):
 				font.setGlyphOrder(glyphOrder)
+				# Rename CFF CharStrings to match the new glyphOrder.
+				self._renameCFFCharStrings(glyphOrder, cffTable)
 				font['CFF '] = cffTable
 		else:
 			for font, glyphOrder in zip(fonts, glyphOrders):
@@ -1134,29 +1134,10 @@ class Merger(object):
 
 		return mega
 
-	def _mergeGlyphOrders(self, glyphOrders, cffTables):
+	def _mergeGlyphOrders(self, glyphOrders):
 		"""Modifies passed-in glyphOrders to reflect new glyph names.
 		Returns glyphOrder for the merged font."""
 		mega = {}
-
-		# If we have CFF tables,
-		# rename topDictIndex charStrings
-		for cffTable in cffTables:
-			td = cffTable.cff.topDictIndex[0]
-			d = {}
-			for i, (glyphName, v) in enumerate(td.CharStrings.charStrings.items()):
-				if glyphName in mega:
-					n = mega[glyphName]
-					while (glyphName + "#" + repr(n)) in mega:
-						n += 1
-					mega[glyphName] = n
-					glyphName += "#" + repr(n)
-				mega[glyphName] = 1
-				d[glyphName] = v
-			cffTable.cff.topDictIndex[0].CharStrings.charStrings = d
-
-		mega = {}
-
 		for glyphOrder in glyphOrders:
 			for i,glyphName in enumerate(glyphOrder):
 				if glyphName in mega:
@@ -1168,6 +1149,15 @@ class Merger(object):
 					glyphOrder[i] = glyphName
 				mega[glyphName] = 1
 		return list(mega.keys())
+
+	def _renameCFFCharStrings(self, glyphOrder, cffTable):
+		"""Rename topDictIndex charStrings based on glyphOrder."""
+		td = cffTable.cff.topDictIndex[0]
+		charStrings = {}
+		for i, v in enumerate(td.CharStrings.charStrings.values()):
+			glyphName = glyphOrder[i]
+			charStrings[glyphName] = v
+		cffTable.cff.topDictIndex[0].CharStrings.charStrings = charStrings
 
 	def mergeObjects(self, returnTable, logic, tables):
 		# Right now we don't use self at all.  Will use in the future
