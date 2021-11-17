@@ -14,32 +14,11 @@ import time
 import operator
 import logging
 import os
-from fontTools import subset
+
 
 log = logging.getLogger("fontTools.merge")
 timer = Timer(logger=logging.getLogger(__name__+".timer"), level=logging.INFO)
 
-def _desubtoutinize(otf):
-	# Desubroutinize with Subsetter (like compreffor does)
-	from io import BytesIO
-
-	stream = BytesIO()
-	otf.save(stream, reorderTables=False)
-	stream.flush()
-	stream.seek(0)
-	tmpfont = ttLib.TTFont(stream)
-
-	options = subset.Options()
-	options.desubroutinize = True
-	options.notdef_outline = True
-	subsetter = subset.Subsetter(options=options)
-	subsetter.populate(glyphs=tmpfont.getGlyphOrder())
-	subsetter.subset(tmpfont)
-	data = tmpfont['CFF '].compile(tmpfont)
-	table = ttLib.newTable('CFF ')
-	table.decompile(data, otf)
-	otf['CFF '] = table
-	tmpfont.close()
 
 def _add_method(*clazzes, **kwargs):
 	"""Returns a decorator function that adds a new method to one or
@@ -1090,7 +1069,7 @@ class Merger(object):
 		cffTables = []
 		if sfntVersion == "OTTO":
 			for i, font in enumerate(fonts):
-				_desubtoutinize(font)
+				font['CFF '].cff.desubroutinize()
 				cffTables.append(font['CFF '])
 
 		glyphOrders = [font.getGlyphOrder() for font in fonts]
