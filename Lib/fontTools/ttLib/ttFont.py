@@ -162,8 +162,10 @@ class TTFont(object):
 		Args:
 			file: Similarly to the constructor, can be either a pathname or a writable
 				file object.
-			reorderTables (bool): If true (the default), reorder the tables, sorting
-				them by tag. If false, retain the original font order.
+			reorderTables (Option[bool]): If true (the default), reorder the tables,
+				sorting them by tag (recommended by the OpenType specification). If
+				false, retain the original font order. If None, reorder by table
+				dependency (fastest).
 		"""
 		if not hasattr(file, "write"):
 			if self.lazy and self.reader.file.name == file:
