@@ -150,9 +150,9 @@ def strToFixed(string, precisionBits):
 
 	Examples::
 
-	>>> ## to convert a float string to a 2.14 fixed-point number:
-	>>> strToFixed('-0.61884', precisionBits=14)
-	-10139
+		>>> ## to convert a float string to a 2.14 fixed-point number:
+		>>> strToFixed('-0.61884', precisionBits=14)
+		-10139
 	"""
 	value = float(string)
 	return otRound(value * (1 << precisionBits))
