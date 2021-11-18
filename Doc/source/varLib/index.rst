@@ -2,6 +2,25 @@
 varLib: OpenType Variation Support
 ##################################
 
+
+.. toctree::
+   :maxdepth: 2
+
+   builder
+   cff
+   errors
+   featureVars
+   instancer
+   interpolatable
+   interpolate_layout
+   iup
+   merger
+   models
+   mutator
+   mvar
+   plot
+   varStore
+
 The ``fontTools.varLib`` package contains a number of classes and routines
 for handling, building and interpolating variable font data. These routines
 rely on a common set of concepts, many of which are equivalent to concepts
@@ -89,24 +108,6 @@ support scalar
    example, the support scalar will be 1 at the support's peak location, and
    0 below its minimum or above its maximum.
 
-
-.. toctree::
-   :maxdepth: 2
-
-   builder
-   cff
-   errors
-   featureVars
-   instancer
-   interpolatable
-   interpolate_layout
-   iup
-   merger
-   models
-   mutator
-   mvar
-   plot
-   varStore
 
 .. automodule:: fontTools.varLib
    :inherited-members:
