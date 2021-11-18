@@ -24,82 +24,100 @@ __usage__ = "pyftsubset font-file [glyph...] [--option=value]..."
 __doc__="""\
 pyftsubset -- OpenType font subsetter and optimizer
 
-  pyftsubset is an OpenType font subsetter and optimizer, based on fontTools.
-  It accepts any TT- or CFF-flavored OpenType (.otf or .ttf) or WOFF (.woff)
-  font file. The subsetted glyph set is based on the specified glyphs
-  or characters, and specified OpenType layout features.
+pyftsubset is an OpenType font subsetter and optimizer, based on fontTools.
+It accepts any TT- or CFF-flavored OpenType (.otf or .ttf) or WOFF (.woff)
+font file. The subsetted glyph set is based on the specified glyphs
+or characters, and specified OpenType layout features.
 
-  The tool also performs some size-reducing optimizations, aimed for using
-  subset fonts as webfonts.  Individual optimizations can be enabled or
-  disabled, and are enabled by default when they are safe.
+The tool also performs some size-reducing optimizations, aimed for using
+subset fonts as webfonts.  Individual optimizations can be enabled or
+disabled, and are enabled by default when they are safe.
 
-Usage:
-  """+__usage__+"""
+Usage: """+__usage__+"""
 
-  At least one glyph or one of --gids, --gids-file, --glyphs, --glyphs-file,
-  --text, --text-file, --unicodes, or --unicodes-file, must be specified.
+At least one glyph or one of --gids, --gids-file, --glyphs, --glyphs-file,
+--text, --text-file, --unicodes, or --unicodes-file, must be specified.
 
-Arguments:
-  font-file
-    The input font file.
-  glyph
-    Specify one or more glyph identifiers to include in the subset. Must be
-    PS glyph names, or the special string '*' to keep the entire glyph set.
+Args:
 
-Initial glyph set specification:
-  These options populate the initial glyph set. Same option can appear
-  multiple times, and the results are accummulated.
-  --gids=<NNN>[,<NNN>...]
-      Specify comma/whitespace-separated list of glyph IDs or ranges as
-      decimal numbers.  For example, --gids=10-12,14 adds glyphs with
-      numbers 10, 11, 12, and 14.
-  --gids-file=<path>
-      Like --gids but reads from a file. Anything after a '#' on any line
-      is ignored as comments.
-  --glyphs=<glyphname>[,<glyphname>...]
-      Specify comma/whitespace-separated PS glyph names to add to the subset.
-      Note that only PS glyph names are accepted, not gidNNN, U+XXXX, etc
-      that are accepted on the command line.  The special string '*' will keep
-      the entire glyph set.
-  --glyphs-file=<path>
-      Like --glyphs but reads from a file. Anything after a '#' on any line
-      is ignored as comments.
-  --text=<text>
-      Specify characters to include in the subset, as UTF-8 string.
-  --text-file=<path>
-      Like --text but reads from a file. Newline character are not added to
-      the subset.
-  --unicodes=<XXXX>[,<XXXX>...]
-      Specify comma/whitespace-separated list of Unicode codepoints or
-      ranges as hex numbers, optionally prefixed with 'U+', 'u', etc.
-      For example, --unicodes=41-5a,61-7a adds ASCII letters, so does
-      the more verbose --unicodes=U+0041-005A,U+0061-007A.
-      The special strings '*' will choose all Unicode characters mapped
-      by the font.
-  --unicodes-file=<path>
-      Like --unicodes, but reads from a file. Anything after a '#' on any
-      line in the file is ignored as comments.
-  --ignore-missing-glyphs
-      Do not fail if some requested glyphs or gids are not available in
-      the font.
-  --no-ignore-missing-glyphs
-      Stop and fail if some requested glyphs or gids are not available
-      in the font. [default]
-  --ignore-missing-unicodes [default]
-      Do not fail if some requested Unicode characters (including those
-      indirectly specified using --text or --text-file) are not available
-      in the font.
-  --no-ignore-missing-unicodes
-      Stop and fail if some requested Unicode characters are not available
-      in the font.
-      Note the default discrepancy between ignoring missing glyphs versus
-      unicodes.  This is for historical reasons and in the future
-      --no-ignore-missing-unicodes might become default.
+font-file
+  The input font file.
+glyph
+  Specify one or more glyph identifiers to include in the subset. Must be
+  PS glyph names, or the special string '*' to keep the entire glyph set.
 
-Other options:
-  For the other options listed below, to see the current value of the option,
-  pass a value of '?' to it, with or without a '='.
-  Examples:
+Initial glyph set specification
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+These options populate the initial glyph set. Same option can appear
+multiple times, and the results are accummulated.
+
+--gids=<NNN>[,<NNN>...]
+  Specify comma/whitespace-separated list of glyph IDs or ranges as decimal
+  numbers.  For example, --gids=10-12,14 adds glyphs with numbers 10, 11,
+  12, and 14.
+
+--gids-file=<path>
+  Like --gids but reads from a file. Anything after a '#' on any line is
+  ignored as comments.
+
+--glyphs=<glyphname>[,<glyphname>...]
+  Specify comma/whitespace-separated PS glyph names to add to the subset.
+  Note that only PS glyph names are accepted, not gidNNN, U+XXXX, etc
+  that are accepted on the command line.  The special string '*' will keep
+  the entire glyph set.
+
+--glyphs-file=<path>
+  Like --glyphs but reads from a file. Anything after a '#' on any line
+  is ignored as comments.
+
+--text=<text>
+  Specify characters to include in the subset, as UTF-8 string.
+
+--text-file=<path>
+  Like --text but reads from a file. Newline character are not added to
+  the subset.
+
+--unicodes=<XXXX>[,<XXXX>...]
+  Specify comma/whitespace-separated list of Unicode codepoints or
+  ranges as hex numbers, optionally prefixed with 'U+', 'u', etc.
+  For example, --unicodes=41-5a,61-7a adds ASCII letters, so does
+  the more verbose --unicodes=U+0041-005A,U+0061-007A.
+  The special strings '*' will choose all Unicode characters mapped
+  by the font.
+
+--unicodes-file=<path>
+  Like --unicodes, but reads from a file. Anything after a '#' on any
+  line in the file is ignored as comments.
+
+--ignore-missing-glyphs
+  Do not fail if some requested glyphs or gids are not available in
+  the font.
+
+--no-ignore-missing-glyphs
+  Stop and fail if some requested glyphs or gids are not available
+  in the font. [default]
+
+--ignore-missing-unicodes [default]
+  Do not fail if some requested Unicode characters (including those
+  indirectly specified using --text or --text-file) are not available
+  in the font.
+
+--no-ignore-missing-unicodes
+  Stop and fail if some requested Unicode characters are not available
+  in the font.
+  Note the default discrepancy between ignoring missing glyphs versus
+  unicodes.  This is for historical reasons and in the future
+  --no-ignore-missing-unicodes might become default.
+
+Other options
+^^^^^^^^^^^^^
+
+For the other options listed below, to see the current value of the option,
+pass a value of '?' to it, with or without a '='.
+
+Examples::
+
     $ pyftsubset --glyph-names?
     Current setting for 'glyph-names' is: False
     $ ./pyftsubset --name-IDs=?
@@ -108,242 +126,299 @@ Other options:
     Current setting for 'hinting' is: True
     Current setting for 'hinting' is: False
 
-Output options:
-  --output-file=<path>
-      The output font file. If not specified, the subsetted font
-      will be saved in as font-file.subset.
-  --flavor=<type>
-      Specify flavor of output font file. May be 'woff' or 'woff2'.
-      Note that WOFF2 requires the Brotli Python extension, available
-      at https://github.com/google/brotli
-  --with-zopfli
-      Use the Google Zopfli algorithm to compress WOFF. The output is 3-8 %
-      smaller than pure zlib, but the compression speed is much slower.
-      The Zopfli Python bindings are available at:
-      https://pypi.python.org/pypi/zopfli
+Output options
+^^^^^^^^^^^^^^
 
-Glyph set expansion:
-  These options control how additional glyphs are added to the subset.
-  --retain-gids
-      Retain glyph indices; just empty glyphs not needed in-place.
-  --notdef-glyph
-      Add the '.notdef' glyph to the subset (ie, keep it). [default]
-  --no-notdef-glyph
-      Drop the '.notdef' glyph unless specified in the glyph set. This
-      saves a few bytes, but is not possible for Postscript-flavored
-      fonts, as those require '.notdef'. For TrueType-flavored fonts,
-      this works fine as long as no unsupported glyphs are requested
-      from the font.
-  --notdef-outline
-      Keep the outline of '.notdef' glyph. The '.notdef' glyph outline is
-      used when glyphs not supported by the font are to be shown. It is not
-      needed otherwise.
-  --no-notdef-outline
-      When including a '.notdef' glyph, remove its outline. This saves
-      a few bytes. [default]
-  --recommended-glyphs
-      Add glyphs 0, 1, 2, and 3 to the subset, as recommended for
-      TrueType-flavored fonts: '.notdef', 'NULL' or '.null', 'CR', 'space'.
-      Some legacy software might require this, but no modern system does.
-  --no-recommended-glyphs
-      Do not add glyphs 0, 1, 2, and 3 to the subset, unless specified in
-      glyph set. [default]
-  --no-layout-closure
-      Do not expand glyph set to add glyphs produced by OpenType layout
-      features.  Instead, OpenType layout features will be subset to only
-      rules that are relevant to the otherwise-specified glyph set.
-  --layout-features[+|-]=<feature>[,<feature>...]
-      Specify (=), add to (+=) or exclude from (-=) the comma-separated
-      set of OpenType layout feature tags that will be preserved.
-      Glyph variants used by the preserved features are added to the
-      specified subset glyph set. By default, 'calt', 'ccmp', 'clig', 'curs',
-      'dnom', 'frac', 'kern', 'liga', 'locl', 'mark', 'mkmk', 'numr', 'rclt',
-      'rlig', 'rvrn', and all features required for script shaping are
-      preserved. To see the full list, try '--layout-features=?'.
-      Use '*' to keep all features.
-      Multiple --layout-features options can be provided if necessary.
-      Examples:
-        --layout-features+=onum,pnum,ss01
-            * Keep the default set of features and 'onum', 'pnum', 'ss01'.
-        --layout-features-='mark','mkmk'
-            * Keep the default set of features but drop 'mark' and 'mkmk'.
-        --layout-features='kern'
-            * Only keep the 'kern' feature, drop all others.
-        --layout-features=''
-            * Drop all features.
-        --layout-features='*'
-            * Keep all features.
-        --layout-features+=aalt --layout-features-=vrt2
-            * Keep default set of features plus 'aalt', but drop 'vrt2'.
-  --layout-scripts[+|-]=<script>[,<script>...]
-      Specify (=), add to (+=) or exclude from (-=) the comma-separated
-      set of OpenType layout script tags that will be preserved. LangSys tags
-      can be appended to script tag, separated by '.', for example:
-      'arab.dflt,arab.URD,latn.TRK'. By default all scripts are retained ('*').
+--output-file=<path>
+  The output font file. If not specified, the subsetted font
+  will be saved in as font-file.subset.
 
-Hinting options:
-  --hinting
-      Keep hinting [default]
-  --no-hinting
-      Drop glyph-specific hinting and font-wide hinting tables, as well
-      as remove hinting-related bits and pieces from other tables (eg. GPOS).
-      See --hinting-tables for list of tables that are dropped by default.
-      Instructions and hints are stripped from 'glyf' and 'CFF ' tables
-      respectively. This produces (sometimes up to 30%) smaller fonts that
-      are suitable for extremely high-resolution systems, like high-end
-      mobile devices and retina displays.
+--flavor=<type>
+  Specify flavor of output font file. May be 'woff' or 'woff2'.
+  Note that WOFF2 requires the Brotli Python extension, available
+  at https://github.com/google/brotli
 
-Optimization options:
-  --desubroutinize
-      Remove CFF use of subroutinizes.  Subroutinization is a way to make CFF
-      fonts smaller.  For small subsets however, desubroutinizing might make
-      the font smaller.  It has even been reported that desubroutinized CFF
-      fonts compress better (produce smaller output) WOFF and WOFF2 fonts.
-      Also see note under --no-hinting.
-  --no-desubroutinize [default]
-      Leave CFF subroutinizes as is, only throw away unused subroutinizes.
+--with-zopfli
+  Use the Google Zopfli algorithm to compress WOFF. The output is 3-8 %
+  smaller than pure zlib, but the compression speed is much slower.
+  The Zopfli Python bindings are available at:
+  https://pypi.python.org/pypi/zopfli
 
-Font table options:
-  --drop-tables[+|-]=<table>[,<table>...]
-      Specify (=), add to (+=) or exclude from (-=) the comma-separated
-      set of tables that will be be dropped.
-      By default, the following tables are dropped:
-      'BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC', 'PCLT', 'LTSH'
-      and Graphite tables: 'Feat', 'Glat', 'Gloc', 'Silf', 'Sill'.
-      The tool will attempt to subset the remaining tables.
-      Examples:
-        --drop-tables-='BASE'
-            * Drop the default set of tables but keep 'BASE'.
-        --drop-tables+=GSUB
-            * Drop the default set of tables and 'GSUB'.
-        --drop-tables=DSIG
-            * Only drop the 'DSIG' table, keep all others.
-        --drop-tables=
-            * Keep all tables.
-  --no-subset-tables+=<table>[,<table>...]
-      Add to the set of tables that will not be subsetted.
-      By default, the following tables are included in this list, as
-      they do not need subsetting (ignore the fact that 'loca' is listed
-      here): 'gasp', 'head', 'hhea', 'maxp', 'vhea', 'OS/2', 'loca', 'name',
-      'cvt ', 'fpgm', 'prep', 'VMDX', 'DSIG', 'CPAL', 'MVAR', 'cvar', 'STAT'.
-      By default, tables that the tool does not know how to subset and are not
-      specified here will be dropped from the font, unless --passthrough-tables
-      option is passed.
-      Example:
-         --no-subset-tables+=FFTM
-            * Keep 'FFTM' table in the font by preventing subsetting.
-  --passthrough-tables
-      Do not drop tables that the tool does not know how to subset.
-  --no-passthrough-tables
-      Tables that the tool does not know how to subset and are not specified
-      in --no-subset-tables will be dropped from the font. [default]
-  --hinting-tables[-]=<table>[,<table>...]
-      Specify (=), add to (+=) or exclude from (-=) the list of font-wide
-      hinting tables that will be dropped if --no-hinting is specified,
-      Examples:
-        --hinting-tables-='VDMX'
-            * Drop font-wide hinting tables except 'VDMX'.
-        --hinting-tables=''
-            * Keep all font-wide hinting tables (but strip hints from glyphs).
-  --legacy-kern
-      Keep TrueType 'kern' table even when OpenType 'GPOS' is available.
-  --no-legacy-kern
-      Drop TrueType 'kern' table if OpenType 'GPOS' is available. [default]
+Glyph set expansion
+^^^^^^^^^^^^^^^^^^^
 
-Font naming options:
-  These options control what is retained in the 'name' table. For numerical
-  codes, see: http://www.microsoft.com/typography/otspec/name.htm
-  --name-IDs[+|-]=<nameID>[,<nameID>...]
-      Specify (=), add to (+=) or exclude from (-=) the set of 'name' table
-      entry nameIDs that will be preserved. By default, only nameIDs between 0
-      and 6 are preserved, the rest are dropped. Use '*' to keep all entries.
-      Examples:
-        --name-IDs+=7,8,9
-            * Also keep Trademark, Manufacturer and Designer name entries.
-        --name-IDs=''
-            * Drop all 'name' table entries.
-        --name-IDs='*'
-            * keep all 'name' table entries
-  --name-legacy
-      Keep legacy (non-Unicode) 'name' table entries (0.x, 1.x etc.).
-      XXX Note: This might be needed for some fonts that have no Unicode name
-      entires for English. See: https://github.com/fonttools/fonttools/issues/146
-  --no-name-legacy
-      Drop legacy (non-Unicode) 'name' table entries [default]
-  --name-languages[+|-]=<langID>[,<langID>]
-      Specify (=), add to (+=) or exclude from (-=) the set of 'name' table
-      langIDs that will be preserved. By default only records with langID
-      0x0409 (English) are preserved. Use '*' to keep all langIDs.
-  --obfuscate-names
-      Make the font unusable as a system font by replacing name IDs 1, 2, 3, 4,
-      and 6 with dummy strings (it is still fully functional as webfont).
+These options control how additional glyphs are added to the subset.
 
-Glyph naming and encoding options:
-  --glyph-names
-      Keep PS glyph names in TT-flavored fonts. In general glyph names are
-      not needed for correct use of the font. However, some PDF generators
-      and PDF viewers might rely on glyph names to extract Unicode text
-      from PDF documents.
-  --no-glyph-names
-      Drop PS glyph names in TT-flavored fonts, by using 'post' table
-      version 3.0. [default]
-  --legacy-cmap
-      Keep the legacy 'cmap' subtables (0.x, 1.x, 4.x etc.).
-  --no-legacy-cmap
-      Drop the legacy 'cmap' subtables. [default]
-  --symbol-cmap
-      Keep the 3.0 symbol 'cmap'.
-  --no-symbol-cmap
-      Drop the 3.0 symbol 'cmap'. [default]
+--retain-gids
+  Retain glyph indices; just empty glyphs not needed in-place.
 
-Other font-specific options:
-  --recalc-bounds
-      Recalculate font bounding boxes.
-  --no-recalc-bounds
-      Keep original font bounding boxes. This is faster and still safe
-      for all practical purposes. [default]
-  --recalc-timestamp
-      Set font 'modified' timestamp to current time.
-  --no-recalc-timestamp
-      Do not modify font 'modified' timestamp. [default]
-  --canonical-order
-      Order tables as recommended in the OpenType standard. This is not
-      required by the standard, nor by any known implementation.
-  --no-canonical-order
-      Keep original order of font tables. This is faster. [default]
-  --prune-unicode-ranges
-      Update the 'OS/2 ulUnicodeRange*' bits after subsetting. The Unicode
-      ranges defined in the OpenType specification v1.7 are intersected with
-      the Unicode codepoints specified in the font's Unicode 'cmap' subtables:
-      when no overlap is found, the bit will be switched off. However, it will
-      *not* be switched on if an intersection is found.  [default]
-  --no-prune-unicode-ranges
-      Don't change the 'OS/2 ulUnicodeRange*' bits.
-  --recalc-average-width
-      Update the 'OS/2 xAvgCharWidth' field after subsetting.
-  --no-recalc-average-width
-      Don't change the 'OS/2 xAvgCharWidth' field. [default]
-  --recalc-max-context
-      Update the 'OS/2 usMaxContext' field after subsetting.
-  --no-recalc-max-context
-      Don't change the 'OS/2 usMaxContext' field. [default]
-  --font-number=<number>
-      Select font number for TrueType Collection (.ttc/.otc), starting from 0.
-  --pretty-svg
-      When subsetting SVG table, use lxml pretty_print=True option to indent
-      the XML output (only recommended for debugging purposes).
+--notdef-glyph
+  Add the '.notdef' glyph to the subset (ie, keep it). [default]
 
-Application options:
-  --verbose
-      Display verbose information of the subsetting process.
-  --timing
-      Display detailed timing information of the subsetting process.
-  --xml
-      Display the TTX XML representation of subsetted font.
+--no-notdef-glyph
+  Drop the '.notdef' glyph unless specified in the glyph set. This
+  saves a few bytes, but is not possible for Postscript-flavored
+  fonts, as those require '.notdef'. For TrueType-flavored fonts,
+  this works fine as long as no unsupported glyphs are requested
+  from the font.
 
-Example:
-  Produce a subset containing the characters ' !"#$%' without performing
-  size-reducing optimizations:
+--notdef-outline
+  Keep the outline of '.notdef' glyph. The '.notdef' glyph outline is
+  used when glyphs not supported by the font are to be shown. It is not
+  needed otherwise.
+
+--no-notdef-outline
+  When including a '.notdef' glyph, remove its outline. This saves
+  a few bytes. [default]
+
+--recommended-glyphs
+  Add glyphs 0, 1, 2, and 3 to the subset, as recommended for
+  TrueType-flavored fonts: '.notdef', 'NULL' or '.null', 'CR', 'space'.
+  Some legacy software might require this, but no modern system does.
+
+--no-recommended-glyphs
+  Do not add glyphs 0, 1, 2, and 3 to the subset, unless specified in
+  glyph set. [default]
+
+--no-layout-closure
+  Do not expand glyph set to add glyphs produced by OpenType layout
+  features.  Instead, OpenType layout features will be subset to only
+  rules that are relevant to the otherwise-specified glyph set.
+
+--layout-features[+|-]=<feature>[,<feature>...]
+  Specify (=), add to (+=) or exclude from (-=) the comma-separated
+  set of OpenType layout feature tags that will be preserved.
+  Glyph variants used by the preserved features are added to the
+  specified subset glyph set. By default, 'calt', 'ccmp', 'clig', 'curs',
+  'dnom', 'frac', 'kern', 'liga', 'locl', 'mark', 'mkmk', 'numr', 'rclt',
+  'rlig', 'rvrn', and all features required for script shaping are
+  preserved. To see the full list, try '--layout-features=?'.
+  Use '*' to keep all features.
+  Multiple --layout-features options can be provided if necessary.
+  Examples:
+
+    --layout-features+=onum,pnum,ss01
+        * Keep the default set of features and 'onum', 'pnum', 'ss01'.
+    --layout-features-='mark','mkmk'
+        * Keep the default set of features but drop 'mark' and 'mkmk'.
+    --layout-features='kern'
+        * Only keep the 'kern' feature, drop all others.
+    --layout-features=''
+        * Drop all features.
+    --layout-features='*'
+        * Keep all features.
+    --layout-features+=aalt --layout-features-=vrt2
+        * Keep default set of features plus 'aalt', but drop 'vrt2'.
+
+--layout-scripts[+|-]=<script>[,<script>...]
+  Specify (=), add to (+=) or exclude from (-=) the comma-separated
+  set of OpenType layout script tags that will be preserved. LangSys tags
+  can be appended to script tag, separated by '.', for example:
+  'arab.dflt,arab.URD,latn.TRK'. By default all scripts are retained ('*').
+
+Hinting options
+^^^^^^^^^^^^^^^
+
+--hinting
+  Keep hinting [default]
+
+--no-hinting
+  Drop glyph-specific hinting and font-wide hinting tables, as well
+  as remove hinting-related bits and pieces from other tables (eg. GPOS).
+  See --hinting-tables for list of tables that are dropped by default.
+  Instructions and hints are stripped from 'glyf' and 'CFF ' tables
+  respectively. This produces (sometimes up to 30%) smaller fonts that
+  are suitable for extremely high-resolution systems, like high-end
+  mobile devices and retina displays.
+
+Optimization options
+^^^^^^^^^^^^^^^^^^^^
+
+--desubroutinize
+  Remove CFF use of subroutinizes.  Subroutinization is a way to make CFF
+  fonts smaller.  For small subsets however, desubroutinizing might make
+  the font smaller.  It has even been reported that desubroutinized CFF
+  fonts compress better (produce smaller output) WOFF and WOFF2 fonts.
+  Also see note under --no-hinting.
+
+--no-desubroutinize [default]
+  Leave CFF subroutinizes as is, only throw away unused subroutinizes.
+
+Font table options
+^^^^^^^^^^^^^^^^^^
+
+--drop-tables[+|-]=<table>[,<table>...]
+  Specify (=), add to (+=) or exclude from (-=) the comma-separated
+  set of tables that will be be dropped.
+  By default, the following tables are dropped:
+  'BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC', 'PCLT', 'LTSH'
+  and Graphite tables: 'Feat', 'Glat', 'Gloc', 'Silf', 'Sill'.
+  The tool will attempt to subset the remaining tables.
+
+  Examples:
+
+  --drop-tables-='BASE'
+      * Drop the default set of tables but keep 'BASE'.
+
+  --drop-tables+=GSUB
+      * Drop the default set of tables and 'GSUB'.
+
+  --drop-tables=DSIG
+      * Only drop the 'DSIG' table, keep all others.
+
+  --drop-tables=
+      * Keep all tables.
+
+--no-subset-tables+=<table>[,<table>...]
+  Add to the set of tables that will not be subsetted.
+  By default, the following tables are included in this list, as
+  they do not need subsetting (ignore the fact that 'loca' is listed
+  here): 'gasp', 'head', 'hhea', 'maxp', 'vhea', 'OS/2', 'loca', 'name',
+  'cvt ', 'fpgm', 'prep', 'VMDX', 'DSIG', 'CPAL', 'MVAR', 'cvar', 'STAT'.
+  By default, tables that the tool does not know how to subset and are not
+  specified here will be dropped from the font, unless --passthrough-tables
+  option is passed.
+
+  Example:
+
+   --no-subset-tables+=FFTM
+      * Keep 'FFTM' table in the font by preventing subsetting.
+
+--passthrough-tables
+  Do not drop tables that the tool does not know how to subset.
+
+--no-passthrough-tables
+  Tables that the tool does not know how to subset and are not specified
+  in --no-subset-tables will be dropped from the font. [default]
+
+--hinting-tables[-]=<table>[,<table>...]
+  Specify (=), add to (+=) or exclude from (-=) the list of font-wide
+  hinting tables that will be dropped if --no-hinting is specified.
+
+  Examples:
+
+  --hinting-tables-='VDMX'
+      * Drop font-wide hinting tables except 'VDMX'.
+  --hinting-tables=''
+      * Keep all font-wide hinting tables (but strip hints from glyphs).
+
+--legacy-kern
+  Keep TrueType 'kern' table even when OpenType 'GPOS' is available.
+
+--no-legacy-kern
+  Drop TrueType 'kern' table if OpenType 'GPOS' is available. [default]
+
+Font naming options
+^^^^^^^^^^^^^^^^^^^
+
+These options control what is retained in the 'name' table. For numerical
+codes, see: http://www.microsoft.com/typography/otspec/name.htm
+
+--name-IDs[+|-]=<nameID>[,<nameID>...]
+  Specify (=), add to (+=) or exclude from (-=) the set of 'name' table
+  entry nameIDs that will be preserved. By default, only nameIDs between 0
+  and 6 are preserved, the rest are dropped. Use '*' to keep all entries.
+
+  Examples:
+
+  --name-IDs+=7,8,9
+      * Also keep Trademark, Manufacturer and Designer name entries.
+  --name-IDs=''
+      * Drop all 'name' table entries.
+  --name-IDs='*'
+      * keep all 'name' table entries
+
+--name-legacy
+  Keep legacy (non-Unicode) 'name' table entries (0.x, 1.x etc.).
+  XXX Note: This might be needed for some fonts that have no Unicode name
+  entires for English. See: https://github.com/fonttools/fonttools/issues/146
+
+--no-name-legacy
+  Drop legacy (non-Unicode) 'name' table entries [default]
+
+--name-languages[+|-]=<langID>[,<langID>]
+  Specify (=), add to (+=) or exclude from (-=) the set of 'name' table
+  langIDs that will be preserved. By default only records with langID
+  0x0409 (English) are preserved. Use '*' to keep all langIDs.
+
+--obfuscate-names
+  Make the font unusable as a system font by replacing name IDs 1, 2, 3, 4,
+  and 6 with dummy strings (it is still fully functional as webfont).
+
+Glyph naming and encoding options
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+--glyph-names
+  Keep PS glyph names in TT-flavored fonts. In general glyph names are
+  not needed for correct use of the font. However, some PDF generators
+  and PDF viewers might rely on glyph names to extract Unicode text
+  from PDF documents.
+--no-glyph-names
+  Drop PS glyph names in TT-flavored fonts, by using 'post' table
+  version 3.0. [default]
+--legacy-cmap
+  Keep the legacy 'cmap' subtables (0.x, 1.x, 4.x etc.).
+--no-legacy-cmap
+  Drop the legacy 'cmap' subtables. [default]
+--symbol-cmap
+  Keep the 3.0 symbol 'cmap'.
+--no-symbol-cmap
+  Drop the 3.0 symbol 'cmap'. [default]
+
+Other font-specific options
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+--recalc-bounds
+    Recalculate font bounding boxes.
+--no-recalc-bounds
+    Keep original font bounding boxes. This is faster and still safe
+    for all practical purposes. [default]
+--recalc-timestamp
+    Set font 'modified' timestamp to current time.
+--no-recalc-timestamp
+    Do not modify font 'modified' timestamp. [default]
+--canonical-order
+    Order tables as recommended in the OpenType standard. This is not
+    required by the standard, nor by any known implementation.
+--no-canonical-order
+    Keep original order of font tables. This is faster. [default]
+--prune-unicode-ranges
+    Update the 'OS/2 ulUnicodeRange*' bits after subsetting. The Unicode
+    ranges defined in the OpenType specification v1.7 are intersected with
+    the Unicode codepoints specified in the font's Unicode 'cmap' subtables:
+    when no overlap is found, the bit will be switched off. However, it will
+    *not* be switched on if an intersection is found.  [default]
+--no-prune-unicode-ranges
+    Don't change the 'OS/2 ulUnicodeRange*' bits.
+--recalc-average-width
+    Update the 'OS/2 xAvgCharWidth' field after subsetting.
+--no-recalc-average-width
+    Don't change the 'OS/2 xAvgCharWidth' field. [default]
+--recalc-max-context
+    Update the 'OS/2 usMaxContext' field after subsetting.
+--no-recalc-max-context
+    Don't change the 'OS/2 usMaxContext' field. [default]
+--font-number=<number>
+    Select font number for TrueType Collection (.ttc/.otc), starting from 0.
+--pretty-svg
+    When subsetting SVG table, use lxml pretty_print=True option to indent
+    the XML output (only recommended for debugging purposes).
+
+Application options
+^^^^^^^^^^^^^^^^^^^
+
+--verbose
+    Display verbose information of the subsetting process.
+--timing
+    Display detailed timing information of the subsetting process.
+--xml
+    Display the TTX XML representation of subsetted font.
+
+Example
+^^^^^^^
+
+Produce a subset containing the characters ' !"#$%' without performing
+size-reducing optimizations::
 
   $ pyftsubset font.ttf --unicodes="U+0020-0025" \\
     --layout-features='*' --glyph-names --symbol-cmap --legacy-cmap \\
