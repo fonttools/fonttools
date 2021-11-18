@@ -392,12 +392,6 @@ def merge(self, m, tables):
 			glyphOrderStrings.append(name)
 	chrset = list(newfont.charset)
 	newcs = newfont.CharStrings
-	log.debug("Font 0 global subrs: %s.", len(newcff.cff.GlobalSubrs))  # XXX what if not zero?
-	ls = None
-	if hasattr(newfont, 'Private') and hasattr(newfont.Private, 'Subr'):
-		ls = newfont.Private.Subrs
-	lenls = len(ls) if ls is not None else 0  # XXX what if not zero?
-	log.debug("Font 0 local subrs: %d.", lenls)
 	log.debug("FONT 0 CharStrings: %d.", len(newcs))
 	for i, table in enumerate(tables[1:], start=1):
 		font = table.cff[0]
@@ -408,12 +402,6 @@ def merge(self, m, tables):
 				glyphOrderStrings.append(name)
 		cs = font.CharStrings
 		gs = table.cff.GlobalSubrs
-		log.debug("Font %d global subrs: %d.", i, len(gs))  # XXX what if not zero?
-		ls = None
-		if hasattr(font, 'Private') and hasattr(font.Private, 'Subr'):
-			ls = font.Private.Subrs
-		lenls = len(ls) if ls is not None else 0  # XXX what if not zero?
-		log.debug("Font %d global subrs: %d.", i, lenls)
 		log.debug("Font %d CharStrings: %d.", i, len(cs))
 		chrset.extend(font.charset)
 		if newcs.charStringsAreIndexed:
