@@ -9,8 +9,10 @@ from . import DefaultTable
 class table_C_O_L_R_(DefaultTable.DefaultTable):
 
 	""" This table is structured so that you can treat it like a dictionary keyed by glyph name.
-	ttFont['COLR'][<glyphName>] will return the color layers for any glyph
-	ttFont['COLR'][<glyphName>] = <value> will set the color layers for any glyph.
+
+	``ttFont['COLR'][<glyphName>]`` will return the color layers for any glyph.
+
+	``ttFont['COLR'][<glyphName>] = <value>`` will set the color layers for any glyph.
 	"""
 
 	@staticmethod
