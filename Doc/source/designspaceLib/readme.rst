@@ -883,7 +883,7 @@ Attributes
    is not important for compiling variable fonts.
 
 5.1.1 conditionset element
-=======================
+==========================
 
 -  Child element of ``rule``
 -  Contains one or more ``condition`` elements.
