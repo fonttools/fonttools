@@ -3,14 +3,82 @@ import itertools
 from fontTools import ttLib
 from fontTools.ttLib.tables._g_l_y_f import Glyph
 from fontTools.fontBuilder import FontBuilder
-from fontTools.merge import Merger
+from fontTools.merge import Merger, main as merge_main
+import difflib
+import os
+import re
+import shutil
+import sys
+import tempfile
 import unittest
+import pathlib
 import pytest
 
 
 class MergeIntegrationTest(unittest.TestCase):
-	# TODO
-	pass
+	def setUp(self):
+		self.tempdir = None
+		self.num_tempfiles = 0
+
+	def tearDown(self):
+		if self.tempdir:
+			shutil.rmtree(self.tempdir)
+
+	@staticmethod
+	def getpath(testfile):
+		path, _ = os.path.split(__file__)
+		return os.path.join(path, "data", testfile)
+
+	def temp_path(self, suffix):
+		if not self.tempdir:
+			self.tempdir = tempfile.mkdtemp()
+		self.num_tempfiles += 1
+		return os.path.join(self.tempdir, "tmp%d%s" % (self.num_tempfiles, suffix))
+
+	IGNORED_LINES_RE = re.compile(
+		"^(<ttFont |    <(checkSumAdjustment|created|modified) ).*"
+	)
+	def read_ttx(self, path):
+		lines = []
+		with open(path, "r", encoding="utf-8") as ttx:
+			for line in ttx.readlines():
+				# Elide lines with data that often change.
+				if self.IGNORED_LINES_RE.match(line):
+					lines.append("\n")
+				else:
+					lines.append(line.rstrip() + "\n")
+		return lines
+
+	def expect_ttx(self, font, expected_ttx, tables=None):
+		path = self.temp_path(suffix=".ttx")
+		font.saveXML(path, tables=tables)
+		actual = self.read_ttx(path)
+		expected = self.read_ttx(expected_ttx)
+		if actual != expected:
+			for line in difflib.unified_diff(
+					expected, actual, fromfile=expected_ttx, tofile=path):
+				sys.stdout.write(line)
+			self.fail("TTX output is different from expected")
+
+	def compile_font(self, path, suffix):
+		savepath = self.temp_path(suffix=suffix)
+		font = ttLib.TTFont(recalcBBoxes=False, recalcTimestamp=False)
+		font.importXML(path)
+		font.save(savepath, reorderTables=None)
+		return font, savepath
+
+# -----
+# Tests
+# -----
+
+	def test_merge_cff(self):
+		_, fontpath1 = self.compile_font(self.getpath("CFFFont1.ttx"), ".otf")
+		_, fontpath2 = self.compile_font(self.getpath("CFFFont2.ttx"), ".otf")
+		mergedpath = self.temp_path(".otf")
+		merge_main([fontpath1, fontpath2, "--output-file=%s" % mergedpath])
+		mergedfont = ttLib.TTFont(mergedpath)
+		self.expect_ttx(mergedfont, self.getpath("CFFFont_expected.ttx"))
+
 
 class gaspMergeUnitTest(unittest.TestCase):
 	def setUp(self):
