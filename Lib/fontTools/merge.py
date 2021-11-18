@@ -392,17 +392,13 @@ def merge(self, m, tables):
 			glyphOrderStrings.append(name)
 	chrset = list(newfont.charset)
 	newcs = newfont.CharStrings
-	# XXX CharStrings object does not have a 'charStringsIndex' attribute
-	# when read from a TTX file
-	newcsi = newcs.charStringsIndex
 	log.debug("Font 0 global subrs: %s.", len(newcff.cff.GlobalSubrs))  # XXX what if not zero?
 	ls = None
 	if hasattr(newfont, 'Private') and hasattr(newfont.Private, 'Subr'):
 		ls = newfont.Private.Subrs
 	lenls = len(ls) if ls is not None else 0  # XXX what if not zero?
 	log.debug("Font 0 local subrs: %d.", lenls)
-	log.debug("FONT 0 CharStrings: %d.", len(newcsi))
-	baseIndex = len(newcsi)
+	log.debug("FONT 0 CharStrings: %d.", len(newcs))
 	for i, table in enumerate(tables[1:], start=1):
 		font = table.cff[0]
 		font.Private = private
@@ -418,16 +414,14 @@ def merge(self, m, tables):
 			ls = font.Private.Subrs
 		lenls = len(ls) if ls is not None else 0  # XXX what if not zero?
 		log.debug("Font %d global subrs: %d.", i, lenls)
-		log.debug("Font %d CharStrings: %d.", i, len(cs.charStringsIndex))
-		newcsi.items.extend([None] * len(cs.charStringsIndex))
+		log.debug("Font %d CharStrings: %d.", i, len(cs))
 		chrset.extend(font.charset)
-		j = baseIndex
-		for name, k in cs.charStrings.items():
-			newcs.charStrings[name] = j
-			ch = cs.charStringsIndex[k]
-			newcsi[j] = ch
-			j += 1
-		baseIndex = j
+		if newcs.charStringsAreIndexed:
+			for i, name in enumerate(cs.charStrings, start=len(newcs)):
+				newcs.charStrings[name] = i
+				newcs.charStringsIndex.items.append(None)
+		for name in cs.charStrings:
+			newcs[name] = cs[name]
 
 	newfont.charset = chrset
 	newfont.numGlyphs = len(chrset)
