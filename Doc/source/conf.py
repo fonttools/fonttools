@@ -32,7 +32,7 @@ needs_sphinx = "1.3"
 # ones.
 extensions = ["sphinx.ext.autodoc", "sphinx.ext.viewcode", "sphinx.ext.napoleon", "sphinx.ext.coverage"]
 
-autodoc_mock_imports = ["gtk"]
+autodoc_mock_imports = ["gtk", "reportlab"]
 
 autodoc_default_options = {
     'members': True,
