@@ -5,9 +5,9 @@ create full instances (i.e. static fonts) from variable fonts, as well as "parti
 variable fonts that only contain a subset of the original variation space.
 
 For example, if you wish to pin the width axis to a given location while also
-restricting the weight axis to 400..700 range, you can do:
+restricting the weight axis to 400..700 range, you can do::
 
-$ fonttools varLib.instancer ./NotoSans-VF.ttf wdth=85 wght=400:700
+    $ fonttools varLib.instancer ./NotoSans-VF.ttf wdth=85 wght=400:700
 
 See `fonttools varLib.instancer --help` for more info on the CLI options.
 
@@ -17,7 +17,7 @@ and returns a new TTFont representing either a partial VF, or full instance if a
 the VF axes were given an explicit coordinate.
 
 E.g. here's how to pin the wght axis at a given location in a wght+wdth variable
-font, keeping only the deltas associated with the wdth axis:
+font, keeping only the deltas associated with the wdth axis::
 
 | >>> from fontTools import ttLib
 | >>> from fontTools.varLib import instancer
@@ -53,12 +53,17 @@ whereas mutator implicitly drops the axis at its default coordinate.
 
 The module currently supports only the first three "levels" of partial instancing,
 with the rest planned to be implemented in the future, namely:
-L1) dropping one or more axes while leaving the default tables unmodified;
-L2) dropping one or more axes while pinning them at non-default locations;
-L3) restricting the range of variation of one or more axes, by setting either
+
+L1
+    dropping one or more axes while leaving the default tables unmodified;
+L2
+    dropping one or more axes while pinning them at non-default locations;
+L3
+    restricting the range of variation of one or more axes, by setting either
     a new minimum or maximum, potentially -- though not necessarily -- dropping
     entire regions of variations that fall completely outside this new range.
-L4) moving the default location of an axis.
+L4
+    moving the default location of an axis.
 
 Currently only TrueType-flavored variable fonts (i.e. containing 'glyf' table)
 are supported, but support for CFF2 variable fonts will be added soon.
