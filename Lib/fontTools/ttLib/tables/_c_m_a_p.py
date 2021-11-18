@@ -207,6 +207,9 @@ class CmapSubtable(object):
 	``cmap_format_0``, ``cmap_format_2`` etc. Use :py:meth:`getSubtableClass`
 	to retrieve the concrete subclass, or :py:meth:`newSubtable` to get a
 	new subtable object for a given format.
+
+	The object exposes a ``.cmap`` attribute, which contains a dictionary mapping
+	character codepoints to glyph names.
 	"""
 
 	@staticmethod
@@ -228,7 +231,6 @@ class CmapSubtable(object):
 		self.platformID = None  #: The platform ID of this subtable
 		self.platEncID = None   #: The encoding ID of this subtable (interpretation depends on ``platformID``)
 		self.language = None    #: The language ID of this subtable (Macintosh platform only)
-		self.cmap = None        #: A dictionary mapping character codepoints to glyph names
 
 	def __getattr__(self, attr):
 		# allow lazy decompilation of subtables.
