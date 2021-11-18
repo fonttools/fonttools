@@ -145,11 +145,11 @@ def populateCOLRv0(
     """Build v0 color layers and add to existing COLR table.
 
     Args:
-        table: a raw otTables.COLR() object (not ttLib's table_C_O_L_R_).
+        table: a raw ``otTables.COLR()`` object (not ttLib's ``table_C_O_L_R_``).
         colorGlyphsV0: map of base glyph names to lists of (layer glyph names,
             color palette index) tuples. Can be empty.
         glyphMap: a map from glyph names to glyph indices, as returned from
-            TTFont.getReverseGlyphMap(), to optionally sort base records by GID.
+            ``TTFont.getReverseGlyphMap()``, to optionally sort base records by GID.
     """
     if glyphMap is not None:
         colorGlyphItems = sorted(
@@ -192,10 +192,12 @@ def buildCOLR(
     clipBoxes: Optional[Dict[str, _ClipBoxInput]] = None,
 ) -> C_O_L_R_.table_C_O_L_R_:
     """Build COLR table from color layers mapping.
+
     Args:
+
         colorGlyphs: map of base glyph name to, either list of (layer glyph name,
-            color palette index) tuples for COLRv0; or a single Paint (dict) or
-            list of Paint for COLRv1.
+            color palette index) tuples for COLRv0; or a single ``Paint`` (dict) or
+            list of ``Paint`` for COLRv1.
         version: the version of COLR table. If None, the version is determined
             by the presence of COLRv1 paints or variation data (varStore), which
             require version 1; otherwise, if all base glyphs use only simple color
@@ -206,7 +208,8 @@ def buildCOLR(
         varIndexMap: Optional DeltaSetIndexMap for deltas associated with v1 layer.
         clipBoxes: Optional map of base glyph name to clip box 4- or 5-tuples:
             (xMin, yMin, xMax, yMax) or (xMin, yMin, xMax, yMax, varIndexBase).
-    Return:
+
+    Returns:
         A new COLR table.
     """
     self = C_O_L_R_.table_C_O_L_R_()
