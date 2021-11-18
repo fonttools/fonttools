@@ -29,21 +29,21 @@ class RecordingPen(AbstractPen):
 	The recording can be accessed as pen.value; or replayed using
 	pen.replay(otherPen).
 
-	Usage example:
-	==============
-	from fontTools.ttLib import TTFont
-	from fontTools.pens.recordingPen import RecordingPen
+	:Example:
 
-	glyph_name = 'dollar'
-	font_path = 'MyFont.otf'
+		from fontTools.ttLib import TTFont
+		from fontTools.pens.recordingPen import RecordingPen
 
-	font = TTFont(font_path)
-	glyphset = font.getGlyphSet()
-	glyph = glyphset[glyph_name]
+		glyph_name = 'dollar'
+		font_path = 'MyFont.otf'
 
-	pen = RecordingPen()
-	glyph.draw(pen)
-	print(pen.value)
+		font = TTFont(font_path)
+		glyphset = font.getGlyphSet()
+		glyph = glyphset[glyph_name]
+
+		pen = RecordingPen()
+		glyph.draw(pen)
+		print(pen.value)
 	"""
 
 	def __init__(self):
