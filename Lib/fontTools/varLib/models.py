@@ -169,46 +169,47 @@ def supportScalar(location, support, ot=True):
 class VariationModel(object):
 
     """
-	Locations must be in normalized space.  Ie. base master
-	is at origin (0).
-	>>> from pprint import pprint
-	>>> locations = [ \
-	{'wght':100}, \
-	{'wght':-100}, \
-	{'wght':-180}, \
-	{'wdth':+.3}, \
-	{'wght':+120,'wdth':.3}, \
-	{'wght':+120,'wdth':.2}, \
-	{}, \
-	{'wght':+180,'wdth':.3}, \
-	{'wght':+180}, \
-	]
-	>>> model = VariationModel(locations, axisOrder=['wght'])
-	>>> pprint(model.locations)
-	[{},
-	 {'wght': -100},
-	 {'wght': -180},
-	 {'wght': 100},
-	 {'wght': 180},
-	 {'wdth': 0.3},
-	 {'wdth': 0.3, 'wght': 180},
-	 {'wdth': 0.3, 'wght': 120},
-	 {'wdth': 0.2, 'wght': 120}]
-	>>> pprint(model.deltaWeights)
-	[{},
-	 {0: 1.0},
-	 {0: 1.0},
-	 {0: 1.0},
-	 {0: 1.0},
-	 {0: 1.0},
-	 {0: 1.0, 4: 1.0, 5: 1.0},
-	 {0: 1.0, 3: 0.75, 4: 0.25, 5: 1.0, 6: 0.6666666666666666},
-	 {0: 1.0,
-	  3: 0.75,
-	  4: 0.25,
-	  5: 0.6666666666666667,
-	  6: 0.4444444444444445,
-	  7: 0.6666666666666667}]
+  Locations must be in normalized space.  Ie. base master
+  is at origin (0)::
+
+      >>> from pprint import pprint
+      >>> locations = [ \
+      {'wght':100}, \
+      {'wght':-100}, \
+      {'wght':-180}, \
+      {'wdth':+.3}, \
+      {'wght':+120,'wdth':.3}, \
+      {'wght':+120,'wdth':.2}, \
+      {}, \
+      {'wght':+180,'wdth':.3}, \
+      {'wght':+180}, \
+      ]
+      >>> model = VariationModel(locations, axisOrder=['wght'])
+      >>> pprint(model.locations)
+      [{},
+       {'wght': -100},
+       {'wght': -180},
+       {'wght': 100},
+       {'wght': 180},
+       {'wdth': 0.3},
+       {'wdth': 0.3, 'wght': 180},
+       {'wdth': 0.3, 'wght': 120},
+       {'wdth': 0.2, 'wght': 120}]
+      >>> pprint(model.deltaWeights)
+      [{},
+       {0: 1.0},
+       {0: 1.0},
+       {0: 1.0},
+       {0: 1.0},
+       {0: 1.0},
+       {0: 1.0, 4: 1.0, 5: 1.0},
+       {0: 1.0, 3: 0.75, 4: 0.25, 5: 1.0, 6: 0.6666666666666666},
+       {0: 1.0,
+        3: 0.75,
+        4: 0.25,
+        5: 0.6666666666666667,
+        6: 0.4444444444444445,
+        7: 0.6666666666666667}]
 	"""
 
     def __init__(self, locations, axisOrder=None):

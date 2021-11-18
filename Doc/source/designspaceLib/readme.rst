@@ -95,7 +95,7 @@ Class Methods
 
 
 
-
+.. _source-descriptor-object:
 
 SourceDescriptor object
 =======================

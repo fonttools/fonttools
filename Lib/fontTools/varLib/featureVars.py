@@ -94,20 +94,22 @@ def overlayFeatureVariations(conditionalSubstitutions):
     substitution dictionaries.  These dictionaries are not merged to allow data
     sharing when they are converted into font tables.
 
-    Example:
-    >>> condSubst = [
-    ...     # A list of (Region, Substitution) tuples.
-    ...     ([{"wght": (0.5, 1.0)}], {"dollar": "dollar.rvrn"}),
-    ...     ([{"wght": (0.5, 1.0)}], {"dollar": "dollar.rvrn"}),
-    ...     ([{"wdth": (0.5, 1.0)}], {"cent": "cent.rvrn"}),
-    ...     ([{"wght": (0.5, 1.0), "wdth": (-1, 1.0)}], {"dollar": "dollar.rvrn"}),
-    ... ]
-    >>> from pprint import pprint
-    >>> pprint(overlayFeatureVariations(condSubst))
-    [({'wdth': (0.5, 1.0), 'wght': (0.5, 1.0)},
-      [{'dollar': 'dollar.rvrn'}, {'cent': 'cent.rvrn'}]),
-     ({'wdth': (0.5, 1.0)}, [{'cent': 'cent.rvrn'}]),
-     ({'wght': (0.5, 1.0)}, [{'dollar': 'dollar.rvrn'}])]
+    Example::
+
+        >>> condSubst = [
+        ...     # A list of (Region, Substitution) tuples.
+        ...     ([{"wght": (0.5, 1.0)}], {"dollar": "dollar.rvrn"}),
+        ...     ([{"wght": (0.5, 1.0)}], {"dollar": "dollar.rvrn"}),
+        ...     ([{"wdth": (0.5, 1.0)}], {"cent": "cent.rvrn"}),
+        ...     ([{"wght": (0.5, 1.0), "wdth": (-1, 1.0)}], {"dollar": "dollar.rvrn"}),
+        ... ]
+        >>> from pprint import pprint
+        >>> pprint(overlayFeatureVariations(condSubst))
+        [({'wdth': (0.5, 1.0), 'wght': (0.5, 1.0)},
+          [{'dollar': 'dollar.rvrn'}, {'cent': 'cent.rvrn'}]),
+         ({'wdth': (0.5, 1.0)}, [{'cent': 'cent.rvrn'}]),
+         ({'wght': (0.5, 1.0)}, [{'dollar': 'dollar.rvrn'}])]
+
     """
 
     # Merge same-substitutions rules, as this creates fewer number oflookups.
@@ -184,11 +186,12 @@ def overlayFeatureVariations(conditionalSubstitutions):
 #
 
 def overlayBox(top, bot):
-    """Overlays `top` box on top of `bot` box.
+    """Overlays ``top`` box on top of ``bot`` box.
 
     Returns two items:
-    - Box for intersection of `top` and `bot`, or None if they don't intersect.
-    - Box for remainder of `bot`.  Remainder box might not be exact (since the
+
+    * Box for intersection of ``top`` and ``bot``, or None if they don't intersect.
+    * Box for remainder of ``bot``.  Remainder box might not be exact (since the
       remainder might not be a simple box), but is inclusive of the exact
       remainder.
     """

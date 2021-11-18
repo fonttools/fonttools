@@ -491,7 +491,7 @@ class UFOReader(_UFOBaseIO):
 		"""
 		Get maps defining the renaming that was done during any
 		needed kerning group conversion. This method returns a
-		dictionary of this form:
+		dictionary of this form::
 
 			{
 				"side1" : {"old group name" : "new group name"},
@@ -1173,7 +1173,7 @@ class UFOWriter(UFOReader):
 		when writing groups and kerning in UFO 1 and UFO 2.
 		This will effectively undo the conversion done when
 		UFOReader reads this data. The dictionary should have
-		this form:
+		this form::
 
 			{
 				"side1" : {"group name to use when writing" : "group name in data"},
