@@ -61,7 +61,7 @@ Libraries
 ---------
 
 The main library you will want to access when using fontTools for font
-engineering is likely to be :py:mod:`fontTools.ttLib`, which is the package
+engineering is likely to be :py:mod:`fontTools.ttLib.ttFont`, which is the module
 for handling TrueType/OpenType fonts. However, there are many other
 libraries in the fontTools suite:
 
@@ -80,6 +80,7 @@ libraries in the fontTools suite:
 - :py:mod:`fontTools.svgLib.path`: Library for drawing SVG paths onto glyphs
 - :py:mod:`fontTools.t1Lib`: Tools for PostScript Type 1 fonts (Python2 only)
 - :py:mod:`fontTools.tfmLib`: Module for reading TFM files
+- :py:mod:`fontTools.ttLib`: Module for reading/writing OpenType and Truetype fonts
 - :py:mod:`fontTools.ttx`: Module for converting between OTF and XML representation
 - :py:mod:`fontTools.ufoLib`: Module for reading and writing UFO files
 - :py:mod:`fontTools.unicodedata`: Convert between Unicode and OpenType script information
