@@ -8,7 +8,7 @@ it is an abstraction for drawing outlines, making sure that outline objects
 don't need to know the details about how and where they're being drawn, and
 that drawings don't need to know the details of how outlines are stored.
 
-The most basic pattern is this:
+The most basic pattern is this::
 
 	outline.draw(pen)  # 'outline' draws itself onto 'pen'
 
@@ -21,13 +21,13 @@ The AbstractPen class defines the Pen protocol. It implements almost
 nothing (only no-op closePath() and endPath() methods), but is useful
 for documentation purposes. Subclassing it basically tells the reader:
 "this class implements the Pen protocol.". An examples of an AbstractPen
-subclass is fontTools.pens.transformPen.TransformPen.
+subclass is :py:class:`fontTools.pens.transformPen.TransformPen`.
 
 The BasePen class is a base implementation useful for pens that actually
 draw (for example a pen renders outlines using a native graphics engine).
 BasePen contains a lot of base functionality, making it very easy to build
 a pen that fully conforms to the pen protocol. Note that if you subclass
-BasePen, you _don't_ override moveTo(), lineTo(), etc., but _moveTo(),
+BasePen, you *don't* override moveTo(), lineTo(), etc., but _moveTo(),
 _lineTo(), etc. See the BasePen doc string for details. Examples of
 BasePen subclasses are fontTools.pens.boundsPen.BoundsPen and
 fontTools.pens.cocoaPen.CocoaPen.
@@ -151,7 +151,7 @@ class NullPen(AbstractPen):
 
 
 class LoggingPen(LogMixin, AbstractPen):
-	"""A pen with a `log` property (see fontTools.misc.loggingTools.LogMixin)
+	"""A pen with a ``log`` property (see fontTools.misc.loggingTools.LogMixin)
 	"""
 	pass
 
