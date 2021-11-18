@@ -3,15 +3,18 @@
 https://docs.microsoft.com/en-us/typography/opentype/spec/svg
 
 The XML format is:
-<SVG>
-	<svgDoc endGlyphID="1" startGlyphID="1">
-		<![CDATA[ <complete SVG doc> ]]
-	</svgDoc>
-...
-	<svgDoc endGlyphID="n" startGlyphID="m">
-		<![CDATA[ <complete SVG doc> ]]
-	</svgDoc>
-</SVG>
+
+.. code-block:: xml
+
+	<SVG>
+		<svgDoc endGlyphID="1" startGlyphID="1">
+			<![CDATA[ <complete SVG doc> ]]
+		</svgDoc>
+	...
+		<svgDoc endGlyphID="n" startGlyphID="m">
+			<![CDATA[ <complete SVG doc> ]]
+		</svgDoc>
+	</SVG>
 """
 
 from fontTools.misc.textTools import bytesjoin, strjoin, tobytes, tostr
