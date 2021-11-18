@@ -911,9 +911,10 @@ class Options(object):
 					op = k[-1]+'='  # Ops is '-=' or '+=' now.
 					k = k[:-1]
 				v = a[i+1:]
+			ok = k
 			k = k.replace('-', '_')
 			if not hasattr(self, k):
-				if ignore_unknown is True or k in ignore_unknown:
+				if ignore_unknown is True or ok in ignore_unknown:
 					ret.append(orig_a)
 					continue
 				else:
@@ -1252,7 +1253,14 @@ def main(args=None):
 		args = sys.argv[1:]
 
 	options = Options()
-	args = options.parse_opts(args)
+	args = options.parse_opts(args, ignore_unknown=['output-file'])
+	outfile = 'merged.ttf'
+	fontfiles = []
+	for g in args:
+		if g.startswith('--output-file='):
+			outfile = g[14:]
+			continue
+		fontfiles.append(g)
 
 	if len(args) < 1:
 		print("usage: pyftmerge font...", file=sys.stderr)
@@ -1265,8 +1273,7 @@ def main(args=None):
 		timer.logger.disabled = True
 
 	merger = Merger(options=options)
-	font = merger.merge(args)
-	outfile = 'merged.ttf'
+	font = merger.merge(fontfiles)
 	with timer("compile and save font"):
 		font.save(outfile)
 
