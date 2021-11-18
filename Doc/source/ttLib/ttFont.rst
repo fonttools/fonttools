@@ -11,3 +11,7 @@ ttFont: Read/write OpenType and TrueType fonts
    :members:
    :undoc-members:
    :private-members:
+
+.. automodule:: fontTools.ttLib.ttFont
+   :members: getTableModule, registerCustomTableClass, unregisterCustomTableClass, getCustomTableClass, getClassTag, newTable, tagToIdentifier, identifierToTag, tagToXML, xmlToTag, sortedTagList, reorderFontTables
+
