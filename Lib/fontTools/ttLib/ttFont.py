@@ -890,7 +890,7 @@ def tagToIdentifier(tag):
 	extra underscore is prepended. Examples::
 
 		>>> tagToIdentifier('glyf')
-		'g_l_y_f'
+		'_g_l_y_f'
 		>>> tagToIdentifier('cvt ')
 		'_c_v_t'
 		>>> tagToIdentifier('OS/2')
