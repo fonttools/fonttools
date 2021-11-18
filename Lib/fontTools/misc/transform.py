@@ -10,12 +10,16 @@ used as dictionary keys.
 
 This module exports the following symbols:
 
-	Transform -- this is the main class
-	Identity  -- Transform instance set to the identity transformation
-	Offset    -- Convenience function that returns a translating transformation
-	Scale     -- Convenience function that returns a scaling transformation
+Transform
+	this is the main class
+Identity
+	Transform instance set to the identity transformation
+Offset
+	Convenience function that returns a translating transformation
+Scale
+	Convenience function that returns a scaling transformation
 
-Examples:
+:Example:
 
 	>>> t = Transform(2, 0, 0, 3, 0, 0)
 	>>> t.transformPoint((100, 100))
@@ -72,7 +76,8 @@ class Transform(NamedTuple):
 	Transform instances are immutable: all transforming methods, eg.
 	rotate(), return a new Transform instance.
 
-	Examples:
+	:Example:
+
 		>>> t = Transform()
 		>>> t
 		<Transform [1 0 0 1 0 0]>
@@ -85,7 +90,8 @@ class Transform(NamedTuple):
 		(200, 300)
 
 	Transform's constructor takes six arguments, all of which are
-	optional, and can be used as keyword arguments:
+	optional, and can be used as keyword arguments::
+
 		>>> Transform(12)
 		<Transform [12 0 0 1 0 0]>
 		>>> Transform(dx=12)
@@ -93,7 +99,8 @@ class Transform(NamedTuple):
 		>>> Transform(yx=12)
 		<Transform [1 0 12 1 0 0]>
 
-	Transform instances also behave like sequences of length 6:
+	Transform instances also behave like sequences of length 6::
+
 		>>> len(Identity)
 		6
 		>>> list(Identity)
@@ -101,13 +108,15 @@ class Transform(NamedTuple):
 		>>> tuple(Identity)
 		(1, 0, 0, 1, 0, 0)
 
-	Transform instances are comparable:
+	Transform instances are comparable::
+
 		>>> t1 = Identity.scale(2, 3).translate(4, 6)
 		>>> t2 = Identity.translate(8, 18).scale(2, 3)
 		>>> t1 == t2
 		1
 
-	But beware of floating point rounding errors:
+	But beware of floating point rounding errors::
+
 		>>> t1 = Identity.scale(0.2, 0.3).translate(0.4, 0.6)
 		>>> t2 = Identity.translate(0.08, 0.18).scale(0.2, 0.3)
 		>>> t1
@@ -118,12 +127,14 @@ class Transform(NamedTuple):
 		0
 
 	Transform instances are hashable, meaning you can use them as
-	keys in dictionaries:
+	keys in dictionaries::
+
 		>>> d = {Scale(12, 13): None}
 		>>> d
 		{<Transform [12 0 0 13 0 0]>: None}
 
-	But again, beware of floating point rounding errors:
+	But again, beware of floating point rounding errors::
+
 		>>> t1 = Identity.scale(0.2, 0.3).translate(0.4, 0.6)
 		>>> t2 = Identity.translate(0.08, 0.18).scale(0.2, 0.3)
 		>>> t1
@@ -149,7 +160,8 @@ class Transform(NamedTuple):
 	def transformPoint(self, p):
 		"""Transform a point.
 
-		Example:
+		:Example:
+
 			>>> t = Transform()
 			>>> t = t.scale(2.5, 5.5)
 			>>> t.transformPoint((100, 100))
@@ -162,7 +174,8 @@ class Transform(NamedTuple):
 	def transformPoints(self, points):
 		"""Transform a list of points.
 
-		Example:
+		:Example:
+
 			>>> t = Scale(2, 3)
 			>>> t.transformPoints([(0, 0), (0, 100), (100, 100), (100, 0)])
 			[(0, 0), (0, 300), (200, 300), (200, 0)]
@@ -174,7 +187,8 @@ class Transform(NamedTuple):
 	def transformVector(self, v):
 		"""Transform an (dx, dy) vector, treating translation as zero.
 
-		Example:
+		:Example:
+
 			>>> t = Transform(2, 0, 0, 2, 10, 20)
 			>>> t.transformVector((3, -4))
 			(6, -8)
@@ -187,7 +201,7 @@ class Transform(NamedTuple):
 	def transformVectors(self, vectors):
 		"""Transform a list of (dx, dy) vector, treating translation as zero.
 
-		Example:
+		:Example:
 			>>> t = Transform(2, 0, 0, 2, 10, 20)
 			>>> t.transformVectors([(3, -4), (5, -6)])
 			[(6, -8), (10, -12)]
@@ -199,7 +213,7 @@ class Transform(NamedTuple):
 	def translate(self, x=0, y=0):
 		"""Return a new transformation, translated (offset) by x, y.
 
-		Example:
+		:Example:
 			>>> t = Transform()
 			>>> t.translate(20, 30)
 			<Transform [1 0 0 1 20 30]>
@@ -211,7 +225,7 @@ class Transform(NamedTuple):
 		"""Return a new transformation, scaled by x, y. The 'y' argument
 		may be None, which implies to use the x value for y as well.
 
-		Example:
+		:Example:
 			>>> t = Transform()
 			>>> t.scale(5)
 			<Transform [5 0 0 5 0 0]>
@@ -226,7 +240,7 @@ class Transform(NamedTuple):
 	def rotate(self, angle):
 		"""Return a new transformation, rotated by 'angle' (radians).
 
-		Example:
+		:Example:
 			>>> import math
 			>>> t = Transform()
 			>>> t.rotate(math.pi / 2)
@@ -241,7 +255,7 @@ class Transform(NamedTuple):
 	def skew(self, x=0, y=0):
 		"""Return a new transformation, skewed by x and y.
 
-		Example:
+		:Example:
 			>>> import math
 			>>> t = Transform()
 			>>> t.skew(math.pi / 4)
@@ -255,7 +269,7 @@ class Transform(NamedTuple):
 		"""Return a new transformation, transformed by another
 		transformation.
 
-		Example:
+		:Example:
 			>>> t = Transform(2, 0, 0, 3, 1, 6)
 			>>> t.transform((4, 3, 2, 1, 5, 6))
 			<Transform [8 9 4 3 11 24]>
@@ -276,7 +290,7 @@ class Transform(NamedTuple):
 		transformed by self. self.reverseTransform(other) is equivalent to
 		other.transform(self).
 
-		Example:
+		:Example:
 			>>> t = Transform(2, 0, 0, 3, 1, 6)
 			>>> t.reverseTransform((4, 3, 2, 1, 5, 6))
 			<Transform [8 6 6 3 21 15]>
@@ -297,7 +311,7 @@ class Transform(NamedTuple):
 	def inverse(self):
 		"""Return the inverse transformation.
 
-		Example:
+		:Example:
 			>>> t = Identity.translate(2, 3).scale(4, 5)
 			>>> t.transformPoint((10, 20))
 			(42, 103)
@@ -315,7 +329,10 @@ class Transform(NamedTuple):
 		return self.__class__(xx, xy, yx, yy, dx, dy)
 
 	def toPS(self):
-		"""Return a PostScript representation:
+		"""Return a PostScript representation
+
+		:Example:
+
 			>>> t = Identity.scale(2, 3).translate(4, 5)
 			>>> t.toPS()
 			'[2 0 0 3 8 15]'
@@ -325,6 +342,9 @@ class Transform(NamedTuple):
 
 	def __bool__(self):
 		"""Returns True if transform is not identity, False otherwise.
+
+		:Example:
+
 			>>> bool(Identity)
 			False
 			>>> bool(Transform())
@@ -351,7 +371,7 @@ Identity = Transform()
 def Offset(x=0, y=0):
 	"""Return the identity transformation offset by x, y.
 
-	Example:
+	:Example:
 		>>> Offset(2, 3)
 		<Transform [1 0 0 1 2 3]>
 		>>>
@@ -362,7 +382,7 @@ def Scale(x, y=None):
 	"""Return the identity transformation scaled by x, y. The 'y' argument
 	may be None, which implies to use the x value for y as well.
 
-	Example:
+	:Example:
 		>>> Scale(2, 3)
 		<Transform [2 0 0 3 0 0]>
 		>>>
