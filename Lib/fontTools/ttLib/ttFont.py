@@ -642,8 +642,10 @@ class TTFont(object):
 		or None, if no unicode cmap subtable is available.
 
 		By default it will search for the following (platformID, platEncID)
-		pairs:
-			(3, 10), (0, 6), (0, 4), (3, 1), (0, 3), (0, 2), (0, 1), (0, 0)
+		pairs::
+
+				(3, 10), (0, 6), (0, 4), (3, 1), (0, 3), (0, 2), (0, 1), (0, 0)
+
 		This can be customized via the cmapPreferences argument.
 		"""
 		return self["cmap"].getBestCmap(cmapPreferences=cmapPreferences)
@@ -808,12 +810,13 @@ _customTableRegistry = {}
 
 def registerCustomTableClass(tag, moduleName, className=None):
 	"""Register a custom packer/unpacker class for a table.
+
 	The 'moduleName' must be an importable module. If no 'className'
 	is given, it is derived from the tag, for example it will be
-	table_C_U_S_T_ for a 'CUST' tag.
+	``table_C_U_S_T_`` for a 'CUST' tag.
 
 	The registered table class should be a subclass of
-	fontTools.ttLib.tables.DefaultTable.DefaultTable
+	:py:class:`fontTools.ttLib.tables.DefaultTable.DefaultTable`
 	"""
 	if className is None:
 		className = "table_" + tagToIdentifier(tag)
@@ -884,10 +887,14 @@ def tagToIdentifier(tag):
 	letters get an underscore after the letter. Trailing spaces are
 	trimmed. Illegal characters are escaped as two hex bytes. If the
 	result starts with a number (as the result of a hex escape), an
-	extra underscore is prepended. Examples:
-		'glyf' -> '_g_l_y_f'
-		'cvt ' -> '_c_v_t'
-		'OS/2' -> 'O_S_2f_2'
+	extra underscore is prepended. Examples::
+
+		>>> tagToIdentifier('glyf')
+		'g_l_y_f'
+		>>> tagToIdentifier('cvt ')
+		'_c_v_t'
+		>>> tagToIdentifier('OS/2')
+		'O_S_2f_2'
 	"""
 	import re
 	tag = Tag(tag)
