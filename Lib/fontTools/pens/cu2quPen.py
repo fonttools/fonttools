@@ -23,13 +23,15 @@ class Cu2QuPen(AbstractPen):
     """ A filter pen to convert cubic bezier curves to quadratic b-splines
     using the FontTools SegmentPen protocol.
 
-    other_pen: another SegmentPen used to draw the transformed outline.
-    max_err: maximum approximation error in font units. For optimal results,
-        if you know the UPEM of the font, we recommend setting this to a
-        value equal, or close to UPEM / 1000.
-    reverse_direction: flip the contours' direction but keep starting point.
-    stats: a dictionary counting the point numbers of quadratic segments.
-    ignore_single_points: don't emit contours containing only a single point
+    Args:
+
+        other_pen: another SegmentPen used to draw the transformed outline.
+        max_err: maximum approximation error in font units. For optimal results,
+            if you know the UPEM of the font, we recommend setting this to a
+            value equal, or close to UPEM / 1000.
+        reverse_direction: flip the contours' direction but keep starting point.
+        stats: a dictionary counting the point numbers of quadratic segments.
+        ignore_single_points: don't emit contours containing only a single point
 
     NOTE: The "ignore_single_points" argument is deprecated since v1.3.0,
     which dropped Robofab subpport. It's no longer needed to special-case
@@ -138,12 +140,13 @@ class Cu2QuPointPen(BasePointToSegmentPen):
     """ A filter pen to convert cubic bezier curves to quadratic b-splines
     using the RoboFab PointPen protocol.
 
-    other_point_pen: another PointPen used to draw the transformed outline.
-    max_err: maximum approximation error in font units. For optimal results,
-        if you know the UPEM of the font, we recommend setting this to a
-        value equal, or close to UPEM / 1000.
-    reverse_direction: reverse the winding direction of all contours.
-    stats: a dictionary counting the point numbers of quadratic segments.
+    Args:
+        other_point_pen: another PointPen used to draw the transformed outline.
+        max_err: maximum approximation error in font units. For optimal results,
+            if you know the UPEM of the font, we recommend setting this to a
+            value equal, or close to UPEM / 1000.
+        reverse_direction: reverse the winding direction of all contours.
+        stats: a dictionary counting the point numbers of quadratic segments.
     """
 
     def __init__(self, other_point_pen, max_err, reverse_direction=False,
