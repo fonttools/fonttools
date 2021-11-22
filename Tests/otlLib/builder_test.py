@@ -204,7 +204,7 @@ class BuilderTest(object):
         assert builder.buildComponentRecord(None) is None
 
     def test_buildCoverage(self):
-        cov = builder.buildCoverage({"two", "four"}, {"two": 2, "four": 4})
+        cov = builder.buildCoverage(("two", "four", "two"), {"two": 2, "four": 4})
         assert getXML(cov.toXML) == [
             "<Coverage>",
             '  <Glyph value="two"/>',

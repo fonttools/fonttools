@@ -925,6 +925,45 @@ class BuilderTest(unittest.TestCase):
         assert "GPOS" not in font
         assert "GSUB" not in font
 
+    def test_disable_empty_classes(self):
+        for test in [
+            "sub a by c []",
+            "sub f f [] by f",
+            "ignore sub a []'",
+            "ignore sub [] a'",
+            "sub a []' by b",
+            "sub [] a' by b",
+            "rsub [] by a",
+            "pos [] 120",
+            "pos a [] 120",
+            "enum pos a [] 120",
+            "pos cursive [] <anchor NULL> <anchor NULL>",
+            "pos base [] <anchor NULL> mark @TOPMARKS",
+            "pos ligature [] <anchor NULL> mark @TOPMARKS",
+            "pos mark [] <anchor NULL> mark @TOPMARKS",
+            "ignore pos a []'",
+            "ignore pos [] a'",
+        ]:
+            self.assertRaisesRegex(
+                FeatureLibError,
+                "Empty ",
+                self.build,
+                f"markClass a <anchor 150 -10> @TOPMARKS; lookup foo {{ {test}; }} foo;",
+            )
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Empty glyph class in mark class definition",
+            self.build,
+            "markClass [] <anchor 150 -10> @TOPMARKS;"
+        )
+        self.assertRaisesRegex(
+            FeatureLibError,
+            'Expected a glyph class with 1 elements after "by", but found a glyph class with 0 elements',
+            self.build,
+            "feature test { sub a by []; test};"
+        )
+
+
 
 def generate_feature_file_test(name):
     return lambda self: self.check_feature_file(name)

@@ -1331,9 +1331,15 @@ class PairPosStatement(Statement):
         """
         if self.enumerated:
             g = [self.glyphs1.glyphSet(), self.glyphs2.glyphSet()]
+            seen_pair = False
             for glyph1, glyph2 in itertools.product(*g):
+                seen_pair = True
                 builder.add_specific_pair_pos(
                     self.location, glyph1, self.valuerecord1, glyph2, self.valuerecord2
+                )
+            if not seen_pair:
+                raise FeatureLibError(
+                    "Empty glyph class in positioning rule", self.location
                 )
             return
 

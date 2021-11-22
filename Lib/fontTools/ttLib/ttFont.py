@@ -12,10 +12,77 @@ log = logging.getLogger(__name__)
 
 class TTFont(object):
 
-	"""The main font object. It manages file input and output, and offers
-	a convenient way of accessing tables.
-	Tables will be only decompiled when necessary, ie. when they're actually
-	accessed. This means that simple operations can be extremely fast.
+	"""Represents a TrueType font.
+
+	The object manages file input and output, and offers a convenient way of
+	accessing tables. Tables will be only decompiled when necessary, ie. when
+	they're actually accessed. This means that simple operations can be extremely fast.
+
+	Example usage::
+
+		>> from fontTools import ttLib
+		>> tt = ttLib.TTFont("afont.ttf") # Load an existing font file
+		>> tt['maxp'].numGlyphs
+		242
+		>> tt['OS/2'].achVendID
+		'B&H\000'
+		>> tt['head'].unitsPerEm
+		2048
+
+	For details of the objects returned when accessing each table, see :ref:`tables`.
+	To add a table to the font, use the :py:func:`newTable` function::
+
+		>> os2 = newTable("OS/2")
+		>> os2.version = 4
+		>> # set other attributes
+		>> font["OS/2"] = os2
+
+	TrueType fonts can also be serialized to and from XML format (see also the
+	:ref:`ttx` binary)::
+
+		>> tt.saveXML("afont.ttx")
+		Dumping 'LTSH' table...
+		Dumping 'OS/2' table...
+		[...]
+
+		>> tt2 = ttLib.TTFont() # Create a new font object
+		>> tt2.importXML("afont.ttx")
+		>> tt2['maxp'].numGlyphs
+		242
+	
+	The TTFont object may be used as a context manager; this will cause the file
+	reader to be closed after the context ``with`` block is exited::
+
+		with TTFont(filename) as f:
+			# Do stuff
+
+	Args:
+		file: When reading a font from disk, either a pathname pointing to a file,
+			or a readable file object.
+		res_name_or_index: If running on a Macintosh, either a sfnt resource name or
+			an sfnt resource index number. If the index number is zero, TTLib will
+			autodetect whether the file is a flat file or a suitcase. (If it is a suitcase,
+			only the first 'sfnt' resource will be read.)
+		sfntVersion (str): When constructing a font object from scratch, sets the four-byte
+			sfnt magic number to be used. Defaults to ``\0\1\0\0`` (TrueType). To create
+			an OpenType file, use ``OTTO``.
+		flavor (str): Set this to ``woff`` when creating a WOFF file or ``woff2`` for a WOFF2
+			file.
+		checkChecksums (int): How checksum data should be treated. Default is 0
+			(no checking). Set to 1 to check and warn on wrong checksums; set to 2 to
+			raise an exception if any wrong checksums are found.
+		recalcBBoxes (bool): If true (the default), recalculates ``glyf``, ``CFF ``,
+			``head`` bounding box values and ``hhea``/``vhea`` min/max values on save.
+			Also compiles the glyphs on importing, which saves memory consumption and
+			time.
+		ignoreDecompileErrors (bool): If true, exceptions raised during table decompilation
+			will be ignored, and the binary data will be returned for those tables instead.
+		recalcTimestamp (bool): If true (the default), sets the ``modified`` timestamp in
+			the ``head`` table on save.
+		fontNumber (int): The index of the font in a TrueType Collection file.
+		lazy (bool): If lazy is set to True, many data structures are loaded lazily, upon
+			access only. If it is set to False, many data structures are loaded immediately.
+			The default is ``lazy=None`` which is somewhere in between.
 	"""
 
 	def __init__(self, file=None, res_name_or_index=None,
@@ -23,54 +90,6 @@ class TTFont(object):
 			verbose=None, recalcBBoxes=True, allowVID=NotImplemented, ignoreDecompileErrors=False,
 			recalcTimestamp=True, fontNumber=-1, lazy=None, quiet=None,
 			_tableCache=None):
-
-		"""The constructor can be called with a few different arguments.
-		When reading a font from disk, 'file' should be either a pathname
-		pointing to a file, or a readable file object.
-
-		It we're running on a Macintosh, 'res_name_or_index' maybe an sfnt
-		resource name or an sfnt resource index number or zero. The latter
-		case will cause TTLib to autodetect whether the file is a flat file
-		or a suitcase. (If it's a suitcase, only the first 'sfnt' resource
-		will be read!)
-
-		The 'checkChecksums' argument is used to specify how sfnt
-		checksums are treated upon reading a file from disk:
-			0: don't check (default)
-			1: check, print warnings if a wrong checksum is found
-			2: check, raise an exception if a wrong checksum is found.
-
-		The TTFont constructor can also be called without a 'file'
-		argument: this is the way to create a new empty font.
-		In this case you can optionally supply the 'sfntVersion' argument,
-		and a 'flavor' which can be None, 'woff', or 'woff2'.
-
-		If the recalcBBoxes argument is false, a number of things will *not*
-		be recalculated upon save/compile:
-			1) 'glyf' glyph bounding boxes
-			2) 'CFF ' font bounding box
-			3) 'head' font bounding box
-			4) 'hhea' min/max values
-			5) 'vhea' min/max values
-		(1) is needed for certain kinds of CJK fonts (ask Werner Lemberg ;-).
-		Additionally, upon importing an TTX file, this option cause glyphs
-		to be compiled right away. This should reduce memory consumption
-		greatly, and therefore should have some impact on the time needed
-		to parse/compile large fonts.
-
-		If the recalcTimestamp argument is false, the modified timestamp in the
-		'head' table will *not* be recalculated upon save/compile.
-
-		If ignoreDecompileErrors is set to True, exceptions raised in
-		individual tables during decompilation will be ignored, falling
-		back to the DefaultTable implementation, which simply keeps the
-		binary data.
-
-		If lazy is set to True, many data structures are loaded lazily, upon
-		access only.  If it is set to False, many data structures are loaded
-		immediately.  The default is lazy=None which is somewhere in between.
-		"""
-
 		for name in ("verbose", "quiet"):
 			val = locals().get(name)
 			if val is not None:
@@ -138,9 +157,15 @@ class TTFont(object):
 			self.reader.close()
 
 	def save(self, file, reorderTables=True):
-		"""Save the font to disk. Similarly to the constructor,
-		the 'file' argument can be either a pathname or a writable
-		file object.
+		"""Save the font to disk.
+
+		Args:
+			file: Similarly to the constructor, can be either a pathname or a writable
+				file object.
+			reorderTables (Option[bool]): If true (the default), reorder the tables,
+				sorting them by tag (recommended by the OpenType specification). If
+				false, retain the original font order. If None, reorder by table
+				dependency (fastest).
 		"""
 		if not hasattr(file, "write"):
 			if self.lazy and self.reader.file.name == file:
@@ -320,11 +345,15 @@ class TTFont(object):
 		reader.read()
 
 	def isLoaded(self, tag):
-		"""Return true if the table identified by 'tag' has been
+		"""Return true if the table identified by ``tag`` has been
 		decompiled and loaded into memory."""
 		return tag in self.tables
 
 	def has_key(self, tag):
+		"""Test if the table identified by ``tag`` is present in the font.
+
+		As well as this method, ``tag in font`` can also be used to determine the
+		presence of the table."""
 		if self.isLoaded(tag):
 			return True
 		elif self.reader and tag in self.reader:
@@ -337,6 +366,7 @@ class TTFont(object):
 	__contains__ = has_key
 
 	def keys(self):
+		"""Returns the list of tables in the font, along with the ``GlyphOrder`` pseudo-table."""
 		keys = list(self.tables.keys())
 		if self.reader:
 			for key in list(self.reader.keys()):
@@ -406,17 +436,24 @@ class TTFont(object):
 			del self.reader[tag]
 
 	def get(self, tag, default=None):
+		"""Returns the table if it exists or (optionally) a default if it doesn't."""
 		try:
 			return self[tag]
 		except KeyError:
 			return default
 
 	def setGlyphOrder(self, glyphOrder):
+		"""Set the glyph order
+
+		Args:
+			glyphOrder ([str]): List of glyph names in order.
+		"""
 		self.glyphOrder = glyphOrder
 		if hasattr(self, '_reverseGlyphOrderDict'):
 			del self._reverseGlyphOrderDict
 
 	def getGlyphOrder(self):
+		"""Returns a list of glyph names ordered by their position in the font."""
 		try:
 			return self.glyphOrder
 		except AttributeError:
@@ -531,18 +568,25 @@ class TTFont(object):
 		return textTools.caselessSort(self.getGlyphOrder())
 
 	def getGlyphName(self, glyphID):
+		"""Returns the name for the glyph with the given ID.
+
+		If no name is available, synthesises one with the form ``glyphXXXXX``` where
+		```XXXXX`` is the zero-padded glyph ID.
+		"""
 		try:
 			return self.getGlyphOrder()[glyphID]
 		except IndexError:
 			return "glyph%.5d" % glyphID
 
 	def getGlyphNameMany(self, lst):
+		"""Converts a list of glyph IDs into a list of glyph names."""
 		glyphOrder = self.getGlyphOrder();
 		cnt = len(glyphOrder)
 		return [glyphOrder[gid] if gid < cnt else "glyph%.5d" % gid
 			for gid in lst]
 
 	def getGlyphID(self, glyphName):
+		"""Returns the ID of the glyph with the given name."""
 		try:
 			return self.getReverseGlyphMap()[glyphName]
 		except KeyError:
@@ -553,6 +597,7 @@ class TTFont(object):
 					raise KeyError(glyphName)
 
 	def getGlyphIDMany(self, lst):
+		"""Converts a list of glyph names into a list of glyph IDs."""
 		d = self.getReverseGlyphMap()
 		try:
 			return [d[glyphName] for glyphName in lst]
@@ -561,6 +606,7 @@ class TTFont(object):
 			return [getGlyphID(glyphName) for glyphName in lst]
 
 	def getReverseGlyphMap(self, rebuild=False):
+		"""Returns a mapping of glyph names to glyph IDs."""
 		if rebuild or not hasattr(self, "_reverseGlyphOrderDict"):
 			self._buildReverseGlyphOrderDict()
 		return self._reverseGlyphOrderDict
@@ -598,7 +644,11 @@ class TTFont(object):
 			tableCache[(Tag(tag), tabledata)] = writer[tag]
 
 	def getTableData(self, tag):
-		"""Returns raw table data, whether compiled or directly read from disk.
+		"""Returns the binary representation of a table.
+
+		If the table is currently loaded and in memory, the data is compiled to
+		binary and returned; if it is not currently loaded, the binary data is
+		read from the font file and returned.
 		"""
 		tag = Tag(tag)
 		if self.isLoaded(tag):
@@ -644,9 +694,16 @@ class TTFont(object):
 		By default it will search for the following (platformID, platEncID)
 		pairs::
 
-				(3, 10), (0, 6), (0, 4), (3, 1), (0, 3), (0, 2), (0, 1), (0, 0)
+			(3, 10),
+			(0, 6),
+			(0, 4),
+			(3, 1),
+			(0, 3),
+			(0, 2),
+			(0, 1),
+			(0, 0)
 
-		This can be customized via the cmapPreferences argument.
+		This can be customized via the ``cmapPreferences`` argument.
 		"""
 		return self["cmap"].getBestCmap(cmapPreferences=cmapPreferences)
 

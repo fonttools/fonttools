@@ -684,6 +684,8 @@ class Parser(object):
         assert self.is_cur_keyword_("markClass")
         location = self.cur_token_location_
         glyphs = self.parse_glyphclass_(accept_glyphname=True)
+        if not glyphs.glyphSet():
+            raise FeatureLibError("Empty glyph class in mark class definition", location)
         anchor = self.parse_anchor_()
         name = self.expect_class_name_()
         self.expect_symbol_(";")
@@ -872,7 +874,7 @@ class Parser(object):
         num_lookups = len([l for l in lookups if l is not None])
 
         is_deletion = False
-        if len(new) == 1 and len(new[0].glyphSet()) == 0:
+        if len(new) == 1 and isinstance(new[0], ast.NullGlyph):
             new = []  # Deletion
             is_deletion = True
 
@@ -918,6 +920,9 @@ class Parser(object):
             and max([len(n.glyphSet()) for n in new]) == 1
             and num_lookups == 0
         ):
+            for n in new:
+                if not list(n.glyphSet()):
+                    raise FeatureLibError("Empty class in replacement", location)
             return self.ast.MultipleSubstStatement(
                 old_prefix,
                 tuple(old[0].glyphSet())[0],

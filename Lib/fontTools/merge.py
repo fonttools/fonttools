@@ -13,6 +13,7 @@ import sys
 import time
 import operator
 import logging
+import os
 
 
 log = logging.getLogger("fontTools.merge")
@@ -200,7 +201,7 @@ ttLib.getTableClass('head').mergeMap = {
 	'macStyle': first,
 	'lowestRecPPEM': max,
 	'fontDirectionHint': lambda lst: 2,
-	'indexToLocFormat': recalculate,
+	'indexToLocFormat': first,
 	'glyphDataFormat': equal,
 }
 
@@ -370,6 +371,51 @@ ttLib.getTableClass('prep').mergeMap = lambda self, lst: first(lst)
 ttLib.getTableClass('fpgm').mergeMap = lambda self, lst: first(lst)
 ttLib.getTableClass('cvt ').mergeMap = lambda self, lst: first(lst)
 ttLib.getTableClass('gasp').mergeMap = lambda self, lst: first(lst) # FIXME? Appears irreconcilable
+
+@_add_method(ttLib.getTableClass('CFF '))
+def merge(self, m, tables):
+	if any(hasattr(table, "FDSelect") for table in tables):
+		raise NotImplementedError(
+			"Merging CID-keyed CFF tables is not supported yet"
+		)
+
+	newcff = tables[0]
+	newfont = newcff.cff[0]
+	private = newfont.Private
+	storedNamesStrings = []
+	glyphOrderStrings = []
+	glyphOrder = set(newfont.getGlyphOrder())
+	for name in newfont.strings.strings:
+		if name not in glyphOrder:
+			storedNamesStrings.append(name)
+		else:
+			glyphOrderStrings.append(name)
+	chrset = list(newfont.charset)
+	newcs = newfont.CharStrings
+	log.debug("FONT 0 CharStrings: %d.", len(newcs))
+	for i, table in enumerate(tables[1:], start=1):
+		font = table.cff[0]
+		font.Private = private
+		fontGlyphOrder = set(font.getGlyphOrder())
+		for name in font.strings.strings:
+			if name in fontGlyphOrder:
+				glyphOrderStrings.append(name)
+		cs = font.CharStrings
+		gs = table.cff.GlobalSubrs
+		log.debug("Font %d CharStrings: %d.", i, len(cs))
+		chrset.extend(font.charset)
+		if newcs.charStringsAreIndexed:
+			for i, name in enumerate(cs.charStrings, start=len(newcs)):
+				newcs.charStrings[name] = i
+				newcs.charStringsIndex.items.append(None)
+		for name in cs.charStrings:
+			newcs[name] = cs[name]
+
+	newfont.charset = chrset
+	newfont.numGlyphs = len(chrset)
+	newfont.strings.strings = glyphOrderStrings + storedNamesStrings
+
+	return newcff
 
 def _glyphsAreSame(glyphSet1, glyphSet2, glyph1, glyph2):
 	pen1 = DecomposingRecordingPen(glyphSet1)
@@ -865,9 +911,10 @@ class Options(object):
 					op = k[-1]+'='  # Ops is '-=' or '+=' now.
 					k = k[:-1]
 				v = a[i+1:]
+			ok = k
 			k = k.replace('-', '_')
 			if not hasattr(self, k):
-				if ignore_unknown is True or k in ignore_unknown:
+				if ignore_unknown is True or ok in ignore_unknown:
 					ret.append(orig_a)
 					continue
 				else:
@@ -993,20 +1040,35 @@ class Merger(object):
 			A :class:`fontTools.ttLib.TTFont` object. Call the ``save`` method on
 			this to write it out to an OTF file.
 		"""
-		mega = ttLib.TTFont()
-
 		#
 		# Settle on a mega glyph order.
 		#
 		fonts = [ttLib.TTFont(fontfile) for fontfile in fontfiles]
 		glyphOrders = [font.getGlyphOrder() for font in fonts]
 		megaGlyphOrder = self._mergeGlyphOrders(glyphOrders)
+
+		# Take first input file sfntVersion
+		sfntVersion = fonts[0].sfntVersion
+
+		cffTables = [None] * len(fonts)
+		if sfntVersion == "OTTO":
+			for i, font in enumerate(fonts):
+				font['CFF '].cff.desubroutinize()
+				cffTables[i] = font['CFF ']
+
 		# Reload fonts and set new glyph names on them.
 		# TODO Is it necessary to reload font?  I think it is.  At least
 		# it's safer, in case tables were loaded to provide glyph names.
 		fonts = [ttLib.TTFont(fontfile) for fontfile in fontfiles]
-		for font,glyphOrder in zip(fonts, glyphOrders):
+		for font, glyphOrder, cffTable in zip(fonts, glyphOrders, cffTables):
 			font.setGlyphOrder(glyphOrder)
+			if cffTable:
+				# Rename CFF CharStrings to match the new glyphOrder.
+				# Using cffTable from before reloading the fonts, because reasons.
+				self._renameCFFCharStrings(glyphOrder, cffTable)
+				font['CFF '] = cffTable
+
+		mega = ttLib.TTFont(sfntVersion=sfntVersion)
 		mega.setGlyphOrder(megaGlyphOrder)
 
 		for font in fonts:
@@ -1063,6 +1125,15 @@ class Merger(object):
 					glyphOrder[i] = glyphName
 				mega[glyphName] = 1
 		return list(mega.keys())
+
+	def _renameCFFCharStrings(self, glyphOrder, cffTable):
+		"""Rename topDictIndex charStrings based on glyphOrder."""
+		td = cffTable.cff.topDictIndex[0]
+		charStrings = {}
+		for i, v in enumerate(td.CharStrings.charStrings.values()):
+			glyphName = glyphOrder[i]
+			charStrings[glyphName] = v
+		cffTable.cff.topDictIndex[0].CharStrings.charStrings = charStrings
 
 	def mergeObjects(self, returnTable, logic, tables):
 		# Right now we don't use self at all.  Will use in the future
@@ -1182,7 +1253,14 @@ def main(args=None):
 		args = sys.argv[1:]
 
 	options = Options()
-	args = options.parse_opts(args)
+	args = options.parse_opts(args, ignore_unknown=['output-file'])
+	outfile = 'merged.ttf'
+	fontfiles = []
+	for g in args:
+		if g.startswith('--output-file='):
+			outfile = g[14:]
+			continue
+		fontfiles.append(g)
 
 	if len(args) < 1:
 		print("usage: pyftmerge font...", file=sys.stderr)
@@ -1195,8 +1273,7 @@ def main(args=None):
 		timer.logger.disabled = True
 
 	merger = Merger(options=options)
-	font = merger.merge(args)
-	outfile = 'merged.ttf'
+	font = merger.merge(fontfiles)
 	with timer("compile and save font"):
 		font.save(outfile)
 

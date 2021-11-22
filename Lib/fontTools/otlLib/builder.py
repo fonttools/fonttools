@@ -52,7 +52,7 @@ def buildCoverage(glyphs, glyphMap):
     if not glyphs:
         return None
     self = ot.Coverage()
-    self.glyphs = sorted(glyphs, key=glyphMap.__getitem__)
+    self.glyphs = sorted(set(glyphs), key=glyphMap.__getitem__)
     return self
 
 
