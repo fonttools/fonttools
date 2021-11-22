@@ -8,10 +8,10 @@
 - [subset] Support subsetting SVG table and remove it from the list of  drop by default tables (#534).
 - [subset] add ``--pretty-svg`` option to pretty print SVG table contents (#2452).
 - [merge] Support merging ``CFF`` tables (CID-keyed ``CFF`` is still not supported) (#2447).
-- [merge] Support --output-file (#2447).
+- [merge] Support ``--output-file`` (#2447).
 - [docs] Split table docs into individual pages (#2444).
 - [feaLib] Forbid empty classes (#2446).
-- [docs] Improve documentation for fontTools.ttLib.ttFont (#2442).
+- [docs] Improve documentation for ``fontTools.ttLib.ttFont`` (#2442).
 
 4.28.1 (released 2021-11-08)
 ----------------------------
