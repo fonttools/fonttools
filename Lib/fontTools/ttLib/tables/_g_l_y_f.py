@@ -1028,7 +1028,7 @@ class Glyph(object):
 
 		Each glyph object stores its bounding box in the
 		``xMin``/``yMin``/``xMax``/``yMax`` attributes. These bounds must be
-		recomputed then the ``coordinates`` change. The ``table__g_l_y_f`` bounds
+		recomputed when the ``coordinates`` change. The ``table__g_l_y_f`` bounds
 		must be provided to resolve component bounds.
 		"""
 		coords, endPts, flags = self.getCoordinates(glyfTable)
