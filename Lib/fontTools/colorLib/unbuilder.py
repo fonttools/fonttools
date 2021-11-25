@@ -76,7 +76,6 @@ if __name__ == "__main__":
     colorGlyphs = unbuildColrV1(
         colr.table.LayerList,
         colr.table.BaseGlyphList,
-        ignoreVarIdx=not colr.table.VarStore,
     )
 
     pprint(colorGlyphs)
