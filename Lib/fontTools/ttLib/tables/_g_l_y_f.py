@@ -254,14 +254,14 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 	def getGlyphName(self, glyphID):
 		"""Returns the name for the glyph with the given ID.
 
-		Raises a ``KeyError`` the glyph name is not found in the font.
+		Raises a ``KeyError`` if the glyph name is not found in the font.
 		"""
 		return self.glyphOrder[glyphID]
 
 	def getGlyphID(self, glyphName):
 		"""Returns the ID of the glyph with the given name.
 
-		Raises a ``KeyError`` the glyph name is not found in the font.
+		Raises a ``ValueError`` if the glyph is not found in the font.
 		"""
 		# XXX optimize with reverse dict!!!
 		return self.glyphOrder.index(glyphName)
