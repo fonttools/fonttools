@@ -47,6 +47,35 @@ SCALE_COMPONENT_OFFSET_DEFAULT = 0   # 0 == MS, 1 == Apple
 
 
 class table__g_l_y_f(DefaultTable.DefaultTable):
+	"""Glyph Data Table
+
+	This class represents the `glyf <https://docs.microsoft.com/en-us/typography/opentype/spec/glyf>`_
+ 	table, which contains outlines for glyphs in TrueType format. In many cases,
+ 	it is easier to access and manipulate glyph outlines through the ``GlyphSet``
+ 	object returned from :py:meth:`fontTools.ttLib.ttFont.getGlyphSet`::
+
+ 			>> from fontTools.pens.boundsPen import BoundsPen
+ 			>> glyphset = font.getGlyphSet()
+			>> bp = BoundsPen(glyphset)
+			>> glyphset["A"].draw(bp)
+			>> bp.bounds
+			(19, 0, 633, 716)
+
+	However, this class can be used for low-level access to the ``glyf`` table data.
+	Objects of this class support dictionary-like access, mapping glyph names to
+	:py:class:`Glyph` objects::
+
+			>> glyf = font["glyf"]
+			>> len(glyf["Aacute"].components)
+			2
+
+	Note that when adding glyphs to the font via low-level access to the ``glyf``
+	table, the new glyphs must also be added to the ``hmtx``/``vmtx`` table::
+
+			>> font["glyf"]["divisionslash"] = Glyph()
+			>> font["hmtx"]["divisionslash"] = (640, 0)
+
+	"""
 
 	# this attribute controls the amount of padding applied to glyph data upon compile.
 	# Glyph lenghts are aligned to multiples of the specified value. 
@@ -215,16 +244,33 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			glyph.compact(self, 0)
 
 	def setGlyphOrder(self, glyphOrder):
+		"""Sets the glyph order
+
+		Args:
+			glyphOrder ([str]): List of glyph names in order.
+		"""
 		self.glyphOrder = glyphOrder
 
 	def getGlyphName(self, glyphID):
+		"""Returns the name for the glyph with the given ID.
+
+		Raises a ``KeyError`` if the glyph name is not found in the font.
+		"""
 		return self.glyphOrder[glyphID]
 
 	def getGlyphID(self, glyphName):
+		"""Returns the ID of the glyph with the given name.
+
+		Raises a ``ValueError`` if the glyph is not found in the font.
+		"""
 		# XXX optimize with reverse dict!!!
 		return self.glyphOrder.index(glyphName)
 
 	def removeHinting(self):
+		"""Removes TrueType hints from all glyphs in the glyphset.
+
+		See :py:meth:`Glyph.removeHinting`.
+		"""
 		for glyph in self.glyphs.values():
 			glyph.removeHinting()
 
@@ -551,6 +597,27 @@ CompositeMaxpValues = namedtuple('CompositeMaxpValues', ['nPoints', 'nContours',
 
 
 class Glyph(object):
+	"""This class represents an individual TrueType glyph.
+
+	TrueType glyph objects come in two flavours: simple and composite. Simple
+	glyph objects contain contours, represented via the ``.coordinates``,
+	``.flags``, ``.numberOfContours``, and ``.endPtsOfContours`` attributes;
+	composite glyphs contain components, available through the ``.components``
+	attributes.
+
+	Because the ``.coordinates`` attribute (and other simple glyph attributes mentioned
+	above) is only set on simple glyphs and the ``.components`` attribute is only
+	set on composite glyphs, it is necessary to use the :py:meth:`isComposite`
+	method to test whether a glyph is simple or composite before attempting to
+	access its data.
+
+	For a composite glyph, the components can also be accessed via array-like access::
+
+		>> assert(font["glyf"]["Aacute"].isComposite())
+		>> font["glyf"]["Aacute"][0]
+		<fontTools.ttLib.tables._g_l_y_f.GlyphComponent at 0x1027b2ee0>
+
+	"""
 
 	def __init__(self, data=b""):
 		if not data:
@@ -957,11 +1024,18 @@ class Glyph(object):
 		return (compressedFlags, compressedXs, compressedYs)
 
 	def recalcBounds(self, glyfTable):
+		"""Recalculates the bounds of the glyph.
+
+		Each glyph object stores its bounding box in the
+		``xMin``/``yMin``/``xMax``/``yMax`` attributes. These bounds must be
+		recomputed when the ``coordinates`` change. The ``table__g_l_y_f`` bounds
+		must be provided to resolve component bounds.
+		"""
 		coords, endPts, flags = self.getCoordinates(glyfTable)
 		self.xMin, self.yMin, self.xMax, self.yMax = calcIntBounds(coords)
 
 	def isComposite(self):
-		"""Can be called on compact or expanded glyph."""
+		"""Test whether a glyph has components"""
 		if hasattr(self, "data") and self.data:
 			return struct.unpack(">h", self.data[:2])[0] == -1
 		else:
@@ -973,6 +1047,21 @@ class Glyph(object):
 		return self.components[componentIndex]
 
 	def getCoordinates(self, glyfTable):
+		"""Return the coordinates, end points and flags
+
+		This method returns three values: A :py:class:`GlyphCoordinates` object,
+		a list of the indexes of the final points of each contour (allowing you
+		to split up the coordinates list into contours) and a list of flags.
+
+		On simple glyphs, this method returns information from the glyph's own
+		contours; on composite glyphs, it "flattens" all components recursively
+		to return a list of coordinates representing all the components involved
+		in the glyph.
+
+		To interpret the flags for each point, see the "Simple Glyph Flags"
+		section of the `glyf table specification <https://docs.microsoft.com/en-us/typography/opentype/spec/glyf#simple-glyph-description>`.
+		"""
+
 		if self.numberOfContours > 0:
 			return self.coordinates, self.endPtsOfContours, self.flags
 		elif self.isComposite():
@@ -1026,6 +1115,11 @@ class Glyph(object):
 			return GlyphCoordinates(), [], bytearray()
 
 	def getComponentNames(self, glyfTable):
+		"""Returns a list of names of component glyphs used in this glyph
+
+		This method can be used on simple glyphs (in which case it returns an
+		empty list) or composite glyphs.
+		"""
 		if not hasattr(self, "data"):
 			if self.isComposite():
 				return [c.glyphName for c in self.components]
@@ -1145,9 +1239,18 @@ class Glyph(object):
 		self.data = data
 
 	def removeHinting(self):
+		"""Removes TrueType hinting instructions from the glyph."""
 		self.trim (remove_hinting=True)
 
 	def draw(self, pen, glyfTable, offset=0):
+		"""Draws the glyph using the supplied pen object.
+
+		Arguments:
+			pen: An object conforming to the pen protocol.
+			glyfTable: A :py:class:`table__g_l_y_f` object, to resolve components.
+			offset (int): A horizontal offset. If provided, all coordinates are
+				translated by this offset.
+		"""
 
 		if self.isComposite():
 			for component in self.components:
@@ -1193,7 +1296,7 @@ class Glyph(object):
 			pen.closePath()
 
 	def drawPoints(self, pen, glyfTable, offset=0):
-		"""Draw the glyph using the supplied pointPen. Opposed to Glyph.draw(),
+		"""Draw the glyph using the supplied pointPen. As opposed to Glyph.draw(),
 		this will not change the point indices.
 		"""
 
@@ -1235,12 +1338,29 @@ class Glyph(object):
 		return result if result is NotImplemented else not result
 
 class GlyphComponent(object):
+	"""Represents a component within a composite glyph.
+
+	The component is represented internally with four attributes: ``glyphName``,
+	``x``, ``y`` and ``transform``. If there is no "two-by-two" matrix (i.e
+	no scaling, reflection, or rotation; only translation), the ``transform``
+	attribute is not present.
+	"""
+	# The above documentation is not *completely* true, but is *true enough* because
+	# the rare firstPt/lastPt attributes are not totally supported and nobody seems to
+	# mind - see below.
 
 	def __init__(self):
 		pass
 
 	def getComponentInfo(self):
-		"""Return the base glyph name and a transform."""
+		"""Return information about the component
+
+		This method returns a tuple of two values: the glyph name of the component's
+		base glyph, and a transformation matrix. As opposed to accessing the attributes
+		directly, ``getComponentInfo`` always returns a six-element tuple of the
+		component's transformation matrix, even when the two-by-two ``.transform``
+		matrix is not present.
+		"""
 		# XXX Ignoring self.firstPt & self.lastpt for now: I need to implement
 		# something equivalent in fontTools.objects.glyph (I'd rather not
 		# convert it to an absolute offset, since it is valuable information).
@@ -1403,30 +1523,39 @@ class GlyphComponent(object):
 		return result if result is NotImplemented else not result
 
 class GlyphCoordinates(object):
+	"""A list of glyph coordinates.
 
+	Unlike an ordinary list, this is a numpy-like matrix object which supports
+	matrix addition, scalar multiplication and other operations described below.
+	"""
 	def __init__(self, iterable=[]):
 		self._a = array.array('d')
 		self.extend(iterable)
 
 	@property
 	def array(self):
+		"""Returns the underlying array of coordinates"""
 		return self._a
 
 	@staticmethod
 	def zeros(count):
+		"""Creates a new ``GlyphCoordinates`` object with all coordinates set to (0,0)"""
 		g = GlyphCoordinates()
 		g._a.frombytes(bytes(count * 2 * g._a.itemsize))
 		return g
 
 	def copy(self):
+		"""Creates a new ``GlyphCoordinates`` object which is a copy of the current one."""
 		c = GlyphCoordinates()
 		c._a.extend(self._a)
 		return c
 
 	def __len__(self):
+		"""Returns the number of coordinates in the array."""
 		return len(self._a) // 2
 
 	def __getitem__(self, k):
+		"""Returns a two element tuple (x,y)"""
 		if isinstance(k, slice):
 			indices = range(*k.indices(len(self)))
 			return [self[i] for i in indices]
@@ -1437,6 +1566,7 @@ class GlyphCoordinates(object):
 			int(y) if y.is_integer() else y)
 
 	def __setitem__(self, k, v):
+		"""Sets a point's coordinates to a two element tuple (x,y)"""
 		if isinstance(k, slice):
 			indices = range(*k.indices(len(self)))
 			# XXX This only works if len(v) == len(indices)
@@ -1446,6 +1576,7 @@ class GlyphCoordinates(object):
 		self._a[2*k],self._a[2*k+1] = v
 
 	def __delitem__(self, i):
+		"""Removes a point from the list"""
 		i = (2*i) % len(self._a)
 		del self._a[i]
 		del self._a[i]
