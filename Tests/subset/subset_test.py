@@ -1352,5 +1352,26 @@ def test_subset_svg_missing_lxml(ttf_path):
         subset.main([str(ttf_path), "--gids=0,1"])
 
 
+def test_subset_COLR_glyph_closure(tmp_path):
+    font = TTFont()
+    ttx = pathlib.Path(__file__).parent / "data" / "BungeeColor-Regular.ttx"
+    font.importXML(ttx)
+    font_path = tmp_path / "BungeeColor-Regular.ttf"
+    subset_path = font_path.with_suffix(".subset.ttf)")
+    font.save(font_path)
+
+    subset.main(
+        [
+            str(font_path),
+            "--glyph-names",
+            f"--output-file={subset_path}",
+            "--glyphs=Agrave",
+        ]
+    )
+    subset_font = TTFont(subset_path)
+    # TODO
+
+
+
 if __name__ == "__main__":
     sys.exit(unittest.main())

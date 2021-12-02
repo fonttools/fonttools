@@ -1,0 +1,438 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="4.28">
+
+  <GlyphOrder>
+    <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
+    <GlyphID id="0" name=".notdef"/>
+    <GlyphID id="1" name="A"/>
+    <GlyphID id="2" name="grave"/>
+    <GlyphID id="3" name="Agrave"/>
+    <GlyphID id="4" name=".notdef.alt001"/>
+    <GlyphID id="5" name=".notdef.alt002"/>
+    <GlyphID id="6" name="A.alt001"/>
+    <GlyphID id="7" name="A.alt002"/>
+    <GlyphID id="8" name="Agrave.alt001"/>
+    <GlyphID id="9" name="Agrave.alt002"/>
+    <GlyphID id="10" name="grave.alt001"/>
+    <GlyphID id="11" name="grave.alt002"/>
+  </GlyphOrder>
+
+  <head>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="1.0"/>
+    <fontRevision value="1.0"/>
+    <checkSumAdjustment value="0x4ca1927f"/>
+    <magicNumber value="0x5f0f3cf5"/>
+    <flags value="00000000 00000001"/>
+    <unitsPerEm value="1000"/>
+    <created value="Tue Jun  7 11:21:57 2016"/>
+    <modified value="Thu Dec  2 17:48:03 2021"/>
+    <xMin value="0"/>
+    <yMin value="-20"/>
+    <xMax value="880"/>
+    <yMax value="963"/>
+    <macStyle value="00000000 00000000"/>
+    <lowestRecPPEM value="6"/>
+    <fontDirectionHint value="2"/>
+    <indexToLocFormat value="0"/>
+    <glyphDataFormat value="0"/>
+  </head>
+
+  <hhea>
+    <tableVersion value="0x00010000"/>
+    <ascent value="860"/>
+    <descent value="-140"/>
+    <lineGap value="200"/>
+    <advanceWidthMax value="1000"/>
+    <minLeftSideBearing value="40"/>
+    <minRightSideBearing value="41"/>
+    <xMaxExtent value="880"/>
+    <caretSlopeRise value="1"/>
+    <caretSlopeRun value="0"/>
+    <caretOffset value="0"/>
+    <reserved0 value="0"/>
+    <reserved1 value="0"/>
+    <reserved2 value="0"/>
+    <reserved3 value="0"/>
+    <metricDataFormat value="0"/>
+    <numberOfHMetrics value="11"/>
+  </hhea>
+
+  <maxp>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="0x10000"/>
+    <numGlyphs value="12"/>
+    <maxPoints value="44"/>
+    <maxContours value="2"/>
+    <maxCompositePoints value="60"/>
+    <maxCompositeContours value="3"/>
+    <maxZones value="1"/>
+    <maxTwilightPoints value="0"/>
+    <maxStorage value="0"/>
+    <maxFunctionDefs value="0"/>
+    <maxInstructionDefs value="0"/>
+    <maxStackElements value="512"/>
+    <maxSizeOfInstructions value="1023"/>
+    <maxComponentElements value="2"/>
+    <maxComponentDepth value="2"/>
+  </maxp>
+
+  <OS_2>
+    <!-- The fields 'usFirstCharIndex' and 'usLastCharIndex'
+         will be recalculated by the compiler -->
+    <version value="3"/>
+    <xAvgCharWidth value="667"/>
+    <usWeightClass value="400"/>
+    <usWidthClass value="5"/>
+    <fsType value="00000000 00000001"/>
+    <ySubscriptXSize value="650"/>
+    <ySubscriptYSize value="600"/>
+    <ySubscriptXOffset value="0"/>
+    <ySubscriptYOffset value="75"/>
+    <ySuperscriptXSize value="650"/>
+    <ySuperscriptYSize value="600"/>
+    <ySuperscriptXOffset value="0"/>
+    <ySuperscriptYOffset value="350"/>
+    <yStrikeoutSize value="0"/>
+    <yStrikeoutPosition value="300"/>
+    <sFamilyClass value="0"/>
+    <panose>
+      <bFamilyType value="0"/>
+      <bSerifStyle value="0"/>
+      <bWeight value="0"/>
+      <bProportion value="0"/>
+      <bContrast value="0"/>
+      <bStrokeVariation value="0"/>
+      <bArmStyle value="0"/>
+      <bLetterForm value="0"/>
+      <bMidline value="0"/>
+      <bXHeight value="0"/>
+    </panose>
+    <ulUnicodeRange1 value="00000000 00000000 00000000 00000010"/>
+    <ulUnicodeRange2 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange3 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange4 value="00000000 00000000 00000000 00000000"/>
+    <achVendID value="djr "/>
+    <fsSelection value="00000000 01000000"/>
+    <usFirstCharIndex value="192"/>
+    <usLastCharIndex value="224"/>
+    <sTypoAscender value="860"/>
+    <sTypoDescender value="-140"/>
+    <sTypoLineGap value="200"/>
+    <usWinAscent value="1138"/>
+    <usWinDescent value="362"/>
+    <ulCodePageRange1 value="00000000 00000000 00000000 00010010"/>
+    <ulCodePageRange2 value="00000000 00000000 00000000 00000000"/>
+    <sxHeight value="500"/>
+    <sCapHeight value="720"/>
+    <usDefaultChar value="0"/>
+    <usBreakChar value="32"/>
+    <usMaxContext value="3"/>
+  </OS_2>
+
+  <hmtx>
+    <mtx name=".notdef" width="1000" lsb="100"/>
+    <mtx name=".notdef.alt001" width="1000" lsb="100"/>
+    <mtx name=".notdef.alt002" width="1000" lsb="120"/>
+    <mtx name="A" width="730" lsb="54"/>
+    <mtx name="A.alt001" width="730" lsb="54"/>
+    <mtx name="A.alt002" width="730" lsb="160"/>
+    <mtx name="Agrave" width="730" lsb="54"/>
+    <mtx name="Agrave.alt001" width="730" lsb="54"/>
+    <mtx name="Agrave.alt002" width="730" lsb="160"/>
+    <mtx name="grave" width="500" lsb="40"/>
+    <mtx name="grave.alt001" width="500" lsb="40"/>
+    <mtx name="grave.alt002" width="500" lsb="130"/>
+  </hmtx>
+
+  <cmap>
+    <tableVersion version="0"/>
+    <cmap_format_4 platformID="0" platEncID="3" language="0">
+      <map code="0xc0" name="Agrave"/><!-- LATIN CAPITAL LETTER A WITH GRAVE -->
+      <map code="0xe0" name="Agrave"/><!-- LATIN SMALL LETTER A WITH GRAVE -->
+    </cmap_format_4>
+    <cmap_format_4 platformID="3" platEncID="1" language="0">
+      <map code="0xc0" name="Agrave"/><!-- LATIN CAPITAL LETTER A WITH GRAVE -->
+      <map code="0xe0" name="Agrave"/><!-- LATIN SMALL LETTER A WITH GRAVE -->
+    </cmap_format_4>
+  </cmap>
+
+  <loca>
+    <!-- The 'loca' table will be calculated by the compiler -->
+  </loca>
+
+  <glyf>
+
+    <!-- The xMin, yMin, xMax and yMax values
+         will be recalculated by the compiler. -->
+
+    <TTGlyph name=".notdef"/><!-- contains no outline data -->
+
+    <TTGlyph name=".notdef.alt001" xMin="0" yMin="0" xMax="0" yMax="0">
+      <component glyphName=".notdef" x="0" y="0" flags="0x204"/>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name=".notdef.alt002" xMin="120" yMin="-20" xMax="880" yMax="740">
+      <contour>
+        <pt x="870" y="-10" on="1"/>
+        <pt x="870" y="730" on="1"/>
+        <pt x="130" y="730" on="1"/>
+        <pt x="130" y="-10" on="1"/>
+      </contour>
+      <contour>
+        <pt x="120" y="-20" on="1"/>
+        <pt x="120" y="740" on="1"/>
+        <pt x="880" y="740" on="1"/>
+        <pt x="880" y="-20" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="A" xMin="54" yMin="0" xMax="676" yMax="720">
+      <contour>
+        <pt x="330" y="510" on="1"/>
+        <pt x="283" y="358" on="1"/>
+        <pt x="440" y="358" on="1"/>
+        <pt x="393" y="510" on="1"/>
+        <pt x="389" y="519" on="0"/>
+        <pt x="380" y="527" on="0"/>
+        <pt x="374" y="527" on="1"/>
+        <pt x="349" y="527" on="1"/>
+        <pt x="343" y="527" on="0"/>
+        <pt x="334" y="519" on="0"/>
+      </contour>
+      <contour>
+        <pt x="273" y="36" on="1"/>
+        <pt x="273" y="17" on="0"/>
+        <pt x="256" y="0" on="0"/>
+        <pt x="237" y="0" on="1"/>
+        <pt x="90" y="0" on="1"/>
+        <pt x="71" y="0" on="0"/>
+        <pt x="54" y="17" on="0"/>
+        <pt x="54" y="36" on="1"/>
+        <pt x="54" y="300" on="1"/>
+        <pt x="54" y="330" on="0"/>
+        <pt x="73" y="408" on="0"/>
+        <pt x="93" y="460" on="1"/>
+        <pt x="180" y="687" on="1"/>
+        <pt x="186" y="704" on="0"/>
+        <pt x="211" y="720" on="0"/>
+        <pt x="231" y="720" on="1"/>
+        <pt x="500" y="720" on="1"/>
+        <pt x="519" y="720" on="0"/>
+        <pt x="544" y="704" on="0"/>
+        <pt x="550" y="687" on="1"/>
+        <pt x="637" y="460" on="1"/>
+        <pt x="657" y="408" on="0"/>
+        <pt x="676" y="330" on="0"/>
+        <pt x="676" y="300" on="1"/>
+        <pt x="676" y="36" on="1"/>
+        <pt x="676" y="17" on="0"/>
+        <pt x="659" y="0" on="0"/>
+        <pt x="640" y="0" on="1"/>
+        <pt x="489" y="0" on="1"/>
+        <pt x="469" y="0" on="0"/>
+        <pt x="450" y="17" on="0"/>
+        <pt x="450" y="36" on="1"/>
+        <pt x="450" y="176" on="1"/>
+        <pt x="273" y="176" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="A.alt001" xMin="54" yMin="0" xMax="676" yMax="720">
+      <component glyphName="A" x="0" y="0" flags="0x204"/>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="A.alt002" xMin="160" yMin="90" xMax="570" yMax="630">
+      <contour>
+        <pt x="165" y="272" on="1"/>
+        <pt x="567" y="272" on="1"/>
+        <pt x="567" y="262" on="1"/>
+        <pt x="165" y="262" on="1"/>
+      </contour>
+      <contour>
+        <pt x="570" y="90" on="1"/>
+        <pt x="560" y="90" on="1"/>
+        <pt x="560" y="303" on="1"/>
+        <pt x="560" y="330" on="0"/>
+        <pt x="551" y="376" on="0"/>
+        <pt x="544" y="396" on="1"/>
+        <pt x="475" y="559" on="1"/>
+        <pt x="464" y="585" on="0"/>
+        <pt x="440" y="620" on="0"/>
+        <pt x="412" y="620" on="1"/>
+        <pt x="314" y="620" on="1"/>
+        <pt x="284" y="620" on="0"/>
+        <pt x="260" y="585" on="0"/>
+        <pt x="250" y="560" on="1"/>
+        <pt x="186" y="396" on="1"/>
+        <pt x="179" y="376" on="0"/>
+        <pt x="170" y="330" on="0"/>
+        <pt x="170" y="303" on="1"/>
+        <pt x="170" y="90" on="1"/>
+        <pt x="160" y="90" on="1"/>
+        <pt x="160" y="303" on="1"/>
+        <pt x="160" y="331" on="0"/>
+        <pt x="169" y="378" on="0"/>
+        <pt x="177" y="400" on="1"/>
+        <pt x="241" y="564" on="1"/>
+        <pt x="252" y="592" on="0"/>
+        <pt x="280" y="630" on="0"/>
+        <pt x="314" y="630" on="1"/>
+        <pt x="412" y="630" on="1"/>
+        <pt x="445" y="630" on="0"/>
+        <pt x="472" y="592" on="0"/>
+        <pt x="484" y="563" on="1"/>
+        <pt x="553" y="400" on="1"/>
+        <pt x="561" y="378" on="0"/>
+        <pt x="570" y="331" on="0"/>
+        <pt x="570" y="303" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="Agrave" xMin="54" yMin="0" xMax="676" yMax="963">
+      <component glyphName="A" x="0" y="0" flags="0x204"/>
+      <component glyphName="grave" x="115" y="0" flags="0x4"/>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="Agrave.alt001" xMin="54" yMin="0" xMax="676" yMax="963">
+      <component glyphName="Agrave" x="0" y="0" flags="0x204"/>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="Agrave.alt002" xMin="160" yMin="90" xMax="570" yMax="877">
+      <component glyphName="A.alt002" x="0" y="0" flags="0x204"/>
+      <component glyphName="grave.alt002" x="115" y="0" flags="0x4"/>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="grave" xMin="40" yMin="751" xMax="459" yMax="963">
+      <contour>
+        <pt x="425" y="753" on="1"/>
+        <pt x="76" y="796" on="1"/>
+        <pt x="57" y="798" on="0"/>
+        <pt x="40" y="813" on="0"/>
+        <pt x="40" y="832" on="1"/>
+        <pt x="40" y="928" on="1"/>
+        <pt x="40" y="945" on="0"/>
+        <pt x="57" y="963" on="0"/>
+        <pt x="74" y="961" on="1"/>
+        <pt x="423" y="918" on="1"/>
+        <pt x="442" y="916" on="0"/>
+        <pt x="459" y="901" on="0"/>
+        <pt x="459" y="882" on="1"/>
+        <pt x="459" y="786" on="1"/>
+        <pt x="459" y="769" on="0"/>
+        <pt x="442" y="751" on="0"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="grave.alt001" xMin="40" yMin="751" xMax="459" yMax="963">
+      <component glyphName="grave" x="0" y="0" flags="0x204"/>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="grave.alt002" xMin="130" yMin="837" xMax="369" yMax="877">
+      <contour>
+        <pt x="130" y="877" on="1"/>
+        <pt x="130" y="867" on="1"/>
+        <pt x="369" y="837" on="1"/>
+        <pt x="369" y="847" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+  </glyf>
+
+  <name>
+    <namerecord nameID="0" platformID="3" platEncID="1" langID="0x409">
+      Copyright 2008 The Bungee Project Authors (david@djr.com)
+    </namerecord>
+    <namerecord nameID="1" platformID="3" platEncID="1" langID="0x409">
+      Bungee Color Regular
+    </namerecord>
+    <namerecord nameID="2" platformID="3" platEncID="1" langID="0x409">
+      Regular
+    </namerecord>
+    <namerecord nameID="3" platformID="3" platEncID="1" langID="0x409">
+      1.000;djr ;BungeeColor-Regular
+    </namerecord>
+    <namerecord nameID="4" platformID="3" platEncID="1" langID="0x409">
+      Bungee Color Regular Regular
+    </namerecord>
+    <namerecord nameID="5" platformID="3" platEncID="1" langID="0x409">
+      Version 1.000;PS 1.0;hotconv 1.0.72;makeotf.lib2.5.5900
+    </namerecord>
+    <namerecord nameID="6" platformID="3" platEncID="1" langID="0x409">
+      BungeeColor-Regular
+    </namerecord>
+  </name>
+
+  <post>
+    <formatType value="2.0"/>
+    <italicAngle value="0.0"/>
+    <underlinePosition value="0"/>
+    <underlineThickness value="0"/>
+    <isFixedPitch value="0"/>
+    <minMemType42 value="0"/>
+    <maxMemType42 value="0"/>
+    <minMemType1 value="0"/>
+    <maxMemType1 value="0"/>
+    <psNames>
+      <!-- This file uses unique glyph names based on the information
+           found in the 'post' table. Since these names might not be unique,
+           we have to invent artificial names in case of clashes. In order to
+           be able to retain the original information, we need a name to
+           ps name mapping for those cases where they differ. That's what
+           you see below.
+            -->
+    </psNames>
+    <extraNames>
+      <!-- following are the name that are not taken from the standard Mac glyph order -->
+      <psName name=".notdef.alt001"/>
+      <psName name=".notdef.alt002"/>
+      <psName name="A.alt001"/>
+      <psName name="A.alt002"/>
+      <psName name="Agrave.alt001"/>
+      <psName name="Agrave.alt002"/>
+      <psName name="grave.alt001"/>
+      <psName name="grave.alt002"/>
+    </extraNames>
+  </post>
+
+  <COLR>
+    <version value="0"/>
+    <ColorGlyph name=".notdef">
+      <layer colorID="0" name=".notdef.alt001"/>
+      <layer colorID="1" name=".notdef.alt002"/>
+    </ColorGlyph>
+    <ColorGlyph name="A">
+      <layer colorID="0" name="A.alt001"/>
+      <layer colorID="1" name="A.alt002"/>
+    </ColorGlyph>
+    <ColorGlyph name="grave">
+      <layer colorID="0" name="grave.alt001"/>
+      <layer colorID="1" name="grave.alt002"/>
+    </ColorGlyph>
+    <ColorGlyph name="Agrave">
+      <layer colorID="0" name="Agrave.alt001"/>
+      <layer colorID="1" name="Agrave.alt002"/>
+    </ColorGlyph>
+  </COLR>
+
+  <CPAL>
+    <version value="0"/>
+    <numPaletteEntries value="2"/>
+    <palette index="0">
+      <color index="0" value="#C90900FF"/>
+      <color index="1" value="#FF9580FF"/>
+    </palette>
+  </CPAL>
+
+</ttFont>
