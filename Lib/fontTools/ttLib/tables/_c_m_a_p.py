@@ -23,8 +23,52 @@ def _make_map(font, chars, gids):
 	return cmap
 
 class table__c_m_a_p(DefaultTable.DefaultTable):
+	"""Character to Glyph Index Mapping Table
+
+	This class represents the `cmap <https://docs.microsoft.com/en-us/typography/opentype/spec/cmap>`_
+	table, which maps between input characters (in Unicode or other system encodings)
+	and glyphs within the font. The ``cmap`` table contains one or more subtables
+	which determine the mapping of of characters to glyphs across different platforms
+	and encoding systems.
+
+	``table__c_m_a_p`` objects expose an accessor ``.tables`` which provides access
+	to the subtables, although it is normally easier to retrieve individual subtables
+	through the utility methods described below. To add new subtables to a font,
+	first determine the subtable format (if in doubt use format 4 for glyphs within
+	the BMP, format 12 for glyphs outside the BMP, and format 14 for Unicode Variation
+	Sequences) construct subtable objects with ``CmapSubtable.newSubtable(format)``,
+	and append them to the ``.tables`` list.
+
+	Within a subtable, the mapping of characters to glyphs is provided by the ``.cmap``
+	attribute.
+
+	Example::
+
+		cmap4_0_3 = CmapSubtable.newSubtable(4)
+		cmap4_0_3.platformID = 0
+		cmap4_0_3.platEncID = 3
+		cmap4_0_3.language = 0
+		cmap4_0_3.cmap = { 0xC1: "Aacute" }
+
+		cmap = newTable("cmap")
+		cmap.tableVersion = 0
+		cmap.tables = [cmap4_0_3]
+	"""
 
 	def getcmap(self, platformID, platEncID):
+		"""Returns the first subtable which matches the given platform and encoding.
+
+		Args:
+			platformID (int): The platform ID. Use 0 for Unicode, 1 for Macintosh
+				(deprecated for new fonts), 2 for ISO (deprecated) and 3 for Windows.
+			encodingID (int): Encoding ID. Interpretation depends on the platform ID.
+				See the OpenType specification for details.
+
+		Returns:
+			An object which is a subclass of :py:class:`CmapSubtable` if a matching
+			subtable is found within the font, or ``None`` otherwise.
+		"""
+
 		for subtable in self.tables:
 			if (subtable.platformID == platformID and
 					subtable.platEncID == platEncID):
@@ -32,13 +76,22 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 		return None # not found
 
 	def getBestCmap(self, cmapPreferences=((3, 10), (0, 6), (0, 4), (3, 1), (0, 3), (0, 2), (0, 1), (0, 0))):
-		"""Return the 'best' unicode cmap dictionary available in the font,
-		or None, if no unicode cmap subtable is available.
+		"""Returns the 'best' Unicode cmap dictionary available in the font
+		or ``None``, if no Unicode cmap subtable is available.
 
 		By default it will search for the following (platformID, platEncID)
-		pairs:
-			(3, 10), (0, 6), (0, 4), (3, 1), (0, 3), (0, 2), (0, 1), (0, 0)
-		This can be customized via the cmapPreferences argument.
+		pairs in order::
+
+				(3, 10), # Windows Unicode full repertoire
+				(0, 6),  # Unicode full repertoire (format 13 subtable)
+				(0, 4),  # Unicode 2.0 full repertoire
+				(3, 1),  # Windows Unicode BMP
+				(0, 3),  # Unicode 2.0 BMP
+				(0, 2),  # Unicode ISO/IEC 10646
+				(0, 1),  # Unicode 1.1
+				(0, 0)   # Unicode 1.0
+
+		This order can be customized via the ``cmapPreferences`` argument.
 		"""
 		for platformID, platEncID in cmapPreferences:
 			cmapSubtable = self.getcmap(platformID, platEncID)
@@ -47,12 +100,20 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 		return None  # None of the requested cmap subtables were found
 
 	def buildReversed(self):
-		"""Returns a reverse cmap such as {'one':{0x31}, 'A':{0x41,0x391}}.
+		"""Builds a reverse mapping dictionary
+
+		Iterates over all Unicode cmap tables and returns a dictionary mapping
+		glyphs to sets of codepoints, such as::
+
+			{
+				'one': {0x31}
+				'A': {0x41,0x391}
+			}
 
 		The values are sets of Unicode codepoints because
 		some fonts map different codepoints to the same glyph.
-		For example, U+0041 LATIN CAPITAL LETTER A and U+0391
-		GREEK CAPITAL LETTER ALPHA are sometimes the same glyph.
+		For example, ``U+0041 LATIN CAPITAL LETTER A`` and ``U+0391
+		GREEK CAPITAL LETTER ALPHA`` are sometimes the same glyph.
 		"""
 		result = {}
 		for subtable in self.tables:
@@ -140,6 +201,16 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 
 
 class CmapSubtable(object):
+	"""Base class for all cmap subtable formats.
+
+	Subclasses which handle the individual subtable formats are named
+	``cmap_format_0``, ``cmap_format_2`` etc. Use :py:meth:`getSubtableClass`
+	to retrieve the concrete subclass, or :py:meth:`newSubtable` to get a
+	new subtable object for a given format.
+
+	The object exposes a ``.cmap`` attribute, which contains a dictionary mapping
+	character codepoints to glyph names.
+	"""
 
 	@staticmethod
 	def getSubtableClass(format):
@@ -148,7 +219,8 @@ class CmapSubtable(object):
 
 	@staticmethod
 	def newSubtable(format):
-		"""Return a new instance of a subtable for format."""
+		"""Return a new instance of a subtable for the given format
+		."""
 		subtableClass = CmapSubtable.getSubtableClass(format)
 		return subtableClass(format)
 
@@ -156,6 +228,9 @@ class CmapSubtable(object):
 		self.format = format
 		self.data = None
 		self.ttFont = None
+		self.platformID = None  #: The platform ID of this subtable
+		self.platEncID = None   #: The encoding ID of this subtable (interpretation depends on ``platformID``)
+		self.language = None    #: The language ID of this subtable (Macintosh platform only)
 
 	def __getattr__(self, attr):
 		# allow lazy decompilation of subtables.
@@ -193,20 +268,22 @@ class CmapSubtable(object):
 	def getEncoding(self, default=None):
 		"""Returns the Python encoding name for this cmap subtable based on its platformID,
 		platEncID, and language.  If encoding for these values is not known, by default
-		None is returned.  That can be overriden by passing a value to the default
+		``None`` is returned.  That can be overridden by passing a value to the ``default``
 		argument.
 
 		Note that if you want to choose a "preferred" cmap subtable, most of the time
-		self.isUnicode() is what you want as that one only returns true for the modern,
+		``self.isUnicode()`` is what you want as that one only returns true for the modern,
 		commonly used, Unicode-compatible triplets, not the legacy ones.
 		"""
 		return getEncoding(self.platformID, self.platEncID, self.language, default)
 
 	def isUnicode(self):
+		"""Returns true if the characters are interpreted as Unicode codepoints."""
 		return (self.platformID == 0 or
 			(self.platformID == 3 and self.platEncID in [0, 1, 10]))
 
 	def isSymbol(self):
+		"""Returns true if the subtable is for the Symbol encoding (3,0)"""
 		return self.platformID == 3 and self.platEncID == 0
 
 	def _writeCodes(self, codes, writer):
