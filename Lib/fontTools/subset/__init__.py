@@ -2064,6 +2064,20 @@ def subset_glyphs(self, s):
 	from fontTools.colorLib.unbuilder import unbuildColrV1
 	from fontTools.colorLib.builder import buildColrV1, populateCOLRv0
 
+	# only include glyphs after COLR closure, which in turn comes after cmap and GSUB
+	# closure, but importantly before glyf/CFF closures. COLR layers can refer to
+	# composite glyphs, and that's ok, since glyf/CFF closures happen after COLR closure
+	# and take care of those. If we also included glyphs resulting from glyf/CFF closures
+	# when deciding which COLR base glyphs to retain, then we may end up with a situation
+	# whereby a COLR base glyph is kept, not because directly requested (cmap)
+	# or substituted (GSUB) or referenced by another COLRv1 PaintColrGlyph, but because
+	# it corresponds to (has same GID as) a non-COLR glyph that happens to be used as a
+	# component in glyf or CFF table. Best case scenario we retain more glyphs than
+	# required; worst case we retain incomplete COLR records that try to reference
+	# glyphs that are no longer in the final subset font.
+	# https://github.com/fonttools/fonttools/issues/2461
+	s.glyphs = s.glyphs_colred
+
 	self.ColorLayers = {g: self.ColorLayers[g] for g in s.glyphs if g in self.ColorLayers}
 	if self.version == 0:
 		return bool(self.ColorLayers)
@@ -2776,6 +2790,7 @@ class Subsetter(object):
 					log.info("Closed glyph list over '%s': %d glyphs after",
 							 table, len(self.glyphs))
 					log.glyphs(self.glyphs, font=font)
+			setattr(self, f"glyphs_{table.lower()}ed", frozenset(self.glyphs))
 
 		if 'glyf' in font:
 			with timer("close glyph list over 'glyf'"):
