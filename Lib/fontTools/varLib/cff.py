@@ -163,15 +163,17 @@ def merge_PrivateDicts(top_dicts, vsindex_dict, var_model, fd_map):
 	"""
 	I step through the FontDicts in the FDArray of the varfont TopDict.
 	For each varfont FontDict:
-		step through each key in FontDict.Private.
-		For each key, step through each relevant source font Private dict, and
+	
+	* step through each key in FontDict.Private.
+	* For each key, step through each relevant source font Private dict, and
 		build a list of values to blend.
+
 	The 'relevant' source fonts are selected by first getting the right
-	submodel using vsindex_dict[vsindex]. The indices of the
-	subModel.locations are mapped to source font list indices by
+	submodel using ``vsindex_dict[vsindex]``. The indices of the
+	``subModel.locations`` are mapped to source font list indices by
 	assuming the latter order is the same as the order of the
-	var_model.locations. I can then get the index of each subModel
-	location in the list of var_model.locations.
+	``var_model.locations``. I can then get the index of each subModel
+	location in the list of ``var_model.locations``.
 	"""
 
 	topDict = top_dicts[0]
@@ -591,19 +593,24 @@ class CFF2CharStringMergePen(T2CharStringPen):
 	def reorder_blend_args(self, commands, get_delta_func):
 		"""
 		We first re-order the master coordinate values.
-		For a moveto to lineto, the args are now arranged as:
+		For a moveto to lineto, the args are now arranged as::
+
 			[ [master_0 x,y], [master_1 x,y], [master_2 x,y] ]
-		We re-arrange this to
-		[	[master_0 x, master_1 x, master_2 x],
-			[master_0 y, master_1 y, master_2 y]
-		]
+
+		We re-arrange this to::
+
+			[	[master_0 x, master_1 x, master_2 x],
+				[master_0 y, master_1 y, master_2 y]
+			]
+
 		If the master values are all the same, we collapse the list to
 		as single value instead of a list.
 
-		We then convert this to:
-		[ [master_0 x] + [x delta tuple] + [numBlends=1]
-		  [master_0 y] + [y delta tuple] + [numBlends=1]
-		]
+		We then convert this to::
+
+			[ [master_0 x] + [x delta tuple] + [numBlends=1]
+			  [master_0 y] + [y delta tuple] + [numBlends=1]
+			]
 		"""
 		for cmd in commands:
 			# arg[i] is the set of arguments for this operator from master i.

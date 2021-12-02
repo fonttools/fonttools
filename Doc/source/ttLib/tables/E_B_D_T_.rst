@@ -11,6 +11,7 @@ BitmapGlyphMetrics
 ^^^^^^^^^^^^^^^^^^
 
 .. automodule:: fontTools.ttLib.tables.BitmapGlyphMetrics
+   :noindex:
    :inherited-members:
    :members:
    :undoc-members:

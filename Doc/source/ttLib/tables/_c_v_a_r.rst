@@ -11,6 +11,7 @@ TupleVariation
 ^^^^^^^^^^^^^^
 
 .. automodule:: fontTools.ttLib.tables.TupleVariation
+   :noindex:
    :inherited-members:
    :members:
    :undoc-members:
