@@ -1,3 +1,10 @@
+- [subset] Fixed bug while subsetting ``COLR`` table, whereby incomplete layer records
+  pointing to missing glyphs were being retained leading to ``struct.error`` upon
+  compiling. Make it so that ``glyf`` glyph closure, which follows the ``COLR`` glyph
+  closure, does not influence the ``COLR`` table subsetting (#2461, #2462).
+- [docs] Fully document the ``cmap`` and ``glyf`` tables (#2454, #2457).
+- [colorLib.unbuilder] Fixed CLI by deleting no longer existing parameter (180bb1867).
+
 4.28.2 (released 2021-11-22)
 ----------------------------
 
