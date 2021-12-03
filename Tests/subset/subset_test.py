@@ -1358,7 +1358,6 @@ def test_subset_COLR_glyph_closure(tmp_path):
     ttx = pathlib.Path(__file__).parent / "data" / "BungeeColor-Regular.ttx"
     font.importXML(ttx)
 
-
     color_layers = font["COLR"].ColorLayers
     assert ".notdef" in color_layers
     assert "Agrave" in color_layers
@@ -1383,7 +1382,7 @@ def test_subset_COLR_glyph_closure(tmp_path):
     assert glyph_order == [
         ".notdef",  # '.notdef' is always included automatically
         "A",
-        "grave",  # included because glyf component of Agrave
+        "grave",
         "Agrave",
         ".notdef.alt001",
         ".notdef.alt002",
@@ -1396,8 +1395,8 @@ def test_subset_COLR_glyph_closure(tmp_path):
     color_layers = subset_font["COLR"].ColorLayers
     assert ".notdef" in color_layers
     assert "Agrave" in color_layers
-    # 'grave' not included in COLR because absent after COLR glyph closure;
-    # only added in subset font after subsequent glyf closure.
+    # Agrave 'glyf' uses grave. It should be retained in 'glyf' but NOT in
+    # COLR when we subset down to Agrave.
     assert "grave" not in color_layers
 
 
