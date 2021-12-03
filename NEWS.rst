@@ -1,3 +1,6 @@
+4.28.3 (released 2021-12-03)
+----------------------------
+
 - [subset] Fixed bug while subsetting ``COLR`` table, whereby incomplete layer records
   pointing to missing glyphs were being retained leading to ``struct.error`` upon
   compiling. Make it so that ``glyf`` glyph closure, which follows the ``COLR`` glyph
