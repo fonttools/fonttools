@@ -333,6 +333,12 @@ class OTTableWriter(object):
 				items[i] = item.getCountData()
 			elif hasattr(item, "getData"):
 				item._doneWriting(internedTables)
+				# At this point, all subwriters are hashable based on their items.
+				# (See hash and comparison magic methods above.) So the ``setdefault``
+				# call here will return the first writer object we've seen with
+				# equal content, or store it in the dictionary if it's not been
+				# seen yet. We therefore replace the subwriter object with an equivalent
+				# object, which deduplicates the tree.
 				if not dontShare:
 					items[i] = item = internedTables.setdefault(item, item)
 		self.items = tuple(items)
