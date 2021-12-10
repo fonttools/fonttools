@@ -53,8 +53,7 @@ def _empty_charstring(font, glyphName, isCFF2, ignoreWidth=False):
 	c, fdSelectIndex = font.CharStrings.getItemAndSelector(glyphName)
 	if isCFF2 or ignoreWidth:
 		# CFF2 charstrings have no widths nor 'endchar' operators
-		c.decompile()
-		c.program = [] if isCFF2 else ['endchar']
+		c.setProgram([] if isCFF2 else ['endchar'])
 	else:
 		if hasattr(font, 'FDArray') and font.FDArray is not None:
 			private = font.FDArray[fdSelectIndex].Private
@@ -120,9 +119,12 @@ def subset_glyphs(self, s):
 				#sel.format = None
 				sel.format = 3
 				sel.gidArray = [sel.gidArray[i] for i in indices]
-			cs.charStrings = {g:indices.index(v)
-					  for g,v in cs.charStrings.items()
-					  if g in glyphs}
+			newCharStrings = {}
+			for indicesIdx, charsetIdx in enumerate(indices):
+				g = font.charset[charsetIdx]
+				if g in cs.charStrings:
+					newCharStrings[g] = indicesIdx
+			cs.charStrings = newCharStrings
 		else:
 			cs.charStrings = {g:v
 					  for g,v in cs.charStrings.items()
