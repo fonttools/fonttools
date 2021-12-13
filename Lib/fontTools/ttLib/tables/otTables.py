@@ -1182,7 +1182,6 @@ class COLR(BaseTable):
 			if conv.name != "LayerRecordCount":
 				subReader.advance(conv.staticSize)
 				continue
-			conv = self.getConverterByName("LayerRecordCount")
 			reader[conv.name] = conv.read(subReader, font, tableDict={})
 			break
 		else:
