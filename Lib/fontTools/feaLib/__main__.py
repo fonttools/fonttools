@@ -70,6 +70,7 @@ def main(args=None):
         if options.traceback:
             raise
         log.error(e)
+        sys.exit(1)
     font.save(output_font)
 
 
