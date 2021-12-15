@@ -837,6 +837,17 @@ def mapLookups(self, lookupMap):
 		if not l: continue
 		l.mapLookups(lookupMap)
 
+@_add_method(otTables.Lookup)
+def mapMarkFilteringSets(self, markFilteringSetMap):
+	if self.LookupFlag & 0x0010:
+		self.MarkFilteringSet = markFilteringSetMap[self.MarkFilteringSet]
+
+@_add_method(otTables.LookupList)
+def mapMarkFilteringSets(self, markFilteringSetMap):
+	for l in self.Lookup:
+		if not l: continue
+		l.mapMarkFilteringSets(markFilteringSetMap)
+
 @_add_method(otTables.Feature)
 def mapLookups(self, lookupMap):
 	self.LookupListIndex = [lookupMap[i] for i in self.LookupListIndex]
@@ -1173,11 +1184,14 @@ class Merger(object):
 				t.table.LookupList.mapLookups(lookupMap)
 				t.table.FeatureList.mapLookups(lookupMap)
 
+				if GDEF and GDEF.table.Version >= 0x00010002:
+					markFilteringSetMap = {i:v for i,v in enumerate(GDEF.table.MarkGlyphSetsDef.Coverage)}
+					t.table.LookupList.mapMarkFilteringSets(markFilteringSetMap)
+
 			if t.table.FeatureList and t.table.ScriptList:
 				featureMap = {i:v for i,v in enumerate(t.table.FeatureList.FeatureRecord)}
 				t.table.ScriptList.mapFeatures(featureMap)
 
-		# TODO GDEF/Lookup MarkFilteringSets
 		# TODO FeatureParams nameIDs
 
 	def _postMerge(self, font):
@@ -1234,7 +1248,11 @@ class Merger(object):
 
 				t.table.LookupList.LookupCount = len(t.table.LookupList.Lookup)
 
-		# TODO GDEF/Lookup MarkFilteringSets
+				if GDEF and GDEF.table.Version >= 0x00010002:
+					markFilteringSetMap = _NonhashableDict(GDEF.table.MarkGlyphSetsDef.Coverage)
+					t.table.LookupList.mapMarkFilteringSets(markFilteringSetMap)
+
+
 		# TODO FeatureParams nameIDs
 
 
