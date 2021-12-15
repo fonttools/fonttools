@@ -489,8 +489,8 @@ def merge(self, m, tables):
 						for idx in (fontIdx, oldFontIdx):
 							if glyphSets[idx] is None:
 								glyphSets[idx] = m.fonts[idx].getGlyphSet()
-						if _glyphsAreSame(glyphSets[oldFontIdx], glyphSets[fontIdx], oldgid, gid):
-							continue
+						#if _glyphsAreSame(glyphSets[oldFontIdx], glyphSets[fontIdx], oldgid, gid):
+						#	continue
 					m.duplicateGlyphsPerFont[fontIdx][oldgid] = gid
 				elif m.duplicateGlyphsPerFont[fontIdx][oldgid] != gid:
 					# Char previously mapped to oldgid but oldgid is already remapped to a different
