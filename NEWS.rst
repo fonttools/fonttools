@@ -1,3 +1,11 @@
+- [merge] Merge GDEF marksets in Lookups properly (#2474).
+- [feaLib] Have ``fontTools feaLib`` script exit with error code when build fails (#2459)
+- [svgPathPen] Added ``ntos`` option to customize number formatting (e.g. rounding) (#2471).
+- [subset] Speed up subsetting of large CFF fonts (#2467).
+- [otTables] Speculatively promote lookups to extension to speed up compilation. If the
+  offset to lookup N is too big to fit in a ushort, the offset to lookup N+1 is going to
+  be too big as well, so we promote to extension all lookups from lookup N onwards (#2465).
+
 4.28.3 (released 2021-12-03)
 ----------------------------
 
