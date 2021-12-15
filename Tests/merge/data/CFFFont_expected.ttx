@@ -25592,10 +25592,9 @@
       <FeatureRecord index="13">
         <FeatureTag value="locl"/>
         <Feature>
-          <!-- LookupCount=3 -->
+          <!-- LookupCount=2 -->
           <LookupListIndex index="0" value="96"/>
-          <LookupListIndex index="1" value="96"/>
-          <LookupListIndex index="2" value="95"/>
+          <LookupListIndex index="1" value="95"/>
         </Feature>
       </FeatureRecord>
       <FeatureRecord index="14">
