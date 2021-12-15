@@ -713,11 +713,11 @@ def merge(self, m, tables):
 						f.FeatureParams = None
 						f.LookupCount = 0
 						f.LookupListIndex = []
-						langsys.FeatureIndex.append(synthFeature)
-						langsys.FeatureIndex.sort(key=lambda v: v.FeatureTag)
 						table.table.FeatureList.FeatureRecord.append(synthFeature)
 						table.table.FeatureList.FeatureCount += 1
 					feature = synthFeature
+					langsys.FeatureIndex.append(feature)
+					langsys.FeatureIndex.sort(key=lambda v: v.FeatureTag)
 
 				if not synthLookup:
 					subtable = otTables.SingleSubst()
@@ -737,8 +737,9 @@ def merge(self, m, tables):
 					table.table.LookupList.Lookup.append(synthLookup)
 					table.table.LookupList.LookupCount += 1
 
-				feature.Feature.LookupListIndex[:0] = [synthLookup]
-				feature.Feature.LookupCount += 1
+				if feature.Feature.LookupListIndex[:1] != [synthLookup]:
+					feature.Feature.LookupListIndex[:0] = [synthLookup]
+					feature.Feature.LookupCount += 1
 
 	DefaultTable.merge(self, m, tables)
 	return self
