@@ -234,7 +234,7 @@ Acknowledgements
 
 In alphabetical order:
 
-Olivier Berten, Samyak Bhuta, Erik van Blokland, Petr van Blokland,
+aschmitz, Olivier Berten, Samyak Bhuta, Erik van Blokland, Petr van Blokland,
 Jelle Bosma, Sascha Brawer, Tom Byrer, Antonio Cavedoni, Frédéric 
 Coiffier, Vincent Connare, David Corbett, Simon Cozens, Dave Crossland, 
 Simon Daniels, Peter Dekkers, Behdad Esfahbod, Behnam Esfahbod, Hannes 
