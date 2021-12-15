@@ -1,3 +1,6 @@
+4.28.4 (released 2021-12-15)
+----------------------------
+
 - [merge] Merge GDEF marksets in Lookups properly (#2474).
 - [feaLib] Have ``fontTools feaLib`` script exit with error code when build fails (#2459)
 - [svgPathPen] Added ``ntos`` option to customize number formatting (e.g. rounding) (#2471).
