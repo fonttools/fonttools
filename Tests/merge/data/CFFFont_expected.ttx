@@ -25156,7 +25156,7 @@
             </Mark2Record>
           </Mark2Array>
         </MarkMarkPos>
-        <MarkFilteringSet value="0"/>
+        <MarkFilteringSet value="3"/>
       </Lookup>
       <Lookup index="27">
         <LookupType value="6"/>
@@ -25280,7 +25280,7 @@
             </Mark2Record>
           </Mark2Array>
         </MarkMarkPos>
-        <MarkFilteringSet value="1"/>
+        <MarkFilteringSet value="4"/>
       </Lookup>
     </LookupList>
   </GPOS>
