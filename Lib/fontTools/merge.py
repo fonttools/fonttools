@@ -374,10 +374,14 @@ ttLib.getTableClass('gasp').mergeMap = lambda self, lst: first(lst) # FIXME? App
 
 @_add_method(ttLib.getTableClass('CFF '))
 def merge(self, m, tables):
+
 	if any(hasattr(table, "FDSelect") for table in tables):
 		raise NotImplementedError(
 			"Merging CID-keyed CFF tables is not supported yet"
 		)
+
+	for table in tables:
+		table.cff.desubroutinize()
 
 	newcff = tables[0]
 	newfont = newcff.cff[0]
@@ -385,14 +389,17 @@ def merge(self, m, tables):
 	storedNamesStrings = []
 	glyphOrderStrings = []
 	glyphOrder = set(newfont.getGlyphOrder())
+
 	for name in newfont.strings.strings:
 		if name not in glyphOrder:
 			storedNamesStrings.append(name)
 		else:
 			glyphOrderStrings.append(name)
+
 	chrset = list(newfont.charset)
 	newcs = newfont.CharStrings
 	log.debug("FONT 0 CharStrings: %d.", len(newcs))
+
 	for i, table in enumerate(tables[1:], start=1):
 		font = table.cff[0]
 		font.Private = private
@@ -1064,7 +1071,6 @@ class Merger(object):
 		cffTables = [None] * len(fonts)
 		if sfntVersion == "OTTO":
 			for i, font in enumerate(fonts):
-				font['CFF '].cff.desubroutinize()
 				cffTables[i] = font['CFF ']
 
 		# Reload fonts and set new glyph names on them.
