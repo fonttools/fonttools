@@ -73,7 +73,7 @@ def computeMegaCmap(merger, tables):
 				format12 = subtable
 			else:
 				log.warning(
-					"Dropped cmap subtable from font [%s]:\t"
+					"Dropped cmap subtable from font '%s':\t"
 					"format %2s, platformID %2s, platEncID %2s",
 					fontIdx, subtable.format, subtable.platformID, subtable.platEncID
 				)

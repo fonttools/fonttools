@@ -182,7 +182,7 @@ def merge(self, m, tables):
 	for i,(table,dups) in enumerate(zip(tables, m.duplicateGlyphsPerFont)):
 		if not dups: continue
 		if table is None or table is NotImplemented:
-			log.warning("Have non-identical duplicates to resolve for font %d but no GSUB. Are duplicates intended?: %s" % (i + 1, dups))
+			log.warning("Have non-identical duplicates to resolve for '%s' but no GSUB. Are duplicates intended?: %s" % (m.fonts[i].name, dups))
 			continue
 
 		synthFeature = None
