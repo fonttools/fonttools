@@ -3,6 +3,7 @@
 # Google Author(s): Behdad Esfahbod, Roozbeh Pournader
 
 from fontTools import ttLib, cffLib
+from fontTools.ttLib.tables.DefaultTable import DefaultTable
 from fontTools.merge.util import *
 
 
