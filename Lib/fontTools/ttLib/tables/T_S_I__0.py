@@ -19,10 +19,10 @@ class table_T_S_I__0(DefaultTable.DefaultTable):
 	dependencies = ["TSI1"]
 
 	def decompile(self, data, ttFont):
-		numGlyphs = ttFont['maxp'].numGlyphs
 		indices = []
 		size = struct.calcsize(tsi0Format)
-		for i in range(numGlyphs + 5):
+		numEntries = len(data) // size
+		for i in range(numEntries):
 			glyphID, textLength, textOffset = fixlongs(*struct.unpack(tsi0Format, data[:size]))
 			indices.append((glyphID, textLength, textOffset))
 			data = data[size:]

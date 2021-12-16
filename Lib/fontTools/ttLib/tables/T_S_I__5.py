@@ -12,13 +12,11 @@ import array
 class table_T_S_I__5(DefaultTable.DefaultTable):
 
 	def decompile(self, data, ttFont):
-		numGlyphs = ttFont['maxp'].numGlyphs
-		assert len(data) == 2 * numGlyphs
 		a = array.array("H")
 		a.frombytes(data)
 		if sys.byteorder != "big": a.byteswap()
 		self.glyphGrouping = {}
-		for i in range(numGlyphs):
+		for i in range(len(data) // 2):
 			self.glyphGrouping[ttFont.getGlyphName(i)] = a[i]
 
 	def compile(self, ttFont):
