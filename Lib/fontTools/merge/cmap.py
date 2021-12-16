@@ -12,19 +12,19 @@ log = logging.getLogger("fontTools.merge")
 
 def computeMegaGlyphOrder(merger, glyphOrders):
 	"""Modifies passed-in glyphOrders to reflect new glyph names.
-	Returns glyphOrder for the merged font."""
-	mega = {}
+    Stores merger.glyphOrder."""
+	megaOrder = {}
 	for glyphOrder in glyphOrders:
 		for i,glyphName in enumerate(glyphOrder):
-			if glyphName in mega:
-				n = mega[glyphName]
-				while (glyphName + "#" + repr(n)) in mega:
+			if glyphName in megaOrder:
+				n = megaOrder[glyphName]
+				while (glyphName + "#" + repr(n)) in megaOrder:
 					n += 1
-				mega[glyphName] = n
+				megaOrder[glyphName] = n
 				glyphName += "#" + repr(n)
 				glyphOrder[i] = glyphName
-			mega[glyphName] = 1
-	return list(mega.keys())
+			megaOrder[glyphName] = 1
+	merger.glyphOrder = megaOrder = list(megaOrder.keys())
 
 
 def _glyphsAreSame(glyphSet1, glyphSet2, glyph1, glyph2,
@@ -56,13 +56,14 @@ class CmapUnicodePlatEncodings:
 	BMP = {(4, 3, 1), (4, 0, 3), (4, 0, 4), (4, 0, 6)}
 	FullRepertoire = {(12, 3, 10), (12, 0, 4), (12, 0, 6)}
 
+def computeMegaCmap(merger, cmapTables):
+	"""Sets merger.cmap and merger.glyphOrder."""
 
-def computeMegaCmap(merger, tables):
 	# TODO Handle format=14.
 	# Only merge format 4 and 12 Unicode subtables, ignores all other subtables
 	# If there is a format 12 table for a font, ignore the format 4 table of it
-	cmapTables = []
-	for fontIdx,table in enumerate(tables):
+	chosenCmapTables = []
+	for fontIdx,table in enumerate(cmapTables):
 		format4 = None
 		format12 = None
 		for subtable in table.tables:
@@ -78,15 +79,16 @@ def computeMegaCmap(merger, tables):
 					fontIdx, subtable.format, subtable.platformID, subtable.platEncID
 				)
 		if format12 is not None:
-			cmapTables.append((format12, fontIdx))
+			chosenCmapTables.append((format12, fontIdx))
 		elif format4 is not None:
-			cmapTables.append((format4, fontIdx))
+			chosenCmapTables.append((format4, fontIdx))
 
 	# Build the unicode mapping
 	merger.cmap = cmap = {}
 	fontIndexForGlyph = {}
 	glyphSets = [None for f in merger.fonts] if hasattr(merger, 'fonts') else None
-	for table,fontIdx in cmapTables:
+
+	for table,fontIdx in chosenCmapTables:
 		# handle duplicates
 		for uni,gid in table.cmap.items():
 			oldgid = cmap.get(uni, None)
@@ -112,4 +114,3 @@ def computeMegaCmap(merger, tables):
 					# gid, because of another Unicode character.
 					# TODO: Try harder to do something about these.
 					log.warning("Dropped mapping from codepoint %#06X to glyphId '%s'", uni, gid)
-

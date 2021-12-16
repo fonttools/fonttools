@@ -74,33 +74,25 @@ class Merger(object):
 		# Settle on a mega glyph order.
 		#
 		fonts = self._openFonts(fontfiles)
-		glyphOrders = [font.getGlyphOrder() for font in fonts]
-		megaGlyphOrder = computeMegaGlyphOrder(self, glyphOrders)
-		self.duplicateGlyphsPerFont = [{} for _ in fonts]
-		computeMegaCmap(self, [font['cmap'] for font in fonts])
+		glyphOrders = [list(font.getGlyphOrder()) for font in fonts]
+		computeMegaGlyphOrder(self, glyphOrders)
 
 		# Take first input file sfntVersion
 		sfntVersion = fonts[0].sfntVersion
 
-		cffTables = [None] * len(fonts)
-		if sfntVersion == "OTTO":
-			for i, font in enumerate(fonts):
-				cffTables[i] = font['CFF ']
-
 		# Reload fonts and set new glyph names on them.
-		# TODO Is it necessary to reload font?  I think it is.  At least
-		# it's safer, in case tables were loaded to provide glyph names.
 		fonts = self._openFonts(fontfiles)
-		for font, glyphOrder, cffTable in zip(fonts, glyphOrders, cffTables):
+		for font,glyphOrder in zip(fonts, glyphOrders):
 			font.setGlyphOrder(glyphOrder)
-			if cffTable:
-				# Rename CFF CharStrings to match the new glyphOrder.
-				# Using cffTable from before reloading the fonts, because reasons.
-				renameCFFCharStrings(self, glyphOrder, cffTable)
-				font['CFF '] = cffTable
+			if 'CFF ' in font:
+				renameCFFCharStrings(self, glyphOrder, font['CFF '])
+
+		cmaps = [font['cmap'] for font in fonts]
+		self.duplicateGlyphsPerFont = [{} for _ in fonts]
+		computeMegaCmap(self, cmaps)
 
 		mega = ttLib.TTFont(sfntVersion=sfntVersion)
-		mega.setGlyphOrder(megaGlyphOrder)
+		mega.setGlyphOrder(self.glyphOrder)
 
 		for font in fonts:
 			self._preMerge(font)
