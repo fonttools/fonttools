@@ -151,7 +151,7 @@ PlistEncodable = Union[
     Data,
     datetime,
     float,
-    int,
+    Integral,
     Mapping[str, Any],
     Sequence[Any],
     str,
