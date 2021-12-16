@@ -68,7 +68,7 @@ class Merger(object):
 		#
 		fonts = [ttLib.TTFont(fontfile) for fontfile in fontfiles]
 		glyphOrders = [font.getGlyphOrder() for font in fonts]
-		megaGlyphOrder = self._mergeGlyphOrders(glyphOrders)
+		megaGlyphOrder = computeMegaGlyphOrder(self, glyphOrders)
 
 		# Take first input file sfntVersion
 		sfntVersion = fonts[0].sfntVersion
@@ -99,7 +99,7 @@ class Merger(object):
 		self.fonts = fonts
 		self.duplicateGlyphsPerFont = [{} for _ in fonts]
 
-		compute_mega_cmap(self, [font['cmap'] for font in fonts])
+		computeMegaCmap(self, [font['cmap'] for font in fonts])
 
 		allTags = reduce(set.union, (list(font.keys()) for font in fonts), set())
 		allTags.remove('GlyphOrder')
@@ -128,22 +128,6 @@ class Merger(object):
 		self._postMerge(mega)
 
 		return mega
-
-	def _mergeGlyphOrders(self, glyphOrders):
-		"""Modifies passed-in glyphOrders to reflect new glyph names.
-		Returns glyphOrder for the merged font."""
-		mega = {}
-		for glyphOrder in glyphOrders:
-			for i,glyphName in enumerate(glyphOrder):
-				if glyphName in mega:
-					n = mega[glyphName]
-					while (glyphName + "#" + repr(n)) in mega:
-						n += 1
-					mega[glyphName] = n
-					glyphName += "#" + repr(n)
-					glyphOrder[i] = glyphName
-				mega[glyphName] = 1
-		return list(mega.keys())
 
 	def _renameCFFCharStrings(self, glyphOrder, cffTable):
 		"""Rename topDictIndex charStrings based on glyphOrder."""

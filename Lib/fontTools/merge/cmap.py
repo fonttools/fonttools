@@ -10,6 +10,23 @@ import logging
 log = logging.getLogger("fontTools.merge")
 
 
+def computeMegaGlyphOrder(merger, glyphOrders):
+	"""Modifies passed-in glyphOrders to reflect new glyph names.
+	Returns glyphOrder for the merged font."""
+	mega = {}
+	for glyphOrder in glyphOrders:
+		for i,glyphName in enumerate(glyphOrder):
+			if glyphName in mega:
+				n = mega[glyphName]
+				while (glyphName + "#" + repr(n)) in mega:
+					n += 1
+				mega[glyphName] = n
+				glyphName += "#" + repr(n)
+				glyphOrder[i] = glyphName
+			mega[glyphName] = 1
+	return list(mega.keys())
+
+
 def _glyphsAreSame(glyphSet1, glyphSet2, glyph1, glyph2,
 				   advanceTolerance=.05,
 				   advanceToleranceEmpty=.20):
@@ -40,7 +57,7 @@ class CmapUnicodePlatEncodings:
 	FullRepertoire = {(12, 3, 10), (12, 0, 4), (12, 0, 6)}
 
 
-def compute_mega_cmap(merger, tables):
+def computeMegaCmap(merger, tables):
 	# TODO Handle format=14.
 	# Only merge format 4 and 12 Unicode subtables, ignores all other subtables
 	# If there is a format 12 table for a font, ignore the format 4 table of it

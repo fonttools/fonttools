@@ -279,7 +279,7 @@ def merge(self, m, tables):
 
 	# TODO Handle format=14.
 	if not hasattr(m, 'cmap'):
-		compute_mega_cmap(m, tables)
+		computeMegaCmap(m, tables)
 	cmap = m.cmap
 
 	cmapBmpOnly = {uni: gid for uni,gid in cmap.items() if uni <= 0xFFFF}
