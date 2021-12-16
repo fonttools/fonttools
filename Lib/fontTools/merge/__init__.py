@@ -87,7 +87,7 @@ class Merger(object):
 			if cffTable:
 				# Rename CFF CharStrings to match the new glyphOrder.
 				# Using cffTable from before reloading the fonts, because reasons.
-				self._renameCFFCharStrings(glyphOrder, cffTable)
+				renameCFFCharStrings(self, glyphOrder, cffTable)
 				font['CFF '] = cffTable
 
 		mega = ttLib.TTFont(sfntVersion=sfntVersion)
@@ -128,15 +128,6 @@ class Merger(object):
 		self._postMerge(mega)
 
 		return mega
-
-	def _renameCFFCharStrings(self, glyphOrder, cffTable):
-		"""Rename topDictIndex charStrings based on glyphOrder."""
-		td = cffTable.cff.topDictIndex[0]
-		charStrings = {}
-		for i, v in enumerate(td.CharStrings.charStrings.values()):
-			glyphName = glyphOrder[i]
-			charStrings[glyphName] = v
-		cffTable.cff.topDictIndex[0].CharStrings.charStrings = charStrings
 
 	def mergeObjects(self, returnTable, logic, tables):
 		# Right now we don't use self at all.  Will use in the future
@@ -243,7 +234,6 @@ class Merger(object):
 				if GDEF and GDEF.table.Version >= 0x00010002:
 					markFilteringSetMap = NonhashableDict(GDEF.table.MarkGlyphSetsDef.Coverage)
 					t.table.LookupList.mapMarkFilteringSets(markFilteringSetMap)
-
 
 		# TODO FeatureParams nameIDs
 

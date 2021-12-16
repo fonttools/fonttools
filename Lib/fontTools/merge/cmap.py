@@ -113,4 +113,3 @@ def computeMegaCmap(merger, tables):
 					# TODO: Try harder to do something about these.
 					log.warning("Dropped mapping from codepoint %#06X to glyphId '%s'", uni, gid)
 
-
