@@ -2,7 +2,7 @@
 #
 # Google Author(s): Behdad Esfahbod, Roozbeh Pournader
 
-from fontTools.merge.unicode import *
+from fontTools.merge.unicode import is_Default_Ignorable
 from fontTools.pens.recordingPen import DecomposingRecordingPen
 import logging
 
@@ -52,7 +52,7 @@ def _glyphsAreSame(glyphSet1, glyphSet2, glyph1, glyph2,
 # Unicode BMP-only and Unicode Full Repertoire semantics.
 # Cf. OpenType spec for "Platform specific encodings":
 # https://docs.microsoft.com/en-us/typography/opentype/spec/name
-class CmapUnicodePlatEncodings:
+class _CmapUnicodePlatEncodings:
 	BMP = {(4, 3, 1), (4, 0, 3), (4, 0, 4), (4, 0, 6)}
 	FullRepertoire = {(12, 3, 10), (12, 0, 4), (12, 0, 6)}
 
@@ -68,9 +68,9 @@ def computeMegaCmap(merger, cmapTables):
 		format12 = None
 		for subtable in table.tables:
 			properties = (subtable.format, subtable.platformID, subtable.platEncID)
-			if properties in CmapUnicodePlatEncodings.BMP:
+			if properties in _CmapUnicodePlatEncodings.BMP:
 				format4 = subtable
-			elif properties in CmapUnicodePlatEncodings.FullRepertoire:
+			elif properties in _CmapUnicodePlatEncodings.FullRepertoire:
 				format12 = subtable
 			else:
 				log.warning(
@@ -114,3 +114,16 @@ def computeMegaCmap(merger, cmapTables):
 					# gid, because of another Unicode character.
 					# TODO: Try harder to do something about these.
 					log.warning("Dropped mapping from codepoint %#06X to glyphId '%s'", uni, gid)
+
+
+def renameCFFCharStrings(merger, glyphOrder, cffTable):
+	"""Rename topDictIndex charStrings based on glyphOrder."""
+	td = cffTable.cff.topDictIndex[0]
+
+	charStrings = {}
+	for i, v in enumerate(td.CharStrings.charStrings.values()):
+		glyphName = glyphOrder[i]
+		charStrings[glyphName] = v
+	td.CharStrings.charStrings = charStrings
+
+	td.charset = list(glyphOrder)

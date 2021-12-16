@@ -3,11 +3,11 @@
 # Google Author(s): Behdad Esfahbod, Roozbeh Pournader
 
 from fontTools import ttLib
-from fontTools.merge.base import *
-from fontTools.merge.cmap import *
-from fontTools.merge.layout import *
-from fontTools.merge.options import *
-from fontTools.merge.util import *
+import fontTools.merge.base
+from fontTools.merge.cmap import computeMegaGlyphOrder, computeMegaCmap, renameCFFCharStrings
+from fontTools.merge.layout import layoutPreMerge, layoutPostMerge
+from fontTools.merge.options import Options
+import fontTools.merge.tables
 from fontTools.misc.loggingTools import Timer
 from functools import reduce
 import sys
