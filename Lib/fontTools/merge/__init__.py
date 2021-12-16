@@ -2,160 +2,20 @@
 #
 # Google Author(s): Behdad Esfahbod, Roozbeh Pournader
 
-from fontTools.misc.timeTools import timestampNow
 from fontTools import ttLib, cffLib
-from fontTools.ttLib.tables import otTables, _h_e_a_d
+from fontTools.ttLib.tables import otTables
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
+from fontTools.merge.util import *
 from fontTools.misc.loggingTools import Timer
 from fontTools.pens.recordingPen import DecomposingRecordingPen
 from functools import reduce
 import sys
-import time
-import operator
 import logging
-import os
 
 
 log = logging.getLogger("fontTools.merge")
 timer = Timer(logger=logging.getLogger(__name__+".timer"), level=logging.INFO)
 
-
-def _add_method(*clazzes, **kwargs):
-	"""Returns a decorator function that adds a new method to one or
-	more classes."""
-	allowDefault = kwargs.get('allowDefaultTable', False)
-	def wrapper(method):
-		done = []
-		for clazz in clazzes:
-			if clazz in done: continue # Support multiple names of a clazz
-			done.append(clazz)
-			assert allowDefault or clazz != DefaultTable, 'Oops, table class not found.'
-			assert method.__name__ not in clazz.__dict__, \
-				"Oops, class '%s' has method '%s'." % (clazz.__name__, method.__name__)
-			setattr(clazz, method.__name__, method)
-		return None
-	return wrapper
-
-# General utility functions for merging values from different fonts
-
-def equal(lst):
-	lst = list(lst)
-	t = iter(lst)
-	first = next(t)
-	assert all(item == first for item in t), "Expected all items to be equal: %s" % lst
-	return first
-
-def first(lst):
-	return next(iter(lst))
-
-def recalculate(lst):
-	return NotImplemented
-
-def current_time(lst):
-	return timestampNow()
-
-def bitwise_and(lst):
-	return reduce(operator.and_, lst)
-
-def bitwise_or(lst):
-	return reduce(operator.or_, lst)
-
-def avg_int(lst):
-	lst = list(lst)
-	return sum(lst) // len(lst)
-
-def onlyExisting(func):
-	"""Returns a filter func that when called with a list,
-	only calls func on the non-NotImplemented items of the list,
-	and only so if there's at least one item remaining.
-	Otherwise returns NotImplemented."""
-
-	def wrapper(lst):
-		items = [item for item in lst if item is not NotImplemented]
-		return func(items) if items else NotImplemented
-
-	return wrapper
-
-def sumLists(lst):
-	l = []
-	for item in lst:
-		l.extend(item)
-	return l
-
-def sumDicts(lst):
-	d = {}
-	for item in lst:
-		d.update(item)
-	return d
-
-def mergeObjects(lst):
-	lst = [item for item in lst if item is not NotImplemented]
-	if not lst:
-		return NotImplemented
-	lst = [item for item in lst if item is not None]
-	if not lst:
-		return None
-
-	clazz = lst[0].__class__
-	assert all(type(item) == clazz for item in lst), lst
-
-	logic = clazz.mergeMap
-	returnTable = clazz()
-	returnDict = {}
-
-	allKeys = set.union(set(), *(vars(table).keys() for table in lst))
-	for key in allKeys:
-		try:
-			mergeLogic = logic[key]
-		except KeyError:
-			try:
-				mergeLogic = logic['*']
-			except KeyError:
-				raise Exception("Don't know how to merge key %s of class %s" %
-						(key, clazz.__name__))
-		if mergeLogic is NotImplemented:
-			continue
-		value = mergeLogic(getattr(table, key, NotImplemented) for table in lst)
-		if value is not NotImplemented:
-			returnDict[key] = value
-
-	returnTable.__dict__ = returnDict
-
-	return returnTable
-
-def mergeBits(bitmap):
-
-	def wrapper(lst):
-		lst = list(lst)
-		returnValue = 0
-		for bitNumber in range(bitmap['size']):
-			try:
-				mergeLogic = bitmap[bitNumber]
-			except KeyError:
-				try:
-					mergeLogic = bitmap['*']
-				except KeyError:
-					raise Exception("Don't know how to merge bit %s" % bitNumber)
-			shiftedBit = 1 << bitNumber
-			mergedValue = mergeLogic(bool(item & shiftedBit) for item in lst)
-			returnValue |= mergedValue << bitNumber
-		return returnValue
-
-	return wrapper
-
-
-@_add_method(DefaultTable, allowDefaultTable=True)
-def merge(self, m, tables):
-	if not hasattr(self, 'mergeMap'):
-		log.info("Don't know how to merge '%s'.", self.tableTag)
-		return NotImplemented
-
-	logic = self.mergeMap
-
-	if isinstance(logic, dict):
-		return m.mergeObjects(self, self.mergeMap, tables)
-	else:
-		return logic(tables)
 
 
 ttLib.getTableClass('maxp').mergeMap = {
@@ -305,7 +165,7 @@ ttLib.getTableClass('OS/2').mergeMap = {
 	'usUpperOpticalPointSize': onlyExisting(max),
 }
 
-@_add_method(ttLib.getTableClass('OS/2'))
+@add_method(ttLib.getTableClass('OS/2'))
 def merge(self, m, tables):
 	DefaultTable.merge(self, m, tables)
 	if self.version < 2:
@@ -353,7 +213,7 @@ ttLib.getTableClass('glyf').mergeMap = {
 	'glyphOrder': sumLists,
 }
 
-@_add_method(ttLib.getTableClass('glyf'))
+@add_method(ttLib.getTableClass('glyf'))
 def merge(self, m, tables):
 	for i,table in enumerate(tables):
 		for g in table.glyphs.values():
@@ -372,7 +232,7 @@ ttLib.getTableClass('fpgm').mergeMap = lambda self, lst: first(lst)
 ttLib.getTableClass('cvt ').mergeMap = lambda self, lst: first(lst)
 ttLib.getTableClass('gasp').mergeMap = lambda self, lst: first(lst) # FIXME? Appears irreconcilable
 
-@_add_method(ttLib.getTableClass('CFF '))
+@add_method(ttLib.getTableClass('CFF '))
 def merge(self, m, tables):
 
 	if any(hasattr(table, "FDSelect") for table in tables):
@@ -518,7 +378,7 @@ def _is_Default_Ignorable(u):
 		False)
 
 
-@_add_method(ttLib.getTableClass('cmap'))
+@add_method(ttLib.getTableClass('cmap'))
 def merge(self, m, tables):
 	# TODO Handle format=14.
 	# Only merge format 4 and 12 Unicode subtables, ignores all other subtables
@@ -765,7 +625,7 @@ ttLib.getTableClass('MATH').mergeMap = \
 	'table': mergeObjects,
 }
 
-@_add_method(ttLib.getTableClass('GSUB'))
+@add_method(ttLib.getTableClass('GSUB'))
 def merge(self, m, tables):
 
 	assert len(tables) == len(m.duplicateGlyphsPerFont)
@@ -824,7 +684,7 @@ def merge(self, m, tables):
 	DefaultTable.merge(self, m, tables)
 	return self
 
-@_add_method(otTables.SingleSubst,
+@add_method(otTables.SingleSubst,
 		otTables.MultipleSubst,
 		otTables.AlternateSubst,
 		otTables.LigatureSubst,
@@ -839,7 +699,7 @@ def mapLookups(self, lookupMap):
 	pass
 
 # Copied and trimmed down from subset.py
-@_add_method(otTables.ContextSubst,
+@add_method(otTables.ContextSubst,
 		otTables.ChainContextSubst,
 		otTables.ContextPos,
 		otTables.ChainContextPos)
@@ -883,7 +743,7 @@ def __merge_classify_context(self):
 	return self.__class__._merge__ContextHelpers[self.Format]
 
 
-@_add_method(otTables.ContextSubst,
+@add_method(otTables.ContextSubst,
 		otTables.ChainContextSubst,
 		otTables.ContextPos,
 		otTables.ChainContextPos)
@@ -905,7 +765,7 @@ def mapLookups(self, lookupMap):
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
-@_add_method(otTables.ExtensionSubst,
+@add_method(otTables.ExtensionSubst,
 		otTables.ExtensionPos)
 def mapLookups(self, lookupMap):
 	if self.Format == 1:
@@ -913,47 +773,47 @@ def mapLookups(self, lookupMap):
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
-@_add_method(otTables.Lookup)
+@add_method(otTables.Lookup)
 def mapLookups(self, lookupMap):
 	for st in self.SubTable:
 		if not st: continue
 		st.mapLookups(lookupMap)
 
-@_add_method(otTables.LookupList)
+@add_method(otTables.LookupList)
 def mapLookups(self, lookupMap):
 	for l in self.Lookup:
 		if not l: continue
 		l.mapLookups(lookupMap)
 
-@_add_method(otTables.Lookup)
+@add_method(otTables.Lookup)
 def mapMarkFilteringSets(self, markFilteringSetMap):
 	if self.LookupFlag & 0x0010:
 		self.MarkFilteringSet = markFilteringSetMap[self.MarkFilteringSet]
 
-@_add_method(otTables.LookupList)
+@add_method(otTables.LookupList)
 def mapMarkFilteringSets(self, markFilteringSetMap):
 	for l in self.Lookup:
 		if not l: continue
 		l.mapMarkFilteringSets(markFilteringSetMap)
 
-@_add_method(otTables.Feature)
+@add_method(otTables.Feature)
 def mapLookups(self, lookupMap):
 	self.LookupListIndex = [lookupMap[i] for i in self.LookupListIndex]
 
-@_add_method(otTables.FeatureList)
+@add_method(otTables.FeatureList)
 def mapLookups(self, lookupMap):
 	for f in self.FeatureRecord:
 		if not f or not f.Feature: continue
 		f.Feature.mapLookups(lookupMap)
 
-@_add_method(otTables.DefaultLangSys,
+@add_method(otTables.DefaultLangSys,
 		otTables.LangSys)
 def mapFeatures(self, featureMap):
 	self.FeatureIndex = [featureMap[i] for i in self.FeatureIndex]
 	if self.ReqFeatureIndex != 65535:
 		self.ReqFeatureIndex = featureMap[self.ReqFeatureIndex]
 
-@_add_method(otTables.Script)
+@add_method(otTables.Script)
 def mapFeatures(self, featureMap):
 	if self.DefaultLangSys:
 		self.DefaultLangSys.mapFeatures(featureMap)
@@ -961,7 +821,7 @@ def mapFeatures(self, featureMap):
 		if not l or not l.LangSys: continue
 		l.LangSys.mapFeatures(featureMap)
 
-@_add_method(otTables.ScriptList)
+@add_method(otTables.ScriptList)
 def mapFeatures(self, featureMap):
 	for s in self.ScriptRecord:
 		if not s or not s.Script: continue
