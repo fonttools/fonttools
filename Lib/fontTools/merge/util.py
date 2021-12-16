@@ -148,3 +148,49 @@ def merge(self, m, tables):
 	else:
 		return logic(tables)
 
+
+class AttendanceRecordingIdentityDict(object):
+	"""A dictionary-like object that records indices of items actually accessed
+	from a list."""
+
+	def __init__(self, lst):
+		self.l = lst
+		self.d = {id(v):i for i,v in enumerate(lst)}
+		self.s = set()
+
+	def __getitem__(self, v):
+		self.s.add(self.d[id(v)])
+		return v
+
+class GregariousIdentityDict(object):
+	"""A dictionary-like object that welcomes guests without reservations and
+	adds them to the end of the guest list."""
+
+	def __init__(self, lst):
+		self.l = lst
+		self.s = set(id(v) for v in lst)
+
+	def __getitem__(self, v):
+		if id(v) not in self.s:
+			self.s.add(id(v))
+			self.l.append(v)
+		return v
+
+class NonhashableDict(object):
+	"""A dictionary-like object mapping objects to values."""
+
+	def __init__(self, keys, values=None):
+		if values is None:
+			self.d = {id(v):i for i,v in enumerate(keys)}
+		else:
+			self.d = {id(k):v for k,v in zip(keys, values)}
+
+	def __getitem__(self, k):
+		return self.d[id(k)]
+
+	def __setitem__(self, k, v):
+		self.d[id(k)] = v
+
+	def __delitem__(self, k):
+		del self.d[id(k)]
+

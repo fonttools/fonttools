@@ -212,51 +212,6 @@ class Options(object):
 
 		return ret
 
-class _AttendanceRecordingIdentityDict(object):
-	"""A dictionary-like object that records indices of items actually accessed
-	from a list."""
-
-	def __init__(self, lst):
-		self.l = lst
-		self.d = {id(v):i for i,v in enumerate(lst)}
-		self.s = set()
-
-	def __getitem__(self, v):
-		self.s.add(self.d[id(v)])
-		return v
-
-class _GregariousIdentityDict(object):
-	"""A dictionary-like object that welcomes guests without reservations and
-	adds them to the end of the guest list."""
-
-	def __init__(self, lst):
-		self.l = lst
-		self.s = set(id(v) for v in lst)
-
-	def __getitem__(self, v):
-		if id(v) not in self.s:
-			self.s.add(id(v))
-			self.l.append(v)
-		return v
-
-class _NonhashableDict(object):
-	"""A dictionary-like object mapping objects to values."""
-
-	def __init__(self, keys, values=None):
-		if values is None:
-			self.d = {id(v):i for i,v in enumerate(keys)}
-		else:
-			self.d = {id(k):v for k,v in zip(keys, values)}
-
-	def __getitem__(self, k):
-		return self.d[id(k)]
-
-	def __setitem__(self, k, v):
-		self.d[id(k)] = v
-
-	def __delitem__(self, k):
-		del self.d[id(k)]
-
 class Merger(object):
 	"""Font merger.
 
@@ -461,11 +416,11 @@ class Merger(object):
 			if t.table.FeatureList and t.table.ScriptList:
 
 				# Collect unregistered (new) features.
-				featureMap = _GregariousIdentityDict(t.table.FeatureList.FeatureRecord)
+				featureMap = GregariousIdentityDict(t.table.FeatureList.FeatureRecord)
 				t.table.ScriptList.mapFeatures(featureMap)
 
 				# Record used features.
-				featureMap = _AttendanceRecordingIdentityDict(t.table.FeatureList.FeatureRecord)
+				featureMap = AttendanceRecordingIdentityDict(t.table.FeatureList.FeatureRecord)
 				t.table.ScriptList.mapFeatures(featureMap)
 				usedIndices = featureMap.s
 
@@ -473,7 +428,7 @@ class Merger(object):
 				t.table.FeatureList.FeatureRecord = [f for i,f in enumerate(t.table.FeatureList.FeatureRecord) if i in usedIndices]
 
 				# Map back to indices.
-				featureMap = _NonhashableDict(t.table.FeatureList.FeatureRecord)
+				featureMap = NonhashableDict(t.table.FeatureList.FeatureRecord)
 				t.table.ScriptList.mapFeatures(featureMap)
 
 				t.table.FeatureList.FeatureCount = len(t.table.FeatureList.FeatureRecord)
@@ -481,12 +436,12 @@ class Merger(object):
 			if t.table.LookupList:
 
 				# Collect unregistered (new) lookups.
-				lookupMap = _GregariousIdentityDict(t.table.LookupList.Lookup)
+				lookupMap = GregariousIdentityDict(t.table.LookupList.Lookup)
 				t.table.FeatureList.mapLookups(lookupMap)
 				t.table.LookupList.mapLookups(lookupMap)
 
 				# Record used lookups.
-				lookupMap = _AttendanceRecordingIdentityDict(t.table.LookupList.Lookup)
+				lookupMap = AttendanceRecordingIdentityDict(t.table.LookupList.Lookup)
 				t.table.FeatureList.mapLookups(lookupMap)
 				t.table.LookupList.mapLookups(lookupMap)
 				usedIndices = lookupMap.s
@@ -495,14 +450,14 @@ class Merger(object):
 				t.table.LookupList.Lookup = [l for i,l in enumerate(t.table.LookupList.Lookup) if i in usedIndices]
 
 				# Map back to indices.
-				lookupMap = _NonhashableDict(t.table.LookupList.Lookup)
+				lookupMap = NonhashableDict(t.table.LookupList.Lookup)
 				t.table.FeatureList.mapLookups(lookupMap)
 				t.table.LookupList.mapLookups(lookupMap)
 
 				t.table.LookupList.LookupCount = len(t.table.LookupList.Lookup)
 
 				if GDEF and GDEF.table.Version >= 0x00010002:
-					markFilteringSetMap = _NonhashableDict(GDEF.table.MarkGlyphSetsDef.Coverage)
+					markFilteringSetMap = NonhashableDict(GDEF.table.MarkGlyphSetsDef.Coverage)
 					t.table.LookupList.mapMarkFilteringSets(markFilteringSetMap)
 
 
