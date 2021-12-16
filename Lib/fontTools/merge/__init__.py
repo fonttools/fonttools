@@ -69,6 +69,8 @@ class Merger(object):
 		fonts = [ttLib.TTFont(fontfile) for fontfile in fontfiles]
 		glyphOrders = [font.getGlyphOrder() for font in fonts]
 		megaGlyphOrder = computeMegaGlyphOrder(self, glyphOrders)
+		self.duplicateGlyphsPerFont = [{} for _ in fonts]
+		computeMegaCmap(self, [font['cmap'] for font in fonts])
 
 		# Take first input file sfntVersion
 		sfntVersion = fonts[0].sfntVersion
@@ -97,9 +99,6 @@ class Merger(object):
 			self._preMerge(font)
 
 		self.fonts = fonts
-		self.duplicateGlyphsPerFont = [{} for _ in fonts]
-
-		computeMegaCmap(self, [font['cmap'] for font in fonts])
 
 		allTags = reduce(set.union, (list(font.keys()) for font in fonts), set())
 		allTags.remove('GlyphOrder')
