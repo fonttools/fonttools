@@ -56,8 +56,8 @@ class Merger(object):
 	def _openFonts(self, fontfiles):
 		fonts = [ttLib.TTFont(fontfile) for fontfile in fontfiles]
 		for font,fontfile in zip(fonts, fontfiles):
-			font.fontfile = fontfile
-			font.name = font['name'].getDebugName(4)
+			font._merger__fontfile = fontfile
+			font._merger__name = font['name'].getDebugName(4)
 		return fonts
 
 	def merge(self, fontfiles):
