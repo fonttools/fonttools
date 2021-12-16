@@ -20,8 +20,8 @@ timer = Timer(logger=logging.getLogger(__name__+".timer"), level=logging.INFO)
 
 
 def _glyphsAreSame(glyphSet1, glyphSet2, glyph1, glyph2,
-                   advanceTolerance=.05,
-                   advanceToleranceEmpty=.20):
+				   advanceTolerance=.05,
+				   advanceToleranceEmpty=.20):
 	pen1 = DecomposingRecordingPen(glyphSet1)
 	pen2 = DecomposingRecordingPen(glyphSet2)
 	g1 = glyphSet1[glyph1]
