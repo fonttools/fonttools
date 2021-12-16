@@ -53,6 +53,13 @@ class Merger(object):
 
 		self.options = options
 
+	def _openFonts(self, fontfiles):
+		fonts = [ttLib.TTFont(fontfile) for fontfile in fontfiles]
+		for font,fontfile in zip(fonts, fontfiles):
+			font.fontfile = fontfile
+			font.name = font['name'].getDebugName(3)
+		return fonts
+
 	def merge(self, fontfiles):
 		"""Merges fonts together.
 
@@ -66,7 +73,7 @@ class Merger(object):
 		#
 		# Settle on a mega glyph order.
 		#
-		fonts = [ttLib.TTFont(fontfile) for fontfile in fontfiles]
+		fonts = self._openFonts(fontfiles)
 		glyphOrders = [font.getGlyphOrder() for font in fonts]
 		megaGlyphOrder = computeMegaGlyphOrder(self, glyphOrders)
 		self.duplicateGlyphsPerFont = [{} for _ in fonts]
@@ -83,7 +90,7 @@ class Merger(object):
 		# Reload fonts and set new glyph names on them.
 		# TODO Is it necessary to reload font?  I think it is.  At least
 		# it's safer, in case tables were loaded to provide glyph names.
-		fonts = [ttLib.TTFont(fontfile) for fontfile in fontfiles]
+		fonts = self._openFonts(fontfiles)
 		for font, glyphOrder, cffTable in zip(fonts, glyphOrders, cffTables):
 			font.setGlyphOrder(glyphOrder)
 			if cffTable:
