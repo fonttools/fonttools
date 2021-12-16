@@ -14,4 +14,5 @@ def debugmsg(msg):
 	print(msg + time.strftime("  (%H:%M:%S)", time.localtime(time.time())))
 
 from fontTools.ttLib.ttFont import *
+from fontTools.ttLib.woff2 import *
 from fontTools.ttLib.ttCollection import TTCollection
