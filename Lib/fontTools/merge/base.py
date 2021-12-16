@@ -4,6 +4,7 @@
 
 from fontTools import ttLib, cffLib
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
+from fontTools.merge.cmap import *
 from fontTools.merge.util import *
 
 
@@ -272,3 +273,34 @@ def merge(self, m, tables):
 	newfont.strings.strings = glyphOrderStrings + storedNamesStrings
 
 	return newcff
+
+@add_method(ttLib.getTableClass('cmap'))
+def merge(self, m, tables):
+
+	# TODO Handle format=14.
+	if not hasattr(m, 'cmap'):
+		compute_mega_cmap(m, tables)
+	cmap = m.cmap
+
+	cmapBmpOnly = {uni: gid for uni,gid in cmap.items() if uni <= 0xFFFF}
+	self.tables = []
+	module = ttLib.getTableModule('cmap')
+	if len(cmapBmpOnly) != len(cmap):
+		# format-12 required.
+		cmapTable = module.cmap_classes[12](12)
+		cmapTable.platformID = 3
+		cmapTable.platEncID = 10
+		cmapTable.language = 0
+		cmapTable.cmap = cmap
+		self.tables.append(cmapTable)
+	# always create format-4
+	cmapTable = module.cmap_classes[4](4)
+	cmapTable.platformID = 3
+	cmapTable.platEncID = 1
+	cmapTable.language = 0
+	cmapTable.cmap = cmapBmpOnly
+	# ordered by platform then encoding
+	self.tables.insert(0, cmapTable)
+	self.tableVersion = 0
+	self.numSubTables = len(self.tables)
+	return self

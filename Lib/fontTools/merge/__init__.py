@@ -4,12 +4,11 @@
 
 from fontTools import ttLib
 from fontTools.merge.base import *
+from fontTools.merge.cmap import *
 from fontTools.merge.layout import *
 from fontTools.merge.options import *
-from fontTools.merge.unicode import *
 from fontTools.merge.util import *
 from fontTools.misc.loggingTools import Timer
-from fontTools.pens.recordingPen import DecomposingRecordingPen
 from functools import reduce
 import sys
 import logging
@@ -17,116 +16,6 @@ import logging
 
 log = logging.getLogger("fontTools.merge")
 timer = Timer(logger=logging.getLogger(__name__+".timer"), level=logging.INFO)
-
-
-def _glyphsAreSame(glyphSet1, glyphSet2, glyph1, glyph2,
-				   advanceTolerance=.05,
-				   advanceToleranceEmpty=.20):
-	pen1 = DecomposingRecordingPen(glyphSet1)
-	pen2 = DecomposingRecordingPen(glyphSet2)
-	g1 = glyphSet1[glyph1]
-	g2 = glyphSet2[glyph2]
-	g1.draw(pen1)
-	g2.draw(pen2)
-	if pen1.value != pen2.value:
-		return False
-	# Allow more width tolerance for glyphs with no ink
-	tolerance = advanceTolerance if pen1.value else advanceToleranceEmpty
-    # TODO Warn if advances not the same but within tolerance.
-	if abs(g1.width - g2.width) > g1.width * tolerance:
-		return False
-	if hasattr(g1, 'height') and g1.height is not None:
-		if abs(g1.height - g2.height) > g1.height * tolerance:
-			return False
-	return True
-
-# Valid (format, platformID, platEncID) triplets for cmap subtables containing
-# Unicode BMP-only and Unicode Full Repertoire semantics.
-# Cf. OpenType spec for "Platform specific encodings":
-# https://docs.microsoft.com/en-us/typography/opentype/spec/name
-class CmapUnicodePlatEncodings:
-	BMP = {(4, 3, 1), (4, 0, 3), (4, 0, 4), (4, 0, 6)}
-	FullRepertoire = {(12, 3, 10), (12, 0, 4), (12, 0, 6)}
-
-@add_method(ttLib.getTableClass('cmap'))
-def merge(self, m, tables):
-	# TODO Handle format=14.
-	# Only merge format 4 and 12 Unicode subtables, ignores all other subtables
-	# If there is a format 12 table for the same font, ignore the format 4 table
-	cmapTables = []
-	for fontIdx,table in enumerate(tables):
-		format4 = None
-		format12 = None
-		for subtable in table.tables:
-			properties = (subtable.format, subtable.platformID, subtable.platEncID)
-			if properties in CmapUnicodePlatEncodings.BMP:
-				format4 = subtable
-			elif properties in CmapUnicodePlatEncodings.FullRepertoire:
-				format12 = subtable
-			else:
-				log.warning(
-					"Dropped cmap subtable from font [%s]:\t"
-					"format %2s, platformID %2s, platEncID %2s",
-					fontIdx, subtable.format, subtable.platformID, subtable.platEncID
-				)
-		if format12 is not None:
-			cmapTables.append((format12, fontIdx))
-		elif format4 is not None:
-			cmapTables.append((format4, fontIdx))
-
-	# Build a unicode mapping, then decide which format is needed to store it.
-	cmap = {}
-	fontIndexForGlyph = {}
-	glyphSets = [None for f in m.fonts] if hasattr(m, 'fonts') else None
-	for table,fontIdx in cmapTables:
-		# handle duplicates
-		for uni,gid in table.cmap.items():
-			oldgid = cmap.get(uni, None)
-			if oldgid is None:
-				cmap[uni] = gid
-				fontIndexForGlyph[gid] = fontIdx
-			elif is_Default_Ignorable(uni) or uni in (0x25CC,): # U+25CC DOTTED CIRCLE
-				continue
-			elif oldgid != gid:
-				# Char previously mapped to oldgid, now to gid.
-				# Record, to fix up in GSUB 'locl' later.
-				if m.duplicateGlyphsPerFont[fontIdx].get(oldgid) is None:
-					if glyphSets is not None:
-						oldFontIdx = fontIndexForGlyph[oldgid]
-						for idx in (fontIdx, oldFontIdx):
-							if glyphSets[idx] is None:
-								glyphSets[idx] = m.fonts[idx].getGlyphSet()
-						#if _glyphsAreSame(glyphSets[oldFontIdx], glyphSets[fontIdx], oldgid, gid):
-						#	continue
-					m.duplicateGlyphsPerFont[fontIdx][oldgid] = gid
-				elif m.duplicateGlyphsPerFont[fontIdx][oldgid] != gid:
-					# Char previously mapped to oldgid but oldgid is already remapped to a different
-					# gid, because of another Unicode character.
-					# TODO: Try harder to do something about these.
-					log.warning("Dropped mapping from codepoint %#06X to glyphId '%s'", uni, gid)
-
-	cmapBmpOnly = {uni: gid for uni,gid in cmap.items() if uni <= 0xFFFF}
-	self.tables = []
-	module = ttLib.getTableModule('cmap')
-	if len(cmapBmpOnly) != len(cmap):
-		# format-12 required.
-		cmapTable = module.cmap_classes[12](12)
-		cmapTable.platformID = 3
-		cmapTable.platEncID = 10
-		cmapTable.language = 0
-		cmapTable.cmap = cmap
-		self.tables.append(cmapTable)
-	# always create format-4
-	cmapTable = module.cmap_classes[4](4)
-	cmapTable.platformID = 3
-	cmapTable.platEncID = 1
-	cmapTable.language = 0
-	cmapTable.cmap = cmapBmpOnly
-	# ordered by platform then encoding
-	self.tables.insert(0, cmapTable)
-	self.tableVersion = 0
-	self.numSubTables = len(self.tables)
-	return self
 
 
 class Merger(object):
@@ -210,16 +99,10 @@ class Merger(object):
 		self.fonts = fonts
 		self.duplicateGlyphsPerFont = [{} for _ in fonts]
 
+		compute_mega_cmap(self, [font['cmap'] for font in fonts])
+
 		allTags = reduce(set.union, (list(font.keys()) for font in fonts), set())
 		allTags.remove('GlyphOrder')
-
-		# Make sure we process cmap before GSUB as we have a dependency there.
-		if 'GSUB' in allTags:
-			allTags.remove('GSUB')
-			allTags = ['GSUB'] + list(allTags)
-		if 'cmap' in allTags:
-			allTags.remove('cmap')
-			allTags = ['cmap'] + list(allTags)
 
 		for tag in allTags:
 			if tag in self.options.drop_tables:
