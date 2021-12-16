@@ -1031,8 +1031,6 @@ class Merger(object):
 
 	Restrictions:
 
-	- All fonts must currently have TrueType outlines (``glyf`` table).
-		Merging fonts with CFF outlines is not supported.
 	- All fonts must have the same units per em.
 	- If duplicate glyph disambiguation takes place as described above then the
 		fonts must have a ``GSUB`` table.
