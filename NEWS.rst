@@ -1,3 +1,6 @@
+4.28.5 (released 2021-12-19)
+----------------------------
+
 - [svgPathPen] Continuation of #2471: make sure all occurrences of ``str()`` are now
   replaced with user-defined ``ntos`` callable.
 - [merge] Refactored code into submodules, plus several bugfixes and improvements:
