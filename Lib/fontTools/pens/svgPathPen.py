@@ -109,11 +109,11 @@ class SVGPathPen(BasePen):
         # vertical line
         elif x == self._lastX:
             cmd = "V"
-            pts = str(y)
+            pts = self._ntos(y)
         # horizontal line
         elif y == self._lastY:
             cmd = "H"
-            pts = str(x)
+            pts = self._ntos(x)
         # previous was a moveto
         elif self._lastCommand == "M":
             cmd = None
