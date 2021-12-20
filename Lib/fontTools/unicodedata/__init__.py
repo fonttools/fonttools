@@ -5,7 +5,7 @@ from bisect import bisect_right
 
 try:
     # use unicodedata backport compatible with python2:
-    # https://github.com/mikekap/unicodedata2
+    # https://github.com/fonttools/unicodedata2
     from unicodedata2 import *
 except ImportError:  # pragma: no cover
     # fall back to built-in unicodedata (possibly outdated)

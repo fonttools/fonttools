@@ -90,11 +90,9 @@ extras_require = {
 	# of the Unicode Character Database instead of the built-in unicodedata
 	# which varies between python versions and may be outdated.
 	"unicode": [
-		# the unicodedata2 extension module doesn't work on PyPy.
-		# Python 3.9 already has Unicode 13.0, so the backport is not needed.
+		# Python 3.11 already has Unicode 14.0, so the backport is not needed.
 		(
-			"unicodedata2 >= 13.0.0; "
-			"python_version < '3.9' and platform_python_implementation != 'PyPy'"
+			"unicodedata2 >= 14.0.0; python_version < '3.11'"
 		),
 	],
 	# for graphite type tables in ttLib/tables (Silf, Glat, Gloc)
