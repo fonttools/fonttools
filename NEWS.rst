@@ -1,3 +1,14 @@
+4.28.5 (released 2021-12-19)
+----------------------------
+
+- [svgPathPen] Continuation of #2471: make sure all occurrences of ``str()`` are now
+  replaced with user-defined ``ntos`` callable.
+- [merge] Refactored code into submodules, plus several bugfixes and improvements:
+  fixed duplicate-glyph-resolution GSUB-lookup generation code; use tolerance in glyph
+  comparison for empty glyph's width; ignore space of default ignorable glyphs;
+  downgrade duplicates-resolution missing-GSUB from assert to warn; added --drop-tables
+  option (#2473, #2475, #2476).
+
 4.28.4 (released 2021-12-15)
 ----------------------------
 
