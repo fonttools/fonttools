@@ -12,7 +12,7 @@ log = logging.getLogger("fontTools.feaLib")
 
 
 def main(args=None):
-    """Add features from a feature file (.fea) into a OTF font"""
+    """Add features from a feature file (.fea) into an OTF font"""
     parser = argparse.ArgumentParser(
         description="Use fontTools to compile OpenType feature files (*.fea)."
     )
@@ -46,7 +46,7 @@ def main(args=None):
     parser.add_argument(
         "-v",
         "--verbose",
-        help="increase the logger verbosity. Multiple -v " "options are allowed.",
+        help="Increase the logger verbosity. Multiple -v " "options are allowed.",
         action="count",
         default=0,
     )
