@@ -4,93 +4,23 @@ __all__ = ['FTPen']
 
 import os
 import ctypes
-import ctypes.util
 import platform
 import subprocess
 import collections
 import math
 
+import freetype
+from freetype.raw import FT_Outline_Get_Bitmap, FT_Outline_Get_BBox, FT_Outline_Get_CBox
+from freetype.ft_types import FT_Pos
+from freetype.ft_structs import FT_Vector, FT_BBox, FT_Bitmap, FT_Outline
+from freetype.ft_enums import FT_OUTLINE_NONE, FT_OUTLINE_EVEN_ODD_FILL, FT_PIXEL_MODE_GRAY
+from freetype.ft_errors import FT_Exception
+
 from fontTools.pens.basePen import BasePen
 from fontTools.misc.roundTools import otRound
 
-class FT_LibraryRec(ctypes.Structure):
-    _fields_ = []
-
-FT_Library = ctypes.POINTER(FT_LibraryRec)
-FT_Pos = ctypes.c_long
-
-class FT_Vector(ctypes.Structure):
-    _fields_ = [('x', FT_Pos), ('y', FT_Pos)]
-
-class FT_BBox(ctypes.Structure):
-    _fields_ = [('xMin', FT_Pos), ('yMin', FT_Pos), ('xMax', FT_Pos), ('yMax', FT_Pos)]
-
-class FT_Bitmap(ctypes.Structure):
-    _fields_ = [('rows', ctypes.c_int), ('width', ctypes.c_int), ('pitch', ctypes.c_int), ('buffer', ctypes.POINTER(ctypes.c_ubyte)), ('num_grays', ctypes.c_short), ('pixel_mode', ctypes.c_ubyte), ('palette_mode', ctypes.c_char), ('palette', ctypes.c_void_p)]
-
-class FT_Outline(ctypes.Structure):
-    _fields_ = [('n_contours', ctypes.c_short), ('n_points', ctypes.c_short), ('points', ctypes.POINTER(FT_Vector)), ('tags', ctypes.POINTER(ctypes.c_ubyte)), ('contours', ctypes.POINTER(ctypes.c_short)), ('flags', ctypes.c_int)]
-
-class FreeType(object):
-
-    @staticmethod
-    def load_freetype_lib():
-        lib_path = ctypes.util.find_library('freetype')
-        if lib_path:
-            return ctypes.cdll.LoadLibrary(lib_path)
-        if platform.system() == 'Darwin':
-            # Try again by searching inside the installation paths of Homebrew and MacPorts
-            # This workaround is needed if Homebrew has been installed to a non-standard location.
-            orig_dyld_path = os.environ.get('DYLD_LIBRARY_PATH')
-            for dyld_path_func in (
-                lambda: os.path.join(subprocess.check_output(('brew', '--prefix'), universal_newlines=True).rstrip(), 'lib'),
-                lambda: os.path.join(os.path.dirname(os.path.dirname(subprocess.check_output(('which', 'port'), universal_newlines=True).rstrip())), 'lib')
-            ):
-                try:
-                    dyld_path = dyld_path_func()
-                    os.environ['DYLD_LIBRARY_PATH'] = ':'.join(os.environ.get('DYLD_LIBRARY_PATH', '').split(':') + [dyld_path])
-                    lib_path = ctypes.util.find_library('freetype')
-                    if lib_path:
-                        return ctypes.cdll.LoadLibrary(lib_path)
-                except CalledProcessError:
-                    pass
-                finally:
-                    if orig_dyld_path:
-                        os.environ['DYLD_LIBRARY_PATH'] = orig_dyld_path
-                    else:
-                        os.environ.pop('DYLD_LIBRARY_PATH', None)
-        return None
-
-    def __init__(self):
-        lib = self.load_freetype_lib()
-        self.handle = FT_Library()
-        self.FT_Init_FreeType      = lib.FT_Init_FreeType
-        self.FT_Done_FreeType      = lib.FT_Done_FreeType
-        self.FT_Library_Version    = lib.FT_Library_Version
-        self.FT_Outline_Get_CBox   = lib.FT_Outline_Get_CBox
-        self.FT_Outline_Get_BBox   = lib.FT_Outline_Get_BBox
-        self.FT_Outline_Get_Bitmap = lib.FT_Outline_Get_Bitmap
-        self.raise_error_if_needed(self.FT_Init_FreeType(ctypes.byref(self.handle)))
-
-    def raise_error_if_needed(self, err):
-        # See the reference for error codes:
-        #   https://freetype.org/freetype2/docs/reference/ft2-error_code_values.html
-        if err != 0:
-            raise RuntimeError("FT_Error: 0x{0:02X}".format(err))
-
-    def __del__(self):
-        if self.handle:
-            self.FT_Done_FreeType(self.handle)
-
-    @property
-    def version(self):
-        major, minor, patch = ctypes.c_int(), ctypes.c_int(), ctypes.c_int()
-        self.FT_Library_Version(self.handle, ctypes.byref(major), ctypes.byref(minor), ctypes.byref(patch))
-        return "{0}.{1}.{2}".format(major.value, minor.value, patch.value)
-
 class FTPen(BasePen):
 
-    ft = None
     np = None
     plt = None
     Image = None
@@ -102,14 +32,10 @@ class FTPen(BasePen):
     QOFFCURVE = 0b00000000
 
     def __init__(self, glyphSet):
-        if not self.__class__.ft:
-            self.__class__.ft = FreeType()
         self.contours = []
 
     def outline(self, offset=None, scale=None, even_odd=False):
         # Convert the current contours to FT_Outline.
-        FT_OUTLINE_NONE = 0x0
-        FT_OUTLINE_EVEN_ODD_FILL = 0x2
         offset = offset or (0, 0)
         scale  = scale  or (1.0, 1.0)
         n_contours = len(self.contours)
@@ -139,7 +65,6 @@ class FTPen(BasePen):
 
     def buffer(self, width=1000, ascender=880, descender=-120, even_odd=False, scale=None):
         # Return a tuple with the bitmap buffer and its dimension.
-        FT_PIXEL_MODE_GRAY = 2
         scale  = scale or (1.0, 1.0)
         width  = math.ceil(width * scale[0])
         height = math.ceil((ascender - descender) * scale[1])
@@ -155,7 +80,9 @@ class FTPen(BasePen):
             (ctypes.c_void_p)(None)
         )
         outline = self.outline(offset=(0, -descender), even_odd=even_odd, scale=scale)
-        self.ft.raise_error_if_needed(self.ft.FT_Outline_Get_Bitmap(self.ft.handle, ctypes.byref(outline), ctypes.byref(bitmap)))
+        err = FT_Outline_Get_Bitmap(freetype.get_handle(), ctypes.byref(outline), ctypes.byref(bitmap))
+        if err != 0:
+            raise FT_Exception(err)
         return buf.raw, (width, height)
 
     def array(self, width=1000, ascender=880, descender=-120, even_odd=False, scale=None):
@@ -195,7 +122,7 @@ class FTPen(BasePen):
         # Compute the exact bounding box of an outline.
         bbox = FT_BBox()
         outline = self.outline()
-        self.ft.FT_Outline_Get_BBox(ctypes.byref(outline), ctypes.byref(bbox))
+        FT_Outline_Get_BBox(ctypes.byref(outline), ctypes.byref(bbox))
         return (bbox.xMin / 64.0, bbox.yMin / 64.0, bbox.xMax / 64.0, bbox.yMax / 64.0)
 
     @property
@@ -203,7 +130,7 @@ class FTPen(BasePen):
         # Return an outline's ‘control box’.
         cbox = FT_BBox()
         outline = self.outline()
-        self.ft.FT_Outline_Get_CBox(ctypes.byref(outline), ctypes.byref(cbox))
+        FT_Outline_Get_CBox(ctypes.byref(outline), ctypes.byref(cbox))
         return (cbox.xMin / 64.0, cbox.yMin / 64.0, cbox.xMax / 64.0, cbox.yMax / 64.0)
 
     def _moveTo(self, pt):

@@ -2,9 +2,10 @@ import unittest
 
 try:
     from fontTools.pens.ftPen import FTPen
-    FREETYPE_AVAILABLE = True
+    import freetype
+    FREETYPE_PY_AVAILABLE = True
 except ImportError:
-    FREETYPE_AVAILABLE = False
+    FREETYPE_PY_AVAILABLE = False
 
 def draw_cubic(pen):
     pen.moveTo((50, 0))
@@ -30,7 +31,7 @@ def star(pen):
     pen.lineTo((800, -200))
     pen.closePath()
 
-@unittest.skipUnless(FREETYPE_AVAILABLE, "freetype not installed")
+@unittest.skipUnless(FREETYPE_PY_AVAILABLE, "freetype-py not installed")
 class FTPenTest(unittest.TestCase):
     def test_draw(self):
         import base64, zlib
