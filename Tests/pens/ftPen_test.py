@@ -1,7 +1,7 @@
 import unittest
 
 try:
-    from ftPen import FTPen
+    from fontTools.pens.ftPen import FTPen
     FREETYPE_AVAILABLE = True
 except ImportError:
     FREETYPE_AVAILABLE = False
