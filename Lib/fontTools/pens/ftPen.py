@@ -21,9 +21,6 @@ from fontTools.misc.roundTools import otRound
 
 class FTPen(BasePen):
 
-    np = None
-    plt = None
-    Image = None
     Contour = collections.namedtuple('Contour', ('points', 'tags'))
     LINE      = 0b00000001
     CURVE     = 0b00000011
@@ -87,29 +84,23 @@ class FTPen(BasePen):
 
     def array(self, width=1000, ascender=880, descender=-120, even_odd=False, scale=None):
         # Return a numpy array. Each element takes values in the range of [0.0, 1.0].
-        if not self.np:
-            import numpy as np
-            self.np = np
+        import numpy as np
         buf, size = self.buffer(width, ascender=ascender, descender=descender, even_odd=even_odd, scale=scale)
-        return self.np.frombuffer(buf, 'B').reshape((size[1], size[0])) / 255.0
+        return np.frombuffer(buf, 'B').reshape((size[1], size[0])) / 255.0
 
     def show(self, width=1000, ascender=880, descender=-120, even_odd=False, scale=None):
         # Plot the image with matplotlib.
-        if not self.plt:
-            from matplotlib import pyplot
-            self.plt = pyplot
+        from matplotlib import pyplot as plt
         a = self.array(width, ascender=ascender, descender=descender, even_odd=even_odd, scale=scale)
-        self.plt.imshow(a, cmap='gray_r', vmin=0, vmax=1)
-        self.plt.show()
+        plt.imshow(a, cmap='gray_r', vmin=0, vmax=1)
+        plt.show()
 
     def image(self, width=1000, ascender=880, descender=-120, even_odd=False, scale=None):
         # Return a PIL image.
-        if not self.Image:
-            from PIL import Image as PILImage
-            self.Image = PILImage
+        from PIL import Image
         buf, size = self.buffer(width, ascender=ascender, descender=descender, even_odd=even_odd, scale=scale)
-        img = self.Image.new('L', size, 0)
-        img.putalpha(self.Image.frombuffer('L', size, buf))
+        img = Image.new('L', size, 0)
+        img.putalpha(Image.frombuffer('L', size, buf))
         return img
 
     def save(self, fp, width=1000, ascender=880, descender=-120, even_odd=False, scale=None, format=None, **kwargs):
