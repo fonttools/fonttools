@@ -60,11 +60,19 @@ class FTPen(BasePen):
             (ctypes.c_int)(flags)
         )
 
-    def buffer(self, width=1000, ascender=880, descender=-120, even_odd=False, scale=None):
+    def buffer(self, offset=None, width=1000, height=1000, even_odd=False, scale=None, contain=False):
         # Return a tuple with the bitmap buffer and its dimension.
+        offset_x, offset_y = offset or (0, 0)
+        if contain:
+            bbox      = self.bbox
+            bbox_size = bbox[2] - bbox[0], bbox[3] - bbox[1]
+            offset_x  = min(offset_x, bbox[0]) * -1
+            width     = max(width,  bbox_size[0])
+            offset_y  = min(offset_y, bbox[1]) * -1
+            height    = max(height, bbox_size[1])
         scale  = scale or (1.0, 1.0)
-        width  = math.ceil(width * scale[0])
-        height = math.ceil((ascender - descender) * scale[1])
+        width  = math.ceil(width  * scale[0])
+        height = math.ceil(height * scale[1])
         buf = ctypes.create_string_buffer(width * height)
         bitmap = FT_Bitmap(
             (ctypes.c_int)(height),
@@ -76,36 +84,36 @@ class FTPen(BasePen):
             (ctypes.c_char)(0),
             (ctypes.c_void_p)(None)
         )
-        outline = self.outline(offset=(0, -descender), even_odd=even_odd, scale=scale)
+        outline = self.outline(offset=(offset_x, offset_y), even_odd=even_odd, scale=scale)
         err = FT_Outline_Get_Bitmap(freetype.get_handle(), ctypes.byref(outline), ctypes.byref(bitmap))
         if err != 0:
             raise FT_Exception(err)
         return buf.raw, (width, height)
 
-    def array(self, width=1000, ascender=880, descender=-120, even_odd=False, scale=None):
+    def array(self, offset=None, width=1000, height=1000, even_odd=False, scale=None, contain=False):
         # Return a numpy array. Each element takes values in the range of [0.0, 1.0].
         import numpy as np
-        buf, size = self.buffer(width, ascender=ascender, descender=descender, even_odd=even_odd, scale=scale)
+        buf, size = self.buffer(offset=offset, width=width, height=height, even_odd=even_odd, scale=scale, contain=contain)
         return np.frombuffer(buf, 'B').reshape((size[1], size[0])) / 255.0
 
-    def show(self, width=1000, ascender=880, descender=-120, even_odd=False, scale=None):
+    def show(self, offset=None, width=1000, height=1000, even_odd=False, scale=None, contain=False):
         # Plot the image with matplotlib.
         from matplotlib import pyplot as plt
-        a = self.array(width, ascender=ascender, descender=descender, even_odd=even_odd, scale=scale)
+        a = self.array(offset=offset, width=width, height=height, even_odd=even_odd, scale=scale, contain=contain)
         plt.imshow(a, cmap='gray_r', vmin=0, vmax=1)
         plt.show()
 
-    def image(self, width=1000, ascender=880, descender=-120, even_odd=False, scale=None):
+    def image(self, offset=None, width=1000, height=1000, even_odd=False, scale=None, contain=False):
         # Return a PIL image.
         from PIL import Image
-        buf, size = self.buffer(width, ascender=ascender, descender=descender, even_odd=even_odd, scale=scale)
+        buf, size = self.buffer(offset=offset, width=width, height=height, even_odd=even_odd, scale=scale, contain=contain)
         img = Image.new('L', size, 0)
         img.putalpha(Image.frombuffer('L', size, buf))
         return img
 
-    def save(self, fp, width=1000, ascender=880, descender=-120, even_odd=False, scale=None, format=None, **kwargs):
+    def save(self, fp, offset=None, width=1000, height=1000, even_odd=False, scale=None, contain=False, format=None, **kwargs):
         # Save the image as a file.
-        img = self.image(width=width, ascender=ascender, descender=descender, even_odd=even_odd, scale=scale)
+        img = self.image(offset=offset, width=width, height=height, even_odd=even_odd, scale=scale, contain=contain)
         img.save(fp, format=format, **kwargs)
 
     @property
