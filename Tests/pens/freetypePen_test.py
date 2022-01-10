@@ -30,7 +30,9 @@ def star(pen):
     pen.lineTo((800, -200))
     pen.closePath()
 
-# Assume the buffers are equal when PSNR > 38dB.
+# Assume the buffers are equal when PSNR > 38dB. See also:
+#   Peak signal-to-noise ratio
+#   https://en.wikipedia.org/wiki/Peak_signal-to-noise_ratio
 PSNR_THRESHOLD = 38.0
 
 def psnr(b1, b2):
