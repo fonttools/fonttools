@@ -30,6 +30,14 @@ def star(pen):
     pen.lineTo((800, -200))
     pen.closePath()
 
+# Assume the buffers are equal when PSNR > 38dB.
+PSNR_THRESHOLD = 38.0
+
+def psnr(b1, b2):
+    import math
+    mse = sum((c1-c2) * (c1-c2) for c1, c2 in zip(b1, b2)) / float(len(b1))
+    return 10.0 * math.log10((255.0 ** 2) / float(mse)) if mse > 0 else math.inf
+
 @unittest.skipUnless(FREETYPE_PY_AVAILABLE, "freetype-py not installed")
 class FreeTypePenTest(unittest.TestCase):
     def test_draw(self):
@@ -40,7 +48,8 @@ class FreeTypePenTest(unittest.TestCase):
         offset, width, height = (0, 0), 500, 500
         buf1, _ = pen.buffer(offset=offset, width=width, height=height)
         buf2 = zlib.decompress(base64.b64decode(ZLIB_B64_BIN))
-        self.assertEqual(buf1, buf2)
+        self.assertEqual(len(buf1), len(buf2))
+        self.assertGreater(psnr(buf1, buf2), PSNR_THRESHOLD)
 
     def test_scale(self):
         import base64, zlib
@@ -50,8 +59,8 @@ class FreeTypePenTest(unittest.TestCase):
         offset, width, height = (0, 0), 500, 500
         buf1, size = pen.buffer(offset=offset, width=width, height=height, scale=(0.1, 0.1))
         buf2 = zlib.decompress(base64.b64decode(ZLIB_B64_BIN))
-        self.assertEqual(buf1, buf2)
         self.assertEqual(size, (50, 50))
+        self.assertGreater(psnr(buf1, buf2), PSNR_THRESHOLD)
 
     def test_empty(self):
         pen = FreeTypePen(None)
@@ -73,7 +82,8 @@ class FreeTypePenTest(unittest.TestCase):
         offset, width, height = (0, 200), 1000, 1000
         buf1, size = pen.buffer(offset=offset, width=width, height=height, scale=(0.1, 0.1), even_odd=False)
         buf2 = zlib.decompress(base64.b64decode(ZLIB_B64_BIN))
-        self.assertEqual(buf1, buf2)
+        self.assertEqual(len(buf1), len(buf2))
+        self.assertGreater(psnr(buf1, buf2), PSNR_THRESHOLD)
 
     def test_even_odd_fill(self):
         import base64, zlib
@@ -83,14 +93,10 @@ class FreeTypePenTest(unittest.TestCase):
         offset, width, height = (0, 200), 1000, 1000
         buf1, size = pen.buffer(offset=offset, width=width, height=height, scale=(0.1, 0.1), even_odd=True)
         buf2 = zlib.decompress(base64.b64decode(ZLIB_B64_BIN))
-        self.assertEqual(buf1, buf2)
+        self.assertEqual(len(buf1), len(buf2))
+        self.assertGreater(psnr(buf1, buf2), PSNR_THRESHOLD)
 
     def test_cubic_vs_quadratic(self):
-        # Assume the buffers are equal when PSNR > 38dB.
-        def psnr(b1, b2):
-            import math
-            mse = sum((c1-c2) * (c1-c2) for c1, c2 in zip(b1, b2)) / float(len(b1))
-            return 10.0 * math.log10((255.0 ** 2) / float(mse))
         pen1, pen2 = FreeTypePen(None), FreeTypePen(None)
         draw_cubic(pen1)
         draw_quadratic(pen2)
@@ -98,7 +104,7 @@ class FreeTypePenTest(unittest.TestCase):
         buf1, _ = pen1.buffer(offset=offset, width=width, height=height)
         buf2, _ = pen2.buffer(offset=offset, width=width, height=height)
         self.assertEqual(len(buf1), len(buf2))
-        self.assertGreater(psnr(buf1, buf2), 38.0)
+        self.assertGreater(psnr(buf1, buf2), PSNR_THRESHOLD)
 
     def test_contain(self):
         import base64, zlib
@@ -108,6 +114,8 @@ class FreeTypePenTest(unittest.TestCase):
         offset, width, height = (0, 0), 0, 0
         buf1, size = pen.buffer(offset=offset, width=width, height=height, scale=(0.05, 0.05), contain=True)
         buf2 = zlib.decompress(base64.b64decode(ZLIB_B64_BIN))
+        self.assertEqual(len(buf1), len(buf2))
+        self.assertGreater(psnr(buf1, buf2), PSNR_THRESHOLD)
 
 if __name__ == '__main__':
     import sys
