@@ -35,8 +35,8 @@ class FTPen(BasePen):
     buffer.
 
     For ``array()`` and ``show()``, `numpy` and `matplotlib` must be installed.
-    For ``image()`` and ``save()``, `Pillow` is required. Each module is lazily
-    loaded when the corresponding method is called.
+    For ``image()``, `Pillow` is required. Each module is lazily loaded when the
+    corresponding method is called.
 
     Args:
         glyphSet: a dictionary of drawable glyph objects keyed by name
@@ -286,32 +286,6 @@ class FTPen(BasePen):
         img = Image.new('L', size, 0)
         img.putalpha(Image.frombuffer('L', size, buf))
         return img
-
-    def save(self, fp, offset=None, width=1000, height=1000, even_odd=False, scale=None, contain=False, format=None, **kwargs):
-        """Saves the image as a file. Requires `Pillow`.
-
-        Args:
-            fp:  A filename (string), pathlib. Path object or file object.
-            offset: A optional tuple of ``(x, y)`` used for translation.
-                Typically ``(0, -descender)`` can be passed so that the glyph
-                image would not been clipped.
-            width:  Image width of the bitmap in pixels.
-            height:  Image height of the bitmap in pixels.
-            scale:  A optional tuple of ``(scale_x, scale_y)`` used for scaling.
-            even_odd: Pass ``True`` for even-odd fill instead of non-zero.
-            contain: If ``True``, the image size will be automatically expanded
-                so that it fits to the bounding box of the paths. Useful for
-                rendering glyphs with negative sidebearings without clipping.
-            format: Optional format override. If omitted, the format to use is
-                determined from the filename extension.
-        
-        :Example:
-            >>> pen = FTPen(None)
-            >>> glyph.draw(pen)
-            >>> pen.save('glyph.png', width=500, height=1000)
-        """
-        img = self.image(offset=offset, width=width, height=height, even_odd=even_odd, scale=scale, contain=contain)
-        img.save(fp, format=format, **kwargs)
 
     @property
     def bbox(self):
