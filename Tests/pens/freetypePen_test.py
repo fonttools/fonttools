@@ -80,7 +80,7 @@ class FreeTypePenTest(unittest.TestCase):
         pen = FreeTypePen(None)
         draw_cubic(pen)
         offset, width, height = (0, 200), 1000, 1000
-        buf1, size = pen.buffer(offset=offset, width=width, height=height, scale=(0.1, 0.1), even_odd=False)
+        buf1, size = pen.buffer(offset=offset, width=width, height=height, scale=(0.1, 0.1), evenOdd=False)
         buf2 = zlib.decompress(base64.b64decode(ZLIB_B64_BIN))
         self.assertEqual(len(buf1), len(buf2))
         self.assertGreater(psnr(buf1, buf2), PSNR_THRESHOLD)
@@ -91,7 +91,7 @@ class FreeTypePenTest(unittest.TestCase):
         pen = FreeTypePen(None)
         draw_cubic(pen)
         offset, width, height = (0, 200), 1000, 1000
-        buf1, size = pen.buffer(offset=offset, width=width, height=height, scale=(0.1, 0.1), even_odd=True)
+        buf1, size = pen.buffer(offset=offset, width=width, height=height, scale=(0.1, 0.1), evenOdd=True)
         buf2 = zlib.decompress(base64.b64decode(ZLIB_B64_BIN))
         self.assertEqual(len(buf1), len(buf2))
         self.assertGreater(psnr(buf1, buf2), PSNR_THRESHOLD)

@@ -108,13 +108,13 @@ class FreeTypePen(BasePen):
         BasePen.__init__(self, glyphSet)
         self.contours = []
 
-    def outline(self, offset=None, scale=None, even_odd=False):
+    def outline(self, offset=None, scale=None, evenOdd=False):
         """Converts the current contours to ``FT_Outline``.
 
         Args:
             offset: A optional tuple of ``(x, y)`` used for translation.
             scale:  A optional tuple of ``(scale_x, scale_y)`` used for scaling.
-            even_odd: Pass ``True`` for even-odd fill instead of non-zero.
+            evenOdd: Pass ``True`` for even-odd fill instead of non-zero.
         """
         offset = offset or (0, 0)
         scale  = scale  or (1.0, 1.0)
@@ -133,7 +133,7 @@ class FreeTypePen(BasePen):
         for contour in self.contours:
             contours_sum += len(contour.points)
             contours.append(contours_sum - 1)
-        flags = FT_OUTLINE_EVEN_ODD_FILL if even_odd else FT_OUTLINE_NONE
+        flags = FT_OUTLINE_EVEN_ODD_FILL if evenOdd else FT_OUTLINE_NONE
         return FT_Outline(
             (ctypes.c_short)(nContours),
             (ctypes.c_short)(n_points),
@@ -143,7 +143,7 @@ class FreeTypePen(BasePen):
             (ctypes.c_int)(flags)
         )
 
-    def buffer(self, offset=None, width=1000, height=1000, even_odd=False, scale=None, contain=False):
+    def buffer(self, offset=None, width=1000, height=1000, evenOdd=False, scale=None, contain=False):
         """Renders the current contours within a bitmap buffer.
 
         Args:
@@ -153,7 +153,7 @@ class FreeTypePen(BasePen):
             width:  Image width of the bitmap in pixels.
             height:  Image height of the bitmap in pixels.
             scale:  A optional tuple of ``(scale_x, scale_y)`` used for scaling.
-            even_odd: Pass ``True`` for even-odd fill instead of non-zero.
+            evenOdd: Pass ``True`` for even-odd fill instead of non-zero.
             contain: If ``True``, the image size will be automatically expanded
                 so that it fits to the bounding box of the paths. Useful for
                 rendering glyphs with negative sidebearings without clipping.
@@ -192,13 +192,13 @@ class FreeTypePen(BasePen):
             (ctypes.c_char)(0),
             (ctypes.c_void_p)(None)
         )
-        outline = self.outline(offset=(offset_x, offset_y), even_odd=even_odd, scale=scale)
+        outline = self.outline(offset=(offset_x, offset_y), evenOdd=evenOdd, scale=scale)
         err = FT_Outline_Get_Bitmap(freetype.get_handle(), ctypes.byref(outline), ctypes.byref(bitmap))
         if err != 0:
             raise FT_Exception(err)
         return buf.raw, (width, height)
 
-    def array(self, offset=None, width=1000, height=1000, even_odd=False, scale=None, contain=False):
+    def array(self, offset=None, width=1000, height=1000, evenOdd=False, scale=None, contain=False):
         """Returns the rendered contours as a numpy array. Requires `numpy`.
 
         Args:
@@ -208,7 +208,7 @@ class FreeTypePen(BasePen):
             width:  Image width of the bitmap in pixels.
             height:  Image height of the bitmap in pixels.
             scale:  A optional tuple of ``(scale_x, scale_y)`` used for scaling.
-            even_odd: Pass ``True`` for even-odd fill instead of non-zero.
+            evenOdd: Pass ``True`` for even-odd fill instead of non-zero.
             contain: If ``True``, the image size will be automatically expanded
                 so that it fits to the bounding box of the paths. Useful for
                 rendering glyphs with negative sidebearings without clipping.
@@ -225,10 +225,10 @@ class FreeTypePen(BasePen):
             (<class 'numpy.ndarray'>, (1000, 500))
         """
         import numpy as np
-        buf, size = self.buffer(offset=offset, width=width, height=height, even_odd=even_odd, scale=scale, contain=contain)
+        buf, size = self.buffer(offset=offset, width=width, height=height, evenOdd=evenOdd, scale=scale, contain=contain)
         return np.frombuffer(buf, 'B').reshape((size[1], size[0])) / 255.0
 
-    def show(self, offset=None, width=1000, height=1000, even_odd=False, scale=None, contain=False):
+    def show(self, offset=None, width=1000, height=1000, evenOdd=False, scale=None, contain=False):
         """Plots the rendered contours with `pyplot`. Requires `numpy` and
         `matplotlib`.
 
@@ -239,7 +239,7 @@ class FreeTypePen(BasePen):
             width:  Image width of the bitmap in pixels.
             height:  Image height of the bitmap in pixels.
             scale:  A optional tuple of ``(scale_x, scale_y)`` used for scaling.
-            even_odd: Pass ``True`` for even-odd fill instead of non-zero.
+            evenOdd: Pass ``True`` for even-odd fill instead of non-zero.
             contain: If ``True``, the image size will be automatically expanded
                 so that it fits to the bounding box of the paths. Useful for
                 rendering glyphs with negative sidebearings without clipping.
@@ -250,11 +250,11 @@ class FreeTypePen(BasePen):
             >>> pen.show(width=500, height=1000)
         """
         from matplotlib import pyplot as plt
-        a = self.array(offset=offset, width=width, height=height, even_odd=even_odd, scale=scale, contain=contain)
+        a = self.array(offset=offset, width=width, height=height, evenOdd=evenOdd, scale=scale, contain=contain)
         plt.imshow(a, cmap='gray_r', vmin=0, vmax=1)
         plt.show()
 
-    def image(self, offset=None, width=1000, height=1000, even_odd=False, scale=None, contain=False):
+    def image(self, offset=None, width=1000, height=1000, evenOdd=False, scale=None, contain=False):
         """Returns the rendered contours as a PIL image. Requires `Pillow`.
         Can be used to display a glyph image in Jupyter Notebook.
 
@@ -265,7 +265,7 @@ class FreeTypePen(BasePen):
             width:  Image width of the bitmap in pixels.
             height:  Image height of the bitmap in pixels.
             scale:  A optional tuple of ``(scale_x, scale_y)`` used for scaling.
-            even_odd: Pass ``True`` for even-odd fill instead of non-zero.
+            evenOdd: Pass ``True`` for even-odd fill instead of non-zero.
             contain: If ``True``, the image size will be automatically expanded
                 so that it fits to the bounding box of the paths. Useful for
                 rendering glyphs with negative sidebearings without clipping.
@@ -282,7 +282,7 @@ class FreeTypePen(BasePen):
             (<class 'PIL.Image.Image'>, (500, 1000))
         """
         from PIL import Image
-        buf, size = self.buffer(offset=offset, width=width, height=height, even_odd=even_odd, scale=scale, contain=contain)
+        buf, size = self.buffer(offset=offset, width=width, height=height, evenOdd=evenOdd, scale=scale, contain=contain)
         img = Image.new('L', size, 0)
         img.putalpha(Image.frombuffer('L', size, buf))
         return img
