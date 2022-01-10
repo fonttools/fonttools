@@ -2,7 +2,6 @@ import unittest
 
 try:
     from fontTools.pens.freetypePen import FreeTypePen
-    import freetype
     FREETYPE_PY_AVAILABLE = True
 except ImportError:
     FREETYPE_PY_AVAILABLE = False
