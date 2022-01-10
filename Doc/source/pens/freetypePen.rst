@@ -1,8 +1,8 @@
 ##########
-ftPen
+freetypePen
 ##########
 
-.. automodule:: fontTools.pens.ftPen
+.. automodule:: fontTools.pens.freetypePen
    :inherited-members:
    :members:
    :undoc-members:

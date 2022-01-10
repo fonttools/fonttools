@@ -2,7 +2,7 @@
 
 """Pen to rasterize paths with FreeType."""
 
-__all__ = ['FTPen']
+__all__ = ['FreeTypePen']
 
 import os
 import ctypes
@@ -28,7 +28,7 @@ OFFCURVE  = 0b00000010
 QCURVE    = 0b00000001
 QOFFCURVE = 0b00000000
 
-class FTPen(BasePen):
+class FreeTypePen(BasePen):
     """Pen to rasterize paths with FreeType. Requires `freetype-py` module.
 
     Constructs ``FT_Outline`` from the paths, and renders it within a bitmap
@@ -47,8 +47,8 @@ class FTPen(BasePen):
         show the glyph image of `fi` in a new window::
 
             from fontTools.ttLib import TTFont
-            from fontTools.pens.ftPen import FTPen
-            pen = FTPen(None)
+            from fontTools.pens.freetypePen import FreeTypePen
+            pen = FreeTypePen(None)
             font = TTFont('SourceSansPro-Regular.otf')
             glyph = font.getGlyphSet()['fi']
             glyph.draw(pen)
@@ -59,7 +59,7 @@ class FTPen(BasePen):
         Combining with `uharfbuzz`, you can typeset a chunk of glyphs in a pen::
 
             import uharfbuzz as hb
-            from fontTools.pens.ftPen import FTPen
+            from fontTools.pens.freetypePen import FreeTypePen
             from fontTools.pens.transformPen import TransformPen
             from fontTools.misc.transform import Offset
 
@@ -81,7 +81,7 @@ class FTPen(BasePen):
                 hb.shape(font, buf, features)
 
                 x, y = 0, 0
-                pen = FTPen(None)
+                pen = FreeTypePen(None)
                 for info, pos in zip(buf.glyph_infos, buf.glyph_positions):
                     gid = info.codepoint
                     transformed = TransformPen(pen, Offset(x + pos.x_offset, y + pos.y_offset))
@@ -164,7 +164,7 @@ class FTPen(BasePen):
             dimension.
         
         :Example:
-            >>> pen = FTPen(None)
+            >>> pen = FreeTypePen(None)
             >>> glyph.draw(pen)
             >>> buf, size = pen.buffer(width=500, height=1000)
             >>> type(buf), len(buf), size
@@ -218,7 +218,7 @@ class FTPen(BasePen):
             Each element takes a value in the range of ``[0.0, 1.0]``.
         
         :Example:
-            >>> pen = FTPen(None)
+            >>> pen = FreeTypePen(None)
             >>> glyph.draw(pen)
             >>> arr = pen.array(width=500, height=1000)
             >>> type(a), a.shape
@@ -245,7 +245,7 @@ class FTPen(BasePen):
                 rendering glyphs with negative sidebearings without clipping.
         
         :Example:
-            >>> pen = FTPen(None)
+            >>> pen = FreeTypePen(None)
             >>> glyph.draw(pen)
             >>> pen.show(width=500, height=1000)
         """
@@ -275,7 +275,7 @@ class FTPen(BasePen):
             channel obtained from the rendered bitmap.
         
         :Example:
-            >>> pen = FTPen(None)
+            >>> pen = FreeTypePen(None)
             >>> glyph.draw(pen)
             >>> img = pen.image(width=500, height=1000)
             >>> type(img), img.size

@@ -11,7 +11,7 @@ pens
    cocoaPen
    cu2quPen
    filterPen
-   ftPen
+   freetypePen
    momentsPen
    perimeterPen
    pointInsidePen
