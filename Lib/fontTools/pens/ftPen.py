@@ -105,6 +105,7 @@ class FTPen(BasePen):
     """
 
     def __init__(self, glyphSet):
+        BasePen.__init__(self, glyphset)
         self.contours = []
 
     def outline(self, offset=None, scale=None, even_odd=False):
