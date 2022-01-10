@@ -308,7 +308,7 @@ class FTPen(BasePen):
         :Example:
             >>> pen = FTPen(None)
             >>> glyph.draw(pen)
-            >>> pen.save('glyph.png' width=500, height=1000)
+            >>> pen.save('glyph.png', width=500, height=1000)
         """
         img = self.image(offset=offset, width=width, height=height, even_odd=even_odd, scale=scale, contain=contain)
         img.save(fp, format=format, **kwargs)
