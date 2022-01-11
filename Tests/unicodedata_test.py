@@ -230,6 +230,9 @@ def test_ot_tag_to_script():
     assert unicodedata.ot_tag_to_script("vai ") == "Vaii"
     assert unicodedata.ot_tag_to_script("lao ") == "Laoo"
     assert unicodedata.ot_tag_to_script("yi") == "Yiii"
+    # both 'hang' and 'jamo' tags map to the Hangul script
+    assert unicodedata.ot_tag_to_script("hang") == "Hang"
+    assert unicodedata.ot_tag_to_script("jamo") == "Hang"
 
     for invalid_value in ("", " ", "z zz", "zzzzz"):
         with pytest.raises(ValueError, match="invalid OpenType tag"):
