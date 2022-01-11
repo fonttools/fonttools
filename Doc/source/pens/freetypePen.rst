@@ -1,6 +1,6 @@
-##########
+###########
 freetypePen
-##########
+###########
 
 .. automodule:: fontTools.pens.freetypePen
    :inherited-members:

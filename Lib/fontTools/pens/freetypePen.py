@@ -166,7 +166,7 @@ class FreeTypePen(BasePen):
 
         Returns:
             A tuple of ``(buffer, size)``, where ``buffer`` is a ``bytes``
-            object of the resulted bitmap and ``size` is a 2-tuple of its
+            object of the resulted bitmap and ``size`` is a 2-tuple of its
             dimension.
 
         :Example:
