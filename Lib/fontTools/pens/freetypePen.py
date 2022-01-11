@@ -148,12 +148,14 @@ class FreeTypePen(BasePen):
             (ctypes.c_int)(flags)
         )
 
-    def buffer(self, width=1000, height=1000, transform=None, contain=False, evenOdd=False):
+    def buffer(self, width=None, height=None, transform=None, contain=False, evenOdd=False):
         """Renders the current contours within a bitmap buffer.
 
         Args:
-            width:  Image width of the bitmap in pixels.
-            height:  Image height of the bitmap in pixels.
+            width: Image width of the bitmap in pixels. If omitted, it
+                automatically fits to the bounding box of the contours.
+            height: Image height of the bitmap in pixels. If omitted, it
+                automatically fits to the bounding box of the contours.
             transform: A optional 6-tuple containing an affine transformation,
                 or a ``Transform`` object from the ``fontTools.misc.transform``
                 module. The bitmap size is not affected by this matrix.
@@ -166,7 +168,7 @@ class FreeTypePen(BasePen):
             A tuple of ``(buffer, size)``, where ``buffer`` is a ``bytes``
             object of the resulted bitmap and ``size` is a 2-tuple of its
             dimension.
-        
+
         :Example:
             >> pen = FreeTypePen(None)
             >> glyph.draw(pen)
@@ -177,15 +179,20 @@ class FreeTypePen(BasePen):
         transform = transform or Transform()
         if not hasattr(transform, 'transformPoint'):
             transform = Transform(*transform)
-        if contain:
+        contain_x, contain_y = contain or width is None, contain or height is None
+        width, height = width or 0, height or 0
+        if contain_x or contain_y:
             bbox = self.bbox
             bbox = transform.transformPoints((bbox[0:2], bbox[2:4]))
             bbox = (*bbox[0], *bbox[1])
             bbox_size = bbox[2] - bbox[0], bbox[3] - bbox[1]
-            dx = min(-transform.dx, bbox[0]) * -1.0
-            dy = min(-transform.dy, bbox[1]) * -1.0
-            width  = max(width,  bbox_size[0])
-            height = max(height, bbox_size[1])
+            dx, dy = transform.dx, transform.dy
+            if contain_x:
+                dx = min(-dx, bbox[0]) * -1.0
+                width  = max(width,  bbox_size[0])
+            if contain_y:
+                dy = min(-dy, bbox[1]) * -1.0
+                height = max(height, bbox_size[1])
             transform = Transform(*transform[:4], dx, dy)
         width, height = math.ceil(width), math.ceil(height)
         buf = ctypes.create_string_buffer(width * height)
@@ -205,12 +212,14 @@ class FreeTypePen(BasePen):
             raise FT_Exception(err)
         return buf.raw, (width, height)
 
-    def array(self, width=1000, height=1000, transform=None, contain=False, evenOdd=False):
+    def array(self, width=None, height=None, transform=None, contain=False, evenOdd=False):
         """Returns the rendered contours as a numpy array. Requires `numpy`.
 
         Args:
-            width:  Image width of the bitmap in pixels.
-            height:  Image height of the bitmap in pixels.
+            width: Image width of the bitmap in pixels. If omitted, it
+                automatically fits to the bounding box of the contours.
+            height: Image height of the bitmap in pixels. If omitted, it
+                automatically fits to the bounding box of the contours.
             transform: A optional 6-tuple containing an affine transformation,
                 or a ``Transform`` object from the ``fontTools.misc.transform``
                 module. The bitmap size is not affected by this matrix.
@@ -222,7 +231,7 @@ class FreeTypePen(BasePen):
         Returns:
             A ``numpy.ndarray`` object with a shape of ``(height, width)``.
             Each element takes a value in the range of ``[0.0, 1.0]``.
-        
+
         :Example:
             >> pen = FreeTypePen(None)
             >> glyph.draw(pen)
@@ -234,13 +243,15 @@ class FreeTypePen(BasePen):
         buf, size = self.buffer(width=width, height=height, transform=transform, contain=contain, evenOdd=evenOdd)
         return np.frombuffer(buf, 'B').reshape((size[1], size[0])) / 255.0
 
-    def show(self, width=1000, height=1000, transform=None, contain=False, evenOdd=False):
+    def show(self, width=None, height=None, transform=None, contain=False, evenOdd=False):
         """Plots the rendered contours with `pyplot`. Requires `numpy` and
         `matplotlib`.
 
         Args:
-            width:  Image width of the bitmap in pixels.
-            height:  Image height of the bitmap in pixels.
+            width: Image width of the bitmap in pixels. If omitted, it
+                automatically fits to the bounding box of the contours.
+            height: Image height of the bitmap in pixels. If omitted, it
+                automatically fits to the bounding box of the contours.
             transform: A optional 6-tuple containing an affine transformation,
                 or a ``Transform`` object from the ``fontTools.misc.transform``
                 module. The bitmap size is not affected by this matrix.
@@ -248,7 +259,7 @@ class FreeTypePen(BasePen):
                 so that it fits to the bounding box of the paths. Useful for
                 rendering glyphs with negative sidebearings without clipping.
             evenOdd: Pass ``True`` for even-odd fill instead of non-zero.
-        
+
         :Example:
             >> pen = FreeTypePen(None)
             >> glyph.draw(pen)
@@ -259,13 +270,15 @@ class FreeTypePen(BasePen):
         plt.imshow(a, cmap='gray_r', vmin=0, vmax=1)
         plt.show()
 
-    def image(self, width=1000, height=1000, transform=None, contain=False, evenOdd=False):
+    def image(self, width=None, height=None, transform=None, contain=False, evenOdd=False):
         """Returns the rendered contours as a PIL image. Requires `Pillow`.
         Can be used to display a glyph image in Jupyter Notebook.
 
         Args:
-            width:  Image width of the bitmap in pixels.
-            height:  Image height of the bitmap in pixels.
+            width: Image width of the bitmap in pixels. If omitted, it
+                automatically fits to the bounding box of the contours.
+            height: Image height of the bitmap in pixels. If omitted, it
+                automatically fits to the bounding box of the contours.
             transform: A optional 6-tuple containing an affine transformation,
                 or a ``Transform`` object from the ``fontTools.misc.transform``
                 module. The bitmap size is not affected by this matrix.
@@ -277,7 +290,7 @@ class FreeTypePen(BasePen):
         Returns:
             A ``PIL.image`` object. The image is filled in black with alpha
             channel obtained from the rendered bitmap.
-        
+
         :Example:
             >> pen = FreeTypePen(None)
             >> glyph.draw(pen)

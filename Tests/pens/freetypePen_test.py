@@ -6,7 +6,7 @@ try:
 except ImportError:
     FREETYPE_PY_AVAILABLE = False
 
-from fontTools.misc.transform import Scale
+from fontTools.misc.transform import Scale, Offset
 
 def draw_cubic(pen):
     pen.moveTo((50, 0))
@@ -126,6 +126,24 @@ class FreeTypePenTest(unittest.TestCase):
         buf2 = zlib.decompress(base64.b64decode(ZLIB_B64_BIN))
         self.assertEqual(len(buf1), len(buf2))
         self.assertGreater(psnr(buf1, buf2), PSNR_THRESHOLD)
+
+    def test_none_width(self):
+        pen = FreeTypePen(None)
+        star(pen)
+        width, height = None, 1000
+        buf1, size = pen.buffer(width=width, height=height, transform=Offset(0, 200))
+        buf2, _    = pen.buffer(width=1000,  height=height, transform=Offset(0, 200))
+        self.assertEqual(size, (1000, 1000))
+        self.assertEqual(buf1, buf2)
+
+    def test_none_height(self):
+        pen = FreeTypePen(None)
+        star(pen)
+        width, height = 1000, None
+        buf1, size = pen.buffer(width=width, height=height)
+        buf2, _    = pen.buffer(width=width, height=1000, transform=Offset(0, 200))
+        self.assertEqual(size, (1000, 1000))
+        self.assertEqual(buf1, buf2)
 
 if __name__ == '__main__':
     import sys
