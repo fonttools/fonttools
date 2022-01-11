@@ -240,6 +240,7 @@ def test_script_horizontal_direction():
     assert unicodedata.script_horizontal_direction("Latn") == "LTR"
     assert unicodedata.script_horizontal_direction("Arab") == "RTL"
     assert unicodedata.script_horizontal_direction("Thaa") == "RTL"
+    assert unicodedata.script_horizontal_direction("Ougr") == "RTL"
 
     with pytest.raises(KeyError):
         unicodedata.script_horizontal_direction("Azzz")

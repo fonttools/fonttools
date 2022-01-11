@@ -134,8 +134,10 @@ def script_code(script_name, default=KeyError):
         return default
 
 
-# The data on script direction is taken from CLDR 37:
-# https://github.com/unicode-org/cldr/blob/release-37/common/properties/scriptMetadata.txt
+# The data on script direction is taken from Harfbuzz source code:
+# https://github.com/harfbuzz/harfbuzz/blob/3.2.0/src/hb-common.cc#L514-L613
+# This in turn references the following "Script_Metadata" document:
+# https://docs.google.com/spreadsheets/d/1Y90M0Ie3MUJ6UVCRDOypOtijlMDLNNyyLk36T6iMu0o
 RTL_SCRIPTS = {
     # Unicode-1.1 additions
     'Arab',  # Arabic
@@ -200,6 +202,9 @@ RTL_SCRIPTS = {
     # Unicode-13.0 additions
     'Chrs',  # Chorasmian
     'Yezi',  # Yezidi
+
+    # Unicode-14.0 additions
+    'Ougr',  # Old Uyghur
 }
 
 def script_horizontal_direction(script_code, default=KeyError):
