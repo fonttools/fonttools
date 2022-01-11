@@ -20,6 +20,7 @@ from freetype.ft_errors import FT_Exception
 
 from fontTools.pens.basePen import BasePen
 from fontTools.misc.roundTools import otRound
+from fontTools.misc.transform import Transform
 
 Contour   = collections.namedtuple('Contour', ('points', 'tags'))
 LINE      = 0b00000001
@@ -48,13 +49,14 @@ class FreeTypePen(BasePen):
 
             from fontTools.ttLib import TTFont
             from fontTools.pens.freetypePen import FreeTypePen
+            from fontTools.misc.transform import Offset
             pen = FreeTypePen(None)
             font = TTFont('SourceSansPro-Regular.otf')
             glyph = font.getGlyphSet()['fi']
             glyph.draw(pen)
             width, ascender, descender = glyph.width, font['OS/2'].usWinAscent, -font['OS/2'].usWinDescent
             height = ascender - descender
-            pen.show(offset=(0, -descender), width=width, height=height)
+            pen.show(width=width, height=height, transform=Offset(0, -descender))
 
         Combining with `uharfbuzz`, you can typeset a chunk of glyphs in a pen::
 
@@ -98,7 +100,7 @@ class FreeTypePen(BasePen):
                     offset = (-vhea_descender, -y)
                     width  = vhea_ascender - vhea_descender
                     height = -y
-                pen.show(offset=offset, width=width, height=height, contain=contain)
+                pen.show(width=width, height=height, transform=Offset(*offset), contain=contain)
 
         For Jupyter Notebook, the rendered image will be displayed in a cell if
         you replace ``show()`` with ``image()`` in the examples.
@@ -108,22 +110,25 @@ class FreeTypePen(BasePen):
         BasePen.__init__(self, glyphSet)
         self.contours = []
 
-    def outline(self, offset=None, scale=None, evenOdd=False):
+    def outline(self, transform=None, evenOdd=False):
         """Converts the current contours to ``FT_Outline``.
 
         Args:
-            offset: A optional tuple of ``(x, y)`` used for translation.
-            scale:  A optional tuple of ``(scale_x, scale_y)`` used for scaling.
+            transform: A optional 6-tuple containing an affine transformation,
+                or a ``Transform`` object from the ``fontTools.misc.transform``
+                module.
             evenOdd: Pass ``True`` for even-odd fill instead of non-zero.
         """
-        offset = offset or (0, 0)
-        scale  = scale  or (1.0, 1.0)
+        transform = transform or Transform()
+        if not hasattr(transform, 'transformPoint'):
+            transform = Transform(*transform)
         nContours = len(self.contours)
-        n_points   = sum((len(contour.points) for contour in self.contours))
+        n_points  = sum((len(contour.points) for contour in self.contours))
         points = []
         for contour in self.contours:
             for point in contour.points:
-                points.append(FT_Vector(FT_Pos(otRound((point[0] + offset[0]) * scale[0] * 64)), FT_Pos(otRound((point[1] + offset[1]) * scale[1] * 64))))
+                point = transform.transformPoint(point)
+                points.append(FT_Vector(FT_Pos(otRound(point[0] * 64)), FT_Pos(otRound(point[1] * 64))))
         tags = []
         for contour in self.contours:
             for tag in contour.tags:
@@ -143,16 +148,15 @@ class FreeTypePen(BasePen):
             (ctypes.c_int)(flags)
         )
 
-    def buffer(self, offset=None, width=1000, height=1000, evenOdd=False, scale=None, contain=False):
+    def buffer(self, width=1000, height=1000, transform=None, evenOdd=False, contain=False):
         """Renders the current contours within a bitmap buffer.
 
         Args:
-            offset: A optional tuple of ``(x, y)`` used for translation.
-                Typically ``(0, -descender)`` can be passed so that the glyph
-                image would not been clipped.
             width:  Image width of the bitmap in pixels.
             height:  Image height of the bitmap in pixels.
-            scale:  A optional tuple of ``(scale_x, scale_y)`` used for scaling.
+            transform: A optional 6-tuple containing an affine transformation,
+                or a ``Transform`` object from the ``fontTools.misc.transform``
+                module. The bitmap size is not affected by this matrix.
             evenOdd: Pass ``True`` for even-odd fill instead of non-zero.
             contain: If ``True``, the image size will be automatically expanded
                 so that it fits to the bounding box of the paths. Useful for
@@ -170,17 +174,20 @@ class FreeTypePen(BasePen):
             >> type(buf), len(buf), size
             (<class 'bytes'>, 500000, (500, 1000))
         """
-        offset_x, offset_y = offset or (0, 0)
+        transform = transform or Transform()
+        if not hasattr(transform, 'transformPoint'):
+            transform = Transform(*transform)
         if contain:
-            bbox      = self.bbox
+            bbox = self.bbox
+            bbox = transform.transformPoints((bbox[0:2], bbox[2:4]))
+            bbox = (*bbox[0], *bbox[1])
             bbox_size = bbox[2] - bbox[0], bbox[3] - bbox[1]
-            offset_x  = min(offset_x, bbox[0]) * -1
-            width     = max(width,  bbox_size[0])
-            offset_y  = min(offset_y, bbox[1]) * -1
-            height    = max(height, bbox_size[1])
-        scale  = scale or (1.0, 1.0)
-        width  = math.ceil(width  * scale[0])
-        height = math.ceil(height * scale[1])
+            dx = min(-transform.dx, bbox[0]) * -1.0
+            dy = min(-transform.dy, bbox[1]) * -1.0
+            width  = max(width,  bbox_size[0])
+            height = max(height, bbox_size[1])
+            transform = Transform(*transform[:4], dx, dy)
+        width, height = math.ceil(width), math.ceil(height)
         buf = ctypes.create_string_buffer(width * height)
         bitmap = FT_Bitmap(
             (ctypes.c_int)(height),
@@ -192,22 +199,21 @@ class FreeTypePen(BasePen):
             (ctypes.c_char)(0),
             (ctypes.c_void_p)(None)
         )
-        outline = self.outline(offset=(offset_x, offset_y), evenOdd=evenOdd, scale=scale)
+        outline = self.outline(transform=transform, evenOdd=evenOdd)
         err = FT_Outline_Get_Bitmap(freetype.get_handle(), ctypes.byref(outline), ctypes.byref(bitmap))
         if err != 0:
             raise FT_Exception(err)
         return buf.raw, (width, height)
 
-    def array(self, offset=None, width=1000, height=1000, evenOdd=False, scale=None, contain=False):
+    def array(self, width=1000, height=1000, transform=None, evenOdd=False, contain=False):
         """Returns the rendered contours as a numpy array. Requires `numpy`.
 
         Args:
-            offset: A optional tuple of ``(x, y)`` used for translation.
-                Typically ``(0, -descender)`` can be passed so that the glyph
-                image would not been clipped.
             width:  Image width of the bitmap in pixels.
             height:  Image height of the bitmap in pixels.
-            scale:  A optional tuple of ``(scale_x, scale_y)`` used for scaling.
+            transform: A optional 6-tuple containing an affine transformation,
+                or a ``Transform`` object from the ``fontTools.misc.transform``
+                module. The bitmap size is not affected by this matrix.
             evenOdd: Pass ``True`` for even-odd fill instead of non-zero.
             contain: If ``True``, the image size will be automatically expanded
                 so that it fits to the bounding box of the paths. Useful for
@@ -225,20 +231,19 @@ class FreeTypePen(BasePen):
             (<class 'numpy.ndarray'>, (1000, 500))
         """
         import numpy as np
-        buf, size = self.buffer(offset=offset, width=width, height=height, evenOdd=evenOdd, scale=scale, contain=contain)
+        buf, size = self.buffer(width=width, height=height, transform=transform, evenOdd=evenOdd, contain=contain)
         return np.frombuffer(buf, 'B').reshape((size[1], size[0])) / 255.0
 
-    def show(self, offset=None, width=1000, height=1000, evenOdd=False, scale=None, contain=False):
+    def show(self, width=1000, height=1000, transform=None, evenOdd=False, contain=False):
         """Plots the rendered contours with `pyplot`. Requires `numpy` and
         `matplotlib`.
 
         Args:
-            offset: A optional tuple of ``(x, y)`` used for translation.
-                Typically ``(0, -descender)`` can be passed so that the glyph
-                image would not been clipped.
             width:  Image width of the bitmap in pixels.
             height:  Image height of the bitmap in pixels.
-            scale:  A optional tuple of ``(scale_x, scale_y)`` used for scaling.
+            transform: A optional 6-tuple containing an affine transformation,
+                or a ``Transform`` object from the ``fontTools.misc.transform``
+                module. The bitmap size is not affected by this matrix.
             evenOdd: Pass ``True`` for even-odd fill instead of non-zero.
             contain: If ``True``, the image size will be automatically expanded
                 so that it fits to the bounding box of the paths. Useful for
@@ -250,21 +255,20 @@ class FreeTypePen(BasePen):
             >> pen.show(width=500, height=1000)
         """
         from matplotlib import pyplot as plt
-        a = self.array(offset=offset, width=width, height=height, evenOdd=evenOdd, scale=scale, contain=contain)
+        a = self.array(width=width, height=height, transform=transform, evenOdd=evenOdd, contain=contain)
         plt.imshow(a, cmap='gray_r', vmin=0, vmax=1)
         plt.show()
 
-    def image(self, offset=None, width=1000, height=1000, evenOdd=False, scale=None, contain=False):
+    def image(self, width=1000, height=1000, transform=None, evenOdd=False, contain=False):
         """Returns the rendered contours as a PIL image. Requires `Pillow`.
         Can be used to display a glyph image in Jupyter Notebook.
 
         Args:
-            offset: A optional tuple of ``(x, y)`` used for translation.
-                Typically ``(0, -descender)`` can be passed so that the glyph
-                image would not been clipped.
             width:  Image width of the bitmap in pixels.
             height:  Image height of the bitmap in pixels.
-            scale:  A optional tuple of ``(scale_x, scale_y)`` used for scaling.
+            transform: A optional 6-tuple containing an affine transformation,
+                or a ``Transform`` object from the ``fontTools.misc.transform``
+                module. The bitmap size is not affected by this matrix.
             evenOdd: Pass ``True`` for even-odd fill instead of non-zero.
             contain: If ``True``, the image size will be automatically expanded
                 so that it fits to the bounding box of the paths. Useful for
@@ -282,7 +286,7 @@ class FreeTypePen(BasePen):
             (<class 'PIL.Image.Image'>, (500, 1000))
         """
         from PIL import Image
-        buf, size = self.buffer(offset=offset, width=width, height=height, evenOdd=evenOdd, scale=scale, contain=contain)
+        buf, size = self.buffer(width=width, height=height, transform=transform, evenOdd=evenOdd, contain=contain)
         img = Image.new('L', size, 0)
         img.putalpha(Image.frombuffer('L', size, buf))
         return img
