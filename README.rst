@@ -199,6 +199,13 @@ are required to unlock the extra features named "ufo", etc.
   * `reportlab <https://pypi.python.org/pypi/reportlab>`__: Python toolkit
     for generating PDFs and graphics.
 
+- ``Lib/fontTools/pens/freetypePen.py``
+
+  Pen to drawing glyphs with FreeType as raster images, requires:
+
+  * `freetype-py <https://pypi.python.org/pypi/freetype-py>`__: Python binding 
+    for the FreeType library.
+
 How to make a new release
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
