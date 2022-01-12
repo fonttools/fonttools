@@ -199,6 +199,13 @@ are required to unlock the extra features named "ufo", etc.
   * `reportlab <https://pypi.python.org/pypi/reportlab>`__: Python toolkit
     for generating PDFs and graphics.
 
+- ``Lib/fontTools/pens/freetypePen.py``
+
+  Pen to drawing glyphs with FreeType as raster images, requires:
+
+  * `freetype-py <https://pypi.python.org/pypi/freetype-py>`__: Python binding 
+    for the FreeType library.
+
 How to make a new release
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -238,9 +245,9 @@ aschmitz, Olivier Berten, Samyak Bhuta, Erik van Blokland, Petr van Blokland,
 Jelle Bosma, Sascha Brawer, Tom Byrer, Antonio Cavedoni, Frédéric 
 Coiffier, Vincent Connare, David Corbett, Simon Cozens, Dave Crossland, 
 Simon Daniels, Peter Dekkers, Behdad Esfahbod, Behnam Esfahbod, Hannes 
-Famira, Sam Fishman, Matt Fontaine, Yannis Haralambous, Greg Hitchcock, 
-Jeremie Hornus, Khaled Hosny, John Hudson, Denis Moyogo Jacquerye, Jack 
-Jansen, Tom Kacvinsky, Jens Kutilek, Antoine Leca, Werner Lemberg, Tal 
+Famira, Sam Fishman, Matt Fontaine, Takaaki Fuji, Yannis Haralambous, Greg 
+Hitchcock, Jeremie Hornus, Khaled Hosny, John Hudson, Denis Moyogo Jacquerye, 
+Jack Jansen, Tom Kacvinsky, Jens Kutilek, Antoine Leca, Werner Lemberg, Tal 
 Leming, Peter Lofting, Cosimo Lupo, Masaya Nakamura, Dave Opstad, 
 Laurence Penney, Roozbeh Pournader, Garret Rieger, Read Roberts, Guido 
 van Rossum, Just van Rossum, Andreas Seidel, Georg Seifert, Chris 
