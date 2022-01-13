@@ -170,11 +170,14 @@ class FreeTypePen(BasePen):
             dimension.
 
         :Example:
-            >> pen = FreeTypePen(None)
-            >> glyph.draw(pen)
-            >> buf, size = pen.buffer(width=500, height=1000)
-            >> type(buf), len(buf), size
-            (<class 'bytes'>, 500000, (500, 1000))
+            .. code-block::
+                
+                >> pen = FreeTypePen(None)
+                >> glyph.draw(pen)
+                >> buf, size = pen.buffer(width=500, height=1000)
+                >> type(buf), len(buf), size
+                (<class 'bytes'>, 500000, (500, 1000))
+        
         """
         transform = transform or Transform()
         if not hasattr(transform, 'transformPoint'):
@@ -233,11 +236,13 @@ class FreeTypePen(BasePen):
             Each element takes a value in the range of ``[0.0, 1.0]``.
 
         :Example:
-            >> pen = FreeTypePen(None)
-            >> glyph.draw(pen)
-            >> arr = pen.array(width=500, height=1000)
-            >> type(a), a.shape
-            (<class 'numpy.ndarray'>, (1000, 500))
+            .. code-block::
+                
+                >> pen = FreeTypePen(None)
+                >> glyph.draw(pen)
+                >> arr = pen.array(width=500, height=1000)
+                >> type(a), a.shape
+                (<class 'numpy.ndarray'>, (1000, 500))
         """
         import numpy as np
         buf, size = self.buffer(width=width, height=height, transform=transform, contain=contain, evenOdd=evenOdd)
@@ -261,9 +266,11 @@ class FreeTypePen(BasePen):
             evenOdd: Pass ``True`` for even-odd fill instead of non-zero.
 
         :Example:
-            >> pen = FreeTypePen(None)
-            >> glyph.draw(pen)
-            >> pen.show(width=500, height=1000)
+            .. code-block::
+                
+                >> pen = FreeTypePen(None)
+                >> glyph.draw(pen)
+                >> pen.show(width=500, height=1000)
         """
         from matplotlib import pyplot as plt
         a = self.array(width=width, height=height, transform=transform, contain=contain, evenOdd=evenOdd)
@@ -292,11 +299,13 @@ class FreeTypePen(BasePen):
             channel obtained from the rendered bitmap.
 
         :Example:
-            >> pen = FreeTypePen(None)
-            >> glyph.draw(pen)
-            >> img = pen.image(width=500, height=1000)
-            >> type(img), img.size
-            (<class 'PIL.Image.Image'>, (500, 1000))
+            .. code-block::
+                
+                >> pen = FreeTypePen(None)
+                >> glyph.draw(pen)
+                >> img = pen.image(width=500, height=1000)
+                >> type(img), img.size
+                (<class 'PIL.Image.Image'>, (500, 1000))
         """
         from PIL import Image
         buf, size = self.buffer(width=width, height=height, transform=transform, contain=contain, evenOdd=evenOdd)
