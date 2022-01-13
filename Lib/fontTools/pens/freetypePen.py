@@ -11,17 +11,12 @@ import subprocess
 import collections
 import math
 
-have_freetype = False
-try:
-    import freetype
-    from freetype.raw import FT_Outline_Get_Bitmap, FT_Outline_Get_BBox, FT_Outline_Get_CBox
-    from freetype.ft_types import FT_Pos
-    from freetype.ft_structs import FT_Vector, FT_BBox, FT_Bitmap, FT_Outline
-    from freetype.ft_enums import FT_OUTLINE_NONE, FT_OUTLINE_EVEN_ODD_FILL, FT_PIXEL_MODE_GRAY
-    from freetype.ft_errors import FT_Exception
-    have_freetype = True
-except ImportError:
-    pass
+import freetype
+from freetype.raw import FT_Outline_Get_Bitmap, FT_Outline_Get_BBox, FT_Outline_Get_CBox
+from freetype.ft_types import FT_Pos
+from freetype.ft_structs import FT_Vector, FT_BBox, FT_Bitmap, FT_Outline
+from freetype.ft_enums import FT_OUTLINE_NONE, FT_OUTLINE_EVEN_ODD_FILL, FT_PIXEL_MODE_GRAY
+from freetype.ft_errors import FT_Exception
 
 from fontTools.pens.basePen import BasePen
 from fontTools.misc.roundTools import otRound
@@ -113,11 +108,6 @@ class FreeTypePen(BasePen):
 
     def __init__(self, glyphSet):
         BasePen.__init__(self, glyphSet)
-        if not have_freetype:
-            self.log.error(
-                'FreeTypePen requires the freetype module, available at: '
-                'https://pypi.org/project/freetype-py/')
-            raise ImportError("No module named freetype")
         self.contours = []
 
     def outline(self, transform=None, evenOdd=False):
