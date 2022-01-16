@@ -3,6 +3,7 @@ import os
 import sys
 from fontTools import t1Lib
 from fontTools.pens.basePen import NullPen
+from fontTools.misc.psCharStrings import T1CharString
 import random
 
 
@@ -13,6 +14,8 @@ LWFN = os.path.join(DATADIR, 'TestT1-Regular.lwfn')
 PFA = os.path.join(DATADIR, 'TestT1-Regular.pfa')
 PFB = os.path.join(DATADIR, 'TestT1-Regular.pfb')
 WEIRD_ZEROS = os.path.join(DATADIR, 'TestT1-weird-zeros.pfa')
+# ellipsis is hinted with 55 131 296 131 537 131 vstem3 0 122 hstem
+ELLIPSIS_HINTED = os.path.join(DATADIR, 'TestT1-ellipsis-hinted.pfa')
 
 
 class FindEncryptedChunksTest(unittest.TestCase):
@@ -52,23 +55,40 @@ class ReadWriteTest(unittest.TestCase):
 		data = self.write(font, 'PFB')
 		self.assertEqual(font.getData(), data)
 
+	def test_read_and_parse_pfa_write_pfb(self):
+		font = t1Lib.T1Font(PFA)
+		font.parse()
+		saved_font = self.write(font, 'PFB', dohex=False, doparase=True)
+		self.assertTrue(same_dicts(font.font, saved_font))
+
 	def test_read_pfb_write_pfa(self):
 		font = t1Lib.T1Font(PFB)
 		# 'OTHER' == 'PFA'
 		data = self.write(font, 'OTHER', dohex=True)
 		self.assertEqual(font.getData(), data)
 
+	def test_read_and_parse_pfb_write_pfa(self):
+		font = t1Lib.T1Font(PFB)
+		font.parse()
+		# 'OTHER' == 'PFA'
+		saved_font = self.write(font, 'OTHER', dohex=True, doparase=True)
+		self.assertTrue(same_dicts(font.font, saved_font))
+
 	def test_read_with_path(self):
 		import pathlib
 		font = t1Lib.T1Font(pathlib.Path(PFB))
 
 	@staticmethod
-	def write(font, outtype, dohex=False):
+	def write(font, outtype, dohex=False, doparase=False):
 		temp = os.path.join(DATADIR, 'temp.' + outtype.lower())
 		try:
 			font.saveAs(temp, outtype, dohex=dohex)
 			newfont = t1Lib.T1Font(temp)
-			data = newfont.getData()
+			if doparase:
+				newfont.parse()
+				data = newfont.font
+			else:
+				data = newfont.getData()
 		finally:
 			if os.path.exists(temp):
 				os.remove(temp)
@@ -105,6 +125,75 @@ class T1FontTest(unittest.TestCase):
 		self.assertFalse(hasattr(aglyph, 'width'))
 		aglyph.draw(NullPen())
 		self.assertTrue(hasattr(aglyph, 'width'))
+
+
+class EditTest(unittest.TestCase):
+
+	def test_edit_pfa(self):
+		font = t1Lib.T1Font(PFA)
+		ellipsis = font.getGlyphSet()["ellipsis"]
+		ellipsis.decompile()
+		program = []
+		for v in ellipsis.program:
+			try:
+				program.append(int(v))
+			except:
+				program.append(v)
+				if v == 'hsbw':
+					hints = [55, 131, 296, 131, 537, 131, 'vstem3', 0, 122, 'hstem']
+					program.extend(hints)
+		ellipsis.program = program
+		# 'OTHER' == 'PFA'
+		saved_font = self.write(font, 'OTHER', dohex=True, doparase=True)
+		hinted_font = t1Lib.T1Font(ELLIPSIS_HINTED)
+		hinted_font.parse()
+		self.assertTrue(same_dicts(hinted_font.font, saved_font))
+
+	@staticmethod
+	def write(font, outtype, dohex=False, doparase=False):
+		temp = os.path.join(DATADIR, 'temp.' + outtype.lower())
+		try:
+			font.saveAs(temp, outtype, dohex=dohex)
+			newfont = t1Lib.T1Font(temp)
+			if doparase:
+				newfont.parse()
+				data = newfont.font
+			else:
+				data = newfont.getData()
+		finally:
+			if os.path.exists(temp):
+				os.remove(temp)
+		return data
+
+
+def same_dicts(dict1, dict2):
+	if dict1.keys() != dict2.keys():
+		return False
+	for key, value in dict1.items():
+		if isinstance(value, dict):
+			if not same_dicts(value, dict2[key]):
+				return False
+		elif isinstance(value, list):
+			if len(value) != len(dict2[key]):
+				return False
+			for elem1, elem2 in zip(value, dict2[key]):
+				if isinstance(elem1, T1CharString):
+					elem1.compile()
+					elem2.compile()
+					if elem1.bytecode != elem2.bytecode:
+						return False
+				else:
+					if elem1 != elem2:
+						return False
+		elif isinstance(value, T1CharString):
+			value.compile()
+			dict2[key].compile()
+			if value.bytecode != dict2[key].bytecode:
+				return False
+		else:
+			if value != dict2[key]:
+				return False
+	return True
 
 
 if __name__ == '__main__':
