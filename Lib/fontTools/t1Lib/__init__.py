@@ -23,6 +23,7 @@ from fontTools.misc.psOperators import _type1_pre_eexec_order, _type1_fontinfo_o
 from fontTools.encodings.StandardEncoding import StandardEncoding
 import os
 import re
+import copy
 
 __author__ = "jvr"
 __version__ = "1.0b3"
@@ -516,12 +517,12 @@ def stringToLong(s):
 
 # PS stream helpers
 
-font_dictionary_keys = _type1_pre_eexec_order
+font_dictionary_keys = copy.copy(_type1_pre_eexec_order)
 # t1write.c:writeRegNameKeyedFont
 # always counts following keys
 font_dictionary_keys.remove("FontMatrix")
 
-FontInfo_dictionary_keys = _type1_fontinfo_order
+FontInfo_dictionary_keys = copy.copy(_type1_fontinfo_order)
 # extend because AFDKO tx may use following keys
 FontInfo_dictionary_keys.extend([
 	"FSType",
