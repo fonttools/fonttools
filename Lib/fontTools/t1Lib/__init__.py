@@ -131,8 +131,8 @@ class T1Font(object):
 				fi = sf["FontInfo"]
 				# follow t1write.c:writeFontInfoDict
 				size = 3 # Headroom for new key addition
-				for key in FontInfo_dictionary_keys:
-					size += int(key in fi)
+				for subkey in FontInfo_dictionary_keys:
+					size += int(subkey in fi)
 				lines.append(self._tobytes(f"/FontInfo {size} dict dup begin"))
 
 				for subkey, subvalue in fi.items():
@@ -167,8 +167,8 @@ class T1Font(object):
 				pr = eexec_dict["Private"]
 				# follow t1write.c:writePrivateDict
 				size = 3 # for RD, ND, NP
-				for key in Praivate_dictionary_keys:
-					size += int(key in pr)
+				for subkey in Praivate_dictionary_keys:
+					size += int(subkey in pr)
 				lines.append(b"dup /Private")
 				lines.append(self._tobytes(f"{size} dict dup begin"))
 				for subkey, subvalue in pr.items():
