@@ -387,15 +387,6 @@ def process(jobs, options):
 		action(input, output, options)
 
 
-def waitForKeyPress():
-	"""Force the DOS Prompt window to stay open so the user gets
-	a chance to see what's wrong."""
-	import msvcrt
-	print('(Hit any key to exit)', file=sys.stderr)
-	while not msvcrt.kbhit():
-		pass
-
-
 def main(args=None):
 	"""Convert OpenType fonts to XML and back"""
 	from fontTools import configLogger
@@ -416,16 +407,12 @@ def main(args=None):
 		log.error("(Cancelled.)")
 		sys.exit(1)
 	except SystemExit:
-		if sys.platform == "win32":
-			waitForKeyPress()
 		raise
 	except TTLibError as e:
 		log.error(e)
 		sys.exit(1)
 	except:
 		log.exception('Unhandled exception has occurred')
-		if sys.platform == "win32":
-			waitForKeyPress()
 		sys.exit(1)
 
 

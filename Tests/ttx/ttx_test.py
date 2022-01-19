@@ -961,10 +961,6 @@ def test_main_keyboard_interrupt(tmpdir, monkeypatch, caplog):
     assert "(Cancelled.)" in caplog.text
 
 
-@pytest.mark.skipif(
-    sys.platform == "win32",
-    reason="waitForKeyPress function causes test to hang on Windows platform",
-)
 def test_main_system_exit(tmpdir, monkeypatch):
     with pytest.raises(SystemExit):
         inpath = os.path.join("Tests", "ttx", "data", "TestTTF.ttx")
@@ -991,10 +987,6 @@ def test_main_ttlib_error(tmpdir, monkeypatch, caplog):
     assert "Test error" in caplog.text
 
 
-@pytest.mark.skipif(
-    sys.platform == "win32",
-    reason="waitForKeyPress function causes test to hang on Windows platform",
-)
 def test_main_base_exception(tmpdir, monkeypatch, caplog):
     with pytest.raises(SystemExit):
         inpath = os.path.join("Tests", "ttx", "data", "TestTTF.ttx")
