@@ -264,6 +264,9 @@ def ot_tag_to_script(tag):
     if not tag or " " in tag or len(tag) > 4:
         raise ValueError("invalid OpenType tag: %r" % tag)
 
+    if tag in OTTags.SCRIPT_ALIASES:
+        tag = OTTags.SCRIPT_ALIASES[tag]
+
     while len(tag) != 4:
         tag += str(" ")  # pad with spaces
 

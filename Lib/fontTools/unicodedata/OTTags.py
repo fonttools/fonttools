@@ -11,6 +11,10 @@
 
 DEFAULT_SCRIPT = "DFLT"
 
+SCRIPT_ALIASES = {
+    "jamo": "hang",
+}
+
 SCRIPT_EXCEPTIONS = {
     "Hira": "kana",
     "Hrkt": "kana",
