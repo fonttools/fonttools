@@ -1,3 +1,5 @@
+import re
+
 from fontTools.ttLib.tables import otTables
 from fontTools.otlLib.builder import buildStatTable
 from fontTools.varLib import instancer
@@ -215,7 +217,7 @@ def test_updateNameTable_with_multilingual_names(varfont, limits, expected, isNo
 
 
 def test_updateNameTable_missing_axisValues(varfont):
-    with pytest.raises(ValueError, match="Cannot find Axis Values \['wght=200'\]"):
+    with pytest.raises(ValueError, match=re.escape("Cannot find Axis Values ['wght=200']")):
         instancer.names.updateNameTable(varfont, {"wght": 200})
 
 

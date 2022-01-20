@@ -372,11 +372,13 @@ class GlyfTableTest(unittest.TestCase):
         font["glyf"] = newTable("glyf")
         font["glyf"].decompile(b"\x00", font)
         font["hmtx"] = newTable("hmtx")
-        font["hmtx"].metrics = {".notdef": (100,0)}
+        font["hmtx"].metrics = {".notdef": (100, 0)}
         font["head"] = newTable("head")
         font["head"].unitsPerEm = 1000
+        font["vmtx"] = newTable("vmtx")
+        font["vmtx"].metrics = {".notdef": (font["head"].unitsPerEm, 0)}
         self.assertEqual(
-            font["glyf"].getPhantomPoints(".notdef", font, 0), 
+            font["glyf"]._getPhantomPoints(".notdef", font["hmtx"], font["vmtx"]),
             [(0, 0), (100, 0), (0, 0), (0, -1000)]
         )
 

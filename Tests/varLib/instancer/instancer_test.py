@@ -50,7 +50,7 @@ def fvarAxes():
 def _get_coordinates(varfont, glyphname):
     # converts GlyphCoordinates to a list of (x, y) tuples, so that pytest's
     # assert will give us a nicer diff
-    return list(varfont["glyf"].getCoordinatesAndControls(glyphname, varfont)[0])
+    return list(varfont["glyf"]._getCoordinatesAndControls(glyphname, varfont["hmtx"], varfont["vmtx"])[0])
 
 
 class InstantiateGvarTest(object):
