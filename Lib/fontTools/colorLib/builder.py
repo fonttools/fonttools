@@ -551,6 +551,10 @@ class LayerListBuilder:
 
         layers = [listToColrLayers(l) for l in layers]
 
+        # No reason to have a colr layers with just one entry
+        if len(layers) == 1:
+            return layers[0], {}
+
         paint = ot.Paint()
         paint.Format = int(ot.PaintFormat.PaintColrLayers)
         paint.NumLayers = len(layers)
