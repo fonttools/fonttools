@@ -122,7 +122,7 @@ class FreeTypePen(BasePen):
         transform = transform or Transform()
         if not hasattr(transform, 'transformPoint'):
             transform = Transform(*transform)
-        nContours = len(self.contours)
+        n_contours = len(self.contours)
         n_points  = sum((len(contour.points) for contour in self.contours))
         points = []
         for contour in self.contours:
@@ -140,11 +140,11 @@ class FreeTypePen(BasePen):
             contours.append(contours_sum - 1)
         flags = FT_OUTLINE_EVEN_ODD_FILL if evenOdd else FT_OUTLINE_NONE
         return FT_Outline(
-            (ctypes.c_short)(nContours),
+            (ctypes.c_short)(n_contours),
             (ctypes.c_short)(n_points),
             (FT_Vector      * n_points)(*points),
             (ctypes.c_ubyte * n_points)(*tags),
-            (ctypes.c_short * nContours)(*contours),
+            (ctypes.c_short * n_contours)(*contours),
             (ctypes.c_int)(flags)
         )
 
