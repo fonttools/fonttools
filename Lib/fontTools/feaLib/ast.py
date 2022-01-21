@@ -179,13 +179,20 @@ class Expression(Element):
 class Comment(Element):
     """A comment in a feature file."""
 
-    def __init__(self, text, location=None):
+    def __init__(self, text, location=None, raw=False):
         super(Comment, self).__init__(location)
+        self.raw = not text.strip().startswith("#")
         #: Text of the comment
         self.text = text
 
     def asFea(self, indent=""):
-        return self.text
+        if not self.raw:
+            return self.text
+        else:
+            lines = ["# {}{}".format(indent, line) for line in self.text.split("\n")]
+            self.text = "\n".join(lines)
+            self.raw = False
+            return self.asFea()
 
 
 class NullGlyph(Expression):
