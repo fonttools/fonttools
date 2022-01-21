@@ -18,7 +18,7 @@ from freetype.ft_structs import FT_Vector, FT_BBox, FT_Bitmap, FT_Outline
 from freetype.ft_enums import FT_OUTLINE_NONE, FT_OUTLINE_EVEN_ODD_FILL, FT_PIXEL_MODE_GRAY
 from freetype.ft_errors import FT_Exception
 
-from fontTools.pens.basePen import BasePen
+from fontTools.pens.basePen import BasePen, PenError
 from fontTools.misc.roundTools import otRound
 from fontTools.misc.transform import Transform
 
@@ -390,11 +390,15 @@ class FreeTypePen(BasePen):
         contour.tags.append(LINE)
 
     def _lineTo(self, pt):
+        if not (self.contours and len(self.contours[-1].points) > 0):
+            raise PenError('Contour missing required initial moveTo')
         contour = self.contours[-1]
         contour.points.append(pt)
         contour.tags.append(LINE)
 
     def _curveToOne(self, p1, p2, p3):
+        if not (self.contours and len(self.contours[-1].points) > 0):
+            raise PenError('Contour missing required initial moveTo')
         t1, t2, t3 = OFFCURVE, OFFCURVE, CURVE
         contour = self.contours[-1]
         for p, t in ((p1, t1), (p2, t2), (p3, t3)):
@@ -402,6 +406,8 @@ class FreeTypePen(BasePen):
             contour.tags.append(t)
 
     def _qCurveToOne(self, p1, p2):
+        if not (self.contours and len(self.contours[-1].points) > 0):
+            raise PenError('Contour missing required initial moveTo')
         t1, t2 = QOFFCURVE, QCURVE
         contour = self.contours[-1]
         for p, t in ((p1, t1), (p2, t2)):
