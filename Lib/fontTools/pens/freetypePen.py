@@ -24,7 +24,7 @@ from fontTools.misc.transform import Transform
 
 Contour   = collections.namedtuple('Contour', ('points', 'tags'))
 LINE      = 0b00000001
-CURVE     = 0b00000011
+CURVE     = 0b00000001
 OFFCURVE  = 0b00000010
 QCURVE    = 0b00000001
 QOFFCURVE = 0b00000000
