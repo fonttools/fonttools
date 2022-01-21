@@ -362,6 +362,7 @@ class GlyfTableTest(unittest.TestCase):
         self.assertEqual(font["glyf"][".notdef"].numberOfContours, 0)
         self.assertEqual(font["glyf"]["space"].numberOfContours, 0)
 
+    @pytest.mark.filterwarnings('ignore::DeprecationWarning')
     def test_getPhantomPoints(self):
         # https://github.com/fonttools/fonttools/issues/2295
         font = TTFont()
@@ -375,10 +376,8 @@ class GlyfTableTest(unittest.TestCase):
         font["hmtx"].metrics = {".notdef": (100, 0)}
         font["head"] = newTable("head")
         font["head"].unitsPerEm = 1000
-        font["vmtx"] = newTable("vmtx")
-        font["vmtx"].metrics = {".notdef": (font["head"].unitsPerEm, 0)}
         self.assertEqual(
-            font["glyf"]._getPhantomPoints(".notdef", font["hmtx"], font["vmtx"]),
+            font["glyf"].getPhantomPoints(".notdef", font, 0),
             [(0, 0), (100, 0), (0, 0), (0, -1000)]
         )
 

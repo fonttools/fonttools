@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.filterwarnings("ignore::DeprecationWarning")
+
 from fontTools.misc.py23 import tobytes
 from fontTools.misc.textTools import deHexStr
 import filecmp
@@ -10,7 +13,6 @@ import unittest
 
 from fontTools.misc.py23 import (
 	round2, round3, isclose, redirect_stdout, redirect_stderr)
-
 
 PIPE_SCRIPT = """\
 import sys
@@ -453,4 +455,4 @@ class TestRedirectStderr(TestRedirectStream, unittest.TestCase):
 
 
 if __name__ == "__main__":
-	sys.exit(unittest.main())
+	sys.exit(pytest.main())
