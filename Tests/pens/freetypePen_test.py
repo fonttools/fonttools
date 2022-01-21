@@ -1,5 +1,6 @@
 import unittest
 import os
+import math
 
 try:
     from fontTools.pens.freetypePen import FreeTypePen
@@ -11,11 +12,11 @@ from fontTools.misc.transform import Scale, Offset
 
 DATA_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'data')
 
-def box(pen):
-    pen.moveTo((0, 0))
-    pen.lineTo((0, 500))
-    pen.lineTo((500, 500))
-    pen.lineTo((500, 0))
+def box(pen, offset=(0, 0)):
+    pen.moveTo((0   + offset[0], 0   + offset[1]))
+    pen.lineTo((0   + offset[0], 500 + offset[1]))
+    pen.lineTo((500 + offset[0], 500 + offset[1]))
+    pen.lineTo((500 + offset[0], 0   + offset[1]))
     pen.closePath()
 
 def draw_cubic(pen):
@@ -136,22 +137,76 @@ class FreeTypePenTest(unittest.TestCase):
         self.assertEqual(size1, size2)
         self.assertGreater(psnr(buf1, buf2), PSNR_THRESHOLD)
 
-    def test_none_width(self):
+    def test_rotate(self):
+        pen = FreeTypePen(None)
+        box(pen)
+        t = Scale(0.05, 0.05).rotate(math.pi / 4.0).translate(1234, 5678)
+        width, height = None, None
+        buf1, size1 = pen.buffer(width=width, height=height, transform=t)
+        buf2, size2 = load_pgm(os.path.join(DATA_DIR, 'test_rotate.pgm'))
+        self.assertEqual(len(buf1), len(buf2))
+        self.assertEqual(size1, size2)
+        self.assertGreater(psnr(buf1, buf2), PSNR_THRESHOLD)
+
+    def test_skew(self):
+        pen = FreeTypePen(None)
+        box(pen)
+        t = Scale(0.05, 0.05).skew(math.pi / 4.0).translate(1234, 5678)
+        width, height = None, None
+        buf1, size1 = pen.buffer(width=width, height=height, transform=t)
+        buf2, size2 = load_pgm(os.path.join(DATA_DIR, 'test_skew.pgm'))
+        self.assertEqual(len(buf1), len(buf2))
+        self.assertEqual(size1, size2)
+        self.assertGreater(psnr(buf1, buf2), PSNR_THRESHOLD)
+
+    def test_none_size(self):
         pen = FreeTypePen(None)
         star(pen)
-        width, height = None, 1000
+        width, height = None, None
         buf1, size = pen.buffer(width=width, height=height, transform=Offset(0, 200))
-        buf2, _    = pen.buffer(width=1000,  height=height, transform=Offset(0, 200))
+        buf2, _    = pen.buffer(width=1000,  height=1000,   transform=Offset(0, 200))
         self.assertEqual(size, (1000, 1000))
         self.assertEqual(buf1, buf2)
 
-    def test_none_height(self):
+        pen = FreeTypePen(None)
+        box(pen, offset=(250, 250))
+        width, height = None, None
+        buf1, size = pen.buffer(width=width, height=height)
+        buf2, _    = pen.buffer(width=500,   height=500, transform=Offset(-250, -250))
+        self.assertEqual(size, (500, 500))
+        self.assertEqual(buf1, buf2)
+
+        pen = FreeTypePen(None)
+        box(pen, offset=(-1234, -5678))
+        width, height = None, None
+        buf1, size = pen.buffer(width=width, height=height)
+        buf2, _    = pen.buffer(width=500,   height=500, transform=Offset(1234, 5678))
+        self.assertEqual(size, (500, 500))
+        self.assertEqual(buf1, buf2)
+
+    def test_zero_size(self):
         pen = FreeTypePen(None)
         star(pen)
-        width, height = 1000, None
-        buf1, size = pen.buffer(width=width, height=height)
-        buf2, _    = pen.buffer(width=width, height=1000, transform=Offset(0, 200))
+        width, height = 0, 0
+        buf1, size = pen.buffer(width=width, height=height, transform=Offset(0, 200), contain=True)
+        buf2, _    = pen.buffer(width=1000,  height=1000,   transform=Offset(0, 200), contain=True)
         self.assertEqual(size, (1000, 1000))
+        self.assertEqual(buf1, buf2)
+
+        pen = FreeTypePen(None)
+        box(pen, offset=(250, 250))
+        width, height = 0, 0
+        buf1, size = pen.buffer(width=width, height=height, contain=True)
+        buf2, _    = pen.buffer(width=500,   height=500, transform=Offset(0, 0), contain=True)
+        self.assertEqual(size, (750, 750))
+        self.assertEqual(buf1, buf2)
+
+        pen = FreeTypePen(None)
+        box(pen, offset=(-1234, -5678))
+        width, height = 0, 0
+        buf1, size = pen.buffer(width=width, height=height, contain=True)
+        buf2, _    = pen.buffer(width=500,   height=500, transform=Offset(1234, 5678), contain=True)
+        self.assertEqual(size, (500, 500))
         self.assertEqual(buf1, buf2)
 
 if __name__ == '__main__':

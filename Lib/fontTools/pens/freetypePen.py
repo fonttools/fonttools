@@ -114,7 +114,7 @@ class FreeTypePen(BasePen):
         """Converts the current contours to ``FT_Outline``.
 
         Args:
-            transform: A optional 6-tuple containing an affine transformation,
+            transform: An optional 6-tuple containing an affine transformation,
                 or a ``Transform`` object from the ``fontTools.misc.transform``
                 module.
             evenOdd: Pass ``True`` for even-odd fill instead of non-zero.
@@ -156,7 +156,7 @@ class FreeTypePen(BasePen):
                 automatically fits to the bounding box of the contours.
             height: Image height of the bitmap in pixels. If omitted, it
                 automatically fits to the bounding box of the contours.
-            transform: A optional 6-tuple containing an affine transformation,
+            transform: An optional 6-tuple containing an affine transformation,
                 or a ``Transform`` object from the ``fontTools.misc.transform``
                 module. The bitmap size is not affected by this matrix.
             contain: If ``True``, the image size will be automatically expanded
@@ -169,33 +169,49 @@ class FreeTypePen(BasePen):
             object of the resulted bitmap and ``size`` is a 2-tuple of its
             dimension.
 
+        :Notes:
+            The image size should always be given explicitly if you need to get
+            a proper glyph image. When ``width`` and ``height`` are omitted, it
+            forcifully fits to the bounding box and the side bearings get
+            cropped. If you pass ``0`` to both ``width`` and ``height`` and set
+            ``contain`` to ``True``, it expands to the bounding box while
+            maintaining the origin of the contours, meaning that LSB will be
+            maintained but RSB won’t. The difference between the two becomes
+            more obvious when rotate or skew transformation is applied.
+
         :Example:
             .. code-block::
-                
+
                 >> pen = FreeTypePen(None)
                 >> glyph.draw(pen)
                 >> buf, size = pen.buffer(width=500, height=1000)
                 >> type(buf), len(buf), size
                 (<class 'bytes'>, 500000, (500, 1000))
-        
+
         """
         transform = transform or Transform()
         if not hasattr(transform, 'transformPoint'):
             transform = Transform(*transform)
         contain_x, contain_y = contain or width is None, contain or height is None
-        width, height = width or 0, height or 0
         if contain_x or contain_y:
-            bbox = self.bbox
-            bbox = transform.transformPoints((bbox[0:2], bbox[2:4]))
-            bbox = (*bbox[0], *bbox[1])
-            bbox_size = bbox[2] - bbox[0], bbox[3] - bbox[1]
             dx, dy = transform.dx, transform.dy
+            bbox = self.bbox
+            p1, p2, p3, p4 = transform.transformPoint((bbox[0], bbox[1])), transform.transformPoint((bbox[2], bbox[1])), transform.transformPoint((bbox[0], bbox[3])), transform.transformPoint((bbox[2], bbox[3]))
+            px, py = (p1[0], p2[0], p3[0], p4[0]), (p1[1], p2[1], p3[1], p4[1])
             if contain_x:
-                dx = min(-dx, bbox[0]) * -1.0
-                width  = max(width,  bbox_size[0])
+                if width is None:
+                    dx = dx - min(*px)
+                    width = max(*px) - min(*px)
+                else:
+                    dx = dx - min(min(*px), 0.0)
+                    width = max(width, max(*px) - min(min(*px), 0.0))
             if contain_y:
-                dy = min(-dy, bbox[1]) * -1.0
-                height = max(height, bbox_size[1])
+                if height is None:
+                    dy = dy - min(*py)
+                    height = max(*py) - min(*py)
+                else:
+                    dy = dy - min(min(*py), 0.0)
+                    height = max(height, max(*py) - min(min(*py), 0.0))
             transform = Transform(*transform[:4], dx, dy)
         width, height = math.ceil(width), math.ceil(height)
         buf = ctypes.create_string_buffer(width * height)
@@ -223,7 +239,7 @@ class FreeTypePen(BasePen):
                 automatically fits to the bounding box of the contours.
             height: Image height of the bitmap in pixels. If omitted, it
                 automatically fits to the bounding box of the contours.
-            transform: A optional 6-tuple containing an affine transformation,
+            transform: An optional 6-tuple containing an affine transformation,
                 or a ``Transform`` object from the ``fontTools.misc.transform``
                 module. The bitmap size is not affected by this matrix.
             contain: If ``True``, the image size will be automatically expanded
@@ -235,9 +251,19 @@ class FreeTypePen(BasePen):
             A ``numpy.ndarray`` object with a shape of ``(height, width)``.
             Each element takes a value in the range of ``[0.0, 1.0]``.
 
+        :Notes:
+            The image size should always be given explicitly if you need to get
+            a proper glyph image. When ``width`` and ``height`` are omitted, it
+            forcifully fits to the bounding box and the side bearings get
+            cropped. If you pass ``0`` to both ``width`` and ``height`` and set
+            ``contain`` to ``True``, it expands to the bounding box while
+            maintaining the origin of the contours, meaning that LSB will be
+            maintained but RSB won’t. The difference between the two becomes
+            more obvious when rotate or skew transformation is applied.
+
         :Example:
             .. code-block::
-                
+
                 >> pen = FreeTypePen(None)
                 >> glyph.draw(pen)
                 >> arr = pen.array(width=500, height=1000)
@@ -257,7 +283,7 @@ class FreeTypePen(BasePen):
                 automatically fits to the bounding box of the contours.
             height: Image height of the bitmap in pixels. If omitted, it
                 automatically fits to the bounding box of the contours.
-            transform: A optional 6-tuple containing an affine transformation,
+            transform: An optional 6-tuple containing an affine transformation,
                 or a ``Transform`` object from the ``fontTools.misc.transform``
                 module. The bitmap size is not affected by this matrix.
             contain: If ``True``, the image size will be automatically expanded
@@ -265,9 +291,19 @@ class FreeTypePen(BasePen):
                 rendering glyphs with negative sidebearings without clipping.
             evenOdd: Pass ``True`` for even-odd fill instead of non-zero.
 
+        :Notes:
+            The image size should always be given explicitly if you need to get
+            a proper glyph image. When ``width`` and ``height`` are omitted, it
+            forcifully fits to the bounding box and the side bearings get
+            cropped. If you pass ``0`` to both ``width`` and ``height`` and set
+            ``contain`` to ``True``, it expands to the bounding box while
+            maintaining the origin of the contours, meaning that LSB will be
+            maintained but RSB won’t. The difference between the two becomes
+            more obvious when rotate or skew transformation is applied.
+
         :Example:
             .. code-block::
-                
+
                 >> pen = FreeTypePen(None)
                 >> glyph.draw(pen)
                 >> pen.show(width=500, height=1000)
@@ -286,7 +322,7 @@ class FreeTypePen(BasePen):
                 automatically fits to the bounding box of the contours.
             height: Image height of the bitmap in pixels. If omitted, it
                 automatically fits to the bounding box of the contours.
-            transform: A optional 6-tuple containing an affine transformation,
+            transform: An optional 6-tuple containing an affine transformation,
                 or a ``Transform`` object from the ``fontTools.misc.transform``
                 module. The bitmap size is not affected by this matrix.
             contain: If ``True``, the image size will be automatically expanded
@@ -298,9 +334,19 @@ class FreeTypePen(BasePen):
             A ``PIL.image`` object. The image is filled in black with alpha
             channel obtained from the rendered bitmap.
 
+        :Notes:
+            The image size should always be given explicitly if you need to get
+            a proper glyph image. When ``width`` and ``height`` are omitted, it
+            forcifully fits to the bounding box and the side bearings get
+            cropped. If you pass ``0`` to both ``width`` and ``height`` and set
+            ``contain`` to ``True``, it expands to the bounding box while
+            maintaining the origin of the contours, meaning that LSB will be
+            maintained but RSB won’t. The difference between the two becomes
+            more obvious when rotate or skew transformation is applied.
+
         :Example:
             .. code-block::
-                
+
                 >> pen = FreeTypePen(None)
                 >> glyph.draw(pen)
                 >> img = pen.image(width=500, height=1000)
