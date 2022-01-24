@@ -1,3 +1,4 @@
+from copy import deepcopy
 from fontTools.ttLib import newTable
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.colorLib import builder
@@ -1691,6 +1692,33 @@ class BuildCOLRTest(object):
         ]
         assert clipBoxes["a"].Format == 2
         assert clipBoxes["c"].Format == 1
+
+    def test_duplicate_base_glyphs(self):
+        # If > 1 base glyphs refer to equivalent list of layers we expect them to share
+        # the same PaintColrLayers.
+        layers = {
+            "Format": ot.PaintFormat.PaintColrLayers,
+            "Layers": [
+                (ot.PaintFormat.PaintGlyph, (ot.PaintFormat.PaintSolid, 0), "d"),
+                (ot.PaintFormat.PaintGlyph, (ot.PaintFormat.PaintSolid, 1), "e"),
+            ],
+        }
+        # I copy the layers to ensure equality is by content, not by identity
+        colr = builder.buildCOLR(
+            {"a": layers, "b": deepcopy(layers), "c": deepcopy(layers)}
+        ).table
+
+        baseGlyphs = colr.BaseGlyphList.BaseGlyphPaintRecord
+        assert len(baseGlyphs) == 3
+
+        assert baseGlyphs[0].BaseGlyph == "a"
+        assert baseGlyphs[1].BaseGlyph == "b"
+        assert baseGlyphs[2].BaseGlyph == "c"
+
+        expected = {"Format": 1, "FirstLayerIndex": 0, "NumLayers": 2}
+        assert baseGlyphs[0].Paint.__dict__ == expected
+        assert baseGlyphs[1].Paint.__dict__ == expected
+        assert baseGlyphs[2].Paint.__dict__ == expected
 
 
 class TrickyRadialGradientTest:

@@ -444,14 +444,12 @@ def _reuse_ranges(num_layers: int) -> Generator[Tuple[int, int], None, None]:
 
 
 class LayerListBuilder:
-    slices: List[ot.Paint]
     layers: List[ot.Paint]
     reusePool: Mapping[Tuple[Any, ...], int]
     tuples: Mapping[int, Tuple[Any, ...]]
     keepAlive: List[ot.Paint]  # we need id to remain valid
 
     def __init__(self):
-        self.slices = []
         self.layers = []
         self.reusePool = {}
         self.tuples = {}
@@ -496,10 +494,6 @@ class LayerListBuilder:
     # COLR layers is unusual in that it modifies shared state
     # so we need a callback into an object
     def _beforeBuildPaintColrLayers(self, dest, source):
-        paint = ot.Paint()
-        paint.Format = int(ot.PaintFormat.PaintColrLayers)
-        self.slices.append(paint)
-
         # Sketchy gymnastics: a sequence input will have dropped it's layers
         # into NumLayers; get it back
         if isinstance(source.get("NumLayers", None), collections.abc.Sequence):
@@ -557,6 +551,12 @@ class LayerListBuilder:
 
         layers = [listToColrLayers(l) for l in layers]
 
+        # No reason to have a colr layers with just one entry
+        if len(layers) == 1:
+            return layers[0], {}
+
+        paint = ot.Paint()
+        paint.Format = int(ot.PaintFormat.PaintColrLayers)
         paint.NumLayers = len(layers)
         paint.FirstLayerIndex = len(self.layers)
         self.layers.extend(layers)
