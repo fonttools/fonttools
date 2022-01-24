@@ -1,3 +1,12 @@
+- [ufoLib] Fixed illegal characters and expanded reserved filenames (#2506).
+- [COLRv1] Don't emit useless PaintColrLayers of lenght=1 in LayerListBuilder (#2513).
+- [ttx] Removed legacy ``waitForKeyPress`` method on Windows (#2509).
+- [pens] Added FreeTypePen that uses ``freetype-py`` and the pen protocol for
+  rasterizating outline paths (#2494).
+- [unicodedata] Updated the script direction list to Unicode 14.0 (#2484).
+  Bumped unicodedata2 dependency to 14.0 (#2499).
+- [psLib] Fixed type of ``fontName`` in ``suckfont`` (#2496).
+
 4.28.5 (released 2021-12-19)
 ----------------------------
 
