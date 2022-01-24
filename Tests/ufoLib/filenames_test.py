@@ -29,6 +29,16 @@ class TestFilenames(unittest.TestCase):
         self.assertEqual(userNameToFileName("con.alt"), "_con.alt")
         self.assertEqual(userNameToFileName("alt.con"), "alt._con")
 
+        self.assertEqual(
+            # Test output for ASCII range (up until 0x7F), except for illegal
+            # characters.
+            userNameToFileName("".join([chr(i) for i in range(0, 0x80)])),
+            "________________________________"
+            " !_#$%&'____,-._0123456789_;_=__"
+            "@A_B_C_D_E_F_G_H_I_J_K_L_M_N_O_P_Q_R_S_T_U_V_W_X_Y_Z_"
+            "___^_`abcdefghijklmnopqrstuvwxyz{_}~_",
+        )
+
     def test_userNameToFileName_ValueError(self):
         with self.assertRaises(ValueError):
             userNameToFileName(b"a")
