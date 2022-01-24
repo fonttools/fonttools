@@ -1,3 +1,6 @@
+4.29.0 (released 2022-01-24)
+----------------------------
+
 - [ufoLib] Fixed illegal characters and expanded reserved filenames (#2506).
 - [COLRv1] Don't emit useless PaintColrLayers of lenght=1 in LayerListBuilder (#2513).
 - [ttx] Removed legacy ``waitForKeyPress`` method on Windows (#2509).
