@@ -58,7 +58,7 @@ class ReadWriteTest(unittest.TestCase):
 	def test_read_and_parse_pfa_write_pfb(self):
 		font = t1Lib.T1Font(PFA)
 		font.parse()
-		saved_font = self.write(font, 'PFB', dohex=False, doparase=True)
+		saved_font = self.write(font, 'PFB', dohex=False, doparse=True)
 		self.assertTrue(same_dicts(font.font, saved_font))
 
 	def test_read_pfb_write_pfa(self):
@@ -71,7 +71,7 @@ class ReadWriteTest(unittest.TestCase):
 		font = t1Lib.T1Font(PFB)
 		font.parse()
 		# 'OTHER' == 'PFA'
-		saved_font = self.write(font, 'OTHER', dohex=True, doparase=True)
+		saved_font = self.write(font, 'OTHER', dohex=True, doparse=True)
 		self.assertTrue(same_dicts(font.font, saved_font))
 
 	def test_read_with_path(self):
@@ -79,12 +79,12 @@ class ReadWriteTest(unittest.TestCase):
 		font = t1Lib.T1Font(pathlib.Path(PFB))
 
 	@staticmethod
-	def write(font, outtype, dohex=False, doparase=False):
+	def write(font, outtype, dohex=False, doparse=False):
 		temp = os.path.join(DATADIR, 'temp.' + outtype.lower())
 		try:
 			font.saveAs(temp, outtype, dohex=dohex)
 			newfont = t1Lib.T1Font(temp)
-			if doparase:
+			if doparse:
 				newfont.parse()
 				data = newfont.font
 			else:
@@ -144,18 +144,18 @@ class EditTest(unittest.TestCase):
 					program.extend(hints)
 		ellipsis.program = program
 		# 'OTHER' == 'PFA'
-		saved_font = self.write(font, 'OTHER', dohex=True, doparase=True)
+		saved_font = self.write(font, 'OTHER', dohex=True, doparse=True)
 		hinted_font = t1Lib.T1Font(ELLIPSIS_HINTED)
 		hinted_font.parse()
 		self.assertTrue(same_dicts(hinted_font.font, saved_font))
 
 	@staticmethod
-	def write(font, outtype, dohex=False, doparase=False):
+	def write(font, outtype, dohex=False, doparse=False):
 		temp = os.path.join(DATADIR, 'temp.' + outtype.lower())
 		try:
 			font.saveAs(temp, outtype, dohex=dohex)
 			newfont = t1Lib.T1Font(temp)
-			if doparase:
+			if doparse:
 				newfont.parse()
 				data = newfont.font
 			else:

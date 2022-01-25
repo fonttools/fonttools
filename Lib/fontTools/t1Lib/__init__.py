@@ -23,7 +23,6 @@ from fontTools.misc.psOperators import _type1_pre_eexec_order, _type1_fontinfo_o
 from fontTools.encodings.StandardEncoding import StandardEncoding
 import os
 import re
-import copy
 
 __author__ = "jvr"
 __version__ = "1.0b3"
@@ -168,7 +167,7 @@ class T1Font(object):
 				pr = eexec_dict["Private"]
 				# follow t1write.c:writePrivateDict
 				size = 3 # for RD, ND, NP
-				for subkey in Praivate_dictionary_keys:
+				for subkey in Private_dictionary_keys:
 					size += int(subkey in pr)
 				lines.append(b"dup /Private")
 				lines.append(self._tobytes(f"{size} dict dup begin"))
@@ -517,19 +516,19 @@ def stringToLong(s):
 
 # PS stream helpers
 
-font_dictionary_keys = copy.copy(_type1_pre_eexec_order)
+font_dictionary_keys = list(_type1_pre_eexec_order)
 # t1write.c:writeRegNameKeyedFont
 # always counts following keys
 font_dictionary_keys.remove("FontMatrix")
 
-FontInfo_dictionary_keys = copy.copy(_type1_fontinfo_order)
+FontInfo_dictionary_keys = list(_type1_fontinfo_order)
 # extend because AFDKO tx may use following keys
 FontInfo_dictionary_keys.extend([
 	"FSType",
 	"Copyright",
 ])
 
-Praivate_dictionary_keys = [
+Private_dictionary_keys = [
 	# We don't know what names will be actually used.
 	# "RD",
 	# "ND",
@@ -557,24 +556,23 @@ Praivate_dictionary_keys = [
 ]
 
 # t1write_hintothers.h
-hintothers = \
-	"/OtherSubrs[{}{}{}{systemdict/internaldict known not{pop 3}{1183615869\n" + \
-	"systemdict/internaldict get exec dup/startlock known{/startlock get exec}{dup\n" + \
-	"/strtlck known{/strtlck get exec}{pop 3}ifelse}ifelse}ifelse}executeonly]def"
+hintothers = """/OtherSubrs[{}{}{}{systemdict/internaldict known not{pop 3}{1183615869
+systemdict/internaldict get exec dup/startlock known{/startlock get exec}{dup
+/strtlck known{/strtlck get exec}{pop 3}ifelse}ifelse}ifelse}executeonly]def"""
 # t1write.c:saveStdSubrs
 def bytechrjoin(iterable, joiner=b""):
 	return tobytes(joiner).join(bytechr(item) for item in iterable)
 std_subrs = [
 	# 3 0 callother pop pop setcurrentpoint return
-	bytechrjoin([0x8e, 0x8b, 0xc, 0x10, 0xc, 0x11, 0xc, 0x11, 0xc, 0x21, 0xb]),
+	b"\x8e\x8b\x0c\x10\x0c\x11\x0c\x11\x0c\x21\x0b",
 	# 0 1 callother return
-	bytechrjoin([0x8b, 0x8c, 0xc, 0x10, 0xb]),
+	b"\x8b\x8c\x0c\x10\x0b",
 	# 0 2 callother return
-	bytechrjoin([0x8b, 0x8d, 0xc, 0x10, 0xb]),
+	b"\x8b\x8d\x0c\x10\x0b",
 	# return
-	bytechrjoin([0xb]),
+	b"\x0b",
 	# 3 1 3 callother pop callsubr return
-	bytechrjoin([0x8e, 0x8c, 0x8e, 0xc, 0x10, 0xc, 0x11, 0xa, 0xb])
+	b"\x8e\x8c\x8e\x0c\x10\x0c\x11\x0a\x0b"
 ]
 # follow t1write.c:writeRegNameKeyedFont
 eexec_IV = b"cccc"
