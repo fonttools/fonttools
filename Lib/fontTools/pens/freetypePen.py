@@ -15,7 +15,7 @@ import freetype
 from freetype.raw import FT_Outline_Get_Bitmap, FT_Outline_Get_BBox, FT_Outline_Get_CBox
 from freetype.ft_types import FT_Pos
 from freetype.ft_structs import FT_Vector, FT_BBox, FT_Bitmap, FT_Outline
-from freetype.ft_enums import FT_OUTLINE_NONE, FT_OUTLINE_EVEN_ODD_FILL, FT_PIXEL_MODE_GRAY
+from freetype.ft_enums import FT_OUTLINE_NONE, FT_OUTLINE_EVEN_ODD_FILL, FT_PIXEL_MODE_GRAY, FT_CURVE_TAG_ON, FT_CURVE_TAG_CONIC, FT_CURVE_TAG_CUBIC
 from freetype.ft_errors import FT_Exception
 
 from fontTools.pens.basePen import BasePen, PenError
@@ -23,11 +23,6 @@ from fontTools.misc.roundTools import otRound
 from fontTools.misc.transform import Transform
 
 Contour   = collections.namedtuple('Contour', ('points', 'tags'))
-LINE      = 0b00000001
-CURVE     = 0b00000001
-OFFCURVE  = 0b00000010
-QCURVE    = 0b00000001
-QOFFCURVE = 0b00000000
 
 class FreeTypePen(BasePen):
     """Pen to rasterize paths with FreeType. Requires `freetype-py` module.
@@ -387,19 +382,19 @@ class FreeTypePen(BasePen):
         contour = Contour([], [])
         self.contours.append(contour)
         contour.points.append(pt)
-        contour.tags.append(LINE)
+        contour.tags.append(FT_CURVE_TAG_ON)
 
     def _lineTo(self, pt):
         if not (self.contours and len(self.contours[-1].points) > 0):
             raise PenError('Contour missing required initial moveTo')
         contour = self.contours[-1]
         contour.points.append(pt)
-        contour.tags.append(LINE)
+        contour.tags.append(FT_CURVE_TAG_ON)
 
     def _curveToOne(self, p1, p2, p3):
         if not (self.contours and len(self.contours[-1].points) > 0):
             raise PenError('Contour missing required initial moveTo')
-        t1, t2, t3 = OFFCURVE, OFFCURVE, CURVE
+        t1, t2, t3 = FT_CURVE_TAG_CUBIC, FT_CURVE_TAG_CUBIC, FT_CURVE_TAG_ON
         contour = self.contours[-1]
         for p, t in ((p1, t1), (p2, t2), (p3, t3)):
             contour.points.append(p)
@@ -408,7 +403,7 @@ class FreeTypePen(BasePen):
     def _qCurveToOne(self, p1, p2):
         if not (self.contours and len(self.contours[-1].points) > 0):
             raise PenError('Contour missing required initial moveTo')
-        t1, t2 = QOFFCURVE, QCURVE
+        t1, t2 = FT_CURVE_TAG_CONIC, FT_CURVE_TAG_ON
         contour = self.contours[-1]
         for p, t in ((p1, t1), (p2, t2)):
             contour.points.append(p)
