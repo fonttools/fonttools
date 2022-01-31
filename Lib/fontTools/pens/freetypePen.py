@@ -2,7 +2,7 @@
 
 """Pen to rasterize paths with FreeType."""
 
-__all__ = ['FreeTypePen']
+__all__ = ["FreeTypePen"]
 
 import os
 import ctypes
@@ -15,19 +15,22 @@ import freetype
 from freetype.raw import FT_Outline_Get_Bitmap, FT_Outline_Get_BBox, FT_Outline_Get_CBox
 from freetype.ft_types import FT_Pos
 from freetype.ft_structs import FT_Vector, FT_BBox, FT_Bitmap, FT_Outline
-from freetype.ft_enums import FT_OUTLINE_NONE, FT_OUTLINE_EVEN_ODD_FILL, FT_PIXEL_MODE_GRAY
+from freetype.ft_enums import (
+    FT_OUTLINE_NONE,
+    FT_OUTLINE_EVEN_ODD_FILL,
+    FT_PIXEL_MODE_GRAY,
+    FT_CURVE_TAG_ON,
+    FT_CURVE_TAG_CONIC,
+    FT_CURVE_TAG_CUBIC,
+)
 from freetype.ft_errors import FT_Exception
 
-from fontTools.pens.basePen import BasePen
+from fontTools.pens.basePen import BasePen, PenError
 from fontTools.misc.roundTools import otRound
 from fontTools.misc.transform import Transform
 
-Contour   = collections.namedtuple('Contour', ('points', 'tags'))
-LINE      = 0b00000001
-CURVE     = 0b00000011
-OFFCURVE  = 0b00000010
-QCURVE    = 0b00000001
-QOFFCURVE = 0b00000000
+Contour = collections.namedtuple("Contour", ("points", "tags"))
+
 
 class FreeTypePen(BasePen):
     """Pen to rasterize paths with FreeType. Requires `freetype-py` module.
@@ -114,21 +117,25 @@ class FreeTypePen(BasePen):
         """Converts the current contours to ``FT_Outline``.
 
         Args:
-            transform: A optional 6-tuple containing an affine transformation,
+            transform: An optional 6-tuple containing an affine transformation,
                 or a ``Transform`` object from the ``fontTools.misc.transform``
                 module.
             evenOdd: Pass ``True`` for even-odd fill instead of non-zero.
         """
         transform = transform or Transform()
-        if not hasattr(transform, 'transformPoint'):
+        if not hasattr(transform, "transformPoint"):
             transform = Transform(*transform)
-        nContours = len(self.contours)
-        n_points  = sum((len(contour.points) for contour in self.contours))
+        n_contours = len(self.contours)
+        n_points = sum((len(contour.points) for contour in self.contours))
         points = []
         for contour in self.contours:
             for point in contour.points:
                 point = transform.transformPoint(point)
-                points.append(FT_Vector(FT_Pos(otRound(point[0] * 64)), FT_Pos(otRound(point[1] * 64))))
+                points.append(
+                    FT_Vector(
+                        FT_Pos(otRound(point[0] * 64)), FT_Pos(otRound(point[1] * 64))
+                    )
+                )
         tags = []
         for contour in self.contours:
             for tag in contour.tags:
@@ -140,15 +147,17 @@ class FreeTypePen(BasePen):
             contours.append(contours_sum - 1)
         flags = FT_OUTLINE_EVEN_ODD_FILL if evenOdd else FT_OUTLINE_NONE
         return FT_Outline(
-            (ctypes.c_short)(nContours),
+            (ctypes.c_short)(n_contours),
             (ctypes.c_short)(n_points),
-            (FT_Vector      * n_points)(*points),
+            (FT_Vector * n_points)(*points),
             (ctypes.c_ubyte * n_points)(*tags),
-            (ctypes.c_short * nContours)(*contours),
-            (ctypes.c_int)(flags)
+            (ctypes.c_short * n_contours)(*contours),
+            (ctypes.c_int)(flags),
         )
 
-    def buffer(self, width=None, height=None, transform=None, contain=False, evenOdd=False):
+    def buffer(
+        self, width=None, height=None, transform=None, contain=False, evenOdd=False
+    ):
         """Renders the current contours within a bitmap buffer.
 
         Args:
@@ -156,7 +165,7 @@ class FreeTypePen(BasePen):
                 automatically fits to the bounding box of the contours.
             height: Image height of the bitmap in pixels. If omitted, it
                 automatically fits to the bounding box of the contours.
-            transform: A optional 6-tuple containing an affine transformation,
+            transform: An optional 6-tuple containing an affine transformation,
                 or a ``Transform`` object from the ``fontTools.misc.transform``
                 module. The bitmap size is not affected by this matrix.
             contain: If ``True``, the image size will be automatically expanded
@@ -169,33 +178,54 @@ class FreeTypePen(BasePen):
             object of the resulted bitmap and ``size`` is a 2-tuple of its
             dimension.
 
+        :Notes:
+            The image size should always be given explicitly if you need to get
+            a proper glyph image. When ``width`` and ``height`` are omitted, it
+            forcifully fits to the bounding box and the side bearings get
+            cropped. If you pass ``0`` to both ``width`` and ``height`` and set
+            ``contain`` to ``True``, it expands to the bounding box while
+            maintaining the origin of the contours, meaning that LSB will be
+            maintained but RSB won’t. The difference between the two becomes
+            more obvious when rotate or skew transformation is applied.
+
         :Example:
             .. code-block::
-                
+
                 >> pen = FreeTypePen(None)
                 >> glyph.draw(pen)
                 >> buf, size = pen.buffer(width=500, height=1000)
                 >> type(buf), len(buf), size
                 (<class 'bytes'>, 500000, (500, 1000))
-        
+
         """
         transform = transform or Transform()
-        if not hasattr(transform, 'transformPoint'):
+        if not hasattr(transform, "transformPoint"):
             transform = Transform(*transform)
         contain_x, contain_y = contain or width is None, contain or height is None
-        width, height = width or 0, height or 0
         if contain_x or contain_y:
-            bbox = self.bbox
-            bbox = transform.transformPoints((bbox[0:2], bbox[2:4]))
-            bbox = (*bbox[0], *bbox[1])
-            bbox_size = bbox[2] - bbox[0], bbox[3] - bbox[1]
             dx, dy = transform.dx, transform.dy
+            bbox = self.bbox
+            p1, p2, p3, p4 = (
+                transform.transformPoint((bbox[0], bbox[1])),
+                transform.transformPoint((bbox[2], bbox[1])),
+                transform.transformPoint((bbox[0], bbox[3])),
+                transform.transformPoint((bbox[2], bbox[3])),
+            )
+            px, py = (p1[0], p2[0], p3[0], p4[0]), (p1[1], p2[1], p3[1], p4[1])
             if contain_x:
-                dx = min(-dx, bbox[0]) * -1.0
-                width  = max(width,  bbox_size[0])
+                if width is None:
+                    dx = dx - min(*px)
+                    width = max(*px) - min(*px)
+                else:
+                    dx = dx - min(min(*px), 0.0)
+                    width = max(width, max(*px) - min(min(*px), 0.0))
             if contain_y:
-                dy = min(-dy, bbox[1]) * -1.0
-                height = max(height, bbox_size[1])
+                if height is None:
+                    dy = dy - min(*py)
+                    height = max(*py) - min(*py)
+                else:
+                    dy = dy - min(min(*py), 0.0)
+                    height = max(height, max(*py) - min(min(*py), 0.0))
             transform = Transform(*transform[:4], dx, dy)
         width, height = math.ceil(width), math.ceil(height)
         buf = ctypes.create_string_buffer(width * height)
@@ -207,15 +237,19 @@ class FreeTypePen(BasePen):
             (ctypes.c_short)(256),
             (ctypes.c_ubyte)(FT_PIXEL_MODE_GRAY),
             (ctypes.c_char)(0),
-            (ctypes.c_void_p)(None)
+            (ctypes.c_void_p)(None),
         )
         outline = self.outline(transform=transform, evenOdd=evenOdd)
-        err = FT_Outline_Get_Bitmap(freetype.get_handle(), ctypes.byref(outline), ctypes.byref(bitmap))
+        err = FT_Outline_Get_Bitmap(
+            freetype.get_handle(), ctypes.byref(outline), ctypes.byref(bitmap)
+        )
         if err != 0:
             raise FT_Exception(err)
         return buf.raw, (width, height)
 
-    def array(self, width=None, height=None, transform=None, contain=False, evenOdd=False):
+    def array(
+        self, width=None, height=None, transform=None, contain=False, evenOdd=False
+    ):
         """Returns the rendered contours as a numpy array. Requires `numpy`.
 
         Args:
@@ -223,7 +257,7 @@ class FreeTypePen(BasePen):
                 automatically fits to the bounding box of the contours.
             height: Image height of the bitmap in pixels. If omitted, it
                 automatically fits to the bounding box of the contours.
-            transform: A optional 6-tuple containing an affine transformation,
+            transform: An optional 6-tuple containing an affine transformation,
                 or a ``Transform`` object from the ``fontTools.misc.transform``
                 module. The bitmap size is not affected by this matrix.
             contain: If ``True``, the image size will be automatically expanded
@@ -235,9 +269,19 @@ class FreeTypePen(BasePen):
             A ``numpy.ndarray`` object with a shape of ``(height, width)``.
             Each element takes a value in the range of ``[0.0, 1.0]``.
 
+        :Notes:
+            The image size should always be given explicitly if you need to get
+            a proper glyph image. When ``width`` and ``height`` are omitted, it
+            forcifully fits to the bounding box and the side bearings get
+            cropped. If you pass ``0`` to both ``width`` and ``height`` and set
+            ``contain`` to ``True``, it expands to the bounding box while
+            maintaining the origin of the contours, meaning that LSB will be
+            maintained but RSB won’t. The difference between the two becomes
+            more obvious when rotate or skew transformation is applied.
+
         :Example:
             .. code-block::
-                
+
                 >> pen = FreeTypePen(None)
                 >> glyph.draw(pen)
                 >> arr = pen.array(width=500, height=1000)
@@ -245,10 +289,19 @@ class FreeTypePen(BasePen):
                 (<class 'numpy.ndarray'>, (1000, 500))
         """
         import numpy as np
-        buf, size = self.buffer(width=width, height=height, transform=transform, contain=contain, evenOdd=evenOdd)
-        return np.frombuffer(buf, 'B').reshape((size[1], size[0])) / 255.0
 
-    def show(self, width=None, height=None, transform=None, contain=False, evenOdd=False):
+        buf, size = self.buffer(
+            width=width,
+            height=height,
+            transform=transform,
+            contain=contain,
+            evenOdd=evenOdd,
+        )
+        return np.frombuffer(buf, "B").reshape((size[1], size[0])) / 255.0
+
+    def show(
+        self, width=None, height=None, transform=None, contain=False, evenOdd=False
+    ):
         """Plots the rendered contours with `pyplot`. Requires `numpy` and
         `matplotlib`.
 
@@ -257,7 +310,7 @@ class FreeTypePen(BasePen):
                 automatically fits to the bounding box of the contours.
             height: Image height of the bitmap in pixels. If omitted, it
                 automatically fits to the bounding box of the contours.
-            transform: A optional 6-tuple containing an affine transformation,
+            transform: An optional 6-tuple containing an affine transformation,
                 or a ``Transform`` object from the ``fontTools.misc.transform``
                 module. The bitmap size is not affected by this matrix.
             contain: If ``True``, the image size will be automatically expanded
@@ -265,19 +318,38 @@ class FreeTypePen(BasePen):
                 rendering glyphs with negative sidebearings without clipping.
             evenOdd: Pass ``True`` for even-odd fill instead of non-zero.
 
+        :Notes:
+            The image size should always be given explicitly if you need to get
+            a proper glyph image. When ``width`` and ``height`` are omitted, it
+            forcifully fits to the bounding box and the side bearings get
+            cropped. If you pass ``0`` to both ``width`` and ``height`` and set
+            ``contain`` to ``True``, it expands to the bounding box while
+            maintaining the origin of the contours, meaning that LSB will be
+            maintained but RSB won’t. The difference between the two becomes
+            more obvious when rotate or skew transformation is applied.
+
         :Example:
             .. code-block::
-                
+
                 >> pen = FreeTypePen(None)
                 >> glyph.draw(pen)
                 >> pen.show(width=500, height=1000)
         """
         from matplotlib import pyplot as plt
-        a = self.array(width=width, height=height, transform=transform, contain=contain, evenOdd=evenOdd)
-        plt.imshow(a, cmap='gray_r', vmin=0, vmax=1)
+
+        a = self.array(
+            width=width,
+            height=height,
+            transform=transform,
+            contain=contain,
+            evenOdd=evenOdd,
+        )
+        plt.imshow(a, cmap="gray_r", vmin=0, vmax=1)
         plt.show()
 
-    def image(self, width=None, height=None, transform=None, contain=False, evenOdd=False):
+    def image(
+        self, width=None, height=None, transform=None, contain=False, evenOdd=False
+    ):
         """Returns the rendered contours as a PIL image. Requires `Pillow`.
         Can be used to display a glyph image in Jupyter Notebook.
 
@@ -286,7 +358,7 @@ class FreeTypePen(BasePen):
                 automatically fits to the bounding box of the contours.
             height: Image height of the bitmap in pixels. If omitted, it
                 automatically fits to the bounding box of the contours.
-            transform: A optional 6-tuple containing an affine transformation,
+            transform: An optional 6-tuple containing an affine transformation,
                 or a ``Transform`` object from the ``fontTools.misc.transform``
                 module. The bitmap size is not affected by this matrix.
             contain: If ``True``, the image size will be automatically expanded
@@ -298,9 +370,19 @@ class FreeTypePen(BasePen):
             A ``PIL.image`` object. The image is filled in black with alpha
             channel obtained from the rendered bitmap.
 
+        :Notes:
+            The image size should always be given explicitly if you need to get
+            a proper glyph image. When ``width`` and ``height`` are omitted, it
+            forcifully fits to the bounding box and the side bearings get
+            cropped. If you pass ``0`` to both ``width`` and ``height`` and set
+            ``contain`` to ``True``, it expands to the bounding box while
+            maintaining the origin of the contours, meaning that LSB will be
+            maintained but RSB won’t. The difference between the two becomes
+            more obvious when rotate or skew transformation is applied.
+
         :Example:
             .. code-block::
-                
+
                 >> pen = FreeTypePen(None)
                 >> glyph.draw(pen)
                 >> img = pen.image(width=500, height=1000)
@@ -308,9 +390,16 @@ class FreeTypePen(BasePen):
                 (<class 'PIL.Image.Image'>, (500, 1000))
         """
         from PIL import Image
-        buf, size = self.buffer(width=width, height=height, transform=transform, contain=contain, evenOdd=evenOdd)
-        img = Image.new('L', size, 0)
-        img.putalpha(Image.frombuffer('L', size, buf))
+
+        buf, size = self.buffer(
+            width=width,
+            height=height,
+            transform=transform,
+            contain=contain,
+            evenOdd=evenOdd,
+        )
+        img = Image.new("L", size, 0)
+        img.putalpha(Image.frombuffer("L", size, buf))
         return img
 
     @property
@@ -341,22 +430,28 @@ class FreeTypePen(BasePen):
         contour = Contour([], [])
         self.contours.append(contour)
         contour.points.append(pt)
-        contour.tags.append(LINE)
+        contour.tags.append(FT_CURVE_TAG_ON)
 
     def _lineTo(self, pt):
+        if not (self.contours and len(self.contours[-1].points) > 0):
+            raise PenError("Contour missing required initial moveTo")
         contour = self.contours[-1]
         contour.points.append(pt)
-        contour.tags.append(LINE)
+        contour.tags.append(FT_CURVE_TAG_ON)
 
     def _curveToOne(self, p1, p2, p3):
-        t1, t2, t3 = OFFCURVE, OFFCURVE, CURVE
+        if not (self.contours and len(self.contours[-1].points) > 0):
+            raise PenError("Contour missing required initial moveTo")
+        t1, t2, t3 = FT_CURVE_TAG_CUBIC, FT_CURVE_TAG_CUBIC, FT_CURVE_TAG_ON
         contour = self.contours[-1]
         for p, t in ((p1, t1), (p2, t2), (p3, t3)):
             contour.points.append(p)
             contour.tags.append(t)
 
     def _qCurveToOne(self, p1, p2):
-        t1, t2 = QOFFCURVE, QCURVE
+        if not (self.contours and len(self.contours[-1].points) > 0):
+            raise PenError("Contour missing required initial moveTo")
+        t1, t2 = FT_CURVE_TAG_CONIC, FT_CURVE_TAG_ON
         contour = self.contours[-1]
         for p, t in ((p1, t1), (p2, t2)):
             contour.points.append(p)
