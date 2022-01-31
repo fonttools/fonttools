@@ -1747,6 +1747,16 @@ class TrickyRadialGradientTest:
         r1 = 260.0072
         assert self.round_start_circle(c0, r0, c1, r1, inside=True) == ((386, 71), 0)
 
+    def test_noto_emoji_horns_sign_u1f918_1f3fc(self):
+        # This radial gradient is taken from noto-emoji's 'SIGNS OF THE HORNS'
+        # (1f918_1f3fc). We check that c0 is inside c1 both before and after rounding.
+        c0 = (-437.6789059060543, -2116.9237094478003)
+        r0 = 0.0
+        c1 = (-488.7330118252256, -1876.5036857045086)
+        r1 = 245.77147821915673
+        assert self.circle_inside_circle(c0, r0, c1, r1)
+        assert self.circle_inside_circle(c0, r0, c1, r1, rounded=True)
+
     @pytest.mark.parametrize(
         "c0, r0, c1, r1, inside, expected",
         [
