@@ -1,3 +1,8 @@
+- [colorLib] Fixed rounding issue with radial gradient's start/end circles inside
+  one another (#2521).
+- [freetypePen] Handle rotate/skew transform when auto-computing width/height of the
+  buffer; raise PenError wen missing moveTo (#2517)
+
 4.29.0 (released 2022-01-24)
 ----------------------------
 
