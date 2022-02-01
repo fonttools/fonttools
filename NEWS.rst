@@ -1,3 +1,6 @@
+4.29.1 (released 2022-02-01)
+----------------------------
+
 - [colorLib] Fixed rounding issue with radial gradient's start/end circles inside
   one another (#2521).
 - [freetypePen] Handle rotate/skew transform when auto-computing width/height of the
