@@ -490,15 +490,15 @@ class NameRecordTest(unittest.TestCase):
 		]
 
 		result_value = name.getSubFamilyName()
-		self.assertEqual("Family Name ID 2", result_value)
+		self.assertEqual("SubFamily Name ID 2", result_value)
 
 		expected_value = "Family Name ID 17"
-		name.setName(expected_value, 16, 1, 0, 0)
+		name.setName(expected_value, 17, 1, 0, 0)
 		result_value = name.getSubFamilyName()
 		self.assertEqual(expected_value, result_value)
 
 		expected_value = "Family Name ID 22"
-		name.setName(expected_value, 21, 1, 0, 0)
+		name.setName(expected_value, 22, 1, 0, 0)
 		result_value = name.getSubFamilyName()
 		self.assertEqual(expected_value, result_value)
 
