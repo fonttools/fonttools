@@ -120,6 +120,37 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		else:
 			return None
 
+	def getFamilyName(self):
+		for nameID in (21, 16, 1):
+			name = self.getDebugName(nameID)
+			if name is not None:
+				return name
+		return None
+
+	def getSubFamilyName(self):
+		for nameID in (22, 17, 2):
+			name = self.getDebugName(nameID)
+			if name is not None:
+				return name
+		return None
+
+	def getNiceFullName(self):
+		for nameIDs in ((21, 22), (16, 17), (1, 2), (4, ), (6, )):
+			if len(nameIDs) == 2:
+				name_fam = self.getDebugName(nameIDs[0])
+				name_subfam = self.getDebugName(nameIDs[1])
+				if None in [name_fam, name_subfam]:
+					continue # if any if None, skip
+				name = f"{name_fam} {name_subfam}"
+				if name_subfam.lower() == 'regular':
+					name = f"{name_fam}"
+				return name
+			else:
+				name = self.getDebugName(nameIDs[0])
+				if name is not None:
+					return name
+		return None
+
 	def setName(self, string, nameID, platformID, platEncID, langID):
 		""" Set the 'string' for the name record identified by 'nameID', 'platformID',
 		'platEncID' and 'langID'. If a record with that nameID doesn't exist, create it
