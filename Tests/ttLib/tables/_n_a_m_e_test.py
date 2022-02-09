@@ -463,17 +463,17 @@ class NameRecordTest(unittest.TestCase):
 			makeName("Trademark Name ID 7", 7, 1, 0, 0),
 		]
 
-		result_value = name.getFamilyName()
+		result_value = name.getBestFamilyName()
 		self.assertEqual("Family Name ID 1", result_value)
 
 		expected_value = "Family Name ID 16"
 		name.setName(expected_value, 16, 1, 0, 0)
-		result_value = name.getFamilyName()
+		result_value = name.getBestFamilyName()
 		self.assertEqual(expected_value, result_value)
 
 		expected_value = "Family Name ID 21"
 		name.setName(expected_value, 21, 1, 0, 0)
-		result_value = name.getFamilyName()
+		result_value = name.getBestFamilyName()
 		self.assertEqual(expected_value, result_value)
 
 	def test_get_subfamily_name(self):
@@ -489,17 +489,17 @@ class NameRecordTest(unittest.TestCase):
 			makeName("Trademark Name ID 7", 7, 1, 0, 0),
 		]
 
-		result_value = name.getSubFamilyName()
+		result_value = name.getBestSubFamilyName()
 		self.assertEqual("SubFamily Name ID 2", result_value)
 
 		expected_value = "Family Name ID 17"
 		name.setName(expected_value, 17, 1, 0, 0)
-		result_value = name.getSubFamilyName()
+		result_value = name.getBestSubFamilyName()
 		self.assertEqual(expected_value, result_value)
 
 		expected_value = "Family Name ID 22"
 		name.setName(expected_value, 22, 1, 0, 0)
-		result_value = name.getSubFamilyName()
+		result_value = name.getBestSubFamilyName()
 		self.assertEqual(expected_value, result_value)
 
 	def test_get_nice_full_name(self):
@@ -511,39 +511,39 @@ class NameRecordTest(unittest.TestCase):
 			makeName("NID 6", 6, 1, 0, 0),
 		]
 
-		result_value = name.getNiceFullName()
+		result_value = name.getBestFullName()
 		self.assertEqual("NID 1 NID 2", result_value)
 
 		expected_value = "NID 1 NID 2"
 		# expection is still NID 1 NID 2,
 		# because name ID 17 is missing
 		name.setName("NID 16", 16, 1, 0, 0)
-		result_value = name.getNiceFullName()
+		result_value = name.getBestFullName()
 		self.assertEqual(expected_value, result_value)
 
 		name.setName('NID 17', 17, 1, 0, 0)
-		result_value = name.getNiceFullName()
+		result_value = name.getBestFullName()
 		self.assertEqual("NID 16 NID 17", result_value)
 
 		expected_value = "NID 16 NID 17"
 		# expection is still NID 16 NID 17,
 		# because name ID 21 is missing
 		name.setName('NID 21', 21, 1, 0, 0)
-		result_value = name.getNiceFullName()
+		result_value = name.getBestFullName()
 		self.assertEqual(expected_value, result_value)
 
 		name.setName('NID 22', 22, 1, 0, 0)
-		result_value = name.getNiceFullName()
+		result_value = name.getBestFullName()
 		self.assertEqual("NID 21 NID 22", result_value)
 
 		for NID in [2, 16, 17, 21, 22]:
 			name.removeNames(NID)
 
-		result_value = name.getNiceFullName()
+		result_value = name.getBestFullName()
 		self.assertEqual("NID 4", result_value)
 
 		name.setName('Regular', 2, 1, 0, 0)
-		result_value = name.getNiceFullName()
+		result_value = name.getBestFullName()
 		self.assertEqual("NID 1", result_value)
 
 

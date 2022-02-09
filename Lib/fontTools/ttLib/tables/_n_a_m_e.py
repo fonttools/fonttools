@@ -131,13 +131,13 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 					return name
 		return None
 
-	def getFamilyName(self):
+	def getBestFamilyName(self):
 		return self.getBestDebugName(21)
 
-	def getSubFamilyName(self):
+	def getBestSubFamilyName(self):
 		return self.getBestDebugName(22)
 
-	def getNiceFullName(self):
+	def getBestFullName(self):
 		for nameIDs in ((21, 22), (16, 17), (1, 2), (4, ), (6, )):
 			if len(nameIDs) == 2:
 				name_fam = self.getDebugName(nameIDs[0])
