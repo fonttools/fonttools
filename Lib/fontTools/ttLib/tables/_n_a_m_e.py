@@ -120,7 +120,7 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		else:
 			return None
 
-	def getBestDebugName(self, nameIDs):
+	def getFirstDebugName(self, nameIDs):
 		for nameID in nameIDs:
 			name = self.getDebugName(nameID)
 			if name is not None:
@@ -128,18 +128,26 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		return None
 
 	def getBestFamilyName(self):
-		return self.getBestDebugName((21, 16, 1))
+		# 21 = WWS Family Name
+		# 16 = Typographic Family Name
+		# 1 = Family Name
+		return self.getFirstDebugName((21, 16, 1))
 
 	def getBestSubFamilyName(self):
-		return self.getBestDebugName((22, 17, 2))
+		# 22 = WWS SubFamily Name
+		# 17 = Typographic SubFamily Name
+		# 2 = SubFamily Name
+		return self.getFirstDebugName((22, 17, 2))
 
 	def getBestFullName(self):
+		# 4 = Full Name
+		# 6 = PostScript Name
 		for nameIDs in ((21, 22), (16, 17), (1, 2), (4, ), (6, )):
 			if len(nameIDs) == 2:
 				name_fam = self.getDebugName(nameIDs[0])
 				name_subfam = self.getDebugName(nameIDs[1])
 				if None in [name_fam, name_subfam]:
-					continue # if any is None, skip
+					continue  # if any is None, skip
 				name = f"{name_fam} {name_subfam}"
 				if name_subfam.lower() == 'regular':
 					name = f"{name_fam}"
