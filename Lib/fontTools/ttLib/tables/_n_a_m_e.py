@@ -143,7 +143,7 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 				name_fam = self.getDebugName(nameIDs[0])
 				name_subfam = self.getDebugName(nameIDs[1])
 				if None in [name_fam, name_subfam]:
-					continue # if any if None, skip
+					continue # if any is None, skip
 				name = f"{name_fam} {name_subfam}"
 				if name_subfam.lower() == 'regular':
 					name = f"{name_fam}"
