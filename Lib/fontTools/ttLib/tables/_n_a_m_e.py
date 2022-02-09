@@ -120,22 +120,18 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		else:
 			return None
 
-	def getBestDebugName(self, nameID):
-		for group in ((21, 16, 1), (22, 17, 2), (25, 4, 6)):
-			if nameID not in group:
-				continue
-
-			for fallback_id in group:
-				name = self.getDebugName(fallback_id)
-				if name:
-					return name
+	def getBestDebugName(self, nameIDs):
+		for nameID in nameIDs:
+			name = self.getDebugName(nameID)
+			if name is not None:
+				return name
 		return None
 
 	def getBestFamilyName(self):
-		return self.getBestDebugName(21)
+		return self.getBestDebugName((21, 16, 1))
 
 	def getBestSubFamilyName(self):
-		return self.getBestDebugName(22)
+		return self.getBestDebugName((22, 17, 2))
 
 	def getBestFullName(self):
 		for nameIDs in ((21, 22), (16, 17), (1, 2), (4, ), (6, )):
