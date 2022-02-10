@@ -1402,6 +1402,79 @@ def test_buildStatTable(axes, axisValues, elidedFallbackName, expected_ttx):
     assert expected_ttx == ttx
 
 
+def test_buildStatTable_name_duplicates():
+    from fontTools.misc.fixedTools import fixedToFloat
+
+    font_obj = ttLib.TTFont()
+    font_obj["name"] = ttLib.newTable("name")
+    font_obj["name"].names = []
+
+    opsz_values = [
+        dict(nominalValue=6, rangeMinValue=fixedToFloat(-0x80000000, 16), rangeMaxValue=9, name="Micro"),
+        dict(nominalValue=12, rangeMinValue=9, rangeMaxValue=16, name="Text"),
+        dict(nominalValue=18, rangeMinValue=16, rangeMaxValue=22, name="Headline"),
+        dict(nominalValue=24, rangeMinValue=22, rangeMaxValue=fixedToFloat(0x7FFFFFFF, 16), name="Poster"),
+    ]
+
+    wght_values = [
+        dict(nominalValue=200, rangeMinValue=200, rangeMaxValue=250, name="ExtraLight"),
+        dict(nominalValue=300, rangeMinValue=250, rangeMaxValue=350, name="Light"),
+        dict(nominalValue=400, rangeMinValue=350, rangeMaxValue=450, name="Regular", flags=0x2),
+        dict(nominalValue=500, rangeMinValue=450, rangeMaxValue=650, name="Medium"),
+        dict(nominalValue=700, rangeMinValue=650, rangeMaxValue=750, name="Bold"),
+        dict(nominalValue=800, rangeMinValue=750, rangeMaxValue=850, name="ExtraBold"),
+        dict(nominalValue=900, rangeMinValue=850, rangeMaxValue=900, name="Black"),
+        dict(value=400, linkedValue=700, name="Regular", flags=0x2, ),  # Regular
+    ]
+
+    ital_value = [
+        dict(value=0, linkedValue=1, name="Regular", flags=0x2, ),
+    ]
+
+    AXES = [
+        dict(
+            tag="opsz",
+            name="Optical Size",
+            ordering=0,
+            values=opsz_values,
+        ),
+        dict(
+            tag="wght",
+            name="Weight",
+            ordering=1,
+            values=wght_values,
+        ),
+        dict(
+            tag="ital",
+            name="Italic",
+            ordering=2,
+            values=ital_value,
+        ),
+    ]
+
+    font_obj["name"].setName('ExtraLight', 260, 1, 0, 0)
+    font_obj["name"].setName('Light', 261, 1, 0, 0)
+    font_obj["name"].setName('Regular', 262, 1, 0, 0)
+    font_obj["name"].setName('Medium', 263, 1, 0, 0)
+    font_obj["name"].setName('Bold', 264, 1, 0, 0)
+    font_obj["name"].setName('ExtraBold', 265, 1, 0, 0)
+    font_obj["name"].setName('Black', 266, 1, 0, 0)
+
+    font_obj["name"].setName('Micro', 270, 1, 0, 0)
+    font_obj["name"].setName('Text', 271, 1, 0, 0)
+    font_obj["name"].setName('Headline', 272, 1, 0, 0)
+    font_obj["name"].setName('Poster', 273, 1, 0, 0)
+
+    font_obj["name"].setName('Optical Size', 280, 1, 0, 0)
+    font_obj["name"].setName('Weight', 281, 1, 0, 0)
+    font_obj["name"].setName('Italic', 281, 1, 0, 0)
+
+    expected_names_len = len(font_obj["name"].names)
+    builder.buildStatTable(font_obj, AXES)
+
+    assert expected_names_len == len(font_obj["name"].names)
+
+
 def test_stat_infinities():
     negInf = floatToFixed(builder.AXIS_VALUE_NEGATIVE_INFINITY, 16)
     assert struct.pack(">l", negInf) == b"\x80\x00\x00\x00"
