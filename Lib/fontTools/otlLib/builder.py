@@ -2802,7 +2802,7 @@ def _buildAxisRecords(axes, nameTable, windowsNames, macNames):
     return axisRecords, axisValues
 
 
-def _buildAxisValuesFormat4(locations, axes, nameTable, windowsNames=True, macNames=True):
+def _buildAxisValuesFormat4(locations, axes, nameTable, windowsNames, macNames):
     axisTagToIndex = {}
     for axisRecordIndex, axisDict in enumerate(axes):
         axisTagToIndex[axisDict["tag"]] = axisRecordIndex
