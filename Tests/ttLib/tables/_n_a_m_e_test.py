@@ -312,7 +312,7 @@ class NameTableTest(unittest.TestCase):
 		a Mac name table entry equal to Windows entry.
 		'''
 
-		font_obj = ttLib.TTFont()
+		font_obj = TTFont()
 		font_obj["name"] = ttLib.newTable("name")
 		font_obj["name"].names = []
 
