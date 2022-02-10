@@ -329,7 +329,7 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 					self.names.append(macName)
 		return nameID
 
-	def addName(self, string, platforms=((1, 0, 0), (3, 1, 0x409)), minNameID=255, force=True):
+	def addName(self, string, platforms=((1, 0, 0), (3, 1, 0x409)), minNameID=255):
 		""" Add a new name record containing 'string' for each (platformID, platEncID,
 		langID) tuple specified in the 'platforms' list.
 
@@ -350,18 +350,6 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		if not isinstance(string, str):
 			raise TypeError(
 				"expected str, found %s: %r" % (type(string).__name__, string))
-
-		if not force:
-			for platform in platforms:
-				for name_rec in self.names:
-					name_rec_platform = (name_rec.platformID, name_rec.platEncID, name_rec.langID)
-					if name_rec_platform != platform:
-						continue
-					if name_rec.string == string:
-						# if name ID exists already, don't create a new one.
-						# Instead return the name ID of the existing one.
-						return name_rec.nameID
-
 		nameID = self._findUnusedNameID(minNameID + 1)
 		for platformID, platEncID, langID in platforms:
 			self.names.append(makeName(string, nameID, platformID, platEncID, langID))
