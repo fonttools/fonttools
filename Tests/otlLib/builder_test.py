@@ -1404,21 +1404,15 @@ def test_buildStatTable(axes, axisValues, elidedFallbackName, expected_ttx):
 
 def test_buildStatTable_name_duplicates():
     '''
-    Create a failing unittest first.
-    Currently 'buildStatTable' creates name table entries,
-    even if the name exists in the name table already.
+    PR: https://github.com/fonttools/fonttools/pull/2528
+    Introduce new 'platform' feature for creating a STAT table.
+    Set windowsNames and or macNames to create name table entries
+    in the specified platforms
     '''
 
     font_obj = ttLib.TTFont()
     font_obj["name"] = ttLib.newTable("name")
     font_obj["name"].names = []
-
-    opsz_values = [
-        dict(nominalValue=6, rangeMinValue=fixedToFloat(-0x80000000, 16), rangeMaxValue=9, name="Micro"),
-        dict(nominalValue=12, rangeMinValue=9, rangeMaxValue=16, name="Text"),
-        dict(nominalValue=18, rangeMinValue=16, rangeMaxValue=22, name="Headline"),
-        dict(nominalValue=24, rangeMinValue=22, rangeMaxValue=fixedToFloat(0x7FFFFFFF, 16), name="Poster"),
-    ]
 
     wght_values = [
         dict(nominalValue=200, rangeMinValue=200, rangeMaxValue=250, name="ExtraLight"),
@@ -1428,31 +1422,14 @@ def test_buildStatTable_name_duplicates():
         dict(nominalValue=700, rangeMinValue=650, rangeMaxValue=750, name="Bold"),
         dict(nominalValue=800, rangeMinValue=750, rangeMaxValue=850, name="ExtraBold"),
         dict(nominalValue=900, rangeMinValue=850, rangeMaxValue=900, name="Black"),
-        dict(value=400, linkedValue=700, name="Regular", flags=0x2, ),  # Regular
-    ]
-
-    ital_value = [
-        dict(value=0, linkedValue=1, name="Regular", flags=0x2, ),
     ]
 
     AXES = [
-        dict(
-            tag="opsz",
-            name="Optical Size",
-            ordering=0,
-            values=opsz_values,
-        ),
         dict(
             tag="wght",
             name="Weight",
             ordering=1,
             values=wght_values,
-        ),
-        dict(
-            tag="ital",
-            name="Italic",
-            ordering=2,
-            values=ital_value,
         ),
     ]
 
@@ -1464,14 +1441,7 @@ def test_buildStatTable_name_duplicates():
     font_obj["name"].setName('ExtraBold', 265, 3, 1, 0x409)
     font_obj["name"].setName('Black', 266, 3, 1, 0x409)
 
-    font_obj["name"].setName('Micro', 270, 3, 1, 0x409)
-    font_obj["name"].setName('Text', 271, 3, 1, 0x409)
-    font_obj["name"].setName('Headline', 272, 3, 1, 0x409)
-    font_obj["name"].setName('Poster', 273, 3, 1, 0x409)
-
-    font_obj["name"].setName('Optical Size', 280, 3, 1, 0x409)
-    font_obj["name"].setName('Weight', 281, 3, 1, 0x409)
-    font_obj["name"].setName('Italic', 282, 3, 1, 0x409)
+    font_obj["name"].setName('Weight', 270, 3, 1, 0x409)
 
     expected_names = [x.string for x in font_obj["name"].names]
 
