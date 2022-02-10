@@ -6,6 +6,7 @@ from fontTools.misc.xmlWriter import XMLWriter
 from io import BytesIO
 import struct
 import unittest
+from fontTools import ttLib
 from fontTools.ttLib import newTable
 from fontTools.ttLib.tables._n_a_m_e import (
 	table__n_a_m_e, NameRecord, nameRecordFormat, nameRecordSize, makeName, log)
@@ -304,6 +305,23 @@ class NameTableTest(unittest.TestCase):
 		nameID = table.addMultilingualName(names, minNameID=256)
 		self.assertGreaterEqual(nameID, 256)
 		self.assertEqual(nameID, table.findMultilingualName(names, minNameID=256))
+
+	def test_addMultilingualName_no_mac_but_win(self):
+		'''
+		Test if addMultilingualName adds
+		a Mac name table entry equal to Windows entry.
+		'''
+
+		font_obj = ttLib.TTFont()
+		font_obj["name"] = ttLib.newTable("name")
+		font_obj["name"].names = []
+
+		font_obj["name"].setName('Weight', 270, 3, 1, 0x409)
+		names = {'en': 'Weight', }
+		nameID = font_obj["name"].addMultilingualName(names, minNameID=256)
+
+		self.assertEqual(270, nameID)
+
 
 	def test_decompile_badOffset(self):
                 # https://github.com/fonttools/fonttools/issues/525

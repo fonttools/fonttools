@@ -1448,7 +1448,32 @@ def test_buildStatTable_name_duplicates():
     builder.buildStatTable(font_obj, AXES, windowsNames=True, macNames=False)
     actual_names = [x.string for x in font_obj["name"].names]
 
+    # no new name records were added by buildStatTable
+    # because windows-only names with the same strings were already present
     assert expected_names == actual_names
+
+    font_obj["name"].removeNames(nameID=270)
+    expected_names = [x.string for x in font_obj["name"].names] + ['Weight']
+
+    builder.buildStatTable(font_obj, AXES, windowsNames=True, macNames=False)
+    actual_names = [x.string for x in font_obj["name"].names]
+    # One new name records 'Weight' were added by buildStatTable
+    assert expected_names == actual_names
+
+    builder.buildStatTable(font_obj, AXES, windowsNames=True, macNames=True)
+    actual_names = [x.string for x in font_obj["name"].names]
+    expected_names = ['Weight', 'Weight',
+                      'ExtraLight', 'ExtraLight',
+                      'Light', 'Light',
+                      'Regular', 'Regular',
+                      'Medium', 'Medium',
+                      'Bold', 'Bold',
+                      'ExtraBold', 'ExtraBold',
+                      'Black', 'Black']
+    # Multiple name records were added by buildStatTable
+    assert expected_names == actual_names
+
+
 
 
 def test_stat_infinities():
