@@ -1403,6 +1403,12 @@ def test_buildStatTable(axes, axisValues, elidedFallbackName, expected_ttx):
 
 
 def test_buildStatTable_name_duplicates():
+    '''
+    Create a failing unittest first.
+    Currently 'buildStatTable' creates name table entries,
+    even if the name exists in the name table already.
+    '''
+
     from fontTools.misc.fixedTools import fixedToFloat
 
     font_obj = ttLib.TTFont()
