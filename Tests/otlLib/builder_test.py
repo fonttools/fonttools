@@ -1,6 +1,6 @@
 import io
 import struct
-from fontTools.misc.fixedTools import floatToFixed
+from fontTools.misc.fixedTools import floatToFixed, fixedToFloat
 from fontTools.misc.testTools import getXML
 from fontTools.otlLib import builder, error
 from fontTools import ttLib
@@ -1409,8 +1409,6 @@ def test_buildStatTable_name_duplicates():
     even if the name exists in the name table already.
     '''
 
-    from fontTools.misc.fixedTools import fixedToFloat
-
     font_obj = ttLib.TTFont()
     font_obj["name"] = ttLib.newTable("name")
     font_obj["name"].names = []
@@ -1458,27 +1456,29 @@ def test_buildStatTable_name_duplicates():
         ),
     ]
 
-    font_obj["name"].setName('ExtraLight', 260, 1, 0, 0)
-    font_obj["name"].setName('Light', 261, 1, 0, 0)
-    font_obj["name"].setName('Regular', 262, 1, 0, 0)
-    font_obj["name"].setName('Medium', 263, 1, 0, 0)
-    font_obj["name"].setName('Bold', 264, 1, 0, 0)
-    font_obj["name"].setName('ExtraBold', 265, 1, 0, 0)
-    font_obj["name"].setName('Black', 266, 1, 0, 0)
+    font_obj["name"].setName('ExtraLight', 260, 3, 1, 0x409)
+    font_obj["name"].setName('Light', 261, 3, 1, 0x409)
+    font_obj["name"].setName('Regular', 262, 3, 1, 0x409)
+    font_obj["name"].setName('Medium', 263, 3, 1, 0x409)
+    font_obj["name"].setName('Bold', 264, 3, 1, 0x409)
+    font_obj["name"].setName('ExtraBold', 265, 3, 1, 0x409)
+    font_obj["name"].setName('Black', 266, 3, 1, 0x409)
 
-    font_obj["name"].setName('Micro', 270, 1, 0, 0)
-    font_obj["name"].setName('Text', 271, 1, 0, 0)
-    font_obj["name"].setName('Headline', 272, 1, 0, 0)
-    font_obj["name"].setName('Poster', 273, 1, 0, 0)
+    font_obj["name"].setName('Micro', 270, 3, 1, 0x409)
+    font_obj["name"].setName('Text', 271, 3, 1, 0x409)
+    font_obj["name"].setName('Headline', 272, 3, 1, 0x409)
+    font_obj["name"].setName('Poster', 273, 3, 1, 0x409)
 
-    font_obj["name"].setName('Optical Size', 280, 1, 0, 0)
-    font_obj["name"].setName('Weight', 281, 1, 0, 0)
-    font_obj["name"].setName('Italic', 281, 1, 0, 0)
+    font_obj["name"].setName('Optical Size', 280, 3, 1, 0x409)
+    font_obj["name"].setName('Weight', 281, 3, 1, 0x409)
+    font_obj["name"].setName('Italic', 282, 3, 1, 0x409)
 
-    expected_names_len = len(font_obj["name"].names)
+    expected_names = [x.string for x in font_obj["name"].names]
+
     builder.buildStatTable(font_obj, AXES)
+    actual_names = [x.string for x in font_obj["name"].names]
 
-    assert expected_names_len == len(font_obj["name"].names)
+    assert expected_names == actual_names
 
 
 def test_stat_infinities():

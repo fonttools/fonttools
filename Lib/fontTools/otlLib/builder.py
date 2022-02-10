@@ -2831,6 +2831,9 @@ def _addName(nameTable, value, minNameID=0):
         # Already a nameID
         return value
     if isinstance(value, str):
+        nameID = nameTable.addName(value, platforms=((3, 1, 0x409), ), minNameID=minNameID)
+        if nameID is not None:
+            return nameID
         names = dict(en=value)
     elif isinstance(value, dict):
         names = value
