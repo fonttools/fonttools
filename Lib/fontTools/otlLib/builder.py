@@ -2649,7 +2649,7 @@ AXIS_VALUE_NEGATIVE_INFINITY = fixedToFloat(-0x80000000, 16)
 AXIS_VALUE_POSITIVE_INFINITY = fixedToFloat(0x7FFFFFFF, 16)
 
 
-def buildStatTable(ttFont, axes, locations=None, elidedFallbackName=2):
+def buildStatTable(ttFont, axes, locations=None, elidedFallbackName=2, platforms=((1, 0, 0), (3, 1, 0x409))):
     """Add a 'STAT' table to 'ttFont'.
 
     'axes' is a list of dictionaries describing axes and their
@@ -2734,17 +2734,17 @@ def buildStatTable(ttFont, axes, locations=None, elidedFallbackName=2):
     ttFont["STAT"] = ttLib.newTable("STAT")
     statTable = ttFont["STAT"].table = ot.STAT()
     nameTable = ttFont["name"]
-    statTable.ElidedFallbackNameID = _addName(nameTable, elidedFallbackName)
+    statTable.ElidedFallbackNameID = _addName(nameTable, elidedFallbackName, platforms=platforms)
 
     # 'locations' contains data for AxisValue Format 4
-    axisRecords, axisValues = _buildAxisRecords(axes, nameTable)
+    axisRecords, axisValues = _buildAxisRecords(axes, nameTable, platforms=platforms)
     if not locations:
         statTable.Version = 0x00010001
     else:
         # We'll be adding Format 4 AxisValue records, which
         # requires a higher table version
         statTable.Version = 0x00010002
-        multiAxisValues = _buildAxisValuesFormat4(locations, axes, nameTable)
+        multiAxisValues = _buildAxisValuesFormat4(locations, axes, nameTable, platforms=platforms)
         axisValues = multiAxisValues + axisValues
 
     # Store AxisRecords
@@ -2763,13 +2763,13 @@ def buildStatTable(ttFont, axes, locations=None, elidedFallbackName=2):
         statTable.AxisValueCount = len(axisValues)
 
 
-def _buildAxisRecords(axes, nameTable):
+def _buildAxisRecords(axes, nameTable, platforms=((1, 0, 0), (3, 1, 0x409))):
     axisRecords = []
     axisValues = []
     for axisRecordIndex, axisDict in enumerate(axes):
         axis = ot.AxisRecord()
         axis.AxisTag = axisDict["tag"]
-        axis.AxisNameID = _addName(nameTable, axisDict["name"], 256)
+        axis.AxisNameID = _addName(nameTable, axisDict["name"], 256, platforms=platforms)
         axis.AxisOrdering = axisDict.get("ordering", axisRecordIndex)
         axisRecords.append(axis)
 
@@ -2777,7 +2777,7 @@ def _buildAxisRecords(axes, nameTable):
             axisValRec = ot.AxisValue()
             axisValRec.AxisIndex = axisRecordIndex
             axisValRec.Flags = axisVal.get("flags", 0)
-            axisValRec.ValueNameID = _addName(nameTable, axisVal["name"])
+            axisValRec.ValueNameID = _addName(nameTable, axisVal["name"], platforms=platforms)
 
             if "value" in axisVal:
                 axisValRec.Value = axisVal["value"]
@@ -2802,7 +2802,7 @@ def _buildAxisRecords(axes, nameTable):
     return axisRecords, axisValues
 
 
-def _buildAxisValuesFormat4(locations, axes, nameTable):
+def _buildAxisValuesFormat4(locations, axes, nameTable, platforms=((1, 0, 0), (3, 1, 0x409))):
     axisTagToIndex = {}
     for axisRecordIndex, axisDict in enumerate(axes):
         axisTagToIndex[axisDict["tag"]] = axisRecordIndex
@@ -2811,7 +2811,7 @@ def _buildAxisValuesFormat4(locations, axes, nameTable):
     for axisLocationDict in locations:
         axisValRec = ot.AxisValue()
         axisValRec.Format = 4
-        axisValRec.ValueNameID = _addName(nameTable, axisLocationDict["name"])
+        axisValRec.ValueNameID = _addName(nameTable, axisLocationDict["name"], platforms=platforms)
         axisValRec.Flags = axisLocationDict.get("flags", 0)
         axisValueRecords = []
         for tag, value in axisLocationDict["location"].items():
@@ -2826,14 +2826,17 @@ def _buildAxisValuesFormat4(locations, axes, nameTable):
     return axisValues
 
 
-def _addName(nameTable, value, minNameID=0):
+def _addName(nameTable, value, minNameID=0, platforms=((1, 0, 0), (3, 1, 0x409))):
     if isinstance(value, int):
         # Already a nameID
         return value
     if isinstance(value, str):
-        nameID = nameTable.addName(value, platforms=((3, 1, 0x409), ), minNameID=256, force=False)
-        if nameID is not None:
-            return nameID
+        #nameID = nameTable.addName(value, platforms=platforms, minNameID=256, force=False)
+        #addMultilingualName(self, names, ttFont=None, nameID=None,
+        #                    windows=True, mac=True, minNameID=0)
+        #print('nameID: ', nameID)
+        #if nameID is not None:
+        #    return nameID
         names = dict(en=value)
     elif isinstance(value, dict):
         names = value
@@ -2853,4 +2856,7 @@ def _addName(nameTable, value, minNameID=0):
         return nameID
     else:
         raise TypeError("value must be int, str, dict or list")
-    return nameTable.addMultilingualName(names, minNameID=minNameID)
+
+    _mac = True if (1, 0, 0) in platforms else False
+    _win = True if (3, 1, 0x409) in platforms else False
+    return nameTable.addMultilingualName(names, windows=_win, mac=_mac, minNameID=minNameID)
