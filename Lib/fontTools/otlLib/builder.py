@@ -2831,12 +2831,6 @@ def _addName(nameTable, value, minNameID=0, platforms=((1, 0, 0), (3, 1, 0x409))
         # Already a nameID
         return value
     if isinstance(value, str):
-        #nameID = nameTable.addName(value, platforms=platforms, minNameID=256, force=False)
-        #addMultilingualName(self, names, ttFont=None, nameID=None,
-        #                    windows=True, mac=True, minNameID=0)
-        #print('nameID: ', nameID)
-        #if nameID is not None:
-        #    return nameID
         names = dict(en=value)
     elif isinstance(value, dict):
         names = value
