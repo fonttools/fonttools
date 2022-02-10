@@ -2826,7 +2826,7 @@ def _buildAxisValuesFormat4(locations, axes, nameTable, windowsNames, macNames):
     return axisValues
 
 
-def _addName(nameTable, value, minNameID=0, windows=True, mac=True):
+def _addName(nameTable, value, minNameID=0, windows, mac):
     if isinstance(value, int):
         # Already a nameID
         return value
