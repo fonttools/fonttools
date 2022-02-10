@@ -1475,7 +1475,7 @@ def test_buildStatTable_name_duplicates():
 
     expected_names = [x.string for x in font_obj["name"].names]
 
-    builder.buildStatTable(font_obj, AXES, windows=True, mac=False)
+    builder.buildStatTable(font_obj, AXES, windowsNames=True, macNames=False)
     actual_names = [x.string for x in font_obj["name"].names]
 
     assert expected_names == actual_names
