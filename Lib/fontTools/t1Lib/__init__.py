@@ -15,14 +15,17 @@ write(path, data, kind='OTHER', dohex=False)
 	part should be written as hexadecimal or binary, but only if kind
 	is 'OTHER'.
 """
+import fontTools
 from fontTools.misc import eexec
 from fontTools.misc.macCreatorType import getMacCreatorAndType
-from fontTools.misc.textTools import bytechr, byteord, bytesjoin
+from fontTools.misc.textTools import bytechr, byteord, bytesjoin, tobytes
+from fontTools.misc.psOperators import _type1_pre_eexec_order, _type1_fontinfo_order, _type1_post_eexec_order
+from fontTools.encodings.StandardEncoding import StandardEncoding
 import os
 import re
 
 __author__ = "jvr"
-__version__ = "1.0b2"
+__version__ = "1.0b3"
 DEBUG = 0
 
 
@@ -65,8 +68,8 @@ class T1Font(object):
 		write(path, self.getData(), type, dohex)
 
 	def getData(self):
-		# XXX Todo: if the data has been converted to Python object,
-		# recreate the PS stream
+		if not hasattr(self, "data"):
+			self.data = self.createData()
 		return self.data
 
 	def getGlyphSet(self):
@@ -101,6 +104,148 @@ class T1Font(object):
 			charString, R = eexec.decrypt(subrs[i], 4330)
 			subrs[i] = psCharStrings.T1CharString(charString[lenIV:], subrs=subrs)
 		del self.data
+
+	def createData(self):
+		sf = self.font
+
+		eexec_began = False
+		eexec_dict = {}
+		lines = []
+		lines.extend([self._tobytes(f"%!FontType1-1.1: {sf['FontName']}"),
+					  self._tobytes(f"%t1Font: ({fontTools.version})"),
+					  self._tobytes(f"%%BeginResource: font {sf['FontName']}")])
+		# follow t1write.c:writeRegNameKeyedFont
+		size = 3 # Headroom for new key addition
+		size += 1 # FontMatrix is always counted
+		size += 1 + 1 # Private, CharStings
+		for key in font_dictionary_keys:
+			size += int(key in sf)
+		lines.append(self._tobytes(f"{size} dict dup begin"))
+
+		for key, value in sf.items():
+			if eexec_began:
+				eexec_dict[key] = value
+				continue
+
+			if key == "FontInfo":
+				fi = sf["FontInfo"]
+				# follow t1write.c:writeFontInfoDict
+				size = 3 # Headroom for new key addition
+				for subkey in FontInfo_dictionary_keys:
+					size += int(subkey in fi)
+				lines.append(self._tobytes(f"/FontInfo {size} dict dup begin"))
+
+				for subkey, subvalue in fi.items():
+					lines.extend(self._make_lines(subkey, subvalue))
+				lines.append(b"end def")
+			elif key in _type1_post_eexec_order: # usually 'Private'
+				eexec_dict[key] = value
+				eexec_began = True
+			else:
+				lines.extend(self._make_lines(key, value))
+		lines.append(b"end")
+		eexec_portion = self.encode_eexec(eexec_dict)
+		lines.append(bytesjoin([b"currentfile eexec ", eexec_portion]))
+
+		for _ in range(8):
+			lines.append(self._tobytes("0"*64))
+		lines.extend([b"cleartomark",
+					  b"%%EndResource",
+					  b"%%EOF"])
+
+		data = bytesjoin(lines, "\n")
+		return data
+
+	def encode_eexec(self, eexec_dict):
+		lines = []
+
+		# '-|', '|-', '|'
+		RD_key, ND_key, NP_key = None, None, None
+
+		for key, value in eexec_dict.items():
+			if key == "Private":
+				pr = eexec_dict["Private"]
+				# follow t1write.c:writePrivateDict
+				size = 3 # for RD, ND, NP
+				for subkey in Private_dictionary_keys:
+					size += int(subkey in pr)
+				lines.append(b"dup /Private")
+				lines.append(self._tobytes(f"{size} dict dup begin"))
+				for subkey, subvalue in pr.items():
+					if not RD_key and subvalue == RD_value:
+						RD_key = subkey
+					elif not ND_key and subvalue == ND_value:
+						ND_key = subkey
+					elif not NP_key and subvalue == PD_value:
+						NP_key = subkey
+
+					if subkey == 'OtherSubrs':
+						# XXX: assert that no flex hint is used
+						lines.append(self._tobytes(hintothers))
+					elif subkey == "Subrs":
+						# XXX: standard Subrs only
+						lines.append(b"/Subrs 5 array")
+						for i, subr_bin in enumerate(std_subrs):
+							encrypted_subr, R = eexec.encrypt(bytesjoin([char_IV, subr_bin]), 4330)
+							lines.append(bytesjoin([self._tobytes(f"dup {i} {len(encrypted_subr)} {RD_key} "), encrypted_subr, self._tobytes(f" {NP_key}")]))
+						lines.append(b'def')
+
+						lines.append(b"put")
+					else:
+						lines.extend(self._make_lines(subkey, subvalue))
+			elif key == "CharStrings":
+				lines.append(b"dup /CharStrings")
+				lines.append(self._tobytes(f"{len(eexec_dict['CharStrings'])} dict dup begin"))
+				for glyph_name, char_bin in eexec_dict["CharStrings"].items():
+					char_bin.compile()
+					encrypted_char, R = eexec.encrypt(bytesjoin([char_IV, char_bin.bytecode]), 4330)
+					lines.append(bytesjoin([self._tobytes(f"/{glyph_name} {len(encrypted_char)} {RD_key} "), encrypted_char, self._tobytes(f" {ND_key}")]))
+				lines.append(b"end put")
+			else:
+				lines.extend(self._make_lines(key, value))
+
+		lines.extend([b"end",
+					  b"dup /FontName get exch definefont pop",
+					  b"mark",
+					  b"currentfile closefile\n"])
+
+		eexec_portion = bytesjoin(lines, "\n")
+		encrypted_eexec, R = eexec.encrypt(bytesjoin([eexec_IV, eexec_portion]), 55665)
+
+		return encrypted_eexec
+
+	def _make_lines(self, key, value):
+		if key == "FontName":
+			return [self._tobytes(f"/{key} /{value} def")]
+		if key in ["isFixedPitch", "ForceBold", "RndStemUp"]:
+			return [self._tobytes(f"/{key} {'true' if value else 'false'} def")]
+		elif key == "Encoding":
+			if value == StandardEncoding:
+				return [self._tobytes(f"/{key} StandardEncoding def")]
+			else:
+				# follow fontTools.misc.psOperators._type1_Encoding_repr
+				lines = []
+				lines.append(b"/Encoding 256 array")
+				lines.append(b"0 1 255 {1 index exch /.notdef put} for")
+				for i in range(256):
+					name = value[i]
+					if name != ".notdef":
+						lines.append(self._tobytes(f"dup {i} /{name} put"))
+				lines.append(b"def")
+				return lines
+		if isinstance(value, str):
+			return [self._tobytes(f"/{key} ({value}) def")]
+		elif isinstance(value, bool):
+			return [self._tobytes(f"/{key} {'true' if value else 'false'} def")]
+		elif isinstance(value, list):
+			return [self._tobytes(f"/{key} [{' '.join(str(v) for v in value)}] def")]
+		elif isinstance(value, tuple):
+			return [self._tobytes(f"/{key} {{{' '.join(str(v) for v in value)}}} def")]
+		else:
+			return [self._tobytes(f"/{key} {value} def")]
+
+	def _tobytes(self, s, errors="strict"):
+		return tobytes(s, self.encoding, errors)
 
 
 # low level T1 data read and write functions
@@ -367,3 +512,69 @@ def stringToLong(s):
 	for i in range(4):
 		l += byteord(s[i]) << (i * 8)
 	return l
+
+
+# PS stream helpers
+
+font_dictionary_keys = list(_type1_pre_eexec_order)
+# t1write.c:writeRegNameKeyedFont
+# always counts following keys
+font_dictionary_keys.remove("FontMatrix")
+
+FontInfo_dictionary_keys = list(_type1_fontinfo_order)
+# extend because AFDKO tx may use following keys
+FontInfo_dictionary_keys.extend([
+	"FSType",
+	"Copyright",
+])
+
+Private_dictionary_keys = [
+	# We don't know what names will be actually used.
+	# "RD",
+	# "ND",
+	# "NP",
+	"Subrs",
+	"OtherSubrs",
+	"UniqueID",
+	"BlueValues",
+	"OtherBlues",
+	"FamilyBlues",
+	"FamilyOtherBlues",
+	"BlueScale",
+	"BlueShift",
+	"BlueFuzz",
+	"StdHW",
+	"StdVW",
+	"StemSnapH",
+	"StemSnapV",
+	"ForceBold",
+	"LanguageGroup",
+	"password",
+	"lenIV",
+	"MinFeature",
+	"RndStemUp",
+]
+
+# t1write_hintothers.h
+hintothers = """/OtherSubrs[{}{}{}{systemdict/internaldict known not{pop 3}{1183615869
+systemdict/internaldict get exec dup/startlock known{/startlock get exec}{dup
+/strtlck known{/strtlck get exec}{pop 3}ifelse}ifelse}ifelse}executeonly]def"""
+# t1write.c:saveStdSubrs
+std_subrs = [
+	# 3 0 callother pop pop setcurrentpoint return
+	b"\x8e\x8b\x0c\x10\x0c\x11\x0c\x11\x0c\x21\x0b",
+	# 0 1 callother return
+	b"\x8b\x8c\x0c\x10\x0b",
+	# 0 2 callother return
+	b"\x8b\x8d\x0c\x10\x0b",
+	# return
+	b"\x0b",
+	# 3 1 3 callother pop callsubr return
+	b"\x8e\x8c\x8e\x0c\x10\x0c\x11\x0a\x0b"
+]
+# follow t1write.c:writeRegNameKeyedFont
+eexec_IV = b"cccc"
+char_IV = b"\x0c\x0c\x0c\x0c"
+RD_value = ("string", "currentfile", "exch", "readstring", "pop")
+ND_value = ("def",)
+PD_value = ("put",)
