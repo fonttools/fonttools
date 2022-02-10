@@ -1462,15 +1462,16 @@ def test_buildStatTable_name_duplicates():
 
     builder.buildStatTable(font_obj, AXES, windowsNames=True, macNames=True)
     actual_names = [x.string for x in font_obj["name"].names]
-    expected_names = ['Weight', 'Weight',
-                      'ExtraLight', 'ExtraLight',
-                      'Light', 'Light',
-                      'Regular', 'Regular',
-                      'Medium', 'Medium',
-                      'Bold', 'Bold',
-                      'ExtraBold', 'ExtraBold',
-                      'Black', 'Black']
-    # Multiple name records were added by buildStatTable
+    expected_names = ['Weight', 'Weight', 'Weight',
+                      'ExtraLight', 'ExtraLight', 'ExtraLight',
+                      'Light', 'Light', 'Light',
+                      'Regular', 'Regular', 'Regular',
+                      'Medium', 'Medium', 'Medium',
+                      'Bold', 'Bold', 'Bold',
+                      'ExtraBold', 'ExtraBold', 'ExtraBold',
+                      'Black', 'Black', 'Black']
+    # Because there is an inconsistency in the names add new name IDs
+    # for each platform -> windowsNames=True, macNames=True
     assert sorted(expected_names) == sorted(actual_names)
 
 

@@ -311,16 +311,6 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 			if nameID is not None:
 				return nameID
 			nameID = self._findUnusedNameID()
-
-			nameID_win = self.findMultilingualName(names, windows=True, mac=False)
-			nameID_mac = self.findMultilingualName(names, windows=False, mac=True)
-			if nameID_win and nameID_mac is None:
-				nameID = nameID_win
-				windows = False
-			if nameID_mac and nameID_win is None:
-				nameID = nameID_mac
-				mac = False
-
 		# TODO: Should minimize BCP 47 language codes.
 		# https://github.com/fonttools/fonttools/issues/930
 		for lang, name in sorted(names.items()):

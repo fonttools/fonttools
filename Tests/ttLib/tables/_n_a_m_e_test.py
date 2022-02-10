@@ -317,10 +317,23 @@ class NameTableTest(unittest.TestCase):
 		font_obj["name"].names = []
 
 		font_obj["name"].setName('Weight', 270, 3, 1, 0x409)
+		font_obj["name"].setName('Weight', 270, 1, 0, 0)
 		names = {'en': 'Weight', }
 		nameID = font_obj["name"].addMultilingualName(names, minNameID=256)
-
 		self.assertEqual(270, nameID)
+
+		font_obj["name"].removeNames(nameID=270, platformID=1)  # remove Mac name
+		nameID = font_obj["name"].addMultilingualName(names, minNameID=256)
+		# Because there is an inconsistency in the names add a new name ID
+		self.assertEqual(271, nameID)
+
+		font_obj["name"].removeNames(platformID=3)  # remove all Windows names
+		font_obj["name"].removeNames(platformID=1)  # remove all Mac names
+		nameID = font_obj["name"].addMultilingualName(names, minNameID=256)
+		#Because there is no name ID with the name 'Weight',
+		# take the next available name ID -> minNameID=256
+		self.assertEqual(256, nameID)
+
 
 
 	def test_decompile_badOffset(self):
