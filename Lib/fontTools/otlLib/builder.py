@@ -2763,7 +2763,7 @@ def buildStatTable(ttFont, axes, locations=None, elidedFallbackName=2, windowsNa
         statTable.AxisValueCount = len(axisValues)
 
 
-def _buildAxisRecords(axes, nameTable, windowsNames=True, macNames=True):
+def _buildAxisRecords(axes, nameTable, windowsNames, macNames):
     axisRecords = []
     axisValues = []
     for axisRecordIndex, axisDict in enumerate(axes):
