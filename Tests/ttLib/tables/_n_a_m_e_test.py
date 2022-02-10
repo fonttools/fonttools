@@ -6,7 +6,6 @@ from fontTools.misc.xmlWriter import XMLWriter
 from io import BytesIO
 import struct
 import unittest
-from fontTools import ttLib
 from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables._n_a_m_e import (
 	table__n_a_m_e, NameRecord, nameRecordFormat, nameRecordSize, makeName, log)
@@ -313,7 +312,7 @@ class NameTableTest(unittest.TestCase):
 		'''
 
 		font_obj = TTFont()
-		font_obj["name"] = ttLib.newTable("name")
+		font_obj["name"] = newTable("name")
 		font_obj["name"].names = []
 
 		font_obj["name"].setName('Weight', 270, 3, 1, 0x409)
@@ -330,11 +329,9 @@ class NameTableTest(unittest.TestCase):
 		font_obj["name"].removeNames(platformID=3)  # remove all Windows names
 		font_obj["name"].removeNames(platformID=1)  # remove all Mac names
 		nameID = font_obj["name"].addMultilingualName(names, minNameID=256)
-		#Because there is no name ID with the name 'Weight',
+		# Because there is no name ID with the name 'Weight',
 		# take the next available name ID -> minNameID=256
 		self.assertEqual(256, nameID)
-
-
 
 	def test_decompile_badOffset(self):
                 # https://github.com/fonttools/fonttools/issues/525

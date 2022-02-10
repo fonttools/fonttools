@@ -1403,13 +1403,10 @@ def test_buildStatTable(axes, axisValues, elidedFallbackName, expected_ttx):
 
 
 def test_buildStatTable_name_duplicates():
-    '''
-    PR: https://github.com/fonttools/fonttools/pull/2528
-    Introduce new 'platform' feature for creating a STAT table.
-    Set windowsNames and or macNames to create name table entries
-    in the specified platforms
-    '''
-
+    # PR: https://github.com/fonttools/fonttools/pull/2528
+    # Introduce new 'platform' feature for creating a STAT table.
+    # Set windowsNames and or macNames to create name table entries
+    # in the specified platforms
     font_obj = ttLib.TTFont()
     font_obj["name"] = ttLib.newTable("name")
     font_obj["name"].names = []
@@ -1473,8 +1470,6 @@ def test_buildStatTable_name_duplicates():
     # Because there is an inconsistency in the names add new name IDs
     # for each platform -> windowsNames=True, macNames=True
     assert sorted(expected_names) == sorted(actual_names)
-
-
 
 
 def test_stat_infinities():

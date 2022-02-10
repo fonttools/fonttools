@@ -2763,7 +2763,7 @@ def buildStatTable(ttFont, axes, locations=None, elidedFallbackName=2, windowsNa
         statTable.AxisValueCount = len(axisValues)
 
 
-def _buildAxisRecords(axes, nameTable, windowsNames, macNames):
+def _buildAxisRecords(axes, nameTable, windowsNames=True, macNames=True):
     axisRecords = []
     axisValues = []
     for axisRecordIndex, axisDict in enumerate(axes):
@@ -2802,7 +2802,7 @@ def _buildAxisRecords(axes, nameTable, windowsNames, macNames):
     return axisRecords, axisValues
 
 
-def _buildAxisValuesFormat4(locations, axes, nameTable, windowsNames, macNames):
+def _buildAxisValuesFormat4(locations, axes, nameTable, windowsNames=True, macNames=True):
     axisTagToIndex = {}
     for axisRecordIndex, axisDict in enumerate(axes):
         axisTagToIndex[axisDict["tag"]] = axisRecordIndex
@@ -2826,7 +2826,7 @@ def _buildAxisValuesFormat4(locations, axes, nameTable, windowsNames, macNames):
     return axisValues
 
 
-def _addName(nameTable, value, minNameID=0, windows, mac):
+def _addName(nameTable, value, minNameID=0, windows=True, mac=True):
     if isinstance(value, int):
         # Already a nameID
         return value
@@ -2850,5 +2850,4 @@ def _addName(nameTable, value, minNameID=0, windows, mac):
         return nameID
     else:
         raise TypeError("value must be int, str, dict or list")
-
     return nameTable.addMultilingualName(names, windows=windows, mac=mac, minNameID=minNameID)
