@@ -1471,7 +1471,7 @@ def test_buildStatTable_name_duplicates():
                       'ExtraBold', 'ExtraBold',
                       'Black', 'Black']
     # Multiple name records were added by buildStatTable
-    assert expected_names == actual_names
+    assert sorted(expected_names) == sorted(actual_names)
 
 
 

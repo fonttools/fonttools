@@ -221,6 +221,21 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 			raise ValueError("nameID must be less than 32768")
 		return nameID
 
+	def findName(self, nameStr, platform=(3, 1, 0x409)):
+		someName = None
+		for name in self.names:
+			if (name.platformID, name.platEncID, name.langID) != platform:
+				continue
+			try:
+				unistr = name.toUnicode()
+			except UnicodeDecodeError:
+				continue
+			someName = unistr
+			if someName == nameStr:
+				return name.nameID
+
+		return someName
+
 	def findMultilingualName(self, names, windows=True, mac=True, minNameID=0):
 		"""Return the name ID of an existing multilingual name that
 		matches the 'names' dictionary, or None if not found.
@@ -304,6 +319,21 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		"""
 		if not hasattr(self, 'names'):
 			self.names = []
+		if windows and mac:
+			for lang, name in sorted(names.items()):
+				langID_win = _WINDOWS_LANGUAGE_CODES.get(lang.lower())
+				nameID_win = self.findName(name, platform=(3, 1, langID_win))
+				langID_mac = _MAC_LANGUAGE_CODES.get(lang.lower())
+				nameID_mac = self.findName(name, platform=(1, 0, langID_mac))
+				if nameID_win and nameID_mac is None:
+					# create Mac name, equal to Windows Name
+					self.setName(name, nameID_win, 1, 0, langID_mac)
+					return nameID_win
+				if nameID_mac and nameID_win is None:
+					# create Windows name, equal to Mac Name
+					self.setName(name, nameID_mac, 3, 1, langID_win)
+					return nameID_mac
+
 		if nameID is None:
 			# Reuse nameID if possible
 			nameID = self.findMultilingualName(
