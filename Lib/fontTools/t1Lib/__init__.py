@@ -560,8 +560,6 @@ hintothers = """/OtherSubrs[{}{}{}{systemdict/internaldict known not{pop 3}{1183
 systemdict/internaldict get exec dup/startlock known{/startlock get exec}{dup
 /strtlck known{/strtlck get exec}{pop 3}ifelse}ifelse}ifelse}executeonly]def"""
 # t1write.c:saveStdSubrs
-def bytechrjoin(iterable, joiner=b""):
-	return tobytes(joiner).join(bytechr(item) for item in iterable)
 std_subrs = [
 	# 3 0 callother pop pop setcurrentpoint return
 	b"\x8e\x8b\x0c\x10\x0c\x11\x0c\x11\x0c\x21\x0b",
