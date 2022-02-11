@@ -6,7 +6,7 @@ from fontTools.misc.xmlWriter import XMLWriter
 from io import BytesIO
 import struct
 import unittest
-from fontTools.ttLib import newTable
+from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables._n_a_m_e import (
 	table__n_a_m_e, NameRecord, nameRecordFormat, nameRecordSize, makeName, log)
 
@@ -304,6 +304,17 @@ class NameTableTest(unittest.TestCase):
 		nameID = table.addMultilingualName(names, minNameID=256)
 		self.assertGreaterEqual(nameID, 256)
 		self.assertEqual(nameID, table.findMultilingualName(names, minNameID=256))
+
+	def test_addMultilingualName_name_inconsistencies(self):
+		# Check what happens, when there are
+		# inconsistencies in the name table
+		table = table__n_a_m_e()
+		table.setName('Weight', 270, 3, 1, 0x409)
+		names = {'en': 'Weight', }
+		nameID = table.addMultilingualName(names, minNameID=256)
+		# Because there is an inconsistency in the names,
+		# addMultilingualName adds a new name ID
+		self.assertEqual(271, nameID)
 
 	def test_decompile_badOffset(self):
                 # https://github.com/fonttools/fonttools/issues/525

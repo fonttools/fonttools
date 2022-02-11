@@ -11,7 +11,11 @@ from fontTools.ttLib.tables.otBase import (
 )
 from fontTools.ttLib.tables import otBase
 from fontTools.feaLib.ast import STATNameStatement
-from fontTools.otlLib.optimize.gpos import GPOS_COMPACT_MODE_DEFAULT, GPOS_COMPACT_MODE_ENV_KEY, compact_lookup
+from fontTools.otlLib.optimize.gpos import (
+    GPOS_COMPACT_MODE_DEFAULT,
+    GPOS_COMPACT_MODE_ENV_KEY,
+    compact_lookup,
+)
 from fontTools.otlLib.error import OpenTypeLibError
 from functools import reduce
 import logging
@@ -962,14 +966,18 @@ class MarkBasePosBuilder(LookupBuilder):
         marks = {}
         for mark, (mc, anchor) in self.marks.items():
             if mc not in markClasses:
-                raise ValueError("Mark class %s not found for mark glyph %s" % (mc, mark))
+                raise ValueError(
+                    "Mark class %s not found for mark glyph %s" % (mc, mark)
+                )
             marks[mark] = (markClasses[mc], anchor)
         bases = {}
         for glyph, anchors in self.bases.items():
             bases[glyph] = {}
             for mc, anchor in anchors.items():
                 if mc not in markClasses:
-                    raise ValueError("Mark class %s not found for base glyph %s" % (mc, mark))
+                    raise ValueError(
+                        "Mark class %s not found for base glyph %s" % (mc, mark)
+                    )
                 bases[glyph][markClasses[mc]] = anchor
         subtables = buildMarkBasePos(marks, bases, self.glyphMap)
         return self.buildLookup_(subtables)
@@ -2123,8 +2131,16 @@ def buildPairPosClassesSubtable(pairs, glyphMap, valueFormat1=None, valueFormat2
         for c2 in classes2:
             rec2 = ot.Class2Record()
             val1, val2 = pairs.get((c1, c2), (None, None))
-            rec2.Value1 = ValueRecord(src=val1, valueFormat=valueFormat1) if valueFormat1 else None
-            rec2.Value2 = ValueRecord(src=val2, valueFormat=valueFormat2) if valueFormat2 else None
+            rec2.Value1 = (
+                ValueRecord(src=val1, valueFormat=valueFormat1)
+                if valueFormat1
+                else None
+            )
+            rec2.Value2 = (
+                ValueRecord(src=val2, valueFormat=valueFormat2)
+                if valueFormat2
+                else None
+            )
             rec1.Class2Record.append(rec2)
     self.Class1Count = len(self.Class1Record)
     self.Class2Count = len(classes2)
@@ -2223,8 +2239,16 @@ def buildPairPosGlyphsSubtable(pairs, glyphMap, valueFormat1=None, valueFormat2=
         for glyph2, val1, val2 in sorted(p[glyph], key=lambda x: glyphMap[x[0]]):
             pvr = ot.PairValueRecord()
             pvr.SecondGlyph = glyph2
-            pvr.Value1 = ValueRecord(src=val1, valueFormat=valueFormat1) if valueFormat1 else None
-            pvr.Value2 = ValueRecord(src=val2, valueFormat=valueFormat2) if valueFormat2 else None
+            pvr.Value1 = (
+                ValueRecord(src=val1, valueFormat=valueFormat1)
+                if valueFormat1
+                else None
+            )
+            pvr.Value2 = (
+                ValueRecord(src=val2, valueFormat=valueFormat2)
+                if valueFormat2
+                else None
+            )
             ps.PairValueRecord.append(pvr)
         ps.PairValueCount = len(ps.PairValueRecord)
     self.PairSetCount = len(self.PairSet)
@@ -2345,8 +2369,13 @@ def buildSinglePosSubtable(values, glyphMap):
     """
     self = ot.SinglePos()
     self.Coverage = buildCoverage(values.keys(), glyphMap)
-    valueFormat = self.ValueFormat = reduce(int.__or__, [v.getFormat() for v in values.values()], 0)
-    valueRecords = [ValueRecord(src=values[g], valueFormat=valueFormat) for g in self.Coverage.glyphs]
+    valueFormat = self.ValueFormat = reduce(
+        int.__or__, [v.getFormat() for v in values.values()], 0
+    )
+    valueRecords = [
+        ValueRecord(src=values[g], valueFormat=valueFormat)
+        for g in self.Coverage.glyphs
+    ]
     if all(v == valueRecords[0] for v in valueRecords):
         self.Format = 1
         if self.ValueFormat != 0:
@@ -2649,7 +2678,9 @@ AXIS_VALUE_NEGATIVE_INFINITY = fixedToFloat(-0x80000000, 16)
 AXIS_VALUE_POSITIVE_INFINITY = fixedToFloat(0x7FFFFFFF, 16)
 
 
-def buildStatTable(ttFont, axes, locations=None, elidedFallbackName=2):
+def buildStatTable(
+    ttFont, axes, locations=None, elidedFallbackName=2, windowsNames=True, macNames=True
+):
     """Add a 'STAT' table to 'ttFont'.
 
     'axes' is a list of dictionaries describing axes and their
@@ -2734,17 +2765,23 @@ def buildStatTable(ttFont, axes, locations=None, elidedFallbackName=2):
     ttFont["STAT"] = ttLib.newTable("STAT")
     statTable = ttFont["STAT"].table = ot.STAT()
     nameTable = ttFont["name"]
-    statTable.ElidedFallbackNameID = _addName(nameTable, elidedFallbackName)
+    statTable.ElidedFallbackNameID = _addName(
+        nameTable, elidedFallbackName, windows=windowsNames, mac=macNames
+    )
 
     # 'locations' contains data for AxisValue Format 4
-    axisRecords, axisValues = _buildAxisRecords(axes, nameTable)
+    axisRecords, axisValues = _buildAxisRecords(
+        axes, nameTable, windowsNames=windowsNames, macNames=macNames
+    )
     if not locations:
         statTable.Version = 0x00010001
     else:
         # We'll be adding Format 4 AxisValue records, which
         # requires a higher table version
         statTable.Version = 0x00010002
-        multiAxisValues = _buildAxisValuesFormat4(locations, axes, nameTable)
+        multiAxisValues = _buildAxisValuesFormat4(
+            locations, axes, nameTable, windowsNames=windowsNames, macNames=macNames
+        )
         axisValues = multiAxisValues + axisValues
 
     # Store AxisRecords
@@ -2763,13 +2800,15 @@ def buildStatTable(ttFont, axes, locations=None, elidedFallbackName=2):
         statTable.AxisValueCount = len(axisValues)
 
 
-def _buildAxisRecords(axes, nameTable):
+def _buildAxisRecords(axes, nameTable, windowsNames=True, macNames=True):
     axisRecords = []
     axisValues = []
     for axisRecordIndex, axisDict in enumerate(axes):
         axis = ot.AxisRecord()
         axis.AxisTag = axisDict["tag"]
-        axis.AxisNameID = _addName(nameTable, axisDict["name"], 256)
+        axis.AxisNameID = _addName(
+            nameTable, axisDict["name"], 256, windows=windowsNames, mac=macNames
+        )
         axis.AxisOrdering = axisDict.get("ordering", axisRecordIndex)
         axisRecords.append(axis)
 
@@ -2777,7 +2816,9 @@ def _buildAxisRecords(axes, nameTable):
             axisValRec = ot.AxisValue()
             axisValRec.AxisIndex = axisRecordIndex
             axisValRec.Flags = axisVal.get("flags", 0)
-            axisValRec.ValueNameID = _addName(nameTable, axisVal["name"])
+            axisValRec.ValueNameID = _addName(
+                nameTable, axisVal["name"], windows=windowsNames, mac=macNames
+            )
 
             if "value" in axisVal:
                 axisValRec.Value = axisVal["value"]
@@ -2802,7 +2843,9 @@ def _buildAxisRecords(axes, nameTable):
     return axisRecords, axisValues
 
 
-def _buildAxisValuesFormat4(locations, axes, nameTable):
+def _buildAxisValuesFormat4(
+    locations, axes, nameTable, windowsNames=True, macNames=True
+):
     axisTagToIndex = {}
     for axisRecordIndex, axisDict in enumerate(axes):
         axisTagToIndex[axisDict["tag"]] = axisRecordIndex
@@ -2811,7 +2854,9 @@ def _buildAxisValuesFormat4(locations, axes, nameTable):
     for axisLocationDict in locations:
         axisValRec = ot.AxisValue()
         axisValRec.Format = 4
-        axisValRec.ValueNameID = _addName(nameTable, axisLocationDict["name"])
+        axisValRec.ValueNameID = _addName(
+            nameTable, axisLocationDict["name"], windows=windowsNames, mac=macNames
+        )
         axisValRec.Flags = axisLocationDict.get("flags", 0)
         axisValueRecords = []
         for tag, value in axisLocationDict["location"].items():
@@ -2826,7 +2871,7 @@ def _buildAxisValuesFormat4(locations, axes, nameTable):
     return axisValues
 
 
-def _addName(nameTable, value, minNameID=0):
+def _addName(nameTable, value, minNameID=0, windows=True, mac=True):
     if isinstance(value, int):
         # Already a nameID
         return value
@@ -2850,4 +2895,6 @@ def _addName(nameTable, value, minNameID=0):
         return nameID
     else:
         raise TypeError("value must be int, str, dict or list")
-    return nameTable.addMultilingualName(names, minNameID=minNameID)
+    return nameTable.addMultilingualName(
+        names, windows=windows, mac=mac, minNameID=minNameID
+    )
