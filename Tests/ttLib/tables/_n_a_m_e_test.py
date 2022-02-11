@@ -306,11 +306,8 @@ class NameTableTest(unittest.TestCase):
 		self.assertEqual(nameID, table.findMultilingualName(names, minNameID=256))
 
 	def test_addMultilingualName_no_mac_but_win(self):
-		'''
-		Test if addMultilingualName adds
-		a Mac name table entry equal to Windows entry.
-		'''
-
+		# Test if addMultilingualName adds
+		# a Mac name table entry equal to Windows entry.
 		font_obj = TTFont()
 		font_obj["name"] = newTable("name")
 		font_obj["name"].names = []
