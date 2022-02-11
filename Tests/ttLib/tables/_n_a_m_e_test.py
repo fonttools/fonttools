@@ -305,30 +305,16 @@ class NameTableTest(unittest.TestCase):
 		self.assertGreaterEqual(nameID, 256)
 		self.assertEqual(nameID, table.findMultilingualName(names, minNameID=256))
 
-	def test_addMultilingualName_no_mac_but_win(self):
-		# Test if addMultilingualName adds
-		# a Mac name table entry equal to Windows entry.
-		font_obj = TTFont()
-		font_obj["name"] = newTable("name")
-		font_obj["name"].names = []
-
-		font_obj["name"].setName('Weight', 270, 3, 1, 0x409)
-		font_obj["name"].setName('Weight', 270, 1, 0, 0)
+	def test_addMultilingualName_name_inconsistencies(self):
+		# Check what happens, when there are
+		# inconsistencies in the name table
+		table = table__n_a_m_e()
+		table.setName('Weight', 270, 3, 1, 0x409)
 		names = {'en': 'Weight', }
-		nameID = font_obj["name"].addMultilingualName(names, minNameID=256)
-		self.assertEqual(270, nameID)
-
-		font_obj["name"].removeNames(nameID=270, platformID=1)  # remove Mac name
-		nameID = font_obj["name"].addMultilingualName(names, minNameID=256)
-		# Because there is an inconsistency in the names add a new name ID
+		nameID = table.addMultilingualName(names, minNameID=256)
+		# Because there is an inconsistency in the names,
+		# addMultilingualName adds a new name ID
 		self.assertEqual(271, nameID)
-
-		font_obj["name"].removeNames(platformID=3)  # remove all Windows names
-		font_obj["name"].removeNames(platformID=1)  # remove all Mac names
-		nameID = font_obj["name"].addMultilingualName(names, minNameID=256)
-		# Because there is no name ID with the name 'Weight',
-		# take the next available name ID -> minNameID=256
-		self.assertEqual(256, nameID)
 
 	def test_decompile_badOffset(self):
                 # https://github.com/fonttools/fonttools/issues/525
