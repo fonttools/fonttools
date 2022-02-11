@@ -1402,7 +1402,7 @@ def test_buildStatTable(axes, axisValues, elidedFallbackName, expected_ttx):
     assert expected_ttx == ttx
 
 
-def test_buildStatTable_name_duplicates():
+def test_buildStatTable_platform_specific_names():
     # PR: https://github.com/fonttools/fonttools/pull/2528
     # Introduce new 'platform' feature for creating a STAT table.
     # Set windowsNames and or macNames to create name table entries
