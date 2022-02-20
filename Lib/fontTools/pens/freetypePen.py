@@ -72,16 +72,17 @@ class FreeTypePen(BasePen):
             from fontTools.misc.transform import Offset
 
             en1, en2, ar, ja = 'Typesetting', 'Jeff', 'صف الحروف', 'たいぷせっと'
-            for text, font_path, direction, typo_ascender, typo_descender, vhea_ascender, vhea_descender, contain, features in (
-                (en1, 'NotoSans-Regular.ttf',       'ltr', 2189, -600, None, None, False, {"kern": True, "liga": True}),
-                (en2, 'NotoSans-Regular.ttf',       'ltr', 2189, -600, None, None, True,  {"kern": True, "liga": True}),
-                (ar,  'NotoSansArabic-Regular.ttf', 'rtl', 1374, -738, None, None, False, {"kern": True, "liga": True}),
-                (ja,  'NotoSansJP-Regular.otf',     'ltr', 880,  -120, 500,  -500, False, {"palt": True, "kern": True}),
-                (ja,  'NotoSansJP-Regular.otf',     'ttb', 880,  -120, 500,  -500, False, {"vert": True, "vpal": True, "vkrn": True})
+            for text, font_path, direction, contain, features in (
+                (en1, 'NotoSans-Regular.ttf',       'ltr', False, {"kern": True, "liga": True}),
+                (en2, 'NotoSans-Regular.ttf',       'ltr', True,  {"kern": True, "liga": True}),
+                (ar,  'NotoSansArabic-Regular.ttf', 'rtl', False, {"kern": True, "liga": True}),
+                (ja,  'NotoSansJP-Regular.otf',     'ltr', False, {"palt": True, "kern": True}),
+                (ja,  'NotoSansJP-Regular.otf',     'ttb', False, {"vert": True, "vpal": True, "vkrn": True})
             ):
                 blob = hb.Blob.from_file_path(font_path)
                 face = hb.Face(blob)
                 font = hb.Font(face)
+                extents = font.get_font_extents(direction)
                 buf = hb.Buffer()
                 buf.direction = direction
                 buf.add_str(text)
@@ -100,12 +101,12 @@ class FreeTypePen(BasePen):
 
                 offset, width, height = None, None, None
                 if direction in ('ltr', 'rtl'):
-                    offset = (0, -typo_descender)
+                    offset = (0, -extents.descender)
                     width  = x
-                    height = typo_ascender - typo_descender
+                    height = extents.ascender - extents.descender
                 else:
-                    offset = (-vhea_descender, -y)
-                    width  = vhea_ascender - vhea_descender
+                    offset = (-extents.descender, -y)
+                    width  = extents.ascender - extents.descender
                     height = -y
                 pen.show(width=width, height=height, transform=Offset(*offset), contain=contain)
 
