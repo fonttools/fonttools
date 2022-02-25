@@ -102,7 +102,7 @@ class FoundANone(VarLibMergeError):
 
     @property
     def offender(self):
-        cause = self.argv[0]
+        cause = self.args[0]
         index = [x is None for x in cause["got"]].index(True)
         return index, self._master_name(index)
 
