@@ -102,13 +102,12 @@ class FoundANone(VarLibMergeError):
 
     @property
     def offender(self):
-        cause = self.args[0]
-        index = [x is None for x in cause["got"]].index(True)
+        index = [x is None for x in self.cause["got"]].index(True)
         return index, self._master_name(index)
 
     @property
     def details(self):
-        cause, stack = self.args[0], self.args[1:]
+        cause, stack = self.cause, self.stack
         return f"{stack[0]}=={cause['got']}\n"
 
 
@@ -137,8 +136,7 @@ class UnsupportedFormat(VarLibMergeError):
 
     @property
     def reason(self):
-        cause, stack = self.args[0], self.args[1:]
-        return self.__doc__ % cause["subtable"]
+        return self.__doc__ % self.cause["subtable"]
 
 
 class UnsupportedFormat(UnsupportedFormat):
