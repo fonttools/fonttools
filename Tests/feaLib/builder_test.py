@@ -78,7 +78,7 @@ class BuilderTest(unittest.TestCase):
         LigatureSubtable AlternateSubtable MultipleSubstSubtable 
         SingleSubstSubtable aalt_chain_contextual_subst AlternateChained 
         MultipleLookupsPerGlyph MultipleLookupsPerGlyph2 GSUB_6_formats
-        GSUB_5_formats delete_glyph STAT_test STAT_test_elidedFallbackNameID
+        delete_glyph STAT_test STAT_test_elidedFallbackNameID
         variable_scalar_valuerecord variable_scalar_anchor variable_conditionset
     """.split()
 

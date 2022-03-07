@@ -30,53 +30,61 @@
     <LookupList>
       <!-- LookupCount=5 -->
       <Lookup index="0">
-        <LookupType value="5"/>
+        <LookupType value="6"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=4 -->
-        <ContextSubst index="0" Format="3">
-          <!-- GlyphCount=1 -->
-          <!-- SubstCount=1 -->
-          <Coverage index="0">
+        <ChainContextSubst index="0" Format="3">
+          <!-- BacktrackGlyphCount=0 -->
+          <!-- InputGlyphCount=1 -->
+          <InputCoverage index="0">
             <Glyph value="G"/>
-          </Coverage>
+          </InputCoverage>
+          <!-- LookAheadGlyphCount=0 -->
+          <!-- SubstCount=1 -->
           <SubstLookupRecord index="0">
             <SequenceIndex value="0"/>
             <LookupListIndex value="1"/>
           </SubstLookupRecord>
-        </ContextSubst>
-        <ContextSubst index="1" Format="3">
-          <!-- GlyphCount=1 -->
-          <!-- SubstCount=1 -->
-          <Coverage index="0">
+        </ChainContextSubst>
+        <ChainContextSubst index="1" Format="3">
+          <!-- BacktrackGlyphCount=0 -->
+          <!-- InputGlyphCount=1 -->
+          <InputCoverage index="0">
             <Glyph value="H"/>
-          </Coverage>
+          </InputCoverage>
+          <!-- LookAheadGlyphCount=0 -->
+          <!-- SubstCount=1 -->
           <SubstLookupRecord index="0">
             <SequenceIndex value="0"/>
             <LookupListIndex value="2"/>
           </SubstLookupRecord>
-        </ContextSubst>
-        <ContextSubst index="2" Format="3">
-          <!-- GlyphCount=1 -->
-          <!-- SubstCount=1 -->
-          <Coverage index="0">
+        </ChainContextSubst>
+        <ChainContextSubst index="2" Format="3">
+          <!-- BacktrackGlyphCount=0 -->
+          <!-- InputGlyphCount=1 -->
+          <InputCoverage index="0">
             <Glyph value="G"/>
-          </Coverage>
+          </InputCoverage>
+          <!-- LookAheadGlyphCount=0 -->
+          <!-- SubstCount=1 -->
           <SubstLookupRecord index="0">
             <SequenceIndex value="0"/>
             <LookupListIndex value="3"/>
           </SubstLookupRecord>
-        </ContextSubst>
-        <ContextSubst index="3" Format="3">
-          <!-- GlyphCount=1 -->
-          <!-- SubstCount=1 -->
-          <Coverage index="0">
+        </ChainContextSubst>
+        <ChainContextSubst index="3" Format="3">
+          <!-- BacktrackGlyphCount=0 -->
+          <!-- InputGlyphCount=1 -->
+          <InputCoverage index="0">
             <Glyph value="H"/>
-          </Coverage>
+          </InputCoverage>
+          <!-- LookAheadGlyphCount=0 -->
+          <!-- SubstCount=1 -->
           <SubstLookupRecord index="0">
             <SequenceIndex value="0"/>
             <LookupListIndex value="4"/>
           </SubstLookupRecord>
-        </ContextSubst>
+        </ChainContextSubst>
       </Lookup>
       <Lookup index="1">
         <LookupType value="1"/>
