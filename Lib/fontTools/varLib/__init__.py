@@ -230,7 +230,7 @@ def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
 			for m in master_ttfs]
 
 	for glyph in font.getGlyphOrder():
-
+		log.debug("building gvar for glyph '%s'", glyph)
 		isComposite = glyf[glyph].isComposite()
 
 		allData = [
