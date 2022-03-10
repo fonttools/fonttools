@@ -1,3 +1,12 @@
+- [varLib] Added debug logger showing the glyph name for which ``gvar`` is built (#2542).
+- [varLib.errors] Fixed undefined names in ``FoundANone`` and ``UnsupportedFormat``
+  exceptions (ac4d5611).
+- [otlLib.builder] Added ``windowsNames`` and ``macNames`` (bool) parameters to the
+  ``buildStatTabe`` function, so that one can select whether to only add one or both
+  of the two sets (#2528).
+- [t1Lib] Added the ability to recreate PostScript stream (#2504).
+- [name] Added ``getFirstDebugName``, ``getBest{Family,SubFamily,Full}Name`` methods (#2526).
+
 4.29.1 (released 2022-02-01)
 ----------------------------
 
