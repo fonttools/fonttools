@@ -1,6 +1,7 @@
 import io
 import os
 import re
+import random
 from fontTools.ttLib import TTFont, newTable, registerCustomTableClass, unregisterCustomTableClass
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
 
@@ -118,3 +119,21 @@ def test_virtualGlyphId():
         font.saveXML(out)
         outxml = normalize_TTX(out.getvalue()).splitlines()
         assert xml == outxml
+
+
+def test_setGlyphOrder_also_updates_glyf_glyphOrder():
+    # https://github.com/fonttools/fonttools/issues/2060#issuecomment-1063932428
+    font = TTFont()
+    font.importXML(os.path.join(DATA_DIR, "TestTTF-Regular.ttx"))
+    current_order = font.getGlyphOrder()
+
+    assert current_order == font["glyf"].glyphOrder
+
+    new_order = list(current_order)
+    while new_order == current_order:
+        random.shuffle(new_order)
+
+    font.setGlyphOrder(new_order)
+
+    assert font.getGlyphOrder() == new_order
+    assert font["glyf"].glyphOrder == new_order
