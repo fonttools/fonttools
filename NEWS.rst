@@ -1,3 +1,6 @@
+4.30.0 (released 2022-03-10)
+----------------------------
+
 - [varLib] Added debug logger showing the glyph name for which ``gvar`` is built (#2542).
 - [varLib.errors] Fixed undefined names in ``FoundANone`` and ``UnsupportedFormat``
   exceptions (ac4d5611).
