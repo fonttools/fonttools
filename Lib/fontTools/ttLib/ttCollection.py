@@ -26,8 +26,10 @@ class TTCollection(object):
 
 		assert 'fontNumber' not in kwargs, kwargs
 
+		closeStream = False
 		if not hasattr(file, "read"):
 			file = open(file, "rb")
+			closeStream = True
 
 		tableCache = {} if shareTables else None
 
@@ -35,13 +37,16 @@ class TTCollection(object):
 		for i in range(header.numFonts):
 			font = TTFont(file, fontNumber=i, _tableCache=tableCache, **kwargs)
 			fonts.append(font)
-			
+
+		if closeStream:
+			file.close()
+
 	def __enter__(self):
 		return self
-	
+
 	def __exit__(self, type, value, traceback):
 		self.close()
-		
+
 	def close(self):
 		for font in self.fonts:
 			font.close()
