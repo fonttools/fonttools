@@ -548,12 +548,17 @@ class Coverage(FormatSwitchingBaseTable):
 		if glyphs is None:
 			glyphs = self.glyphs = []
 		format = 1
+
+		glyphIDs = font.getGlyphIDMany(glyphs)
+		if sorted(glyphIDs) != glyphIDs:
+			log.debug("GSUB/GPOS Coverage is not sorted by glyph ids.")
+			glyphs = sorted(glyphs, key=font.getGlyphID)
+			glyphIDs = font.getGlyphIDMany(glyphs)
+			assert sorted(glyphIDs) == glyphIDs
+
 		rawTable = {"GlyphArray": glyphs}
 		if glyphs:
 			# find out whether Format 2 is more compact or not
-			glyphIDs = font.getGlyphIDMany(glyphs)
-			brokenOrder = sorted(glyphIDs) != glyphIDs
-
 			last = glyphIDs[0]
 			ranges = [[last]]
 			for glyphID in glyphIDs[1:]:
@@ -563,23 +568,17 @@ class Coverage(FormatSwitchingBaseTable):
 				last = glyphID
 			ranges[-1].append(last)
 
-			if brokenOrder or len(ranges) * 3 < len(glyphs):  # 3 words vs. 1 word
+			if len(ranges) * 3 < len(glyphs):  # 3 words vs. 1 word
 				# Format 2 is more compact
 				index = 0
 				for i in range(len(ranges)):
 					start, end = ranges[i]
 					r = RangeRecord()
-					r.StartID = start
 					r.Start = font.getGlyphName(start)
 					r.End = font.getGlyphName(end)
 					r.StartCoverageIndex = index
 					ranges[i] = r
 					index = index + end - start + 1
-				if brokenOrder:
-					log.warning("GSUB/GPOS Coverage is not sorted by glyph ids.")
-					ranges.sort(key=lambda a: a.StartID)
-				for r in ranges:
-					del r.StartID
 				format = 2
 				rawTable = {"RangeRecord": ranges}
 			#else:
