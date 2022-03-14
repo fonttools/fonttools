@@ -451,6 +451,8 @@ class TTFont(object):
 		self.glyphOrder = glyphOrder
 		if hasattr(self, '_reverseGlyphOrderDict'):
 			del self._reverseGlyphOrderDict
+		if self.isLoaded("glyf"):
+			self["glyf"].setGlyphOrder(glyphOrder)
 
 	def getGlyphOrder(self):
 		"""Returns a list of glyph names ordered by their position in the font."""
