@@ -115,7 +115,6 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 	def ensureDecompiled(self):
 		for glyph in self.glyphs.values():
 			glyph.expand(self)
-		return self
 
 	def compile(self, ttFont):
 		if not hasattr(self, "glyphOrder"):

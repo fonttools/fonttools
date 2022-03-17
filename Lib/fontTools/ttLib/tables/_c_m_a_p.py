@@ -162,7 +162,6 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 	def ensureDecompiled(self):
 		for st in self.tables:
 			st.ensureDecompiled()
-		return self
 
 	def compile(self, ttFont):
 		self.tables.sort()  # sort according to the spec; see CmapSubtable.__lt__()
@@ -246,7 +245,6 @@ class CmapSubtable(object):
 		self.data = None	# Once this table has been decompiled, make sure we don't
 							# just return the original data. Also avoids recursion when
 							# called with an attribute that the cmap subtable doesn't have.
-		return self
 
 	def __getattr__(self, attr):
 		# allow lazy decompilation of subtables.
