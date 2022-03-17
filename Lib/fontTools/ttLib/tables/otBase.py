@@ -4,6 +4,7 @@ import sys
 import array
 import struct
 import logging
+from typing import Iterator, NamedTuple, Optional
 
 log = logging.getLogger(__name__)
 
@@ -608,7 +609,7 @@ class BaseTable(object):
 			self.decompile(reader, font)
 		if recurse:
 			for subtable in self.iterSubTables():
-				subtable.ensureDecompiled(recurse)
+				subtable.value.ensureDecompiled(recurse)
 
 	@classmethod
 	def getRecordSize(cls, reader):
@@ -857,15 +858,36 @@ class BaseTable(object):
 
 		return self.__dict__ == other.__dict__
 
-	def iterSubTables(self):
+	class SubTableEntry(NamedTuple):
+		"""See BaseTable.iterSubTables()"""
+		name: str
+		value: "BaseTable"
+		index: Optional[int] = None  # index into given array, None for single values
+
+	def iterSubTables(self) -> Iterator[SubTableEntry]:
+		"""Yield (name, value, index) namedtuples for all subtables of current table.
+
+		A sub-table is an instance of BaseTable (or subclass thereof) that is a child
+		of self, the current parent table.
+		The tuples also contain the attribute name (str) of the of parent table to get
+		a subtable, and optionally, for lists of subtables (i.e. attributes associated
+		with a converter that has a 'repeat'), an index into the list containing the
+		given subtable value.
+		This method can be useful to traverse trees of otTables.
+		"""
 		for conv in self.getConverters():
-			value = getattr(self, conv.name, None)
+			name = conv.name
+			value = getattr(self, name, None)
 			if value is None:
 				continue
 			if isinstance(value, BaseTable):
-				yield value
+				yield self.SubTableEntry(name, value)
 			elif isinstance(value, list):
-				yield from (v for v in value if isinstance(v, BaseTable))
+				yield from (
+					self.SubTableEntry(name, v, index=i)
+					for i, v in enumerate(value)
+					if isinstance(v, BaseTable)
+				)
 
 
 class FormatSwitchingBaseTable(BaseTable):
