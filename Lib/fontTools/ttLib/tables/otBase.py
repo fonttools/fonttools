@@ -110,6 +110,7 @@ class BaseTTXConverter(DefaultTable):
 
 	def ensureDecompiled(self):
 		self.table.ensureDecompiled(recurse=True)
+		return self
 
 
 # https://github.com/fonttools/fonttools/pull/2285#issuecomment-834652928
@@ -609,6 +610,7 @@ class BaseTable(object):
 		if recurse:
 			for subtable in self.iterSubTables():
 				subtable.ensureDecompiled(recurse)
+		return self
 
 	@classmethod
 	def getRecordSize(cls, reader):
