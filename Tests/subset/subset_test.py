@@ -801,6 +801,16 @@ class SubsetTest(unittest.TestCase):
             ["GlyphOrder", "GPOS"],
         )
 
+    def test_harfbuzz_repacker(self):
+        _, fontpath = self.compile_font(self.getpath("harfbuzz_repacker.ttx"), ".otf")
+        subsetpath = self.temp_path(".otf")
+        subset.main([fontpath, "--unicodes=0x53a9", "--layout-features=*",
+                     "--output-file=%s" % subsetpath])
+        subsetfont = TTFont(subsetpath)
+        self.expect_ttx(subsetfont, self.getpath("expect_harfbuzz_repacker.ttx"),
+                        ["GSUB"])
+
+
 
 @pytest.fixture
 def featureVarsTestFont():

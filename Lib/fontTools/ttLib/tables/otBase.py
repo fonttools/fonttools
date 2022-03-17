@@ -8,6 +8,13 @@ from typing import Iterator, NamedTuple, Optional
 
 log = logging.getLogger(__name__)
 
+have_uharfbuzz = False
+try:
+	import uharfbuzz as hb
+	have_uharfbuzz = True
+except ImportError:
+	pass
+
 class OverflowErrorRecord(object):
 	def __init__(self, overflowTuple):
 		self.tableType = overflowTuple[0]
@@ -71,6 +78,12 @@ class BaseTTXConverter(DefaultTable):
 			try:
 				writer = OTTableWriter(tableTag=self.tableTag)
 				self.table.compile(writer, font)
+				if have_uharfbuzz and self.tableTag in ("GSUB", "GPOS"):
+					try:
+						return writer.getAllDataUsingHarfbuzz()
+					except (ValueError, MemoryError, hb.RepackerError) as e:
+						log.error("hb.repack failed, reverting to pure-python serializer; the error message was: %s", e)
+						return writer.getAllData(remove_duplicate=False)
 				return writer.getAllData()
 
 			except OTLOffsetOverflowError as e:
@@ -298,6 +311,20 @@ class OTTableWriter(object):
 
 		return bytesjoin(items)
 
+	def getDataForHarfbuzz(self):
+		"""Assemble the data for this writer/table with all offset field set to 0"""
+		items = list(self.items)
+		packFuncs = {2: packUShort, 3: packUInt24, 4: packULong}
+		for i, item in enumerate(items):
+			if hasattr(item, "getData"):
+				# Offset value is not needed in harfbuzz repacker, so setting offset to 0 to avoid overflow here
+				if item.offsetSize in packFuncs:
+					items[i] = packFuncs[item.offsetSize](0)
+				else:
+					raise ValueError(item.offsetSize)
+
+		return bytesjoin(items)
+
 	def __hash__(self):
 		# only works after self._doneWriting() has been called
 		return hash(self.items)
@@ -402,10 +429,94 @@ class OTTableWriter(object):
 
 		selfTables.append(self)
 
-	def getAllData(self):
-		"""Assemble all data, including all subtables."""
+	def _gatherGraphForHarfbuzz(self, tables, obj_list, done, objidx, virtual_edges):
+		real_links = []
+		virtual_links = []
+		item_idx = objidx
+
+		# Merge virtual_links from parent
+		for idx in virtual_edges:
+			virtual_links.append((0, 0, idx))
+
+		sortCoverageLast = False
+		coverage_idx = 0
+		if hasattr(self, "sortCoverageLast"):
+			# Find coverage table
+			for i, item in enumerate(self.items):
+				if getattr(item, 'name', None) == "Coverage":
+					sortCoverageLast = True
+					if id(item) not in done:
+						coverage_idx = item_idx = item._gatherGraphForHarfbuzz(tables, obj_list, done, item_idx, virtual_edges)
+					else:
+						coverage_idx = done[id(item)]
+					virtual_edges.append(coverage_idx)
+					break
+
+		child_idx = 0
+		offset_pos = 0
+		for i, item in enumerate(self.items):
+			if hasattr(item, "getData"):
+				pos = offset_pos
+			elif hasattr(item, "getCountData"):
+				offset_pos += item.size
+				continue
+			else:
+				offset_pos = offset_pos + len(item)
+				continue
+
+			if id(item) not in done:
+				child_idx = item_idx = item._gatherGraphForHarfbuzz(tables, obj_list, done, item_idx, virtual_edges)
+			else:
+				child_idx = done[id(item)]
+                        
+			real_edge = (pos, item.offsetSize, child_idx)
+			real_links.append(real_edge)
+			offset_pos += item.offsetSize
+
+		tables.append(self)
+		obj_list.append((real_links,virtual_links))
+		item_idx += 1
+		done[id(self)] = item_idx
+		if sortCoverageLast:
+			virtual_edges.pop()
+
+		return item_idx
+
+	def getAllDataUsingHarfbuzz(self):
+		"""The Whole table is represented as a Graph.
+                Assemble graph data and call Harfbuzz repacker to pack the table.
+                Harfbuzz repacker is faster and retain as much sub-table sharing as possible, see also:
+                https://github.com/harfbuzz/harfbuzz/blob/main/docs/repacker.md
+                The input format for hb.repack() method is explained here:
+                https://github.com/harfbuzz/uharfbuzz/blob/main/src/uharfbuzz/_harfbuzz.pyx#L1149
+                """
 		internedTables = {}
 		self._doneWriting(internedTables)
+		tables = []
+		obj_list = []
+		done = {}
+		objidx = 0
+		virtual_edges = []
+		self._gatherGraphForHarfbuzz(tables, obj_list, done, objidx, virtual_edges)
+		# Gather all data in two passes: the absolute positions of all
+		# subtable are needed before the actual data can be assembled.
+		pos = 0
+		for table in tables:
+			table.pos = pos
+			pos = pos + table.getDataLength()
+
+		data = []
+		for table in tables:
+			tableData = table.getDataForHarfbuzz()
+			data.append(tableData)
+
+		return hb.repack(data, obj_list)
+
+	def getAllData(self, remove_duplicate=True):
+		"""Assemble all data, including all subtables."""
+		if remove_duplicate:
+			internedTables = {}
+			self._doneWriting(internedTables)
 		tables = []
 		extTables = []
 		done = {}
