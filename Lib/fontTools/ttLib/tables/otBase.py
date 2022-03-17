@@ -851,6 +851,16 @@ class BaseTable(object):
 
 		return self.__dict__ == other.__dict__
 
+	def iterSubTables(self):
+		for conv in self.getConverters():
+			value = getattr(self, conv.name, None)
+			if value is None:
+				continue
+			if isinstance(value, BaseTable):
+				yield value
+			elif isinstance(value, list):
+				yield from (v for v in value if isinstance(v, BaseTable))
+
 
 class FormatSwitchingBaseTable(BaseTable):
 
@@ -862,6 +872,13 @@ class FormatSwitchingBaseTable(BaseTable):
 		return NotImplemented
 
 	def getConverters(self):
+		try:
+			fmt = self.Format
+		except AttributeError:
+			# some FormatSwitchingBaseTables (e.g. Coverage) no longer have 'Format'
+			# attribute after fully decompiled, only gain one in preWrite before being
+			# recompiled.
+			return []
 		return self.converters.get(self.Format, [])
 
 	def getConverterByName(self, name):
