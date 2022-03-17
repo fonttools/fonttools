@@ -2,8 +2,12 @@ import io
 import os
 import re
 import random
+from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
 from fontTools.ttLib import TTFont, newTable, registerCustomTableClass, unregisterCustomTableClass
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
+from fontTools.ttLib.tables._c_m_a_p import CmapSubtable
+import pytest
+
 
 DATA_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "data")
 
@@ -137,3 +141,74 @@ def test_setGlyphOrder_also_updates_glyf_glyphOrder():
 
     assert font.getGlyphOrder() == new_order
     assert font["glyf"].glyphOrder == new_order
+
+
+@pytest.mark.parametrize("lazy", [None, True, False])
+def test_ensureDecompiled(lazy):
+    # test that no matter the lazy value, ensureDecompiled decompiles all tables
+    font = TTFont()
+    font.importXML(os.path.join(DATA_DIR, "TestTTF-Regular.ttx"))
+    # test font has no OTL so we add some, as an example of otData-driven tables
+    addOpenTypeFeaturesFromString(
+        font,
+        """
+        feature calt {
+            sub period' period' period' space by ellipsis;
+        } calt;
+
+        feature dist {
+            pos period period -30;
+        } dist;
+        """
+    )
+    # also add an additional cmap subtable that will be lazily-loaded
+    cm = CmapSubtable.newSubtable(14)
+    cm.platformID = 0
+    cm.platEncID = 5
+    cm.language = 0
+    cm.cmap = {}
+    cm.uvsDict = {0xFE00: [(0x002e, None)]}
+    font["cmap"].tables.append(cm)
+
+    # save and reload, potentially lazily
+    buf = io.BytesIO()
+    font.save(buf)
+    buf.seek(0)
+    font = TTFont(buf, lazy=lazy)
+
+    # check no table is loaded until/unless requested, no matter the laziness
+    for tag in font.keys():
+        assert not font.isLoaded(tag)
+
+    if lazy is not False:
+        # additional cmap doesn't get decompiled automatically unless lazy=False;
+        # can't use hasattr or else cmap's maginc __getattr__ kicks in...
+        cm = next(st for st in font["cmap"].tables if st.__dict__["format"] == 14)
+        assert cm.data is not None
+        assert "uvsDict" not in cm.__dict__
+        # glyf glyphs are not expanded unless lazy=False
+        assert font["glyf"].glyphs["period"].data is not None
+        assert not hasattr(font["glyf"].glyphs["period"], "coordinates")
+
+    if lazy is True:
+        # OTL tables hold a 'reader' to lazily load when lazy=True
+        assert "reader" in font["GSUB"].table.LookupList.__dict__
+        assert "reader" in font["GPOS"].table.LookupList.__dict__
+
+    font.ensureDecompiled()
+
+    # all tables are decompiled now
+    for tag in font.keys():
+        assert font.isLoaded(tag)
+    # including the additional cmap
+    cm = next(st for st in font["cmap"].tables if st.__dict__["format"] == 14)
+    assert cm.data is None
+    assert "uvsDict" in cm.__dict__
+    # expanded glyf glyphs lost the 'data' attribute
+    assert not hasattr(font["glyf"].glyphs["period"], "data")
+    assert hasattr(font["glyf"].glyphs["period"], "coordinates")
+    # and OTL tables have read their 'reader'
+    assert "reader" not in font["GSUB"].table.LookupList.__dict__
+    assert "Lookup" in font["GSUB"].table.LookupList.__dict__
+    assert "reader" not in font["GPOS"].table.LookupList.__dict__
+    assert "Lookup" in font["GPOS"].table.LookupList.__dict__
