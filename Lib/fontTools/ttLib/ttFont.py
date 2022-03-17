@@ -129,7 +129,7 @@ class TTFont(object):
 			closeStream = False
 			file.seek(0)
 
-		if self.lazy is None:
+		if not self.lazy:
 			# read input file in memory and wrap a stream around it to allow overwriting
 			file.seek(0)
 			tmp = BytesIO(file.read())
@@ -139,18 +139,11 @@ class TTFont(object):
 			if closeStream:
 				file.close()
 			file = tmp
-
 		self._tableCache = _tableCache
 		self.reader = SFNTReader(file, checkChecksums, fontNumber=fontNumber)
 		self.sfntVersion = self.reader.sfntVersion
 		self.flavor = self.reader.flavor
 		self.flavorData = self.reader.flavorData
-
-		if self.lazy is False:
-			# if lazy=False immediately load all the tables
-			self.ensureDecompiled()
-			if closeStream:
-				file.close()
 
 	def __enter__(self):
 		return self
