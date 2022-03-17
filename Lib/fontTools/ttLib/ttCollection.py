@@ -38,7 +38,12 @@ class TTCollection(object):
 			font = TTFont(file, fontNumber=i, _tableCache=tableCache, **kwargs)
 			fonts.append(font)
 
-		if closeStream:
+		# don't close file if lazy=True, as the TTFont hold a reference to the original
+		# file; the file will be closed once the TTFonts are closed in the
+		# TTCollection.close(). We still want to close the file if lazy is None or
+		# False, because in that case the TTFont no longer need the original file
+		# and we want to avoid 'ResourceWarning: unclosed file'.
+		if not kwargs.get("lazy") and closeStream:
 			file.close()
 
 	def __enter__(self):
