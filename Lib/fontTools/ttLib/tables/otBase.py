@@ -108,6 +108,9 @@ class BaseTTXConverter(DefaultTable):
 		self.table.fromXML(name, attrs, content, font)
 		self.table.populateDefaults()
 
+	def ensureDecompiled(self):
+		self.table.ensureDecompiled(recurse=True)
+
 
 # https://github.com/fonttools/fonttools/pull/2285#issuecomment-834652928
 assert len(struct.pack('i', 0)) == 4
@@ -596,13 +599,16 @@ class BaseTable(object):
 
 		raise AttributeError(attr)
 
-	def ensureDecompiled(self):
+	def ensureDecompiled(self, recurse=False):
 		reader = self.__dict__.get("reader")
 		if reader:
 			del self.reader
 			font = self.font
 			del self.font
 			self.decompile(reader, font)
+		if recurse:
+			for subtable in self.iterSubTables():
+				subtable.ensureDecompiled(recurse)
 
 	@classmethod
 	def getRecordSize(cls, reader):
