@@ -1,3 +1,6 @@
+4.31.0 (released 2022-03-18)
+----------------------------
+
 - [ttCollection] Fixed 'ResourceWarning: unclosed file' warning (#2549).
 - [varLib.merger] Handle merging SinglePos with valueformat=0 (#2550).
 - [ttFont] Update glyf's glyphOrder when calling TTFont.setGlyphOrder() (#2544).
