@@ -905,7 +905,9 @@ class FormatSwitchingBaseTable(BaseTable):
 		except AttributeError:
 			# some FormatSwitchingBaseTables (e.g. Coverage) no longer have 'Format'
 			# attribute after fully decompiled, only gain one in preWrite before being
-			# recompiled.
+			# recompiled. In the decompiled state, these hand-coded classes defined in
+			# otTables.py lose their format-specific nature and gain more high-level
+			# attributes that are not tied to converters.
 			return []
 		return self.converters.get(self.Format, [])
 
