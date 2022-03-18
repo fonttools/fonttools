@@ -110,8 +110,11 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		if noname:
 			log.warning('%s glyphs have no name', noname)
 		if ttFont.lazy is False: # Be lazy for None and True
-			for glyph in self.glyphs.values():
-				glyph.expand(self)
+			self.ensureDecompiled()
+
+	def ensureDecompiled(self):
+		for glyph in self.glyphs.values():
+			glyph.expand(self)
 
 	def compile(self, ttFont):
 		if not hasattr(self, "glyphOrder"):

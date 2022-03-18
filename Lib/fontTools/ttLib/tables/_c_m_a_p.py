@@ -156,6 +156,12 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 			else:
 				seenOffsets[offset] = i
 			tables.append(table)
+		if ttFont.lazy is False:  # Be lazy for None and True
+			self.ensureDecompiled()
+
+	def ensureDecompiled(self):
+		for st in self.tables:
+			st.ensureDecompiled()
 
 	def compile(self, ttFont):
 		self.tables.sort()  # sort according to the spec; see CmapSubtable.__lt__()
@@ -232,16 +238,21 @@ class CmapSubtable(object):
 		self.platEncID = None   #: The encoding ID of this subtable (interpretation depends on ``platformID``)
 		self.language = None    #: The language ID of this subtable (Macintosh platform only)
 
+	def ensureDecompiled(self):
+		if self.data is None:
+			return
+		self.decompile(None, None) # use saved data.
+		self.data = None	# Once this table has been decompiled, make sure we don't
+							# just return the original data. Also avoids recursion when
+							# called with an attribute that the cmap subtable doesn't have.
+
 	def __getattr__(self, attr):
 		# allow lazy decompilation of subtables.
 		if attr[:2] == '__': # don't handle requests for member functions like '__lt__'
 			raise AttributeError(attr)
 		if self.data is None:
 			raise AttributeError(attr)
-		self.decompile(None, None) # use saved data.
-		self.data = None	# Once this table has been decompiled, make sure we don't
-							# just return the original data. Also avoids recursion when
-							# called with an attribute that the cmap subtable doesn't have.
+		self.ensureDecompiled()
 		return getattr(self, attr)
 
 	def decompileHeader(self, data, ttFont):

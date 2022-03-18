@@ -4,6 +4,7 @@ import sys
 import array
 import struct
 import logging
+from typing import Iterator, NamedTuple, Optional
 
 log = logging.getLogger(__name__)
 
@@ -107,6 +108,9 @@ class BaseTTXConverter(DefaultTable):
 			self.table = tableClass()
 		self.table.fromXML(name, attrs, content, font)
 		self.table.populateDefaults()
+
+	def ensureDecompiled(self):
+		self.table.ensureDecompiled(recurse=True)
 
 
 # https://github.com/fonttools/fonttools/pull/2285#issuecomment-834652928
@@ -596,13 +600,16 @@ class BaseTable(object):
 
 		raise AttributeError(attr)
 
-	def ensureDecompiled(self):
+	def ensureDecompiled(self, recurse=False):
 		reader = self.__dict__.get("reader")
 		if reader:
 			del self.reader
 			font = self.font
 			del self.font
 			self.decompile(reader, font)
+		if recurse:
+			for subtable in self.iterSubTables():
+				subtable.value.ensureDecompiled(recurse)
 
 	@classmethod
 	def getRecordSize(cls, reader):
@@ -851,6 +858,37 @@ class BaseTable(object):
 
 		return self.__dict__ == other.__dict__
 
+	class SubTableEntry(NamedTuple):
+		"""See BaseTable.iterSubTables()"""
+		name: str
+		value: "BaseTable"
+		index: Optional[int] = None  # index into given array, None for single values
+
+	def iterSubTables(self) -> Iterator[SubTableEntry]:
+		"""Yield (name, value, index) namedtuples for all subtables of current table.
+
+		A sub-table is an instance of BaseTable (or subclass thereof) that is a child
+		of self, the current parent table.
+		The tuples also contain the attribute name (str) of the of parent table to get
+		a subtable, and optionally, for lists of subtables (i.e. attributes associated
+		with a converter that has a 'repeat'), an index into the list containing the
+		given subtable value.
+		This method can be useful to traverse trees of otTables.
+		"""
+		for conv in self.getConverters():
+			name = conv.name
+			value = getattr(self, name, None)
+			if value is None:
+				continue
+			if isinstance(value, BaseTable):
+				yield self.SubTableEntry(name, value)
+			elif isinstance(value, list):
+				yield from (
+					self.SubTableEntry(name, v, index=i)
+					for i, v in enumerate(value)
+					if isinstance(v, BaseTable)
+				)
+
 
 class FormatSwitchingBaseTable(BaseTable):
 
@@ -862,6 +900,15 @@ class FormatSwitchingBaseTable(BaseTable):
 		return NotImplemented
 
 	def getConverters(self):
+		try:
+			fmt = self.Format
+		except AttributeError:
+			# some FormatSwitchingBaseTables (e.g. Coverage) no longer have 'Format'
+			# attribute after fully decompiled, only gain one in preWrite before being
+			# recompiled. In the decompiled state, these hand-coded classes defined in
+			# otTables.py lose their format-specific nature and gain more high-level
+			# attributes that are not tied to converters.
+			return []
 		return self.converters.get(self.Format, [])
 
 	def getConverterByName(self, name):
