@@ -1,3 +1,11 @@
+- [ttCollection] Fixed 'ResourceWarning: unclosed file' warning (#2549).
+- [varLib.merger] Handle merging SinglePos with valueformat=0 (#2550).
+- [ttFont] Update glyf's glyphOrder when calling TTFont.setGlyphOrder() (#2544).
+- [ttFont] Added ``ensureDecompiled`` method to load all tables irrespective
+  of the ``lazy`` attribute (#2551).
+- [otBase] Added ``iterSubTable`` method to iterate over BaseTable's children of
+  type BaseTable; useful for traversing a tree of otTables (#2551).
+
 4.30.0 (released 2022-03-10)
 ----------------------------
 
