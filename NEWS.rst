@@ -1,3 +1,6 @@
+- [subset] fix subsetting OT-SVG when glyph id attribute is on the root ``<svg>``
+  element (#2553).
+
 4.31.0 (released 2022-03-18)
 ----------------------------
 
