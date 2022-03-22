@@ -263,7 +263,7 @@ def merge(merger, self, lst):
 	# If all have same coverage table and all are format 1,
 	coverageGlyphs = self.Coverage.glyphs
 	if all(v.Format == 1 for v in lst) and all(coverageGlyphs == v.Coverage.glyphs for v in lst):
-		self.Value = otBase.ValueRecord(valueFormat)
+		self.Value = otBase.ValueRecord(valueFormat, self.Value)
 		if valueFormat != 0:
 			merger.mergeThings(self.Value, [v.Value for v in lst])
 		self.ValueFormat = self.Value.getFormat()

@@ -1476,6 +1476,23 @@ class InstantiateVariableFontTest(object):
 
         assert _dump_ttx(instance) == expected
 
+    def test_singlepos(self):
+        varfont = ttLib.TTFont(recalcTimestamp=False)
+        varfont.importXML(os.path.join(TESTDATA, "SinglePos.ttx"))
+
+        location = {"wght": 280, "opsz": 18}
+
+        instance = instancer.instantiateVariableFont(
+            varfont, location,
+        )
+
+        expected = _get_expected_instance_ttx(
+            "SinglePos", *location.values()
+        )
+
+        assert _dump_ttx(instance) == expected
+
+
 
 def _conditionSetAsDict(conditionSet, axisOrder):
     result = {}
