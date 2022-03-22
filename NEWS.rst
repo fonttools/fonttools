@@ -1,3 +1,8 @@
+4.31.2 (released 2022-03-22)
+----------------------------
+
+- [varLib] fix instantiation of GPOS SinglePos values (#2555).
+
 4.31.1 (released 2022-03-18)
 ----------------------------
 
