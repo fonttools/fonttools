@@ -1026,6 +1026,8 @@ def instantiateSTAT(varfont, axisLimits):
     newAxisValueTables = axisValuesFromAxisLimits(stat, axisLimits)
     stat.AxisValueArray.AxisValue = newAxisValueTables
     stat.AxisValueCount = len(stat.AxisValueArray.AxisValue)
+    if not stat.AxisValueCount:
+        stat.AxisValueArray = None
 
 
 def axisValuesFromAxisLimits(stat, axisLimits):
