@@ -58,3 +58,5 @@ Lib/**/*.c
 
 # Ctags
 tags
+
+.hypothesis

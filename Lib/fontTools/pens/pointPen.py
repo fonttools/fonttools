@@ -123,19 +123,15 @@ class BasePointToSegmentPen(AbstractPointPen):
 		if points[0][1] == "move":
 			# It's an open contour, insert a "move" segment for the first
 			# point and remove that first point from the point list.
-			pt, segmentType, smooth, name, kwargs = points[0]
+			pt, segmentType, smooth, name, kwargs = points.pop(0)
 			segments.append(("move", [(pt, smooth, name, kwargs)]))
-			points.pop(0)
 		else:
 			# It's a closed contour. Locate the first on-curve point, and
 			# rotate the point list so that it _ends_ with an on-curve
 			# point.
-			firstOnCurve = None
-			for i in range(len(points)):
-				segmentType = points[i][1]
-				if segmentType is not None:
-					firstOnCurve = i
-					break
+			firstOnCurve = next(
+				(i for i, (_, type, *_) in enumerate(points) if type is not None), None
+			)
 			if firstOnCurve is None:
 				# Special case for quadratics: a contour with no on-curve
 				# points. Add a "None" point. (See also the Pen protocol's
