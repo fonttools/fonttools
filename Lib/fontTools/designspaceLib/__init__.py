@@ -743,6 +743,21 @@ class BaseDocReader(LogMixin):
         self.readInstances()
         self.readLib()
 
+    def validateAttributes(self, element, attributeTypeMap):
+        for attributeName, attributeType in attributeTypeMap.items():
+            attrib = element.attrib.get(attributeName)
+            if attrib is None:
+                raise DesignSpaceDocumentError(
+                    "<%s> element missing required attribute '%s'"
+                    % (element.tag, attributeName))
+            try:
+                attributeType(attrib)
+            except Exception as e:
+                raise DesignSpaceDocumentError(
+                    "<%s> element attribute '%s' could not be converted "
+                    "to type %s"
+                    % (element.tag, attributeName, str(attributeType)))
+
     def readRules(self):
         # we also need to read any conditions that are outside of a condition set.
         rules = []
@@ -756,6 +771,7 @@ class BaseDocReader(LogMixin):
             self.documentObject.rulesProcessingLast = processingValue == "last"
         for ruleElement in self.root.findall(".rules/rule"):
             ruleObject = self.ruleDescriptorClass()
+            self.validateAttributes(ruleElement, {"name": str})
             ruleName = ruleObject.name = ruleElement.attrib.get("name")
             # read any stray conditions outside a condition set
             externalConditions = self._readConditionElements(
@@ -814,6 +830,13 @@ class BaseDocReader(LogMixin):
         if not axisElements:
             return
         for axisElement in axisElements:
+            self.validateAttributes(axisElement, {
+                "name": str,
+                "minimum": float,
+                "maximum": float,
+                "default": float,
+                "tag": str
+            })
             axisObject = self.axisDescriptorClass()
             axisObject.name = axisElement.attrib.get("name")
             axisObject.minimum = float(axisElement.attrib.get("minimum"))
@@ -904,11 +927,8 @@ class BaseDocReader(LogMixin):
                 self.log.warning("Location with undefined axis: \"%s\".", dimName)
                 continue
             xValue = yValue = None
-            try:
-                xValue = dimensionElement.attrib.get('xvalue')
-                xValue = float(xValue)
-            except ValueError:
-                self.log.warning("KeyError in readLocation xValue %3.3f", xValue)
+            self.validateAttributes(dimensionElement, {"xvalue": float})
+            xValue = float(dimensionElement.attrib.get('xvalue'))
             try:
                 yValue = dimensionElement.attrib.get('yvalue')
                 if yValue is not None:
