@@ -337,7 +337,7 @@ class CFFFontSet(object):
 				topDict = TopDict(
 					GlobalSubrs=self.GlobalSubrs,
 					cff2GetGlyphOrder=cff2GetGlyphOrder)
-				self.topDictIndex = TopDictIndex(None, cff2GetGlyphOrder, None)
+				self.topDictIndex = TopDictIndex(None, cff2GetGlyphOrder)
 			self.topDictIndex.append(topDict)
 			for element in content:
 				if isinstance(element, str):
@@ -375,7 +375,7 @@ class CFFFontSet(object):
 		filled via :meth:`decompile`.)"""
 		self.major = 2
 		cff2GetGlyphOrder = self.otFont.getGlyphOrder
-		topDictData = TopDictIndex(None, cff2GetGlyphOrder, None)
+		topDictData = TopDictIndex(None, cff2GetGlyphOrder)
 		topDictData.items = self.topDictIndex.items
 		self.topDictIndex = topDictData
 		topDict = topDictData[0]
