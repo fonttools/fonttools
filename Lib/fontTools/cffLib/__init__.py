@@ -1004,11 +1004,6 @@ class VarStoreData(object):
 
 	def decompile(self):
 		if self.file:
-			class GlobalState(object):
-				def __init__(self, tableType, cachingStats):
-					self.tableType = tableType
-					self.cachingStats = cachingStats
-			globalState = GlobalState(tableType="VarStore", cachingStats={})
 			# read data in from file. Assume position is correct.
 			length = readCard16(self.file)
 			self.data = self.file.read(length)
