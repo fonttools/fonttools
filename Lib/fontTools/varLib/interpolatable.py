@@ -305,7 +305,7 @@ def test(glyphsets, glyphs=None, names=None):
                     costs = [v for v in (_complex_vlen(_vdiff(c0, c1)) for i1,c1 in contour1)]
                     min_cost = min(costs)
                     first_cost = costs[0]
-                    if min_cost < first_cost:
+                    if min_cost < first_cost * .95:
                         add_problem(
                             glyph_name,
                             {
