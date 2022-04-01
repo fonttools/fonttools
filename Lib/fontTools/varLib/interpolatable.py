@@ -213,7 +213,6 @@ def test(glyphsets, glyphs=None, names=None):
                     # points.value is a list of pt,bool where bool is true if on-curve and false if off-curve;
                     # now check all rotations and mirror-rotations of the contour and build list of isomorphic
                     # possible starting points.
-                    #print(points.value)
                     bits = 0
                     for pt,b in points.value:
                         bits = (bits << 1) | b
@@ -294,23 +293,6 @@ def test(glyphsets, glyphs=None, names=None):
                         },
                     )
                     break
-                upem = 2048
-                item_cost = round(
-                    (matching_cost / len(m0) / len(m0[0])) ** 0.5 / upem * 100
-                )
-                hist.append(item_cost)
-                threshold = 7
-                if item_cost >= threshold:
-                    add_problem(
-                        glyph_name,
-                        {
-                            "type": "high_cost",
-                            "master_1": names[i],
-                            "master_2": names[i + 1],
-                            "value_1": item_cost,
-                            "value_2": threshold,
-                        },
-                    )
 
             for i, (m0, m1) in enumerate(zip(allContourIsomorphisms[:-1], allContourIsomorphisms[1:])):
                 if not m0:
@@ -435,16 +417,6 @@ def main(args=None):
                         % (
                             p["master_1"],
                             p["master_2"],
-                        )
-                    )
-                if p["type"] == "high_cost":
-                    print(
-                        "    Interpolation has high cost: cost of %s to %s = %i, threshold %i"
-                        % (
-                            p["master_1"],
-                            p["master_2"],
-                            p["value_1"],
-                            p["value_2"],
                         )
                     )
     if problems:
