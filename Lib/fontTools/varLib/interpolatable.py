@@ -166,7 +166,10 @@ def test(glyphsets, glyphs=None, names=None):
                 perContourPen = PerContourOrComponentPen(
                     RecordingPen, glyphset=glyphset
                 )
-                glyph.draw(perContourPen)
+                try:
+                    glyph.draw(perContourPen, outputImpliedClosingLine=True)
+                except TypeError:
+                    glyph.draw(perContourPen)
                 contourPens = perContourPen.value
                 del perContourPen
 

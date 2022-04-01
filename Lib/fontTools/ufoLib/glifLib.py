@@ -95,11 +95,11 @@ class Glyph:
 		self.glyphName = glyphName
 		self.glyphSet = glyphSet
 
-	def draw(self, pen):
+	def draw(self, pen, outputImpliedClosingLine=False):
 		"""
 		Draw this glyph onto a *FontTools* Pen.
 		"""
-		pointPen = PointToSegmentPen(pen)
+		pointPen = PointToSegmentPen(pen, outputImpliedClosingLine=outputImpliedClosingLine)
 		self.drawPoints(pointPen)
 
 	def drawPoints(self, pointPen):
