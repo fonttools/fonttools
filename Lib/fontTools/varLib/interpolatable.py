@@ -209,7 +209,7 @@ def test(glyphsets, glyphs=None, names=None):
                     if nodeVecs[0] == 'addComponent':
                         continue
                     assert nodeVecs[0] == 'moveTo'
-                    assert nodeVecs[-1] == 'closePath'
+                    assert nodeVecs[-1] in ('closePath', 'endPath')
                     points = RecordingPointPen()
                     converter = SegmentToPointPen(points, False)
                     contour.replay(converter)
