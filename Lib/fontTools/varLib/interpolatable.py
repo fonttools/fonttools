@@ -308,8 +308,10 @@ def test(glyphsets, glyphs=None, names=None):
                     break
 
             for i, (m0, m1) in enumerate(zip(allContourIsomorphisms[:-1], allContourIsomorphisms[1:])):
+                if len(m0) != len(m1):
+                    # We already reported this
+                    continue
                 if not m0:
-                    assert not m1
                     continue
                 for contour0,contour1 in zip(m0,m1):
                     c0 = contour0[0]
