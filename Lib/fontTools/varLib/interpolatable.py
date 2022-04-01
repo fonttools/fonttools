@@ -223,7 +223,7 @@ def test(glyphsets, glyphs=None, names=None):
                     for i in range(n):
                         b = ((bits << i) & mask) | ((bits >> (n - i)))
                         if b == bits:
-                            isomorphisms.append((i, _rot_list ([complex(*pt) for pt,bl in points.value], i)))
+                            isomorphisms.append(_rot_list ([complex(*pt) for pt,bl in points.value], i))
                     # TODO Add mirrors
 
             # Check each master against the next one in the list.
@@ -301,8 +301,8 @@ def test(glyphsets, glyphs=None, names=None):
                     assert not m1
                     continue
                 for contour0,contour1 in zip(m0,m1):
-                    c0 = contour0[0][1]
-                    costs = [v for v in (_complex_vlen(_vdiff(c0, c1)) for i1,c1 in contour1)]
+                    c0 = contour0[0]
+                    costs = [v for v in (_complex_vlen(_vdiff(c0, c1)) for c1 in contour1)]
                     min_cost = min(costs)
                     first_cost = costs[0]
                     if min_cost < first_cost * .95:
