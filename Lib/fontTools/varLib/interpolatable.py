@@ -224,7 +224,15 @@ def test(glyphsets, glyphs=None, names=None):
                         b = ((bits << i) & mask) | ((bits >> (n - i)))
                         if b == bits:
                             isomorphisms.append(_rot_list ([complex(*pt) for pt,bl in points.value], i))
-                    # TODO Add mirrors
+                    # Add mirrored rotations
+                    mirrored = list(reversed(points.value))
+                    reversed_bits = 0
+                    for pt,b in mirrored:
+                        reversed_bits = (reversed_bits << 1) | b
+                    for i in range(n):
+                        b = ((reversed_bits << i) & mask) | ((reversed_bits >> (n - i)))
+                        if b == bits:
+                            isomorphisms.append(_rot_list ([complex(*pt) for pt,bl in mirrored], i))
 
             # Check each master against the next one in the list.
             for i, (m0, m1) in enumerate(zip(allNodeTypes[:-1], allNodeTypes[1:])):
