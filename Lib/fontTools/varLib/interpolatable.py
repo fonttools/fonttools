@@ -281,7 +281,9 @@ def test(glyphsets, glyphs=None, names=None):
                     continue
                 costs = [[_vlen(_vdiff(v0, v1)) for v1 in m1] for v0 in m0]
                 matching, matching_cost = min_cost_perfect_bipartite_matching(costs)
-                if matching != list(range(len(m0))):
+                identity_matching = list(range(len(m0)))
+                identity_cost = sum(costs[i][i] for i in range(len(m0)))
+                if matching != identity_matching and matching_cost < identity_cost * .95:
                     add_problem(
                         glyph_name,
                         {
