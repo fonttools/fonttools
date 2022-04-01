@@ -7,12 +7,21 @@ $ fonttools varLib.interpolatable font1 font2 ...
 """
 
 from fontTools.pens.basePen import AbstractPen, BasePen
+from fontTools.pens.pointPen import SegmentToPointPen
 from fontTools.pens.recordingPen import RecordingPen
 from fontTools.pens.statisticsPen import StatisticsPen
 from fontTools.pens.momentsPen import OpenContourError
 from collections import OrderedDict
 import itertools
 import sys
+
+def _rot_list(l, k):
+	"""Rotate list by k items forward.  Ie. item at position 0 will be
+	at position k in returned list.  Negative k is allowed."""
+	n = len(l)
+	k %= n
+	if not k: return l
+	return l[n-k:] + l[:n-k]
 
 
 class PerContourPen(BasePen):
@@ -55,6 +64,21 @@ class PerContourOrComponentPen(PerContourPen):
         self.value[-1].addComponent(glyphName, transformation)
 
 
+class RecordingPointPen(BasePen):
+
+    def __init__(self):
+        self.value = []
+
+    def beginPath(self, identifier = None, **kwargs):
+        pass
+
+    def endPath(self) -> None:
+        pass
+
+    def addPoint(self, pt, segmentType=None):
+        self.value.append((pt, False if segmentType is None else True))
+
+
 def _vdiff(v0, v1):
     return tuple(b - a for a, b in zip(v0, v1))
 
@@ -63,6 +87,12 @@ def _vlen(vec):
     v = 0
     for x in vec:
         v += x * x
+    return v
+
+def _complex_vlen(vec):
+    v = 0
+    for x in vec:
+        v += abs(x) * abs(x)
     return v
 
 
@@ -125,6 +155,7 @@ def test(glyphsets, glyphs=None, names=None):
         try:
             allVectors = []
             allNodeTypes = []
+            allContourIsomorphisms = []
             for glyphset, name in zip(glyphsets, names):
                 # print('.', end='')
                 if glyph_name not in glyphset:
@@ -135,18 +166,24 @@ def test(glyphsets, glyphs=None, names=None):
                 perContourPen = PerContourOrComponentPen(
                     RecordingPen, glyphset=glyphset
                 )
-                glyph.draw(perContourPen)
+                try:
+                    glyph.draw(perContourPen, outputImpliedClosingLine=True)
+                except TypeError:
+                    glyph.draw(perContourPen)
                 contourPens = perContourPen.value
                 del perContourPen
 
                 contourVectors = []
+                contourIsomorphisms = []
                 nodeTypes = []
                 allNodeTypes.append(nodeTypes)
                 allVectors.append(contourVectors)
+                allContourIsomorphisms.append(contourIsomorphisms)
                 for ix, contour in enumerate(contourPens):
-                    nodeTypes.append(
-                        tuple(instruction[0] for instruction in contour.value)
-                    )
+
+                    nodeVecs = tuple(instruction[0] for instruction in contour.value)
+                    nodeTypes.append(nodeVecs)
+
                     stats = StatisticsPen(glyphset=glyphset)
                     try:
                         contour.replay(stats)
@@ -167,6 +204,38 @@ def test(glyphsets, glyphs=None, names=None):
                     )
                     contourVectors.append(vector)
                     # print(vector)
+
+                    # Check starting point
+                    if nodeVecs[0] == 'addComponent':
+                        continue
+                    assert nodeVecs[0] == 'moveTo'
+                    assert nodeVecs[-1] in ('closePath', 'endPath')
+                    points = RecordingPointPen()
+                    converter = SegmentToPointPen(points, False)
+                    contour.replay(converter)
+                    # points.value is a list of pt,bool where bool is true if on-curve and false if off-curve;
+                    # now check all rotations and mirror-rotations of the contour and build list of isomorphic
+                    # possible starting points.
+                    bits = 0
+                    for pt,b in points.value:
+                        bits = (bits << 1) | b
+                    n = len(points.value)
+                    mask = (1 << n ) - 1
+                    isomorphisms = []
+                    contourIsomorphisms.append(isomorphisms)
+                    for i in range(n):
+                        b = ((bits << i) & mask) | ((bits >> (n - i)))
+                        if b == bits:
+                            isomorphisms.append(_rot_list ([complex(*pt) for pt,bl in points.value], i))
+                    # Add mirrored rotations
+                    mirrored = list(reversed(points.value))
+                    reversed_bits = 0
+                    for pt,b in mirrored:
+                        reversed_bits = (reversed_bits << 1) | b
+                    for i in range(n):
+                        b = ((reversed_bits << i) & mask) | ((reversed_bits >> (n - i)))
+                        if b == bits:
+                            isomorphisms.append(_rot_list ([complex(*pt) for pt,bl in mirrored], i))
 
             # Check each master against the next one in the list.
             for i, (m0, m1) in enumerate(zip(allNodeTypes[:-1], allNodeTypes[1:])):
@@ -223,7 +292,9 @@ def test(glyphsets, glyphs=None, names=None):
                     continue
                 costs = [[_vlen(_vdiff(v0, v1)) for v1 in m1] for v0 in m0]
                 matching, matching_cost = min_cost_perfect_bipartite_matching(costs)
-                if matching != list(range(len(m0))):
+                identity_matching = list(range(len(m0)))
+                identity_cost = sum(costs[i][i] for i in range(len(m0)))
+                if matching != identity_matching and matching_cost < identity_cost * .95:
                     add_problem(
                         glyph_name,
                         {
@@ -235,23 +306,27 @@ def test(glyphsets, glyphs=None, names=None):
                         },
                     )
                     break
-                upem = 2048
-                item_cost = round(
-                    (matching_cost / len(m0) / len(m0[0])) ** 0.5 / upem * 100
-                )
-                hist.append(item_cost)
-                threshold = 7
-                if item_cost >= threshold:
-                    add_problem(
-                        glyph_name,
-                        {
-                            "type": "high_cost",
-                            "master_1": names[i],
-                            "master_2": names[i + 1],
-                            "value_1": item_cost,
-                            "value_2": threshold,
-                        },
-                    )
+
+            for i, (m0, m1) in enumerate(zip(allContourIsomorphisms[:-1], allContourIsomorphisms[1:])):
+                if len(m0) != len(m1):
+                    # We already reported this
+                    continue
+                if not m0:
+                    continue
+                for contour0,contour1 in zip(m0,m1):
+                    c0 = contour0[0]
+                    costs = [v for v in (_complex_vlen(_vdiff(c0, c1)) for c1 in contour1)]
+                    min_cost = min(costs)
+                    first_cost = costs[0]
+                    if min_cost < first_cost * .95:
+                        add_problem(
+                            glyph_name,
+                            {
+                                "type": "wrong_start_point",
+                                "master_1": names[i],
+                                "master_2": names[i + 1],
+                            },
+                        )
 
         except ValueError as e:
             add_problem(
@@ -351,14 +426,12 @@ def main(args=None):
                             p["master_2"],
                         )
                     )
-                if p["type"] == "high_cost":
+                if p["type"] == "wrong_start_point":
                     print(
-                        "    Interpolation has high cost: cost of %s to %s = %i, threshold %i"
+                        "    Contour start point differs: %s, %s"
                         % (
                             p["master_1"],
                             p["master_2"],
-                            p["value_1"],
-                            p["value_2"],
                         )
                     )
     if problems:
