@@ -368,15 +368,14 @@ class ChainContextualBuilder(LookupBuilder):
         """
         subtables = []
 
-        # There is a possible optimization here, which produces GSUB5 and
-        # GPOS7 lookups when there are no prefixes or suffixes in a rule set:
-        #   chaining = any(ruleset.hasPrefixOrSuffix for ruleset in rulesets)
-        # However, as of 2022-03-07, Apple's CoreText renderer did not
-        # correctly process these lookup types, so for now we force all
-        # contextual lookups to be chaining (GSUB6/GPOS8).
-        chaining = True
-
         rulesets = self.rulesets()
+        chaining = any(ruleset.hasPrefixOrSuffix for ruleset in rulesets)
+        # Unfortunately, as of 2022-03-07, Apple's CoreText renderer does not
+        # correctly process GPOS7 lookups, so for now we force contextual
+        # positioning lookups to be chaining (GPOS8).
+        if self.subtable_type == "Pos":  # horrible separation of concerns breach
+            chaining = True
+
         for ruleset in rulesets:
             # Determine format strategy. We try to build formats 1, 2 and 3
             # subtables and then work out which is best. candidates list holds
