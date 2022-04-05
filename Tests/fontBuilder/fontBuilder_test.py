@@ -1,29 +1,19 @@
 
 import os
 import pytest
-import re
 from fontTools.ttLib import TTFont
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.pens.t2CharStringPen import T2CharStringPen
 from fontTools.fontBuilder import FontBuilder
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools.misc.psCharStrings import T2CharString
+from fontTools.misc.testTools import stripVariableItemsFromTTX
 
 
 def getTestData(fileName, mode="r"):
     path = os.path.join(os.path.dirname(__file__), "data", fileName)
     with open(path, mode) as f:
         return f.read()
-
-
-def strip_VariableItems(string):
-    # ttlib changes with the fontTools version
-    string = re.sub(' ttLibVersion=".*"', '', string)
-    # head table checksum and creation and mod date changes with each save.
-    string = re.sub('<checkSumAdjustment value="[^"]+"/>', '', string)
-    string = re.sub('<modified value="[^"]+"/>', '', string)
-    string = re.sub('<created value="[^"]+"/>', '', string)
-    return string
 
 
 def drawTestGlyph(pen):
@@ -91,8 +81,8 @@ def _verifyOutput(outPath, tables=None):
     f = TTFont(outPath)
     f.saveXML(outPath + ".ttx", tables=tables)
     with open(outPath + ".ttx") as f:
-        testData = strip_VariableItems(f.read())
-    refData = strip_VariableItems(getTestData(os.path.basename(outPath) + ".ttx"))
+        testData = stripVariableItemsFromTTX(f.read())
+    refData = stripVariableItemsFromTTX(getTestData(os.path.basename(outPath) + ".ttx"))
     assert refData == testData
 
 

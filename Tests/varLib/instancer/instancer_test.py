@@ -1,4 +1,5 @@
 from fontTools.misc.fixedTools import floatToFixedToFloat
+from fontTools.misc.testTools import stripVariableItemsFromTTX
 from fontTools.misc.textTools import Tag
 from fontTools import ttLib
 from fontTools import designspaceLib
@@ -1386,10 +1387,6 @@ def test_setMacOverlapFlags():
     assert b.components[0].flags & flagOverlapCompound != 0
 
 
-def _strip_ttLibVersion(string):
-    return re.sub(' ttLibVersion=".*"', "", string)
-
-
 @pytest.fixture
 def varfont2():
     f = ttLib.TTFont(recalcTimestamp=False)
@@ -1412,7 +1409,7 @@ def _dump_ttx(ttFont):
     ttFont2 = ttLib.TTFont(tmp, recalcBBoxes=False, recalcTimestamp=False)
     s = StringIO()
     ttFont2.saveXML(s)
-    return _strip_ttLibVersion(s.getvalue())
+    return stripVariableItemsFromTTX(s.getvalue())
 
 
 def _get_expected_instance_ttx(
@@ -1428,7 +1425,7 @@ def _get_expected_instance_ttx(
         "r",
         encoding="utf-8",
     ) as fp:
-        return _strip_ttLibVersion(fp.read())
+        return stripVariableItemsFromTTX(fp.read())
 
 
 class InstantiateVariableFontTest(object):

@@ -1,5 +1,5 @@
 import io
-from fontTools.misc.testTools import getXML
+from fontTools.misc.testTools import getXML, stripVariableItemsFromTTX
 from fontTools.misc.textTools import tobytes, tostr
 from fontTools import subset
 from fontTools.fontBuilder import FontBuilder
@@ -48,15 +48,10 @@ class SubsetTest(unittest.TestCase):
                             "tmp%d%s" % (self.num_tempfiles, suffix))
 
     def read_ttx(self, path):
-        lines = []
-        with open(path, "r", encoding="utf-8") as ttx:
-            for line in ttx.readlines():
-                # Elide ttFont attributes because ttLibVersion may change.
-                if line.startswith("<ttFont "):
-                    lines.append("<ttFont>\n")
-                else:
-                    lines.append(line.rstrip() + "\n")
-        return lines
+        with open(path, "r", encoding="utf-8") as f:
+            ttx = f.read()
+        # don't care whether TTF or OTF, thus strip sfntVersion as well
+        return stripVariableItemsFromTTX(ttx, sfntVersion=True).splitlines(True)
 
     def expect_ttx(self, font, expected_ttx, tables=None):
         path = self.temp_path(suffix=".ttx")
