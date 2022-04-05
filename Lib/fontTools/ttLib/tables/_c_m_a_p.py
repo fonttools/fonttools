@@ -800,7 +800,6 @@ class cmap_format_4(CmapSubtable):
 			start = startCode[i]
 			delta = idDelta[i]
 			rangeOffset = idRangeOffset[i]
-			# *someone* needs to get killed.
 			partial = rangeOffset // 2 - start + i - len(idRangeOffset)
 
 			rangeCharCodes = list(range(startCode[i], endCode[i] + 1))
@@ -891,7 +890,6 @@ class cmap_format_4(CmapSubtable):
 				idDelta.append((indices[0] - startCode[i]) % 0x10000)
 				idRangeOffset.append(0)
 			else:
-				# someone *definitely* needs to get killed.
 				idDelta.append(0)
 				idRangeOffset.append(2 * (len(endCode) + len(glyphIndexArray) - i))
 				glyphIndexArray.extend(indices)
