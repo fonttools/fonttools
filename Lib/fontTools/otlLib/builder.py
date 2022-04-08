@@ -367,9 +367,15 @@ class ChainContextualBuilder(LookupBuilder):
             contextual positioning lookup.
         """
         subtables = []
-        chaining = False
+
         rulesets = self.rulesets()
         chaining = any(ruleset.hasPrefixOrSuffix for ruleset in rulesets)
+        # Unfortunately, as of 2022-03-07, Apple's CoreText renderer does not
+        # correctly process GPOS7 lookups, so for now we force contextual
+        # positioning lookups to be chaining (GPOS8).
+        if self.subtable_type == "Pos":  # horrible separation of concerns breach
+            chaining = True
+
         for ruleset in rulesets:
             # Determine format strategy. We try to build formats 1, 2 and 3
             # subtables and then work out which is best. candidates list holds
