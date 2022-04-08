@@ -91,6 +91,11 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 				(0, 1),  # Unicode 1.1
 				(0, 0)   # Unicode 1.0
 
+		This particular order matches what HarfBuzz uses to choose what
+		subtable to use by default. This order prefers the largest-repertoire
+		subtable, and among those, prefers the Windows-platform over the
+		Unicode-platform as the former has wider support.
+
 		This order can be customized via the ``cmapPreferences`` argument.
 		"""
 		for platformID, platEncID in cmapPreferences:
