@@ -1,3 +1,12 @@
+- [otlLib] Disable GPOS7 optimization to work around bug in Apple CoreText.
+  Always force Chaining GPOS8 for now (#2540).
+- [glifLib] Added ``outputImpliedClosingLine=False`` parameter to ``Glyph.draw()``,
+  to control behaviour of ``PointToSegmentPen`` (6b4e2e7).
+- [varLib.interpolatable] Check for wrong contour starting point (#2571).
+- [cffLib] Remove leftover ``GlobalState`` class and fix calls to ``TopDictIndex()``
+  (#2569, #2570).
+- [instancer] Clear ``AxisValueArray`` if it is empty after instantiating (#2563).
+
 4.31.2 (released 2022-03-22)
 ----------------------------
 
