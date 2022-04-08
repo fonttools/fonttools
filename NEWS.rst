@@ -1,3 +1,6 @@
+4.32.0 (released 2022-04-08)
+----------------------------
+
 - [otlLib] Disable GPOS7 optimization to work around bug in Apple CoreText.
   Always force Chaining GPOS8 for now (#2540).
 - [glifLib] Added ``outputImpliedClosingLine=False`` parameter to ``Glyph.draw()``,
