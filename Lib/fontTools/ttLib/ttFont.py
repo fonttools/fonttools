@@ -698,22 +698,27 @@ class TTFont(object):
 		return glyphs
 
 	def getBestCmap(self, cmapPreferences=((3, 10), (0, 6), (0, 4), (3, 1), (0, 3), (0, 2), (0, 1), (0, 0))):
-		"""Return the 'best' unicode cmap dictionary available in the font,
-		or None, if no unicode cmap subtable is available.
+		"""Returns the 'best' Unicode cmap dictionary available in the font
+		or ``None``, if no Unicode cmap subtable is available.
 
 		By default it will search for the following (platformID, platEncID)
-		pairs::
+		pairs in order::
 
-			(3, 10),
-			(0, 6),
-			(0, 4),
-			(3, 1),
-			(0, 3),
-			(0, 2),
-			(0, 1),
-			(0, 0)
+				(3, 10), # Windows Unicode full repertoire
+				(0, 6),  # Unicode full repertoire (format 13 subtable)
+				(0, 4),  # Unicode 2.0 full repertoire
+				(3, 1),  # Windows Unicode BMP
+				(0, 3),  # Unicode 2.0 BMP
+				(0, 2),  # Unicode ISO/IEC 10646
+				(0, 1),  # Unicode 1.1
+				(0, 0)   # Unicode 1.0
 
-		This can be customized via the ``cmapPreferences`` argument.
+		This particular order matches what HarfBuzz uses to choose what
+		subtable to use by default. This order prefers the largest-repertoire
+		subtable, and among those, prefers the Windows-platform over the
+		Unicode-platform as the former has wider support.
+
+		This order can be customized via the ``cmapPreferences`` argument.
 		"""
 		return self["cmap"].getBestCmap(cmapPreferences=cmapPreferences)
 
