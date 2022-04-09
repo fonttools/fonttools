@@ -980,6 +980,7 @@ class T2CharString(object):
 				self.private.nominalWidthX, self.private.defaultWidthX,
 				self.private)
 		extractor.execute(self)
+		extractor.endPath()
 		self.width = extractor.width
 
 	def calcBounds(self, glyphSet):
