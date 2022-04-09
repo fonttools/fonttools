@@ -8,6 +8,7 @@ from fontTools.misc.psCharStrings import (
     read_fixed1616,
     read_realNumber,
 )
+from fontTools.pens.recordingPen import RecordingPen
 import unittest
 
 
@@ -157,6 +158,14 @@ class T2CharStringTest(unittest.TestCase):
             else:
                 self.assertNotIsInstance(expected_arg, str)
                 self.assertAlmostEqual(arg, expected_arg)
+
+    def test_pen_closePath(self):
+        # Test CFF2/T2 charstring: it does NOT end in "endchar"
+        # https://github.com/fonttools/fonttools/issues/2455
+        cs = self.stringToT2CharString("100 100 rmoveto -50 -150 200 0 -50 150 rrcurveto")
+        pen = RecordingPen()
+        cs.draw(pen)
+        self.assertEqual(pen.value[-1], ('closePath', ()))
 
 
 if __name__ == "__main__":
