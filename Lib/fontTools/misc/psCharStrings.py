@@ -502,11 +502,20 @@ class T2OutlineExtractor(T2WidthExtractor):
 		T2WidthExtractor.__init__(
 			self, localSubrs, globalSubrs, nominalWidthX, defaultWidthX, private)
 		self.pen = pen
+		self.subrLevel = 0
 
 	def reset(self):
 		T2WidthExtractor.reset(self)
 		self.currentPoint = (0, 0)
 		self.sawMoveTo = 0
+		self.subrLevel = 0
+
+	def execute(self, charString):
+		self.subrLevel += 1
+		super().execute(charString)
+		self.subrLevel -= 1
+		if self.subrLevel == 0:
+			self.endPath()
 
 	def _nextPoint(self, point):
 		x, y = self.currentPoint
@@ -536,8 +545,11 @@ class T2OutlineExtractor(T2WidthExtractor):
 
 	def endPath(self):
 		# In T2 there are no open paths, so always do a closePath when
-		# finishing a sub path.
-		self.closePath()
+		# finishing a sub path. We avoid spurious calls to closePath()
+		# because its a real T1 op we're emulating in T2 whereas
+		# endPath() is just a means to that emulation
+		if self.sawMoveTo:
+			self.closePath()
 
 	#
 	# hint operators
@@ -980,7 +992,6 @@ class T2CharString(object):
 				self.private.nominalWidthX, self.private.defaultWidthX,
 				self.private)
 		extractor.execute(self)
-		extractor.endPath()
 		self.width = extractor.width
 
 	def calcBounds(self, glyphSet):
