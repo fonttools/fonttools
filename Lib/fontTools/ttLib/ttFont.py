@@ -1,4 +1,6 @@
+from fontTools.config import Config
 from fontTools.misc import xmlWriter
+from fontTools.misc.configTools import AbstractConfig
 from fontTools.misc.textTools import Tag, byteord, tostr
 from fontTools.misc.loggingTools import deprecateArgument
 from fontTools.ttLib import TTLibError
@@ -49,7 +51,7 @@ class TTFont(object):
 		>> tt2.importXML("afont.ttx")
 		>> tt2['maxp'].numGlyphs
 		242
-	
+
 	The TTFont object may be used as a context manager; this will cause the file
 	reader to be closed after the context ``with`` block is exited::
 
@@ -89,7 +91,7 @@ class TTFont(object):
 			sfntVersion="\000\001\000\000", flavor=None, checkChecksums=0,
 			verbose=None, recalcBBoxes=True, allowVID=NotImplemented, ignoreDecompileErrors=False,
 			recalcTimestamp=True, fontNumber=-1, lazy=None, quiet=None,
-			_tableCache=None):
+			_tableCache=None, cfg={}):
 		for name in ("verbose", "quiet"):
 			val = locals().get(name)
 			if val is not None:
@@ -101,6 +103,7 @@ class TTFont(object):
 		self.recalcTimestamp = recalcTimestamp
 		self.tables = {}
 		self.reader = None
+		self.cfg = cfg.copy() if isinstance(cfg, AbstractConfig) else Config(cfg)
 		self.ignoreDecompileErrors = ignoreDecompileErrors
 
 		if not file:

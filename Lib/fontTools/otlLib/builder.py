@@ -11,11 +11,7 @@ from fontTools.ttLib.tables.otBase import (
 )
 from fontTools.ttLib.tables import otBase
 from fontTools.feaLib.ast import STATNameStatement
-from fontTools.otlLib.optimize.gpos import (
-    GPOS_COMPACT_MODE_DEFAULT,
-    GPOS_COMPACT_MODE_ENV_KEY,
-    compact_lookup,
-)
+from fontTools.otlLib.optimize.gpos import compact_lookup
 from fontTools.otlLib.error import OpenTypeLibError
 from functools import reduce
 import logging
@@ -1414,10 +1410,10 @@ class PairPosBuilder(LookupBuilder):
         # Compact the lookup
         # This is a good moment to do it because the compaction should create
         # smaller subtables, which may prevent overflows from happening.
-        mode = os.environ.get(GPOS_COMPACT_MODE_ENV_KEY, GPOS_COMPACT_MODE_DEFAULT)
-        if mode and mode != "0":
+        level = self.font.cfg["fontTools.otlLib.optimize.gpos:COMPRESSION_LEVEL"]
+        if level and level != 0:
             log.info("Compacting GPOS...")
-            compact_lookup(self.font, mode, lookup)
+            compact_lookup(self.font, level, lookup)
 
         return lookup
 

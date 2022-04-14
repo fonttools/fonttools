@@ -9,16 +9,10 @@ from fontTools.misc.intTools import bit_count, bit_indices
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables import otBase, otTables
 
-# NOTE: activating this optimization via the environment variable is
-# experimental and may not be supported once an alternative mechanism
-# is in place. See: https://github.com/fonttools/fonttools/issues/2349
-GPOS_COMPACT_MODE_ENV_KEY = "FONTTOOLS_GPOS_COMPACT_MODE"
-GPOS_COMPACT_MODE_DEFAULT = "0"
-
 log = logging.getLogger("fontTools.otlLib.optimize.gpos")
 
 
-def compact(font: TTFont, mode: str) -> TTFont:
+def compact(font: TTFont, level: int) -> TTFont:
     # Ideal plan:
     #  1. Find lookups of Lookup Type 2: Pair Adjustment Positioning Subtable
     #     https://docs.microsoft.com/en-us/typography/opentype/spec/gpos#lookup-type-2-pair-adjustment-positioning-subtable
@@ -35,21 +29,21 @@ def compact(font: TTFont, mode: str) -> TTFont:
     gpos = font["GPOS"]
     for lookup in gpos.table.LookupList.Lookup:
         if lookup.LookupType == 2:
-            compact_lookup(font, mode, lookup)
+            compact_lookup(font, level, lookup)
         elif lookup.LookupType == 9 and lookup.SubTable[0].ExtensionLookupType == 2:
-            compact_ext_lookup(font, mode, lookup)
+            compact_ext_lookup(font, level, lookup)
     return font
 
 
-def compact_lookup(font: TTFont, mode: str, lookup: otTables.Lookup) -> None:
-    new_subtables = compact_pair_pos(font, mode, lookup.SubTable)
+def compact_lookup(font: TTFont, level: int, lookup: otTables.Lookup) -> None:
+    new_subtables = compact_pair_pos(font, level, lookup.SubTable)
     lookup.SubTable = new_subtables
     lookup.SubTableCount = len(new_subtables)
 
 
-def compact_ext_lookup(font: TTFont, mode: str, lookup: otTables.Lookup) -> None:
+def compact_ext_lookup(font: TTFont, level: int, lookup: otTables.Lookup) -> None:
     new_subtables = compact_pair_pos(
-        font, mode, [ext_subtable.ExtSubTable for ext_subtable in lookup.SubTable]
+        font, level, [ext_subtable.ExtSubTable for ext_subtable in lookup.SubTable]
     )
     new_ext_subtables = []
     for subtable in new_subtables:
@@ -62,7 +56,7 @@ def compact_ext_lookup(font: TTFont, mode: str, lookup: otTables.Lookup) -> None
 
 
 def compact_pair_pos(
-    font: TTFont, mode: str, subtables: Sequence[otTables.PairPos]
+    font: TTFont, level: int, subtables: Sequence[otTables.PairPos]
 ) -> Sequence[otTables.PairPos]:
     new_subtables = []
     for subtable in subtables:
@@ -70,12 +64,12 @@ def compact_pair_pos(
             # Not doing anything to Format 1 (yet?)
             new_subtables.append(subtable)
         elif subtable.Format == 2:
-            new_subtables.extend(compact_class_pairs(font, mode, subtable))
+            new_subtables.extend(compact_class_pairs(font, level, subtable))
     return new_subtables
 
 
 def compact_class_pairs(
-    font: TTFont, mode: str, subtable: otTables.PairPos
+    font: TTFont, level: int, subtable: otTables.PairPos
 ) -> List[otTables.PairPos]:
     from fontTools.otlLib.builder import buildPairPosClassesSubtable
 
@@ -95,17 +89,9 @@ def compact_class_pairs(
                 getattr(class2, "Value1", None),
                 getattr(class2, "Value2", None),
             )
-
-    if len(mode) == 1 and mode in "123456789":
-        grouped_pairs = cluster_pairs_by_class2_coverage_custom_cost(
-            font, all_pairs, int(mode)
-        )
-        for pairs in grouped_pairs:
-            subtables.append(
-                buildPairPosClassesSubtable(pairs, font.getReverseGlyphMap())
-            )
-    else:
-        raise ValueError(f"Bad {GPOS_COMPACT_MODE_ENV_KEY}={mode}")
+    grouped_pairs = cluster_pairs_by_class2_coverage_custom_cost(font, all_pairs, level)
+    for pairs in grouped_pairs:
+        subtables.append(buildPairPosClassesSubtable(pairs, font.getReverseGlyphMap()))
     return subtables
 
 
