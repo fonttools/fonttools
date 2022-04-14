@@ -1,17 +1,15 @@
+import contextlib
 import logging
+import os
 from pathlib import Path
 from subprocess import run
-import contextlib
-import os
 from typing import List, Optional, Tuple
-from fontTools.ttLib import TTFont
 
 import pytest
-
 from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
 from fontTools.fontBuilder import FontBuilder
-
-from fontTools.ttLib.tables.otBase import OTTableWriter, ValueRecord
+from fontTools.ttLib import TTFont
+from fontTools.ttLib.tables.otBase import OTTableWriter
 
 
 def test_main(tmpdir: Path):
@@ -34,7 +32,7 @@ def test_main(tmpdir: Path):
         [
             "fonttools",
             "otlLib.optimize",
-            "--gpos-compact-mode",
+            "--gpos-compression-level",
             "5",
             str(input),
             "-o",
@@ -127,9 +125,9 @@ def get_kerning_by_blocks(blocks: List[Tuple[int, int]]) -> Tuple[List[str], str
 
 
 @pytest.mark.parametrize(
-    ("blocks", "mode", "expected_subtables", "expected_bytes"),
+    ("blocks", "level", "expected_subtables", "expected_bytes"),
     [
-        # Mode = 0 = no optimization leads to 650 bytes of GPOS
+        # Level = 0 = no optimization leads to 650 bytes of GPOS
         ([(15, 3), (2, 10)], None, 1, 602),
         # Optimization level 1 recognizes the 2 blocks and splits into 2
         # subtables = adds 1 subtable leading to a size reduction of
@@ -143,13 +141,13 @@ def get_kerning_by_blocks(blocks: List[Tuple[int, int]]) -> Tuple[List[str], str
         ([(4, 4) for _ in range(20)], 9, 20, 1886),
         # On a fully occupied kerning matrix, even the strategy 9 doesn't
         # split anything.
-        ([(10, 10)], 9, 1, 304)
+        ([(10, 10)], 9, 1, 304),
     ],
 )
 def test_optimization_mode(
     caplog,
     blocks: List[Tuple[int, int]],
-    mode: Optional[int],
+    level: Optional[int],
     expected_subtables: int,
     expected_bytes: int,
 ):
@@ -161,15 +159,10 @@ def test_optimization_mode(
     glyphs, features = get_kerning_by_blocks(blocks)
     glyphs = [".notdef space"] + glyphs
 
-    env = {}
-    if mode is not None:
-        # NOTE: activating this optimization via the environment variable is
-        # experimental and may not be supported once an alternative mechanism
-        # is in place. See: https://github.com/fonttools/fonttools/issues/2349
-        env["FONTTOOLS_GPOS_COMPACT_MODE"] = str(mode)
-    with set_env(**env):
-        fb = FontBuilder(1000)
-        fb.setupGlyphOrder(glyphs)
-        addOpenTypeFeaturesFromString(fb.font, features)
-        assert expected_subtables == count_pairpos_subtables(fb.font)
-        assert expected_bytes == count_pairpos_bytes(fb.font)
+    fb = FontBuilder(1000)
+    if level is not None:
+        fb.font.cfg["fontTools.otlLib.optimize.gpos:COMPRESSION_LEVEL"] = level
+    fb.setupGlyphOrder(glyphs)
+    addOpenTypeFeaturesFromString(fb.font, features)
+    assert expected_subtables == count_pairpos_subtables(fb.font)
+    assert expected_bytes == count_pairpos_bytes(fb.font)
