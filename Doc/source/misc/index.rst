@@ -12,6 +12,7 @@ utilities by fontTools, but some of which may be more generally useful.
    bezierTools
    classifyTools
    cliTools
+   configTools
    eexec
    encodingTools
    etree
