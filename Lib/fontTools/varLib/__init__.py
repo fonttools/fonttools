@@ -18,6 +18,7 @@ Then you can make a variable-font this way:
 
 API *will* change in near future.
 """
+from typing import List
 from fontTools.misc.vector import Vector
 from fontTools.misc.roundTools import noRound, otRound
 from fontTools.misc.textTools import Tag, tostr
@@ -33,7 +34,9 @@ from fontTools.varLib.merger import VariationMerger
 from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib.iup import iup_delta_optimize
 from fontTools.varLib.featureVars import addFeatureVariations
-from fontTools.designspaceLib import DesignSpaceDocument
+from fontTools.designspaceLib import DesignSpaceDocument, InstanceDescriptor
+from fontTools.designspaceLib.split import splitInterpolable, splitVariableFonts
+from fontTools.varLib.stat import buildVFStatTable
 from functools import partial
 from collections import OrderedDict, namedtuple
 import os.path
@@ -53,7 +56,7 @@ FEAVAR_FEATURETAG_LIB_KEY = "com.github.fonttools.varLib.featureVarsFeatureTag"
 # Creation routines
 #
 
-def _add_fvar(font, axes, instances):
+def _add_fvar(font, axes, instances: List[InstanceDescriptor]):
 	"""
 	Add 'fvar' table to font.
 
@@ -81,7 +84,8 @@ def _add_fvar(font, axes, instances):
 		fvar.axes.append(axis)
 
 	for instance in instances:
-		coordinates = instance.location
+		# Filter out discrete axis locations
+		coordinates = {name: value for name, value in instance.location.items() if name in axes}
 
 		if "en" not in instance.localisedStyleName:
 			if not instance.styleName:
@@ -198,11 +202,10 @@ def _add_avar(font, axes):
 
 	return avar
 
-def _add_stat(font, axes):
-	# for now we just get the axis tags and nameIDs from the fvar,
-	# so we can reuse the same nameIDs which were defined in there.
-	# TODO make use of 'axes' once it adds style attributes info:
-	# https://github.com/LettError/designSpaceDocument/issues/8
+def _add_stat(font):
+	# Note: this function only gets called by old code that calls `build()`
+	# directly. Newer code that wants to benefit from STAT data from the
+	# designspace should call `build_many()`
 
 	if "STAT" in font:
 		return
@@ -759,7 +762,8 @@ def load_designspace(designspace):
 	# Check all master and instance locations are valid and fill in defaults
 	for obj in masters+instances:
 		obj_name = obj.name or obj.styleName or ''
-		loc = obj.location
+		loc = obj.getFullDesignLocation(ds)
+		obj.designLocation = loc
 		if loc is None:
 			raise VarLibValidationError(
 				f"Source or instance '{obj_name}' has no location."
@@ -770,22 +774,18 @@ def load_designspace(designspace):
 					f"Location axis '{axis_name}' unknown for '{obj_name}'."
 				)
 		for axis_name,axis in axes.items():
-			if axis_name not in loc:
-				# NOTE: `axis.default` is always user-space, but `obj.location` always design-space.
-				loc[axis_name] = axis.map_forward(axis.default)
-			else:
-				v = axis.map_backward(loc[axis_name])
-				if not (axis.minimum <= v <= axis.maximum):
-					raise VarLibValidationError(
-						f"Source or instance '{obj_name}' has out-of-range location "
-						f"for axis '{axis_name}': is mapped to {v} but must be in "
-						f"mapped range [{axis.minimum}..{axis.maximum}] (NOTE: all "
-						"values are in user-space)."
-					)
+			v = axis.map_backward(loc[axis_name])
+			if not (axis.minimum <= v <= axis.maximum):
+				raise VarLibValidationError(
+					f"Source or instance '{obj_name}' has out-of-range location "
+					f"for axis '{axis_name}': is mapped to {v} but must be in "
+					f"mapped range [{axis.minimum}..{axis.maximum}] (NOTE: all "
+					"values are in user-space)."
+				)
 
 	# Normalize master locations
 
-	internal_master_locs = [o.location for o in masters]
+	internal_master_locs = [o.getFullDesignLocation(ds) for o in masters]
 	log.info("Internal master locations:\n%s", pformat(internal_master_locs))
 
 	# TODO This mapping should ideally be moved closer to logic in _add_fvar/avar
@@ -865,6 +865,38 @@ def set_default_weight_width_slant(font, location):
 			font["post"].italicAngle = italicAngle
 
 
+def build_many(designspace: DesignSpaceDocument, master_finder=lambda s:s, exclude=[], optimize=True, skip_vf=lambda vf_name: False):
+	"""
+	Build variable fonts from a designspace file, version 5 which can define
+	several VFs, or version 4 which has implicitly one VF covering the whole doc.
+
+	If master_finder is set, it should be a callable that takes master
+	filename as found in designspace file and map it to master font
+	binary as to be opened (eg. .ttf or .otf).
+
+	skip_vf can be used to skip building some of the variable fonts defined in
+	the input designspace. It's a predicate that takes as argument the name
+	of the variable font and returns `bool`.
+
+	Always returns a Dict[str, TTFont] keyed by VariableFontDescriptor.name
+	"""
+	res = {}
+	for _location, subDoc in splitInterpolable(designspace):
+		for name, vfDoc in splitVariableFonts(subDoc):
+			if skip_vf(name):
+				log.debug(f"Skipping variable TTF font: {name}")
+				continue
+			vf = build(
+				vfDoc,
+				master_finder,
+				exclude=list(exclude) + ["STAT"],
+				optimize=optimize
+			)[0]
+			if "STAT" not in exclude:
+				buildVFStatTable(vf, designspace, name)
+			res[name] = vf
+	return res
+
 def build(designspace, master_finder=lambda s:s, exclude=[], optimize=True):
 	"""
 	Build variation font from a designspace file.
@@ -898,7 +930,7 @@ def build(designspace, master_finder=lambda s:s, exclude=[], optimize=True):
 	# TODO append masters as named-instances as well; needs .designspace change.
 	fvar = _add_fvar(vf, ds.axes, ds.instances)
 	if 'STAT' not in exclude:
-		_add_stat(vf, ds.axes)
+		_add_stat(vf)
 	if 'avar' not in exclude:
 		_add_avar(vf, ds.axes)
 

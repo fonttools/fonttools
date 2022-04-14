@@ -1,0 +1,50 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<designspace format="5.0">
+  <axes>
+    <axis tag="wdth" name="width" minimum="50" maximum="200" default="50">
+      <map input="50" output="0"/>
+      <map input="100" output="500"/>
+      <map input="200" output="1000"/>
+    </axis>
+  </axes>
+  <rules>
+    <rule name="fold_I_serifs">
+      <conditionset>
+        <condition name="width" minimum="0" maximum="328"/>
+      </conditionset>
+      <sub name="I" with="I.narrow"/>
+    </rule>
+    <rule name="fold_S_terminals">
+      <sub name="S" with="S.closed"/>
+    </rule>
+  </rules>
+  <sources>
+    <source filename="../MutatorSansLightCondensed.ufo" name="master.MutatorMathTest.LightCondensed.0" familyname="MutatorMathTest" stylename="LightCondensed">
+      <location>
+        <dimension name="width" xvalue="0"/>
+      </location>
+    </source>
+    <source filename="../MutatorSansLightWide.ufo" name="master.MutatorMathTest.LightWide.2" familyname="MutatorMathTest" stylename="LightWide">
+      <location>
+        <dimension name="width" xvalue="1000"/>
+      </location>
+    </source>
+  </sources>
+  <instances>
+    <instance name="MutatorMathTest Sans Light Condensed" familyname="MutatorMathTest" stylename="Sans Light Condensed" filename="MutatorMathTest-Sans Light Condensed.ttf" postscriptfontname="MutatorMathTest-SansLightCondensed" stylemapfamilyname="MutatorMathTest Sans Light Condensed" stylemapstylename="regular">
+      <location>
+        <dimension name="width" xvalue="0"/>
+      </location>
+    </instance>
+    <instance name="MutatorMathTest Sans Light Extended" familyname="MutatorMathTest" stylename="Sans Light Extended" filename="MutatorMathTest-Sans Light Extended.ttf" postscriptfontname="MutatorMathTest-SansLightExtended" stylemapfamilyname="MutatorMathTest Sans Light Extended" stylemapstylename="regular">
+      <location>
+        <dimension name="width" xvalue="1000"/>
+      </location>
+    </instance>
+    <instance name="MutatorMathTest Sans Light Condensed" familyname="MutatorMathTest" stylename="Sans Light Condensed" filename="MutatorMathTest-Sans Light Condensed.ttf" postscriptfontname="MutatorMathTest-SansLightCondensed" stylemapfamilyname="MutatorMathTest Sans Light Condensed" stylemapstylename="regular">
+      <location>
+        <dimension name="width" xvalue="0"/>
+      </location>
+    </instance>
+  </instances>
+</designspace>

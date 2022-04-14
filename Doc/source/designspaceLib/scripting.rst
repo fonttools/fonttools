@@ -1,6 +1,6 @@
-#######################
-Scripting a designspace
-#######################
+#########################
+3 Scripting a designspace
+#########################
 
 It can be useful to build a designspace with a script rather than
 construct one with an interface like
@@ -60,7 +60,7 @@ Make a descriptor object and add it to the document.
    Variation Axis
    Tags <https://www.microsoft.com/typography/otspec/fvar.htm#VAT>`__
 -  The default master is expected at the intersection of all
-   default values of all axes. 
+   default values of all axes.
 
 Option: add label names
 -----------------------
@@ -88,6 +88,7 @@ OpenType <https://www.microsoft.com/typography/otspec/avar.htm>`__.
 
 .. code:: python
 
+    # (user space, design space), (user space, design space)...
     a1.map = [(0.0, 10.0), (401.0, 66.0), (1000.0, 990.0)]
 
 Make a source object
@@ -124,7 +125,7 @@ So go ahead and add another master:
     s1.name = "master.bold"
     s1.location = dict(weight=1000)
     doc.addSource(s1)
-    
+
 
 Option: exclude glyphs
 ----------------------
@@ -241,7 +242,7 @@ This is how you check the default font.
 Generating?
 ***********
 
-You can generate the UFO's with MutatorMath:
+You can generate the UFOs with MutatorMath:
 
 .. code:: python
 
@@ -251,3 +252,39 @@ You can generate the UFO's with MutatorMath:
 -  Assuming the outline data in the masters is compatible.
 
 Or you can use the file in making a **variable font** with varlib.
+
+
+.. _working_with_v5:
+
+**********************************
+Working with DesignSpace version 5
+**********************************
+
+The new version 5 allows "discrete" axes, which do not interpolate across their
+values. This is useful to store in one place family-wide data such as the STAT
+information, however it prevents the usual things done on designspaces that
+interpolate everywhere:
+
+- checking that all sources are compatible for interpolation
+- building variable fonts
+
+In order to allow the above in tools that want to handle designspace v5,
+the :mod:`fontTools.designspaceLib.split` module provides two methods to
+split a designspace into interpolable sub-spaces,
+:func:`splitInterpolable() <fontTools.designspaceLib.split.splitInterpolable>`
+and then
+:func:`splitVariableFonts() <fontTools.designspaceLib.split.splitVariableFonts>`.
+
+
+.. figure:: v5_split_downconvert.png
+   :width: 680px
+   :alt: Example process diagram to check and build DesignSpace 5
+
+   Example process process to check and build Designspace 5.
+
+
+Also, for older tools that don't know about the other version 5 additions such
+as the STAT data fields, the function
+:func:`convert5to4() <fontTools.designspaceLib.split.convert5to4>` allows to
+strip new information from a designspace version 5 to downgrade it to a
+collection of version 4 documents, one per variable font.

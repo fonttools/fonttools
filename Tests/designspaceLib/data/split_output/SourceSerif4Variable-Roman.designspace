@@ -1,0 +1,274 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<designspace format="5.0">
+  <axes>
+    <axis tag="wght" name="weight" minimum="200" maximum="900" default="400">
+      <map input="200" output="0"/>
+      <map input="300" output="145"/>
+      <map input="400" output="394"/>
+      <map input="600" output="594"/>
+      <map input="700" output="823"/>
+      <map input="900" output="1000"/>
+    </axis>
+    <axis tag="opsz" name="optical" minimum="8" maximum="60" default="20"/>
+  </axes>
+  <sources>
+    <source filename="../caption/master_0/SourceSerif_c0.ufo">
+      <location>
+        <dimension name="weight" xvalue="0"/>
+        <dimension name="optical" xvalue="8"/>
+      </location>
+    </source>
+    <source filename="../caption/master_1/SourceSerif_c1.ufo">
+      <location>
+        <dimension name="weight" xvalue="394"/>
+        <dimension name="optical" xvalue="8"/>
+      </location>
+    </source>
+    <source filename="../caption/master_2/SourceSerif_c2.ufo">
+      <location>
+        <dimension name="weight" xvalue="1000"/>
+        <dimension name="optical" xvalue="8"/>
+      </location>
+    </source>
+    <source filename="../text/master_0/SourceSerif_0.ufo">
+      <location>
+        <dimension name="weight" xvalue="0"/>
+        <dimension name="optical" xvalue="20"/>
+      </location>
+    </source>
+    <source filename="../text/master_1/SourceSerif_1.ufo" familyname="Source Serif 4">
+      <location>
+        <dimension name="weight" xvalue="394"/>
+        <dimension name="optical" xvalue="20"/>
+      </location>
+    </source>
+    <source filename="../text/master_2/SourceSerif_2.ufo">
+      <location>
+        <dimension name="weight" xvalue="1000"/>
+        <dimension name="optical" xvalue="20"/>
+      </location>
+    </source>
+    <source filename="../display/master_0/SourceSerif_d0.ufo">
+      <location>
+        <dimension name="weight" xvalue="0"/>
+        <dimension name="optical" xvalue="60"/>
+      </location>
+    </source>
+    <source filename="../display/master_1/SourceSerif_d1.ufo">
+      <location>
+        <dimension name="weight" xvalue="394"/>
+        <dimension name="optical" xvalue="60"/>
+      </location>
+    </source>
+    <source filename="../display/master_2/SourceSerif_d2.ufo">
+      <location>
+        <dimension name="weight" xvalue="1000"/>
+        <dimension name="optical" xvalue="60"/>
+      </location>
+    </source>
+  </sources>
+  <instances>
+    <instance name="Source Serif 4 Caption ExtraLight" familyname="Source Serif 4" stylename="Caption ExtraLight" filename="Source Serif 4-Caption ExtraLight.ttf" postscriptfontname="SourceSerif4Roman-CaptionExtraLight" stylemapfamilyname="Source Serif 4 Caption ExtraLight" stylemapstylename="regular">
+      <location>
+        <dimension name="weight" xvalue="0"/>
+        <dimension name="optical" xvalue="8"/>
+      </location>
+    </instance>
+    <instance name="Source Serif 4 Caption Light" familyname="Source Serif 4" stylename="Caption Light" filename="Source Serif 4-Caption Light.ttf" postscriptfontname="SourceSerif4Roman-CaptionLight" stylemapfamilyname="Source Serif 4 Caption Light" stylemapstylename="regular">
+      <location>
+        <dimension name="weight" xvalue="145"/>
+        <dimension name="optical" xvalue="8"/>
+      </location>
+    </instance>
+    <instance name="Source Serif 4 Caption" familyname="Source Serif 4" stylename="Caption" filename="Source Serif 4-Caption.ttf" postscriptfontname="SourceSerif4Roman-CaptionRegular" stylemapfamilyname="Source Serif 4 Caption" stylemapstylename="regular">
+      <location>
+        <dimension name="weight" xvalue="394"/>
+        <dimension name="optical" xvalue="8"/>
+      </location>
+    </instance>
+    <instance name="Source Serif 4 Caption Semibold" familyname="Source Serif 4" stylename="Caption Semibold" filename="Source Serif 4-Caption Semibold.ttf" postscriptfontname="SourceSerif4Roman-CaptionSemibold" stylemapfamilyname="Source Serif 4 Caption Semibold" stylemapstylename="regular">
+      <location>
+        <dimension name="weight" xvalue="594"/>
+        <dimension name="optical" xvalue="8"/>
+      </location>
+    </instance>
+    <instance name="Source Serif 4 Caption Bold" familyname="Source Serif 4" stylename="Caption Bold" filename="Source Serif 4-Caption Bold.ttf" postscriptfontname="SourceSerif4Roman-CaptionBold" stylemapfamilyname="Source Serif 4 Caption Bold" stylemapstylename="regular">
+      <location>
+        <dimension name="weight" xvalue="823"/>
+        <dimension name="optical" xvalue="8"/>
+      </location>
+    </instance>
+    <instance name="Source Serif 4 Caption Black" familyname="Source Serif 4" stylename="Caption Black" filename="Source Serif 4-Caption Black.ttf" postscriptfontname="SourceSerif4Roman-CaptionBlack" stylemapfamilyname="Source Serif 4 Caption Black" stylemapstylename="regular">
+      <location>
+        <dimension name="weight" xvalue="1000"/>
+        <dimension name="optical" xvalue="8"/>
+      </location>
+    </instance>
+    <instance name="Source Serif 4 SmText ExtraLight" familyname="Source Serif 4" stylename="SmText ExtraLight" filename="Source Serif 4-SmText ExtraLight.ttf" postscriptfontname="SourceSerif4Roman-SmTextExtraLight" stylemapfamilyname="Source Serif 4 SmallText ExtraLight" stylemapstylename="regular">
+      <location>
+        <dimension name="weight" xvalue="0"/>
+        <dimension name="optical" xvalue="16"/>
+      </location>
+    </instance>
+    <instance name="Source Serif 4 SmText Light" familyname="Source Serif 4" stylename="SmText Light" filename="Source Serif 4-SmText Light.ttf" postscriptfontname="SourceSerif4Roman-SmTextLight" stylemapfamilyname="Source Serif 4 SmallText Light" stylemapstylename="regular">
+      <location>
+        <dimension name="weight" xvalue="145"/>
+        <dimension name="optical" xvalue="16"/>
+      </location>
+    </instance>
+    <instance name="Source Serif 4 SmText" familyname="Source Serif 4" stylename="SmText" filename="Source Serif 4-SmText.ttf" postscriptfontname="SourceSerif4Roman-SmTextRegular" stylemapfamilyname="Source Serif 4 SmallText" stylemapstylename="regular">
+      <location>
+        <dimension name="weight" xvalue="394"/>
+        <dimension name="optical" xvalue="16"/>
+      </location>
+    </instance>
+    <instance name="Source Serif 4 SmText Semibold" familyname="Source Serif 4" stylename="SmText Semibold" filename="Source Serif 4-SmText Semibold.ttf" postscriptfontname="SourceSerif4Roman-SmTextSemibold" stylemapfamilyname="Source Serif 4 SmallText Semibold" stylemapstylename="regular">
+      <location>
+        <dimension name="weight" xvalue="594"/>
+        <dimension name="optical" xvalue="16"/>
+      </location>
+    </instance>
+    <instance name="Source Serif 4 SmText Bold" familyname="Source Serif 4" stylename="SmText Bold" filename="Source Serif 4-SmText Bold.ttf" postscriptfontname="SourceSerif4Roman-SmTextBold" stylemapfamilyname="Source Serif 4 SmallText Bold" stylemapstylename="regular">
+      <location>
+        <dimension name="weight" xvalue="823"/>
+        <dimension name="optical" xvalue="16"/>
+      </location>
+    </instance>
+    <instance name="Source Serif 4 SmText Black" familyname="Source Serif 4" stylename="SmText Black" filename="Source Serif 4-SmText Black.ttf" postscriptfontname="SourceSerif4Roman-SmTextBlack" stylemapfamilyname="Source Serif 4 SmallText Black" stylemapstylename="regular">
+      <location>
+        <dimension name="weight" xvalue="1000"/>
+        <dimension name="optical" xvalue="16"/>
+      </location>
+    </instance>
+    <instance name="Source Serif 4 ExtraLight" familyname="Source Serif 4" stylename="ExtraLight" filename="Source Serif 4-ExtraLight.ttf" postscriptfontname="SourceSerif4Roman-ExtraLight" stylemapfamilyname="Source Serif 4 ExtraLight" stylemapstylename="regular">
+      <location>
+        <dimension name="weight" xvalue="0"/>
+        <dimension name="optical" xvalue="20"/>
+      </location>
+    </instance>
+    <instance name="Source Serif 4 Light" familyname="Source Serif 4" stylename="Light" filename="Source Serif 4-Light.ttf" postscriptfontname="SourceSerif4Roman-Light" stylemapfamilyname="Source Serif 4 Light" stylemapstylename="regular">
+      <location>
+        <dimension name="weight" xvalue="145"/>
+        <dimension name="optical" xvalue="20"/>
+      </location>
+    </instance>
+    <instance name="Source Serif 4 Regular" familyname="Source Serif 4" stylename="Regular" filename="Source Serif 4-Regular.ttf" postscriptfontname="SourceSerif4Roman-Regular" stylemapfamilyname="Source Serif 4" stylemapstylename="regular">
+      <location>
+        <dimension name="weight" xvalue="394"/>
+        <dimension name="optical" xvalue="20"/>
+      </location>
+    </instance>
+    <instance name="Source Serif 4 Semibold" familyname="Source Serif 4" stylename="Semibold" filename="Source Serif 4-Semibold.ttf" postscriptfontname="SourceSerif4Roman-Semibold" stylemapfamilyname="Source Serif 4 Semibold" stylemapstylename="regular">
+      <location>
+        <dimension name="weight" xvalue="594"/>
+        <dimension name="optical" xvalue="20"/>
+      </location>
+    </instance>
+    <instance name="Source Serif 4 Bold" familyname="Source Serif 4" stylename="Bold" filename="Source Serif 4-Bold.ttf" postscriptfontname="SourceSerif4Roman-Bold" stylemapfamilyname="Source Serif 4 Bold" stylemapstylename="regular">
+      <location>
+        <dimension name="weight" xvalue="823"/>
+        <dimension name="optical" xvalue="20"/>
+      </location>
+    </instance>
+    <instance name="Source Serif 4 Black" familyname="Source Serif 4" stylename="Black" filename="Source Serif 4-Black.ttf" postscriptfontname="SourceSerif4Roman-Black" stylemapfamilyname="Source Serif 4 Black" stylemapstylename="regular">
+      <location>
+        <dimension name="weight" xvalue="1000"/>
+        <dimension name="optical" xvalue="20"/>
+      </location>
+    </instance>
+    <instance name="Source Serif 4 Subhead ExtraLight" familyname="Source Serif 4" stylename="Subhead ExtraLight" filename="Source Serif 4-Subhead ExtraLight.ttf" postscriptfontname="SourceSerif4Roman-SubheadExtraLight" stylemapfamilyname="Source Serif 4 Subhead ExtraLight" stylemapstylename="regular">
+      <location>
+        <dimension name="weight" xvalue="0"/>
+        <dimension name="optical" xvalue="32"/>
+      </location>
+    </instance>
+    <instance name="Source Serif 4 Subhead Light" familyname="Source Serif 4" stylename="Subhead Light" filename="Source Serif 4-Subhead Light.ttf" postscriptfontname="SourceSerif4Roman-SubheadLight" stylemapfamilyname="Source Serif 4 Subhead Light" stylemapstylename="regular">
+      <location>
+        <dimension name="weight" xvalue="145"/>
+        <dimension name="optical" xvalue="32"/>
+      </location>
+    </instance>
+    <instance name="Source Serif 4 Subhead" familyname="Source Serif 4" stylename="Subhead" filename="Source Serif 4-Subhead.ttf" postscriptfontname="SourceSerif4Roman-SubheadRegular" stylemapfamilyname="Source Serif 4 Subhead" stylemapstylename="regular">
+      <location>
+        <dimension name="weight" xvalue="394"/>
+        <dimension name="optical" xvalue="32"/>
+      </location>
+    </instance>
+    <instance name="Source Serif 4 Subhead Semibold" familyname="Source Serif 4" stylename="Subhead Semibold" filename="Source Serif 4-Subhead Semibold.ttf" postscriptfontname="SourceSerif4Roman-SubheadSemibold" stylemapfamilyname="Source Serif 4 Subhead Semibold" stylemapstylename="regular">
+      <location>
+        <dimension name="weight" xvalue="594"/>
+        <dimension name="optical" xvalue="32"/>
+      </location>
+    </instance>
+    <instance name="Source Serif 4 Subhead Bold" familyname="Source Serif 4" stylename="Subhead Bold" filename="Source Serif 4-Subhead Bold.ttf" postscriptfontname="SourceSerif4Roman-SubheadBold" stylemapfamilyname="Source Serif 4 Subhead Bold" stylemapstylename="regular">
+      <location>
+        <dimension name="weight" xvalue="823"/>
+        <dimension name="optical" xvalue="32"/>
+      </location>
+    </instance>
+    <instance name="Source Serif 4 Subhead Black" familyname="Source Serif 4" stylename="Subhead Black" filename="Source Serif 4-Subhead Black.ttf" postscriptfontname="SourceSerif4Roman-SubheadBlack" stylemapfamilyname="Source Serif 4 Subhead Black" stylemapstylename="regular">
+      <location>
+        <dimension name="weight" xvalue="1000"/>
+        <dimension name="optical" xvalue="32"/>
+      </location>
+    </instance>
+    <instance name="Source Serif 4 Display ExtraLight" familyname="Source Serif 4" stylename="Display ExtraLight" filename="Source Serif 4-Display ExtraLight.ttf" postscriptfontname="SourceSerif4Roman-DisplayExtraLight" stylemapfamilyname="Source Serif 4 Display ExtraLight" stylemapstylename="regular">
+      <location>
+        <dimension name="weight" xvalue="0"/>
+        <dimension name="optical" xvalue="60"/>
+      </location>
+    </instance>
+    <instance name="Source Serif 4 Display Light" familyname="Source Serif 4" stylename="Display Light" filename="Source Serif 4-Display Light.ttf" postscriptfontname="SourceSerif4Roman-DisplayLight" stylemapfamilyname="Source Serif 4 Display Light" stylemapstylename="regular">
+      <location>
+        <dimension name="weight" xvalue="145"/>
+        <dimension name="optical" xvalue="60"/>
+      </location>
+    </instance>
+    <instance name="Source Serif 4 Display" familyname="Source Serif 4" stylename="Display" filename="Source Serif 4-Display.ttf" postscriptfontname="SourceSerif4Roman-DisplayRegular" stylemapfamilyname="Source Serif 4 Display" stylemapstylename="regular">
+      <location>
+        <dimension name="weight" xvalue="394"/>
+        <dimension name="optical" xvalue="60"/>
+      </location>
+    </instance>
+    <instance name="Source Serif 4 Display Semibold" familyname="Source Serif 4" stylename="Display Semibold" filename="Source Serif 4-Display Semibold.ttf" postscriptfontname="SourceSerif4Roman-DisplaySemibold" stylemapfamilyname="Source Serif 4 Display Semibold" stylemapstylename="regular">
+      <location>
+        <dimension name="weight" xvalue="594"/>
+        <dimension name="optical" xvalue="60"/>
+      </location>
+    </instance>
+    <instance name="Source Serif 4 Display Bold" familyname="Source Serif 4" stylename="Display Bold" filename="Source Serif 4-Display Bold.ttf" postscriptfontname="SourceSerif4Roman-DisplayBold" stylemapfamilyname="Source Serif 4 Display Bold" stylemapstylename="regular">
+      <location>
+        <dimension name="weight" xvalue="823"/>
+        <dimension name="optical" xvalue="60"/>
+      </location>
+    </instance>
+    <instance name="Source Serif 4 Display Black" familyname="Source Serif 4" stylename="Display Black" filename="Source Serif 4-Display Black.ttf" postscriptfontname="SourceSerif4Roman-DisplayBlack" stylemapfamilyname="Source Serif 4 Display Black" stylemapstylename="regular">
+      <location>
+        <dimension name="weight" xvalue="1000"/>
+        <dimension name="optical" xvalue="60"/>
+      </location>
+    </instance>
+  </instances>
+  <lib>
+    <dict>
+      <key>public.skipExportGlyphs</key>
+      <array>
+        <string>caron.alt</string>
+        <string>commabelowcmb.alt</string>
+        <string>tonos.cap</string>
+        <string>f.ligalong</string>
+        <string>dieresiscmb.tight</string>
+        <string>IJ</string>
+        <string>Tbar</string>
+        <string>colontriangularmod</string>
+        <string>crossmark</string>
+        <string>ij</string>
+        <string>overline</string>
+        <string>similar</string>
+        <string>tbar</string>
+        <string>triangularbullet</string>
+        <string>turkicdsccmb</string>
+      </array>
+    </dict>
+  </lib>
+</designspace>
