@@ -58,3 +58,6 @@ Lib/**/*.c
 
 # Ctags
 tags
+
+# Documentation
+Doc/source/_build

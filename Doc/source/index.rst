@@ -69,6 +69,7 @@ libraries in the fontTools suite:
 - :py:mod:`fontTools.agl`: Access to the Adobe Glyph List
 - :py:mod:`fontTools.cffLib`: Read/write tools for Adobe CFF fonts
 - :py:mod:`fontTools.colorLib`: Module for handling colors in CPAL/COLR fonts
+- :py:mod:`fontTools.config`: Configure fontTools
 - :py:mod:`fontTools.cu2qu`: Module for cubic to quadratic conversion
 - :py:mod:`fontTools.designspaceLib`: Read and write designspace files
 - :py:mod:`fontTools.encodings`: Support for font-related character encodings
@@ -120,6 +121,7 @@ Table of Contents
    agl
    cffLib/index
    colorLib/index
+   config
    cu2qu/index
    designspaceLib/index
    encodings/index
