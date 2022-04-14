@@ -1,0 +1,139 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<designspace format="5.0">
+  <axes>
+    <axis tag="wght" name="Weight" values="400 700 900" default="400">
+      <labels>
+        <label uservalue="400" name="Regular" elidable="true" linkeduservalue="700"/>
+        <label uservalue="700" name="Bold"/>
+        <label uservalue="900" name="Black"/>
+      </labels>
+    </axis>
+    <axis tag="wdth" name="Width" values="75 100" default="100">
+      <labels>
+        <label uservalue="75" name="Narrow"/>
+        <label uservalue="100" name="Normal" elidable="true"/>
+      </labels>
+    </axis>
+    <axis tag="ital" name="Italic" values="0 1" default="0">
+      <labels>
+        <label uservalue="0" name="Roman" elidable="true" linkeduservalue="1"/>
+        <label uservalue="1" name="Italic"/>
+      </labels>
+    </axis>
+  </axes>
+
+  <sources>
+    <source filename="arial.ufo" name="Arial Regular">
+      <location>
+        <dimension name="Weight" xvalue="400"/>
+      </location>
+    </source>
+    <source filename="arialbd.ufo" name="Arial Bold">
+      <location>
+        <dimension name="Weight" xvalue="700"/>
+      </location>
+    </source>
+    <source filename="ariblk.ufo" name="Arial Black">
+      <location>
+        <dimension name="Weight" xvalue="900"/>
+      </location>
+    </source>
+    <source filename="ariali.ufo" name="Arial Italic">
+      <location>
+        <dimension name="Weight" xvalue="400"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </source>
+    <source filename="arialbi.ufo" name="Arial Bold Italic">
+      <location>
+        <dimension name="Weight" xvalue="700"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </source>
+    <source filename="ARIALN.ufo" name="Arial Narrow">
+      <location>
+        <dimension name="Weight" xvalue="400"/>
+        <dimension name="Width" xvalue="75"/>
+      </location>
+    </source>
+    <source filename="ARIALNB.ufo" name="Arial Narrow Bold">
+      <location>
+        <dimension name="Weight" xvalue="700"/>
+        <dimension name="Width" xvalue="75"/>
+      </location>
+    </source>
+    <source filename="ARIALNBI.ufo" name="Arial Narrow Bold Italic">
+      <location>
+        <dimension name="Weight" xvalue="700"/>
+        <dimension name="Width" xvalue="75"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </source>
+    <source filename="ARIALNI.ufo" name="Arial Narrow Italic">
+      <location>
+        <dimension name="Weight" xvalue="400"/>
+        <dimension name="Width" xvalue="75"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </source>
+  </sources>
+
+  <instances>
+    <instance name="Arial Regular">
+      <location>
+        <dimension name="Weight" xvalue="400"/>
+      </location>
+    </instance>
+    <instance name="Arial Bold">
+      <!-- Should be stylemapstylename="bold" -->
+      <location>
+        <dimension name="Weight" xvalue="700"/>
+      </location>
+    </instance>
+    <instance name="Arial Black">
+      <location>
+        <dimension name="Weight" xvalue="900"/>
+      </location>
+    </instance>
+    <instance name="Arial Italic">
+      <!-- Should be stylemapstylename="italic" -->
+      <location>
+        <dimension name="Weight" xvalue="400"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </instance>
+    <instance name="Arial Bold Italic">
+      <!-- Should be stylemapstylename="bold italic" -->
+      <location>
+        <dimension name="Weight" xvalue="700"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </instance>
+    <instance name="Arial Narrow">
+      <location>
+        <dimension name="Weight" xvalue="400"/>
+        <dimension name="Width" xvalue="75"/>
+      </location>
+    </instance>
+    <instance name="Arial Narrow Bold">
+      <location>
+        <dimension name="Weight" xvalue="700"/>
+        <dimension name="Width" xvalue="75"/>
+      </location>
+    </instance>
+    <instance name="Arial Narrow Bold Italic">
+      <location>
+        <dimension name="Weight" xvalue="700"/>
+        <dimension name="Width" xvalue="75"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </instance>
+    <instance name="Arial Narrow Italic">
+      <location>
+        <dimension name="Weight" xvalue="400"/>
+        <dimension name="Width" xvalue="75"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </instance>
+  </instances>
+</designspace>

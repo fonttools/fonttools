@@ -1,0 +1,242 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<designspace format="5.0">
+  <axes>
+    <axis tag="BLDA" name="Inline" minimum="0" maximum="1000" default="0"/>
+    <axis tag="TRMD" name="Shearded" minimum="0" maximum="1000" default="0"/>
+    <axis tag="TRMC" name="Rounded Slab" minimum="0" maximum="1000" default="0"/>
+    <axis tag="SKLD" name="Stripes" minimum="0" maximum="1000" default="0"/>
+    <axis tag="TRML" name="Worm Terminal" minimum="0" maximum="1000" default="0"/>
+    <axis tag="SKLA" name="Inline Skeleton" minimum="0" maximum="1000" default="0"/>
+    <axis tag="TRMF" name="Open Inline Terminal" minimum="0" maximum="1000" default="0"/>
+    <axis tag="TRMK" name="Inline Terminal" minimum="0" maximum="1000" default="0"/>
+    <axis tag="BLDB" name="Worm" minimum="0" maximum="1000" default="0"/>
+    <axis tag="WMX2" name="Weight" minimum="0" maximum="1000" default="0"/>
+    <axis tag="TRMB" name="Flared" minimum="0" maximum="1000" default="0"/>
+    <axis tag="TRMA" name="Rounded" minimum="0" maximum="1000" default="0"/>
+    <axis tag="SKLB" name="Worm Skeleton" minimum="0" maximum="1000" default="0"/>
+    <axis tag="TRMG" name="Slab" minimum="0" maximum="1000" default="0"/>
+    <axis tag="TRME" name="Bifurcated" minimum="0" maximum="1000" default="0"/>
+  </axes>
+
+  <!-- Labels without location or just partly specified location are at the default location plus the explicitly given sub-locations. -->
+  <labels>
+    <label name="Default" elidable="true"/>
+    <label name="Open">
+      <labelname xml:lang="de">Offen</labelname>
+      <location>
+        <dimension name="Inline" uservalue="1000"/>
+      </location>
+    </label>
+    <label name="Worm">
+      <location>
+        <dimension name="Worm" uservalue="1000"/>
+      </location>
+    </label>
+    <label name="Checkered">
+      <location>
+        <dimension name="Inline Skeleton" uservalue="1000"/>
+      </location>
+    </label>
+    <label name="Checkered Reverse">
+      <location>
+        <dimension name="Inline Terminal" uservalue="1000"/>
+      </location>
+    </label>
+    <label name="Striped">
+      <location>
+        <dimension name="Stripes" uservalue="500"/>
+      </location>
+    </label>
+    <label name="Rounded">
+      <location>
+        <dimension name="Rounded" uservalue="1000"/>
+      </location>
+    </label>
+    <label name="Flared">
+      <location>
+        <dimension name="Flared" uservalue="1000"/>
+      </location>
+    </label>
+    <label name="Flared Open">
+      <location>
+        <dimension name="Inline Skeleton" uservalue="1000"/>
+        <dimension name="Flared" uservalue="1000"/>
+      </location>
+    </label>
+    <label name="Rounded Slab">
+      <location>
+        <dimension name="Rounded Slab" uservalue="1000"/>
+      </location>
+    </label>
+    <label name="Sheared">
+      <location>
+        <dimension name="Shearded" uservalue="1000"/>
+      </location>
+    </label>
+    <label name="Bifurcated">
+      <location>
+        <dimension name="Bifurcated" uservalue="1000"/>
+      </location>
+    </label>
+    <label name="Inline">
+      <location>
+        <dimension name="Inline Skeleton" uservalue="500"/>
+        <dimension name="Open Inline Terminal" uservalue="500"/>
+      </location>
+    </label>
+    <label name="Slab">
+      <location>
+        <dimension name="Slab" uservalue="1000"/>
+      </location>
+    </label>
+    <label name="Contrast">
+      <location>
+        <dimension name="Weight" uservalue="1000"/>
+      </location>
+    </label>
+    <label name="Fancy">
+      <location>
+        <dimension name="Inline Skeleton" uservalue="1000"/>
+        <dimension name="Weight" uservalue="1000"/>
+        <dimension name="Flared" uservalue="1000"/>
+      </location>
+    </label>
+    <label name="Mayhem">
+      <location>
+        <dimension name="Rounded Slab" uservalue="750"/>
+        <dimension name="Worm Terminal" uservalue="250"/>
+        <dimension name="Inline Skeleton" uservalue="1000"/>
+        <dimension name="Open Inline Terminal" uservalue="250"/>
+        <dimension name="Inline Terminal" uservalue="250"/>
+        <dimension name="Worm" uservalue="1000"/>
+        <dimension name="Weight" uservalue="750"/>
+        <dimension name="Flared" uservalue="500"/>
+        <dimension name="Rounded" uservalue="500"/>
+        <dimension name="Worm Skeleton" uservalue="1000"/>
+        <dimension name="Slab" uservalue="750"/>
+        <dimension name="Bifurcated" uservalue="500"/>
+      </location>
+    </label>
+  </labels>
+
+  <sources>
+    <source filename="DecovarAlpha-Regular24.ufo" name="master_Regular"/>
+    <source filename="DecovarAlpha-Regular24SkelA.ufo" name="master_sklA">
+      <location>
+        <dimension name="Inline Skeleton" xvalue="1000"/>
+      </location>
+    </source>
+    <source filename="DecovarAlpha-Regular24SkelD2.ufo" name="master_sklD2">
+      <location>
+        <dimension name="Stripes" xvalue="500"/>
+      </location>
+    </source>
+    <source filename="DecovarAlpha-Regular24SkelD4.ufo" name="master_sklD4">
+      <location>
+        <dimension name="Stripes" xvalue="1000"/>
+      </location>
+    </source>
+    <source filename="DecovarAlpha-Regular24SkelB2.ufo" name="master_sklB2">
+      <location>
+        <dimension name="Worm Skeleton" xvalue="1000"/>
+      </location>
+    </source>
+    <source filename="DecovarAlpha-Regular24TermA.ufo" name="master_trmA">
+      <location>
+        <dimension name="Rounded" xvalue="1000"/>
+      </location>
+    </source>
+    <source filename="DecovarAlpha-Regular24TermB.ufo" name="master_trmB">
+      <location>
+        <dimension name="Flared" xvalue="1000"/>
+      </location>
+    </source>
+    <source filename="DecovarAlpha-Regular24TermC.ufo" name="master_trmC">
+      <location>
+        <dimension name="Rounded Slab" xvalue="1000"/>
+      </location>
+    </source>
+    <source filename="DecovarAlpha-Regular24TermD.ufo" name="master_trmD">
+      <location>
+        <dimension name="Shearded" xvalue="1000"/>
+      </location>
+    </source>
+    <source filename="DecovarAlpha-Regular24TermE.ufo" name="master_trmE">
+      <location>
+        <dimension name="Bifurcated" xvalue="1000"/>
+      </location>
+    </source>
+    <source filename="DecovarAlpha-Regular24TermF.ufo" name="master_trmF">
+      <location>
+        <dimension name="Open Inline Terminal" xvalue="1000"/>
+      </location>
+    </source>
+    <source filename="DecovarAlpha-Regular24TermG.ufo" name="master_trmG">
+      <location>
+        <dimension name="Slab" xvalue="1000"/>
+      </location>
+    </source>
+    <source filename="DecovarAlpha-Regular24TermSkelA.ufo" name="master_trmK">
+      <location>
+        <dimension name="Inline Terminal" xvalue="1000"/>
+      </location>
+    </source>
+    <source filename="DecovarAlpha-Regular24TermSkelB.ufo" name="master_trmL">
+      <location>
+        <dimension name="Worm Terminal" xvalue="1000"/>
+      </location>
+    </source>
+    <source filename="DecovarAlpha-Regular24WeightMax1.ufo" name="master_wmx1">
+      <location>
+        <dimension name="Weight" xvalue="5"/>
+      </location>
+    </source>
+    <source filename="DecovarAlpha-Regular24WeightMax1.5.ufo" name="master_wmx1.5">
+      <location>
+        <dimension name="Weight" xvalue="507.806"/>
+      </location>
+    </source>
+    <source filename="DecovarAlpha-Regular24WeightMax2.ufo" name="master_wmx2">
+      <location>
+        <dimension name="Weight" xvalue="1000"/>
+      </location>
+    </source>
+    <source filename="DecovarAlpha-Regular24bldA.ufo" name="master_bldA">
+      <location>
+        <dimension name="Inline" xvalue="1000"/>
+      </location>
+    </source>
+    <source filename="DecovarAlpha-Regular24bldB.ufo" name="master_bldB">
+      <location>
+        <dimension name="Worm" xvalue="1000"/>
+      </location>
+    </source>
+  </sources>
+
+  <instances>
+    <!--
+      This designspace defines LocationLabels (STAT format 4) for various
+      points within the design space. In order to define instances at these
+      locations, DS version 5 provides the `location="..."` attribute which
+      means that the instance is in the same location as the LocationLabel
+      with the given name.
+    -->
+    <instance location="Default" filename="DecovarAlpha-Default.ufo"/>
+    <instance location="Open" filename="DecovarAlpha-Open.ufo"/>
+    <instance location="Worm" filename="DecovarAlpha-Worm.ufo"/>
+    <instance location="Checkered" filename="DecovarAlpha-Checkered.ufo"/>
+    <instance location="Checkered Reverse" filename="DecovarAlpha-CheckeredReverse.ufo"/>
+    <instance location="Striped" filename="DecovarAlpha-Striped.ufo"/>
+    <instance location="Rounded" filename="DecovarAlpha-Rounded.ufo"/>
+    <instance location="Flared" filename="DecovarAlpha-Flared.ufo"/>
+    <instance location="Flared Open" filename="DecovarAlpha-FlaredOpen.ufo"/>
+    <instance location="Rounded Slab" filename="DecovarAlpha-RoundedSlab.ufo"/>
+    <instance location="Sheared" filename="DecovarAlpha-Sheared.ufo"/>
+    <instance location="Bifurcated" filename="DecovarAlpha-Bifurcated.ufo"/>
+    <instance location="Inline" filename="DecovarAlpha-Inline.ufo"/>
+    <instance location="Slab" filename="DecovarAlpha-Slab.ufo"/>
+    <instance location="Contrast" filename="DecovarAlpha-Contrast.ufo"/>
+    <instance location="Fancy" filename="DecovarAlpha-Fancy.ufo"/>
+    <instance location="Mayhem" filename="DecovarAlpha-Mayhem.ufo"/>
+  </instances>
+</designspace>
