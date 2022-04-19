@@ -137,6 +137,16 @@ class Options(Mapping):
     def __len__(self) -> int:
         return self.__options.__len__()
 
+    def __repr__(self) -> str:
+        return (
+            f"{self.__class__.__name__}({{\n"
+            + "".join(
+                f"    {k!r}: Option(default={v.default!r}, ...),\n"
+                for k, v in self.__options.items()
+            )
+            + "})"
+        )
+
 
 _USE_GLOBAL_DEFAULT = object()
 
