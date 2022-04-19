@@ -19,35 +19,32 @@ import pathlib
 import pytest
 
 
-class SubsetTest(unittest.TestCase):
-    def __init__(self, methodName):
-        unittest.TestCase.__init__(self, methodName)
-        # Python 3 renamed assertRaisesRegexp to assertRaisesRegex,
-        # and fires deprecation warnings if a program uses the old name.
-        if not hasattr(self, "assertRaisesRegex"):
-            self.assertRaisesRegex = self.assertRaisesRegexp
+class SubsetTest:
+    @classmethod
+    def setup_class(cls):
+        cls.tempdir = None
+        cls.num_tempfiles = 0
 
-    def setUp(self):
-        self.tempdir = None
-        self.num_tempfiles = 0
-
-    def tearDown(self):
-        if self.tempdir:
-            shutil.rmtree(self.tempdir)
+    @classmethod
+    def teardown_class(cls):
+        if cls.tempdir:
+            shutil.rmtree(cls.tempdir)
 
     @staticmethod
     def getpath(testfile):
         path, _ = os.path.split(__file__)
         return os.path.join(path, "data", testfile)
 
-    def temp_path(self, suffix):
-        if not self.tempdir:
-            self.tempdir = tempfile.mkdtemp()
-        self.num_tempfiles += 1
-        return os.path.join(self.tempdir,
-                            "tmp%d%s" % (self.num_tempfiles, suffix))
+    @classmethod
+    def temp_path(cls, suffix):
+        if not cls.tempdir:
+            cls.tempdir = tempfile.mkdtemp()
+        cls.num_tempfiles += 1
+        return os.path.join(cls.tempdir,
+                            "tmp%d%s" % (cls.num_tempfiles, suffix))
 
-    def read_ttx(self, path):
+    @staticmethod
+    def read_ttx(path):
         with open(path, "r", encoding="utf-8") as f:
             ttx = f.read()
         # don't care whether TTF or OTF, thus strip sfntVersion as well
@@ -62,7 +59,7 @@ class SubsetTest(unittest.TestCase):
             for line in difflib.unified_diff(
                     expected, actual, fromfile=expected_ttx, tofile=path):
                 sys.stdout.write(line)
-            self.fail("TTX output is different from expected")
+            pytest.fail("TTX output is different from expected")
 
     def compile_font(self, path, suffix):
         savepath = self.temp_path(suffix=suffix)
@@ -117,7 +114,7 @@ class SubsetTest(unittest.TestCase):
         _, fontpath = self.compile_font(self.getpath("TestANKR.ttx"), ".ttf")
         subsetpath = self.temp_path(".ttf")
         subset.main([fontpath, "--glyphs=two", "--output-file=%s" % subsetpath])
-        self.assertNotIn("ankr", TTFont(subsetpath))
+        assert "ankr" not in TTFont(subsetpath)
 
     def test_subset_bsln_format_0(self):
         _, fontpath = self.compile_font(self.getpath("TestBSLN-0.ttx"), ".ttf")
@@ -223,7 +220,7 @@ class SubsetTest(unittest.TestCase):
         subsetpath = self.temp_path(".ttf")
         subset.main([fontpath, "--glyphs=one", "--output-file=%s" % subsetpath])
         subsetfont = TTFont(subsetpath)
-        self.assertNotIn("lcar", subsetfont)
+        assert "lcar" not in subsetfont
 
     def test_subset_lcar_format_0(self):
         _, fontpath = self.compile_font(self.getpath("TestLCAR-0.ttx"), ".ttf")
@@ -264,7 +261,7 @@ class SubsetTest(unittest.TestCase):
         subsetpath = self.temp_path(".ttf")
         subset.main([fontpath, "--glyphs=one", "--output-file=%s" % subsetpath])
         subsetfont = TTFont(subsetpath)
-        self.assertNotIn("opbd", subsetfont)
+        assert "opbd" not in subsetfont
 
     def test_subset_opbd_format_0(self):
         _, fontpath = self.compile_font(self.getpath("TestOPBD-0.ttx"), ".ttf")
@@ -288,7 +285,7 @@ class SubsetTest(unittest.TestCase):
         subset.main([fontpath, "--unicodes=U+0041",
                      "--output-file=%s" % subsetpath])
         subsetfont = TTFont(subsetpath)
-        self.assertNotIn("prop", subsetfont)
+        assert "prop" not in subsetfont
 
     def test_subset_prop_0(self):
         # If all glyphs share the same AAT glyph properties, the "prop" table
@@ -318,29 +315,29 @@ class SubsetTest(unittest.TestCase):
     def test_options(self):
         # https://github.com/fonttools/fonttools/issues/413
         opt1 = subset.Options()
-        self.assertTrue('Xyz-' not in opt1.layout_features)
+        assert 'Xyz-' not in opt1.layout_features
         opt2 = subset.Options()
         opt2.layout_features.append('Xyz-')
-        self.assertTrue('Xyz-' in opt2.layout_features)
-        self.assertTrue('Xyz-' not in opt1.layout_features)
+        assert 'Xyz-' in opt2.layout_features
+        assert 'Xyz-' not in opt1.layout_features
 
     def test_google_color(self):
         _, fontpath = self.compile_font(self.getpath("google_color.ttx"), ".ttf")
         subsetpath = self.temp_path(".ttf")
         subset.main([fontpath, "--gids=0,1", "--output-file=%s" % subsetpath])
         subsetfont = TTFont(subsetpath)
-        self.assertTrue("CBDT" in subsetfont)
-        self.assertTrue("CBLC" in subsetfont)
-        self.assertTrue("x" in subsetfont['CBDT'].strikeData[0])
-        self.assertFalse("y" in subsetfont['CBDT'].strikeData[0])
+        assert "CBDT" in subsetfont
+        assert "CBLC" in subsetfont
+        assert "x" in subsetfont['CBDT'].strikeData[0]
+        assert "y" not in subsetfont['CBDT'].strikeData[0]
 
     def test_google_color_all(self):
         _, fontpath = self.compile_font(self.getpath("google_color.ttx"), ".ttf")
         subsetpath = self.temp_path(".ttf")
         subset.main([fontpath, "--unicodes=*", "--output-file=%s" % subsetpath])
         subsetfont = TTFont(subsetpath)
-        self.assertTrue("x" in subsetfont['CBDT'].strikeData[0])
-        self.assertTrue("y" in subsetfont['CBDT'].strikeData[0])
+        assert "x" in subsetfont['CBDT'].strikeData[0]
+        assert "y" in subsetfont['CBDT'].strikeData[0]
 
     def test_sbix(self):
         _, fontpath = self.compile_font(self.getpath("sbix.ttx"), ".ttf")
@@ -362,12 +359,12 @@ class SubsetTest(unittest.TestCase):
             subsetter.subset(font)
         logs = captor.records
 
-        self.assertTrue(len(logs) > 5)
-        self.assertEqual(len(logs), len([l for l in logs if 'msg' in l.args and 'time' in l.args]))
+        assert len(logs) > 5
+        assert len(logs) == len([l for l in logs if 'msg' in l.args and 'time' in l.args])
         # Look for a few things we know should happen
-        self.assertTrue(filter(lambda l: l.args['msg'] == "load 'cmap'", logs))
-        self.assertTrue(filter(lambda l: l.args['msg'] == "subset 'cmap'", logs))
-        self.assertTrue(filter(lambda l: l.args['msg'] == "subset 'glyf'", logs))
+        assert filter(lambda l: l.args['msg'] == "load 'cmap'", logs)
+        assert filter(lambda l: l.args['msg'] == "subset 'cmap'", logs)
+        assert filter(lambda l: l.args['msg'] == "subset 'glyf'", logs)
 
     def test_passthrough_tables(self):
         _, fontpath = self.compile_font(self.getpath("TestTTF-Regular.ttx"), ".ttf")
@@ -383,14 +380,14 @@ class SubsetTest(unittest.TestCase):
         subsetfont = TTFont(subsetpath)
 
         # tables we can't subset are dropped by default
-        self.assertFalse(unknown_tag in subsetfont)
+        assert unknown_tag not in subsetfont
 
         subsetpath = self.temp_path(".ttf")
         subset.main([fontpath, "--passthrough-tables", "--output-file=%s" % subsetpath])
         subsetfont = TTFont(subsetpath)
 
         # unknown tables are kept if --passthrough-tables option is passed
-        self.assertTrue(unknown_tag in subsetfont)
+        assert unknown_tag in subsetfont
 
     def test_non_BMP_text_arg_input(self):
         _, fontpath = self.compile_font(
@@ -401,8 +398,8 @@ class SubsetTest(unittest.TestCase):
         subset.main([fontpath, "--text=%s" % text, "--output-file=%s" % subsetpath])
         subsetfont = TTFont(subsetpath)
 
-        self.assertEqual(subsetfont['maxp'].numGlyphs, 3)
-        self.assertEqual(subsetfont.getGlyphOrder(), ['.notdef', 'A', 'u1F6D2'])
+        assert subsetfont['maxp'].numGlyphs == 3
+        assert subsetfont.getGlyphOrder() == ['.notdef', 'A', 'u1F6D2']
 
     def test_non_BMP_text_file_input(self):
         _, fontpath = self.compile_font(
@@ -419,8 +416,8 @@ class SubsetTest(unittest.TestCase):
         finally:
             os.remove(tmp.name)
 
-        self.assertEqual(subsetfont['maxp'].numGlyphs, 3)
-        self.assertEqual(subsetfont.getGlyphOrder(), ['.notdef', 'A', 'u1F6D2'])
+        assert subsetfont['maxp'].numGlyphs == 3
+        assert subsetfont.getGlyphOrder() == ['.notdef', 'A', 'u1F6D2']
 
     def test_no_hinting_CFF(self):
         ttxpath = self.getpath("Lobster.subset.ttx")
@@ -481,7 +478,7 @@ class SubsetTest(unittest.TestCase):
         self.expect_ttx(subsetfont, self.getpath(
             "expect_no_hinting_TTF.ttx"), ["glyf", "maxp"])
         for tag in subset.Options().hinting_tables:
-            self.assertTrue(tag not in subsetfont)
+            assert tag not in subsetfont
 
     def test_notdef_width_cid(self):
         # https://github.com/fonttools/fonttools/pull/845
@@ -504,12 +501,12 @@ class SubsetTest(unittest.TestCase):
         # by default, the subsetter does not recalculate the bounding box
         subset.main([fontpath, "--output-file=%s" % subsetpath, "*"])
         head = TTFont(subsetpath)['head']
-        self.assertEqual(bounds, [head.xMin, head.yMin, head.xMax, head.yMax])
+        assert bounds == [head.xMin, head.yMin, head.xMax, head.yMax]
 
         subset.main([fontpath, "--recalc-bounds", "--output-file=%s" % subsetpath, "*"])
         head = TTFont(subsetpath)['head']
         bounds = [132, 304, 365, 567]
-        self.assertEqual(bounds, [head.xMin, head.yMin, head.xMax, head.yMax])
+        assert bounds == [head.xMin, head.yMin, head.xMax, head.yMax]
 
     def test_recalc_bounds_otf(self):
         ttxpath = self.getpath("TestOTF-Regular.ttx")
@@ -524,12 +521,12 @@ class SubsetTest(unittest.TestCase):
         # by default, the subsetter does not recalculate the bounding box
         subset.main([fontpath, "--output-file=%s" % subsetpath, "*"])
         head = TTFont(subsetpath)['head']
-        self.assertEqual(bounds, [head.xMin, head.yMin, head.xMax, head.yMax])
+        assert bounds == [head.xMin, head.yMin, head.xMax, head.yMax]
 
         subset.main([fontpath, "--recalc-bounds", "--output-file=%s" % subsetpath, "*"])
         head = TTFont(subsetpath)['head']
         bounds = [132, 304, 365, 567]
-        self.assertEqual(bounds, [head.xMin, head.yMin, head.xMax, head.yMax])
+        assert bounds == [head.xMin, head.yMin, head.xMax, head.yMax]
 
     def test_recalc_timestamp_ttf(self):
         ttxpath = self.getpath("TestTTF-Regular.ttx")
@@ -541,10 +538,10 @@ class SubsetTest(unittest.TestCase):
 
         # by default, the subsetter does not recalculate the modified timestamp
         subset.main([fontpath, "--output-file=%s" % subsetpath, "*"])
-        self.assertEqual(modified, TTFont(subsetpath)['head'].modified)
+        assert modified == TTFont(subsetpath)['head'].modified
 
         subset.main([fontpath, "--recalc-timestamp", "--output-file=%s" % subsetpath, "*"])
-        self.assertLess(modified, TTFont(subsetpath)['head'].modified)
+        assert modified < TTFont(subsetpath)['head'].modified
 
     def test_recalc_timestamp_otf(self):
         ttxpath = self.getpath("TestOTF-Regular.ttx")
@@ -556,10 +553,10 @@ class SubsetTest(unittest.TestCase):
 
         # by default, the subsetter does not recalculate the modified timestamp
         subset.main([fontpath, "--output-file=%s" % subsetpath, "*"])
-        self.assertEqual(modified, TTFont(subsetpath)['head'].modified)
+        assert modified == TTFont(subsetpath)['head'].modified
 
         subset.main([fontpath, "--recalc-timestamp", "--output-file=%s" % subsetpath, "*"])
-        self.assertLess(modified, TTFont(subsetpath)['head'].modified)
+        assert modified < TTFont(subsetpath)['head'].modified
 
     def test_recalc_max_context(self):
         ttxpath = self.getpath("Lobster.subset.ttx")
@@ -572,22 +569,22 @@ class SubsetTest(unittest.TestCase):
         # by default, the subsetter does not recalculate the usMaxContext
         subset.main([fontpath, "--drop-tables+=GSUB,GPOS",
                                "--output-file=%s" % subsetpath])
-        self.assertEqual(max_context, TTFont(subsetpath)['OS/2'].usMaxContext)
+        assert max_context == TTFont(subsetpath)['OS/2'].usMaxContext
 
         subset.main([fontpath, "--recalc-max-context",
                                "--drop-tables+=GSUB,GPOS",
                                "--output-file=%s" % subsetpath])
-        self.assertEqual(0, TTFont(subsetpath)['OS/2'].usMaxContext)
+        assert 0 == TTFont(subsetpath)['OS/2'].usMaxContext
 
     def test_retain_gids_ttf(self):
         _, fontpath = self.compile_font(self.getpath("TestTTF-Regular.ttx"), ".ttf")
         font = TTFont(fontpath)
 
-        self.assertEqual(font["hmtx"]["A"], (500, 132))
-        self.assertEqual(font["hmtx"]["B"], (400, 132))
+        assert font["hmtx"]["A"] == (500, 132)
+        assert font["hmtx"]["B"] == (400, 132)
 
-        self.assertGreater(font["glyf"]["A"].numberOfContours, 0)
-        self.assertGreater(font["glyf"]["B"].numberOfContours, 0)
+        assert font["glyf"]["A"].numberOfContours > 0
+        assert font["glyf"]["B"].numberOfContours > 0
 
         subsetpath = self.temp_path(".ttf")
         subset.main(
@@ -601,29 +598,29 @@ class SubsetTest(unittest.TestCase):
         )
         subsetfont = TTFont(subsetpath)
 
-        self.assertEqual(subsetfont.getGlyphOrder(), font.getGlyphOrder()[0:3])
+        assert subsetfont.getGlyphOrder() == font.getGlyphOrder()[0:3]
 
         hmtx = subsetfont["hmtx"]
-        self.assertEqual(hmtx["A"], (  0,   0))
-        self.assertEqual(hmtx["B"], (400, 132))
+        assert hmtx["A"] == (0, 0)
+        assert hmtx["B"] == (400, 132)
 
         glyf = subsetfont["glyf"]
-        self.assertEqual(glyf["A"].numberOfContours, 0)
-        self.assertGreater(glyf["B"].numberOfContours, 0)
+        assert glyf["A"].numberOfContours == 0
+        assert glyf["B"].numberOfContours > 0
 
     def test_retain_gids_cff(self):
         _, fontpath = self.compile_font(self.getpath("TestOTF-Regular.ttx"), ".otf")
         font = TTFont(fontpath)
 
-        self.assertEqual(font["hmtx"]["A"], (500, 132))
-        self.assertEqual(font["hmtx"]["B"], (400, 132))
-        self.assertEqual(font["hmtx"]["C"], (500,   0))
+        assert font["hmtx"]["A"] == (500, 132)
+        assert font["hmtx"]["B"] == (400, 132)
+        assert font["hmtx"]["C"] == (500, 0)
 
         font["CFF "].cff[0].decompileAllCharStrings()
         cs = font["CFF "].cff[0].CharStrings
-        self.assertGreater(len(cs["A"].program), 0)
-        self.assertGreater(len(cs["B"].program), 0)
-        self.assertGreater(len(cs["C"].program), 0)
+        assert len(cs["A"].program) > 0
+        assert len(cs["B"].program) > 0
+        assert len(cs["C"].program) > 0
 
         subsetpath = self.temp_path(".otf")
         subset.main(
@@ -637,29 +634,29 @@ class SubsetTest(unittest.TestCase):
         )
         subsetfont = TTFont(subsetpath)
 
-        self.assertEqual(subsetfont.getGlyphOrder(), font.getGlyphOrder()[0:3])
+        assert subsetfont.getGlyphOrder() == font.getGlyphOrder()[0:3]
 
         hmtx = subsetfont["hmtx"]
-        self.assertEqual(hmtx["A"], (0,     0))
-        self.assertEqual(hmtx["B"], (400, 132))
+        assert hmtx["A"] == (0, 0)
+        assert hmtx["B"] == (400, 132)
 
         subsetfont["CFF "].cff[0].decompileAllCharStrings()
         cs = subsetfont["CFF "].cff[0].CharStrings
 
-        self.assertEqual(cs["A"].program, ["endchar"])
-        self.assertGreater(len(cs["B"].program), 0)
+        assert cs["A"].program == ["endchar"]
+        assert len(cs["B"].program) > 0
 
     def test_retain_gids_cff2(self):
         ttx_path = self.getpath("../../varLib/data/master_ttx_varfont_otf/TestCFF2VF.ttx")
         font, fontpath = self.compile_font(ttx_path, ".otf")
 
-        self.assertEqual(font["hmtx"]["A"], (600, 31))
-        self.assertEqual(font["hmtx"]["T"], (600, 41))
+        assert font["hmtx"]["A"] == (600, 31)
+        assert font["hmtx"]["T"] == (600, 41)
 
         font["CFF2"].cff[0].decompileAllCharStrings()
         cs = font["CFF2"].cff[0].CharStrings
-        self.assertGreater(len(cs["A"].program), 0)
-        self.assertGreater(len(cs["T"].program), 0)
+        assert len(cs["A"].program) > 0
+        assert len(cs["T"].program) > 0
 
         subsetpath = self.temp_path(".otf")
         subset.main(
@@ -672,16 +669,16 @@ class SubsetTest(unittest.TestCase):
         )
         subsetfont = TTFont(subsetpath)
 
-        self.assertEqual(len(subsetfont.getGlyphOrder()), len(font.getGlyphOrder()[0:3]))
+        assert len(subsetfont.getGlyphOrder()) == len(font.getGlyphOrder()[0:3])
 
         hmtx = subsetfont["hmtx"]
-        self.assertEqual(hmtx["glyph00001"], (  0,  0))
-        self.assertEqual(hmtx["T"], (600, 41))
+        assert hmtx["glyph00001"] == (0, 0)
+        assert hmtx["T"] == (600, 41)
 
         subsetfont["CFF2"].cff[0].decompileAllCharStrings()
         cs = subsetfont["CFF2"].cff[0].CharStrings
-        self.assertEqual(cs["glyph00001"].program, [])
-        self.assertGreater(len(cs["T"].program), 0)
+        assert cs["glyph00001"].program == []
+        assert len(cs["T"].program) > 0
 
     def test_HVAR_VVAR(self):
         _, fontpath = self.compile_font(self.getpath("TestHVVAR.ttx"), ".ttf")
@@ -712,7 +709,7 @@ class SubsetTest(unittest.TestCase):
         )
         woff = TTFont(woff_path)
 
-        self.assertEqual(woff.flavor, "woff")
+        assert woff.flavor == "woff"
 
         woff2_path = self.temp_path(".woff2")
         subset.main(
@@ -725,7 +722,7 @@ class SubsetTest(unittest.TestCase):
         )
         woff2 = TTFont(woff2_path)
 
-        self.assertEqual(woff2.flavor, "woff2")
+        assert woff2.flavor == "woff2"
 
         ttf_path = self.temp_path(".ttf")
         subset.main(
@@ -737,7 +734,7 @@ class SubsetTest(unittest.TestCase):
         )
         ttf = TTFont(ttf_path)
 
-        self.assertEqual(ttf.flavor, None)
+        assert ttf.flavor is None
 
     def test_subset_context_subst_format_3(self):
         # https://github.com/fonttools/fonttools/issues/1879
@@ -757,7 +754,8 @@ class SubsetTest(unittest.TestCase):
         subsetfont = TTFont(subsetpath)
         self.expect_ttx(subsetfont, self.getpath("CmapSubsetTest.subset.ttx"), ["cmap"])
 
-    def test_GPOS_PairPos_Format2_useClass0(self):
+    @pytest.mark.parametrize("text, n", [("!", 1), ("#", 2)])
+    def test_GPOS_PairPos_Format2_useClass0(self, text, n):
         # Check two things related to class 0 ('every other glyph'):
         # 1) that it's reused for ClassDef1 when it becomes empty as the subset glyphset
         #    is intersected with the table's Coverage
@@ -772,21 +770,19 @@ class SubsetTest(unittest.TestCase):
         )
         subsetpath = self.temp_path(".ttf")
 
-        for n, text in enumerate("!#", start=1):
-            expected_ttx = self.getpath(
-                f"GPOS_PairPos_Format2_ClassDef{n}_useClass0.subset.ttx"
-            )
-            with self.subTest(text=text, expected_ttx=expected_ttx):
-                subset.main(
-                    [
-                        fontpath,
-                        f"--text='{text}'",
-                        "--layout-features+=test",
-                        "--output-file=%s" % subsetpath,
-                    ]
-                )
-                subsetfont = TTFont(subsetpath)
-                self.expect_ttx(subsetfont, expected_ttx, ["GPOS"])
+        expected_ttx = self.getpath(
+            f"GPOS_PairPos_Format2_ClassDef{n}_useClass0.subset.ttx"
+        )
+        subset.main(
+            [
+                fontpath,
+                f"--text='{text}'",
+                "--layout-features+=test",
+                "--output-file=%s" % subsetpath,
+            ]
+        )
+        subsetfont = TTFont(subsetpath)
+        self.expect_ttx(subsetfont, expected_ttx, ["GPOS"])
 
     def test_GPOS_SinglePos_prune_post_subset_no_value(self):
         _, fontpath = self.compile_font(
