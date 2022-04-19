@@ -1,4 +1,5 @@
 import io
+import fontTools.ttLib.tables.otBase
 from fontTools.misc.testTools import getXML, stripVariableItemsFromTTX
 from fontTools.misc.textTools import tobytes, tostr
 from fontTools import subset
@@ -798,15 +799,60 @@ class SubsetTest:
             ["GlyphOrder", "GPOS"],
         )
 
-    def test_harfbuzz_repacker(self):
+    @pytest.mark.parametrize(
+        "installed, ok",
+        [
+            pytest.param(True, True, id="installed-ok"),
+            pytest.param(True, False, id="installed-fail"),
+            pytest.param(False, True, id="not_installed"),
+        ],
+    )
+    def test_harfbuzz_repacker(self, caplog, monkeypatch, installed, ok):
+        # Use a mock to test the pure-python serializer is used when uharfbuzz
+        # returns an error or is not installed
+        have_uharfbuzz = fontTools.ttLib.tables.otBase.have_uharfbuzz
+        if installed:
+            if not have_uharfbuzz:
+                pytest.skip("uharfbuzz is not installed")
+            if not ok:
+                # pretend hb.repack returns an error
+                import uharfbuzz as hb
+
+                def mock_repack(data, obj_list):
+                    raise hb.RepackerError("mocking")
+
+                monkeypatch.setattr(hb, "repack", mock_repack)
+        else:
+            if have_uharfbuzz:
+                # pretend uharfbuzz is not installed
+                monkeypatch.setattr(
+                    fontTools.ttLib.tables.otBase, "have_uharfbuzz", False
+                )
+
         fontpath = self.compile_font(self.getpath("harfbuzz_repacker.ttx"), ".otf")
         subsetpath = self.temp_path(".otf")
-        subset.main([fontpath, "--unicodes=0x53a9", "--layout-features=*",
-                     "--output-file=%s" % subsetpath])
+        with caplog.at_level(logging.ERROR, "fontTools.ttLib.tables.otBase"):
+            subset.main(
+                [
+                    fontpath,
+                    "--unicodes=0x53a9",
+                    "--layout-features=*",
+                    f"--output-file={subsetpath}",
+                ]
+            )
         subsetfont = TTFont(subsetpath)
-        self.expect_ttx(subsetfont, self.getpath("expect_harfbuzz_repacker.ttx"),
-                        ["GSUB"])
+        # both hb.repack and pure-python serializer compile to the same ttx
+        self.expect_ttx(
+            subsetfont, self.getpath("expect_harfbuzz_repacker.ttx"), ["GSUB"]
+        )
 
+        # test we emit a log.error if hb.repack fails (and we don't if successful)
+        assert (
+                (
+                "hb.repack failed, reverting to pure-python serializer; "
+                "the error message was: mocking"
+            ) in caplog.text
+        ) ^ ok
 
 
 @pytest.fixture
