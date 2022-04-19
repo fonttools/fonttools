@@ -402,31 +402,39 @@ class DeciPoints(FloatValue):
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeUShort(round(value * 10))
 
-class Fixed(FloatValue):
-	staticSize = 4
+class BaseFixedValue(FloatValue):
+	staticSize = NotImplemented
+	precisionBits = NotImplemented
+	readerMethod = NotImplemented
+	writerMethod = NotImplemented
 	def read(self, reader, font, tableDict):
-		return  fi2fl(reader.readLong(), 16)
+		return  self.fromInt(getattr(reader, self.readerMethod)())
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
-		writer.writeLong(fl2fi(value, 16))
-	@staticmethod
-	def fromString(value):
-		return str2fl(value, 16)
-	@staticmethod
-	def toString(value):
-		return fl2str(value, 16)
+		getattr(writer, self.writerMethod)(self.toInt(value))
+	@classmethod
+	def fromInt(cls, value):
+		return fi2fl(value, cls.precisionBits)
+	@classmethod
+	def toInt(cls, value):
+		return fl2fi(value, cls.precisionBits)
+	@classmethod
+	def fromString(cls, value):
+		return str2fl(value, cls.precisionBits)
+	@classmethod
+	def toString(cls, value):
+		return fl2str(value, cls.precisionBits)
 
-class F2Dot14(FloatValue):
+class Fixed(BaseFixedValue):
+	staticSize = 4
+	precisionBits = 16
+	readerMethod = "readLong"
+	writerMethod = "writeLong"
+
+class F2Dot14(BaseFixedValue):
 	staticSize = 2
-	def read(self, reader, font, tableDict):
-		return  fi2fl(reader.readShort(), 14)
-	def write(self, writer, font, tableDict, value, repeatIndex=None):
-		writer.writeShort(fl2fi(value, 14))
-	@staticmethod
-	def fromString(value):
-		return str2fl(value, 14)
-	@staticmethod
-	def toString(value):
-		return fl2str(value, 14)
+	precisionBits = 14
+	readerMethod = "readShort"
+	writerMethod = "writeShort"
 
 class Angle(F2Dot14):
 	# angles are specified in degrees, and encoded as F2Dot14 fractions of half

@@ -3,12 +3,15 @@ Merge OpenType Layout tables (GDEF / GPOS / GSUB).
 """
 import os
 import copy
+from functools import partial
 from operator import ior
 import logging
 from fontTools.misc import classifyTools
+from fontTools.misc.fixedTools import floatToFixed, fixedToFloat
 from fontTools.misc.roundTools import otRound
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables import otBase as otBase
+from fontTools.ttLib.tables.otConverters import BaseFixedValue
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
 from fontTools.varLib import builder, models, varStore
 from fontTools.varLib.models import nonNone, allNone, allEqual, allEqualTo
@@ -1099,3 +1102,94 @@ def merge(merger, self, lst):
 			setattr(self, name, value)
 			if deviceTable:
 				setattr(self, tableName, deviceTable)
+
+
+class COLRVariationMerger(VariationMerger):
+
+	variable_formats = {
+		(ot.Paint, ot.PaintFormat.PaintSolid): ot.PaintFormat.PaintVarSolid,
+		(ot.ClipBox, 1): 2,
+	}
+
+	variable_attrs = {
+		(ot.Paint, ot.PaintFormat.PaintVarSolid): ["Alpha"],
+		(ot.ClipBox, 2): ["xMin", "yMin", "xMax", "yMax"],
+	}
+
+	def __init__(self, model, axisTags, font):
+		VariationMerger.__init__(self, model, axisTags, font)
+		self.varIdxes = []
+
+	def mergeTables(self, font, master_ttfs, tableTags=("COLR",)):
+		VariationMerger.mergeTables(self, font, master_ttfs, tableTags)
+
+	def mergeSparseDict(self, out, lst):
+		for k in out.keys():
+			try:
+				self.mergeThings(out[k], [v.get(k) for v in lst])
+			except VarLibMergeError as e:
+				e.stack.append(f"[{k}]")
+				raise
+
+	def storeMastersForAttrs(self, out, lst, attrs):
+		varIdxes = []
+		for attr in attrs:
+			master_values = [getattr(item, attr) for item in lst]
+			varIdx = 0xFFFFFFFF
+			if allEqual(master_values):
+				baseValue = master_values[0]
+			else:
+				is_fixed_size_float = False
+				conv = out.getConverterByName(attr)
+				if isinstance(conv, BaseFixedValue):
+					# VarStore treats deltas for fixed-size floats as integers
+					is_fixed_size_float = True
+					master_values = [conv.toInt(v) for v in master_values]
+
+				baseValue, varIdx = self.store_builder.storeMasters(master_values)
+
+				if is_fixed_size_float:
+					baseValue = conv.fromInt(baseValue)
+
+			setattr(out, attr, baseValue)
+
+			varIdxes.append(varIdx)
+		return varIdxes
+
+
+@COLRVariationMerger.merger((ot.Paint, ot.ClipBox))
+def merge(merger, self, lst):
+	klass = type(self)
+	try:
+		varFormat = merger.variable_formats[(klass, self.Format)]
+	except KeyError:
+		merger.mergeLists(
+			[st.value for st in self.iterSubTables()],
+			[[st.value for st in m.iterSubTables()] for m in lst])
+		return
+
+	varAttrs = merger.variable_attrs[(klass, varFormat)]
+
+	staticAttrs = {c.name for c in self.getConverters() if c.name not in varAttrs}
+	for attr in staticAttrs:
+		if not allEqual([getattr(item, attr) for item in lst]):
+			raise ShouldBeConstant(
+				merger,
+				expected=getattr(lst[0], attr),
+				got=[getattr(item, attr) for item in lst],
+				stack=["."+attr],
+			)
+		setattr(self, attr, getattr(lst[0], attr))
+
+	varIdxes = merger.storeMastersForAttrs(self, lst, varAttrs)
+
+	variable = any(v != 0xFFFFFFFF for v in varIdxes)
+	if variable:
+		self.Format = varFormat
+		self.VarIndexBase = len(merger.varIdxes)
+		merger.varIdxes.extend(varIdxes)
+
+
+@COLRVariationMerger.merger(ot.ClipList)
+def merge(merger, self, lst):
+	merger.mergeSparseDict(self.clips, [v.clips for v in lst])

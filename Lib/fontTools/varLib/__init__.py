@@ -711,6 +711,10 @@ def _add_CFF2(varFont, model, master_fonts):
 	merge_region_fonts(varFont, model, ordered_fonts_list, glyphOrder)
 
 
+def _add_COLR(font, model, master_fonts):
+	pass
+
+
 def load_designspace(designspace):
 	# TODO: remove this and always assume 'designspace' is a DesignSpaceDocument,
 	# never a file path, as that's already handled by caller
@@ -975,6 +979,8 @@ def build(designspace, master_finder=lambda s:s, exclude=[], optimize=True):
 				post.formatType = 2.0
 				post.extraNames = []
 				post.mapping = {}
+	if 'COLR' not in exclude and 'COLR' in vf and vf['COLR'].version > 0:
+		_add_COLR(vf, model, master_fonts)
 
 	set_default_weight_width_slant(
 		vf, location={axis.axisTag: axis.defaultValue for axis in vf["fvar"].axes}
