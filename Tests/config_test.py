@@ -39,10 +39,7 @@ def test_ttfont_has_config():
 
 def test_ttfont_can_take_superset_of_fonttools_config():
     # Create MyConfig with all options from fontTools.config plus some
-    my_options = Options()
-    for name, option in Config.options.items():
-        my_options.register_option(name, option)
-
+    my_options = Options(Config.options)
     my_options.register("custom:my_option", "help", "default", str, any)
 
     class MyConfig(AbstractConfig):

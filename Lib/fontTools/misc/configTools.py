@@ -107,8 +107,11 @@ class Options(Mapping):
 
     __options: Dict[str, Option]
 
-    def __init__(self) -> None:
+    def __init__(self, other: "Options" = None) -> None:
         self.__options = {}
+        if other is not None:
+            for name, option in other.items():
+                self.register_option(name, option)
 
     def register(
         self,
@@ -128,8 +131,8 @@ class Options(Mapping):
         self.__options[name] = option
         return option
 
-    def __getitem__(self, __k: str) -> Option:
-        return self.__options.__getitem__(__k)
+    def __getitem__(self, key: str) -> Option:
+        return self.__options.__getitem__(key)
 
     def __iter__(self) -> Iterator[str]:
         return self.__options.__iter__()
