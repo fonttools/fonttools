@@ -1,3 +1,4 @@
+from fontTools.config import OPTIONS
 from fontTools.misc.textTools import Tag, bytesjoin
 from .DefaultTable import DefaultTable
 import sys
@@ -14,6 +15,8 @@ try:
 	have_uharfbuzz = True
 except ImportError:
 	pass
+
+USE_HARFBUZZ_REPACKER = OPTIONS[f"{__name__}:USE_HARFBUZZ_REPACKER"]
 
 class OverflowErrorRecord(object):
 	def __init__(self, overflowTuple):
@@ -73,16 +76,34 @@ class BaseTTXConverter(DefaultTable):
 
 		# 		If a lookup subtable overflows an offset, we have to start all over.
 		overflowRecord = None
+		use_hb_repack = font.cfg[USE_HARFBUZZ_REPACKER]
+		if self.tableTag in ("GSUB", "GPOS"):
+			if not use_hb_repack:
+				log.debug(
+					"hb.repack disabled, compiling '%s' with pure-python serializer",
+					self.tableTag,
+				)
+			elif not have_uharfbuzz:
+				log.debug(
+					"uharfbuzz not found, compiling '%s' with pure-python serializer",
+					self.tableTag,
+				)
 
 		while True:
 			try:
 				writer = OTTableWriter(tableTag=self.tableTag)
 				self.table.compile(writer, font)
-				if have_uharfbuzz and self.tableTag in ("GSUB", "GPOS"):
+				if use_hb_repack and have_uharfbuzz and self.tableTag in ("GSUB", "GPOS"):
 					try:
+						log.debug("serializing '%s' with hb.repack", self.tableTag)
 						return writer.getAllDataUsingHarfbuzz()
 					except (ValueError, MemoryError, hb.RepackerError) as e:
-						log.error("hb.repack failed, reverting to pure-python serializer; the error message was: %s", e)
+						log.error(
+							"hb.repack failed to serialize '%s', reverting to "
+							"pure-python serializer; the error message was: %s",
+							self.tableTag,
+							e,
+						)
 						return writer.getAllData(remove_duplicate=False)
 				return writer.getAllData()
 
