@@ -2,9 +2,11 @@
 #
 # Google Author(s): Behdad Esfahbod
 
+from fontTools import config
 from fontTools.misc.roundTools import otRound
 from fontTools import ttLib
 from fontTools.ttLib.tables import otTables
+from fontTools.ttLib.tables.otBase import USE_HARFBUZZ_REPACKER
 from fontTools.otlLib.maxContextCalc import maxCtxFont
 from fontTools.pens.basePen import NullPen
 from fontTools.misc.loggingTools import Timer
@@ -143,6 +145,13 @@ Output options
   smaller than pure zlib, but the compression speed is much slower.
   The Zopfli Python bindings are available at:
   https://pypi.python.org/pypi/zopfli
+
+--harfbuzz-repacker [default]
+  Serialize GPOS/GSUB using the HarfBuzz Repacker if uharfbuzz can be
+  imported [default].
+
+--no-harfbuzz-repacker
+  Always use the pure-python serializer even if uharfbuzz is available.
 
 Glyph set expansion
 ^^^^^^^^^^^^^^^^^^^
@@ -2642,6 +2651,7 @@ class Options(object):
 		self.flavor = None  # May be 'woff' or 'woff2'
 		self.with_zopfli = False  # use zopfli instead of zlib for WOFF 1.0
 		self.desubroutinize = False # Desubroutinize CFF CharStrings
+		self.harfbuzz_repacker = USE_HARFBUZZ_REPACKER.default
 		self.verbose = False
 		self.timing = False
 		self.xml = False
@@ -3038,6 +3048,7 @@ def save_font(font, outfile, options):
 		from fontTools.ttLib import sfnt
 		sfnt.USE_ZOPFLI = True
 	font.flavor = options.flavor
+	font.cfg[USE_HARFBUZZ_REPACKER] = options.harfbuzz_repacker
 	font.save(outfile, reorderTables=options.canonical_order)
 
 def parse_unicodes(s):
