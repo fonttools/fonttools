@@ -132,7 +132,7 @@ ttLib.getTableClass('OS/2').mergeMap = {
 	'*': first,
 	'tableTag': equal,
 	'version': max,
-	'xAvgCharWidth': avg_int, # Apparently fontTools doesn't recalc this
+	'xAvgCharWidth': first, # Will be recalculated at the end on the merged font
 	'fsType': mergeOs2FsType, # Will be overwritten
 	'panose': first, # FIXME: should really be the first Latin font
 	'ulUnicodeRange1': bitwise_or,
