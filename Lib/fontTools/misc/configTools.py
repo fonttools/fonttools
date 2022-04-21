@@ -86,7 +86,8 @@ class ConfigUnknownOptionError(ConfigError):
         super().__init__(f"Config option {name} is unknown")
 
 
-@dataclass(frozen=True)
+# eq=False because Options are unique, not fungible objects
+@dataclass(frozen=True, eq=False)
 class Option:
     name: str
     """Unique name identifying the option (e.g. package.module:MY_OPTION)."""

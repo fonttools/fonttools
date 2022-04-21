@@ -1,6 +1,12 @@
+import dataclasses
 import pytest
 
-from fontTools.misc.configTools import AbstractConfig, Options, ConfigUnknownOptionError
+from fontTools.misc.configTools import (
+    AbstractConfig,
+    Option,
+    Options,
+    ConfigUnknownOptionError,
+)
 
 
 def test_can_create_custom_config_system():
@@ -32,3 +38,22 @@ def test_can_create_custom_config_system():
     # Test that it raises on unknown option
     with pytest.raises(ConfigUnknownOptionError):
         cfg.get("test:unknown")
+
+
+def test_options_are_unique():
+    class MyConfig(AbstractConfig):
+        options = Options()
+
+    opt1 = MyConfig.register_option("test:OPT_1", "", "foo", str, any)
+    cfg = MyConfig({opt1: "bar"})
+    assert cfg[opt1] == "bar"
+
+    opt2 = Option("test:OPT_1", "", "foo", str, any)
+
+    assert dataclasses.asdict(opt1) == dataclasses.asdict(opt2)
+    assert opt1 != opt2
+
+    with pytest.raises(ConfigUnknownOptionError):
+        cfg.get(opt2)
+    with pytest.raises(ConfigUnknownOptionError):
+        cfg.set(opt2, "bar")
