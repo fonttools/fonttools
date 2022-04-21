@@ -300,7 +300,7 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 		self.setUnicodeRanges(bits)
 		return bits
 
-	def recalcXAvgCharWidth(self, ttFont):
+	def recalcAvgCharWidth(self, ttFont):
 		"""Recalculate xAvgCharWidth using metrics from ttFont's 'hmtx' table.
 
 		Set it to 0 if the unlikely event 'hmtx' table is not found.

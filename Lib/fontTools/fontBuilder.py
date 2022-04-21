@@ -491,7 +491,7 @@ class FontBuilder(object):
             assert (
                 "hmtx" in self.font
             ), "the 'hmtx' table must be setup before the 'OS/2' table"
-            self.font["OS/2"].recalcXAvgCharWidth(self.font)
+            self.font["OS/2"].recalcAvgCharWidth(self.font)
         if not (
             "ulUnicodeRange1" in values
             or "ulUnicodeRange2" in values

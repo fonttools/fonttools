@@ -2977,7 +2977,7 @@ class Subsetter(object):
 					log.info("%s Unicode ranges pruned: %s", tag, sorted(new_uniranges))
 				if self.options.recalc_average_width:
 					old_avg_width = font[tag].xAvgCharWidth
-					new_avg_width = font[tag].recalcXAvgCharWidth(font)
+					new_avg_width = font[tag].recalcAvgCharWidth(font)
 					if old_avg_width != new_avg_width:
 						log.info("%s xAvgCharWidth updated: %d", tag, new_avg_width)
 				if self.options.recalc_max_context:
