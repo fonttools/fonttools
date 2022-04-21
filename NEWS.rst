@@ -1,3 +1,42 @@
+- [OS/2 / merge] Automatically recalculate ``OS/2.xAvgCharWidth`` after merging
+  fonts with ``fontTools.merge`` (#2591, #2538).
+- [misc/config] Added ``fontTools.misc.configTools`` module, a generic configuration
+  system (#2416, #2439).
+  * Added ``fontTools.config`` module, a fontTools-specific configuration
+  system using ``configTools`` above.
+  * Attached a ``Config`` object to ``TTFont``.
+- [otlLib] Replaced environment variable for GPOS compression level with an
+  equivalent option using the new config system.
+- [designspaceLib] Incremented format version to 5.0 (#2436).
+  * Added discrete axes, variable fonts, STAT information, either design- or
+    user-space location on instances.
+    - Added ``fontTools.designspaceLib.split`` module to split a designspace
+      into sub-spaces that interpolate and that represent the variable fonts
+      listed in the document.
+  * Made instance names optional and allow computing them from STAT data instead.
+    - Added ``fontTools.designspaceLib.statNames`` module.
+  * Allow instances to have the same location as a previously defined STAT label
+  * Deprecated some attributes:
+    - ``SourceDescriptor``: ``copyLib``, ``copyInfo``, ``copyGroups``,
+      ``copyFeatures``.
+    - ``InstanceDescriptor``: ``kerning``, ``info``; ``glyphs``: use rules or
+      sparse sources.
+    - for both, ``location``: use the more explicit designLocation.
+    - Note: all are soft deprecations and existing code should keep working.
+  * Updated documentation for Python methods and the XML format.
+- [varLib] Added ``build_many`` to build several variable fonts from a single
+  designspace document (#2436).
+  * Added ``fontTools.varLib.stat`` module to build STAT tables from a
+    designspace document.
+- [otBase] Try to use the Harfbuzz Repacker for packing GSUB/GPOS tables when
+  ``uharfbuzz`` python bindings are available (#2552). Disable it by setting the
+  "fontTools.ttLib.tables.otBase:USE_HARFBUZZ_REPACKER" config option to ``False``.
+  If the option is set explicitly to ``True`` but ``uharfbuzz`` can't be imported
+  or fails to serialize for any reasons, an error will be raised (ImportError or
+  uharfbuzz errors).
+- [CFF/T2] Ensure that ``pen.closePath()`` gets called for CFF2 charstrings (#2577).
+  Handle implicit CFF2 closePath within ``T2OutlineExtractor`` (#2580).
+
 4.32.0 (released 2022-04-08)
 ----------------------------
 
