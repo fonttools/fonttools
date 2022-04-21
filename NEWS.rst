@@ -1,3 +1,6 @@
+4.33.0 (released 2022-04-21)
+----------------------------
+
 - [OS/2 / merge] Automatically recalculate ``OS/2.xAvgCharWidth`` after merging
   fonts with ``fontTools.merge`` (#2591, #2538).
 - [misc/config] Added ``fontTools.misc.configTools`` module, a generic configuration
