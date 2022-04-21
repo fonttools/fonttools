@@ -110,11 +110,9 @@ class Options(Mapping):
     """
 
     __options: Dict[str, Option]
-    __cache: Set[Option]
 
     def __init__(self, other: "Options" = None) -> None:
         self.__options = {}
-        self.__cache = set()
         if other is not None:
             for option in other.values():
                 self.register_option(option)
@@ -135,15 +133,12 @@ class Options(Mapping):
         name = option.name
         if name in self.__options:
             raise ConfigAlreadyRegisteredError(name)
-        # sanity check option values are unique
-        assert option not in self.__cache
         self.__options[name] = option
-        self.__cache.add(option)
         return option
 
     def is_registered(self, option: Option) -> bool:
-        """Return True if the option object is already registered."""
-        return option in self.__cache
+        """Return True if the same option object is already registered."""
+        return self.__options.get(option.name) is option
 
     def __getitem__(self, key: str) -> Option:
         return self.__options.__getitem__(key)
