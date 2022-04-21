@@ -17,9 +17,11 @@ from typing import (
     Callable,
     ClassVar,
     Dict,
-    Iterator,
+    Iterable,
     Mapping,
     MutableMapping,
+    Optional,
+    Set,
     Union,
 )
 
@@ -72,28 +74,29 @@ class ConfigValueValidationError(ConfigError):
         )
 
 
-_NO_VALUE = object()
-
-
 class ConfigUnknownOptionError(ConfigError):
     """Raised when a configuration option is unknown."""
 
-    def __init__(self, name, value=_NO_VALUE):
-        super().__init__(
-            f"Config option {name} is unknown"
-            + ("" if value is _NO_VALUE else f" (with given value {repr(value)})")
+    def __init__(self, option_or_name):
+        name = (
+            f"'{option_or_name.name}' (id={id(option_or_name)})>"
+            if isinstance(option_or_name, Option)
+            else f"'{option_or_name}'"
         )
+        super().__init__(f"Config option {name} is unknown")
 
 
-@dataclass
+@dataclass(frozen=True)
 class Option:
+    name: str
+    """Unique name identifying the option (e.g. package.module:MY_OPTION)."""
     help: str
     """Help text for this option."""
     default: Any
     """Default value for this option."""
     parse: Callable[[str], Any]
     """Turn input (e.g. string) into proper type. Only when reading from file."""
-    validate: Callable[[Any], bool]
+    validate: Optional[Callable[[Any], bool]] = None
     """Return true if the given value is an acceptable value."""
 
 
@@ -106,12 +109,14 @@ class Options(Mapping):
     """
 
     __options: Dict[str, Option]
+    __cache: Set[Option]
 
     def __init__(self, other: "Options" = None) -> None:
         self.__options = {}
+        self.__cache = set()
         if other is not None:
-            for name, option in other.items():
-                self.register_option(name, option)
+            for option in other.values():
+                self.register_option(option)
 
     def register(
         self,
@@ -119,17 +124,25 @@ class Options(Mapping):
         help: str,
         default: Any,
         parse: Callable[[str], Any],
-        validate: Callable[[Any], bool],
+        validate: Optional[Callable[[Any], bool]] = None,
     ) -> Option:
-        """Register a new option."""
-        return self.register_option(name, Option(help, default, parse, validate))
+        """Create and register a new option."""
+        return self.register_option(Option(name, help, default, parse, validate))
 
-    def register_option(self, name: str, option: Option) -> Option:
+    def register_option(self, option: Option) -> Option:
         """Register a new option."""
+        name = option.name
         if name in self.__options:
             raise ConfigAlreadyRegisteredError(name)
+        # sanity check option values are unique
+        assert option not in self.__cache
         self.__options[name] = option
+        self.__cache.add(option)
         return option
+
+    def is_registered(self, option: Option) -> bool:
+        """Return True if the option object is already registered."""
+        return option in self.__cache
 
     def __getitem__(self, key: str) -> Option:
         return self.__options.__getitem__(key)
@@ -157,7 +170,10 @@ _USE_GLOBAL_DEFAULT = object()
 class AbstractConfig(MutableMapping):
     """
     Create a set of config values, optionally pre-filled with values from
-    the given dictionary.
+    the given dictionary or pre-existing config object.
+
+    The class implements the MutableMapping protocol keyed by option name (`str`).
+    For convenience its methods accept either Option or str as the key parameter.
 
     .. seealso:: :meth:`set()`
 
@@ -173,32 +189,68 @@ class AbstractConfig(MutableMapping):
         MyConfig.register_option( "test:option_name", "This is an option", 0, int, lambda v: isinstance(v, int))
 
         cfg = MyConfig({"test:option_name": 10})
+
     """
 
     options: ClassVar[Options]
 
     @classmethod
-    def register_option(cls, *args, **kwargs) -> Option:
+    def register_option(
+        cls,
+        name: str,
+        help: str,
+        default: Any,
+        parse: Callable[[str], Any],
+        validate: Optional[Callable[[Any], bool]] = None,
+    ) -> Option:
         """Register an available option in this config system."""
-        return cls.options.register(*args, **kwargs)
+        return cls.options.register(
+            name, help=help, default=default, parse=parse, validate=validate
+        )
 
     _values: Dict[str, Any]
 
     def __init__(
         self,
-        values: Union[AbstractConfig, Dict] = {},
-        parse_values=False,
-        skip_unknown=False,
+        values: Union[AbstractConfig, Dict[Union[Option, str], Any]] = {},
+        parse_values: bool = False,
+        skip_unknown: bool = False,
     ):
         self._values = {}
         values_dict = values._values if isinstance(values, AbstractConfig) else values
         for name, value in values_dict.items():
             self.set(name, value, parse_values, skip_unknown)
 
-    def set(self, name: str, value: Any, parse_values=False, skip_unknown=False):
+    def _resolve_option(self, option_or_name: Union[Option, str]) -> Option:
+        if isinstance(option_or_name, Option):
+            option = option_or_name
+            if not self.options.is_registered(option):
+                raise ConfigUnknownOptionError(option)
+            return option
+        elif isinstance(option_or_name, str):
+            name = option_or_name
+            try:
+                return self.options[name]
+            except KeyError:
+                raise ConfigUnknownOptionError(name)
+        else:
+            raise TypeError(
+                "expected Option or str, found "
+                f"{type(option_or_name).__name__}: {option_or_name!r}"
+            )
+
+    def set(
+        self,
+        option_or_name: Union[Option, str],
+        value: Any,
+        parse_values: bool = False,
+        skip_unknown: bool = False,
+    ):
         """Set the value of an option.
 
         Args:
+            * `option_or_name`: an `Option` object or its name (`str`).
+            * `value`: the value to be assigned to given option.
             * `parse_values`: parse the configuration value from a string into
                 its proper type, as per its `Option` object. The default
                 behavior is to raise `ConfigValueValidationError` when the value
@@ -210,15 +262,12 @@ class AbstractConfig(MutableMapping):
                 (e.g. for a later version of fontTools)
         """
         try:
-            option = self.options[name]
-        except KeyError:
+            option = self._resolve_option(option_or_name)
+        except ConfigUnknownOptionError as e:
             if skip_unknown:
-                log.debug(
-                    "Config option %s is unknown (with given value %r)", name, value
-                )
+                log.debug(str(e))
                 return
-            else:
-                raise ConfigUnknownOptionError(name, value)
+            raise
 
         # Can be useful if the values come from a source that doesn't have
         # strict typing (.ini file? Terminal input?)
@@ -226,14 +275,16 @@ class AbstractConfig(MutableMapping):
             try:
                 value = option.parse(value)
             except Exception as e:
-                raise ConfigValueParsingError(name, value) from e
+                raise ConfigValueParsingError(option.name, value) from e
 
-        if not option.validate(value):
-            raise ConfigValueValidationError(name, value)
+        if option.validate is not None and not option.validate(value):
+            raise ConfigValueValidationError(option.name, value)
 
-        self._values[name] = value
+        self._values[option.name] = value
 
-    def get(self, name: str, default=_USE_GLOBAL_DEFAULT):
+    def get(
+        self, option_or_name: Union[Option, str], default: Any = _USE_GLOBAL_DEFAULT
+    ) -> Any:
         """
         Get the value of an option. The value which is returned is the first
         provided among:
@@ -256,28 +307,27 @@ class AbstractConfig(MutableMapping):
         still pass the option to the function call, but will favour the new
         config mechanism if the given font specifies a value for that option.
         """
-        if name in self._values:
-            return self._values[name]
+        option = self._resolve_option(option_or_name)
+        if option.name in self._values:
+            return self._values[option.name]
         if default is not _USE_GLOBAL_DEFAULT:
             return default
-        try:
-            return self.options[name].default
-        except KeyError as e:
-            raise ConfigUnknownOptionError(name) from e
+        return option.default
 
     def copy(self):
         return self.__class__(self._values)
 
-    def __getitem__(self, name: str) -> Any:
-        return self.get(name)
+    def __getitem__(self, option_or_name: Union[Option, str]) -> Any:
+        return self.get(option_or_name)
 
-    def __setitem__(self, name: str, value: Any) -> None:
-        return self.set(name, value)
+    def __setitem__(self, option_or_name: Union[Option, str], value: Any) -> None:
+        return self.set(option_or_name, value)
 
-    def __delitem__(self, name: str) -> None:
-        del self._values[name]
+    def __delitem__(self, option_or_name: Union[Option, str]) -> None:
+        option = self._resolve_option(option_or_name)
+        del self._values[option.name]
 
-    def __iter__(self) -> Iterator:
+    def __iter__(self) -> Iterable[str]:
         return self._values.__iter__()
 
     def __len__(self) -> int:
