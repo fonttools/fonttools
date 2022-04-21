@@ -57,3 +57,24 @@ def test_options_are_unique():
         cfg.get(opt2)
     with pytest.raises(ConfigUnknownOptionError):
         cfg.set(opt2, "bar")
+
+
+def test_optional_bool():
+    for v in ("yes", "YES", "Yes", "1", "True", "true", "TRUE"):
+        assert Option.parse_optional_bool(v) is True
+
+    for v in ("no", "NO", "No", "0", "False", "false", "FALSE"):
+        assert Option.parse_optional_bool(v) is False
+
+    for v in ("auto", "AUTO", "Auto", "None", "none", "NONE"):
+        assert Option.parse_optional_bool(v) is None
+
+    with pytest.raises(ValueError, match="invalid optional bool"):
+        Option.parse_optional_bool("foobar")
+
+    assert Option.validate_optional_bool(True)
+    assert Option.validate_optional_bool(False)
+    assert Option.validate_optional_bool(None)
+    assert not Option.validate_optional_bool(1)
+    assert not Option.validate_optional_bool(0)
+    assert not Option.validate_optional_bool("1")

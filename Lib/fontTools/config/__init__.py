@@ -49,9 +49,11 @@ Config.register_option(
         FontTools tries to use the HarfBuzz Repacker to serialize GPOS/GSUB tables
         if the uharfbuzz python bindings are importable, otherwise falls back to its
         slower, less efficient serializer. Set to False to always use the latter.
+        Set to True to explicitly request the HarfBuzz Repacker (will raise an
+        error if uharfbuzz cannot be imported).
         """
     ),
-    default=True,
-    parse=lambda s: str(s).lower() not in {"0", "no", "false"},
-    validate=lambda v: isinstance(v, bool),
+    default=None,
+    parse=Option.parse_optional_bool,
+    validate=Option.validate_optional_bool,
 )

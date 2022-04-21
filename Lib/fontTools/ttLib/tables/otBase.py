@@ -76,35 +76,49 @@ class BaseTTXConverter(DefaultTable):
 
 		# 		If a lookup subtable overflows an offset, we have to start all over.
 		overflowRecord = None
+		# this is 3-state option: default (None) means automatically use hb.repack or
+		# silently fall back if it fails; True, use it and raise error if not possible
+		# or it errors out; False, don't use it, even if you can.
 		use_hb_repack = font.cfg[USE_HARFBUZZ_REPACKER]
 		if self.tableTag in ("GSUB", "GPOS"):
-			if not use_hb_repack:
+			if use_hb_repack is False:
 				log.debug(
 					"hb.repack disabled, compiling '%s' with pure-python serializer",
 					self.tableTag,
 				)
 			elif not have_uharfbuzz:
-				log.debug(
-					"uharfbuzz not found, compiling '%s' with pure-python serializer",
-					self.tableTag,
-				)
+				if use_hb_repack is True:
+					raise ImportError("No module named 'uharfbuzz'")
+				else:
+					assert use_hb_repack is None
+					log.debug(
+						"uharfbuzz not found, compiling '%s' with pure-python serializer",
+						self.tableTag,
+					)
 
 		while True:
 			try:
 				writer = OTTableWriter(tableTag=self.tableTag)
 				self.table.compile(writer, font)
-				if use_hb_repack and have_uharfbuzz and self.tableTag in ("GSUB", "GPOS"):
+				if (
+					use_hb_repack in (None, True)
+					and have_uharfbuzz
+					and self.tableTag in ("GSUB", "GPOS")
+				):
 					try:
 						log.debug("serializing '%s' with hb.repack", self.tableTag)
 						return writer.getAllDataUsingHarfbuzz()
 					except (ValueError, MemoryError, hb.RepackerError) as e:
-						log.error(
-							"hb.repack failed to serialize '%s', reverting to "
-							"pure-python serializer; the error message was: %s",
-							self.tableTag,
-							e,
-						)
-						return writer.getAllData(remove_duplicate=False)
+						if use_hb_repack is None:
+							log.error(
+								"hb.repack failed to serialize '%s', reverting to "
+								"pure-python serializer; the error message was: %s",
+								self.tableTag,
+								e,
+							)
+							return writer.getAllData(remove_duplicate=False)
+						# let the error propagate if USE_HARFBUZZ_REPACKER is True
+						raise
 				return writer.getAllData()
 
 			except OTLOffsetOverflowError as e:

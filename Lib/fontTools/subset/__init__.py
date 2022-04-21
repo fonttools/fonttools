@@ -146,9 +146,11 @@ Output options
   The Zopfli Python bindings are available at:
   https://pypi.python.org/pypi/zopfli
 
---harfbuzz-repacker [default]
-  Serialize GPOS/GSUB using the HarfBuzz Repacker if uharfbuzz can be
-  imported [default].
+--harfbuzz-repacker
+  By default, we serialize GPOS/GSUB using the HarfBuzz Repacker when
+  uharfbuzz can be imported and is successful, otherwise fall back to
+  the pure-python serializer. Set the option to force using the HarfBuzz
+  Repacker (raises an error if uharfbuzz can't be found or fails).
 
 --no-harfbuzz-repacker
   Always use the pure-python serializer even if uharfbuzz is available.

@@ -802,6 +802,8 @@ class SubsetTest:
     @pytest.mark.parametrize(
         "installed, enabled, ok",
         [
+            pytest.param(True, None, True, id="installed-auto-ok"),
+            pytest.param(True, None, True, id="installed-auto-fail"),
             pytest.param(True, True, True, id="installed-enabled-ok"),
             pytest.param(True, True, False, id="installed-enabled-fail"),
             pytest.param(True, False, True, id="installed-disabled"),
@@ -839,8 +841,24 @@ class SubsetTest:
             "--layout-features=*",
             f"--output-file={subsetpath}",
         ]
-        if not enabled:
+        if enabled is True:
+            args.append("--harfbuzz-repacker")
+        elif enabled is False:
             args.append("--no-harfbuzz-repacker")
+        # elif enabled is None: ... is the default
+
+        if enabled is True:
+            if not installed:
+                # raise if enabled but not installed
+                with pytest.raises(ImportError, match="uharfbuzz"):
+                    subset.main(args)
+                return
+
+            elif not ok:
+                # raise if enabled but fails
+                with pytest.raises(hb.RepackerError, match="mocking"):
+                    subset.main(args)
+                return
 
         with caplog.at_level(logging.DEBUG, "fontTools.ttLib.tables.otBase"):
             subset.main(args)
@@ -851,14 +869,16 @@ class SubsetTest:
             subsetfont, self.getpath("expect_harfbuzz_repacker.ttx"), ["GSUB"]
         )
 
-        if enabled:
+        if enabled or enabled is None:
             if installed:
                 assert "serializing 'GSUB' with hb.repack" in caplog.text
-            else:
-                assert (
-                    "uharfbuzz not found, compiling 'GSUB' with pure-python serializer"
-                ) in caplog.text
-        else:
+
+        if enabled is None and not installed:
+            assert (
+                "uharfbuzz not found, compiling 'GSUB' with pure-python serializer"
+            ) in caplog.text
+
+        if enabled is False:
             assert (
                 "hb.repack disabled, compiling 'GSUB' with pure-python serializer"
             ) in caplog.text

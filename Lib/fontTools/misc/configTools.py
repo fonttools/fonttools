@@ -100,6 +100,21 @@ class Option:
     validate: Optional[Callable[[Any], bool]] = None
     """Return true if the given value is an acceptable value."""
 
+    @staticmethod
+    def parse_optional_bool(v: str) -> Optional[bool]:
+        s = str(v).lower()
+        if s in {"0", "no", "false"}:
+            return False
+        if s in {"1", "yes", "true"}:
+            return True
+        if s in {"auto", "none"}:
+            return None
+        raise ValueError("invalid optional bool: {v!r}")
+
+    @staticmethod
+    def validate_optional_bool(v: Any) -> bool:
+        return v is None or isinstance(v, bool)
+
 
 class Options(Mapping):
     """Registry of available options for a given config system.
