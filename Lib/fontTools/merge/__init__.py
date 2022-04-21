@@ -125,6 +125,21 @@ class Merger(object):
 
 		self._postMerge(mega)
 
+		# merge only averages the xAvgCharWidth of the fonts being merged rather than recalculating. This code (from FontBakery) recalculates.
+
+		width_sum = 0
+		count = 0
+		for glyph_id in mega['glyf'].glyphs:  # At least .notdef must be present.
+			width = mega['hmtx'].metrics[glyph_id][0]
+			# The OpenType spec doesn't exclude negative widths, but only positive
+			# widths seems to be the assumption in the wild?
+			if width > 0:
+				count += 1
+				width_sum += width
+
+		avgCharWidth = int(round(width_sum / count))
+		mega["OS/2"].xAvgCharWidth = avgCharWidth
+
 		return mega
 
 	def mergeObjects(self, returnTable, logic, tables):
