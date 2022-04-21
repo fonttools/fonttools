@@ -8,6 +8,7 @@ import shutil
 import sys
 import tempfile
 from unittest import TestCase as _TestCase
+from fontTools.config import Config
 from fontTools.misc.textTools import tobytes
 from fontTools.misc.xmlWriter import XMLWriter
 
@@ -53,6 +54,7 @@ class FakeFont:
         self.reverseGlyphOrderDict_ = {g: i for i, g in enumerate(glyphs)}
         self.lazy = False
         self.tables = {}
+        self.cfg = Config()
 
     def __getitem__(self, tag):
         return self.tables[tag]

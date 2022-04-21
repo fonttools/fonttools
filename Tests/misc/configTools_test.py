@@ -1,6 +1,12 @@
+import dataclasses
 import pytest
 
-from fontTools.misc.configTools import AbstractConfig, Options, ConfigUnknownOptionError
+from fontTools.misc.configTools import (
+    AbstractConfig,
+    Option,
+    Options,
+    ConfigUnknownOptionError,
+)
 
 
 def test_can_create_custom_config_system():
@@ -32,3 +38,43 @@ def test_can_create_custom_config_system():
     # Test that it raises on unknown option
     with pytest.raises(ConfigUnknownOptionError):
         cfg.get("test:unknown")
+
+
+def test_options_are_unique():
+    class MyConfig(AbstractConfig):
+        options = Options()
+
+    opt1 = MyConfig.register_option("test:OPT_1", "", "foo", str, any)
+    cfg = MyConfig({opt1: "bar"})
+    assert cfg[opt1] == "bar"
+
+    opt2 = Option("test:OPT_1", "", "foo", str, any)
+
+    assert dataclasses.asdict(opt1) == dataclasses.asdict(opt2)
+    assert opt1 != opt2
+
+    with pytest.raises(ConfigUnknownOptionError):
+        cfg.get(opt2)
+    with pytest.raises(ConfigUnknownOptionError):
+        cfg.set(opt2, "bar")
+
+
+def test_optional_bool():
+    for v in ("yes", "YES", "Yes", "1", "True", "true", "TRUE"):
+        assert Option.parse_optional_bool(v) is True
+
+    for v in ("no", "NO", "No", "0", "False", "false", "FALSE"):
+        assert Option.parse_optional_bool(v) is False
+
+    for v in ("auto", "AUTO", "Auto", "None", "none", "NONE"):
+        assert Option.parse_optional_bool(v) is None
+
+    with pytest.raises(ValueError, match="invalid optional bool"):
+        Option.parse_optional_bool("foobar")
+
+    assert Option.validate_optional_bool(True)
+    assert Option.validate_optional_bool(False)
+    assert Option.validate_optional_bool(None)
+    assert not Option.validate_optional_bool(1)
+    assert not Option.validate_optional_bool(0)
+    assert not Option.validate_optional_bool("1")

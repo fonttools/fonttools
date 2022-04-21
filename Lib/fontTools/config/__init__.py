@@ -14,7 +14,9 @@ from fontTools.misc.configTools import *
 class Config(AbstractConfig):
     options = Options()
 
+
 OPTIONS = Config.options
+
 
 Config.register_option(
     name="fontTools.otlLib.optimize.gpos:COMPRESSION_LEVEL",
@@ -38,4 +40,20 @@ Config.register_option(
     default=0,
     parse=int,
     validate=lambda v: v in range(10),
+)
+
+Config.register_option(
+    name="fontTools.ttLib.tables.otBase:USE_HARFBUZZ_REPACKER",
+    help=dedent(
+        """\
+        FontTools tries to use the HarfBuzz Repacker to serialize GPOS/GSUB tables
+        if the uharfbuzz python bindings are importable, otherwise falls back to its
+        slower, less efficient serializer. Set to False to always use the latter.
+        Set to True to explicitly request the HarfBuzz Repacker (will raise an
+        error if uharfbuzz cannot be imported).
+        """
+    ),
+    default=None,
+    parse=Option.parse_optional_bool,
+    validate=Option.validate_optional_bool,
 )

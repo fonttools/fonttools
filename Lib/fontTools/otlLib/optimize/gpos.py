@@ -5,11 +5,14 @@ from itertools import chain
 from math import log2
 from typing import DefaultDict, Dict, Iterable, List, Sequence, Tuple
 
+from fontTools.config import OPTIONS
 from fontTools.misc.intTools import bit_count, bit_indices
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables import otBase, otTables
 
-log = logging.getLogger("fontTools.otlLib.optimize.gpos")
+log = logging.getLogger(__name__)
+
+COMPRESSION_LEVEL = OPTIONS[f"{__name__}:COMPRESSION_LEVEL"]
 
 
 def compact(font: TTFont, level: int) -> TTFont:

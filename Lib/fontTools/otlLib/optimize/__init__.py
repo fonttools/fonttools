@@ -1,7 +1,5 @@
 from argparse import RawTextHelpFormatter
-from fontTools.config import OPTIONS
-
-from fontTools.otlLib.optimize.gpos import compact
+from fontTools.otlLib.optimize.gpos import COMPRESSION_LEVEL, compact
 from fontTools.ttLib import TTFont
 
 
@@ -20,7 +18,6 @@ def main(args=None):
     parser.add_argument(
         "-o", metavar="OUTPUTFILE", dest="outfile", default=None, help="output file"
     )
-    COMPRESSION_LEVEL = OPTIONS["fontTools.otlLib.optimize.gpos:COMPRESSION_LEVEL"]
     parser.add_argument(
         "--gpos-compression-level",
         help=COMPRESSION_LEVEL.help,

@@ -800,14 +800,18 @@ class SubsetTest:
         )
 
     @pytest.mark.parametrize(
-        "installed, ok",
+        "installed, enabled, ok",
         [
-            pytest.param(True, True, id="installed-ok"),
-            pytest.param(True, False, id="installed-fail"),
-            pytest.param(False, True, id="not_installed"),
+            pytest.param(True, None, True, id="installed-auto-ok"),
+            pytest.param(True, None, True, id="installed-auto-fail"),
+            pytest.param(True, True, True, id="installed-enabled-ok"),
+            pytest.param(True, True, False, id="installed-enabled-fail"),
+            pytest.param(True, False, True, id="installed-disabled"),
+            pytest.param(False, True, True, id="not_installed-enabled"),
+            pytest.param(False, False, True, id="not_installed-disabled"),
         ],
     )
-    def test_harfbuzz_repacker(self, caplog, monkeypatch, installed, ok):
+    def test_harfbuzz_repacker(self, caplog, monkeypatch, installed, enabled, ok):
         # Use a mock to test the pure-python serializer is used when uharfbuzz
         # returns an error or is not installed
         have_uharfbuzz = fontTools.ttLib.tables.otBase.have_uharfbuzz
@@ -831,26 +835,59 @@ class SubsetTest:
 
         fontpath = self.compile_font(self.getpath("harfbuzz_repacker.ttx"), ".otf")
         subsetpath = self.temp_path(".otf")
-        with caplog.at_level(logging.ERROR, "fontTools.ttLib.tables.otBase"):
-            subset.main(
-                [
-                    fontpath,
-                    "--unicodes=0x53a9",
-                    "--layout-features=*",
-                    f"--output-file={subsetpath}",
-                ]
-            )
+        args = [
+            fontpath,
+            "--unicodes=0x53a9",
+            "--layout-features=*",
+            f"--output-file={subsetpath}",
+        ]
+        if enabled is True:
+            args.append("--harfbuzz-repacker")
+        elif enabled is False:
+            args.append("--no-harfbuzz-repacker")
+        # elif enabled is None: ... is the default
+
+        if enabled is True:
+            if not installed:
+                # raise if enabled but not installed
+                with pytest.raises(ImportError, match="uharfbuzz"):
+                    subset.main(args)
+                return
+
+            elif not ok:
+                # raise if enabled but fails
+                with pytest.raises(hb.RepackerError, match="mocking"):
+                    subset.main(args)
+                return
+
+        with caplog.at_level(logging.DEBUG, "fontTools.ttLib.tables.otBase"):
+            subset.main(args)
+
         subsetfont = TTFont(subsetpath)
         # both hb.repack and pure-python serializer compile to the same ttx
         self.expect_ttx(
             subsetfont, self.getpath("expect_harfbuzz_repacker.ttx"), ["GSUB"]
         )
 
+        if enabled or enabled is None:
+            if installed:
+                assert "serializing 'GSUB' with hb.repack" in caplog.text
+
+        if enabled is None and not installed:
+            assert (
+                "uharfbuzz not found, compiling 'GSUB' with pure-python serializer"
+            ) in caplog.text
+
+        if enabled is False:
+            assert (
+                "hb.repack disabled, compiling 'GSUB' with pure-python serializer"
+            ) in caplog.text
+
         # test we emit a log.error if hb.repack fails (and we don't if successful)
         assert (
                 (
-                "hb.repack failed, reverting to pure-python serializer; "
-                "the error message was: mocking"
+                "hb.repack failed to serialize 'GSUB', reverting to "
+                "pure-python serializer; the error message was: mocking"
             ) in caplog.text
         ) ^ ok
 
