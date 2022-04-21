@@ -2976,11 +2976,10 @@ class Subsetter(object):
 				if old_uniranges != new_uniranges:
 					log.info("%s Unicode ranges pruned: %s", tag, sorted(new_uniranges))
 				if self.options.recalc_average_width:
-					widths = [m[0] for m in font["hmtx"].metrics.values() if m[0] > 0]
-					avg_width = otRound(sum(widths) / len(widths))
-					if avg_width != font[tag].xAvgCharWidth:
-						font[tag].xAvgCharWidth = avg_width
-						log.info("%s xAvgCharWidth updated: %d", tag, avg_width)
+					old_avg_width = font[tag].xAvgCharWidth
+					new_avg_width = font[tag].recalcAvgCharWidth(font)
+					if old_avg_width != new_avg_width:
+						log.info("%s xAvgCharWidth updated: %d", tag, new_avg_width)
 				if self.options.recalc_max_context:
 					max_context = maxCtxFont(font)
 					if max_context != font[tag].usMaxContext:

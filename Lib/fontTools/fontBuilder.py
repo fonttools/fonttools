@@ -486,15 +486,12 @@ class FontBuilder(object):
         """Create a new `OS/2` table and initialize it with default values,
         which can be overridden by keyword arguments.
         """
-        if "xAvgCharWidth" not in values:
-            gs = self.font.getGlyphSet()
-            widths = [
-                gs[glyphName].width
-                for glyphName in gs.keys()
-                if gs[glyphName].width > 0
-            ]
-            values["xAvgCharWidth"] = int(round(sum(widths) / float(len(widths))))
         self._initTableWithValues("OS/2", _OS2Defaults, values)
+        if "xAvgCharWidth" not in values:
+            assert (
+                "hmtx" in self.font
+            ), "the 'hmtx' table must be setup before the 'OS/2' table"
+            self.font["OS/2"].recalcAvgCharWidth(self.font)
         if not (
             "ulUnicodeRange1" in values
             or "ulUnicodeRange2" in values

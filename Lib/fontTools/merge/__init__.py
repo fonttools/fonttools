@@ -155,6 +155,11 @@ class Merger(object):
 	def _postMerge(self, font):
 		layoutPostMerge(font)
 
+		if "OS/2" in font:
+			# https://github.com/fonttools/fonttools/issues/2538
+			# TODO: Add an option to disable this?
+			font["OS/2"].recalcAvgCharWidth(font)
+
 
 __all__ = [
 	'Options',
