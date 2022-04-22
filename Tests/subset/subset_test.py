@@ -803,7 +803,7 @@ class SubsetTest:
         "installed, enabled, ok",
         [
             pytest.param(True, None, True, id="installed-auto-ok"),
-            pytest.param(True, None, True, id="installed-auto-fail"),
+            pytest.param(True, None, False, id="installed-auto-fail"),
             pytest.param(True, True, True, id="installed-enabled-ok"),
             pytest.param(True, True, False, id="installed-enabled-fail"),
             pytest.param(True, False, True, id="installed-disabled"),
@@ -887,7 +887,7 @@ class SubsetTest:
         assert (
                 (
                 "hb.repack failed to serialize 'GSUB', reverting to "
-                "pure-python serializer; the error message was: mocking"
+                "pure-python serializer; the error message was: RepackerError: mocking"
             ) in caplog.text
         ) ^ ok
 

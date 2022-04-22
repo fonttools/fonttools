@@ -110,11 +110,14 @@ class BaseTTXConverter(DefaultTable):
 						return writer.getAllDataUsingHarfbuzz()
 					except (ValueError, MemoryError, hb.RepackerError) as e:
 						if use_hb_repack is None:
+							error_msg = f"{type(e).__name__}"
+							if str(e) != "":
+								error_msg += f": {e}"
 							log.error(
 								"hb.repack failed to serialize '%s', reverting to "
 								"pure-python serializer; the error message was: %s",
 								self.tableTag,
-								e,
+								error_msg,
 							)
 							return writer.getAllData(remove_duplicate=False)
 						# let the error propagate if USE_HARFBUZZ_REPACKER is True
