@@ -29,7 +29,7 @@ class SubsetTest:
     @classmethod
     def teardown_class(cls):
         if cls.tempdir:
-            shutil.rmtree(cls.tempdir)
+            shutil.rmtree(cls.tempdir, ignore_errors=True)
 
     @staticmethod
     def getpath(testfile):
