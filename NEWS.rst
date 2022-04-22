@@ -1,3 +1,9 @@
+- [otBase] Make logging less verbose when harfbuzz fails to serialize. Do not exit
+  at the first failure but continue attempting to fix offset overflow error using
+  the pure-python serializer even when the ``USE_HARFBUZZ_REPACKER`` option was
+  explicitly set to ``True``. This is normal with fonts with relatively large
+  tables, at least until hb.repack implements proper table splitting.
+
 4.33.1 (released 2022-04-22)
 ----------------------------
 
