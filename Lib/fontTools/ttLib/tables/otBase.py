@@ -96,6 +96,7 @@ class BaseTTXConverter(DefaultTable):
 						self.tableTag,
 					)
 
+		hb_first_error_logged = False
 		while True:
 			try:
 				writer = OTTableWriter(tableTag=self.tableTag)
@@ -109,19 +110,22 @@ class BaseTTXConverter(DefaultTable):
 						log.debug("serializing '%s' with hb.repack", self.tableTag)
 						return writer.getAllDataUsingHarfbuzz()
 					except (ValueError, MemoryError, hb.RepackerError) as e:
-						if use_hb_repack is None:
+						# Only log hb repacker errors the first time they occur in
+						# the offset-overflow resolution loop, they are just noisy.
+						# Maybe we can revisit this if/when uharfbuzz actually gives
+						# us more info as to why hb.repack failed...
+						if not hb_first_error_logged:
 							error_msg = f"{type(e).__name__}"
 							if str(e) != "":
 								error_msg += f": {e}"
-							log.error(
+							log.warning(
 								"hb.repack failed to serialize '%s', reverting to "
 								"pure-python serializer; the error message was: %s",
 								self.tableTag,
 								error_msg,
 							)
-							return writer.getAllData(remove_duplicate=False)
-						# let the error propagate if USE_HARFBUZZ_REPACKER is True
-						raise
+							hb_first_error_logged = True
+						return writer.getAllData(remove_duplicate=False)
 				return writer.getAllData()
 
 			except OTLOffsetOverflowError as e:

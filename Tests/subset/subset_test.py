@@ -847,18 +847,11 @@ class SubsetTest:
             args.append("--no-harfbuzz-repacker")
         # elif enabled is None: ... is the default
 
-        if enabled is True:
-            if not installed:
-                # raise if enabled but not installed
-                with pytest.raises(ImportError, match="uharfbuzz"):
-                    subset.main(args)
-                return
-
-            elif not ok:
-                # raise if enabled but fails
-                with pytest.raises(hb.RepackerError, match="mocking"):
-                    subset.main(args)
-                return
+        if enabled is True and not installed:
+            # raise if enabled but not installed
+            with pytest.raises(ImportError, match="uharfbuzz"):
+                subset.main(args)
+            return
 
         with caplog.at_level(logging.DEBUG, "fontTools.ttLib.tables.otBase"):
             subset.main(args)
