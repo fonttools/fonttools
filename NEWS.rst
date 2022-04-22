@@ -1,3 +1,8 @@
+- [otlLib] Put back the ``FONTTOOLS_GPOS_COMPACT_MODE`` environment variable to fix
+  regression in ufo2ft (and thus fontmake) introduced with v4.33.0 (#2592, #2593).
+  This is deprecated and will be removed one ufo2ft gets updated to use the new
+  config setup.
+
 4.33.0 (released 2022-04-21)
 ----------------------------
 
