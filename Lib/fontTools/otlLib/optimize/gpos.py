@@ -18,7 +18,7 @@ COMPRESSION_LEVEL = OPTIONS[f"{__name__}:COMPRESSION_LEVEL"]
 # Kept because ufo2ft depends on it, to be removed once ufo2ft uses the config instead
 # https://github.com/fonttools/fonttools/issues/2592
 GPOS_COMPACT_MODE_ENV_KEY = "FONTTOOLS_GPOS_COMPACT_MODE"
-GPOS_COMPACT_MODE_DEFAULT = "0"
+GPOS_COMPACT_MODE_DEFAULT = str(COMPRESSION_LEVEL.default)
 
 
 def compact(font: TTFont, level: int) -> TTFont:
