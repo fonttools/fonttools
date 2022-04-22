@@ -1,3 +1,6 @@
+4.33.2 (released 2022-04-22)
+----------------------------
+
 - [otBase] Make logging less verbose when harfbuzz fails to serialize. Do not exit
   at the first failure but continue attempting to fix offset overflow error using
   the pure-python serializer even when the ``USE_HARFBUZZ_REPACKER`` option was
