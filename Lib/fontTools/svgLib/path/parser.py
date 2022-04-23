@@ -278,8 +278,8 @@ def parse_path(pathdef, pen, current_pos=(0, 0), arc_class=EllipticalArc):
             last_control = control
 
         elif command == 'A':
-            rx = float(elements.pop())
-            ry = float(elements.pop())
+            rx = abs(float(elements.pop()))
+            ry = abs(float(elements.pop()))
             rotation = float(elements.pop())
             arc_large = bool(int(elements.pop()))
             arc_sweep = bool(int(elements.pop()))
