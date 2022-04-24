@@ -24,7 +24,7 @@ class Range:
     default: float = 0
     """Default value"""
 
-    def __post__init__(self):
+    def __post_init__(self):
         self.minimum, self.maximum = sorted((self.minimum, self.maximum))
         self.default = clamp(self.default, self.minimum, self.maximum)
 
