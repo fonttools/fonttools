@@ -2940,7 +2940,7 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
                 source.font = None
             res = copy.deepcopy(self)
             for source, font in zip(res.sources, fonts):
-                res.font = font
+                source.font = font
             return res
         finally:
             for source, font in zip(self.sources, fonts):
