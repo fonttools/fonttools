@@ -1043,3 +1043,15 @@ def test_addRuleDescriptor(tmp_path):
 
     # Test it doesn't crash.
     ds.write(tmp_path / "test.designspace")
+
+
+def test_deepcopyExceptFonts():
+    ds = DesignSpaceDocument()
+    ds.addSourceDescriptor(font=object())
+    ds.addSourceDescriptor(font=object())
+
+    ds_copy = ds.deepcopyExceptFonts()
+
+    assert ds.tostring() == ds_copy.tostring()
+    assert ds.sources[0].font is ds_copy.sources[0].font
+    assert ds.sources[1].font is ds_copy.sources[1].font
