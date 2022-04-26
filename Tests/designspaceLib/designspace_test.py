@@ -18,6 +18,7 @@ from fontTools.designspaceLib import (
     posix,
     processRules,
 )
+from fontTools.designspaceLib.types import Range
 from fontTools.misc import plistlib
 
 
@@ -1055,3 +1056,11 @@ def test_deepcopyExceptFonts():
     assert ds.tostring() == ds_copy.tostring()
     assert ds.sources[0].font is ds_copy.sources[0].font
     assert ds.sources[1].font is ds_copy.sources[1].font
+
+
+def test_Range_post_init():
+    # test min and max are sorted and default is clamped to either min/max
+    r = Range(minimum=2, maximum=-1, default=-2)
+    assert r.minimum == -1
+    assert r.maximum == 2
+    assert r.default == -1

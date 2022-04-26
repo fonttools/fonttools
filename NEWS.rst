@@ -1,5 +1,6 @@
 - [designspaceLib] Fixed typo in ``deepcopyExceptFonts`` method, preventing font
-  references to be transferred (#2600).
+  references to be transferred (#2600). Fixed another typo in the name of ``Range``
+  dataclass's ``__post_init__`` magic method (#2597).
 
 4.33.2 (released 2022-04-22)
 ----------------------------
