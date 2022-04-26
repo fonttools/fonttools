@@ -1,3 +1,6 @@
+- [designspaceLib] Fixed typo in ``deepcopyExceptFonts`` method, preventing font
+  references to be transferred (#2600).
+
 4.33.2 (released 2022-04-22)
 ----------------------------
 
