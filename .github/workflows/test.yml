@@ -12,9 +12,9 @@ jobs:
     # https://github.community/t/github-actions-does-not-respect-skip-ci/17325/8
     if: "! contains(toJSON(github.event.commits.*.message), '[skip ci]')"
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Set up Python 3.x
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v3
       with:
         python-version: "3.x"
     - name: Install packages
@@ -27,21 +27,17 @@ jobs:
     if: "! contains(toJSON(github.event.commits.*.message), '[skip ci]')"
     strategy:
       matrix:
-        python-version: [3.7, 3.8, 3.9]
+        python-version: ["3.7", "3.10"]
         platform: [ubuntu-latest, macos-latest, windows-latest]
-        exclude: # Only test on the oldest and latest supported stable Python on macOS and Windows.
+        exclude: # Only test on the latest supported stable Python on macOS and Windows.
           - platform: macos-latest
             python-version: 3.7
-          - platform: macos-latest
-            python-version: 3.9
           - platform: windows-latest
             python-version: 3.7
-          - platform: windows-latest
-            python-version: 3.9
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install packages
@@ -66,11 +62,11 @@ jobs:
     runs-on: ubuntu-latest
     if: "! contains(toJSON(github.event.commits.*.message), '[skip ci]')"
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Set up Python 3.x
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v3
       with:
-        python-version: 3.9
+        python-version: "3.10"
     - name: Install packages
       run: pip install tox
     - name: Run Tox
@@ -80,9 +76,9 @@ jobs:
     runs-on: ubuntu-latest
     if: "! contains(toJSON(github.event.commits.*.message), '[skip ci]')"
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Set up Python pypy3
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v3
       with:
         python-version: "pypy-3.7"
     - name: Install packages
