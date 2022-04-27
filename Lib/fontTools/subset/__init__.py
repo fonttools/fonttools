@@ -636,10 +636,16 @@ def prune_post_subset(self, font, options):
 			self.Value.prune_hints()
 		self.ValueFormat = self.Value.getEffectiveFormat()
 	elif self.Format == 2:
-		if not options.hinting:
-			for v in self.Value:
-				v.prune_hints()
-		self.ValueFormat = reduce(int.__or__, [v.getEffectiveFormat() for v in self.Value], 0)
+		if None in self.Value:
+			assert self.ValueFormat == 0
+			assert all(v is None for v in self.Value)
+		else:
+			if not options.hinting:
+				for v in self.Value:
+					v.prune_hints()
+			self.ValueFormat = reduce(
+				int.__or__, [v.getEffectiveFormat() for v in self.Value], 0
+			)
 
 	# Downgrade to Format 1 if all ValueRecords are the same
 	if self.Format == 2 and all(v == self.Value[0] for v in self.Value):
