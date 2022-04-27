@@ -512,11 +512,11 @@ class LayerListBuilder:
         # Convert maps seqs or whatever into typed objects
         layers = [self.buildPaint(l) for l in layers]
 
-        # No reason to have a colr layers with just one entry
-        if len(layers) == 1:
-            return layers[0], {}
-
         if self.allowLayerReuse:
+            # No reason to have a colr layers with just one entry
+            if len(layers) == 1:
+                return layers[0], {}
+
             # Look for reuse, with preference to longer sequences
             # This may make the layer list smaller
             found_reuse = True
@@ -561,7 +561,7 @@ class LayerListBuilder:
         layers = [listToColrLayers(l) for l in layers]
 
         # No reason to have a colr layers with just one entry
-        if len(layers) == 1:
+        if self.allowLayerReuse and len(layers) == 1:
             return layers[0], {}
 
         paint = ot.Paint()
