@@ -3,11 +3,9 @@ Merge OpenType Layout tables (GDEF / GPOS / GSUB).
 """
 import os
 import copy
-from functools import partial
 from operator import ior
 import logging
 from fontTools.misc import classifyTools
-from fontTools.misc.fixedTools import floatToFixed, fixedToFloat
 from fontTools.misc.roundTools import otRound
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables import otBase as otBase
@@ -1107,13 +1105,28 @@ def merge(merger, self, lst):
 class COLRVariationMerger(VariationMerger):
 
 	variable_formats = {
-		(ot.Paint, ot.PaintFormat.PaintSolid): ot.PaintFormat.PaintVarSolid,
 		(ot.ClipBox, 1): 2,
+		(ot.Paint, ot.PaintFormat.PaintLinearGradient): ot.PaintFormat.PaintVarLinearGradient,
+		(ot.Paint, ot.PaintFormat.PaintRadialGradient): ot.PaintFormat.PaintVarRadialGradient,
+		(ot.Paint, ot.PaintFormat.PaintSweepGradient): ot.PaintFormat.PaintVarSweepGradient,
+		(ot.Paint, ot.PaintFormat.PaintSolid): ot.PaintFormat.PaintVarSolid,
+		(ot.Paint, ot.PaintFormat.PaintTransform): ot.PaintFormat.PaintVarTransform,
+	}
+
+	variable_types = {
+		ot.Affine2x3: ot.VarAffine2x3,
+		ot.ColorStop: ot.VarColorStop,
+		ot.ColorLine: ot.VarColorLine,
 	}
 
 	variable_attrs = {
-		(ot.Paint, ot.PaintFormat.PaintVarSolid): ["Alpha"],
 		(ot.ClipBox, 2): ["xMin", "yMin", "xMax", "yMax"],
+		(ot.Paint, ot.PaintFormat.PaintVarSolid): ["Alpha"],
+		(ot.Paint, ot.PaintFormat.PaintVarLinearGradient): ["x0", "y0", "x1", "y1", "x2", "y2"],
+		(ot.Paint, ot.PaintFormat.PaintVarRadialGradient): ["x0", "y0", "r0", "x1", "y1", "r1"],
+		(ot.Paint, ot.PaintFormat.PaintVarSweepGradient): ["centerX", "centerY", "startAngle", "endAngle"],
+		(ot.Affine2x3, None): ["xx", "yx", "xy", "yy", "dx", "dy"],
+		(ot.ColorStop, None): ["StopOffset", "Alpha"],
 	}
 
 	def __init__(self, model, axisTags, font):
@@ -1156,38 +1169,102 @@ class COLRVariationMerger(VariationMerger):
 			varIdxes.append(varIdx)
 		return varIdxes
 
+	@classmethod
+	def asVariableType(cls, table):
+		varType = cls.variable_types[type(table)]
+		hasVarIndexBase = "VarIndexBase" in varType.convertersByName
+		varTable = varType()
+		varTable.__dict__.update(table.__dict__)
+		if hasVarIndexBase and getattr(varTable, "VarIndexBase", None) is None:
+			varTable.VarIndexBase = 0xFFFFFFFF
 
-@COLRVariationMerger.merger((ot.Paint, ot.ClipBox))
+		varAttrs = cls.variable_attrs.get((varType, None), ())
+		for conv in varTable.getConverters():
+			attr = conv.name
+			if attr in varAttrs:
+				continue
+			value = getattr(varTable, attr)
+			if isinstance(value, otBase.BaseTable) and type(value) in cls.variable_types:
+				setattr(varTable, attr, cls.asVariableType(value))
+			elif isinstance(value, list) and isinstance(value[0],
+					       otBase.BaseTable) and type(value[0]) in cls.variable_types:
+				setattr(varTable, attr, [cls.asVariableType(v) for v in value])
+
+		return varTable
+
+
+@COLRVariationMerger.merger((ot.Affine2x3, ot.ColorStop, ot.ColorLine, ot.ClipBox, ot.Paint))
 def merge(merger, self, lst):
 	klass = type(self)
-	try:
-		varFormat = merger.variable_formats[(klass, self.Format)]
-	except KeyError:
-		merger.mergeLists(
-			[st.value for st in self.iterSubTables()],
-			[[st.value for st in m.iterSubTables()] for m in lst])
-		return
+	varFormat = merger.variable_formats.get((klass, getattr(self, "Format", None)))
+	varAttrs = merger.variable_attrs.get((klass, varFormat), ())
 
-	varAttrs = merger.variable_attrs[(klass, varFormat)]
+	converters = self.getConverters()
+	for conv in converters:
+		attr = conv.name
+		if attr in varAttrs:
+			# merged separately below
+			continue
+		value = getattr(self, attr)
+		values = [getattr(item, attr) for item in lst]
+		if isinstance(value, otBase.BaseTable):
+			merger.mergeThings(value, values)
+			if (
+				type(value) in merger.variable_types
+				and (
+					hasattr(value, "VarIndexBase")
+					or hasattr(value, "_is_var")
+				)
+			):
+				setattr(self, attr, merger.asVariableType(value))
+				if varFormat is not None:
+					self.Format = varFormat
+				self._is_var = True
+		elif isinstance(value, list):
+			merger.mergeLists(value, values)
+			if (
+				value
+				and type(value[0]) in merger.variable_types
+				and any(hasattr(v, "VarIndexBase") for v in value)
+			):
+				setattr(self, attr, [merger.asVariableType(v) for v in value])
+				if varFormat is not None:
+					self.Format = varFormat
+				self._is_var = True
+		else:
+			if not allEqual(values):
+				raise ShouldBeConstant(
+					merger,
+					expected=values[0],
+					got=values,
+					stack=["."+attr],
+				)
+			setattr(self, attr, values[0])
 
-	staticAttrs = {c.name for c in self.getConverters() if c.name not in varAttrs}
-	for attr in staticAttrs:
-		if not allEqual([getattr(item, attr) for item in lst]):
-			raise ShouldBeConstant(
-				merger,
-				expected=getattr(lst[0], attr),
-				got=[getattr(item, attr) for item in lst],
-				stack=["."+attr],
-			)
-		setattr(self, attr, getattr(lst[0], attr))
+	if varAttrs:
+		varIdxes = merger.storeMastersForAttrs(self, lst, varAttrs)
 
-	varIdxes = merger.storeMastersForAttrs(self, lst, varAttrs)
+		variable = any(v != 0xFFFFFFFF for v in varIdxes)
+		if variable:
 
-	variable = any(v != 0xFFFFFFFF for v in varIdxes)
-	if variable:
-		self.Format = varFormat
-		self.VarIndexBase = len(merger.varIdxes)
-		merger.varIdxes.extend(varIdxes)
+			for conv in converters:
+				attr = conv.name
+				if attr in varAttrs:
+					continue
+				value = getattr(self, attr)
+				if isinstance(value, otBase.BaseTable) and type(value) in merger.variable_types:
+					setattr(self, attr, merger.asVariableType(value))
+				elif isinstance(value, list) and isinstance(value[0], otBase.BaseTable) and type(value[0]) in merger.variable_types:
+					setattr(self, attr, [merger.asVariableType(v) for v in value])
+
+			if varFormat is not None:
+				self.Format = varFormat
+			self.VarIndexBase = len(merger.varIdxes)
+			merger.varIdxes.extend(varIdxes)
+
+
+		elif varFormat is not None and getattr(self, "Format", None) == varFormat:
+			self.VarIndexBase = 0xFFFFFFFF
 
 
 @COLRVariationMerger.merger(ot.ClipList)
