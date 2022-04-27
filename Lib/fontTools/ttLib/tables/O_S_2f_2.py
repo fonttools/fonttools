@@ -288,6 +288,17 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
     def fsLastCharIndex(self, value):
         self.usLastCharIndex = value
 
+    def getCodePageRanges(self):
+        """Return the set of 'ulCodePageRange*' bits currently enabled."""
+        bits = set()
+        cpl1, cpl2 = self.ulCodePageRange1, self.ulCodePageRange2
+        for i in range(32):
+            if cpl1 & (1 << i):
+                bits.add(i)
+            if cpl2 & (1 << i):
+                bits.add(i + 32)
+        return bits
+
     def getUnicodeRanges(self):
         """Return the set of 'ulUnicodeRange*' bits currently enabled."""
         bits = set()

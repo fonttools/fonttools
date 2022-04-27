@@ -55,6 +55,14 @@ class OS2TableTest(unittest.TestCase):
             (set(range(123)) - {9, 57, 122}),
         )
 
+    def test_getCodePageRanges(self):
+        table = table_O_S_2f_2()
+        table.ulCodePageRange1 = 0xFFFFFFFF
+        table.ulCodePageRange2 = 0xFFFFFFFF
+        bits = table.getCodePageRanges()
+        for i in range(63):
+            self.assertIn(i, bits)
+
 
 if __name__ == "__main__":
     import sys
