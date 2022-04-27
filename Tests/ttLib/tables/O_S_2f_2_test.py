@@ -63,6 +63,16 @@ class OS2TableTest(unittest.TestCase):
         for i in range(63):
             self.assertIn(i, bits)
 
+    def test_setCodePageRanges(self):
+        table = table_O_S_2f_2()
+        table.ulCodePageRange1 = 0
+        table.ulCodePageRange2 = 0
+        bits = set(range(64))
+        table.setCodePageRanges(bits)
+        self.assertEqual(table.getCodePageRanges(), bits)
+        with self.assertRaises(ValueError):
+            table.setCodePageRanges([-1, 64, 255])
+
 
 if __name__ == "__main__":
     import sys

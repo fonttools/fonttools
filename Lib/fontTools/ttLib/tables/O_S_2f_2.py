@@ -315,6 +315,18 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
                 bits.add(i + 96)
         return bits
 
+    def setCodePageRanges(self, bits):
+        """Set the 'ulCodePageRange*' fields to the specified 'bits'."""
+        cpl1, cpl2 = 0, 0
+        for bit in bits:
+            if 0 <= bit < 32:
+                cpl1 |= 1 << bit
+            elif 32 <= bit <= 63:
+                cpl2 |= 1 << (bit - 32)
+            else:
+                raise ValueError("expected 0 <= int <= 63, found: %r" % bit)
+        self.ulCodePageRange1, self.ulCodePageRange2 = cpl1, cpl2
+
     def setUnicodeRanges(self, bits):
         """Set the 'ulUnicodeRange*' fields to the specified 'bits'."""
         ul1, ul2, ul3, ul4 = 0, 0, 0, 0
