@@ -1106,11 +1106,20 @@ class COLRVariationMerger(VariationMerger):
 
 	variable_formats = {
 		(ot.ClipBox, 1): 2,
+		(ot.Paint, ot.PaintFormat.PaintSolid): ot.PaintFormat.PaintVarSolid,
 		(ot.Paint, ot.PaintFormat.PaintLinearGradient): ot.PaintFormat.PaintVarLinearGradient,
 		(ot.Paint, ot.PaintFormat.PaintRadialGradient): ot.PaintFormat.PaintVarRadialGradient,
 		(ot.Paint, ot.PaintFormat.PaintSweepGradient): ot.PaintFormat.PaintVarSweepGradient,
-		(ot.Paint, ot.PaintFormat.PaintSolid): ot.PaintFormat.PaintVarSolid,
 		(ot.Paint, ot.PaintFormat.PaintTransform): ot.PaintFormat.PaintVarTransform,
+		(ot.Paint, ot.PaintFormat.PaintTranslate): ot.PaintFormat.PaintVarTranslate,
+		(ot.Paint, ot.PaintFormat.PaintScale): ot.PaintFormat.PaintVarScale,
+		(ot.Paint, ot.PaintFormat.PaintScaleAroundCenter): ot.PaintFormat.PaintVarScaleAroundCenter,
+		(ot.Paint, ot.PaintFormat.PaintScaleUniform): ot.PaintFormat.PaintVarScaleUniform,
+		(ot.Paint, ot.PaintFormat.PaintScaleUniformAroundCenter): ot.PaintFormat.PaintVarScaleUniformAroundCenter,
+		(ot.Paint, ot.PaintFormat.PaintRotate): ot.PaintFormat.PaintVarRotate,
+		(ot.Paint, ot.PaintFormat.PaintRotateAroundCenter): ot.PaintFormat.PaintVarRotateAroundCenter,
+		(ot.Paint, ot.PaintFormat.PaintSkew): ot.PaintFormat.PaintVarSkew,
+		(ot.Paint, ot.PaintFormat.PaintSkewAroundCenter): ot.PaintFormat.PaintVarSkewAroundCenter,
 	}
 
 	variable_types = {
@@ -1120,13 +1129,22 @@ class COLRVariationMerger(VariationMerger):
 	}
 
 	variable_attrs = {
+		(ot.Affine2x3, None): ["xx", "yx", "xy", "yy", "dx", "dy"],
 		(ot.ClipBox, 2): ["xMin", "yMin", "xMax", "yMax"],
+		(ot.ColorStop, None): ["StopOffset", "Alpha"],
 		(ot.Paint, ot.PaintFormat.PaintVarSolid): ["Alpha"],
 		(ot.Paint, ot.PaintFormat.PaintVarLinearGradient): ["x0", "y0", "x1", "y1", "x2", "y2"],
 		(ot.Paint, ot.PaintFormat.PaintVarRadialGradient): ["x0", "y0", "r0", "x1", "y1", "r1"],
 		(ot.Paint, ot.PaintFormat.PaintVarSweepGradient): ["centerX", "centerY", "startAngle", "endAngle"],
-		(ot.Affine2x3, None): ["xx", "yx", "xy", "yy", "dx", "dy"],
-		(ot.ColorStop, None): ["StopOffset", "Alpha"],
+		(ot.Paint, ot.PaintFormat.PaintVarTranslate): ["dx", "dy"],
+		(ot.Paint, ot.PaintFormat.PaintVarScale): ["scaleX", "scaleY"],
+		(ot.Paint, ot.PaintFormat.PaintVarScaleAroundCenter): ["scaleX", "scaleY", "centerX", "centerY"],
+		(ot.Paint, ot.PaintFormat.PaintVarScaleUniform): ["scale"],
+		(ot.Paint, ot.PaintFormat.PaintVarScaleUniformAroundCenter): ["scale", "centerX", "centerY"],
+		(ot.Paint, ot.PaintFormat.PaintVarRotate): ["angle"],
+		(ot.Paint, ot.PaintFormat.PaintVarRotateAroundCenter): ["angle", "centerX", "centerY"],
+		(ot.Paint, ot.PaintFormat.PaintVarSkew): ["xSkewAngle", "ySkewAngle"],
+		(ot.Paint, ot.PaintFormat.PaintVarSkewAroundCenter): ["xSkewAngle", "ySkewAngle", "centerX", "centerY"],
 	}
 
 	def __init__(self, model, axisTags, font):
