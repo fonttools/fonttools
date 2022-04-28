@@ -1421,7 +1421,7 @@ def parseArgs(args):
     if len(axisLimits) != len(options.locargs):
         parser.error("Specified multiple limits for the same axis")
 
-    if axisLimits and options.fvar:
+    if axisLimits and options.named_instances:
         parser.error("Specified limits and --fvar")
 
     return (infile, axisLimits, options)
