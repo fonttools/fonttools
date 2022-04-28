@@ -374,7 +374,7 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
             if drop:
                 for enc in drop:
                     codepage_encoding.discard(enc)
-            if set() == codepage_encoding.difference(unicodes):
+            if unicodes.issuperset(codepage_encoding):
                 bits.add(bit)
         self.setCodePageRanges(bits)
         return bits
