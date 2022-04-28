@@ -37,6 +37,8 @@ from fontTools.varLib.featureVars import addFeatureVariations
 from fontTools.designspaceLib import DesignSpaceDocument, InstanceDescriptor
 from fontTools.designspaceLib.split import splitInterpolable, splitVariableFonts
 from fontTools.varLib.stat import buildVFStatTable
+from fontTools.colorLib.builder import buildColrV1
+from fontTools.colorLib.unbuilder import unbuildColrV1
 from functools import partial
 from collections import OrderedDict, namedtuple
 import os.path
@@ -724,6 +726,10 @@ def _add_COLR(font, model, master_fonts, axisTags):
 			[mapping.get(v, 0xFFFFFFFF) for v in merger.varIdxes]
 		)
 		colr.VarIndexMap = varIdxMap
+
+	# rebuild to optimize COLR table layer reuse
+	colorGlyphs = unbuildColrV1(colr.LayerList, colr.BaseGlyphList)
+	colr.LayerList, colr.BaseGlyphList = buildColrV1(colorGlyphs, allowLayerReuse=True)
 
 
 def load_designspace(designspace):
