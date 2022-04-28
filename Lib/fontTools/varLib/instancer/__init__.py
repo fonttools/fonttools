@@ -1422,7 +1422,7 @@ def parseArgs(args):
         parser.error("Specified multiple limits for the same axis")
 
     if axisLimits and options.named_instances:
-        parser.error("Specified limits and --fvar")
+        parser.error("Specified limits and --named-instances")
 
     return (infile, axisLimits, options)
 
@@ -1436,6 +1436,8 @@ def main(args=None):
     if options.named_instances:
         for instance in varfont["fvar"].instances:
             name = varfont["name"].getDebugName(instance.subfamilyNameID)
+            if not name:
+                raise ValueError("Couldn't get instance name: bad fvar/name table?")
             if not re.search(options.named_instances, name):
                 continue
             axisLimits = instance.coordinates
