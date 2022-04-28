@@ -1380,6 +1380,11 @@ def parseArgs(args):
         help="Update the instantiated font's `name` table. Input font must have "
         "a STAT table with Axis Value Tables",
     )
+    parser.add_argument(
+        "--fvar",
+        action="store_true",
+        help="Create static instances for each instance in the variable font's fvar table",
+    )
     loggingGroup = parser.add_mutually_exclusive_group(required=False)
     loggingGroup.add_argument(
         "-v", "--verbose", action="store_true", help="Run more verbosely."
@@ -1413,16 +1418,43 @@ def parseArgs(args):
     if len(axisLimits) != len(options.locargs):
         parser.error("Specified multiple limits for the same axis")
 
+    if axisLimits and options.fvar:
+        parser.error("Specified limits and --fvar")
+
     return (infile, axisLimits, options)
 
 
 def main(args=None):
     """Partially instantiate a variable font."""
     infile, axisLimits, options = parseArgs(args)
-    log.info("Restricting axes: %s", axisLimits)
 
     log.info("Loading variable font")
     varfont = TTFont(infile)
+
+    if options.fvar:
+        for instance in varfont["fvar"].instances:
+            axisLimits = instance.coordinates
+            outfile = (
+                os.path.splitext(infile)[0]
+                + "-"
+                + "-".join(["%s%i" % (k, v) for k, v in axisLimits.items()])
+                + ".ttf"
+            )
+            log.info("Restricting axes: %s", axisLimits)
+            outfont = instantiateVariableFont(
+                varfont,
+                axisLimits,
+                inplace=False,
+                optimize=options.optimize,
+                overlap=options.overlap,
+                updateFontNames=options.update_name_table,
+            )
+            log.info("Saving instance font %s", outfile)
+
+            outfont.save(outfile)
+        return
+
+    log.info("Restricting axes: %s", axisLimits)
 
     isFullInstance = {
         axisTag for axisTag, limit in axisLimits.items() if not isinstance(limit, tuple)
