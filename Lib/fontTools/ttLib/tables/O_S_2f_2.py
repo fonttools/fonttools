@@ -344,6 +344,41 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
         self.ulUnicodeRange1, self.ulUnicodeRange2 = ul1, ul2
         self.ulUnicodeRange3, self.ulUnicodeRange4 = ul3, ul4
 
+    def recalcCodePageRanges(self, ttFont, drop=[0x0000]):
+        """
+        Function to recalculate OS/2 fsSelection CodePageRanges
+        Drop 0x0000 by default, because most fonts have the character NULL not encoded
+        """
+        from fontTools.unicodedata.codepages import (
+            OS2_CODEPAGE_RANGES,
+            CODEPAGERANGES_ENCODINGS,
+        )
+
+        for table in ttFont["cmap"].tables:
+            # if symbol font (cmap = platform 3 encoding 0 )
+            # set bit 31 only
+            if table.platformID == 3 and table.platEncID == 0:
+                bits = {31}
+                self.setCodePageRanges(bits)
+                return bits
+        unicodes = set()
+        for table in ttFont["cmap"].tables:
+            if table.isUnicode():
+                unicodes.update(table.cmap.keys())
+        bits = set()
+        for bit in OS2_CODEPAGE_RANGES:
+            codepage_name = OS2_CODEPAGE_RANGES[bit]
+            if codepage_name is None:
+                continue
+            codepage_encoding = CODEPAGERANGES_ENCODINGS[codepage_name]
+            if drop:
+                for enc in drop:
+                    codepage_encoding.discard(enc)
+            if set() == codepage_encoding.difference(unicodes):
+                bits.add(bit)
+        self.setCodePageRanges(bits)
+        return bits
+
     def recalcUnicodeRanges(self, ttFont, pruneOnly=False):
         """Intersect the codepoints in the font's Unicode cmap subtables with
         the Unicode block ranges defined in the OpenType specification (v1.7),

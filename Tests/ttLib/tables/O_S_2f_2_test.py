@@ -73,6 +73,28 @@ class OS2TableTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             table.setCodePageRanges([-1, 64, 255])
 
+    def test_recalcCodePageRanges(self):
+        font = TTFont()
+        font["OS/2"] = os2 = newTable("OS/2")
+        font["cmap"] = cmap = newTable("cmap")
+        st = getTableModule("cmap").CmapSubtable.newSubtable(4)
+        st.platformID, st.platEncID, st.language = 3, 1, 0
+        st.cmap = {0x0041: "A", 0x03B1: "alpha", 0x0410: "Acyr"}
+        cmap.tables = []
+        cmap.tables.append(st)
+
+        os2.setCodePageRanges({0, 1, 9})  # set wrong ranges
+        self.assertEqual(os2.recalcCodePageRanges(font), set())
+
+        st = getTableModule("cmap").CmapSubtable.newSubtable(4)
+        st.platformID, st.platEncID, st.language = 3, 0, 0
+        st.cmap = {0x0041: "A", 0x03B1: "alpha", 0x0410: "Acyr"}
+        cmap.tables = []
+        cmap.tables.append(st)
+
+        os2.setCodePageRanges({0, 1, 9})  # set wrong ranges
+        self.assertEqual(os2.recalcCodePageRanges(font), {31})
+
 
 if __name__ == "__main__":
     import sys
