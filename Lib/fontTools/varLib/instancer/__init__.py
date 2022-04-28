@@ -1381,9 +1381,12 @@ def parseArgs(args):
         "a STAT table with Axis Value Tables",
     )
     parser.add_argument(
-        "--fvar",
-        action="store_true",
-        help="Create static instances for each instance in the variable font's fvar table",
+        "--named-instances",
+        "-n",
+        nargs="?",
+        const=".*",
+        help="Create static instances for each instance in the variable font's "
+        "fvar table matching the given regular expression",
     )
     loggingGroup = parser.add_mutually_exclusive_group(required=False)
     loggingGroup.add_argument(
@@ -1430,17 +1433,15 @@ def main(args=None):
 
     log.info("Loading variable font")
     varfont = TTFont(infile)
-
-    if options.fvar:
+    if options.named_instances:
         for instance in varfont["fvar"].instances:
+            name = varfont["name"].getDebugName(instance.subfamilyNameID)
+            if not re.search(options.named_instances, name):
+                continue
             axisLimits = instance.coordinates
-            outfile = (
-                os.path.splitext(infile)[0]
-                + "-"
-                + "-".join(["%s%i" % (k, v) for k, v in axisLimits.items()])
-                + ".ttf"
-            )
-            log.info("Restricting axes: %s", axisLimits)
+            log.info("Restricting axes: %s (%s)", axisLimits, name)
+            name = name.replace(" ", "")
+            outfile = os.path.splitext(infile)[0] + "-" + name + ".ttf"
             outfont = instantiateVariableFont(
                 varfont,
                 axisLimits,
