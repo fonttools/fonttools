@@ -1224,6 +1224,7 @@ def merge(merger, self, lst):
 		if attr in varAttrs:
 			# merged separately below
 			continue
+		# TODO: Check master values have same type and format
 		value = getattr(self, attr)
 		values = [getattr(item, attr) for item in lst]
 		if isinstance(value, otBase.BaseTable):
