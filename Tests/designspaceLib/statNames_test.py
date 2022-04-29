@@ -19,7 +19,7 @@ def test_instance_getStatNames(datadir):
 def test_not_all_ordering_specified_and_translations(datadir):
     doc = DesignSpaceDocument.fromfile(datadir / "test_v5.designspace")
 
-    assert getStatNames(doc, {"weight": 200, "width": 125, "Italic": 1}) == StatNames(
+    assert getStatNames(doc, {"Weight": 200, "Width": 125, "Italic": 1}) == StatNames(
         familyNames={
             "en": "MasterFamilyName",
             "fr": "Montserrat",

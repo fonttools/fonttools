@@ -34,7 +34,7 @@ def test_read_v5_document_simple(datadir):
         [
             AxisDescriptor(
                 tag="wght",
-                name="weight",
+                name="Weight",
                 minimum=200,
                 maximum=1000,
                 default=200,
@@ -82,7 +82,7 @@ def test_read_v5_document_simple(datadir):
             ),
             AxisDescriptor(
                 tag="wdth",
-                name="width",
+                name="Width",
                 minimum=50,
                 maximum=150,
                 default=100,
@@ -123,10 +123,10 @@ def test_read_v5_document_simple(datadir):
             LocationLabelDescriptor(
                 name="Some Style",
                 labelNames={"fr": "Un Style"},
-                userLocation={"weight": 300, "width": 50, "Italic": 0},
+                userLocation={"Weight": 300, "Width": 50, "Italic": 0},
             ),
             LocationLabelDescriptor(
-                name="Other", userLocation={"weight": 700, "width": 100, "Italic": 1}
+                name="Other", userLocation={"Weight": 700, "Width": 100, "Italic": 1}
             ),
         ],
     )
@@ -139,7 +139,7 @@ def test_read_v5_document_simple(datadir):
                 path=posix(str((datadir / "masters/masterTest1.ufo").resolve())),
                 name="master.ufo1",
                 layerName=None,
-                location={"weight": 0.0, "width": 20.0},
+                location={"Italic": 0.0, "Weight": 0.0, "Width": 20.0},
                 copyLib=True,
                 copyInfo=True,
                 copyGroups=False,
@@ -156,7 +156,7 @@ def test_read_v5_document_simple(datadir):
                 path=posix(str((datadir / "masters/masterTest2.ufo").resolve())),
                 name="master.ufo2",
                 layerName=None,
-                location={"weight": 1000.0, "width": 20.0},
+                location={"Italic": 0.0, "Weight": 1000.0, "Width": 20.0},
                 copyLib=False,
                 copyInfo=False,
                 copyGroups=False,
@@ -173,7 +173,7 @@ def test_read_v5_document_simple(datadir):
                 path=posix(str((datadir / "masters/masterTest2.ufo").resolve())),
                 name="master.ufo2",
                 layerName="supports",
-                location={"weight": 1000.0, "width": 20.0},
+                location={"Italic": 0.0, "Weight": 1000.0, "Width": 20.0},
                 copyLib=False,
                 copyInfo=False,
                 copyGroups=False,
@@ -183,6 +183,22 @@ def test_read_v5_document_simple(datadir):
                 mutedGlyphNames=[],
                 familyName="MasterFamilyName",
                 styleName="Supports",
+                localisedFamilyName={},
+            ),
+            SourceDescriptor(
+                filename="masters/masterTest2.ufo",
+                path=posix(str((datadir / "masters/masterTest2.ufo").resolve())),
+                name="master.ufo3",
+                layerName=None,
+                location={"Italic": 1.0, "Weight": 0.0, "Width": 100.0},
+                copyLib=False,
+                copyGroups=False,
+                copyFeatures=False,
+                muteKerning=False,
+                muteInfo=False,
+                mutedGlyphNames=[],
+                familyName="MasterFamilyName",
+                styleName="FauxItalic",
                 localisedFamilyName={},
             ),
         ],
@@ -245,7 +261,7 @@ def test_read_v5_document_simple(datadir):
                 filename="instances/instanceTest1.ufo",
                 path=posix(str((datadir / "instances/instanceTest1.ufo").resolve())),
                 name="instance.ufo1",
-                designLocation={"weight": 500.0, "width": 20.0},
+                designLocation={"Weight": 500.0, "Width": 20.0},
                 familyName="InstanceFamilyName",
                 styleName="InstanceStyleName",
                 postScriptFontName="InstancePostscriptName",
@@ -268,7 +284,7 @@ def test_read_v5_document_simple(datadir):
                 filename="instances/instanceTest2.ufo",
                 path=posix(str((datadir / "instances/instanceTest2.ufo").resolve())),
                 name="instance.ufo2",
-                designLocation={"weight": 500.0, "width": (400.0, 300.0)},
+                designLocation={"Weight": 500.0, "Width": (400.0, 300.0)},
                 familyName="InstanceFamilyName",
                 styleName="InstanceStyleName",
                 postScriptFontName="InstancePostscriptName",
@@ -278,16 +294,16 @@ def test_read_v5_document_simple(datadir):
                     "arrow": {
                         "unicodes": [101, 201, 301],
                         "note": "A note about this glyph",
-                        "instanceLocation": {"weight": 120.0, "width": 100.0},
+                        "instanceLocation": {"Weight": 120.0, "Width": 100.0},
                         "masters": [
                             {
                                 "font": "master.ufo1",
-                                "location": {"weight": 20.0, "width": 20.0},
+                                "location": {"Weight": 20.0, "Width": 20.0},
                                 "glyphName": "BB",
                             },
                             {
                                 "font": "master.ufo2",
-                                "location": {"weight": 900.0, "width": 900.0},
+                                "location": {"Weight": 900.0, "Width": 900.0},
                                 "glyphName": "CC",
                             },
                         ],
@@ -296,17 +312,17 @@ def test_read_v5_document_simple(datadir):
                 },
             ),
             InstanceDescriptor(
-                locationLabel="asdf",
+                locationLabel="Some Style",
             ),
             InstanceDescriptor(
-                designLocation={"weight": 600.0, "width": (401.0, 420.0)},
+                designLocation={"Weight": 600.0, "Width": (401.0, 420.0)},
             ),
             InstanceDescriptor(
-                designLocation={"weight": 10.0, "Italic": 0.0},
-                userLocation={"width": 100.0},
+                designLocation={"Weight": 10.0, "Italic": 0.0},
+                userLocation={"Width": 100.0},
             ),
             InstanceDescriptor(
-                userLocation={"weight": 300.0, "width": 130.0, "Italic": 1.0},
+                userLocation={"Weight": 300.0, "Width": 130.0, "Italic": 1.0},
             ),
         ],
     )
