@@ -1196,16 +1196,16 @@ class COLRVariationMerger(VariationMerger):
 		if hasVarIndexBase and getattr(varTable, "VarIndexBase", None) is None:
 			varTable.VarIndexBase = 0xFFFFFFFF
 
-		varAttrs = cls.variable_attrs.get((varType, None), ())
-		for conv in varTable.getConverters():
-			attr = conv.name
-			if attr in varAttrs:
-				continue
-			value = getattr(varTable, attr)
-			if isinstance(value, otBase.BaseTable) and type(value) in cls.variable_types:
+		for attr, value in varTable.__dict__.items():
+			if (
+				type(value) in cls.variable_types
+            ):
 				setattr(varTable, attr, cls.asVariableType(value))
-			elif isinstance(value, list) and isinstance(value[0],
-					       otBase.BaseTable) and type(value[0]) in cls.variable_types:
+			elif (
+				isinstance(value, list)
+				and value
+				and type(value[0]) in cls.variable_types
+			):
 				setattr(varTable, attr, [cls.asVariableType(v) for v in value])
 
 		return varTable
@@ -1217,6 +1217,7 @@ def merge(merger, self, lst):
 	varFormat = merger.variable_formats.get((klass, getattr(self, "Format", None)))
 	varAttrs = merger.variable_attrs.get((klass, varFormat), ())
 
+	self_is_variable = False
 	converters = self.getConverters()
 	for conv in converters:
 		attr = conv.name
@@ -1229,26 +1230,17 @@ def merge(merger, self, lst):
 			merger.mergeThings(value, values)
 			if (
 				type(value) in merger.variable_types
-				and (
-					hasattr(value, "VarIndexBase")
-					or hasattr(value, "_is_var")
-				)
+				and hasattr(value, "_is_var")
 			):
-				setattr(self, attr, merger.asVariableType(value))
-				if varFormat is not None:
-					self.Format = varFormat
-				self._is_var = True
+				self_is_variable = True
 		elif isinstance(value, list):
 			merger.mergeLists(value, values)
 			if (
 				value
 				and type(value[0]) in merger.variable_types
-				and any(hasattr(v, "VarIndexBase") for v in value)
+				and any(hasattr(v, "_is_var") for v in value)
 			):
-				setattr(self, attr, [merger.asVariableType(v) for v in value])
-				if varFormat is not None:
-					self.Format = varFormat
-				self._is_var = True
+				self_is_variable = True
 		else:
 			if not allEqual(values):
 				raise ShouldBeConstant(
@@ -1261,28 +1253,30 @@ def merge(merger, self, lst):
 
 	if varAttrs:
 		varIdxes = merger.storeMastersForAttrs(self, lst, varAttrs)
-
-		variable = any(v != 0xFFFFFFFF for v in varIdxes)
-		if variable:
-
-			for conv in converters:
-				attr = conv.name
-				if attr in varAttrs:
-					continue
-				value = getattr(self, attr)
-				if isinstance(value, otBase.BaseTable) and type(value) in merger.variable_types:
-					setattr(self, attr, merger.asVariableType(value))
-				elif isinstance(value, list) and isinstance(value[0], otBase.BaseTable) and type(value[0]) in merger.variable_types:
-					setattr(self, attr, [merger.asVariableType(v) for v in value])
-
-			if varFormat is not None:
-				self.Format = varFormat
+		if any(v != 0xFFFFFFFF for v in varIdxes):
 			self.VarIndexBase = len(merger.varIdxes)
 			merger.varIdxes.extend(varIdxes)
-
-
-		elif varFormat is not None and getattr(self, "Format", None) == varFormat:
+			self_is_variable = True
+		elif varFormat is not None and self_is_variable:
 			self.VarIndexBase = 0xFFFFFFFF
+
+	if self_is_variable:
+		for attr, value in self.__dict__.items():
+			if (
+				type(value) in merger.variable_types
+			):
+				setattr(self, attr, merger.asVariableType(value))
+			elif (
+				isinstance(value, list)
+				and value
+				and type(value[0]) in merger.variable_types
+			):
+				setattr(self, attr, [merger.asVariableType(v) for v in value])
+
+		if varFormat is not None:
+			self.Format = varFormat
+
+		self._is_var = self_is_variable
 
 
 @COLRVariationMerger.merger(ot.ClipList, "clips")
