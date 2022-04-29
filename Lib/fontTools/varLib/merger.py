@@ -1285,6 +1285,6 @@ def merge(merger, self, lst):
 			self.VarIndexBase = 0xFFFFFFFF
 
 
-@COLRVariationMerger.merger(ot.ClipList)
+@COLRVariationMerger.merger(ot.ClipList, "clips")
 def merge(merger, self, lst):
-	merger.mergeSparseDict(self.clips, [v.clips for v in lst])
+	merger.mergeSparseDict(self, lst)
