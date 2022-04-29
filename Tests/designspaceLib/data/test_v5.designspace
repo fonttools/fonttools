@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <designspace format="5.0">
   <axes elidedfallbackname="Regular">
-    <axis tag="wght" name="weight" minimum="200" maximum="1000" default="200">
+    <axis tag="wght" name="Weight" minimum="200" maximum="1000" default="200">
       <labelname xml:lang="en">Wéíght</labelname>
       <labelname xml:lang="fa-IR">قطر</labelname>
       <map input="200" output="0"/>
@@ -24,7 +24,7 @@
       </labels>
     </axis>
 
-    <axis tag="wdth" name="width" minimum="50" maximum="150" default="100" hidden="1">
+    <axis tag="wdth" name="Width" minimum="50" maximum="150" default="100" hidden="1">
       <labelname xml:lang="fr">Chasse</labelname>
       <map input="50" output="10"/>
       <map input="100" output="20"/>
@@ -59,15 +59,15 @@
     <label name="Some Style">
       <labelname xml:lang="fr">Un Style</labelname>
       <location>
-        <dimension name="weight" uservalue="300"/>
-        <dimension name="width" uservalue="50"/>
+        <dimension name="Weight" uservalue="300"/>
+        <dimension name="Width" uservalue="50"/>
         <dimension name="Italic" uservalue="0"/>
       </location>
     </label>
     <label name="Other">
       <location>
-        <dimension name="weight" uservalue="700"/>
-        <dimension name="width" uservalue="100"/>
+        <dimension name="Weight" uservalue="700"/>
+        <dimension name="Width" uservalue="100"/>
         <dimension name="Italic" uservalue="1"/>
       </location>
     </label>
@@ -84,7 +84,7 @@
   </rules>
 
   <sources>
-    <source filename="masters/masterTest1.ufo" name="master.ufo1" familyname="MasterFamilyName" stylename="MasterStyleNameOne">
+    <source filename="masterTest1.ufo" name="master.ufo1" familyname="MasterFamilyName" stylename="MasterStyleNameOne">
       <familyname xml:lang="fr">Montserrat</familyname>
       <familyname xml:lang="ja">モンセラート</familyname>
       <lib copy="1"/>
@@ -93,21 +93,31 @@
       <glyph name="A" mute="1"/>
       <glyph name="Z" mute="1"/>
       <location>
-        <dimension name="weight" xvalue="0"/>
-        <dimension name="width" xvalue="20"/>
+        <dimension name="Weight" xvalue="0"/>
+        <dimension name="Width" xvalue="20"/>
+        <dimension name="Italic" xvalue="0"/>
       </location>
     </source>
-    <source filename="masters/masterTest2.ufo" name="master.ufo2" familyname="MasterFamilyName" stylename="MasterStyleNameTwo">
+    <source filename="masterTest2.ufo" name="master.ufo2" familyname="MasterFamilyName" stylename="MasterStyleNameTwo">
       <kerning mute="1"/>
       <location>
-        <dimension name="weight" xvalue="1000"/>
-        <dimension name="width" xvalue="20"/>
+        <dimension name="Weight" xvalue="1000"/>
+        <dimension name="Width" xvalue="20"/>
+        <dimension name="Italic" xvalue="0"/>
       </location>
     </source>
-    <source filename="masters/masterTest2.ufo" name="master.ufo2" familyname="MasterFamilyName" stylename="Supports" layer="supports">
+    <source filename="masterTest2.ufo" name="master.ufo2" familyname="MasterFamilyName" stylename="Supports" layer="supports">
       <location>
-        <dimension name="weight" xvalue="1000"/>
-        <dimension name="width" xvalue="20"/>
+        <dimension name="Weight" xvalue="1000"/>
+        <dimension name="Width" xvalue="20"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </source>
+    <source filename="masterTest2.ufo" name="master.ufo3" familyname="MasterFamilyName" stylename="FauxItalic">
+      <location>
+        <dimension name="Weight" xvalue="0"/>
+        <dimension name="Width" xvalue="100"/>
+        <dimension name="Italic" xvalue="1"/>
       </location>
     </source>
   </sources>
@@ -193,8 +203,8 @@
       <stylemapfamilyname xml:lang="de">Montserrat Halbfett</stylemapfamilyname>
       <stylemapfamilyname xml:lang="ja">モンセラート SemiBold</stylemapfamilyname>
       <location>
-        <dimension name="weight" xvalue="500"/>
-        <dimension name="width" xvalue="20"/>
+        <dimension name="Weight" xvalue="500"/>
+        <dimension name="Width" xvalue="20"/>
       </location>
 
       <!-- The following elements are deprecated in v5.0. They can still be
@@ -220,28 +230,28 @@
     </instance>
     <instance name="instance.ufo2" familyname="InstanceFamilyName" stylename="InstanceStyleName" filename="instances/instanceTest2.ufo" postscriptfontname="InstancePostscriptName" stylemapfamilyname="InstanceStyleMapFamilyName" stylemapstylename="InstanceStyleMapStyleName">
       <location>
-        <dimension name="weight" xvalue="500"/>
-        <dimension name="width" xvalue="400" yvalue="300"/>
+        <dimension name="Weight" xvalue="500"/>
+        <dimension name="Width" xvalue="400" yvalue="300"/>
       </location>
       <!-- ROUNDTRIP_TEST_REMOVE_ME_BEGIN -->
       <glyphs>
         <glyph unicode="0x65 0xc9 0x12d" name="arrow">
           <location>
-            <dimension name="weight" xvalue="120"/>
-            <dimension name="width" xvalue="100"/>
+            <dimension name="Weight" xvalue="120"/>
+            <dimension name="Width" xvalue="100"/>
           </location>
           <note>A note about this glyph</note>
           <masters>
             <master glyphname="BB" source="master.ufo1">
               <location>
-                <dimension name="weight" xvalue="20"/>
-                <dimension name="width" xvalue="20"/>
+                <dimension name="Weight" xvalue="20"/>
+                <dimension name="Width" xvalue="20"/>
               </location>
             </master>
             <master glyphname="CC" source="master.ufo2">
               <location>
-                <dimension name="weight" xvalue="900"/>
-                <dimension name="width" xvalue="900"/>
+                <dimension name="Weight" xvalue="900"/>
+                <dimension name="Width" xvalue="900"/>
               </location>
             </master>
           </masters>
@@ -262,24 +272,24 @@
         - with user coordinates (uservalue="")
         - with a mix of both coordinate systems
     -->
-    <instance location="asdf"/>
+    <instance location="Some Style"/>
     <instance>
       <location>
-        <dimension name="weight" xvalue="600"/>
-        <dimension name="width" xvalue="401" yvalue="420"/>
+        <dimension name="Weight" xvalue="600"/>
+        <dimension name="Width" xvalue="401" yvalue="420"/>
       </location>
     </instance>
     <instance>
       <location>
-        <dimension name="weight" xvalue="10"/>
-        <dimension name="width" uservalue="100"/>
+        <dimension name="Weight" xvalue="10"/>
+        <dimension name="Width" uservalue="100"/>
         <dimension name="Italic" xvalue="0"/>
       </location>
     </instance>
     <instance>
       <location>
-        <dimension name="weight" uservalue="300"/>
-        <dimension name="width" uservalue="130"/>
+        <dimension name="Weight" uservalue="300"/>
+        <dimension name="Width" uservalue="130"/>
         <dimension name="Italic" uservalue="1"/>
       </location>
     </instance>
