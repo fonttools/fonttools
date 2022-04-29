@@ -1434,6 +1434,11 @@ def main(args=None):
     log.info("Loading variable font")
     varfont = TTFont(infile)
     if options.named_instances:
+        if options.output:
+            outprefix = os.path.splitext(options.output)[0]
+        else:
+            outprefix = os.path.splitext(infile)[0]
+
         for instance in varfont["fvar"].instances:
             name = varfont["name"].getDebugName(instance.subfamilyNameID)
             if not name:
@@ -1443,7 +1448,7 @@ def main(args=None):
             axisLimits = instance.coordinates
             log.info("Restricting axes: %s (%s)", axisLimits, name)
             name = name.replace(" ", "")
-            outfile = os.path.splitext(infile)[0] + "-" + name + ".ttf"
+            outfile = outprefix + "-" + name + ".ttf"
             outfont = instantiateVariableFont(
                 varfont,
                 axisLimits,
