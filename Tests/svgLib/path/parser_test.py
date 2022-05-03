@@ -360,7 +360,7 @@ def test_arc_pen_with_arcTo():
             "M1-2A3-4-1.0 01.5.7",
             [
                 ("moveTo", ((1.0, -2.0),)),
-                ("arcTo", (3.0, -4.0, -1.0, False, True, (0.5, 0.7))),
+                ("arcTo", (3.0, 4.0, -1.0, False, True, (0.5, 0.7))),
                 ("endPath", ()),
             ],
         ),
