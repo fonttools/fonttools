@@ -113,12 +113,8 @@ def getStatNames(
 
     styleMapFamilyNames = {}
     for language in set(familyNames).union(styleNames.keys()):
-        try:
-            familyName = familyNames.get(language, familyNames["en"])
-            styleName = styleNamesForStyleMap.get(language, styleNamesForStyleMap["en"])
-        except KeyError:
-            LOGGER.warning("Cannot complete localized style map name because there are no English language fallbacks.")
-            continue 
+        familyName = familyNames.get(language, familyNames["en"])
+        styleName = styleNamesForStyleMap.get(language, styleNamesForStyleMap["en"])
         styleMapFamilyNames[language] = (familyName + " " + styleName).strip()
 
     return StatNames(
