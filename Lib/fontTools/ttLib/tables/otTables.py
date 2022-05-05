@@ -648,10 +648,13 @@ class DeltaSetIndexMap(getFormatSwitchingBaseTableClass("uint8")):
 
 	def toXML2(self, xmlWriter, font):
 		for i, value in enumerate(getattr(self, "mapping", [])):
+			outer, inner = value >> 16, value & 0xFFFF
+			if outer == 0xFFFF and inner == 0xFFFF:
+				continue
 			attrs = (
 				('index', i),
-				('outer', value >> 16),
-				('inner', value & 0xFFFF),
+				('outer', outer),
+				('inner', inner),
 			)
 			xmlWriter.simpletag("Map", attrs)
 			xmlWriter.newline()
@@ -664,6 +667,9 @@ class DeltaSetIndexMap(getFormatSwitchingBaseTableClass("uint8")):
 		outer = safeEval(attrs['outer'])
 		inner = safeEval(attrs['inner'])
 		assert inner <= 0xFFFF
+		if index > len(self.mapping) + 1:
+			mapping.extend(0xFFFFFFFF for _ in range(len(self.mapping) - index))
+		assert index == len(self.mapping) + 1, f"Bad delta set index: {index}"
 		mapping.insert(index, (outer << 16) | inner)
 
 
