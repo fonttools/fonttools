@@ -3,6 +3,7 @@ Merge OpenType Layout tables (GDEF / GPOS / GSUB).
 """
 import os
 import copy
+from functools import lru_cache
 from operator import ior
 import logging
 from fontTools.misc import classifyTools
@@ -1104,47 +1105,10 @@ def merge(merger, self, lst):
 
 class COLRVariationMerger(VariationMerger):
 
-	variable_formats = {
-		(ot.ClipBox, 1): 2,
-		(ot.Paint, ot.PaintFormat.PaintSolid): ot.PaintFormat.PaintVarSolid,
-		(ot.Paint, ot.PaintFormat.PaintLinearGradient): ot.PaintFormat.PaintVarLinearGradient,
-		(ot.Paint, ot.PaintFormat.PaintRadialGradient): ot.PaintFormat.PaintVarRadialGradient,
-		(ot.Paint, ot.PaintFormat.PaintSweepGradient): ot.PaintFormat.PaintVarSweepGradient,
-		(ot.Paint, ot.PaintFormat.PaintTransform): ot.PaintFormat.PaintVarTransform,
-		(ot.Paint, ot.PaintFormat.PaintTranslate): ot.PaintFormat.PaintVarTranslate,
-		(ot.Paint, ot.PaintFormat.PaintScale): ot.PaintFormat.PaintVarScale,
-		(ot.Paint, ot.PaintFormat.PaintScaleAroundCenter): ot.PaintFormat.PaintVarScaleAroundCenter,
-		(ot.Paint, ot.PaintFormat.PaintScaleUniform): ot.PaintFormat.PaintVarScaleUniform,
-		(ot.Paint, ot.PaintFormat.PaintScaleUniformAroundCenter): ot.PaintFormat.PaintVarScaleUniformAroundCenter,
-		(ot.Paint, ot.PaintFormat.PaintRotate): ot.PaintFormat.PaintVarRotate,
-		(ot.Paint, ot.PaintFormat.PaintRotateAroundCenter): ot.PaintFormat.PaintVarRotateAroundCenter,
-		(ot.Paint, ot.PaintFormat.PaintSkew): ot.PaintFormat.PaintVarSkew,
-		(ot.Paint, ot.PaintFormat.PaintSkewAroundCenter): ot.PaintFormat.PaintVarSkewAroundCenter,
-	}
-
 	variable_types = {
 		ot.Affine2x3: ot.VarAffine2x3,
 		ot.ColorStop: ot.VarColorStop,
 		ot.ColorLine: ot.VarColorLine,
-	}
-
-	variable_attrs = {
-		(ot.Affine2x3, None): ["xx", "yx", "xy", "yy", "dx", "dy"],
-		(ot.ClipBox, 2): ["xMin", "yMin", "xMax", "yMax"],
-		(ot.ColorStop, None): ["StopOffset", "Alpha"],
-		(ot.Paint, ot.PaintFormat.PaintVarSolid): ["Alpha"],
-		(ot.Paint, ot.PaintFormat.PaintVarLinearGradient): ["x0", "y0", "x1", "y1", "x2", "y2"],
-		(ot.Paint, ot.PaintFormat.PaintVarRadialGradient): ["x0", "y0", "r0", "x1", "y1", "r1"],
-		(ot.Paint, ot.PaintFormat.PaintVarSweepGradient): ["centerX", "centerY", "startAngle", "endAngle"],
-		(ot.Paint, ot.PaintFormat.PaintVarTranslate): ["dx", "dy"],
-		(ot.Paint, ot.PaintFormat.PaintVarScale): ["scaleX", "scaleY"],
-		(ot.Paint, ot.PaintFormat.PaintVarScaleAroundCenter): ["scaleX", "scaleY", "centerX", "centerY"],
-		(ot.Paint, ot.PaintFormat.PaintVarScaleUniform): ["scale"],
-		(ot.Paint, ot.PaintFormat.PaintVarScaleUniformAroundCenter): ["scale", "centerX", "centerY"],
-		(ot.Paint, ot.PaintFormat.PaintVarRotate): ["angle"],
-		(ot.Paint, ot.PaintFormat.PaintVarRotateAroundCenter): ["angle", "centerX", "centerY"],
-		(ot.Paint, ot.PaintFormat.PaintVarSkew): ["xSkewAngle", "ySkewAngle"],
-		(ot.Paint, ot.PaintFormat.PaintVarSkewAroundCenter): ["xSkewAngle", "ySkewAngle", "centerX", "centerY"],
 	}
 
 	def __init__(self, model, axisTags, font):
@@ -1197,9 +1161,7 @@ class COLRVariationMerger(VariationMerger):
 			varTable.VarIndexBase = 0xFFFFFFFF
 
 		for attr, value in varTable.__dict__.items():
-			if (
-				type(value) in cls.variable_types
-            ):
+			if type(value) in cls.variable_types:
 				setattr(varTable, attr, cls.asVariableType(value))
 			elif (
 				isinstance(value, list)
@@ -1210,12 +1172,28 @@ class COLRVariationMerger(VariationMerger):
 
 		return varTable
 
+	@classmethod
+	@lru_cache(maxsize=None)
+	def getVariableFormatAndAttrs(cls, tableClass, tableFormat):
+		varFormat = None
+		if tableFormat is None:
+			varType = cls.variable_types.get(tableClass, tableClass)
+			varConverters = varType.converters
+		else:
+			varFormat = tableClass.formatEnum(tableFormat).as_variable()
+			varConverters = tableClass.converters[varFormat if varFormat is not None else tableFormat]
+		# TODO: parse 'VarIndexBase + {offset}' and sort result by increasing offset
+		return (
+			varFormat,
+			tuple(c.name for c in varConverters if "VarIndexBase +" in c.description),
+		)
+
 
 @COLRVariationMerger.merger((ot.Affine2x3, ot.ColorStop, ot.ColorLine, ot.ClipBox, ot.Paint))
 def merge(merger, self, lst):
 	klass = type(self)
-	varFormat = merger.variable_formats.get((klass, getattr(self, "Format", None)))
-	varAttrs = merger.variable_attrs.get((klass, varFormat), ())
+	fmt = getattr(self, "Format", None)
+	varFormat, varAttrs = merger.getVariableFormatAndAttrs(klass, fmt)
 
 	self_is_variable = False
 	converters = self.getConverters()
@@ -1258,7 +1236,7 @@ def merge(merger, self, lst):
 			self.VarIndexBase = len(merger.varIdxes)
 			merger.varIdxes.extend(varIdxes)
 			self_is_variable = True
-		elif varFormat is not None and self_is_variable:
+		elif self_is_variable:
 			self.VarIndexBase = 0xFFFFFFFF
 
 	if self_is_variable:
