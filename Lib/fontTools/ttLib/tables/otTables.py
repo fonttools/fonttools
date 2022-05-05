@@ -1263,7 +1263,16 @@ class BaseGlyphList(BaseTable):
 		return self.__dict__.copy()
 
 
+class ClipBoxFormat(IntEnum):
+	Static = 1
+	Variable = 2
+
+	def as_variable(self):
+		return self.Variable
+
+
 class ClipBox(getFormatSwitchingBaseTableClass("uint8")):
+	formatEnum = ClipBoxFormat
 
 	def as_tuple(self):
 		return tuple(getattr(self, conv.name) for conv in self.getConverters())
@@ -1498,12 +1507,21 @@ class PaintFormat(IntEnum):
 	PaintVarSkewAroundCenter = 31
 	PaintComposite = 32
 
+	def as_variable(self):
+		if self.name.startswith("PaintVar"):
+			return self
+		try:
+			return PaintFormat.__members__[f"PaintVar{self.name[5:]}"]
+		except KeyError:
+			return None
+
 
 class Paint(getFormatSwitchingBaseTableClass("uint8")):
+	formatEnum = PaintFormat
 
 	def getFormatName(self):
 		try:
-			return PaintFormat(self.Format).name
+			return self.formatEnum(self.Format).name
 		except ValueError:
 			raise NotImplementedError(f"Unknown Paint format: {self.Format}")
 
