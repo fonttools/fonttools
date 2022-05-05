@@ -1207,19 +1207,16 @@ def merge(merger, self, lst):
 		values = [getattr(item, attr) for item in lst]
 		if isinstance(value, otBase.BaseTable):
 			merger.mergeThings(value, values)
-			if (
-				type(value) in merger.variable_types
-				and hasattr(value, "_is_var")
-			):
+			if hasattr(value, "_is_var"):
 				self_is_variable = True
+				del value._is_var
 		elif isinstance(value, list):
 			merger.mergeLists(value, values)
-			if (
-				value
-				and type(value[0]) in merger.variable_types
-				and any(hasattr(v, "_is_var") for v in value)
-			):
+			if any(hasattr(v, "_is_var") for v in value):
 				self_is_variable = True
+				for v in value:
+					if hasattr(v, "_is_var"):
+						del v._is_var
 		else:
 			if not allEqual(values):
 				raise ShouldBeConstant(
@@ -1241,9 +1238,7 @@ def merge(merger, self, lst):
 
 	if self_is_variable:
 		for attr, value in self.__dict__.items():
-			if (
-				type(value) in merger.variable_types
-			):
+			if type(value) in merger.variable_types:
 				setattr(self, attr, merger.asVariableType(value))
 			elif (
 				isinstance(value, list)
@@ -1255,7 +1250,8 @@ def merge(merger, self, lst):
 		if varFormat is not None:
 			self.Format = varFormat
 
-		self._is_var = self_is_variable
+		if klass in merger.variable_types:
+			self._is_var = True
 
 
 @COLRVariationMerger.merger(ot.ClipList, "clips")
