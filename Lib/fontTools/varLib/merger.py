@@ -1188,12 +1188,11 @@ class COLRVariationMerger(VariationMerger):
 	def getVariableFormatAndAttrs(cls, tableClass, tableFormat):
 		varFormat = None
 		if tableFormat is None:
-			varType = cls.variable_types.get(tableClass, tableClass)
-			varConverters = varType.converters
+			varConverters = cls.variable_types[tableClass].converters
 		else:
 			varFormat = tableClass.formatEnum(tableFormat).as_variable()
 			varConverters = tableClass.converters[varFormat if varFormat is not None else tableFormat]
-		# TODO: parse 'VarIndexBase + {offset}' and sort result by increasing offset
+		# we assume the variable attributes are already sorted by increasing 'VarIndexBase + {offset}'
 		return (
 			varFormat,
 			tuple(c.name for c in varConverters if "VarIndexBase +" in c.description),
