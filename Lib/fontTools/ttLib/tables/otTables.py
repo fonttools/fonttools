@@ -1267,12 +1267,8 @@ class ClipBoxFormat(IntEnum):
 	Static = 1
 	Variable = 2
 
-	def as_variable(self):
-		return self.Variable
-
 
 class ClipBox(getFormatSwitchingBaseTableClass("uint8")):
-	formatEnum = ClipBoxFormat
 
 	def as_tuple(self):
 		return tuple(getattr(self, conv.name) for conv in self.getConverters())
@@ -1517,11 +1513,10 @@ class PaintFormat(IntEnum):
 
 
 class Paint(getFormatSwitchingBaseTableClass("uint8")):
-	formatEnum = PaintFormat
 
 	def getFormatName(self):
 		try:
-			return self.formatEnum(self.Format).name
+			return PaintFormat(self.Format).name
 		except ValueError:
 			raise NotImplementedError(f"Unknown Paint format: {self.Format}")
 
