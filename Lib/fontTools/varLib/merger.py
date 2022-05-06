@@ -1112,7 +1112,7 @@ def merge(merger, self, lst):
 
 class COLRVariationMerger(VariationMerger):
 
-	variable_types = {
+	varTypes = {
 		ot.Affine2x3: ot.VarAffine2x3,
 		ot.ColorStop: ot.VarColorStop,
 		ot.ColorLine: ot.VarColorLine,
@@ -1121,6 +1121,7 @@ class COLRVariationMerger(VariationMerger):
 	def __init__(self, model, axisTags, font):
 		VariationMerger.__init__(self, model, axisTags, font)
 		self.varIdxes = []
+		self.varTables = set()
 
 	def mergeTables(self, font, master_ttfs, tableTags=("COLR",)):
 		VariationMerger.mergeTables(self, font, master_ttfs, tableTags)
@@ -1197,35 +1198,40 @@ class COLRVariationMerger(VariationMerger):
 
 		return False
 
-	@classmethod
-	def convertSubtablesToVariableType(cls, table):
+	def markTableAsVariable(self, table):
+		self.varTables.add(id(table))
+
+	def isVariableTable(self, table):
+		return id(table) in self.varTables
+
+	def convertSubtablesToVariableType(self, table):
 		for attr, value in table.__dict__.items():
-			if type(value) in cls.variable_types:
-				setattr(table, attr, cls.asVariableType(value))
+			if type(value) in self.varTypes:
+				setattr(table, attr, self.asVariableType(value))
 			elif (
 				isinstance(value, list)
 				and value
-				and type(value[0]) in cls.variable_types
+				and type(value[0]) in self.varTypes
 			):
-				setattr(table, attr, [cls.asVariableType(v) for v in value])
+				setattr(table, attr, [self.asVariableType(v) for v in value])
 
-	@classmethod
-	def asVariableType(cls, table):
-		varType = cls.variable_types[type(table)]
+	def asVariableType(self, table):
+		varType = self.varTypes[type(table)]
 		hasVarIndexBase = "VarIndexBase" in varType.convertersByName
 		varTable = varType()
 		varTable.__dict__.update(table.__dict__)
 		if hasVarIndexBase and getattr(varTable, "VarIndexBase", None) is None:
 			varTable.VarIndexBase = 0xFFFFFFFF
 
-		cls.convertSubtablesToVariableType(varTable)
+		self.convertSubtablesToVariableType(varTable)
+		self.varTables.discard(id(table))
 		return varTable
 
 	@classmethod
 	@lru_cache(maxsize=None)
 	def getVariableAttrs(cls, tableClass, varFormat=None):
 		if varFormat is None:
-			varConverters = cls.variable_types[tableClass].converters
+			varConverters = cls.varTypes[tableClass].converters
 		else:
 			varConverters = tableClass.converters[varFormat]
 		# we assume the variable attributes are already sorted by increasing 'VarIndexBase + {offset}'
@@ -1248,7 +1254,7 @@ def merge(merger, self, lst):
 	merger.mergeAttrs(self, lst, attrs, exclude=varAttrs)
 
 	haveVariableSubtables = any(
-		hasattr(st.value, "___I_am_variable___") for st in self.iterSubTables()
+		merger.isVariableTable(st.value) for st in self.iterSubTables()
 	)
 
 	haveVariableAttrs = merger.storeMastersForVariableAttrs(self, lst, varAttrs)
@@ -1265,7 +1271,7 @@ def merge(merger, self, lst):
 @COLRVariationMerger.merger((ot.Affine2x3, ot.ColorStop))
 def merge(merger, self, lst):
 	klass = merger.checkType(self, lst)
-	assert klass in merger.variable_types
+	assert klass in merger.varTypes
 	varAttrs = merger.getVariableAttrs(klass)
 
 	attrs = tuple(c.name for c in self.getConverters())
@@ -1274,23 +1280,23 @@ def merge(merger, self, lst):
 	merger.mergeAttrs(self, lst, attrs, exclude=varAttrs)
 
 	if merger.storeMastersForVariableAttrs(self, lst, varAttrs):
-		self.___I_am_variable___ = True
+		merger.markTableAsVariable(self)
 
 
 @COLRVariationMerger.merger(ot.ColorLine)
 def merge(merger, self, lst):
 	klass = merger.checkType(self, lst)
-	assert klass in merger.variable_types
+	assert klass in merger.varTypes
 
 	merger.mergeAttrs(self, lst, (c.name for c in self.getConverters()))
 
 	haveVariableColorStops = any(
-		hasattr(stop, "___I_am_variable___") for stop in self.ColorStop
+		merger.isVariableTable(stop) for stop in self.ColorStop
 	)
 
 	if haveVariableColorStops:
 		merger.convertSubtablesToVariableType(self)
-		self.___I_am_variable___ = True
+		merger.markTableAsVariable(self)
 
 
 @COLRVariationMerger.merger(ot.ClipList, "clips")
