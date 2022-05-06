@@ -28,6 +28,7 @@ from .errors import (
     ShouldBeConstant,
     FoundANone,
     MismatchedTypes,
+    MismatchedFormats,
     LengthsDiffer,
     KeysDiffer,
     InconsistentGlyphOrder,
@@ -1151,6 +1152,25 @@ class COLRVariationMerger(VariationMerger):
 			varIdxes.append(varIdx)
 		return varIdxes
 
+	@staticmethod
+	def shouldConvertToVariableType(value) -> bool:
+		return any(
+			hasattr(v, "___I_am_variable___")
+			for v in ([value] if not isinstance(value, list) else value)
+		)
+
+	@classmethod
+	def convertSubtablesToVariableType(cls, table):
+		for attr, value in table.__dict__.items():
+			if type(value) in cls.variable_types:
+				setattr(table, attr, cls.asVariableType(value))
+			elif (
+				isinstance(value, list)
+				and value
+				and type(value[0]) in cls.variable_types
+			):
+				setattr(table, attr, [cls.asVariableType(v) for v in value])
+
 	@classmethod
 	def asVariableType(cls, table):
 		varType = cls.variable_types[type(table)]
@@ -1160,16 +1180,7 @@ class COLRVariationMerger(VariationMerger):
 		if hasVarIndexBase and getattr(varTable, "VarIndexBase", None) is None:
 			varTable.VarIndexBase = 0xFFFFFFFF
 
-		for attr, value in varTable.__dict__.items():
-			if type(value) in cls.variable_types:
-				setattr(varTable, attr, cls.asVariableType(value))
-			elif (
-				isinstance(value, list)
-				and value
-				and type(value[0]) in cls.variable_types
-			):
-				setattr(varTable, attr, [cls.asVariableType(v) for v in value])
-
+		cls.convertSubtablesToVariableType(varTable)
 		return varTable
 
 	@classmethod
@@ -1192,31 +1203,40 @@ class COLRVariationMerger(VariationMerger):
 @COLRVariationMerger.merger((ot.Affine2x3, ot.ColorStop, ot.ColorLine, ot.ClipBox, ot.Paint))
 def merge(merger, self, lst):
 	klass = type(self)
+	if not allEqualTo(self, lst, type):
+		raise MismatchedTypes(
+			merger,
+			expected=klass.__name__,
+			got=[type(v).__name__ for v in lst],
+		)
+
 	fmt = getattr(self, "Format", None)
+	if (
+		fmt is not None
+		and not allEqualTo(self, lst, lambda v: getattr(v, "Format", None))
+	):
+		raise MismatchedFormats(
+			merger,
+			expected=self.Format,
+			got=[getattr(v, "Format", None) for v in lst],
+			stack=[".Format"],
+		)
+
 	varFormat, varAttrs = merger.getVariableFormatAndAttrs(klass, fmt)
 
-	self_is_variable = False
-	converters = self.getConverters()
-	for conv in converters:
-		attr = conv.name
+	attrs = [c.name for c in self.getConverters()]
+	assert set(varAttrs).issubset(attrs)
+
+	haveVariableSubtables = False
+	for attr in attrs:
 		if attr in varAttrs:
 			# merged separately below
 			continue
-		# TODO: Check master values have same type and format
 		value = getattr(self, attr)
 		values = [getattr(item, attr) for item in lst]
-		if isinstance(value, otBase.BaseTable):
+		if isinstance(value, (otBase.BaseTable, list)):
 			merger.mergeThings(value, values)
-			if hasattr(value, "_is_var"):
-				self_is_variable = True
-				del value._is_var
-		elif isinstance(value, list):
-			merger.mergeLists(value, values)
-			if any(hasattr(v, "_is_var") for v in value):
-				self_is_variable = True
-				for v in value:
-					if hasattr(v, "_is_var"):
-						del v._is_var
+			haveVariableSubtables |= merger.shouldConvertToVariableType(value)
 		else:
 			if not allEqual(values):
 				raise ShouldBeConstant(
@@ -1227,31 +1247,24 @@ def merge(merger, self, lst):
 				)
 			setattr(self, attr, values[0])
 
+	haveVariableAttrs = False
 	if varAttrs:
 		varIdxes = merger.storeMastersForAttrs(self, lst, varAttrs)
 		if any(v != 0xFFFFFFFF for v in varIdxes):
 			self.VarIndexBase = len(merger.varIdxes)
 			merger.varIdxes.extend(varIdxes)
-			self_is_variable = True
-		elif self_is_variable:
+			haveVariableAttrs = True
+		elif haveVariableSubtables:
 			self.VarIndexBase = 0xFFFFFFFF
 
-	if self_is_variable:
-		for attr, value in self.__dict__.items():
-			if type(value) in merger.variable_types:
-				setattr(self, attr, merger.asVariableType(value))
-			elif (
-				isinstance(value, list)
-				and value
-				and type(value[0]) in merger.variable_types
-			):
-				setattr(self, attr, [merger.asVariableType(v) for v in value])
+	if haveVariableSubtables or haveVariableAttrs:
+		merger.convertSubtablesToVariableType(self)
 
 		if varFormat is not None:
 			self.Format = varFormat
 
 		if klass in merger.variable_types:
-			self._is_var = True
+			self.___I_am_variable___ = True
 
 
 @COLRVariationMerger.merger(ot.ClipList, "clips")

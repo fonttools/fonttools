@@ -115,6 +115,10 @@ class MismatchedTypes(VarLibMergeError):
     """data had inconsistent types"""
 
 
+class MismatchedFormats(VarLibMergeError):
+    """format-switching subtables have incompatible formats"""
+
+
 class LengthsDiffer(VarLibMergeError):
     """a list of objects had inconsistent lengths"""
 
