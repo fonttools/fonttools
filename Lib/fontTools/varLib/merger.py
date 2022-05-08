@@ -4,7 +4,6 @@ Merge OpenType Layout tables (GDEF / GPOS / GSUB).
 import os
 import copy
 import enum
-from functools import lru_cache
 from operator import ior
 import logging
 from fontTools.misc import classifyTools
@@ -1227,26 +1226,14 @@ class COLRVariationMerger(VariationMerger):
 		self.varTables.discard(id(table))
 		return varTable
 
-	@classmethod
-	@lru_cache(maxsize=None)
-	def getVariableAttrs(cls, tableClass, varFormat=None):
-		if varFormat is None:
-			varConverters = cls.varTypes[tableClass].converters
-		else:
-			varConverters = tableClass.converters[varFormat]
-		# we assume the variable attributes are already sorted by increasing 'VarIndexBase + {offset}'
-		return tuple(c.name for c in varConverters if "VarIndexBase +" in c.description)
-
 
 @COLRVariationMerger.merger(ot.Paint)
 def merge(merger, self, lst):
 	klass = merger.checkType(self, lst)
 	fmt = merger.checkFormat(self, lst)
-
 	varFormat = ot.PaintFormat(fmt).as_variable()
-	varAttrs = ()
-	if varFormat is not None:
-		varAttrs = merger.getVariableAttrs(klass, varFormat)
+
+	varAttrs = self.getVariableAttrs()
 
 	attrs = tuple(c.name for c in self.getConverters())
 	assert set(varAttrs).issubset(attrs)
@@ -1272,7 +1259,7 @@ def merge(merger, self, lst):
 def merge(merger, self, lst):
 	klass = merger.checkType(self, lst)
 	assert klass in merger.varTypes
-	varAttrs = merger.getVariableAttrs(klass)
+	varAttrs = self.getVariableAttrs()
 
 	attrs = tuple(c.name for c in self.getConverters())
 	assert set(varAttrs).issubset(attrs)
@@ -1309,6 +1296,6 @@ def merge(merger, self, lst):
 	merger.checkType(self, lst)
 	merger.checkFormat(self, lst)
 
-	varAttrs = merger.getVariableAttrs(ot.ClipBox, ot.ClipBoxFormat.Variable)
+	varAttrs = self.getVariableAttrs()
 	if merger.storeMastersForVariableAttrs(self, lst, varAttrs):
 		self.Format = ot.ClipBoxFormat.Variable

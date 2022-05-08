@@ -18,7 +18,9 @@ from .otTables import (lookupTypes, AATStateTable, AATState, AATAction,
                        CompositeMode as _CompositeMode)
 from itertools import zip_longest
 from functools import partial
+import re
 import struct
+from typing import Optional
 import logging
 
 
@@ -211,6 +213,15 @@ class BaseConverter(object):
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
 		"""Write a value to XML."""
 		raise NotImplementedError(self)
+
+	varIndexBasePlusOffsetRE = re.compile(r"VarIndexBase\s*\+\s*(\d+)")
+
+	def getVarIndexOffset(self) -> Optional[int]:
+		"""If description has `VarIndexBase + {offset}`, return the offset else None."""
+		m = self.varIndexBasePlusOffsetRE.search(self.description)
+		if not m:
+			return None
+		return int(m.group(1))
 
 
 class SimpleValue(BaseConverter):

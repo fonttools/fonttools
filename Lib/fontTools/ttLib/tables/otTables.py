@@ -7,8 +7,11 @@ converter objects from otConverters.py.
 """
 import copy
 from enum import IntEnum
+from functools import lru_cache
 import itertools
 from collections import defaultdict, namedtuple
+from types import MappingProxyType
+from typing import Mapping
 from fontTools.misc.roundTools import otRound
 from fontTools.misc.textTools import bytesjoin, pad, safeEval
 from .otBase import (
@@ -1263,12 +1266,80 @@ class BaseGlyphList(BaseTable):
 		return self.__dict__.copy()
 
 
+class _VariableAttrsGetterMixin:
+
+	@classmethod
+	@lru_cache(maxsize=None)
+	def getVariableAttrs(cls) -> Mapping[str, int]:
+		"""Return {attrName: varIndexOffset} for each variable attributes in table.
+
+		Return empty {} if table has no variable attributes."""
+		if not issubclass(cls, BaseTable):
+			raise TypeError(cls)
+		className = cls.__name__
+		if not className.startswith("Var"):
+			cls = globals().get(f"Var{className}")
+			if cls is None:
+				return MappingProxyType({})
+		varAttrs = {}
+		for c in cls.converters:
+			offset = c.getVarIndexOffset()
+			if offset is not None:
+				varAttrs[c.name] = offset
+		return MappingProxyType(varAttrs)
+
+
+class Affine2x3(_VariableAttrsGetterMixin, BaseTable):
+	pass
+
+class VarAffine2x3(_VariableAttrsGetterMixin, BaseTable):
+	pass
+
+class ColorStop(_VariableAttrsGetterMixin, BaseTable):
+	pass
+
+class VarColorStop(_VariableAttrsGetterMixin, BaseTable):
+	pass
+
+
+class _FormatVariableAttrsGetterMixin:
+
+	@classmethod
+	@lru_cache(maxsize=None)
+	def _getFormatSwitchingVariableAttrs(cls, fmt: int) -> Mapping[str, int]:
+		if not issubclass(cls, FormatSwitchingBaseTable):
+			raise TypeError(cls)
+		varFormat = cls.formatEnum(fmt).as_variable()
+		if varFormat is None:
+			return MappingProxyType({})
+		varConverters = cls.converters[varFormat]
+		varAttrs = {}
+		for c in varConverters:
+			offset = c.getVarIndexOffset()
+			if offset is not None:
+				varAttrs[c.name] = offset
+		return MappingProxyType(varAttrs)
+
+	def getVariableAttrs(self) -> Mapping[str, int]:
+		"""Return {attrName: varIndexOffset} for each variable attributes in table.
+
+		Return empty {} if table has no variable attributes."""
+		return self._getFormatSwitchingVariableAttrs(self.Format)
+
+
 class ClipBoxFormat(IntEnum):
 	Static = 1
 	Variable = 2
 
+	def as_variable(self):
+		return self.Variable
 
-class ClipBox(getFormatSwitchingBaseTableClass("uint8")):
+
+class ClipBox(
+	_FormatVariableAttrsGetterMixin,
+	getFormatSwitchingBaseTableClass("uint8"),
+):
+	formatEnum = ClipBoxFormat
 
 	def as_tuple(self):
 		return tuple(getattr(self, conv.name) for conv in self.getConverters())
@@ -1512,11 +1583,15 @@ class PaintFormat(IntEnum):
 			return None
 
 
-class Paint(getFormatSwitchingBaseTableClass("uint8")):
+class Paint(
+	_FormatVariableAttrsGetterMixin,
+	getFormatSwitchingBaseTableClass("uint8"),
+):
+	formatEnum = PaintFormat
 
 	def getFormatName(self):
 		try:
-			return PaintFormat(self.Format).name
+			return self.formatEnum(self.Format).name
 		except ValueError:
 			raise NotImplementedError(f"Unknown Paint format: {self.Format}")
 
