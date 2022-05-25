@@ -380,7 +380,7 @@ class OTTableWriter(object):
 			return NotImplemented
 		return self.offsetSize == other.offsetSize and self.items == other.items
 
-	def _doneWriting(self, internedTables):
+	def _doneWriting(self, internedTables, shareExtension=False):
 		# Convert CountData references to data string items
 		# collapse duplicate table references to a unique entry
 		# "tables" are OTTableWriter objects.
@@ -396,7 +396,7 @@ class OTTableWriter(object):
 		# See: https://github.com/fonttools/fonttools/issues/518
 		dontShare = hasattr(self, 'DontShare')
 
-		if isExtension:
+		if isExtension and not shareExtension:
 			internedTables = {}
 
 		items = self.items
@@ -405,7 +405,7 @@ class OTTableWriter(object):
 			if hasattr(item, "getCountData"):
 				items[i] = item.getCountData()
 			elif hasattr(item, "getData"):
-				item._doneWriting(internedTables)
+				item._doneWriting(internedTables, shareExtension=shareExtension)
 				# At this point, all subwriters are hashable based on their items.
 				# (See hash and comparison magic methods above.) So the ``setdefault``
 				# call here will return the first writer object we've seen with
@@ -533,7 +533,7 @@ class OTTableWriter(object):
                 https://github.com/harfbuzz/uharfbuzz/blob/main/src/uharfbuzz/_harfbuzz.pyx#L1149
                 """
 		internedTables = {}
-		self._doneWriting(internedTables)
+		self._doneWriting(internedTables, shareExtension=True)
 		tables = []
 		obj_list = []
 		done = {}
