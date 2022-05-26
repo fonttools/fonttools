@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from math import floor
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import bytechr, byteord, bytesjoin, strjoin, tobytes, tostr, safeEval
 from fontTools.misc.encodingTools import getEncoding
@@ -7,6 +8,7 @@ from . import DefaultTable
 import struct
 import logging
 
+from functools import cmp_to_key
 
 log = logging.getLogger(__name__)
 
@@ -21,6 +23,19 @@ nameRecordFormat = """
 """
 
 nameRecordSize = sstruct.calcsize(nameRecordFormat)
+
+# From	https://gitlab.freedesktop.org/fontconfig/fontconfig/-/blob/d863f6778915f7dd224c98c814247ec292904e30/src/fcfreetype.c#L1078
+#		https://github.com/freetype/freetype/blob/b98dd169a1823485e35b3007ce707a6712dcd525/include/freetype/ttnameid.h#L86-L91
+TT_PLATFORM_APPLE_UNICODE = 0
+TT_PLATFORM_MACINTOSH = 1
+TT_PLATFORM_ISO = 2 # deprecated
+TT_PLATFORM_MICROSOFT = 3
+platform_order = [
+    TT_PLATFORM_MICROSOFT,
+    TT_PLATFORM_APPLE_UNICODE,
+    TT_PLATFORM_MACINTOSH,
+    TT_PLATFORM_ISO,
+]
 
 
 class table__n_a_m_e(DefaultTable.DefaultTable):
@@ -98,6 +113,80 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 				if langID is None or namerecord.langID == langID:
 					return namerecord
 		return None # not found
+
+
+	def FcFreeTypeGetFirstName (self, platformID, nameID, name, count):
+		# From https://gitlab.freedesktop.org/fontconfig/fontconfig/-/blob/d863f6778915f7dd224c98c814247ec292904e30/src/fcfreetype.c#L1143
+
+		min = 0
+		max = count - 1
+
+		while min <= max:
+		
+			mid = floor((min + max) / 2)
+			print(mid)
+
+		if (platformID < name.platformID or
+			(platformID == name.platformID and
+			(name.nameID < name.nameID or
+			(name.nameID == name.nameID and
+			(mid and
+			platformID == self.names[mid - 1].platformID and
+			name.nameID == self.names[mid - 1].nameID
+			))))):
+			max = mid - 1
+		elif (platformID > name.platformID or
+			(platformID == name.platformID and
+			nameID > name.nameID)):
+			min = mid + 1
+		else:
+			return mid
+		
+
+		return -1
+
+	def _is_english(self, platformID, langID):
+		# From https://gitlab.freedesktop.org/fontconfig/fontconfig/-/blob/d863f6778915f7dd224c98c814247ec292904e30/src/fcfreetype.c#L1111
+
+		return (platformID, langID) in ((1, 0), (3, 0x409))
+
+	def compare(self, item1, item2):
+		# From https://gitlab.freedesktop.org/fontconfig/fontconfig/-/blob/d863f6778915f7dd224c98c814247ec292904e30/src/fcfreetype.c#L1128
+		# Warning ! I don't have the variable "idx" which seems to be the index of the name in the naming_table
+
+		if (item1.platformID != item2.platformID):
+			return item1.platformID - item2.platformID
+		if (item1.nameID != item2.nameID):
+			return item1.nameID - item2.nameID
+		if (item1.platEncID != item2.platEncID):
+			return item1.platEncID - item2.platEncID
+		if (item1.langID != item2.langID):
+			if self._is_english(item1.platformID, item1.langID):
+				return -1
+			elif self._is_english(item2.platformID, item2.langID):
+				return 1
+			else:
+				return item1.langID - item2.langID
+
+		return 0
+
+	def _getNameIdFromPlatform(self, platformID):
+		platformName = []
+
+		for name in self.names:
+			if name.platformID == platformID:
+				platformName.append(name)
+		
+		return platformName
+
+	def getFirstName(self, nameID):
+		self.names.sort(key=cmp_to_key(self.compare))
+
+		for platformID in platform_order:
+			platformName = self._getNameIdFromPlatform(platformID)
+			
+			for name in platformName:
+				print(self.FcFreeTypeGetFirstName(platformID, nameID, name, len(self.names)))
 
 	def getDebugName(self, nameID):
 		englishName = someName = None
