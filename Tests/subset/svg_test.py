@@ -55,7 +55,7 @@ def simple_svg_table_glyph_ids_on_children(empty_svg_font):
     for i in range(1, 11):
         svg = new_svg()
         etree.SubElement(svg, "path", {"id": f"glyph{i}", "d": f"M{i},{i}"})
-        svg_docs.append((etree.tostring(svg).decode(), i, i))
+        svg_docs.append((etree.tostring(svg).decode(), i, i, False))
     return font
 
 
@@ -65,7 +65,7 @@ def simple_svg_table_glyph_ids_on_roots(empty_svg_font):
     for i in range(1, 11):
         svg = new_svg(id=f"glyph{i}")
         etree.SubElement(svg, "path", {"d": f"M{i},{i}"})
-        svg_docs.append((etree.tostring(svg).decode(), i, i))
+        svg_docs.append((etree.tostring(svg).decode(), i, i, False))
     return font
 
 
@@ -466,7 +466,7 @@ def test_subset_svg_with_references(
 ):
     font = empty_svg_font
 
-    font["SVG "].docList.append((COMPLEX_SVG, 1, 12))
+    font["SVG "].docList.append((COMPLEX_SVG, 1, 12, False))
     svg_font_path = tmp_path / "TestSVG.ttf"
     font.save(svg_font_path)
     subset_path = svg_font_path.with_suffix(".subset.ttf")
@@ -492,7 +492,7 @@ def test_subset_svg_empty_table(empty_svg_font, tmp_path):
 
     svg = new_svg()
     etree.SubElement(svg, "rect", {"id": "glyph1", "x": "1", "y": "2"})
-    font["SVG "].docList.append((etree.tostring(svg).decode(), 1, 1))
+    font["SVG "].docList.append((etree.tostring(svg).decode(), 1, 1, False))
 
     svg_font_path = tmp_path / "TestSVG.ttf"
     font.save(svg_font_path)
@@ -517,6 +517,7 @@ def test_subset_svg_missing_glyph(empty_svg_font, tmp_path):
             # only one glyph element with id="glyph1", the "glyph2" one is absent.
             # Techically this would be invalid according to the OT-SVG spec.
             2,
+            False,
         )
     )
     svg_font_path = tmp_path / "TestSVG.ttf"

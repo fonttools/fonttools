@@ -75,15 +75,16 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 				start = entry.svgDocOffset + subTableStart
 				end = start + entry.svgDocLength
 				doc = data[start:end]
+				compressed = False
 				if doc.startswith(b"\x1f\x8b"):
 					import gzip
 					bytesIO = BytesIO(doc)
 					with gzip.GzipFile(None, "r", fileobj=bytesIO) as gunzipper:
 						doc = gunzipper.read()
-					self.compressed = True
 					del bytesIO
+					compressed = True
 				doc = tostr(doc, "utf_8")
-				self.docList.append( [doc, entry.startGlyphID, entry.endGlyphID] )
+				self.docList.append( [doc, entry.startGlyphID, entry.endGlyphID, compressed] )
 
 	def compile(self, ttFont):
 		version = 0
@@ -96,9 +97,9 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 		entryList.append(datum)
 		curOffset = len(datum) + doc_index_entry_format_0Size*numEntries
 		seenDocs = {}
-		for doc, startGlyphID, endGlyphID in self.docList:
+		for doc, startGlyphID, endGlyphID, compressed in self.docList:
 			docBytes = tobytes(doc, encoding="utf_8")
-			if getattr(self, "compressed", False) and not docBytes.startswith(b"\x1f\x8b"):
+			if compressed and not docBytes.startswith(b"\x1f\x8b"):
 				import gzip
 				bytesIO = BytesIO()
 				with gzip.GzipFile(None, "w", fileobj=bytesIO) as gzipper:
@@ -127,8 +128,11 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 		return data
 
 	def toXML(self, writer, ttFont):
-		for doc, startGID, endGID in self.docList:
-			writer.begintag("svgDoc", startGlyphID=startGID, endGlyphID=endGID)
+		for doc, startGID, endGID, compressed in self.docList:
+			attrs = {"startGlyphID":startGID, "endGlyphID":endGID}
+			if compressed:
+				attrs["compressed"] = True
+			writer.begintag("svgDoc", **attrs)
 			writer.newline()
 			writer.writecdata(doc)
 			writer.newline()
@@ -143,7 +147,8 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 			doc = doc.strip()
 			startGID = int(attrs["startGlyphID"])
 			endGID = int(attrs["endGlyphID"])
-			self.docList.append( [doc, startGID, endGID] )
+			compressed = bool(attrs.get("compressed", False))
+			self.docList.append( [doc, startGID, endGID, compressed] )
 		else:
 			log.warning("Unknown %s %s", name, content)
 

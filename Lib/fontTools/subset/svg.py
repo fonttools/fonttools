@@ -202,7 +202,7 @@ def subset_glyphs(self, s) -> bool:
     glyph_index_map: Dict[int, int] = s.glyph_index_map
 
     new_docs: List[Tuple[bytes, int, int]] = []
-    for doc, start, end in self.docList:
+    for doc, start, end, compressed in self.docList:
 
         glyphs = {glyph_order[i] for i in range(start, end + 1)}.intersection(s.glyphs)
         if not glyphs:
@@ -241,7 +241,7 @@ def subset_glyphs(self, s) -> bool:
 
         new_gids = (glyph_index_map[i] for i in gids)
         for start, end in ranges(new_gids):
-            new_docs.append((new_doc, start, end))
+            new_docs.append((new_doc, start, end, compressed))
 
     self.docList = new_docs
 
