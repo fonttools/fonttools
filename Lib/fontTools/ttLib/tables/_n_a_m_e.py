@@ -115,7 +115,7 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		return None # not found
 
 
-	def FcFreeTypeGetFirstName (self, platformID, nameID, name, count):
+	def FcFreeTypeGetFirstName (self, platformID, nameID, count):
 		# From https://gitlab.freedesktop.org/fontconfig/fontconfig/-/blob/d863f6778915f7dd224c98c814247ec292904e30/src/fcfreetype.c#L1143
 
 		min = 0
@@ -124,24 +124,25 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		while min <= max:
 		
 			mid = floor((min + max) / 2)
-			print(mid)
 
-		if (platformID < name.platformID or
-			(platformID == name.platformID and
-			(name.nameID < name.nameID or
-			(name.nameID == name.nameID and
-			(mid and
-			platformID == self.names[mid - 1].platformID and
-			name.nameID == self.names[mid - 1].nameID
-			))))):
-			max = mid - 1
-		elif (platformID > name.platformID or
-			(platformID == name.platformID and
-			nameID > name.nameID)):
-			min = mid + 1
-		else:
-			return mid
-		
+			name = self.names[mid]
+
+			if (platformID < name.platformID or
+				(platformID == name.platformID and
+				(name.nameID < name.nameID or
+				(name.nameID == name.nameID and
+				(mid and
+				platformID == self.names[mid - 1].platformID and
+				name.nameID == self.names[mid - 1].nameID
+				))))):
+				max = mid - 1
+			elif (platformID > name.platformID or
+				(platformID == name.platformID and
+				nameID > name.nameID)):
+				min = mid + 1
+			else:
+				return mid
+			
 
 		return -1
 
@@ -186,7 +187,15 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 			platformName = self._getNameIdFromPlatform(platformID)
 			
 			for name in platformName:
-				print(self.FcFreeTypeGetFirstName(platformID, nameID, name, len(self.names)))
+				nameidx = self.FcFreeTypeGetFirstName(platformID, nameID, len(self.names))
+				
+				nameidx += 1
+				while (nameidx < len(self.names) and
+				platformID == self.names[nameidx].platformID and nameID == self.names[nameidx].nameID):
+					nameidx += 1
+				nameidx -= 1
+				print(self.names[nameidx])
+
 
 	def getDebugName(self, nameID):
 		englishName = someName = None
