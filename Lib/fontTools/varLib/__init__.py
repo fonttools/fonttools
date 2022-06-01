@@ -74,6 +74,7 @@ def _add_fvar(font, axes, instances: List[InstanceDescriptor]):
 	fvar = newTable('fvar')
 	nameTable = font['name']
 
+	dflt_axis_coordinates = {v.tag: v.default for k,v in axes.items()}
 	for a in axes.values():
 		axis = Axis()
 		axis.axisTag = Tag(a.tag)
@@ -102,11 +103,13 @@ def _add_fvar(font, axes, instances: List[InstanceDescriptor]):
 		psname = instance.postScriptFontName
 
 		inst = NamedInstance()
-		inst.subfamilyNameID = nameTable.addMultilingualName(localisedStyleName)
-		if psname is not None:
-			psname = tostr(psname)
-			inst.postscriptNameID = nameTable.addName(psname)
 		inst.coordinates = {axes[k].tag:axes[k].map_backward(v) for k,v in coordinates.items()}
+		if inst.coordinates == dflt_axis_coordinates:
+			inst.subfamilyNameID = 17 if any(r.nameID == 17 for r in nameTable.names) else 2
+			inst.postscriptNameID = 6 if psname else 0xFFFF
+		else:
+			inst.subfamilyNameID = nameTable.addMultilingualName(localisedStyleName)
+			inst.postscriptNameID = nameTable.addName(tostr(psname)) if psname else 0xFFFF
 		#inst.coordinates = {axes[k].tag:v for k,v in coordinates.items()}
 		fvar.instances.append(inst)
 
