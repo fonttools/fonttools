@@ -108,13 +108,13 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 
 		return (name.platformID, name.langID) in ((1, 0), (3, 0x409))
 
-	def getDebugName(self, nameID: int):
+	def getDebugName(self, nameID: int) -> str:
 		"""
-		Get unicode name from the naming table (https://docs.microsoft.com/en-us/typography/opentype/spec/name#name-ids)
+		Get str name from the naming table
 
 		This method is inspired by: https://gitlab.freedesktop.org/fontconfig/fontconfig/-/blob/d863f6778915f7dd224c98c814247ec292904e30/src/fcfreetype.c#L1448-1604
 		Parameters:
-			nameID (List[Path]): List of path that contains font. The list can contains directory and/or file
+			nameID (int): NameID from the naming table (https://docs.microsoft.com/en-us/typography/opentype/spec/name#name-ids)
 		Returns:
 			First decoded name that matches the nameID
 		"""
