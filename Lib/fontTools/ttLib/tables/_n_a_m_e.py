@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
-from math import floor
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import bytechr, byteord, bytesjoin, strjoin, tobytes, tostr, safeEval
 from fontTools.misc.encodingTools import getEncoding
 from fontTools.ttLib import newTable
+from sortedcontainers import SortedList
 from . import DefaultTable
 import struct
 import logging
-
-from functools import cmp_to_key
 
 log = logging.getLogger(__name__)
 
@@ -24,22 +22,13 @@ nameRecordFormat = """
 
 nameRecordSize = sstruct.calcsize(nameRecordFormat)
 
-# From	https://gitlab.freedesktop.org/fontconfig/fontconfig/-/blob/d863f6778915f7dd224c98c814247ec292904e30/src/fcfreetype.c#L1078
-#		https://github.com/freetype/freetype/blob/b98dd169a1823485e35b3007ce707a6712dcd525/include/freetype/ttnameid.h#L86-L91
-TT_PLATFORM_APPLE_UNICODE = 0
-TT_PLATFORM_MACINTOSH = 1
-TT_PLATFORM_ISO = 2 # deprecated
-TT_PLATFORM_MICROSOFT = 3
-platform_order = [
-    TT_PLATFORM_MICROSOFT,
-    TT_PLATFORM_APPLE_UNICODE,
-    TT_PLATFORM_MACINTOSH,
-    TT_PLATFORM_ISO,
-]
-
 
 class table__n_a_m_e(DefaultTable.DefaultTable):
 	dependencies = ["ltag"]
+
+	def initializeNames(self):
+		# From: https://gitlab.freedesktop.org/fontconfig/fontconfig/-/blob/d863f6778915f7dd224c98c814247ec292904e30/src/fcfreetype.c#L1128
+		self.names = SortedList(key=lambda name: (name.platformID, name.nameID, name.platEncID, -self.isEnglish(name), name.langID))
 
 	def decompile(self, data, ttFont):
 		format, n, stringOffset = struct.unpack(b">HHH", data[:6])
@@ -50,7 +39,7 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 				expectedStringOffset, stringOffset)
 		stringData = data[stringOffset:]
 		data = data[6:]
-		self.names = []
+		self.initializeNames()
 		for i in range(n):
 			if len(data) < 12:
 				log.error('skipping malformed name record #%d', i)
@@ -66,14 +55,14 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 			#		print "2-byte string doesn't have even length!"
 			#		print name.__dict__
 			del name.offset, name.length
-			self.names.append(name)
+			self.names.add(name)
 
 	def compile(self, ttFont):
 		if not hasattr(self, "names"):
 			# only happens when there are NO name table entries read
 			# from the TTX file
-			self.names = []
-		names = self.names
+			self.initializeNames()
+		names = [name for name in self.names]
 		names.sort() # sort according to the spec; see NameRecord.__lt__()
 		stringData = b""
 		format = 0
@@ -100,9 +89,9 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		if name != "namerecord":
 			return # ignore unknown tags
 		if not hasattr(self, "names"):
-			self.names = []
+			self.initializeNames()
 		name = NameRecord()
-		self.names.append(name)
+		self.names.add(name)
 		name.fromXML(name, attrs, content, ttFont)
 
 	def getName(self, nameID, platformID, platEncID, langID=None):
@@ -114,109 +103,35 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 					return namerecord
 		return None # not found
 
+	def isEnglish(self, name):
+		# From https://gitlab.freedesktop.org/fontconfig/fontconfig/-/blob/d863f6778915f7dd224c98c814247ec292904e30/src/fcfreetype.c#L1111-1125
 
-	def FcFreeTypeGetFirstName (self, platformID, nameID, count):
-		# From https://gitlab.freedesktop.org/fontconfig/fontconfig/-/blob/d863f6778915f7dd224c98c814247ec292904e30/src/fcfreetype.c#L1143
+		return (name.platformID, name.langID) in ((1, 0), (3, 0x409))
 
-		min = 0
-		max = count - 1
+	def getDebugName(self, nameID: int):
+		"""
+		Get unicode name from the naming table (https://docs.microsoft.com/en-us/typography/opentype/spec/name#name-ids)
 
-		while min <= max:
-		
-			mid = floor((min + max) / 2)
+		This method is inspired by: https://gitlab.freedesktop.org/fontconfig/fontconfig/-/blob/d863f6778915f7dd224c98c814247ec292904e30/src/fcfreetype.c#L1448-1604
+		Parameters:
+			nameID (List[Path]): List of path that contains font. The list can contains directory and/or file
+		Returns:
+			First decoded name that matches the nameID
+		"""
 
-			name = self.names[mid]
+		unistr = ""
+		for platformID in PLATFORM_ID_ORDER:
+			platformNames = [name for name in self.names if name.platformID == platformID]
 
-			if (platformID < name.platformID or
-				(platformID == name.platformID and
-				(name.nameID < name.nameID or
-				(name.nameID == name.nameID and
-				(mid and
-				platformID == self.names[mid - 1].platformID and
-				name.nameID == self.names[mid - 1].nameID
-				))))):
-				max = mid - 1
-			elif (platformID > name.platformID or
-				(platformID == name.platformID and
-				nameID > name.nameID)):
-				min = mid + 1
-			else:
-				return mid
-			
+			for name in platformNames:
+				if name.nameID != nameID:
+					continue
+				try:
+					unistr = name.toUnicode()
+				except UnicodeDecodeError:
+					continue
 
-		return -1
-
-	def _is_english(self, platformID, langID):
-		# From https://gitlab.freedesktop.org/fontconfig/fontconfig/-/blob/d863f6778915f7dd224c98c814247ec292904e30/src/fcfreetype.c#L1111
-
-		return (platformID, langID) in ((1, 0), (3, 0x409))
-
-	def compare(self, item1, item2):
-		# From https://gitlab.freedesktop.org/fontconfig/fontconfig/-/blob/d863f6778915f7dd224c98c814247ec292904e30/src/fcfreetype.c#L1128
-		# Warning ! I don't have the variable "idx" which seems to be the index of the name in the naming_table
-
-		if (item1.platformID != item2.platformID):
-			return item1.platformID - item2.platformID
-		if (item1.nameID != item2.nameID):
-			return item1.nameID - item2.nameID
-		if (item1.platEncID != item2.platEncID):
-			return item1.platEncID - item2.platEncID
-		if (item1.langID != item2.langID):
-			if self._is_english(item1.platformID, item1.langID):
-				return -1
-			elif self._is_english(item2.platformID, item2.langID):
-				return 1
-			else:
-				return item1.langID - item2.langID
-
-		return 0
-
-	def _getNameIdFromPlatform(self, platformID):
-		platformName = []
-
-		for name in self.names:
-			if name.platformID == platformID:
-				platformName.append(name)
-		
-		return platformName
-
-	def getFirstName(self, nameID):
-		self.names.sort(key=cmp_to_key(self.compare))
-
-		for platformID in platform_order:
-			platformName = self._getNameIdFromPlatform(platformID)
-			
-			for name in platformName:
-				nameidx = self.FcFreeTypeGetFirstName(platformID, nameID, len(self.names))
-				
-				nameidx += 1
-				while (nameidx < len(self.names) and
-				platformID == self.names[nameidx].platformID and nameID == self.names[nameidx].nameID):
-					nameidx += 1
-				nameidx -= 1
-				print(self.names[nameidx])
-
-
-	def getDebugName(self, nameID):
-		englishName = someName = None
-		for name in self.names:
-			if name.nameID != nameID:
-				continue
-			try:
-				unistr = name.toUnicode()
-			except UnicodeDecodeError:
-				continue
-
-			someName = unistr
-			if (name.platformID, name.langID) in ((1, 0), (3, 0x409)):
-				englishName = unistr
-				break
-		if englishName:
-			return englishName
-		elif someName:
-			return someName
-		else:
-			return None
+				return unistr
 
 	def getFirstDebugName(self, nameIDs):
 		for nameID in nameIDs:
@@ -267,7 +182,7 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		to prevent unexpected results.
 		"""
 		if not hasattr(self, 'names'):
-			self.names = []
+			self.initializeNames()
 		if not isinstance(string, str):
 			if isinstance(string, bytes):
 				log.warning(
@@ -280,7 +195,7 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		if namerecord:
 			namerecord.string = string
 		else:
-			self.names.append(makeName(string, nameID, platformID, platEncID, langID))
+			self.names.add(makeName(string, nameID, platformID, platEncID, langID))
 
 	def removeNames(self, nameID=None, platformID=None, platEncID=None, langID=None):
 		"""Remove any name records identified by the given combination of 'nameID',
@@ -401,7 +316,7 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		be less than the 'minNameID' argument.
 		"""
 		if not hasattr(self, 'names'):
-			self.names = []
+			self.initializeNames()
 		if nameID is None:
 			# Reuse nameID if possible
 			nameID = self.findMultilingualName(
@@ -411,11 +326,11 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 			nameID = self._findUnusedNameID()
 		# TODO: Should minimize BCP 47 language codes.
 		# https://github.com/fonttools/fonttools/issues/930
-		for lang, name in sorted(names.items()):
+		for lang, name in names.items():
 			if windows:
 				windowsName = _makeWindowsName(name, nameID, lang)
 				if windowsName is not None:
-					self.names.append(windowsName)
+					self.names.add(windowsName)
 				else:
 					# We cannot not make a Windows name: make sure we add a
 					# Mac name as a fallback. This can happen for exotic
@@ -424,7 +339,7 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 			if mac:
 				macName = _makeMacName(name, nameID, lang, ttFont)
 				if macName is not None:
-					self.names.append(macName)
+					self.names.add(macName)
 		return nameID
 
 	def addName(self, string, platforms=((1, 0, 0), (3, 1, 0x409)), minNameID=255):
@@ -444,13 +359,13 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		assert len(platforms) > 0, \
 			"'platforms' must contain at least one (platformID, platEncID, langID) tuple"
 		if not hasattr(self, 'names'):
-			self.names = []
+			self.initializeNames()
 		if not isinstance(string, str):
 			raise TypeError(
 				"expected str, found %s: %r" % (type(string).__name__, string))
 		nameID = self._findUnusedNameID(minNameID + 1)
 		for platformID, platEncID, langID in platforms:
-			self.names.append(makeName(string, nameID, platformID, platEncID, langID))
+			self.names.add(makeName(string, nameID, platformID, platEncID, langID))
 		return nameID
 
 
@@ -690,6 +605,18 @@ class NameRecord(object):
 		return "<NameRecord NameID=%d; PlatformID=%d; LanguageID=%d>" % (
 				self.nameID, self.platformID, self.langID)
 
+# From	https://gitlab.freedesktop.org/fontconfig/fontconfig/-/blob/d863f6778915f7dd224c98c814247ec292904e30/src/fcfreetype.c#L1078
+#		https://github.com/freetype/freetype/blob/b98dd169a1823485e35b3007ce707a6712dcd525/include/freetype/ttnameid.h#L86-L91
+PLATFORM_ID_APPLE_UNICODE = 0
+PLATFORM_ID_MACINTOSH = 1
+PLATFORM_ID_ISO = 2
+PLATFORM_ID_MICROSOFT = 3
+PLATFORM_ID_ORDER = [
+    PLATFORM_ID_MICROSOFT,
+    PLATFORM_ID_APPLE_UNICODE,
+    PLATFORM_ID_MACINTOSH,
+    PLATFORM_ID_ISO,
+]
 
 # Windows language ID → IETF BCP-47 language tag
 #

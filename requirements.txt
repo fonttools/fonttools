@@ -13,3 +13,4 @@ ufoLib2==0.13.0
 pyobjc==8.1; sys_platform == "darwin"
 freetype-py==2.2.0
 uharfbuzz==0.24.1
+sortedcontainers==2.4.0
