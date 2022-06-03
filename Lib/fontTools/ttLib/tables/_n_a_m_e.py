@@ -91,8 +91,8 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		if not hasattr(self, "names"):
 			self.initializeNames()
 		name = NameRecord()
-		self.names.add(name)
 		name.fromXML(name, attrs, content, ttFont)
+		self.names.add(name)
 
 	def getName(self, nameID, platformID, platEncID, langID=None):
 		for namerecord in self.names:
