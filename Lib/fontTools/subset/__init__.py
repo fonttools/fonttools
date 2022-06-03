@@ -2616,7 +2616,7 @@ class Options(object):
 		'rtl': ['rtla', 'rtlm'],
 		'rand': ['rand'],
 		'justify': ['jalt'],
-		'private': ['Harf', 'HARF', 'Buzz', BUZZ'],
+		'private': ['Harf', 'HARF', 'Buzz', 'BUZZ'],
 		# Complex shapers
 		'arabic': ['init', 'medi', 'fina', 'isol', 'med2', 'fin2', 'fin3',
 			   'cswh', 'mset', 'stch'],
