@@ -469,7 +469,7 @@ class FontBuilder(object):
             variationsPostScriptNamePrefix (nameID 25)
         """
         nameTable = self.font["name"] = newTable("name")
-        nameTable.names = []
+        nameTable.initializeNames()
 
         for nameName, nameValue in nameStrings.items():
             if isinstance(nameName, int):
