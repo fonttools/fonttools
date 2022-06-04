@@ -82,7 +82,9 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		return data + stringData
 
 	def toXML(self, writer, ttFont):
-		for name in self.names:
+		names = [name for name in self.names]
+		names.sort() # sort according to the spec; see NameRecord.__lt__()
+		for name in names:
 			name.toXML(writer, ttFont)
 
 	def fromXML(self, name, attrs, content, ttFont):
