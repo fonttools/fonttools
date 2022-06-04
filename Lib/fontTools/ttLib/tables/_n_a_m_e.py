@@ -216,13 +216,15 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		if not args:
 			# no arguments, nothing to do
 			return
-		self.names = [
+		names = [
 			rec for rec in self.names
 			if any(
 				argValue != getattr(rec, argName)
 				for argName, argValue in args.items()
 			)
 		]
+		self.names.clear()
+		self.names.update(names)
 
 	def _findUnusedNameID(self, minNameID=256):
 		"""Finds an unused name id.

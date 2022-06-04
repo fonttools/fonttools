@@ -51,9 +51,9 @@ def pruningUnusedNames(varfont):
 
     log.info("Pruning name table")
     exclude = origNameIDs - getVariationNameIDs(varfont)
-    varfont["name"].names[:] = [
-        record for record in varfont["name"].names if record.nameID not in exclude
-    ]
+    names = [record for record in varfont["name"].names if record.nameID not in exclude]
+    varfont["name"].names.clear()
+    varfont["name"].names.update(names)
     if "ltag" in varfont:
         # Drop the whole 'ltag' table if all the language-dependent Unicode name
         # records that reference it have been dropped.
