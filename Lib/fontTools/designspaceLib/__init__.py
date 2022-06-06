@@ -22,9 +22,20 @@ from fontTools.misc.textTools import tobytes, tostr
 """
 
 __all__ = [
-    'DesignSpaceDocumentError', 'DesignSpaceDocument', 'SourceDescriptor',
-    'InstanceDescriptor', 'AxisDescriptor', 'RuleDescriptor', 'BaseDocReader',
-    'BaseDocWriter'
+    'AxisDescriptor',
+    'AxisLabelDescriptor',
+    'BaseDocReader',
+    'BaseDocWriter',
+    'DesignSpaceDocument',
+    'DesignSpaceDocumentError',
+    'DiscreteAxisDescriptor',
+    'InstanceDescriptor',
+    'LocationLabelDescriptor',
+    'RangeAxisSubsetDescriptor',
+    'RuleDescriptor',
+    'SourceDescriptor',
+    'ValueAxisSubsetDescriptor',
+    'VariableFontDescriptor',
 ]
 
 # ElementTree allows to find namespace-prefixed elements, but not attributes
