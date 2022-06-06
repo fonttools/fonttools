@@ -97,6 +97,7 @@ ttx = "fontTools.ttx:main"
 Homepage = "http://github.com/fonttools/fonttools"
 
 [tool.hatch.version]
+pattern = 'version = __version__ = "(?P<version>.+?)"'
 path = "Lib/fontTools/__init__.py"
 
 [tool.hatch.build.targets.wheel]
