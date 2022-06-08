@@ -950,6 +950,7 @@ class DiscreteAxisDescriptor(AbstractAxisDescriptor):
 
         a2 = DiscreteAxisDescriptor()
         a2.values = [0, 1]
+        a2.default = 0
         a2.name = "Italic"
         a2.tag = "ITAL"
         a2.labelNames['fr'] = "Italique"
