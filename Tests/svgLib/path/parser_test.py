@@ -280,6 +280,15 @@ def test_exponents():
 
     assert pen.value == expected
 
+    pen = RecordingPen()
+    parse_path("M-3e38 3E+38L-3E-38,3e-38", pen)
+    expected = [
+        ("moveTo", ((-3e+38, 3e+38),)),
+        ("lineTo", ((-3e-38, 3e-38),)),
+        ("endPath", ()),
+    ]
+
+    assert pen.value == expected
 
 def test_invalid_implicit_command():
     with pytest.raises(ValueError) as exc_info:
@@ -360,7 +369,7 @@ def test_arc_pen_with_arcTo():
             "M1-2A3-4-1.0 01.5.7",
             [
                 ("moveTo", ((1.0, -2.0),)),
-                ("arcTo", (3.0, -4.0, -1.0, False, True, (0.5, 0.7))),
+                ("arcTo", (3.0, 4.0, -1.0, False, True, (0.5, 0.7))),
                 ("endPath", ()),
             ],
         ),

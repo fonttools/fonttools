@@ -16,10 +16,13 @@ ARC_COMMANDS = set("Aa")
 UPPERCASE = set('MZLHVCSQTA')
 
 COMMAND_RE = re.compile("([MmZzLlHhVvCcSsQqTtAa])")
+
+# https://www.w3.org/TR/css-syntax-3/#number-token-diagram
+#   but -6.e-5 will be tokenized as "-6" then "-5" and confuse parsing
 FLOAT_RE = re.compile(
     r"[-+]?"  # optional sign
     r"(?:"
-    r"(?:0|[1-9][0-9]*)(?:\.[0-9]+(?:[eE][-+]?[0-9]+)?)?"  # int/float
+    r"(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][-+]?[0-9]+)?"  # int/float
     r"|"
     r"(?:\.[0-9]+(?:[eE][-+]?[0-9]+)?)"  # float with leading dot (e.g. '.42')
     r")"
@@ -278,8 +281,8 @@ def parse_path(pathdef, pen, current_pos=(0, 0), arc_class=EllipticalArc):
             last_control = control
 
         elif command == 'A':
-            rx = float(elements.pop())
-            ry = float(elements.pop())
+            rx = abs(float(elements.pop()))
+            ry = abs(float(elements.pop()))
             rotation = float(elements.pop())
             arc_large = bool(int(elements.pop()))
             arc_sweep = bool(int(elements.pop()))

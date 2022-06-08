@@ -5,6 +5,8 @@ from typing import Dict, List, Optional, Union
 
 from fontTools.designspaceLib import (
     DesignSpaceDocument,
+    DesignSpaceDocumentError,
+    DiscreteAxisDescriptor,
     RangeAxisSubsetDescriptor,
     SimpleLocationDict,
     VariableFontDescriptor,
@@ -89,6 +91,10 @@ def userRegionToDesignRegion(doc: DesignSpaceDocument, userRegion: Region) -> Re
     designRegion = {}
     for name, value in userRegion.items():
         axis = doc.getAxis(name)
+        if axis is None:
+            raise DesignSpaceDocumentError(
+                f"Cannot find axis named '{name}' for region."
+            )
         if isinstance(value, (float, int)):
             designRegion[name] = axis.map_forward(value)
         else:
@@ -107,7 +113,16 @@ def getVFUserRegion(doc: DesignSpaceDocument, vf: VariableFontDescriptor) -> Reg
     #  - it's a single location = use it to know which rules should apply in the VF
     for axisSubset in vf.axisSubsets:
         axis = doc.getAxis(axisSubset.name)
+        if axis is None:
+            raise DesignSpaceDocumentError(
+                f"Cannot find axis named '{axisSubset.name}' for variable font '{vf.name}'."
+            )
         if isinstance(axisSubset, RangeAxisSubsetDescriptor):
+            if isinstance(axis, DiscreteAxisDescriptor):
+                raise DesignSpaceDocumentError(
+                    f"Cannot select a range over '{axis.name}' for variable font '{vf.name}' "
+                    "because it's a discrete axis, use only 'userValue' instead."
+                )
             vfUserRegion[axis.name] = Range(
                 max(axisSubset.userMinimum, axis.minimum),
                 min(axisSubset.userMaximum, axis.maximum),
@@ -118,5 +133,8 @@ def getVFUserRegion(doc: DesignSpaceDocument, vf: VariableFontDescriptor) -> Reg
     # Any axis not mentioned explicitly has a single location = default value
     for axis in doc.axes:
         if axis.name not in vfUserRegion:
+            assert isinstance(
+                axis.default, (int, float)
+            ), f"Axis '{axis.name}' has no valid default value."
             vfUserRegion[axis.name] = axis.default
     return vfUserRegion

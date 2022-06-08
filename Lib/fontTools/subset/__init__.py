@@ -2614,6 +2614,9 @@ class Options(object):
 		'vertical': ['valt', 'vert', 'vkrn', 'vpal', 'vrt2'],
 		'ltr': ['ltra', 'ltrm'],
 		'rtl': ['rtla', 'rtlm'],
+		'rand': ['rand'],
+		'justify': ['jalt'],
+		'private': ['Harf', 'HARF', 'Buzz', 'BUZZ'],
 		# Complex shapers
 		'arabic': ['init', 'medi', 'fina', 'isol', 'med2', 'fin2', 'fin3',
 			   'cswh', 'mset', 'stch'],

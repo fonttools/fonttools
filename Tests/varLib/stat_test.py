@@ -15,7 +15,7 @@ def test_getStatAxes(datadir):
     doc = DesignSpaceDocument.fromfile(datadir / "test_v5.designspace")
 
     assert getStatAxes(
-        doc, {"Italic": 0, "width": Range(50, 150), "weight": Range(200, 900)}
+        doc, {"Italic": 0, "Width": Range(50, 150), "Weight": Range(200, 900)}
     ) == [
         {
             "values": [
@@ -82,7 +82,7 @@ def test_getStatAxes(datadir):
                     "rangeMinValue": 150.0,
                 },
             ],
-            "name": {"en": "width", "fr": "Chasse"},
+            "name": {"en": "Width", "fr": "Chasse"},
             "ordering": 1,
             "tag": "wdth",
         },
@@ -96,7 +96,7 @@ def test_getStatAxes(datadir):
         },
     ]
 
-    assert getStatAxes(doc, {"Italic": 1, "width": 100, "weight": Range(400, 700)}) == [
+    assert getStatAxes(doc, {"Italic": 1, "Width": 100, "Weight": Range(400, 700)}) == [
         {
             "values": [
                 {
@@ -129,7 +129,7 @@ def test_getStatAxes(datadir):
             "values": [
                 {"flags": 3, "name": {"en": "Normal"}, "value": 100.0},
             ],
-            "name": {"en": "width", "fr": "Chasse"},
+            "name": {"en": "Width", "fr": "Chasse"},
             "ordering": 1,
             "tag": "wdth",
         },
@@ -148,7 +148,7 @@ def test_getStatLocations(datadir):
     doc = DesignSpaceDocument.fromfile(datadir / "test_v5.designspace")
 
     assert getStatLocations(
-        doc, {"Italic": 0, "width": Range(50, 150), "weight": Range(200, 900)}
+        doc, {"Italic": 0, "Width": Range(50, 150), "Weight": Range(200, 900)}
     ) == [
         {
             "flags": 0,
@@ -157,7 +157,7 @@ def test_getStatLocations(datadir):
         },
     ]
     assert getStatLocations(
-        doc, {"Italic": 1, "width": Range(50, 150), "weight": Range(200, 900)}
+        doc, {"Italic": 1, "Width": Range(50, 150), "Weight": Range(200, 900)}
     ) == [
         {
             "flags": 0,
