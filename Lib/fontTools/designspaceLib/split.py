@@ -7,7 +7,7 @@ from __future__ import annotations
 import itertools
 import logging
 import math
-from typing import Any, Callable, Dict, Iterator, List, Tuple
+from typing import Any, Callable, Dict, Iterator, List, Tuple, cast
 
 from fontTools.designspaceLib import (
     AxisDescriptor,
@@ -21,9 +21,9 @@ from fontTools.designspaceLib import (
 )
 from fontTools.designspaceLib.statNames import StatNames, getStatNames
 from fontTools.designspaceLib.types import (
+    ConditionSet,
     Range,
     Region,
-    ConditionSet,
     getVFUserRegion,
     locationInRegion,
     regionInRegion,
@@ -87,11 +87,18 @@ def splitInterpolable(
     discreteAxes = []
     interpolableUserRegion: Region = {}
     for axis in doc.axes:
-        if isinstance(axis, DiscreteAxisDescriptor):
+        if hasattr(axis, "values"):
+            # Mypy doesn't support narrowing union types via hasattr()
+            # TODO(Python 3.10): use TypeGuard
+            # https://mypy.readthedocs.io/en/stable/type_narrowing.html
+            axis = cast(DiscreteAxisDescriptor, axis)
             discreteAxes.append(axis)
         else:
+            axis = cast(AxisDescriptor, axis)
             interpolableUserRegion[axis.name] = Range(
-                axis.minimum, axis.maximum, axis.default
+                axis.minimum,
+                axis.maximum,
+                axis.default,
             )
     valueCombinations = itertools.product(*[axis.values for axis in discreteAxes])
     for values in valueCombinations:
@@ -191,7 +198,11 @@ def _extractSubSpace(
 
     for axis in doc.axes:
         range = userRegion[axis.name]
-        if isinstance(range, Range) and isinstance(axis, AxisDescriptor):
+        if isinstance(range, Range) and hasattr(axis, "minimum"):
+            # Mypy doesn't support narrowing union types via hasattr()
+            # TODO(Python 3.10): use TypeGuard
+            # https://mypy.readthedocs.io/en/stable/type_narrowing.html
+            axis = cast(AxisDescriptor, axis)
             subDoc.addAxis(
                 AxisDescriptor(
                     # Same info
