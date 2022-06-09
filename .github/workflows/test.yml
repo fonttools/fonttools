@@ -43,7 +43,7 @@ jobs:
     - name: Install packages
       run: pip install hatch
     - name: Run Tox
-      run: hatch run test:test
+      run: hatch run test:cov
     # - name: Run Tox without lxml
     #   run: tox -e py-cov-nolxml
     # - name: Produce coverage files

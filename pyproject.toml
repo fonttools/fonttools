@@ -23,7 +23,6 @@ classifiers = [
     "Natural Language :: English",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 2",
     "Programming Language :: Python :: 3",
     "Topic :: Multimedia :: Graphics",
     "Topic :: Multimedia :: Graphics :: Graphics Conversion",
@@ -34,22 +33,6 @@ dynamic = [
 ]
 
 [project.optional-dependencies]
-all = [
-    "brotli >= 1.0.1; platform_python_implementation == 'CPython'",
-    "brotlicffi >= 0.8.0; platform_python_implementation != 'CPython'",
-    "fs >= 2.2.0, < 3",
-    "lxml >= 4.0, < 5",
-    "lz4 >= 1.7.4.2",
-    "matplotlib",
-    "munkres; platform_python_implementation == 'PyPy'",
-    "scipy; platform_python_implementation != 'PyPy'",
-    "skia-pathops >= 0.5.0",
-    "sympy",
-    "uharfbuzz >= 0.23.0",
-    "unicodedata2 >= 14.0.0; python_version < '3.11'",
-    "xattr; sys_platform == 'darwin'",
-    "zopfli >= 0.1.4",
-]
 graphite = [
     "lz4 >= 1.7.4.2",
 ]
@@ -115,9 +98,28 @@ include = [
 
 [tool.hatch.envs.test]
 dependencies = [
-  "pytest"
+    "pytest",
+    "pytest-cov",
+    "pytest-randomly",
+    "freetype-py",
+    "ufoLib2",
 ]
+features = [
+    "interpolatable",
+    "lxml",
+    "pathops",
+    "plot",
+    "repacker",
+    "symfont",
+    "type1",
+    "ufo",
+    "unicode",
+    "woff",
+]
+
+[tool.hatch.envs.test.scripts]
+cov = "pytest --cov-config=.coveragerc --cov"
+no-cov = "pytest"
 
 [[tool.hatch.envs.test.matrix]]
 python = ["37", "38", "39", "310"]
-features = ["all"]

@@ -2,9 +2,12 @@
 # measure 'branch' coverage in addition to 'statement' coverage
 # See: http://coverage.readthedocs.org/en/coverage-4.0.3/branch.html#branch
 branch = True
+parallel = True
 
 # list of directories or packages to measure
-source = fontTools
+source = 
+    fontTools
+    Tests
 
 # these are treated as equivalent when combining data
 [paths]
