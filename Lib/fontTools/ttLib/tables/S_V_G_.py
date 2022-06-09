@@ -110,7 +110,9 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 			if (allCompressed or doc.compressed) and not docBytes.startswith(b"\x1f\x8b"):
 				import gzip
 				bytesIO = BytesIO()
-				with gzip.GzipFile(None, "w", fileobj=bytesIO) as gzipper:
+				# mtime=0 strips the useless timestamp and makes gzip output reproducible;
+				# equivalent to `gzip -n`
+				with gzip.GzipFile(None, "w", fileobj=bytesIO, mtime=0) as gzipper:
 					gzipper.write(docBytes)
 				gzipped = bytesIO.getvalue()
 				if len(gzipped) < len(docBytes):

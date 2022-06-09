@@ -16,7 +16,7 @@ def dump(table, ttFont=None):
 
 def compress(data: bytes) -> bytes:
     buf = io.BytesIO()
-    with gzip.GzipFile(None, "w", fileobj=buf) as gz:
+    with gzip.GzipFile(None, "w", fileobj=buf, mtime=0) as gz:
         gz.write(data)
     return buf.getvalue()
 
