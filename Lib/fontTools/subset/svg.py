@@ -14,6 +14,7 @@ except ModuleNotFoundError:
 
 from fontTools import ttLib
 from fontTools.subset.util import _add_method
+from fontTools.ttLib.tables.S_V_G_ import SVGDocument
 
 
 __all__ = ["subset_glyphs"]
@@ -201,10 +202,12 @@ def subset_glyphs(self, s) -> bool:
     # map from original to new glyph indices (after subsetting)
     glyph_index_map: Dict[int, int] = s.glyph_index_map
 
-    new_docs: List[Tuple[bytes, int, int]] = []
-    for doc, start, end in self.docList:
+    new_docs: List[SVGDocument] = []
+    for doc in self.docList:
 
-        glyphs = {glyph_order[i] for i in range(start, end + 1)}.intersection(s.glyphs)
+        glyphs = {
+            glyph_order[i] for i in range(doc.startGlyphID, doc.endGlyphID + 1)
+        }.intersection(s.glyphs)
         if not glyphs:
             # no intersection: we can drop the whole record
             continue
@@ -212,7 +215,7 @@ def subset_glyphs(self, s) -> bool:
         svg = etree.fromstring(
             # encode because fromstring dislikes xml encoding decl if input is str.
             # SVG xml encoding must be utf-8 as per OT spec.
-            doc.encode("utf-8"),
+            doc.data.encode("utf-8"),
             parser=etree.XMLParser(
                 # Disable libxml2 security restrictions to support very deep trees.
                 # Without this we would get an error like this:
@@ -241,7 +244,7 @@ def subset_glyphs(self, s) -> bool:
 
         new_gids = (glyph_index_map[i] for i in gids)
         for start, end in ranges(new_gids):
-            new_docs.append((new_doc, start, end))
+            new_docs.append(SVGDocument(new_doc, start, end, doc.compressed))
 
     self.docList = new_docs
 
