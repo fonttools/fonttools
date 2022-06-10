@@ -1,3 +1,5 @@
+import gzip
+import io
 import struct
 
 from fontTools.misc import etree
@@ -10,6 +12,13 @@ import pytest
 
 def dump(table, ttFont=None):
     print("\n".join(getXML(table.toXML, ttFont)))
+
+
+def compress(data: bytes) -> bytes:
+    buf = io.BytesIO()
+    with gzip.GzipFile(None, "w", fileobj=buf, mtime=0) as gz:
+        gz.write(data)
+    return buf.getvalue()
 
 
 def strip_xml_whitespace(xml_string):
@@ -45,7 +54,9 @@ SVG_DOCS = [
         b"""\
         <svg xmlns="http://www.w3.org/2000/svg" version="1.1">
           <g id="glyph3">
-            <path d="M0,0 L100,0 L50,100 Z"/>
+            <path d="M0,0 L100,0 L50,100 Z" fill="#red"/>
+            <path d="M10,10 L110,10 L60,110 Z" fill="#blue"/>
+            <path d="M20,20 L120,20 L70,120 Z" fill="#green"/>
           </g>
         </svg>""",
     )
@@ -65,25 +76,25 @@ OTSVG_DATA = b"".join(
         b"\x00\x02"  # endGlyphID (2)
         b"\x00\x00\x00\x26"  # svgDocOffset (2 + 12*3 == 38 == 0x26)
         + struct.pack(">L", len(SVG_DOCS[0]))  # svgDocLength
-        # SVGDocumentRecord[1]
+        # SVGDocumentRecord[1] (compressed)
         + b"\x00\x03"  # startGlyphID (3)
         b"\x00\x03"  # endGlyphID (3)
         + struct.pack(">L", 0x26 + len(SVG_DOCS[0]))  # svgDocOffset
-        + struct.pack(">L", len(SVG_DOCS[1]))  # svgDocLength
+        + struct.pack(">L", len(compress(SVG_DOCS[1])))  # svgDocLength
         # SVGDocumentRecord[2]
         + b"\x00\x04"  # startGlyphID (4)
         b"\x00\x04"  # endGlyphID (4)
         b"\x00\x00\x00\x26"  # svgDocOffset (38); records 0 and 2 point to same SVG doc
         + struct.pack(">L", len(SVG_DOCS[0]))  # svgDocLength
     ]
-    + SVG_DOCS
+    + [SVG_DOCS[0], compress(SVG_DOCS[1])]
 )
 
 OTSVG_TTX = [
     '<svgDoc endGlyphID="2" startGlyphID="1">',
     f"  <![CDATA[{SVG_DOCS[0].decode()}]]>",
     "</svgDoc>",
-    '<svgDoc endGlyphID="3" startGlyphID="3">',
+    '<svgDoc compressed="1" endGlyphID="3" startGlyphID="3">',
     f"  <![CDATA[{SVG_DOCS[1].decode()}]]>",
     "</svgDoc>",
     '<svgDoc endGlyphID="4" startGlyphID="4">',
@@ -129,3 +140,19 @@ def test_round_trip_ttx(font):
     table = table_S_V_G_()
     table.decompile(compiled, font)
     assert getXML(table.toXML, font) == OTSVG_TTX
+
+
+def test_unpack_svg_doc_as_3_tuple():
+    # test that the legacy docList as list of 3-tuples interface still works
+    # even after the new SVGDocument class with extra `compressed` attribute
+    # was added
+    table = table_S_V_G_()
+    table.decompile(OTSVG_DATA, font)
+
+    for doc, compressed in zip(table.docList, (False, True, False)):
+        assert len(doc) == 3
+        data, startGID, endGID = doc
+        assert doc.data == data
+        assert doc.startGlyphID == startGID
+        assert doc.endGlyphID == endGID
+        assert doc.compressed == compressed
