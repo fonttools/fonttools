@@ -823,6 +823,7 @@ been the same. This happened while performing the following operation:
 GPOS.table.FeatureList.FeatureCount
 
 The problem is likely to be in Simple Two Axis Bold:
+Expected to see .FeatureCount==2, instead saw 1
 
 Incompatible features between masters.
 Expected: kern, mark.
