@@ -1380,6 +1380,14 @@ def parseArgs(args):
         help="Update the instantiated font's `name` table. Input font must have "
         "a STAT table with Axis Value Tables",
     )
+    parser.add_argument(
+        "--named-instances",
+        "-n",
+        nargs="?",
+        const=".*",
+        help="Create static instances for each instance in the variable font's "
+        "fvar table matching the given regular expression",
+    )
     loggingGroup = parser.add_mutually_exclusive_group(required=False)
     loggingGroup.add_argument(
         "-v", "--verbose", action="store_true", help="Run more verbosely."
@@ -1413,16 +1421,48 @@ def parseArgs(args):
     if len(axisLimits) != len(options.locargs):
         parser.error("Specified multiple limits for the same axis")
 
+    if axisLimits and options.named_instances:
+        parser.error("Specified limits and --named-instances")
+
     return (infile, axisLimits, options)
 
 
 def main(args=None):
     """Partially instantiate a variable font."""
     infile, axisLimits, options = parseArgs(args)
-    log.info("Restricting axes: %s", axisLimits)
 
     log.info("Loading variable font")
     varfont = TTFont(infile)
+    if options.named_instances:
+        if options.output:
+            outprefix = os.path.splitext(options.output)[0]
+        else:
+            outprefix = os.path.splitext(infile)[0]
+
+        for instance in varfont["fvar"].instances:
+            name = varfont["name"].getDebugName(instance.subfamilyNameID)
+            if not name:
+                raise ValueError("Couldn't get instance name: bad fvar/name table?")
+            if not re.search(options.named_instances, name):
+                continue
+            axisLimits = instance.coordinates
+            log.info("Restricting axes: %s (%s)", axisLimits, name)
+            name = name.replace(" ", "")
+            outfile = outprefix + "-" + name + ".ttf"
+            outfont = instantiateVariableFont(
+                varfont,
+                axisLimits,
+                inplace=False,
+                optimize=options.optimize,
+                overlap=options.overlap,
+                updateFontNames=options.update_name_table,
+            )
+            log.info("Saving instance font %s", outfile)
+
+            outfont.save(outfile)
+        return
+
+    log.info("Restricting axes: %s", axisLimits)
 
     isFullInstance = {
         axisTag for axisTag, limit in axisLimits.items() if not isinstance(limit, tuple)
