@@ -17,9 +17,11 @@ The XML format is:
 	</SVG>
 """
 
-from fontTools.misc.textTools import bytesjoin, strjoin, tobytes, tostr
+from fontTools.misc.textTools import bytesjoin, safeEval, strjoin, tobytes, tostr
 from fontTools.misc import sstruct
 from . import DefaultTable
+from collections.abc import Sequence
+from dataclasses import dataclass, astuple
 from io import BytesIO
 import struct
 import logging
@@ -75,15 +77,18 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 				start = entry.svgDocOffset + subTableStart
 				end = start + entry.svgDocLength
 				doc = data[start:end]
+				compressed = False
 				if doc.startswith(b"\x1f\x8b"):
 					import gzip
 					bytesIO = BytesIO(doc)
 					with gzip.GzipFile(None, "r", fileobj=bytesIO) as gunzipper:
 						doc = gunzipper.read()
-					self.compressed = True
 					del bytesIO
+					compressed = True
 				doc = tostr(doc, "utf_8")
-				self.docList.append( [doc, entry.startGlyphID, entry.endGlyphID] )
+				self.docList.append(
+					SVGDocument(doc, entry.startGlyphID, entry.endGlyphID, compressed)
+				)
 
 	def compile(self, ttFont):
 		version = 0
@@ -96,12 +101,18 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 		entryList.append(datum)
 		curOffset = len(datum) + doc_index_entry_format_0Size*numEntries
 		seenDocs = {}
-		for doc, startGlyphID, endGlyphID in self.docList:
-			docBytes = tobytes(doc, encoding="utf_8")
-			if getattr(self, "compressed", False) and not docBytes.startswith(b"\x1f\x8b"):
+		allCompressed = getattr(self, "compressed", False)
+		for i, doc in enumerate(self.docList):
+			if isinstance(doc, (list, tuple)):
+				doc = SVGDocument(*doc)
+				self.docList[i] = doc
+			docBytes = tobytes(doc.data, encoding="utf_8")
+			if (allCompressed or doc.compressed) and not docBytes.startswith(b"\x1f\x8b"):
 				import gzip
 				bytesIO = BytesIO()
-				with gzip.GzipFile(None, "w", fileobj=bytesIO) as gzipper:
+				# mtime=0 strips the useless timestamp and makes gzip output reproducible;
+				# equivalent to `gzip -n`
+				with gzip.GzipFile(None, "w", fileobj=bytesIO, mtime=0) as gzipper:
 					gzipper.write(docBytes)
 				gzipped = bytesIO.getvalue()
 				if len(gzipped) < len(docBytes):
@@ -115,7 +126,7 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 				curOffset += docLength
 				seenDocs[docBytes] = docOffset
 				docList.append(docBytes)
-			entry = struct.pack(">HHLL", startGlyphID, endGlyphID, docOffset, docLength)
+			entry = struct.pack(">HHLL", doc.startGlyphID, doc.endGlyphID, docOffset, docLength)
 			entryList.append(entry)
 		entryList.extend(docList)
 		svgDocData = bytesjoin(entryList)
@@ -127,10 +138,16 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 		return data
 
 	def toXML(self, writer, ttFont):
-		for doc, startGID, endGID in self.docList:
-			writer.begintag("svgDoc", startGlyphID=startGID, endGlyphID=endGID)
+		for i, doc in enumerate(self.docList):
+			if isinstance(doc, (list, tuple)):
+				doc = SVGDocument(*doc)
+				self.docList[i] = doc
+			attrs = {"startGlyphID": doc.startGlyphID, "endGlyphID": doc.endGlyphID}
+			if doc.compressed:
+				attrs["compressed"] = 1
+			writer.begintag("svgDoc", **attrs)
 			writer.newline()
-			writer.writecdata(doc)
+			writer.writecdata(doc.data)
 			writer.newline()
 			writer.endtag("svgDoc")
 			writer.newline()
@@ -143,7 +160,8 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 			doc = doc.strip()
 			startGID = int(attrs["startGlyphID"])
 			endGID = int(attrs["endGlyphID"])
-			self.docList.append( [doc, startGID, endGID] )
+			compressed = bool(safeEval(attrs.get("compressed", "0")))
+			self.docList.append(SVGDocument(doc, startGID, endGID, compressed))
 		else:
 			log.warning("Unknown %s %s", name, content)
 
@@ -157,3 +175,23 @@ class DocumentIndexEntry(object):
 
 	def __repr__(self):
 		return "startGlyphID: %s, endGlyphID: %s, svgDocOffset: %s, svgDocLength: %s" % (self.startGlyphID, self.endGlyphID, self.svgDocOffset, self.svgDocLength)
+
+
+@dataclass
+class SVGDocument(Sequence):
+	data: str
+	startGlyphID: int
+	endGlyphID: int
+	compressed: bool = False
+
+	# Previously, the SVG table's docList attribute contained a lists of 3 items:
+	# [doc, startGlyphID, endGlyphID]; later, we added a `compressed` attribute.
+	# For backward compatibility with code that depends of them being sequences of
+	# fixed length=3, we subclass the Sequence abstract base class and pretend only
+	# the first three items are present. 'compressed' is only accessible via named
+	# attribute lookup like regular dataclasses: i.e. `doc.compressed`, not `doc[3]`
+	def __getitem__(self, index):
+		return astuple(self)[:3][index]
+
+	def __len__(self):
+		return 3

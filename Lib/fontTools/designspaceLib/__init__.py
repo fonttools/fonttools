@@ -8,7 +8,7 @@ import os
 import posixpath
 from io import BytesIO, StringIO
 from textwrap import indent
-from typing import Any, Dict, List, MutableMapping, Optional, Tuple, Union
+from typing import Any, Dict, List, MutableMapping, Optional, Tuple, Union, cast
 
 from fontTools.misc import etree as ET
 from fontTools.misc import plistlib
@@ -22,9 +22,20 @@ from fontTools.misc.textTools import tobytes, tostr
 """
 
 __all__ = [
-    'DesignSpaceDocumentError', 'DesignSpaceDocument', 'SourceDescriptor',
-    'InstanceDescriptor', 'AxisDescriptor', 'RuleDescriptor', 'BaseDocReader',
-    'BaseDocWriter'
+    'AxisDescriptor',
+    'AxisLabelDescriptor',
+    'BaseDocReader',
+    'BaseDocWriter',
+    'DesignSpaceDocument',
+    'DesignSpaceDocumentError',
+    'DiscreteAxisDescriptor',
+    'InstanceDescriptor',
+    'LocationLabelDescriptor',
+    'RangeAxisSubsetDescriptor',
+    'RuleDescriptor',
+    'SourceDescriptor',
+    'ValueAxisSubsetDescriptor',
+    'VariableFontDescriptor',
 ]
 
 # ElementTree allows to find namespace-prefixed elements, but not attributes
@@ -950,6 +961,7 @@ class DiscreteAxisDescriptor(AbstractAxisDescriptor):
 
         a2 = DiscreteAxisDescriptor()
         a2.values = [0, 1]
+        a2.default = 0
         a2.name = "Italic"
         a2.tag = "ITAL"
         a2.labelNames['fr'] = "Italique"
@@ -1352,7 +1364,7 @@ class BaseDocWriter(object):
         minVersion = self.documentObject.formatTuple
         if (
             any(
-                isinstance(axis, DiscreteAxisDescriptor) or
+                hasattr(axis, 'values') or
                 axis.axisOrdering is not None or
                 axis.axisLabels
                 for axis in self.documentObject.axes
@@ -1445,10 +1457,10 @@ class BaseDocWriter(object):
             for label in axisObject.axisLabels:
                 self._addAxisLabel(labelsElement, label)
             axisElement.append(labelsElement)
-        if isinstance(axisObject, AxisDescriptor):
+        if hasattr(axisObject, "minimum"):
             axisElement.attrib['minimum'] = self.intOrFloat(axisObject.minimum)
             axisElement.attrib['maximum'] = self.intOrFloat(axisObject.maximum)
-        elif isinstance(axisObject, DiscreteAxisDescriptor):
+        elif hasattr(axisObject, "values"):
             axisElement.attrib['values'] = " ".join(self.intOrFloat(v) for v in axisObject.values)
         axisElement.attrib['default'] = self.intOrFloat(axisObject.default)
         if axisObject.hidden:
@@ -1682,14 +1694,19 @@ class BaseDocWriter(object):
             for subset in vf.axisSubsets:
                 subsetElement = ET.Element('axis-subset')
                 subsetElement.attrib['name'] = subset.name
-                if isinstance(subset, RangeAxisSubsetDescriptor):
+                # Mypy doesn't support narrowing union types via hasattr()
+                # https://mypy.readthedocs.io/en/stable/type_narrowing.html
+                # TODO(Python 3.10): use TypeGuard
+                if hasattr(subset, "userMinimum"):
+                    subset = cast(RangeAxisSubsetDescriptor, subset)
                     if subset.userMinimum != -math.inf:
                         subsetElement.attrib['userminimum'] = self.intOrFloat(subset.userMinimum)
                     if subset.userMaximum != math.inf:
                         subsetElement.attrib['usermaximum'] = self.intOrFloat(subset.userMaximum)
                     if subset.userDefault is not None:
                         subsetElement.attrib['userdefault'] = self.intOrFloat(subset.userDefault)
-                elif isinstance(subset, ValueAxisSubsetDescriptor):
+                elif hasattr(subset, "userValue"):
+                    subset = cast(ValueAxisSubsetDescriptor, subset)
                     subsetElement.attrib['uservalue'] = self.intOrFloat(subset.userValue)
                 subsetsElement.append(subsetElement)
             vfElement.append(subsetsElement)
@@ -2904,8 +2921,12 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
         discreteAxes = []
         rangeAxisSubsets: List[Union[RangeAxisSubsetDescriptor, ValueAxisSubsetDescriptor]] = []
         for axis in self.axes:
-            if isinstance(axis, DiscreteAxisDescriptor):
-                discreteAxes.append(axis)
+            if hasattr(axis, "values"):
+                # Mypy doesn't support narrowing union types via hasattr()
+                # TODO(Python 3.10): use TypeGuard
+                # https://mypy.readthedocs.io/en/stable/type_narrowing.html
+                axis = cast(DiscreteAxisDescriptor, axis)
+                discreteAxes.append(axis)  # type: ignore
             else:
                 rangeAxisSubsets.append(RangeAxisSubsetDescriptor(name=axis.name))
         valueCombinations = itertools.product(*[axis.values for axis in discreteAxes])

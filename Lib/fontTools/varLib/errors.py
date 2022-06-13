@@ -30,12 +30,8 @@ class VarLibMergeError(VarLibError):
     def _master_name(self, ix):
         if self.merger is not None:
             ttf = self.merger.ttfs[ix]
-            if (
-                "name" in ttf
-                and ttf["name"].getDebugName(1)
-                and ttf["name"].getDebugName(2)
-            ):
-                return ttf["name"].getDebugName(1) + " " + ttf["name"].getDebugName(2)
+            if "name" in ttf and ttf["name"].getBestFullName():
+                return ttf["name"].getBestFullName()
             elif hasattr(ttf.reader, "file") and hasattr(ttf.reader.file, "name"):
                 return ttf.reader.file.name
         return f"master number {ix}"
@@ -76,11 +72,19 @@ class ShouldBeConstant(VarLibMergeError):
 
     @property
     def details(self):
+        basic_message = super().details
+
         if self.stack[0] != ".FeatureCount" or self.merger is None:
-            return super().details
-        offender_index, offender = self.offender
+            return basic_message
+
+        assert self.stack[0] == ".FeatureCount"
+        offender_index, _ = self.offender
         bad_ttf = self.merger.ttfs[offender_index]
-        good_ttf = self.merger.ttfs[offender_index - 1]
+        good_ttf = next(
+            ttf
+            for ttf in self.merger.ttfs
+            if ttf["GPOS"].table.FeatureList.FeatureCount == self.cause["expected"]
+        )
 
         good_features = [
             x.FeatureTag
@@ -90,7 +94,7 @@ class ShouldBeConstant(VarLibMergeError):
             x.FeatureTag
             for x in bad_ttf[self.stack[-1]].table.FeatureList.FeatureRecord
         ]
-        return (
+        return basic_message + (
             "\nIncompatible features between masters.\n"
             f"Expected: {', '.join(good_features)}.\n"
             f"Got: {', '.join(bad_features)}.\n"
