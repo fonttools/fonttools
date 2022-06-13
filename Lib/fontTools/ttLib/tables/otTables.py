@@ -670,9 +670,9 @@ class DeltaSetIndexMap(getFormatSwitchingBaseTableClass("uint8")):
 		outer = safeEval(attrs['outer'])
 		inner = safeEval(attrs['inner'])
 		assert inner <= 0xFFFF
-		if index > len(self.mapping) + 1:
-			mapping.extend(0xFFFFFFFF for _ in range(len(self.mapping) - index))
-		assert index == len(self.mapping) + 1, f"Bad delta set index: {index}"
+		if index > len(mapping):
+			mapping.extend(0xFFFFFFFF for _ in range(index - len(mapping)))
+		assert index == len(mapping), f"Bad delta set index: {index}"
 		mapping.insert(index, (outer << 16) | inner)
 
 
