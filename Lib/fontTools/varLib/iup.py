@@ -1,3 +1,5 @@
+MAX_LOOKBACK = 8
+
 def iup_segment(coords, rc1, rd1, rc2, rd2):
 	# rc1 = reference coord 1
 	# rd1 = reference delta 1
@@ -105,13 +107,13 @@ def _iup_contour_bound_forced_set(delta, coords, tolerance=0):
 	"""
 	assert len(delta) == len(coords)
 
+	n = len(delta)
 	forced = set()
 	# Track "last" and "next" points on the contour as we sweep.
-	nd, nc = delta[0], coords[0]
-	ld, lc = delta[-1], coords[-1]
 	for i in range(len(delta)-1, -1, -1):
-		d, c = ld, lc
 		ld, lc = delta[i-1], coords[i-1]
+		d, c = delta[i], coords[i]
+		nd, nc = delta[i-n+1], coords[i-n+1]
 
 		for j in (0,1): # For X and for Y
 			cj = c[j]
@@ -128,38 +130,40 @@ def _iup_contour_bound_forced_set(delta, coords, tolerance=0):
 				c1, c2 = ncj, lcj
 				d1, d2 = ndj, ldj
 
+			force = False
+
+			# If the two coordinates are the same, then the interpolation
+			# algorithm produces the same delta if both deltas are equal,
+			# and zero if they differ.
+			#
+			# This test has to be before the next one.
+			if c1 == c2:
+				if abs(d1 - d2) > tolerance and abs(dj) > tolerance:
+					force = True
+
 			# If coordinate for current point is between coordinate of adjacent
 			# points on the two sides, but the delta for current point is NOT
 			# between delta for those adjacent points (considering tolerance
 			# allowance), then there is no way that current point can be IUP-ed.
 			# Mark it forced.
-			force = False
-			if c1 <= cj <= c2:
+			elif c1 <= cj <= c2: # and c1 != c2
 				if not (min(d1,d2)-tolerance <= dj <= max(d1,d2)+tolerance):
 					force = True
+
+			# Otherwise, the delta should either match the closest, or have the
+			# same sign as the interpolation of the two deltas.
 			else: # cj < c1 or c2 < cj
-				if c1 == c2:
-					if d1 == d2:
-						if abs(dj - d1) > tolerance:
-							force = True
-					else:
-						if abs(dj) > tolerance:
-							# Disabled the following because the "d1 == d2" does
-							# check does not take tolerance into consideration...
-							pass # force = True
-				elif d1 != d2:
+				if d1 != d2:
 					if cj < c1:
-						if dj != d1 and ((dj-tolerance < d1) != (d1 < d2)):
+						if abs(dj) > tolerance and abs(dj - d1) > tolerance and ((dj-tolerance < d1) != (d1 < d2)):
 							force = True
 					else: # c2 < cj
-						if d2 != dj and ((d2 < dj+tolerance) != (d1 < d2)):
+						if abs(dj) > tolerance and abs(dj - d2) > tolerance and ((d2 < dj+tolerance) != (d1 < d2)):
 							force = True
 
 			if force:
 				forced.add(i)
 				break
-
-		nd, nc = d, c
 
 	return forced
 
@@ -176,6 +180,7 @@ def _iup_contour_optimize_dp(delta, coords, forced={}, tolerance=0, lookback=Non
 	n = len(delta)
 	if lookback is None:
 		lookback = n
+	lookback = min(lookback, MAX_LOOKBACK)
 	costs = {-1:0}
 	chain = {-1:None}
 	for i in range(0, n):
@@ -239,6 +244,9 @@ def iup_contour_optimize(delta, coords, tolerance=0.):
 	# To remove this constraint, we use two different methods, depending on
 	# whether forced set is non-empty or not:
 
+	# Debugging: Make the next if always take the second branch and observe
+	# if the font size changes (reduced); that would mean the forced-set
+	# has members it should not have.
 	if forced:
 		# Forced set is non-empty: rotate the contour start point
 		# such that the last point in the list is a forced point.
@@ -249,6 +257,8 @@ def iup_contour_optimize(delta, coords, tolerance=0.):
 		coords = _rot_list(coords, k)
 		forced = _rot_set(forced, k, n)
 
+		# Debugging: Pass a set() instead of forced variable to the next call
+		# to exercise forced-set computation for under-counting.
 		chain, costs = _iup_contour_optimize_dp(delta, coords, forced, tolerance)
 
 		# Assemble solution.
@@ -257,18 +267,25 @@ def iup_contour_optimize(delta, coords, tolerance=0.):
 		while i is not None:
 			solution.add(i)
 			i = chain[i]
+		solution.remove(-1)
+
+		#if not forced <= solution:
+		#	print("coord", coords)
+		#	print("delta", delta)
+		#	print("len", len(delta))
 		assert forced <= solution, (forced, solution)
+
 		delta = [delta[i] if i in solution else None for i in range(n)]
 
 		delta = _rot_list(delta, -k)
 	else:
-		# Repeat the contour an extra time, solve the 2*n case, then look for solutions of the
-		# circular n-length problem in the solution for 2*n linear case.  I cannot prove that
+		# Repeat the contour an extra time, solve the new case, then look for solutions of the
+		# circular n-length problem in the solution for new linear case.  I cannot prove that
 		# this always produces the optimal solution...
-		chain, costs = _iup_contour_optimize_dp(delta+delta, coords+coords, forced, tolerance, n)
+		chain, costs = _iup_contour_optimize_dp(delta+delta, coords+coords, {}, tolerance, n)
 		best_sol, best_cost = None, n+1
 
-		for start in range(n-1, 2*n-1):
+		for start in range(n-1, len(costs) - 1):
 			# Assemble solution.
 			solution = set()
 			i = start
@@ -279,6 +296,12 @@ def iup_contour_optimize(delta, coords, tolerance=0.):
 				cost = costs[start] - costs[start - n]
 				if cost <= best_cost:
 					best_sol, best_cost = solution, cost
+
+		#if not forced <= best_sol:
+		#	print("coord", coords)
+		#	print("delta", delta)
+		#	print("len", len(delta))
+		assert forced <= best_sol, (forced, best_sol)
 
 		delta = [delta[i] if i in best_sol else None for i in range(n)]
 
