@@ -221,7 +221,26 @@ TEST_COLOR_GLYPHS = {
                 "Glyph": "glyph00012",
             },
         ],
-    }
+    },
+    # When PaintColrLayers contains more than 255 layers, we build a tree
+    # of nested PaintColrLayers of max 255 items (NumLayers field is a uint8).
+    # Below we test that unbuildColrV1 restores a flat list of layers without
+    # nested PaintColrLayers.
+    "glyph00017": {
+        "Format": int(ot.PaintFormat.PaintColrLayers),
+        "Layers": [
+            {
+                "Format": int(ot.PaintFormat.PaintGlyph),
+                "Paint": {
+                    "Format": int(ot.PaintFormat.PaintSolid),
+                    "PaletteIndex": i,
+                    "Alpha": 1.0,
+                },
+                "Glyph": "glyph{str(18 + i).zfill(5)}",
+            }
+            for i in range(256)
+        ],
+    },
 }
 
 
@@ -229,6 +248,7 @@ def test_unbuildColrV1():
     layers, baseGlyphs = buildColrV1(TEST_COLOR_GLYPHS)
     colorGlyphs = unbuildColrV1(layers, baseGlyphs)
     assert colorGlyphs == TEST_COLOR_GLYPHS
+
 
 def test_unbuildColrV1_noLayers():
     _, baseGlyphsV1 = buildColrV1(TEST_COLOR_GLYPHS)
