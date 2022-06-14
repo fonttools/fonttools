@@ -603,6 +603,11 @@ class Coverage(FormatSwitchingBaseTable):
 		glyphs.append(attrs["value"])
 
 
+# The special 0xFFFFFFFF delta-set index is used to indicate that there
+# is no variation data in the ItemVariationStore for a given variable field
+NO_VARIATION_INDEX = 0xFFFFFFFF
+
+
 class DeltaSetIndexMap(getFormatSwitchingBaseTableClass("uint8")):
 
 	def populateDefaults(self, propagator=None):
@@ -671,7 +676,7 @@ class DeltaSetIndexMap(getFormatSwitchingBaseTableClass("uint8")):
 		inner = safeEval(attrs['inner'])
 		assert inner <= 0xFFFF
 		if index > len(mapping):
-			mapping.extend(0xFFFFFFFF for _ in range(index - len(mapping)))
+			mapping.extend(NO_VARIATION_INDEX for _ in range(index - len(mapping)))
 		assert index == len(mapping), f"Bad delta set index: {index}"
 		mapping.insert(index, (outer << 16) | inner)
 
