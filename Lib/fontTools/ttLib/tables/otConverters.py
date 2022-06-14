@@ -18,7 +18,9 @@ from .otTables import (lookupTypes, AATStateTable, AATState, AATAction,
                        CompositeMode as _CompositeMode)
 from itertools import zip_longest
 from functools import partial
+import re
 import struct
+from typing import Optional
 import logging
 
 
@@ -60,7 +62,7 @@ def buildConverters(tableSpec, tableNamespace):
 			else:
 				converterClass = eval(tp, tableNamespace, converterMapping)
 
-		conv = converterClass(name, repeat, aux)
+		conv = converterClass(name, repeat, aux, description=descr)
 
 		if conv.tableClass:
 			# A "template" such as OffsetTo(AType) knowss the table class already
@@ -136,7 +138,7 @@ class BaseConverter(object):
 	"""Base class for converter objects. Apart from the constructor, this
 	is an abstract class."""
 
-	def __init__(self, name, repeat, aux, tableClass=None):
+	def __init__(self, name, repeat, aux, tableClass=None, *, description=""):
 		self.name = name
 		self.repeat = repeat
 		self.aux = aux
@@ -159,6 +161,7 @@ class BaseConverter(object):
 			"BaseGlyphRecordCount",
 			"LayerRecordCount",
 		]
+		self.description = description
 
 	def readArray(self, reader, font, tableDict, count):
 		"""Read an array of values from the reader."""
@@ -210,6 +213,15 @@ class BaseConverter(object):
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
 		"""Write a value to XML."""
 		raise NotImplementedError(self)
+
+	varIndexBasePlusOffsetRE = re.compile(r"VarIndexBase\s*\+\s*(\d+)")
+
+	def getVarIndexOffset(self) -> Optional[int]:
+		"""If description has `VarIndexBase + {offset}`, return the offset else None."""
+		m = self.varIndexBasePlusOffsetRE.search(self.description)
+		if not m:
+			return None
+		return int(m.group(1))
 
 
 class SimpleValue(BaseConverter):
@@ -696,8 +708,10 @@ class FeatureParams(Table):
 
 class ValueFormat(IntValue):
 	staticSize = 2
-	def __init__(self, name, repeat, aux, tableClass=None):
-		BaseConverter.__init__(self, name, repeat, aux, tableClass)
+	def __init__(self, name, repeat, aux, tableClass=None, *, description=""):
+		BaseConverter.__init__(
+			self, name, repeat, aux, tableClass, description=description
+		)
 		self.which = "ValueFormat" + ("2" if name[-1] == "2" else "1")
 	def read(self, reader, font, tableDict):
 		format = reader.readUShort()
@@ -730,8 +744,10 @@ class ValueRecord(ValueFormat):
 class AATLookup(BaseConverter):
 	BIN_SEARCH_HEADER_SIZE = 10
 
-	def __init__(self, name, repeat, aux, tableClass):
-		BaseConverter.__init__(self, name, repeat, aux, tableClass)
+	def __init__(self, name, repeat, aux, tableClass, *, description=""):
+		BaseConverter.__init__(
+			self, name, repeat, aux, tableClass, description=description
+		)
 		if issubclass(self.tableClass, SimpleValue):
 			self.converter = self.tableClass(name='Value', repeat=None, aux=None)
 		else:
@@ -1029,8 +1045,10 @@ class MorxSubtableConverter(BaseConverter):
 		val: key for key, val in _PROCESSING_ORDERS.items()
 	}
 
-	def __init__(self, name, repeat, aux):
-		BaseConverter.__init__(self, name, repeat, aux)
+	def __init__(self, name, repeat, aux, tableClass=None, *, description=""):
+		BaseConverter.__init__(
+			self, name, repeat, aux, tableClass, description=description
+		)
 
 	def _setTextDirectionFromCoverageFlags(self, flags, subtable):
 		if (flags & 0x20) != 0:
@@ -1150,8 +1168,10 @@ class MorxSubtableConverter(BaseConverter):
 # https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6Tables.html#ExtendedStateHeader
 # TODO: Untangle the implementation of the various lookup-specific formats.
 class STXHeader(BaseConverter):
-	def __init__(self, name, repeat, aux, tableClass):
-		BaseConverter.__init__(self, name, repeat, aux, tableClass)
+	def __init__(self, name, repeat, aux, tableClass, *, description=""):
+		BaseConverter.__init__(
+			self, name, repeat, aux, tableClass, description=description
+		)
 		assert issubclass(self.tableClass, AATAction)
 		self.classLookup = AATLookup("GlyphClasses", None, None, UShort)
 		if issubclass(self.tableClass, ContextualMorphAction):
