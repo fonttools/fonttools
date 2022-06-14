@@ -838,6 +838,7 @@ class FontBuilder(object):
         varStore=None,
         varIndexMap=None,
         clipBoxes=None,
+        allowLayerReuse=True,
     ):
         """Build new COLR table using color layers dictionary.
 
@@ -853,6 +854,7 @@ class FontBuilder(object):
             varStore=varStore,
             varIndexMap=varIndexMap,
             clipBoxes=clipBoxes,
+            allowLayerReuse=allowLayerReuse,
         )
 
     def setupCPAL(

@@ -186,10 +186,12 @@ def populateCOLRv0(
 def buildCOLR(
     colorGlyphs: _ColorGlyphsDict,
     version: Optional[int] = None,
+    *,
     glyphMap: Optional[Mapping[str, int]] = None,
     varStore: Optional[ot.VarStore] = None,
     varIndexMap: Optional[ot.DeltaSetIndexMap] = None,
     clipBoxes: Optional[Dict[str, _ClipBoxInput]] = None,
+    allowLayerReuse: bool = True,
 ) -> C_O_L_R_.table_C_O_L_R_:
     """Build COLR table from color layers mapping.
 
@@ -231,7 +233,11 @@ def buildCOLR(
 
     populateCOLRv0(colr, colorGlyphsV0, glyphMap)
 
-    colr.LayerList, colr.BaseGlyphList = buildColrV1(colorGlyphsV1, glyphMap)
+    colr.LayerList, colr.BaseGlyphList = buildColrV1(
+        colorGlyphsV1,
+        glyphMap,
+        allowLayerReuse=allowLayerReuse,
+    )
 
     if version is None:
         version = 1 if (varStore or colorGlyphsV1) else 0
@@ -448,12 +454,14 @@ class LayerListBuilder:
     reusePool: Mapping[Tuple[Any, ...], int]
     tuples: Mapping[int, Tuple[Any, ...]]
     keepAlive: List[ot.Paint]  # we need id to remain valid
+    allowLayerReuse: bool
 
-    def __init__(self):
+    def __init__(self, *, allowLayerReuse=True):
         self.layers = []
         self.reusePool = {}
         self.tuples = {}
         self.keepAlive = []
+        self.allowLayerReuse = allowLayerReuse
 
         # We need to intercept construction of PaintColrLayers
         callbacks = _buildPaintCallbacks()
@@ -504,34 +512,35 @@ class LayerListBuilder:
         # Convert maps seqs or whatever into typed objects
         layers = [self.buildPaint(l) for l in layers]
 
-        # No reason to have a colr layers with just one entry
-        if len(layers) == 1:
-            return layers[0], {}
+        if self.allowLayerReuse:
+            # No reason to have a colr layers with just one entry
+            if len(layers) == 1:
+                return layers[0], {}
 
-        # Look for reuse, with preference to longer sequences
-        # This may make the layer list smaller
-        found_reuse = True
-        while found_reuse:
-            found_reuse = False
+            # Look for reuse, with preference to longer sequences
+            # This may make the layer list smaller
+            found_reuse = True
+            while found_reuse:
+                found_reuse = False
 
-            ranges = sorted(
-                _reuse_ranges(len(layers)),
-                key=lambda t: (t[1] - t[0], t[1], t[0]),
-                reverse=True,
-            )
-            for lbound, ubound in ranges:
-                reuse_lbound = self.reusePool.get(
-                    self._as_tuple(layers[lbound:ubound]), -1
+                ranges = sorted(
+                    _reuse_ranges(len(layers)),
+                    key=lambda t: (t[1] - t[0], t[1], t[0]),
+                    reverse=True,
                 )
-                if reuse_lbound == -1:
-                    continue
-                new_slice = ot.Paint()
-                new_slice.Format = int(ot.PaintFormat.PaintColrLayers)
-                new_slice.NumLayers = ubound - lbound
-                new_slice.FirstLayerIndex = reuse_lbound
-                layers = layers[:lbound] + [new_slice] + layers[ubound:]
-                found_reuse = True
-                break
+                for lbound, ubound in ranges:
+                    reuse_lbound = self.reusePool.get(
+                        self._as_tuple(layers[lbound:ubound]), -1
+                    )
+                    if reuse_lbound == -1:
+                        continue
+                    new_slice = ot.Paint()
+                    new_slice.Format = int(ot.PaintFormat.PaintColrLayers)
+                    new_slice.NumLayers = ubound - lbound
+                    new_slice.FirstLayerIndex = reuse_lbound
+                    layers = layers[:lbound] + [new_slice] + layers[ubound:]
+                    found_reuse = True
+                    break
 
         # The layer list is now final; if it's too big we need to tree it
         is_tree = len(layers) > MAX_PAINT_COLR_LAYER_COUNT
@@ -552,7 +561,7 @@ class LayerListBuilder:
         layers = [listToColrLayers(l) for l in layers]
 
         # No reason to have a colr layers with just one entry
-        if len(layers) == 1:
+        if self.allowLayerReuse and len(layers) == 1:
             return layers[0], {}
 
         paint = ot.Paint()
@@ -563,7 +572,7 @@ class LayerListBuilder:
 
         # Register our parts for reuse provided we aren't a tree
         # If we are a tree the leaves registered for reuse and that will suffice
-        if not is_tree:
+        if self.allowLayerReuse and not is_tree:
             for lbound, ubound in _reuse_ranges(len(layers)):
                 self.reusePool[self._as_tuple(layers[lbound:ubound])] = (
                     lbound + paint.FirstLayerIndex
@@ -603,6 +612,8 @@ def _format_glyph_errors(errors: Mapping[str, Exception]) -> str:
 def buildColrV1(
     colorGlyphs: _ColorGlyphsDict,
     glyphMap: Optional[Mapping[str, int]] = None,
+    *,
+    allowLayerReuse: bool = True,
 ) -> Tuple[Optional[ot.LayerList], ot.BaseGlyphList]:
     if glyphMap is not None:
         colorGlyphItems = sorted(
@@ -613,7 +624,7 @@ def buildColrV1(
 
     errors = {}
     baseGlyphs = []
-    layerBuilder = LayerListBuilder()
+    layerBuilder = LayerListBuilder(allowLayerReuse=allowLayerReuse)
     for baseGlyph, paint in colorGlyphItems:
         try:
             baseGlyphs.append(buildBaseGlyphPaintRecord(baseGlyph, layerBuilder, paint))
