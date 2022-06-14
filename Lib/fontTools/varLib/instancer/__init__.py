@@ -1380,6 +1380,12 @@ def parseArgs(args):
         help="Update the instantiated font's `name` table. Input font must have "
         "a STAT table with Axis Value Tables",
     )
+    parser.add_argument(
+        "--no-recalc-timestamp",
+        dest="recalc_timestamp",
+        action="store_false",
+        help="Don't set the output font's timestamp to the current time."
+    )
     loggingGroup = parser.add_mutually_exclusive_group(required=False)
     loggingGroup.add_argument(
         "-v", "--verbose", action="store_true", help="Run more verbosely."
@@ -1422,7 +1428,7 @@ def main(args=None):
     log.info("Restricting axes: %s", axisLimits)
 
     log.info("Loading variable font")
-    varfont = TTFont(infile)
+    varfont = TTFont(infile, recalcTimestamp=options.recalc_timestamp)
 
     isFullInstance = {
         axisTag for axisTag, limit in axisLimits.items() if not isinstance(limit, tuple)
