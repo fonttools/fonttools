@@ -779,6 +779,17 @@ class SingleSubst(FormatSwitchingBaseTable):
 		format = 2
 		delta = None
 		for inID, outID in gidItems:
+			if inID is None or outID is None:
+				log.error(
+					"Substitution references one or more missing glyphs. "
+					"Check any items that contain a glyph ID of None:"
+				)
+				log.error([
+						({v[0]: k[0]}, {v[1]: k[1]})
+						for k, v in sortableItems
+				])
+				raise KeyError
+
 			if delta is None:
 				delta = (outID - inID) % 65536
 
