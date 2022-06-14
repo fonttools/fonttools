@@ -164,8 +164,8 @@ class BaseTTXConverter(DefaultTable):
 		self.table.fromXML(name, attrs, content, font)
 		self.table.populateDefaults()
 
-	def ensureDecompiled(self):
-		self.table.ensureDecompiled(recurse=True)
+	def ensureDecompiled(self, recurse=True):
+		self.table.ensureDecompiled(recurse=recurse)
 
 
 # https://github.com/fonttools/fonttools/pull/2285#issuecomment-834652928

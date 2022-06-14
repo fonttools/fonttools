@@ -81,10 +81,10 @@ class Merger(object):
 
 	def mergeObjects(self, out, lst, exclude=()):
 		if hasattr(out, "ensureDecompiled"):
-			out.ensureDecompiled()
+			out.ensureDecompiled(recurse=False)
 		for item in lst:
 			if hasattr(item, "ensureDecompiled"):
-				item.ensureDecompiled()
+				item.ensureDecompiled(recurse=False)
 		keys = sorted(vars(out).keys())
 		if not all(keys == sorted(vars(v).keys()) for v in lst):
 			raise KeysDiffer(self, expected=keys,
