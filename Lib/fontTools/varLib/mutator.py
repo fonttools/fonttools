@@ -413,8 +413,8 @@ def main(args=None):
 		"-o", "--output", metavar="OUTPUT.ttf", default=None,
 		help="Output instance TTF file (default: INPUT-instance.ttf).")
 	parser.add_argument(
-			"--norecalc_timestamp", default=None, action='store_true',
-			help="If set don't set the output fonts timestamp to the current time.")
+		"--no-recalc-timestamp", dest="recalc_timestamp", action='store_false',
+		help="Don't set the output font's timestamp to the current time.")
 	logging_group = parser.add_mutually_exclusive_group(required=False)
 	logging_group.add_argument(
 		"-v", "--verbose", action="store_true", help="Run more verbosely.")
@@ -428,7 +428,6 @@ def main(args=None):
 	)
 	options = parser.parse_args(args)
 
-	recalc_timestamp = bool(options.norecalc_timestamp is None)
 	varfilename = options.input
 	outfile = (
 		os.path.splitext(varfilename)[0] + '-instance.ttf'
@@ -449,7 +448,7 @@ def main(args=None):
 	log.info("Location: %s", loc)
 
 	log.info("Loading variable font")
-	varfont = TTFont(varfilename, recalcTimestamp=recalc_timestamp)
+	varfont = TTFont(varfilename, recalcTimestamp=options.recalc_timestamp)
 
 	instantiateVariableFont(varfont, loc, inplace=True, overlap=options.overlap)
 
