@@ -1154,10 +1154,8 @@ class COLRVariationMerger(VariationMerger):
 				e.stack.append(f"[{k}]")
 				raise
 
-	def mergeAttrs(self, out, lst, attrs, exclude=()):
+	def mergeAttrs(self, out, lst, attrs):
 		for attr in attrs:
-			if attr in exclude:
-				continue
 			value = getattr(out, attr)
 			values = [getattr(item, attr) for item in lst]
 			try:
@@ -1166,11 +1164,12 @@ class COLRVariationMerger(VariationMerger):
 				e.stack.append(f".{attr}")
 				raise
 
-	def storeMastersForVariableAttrs(self, out, lst, attrs) -> bool:
+	def storeMastersForVariableAttrs(self, out, lst) -> int:
+		varIndexBase = ot.NO_VARIATION_INDEX
 		varIdxes = []
-		for attr in attrs:
+		for attr in out.getVariableAttrs():
 			master_values = [getattr(item, attr) for item in lst]
-			varIdx = 0xFFFFFFFF
+			varIdx = ot.NO_VARIATION_INDEX
 			if allEqual(master_values):
 				baseValue = master_values[0]
 			else:
@@ -1190,12 +1189,11 @@ class COLRVariationMerger(VariationMerger):
 
 			varIdxes.append(varIdx)
 
-		if any(v != 0xFFFFFFFF for v in varIdxes):
-			out.VarIndexBase = len(self.varIdxes)
+		if any(v != ot.NO_VARIATION_INDEX for v in varIdxes):
+			varIndexBase = len(self.varIdxes)
 			self.varIdxes.extend(varIdxes)
-			return True
 
-		return False
+		return varIndexBase
 
 	def markTableAsVariable(self, table):
 		self.varTables.add(id(table))
@@ -1220,7 +1218,7 @@ class COLRVariationMerger(VariationMerger):
 		varTable = varType()
 		varTable.__dict__.update(table.__dict__)
 		if hasVarIndexBase and getattr(varTable, "VarIndexBase", None) is None:
-			varTable.VarIndexBase = 0xFFFFFFFF
+			varTable.VarIndexBase = ot.NO_VARIATION_INDEX
 
 		self.convertSubtablesToVariableType(varTable)
 		self.varTables.discard(id(table))
@@ -1234,21 +1232,19 @@ def merge(merger, self, lst):
 	varFormat = ot.PaintFormat(fmt).as_variable()
 
 	varAttrs = self.getVariableAttrs()
+	staticAttrs = (c.name for c in self.getConverters() if c.name not in varAttrs)
 
-	attrs = tuple(c.name for c in self.getConverters())
-	assert set(varAttrs).issubset(attrs)
-
-	merger.mergeAttrs(self, lst, attrs, exclude=varAttrs)
+	merger.mergeAttrs(self, lst, staticAttrs)
 
 	haveVariableSubtables = any(
 		merger.isVariableTable(st.value) for st in self.iterSubTables()
 	)
 
-	haveVariableAttrs = merger.storeMastersForVariableAttrs(self, lst, varAttrs)
-	if not haveVariableAttrs and haveVariableSubtables:
-		self.VarIndexBase = 0xFFFFFFFF
+	varIndexBase = merger.storeMastersForVariableAttrs(self, lst)
 
-	if haveVariableSubtables or haveVariableAttrs:
+	if varIndexBase != ot.NO_VARIATION_INDEX or haveVariableSubtables:
+		self.VarIndexBase = varIndexBase
+
 		merger.convertSubtablesToVariableType(self)
 
 		assert varFormat is not None
@@ -1259,14 +1255,15 @@ def merge(merger, self, lst):
 def merge(merger, self, lst):
 	klass = merger.checkType(self, lst)
 	assert klass in merger.varTypes
+
 	varAttrs = self.getVariableAttrs()
+	staticAttrs = (c.name for c in self.getConverters() if c.name not in varAttrs)
 
-	attrs = tuple(c.name for c in self.getConverters())
-	assert set(varAttrs).issubset(attrs)
+	merger.mergeAttrs(self, lst, staticAttrs)
 
-	merger.mergeAttrs(self, lst, attrs, exclude=varAttrs)
-
-	if merger.storeMastersForVariableAttrs(self, lst, varAttrs):
+	varIndexBase = merger.storeMastersForVariableAttrs(self, lst)
+	if varIndexBase != ot.NO_VARIATION_INDEX:
+		self.VarIndexBase = varIndexBase
 		merger.markTableAsVariable(self)
 
 
@@ -1296,6 +1293,8 @@ def merge(merger, self, lst):
 	merger.checkType(self, lst)
 	merger.checkFormat(self, lst)
 
-	varAttrs = self.getVariableAttrs()
-	if merger.storeMastersForVariableAttrs(self, lst, varAttrs):
+	varIndexBase = merger.storeMastersForVariableAttrs(self, lst)
+
+	if varIndexBase != ot.NO_VARIATION_INDEX:
+		self.VarIndexBase = varIndexBase
 		self.Format = ot.ClipBoxFormat.Variable
