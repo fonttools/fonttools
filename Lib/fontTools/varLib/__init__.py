@@ -722,10 +722,10 @@ def _add_COLR(font, model, master_fonts, axisTags):
 	if store.VarData:
 		mapping = store.optimize()
 		colr.VarStore = store
-		varIdxMap = builder.buildDeltaSetIndexMap(
-			[mapping.get(v, 0xFFFFFFFF) for v in merger.varIdxes]
-		)
-		colr.VarIndexMap = varIdxMap
+		# the special 0xFFFF/0xFFFF (for no variations) always maps to self
+		mapping[ot.NO_VARIATION_INDEX] = ot.NO_VARIATION_INDEX
+		varIdxes = [mapping[v] for v in merger.varIdxes]
+		colr.VarIndexMap = builder.buildDeltaSetIndexMap(varIdxes)
 
 	# rebuild to optimize COLR table layer reuse
 	colorGlyphs = unbuildColrV1(colr.LayerList, colr.BaseGlyphList)
