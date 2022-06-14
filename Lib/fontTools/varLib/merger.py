@@ -1248,7 +1248,11 @@ def merge(merger, self, lst):
 	varIndexBase = merger.mergeVariableAttrs(self, lst)
 
 	if varIndexBase != ot.NO_VARIATION_INDEX or haveVariableSubtables:
-		self.VarIndexBase = varIndexBase
+		if varAttrs:
+			# Some PaintVar* don't have any scalar attributes that can vary,
+			# only indirect offsets to other variable subtables, thus have
+			# no VarIndexBase of their own (e.g. PaintVarTransform)
+			self.VarIndexBase = varIndexBase
 
 		merger.convertSubtablesToVariableType(self)
 
