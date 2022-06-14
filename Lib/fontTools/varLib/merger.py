@@ -1164,29 +1164,34 @@ class COLRVariationMerger(VariationMerger):
 				e.stack.append(f".{attr}")
 				raise
 
-	def storeMastersForVariableAttrs(self, out, lst) -> int:
+	def storeMastersForAttr(self, out, lst, attr):
+		master_values = [getattr(item, attr) for item in lst]
+
+		# VarStore treats deltas for fixed-size floats as integers, so we
+		# must convert master values to int before storing them in the builder
+		# then back to float.
+		is_fixed_size_float = False
+		conv = out.getConverterByName(attr)
+		if isinstance(conv, BaseFixedValue):
+			is_fixed_size_float = True
+			master_values = [conv.toInt(v) for v in master_values]
+
+		baseValue = master_values[0]
+		varIdx = ot.NO_VARIATION_INDEX
+		if not allEqual(master_values):
+			baseValue, varIdx = self.store_builder.storeMasters(master_values)
+
+		if is_fixed_size_float:
+			baseValue = conv.fromInt(baseValue)
+
+		return baseValue, varIdx
+
+	def mergeVariableAttrs(self, out, lst) -> int:
 		varIndexBase = ot.NO_VARIATION_INDEX
 		varIdxes = []
 		for attr in out.getVariableAttrs():
-			master_values = [getattr(item, attr) for item in lst]
-			varIdx = ot.NO_VARIATION_INDEX
-			if allEqual(master_values):
-				baseValue = master_values[0]
-			else:
-				is_fixed_size_float = False
-				conv = out.getConverterByName(attr)
-				if isinstance(conv, BaseFixedValue):
-					# VarStore treats deltas for fixed-size floats as integers
-					is_fixed_size_float = True
-					master_values = [conv.toInt(v) for v in master_values]
-
-				baseValue, varIdx = self.store_builder.storeMasters(master_values)
-
-				if is_fixed_size_float:
-					baseValue = conv.fromInt(baseValue)
-
+			baseValue, varIdx = self.storeMastersForAttr(out, lst, attr)
 			setattr(out, attr, baseValue)
-
 			varIdxes.append(varIdx)
 
 		if any(v != ot.NO_VARIATION_INDEX for v in varIdxes):
@@ -1240,7 +1245,7 @@ def merge(merger, self, lst):
 		merger.isVariableTable(st.value) for st in self.iterSubTables()
 	)
 
-	varIndexBase = merger.storeMastersForVariableAttrs(self, lst)
+	varIndexBase = merger.mergeVariableAttrs(self, lst)
 
 	if varIndexBase != ot.NO_VARIATION_INDEX or haveVariableSubtables:
 		self.VarIndexBase = varIndexBase
@@ -1261,7 +1266,7 @@ def merge(merger, self, lst):
 
 	merger.mergeAttrs(self, lst, staticAttrs)
 
-	varIndexBase = merger.storeMastersForVariableAttrs(self, lst)
+	varIndexBase = merger.mergeVariableAttrs(self, lst)
 	if varIndexBase != ot.NO_VARIATION_INDEX:
 		self.VarIndexBase = varIndexBase
 		merger.markTableAsVariable(self)
@@ -1293,7 +1298,7 @@ def merge(merger, self, lst):
 	merger.checkType(self, lst)
 	merger.checkFormat(self, lst)
 
-	varIndexBase = merger.storeMastersForVariableAttrs(self, lst)
+	varIndexBase = merger.mergeVariableAttrs(self, lst)
 
 	if varIndexBase != ot.NO_VARIATION_INDEX:
 		self.VarIndexBase = varIndexBase
