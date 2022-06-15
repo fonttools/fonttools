@@ -35,7 +35,7 @@ def test_formatVersionTuple(ufo_path):
     assert reader.formatVersionTuple == (3, 0)
     assert reader.formatVersionTuple.major == 3
     assert reader.formatVersionTuple.minor == 0
-    assert str(reader.formatVersionTuple) == "3.0"
+    assert str(reader.formatVersionTuple) in ("3.0", "UFOFormatVersion.FORMAT_3_0")
 
 
 def test_readMetaInfo_errors(ufo_path):
