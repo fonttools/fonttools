@@ -44,6 +44,10 @@ def addFeatureVariations(font, conditionalSubstitutions, featureTag='rvrn'):
     # >>> f.save(dstPath)
     """
 
+    _checkSubstitutionGlyphs(
+        fontGlyphnames=set(font.getGlyphOrder()),
+        substitutions=conditionalSubstitutions,
+    )
 
     substitutions = overlayFeatureVariations(conditionalSubstitutions)
 
@@ -65,6 +69,19 @@ def addFeatureVariations(font, conditionalSubstitutions, featureTag='rvrn'):
     addFeatureVariationsRaw(font, font["GSUB"].table,
                             conditionsAndLookups,
                             featureTag)
+
+def _checkSubstitutionGlyphs(fontGlyphnames, substitutions):
+    """Check that all referenced glyphs exist in the font."""
+    referenced_glyphs = set()
+    for _, substitution in substitutions:
+        for sub in substitution.items():
+            referenced_glyphs |= set(sub)
+    missing = referenced_glyphs - fontGlyphnames
+    if missing:
+       raise VarLibValidationError(
+            "Missing glyphs are referenced in conditional substitution rules:"
+            f" {', '.join(missing)}"
+        )
 
 def overlayFeatureVariations(conditionalSubstitutions):
     """Compute overlaps between all conditional substitutions.
