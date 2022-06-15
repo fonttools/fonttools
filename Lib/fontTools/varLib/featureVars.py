@@ -74,8 +74,8 @@ def _checkSubstitutionGlyphs(fontGlyphnames, substitutions):
     """Check that all referenced glyphs exist in the font."""
     referenced_glyphs = set()
     for _, substitution in substitutions:
-        for sub in substitution.items():
-            referenced_glyphs |= set(sub)
+        referenced_glyphs |=  substitution.keys()
+        referenced_glyphs |=  set(substitution.values())
     missing = referenced_glyphs - fontGlyphnames
     if missing:
        raise VarLibValidationError(
