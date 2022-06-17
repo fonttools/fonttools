@@ -30,7 +30,7 @@ from .errors import (
     KeysDiffer,
     InconsistentGlyphOrder,
     InconsistentExtensions,
-    UnsupportedFormat,
+    InconsistentFormats,
     UnsupportedFormat,
     VarLibMergeError,
 )

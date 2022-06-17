@@ -143,7 +143,7 @@ class UnsupportedFormat(VarLibMergeError):
         return self.__doc__ % self.cause["subtable"]
 
 
-class UnsupportedFormat(UnsupportedFormat):
+class InconsistentFormats(UnsupportedFormat):
     """an OpenType subtable (%s) had inconsistent formats between masters"""
 
 
