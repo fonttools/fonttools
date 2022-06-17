@@ -841,7 +841,7 @@ Got: kern.
     def test_varlib_build_incompatible_lookup_types(self):
         with pytest.raises(
             varLibErrors.MismatchedTypes,
-            match = r"MarkBasePos, instead saw PairPos"
+            match = r"'MarkBasePos', instead saw 'PairPos'"
         ):
             self._run_varlib_build_test(
                 designspace_name="IncompatibleLookupTypes",
