@@ -44,8 +44,8 @@ def addFeatureVariations(font, conditionalSubstitutions, featureTag='rvrn'):
     # >>> f.save(dstPath)
     """
 
-    _checkSubstitutionGlyphs(
-        fontGlyphnames=set(font.getGlyphOrder()),
+    _checkSubstitutionGlyphsExist(
+        glyphNames=set(font.getGlyphOrder()),
         substitutions=conditionalSubstitutions,
     )
 
@@ -70,13 +70,12 @@ def addFeatureVariations(font, conditionalSubstitutions, featureTag='rvrn'):
                             conditionsAndLookups,
                             featureTag)
 
-def _checkSubstitutionGlyphs(fontGlyphnames, substitutions):
-    """Check that all referenced glyphs exist in the font."""
-    referenced_glyphs = set()
+def _checkSubstitutionGlyphsExist(glyphNames, substitutions):
+    referencedGlyphNames = set()
     for _, substitution in substitutions:
-        referenced_glyphs |=  substitution.keys()
-        referenced_glyphs |=  set(substitution.values())
-    missing = referenced_glyphs - fontGlyphnames
+        referencedGlyphNames |=  substitution.keys()
+        referencedGlyphNames |=  set(substitution.values())
+    missing = referencedGlyphNames - glyphNames
     if missing:
        raise VarLibValidationError(
             "Missing glyphs are referenced in conditional substitution rules:"
