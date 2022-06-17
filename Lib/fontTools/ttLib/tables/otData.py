@@ -1970,9 +1970,11 @@ otData = [
 	]),
 
 	('avar', [
-		('Version', 'Version', None, None, 'Version of the avar table- 0x00010000'),
+		('Version', 'Version', None, None, 'Version of the avar table- 0x00010000 or 0x00020000'),
 		('uint16', 'Reserved', None, None, 'Permanently reserved; set to zero'),
 		('uint16', 'AxisCount', None, None, 'The number of variation axes for this font. This must be the same number as axisCount in the "fvar" table'),
 		('AxisSegmentMap', 'AxisSegmentMap', 'AxisCount', 0, 'The segment maps array — one segment map for each axis, in the order of axes specified in the "fvar" table'),
+		('LOffset', 'VarIdxMap', None, 'Version >= 0x00020000', ''),
+		('LOffset', 'VarStore', None, 'Version >= 0x00020000', ''),
 	]),
 ]
