@@ -14,20 +14,9 @@ import logging
 
 log = logging.getLogger(__name__)
 
-# Apple's documentation of 'avar':
-# https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6avar.html
+from .otBase import BaseTTXConverter
 
-AVAR_HEADER_FORMAT = """
-    > # big endian
-    majorVersion:  H
-    minorVersion:  H
-    reserved:      H
-    axisCount:     H
-"""
-assert sstruct.calcsize(AVAR_HEADER_FORMAT) == 8, sstruct.calcsize(AVAR_HEADER_FORMAT)
-
-
-class table__a_v_a_r(DefaultTable.DefaultTable):
+class table__a_v_a_r(BaseTTXConverter):
     """Axis Variations Table
 
     This class represents the ``avar`` table of a variable font. The object has one
@@ -55,8 +44,9 @@ class table__a_v_a_r(DefaultTable.DefaultTable):
 
     def __init__(self, tag=None):
         DefaultTable.DefaultTable.__init__(self, tag)
-        self.segments = {}
+        #self.segments = {}
 
+    """
     def compile(self, ttFont):
         axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
         header = {
@@ -120,3 +110,4 @@ class table__a_v_a_r(DefaultTable.DefaultTable):
                             log.warning("duplicate entry for %s in axis '%s'",
                                         fromValue, axis)
                         segment[fromValue] = toValue
+    """

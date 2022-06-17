@@ -1954,4 +1954,25 @@ otData = [
 		('CompositeMode', 'CompositeMode', None, None, 'A CompositeMode enumeration value.'),
 		('LOffset24To(Paint)', 'BackdropPaint', None, None, 'Offset (from beginning of PaintComposite table) to backdrop Paint subtable.'),
 	]),
+
+	#
+	# avar
+	#
+
+	('AxisValueMap', [
+		('F2Dot14', 'FromCoordinate', None, None, 'A normalized coordinate value obtained using default normalization'),
+		('F2Dot14', 'ToCoordinate', None, None, 'The modified, normalized coordinate value'),
+	]),
+
+	('AxisSegmentMap', [
+		('uint16', 'PositionMapCount', None, None, 'The number of correspondence pairs for this axis'),
+		('AxisValueMap', 'AxisValueMap', 'PositionMapCount', 0, 'The array of axis value map records for this axis'),
+	]),
+
+	('avar', [
+		('Version', 'Version', None, None, 'Version of the avar table- 0x00010000'),
+		('uint16', 'Reserved', None, None, 'Permanently reserved; set to zero'),
+		('uint16', 'AxisCount', None, None, 'The number of variation axes for this font. This must be the same number as axisCount in the "fvar" table'),
+		('AxisSegmentMap', 'AxisSegmentMap', 'AxisCount', 0, 'The segment maps array — one segment map for each axis, in the order of axes specified in the "fvar" table'),
+	]),
 ]
