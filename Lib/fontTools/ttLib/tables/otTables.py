@@ -1998,6 +1998,14 @@ def _buildClasses():
 				cls.DontShare = True
 			namespace[name] = cls
 
+	# link Var{Table} <-> {Table} (e.g. ColorStop <-> VarColorStop, etc.)
+	for name, _ in otData:
+		if name.startswith("Var") and len(name) > 3 and name[3:] in namespace:
+			varType = namespace[name]
+			noVarType = namespace[name[3:]]
+			varType.NoVarType = noVarType
+			noVarType.VarType = varType
+
 	for base, alts in _equivalents.items():
 		base = namespace[base]
 		for alt in alts:
