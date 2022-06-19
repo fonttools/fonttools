@@ -809,6 +809,9 @@ class BaseTable(object):
 				#elif not conv.isCount:
 				#	# Warn?
 				#	pass
+				if hasattr(conv, "DEFAULT"):
+					# OptionalValue converters (e.g. VarIndex)
+					setattr(self, conv.name, conv.DEFAULT)
 
 	def decompile(self, reader, font):
 		self.readFormat(reader)

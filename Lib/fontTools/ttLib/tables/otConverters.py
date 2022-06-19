@@ -15,7 +15,8 @@ from .otTables import (lookupTypes, AATStateTable, AATState, AATAction,
                        ContextualMorphAction, LigatureMorphAction,
                        InsertionMorphAction, MorxSubtable,
                        ExtendMode as _ExtendMode,
-                       CompositeMode as _CompositeMode)
+                       CompositeMode as _CompositeMode,
+                       NO_VARIATION_INDEX)
 from itertools import zip_longest
 from functools import partial
 import re
@@ -282,7 +283,7 @@ class Flags32(ULong):
 		return "0x%08X" % value
 
 class VarIndex(OptionalValue, ULong):
-	DEFAULT = 0xFFFFFFFF
+	DEFAULT = NO_VARIATION_INDEX
 
 class Short(IntValue):
 	staticSize = 2
