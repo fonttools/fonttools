@@ -486,7 +486,7 @@ def _get_advance_metrics(font, masterModel, master_ttfs,
 			vOrigMap[glyphName] = storeBuilder.storeDeltas(deltas, round=noRound)
 
 	indirectStore = storeBuilder.finish()
-	mapping2 = indirectStore.optimize()
+	mapping2 = indirectStore.optimize(use_NO_VARIATION_INDEX=False)
 	advMapping = [mapping2[advMapping[g]] for g in glyphOrder]
 	advanceMapping = builder.buildVarIdxMap(advMapping, glyphOrder)
 

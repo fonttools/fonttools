@@ -178,6 +178,7 @@ class VarStoreInstancer(object):
 
 	def __getitem__(self, varidx):
 		major, minor = varidx >> 16, varidx & 0xFFFF
+		if varidx == NO_VARIATION_INDEX: return 0.
 		varData = self._varData
 		scalars = [self._getScalar(ri) for ri in varData[major].VarRegionIndex]
 		deltas = varData[major].Item[minor]
@@ -440,7 +441,7 @@ class _EncodingDict(dict):
 		return chars
 
 
-def VarStore_optimize(self):
+def VarStore_optimize(self, use_NO_VARIATION_INDEX=True):
 	"""Optimize storage. Returns mapping from old VarIdxes to new ones."""
 
 	# TODO
@@ -463,6 +464,10 @@ def VarStore_optimize(self):
 			for regionIdx,v in zip(regionIndices, item):
 				row[regionIdx] += v
 			row = tuple(row)
+
+			if use_NO_VARIATION_INDEX and not any(row):
+				front_mapping[(major<<16)+minor] = None
+				continue
 
 			encodings.add_row(row)
 			front_mapping[(major<<16)+minor] = row
@@ -546,9 +551,9 @@ def VarStore_optimize(self):
 			back_mapping[item] = (major<<16)+minor
 
 	# Compile final mapping.
-	varidx_map = {}
+	varidx_map = {NO_VARIATION_INDEX:NO_VARIATION_INDEX}
 	for k,v in front_mapping.items():
-		varidx_map[k] = back_mapping[v]
+		varidx_map[k] = back_mapping[v] if v is not None else NO_VARIATION_INDEX
 
 	# Remove unused regions.
 	self.prune_regions()

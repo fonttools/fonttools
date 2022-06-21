@@ -13,7 +13,7 @@ from fontTools.ttLib.tables.otTables import VarStore
         (
             [{}, {"a": 1}],
             [
-                [10, 20],
+                [10, 10],
                 [100, 2000],
                 [100, 22000],
             ],
