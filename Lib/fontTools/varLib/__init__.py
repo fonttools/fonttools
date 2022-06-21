@@ -713,7 +713,7 @@ def _add_CFF2(varFont, model, master_fonts):
 	merge_region_fonts(varFont, model, ordered_fonts_list, glyphOrder)
 
 
-def _add_COLR(font, model, master_fonts, axisTags):
+def _add_COLR(font, model, master_fonts, axisTags, colr_layer_reuse=True):
 	merger = COLRVariationMerger(model, axisTags, font)
 	merger.mergeTables(font, master_fonts)
 	store = merger.store_builder.finish()
@@ -729,8 +729,7 @@ def _add_COLR(font, model, master_fonts, axisTags):
 		colr.VarIndexMap = builder.buildDeltaSetIndexMap(varIdxes)
 
 	# rebuild LayerList to optimize PaintColrLayers layer reuse
-	# TODO: Perhaps make it optional?
-	if colr.LayerList:
+	if colr.LayerList and colr_layer_reuse:
 		colorGlyphs = unbuildColrV1(colr.LayerList, colr.BaseGlyphList)
 		colr.LayerList, colr.BaseGlyphList = buildColrV1(colorGlyphs, allowLayerReuse=True)
 
@@ -889,7 +888,14 @@ def set_default_weight_width_slant(font, location):
 			font["post"].italicAngle = italicAngle
 
 
-def build_many(designspace: DesignSpaceDocument, master_finder=lambda s:s, exclude=[], optimize=True, skip_vf=lambda vf_name: False):
+def build_many(
+	designspace: DesignSpaceDocument,
+	master_finder=lambda s:s,
+	exclude=[],
+	optimize=True,
+	skip_vf=lambda vf_name: False,
+	colr_layer_reuse=True,
+):
 	"""
 	Build variable fonts from a designspace file, version 5 which can define
 	several VFs, or version 4 which has implicitly one VF covering the whole doc.
@@ -921,7 +927,13 @@ def build_many(designspace: DesignSpaceDocument, master_finder=lambda s:s, exclu
 			res[name] = vf
 	return res
 
-def build(designspace, master_finder=lambda s:s, exclude=[], optimize=True):
+def build(
+	designspace,
+	master_finder=lambda s:s,
+	exclude=[],
+	optimize=True,
+	colr_layer_reuse=True,
+):
 	"""
 	Build variation font from a designspace file.
 
@@ -1000,7 +1012,7 @@ def build(designspace, master_finder=lambda s:s, exclude=[], optimize=True):
 				post.extraNames = []
 				post.mapping = {}
 	if 'COLR' not in exclude and 'COLR' in vf and vf['COLR'].version > 0:
-		_add_COLR(vf, model, master_fonts, axisTags)
+		_add_COLR(vf, model, master_fonts, axisTags, colr_layer_reuse)
 
 	set_default_weight_width_slant(
 		vf, location={axis.axisTag: axis.defaultValue for axis in vf["fvar"].axes}
@@ -1109,6 +1121,12 @@ def main(args=None):
 		help='do not perform IUP optimization'
 	)
 	parser.add_argument(
+		'--no-colr-layer-reuse',
+		dest='colr_layer_reuse',
+		action='store_false',
+		help='do not rebuild variable COLR table to optimize COLR layer reuse',
+	)
+	parser.add_argument(
 		'--master-finder',
 		default='master_ttf_interpolatable/{stem}.ttf',
 		help=(
@@ -1146,7 +1164,8 @@ def main(args=None):
 		designspace_filename,
 		finder,
 		exclude=options.exclude,
-		optimize=options.optimize
+		optimize=options.optimize,
+		colr_layer_reuse=options.colr_layer_reuse,
 	)
 
 	outfile = options.outfile
