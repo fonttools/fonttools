@@ -7,6 +7,10 @@ from functools import partial
 from collections import defaultdict
 
 
+NO_VARIATION_INDEX = 0xFFFFFFFF
+ot.VarStore.NO_VARIATION_INDEX = NO_VARIATION_INDEX
+
+
 def _getLocationKey(loc):
 	return tuple(sorted(loc.items(), key=lambda kv: kv[0]))
 
