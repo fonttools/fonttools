@@ -3,12 +3,16 @@ Merge OpenType Layout tables (GDEF / GPOS / GSUB).
 """
 import os
 import copy
+import enum
+from itertools import islice
 from operator import ior
 import logging
 from fontTools.misc import classifyTools
 from fontTools.misc.roundTools import otRound
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables import otBase as otBase
+from fontTools.ttLib.tables.otConverters import BaseFixedValue
+from fontTools.ttLib.tables.otTraverse import dfs_base_table
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
 from fontTools.varLib import builder, models, varStore
 from fontTools.varLib.models import nonNone, allNone, allEqual, allEqualTo
@@ -45,7 +49,7 @@ class Merger(object):
 		assert celf != Merger, 'Subclass Merger instead.'
 		if 'mergers' not in celf.__dict__:
 			celf.mergers = {}
-		if type(clazzes) == type:
+		if type(clazzes) in (type, enum.EnumMeta):
 			clazzes = (clazzes,)
 		if type(attrs) == str:
 			attrs = (attrs,)
@@ -122,6 +126,11 @@ class Merger(object):
 		mergerFunc = self.mergersFor(out).get(None, None)
 		if mergerFunc is not None:
 			mergerFunc(self, out, lst)
+		elif isinstance(out, enum.Enum):
+			# need to special-case Enums as have __dict__ but are not regular 'objects',
+			# otherwise mergeObjects/mergeThings get trapped in a RecursionError
+			if not allEqualTo(out, lst):
+				raise ShouldBeConstant(self, expected=out, got=lst)
 		elif hasattr(out, '__dict__'):
 			self.mergeObjects(out, lst)
 		elif isinstance(out, list):
@@ -1099,3 +1108,196 @@ def merge(merger, self, lst):
 			setattr(self, name, value)
 			if deviceTable:
 				setattr(self, tableName, deviceTable)
+
+
+class COLRVariationMerger(VariationMerger):
+	"""A specialized VariationMerger that takes multiple master fonts containing
+	COLRv1 tables, and builds a variable COLR font.
+
+	COLR tables are special in that variable subtables can be associated with
+	multiple delta-set indices (via VarIndexBase).
+	They also contain tables that must change their type (not simply the Format)
+	as they become variable (e.g. Affine2x3 -> VarAffine2x3) so this merger takes
+	care of that too.
+	"""
+
+	def __init__(self, model, axisTags, font):
+		VariationMerger.__init__(self, model, axisTags, font)
+		self.varIdxes = []
+		self.varTables = set()
+
+	def mergeTables(self, font, master_ttfs, tableTags=("COLR",)):
+		VariationMerger.mergeTables(self, font, master_ttfs, tableTags)
+
+	def checkFormatEnum(self, out, lst, validate=lambda _: True):
+		fmt = out.Format
+		formatEnum = out.formatEnum
+		ok = False
+		try:
+			fmt = formatEnum(fmt)
+		except ValueError:
+			pass
+		else:
+			ok = validate(fmt)
+		if not ok:
+			raise UnsupportedFormat(
+				self, subtable=type(out).__name__, value=fmt
+			)
+		expected = fmt
+		got = []
+		for v in lst:
+			fmt = getattr(v, "Format", None)
+			try:
+				fmt = formatEnum(fmt)
+			except ValueError:
+				pass
+			got.append(fmt)
+		if not allEqualTo(expected, got):
+			raise InconsistentFormats(
+				self,
+				subtable=type(out).__name__,
+				expected=expected,
+				got=got,
+			)
+		return expected
+
+	def mergeSparseDict(self, out, lst):
+		for k in out.keys():
+			try:
+				self.mergeThings(out[k], [v.get(k) for v in lst])
+			except VarLibMergeError as e:
+				e.stack.append(f"[{k!r}]")
+				raise
+
+	def mergeAttrs(self, out, lst, attrs):
+		for attr in attrs:
+			value = getattr(out, attr)
+			values = [getattr(item, attr) for item in lst]
+			try:
+				self.mergeThings(value, values)
+			except VarLibMergeError as e:
+				e.stack.append(f".{attr}")
+				raise
+
+	def storeMastersForAttr(self, out, lst, attr):
+		master_values = [getattr(item, attr) for item in lst]
+
+		# VarStore treats deltas for fixed-size floats as integers, so we
+		# must convert master values to int before storing them in the builder
+		# then back to float.
+		is_fixed_size_float = False
+		conv = out.getConverterByName(attr)
+		if isinstance(conv, BaseFixedValue):
+			is_fixed_size_float = True
+			master_values = [conv.toInt(v) for v in master_values]
+
+		baseValue = master_values[0]
+		varIdx = ot.NO_VARIATION_INDEX
+		if not allEqual(master_values):
+			baseValue, varIdx = self.store_builder.storeMasters(master_values)
+
+		if is_fixed_size_float:
+			baseValue = conv.fromInt(baseValue)
+
+		return baseValue, varIdx
+
+	def mergeVariableAttrs(self, out, lst, attrs) -> int:
+		varIndexBase = ot.NO_VARIATION_INDEX
+		varIdxes = []
+		for attr in attrs:
+			baseValue, varIdx = self.storeMastersForAttr(out, lst, attr)
+			setattr(out, attr, baseValue)
+			varIdxes.append(varIdx)
+
+		if any(v != ot.NO_VARIATION_INDEX for v in varIdxes):
+			varIndexBase = len(self.varIdxes)
+			self.varIdxes.extend(varIdxes)
+
+		return varIndexBase
+
+	@staticmethod
+	def convertSubTablesToVarType(table):
+		for path in islice(dfs_base_table(table), 1, None):  # skip first (root)
+			st = path[-1]
+			subTable = st.value
+			varType = getattr(type(subTable), "VarType", None)
+			if varType is None:
+				continue
+			newSubTable = varType()
+			newSubTable.__dict__.update(subTable.__dict__)
+			newSubTable.populateDefaults()
+			parent = path[-2].value
+			if st.index is not None:
+				getattr(parent, st.name)[st.index] = newSubTable
+			else:
+				setattr(parent, st.name, newSubTable)
+
+
+@COLRVariationMerger.merger((ot.Paint, ot.ClipBox))
+def merge(merger, self, lst):
+	fmt = merger.checkFormatEnum(self, lst, lambda fmt: not fmt.is_variable())
+	varFormat = fmt.as_variable()
+
+	varAttrs = ()
+	if varFormat is not None:
+		varAttrs = otBase.getVariableAttrs(type(self), varFormat)
+	staticAttrs = (c.name for c in self.getConverters() if c.name not in varAttrs)
+
+	merger.mergeAttrs(self, lst, staticAttrs)
+
+	varIndexBase = merger.mergeVariableAttrs(self, lst, varAttrs)
+
+	subTables = [st.value for st in self.iterSubTables()]
+
+	# Convert table to variable if itself has variations or any subtables have
+	isVariable = (
+		varIndexBase != ot.NO_VARIATION_INDEX
+		or any(id(table) in merger.varTables for table in subTables)
+	)
+
+	if isVariable:
+		if varAttrs:
+			# Some PaintVar* don't have any scalar attributes that can vary,
+			# only indirect offsets to other variable subtables, thus have
+			# no VarIndexBase of their own (e.g. PaintVarTransform)
+			self.VarIndexBase = varIndexBase
+
+		if subTables:
+			# Convert Affine2x3 -> VarAffine2x3, ColorLine -> VarColorLine, etc.
+			merger.convertSubTablesToVarType(self)
+
+		assert varFormat is not None
+		self.Format = varFormat
+
+
+@COLRVariationMerger.merger((ot.Affine2x3, ot.ColorStop))
+def merge(merger, self, lst):
+	varType = type(self).VarType
+
+	varAttrs = otBase.getVariableAttrs(varType)
+	staticAttrs = (c.name for c in self.getConverters() if c.name not in varAttrs)
+
+	merger.mergeAttrs(self, lst, staticAttrs)
+
+	varIndexBase = merger.mergeVariableAttrs(self, lst, varAttrs)
+
+	if varIndexBase != ot.NO_VARIATION_INDEX:
+		self.VarIndexBase = varIndexBase
+		# mark as having variations so the parent table will convert to Var{Type}
+		merger.varTables.add(id(self))
+
+
+@COLRVariationMerger.merger(ot.ColorLine)
+def merge(merger, self, lst):
+	merger.mergeAttrs(self, lst, (c.name for c in self.getConverters()))
+
+	if any(id(stop) in merger.varTables for stop in self.ColorStop):
+		merger.convertSubTablesToVarType(self)
+		merger.varTables.add(id(self))
+
+
+@COLRVariationMerger.merger(ot.ClipList, "clips")
+def merge(merger, self, lst):
+	# 'sparse' in that we allow non-default masters to omit ClipBox entries
+	# for some/all glyphs (i.e. they don't participate)
+	merger.mergeSparseDict(self, lst)
