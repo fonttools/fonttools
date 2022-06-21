@@ -30,13 +30,15 @@ from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables.otBase import OTTableWriter
 from fontTools.varLib import builder, models, varStore
-from fontTools.varLib.merger import VariationMerger
+from fontTools.varLib.merger import VariationMerger, COLRVariationMerger
 from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib.iup import iup_delta_optimize
 from fontTools.varLib.featureVars import addFeatureVariations
 from fontTools.designspaceLib import DesignSpaceDocument, InstanceDescriptor
 from fontTools.designspaceLib.split import splitInterpolable, splitVariableFonts
 from fontTools.varLib.stat import buildVFStatTable
+from fontTools.colorLib.builder import buildColrV1
+from fontTools.colorLib.unbuilder import unbuildColrV1
 from functools import partial
 from collections import OrderedDict, namedtuple
 import os.path
@@ -711,6 +713,28 @@ def _add_CFF2(varFont, model, master_fonts):
 	merge_region_fonts(varFont, model, ordered_fonts_list, glyphOrder)
 
 
+def _add_COLR(font, model, master_fonts, axisTags):
+	merger = COLRVariationMerger(model, axisTags, font)
+	merger.mergeTables(font, master_fonts)
+	store = merger.store_builder.finish()
+
+	colr = font["COLR"].table
+	if store.VarData:
+		mapping = store.optimize()
+		colr.VarStore = store
+		# the special 0xFFFF/0xFFFF (for no variations) always maps to itself
+		mapping[ot.NO_VARIATION_INDEX] = ot.NO_VARIATION_INDEX
+		varIdxes = [mapping[v] for v in merger.varIdxes]
+		# TODO: Optimize reusable runs of delta-set indices from multiple paints
+		colr.VarIndexMap = builder.buildDeltaSetIndexMap(varIdxes)
+
+	# rebuild LayerList to optimize PaintColrLayers layer reuse
+	# TODO: Perhaps make it optional?
+	if colr.LayerList:
+		colorGlyphs = unbuildColrV1(colr.LayerList, colr.BaseGlyphList)
+		colr.LayerList, colr.BaseGlyphList = buildColrV1(colorGlyphs, allowLayerReuse=True)
+
+
 def load_designspace(designspace):
 	# TODO: remove this and always assume 'designspace' is a DesignSpaceDocument,
 	# never a file path, as that's already handled by caller
@@ -975,6 +999,8 @@ def build(designspace, master_finder=lambda s:s, exclude=[], optimize=True):
 				post.formatType = 2.0
 				post.extraNames = []
 				post.mapping = {}
+	if 'COLR' not in exclude and 'COLR' in vf and vf['COLR'].version > 0:
+		_add_COLR(vf, model, master_fonts, axisTags)
 
 	set_default_weight_width_slant(
 		vf, location={axis.axisTag: axis.defaultValue for axis in vf["fvar"].axes}
