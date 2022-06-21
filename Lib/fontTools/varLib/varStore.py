@@ -135,6 +135,11 @@ def VarRegion_get_support(self, fvar_axes):
 
 ot.VarRegion.get_support = VarRegion_get_support
 
+def VarStore___bool__(self):
+    return bool(self.VarData)
+
+ot.VarStore.__bool__ = VarStore___bool__
+
 class VarStoreInstancer(object):
 
 	def __init__(self, varstore, fvar_axes, location={}):

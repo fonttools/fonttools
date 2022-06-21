@@ -606,7 +606,7 @@ def _add_BASE(font, masterModel, master_ttfs, axisTags):
 	merger.mergeTables(font, master_ttfs, ['BASE'])
 	store = merger.store_builder.finish()
 
-	if not store.VarData:
+	if not store:
 		return
 	base = font['BASE'].table
 	assert base.Version == 0x00010000
@@ -621,7 +621,7 @@ def _merge_OTL(font, model, master_fonts, axisTags):
 
 	merger.mergeTables(font, master_fonts, ['GSUB', 'GDEF', 'GPOS'])
 	store = merger.store_builder.finish()
-	if not store.VarData:
+	if not store:
 		return
 	try:
 		GDEF = font['GDEF'].table
