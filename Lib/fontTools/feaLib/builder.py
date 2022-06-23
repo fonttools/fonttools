@@ -764,7 +764,7 @@ class Builder(object):
         gdef.Version = 0x00010002 if gdef.MarkGlyphSetsDef else 0x00010000
         if self.varstorebuilder:
             store = self.varstorebuilder.finish()
-            if store.VarData:
+            if store:
                 gdef.Version = 0x00010003
                 gdef.VarStore = store
                 varidx_map = store.optimize()
