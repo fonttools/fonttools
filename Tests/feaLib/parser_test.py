@@ -316,7 +316,7 @@ class ParserTest(unittest.TestCase):
     def test_strict_glyph_name_check(self):
         self.parse("@bad = [a b ccc];", glyphNames=("a", "b", "ccc"))
 
-        with self.assertRaisesRegex(FeatureLibError, "missing from the glyph set: ccc"):
+        with self.assertRaisesRegex(FeatureLibError, "(?s)missing from the glyph set:.*ccc"):
             self.parse("@bad = [a b ccc];", glyphNames=("a", "b"))
 
     def test_glyphclass(self):
