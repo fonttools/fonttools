@@ -9,6 +9,9 @@ on:
     tags:
       - '*.*.*' # e.g. 1.0.0 or 20.15.10
 
+permissions:
+  contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
