@@ -52,6 +52,17 @@ class BaseTTXConverter(DefaultTable):
 		self.table = tableClass()
 		self.table.decompile(reader, font)
 
+	# Pack only with fontTools, don't allow sharing between extensions.
+	MODE_PURE_FT = 1
+
+	# Attempt to pack with harfbuzz (allowing sharing between extensions)
+	# use fontTools to attempt overflow resolution.
+	MODE_HB_FT = 2
+
+	# Fallback if HB/FT packing gets stuck. Pack only with fontTools, don't allow sharing between
+	# extensions.
+	MODE_FT_FALLBACK = 3
+
 	def compile(self, font):
 		"""Compiles the table into binary. Called automatically on save."""
 
@@ -96,62 +107,95 @@ class BaseTTXConverter(DefaultTable):
 						self.tableTag,
 					)
 
+		if (use_hb_repack in (None, True)
+				and have_uharfbuzz
+				and self.tableTag in ("GSUB", "GPOS")):
+			mode = self.MODE_HB_FT
+		else:
+			mode = self.MODE_PURE_FT
+
 		hb_first_error_logged = False
+		lastOverflowRecord = None
 		while True:
 			try:
 				writer = OTTableWriter(tableTag=self.tableTag)
 				self.table.compile(writer, font)
-				if (
-					use_hb_repack in (None, True)
-					and have_uharfbuzz
-					and self.tableTag in ("GSUB", "GPOS")
-				):
-					try:
-						log.debug("serializing '%s' with hb.repack", self.tableTag)
-						return writer.getAllDataUsingHarfbuzz()
-					except (ValueError, MemoryError, hb.RepackerError) as e:
-						# Only log hb repacker errors the first time they occur in
-						# the offset-overflow resolution loop, they are just noisy.
-						# Maybe we can revisit this if/when uharfbuzz actually gives
-						# us more info as to why hb.repack failed...
-						if not hb_first_error_logged:
-							error_msg = f"{type(e).__name__}"
-							if str(e) != "":
-								error_msg += f": {e}"
-							log.warning(
-								"hb.repack failed to serialize '%s', reverting to "
-								"pure-python serializer; the error message was: %s",
-								self.tableTag,
-								error_msg,
-							)
-							hb_first_error_logged = True
-						return writer.getAllData(remove_duplicate=False)
-				return writer.getAllData()
+				if mode == self.MODE_HB_FT:
+					return self.tryPackingHarfbuzz(writer, hb_first_error_logged)
+				elif mode == self.MODE_PURE_FT:
+					return self.tryPackingFontTools(writer)
+				elif mode == self.MODE_FT_FALLBACK:
+					self.tryPackingFontTools(writer)
+					log.info("Re-enabling sharing between extensions and switching back to "
+										"harfbuzz+fontTools packing.")
+					mode = self.MODE_HB_FT
 
 			except OTLOffsetOverflowError as e:
+				hb_first_error_logged = True
+				ok = self.tryResolveOverflow(font, e, lastOverflowRecord)
+				lastOverflowRecord = e.value
 
-				if overflowRecord == e.value:
-					raise # Oh well...
+				if ok:
+					continue
 
-				overflowRecord = e.value
-				log.info("Attempting to fix OTLOffsetOverflowError %s", e)
-				lastItem = overflowRecord
-
-				ok = 0
-				if overflowRecord.itemName is None:
-					from .otTables import fixLookupOverFlows
-					ok = fixLookupOverFlows(font, overflowRecord)
+				if mode is self.MODE_HB_FT:
+					log.info("Harfbuzz packing out of resolutions, disabling sharing between extensions and "
+									 "switching to fontTools only packing.")
+					mode = self.MODE_FT_FALLBACK
 				else:
-					from .otTables import fixSubTableOverFlows
-					ok = fixSubTableOverFlows(font, overflowRecord)
-				if not ok:
-					# Try upgrading lookup to Extension and hope
-					# that cross-lookup sharing not happening would
-					# fix overflow...
-					from .otTables import fixLookupOverFlows
-					ok = fixLookupOverFlows(font, overflowRecord)
-					if not ok:
-						raise
+					raise
+
+	def tryPackingHarfbuzz(self, writer, hb_first_error_logged):
+		try:
+			log.debug("serializing '%s' with hb.repack", self.tableTag)
+			return writer.getAllDataUsingHarfbuzz()
+		except (ValueError, MemoryError, hb.RepackerError) as e:
+			# Only log hb repacker errors the first time they occur in
+			# the offset-overflow resolution loop, they are just noisy.
+			# Maybe we can revisit this if/when uharfbuzz actually gives
+			# us more info as to why hb.repack failed...
+			if not hb_first_error_logged:
+				error_msg = f"{type(e).__name__}"
+				if str(e) != "":
+					error_msg += f": {e}"
+				log.warning(
+						"hb.repack failed to serialize '%s', attempting fonttools resolutions "
+						"; the error message was: %s",
+						self.tableTag,
+						error_msg,
+				)
+				hb_first_error_logged = True
+			return writer.getAllData(remove_duplicate=False)
+
+
+	def tryPackingFontTools(self, writer):
+		return writer.getAllData()
+
+
+	def tryResolveOverflow(self, font, e, lastOverflowRecord):
+		ok = 0
+		if lastOverflowRecord == e.value:
+			# Oh well...
+			return ok
+
+		overflowRecord = e.value
+		log.info("Attempting to fix OTLOffsetOverflowError %s", e)
+
+		if overflowRecord.itemName is None:
+			from .otTables import fixLookupOverFlows
+			ok = fixLookupOverFlows(font, overflowRecord)
+		else:
+			from .otTables import fixSubTableOverFlows
+			ok = fixSubTableOverFlows(font, overflowRecord)
+
+		if ok:
+			return ok
+
+		# Try upgrading lookup to Extension and hope
+		# that cross-lookup sharing not happening would
+		# fix overflow...
+		from .otTables import fixLookupOverFlows
+		return fixLookupOverFlows(font, overflowRecord)
 
 	def toXML(self, writer, font):
 		self.table.toXML2(writer, font)
@@ -535,7 +579,7 @@ class OTTableWriter(object):
 		internedTables = {}
 		# TODO: Restore shareExtension=True after we fix
 		# https://github.com/fonttools/fonttools/issues/2661
-		self._doneWriting(internedTables, shareExtension=False)
+		self._doneWriting(internedTables, shareExtension=True)
 		tables = []
 		obj_list = []
 		done = {}
