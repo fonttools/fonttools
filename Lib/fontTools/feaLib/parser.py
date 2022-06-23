@@ -126,6 +126,7 @@ class Parser(object):
                     ),
                     self.cur_token_location_,
                 )
+        # Report any missing glyphs at the end of parsing
         if self.missing:
             error = [
                 " %s (first found at %s)" % (name, loc)
@@ -2083,8 +2084,9 @@ class Parser(object):
         raise FeatureLibError("Expected a glyph name or CID", self.cur_token_location_)
 
     def check_glyph_name_in_glyph_set(self, *names):
-        """Raises if glyph name (just `start`) or glyph names of a
-        range (`start` and `end`) are not in the glyph set.
+        """Adds a glyph name (just `start`) or glyph names of a
+        range (`start` and `end`) which are not in the glyph set
+        to the "missing list" for future error reporting.
 
         If no glyph set is present, does nothing.
         """
