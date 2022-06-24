@@ -7,7 +7,7 @@ from functools import partial
 from collections import defaultdict
 
 
-NO_VARIATION_INDEX = 0xFFFFFFFF
+NO_VARIATION_INDEX = ot.NO_VARIATION_INDEX
 ot.VarStore.NO_VARIATION_INDEX = NO_VARIATION_INDEX
 
 

@@ -719,11 +719,9 @@ def _add_COLR(font, model, master_fonts, axisTags, colr_layer_reuse=True):
 	store = merger.store_builder.finish()
 
 	colr = font["COLR"].table
-	if store.VarData:
+	if store:
 		mapping = store.optimize()
 		colr.VarStore = store
-		# the special 0xFFFF/0xFFFF (for no variations) always maps to itself
-		mapping[ot.NO_VARIATION_INDEX] = ot.NO_VARIATION_INDEX
 		varIdxes = [mapping[v] for v in merger.varIdxes]
 		# TODO: Optimize reusable runs of delta-set indices from multiple paints
 		colr.VarIndexMap = builder.buildDeltaSetIndexMap(varIdxes)
