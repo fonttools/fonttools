@@ -633,6 +633,7 @@ def instantiateItemVariationStore(itemVarStore, fvarAxes, axisLimits):
         for major, deltas in enumerate(defaultDeltaArray)
         for minor, delta in enumerate(deltas)
     }
+    defaultDeltas[itemVarStore.NO_VARIATION_INDEX] = 0
     return defaultDeltas
 
 

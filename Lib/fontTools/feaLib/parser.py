@@ -73,6 +73,7 @@ class Parser(object):
         self.next_token_location_ = None
         lexerClass = IncludingLexer if followIncludes else NonIncludingLexer
         self.lexer_ = lexerClass(featurefile, includeDir=includeDir)
+        self.missing = {}
         self.advance_lexer_(comments=True)
 
     def parse(self):
@@ -125,6 +126,16 @@ class Parser(object):
                     ),
                     self.cur_token_location_,
                 )
+        # Report any missing glyphs at the end of parsing
+        if self.missing:
+            error = [
+                " %s (first found at %s)" % (name, loc)
+                for name, loc in self.missing.items()
+            ]
+            raise FeatureLibError(
+                "The following glyph names are referenced but are missing from the "
+                "glyph set:\n" + ("\n".join(error)), None
+            )
         return self.doc_
 
     def parse_anchor_(self):
@@ -2073,19 +2084,18 @@ class Parser(object):
         raise FeatureLibError("Expected a glyph name or CID", self.cur_token_location_)
 
     def check_glyph_name_in_glyph_set(self, *names):
-        """Raises if glyph name (just `start`) or glyph names of a
-        range (`start` and `end`) are not in the glyph set.
+        """Adds a glyph name (just `start`) or glyph names of a
+        range (`start` and `end`) which are not in the glyph set
+        to the "missing list" for future error reporting.
 
         If no glyph set is present, does nothing.
         """
         if self.glyphNames_:
-            missing = [name for name in names if name not in self.glyphNames_]
-            if missing:
-                raise FeatureLibError(
-                    "The following glyph names are referenced but are missing from the "
-                    f"glyph set: {', '.join(missing)}",
-                    self.cur_token_location_,
-                )
+            for name in names:
+                if name in self.glyphNames_:
+                    continue
+                if name not in self.missing:
+                    self.missing[name] = self.cur_token_location_
 
     def expect_markClass_reference_(self):
         name = self.expect_class_name_()
