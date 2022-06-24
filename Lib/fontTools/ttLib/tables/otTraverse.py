@@ -7,10 +7,22 @@ from .otBase import BaseTable
 __all__ = [
     "bfs_base_table",
     "dfs_base_table",
+    "SubTablePath",
 ]
 
 
-SubTablePath = Tuple[BaseTable.SubTableEntry, ...]
+class SubTablePath(Tuple[BaseTable.SubTableEntry, ...]):
+
+    def __str__(self) -> str:
+        path_parts = []
+        for entry in self:
+            path_part = entry.name
+            if entry.index is not None:
+                path_part += f"[{entry.index}]"
+            path_parts.append(path_part)
+        return ".".join(path_parts)
+
+
 # Given f(current frontier, new entries) add new entries to frontier
 AddToFrontierFn = Callable[[Deque[SubTablePath], List[SubTablePath]], None]
 
@@ -116,7 +128,7 @@ def _traverse_ot_data(
         if not predicate(path):
             continue
 
-        yield path
+        yield SubTablePath(path)
 
         new_entries = [
             path + (subtable_entry,) for subtable_entry in current.iterSubTables()
