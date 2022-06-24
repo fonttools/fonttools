@@ -4,7 +4,6 @@ Merge OpenType Layout tables (GDEF / GPOS / GSUB).
 import os
 import copy
 import enum
-from itertools import islice
 from operator import ior
 import logging
 from fontTools.misc import classifyTools
@@ -1215,14 +1214,18 @@ class COLRVariationMerger(VariationMerger):
 
 		return varIndexBase
 
-	@staticmethod
-	def convertSubTablesToVarType(table):
-		for path in islice(dfs_base_table(table), 1, None):  # skip first (root)
+	@classmethod
+	def convertSubTablesToVarType(cls, table):
+		for path in dfs_base_table(
+			table,
+			skip_root=True,
+			predicate=lambda path: (
+				getattr(type(path[-1].value), "VarType", None) is not None
+			)
+		):
 			st = path[-1]
 			subTable = st.value
-			varType = getattr(type(subTable), "VarType", None)
-			if varType is None:
-				continue
+			varType = type(subTable).VarType
 			newSubTable = varType()
 			newSubTable.__dict__.update(subTable.__dict__)
 			newSubTable.populateDefaults()
