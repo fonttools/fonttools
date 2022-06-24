@@ -1267,7 +1267,7 @@ def merge(merger, self, lst):
 			merger.convertSubTablesToVarType(self)
 
 		assert varFormat is not None
-		self.Format = varFormat
+		self.Format = int(varFormat)
 
 
 @COLRVariationMerger.merger((ot.Affine2x3, ot.ColorStop))
