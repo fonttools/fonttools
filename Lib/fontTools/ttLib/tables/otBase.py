@@ -1,6 +1,7 @@
 from fontTools.config import OPTIONS
 from fontTools.misc.textTools import Tag, bytesjoin
 from .DefaultTable import DefaultTable
+from enum import IntEnum
 import sys
 import array
 import struct
@@ -36,6 +37,17 @@ class OTLOffsetOverflowError(Exception):
 	def __str__(self):
 		return repr(self.value)
 
+class RepackerState(IntEnum):
+	# Pack only with fontTools, don't allow sharing between extensions.
+	PURE_FT = 1
+
+	# Attempt to pack with harfbuzz (allowing sharing between extensions)
+	# use fontTools to attempt overflow resolution.
+	HB_FT = 2
+
+	# Fallback if HB/FT packing gets stuck. Pack only with fontTools, don't allow sharing between
+	# extensions.
+	FT_FALLBACK = 3
 
 class BaseTTXConverter(DefaultTable):
 
@@ -51,17 +63,6 @@ class BaseTTXConverter(DefaultTable):
 		tableClass = getattr(otTables, self.tableTag)
 		self.table = tableClass()
 		self.table.decompile(reader, font)
-
-	# Pack only with fontTools, don't allow sharing between extensions.
-	MODE_PURE_FT = 1
-
-	# Attempt to pack with harfbuzz (allowing sharing between extensions)
-	# use fontTools to attempt overflow resolution.
-	MODE_HB_FT = 2
-
-	# Fallback if HB/FT packing gets stuck. Pack only with fontTools, don't allow sharing between
-	# extensions.
-	MODE_FT_FALLBACK = 3
 
 	def compile(self, font):
 		"""Compiles the table into binary. Called automatically on save."""
@@ -110,9 +111,9 @@ class BaseTTXConverter(DefaultTable):
 		if (use_hb_repack in (None, True)
 				and have_uharfbuzz
 				and self.tableTag in ("GSUB", "GPOS")):
-			mode = self.MODE_HB_FT
+			state = RepackerState.HB_FT
 		else:
-			mode = self.MODE_PURE_FT
+			state = RepackerState.PURE_FT
 
 		hb_first_error_logged = False
 		lastOverflowRecord = None
@@ -120,15 +121,15 @@ class BaseTTXConverter(DefaultTable):
 			try:
 				writer = OTTableWriter(tableTag=self.tableTag)
 				self.table.compile(writer, font)
-				if mode == self.MODE_HB_FT:
+				if state == RepackerState.HB_FT:
 					return self.tryPackingHarfbuzz(writer, hb_first_error_logged)
-				elif mode == self.MODE_PURE_FT:
+				elif state == RepackerState.PURE_FT:
 					return self.tryPackingFontTools(writer)
-				elif mode == self.MODE_FT_FALLBACK:
+				elif state == RepackerState.FT_FALLBACK:
 					self.tryPackingFontTools(writer)
-					log.info("Re-enabling sharing between extensions and switching back to "
+					log.debug("Re-enabling sharing between extensions and switching back to "
 										"harfbuzz+fontTools packing.")
-					mode = self.MODE_HB_FT
+					state = RepackerState.HB_FT
 
 			except OTLOffsetOverflowError as e:
 				hb_first_error_logged = True
@@ -138,10 +139,10 @@ class BaseTTXConverter(DefaultTable):
 				if ok:
 					continue
 
-				if mode is self.MODE_HB_FT:
-					log.info("Harfbuzz packing out of resolutions, disabling sharing between extensions and "
+				if state is RepackerState.HB_FT:
+					log.debug("Harfbuzz packing out of resolutions, disabling sharing between extensions and "
 									 "switching to fontTools only packing.")
-					mode = self.MODE_FT_FALLBACK
+					state = RepackerState.FT_FALLBACK
 				else:
 					raise
 
