@@ -38,6 +38,14 @@ class OTLOffsetOverflowError(Exception):
 		return repr(self.value)
 
 class RepackerState(IntEnum):
+	# Repacking control flow is implemnted using a state machine. The state machine table:
+	#
+	# State       | Packing Success | Packing Failed | Exception Raised |
+	# ------------+-----------------+----------------+------------------+
+	# PURE_FT     | Return result   | PURE_FT        | Return failure   |
+	# HB_FT       | Return result   | HB_FT          | FT_FALLBACK      |
+	# FT_FALLBACK | HB_FT           | FT_FALLBACK    | Return failure   |
+
 	# Pack only with fontTools, don't allow sharing between extensions.
 	PURE_FT = 1
 
@@ -126,6 +134,9 @@ class BaseTTXConverter(DefaultTable):
 				elif state == RepackerState.PURE_FT:
 					return self.tryPackingFontTools(writer)
 				elif state == RepackerState.FT_FALLBACK:
+					# Run packing with FontTools only, but don't return the result as it will
+					# not be optimally packed. Once a successful packing has been found, state is
+					# changed back to harfbuzz packing to produce the final, optimal, packing.
 					self.tryPackingFontTools(writer)
 					log.debug("Re-enabling sharing between extensions and switching back to "
 										"harfbuzz+fontTools packing.")
