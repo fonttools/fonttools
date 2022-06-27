@@ -1123,7 +1123,9 @@ class COLRVariationMerger(VariationMerger):
 	def __init__(self, model, axisTags, font):
 		VariationMerger.__init__(self, model, axisTags, font)
 		self.varIdxes = []
-		self.varTables = set()
+		# set of id()s of the subtables that contain variations after merging
+		# and need to be upgraded to the associated VarType.
+		self.varTableIds = set()
 
 	def mergeTables(self, font, master_ttfs, tableTags=("COLR",)):
 		VariationMerger.mergeTables(self, font, master_ttfs, tableTags)
@@ -1255,7 +1257,7 @@ def merge(merger, self, lst):
 	# Convert table to variable if itself has variations or any subtables have
 	isVariable = (
 		varIndexBase != ot.NO_VARIATION_INDEX
-		or any(id(table) in merger.varTables for table in subTables)
+		or any(id(table) in merger.varTableIds for table in subTables)
 	)
 
 	if isVariable:
@@ -1287,16 +1289,16 @@ def merge(merger, self, lst):
 	if varIndexBase != ot.NO_VARIATION_INDEX:
 		self.VarIndexBase = varIndexBase
 		# mark as having variations so the parent table will convert to Var{Type}
-		merger.varTables.add(id(self))
+		merger.varTableIds.add(id(self))
 
 
 @COLRVariationMerger.merger(ot.ColorLine)
 def merge(merger, self, lst):
 	merger.mergeAttrs(self, lst, (c.name for c in self.getConverters()))
 
-	if any(id(stop) in merger.varTables for stop in self.ColorStop):
+	if any(id(stop) in merger.varTableIds for stop in self.ColorStop):
 		merger.convertSubTablesToVarType(self)
-		merger.varTables.add(id(self))
+		merger.varTableIds.add(id(self))
 
 
 @COLRVariationMerger.merger(ot.ClipList, "clips")
