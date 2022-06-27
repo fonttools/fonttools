@@ -723,7 +723,6 @@ def _add_COLR(font, model, master_fonts, axisTags, colr_layer_reuse=True):
 		mapping = store.optimize()
 		colr.VarStore = store
 		varIdxes = [mapping[v] for v in merger.varIdxes]
-		# TODO: Optimize reusable runs of delta-set indices from multiple paints
 		colr.VarIndexMap = builder.buildDeltaSetIndexMap(varIdxes)
 
 	# rebuild LayerList to optimize PaintColrLayers layer reuse

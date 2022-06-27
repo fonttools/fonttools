@@ -425,6 +425,65 @@ class COLRVariationMergerTest:
             pytest.param(
                 [
                     {
+                        "Format": int(ot.PaintFormat.PaintSweepGradient),
+                        "ColorLine": {
+                            "Extend": int(ot.ExtendMode.PAD),
+                            "ColorStop": [
+                                {"StopOffset": 0.0, "PaletteIndex": 0, "Alpha": 1.0},
+                                {"StopOffset": 1.0, "PaletteIndex": 1, "Alpha": 1.0},
+                            ],
+                        },
+                        "centerX": 0,
+                        "centerY": 0,
+                        "startAngle": 0.0,
+                        "endAngle": 180.0,
+                    },
+                    {
+                        "Format": int(ot.PaintFormat.PaintSweepGradient),
+                        "ColorLine": {
+                            "Extend": int(ot.ExtendMode.PAD),
+                            "ColorStop": [
+                                {"StopOffset": 0.0, "PaletteIndex": 0, "Alpha": 0.5},
+                                {"StopOffset": 1.0, "PaletteIndex": 1, "Alpha": 0.5},
+                            ],
+                        },
+                        "centerX": 0,
+                        "centerY": 0,
+                        "startAngle": 0.0,
+                        "endAngle": 180.0,
+                    },
+                ],
+                [
+                    '<Paint Format="9"><!-- PaintVarSweepGradient -->',
+                    "  <ColorLine>",
+                    '    <Extend value="pad"/>',
+                    "    <!-- StopCount=2 -->",
+                    '    <ColorStop index="0">',
+                    '      <StopOffset value="0.0"/>',
+                    '      <PaletteIndex value="0"/>',
+                    '      <Alpha value="1.0"/>',
+                    '      <VarIndexBase value="0"/>',
+                    "    </ColorStop>",
+                    '    <ColorStop index="1">',
+                    '      <StopOffset value="1.0"/>',
+                    '      <PaletteIndex value="1"/>',
+                    '      <Alpha value="1.0"/>',
+                    '      <VarIndexBase value="0"/>',
+                    "    </ColorStop>",
+                    "  </ColorLine>",
+                    '  <centerX value="0"/>',
+                    '  <centerY value="0"/>',
+                    '  <startAngle value="0.0"/>',
+                    '  <endAngle value="180.0"/>',
+                    '  <VarIndexBase/>',
+                    "</Paint>",
+                ],
+                [NO_VARIATION_INDEX, 0],
+                id="sweep_grad-stops-alpha-reuse-varidxbase",
+            ),
+            pytest.param(
+                [
+                    {
                         "Format": int(ot.PaintFormat.PaintTransform),
                         "Paint": {
                             "Format": int(ot.PaintFormat.PaintRadialGradient),
