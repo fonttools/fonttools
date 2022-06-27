@@ -879,8 +879,8 @@ class SubsetTest:
         # test we emit a log.error if hb.repack fails (and we don't if successful)
         assert (
                 (
-                "hb.repack failed to serialize 'GSUB', reverting to "
-                "pure-python serializer; the error message was: RepackerError: mocking"
+                "hb.repack failed to serialize 'GSUB', attempting fonttools resolutions "
+                "; the error message was: RepackerError: mocking"
             ) in caplog.text
         ) ^ ok
 
