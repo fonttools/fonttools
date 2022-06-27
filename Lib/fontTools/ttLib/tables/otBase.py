@@ -589,8 +589,6 @@ class OTTableWriter(object):
                 https://github.com/harfbuzz/uharfbuzz/blob/main/src/uharfbuzz/_harfbuzz.pyx#L1149
                 """
 		internedTables = {}
-		# TODO: Restore shareExtension=True after we fix
-		# https://github.com/fonttools/fonttools/issues/2661
 		self._doneWriting(internedTables, shareExtension=True)
 		tables = []
 		obj_list = []
