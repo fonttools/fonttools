@@ -227,65 +227,6 @@ class COLRVariationMergerTest:
             pytest.param(
                 [
                     {
-                        "Format": int(ot.PaintFormat.PaintSweepGradient),
-                        "ColorLine": {
-                            "Extend": int(ot.ExtendMode.REPEAT),
-                            "ColorStop": [
-                                {"StopOffset": 0.4, "PaletteIndex": 0, "Alpha": 1.0},
-                                {"StopOffset": 0.6, "PaletteIndex": 1, "Alpha": 1.0},
-                            ],
-                        },
-                        "centerX": 0,
-                        "centerY": 0,
-                        "startAngle": 0,
-                        "endAngle": 180.0,
-                    },
-                    {
-                        "Format": int(ot.PaintFormat.PaintSweepGradient),
-                        "ColorLine": {
-                            "Extend": int(ot.ExtendMode.REPEAT),
-                            "ColorStop": [
-                                {"StopOffset": 0.4, "PaletteIndex": 0, "Alpha": 1.0},
-                                {"StopOffset": 0.6, "PaletteIndex": 1, "Alpha": 1.0},
-                            ],
-                        },
-                        "centerX": 0,
-                        "centerY": 0,
-                        "startAngle": 90.0,
-                        "endAngle": 180.0,
-                    },
-                ],
-                [
-                    '<Paint Format="9"><!-- PaintVarSweepGradient -->',
-                    "  <ColorLine>",
-                    '    <Extend value="repeat"/>',
-                    "    <!-- StopCount=2 -->",
-                    '    <ColorStop index="0">',
-                    '      <StopOffset value="0.4"/>',
-                    '      <PaletteIndex value="0"/>',
-                    '      <Alpha value="1.0"/>',
-                    "      <VarIndexBase/>",
-                    "    </ColorStop>",
-                    '    <ColorStop index="1">',
-                    '      <StopOffset value="0.6"/>',
-                    '      <PaletteIndex value="1"/>',
-                    '      <Alpha value="1.0"/>',
-                    "      <VarIndexBase/>",
-                    "    </ColorStop>",
-                    "  </ColorLine>",
-                    '  <centerX value="0"/>',
-                    '  <centerY value="0"/>',
-                    '  <startAngle value="0.0"/>',
-                    '  <endAngle value="180.0"/>',
-                    '  <VarIndexBase value="0"/>',
-                    "</Paint>",
-                ],
-                [NO_VARIATION_INDEX, NO_VARIATION_INDEX, 0, NO_VARIATION_INDEX],
-                id="sweep_grad-startAngle",
-            ),
-            pytest.param(
-                [
-                    {
                         "Format": int(ot.PaintFormat.PaintLinearGradient),
                         "ColorLine": {
                             "Extend": int(ot.ExtendMode.PAD),
@@ -421,6 +362,65 @@ class COLRVariationMergerTest:
                 ],
                 [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
                 id="radial_grad-all-different",
+            ),
+            pytest.param(
+                [
+                    {
+                        "Format": int(ot.PaintFormat.PaintSweepGradient),
+                        "ColorLine": {
+                            "Extend": int(ot.ExtendMode.REPEAT),
+                            "ColorStop": [
+                                {"StopOffset": 0.4, "PaletteIndex": 0, "Alpha": 1.0},
+                                {"StopOffset": 0.6, "PaletteIndex": 1, "Alpha": 1.0},
+                            ],
+                        },
+                        "centerX": 0,
+                        "centerY": 0,
+                        "startAngle": 0,
+                        "endAngle": 180.0,
+                    },
+                    {
+                        "Format": int(ot.PaintFormat.PaintSweepGradient),
+                        "ColorLine": {
+                            "Extend": int(ot.ExtendMode.REPEAT),
+                            "ColorStop": [
+                                {"StopOffset": 0.4, "PaletteIndex": 0, "Alpha": 1.0},
+                                {"StopOffset": 0.6, "PaletteIndex": 1, "Alpha": 1.0},
+                            ],
+                        },
+                        "centerX": 0,
+                        "centerY": 0,
+                        "startAngle": 90.0,
+                        "endAngle": 180.0,
+                    },
+                ],
+                [
+                    '<Paint Format="9"><!-- PaintVarSweepGradient -->',
+                    "  <ColorLine>",
+                    '    <Extend value="repeat"/>',
+                    "    <!-- StopCount=2 -->",
+                    '    <ColorStop index="0">',
+                    '      <StopOffset value="0.4"/>',
+                    '      <PaletteIndex value="0"/>',
+                    '      <Alpha value="1.0"/>',
+                    "      <VarIndexBase/>",
+                    "    </ColorStop>",
+                    '    <ColorStop index="1">',
+                    '      <StopOffset value="0.6"/>',
+                    '      <PaletteIndex value="1"/>',
+                    '      <Alpha value="1.0"/>',
+                    "      <VarIndexBase/>",
+                    "    </ColorStop>",
+                    "  </ColorLine>",
+                    '  <centerX value="0"/>',
+                    '  <centerY value="0"/>',
+                    '  <startAngle value="0.0"/>',
+                    '  <endAngle value="180.0"/>',
+                    '  <VarIndexBase value="0"/>',
+                    "</Paint>",
+                ],
+                [NO_VARIATION_INDEX, NO_VARIATION_INDEX, 0, NO_VARIATION_INDEX],
+                id="sweep_grad-startAngle",
             ),
             pytest.param(
                 [
