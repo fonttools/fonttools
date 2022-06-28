@@ -283,12 +283,11 @@ class COLRVariationMergerTest:
                     '  <y1 value="1"/>',
                     '  <x2 value="2"/>',
                     '  <y2 value="2"/>',
-                    '  <VarIndexBase value="2"/>',
+                    '  <VarIndexBase value="1"/>',
                     "</Paint>",
                 ],
                 [
                     0,
-                    NO_VARIATION_INDEX,
                     NO_VARIATION_INDEX,
                     NO_VARIATION_INDEX,
                     NO_VARIATION_INDEX,
@@ -475,7 +474,7 @@ class COLRVariationMergerTest:
                     '  <centerY value="0"/>',
                     '  <startAngle value="0.0"/>',
                     '  <endAngle value="180.0"/>',
-                    '  <VarIndexBase/>',
+                    "  <VarIndexBase/>",
                     "</Paint>",
                 ],
                 [NO_VARIATION_INDEX, 0],
@@ -598,6 +597,106 @@ class COLRVariationMergerTest:
                     1,
                 ],
                 id="transform-yy-dy",
+            ),
+            pytest.param(
+                [
+                    {
+                        "Format": ot.PaintFormat.PaintTransform,
+                        "Paint": {
+                            "Format": ot.PaintFormat.PaintSweepGradient,
+                            "ColorLine": {
+                                "Extend": ot.ExtendMode.PAD,
+                                "ColorStop": [
+                                    {"StopOffset": 0.0, "PaletteIndex": 0},
+                                    {
+                                        "StopOffset": 1.0,
+                                        "PaletteIndex": 1,
+                                        "Alpha": 1.0,
+                                    },
+                                ],
+                            },
+                            "centerX": 0,
+                            "centerY": 0,
+                            "startAngle": -360,
+                            "endAngle": 0,
+                        },
+                        "Transform": (1.0, 0, 0, 1.0, 0, 0),
+                    },
+                    {
+                        "Format": ot.PaintFormat.PaintTransform,
+                        "Paint": {
+                            "Format": ot.PaintFormat.PaintSweepGradient,
+                            "ColorLine": {
+                                "Extend": ot.ExtendMode.PAD,
+                                "ColorStop": [
+                                    {"StopOffset": 0.0, "PaletteIndex": 0},
+                                    {
+                                        "StopOffset": 1.0,
+                                        "PaletteIndex": 1,
+                                        "Alpha": 1.0,
+                                    },
+                                ],
+                            },
+                            "centerX": 256,
+                            "centerY": 0,
+                            "startAngle": -360,
+                            "endAngle": 0,
+                        },
+                        # Transform.xx below produces the same VarStore delta as the
+                        # above PaintSweepGradient's centerX because, when Fixed16.16
+                        # is converted to integer, it becomes:
+                        # floatToFixed(1.00390625, 16) == 256
+                        # Because there is overlap between the varIdxes of the
+                        # PaintVarTransform's Affine2x3 and the PaintSweepGradient's
+                        # the VarIndexBase is reused (0 for both)
+                        "Transform": (1.00390625, 0, 0, 1.0, 10, 0),
+                    },
+                ],
+                [
+                    '<Paint Format="13"><!-- PaintVarTransform -->',
+                    '  <Paint Format="9"><!-- PaintVarSweepGradient -->',
+                    "    <ColorLine>",
+                    '      <Extend value="pad"/>',
+                    "      <!-- StopCount=2 -->",
+                    '      <ColorStop index="0">',
+                    '        <StopOffset value="0.0"/>',
+                    '        <PaletteIndex value="0"/>',
+                    '        <Alpha value="1.0"/>',
+                    "        <VarIndexBase/>",
+                    "      </ColorStop>",
+                    '      <ColorStop index="1">',
+                    '        <StopOffset value="1.0"/>',
+                    '        <PaletteIndex value="1"/>',
+                    '        <Alpha value="1.0"/>',
+                    "        <VarIndexBase/>",
+                    "      </ColorStop>",
+                    "    </ColorLine>",
+                    '    <centerX value="0"/>',
+                    '    <centerY value="0"/>',
+                    '    <startAngle value="-360.0"/>',
+                    '    <endAngle value="0.0"/>',
+                    '    <VarIndexBase value="0"/>',
+                    "  </Paint>",
+                    "  <Transform>",
+                    '    <xx value="1.0"/>',
+                    '    <yx value="0.0"/>',
+                    '    <xy value="0.0"/>',
+                    '    <yy value="1.0"/>',
+                    '    <dx value="0.0"/>',
+                    '    <dy value="0.0"/>',
+                    '    <VarIndexBase value="0"/>',
+                    "  </Transform>",
+                    "</Paint>",
+                ],
+                [
+                    0,
+                    NO_VARIATION_INDEX,
+                    NO_VARIATION_INDEX,
+                    NO_VARIATION_INDEX,
+                    1,
+                    NO_VARIATION_INDEX,
+                ],
+                id="transform-xx-sweep_grad-centerx-same-varidxbase",
             ),
         ],
     )

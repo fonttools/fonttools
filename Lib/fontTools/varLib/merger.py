@@ -4,7 +4,6 @@ Merge OpenType Layout tables (GDEF / GPOS / GSUB).
 import os
 import copy
 import enum
-import itertools
 from operator import ior
 import logging
 from fontTools.misc import classifyTools
@@ -1126,26 +1125,14 @@ class COLRVariationMerger(VariationMerger):
 		# maps {tuple(varIdxes): VarIndexBase} to facilitate reuse of VarIndexBase
 		# between variable tables with same varIdxes.
 		self.varIndexCache = {}
-		# total number of varIdxes (i.e. sum(len(vs) for vs in self.varIndexCache))
-		self.varIndexCount = 0
+		# flat list of all the varIdxes generated while merging
+		self.varIdxes = []
 		# set of id()s of the subtables that contain variations after merging
 		# and need to be upgraded to the associated VarType.
 		self.varTableIds = set()
 
 	def mergeTables(self, font, master_ttfs, tableTags=("COLR",)):
 		VariationMerger.mergeTables(self, font, master_ttfs, tableTags)
-
-	@property
-	def varIdxes(self):
-		"""Return flat list of all the varIdxes generated while merging.
-
-		To be called after mergeTables() for building a DeltaSetIndexMap.
-		"""
-		# dict remembers insertion order (as of py37+), and we extend the cache
-		# of VarIndexBases incrementally as new, unique tuples of varIdxes are found
-		# while merging, thus we don't need to sort but we just unpack the keys and
-		# chain the tuples
-		return [v for v in itertools.chain(*self.varIndexCache.keys())]
 
 	def checkFormatEnum(self, out, lst, validate=lambda _: True):
 		fmt = out.Format
@@ -1219,6 +1206,35 @@ class COLRVariationMerger(VariationMerger):
 
 		return baseValue, varIdx
 
+	def storeVariationIndices(self, varIdxes) -> int:
+		# try to reuse an existing VarIndexBase for the same varIdxes, or else
+		# create a new one
+		key = tuple(varIdxes)
+		varIndexBase = self.varIndexCache.get(key)
+
+		if varIndexBase is None:
+			# scan for a full match anywhere in the self.varIdxes
+			for i in range(len(self.varIdxes) - len(varIdxes) + 1):
+				if self.varIdxes[i:i+len(varIdxes)] == varIdxes:
+					self.varIndexCache[key] = varIndexBase = i
+					break
+
+		if varIndexBase is None:
+			# try find a partial match at the end of the self.varIdxes
+			for n in range(len(varIdxes)-1, 0, -1):
+				if self.varIdxes[-n:] == varIdxes[:n]:
+					varIndexBase = len(self.varIdxes) - n
+					self.varIndexCache[key] = varIndexBase
+					self.varIdxes.extend(varIdxes[n:])
+					break
+
+		if varIndexBase is None:
+			# no match found, append at the end
+			self.varIndexCache[key] = varIndexBase = len(self.varIdxes)
+			self.varIdxes.extend(varIdxes)
+
+		return varIndexBase
+
 	def mergeVariableAttrs(self, out, lst, attrs) -> int:
 		varIndexBase = ot.NO_VARIATION_INDEX
 		varIdxes = []
@@ -1226,14 +1242,9 @@ class COLRVariationMerger(VariationMerger):
 			baseValue, varIdx = self.storeMastersForAttr(out, lst, attr)
 			setattr(out, attr, baseValue)
 			varIdxes.append(varIdx)
-		varIdxes = tuple(varIdxes)
 
 		if any(v != ot.NO_VARIATION_INDEX for v in varIdxes):
-			# try to reuse an existing VarIndexBase for the same varIdxes, or else
-			# create a new one at the end of self.varIndexCache (py37+ dicts are ordered)
-			varIndexBase = self.varIndexCache.setdefault(varIdxes, self.varIndexCount)
-			if varIndexBase == self.varIndexCount:
-				self.varIndexCount += len(varIdxes)
+			varIndexBase = self.storeVariationIndices(varIdxes)
 
 		return varIndexBase
 
