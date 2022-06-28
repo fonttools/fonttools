@@ -1,6 +1,6 @@
 from copy import deepcopy
 import string
-from fontTools.colorLib.builder import LayerListBuilder
+from fontTools.colorLib.builder import LayerListBuilder, buildClipList
 from fontTools.misc.testTools import getXML
 from fontTools.varLib.merger import COLRVariationMerger
 from fontTools.varLib.models import VariationModel
@@ -712,3 +712,76 @@ class COLRVariationMergerTest:
         assert compile_decompile(out, ttFont) == out
         assert dump_xml(out, ttFont) == expected_xml
         assert merger.varIdxes == expected_varIdxes
+
+    def test_merge_ClipList(self, ttFont):
+        clipLists = [
+            buildClipList(clips)
+            for clips in [
+                {
+                    "A": (0, 0, 1000, 1000),
+                    "B": (0, 0, 1000, 1000),
+                    "C": (0, 0, 1000, 1000),
+                    "D": (0, 0, 1000, 1000),
+                },
+                {
+                    # non-default masters' clip boxes can be 'sparse'
+                    # (i.e. can omit explicit clip box for some glyphs)
+                    # "A": (0, 0, 1000, 1000),
+                    "B": (10, 0, 1000, 1000),
+                    "C": (20, 20, 1020, 1020),
+                    "D": (20, 20, 1020, 1020),
+                },
+            ]
+        ]
+        out = deepcopy(clipLists[0])
+
+        model = VariationModel([{}, {"ZZZZ": 1.0}])
+        merger = COLRVariationMerger(model, ["ZZZZ"], ttFont)
+
+        merger.mergeThings(out, clipLists)
+
+        assert compile_decompile(out, ttFont) == out
+        assert dump_xml(out, ttFont) == [
+            '<ClipList Format="1">',
+            "  <Clip>",
+            '    <Glyph value="A"/>',
+            '    <ClipBox Format="1">',
+            '      <xMin value="0"/>',
+            '      <yMin value="0"/>',
+            '      <xMax value="1000"/>',
+            '      <yMax value="1000"/>',
+            "    </ClipBox>",
+            "  </Clip>",
+            "  <Clip>",
+            '    <Glyph value="B"/>',
+            '    <ClipBox Format="2">',
+            '      <xMin value="0"/>',
+            '      <yMin value="0"/>',
+            '      <xMax value="1000"/>',
+            '      <yMax value="1000"/>',
+            '      <VarIndexBase value="0"/>',
+            "    </ClipBox>",
+            "  </Clip>",
+            "  <Clip>",
+            '    <Glyph value="C"/>',
+            '    <Glyph value="D"/>',
+            '    <ClipBox Format="2">',
+            '      <xMin value="0"/>',
+            '      <yMin value="0"/>',
+            '      <xMax value="1000"/>',
+            '      <yMax value="1000"/>',
+            '      <VarIndexBase value="4"/>',
+            "    </ClipBox>",
+            "  </Clip>",
+            "</ClipList>",
+        ]
+        assert merger.varIdxes == [
+            0,
+            NO_VARIATION_INDEX,
+            NO_VARIATION_INDEX,
+            NO_VARIATION_INDEX,
+            1,
+            1,
+            1,
+            1,
+        ]
