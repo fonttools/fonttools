@@ -1755,8 +1755,8 @@ otData = [
 		('Offset24', 'ColorLine', None, None, 'Offset (from beginning of PaintSweepGradient table) to ColorLine subtable.'),
 		('int16', 'centerX', None, None, 'Center x coordinate.'),
 		('int16', 'centerY', None, None, 'Center y coordinate.'),
-		('Angle', 'startAngle', None, None, 'Start of the angular range of the gradient.'),
-		('Angle', 'endAngle', None, None, 'End of the angular range of the gradient.'),
+		('BiasedAngle', 'startAngle', None, None, 'Start of the angular range of the gradient.'),
+		('BiasedAngle', 'endAngle', None, None, 'End of the angular range of the gradient.'),
 	]),
 	# PaintVarSweepGradient
 	('PaintFormat9', [
@@ -1764,8 +1764,8 @@ otData = [
 		('LOffset24To(VarColorLine)', 'ColorLine', None, None, 'Offset (from beginning of PaintVarSweepGradient table) to VarColorLine subtable.'),
 		('int16', 'centerX', None, None, 'Center x coordinate. VarIndexBase + 0.'),
 		('int16', 'centerY', None, None, 'Center y coordinate. VarIndexBase + 1.'),
-		('Angle', 'startAngle', None, None, 'Start of the angular range of the gradient. VarIndexBase + 2.'),
-		('Angle', 'endAngle', None, None, 'End of the angular range of the gradient. VarIndexBase + 3.'),
+		('BiasedAngle', 'startAngle', None, None, 'Start of the angular range of the gradient. VarIndexBase + 2.'),
+		('BiasedAngle', 'endAngle', None, None, 'End of the angular range of the gradient. VarIndexBase + 3.'),
 		('VarIndex', 'VarIndexBase', None, None, 'Base index into DeltaSetIndexMap.'),
 	]),
 
