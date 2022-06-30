@@ -113,6 +113,9 @@ def printGreenPen(penName, funcs, file=sys.stdout):
 	print(
 '''from fontTools.pens.basePen import BasePen
 
+class %sOpenContourError(NotImplementedError):
+    pass
+
 class %s(BasePen):
 
 	def __init__(self, glyphset=None):
@@ -132,8 +135,9 @@ class %s(BasePen):
 	def _endPath(self):
 		p0 = self._getCurrentPoint()
 		if p0 != self.__startPoint:
-			# Green theorem is not defined on open contours.
-			raise NotImplementedError
+			raise OpenContourError(
+					"Green theorem is not defined on open contours."
+			)			
 ''', end='', file=file)
 
 	for n in (1, 2, 3):
