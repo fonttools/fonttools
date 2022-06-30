@@ -90,12 +90,10 @@ from fontTools.varLib import builder
 from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib.merger import MutatorMerger
 from fontTools.varLib.instancer import names
-from contextlib import contextmanager
 import collections
 from copy import deepcopy
 from enum import IntEnum
 import logging
-from itertools import islice
 import os
 import re
 
@@ -1273,7 +1271,49 @@ def instantiateVariableFont(
         },
     )
 
+    if "fvar" not in varfont:
+        # For statics, we should set various bits to mark them as
+        # Regular/Italic/Bold/BoldItalic as appropriate.
+        setRibbiBits(varfont)
+
     return varfont
+
+
+def setRibbiBits(staticFont):
+    """Set the `head.macStyle` and `OS/2.fsSelection` style bits
+    appropriately."""
+
+    english_ribbi_style = staticFont["name"].getName(2, 3, 1, 0x409)
+    if english_ribbi_style is None:
+        log.warning(
+            "Cannot set RIBBI bits because there is no Windows Unicode BMP name ID 2."
+        )
+        return
+
+    styleMapStyleName = english_ribbi_style.toStr().lower()
+    if styleMapStyleName == "bold":
+        staticFont["head"].macStyle = 0b01
+    elif styleMapStyleName == "bold italic":
+        staticFont["head"].macStyle = 0b11
+    elif styleMapStyleName == "italic":
+        staticFont["head"].macStyle = 0b10
+
+    selection = staticFont["OS/2"].fsSelection
+    # First clear...
+    selection &= ~(1 << 0)
+    selection &= ~(1 << 5)
+    selection &= ~(1 << 6)
+    # ...then re-set the bits.
+    if styleMapStyleName == "regular":
+        selection |= 1 << 6
+    elif styleMapStyleName == "bold":
+        selection |= 1 << 5
+    elif styleMapStyleName == "italic":
+        selection |= 1 << 0
+    elif styleMapStyleName == "bold italic":
+        selection |= 1 << 0
+        selection |= 1 << 5
+    staticFont["OS/2"].fsSelection = selection
 
 
 def splitAxisLocationAndRanges(axisLimits, rangeType=AxisRange):
