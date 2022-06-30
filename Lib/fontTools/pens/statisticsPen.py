@@ -46,12 +46,12 @@ class StatisticsPen(MomentsPen):
 
 		# Center of mass
 		# https://en.wikipedia.org/wiki/Center_of_mass#A_continuous_volume
-		self.meanX = meanX = self.momentX / area
-		self.meanY = meanY = self.momentY / area
+		self.meanX = meanX = self.momentY / area
+		self.meanY = meanY = self.momentX / area
 
 		#  Var(X) = E[X^2] - E[X]^2
-		self.varianceX = varianceX = self.momentXX / area - meanX**2
-		self.varianceY = varianceY = self.momentYY / area - meanY**2
+		self.varianceX = varianceX = self.momentYY / area - meanX**2
+		self.varianceY = varianceY = self.momentXX / area - meanY**2
 
 		self.stddevX = stddevX = math.copysign(abs(varianceX)**.5, varianceX)
 		self.stddevY = stddevY = math.copysign(abs(varianceY)**.5, varianceY)
