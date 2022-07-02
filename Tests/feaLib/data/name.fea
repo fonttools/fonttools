@@ -1,16 +1,16 @@
 table name {
 #test-fea2fea:
-  nameid 1 "Ignored-1";
+  nameid 1 "Test1";
 #test-fea2fea:
-  nameid 2 "Ignored-2";
+  nameid 2 "Test2";
 #test-fea2fea:
-  nameid 3 "Ignored-3";
+  nameid 3 "Test3";
 #test-fea2fea:
-  nameid 4 "Ignored-4";
+  nameid 4 "Test4";
 #test-fea2fea:
-  nameid 5 "Ignored-5";
+  nameid 5 "Test5";
 #test-fea2fea:
-    nameid 6 "Ignored-6";
+    nameid 6 "Test6";
 #test-fea2fea: nameid 7 "Test7";
   nameid 7 3 "Test7";
     nameid 8 1 "Test8";
