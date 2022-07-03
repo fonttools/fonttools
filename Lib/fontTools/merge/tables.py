@@ -187,6 +187,14 @@ ttLib.getTableClass('post').mergeMap = {
 	'extraNames': lambda lst: [],
 }
 
+@add_method(ttLib.getTableClass('post'))
+def merge(self, m, tables):
+	DefaultTable.merge(self, m, tables)
+	beyond64k = sum(len(f.getGlyphOrder()) for f in m.fonts) > 65535
+	if beyond64k:
+		self.formatType = 3
+	return self
+
 ttLib.getTableClass('vmtx').mergeMap = ttLib.getTableClass('hmtx').mergeMap = {
 	'tableTag': equal,
 	'metrics': sumDicts,
