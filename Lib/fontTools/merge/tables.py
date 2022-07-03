@@ -190,7 +190,7 @@ ttLib.getTableClass('post').mergeMap = {
 @add_method(ttLib.getTableClass('post'))
 def merge(self, m, tables):
 	DefaultTable.merge(self, m, tables)
-	beyond64k = sum(len(f.getGlyphOrder()) for f in m.fonts) > 65535
+	beyond64k = len(m.glyphOrder) > 65535
 	if beyond64k:
 		self.formatType = 3
 	return self
@@ -296,7 +296,7 @@ def merge(self, m, tables):
 	cmap = m.cmap
 
 	cmapBmpOnly = {uni: gid for uni,gid in cmap.items() if uni <= 0xFFFF}
-	beyond64k = sum(len(f.getGlyphOrder()) for f in m.fonts) > 65535
+	beyond64k = len(m.glyphOrder) > 65535
 	self.tables = []
 	module = ttLib.getTableModule('cmap')
 	if len(cmapBmpOnly) != len(cmap) or beyond64k:
