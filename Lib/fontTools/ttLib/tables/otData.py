@@ -102,10 +102,28 @@ otData = [
 		('struct', 'RangeRecord', 'RangeCount', 0, 'Array of glyph ranges-ordered by Start GlyphID'),
 	]),
 
+	('CoverageFormat3', [
+		('uint16', 'CoverageFormat', None, None, 'Format identifier-format = 1'),
+		('uint24', 'GlyphCount', None, None, 'Number of glyphs in the GlyphArray'),
+		('GlyphID24', 'GlyphArray', 'GlyphCount', 0, 'Array of GlyphIDs-in numerical order'),
+	]),
+
+	('CoverageFormat4', [
+		('uint16', 'CoverageFormat', None, None, 'Format identifier-format = 2'),
+		('uint24', 'RangeCount', None, None, 'Number of RangeRecords'),
+		('struct', 'Range24Record', 'RangeCount', 0, 'Array of glyph ranges-ordered by Start GlyphID'),
+	]),
+
 	('RangeRecord', [
 		('GlyphID', 'Start', None, None, 'First GlyphID in the range'),
 		('GlyphID', 'End', None, None, 'Last GlyphID in the range'),
 		('uint16', 'StartCoverageIndex', None, None, 'Coverage Index of first GlyphID in range'),
+	]),
+
+	('Range24Record', [
+		('GlyphID24', 'Start', None, None, 'First GlyphID in the range'),
+		('GlyphID24', 'End', None, None, 'Last GlyphID in the range'),
+		('uint24', 'StartCoverageIndex', None, None, 'Coverage Index of first GlyphID in range'),
 	]),
 
 	('ClassDefFormat1', [
@@ -121,10 +139,29 @@ otData = [
 		('struct', 'ClassRangeRecord', 'ClassRangeCount', 0, 'Array of ClassRangeRecords-ordered by Start GlyphID'),
 	]),
 
+	('ClassDefFormat3', [
+		('uint16', 'ClassFormat', None, None, 'Format identifier-format = 1'),
+		('GlyphID24', 'StartGlyph', None, None, 'First GlyphID of the ClassValueArray'),
+		('uint24', 'GlyphCount', None, None, 'Size of the ClassValueArray'),
+		('uint24', 'ClassValueArray', 'GlyphCount', 0, 'Array of Class Values-one per GlyphID'),
+	]),
+
+	('ClassDefFormat4', [
+		('uint16', 'ClassFormat', None, None, 'Format identifier-format = 2'),
+		('uint24', 'ClassRangeCount', None, None, 'Number of ClassRangeRecords'),
+		('struct', 'ClassRange24Record', 'ClassRangeCount', 0, 'Array of ClassRangeRecords-ordered by Start GlyphID'),
+	]),
+
 	('ClassRangeRecord', [
 		('GlyphID', 'Start', None, None, 'First GlyphID in the range'),
 		('GlyphID', 'End', None, None, 'Last GlyphID in the range'),
 		('uint16', 'Class', None, None, 'Applied to all glyphs in the range'),
+	]),
+
+	('ClassRange24Record', [
+		('GlyphID24', 'Start', None, None, 'First GlyphID in the range'),
+		('GlyphID24', 'End', None, None, 'Last GlyphID in the range'),
+		('uint24', 'Class', None, None, 'Applied to all glyphs in the range'),
 	]),
 
 	('Device', [

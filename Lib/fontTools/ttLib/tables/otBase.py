@@ -777,7 +777,7 @@ class CountReference(object):
 	def getCountData(self):
 		v = self.table[self.name]
 		if v is None: v = 0
-		return {1:packUInt8, 2:packUShort, 4:packULong}[self.size](v)
+		return {1:packUInt8, 2:packUShort, 3: packUInt24, 4:packULong}[self.size](v)
 
 
 def packUInt8 (value):

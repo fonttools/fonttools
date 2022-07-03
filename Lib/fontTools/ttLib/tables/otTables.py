@@ -548,6 +548,7 @@ class Coverage(FormatSwitchingBaseTable):
 		if glyphs is None:
 			glyphs = self.glyphs = []
 		format = 1
+		beyond64k = False
 		rawTable = {"GlyphArray": glyphs}
 		if glyphs:
 			# find out whether Format 2 is more compact or not
@@ -555,8 +556,11 @@ class Coverage(FormatSwitchingBaseTable):
 			brokenOrder = sorted(glyphIDs) != glyphIDs
 
 			last = glyphIDs[0]
+			beyond64k = last > 65535
 			ranges = [[last]]
 			for glyphID in glyphIDs[1:]:
+				if glyphID > 65535:
+					beyond64k = True
 				if glyphID != last + 1:
 					ranges[-1].append(last)
 					ranges.append([glyphID])
@@ -584,6 +588,13 @@ class Coverage(FormatSwitchingBaseTable):
 				rawTable = {"RangeRecord": ranges}
 			#else:
 			#	fallthrough; Format 1 is more compact
+		# If any glyph is beyond 64k or count is beyond 64k, upgrade
+		if format == 1 and len(glyphs) > 65535:
+			beyond64k = True
+		elif format == 2 and len(ranges) > 65535:
+			beyond64k = True
+		if beyond64k:
+			format += 2
 		self.Format = format
 		return rawTable
 
@@ -951,8 +962,9 @@ class ClassDef(FormatSwitchingBaseTable):
 		classDefs = getattr(self, "classDefs", None)
 		if classDefs is None:
 			self.classDefs = {}
-			return
+			return [], False
 		getGlyphID = font.getGlyphID
+		beyond64k = False
 		items = []
 		for glyphName, cls in classDefs.items():
 			if not cls:
@@ -961,8 +973,11 @@ class ClassDef(FormatSwitchingBaseTable):
 		if items:
 			items.sort()
 			last, lastName, lastCls = items[0]
+			beyond64k = last > 65535
 			ranges = [[lastCls, last, lastName]]
 			for glyphID, glyphName, cls in items[1:]:
+				if glyphID > 65535:
+					beyond64k = True
 				if glyphID != last + 1 or cls != lastCls:
 					ranges[-1].extend([last, lastName])
 					ranges.append([cls, glyphID, glyphName])
@@ -970,12 +985,13 @@ class ClassDef(FormatSwitchingBaseTable):
 				lastName = glyphName
 				lastCls = cls
 			ranges[-1].extend([last, lastName])
-			return ranges
+			return ranges, beyond64k
+		return [], False
 
 	def preWrite(self, font):
 		format = 2
 		rawTable = {"ClassRangeRecord": []}
-		ranges = self._getClassRanges(font)
+		ranges, beyond64k = self._getClassRanges(font)
 		if ranges:
 			startGlyph = ranges[0][1]
 			endGlyph = ranges[-1][3]
@@ -1000,6 +1016,13 @@ class ClassDef(FormatSwitchingBaseTable):
 						classes[g] = cls
 				format = 1
 				rawTable = {"StartGlyph": startGlyphName, "ClassValueArray": classes}
+		# If any glyph is beyond 64k or count is beyond 64k, upgrade
+		if format == 1 and len(classes) > 65535:
+			beyond64k = True
+		elif format == 2 and len(ranges) > 65535:
+			beyond64k = True
+		if beyond64k:
+			format += 2
 		self.Format = format
 		return rawTable
 

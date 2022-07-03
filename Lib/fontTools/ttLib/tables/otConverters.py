@@ -44,6 +44,7 @@ def buildConverters(tableSpec, tableNamespace):
 			converterClass = {
 				"uint8": ComputedUInt8,
 				"uint16": ComputedUShort,
+				"uint24": ComputedUInt24,
 				"uint32": ComputedULong,
 			}[tp]
 		elif name == "SubTable":
@@ -346,6 +347,8 @@ class ComputedUInt8(ComputedInt, UInt8):
 	pass
 class ComputedUShort(ComputedInt, UShort):
 	pass
+class ComputedUInt24(ComputedInt, UInt24):
+	pass
 class ComputedULong(ComputedInt, ULong):
 	pass
 
@@ -367,6 +370,13 @@ class GlyphID(SimpleValue):
 		writer.writeArray(self.typecode, font.getGlyphIDMany(values))
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeValue(self.typecode, font.getGlyphID(value))
+
+class GlyphID24(SimpleValue):
+	staticSize = 3
+	def read(self, reader, font, tableDict):
+		return font.getGlyphName(reader.readUInt24())
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
+		writer.writeUInt24(font.getGlyphID(value))
 
 
 class GlyphID32(GlyphID):
@@ -1767,6 +1777,7 @@ converterMapping = {
 	"Version":	Version,
 	"Tag":		Tag,
 	"GlyphID":	GlyphID,
+	"GlyphID24":	GlyphID24,
 	"GlyphID32":	GlyphID32,
 	"NameID":	NameID,
 	"DeciPoints":	DeciPoints,
