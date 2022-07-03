@@ -72,6 +72,11 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 				hasNegativeAdvances = True
 			metrics.append([advanceWidth, sideBearing])
 
+		additionalAdvances = []
+		if len(metrics) > 65535:
+			additionalAdvances = [otRound(a) for a, _ in metrics[65535:]]
+			metrics = metrics[:65535]
+
 		headerTable = ttFont.get(self.headerTag)
 		if headerTable is not None:
 			lastAdvance = metrics[-1][0]
@@ -105,9 +110,16 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 					% (self.tableTag, self.advanceName))
 			else:
 				raise
+
 		additionalMetrics = array.array("h", additionalMetrics)
 		if sys.byteorder != "big": additionalMetrics.byteswap()
 		data = data + additionalMetrics.tobytes()
+
+		# TODO Prune equal advances at the end
+		additionalAdvances = array.array("h", additionalAdvances)
+		if sys.byteorder != "big": additionalAdvances.byteswap()
+		data = data + additionalAdvances.tobytes()
+
 		return data
 
 	def toXML(self, writer, ttFont):
