@@ -594,6 +594,7 @@ USE_MY_METRICS			= 0x0200  # apply these metrics to parent glyph
 OVERLAP_COMPOUND		= 0x0400  # used by Apple in GX fonts
 SCALED_COMPONENT_OFFSET		= 0x0800  # composite designed to have the component offset scaled (designed for Apple)
 UNSCALED_COMPONENT_OFFSET	= 0x1000  # composite designed not to have the component offset scaled (designed for MS)
+GID_IS_24BIT			= 0x2000  # glyph index is 24bit instead of 16
 
 
 CompositeMaxpValues = namedtuple('CompositeMaxpValues', ['nPoints', 'nContours', 'maxComponentDepth'])
@@ -1464,7 +1465,13 @@ class GlyphComponent(object):
 						transform[0][0])
 
 		glyphID = glyfTable.getGlyphID(self.glyphName)
-		return struct.pack(">HH", flags, glyphID) + data
+		if glyphID <= 65535:
+			return struct.pack(">HH", flags, glyphID) + data
+		else:
+			flags = flags | GID_IS_24BIT
+			assert(glyphID < (1<<24))
+			return struct.pack(">H", flags) + \
+				   struct.pack(">I", glyphID)[1:] + data
 
 	def toXML(self, writer, ttFont):
 		attrs = [("glyphName", self.glyphName)]
