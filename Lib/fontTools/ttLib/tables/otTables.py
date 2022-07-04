@@ -1755,6 +1755,8 @@ def fixLookupOverFlows(ttf, overflowRecord):
 			return ok
 		lookup = lookups[lookupIndex]
 
+	if len(lookups) > 128:
+		lookupIndex = 0 # Upgrade all
 	for lookupIndex in range(lookupIndex, len(lookups)):
 		lookup = lookups[lookupIndex]
 		if lookup.LookupType != extType:
