@@ -1678,7 +1678,7 @@ class BuildCOLRTest(object):
             clipBoxes={
                 "a": (0, 0, 1000, 1000, 0),  # optional 5th: varIndexBase
                 "c": (-100.8, -200.4, 1100.1, 1200.5),  # floats get rounded
-                "e": (0, 0, 10, 10),  # missing base glyph 'e' is ignored
+                "e": (0, 0, 10, 10),  # 'e' does _not_ get ignored despite being missing
             },
         )
 
@@ -1689,9 +1689,11 @@ class BuildCOLRTest(object):
         ] == [
             ("a", (0, 0, 1000, 1000, 0)),
             ("c", (-101, -201, 1101, 1201)),
+            ("e", (0, 0, 10, 10)),
         ]
         assert clipBoxes["a"].Format == 2
         assert clipBoxes["c"].Format == 1
+        assert clipBoxes["e"].Format == 1
 
     def test_duplicate_base_glyphs(self):
         # If > 1 base glyphs refer to equivalent list of layers we expect them to share

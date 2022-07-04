@@ -248,9 +248,6 @@ def buildCOLR(
     if version == 0:
         self.ColorLayers = self._decompileColorLayersV0(colr)
     else:
-        clipBoxes = {
-            name: clipBoxes[name] for name in clipBoxes or {} if name in colorGlyphsV1
-        }
         colr.ClipList = buildClipList(clipBoxes) if clipBoxes else None
         colr.VarIndexMap = varIndexMap
         colr.VarStore = varStore
