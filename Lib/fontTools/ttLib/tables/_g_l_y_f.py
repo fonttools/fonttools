@@ -1378,11 +1378,19 @@ class GlyphComponent(object):
 		return self.glyphName, trans
 
 	def decompile(self, data, glyfTable):
-		flags, glyphID = struct.unpack(">HH", data[:4])
+		flags = struct.unpack(">H", data[:2])[0]
 		self.flags = int(flags)
+		data = data[2:]
+
+		if self.flags & GID_IS_24BIT:
+			glyphID = struct.unpack(">I", b'\0'+data[:3])[0]
+			data = data[3:]
+		else:
+			glyphID = struct.unpack(">H", data[:2])[0]
+			data = data[2:]
+
 		glyphID = int(glyphID)
-		self.glyphName = glyfTable.getGlyphName(int(glyphID))
-		data = data[4:]
+		self.glyphName = glyfTable.getGlyphName(glyphID)
 
 		if self.flags & ARG_1_AND_2_ARE_WORDS:
 			if self.flags & ARGS_ARE_XY_VALUES:
