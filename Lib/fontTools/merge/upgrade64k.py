@@ -39,8 +39,7 @@ def upgrade64k(self, reverseGlyphMap):
 
 	elif self.Format == 2:
 		# To use longer offsets
-		if len(reverseGlyphMap) > 65535:
-			upgrade = True
+		upgrade = True
 
 	if upgrade:
 		self.Format += 2
@@ -50,9 +49,8 @@ def upgrade64k(self, reverseGlyphMap):
 		otTables.MarkMarkPos)
 def upgrade64k(self, reverseGlyphMap):
 	# To use longer offsets
-	if self.Format == 1 and len(reverseGlyphMap) > 65535:
-		upgrade = True
-	self.Format = 2
+	if self.Format == 1:
+		self.Format = 2
 
 @add_method(otTables.ContextSubst,
 		otTables.ChainContextSubst,
