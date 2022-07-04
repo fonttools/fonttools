@@ -519,9 +519,9 @@ class Coverage(FormatSwitchingBaseTable):
 			self.glyphs = []
 
 	def postRead(self, rawTable, font):
-		if self.Format == 1:
+		if self.Format in (1, 3):
 			self.glyphs = rawTable["GlyphArray"]
-		elif self.Format == 2:
+		elif self.Format in (2, 4):
 			glyphs = self.glyphs = []
 			ranges = rawTable["RangeRecord"]
 			# Some SIL fonts have coverage entries that don't have sorted
@@ -572,7 +572,7 @@ class Coverage(FormatSwitchingBaseTable):
 				index = 0
 				for i in range(len(ranges)):
 					start, end = ranges[i]
-					r = RangeRecord()
+					r = Range24Record() if beyond64k else RangeRecord()
 					r.StartID = start
 					r.Start = font.getGlyphName(start)
 					r.End = font.getGlyphName(end)
@@ -591,8 +591,8 @@ class Coverage(FormatSwitchingBaseTable):
 		# If any glyph is beyond 64k or count is beyond 64k, upgrade
 		if format == 1 and len(glyphs) > 65535:
 			beyond64k = True
-		elif format == 2 and len(ranges) > 65535:
-			beyond64k = True
+		#elif format == 2 and len(ranges) > 65535:
+		#	beyond64k = True
 		if beyond64k:
 			format += 2
 		self.Format = format
@@ -957,7 +957,7 @@ class ClassDef(FormatSwitchingBaseTable):
 	def postRead(self, rawTable, font):
 		classDefs = {}
 
-		if self.Format == 1:
+		if self.Format in (1, 3):
 			start = rawTable["StartGlyph"]
 			classList = rawTable["ClassValueArray"]
 			startID = font.getGlyphID(start)
@@ -967,7 +967,7 @@ class ClassDef(FormatSwitchingBaseTable):
 				if cls:
 					classDefs[glyphName] = cls
 
-		elif self.Format == 2:
+		elif self.Format in (2, 4):
 			records = rawTable["ClassRangeRecord"]
 			for rec in records:
 				cls = rec.Class
@@ -1027,7 +1027,7 @@ class ClassDef(FormatSwitchingBaseTable):
 				# Format 2 is more compact
 				for i in range(len(ranges)):
 					cls, start, startName, end, endName = ranges[i]
-					rec = ClassRangeRecord()
+					rec = ClassRange24Record() if beyond64k else ClassRangeRecord()
 					rec.Start = startName
 					rec.End = endName
 					rec.Class = cls
@@ -1046,8 +1046,8 @@ class ClassDef(FormatSwitchingBaseTable):
 		# If any glyph is beyond 64k or count is beyond 64k, upgrade
 		if format == 1 and len(classes) > 65535:
 			beyond64k = True
-		elif format == 2 and len(ranges) > 65535:
-			beyond64k = True
+		#elif format == 2 and len(ranges) > 65535:
+		#	beyond64k = True
 		if beyond64k:
 			format += 2
 		self.Format = format

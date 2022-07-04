@@ -116,7 +116,7 @@ otData = [
 	('CoverageFormat4', [
 		('uint16', 'CoverageFormat', None, None, 'Format identifier-format = 2'),
 		('uint24', 'RangeCount', None, None, 'Number of RangeRecords'),
-		('struct', 'Range24Record', 'RangeCount', 0, 'Array of glyph ranges-ordered by Start GlyphID'),
+		('Range24Record', 'RangeRecord', 'RangeCount', 0, 'Array of glyph ranges-ordered by Start GlyphID'),
 	]),
 
 	('RangeRecord', [
@@ -154,7 +154,7 @@ otData = [
 	('ClassDefFormat4', [
 		('uint16', 'ClassFormat', None, None, 'Format identifier-format = 2'),
 		('uint24', 'ClassRangeCount', None, None, 'Number of ClassRangeRecords'),
-		('struct', 'ClassRange24Record', 'ClassRangeCount', 0, 'Array of ClassRangeRecords-ordered by Start GlyphID'),
+		('ClassRange24Record', 'ClassRangeRecord', 'ClassRangeCount', 0, 'Array of ClassRangeRecords-ordered by Start GlyphID'),
 	]),
 
 	('ClassRangeRecord', [
