@@ -1777,6 +1777,7 @@ converterMapping = {
 	"Offset":	Table,
 	"LOffset":	LTable,
 	"Offset24":	Table24,
+	"Offset32":	LTable,
 	"ValueRecord":	ValueRecord,
 	"DeltaValue":	DeltaValue,
 	"VarIdxMapValue":	VarIdxMapValue,
