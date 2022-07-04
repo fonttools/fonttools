@@ -862,7 +862,7 @@ class MultipleSubst(FormatSwitchingBaseTable):
 
 	def postRead(self, rawTable, font):
 		mapping = {}
-		if self.Format == 1:
+		if self.Format in (1, 2):
 			glyphs = _getGlyphsFromCoverageTable(rawTable["Coverage"])
 			subst = [s.Substitute for s in rawTable["Sequence"]]
 			mapping = dict(zip(glyphs, subst))
@@ -894,9 +894,10 @@ class MultipleSubst(FormatSwitchingBaseTable):
 
 		cov = Coverage()
 		cov.glyphs = sorted(list(mapping.keys()), key=font.getGlyphID)
+		klass = Sequence24 if beyond64k else Sequence
 		rawTable = {
 						"Coverage": cov,
-						"Sequence": [self.makeSequence_(mapping[glyph])
+						"Sequence": [self.makeSequence_(mapping[glyph], klass)
 									 for glyph in cov.glyphs],
 				}
 		return rawTable
@@ -942,8 +943,8 @@ class MultipleSubst(FormatSwitchingBaseTable):
 		mapping[attrs["in"]] = [g.strip() for g in outGlyphs]
 
 	@staticmethod
-	def makeSequence_(g):
-		seq = Sequence()
+	def makeSequence_(g, klass):
+		seq = klass()
 		seq.Substitute = g
 		return seq
 
@@ -1075,7 +1076,7 @@ class AlternateSubst(FormatSwitchingBaseTable):
 
 	def postRead(self, rawTable, font):
 		alternates = {}
-		if self.Format == 1:
+		if self.Format in (1, 2):
 			input = _getGlyphsFromCoverageTable(rawTable["Coverage"])
 			alts = rawTable["AlternateSet"]
 			assert len(input) == len(alts)
@@ -1117,7 +1118,7 @@ class AlternateSubst(FormatSwitchingBaseTable):
 		alternates = []
 		setList = [ item[-1] for item in items]
 		for set in setList:
-			alts = AlternateSet()
+			alts = AlternateSet24() if beyond64k else AlternateSet()
 			alts.Alternate = set
 			alternates.append(alts)
 		# a special case to deal with the fact that several hundred Adobe Japan1-5

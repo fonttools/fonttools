@@ -673,7 +673,7 @@ otData = [
 		('uint16', 'SubstFormat', None, None, 'Format identifier-format = 1'),
 		('Offset', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
 		('uint24', 'SequenceCount', None, None, 'Number of Sequence table offsets in the Sequence array'),
-		('Offset24', 'Sequence24', 'SequenceCount', 0, 'Array of offsets to Sequence tables-from beginning of Substitution table-ordered by Coverage Index'),
+		('LOffset24To(Sequence24)', 'Sequence', 'SequenceCount', 0, 'Array of offsets to Sequence tables-from beginning of Substitution table-ordered by Coverage Index'),
 	]),
 
 	('Sequence', [
@@ -697,7 +697,7 @@ otData = [
 		('uint16', 'SubstFormat', None, None, 'Format identifier-format = 1'),
 		('Offset32', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
 		('uint24', 'AlternateSetCount', None, None, 'Number of AlternateSet tables'),
-		('Offset24', 'AlternateSet24', 'AlternateSetCount', 0, 'Array of offsets to AlternateSet tables-from beginning of Substitution table-ordered by Coverage Index'),
+		('LOffset24To(AlternateSet24)', 'AlternateSet', 'AlternateSetCount', 0, 'Array of offsets to AlternateSet tables-from beginning of Substitution table-ordered by Coverage Index'),
 	]),
 
 	('AlternateSet', [
