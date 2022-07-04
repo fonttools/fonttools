@@ -505,7 +505,7 @@ class OTTableWriter(object):
 				if getattr(item, 'name', None) == "Coverage":
 					sortCoverageLast = True
 					break
-			if id(item) not in done:
+			if sortCoverageLast and id(item) not in done:
 				item._gatherTables(tables, extTables, done)
 			else:
 				# We're a new parent of item
