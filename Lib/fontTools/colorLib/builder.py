@@ -23,6 +23,7 @@ from typing import (
 )
 from fontTools.misc.arrayTools import intRect
 from fontTools.misc.fixedTools import fixedToFloat
+from fontTools.misc.treeTools import build_n_ary_tree
 from fontTools.ttLib.tables import C_O_L_R_
 from fontTools.ttLib.tables import C_P_A_L_
 from fontTools.ttLib.tables import _n_a_m_e
@@ -560,7 +561,7 @@ class LayerListBuilder:
 
         # The layer list is now final; if it's too big we need to tree it
         is_tree = len(layers) > MAX_PAINT_COLR_LAYER_COUNT
-        layers = _build_n_ary_tree(layers, n=MAX_PAINT_COLR_LAYER_COUNT)
+        layers = build_n_ary_tree(layers, n=MAX_PAINT_COLR_LAYER_COUNT)
 
         # We now have a tree of sequences with Paint leaves.
         # Convert the sequences into PaintColrLayers.
@@ -656,45 +657,3 @@ def buildColrV1(
     glyphs.BaseGlyphCount = len(baseGlyphs)
     glyphs.BaseGlyphPaintRecord = baseGlyphs
     return (layers, glyphs)
-
-
-def _build_n_ary_tree(leaves, n):
-    """Build N-ary tree from sequence of leaf nodes.
-
-    Return a list of lists where each non-leaf node is a list containing
-    max n nodes.
-    """
-    if not leaves:
-        return []
-
-    assert n > 1
-
-    depth = ceil(log(len(leaves), n))
-
-    if depth <= 1:
-        return list(leaves)
-
-    # Fully populate complete subtrees of root until we have enough leaves left
-    root = []
-    unassigned = None
-    full_step = n ** (depth - 1)
-    for i in range(0, len(leaves), full_step):
-        subtree = leaves[i : i + full_step]
-        if len(subtree) < full_step:
-            unassigned = subtree
-            break
-        while len(subtree) > n:
-            subtree = [subtree[k : k + n] for k in range(0, len(subtree), n)]
-        root.append(subtree)
-
-    if unassigned:
-        # Recurse to fill the last subtree, which is the only partially populated one
-        subtree = _build_n_ary_tree(unassigned, n)
-        if len(subtree) <= n - len(root):
-            # replace last subtree with its children if they can still fit
-            root.extend(subtree)
-        else:
-            root.append(subtree)
-        assert len(root) <= n
-
-    return root
