@@ -82,6 +82,11 @@ otData = [
 		('Offset', 'Lookup', 'LookupCount', 0, 'Array of offsets to Lookup tables-from beginning of LookupList -zero based (first lookup is Lookup index = 0)'),
 	]),
 
+	('LookupList32', [
+		('uint16', 'LookupCount', None, None, 'Number of lookups in this table'),
+		('Offset32', 'Lookup', 'LookupCount', 0, 'Array of offsets to Lookup tables-from beginning of LookupList -zero based (first lookup is Lookup index = 0)'),
+	]),
+
 	('Lookup', [
 		('uint16', 'LookupType', None, None, 'Different enumerations for GSUB and GPOS'),
 		('LookupFlag', 'LookupFlag', None, None, 'Lookup qualifiers'),
@@ -180,7 +185,8 @@ otData = [
 		('Version', 'Version', None, None, 'Version of the GPOS table- 0x00010000 or 0x00010001'),
 		('Offset', 'ScriptList', None, None, 'Offset to ScriptList table-from beginning of GPOS table'),
 		('Offset', 'FeatureList', None, None, 'Offset to FeatureList table-from beginning of GPOS table'),
-		('Offset', 'LookupList', None, None, 'Offset to LookupList table-from beginning of GPOS table'),
+		('Offset', 'LookupList', None, 'Version < 0x00020000', 'Offset to LookupList table-from beginning of GPOS table'),
+		('Offset32', 'LookupList32', None, 'Version >= 0x00020000', 'Offset to LookupList table-from beginning of GPOS table'),
 		('LOffset', 'FeatureVariations', None, 'Version >= 0x00010001', 'Offset to FeatureVariations table-from beginning of GPOS table'),
 	]),
 
@@ -620,7 +626,8 @@ otData = [
 		('Version', 'Version', None, None, 'Version of the GSUB table- 0x00010000 or 0x00010001'),
 		('Offset', 'ScriptList', None, None, 'Offset to ScriptList table-from beginning of GSUB table'),
 		('Offset', 'FeatureList', None, None, 'Offset to FeatureList table-from beginning of GSUB table'),
-		('Offset', 'LookupList', None, None, 'Offset to LookupList table-from beginning of GSUB table'),
+		('Offset', 'LookupList', None, 'Version < 0x00020000', 'Offset to LookupList table-from beginning of GSUB table'),
+		('Offset32', 'LookupList32', None, 'Version >= 0x00020000', 'Offset to LookupList table-from beginning of GSUB table'),
 		('LOffset', 'FeatureVariations', None, 'Version >= 0x00010001', 'Offset to FeatureVariations table-from beginning of GSUB table'),
 	]),
 

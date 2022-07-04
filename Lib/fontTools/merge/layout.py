@@ -422,6 +422,6 @@ def layoutPostMerge(font):
 
 				beyond64k = len(font.getGlyphOrder()) > 65535
 				if beyond64k:
-					t.table.LookupList.upgrade64k(font.getReverseGlyphMap())
+					t.table.upgrade64k(font.getReverseGlyphMap())
 
 		# TODO FeatureParams nameIDs

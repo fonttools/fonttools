@@ -481,11 +481,9 @@ class Version(SimpleValue):
 	staticSize = 4
 	def read(self, reader, font, tableDict):
 		value = reader.readLong()
-		assert (value >> 16) == 1, "Unsupported version 0x%08x" % value
 		return value
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		value = fi2ve(value)
-		assert (value >> 16) == 1, "Unsupported version 0x%08x" % value
 		writer.writeLong(value)
 	@staticmethod
 	def fromString(value):
