@@ -14,7 +14,7 @@ from fontTools.ttLib.tables.otConverters import BaseFixedValue
 from fontTools.ttLib.tables.otTraverse import dfs_base_table
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
 from fontTools.varLib import builder, models, varStore
-from fontTools.varLib.models import nonNone, allNone, allEqual, allEqualTo
+from fontTools.varLib.models import nonNone, allNone, allEqual, allEqualTo, subList
 from fontTools.varLib.varStore import VarStoreInstancer
 from functools import reduce
 from fontTools.otlLib.builder import buildSinglePos
@@ -42,6 +42,8 @@ class Merger(object):
 
 	def __init__(self, font=None):
 		self.font = font
+		# mergeTables populates this from the parent's master ttfs
+		self.ttfs = None
 
 	@classmethod
 	def merger(celf, clazzes, attrs=(None,)):
@@ -142,9 +144,8 @@ class Merger(object):
 		for tag in tableTags:
 			if tag not in font: continue
 			try:
-				self.ttfs = [m for m in master_ttfs if tag in m]
-				self.mergeThings(font[tag], [m[tag] if tag in m else None
-							     for m in master_ttfs])
+				self.ttfs = master_ttfs
+				self.mergeThings(font[tag], [m.get(tag) for m in master_ttfs])
 			except VarLibMergeError as e:
 				e.stack.append(tag)
 				raise
@@ -1044,11 +1045,19 @@ class VariationMerger(AligningMerger):
 
 	def mergeThings(self, out, lst):
 		masterModel = None
+		origTTFs = None
 		if None in lst:
 			if allNone(lst):
 				if out is not None:
 					raise FoundANone(self, got=lst)
 				return
+
+			# temporarily subset the list of master ttfs to the ones for which
+			# master values are not None
+			origTTFs = self.ttfs
+			if self.ttfs:
+				self.ttfs = subList([v is not None for v in lst], self.ttfs)
+
 			masterModel = self.model
 			model, lst = masterModel.getSubModel(lst)
 			self.setModel(model)
@@ -1057,6 +1066,8 @@ class VariationMerger(AligningMerger):
 
 		if masterModel:
 			self.setModel(masterModel)
+		if origTTFs:
+			self.ttfs = origTTFs
 
 
 def buildVarDevTable(store_builder, master_values):
