@@ -74,6 +74,9 @@ def upgrade64k(self, reverseGlyphMap):
 							break
 				if upgrade: break
 			if upgrade: break
+	elif self.Format in (2, 3):
+		# To use longer offsets
+		upgrade = True
 
 	if upgrade:
 		self.Format += 3
