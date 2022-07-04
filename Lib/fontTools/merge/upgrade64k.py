@@ -14,15 +14,12 @@ def upgrade64k(self, reverseGlyphMap):
 	# These are handled in otTables
 	pass
 
-@add_method(otTables.SinglePos,
+@add_method(otTables.ReverseChainSingleSubst,
+		otTables.SinglePos,
 		otTables.CursivePos)
 def upgrade64k(self, reverseGlyphMap):
 	# Nothing to do
 	pass
-
-@add_method(otTables.ReverseChainSingleSubst)
-def upgrade64k(self, reverseGlyphMap):
-	NotImplemented
 
 @add_method(otTables.PairPos)
 def upgrade64k(self, reverseGlyphMap):
