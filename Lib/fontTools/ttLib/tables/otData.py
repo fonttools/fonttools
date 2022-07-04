@@ -293,6 +293,15 @@ otData = [
 		('Offset', 'BaseArray', None, None, 'Offset to BaseArray table-from beginning of MarkBasePos subtable'),
 	]),
 
+	('MarkBasePosFormat2', [
+		('uint16', 'PosFormat', None, None, 'Format identifier-format = 1'),
+		('Offset32', 'MarkCoverage', None, None, 'Offset to MarkCoverage table-from beginning of MarkBasePos subtable'),
+		('Offset32', 'BaseCoverage', None, None, 'Offset to BaseCoverage table-from beginning of MarkBasePos subtable'),
+		('uint16', 'ClassCount', None, None, 'Number of classes defined for marks'),
+		('Offset32', 'MarkArray', None, None, 'Offset to MarkArray table-from beginning of MarkBasePos subtable'),
+		('Offset32', 'BaseArray', None, None, 'Offset to BaseArray table-from beginning of MarkBasePos subtable'),
+	]),
+
 	('BaseArray', [
 		('uint16', 'BaseCount', None, None, 'Number of BaseRecords'),
 		('struct', 'BaseRecord', 'BaseCount', 0, 'Array of BaseRecords-in order of BaseCoverage Index'),
@@ -309,6 +318,15 @@ otData = [
 		('uint16', 'ClassCount', None, None, 'Number of defined mark classes'),
 		('Offset', 'MarkArray', None, None, 'Offset to MarkArray table-from beginning of MarkLigPos subtable'),
 		('Offset', 'LigatureArray', None, None, 'Offset to LigatureArray table-from beginning of MarkLigPos subtable'),
+	]),
+
+	('MarkLigPosFormat2', [
+		('uint16', 'PosFormat', None, None, 'Format identifier-format = 1'),
+		('Offset32', 'MarkCoverage', None, None, 'Offset to Mark Coverage table-from beginning of MarkLigPos subtable'),
+		('Offset32', 'LigatureCoverage', None, None, 'Offset to Ligature Coverage table-from beginning of MarkLigPos subtable'),
+		('uint16', 'ClassCount', None, None, 'Number of defined mark classes'),
+		('Offset32', 'MarkArray', None, None, 'Offset to MarkArray table-from beginning of MarkLigPos subtable'),
+		('Offset32', 'LigatureArray', None, None, 'Offset to LigatureArray table-from beginning of MarkLigPos subtable'),
 	]),
 
 	('LigatureArray', [
@@ -332,6 +350,15 @@ otData = [
 		('uint16', 'ClassCount', None, None, 'Number of Combining Mark classes defined'),
 		('Offset', 'Mark1Array', None, None, 'Offset to MarkArray table for Mark1-from beginning of MarkMarkPos subtable'),
 		('Offset', 'Mark2Array', None, None, 'Offset to Mark2Array table for Mark2-from beginning of MarkMarkPos subtable'),
+	]),
+
+	('MarkMarkPosFormat2', [
+		('uint16', 'PosFormat', None, None, 'Format identifier-format = 1'),
+		('Offset32', 'Mark1Coverage', None, None, 'Offset to Combining Mark Coverage table-from beginning of MarkMarkPos subtable'),
+		('Offset32', 'Mark2Coverage', None, None, 'Offset to Base Mark Coverage table-from beginning of MarkMarkPos subtable'),
+		('uint16', 'ClassCount', None, None, 'Number of Combining Mark classes defined'),
+		('Offset32', 'Mark1Array', None, None, 'Offset to MarkArray table for Mark1-from beginning of MarkMarkPos subtable'),
+		('Offset32', 'Mark2Array', None, None, 'Offset to Mark2Array table for Mark2-from beginning of MarkMarkPos subtable'),
 	]),
 
 	('Mark2Array', [

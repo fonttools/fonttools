@@ -14,12 +14,13 @@ def upgrade64k(self, reverseGlyphMap):
 	# These are handled in otTables
 	pass
 
-@add_method(otTables.ReverseChainSingleSubst,
-		otTables.SinglePos,
-		otTables.CursivePos,
-		otTables.MarkBasePos,
-		otTables.MarkLigPos,
-		otTables.MarkMarkPos)
+@add_method(otTables.SinglePos,
+		otTables.CursivePos)
+def upgrade64k(self, reverseGlyphMap):
+	# Nothing to do
+	pass
+
+@add_method(otTables.ReverseChainSingleSubst)
 def upgrade64k(self, reverseGlyphMap):
 	NotImplemented
 
@@ -41,10 +42,20 @@ def upgrade64k(self, reverseGlyphMap):
 
 	elif self.Format == 2:
 		# To use longer offsets
-		upgrade = True
+		if len(reverseGlyphMap) > 65535:
+			upgrade = True
 
 	if upgrade:
 		self.Format += 2
+
+@add_method(otTables.MarkBasePos,
+		otTables.MarkLigPos,
+		otTables.MarkMarkPos)
+def upgrade64k(self, reverseGlyphMap):
+	# To use longer offsets
+	if self.Format == 1 and len(reverseGlyphMap) > 65535:
+		upgrade = True
+	self.Format = 2
 
 @add_method(otTables.ContextSubst,
 		otTables.ChainContextSubst,
