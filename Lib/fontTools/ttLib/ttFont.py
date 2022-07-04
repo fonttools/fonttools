@@ -519,6 +519,8 @@ class TTFont(object):
 		# temporary cmap and by the real cmap in case we don't find a unicode
 		# cmap.
 		numGlyphs = int(self['maxp'].numGlyphs)
+		if 'loca' in self: # Support for >64k glyphs
+			numGlyphs = max(numGlyphs, len(self['loca'].locations) - 1)
 		glyphOrder = [None] * numGlyphs
 		glyphOrder[0] = ".notdef"
 		for i in range(1, numGlyphs):
