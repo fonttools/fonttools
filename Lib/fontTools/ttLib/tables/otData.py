@@ -565,11 +565,24 @@ otData = [
 		('uint16', 'DeltaGlyphID', None, None, 'Add to original GlyphID modulo 65536 to get substitute GlyphID'),
 	]),
 
+	('SingleSubstFormat3', [
+		('uint16', 'SubstFormat', None, None, 'Format identifier-format = 1'),
+		('Offset32', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
+		('uint32', 'DeltaGlyphID', None, None, 'Add to original GlyphID modulo 65536 to get substitute GlyphID'),
+	]),
+
 	('SingleSubstFormat2', [
 		('uint16', 'SubstFormat', None, None, 'Format identifier-format = 2'),
 		('Offset', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
 		('uint16', 'GlyphCount', None, None, 'Number of GlyphIDs in the Substitute array'),
 		('GlyphID', 'Substitute', 'GlyphCount', 0, 'Array of substitute GlyphIDs-ordered by Coverage Index'),
+	]),
+
+	('SingleSubstFormat4', [
+		('uint16', 'SubstFormat', None, None, 'Format identifier-format = 2'),
+		('Offset32', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
+		('uint24', 'GlyphCount', None, None, 'Number of GlyphIDs in the Substitute array'),
+		('GlyphID24', 'Substitute', 'GlyphCount', 0, 'Array of substitute GlyphIDs-ordered by Coverage Index'),
 	]),
 
 	('MultipleSubstFormat1', [

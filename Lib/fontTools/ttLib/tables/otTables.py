@@ -798,6 +798,13 @@ class SingleSubst(FormatSwitchingBaseTable):
 		gidItems = [(getGlyphID(a), getGlyphID(b)) for a,b in items]
 		sortableItems = sorted(zip(gidItems, items))
 
+		beyond64k = False
+		if len(font.getGlyphOrder()) > 65535:
+			for _,subs in gidItems:
+				if subs > 65535:
+					beyond64k = True
+					break
+
 		# figure out format
 		format = 2
 		delta = None
@@ -826,6 +833,10 @@ class SingleSubst(FormatSwitchingBaseTable):
 			rawTable["DeltaGlyphID"] = delta
 		else:
 			rawTable["Substitute"] = subst
+
+		if beyond64k:
+			self.Format += 2
+
 		return rawTable
 
 	def toXML2(self, xmlWriter, font):
