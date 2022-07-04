@@ -296,7 +296,7 @@ def merge(self, m, tables):
 	cmap = m.cmap
 
 	cmapBmpOnly = {uni: gid for uni,gid in cmap.items() if uni <= 0xFFFF}
-	beyond64k = len(m.glyphOrder) > 65535
+	beyond64k = len(getattr(m, 'glyphOrder', [])) > 65535
 	self.tables = []
 	module = ttLib.getTableModule('cmap')
 	if len(cmapBmpOnly) != len(cmap) or beyond64k:
