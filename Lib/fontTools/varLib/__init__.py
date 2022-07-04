@@ -714,7 +714,7 @@ def _add_CFF2(varFont, model, master_fonts):
 
 
 def _add_COLR(font, model, master_fonts, axisTags, colr_layer_reuse=True):
-	merger = COLRVariationMerger(model, axisTags, font)
+	merger = COLRVariationMerger(model, axisTags, font, allowLayerReuse=colr_layer_reuse)
 	merger.mergeTables(font, master_fonts)
 	store = merger.store_builder.finish()
 
@@ -724,11 +724,6 @@ def _add_COLR(font, model, master_fonts, axisTags, colr_layer_reuse=True):
 		colr.VarStore = store
 		varIdxes = [mapping[v] for v in merger.varIdxes]
 		colr.VarIndexMap = builder.buildDeltaSetIndexMap(varIdxes)
-
-	# rebuild LayerList to optimize PaintColrLayers layer reuse
-	if colr.LayerList and colr_layer_reuse:
-		colorGlyphs = unbuildColrV1(colr.LayerList, colr.BaseGlyphList)
-		colr.LayerList, colr.BaseGlyphList = buildColrV1(colorGlyphs, allowLayerReuse=True)
 
 
 def load_designspace(designspace):

@@ -1,6 +1,6 @@
 from copy import deepcopy
 import string
-from fontTools.colorLib.builder import LayerListBuilder, buildClipList
+from fontTools.colorLib.builder import LayerListBuilder, buildCOLR, buildClipList
 from fontTools.misc.testTools import getXML
 from fontTools.varLib.merger import COLRVariationMerger
 from fontTools.varLib.models import VariationModel
@@ -24,6 +24,8 @@ def dump_xml(table, ttFont=None):
 
 def compile_decompile(table, ttFont):
     writer = OTTableWriter(tableTag="COLR")
+    # compile itself may modify a table, safer to copy it first
+    table = deepcopy(table)
     table.compile(writer, ttFont)
     data = writer.getAllData()
 
@@ -785,3 +787,550 @@ class COLRVariationMergerTest:
             1,
             1,
         ]
+
+    @pytest.mark.parametrize(
+        "color_glyphs, reuse, expected_xml, expected_varIdxes",
+        [
+            pytest.param(
+                [
+                    {
+                        "A": {
+                            "Format": int(ot.PaintFormat.PaintColrLayers),
+                            "Layers": [
+                                {
+                                    "Format": int(ot.PaintFormat.PaintGlyph),
+                                    "Paint": {
+                                        "Format": int(ot.PaintFormat.PaintSolid),
+                                        "PaletteIndex": 0,
+                                        "Alpha": 1.0,
+                                    },
+                                    "Glyph": "B",
+                                },
+                                {
+                                    "Format": int(ot.PaintFormat.PaintGlyph),
+                                    "Paint": {
+                                        "Format": int(ot.PaintFormat.PaintSolid),
+                                        "PaletteIndex": 1,
+                                        "Alpha": 1.0,
+                                    },
+                                    "Glyph": "B",
+                                },
+                            ],
+                        },
+                    },
+                    {
+                        "A": {
+                            "Format": ot.PaintFormat.PaintColrLayers,
+                            "Layers": [
+                                {
+                                    "Format": int(ot.PaintFormat.PaintGlyph),
+                                    "Paint": {
+                                        "Format": int(ot.PaintFormat.PaintSolid),
+                                        "PaletteIndex": 0,
+                                        "Alpha": 1.0,
+                                    },
+                                    "Glyph": "B",
+                                },
+                                {
+                                    "Format": int(ot.PaintFormat.PaintGlyph),
+                                    "Paint": {
+                                        "Format": int(ot.PaintFormat.PaintSolid),
+                                        "PaletteIndex": 1,
+                                        "Alpha": 1.0,
+                                    },
+                                    "Glyph": "B",
+                                },
+                            ],
+                        },
+                    },
+                ],
+                False,
+                [
+                    "<COLR>",
+                    '  <Version value="1"/>',
+                    "  <!-- BaseGlyphRecordCount=0 -->",
+                    "  <!-- LayerRecordCount=0 -->",
+                    "  <BaseGlyphList>",
+                    "    <!-- BaseGlyphCount=1 -->",
+                    '    <BaseGlyphPaintRecord index="0">',
+                    '      <BaseGlyph value="A"/>',
+                    '      <Paint Format="1"><!-- PaintColrLayers -->',
+                    '        <NumLayers value="2"/>',
+                    '        <FirstLayerIndex value="0"/>',
+                    "      </Paint>",
+                    "    </BaseGlyphPaintRecord>",
+                    "  </BaseGlyphList>",
+                    "  <LayerList>",
+                    "    <!-- LayerCount=2 -->",
+                    '    <Paint index="0" Format="10"><!-- PaintGlyph -->',
+                    '      <Paint Format="2"><!-- PaintSolid -->',
+                    '        <PaletteIndex value="0"/>',
+                    '        <Alpha value="1.0"/>',
+                    "      </Paint>",
+                    '      <Glyph value="B"/>',
+                    "    </Paint>",
+                    '    <Paint index="1" Format="10"><!-- PaintGlyph -->',
+                    '      <Paint Format="2"><!-- PaintSolid -->',
+                    '        <PaletteIndex value="1"/>',
+                    '        <Alpha value="1.0"/>',
+                    "      </Paint>",
+                    '      <Glyph value="B"/>',
+                    "    </Paint>",
+                    "  </LayerList>",
+                    "</COLR>",
+                ],
+                [],
+                id="no-variation",
+            ),
+            pytest.param(
+                [
+                    {
+                        "A": {
+                            "Format": int(ot.PaintFormat.PaintColrLayers),
+                            "Layers": [
+                                {
+                                    "Format": int(ot.PaintFormat.PaintGlyph),
+                                    "Paint": {
+                                        "Format": int(ot.PaintFormat.PaintSolid),
+                                        "PaletteIndex": 0,
+                                        "Alpha": 1.0,
+                                    },
+                                    "Glyph": "B",
+                                },
+                                {
+                                    "Format": int(ot.PaintFormat.PaintGlyph),
+                                    "Paint": {
+                                        "Format": int(ot.PaintFormat.PaintSolid),
+                                        "PaletteIndex": 1,
+                                        "Alpha": 1.0,
+                                    },
+                                    "Glyph": "B",
+                                },
+                            ],
+                        },
+                        "C": {
+                            "Format": int(ot.PaintFormat.PaintColrLayers),
+                            "Layers": [
+                                {
+                                    "Format": int(ot.PaintFormat.PaintGlyph),
+                                    "Paint": {
+                                        "Format": int(ot.PaintFormat.PaintSolid),
+                                        "PaletteIndex": 2,
+                                        "Alpha": 1.0,
+                                    },
+                                    "Glyph": "B",
+                                },
+                                {
+                                    "Format": int(ot.PaintFormat.PaintGlyph),
+                                    "Paint": {
+                                        "Format": int(ot.PaintFormat.PaintSolid),
+                                        "PaletteIndex": 3,
+                                        "Alpha": 1.0,
+                                    },
+                                    "Glyph": "B",
+                                },
+                            ],
+                        },
+                    },
+                    {
+                        # NOTE: 'A' is missing from non-default master
+                        "C": {
+                            "Format": int(ot.PaintFormat.PaintColrLayers),
+                            "Layers": [
+                                {
+                                    "Format": int(ot.PaintFormat.PaintGlyph),
+                                    "Paint": {
+                                        "Format": int(ot.PaintFormat.PaintSolid),
+                                        "PaletteIndex": 2,
+                                        "Alpha": 0.5,
+                                    },
+                                    "Glyph": "B",
+                                },
+                                {
+                                    "Format": int(ot.PaintFormat.PaintGlyph),
+                                    "Paint": {
+                                        "Format": int(ot.PaintFormat.PaintSolid),
+                                        "PaletteIndex": 3,
+                                        "Alpha": 0.5,
+                                    },
+                                    "Glyph": "B",
+                                },
+                            ],
+                        },
+                    },
+                ],
+                False,
+                [
+                    "<COLR>",
+                    '  <Version value="1"/>',
+                    "  <!-- BaseGlyphRecordCount=0 -->",
+                    "  <!-- LayerRecordCount=0 -->",
+                    "  <BaseGlyphList>",
+                    "    <!-- BaseGlyphCount=2 -->",
+                    '    <BaseGlyphPaintRecord index="0">',
+                    '      <BaseGlyph value="A"/>',
+                    '      <Paint Format="1"><!-- PaintColrLayers -->',
+                    '        <NumLayers value="2"/>',
+                    '        <FirstLayerIndex value="0"/>',
+                    "      </Paint>",
+                    "    </BaseGlyphPaintRecord>",
+                    '    <BaseGlyphPaintRecord index="1">',
+                    '      <BaseGlyph value="C"/>',
+                    '      <Paint Format="1"><!-- PaintColrLayers -->',
+                    '        <NumLayers value="2"/>',
+                    '        <FirstLayerIndex value="2"/>',
+                    "      </Paint>",
+                    "    </BaseGlyphPaintRecord>",
+                    "  </BaseGlyphList>",
+                    "  <LayerList>",
+                    "    <!-- LayerCount=4 -->",
+                    '    <Paint index="0" Format="10"><!-- PaintGlyph -->',
+                    '      <Paint Format="2"><!-- PaintSolid -->',
+                    '        <PaletteIndex value="0"/>',
+                    '        <Alpha value="1.0"/>',
+                    "      </Paint>",
+                    '      <Glyph value="B"/>',
+                    "    </Paint>",
+                    '    <Paint index="1" Format="10"><!-- PaintGlyph -->',
+                    '      <Paint Format="2"><!-- PaintSolid -->',
+                    '        <PaletteIndex value="1"/>',
+                    '        <Alpha value="1.0"/>',
+                    "      </Paint>",
+                    '      <Glyph value="B"/>',
+                    "    </Paint>",
+                    '    <Paint index="2" Format="10"><!-- PaintGlyph -->',
+                    '      <Paint Format="3"><!-- PaintVarSolid -->',
+                    '        <PaletteIndex value="2"/>',
+                    '        <Alpha value="1.0"/>',
+                    '        <VarIndexBase value="0"/>',
+                    "      </Paint>",
+                    '      <Glyph value="B"/>',
+                    "    </Paint>",
+                    '    <Paint index="3" Format="10"><!-- PaintGlyph -->',
+                    '      <Paint Format="3"><!-- PaintVarSolid -->',
+                    '        <PaletteIndex value="3"/>',
+                    '        <Alpha value="1.0"/>',
+                    '        <VarIndexBase value="0"/>',
+                    "      </Paint>",
+                    '      <Glyph value="B"/>',
+                    "    </Paint>",
+                    "  </LayerList>",
+                    "</COLR>",
+                ],
+                [0],
+                id="sparse-masters",
+            ),
+            pytest.param(
+                [
+                    {
+                        "A": {
+                            "Format": int(ot.PaintFormat.PaintColrLayers),
+                            "Layers": [
+                                {
+                                    "Format": int(ot.PaintFormat.PaintGlyph),
+                                    "Paint": {
+                                        "Format": int(ot.PaintFormat.PaintSolid),
+                                        "PaletteIndex": 0,
+                                        "Alpha": 1.0,
+                                    },
+                                    "Glyph": "B",
+                                },
+                                {
+                                    "Format": int(ot.PaintFormat.PaintGlyph),
+                                    "Paint": {
+                                        "Format": int(ot.PaintFormat.PaintSolid),
+                                        "PaletteIndex": 1,
+                                        "Alpha": 1.0,
+                                    },
+                                    "Glyph": "B",
+                                },
+                                {
+                                    "Format": int(ot.PaintFormat.PaintGlyph),
+                                    "Paint": {
+                                        "Format": int(ot.PaintFormat.PaintSolid),
+                                        "PaletteIndex": 2,
+                                        "Alpha": 1.0,
+                                    },
+                                    "Glyph": "B",
+                                },
+                            ],
+                        },
+                        "C": {
+                            "Format": int(ot.PaintFormat.PaintColrLayers),
+                            "Layers": [
+                                # 'C' reuses layers 1-3 from 'A'
+                                {
+                                    "Format": int(ot.PaintFormat.PaintGlyph),
+                                    "Paint": {
+                                        "Format": int(ot.PaintFormat.PaintSolid),
+                                        "PaletteIndex": 1,
+                                        "Alpha": 1.0,
+                                    },
+                                    "Glyph": "B",
+                                },
+                                {
+                                    "Format": int(ot.PaintFormat.PaintGlyph),
+                                    "Paint": {
+                                        "Format": int(ot.PaintFormat.PaintSolid),
+                                        "PaletteIndex": 2,
+                                        "Alpha": 1.0,
+                                    },
+                                    "Glyph": "B",
+                                },
+                            ],
+                        },
+                        "D": {  # identical to 'C'
+                            "Format": int(ot.PaintFormat.PaintColrLayers),
+                            "Layers": [
+                                {
+                                    "Format": int(ot.PaintFormat.PaintGlyph),
+                                    "Paint": {
+                                        "Format": int(ot.PaintFormat.PaintSolid),
+                                        "PaletteIndex": 1,
+                                        "Alpha": 1.0,
+                                    },
+                                    "Glyph": "B",
+                                },
+                                {
+                                    "Format": int(ot.PaintFormat.PaintGlyph),
+                                    "Paint": {
+                                        "Format": int(ot.PaintFormat.PaintSolid),
+                                        "PaletteIndex": 2,
+                                        "Alpha": 1.0,
+                                    },
+                                    "Glyph": "B",
+                                },
+                            ],
+                        },
+                        "E": {  # superset of 'C' or 'D'
+                            "Format": int(ot.PaintFormat.PaintColrLayers),
+                            "Layers": [
+                                {
+                                    "Format": int(ot.PaintFormat.PaintGlyph),
+                                    "Paint": {
+                                        "Format": int(ot.PaintFormat.PaintSolid),
+                                        "PaletteIndex": 1,
+                                        "Alpha": 1.0,
+                                    },
+                                    "Glyph": "B",
+                                },
+                                {
+                                    "Format": int(ot.PaintFormat.PaintGlyph),
+                                    "Paint": {
+                                        "Format": int(ot.PaintFormat.PaintSolid),
+                                        "PaletteIndex": 2,
+                                        "Alpha": 1.0,
+                                    },
+                                    "Glyph": "B",
+                                },
+                                {
+                                    "Format": int(ot.PaintFormat.PaintGlyph),
+                                    "Paint": {
+                                        "Format": int(ot.PaintFormat.PaintSolid),
+                                        "PaletteIndex": 3,
+                                        "Alpha": 1.0,
+                                    },
+                                    "Glyph": "B",
+                                },
+                            ],
+                        },
+                    },
+                    {
+                        # NOTE: 'A' is missing from non-default master
+                        "C": {
+                            "Format": int(ot.PaintFormat.PaintColrLayers),
+                            "Layers": [
+                                {
+                                    "Format": int(ot.PaintFormat.PaintGlyph),
+                                    "Paint": {
+                                        "Format": int(ot.PaintFormat.PaintSolid),
+                                        "PaletteIndex": 1,
+                                        "Alpha": 0.5,
+                                    },
+                                    "Glyph": "B",
+                                },
+                                {
+                                    "Format": int(ot.PaintFormat.PaintGlyph),
+                                    "Paint": {
+                                        "Format": int(ot.PaintFormat.PaintSolid),
+                                        "PaletteIndex": 2,
+                                        "Alpha": 0.5,
+                                    },
+                                    "Glyph": "B",
+                                },
+                            ],
+                        },
+                        "D": {  # same as 'C'
+                            "Format": int(ot.PaintFormat.PaintColrLayers),
+                            "Layers": [
+                                {
+                                    "Format": int(ot.PaintFormat.PaintGlyph),
+                                    "Paint": {
+                                        "Format": int(ot.PaintFormat.PaintSolid),
+                                        "PaletteIndex": 1,
+                                        "Alpha": 0.5,
+                                    },
+                                    "Glyph": "B",
+                                },
+                                {
+                                    "Format": int(ot.PaintFormat.PaintGlyph),
+                                    "Paint": {
+                                        "Format": int(ot.PaintFormat.PaintSolid),
+                                        "PaletteIndex": 2,
+                                        "Alpha": 0.5,
+                                    },
+                                    "Glyph": "B",
+                                },
+                            ],
+                        },
+                        "E": {  # first two layers vary the same way as 'C' or 'D'
+                            "Format": int(ot.PaintFormat.PaintColrLayers),
+                            "Layers": [
+                                {
+                                    "Format": int(ot.PaintFormat.PaintGlyph),
+                                    "Paint": {
+                                        "Format": int(ot.PaintFormat.PaintSolid),
+                                        "PaletteIndex": 1,
+                                        "Alpha": 0.5,
+                                    },
+                                    "Glyph": "B",
+                                },
+                                {
+                                    "Format": int(ot.PaintFormat.PaintGlyph),
+                                    "Paint": {
+                                        "Format": int(ot.PaintFormat.PaintSolid),
+                                        "PaletteIndex": 2,
+                                        "Alpha": 0.5,
+                                    },
+                                    "Glyph": "B",
+                                },
+                                {
+                                    "Format": int(ot.PaintFormat.PaintGlyph),
+                                    "Paint": {
+                                        "Format": int(ot.PaintFormat.PaintSolid),
+                                        "PaletteIndex": 3,
+                                        "Alpha": 1.0,
+                                    },
+                                    "Glyph": "B",
+                                },
+                            ],
+                        },
+                    },
+                ],
+                True,  # reuse
+                [
+                    "<COLR>",
+                    '  <Version value="1"/>',
+                    "  <!-- BaseGlyphRecordCount=0 -->",
+                    "  <!-- LayerRecordCount=0 -->",
+                    "  <BaseGlyphList>",
+                    "    <!-- BaseGlyphCount=4 -->",
+                    '    <BaseGlyphPaintRecord index="0">',
+                    '      <BaseGlyph value="A"/>',
+                    '      <Paint Format="1"><!-- PaintColrLayers -->',
+                    '        <NumLayers value="3"/>',
+                    '        <FirstLayerIndex value="0"/>',
+                    "      </Paint>",
+                    "    </BaseGlyphPaintRecord>",
+                    '    <BaseGlyphPaintRecord index="1">',
+                    '      <BaseGlyph value="C"/>',
+                    '      <Paint Format="1"><!-- PaintColrLayers -->',
+                    '        <NumLayers value="2"/>',
+                    '        <FirstLayerIndex value="3"/>',
+                    "      </Paint>",
+                    "    </BaseGlyphPaintRecord>",
+                    '    <BaseGlyphPaintRecord index="2">',
+                    '      <BaseGlyph value="D"/>',
+                    '      <Paint Format="1"><!-- PaintColrLayers -->',
+                    '        <NumLayers value="2"/>',
+                    '        <FirstLayerIndex value="3"/>',
+                    "      </Paint>",
+                    "    </BaseGlyphPaintRecord>",
+                    '    <BaseGlyphPaintRecord index="3">',
+                    '      <BaseGlyph value="E"/>',
+                    '      <Paint Format="1"><!-- PaintColrLayers -->',
+                    '        <NumLayers value="2"/>',
+                    '        <FirstLayerIndex value="5"/>',
+                    "      </Paint>",
+                    "    </BaseGlyphPaintRecord>",
+                    "  </BaseGlyphList>",
+                    "  <LayerList>",
+                    "    <!-- LayerCount=7 -->",
+                    '    <Paint index="0" Format="10"><!-- PaintGlyph -->',
+                    '      <Paint Format="2"><!-- PaintSolid -->',
+                    '        <PaletteIndex value="0"/>',
+                    '        <Alpha value="1.0"/>',
+                    "      </Paint>",
+                    '      <Glyph value="B"/>',
+                    "    </Paint>",
+                    '    <Paint index="1" Format="10"><!-- PaintGlyph -->',
+                    '      <Paint Format="2"><!-- PaintSolid -->',
+                    '        <PaletteIndex value="1"/>',
+                    '        <Alpha value="1.0"/>',
+                    "      </Paint>",
+                    '      <Glyph value="B"/>',
+                    "    </Paint>",
+                    '    <Paint index="2" Format="10"><!-- PaintGlyph -->',
+                    '      <Paint Format="2"><!-- PaintSolid -->',
+                    '        <PaletteIndex value="2"/>',
+                    '        <Alpha value="1.0"/>',
+                    "      </Paint>",
+                    '      <Glyph value="B"/>',
+                    "    </Paint>",
+                    '    <Paint index="3" Format="10"><!-- PaintGlyph -->',
+                    '      <Paint Format="3"><!-- PaintVarSolid -->',
+                    '        <PaletteIndex value="1"/>',
+                    '        <Alpha value="1.0"/>',
+                    '        <VarIndexBase value="0"/>',
+                    "      </Paint>",
+                    '      <Glyph value="B"/>',
+                    "    </Paint>",
+                    '    <Paint index="4" Format="10"><!-- PaintGlyph -->',
+                    '      <Paint Format="3"><!-- PaintVarSolid -->',
+                    '        <PaletteIndex value="2"/>',
+                    '        <Alpha value="1.0"/>',
+                    '        <VarIndexBase value="0"/>',
+                    "      </Paint>",
+                    '      <Glyph value="B"/>',
+                    "    </Paint>",
+                    '    <Paint index="5" Format="1"><!-- PaintColrLayers -->',
+                    '      <NumLayers value="2"/>',
+                    '      <FirstLayerIndex value="3"/>',
+                    "    </Paint>",
+                    '    <Paint index="6" Format="10"><!-- PaintGlyph -->',
+                    '      <Paint Format="2"><!-- PaintSolid -->',
+                    '        <PaletteIndex value="3"/>',
+                    '        <Alpha value="1.0"/>',
+                    "      </Paint>",
+                    '      <Glyph value="B"/>',
+                    "    </Paint>",
+                    "  </LayerList>",
+                    "</COLR>",
+                ],
+                [0],
+                id="sparse-masters-with-reuse",
+            ),
+        ],
+    )
+    def test_merge_full_table(
+        self, color_glyphs, ttFont, expected_xml, expected_varIdxes, reuse
+    ):
+        master_ttfs = [deepcopy(ttFont) for _ in range(len(color_glyphs))]
+        for ttf, glyphs in zip(master_ttfs, color_glyphs):
+            # merge algorithm is expected to work even if the master COLRs may differ as
+            # to the layer reuse, hence we force this is on while building them (even
+            # if it's on by default anyway, we want to make sure it works under more
+            # complex scenario).
+            ttf["COLR"] = buildCOLR(glyphs, allowLayerReuse=True)
+        vf = deepcopy(master_ttfs[0])
+
+        model = VariationModel([{}, {"ZZZZ": 1.0}])
+        merger = COLRVariationMerger(model, ["ZZZZ"], vf, allowLayerReuse=reuse)
+
+        merger.mergeTables(vf, master_ttfs)
+
+        out = vf["COLR"].table
+
+        assert compile_decompile(out, vf) == out
+        assert dump_xml(out, vf) == expected_xml
+        assert merger.varIdxes == expected_varIdxes

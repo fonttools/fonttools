@@ -4,10 +4,13 @@ Merge OpenType Layout tables (GDEF / GPOS / GSUB).
 import os
 import copy
 import enum
+import itertools
 from operator import ior
 import logging
+from fontTools.colorLib.builder import MAX_PAINT_COLR_LAYER_COUNT, LayerReuseCache
 from fontTools.misc import classifyTools
 from fontTools.misc.roundTools import otRound
+from fontTools.misc.treeTools import build_n_ary_tree
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables import otBase as otBase
 from fontTools.ttLib.tables.otConverters import BaseFixedValue
@@ -1131,7 +1134,7 @@ class COLRVariationMerger(VariationMerger):
 	care of that too.
 	"""
 
-	def __init__(self, model, axisTags, font):
+	def __init__(self, model, axisTags, font, allowLayerReuse=True):
 		VariationMerger.__init__(self, model, axisTags, font)
 		# maps {tuple(varIdxes): VarIndexBase} to facilitate reuse of VarIndexBase
 		# between variable tables with same varIdxes.
@@ -1141,6 +1144,14 @@ class COLRVariationMerger(VariationMerger):
 		# set of id()s of the subtables that contain variations after merging
 		# and need to be upgraded to the associated VarType.
 		self.varTableIds = set()
+		# we keep these around for rebuilding a LayerList while merging PaintColrLayers
+		self.layers = []
+		self.uniqueLayerIDs = set()
+		self.layerReuseCache = None
+		if allowLayerReuse:
+			self.layerReuseCache = LayerReuseCache()
+		# flag to ensure BaseGlyphList is fully merged before LayerList gets processed
+		self._doneBaseGlyphs = False
 
 	def mergeTables(self, font, master_ttfs, tableTags=("COLR",)):
 		VariationMerger.mergeTables(self, font, master_ttfs, tableTags)
@@ -1281,9 +1292,126 @@ class COLRVariationMerger(VariationMerger):
 				setattr(parent, st.name, newSubTable)
 
 
+@COLRVariationMerger.merger(ot.BaseGlyphList)
+def merge(merger, self, lst):
+	# ignore BaseGlyphCount, allow sparse glyph sets across masters
+	out = {rec.BaseGlyph: rec for rec in self.BaseGlyphPaintRecord}
+	masters = [{rec.BaseGlyph: rec for rec in m.BaseGlyphPaintRecord} for m in lst]
+
+	for i, g in enumerate(out.keys()):
+		try:
+			# missing base glyphs don't participate in the merge
+			merger.mergeThings(out[g], [v.get(g) for v in masters])
+		except VarLibMergeError as e:
+			e.stack.append(f".BaseGlyphPaintRecord[{i}]")
+			e.cause["location"] = f"base glyph {g!r}"
+			raise
+
+	merger._doneBaseGlyphs = True
+
+
+@COLRVariationMerger.merger(ot.LayerList)
+def merge(merger, self, lst):
+	# nothing to merge for LayerList, assuming we have already merged all PaintColrLayers
+	# found while traversing the paint graphs rooted at BaseGlyphPaintRecords.
+	assert merger._doneBaseGlyphs, "BaseGlyphList must be merged before LayerList"
+	# Simply flush the final list of layers and go home.
+	self.LayerCount = len(merger.layers)
+	self.Paint = merger.layers
+
+
+def _flatten_layers(paint, colr):
+	if paint.Format == ot.PaintFormat.PaintColrLayers:
+		yield from itertools.chain(
+			*(_flatten_layers(l, colr) for l in paint.getChildren(colr))
+		)
+	else:
+		yield paint
+
+
+def _merge_PaintColrLayers(self, out, lst):
+	# we only enforce that the (flat) number of layers is the same across all masters
+	# but we allow FirstLayerIndex to differ to acommodate for sparse glyph sets.
+	out_layers = []
+	for paint in _flatten_layers(out, self.font["COLR"].table):
+		if id(paint) in self.uniqueLayerIDs:
+			# ensure dest paints are unique, since merging operation modifies in-place
+			paint2 = copy.deepcopy(paint)
+			assert id(paint2) not in self.uniqueLayerIDs
+			paint = paint2
+		out_layers.append(paint)
+
+	# sanity check ttfs are subset to current values (see VariationMerger.mergeThings)
+	# before matching each master PaintColrLayers to its respective COLR by position
+	assert len(self.ttfs) == len(lst)
+	master_layerses = [
+		list(_flatten_layers(lst[i], self.ttfs[i]["COLR"].table))
+		for i in range(len(lst))
+	]
+
+	try:
+		self.mergeLists(out_layers, master_layerses)
+	except VarLibMergeError as e:
+		# NOTE: This attribute doesn't actually exist in PaintColrLayers but it's
+		# handy to have it in the stack trace for debugging.
+		e.stack.append(".Layers")
+		raise
+
+	# following block is very similar to LayerListBuilder._beforeBuildPaintColrLayers
+	# but I couldn't find a nice way to share the code between the two...
+
+	if self.layerReuseCache is not None:
+		# successful reuse can make the list smaller
+		out_layers = self.layerReuseCache.try_reuse(out_layers)
+
+	# if the list is still too big we need to tree-fy it
+	is_tree = len(out_layers) > MAX_PAINT_COLR_LAYER_COUNT
+	out_layers = build_n_ary_tree(out_layers, n=MAX_PAINT_COLR_LAYER_COUNT)
+
+	# We now have a tree of sequences with Paint leaves.
+	# Convert the sequences into PaintColrLayers.
+	def listToColrLayers(paint):
+		if isinstance(paint, list):
+			layers = [listToColrLayers(l) for l in paint]
+			paint = ot.Paint()
+			paint.Format = int(ot.PaintFormat.PaintColrLayers)
+			paint.NumLayers = len(layers)
+			paint.FirstLayerIndex = len(self.layers)
+			self.layers.exend(layers)
+			if self.layerReuseCache is not None:
+				self.layerReuseCache.add(layers, paint.FirstLayerIndex)
+		return paint
+
+	out_layers = [listToColrLayers(l) for l in out_layers]
+
+	if len(out_layers) == 1 and out_layers[0].Format == ot.PaintFormat.PaintColrLayers:
+		# special case when the reuse cache finds a single perfect PaintColrLayers match
+		# (it can only come from a successful reuse, _flatten_layers has gotten rid of
+		# all nested PaintColrLayers already); we assign it directly and avoid creating
+		# an extra table
+		out.NumLayers = out_layers[0].NumLayers
+		out.FirstLayerIndex = out_layers[0].FirstLayerIndex
+	else:
+		out.NumLayers = len(out_layers)
+		out.FirstLayerIndex = len(self.layers)
+
+		self.layers.extend(out_layers)
+		self.uniqueLayerIDs.update(id(p) for p in out_layers)
+
+		# Register our parts for reuse provided we aren't a tree
+		# If we are a tree the leaves registered for reuse and that will suffice
+		if self.layerReuseCache is not None and not is_tree:
+			self.layerReuseCache.add(out_layers, out.FirstLayerIndex)
+
+
 @COLRVariationMerger.merger((ot.Paint, ot.ClipBox))
 def merge(merger, self, lst):
 	fmt = merger.checkFormatEnum(self, lst, lambda fmt: not fmt.is_variable())
+
+	if fmt is ot.PaintFormat.PaintColrLayers:
+		_merge_PaintColrLayers(merger, self, lst)
+		return
+
 	varFormat = fmt.as_variable()
 
 	varAttrs = ()
