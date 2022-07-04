@@ -42,7 +42,10 @@ class VarLibMergeError(VarLibError):
             index = [x == self.cause["expected"] for x in self.cause["got"]].index(
                 False
             )
-            return index, self._master_name(index)
+            master_name = self._master_name(index)
+            if "location" in self.cause:
+                master_name = f"{master_name} ({self.cause['location']})"
+            return index, master_name
         return None, None
 
     @property
