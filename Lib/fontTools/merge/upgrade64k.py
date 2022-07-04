@@ -4,6 +4,7 @@ from fontTools.ttLib.tables.DefaultTable import DefaultTable
 from fontTools.ttLib.tables import otTables
 from fontTools.merge.base import add_method, mergeObjects
 from fontTools.merge.util import *
+import fontTools.merge.classify_context
 
 @add_method(otTables.PairPos)
 def upgrade64k(self, reverseGlyphMap):
@@ -46,7 +47,26 @@ def upgrade64k(self, reverseGlyphMap):
 		otTables.ContextPos,
 		otTables.ChainContextPos)
 def upgrade64k(self, reverseGlyphMap):
-	NotImplemented
+	upgrade = False
+	c = self.__merge_classify_context()
+
+	if self.Format == 1:
+		for rs in getattr(self, c.RuleSet):
+			if not rs: continue
+			for r in getattr(rs, c.Rule):
+				if not r: continue
+				for s in ['Backtrack', 'Input', 'LookAhead']:
+					if not hasattr(r, s): continue
+					seq = getattr(r, s)
+					for glyph in seq:
+						if reverseGlyphMap[glyph] > 65535:
+							upgrade = True
+							break
+				if upgrade: break
+			if upgrade: break
+
+	if upgrade:
+		self.Format += 3
 
 @add_method(otTables.ExtensionSubst,
 		otTables.ExtensionPos)

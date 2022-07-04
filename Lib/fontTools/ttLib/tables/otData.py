@@ -355,15 +355,34 @@ otData = [
 		('Offset', 'PosRuleSet', 'PosRuleSetCount', 0, 'Array of offsets to PosRuleSet tables-from beginning of ContextPos subtable-ordered by Coverage Index'),
 	]),
 
+	('ContextPosFormat4', [
+		('uint16', 'PosFormat', None, None, 'Format identifier-format = 1'),
+		('Offset', 'Coverage', None, None, 'Offset to Coverage table-from beginning of ContextPos subtable'),
+		('uint16', 'PosRuleSetCount', None, None, 'Number of PosRuleSet tables'),
+		('Offset', 'PosRuleSet24', 'PosRuleSetCount', 0, 'Array of offsets to PosRuleSet tables-from beginning of ContextPos subtable-ordered by Coverage Index'),
+	]),
+
 	('PosRuleSet', [
 		('uint16', 'PosRuleCount', None, None, 'Number of PosRule tables'),
 		('Offset', 'PosRule', 'PosRuleCount', 0, 'Array of offsets to PosRule tables-from beginning of PosRuleSet-ordered by preference'),
+	]),
+
+	('PosRuleSet24', [
+		('uint16', 'PosRuleCount', None, None, 'Number of PosRule tables'),
+		('Offset', 'PosRule24', 'PosRuleCount', 0, 'Array of offsets to PosRule tables-from beginning of PosRuleSet-ordered by preference'),
 	]),
 
 	('PosRule', [
 		('uint16', 'GlyphCount', None, None, 'Number of glyphs in the Input glyph sequence'),
 		('uint16', 'PosCount', None, None, 'Number of PosLookupRecords'),
 		('GlyphID', 'Input', 'GlyphCount', -1, 'Array of input GlyphIDs-starting with the second glyph'),
+		('struct', 'PosLookupRecord', 'PosCount', 0, 'Array of positioning lookups-in design order'),
+	]),
+
+	('PosRule24', [
+		('uint16', 'GlyphCount', None, None, 'Number of glyphs in the Input glyph sequence'),
+		('uint16', 'PosCount', None, None, 'Number of PosLookupRecords'),
+		('GlyphID24', 'Input', 'GlyphCount', -1, 'Array of input GlyphIDs-starting with the second glyph'),
 		('struct', 'PosLookupRecord', 'PosCount', 0, 'Array of positioning lookups-in design order'),
 	]),
 
@@ -402,9 +421,21 @@ otData = [
 		('Offset', 'ChainPosRuleSet', 'ChainPosRuleSetCount', 0, 'Array of offsets to ChainPosRuleSet tables-from beginning of ContextPos subtable-ordered by Coverage Index'),
 	]),
 
+	('ChainContextPosFormat4', [
+		('uint16', 'PosFormat', None, None, 'Format identifier-format = 1'),
+		('Offset', 'Coverage', None, None, 'Offset to Coverage table-from beginning of ContextPos subtable'),
+		('uint16', 'ChainPosRuleSetCount', None, None, 'Number of ChainPosRuleSet tables'),
+		('Offset', 'ChainPosRuleSet24', 'ChainPosRuleSetCount', 0, 'Array of offsets to ChainPosRuleSet tables-from beginning of ContextPos subtable-ordered by Coverage Index'),
+	]),
+
 	('ChainPosRuleSet', [
 		('uint16', 'ChainPosRuleCount', None, None, 'Number of ChainPosRule tables'),
 		('Offset', 'ChainPosRule', 'ChainPosRuleCount', 0, 'Array of offsets to ChainPosRule tables-from beginning of ChainPosRuleSet-ordered by preference'),
+	]),
+
+	('ChainPosRuleSet24', [
+		('uint16', 'ChainPosRuleCount', None, None, 'Number of ChainPosRule tables'),
+		('Offset', 'ChainPosRule24', 'ChainPosRuleCount', 0, 'Array of offsets to ChainPosRule tables-from beginning of ChainPosRuleSet-ordered by preference'),
 	]),
 
 	('ChainPosRule', [
@@ -414,6 +445,17 @@ otData = [
 		('GlyphID', 'Input', 'InputGlyphCount', -1, 'Array of input GlyphIDs (start with second glyph)'),
 		('uint16', 'LookAheadGlyphCount', None, None, 'Total number of glyphs in the look ahead sequence (number of glyphs to be matched after the input sequence)'),
 		('GlyphID', 'LookAhead', 'LookAheadGlyphCount', 0, "Array of lookahead GlyphID's (to be matched after the input sequence)"),
+		('uint16', 'PosCount', None, None, 'Number of PosLookupRecords'),
+		('struct', 'PosLookupRecord', 'PosCount', 0, 'Array of PosLookupRecords (in design order)'),
+	]),
+
+	('ChainPosRule24', [
+		('uint16', 'BacktrackGlyphCount', None, None, 'Total number of glyphs in the backtrack sequence (number of glyphs to be matched before the first glyph)'),
+		('GlyphID24', 'Backtrack', 'BacktrackGlyphCount', 0, "Array of backtracking GlyphID's (to be matched before the input sequence)"),
+		('uint16', 'InputGlyphCount', None, None, 'Total number of glyphs in the input sequence (includes the first glyph)'),
+		('GlyphID24', 'Input', 'InputGlyphCount', -1, 'Array of input GlyphIDs (start with second glyph)'),
+		('uint16', 'LookAheadGlyphCount', None, None, 'Total number of glyphs in the look ahead sequence (number of glyphs to be matched after the input sequence)'),
+		('GlyphID24', 'LookAhead', 'LookAheadGlyphCount', 0, "Array of lookahead GlyphID's (to be matched after the input sequence)"),
 		('uint16', 'PosCount', None, None, 'Number of PosLookupRecords'),
 		('struct', 'PosLookupRecord', 'PosCount', 0, 'Array of PosLookupRecords (in design order)'),
 	]),
@@ -584,15 +626,34 @@ otData = [
 		('Offset', 'SubRuleSet', 'SubRuleSetCount', 0, 'Array of offsets to SubRuleSet tables-from beginning of Substitution table-ordered by Coverage Index'),
 	]),
 
+	('ContextSubstFormat4', [
+		('uint16', 'SubstFormat', None, None, 'Format identifier-format = 1'),
+		('Offset', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
+		('uint16', 'SubRuleSetCount', None, None, 'Number of SubRuleSet tables-must equal GlyphCount in Coverage table'),
+		('Offset', 'SubRuleSet24', 'SubRuleSetCount', 0, 'Array of offsets to SubRuleSet tables-from beginning of Substitution table-ordered by Coverage Index'),
+	]),
+
 	('SubRuleSet', [
 		('uint16', 'SubRuleCount', None, None, 'Number of SubRule tables'),
 		('Offset', 'SubRule', 'SubRuleCount', 0, 'Array of offsets to SubRule tables-from beginning of SubRuleSet table-ordered by preference'),
+	]),
+
+	('SubRuleSet24', [
+		('uint16', 'SubRuleCount', None, None, 'Number of SubRule tables'),
+		('Offset', 'SubRule24', 'SubRuleCount', 0, 'Array of offsets to SubRule tables-from beginning of SubRuleSet table-ordered by preference'),
 	]),
 
 	('SubRule', [
 		('uint16', 'GlyphCount', None, None, 'Total number of glyphs in input glyph sequence-includes the first glyph'),
 		('uint16', 'SubstCount', None, None, 'Number of SubstLookupRecords'),
 		('GlyphID', 'Input', 'GlyphCount', -1, 'Array of input GlyphIDs-start with second glyph'),
+		('struct', 'SubstLookupRecord', 'SubstCount', 0, 'Array of SubstLookupRecords-in design order'),
+	]),
+
+	('SubRule24', [
+		('uint16', 'GlyphCount', None, None, 'Total number of glyphs in input glyph sequence-includes the first glyph'),
+		('uint16', 'SubstCount', None, None, 'Number of SubstLookupRecords'),
+		('GlyphID24', 'Input', 'GlyphCount', -1, 'Array of input GlyphIDs-start with second glyph'),
 		('struct', 'SubstLookupRecord', 'SubstCount', 0, 'Array of SubstLookupRecords-in design order'),
 	]),
 
@@ -631,9 +692,21 @@ otData = [
 		('Offset', 'ChainSubRuleSet', 'ChainSubRuleSetCount', 0, 'Array of offsets to ChainSubRuleSet tables-from beginning of Substitution table-ordered by Coverage Index'),
 	]),
 
+	('ChainContextSubstFormat4', [
+		('uint16', 'SubstFormat', None, None, 'Format identifier-format = 1'),
+		('Offset', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
+		('uint16', 'ChainSubRuleSetCount', None, None, 'Number of ChainSubRuleSet tables-must equal GlyphCount in Coverage table'),
+		('Offset', 'ChainSubRuleSet24', 'ChainSubRuleSetCount', 0, 'Array of offsets to ChainSubRuleSet tables-from beginning of Substitution table-ordered by Coverage Index'),
+	]),
+
 	('ChainSubRuleSet', [
 		('uint16', 'ChainSubRuleCount', None, None, 'Number of ChainSubRule tables'),
 		('Offset', 'ChainSubRule', 'ChainSubRuleCount', 0, 'Array of offsets to ChainSubRule tables-from beginning of ChainSubRuleSet table-ordered by preference'),
+	]),
+
+	('ChainSubRuleSet24', [
+		('uint16', 'ChainSubRuleCount', None, None, 'Number of ChainSubRule tables'),
+		('Offset', 'ChainSubRule24', 'ChainSubRuleCount', 0, 'Array of offsets to ChainSubRule tables-from beginning of ChainSubRuleSet table-ordered by preference'),
 	]),
 
 	('ChainSubRule', [
@@ -643,6 +716,17 @@ otData = [
 		('GlyphID', 'Input', 'InputGlyphCount', -1, 'Array of input GlyphIDs (start with second glyph)'),
 		('uint16', 'LookAheadGlyphCount', None, None, 'Total number of glyphs in the look ahead sequence (number of glyphs to be matched after the input sequence)'),
 		('GlyphID', 'LookAhead', 'LookAheadGlyphCount', 0, "Array of lookahead GlyphID's (to be matched after the input sequence)"),
+		('uint16', 'SubstCount', None, None, 'Number of SubstLookupRecords'),
+		('struct', 'SubstLookupRecord', 'SubstCount', 0, 'Array of SubstLookupRecords (in design order)'),
+	]),
+
+	('ChainSubRule24', [
+		('uint16', 'BacktrackGlyphCount', None, None, 'Total number of glyphs in the backtrack sequence (number of glyphs to be matched before the first glyph)'),
+		('GlyphID24', 'Backtrack', 'BacktrackGlyphCount', 0, "Array of backtracking GlyphID's (to be matched before the input sequence)"),
+		('uint16', 'InputGlyphCount', None, None, 'Total number of glyphs in the input sequence (includes the first glyph)'),
+		('GlyphID24', 'Input', 'InputGlyphCount', -1, 'Array of input GlyphIDs (start with second glyph)'),
+		('uint16', 'LookAheadGlyphCount', None, None, 'Total number of glyphs in the look ahead sequence (number of glyphs to be matched after the input sequence)'),
+		('GlyphID24', 'LookAhead', 'LookAheadGlyphCount', 0, "Array of lookahead GlyphID's (to be matched after the input sequence)"),
 		('uint16', 'SubstCount', None, None, 'Number of SubstLookupRecords'),
 		('struct', 'SubstLookupRecord', 'SubstCount', 0, 'Array of SubstLookupRecords (in design order)'),
 	]),
