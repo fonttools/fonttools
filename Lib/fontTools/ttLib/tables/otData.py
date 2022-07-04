@@ -621,9 +621,21 @@ otData = [
 		('Offset', 'AlternateSet', 'AlternateSetCount', 0, 'Array of offsets to AlternateSet tables-from beginning of Substitution table-ordered by Coverage Index'),
 	]),
 
+	('AlternateSubstFormat2', [
+		('uint16', 'SubstFormat', None, None, 'Format identifier-format = 1'),
+		('Offset32', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
+		('uint24', 'AlternateSetCount', None, None, 'Number of AlternateSet tables'),
+		('Offset24', 'AlternateSet24', 'AlternateSetCount', 0, 'Array of offsets to AlternateSet tables-from beginning of Substitution table-ordered by Coverage Index'),
+	]),
+
 	('AlternateSet', [
 		('uint16', 'GlyphCount', None, None, 'Number of GlyphIDs in the Alternate array'),
 		('GlyphID', 'Alternate', 'GlyphCount', 0, 'Array of alternate GlyphIDs-in arbitrary order'),
+	]),
+
+	('AlternateSet24', [
+		('uint16', 'GlyphCount', None, None, 'Number of GlyphIDs in the Alternate array'),
+		('GlyphID24', 'Alternate', 'GlyphCount', 0, 'Array of alternate GlyphIDs-in arbitrary order'),
 	]),
 
 	('LigatureSubstFormat1', [

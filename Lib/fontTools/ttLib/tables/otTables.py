@@ -1091,6 +1091,22 @@ class AlternateSubst(FormatSwitchingBaseTable):
 		alternates = getattr(self, "alternates", None)
 		if alternates is None:
 			alternates = self.alternates = {}
+
+		beyond64k = False
+		reverseGlyphMap = font.getReverseGlyphMap()
+		if len(reverseGlyphMap) > 65535:
+			if len(alternates) > 65535:
+				beyond64k = True
+			else:
+				for _, seq in alternates.items():
+					for glyph in seq:
+						if reverseGlyphMap[glyph] > 65535:
+							beyond64k = True
+							break
+					if beyond64k: break
+		if beyond64k:
+			self.Format += 1
+
 		items = list(alternates.items())
 		for i in range(len(items)):
 			glyphName, set = items[i]
