@@ -449,30 +449,15 @@ def _reuse_ranges(num_layers: int) -> Generator[Tuple[int, int], None, None]:
             yield (lbound, ubound)
 
 
-class LayerListBuilder:
-    layers: List[ot.Paint]
+class LayerReuseCache:
     reusePool: Mapping[Tuple[Any, ...], int]
     tuples: Mapping[int, Tuple[Any, ...]]
     keepAlive: List[ot.Paint]  # we need id to remain valid
-    allowLayerReuse: bool
 
-    def __init__(self, *, allowLayerReuse=True):
-        self.layers = []
+    def __init__(self):
         self.reusePool = {}
         self.tuples = {}
         self.keepAlive = []
-        self.allowLayerReuse = allowLayerReuse
-
-        # We need to intercept construction of PaintColrLayers
-        callbacks = _buildPaintCallbacks()
-        callbacks[
-            (
-                BuildCallback.BEFORE_BUILD,
-                ot.Paint,
-                ot.PaintFormat.PaintColrLayers,
-            )
-        ] = self._beforeBuildPaintColrLayers
-        self.tableBuilder = TableBuilder(callbacks)
 
     def _paint_tuple(self, paint: ot.Paint):
         # start simple, who even cares about cyclic graphs or interesting field types
@@ -499,6 +484,61 @@ class LayerListBuilder:
     def _as_tuple(self, paints: Sequence[ot.Paint]) -> Tuple[Any, ...]:
         return tuple(self._paint_tuple(p) for p in paints)
 
+    def try_reuse(self, layers: List[ot.Paint]) -> List[ot.Paint]:
+        found_reuse = True
+        while found_reuse:
+            found_reuse = False
+
+            ranges = sorted(
+                _reuse_ranges(len(layers)),
+                key=lambda t: (t[1] - t[0], t[1], t[0]),
+                reverse=True,
+            )
+            for lbound, ubound in ranges:
+                reuse_lbound = self.reusePool.get(
+                    self._as_tuple(layers[lbound:ubound]), -1
+                )
+                if reuse_lbound == -1:
+                    continue
+                new_slice = ot.Paint()
+                new_slice.Format = int(ot.PaintFormat.PaintColrLayers)
+                new_slice.NumLayers = ubound - lbound
+                new_slice.FirstLayerIndex = reuse_lbound
+                layers = layers[:lbound] + [new_slice] + layers[ubound:]
+                found_reuse = True
+                break
+        return layers
+
+    def add(self, layers: List[ot.Paint], first_layer_index: int):
+        for lbound, ubound in _reuse_ranges(len(layers)):
+            self.reusePool[self._as_tuple(layers[lbound:ubound])] = (
+                lbound + first_layer_index
+            )
+
+
+class LayerListBuilder:
+    layers: List[ot.Paint]
+    cache: LayerReuseCache
+    allowLayerReuse: bool
+
+    def __init__(self, *, allowLayerReuse=True):
+        self.layers = []
+        if allowLayerReuse:
+            self.cache = LayerReuseCache()
+        else:
+            self.cache = None
+
+        # We need to intercept construction of PaintColrLayers
+        callbacks = _buildPaintCallbacks()
+        callbacks[
+            (
+                BuildCallback.BEFORE_BUILD,
+                ot.Paint,
+                ot.PaintFormat.PaintColrLayers,
+            )
+        ] = self._beforeBuildPaintColrLayers
+        self.tableBuilder = TableBuilder(callbacks)
+
     # COLR layers is unusual in that it modifies shared state
     # so we need a callback into an object
     def _beforeBuildPaintColrLayers(self, dest, source):
@@ -512,35 +552,14 @@ class LayerListBuilder:
         # Convert maps seqs or whatever into typed objects
         layers = [self.buildPaint(l) for l in layers]
 
-        if self.allowLayerReuse:
-            # No reason to have a colr layers with just one entry
-            if len(layers) == 1:
-                return layers[0], {}
+        # No reason to have a colr layers with just one entry
+        if len(layers) == 1:
+            return layers[0], {}
 
+        if self.cache is not None:
             # Look for reuse, with preference to longer sequences
             # This may make the layer list smaller
-            found_reuse = True
-            while found_reuse:
-                found_reuse = False
-
-                ranges = sorted(
-                    _reuse_ranges(len(layers)),
-                    key=lambda t: (t[1] - t[0], t[1], t[0]),
-                    reverse=True,
-                )
-                for lbound, ubound in ranges:
-                    reuse_lbound = self.reusePool.get(
-                        self._as_tuple(layers[lbound:ubound]), -1
-                    )
-                    if reuse_lbound == -1:
-                        continue
-                    new_slice = ot.Paint()
-                    new_slice.Format = int(ot.PaintFormat.PaintColrLayers)
-                    new_slice.NumLayers = ubound - lbound
-                    new_slice.FirstLayerIndex = reuse_lbound
-                    layers = layers[:lbound] + [new_slice] + layers[ubound:]
-                    found_reuse = True
-                    break
+            layers = self.cache.try_reuse(layers)
 
         # The layer list is now final; if it's too big we need to tree it
         is_tree = len(layers) > MAX_PAINT_COLR_LAYER_COUNT
@@ -561,7 +580,7 @@ class LayerListBuilder:
         layers = [listToColrLayers(l) for l in layers]
 
         # No reason to have a colr layers with just one entry
-        if self.allowLayerReuse and len(layers) == 1:
+        if len(layers) == 1:
             return layers[0], {}
 
         paint = ot.Paint()
@@ -572,11 +591,8 @@ class LayerListBuilder:
 
         # Register our parts for reuse provided we aren't a tree
         # If we are a tree the leaves registered for reuse and that will suffice
-        if self.allowLayerReuse and not is_tree:
-            for lbound, ubound in _reuse_ranges(len(layers)):
-                self.reusePool[self._as_tuple(layers[lbound:ubound])] = (
-                    lbound + paint.FirstLayerIndex
-                )
+        if self.cache is not None and not is_tree:
+            self.cache.add(layers, paint.FirstLayerIndex)
 
         # we've fully built dest; empty source prevents generalized build from kicking in
         return paint, {}
