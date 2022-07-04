@@ -80,7 +80,7 @@ class RearrangementMorphAction(AATAction):
 		13: "ABxCD ⇒ CDxBA",
 		14: "ABxCD ⇒ DCxAB",
 		15: "ABxCD ⇒ DCxBA",
-        }
+		}
 
 	def __init__(self):
 		self.NewState = 0
@@ -180,7 +180,7 @@ class ContextualMorphAction(AATAction):
 		xmlWriter.simpletag("MarkIndex", value=self.MarkIndex)
 		xmlWriter.newline()
 		xmlWriter.simpletag("CurrentIndex",
-		                    value=self.CurrentIndex)
+							value=self.CurrentIndex)
 		xmlWriter.newline()
 		xmlWriter.endtag(name)
 		xmlWriter.newline()
@@ -365,8 +365,8 @@ class InsertionMorphAction(AATAction):
 	staticSize = 8
 	actionHeaderSize = 4  # 4 bytes for actionOffset
 	_FLAGS = ["SetMark", "DontAdvance",
-	          "CurrentIsKashidaLike", "MarkedIsKashidaLike",
-	          "CurrentInsertBefore", "MarkedInsertBefore"]
+			  "CurrentIsKashidaLike", "MarkedIsKashidaLike",
+			  "CurrentInsertBefore", "MarkedInsertBefore"]
 
 	def __init__(self):
 		self.NewState = 0
@@ -868,10 +868,10 @@ class MultipleSubst(FormatSwitchingBaseTable):
 		cov.glyphs = sorted(list(mapping.keys()), key=font.getGlyphID)
 		self.Format = 1
 		rawTable = {
-                        "Coverage": cov,
-                        "Sequence": [self.makeSequence_(mapping[glyph])
-                                     for glyph in cov.glyphs],
-                }
+						"Coverage": cov,
+						"Sequence": [self.makeSequence_(mapping[glyph])
+									 for glyph in cov.glyphs],
+				}
 		return rawTable
 
 	def toXML2(self, xmlWriter, font):
@@ -910,7 +910,7 @@ class MultipleSubst(FormatSwitchingBaseTable):
 					glyph_mapping.append(element_attrs["value"])
 			return
 
-                # TTX v3.1 and later.
+				# TTX v3.1 and later.
 		outGlyphs = attrs["out"].split(",") if attrs["out"] else []
 		mapping[attrs["in"]] = [g.strip() for g in outGlyphs]
 
@@ -1151,6 +1151,25 @@ class LigatureSubst(FormatSwitchingBaseTable):
 			ligatures = newLigatures
 
 		items = list(ligatures.items())
+
+		beyond64k = False
+		reverseGlyphMap = font.getReverseGlyphMap()
+		if len(reverseGlyphMap) > 65535:
+			if len(items) > 65535:
+				beyond64k = True
+			else:
+				for glyph, set in items:
+					for ligature in set:
+						if reverseGlyphMap[ligature.LigGlyph] > 65535:
+							beyond64k = True
+						for comp in ligature.Component:
+							if reverseGlyphMap[comp] > 65535:
+								beyond64k = True
+						if beyond64k: break
+					if beyond64k: break
+		if beyond64k:
+			self.Format += 1
+
 		for i in range(len(items)):
 			glyphName, set = items[i]
 			items[i] = font.getGlyphID(glyphName), glyphName, set

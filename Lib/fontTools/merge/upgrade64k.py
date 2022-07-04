@@ -6,6 +6,23 @@ from fontTools.merge.base import add_method, mergeObjects
 from fontTools.merge.util import *
 import fontTools.merge.classify_context
 
+@add_method(otTables.SingleSubst,
+		otTables.MultipleSubst,
+		otTables.AlternateSubst,
+		otTables.LigatureSubst)
+def upgrade64k(self, reverseGlyphMap):
+	# These are handled in otTables
+	pass
+
+@add_method(otTables.ReverseChainSingleSubst,
+		otTables.SinglePos,
+		otTables.CursivePos,
+		otTables.MarkBasePos,
+		otTables.MarkLigPos,
+		otTables.MarkMarkPos)
+def upgrade64k(self, reverseGlyphMap):
+	NotImplemented
+
 @add_method(otTables.PairPos)
 def upgrade64k(self, reverseGlyphMap):
 	upgrade = False
@@ -28,19 +45,6 @@ def upgrade64k(self, reverseGlyphMap):
 
 	if upgrade:
 		self.Format += 2
-
-@add_method(otTables.SingleSubst,
-		otTables.MultipleSubst,
-		otTables.AlternateSubst,
-		otTables.LigatureSubst,
-		otTables.ReverseChainSingleSubst,
-		otTables.SinglePos,
-		otTables.CursivePos,
-		otTables.MarkBasePos,
-		otTables.MarkLigPos,
-		otTables.MarkMarkPos)
-def upgrade64k(self, reverseGlyphMap):
-	NotImplemented
 
 @add_method(otTables.ContextSubst,
 		otTables.ChainContextSubst,

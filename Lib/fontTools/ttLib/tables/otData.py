@@ -603,15 +603,33 @@ otData = [
 		('Offset', 'LigatureSet', 'LigSetCount', 0, 'Array of offsets to LigatureSet tables-from beginning of Substitution table-ordered by Coverage Index'),
 	]),
 
+	('LigatureSubstFormat2', [
+		('uint16', 'SubstFormat', None, None, 'Format identifier-format = 1'),
+		('Offset32', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
+		('uint24', 'LigSetCount', None, None, 'Number of LigatureSet tables'),
+		('Offset24', 'LigatureSet24', 'LigSetCount', 0, 'Array of offsets to LigatureSet tables-from beginning of Substitution table-ordered by Coverage Index'),
+	]),
+
 	('LigatureSet', [
 		('uint16', 'LigatureCount', None, None, 'Number of Ligature tables'),
 		('Offset', 'Ligature', 'LigatureCount', 0, 'Array of offsets to Ligature tables-from beginning of LigatureSet table-ordered by preference'),
+	]),
+
+	('LigatureSet24', [
+		('uint16', 'LigatureCount', None, None, 'Number of Ligature tables'),
+		('Offset', 'Ligature24', 'LigatureCount', 0, 'Array of offsets to Ligature tables-from beginning of LigatureSet table-ordered by preference'),
 	]),
 
 	('Ligature', [
 		('GlyphID', 'LigGlyph', None, None, 'GlyphID of ligature to substitute'),
 		('uint16', 'CompCount', None, None, 'Number of components in the ligature'),
 		('GlyphID', 'Component', 'CompCount', -1, 'Array of component GlyphIDs-start with the second component-ordered in writing direction'),
+	]),
+
+	('Ligature24', [
+		('GlyphID24', 'LigGlyph', None, None, 'GlyphID of ligature to substitute'),
+		('uint16', 'CompCount', None, None, 'Number of components in the ligature'),
+		('GlyphID24', 'Component', 'CompCount', -1, 'Array of component GlyphIDs-start with the second component-ordered in writing direction'),
 	]),
 
 	('SubstLookupRecord', [
