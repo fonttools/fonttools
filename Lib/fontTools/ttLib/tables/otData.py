@@ -597,6 +597,23 @@ otData = [
 		('GlyphID', 'Substitute', 'GlyphCount', 0, 'String of GlyphIDs to substitute'),
 	]),
 
+	('MultipleSubstFormat2', [
+		('uint16', 'SubstFormat', None, None, 'Format identifier-format = 1'),
+		('Offset', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
+		('uint24', 'SequenceCount', None, None, 'Number of Sequence table offsets in the Sequence array'),
+		('Offset24', 'Sequence24', 'SequenceCount', 0, 'Array of offsets to Sequence tables-from beginning of Substitution table-ordered by Coverage Index'),
+	]),
+
+	('Sequence', [
+		('uint16', 'GlyphCount', None, None, 'Number of GlyphIDs in the Substitute array. This should always be greater than 0.'),
+		('GlyphID', 'Substitute', 'GlyphCount', 0, 'String of GlyphIDs to substitute'),
+	]),
+
+	('Sequence24', [
+		('uint16', 'GlyphCount', None, None, 'Number of GlyphIDs in the Substitute array. This should always be greater than 0.'),
+		('GlyphID24', 'Substitute', 'GlyphCount', 0, 'String of GlyphIDs to substitute'),
+	]),
+
 	('AlternateSubstFormat1', [
 		('uint16', 'SubstFormat', None, None, 'Format identifier-format = 1'),
 		('Offset', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),

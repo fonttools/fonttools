@@ -875,9 +875,25 @@ class MultipleSubst(FormatSwitchingBaseTable):
 		mapping = getattr(self, "mapping", None)
 		if mapping is None:
 			mapping = self.mapping = {}
+		self.Format = 1
+
+		beyond64k = False
+		reverseGlyphMap = font.getReverseGlyphMap()
+		if len(reverseGlyphMap) > 65535:
+			if len(mapping) > 65535:
+				beyond64k = True
+			else:
+				for _, seq in mapping.items():
+					for glyph in seq:
+						if reverseGlyphMap[glyph] > 65535:
+							beyond64k = True
+							break
+					if beyond64k: break
+		if beyond64k:
+			self.Format += 1
+
 		cov = Coverage()
 		cov.glyphs = sorted(list(mapping.keys()), key=font.getGlyphID)
-		self.Format = 1
 		rawTable = {
 						"Coverage": cov,
 						"Sequence": [self.makeSequence_(mapping[glyph])
