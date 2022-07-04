@@ -7,6 +7,7 @@ from fontTools.ttLib.tables.DefaultTable import DefaultTable
 from fontTools.ttLib.tables import otTables
 from fontTools.merge.base import add_method, mergeObjects
 from fontTools.merge.util import *
+import fontTools.merge.upgrade64k
 import logging
 
 
@@ -462,5 +463,9 @@ def layoutPostMerge(font):
 				if GDEF and GDEF.table.Version >= 0x00010002:
 					markFilteringSetMap = NonhashableDict(GDEF.table.MarkGlyphSetsDef.Coverage)
 					t.table.LookupList.mapMarkFilteringSets(markFilteringSetMap)
+
+				beyond64k = len(font.getGlyphOrder()) > 65535
+				if beyond64k:
+					t.table.LookupList.upgrade64k(font.getReverseGlyphMap())
 
 		# TODO FeatureParams nameIDs

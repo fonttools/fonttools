@@ -208,13 +208,33 @@ otData = [
 		('Offset', 'PairSet', 'PairSetCount', 0, 'Array of offsets to PairSet tables-from beginning of PairPos subtable-ordered by Coverage Index'),
 	]),
 
+	('PairPosFormat3', [
+		('uint16', 'PosFormat', None, None, 'Format identifier-format = 1'),
+		('Offset32', 'Coverage', None, None, 'Offset to Coverage table-from beginning of PairPos subtable-only the first glyph in each pair'),
+		('uint16', 'ValueFormat1', None, None, 'Defines the types of data in ValueRecord1-for the first glyph in the pair -may be zero (0)'),
+		('uint16', 'ValueFormat2', None, None, 'Defines the types of data in ValueRecord2-for the second glyph in the pair -may be zero (0)'),
+		('uint24', 'PairSetCount', None, None, 'Number of PairSet tables'),
+		('Offset24', 'PairSet24', 'PairSetCount', 0, 'Array of offsets to PairSet tables-from beginning of PairPos subtable-ordered by Coverage Index'),
+	]),
+
 	('PairSet', [
 		('uint16', 'PairValueCount', None, None, 'Number of PairValueRecords'),
 		('struct', 'PairValueRecord', 'PairValueCount', 0, 'Array of PairValueRecords-ordered by GlyphID of the second glyph'),
 	]),
 
+	('PairSet24', [
+		('uint24', 'PairValueCount', None, None, 'Number of PairValueRecords'),
+		('struct', 'PairValue24Record', 'PairValueCount', 0, 'Array of PairValueRecords-ordered by GlyphID of the second glyph'),
+	]),
+
 	('PairValueRecord', [
 		('GlyphID', 'SecondGlyph', None, None, 'GlyphID of second glyph in the pair-first glyph is listed in the Coverage table'),
+		('ValueRecord', 'Value1', None, None, 'Positioning data for the first glyph in the pair'),
+		('ValueRecord', 'Value2', None, None, 'Positioning data for the second glyph in the pair'),
+	]),
+
+	('PairValue24Record', [
+		('GlyphID24', 'SecondGlyph', None, None, 'GlyphID of second glyph in the pair-first glyph is listed in the Coverage table'),
 		('ValueRecord', 'Value1', None, None, 'Positioning data for the first glyph in the pair'),
 		('ValueRecord', 'Value2', None, None, 'Positioning data for the second glyph in the pair'),
 	]),
@@ -226,6 +246,18 @@ otData = [
 		('uint16', 'ValueFormat2', None, None, 'ValueRecord definition-for the second glyph of the pair-may be zero (0)'),
 		('Offset', 'ClassDef1', None, None, 'Offset to ClassDef table-from beginning of PairPos subtable-for the first glyph of the pair'),
 		('Offset', 'ClassDef2', None, None, 'Offset to ClassDef table-from beginning of PairPos subtable-for the second glyph of the pair'),
+		('uint16', 'Class1Count', None, None, 'Number of classes in ClassDef1 table-includes Class0'),
+		('uint16', 'Class2Count', None, None, 'Number of classes in ClassDef2 table-includes Class0'),
+		('struct', 'Class1Record', 'Class1Count', 0, 'Array of Class1 records-ordered by Class1'),
+	]),
+
+	('PairPosFormat4', [
+		('uint16', 'PosFormat', None, None, 'Format identifier-format = 2'),
+		('Offset32', 'Coverage', None, None, 'Offset to Coverage table-from beginning of PairPos subtable-for the first glyph of the pair'),
+		('uint16', 'ValueFormat1', None, None, 'ValueRecord definition-for the first glyph of the pair-may be zero (0)'),
+		('uint16', 'ValueFormat2', None, None, 'ValueRecord definition-for the second glyph of the pair-may be zero (0)'),
+		('Offset32', 'ClassDef1', None, None, 'Offset to ClassDef table-from beginning of PairPos subtable-for the first glyph of the pair'),
+		('Offset32', 'ClassDef2', None, None, 'Offset to ClassDef table-from beginning of PairPos subtable-for the second glyph of the pair'),
 		('uint16', 'Class1Count', None, None, 'Number of classes in ClassDef1 table-includes Class0'),
 		('uint16', 'Class2Count', None, None, 'Number of classes in ClassDef2 table-includes Class0'),
 		('struct', 'Class1Record', 'Class1Count', 0, 'Array of Class1 records-ordered by Class1'),
