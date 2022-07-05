@@ -943,7 +943,9 @@ class MultipleSubst(FormatSwitchingBaseTable):
 		mapping[attrs["in"]] = [g.strip() for g in outGlyphs]
 
 	@staticmethod
-	def makeSequence_(g, klass):
+	def makeSequence_(g, klass=None):
+		if klass is None:
+			klass = Sequence
 		seq = klass()
 		seq.Substitute = g
 		return seq
