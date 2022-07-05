@@ -123,7 +123,7 @@ def upgrade64k(self, reverseGlyphMap):
 		if not st: continue
 		st.upgrade64k(reverseGlyphMap)
 
-@add_method(otTables.LookupList32)
+@add_method(otTables.LookupList24)
 def upgrade64k(self, reverseGlyphMap):
 	for l in self.Lookup:
 		if not l: continue
@@ -133,7 +133,7 @@ def upgrade64k(self, reverseGlyphMap):
 		otTables.GPOS)
 def upgrade64k(self, reverseGlyphMap):
 	if self.Version < 0x00020000:
-		self.LookupList32 = otTables.LookupList32()
-		self.LookupList32.Lookup = self.LookupList.Lookup
+		self.LookupList24 = otTables.LookupList24()
+		self.LookupList24.Lookup = self.LookupList.Lookup
 		self.Version = 0x00020000
-	self.LookupList32.upgrade64k(reverseGlyphMap)
+	self.LookupList24.upgrade64k(reverseGlyphMap)

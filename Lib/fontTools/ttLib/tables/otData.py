@@ -82,9 +82,9 @@ otData = [
 		('Offset', 'Lookup', 'LookupCount', 0, 'Array of offsets to Lookup tables-from beginning of LookupList -zero based (first lookup is Lookup index = 0)'),
 	]),
 
-	('LookupList32', [
+	('LookupList24', [
 		('uint16', 'LookupCount', None, None, 'Number of lookups in this table'),
-		('Offset32', 'Lookup', 'LookupCount', 0, 'Array of offsets to Lookup tables-from beginning of LookupList -zero based (first lookup is Lookup index = 0)'),
+		('Offset24', 'Lookup', 'LookupCount', 0, 'Array of offsets to Lookup tables-from beginning of LookupList -zero based (first lookup is Lookup index = 0)'),
 	]),
 
 	('Lookup', [
@@ -186,7 +186,7 @@ otData = [
 		('Offset', 'ScriptList', None, None, 'Offset to ScriptList table-from beginning of GPOS table'),
 		('Offset', 'FeatureList', None, None, 'Offset to FeatureList table-from beginning of GPOS table'),
 		('Offset', 'LookupList', None, 'Version < 0x00020000', 'Offset to LookupList table-from beginning of GPOS table'),
-		('Offset32', 'LookupList32', None, 'Version >= 0x00020000', 'Offset to LookupList table-from beginning of GPOS table'),
+		('Offset24', 'LookupList24', None, 'Version >= 0x00020000', 'Offset to LookupList table-from beginning of GPOS table'),
 		('LOffset', 'FeatureVariations', None, 'Version >= 0x00010001', 'Offset to FeatureVariations table-from beginning of GPOS table'),
 	]),
 
@@ -216,7 +216,7 @@ otData = [
 
 	('PairPosFormat3', [
 		('uint16', 'PosFormat', None, None, 'Format identifier-format = 1'),
-		('Offset32', 'Coverage', None, None, 'Offset to Coverage table-from beginning of PairPos subtable-only the first glyph in each pair'),
+		('Offset24', 'Coverage', None, None, 'Offset to Coverage table-from beginning of PairPos subtable-only the first glyph in each pair'),
 		('uint16', 'ValueFormat1', None, None, 'Defines the types of data in ValueRecord1-for the first glyph in the pair -may be zero (0)'),
 		('uint16', 'ValueFormat2', None, None, 'Defines the types of data in ValueRecord2-for the second glyph in the pair -may be zero (0)'),
 		('uint24', 'PairSetCount', None, None, 'Number of PairSet tables'),
@@ -259,11 +259,11 @@ otData = [
 
 	('PairPosFormat4', [
 		('uint16', 'PosFormat', None, None, 'Format identifier-format = 2'),
-		('Offset32', 'Coverage', None, None, 'Offset to Coverage table-from beginning of PairPos subtable-for the first glyph of the pair'),
+		('Offset24', 'Coverage', None, None, 'Offset to Coverage table-from beginning of PairPos subtable-for the first glyph of the pair'),
 		('uint16', 'ValueFormat1', None, None, 'ValueRecord definition-for the first glyph of the pair-may be zero (0)'),
 		('uint16', 'ValueFormat2', None, None, 'ValueRecord definition-for the second glyph of the pair-may be zero (0)'),
-		('Offset32', 'ClassDef1', None, None, 'Offset to ClassDef table-from beginning of PairPos subtable-for the first glyph of the pair'),
-		('Offset32', 'ClassDef2', None, None, 'Offset to ClassDef table-from beginning of PairPos subtable-for the second glyph of the pair'),
+		('Offset24', 'ClassDef1', None, None, 'Offset to ClassDef table-from beginning of PairPos subtable-for the first glyph of the pair'),
+		('Offset24', 'ClassDef2', None, None, 'Offset to ClassDef table-from beginning of PairPos subtable-for the second glyph of the pair'),
 		('uint16', 'Class1Count', None, None, 'Number of classes in ClassDef1 table-includes Class0'),
 		('uint16', 'Class2Count', None, None, 'Number of classes in ClassDef2 table-includes Class0'),
 		('struct', 'Class1Record', 'Class1Count', 0, 'Array of Class1 records-ordered by Class1'),
@@ -301,11 +301,11 @@ otData = [
 
 	('MarkBasePosFormat2', [
 		('uint16', 'PosFormat', None, None, 'Format identifier-format = 1'),
-		('Offset32', 'MarkCoverage', None, None, 'Offset to MarkCoverage table-from beginning of MarkBasePos subtable'),
-		('Offset32', 'BaseCoverage', None, None, 'Offset to BaseCoverage table-from beginning of MarkBasePos subtable'),
+		('Offset24', 'MarkCoverage', None, None, 'Offset to MarkCoverage table-from beginning of MarkBasePos subtable'),
+		('Offset24', 'BaseCoverage', None, None, 'Offset to BaseCoverage table-from beginning of MarkBasePos subtable'),
 		('uint16', 'ClassCount', None, None, 'Number of classes defined for marks'),
-		('Offset32', 'MarkArray', None, None, 'Offset to MarkArray table-from beginning of MarkBasePos subtable'),
-		('Offset32', 'BaseArray', None, None, 'Offset to BaseArray table-from beginning of MarkBasePos subtable'),
+		('Offset24', 'MarkArray', None, None, 'Offset to MarkArray table-from beginning of MarkBasePos subtable'),
+		('Offset24', 'BaseArray', None, None, 'Offset to BaseArray table-from beginning of MarkBasePos subtable'),
 	]),
 
 	('BaseArray', [
@@ -328,11 +328,11 @@ otData = [
 
 	('MarkLigPosFormat2', [
 		('uint16', 'PosFormat', None, None, 'Format identifier-format = 1'),
-		('Offset32', 'MarkCoverage', None, None, 'Offset to Mark Coverage table-from beginning of MarkLigPos subtable'),
-		('Offset32', 'LigatureCoverage', None, None, 'Offset to Ligature Coverage table-from beginning of MarkLigPos subtable'),
+		('Offset24', 'MarkCoverage', None, None, 'Offset to Mark Coverage table-from beginning of MarkLigPos subtable'),
+		('Offset24', 'LigatureCoverage', None, None, 'Offset to Ligature Coverage table-from beginning of MarkLigPos subtable'),
 		('uint16', 'ClassCount', None, None, 'Number of defined mark classes'),
-		('Offset32', 'MarkArray', None, None, 'Offset to MarkArray table-from beginning of MarkLigPos subtable'),
-		('Offset32', 'LigatureArray', None, None, 'Offset to LigatureArray table-from beginning of MarkLigPos subtable'),
+		('Offset24', 'MarkArray', None, None, 'Offset to MarkArray table-from beginning of MarkLigPos subtable'),
+		('Offset24', 'LigatureArray', None, None, 'Offset to LigatureArray table-from beginning of MarkLigPos subtable'),
 	]),
 
 	('LigatureArray', [
@@ -360,11 +360,11 @@ otData = [
 
 	('MarkMarkPosFormat2', [
 		('uint16', 'PosFormat', None, None, 'Format identifier-format = 1'),
-		('Offset32', 'Mark1Coverage', None, None, 'Offset to Combining Mark Coverage table-from beginning of MarkMarkPos subtable'),
-		('Offset32', 'Mark2Coverage', None, None, 'Offset to Base Mark Coverage table-from beginning of MarkMarkPos subtable'),
+		('Offset24', 'Mark1Coverage', None, None, 'Offset to Combining Mark Coverage table-from beginning of MarkMarkPos subtable'),
+		('Offset24', 'Mark2Coverage', None, None, 'Offset to Base Mark Coverage table-from beginning of MarkMarkPos subtable'),
 		('uint16', 'ClassCount', None, None, 'Number of Combining Mark classes defined'),
-		('Offset32', 'Mark1Array', None, None, 'Offset to MarkArray table for Mark1-from beginning of MarkMarkPos subtable'),
-		('Offset32', 'Mark2Array', None, None, 'Offset to Mark2Array table for Mark2-from beginning of MarkMarkPos subtable'),
+		('Offset24', 'Mark1Array', None, None, 'Offset to MarkArray table for Mark1-from beginning of MarkMarkPos subtable'),
+		('Offset24', 'Mark2Array', None, None, 'Offset to Mark2Array table for Mark2-from beginning of MarkMarkPos subtable'),
 	]),
 
 	('Mark2Array', [
@@ -429,8 +429,8 @@ otData = [
 
 	('ContextPosFormat5', [
 		('uint16', 'PosFormat', None, None, 'Format identifier-format = 2'),
-		('Offset32', 'Coverage', None, None, 'Offset to Coverage table-from beginning of ContextPos subtable'),
-		('Offset32', 'ClassDef', None, None, 'Offset to ClassDef table-from beginning of ContextPos subtable'),
+		('Offset24', 'Coverage', None, None, 'Offset to Coverage table-from beginning of ContextPos subtable'),
+		('Offset24', 'ClassDef', None, None, 'Offset to ClassDef table-from beginning of ContextPos subtable'),
 		('uint16', 'PosClassSetCount', None, None, 'Number of PosClassSet tables'),
 		('Offset24', 'PosClassSet', 'PosClassSetCount', 0, 'Array of offsets to PosClassSet tables-from beginning of ContextPos subtable-ordered by class-may be NULL'),
 	]),
@@ -521,10 +521,10 @@ otData = [
 
 	('ChainContextPosFormat5', [
 		('uint16', 'PosFormat', None, None, 'Format identifier-format = 2'),
-		('Offset32', 'Coverage', None, None, 'Offset to Coverage table-from beginning of ChainContextPos subtable'),
-		('Offset32', 'BacktrackClassDef', None, None, 'Offset to ClassDef table containing backtrack sequence context-from beginning of ChainContextPos subtable'),
-		('Offset32', 'InputClassDef', None, None, 'Offset to ClassDef table containing input sequence context-from beginning of ChainContextPos subtable'),
-		('Offset32', 'LookAheadClassDef', None, None, 'Offset to ClassDef table containing lookahead sequence context-from beginning of ChainContextPos subtable'),
+		('Offset24', 'Coverage', None, None, 'Offset to Coverage table-from beginning of ChainContextPos subtable'),
+		('Offset24', 'BacktrackClassDef', None, None, 'Offset to ClassDef table containing backtrack sequence context-from beginning of ChainContextPos subtable'),
+		('Offset24', 'InputClassDef', None, None, 'Offset to ClassDef table containing input sequence context-from beginning of ChainContextPos subtable'),
+		('Offset24', 'LookAheadClassDef', None, None, 'Offset to ClassDef table containing lookahead sequence context-from beginning of ChainContextPos subtable'),
 		('uint16', 'ChainPosClassSetCount', None, None, 'Number of ChainPosClassSet tables'),
 		('Offset24', 'ChainPosClassSet', 'ChainPosClassSetCount', 0, 'Array of offsets to ChainPosClassSet tables-from beginning of ChainContextPos subtable-ordered by input class-may be NULL'),
 	]),
@@ -627,7 +627,7 @@ otData = [
 		('Offset', 'ScriptList', None, None, 'Offset to ScriptList table-from beginning of GSUB table'),
 		('Offset', 'FeatureList', None, None, 'Offset to FeatureList table-from beginning of GSUB table'),
 		('Offset', 'LookupList', None, 'Version < 0x00020000', 'Offset to LookupList table-from beginning of GSUB table'),
-		('Offset32', 'LookupList32', None, 'Version >= 0x00020000', 'Offset to LookupList table-from beginning of GSUB table'),
+		('Offset24', 'LookupList24', None, 'Version >= 0x00020000', 'Offset to LookupList table-from beginning of GSUB table'),
 		('LOffset', 'FeatureVariations', None, 'Version >= 0x00010001', 'Offset to FeatureVariations table-from beginning of GSUB table'),
 	]),
 
@@ -639,7 +639,7 @@ otData = [
 
 	('SingleSubstFormat3', [
 		('uint16', 'SubstFormat', None, None, 'Format identifier-format = 1'),
-		('Offset32', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
+		('Offset24', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
 		('uint32', 'DeltaGlyphID', None, None, 'Add to original GlyphID modulo 65536 to get substitute GlyphID'),
 	]),
 
@@ -652,7 +652,7 @@ otData = [
 
 	('SingleSubstFormat4', [
 		('uint16', 'SubstFormat', None, None, 'Format identifier-format = 2'),
-		('Offset32', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
+		('Offset24', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
 		('uint24', 'GlyphCount', None, None, 'Number of GlyphIDs in the Substitute array'),
 		('GlyphID24', 'Substitute', 'GlyphCount', 0, 'Array of substitute GlyphIDs-ordered by Coverage Index'),
 	]),
@@ -695,7 +695,7 @@ otData = [
 
 	('AlternateSubstFormat2', [
 		('uint16', 'SubstFormat', None, None, 'Format identifier-format = 1'),
-		('Offset32', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
+		('Offset24', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
 		('uint24', 'AlternateSetCount', None, None, 'Number of AlternateSet tables'),
 		('LOffset24To(AlternateSet24)', 'AlternateSet', 'AlternateSetCount', 0, 'Array of offsets to AlternateSet tables-from beginning of Substitution table-ordered by Coverage Index'),
 	]),
@@ -719,7 +719,7 @@ otData = [
 
 	('LigatureSubstFormat2', [
 		('uint16', 'SubstFormat', None, None, 'Format identifier-format = 1'),
-		('Offset32', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
+		('Offset24', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
 		('uint24', 'LigSetCount', None, None, 'Number of LigatureSet tables'),
 		('LOffset24To(LigatureSet24)', 'LigatureSet', 'LigSetCount', 0, 'Array of offsets to LigatureSet tables-from beginning of Substitution table-ordered by Coverage Index'),
 	]),
@@ -799,8 +799,8 @@ otData = [
 
 	('ContextSubstFormat5', [
 		('uint16', 'SubstFormat', None, None, 'Format identifier-format = 2'),
-		('Offset32', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
-		('Offset32', 'ClassDef', None, None, 'Offset to glyph ClassDef table-from beginning of Substitution table'),
+		('Offset24', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
+		('Offset24', 'ClassDef', None, None, 'Offset to glyph ClassDef table-from beginning of Substitution table'),
 		('uint16', 'SubClassSetCount', None, None, 'Number of SubClassSet tables'),
 		('Offset24', 'SubClassSet', 'SubClassSetCount', 0, 'Array of offsets to SubClassSet tables-from beginning of Substitution table-ordered by class-may be NULL'),
 	]),
@@ -891,10 +891,10 @@ otData = [
 
 	('ChainContextSubstFormat5', [
 		('uint16', 'SubstFormat', None, None, 'Format identifier-format = 2'),
-		('Offset32', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
-		('Offset32', 'BacktrackClassDef', None, None, 'Offset to glyph ClassDef table containing backtrack sequence data-from beginning of Substitution table'),
-		('Offset32', 'InputClassDef', None, None, 'Offset to glyph ClassDef table containing input sequence data-from beginning of Substitution table'),
-		('Offset32', 'LookAheadClassDef', None, None, 'Offset to glyph ClassDef table containing lookahead sequence data-from beginning of Substitution table'),
+		('Offset24', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
+		('Offset24', 'BacktrackClassDef', None, None, 'Offset to glyph ClassDef table containing backtrack sequence data-from beginning of Substitution table'),
+		('Offset24', 'InputClassDef', None, None, 'Offset to glyph ClassDef table containing input sequence data-from beginning of Substitution table'),
+		('Offset24', 'LookAheadClassDef', None, None, 'Offset to glyph ClassDef table containing lookahead sequence data-from beginning of Substitution table'),
 		('uint16', 'ChainSubClassSetCount', None, None, 'Number of ChainSubClassSet tables'),
 		('Offset24', 'ChainSubClassSet', 'ChainSubClassSetCount', 0, 'Array of offsets to ChainSubClassSet tables-from beginning of Substitution table-ordered by input class-may be NULL'),
 	]),
