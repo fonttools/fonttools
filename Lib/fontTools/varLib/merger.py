@@ -4,7 +4,6 @@ Merge OpenType Layout tables (GDEF / GPOS / GSUB).
 import os
 import copy
 import enum
-import itertools
 from operator import ior
 import logging
 from fontTools.colorLib.builder import MAX_PAINT_COLR_LAYER_COUNT, LayerReuseCache
@@ -1146,7 +1145,6 @@ class COLRVariationMerger(VariationMerger):
 		self.varTableIds = set()
 		# we keep these around for rebuilding a LayerList while merging PaintColrLayers
 		self.layers = []
-		self.uniqueLayerIDs = set()
 		self.layerReuseCache = None
 		if allowLayerReuse:
 			self.layerReuseCache = LayerReuseCache()
@@ -1320,26 +1318,23 @@ def merge(merger, self, lst):
 	self.Paint = merger.layers
 
 
-def _flatten_layers(paint, colr):
-	if paint.Format == ot.PaintFormat.PaintColrLayers:
-		yield from itertools.chain(
-			*(_flatten_layers(l, colr) for l in paint.getChildren(colr))
-		)
-	else:
-		yield paint
+def _flatten_layers(root, colr):
+	assert root.Format == ot.PaintFormat.PaintColrLayers
+	for paint in root.getChildren(colr):
+		if paint.Format == ot.PaintFormat.PaintColrLayers:
+			yield from _flatten_layers(paint, colr)
+		else:
+			yield paint
 
 
 def _merge_PaintColrLayers(self, out, lst):
 	# we only enforce that the (flat) number of layers is the same across all masters
 	# but we allow FirstLayerIndex to differ to acommodate for sparse glyph sets.
+
+	# ensure dest paints are unique, since merging operation modifies in-place
 	out_layers = []
 	for paint in _flatten_layers(out, self.font["COLR"].table):
-		if id(paint) in self.uniqueLayerIDs:
-			# ensure dest paints are unique, since merging operation modifies in-place
-			paint2 = copy.deepcopy(paint)
-			assert id(paint2) not in self.uniqueLayerIDs
-			paint = paint2
-		out_layers.append(paint)
+		out_layers.append(copy.deepcopy(paint))
 
 	# sanity check ttfs are subset to current values (see VariationMerger.mergeThings)
 	# before matching each master PaintColrLayers to its respective COLR by position
@@ -1396,7 +1391,6 @@ def _merge_PaintColrLayers(self, out, lst):
 		out.FirstLayerIndex = len(self.layers)
 
 		self.layers.extend(out_layers)
-		self.uniqueLayerIDs.update(id(p) for p in out_layers)
 
 		# Register our parts for reuse provided we aren't a tree
 		# If we are a tree the leaves registered for reuse and that will suffice

@@ -1310,6 +1310,193 @@ class COLRVariationMergerTest:
                 [0],
                 id="sparse-masters-with-reuse",
             ),
+            pytest.param(
+                [
+                    {
+                        "A": {
+                            "Format": int(ot.PaintFormat.PaintColrLayers),
+                            "Layers": [
+                                {
+                                    "Format": int(ot.PaintFormat.PaintGlyph),
+                                    "Paint": {
+                                        "Format": int(ot.PaintFormat.PaintSolid),
+                                        "PaletteIndex": 0,
+                                        "Alpha": 1.0,
+                                    },
+                                    "Glyph": "B",
+                                },
+                                {
+                                    "Format": int(ot.PaintFormat.PaintGlyph),
+                                    "Paint": {
+                                        "Format": int(ot.PaintFormat.PaintSolid),
+                                        "PaletteIndex": 1,
+                                        "Alpha": 1.0,
+                                    },
+                                    "Glyph": "B",
+                                },
+                                {
+                                    "Format": int(ot.PaintFormat.PaintGlyph),
+                                    "Paint": {
+                                        "Format": int(ot.PaintFormat.PaintSolid),
+                                        "PaletteIndex": 2,
+                                        "Alpha": 1.0,
+                                    },
+                                    "Glyph": "B",
+                                },
+                            ],
+                        },
+                        "C": {  # 'C' shares layer 1 and 2 with 'A'
+                            "Format": int(ot.PaintFormat.PaintColrLayers),
+                            "Layers": [
+                                {
+                                    "Format": int(ot.PaintFormat.PaintGlyph),
+                                    "Paint": {
+                                        "Format": int(ot.PaintFormat.PaintSolid),
+                                        "PaletteIndex": 1,
+                                        "Alpha": 1.0,
+                                    },
+                                    "Glyph": "B",
+                                },
+                                {
+                                    "Format": int(ot.PaintFormat.PaintGlyph),
+                                    "Paint": {
+                                        "Format": int(ot.PaintFormat.PaintSolid),
+                                        "PaletteIndex": 2,
+                                        "Alpha": 1.0,
+                                    },
+                                    "Glyph": "B",
+                                },
+                            ],
+                        },
+                    },
+                    {
+                        "A": {
+                            "Format": int(ot.PaintFormat.PaintColrLayers),
+                            "Layers": [
+                                {
+                                    "Format": int(ot.PaintFormat.PaintGlyph),
+                                    "Paint": {
+                                        "Format": int(ot.PaintFormat.PaintSolid),
+                                        "PaletteIndex": 0,
+                                        "Alpha": 1.0,
+                                    },
+                                    "Glyph": "B",
+                                },
+                                {
+                                    "Format": int(ot.PaintFormat.PaintGlyph),
+                                    "Paint": {
+                                        "Format": int(ot.PaintFormat.PaintSolid),
+                                        "PaletteIndex": 1,
+                                        "Alpha": 0.9,
+                                    },
+                                    "Glyph": "B",
+                                },
+                                {
+                                    "Format": int(ot.PaintFormat.PaintGlyph),
+                                    "Paint": {
+                                        "Format": int(ot.PaintFormat.PaintSolid),
+                                        "PaletteIndex": 2,
+                                        "Alpha": 1.0,
+                                    },
+                                    "Glyph": "B",
+                                },
+                            ],
+                        },
+                        "C": {
+                            "Format": int(ot.PaintFormat.PaintColrLayers),
+                            "Layers": [
+                                {
+                                    "Format": int(ot.PaintFormat.PaintGlyph),
+                                    "Paint": {
+                                        "Format": int(ot.PaintFormat.PaintSolid),
+                                        "PaletteIndex": 1,
+                                        "Alpha": 0.5,
+                                    },
+                                    "Glyph": "B",
+                                },
+                                {
+                                    "Format": int(ot.PaintFormat.PaintGlyph),
+                                    "Paint": {
+                                        "Format": int(ot.PaintFormat.PaintSolid),
+                                        "PaletteIndex": 2,
+                                        "Alpha": 1.0,
+                                    },
+                                    "Glyph": "B",
+                                },
+                            ],
+                        },
+                    },
+                ],
+                True,
+                [
+                    # a different Alpha variation is applied to a shared layer between
+                    # 'A' and 'C' and thus they are no longer shared.
+                    "<COLR>",
+                    '  <Version value="1"/>',
+                    "  <!-- BaseGlyphRecordCount=0 -->",
+                    "  <!-- LayerRecordCount=0 -->",
+                    "  <BaseGlyphList>",
+                    "    <!-- BaseGlyphCount=2 -->",
+                    '    <BaseGlyphPaintRecord index="0">',
+                    '      <BaseGlyph value="A"/>',
+                    '      <Paint Format="1"><!-- PaintColrLayers -->',
+                    '        <NumLayers value="3"/>',
+                    '        <FirstLayerIndex value="0"/>',
+                    "      </Paint>",
+                    "    </BaseGlyphPaintRecord>",
+                    '    <BaseGlyphPaintRecord index="1">',
+                    '      <BaseGlyph value="C"/>',
+                    '      <Paint Format="1"><!-- PaintColrLayers -->',
+                    '        <NumLayers value="2"/>',
+                    '        <FirstLayerIndex value="3"/>',
+                    "      </Paint>",
+                    "    </BaseGlyphPaintRecord>",
+                    "  </BaseGlyphList>",
+                    "  <LayerList>",
+                    "    <!-- LayerCount=5 -->",
+                    '    <Paint index="0" Format="10"><!-- PaintGlyph -->',
+                    '      <Paint Format="2"><!-- PaintSolid -->',
+                    '        <PaletteIndex value="0"/>',
+                    '        <Alpha value="1.0"/>',
+                    "      </Paint>",
+                    '      <Glyph value="B"/>',
+                    "    </Paint>",
+                    '    <Paint index="1" Format="10"><!-- PaintGlyph -->',
+                    '      <Paint Format="3"><!-- PaintVarSolid -->',
+                    '        <PaletteIndex value="1"/>',
+                    '        <Alpha value="1.0"/>',
+                    '        <VarIndexBase value="0"/>',
+                    "      </Paint>",
+                    '      <Glyph value="B"/>',
+                    "    </Paint>",
+                    '    <Paint index="2" Format="10"><!-- PaintGlyph -->',
+                    '      <Paint Format="2"><!-- PaintSolid -->',
+                    '        <PaletteIndex value="2"/>',
+                    '        <Alpha value="1.0"/>',
+                    "      </Paint>",
+                    '      <Glyph value="B"/>',
+                    "    </Paint>",
+                    '    <Paint index="3" Format="10"><!-- PaintGlyph -->',
+                    '      <Paint Format="3"><!-- PaintVarSolid -->',
+                    '        <PaletteIndex value="1"/>',
+                    '        <Alpha value="1.0"/>',
+                    '        <VarIndexBase value="1"/>',
+                    "      </Paint>",
+                    '      <Glyph value="B"/>',
+                    "    </Paint>",
+                    '    <Paint index="4" Format="10"><!-- PaintGlyph -->',
+                    '      <Paint Format="2"><!-- PaintSolid -->',
+                    '        <PaletteIndex value="2"/>',
+                    '        <Alpha value="1.0"/>',
+                    "      </Paint>",
+                    '      <Glyph value="B"/>',
+                    "    </Paint>",
+                    "  </LayerList>",
+                    "</COLR>",
+                ],
+                [0, 1],
+                id="shared-master-layers-different-variations",
+            ),
         ],
     )
     def test_merge_full_table(
