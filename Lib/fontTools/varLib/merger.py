@@ -1152,6 +1152,16 @@ class COLRVariationMerger(VariationMerger):
 		self._doneBaseGlyphs = False
 
 	def mergeTables(self, font, master_ttfs, tableTags=("COLR",)):
+		if "COLR" in tableTags and "COLR" in font:
+			# The merger modifies the destination COLR table in-place. If this contains
+			# multiple PaintColrLayers referencing the same layers from LayerList, it's
+			# a problem because we may risk modifying the same paint more than once, or
+			# worse, fail while attempting to do that.
+			# We don't know whether the master COLR table was built with layer reuse
+			# disabled, thus to be safe we rebuild its LayerList so that it contains only
+			# unique layers referenced from non-overlapping PaintColrLayers throughout
+			# the base paint graphs.
+			self.expandPaintColrLayers(font["COLR"].table)
 		VariationMerger.mergeTables(self, font, master_ttfs, tableTags)
 
 	def checkFormatEnum(self, out, lst, validate=lambda _: True):
@@ -1289,6 +1299,53 @@ class COLRVariationMerger(VariationMerger):
 			else:
 				setattr(parent, st.name, newSubTable)
 
+	@staticmethod
+	def expandPaintColrLayers(colr):
+		"""Rebuild LayerList without PaintColrLayers reuse.
+
+		Each base paint graph is fully DFS-traversed (with exception of PaintColrGlyph
+		which are irrelevant for this); any layers referenced via PaintColrLayers are
+		collected into a new LayerList and duplicated when reuse is detected, to ensure
+		that all paints are distinct objects at the end of the process.
+		PaintColrLayers's FirstLayerIndex/NumLayers are updated so that no overlap
+		is left. Also, any consecutively nested PaintColrLayers are flattened.
+		The COLR table's LayerList is replaced with the new unique layers.
+		A side effect is also that any layer from the old LayerList which is not
+		referenced by any PaintColrLayers is dropped.
+		"""
+		if not colr.LayerList:
+			# if no LayerList, there's nothing to expand
+			return
+		uniqueLayerIDs = set()
+		newLayerList = []
+		for rec in colr.BaseGlyphList.BaseGlyphPaintRecord:
+			frontier = [rec.Paint]
+			while frontier:
+				paint = frontier.pop()
+				if paint.Format == ot.PaintFormat.PaintColrGlyph:
+					# don't traverse these, we treat them as constant for merging
+					continue
+				elif paint.Format == ot.PaintFormat.PaintColrLayers:
+					# de-treeify any nested PaintColrLayers, append unique copies to
+					# the new layer list and update PaintColrLayers index/count
+					children = list(_flatten_layers(paint, colr))
+					first_layer_index = len(newLayerList)
+					for layer in children:
+						if id(layer) in uniqueLayerIDs:
+							layer = copy.deepcopy(layer)
+							assert id(layer) not in uniqueLayerIDs
+						newLayerList.append(layer)
+						uniqueLayerIDs.add(id(layer))
+					paint.FirstLayerIndex = first_layer_index
+					paint.NumLayers = len(children)
+				else:
+					children = paint.getChildren(colr)
+				frontier.extend(reversed(children))
+		# sanity check all the new layers are distinct objects
+		assert len(newLayerList) == len(uniqueLayerIDs)
+		colr.LayerList.Paint = newLayerList
+		colr.LayerList.LayerCount = len(newLayerList)
+
 
 @COLRVariationMerger.merger(ot.BaseGlyphList)
 def merge(merger, self, lst):
@@ -1331,10 +1388,7 @@ def _merge_PaintColrLayers(self, out, lst):
 	# we only enforce that the (flat) number of layers is the same across all masters
 	# but we allow FirstLayerIndex to differ to acommodate for sparse glyph sets.
 
-	# ensure dest paints are unique, since merging operation modifies in-place
-	out_layers = []
-	for paint in _flatten_layers(out, self.font["COLR"].table):
-		out_layers.append(copy.deepcopy(paint))
+	out_layers = list(_flatten_layers(out, self.font["COLR"].table))
 
 	# sanity check ttfs are subset to current values (see VariationMerger.mergeThings)
 	# before matching each master PaintColrLayers to its respective COLR by position
