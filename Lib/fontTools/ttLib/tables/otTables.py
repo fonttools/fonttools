@@ -1163,7 +1163,7 @@ class LigatureSubst(FormatSwitchingBaseTable):
 
 	def postRead(self, rawTable, font):
 		ligatures = {}
-		if self.Format == 1:
+		if self.Format in (1, 2):
 			input = _getGlyphsFromCoverageTable(rawTable["Coverage"])
 			ligSets = rawTable["LigatureSet"]
 			assert len(input) == len(ligSets)
@@ -1212,6 +1212,15 @@ class LigatureSubst(FormatSwitchingBaseTable):
 						if beyond64k: break
 					if beyond64k: break
 		if beyond64k:
+			new_items = []
+			for glyph, set in items:
+				new_set = []
+				for ligature in set:
+					new_ligature = Ligature24()
+					new_ligature.__dict__ = ligature.__dict__
+					new_set.append(new_ligature)
+				new_items.append((glyph, new_set))
+			items = new_items
 			self.Format += 1
 
 		for i in range(len(items)):

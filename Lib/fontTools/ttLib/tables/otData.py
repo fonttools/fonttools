@@ -721,7 +721,7 @@ otData = [
 		('uint16', 'SubstFormat', None, None, 'Format identifier-format = 1'),
 		('Offset32', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
 		('uint24', 'LigSetCount', None, None, 'Number of LigatureSet tables'),
-		('Offset24', 'LigatureSet24', 'LigSetCount', 0, 'Array of offsets to LigatureSet tables-from beginning of Substitution table-ordered by Coverage Index'),
+		('LOffset24To(LigatureSet24)', 'LigatureSet', 'LigSetCount', 0, 'Array of offsets to LigatureSet tables-from beginning of Substitution table-ordered by Coverage Index'),
 	]),
 
 	('LigatureSet', [
@@ -731,7 +731,7 @@ otData = [
 
 	('LigatureSet24', [
 		('uint16', 'LigatureCount', None, None, 'Number of Ligature tables'),
-		('Offset', 'Ligature24', 'LigatureCount', 0, 'Array of offsets to Ligature tables-from beginning of LigatureSet table-ordered by preference'),
+		('OffsetTo(Ligature24)', 'Ligature', 'LigatureCount', 0, 'Array of offsets to Ligature tables-from beginning of LigatureSet table-ordered by preference'),
 	]),
 
 	('Ligature', [
