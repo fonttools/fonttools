@@ -1271,9 +1271,10 @@ def instantiateVariableFont(
         },
     )
 
-    # Set Regular/Italic/Bold/Bold Italic bits as appropriate, after the name
-    # table has been updated.
-    setRibbiBits(varfont)
+    if updateFontNames:
+        # Set Regular/Italic/Bold/Bold Italic bits as appropriate, after the
+        # name table has been updated.
+        setRibbiBits(varfont)
 
     return varfont
 
