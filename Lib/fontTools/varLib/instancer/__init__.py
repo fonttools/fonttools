@@ -1284,17 +1284,10 @@ def setRibbiBits(font):
 
     english_ribbi_style = font["name"].getName(2, 3, 1, 0x409)
     if english_ribbi_style is None:
-        log.warning(
-            "Cannot set RIBBI bits because there is no Windows Unicode BMP name ID 2."
-        )
         return
 
     styleMapStyleName = english_ribbi_style.toStr().lower()
     if styleMapStyleName not in {"regular", "bold", "italic", "bold italic"}:
-        log.warning(
-            "Cannot set RIBBI bits because the Windows Unicode BMP name ID 2 is "
-            "something other than Regular/Italic/Bold/Bold Italic."
-        )
         return
 
     if styleMapStyleName == "bold":
