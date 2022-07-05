@@ -392,7 +392,7 @@ otData = [
 		('uint16', 'PosFormat', None, None, 'Format identifier-format = 1'),
 		('Offset', 'Coverage', None, None, 'Offset to Coverage table-from beginning of ContextPos subtable'),
 		('uint16', 'PosRuleSetCount', None, None, 'Number of PosRuleSet tables'),
-		('Offset', 'PosRuleSet24', 'PosRuleSetCount', 0, 'Array of offsets to PosRuleSet tables-from beginning of ContextPos subtable-ordered by Coverage Index'),
+		('OffsetTo(PosRuleSet24)', 'PosRuleSet', 'PosRuleSetCount', 0, 'Array of offsets to PosRuleSet tables-from beginning of ContextPos subtable-ordered by Coverage Index'),
 	]),
 
 	('PosRuleSet', [
@@ -402,7 +402,7 @@ otData = [
 
 	('PosRuleSet24', [
 		('uint16', 'PosRuleCount', None, None, 'Number of PosRule tables'),
-		('Offset', 'PosRule24', 'PosRuleCount', 0, 'Array of offsets to PosRule tables-from beginning of PosRuleSet-ordered by preference'),
+		('OffsetTo(PosRule24)', 'PosRule', 'PosRuleCount', 0, 'Array of offsets to PosRule tables-from beginning of PosRuleSet-ordered by preference'),
 	]),
 
 	('PosRule', [
@@ -474,7 +474,7 @@ otData = [
 		('uint16', 'PosFormat', None, None, 'Format identifier-format = 1'),
 		('Offset', 'Coverage', None, None, 'Offset to Coverage table-from beginning of ContextPos subtable'),
 		('uint16', 'ChainPosRuleSetCount', None, None, 'Number of ChainPosRuleSet tables'),
-		('Offset', 'ChainPosRuleSet24', 'ChainPosRuleSetCount', 0, 'Array of offsets to ChainPosRuleSet tables-from beginning of ContextPos subtable-ordered by Coverage Index'),
+		('OffsetTo(ChainPosRuleSet24)', 'ChainPosRuleSet', 'ChainPosRuleSetCount', 0, 'Array of offsets to ChainPosRuleSet tables-from beginning of ContextPos subtable-ordered by Coverage Index'),
 	]),
 
 	('ChainPosRuleSet', [
@@ -484,7 +484,7 @@ otData = [
 
 	('ChainPosRuleSet24', [
 		('uint16', 'ChainPosRuleCount', None, None, 'Number of ChainPosRule tables'),
-		('Offset', 'ChainPosRule24', 'ChainPosRuleCount', 0, 'Array of offsets to ChainPosRule tables-from beginning of ChainPosRuleSet-ordered by preference'),
+		('OffsetTo(ChainPosRule24)', 'ChainPosRule', 'ChainPosRuleCount', 0, 'Array of offsets to ChainPosRule tables-from beginning of ChainPosRuleSet-ordered by preference'),
 	]),
 
 	('ChainPosRule', [
@@ -762,7 +762,7 @@ otData = [
 		('uint16', 'SubstFormat', None, None, 'Format identifier-format = 1'),
 		('Offset', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
 		('uint16', 'SubRuleSetCount', None, None, 'Number of SubRuleSet tables-must equal GlyphCount in Coverage table'),
-		('Offset', 'SubRuleSet24', 'SubRuleSetCount', 0, 'Array of offsets to SubRuleSet tables-from beginning of Substitution table-ordered by Coverage Index'),
+		('OffsetTo(SubRuleSet24)', 'SubRuleSet', 'SubRuleSetCount', 0, 'Array of offsets to SubRuleSet tables-from beginning of Substitution table-ordered by Coverage Index'),
 	]),
 
 	('SubRuleSet', [
@@ -772,7 +772,7 @@ otData = [
 
 	('SubRuleSet24', [
 		('uint16', 'SubRuleCount', None, None, 'Number of SubRule tables'),
-		('Offset', 'SubRule24', 'SubRuleCount', 0, 'Array of offsets to SubRule tables-from beginning of SubRuleSet table-ordered by preference'),
+		('OffsetTo(SubRule24)', 'SubRule', 'SubRuleCount', 0, 'Array of offsets to SubRule tables-from beginning of SubRuleSet table-ordered by preference'),
 	]),
 
 	('SubRule', [
@@ -844,7 +844,7 @@ otData = [
 		('uint16', 'SubstFormat', None, None, 'Format identifier-format = 1'),
 		('Offset', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
 		('uint16', 'ChainSubRuleSetCount', None, None, 'Number of ChainSubRuleSet tables-must equal GlyphCount in Coverage table'),
-		('Offset', 'ChainSubRuleSet24', 'ChainSubRuleSetCount', 0, 'Array of offsets to ChainSubRuleSet tables-from beginning of Substitution table-ordered by Coverage Index'),
+		('OffsetTo(ChainSubRule24)', 'ChainSubRuleSet', 'ChainSubRuleSetCount', 0, 'Array of offsets to ChainSubRuleSet tables-from beginning of Substitution table-ordered by Coverage Index'),
 	]),
 
 	('ChainSubRuleSet', [
@@ -854,7 +854,7 @@ otData = [
 
 	('ChainSubRuleSet24', [
 		('uint16', 'ChainSubRuleCount', None, None, 'Number of ChainSubRule tables'),
-		('Offset', 'ChainSubRule24', 'ChainSubRuleCount', 0, 'Array of offsets to ChainSubRule tables-from beginning of ChainSubRuleSet table-ordered by preference'),
+		('OffsetTo(ChainSubRule24)', 'ChainSubRule', 'ChainSubRuleCount', 0, 'Array of offsets to ChainSubRule tables-from beginning of ChainSubRuleSet table-ordered by preference'),
 	]),
 
 	('ChainSubRule', [

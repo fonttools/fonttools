@@ -10,7 +10,7 @@ def _convertList(lst, fromType, toType):
 	new_list = []
 	for item in lst:
 		if item is not None:
-			assert type(item) == fromType
+			assert type(item) == fromType, (type(item), fromType)
 			new_item = toType()
 			new_item.__dict__ = item.__dict__
 			item = new_item
@@ -91,6 +91,17 @@ def upgrade64k(self, reverseGlyphMap):
 							break
 				if upgrade: break
 			if upgrade: break
+
+		if upgrade:
+			rss = getattr(self, c.RuleSet)
+			rss = _convertList(rss, getattr(otTables, c.RuleSet), getattr(otTables, c.RuleSet+'24'))
+			setattr(self, c.RuleSet, rss)
+			for rs in rss:
+				if not rs: continue
+				r = getattr(rs, c.Rule)
+				r = _convertList(r, getattr(otTables, c.Rule), getattr(otTables, c.Rule+'24'))
+				setattr(rs, c.Rule, r)
+
 	elif self.Format in (2, 3):
 		# To use longer offsets
 		upgrade = True
