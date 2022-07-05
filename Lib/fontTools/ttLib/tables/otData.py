@@ -220,7 +220,7 @@ otData = [
 		('uint16', 'ValueFormat1', None, None, 'Defines the types of data in ValueRecord1-for the first glyph in the pair -may be zero (0)'),
 		('uint16', 'ValueFormat2', None, None, 'Defines the types of data in ValueRecord2-for the second glyph in the pair -may be zero (0)'),
 		('uint24', 'PairSetCount', None, None, 'Number of PairSet tables'),
-		('Offset24', 'PairSet24', 'PairSetCount', 0, 'Array of offsets to PairSet tables-from beginning of PairPos subtable-ordered by Coverage Index'),
+		('LOffset24To(PairSet24)', 'PairSet', 'PairSetCount', 0, 'Array of offsets to PairSet tables-from beginning of PairPos subtable-ordered by Coverage Index'),
 	]),
 
 	('PairSet', [
@@ -230,7 +230,7 @@ otData = [
 
 	('PairSet24', [
 		('uint24', 'PairValueCount', None, None, 'Number of PairValueRecords'),
-		('struct', 'PairValue24Record', 'PairValueCount', 0, 'Array of PairValueRecords-ordered by GlyphID of the second glyph'),
+		('PairValue24Record', 'PairValueRecord', 'PairValueCount', 0, 'Array of PairValueRecords-ordered by GlyphID of the second glyph'),
 	]),
 
 	('PairValueRecord', [

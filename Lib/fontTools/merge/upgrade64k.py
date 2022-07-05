@@ -6,6 +6,17 @@ from fontTools.merge.base import add_method, mergeObjects
 from fontTools.merge.util import *
 import fontTools.merge.classify_context
 
+def _convertList(lst, fromType, toType):
+	new_list = []
+	for item in lst:
+		if item is not None:
+			assert type(item) == fromType
+			new_item = toType()
+			new_item.__dict__ = item.__dict__
+			item = new_item
+		new_list.append(item)
+	return new_list
+
 @add_method(otTables.SingleSubst,
 		otTables.MultipleSubst,
 		otTables.AlternateSubst,
@@ -36,6 +47,12 @@ def upgrade64k(self, reverseGlyphMap):
 						upgrade = True
 						break
 				if upgrade: break
+
+		if upgrade:
+			self.PairSet = _convertList(self.PairSet, otTables.PairSet, otTables.PairSet24)
+			for ps in self.PairSet:
+				if not ps: continue
+				ps.PairValueRecord = _convertList(ps.PairValueRecord, otTables.PairValueRecord, otTables.PairValue24Record)
 
 	elif self.Format == 2:
 		# To use longer offsets
