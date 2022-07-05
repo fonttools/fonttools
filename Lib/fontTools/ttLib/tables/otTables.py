@@ -2056,7 +2056,7 @@ def fixSubTableOverFlows(ttf, overflowRecord):
 	try:
 		splitFunc = splitTable[overflowRecord.tableType][subTableType]
 	except KeyError:
-		log.error(
+		log.info(
 			"Don't know how to split %s lookup type %s",
 			overflowRecord.tableType,
 			subTableType,
