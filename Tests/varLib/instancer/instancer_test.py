@@ -1975,3 +1975,35 @@ def test_main_exit_multiple_limits(varfont, tmpdir, capsys):
     captured = capsys.readouterr()
 
     assert "Specified multiple limits for the same axis" in captured.err
+
+
+def test_set_ribbi_bits():
+    varfont = ttLib.TTFont()
+    varfont.importXML(os.path.join(TESTDATA, "STATInstancerTest.ttx"))
+
+    for location in [instance.coordinates for instance in varfont["fvar"].instances]:
+        instance = instancer.instantiateVariableFont(
+            varfont, location, updateFontNames=True
+        )
+        name_id_2 = instance["name"].getDebugName(2)
+        mac_style = instance["head"].macStyle
+        fs_selection = instance["OS/2"].fsSelection & 0b1100001  # Just bits 0, 5, 6
+
+        if location["ital"] == 0:
+            if location["wght"] == 700:
+                assert name_id_2 == "Bold", location
+                assert mac_style == 0b01, location
+                assert fs_selection == 0b0100000, location
+            else:
+                assert name_id_2 == "Regular", location
+                assert mac_style == 0b00, location
+                assert fs_selection == 0b1000000, location
+        else:
+            if location["wght"] == 700:
+                assert name_id_2 == "Bold Italic", location
+                assert mac_style == 0b11, location
+                assert fs_selection == 0b0100001, location
+            else:
+                assert name_id_2 == "Italic", location
+                assert mac_style == 0b10, location
+                assert fs_selection == 0b0000001, location

@@ -1271,19 +1271,18 @@ def instantiateVariableFont(
         },
     )
 
-    if "fvar" not in varfont:
-        # For statics, we should set various bits to mark them as
-        # Regular/Italic/Bold/BoldItalic as appropriate.
-        setRibbiBits(varfont)
+    # Set Regular/Italic/Bold/Bold Italic bits as appropriate, after the name
+    # table has been updated.
+    setRibbiBits(varfont)
 
     return varfont
 
 
-def setRibbiBits(staticFont):
+def setRibbiBits(font):
     """Set the `head.macStyle` and `OS/2.fsSelection` style bits
     appropriately."""
 
-    english_ribbi_style = staticFont["name"].getName(2, 3, 1, 0x409)
+    english_ribbi_style = font["name"].getName(2, 3, 1, 0x409)
     if english_ribbi_style is None:
         log.warning(
             "Cannot set RIBBI bits because there is no Windows Unicode BMP name ID 2."
@@ -1291,14 +1290,21 @@ def setRibbiBits(staticFont):
         return
 
     styleMapStyleName = english_ribbi_style.toStr().lower()
-    if styleMapStyleName == "bold":
-        staticFont["head"].macStyle = 0b01
-    elif styleMapStyleName == "bold italic":
-        staticFont["head"].macStyle = 0b11
-    elif styleMapStyleName == "italic":
-        staticFont["head"].macStyle = 0b10
+    if styleMapStyleName not in {"regular", "bold", "italic", "bold italic"}:
+        log.warning(
+            "Cannot set RIBBI bits because the Windows Unicode BMP name ID 2 is "
+            "something other than Regular/Italic/Bold/Bold Italic."
+        )
+        return
 
-    selection = staticFont["OS/2"].fsSelection
+    if styleMapStyleName == "bold":
+        font["head"].macStyle = 0b01
+    elif styleMapStyleName == "bold italic":
+        font["head"].macStyle = 0b11
+    elif styleMapStyleName == "italic":
+        font["head"].macStyle = 0b10
+
+    selection = font["OS/2"].fsSelection
     # First clear...
     selection &= ~(1 << 0)
     selection &= ~(1 << 5)
@@ -1313,7 +1319,7 @@ def setRibbiBits(staticFont):
     elif styleMapStyleName == "bold italic":
         selection |= 1 << 0
         selection |= 1 << 5
-    staticFont["OS/2"].fsSelection = selection
+    font["OS/2"].fsSelection = selection
 
 
 def splitAxisLocationAndRanges(axisLimits, rangeType=AxisRange):
