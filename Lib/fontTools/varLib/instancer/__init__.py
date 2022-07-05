@@ -1387,6 +1387,12 @@ def parseArgs(args):
         action="store_false",
         help="Don't set the output font's timestamp to the current time."
     )
+    parser.add_argument(
+        "--no-recalc-bounds",
+        dest="recalc_bounds",
+        action="store_false",
+        help="Don't recalculate font bounding boxes",
+    )
     loggingGroup = parser.add_mutually_exclusive_group(required=False)
     loggingGroup.add_argument(
         "-v", "--verbose", action="store_true", help="Run more verbosely."
@@ -1429,7 +1435,11 @@ def main(args=None):
     log.info("Restricting axes: %s", axisLimits)
 
     log.info("Loading variable font")
-    varfont = TTFont(infile, recalcTimestamp=options.recalc_timestamp)
+    varfont = TTFont(
+        infile,
+        recalcTimestamp=options.recalc_timestamp,
+        recalcBBoxes=options.recalc_bounds,
+    )
 
     isFullInstance = {
         axisTag for axisTag, limit in axisLimits.items() if not isinstance(limit, tuple)
