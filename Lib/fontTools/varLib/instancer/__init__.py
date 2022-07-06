@@ -483,7 +483,7 @@ def _instantiateVHVAR(varfont, axisLimits, tableFields):
         # or AdvHeightMap. If a direct, implicit glyphID->VariationIndex mapping is
         # used for advances, skip re-optimizing and maintain original VariationIndex.
         if getattr(vhvar, tableFields.advMapping):
-            varIndexMapping = varStore.optimize()
+            varIndexMapping = varStore.optimize(use_NO_VARIATION_INDEX=False)
             glyphOrder = varfont.getGlyphOrder()
             _remapVarIdxMap(vhvar, tableFields.advMapping, varIndexMapping, glyphOrder)
             if getattr(vhvar, tableFields.sb1):  # left or top sidebearings
