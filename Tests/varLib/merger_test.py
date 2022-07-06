@@ -1534,3 +1534,311 @@ class COLRVariationMergerTest:
         assert compile_decompile(out, vf) == out
         assert dump_xml(out, vf) == expected_xml
         assert merger.varIdxes == expected_varIdxes
+
+    @pytest.mark.parametrize(
+        "color_glyphs, before_xml, expected_xml",
+        [
+            pytest.param(
+                {
+                    "A": {
+                        "Format": int(ot.PaintFormat.PaintColrLayers),
+                        "Layers": [
+                            {
+                                "Format": int(ot.PaintFormat.PaintGlyph),
+                                "Paint": {
+                                    "Format": int(ot.PaintFormat.PaintSolid),
+                                    "PaletteIndex": 0,
+                                    "Alpha": 1.0,
+                                },
+                                "Glyph": "B",
+                            },
+                            {
+                                "Format": int(ot.PaintFormat.PaintGlyph),
+                                "Paint": {
+                                    "Format": int(ot.PaintFormat.PaintSolid),
+                                    "PaletteIndex": 1,
+                                    "Alpha": 1.0,
+                                },
+                                "Glyph": "C",
+                            },
+                            {
+                                "Format": int(ot.PaintFormat.PaintGlyph),
+                                "Paint": {
+                                    "Format": int(ot.PaintFormat.PaintSolid),
+                                    "PaletteIndex": 2,
+                                    "Alpha": 1.0,
+                                },
+                                "Glyph": "D",
+                            },
+                        ],
+                    },
+                    "E": {
+                        "Format": int(ot.PaintFormat.PaintColrLayers),
+                        "Layers": [
+                            {
+                                "Format": int(ot.PaintFormat.PaintGlyph),
+                                "Paint": {
+                                    "Format": int(ot.PaintFormat.PaintSolid),
+                                    "PaletteIndex": 1,
+                                    "Alpha": 1.0,
+                                },
+                                "Glyph": "C",
+                            },
+                            {
+                                "Format": int(ot.PaintFormat.PaintGlyph),
+                                "Paint": {
+                                    "Format": int(ot.PaintFormat.PaintSolid),
+                                    "PaletteIndex": 2,
+                                    "Alpha": 1.0,
+                                },
+                                "Glyph": "D",
+                            },
+                            {
+                                "Format": int(ot.PaintFormat.PaintGlyph),
+                                "Paint": {
+                                    "Format": int(ot.PaintFormat.PaintSolid),
+                                    "PaletteIndex": 3,
+                                    "Alpha": 1.0,
+                                },
+                                "Glyph": "F",
+                            },
+                        ],
+                    },
+                    "G": {
+                        "Format": int(ot.PaintFormat.PaintColrGlyph),
+                        "Glyph": "E",
+                    },
+                },
+                [
+                    "<COLR>",
+                    '  <Version value="1"/>',
+                    "  <!-- BaseGlyphRecordCount=0 -->",
+                    "  <!-- LayerRecordCount=0 -->",
+                    "  <BaseGlyphList>",
+                    "    <!-- BaseGlyphCount=3 -->",
+                    '    <BaseGlyphPaintRecord index="0">',
+                    '      <BaseGlyph value="A"/>',
+                    '      <Paint Format="1"><!-- PaintColrLayers -->',
+                    '        <NumLayers value="3"/>',
+                    '        <FirstLayerIndex value="0"/>',
+                    "      </Paint>",
+                    "    </BaseGlyphPaintRecord>",
+                    '    <BaseGlyphPaintRecord index="1">',
+                    '      <BaseGlyph value="E"/>',
+                    '      <Paint Format="1"><!-- PaintColrLayers -->',
+                    '        <NumLayers value="2"/>',
+                    '        <FirstLayerIndex value="3"/>',
+                    "      </Paint>",
+                    "    </BaseGlyphPaintRecord>",
+                    '    <BaseGlyphPaintRecord index="2">',
+                    '      <BaseGlyph value="G"/>',
+                    '      <Paint Format="11"><!-- PaintColrGlyph -->',
+                    '        <Glyph value="E"/>',
+                    "      </Paint>",
+                    "    </BaseGlyphPaintRecord>",
+                    "  </BaseGlyphList>",
+                    "  <LayerList>",
+                    "    <!-- LayerCount=5 -->",
+                    '    <Paint index="0" Format="10"><!-- PaintGlyph -->',
+                    '      <Paint Format="2"><!-- PaintSolid -->',
+                    '        <PaletteIndex value="0"/>',
+                    '        <Alpha value="1.0"/>',
+                    "      </Paint>",
+                    '      <Glyph value="B"/>',
+                    "    </Paint>",
+                    '    <Paint index="1" Format="10"><!-- PaintGlyph -->',
+                    '      <Paint Format="2"><!-- PaintSolid -->',
+                    '        <PaletteIndex value="1"/>',
+                    '        <Alpha value="1.0"/>',
+                    "      </Paint>",
+                    '      <Glyph value="C"/>',
+                    "    </Paint>",
+                    '    <Paint index="2" Format="10"><!-- PaintGlyph -->',
+                    '      <Paint Format="2"><!-- PaintSolid -->',
+                    '        <PaletteIndex value="2"/>',
+                    '        <Alpha value="1.0"/>',
+                    "      </Paint>",
+                    '      <Glyph value="D"/>',
+                    "    </Paint>",
+                    '    <Paint index="3" Format="1"><!-- PaintColrLayers -->',
+                    '      <NumLayers value="2"/>',
+                    '      <FirstLayerIndex value="1"/>',
+                    "    </Paint>",
+                    '    <Paint index="4" Format="10"><!-- PaintGlyph -->',
+                    '      <Paint Format="2"><!-- PaintSolid -->',
+                    '        <PaletteIndex value="3"/>',
+                    '        <Alpha value="1.0"/>',
+                    "      </Paint>",
+                    '      <Glyph value="F"/>',
+                    "    </Paint>",
+                    "  </LayerList>",
+                    "</COLR>",
+                ],
+                [
+                    "<COLR>",
+                    '  <Version value="1"/>',
+                    "  <!-- BaseGlyphRecordCount=0 -->",
+                    "  <!-- LayerRecordCount=0 -->",
+                    "  <BaseGlyphList>",
+                    "    <!-- BaseGlyphCount=3 -->",
+                    '    <BaseGlyphPaintRecord index="0">',
+                    '      <BaseGlyph value="A"/>',
+                    '      <Paint Format="1"><!-- PaintColrLayers -->',
+                    '        <NumLayers value="3"/>',
+                    '        <FirstLayerIndex value="0"/>',
+                    "      </Paint>",
+                    "    </BaseGlyphPaintRecord>",
+                    '    <BaseGlyphPaintRecord index="1">',
+                    '      <BaseGlyph value="E"/>',
+                    '      <Paint Format="1"><!-- PaintColrLayers -->',
+                    '        <NumLayers value="3"/>',
+                    '        <FirstLayerIndex value="3"/>',
+                    "      </Paint>",
+                    "    </BaseGlyphPaintRecord>",
+                    '    <BaseGlyphPaintRecord index="2">',
+                    '      <BaseGlyph value="G"/>',
+                    '      <Paint Format="11"><!-- PaintColrGlyph -->',
+                    '        <Glyph value="E"/>',
+                    "      </Paint>",
+                    "    </BaseGlyphPaintRecord>",
+                    "  </BaseGlyphList>",
+                    "  <LayerList>",
+                    "    <!-- LayerCount=6 -->",
+                    '    <Paint index="0" Format="10"><!-- PaintGlyph -->',
+                    '      <Paint Format="2"><!-- PaintSolid -->',
+                    '        <PaletteIndex value="0"/>',
+                    '        <Alpha value="1.0"/>',
+                    "      </Paint>",
+                    '      <Glyph value="B"/>',
+                    "    </Paint>",
+                    '    <Paint index="1" Format="10"><!-- PaintGlyph -->',
+                    '      <Paint Format="2"><!-- PaintSolid -->',
+                    '        <PaletteIndex value="1"/>',
+                    '        <Alpha value="1.0"/>',
+                    "      </Paint>",
+                    '      <Glyph value="C"/>',
+                    "    </Paint>",
+                    '    <Paint index="2" Format="10"><!-- PaintGlyph -->',
+                    '      <Paint Format="2"><!-- PaintSolid -->',
+                    '        <PaletteIndex value="2"/>',
+                    '        <Alpha value="1.0"/>',
+                    "      </Paint>",
+                    '      <Glyph value="D"/>',
+                    "    </Paint>",
+                    '    <Paint index="3" Format="10"><!-- PaintGlyph -->',
+                    '      <Paint Format="2"><!-- PaintSolid -->',
+                    '        <PaletteIndex value="1"/>',
+                    '        <Alpha value="1.0"/>',
+                    "      </Paint>",
+                    '      <Glyph value="C"/>',
+                    "    </Paint>",
+                    '    <Paint index="4" Format="10"><!-- PaintGlyph -->',
+                    '      <Paint Format="2"><!-- PaintSolid -->',
+                    '        <PaletteIndex value="2"/>',
+                    '        <Alpha value="1.0"/>',
+                    "      </Paint>",
+                    '      <Glyph value="D"/>',
+                    "    </Paint>",
+                    '    <Paint index="5" Format="10"><!-- PaintGlyph -->',
+                    '      <Paint Format="2"><!-- PaintSolid -->',
+                    '        <PaletteIndex value="3"/>',
+                    '        <Alpha value="1.0"/>',
+                    "      </Paint>",
+                    '      <Glyph value="F"/>',
+                    "    </Paint>",
+                    "  </LayerList>",
+                    "</COLR>",
+                ],
+                id="simple-reuse",
+            ),
+            pytest.param(
+                {
+                    "A": {
+                        "Format": int(ot.PaintFormat.PaintGlyph),
+                        "Paint": {
+                            "Format": int(ot.PaintFormat.PaintSolid),
+                            "PaletteIndex": 0,
+                            "Alpha": 1.0,
+                        },
+                        "Glyph": "B",
+                    },
+                },
+                [
+                    "<COLR>",
+                    '  <Version value="1"/>',
+                    "  <!-- BaseGlyphRecordCount=0 -->",
+                    "  <!-- LayerRecordCount=0 -->",
+                    "  <BaseGlyphList>",
+                    "    <!-- BaseGlyphCount=1 -->",
+                    '    <BaseGlyphPaintRecord index="0">',
+                    '      <BaseGlyph value="A"/>',
+                    '      <Paint Format="10"><!-- PaintGlyph -->',
+                    '        <Paint Format="2"><!-- PaintSolid -->',
+                    '          <PaletteIndex value="0"/>',
+                    '          <Alpha value="1.0"/>',
+                    "        </Paint>",
+                    '        <Glyph value="B"/>',
+                    "      </Paint>",
+                    "    </BaseGlyphPaintRecord>",
+                    "  </BaseGlyphList>",
+                    "</COLR>",
+                ],
+                [
+                    "<COLR>",
+                    '  <Version value="1"/>',
+                    "  <!-- BaseGlyphRecordCount=0 -->",
+                    "  <!-- LayerRecordCount=0 -->",
+                    "  <BaseGlyphList>",
+                    "    <!-- BaseGlyphCount=1 -->",
+                    '    <BaseGlyphPaintRecord index="0">',
+                    '      <BaseGlyph value="A"/>',
+                    '      <Paint Format="10"><!-- PaintGlyph -->',
+                    '        <Paint Format="2"><!-- PaintSolid -->',
+                    '          <PaletteIndex value="0"/>',
+                    '          <Alpha value="1.0"/>',
+                    "        </Paint>",
+                    '        <Glyph value="B"/>',
+                    "      </Paint>",
+                    "    </BaseGlyphPaintRecord>",
+                    "  </BaseGlyphList>",
+                    "</COLR>",
+                ],
+                id="no-layer-list",
+            ),
+        ],
+    )
+    def test_expandPaintColrLayers(
+        self, color_glyphs, ttFont, before_xml, expected_xml
+    ):
+        colr = buildCOLR(color_glyphs, allowLayerReuse=True)
+
+        assert dump_xml(colr.table, ttFont) == before_xml
+
+        before_layer_count = 0
+        reuses_colr_layers = False
+        if colr.table.LayerList:
+            before_layer_count = len(colr.table.LayerList.Paint)
+            reuses_colr_layers = any(
+                p.Format == ot.PaintFormat.PaintColrLayers
+                for p in colr.table.LayerList.Paint
+            )
+
+        COLRVariationMerger.expandPaintColrLayers(colr.table)
+
+        assert dump_xml(colr.table, ttFont) == expected_xml
+
+        after_layer_count = (
+            0 if not colr.table.LayerList else len(colr.table.LayerList.Paint)
+        )
+
+        if reuses_colr_layers:
+            assert not any(
+                p.Format == ot.PaintFormat.PaintColrLayers
+                for p in colr.table.LayerList.Paint
+            )
+            assert after_layer_count > before_layer_count
+        else:
+            assert after_layer_count == before_layer_count
+
+        if colr.table.LayerList:
+            assert len({id(p) for p in colr.table.LayerList.Paint}) == after_layer_count
