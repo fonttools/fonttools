@@ -42,7 +42,10 @@ class VarLibMergeError(VarLibError):
             index = [x == self.cause["expected"] for x in self.cause["got"]].index(
                 False
             )
-            return index, self._master_name(index)
+            master_name = self._master_name(index)
+            if "location" in self.cause:
+                master_name = f"{master_name} ({self.cause['location']})"
+            return index, master_name
         return None, None
 
     @property
@@ -50,7 +53,7 @@ class VarLibMergeError(VarLibError):
         if "expected" in self.cause and "got" in self.cause:
             offender_index, offender = self.offender
             got = self.cause["got"][offender_index]
-            return f"Expected to see {self.stack[0]}=={self.cause['expected']}, instead saw {got}\n"
+            return f"Expected to see {self.stack[0]}=={self.cause['expected']!r}, instead saw {got!r}\n"
         return ""
 
     def __str__(self):
@@ -138,9 +141,17 @@ class InconsistentExtensions(VarLibMergeError):
 class UnsupportedFormat(VarLibMergeError):
     """an OpenType subtable (%s) had a format I didn't expect"""
 
+    def __init__(self, merger=None, **kwargs):
+        super().__init__(merger, **kwargs)
+        if not self.stack:
+            self.stack = [".Format"]
+
     @property
     def reason(self):
-        return self.__doc__ % self.cause["subtable"]
+        s = self.__doc__ % self.cause["subtable"]
+        if "value" in self.cause:
+            s += f" ({self.cause['value']!r})"
+        return s
 
 
 class InconsistentFormats(UnsupportedFormat):

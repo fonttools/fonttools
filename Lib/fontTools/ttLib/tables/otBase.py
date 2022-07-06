@@ -6,7 +6,8 @@ import sys
 import array
 import struct
 import logging
-from typing import Iterator, NamedTuple, Optional
+from functools import lru_cache
+from typing import Iterator, NamedTuple, Optional, Tuple
 
 log = logging.getLogger(__name__)
 
@@ -220,8 +221,8 @@ class BaseTTXConverter(DefaultTable):
 		self.table.fromXML(name, attrs, content, font)
 		self.table.populateDefaults()
 
-	def ensureDecompiled(self):
-		self.table.ensureDecompiled(recurse=True)
+	def ensureDecompiled(self, recurse=True):
+		self.table.ensureDecompiled(recurse=recurse)
 
 
 # https://github.com/fonttools/fonttools/pull/2285#issuecomment-834652928
@@ -864,6 +865,9 @@ class BaseTable(object):
 				#elif not conv.isCount:
 				#	# Warn?
 				#	pass
+				if hasattr(conv, "DEFAULT"):
+					# OptionalValue converters (e.g. VarIndex)
+					setattr(self, conv.name, conv.DEFAULT)
 
 	def decompile(self, reader, font):
 		self.readFormat(reader)
@@ -1098,6 +1102,10 @@ class BaseTable(object):
 					if isinstance(v, BaseTable)
 				)
 
+	# instance (not @class)method for consistency with FormatSwitchingBaseTable
+	def getVariableAttrs(self):
+		return getVariableAttrs(self.__class__)
+
 
 class FormatSwitchingBaseTable(BaseTable):
 
@@ -1132,6 +1140,9 @@ class FormatSwitchingBaseTable(BaseTable):
 	def toXML(self, xmlWriter, font, attrs=None, name=None):
 		BaseTable.toXML(self, xmlWriter, font, attrs, name)
 
+	def getVariableAttrs(self):
+		return getVariableAttrs(self.__class__, self.Format)
+
 
 class UInt8FormatSwitchingBaseTable(FormatSwitchingBaseTable):
 	def readFormat(self, reader):
@@ -1151,6 +1162,33 @@ def getFormatSwitchingBaseTableClass(formatType):
 		return formatSwitchingBaseTables[formatType]
 	except KeyError:
 		raise TypeError(f"Unsupported format type: {formatType!r}")
+
+
+# memoize since these are parsed from otData.py, thus stay constant
+@lru_cache()
+def getVariableAttrs(cls: BaseTable, fmt: Optional[int] = None) -> Tuple[str]:
+	"""Return sequence of variable table field names (can be empty).
+
+	Attributes are deemed "variable" when their otData.py's description contain
+	'VarIndexBase + {offset}', e.g. COLRv1 PaintVar* tables.
+	"""
+	if not issubclass(cls, BaseTable):
+		raise TypeError(cls)
+	if issubclass(cls, FormatSwitchingBaseTable):
+		if fmt is None:
+			raise TypeError(f"'fmt' is required for format-switching {cls.__name__}")
+		converters = cls.convertersByName[fmt]
+	else:
+		converters = cls.convertersByName
+	# assume if no 'VarIndexBase' field is present, table has no variable fields
+	if "VarIndexBase" not in converters:
+		return ()
+	varAttrs = {}
+	for name, conv in converters.items():
+		offset = conv.getVarIndexOffset()
+		if offset is not None:
+			varAttrs[name] = offset
+	return tuple(sorted(varAttrs, key=varAttrs.__getitem__))
 
 
 #

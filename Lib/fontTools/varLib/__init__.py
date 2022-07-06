@@ -30,13 +30,15 @@ from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables.otBase import OTTableWriter
 from fontTools.varLib import builder, models, varStore
-from fontTools.varLib.merger import VariationMerger
+from fontTools.varLib.merger import VariationMerger, COLRVariationMerger
 from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib.iup import iup_delta_optimize
 from fontTools.varLib.featureVars import addFeatureVariations
 from fontTools.designspaceLib import DesignSpaceDocument, InstanceDescriptor
 from fontTools.designspaceLib.split import splitInterpolable, splitVariableFonts
 from fontTools.varLib.stat import buildVFStatTable
+from fontTools.colorLib.builder import buildColrV1
+from fontTools.colorLib.unbuilder import unbuildColrV1
 from functools import partial
 from collections import OrderedDict, namedtuple
 import os.path
@@ -711,6 +713,19 @@ def _add_CFF2(varFont, model, master_fonts):
 	merge_region_fonts(varFont, model, ordered_fonts_list, glyphOrder)
 
 
+def _add_COLR(font, model, master_fonts, axisTags, colr_layer_reuse=True):
+	merger = COLRVariationMerger(model, axisTags, font, allowLayerReuse=colr_layer_reuse)
+	merger.mergeTables(font, master_fonts)
+	store = merger.store_builder.finish()
+
+	colr = font["COLR"].table
+	if store:
+		mapping = store.optimize()
+		colr.VarStore = store
+		varIdxes = [mapping[v] for v in merger.varIdxes]
+		colr.VarIndexMap = builder.buildDeltaSetIndexMap(varIdxes)
+
+
 def load_designspace(designspace):
 	# TODO: remove this and always assume 'designspace' is a DesignSpaceDocument,
 	# never a file path, as that's already handled by caller
@@ -865,7 +880,14 @@ def set_default_weight_width_slant(font, location):
 			font["post"].italicAngle = italicAngle
 
 
-def build_many(designspace: DesignSpaceDocument, master_finder=lambda s:s, exclude=[], optimize=True, skip_vf=lambda vf_name: False):
+def build_many(
+	designspace: DesignSpaceDocument,
+	master_finder=lambda s:s,
+	exclude=[],
+	optimize=True,
+	skip_vf=lambda vf_name: False,
+	colr_layer_reuse=True,
+):
 	"""
 	Build variable fonts from a designspace file, version 5 which can define
 	several VFs, or version 4 which has implicitly one VF covering the whole doc.
@@ -897,7 +919,13 @@ def build_many(designspace: DesignSpaceDocument, master_finder=lambda s:s, exclu
 			res[name] = vf
 	return res
 
-def build(designspace, master_finder=lambda s:s, exclude=[], optimize=True):
+def build(
+	designspace,
+	master_finder=lambda s:s,
+	exclude=[],
+	optimize=True,
+	colr_layer_reuse=True,
+):
 	"""
 	Build variation font from a designspace file.
 
@@ -975,6 +1003,8 @@ def build(designspace, master_finder=lambda s:s, exclude=[], optimize=True):
 				post.formatType = 2.0
 				post.extraNames = []
 				post.mapping = {}
+	if 'COLR' not in exclude and 'COLR' in vf and vf['COLR'].version > 0:
+		_add_COLR(vf, model, master_fonts, axisTags, colr_layer_reuse)
 
 	set_default_weight_width_slant(
 		vf, location={axis.axisTag: axis.defaultValue for axis in vf["fvar"].axes}
@@ -1083,6 +1113,12 @@ def main(args=None):
 		help='do not perform IUP optimization'
 	)
 	parser.add_argument(
+		'--no-colr-layer-reuse',
+		dest='colr_layer_reuse',
+		action='store_false',
+		help='do not rebuild variable COLR table to optimize COLR layer reuse',
+	)
+	parser.add_argument(
 		'--master-finder',
 		default='master_ttf_interpolatable/{stem}.ttf',
 		help=(
@@ -1120,7 +1156,8 @@ def main(args=None):
 		designspace_filename,
 		finder,
 		exclude=options.exclude,
-		optimize=options.optimize
+		optimize=options.optimize,
+		colr_layer_reuse=options.colr_layer_reuse,
 	)
 
 	outfile = options.outfile

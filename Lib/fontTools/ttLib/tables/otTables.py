@@ -600,6 +600,11 @@ class Coverage(FormatSwitchingBaseTable):
 		glyphs.append(attrs["value"])
 
 
+# The special 0xFFFFFFFF delta-set index is used to indicate that there
+# is no variation data in the ItemVariationStore for a given variable field
+NO_VARIATION_INDEX = 0xFFFFFFFF
+
+
 class DeltaSetIndexMap(getFormatSwitchingBaseTableClass("uint8")):
 
 	def populateDefaults(self, propagator=None):
@@ -647,12 +652,19 @@ class DeltaSetIndexMap(getFormatSwitchingBaseTableClass("uint8")):
 		return rawTable
 
 	def toXML2(self, xmlWriter, font):
+		# Make xml dump less verbose, by omitting no-op entries like:
+		#   <Map index="..." outer="65535" inner="65535"/>
+		xmlWriter.comment(
+			"Omitted values default to 0xFFFF/0xFFFF (no variations)"
+		)
+		xmlWriter.newline()
 		for i, value in enumerate(getattr(self, "mapping", [])):
-			attrs = (
-				('index', i),
-				('outer', value >> 16),
-				('inner', value & 0xFFFF),
-			)
+			attrs = [('index', i)]
+			if value != NO_VARIATION_INDEX:
+				attrs.extend([
+					('outer', value >> 16),
+					('inner', value & 0xFFFF),
+				])
 			xmlWriter.simpletag("Map", attrs)
 			xmlWriter.newline()
 
@@ -661,8 +673,8 @@ class DeltaSetIndexMap(getFormatSwitchingBaseTableClass("uint8")):
 		if mapping is None:
 			self.mapping = mapping = []
 		index = safeEval(attrs['index'])
-		outer = safeEval(attrs['outer'])
-		inner = safeEval(attrs['inner'])
+		outer = safeEval(attrs.get('outer', '0xFFFF'))
+		inner = safeEval(attrs.get('inner', '0xFFFF'))
 		assert inner <= 0xFFFF
 		mapping.insert(index, (outer << 16) | inner)
 
@@ -1257,7 +1269,19 @@ class BaseGlyphList(BaseTable):
 		return self.__dict__.copy()
 
 
+class ClipBoxFormat(IntEnum):
+	Static = 1
+	Variable = 2
+
+	def is_variable(self):
+		return self is self.Variable
+
+	def as_variable(self):
+		return self.Variable
+
+
 class ClipBox(getFormatSwitchingBaseTableClass("uint8")):
+	formatEnum = ClipBoxFormat
 
 	def as_tuple(self):
 		return tuple(getattr(self, conv.name) for conv in self.getConverters())
@@ -1492,12 +1516,24 @@ class PaintFormat(IntEnum):
 	PaintVarSkewAroundCenter = 31
 	PaintComposite = 32
 
+	def is_variable(self):
+		return self.name.startswith("PaintVar")
+
+	def as_variable(self):
+		if self.is_variable():
+			return self
+		try:
+			return PaintFormat.__members__[f"PaintVar{self.name[5:]}"]
+		except KeyError:
+			return None
+
 
 class Paint(getFormatSwitchingBaseTableClass("uint8")):
+	formatEnum = PaintFormat
 
 	def getFormatName(self):
 		try:
-			return PaintFormat(self.Format).name
+			return self.formatEnum(self.Format).name
 		except ValueError:
 			raise NotImplementedError(f"Unknown Paint format: {self.Format}")
 
@@ -1961,6 +1997,14 @@ def _buildClasses():
 			if name in ('GSUB', 'GPOS'):
 				cls.DontShare = True
 			namespace[name] = cls
+
+	# link Var{Table} <-> {Table} (e.g. ColorStop <-> VarColorStop, etc.)
+	for name, _ in otData:
+		if name.startswith("Var") and len(name) > 3 and name[3:] in namespace:
+			varType = namespace[name]
+			noVarType = namespace[name[3:]]
+			varType.NoVarType = noVarType
+			noVarType.VarType = varType
 
 	for base, alts in _equivalents.items():
 		base = namespace[base]
