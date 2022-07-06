@@ -1,3 +1,6 @@
+4.34.0 (released 2022-07-06)
+----------------------------
+
 - [instancer] Set RIBBI bits in head and OS/2 table when cutting instances and the
   subfamily nameID=2 contains strings like 'Italic' or 'Bold' (#2673).
 - [otTraverse] Addded module containing methods for traversing trees of otData tables
