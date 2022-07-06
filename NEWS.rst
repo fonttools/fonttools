@@ -1,3 +1,6 @@
+4.34.1 (released 2022-07-06)
+----------------------------
+
 - [instancer] When optimizing HVAR/VVAR VarStore, use_NO_VARIATION_INDEX=False to avoid
   including NO_VARIATION_INDEX in AdvWidthMap, RsbMap, LsbMap mappings, which would
   push the VarIdx width to maximum (4bytes), which is not desirable. This also fixes
