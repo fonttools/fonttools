@@ -1,3 +1,40 @@
+- [instancer] Set RIBBI bits in head and OS/2 table when cutting instances and the
+  subfamily nameID=2 contains strings like 'Italic' or 'Bold' (#2673).
+- [otTraverse] Addded module containing methods for traversing trees of otData tables
+  (#2660).
+- [otTables] Made DeltaSetIndexMap TTX dump less verbose by omitting no-op entries
+  (#2660).
+- [colorLib.builder] Added option to disable PaintColrLayers's reuse of layers from
+  LayerList (#2660).
+- [varLib] Added support for merging multiple master COLRv1 tables into a variable
+  COLR table (#2660, #2328). Base color glyphs of same name in different masters must have
+  identical paint graph structure (incl. number of layers, palette indices, number
+  of color line stops, corresponding paint formats at each level of the graph),
+  but can differ in the variable fields (e.g. PaintSolid.Alpha). PaintVar* tables
+  are produced when this happens and a VarStore/DeltaSetIndexMap is added to the
+  variable COLR table. It is possible for non-default masters to be 'sparse', i.e.
+  omit some of the color glyphs present in the default master.
+- [feaLib] Let the Parser set nameIDs 1 through 6 that were previously reserved (#2675).
+- [varLib.varStore] Support NO_VARIATION_INDEX in optimizer and instancer.
+- [feaLib] Show all missing glyphs at once at end of parsing (#2665).
+- [varLib.iup] Rewrite force-set conditions and limit DP loopback length (#2651).
+  For Noto Sans, IUP time drops from 23s down to 9s, with only a slight size increase
+  in the final font. This basically turns the algorithm from O(n^3) into O(n).
+- [featureVars] Report about missing glyphs in substitution rules (#2654).
+- [mutator/instancer] Added CLI flag to --no-recalc-timestamp (#2649).
+- [SVG] Allow individual SVG documents in SVG OT table to be compressed on uncompressed,
+  and remember that when roundtripping to/from ttx. The SVG.docList is now a list
+  of SVGDocument namedtuple-like dataclass containing an extra ``compressed`` field,
+  and no longer a bare 3-tuple (#2645).
+- [designspaceLib] Check for descriptor types with hasattr() to allow custom classes
+  that don't inherit the default descriptors (#2634).
+- [subset] Enable sharing across subtables of extension lookups for harfbuzz packing
+  (#2626). Updated how table packing falls back to fontTools from harfbuzz (#2668).
+- [subset] Updated default feature tags following current Harfbuzz (#2637).
+- [svgLib] Fixed regex for real number to support e.g. 1e-4 in addition to 1.0e-4.
+  Support parsing negative rx, ry on arc commands (#2596, #2611).
+- [subset] Fixed subsetting SinglePosFormat2 when ValueFormat=0 (#2603).
+
 4.33.3 (released 2022-04-26)
 ----------------------------
 
