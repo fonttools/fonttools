@@ -79,6 +79,9 @@ class GLIFFormatVersion(tuple, _VersionTupleEnumMixin, enum.Enum):
 			versions.add(cls.FORMAT_2_0)
 		return frozenset(versions)
 
+# workaround for py3.11, see https://github.com/fonttools/fonttools/pull/2655
+GLIFFormatVersion.__str__ = _VersionTupleEnumMixin.__str__
+
 
 # ------------
 # Simple Glyph
