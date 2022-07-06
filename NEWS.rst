@@ -1,3 +1,6 @@
+4.34.2 (released 2022-07-06)
+----------------------------
+
 - [varStore/subset] fixed KeyError exception to do with NO_VARIATION_INDEX while
   subsetting varidxes in GPOS/GDEF (a08140d).
 
