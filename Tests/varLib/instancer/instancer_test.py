@@ -360,7 +360,7 @@ class InstantiateHVARTest(object):
                 assert support == pytest.approx(expectedRegion[axisTag])
 
         assert len(varStore.VarData) == 1
-        assert varStore.VarData[0].ItemCount == 1
+        assert varStore.VarData[0].ItemCount == 2
 
         assert hvar.AdvWidthMap is not None
         advWithMap = hvar.AdvWidthMap.mapping
@@ -368,7 +368,9 @@ class InstantiateHVARTest(object):
         assert advWithMap[".notdef"] == advWithMap["space"]
         varIdx = advWithMap[".notdef"]
         # these glyphs have no metrics variations in the test font
-        assert varIdx == varStore.NO_VARIATION_INDEX
+        assert varStore.VarData[varIdx >> 16].Item[varIdx & 0xFFFF] == (
+            [0] * varStore.VarData[0].VarRegionCount
+        )
 
         varIdx = advWithMap["hyphen"]
         assert varStore.VarData[varIdx >> 16].Item[varIdx & 0xFFFF] == expectedDeltas
