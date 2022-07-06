@@ -109,13 +109,13 @@ otData = [
 
 	('CoverageFormat3', [
 		('uint16', 'CoverageFormat', None, None, 'Format identifier-format = 1'),
-		('uint24', 'GlyphCount', None, None, 'Number of glyphs in the GlyphArray'),
+		('uint16', 'GlyphCount', None, None, 'Number of glyphs in the GlyphArray'),
 		('GlyphID24', 'GlyphArray', 'GlyphCount', 0, 'Array of GlyphIDs-in numerical order'),
 	]),
 
 	('CoverageFormat4', [
 		('uint16', 'CoverageFormat', None, None, 'Format identifier-format = 2'),
-		('uint24', 'RangeCount', None, None, 'Number of RangeRecords'),
+		('uint16', 'RangeCount', None, None, 'Number of RangeRecords'),
 		('Range24Record', 'RangeRecord', 'RangeCount', 0, 'Array of glyph ranges-ordered by Start GlyphID'),
 	]),
 
@@ -128,7 +128,7 @@ otData = [
 	('Range24Record', [
 		('GlyphID24', 'Start', None, None, 'First GlyphID in the range'),
 		('GlyphID24', 'End', None, None, 'Last GlyphID in the range'),
-		('uint24', 'StartCoverageIndex', None, None, 'Coverage Index of first GlyphID in range'),
+		('uint16', 'StartCoverageIndex', None, None, 'Coverage Index of first GlyphID in range'),
 	]),
 
 	('ClassDefFormat1', [
@@ -148,7 +148,7 @@ otData = [
 		('uint16', 'ClassFormat', None, None, 'Format identifier-format = 1'),
 		('GlyphID24', 'StartGlyph', None, None, 'First GlyphID of the ClassValueArray'),
 		('uint24', 'GlyphCount', None, None, 'Size of the ClassValueArray'),
-		('uint24', 'ClassValueArray', 'GlyphCount', 0, 'Array of Class Values-one per GlyphID'),
+		('uint16', 'ClassValueArray', 'GlyphCount', 0, 'Array of Class Values-one per GlyphID'),
 	]),
 
 	('ClassDefFormat4', [
@@ -166,7 +166,7 @@ otData = [
 	('ClassRange24Record', [
 		('GlyphID24', 'Start', None, None, 'First GlyphID in the range'),
 		('GlyphID24', 'End', None, None, 'Last GlyphID in the range'),
-		('uint24', 'Class', None, None, 'Applied to all glyphs in the range'),
+		('uint16', 'Class', None, None, 'Applied to all glyphs in the range'),
 	]),
 
 	('Device', [
@@ -219,7 +219,7 @@ otData = [
 		('Offset24', 'Coverage', None, None, 'Offset to Coverage table-from beginning of PairPos subtable-only the first glyph in each pair'),
 		('uint16', 'ValueFormat1', None, None, 'Defines the types of data in ValueRecord1-for the first glyph in the pair -may be zero (0)'),
 		('uint16', 'ValueFormat2', None, None, 'Defines the types of data in ValueRecord2-for the second glyph in the pair -may be zero (0)'),
-		('uint24', 'PairSetCount', None, None, 'Number of PairSet tables'),
+		('uint16', 'PairSetCount', None, None, 'Number of PairSet tables'),
 		('LOffset24To(PairSet24)', 'PairSet', 'PairSetCount', 0, 'Array of offsets to PairSet tables-from beginning of PairPos subtable-ordered by Coverage Index'),
 	]),
 
@@ -229,7 +229,7 @@ otData = [
 	]),
 
 	('PairSet24', [
-		('uint24', 'PairValueCount', None, None, 'Number of PairValueRecords'),
+		('uint16', 'PairValueCount', None, None, 'Number of PairValueRecords'),
 		('PairValue24Record', 'PairValueRecord', 'PairValueCount', 0, 'Array of PairValueRecords-ordered by GlyphID of the second glyph'),
 	]),
 
@@ -653,7 +653,7 @@ otData = [
 	('SingleSubstFormat4', [
 		('uint16', 'SubstFormat', None, None, 'Format identifier-format = 2'),
 		('Offset24', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
-		('uint24', 'GlyphCount', None, None, 'Number of GlyphIDs in the Substitute array'),
+		('uint16', 'GlyphCount', None, None, 'Number of GlyphIDs in the Substitute array'),
 		('GlyphID24', 'Substitute', 'GlyphCount', 0, 'Array of substitute GlyphIDs-ordered by Coverage Index'),
 	]),
 
@@ -672,7 +672,7 @@ otData = [
 	('MultipleSubstFormat2', [
 		('uint16', 'SubstFormat', None, None, 'Format identifier-format = 1'),
 		('Offset', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
-		('uint24', 'SequenceCount', None, None, 'Number of Sequence table offsets in the Sequence array'),
+		('uint16', 'SequenceCount', None, None, 'Number of Sequence table offsets in the Sequence array'),
 		('LOffset24To(Sequence24)', 'Sequence', 'SequenceCount', 0, 'Array of offsets to Sequence tables-from beginning of Substitution table-ordered by Coverage Index'),
 	]),
 
@@ -696,7 +696,7 @@ otData = [
 	('AlternateSubstFormat2', [
 		('uint16', 'SubstFormat', None, None, 'Format identifier-format = 1'),
 		('Offset24', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
-		('uint24', 'AlternateSetCount', None, None, 'Number of AlternateSet tables'),
+		('uint16', 'AlternateSetCount', None, None, 'Number of AlternateSet tables'),
 		('LOffset24To(AlternateSet24)', 'AlternateSet', 'AlternateSetCount', 0, 'Array of offsets to AlternateSet tables-from beginning of Substitution table-ordered by Coverage Index'),
 	]),
 
@@ -720,7 +720,7 @@ otData = [
 	('LigatureSubstFormat2', [
 		('uint16', 'SubstFormat', None, None, 'Format identifier-format = 1'),
 		('Offset24', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
-		('uint24', 'LigSetCount', None, None, 'Number of LigatureSet tables'),
+		('uint16', 'LigSetCount', None, None, 'Number of LigatureSet tables'),
 		('LOffset24To(LigatureSet24)', 'LigatureSet', 'LigSetCount', 0, 'Array of offsets to LigatureSet tables-from beginning of Substitution table-ordered by Coverage Index'),
 	]),
 
