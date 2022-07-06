@@ -1198,10 +1198,10 @@ def instantiateVariableFont(
             requires the skia-pathops package (available to pip install).
             The overlap parameter only has effect when generating full static instances.
         updateFontNames (bool): if True, update the instantiated font's name table using
-            the Axis Value Tables from the STAT table. The name table will be updated so
-            it conforms to the R/I/B/BI model. If the STAT table is missing or
-            an Axis Value table is missing for a given axis coordinate, a ValueError will
-            be raised.
+            the Axis Value Tables from the STAT table. The name table and the style bits
+            in the head and OS/2 table will be updated so they conform to the R/I/B/BI
+            model. If the STAT table is missing or an Axis Value table is missing for
+            a given axis coordinate, a ValueError will be raised.
     """
     # 'overlap' used to be bool and is now enum; for backward compat keep accepting bool
     overlap = OverlapMode(int(overlap))
