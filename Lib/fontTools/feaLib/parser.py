@@ -1253,14 +1253,6 @@ class Parser(object):
             raise FeatureLibError(
                 "Name id value cannot be greater than 32767", self.cur_token_location_
             )
-        if 1 <= nameID <= 6:
-            log.warning(
-                "Name id %d cannot be set from the feature file. "
-                "Ignoring record" % nameID
-            )
-            self.parse_name_()  # skip to the next record
-            return None
-
         platformID, platEncID, langID, string = self.parse_name_()
         return self.ast.NameRecord(
             nameID, platformID, platEncID, langID, string, location=location
