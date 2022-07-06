@@ -95,3 +95,66 @@ class VariableScalar:
         store_builder.setSupports(supports)
         index = store_builder.storeDeltas(deltas)
         return int(self.default), index
+
+    def __sub__(self, other):
+        new = VariableScalar()
+        new.axes = self.axes
+        for loc in self.values.keys():
+            if isinstance(other, (float,int)):
+                new.add_value(
+                    dict(loc),
+                    self.value_at_location(loc) - other
+                )
+            elif other.does_vary:
+                new.add_value(
+                    dict(loc),
+                    self.value_at_location(loc) - other.value_at_location(loc),
+                )
+            else:
+                new.add_value(
+                    dict(loc),
+                    self.value_at_location(loc) - list(other.values.values())[0],
+                )
+        return new
+
+
+    def __add__(self, other):
+        new = VariableScalar()
+        new.axes = self.axes
+        for loc in self.values.keys():
+            if isinstance(other, (float,int)):
+                new.add_value(
+                    dict(loc),
+                    self.value_at_location(loc) + other
+                )
+            elif other.does_vary:
+                new.add_value(
+                    dict(loc),
+                    self.value_at_location(loc) + other.value_at_location(loc),
+                )
+            else:
+                new.add_value(
+                    dict(loc),
+                    self.value_at_location(loc) + list(other.values.values())[0],
+                )
+        return new
+
+    def __mul__(self, other):
+        new = VariableScalar()
+        new.axes = self.axes
+        for loc in self.values.keys():
+            new.add_value(
+                dict(loc),
+                int(self.value_at_location(loc) * other),
+            )
+        return new
+
+    def __truediv__(self, other):
+        new = VariableScalar()
+        new.axes = self.axes
+        for loc in self.values.keys():
+            new.add_value(
+                dict(loc),
+                int(self.value_at_location(loc) / other),
+            )
+        return new
