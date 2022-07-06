@@ -90,12 +90,10 @@ from fontTools.varLib import builder
 from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib.merger import MutatorMerger
 from fontTools.varLib.instancer import names
-from contextlib import contextmanager
 import collections
 from copy import deepcopy
 from enum import IntEnum
 import logging
-from itertools import islice
 import os
 import re
 
@@ -1200,10 +1198,10 @@ def instantiateVariableFont(
             requires the skia-pathops package (available to pip install).
             The overlap parameter only has effect when generating full static instances.
         updateFontNames (bool): if True, update the instantiated font's name table using
-            the Axis Value Tables from the STAT table. The name table will be updated so
-            it conforms to the R/I/B/BI model. If the STAT table is missing or
-            an Axis Value table is missing for a given axis coordinate, a ValueError will
-            be raised.
+            the Axis Value Tables from the STAT table. The name table and the style bits
+            in the head and OS/2 table will be updated so they conform to the R/I/B/BI
+            model. If the STAT table is missing or an Axis Value table is missing for
+            a given axis coordinate, a ValueError will be raised.
     """
     # 'overlap' used to be bool and is now enum; for backward compat keep accepting bool
     overlap = OverlapMode(int(overlap))
@@ -1273,7 +1271,49 @@ def instantiateVariableFont(
         },
     )
 
+    if updateFontNames:
+        # Set Regular/Italic/Bold/Bold Italic bits as appropriate, after the
+        # name table has been updated.
+        setRibbiBits(varfont)
+
     return varfont
+
+
+def setRibbiBits(font):
+    """Set the `head.macStyle` and `OS/2.fsSelection` style bits
+    appropriately."""
+
+    english_ribbi_style = font["name"].getName(names.NameID.SUBFAMILY_NAME, 3, 1, 0x409)
+    if english_ribbi_style is None:
+        return
+
+    styleMapStyleName = english_ribbi_style.toStr().lower()
+    if styleMapStyleName not in {"regular", "bold", "italic", "bold italic"}:
+        return
+
+    if styleMapStyleName == "bold":
+        font["head"].macStyle = 0b01
+    elif styleMapStyleName == "bold italic":
+        font["head"].macStyle = 0b11
+    elif styleMapStyleName == "italic":
+        font["head"].macStyle = 0b10
+
+    selection = font["OS/2"].fsSelection
+    # First clear...
+    selection &= ~(1 << 0)
+    selection &= ~(1 << 5)
+    selection &= ~(1 << 6)
+    # ...then re-set the bits.
+    if styleMapStyleName == "regular":
+        selection |= 1 << 6
+    elif styleMapStyleName == "bold":
+        selection |= 1 << 5
+    elif styleMapStyleName == "italic":
+        selection |= 1 << 0
+    elif styleMapStyleName == "bold italic":
+        selection |= 1 << 0
+        selection |= 1 << 5
+    font["OS/2"].fsSelection = selection
 
 
 def splitAxisLocationAndRanges(axisLimits, rangeType=AxisRange):
