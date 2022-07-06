@@ -1283,7 +1283,7 @@ def setRibbiBits(font):
     """Set the `head.macStyle` and `OS/2.fsSelection` style bits
     appropriately."""
 
-    english_ribbi_style = font["name"].getName(2, 3, 1, 0x409)
+    english_ribbi_style = font["name"].getName(names.NameID.SUBFAMILY_NAME, 3, 1, 0x409)
     if english_ribbi_style is None:
         return
 
