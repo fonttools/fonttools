@@ -789,7 +789,14 @@ class COLRVariationMergerTest:
         ]
 
     @pytest.mark.parametrize(
-        "color_glyphs, reuse, expected_xml, expected_varIdxes",
+        "master_layer_reuse",
+        [
+            pytest.param(False, id="no-reuse"),
+            pytest.param(True, id="with-reuse"),
+        ],
+    )
+    @pytest.mark.parametrize(
+        "color_glyphs, output_layer_reuse, expected_xml, expected_varIdxes",
         [
             pytest.param(
                 [
@@ -1500,19 +1507,25 @@ class COLRVariationMergerTest:
         ],
     )
     def test_merge_full_table(
-        self, color_glyphs, ttFont, expected_xml, expected_varIdxes, reuse
+        self,
+        color_glyphs,
+        ttFont,
+        expected_xml,
+        expected_varIdxes,
+        master_layer_reuse,
+        output_layer_reuse,
     ):
         master_ttfs = [deepcopy(ttFont) for _ in range(len(color_glyphs))]
         for ttf, glyphs in zip(master_ttfs, color_glyphs):
-            # merge algorithm is expected to work even if the master COLRs may differ as
-            # to the layer reuse, hence we force this is on while building them (even
-            # if it's on by default anyway, we want to make sure it works under more
-            # complex scenario).
-            ttf["COLR"] = buildCOLR(glyphs, allowLayerReuse=True)
+            # merge algorithm is expected to work the same even if the master COLRs
+            # may differ as to the layer reuse, hence we try both ways
+            ttf["COLR"] = buildCOLR(glyphs, allowLayerReuse=master_layer_reuse)
         vf = deepcopy(master_ttfs[0])
 
         model = VariationModel([{}, {"ZZZZ": 1.0}])
-        merger = COLRVariationMerger(model, ["ZZZZ"], vf, allowLayerReuse=reuse)
+        merger = COLRVariationMerger(
+            model, ["ZZZZ"], vf, allowLayerReuse=output_layer_reuse
+        )
 
         merger.mergeTables(vf, master_ttfs)
 
