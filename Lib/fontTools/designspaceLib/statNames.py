@@ -88,21 +88,30 @@ def getStatNames(
         # Then build names for all these languages, but fallback to English
         # whenever a translation is missing.
         labels = _getAxisLabelsForUserLocation(doc.axes, userLocation)
-        languages = set(language for label in labels for language in label.labelNames)
-        languages.add("en")
-        for language in languages:
-            styleName = " ".join(
-                label.labelNames.get(language, label.defaultName)
-                for label in labels
-                if not label.elidable
-            )
-            if not styleName and doc.elidedFallbackName is not None:
-                styleName = doc.elidedFallbackName
-            styleNames[language] = styleName
+        if labels:
+            languages = set(language for label in labels for language in label.labelNames)
+            languages.add("en")
+            for language in languages:
+                styleName = " ".join(
+                    label.labelNames.get(language, label.defaultName)
+                    for label in labels
+                    if not label.elidable
+                )
+                if not styleName and doc.elidedFallbackName is not None:
+                    styleName = doc.elidedFallbackName
+                styleNames[language] = styleName
 
-    postScriptFontName = None
-    if "en" in familyNames and "en" in styleNames:
-        postScriptFontName = f"{familyNames['en']}-{styleNames['en']}".replace(" ", "")
+    if "en" not in familyNames or "en" not in styleNames:
+        # Not enough information to compute PS names of styleMap names
+        return StatNames(
+            familyNames=familyNames,
+            styleNames=styleNames,
+            postScriptFontName=None,
+            styleMapFamilyNames={},
+            styleMapStyleName=None,
+        )
+
+    postScriptFontName = f"{familyNames['en']}-{styleNames['en']}".replace(" ", "")
 
     styleMapStyleName, regularUserLocation = _getRibbiStyle(doc, userLocation)
 
