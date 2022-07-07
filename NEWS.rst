@@ -1,3 +1,6 @@
+- Fixed typo in varLib/merger.py that causes NameError merging COLR glyphs
+  containing more than 255 layers (#2685).
+
 4.34.3 (released 2022-07-07)
 ----------------------------
 
