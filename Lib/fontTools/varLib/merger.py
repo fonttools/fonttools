@@ -1426,7 +1426,7 @@ def _merge_PaintColrLayers(self, out, lst):
 			paint.Format = int(ot.PaintFormat.PaintColrLayers)
 			paint.NumLayers = len(layers)
 			paint.FirstLayerIndex = len(self.layers)
-			self.layers.exend(layers)
+			self.layers.extend(layers)
 			if self.layerReuseCache is not None:
 				self.layerReuseCache.add(layers, paint.FirstLayerIndex)
 		return paint
