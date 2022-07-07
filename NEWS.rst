@@ -1,3 +1,5 @@
+- [designspaceLib] Don't make up bad PS names when no STAT data (#2684)
+
 4.34.2 (released 2022-07-06)
 ----------------------------
 
