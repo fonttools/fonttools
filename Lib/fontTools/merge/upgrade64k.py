@@ -102,7 +102,7 @@ def upgrade64k(self, reverseGlyphMap):
 				r = _convertList(r, getattr(otTables, c.Rule), getattr(otTables, c.Rule+'24'))
 				setattr(rs, c.Rule, r)
 
-	elif self.Format in (2, 3):
+	elif self.Format == 2:
 		# To use longer offsets
 		upgrade = True
 
