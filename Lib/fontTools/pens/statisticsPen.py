@@ -39,25 +39,25 @@ class StatisticsPen(MomentsPen):
 
 	def __update(self):
 
-		area = self.Area
-		if not area:
+		Area = self.Area
+		if not Area:
 			self.__zero()
 			return
 
 		# Center of mass
 		# https://en.wikipedia.org/wiki/Center_of_mass#A_continuous_volume
-		self.meanX = meanX = self.Planar1stMomentWrtY / area
-		self.meanY = meanY = self.Planar1stMomentWrtX / area
+		self.meanX = meanX = self.Planar1stMomentWrtY / Area
+		self.meanY = meanY = self.Planar1stMomentWrtX / Area
 
 		#  Var(X) = E[X^2] - E[X]^2
-		self.varianceX = varianceX = self.Planar2ndMomentWrtY / area - meanX**2
-		self.varianceY = varianceY = self.Planar2ndMomentWrtX / area - meanY**2
+		self.varianceX = varianceX = self.Planar2ndMomentWrtY / Area - meanX**2
+		self.varianceY = varianceY = self.Planar2ndMomentWrtX / Area - meanY**2
 
 		self.stddevX = stddevX = math.copysign(abs(varianceX)**.5, varianceX)
 		self.stddevY = stddevY = math.copysign(abs(varianceY)**.5, varianceY)
 
 		#  Covariance(X,Y) = ( E[X.Y] - E[X]E[Y] )
-		self.covariance = covariance = self.ProductMomentXY / area - meanX*meanY
+		self.covariance = covariance = self.ProductMomentXY / Area - meanX*meanY
 
 		#  Correlation(X,Y) = Covariance(X,Y) / ( stddev(X) * stddev(Y) )
 		# https://en.wikipedia.org/wiki/Pearson_product-moment_correlation_coefficient
@@ -81,7 +81,7 @@ def _test(glyphset, upem, glyphs):
 		pen = StatisticsPen(glyphset=glyphset)
 		transformer = TransformPen(pen, Scale(1./upem))
 		glyph.draw(transformer)
-		for item in ['area', 'Planar1stMomentWrtX', 'Planar1stMomentWrtY', 'Planar2ndMomentWrtX', 'Planar2ndMomentWrtY', 'ProductMomentXY', 'meanX', 'meanY', 'varianceX', 'varianceY', 'stddevX', 'stddevY', 'covariance', 'correlation', 'slant']:
+		for item in ['Area', 'Planar1stMomentWrtX', 'Planar1stMomentWrtY', 'Planar2ndMomentWrtX', 'Planar2ndMomentWrtY', 'ProductMomentXY', 'meanX', 'meanY', 'varianceX', 'varianceY', 'stddevX', 'stddevY', 'covariance', 'correlation', 'slant']:
 			if item[0] == '_': continue
 			print ("%s: %g" % (item, getattr(pen, item)))
 
