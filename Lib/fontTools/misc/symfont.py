@@ -101,11 +101,11 @@ class GreenPen(BasePen):
 # Do not use this in real code.
 # Use fontTools.pens.momentsPen.MomentsPen instead.
 AreaPen = partial(GreenPen, func=1)
-MomentXPen = partial(GreenPen, func=y)
-MomentYPen = partial(GreenPen, func=x)
-MomentXXPen = partial(GreenPen, func=y*y)
-MomentYYPen = partial(GreenPen, func=x*x)
-MomentXYPen = partial(GreenPen, func=x*y)
+Planar1stMomentWrtXPen = partial(GreenPen, func=y)
+Planar1stMomentWrtYPen = partial(GreenPen, func=x)
+Planar2ndMomentWrtXPen = partial(GreenPen, func=y*y)
+Planar2ndMomentWrtYPen = partial(GreenPen, func=x*x)
+ProductMomentXYPen = partial(GreenPen, func=x*y)
 
 
 def printGreenPen(penName, funcs, file=sys.stdout):
