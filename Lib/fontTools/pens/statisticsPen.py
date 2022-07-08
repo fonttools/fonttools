@@ -39,7 +39,7 @@ class StatisticsPen(MomentsPen):
 
 	def __update(self):
 
-		area = self.area
+		area = self.Area
 		if not area:
 			self.__zero()
 			return
