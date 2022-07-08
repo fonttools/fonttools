@@ -390,9 +390,9 @@ otData = [
 
 	('ContextPosFormat4', [
 		('uint16', 'PosFormat', None, None, 'Format identifier-format = 1'),
-		('Offset', 'Coverage', None, None, 'Offset to Coverage table-from beginning of ContextPos subtable'),
+		('Offset24', 'Coverage', None, None, 'Offset to Coverage table-from beginning of ContextPos subtable'),
 		('uint16', 'PosRuleSetCount', None, None, 'Number of PosRuleSet tables'),
-		('OffsetTo(PosRuleSet24)', 'PosRuleSet', 'PosRuleSetCount', 0, 'Array of offsets to PosRuleSet tables-from beginning of ContextPos subtable-ordered by Coverage Index'),
+		('LOffset24To(PosRuleSet24)', 'PosRuleSet', 'PosRuleSetCount', 0, 'Array of offsets to PosRuleSet tables-from beginning of ContextPos subtable-ordered by Coverage Index'),
 	]),
 
 	('PosRuleSet', [
@@ -472,9 +472,9 @@ otData = [
 
 	('ChainContextPosFormat4', [
 		('uint16', 'PosFormat', None, None, 'Format identifier-format = 1'),
-		('Offset', 'Coverage', None, None, 'Offset to Coverage table-from beginning of ContextPos subtable'),
+		('Offset24', 'Coverage', None, None, 'Offset to Coverage table-from beginning of ContextPos subtable'),
 		('uint16', 'ChainPosRuleSetCount', None, None, 'Number of ChainPosRuleSet tables'),
-		('OffsetTo(ChainPosRuleSet24)', 'ChainPosRuleSet', 'ChainPosRuleSetCount', 0, 'Array of offsets to ChainPosRuleSet tables-from beginning of ContextPos subtable-ordered by Coverage Index'),
+		('LOffset24To(ChainPosRuleSet24)', 'ChainPosRuleSet', 'ChainPosRuleSetCount', 0, 'Array of offsets to ChainPosRuleSet tables-from beginning of ContextPos subtable-ordered by Coverage Index'),
 	]),
 
 	('ChainPosRuleSet', [
@@ -760,9 +760,9 @@ otData = [
 
 	('ContextSubstFormat4', [
 		('uint16', 'SubstFormat', None, None, 'Format identifier-format = 1'),
-		('Offset', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
+		('Offset24', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
 		('uint16', 'SubRuleSetCount', None, None, 'Number of SubRuleSet tables-must equal GlyphCount in Coverage table'),
-		('OffsetTo(SubRuleSet24)', 'SubRuleSet', 'SubRuleSetCount', 0, 'Array of offsets to SubRuleSet tables-from beginning of Substitution table-ordered by Coverage Index'),
+		('LOffset24To(SubRuleSet24)', 'SubRuleSet', 'SubRuleSetCount', 0, 'Array of offsets to SubRuleSet tables-from beginning of Substitution table-ordered by Coverage Index'),
 	]),
 
 	('SubRuleSet', [
@@ -842,9 +842,9 @@ otData = [
 
 	('ChainContextSubstFormat4', [
 		('uint16', 'SubstFormat', None, None, 'Format identifier-format = 1'),
-		('Offset', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
+		('Offset24', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
 		('uint16', 'ChainSubRuleSetCount', None, None, 'Number of ChainSubRuleSet tables-must equal GlyphCount in Coverage table'),
-		('OffsetTo(ChainSubRule24)', 'ChainSubRuleSet', 'ChainSubRuleSetCount', 0, 'Array of offsets to ChainSubRuleSet tables-from beginning of Substitution table-ordered by Coverage Index'),
+		('LOffset24To(ChainSubRule24)', 'ChainSubRuleSet', 'ChainSubRuleSetCount', 0, 'Array of offsets to ChainSubRuleSet tables-from beginning of Substitution table-ordered by Coverage Index'),
 	]),
 
 	('ChainSubRuleSet', [
