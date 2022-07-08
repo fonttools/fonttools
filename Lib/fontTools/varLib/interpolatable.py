@@ -193,7 +193,7 @@ def test(glyphsets, glyphs=None, names=None):
                             {"master": name, "contour": ix, "type": "open_path"},
                         )
                         continue
-                    size = abs(stats.Area) ** 0.5 * 0.5
+                    size = abs(stats.area) ** 0.5 * 0.5
                     vector = (
                         int(size),
                         int(stats.meanX),
