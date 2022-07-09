@@ -183,8 +183,10 @@ otData = [
 
 	('GPOS', [
 		('Version', 'Version', None, None, 'Version of the GPOS table- 0x00010000 or 0x00010001'),
-		('Offset', 'ScriptList', None, None, 'Offset to ScriptList table-from beginning of GPOS table'),
-		('Offset', 'FeatureList', None, None, 'Offset to FeatureList table-from beginning of GPOS table'),
+		('Offset', 'ScriptList', None, 'Version < 0x00020000', 'Offset to ScriptList table-from beginning of GPOS table'),
+		('LOffset24To(ScriptList)', 'ScriptList24', None, 'Version >= 0x00020000', 'Offset to ScriptList table-from beginning of GPOS table'),
+		('Offset', 'FeatureList', None, 'Version < 0x00020000', 'Offset to FeatureList table-from beginning of GPOS table'),
+		('LOffset24To(FeatureList)', 'FeatureList24', None, 'Version >= 0x00020000', 'Offset to FeatureList table-from beginning of GPOS table'),
 		('Offset', 'LookupList', None, 'Version < 0x00020000', 'Offset to LookupList table-from beginning of GPOS table'),
 		('Offset24', 'LookupList24', None, 'Version >= 0x00020000', 'Offset to LookupList table-from beginning of GPOS table'),
 		('LOffset', 'FeatureVariations', None, 'Version >= 0x00010001', 'Offset to FeatureVariations table-from beginning of GPOS table'),
@@ -604,8 +606,10 @@ otData = [
 
 	('GSUB', [
 		('Version', 'Version', None, None, 'Version of the GSUB table- 0x00010000 or 0x00010001'),
-		('Offset', 'ScriptList', None, None, 'Offset to ScriptList table-from beginning of GSUB table'),
-		('Offset', 'FeatureList', None, None, 'Offset to FeatureList table-from beginning of GSUB table'),
+		('Offset', 'ScriptList', None, 'Version < 0x00020000', 'Offset to ScriptList table-from beginning of GSUB table'),
+		('LOffset24To(ScriptList)', 'ScriptList24', None, 'Version >= 0x00020000', 'Offset to ScriptList table-from beginning of GSUB table'),
+		('Offset', 'FeatureList', None, 'Version < 0x00020000', 'Offset to FeatureList table-from beginning of GSUB table'),
+		('LOffset24To(FeatureList)', 'FeatureList24', None, 'Version >= 0x00020000', 'Offset to FeatureList table-from beginning of GSUB table'),
 		('Offset', 'LookupList', None, 'Version < 0x00020000', 'Offset to LookupList table-from beginning of GSUB table'),
 		('Offset24', 'LookupList24', None, 'Version >= 0x00020000', 'Offset to LookupList table-from beginning of GSUB table'),
 		('LOffset', 'FeatureVariations', None, 'Version >= 0x00010001', 'Offset to FeatureVariations table-from beginning of GSUB table'),

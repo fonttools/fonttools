@@ -133,6 +133,8 @@ def upgrade64k(self, reverseGlyphMap):
 		otTables.GPOS)
 def upgrade64k(self, reverseGlyphMap):
 	if self.Version < 0x00020000:
+		self.ScriptList24 = self.ScriptList
+		self.FeatureList24 = self.FeatureList
 		self.LookupList24 = otTables.LookupList24()
 		self.LookupList24.Lookup = self.LookupList.Lookup
 		self.Version = 0x00020000
