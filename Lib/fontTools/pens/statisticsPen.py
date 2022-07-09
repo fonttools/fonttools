@@ -36,6 +36,13 @@ class StatisticsPen(MomentsPen):
 		self.covariance = 0
 		self.correlation = 0
 		self.slant = 0
+                # Backward-compatibility properties
+                # Do not rely on these in new code.
+                self.momentX = 0
+                self.momentY = 0
+                self.momentXX = 0
+                self.momentYY = 0
+                self.momentXY = 0
 
 	def __update(self):
 
@@ -66,6 +73,14 @@ class StatisticsPen(MomentsPen):
 
 		slant = covariance / varianceY
 		self.slant = slant if abs(slant) > 1e-3 else 0
+
+                # Backward-compatibility properties
+                # Do not rely on these in new code.
+                self.momentX = self.Planar1stMomentWrtY
+                self.momentY = self.Planar1stMomentWrtX
+                self.momentXX = self.Planar2ndMomentWrtY
+                self.momentYY = self.Planar2ndMomentWrtX
+                self.momentXY = self.ProductMomentXY
 
 
 def _test(glyphset, upem, glyphs):
