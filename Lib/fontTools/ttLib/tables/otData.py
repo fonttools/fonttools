@@ -655,7 +655,7 @@ otData = [
 
 	('MultipleSubstFormat2', [
 		('uint16', 'SubstFormat', None, None, 'Format identifier-format = 1'),
-		('Offset', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
+		('Offset24', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
 		('uint16', 'SequenceCount', None, None, 'Number of Sequence table offsets in the Sequence array'),
 		('LOffset24To(Sequence24)', 'Sequence', 'SequenceCount', 0, 'Array of offsets to Sequence tables-from beginning of Substitution table-ordered by Coverage Index'),
 	]),
