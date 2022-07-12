@@ -84,10 +84,15 @@ class ShouldBeConstant(VarLibMergeError):
         offender_index, _ = self.offender
         bad_ttf = self.merger.ttfs[offender_index]
         good_ttf = next(
-            ttf
-            for ttf in self.merger.ttfs
-            if ttf["GPOS"].table.FeatureList.FeatureCount == self.cause["expected"]
+            (
+                ttf
+                for ttf in self.merger.ttfs
+                if ttf["GPOS"].table.FeatureList.FeatureCount == self.cause["expected"]
+            ),
+            None,
         )
+        if good_ttf is None:
+            return basic_message
 
         good_features = [
             x.FeatureTag
