@@ -231,7 +231,7 @@ class Builder(object):
             elif "GDEF" in self.font:
                 del self.font["GDEF"]
         elif self.varstorebuilder:
-            raise FeatureLibError("Must save GDEF when compiling a variable font")
+            raise FeatureLibError("Must save GDEF when compiling a variable font", None)
         if "BASE" in tables:
             base = self.buildBASE()
             if base:
