@@ -82,17 +82,16 @@ def _test(glyphset, upem, glyphs):
 		transformer = TransformPen(pen, Scale(1./upem))
 		glyph.draw(transformer)
 		for item in ['area', 'momentX', 'momentY', 'momentXX', 'momentYY', 'momentXY', 'meanX', 'meanY', 'varianceX', 'varianceY', 'stddevX', 'stddevY', 'covariance', 'correlation', 'slant']:
-			if item[0] == '_': continue
 			print ("%s: %g" % (item, getattr(pen, item)))
 
 def main(args):
 	if not args:
 		return
 	filename, glyphs = args[0], args[1:]
-	if not glyphs:
-		glyphs = ['e', 'o', 'I', 'slash', 'E', 'zero', 'eight', 'minus', 'equal']
 	from fontTools.ttLib import TTFont
 	font = TTFont(filename)
+	if not glyphs:
+		glyphs = font.getGlyphOrder()
 	_test(font.getGlyphSet(), font['head'].unitsPerEm, glyphs)
 
 if __name__ == '__main__':
