@@ -20,16 +20,18 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 	longMetricFormat = 'Hh'
 
 	def decompile(self, data, ttFont):
-		numGlyphs = ttFont['maxp'].numGlyphs
+		numMaxpGlyphs = ttFont['maxp'].numGlyphs
+		glyphOrder = ttFont.getGlyphOrder()
+		numGlyphs = len(glyphOrder)
 		headerTable = ttFont.get(self.headerTag)
 		if headerTable is not None:
 			numberOfMetrics = int(getattr(headerTable, self.numberOfMetricsName))
 		else:
-			numberOfMetrics = numGlyphs
-		if numberOfMetrics > numGlyphs:
+			numberOfMetrics = numMaxpGlyphs
+		if numberOfMetrics > numMaxpGlyphs:
 			log.warning("The %s.%s exceeds the maxp.numGlyphs" % (
 				self.headerTag, self.numberOfMetricsName))
-			numberOfMetrics = numGlyphs
+			numberOfMetrics = numMaxpGlyphs
 		if len(data) < 4 * numberOfMetrics:
 			raise ttLib.TTLibError("not enough '%s' table data" % self.tableTag)
 		# Note: advanceWidth is unsigned, but some font editors might
@@ -38,15 +40,16 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 		metricsFmt = ">" + self.longMetricFormat * numberOfMetrics
 		metrics = struct.unpack(metricsFmt, data[:4 * numberOfMetrics])
 		data = data[4 * numberOfMetrics:]
-		numberOfSideBearings = numGlyphs - numberOfMetrics
+		numberOfSideBearings = numMaxpGlyphs - numberOfMetrics
 		sideBearings = array.array("h", data[:2 * numberOfSideBearings])
 		data = data[2 * numberOfSideBearings:]
-
 		if sys.byteorder != "big": sideBearings.byteswap()
+		advances = array.array("h", data[:(numGlyphs-numMaxpGlyphs)*2])
+		if sys.byteorder != "big": advances.byteswap()
+		data = data[(numGlyphs-numMaxpGlyphs)*2:]
 		if data:
 			log.warning("too much '%s' table data" % self.tableTag)
 		self.metrics = {}
-		glyphOrder = ttFont.getGlyphOrder()
 		for i in range(numberOfMetrics):
 			glyphName = glyphOrder[i]
 			advanceWidth, lsb = metrics[i*2:i*2+2]
@@ -60,6 +63,11 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 		for i in range(numberOfSideBearings):
 			glyphName = glyphOrder[i + numberOfMetrics]
 			self.metrics[glyphName] = (lastAdvance, sideBearings[i])
+		numberOfMetrics += numberOfSideBearings
+		for i in range(len(advances)):
+			glyphName = glyphOrder[i + numberOfMetrics]
+			self.metrics[glyphName] = (advances[i], None)
+		# TODO Use last advance for all other glyphs
 
 	def compile(self, ttFont):
 		metrics = []
