@@ -818,7 +818,7 @@ class _TTGlyphGlyf(_TTGlyph):
 		"""
 		glyfTable = self._glyphset._glyphs
 		glyph = self._glyph
-		offset = self.lsb - glyph.xMin if hasattr(glyph, "xMin") else 0
+		offset = self.lsb - glyph.xMin if hasattr(glyph, "xMin") and self.lsb is not None else 0
 		glyph.draw(pen, glyfTable, offset)
 
 	def drawPoints(self, pen):
@@ -827,7 +827,7 @@ class _TTGlyphGlyf(_TTGlyph):
 		"""
 		glyfTable = self._glyphset._glyphs
 		glyph = self._glyph
-		offset = self.lsb - glyph.xMin if hasattr(glyph, "xMin") else 0
+		offset = self.lsb - glyph.xMin if hasattr(glyph, "xMin") and self.lsb is not None else 0
 		glyph.drawPoints(pen, glyfTable, offset)
 
 
