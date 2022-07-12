@@ -1923,6 +1923,25 @@ class VheaField(Statement):
         return "{} {};".format(keywords[self.key], self.value)
 
 
+class VmtxStatement(Statement):
+    """An entry in the ``vmtx`` table."""
+
+    def __init__(self, glyph, key, value, location=None):
+        Statement.__init__(self, location)
+        self.glyph = glyph
+        self.key = key
+        self.value = value
+
+    def build(self, builder):
+        """Calls the builder object's ``add_vmtx_field`` callback."""
+        builder.add_vmtx_pos(self.key, self.glyph, self.value)
+
+    def asFea(self, indent=""):
+        fields = ("VertOriginY", "VertAdvanceY")
+        keywords = dict([(x.lower(), x) for x in fields])
+        return "{} {} {};".format(keywords[self.key], self.glyph, self.value)
+
+
 class STATDesignAxisStatement(Statement):
     """A STAT table Design Axis
 

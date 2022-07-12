@@ -1,0 +1,7 @@
+table vmtx {
+    VertOriginY cid00800 994;
+    VertAdvanceY cid00800 1130;
+    VertOriginY cid00801 766;
+    VertAdvanceY cid00801 870;
+} vmtx;
+
