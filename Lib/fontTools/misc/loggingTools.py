@@ -282,7 +282,8 @@ class Timer(object):
 	# timeit.default_timer choses the most accurate clock for each platform
 	_time = timeit.default_timer
 	default_msg = "elapsed time: %(time).3fs"
-	default_format = "Took %(time).3fs to %(msg)s"
+	default_format = "%(indent)sTook %(time).3fs to %(msg)s"
+	start_step_format = "%(indent)sStarting to %(msg)s"
 
 	def __init__(self, logger=None, msg=None, level=None, start=None):
 		self.reset(start)
@@ -294,6 +295,7 @@ class Timer(object):
 		self.logger = logger
 		self.level = level if level is not None else TIME_LEVEL
 		self.msg = msg
+		self.stack = []
 
 	def reset(self, start=None):
 		""" Reset timer to 'start_time' or the current time. """
@@ -315,6 +317,20 @@ class Timer(object):
 		self.last = current
 		return self.elapsed
 
+	def start_step(self, msg):
+		indent = "  " * len(self.stack)
+		start_msg = self.start_step_format % {"msg": self.msg, "indent": indent}
+		self.logger.log(self.level, start_msg)
+		self.stack.append((self._time(), msg))
+		self.elapsed = 0.0
+		self.msg = msg
+
+	def end_step(self):
+		""" Finishes the current operation, logging the time elapsed. """
+		self.start, self.msg = self.stack.pop()
+		self.last = self.start
+		self.__exit__(None, None, None)  # Reuse finish/logging code
+
 	def formatTime(self, msg, time):
 		""" Format 'time' value in 'msg' and return formatted string.
 		If 'msg' contains a '%(time)' format string, try to use that.
@@ -323,11 +339,12 @@ class Timer(object):
 		"""
 		if not msg:
 			msg = self.default_msg
+		indent = "  " * len(self.stack)
 		if msg.find("%(time)") < 0:
-			msg = self.default_format % {"msg": msg, "time": time}
+			msg = self.default_format % {"msg": msg, "time": time, "indent": indent}
 		else:
 			try:
-				msg = msg % {"time": time}
+				msg = msg % {"time": time, "indent": indent}
 			except (KeyError, ValueError):
 				pass  # skip if the format string is malformed
 		return msg
@@ -348,9 +365,10 @@ class Timer(object):
 			# the with-statement, exit without logging the time
 			return
 		message = self.formatTime(self.msg, time)
+		indent = "  " * len(self.stack)
 		# Allow log handlers to see the individual parts to facilitate things
 		# like a server accumulating aggregate stats.
-		msg_parts = { 'msg': self.msg, 'time': time }
+		msg_parts = { 'msg': self.msg, 'time': time, "indent": indent }
 		self.logger.log(self.level, message, msg_parts)
 
 	def __call__(self, func_or_msg=None, **kwargs):
