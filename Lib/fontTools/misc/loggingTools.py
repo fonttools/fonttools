@@ -404,6 +404,52 @@ class Timer(object):
 		return "%.3f" % self.elapsed
 
 
+class _Forwarder(type):
+	def __getattr__(self, name):
+		if self._instance:
+			return getattr(self._instance, name)
+		else:
+			return self.do_nothing
+
+	def do_nothing(self, *args, **kwargs):
+		pass
+
+class GlobalTimer(metaclass=_Forwarder):
+	_instance = None
+
+	@classmethod
+	def attach(self, timer):
+		self._instance = timer
+
+	def __init__(self, msg=None):
+		self.msg = msg
+
+	def __call__(self, func=None, **kwargs):
+		@wraps(func)
+		def wrapper(*args, **kwds):
+			if not self._instance:
+				return func(*args, **kwds)
+			if self.msg:
+				self._instance.msg = self.msg
+			else:
+				self._instance.msg = "run '%s'" % func.__name__
+			with self:
+				return func(*args, **kwds)
+		return wrapper
+
+	def __enter__(self):
+		if self._instance:
+			self._instance.start_step(self._instance.msg)
+		return self
+
+	def __exit__(self, exc_type, exc_value, traceback):
+		if exc_type:
+			return
+		if self._instance:
+			self._instance.end_step()
+		return self
+
+
 class ChannelsFilter(logging.Filter):
 	"""Provides a hierarchical filter for log entries based on channel names.
 
