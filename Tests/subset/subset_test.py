@@ -1470,7 +1470,7 @@ def test_subset_svg_missing_lxml(ttf_path):
     font["SVG "].docList = [('<svg><g id="glyph1"/></svg>', 1, 1)]
     font.save(ttf_path)
 
-    with pytest.raises(ModuleNotFoundError):
+    with pytest.raises(ImportError):
         subset.main([str(ttf_path), "--gids=0,1"])
 
 
