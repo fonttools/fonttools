@@ -364,6 +364,8 @@ def layoutPreMerge(font):
 		# TODO FeatureParams nameIDs
 
 def layoutPostMerge(font):
+		beyond64k = len(font.getGlyphOrder()) > 65535
+
 		# Map references back to indices
 
 		GDEF = font.get('GDEF')
@@ -420,8 +422,10 @@ def layoutPostMerge(font):
 					markFilteringSetMap = NonhashableDict(GDEF.table.MarkGlyphSetsDef.Coverage)
 					t.table.LookupList.mapMarkFilteringSets(markFilteringSetMap)
 
-				beyond64k = len(font.getGlyphOrder()) > 65535
 				if beyond64k:
 					t.table.upgrade64k(font.getReverseGlyphMap())
 
 		# TODO FeatureParams nameIDs
+
+		if beyond64k and GDEF:
+			GDEF.table.upgrade64k(font.getReverseGlyphMap())

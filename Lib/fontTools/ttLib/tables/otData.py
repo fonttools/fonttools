@@ -926,11 +926,16 @@ otData = [
 
 	('GDEF', [
 		('Version', 'Version', None, None, 'Version of the GDEF table- 0x00010000, 0x00010002, or 0x00010003'),
-		('Offset', 'GlyphClassDef', None, None, 'Offset to class definition table for glyph type-from beginning of GDEF header (may be NULL)'),
-		('Offset', 'AttachList', None, None, 'Offset to list of glyphs with attachment points-from beginning of GDEF header (may be NULL)'),
-		('Offset', 'LigCaretList', None, None, 'Offset to list of positioning points for ligature carets-from beginning of GDEF header (may be NULL)'),
-		('Offset', 'MarkAttachClassDef', None, None, 'Offset to class definition table for mark attachment type-from beginning of GDEF header (may be NULL)'),
-		('Offset', 'MarkGlyphSetsDef', None, 'Version >= 0x00010002', 'Offset to the table of mark set definitions-from beginning of GDEF header (may be NULL)'),
+		('Offset', 'GlyphClassDef', None, 'Version < 0x00020000', 'Offset to class definition table for glyph type-from beginning of GDEF header (may be NULL)'),
+		('LOffset24To(GlyphClassDef)', 'GlyphClassDef24', None, 'Version >= 0x00020000', 'Offset to class definition table for glyph type-from beginning of GDEF header (may be NULL)'),
+		('Offset', 'AttachList', None, 'Version < 0x00020000', 'Offset to list of glyphs with attachment points-from beginning of GDEF header (may be NULL)'),
+		('LOffset24To(AttachList)', 'AttachList24', None, 'Version >= 0x00020000', 'Offset to list of glyphs with attachment points-from beginning of GDEF header (may be NULL)'),
+		('Offset', 'LigCaretList', None, 'Version < 0x00020000', 'Offset to list of positioning points for ligature carets-from beginning of GDEF header (may be NULL)'),
+		('LOffset24To(LigCaretList)', 'LigCaretList24', None, 'Version >= 0x00020000', 'Offset to list of positioning points for ligature carets-from beginning of GDEF header (may be NULL)'),
+		('Offset', 'MarkAttachClassDef', None, 'Version < 0x00020000', 'Offset to class definition table for mark attachment type-from beginning of GDEF header (may be NULL)'),
+		('LOffset24To(MarkAttachClassDef)', 'MarkAttachClassDef24', None, 'Version >= 0x00020000', 'Offset to class definition table for mark attachment type-from beginning of GDEF header (may be NULL)'),
+		('Offset', 'MarkGlyphSetsDef', None, 'Version >= 0x00010002 and Version < 0x00020000', 'Offset to the table of mark set definitions-from beginning of GDEF header (may be NULL)'),
+		('LOffset24To(MarkGlyphSetsDef)', 'MarkGlyphSetsDef24', None, 'Version >= 0x00020000', 'Offset to the table of mark set definitions-from beginning of GDEF header (may be NULL)'),
 		('LOffset', 'VarStore', None, 'Version >= 0x00010003', 'Offset to variation store (may be NULL)'),
 	]),
 

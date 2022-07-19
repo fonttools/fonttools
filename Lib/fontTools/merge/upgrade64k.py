@@ -139,3 +139,13 @@ def upgrade64k(self, reverseGlyphMap):
 		self.LookupList24.Lookup = self.LookupList.Lookup
 		self.Version = 0x00020000
 	self.LookupList24.upgrade64k(reverseGlyphMap)
+
+@add_method(otTables.GDEF)
+def upgrade64k(self, reverseGlyphMap):
+	if self.Version < 0x00020000:
+		self.GlyphClassDef24 = self.GlyphClassDef
+		self.AttachList24 = self.AttachList
+		self.LigCaretList24 = self.LigCaretList
+		self.MarkAttachClassDef24 = self.MarkAttachClassDef
+		self.MarkGlyphSetsDef24 = self.MarkGlyphSetsDef
+		self.Version = 0x00020000
