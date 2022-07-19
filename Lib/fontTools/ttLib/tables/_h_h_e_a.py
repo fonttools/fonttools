@@ -92,6 +92,8 @@ class table__h_h_e_a(DefaultTable.DefaultTable):
 			xMaxExtent = -float('inf')
 			for name, boundsWidth in boundsWidthDict.items():
 				advanceWidth, lsb = hmtxTable[name]
+				if lsb is None:
+					continue
 				rsb = advanceWidth - lsb - boundsWidth
 				extent = lsb + boundsWidth
 				minLeftSideBearing = min(minLeftSideBearing, lsb)
