@@ -7,7 +7,7 @@ from functools import partial
 from collections import defaultdict
 
 
-NO_VARIATION_INDEX = 0xFFFFFFFF
+NO_VARIATION_INDEX = ot.NO_VARIATION_INDEX
 ot.VarStore.NO_VARIATION_INDEX = NO_VARIATION_INDEX
 
 
@@ -202,6 +202,8 @@ def VarStore_subset_varidxes(self, varIdxes, optimize=True, retainFirstMap=False
 	# Sort out used varIdxes by major/minor.
 	used = {}
 	for varIdx in varIdxes:
+		if varIdx == NO_VARIATION_INDEX:
+			continue
 		major = varIdx >> 16
 		minor = varIdx & 0xFFFF
 		d = used.get(major)
@@ -216,7 +218,7 @@ def VarStore_subset_varidxes(self, varIdxes, optimize=True, retainFirstMap=False
 
 	varData = self.VarData
 	newVarData = []
-	varDataMap = {}
+	varDataMap = {NO_VARIATION_INDEX: NO_VARIATION_INDEX}
 	for major,data in enumerate(varData):
 		usedMinors = used.get(major)
 		if usedMinors is None:

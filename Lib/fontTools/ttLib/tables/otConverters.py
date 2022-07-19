@@ -15,10 +15,13 @@ from .otTables import (lookupTypes, AATStateTable, AATState, AATAction,
                        ContextualMorphAction, LigatureMorphAction,
                        InsertionMorphAction, MorxSubtable,
                        ExtendMode as _ExtendMode,
-                       CompositeMode as _CompositeMode)
+                       CompositeMode as _CompositeMode,
+                       NO_VARIATION_INDEX)
 from itertools import zip_longest
 from functools import partial
+import re
 import struct
+from typing import Optional
 import logging
 
 
@@ -60,7 +63,7 @@ def buildConverters(tableSpec, tableNamespace):
 			else:
 				converterClass = eval(tp, tableNamespace, converterMapping)
 
-		conv = converterClass(name, repeat, aux)
+		conv = converterClass(name, repeat, aux, description=descr)
 
 		if conv.tableClass:
 			# A "template" such as OffsetTo(AType) knowss the table class already
@@ -136,7 +139,7 @@ class BaseConverter(object):
 	"""Base class for converter objects. Apart from the constructor, this
 	is an abstract class."""
 
-	def __init__(self, name, repeat, aux, tableClass=None):
+	def __init__(self, name, repeat, aux, tableClass=None, *, description=""):
 		self.name = name
 		self.repeat = repeat
 		self.aux = aux
@@ -159,6 +162,7 @@ class BaseConverter(object):
 			"BaseGlyphRecordCount",
 			"LayerRecordCount",
 		]
+		self.description = description
 
 	def readArray(self, reader, font, tableDict, count):
 		"""Read an array of values from the reader."""
@@ -210,6 +214,15 @@ class BaseConverter(object):
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
 		"""Write a value to XML."""
 		raise NotImplementedError(self)
+
+	varIndexBasePlusOffsetRE = re.compile(r"VarIndexBase\s*\+\s*(\d+)")
+
+	def getVarIndexOffset(self) -> Optional[int]:
+		"""If description has `VarIndexBase + {offset}`, return the offset else None."""
+		m = self.varIndexBasePlusOffsetRE.search(self.description)
+		if not m:
+			return None
+		return int(m.group(1))
 
 
 class SimpleValue(BaseConverter):
@@ -270,7 +283,7 @@ class Flags32(ULong):
 		return "0x%08X" % value
 
 class VarIndex(OptionalValue, ULong):
-	DEFAULT = 0xFFFFFFFF
+	DEFAULT = NO_VARIATION_INDEX
 
 class Short(IntValue):
 	staticSize = 2
@@ -402,40 +415,50 @@ class DeciPoints(FloatValue):
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeUShort(round(value * 10))
 
-class Fixed(FloatValue):
-	staticSize = 4
+class BaseFixedValue(FloatValue):
+	staticSize = NotImplemented
+	precisionBits = NotImplemented
+	readerMethod = NotImplemented
+	writerMethod = NotImplemented
 	def read(self, reader, font, tableDict):
-		return  fi2fl(reader.readLong(), 16)
+		return  self.fromInt(getattr(reader, self.readerMethod)())
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
-		writer.writeLong(fl2fi(value, 16))
-	@staticmethod
-	def fromString(value):
-		return str2fl(value, 16)
-	@staticmethod
-	def toString(value):
-		return fl2str(value, 16)
+		getattr(writer, self.writerMethod)(self.toInt(value))
+	@classmethod
+	def fromInt(cls, value):
+		return fi2fl(value, cls.precisionBits)
+	@classmethod
+	def toInt(cls, value):
+		return fl2fi(value, cls.precisionBits)
+	@classmethod
+	def fromString(cls, value):
+		return str2fl(value, cls.precisionBits)
+	@classmethod
+	def toString(cls, value):
+		return fl2str(value, cls.precisionBits)
 
-class F2Dot14(FloatValue):
+class Fixed(BaseFixedValue):
+	staticSize = 4
+	precisionBits = 16
+	readerMethod = "readLong"
+	writerMethod = "writeLong"
+
+class F2Dot14(BaseFixedValue):
 	staticSize = 2
-	def read(self, reader, font, tableDict):
-		return  fi2fl(reader.readShort(), 14)
-	def write(self, writer, font, tableDict, value, repeatIndex=None):
-		writer.writeShort(fl2fi(value, 14))
-	@staticmethod
-	def fromString(value):
-		return str2fl(value, 14)
-	@staticmethod
-	def toString(value):
-		return fl2str(value, 14)
+	precisionBits = 14
+	readerMethod = "readShort"
+	writerMethod = "writeShort"
 
 class Angle(F2Dot14):
 	# angles are specified in degrees, and encoded as F2Dot14 fractions of half
 	# circle: e.g. 1.0 => 180, -0.5 => -90, -2.0 => -360, etc.
 	factor = 1.0/(1<<14) * 180  # 0.010986328125
-	def read(self, reader, font, tableDict):
-		return super().read(reader, font, tableDict) * 180
-	def write(self, writer, font, tableDict, value, repeatIndex=None):
-		super().write(writer, font, tableDict, value / 180, repeatIndex=repeatIndex)
+	@classmethod
+	def fromInt(cls, value):
+		return super().fromInt(value) * 180
+	@classmethod
+	def toInt(cls, value):
+		return super().toInt(value / 180)
 	@classmethod
 	def fromString(cls, value):
 		# quantize to nearest multiples of minimum fixed-precision angle
@@ -686,8 +709,10 @@ class FeatureParams(Table):
 
 class ValueFormat(IntValue):
 	staticSize = 2
-	def __init__(self, name, repeat, aux, tableClass=None):
-		BaseConverter.__init__(self, name, repeat, aux, tableClass)
+	def __init__(self, name, repeat, aux, tableClass=None, *, description=""):
+		BaseConverter.__init__(
+			self, name, repeat, aux, tableClass, description=description
+		)
 		self.which = "ValueFormat" + ("2" if name[-1] == "2" else "1")
 	def read(self, reader, font, tableDict):
 		format = reader.readUShort()
@@ -720,8 +745,10 @@ class ValueRecord(ValueFormat):
 class AATLookup(BaseConverter):
 	BIN_SEARCH_HEADER_SIZE = 10
 
-	def __init__(self, name, repeat, aux, tableClass):
-		BaseConverter.__init__(self, name, repeat, aux, tableClass)
+	def __init__(self, name, repeat, aux, tableClass, *, description=""):
+		BaseConverter.__init__(
+			self, name, repeat, aux, tableClass, description=description
+		)
 		if issubclass(self.tableClass, SimpleValue):
 			self.converter = self.tableClass(name='Value', repeat=None, aux=None)
 		else:
@@ -1019,8 +1046,10 @@ class MorxSubtableConverter(BaseConverter):
 		val: key for key, val in _PROCESSING_ORDERS.items()
 	}
 
-	def __init__(self, name, repeat, aux):
-		BaseConverter.__init__(self, name, repeat, aux)
+	def __init__(self, name, repeat, aux, tableClass=None, *, description=""):
+		BaseConverter.__init__(
+			self, name, repeat, aux, tableClass, description=description
+		)
 
 	def _setTextDirectionFromCoverageFlags(self, flags, subtable):
 		if (flags & 0x20) != 0:
@@ -1140,8 +1169,10 @@ class MorxSubtableConverter(BaseConverter):
 # https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6Tables.html#ExtendedStateHeader
 # TODO: Untangle the implementation of the various lookup-specific formats.
 class STXHeader(BaseConverter):
-	def __init__(self, name, repeat, aux, tableClass):
-		BaseConverter.__init__(self, name, repeat, aux, tableClass)
+	def __init__(self, name, repeat, aux, tableClass, *, description=""):
+		BaseConverter.__init__(
+			self, name, repeat, aux, tableClass, description=description
+		)
 		assert issubclass(self.tableClass, AATAction)
 		self.classLookup = AATLookup("GlyphClasses", None, None, UShort)
 		if issubclass(self.tableClass, ContextualMorphAction):

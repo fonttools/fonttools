@@ -7,7 +7,7 @@ from typing import Dict, Iterable, Iterator, List, Optional, Set, Tuple
 
 try:
     from lxml import etree
-except ModuleNotFoundError:
+except ImportError:
     # lxml is required for subsetting SVG, but we prefer to delay the import error
     # until subset_glyphs() is called (i.e. if font to subset has an 'SVG ' table)
     etree = None
@@ -193,7 +193,7 @@ def ranges(ints: Iterable[int]) -> Iterator[Tuple[int, int]]:
 @_add_method(ttLib.getTableClass("SVG "))
 def subset_glyphs(self, s) -> bool:
     if etree is None:
-        raise ModuleNotFoundError("No module named 'lxml', required to subset SVG")
+        raise ImportError("No module named 'lxml', required to subset SVG")
 
     # glyph names (before subsetting)
     glyph_order: List[str] = s.orig_glyph_order

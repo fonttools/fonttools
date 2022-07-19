@@ -98,6 +98,11 @@ class UFOFormatVersion(tuple, _VersionTupleEnumMixin, enum.Enum):
 	FORMAT_2_0 = (2, 0)
 	FORMAT_3_0 = (3, 0)
 
+# python 3.11 doesn't like when a mixin overrides a dunder method like __str__
+# for some reasons it keep using Enum.__str__, see
+# https://github.com/fonttools/fonttools/pull/2655
+UFOFormatVersion.__str__ = _VersionTupleEnumMixin.__str__
+
 
 class UFOFileStructure(enum.Enum):
 	ZIP = "zip"

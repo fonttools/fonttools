@@ -23,6 +23,7 @@ from typing import (
 )
 from fontTools.misc.arrayTools import intRect
 from fontTools.misc.fixedTools import fixedToFloat
+from fontTools.misc.treeTools import build_n_ary_tree
 from fontTools.ttLib.tables import C_O_L_R_
 from fontTools.ttLib.tables import C_P_A_L_
 from fontTools.ttLib.tables import _n_a_m_e
@@ -186,10 +187,12 @@ def populateCOLRv0(
 def buildCOLR(
     colorGlyphs: _ColorGlyphsDict,
     version: Optional[int] = None,
+    *,
     glyphMap: Optional[Mapping[str, int]] = None,
     varStore: Optional[ot.VarStore] = None,
     varIndexMap: Optional[ot.DeltaSetIndexMap] = None,
     clipBoxes: Optional[Dict[str, _ClipBoxInput]] = None,
+    allowLayerReuse: bool = True,
 ) -> C_O_L_R_.table_C_O_L_R_:
     """Build COLR table from color layers mapping.
 
@@ -231,7 +234,11 @@ def buildCOLR(
 
     populateCOLRv0(colr, colorGlyphsV0, glyphMap)
 
-    colr.LayerList, colr.BaseGlyphList = buildColrV1(colorGlyphsV1, glyphMap)
+    colr.LayerList, colr.BaseGlyphList = buildColrV1(
+        colorGlyphsV1,
+        glyphMap,
+        allowLayerReuse=allowLayerReuse,
+    )
 
     if version is None:
         version = 1 if (varStore or colorGlyphsV1) else 0
@@ -242,9 +249,6 @@ def buildCOLR(
     if version == 0:
         self.ColorLayers = self._decompileColorLayersV0(colr)
     else:
-        clipBoxes = {
-            name: clipBoxes[name] for name in clipBoxes or {} if name in colorGlyphsV1
-        }
         colr.ClipList = buildClipList(clipBoxes) if clipBoxes else None
         colr.VarIndexMap = varIndexMap
         colr.VarStore = varStore
@@ -443,28 +447,15 @@ def _reuse_ranges(num_layers: int) -> Generator[Tuple[int, int], None, None]:
             yield (lbound, ubound)
 
 
-class LayerListBuilder:
-    layers: List[ot.Paint]
+class LayerReuseCache:
     reusePool: Mapping[Tuple[Any, ...], int]
     tuples: Mapping[int, Tuple[Any, ...]]
     keepAlive: List[ot.Paint]  # we need id to remain valid
 
     def __init__(self):
-        self.layers = []
         self.reusePool = {}
         self.tuples = {}
         self.keepAlive = []
-
-        # We need to intercept construction of PaintColrLayers
-        callbacks = _buildPaintCallbacks()
-        callbacks[
-            (
-                BuildCallback.BEFORE_BUILD,
-                ot.Paint,
-                ot.PaintFormat.PaintColrLayers,
-            )
-        ] = self._beforeBuildPaintColrLayers
-        self.tableBuilder = TableBuilder(callbacks)
 
     def _paint_tuple(self, paint: ot.Paint):
         # start simple, who even cares about cyclic graphs or interesting field types
@@ -491,25 +482,7 @@ class LayerListBuilder:
     def _as_tuple(self, paints: Sequence[ot.Paint]) -> Tuple[Any, ...]:
         return tuple(self._paint_tuple(p) for p in paints)
 
-    # COLR layers is unusual in that it modifies shared state
-    # so we need a callback into an object
-    def _beforeBuildPaintColrLayers(self, dest, source):
-        # Sketchy gymnastics: a sequence input will have dropped it's layers
-        # into NumLayers; get it back
-        if isinstance(source.get("NumLayers", None), collections.abc.Sequence):
-            layers = source["NumLayers"]
-        else:
-            layers = source["Layers"]
-
-        # Convert maps seqs or whatever into typed objects
-        layers = [self.buildPaint(l) for l in layers]
-
-        # No reason to have a colr layers with just one entry
-        if len(layers) == 1:
-            return layers[0], {}
-
-        # Look for reuse, with preference to longer sequences
-        # This may make the layer list smaller
+    def try_reuse(self, layers: List[ot.Paint]) -> List[ot.Paint]:
         found_reuse = True
         while found_reuse:
             found_reuse = False
@@ -532,10 +505,63 @@ class LayerListBuilder:
                 layers = layers[:lbound] + [new_slice] + layers[ubound:]
                 found_reuse = True
                 break
+        return layers
+
+    def add(self, layers: List[ot.Paint], first_layer_index: int):
+        for lbound, ubound in _reuse_ranges(len(layers)):
+            self.reusePool[self._as_tuple(layers[lbound:ubound])] = (
+                lbound + first_layer_index
+            )
+
+
+class LayerListBuilder:
+    layers: List[ot.Paint]
+    cache: LayerReuseCache
+    allowLayerReuse: bool
+
+    def __init__(self, *, allowLayerReuse=True):
+        self.layers = []
+        if allowLayerReuse:
+            self.cache = LayerReuseCache()
+        else:
+            self.cache = None
+
+        # We need to intercept construction of PaintColrLayers
+        callbacks = _buildPaintCallbacks()
+        callbacks[
+            (
+                BuildCallback.BEFORE_BUILD,
+                ot.Paint,
+                ot.PaintFormat.PaintColrLayers,
+            )
+        ] = self._beforeBuildPaintColrLayers
+        self.tableBuilder = TableBuilder(callbacks)
+
+    # COLR layers is unusual in that it modifies shared state
+    # so we need a callback into an object
+    def _beforeBuildPaintColrLayers(self, dest, source):
+        # Sketchy gymnastics: a sequence input will have dropped it's layers
+        # into NumLayers; get it back
+        if isinstance(source.get("NumLayers", None), collections.abc.Sequence):
+            layers = source["NumLayers"]
+        else:
+            layers = source["Layers"]
+
+        # Convert maps seqs or whatever into typed objects
+        layers = [self.buildPaint(l) for l in layers]
+
+        # No reason to have a colr layers with just one entry
+        if len(layers) == 1:
+            return layers[0], {}
+
+        if self.cache is not None:
+            # Look for reuse, with preference to longer sequences
+            # This may make the layer list smaller
+            layers = self.cache.try_reuse(layers)
 
         # The layer list is now final; if it's too big we need to tree it
         is_tree = len(layers) > MAX_PAINT_COLR_LAYER_COUNT
-        layers = _build_n_ary_tree(layers, n=MAX_PAINT_COLR_LAYER_COUNT)
+        layers = build_n_ary_tree(layers, n=MAX_PAINT_COLR_LAYER_COUNT)
 
         # We now have a tree of sequences with Paint leaves.
         # Convert the sequences into PaintColrLayers.
@@ -563,11 +589,8 @@ class LayerListBuilder:
 
         # Register our parts for reuse provided we aren't a tree
         # If we are a tree the leaves registered for reuse and that will suffice
-        if not is_tree:
-            for lbound, ubound in _reuse_ranges(len(layers)):
-                self.reusePool[self._as_tuple(layers[lbound:ubound])] = (
-                    lbound + paint.FirstLayerIndex
-                )
+        if self.cache is not None and not is_tree:
+            self.cache.add(layers, paint.FirstLayerIndex)
 
         # we've fully built dest; empty source prevents generalized build from kicking in
         return paint, {}
@@ -603,6 +626,8 @@ def _format_glyph_errors(errors: Mapping[str, Exception]) -> str:
 def buildColrV1(
     colorGlyphs: _ColorGlyphsDict,
     glyphMap: Optional[Mapping[str, int]] = None,
+    *,
+    allowLayerReuse: bool = True,
 ) -> Tuple[Optional[ot.LayerList], ot.BaseGlyphList]:
     if glyphMap is not None:
         colorGlyphItems = sorted(
@@ -613,7 +638,7 @@ def buildColrV1(
 
     errors = {}
     baseGlyphs = []
-    layerBuilder = LayerListBuilder()
+    layerBuilder = LayerListBuilder(allowLayerReuse=allowLayerReuse)
     for baseGlyph, paint in colorGlyphItems:
         try:
             baseGlyphs.append(buildBaseGlyphPaintRecord(baseGlyph, layerBuilder, paint))
@@ -632,45 +657,3 @@ def buildColrV1(
     glyphs.BaseGlyphCount = len(baseGlyphs)
     glyphs.BaseGlyphPaintRecord = baseGlyphs
     return (layers, glyphs)
-
-
-def _build_n_ary_tree(leaves, n):
-    """Build N-ary tree from sequence of leaf nodes.
-
-    Return a list of lists where each non-leaf node is a list containing
-    max n nodes.
-    """
-    if not leaves:
-        return []
-
-    assert n > 1
-
-    depth = ceil(log(len(leaves), n))
-
-    if depth <= 1:
-        return list(leaves)
-
-    # Fully populate complete subtrees of root until we have enough leaves left
-    root = []
-    unassigned = None
-    full_step = n ** (depth - 1)
-    for i in range(0, len(leaves), full_step):
-        subtree = leaves[i : i + full_step]
-        if len(subtree) < full_step:
-            unassigned = subtree
-            break
-        while len(subtree) > n:
-            subtree = [subtree[k : k + n] for k in range(0, len(subtree), n)]
-        root.append(subtree)
-
-    if unassigned:
-        # Recurse to fill the last subtree, which is the only partially populated one
-        subtree = _build_n_ary_tree(unassigned, n)
-        if len(subtree) <= n - len(root):
-            # replace last subtree with its children if they can still fit
-            root.extend(subtree)
-        else:
-            root.append(subtree)
-        assert len(root) <= n
-
-    return root

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
 import unittest
 
 from fontTools.pens.cu2quPen import Cu2QuPen, Cu2QuPointPen
@@ -257,8 +258,12 @@ class TestCu2QuPen(unittest.TestCase, _TestPenMixin):
         quadpen.closePath()
 
         self.assertGreaterEqual(len(log.records), 1)
-        self.assertIn("ignore_single_points is deprecated",
-                      log.records[0].args[0])
+        if sys.version_info < (3, 11):
+            self.assertIn("ignore_single_points is deprecated",
+                          log.records[0].args[0])
+        else:
+            self.assertIn("ignore_single_points is deprecated",
+                          log.records[0].msg)
 
         # single-point contours were ignored, so the pen commands are empty
         self.assertFalse(pen.commands)
