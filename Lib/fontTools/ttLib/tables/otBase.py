@@ -14,7 +14,10 @@ log = logging.getLogger(__name__)
 have_uharfbuzz = False
 try:
 	import uharfbuzz as hb
-	have_uharfbuzz = True
+	# repack method added in uharfbuzz >= 0.23; if uharfbuzz *can* be
+	# imported but repack method is missing, behave as if uharfbuzz
+	# is not available (fallback to the slower Python implementation)
+	have_uharfbuzz = callable(getattr(hb, "repack", None))
 except ImportError:
 	pass
 
