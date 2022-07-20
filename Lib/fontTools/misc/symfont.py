@@ -101,17 +101,20 @@ class GreenPen(BasePen):
 # Do not use this in real code.
 # Use fontTools.pens.momentsPen.MomentsPen instead.
 AreaPen = partial(GreenPen, func=1)
-MomentXPen = partial(GreenPen, func=x)
-MomentYPen = partial(GreenPen, func=y)
-MomentXXPen = partial(GreenPen, func=x*x)
-MomentYYPen = partial(GreenPen, func=y*y)
-MomentXYPen = partial(GreenPen, func=x*y)
+Planar1stMomentWrtXPen = partial(GreenPen, func=y)
+Planar1stMomentWrtYPen = partial(GreenPen, func=x)
+Planar2ndMomentWrtXPen = partial(GreenPen, func=y*y)
+Planar2ndMomentWrtYPen = partial(GreenPen, func=x*x)
+ProductMomentXYPen = partial(GreenPen, func=x*y)
 
 
 def printGreenPen(penName, funcs, file=sys.stdout):
 
 	print(
 '''from fontTools.pens.basePen import BasePen
+
+class %sOpenContourError(NotImplementedError):
+    pass
 
 class %s(BasePen):
 
@@ -132,8 +135,9 @@ class %s(BasePen):
 	def _endPath(self):
 		p0 = self._getCurrentPoint()
 		if p0 != self.__startPoint:
-			# Green theorem is not defined on open contours.
-			raise NotImplementedError
+			raise OpenContourError(
+					"Green theorem is not defined on open contours."
+			)			
 ''', end='', file=file)
 
 	for n in (1, 2, 3):

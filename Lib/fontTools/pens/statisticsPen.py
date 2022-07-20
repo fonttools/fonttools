@@ -36,6 +36,13 @@ class StatisticsPen(MomentsPen):
 		self.covariance = 0
 		self.correlation = 0
 		self.slant = 0
+		# Backward-compatibility properties
+		# Do not rely on these in new code.
+		self.momentX = 0
+		self.momentY = 0
+		self.momentXX = 0
+		self.momentYY = 0
+		self.momentXY = 0
 
 	def __update(self):
 
@@ -46,18 +53,18 @@ class StatisticsPen(MomentsPen):
 
 		# Center of mass
 		# https://en.wikipedia.org/wiki/Center_of_mass#A_continuous_volume
-		self.meanX = meanX = self.momentX / area
-		self.meanY = meanY = self.momentY / area
+		self.meanX = meanX = self.Planar1stMomentWrtY / area
+		self.meanY = meanY = self.Planar1stMomentWrtX / area
 
 		#  Var(X) = E[X^2] - E[X]^2
-		self.varianceX = varianceX = self.momentXX / area - meanX**2
-		self.varianceY = varianceY = self.momentYY / area - meanY**2
+		self.varianceX = varianceX = self.Planar2ndMomentWrtY / area - meanX**2
+		self.varianceY = varianceY = self.Planar2ndMomentWrtX / area - meanY**2
 
 		self.stddevX = stddevX = math.copysign(abs(varianceX)**.5, varianceX)
 		self.stddevY = stddevY = math.copysign(abs(varianceY)**.5, varianceY)
 
 		#  Covariance(X,Y) = ( E[X.Y] - E[X]E[Y] )
-		self.covariance = covariance = self.momentXY / area - meanX*meanY
+		self.covariance = covariance = self.ProductMomentXY / area - meanX*meanY
 
 		#  Correlation(X,Y) = Covariance(X,Y) / ( stddev(X) * stddev(Y) )
 		# https://en.wikipedia.org/wiki/Pearson_product-moment_correlation_coefficient
@@ -66,6 +73,14 @@ class StatisticsPen(MomentsPen):
 
 		slant = covariance / varianceY
 		self.slant = slant if abs(slant) > 1e-3 else 0
+
+		# Backward-compatibility properties
+		# Do not rely on these in new code.
+		self.momentX = self.Planar1stMomentWrtY
+		self.momentY = self.Planar1stMomentWrtX
+		self.momentXX = self.Planar2ndMomentWrtY
+		self.momentYY = self.Planar2ndMomentWrtX
+		self.momentXY = self.ProductMomentXY
 
 
 def _test(glyphset, upem, glyphs):
@@ -81,7 +96,7 @@ def _test(glyphset, upem, glyphs):
 		pen = StatisticsPen(glyphset=glyphset)
 		transformer = TransformPen(pen, Scale(1./upem))
 		glyph.draw(transformer)
-		for item in ['area', 'momentX', 'momentY', 'momentXX', 'momentYY', 'momentXY', 'meanX', 'meanY', 'varianceX', 'varianceY', 'stddevX', 'stddevY', 'covariance', 'correlation', 'slant']:
+		for item in ['area', 'Planar1stMomentWrtX', 'Planar1stMomentWrtY', 'Planar2ndMomentWrtX', 'Planar2ndMomentWrtY', 'ProductMomentXY', 'meanX', 'meanY', 'varianceX', 'varianceY', 'stddevX', 'stddevY', 'covariance', 'correlation', 'slant']:
 			print ("%s: %g" % (item, getattr(pen, item)))
 
 def main(args):
