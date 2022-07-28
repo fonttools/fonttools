@@ -108,16 +108,22 @@ MomentYYPen = partial(GreenPen, func=y*y)
 MomentXYPen = partial(GreenPen, func=x*y)
 
 
-def printGreenPen(penName, funcs, file=sys.stdout):
+def printGreenPen(penName, funcs, file=sys.stdout, docstring=None):
+
+	if docstring is not None:
+		print('"""%s"""' % docstring)
 
 	print(
-'''from fontTools.pens.basePen import BasePen
+'''from fontTools.pens.basePen import BasePen, OpenContourError
+
+
+__all__ = ["%s"]
 
 class %s(BasePen):
 
 	def __init__(self, glyphset=None):
 		BasePen.__init__(self, glyphset)
-'''%penName, file=file)
+'''% (penName, penName), file=file)
 	for name,f in funcs:
 		print('		self.%s = 0' % name, file=file)
 	print('''
@@ -133,7 +139,9 @@ class %s(BasePen):
 		p0 = self._getCurrentPoint()
 		if p0 != self.__startPoint:
 			# Green theorem is not defined on open contours.
-			raise NotImplementedError
+			raise OpenContourError(
+							"Green theorem is not defined on open contours."
+			)
 ''', end='', file=file)
 
 	for n in (1, 2, 3):
