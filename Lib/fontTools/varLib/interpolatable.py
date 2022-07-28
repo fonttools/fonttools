@@ -361,25 +361,38 @@ def main(args=None):
 
     from os.path import basename
 
-    if len(args.inputs) == 1 and args.inputs[0].endswith('.designspace'):
-        from fontTools.designspaceLib import DesignSpaceDocument
-        designspace = DesignSpaceDocument.fromfile(args.inputs[0])
-        args.inputs = [master.path for master in designspace.sources]
-
-    names = [basename(filename).rsplit(".", 1)[0] for filename in args.inputs]
-
     fonts = []
+    names = []
+
+    if len(args.inputs) == 1:
+        if args.inputs[0].endswith('.designspace'):
+            from fontTools.designspaceLib import DesignSpaceDocument
+            designspace = DesignSpaceDocument.fromfile(args.inputs[0])
+            args.inputs = [master.path for master in designspace.sources]
+
+        elif args.inputs[0].endswith('.glyphs'):
+            from glyphsLib import GSFont, to_ufos
+            gsfont = GSFont(args.inputs[0])
+            fonts.extend(to_ufos(gsfont))
+            names = ['%s-%s' % (f.info.familyName, f.info.styleName) for f in fonts]
+            args.inputs = []
+
+
     for filename in args.inputs:
         if filename.endswith(".ufo"):
             from fontTools.ufoLib import UFOReader
-
             fonts.append(UFOReader(filename))
         else:
             from fontTools.ttLib import TTFont
-
             fonts.append(TTFont(filename))
 
-    glyphsets = [font.getGlyphSet() for font in fonts]
+        names.append(basename(filename).rsplit(".", 1)[0])
+
+    if hasattr(fonts[0], 'getGlyphSet'):
+        glyphsets = [font.getGlyphSet() for font in fonts]
+    else:
+        glyphsets = fonts
+
     problems = test(glyphsets, glyphs=glyphs, names=names)
     if args.json:
         import json
