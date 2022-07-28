@@ -361,6 +361,11 @@ def main(args=None):
 
     from os.path import basename
 
+    if len(args.inputs) == 1 and args.inputs[0].endswith('.designspace'):
+        from fontTools.designspaceLib import DesignSpaceDocument
+        designspace = DesignSpaceDocument.fromfile(args.inputs[0])
+        args.inputs = [master.path for master in designspace.sources]
+
     names = [basename(filename).rsplit(".", 1)[0] for filename in args.inputs]
 
     fonts = []
