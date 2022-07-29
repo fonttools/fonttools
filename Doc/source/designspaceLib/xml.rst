@@ -717,7 +717,10 @@ The ``<variable-fonts>`` element contains one or more ``<variable-font>`` elemen
         <axis-subset name="Weight" userminimum="400" usermaximum="500" userdefault="400"/>
 
   3. a specific value along that axis; then the axis is not functional in the VF
-     but the design space is sliced at the given location.
+     but the design space is sliced at the given location. *Note:* While valid to have a
+     specific value that doesn’t have a matching ``<source>`` at that value, currently there
+     isn’t an implentation that supports this. See `this fontmake issue
+     <https://github.com/googlefonts/fontmake/issues/920>`.
 
      .. code:: xml
 
