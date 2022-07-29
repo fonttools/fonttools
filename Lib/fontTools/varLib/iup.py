@@ -1,3 +1,17 @@
+try:
+	import cython
+except ImportError:
+	# if cython not installed, use mock module with no-op decorators and types
+	from fontTools.misc import cython
+
+if cython.compiled:
+	# Yep, I'm compiled.
+	COMPILED = True
+else:
+	# Just a lowly interpreted script.
+	COMPILED = False
+
+
 MAX_LOOKBACK = 8
 
 def iup_segment(coords, rc1, rd1, rc2, rd2):
