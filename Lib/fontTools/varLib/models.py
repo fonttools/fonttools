@@ -14,6 +14,7 @@ __all__ = [
 
 from fontTools.misc.roundTools import noRound
 from .errors import VariationModelError
+from collections import defaultdict
 
 
 def nonNone(lst):
@@ -203,13 +204,8 @@ class VariationModel(object):
        {0: 1.0},
        {0: 1.0},
        {0: 1.0, 4: 1.0, 5: 1.0},
-       {0: 1.0, 3: 0.75, 4: 0.25, 5: 1.0, 6: 0.6666666666666666},
-       {0: 1.0,
-        3: 0.75,
-        4: 0.25,
-        5: 0.6666666666666667,
-        6: 0.4444444444444445,
-        7: 0.6666666666666667}]
+       {0: 1.0, 3: 0.75, 4: 0.25, 5: 1.0},
+       {0: 1.0, 3: 0.75, 4: 0.25, 5: 0.6666666666666667}]
 	"""
 
     def __init__(self, locations, axisOrder=None):
@@ -366,23 +362,48 @@ class VariationModel(object):
 
     def _locationsToRegions(self):
         locations = self.locations
+
         # Compute min/max across each axis, use it as total range.
-        # TODO Take this as input from outside?
         minV = {}
         maxV = {}
+        axes = set()
         for l in locations:
-            for k, v in l.items():
-                minV[k] = min(v, minV.get(k, v))
-                maxV[k] = max(v, maxV.get(k, v))
+            for axis in l.keys():
+                axes.add(axis)
+        for axis in axes:
+            minV[axis] = 0.0
+            maxV[axis] = 0.0
+        for l in locations:
+            for axis, v in l.items():
+                minV[axis] = min(v, minV.get(axis, v))
+                maxV[axis] = max(v, maxV.get(axis, v))
+
+        axisPoints = defaultdict(lambda: defaultdict(lambda: {0.0}))
+        for loc in locations:
+            for axis, value in loc.items():
+                offAxisLoc = loc.copy()
+                offAxisLoc.pop(axis)
+                offAxisLoc = tuple(sorted(offAxisLoc.items()))
+                axisPoints[axis][offAxisLoc].add(value)
 
         regions = []
         for loc in locations:
             region = {}
-            for axis, locV in loc.items():
-                if locV > 0:
-                    region[axis] = (0, locV, maxV[axis])
-                else:
-                    region[axis] = (minV[axis], locV, 0)
+            for axis, peak in loc.items():
+                assert peak != 0
+
+                offAxisLoc = loc.copy()
+                offAxisLoc.pop(axis)
+                offAxisLoc = tuple(sorted(offAxisLoc.items()))
+                points = axisPoints[axis][offAxisLoc]
+                points.add(minV[axis])
+                points.add(maxV[axis])
+                points = sorted(points)
+
+                peakIndex = points.index(peak)
+                lower = peak if peakIndex == 0 else points[peakIndex - 1]
+                upper = peak if peakIndex == len(points) - 1 else points[peakIndex + 1]
+                region[axis] = (lower, peak, upper)
             regions.append(region)
         return regions
 
