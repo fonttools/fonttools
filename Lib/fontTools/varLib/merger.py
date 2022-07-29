@@ -31,6 +31,7 @@ from .errors import (
     ShouldBeConstant,
     FoundANone,
     MismatchedTypes,
+    NotANone,
     LengthsDiffer,
     KeysDiffer,
     InconsistentGlyphOrder,
