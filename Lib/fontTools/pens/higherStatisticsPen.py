@@ -1,0 +1,126 @@
+"""Pen calculating area, center of mass, variance and standard-deviation,
+covariance and correlation, 0th to 4th planar moments, four product moments,
+2nd and 4th polar moments, and slant, of glyph shapes."""
+import math
+from fontTools.pens.higherMomentsPen import HigherMomentsPen
+
+__all__ = ["HigherStatisticsPen"]
+
+
+class HigherStatisticsPen(HigherMomentsPen):
+
+	"""Pen calculating area, center of mass, variance and
+	standard-deviation, covariance and correlation, 0th to 4th
+	planar moments, four product moments, 2nd and 4th polar moments,
+	and slant, of glyph shapes.
+
+	Note that all the calculated values are 'signed'. Ie. if the
+	glyph shape is self-intersecting, the values are not correct
+	(but well-defined). As such, area will be negative if contour
+	directions are clockwise.  Moreover, variance might be negative
+	if the shapes are self-intersecting in certain ways."""
+
+	def __init__(self, glyphset=None):
+		HigherMomentsPen.__init__(self, glyphset=glyphset)
+		self.__zero()
+
+	def _closePath(self):
+		HigherMomentsPen._closePath(self)
+		self.__update()
+
+	def __zero(self):
+		self.meanX = 0
+		self.meanY = 0
+		self.varianceX = 0
+		self.varianceY = 0
+		self.stddevX = 0
+		self.stddevY = 0
+		self.covariance = 0
+		self.correlation = 0
+		self.slant = 0
+		# Backward-compatibility properties
+		# Do not rely on these in new code.
+		self.momentX = 0
+		self.momentY = 0
+		self.momentXX = 0
+		self.momentYY = 0
+		self.momentXY = 0
+                # Polar 2nd and 4th moments
+                self.Polar2ndMoment = 0
+                self.Polar4thMoment = 0
+
+	def __update(self):
+
+		area = self.area
+		if not area:
+			self.__zero()
+			return
+
+		# Center of mass
+		# https://en.wikipedia.org/wiki/Center_of_mass#A_continuous_volume
+		self.meanX = meanX = self.Planar1stMomentWrtY / area
+		self.meanY = meanY = self.Planar1stMomentWrtX / area
+
+		#  Var(X) = E[X^2] - E[X]^2
+		self.varianceX = varianceX = self.Planar2ndMomentWrtY / area - meanX**2
+		self.varianceY = varianceY = self.Planar2ndMomentWrtX / area - meanY**2
+
+		self.stddevX = stddevX = math.copysign(abs(varianceX)**.5, varianceX)
+		self.stddevY = stddevY = math.copysign(abs(varianceY)**.5, varianceY)
+
+		#  Covariance(X,Y) = ( E[X.Y] - E[X]E[Y] )
+		self.covariance = covariance = self.ProductMomentXY / area - meanX*meanY
+
+		#  Correlation(X,Y) = Covariance(X,Y) / ( stddev(X) * stddev(Y) )
+		# https://en.wikipedia.org/wiki/Pearson_product-moment_correlation_coefficient
+		correlation = covariance / (stddevX * stddevY)
+		self.correlation = correlation if abs(correlation) > 1e-3 else 0
+
+		slant = covariance / varianceY
+		self.slant = slant if abs(slant) > 1e-3 else 0
+
+		# Backward-compatibility properties
+		# Do not rely on these in new code.
+		self.momentX = self.Planar1stMomentWrtY
+		self.momentY = self.Planar1stMomentWrtX
+		self.momentXX = self.Planar2ndMomentWrtY
+		self.momentYY = self.Planar2ndMomentWrtX
+		self.momentXY = self.ProductMomentXY
+
+                # Polar 2nd and 4th moments
+                #
+                # (Polar 1st and 3rd moments don't have polynomial solutions easily
+                #  plugged into GreenPen form at present.)
+                self.Polar2ndMoment = self.Planar1stMomentWrtX + self.Planar1stMomentWrtY
+                self.Polar4thMoment = self.Planar4thMomentWrtX + self.Planar4thMomentWrtY + 2*self.ProductMomentXXYY
+
+
+def _test(glyphset, upem, glyphs):
+	from fontTools.pens.transformPen import TransformPen
+	from fontTools.misc.transform import Scale
+
+	print('upem', upem)
+
+	for glyph_name in glyphs:
+		print()
+		print("glyph:", glyph_name)
+		glyph = glyphset[glyph_name]
+		pen = HigherStatisticsPen(glyphset=glyphset)
+		transformer = TransformPen(pen, Scale(1./upem))
+		glyph.draw(transformer)
+		for item in ['area', 'Planar1stMomentWrtX', 'Planar1stMomentWrtY', 'Planar2ndMomentWrtX', 'Planar2ndMomentWrtY', 'Planar3rdMomentWrtX', 'Planar3rdMomentWrtY', 'Planar4thMomentWrtX', 'Planar4thMomentWrtY', 'ProductMomentXY', 'ProductMomentXXY', 'ProductMomentXYY', 'ProductMomentXXYY', 'Polar2ndMoment', 'Polar4thMoment', 'meanX', 'meanY', 'varianceX', 'varianceY', 'stddevX', 'stddevY', 'covariance', 'correlation', 'slant']:
+			print ("%s: %g" % (item, getattr(pen, item)))
+
+def main(args):
+	if not args:
+		return
+	filename, glyphs = args[0], args[1:]
+	from fontTools.ttLib import TTFont
+	font = TTFont(filename)
+	if not glyphs:
+		glyphs = font.getGlyphOrder()
+	_test(font.getGlyphSet(), font['head'].unitsPerEm, glyphs)
+
+if __name__ == '__main__':
+	import sys
+	main(sys.argv[1:])
