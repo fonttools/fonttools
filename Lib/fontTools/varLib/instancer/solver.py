@@ -4,7 +4,7 @@ def _solvePinned(var, axisTag, axisLimit):
 
     axisMin, axisDef, axisMax = axisLimit
 
-    support = {axisTag: var.axes.pop(axisTag, (-1, 0, 1))}
+    support = {axisTag: var.axes.pop(axisTag)}
     scalar = supportScalar({axisTag: axisLimit.default}, support)
     if scalar == 0.0:
         return []
@@ -16,7 +16,7 @@ def _solvePinned(var, axisTag, axisLimit):
 def _solveDefaultUnmoved(var, axisTag, axisLimit):
 
     axisMin, axisDef, axisMax = axisLimit
-    lower, peak, upper = var.axes.get(axisTag, (-1, 0, 1))
+    lower, peak, upper = var.axes.get(axisTag)
 
     negative = lower < 0
     if negative:
@@ -110,14 +110,6 @@ def changeTupleVariationAxisLimit(var, axisTag, axisLimit):
 
     axisMin, axisDef, axisMax = axisLimit
     assert -1 <= axisMin <= axisDef <= axisMax <= +1
-
-    # Skip when current axis is missing (i.e. doesn't participate),
-    lower, peak, upper = var.axes.get(axisTag, (-1, 0, 1))
-    if peak == 0:
-        return [var]
-    # Drop if the var 'tent' isn't well-formed
-    if not (lower <= peak <= upper) or (lower < 0 and upper > 0):
-        return []
 
     # Get the pinned case out of the way
     if axisMin == axisMax:

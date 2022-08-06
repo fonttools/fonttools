@@ -227,6 +227,18 @@ def _negate(*values):
 
 def changeTupleVariationAxisLimit(var, axisTag, axisLimit):
     assert isinstance(axisLimit, NormalizedAxisTent)
+
+    # Skip when current axis is missing (i.e. doesn't participate),
+    lower, peak, upper = var.axes.get(axisTag, (-1, 0, 1))
+    if peak == 0:
+        return [var]
+    # Drop if the var 'tent' isn't well-formed
+    if not (lower <= peak <= upper) or (lower < 0 and upper > 0):
+        return []
+
+    if axisTag not in var.axes:
+        return [var]
+
     return solver.changeTupleVariationAxisLimit(var, axisTag, axisLimit)
 
 def _instantiateGvarGlyph(
