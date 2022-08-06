@@ -1326,8 +1326,8 @@ def setRibbiBits(font):
 def splitAxisLocationAndRanges(axisLimits, rangeType=AxisRange):
     location, axisRanges = {}, {}
     for axisTag, (minimum, default, maximum) in axisLimits.items():
-        if minimum == maximum:
-            location[axisTag] = minimum
+        if minimum == default == maximum:
+            location[axisTag] = default
         else:
             axisRanges[axisTag] = rangeType(minimum, maximum)
     return location, axisRanges
