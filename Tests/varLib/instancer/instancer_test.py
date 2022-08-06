@@ -1698,7 +1698,7 @@ class InstantiateFeatureVariationsTest(object):
 
 class LimitTupleVariationAxisRangesTest:
     def check_limit_single_var_axis_range(self, var, axisTag, axisRange, expected):
-        result = instancer.limitTupleVariationAxisRange(var, axisTag, axisRange)
+        result = instancer.changeTupleVariationAxisLimit(var, axisTag, axisRange)
         print(result)
 
         assert len(result) == len(expected)

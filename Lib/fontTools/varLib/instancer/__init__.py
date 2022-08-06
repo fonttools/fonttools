@@ -102,6 +102,13 @@ import re
 
 log = logging.getLogger("fontTools.varLib.instancer")
 
+def _expand(v):
+    if not isinstance(v, tuple):
+        return (v, v, v)
+    else:
+        if len(v) == 2:
+            return (v[0], None, v[1])
+        return v
 
 class AxisRange(collections.namedtuple("AxisRange", "minimum maximum")):
     def __new__(cls, *args, **kwargs):
@@ -1030,7 +1037,7 @@ def normalizeAxisLimits(varfont, axisLimits, usingAvar=True):
 
         value = axisLimits[axis_tag]
 
-        minV, defaultV, maxV = value
+        minV, defaultV, maxV = _expand(value)
         if defaultV is None:
             defaultV = default
         if (minV != maxV or minV != defaultV) and defaultV != default:
@@ -1180,9 +1187,9 @@ def instantiateVariableFont(
     varLib.set_default_weight_width_slant(
         varfont,
         location={
-            axisTag: limit[0]
+            axisTag: _expand(limit)[1]
             for axisTag, limit in axisLimits.items()
-            if limit[0] == limit[2]
+            if _expand(limit)[0] == _expand(limit)[2]
         },
     )
 
@@ -1233,7 +1240,8 @@ def setRibbiBits(font):
 
 def splitAxisLocationAndRanges(axisLimits, rangeType=AxisRange):
     location, axisRanges = {}, {}
-    for axisTag, (minimum, default, maximum) in axisLimits.items():
+    for axisTag, value in axisLimits.items():
+        (minimum, default, maximum) = _expand(value)
         if minimum == default == maximum:
             location[axisTag] = default
         else:
