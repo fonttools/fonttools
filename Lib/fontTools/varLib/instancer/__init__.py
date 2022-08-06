@@ -251,9 +251,10 @@ def changeTupleVariationAxisLimit(var, axisTag, axisLimit):
     for scalar,tent in solutions:
         if scalar == 0: continue
         newVar = TupleVariation(var.axes, var.coordinates)
-        newVar.axes.pop(axisTag)
-        if tent[1] != 0:
-            newVar.axes[axisTag] == tent
+        if tent[1] == 0:
+            newVar.axes.pop(axisTag)
+        else:
+            newVar.axes[axisTag] = tent
         if scalar != 1:
             newVar.scaleDeltas(scalar)
         out.append(newVar)

@@ -101,7 +101,7 @@ def _solveDefaultUnmoved(tent, axisLimit):
         return [(scalar1, loc), (scalar2, newloc)]
 
 
-def _solveDefaultUnmoved(tent, axisLimit):
+def _solveGeneral(tent, axisLimit):
     raise NotImplementedError
 
 
