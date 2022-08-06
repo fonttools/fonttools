@@ -110,6 +110,8 @@ def rebaseTent(tent, axisLimit):
     lower, peak, upper = tent
     assert -2 <= lower <= peak <= upper <= +2
 
+    assert peak != 0
+
     # Get the pinned case out of the way
     if axisMin == axisMax:
         return _solvePinned(tent, axisLimit)
