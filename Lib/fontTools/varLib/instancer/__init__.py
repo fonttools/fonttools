@@ -239,7 +239,23 @@ def changeTupleVariationAxisLimit(var, axisTag, axisLimit):
     if axisTag not in var.axes:
         return [var]
 
-    return solver.changeTupleVariationAxisLimit(var, axisTag, axisLimit)
+    tent = var.axes[axisTag]
+
+    solutions = solver.rebaseTent(tent, axisLimit)
+
+    out = []
+    # TODO Reuse original var
+    for scalar,tent in solutions:
+        if scalar == 0: continue
+        newVar = TupleVariation(var.axes, var.coordinates)
+        newVar.axes.pop(axisTag)
+        if tent[1] != 0:
+            newVar.axes[axisTag] == tent
+        if scalar != 1:
+            newVar.scaleDeltas(scalar)
+        out.append(newVar)
+
+    return out
 
 def _instantiateGvarGlyph(
     glyphname, glyf, gvar, hMetrics, vMetrics, axisLimits, optimize=True
