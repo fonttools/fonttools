@@ -184,17 +184,8 @@ def instantiateTupleVariationStore(
     Returns:
         List[float]: the overall delta adjustment after applicable deltas were summed.
     """
-    pinnedLocation, axisRanges = splitAxisLocationAndRanges(
-        axisLimits, rangeType=NormalizedAxisRange
-    )
 
-    newVariations = variations
-
-    if pinnedLocation:
-        newVariations = pinTupleVariationAxes(variations, pinnedLocation)
-
-    if axisRanges:
-        newVariations = limitTupleVariationAxisRanges(newVariations, axisRanges)
+    newVariations = changeTupleVariationsAxisLimits(variations, axisLimits)
 
     mergedVariations = collections.OrderedDict()
     for var in newVariations:
@@ -220,29 +211,11 @@ def instantiateTupleVariationStore(
     return defaultVar.coordinates if defaultVar is not None else []
 
 
-def pinTupleVariationAxes(variations, location):
-    newVariations = []
-    for var in variations:
-        # Compute the scalar support of the axes to be pinned at the desired location,
-        # excluding any axes that we are not pinning.
-        # If a TupleVariation doesn't mention an axis, it implies that the axis peak
-        # is 0 (i.e. the axis does not participate).
-        support = {axis: var.axes.pop(axis, (-1, 0, +1)) for axis in location}
-        scalar = supportScalar(location, support)
-        if scalar == 0.0:
-            # no influence, drop the TupleVariation
-            continue
-        if scalar != 1.0:
-            var.scaleDeltas(scalar)
-        newVariations.append(var)
-    return newVariations
-
-
-def limitTupleVariationAxisRanges(variations, axisRanges):
-    for axisTag, axisRange in sorted(axisRanges.items()):
+def changeTupleVariationsAxisLimits(variations, axisLimits):
+    for axisTag, axisLimit in sorted(axisLimits.items()):
         newVariations = []
         for var in variations:
-            newVariations.extend(limitTupleVariationAxisRange(var, axisTag, axisRange))
+            newVariations.extend(changeTupleVariationAxisLimit(var, axisTag, axisLimit))
         variations = newVariations
     return variations
 
@@ -251,28 +224,39 @@ def _negate(*values):
     yield from (-1 * v for v in values)
 
 
-def limitTupleVariationAxisRange(var, axisTag, axisRange):
-    assert isinstance(axisRange, NormalizedAxisRange)
+def changeTupleVariationAxisLimit(var, axisTag, axisLimit):
+    assert isinstance(axisLimit, NormalizedAxisTent)
+
+    # if axis is fully pinned down, get it out of the way
+    if axisLimit.minimum == axisLimit.maximum:
+        support = {axisTag: var.axes.pop(axisTag, (-1, 0, 1))}
+        scalar = supportScalar({axisTag: axisLimit.default}, support)
+        if scalar == 0.0:
+            return []
+        if scalar != 1.0:
+            var.scaleDeltas(scalar)
+        return [var]
 
     # skip when current axis is missing (i.e. doesn't participate), or when the
     # 'tent' isn't fully on either the negative or positive side
     lower, peak, upper = var.axes.get(axisTag, (-1, 0, 1))
+
     if peak == 0 or lower > peak or peak > upper or (lower < 0 and upper > 0):
         return [var]
 
     negative = lower < 0
     if negative:
-        if axisRange.minimum == -1.0:
+        if axisLimit.minimum == -1.0:
             return [var]
-        elif axisRange.minimum == 0.0:
+        elif axisLimit.minimum == 0.0:
             return []
     else:
-        if axisRange.maximum == 1.0:
+        if axisLimit.maximum == 1.0:
             return [var]
-        elif axisRange.maximum == 0.0:
+        elif axisLimit.maximum == 0.0:
             return []
 
-    limit = axisRange.minimum if negative else axisRange.maximum
+    limit = axisLimit.minimum if negative else axisLimit.maximum
 
     # Rebase axis bounds onto the new limit, which then becomes the new -1.0 or +1.0.
     # The results are always positive, because both dividend and divisor are either
