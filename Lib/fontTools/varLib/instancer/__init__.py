@@ -120,10 +120,6 @@ class NormalizedAxisRange(AxisRange):
         self = super().__new__(cls, *args, **kwargs)
         if self.minimum < -1.0 or self.maximum > 1.0:
             raise ValueError("Axis range values must be normalized to -1..+1 range")
-        if self.minimum > 0:
-            raise ValueError(f"Expected axis range minimum <= 0; got {self.minimum}")
-        if self.maximum < 0:
-            raise ValueError(f"Expected axis range maximum >= 0; got {self.maximum}")
         return self
 
 
@@ -572,8 +568,8 @@ class _TupleVarStoreAdapter(object):
 
         pinnedAxes = {
             axisTag
-            for axisTag, value in axisLimits.items()
-            if not isinstance(value, tuple)
+            for axisTag, (minimum, maximum) in axisLimits.items()
+            if minimum == maximum
         }
         self.axisOrder = [
             axisTag for axisTag in self.axisOrder if axisTag not in pinnedAxes
@@ -1102,7 +1098,7 @@ def normalizeAxisLimits(varfont, axisLimits, usingAvar=True):
         value = axisLimits[axis_tag]
         if isinstance(value, tuple):
             minV, maxV = value
-            if minV > default or maxV < default:
+            if minV != maxV and (minV > default or maxV < default):
                 raise NotImplementedError(
                     f"Unsupported range {axis_tag}={minV:g}:{maxV:g}; "
                     f"can't change default position ({axis_tag}={default:g})"
@@ -1111,13 +1107,10 @@ def normalizeAxisLimits(varfont, axisLimits, usingAvar=True):
     normalizedLimits = {}
     for axis_tag, triple in axes.items():
         avarMapping = avarSegments.get(axis_tag, None)
-        value = axisLimits[axis_tag]
-        if isinstance(value, tuple):
-            normalizedLimits[axis_tag] = NormalizedAxisRange(
-                *(normalize(v, triple, avarMapping) for v in value)
-            )
-        else:
-            normalizedLimits[axis_tag] = normalize(value, triple, avarMapping)
+        minimum, maximum = axisLimits[axis_tag]
+        normalizedLimits[axis_tag] = NormalizedAxisRange(
+            *(normalize(v, triple, avarMapping) for v in (minimum, maximum))
+        )
     return normalizedLimits
 
 
@@ -1305,18 +1298,11 @@ def setRibbiBits(font):
 
 def splitAxisLocationAndRanges(axisLimits, rangeType=AxisRange):
     location, axisRanges = {}, {}
-    for axisTag, value in axisLimits.items():
-        if isinstance(value, rangeType):
-            axisRanges[axisTag] = value
-        elif isinstance(value, (int, float)):
-            location[axisTag] = value
-        elif isinstance(value, tuple):
-            axisRanges[axisTag] = rangeType(*value)
+    for axisTag, (minimum, maximum) in axisLimits.items():
+        if minimum == maximum:
+            location[axisTag] = minimum
         else:
-            raise TypeError(
-                f"Expected number or {rangeType.__name__}, "
-                f"got {type(value).__name__}: {value!r}"
-            )
+            axisRanges[axisTag] = rangeType(minimum, maximum)
     return location, axisRanges
 
 
@@ -1334,10 +1320,7 @@ def parseLimits(limits):
         ubound = lbound
         if match.group(4):
             ubound = strToFixedToFloat(match.group(4), precisionBits=16)
-        if lbound != ubound:
-            result[tag] = AxisRange(lbound, ubound)
-        else:
-            result[tag] = lbound
+        result[tag] = (lbound, ubound)
     return result
 
 
