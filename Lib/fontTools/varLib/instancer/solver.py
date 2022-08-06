@@ -1,5 +1,8 @@
 from fontTools.varLib.models import supportScalar
 
+def _negate(*values):
+    yield from (-1 * v for v in values)
+
 def _solvePinned(tent, axisLimit):
 
     axisMin, axisDef, axisMax = axisLimit

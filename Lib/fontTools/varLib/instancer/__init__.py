@@ -221,10 +221,6 @@ def changeTupleVariationsAxisLimits(variations, axisLimits):
     return variations
 
 
-def _negate(*values):
-    yield from (-1 * v for v in values)
-
-
 def changeTupleVariationAxisLimit(var, axisTag, axisLimit):
     assert isinstance(axisLimit, NormalizedAxisTent)
 
