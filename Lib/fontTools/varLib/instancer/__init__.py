@@ -123,6 +123,27 @@ class NormalizedAxisRange(AxisRange):
         return self
 
 
+class AxisTent(collections.namedtuple("AxisTent", "minimum default maximum")):
+    def __new__(cls, *args, **kwargs):
+        self = super().__new__(cls, *args, **kwargs)
+        if not (self.minimum <= self.default <= self.maximum):
+            raise ValueError(
+                f"Tent minimum ({self.minimum:g}) must be <= default ({self.default:g}) which must be <= maximum ({self.maximum:g})"
+            )
+        return self
+
+    def __repr__(self):
+        return f"{type(self).__name__}({self.minimum:g}, {self.default:g}, {self.maximum:g})"
+
+
+class NormalizedAxisTent(AxisTent):
+    def __new__(cls, *args, **kwargs):
+        self = super().__new__(cls, *args, **kwargs)
+        if self.minimum < -1.0 or self.maximum > 1.0:
+            raise ValueError("Axis tent values must be normalized to -1..+1 range")
+        return self
+
+
 class OverlapMode(IntEnum):
     KEEP_AND_DONT_SET_FLAGS = 0
     KEEP_AND_SET_FLAGS = 1
@@ -568,7 +589,7 @@ class _TupleVarStoreAdapter(object):
 
         pinnedAxes = {
             axisTag
-            for axisTag, (minimum, maximum) in axisLimits.items()
+            for axisTag, (minimum, default, maximum) in axisLimits.items()
             if minimum == maximum
         }
         self.axisOrder = [
@@ -913,7 +934,7 @@ def instantiateAvar(varfont, axisLimits):
     # dropping any mappings that fall outside the restricted range.
     # The keys ('fromCoord') are specified in default normalized coordinate space,
     # whereas the values ('toCoord') are "mapped forward" using the SegmentMap.
-    normalizedRanges = normalizeAxisLimits(varfont, axisRanges, usingAvar=False)
+    normalizedRanges = normalizeAxisLimits(varfont, axisLimits, usingAvar=False)
     newSegments = {}
     for axisTag, mapping in segments.items():
         if not _isValidAvarSegmentMap(axisTag, mapping):
@@ -1094,23 +1115,29 @@ def normalizeAxisLimits(varfont, axisLimits, usingAvar=True):
     if usingAvar and "avar" in varfont:
         avarSegments = varfont["avar"].segments
 
-    for axis_tag, (_, default, _) in axes.items():
-        value = axisLimits[axis_tag]
-        if isinstance(value, tuple):
-            minV, maxV = value
-            if minV != maxV and (minV > default or maxV < default):
-                raise NotImplementedError(
-                    f"Unsupported range {axis_tag}={minV:g}:{maxV:g}; "
-                    f"can't change default position ({axis_tag}={default:g})"
-                )
-
     normalizedLimits = {}
+
     for axis_tag, triple in axes.items():
+        default = triple[1]
+
+        value = axisLimits[axis_tag]
+
+        minV, defaultV, maxV = value
+        if defaultV is None:
+            defaultV = default
+        if (minV != maxV or minV != defaultV) and defaultV != default:
+            raise NotImplementedError(
+                f"Unsupported range {axis_tag}={minV:g}:{defaultV:g}:{maxV:g}; "
+                f"can't change default position ({axis_tag}={default:g})"
+            )
+
+        value = (minV, defaultV, maxV)
+
         avarMapping = avarSegments.get(axis_tag, None)
-        minimum, maximum = axisLimits[axis_tag]
-        normalizedLimits[axis_tag] = NormalizedAxisRange(
-            *(normalize(v, triple, avarMapping) for v in (minimum, maximum))
+        normalizedLimits[axis_tag] = NormalizedAxisTent(
+            *(normalize(v, triple, avarMapping) for v in value)
         )
+
     return normalizedLimits
 
 
@@ -1298,7 +1325,7 @@ def setRibbiBits(font):
 
 def splitAxisLocationAndRanges(axisLimits, rangeType=AxisRange):
     location, axisRanges = {}, {}
-    for axisTag, (minimum, maximum) in axisLimits.items():
+    for axisTag, (minimum, default, maximum) in axisLimits.items():
         if minimum == maximum:
             location[axisTag] = minimum
         else:
@@ -1309,7 +1336,7 @@ def splitAxisLocationAndRanges(axisLimits, rangeType=AxisRange):
 def parseLimits(limits):
     result = {}
     for limitString in limits:
-        match = re.match(r"^(\w{1,4})=(?:(drop)|(?:([^:]+)(?:[:](.+))?))$", limitString)
+        match = re.match(r"^(\w{1,4})=(?:(drop)|(?:([^:]+)(?:[:]([^:]+))?(?:[:]([^:]+))?))$", limitString)
         if not match:
             raise ValueError("invalid location format: %r" % limitString)
         tag = match.group(1).ljust(4)
@@ -1317,10 +1344,19 @@ def parseLimits(limits):
             lbound = None
         else:
             lbound = strToFixedToFloat(match.group(3), precisionBits=16)
-        ubound = lbound
+        ubound = default = lbound
         if match.group(4):
-            ubound = strToFixedToFloat(match.group(4), precisionBits=16)
-        result[tag] = (lbound, ubound)
+            ubound = default = strToFixedToFloat(match.group(4), precisionBits=16)
+            default = None
+        if match.group(5):
+            default = ubound
+            ubound = strToFixedToFloat(match.group(5), precisionBits=16)
+
+        if default is None:
+            assert lbound <= ubound
+        else:
+            assert lbound <= default <= ubound
+        result[tag] = (lbound, default, ubound)
     return result
 
 
