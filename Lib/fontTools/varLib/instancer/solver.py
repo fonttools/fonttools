@@ -1,40 +1,36 @@
 from fontTools.varLib.models import supportScalar
 
-def changeTupleVariationAxisLimit(var, axisTag, axisLimit):
+def _solvePinned(var, axisTag, axisLimit):
 
     axisMin, axisDef, axisMax = axisLimit
-    assert -1 <= axisMin <= axisDef <= axisMax <= +1
 
-    # if axis is fully pinned down, get it out of the way
-    if axisLimit.minimum == axisLimit.maximum:
-        support = {axisTag: var.axes.pop(axisTag, (-1, 0, 1))}
-        scalar = supportScalar({axisTag: axisLimit.default}, support)
-        if scalar == 0.0:
-            return []
-        if scalar != 1.0:
-            var.scaleDeltas(scalar)
-        return [var]
+    support = {axisTag: var.axes.pop(axisTag, (-1, 0, 1))}
+    scalar = supportScalar({axisTag: axisLimit.default}, support)
+    if scalar == 0.0:
+        return []
+    if scalar != 1.0:
+        var.scaleDeltas(scalar)
+    return [var]
 
-    # skip when current axis is missing (i.e. doesn't participate), or when the
-    # 'tent' isn't fully on either the negative or positive side
+
+def _solveDefaultUnmoved(var, axisTag, axisLimit):
+
+    axisMin, axisDef, axisMax = axisLimit
     lower, peak, upper = var.axes.get(axisTag, (-1, 0, 1))
-
-    if peak == 0 or lower > peak or peak > upper or (lower < 0 and upper > 0):
-        return [var]
 
     negative = lower < 0
     if negative:
-        if axisLimit.minimum == -1.0:
+        if axisMin == -1.0:
             return [var]
-        elif axisLimit.minimum == 0.0:
+        elif axisMin == 0.0:
             return []
     else:
-        if axisLimit.maximum == 1.0:
+        if axisMax == 1.0:
             return [var]
-        elif axisLimit.maximum == 0.0:
+        elif axisMax == 0.0:
             return []
 
-    limit = axisLimit.minimum if negative else axisLimit.maximum
+    limit = axisMin if negative else axisMax
 
     # Rebase axis bounds onto the new limit, which then becomes the new -1.0 or +1.0.
     # The results are always positive, because both dividend and divisor are either
@@ -105,3 +101,30 @@ def changeTupleVariationAxisLimit(var, axisTag, axisLimit):
 
         return [var, newVar]
 
+
+def _solveDefaultUnmoved(var, axisTag, axisLimit):
+    raise NotImplementedError
+
+
+def changeTupleVariationAxisLimit(var, axisTag, axisLimit):
+
+    axisMin, axisDef, axisMax = axisLimit
+    assert -1 <= axisMin <= axisDef <= axisMax <= +1
+
+    # Skip when current axis is missing (i.e. doesn't participate),
+    lower, peak, upper = var.axes.get(axisTag, (-1, 0, 1))
+    if peak == 0:
+        return [var]
+    # Drop if the var 'tent' isn't well-formed
+    if not (lower <= peak <= upper) or (lower < 0 and upper > 0):
+        return []
+
+    # Get the pinned case out of the way
+    if axisMin == axisMax:
+        return _solvePinned(var, axisTag, axisLimit)
+
+    # If default isn't moving, get that out of the way as well
+    if axisDef == 0:
+        return _solveDefaultUnmoved(var, axisTag, axisLimit)
+
+    return _solveGeneral(var, axisTag, axisLimit)
