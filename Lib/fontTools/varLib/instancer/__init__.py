@@ -215,8 +215,8 @@ def pinTupleVariationAxes(variations, location):
         if scalar == 0.0:
             # no influence, drop the TupleVariation
             continue
-
-        var.scaleDeltas(scalar)
+        if scalar != 1.0:
+            var.scaleDeltas(scalar)
         newVariations.append(var)
     return newVariations
 
