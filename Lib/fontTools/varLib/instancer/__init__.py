@@ -252,8 +252,7 @@ def _negate(*values):
 
 
 def limitTupleVariationAxisRange(var, axisTag, axisRange):
-    if not isinstance(axisRange, NormalizedAxisRange):
-        axisRange = NormalizedAxisRange(*axisRange)
+    assert isinstance(axisRange, NormalizedAxisRange)
 
     # skip when current axis is missing (i.e. doesn't participate), or when the
     # 'tent' isn't fully on either the negative or positive side
