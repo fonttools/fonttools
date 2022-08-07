@@ -1041,11 +1041,6 @@ def normalizeAxisLimits(varfont, axisLimits, usingAvar=True):
         minV, defaultV, maxV = _expand(value)
         if defaultV is None:
             defaultV = default
-        if (minV != maxV or minV != defaultV) and defaultV != default:
-            raise NotImplementedError(
-                f"Unsupported range {axis_tag}={minV:g}:{defaultV:g}:{maxV:g}; "
-                f"can't change default position ({axis_tag}={default:g})"
-            )
 
         value = (minV, defaultV, maxV)
 

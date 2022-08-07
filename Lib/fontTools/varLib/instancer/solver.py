@@ -3,6 +3,9 @@ from fontTools.varLib.models import supportScalar
 def _negate(*values):
     yield from (-1 * v for v in values)
 
+def _revnegate(v):
+    return (-v[2], -v[1], -v[0])
+
 def _solvePinned(tent, axisLimit):
 
     axisMin, axisDef, axisMax = axisLimit
@@ -101,7 +104,32 @@ def _solveDefaultUnmoved(tent, axisLimit):
         return [(scalar1, loc), (scalar2, newloc)]
 
 
+
+
+
+
+
 def _solveGeneral(tent, axisLimit):
+    axisMin, axisDef, axisMax = axisLimit
+    lower, peak, upper = tent
+
+    if axisDef > peak:
+        return [(scalar, _revnegate(t))
+                for scalar,t
+                in _solveGeneral(_revnegate(tent),
+                                 _revnegate(axisLimit))]
+    # axisDef <= peak
+
+    if axisMax <= lower and axisMax < peak:
+        return [] # No overlap
+
+    if axisMax < peak:
+        mult = supportScalar({'tag': peak}, {'tag': axisLimit})
+        tent = (lower, axisMax, axisMax)
+        return [(scalar*mult, t) for scalar,t in _solveGeneral(tent, axisLimit)]
+
+    # axisDef <= peak <= axisMax
+
     raise NotImplementedError
 
 
