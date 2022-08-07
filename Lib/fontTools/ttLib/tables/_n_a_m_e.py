@@ -99,26 +99,26 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 					return namerecord
 		return None # not found
 
-	def getDebugName(self, nameID):
-		englishName = someName = None
-		for name in self.names:
-			if name.nameID != nameID:
-				continue
+	def getDebugName(self, nameID, platformIDs=(3, 0, 1, 2)):
+		"""
+		Parameters:
+			nameID: NameID from NamingTable.
+			platformIDs: Search the name depending on the platformID order.
+		Returns:
+			Decoded nameID.
+		"""
+		def isEnglish(name: NameRecord) -> bool:
+			return (name.platformID, name.langID) in ((1, 0), (3, 0x409))
+		filteredNamingTable = filter(lambda name: name.nameID == nameID and name.platformID in platformIDs, self.names)
+		sortedNamingTable = sorted(filteredNamingTable, key=lambda name: (platformIDs.index(name.platformID), name.platEncID, -isEnglish(name), name.langID))
+
+		for name in sortedNamingTable:
 			try:
 				unistr = name.toUnicode()
 			except UnicodeDecodeError:
 				continue
-
-			someName = unistr
-			if (name.platformID, name.langID) in ((1, 0), (3, 0x409)):
-				englishName = unistr
-				break
-		if englishName:
-			return englishName
-		elif someName:
-			return someName
-		else:
-			return None
+			return unistr
+		return None
 
 	def getFirstDebugName(self, nameIDs):
 		for nameID in nameIDs:
