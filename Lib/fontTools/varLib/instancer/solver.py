@@ -106,7 +106,7 @@ def _solveDefaultUnmoved(tent, axisLimit):
 
 
 
-def _solveNoGain(tent, axisLimit):
+def _solveWithoutGain(tent, axisLimit):
     axisMin, axisDef, axisMax = axisLimit
     lower, peak, upper = tent
 
@@ -138,6 +138,69 @@ def _solveNoGain(tent, axisLimit):
         return [(scalar1, loc1), (scalar2, loc2)]
 
 
+def _solveWithGain(tent, axisLimit):
+    axisMin, axisDef, axisMax = axisLimit
+    lower, peak, upper = tent
+
+    # lower <= axisDef <= peak <= axisMax
+
+    gain = supportScalar({tag: axisDef}, {tag: tent})
+    out = [(gain, axisLimit)]
+
+
+    # First, the positive side
+
+    # case 3: outermost limit still fits within F2Dot14 bounds;
+    # we keep deltas as is and only scale the axes bounds. Deltas beyond -1.0
+    # or +1.0 will never be applied as implementations must clamp to that range.
+    if axisDef + (axisMax - axisDef) * 2 >= upper:
+
+        if axisDef + (axisMax - axisDef) * MAX_F2DOT14 < upper:
+            # we clamp +2.0 to the max F2Dot14 (~1.99994) for convenience
+            upper = axisDef + (axisMax - axisDef) * MAX_F2DOT14
+
+        out.append((1 - gain, (axisDef, peak, upper)))
+
+    # case 4: new limit doesn't fit; we need to chop the deltaset into two 'tents',
+    # because the shape of a triangle with part of one side cut off cannot be
+    # represented as a triangle itself. It can be represented as sum of two triangles.
+    # NOTE: This increases the file size!
+    else:
+
+        loc1 = (axisDef, peak, axisMax)
+        scalar1 = 1
+
+        loc2 = (peak, axisMax, axisMax)
+        scalar2 = supportScalar({tag: axisMax}, {tag: tent})
+
+        out.append((scalar1 - gain, loc1))
+        out.append((scalar2 - gain, loc2))
+
+
+    # Now, the negative side
+
+    # case 1neg: lower extends beyond axisMin: we chop.
+    if lower <= axisMin:
+        loc = (axisMin, axisMin, axisDef)
+        scalar = supportScalar({tag: axisMin}, {tag: tent})
+
+        out.append((scalar - gain, loc))
+
+    # case 2neg: lower is betwen axisMin and axisDef: we add two deltasets to
+    # keep it "up" all the way to end.
+    else:
+        loc1 = (axisMin, lower, axisDef)
+        scalar1 = 0
+
+        loc2 = (axisMin, axisMin, lower)
+        scalar2 = 0
+
+        out.append((scalar1 - gain, loc1))
+        out.append((scalar2 - gain, loc2))
+
+    return out
+
+
 def _solveGeneral(tent, axisLimit):
     axisMin, axisDef, axisMax = axisLimit
     lower, peak, upper = tent
@@ -166,7 +229,9 @@ def _solveGeneral(tent, axisLimit):
 
     if axisDef <= lower and axisDef < peak:
         # No gain to carry
-        return _solveNoGain(tent, axisLimit)
+        return _solveWithoutGain(tent, axisLimit)
+    else:
+        return _solveWithGain(tent, axisLimit)
 
     raise NotImplementedError
 
@@ -187,9 +252,7 @@ def rebaseTent(tent, axisLimit):
 
     # If default isn't moving, get that out of the way as well
     if False and axisDef == 0:
-        sols = _solveDefaultUnmoved(tent, axisLimit)
-        print(sols)
-        return sols
+        return _solveDefaultUnmoved(tent, axisLimit)
 
     sols = _solveGeneral(tent, axisLimit)
     n = lambda v: normalizeValue(v, axisLimit, extrapolate=True)
