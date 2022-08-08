@@ -47,7 +47,7 @@ def _solveWithGain(tent, axisLimit):
     # lower <= axisDef <= peak <= axisMax
 
     gain = supportScalar({'tag': axisDef}, {'tag': tent})
-    out = [(gain, axisLimit)]
+    out = [(gain, None)]
 
     # First, the positive side
 
@@ -137,7 +137,7 @@ def _solveGeneral(tent, axisLimit):
 
     # Mirror the problem such that axisDef is always <= peak
     if axisDef > peak:
-        return [(scalar, _revnegate(t))
+        return [(scalar, _revnegate(t) if t is not None else None)
                 for scalar,t
                 in _solveGeneral(_revnegate(tent),
                                  _revnegate(axisLimit))]
@@ -179,5 +179,5 @@ def rebaseTent(tent, axisLimit):
 
     sols = _solveGeneral(tent, axisLimit)
     n = lambda v: normalizeValue(v, axisLimit, extrapolate=True)
-    sols = [(scalar, (n(v[0]), n(v[1]), n(v[2]))) for scalar,v in sols if scalar != 0]
+    sols = [(scalar, (n(v[0]), n(v[1]), n(v[2])) if v is not None else None) for scalar,v in sols if scalar != 0]
     return sols

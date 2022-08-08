@@ -248,7 +248,7 @@ def changeTupleVariationAxisLimit(var, axisTag, axisLimit):
     out = []
     for scalar,tent in solutions:
         newVar = TupleVariation(var.axes, var.coordinates) if len(solutions) > 1 else var
-        if tent[1] == 0:
+        if tent is None:
             newVar.axes.pop(axisTag)
         else:
             newVar.axes[axisTag] = tent
