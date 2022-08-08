@@ -229,6 +229,8 @@ def changeTupleVariationsAxisLimits(variations, axisLimits):
 
 
 def changeTupleVariationAxisLimit(var, axisTag, axisLimit):
+    if not isinstance(axisLimit, tuple): # Just to make tests happy
+        axisLimit = NormalizedAxisTent(axisLimit, axisLimit, axisLimit)
     if isinstance(axisLimit, NormalizedAxisRange): # Just to make tests happy
         axisLimit = NormalizedAxisTent(axisLimit[0], 0, axisLimit[1])
     assert isinstance(axisLimit, NormalizedAxisTent)
