@@ -101,6 +101,7 @@ import re
 
 log = logging.getLogger("fontTools.varLib.instancer")
 
+# This just exists to make some tests happy.
 def _expand(v):
     if not isinstance(v, tuple):
         return (v, v, v)
@@ -228,6 +229,8 @@ def changeTupleVariationsAxisLimits(variations, axisLimits):
 
 
 def changeTupleVariationAxisLimit(var, axisTag, axisLimit):
+    if isinstance(axisLimit, NormalizedAxisRange): # Just to make tests happy
+        axisLimit = NormalizedAxisTent(axisLimit[0], 0, axisLimit[1])
     assert isinstance(axisLimit, NormalizedAxisTent)
 
     # Skip when current axis is missing (i.e. doesn't participate),
