@@ -101,7 +101,6 @@ import re
 
 log = logging.getLogger("fontTools.varLib.instancer")
 
-# This just exists to make some tests happy.
 def _expand(v):
     if not isinstance(v, tuple):
         return (v, v, v)
@@ -229,9 +228,9 @@ def changeTupleVariationsAxisLimits(variations, axisLimits):
 
 
 def changeTupleVariationAxisLimit(var, axisTag, axisLimit):
-    if not isinstance(axisLimit, tuple): # Just to make tests happy
+    if not isinstance(axisLimit, tuple):
         axisLimit = NormalizedAxisTent(axisLimit, axisLimit, axisLimit)
-    if isinstance(axisLimit, NormalizedAxisRange): # Just to make tests happy
+    if isinstance(axisLimit, NormalizedAxisRange):
         axisLimit = NormalizedAxisTent(axisLimit[0], 0, axisLimit[1])
     assert isinstance(axisLimit, NormalizedAxisTent)
 
@@ -1279,7 +1278,16 @@ def parseLimits(limits):
                 assert lbound <= ubound
             else:
                 assert lbound <= default <= ubound
-        result[tag] = (lbound, default, ubound)
+
+        if lbound == default == ubound:
+            result[tag] = lbound
+            continue
+        elif default is None:
+            result[tag] = AxisRange(lbound, ubound)
+            continue
+
+        result[tag] = AxisTent(lbound, default, ubound)
+
     return result
 
 
