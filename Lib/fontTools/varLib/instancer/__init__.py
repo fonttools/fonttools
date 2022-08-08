@@ -1073,12 +1073,12 @@ def sanityCheckVariableTables(varfont):
 
 
 def populateAxisDefaults(varfont, axisLimits):
-    if any(None in value for value in axisLimits.values()):
+    if any(None in _expand(value) for value in axisLimits.values()):
         fvar = varfont["fvar"]
         defaultValues = {a.axisTag: a.defaultValue for a in fvar.axes}
         return {
             axisTag: tuple(defaultValues[axisTag] if v is None else v
-                           for v in value)
+                           for v in _expand(value))
             for axisTag, value in axisLimits.items()
         }
     return axisLimits
