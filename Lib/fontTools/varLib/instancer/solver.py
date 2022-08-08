@@ -61,7 +61,8 @@ def _solveWithGain(tent, axisLimit):
             # we clamp +2.0 to the max F2Dot14 (~1.99994) for convenience
             upper = axisDef + (axisMax - axisDef) * MAX_F2DOT14
 
-        out.append((1 - gain, (axisDef, peak, upper)))
+        if upper > axisDef:
+            out.append((0 - gain, (axisDef, peak, upper)))
 
     # case 4: new limit doesn't fit; we need to chop the deltaset into two 'tents',
     # because the shape of a triangle with part of one side cut off cannot be
@@ -70,7 +71,7 @@ def _solveWithGain(tent, axisLimit):
     else:
 
         loc1 = (axisDef, peak, axisMax)
-        scalar1 = 1
+        scalar1 = 0
 
         loc2 = (peak, axisMax, axisMax)
         scalar2 = supportScalar({'tag': axisMax}, {'tag': tent})
