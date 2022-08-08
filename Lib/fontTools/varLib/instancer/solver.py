@@ -1,5 +1,6 @@
 from fontTools.varLib.models import supportScalar, normalizeValue
 from fontTools.misc.fixedTools import MAX_F2DOT14
+from functools import cache
 
 def _revnegate(v):
     return (-v[2], -v[1], -v[0])
@@ -138,6 +139,7 @@ def _solveGeneral(tent, axisLimit):
     raise NotImplementedError
 
 
+@cache
 def rebaseTent(tent, axisLimit):
 
     axisMin, axisDef, axisMax = axisLimit
