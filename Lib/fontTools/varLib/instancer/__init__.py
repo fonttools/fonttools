@@ -251,6 +251,10 @@ def changeTupleVariationAxisLimit(var, axisTag, axisLimit):
         if tent is None:
             newVar.axes.pop(axisTag)
         else:
+            # Sometimes happens when can't be solved. Eg. if a dirac function
+            # (tent with upper==peak==lower) is placed at axisLimit's default
+            # location.
+            assert tent[1] != 0, tent
             newVar.axes[axisTag] = tent
         if scalar != 1:
             newVar.scaleDeltas(scalar)
