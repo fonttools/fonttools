@@ -912,7 +912,10 @@ def instantiateFvar(varfont, axisLimits):
         if axisTag in location:
             continue
         if axisTag in axisLimits:
-            axis.minValue, axis.defaultValue, axis.maxValue = axisLimits[axisTag]
+            triple = axisLimits[axisTag]
+            if triple[1] is None:
+                triple = (triple[0], axis.defaultValue, triple[2])
+            axis.minValue, axis.defaultValue, axis.maxValue = triple
         axes.append(axis)
     fvar.axes = axes
 
