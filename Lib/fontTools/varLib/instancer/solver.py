@@ -33,7 +33,10 @@ def _solveWithoutGain(tent, axisLimit):
         loc2 = (peak, axisMax, axisMax)
         scalar2 = supportScalar({'tag': axisMax}, {'tag': tent})
 
-        return [(scalar1, loc1), (scalar2, loc2)]
+        if (peak < axisMax):
+            return [(scalar1, loc1), (scalar2, loc2)]
+        else:
+            return [(scalar1, loc1)]
 
 
 def _solveWithGain(tent, axisLimit):
@@ -72,7 +75,8 @@ def _solveWithGain(tent, axisLimit):
         scalar2 = supportScalar({'tag': axisMax}, {'tag': tent})
 
         out.append((scalar1 - gain, loc1))
-        out.append((scalar2 - gain, loc2))
+        if (peak < axisMax):
+            out.append((scalar2 - gain, loc2))
 
 
     # Now, the negative side
