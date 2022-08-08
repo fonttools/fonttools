@@ -4,7 +4,7 @@ from functools import cache
 
 __all__ = ['rebaseTent']
 
-def _revnegate(v):
+def _reverse_negate(v):
     return (-v[2], -v[1], -v[0])
 
 def _solve(tent, axisLimit):
@@ -13,9 +13,9 @@ def _solve(tent, axisLimit):
 
     # Mirror the problem such that axisDef is always <= peak
     if axisDef > peak:
-        return [(scalar, _revnegate(t) if t is not None else None)
+        return [(scalar, _reverse_negate(t) if t is not None else None)
                 for scalar,t
-                in _solve(_revnegate(tent), _revnegate(axisLimit))]
+                in _solve(_reverse_negate(tent), _reverse_negate(axisLimit))]
     # axisDef <= peak
 
     # case 1: The whole deltaset falls outside the new limit; we can drop it
