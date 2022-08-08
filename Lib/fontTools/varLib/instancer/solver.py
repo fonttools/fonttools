@@ -11,7 +11,7 @@ def _solve(tent, axisLimit):
     axisMin, axisDef, axisMax = axisLimit
     lower, peak, upper = tent
 
-    # Mirror the problem such that axisDef is always <= peak
+    # Mirror the problem such that axisDef <= peak
     if axisDef > peak:
         return [(scalar, _reverse_negate(t) if t is not None else None)
                 for scalar,t
