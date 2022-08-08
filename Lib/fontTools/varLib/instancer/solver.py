@@ -144,7 +144,7 @@ def _solveWithGain(tent, axisLimit):
 
     # lower <= axisDef <= peak <= axisMax
 
-    gain = supportScalar({tag: axisDef}, {tag: tent})
+    gain = supportScalar({'tag': axisDef}, {'tag': tent})
     out = [(gain, axisLimit)]
 
 
@@ -171,7 +171,7 @@ def _solveWithGain(tent, axisLimit):
         scalar1 = 1
 
         loc2 = (peak, axisMax, axisMax)
-        scalar2 = supportScalar({tag: axisMax}, {tag: tent})
+        scalar2 = supportScalar({'tag': axisMax}, {'tag': tent})
 
         out.append((scalar1 - gain, loc1))
         out.append((scalar2 - gain, loc2))
@@ -182,7 +182,7 @@ def _solveWithGain(tent, axisLimit):
     # case 1neg: lower extends beyond axisMin: we chop.
     if lower <= axisMin:
         loc = (axisMin, axisMin, axisDef)
-        scalar = supportScalar({tag: axisMin}, {tag: tent})
+        scalar = supportScalar({'tag': axisMin}, {'tag': tent})
 
         out.append((scalar - gain, loc))
 
@@ -247,7 +247,7 @@ def rebaseTent(tent, axisLimit):
     assert peak != 0
 
     # Get the pinned case out of the way
-    if axisMin == axisMax:
+    if False and axisMin == axisMax:
         return _solvePinned(tent, axisLimit)
 
     # If default isn't moving, get that out of the way as well
