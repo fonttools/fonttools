@@ -75,7 +75,6 @@ from fontTools.misc.fixedTools import (
     floatToFixedToFloat,
     strToFixedToFloat,
     otRound,
-    MAX_F2DOT14,
 )
 from fontTools.varLib.models import supportScalar, normalizeValue, piecewiseLinearMap
 from fontTools.ttLib import TTFont
