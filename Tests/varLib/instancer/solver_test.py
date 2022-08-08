@@ -181,6 +181,18 @@ class RebaseTentTest(object):
                     (1, (1, 1, 1)),
                 ]
             ),
+            pytest.param(
+                (.5, .5, .5), (.25, .35, .5),
+                [
+                    (1, (1, 1, 1)),
+                ]
+            ),
+            pytest.param(
+                (.5, .5, .55), (.25, .35, .5),
+                [
+                    (1, (1, 1, 1)),
+                ]
+            ),
         ],
     )
     def test_rebaseTent(self, tent, axisRange, expected):

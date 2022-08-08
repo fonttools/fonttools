@@ -87,6 +87,10 @@ def _solve(tent, axisLimit):
             # we clamp +2.0 to the max F2Dot14 (~1.99994) for convenience
             upper = axisDef + (axisMax - axisDef) * MAX_F2DOT14
 
+        # Special-case if peak is at axisMax.
+        if axisMax == peak:
+            upper = peak
+
         loc = (max(axisDef, lower), peak, upper)
 
         # Don't add a dirac delta!
