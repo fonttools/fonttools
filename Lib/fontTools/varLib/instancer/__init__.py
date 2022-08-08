@@ -1071,11 +1071,12 @@ def sanityCheckVariableTables(varfont):
 
 
 def populateAxisDefaults(varfont, axisLimits):
-    if any(value is None for value in axisLimits.values()):
+    if any(None in value for value in axisLimits.values()):
         fvar = varfont["fvar"]
         defaultValues = {a.axisTag: a.defaultValue for a in fvar.axes}
         return {
-            axisTag: defaultValues[axisTag] if value is None else value
+            axisTag: tuple(defaultValues[axisTag] if v is None else v
+                           for v in value)
             for axisTag, value in axisLimits.items()
         }
     return axisLimits
@@ -1271,10 +1272,11 @@ def parseLimits(limits):
             default = ubound
             ubound = strToFixedToFloat(match.group(5), precisionBits=16)
 
-        if default is None:
-            assert lbound <= ubound
-        else:
-            assert lbound <= default <= ubound
+        if lbound is not None:
+            if default is None:
+                assert lbound <= ubound
+            else:
+                assert lbound <= default <= ubound
         result[tag] = (lbound, default, ubound)
     return result
 
