@@ -84,7 +84,7 @@ class RebaseTentTest(object):
             # With gain:
             #
 
-            # Case 3/1neg
+            # Case 3a/1neg
             pytest.param(
                 (.0, .5, 1), (0, .5, 1),
                 [
@@ -94,12 +94,12 @@ class RebaseTentTest(object):
                 ]
             ),
 
-            # Case 4/1neg
+            # Case 3a/1neg
             pytest.param(
                 (.0, .5, 2), (0, .5, .8),
                 [
                     (1, (-1, 0, 1)),
-                    (-1.0, (0.0, 1, 1)),
+                    (-0.20000000000000007, (0, 1, 1)),
                     (-1, (-1, -1, 0)),
                 ]
             ),

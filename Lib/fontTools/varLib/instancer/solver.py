@@ -62,7 +62,7 @@ def _solveWithGain(tent, axisLimit):
         scalar1 = 1
 
         loc2 = (crossing, axisMax, axisMax)
-        scalar2 = 0
+        scalar2 = supportScalar({'tag': axisMax}, {'tag': tent})
 
         out.append((scalar1 - gain, loc1))
         if (peak < upper):
