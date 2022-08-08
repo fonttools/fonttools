@@ -87,8 +87,10 @@ def _solveWithGain(tent, axisLimit):
             # we clamp +2.0 to the max F2Dot14 (~1.99994) for convenience
             upper = axisDef + (axisMax - axisDef) * MAX_F2DOT14
 
+        loc = (max(axisDef, lower), peak, upper)
+
         if upper > axisDef:
-            out.append((1 - gain, (axisDef, peak, upper)))
+            out.append((1 - gain, loc))
 
     # case 4: new limit doesn't fit; we need to chop the deltaset into two 'tents',
     # because the shape of a triangle with part of one side cut off cannot be
@@ -96,7 +98,7 @@ def _solveWithGain(tent, axisLimit):
     # NOTE: This increases the file size!
     else:
 
-        loc1 = (axisDef, peak, axisMax)
+        loc1 = (max(axisDef, lower), peak, axisMax)
         scalar1 = 1
 
         loc2 = (peak, axisMax, axisMax)
@@ -157,7 +159,7 @@ def _solveGeneral(tent, axisLimit):
 
     # axisDef <= peak <= axisMax
 
-    if axisDef <= lower and axisDef < peak:
+    if False and axisDef <= lower and axisDef < peak:
         # No gain to carry
         return _solveWithoutGain(tent, axisLimit)
     else:
