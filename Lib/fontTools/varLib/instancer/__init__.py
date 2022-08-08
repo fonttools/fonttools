@@ -246,9 +246,8 @@ def changeTupleVariationAxisLimit(var, axisTag, axisLimit):
     solutions = solver.rebaseTent(tent, axisLimit)
 
     out = []
-    # TODO Reuse original var
     for scalar,tent in solutions:
-        newVar = TupleVariation(var.axes, var.coordinates)
+        newVar = TupleVariation(var.axes, var.coordinates) if len(solutions) > 1 else var
         if tent[1] == 0:
             newVar.axes.pop(axisTag)
         else:
