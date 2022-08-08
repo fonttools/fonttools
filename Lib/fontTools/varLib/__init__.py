@@ -912,7 +912,8 @@ def build_many(
 				vfDoc,
 				master_finder,
 				exclude=list(exclude) + ["STAT"],
-				optimize=optimize
+				optimize=optimize,
+				colr_layer_reuse=colr_layer_reuse,
 			)[0]
 			if "STAT" not in exclude:
 				buildVFStatTable(vf, designspace, name)
