@@ -58,14 +58,24 @@ def _solveWithGain(tent, axisLimit):
 
         crossing = peak + ((1 - gain) * (upper - peak) / (1 - outGain))
 
-        loc1 = (peak, peak, crossing)
-        scalar1 = 1
+        loc = (peak, peak, crossing)
+        scalar = 1
 
-        loc2 = (crossing, axisMax, axisMax)
-        scalar2 = supportScalar({'tag': axisMax}, {'tag': tent})
+        out.append((scalar - gain, loc))
 
-        out.append((scalar1 - gain, loc1))
-        if (peak < upper):
+        if upper >= axisMax:
+            loc = (crossing, axisMax, axisMax)
+            scalar = supportScalar({'tag': axisMax}, {'tag': tent})
+
+            out.append((scalar - gain, loc))
+        else:
+            loc1 = (crossing, upper, axisMax)
+            scalar1 = 0
+
+            loc2 = (upper, axisMax, axisMax)
+            scalar2 = supportScalar({'tag': axisMax}, {'tag': tent})
+
+            out.append((scalar1 - gain, loc1))
             out.append((scalar2 - gain, loc2))
 
     # case 3: outermost limit still fits within F2Dot14 bounds;
