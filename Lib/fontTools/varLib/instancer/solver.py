@@ -31,7 +31,7 @@ def _solveWithoutGain(tent, axisLimit):
         scalar1 = 1
 
         loc2 = (peak, axisMax, axisMax)
-        scalar2 = supportScalar({tag: axisMax}, {tag: tent})
+        scalar2 = supportScalar({'tag': axisMax}, {'tag': tent})
 
         return [(scalar1, loc1), (scalar2, loc2)]
 
