@@ -913,8 +913,8 @@ def instantiateFvar(varfont, axisLimits):
         axisTag = axis.axisTag
         if axisTag in location:
             continue
-        if axisTag in axisRanges:
-            axis.minValue, axis.maxValue = axisRanges[axisTag]
+        if axisTag in axisLimits:
+            axis.minValue, axis.defaultValue, axis.maxValue = axisLimits[axisTag]
         axes.append(axis)
     fvar.axes = axes
 
