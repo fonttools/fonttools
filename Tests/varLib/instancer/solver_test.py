@@ -124,6 +124,17 @@ class RebaseTentTest(object):
                     (-.4, (-1, -1, -.8)),
                 ]
             ),
+
+            # Case 2neg, other side
+            pytest.param(
+                (-1, -.55, -.05), (-.5, -.25, 0),
+                [
+                    (.4, (-1.0, 0.0, 1.0)),
+                    (.5, (-1, -1, 0)),
+                    (-.4, (0, .8, 1)),
+                    (-.4, (.8, 1, 1)),
+                ]
+            ),
         ],
     )
     def test_rebaseTent(self, tent, axisRange, expected):
