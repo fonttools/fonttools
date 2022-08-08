@@ -84,12 +84,22 @@ class RebaseTentTest(object):
             # With gain:
             #
 
-            # Case 1neg
+            # Case 3/1neg
             pytest.param(
                 (.0, .5, 1), (0, .5, 1),
                 [
                     (1, (-1, 0, 1)),
-                    (-1, (0, 0, 1)),
+                    (-1, (0, 1, 1)),
+                    (-1, (-1, -1, 0)),
+                ]
+            ),
+
+            # Case 4/1neg
+            pytest.param(
+                (.0, .5, 2), (0, .5, .8),
+                [
+                    (1, (-1, 0, 1)),
+                    (-1.0, (0.0, 1, 1)),
                     (-1, (-1, -1, 0)),
                 ]
             ),
@@ -99,7 +109,7 @@ class RebaseTentTest(object):
                 (.0, .5, 1), (0, .25, .5),
                 [
                     (.5, (-1, 0, 1)),
-                    (-.5, (0, 1, 1)),
+                    (.5, (0, 1, 1)),
                     (-.5, (-1, -1, 0)),
                 ]
             ),
@@ -109,7 +119,7 @@ class RebaseTentTest(object):
                 (.05, .55, 1), (0, .25, .5),
                 [
                     (.4, (-1.0, 0.0, 1.0)),
-                    (-.4, (0.0, 1.0, 1.0)),
+                    (.5, (0, 1, 1)),
                     (-.4, (-1, -.8, 0)),
                     (-.4, (-1, -1, -.8)),
                 ]
@@ -120,4 +130,4 @@ class RebaseTentTest(object):
 
         sol = solver.rebaseTent(tent, axisRange)
 
-        assert sol == expected
+        assert sol == expected, (tent, axisRange)

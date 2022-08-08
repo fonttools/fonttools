@@ -49,20 +49,36 @@ def _solveWithGain(tent, axisLimit):
     gain = supportScalar({'tag': axisDef}, {'tag': tent})
     out = [(gain, axisLimit)]
 
-
     # First, the positive side
+
+    # case 3a: gain is more than outGain.
+    outGain = supportScalar({'tag': axisMax}, {'tag': tent})
+
+    if gain > outGain:
+
+        crossing = peak + ((1 - gain) * (upper - peak) / (1 - outGain))
+
+        loc1 = (peak, peak, crossing)
+        scalar1 = 1
+
+        loc2 = (crossing, axisMax, axisMax)
+        scalar2 = 0
+
+        out.append((scalar1 - gain, loc1))
+        if (peak < upper):
+            out.append((scalar2 - gain, loc2))
 
     # case 3: outermost limit still fits within F2Dot14 bounds;
     # we keep deltas as is and only scale the axes bounds. Deltas beyond -1.0
     # or +1.0 will never be applied as implementations must clamp to that range.
-    if axisDef + (axisMax - axisDef) * 2 >= upper:
+    elif axisDef + (axisMax - axisDef) * 2 >= upper:
 
         if axisDef + (axisMax - axisDef) * MAX_F2DOT14 < upper:
             # we clamp +2.0 to the max F2Dot14 (~1.99994) for convenience
             upper = axisDef + (axisMax - axisDef) * MAX_F2DOT14
 
         if upper > axisDef:
-            out.append((0 - gain, (axisDef, peak, upper)))
+            out.append((1 - gain, (axisDef, peak, upper)))
 
     # case 4: new limit doesn't fit; we need to chop the deltaset into two 'tents',
     # because the shape of a triangle with part of one side cut off cannot be
@@ -71,7 +87,7 @@ def _solveWithGain(tent, axisLimit):
     else:
 
         loc1 = (axisDef, peak, axisMax)
-        scalar1 = 0
+        scalar1 = 1
 
         loc2 = (peak, axisMax, axisMax)
         scalar2 = supportScalar({'tag': axisMax}, {'tag': tent})
