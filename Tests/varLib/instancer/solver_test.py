@@ -157,6 +157,13 @@ class RebaseTentTest(object):
                     (-1, (-1, -1, -.5)),
                 ]
             ),
+
+            pytest.param(
+                (.5, .5, .5), (.25, .25, .5),
+                [
+                    (1, (1, 1, 1)),
+                ]
+            ),
         ],
     )
     def test_rebaseTent(self, tent, axisRange, expected):
