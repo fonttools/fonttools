@@ -48,11 +48,14 @@ def _solve(tent, axisLimit):
 
         out.append((scalar - gain, loc))
 
+        # case 3a1, similar to case 1neg
         if upper >= axisMax:
             loc = (crossing, axisMax, axisMax)
             scalar = supportScalar({'tag': axisMax}, {'tag': tent})
 
             out.append((scalar - gain, loc))
+
+        # case 3a2, similar to case 2neg
         else:
             loc1 = (crossing, upper, axisMax)
             scalar1 = 0
