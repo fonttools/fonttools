@@ -18,14 +18,47 @@ def _solve(tent, axisLimit):
                 in _solve(_revnegate(tent), _revnegate(axisLimit))]
     # axisDef <= peak
 
-    # case 1: the whole deltaset falls outside the new limit; we can drop it
+    # case 1: The whole deltaset falls outside the new limit; we can drop it
+    #
+    #                                          peak
+    #  1.........................................o..........
+    #                                           / \
+    #                                          /   \
+    #                                         /     \
+    #                                        /       \
+    #  0---|-----------|----------|-------- o         o----1
+    #    axisMin     axisDef    axisMax   lower     upper
+    #
     if axisMax <= lower and axisMax < peak:
         return [] # No overlap
 
-    # case 2: only the peak and outermost bound fall outside the new limit;
+    # case 2: Only the peak and outermost bound fall outside the new limit;
     # we keep the deltaset, update peak and outermost bound and and scale deltas
     # by the scalar value for the restricted axis at the new limit, and solve
     # recursively.
+    #
+    #                                  |peak
+    #  1...............................|.o..........
+    #                                  |/ \
+    #                                  /   \
+    #                                 /|    \
+    #                                / |     \
+    #  0---|-----------|----------- o  |      o----1
+    #    axisMin     axisDef    lower  |      upper
+    #                                  |
+    #                                axisMax
+    #
+    # Convert to:
+    #
+    #  1............................................
+    #                                  |
+    #                                  o peak
+    #                                 /|
+    #                                /x|
+    #  0---|-----------|----------- o  o upper ----1
+    #    axisMin     axisDef    lower  |
+    #                                  |
+    #                                axisMax
     if axisMax < peak:
         mult = supportScalar({'tag': axisMax}, {'tag': tent})
         tent = (lower, axisMax, axisMax)
@@ -41,8 +74,22 @@ def _solve(tent, axisLimit):
     # outGain is the scalar of axisMax at the tent.
     outGain = supportScalar({'tag': axisMax}, {'tag': tent})
 
-    # case 3a: gain is more than outGain. The tent down-slope crosses
+    # Case 3a: Gain is more than outGain. The tent down-slope crosses
     # the axis into negative. We have to split it into multiples.
+    #
+    #                      | peak  |
+    #  1...................|.o.....|..............
+    #                      |/x\_   |
+    #  gain................+....+_.|..............
+    #                     /|    |y\|
+    #  ................../.|....|..+_......outGain
+    #                   /  |    |  | \
+    #  0---|-----------o   |    |  |  o----------1
+    #    axisMin    lower  |    |  |   upper
+    #                      |    |  |
+    #                axisDef    |  axisMax
+    #                           |
+    #                      crossing
     if gain > outGain:
 
         # Crossing point on the axis.
@@ -58,15 +105,30 @@ def _solve(tent, axisLimit):
         # depending on whether upper is before axisMax or not, in one
         # case we need to keep it down to eternity.
 
-        # case 3a1, similar to case 1neg; just one tent needed.
+        # Case 3a1, similar to case 1neg; just one tent needed, as in
+        # the drawing above.
         if upper >= axisMax:
             loc = (crossing, axisMax, axisMax)
             scalar = supportScalar({'tag': axisMax}, {'tag': tent})
 
             out.append((scalar - gain, loc))
 
-        # case 3a2, similar to case 2neg; two tents needed, to keep
+        # Case 3a2: Similar to case 2neg; two tents needed, to keep
         # down to eternity.
+        #
+        #                      | peak             |
+        #  1...................|.o................|...
+        #                      |/ \_              |
+        #  gain................+....+_............|...
+        #                     /|    | \xxxxxxxxxxy|
+        #                    / |    |  \_xxxxxyyyy|
+        #                   /  |    |    \xxyyyyyy|
+        #  0---|-----------o   |    |     o-------|--1
+        #    axisMin    lower  |    |      upper  |
+        #                      |    |             |
+        #                axisDef    |             axisMax
+        #                           |
+        #                      crossing
         else:
             # Downslope.
             loc1 = (crossing, upper, axisMax)
@@ -79,9 +141,22 @@ def _solve(tent, axisLimit):
             out.append((scalar1 - gain, loc1))
             out.append((scalar2 - gain, loc2))
 
-    # case 3: outermost limit still fits within F2Dot14 bounds;
+    # Case 3: Outermost limit still fits within F2Dot14 bounds;
     # we keep deltas as is and only scale the axes bounds. Deltas beyond -1.0
     # or +1.0 will never be applied as implementations must clamp to that range.
+    #
+    #            |           peak |
+    #  1.........|............o...|..................
+    #            |           /x\  |
+    #            |          /xxx\ |
+    #            |         /xxxxx\|
+    #            |        /xxxxxxx+
+    #            |       /xxxxxxxx|\
+    #  0---|-----|------oxxxxxxxxx|xo---------------1
+    #    axisMin |  lower         | upper
+    #            |                |
+    #          axisDef          axisMax
+    #
     elif axisDef + (axisMax - axisDef) * 2 >= upper:
 
         if axisDef + (axisMax - axisDef) * MAX_F2DOT14 < upper:
@@ -98,9 +173,22 @@ def _solve(tent, axisLimit):
         if upper > axisDef:
             out.append((1 - gain, loc))
 
-    # case 4: new limit doesn't fit; we need to chop into two tents,
+    # Case 4: New limit doesn't fit; we need to chop into two tents,
     # because the shape of a triangle with part of one side cut off
     # cannot be represented as a triangle itself.
+    #
+    #            |   peak |
+    #  1.........|......o.|...................
+    #            |     /x\|
+    #            |    |xxy|\_
+    #            |   /xxxy|  \_
+    #            |  |xxxxy|    \_
+    #            |  /xxxxy|      \_
+    #  0---|-----|-oxxxxxx|        o----------1
+    #    axisMin | lower  |        upper
+    #            |        |
+    #          axisDef  axisMax
+    #
     else:
 
         loc1 = (max(axisDef, lower), peak, axisMax)
@@ -117,15 +205,41 @@ def _solve(tent, axisLimit):
 
     # Now, the negative side
 
-    # case 1neg: lower extends beyond axisMin: we chop. Simple.
+    # Case 1neg: Lower extends beyond axisMin: we chop. Simple.
+    #
+    #                     |   |peak
+    #  1..................|...|.o.................
+    #                     |   |/ \
+    #  gain...............|...+...\...............
+    #                     |x_/|    \
+    #                     |/  |     \
+    #                   _/|   |      \
+    #  0---------------o  |   |       o----------1
+    #              lower  |   |       upper
+    #                     |   |
+    #               axisMin   axisDef
+    #
     if lower <= axisMin:
         loc = (axisMin, axisMin, axisDef)
         scalar = supportScalar({'tag': axisMin}, {'tag': tent})
 
         out.append((scalar - gain, loc))
 
-    # case 2neg: lower is betwen axisMin and axisDef: we add two
-    # deltasets to # keep it down all the way to eternity.
+    # Case 2neg: Lower is betwen axisMin and axisDef: we add two
+    # tents to keep it down all the way to eternity.
+    #
+    #      |               |peak
+    #  1...|...............|.o.................
+    #      |               |/ \
+    #  gain|...............+...\...............
+    #      |yxxxxxxxxxxxxx/|    \
+    #      |yyyyyyxxxxxxx/ |     \
+    #      |yyyyyyyyyyyx/  |      \
+    #  0---|-----------o   |       o----------1
+    #    axisMin    lower  |       upper
+    #                      |
+    #                    axisDef
+    #
     else:
         # Downslope.
         loc1 = (axisMin, lower, axisDef)
