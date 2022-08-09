@@ -59,7 +59,7 @@ class RebaseTentTest(object):
             pytest.param(
                 (0, .4, 1), (-1, 0, .5),
                 [
-                    (1, (0.0, 0.8, pytest.approx(1.9999389))),
+                    (1, (0.0, 0.8, pytest.approx(1.99994))),
                 ]
             ),
 
@@ -205,6 +205,12 @@ class RebaseTentTest(object):
                 [
                     (1, None),
                     (-1, (0, 1, 1)),
+                ]
+            ),
+            pytest.param(
+                (0, .2, 1), (0, 0, .5),
+                [
+                    (1, (0, .4, pytest.approx(1.99994))),
                 ]
             ),
         ],
