@@ -33,14 +33,14 @@ class RebaseTentTest(object):
             pytest.param(
                 (0, 1, 1), (-1, 0, .5),
                 [
-                    (.5, (0, 1.0, 1.0)),
+                    (.5, (0, 1, 1)),
                 ]
             ),
             # Case 2:
             pytest.param(
                 (0, 1, 1), (-1, 0, .75),
                 [
-                    (.75, (0, 1.0, 1.0)),
+                    (.75, (0, 1, 1)),
                 ]
             ),
 
@@ -59,7 +59,7 @@ class RebaseTentTest(object):
             pytest.param(
                 (0, .4, 1), (-1, 0, .5),
                 [
-                    (1, (0.0, 0.8, pytest.approx(1.99994))),
+                    (1, (0, 0.8, 1.99994)),
                 ]
             ),
 
@@ -67,15 +67,15 @@ class RebaseTentTest(object):
             pytest.param(
                 (0, .25, 1), (-1, 0, .4),
                 [
-                    (1, (0.0, 0.625, 1.0)),
-                    (pytest.approx(0.8), (0.625, 1.0, 1.0)),
+                    (1, (0, 0.625, 1)),
+                    (0.8, (0.625, 1, 1)),
                 ]
             ),
             pytest.param(
                 (.25, .3, 1.05), (0, .2, .4),
                 [
-                    (1, (pytest.approx(.25), pytest.approx(.5), 1.0)),
-                    (pytest.approx(2.6/3), (pytest.approx(.5), 1.0, 1.0)),
+                    (1, (.25, .5, 1)),
+                    (2.6/3, (.5, 1, 1)),
                 ]
             ),
             # Case 4 boundary
@@ -106,7 +106,7 @@ class RebaseTentTest(object):
                 (.0, .5, 2), (.2, .5, .8),
                 [
                     (1, None),
-                    (pytest.approx(-.2), (0, 1, 1)),
+                    (-.2, (0, 1, 1)),
                     (-.6, (-1, -1, 0)),
                 ]
             ),
@@ -116,7 +116,7 @@ class RebaseTentTest(object):
                 (.0, .5, 2), (.2, .5, 1),
                 [
                     (1, None),
-                    (pytest.approx(-1/3), (0, 1, 1)),
+                    (-1/3, (0, 1, 1)),
                     (-.6, (-1, -1, 0)),
                 ]
             ),
@@ -168,8 +168,8 @@ class RebaseTentTest(object):
                 (.3, .5, .7), (.1, .5, .9),
                 [
                     (1, None),
-                    (-1, (0, pytest.approx(.5), 1)),
-                    (-1, (pytest.approx(.5), 1, 1)),
+                    (-1, (0, .5, 1)),
+                    (-1, (.5, 1, 1)),
                     (-1, (-1, -.5, 0)),
                     (-1, (-1, -1, -.5)),
                 ]
@@ -210,7 +210,7 @@ class RebaseTentTest(object):
             pytest.param(
                 (0, .2, 1), (0, 0, .5),
                 [
-                    (1, (0, .4, pytest.approx(1.99994))),
+                    (1, (0, .4, 1.99994)),
                 ]
             ),
         ],
@@ -218,5 +218,14 @@ class RebaseTentTest(object):
     def test_rebaseTent(self, tent, axisRange, expected):
 
         sol = solver.rebaseTent(tent, axisRange)
+
+        a = pytest.approx
+        expected = [
+            (
+             a(scalar),
+             (a(v[0]),a(v[1]),a(v[2])) if v is not None else None
+            )
+            for scalar,v in expected
+        ]
 
         assert sol == expected, (tent, axisRange)
