@@ -1761,8 +1761,8 @@ class LimitTupleVariationAxisRangesTest:
                 "wght",
                 0.4,
                 [
-                    TupleVariation({"wght": (0.0, 0.5, 1.99994)}, [100, 100]),
-                    TupleVariation({"wght": (0.5, 1.0, 1.0)}, [8.33333, 8.33333]),
+                    TupleVariation({"wght": (0.0, 0.5, 1.0)}, [100, 100]),
+                    TupleVariation({"wght": (0.5, 1.0, 1.0)}, [75, 75]),
                 ],
             ),
             (
@@ -1840,8 +1840,8 @@ class LimitTupleVariationAxisRangesTest:
                 "wght",
                 -0.4,
                 [
-                    TupleVariation({"wght": (-2.0, -0.5, -0.0)}, [100, 100]),
-                    TupleVariation({"wght": (-1.0, -1.0, -0.5)}, [8.33333, 8.33333]),
+                    TupleVariation({"wght": (-1.0, -0.5, -0.0)}, [100, 100]),
+                    TupleVariation({"wght": (-1.0, -1.0, -0.5)}, [75, 75]),
                 ],
             ),
             (
