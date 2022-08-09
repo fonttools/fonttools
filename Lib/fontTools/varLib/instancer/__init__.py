@@ -678,21 +678,21 @@ def _featureVariationRecordIsUnique(rec, seen):
         return True
 
 
-def _limitFeatureVariationConditionRange(condition, axisRange):
+def _limitFeatureVariationConditionRange(condition, axisLimit):
     minValue = condition.FilterRangeMinValue
     maxValue = condition.FilterRangeMaxValue
 
     if (
         minValue > maxValue
-        or minValue > axisRange.maximum
-        or maxValue < axisRange.minimum
+        or minValue > axisLimit.maximum
+        or maxValue < axisLimit.minimum
     ):
         # condition invalid or out of range
         return
 
     values = [minValue, maxValue]
     for i, value in enumerate(values):
-        values[i] = normalizeValue(value, (axisRange.minimum, 0, axisRange.maximum))
+        values[i] = normalizeValue(value, axisLimit)
 
     return AxisRange(*values)
 
@@ -737,15 +737,15 @@ def _instantiateFeatureVariationRecord(
     return applies, shouldKeep
 
 
-def _limitFeatureVariationRecord(record, axisRanges, axisOrder):
+def _limitFeatureVariationRecord(record, axisLimits, axisOrder):
     newConditions = []
     for i, condition in enumerate(record.ConditionSet.ConditionTable):
         if condition.Format == 1:
             axisIdx = condition.AxisIndex
             axisTag = axisOrder[axisIdx]
-            if axisTag in axisRanges:
-                axisRange = axisRanges[axisTag]
-                newRange = _limitFeatureVariationConditionRange(condition, axisRange)
+            if axisTag in axisLimits:
+                axisLimit = axisLimits[axisTag]
+                newRange = _limitFeatureVariationConditionRange(condition, axisLimit)
                 if newRange:
                     # keep condition with updated limits and remapped axis index
                     condition.FilterRangeMinValue = newRange.minimum
@@ -786,7 +786,7 @@ def _instantiateFeatureVariations(table, fvarAxes, axisLimits):
             record, i, location, fvarAxes, axisIndexMap
         )
         if shouldKeep:
-            shouldKeep = _limitFeatureVariationRecord(record, axisRanges, axisOrder)
+            shouldKeep = _limitFeatureVariationRecord(record, axisLimits, axisOrder)
 
         if shouldKeep and _featureVariationRecordIsUnique(record, uniqueRecords):
             newRecords.append(record)

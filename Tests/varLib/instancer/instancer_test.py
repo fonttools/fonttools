@@ -1589,7 +1589,9 @@ class InstantiateFeatureVariationsTest(object):
             ]
         )
 
-        instancer.instantiateFeatureVariations(font, location)
+        limits = {tag:instancer.NormalizedAxisTent(l, l, l)
+                  for tag,l in location.items()}
+        instancer.instantiateFeatureVariations(font, limits)
 
         gsub = font["GSUB"].table
         featureVariations = gsub.FeatureVariations
@@ -1668,7 +1670,7 @@ class InstantiateFeatureVariationsTest(object):
         rec1.ConditionSet.ConditionTable[0].Format = 2
 
         with caplog.at_level(logging.WARNING, logger="fontTools.varLib.instancer"):
-            instancer.instantiateFeatureVariations(font, {"wdth": 0})
+            instancer.instantiateFeatureVariations(font, {"wdth": instancer.NormalizedAxisTent(0,0,0)})
 
         assert (
             "Condition table 0 of FeatureVariationRecord 0 "
@@ -1864,25 +1866,25 @@ class LimitTupleVariationAxisRangesTest:
 
 
 @pytest.mark.parametrize(
-    "oldRange, newRange, expected",
+    "oldRange, newLimit, expected",
     [
-        ((1.0, -1.0), (-1.0, 1.0), None),  # invalid oldRange min > max
-        ((0.6, 1.0), (0, 0.5), None),
-        ((-1.0, -0.6), (-0.5, 0), None),
-        ((0.4, 1.0), (0, 0.5), (0.8, 1.0)),
-        ((-1.0, -0.4), (-0.5, 0), (-1.0, -0.8)),
-        ((0.4, 1.0), (0, 0.4), (1.0, 1.0)),
-        ((-1.0, -0.4), (-0.4, 0), (-1.0, -1.0)),
-        ((-0.5, 0.5), (-0.4, 0.4), (-1.0, 1.0)),
-        ((0, 1.0), (-1.0, 0), (0, 0)),  # or None?
-        ((-1.0, 0), (0, 1.0), (0, 0)),  # or None?
+        ((1.0, -1.0), (-1.0, 0, 1.0), None),  # invalid oldRange min > max
+        ((0.6, 1.0), (0, 0, 0.5), None),
+        ((-1.0, -0.6), (-0.5, 0, 0), None),
+        ((0.4, 1.0), (0, 0, 0.5), (0.8, 1.0)),
+        ((-1.0, -0.4), (-0.5, 0, 0), (-1.0, -0.8)),
+        ((0.4, 1.0), (0, 0, 0.4), (1.0, 1.0)),
+        ((-1.0, -0.4), (-0.4, 0, 0), (-1.0, -1.0)),
+        ((-0.5, 0.5), (-0.4, 0, 0.4), (-1.0, 1.0)),
+        ((0, 1.0), (-1.0, 0, 0), (0, 0)),  # or None?
+        ((-1.0, 0), (0, 0, 1.0), (0, 0)),  # or None?
     ],
 )
-def test_limitFeatureVariationConditionRange(oldRange, newRange, expected):
+def test_limitFeatureVariationConditionRange(oldRange, newLimit, expected):
     condition = featureVars.buildConditionTable(0, *oldRange)
 
     result = instancer._limitFeatureVariationConditionRange(
-        condition, instancer.NormalizedAxisRange(*newRange)
+        condition, instancer.NormalizedAxisTent(*newLimit)
     )
 
     assert result == expected
