@@ -1911,12 +1911,7 @@ def test_parseLimits_invalid(limits):
 
 def test_normalizeAxisLimits_tuple(varfont):
     normalized = instancer.normalizeAxisLimits(varfont, {"wght": (100, 400)})
-    assert normalized == {"wght": (-1.0, 0)}
-
-
-def test_normalizeAxisLimits_unsupported_range(varfont):
-    with pytest.raises(NotImplementedError, match="Unsupported range"):
-        instancer.normalizeAxisLimits(varfont, {"wght": (401, 700)})
+    assert normalized == {"wght": (-1.0, 0, 0)}
 
 
 def test_normalizeAxisLimits_no_avar(varfont):
@@ -1924,7 +1919,7 @@ def test_normalizeAxisLimits_no_avar(varfont):
 
     normalized = instancer.normalizeAxisLimits(varfont, {"wght": (400, 500)})
 
-    assert normalized["wght"] == pytest.approx((0, 0.2), 1e-4)
+    assert normalized["wght"] == pytest.approx((0, 0, 0.2), 1e-4)
 
 
 def test_normalizeAxisLimits_missing_from_fvar(varfont):
