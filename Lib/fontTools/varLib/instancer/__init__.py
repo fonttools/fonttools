@@ -744,23 +744,7 @@ def _limitFeatureVariationConditionRange(condition, axisRange):
 
     values = [minValue, maxValue]
     for i, value in enumerate(values):
-        if value < 0:
-            if axisRange.minimum == 0:
-                newValue = 0
-            else:
-                newValue = value / abs(axisRange.minimum)
-                if newValue <= -1.0:
-                    newValue = -1.0
-        elif value > 0:
-            if axisRange.maximum == 0:
-                newValue = 0
-            else:
-                newValue = value / axisRange.maximum
-                if newValue >= 1.0:
-                    newValue = 1.0
-        else:
-            newValue = 0
-        values[i] = newValue
+        values[i] = normalizeValue(value, (axisRange.minimum, 0, axisRange.maximum))
 
     return AxisRange(*values)
 
