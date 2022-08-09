@@ -510,8 +510,8 @@ class _TupleVarStoreAdapter(object):
 
         pinnedAxes = {
             axisTag
-            for axisTag, (minimum, default, maximum) in axisLimits.items()
-            if minimum == maximum
+            for axisTag, v in axisLimits.items()
+            if (v[0] == v[1] if isinstance(v, tuple) else True)
         }
         self.axisOrder = [
             axisTag for axisTag in self.axisOrder if axisTag not in pinnedAxes
