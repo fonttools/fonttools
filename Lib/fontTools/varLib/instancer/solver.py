@@ -255,7 +255,7 @@ def _solve(tent, axisLimit, negative=False):
     return out
 
 
-@lru_cache
+@lru_cache(128)
 def rebaseTent(tent, axisLimit):
     """Given a tuple (lower,peak,upper) "tent" and new axis limits
     (axisMin,axisDefault,axisMax), solves how to represent the tent
