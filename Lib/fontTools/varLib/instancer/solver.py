@@ -7,7 +7,7 @@ __all__ = ['rebaseTent']
 def _reverse_negate(v):
     return (-v[2], -v[1], -v[0])
 
-def _solve(tent, axisLimit):
+def _solve(tent, axisLimit, negative=False):
     axisMin, axisDef, axisMax = axisLimit
     lower, peak, upper = tent
 
@@ -15,7 +15,7 @@ def _solve(tent, axisLimit):
     if axisDef > peak:
         return [(scalar, _reverse_negate(t) if t is not None else None)
                 for scalar,t
-                in _solve(_reverse_negate(tent), _reverse_negate(axisLimit))]
+                in _solve(_reverse_negate(tent), _reverse_negate(axisLimit), not negative)]
     # axisDef <= peak
 
     # case 1: The whole deltaset falls outside the new limit; we can drop it
@@ -159,7 +159,7 @@ def _solve(tent, axisLimit):
     #
     elif axisDef + (axisMax - axisDef) * 2 >= upper:
 
-        if axisDef + (axisMax - axisDef) * MAX_F2DOT14 < upper:
+        if not negative and axisDef + (axisMax - axisDef) * MAX_F2DOT14 < upper:
             # we clamp +2.0 to the max F2Dot14 (~1.99994) for convenience
             upper = axisDef + (axisMax - axisDef) * MAX_F2DOT14
 
