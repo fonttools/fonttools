@@ -408,13 +408,14 @@ def _remapVarIdxMap(table, attrName, varIndexMapping, glyphOrder):
 
 # TODO(anthrotype) Add support for HVAR/VVAR in CFF2
 def _instantiateVHVAR(varfont, axisLimits, tableFields):
+    location, axisRanges = splitAxisLocationAndRanges(
+        axisLimits, rangeType=NormalizedAxisRange
+    )
     tableTag = tableFields.tableTag
     fvarAxes = varfont["fvar"].axes
     # Deltas from gvar table have already been applied to the hmtx/vmtx. For full
     # instances (i.e. all axes pinned), we can simply drop HVAR/VVAR and return
-    if set(
-        axisTag for axisTag, value in axisLimits.items() if not isinstance(value, tuple)
-    ).issuperset(axis.axisTag for axis in fvarAxes):
+    if set(location).issuperset(axis.axisTag for axis in fvarAxes):
         log.info("Dropping %s table", tableTag)
         del varfont[tableTag]
         return
