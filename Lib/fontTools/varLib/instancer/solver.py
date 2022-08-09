@@ -1,6 +1,6 @@
 from fontTools.varLib.models import supportScalar, normalizeValue
 from fontTools.misc.fixedTools import MAX_F2DOT14
-from functools import cache
+from functools import lru_cache
 
 __all__ = ['rebaseTent']
 
@@ -255,7 +255,7 @@ def _solve(tent, axisLimit, negative=False):
     return out
 
 
-@cache
+@lru_cache
 def rebaseTent(tent, axisLimit):
     """Given a tuple (lower,peak,upper) "tent" and new axis limits
     (axisMin,axisDefault,axisMax), solves how to represent the tent
