@@ -1895,6 +1895,7 @@ def test_limitFeatureVariationConditionRange(oldRange, newLimit, expected):
     [
         (["wght=400", "wdth=100"], {"wght": 400, "wdth": 100}),
         (["wght=400:900"], {"wght": (400, 900)}),
+        (["wght=400:700:900"], {"wght": (400, 700, 900)}),
         (["slnt=11.4"], {"slnt": pytest.approx(11.399994)}),
         (["ABCD=drop"], {"ABCD": None}),
     ],
