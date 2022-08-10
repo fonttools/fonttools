@@ -302,6 +302,8 @@ def rebaseTent(tent, axisLimit):
     sols = _solve(tent, axisLimit)
 
     n = lambda v: normalizeValue(v, axisLimit, extrapolate=True)
-    sols = [(scalar, (n(v[0]), n(v[1]), n(v[2])) if v is not None else None) for scalar,v in sols if scalar]
+    sols = [(scalar, (n(v[0]), n(v[1]), n(v[2])) if v is not None else None)
+            for scalar,v in sols
+            if scalar]
 
     return sols
