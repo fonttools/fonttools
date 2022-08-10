@@ -174,6 +174,7 @@ def _solve(tent, axisLimit, negative=False):
         if not negative and axisDef + (axisMax - axisDef) * MAX_F2DOT14 < upper:
             # we clamp +2.0 to the max F2Dot14 (~1.99994) for convenience
             upper = axisDef + (axisMax - axisDef) * MAX_F2DOT14
+            assert peak < upper
 
         # Special-case if peak is at axisMax.
         if axisMax == peak:
