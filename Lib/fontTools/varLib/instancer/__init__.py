@@ -926,14 +926,9 @@ def instantiateAvar(varfont, axisLimits):
                     continue
                 fromCoord = normalizeValue(fromCoord, (axisRange.minimum, 0, axisRange.maximum))
 
-                if toCoord < 0:
-                    assert mappedMin != 0
-                    assert toCoord >= mappedMin
-                    toCoord /= abs(mappedMin)
-                elif toCoord > 0:
-                    assert mappedMax != 0
-                    assert toCoord <= mappedMax
-                    toCoord /= mappedMax
+                assert mappedMin <= toCoord <= mappedMax
+                toCoord = normalizeValue(toCoord, (mappedMin, 0, mappedMax))
+
                 fromCoord = floatToFixedToFloat(fromCoord, 14)
                 toCoord = floatToFixedToFloat(toCoord, 14)
                 newMapping[fromCoord] = toCoord
