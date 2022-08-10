@@ -252,7 +252,27 @@ def _solve(tent, axisLimit, negative=False):
         out.append((scalar1 - gain, loc1))
         out.append((scalar2 - gain, loc2))
 
-    return out
+
+    # If peak ended up being zero, nudge it to the next value
+    EPSILON = 1 / (1 << 14)
+    new_out = []
+    for scalar,triple in out:
+        if scalar == 0:
+            continue
+
+        if triple is None:
+            new_out.append((scalar, triple))
+            continue
+
+        lower,peak,upper = triple
+        if peak == axisDef:
+            assert not (lower == upper == axisDef)
+
+            peak += EPSILON if lower == axisDef else -EPSILON
+
+        new_out.append((scalar, (lower,peak,upper)))
+
+    return new_out
 
 
 @lru_cache(128)
@@ -279,6 +299,6 @@ def rebaseTent(tent, axisLimit):
     sols = _solve(tent, axisLimit)
 
     n = lambda v: normalizeValue(v, axisLimit, extrapolate=True)
-    sols = [(scalar, (n(v[0]), n(v[1]), n(v[2])) if v is not None else None) for scalar,v in sols if scalar != 0]
+    sols = [(scalar, (n(v[0]), n(v[1]), n(v[2])) if v is not None else None) for scalar,v in sols]
 
     return sols

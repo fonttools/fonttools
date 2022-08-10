@@ -213,6 +213,17 @@ class RebaseTentTest(object):
                     (1, (0, .4, 1.99994)),
                 ]
             ),
+            # Dirac delta at new default. Fancy!
+            pytest.param(
+                (.5, .5, .5), (0, .5, 1),
+                [
+                    (1, None),
+                    (-1, (0, 0.0001220703, 1)),
+                    (-1, (0, 1, 1)),
+                    (-1, (-1, -0.0001220703, 0)),
+                    (-1, (-1, -1, 0)),
+                ]
+            ),
         ],
     )
     def test_rebaseTent(self, tent, axisRange, expected):
