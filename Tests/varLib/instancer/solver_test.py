@@ -121,6 +121,16 @@ class RebaseTentTest(object):
                 ]
             ),
 
+            # Case 3
+            pytest.param(
+                (0, .5, 1), (.25, .25, .75),
+                [
+                    (.5, None),
+                    (.5, (0, 0.5, 1.5)),
+                    (-.5, (0.5, 1.5, 1.5)),
+                ]
+            ),
+
             # Case 1neg
             pytest.param(
                 (.0, .5, 1), (0, .25, .5),

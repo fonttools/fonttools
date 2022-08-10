@@ -151,6 +151,12 @@ def _solve(tent, axisLimit, negative=False):
     # we keep deltas as is and only scale the axes bounds. Deltas beyond -1.0
     # or +1.0 will never be applied as implementations must clamp to that range.
     #
+    # A second tent is needed for cases when gain is positive, though we add it
+    # unconditionally and it will be dropped because scalar ends up 0.
+    #
+    # TODO: See if we can just move upper closer to adjust the slope, instead of
+    # second tent.
+    #
     #            |           peak |
     #  1.........|............o...|..................
     #            |           /x\  |
@@ -173,11 +179,17 @@ def _solve(tent, axisLimit, negative=False):
         if axisMax == peak:
             upper = peak
 
-        loc = (max(axisDef, lower), peak, upper)
+        loc1 = (max(axisDef, lower), peak, upper)
+        scalar1 = 1
+
+        loc2 = (peak, upper, upper)
+        scalar2 = 0
 
         # Don't add a dirac delta!
-        if upper > axisDef:
-            out.append((1 - gain, loc))
+        if axisDef < upper:
+            out.append((scalar1 - gain, loc1))
+        if peak < upper:
+            out.append((scalar2 - gain, loc2))
 
     # Case 4: New limit doesn't fit; we need to chop into two tents,
     # because the shape of a triangle with part of one side cut off
