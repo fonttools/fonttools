@@ -874,7 +874,7 @@ def instantiateAvar(varfont, axisLimits):
 
                 if fromCoord < axisRange.minimum or fromCoord > axisRange.maximum:
                     continue
-                fromCoord = normalizeValue(fromCoord, (axisRange.minimum, 0, axisRange.maximum))
+                fromCoord = normalizeValue(fromCoord, axisRange)
 
                 if toCoord < 0:
                     assert mappedMin != 0
@@ -887,7 +887,7 @@ def instantiateAvar(varfont, axisLimits):
                 fromCoord = floatToFixedToFloat(fromCoord, 14)
                 toCoord = floatToFixedToFloat(toCoord, 14)
                 newMapping[fromCoord] = toCoord
-            newMapping.update({-1.0: -1.0, 1.0: 1.0})
+            newMapping.update({-1.0: -1.0, 0.0: 0.0, 1.0: 1.0})
             newSegments[axisTag] = newMapping
         else:
             newSegments[axisTag] = mapping
