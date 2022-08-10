@@ -739,7 +739,6 @@ def _limitFeatureVariationRecord(record, axisLimits, axisOrder):
         if condition.Format == 1:
             axisIdx = condition.AxisIndex
             axisTag = axisOrder[axisIdx]
-            print(axisTag)
             if axisTag in axisLimits:
                 axisLimit = axisLimits[axisTag]
                 newRange = _limitFeatureVariationConditionRange(condition, axisLimit)
