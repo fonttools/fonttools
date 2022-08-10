@@ -257,7 +257,7 @@ def changeTupleVariationAxisLimit(var, axisTag, axisLimit):
         else:
             assert tent[1] != 0, tent
             newVar.axes[axisTag] = tent
-        newVar.scaleDeltas(scalar)
+        newVar *= scalar
         out.append(newVar)
 
     return out
