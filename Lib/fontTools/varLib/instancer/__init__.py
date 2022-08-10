@@ -922,12 +922,12 @@ def instantiateAvar(varfont, axisLimits):
             newMapping = {}
             for fromCoord, toCoord in mapping.items():
                 if fromCoord < 0:
-                    if axisRange.minimum == 0 or fromCoord < axisRange.minimum:
+                    if fromCoord < axisRange.minimum:
                         continue
                     else:
                         fromCoord /= abs(axisRange.minimum)
                 elif fromCoord > 0:
-                    if axisRange.maximum == 0 or fromCoord > axisRange.maximum:
+                    if fromCoord > axisRange.maximum:
                         continue
                     else:
                         fromCoord /= axisRange.maximum
