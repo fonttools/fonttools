@@ -866,6 +866,9 @@ def instantiateAvar(varfont, axisLimits):
             mappedMin = floatToFixedToFloat(
                 piecewiseLinearMap(axisRange.minimum, mapping), 14
             )
+            mappedDef = floatToFixedToFloat(
+                piecewiseLinearMap(axisRange.default, mapping), 14
+            )
             mappedMax = floatToFixedToFloat(
                 piecewiseLinearMap(axisRange.maximum, mapping), 14
             )
@@ -877,7 +880,7 @@ def instantiateAvar(varfont, axisLimits):
                 fromCoord = normalizeValue(fromCoord, axisRange)
 
                 assert mappedMin <= toCoord <= mappedMax
-                toCoord = normalizeValue(toCoord, (mappedMin, 0, mappedMax))
+                toCoord = normalizeValue(toCoord, (mappedMin, mappedDef, mappedMax))
 
                 fromCoord = floatToFixedToFloat(fromCoord, 14)
                 toCoord = floatToFixedToFloat(toCoord, 14)
