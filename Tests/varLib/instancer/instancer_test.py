@@ -1575,6 +1575,28 @@ class InstantiateFeatureVariationsTest(object):
                     )
                 ],
             ),
+            (
+                {"cntr": (-.5, 0, 1.0)},
+                {},
+                [
+                    (
+                        {"wght": (0.20886, 1.0), "cntr": (.75, 1)},
+                        {"uni0024": "uni0024.nostroke", "uni0041": "uni0061"},
+                    ),
+                    (
+                        {"wght": (-1.0, -0.45654), "cntr": (0, .25)},
+                        {"uni0061": "uni0041"},
+                    ),
+                    (
+                        {"cntr": (0.75, 1.0)},
+                        {"uni0041": "uni0061"},
+                    ),
+                    (
+                        {"wght": (0.20886, 1.0)},
+                        {"uni0024": "uni0024.nostroke"},
+                    ),
+                ],
+            ),
         ],
     )
     def test_partial_instance(self, location, appliedSubs, expectedRecords):
@@ -1589,7 +1611,7 @@ class InstantiateFeatureVariationsTest(object):
             ]
         )
 
-        limits = {tag:instancer.NormalizedAxisTent(l, l, l)
+        limits = {tag:instancer.NormalizedAxisTent(l, l, l) if not isinstance(l, tuple) else instancer.NormalizedAxisTent(*l)
                   for tag,l in location.items()}
         instancer.instantiateFeatureVariations(font, limits)
 
@@ -1598,18 +1620,18 @@ class InstantiateFeatureVariationsTest(object):
 
         assert featureVariations.FeatureVariationCount == len(expectedRecords)
 
-        axisOrder = [a.axisTag for a in font["fvar"].axes if a.axisTag not in location]
+        axisOrder = [a.axisTag for a in font["fvar"].axes if a.axisTag not in location or isinstance(location[a.axisTag], tuple)]
         for i, (expectedConditionSet, expectedSubs) in enumerate(expectedRecords):
             rec = featureVariations.FeatureVariationRecord[i]
             conditionSet = _conditionSetAsDict(rec.ConditionSet, axisOrder)
 
-            assert conditionSet == expectedConditionSet
+            assert conditionSet == expectedConditionSet, i
 
             subsRecord = rec.FeatureTableSubstitution.SubstitutionRecord[0]
             lookupIndices = subsRecord.Feature.LookupListIndex
             substitutions = _getSubstitutions(gsub, lookupIndices)
 
-            assert substitutions == expectedSubs
+            assert substitutions == expectedSubs, i
 
         appliedLookupIndices = gsub.FeatureList.FeatureRecord[0].Feature.LookupListIndex
 
