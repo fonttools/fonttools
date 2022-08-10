@@ -231,7 +231,7 @@ def changeTupleVariationAxisLimit(var, axisTag, axisLimit):
     if not isinstance(axisLimit, tuple):
         axisLimit = NormalizedAxisTent(axisLimit, axisLimit, axisLimit)
     if isinstance(axisLimit, NormalizedAxisRange):
-        axisLimit = NormalizedAxisTent(axisLimit[0], 0, axisLimit[1])
+        axisLimit = NormalizedAxisTent(axisLimit.minimum, 0, axisLimit.maximum)
     assert isinstance(axisLimit, NormalizedAxisTent)
 
     # Skip when current axis is missing (i.e. doesn't participate),
@@ -508,7 +508,7 @@ class _TupleVarStoreAdapter(object):
         pinnedAxes = {
             axisTag
             for axisTag, v in axisLimits.items()
-            if (v[0] == v[1] if isinstance(v, tuple) else True)
+            if (v.minimum == v.maximum if isinstance(v, tuple) else True)
         }
         self.axisOrder = [
             axisTag for axisTag in self.axisOrder if axisTag not in pinnedAxes
@@ -919,8 +919,8 @@ def instantiateFvar(varfont, axisLimits):
             continue
         if axisTag in axisLimits:
             triple = axisLimits[axisTag]
-            if triple[1] is None:
-                triple = (triple[0], axis.defaultValue, triple[2])
+            if triple.default is None:
+                triple = (triple.minimum, axis.defaultValue, triple.maximum)
             axis.minValue, axis.defaultValue, axis.maxValue = triple
         axes.append(axis)
     fvar.axes = axes
