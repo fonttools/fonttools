@@ -694,7 +694,7 @@ def _limitFeatureVariationConditionRange(condition, axisLimit):
 
 
 def _instantiateFeatureVariationRecord(
-    record, recIdx, location, fvarAxes, axisIndexMap
+    record, recIdx, axisLimits, fvarAxes, axisIndexMap
 ):
     applies = True
     newConditions = []
@@ -702,18 +702,20 @@ def _instantiateFeatureVariationRecord(
         if condition.Format == 1:
             axisIdx = condition.AxisIndex
             axisTag = fvarAxes[axisIdx].axisTag
-            if axisTag in location:
-                minValue = condition.FilterRangeMinValue
-                maxValue = condition.FilterRangeMaxValue
-                v = location[axisTag]
-                if not (minValue <= v <= maxValue):
-                    # condition not met so remove entire record
-                    applies = False
+
+            minValue = condition.FilterRangeMinValue
+            maxValue = condition.FilterRangeMaxValue
+            triple = _expand(axisLimits.get(axisTag, (-1, 0, +1)))
+            v = triple[1]
+            if not (minValue <= v <= maxValue):
+                applies = False
+                # condition not met so remove entire record
+                if triple[0] > maxValue or triple[2] < minValue:
                     newConditions = None
                     break
-            else:
-                # axis not pinned, keep condition with remapped axis index
-                applies = False
+
+            if axisTag in axisIndexMap:
+                # remap axis index
                 condition.AxisIndex = axisIndexMap[axisTag]
                 newConditions.append(condition)
         else:
@@ -746,7 +748,8 @@ def _limitFeatureVariationRecord(record, axisLimits, axisOrder):
                     # keep condition with updated limits and remapped axis index
                     condition.FilterRangeMinValue = newRange.minimum
                     condition.FilterRangeMaxValue = newRange.maximum
-                    newConditions.append(condition)
+                    if newRange.minimum != -1 or newRange.maximum != +1:
+                        newConditions.append(condition)
                 else:
                     # condition out of range, remove entire record
                     newConditions = None
@@ -779,7 +782,7 @@ def _instantiateFeatureVariations(table, fvarAxes, axisLimits):
 
     for i, record in enumerate(table.FeatureVariations.FeatureVariationRecord):
         applies, shouldKeep = _instantiateFeatureVariationRecord(
-            record, i, location, fvarAxes, axisIndexMap
+            record, i, axisLimits, fvarAxes, axisIndexMap
         )
         if shouldKeep:
             shouldKeep = _limitFeatureVariationRecord(record, axisLimits, axisOrder)
@@ -790,7 +793,7 @@ def _instantiateFeatureVariations(table, fvarAxes, axisLimits):
         if applies and not featureVariationApplied:
             assert record.FeatureTableSubstitution.Version == 0x00010000
             for rec in record.FeatureTableSubstitution.SubstitutionRecord:
-                table.FeatureList.FeatureRecord[rec.FeatureIndex].Feature = rec.Feature
+                table.FeatureList.FeatureRecord[rec.FeatureIndex].Feature = deepcopy(rec.Feature)
             # Set variations only once
             featureVariationApplied = True
 

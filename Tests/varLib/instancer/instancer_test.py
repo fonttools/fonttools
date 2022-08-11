@@ -1539,9 +1539,10 @@ class InstantiateFeatureVariationsTest(object):
         "location, appliedSubs, expectedRecords",
         [
             ({"wght": 0}, {}, [({"cntr": (0.75, 1.0)}, {"uni0041": "uni0061"})]),
+            # Buggy. See: https://github.com/fonttools/fonttools/issues/2737
             (
                 {"wght": -1.0},
-                {},
+                {"uni0061": "uni0041"},
                 [
                     ({"cntr": (0, 0.25)}, {"uni0061": "uni0041"}),
                     ({"cntr": (0.75, 1.0)}, {"uni0041": "uni0061"}),
@@ -1594,6 +1595,16 @@ class InstantiateFeatureVariationsTest(object):
                     (
                         {"wght": (0.20886, 1.0)},
                         {"uni0024": "uni0024.nostroke"},
+                    ),
+                ],
+            ),
+            (
+                {"cntr": (.8, .9, 1.0)},
+                {"uni0041": "uni0061"},
+                [
+                    (
+                        {"wght": (0.20886, 1.0)},
+                        {"uni0024": "uni0024.nostroke", "uni0041": "uni0061"},
                     ),
                 ],
             ),
