@@ -45,8 +45,8 @@ def _solve(tent, axisLimit, negative=False):
     #                                  /   \
     #                                 /|    \
     #                                / |     \
-    #  0---|-----------|----------- o  |      o----1
-    #    axisMin     axisDef    lower  |      upper
+    #  0--------------------------- o  |      o----1
+    #                           lower  |      upper
     #                                  |
     #                                axisMax
     #
@@ -57,8 +57,8 @@ def _solve(tent, axisLimit, negative=False):
     #                                  o peak
     #                                 /|
     #                                /x|
-    #  0---|-----------|----------- o  o upper ----1
-    #    axisMin     axisDef    lower  |
+    #  0--------------------------- o  o upper ----1
+    #                           lower  |
     #                                  |
     #                                axisMax
     if axisMax < peak:
