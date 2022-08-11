@@ -1606,6 +1606,10 @@ class InstantiateFeatureVariationsTest(object):
                         {"wght": (0.20886, 1.0)},
                         {"uni0024": "uni0024.nostroke", "uni0041": "uni0061"},
                     ),
+                    (
+                        {},
+                        {"uni0041": "uni0061"},
+                    ),
                 ],
             ),
         ],
