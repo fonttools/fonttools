@@ -7,6 +7,7 @@ from fontTools.ttLib import TTLibError
 from fontTools.ttLib.ttGlyphSet import (
     _TTGlyphSet, _TTGlyph,
     _TTGlyphCFF, _TTGlyphGlyf,
+    _TTVarGlyphSet,
 )
 from fontTools.ttLib.sfnt import SFNTReader, SFNTWriter
 from io import BytesIO, StringIO
@@ -677,7 +678,7 @@ class TTFont(object):
 		else:
 			raise KeyError(tag)
 
-	def getGlyphSet(self, preferCFF=True):
+	def getGlyphSet(self, preferCFF=True, location=None):
 		"""Return a generic GlyphSet, which is a dict-like object
 		mapping glyph names to glyph objects. The returned glyph objects
 		have a .draw() method that supports the Pen protocol, and will
@@ -693,11 +694,16 @@ class TTFont(object):
 		if (preferCFF and any(tb in self for tb in ["CFF ", "CFF2"]) or
 		   ("glyf" not in self and any(tb in self for tb in ["CFF ", "CFF2"]))):
 			table_tag = "CFF2" if "CFF2" in self else "CFF "
+			if location:
+				raise NotImplementedError
 			glyphs = _TTGlyphSet(self,
 			    list(self[table_tag].cff.values())[0].CharStrings, _TTGlyphCFF)
 
 		if glyphs is None and "glyf" in self:
-			glyphs = _TTGlyphSet(self, self["glyf"], _TTGlyphGlyf)
+			if location and 'gvar' in self:
+				glyphs = _TTVarGlyphSet(self, location)
+			else:
+				glyphs = _TTGlyphSet(self, self["glyf"], _TTGlyphGlyf)
 
 		if glyphs is None:
 			raise TTLibError("Font contains no outlines")

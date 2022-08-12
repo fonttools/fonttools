@@ -102,3 +102,106 @@ class _TTGlyphGlyf(_TTGlyph):
 		glyph.drawPoints(pen, glyfTable, offset)
 
 
+
+class _TTVarGlyphSet(object):
+
+	def __init__(self, font, location):
+		from fontTools.varLib.models import normalizeLocation
+		self._ttFont = font
+		axes = {a.axisTag: (a.minValue, a.defaultValue, a.maxValue) for a in font['fvar'].axes}
+		self.location = normalizeLocation(location, axes)
+
+	def keys(self):
+		return list(self._ttFont['glyf'].keys())
+
+	def has_key(self, glyphName):
+		return glyphName in self._ttFont['glyf']
+	__contains__ = has_key
+
+	def __getitem__(self, glyphName):
+		return _TTVarGlyphGlyf(self._ttFont, glyphName, self.location)
+
+	def get(self, glyphName, default=None):
+		try:
+			return self[glyphName]
+		except KeyError:
+			return default
+
+def setCoordinates(glyph, coord, glyfTable):
+	# Handle phantom points for (left, right, top, bottom) positions.
+	assert len(coord) >= 4
+	if not hasattr(glyph, 'xMin'):
+		glyph.recalcBounds(glyfTable)
+	leftSideX = coord[-4][0]
+	rightSideX = coord[-3][0]
+	topSideY = coord[-2][1]
+	bottomSideY = coord[-1][1]
+
+	for _ in range(4):
+		del coord[-1]
+
+	if glyph.isComposite():
+		assert len(coord) == len(glyph.components)
+		for p,comp in zip(coord, glyph.components):
+			if hasattr(comp, 'x'):
+				comp.x,comp.y = p
+	elif glyph.numberOfContours is 0:
+		assert len(coord) == 0
+	else:
+		assert len(coord) == len(glyph.coordinates)
+		glyph.coordinates = coord
+
+	glyph.recalcBounds(glyfTable)
+
+	horizontalAdvanceWidth = rightSideX - leftSideX
+	leftSideBearing = glyph.xMin - leftSideX
+	return horizontalAdvanceWidth, leftSideBearing
+
+
+class _TTVarGlyphGlyf(object):
+
+	def __init__(self, ttFont, glyphName, location):
+		self._ttFont = ttFont
+		self._glyphName = glyphName
+		self._location = location
+		#self.width, self.lsb = ttFont['hmtx'][glyphName]
+
+	@staticmethod
+	def _copyGlyph(glyph, glyfTable):
+		# would be nice if this could be avoided
+		from fontTools.ttLib.tables._g_l_y_f import Glyph as TTGlyph
+		from copy import deepcopy
+		#glyph = TTGlyph(glyph.compile(glyfTable))
+		glyph.expand(glyfTable)
+		return deepcopy(glyph)
+
+	def draw(self, pen):
+		from fontTools.varLib.iup import iup_delta
+		from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
+		from fontTools.varLib.models import supportScalar
+
+		glyf = self._ttFont['glyf']
+		glyph = glyf[self._glyphName]
+		glyph = self._copyGlyph(glyph, glyf)
+		hMetrics = self._ttFont['hmtx'].metrics
+		vMetrics = getattr(self._ttFont.get('vmtx'), 'metrics', None)
+
+		variations = self._ttFont['gvar'].variations[self._glyphName]
+		coordinates, _ = glyf._getCoordinatesAndControls(self._glyphName, hMetrics, vMetrics)
+		origCoords, endPts = None, None
+		for var in variations:
+			scalar = supportScalar(self._location, var.axes)
+			if not scalar:
+				continue
+			delta = var.coordinates
+			if None in delta:
+				if origCoords is None:
+					origCoords,control = glyf._getCoordinatesAndControls(self._glyphName, hMetrics, vMetrics)
+					endPts = control[1] if control[0] >= 1 else list(range(len(control[1])))
+				delta = iup_delta(delta, origCoords, endPts)
+			coordinates += GlyphCoordinates(delta) * scalar
+
+		horizontalAdvanceWidth, leftSideBearing = setCoordinates(glyph, coordinates, glyf)
+		self.width = horizontalAdvanceWidth
+		# XXX height!
+		glyph.draw(pen, self._ttFont['glyf'])  # XXX offset based on lsb
