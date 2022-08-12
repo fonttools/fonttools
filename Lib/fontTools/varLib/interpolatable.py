@@ -377,6 +377,37 @@ def main(args=None):
             names = ['%s-%s' % (f.info.familyName, f.info.styleName) for f in fonts]
             args.inputs = []
 
+        elif args.inputs[0].endswith('.ttf'):
+            from fontTools.ttLib import TTFont
+            font = TTFont(args.inputs[0])
+            if 'gvar' in font:
+                # Is variable font
+                gvar = font['gvar']
+                # Gather all "master" locations
+                locs = set()
+                for variations in gvar.variations.values():
+                    for var in variations:
+                        loc = []
+                        for tag,val in sorted(var.axes.items()):
+                            loc.append((tag,val[1]))
+                        locs.add(tuple(loc))
+                # Rebuild locs as dictionaries
+                new_locs = [{}]
+                for loc in (sorted(locs, key=lambda v: (len(v), v))):
+                    names.append(str(loc))
+                    l = {}
+                    for tag,val in loc:
+                        l[tag] = val
+                    new_locs.append(l)
+                locs = new_locs
+                del new_locs
+                # locs is all master locations now
+
+                for loc in locs:
+                    fonts.append(font.getGlyphSet(location=loc, normalized=True))
+
+                args.inputs = []
+
 
     for filename in args.inputs:
         if filename.endswith(".ufo"):
