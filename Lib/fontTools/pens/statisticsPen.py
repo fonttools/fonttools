@@ -61,10 +61,13 @@ class StatisticsPen(MomentsPen):
 
 		#  Correlation(X,Y) = Covariance(X,Y) / ( stddev(X) * stddev(Y) )
 		# https://en.wikipedia.org/wiki/Pearson_product-moment_correlation_coefficient
-		correlation = covariance / (stddevX * stddevY)
+		if stddevX * stddevY == 0:
+			correlation = float("NaN")
+		else:
+			correlation = covariance / (stddevX * stddevY)
 		self.correlation = correlation if abs(correlation) > 1e-3 else 0
 
-		slant = covariance / varianceY
+		slant = covariance / varianceY if varianceY != 0 else float("NaN")
 		self.slant = slant if abs(slant) > 1e-3 else 0
 
 
