@@ -678,7 +678,7 @@ class TTFont(object):
 		else:
 			raise KeyError(tag)
 
-	def getGlyphSet(self, preferCFF=True, location=None):
+	def getGlyphSet(self, preferCFF=True, location=None, normalized=False):
 		"""Return a generic GlyphSet, which is a dict-like object
 		mapping glyph names to glyph objects. The returned glyph objects
 		have a .draw() method that supports the Pen protocol, and will
@@ -701,7 +701,7 @@ class TTFont(object):
 
 		if glyphs is None and "glyf" in self:
 			if location and 'gvar' in self:
-				glyphs = _TTVarGlyphSet(self, location)
+				glyphs = _TTVarGlyphSet(self, location=location, normalized=normalized)
 			else:
 				glyphs = _TTGlyphSet(self, self["glyf"], _TTGlyphGlyf)
 

@@ -105,11 +105,14 @@ class _TTGlyphGlyf(_TTGlyph):
 
 class _TTVarGlyphSet(object):
 
-	def __init__(self, font, location):
+	def __init__(self, font, location, normalized=False):
 		from fontTools.varLib.models import normalizeLocation
 		self._ttFont = font
-		axes = {a.axisTag: (a.minValue, a.defaultValue, a.maxValue) for a in font['fvar'].axes}
-		self.location = normalizeLocation(location, axes)
+		if not normalized:
+			axes = {a.axisTag: (a.minValue, a.defaultValue, a.maxValue) for a in font['fvar'].axes}
+			# TODO: avar mapping
+			location = normalizeLocation(location, axes)
+		self.location = location
 
 	def keys(self):
 		return list(self._ttFont['glyf'].keys())
@@ -145,7 +148,7 @@ def setCoordinates(glyph, coord, glyfTable):
 		for p,comp in zip(coord, glyph.components):
 			if hasattr(comp, 'x'):
 				comp.x,comp.y = p
-	elif glyph.numberOfContours is 0:
+	elif glyph.numberOfContours == 0:
 		assert len(coord) == 0
 	else:
 		assert len(coord) == len(glyph.coordinates)
