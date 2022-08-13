@@ -168,8 +168,9 @@ def setCoordinates(glyph, coord, glyfTable):
 	glyph.recalcBounds(glyfTable)
 
 	horizontalAdvanceWidth = rightSideX - leftSideX
+	verticalAdvanceWidth = topSideY - bottomSideY
 	leftSideBearing = glyph.xMin - leftSideX
-	return horizontalAdvanceWidth, leftSideBearing
+	return horizontalAdvanceWidth, leftSideBearing, verticalAdvanceWidth
 
 
 class _TTVarGlyphGlyf(object):
@@ -206,8 +207,8 @@ class _TTVarGlyphGlyf(object):
 
 		from copy import copy
 		glyph = copy(glyf[self._glyphName]) # Shallow copy
-		horizontalAdvanceWidth, leftSideBearing = setCoordinates(glyph, coordinates, glyf)
+		horizontalAdvanceWidth, leftSideBearing, verticalAdvanceWidth = setCoordinates(glyph, coordinates, glyf)
 		self.width = horizontalAdvanceWidth
-		# XXX height!
+		self.height = verticalAdvanceWidth
 		offset = leftSideBearing - glyph.xMin if hasattr(glyph, "xMin") else 0
 		glyph.draw(pen, glyf, offset)
