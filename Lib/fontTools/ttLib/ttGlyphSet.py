@@ -198,4 +198,5 @@ class _TTVarGlyphGlyf(object):
 		horizontalAdvanceWidth, leftSideBearing = setCoordinates(glyph, coordinates, glyf)
 		self.width = horizontalAdvanceWidth
 		# XXX height!
-		glyph.draw(pen, self._ttFont['glyf'])  # XXX offset based on lsb
+		offset = leftSideBearing - glyph.xMin if hasattr(glyph, "xMin") else 0
+		glyph.draw(pen, glyf, offset)
