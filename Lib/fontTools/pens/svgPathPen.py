@@ -200,14 +200,36 @@ if __name__ == "__main__":
         sys.exit(doctest.testmod().failed)
 
     from fontTools.ttLib import TTFont
+    import argparse
 
-    font = TTFont(sys.argv[1])
-    text = sys.argv[2]
+    parser = argparse.ArgumentParser(
+        "fonttools pens.svgPathPen", description="Generate SVG from text")
+    parser.add_argument(
+        "font", metavar="font.ttf", help="Font file.")
+    parser.add_argument(
+        "text", metavar="text", help="Text string.")
+    parser.add_argument(
+        "--variations", metavar="AXIS=LOC", default='',
+        help="List of space separated locations. A location consist in "
+        "the name of a variation axis, followed by '=' and a number. E.g.: "
+        "wght=700 wdth=80. The default is the location of the base master.")
+
+    options = parser.parse_args(sys.argv[1:])
+
+    font = TTFont(options.font)
+    text = options.text
+
+    location = {}
+    for tag_v in options.variations.split():
+        fields = tag_v.split('=')
+        tag = fields[0].strip()
+        v = int(fields[1])
+        location[tag] = v
 
     hhea = font['hhea']
     ascent, descent = hhea.ascent, hhea.descent
 
-    glyphset = font.getGlyphSet()
+    glyphset = font.getGlyphSet(location=location)
     cmap = font['cmap'].getBestCmap()
 
     s = ''
