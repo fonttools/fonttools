@@ -110,7 +110,7 @@ class _TTVarGlyphSet(object):
 		self._ttFont = font
 		if not normalized:
 			axes = {a.axisTag: (a.minValue, a.defaultValue, a.maxValue) for a in font['fvar'].axes}
-			# TODO: avar mapping
+			# XXX avar mapping
 			location = normalizeLocation(location, axes)
 		self.location = location
 
@@ -169,23 +169,12 @@ class _TTVarGlyphGlyf(object):
 		self._location = location
 		#self.width, self.lsb = ttFont['hmtx'][glyphName]
 
-	@staticmethod
-	def _copyGlyph(glyph, glyfTable):
-		# would be nice if this could be avoided
-		from fontTools.ttLib.tables._g_l_y_f import Glyph as TTGlyph
-		from copy import deepcopy
-		#glyph = TTGlyph(glyph.compile(glyfTable))
-		glyph.expand(glyfTable)
-		return deepcopy(glyph)
-
 	def draw(self, pen):
 		from fontTools.varLib.iup import iup_delta
 		from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 		from fontTools.varLib.models import supportScalar
 
 		glyf = self._ttFont['glyf']
-		glyph = glyf[self._glyphName]
-		glyph = self._copyGlyph(glyph, glyf)
 		hMetrics = self._ttFont['hmtx'].metrics
 		vMetrics = getattr(self._ttFont.get('vmtx'), 'metrics', None)
 
@@ -204,6 +193,8 @@ class _TTVarGlyphGlyf(object):
 				delta = iup_delta(delta, origCoords, endPts)
 			coordinates += GlyphCoordinates(delta) * scalar
 
+		from copy import copy
+		glyph = copy(glyf[self._glyphName]) # Shallow copy
 		horizontalAdvanceWidth, leftSideBearing = setCoordinates(glyph, coordinates, glyf)
 		self.width = horizontalAdvanceWidth
 		# XXX height!
