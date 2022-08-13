@@ -106,12 +106,23 @@ class _TTGlyphGlyf(_TTGlyph):
 class _TTVarGlyphSet(object):
 
 	def __init__(self, font, location, normalized=False):
-		from fontTools.varLib.models import normalizeLocation
+		from fontTools.varLib.models import normalizeLocation, piecewiseLinearMap
 		self._ttFont = font
 		if not normalized:
 			axes = {a.axisTag: (a.minValue, a.defaultValue, a.maxValue) for a in font['fvar'].axes}
-			# XXX avar mapping
 			location = normalizeLocation(location, axes)
+			if 'avar' in font:
+				avar = font['avar']
+				avarSegments = avar.segments
+				new_location = {}
+				for axis_tag,value in location.items():
+					avarMapping = avarSegments.get(axis_tag, None)
+					if avarMapping is not None:
+						value = piecewiseLinearMap(value, avarMapping)
+					new_location[axis_tag] = value
+				location = new_location
+				del new_location
+
 		self.location = location
 
 	def keys(self):
