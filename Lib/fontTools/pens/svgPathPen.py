@@ -195,5 +195,36 @@ class SVGPathPen(BasePen):
 
 if __name__ == "__main__":
     import sys
-    import doctest
-    sys.exit(doctest.testmod().failed)
+    if len(sys.argv) == 1:
+        import doctest
+        sys.exit(doctest.testmod().failed)
+
+    from fontTools.ttLib import TTFont
+
+    font = TTFont(sys.argv[1])
+    text = sys.argv[2]
+
+    hhea = font['hhea']
+    ascent, descent = hhea.ascent, hhea.descent
+
+    glyphset = font.getGlyphSet()
+    cmap = font['cmap'].getBestCmap()
+
+    s = ''
+    width = 0
+    for u in text:
+        g = cmap[ord(u)]
+        glyph = glyphset[g]
+
+        pen = SVGPathPen(glyphset)
+        glyph.draw(pen)
+        commands = pen.getCommands()
+
+        s += '<g transform="translate(%d %d) scale(1 -1)"><path d="%s"/></g>\n' % (width, ascent, commands)
+
+        width += glyph.width
+
+    print('<?xml version="1.0" encoding="UTF-8"?>')
+    print('<svg width="%d" height="%d" xmlns="http://www.w3.org/2000/svg">' % (width, ascent-descent))
+    print(s, end='')
+    print('</svg>')
