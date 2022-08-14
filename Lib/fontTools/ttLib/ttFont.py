@@ -381,11 +381,13 @@ class TTFont(object):
 		keys = sortedTagList(keys)
 		return ["GlyphOrder"] + keys
 
-	def ensureDecompiled(self):
+	def ensureDecompiled(self, recurse=None):
 		"""Decompile all the tables, even if a TTFont was opened in 'lazy' mode."""
 		for tag in self.keys():
 			table = self[tag]
-			if self.lazy is not False and hasattr(table, "ensureDecompiled"):
+			if recurse is None:
+				recurse = self.lazy is not False
+			if recurse and hasattr(table, "ensureDecompiled"):
 				table.ensureDecompiled()
 		self.lazy = False
 
