@@ -121,7 +121,7 @@ def parseScriptList(lines, featureMap=None):
 				script = script[0].Script
 			else:
 				scriptRec = ot.ScriptRecord()
-				scriptRec.ScriptTag = scriptTag
+				scriptRec.ScriptTag = scriptTag + ' '*(4 - len(scriptTag))
 				scriptRec.Script = ot.Script()
 				records.append(scriptRec)
 				script = scriptRec.Script
