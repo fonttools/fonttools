@@ -52,6 +52,21 @@ class lazy_dict(dict):
             self[k] = v
         return v
 
+    def items(self):
+        if not hasattr(self, '_loaded'):
+            self._load()
+        return super().items()
+
+    def values(self):
+        if not hasattr(self, '_loaded'):
+            self._load()
+        return super().values()
+
+    def _load(self):
+        for k in self:
+            self[k]
+        self._loaded = True
+
 class table__g_v_a_r(DefaultTable.DefaultTable):
 	dependencies = ["fvar", "glyf"]
 
