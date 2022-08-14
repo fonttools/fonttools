@@ -18,10 +18,10 @@ def computeMegaGlyphOrder(merger, glyphOrders):
 		for i,glyphName in enumerate(glyphOrder):
 			if glyphName in megaOrder:
 				n = megaOrder[glyphName]
-				while (glyphName + "#" + repr(n)) in megaOrder:
+				while (glyphName + "." + repr(n)) in megaOrder:
 					n += 1
 				megaOrder[glyphName] = n
-				glyphName += "#" + repr(n)
+				glyphName += "." + repr(n)
 				glyphOrder[i] = glyphName
 			megaOrder[glyphName] = 1
 	merger.glyphOrder = megaOrder = list(megaOrder.keys())
