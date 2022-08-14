@@ -60,11 +60,12 @@ def test_modeling_error(numLocations, numSamples):
         err = abs(actual - expected)
         assert err <= .5, (i, err)
 
-        deltas_late_round = [round(d) for d in deltas_float]
-        bad = model.interpolateFromDeltasAndScalars(deltas_late_round, scalars)
-        err_bad = abs(bad - expected)
-        if err != err_bad:
-            print("{:d}	{:.2}	{:.2}".format(i, err, err_bad))
+        # This is how NOT to round deltas.
+        #deltas_late_round = [round(d) for d in deltas_float]
+        #bad = model.interpolateFromDeltasAndScalars(deltas_late_round, scalars)
+        #err_bad = abs(bad - expected)
+        #if err != err_bad:
+        #    print("{:d}	{:.2}	{:.2}".format(i, err, err_bad))
 
 
 class VariationModelTest(object):
