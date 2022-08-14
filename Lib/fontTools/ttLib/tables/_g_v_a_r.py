@@ -36,6 +36,21 @@ GVAR_HEADER_FORMAT = """
 
 GVAR_HEADER_SIZE = sstruct.calcsize(GVAR_HEADER_FORMAT)
 
+class lazy_dict(dict):
+
+    def get(self, k, *args):
+        v = super().get(k, *args)
+        if callable(v):
+            v = v()
+            self[k] = v
+        return v
+
+    def __getitem__(self, k):
+        v = super().__getitem__(k)
+        if callable(v):
+            v = v()
+            self[k] = v
+        return v
 
 class table__g_v_a_r(DefaultTable.DefaultTable):
 	dependencies = ["fvar", "glyf"]
@@ -97,23 +112,17 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		offsets = self.decompileOffsets_(data[GVAR_HEADER_SIZE:], tableFormat=(self.flags & 1), glyphCount=self.glyphCount)
 		sharedCoords = tv.decompileSharedTuples(
 			axisTags, self.sharedTupleCount, data, self.offsetToSharedTuples)
-		self.variations = {}
+		self.variations = lazy_dict()
 		offsetToData = self.offsetToGlyphVariationData
 		glyf = ttFont['glyf']
+		def get_lambda(gvarData, numPointsInGlyph):
+			return lambda: decompileGlyph_(numPointsInGlyph, sharedCoords, axisTags, gvarData)
 		for i in range(self.glyphCount):
 			glyphName = glyphs[i]
 			glyph = glyf[glyphName]
 			numPointsInGlyph = self.getNumPoints_(glyph)
 			gvarData = data[offsetToData + offsets[i] : offsetToData + offsets[i + 1]]
-			try:
-				self.variations[glyphName] = decompileGlyph_(
-					numPointsInGlyph, sharedCoords, axisTags, gvarData)
-			except Exception:
-				log.error(
-					"Failed to decompile deltas for glyph '%s' (%d points)",
-					glyphName, numPointsInGlyph,
-				)
-				raise
+			self.variations[glyphName] = get_lambda(gvarData, numPointsInGlyph)
 
 	@staticmethod
 	def decompileOffsets_(data, tableFormat, glyphCount):
