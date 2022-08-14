@@ -1,3 +1,4 @@
+from functools import partial
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
 from . import DefaultTable
@@ -36,7 +37,7 @@ GVAR_HEADER_FORMAT = """
 
 GVAR_HEADER_SIZE = sstruct.calcsize(GVAR_HEADER_FORMAT)
 
-class lazy_dict(dict):
+class _lazy_dict(dict):
 
     def get(self, k, *args):
         v = super().get(k, *args)
@@ -61,6 +62,16 @@ class lazy_dict(dict):
         if not hasattr(self, '_loaded'):
             self._load()
         return super().values()
+
+    def __eq__(self, other):
+        if not hasattr(self, '_loaded'):
+            self._load()
+        return super().__eq__(other)
+
+    def __neq__(self, other):
+        if not hasattr(self, '_loaded'):
+            self._load()
+        return super().__neq__(other)
 
     def _load(self):
         for k in self:
@@ -127,17 +138,16 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		offsets = self.decompileOffsets_(data[GVAR_HEADER_SIZE:], tableFormat=(self.flags & 1), glyphCount=self.glyphCount)
 		sharedCoords = tv.decompileSharedTuples(
 			axisTags, self.sharedTupleCount, data, self.offsetToSharedTuples)
-		self.variations = lazy_dict()
+		self.variations = _lazy_dict()
 		offsetToData = self.offsetToGlyphVariationData
 		glyf = ttFont['glyf']
-		def get_lambda(gvarData, numPointsInGlyph):
-			return lambda: decompileGlyph_(numPointsInGlyph, sharedCoords, axisTags, gvarData)
+		func = lambda gvarData, numPointsInGlyph: decompileGlyph_(numPointsInGlyph, sharedCoords, axisTags, gvarData)
 		for i in range(self.glyphCount):
 			glyphName = glyphs[i]
 			glyph = glyf[glyphName]
 			numPointsInGlyph = self.getNumPoints_(glyph)
 			gvarData = data[offsetToData + offsets[i] : offsetToData + offsets[i + 1]]
-			self.variations[glyphName] = get_lambda(gvarData, numPointsInGlyph)
+			self.variations[glyphName] = partial(func, gvarData, numPointsInGlyph)
 
 	@staticmethod
 	def decompileOffsets_(data, tableFormat, glyphCount):
