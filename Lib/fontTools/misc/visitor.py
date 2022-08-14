@@ -1,3 +1,4 @@
+from fontTools.ttLib import TTFont
 
 class Visitor(object):
 
@@ -74,9 +75,19 @@ class Visitor(object):
 			self.visitList(obj, *args, **kwargs)
 
 
-class OTVisitor(Visitor):
+class TTVisitor(Visitor):
 
 	def visit(self, obj, *args, **kwargs):
 		if hasattr(obj, "ensureDecompiled"):
-			obj.ensureDecompiled(recurse=False)
+			obj.ensureDecompiled()
 		super().visit(obj, *args, **kwargs)
+
+@TTVisitor.register(TTFont)
+def visit(visitor, font):
+	if hasattr(font, 'visited'):
+		return False
+	font.visited = True
+	for tag in font.keys():
+		visitor.visit(font[tag])
+	del font.visited
+	return False
