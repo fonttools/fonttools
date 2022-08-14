@@ -508,7 +508,7 @@ class OTTableWriter(object):
 				if getattr(item, 'name', None) == "Coverage":
 					sortCoverageLast = True
 					break
-			if id(item) not in done:
+			if sortCoverageLast and id(item) not in done:
 				item._gatherTables(tables, extTables, done)
 			else:
 				# We're a new parent of item
@@ -749,11 +749,11 @@ class OTTableWriter(object):
 			else: # who knows how far below the SubTable level we are! Climb back up to the nearest subtable.
 				itemName = ".".join([self.name, itemName])
 				p1 = self.parent
-				while p1 and p1.name not in ['ExtSubTable', 'SubTable']:
-					itemName = ".".join([p1.name, itemName])
+				while p1 and getattr(p1, 'name', None) not in ['ExtSubTable', 'SubTable']:
+					itemName = ".".join([getattr(p1, 'name', '<none>'), itemName])
 					p1 = p1.parent
 				if p1:
-					if p1.name == 'ExtSubTable':
+					if getattr(p1, 'name', None) == 'ExtSubTable':
 						LookupListIndex = p1.parent.parent.repeatIndex
 						SubTableIndex = p1.parent.repeatIndex
 					else:
@@ -783,7 +783,7 @@ class CountReference(object):
 	def getCountData(self):
 		v = self.table[self.name]
 		if v is None: v = 0
-		return {1:packUInt8, 2:packUShort, 4:packULong}[self.size](v)
+		return {1:packUInt8, 2:packUShort, 3: packUInt24, 4:packULong}[self.size](v)
 
 
 def packUInt8 (value):

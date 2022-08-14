@@ -82,6 +82,11 @@ otData = [
 		('Offset', 'Lookup', 'LookupCount', 0, 'Array of offsets to Lookup tables-from beginning of LookupList -zero based (first lookup is Lookup index = 0)'),
 	]),
 
+	('LookupList24', [
+		('uint16', 'LookupCount', None, None, 'Number of lookups in this table'),
+		('Offset24', 'Lookup', 'LookupCount', 0, 'Array of offsets to Lookup tables-from beginning of LookupList -zero based (first lookup is Lookup index = 0)'),
+	]),
+
 	('Lookup', [
 		('uint16', 'LookupType', None, None, 'Different enumerations for GSUB and GPOS'),
 		('LookupFlag', 'LookupFlag', None, None, 'Lookup qualifiers'),
@@ -102,9 +107,27 @@ otData = [
 		('struct', 'RangeRecord', 'RangeCount', 0, 'Array of glyph ranges-ordered by Start GlyphID'),
 	]),
 
+	('CoverageFormat3', [
+		('uint16', 'CoverageFormat', None, None, 'Format identifier-format = 1'),
+		('uint16', 'GlyphCount', None, None, 'Number of glyphs in the GlyphArray'),
+		('GlyphID24', 'GlyphArray', 'GlyphCount', 0, 'Array of GlyphIDs-in numerical order'),
+	]),
+
+	('CoverageFormat4', [
+		('uint16', 'CoverageFormat', None, None, 'Format identifier-format = 2'),
+		('uint16', 'RangeCount', None, None, 'Number of RangeRecords'),
+		('Range24Record', 'RangeRecord', 'RangeCount', 0, 'Array of glyph ranges-ordered by Start GlyphID'),
+	]),
+
 	('RangeRecord', [
 		('GlyphID', 'Start', None, None, 'First GlyphID in the range'),
 		('GlyphID', 'End', None, None, 'Last GlyphID in the range'),
+		('uint16', 'StartCoverageIndex', None, None, 'Coverage Index of first GlyphID in range'),
+	]),
+
+	('Range24Record', [
+		('GlyphID24', 'Start', None, None, 'First GlyphID in the range'),
+		('GlyphID24', 'End', None, None, 'Last GlyphID in the range'),
 		('uint16', 'StartCoverageIndex', None, None, 'Coverage Index of first GlyphID in range'),
 	]),
 
@@ -121,9 +144,28 @@ otData = [
 		('struct', 'ClassRangeRecord', 'ClassRangeCount', 0, 'Array of ClassRangeRecords-ordered by Start GlyphID'),
 	]),
 
+	('ClassDefFormat3', [
+		('uint16', 'ClassFormat', None, None, 'Format identifier-format = 1'),
+		('GlyphID24', 'StartGlyph', None, None, 'First GlyphID of the ClassValueArray'),
+		('uint24', 'GlyphCount', None, None, 'Size of the ClassValueArray'),
+		('uint16', 'ClassValueArray', 'GlyphCount', 0, 'Array of Class Values-one per GlyphID'),
+	]),
+
+	('ClassDefFormat4', [
+		('uint16', 'ClassFormat', None, None, 'Format identifier-format = 2'),
+		('uint24', 'ClassRangeCount', None, None, 'Number of ClassRangeRecords'),
+		('ClassRange24Record', 'ClassRangeRecord', 'ClassRangeCount', 0, 'Array of ClassRangeRecords-ordered by Start GlyphID'),
+	]),
+
 	('ClassRangeRecord', [
 		('GlyphID', 'Start', None, None, 'First GlyphID in the range'),
 		('GlyphID', 'End', None, None, 'Last GlyphID in the range'),
+		('uint16', 'Class', None, None, 'Applied to all glyphs in the range'),
+	]),
+
+	('ClassRange24Record', [
+		('GlyphID24', 'Start', None, None, 'First GlyphID in the range'),
+		('GlyphID24', 'End', None, None, 'Last GlyphID in the range'),
 		('uint16', 'Class', None, None, 'Applied to all glyphs in the range'),
 	]),
 
@@ -141,9 +183,12 @@ otData = [
 
 	('GPOS', [
 		('Version', 'Version', None, None, 'Version of the GPOS table- 0x00010000 or 0x00010001'),
-		('Offset', 'ScriptList', None, None, 'Offset to ScriptList table-from beginning of GPOS table'),
-		('Offset', 'FeatureList', None, None, 'Offset to FeatureList table-from beginning of GPOS table'),
-		('Offset', 'LookupList', None, None, 'Offset to LookupList table-from beginning of GPOS table'),
+		('Offset', 'ScriptList', None, 'Version < 0x00020000', 'Offset to ScriptList table-from beginning of GPOS table'),
+		('LOffset24To(ScriptList)', 'ScriptList24', None, 'Version >= 0x00020000', 'Offset to ScriptList table-from beginning of GPOS table'),
+		('Offset', 'FeatureList', None, 'Version < 0x00020000', 'Offset to FeatureList table-from beginning of GPOS table'),
+		('LOffset24To(FeatureList)', 'FeatureList24', None, 'Version >= 0x00020000', 'Offset to FeatureList table-from beginning of GPOS table'),
+		('Offset', 'LookupList', None, 'Version < 0x00020000', 'Offset to LookupList table-from beginning of GPOS table'),
+		('Offset24', 'LookupList24', None, 'Version >= 0x00020000', 'Offset to LookupList table-from beginning of GPOS table'),
 		('LOffset', 'FeatureVariations', None, 'Version >= 0x00010001', 'Offset to FeatureVariations table-from beginning of GPOS table'),
 	]),
 
@@ -171,13 +216,33 @@ otData = [
 		('Offset', 'PairSet', 'PairSetCount', 0, 'Array of offsets to PairSet tables-from beginning of PairPos subtable-ordered by Coverage Index'),
 	]),
 
+	('PairPosFormat3', [
+		('uint16', 'PosFormat', None, None, 'Format identifier-format = 1'),
+		('Offset24', 'Coverage', None, None, 'Offset to Coverage table-from beginning of PairPos subtable-only the first glyph in each pair'),
+		('uint16', 'ValueFormat1', None, None, 'Defines the types of data in ValueRecord1-for the first glyph in the pair -may be zero (0)'),
+		('uint16', 'ValueFormat2', None, None, 'Defines the types of data in ValueRecord2-for the second glyph in the pair -may be zero (0)'),
+		('uint16', 'PairSetCount', None, None, 'Number of PairSet tables'),
+		('LOffset24To(PairSet24)', 'PairSet', 'PairSetCount', 0, 'Array of offsets to PairSet tables-from beginning of PairPos subtable-ordered by Coverage Index'),
+	]),
+
 	('PairSet', [
 		('uint16', 'PairValueCount', None, None, 'Number of PairValueRecords'),
 		('struct', 'PairValueRecord', 'PairValueCount', 0, 'Array of PairValueRecords-ordered by GlyphID of the second glyph'),
 	]),
 
+	('PairSet24', [
+		('uint16', 'PairValueCount', None, None, 'Number of PairValueRecords'),
+		('PairValue24Record', 'PairValueRecord', 'PairValueCount', 0, 'Array of PairValueRecords-ordered by GlyphID of the second glyph'),
+	]),
+
 	('PairValueRecord', [
 		('GlyphID', 'SecondGlyph', None, None, 'GlyphID of second glyph in the pair-first glyph is listed in the Coverage table'),
+		('ValueRecord', 'Value1', None, None, 'Positioning data for the first glyph in the pair'),
+		('ValueRecord', 'Value2', None, None, 'Positioning data for the second glyph in the pair'),
+	]),
+
+	('PairValue24Record', [
+		('GlyphID24', 'SecondGlyph', None, None, 'GlyphID of second glyph in the pair-first glyph is listed in the Coverage table'),
 		('ValueRecord', 'Value1', None, None, 'Positioning data for the first glyph in the pair'),
 		('ValueRecord', 'Value2', None, None, 'Positioning data for the second glyph in the pair'),
 	]),
@@ -189,6 +254,18 @@ otData = [
 		('uint16', 'ValueFormat2', None, None, 'ValueRecord definition-for the second glyph of the pair-may be zero (0)'),
 		('Offset', 'ClassDef1', None, None, 'Offset to ClassDef table-from beginning of PairPos subtable-for the first glyph of the pair'),
 		('Offset', 'ClassDef2', None, None, 'Offset to ClassDef table-from beginning of PairPos subtable-for the second glyph of the pair'),
+		('uint16', 'Class1Count', None, None, 'Number of classes in ClassDef1 table-includes Class0'),
+		('uint16', 'Class2Count', None, None, 'Number of classes in ClassDef2 table-includes Class0'),
+		('struct', 'Class1Record', 'Class1Count', 0, 'Array of Class1 records-ordered by Class1'),
+	]),
+
+	('PairPosFormat4', [
+		('uint16', 'PosFormat', None, None, 'Format identifier-format = 2'),
+		('Offset24', 'Coverage', None, None, 'Offset to Coverage table-from beginning of PairPos subtable-for the first glyph of the pair'),
+		('uint16', 'ValueFormat1', None, None, 'ValueRecord definition-for the first glyph of the pair-may be zero (0)'),
+		('uint16', 'ValueFormat2', None, None, 'ValueRecord definition-for the second glyph of the pair-may be zero (0)'),
+		('Offset24', 'ClassDef1', None, None, 'Offset to ClassDef table-from beginning of PairPos subtable-for the first glyph of the pair'),
+		('Offset24', 'ClassDef2', None, None, 'Offset to ClassDef table-from beginning of PairPos subtable-for the second glyph of the pair'),
 		('uint16', 'Class1Count', None, None, 'Number of classes in ClassDef1 table-includes Class0'),
 		('uint16', 'Class2Count', None, None, 'Number of classes in ClassDef2 table-includes Class0'),
 		('struct', 'Class1Record', 'Class1Count', 0, 'Array of Class1 records-ordered by Class1'),
@@ -224,6 +301,15 @@ otData = [
 		('Offset', 'BaseArray', None, None, 'Offset to BaseArray table-from beginning of MarkBasePos subtable'),
 	]),
 
+	('MarkBasePosFormat2', [
+		('uint16', 'PosFormat', None, None, 'Format identifier-format = 1'),
+		('Offset24', 'MarkCoverage', None, None, 'Offset to MarkCoverage table-from beginning of MarkBasePos subtable'),
+		('Offset24', 'BaseCoverage', None, None, 'Offset to BaseCoverage table-from beginning of MarkBasePos subtable'),
+		('uint16', 'ClassCount', None, None, 'Number of classes defined for marks'),
+		('Offset24', 'MarkArray', None, None, 'Offset to MarkArray table-from beginning of MarkBasePos subtable'),
+		('Offset24', 'BaseArray', None, None, 'Offset to BaseArray table-from beginning of MarkBasePos subtable'),
+	]),
+
 	('BaseArray', [
 		('uint16', 'BaseCount', None, None, 'Number of BaseRecords'),
 		('struct', 'BaseRecord', 'BaseCount', 0, 'Array of BaseRecords-in order of BaseCoverage Index'),
@@ -240,6 +326,15 @@ otData = [
 		('uint16', 'ClassCount', None, None, 'Number of defined mark classes'),
 		('Offset', 'MarkArray', None, None, 'Offset to MarkArray table-from beginning of MarkLigPos subtable'),
 		('Offset', 'LigatureArray', None, None, 'Offset to LigatureArray table-from beginning of MarkLigPos subtable'),
+	]),
+
+	('MarkLigPosFormat2', [
+		('uint16', 'PosFormat', None, None, 'Format identifier-format = 1'),
+		('Offset24', 'MarkCoverage', None, None, 'Offset to Mark Coverage table-from beginning of MarkLigPos subtable'),
+		('Offset24', 'LigatureCoverage', None, None, 'Offset to Ligature Coverage table-from beginning of MarkLigPos subtable'),
+		('uint16', 'ClassCount', None, None, 'Number of defined mark classes'),
+		('Offset24', 'MarkArray', None, None, 'Offset to MarkArray table-from beginning of MarkLigPos subtable'),
+		('Offset24', 'LigatureArray', None, None, 'Offset to LigatureArray table-from beginning of MarkLigPos subtable'),
 	]),
 
 	('LigatureArray', [
@@ -265,6 +360,15 @@ otData = [
 		('Offset', 'Mark2Array', None, None, 'Offset to Mark2Array table for Mark2-from beginning of MarkMarkPos subtable'),
 	]),
 
+	('MarkMarkPosFormat2', [
+		('uint16', 'PosFormat', None, None, 'Format identifier-format = 1'),
+		('Offset24', 'Mark1Coverage', None, None, 'Offset to Combining Mark Coverage table-from beginning of MarkMarkPos subtable'),
+		('Offset24', 'Mark2Coverage', None, None, 'Offset to Base Mark Coverage table-from beginning of MarkMarkPos subtable'),
+		('uint16', 'ClassCount', None, None, 'Number of Combining Mark classes defined'),
+		('Offset24', 'Mark1Array', None, None, 'Offset to MarkArray table for Mark1-from beginning of MarkMarkPos subtable'),
+		('Offset24', 'Mark2Array', None, None, 'Offset to Mark2Array table for Mark2-from beginning of MarkMarkPos subtable'),
+	]),
+
 	('Mark2Array', [
 		('uint16', 'Mark2Count', None, None, 'Number of Mark2 records'),
 		('struct', 'Mark2Record', 'Mark2Count', 0, 'Array of Mark2 records-in Coverage order'),
@@ -286,9 +390,21 @@ otData = [
 		('Offset', 'PosRuleSet', 'PosRuleSetCount', 0, 'Array of offsets to PosRuleSet tables-from beginning of ContextPos subtable-ordered by Coverage Index'),
 	]),
 
+	('ContextPosFormat4', [
+		('uint16', 'PosFormat', None, None, 'Format identifier-format = 1'),
+		('Offset24', 'Coverage', None, None, 'Offset to Coverage table-from beginning of ContextPos subtable'),
+		('uint16', 'PosRuleSetCount', None, None, 'Number of PosRuleSet tables'),
+		('LOffset24To(PosRuleSet24)', 'PosRuleSet', 'PosRuleSetCount', 0, 'Array of offsets to PosRuleSet tables-from beginning of ContextPos subtable-ordered by Coverage Index'),
+	]),
+
 	('PosRuleSet', [
 		('uint16', 'PosRuleCount', None, None, 'Number of PosRule tables'),
 		('Offset', 'PosRule', 'PosRuleCount', 0, 'Array of offsets to PosRule tables-from beginning of PosRuleSet-ordered by preference'),
+	]),
+
+	('PosRuleSet24', [
+		('uint16', 'PosRuleCount', None, None, 'Number of PosRule tables'),
+		('OffsetTo(PosRule24)', 'PosRule', 'PosRuleCount', 0, 'Array of offsets to PosRule tables-from beginning of PosRuleSet-ordered by preference'),
 	]),
 
 	('PosRule', [
@@ -298,12 +414,27 @@ otData = [
 		('struct', 'PosLookupRecord', 'PosCount', 0, 'Array of positioning lookups-in design order'),
 	]),
 
+	('PosRule24', [
+		('uint16', 'GlyphCount', None, None, 'Number of glyphs in the Input glyph sequence'),
+		('uint16', 'PosCount', None, None, 'Number of PosLookupRecords'),
+		('GlyphID24', 'Input', 'GlyphCount', -1, 'Array of input GlyphIDs-starting with the second glyph'),
+		('struct', 'PosLookupRecord', 'PosCount', 0, 'Array of positioning lookups-in design order'),
+	]),
+
 	('ContextPosFormat2', [
 		('uint16', 'PosFormat', None, None, 'Format identifier-format = 2'),
 		('Offset', 'Coverage', None, None, 'Offset to Coverage table-from beginning of ContextPos subtable'),
 		('Offset', 'ClassDef', None, None, 'Offset to ClassDef table-from beginning of ContextPos subtable'),
 		('uint16', 'PosClassSetCount', None, None, 'Number of PosClassSet tables'),
 		('Offset', 'PosClassSet', 'PosClassSetCount', 0, 'Array of offsets to PosClassSet tables-from beginning of ContextPos subtable-ordered by class-may be NULL'),
+	]),
+
+	('ContextPosFormat5', [
+		('uint16', 'PosFormat', None, None, 'Format identifier-format = 2'),
+		('Offset24', 'Coverage', None, None, 'Offset to Coverage table-from beginning of ContextPos subtable'),
+		('Offset24', 'ClassDef', None, None, 'Offset to ClassDef table-from beginning of ContextPos subtable'),
+		('uint16', 'PosClassSetCount', None, None, 'Number of PosClassSet tables'),
+		('Offset24', 'PosClassSet', 'PosClassSetCount', 0, 'Array of offsets to PosClassSet tables-from beginning of ContextPos subtable-ordered by class-may be NULL'),
 	]),
 
 	('PosClassSet', [
@@ -333,9 +464,21 @@ otData = [
 		('Offset', 'ChainPosRuleSet', 'ChainPosRuleSetCount', 0, 'Array of offsets to ChainPosRuleSet tables-from beginning of ContextPos subtable-ordered by Coverage Index'),
 	]),
 
+	('ChainContextPosFormat4', [
+		('uint16', 'PosFormat', None, None, 'Format identifier-format = 1'),
+		('Offset24', 'Coverage', None, None, 'Offset to Coverage table-from beginning of ContextPos subtable'),
+		('uint16', 'ChainPosRuleSetCount', None, None, 'Number of ChainPosRuleSet tables'),
+		('LOffset24To(ChainPosRuleSet24)', 'ChainPosRuleSet', 'ChainPosRuleSetCount', 0, 'Array of offsets to ChainPosRuleSet tables-from beginning of ContextPos subtable-ordered by Coverage Index'),
+	]),
+
 	('ChainPosRuleSet', [
 		('uint16', 'ChainPosRuleCount', None, None, 'Number of ChainPosRule tables'),
 		('Offset', 'ChainPosRule', 'ChainPosRuleCount', 0, 'Array of offsets to ChainPosRule tables-from beginning of ChainPosRuleSet-ordered by preference'),
+	]),
+
+	('ChainPosRuleSet24', [
+		('uint16', 'ChainPosRuleCount', None, None, 'Number of ChainPosRule tables'),
+		('OffsetTo(ChainPosRule24)', 'ChainPosRule', 'ChainPosRuleCount', 0, 'Array of offsets to ChainPosRule tables-from beginning of ChainPosRuleSet-ordered by preference'),
 	]),
 
 	('ChainPosRule', [
@@ -349,6 +492,17 @@ otData = [
 		('struct', 'PosLookupRecord', 'PosCount', 0, 'Array of PosLookupRecords (in design order)'),
 	]),
 
+	('ChainPosRule24', [
+		('uint16', 'BacktrackGlyphCount', None, None, 'Total number of glyphs in the backtrack sequence (number of glyphs to be matched before the first glyph)'),
+		('GlyphID24', 'Backtrack', 'BacktrackGlyphCount', 0, "Array of backtracking GlyphID's (to be matched before the input sequence)"),
+		('uint16', 'InputGlyphCount', None, None, 'Total number of glyphs in the input sequence (includes the first glyph)'),
+		('GlyphID24', 'Input', 'InputGlyphCount', -1, 'Array of input GlyphIDs (start with second glyph)'),
+		('uint16', 'LookAheadGlyphCount', None, None, 'Total number of glyphs in the look ahead sequence (number of glyphs to be matched after the input sequence)'),
+		('GlyphID24', 'LookAhead', 'LookAheadGlyphCount', 0, "Array of lookahead GlyphID's (to be matched after the input sequence)"),
+		('uint16', 'PosCount', None, None, 'Number of PosLookupRecords'),
+		('struct', 'PosLookupRecord', 'PosCount', 0, 'Array of PosLookupRecords (in design order)'),
+	]),
+
 	('ChainContextPosFormat2', [
 		('uint16', 'PosFormat', None, None, 'Format identifier-format = 2'),
 		('Offset', 'Coverage', None, None, 'Offset to Coverage table-from beginning of ChainContextPos subtable'),
@@ -357,6 +511,16 @@ otData = [
 		('Offset', 'LookAheadClassDef', None, None, 'Offset to ClassDef table containing lookahead sequence context-from beginning of ChainContextPos subtable'),
 		('uint16', 'ChainPosClassSetCount', None, None, 'Number of ChainPosClassSet tables'),
 		('Offset', 'ChainPosClassSet', 'ChainPosClassSetCount', 0, 'Array of offsets to ChainPosClassSet tables-from beginning of ChainContextPos subtable-ordered by input class-may be NULL'),
+	]),
+
+	('ChainContextPosFormat5', [
+		('uint16', 'PosFormat', None, None, 'Format identifier-format = 2'),
+		('Offset24', 'Coverage', None, None, 'Offset to Coverage table-from beginning of ChainContextPos subtable'),
+		('Offset24', 'BacktrackClassDef', None, None, 'Offset to ClassDef table containing backtrack sequence context-from beginning of ChainContextPos subtable'),
+		('Offset24', 'InputClassDef', None, None, 'Offset to ClassDef table containing input sequence context-from beginning of ChainContextPos subtable'),
+		('Offset24', 'LookAheadClassDef', None, None, 'Offset to ClassDef table containing lookahead sequence context-from beginning of ChainContextPos subtable'),
+		('uint16', 'ChainPosClassSetCount', None, None, 'Number of ChainPosClassSet tables'),
+		('Offset24', 'ChainPosClassSet', 'ChainPosClassSetCount', 0, 'Array of offsets to ChainPosClassSet tables-from beginning of ChainContextPos subtable-ordered by input class-may be NULL'),
 	]),
 
 	('ChainPosClassSet', [
@@ -442,9 +606,12 @@ otData = [
 
 	('GSUB', [
 		('Version', 'Version', None, None, 'Version of the GSUB table- 0x00010000 or 0x00010001'),
-		('Offset', 'ScriptList', None, None, 'Offset to ScriptList table-from beginning of GSUB table'),
-		('Offset', 'FeatureList', None, None, 'Offset to FeatureList table-from beginning of GSUB table'),
-		('Offset', 'LookupList', None, None, 'Offset to LookupList table-from beginning of GSUB table'),
+		('Offset', 'ScriptList', None, 'Version < 0x00020000', 'Offset to ScriptList table-from beginning of GSUB table'),
+		('LOffset24To(ScriptList)', 'ScriptList24', None, 'Version >= 0x00020000', 'Offset to ScriptList table-from beginning of GSUB table'),
+		('Offset', 'FeatureList', None, 'Version < 0x00020000', 'Offset to FeatureList table-from beginning of GSUB table'),
+		('LOffset24To(FeatureList)', 'FeatureList24', None, 'Version >= 0x00020000', 'Offset to FeatureList table-from beginning of GSUB table'),
+		('Offset', 'LookupList', None, 'Version < 0x00020000', 'Offset to LookupList table-from beginning of GSUB table'),
+		('Offset24', 'LookupList24', None, 'Version >= 0x00020000', 'Offset to LookupList table-from beginning of GSUB table'),
 		('LOffset', 'FeatureVariations', None, 'Version >= 0x00010001', 'Offset to FeatureVariations table-from beginning of GSUB table'),
 	]),
 
@@ -454,11 +621,24 @@ otData = [
 		('uint16', 'DeltaGlyphID', None, None, 'Add to original GlyphID modulo 65536 to get substitute GlyphID'),
 	]),
 
+	('SingleSubstFormat3', [
+		('uint16', 'SubstFormat', None, None, 'Format identifier-format = 1'),
+		('Offset24', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
+		('uint32', 'DeltaGlyphID', None, None, 'Add to original GlyphID modulo 65536 to get substitute GlyphID'),
+	]),
+
 	('SingleSubstFormat2', [
 		('uint16', 'SubstFormat', None, None, 'Format identifier-format = 2'),
 		('Offset', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
 		('uint16', 'GlyphCount', None, None, 'Number of GlyphIDs in the Substitute array'),
 		('GlyphID', 'Substitute', 'GlyphCount', 0, 'Array of substitute GlyphIDs-ordered by Coverage Index'),
+	]),
+
+	('SingleSubstFormat4', [
+		('uint16', 'SubstFormat', None, None, 'Format identifier-format = 2'),
+		('Offset24', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
+		('uint16', 'GlyphCount', None, None, 'Number of GlyphIDs in the Substitute array'),
+		('GlyphID24', 'Substitute', 'GlyphCount', 0, 'Array of substitute GlyphIDs-ordered by Coverage Index'),
 	]),
 
 	('MultipleSubstFormat1', [
@@ -473,6 +653,23 @@ otData = [
 		('GlyphID', 'Substitute', 'GlyphCount', 0, 'String of GlyphIDs to substitute'),
 	]),
 
+	('MultipleSubstFormat2', [
+		('uint16', 'SubstFormat', None, None, 'Format identifier-format = 1'),
+		('Offset24', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
+		('uint16', 'SequenceCount', None, None, 'Number of Sequence table offsets in the Sequence array'),
+		('LOffset24To(Sequence24)', 'Sequence', 'SequenceCount', 0, 'Array of offsets to Sequence tables-from beginning of Substitution table-ordered by Coverage Index'),
+	]),
+
+	('Sequence', [
+		('uint16', 'GlyphCount', None, None, 'Number of GlyphIDs in the Substitute array. This should always be greater than 0.'),
+		('GlyphID', 'Substitute', 'GlyphCount', 0, 'String of GlyphIDs to substitute'),
+	]),
+
+	('Sequence24', [
+		('uint16', 'GlyphCount', None, None, 'Number of GlyphIDs in the Substitute array. This should always be greater than 0.'),
+		('GlyphID24', 'Substitute', 'GlyphCount', 0, 'String of GlyphIDs to substitute'),
+	]),
+
 	('AlternateSubstFormat1', [
 		('uint16', 'SubstFormat', None, None, 'Format identifier-format = 1'),
 		('Offset', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
@@ -480,9 +677,21 @@ otData = [
 		('Offset', 'AlternateSet', 'AlternateSetCount', 0, 'Array of offsets to AlternateSet tables-from beginning of Substitution table-ordered by Coverage Index'),
 	]),
 
+	('AlternateSubstFormat2', [
+		('uint16', 'SubstFormat', None, None, 'Format identifier-format = 1'),
+		('Offset24', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
+		('uint16', 'AlternateSetCount', None, None, 'Number of AlternateSet tables'),
+		('LOffset24To(AlternateSet24)', 'AlternateSet', 'AlternateSetCount', 0, 'Array of offsets to AlternateSet tables-from beginning of Substitution table-ordered by Coverage Index'),
+	]),
+
 	('AlternateSet', [
 		('uint16', 'GlyphCount', None, None, 'Number of GlyphIDs in the Alternate array'),
 		('GlyphID', 'Alternate', 'GlyphCount', 0, 'Array of alternate GlyphIDs-in arbitrary order'),
+	]),
+
+	('AlternateSet24', [
+		('uint16', 'GlyphCount', None, None, 'Number of GlyphIDs in the Alternate array'),
+		('GlyphID24', 'Alternate', 'GlyphCount', 0, 'Array of alternate GlyphIDs-in arbitrary order'),
 	]),
 
 	('LigatureSubstFormat1', [
@@ -492,15 +701,33 @@ otData = [
 		('Offset', 'LigatureSet', 'LigSetCount', 0, 'Array of offsets to LigatureSet tables-from beginning of Substitution table-ordered by Coverage Index'),
 	]),
 
+	('LigatureSubstFormat2', [
+		('uint16', 'SubstFormat', None, None, 'Format identifier-format = 1'),
+		('Offset24', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
+		('uint16', 'LigSetCount', None, None, 'Number of LigatureSet tables'),
+		('LOffset24To(LigatureSet24)', 'LigatureSet', 'LigSetCount', 0, 'Array of offsets to LigatureSet tables-from beginning of Substitution table-ordered by Coverage Index'),
+	]),
+
 	('LigatureSet', [
 		('uint16', 'LigatureCount', None, None, 'Number of Ligature tables'),
 		('Offset', 'Ligature', 'LigatureCount', 0, 'Array of offsets to Ligature tables-from beginning of LigatureSet table-ordered by preference'),
+	]),
+
+	('LigatureSet24', [
+		('uint16', 'LigatureCount', None, None, 'Number of Ligature tables'),
+		('OffsetTo(Ligature24)', 'Ligature', 'LigatureCount', 0, 'Array of offsets to Ligature tables-from beginning of LigatureSet table-ordered by preference'),
 	]),
 
 	('Ligature', [
 		('GlyphID', 'LigGlyph', None, None, 'GlyphID of ligature to substitute'),
 		('uint16', 'CompCount', None, None, 'Number of components in the ligature'),
 		('GlyphID', 'Component', 'CompCount', -1, 'Array of component GlyphIDs-start with the second component-ordered in writing direction'),
+	]),
+
+	('Ligature24', [
+		('GlyphID24', 'LigGlyph', None, None, 'GlyphID of ligature to substitute'),
+		('uint16', 'CompCount', None, None, 'Number of components in the ligature'),
+		('GlyphID24', 'Component', 'CompCount', -1, 'Array of component GlyphIDs-start with the second component-ordered in writing direction'),
 	]),
 
 	('SubstLookupRecord', [
@@ -515,9 +742,21 @@ otData = [
 		('Offset', 'SubRuleSet', 'SubRuleSetCount', 0, 'Array of offsets to SubRuleSet tables-from beginning of Substitution table-ordered by Coverage Index'),
 	]),
 
+	('ContextSubstFormat4', [
+		('uint16', 'SubstFormat', None, None, 'Format identifier-format = 1'),
+		('Offset24', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
+		('uint16', 'SubRuleSetCount', None, None, 'Number of SubRuleSet tables-must equal GlyphCount in Coverage table'),
+		('LOffset24To(SubRuleSet24)', 'SubRuleSet', 'SubRuleSetCount', 0, 'Array of offsets to SubRuleSet tables-from beginning of Substitution table-ordered by Coverage Index'),
+	]),
+
 	('SubRuleSet', [
 		('uint16', 'SubRuleCount', None, None, 'Number of SubRule tables'),
 		('Offset', 'SubRule', 'SubRuleCount', 0, 'Array of offsets to SubRule tables-from beginning of SubRuleSet table-ordered by preference'),
+	]),
+
+	('SubRuleSet24', [
+		('uint16', 'SubRuleCount', None, None, 'Number of SubRule tables'),
+		('OffsetTo(SubRule24)', 'SubRule', 'SubRuleCount', 0, 'Array of offsets to SubRule tables-from beginning of SubRuleSet table-ordered by preference'),
 	]),
 
 	('SubRule', [
@@ -527,12 +766,27 @@ otData = [
 		('struct', 'SubstLookupRecord', 'SubstCount', 0, 'Array of SubstLookupRecords-in design order'),
 	]),
 
+	('SubRule24', [
+		('uint16', 'GlyphCount', None, None, 'Total number of glyphs in input glyph sequence-includes the first glyph'),
+		('uint16', 'SubstCount', None, None, 'Number of SubstLookupRecords'),
+		('GlyphID24', 'Input', 'GlyphCount', -1, 'Array of input GlyphIDs-start with second glyph'),
+		('struct', 'SubstLookupRecord', 'SubstCount', 0, 'Array of SubstLookupRecords-in design order'),
+	]),
+
 	('ContextSubstFormat2', [
 		('uint16', 'SubstFormat', None, None, 'Format identifier-format = 2'),
 		('Offset', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
 		('Offset', 'ClassDef', None, None, 'Offset to glyph ClassDef table-from beginning of Substitution table'),
 		('uint16', 'SubClassSetCount', None, None, 'Number of SubClassSet tables'),
 		('Offset', 'SubClassSet', 'SubClassSetCount', 0, 'Array of offsets to SubClassSet tables-from beginning of Substitution table-ordered by class-may be NULL'),
+	]),
+
+	('ContextSubstFormat5', [
+		('uint16', 'SubstFormat', None, None, 'Format identifier-format = 2'),
+		('Offset24', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
+		('Offset24', 'ClassDef', None, None, 'Offset to glyph ClassDef table-from beginning of Substitution table'),
+		('uint16', 'SubClassSetCount', None, None, 'Number of SubClassSet tables'),
+		('Offset24', 'SubClassSet', 'SubClassSetCount', 0, 'Array of offsets to SubClassSet tables-from beginning of Substitution table-ordered by class-may be NULL'),
 	]),
 
 	('SubClassSet', [
@@ -562,9 +816,21 @@ otData = [
 		('Offset', 'ChainSubRuleSet', 'ChainSubRuleSetCount', 0, 'Array of offsets to ChainSubRuleSet tables-from beginning of Substitution table-ordered by Coverage Index'),
 	]),
 
+	('ChainContextSubstFormat4', [
+		('uint16', 'SubstFormat', None, None, 'Format identifier-format = 1'),
+		('Offset24', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
+		('uint16', 'ChainSubRuleSetCount', None, None, 'Number of ChainSubRuleSet tables-must equal GlyphCount in Coverage table'),
+		('LOffset24To(ChainSubRule24)', 'ChainSubRuleSet', 'ChainSubRuleSetCount', 0, 'Array of offsets to ChainSubRuleSet tables-from beginning of Substitution table-ordered by Coverage Index'),
+	]),
+
 	('ChainSubRuleSet', [
 		('uint16', 'ChainSubRuleCount', None, None, 'Number of ChainSubRule tables'),
 		('Offset', 'ChainSubRule', 'ChainSubRuleCount', 0, 'Array of offsets to ChainSubRule tables-from beginning of ChainSubRuleSet table-ordered by preference'),
+	]),
+
+	('ChainSubRuleSet24', [
+		('uint16', 'ChainSubRuleCount', None, None, 'Number of ChainSubRule tables'),
+		('OffsetTo(ChainSubRule24)', 'ChainSubRule', 'ChainSubRuleCount', 0, 'Array of offsets to ChainSubRule tables-from beginning of ChainSubRuleSet table-ordered by preference'),
 	]),
 
 	('ChainSubRule', [
@@ -578,6 +844,17 @@ otData = [
 		('struct', 'SubstLookupRecord', 'SubstCount', 0, 'Array of SubstLookupRecords (in design order)'),
 	]),
 
+	('ChainSubRule24', [
+		('uint16', 'BacktrackGlyphCount', None, None, 'Total number of glyphs in the backtrack sequence (number of glyphs to be matched before the first glyph)'),
+		('GlyphID24', 'Backtrack', 'BacktrackGlyphCount', 0, "Array of backtracking GlyphID's (to be matched before the input sequence)"),
+		('uint16', 'InputGlyphCount', None, None, 'Total number of glyphs in the input sequence (includes the first glyph)'),
+		('GlyphID24', 'Input', 'InputGlyphCount', -1, 'Array of input GlyphIDs (start with second glyph)'),
+		('uint16', 'LookAheadGlyphCount', None, None, 'Total number of glyphs in the look ahead sequence (number of glyphs to be matched after the input sequence)'),
+		('GlyphID24', 'LookAhead', 'LookAheadGlyphCount', 0, "Array of lookahead GlyphID's (to be matched after the input sequence)"),
+		('uint16', 'SubstCount', None, None, 'Number of SubstLookupRecords'),
+		('struct', 'SubstLookupRecord', 'SubstCount', 0, 'Array of SubstLookupRecords (in design order)'),
+	]),
+
 	('ChainContextSubstFormat2', [
 		('uint16', 'SubstFormat', None, None, 'Format identifier-format = 2'),
 		('Offset', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
@@ -586,6 +863,16 @@ otData = [
 		('Offset', 'LookAheadClassDef', None, None, 'Offset to glyph ClassDef table containing lookahead sequence data-from beginning of Substitution table'),
 		('uint16', 'ChainSubClassSetCount', None, None, 'Number of ChainSubClassSet tables'),
 		('Offset', 'ChainSubClassSet', 'ChainSubClassSetCount', 0, 'Array of offsets to ChainSubClassSet tables-from beginning of Substitution table-ordered by input class-may be NULL'),
+	]),
+
+	('ChainContextSubstFormat5', [
+		('uint16', 'SubstFormat', None, None, 'Format identifier-format = 2'),
+		('Offset24', 'Coverage', None, None, 'Offset to Coverage table-from beginning of Substitution table'),
+		('Offset24', 'BacktrackClassDef', None, None, 'Offset to glyph ClassDef table containing backtrack sequence data-from beginning of Substitution table'),
+		('Offset24', 'InputClassDef', None, None, 'Offset to glyph ClassDef table containing input sequence data-from beginning of Substitution table'),
+		('Offset24', 'LookAheadClassDef', None, None, 'Offset to glyph ClassDef table containing lookahead sequence data-from beginning of Substitution table'),
+		('uint16', 'ChainSubClassSetCount', None, None, 'Number of ChainSubClassSet tables'),
+		('Offset24', 'ChainSubClassSet', 'ChainSubClassSetCount', 0, 'Array of offsets to ChainSubClassSet tables-from beginning of Substitution table-ordered by input class-may be NULL'),
 	]),
 
 	('ChainSubClassSet', [
@@ -639,11 +926,16 @@ otData = [
 
 	('GDEF', [
 		('Version', 'Version', None, None, 'Version of the GDEF table- 0x00010000, 0x00010002, or 0x00010003'),
-		('Offset', 'GlyphClassDef', None, None, 'Offset to class definition table for glyph type-from beginning of GDEF header (may be NULL)'),
-		('Offset', 'AttachList', None, None, 'Offset to list of glyphs with attachment points-from beginning of GDEF header (may be NULL)'),
-		('Offset', 'LigCaretList', None, None, 'Offset to list of positioning points for ligature carets-from beginning of GDEF header (may be NULL)'),
-		('Offset', 'MarkAttachClassDef', None, None, 'Offset to class definition table for mark attachment type-from beginning of GDEF header (may be NULL)'),
-		('Offset', 'MarkGlyphSetsDef', None, 'Version >= 0x00010002', 'Offset to the table of mark set definitions-from beginning of GDEF header (may be NULL)'),
+		('Offset', 'GlyphClassDef', None, 'Version < 0x00020000', 'Offset to class definition table for glyph type-from beginning of GDEF header (may be NULL)'),
+		('LOffset24To(GlyphClassDef)', 'GlyphClassDef24', None, 'Version >= 0x00020000', 'Offset to class definition table for glyph type-from beginning of GDEF header (may be NULL)'),
+		('Offset', 'AttachList', None, 'Version < 0x00020000', 'Offset to list of glyphs with attachment points-from beginning of GDEF header (may be NULL)'),
+		('LOffset24To(AttachList)', 'AttachList24', None, 'Version >= 0x00020000', 'Offset to list of glyphs with attachment points-from beginning of GDEF header (may be NULL)'),
+		('Offset', 'LigCaretList', None, 'Version < 0x00020000', 'Offset to list of positioning points for ligature carets-from beginning of GDEF header (may be NULL)'),
+		('LOffset24To(LigCaretList)', 'LigCaretList24', None, 'Version >= 0x00020000', 'Offset to list of positioning points for ligature carets-from beginning of GDEF header (may be NULL)'),
+		('Offset', 'MarkAttachClassDef', None, 'Version < 0x00020000', 'Offset to class definition table for mark attachment type-from beginning of GDEF header (may be NULL)'),
+		('LOffset24To(MarkAttachClassDef)', 'MarkAttachClassDef24', None, 'Version >= 0x00020000', 'Offset to class definition table for mark attachment type-from beginning of GDEF header (may be NULL)'),
+		('Offset', 'MarkGlyphSetsDef', None, 'Version >= 0x00010002 and Version < 0x00020000', 'Offset to the table of mark set definitions-from beginning of GDEF header (may be NULL)'),
+		('LOffset24To(MarkGlyphSetsDef)', 'MarkGlyphSetsDef24', None, 'Version >= 0x00020000', 'Offset to the table of mark set definitions-from beginning of GDEF header (may be NULL)'),
 		('LOffset', 'VarStore', None, 'Version >= 0x00010003', 'Offset to variation store (may be NULL)'),
 	]),
 

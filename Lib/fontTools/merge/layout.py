@@ -7,6 +7,8 @@ from fontTools.ttLib.tables.DefaultTable import DefaultTable
 from fontTools.ttLib.tables import otTables
 from fontTools.merge.base import add_method, mergeObjects
 from fontTools.merge.util import *
+import fontTools.merge.classify_context
+import fontTools.merge.upgrade64k
 import logging
 
 
@@ -252,51 +254,6 @@ def merge(self, m, tables):
 def mapLookups(self, lookupMap):
 	pass
 
-# Copied and trimmed down from subset.py
-@add_method(otTables.ContextSubst,
-		otTables.ChainContextSubst,
-		otTables.ContextPos,
-		otTables.ChainContextPos)
-def __merge_classify_context(self):
-
-	class ContextHelper(object):
-		def __init__(self, klass, Format):
-			if klass.__name__.endswith('Subst'):
-				Typ = 'Sub'
-				Type = 'Subst'
-			else:
-				Typ = 'Pos'
-				Type = 'Pos'
-			if klass.__name__.startswith('Chain'):
-				Chain = 'Chain'
-			else:
-				Chain = ''
-			ChainTyp = Chain+Typ
-
-			self.Typ = Typ
-			self.Type = Type
-			self.Chain = Chain
-			self.ChainTyp = ChainTyp
-
-			self.LookupRecord = Type+'LookupRecord'
-
-			if Format == 1:
-				self.Rule = ChainTyp+'Rule'
-				self.RuleSet = ChainTyp+'RuleSet'
-			elif Format == 2:
-				self.Rule = ChainTyp+'ClassRule'
-				self.RuleSet = ChainTyp+'ClassSet'
-
-	if self.Format not in [1, 2, 3]:
-		return None  # Don't shoot the messenger; let it go
-	if not hasattr(self.__class__, "_merge__ContextHelpers"):
-		self.__class__._merge__ContextHelpers = {}
-	if self.Format not in self.__class__._merge__ContextHelpers:
-		helper = ContextHelper(self.__class__, self.Format)
-		self.__class__._merge__ContextHelpers[self.Format] = helper
-	return self.__class__._merge__ContextHelpers[self.Format]
-
-
 @add_method(otTables.ContextSubst,
 		otTables.ChainContextSubst,
 		otTables.ContextPos,
@@ -407,6 +364,8 @@ def layoutPreMerge(font):
 		# TODO FeatureParams nameIDs
 
 def layoutPostMerge(font):
+		beyond64k = len(font.getGlyphOrder()) > 65535
+
 		# Map references back to indices
 
 		GDEF = font.get('GDEF')
@@ -463,4 +422,10 @@ def layoutPostMerge(font):
 					markFilteringSetMap = NonhashableDict(GDEF.table.MarkGlyphSetsDef.Coverage)
 					t.table.LookupList.mapMarkFilteringSets(markFilteringSetMap)
 
+				if beyond64k:
+					t.table.upgrade64k(font.getReverseGlyphMap())
+
 		# TODO FeatureParams nameIDs
+
+		if beyond64k and GDEF:
+			GDEF.table.upgrade64k(font.getReverseGlyphMap())

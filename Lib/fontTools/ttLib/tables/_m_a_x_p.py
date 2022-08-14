@@ -43,7 +43,7 @@ class table__m_a_x_p(DefaultTable.DefaultTable):
 				self.recalc(ttFont)
 		else:
 			pass  # CFF
-		self.numGlyphs = len(ttFont.getGlyphOrder())
+		self.numGlyphs = min(0xFFFF, len(ttFont.getGlyphOrder()))
 		if self.tableVersion != 0x00005000:
 			self.tableVersion = 0x00010000
 		data = sstruct.pack(maxpFormat_0_5, self)

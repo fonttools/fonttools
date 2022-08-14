@@ -187,6 +187,14 @@ ttLib.getTableClass('post').mergeMap = {
 	'extraNames': lambda lst: [],
 }
 
+@add_method(ttLib.getTableClass('post'))
+def merge(self, m, tables):
+	DefaultTable.merge(self, m, tables)
+	beyond64k = len(m.glyphOrder) > 65535
+	if beyond64k:
+		self.formatType = 3
+	return self
+
 ttLib.getTableClass('vmtx').mergeMap = ttLib.getTableClass('hmtx').mergeMap = {
 	'tableTag': equal,
 	'metrics': sumDicts,
@@ -288,9 +296,10 @@ def merge(self, m, tables):
 	cmap = m.cmap
 
 	cmapBmpOnly = {uni: gid for uni,gid in cmap.items() if uni <= 0xFFFF}
+	beyond64k = len(getattr(m, 'glyphOrder', [])) > 65535
 	self.tables = []
 	module = ttLib.getTableModule('cmap')
-	if len(cmapBmpOnly) != len(cmap):
+	if len(cmapBmpOnly) != len(cmap) or beyond64k:
 		# format-12 required.
 		cmapTable = module.cmap_classes[12](12)
 		cmapTable.platformID = 3
@@ -298,12 +307,13 @@ def merge(self, m, tables):
 		cmapTable.language = 0
 		cmapTable.cmap = cmap
 		self.tables.append(cmapTable)
-	# always create format-4
-	cmapTable = module.cmap_classes[4](4)
-	cmapTable.platformID = 3
-	cmapTable.platEncID = 1
-	cmapTable.language = 0
-	cmapTable.cmap = cmapBmpOnly
+	if not beyond64k:
+		# create format-4
+		cmapTable = module.cmap_classes[4](4)
+		cmapTable.platformID = 3
+		cmapTable.platEncID = 1
+		cmapTable.language = 0
+		cmapTable.cmap = cmapBmpOnly
 	# ordered by platform then encoding
 	self.tables.insert(0, cmapTable)
 	self.tableVersion = 0
