@@ -36,7 +36,7 @@ def test_supportScalar():
 
 @pytest.mark.parametrize(
     "numLocations, numSamples", [
-        (127, 509),
+        pytest.param(127, 509, marks=pytest.mark.slow),
         (31, 251),
     ]
 )
