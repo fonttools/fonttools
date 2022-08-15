@@ -1,4 +1,4 @@
-from fontTools.misc.visitor import TTVisitor
+from fontTools.ttLib.ttVisitor import TTVisitor
 import fontTools.ttLib as ttLib
 import fontTools.ttLib.tables.otBase as otBase
 import fontTools.ttLib.tables.otTables as otTables

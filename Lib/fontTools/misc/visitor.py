@@ -1,4 +1,5 @@
-from fontTools.ttLib import TTFont
+"""Generic visitor pattern implementation for Python objects."""
+
 import enum
 
 
@@ -94,21 +95,3 @@ class Visitor(object):
             self.visitObject(obj, *args, **kwargs)
         elif isinstance(obj, list):
             self.visitList(obj, *args, **kwargs)
-
-
-class TTVisitor(Visitor):
-    def visit(self, obj, *args, **kwargs):
-        if hasattr(obj, "ensureDecompiled"):
-            obj.ensureDecompiled(recurse=False)
-        super().visit(obj, *args, **kwargs)
-
-
-@TTVisitor.register(TTFont)
-def visit(visitor, font):
-    if hasattr(visitor, "font"):
-        return False
-    visitor.font = font
-    for tag in font.keys():
-        visitor.visit(font[tag])
-    del visitor.font
-    return False
