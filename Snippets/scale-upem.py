@@ -82,6 +82,7 @@ def visit(visitor, obj, attr, glyphs):
         for i, (x, y) in enumerate(coordinates):
             coordinates[i] = visitor.scale(x), visitor.scale(y)
 
+
 @ScalerVisitor.register_attr(ttLib.getTableClass("gvar"), "variations")
 def visit(visitor, obj, attr, variations):
     for varlist in variations.values():
@@ -121,6 +122,16 @@ def visit(visitor, obj):
         v = getattr(obj, attr)
         v = visitor.scale(v)
         setattr(obj, attr, v)
+
+
+# ItemVariationStore
+
+
+@ScalerVisitor.register(otTables.VarData)
+def visit(visitor, varData):
+    for item in varData.Item:
+        for i, v in enumerate(item):
+            item[i] = visitor.scale(v)
 
 
 if __name__ == "__main__":
