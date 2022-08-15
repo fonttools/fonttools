@@ -1,3 +1,6 @@
+4.35.0 (released 2022-08-15)
+----------------------------
+
 - [otData/otConverters] Added support for 'biased' PaintSweepGradient start/end angles
   to match latest COLRv1 spec (#2743).
 - [varLib.instancer] Fixed bug in ``_instantiateFeatureVariations`` when at the same
