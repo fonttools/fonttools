@@ -34,6 +34,40 @@ def test_supportScalar():
     assert supportScalar({'wght':2.5}, {'wght':(0,2,4)}) == 0.75
 
 
+@pytest.mark.parametrize(
+    "numLocations, numSamples", [
+        pytest.param(127, 509, marks=pytest.mark.slow),
+        (31, 251),
+    ]
+)
+def test_modeling_error(numLocations, numSamples):
+    # https://github.com/fonttools/fonttools/issues/2213
+    locations = [{'axis': float(i)/numLocations} for i in range(numLocations)]
+    masterValues = [100. if i else 0. for i in range(numLocations)]
+
+    model = VariationModel(locations)
+
+    for i in range(numSamples):
+        loc = {'axis': float(i)/numSamples}
+        scalars = model.getScalars(loc)
+
+        deltas_float = model.getDeltas(masterValues)
+        deltas_round = model.getDeltas(masterValues, round=round)
+
+        expected = model.interpolateFromDeltasAndScalars(deltas_float, scalars)
+        actual = model.interpolateFromDeltasAndScalars(deltas_round, scalars)
+
+        err = abs(actual - expected)
+        assert err <= .5, (i, err)
+
+        # This is how NOT to round deltas.
+        #deltas_late_round = [round(d) for d in deltas_float]
+        #bad = model.interpolateFromDeltasAndScalars(deltas_late_round, scalars)
+        #err_bad = abs(bad - expected)
+        #if err != err_bad:
+        #    print("{:d}	{:.2}	{:.2}".format(i, err, err_bad))
+
+
 class VariationModelTest(object):
 
     @pytest.mark.parametrize(
