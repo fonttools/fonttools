@@ -17,11 +17,11 @@ class TTVisitor(Visitor):
 
 
 @TTVisitor.register(TTFont)
-def visit(visitor, font):
+def visit(visitor, font, *args, **kwargs):
     if hasattr(visitor, "font"):
         return False
     visitor.font = font
     for tag in font.keys():
-        visitor.visit(font[tag])
+        visitor.visit(font[tag], *args, **kwargs)
     del visitor.font
     return False
