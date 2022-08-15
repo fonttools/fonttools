@@ -53,6 +53,7 @@ class ScalerVisitor(TTVisitor):
         ),
         (otTables.ValueRecord, ("XAdvance", "YAdvance", "XPlacement", "YPlacement")),
         (otTables.Anchor, ("XCoordinate", "YCoordinate")),
+        (otTables.CaretValue, ("Coordinate")),
     )
 )
 def visit(visitor, obj, attr, value):
