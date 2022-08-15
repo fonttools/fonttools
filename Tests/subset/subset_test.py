@@ -819,13 +819,20 @@ class SubsetTest:
             if not have_uharfbuzz:
                 pytest.skip("uharfbuzz is not installed")
             if not ok:
-                # pretend hb.repack returns an error
+                # pretend hb.repack/repack_with_tag return an error
                 import uharfbuzz as hb
 
                 def mock_repack(data, obj_list):
                     raise hb.RepackerError("mocking")
 
                 monkeypatch.setattr(hb, "repack", mock_repack)
+
+                if hasattr(hb, "repack_with_tag"):  # uharfbuzz >= 0.30.0
+
+                    def mock_repack_with_tag(tag, data, obj_list):
+                        raise hb.RepackerError("mocking")
+
+                    monkeypatch.setattr(hb, "repack_with_tag", mock_repack_with_tag)
         else:
             if have_uharfbuzz:
                 # pretend uharfbuzz is not installed
