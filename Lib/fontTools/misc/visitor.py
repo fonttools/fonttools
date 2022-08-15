@@ -91,6 +91,9 @@ class Visitor(object):
         for value in obj:
             self.visit(value, *args, **kwargs)
 
+    def visitLeaf(self, obj, *args, **kwargs):
+        pass
+
     def visit(self, obj, *args, **kwargs):
         visitorFunc = self._visitorsFor(obj).get(None, None)
         if visitorFunc is not None:
@@ -101,3 +104,5 @@ class Visitor(object):
             self.visitObject(obj, *args, **kwargs)
         elif isinstance(obj, list):
             self.visitList(obj, *args, **kwargs)
+        else:
+            self.visitLeaf(obj, *args, **kwargs)
