@@ -1,3 +1,35 @@
+- [otData/otConverters] Added support for 'biased' PaintSweepGradient start/end angles
+  to match latest COLRv1 spec (#2743).
+- [varLib.instancer] Fixed bug in ``_instantiateFeatureVariations`` when at the same
+  time pinning one axis and restricting the range of a subsequent axis; the wrong axis
+  tag was being used in the latter step (as the records' axisIdx was updated in the
+  preceding step but looked up using the old axes order in the following step) (#2733,
+  #2734).
+- [mtiLib] Pad script tags with space when less than 4 char long (#1727).
+- [merge] Use ``'.'`` instead of ``'#'`` in duplicate glyph names (#2742).
+- [gvar] Added support for lazily loading glyph variations (#2741).
+- [varLib] In ``build_many``, we forgot to pass on ``colr_layer_reuse`` parameter to
+  the ``build`` method (#2730).
+- [svgPathPen] Add a main that prints SVG for input text (6df779fd).
+- [cffLib.width] Fixed off-by-one in optimized values; previous code didn't match the
+  code block above it (2963fa50).
+- [varLib.interpolatable] Support reading .designspace and .glyphs files (via optional
+  ``glyphsLib``).
+- Compile some modules with Cython when available and building/installing fonttools
+  from source: ``varLib.iup`` (35% faster), ``pens.momentsPen`` (makes
+  ``varLib.interpolatable`` 3x faster).
+- [feaLib] Allow features to be built for VF without also building a GDEF table (e.g.
+  only build GSUB); warn when GDEF would be needed but isn't requested (#2705, 2694).
+- [otBase] Fixed ``AttributeError`` when uharfbuzz < 0.23.0 and 'repack' method is
+  missing (32aa8eaf). Use new ``uharfbuzz.repack_with_tag`` when available (since
+  uharfbuzz>=0.30.0), enables table-specific optimizations to be performed during
+  repacking (#2724).
+- [statisticsPen] By default report all glyphs (4139d891). Avoid division-by-zero
+  (52b28f90).
+- [feaLib] Added missing required argument to FeatureLibError exception (#2693)
+- [varLib.merge] Fixed error during error reporting (#2689). Fixed undefined
+  ``NotANone`` variable (#2714).
+
 4.34.4 (released 2022-07-07)
 ----------------------------
 
