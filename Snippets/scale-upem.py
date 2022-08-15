@@ -27,7 +27,7 @@ class ScalerVisitor(TTVisitor):
                 "minRightSideBearing",
                 "xMaxExtent",
                 "caretOffset",
-            )
+            ),
         ),
         (
             ttLib.getTableClass("vhea"),
@@ -40,7 +40,7 @@ class ScalerVisitor(TTVisitor):
                 "minBottomSideBearing",
                 "yMaxExtent",
                 "caretOffset",
-            )
+            ),
         ),
         (
             ttLib.getTableClass("OS/2"),
@@ -63,7 +63,7 @@ class ScalerVisitor(TTVisitor):
                 "usWinDescent",
                 "sxHeight",
                 "sCapHeight",
-            )
+            ),
         ),
         (otTables.ValueRecord, ("XAdvance", "YAdvance", "XPlacement", "YPlacement")),
         (otTables.Anchor, ("XCoordinate", "YCoordinate")),
@@ -74,7 +74,9 @@ def visit(visitor, obj, attr, value):
     setattr(obj, attr, visitor.scale(value))
 
 
-@ScalerVisitor.register_attr(ttLib.getTableClass("hmtx"), "metrics")
+@ScalerVisitor.register_attr(
+    (ttLib.getTableClass("hmtx"), ttLib.getTableClass("vmtx")), "metrics"
+)
 def visit(visitor, obj, attr, metrics):
     for g in metrics:
         advance, lsb = metrics[g]
