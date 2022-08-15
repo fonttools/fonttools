@@ -85,7 +85,7 @@ class Visitor(object):
 class TTVisitor(Visitor):
     def visit(self, obj, *args, **kwargs):
         if hasattr(obj, "ensureDecompiled"):
-            obj.ensureDecompiled()
+            obj.ensureDecompiled(recurse=False)
         super().visit(obj, *args, **kwargs)
 
 

@@ -388,7 +388,7 @@ class TTFont(object):
 			if recurse is None:
 				recurse = self.lazy is not False
 			if recurse and hasattr(table, "ensureDecompiled"):
-				table.ensureDecompiled()
+				table.ensureDecompiled(recurse=recurse)
 		self.lazy = False
 
 	def __len__(self):
