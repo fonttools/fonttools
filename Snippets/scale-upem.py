@@ -114,10 +114,19 @@ def visit(visitor, obj):
         setattr(obj, attr, v)
 
 
-from fontTools.ttLib import TTFont
-import sys
+if __name__ == "__main__":
 
-font = TTFont(sys.argv[1])
+    from fontTools.ttLib import TTFont
+    import sys
 
-visitor = ScalerVisitor(0.5)
-visitor.visit(font)
+    if len(sys.argv) != 3:
+        print("usage: scale-upem.py font new-upem")
+        sys.exit()
+
+    font = TTFont(sys.argv[1])
+    new_upem = int(sys.argv[2])
+
+    upem = font["head"].unitsPerEm
+
+    visitor = ScalerVisitor(new_upem / upem)
+    visitor.visit(font)
