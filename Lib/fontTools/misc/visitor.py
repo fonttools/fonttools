@@ -105,10 +105,10 @@ class TTVisitor(Visitor):
 
 @TTVisitor.register(TTFont)
 def visit(visitor, font):
-    if hasattr(font, "visited"):
+    if hasattr(visitor, "font"):
         return False
-    font.visited = True
+    visitor.font = font
     for tag in font.keys():
         visitor.visit(font[tag])
-    del font.visited
+    del visitor.font
     return False

@@ -61,6 +61,25 @@ def visit(visitor, obj, attr, metrics):
         metrics[g] = visitor.scale(advance), visitor.scale(lsb)
 
 
+@ScalerVisitor.register_attr(ttLib.getTableClass("glyf"), "glyphs")
+def visit(visitor, obj, attr, glyphs):
+    for g in glyphs.values():
+        if g.isComposite():
+            for component in g.components:
+                component.x = visitor.scale(component.x)
+                component.y = visitor.scale(component.y)
+        else:
+            for attr in ("xMin", "xMax", "yMin", "yMax"):
+                v = getattr(g, attr, None)
+                if v is not None:
+                    setattr(g, attr, visitor.scale(v))
+
+        glyf = visitor.font["glyf"]
+        coordinates = g.getCoordinates(glyf)[0]
+        for i, (x, y) in enumerate(coordinates):
+            coordinates[i] = visitor.scale(x), visitor.scale(y)
+
+
 # GPOS
 
 
