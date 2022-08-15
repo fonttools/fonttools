@@ -82,6 +82,16 @@ def visit(visitor, obj, attr, glyphs):
         for i, (x, y) in enumerate(coordinates):
             coordinates[i] = visitor.scale(x), visitor.scale(y)
 
+@ScalerVisitor.register_attr(ttLib.getTableClass("gvar"), "variations")
+def visit(visitor, obj, attr, variations):
+    for varlist in variations.values():
+        for var in varlist:
+            coordinates = var.coordinates
+            for i, xy in enumerate(coordinates):
+                if xy is None:
+                    continue
+                coordinates[i] = visitor.scale(xy[0]), visitor.scale(xy[1])
+
 
 @ScalerVisitor.register_attr(ttLib.getTableClass("kern"), "kernTables")
 def visit(visitor, obj, attr, kernTables):
