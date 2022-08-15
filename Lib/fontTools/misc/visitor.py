@@ -7,7 +7,7 @@ class Visitor(object):
     defaultStop = False
 
     @classmethod
-    def register(celf, clazzes, attrs=(None,)):
+    def _register(celf, clazzes, attrs=(None,)):
         assert celf != Visitor, "Subclass Visitor instead."
         if "_visitors" not in celf.__dict__:
             celf._visitors = {}
@@ -33,6 +33,20 @@ class Visitor(object):
             return None
 
         return wrapper
+
+    @classmethod
+    def register(celf, clazzes):
+        return celf._register(clazzes)
+
+    @classmethod
+    def register_attr(celf, clazzes, attrs):
+        return celf._register(clazzes, attrs)
+
+    @classmethod
+    def register_attrs(celf, clazzes_attrs):
+        for clazz, attrs in clazzes_attrs:
+            celf._register(clazz, attrs)
+        return lambda _: None
 
     @classmethod
     def _visitorsFor(celf, thing, _default={}):
