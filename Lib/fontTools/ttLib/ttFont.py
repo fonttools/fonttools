@@ -689,13 +689,20 @@ class TTFont(object):
 		If the font contains both a 'CFF '/'CFF2' and a 'glyf' table, you can use
 		the 'preferCFF' argument to specify which one should be taken. If the
 		font contains both a 'CFF ' and a 'CFF2' table, the latter is taken.
+
+		If the 'location' parameter is set, it should be a dictionary mapping
+		four-letter variation tags to their float values, and the returned
+		glyph-set will represent an instance of a variable font at that location.
+		If the 'normalized' variable is set to True, that location is interpretted
+		as in the normalized (-1..+1) space, otherwise it is in the font's defined
+		axes space.
 		"""
 		glyphs = None
 		if (preferCFF and any(tb in self for tb in ["CFF ", "CFF2"]) or
 		   ("glyf" not in self and any(tb in self for tb in ["CFF ", "CFF2"]))):
 			table_tag = "CFF2" if "CFF2" in self else "CFF "
 			if location:
-				raise NotImplementedError
+				raise NotImplementedError # TODO
 			glyphs = _TTGlyphSet(self,
 			    list(self[table_tag].cff.values())[0].CharStrings, _TTGlyphCFF)
 

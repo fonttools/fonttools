@@ -393,7 +393,7 @@ def main(args=None):
                         locs.add(tuple(loc))
                 # Rebuild locs as dictionaries
                 new_locs = [{}]
-                for loc in (sorted(locs, key=lambda v: (len(v), v))):
+                for loc in sorted(locs, key=lambda v: (len(v), v)):
                     names.append(str(loc))
                     l = {}
                     for tag,val in loc:

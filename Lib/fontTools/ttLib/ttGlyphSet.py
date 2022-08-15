@@ -1,3 +1,7 @@
+"""GlyphSets returned by a TTFont."""
+
+from fontTools.misc.fixedTools import otRound
+from copy import copy
 
 class _TTGlyphSet(object):
 
@@ -141,7 +145,7 @@ class _TTVarGlyphSet(object):
 		except KeyError:
 			return default
 
-def setCoordinates(glyph, coord, glyfTable):
+def _setCoordinates(glyph, coord, glyfTable):
 	# Handle phantom points for (left, right, top, bottom) positions.
 	assert len(coord) >= 4
 	if not hasattr(glyph, 'xMin'):
@@ -167,9 +171,9 @@ def setCoordinates(glyph, coord, glyfTable):
 
 	glyph.recalcBounds(glyfTable)
 
-	horizontalAdvanceWidth = rightSideX - leftSideX
-	verticalAdvanceWidth = topSideY - bottomSideY
-	leftSideBearing = glyph.xMin - leftSideX
+	horizontalAdvanceWidth = otRound(rightSideX - leftSideX)
+	verticalAdvanceWidth = otRound(topSideY - bottomSideY)
+	leftSideBearing = otRound(glyph.xMin - leftSideX)
 	return horizontalAdvanceWidth, leftSideBearing, verticalAdvanceWidth
 
 
@@ -179,7 +183,7 @@ class _TTVarGlyphGlyf(object):
 		self._ttFont = ttFont
 		self._glyphName = glyphName
 		self._location = location
-		#self.width, self.lsb = ttFont['hmtx'][glyphName]
+		self.width = None # draw fills it in
 
 	def draw(self, pen):
 		from fontTools.varLib.iup import iup_delta
@@ -205,9 +209,8 @@ class _TTVarGlyphGlyf(object):
 				delta = iup_delta(delta, origCoords, endPts)
 			coordinates += GlyphCoordinates(delta) * scalar
 
-		from copy import copy
 		glyph = copy(glyf[self._glyphName]) # Shallow copy
-		horizontalAdvanceWidth, leftSideBearing, verticalAdvanceWidth = setCoordinates(glyph, coordinates, glyf)
+		horizontalAdvanceWidth, leftSideBearing, verticalAdvanceWidth = _setCoordinates(glyph, coordinates, glyf)
 		self.width = horizontalAdvanceWidth
 		self.height = verticalAdvanceWidth
 		offset = leftSideBearing - glyph.xMin if hasattr(glyph, "xMin") else 0

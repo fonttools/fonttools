@@ -8,7 +8,7 @@ class TTGlyphSetTest(object):
 
     @staticmethod
     def getpath(testfile):
-        path, _ = os.path.split(__file__)
+        path = os.path.dirname(__file__)
         return os.path.join(path, "data", testfile)
 
     @pytest.mark.parametrize(
