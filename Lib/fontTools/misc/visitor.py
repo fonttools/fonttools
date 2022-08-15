@@ -91,6 +91,10 @@ class Visitor(object):
         for value in obj:
             self.visit(value, *args, **kwargs)
 
+    def visitDict(self, obj, *args, **kwargs):
+        for value in obj.values():
+            self.visit(value, *args, **kwargs)
+
     def visitLeaf(self, obj, *args, **kwargs):
         pass
 
@@ -104,5 +108,7 @@ class Visitor(object):
             self.visitObject(obj, *args, **kwargs)
         elif isinstance(obj, list):
             self.visitList(obj, *args, **kwargs)
+        elif isinstance(obj, dict):
+            self.visitDict(obj, *args, **kwargs)
         else:
             self.visitLeaf(obj, *args, **kwargs)
