@@ -452,13 +452,14 @@ class F2Dot14(BaseFixedValue):
 class Angle(F2Dot14):
 	# angles are specified in degrees, and encoded as F2Dot14 fractions of half
 	# circle: e.g. 1.0 => 180, -0.5 => -90, -2.0 => -360, etc.
+	bias = 0.0
 	factor = 1.0/(1<<14) * 180  # 0.010986328125
 	@classmethod
 	def fromInt(cls, value):
-		return super().fromInt(value) * 180
+		return (super().fromInt(value) + cls.bias) * 180
 	@classmethod
 	def toInt(cls, value):
-		return super().toInt(value / 180)
+		return super().toInt((value / 180) - cls.bias)
 	@classmethod
 	def fromString(cls, value):
 		# quantize to nearest multiples of minimum fixed-precision angle
@@ -466,6 +467,11 @@ class Angle(F2Dot14):
 	@classmethod
 	def toString(cls, value):
 		return nearestMultipleShortestRepr(value, cls.factor)
+
+class BiasedAngle(Angle):
+	# A bias of 1.0 is used in the representation of start and end angles
+	# of COLRv1 PaintSweepGradients to allow for encoding +360deg
+	bias = 1.0
 
 class Version(SimpleValue):
 	staticSize = 4
@@ -1773,6 +1779,7 @@ converterMapping = {
 	"Fixed":	Fixed,
 	"F2Dot14":	F2Dot14,
 	"Angle":	Angle,
+	"BiasedAngle":	BiasedAngle,
 	"struct":	Struct,
 	"Offset":	Table,
 	"LOffset":	LTable,
