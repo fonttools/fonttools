@@ -143,6 +143,10 @@ if __name__ == "__main__":
     font = TTFont(sys.argv[1])
     new_upem = int(sys.argv[2])
 
+    if 'CFF ' in font or 'CFF2' in font:
+        print("scale-upem: CFF/CFF2 fonts are not supported.", file=sys.stderr)
+        sys.exit(1)
+
     upem = font["head"].unitsPerEm
 
     visitor = ScalerVisitor(new_upem / upem)
