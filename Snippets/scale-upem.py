@@ -6,7 +6,6 @@ from fontTools.misc.fixedTools import otRound
 
 
 class ScalerVisitor(TTVisitor):
-
     def __init__(self, scaleFactor):
         self.scaleFactor = scaleFactor
 
@@ -85,6 +84,14 @@ def visit(visitor, obj, attr, glyphs):
             coordinates[i] = visitor.scale(x), visitor.scale(y)
 
 
+@ScalerVisitor.register_attr(ttLib.getTableClass("kern"), "kernTables")
+def visit(visitor, obj, attr, kernTables):
+    for table in kernTables:
+        kernTable = table.kernTable
+        for k in kernTable.keys():
+            kernTable[k] = visitor.scale(kernTable[k])
+
+
 # GPOS
 
 
@@ -112,5 +119,5 @@ import sys
 
 font = TTFont(sys.argv[1])
 
-visitor = ScalerVisitor(.5)
+visitor = ScalerVisitor(0.5)
 visitor.visit(font)
