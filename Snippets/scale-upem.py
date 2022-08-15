@@ -41,7 +41,6 @@ class ScalerVisitor(TTVisitor):
                 "ySuperscriptXOffset",
                 "ySuperscriptYOffset",
                 "yStrikeoutSize",
-                "yStrikeoutSize",
                 "yStrikeoutPosition",
                 "sTypoAscender",
                 "sTypoDescender",
@@ -130,3 +129,5 @@ if __name__ == "__main__":
 
     visitor = ScalerVisitor(new_upem / upem)
     visitor.visit(font)
+
+    font.save("out.ttf")

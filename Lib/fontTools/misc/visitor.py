@@ -8,46 +8,50 @@ class Visitor(object):
     defaultStop = False
 
     @classmethod
-    def _register(celf, clazzes, attrs=(None,)):
+    def _register(celf, clazzes_attrs):
         assert celf != Visitor, "Subclass Visitor instead."
         if "_visitors" not in celf.__dict__:
             celf._visitors = {}
-        if type(clazzes) != tuple:
-            clazzes = (clazzes,)
-        if type(attrs) == str:
-            attrs = (attrs,)
 
         def wrapper(method):
             assert method.__name__ == "visit"
-            done = []
-            for clazz in clazzes:
-                if clazz in done:
-                    continue  # Support multiple names of a clazz
-                done.append(clazz)
-                _visitors = celf._visitors.setdefault(clazz, {})
-                for attr in attrs:
-                    assert attr not in _visitors, (
-                        "Oops, class '%s' has visitor function for '%s' defined already."
-                        % (clazz.__name__, attr)
-                    )
-                    _visitors[attr] = method
+            for clazzes,attrs in clazzes_attrs:
+                if type(clazzes) != tuple:
+                    clazzes = (clazzes,)
+                if type(attrs) == str:
+                    attrs = (attrs,)
+                for clazz in clazzes:
+                    _visitors = celf._visitors.setdefault(clazz, {})
+                    for attr in attrs:
+                        assert attr not in _visitors, (
+                            "Oops, class '%s' has visitor function for '%s' defined already."
+                            % (clazz.__name__, attr)
+                        )
+                        _visitors[attr] = method
             return None
 
         return wrapper
 
     @classmethod
     def register(celf, clazzes):
-        return celf._register(clazzes)
+        if type(clazzes) != tuple:
+            clazzes = (clazzes,)
+        return celf._register([(clazzes, (None,))])
 
     @classmethod
     def register_attr(celf, clazzes, attrs):
-        return celf._register(clazzes, attrs)
+        clazzes_attrs = []
+        if type(clazzes) != tuple:
+            clazzes = (clazzes,)
+        if type(attrs) == str:
+            attrs = (attrs,)
+        for clazz in clazzes:
+            clazzes_attrs.append((clazz, attrs))
+        return celf._register(clazzes_attrs)
 
     @classmethod
     def register_attrs(celf, clazzes_attrs):
-        for clazz, attrs in clazzes_attrs:
-            celf._register(clazz, attrs)
-        return lambda _: None
+        return celf._register(clazzes_attrs)
 
     @classmethod
     def _visitorsFor(celf, thing, _default={}):
