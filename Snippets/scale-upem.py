@@ -26,7 +26,21 @@ class ScalerVisitor(TTVisitor):
                 "minLeftSideBearing",
                 "minRightSideBearing",
                 "xMaxExtent",
-            ),
+                "caretOffset",
+            )
+        ),
+        (
+            ttLib.getTableClass("vhea"),
+            (
+                "ascent",
+                "descent",
+                "lineGap",
+                "advanceHeightMax",
+                "minTopSideBearing",
+                "minBottomSideBearing",
+                "yMaxExtent",
+                "caretOffset",
+            )
         ),
         (
             ttLib.getTableClass("OS/2"),
@@ -49,7 +63,7 @@ class ScalerVisitor(TTVisitor):
                 "usWinDescent",
                 "sxHeight",
                 "sCapHeight",
-            ),
+            )
         ),
         (otTables.ValueRecord, ("XAdvance", "YAdvance", "XPlacement", "YPlacement")),
         (otTables.Anchor, ("XCoordinate", "YCoordinate")),
