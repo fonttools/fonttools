@@ -2,11 +2,16 @@ from fontTools.misc.visitor import TTVisitor
 import fontTools.ttLib as ttLib
 import fontTools.ttLib.tables.otBase as otBase
 import fontTools.ttLib.tables.otTables as otTables
+from fontTools.misc.fixedTools import otRound
 
 
 class ScalerVisitor(TTVisitor):
+
+    def __init__(self, scaleFactor):
+        self.scaleFactor = scaleFactor
+
     def scale(self, v):
-        return v // 2
+        return otRound(v * self.scaleFactor)
 
 
 @ScalerVisitor.register_attrs(
@@ -107,5 +112,5 @@ import sys
 
 font = TTFont(sys.argv[1])
 
-visitor = ScalerVisitor()
+visitor = ScalerVisitor(.5)
 visitor.visit(font)
