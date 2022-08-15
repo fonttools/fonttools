@@ -1,4 +1,5 @@
 from fontTools.ttLib import TTFont
+import enum
 
 
 class Visitor(object):
@@ -75,7 +76,7 @@ class Visitor(object):
             ret = visitorFunc(self, obj, *args, **kwargs)
             if ret == False or (ret is None and self.defaultStop):
                 return
-        if hasattr(obj, "__dict__"):
+        if hasattr(obj, "__dict__") and not isinstance(obj, enum.Enum):
             self.visitObject(obj, *args, **kwargs)
         elif isinstance(obj, list):
             self.visitList(obj, *args, **kwargs)
