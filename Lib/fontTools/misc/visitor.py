@@ -70,6 +70,8 @@ class Visitor(object):
         _visitors = self._visitorsFor(obj)
         defaultVisitor = _visitors.get("*", None)
         for key in keys:
+            if key[0] == "_":
+                continue
             value = getattr(obj, key)
             visitorFunc = _visitors.get(key, defaultVisitor)
             if visitorFunc is not None:
