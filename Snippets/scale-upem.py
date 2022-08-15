@@ -51,6 +51,8 @@ class ScalerVisitor(TTVisitor):
                 "sCapHeight",
             ),
         ),
+        (otTables.ValueRecord, ("XAdvance", "YAdvance", "XPlacement", "YPlacement")),
+        (otTables.Anchor, ("XCoordinate", "YCoordinate")),
     )
 )
 def visit(visitor, obj, attr, value):
@@ -100,28 +102,6 @@ def visit(visitor, obj, attr, kernTables):
         kernTable = table.kernTable
         for k in kernTable.keys():
             kernTable[k] = visitor.scale(kernTable[k])
-
-
-# GPOS
-
-
-@ScalerVisitor.register(otTables.ValueRecord)
-def visit(visitor, obj):
-    attrs = ["XAdvance", "YAdvance", "XPlacement", "YPlacement"]
-    for attr in attrs:
-        v = getattr(obj, attr, None)
-        if v is not None:
-            v = visitor.scale(v)
-            setattr(obj, attr, v)
-
-
-@ScalerVisitor.register(otTables.Anchor)
-def visit(visitor, obj):
-    attrs = ["XCoordinate", "YCoordinate"]
-    for attr in attrs:
-        v = getattr(obj, attr)
-        v = visitor.scale(v)
-        setattr(obj, attr, v)
 
 
 # ItemVariationStore
