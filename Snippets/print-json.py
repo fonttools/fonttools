@@ -103,6 +103,12 @@ def visit(self, font):
     return False
 
 
+@JsonVisitor.register(ttLib.GlyphOrder)
+def visit(self, obj):
+    self.visitList(self.font.getGlyphOrder())
+    return False
+
+
 @JsonVisitor.register_attr(ttLib.getTableClass("glyf"), "glyphOrder")
 def visit(visitor, obj, attr, value):
     return False
@@ -119,10 +125,12 @@ def visit(self, obj):
     print('"%s"' % str(obj), end="", file=self.file)
     return False
 
+
 @JsonVisitor.register(array)
 def visit(self, obj):
     self.visitList(obj)
     return False
+
 
 @JsonVisitor.register(bytearray)
 def visit(self, obj):
