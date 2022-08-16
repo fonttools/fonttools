@@ -15,7 +15,7 @@ class Visitor(object):
 
         def wrapper(method):
             assert method.__name__ == "visit"
-            for clazzes,attrs in clazzes_attrs:
+            for clazzes, attrs in clazzes_attrs:
                 if type(clazzes) != tuple:
                     clazzes = (clazzes,)
                 if type(attrs) == str:
