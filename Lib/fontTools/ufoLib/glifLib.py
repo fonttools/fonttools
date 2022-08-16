@@ -847,12 +847,16 @@ def _writeUnicodes(glyphObject, element, validate):
 		hexCode = "%04X" % code
 		etree.SubElement(element, "unicode", dict(hex=hexCode))
 
+def _noteIsCDATA(note):
+	return (note.__class__.__name__, note.__class__.__module__) == ("CDATA", "lxml.etree")
+
 def _writeNote(glyphObject, element, validate):
 	note = getattr(glyphObject, "note", None)
-	if validate and not isinstance(note, str):
-		raise GlifLibError("note attribute must be str")
-	note = note.strip()
-	note = "\n" + note + "\n"
+	if not _noteIsCDATA(note):
+		if validate and not isinstance(note, str):
+			raise GlifLibError("note attribute must be str or CDATA")
+		note = note.strip()
+		note = "\n" + note + "\n"
 	etree.SubElement(element, "note").text = note
 
 def _writeImage(glyphObject, element, validate):
@@ -1013,7 +1017,7 @@ def validateLayerInfoVersion3Data(infoData):
 
 def _glifTreeFromFile(aFile):
 	if etree._have_lxml:
-		tree = etree.parse(aFile, parser=etree.XMLParser(remove_comments=True))
+		tree = etree.parse(aFile, parser=etree.XMLParser(remove_comments=True, strip_cdata=False))
 	else:
 		tree = etree.parse(aFile)
 	root = tree.getroot()
@@ -1027,7 +1031,7 @@ def _glifTreeFromFile(aFile):
 def _glifTreeFromString(aString):
 	data = tobytes(aString, encoding="utf-8")
 	if etree._have_lxml:
-		root = etree.fromstring(data, parser=etree.XMLParser(remove_comments=True))
+		root = etree.fromstring(data, parser=etree.XMLParser(remove_comments=True, strip_cdata=False))
 	else:
 		root = etree.fromstring(data)
 	if root.tag != "glyph":
@@ -1240,8 +1244,11 @@ def _readAdvance(glyphObject, advance):
 	_relaxedSetattr(glyphObject, "height", height)
 
 def _readNote(glyphObject, note):
-	lines = note.text.split("\n")
-	note = "\n".join(line.strip() for line in lines if line.strip())
+	if not _noteIsCDATA(note):
+		lines = note.text.split("\n")
+		note = "\n".join(line.strip() for line in lines if line.strip())
+	else:
+		note = note.text
 	_relaxedSetattr(glyphObject, "note", note)
 
 def _readLib(glyphObject, lib, validate):

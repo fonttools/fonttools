@@ -18,6 +18,7 @@ XML_DECLARATION = """<?xml version='1.0' encoding='%s'?>"""
 
 __all__ = [
     # public symbols
+    "CDATA",
     "Comment",
     "dump",
     "Element",
@@ -477,3 +478,6 @@ except ImportError:
         else:
             if level and (not elem.tail or not elem.tail.strip()):
                 elem.tail = i
+
+    class CDATA(str):
+        pass
