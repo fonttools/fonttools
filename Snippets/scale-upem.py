@@ -152,4 +152,5 @@ if __name__ == "__main__":
     visitor = ScalerVisitor(new_upem / upem)
     visitor.visit(font)
 
+    print("Writing out.ttf")
     font.save("out.ttf")
