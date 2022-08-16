@@ -1,6 +1,7 @@
 import fontTools.ttLib as ttLib
 from fontTools.ttLib.ttVisitor import TTVisitor
 from fontTools.misc.textTools import Tag
+from array import array
 
 
 class JsonVisitor(TTVisitor):
@@ -65,16 +66,15 @@ class JsonVisitor(TTVisitor):
     def visitLeaf(self, obj):
         if isinstance(obj, tuple):
             obj = list(obj)
+        elif isinstance(obj, bytes):
+            obj = list(obj)
 
         if obj is None:
             s = "null"
-        elif obj == True:
+        elif obj is True:
             s = "true"
-        elif obj == False:
+        elif obj is False:
             s = "false"
-        elif isinstance(obj, bytes):
-            s = repr(obj)
-            s = s[1:]
         else:
             s = repr(obj)
 
@@ -117,6 +117,16 @@ def visit(self, obj):
 @JsonVisitor.register(Tag)
 def visit(self, obj):
     print('"%s"' % str(obj), end="", file=self.file)
+    return False
+
+@JsonVisitor.register(array)
+def visit(self, obj):
+    self.visitList(obj)
+    return False
+
+@JsonVisitor.register(bytearray)
+def visit(self, obj):
+    self.visitList(obj)
     return False
 
 
