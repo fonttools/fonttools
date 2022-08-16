@@ -304,7 +304,7 @@ def _convertBlendOpToArgs(blendList):
 	deltaArgs = args[numBlends:]
 	numDeltaValues = len(deltaArgs)
 	deltaList = [ deltaArgs[i:i + numRegions] for i in range(0, numDeltaValues, numRegions) ]
-	blend_args = [ a + b for a, b in zip(defaultArgs,deltaList)]
+	blend_args = [ a + b + [1] for a, b in zip(defaultArgs,deltaList)]
 	return blend_args
 
 def generalizeCommands(commands, ignoreErrors=False):
@@ -399,10 +399,10 @@ def _convertToBlendCmds(args):
 		else:
 			prev_stack_use = stack_use
 			# The arg is a tuple of blend values.
-			# These are each (master 0,delta 1..delta n)
+			# These are each (master 0,delta 1..delta n, 1)
 			# Combine as many successive tuples as we can,
 			# up to the max stack limit.
-			num_sources = len(arg)
+			num_sources = len(arg) - 1
 			blendlist = [arg]
 			i += 1
 			stack_use += 1 + num_sources  # 1 for the num_blends arg
@@ -427,7 +427,8 @@ def _convertToBlendCmds(args):
 			for arg in blendlist:
 				blend_args.append(arg[0])
 			for arg in blendlist:
-				blend_args.extend(arg[1:])
+				assert arg[-1] == 1
+				blend_args.extend(arg[1:-1])
 			blend_args.append(num_blends)
 			new_args.append(blend_args)
 			stack_use = prev_stack_use + num_blends
@@ -437,12 +438,13 @@ def _convertToBlendCmds(args):
 def _addArgs(a, b):
 	if isinstance(b, list):
 		if isinstance(a, list):
-			if len(a) != len(b):
+			if len(a) != len(b) or a[-1] != b[-1]:
 				raise ValueError()
-			return [_addArgs(va, vb) for va,vb in zip(a, b)]
+			return [_addArgs(va, vb) for va,vb in zip(a[:-1], b[:-1])] + [a[-1]]
 		else:
 			a, b = b, a
 	if isinstance(a, list):
+		assert a[-1] == 1
 		return [_addArgs(a[0], b)] + a[1:]
 	return a + b
 
@@ -739,12 +741,27 @@ if __name__ == '__main__':
 	if len(sys.argv) == 1:
 		import doctest
 		sys.exit(doctest.testmod().failed)
-	program = stringToProgram(sys.argv[1:])
+
+	import argparse
+
+	parser = argparse.ArgumentParser(
+		"fonttools cffLib.specialer", description="CFF CharString generalizer/specializer")
+	parser.add_argument(
+		"program", metavar="command", nargs="*", help="Commands.")
+	parser.add_argument(
+		"--num-regions", metavar="NumRegions", nargs="*", default=None,
+		help="Number of variable-font regions for blend opertaions.")
+
+	options = parser.parse_args(sys.argv[1:])
+
+	getNumRegions = None if options.num_regions is None else lambda vsIndex: int(options.num_regions[0 if vsIndex is None else vsIndex])
+
+	program = stringToProgram(options.program)
 	print("Program:"); print(programToString(program))
-	commands = programToCommands(program)
+	commands = programToCommands(program, getNumRegions)
 	print("Commands:"); print(commands)
 	program2 = commandsToProgram(commands)
 	print("Program from commands:"); print(programToString(program2))
 	assert program == program2
-	print("Generalized program:"); print(programToString(generalizeProgram(program)))
-	print("Specialized program:"); print(programToString(specializeProgram(program)))
+	print("Generalized program:"); print(programToString(generalizeProgram(program, getNumRegions)))
+	print("Specialized program:"); print(programToString(specializeProgram(program, getNumRegions)))
