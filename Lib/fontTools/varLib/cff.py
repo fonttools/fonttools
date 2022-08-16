@@ -639,6 +639,7 @@ class CFF2CharStringMergePen(T2CharStringPen):
 						# convert to deltas
 						deltas = get_delta_func(coord)[1:]
 						coord = [coord[0]] + deltas
+						coord.append(1)
 						new_coords.append(coord)
 				cmd[1] = new_coords
 			lastOp = op
