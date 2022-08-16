@@ -4,14 +4,15 @@ from fontTools.misc.textTools import Tag
 
 
 class JsonVisitor(TTVisitor):
-
     def _open(self, s):
         print(s, file=self.file)
         self._indent += self.indent
+        self.comma = False
 
     def _close(self, s):
-        self._indent = self._indent[:-len(self.indent)]
-        print("%s%s," % (self._indent, s), file=self.file)
+        self._indent = self._indent[: -len(self.indent)]
+        print("\n%s%s" % (self._indent, s), end="", file=self.file)
+        self.comma = True
 
     def __init__(self, file, indent="  "):
         self.file = file
@@ -21,32 +22,57 @@ class JsonVisitor(TTVisitor):
     def visitObject(self, obj):
         self._open("{")
         super().visitObject(obj)
-        print('%s"type": "%s"' % (self._indent, obj.__class__.__name__), file=self.file)
+        if self.comma:
+            print(",", end="", file=self.file)
+        print(
+            '\n%s"type": "%s"' % (self._indent, obj.__class__.__name__),
+            end="",
+            file=self.file,
+        )
         self._close("}")
 
     def visitAttr(self, obj, attr, value):
+        if self.comma:
+            print(",", file=self.file)
         print('%s"%s": ' % (self._indent, attr), end="", file=self.file)
         self.visit(value)
+        self.comma = True
 
     def visitList(self, obj, *args, **kwargs):
         self._open("[")
+        comma = False
         for value in obj:
+            if comma:
+                print(",", end="", file=self.file)
+                print(file=self.file)
             print(self._indent, end="", file=self.file)
             self.visit(value, *args, **kwargs)
+            comma = True
         self._close("]")
 
     def visitDict(self, obj, *args, **kwargs):
         self._open("{")
+        comma = False
         for key, value in obj.items():
+            if comma:
+                print(",", end="", file=self.file)
+                print(file=self.file)
             print('%s"%s": ' % (self._indent, key), end="", file=self.file)
             self.visit(value, *args, **kwargs)
+            comma = True
         self._close("}")
 
     def visitLeaf(self, obj):
         if isinstance(obj, tuple):
             obj = list(obj)
 
-        if isinstance(obj, bytes):
+        if obj is None:
+            s = "null"
+        elif obj == True:
+            s = "true"
+        elif obj == False:
+            s = "false"
+        elif isinstance(obj, bytes):
             s = repr(obj)
             s = s[1:]
         else:
@@ -55,18 +81,21 @@ class JsonVisitor(TTVisitor):
         if s[0] == "'":
             s = '"' + s[1:-1] + '"'
 
-        print("%s," % s, file=self.file)
+        print("%s" % s, end="", file=self.file)
 
 
 @JsonVisitor.register(ttLib.TTFont)
 def visit(self, font):
     if hasattr(visitor, "font"):
+        print("{}", end="", file=self.file)
         return False
     visitor.font = font
 
     self._open("{")
     for tag in font.keys():
-        print('%s"%s": ' % (self._indent, tag), end="", file=self.file)
+        if self.comma:
+            print(",", file=self.file)
+        print('\n%s"%s": ' % (self._indent, tag), end="", file=self.file)
         visitor.visit(font[tag])
     self._close("}")
 
@@ -87,7 +116,7 @@ def visit(self, obj):
 
 @JsonVisitor.register(Tag)
 def visit(self, obj):
-    print('"%s",' % str(obj), file=self.file)
+    print('"%s"' % str(obj), end="", file=self.file)
     return False
 
 
