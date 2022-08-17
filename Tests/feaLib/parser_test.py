@@ -167,7 +167,7 @@ class ParserTest(unittest.TestCase):
             "} test;"
         )
         anchor = doc.statements[0].statements[0].exitAnchor
-        self.assertIsNone(anchor)
+        assert(anchor.isNull())
 
     def test_anchor_format_e(self):
         doc = self.parse(

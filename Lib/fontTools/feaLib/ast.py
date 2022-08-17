@@ -30,6 +30,7 @@ __all__ = [
     "MarkClassDefinition",
     "AlternateSubstStatement",
     "Anchor",
+    "NullAnchor",
     "AnchorDefinition",
     "AttachStatement",
     "AxisValueLocationStatement",
@@ -695,8 +696,8 @@ class Anchor(Expression):
 
     def __init__(
         self,
-        x: int,
-        y: int,
+        x: Optional[int],
+        y: Optional[int],
         name=None,
         contourpoint: int = None,
         xDeviceTable=None,
@@ -708,9 +709,14 @@ class Anchor(Expression):
         self.x, self.y, self.contourpoint = x, y, contourpoint
         self.xDeviceTable, self.yDeviceTable = xDeviceTable, yDeviceTable
 
+    def isNull(self) -> bool:
+        return self.x is None and self.y is None
+
     def asFea(self, indent="") -> str:
         if self.name is not None:
             return "<anchor {}>".format(self.name)
+        if self.isNull():
+            return "<anchor NULL>"
         res = "<anchor {} {}".format(self.x, self.y)
         if self.contourpoint:
             res += " contourpoint {}".format(self.contourpoint)
@@ -721,6 +727,9 @@ class Anchor(Expression):
             res += deviceToString(self.yDeviceTable)
         res += ">"
         return res
+
+
+NullAnchor = Anchor(None, None)
 
 
 class AnchorDefinition(Statement):
@@ -881,7 +890,8 @@ class CursivePosStatement(Statement):
     ):
         Statement.__init__(self, location)
         self.glyphclass = glyphclass
-        self.entryAnchor, self.exitAnchor = entryAnchor, exitAnchor
+        self.entryAnchor = entryAnchor or NullAnchor
+        self.exitAnchor = exitAnchor or NullAnchor
 
     def build(self, builder) -> None:
         """Calls the builder object's ``add_cursive_pos`` callback."""
@@ -890,8 +900,8 @@ class CursivePosStatement(Statement):
         )
 
     def asFea(self, indent="") -> str:
-        entry = self.entryAnchor.asFea() if self.entryAnchor else "<anchor NULL>"
-        exit = self.exitAnchor.asFea() if self.exitAnchor else "<anchor NULL>"
+        entry = self.entryAnchor.asFea()
+        exit = self.exitAnchor.asFea()
         return "pos cursive {} {} {};".format(self.glyphclass.asFea(), entry, exit)
 
 

@@ -148,7 +148,7 @@ class Parser(object):
         if self.next_token_ == "NULL":  # Format D
             self.expect_keyword_("NULL")
             self.expect_symbol_(">")
-            return None
+            return self.ast.NullAnchor
 
         if self.next_token_type_ == Lexer.NAME:  # Format E
             name = self.expect_name_()

@@ -1581,7 +1581,7 @@ class Builder(object):
 
     def makeOpenTypeAnchor(self, location, anchor):
         """ast.Anchor --> otTables.Anchor"""
-        if anchor is None:
+        if anchor is None or anchor.isNull():
             return None
         variable = False
         deviceX, deviceY = None, None
