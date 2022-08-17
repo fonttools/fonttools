@@ -2081,6 +2081,10 @@ class ParserTest(unittest.TestCase):
         doc = Parser(fea_path, includeDir=include_dir).parse()
         assert len(doc.statements) == 1 and doc.statements[0].text == "# Nothing"
 
+    def test_markclass_format_D(self):
+        flag = self.parse("markClass A <anchor NULL> @top;")
+        self.assertEqual(flag.asFea(), "markClass A <anchor NULL> @top;")
+
     def parse(self, text, glyphNames=GLYPHNAMES, followIncludes=True):
         featurefile = StringIO(text)
         p = Parser(featurefile, glyphNames, followIncludes=followIncludes)
