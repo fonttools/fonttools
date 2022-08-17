@@ -1395,7 +1395,7 @@ class PairPosBuilder(LookupBuilder):
                 continue
             valFormat1, valFormat2 = 0, 0
             valFormat1 = value1.getEffectiveFormat() if value1 is not None else 0
-            valFormat2 = value1.getEffectiveFormat() if value2 is not None else 0
+            valFormat2 = value2.getEffectiveFormat() if value2 is not None else 0
             if not (valFormat1 | valFormat2):
                 continue
             builder = builders.get((valFormat1, valFormat2))
@@ -2073,7 +2073,7 @@ def _getValueFormat(f, values, i):
     mask = 0
     for value in values:
         if value is not None and value[i] is not None:
-            mask |= value[i].getFormat()
+            mask |= value[i].getEffectiveFormat()
     return mask
 
 
@@ -2190,8 +2190,10 @@ def buildPairPosGlyphs(pairs, glyphMap):
 
     p = {}  # (formatA, formatB) --> {(glyphA, glyphB): (valA, valB)}
     for (glyphA, glyphB), (valA, valB) in pairs.items():
-        formatA = valA.getFormat() if valA is not None else 0
-        formatB = valB.getFormat() if valB is not None else 0
+        formatA = valA.getEffectiveFormat() if valA is not None else 0
+        formatB = valB.getEffectiveFormat() if valB is not None else 0
+        if not (formatA | formatB):
+            continue
         pos = p.setdefault((formatA, formatB), {})
         pos[(glyphA, glyphB)] = (valA, valB)
     return [
@@ -2379,7 +2381,7 @@ def buildSinglePosSubtable(values, glyphMap):
     self = ot.SinglePos()
     self.Coverage = buildCoverage(values.keys(), glyphMap)
     valueFormat = self.ValueFormat = reduce(
-        int.__or__, [v.getFormat() for v in values.values()], 0
+        int.__or__, [v.getEffectiveFormat() for v in values.values()], 0
     )
     valueRecords = [
         ValueRecord(src=values[g], valueFormat=valueFormat)
