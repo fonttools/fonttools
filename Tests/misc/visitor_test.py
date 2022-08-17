@@ -1,6 +1,12 @@
 from fontTools.misc.visitor import Visitor
+import enum
 import pytest
 
+
+class E(enum.Enum):
+    E1 = 1
+    E2 = 2
+    E3 = 3
 
 class A:
     def __init__(self):
@@ -8,7 +14,7 @@ class A:
         self.b = [2, 3]
         self.c = {4: 5, 6: 7}
         self._d = 8
-        self.e = 9
+        self.e = E.E2
         self.f = 10
 
 
@@ -58,4 +64,4 @@ class VisitorTest(object):
         b = B()
         visitor = TestVisitor()
         visitor.visit(b)
-        assert visitor.value == ["B", "B a", "A", 1, 2, 3, 5, 7, "e", 9, 10]
+        assert visitor.value == ["B", "B a", "A", 1, 2, 3, 5, 7, "e", E.E2, 10]
