@@ -143,14 +143,14 @@ if __name__ == "__main__":
     import sys
 
     if len(sys.argv) != 3:
-        print("usage: scale-upem.py font new-upem")
+        print("usage: fonttools scaleUpem font new-upem")
         sys.exit()
 
     font = TTFont(sys.argv[1])
     new_upem = int(sys.argv[2])
 
     if "CFF " in font or "CFF2" in font:
-        print("scale-upem: CFF/CFF2 fonts are not supported.", file=sys.stderr)
+        print("fonttools scaleUpem: CFF/CFF2 fonts are not supported.", file=sys.stderr)
         sys.exit(1)
 
     upem = font["head"].unitsPerEm
