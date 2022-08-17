@@ -11,6 +11,9 @@ import fontTools.ttLib.tables.otTables as otTables
 from fontTools.misc.fixedTools import otRound
 
 
+__all__ = ["scale_upem", "ScalerVisitor"]
+
+
 class ScalerVisitor(TTVisitor):
     def __init__(self, scaleFactor):
         self.scaleFactor = scaleFactor
@@ -137,6 +140,13 @@ def visit(visitor, varData):
             item[i] = visitor.scale(v)
 
 
+def scale_upem(font, new_upem):
+    """Change the units-per-EM of font to the new value."""
+    upem = font["head"].unitsPerEm
+    visitor = ScalerVisitor(new_upem / upem)
+    visitor.visit(font)
+
+
 if __name__ == "__main__":
 
     from fontTools.ttLib import TTFont
@@ -153,10 +163,7 @@ if __name__ == "__main__":
         print("fonttools scaleUpem: CFF/CFF2 fonts are not supported.", file=sys.stderr)
         sys.exit(1)
 
-    upem = font["head"].unitsPerEm
-
-    visitor = ScalerVisitor(new_upem / upem)
-    visitor.visit(font)
+    scale_upem(font, new_upem)
 
     print("Writing out.ttf")
     font.save("out.ttf")
