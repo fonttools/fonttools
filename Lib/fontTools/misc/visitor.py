@@ -70,6 +70,15 @@ class Visitor(object):
         return _default
 
     def visitObject(self, obj, *args, **kwargs):
+        """Called to visit an object. This function loops over all non-private
+        attributes of the objects and calls any user-registered (via
+        @register_attr() or @register_attrs()) visit() functions.
+
+        If there is no user-registered visit function, of if there is and it
+        returns True, or it returns None (or doesn't return anything) and
+        visitor.defaultStop is False (default), then the visitor will proceed
+        to call self.visitAttr()"""
+
         keys = sorted(vars(obj).keys())
         _visitors = self._visitorsFor(obj)
         defaultVisitor = _visitors.get("*", None)
@@ -85,20 +94,40 @@ class Visitor(object):
             self.visitAttr(obj, key, value, *args, **kwargs)
 
     def visitAttr(self, obj, attr, value, *args, **kwargs):
+        """Called to visit an attribute of an object."""
         self.visit(value, *args, **kwargs)
 
     def visitList(self, obj, *args, **kwargs):
+        """Called to visit any value that is a list."""
         for value in obj:
             self.visit(value, *args, **kwargs)
 
     def visitDict(self, obj, *args, **kwargs):
+        """Called to visit any value that is a dictionary."""
         for value in obj.values():
             self.visit(value, *args, **kwargs)
 
     def visitLeaf(self, obj, *args, **kwargs):
+        """Called to visit any value that is not an object, list,
+        or dictionary."""
         pass
 
     def visit(self, obj, *args, **kwargs):
+        """This is the main entry to the visitor. The visitor will visit object
+        obj.
+
+        The visitor will first determine if there is a registered (via
+        @register()) visit function for the type of object. If there is, it
+        will be called, and (visitor, obj, *args, **kwargs) will be passed to
+        the user visit function.
+
+        If there is no user-registered visit function, of if there is and it
+        returns True, or it returns None (or doesn't return anything) and
+        visitor.defaultStop is False (default), then the visitor will proceed
+        to dispatch to one of self.visitObject(), self.visitList(),
+        self.visitDict(), or self.visitLeaf() (any of which can be overriden in
+        a subclass)."""
+
         visitorFunc = self._visitorsFor(obj).get(None, None)
         if visitorFunc is not None:
             ret = visitorFunc(self, obj, *args, **kwargs)
