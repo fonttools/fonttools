@@ -1,3 +1,6 @@
+4.36.0 (released 2022-08-17)
+----------------------------
+
 - [varLib.models] Use a simpler model that generates narrower "tents" (regions, master
   supports) whenever possible: specifically when any two axes that actively "cooperate"
   (have masters at non-zero positions for both axes) have a complete set of intermediates.
