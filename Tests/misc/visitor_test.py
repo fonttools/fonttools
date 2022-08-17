@@ -65,3 +65,8 @@ class VisitorTest(object):
         visitor = TestVisitor()
         visitor.visit(b)
         assert visitor.value == ["B", "B a", "A", 1, 2, 3, 5, 7, "e", E.E2, 10]
+
+        visitor.value = []
+        visitor.defaultStop = True
+        visitor.visit(b)
+        assert visitor.value == ["B", "B a"]
