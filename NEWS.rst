@@ -1,3 +1,18 @@
+- [varLib.models] Use a simpler model that generates narrower "tents" (regions, master
+  supports) whenever possible: specifically when any two axes that actively "cooperate"
+  (have masters at non-zero positions for both axes) have a complete set of intermediates.
+  The simpler algorithm produces fewer overlapping regions and behaves better with
+  respect to rounding at the peak positions than the generic solver, always matching
+  intermediate masters exactly, instead of maximally 0.5 units off. This may be useful
+  when 100% metrics compatibility is desired (#2218, #2717).
+- [feaLib] Remove warning when about ``GDEF`` not being built when explicitly not
+  requested; don't build one unconditonally even when not requested (#2744, also works
+  around #2747).
+- [ttFont] ``TTFont.getGlyphSet`` method now supports selecting a location that
+  represents an instance of a variable font (supports both user-scale and normalized
+  axes coordinates via the ``normalized=False`` parameter). Currently this only works
+  for TrueType-flavored variable fonts (#2738).
+
 4.35.0 (released 2022-08-15)
 ----------------------------
 
