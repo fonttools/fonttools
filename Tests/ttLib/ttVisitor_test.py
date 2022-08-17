@@ -4,6 +4,22 @@ import os
 import pytest
 
 
+class TestVisitor(TTVisitor):
+    def __init__(self):
+        self.value = []
+        self.depth = 0
+
+    def _add(self, s):
+        self.value.append(s)
+
+    def visit(self, obj, target_depth):
+        if self.depth == target_depth:
+            self._add(obj)
+        self.depth += 1
+        super().visit(obj, target_depth)
+        self.depth -= 1
+
+
 class TTVisitorTest(object):
 
     @staticmethod
@@ -14,5 +30,10 @@ class TTVisitorTest(object):
     def test_ttvisitor(self):
 
         font = TTFont(self.getpath("TestVGID-Regular.otf"))
-        visitor = TTVisitor()
-        visitor.visit(font, 1, 2, arg=3)
+        visitor = TestVisitor()
+
+        # Count number of objects at depth 1:
+        # That is, number of font tables, including GlyphOrder.
+        visitor.visit(font, 1)
+
+        assert len(visitor.value) == 14
