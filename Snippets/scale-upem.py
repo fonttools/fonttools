@@ -1,3 +1,9 @@
+"""Change the units-per-EM of a font.
+
+Currently does not support CFF fonts. AAT, Graphite, or color tables are
+not supported either."""
+
+
 from fontTools.ttLib.ttVisitor import TTVisitor
 import fontTools.ttLib as ttLib
 import fontTools.ttLib.tables.otBase as otBase
@@ -143,7 +149,7 @@ if __name__ == "__main__":
     font = TTFont(sys.argv[1])
     new_upem = int(sys.argv[2])
 
-    if 'CFF ' in font or 'CFF2' in font:
+    if "CFF " in font or "CFF2" in font:
         print("scale-upem: CFF/CFF2 fonts are not supported.", file=sys.stderr)
         sys.exit(1)
 
