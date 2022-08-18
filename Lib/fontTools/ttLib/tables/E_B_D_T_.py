@@ -398,11 +398,16 @@ class BitmapGlyph(object):
 		# Allow lazy decompile.
 		if attr[:2] == '__':
 			raise AttributeError(attr)
-		if not hasattr(self, "data"):
+		if attr == "data":
 			raise AttributeError(attr)
 		self.decompile()
 		del self.data
 		return getattr(self, attr)
+
+	def ensureDecompiled(self, recurse=False):
+		if hasattr(self, "data"):
+			self.decompile()
+			del self.data
 
 	# Not a fan of this but it is needed for safer safety checking.
 	def getFormat(self):
