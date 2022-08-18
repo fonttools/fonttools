@@ -26,6 +26,7 @@ class ScalerVisitor(TTVisitor):
     (
         (ttLib.getTableClass("head"), ("unitsPerEm", "xMin", "yMin", "xMax", "yMax")),
         (ttLib.getTableClass("post"), ("underlinePosition", "underlineThickness")),
+        (ttLib.getTableClass("VORG"), ("defaultVertOriginY")),
         (
             ttLib.getTableClass("hhea"),
             (
@@ -95,6 +96,12 @@ def visit(visitor, obj, attr, metrics):
         metrics[g] = visitor.scale(advance), visitor.scale(lsb)
 
 
+@ScalerVisitor.register_attr(ttLib.getTableClass("VMTX"), "VOriginRecords")
+def visit(visitor, obj, attr, VOriginRecords):
+    for g in VOriginRecords:
+        VOriginRecords[g] = visitor.scale(VOriginRecords[g])
+
+
 @ScalerVisitor.register_attr(ttLib.getTableClass("glyf"), "glyphs")
 def visit(visitor, obj, attr, glyphs):
     for g in glyphs.values():
@@ -145,9 +152,10 @@ def visit(visitor, varData):
 
 # COLRv1
 
+
 def _setup_scale_paint(paint, scale):
     if -2 <= scale <= 2 - (1 >> 14):
-        paint.Format = 20 # PaintScaleUniform
+        paint.Format = 20  # PaintScaleUniform
         paint.scale = scale
         return
 
