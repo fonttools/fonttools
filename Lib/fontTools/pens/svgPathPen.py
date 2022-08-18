@@ -193,11 +193,12 @@ class SVGPathPen(BasePen):
         return "".join(self._commands)
 
 
-if __name__ == "__main__":
-    import sys
-    if len(sys.argv) == 1:
-        import doctest
-        sys.exit(doctest.testmod().failed)
+def main(args=None):
+    """Generate per-character SVG from font and text"""
+
+    if args is None:
+        import sys
+        args = sys.argv[1:]
 
     from fontTools.ttLib import TTFont
     import argparse
@@ -214,7 +215,7 @@ if __name__ == "__main__":
         "the name of a variation axis, followed by '=' and a number. E.g.: "
         "wght=700 wdth=80. The default is the location of the base master.")
 
-    options = parser.parse_args(sys.argv[1:])
+    options = parser.parse_args(args)
 
     font = TTFont(options.font)
     text = options.text
@@ -250,3 +251,12 @@ if __name__ == "__main__":
     print('<svg width="%d" height="%d" xmlns="http://www.w3.org/2000/svg">' % (width, ascent-descent))
     print(s, end='')
     print('</svg>')
+
+
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) == 1:
+        import doctest
+        sys.exit(doctest.testmod().failed)
+
+    sys.exit(main())
