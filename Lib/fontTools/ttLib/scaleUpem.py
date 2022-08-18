@@ -145,21 +145,31 @@ def visit(visitor, varData):
 
 # COLRv1
 
+def _setup_scale_paint(paint, scale):
+    if -2 <= scale <= 2 - (1 >> 14):
+        paint.Format = 20 # PaintScaleUniform
+        paint.scale = scale
+        return
+
+    transform = otTables.Affine2x3()
+    transform.populateDefaults()
+    transform.xy = transform.yx = transform.dx = transform.dy = 0
+    transform.xx = transform.yy = scale
+
+    paint.Format = 12  # PaintTransform
+    paint.Transform = transform
+
 
 @ScalerVisitor.register(otTables.BaseGlyphPaintRecord)
 def visit(visitor, record):
     oldPaint = record.Paint
 
-    transform = otTables.Affine2x3()
-    transform.populateDefaults()
-    transform.xy = transform.yx = transform.dx = transform.dy = 0
-    transform.xx = transform.yy = visitor.scaleFactor
-
     scale = otTables.Paint()
-    scale.Format = 12  # PaintTransform
-    scale.Transform = transform
+    _setup_scale_paint(scale, visitor.scaleFactor)
     scale.Paint = oldPaint
+
     record.Paint = scale
+
     return True
 
 
@@ -175,12 +185,7 @@ def visit(visitor, paint):
     del paint.Paint
     del paint.Glyph
 
-    transform = otTables.Affine2x3()
-    transform.xy = transform.yx = transform.dx = transform.dy = 0
-    transform.xx = transform.yy = 1 / visitor.scaleFactor
-
-    paint.Format = 12  # PaintTransform
-    paint.Transform = transform
+    _setup_scale_paint(paint, 1 / visitor.scaleFactor)
     paint.Paint = newPaint
 
     visitor.visit(newPaint.Paint)
