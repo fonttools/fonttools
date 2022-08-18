@@ -159,7 +159,7 @@ def visit(visitor, varData):
 
 def _setup_scale_paint(paint, scale):
     if -2 <= scale <= 2 - (1 >> 14):
-        paint.Format = 20  # PaintScaleUniform
+        paint.Format = otTables.PaintFormat.PaintScaleUniform
         paint.scale = scale
         return
 
@@ -168,7 +168,7 @@ def _setup_scale_paint(paint, scale):
     transform.xy = transform.yx = transform.dx = transform.dy = 0
     transform.xx = transform.yy = scale
 
-    paint.Format = 12  # PaintTransform
+    paint.Format = otTables.PaintFormat.PaintTransform
     paint.Transform = transform
 
 
@@ -187,7 +187,7 @@ def visit(visitor, record):
 
 @ScalerVisitor.register(otTables.Paint)
 def visit(visitor, paint):
-    if paint.Format != 10:  # PaintGlyph
+    if paint.Format != otTables.PaintFormat.PaintGlyph:
         return True
 
     newPaint = otTables.Paint()
@@ -217,6 +217,7 @@ def main(args=None):
 
     if args is None:
         import sys
+
         args = sys.argv[1:]
 
     from fontTools.ttLib import TTFont
@@ -240,6 +241,8 @@ def main(args=None):
     print("Writing out.ttf")
     font.save("out.ttf")
 
+
 if __name__ == "__main__":
     import sys
+
     sys.exit(main())
