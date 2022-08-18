@@ -25,6 +25,7 @@ class ScalerVisitor(TTVisitor):
 @ScalerVisitor.register_attrs(
     (
         (ttLib.getTableClass("head"), ("unitsPerEm", "xMin", "yMin", "xMax", "yMax")),
+        (ttLib.getTableClass("post"), ("underlinePosition", "underlineThickness")),
         (
             ttLib.getTableClass("hhea"),
             (
