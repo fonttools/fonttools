@@ -77,6 +77,7 @@ class ScalerVisitor(TTVisitor):
         (otTables.ValueRecord, ("XAdvance", "YAdvance", "XPlacement", "YPlacement")),
         (otTables.Anchor, ("XCoordinate", "YCoordinate")),
         (otTables.CaretValue, ("Coordinate")),
+        (otTables.BaseCoord, ("Coordinate")),
     )
 )
 def visit(visitor, obj, attr, value):
@@ -160,7 +161,10 @@ if __name__ == "__main__":
     new_upem = int(sys.argv[2])
 
     if "CFF " in font or "CFF2" in font:
-        print("fonttools ttLib.scaleUpem: CFF/CFF2 fonts are not supported.", file=sys.stderr)
+        print(
+            "fonttools ttLib.scaleUpem: CFF/CFF2 fonts are not supported.",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
     scale_upem(font, new_upem)
