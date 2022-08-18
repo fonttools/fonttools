@@ -76,12 +76,15 @@ class ScalerVisitor(TTVisitor):
                 "sCapHeight",
             ),
         ),
-        (otTables.ValueRecord, ("XAdvance", "YAdvance", "XPlacement", "YPlacement")),
-        (otTables.Anchor, ("XCoordinate", "YCoordinate")),
-        (otTables.CaretValue, ("Coordinate")),
-        (otTables.BaseCoord, ("Coordinate")),
-        (otTables.MathValueRecord, ("Value")),
-        (otTables.ClipBox, ("xMin", "yMin", "xMax", "yMax")),
+        (
+            otTables.ValueRecord,
+            ("XAdvance", "YAdvance", "XPlacement", "YPlacement"),
+        ),  # GPOS
+        (otTables.Anchor, ("XCoordinate", "YCoordinate")),  # GPOS
+        (otTables.CaretValue, ("Coordinate")),  # GDEF
+        (otTables.BaseCoord, ("Coordinate")),  # BASE
+        (otTables.MathValueRecord, ("Value")),  # MATH
+        (otTables.ClipBox, ("xMin", "yMin", "xMax", "yMax")),  # COLR
     )
 )
 def visit(visitor, obj, attr, value):
