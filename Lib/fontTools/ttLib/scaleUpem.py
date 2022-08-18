@@ -1,7 +1,7 @@
 """Change the units-per-EM of a font.
 
-Currently does not support CFF fonts. AAT, Graphite, or color tables are
-not supported either."""
+Currently does not support CFF fonts. AAT, Graphite tables are not supported
+either."""
 
 
 from fontTools.ttLib.ttVisitor import TTVisitor
@@ -155,7 +155,7 @@ def visit(visitor, record):
     transform.xx = transform.yy = visitor.scaleFactor
 
     scale = otTables.Paint()
-    scale.Format = 12 # PaintTransform
+    scale.Format = 12  # PaintTransform
     scale.Transform = transform
     scale.Paint = oldPaint
     record.Paint = scale
@@ -164,7 +164,7 @@ def visit(visitor, record):
 
 @ScalerVisitor.register(otTables.Paint)
 def visit(visitor, paint):
-    if paint.Format != 10: # PaintGlyph
+    if paint.Format != 10:  # PaintGlyph
         return True
 
     newPaint = otTables.Paint()
@@ -178,7 +178,7 @@ def visit(visitor, paint):
     transform.xy = transform.yx = transform.dx = transform.dy = 0
     transform.xx = transform.yy = 1 / visitor.scaleFactor
 
-    paint.Format = 12 # PaintTransform
+    paint.Format = 12  # PaintTransform
     paint.Transform = transform
     paint.Paint = newPaint
 
