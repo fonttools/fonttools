@@ -1765,10 +1765,16 @@ class Builder(object):
     def add_vhea_field(self, key, value):
         self.vhea_[key] = value
 
-    def add_conditionset(self, key: str, value: Dict[str, Tuple[float, float]]):
+    def add_conditionset(
+        self,
+        location: FeatureLibLocation,
+        key: str,
+        value: Dict[str, Tuple[float, float]],
+    ):
         if not "fvar" in self.font:
             raise FeatureLibError(
-                "Cannot add feature variations to a font without an 'fvar' table"
+                "Cannot add feature variations to a font without an 'fvar' table",
+                location,
             )
 
         # Normalize

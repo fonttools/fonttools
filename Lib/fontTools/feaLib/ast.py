@@ -2289,7 +2289,7 @@ class ConditionsetStatement(Statement):
         self.conditions = conditions
 
     def build(self, builder) -> None:
-        builder.add_conditionset(self.name, self.conditions)
+        builder.add_conditionset(self.location, self.name, self.conditions)
 
     def asFea(self, indent="") -> str:
         res = indent + f"conditionset {self.name} " + "{\n"
