@@ -78,6 +78,7 @@ class ScalerVisitor(TTVisitor):
         (otTables.Anchor, ("XCoordinate", "YCoordinate")),
         (otTables.CaretValue, ("Coordinate")),
         (otTables.BaseCoord, ("Coordinate")),
+        (otTables.ClipBox, ("xMin", "yMin", "xMax", "yMax")),
     )
 )
 def visit(visitor, obj, attr, value):
@@ -139,6 +140,51 @@ def visit(visitor, varData):
     for item in varData.Item:
         for i, v in enumerate(item):
             item[i] = visitor.scale(v)
+
+
+# COLRv1
+
+
+@ScalerVisitor.register(otTables.BaseGlyphPaintRecord)
+def visit(visitor, record):
+    oldPaint = record.Paint
+
+    transform = otTables.Affine2x3()
+    transform.populateDefaults()
+    transform.xy = transform.yx = transform.dx = transform.dy = 0
+    transform.xx = transform.yy = visitor.scaleFactor
+
+    scale = otTables.Paint()
+    scale.Format = 12 # PaintTransform
+    scale.Transform = transform
+    scale.Paint = oldPaint
+    record.Paint = scale
+    return True
+
+
+@ScalerVisitor.register(otTables.Paint)
+def visit(visitor, paint):
+    if paint.Format != 10: # PaintGlyph
+        return True
+
+    newPaint = otTables.Paint()
+    newPaint.Format = paint.Format
+    newPaint.Paint = paint.Paint
+    newPaint.Glyph = paint.Glyph
+    del paint.Paint
+    del paint.Glyph
+
+    transform = otTables.Affine2x3()
+    transform.xy = transform.yx = transform.dx = transform.dy = 0
+    transform.xx = transform.yy = 1 / visitor.scaleFactor
+
+    paint.Format = 12 # PaintTransform
+    paint.Transform = transform
+    paint.Paint = newPaint
+
+    visitor.visit(newPaint.Paint)
+
+    return False
 
 
 def scale_upem(font, new_upem):
