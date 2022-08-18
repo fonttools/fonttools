@@ -1165,7 +1165,7 @@ def build(f, font, tableTag=None):
 
 
 def main(args=None, font=None):
-	"""Convert a FontDame OTL file to TTX XML.
+	"""Convert a FontDame OTL file to TTX XML
 
 	Writes XML output to stdout.
 

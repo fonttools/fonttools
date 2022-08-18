@@ -4,7 +4,7 @@ from fontTools.ttLib import TTFont
 
 
 def main(args=None):
-    """Optimize the layout tables of an existing font."""
+    """Optimize the layout tables of an existing font"""
     from argparse import ArgumentParser
 
     from fontTools import configLogger

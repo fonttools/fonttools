@@ -1444,7 +1444,7 @@ def parseArgs(args):
 
 
 def main(args=None):
-    """Partially instantiate a variable font."""
+    """Partially instantiate a variable font"""
     infile, axisLimits, options = parseArgs(args)
     log.info("Restricting axes: %s", axisLimits)
 
