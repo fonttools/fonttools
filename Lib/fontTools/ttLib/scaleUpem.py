@@ -80,6 +80,7 @@ class ScalerVisitor(TTVisitor):
         (otTables.Anchor, ("XCoordinate", "YCoordinate")),
         (otTables.CaretValue, ("Coordinate")),
         (otTables.BaseCoord, ("Coordinate")),
+        (otTables.MathValueRecord, ("Value")),
         (otTables.ClipBox, ("xMin", "yMin", "xMax", "yMax")),
     )
 )
