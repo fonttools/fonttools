@@ -164,7 +164,9 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 		if ttFont.lazy is False:  # Be lazy for None and True
 			self.ensureDecompiled()
 
-	def ensureDecompiled(self):
+	def ensureDecompiled(self, recurse=False):
+		# The recurse argument is unused, but part of the signature of
+		# ensureDecompiled across the library.
 		for st in self.tables:
 			st.ensureDecompiled()
 
@@ -241,7 +243,9 @@ class CmapSubtable(object):
 		self.platEncID = None   #: The encoding ID of this subtable (interpretation depends on ``platformID``)
 		self.language = None    #: The language ID of this subtable (Macintosh platform only)
 
-	def ensureDecompiled(self):
+	def ensureDecompiled(self, recurse=False):
+		# The recurse argument is unused, but part of the signature of
+		# ensureDecompiled across the library.
 		if self.data is None:
 			return
 		self.decompile(None, None) # use saved data.

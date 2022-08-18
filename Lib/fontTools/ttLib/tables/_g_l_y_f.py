@@ -112,7 +112,9 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		if ttFont.lazy is False: # Be lazy for None and True
 			self.ensureDecompiled()
 
-	def ensureDecompiled(self):
+	def ensureDecompiled(self, recurse=False):
+		# The recurse argument is unused, but part of the signature of
+		# ensureDecompiled across the library.
 		for glyph in self.glyphs.values():
 			glyph.expand(self)
 
