@@ -2,10 +2,13 @@ from fontTools.feaLib.error import FeatureLibError
 from fontTools.feaLib.location import FeatureLibLocation
 from fontTools.misc.encodingTools import getEncoding
 from fontTools.misc.textTools import byteord, tobytes
-from fontTools.feaLib.variableScalar import VariableScalar
+import typing
+
+if typing.TYPE_CHECKING:
+    from fontTools.feaLib.variableScalar import VariableScalar
 from collections import OrderedDict
 from collections.abc import Sequence
-from typing import Tuple, List, Optional, Union, Dict, Callable
+from typing import Tuple, List, Optional, Union, Dict, Callable, Set
 from typing_extensions import Protocol
 import itertools
 
@@ -198,7 +201,7 @@ class Expression(Element):
     pass
 
 
-class Comment(Element):
+class Comment(Statement):
     """A comment in a feature file."""
 
     def __init__(self, text: str, location: Optional[FeatureLibLocation] = None):
@@ -307,7 +310,7 @@ class GlyphClassDefinition(Statement):
     def __init__(
         self,
         name: str,
-        glyphs: GlyphClass,
+        glyphs: Union[NullGlyph, "NamedOrInlineClass", GlyphName],
         location: Optional[FeatureLibLocation] = None,
     ):
         Statement.__init__(self, location)
@@ -450,6 +453,9 @@ class MarkClassName(Expression):
 
     def asFea(self, indent="") -> str:
         return "@" + self.markClass.name
+
+
+NamedOrInlineClass = Union[GlyphClass, GlyphClassName, MarkClassName]
 
 
 class AnonymousBlock(Statement):
@@ -696,8 +702,8 @@ class Anchor(Expression):
 
     def __init__(
         self,
-        x: Optional[int],
-        y: Optional[int],
+        x: Union[int, float, None, "VariableScalar"],
+        y: Union[int, float, None, "VariableScalar"],
         name=None,
         contourpoint: int = None,
         xDeviceTable=None,
@@ -738,8 +744,8 @@ class AnchorDefinition(Statement):
     def __init__(
         self,
         name: str,
-        x: int,
-        y: int,
+        x: Union[int, float, None, "VariableScalar"],
+        y: Union[int, float, None, "VariableScalar"],
         contourpoint=None,
         location: Optional[FeatureLibLocation] = None,
     ):
@@ -760,7 +766,7 @@ class AttachStatement(Statement):
     def __init__(
         self,
         glyphs: GlyphContainer,
-        contourPoints: List[int],
+        contourPoints: Set[int],
         location: Optional[FeatureLibLocation] = None,
     ):
         Statement.__init__(self, location)
@@ -778,6 +784,9 @@ class AttachStatement(Statement):
         )
 
 
+ContextualLookupList = Sequence[Union[LookupBlock, Sequence[LookupBlock], None]]
+
+
 class ChainContextStatement(Statement):
     table = ""
 
@@ -786,7 +795,7 @@ class ChainContextStatement(Statement):
         prefix: Sequence[GlyphContainer],
         glyphs: Sequence[GlyphContainer],
         suffix: Sequence[GlyphContainer],
-        lookups: Sequence[Union[LookupBlock, Sequence[LookupBlock], None]],
+        lookups: ContextualLookupList,
         location: Optional[FeatureLibLocation] = None,
     ):
         Statement.__init__(self, location)
@@ -883,7 +892,7 @@ class CursivePosStatement(Statement):
 
     def __init__(
         self,
-        glyphclass: GlyphClassDefinition,
+        glyphclass: GlyphContainer,
         entryAnchor: Optional[Anchor],
         exitAnchor: Optional[Anchor],
         location: Optional[FeatureLibLocation] = None,
@@ -1623,7 +1632,7 @@ class SinglePosStatement(Statement):
 
     def __init__(
         self,
-        pos: Sequence[Tuple[GlyphContainer, "ValueRecord"]],
+        pos: Sequence[Tuple[GlyphContainer, Optional["ValueRecord"]]],
         prefix: Sequence[GlyphContainer],
         suffix: Sequence[GlyphContainer],
         forceChain: bool,
@@ -1680,10 +1689,10 @@ class ValueRecord(Expression):
 
     def __init__(
         self,
-        xPlacement: Union[int, VariableScalar, None] = None,
-        yPlacement: Union[int, VariableScalar, None] = None,
-        xAdvance: Union[int, VariableScalar, None] = None,
-        yAdvance: Union[int, VariableScalar, None] = None,
+        xPlacement: Union[int, "VariableScalar", None] = None,
+        yPlacement: Union[int, "VariableScalar", None] = None,
+        xAdvance: Union[int, "VariableScalar", None] = None,
+        yAdvance: Union[int, "VariableScalar", None] = None,
         xPlaDevice=None,
         yPlaDevice=None,
         xAdvDevice=None,
@@ -1816,7 +1825,9 @@ class NameRecord(Statement):
 
     def __init__(
         self,
-        nameID: Union[int, Tuple],  # See CVParametersNameStatement.build
+        nameID: Union[
+            int, Tuple, str
+        ],  # See CVParametersNameStatement.build / FeatureNameStatement
         platformID: int,
         platEncID: int,
         langID: int,
