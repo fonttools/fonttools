@@ -1385,23 +1385,24 @@ class MultipleSubstStatement(Statement):
         """Calls the builder object's ``add_multiple_subst`` callback."""
         prefix = [p.glyphSet() for p in self.prefix]
         suffix = [s.glyphSet() for s in self.suffix]
-        if not self.replacement and hasattr(self.glyph, "glyphSet"):
+        replacement = [s.glyphSet()[0] for s in self.replacement]
+        if not replacement:
             for glyph in self.glyph.glyphSet():
                 builder.add_multiple_subst(
                     self.location,
                     prefix,
                     glyph,
                     suffix,
-                    self.replacement,
+                    replacement,
                     self.forceChain,
                 )
         else:
             builder.add_multiple_subst(
                 self.location,
                 prefix,
-                self.glyph,
+                self.glyph.glyphSet()[0],
                 suffix,
-                self.replacement,
+                tuple(replacement),
                 self.forceChain,
             )
 
