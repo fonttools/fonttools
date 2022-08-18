@@ -1409,10 +1409,10 @@ class MultipleSubstStatement(Statement):
         res = "sub "
         if len(self.prefix) or len(self.suffix) or self.forceChain:
             if len(self.prefix):
-                res += " ".join(map(asFea, self.prefix)) + " "
+                res += " ".join(map(lambda x: x.asFea(), self.prefix)) + " "
             res += asFea(self.glyph) + "'"
             if len(self.suffix):
-                res += " " + " ".join(map(asFea, self.suffix))
+                res += " " + " ".join(map(lambda x: x.asFea(), self.suffix))
         else:
             res += asFea(self.glyph)
         replacement = self.replacement or [NullGlyph()]
