@@ -212,17 +212,21 @@ def scale_upem(font, new_upem):
     visitor.visit(font)
 
 
-if __name__ == "__main__":
+def main(args=None):
+    """Change the units-per-EM of fonts"""
+
+    if args is None:
+        import sys
+        args = sys.argv[1:]
 
     from fontTools.ttLib import TTFont
-    import sys
 
-    if len(sys.argv) != 3:
+    if len(args) != 2:
         print("usage: fonttools ttLib.scaleUpem font new-upem")
         sys.exit()
 
-    font = TTFont(sys.argv[1])
-    new_upem = int(sys.argv[2])
+    font = TTFont(args[0])
+    new_upem = int(args[1])
 
     if "CFF " in font or "CFF2" in font:
         print(
@@ -235,3 +239,7 @@ if __name__ == "__main__":
 
     print("Writing out.ttf")
     font.save("out.ttf")
+
+if __name__ == "__main__":
+    import sys
+    sys.exit(main())
