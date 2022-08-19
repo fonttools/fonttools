@@ -10,6 +10,7 @@ from fontTools.ttLib.tables.otBase import USE_HARFBUZZ_REPACKER
 from fontTools.otlLib.maxContextCalc import maxCtxFont
 from fontTools.pens.basePen import NullPen
 from fontTools.misc.loggingTools import Timer
+from fontTools.misc.cliTools import makeOutputFileName
 from fontTools.subset.util import _add_method, _uniq_sort
 from fontTools.subset.cff import *
 from fontTools.subset.svg import *
@@ -3189,12 +3190,7 @@ def main(args=None):
 	font = load_font(fontfile, options, dontLoadGlyphNames=dontLoadGlyphNames)
 
 	if outfile is None:
-		basename, _ = splitext(fontfile)
-		if options.flavor is not None:
-			ext = "." + options.flavor.lower()
-		else:
-			ext = ".ttf" if font.sfntVersion == "\0\1\0\0" else ".otf"
-		outfile = basename + ".subset" + ext
+		outfile = makeOutputFileName(fontfile, overWrite=True, fragment=".subset")
 
 	with timer("compile glyph list"):
 		if wildcard_glyphs:

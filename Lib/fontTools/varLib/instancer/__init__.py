@@ -90,6 +90,7 @@ from fontTools.varLib import builder
 from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib.merger import MutatorMerger
 from fontTools.varLib.instancer import names
+from fontTools.misc.cliTools import makeOutputFileName
 import collections
 from copy import deepcopy
 from enum import IntEnum
@@ -1468,9 +1469,8 @@ def main(args=None):
         updateFontNames=options.update_name_table,
     )
 
-    outfile = (
-        os.path.splitext(infile)[0]
-        + "-{}.ttf".format("instance" if isFullInstance else "partial")
+    fragment = "-instance" if isFullInstance else "-partial"
+    outfile = (makeOutputFileName(infile, overWrite=True, fragment=fragment)
         if not options.output
         else options.output
     )
