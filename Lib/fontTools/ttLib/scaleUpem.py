@@ -194,6 +194,9 @@ def visit(visitor, obj, attr, cff):
             else:
                 setattr(topDict, attr, visitor.scale(value))
 
+        topDict.FontMatrix[0] /= visitor.scaleFactor
+        topDict.FontMatrix[3] /= visitor.scaleFactor
+
         for private in privates:
             for attr in (
                 "BlueValues",
