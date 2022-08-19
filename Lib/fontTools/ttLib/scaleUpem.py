@@ -147,16 +147,13 @@ def visit(visitor, obj, attr, kernTables):
 
 
 def _cff_scale(visitor, args):
-    new_args = []
-    for arg in args:
+    for i,arg in enumerate(args):
         if not isinstance(arg, list):
-            new_args.append(visitor.scale(arg))
+            args[i] = visitor.scale(arg)
         else:
             num_blends = arg[-1]
             _cff_scale(visitor, arg)
             arg[-1] = num_blends
-            new_args.append(arg)
-    args[:] = new_args
 
 
 @ScalerVisitor.register_attr(
