@@ -8,6 +8,8 @@ from fontTools.ttLib.ttVisitor import TTVisitor
 import fontTools.ttLib as ttLib
 import fontTools.ttLib.tables.otBase as otBase
 import fontTools.ttLib.tables.otTables as otTables
+from fontTools.cffLib import VarStoreData
+import fontTools.cffLib.specializer as cffSpecializer
 from fontTools.misc.fixedTools import otRound
 
 
@@ -144,6 +146,41 @@ def visit(visitor, obj, attr, kernTables):
             kernTable[k] = visitor.scale(kernTable[k])
 
 
+def _cff_scale(visitor, args):
+    new_args = []
+    for arg in args:
+        if not isinstance(arg, list):
+            new_args.append(visitor.scale(arg))
+        else:
+            num_blends = arg[-1]
+            _cff_scale(visitor, arg)
+            arg[-1] = num_blends
+            new_args.append(arg)
+    args[:] = new_args
+
+
+@ScalerVisitor.register_attr(
+    (ttLib.getTableClass("CFF "), ttLib.getTableClass("CFF2")), "cff"
+)
+def visit(visitor, obj, attr, cff):
+    cff.desubroutinize()
+    topDict = cff.topDictIndex[0]
+    varStore = getattr(topDict, "VarStore", None)
+    getNumRegions = varStore.getNumRegions if varStore is not None else None
+    for fontname in cff.keys():
+        font = cff[fontname]
+        cs = font.CharStrings
+        for g in font.charset:
+            c, _ = cs.getItemAndSelector(g)
+
+            commands = cffSpecializer.programToCommands(
+                c.program, getNumRegions=getNumRegions
+            )
+            for op, args in commands:
+                _cff_scale(visitor, args)
+            c.program[:] = cffSpecializer.commandsToProgram(commands)
+
+
 # ItemVariationStore
 
 
@@ -228,13 +265,6 @@ def main(args=None):
 
     font = TTFont(args[0])
     new_upem = int(args[1])
-
-    if "CFF " in font or "CFF2" in font:
-        print(
-            "fonttools ttLib.scaleUpem: CFF/CFF2 fonts are not supported.",
-            file=sys.stderr,
-        )
-        sys.exit(1)
 
     scale_upem(font, new_upem)
 

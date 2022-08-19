@@ -1037,6 +1037,8 @@ class VarStoreData(object):
 		return len(self.data)
 
 	def getNumRegions(self, vsIndex):
+		if vsIndex is None:
+			vsIndex = 0
 		varData = self.otVarStore.VarData[vsIndex]
 		numRegions = varData.VarRegionCount
 		return numRegions

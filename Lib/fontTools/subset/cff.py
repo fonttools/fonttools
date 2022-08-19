@@ -3,7 +3,6 @@ from fontTools import ttLib
 from fontTools.pens.basePen import NullPen
 from fontTools.misc.roundTools import otRound
 from fontTools.misc.loggingTools import deprecateFunction
-from fontTools.varLib.varStore import VarStoreInstancer
 from fontTools.subset.util import _add_method, _uniq_sort
 
 
