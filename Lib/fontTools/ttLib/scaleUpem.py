@@ -1,7 +1,6 @@
 """Change the units-per-EM of a font.
 
-Currently does not support CFF fonts. AAT, Graphite tables are not supported
-either."""
+AAT and Graphite tables are not supported."""
 
 
 from fontTools.ttLib.ttVisitor import TTVisitor
@@ -147,7 +146,7 @@ def visit(visitor, obj, attr, kernTables):
 
 
 def _cff_scale(visitor, args):
-    for i,arg in enumerate(args):
+    for i, arg in enumerate(args):
         if not isinstance(arg, list):
             args[i] = visitor.scale(arg)
         else:
