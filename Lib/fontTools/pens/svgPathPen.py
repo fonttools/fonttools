@@ -23,6 +23,18 @@ class SVGPathPen(BasePen):
             used to resolve component references in composite glyphs.
         ntos: a callable that takes a number and returns a string, to
             customize how numbers are formatted (default: str).
+
+    Note:
+        Fonts have a coordinate system where Y grows up, whereas in SVG,
+        Y grows down.  As such, rendering path data from this pen in
+        SVG typically results in upside-down glyphs.  You can fix this
+        by wrapping the data from this pen in an SVG group element with
+        transform, or wrap this pen in a transform pen.  For example:
+
+            spen = svgPathPen.SVGPathPen(glyphset)
+            pen= TransformPen(spen , (1, 0, 0, -1, 0, 0))
+            glyphset[glyphname].draw(pen)
+            print(tpen.getCommands())
     """
     def __init__(self, glyphSet, ntos: Callable[[float], str] = str):
         BasePen.__init__(self, glyphSet)
