@@ -161,7 +161,7 @@ class KernTable_format_0(object):
 				len(data) - 6 * nPairs)
 
 	def compile(self, ttFont):
-		nPairs = len(self.kernTable)
+		nPairs = min(len(self.kernTable), 0xFFFF)
 		searchRange, entrySelector, rangeShift = getSearchRange(nPairs, 6)
 		searchRange &= 0xFFFF
 		data = struct.pack(
