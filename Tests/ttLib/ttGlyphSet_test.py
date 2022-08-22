@@ -1,4 +1,5 @@
 from fontTools.ttLib import TTFont
+from fontTools.ttLib import ttGlyphSet
 from fontTools.pens.recordingPen import RecordingPen
 import os
 import pytest
@@ -14,6 +15,16 @@ class TTGlyphSetTest(object):
     @pytest.mark.parametrize(
         "location, expected",
         [
+            (
+                None,
+                [
+                 ('moveTo', ((175, 0),)),
+                 ('lineTo', ((367, 0),)),
+                 ('lineTo', ((367, 1456),)),
+                 ('lineTo', ((175, 1456),)),
+                 ('closePath', ())
+                ]
+            ),
             (
                 {},
                 [
@@ -69,11 +80,32 @@ class TTGlyphSetTest(object):
     def test_glyphset(
         self, location, expected
     ):
-
+        # TODO: also test loading CFF-flavored fonts
         font = TTFont(self.getpath("I.ttf"))
         glyphset = font.getGlyphSet(location=location)
+
+        assert isinstance(glyphset, ttGlyphSet._TTGlyphSet)
+        if location:
+            assert isinstance(glyphset, ttGlyphSet._TTVarGlyphSet)
+
+        assert list(glyphset.keys()) == [".notdef", "I"]
+
+        assert "I" in glyphset
+        assert glyphset.has_key("I")  # we should really get rid of this...
+
+        assert len(glyphset) == 2
+
         pen = RecordingPen()
         glyph = glyphset['I']
+
+        assert glyphset.get("foobar") is None
+
+        assert isinstance(glyph, ttGlyphSet._TTGlyph)
+        if location:
+            assert isinstance(glyph, ttGlyphSet._TTVarGlyphGlyf)
+        else:
+            assert isinstance(glyph, ttGlyphSet._TTGlyphGlyf)
+
         glyph.draw(pen)
         actual = pen.value
 
