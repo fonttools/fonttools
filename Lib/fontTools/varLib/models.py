@@ -1,11 +1,6 @@
 """Variation fonts interpolation models."""
 
 __all__ = [
-    "nonNone",
-    "allNone",
-    "allEqual",
-    "allEqualTo",
-    "subList",
     "normalizeValue",
     "normalizeLocation",
     "supportScalar",
