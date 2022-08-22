@@ -107,7 +107,7 @@ class _TTGlyphGlyf(_TTGlyph):
 
 
 
-class _TTVarGlyphSet(object):
+class _TTVarGlyphSet(_TTGlyphSet):
 
 	def __init__(self, font, location, normalized=False):
 		from fontTools.varLib.models import normalizeLocation, piecewiseLinearMap
@@ -177,7 +177,7 @@ def _setCoordinates(glyph, coord, glyfTable):
 	return horizontalAdvanceWidth, leftSideBearing, verticalAdvanceWidth
 
 
-class _TTVarGlyphGlyf(object):
+class _TTVarGlyphGlyf(_TTGlyph):
 
 	def __init__(self, ttFont, glyphName, location):
 		self._ttFont = ttFont
