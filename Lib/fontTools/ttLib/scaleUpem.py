@@ -300,18 +300,34 @@ def main(args=None):
         args = sys.argv[1:]
 
     from fontTools.ttLib import TTFont
+    from fontTools.misc.cliTools import makeOutputFileName
+    import argparse
 
-    if len(args) != 2:
-        print("usage: fonttools ttLib.scaleUpem font new-upem")
-        sys.exit()
+    parser = argparse.ArgumentParser(
+        "fonttools ttLib.scaleUpem", description="Change the units-per-EM of fonts"
+    )
+    parser.add_argument("font", metavar="font", help="Font file.")
+    parser.add_argument(
+        "new_upem", metavar="new-upem", help="New units-per-EM integer value."
+    )
+    parser.add_argument(
+        "--output-file", metavar="path", default=None, help="Output file."
+    )
 
-    font = TTFont(args[0])
-    new_upem = int(args[1])
+    options = parser.parse_args(args)
+
+    font = TTFont(options.font)
+    new_upem = int(options.new_upem)
+    output_file = (
+        options.output_file
+        if options.output_file is not None
+        else makeOutputFileName(options.font, overWrite=True, suffix="-scaled")
+    )
 
     scale_upem(font, new_upem)
 
-    print("Writing out.ttf")
-    font.save("out.ttf")
+    print("Writing %s" % output_file)
+    font.save(output_file)
 
 
 if __name__ == "__main__":
