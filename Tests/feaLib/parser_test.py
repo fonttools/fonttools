@@ -1751,7 +1751,7 @@ class ParserTest(unittest.TestCase):
         sub = doc.statements[0].statements[0]
         self.assertIsInstance(sub, ast.LigatureSubstStatement)
         self.assertEqual(glyphstr(sub.glyphs), "f f i")
-        self.assertEqual(sub.replacement, "f_f_i")
+        self.assertEqual(glyphstr([sub.replacement]), "f_f_i")
         self.assertEqual(glyphstr(sub.prefix), "")
         self.assertEqual(glyphstr(sub.suffix), "")
 
@@ -1760,7 +1760,7 @@ class ParserTest(unittest.TestCase):
         sub = doc.statements[0].statements[0]
         self.assertIsInstance(sub, ast.LigatureSubstStatement)
         self.assertEqual(glyphstr(sub.glyphs), "f i")
-        self.assertEqual(sub.replacement, "f_i")
+        self.assertEqual(glyphstr([sub.replacement]), "f_i")
         self.assertEqual(glyphstr(sub.prefix), "A B")
         self.assertEqual(glyphstr(sub.suffix), "Z")
 
