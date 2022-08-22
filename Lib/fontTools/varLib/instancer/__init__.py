@@ -328,7 +328,9 @@ def limitTupleVariationAxisRange(var, axisTag, axisRange):
         return [var, newVar]
 
 
-def _instantiateGvarGlyph(glyphname, glyf, gvar, hMetrics, vMetrics, axisLimits, optimize=True):
+def _instantiateGvarGlyph(
+    glyphname, glyf, gvar, hMetrics, vMetrics, axisLimits, optimize=True
+):
     coordinates, ctrl = glyf._getCoordinatesAndControls(glyphname, hMetrics, vMetrics)
     endPts = ctrl.endPts
 
@@ -364,22 +366,26 @@ def _instantiateGvarGlyph(glyphname, glyf, gvar, hMetrics, vMetrics, axisLimits,
         for var in tupleVarStore:
             var.optimize(coordinates, endPts, isComposite)
 
+
 def instantiateGvarGlyph(varfont, glyphname, axisLimits, optimize=True):
     """Remove?
     https://github.com/fonttools/fonttools/pull/2266"""
     gvar = varfont["gvar"]
     glyf = varfont["glyf"]
-    hMetrics = varfont['hmtx'].metrics
-    vMetrics = getattr(varfont.get('vmtx'), 'metrics', None)
-    _instantiateGvarGlyph(glyphname, glyf, gvar, hMetrics, vMetrics, axisLimits, optimize=optimize)
+    hMetrics = varfont["hmtx"].metrics
+    vMetrics = getattr(varfont.get("vmtx"), "metrics", None)
+    _instantiateGvarGlyph(
+        glyphname, glyf, gvar, hMetrics, vMetrics, axisLimits, optimize=optimize
+    )
+
 
 def instantiateGvar(varfont, axisLimits, optimize=True):
     log.info("Instantiating glyf/gvar tables")
 
     gvar = varfont["gvar"]
     glyf = varfont["glyf"]
-    hMetrics = varfont['hmtx'].metrics
-    vMetrics = getattr(varfont.get('vmtx'), 'metrics', None)
+    hMetrics = varfont["hmtx"].metrics
+    vMetrics = getattr(varfont.get("vmtx"), "metrics", None)
     # Get list of glyph names sorted by component depth.
     # If a composite glyph is processed before its base glyph, the bounds may
     # be calculated incorrectly because deltas haven't been applied to the
@@ -394,7 +400,9 @@ def instantiateGvar(varfont, axisLimits, optimize=True):
         ),
     )
     for glyphname in glyphnames:
-        _instantiateGvarGlyph(glyphname, glyf, gvar, hMetrics, vMetrics, axisLimits, optimize=optimize)
+        _instantiateGvarGlyph(
+            glyphname, glyf, gvar, hMetrics, vMetrics, axisLimits, optimize=optimize
+        )
 
     if not gvar.variations:
         del varfont["gvar"]
@@ -925,7 +933,9 @@ def instantiateAvar(varfont, axisLimits):
 
                 if fromCoord < axisRange.minimum or fromCoord > axisRange.maximum:
                     continue
-                fromCoord = normalizeValue(fromCoord, (axisRange.minimum, 0, axisRange.maximum))
+                fromCoord = normalizeValue(
+                    fromCoord, (axisRange.minimum, 0, axisRange.maximum)
+                )
 
                 assert mappedMin <= toCoord <= mappedMax
                 toCoord = normalizeValue(toCoord, (mappedMin, 0, mappedMax))
@@ -1400,7 +1410,7 @@ def parseArgs(args):
         "--no-recalc-timestamp",
         dest="recalc_timestamp",
         action="store_false",
-        help="Don't set the output font's timestamp to the current time."
+        help="Don't set the output font's timestamp to the current time.",
     )
     parser.add_argument(
         "--no-recalc-bounds",
@@ -1470,7 +1480,8 @@ def main(args=None):
     )
 
     suffix = "-instance" if isFullInstance else "-partial"
-    outfile = (makeOutputFileName(infile, overWrite=True, suffix=suffix)
+    outfile = (
+        makeOutputFileName(infile, overWrite=True, suffix=suffix)
         if not options.output
         else options.output
     )
