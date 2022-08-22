@@ -138,7 +138,7 @@ class Builder(object):
         self.default_language_systems_: Set[Tuple[str, str]] = set()
         self.script_: Optional[str] = None
         self.lookupflag_ = 0
-        self.lookupflag_markFilterSet_ = None
+        self.lookupflag_markFilterSet_: Optional[int] = None
         self.language_systems: Optional[
             Union[FrozenSet[Tuple[str, str]], Set[Tuple[str, str]]]
         ] = set()
@@ -203,10 +203,10 @@ class Builder(object):
             str, Tuple[int, Tuple[str, int, int]]
         ] = {}  # "acute" --> (4, (file, line, column))
         self.markAttachClassID_: Dict[
-            frozenset, int
+            FrozenSet[str], int
         ] = {}  # frozenset({"acute", "grave"}) --> 4
         self.markFilterSets_: Dict[
-            frozenset, int
+            FrozenSet[str], int
         ] = {}  # frozenset({"acute", "grave"}) --> 4
         # for table 'OS/2'
         self.os2_: Dict[str, Any] = {}
@@ -821,15 +821,18 @@ class Builder(object):
                 gdef.remap_device_varidxes(varidx_map)
                 if "GPOS" in self.font:
                     self.font["GPOS"].table.remap_device_varidxes(varidx_map)
-        if any(
-            (
-                gdef.GlyphClassDef,
-                gdef.AttachList,
-                gdef.LigCaretList,
-                gdef.MarkAttachClassDef,
-                gdef.MarkGlyphSetsDef,
+        if (
+            any(
+                (
+                    gdef.GlyphClassDef,
+                    gdef.AttachList,
+                    gdef.LigCaretList,
+                    gdef.MarkAttachClassDef,
+                    gdef.MarkGlyphSetsDef,
+                )
             )
-        ) or hasattr(gdef, "VarStore"):
+            or hasattr(gdef, "VarStore")
+        ):
             result = newTable("GDEF")
             result.table = gdef
             return result
@@ -1190,16 +1193,24 @@ class Builder(object):
             self.markAttach_[glyph] = (id_, location)
         return id_
 
-    def getMarkFilterSet_(self, location, glyphs):
-        glyphs = frozenset(glyphs)
-        id_ = self.markFilterSets_.get(glyphs)
+    def getMarkFilterSet_(
+        self, location: FeatureLibLocation, glyphs: Sequence[str]
+    ) -> int:
+        glyphset = frozenset(glyphs)
+        id_ = self.markFilterSets_.get(glyphset)
         if id_ is not None:
             return id_
         id_ = len(self.markFilterSets_)
-        self.markFilterSets_[glyphs] = id_
+        self.markFilterSets_[glyphset] = id_
         return id_
 
-    def set_lookup_flag(self, location, value, markAttach, markFilter):
+    def set_lookup_flag(
+        self,
+        location: FeatureLibLocation,
+        value: int,
+        markAttach: Sequence[str],
+        markFilter: Sequence[str],
+    ):
         value = value & 0xFF
         if markAttach:
             markAttachClass = self.getMarkAttachClass_(location, markAttach)
