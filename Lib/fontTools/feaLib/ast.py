@@ -248,51 +248,52 @@ class GlyphClass(Expression):
     """A glyph class, such as ``[acute cedilla grave]``."""
 
     def __init__(
-        self, glyphs: Sequence[str] = None, location: FeatureLibLocation = None
+        self, glyphs: Sequence[GlyphName] = None, location: FeatureLibLocation = None
     ):
         Expression.__init__(self, location)
         #: The list of glyphs in this class, as strings.
-        self.glyphs: List[str] = list(glyphs) if glyphs is not None else []
+        self.glyphs: List[GlyphName] = list(glyphs or [])
         self.original: List[str] = []
         self.curr = 0
 
     def glyphSet(self) -> Tuple[str, ...]:
         """The glyphs in this class."""
-        return tuple(self.glyphs)
-        # return tuple([x.glyph for x in self.glyphs])
+        return tuple([x.glyph for x in self.glyphs])
 
     def asFea(self, indent="") -> str:
         if len(self.original):
             if self.curr < len(self.glyphs):
-                self.original.extend(self.glyphs[self.curr :])
+                self.original.extend([x.glyph for x in self.glyphs[self.curr :]])
                 self.curr = len(self.glyphs)
-            return "[" + " ".join(map(asFea, self.original)) + "]"
+            return "[" + " ".join(self.original) + "]"
         else:
-            return "[" + " ".join(map(asFea, self.glyphs)) + "]"
+            return "[" + " ".join([ x.asFea() for x in self.glyphs]) + "]"
 
-    def extend(self, glyphs: Sequence[str]):
-        """Add a list of :class:`str` objects to the class."""
+    def extend(self, glyphs: Sequence[GlyphName]):
+        """Add a list of :class:`GlyphName` objects to the class."""
+        assert all(isinstance(g, GlyphName) for g in glyphs)
         self.glyphs.extend(glyphs)
 
-    def append(self, glyph: str):
-        """Add a single :class:`str` object to the class."""
+    def append(self, glyph: GlyphName):
+        """Add a single :class:`GlyphName` object to the class."""
+        assert isinstance(glyph, GlyphName)
         self.glyphs.append(glyph)
 
-    def _add_things(self, glyphs: Sequence[str], original: str):
+    def _add_things(self, glyphs: Sequence[GlyphName], original: str):
+        assert all(isinstance(g, GlyphName) for g in glyphs)
         if self.curr < len(self.glyphs):
-            self.original.extend(self.glyphs[self.curr :])
-            # self.original.extend([x.glyph for x in self.glyphs[self.curr :]])
+            self.original.extend([x.glyph for x in self.glyphs[self.curr :]])
         self.original.append(original)
         self.glyphs.extend(glyphs)
         self.curr = len(self.glyphs)
 
-    def add_range(self, start: str, end: str, glyphs: Sequence[str]):
+    def add_range(self, start: str, end: str, glyphs: Sequence[GlyphName]):
         """Add a range (e.g. ``A-Z``) to the class. ``start`` and ``end``
         are strings representing the start and end glyphs in the class,
         and ``glyphs`` is the full list of strs representing glyphs in the range."""
         self._add_things(glyphs, start + " - " + end)
 
-    def add_cid_range(self, start: int, end: int, glyphs: Sequence[str]):
+    def add_cid_range(self, start: int, end: int, glyphs: Sequence[GlyphName]):
         """Add a range to the class by glyph ID. ``start`` and ``end`` are the
         initial and final IDs, and ``glyphs`` is the full list of
         :class:`str` objects in the range."""
@@ -301,7 +302,7 @@ class GlyphClass(Expression):
     def add_class(self, gc: "Union[GlyphClassName, MarkClassName]"):
         """Add glyphs from the given :class:`GlyphClassName` object to the
         class."""
-        self._add_things(gc.glyphSet(), gc.asFea())
+        self._add_things([GlyphName(g, gc.location) for g in gc.glyphSet()], gc.asFea())
 
 
 class GlyphClassDefinition(Statement):

@@ -405,7 +405,7 @@ class Parser(object):
                             )
                         )
                     self.check_glyph_name_in_glyph_set(glyph)
-                    glyphs.append(glyph)
+                    glyphs.append(self.ast.GlyphName(glyph, location))
             elif self.next_token_type_ is Lexer.CID:
                 glyph = self.expect_glyph_()
                 if self.next_token_ == "-":
@@ -425,7 +425,7 @@ class Parser(object):
                 else:
                     glyph_name = f"cid{self.cur_token_:05d}"
                     self.check_glyph_name_in_glyph_set(glyph_name)
-                    glyphs.append(glyph_name)
+                    glyphs.append(self.ast.GlyphName(glyph_name, location))
             elif self.next_token_type_ is Lexer.GLYPHCLASS:
                 self.advance_lexer_()
                 gc = self.glyphclasses_.resolve(self.cur_token_)
@@ -2361,18 +2361,22 @@ class Parser(object):
         """'abc' --> 'cba'"""
         return "".join(reversed(list(s)))
 
-    def make_cid_range_(self, location, start, limit):
+    def make_cid_range_(
+        self, location: FeatureLibLocation, start: int, limit: int
+    ) -> Sequence[ast.GlyphName]:
         """(location, 999, 1001) --> ["cid00999", "cid01000", "cid01001"]"""
-        result = list()
+        result: List[ast.GlyphName] = list()
         if start > limit:
             raise FeatureLibError(
                 "Bad range: start should be less than limit", location
             )
         for cid in range(start, limit + 1):
-            result.append("cid%05d" % cid)
+            result.append(self.ast.GlyphName("cid%05d" % cid, location))
         return result
 
-    def make_glyph_range_(self, location, start, limit):
+    def make_glyph_range_(
+        self, location: FeatureLibLocation, start: str, limit: str
+    ) -> List[ast.GlyphName]:
         """(location, "a.sc", "d.sc") --> ["a.sc", "b.sc", "c.sc", "d.sc"]"""
         result = list()
         if len(start) != len(limit):
@@ -2399,20 +2403,26 @@ class Parser(object):
         uppercase = re.compile(r"^[A-Z]$")
         if uppercase.match(start_range) and uppercase.match(limit_range):
             for c in range(ord(start_range), ord(limit_range) + 1):
-                result.append("%s%c%s" % (prefix, c, suffix))
+                result.append(
+                    self.ast.GlyphName("%s%c%s" % (prefix, c, suffix), location)
+                )
             return result
 
         lowercase = re.compile(r"^[a-z]$")
         if lowercase.match(start_range) and lowercase.match(limit_range):
             for c in range(ord(start_range), ord(limit_range) + 1):
-                result.append("%s%c%s" % (prefix, c, suffix))
+                result.append(
+                    self.ast.GlyphName("%s%c%s" % (prefix, c, suffix), location)
+                )
             return result
 
         digits = re.compile(r"^[0-9]{1,3}$")
         if digits.match(start_range) and digits.match(limit_range):
             for i in range(int(start_range, 10), int(limit_range, 10) + 1):
                 number = ("000" + str(i))[-len(start_range) :]
-                result.append("%s%s%s" % (prefix, number, suffix))
+                result.append(
+                    self.ast.GlyphName("%s%s%s" % (prefix, number, suffix), location)
+                )
             return result
 
         raise FeatureLibError('Bad range: "%s-%s"' % (start, limit), location)
