@@ -258,7 +258,7 @@ class GlyphClass(Expression):
                 self.curr = len(self.glyphs)
             return "[" + " ".join(self.original) + "]"
         else:
-            return "[" + " ".join([ x.asFea() for x in self.glyphs]) + "]"
+            return "[" + " ".join([x.asFea() for x in self.glyphs]) + "]"
 
     def extend(self, glyphs: Sequence[GlyphName]):
         """Add a list of :class:`GlyphName` objects to the class."""
@@ -1145,7 +1145,8 @@ class LigatureSubstStatement(Statement):
         location: Optional[FeatureLibLocation] = None,
     ):
         Statement.__init__(self, location)
-        assert not isinstance(replacement, str)
+        if isinstance(replacement, str):
+            replacement = GlyphName(replacement, location)
         self.prefix, self.glyphs, self.suffix = (prefix, glyphs, suffix)
         self.replacement, self.forceChain = replacement, forceChain
 
@@ -1154,7 +1155,12 @@ class LigatureSubstStatement(Statement):
         glyphs = [g.glyphSet() for g in self.glyphs]
         suffix = [s.glyphSet() for s in self.suffix]
         builder.add_ligature_subst(
-            self.location, prefix, glyphs, suffix, self.replacement.glyphSet()[0], self.forceChain
+            self.location,
+            prefix,
+            glyphs,
+            suffix,
+            self.replacement.glyphSet()[0],
+            self.forceChain,
         )
 
     def asFea(self, indent="") -> str:
@@ -1370,6 +1376,12 @@ class MultipleSubstStatement(Statement):
         location: Optional[FeatureLibLocation] = None,
     ):
         Statement.__init__(self, location)
+        if isinstance(glyph, str):
+            glyph = GlyphName(glyph, location)
+        replacement = [
+            GlyphName(glyph, location) if isinstance(glyph, str) else glyph
+            for glyph in replacement
+        ]
         self.prefix, self.glyph, self.suffix = prefix, glyph, suffix
         self.replacement = replacement
         self.forceChain = forceChain
