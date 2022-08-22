@@ -150,17 +150,6 @@ fea_keywords = set(
 )
 
 
-def asFea(g):
-    if hasattr(g, "asFea"):
-        return g.asFea()
-    elif isinstance(g, tuple) and len(g) == 2:
-        return asFea(g[0]) + " - " + asFea(g[1])  # a range
-    elif g.lower() in fea_keywords:
-        return "\\" + g
-    else:
-        return g
-
-
 class GlyphContainer(Protocol):
     def glyphSet(self) -> Tuple[str, ...]:
         ...
@@ -241,7 +230,9 @@ class GlyphName(Expression):
         return (self.glyph,)
 
     def asFea(self, indent="") -> str:
-        return asFea(self.glyph)
+        if self.glyph.lower() in fea_keywords:
+            return "\\" + self.glyph
+        return self.glyph
 
 
 class GlyphClass(Expression):
@@ -682,14 +673,14 @@ class AlternateSubstStatement(Statement):
         res = "sub "
         if len(self.prefix) or len(self.suffix):
             if len(self.prefix):
-                res += " ".join(map(asFea, self.prefix)) + " "
-            res += asFea(self.glyph) + "'"  # even though we really only use 1
+                res += " ".join(map(lambda x: x.asFea(), self.prefix)) + " "
+            res += self.glyph.asFea() + "'"  # even though we really only use 1
             if len(self.suffix):
-                res += " " + " ".join(map(asFea, self.suffix))
+                res += " " + " ".join(map(lambda x: x.asFea(), self.suffix))
         else:
-            res += asFea(self.glyph)
+            res += self.glyph.asFea()
         res += " from "
-        res += asFea(self.replacement)
+        res += self.replacement.asFea()
         res += ";"
         return res
 
@@ -828,9 +819,9 @@ class ChainContextStatement(Statement):
                 if i < len(self.glyphs) - 1:
                     res += " "
             if len(self.suffix):
-                res += " " + " ".join(map(asFea, self.suffix))
+                res += " " + " ".join(map(lambda x: x.asFea(), self.suffix))
         else:
-            res += " ".join(map(asFea, self.glyphs))
+            res += " ".join(map(lambda x: x.asFea(), self.glyphs))
         res += ";"
         return res
 
@@ -952,12 +943,12 @@ class IgnoreStatement(Statement):
             res = ""
             if len(prefix) or len(suffix):
                 if len(prefix):
-                    res += " ".join(map(asFea, prefix)) + " "
+                    res += " ".join(map(lambda x: x.asFea(), prefix)) + " "
                 res += " ".join(g.asFea() + "'" for g in glyphs)
                 if len(suffix):
-                    res += " " + " ".join(map(asFea, suffix))
+                    res += " " + " ".join(map(lambda x: x.asFea(), suffix))
             else:
-                res += " ".join(map(asFea, glyphs))
+                res += " ".join(map(lambda x: x.asFea(), glyphs))
             contexts.append(res)
         return f"ignore {self.table} " + ", ".join(contexts) + ";"
 
@@ -1154,6 +1145,7 @@ class LigatureSubstStatement(Statement):
         location: Optional[FeatureLibLocation] = None,
     ):
         Statement.__init__(self, location)
+        assert not isinstance(replacement, str)
         self.prefix, self.glyphs, self.suffix = (prefix, glyphs, suffix)
         self.replacement, self.forceChain = replacement, forceChain
 
@@ -1176,7 +1168,7 @@ class LigatureSubstStatement(Statement):
         else:
             res += " ".join(g.asFea() for g in self.glyphs)
         res += " by "
-        res += asFea(self.replacement)
+        res += self.replacement.asFea()
         res += ";"
         return res
 
@@ -1412,14 +1404,14 @@ class MultipleSubstStatement(Statement):
         if len(self.prefix) or len(self.suffix) or self.forceChain:
             if len(self.prefix):
                 res += " ".join(map(lambda x: x.asFea(), self.prefix)) + " "
-            res += asFea(self.glyph) + "'"
+            res += self.glyph.asFea() + "'"
             if len(self.suffix):
                 res += " " + " ".join(map(lambda x: x.asFea(), self.suffix))
         else:
-            res += asFea(self.glyph)
+            res += self.glyph.asFea()
         replacement = self.replacement or [NullGlyph()]
         res += " by "
-        res += " ".join(map(asFea, replacement))
+        res += " ".join(map(lambda x: x.asFea(), replacement))
         res += ";"
         return res
 
@@ -1546,13 +1538,13 @@ class ReverseChainSingleSubstStatement(Statement):
         res = "rsub "
         if len(self.old_prefix) or len(self.old_suffix):
             if len(self.old_prefix):
-                res += " ".join(asFea(g) for g in self.old_prefix) + " "
-            res += " ".join(asFea(g) + "'" for g in self.glyphs)
+                res += " ".join(g.asFea() for g in self.old_prefix) + " "
+            res += " ".join(g.asFea() + "'" for g in self.glyphs)
             if len(self.old_suffix):
-                res += " " + " ".join(asFea(g) for g in self.old_suffix)
+                res += " " + " ".join(g.asFea() for g in self.old_suffix)
         else:
-            res += " ".join(map(asFea, self.glyphs))
-        res += " by {};".format(" ".join(asFea(g) for g in self.replacements))
+            res += " ".join(map(lambda x: x.asFea(), self.glyphs))
+        res += " by {};".format(" ".join(g.asFea() for g in self.replacements))
         return res
 
 
@@ -1600,13 +1592,13 @@ class SingleSubstStatement(Statement):
         res = "sub "
         if len(self.prefix) or len(self.suffix) or self.forceChain:
             if len(self.prefix):
-                res += " ".join(asFea(g) for g in self.prefix) + " "
-            res += " ".join(asFea(g) + "'" for g in self.glyphs)
+                res += " ".join(g.asFea() for g in self.prefix) + " "
+            res += " ".join(g.asFea() + "'" for g in self.glyphs)
             if len(self.suffix):
-                res += " " + " ".join(asFea(g) for g in self.suffix)
+                res += " " + " ".join(g.asFea() for g in self.suffix)
         else:
-            res += " ".join(asFea(g) for g in self.glyphs)
-        res += " by {};".format(" ".join(asFea(g) for g in self.replacements))
+            res += " ".join(g.asFea() for g in self.glyphs)
+        res += " by {};".format(" ".join(g.asFea() for g in self.replacements))
         return res
 
 
@@ -1655,18 +1647,18 @@ class SinglePosStatement(Statement):
         res = "pos "
         if len(self.prefix) or len(self.suffix) or self.forceChain:
             if len(self.prefix):
-                res += " ".join(map(asFea, self.prefix)) + " "
+                res += " ".join(map(lambda x: x.asFea(), self.prefix)) + " "
             res += " ".join(
                 [
-                    asFea(x[0]) + "'" + ((" " + x[1].asFea()) if x[1] else "")
+                    x[0].asFea() + "'" + ((" " + x[1].asFea()) if x[1] else "")
                     for x in self.pos
                 ]
             )
             if len(self.suffix):
-                res += " " + " ".join(map(asFea, self.suffix))
+                res += " " + " ".join(map(lambda x: x.asFea(), self.suffix))
         else:
             res += " ".join(
-                [asFea(x[0]) + " " + (x[1].asFea() if x[1] else "") for x in self.pos]
+                [x[0].asFea() + " " + (x[1].asFea() if x[1] else "") for x in self.pos]
             )
         res += ";"
         return res
