@@ -2,12 +2,14 @@ from fontTools.varLib.models import supportScalar, normalizeValue
 from fontTools.misc.fixedTools import MAX_F2DOT14
 from functools import lru_cache
 
-__all__ = ['rebaseTent']
+__all__ = ["rebaseTent"]
 
 EPSILON = 1 / (1 << 14)
 
+
 def _reverse_negate(v):
     return (-v[2], -v[1], -v[0])
+
 
 def _solve(tent, axisLimit, negative=False):
     axisMin, axisDef, axisMax = axisLimit
@@ -15,9 +17,12 @@ def _solve(tent, axisLimit, negative=False):
 
     # Mirror the problem such that axisDef <= peak
     if axisDef > peak:
-        return [(scalar, _reverse_negate(t) if t is not None else None)
-                for scalar,t
-                in _solve(_reverse_negate(tent), _reverse_negate(axisLimit), not negative)]
+        return [
+            (scalar, _reverse_negate(t) if t is not None else None)
+            for scalar, t in _solve(
+                _reverse_negate(tent), _reverse_negate(axisLimit), not negative
+            )
+        ]
     # axisDef <= peak
 
     # case 1: The whole deltaset falls outside the new limit; we can drop it
@@ -32,7 +37,7 @@ def _solve(tent, axisLimit, negative=False):
     #    axisMin     axisDef    axisMax   lower     upper
     #
     if axisMax <= lower and axisMax < peak:
-        return [] # No overlap
+        return []  # No overlap
 
     # case 2: Only the peak and outermost bound fall outside the new limit;
     # we keep the deltaset, update peak and outermost bound and and scale deltas
@@ -62,19 +67,19 @@ def _solve(tent, axisLimit, negative=False):
     #                                  |
     #                                axisMax
     if axisMax < peak:
-        mult = supportScalar({'tag': axisMax}, {'tag': tent})
+        mult = supportScalar({"tag": axisMax}, {"tag": tent})
         tent = (lower, axisMax, axisMax)
-        return [(scalar*mult, t) for scalar,t in _solve(tent, axisLimit)]
+        return [(scalar * mult, t) for scalar, t in _solve(tent, axisLimit)]
 
     # lower <= axisDef <= peak <= axisMax
 
-    gain = supportScalar({'tag': axisDef}, {'tag': tent})
+    gain = supportScalar({"tag": axisDef}, {"tag": tent})
     out = [(gain, None)]
 
     # First, the positive side
 
     # outGain is the scalar of axisMax at the tent.
-    outGain = supportScalar({'tag': axisMax}, {'tag': tent})
+    outGain = supportScalar({"tag": axisMax}, {"tag": tent})
 
     # Case 3a: Gain is more than outGain. The tent down-slope crosses
     # the axis into negative. We have to split it into multiples.
@@ -111,7 +116,7 @@ def _solve(tent, axisLimit, negative=False):
         # the drawing above.
         if upper >= axisMax:
             loc = (crossing, axisMax, axisMax)
-            scalar = supportScalar({'tag': axisMax}, {'tag': tent})
+            scalar = supportScalar({"tag": axisMax}, {"tag": tent})
 
             out.append((scalar - gain, loc))
 
@@ -142,7 +147,7 @@ def _solve(tent, axisLimit, negative=False):
 
             # Eternity justify.
             loc2 = (upper, axisMax, axisMax)
-            scalar2 = supportScalar({'tag': axisMax}, {'tag': tent})
+            scalar2 = supportScalar({"tag": axisMax}, {"tag": tent})
 
             out.append((scalar1 - gain, loc1))
             out.append((scalar2 - gain, loc2))
@@ -214,13 +219,12 @@ def _solve(tent, axisLimit, negative=False):
         scalar1 = 1
 
         loc2 = (peak, axisMax, axisMax)
-        scalar2 = supportScalar({'tag': axisMax}, {'tag': tent})
+        scalar2 = supportScalar({"tag": axisMax}, {"tag": tent})
 
         out.append((scalar1 - gain, loc1))
         # Don't add a dirac delta!
-        if (peak < axisMax):
+        if peak < axisMax:
             out.append((scalar2 - gain, loc2))
-
 
     # Now, the negative side
 
@@ -240,7 +244,7 @@ def _solve(tent, axisLimit, negative=False):
     #
     if lower <= axisMin:
         loc = (axisMin, axisMin, axisDef)
-        scalar = supportScalar({'tag': axisMin}, {'tag': tent})
+        scalar = supportScalar({"tag": axisMin}, {"tag": tent})
 
         out.append((scalar - gain, loc))
 
@@ -302,8 +306,10 @@ def rebaseTent(tent, axisLimit):
     sols = _solve(tent, axisLimit)
 
     n = lambda v: normalizeValue(v, axisLimit, extrapolate=True)
-    sols = [(scalar, (n(v[0]), n(v[1]), n(v[2])) if v is not None else None)
-            for scalar,v in sols
-            if scalar]
+    sols = [
+        (scalar, (n(v[0]), n(v[1]), n(v[2])) if v is not None else None)
+        for scalar, v in sols
+        if scalar
+    ]
 
     return sols

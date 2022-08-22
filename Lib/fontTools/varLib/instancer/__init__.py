@@ -101,6 +101,7 @@ import re
 
 log = logging.getLogger("fontTools.varLib.instancer")
 
+
 def _expand(v):
     if not isinstance(v, tuple):
         return (v, v, v)
@@ -108,6 +109,7 @@ def _expand(v):
         if len(v) == 2:
             return (v[0], None, v[1])
         return v
+
 
 class AxisRange(collections.namedtuple("AxisRange", "minimum maximum")):
     def __new__(cls, *args, **kwargs):
@@ -250,8 +252,10 @@ def changeTupleVariationAxisLimit(var, axisTag, axisLimit):
     solutions = solver.rebaseTent(tent, axisLimit)
 
     out = []
-    for scalar,tent in solutions:
-        newVar = TupleVariation(var.axes, var.coordinates) if len(solutions) > 1 else var
+    for scalar, tent in solutions:
+        newVar = (
+            TupleVariation(var.axes, var.coordinates) if len(solutions) > 1 else var
+        )
         if tent is None:
             newVar.axes.pop(axisTag)
         else:
@@ -261,6 +265,7 @@ def changeTupleVariationAxisLimit(var, axisTag, axisLimit):
         out.append(newVar)
 
     return out
+
 
 def _instantiateGvarGlyph(
     glyphname, glyf, gvar, hMetrics, vMetrics, axisLimits, optimize=True
@@ -787,7 +792,9 @@ def _instantiateFeatureVariations(table, fvarAxes, axisLimits):
         if applies and not featureVariationApplied:
             assert record.FeatureTableSubstitution.Version == 0x00010000
             for rec in record.FeatureTableSubstitution.SubstitutionRecord:
-                table.FeatureList.FeatureRecord[rec.FeatureIndex].Feature = deepcopy(rec.Feature)
+                table.FeatureList.FeatureRecord[rec.FeatureIndex].Feature = deepcopy(
+                    rec.Feature
+                )
             # Set variations only once
             featureVariationApplied = True
 
@@ -1071,8 +1078,9 @@ def populateAxisDefaults(varfont, axisLimits):
         fvar = varfont["fvar"]
         defaultValues = {a.axisTag: a.defaultValue for a in fvar.axes}
         return {
-            axisTag: tuple(defaultValues[axisTag] if v is None else v
-                           for v in _expand(value))
+            axisTag: tuple(
+                defaultValues[axisTag] if v is None else v for v in _expand(value)
+            )
             for axisTag, value in axisLimits.items()
         }
     return axisLimits
@@ -1252,7 +1260,10 @@ def splitAxisLocationAndRanges(axisLimits, rangeType=AxisRange):
 def parseLimits(limits):
     result = {}
     for limitString in limits:
-        match = re.match(r"^(\w{1,4})=(?:(drop)|(?:([^:]+)(?:[:]([^:]+))?(?:[:]([^:]+))?))$", limitString)
+        match = re.match(
+            r"^(\w{1,4})=(?:(drop)|(?:([^:]+)(?:[:]([^:]+))?(?:[:]([^:]+))?))$",
+            limitString,
+        )
         if not match:
             raise ValueError("invalid location format: %r" % limitString)
         tag = match.group(1).ljust(4)
