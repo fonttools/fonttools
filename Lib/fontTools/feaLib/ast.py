@@ -1154,7 +1154,7 @@ class LigatureSubstStatement(Statement):
         glyphs = [g.glyphSet() for g in self.glyphs]
         suffix = [s.glyphSet() for s in self.suffix]
         builder.add_ligature_subst(
-            self.location, prefix, glyphs, suffix, self.replacement, self.forceChain
+            self.location, prefix, glyphs, suffix, self.replacement.glyphSet()[0], self.forceChain
         )
 
     def asFea(self, indent="") -> str:

@@ -1009,7 +1009,7 @@ class Parser(object):
                 old_prefix,
                 old,
                 old_suffix,
-                list(new[0].glyphSet())[0],
+                new[0],
                 forceChain=hasMarks,
                 location=location,
             )
