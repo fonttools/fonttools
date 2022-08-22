@@ -188,10 +188,11 @@ def supportScalar(location, support, ot=True, extrapolate=False):
 
 
 class VariationModel(object):
+    """Locations must have the base master at the origin (ie. 0).
 
-    """
-  Locations must be in normalized space.  Ie. base master
-  is at origin (0).
+    If the extrapolate argument is set to True, then location values are
+    interpretted in the normalized space, ie. in the [-1,+1] range, and
+    values are extrapolated outside this range.
 
       >>> from pprint import pprint
       >>> locations = [ \
