@@ -6,7 +6,7 @@ import re
 numberAddedRE = re.compile(r"#\d+$")
 
 
-def makeOutputFileName(input, outputDir=None, extension=None, overWrite=False, fragment=""):
+def makeOutputFileName(input, outputDir=None, extension=None, overWrite=False, suffix=""):
     """Generates a suitable file name for writing output.
 
     Often tools will want to take a file, do some kind of transformation to it,
@@ -14,7 +14,7 @@ def makeOutputFileName(input, outputDir=None, extension=None, overWrite=False, f
     output file, through one or more of the following steps:
 
     - changing the output directory
-    - appending fragment before file extension
+    - appending suffix before file extension
     - replacing the file extension
     - suffixing the filename with a number (``#1``, ``#2``, etc.) to avoid
       overwriting an existing file.
@@ -22,7 +22,7 @@ def makeOutputFileName(input, outputDir=None, extension=None, overWrite=False, f
     Args:
         input: Name of input file.
         outputDir: Optionally, a new directory to write the file into.
-        fragment: Optionally, a string fragment is appended to file name before
+        suffix: Optionally, a string suffix is appended to file name before
             the extension.
         extension: Optionally, a replacement for the current file extension.
         overWrite: Overwriting an existing file is permitted if true; if false
@@ -39,11 +39,11 @@ def makeOutputFileName(input, outputDir=None, extension=None, overWrite=False, f
     fileName = numberAddedRE.split(fileName)[0]
     if extension is None:
         extension = os.path.splitext(input)[1]
-    output = os.path.join(dirName, fileName + fragment + extension)
+    output = os.path.join(dirName, fileName + suffix + extension)
     n = 1
     if not overWrite:
         while os.path.exists(output):
             output = os.path.join(
-                dirName, fileName + fragment + "#" + repr(n) + extension)
+                dirName, fileName + suffix + "#" + repr(n) + extension)
             n += 1
     return output

@@ -242,7 +242,7 @@ def main(args=None):
     output_file = (
         options.output_file
         if options.output_file is not None
-        else makeOutputFileName(options.font, overWrite=True, fragment="-scaled")
+        else makeOutputFileName(options.font, overWrite=True, suffix="-scaled")
     )
 
     if "CFF " in font or "CFF2" in font:

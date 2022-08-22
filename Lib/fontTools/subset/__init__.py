@@ -3190,7 +3190,7 @@ def main(args=None):
 	font = load_font(fontfile, options, dontLoadGlyphNames=dontLoadGlyphNames)
 
 	if outfile is None:
-		outfile = makeOutputFileName(fontfile, overWrite=True, fragment=".subset")
+		outfile = makeOutputFileName(fontfile, overWrite=True, suffix=".subset")
 
 	with timer("compile glyph list"):
 		if wildcard_glyphs:

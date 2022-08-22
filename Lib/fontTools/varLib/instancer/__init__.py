@@ -1469,8 +1469,8 @@ def main(args=None):
         updateFontNames=options.update_name_table,
     )
 
-    fragment = "-instance" if isFullInstance else "-partial"
-    outfile = (makeOutputFileName(infile, overWrite=True, fragment=fragment)
+    suffix = "-instance" if isFullInstance else "-partial"
+    outfile = (makeOutputFileName(infile, overWrite=True, suffix=suffix)
         if not options.output
         else options.output
     )
