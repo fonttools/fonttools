@@ -1,6 +1,7 @@
 """Change the units-per-EM of a font.
 
-AAT and Graphite tables are not supported."""
+AAT and Graphite tables are not supported. CFF/CFF2 fonts
+are de-subroutinized."""
 
 
 from fontTools.ttLib.ttVisitor import TTVisitor
