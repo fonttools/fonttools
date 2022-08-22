@@ -1,13 +1,15 @@
 """Change the units-per-EM of a font.
 
-Currently does not support CFF fonts. AAT, Graphite tables are not supported
-either."""
+AAT and Graphite tables are not supported. CFF/CFF2 fonts
+are de-subroutinized."""
 
 
 from fontTools.ttLib.ttVisitor import TTVisitor
 import fontTools.ttLib as ttLib
 import fontTools.ttLib.tables.otBase as otBase
 import fontTools.ttLib.tables.otTables as otTables
+from fontTools.cffLib import VarStoreData
+import fontTools.cffLib.specializer as cffSpecializer
 from fontTools.misc.fixedTools import otRound
 
 
@@ -144,6 +146,83 @@ def visit(visitor, obj, attr, kernTables):
             kernTable[k] = visitor.scale(kernTable[k])
 
 
+def _cff_scale(visitor, args):
+    for i, arg in enumerate(args):
+        if not isinstance(arg, list):
+            args[i] = visitor.scale(arg)
+        else:
+            num_blends = arg[-1]
+            _cff_scale(visitor, arg)
+            arg[-1] = num_blends
+
+
+@ScalerVisitor.register_attr(
+    (ttLib.getTableClass("CFF "), ttLib.getTableClass("CFF2")), "cff"
+)
+def visit(visitor, obj, attr, cff):
+    cff.desubroutinize()
+    topDict = cff.topDictIndex[0]
+    varStore = getattr(topDict, "VarStore", None)
+    getNumRegions = varStore.getNumRegions if varStore is not None else None
+    privates = set()
+    for fontname in cff.keys():
+        font = cff[fontname]
+        cs = font.CharStrings
+        for g in font.charset:
+            c, _ = cs.getItemAndSelector(g)
+            privates.add(c.private)
+
+            commands = cffSpecializer.programToCommands(
+                c.program, getNumRegions=getNumRegions
+            )
+            for op, args in commands:
+                _cff_scale(visitor, args)
+            c.program[:] = cffSpecializer.commandsToProgram(commands)
+
+        # Annoying business of scaling numbers that do not matter whatsoever
+
+        for attr in (
+            "UnderlinePosition",
+            "UnderlineThickness",
+            "FontBBox",
+            "StrokeWidth",
+        ):
+            value = getattr(topDict, attr, None)
+            if value is None:
+                continue
+            if isinstance(value, list):
+                _cff_scale(visitor, value)
+            else:
+                setattr(topDict, attr, visitor.scale(value))
+
+        topDict.FontMatrix[0] /= visitor.scaleFactor
+        topDict.FontMatrix[3] /= visitor.scaleFactor
+
+        for private in privates:
+            for attr in (
+                "BlueValues",
+                "OtherBlues",
+                "FamilyBlues",
+                "FamilyOtherBlues",
+                # "BlueScale",
+                # "BlueShift",
+                # "BlueFuzz",
+                "StdHW",
+                "StdVW",
+                "StemSnapH",
+                "StemSnapV",
+                "defaultWidthX",
+                "nominalWidthX",
+            ):
+                value = getattr(private, attr, None)
+                if value is None:
+                    continue
+                if isinstance(value, list):
+                    _cff_scale(visitor, value)
+                else:
+                    setattr(private, attr, visitor.scale(value))
+
+
 # ItemVariationStore
 
 
@@ -228,13 +307,6 @@ def main(args=None):
 
     font = TTFont(args[0])
     new_upem = int(args[1])
-
-    if "CFF " in font or "CFF2" in font:
-        print(
-            "fonttools ttLib.scaleUpem: CFF/CFF2 fonts are not supported.",
-            file=sys.stderr,
-        )
-        sys.exit(1)
 
     scale_upem(font, new_upem)
 
