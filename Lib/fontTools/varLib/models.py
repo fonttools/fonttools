@@ -51,12 +51,13 @@ def subList(truth, lst):
 
 def normalizeValue(v, triple):
     """Normalizes value based on a min/default/max triple.
-    >>> normalizeValue(400, (100, 400, 900))
-    0.0
-    >>> normalizeValue(100, (100, 400, 900))
-    -1.0
-    >>> normalizeValue(650, (100, 400, 900))
-    0.5
+
+      >>> normalizeValue(400, (100, 400, 900))
+      0.0
+      >>> normalizeValue(100, (100, 400, 900))
+      -1.0
+      >>> normalizeValue(650, (100, 400, 900))
+      0.5
     """
     lower, default, upper = triple
     if not (lower <= default <= upper):
@@ -76,41 +77,42 @@ def normalizeValue(v, triple):
 
 def normalizeLocation(location, axes):
     """Normalizes location based on axis min/default/max values from axes.
-    >>> axes = {"wght": (100, 400, 900)}
-    >>> normalizeLocation({"wght": 400}, axes)
-    {'wght': 0.0}
-    >>> normalizeLocation({"wght": 100}, axes)
-    {'wght': -1.0}
-    >>> normalizeLocation({"wght": 900}, axes)
-    {'wght': 1.0}
-    >>> normalizeLocation({"wght": 650}, axes)
-    {'wght': 0.5}
-    >>> normalizeLocation({"wght": 1000}, axes)
-    {'wght': 1.0}
-    >>> normalizeLocation({"wght": 0}, axes)
-    {'wght': -1.0}
-    >>> axes = {"wght": (0, 0, 1000)}
-    >>> normalizeLocation({"wght": 0}, axes)
-    {'wght': 0.0}
-    >>> normalizeLocation({"wght": -1}, axes)
-    {'wght': 0.0}
-    >>> normalizeLocation({"wght": 1000}, axes)
-    {'wght': 1.0}
-    >>> normalizeLocation({"wght": 500}, axes)
-    {'wght': 0.5}
-    >>> normalizeLocation({"wght": 1001}, axes)
-    {'wght': 1.0}
-    >>> axes = {"wght": (0, 1000, 1000)}
-    >>> normalizeLocation({"wght": 0}, axes)
-    {'wght': -1.0}
-    >>> normalizeLocation({"wght": -1}, axes)
-    {'wght': -1.0}
-    >>> normalizeLocation({"wght": 500}, axes)
-    {'wght': -0.5}
-    >>> normalizeLocation({"wght": 1000}, axes)
-    {'wght': 0.0}
-    >>> normalizeLocation({"wght": 1001}, axes)
-    {'wght': 0.0}
+
+      >>> axes = {"wght": (100, 400, 900)}
+      >>> normalizeLocation({"wght": 400}, axes)
+      {'wght': 0.0}
+      >>> normalizeLocation({"wght": 100}, axes)
+      {'wght': -1.0}
+      >>> normalizeLocation({"wght": 900}, axes)
+      {'wght': 1.0}
+      >>> normalizeLocation({"wght": 650}, axes)
+      {'wght': 0.5}
+      >>> normalizeLocation({"wght": 1000}, axes)
+      {'wght': 1.0}
+      >>> normalizeLocation({"wght": 0}, axes)
+      {'wght': -1.0}
+      >>> axes = {"wght": (0, 0, 1000)}
+      >>> normalizeLocation({"wght": 0}, axes)
+      {'wght': 0.0}
+      >>> normalizeLocation({"wght": -1}, axes)
+      {'wght': 0.0}
+      >>> normalizeLocation({"wght": 1000}, axes)
+      {'wght': 1.0}
+      >>> normalizeLocation({"wght": 500}, axes)
+      {'wght': 0.5}
+      >>> normalizeLocation({"wght": 1001}, axes)
+      {'wght': 1.0}
+      >>> axes = {"wght": (0, 1000, 1000)}
+      >>> normalizeLocation({"wght": 0}, axes)
+      {'wght': -1.0}
+      >>> normalizeLocation({"wght": -1}, axes)
+      {'wght': -1.0}
+      >>> normalizeLocation({"wght": 500}, axes)
+      {'wght': -0.5}
+      >>> normalizeLocation({"wght": 1000}, axes)
+      {'wght': 0.0}
+      >>> normalizeLocation({"wght": 1001}, axes)
+      {'wght': 0.0}
     """
     out = {}
     for tag, triple in axes.items():
@@ -124,22 +126,23 @@ def supportScalar(location, support, ot=True):
     with support.  If ot is True, then a peak value of zero
     for support of an axis means "axis does not participate".  That
     is how OpenType Variation Font technology works.
-    >>> supportScalar({}, {})
-    1.0
-    >>> supportScalar({'wght':.2}, {})
-    1.0
-    >>> supportScalar({'wght':.2}, {'wght':(0,2,3)})
-    0.1
-    >>> supportScalar({'wght':2.5}, {'wght':(0,2,4)})
-    0.75
-    >>> supportScalar({'wght':2.5, 'wdth':0}, {'wght':(0,2,4), 'wdth':(-1,0,+1)})
-    0.75
-    >>> supportScalar({'wght':2.5, 'wdth':.5}, {'wght':(0,2,4), 'wdth':(-1,0,+1)}, ot=False)
-    0.375
-    >>> supportScalar({'wght':2.5, 'wdth':0}, {'wght':(0,2,4), 'wdth':(-1,0,+1)})
-    0.75
-    >>> supportScalar({'wght':2.5, 'wdth':.5}, {'wght':(0,2,4), 'wdth':(-1,0,+1)})
-    0.75
+
+      >>> supportScalar({}, {})
+      1.0
+      >>> supportScalar({'wght':.2}, {})
+      1.0
+      >>> supportScalar({'wght':.2}, {'wght':(0,2,3)})
+      0.1
+      >>> supportScalar({'wght':2.5}, {'wght':(0,2,4)})
+      0.75
+      >>> supportScalar({'wght':2.5, 'wdth':0}, {'wght':(0,2,4), 'wdth':(-1,0,+1)})
+      0.75
+      >>> supportScalar({'wght':2.5, 'wdth':.5}, {'wght':(0,2,4), 'wdth':(-1,0,+1)}, ot=False)
+      0.375
+      >>> supportScalar({'wght':2.5, 'wdth':0}, {'wght':(0,2,4), 'wdth':(-1,0,+1)})
+      0.75
+      >>> supportScalar({'wght':2.5, 'wdth':.5}, {'wght':(0,2,4), 'wdth':(-1,0,+1)})
+      0.75
     """
     scalar = 1.0
     for axis, (lower, peak, upper) in support.items():
