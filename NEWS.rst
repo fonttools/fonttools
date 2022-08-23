@@ -1,3 +1,17 @@
+- [varLib.models] Reverted PR #2717 which added support for "narrow tents" in v4.36.0,
+  as it introduced a regression (#2764, #2765). It will be restored in upcoming release
+  once we found a solution to the bug.
+- [cff.specializer] Fixed issue in charstring generalizer with the ``blend`` operator
+  (#2750, #1975).
+- [varLib.models] Added support for extrapolation (#2757).
+- [ttGlyphSet] Ensure the newly added ``_TTVarGlyphSet`` inherits from ``_TTGlyphSet``
+  to keep backward compatibility with existing API (#2762).
+- [kern] Allow compiling legacy kern tables with more than 64k entries (d21cfdede).
+- [visitor] Added new visitor API to traverse tree of objects and dispatch based
+  on the attribute type: cf. ``fontTools.misc.visitor`` and ``fontTools.ttLib.ttVisitor``. Added ``fontTools.ttLib.scaleUpem`` module that uses the latter to
+  change a font's units-per-em and scale all the related fields accordingly (#2718,
+  #2755).
+
 4.36.0 (released 2022-08-17)
 ----------------------------
 
