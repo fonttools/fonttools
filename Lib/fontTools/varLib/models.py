@@ -225,8 +225,13 @@ class VariationModel(object):
        {0: 1.0},
        {0: 1.0},
        {0: 1.0, 4: 1.0, 5: 1.0},
-       {0: 1.0, 3: 0.75, 4: 0.25, 5: 1.0},
-       {0: 1.0, 3: 0.75, 4: 0.25, 5: 0.6666666666666667}]
+       {0: 1.0, 3: 0.75, 4: 0.25, 5: 1.0, 6: 0.6666666666666666},
+       {0: 1.0,
+        3: 0.75,
+        4: 0.25,
+        5: 0.6666666666666667,
+        6: 0.4444444444444445,
+        7: 0.6666666666666667}]
     """
 
     def __init__(self, locations, axisOrder=None, extrapolate=False):
@@ -424,8 +429,12 @@ class VariationModel(object):
                 points = sorted(points)
 
                 peakIndex = points.index(peak)
-                lower = peak if peakIndex == 0 else points[peakIndex - 1]
-                upper = peak if peakIndex == len(points) - 1 else points[peakIndex + 1]
+                if len(loc) > 1:
+                    lower = 0 if peak > 0 else minV[axis]
+                    upper = 0 if peak < 0 else maxV[axis]
+                else:
+                    lower = peak if peakIndex == 0 else points[peakIndex - 1]
+                    upper = peak if peakIndex == len(points) - 1 else points[peakIndex + 1]
                 region[axis] = (lower, peak, upper)
             regions.append(region)
         return regions

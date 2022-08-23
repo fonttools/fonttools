@@ -39,7 +39,7 @@ def test_supportScalar():
     assert supportScalar({"wght": 4}, {"wght": (0, 2, 2)}) == 0.0
     assert supportScalar({"wght": 4}, {"wght": (0, 2, 2)}, extrapolate=True) == 2.0
     assert supportScalar({"wght": 4}, {"wght": (0, 2, 3)}, extrapolate=True) == 2.0
-    assert supportScalar({"wght": 2}, {"wght": (0, .75, 1)}, extrapolate=True) == -4.0
+    assert supportScalar({"wght": 2}, {"wght": (0, 0.75, 1)}, extrapolate=True) == -4.0
 
 
 @pytest.mark.parametrize(
@@ -112,8 +112,8 @@ class VariationModelTest(object):
                     {"wght": (0, 0.55, 1.0)},
                     {"wght": (0.55, 1.0, 1.0)},
                     {"wdth": (0, 1.0, 1.0)},
-                    {"wdth": (0, 1.0, 1.0), "wght": (0.66, 1.0, 1.0)},
-                    {"wdth": (0.66, 1.0, 1.0), "wght": (0, 0.66, 1.0)},
+                    {"wdth": (0, 1.0, 1.0), "wght": (0, 1.0, 1.0)},
+                    {"wdth": (0, 1.0, 1.0), "wght": (0, 0.66, 1.0)},
                     {"wdth": (0, 0.66, 1.0), "wght": (0, 0.66, 1.0)},
                 ],
                 [
@@ -124,8 +124,21 @@ class VariationModelTest(object):
                     {0: 1.0},
                     {0: 1.0},
                     {0: 1.0, 4: 1.0, 5: 1.0},
-                    {0: 1.0, 3: 0.7555555555555555, 4: 0.24444444444444444, 5: 1.0},
-                    {0: 1.0, 3: 0.7555555555555555, 4: 0.24444444444444444, 5: 0.66},
+                    {
+                        0: 1.0,
+                        3: 0.7555555555555555,
+                        4: 0.24444444444444444,
+                        5: 1.0,
+                        6: 0.66,
+                    },
+                    {
+                        0: 1.0,
+                        3: 0.7555555555555555,
+                        4: 0.24444444444444444,
+                        5: 0.66,
+                        6: 0.43560000000000004,
+                        7: 0.66,
+                    },
                 ],
             ),
             (
