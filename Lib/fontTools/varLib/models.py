@@ -116,7 +116,7 @@ def normalizeLocation(location, axes):
     return out
 
 
-def supportScalar(location, support, ot=True):
+def supportScalar(location, support, ot=True, extrapolate=False):
     """Returns the scalar multiplier at location, for a master
     with support.  If ot is True, then a peak value of zero
     for support of an axis means "axis does not participate".  That
@@ -138,6 +138,10 @@ def supportScalar(location, support, ot=True):
       0.75
       >>> supportScalar({'wght':2.5, 'wdth':.5}, {'wght':(0,2,4), 'wdth':(-1,0,+1)})
       0.75
+      >>> supportScalar({'wght':4}, {'wght':(0,2,3)}, extrapolate=True)
+      2.0
+      >>> supportScalar({'wght':4}, {'wght':(0,2,2)}, extrapolate=True)
+      2.0
     """
     scalar = 1.0
     for axis, (lower, peak, upper) in support.items():
@@ -155,9 +159,27 @@ def supportScalar(location, support, ot=True):
             v = location[axis]
         if v == peak:
             continue
+
+        if extrapolate:
+            if v < -1 and lower <= -1:
+                if peak <= -1 and peak < upper:
+                    scalar *= (v - upper) / (peak - upper)
+                    continue
+                elif -1 < peak:
+                    scalar *= (v - lower) / (peak - lower)
+                    continue
+            elif +1 < v and +1 <= upper:
+                if +1 <= peak and lower < peak:
+                    scalar *= (v - lower) / (peak - lower)
+                    continue
+                elif peak < +1:
+                    scalar *= (v - upper) / (peak - upper)
+                    continue
+
         if v <= lower or upper <= v:
             scalar = 0.0
             break
+
         if v < peak:
             scalar *= (v - lower) / (peak - lower)
         else:  # v > peak
@@ -169,7 +191,7 @@ class VariationModel(object):
 
     """
   Locations must be in normalized space.  Ie. base master
-  is at origin (0)::
+  is at origin (0).
 
       >>> from pprint import pprint
       >>> locations = [ \
@@ -204,14 +226,16 @@ class VariationModel(object):
        {0: 1.0, 4: 1.0, 5: 1.0},
        {0: 1.0, 3: 0.75, 4: 0.25, 5: 1.0},
        {0: 1.0, 3: 0.75, 4: 0.25, 5: 0.6666666666666667}]
-	"""
+    """
 
-    def __init__(self, locations, axisOrder=None):
+    def __init__(self, locations, axisOrder=None, extrapolate=False):
+
         if len(set(tuple(sorted(l.items())) for l in locations)) != len(locations):
             raise VariationModelError("Locations must be unique.")
 
         self.origLocations = locations
         self.axisOrder = axisOrder if axisOrder is not None else []
+        self.extrapolate = extrapolate
 
         locations = [{k: v for k, v in loc.items() if v != 0.0} for loc in locations]
         keyFunc = self.getMasterLocationsSortKeyFunc(
@@ -435,7 +459,8 @@ class VariationModel(object):
         return model.getDeltas(items, round=round), model.supports
 
     def getScalars(self, loc):
-        return [supportScalar(loc, support) for support in self.supports]
+        return [supportScalar(loc, support, extrapolate=self.extrapolate)
+                for support in self.supports]
 
     @staticmethod
     def interpolateFromDeltasAndScalars(deltas, scalars):
