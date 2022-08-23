@@ -1,3 +1,6 @@
+4.37.0 (released 2022-08-23)
+----------------------------
+
 - [varLib.models] Reverted PR #2717 which added support for "narrow tents" in v4.36.0,
   as it introduced a regression (#2764, #2765). It will be restored in upcoming release
   once we found a solution to the bug.
