@@ -153,6 +153,7 @@ def _setCoordinates(glyph, coord, glyfTable):
 
 	if glyph.isComposite():
 		assert len(coord) == len(glyph.components)
+		glyph.components = [copy(comp) for comp in glyph.components]
 		for p,comp in zip(coord, glyph.components):
 			if hasattr(comp, 'x'):
 				comp.x,comp.y = p
