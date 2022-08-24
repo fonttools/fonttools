@@ -141,12 +141,16 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		self.variations = _lazy_dict()
 		offsetToData = self.offsetToGlyphVariationData
 		glyf = ttFont['glyf']
-		for i in range(self.glyphCount):
-			glyphName = glyphs[i]
+
+		def decompileVarGlyph(glyphName, gid):
 			glyph = glyf[glyphName]
 			numPointsInGlyph = self.getNumPoints_(glyph)
-			gvarData = data[offsetToData + offsets[i] : offsetToData + offsets[i + 1]]
-			self.variations[glyphName] = partial(decompileGlyph_, numPointsInGlyph, sharedCoords, axisTags, gvarData)
+			gvarData = data[offsetToData + offsets[gid] : offsetToData + offsets[gid + 1]]
+			return decompileGlyph_(numPointsInGlyph, sharedCoords, axisTags, gvarData)
+
+		for gid in range(self.glyphCount):
+			glyphName = glyphs[gid]
+			self.variations[glyphName] = partial(decompileVarGlyph, glyphName, gid)
 
 	@staticmethod
 	def decompileOffsets_(data, tableFormat, glyphCount):
