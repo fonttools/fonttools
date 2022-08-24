@@ -14,6 +14,7 @@ from fontTools.misc.cliTools import makeOutputFileName
 from fontTools.subset.util import _add_method, _uniq_sort
 from fontTools.subset.cff import *
 from fontTools.subset.svg import *
+from fontTools.varLib import varStore  # for subset_varidxes
 import sys
 import struct
 import array
