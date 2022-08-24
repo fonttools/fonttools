@@ -79,8 +79,8 @@ class _TTGlyph(object):
 		self._glyph.draw(pen)
 
 	def drawPoints(self, pen):
-		# drawPoints is only implemented for _TTGlyphGlyf at this time.
-		raise NotImplementedError()
+		from fontTools.pens.pointPen import SegmentToPointPen
+		self.draw(SegmentToPointPen(pen))
 
 class _TTGlyphCFF(_TTGlyph):
 	pass
