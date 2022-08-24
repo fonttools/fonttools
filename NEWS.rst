@@ -1,3 +1,6 @@
+4.37.1 (released 2022-08-24)
+----------------------------
+
 - [subset] Fixed regression introduced with v4.37.0 while subsetting the VarStore of
   ``HVAR`` and ``VVAR`` tables, whereby an ``AttributeError: subset_varidxes`` was
   thrown because an apparently unused import statement (with the side-effect of
