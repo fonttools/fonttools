@@ -1,3 +1,13 @@
+- [subset] Fixed regression introduced with v4.37.0 while subsetting the VarStore of
+  ``HVAR`` and ``VVAR`` tables, whereby an ``AttributeError: subset_varidxes`` was
+  thrown because an apparently unused import statement (with the side-effect of
+  dynamically binding that ``subset_varidxes`` method to the VarStore class) had been
+  accidentally deleted in an unrelated PR (#2679, #2773).
+- [pens] Added ``cairoPen`` (#2678).
+- [gvar] Read ``gvar`` more lazily by not parsing all of the ``glyf`` table (#2771).
+- [ttGlyphSet] Make ``drawPoints(pointPen)`` method work for CFF fonts as well via
+  adapter pen (#2770).
+
 4.37.0 (released 2022-08-23)
 ----------------------------
 
