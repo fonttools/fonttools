@@ -36,8 +36,6 @@ with cairo.SVGSurface("example.svg", hhea.advanceWidthMax, hhea.ascent-hhea.desc
     stats = StatisticsPen()
     glyph.draw(stats)
 
-    context.save()
-
     # https://cookierobotics.com/007/
     a = stats.varianceX
     b = stats.covariance
@@ -59,12 +57,30 @@ with cairo.SVGSurface("example.svg", hhea.advanceWidthMax, hhea.ascent-hhea.desc
 
     ellipse_area = math.sqrt(lambda1) * math.sqrt(lambda2) * math.pi/4 * mult * mult
 
+    context.save()
     context.set_line_cap(cairo.LINE_CAP_ROUND)
     context.transform(transform)
     context.move_to(0, 0)
     context.line_to(0, 0)
     context.set_line_width(1)
     context.set_source_rgba(1, 0, 0, abs(stats.area / ellipse_area))
+    context.stroke()
+    context.restore()
+
+    context.save()
+    context.set_line_cap(cairo.LINE_CAP_ROUND)
+    context.set_source_rgb(.8, 0, 0)
+    context.translate(stats.meanX, stats.meanY)
+
+    context.move_to(0, 0)
+    context.line_to(0, 0)
+    context.set_line_width(15)
+    context.stroke()
+
+    context.transform(cairo.Matrix(1, 0, stats.slant, 1, 0, 0))
+    context.move_to(0, -stats.meanY + font['hhea'].ascent)
+    context.line_to(0, -stats.meanY + font['hhea'].descent)
+    context.set_line_width(5)
     context.stroke()
 
     context.restore()
