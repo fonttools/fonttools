@@ -39,6 +39,7 @@ def run_benchmark(
     print('\t%5.1fus' % (min(results) * 1000000. / number))
 
 def main():
+    """Benchmark the cu2qu algorithm performance."""
     run_benchmark('cu2qu.benchmark', 'cu2qu', 'curve_to_quadratic')
     run_benchmark('cu2qu.benchmark', 'cu2qu', 'curves_to_quadratic')
 
