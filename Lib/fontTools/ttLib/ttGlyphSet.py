@@ -189,6 +189,12 @@ class _TTVarGlyph(_TTGlyph):
 class _TTVarGlyphGlyf(_TTVarGlyph):
 
 	def draw(self, pen):
+		self._drawWithPen(pen, False)
+
+	def drawPoints(self, pen):
+		self._drawWithPen(pen, True)
+
+	def _drawWithPen(self, pen, isPointPen):
 		from fontTools.varLib.iup import iup_delta
 		from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 		from fontTools.varLib.models import supportScalar
@@ -219,4 +225,7 @@ class _TTVarGlyphGlyf(_TTVarGlyph):
 		self.height = height
 		self.tsb = tsb
 		offset = lsb - glyph.xMin if hasattr(glyph, "xMin") else 0
-		glyph.draw(pen, glyf, offset)
+		if isPointPen:
+			glyph.drawPoints(pen, glyf, offset)
+		else:
+			glyph.draw(pen, glyf, offset)
