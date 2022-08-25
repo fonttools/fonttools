@@ -189,10 +189,10 @@ class _TTVarGlyph(_TTGlyph):
 class _TTVarGlyphGlyf(_TTVarGlyph):
 
 	def draw(self, pen):
-		self._drawWithPen(pen, False)
+		self._drawWithPen(pen, isPointPen=False)
 
 	def drawPoints(self, pen):
-		self._drawWithPen(pen, True)
+		self._drawWithPen(pen, isPointPen=True)
 
 	def _drawWithPen(self, pen, isPointPen):
 		from fontTools.varLib.iup import iup_delta
