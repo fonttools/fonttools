@@ -313,7 +313,7 @@ def test(glyphsets, glyphs=None, names=None):
                     continue
                 if not m0:
                     continue
-                for contour0,contour1 in zip(m0,m1):
+                for ix,(contour0,contour1) in enumerate(zip(m0,m1)):
                     c0 = contour0[0]
                     costs = [v for v in (_complex_vlen(_vdiff(c0, c1)) for c1 in contour1)]
                     min_cost = min(costs)
@@ -323,6 +323,7 @@ def test(glyphsets, glyphs=None, names=None):
                             glyph_name,
                             {
                                 "type": "wrong_start_point",
+                                "contour": ix,
                                 "master_1": names[i],
                                 "master_2": names[i + 1],
                             },
@@ -477,8 +478,9 @@ def main(args=None):
                     )
                 if p["type"] == "wrong_start_point":
                     print(
-                        "    Contour start point differs: %s, %s"
+                        "    Contour %d start point differs: %s, %s"
                         % (
+                            p["contour"],
                             p["master_1"],
                             p["master_2"],
                         )
