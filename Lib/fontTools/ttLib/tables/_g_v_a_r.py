@@ -54,14 +54,24 @@ class _lazy_dict(dict):
         return v
 
     def items(self):
-        if not hasattr(self, '_loaded'):
-            self._load()
-        return super().items()
+        gen = super().items()
+        def wrap(gen):
+            for v in gen:
+                if callable(v[1]):
+                    v = v[0],v[1]()
+                    self[v[0]] = v[1]
+                yield v
+        return wrap(gen)
 
     def values(self):
-        if not hasattr(self, '_loaded'):
-            self._load()
-        return super().values()
+        gen = super().items()
+        def wrap(gen):
+            for v in gen:
+                if callable(v[1]):
+                    v = v[0],v[1]()
+                    self[v[0]] = v[1]
+                yield v[1]
+        return wrap(gen)
 
     def __eq__(self, other):
         if not hasattr(self, '_loaded'):
