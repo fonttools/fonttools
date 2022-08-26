@@ -39,6 +39,10 @@ GVAR_HEADER_FORMAT = """
 GVAR_HEADER_SIZE = sstruct.calcsize(GVAR_HEADER_FORMAT)
 
 class _LazyDict(UserDict):
+	def __init__(self, data):
+		super().__init__()
+		self.data = data
+
 	def __getitem__(self, k):
 		v = self.data[k]
 		if callable(v):
@@ -120,8 +124,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		for gid in range(self.glyphCount):
 			glyphName = glyphs[gid]
 			variations[glyphName] = partial(decompileVarGlyph, glyphName, gid)
-		self.variations = _LazyDict()
-		self.variations.data = variations
+		self.variations = _LazyDict(variations)
 
 	@staticmethod
 	def decompileOffsets_(data, tableFormat, glyphCount):
