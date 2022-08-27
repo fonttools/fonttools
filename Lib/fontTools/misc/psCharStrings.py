@@ -279,7 +279,7 @@ class SimpleT2Decompiler(object):
 		self.hintCount = 0
 		self.hintMaskBytes = 0
 		self.numRegions = 0
-		self.vi = 0
+		self.vsIndex = 0
 
 	def execute(self, charString):
 		self.callingStack.append(charString)
@@ -426,7 +426,7 @@ class SimpleT2Decompiler(object):
 			while argi < end_args:
 				next_ti = tuplei + self.numRegions
 				deltas = self.operandStack[tuplei:next_ti]
-				delta = self.blender(self.vi, deltas)
+				delta = self.blender(self.vsIndex, deltas)
 				self.operandStack[argi] += otRound(delta)
 				tuplei = next_ti
 				argi += 1
@@ -434,7 +434,7 @@ class SimpleT2Decompiler(object):
 
 	def op_vsindex(self, index):
 		vi = self.pop()
-		self.vi = vi
+		self.vsIndex = vi
 		self.numRegions = self.private.getNumRegions(vi)
 
 
