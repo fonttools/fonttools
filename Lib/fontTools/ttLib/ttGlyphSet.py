@@ -212,7 +212,7 @@ class _TTVarGlyphCFF(_TTVarGlyph):
 				varidx = hvar.AdvWidthMap.mapping[self._glyphName]
 			vsInstancer = VarStoreInstancer(hvar.VarStore, self._ttFont['fvar'].axes, self._location)
 			delta = vsInstancer[varidx]
-			self.width += otRound(delta)
+			self.width += delta
 
 
 class _TTVarGlyphGlyf(_TTVarGlyph):

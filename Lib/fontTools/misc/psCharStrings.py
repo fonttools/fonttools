@@ -5,7 +5,6 @@ CFF dictionary data and Type1/Type2 CharStrings.
 from fontTools.misc.fixedTools import (
 	fixedToFloat, floatToFixed, floatToFixedToStr, strToFixedToFloat,
 )
-from fontTools.misc.roundTools import otRound
 from fontTools.misc.textTools import bytechr, byteord, bytesjoin, strjoin
 from fontTools.pens.boundsPen import BoundsPen
 import struct
@@ -427,7 +426,7 @@ class SimpleT2Decompiler(object):
 				next_ti = tuplei + self.numRegions
 				deltas = self.operandStack[tuplei:next_ti]
 				delta = self.blender(self.vsIndex, deltas)
-				self.operandStack[argi] += otRound(delta)
+				self.operandStack[argi] += delta
 				tuplei = next_ti
 				argi += 1
 			self.operandStack[end_args:] = []
