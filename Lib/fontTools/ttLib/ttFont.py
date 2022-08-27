@@ -705,7 +705,7 @@ class TTFont(object):
 		   ("glyf" not in self and any(tb in self for tb in ["CFF ", "CFF2"]))):
 			table_tag = "CFF2" if "CFF2" in self else "CFF "
 			glyphs = list(self[table_tag].cff.values())[0].CharStrings
-			if location:
+			if location and 'fvar' in self:
 				glyphs = _TTVarGlyphSet(self, glyphs, _TTVarGlyphCFF,
 										location, normalized)
 			else:
