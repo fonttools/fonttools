@@ -56,7 +56,7 @@ class _TTGlyph(object):
 	attributes.
 	"""
 
-	def __init__(self, glyphset, glyph, horizontalMetrics, verticalMetrics=None):
+	def __init__(self, glyphset, glyph, horizontalMetrics=None, verticalMetrics=None):
 		"""Construct a new _TTGlyph.
 
 		Args:
@@ -66,7 +66,10 @@ class _TTGlyph(object):
 		"""
 		self._glyphset = glyphset
 		self._glyph = glyph
-		self.width, self.lsb = horizontalMetrics
+		if horizontalMetrics:
+			self.width, self.lsb = horizontalMetrics
+		else:
+			self.width, self.lsb = None, None
 		if verticalMetrics:
 			self.height, self.tsb = verticalMetrics
 		else:
@@ -109,9 +112,10 @@ class _TTGlyphGlyf(_TTGlyph):
 
 class _TTVarGlyphSet(_TTGlyphSet):
 
-	def __init__(self, font, location, normalized=False):
+	def __init__(self, font, glyphs, glyphType, location, normalized):
 		self._ttFont = font
-		self._glyphs = font['glyf']
+		self._glyphs = glyphs
+		self._glyphType = glyphType
 
 		if not normalized:
 			from fontTools.varLib.models import normalizeLocation, piecewiseLinearMap
@@ -135,7 +139,7 @@ class _TTVarGlyphSet(_TTGlyphSet):
 	def __getitem__(self, glyphName):
 		if glyphName not in self._glyphs:
 			raise KeyError(glyphName)
-		return _TTVarGlyphGlyf(self._ttFont, glyphName, self.location)
+		return self._glyphType(self._ttFont, self._glyphs, glyphName, self.location)
 
 
 def _setCoordinates(glyph, coord, glyfTable):
@@ -178,12 +182,30 @@ def _setCoordinates(glyph, coord, glyfTable):
 
 
 class _TTVarGlyph(_TTGlyph):
-	def __init__(self, ttFont, glyphName, location):
+	def __init__(self, ttFont, glyphs, glyphName, location):
+
+		super().__init__(glyphs, glyphs[glyphName])
+
 		self._ttFont = ttFont
 		self._glyphName = glyphName
 		self._location = location
-		# draw() fills these in
-		self.width = self.height = self.lsb = self.tsb = None
+
+
+class _TTVarGlyphCFF(_TTVarGlyph):
+
+	def draw(self, pen):
+		from fontTools.varLib.varStore import VarStoreInstancer
+		table_tag = "CFF2" if "CFF2" in self._ttFont else "CFF "
+		cff = self._ttFont[table_tag].cff
+		topDict = cff.topDictIndex[0]
+		varStore = getattr(topDict, "VarStore", None)
+		if varStore is None:
+			blender = None
+		else:
+			vsInstancer = VarStoreInstancer(topDict.VarStore.otVarStore, self._ttFont['fvar'].axes, self._location)
+			blender = vsInstancer.interpolateFromDeltas
+		self._glyph.draw(pen, blender)
+		self.width = self._ttFont['hmtx'][self._glyphName][0]
 
 
 class _TTVarGlyphGlyf(_TTVarGlyph):

@@ -8,6 +8,7 @@ from fontTools.ttLib.ttGlyphSet import (
     _TTGlyphSet, _TTGlyph,
     _TTGlyphCFF, _TTGlyphGlyf,
     _TTVarGlyphSet,
+    _TTVarGlyphCFF, _TTVarGlyphGlyf,
 )
 from fontTools.ttLib.sfnt import SFNTReader, SFNTWriter
 from io import BytesIO, StringIO
@@ -703,14 +704,17 @@ class TTFont(object):
 		if (preferCFF and any(tb in self for tb in ["CFF ", "CFF2"]) or
 		   ("glyf" not in self and any(tb in self for tb in ["CFF ", "CFF2"]))):
 			table_tag = "CFF2" if "CFF2" in self else "CFF "
+			glyphs = list(self[table_tag].cff.values())[0].CharStrings
 			if location:
-				raise NotImplementedError # TODO
-			glyphs = _TTGlyphSet(self,
-			    list(self[table_tag].cff.values())[0].CharStrings, _TTGlyphCFF)
+				glyphs = _TTVarGlyphSet(self, glyphs, _TTVarGlyphCFF,
+										location, normalized)
+			else:
+				glyphs = _TTGlyphSet(self, glyphs, _TTGlyphCFF)
 
 		if glyphs is None and "glyf" in self:
 			if location and 'gvar' in self:
-				glyphs = _TTVarGlyphSet(self, location=location, normalized=normalized)
+				glyphs = _TTVarGlyphSet(self, self["glyf"], _TTVarGlyphGlyf,
+										location, normalized)
 			else:
 				glyphs = _TTGlyphSet(self, self["glyf"], _TTGlyphGlyf)
 
