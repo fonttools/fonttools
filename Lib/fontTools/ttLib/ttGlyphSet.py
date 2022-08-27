@@ -203,7 +203,15 @@ class _TTVarGlyphCFF(_TTVarGlyph):
 			vsInstancer = VarStoreInstancer(varStore.otVarStore, self._ttFont['fvar'].axes, self._location)
 			blender = vsInstancer.interpolateFromDeltas
 		self._glyph.draw(pen, blender)
+
 		self.width = self._ttFont['hmtx'][self._glyphName][0]
+		hvar = self._ttFont['HVAR'].table
+		varidx = self._ttFont.getGlyphID(self._glyphName)
+		if hvar.AdvWidthMap is not None:
+			varidx = hvar.AdvWidthMap.mapping[self._glyphName]
+		vsInstancer = VarStoreInstancer(hvar.VarStore, self._ttFont['fvar'].axes, self._location)
+		delta = vsInstancer[varidx]
+		self.width += otRound(delta)
 
 
 class _TTVarGlyphGlyf(_TTVarGlyph):
