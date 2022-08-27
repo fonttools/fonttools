@@ -187,6 +187,7 @@ class _TTVarGlyph(_TTGlyph):
 		super().__init__(glyphs, glyphs[glyphName])
 
 		self._ttFont = ttFont
+		self._glyphs = glyphs
 		self._glyphName = glyphName
 		self._location = location
 
@@ -194,15 +195,12 @@ class _TTVarGlyph(_TTGlyph):
 class _TTVarGlyphCFF(_TTVarGlyph):
 
 	def draw(self, pen):
-		from fontTools.varLib.varStore import VarStoreInstancer
-		table_tag = "CFF2" if "CFF2" in self._ttFont else "CFF "
-		cff = self._ttFont[table_tag].cff
-		topDict = cff.topDictIndex[0]
-		varStore = getattr(topDict, "VarStore", None)
+		varStore = self._glyphs.varStore
 		if varStore is None:
 			blender = None
 		else:
-			vsInstancer = VarStoreInstancer(topDict.VarStore.otVarStore, self._ttFont['fvar'].axes, self._location)
+			from fontTools.varLib.varStore import VarStoreInstancer
+			vsInstancer = VarStoreInstancer(varStore.otVarStore, self._ttFont['fvar'].axes, self._location)
 			blender = vsInstancer.interpolateFromDeltas
 		self._glyph.draw(pen, blender)
 		self.width = self._ttFont['hmtx'][self._glyphName][0]
