@@ -237,14 +237,15 @@ def test(glyphsets, glyphs=None, names=None):
                         if b == bits:
                             isomorphisms.append(_rot_list ([complex(*pt) for pt,bl in mirrored], i))
 
-            # Check each master against the next one in the list.
-            for i, (m0, m1) in enumerate(zip(allNodeTypes[:-1], allNodeTypes[1:])):
+            # Check each master against the first on in the list.
+            m0 = allNodeTypes[0]
+            for i,m1 in enumerate(allNodeTypes[1:]):
                 if len(m0) != len(m1):
                     add_problem(
                         glyph_name,
                         {
                             "type": "path_count",
-                            "master_1": names[i],
+                            "master_1": names[0],
                             "master_2": names[i + 1],
                             "value_1": len(m0),
                             "value_2": len(m1),
@@ -261,7 +262,7 @@ def test(glyphsets, glyphs=None, names=None):
                             {
                                 "type": "node_count",
                                 "path": pathIx,
-                                "master_1": names[i],
+                                "master_1": names[0],
                                 "master_2": names[i + 1],
                                 "value_1": len(nodes1),
                                 "value_2": len(nodes2),
@@ -276,7 +277,7 @@ def test(glyphsets, glyphs=None, names=None):
                                     "type": "node_incompatibility",
                                     "path": pathIx,
                                     "node": nodeIx,
-                                    "master_1": names[i],
+                                    "master_1": names[0],
                                     "master_2": names[i + 1],
                                     "value_1": n1,
                                     "value_2": n2,
@@ -284,7 +285,8 @@ def test(glyphsets, glyphs=None, names=None):
                             )
                             continue
 
-            for i, (m0, m1) in enumerate(zip(allVectors[:-1], allVectors[1:])):
+            m0 = allVectors[0]
+            for i, m1 in enumerate(allVectors[1:]):
                 if len(m0) != len(m1):
                     # We already reported this
                     continue
@@ -299,7 +301,7 @@ def test(glyphsets, glyphs=None, names=None):
                         glyph_name,
                         {
                             "type": "contour_order",
-                            "master_1": names[i],
+                            "master_1": names[0],
                             "master_2": names[i + 1],
                             "value_1": list(range(len(m0))),
                             "value_2": matching,
@@ -307,7 +309,8 @@ def test(glyphsets, glyphs=None, names=None):
                     )
                     break
 
-            for i, (m0, m1) in enumerate(zip(allContourIsomorphisms[:-1], allContourIsomorphisms[1:])):
+            m0 = allContourIsomorphisms[0]
+            for i, m1 in enumerate(allContourIsomorphisms[1:]):
                 if len(m0) != len(m1):
                     # We already reported this
                     continue
@@ -324,7 +327,7 @@ def test(glyphsets, glyphs=None, names=None):
                             {
                                 "type": "wrong_start_point",
                                 "contour": ix,
-                                "master_1": names[i],
+                                "master_1": names[0],
                                 "master_2": names[i + 1],
                             },
                         )
