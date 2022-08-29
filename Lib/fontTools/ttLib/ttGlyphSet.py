@@ -3,6 +3,7 @@
 from fontTools.misc.fixedTools import otRound
 from copy import copy
 
+
 class _TTGlyphSet(object):
 
 	"""Generic dict-like GlyphSet class that pulls metrics from hmtx and
@@ -13,13 +14,13 @@ class _TTGlyphSet(object):
 		"""Construct a new glyphset.
 
 		Args:
-			font (TTFont): The font object (used to get metrics).
-			glyphs (dict): A dictionary mapping glyph names to ``_TTGlyph`` objects.
-			glyphType (class): Either ``_TTGlyphCFF`` or ``_TTGlyphGlyf``.
+				font (TTFont): The font object (used to get metrics).
+				glyphs (dict): A dictionary mapping glyph names to ``_TTGlyph`` objects.
+				glyphType (class): Either ``_TTGlyphCFF`` or ``_TTGlyphGlyf``.
 		"""
 		self._glyphs = glyphs
-		self._hmtx = ttFont['hmtx']
-		self._vmtx = ttFont['vmtx'] if 'vmtx' in ttFont else None
+		self._hmtx = ttFont["hmtx"]
+		self._vmtx = ttFont["vmtx"] if "vmtx" in ttFont else None
 		self._glyphType = glyphType
 
 	def keys(self):
@@ -34,7 +35,8 @@ class _TTGlyphSet(object):
 		horizontalMetrics = self._hmtx[glyphName]
 		verticalMetrics = self._vmtx[glyphName] if self._vmtx else None
 		return self._glyphType(
-			self, self._glyphs[glyphName], horizontalMetrics, verticalMetrics)
+			self, self._glyphs[glyphName], horizontalMetrics, verticalMetrics
+		)
 
 	def __len__(self):
 		return len(self._glyphs)
@@ -44,6 +46,7 @@ class _TTGlyphSet(object):
 			return self[glyphName]
 		except KeyError:
 			return default
+
 
 class _TTGlyph(object):
 
@@ -56,17 +59,20 @@ class _TTGlyph(object):
 	attributes.
 	"""
 
-	def __init__(self, glyphset, glyph, horizontalMetrics, verticalMetrics=None):
+	def __init__(self, glyphset, glyph, horizontalMetrics=None, verticalMetrics=None):
 		"""Construct a new _TTGlyph.
 
 		Args:
-			glyphset (_TTGlyphSet): A glyphset object used to resolve components.
-			glyph (ttLib.tables._g_l_y_f.Glyph): The glyph object.
-			horizontalMetrics (int, int): The glyph's width and left sidebearing.
+				glyphset (_TTGlyphSet): A glyphset object used to resolve components.
+				glyph (ttLib.tables._g_l_y_f.Glyph): The glyph object.
+				horizontalMetrics (int, int): The glyph's width and left sidebearing.
 		"""
 		self._glyphset = glyphset
 		self._glyph = glyph
-		self.width, self.lsb = horizontalMetrics
+		if horizontalMetrics:
+			self.width, self.lsb = horizontalMetrics
+		else:
+			self.width, self.lsb = None, None
 		if verticalMetrics:
 			self.height, self.tsb = verticalMetrics
 		else:
@@ -80,13 +86,15 @@ class _TTGlyph(object):
 
 	def drawPoints(self, pen):
 		from fontTools.pens.pointPen import SegmentToPointPen
+
 		self.draw(SegmentToPointPen(pen))
+
 
 class _TTGlyphCFF(_TTGlyph):
 	pass
 
-class _TTGlyphGlyf(_TTGlyph):
 
+class _TTGlyphGlyf(_TTGlyph):
 	def draw(self, pen):
 		"""Draw the glyph onto Pen. See fontTools.pens.basePen for details
 		how that works.
@@ -106,20 +114,22 @@ class _TTGlyphGlyf(_TTGlyph):
 		glyph.drawPoints(pen, glyfTable, offset)
 
 
-
 class _TTVarGlyphSet(_TTGlyphSet):
-
-	def __init__(self, font, location, normalized=False):
+	def __init__(self, font, glyphs, glyphType, location, normalized):
 		self._ttFont = font
-		self._glyphs = font['glyf']
+		self._glyphs = glyphs
+		self._glyphType = glyphType
 
 		if not normalized:
 			from fontTools.varLib.models import normalizeLocation, piecewiseLinearMap
 
-			axes = {a.axisTag: (a.minValue, a.defaultValue, a.maxValue) for a in font['fvar'].axes}
+			axes = {
+				a.axisTag: (a.minValue, a.defaultValue, a.maxValue)
+				for a in font["fvar"].axes
+			}
 			location = normalizeLocation(location, axes)
-			if 'avar' in font:
-				avar = font['avar']
+			if "avar" in font:
+				avar = font["avar"]
 				avarSegments = avar.segments
 				new_location = {}
 				for axis_tag, value in location.items():
@@ -135,13 +145,13 @@ class _TTVarGlyphSet(_TTGlyphSet):
 	def __getitem__(self, glyphName):
 		if glyphName not in self._glyphs:
 			raise KeyError(glyphName)
-		return _TTVarGlyphGlyf(self._ttFont, glyphName, self.location)
+		return self._glyphType(self, glyphName, self.location)
 
 
 def _setCoordinates(glyph, coord, glyfTable):
 	# Handle phantom points for (left, right, top, bottom) positions.
 	assert len(coord) >= 4
-	if not hasattr(glyph, 'xMin'):
+	if not hasattr(glyph, "xMin"):
 		glyph.recalcBounds(glyfTable)
 	leftSideX = coord[-4][0]
 	rightSideX = coord[-3][0]
@@ -154,9 +164,9 @@ def _setCoordinates(glyph, coord, glyfTable):
 	if glyph.isComposite():
 		assert len(coord) == len(glyph.components)
 		glyph.components = [copy(comp) for comp in glyph.components]
-		for p,comp in zip(coord, glyph.components):
-			if hasattr(comp, 'x'):
-				comp.x,comp.y = p
+		for p, comp in zip(coord, glyph.components):
+			if hasattr(comp, "x"):
+				comp.x, comp.y = p
 	elif glyph.numberOfContours == 0:
 		assert len(coord) == 0
 	else:
@@ -178,16 +188,47 @@ def _setCoordinates(glyph, coord, glyfTable):
 
 
 class _TTVarGlyph(_TTGlyph):
-	def __init__(self, ttFont, glyphName, location):
-		self._ttFont = ttFont
+	def __init__(self, glyphSet, glyphName, location):
+
+		super().__init__(glyphSet._glyphs, glyphSet._glyphs[glyphName])
+
+		self._glyphSet = glyphSet
+		self._ttFont = glyphSet._ttFont
+		self._glyphs = glyphSet._glyphs
 		self._glyphName = glyphName
 		self._location = location
-		# draw() fills these in
-		self.width = self.height = self.lsb = self.tsb = None
+
+
+class _TTVarGlyphCFF(_TTVarGlyph):
+	def draw(self, pen):
+		varStore = self._glyphs.varStore
+		if varStore is None:
+			blender = None
+		else:
+			from fontTools.varLib.varStore import VarStoreInstancer
+
+			vsInstancer = getattr(self._glyphSet, "vsInstancer", None)
+			if vsInstancer is None:
+				self._glyphSet.vsInstancer = vsInstancer = VarStoreInstancer(
+					varStore.otVarStore, self._ttFont["fvar"].axes, self._location
+				)
+			blender = vsInstancer.interpolateFromDeltas
+		self._glyph.draw(pen, blender)
+
+		self.width = self._ttFont["hmtx"][self._glyphName][0]
+		if "HVAR" in self._ttFont:
+			hvar = self._ttFont["HVAR"].table
+			varidx = self._ttFont.getGlyphID(self._glyphName)
+			if hvar.AdvWidthMap is not None:
+				varidx = hvar.AdvWidthMap.mapping[self._glyphName]
+			vsInstancer = VarStoreInstancer(
+				hvar.VarStore, self._ttFont["fvar"].axes, self._location
+			)
+			delta = vsInstancer[varidx]
+			self.width += delta
 
 
 class _TTVarGlyphGlyf(_TTVarGlyph):
-
 	def draw(self, pen):
 		self._drawWithPen(pen, isPointPen=False)
 
@@ -199,12 +240,14 @@ class _TTVarGlyphGlyf(_TTVarGlyph):
 		from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 		from fontTools.varLib.models import supportScalar
 
-		glyf = self._ttFont['glyf']
-		hMetrics = self._ttFont['hmtx'].metrics
-		vMetrics = getattr(self._ttFont.get('vmtx'), 'metrics', None)
+		glyf = self._ttFont["glyf"]
+		hMetrics = self._ttFont["hmtx"].metrics
+		vMetrics = getattr(self._ttFont.get("vmtx"), "metrics", None)
 
-		variations = self._ttFont['gvar'].variations[self._glyphName]
-		coordinates, _ = glyf._getCoordinatesAndControls(self._glyphName, hMetrics, vMetrics)
+		variations = self._ttFont["gvar"].variations[self._glyphName]
+		coordinates, _ = glyf._getCoordinatesAndControls(
+			self._glyphName, hMetrics, vMetrics
+		)
 		origCoords, endPts = None, None
 		for var in variations:
 			scalar = supportScalar(self._location, var.axes)
@@ -213,12 +256,16 @@ class _TTVarGlyphGlyf(_TTVarGlyph):
 			delta = var.coordinates
 			if None in delta:
 				if origCoords is None:
-					origCoords,control = glyf._getCoordinatesAndControls(self._glyphName, hMetrics, vMetrics)
-					endPts = control[1] if control[0] >= 1 else list(range(len(control[1])))
+					origCoords, control = glyf._getCoordinatesAndControls(
+						self._glyphName, hMetrics, vMetrics
+					)
+					endPts = (
+						control[1] if control[0] >= 1 else list(range(len(control[1])))
+					)
 				delta = iup_delta(delta, origCoords, endPts)
 			coordinates += GlyphCoordinates(delta) * scalar
 
-		glyph = copy(glyf[self._glyphName]) # Shallow copy
+		glyph = copy(glyf[self._glyphName])  # Shallow copy
 		width, lsb, height, tsb = _setCoordinates(glyph, coordinates, glyf)
 		self.width = width
 		self.lsb = lsb

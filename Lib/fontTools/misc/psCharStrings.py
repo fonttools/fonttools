@@ -263,12 +263,13 @@ class CharStringCompileError(Exception): pass
 
 class SimpleT2Decompiler(object):
 
-	def __init__(self, localSubrs, globalSubrs, private=None):
+	def __init__(self, localSubrs, globalSubrs, private=None, blender=None):
 		self.localSubrs = localSubrs
 		self.localBias = calcSubrBias(localSubrs)
 		self.globalSubrs = globalSubrs
 		self.globalBias = calcSubrBias(globalSubrs)
 		self.private = private
+		self.blender = blender
 		self.reset()
 
 	def reset(self):
@@ -277,6 +278,7 @@ class SimpleT2Decompiler(object):
 		self.hintCount = 0
 		self.hintMaskBytes = 0
 		self.numRegions = 0
+		self.vsIndex = 0
 
 	def execute(self, charString):
 		self.callingStack.append(charString)
@@ -410,17 +412,28 @@ class SimpleT2Decompiler(object):
 	def op_roll(self, index):
 		raise NotImplementedError
 
-	# TODO(behdad): move to T2OutlineExtractor and add a 'setVariation'
-	# method that takes VarStoreData and a location
 	def op_blend(self, index):
 		if self.numRegions == 0:
 			self.numRegions = self.private.getNumRegions()
 		numBlends = self.pop()
 		numOps = numBlends * (self.numRegions + 1)
-		del self.operandStack[-(numOps-numBlends):] # Leave the default operands on the stack.
+		if self.blender is None:
+			del self.operandStack[-(numOps-numBlends):] # Leave the default operands on the stack.
+		else:
+			argi = len(self.operandStack) - numOps
+			end_args = tuplei = argi + numBlends
+			while argi < end_args:
+				next_ti = tuplei + self.numRegions
+				deltas = self.operandStack[tuplei:next_ti]
+				delta = self.blender(self.vsIndex, deltas)
+				self.operandStack[argi] += delta
+				tuplei = next_ti
+				argi += 1
+			self.operandStack[end_args:] = []
 
 	def op_vsindex(self, index):
 		vi = self.pop()
+		self.vsIndex = vi
 		self.numRegions = self.private.getNumRegions(vi)
 
 
@@ -456,8 +469,8 @@ t1Operators = [
 
 class T2WidthExtractor(SimpleT2Decompiler):
 
-	def __init__(self, localSubrs, globalSubrs, nominalWidthX, defaultWidthX, private=None):
-		SimpleT2Decompiler.__init__(self, localSubrs, globalSubrs, private)
+	def __init__(self, localSubrs, globalSubrs, nominalWidthX, defaultWidthX, private=None, blender=None):
+		SimpleT2Decompiler.__init__(self, localSubrs, globalSubrs, private, blender)
 		self.nominalWidthX = nominalWidthX
 		self.defaultWidthX = defaultWidthX
 
@@ -498,9 +511,9 @@ class T2WidthExtractor(SimpleT2Decompiler):
 
 class T2OutlineExtractor(T2WidthExtractor):
 
-	def __init__(self, pen, localSubrs, globalSubrs, nominalWidthX, defaultWidthX, private=None):
+	def __init__(self, pen, localSubrs, globalSubrs, nominalWidthX, defaultWidthX, private=None, blender=None):
 		T2WidthExtractor.__init__(
-			self, localSubrs, globalSubrs, nominalWidthX, defaultWidthX, private)
+			self, localSubrs, globalSubrs, nominalWidthX, defaultWidthX, private, blender)
 		self.pen = pen
 		self.subrLevel = 0
 
@@ -986,11 +999,11 @@ class T2CharString(object):
 		decompiler = self.decompilerClass(subrs, self.globalSubrs, self.private)
 		decompiler.execute(self)
 
-	def draw(self, pen):
+	def draw(self, pen, blender=None):
 		subrs = getattr(self.private, "Subrs", [])
 		extractor = self.outlineExtractor(pen, subrs, self.globalSubrs,
 				self.private.nominalWidthX, self.private.defaultWidthX,
-				self.private)
+				self.private, blender)
 		extractor.execute(self)
 		self.width = extractor.width
 
