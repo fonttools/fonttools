@@ -4,6 +4,7 @@ import re
 import random
 from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
 from fontTools.ttLib import TTFont, TTLibError, newTable, registerCustomTableClass, unregisterCustomTableClass
+from fontTools.ttLib.standardGlyphOrder import standardGlyphOrder
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
 from fontTools.ttLib.tables._c_m_a_p import CmapSubtable
 import pytest
@@ -141,6 +142,13 @@ def test_setGlyphOrder_also_updates_glyf_glyphOrder():
 
     assert font.getGlyphOrder() == new_order
     assert font["glyf"].glyphOrder == new_order
+
+
+def test_getGlyphOrder_not_true_post_format_1():
+    # https://github.com/fonttools/fonttools/issues/2736
+    font = TTFont(os.path.join(DATA_DIR, "bogus_post_format_1.ttf"))
+    hmtx = font["hmtx"]
+    assert len(hmtx.metrics) > len(standardGlyphOrder)
 
 
 @pytest.mark.parametrize("lazy", [None, True, False])
