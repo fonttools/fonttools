@@ -696,8 +696,7 @@ class TTFont(object):
 		axes space.
 		"""
 		glyphSetClass = None
-		haveCFF = "CFF " in self or "CFF2" in self
-		if haveCFF and (preferCFF or "glyf" not in self):
+		if ("CFF " in self or "CFF2" in self) and (preferCFF or "glyf" not in self):
 			glyphSetClass = _TTGlyphSetCFF
 
 		if glyphSetClass is None and "glyf" in self:
