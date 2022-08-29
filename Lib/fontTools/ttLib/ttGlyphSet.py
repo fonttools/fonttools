@@ -22,13 +22,10 @@ class _TTGlyphSet(Mapping):
             from fontTools.varLib.varStore import VarStoreInstancer
 
             self.hvarTable = getattr(font.get("HVAR"), "table", None)
-            self.hvarInstancer = (
-                VarStoreInstancer(
+            if self.hvarTable is not None:
+                self.hvarInstancer = VarStoreInstancer(
                     self.hvarTable.VarStore, font["fvar"].axes, self.location
                 )
-                if self.hvarTable is not None
-                else None
-            )
             # TODO VVAR, VORG
 
     def __contains__(self, glyphName):
