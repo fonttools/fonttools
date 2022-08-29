@@ -12,19 +12,19 @@ class _TTGlyphSet(Mapping):
     glyph shape from TrueType or CFF.
     """
 
-    def __init__(self, font, location, normalized, glyphsMapping):
+    def __init__(self, font, location, glyphsMapping):
         self.font = font
-        self.location = _normalizeLocation(font, location, normalized)
+        self.location = location
         self.glyphsMapping = glyphsMapping
         self.hMetrics = font["hmtx"].metrics
         self.vMetrics = getattr(font.get("vmtx"), "metrics", None)
-        if self.location:
+        if location:
             from fontTools.varLib.varStore import VarStoreInstancer
 
             self.hvarTable = getattr(font.get("HVAR"), "table", None)
             if self.hvarTable is not None:
                 self.hvarInstancer = VarStoreInstancer(
-                    self.hvarTable.VarStore, font["fvar"].axes, self.location
+                    self.hvarTable.VarStore, font["fvar"].axes, location
                 )
             # TODO VVAR, VORG
 
@@ -45,10 +45,10 @@ class _TTGlyphSet(Mapping):
 
 
 class _TTGlyphSetGlyf(_TTGlyphSet):
-    def __init__(self, font, location, normalized):
+    def __init__(self, font, location):
         self.glyfTable = font["glyf"]
-        super().__init__(font, location, normalized, self.glyfTable)
-        if self.location:
+        super().__init__(font, location, self.glyfTable)
+        if location:
             self.gvarTable = font.get("gvar")
 
     def __getitem__(self, glyphName):
@@ -56,18 +56,18 @@ class _TTGlyphSetGlyf(_TTGlyphSet):
 
 
 class _TTGlyphSetCFF(_TTGlyphSet):
-    def __init__(self, font, location, normalized):
+    def __init__(self, font, location):
         tableTag = "CFF2" if "CFF2" in font else "CFF "
         self.charStrings = list(font[tableTag].cff.values())[0].CharStrings
-        super().__init__(font, location, normalized, self.charStrings)
+        super().__init__(font, location, self.charStrings)
         self.blender = None
-        if self.location:
+        if location:
             from fontTools.varLib.varStore import VarStoreInstancer
 
             varStore = getattr(self.charStrings, "varStore", None)
             if varStore is not None:
                 instancer = VarStoreInstancer(
-                    varStore.otVarStore, font["fvar"].axes, self.location
+                    varStore.otVarStore, font["fvar"].axes, location
                 )
                 self.blender = instancer.interpolateFromDeltas
 
@@ -185,27 +185,23 @@ class _TTGlyphCFF(_TTGlyph):
         self.draw(SegmentToPointPen(pen))
 
 
-def _normalizeLocation(font, location, normalized):
-    if location is None or "fvar" not in font:
-        return None
-    if not normalized:
-        from fontTools.varLib.models import normalizeLocation, piecewiseLinearMap
+def _normalizeLocation(location, font):
+    from fontTools.varLib.models import normalizeLocation, piecewiseLinearMap
 
-        axes = {
-            a.axisTag: (a.minValue, a.defaultValue, a.maxValue)
-            for a in font["fvar"].axes
-        }
-        location = normalizeLocation(location, axes)
-        if "avar" in font:
-            avar = font["avar"]
-            avarSegments = avar.segments
-            mappedLocation = {}
-            for axisTag, value in location.items():
-                avarMapping = avarSegments.get(axisTag, None)
-                if avarMapping is not None:
-                    value = piecewiseLinearMap(value, avarMapping)
-                mappedLocation[axisTag] = value
-            location = mappedLocation
+    axes = {
+        a.axisTag: (a.minValue, a.defaultValue, a.maxValue) for a in font["fvar"].axes
+    }
+    location = normalizeLocation(location, axes)
+    if "avar" in font:
+        avar = font["avar"]
+        avarSegments = avar.segments
+        mappedLocation = {}
+        for axisTag, value in location.items():
+            avarMapping = avarSegments.get(axisTag, None)
+            if avarMapping is not None:
+                value = piecewiseLinearMap(value, avarMapping)
+            mappedLocation[axisTag] = value
+        location = mappedLocation
     return location
 
 

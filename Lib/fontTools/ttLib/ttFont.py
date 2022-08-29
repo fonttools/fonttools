@@ -4,7 +4,12 @@ from fontTools.misc.configTools import AbstractConfig
 from fontTools.misc.textTools import Tag, byteord, tostr
 from fontTools.misc.loggingTools import deprecateArgument
 from fontTools.ttLib import TTLibError
-from fontTools.ttLib.ttGlyphSet import _TTGlyph, _TTGlyphSetCFF, _TTGlyphSetGlyf
+from fontTools.ttLib.ttGlyphSet import (
+    _TTGlyph,
+    _TTGlyphSetCFF,
+    _TTGlyphSetGlyf,
+    _normalizeLocation,
+)
 from fontTools.ttLib.sfnt import SFNTReader, SFNTWriter
 from io import BytesIO, StringIO
 import os
@@ -695,10 +700,12 @@ class TTFont(object):
 		as in the normalized (-1..+1) space, otherwise it is in the font's defined
 		axes space.
 		"""
+		if location:
+			location = _normalizeLocation(location, self) if "fvar" in self else None
 		if ("CFF " in self or "CFF2" in self) and (preferCFF or "glyf" not in self):
-			return _TTGlyphSetCFF(self, location, normalized)
+			return _TTGlyphSetCFF(self, location)
 		elif "glyf" in self:
-			return _TTGlyphSetGlyf(self, location, normalized)
+			return _TTGlyphSetGlyf(self, location)
 		else:
 			raise TTLibError("Font contains no outlines")
 
