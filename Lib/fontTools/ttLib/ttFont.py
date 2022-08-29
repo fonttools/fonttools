@@ -4,12 +4,7 @@ from fontTools.misc.configTools import AbstractConfig
 from fontTools.misc.textTools import Tag, byteord, tostr
 from fontTools.misc.loggingTools import deprecateArgument
 from fontTools.ttLib import TTLibError
-from fontTools.ttLib.ttGlyphSet import (
-    _TTGlyphSet, _TTGlyph,
-    _TTGlyphCFF, _TTGlyphGlyf,
-    _TTVarGlyphSet,
-    _TTVarGlyphCFF, _TTVarGlyphGlyf,
-)
+from fontTools.ttLib.ttGlyphSet import _TTGlyph, _TTGlyphSetCFF, _TTGlyphSetGlyf
 from fontTools.ttLib.sfnt import SFNTReader, SFNTWriter
 from io import BytesIO, StringIO
 import os
@@ -700,28 +695,18 @@ class TTFont(object):
 		as in the normalized (-1..+1) space, otherwise it is in the font's defined
 		axes space.
 		"""
-		glyphs = None
-		if (preferCFF and any(tb in self for tb in ["CFF ", "CFF2"]) or
-		   ("glyf" not in self and any(tb in self for tb in ["CFF ", "CFF2"]))):
-			table_tag = "CFF2" if "CFF2" in self else "CFF "
-			glyphs = list(self[table_tag].cff.values())[0].CharStrings
-			if location and 'fvar' in self:
-				glyphs = _TTVarGlyphSet(self, glyphs, _TTVarGlyphCFF,
-										location, normalized)
-			else:
-				glyphs = _TTGlyphSet(self, glyphs, _TTGlyphCFF)
+		glyphSetClass = None
+		haveCFF = "CFF " in self or "CFF2" in self
+		if haveCFF and (preferCFF or "glyf" not in self):
+			glyphSetClass = _TTGlyphSetCFF
 
-		if glyphs is None and "glyf" in self:
-			if location and 'gvar' in self:
-				glyphs = _TTVarGlyphSet(self, self["glyf"], _TTVarGlyphGlyf,
-										location, normalized)
-			else:
-				glyphs = _TTGlyphSet(self, self["glyf"], _TTGlyphGlyf)
+		if glyphSetClass is None and "glyf" in self:
+			glyphSetClass = _TTGlyphSetGlyf
 
-		if glyphs is None:
+		if glyphSetClass is None:
 			raise TTLibError("Font contains no outlines")
 
-		return glyphs
+		return glyphSetClass(self, location, normalized)
 
 	def getBestCmap(self, cmapPreferences=((3, 10), (0, 6), (0, 4), (3, 1), (0, 3), (0, 2), (0, 1), (0, 0))):
 		"""Returns the 'best' Unicode cmap dictionary available in the font
