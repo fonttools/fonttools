@@ -700,8 +700,10 @@ class TTFont(object):
 		as in the normalized (-1..+1) space, otherwise it is in the font's defined
 		axes space.
 		"""
-		if location:
-			location = _normalizeLocation(location, self) if "fvar" in self else None
+		if location and "fvar" not in self:
+			location = None
+		if location and not normalized:
+			location = _normalizeLocation(location, self)
 		if ("CFF " in self or "CFF2" in self) and (preferCFF or "glyf" not in self):
 			return _TTGlyphSetCFF(self, location)
 		elif "glyf" in self:
