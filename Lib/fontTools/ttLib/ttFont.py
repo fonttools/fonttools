@@ -698,13 +698,10 @@ class TTFont(object):
 		glyphSetClass = None
 		if ("CFF " in self or "CFF2" in self) and (preferCFF or "glyf" not in self):
 			glyphSetClass = _TTGlyphSetCFF
-
-		if glyphSetClass is None and "glyf" in self:
+		elif "glyf" in self:
 			glyphSetClass = _TTGlyphSetGlyf
-
-		if glyphSetClass is None:
+		else:
 			raise TTLibError("Font contains no outlines")
-
 		return glyphSetClass(self, location, normalized)
 
 	def getBestCmap(self, cmapPreferences=((3, 10), (0, 6), (0, 4), (3, 1), (0, 3), (0, 2), (0, 1), (0, 0))):
