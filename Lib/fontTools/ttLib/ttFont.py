@@ -695,7 +695,6 @@ class TTFont(object):
 		as in the normalized (-1..+1) space, otherwise it is in the font's defined
 		axes space.
 		"""
-		glyphSetClass = None
 		if ("CFF " in self or "CFF2" in self) and (preferCFF or "glyf" not in self):
 			glyphSetClass = _TTGlyphSetCFF
 		elif "glyf" in self:
