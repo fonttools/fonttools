@@ -679,21 +679,26 @@ class TTFont(object):
 	def getGlyphSet(self, preferCFF=True, location=None, normalized=False):
 		"""Return a generic GlyphSet, which is a dict-like object
 		mapping glyph names to glyph objects. The returned glyph objects
-		have a .draw() method that supports the Pen protocol, and will
+		have a ``.draw()`` method that supports the Pen protocol, and will
 		have an attribute named 'width'.
 
-		If the font is CFF-based, the outlines will be taken from the 'CFF ' or
-		'CFF2' tables. Otherwise the outlines will be taken from the 'glyf' table.
-		If the font contains both a 'CFF '/'CFF2' and a 'glyf' table, you can use
-		the 'preferCFF' argument to specify which one should be taken. If the
-		font contains both a 'CFF ' and a 'CFF2' table, the latter is taken.
+		If the font is CFF-based, the outlines will be taken from the ``CFF ``
+		or ``CFF2`` tables. Otherwise the outlines will be taken from the
+		``glyf`` table.
 
-		If the 'location' parameter is set, it should be a dictionary mapping
+		If the font contains both a ``CFF ``/``CFF2`` and a ``glyf`` table, you
+		can use the ``preferCFF`` argument to specify which one should be taken.
+		If the font contains both a ``CFF `` and a ``CFF2`` table, the latter is
+		taken.
+
+		If the ``location`` parameter is set, it should be a dictionary mapping
 		four-letter variation tags to their float values, and the returned
-		glyph-set will represent an instance of a variable font at that location.
-		If the 'normalized' variable is set to True, that location is interpretted
-		as in the normalized (-1..+1) space, otherwise it is in the font's defined
-		axes space.
+		glyph-set will represent an instance of a variable font at that
+		location.
+
+		If the ``normalized`` variable is set to True, that location is
+		interpreted as in the normalized (-1..+1) space, otherwise it is in the
+		font's defined axes space.
 		"""
 		if location and "fvar" not in self:
 			location = None
