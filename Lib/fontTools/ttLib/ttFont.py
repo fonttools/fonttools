@@ -4,12 +4,7 @@ from fontTools.misc.configTools import AbstractConfig
 from fontTools.misc.textTools import Tag, byteord, tostr
 from fontTools.misc.loggingTools import deprecateArgument
 from fontTools.ttLib import TTLibError
-from fontTools.ttLib.ttGlyphSet import (
-    _TTGlyph,
-    _TTGlyphSetCFF,
-    _TTGlyphSetGlyf,
-    _normalizeLocation,
-)
+from fontTools.ttLib.ttGlyphSet import _TTGlyph, _TTGlyphSetCFF, _TTGlyphSetGlyf
 from fontTools.ttLib.sfnt import SFNTReader, SFNTWriter
 from io import BytesIO, StringIO
 import os
@@ -703,13 +698,44 @@ class TTFont(object):
 		if location and "fvar" not in self:
 			location = None
 		if location and not normalized:
-			location = _normalizeLocation(location, self)
+			location = self.normalizeLocation(location)
 		if ("CFF " in self or "CFF2" in self) and (preferCFF or "glyf" not in self):
 			return _TTGlyphSetCFF(self, location)
 		elif "glyf" in self:
 			return _TTGlyphSetGlyf(self, location)
 		else:
 			raise TTLibError("Font contains no outlines")
+
+	def normalizeLocation(self, location):
+		"""Normalize a ``location`` from the font's defined axes space (also
+		known as user space) into the normalized (-1..+1) space. It applies
+		``avar`` mapping if the font contains an ``avar`` table.
+
+		The ``location`` parameter should be a dictionary mapping four-letter
+		variation tags to their float values.
+
+		Raises ``TTLibError`` if the font is not a variable font.
+		"""
+		from fontTools.varLib.models import normalizeLocation, piecewiseLinearMap
+
+		if "fvar" not in self:
+			raise TTLibError("Not a variable font")
+
+		axes = {
+			a.axisTag: (a.minValue, a.defaultValue, a.maxValue) for a in self["fvar"].axes
+		}
+		location = normalizeLocation(location, axes)
+		if "avar" in self:
+			avar = self["avar"]
+			avarSegments = avar.segments
+			mappedLocation = {}
+			for axisTag, value in location.items():
+				avarMapping = avarSegments.get(axisTag, None)
+				if avarMapping is not None:
+					value = piecewiseLinearMap(value, avarMapping)
+				mappedLocation[axisTag] = value
+			location = mappedLocation
+		return location
 
 	def getBestCmap(self, cmapPreferences=((3, 10), (0, 6), (0, 4), (3, 1), (0, 3), (0, 2), (0, 1), (0, 0))):
 		"""Returns the 'best' Unicode cmap dictionary available in the font

@@ -185,26 +185,6 @@ class _TTGlyphCFF(_TTGlyph):
         self.draw(SegmentToPointPen(pen))
 
 
-def _normalizeLocation(location, font):
-    from fontTools.varLib.models import normalizeLocation, piecewiseLinearMap
-
-    axes = {
-        a.axisTag: (a.minValue, a.defaultValue, a.maxValue) for a in font["fvar"].axes
-    }
-    location = normalizeLocation(location, axes)
-    if "avar" in font:
-        avar = font["avar"]
-        avarSegments = avar.segments
-        mappedLocation = {}
-        for axisTag, value in location.items():
-            avarMapping = avarSegments.get(axisTag, None)
-            if avarMapping is not None:
-                value = piecewiseLinearMap(value, avarMapping)
-            mappedLocation[axisTag] = value
-        location = mappedLocation
-    return location
-
-
 def _setCoordinates(glyph, coord, glyfTable):
     # Handle phantom points for (left, right, top, bottom) positions.
     assert len(coord) >= 4
