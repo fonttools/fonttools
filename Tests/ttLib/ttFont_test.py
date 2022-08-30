@@ -144,11 +144,15 @@ def test_setGlyphOrder_also_updates_glyf_glyphOrder():
     assert font["glyf"].glyphOrder == new_order
 
 
-def test_getGlyphOrder_not_true_post_format_1():
+def test_getGlyphOrder_not_true_post_format_1(caplog):
     # https://github.com/fonttools/fonttools/issues/2736
+    caplog.set_level("WARNING")
     font = TTFont(os.path.join(DATA_DIR, "bogus_post_format_1.ttf"))
     hmtx = font["hmtx"]
     assert len(hmtx.metrics) > len(standardGlyphOrder)
+    log_rec = caplog.records[-1]
+    assert log_rec.levelname == "WARNING"
+    assert "'post' table format 1 discarded" in log_rec.message
 
 
 @pytest.mark.parametrize("lazy", [None, True, False])
