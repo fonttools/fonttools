@@ -214,6 +214,14 @@ def test_ensureDecompiled(lazy):
     assert "Lookup" in font["GPOS"].table.LookupList.__dict__
 
 
+@pytest.fixture
+def testFont_fvar_avar():
+    ttxpath = os.path.join(DATA_DIR, "TestTTF_normalizeLocation.ttx")
+    ttf = TTFont()
+    ttf.importXML(ttxpath)
+    return ttf
+
+
 @pytest.mark.parametrize(
     "userLocation, expectedNormalizedLocation",
     [
@@ -226,9 +234,8 @@ def test_ensureDecompiled(lazy):
         ({"wght": 700}, {"wght": 1.0}),
     ],
 )
-def test_font_normalizeLocation(userLocation, expectedNormalizedLocation):
-    ttxpath = os.path.join(DATA_DIR, "TestTTF_normalizeLocation.ttx")
-    ttf = TTFont()
-    ttf.importXML(ttxpath)
-    normalizedLocation = ttf.normalizeLocation(userLocation)
+def test_font_normalizeLocation(
+    testFont_fvar_avar, userLocation, expectedNormalizedLocation
+):
+    normalizedLocation = testFont_fvar_avar.normalizeLocation(userLocation)
     assert expectedNormalizedLocation == normalizedLocation
