@@ -1,6 +1,6 @@
 """GlyphSets returned by a TTFont."""
 
-from abc import ABCMeta, abstractmethod
+from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from copy import copy
 from fontTools.misc.fixedTools import otRound
@@ -76,7 +76,7 @@ class _TTGlyphSetCFF(_TTGlyphSet):
         return _TTGlyphCFF(self, glyphName)
 
 
-class _TTGlyph(metaclass=ABCMeta):
+class _TTGlyph(ABC):
 
     """Glyph object that supports the Pen protocol, meaning that it has
     .draw() and .drawPoints() methods that take a pen object as their only
