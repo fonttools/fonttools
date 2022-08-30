@@ -3,7 +3,7 @@ import os
 import re
 import random
 from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
-from fontTools.ttLib import TTFont, newTable, registerCustomTableClass, unregisterCustomTableClass
+from fontTools.ttLib import TTFont, TTLibError, newTable, registerCustomTableClass, unregisterCustomTableClass
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
 from fontTools.ttLib.tables._c_m_a_p import CmapSubtable
 import pytest
@@ -239,3 +239,9 @@ def test_font_normalizeLocation(
 ):
     normalizedLocation = testFont_fvar_avar.normalizeLocation(userLocation)
     assert expectedNormalizedLocation == normalizedLocation
+
+
+def test_font_normalizeLocation_no_VF():
+    ttf = TTFont()
+    with pytest.raises(TTLibError, match="Not a variable font"):
+        ttf.normalizeLocation({})
