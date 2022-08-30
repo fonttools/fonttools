@@ -111,12 +111,13 @@ class _TTGlyph(metaclass=ABCMeta):
         """
         raise NotImplementedError
 
-    @abstractmethod
     def drawPoints(self, pen):
         """Draw the glyph onto ``pen``. See fontTools.pens.pointPen for details
         how that works.
         """
-        raise NotImplementedError
+        from fontTools.pens.pointPen import SegmentToPointPen
+
+        self.draw(SegmentToPointPen(pen))
 
 
 class _TTGlyphGlyf(_TTGlyph):
@@ -190,14 +191,6 @@ class _TTGlyphCFF(_TTGlyph):
         how that works.
         """
         self.glyphSet.charStrings[self.name].draw(pen, self.glyphSet.blender)
-
-    def drawPoints(self, pen):
-        """Draw the glyph onto ``pen``. See fontTools.pens.pointPen for details
-        how that works.
-        """
-        from fontTools.pens.pointPen import SegmentToPointPen
-
-        self.draw(SegmentToPointPen(pen))
 
 
 def _setCoordinates(glyph, coord, glyfTable):
