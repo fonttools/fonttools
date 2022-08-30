@@ -1,5 +1,6 @@
 """GlyphSets returned by a TTFont."""
 
+from abc import ABCMeta, abstractmethod
 from collections.abc import Mapping
 from copy import copy
 from fontTools.misc.fixedTools import otRound
@@ -75,7 +76,7 @@ class _TTGlyphSetCFF(_TTGlyphSet):
         return _TTGlyphCFF(self, glyphName)
 
 
-class _TTGlyph:
+class _TTGlyph(metaclass=ABCMeta):
 
     """Glyph object that supports the Pen protocol, meaning that it has
     .draw() and .drawPoints() methods that take a pen object as their only
@@ -102,6 +103,20 @@ class _TTGlyph:
             )
             self.width += glyphSet.hvarInstancer[varidx]
         # TODO: VVAR/VORG
+
+    @abstractmethod
+    def draw(self, pen):
+        """Draw the glyph onto ``pen``. See fontTools.pens.basePen for details
+        how that works.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def drawPoints(self, pen):
+        """Draw the glyph onto ``pen``. See fontTools.pens.pointPen for details
+        how that works.
+        """
+        raise NotImplementedError
 
 
 class _TTGlyphGlyf(_TTGlyph):
