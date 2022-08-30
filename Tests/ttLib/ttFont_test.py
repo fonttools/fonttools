@@ -212,3 +212,23 @@ def test_ensureDecompiled(lazy):
     assert "Lookup" in font["GSUB"].table.LookupList.__dict__
     assert "reader" not in font["GPOS"].table.LookupList.__dict__
     assert "Lookup" in font["GPOS"].table.LookupList.__dict__
+
+
+@pytest.mark.parametrize(
+    "userLocation, expectedNormalizedLocation",
+    [
+        ({}, {"wght": 0.0}),
+        ({"wght": 100}, {"wght": -1.0}),
+        ({"wght": 250}, {"wght": -0.75}),
+        ({"wght": 400}, {"wght": 0.0}),
+        ({"wght": 550}, {"wght": 0.75}),
+        ({"wght": 625}, {"wght": 0.875}),
+        ({"wght": 700}, {"wght": 1.0}),
+    ],
+)
+def test_font_normalizeLocation(userLocation, expectedNormalizedLocation):
+    ttxpath = os.path.join(DATA_DIR, "TestTTF_normalizeLocation.ttx")
+    ttf = TTFont()
+    ttf.importXML(ttxpath)
+    normalizedLocation = ttf.normalizeLocation(userLocation)
+    assert expectedNormalizedLocation == normalizedLocation
