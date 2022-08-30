@@ -119,8 +119,6 @@ class TTGlyphSetTest(object):
         glyphset = font.getGlyphSet(location=location)
 
         assert isinstance(glyphset, ttGlyphSet._TTGlyphSet)
-        if location:
-            assert isinstance(glyphset, ttGlyphSet._TTVarGlyphSet)
 
         assert list(glyphset.keys()) == [".notdef", "I"]
 
@@ -136,12 +134,7 @@ class TTGlyphSetTest(object):
 
         assert isinstance(glyph, ttGlyphSet._TTGlyph)
         is_glyf = fontfile.endswith(".ttf")
-        if location:
-            glyphType = (
-                ttGlyphSet._TTVarGlyphGlyf if is_glyf else ttGlyphSet._TTVarGlyphCFF
-            )
-        else:
-            glyphType = ttGlyphSet._TTGlyphGlyf if is_glyf else ttGlyphSet._TTGlyphCFF
+        glyphType = ttGlyphSet._TTGlyphGlyf if is_glyf else ttGlyphSet._TTGlyphCFF
         assert isinstance(glyph, glyphType)
 
         glyph.draw(pen)

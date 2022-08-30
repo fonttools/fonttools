@@ -3,7 +3,7 @@ import os
 import re
 import random
 from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
-from fontTools.ttLib import TTFont, newTable, registerCustomTableClass, unregisterCustomTableClass
+from fontTools.ttLib import TTFont, TTLibError, newTable, registerCustomTableClass, unregisterCustomTableClass
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
 from fontTools.ttLib.tables._c_m_a_p import CmapSubtable
 import pytest
@@ -212,3 +212,36 @@ def test_ensureDecompiled(lazy):
     assert "Lookup" in font["GSUB"].table.LookupList.__dict__
     assert "reader" not in font["GPOS"].table.LookupList.__dict__
     assert "Lookup" in font["GPOS"].table.LookupList.__dict__
+
+
+@pytest.fixture
+def testFont_fvar_avar():
+    ttxpath = os.path.join(DATA_DIR, "TestTTF_normalizeLocation.ttx")
+    ttf = TTFont()
+    ttf.importXML(ttxpath)
+    return ttf
+
+
+@pytest.mark.parametrize(
+    "userLocation, expectedNormalizedLocation",
+    [
+        ({}, {"wght": 0.0}),
+        ({"wght": 100}, {"wght": -1.0}),
+        ({"wght": 250}, {"wght": -0.75}),
+        ({"wght": 400}, {"wght": 0.0}),
+        ({"wght": 550}, {"wght": 0.75}),
+        ({"wght": 625}, {"wght": 0.875}),
+        ({"wght": 700}, {"wght": 1.0}),
+    ],
+)
+def test_font_normalizeLocation(
+    testFont_fvar_avar, userLocation, expectedNormalizedLocation
+):
+    normalizedLocation = testFont_fvar_avar.normalizeLocation(userLocation)
+    assert expectedNormalizedLocation == normalizedLocation
+
+
+def test_font_normalizeLocation_no_VF():
+    ttf = TTFont()
+    with pytest.raises(TTLibError, match="Not a variable font"):
+        ttf.normalizeLocation({})
