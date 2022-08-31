@@ -152,7 +152,7 @@ def test_getGlyphOrder_not_true_post_format_1(caplog):
     assert len(hmtx.metrics) > len(standardGlyphOrder)
     log_rec = caplog.records[-1]
     assert log_rec.levelname == "WARNING"
-    assert "'post' table format 1 discarded" in log_rec.message
+    assert "Not enough names found in the 'post' table" in log_rec.message
 
 
 @pytest.mark.parametrize("lazy", [None, True, False])

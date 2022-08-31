@@ -493,7 +493,7 @@ class TTFont(object):
 				# Can happen when 'post' format 1 is improperly used on a font that
 				# has more than 258 glyphs (the lenght of 'standardGlyphOrder').
 				#
-				log.warning("'post' table format 1 discarded; font has more than 258 glyphs")
+				log.warning("Not enough names found in the 'post' table, generating them from cmap instead")
 				self._getGlyphNamesFromCmap()
 			else:
 				self.glyphOrder = glyphOrder
