@@ -1,4 +1,4 @@
-from collections import UserDict
+from collections import UserDict, deque
 from functools import partial
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
@@ -125,6 +125,15 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			glyphName = glyphs[gid]
 			variations[glyphName] = partial(decompileVarGlyph, glyphName, gid)
 		self.variations = _LazyDict(variations)
+
+		if ttFont.lazy is False: # Be lazy for None and True
+			self.ensureDecompiled()
+
+	def ensureDecompiled(self, recurse=False):
+		# The recurse argument is unused, but part of the signature of
+		# ensureDecompiled across the library.
+		# Use a zero-length deque to consume the lazy dict
+		deque(self.variations.values(), maxlen=0)
 
 	@staticmethod
 	def decompileOffsets_(data, tableFormat, glyphCount):

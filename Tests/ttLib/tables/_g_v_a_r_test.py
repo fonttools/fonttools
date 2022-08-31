@@ -174,9 +174,18 @@ class GVARTableTest(unittest.TestCase):
 		                 hexStr(GVAR_DATA_EMPTY_VARIATIONS))
 
 	def test_decompile(self):
-		font, gvar = self.makeFont({})
-		gvar.decompile(GVAR_DATA, font)
-		self.assertVariationsAlmostEqual(gvar.variations, GVAR_VARIATIONS)
+		for lazy in (True, False, None):
+			with self.subTest(lazy=lazy):
+				font, gvar = self.makeFont({})
+				font.lazy = lazy
+				gvar.decompile(GVAR_DATA, font)
+
+				self.assertEqual(
+					all(callable(v) for v in gvar.variations.data.values()),
+					lazy is not False,
+				)
+
+				self.assertVariationsAlmostEqual(gvar.variations, GVAR_VARIATIONS)
 
 	def test_decompile_noVariations(self):
 		font, gvar = self.makeFont({})
