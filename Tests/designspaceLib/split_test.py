@@ -160,13 +160,15 @@ def test_convert5to4(datadir, tmpdir, test_ds, expected_vfs):
 @pytest.mark.parametrize(
     ["unbounded_condition"],
     [
+        ({"name": "Weight", "minimum": 500},),
+        ({"name": "Weight", "maximum": 500},),
         ({"name": "Weight", "minimum": 500, "maximum": None},),
         ({"name": "Weight", "minimum": None, "maximum": 500},),
     ],
 )
 def test_optional_min_max(unbounded_condition):
     """Check that split functions can handle conditions that are partially
-    unbounded without tripping over the None values."""
+    unbounded without tripping over None values and missing keys."""
     doc = DesignSpaceDocument()
 
     doc.addAxisDescriptor(
@@ -185,6 +187,14 @@ def test_optional_min_max(unbounded_condition):
 @pytest.mark.parametrize(
     ["condition", "expected_set"],
     [
+        (
+            {"name": "axis", "minimum": 0.5},
+            {"axis": Range(minimum=0.5, maximum=math.inf)},
+        ),
+        (
+            {"name": "axis", "maximum": 0.5},
+            {"axis": Range(minimum=-math.inf, maximum=0.5)},
+        ),
         (
             {"name": "axis", "minimum": 0.5, "maximum": None},
             {"axis": Range(minimum=0.5, maximum=math.inf)},
