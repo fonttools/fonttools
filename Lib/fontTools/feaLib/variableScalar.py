@@ -97,14 +97,13 @@ class VariableScalar:
         return int(self.default), index
 
     def __sub__(self, other):
+        if not isinstance(other, (VariableScalar, float, int)):
+            return NotImplemented
         new = VariableScalar()
         new.axes = self.axes
         for loc in self.values.keys():
-            if isinstance(other, (float,int)):
-                new.add_value(
-                    dict(loc),
-                    self.value_at_location(loc) - other
-                )
+            if isinstance(other, (float, int)):
+                new.add_value(dict(loc), self.value_at_location(loc) - other)
             elif other.does_vary:
                 new.add_value(
                     dict(loc),
@@ -117,16 +116,14 @@ class VariableScalar:
                 )
         return new
 
-
     def __add__(self, other):
+        if not isinstance(other, (VariableScalar, float, int)):
+            return NotImplemented
         new = VariableScalar()
         new.axes = self.axes
         for loc in self.values.keys():
-            if isinstance(other, (float,int)):
-                new.add_value(
-                    dict(loc),
-                    self.value_at_location(loc) + other
-                )
+            if isinstance(other, (float, int)):
+                new.add_value(dict(loc), self.value_at_location(loc) + other)
             elif other.does_vary:
                 new.add_value(
                     dict(loc),
@@ -140,6 +137,8 @@ class VariableScalar:
         return new
 
     def __mul__(self, other):
+        if not isinstance(other, (float, int)):
+            return NotImplemented
         new = VariableScalar()
         new.axes = self.axes
         for loc in self.values.keys():
@@ -150,6 +149,8 @@ class VariableScalar:
         return new
 
     def __truediv__(self, other):
+        if not isinstance(other, (float, int)):
+            return NotImplemented
         new = VariableScalar()
         new.axes = self.axes
         for loc in self.values.keys():
