@@ -159,3 +159,24 @@ class VariableScalar:
                 int(self.value_at_location(loc) / other),
             )
         return new
+
+    def __pos__(self):
+        new = VariableScalar()
+        new.axes = self.axes
+        for loc, value in self.values.items():
+            new.add_value(dict(loc), +value)
+        return new
+
+    def __neg__(self):
+        new = VariableScalar()
+        new.axes = self.axes
+        for loc, value in self.values.items():
+            new.add_value(dict(loc), -value)
+        return new
+
+    def __abs__(self):
+        new = VariableScalar()
+        new.axes = self.axes
+        for loc, value in self.values.items():
+            new.add_value(dict(loc), abs(value))
+        return new
