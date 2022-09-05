@@ -92,10 +92,10 @@ class VariableScalar:
 
     @property
     def model(self):
-        locations = [dict(self._normalized_location(k)) for k in self.values.keys()]
-        key = tuple([tuple(x.items()) for x in locations])
+        key = tuple(self.values.keys())
         if key in self.model_pool:
             return self.model_pool[key]
+        locations = [dict(self._normalized_location(k)) for k in self.values.keys()]
         m = VariationModel(locations)
         self.model_pool[key] = m
         return m
