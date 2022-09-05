@@ -770,6 +770,7 @@ class Builder(object):
                 gdef.remap_device_varidxes(varidx_map)
                 if 'GPOS' in self.font:
                     self.font['GPOS'].table.remap_device_varidxes(varidx_map)
+            VariableScalar.clear_cache()
         if any(
             (
                 gdef.GlyphClassDef,
