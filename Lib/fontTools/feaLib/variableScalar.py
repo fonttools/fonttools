@@ -1,5 +1,5 @@
 from fontTools.varLib.models import VariationModel, normalizeValue
-from functools import cached_property, lru_cache
+from functools import lru_cache
 
 # We will often use exactly the same locations (i.e. the font's
 # masters) for a large number of variable scalars. Instead of
@@ -88,7 +88,7 @@ class VariableScalar:
         values = list(self.values.values())
         return self.model.interpolateFromMasters(loc, values)
 
-    @cached_property
+    @property
     def model(self):
         locations = [dict(self._normalized_location(k)) for k in self.values.keys()]
         key = tuple([tuple(x.items()) for x in locations])
