@@ -1,4 +1,11 @@
 from fontTools.varLib.models import VariationModel, normalizeValue
+from functools import cached_property, lru_cache
+
+# We will often use exactly the same locations (i.e. the font's
+# masters) for a large number of variable scalars. Instead of
+# creating a model for each, let's share the models.
+model_pool = {}
+
 
 
 def Location(loc):
@@ -81,11 +88,17 @@ class VariableScalar:
         values = list(self.values.values())
         return self.model.interpolateFromMasters(loc, values)
 
-    @property
+    @cached_property
     def model(self):
         locations = [dict(self._normalized_location(k)) for k in self.values.keys()]
-        return VariationModel(locations)
+        key = tuple([tuple(x.items()) for x in locations])
+        if key in model_pool:
+            return model_pool[key]
+        m = VariationModel(locations)
+        model_pool[key] = m
+        return m
 
+    @lru_cache
     def get_deltas_and_supports(self):
         values = list(self.values.values())
         return self.model.getDeltasAndSupports(values)
