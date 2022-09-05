@@ -1,5 +1,4 @@
 from fontTools.varLib.models import VariationModel, normalizeValue
-from functools import lru_cache
 
 
 def Location(loc):
