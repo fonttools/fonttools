@@ -101,7 +101,6 @@ class VariableScalar:
         self.model_pool[key] = m
         return m
 
-    @lru_cache(maxsize=None)
     def get_deltas_and_supports(self):
         values = list(self.values.values())
         return self.model.getDeltasAndSupports(values)
