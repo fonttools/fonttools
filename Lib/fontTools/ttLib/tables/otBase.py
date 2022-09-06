@@ -962,10 +962,12 @@ class BaseTable(object):
 				if isinstance(conv.repeat, int):
 					assert len(value) == conv.repeat, 'expected %d values, got %d' % (conv.repeat, len(value))
 				elif conv.repeat in table:
-					if table[conv.repeat] is None: 
-						table[conv.repeat] = value 
-					else: 
-			 			assert table[conv.repeat] == value, (conv.repeat, table[conv.repeat], value)
+					# This is extracted from `CountReference.setValue()`. make sure that it does the same thing
+					if countValue is not None:
+						if table[conv.repeat] is None:
+							table[conv.repeat] = countValue
+						else:
+							assert table[conv.repeat] == countValue, (conv.repeat, table[conv.repeat], countValue)
 				else:
 					# conv.repeat is a propagated count
 					writer[conv.repeat].setValue(countValue)
