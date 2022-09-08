@@ -2670,6 +2670,7 @@ class Options(object):
 		self.xml = False
 		self.font_number = -1
 		self.pretty_svg = False
+		self.lazy = True
 
 		self.set(**kwargs)
 
@@ -3188,7 +3189,8 @@ def main(args=None):
 		glyphs.append(g)
 
 	dontLoadGlyphNames = not options.glyph_names and not glyphs
-	font = load_font(fontfile, options, dontLoadGlyphNames=dontLoadGlyphNames)
+	lazy = options.lazy
+	font = load_font(fontfile, options, dontLoadGlyphNames=dontLoadGlyphNames, lazy=lazy)
 
 	if outfile is None:
 		outfile = makeOutputFileName(fontfile, overWrite=True, suffix=".subset")
