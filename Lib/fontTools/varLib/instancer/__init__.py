@@ -715,6 +715,9 @@ def instantiateFeatureVariations(varfont, axisLimits):
         )
         # remove unreferenced lookups
         varfont[tableTag].prune_lookups()
+        # downgrade table version if there are no FeatureVariations
+        if not getattr(varfont[tableTag].table, "FeatureVariations", None) and getattr(varfont[tableTag].table, "Version", None) == 0x00010001:
+            setattr(varfont[tableTag].table, "Version", 0x00010000)
 
 
 def _featureVariationRecordIsUnique(rec, seen):
