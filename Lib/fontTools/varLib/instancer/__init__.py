@@ -864,6 +864,8 @@ def _instantiateFeatureVariations(table, fvarAxes, axisLimits):
         table.FeatureVariations.FeatureVariationCount = len(newRecords)
     else:
         del table.FeatureVariations
+        # downgrade table version if there are no FeatureVariations left
+        table.Version = 0x00010000
 
 
 def _isValidAvarSegmentMap(axisTag, segmentMap):
