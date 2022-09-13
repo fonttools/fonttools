@@ -1638,11 +1638,14 @@ class InstantiateFeatureVariationsTest(object):
                 ),
             ]
         )
+        gsub = font["GSUB"].table
+        assert gsub.FeatureVariations
+        assert gsub.Version == 0x00010001
 
         instancer.instantiateFeatureVariations(font, location)
 
-        gsub = font["GSUB"].table
         assert not hasattr(gsub, "FeatureVariations")
+        assert gsub.Version == 0x00010000
 
         if appliedSubs:
             lookupIndices = gsub.FeatureList.FeatureRecord[0].Feature.LookupListIndex
