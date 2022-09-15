@@ -1,3 +1,6 @@
+4.37.2 (released 2022-09-15)
+----------------------------
+
 - [subset] Keep CPAL table and don't attempt to prune unused color indices if OT-SVG
   table is present even if COLR table was subsetted away; OT-SVG may be referencing the
   CPAL table; for now we assume that's the case (#2814, #2815).
