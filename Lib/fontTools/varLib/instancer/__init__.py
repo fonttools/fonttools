@@ -765,6 +765,7 @@ def _limitFeatureVariationRecord(record, axisLimits, axisOrder):
             newConditions.append(condition)
 
     record.ConditionSet.ConditionTable = newConditions
+    return newConditions is not None
 
 
 def _instantiateFeatureVariations(table, fvarAxes, axisLimits):
@@ -784,7 +785,7 @@ def _instantiateFeatureVariations(table, fvarAxes, axisLimits):
             record, i, axisLimits, fvarAxes, axisIndexMap
         )
         if shouldKeep:
-            _limitFeatureVariationRecord(record, axisLimits, axisOrder)
+            shouldKeep = _limitFeatureVariationRecord(record, axisLimits, axisOrder)
 
         if shouldKeep and _featureVariationRecordIsUnique(record, uniqueRecords):
             newRecords.append(record)
