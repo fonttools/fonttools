@@ -1,3 +1,6 @@
+4.37.3 (released 2022-09-20)
+----------------------------
+
 - Fix arguments in calls to (glyf) glyph.draw() and drawPoints(), whereby offset wasn't
   correctly passed down; this fix also exposed a second bug, where lsb and tsb were not
   set (#2824, #2825, adobe-type-tools/afdko#1560).
