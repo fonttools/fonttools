@@ -112,6 +112,18 @@ class TTGlyphSetTest(object):
                     ("closePath", ()),
                 ],
             ),
+            (
+                "issue2824.ttf",
+                None,
+                [
+                    ("moveTo", ((309, 180),)),
+                    ("qCurveTo", ((274, 151), (187, 136), (104, 166), (74, 201))),
+                    ("qCurveTo", ((45, 236), (30, 323), (59, 407), (95, 436))),
+                    ("qCurveTo", ((130, 466), (217, 480), (301, 451), (330, 415))),
+                    ("qCurveTo", ((360, 380), (374, 293), (345, 210), (309, 180))),
+                    ("closePath", ()),
+                ],
+            ),
         ],
     )
     def test_glyphset(self, fontfile, location, expected):
