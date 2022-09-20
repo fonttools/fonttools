@@ -126,14 +126,14 @@ class _TTGlyphGlyf(_TTGlyph):
         how that works.
         """
         glyph, offset = self._getGlyphAndOffset()
-        glyph.draw(pen, offset)
+        glyph.draw(pen, self.glyphSet.glyfTable, offset)
 
     def drawPoints(self, pen):
         """Draw the glyph onto ``pen``. See fontTools.pens.pointPen for details
         how that works.
         """
         glyph, offset = self._getGlyphAndOffset()
-        glyph.drawPoints(pen, offset)
+        glyph.drawPoints(pen, self.glyphSet.glyfTable, offset)
 
     def _getGlyphAndOffset(self):
         if self.glyphSet.location and self.glyphSet.gvarTable is not None:
@@ -176,12 +176,12 @@ class _TTGlyphGlyf(_TTGlyph):
 
         glyph = copy(glyfTable[self.name])  # Shallow copy
         width, lsb, height, tsb = _setCoordinates(glyph, coordinates, glyfTable)
+        self.lsb = lsb
+        self.tsb = tsb
         if glyphSet.hvarTable is None:
             # no HVAR: let's set metrics from the phantom points
             self.width = width
-            self.lsb = lsb
             self.height = height
-            self.tsb = tsb
         return glyph
 
 
