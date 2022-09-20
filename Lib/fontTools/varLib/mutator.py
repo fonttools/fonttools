@@ -143,7 +143,7 @@ def interpolate_cff2_metrics(varfont, topDict, glyphOrder, loc):
 
 		if lsb_delta or width_delta:
 			if width_delta:
-				entry[0] += width_delta
+				entry[0] = max(0, entry[0] + width_delta)
 			if lsb_delta:
 				entry[1] = lsb
 			hmtx[gname] = tuple(entry)
