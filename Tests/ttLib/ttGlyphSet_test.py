@@ -113,6 +113,9 @@ class TTGlyphSetTest(object):
                 ],
             ),
             (
+                # In this font, /I has an lsb of 30, but an xMin of 25, so an
+                # offset of 5 units needs to be applied when drawing the outline.
+                # See https://github.com/fonttools/fonttools/issues/2824
                 "issue2824.ttf",
                 None,
                 [
