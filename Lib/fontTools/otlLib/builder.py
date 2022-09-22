@@ -1387,27 +1387,16 @@ class PairPosBuilder(LookupBuilder):
             lookup.
         """
         builders = {}
-        builder = None
+        builder = ClassPairPosSubtableBuilder(self)
         for glyphclass1, value1, glyphclass2, value2 in self.pairs:
             if glyphclass1 is self.SUBTABLE_BREAK_:
-                if builder is not None:
-                    builder.addSubtableBreak()
+                builder.addSubtableBreak()
                 continue
-            valFormat1, valFormat2 = 0, 0
-            if value1:
-                valFormat1 = value1.getFormat()
-            if value2:
-                valFormat2 = value2.getFormat()
-            builder = builders.get((valFormat1, valFormat2))
-            if builder is None:
-                builder = ClassPairPosSubtableBuilder(self)
-                builders[(valFormat1, valFormat2)] = builder
             builder.addPair(glyphclass1, value1, glyphclass2, value2)
         subtables = []
         if self.glyphPairs:
             subtables.extend(buildPairPosGlyphs(self.glyphPairs, self.glyphMap))
-        for key in sorted(builders.keys()):
-            subtables.extend(builders[key].subtables())
+        subtables.extend(builder.subtables())
         lookup = self.buildLookup_(subtables)
 
         # Compact the lookup

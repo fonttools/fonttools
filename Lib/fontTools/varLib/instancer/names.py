@@ -37,6 +37,9 @@ def getVariationNameIDs(varfont):
             used.append(axis.AxisNameID)
         for value in stat.AxisValueArray.AxisValue if stat.AxisValueArray else ():
             used.append(value.ValueNameID)
+        elidedFallbackNameID = getattr(stat, "ElidedFallbackNameID", None)
+        if elidedFallbackNameID is not None:
+            used.append(elidedFallbackNameID)
     # nameIDs <= 255 are reserved by OT spec so we don't touch them
     return {nameID for nameID in used if nameID > 255}
 

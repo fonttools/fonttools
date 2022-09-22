@@ -1,7 +1,10 @@
+from fontTools.colorLib.builder import buildCOLR
 from fontTools.ttLib import TTFont, newTable
-from fontTools.varLib import build, load_designspace
+from fontTools.ttLib.tables import otTables as ot
+from fontTools.varLib import build, load_designspace, _add_COLR
 from fontTools.varLib.errors import VarLibValidationError
 import fontTools.varLib.errors as varLibErrors
+from fontTools.varLib.models import VariationModel
 from fontTools.varLib.mutator import instantiateVariableFont
 from fontTools.varLib import main as varLib_main, load_masters
 from fontTools.varLib import set_default_weight_width_slant
@@ -10,6 +13,7 @@ from fontTools.designspaceLib import (
 )
 from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
 import difflib
+from copy import deepcopy
 from io import BytesIO
 import os
 import shutil
@@ -983,6 +987,39 @@ class SetDefaultWeightWidthSlantTest(object):
         assert ttFont["OS/2"].usWeightClass == 500
         assert ttFont["OS/2"].usWidthClass == 8
         assert ttFont["post"].italicAngle == -12.0
+
+
+def test_variable_COLR_without_VarIndexMap():
+    # test we don't add a no-op VarIndexMap to variable COLR when not needed
+    # https://github.com/fonttools/fonttools/issues/2800
+
+    font1 = TTFont()
+    font1.setGlyphOrder([".notdef", "A"])
+    font1["COLR"] = buildCOLR({"A": (ot.PaintFormat.PaintSolid, 0, 1.0)})
+    # font2 == font1 except for PaintSolid.Alpha
+    font2 = deepcopy(font1)
+    font2["COLR"].table.BaseGlyphList.BaseGlyphPaintRecord[0].Paint.Alpha = 0.0
+    master_fonts = [font1, font2]
+
+    varfont = deepcopy(font1)
+    axis_order = ["XXXX"]
+    model = VariationModel([{}, {"XXXX": 1.0}], axis_order)
+
+    _add_COLR(varfont, model, master_fonts, axis_order)
+
+    colr = varfont["COLR"].table
+
+    assert len(colr.BaseGlyphList.BaseGlyphPaintRecord) == 1
+    baserec = colr.BaseGlyphList.BaseGlyphPaintRecord[0]
+    assert baserec.Paint.Format == ot.PaintFormat.PaintVarSolid
+    assert baserec.Paint.VarIndexBase == 0
+
+    assert colr.VarStore is not None
+    assert len(colr.VarStore.VarData) == 1
+    assert len(colr.VarStore.VarData[0].Item) == 1
+    assert colr.VarStore.VarData[0].Item[0] == [-16384]
+
+    assert colr.VarIndexMap is None
 
 
 if __name__ == "__main__":

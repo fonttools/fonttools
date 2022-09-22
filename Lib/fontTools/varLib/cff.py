@@ -448,9 +448,9 @@ class MergeOutlineExtractor(CFFToCFF2OutlineExtractor):
 	into a CFF2 variable font charstring."""
 
 	def __init__(self, pen, localSubrs, globalSubrs,
-			nominalWidthX, defaultWidthX, private=None):
+			nominalWidthX, defaultWidthX, private=None, blender=None):
 		super().__init__(pen, localSubrs,
-			globalSubrs, nominalWidthX, defaultWidthX, private)
+			globalSubrs, nominalWidthX, defaultWidthX, private, blender)
 
 	def countHints(self):
 		args = self.popallWidth()

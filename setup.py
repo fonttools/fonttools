@@ -74,6 +74,9 @@ if with_cython is True or (with_cython is None and has_cython):
 	ext_modules.append(
 		Extension("fontTools.varLib.iup", ["Lib/fontTools/varLib/iup.py"]),
 	)
+	ext_modules.append(
+		Extension("fontTools.feaLib.lexer", ["Lib/fontTools/feaLib/lexer.py"]),
+	)
 
 extras_require = {
 	# for fontTools.ufoLib: to read/write UFO fonts
@@ -449,7 +452,7 @@ if ext_modules:
 
 setup_params = dict(
 	name="fonttools",
-	version="4.37.1.dev0",
+	version="4.37.4.dev0",
 	description="Tools to manipulate font files",
 	author="Just van Rossum",
 	author_email="just@letterror.com",

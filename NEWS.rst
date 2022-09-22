@@ -1,3 +1,57 @@
+4.37.3 (released 2022-09-20)
+----------------------------
+
+- Fix arguments in calls to (glyf) glyph.draw() and drawPoints(), whereby offset wasn't
+  correctly passed down; this fix also exposed a second bug, where lsb and tsb were not
+  set (#2824, #2825, adobe-type-tools/afdko#1560).
+
+4.37.2 (released 2022-09-15)
+----------------------------
+
+- [subset] Keep CPAL table and don't attempt to prune unused color indices if OT-SVG
+  table is present even if COLR table was subsetted away; OT-SVG may be referencing the
+  CPAL table; for now we assume that's the case (#2814, #2815).
+- [varLib.instancer] Downgrade GPOS/GSUB version if there are no more FeatureVariations
+  after instancing (#2812).
+- [subset] Added ``--no-lazy`` to optionally load fonts eagerly (mostly to ease
+  debugging of table lazy loading, no practical effects) (#2807).
+- [varLib] Avoid building empty COLR.DeltaSetIndexMap with only identity mappings (#2803).
+- [feaLib] Allow multiple value record types (by promoting to the most general format)
+  within the same PairPos subtable; e.g. this allows variable and non variable kerning
+  rules to share the same subtable. This also fixes a bug whereby some kerning pairs
+  would become unreachable while shapiong because of premature subtable splitting (#2772, #2776).
+- [feaLib] Speed up ``VarScalar`` by caching models for recurring master locations (#2798).
+- [feaLib] Optionally cythonize ``feaLib.lexer``, speeds up parsing FEA a bit (#2799).
+- [designspaceLib] Avoid crash when handling unbounded rule conditions (#2797).
+- [post] Don't crash if ``post`` legacy format 1 is malformed/improperly used (#2786)
+- [gvar] Don't be "lazy" (load all glyph variations up front) when TTFont.lazy=False (#2771).
+- [TTFont] Added ``normalizeLocation`` method to normalize a location dict from the
+  font's defined axes space (also known as "user space") into the normalized (-1..+1)
+  space. It applies ``avar`` mapping if the font contains an ``avar`` table (#2789).
+- [TTVarGlyphSet] Support drawing glyph instances from CFF2 variable glyph set (#2784).
+- [fontBuilder] Do not error when building cmap if there are zero code points (#2785).
+- [varLib.plot] Added ability to plot a variation model and set of accompaning master
+  values corresponding to the model's master locations into a pyplot figure (#2767).
+- [Snippets] Added ``statShape.py`` script to draw statistical shape of a glyph as an
+  ellips (requires pycairo) (baecd88).
+- [TTVarGlyphSet] implement drawPoints natively, avoiding going through
+  SegmentToPointPen (#2778).
+- [TTVarGlyphSet] Fixed bug whereby drawing a composite glyph multiple times, its
+  components would shif; needed an extra copy (#2774).
+
+4.37.1 (released 2022-08-24)
+----------------------------
+
+- [subset] Fixed regression introduced with v4.37.0 while subsetting the VarStore of
+  ``HVAR`` and ``VVAR`` tables, whereby an ``AttributeError: subset_varidxes`` was
+  thrown because an apparently unused import statement (with the side-effect of
+  dynamically binding that ``subset_varidxes`` method to the VarStore class) had been
+  accidentally deleted in an unrelated PR (#2679, #2773).
+- [pens] Added ``cairoPen`` (#2678).
+- [gvar] Read ``gvar`` more lazily by not parsing all of the ``glyf`` table (#2771).
+- [ttGlyphSet] Make ``drawPoints(pointPen)`` method work for CFF fonts as well via
+  adapter pen (#2770).
+
 4.37.0 (released 2022-08-23)
 ----------------------------
 

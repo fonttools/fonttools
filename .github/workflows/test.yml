@@ -60,6 +60,8 @@ jobs:
         flags: unittests
         name: codecov-umbrella
         fail_ci_if_error: true
+        # see https://github.com/codecov/codecov-action/issues/557
+        token: ${{ secrets.CODECOV_TOKEN }}
 
   test-cython:
     runs-on: ubuntu-latest

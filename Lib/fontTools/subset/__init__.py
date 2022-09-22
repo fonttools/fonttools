@@ -14,6 +14,7 @@ from fontTools.misc.cliTools import makeOutputFileName
 from fontTools.subset.util import _add_method, _uniq_sort
 from fontTools.subset.cff import *
 from fontTools.subset.svg import *
+from fontTools.varLib import varStore  # for subset_varidxes
 import sys
 import struct
 import array
@@ -2206,6 +2207,14 @@ def subset_glyphs(self, s):
 
 @_add_method(ttLib.getTableClass('CPAL'))
 def prune_post_subset(self, font, options):
+	# Keep whole "CPAL" if "SVG " is present as it may be referenced by the latter
+	# via 'var(--color{palette_entry_index}, ...)' CSS color variables.
+	# For now we just assume this is the case by the mere presence of "SVG " table,
+	# for parsing SVG to collect all the used indices is too much work...
+	# TODO(anthrotype): Do The Right Thing (TM).
+	if "SVG " in font:
+		return True
+
 	colr = font.get("COLR")
 	if not colr:  # drop CPAL if COLR was subsetted to empty
 		return False
@@ -2669,6 +2678,7 @@ class Options(object):
 		self.xml = False
 		self.font_number = -1
 		self.pretty_svg = False
+		self.lazy = True
 
 		self.set(**kwargs)
 
@@ -3187,7 +3197,8 @@ def main(args=None):
 		glyphs.append(g)
 
 	dontLoadGlyphNames = not options.glyph_names and not glyphs
-	font = load_font(fontfile, options, dontLoadGlyphNames=dontLoadGlyphNames)
+	lazy = options.lazy
+	font = load_font(fontfile, options, dontLoadGlyphNames=dontLoadGlyphNames, lazy=lazy)
 
 	if outfile is None:
 		outfile = makeOutputFileName(fontfile, overWrite=True, suffix=".subset")
