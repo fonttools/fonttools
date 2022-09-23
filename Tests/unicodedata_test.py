@@ -151,6 +151,7 @@ def test_script():
     assert unicodedata.script(chr(0x118CF)) == 'Wara'
     assert unicodedata.script(chr(0xA066)) == 'Yiii'
     assert unicodedata.script(chr(0x11A31)) == 'Zanb'
+    assert unicodedata.script(chr(0x11F00)) == 'Kawi'
 
 
 def test_script_extension():
@@ -199,6 +200,7 @@ def test_block():
     assert unicodedata.block("\x80") == "Latin-1 Supplement"
     assert unicodedata.block("\u1c90") == "Georgian Extended"
     assert unicodedata.block("\u0870") == "Arabic Extended-B"
+    assert unicodedata.block("\U00011B00") == "Devanagari Extended-A"
 
 
 def test_ot_tags_from_script():
