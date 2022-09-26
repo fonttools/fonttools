@@ -786,6 +786,13 @@ class Glyph(object):
 			haveInstructions = haveInstructions | haveInstr
 			self.components.append(component)
 		if haveInstructions:
+			if not data:
+				log.warning(
+					"Composite glyph flags announce presence of instructions, but there are none. %s",
+					[c.glyphName for c in self.components]
+				)
+				return
+
 			numInstructions, = struct.unpack(">h", data[:2])
 			data = data[2:]
 			self.program = ttProgram.Program()
@@ -897,7 +904,8 @@ class Glyph(object):
 		haveInstructions = 0
 		for i in range(len(self.components)):
 			if i == lastcomponent:
-				haveInstructions = hasattr(self, "program")
+				# Only set haveInstructions if the program is non-zero
+				haveInstructions = hasattr(self, "program") and self.program
 				more = 0
 			compo = self.components[i]
 			data = data + compo.compile(more, haveInstructions, glyfTable)
