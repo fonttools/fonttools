@@ -702,7 +702,7 @@ _DesignSpaceData = namedtuple(
 )
 
 
-def _add_CFF2(varFont, model, master_fonts):
+def _add_CFF2(varFont, model, master_fonts, optimize=True):
 	from .cff import merge_region_fonts
 	glyphOrder = varFont.getGlyphOrder()
 	if "CFF2" not in varFont:
@@ -710,7 +710,9 @@ def _add_CFF2(varFont, model, master_fonts):
 		convertCFFtoCFF2(varFont)
 	ordered_fonts_list = model.reorderMasters(master_fonts, model.reverseMapping)
 	# re-ordering the master list simplifies building the CFF2 data item lists.
-	merge_region_fonts(varFont, model, ordered_fonts_list, glyphOrder)
+	merge_region_fonts(
+		varFont, model, ordered_fonts_list, glyphOrder, optimize=optimize
+	)
 
 
 def _add_COLR(font, model, master_fonts, axisTags, colr_layer_reuse=True):
@@ -999,7 +1001,7 @@ def build(
 		)
 		_add_GSUB_feature_variations(vf, ds.axes, ds.internal_axis_supports, ds.rules, featureTag)
 	if 'CFF2' not in exclude and ('CFF ' in vf or 'CFF2' in vf):
-		_add_CFF2(vf, model, master_fonts)
+		_add_CFF2(vf, model, master_fonts, optimize=optimize)
 		if "post" in vf:
 			# set 'post' to format 2 to keep the glyph names dropped from CFF2
 			post = vf["post"]
@@ -1090,7 +1092,7 @@ class MasterFinder(object):
 
 def main(args=None):
 	"""Build a variable font from a designspace file and masters"""
-	from argparse import ArgumentParser
+	from argparse import ArgumentParser, SUPPRESS
 	from fontTools import configLogger
 
 	parser = ArgumentParser(prog='varLib', description = main.__doc__)
@@ -1114,7 +1116,17 @@ def main(args=None):
 		'--disable-iup',
 		dest='optimize',
 		action='store_false',
-		help='do not perform IUP optimization'
+		# hidden from -h (replaced by --no-optimize), kept for backward compat
+		help=SUPPRESS,
+	)
+	parser.add_argument(
+		'--no-optimize',
+		dest='optimize',
+		action='store_false',
+		help=(
+			'do not perform IUP optimization on gvar, or specialization of'
+			' CFF2 charstrings'
+		),
 	)
 	parser.add_argument(
 		'--no-colr-layer-reuse',
