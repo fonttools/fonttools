@@ -14,6 +14,7 @@ from fontTools.ufoLib.plistlib import (
 import pytest
 from collections.abc import Mapping
 
+pytestmark = pytest.mark.filterwarnings("ignore::DeprecationWarning")
 
 # The testdata is generated using https://github.com/python/cpython/...
 # Mac/Tools/plistlib_generate_testdata.py
