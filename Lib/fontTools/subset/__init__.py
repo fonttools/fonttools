@@ -2258,8 +2258,24 @@ def prune_post_subset(self, font, options):
 	self.numPaletteEntries = len(self.palettes[0])
 
 	if self.version == 1:
-		self.paletteEntryLabels = [
-			label for i, label in self.paletteEntryLabels if i in retained_palette_indices
+		kept_labels = []
+		dropped_labels = []
+		for i, label in enumerate(self.paletteEntryLabels):
+			if i in retained_palette_indices:
+				kept_labels.append(label)
+			else:
+				dropped_labels.append(label)
+		self.paletteEntryLabels = kept_labels
+		# Remove dropped labels from the name table.
+		name_table = font["name"]
+		name_table.names = [
+			n for n in name_table.names
+			if (
+				n.nameID not in dropped_labels
+				# Only remove nameIDs in the user range and if they're not explicitly kept
+				or n.nameID < 256
+				or n.nameID in options.name_IDs
+			)
 		]
 	return bool(self.numPaletteEntries)
 
@@ -2553,6 +2569,10 @@ def prune_pre_subset(self, font, options):
 		if stat.table.AxisValueArray:
 			nameIDs.update([val_rec.ValueNameID for val_rec in stat.table.AxisValueArray.AxisValue])
 		nameIDs.update([axis_rec.AxisNameID for axis_rec in stat.table.DesignAxisRecord.Axis])
+	cpal = font.get('CPAL')
+	if cpal and cpal.version == 1:
+		nameIDs.update(cpal.paletteLabels)
+		nameIDs.update(cpal.paletteEntryLabels)
 	if '*' not in options.name_IDs:
 		self.names = [n for n in self.names if n.nameID in nameIDs]
 	if not options.name_legacy:
