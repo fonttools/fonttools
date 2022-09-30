@@ -1,6 +1,9 @@
 4.37.4 (released 2022-09-30)
 ----------------------------
 
+4.37.4 (released 2022-09-30)
+----------------------------
+
 - [subset] Keep nameIDs used by CPAL palette entry labels (#2837).
 - [varLib] Avoid negative hmtx values when creating font from variable CFF2 font (#2827).
 - [instancer] Don't prune stat.ElidedFallbackNameID (#2828).
