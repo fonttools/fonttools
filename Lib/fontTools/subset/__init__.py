@@ -2553,6 +2553,10 @@ def prune_pre_subset(self, font, options):
 		if stat.table.AxisValueArray:
 			nameIDs.update([val_rec.ValueNameID for val_rec in stat.table.AxisValueArray.AxisValue])
 		nameIDs.update([axis_rec.AxisNameID for axis_rec in stat.table.DesignAxisRecord.Axis])
+	cpal = font.get('CPAL')
+	if cpal and cpal.version == 1:
+		nameIDs.update(cpal.paletteLabels)
+		nameIDs.update(cpal.paletteEntryLabels)
 	if '*' not in options.name_IDs:
 		self.names = [n for n in self.names if n.nameID in nameIDs]
 	if not options.name_legacy:

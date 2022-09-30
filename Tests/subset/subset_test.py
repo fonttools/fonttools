@@ -1359,8 +1359,6 @@ def test_subset_COLRv1_and_CPALv1(colrv1_cpalv1_path):
     assert "CPAL" in subset_font
     cpal = subset_font["CPAL"]
     name_table = subset_font["name"]
-    import pdb
-    pdb.set_trace()
     assert [name_table.getDebugName(name_id) for name_id in cpal.paletteEntryLabels] == [
         # "first color",  # The first color was pruned
         "second color",
