@@ -2259,7 +2259,7 @@ def prune_post_subset(self, font, options):
 
 	if self.version == 1:
 		self.paletteEntryLabels = [
-			label for i, label in self.paletteEntryLabels if i in retained_palette_indices
+			label for i, label in enumerate(self.paletteEntryLabels) if i in retained_palette_indices
 		]
 	return bool(self.numPaletteEntries)
 
