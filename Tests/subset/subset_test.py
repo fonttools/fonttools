@@ -1268,7 +1268,6 @@ def colrv1_cpalv1_path(colrv1_path):
 
 @pytest.fixture
 def colrv1_cpalv1_share_nameID_path(colrv1_path):
-    # upgrade CPAL from v0 to v1 by adding labels
     font = TTFont(colrv1_path)
     fb = FontBuilder(font=font)
     fb.setupCPAL(
@@ -1392,6 +1391,8 @@ def test_subset_COLRv1_and_CPALv1(colrv1_cpalv1_path):
     ]
     # check that the "first color" name is dropped from name table
     font = TTFont(colrv1_cpalv1_path)
+
+    first_color_nameID = None
     for n in font["name"].names:
         if n.toUnicode() == "first color":
             first_color_nameID = n.nameID
@@ -1406,6 +1407,7 @@ def test_subset_COLRv1_and_CPALv1_keep_nameID(colrv1_cpalv1_path):
     # figure out the name ID of first color so we can keep it
     font = TTFont(colrv1_cpalv1_path)
 
+    first_color_nameID = None
     for n in font["name"].names:
         if n.toUnicode() == "first color":
             first_color_nameID = n.nameID

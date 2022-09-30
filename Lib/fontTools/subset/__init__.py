@@ -2271,9 +2271,10 @@ def prune_post_subset(self, font, options):
 		name_table.names = [
 			n for n in name_table.names
 			if (
-				n.nameID not in dropped_labels or
+				n.nameID not in dropped_labels
 				# Only remove nameIDs in the user range and if they're not explicitly kept
-				n.nameID < 256 or n.nameID in options.name_IDs
+				or n.nameID < 256
+				or n.nameID in options.name_IDs
 			)
 		]
 	return bool(self.numPaletteEntries)
