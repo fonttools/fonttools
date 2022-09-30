@@ -1,3 +1,11 @@
+4.37.4 (released 2022-09-30)
+----------------------------
+
+- [subset] Keep nameIDs used by CPAL palette entry labels (#2837).
+- [varLib] Avoid negative hmtx values when creating font from variable CFF2 font (#2827).
+- [instancer] Don't prune stat.ElidedFallbackNameID (#2828).
+- [unicodedata] Update Scripts/Blocks to Unicode 15.0 (#2833).
+
 4.37.3 (released 2022-09-20)
 ----------------------------
 
@@ -218,30 +226,30 @@
 - [OS/2 / merge] Automatically recalculate ``OS/2.xAvgCharWidth`` after merging
   fonts with ``fontTools.merge`` (#2591, #2538).
 - [misc/config] Added ``fontTools.misc.configTools`` module, a generic configuration
-  system (#2416, #2439).  
+  system (#2416, #2439).
   Added ``fontTools.config`` module, a fontTools-specific configuration
-  system using ``configTools`` above.  
+  system using ``configTools`` above.
   Attached a ``Config`` object to ``TTFont``.
 - [otlLib] Replaced environment variable for GPOS compression level with an
   equivalent option using the new config system.
-- [designspaceLib] Incremented format version to 5.0 (#2436).  
+- [designspaceLib] Incremented format version to 5.0 (#2436).
   Added discrete axes, variable fonts, STAT information, either design- or
-  user-space location on instances.  
+  user-space location on instances.
   Added ``fontTools.designspaceLib.split`` module to split a designspace
   into sub-spaces that interpolate and that represent the variable fonts
-  listed in the document.  
+  listed in the document.
   Made instance names optional and allow computing them from STAT data instead.
-  Added ``fontTools.designspaceLib.statNames`` module.  
-  Allow instances to have the same location as a previously defined STAT label.  
-  Deprecated some attributes:  
-  ``SourceDescriptor``: ``copyLib``, ``copyInfo``, ``copyGroups``, ``copyFeatures``.  
+  Added ``fontTools.designspaceLib.statNames`` module.
+  Allow instances to have the same location as a previously defined STAT label.
+  Deprecated some attributes:
+  ``SourceDescriptor``: ``copyLib``, ``copyInfo``, ``copyGroups``, ``copyFeatures``.
   ``InstanceDescriptor``: ``kerning``, ``info``; ``glyphs``: use rules or sparse
-  sources.  
-  For both, ``location``: use the more explicit designLocation.  
-  Note: all are soft deprecations and existing code should keep working.  
+  sources.
+  For both, ``location``: use the more explicit designLocation.
+  Note: all are soft deprecations and existing code should keep working.
   Updated documentation for Python methods and the XML format.
 - [varLib] Added ``build_many`` to build several variable fonts from a single
-  designspace document (#2436).  
+  designspace document (#2436).
   Added ``fontTools.varLib.stat`` module to build STAT tables from a designspace
   document.
 - [otBase] Try to use the Harfbuzz Repacker for packing GSUB/GPOS tables when
@@ -432,12 +440,12 @@
 4.25.2 (released 2021-07-26)
 ----------------------------
 
-- [COLRv1] Various changes to sync with the latest CORLv1 draft spec. In particular:  
-  define COLR.VarIndexMap, remove/inline ColorIndex struct, add VarIndexBase to ``PaintVar*`` tables (#2372);  
-  add reduced-precicion specialized transform Paints;  
-  define Angle as fraction of half circle encoded as F2Dot14;  
-  use FWORD (int16) for all Paint center coordinates;  
-  change PaintTransform to have an offset to Affine2x3;  
+- [COLRv1] Various changes to sync with the latest CORLv1 draft spec. In particular:
+  define COLR.VarIndexMap, remove/inline ColorIndex struct, add VarIndexBase to ``PaintVar*`` tables (#2372);
+  add reduced-precicion specialized transform Paints;
+  define Angle as fraction of half circle encoded as F2Dot14;
+  use FWORD (int16) for all Paint center coordinates;
+  change PaintTransform to have an offset to Affine2x3;
 - [ttLib] when importing XML, only set sfntVersion if the font has no reader and is empty (#2376)
 
 4.25.1 (released 2021-07-16)
