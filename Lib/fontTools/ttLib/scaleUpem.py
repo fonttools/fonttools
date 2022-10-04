@@ -150,7 +150,8 @@ def visit(visitor, obj, attr, kernTables):
 def _cff_scale(visitor, args):
     for i, arg in enumerate(args):
         if not isinstance(arg, list):
-            args[i] = visitor.scale(arg)
+            if not isinstance(arg, bytes):
+                args[i] = visitor.scale(arg)
         else:
             num_blends = arg[-1]
             _cff_scale(visitor, arg)
