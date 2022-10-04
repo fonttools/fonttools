@@ -10,6 +10,7 @@ import fontTools.ttLib.tables.otBase as otBase
 import fontTools.ttLib.tables.otTables as otTables
 from fontTools.cffLib import VarStoreData
 import fontTools.cffLib.specializer as cffSpecializer
+from fontTools.varLib import builder  # for VarData.calculateNumShorts
 from fontTools.misc.fixedTools import otRound
 
 
@@ -231,6 +232,7 @@ def visit(visitor, varData):
     for item in varData.Item:
         for i, v in enumerate(item):
             item[i] = visitor.scale(v)
+    varData.calculateNumShorts()
 
 
 # COLRv1
