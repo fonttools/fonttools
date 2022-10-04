@@ -502,7 +502,8 @@ class CFF2CharStringMergePen(T2CharStringPen):
 	"""
 	def __init__(
 				self, default_commands, glyphName, num_masters, master_idx,
-				roundTolerance=0.5):
+				roundTolerance=0.01):
+		# For roundTolerance see https://github.com/fonttools/fonttools/issues/2838
 		super().__init__(
 							width=None,
 							glyphSet=None, CFF2=True,
