@@ -244,8 +244,7 @@ class VariationModel(object):
         self.origLocations = locations
         self.axisOrder = axisOrder if axisOrder is not None else []
         self.extrapolate = extrapolate
-        if extrapolate:
-            self.axisRanges = self.computeAxisRanges(locations)
+        self.axisRanges = self.computeAxisRanges(locations) if extrapolate else None
 
         locations = [{k: v for k, v in loc.items() if v != 0.0} for loc in locations]
         keyFunc = self.getMasterLocationsSortKeyFunc(
