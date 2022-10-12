@@ -274,7 +274,7 @@ class VariationModel(object):
         axisRanges = {}
         for loc in locations:
             for axis, value in loc.items():
-                axisMin, axisMax = axisRanges.get(axis, (0, 0))
+                axisMin, axisMax = axisRanges.get(axis, (value, value))
                 axisRanges[axis] = min(value, axisMin), max(value, axisMax)
         return axisRanges
 
