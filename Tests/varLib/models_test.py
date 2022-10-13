@@ -49,9 +49,7 @@ def test_supportScalar():
 def test_model_extrapolate():
     locations = [{}, {"a": 1}, {"b": 1}, {"a": 1, "b": 1}]
     model = VariationModel(locations, extrapolate=True)
-    masterValues = [
-     100, 200,
-     300, 400]
+    masterValues = [100, 200, 300, 400]
     testLocsAndValues = [
         ({"a": -1, "b": -1}, -200),
         ({"a": -1, "b": 0}, 0),
