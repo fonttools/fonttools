@@ -61,13 +61,16 @@ def normalizeValue(v, triple, extrapolate=False):
         )
     if not extrapolate:
         v = max(min(v, upper), lower)
-    if v == default:
-        v = 0.0
-    elif v < default:
-        v = (v - default) / (default - lower)
-    else:
-        v = (v - default) / (upper - default)
-    return v
+
+    if v == default or lower == upper:
+        return 0.0
+
+    if (v < default and lower != default) or (v > default and upper == default):
+        return (v - default) / (default - lower)
+    elif (v > default and upper != default) or (v < default and lower == default):
+        return (v - default) / (upper - default)
+
+    raise AssertionError("that's not possible")
 
 
 def normalizeLocation(location, axes, extrapolate=False):
