@@ -452,8 +452,12 @@ class VariationModel(object):
         return model.getDeltas(items, round=round), model.supports
 
     def getScalars(self, loc):
-        return [supportScalar(loc, support, extrapolate=self.extrapolate, axisRanges=self.axisRanges)
-                for support in self.supports]
+        return [
+            supportScalar(
+                loc, support, extrapolate=self.extrapolate, axisRanges=self.axisRanges
+            )
+            for support in self.supports
+        ]
 
     @staticmethod
     def interpolateFromDeltasAndScalars(deltas, scalars):
