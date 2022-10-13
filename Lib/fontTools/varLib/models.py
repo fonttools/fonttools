@@ -169,7 +169,7 @@ def supportScalar(location, support, ot=True, extrapolate=False, axisRanges=None
             continue
 
         if extrapolate:
-            axisMin, axisMax = axisRanges.get(axis, (-1, +1))
+            axisMin, axisMax = axisRanges[axis]
             if v < axisMin and lower <= axisMin:
                 if peak <= axisMin and peak < upper:
                     scalar *= (v - upper) / (peak - upper)
