@@ -121,6 +121,9 @@ def supportScalar(location, support, ot=True, extrapolate=False, axisRanges=None
     for support of an axis means "axis does not participate".  That
     is how OpenType Variation Font technology works.
 
+    If extrapolate is True, axisRanges must be a dict that maps axis
+    names to (axisMin, axisMax) tuples.
+
       >>> supportScalar({}, {})
       1.0
       >>> supportScalar({'wght':.2}, {})
@@ -137,10 +140,14 @@ def supportScalar(location, support, ot=True, extrapolate=False, axisRanges=None
       0.75
       >>> supportScalar({'wght':2.5, 'wdth':.5}, {'wght':(0,2,4), 'wdth':(-1,0,+1)})
       0.75
-      >>> supportScalar({'wght':4}, {'wght':(0,2,3)}, extrapolate=True)
-      2.0
-      >>> supportScalar({'wght':4}, {'wght':(0,2,2)}, extrapolate=True)
-      2.0
+      >>> supportScalar({'wght':3}, {'wght':(0,1,2)}, extrapolate=True, axisRanges={'wght':(0, 2)})
+      -1.0
+      >>> supportScalar({'wght':-1}, {'wght':(0,1,2)}, extrapolate=True, axisRanges={'wght':(0, 2)})
+      -1.0
+      >>> supportScalar({'wght':3}, {'wght':(0,2,2)}, extrapolate=True, axisRanges={'wght':(0, 2)})
+      1.5
+      >>> supportScalar({'wght':-1}, {'wght':(0,2,2)}, extrapolate=True, axisRanges={'wght':(0, 2)})
+      -0.5
     """
     if extrapolate and axisRanges is None:
         axisRanges = {}
@@ -192,9 +199,8 @@ def supportScalar(location, support, ot=True, extrapolate=False, axisRanges=None
 class VariationModel(object):
     """Locations must have the base master at the origin (ie. 0).
 
-    If the extrapolate argument is set to True, then location values are
-    interpretted in the normalized space, ie. in the [-1,+1] range, and
-    values are extrapolated outside this range.
+    If the extrapolate argument is set to True, then values are extrapolated
+    outside the axis range.
 
       >>> from pprint import pprint
       >>> locations = [ \
