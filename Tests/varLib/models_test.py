@@ -46,6 +46,34 @@ def test_supportScalar():
         supportScalar({"wght": 2}, {"wght": (0, 0.75, 1)}, extrapolate=True, axisRanges=None)
 
 
+def test_model_extrapolate():
+    locations = [{}, {"a": 1}, {"b": 1}, {"a": 1, "b": 1}]
+    model = VariationModel(locations, extrapolate=True)
+    masterValues = [
+     100, 200,
+     300, 400]
+    testLocsAndValues = [
+        ({"a": -1, "b": -1}, -200),
+        ({"a": -1, "b": 0}, 0),
+        ({"a": -1, "b": 1}, 200),
+        ({"a": -1, "b": 2}, 400),
+        ({"a": 0, "b": -1}, -100),
+        ({"a": 0, "b": 0}, 100),
+        ({"a": 0, "b": 1}, 300),
+        ({"a": 0, "b": 2}, 500),
+        ({"a": 1, "b": -1}, 0),
+        ({"a": 1, "b": 0}, 200),
+        ({"a": 1, "b": 1}, 400),
+        ({"a": 1, "b": 2}, 600),
+        ({"a": 2, "b": -1}, 100),
+        ({"a": 2, "b": 0}, 300),
+        ({"a": 2, "b": 1}, 500),
+        ({"a": 2, "b": 2}, 700),
+    ]
+    for loc, expectedValue in testLocsAndValues:
+        assert expectedValue == model.interpolateFromMasters(loc, masterValues)
+
+
 @pytest.mark.parametrize(
     "numLocations, numSamples",
     [
