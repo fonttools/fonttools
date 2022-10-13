@@ -115,11 +115,14 @@ def normalizeLocation(location, axes):
     return out
 
 
-def supportScalar(location, support, ot=True, extrapolate=False):
+def supportScalar(location, support, ot=True, extrapolate=False, axisRanges=None):
     """Returns the scalar multiplier at location, for a master
     with support.  If ot is True, then a peak value of zero
     for support of an axis means "axis does not participate".  That
     is how OpenType Variation Font technology works.
+
+    If extrapolate is True, axisRanges must be a dict that maps axis
+    names to (axisMin, axisMax) tuples.
 
       >>> supportScalar({}, {})
       1.0
@@ -137,11 +140,17 @@ def supportScalar(location, support, ot=True, extrapolate=False):
       0.75
       >>> supportScalar({'wght':2.5, 'wdth':.5}, {'wght':(0,2,4), 'wdth':(-1,0,+1)})
       0.75
-      >>> supportScalar({'wght':4}, {'wght':(0,2,3)}, extrapolate=True)
-      2.0
-      >>> supportScalar({'wght':4}, {'wght':(0,2,2)}, extrapolate=True)
-      2.0
+      >>> supportScalar({'wght':3}, {'wght':(0,1,2)}, extrapolate=True, axisRanges={'wght':(0, 2)})
+      -1.0
+      >>> supportScalar({'wght':-1}, {'wght':(0,1,2)}, extrapolate=True, axisRanges={'wght':(0, 2)})
+      -1.0
+      >>> supportScalar({'wght':3}, {'wght':(0,2,2)}, extrapolate=True, axisRanges={'wght':(0, 2)})
+      1.5
+      >>> supportScalar({'wght':-1}, {'wght':(0,2,2)}, extrapolate=True, axisRanges={'wght':(0, 2)})
+      -0.5
     """
+    if extrapolate and axisRanges is None:
+        raise TypeError("axisRanges must be passed when extrapolate is True")
     scalar = 1.0
     for axis, (lower, peak, upper) in support.items():
         if ot:
@@ -160,18 +169,19 @@ def supportScalar(location, support, ot=True, extrapolate=False):
             continue
 
         if extrapolate:
-            if v < -1 and lower <= -1:
-                if peak <= -1 and peak < upper:
+            axisMin, axisMax = axisRanges[axis]
+            if v < axisMin and lower <= axisMin:
+                if peak <= axisMin and peak < upper:
                     scalar *= (v - upper) / (peak - upper)
                     continue
-                elif -1 < peak:
+                elif axisMin < peak:
                     scalar *= (v - lower) / (peak - lower)
                     continue
-            elif +1 < v and +1 <= upper:
-                if +1 <= peak and lower < peak:
+            elif axisMax < v and axisMax <= upper:
+                if axisMax <= peak and lower < peak:
                     scalar *= (v - lower) / (peak - lower)
                     continue
-                elif peak < +1:
+                elif peak < axisMax:
                     scalar *= (v - upper) / (peak - upper)
                     continue
 
@@ -189,9 +199,8 @@ def supportScalar(location, support, ot=True, extrapolate=False):
 class VariationModel(object):
     """Locations must have the base master at the origin (ie. 0).
 
-    If the extrapolate argument is set to True, then location values are
-    interpretted in the normalized space, ie. in the [-1,+1] range, and
-    values are extrapolated outside this range.
+    If the extrapolate argument is set to True, then values are extrapolated
+    outside the axis range.
 
       >>> from pprint import pprint
       >>> locations = [ \
@@ -241,6 +250,7 @@ class VariationModel(object):
         self.origLocations = locations
         self.axisOrder = axisOrder if axisOrder is not None else []
         self.extrapolate = extrapolate
+        self.axisRanges = self.computeAxisRanges(locations) if extrapolate else None
 
         locations = [{k: v for k, v in loc.items() if v != 0.0} for loc in locations]
         keyFunc = self.getMasterLocationsSortKeyFunc(
@@ -264,6 +274,17 @@ class VariationModel(object):
             subModel = VariationModel(subList(key, self.origLocations), self.axisOrder)
             self._subModels[key] = subModel
         return subModel, subList(key, items)
+
+    @staticmethod
+    def computeAxisRanges(locations):
+        axisRanges = {}
+        allAxes = {axis for loc in locations for axis in loc.keys()}
+        for loc in locations:
+            for axis in allAxes:
+                value = loc.get(axis, 0)
+                axisMin, axisMax = axisRanges.get(axis, (value, value))
+                axisRanges[axis] = min(value, axisMin), max(value, axisMax)
+        return axisRanges
 
     @staticmethod
     def getMasterLocationsSortKeyFunc(locations, axisOrder=[]):
@@ -439,8 +460,12 @@ class VariationModel(object):
         return model.getDeltas(items, round=round), model.supports
 
     def getScalars(self, loc):
-        return [supportScalar(loc, support, extrapolate=self.extrapolate)
-                for support in self.supports]
+        return [
+            supportScalar(
+                loc, support, extrapolate=self.extrapolate, axisRanges=self.axisRanges
+            )
+            for support in self.supports
+        ]
 
     @staticmethod
     def interpolateFromDeltasAndScalars(deltas, scalars):
