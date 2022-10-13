@@ -42,6 +42,8 @@ def test_supportScalar():
     assert supportScalar({"wght": 3}, {"wght": (0, 1, 2)}, extrapolate=True, axisRanges={"wght": (0, 2)}) == -1.0
     assert supportScalar({"wght": -1}, {"wght": (0, 1, 2)}, extrapolate=True, axisRanges={"wght": (0, 2)}) == -1.0
     assert supportScalar({"wght": 2}, {"wght": (0, 0.75, 1)}, extrapolate=True, axisRanges={"wght": (0, 1)}) == -4.0
+    with pytest.raises(TypeError):
+        supportScalar({"wght": 2}, {"wght": (0, 0.75, 1)}, extrapolate=True, axisRanges=None)
 
 
 @pytest.mark.parametrize(

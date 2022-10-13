@@ -150,7 +150,7 @@ def supportScalar(location, support, ot=True, extrapolate=False, axisRanges=None
       -0.5
     """
     if extrapolate and axisRanges is None:
-        axisRanges = {}
+        raise TypeError("axisRanges must be passed when extrapolate is True")
     scalar = 1.0
     for axis, (lower, peak, upper) in support.items():
         if ot:
