@@ -67,10 +67,11 @@ def normalizeValue(v, triple, extrapolate=False):
 
     if (v < default and lower != default) or (v > default and upper == default):
         return (v - default) / (default - lower)
-    elif (v > default and upper != default) or (v < default and lower == default):
+    else:
+        assert (v > default and upper != default) or (
+            v < default and lower == default
+        ), f"Ooops... v={v}, triple=({lower}, {default}, {upper})"
         return (v - default) / (upper - default)
-
-    raise AssertionError("that's not possible")
 
 
 def normalizeLocation(location, axes, extrapolate=False):
