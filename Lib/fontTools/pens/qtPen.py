@@ -20,10 +20,10 @@ class QtPen(BasePen):
 		self.path.lineTo(*p)
 
 	def _curveToOne(self, p1, p2, p3):
-		self.path.cubicTo(*p1+p2+p3)
+		self.path.cubicTo(*p1, *p2, *p3)
 
 	def _qCurveToOne(self, p1, p2):
-		self.path.quadTo(*p1+p2)
+		self.path.quadTo(*p1, *p2)
 
 	def _closePath(self):
 		self.path.closeSubpath()

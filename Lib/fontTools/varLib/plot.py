@@ -131,6 +131,66 @@ def plotDocument(doc, fig, **kwargs):
 	plotLocations(locations, fig, names, **kwargs)
 
 
+def _plotModelFromMasters2D(model, masterValues, fig, **kwargs):
+	assert len(model.axisOrder) == 1
+	axis = model.axisOrder[0]
+
+	axis_min = min(loc.get(axis, 0) for loc in model.locations)
+	axis_max = max(loc.get(axis, 0) for loc in model.locations)
+
+	import numpy as np
+	X = np.arange(axis_min, axis_max, (axis_max - axis_min) / 100)
+	Y = []
+
+	for x in X:
+		loc = {axis: x}
+		v = model.interpolateFromMasters(loc, masterValues)
+		Y.append(v)
+
+	subplot = fig.add_subplot(111)
+	subplot.plot(X, Y, '-', **kwargs)
+
+
+def _plotModelFromMasters3D(model, masterValues, fig, **kwargs):
+	assert len(model.axisOrder) == 2
+	axis1, axis2 = model.axisOrder[0], model.axisOrder[1]
+
+	axis1_min = min(loc.get(axis1, 0) for loc in model.locations)
+	axis1_max = max(loc.get(axis1, 0) for loc in model.locations)
+	axis2_min = min(loc.get(axis2, 0) for loc in model.locations)
+	axis2_max = max(loc.get(axis2, 0) for loc in model.locations)
+
+	import numpy as np
+	X = np.arange(axis1_min, axis1_max, (axis1_max - axis1_min) / 100)
+	Y = np.arange(axis2_min, axis2_max, (axis2_max - axis2_min) / 100)
+	X, Y = np.meshgrid(X, Y)
+	Z = []
+
+	for row_x,row_y in zip(X,Y):
+		z_row = []
+		Z.append(z_row)
+		for x,y in zip(row_x,row_y):
+			loc = {axis1: x, axis2: y}
+			v = model.interpolateFromMasters(loc, masterValues)
+			z_row.append(v)
+	Z = np.array(Z)
+
+	axis3D = fig.add_subplot(111, projection='3d')
+	axis3D.plot_surface(X, Y, Z, **kwargs)
+
+
+def plotModelFromMasters(model, masterValues, fig, **kwargs):
+	"""Plot a variation model and set of master values corresponding
+	to the locations to the model into a pyplot figure.  Variation
+	model must have axisOrder of size 1 or 2."""
+	if len(model.axisOrder) == 1:
+		_plotModelFromMasters2D(model, masterValues, fig, **kwargs)
+	elif len(model.axisOrder) == 2:
+		_plotModelFromMasters3D(model, masterValues, fig, **kwargs)
+	else:
+		raise ValueError("Only 1 or 2 axes are supported")
+
+
 def main(args=None):
 	from fontTools import configLogger
 
@@ -146,6 +206,8 @@ def main(args=None):
 		print("usage: fonttools varLib.plot source.designspace", file=sys.stderr)
 		print("  or")
 		print("usage: fonttools varLib.plot location1 location2 ...", file=sys.stderr)
+		print("  or")
+		print("usage: fonttools varLib.plot location1=value1 location2=value2 ...", file=sys.stderr)
 		sys.exit(1)
 
 	fig = pyplot.figure()
@@ -157,8 +219,19 @@ def main(args=None):
 		plotDocument(doc, fig)
 	else:
 		axes = [chr(c) for c in range(ord('A'), ord('Z')+1)]
-		locs = [dict(zip(axes, (float(v) for v in s.split(',')))) for s in args]
-		plotLocations(locs, fig)
+		if '=' not in args[0]:
+			locs = [dict(zip(axes, (float(v) for v in s.split(',')))) for s in args]
+			plotLocations(locs, fig)
+		else:
+			locations = []
+			masterValues = []
+			for arg in args:
+				loc,v = arg.split('=')
+				locations.append(dict(zip(axes, (float(v) for v in loc.split(',')))))
+				masterValues.append(float(v))
+			model = VariationModel(locations, axes[:len(locations[0])])
+			plotModelFromMasters(model, masterValues, fig)
+
 
 	pyplot.show()
 

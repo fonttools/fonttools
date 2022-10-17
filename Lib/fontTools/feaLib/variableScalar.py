@@ -8,6 +8,15 @@ def Location(loc):
 class VariableScalar:
     """A scalar with different values at different points in the designspace."""
 
+    # We will often use exactly the same locations (i.e. the font's
+    # masters) for a large number of variable scalars. Instead of
+    # creating a model for each, let's share the models.
+    model_pool = {}
+
+    @classmethod
+    def clear_cache(cls):
+        cls.model_pool = {}
+
     def __init__(self, location_value={}):
         self.values = {}
         self.axes = {}
@@ -83,8 +92,13 @@ class VariableScalar:
 
     @property
     def model(self):
+        key = tuple(self.values.keys())
+        if key in self.model_pool:
+            return self.model_pool[key]
         locations = [dict(self._normalized_location(k)) for k in self.values.keys()]
-        return VariationModel(locations)
+        m = VariationModel(locations)
+        self.model_pool[key] = m
+        return m
 
     def get_deltas_and_supports(self):
         values = list(self.values.values())

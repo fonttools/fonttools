@@ -23,7 +23,7 @@
       <CIDFontType value="0"/>
       <CIDCount value="4"/>
       <!-- charset is dumped separately as the 'GlyphOrder' element -->
-      <FDSelect format="3"/>
+      <FDSelect format="0"/>
       <FDArray>
         <FontDict index="0">
           <FontName value="TestCID-Regular-One"/>

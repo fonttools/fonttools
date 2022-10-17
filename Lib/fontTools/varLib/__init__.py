@@ -722,8 +722,11 @@ def _add_COLR(font, model, master_fonts, axisTags, colr_layer_reuse=True):
 	if store:
 		mapping = store.optimize()
 		colr.VarStore = store
+		# don't add DeltaSetIndexMap for identity mapping
+		colr.VarIndexMap = None
 		varIdxes = [mapping[v] for v in merger.varIdxes]
-		colr.VarIndexMap = builder.buildDeltaSetIndexMap(varIdxes)
+		if any(i != varIdxes[i] for i in range(len(varIdxes))):
+			colr.VarIndexMap = builder.buildDeltaSetIndexMap(varIdxes)
 
 
 def load_designspace(designspace):

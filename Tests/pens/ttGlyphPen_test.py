@@ -21,12 +21,11 @@ class TTGlyphPenTestBase:
 
         glyphSet = font.getGlyphSet()
         glyfTable = font["glyf"]
-        pen = self.penClass(font.getGlyphSet())
+        pen = self.penClass(glyphSet)
 
         for name in font.getGlyphOrder():
-            oldGlyph = glyphSet[name]
-            getattr(oldGlyph, self.drawMethod)(pen)
-            oldGlyph = oldGlyph._glyph
+            getattr(glyphSet[name], self.drawMethod)(pen)
+            oldGlyph = glyfTable[name]
             newGlyph = pen.glyph()
 
             if hasattr(oldGlyph, "program"):

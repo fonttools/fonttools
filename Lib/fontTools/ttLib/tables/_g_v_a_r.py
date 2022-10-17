@@ -1,3 +1,4 @@
+from collections import UserDict, deque
 from functools import partial
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
@@ -37,46 +38,18 @@ GVAR_HEADER_FORMAT = """
 
 GVAR_HEADER_SIZE = sstruct.calcsize(GVAR_HEADER_FORMAT)
 
-class _lazy_dict(dict):
+class _LazyDict(UserDict):
+	def __init__(self, data):
+		super().__init__()
+		self.data = data
 
-    def get(self, k, *args):
-        v = super().get(k, *args)
-        if callable(v):
-            v = v()
-            self[k] = v
-        return v
+	def __getitem__(self, k):
+		v = self.data[k]
+		if callable(v):
+			v = v()
+			self.data[k] = v
+		return v
 
-    def __getitem__(self, k):
-        v = super().__getitem__(k)
-        if callable(v):
-            v = v()
-            self[k] = v
-        return v
-
-    def items(self):
-        if not hasattr(self, '_loaded'):
-            self._load()
-        return super().items()
-
-    def values(self):
-        if not hasattr(self, '_loaded'):
-            self._load()
-        return super().values()
-
-    def __eq__(self, other):
-        if not hasattr(self, '_loaded'):
-            self._load()
-        return super().__eq__(other)
-
-    def __neq__(self, other):
-        if not hasattr(self, '_loaded'):
-            self._load()
-        return super().__neq__(other)
-
-    def _load(self):
-        for k in self:
-            self[k]
-        self._loaded = True
 
 class table__g_v_a_r(DefaultTable.DefaultTable):
 	dependencies = ["fvar", "glyf"]
@@ -138,15 +111,29 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		offsets = self.decompileOffsets_(data[GVAR_HEADER_SIZE:], tableFormat=(self.flags & 1), glyphCount=self.glyphCount)
 		sharedCoords = tv.decompileSharedTuples(
 			axisTags, self.sharedTupleCount, data, self.offsetToSharedTuples)
-		self.variations = _lazy_dict()
+		variations = {}
 		offsetToData = self.offsetToGlyphVariationData
 		glyf = ttFont['glyf']
-		for i in range(self.glyphCount):
-			glyphName = glyphs[i]
+
+		def decompileVarGlyph(glyphName, gid):
 			glyph = glyf[glyphName]
 			numPointsInGlyph = self.getNumPoints_(glyph)
-			gvarData = data[offsetToData + offsets[i] : offsetToData + offsets[i + 1]]
-			self.variations[glyphName] = partial(decompileGlyph_, numPointsInGlyph, sharedCoords, axisTags, gvarData)
+			gvarData = data[offsetToData + offsets[gid] : offsetToData + offsets[gid + 1]]
+			return decompileGlyph_(numPointsInGlyph, sharedCoords, axisTags, gvarData)
+
+		for gid in range(self.glyphCount):
+			glyphName = glyphs[gid]
+			variations[glyphName] = partial(decompileVarGlyph, glyphName, gid)
+		self.variations = _LazyDict(variations)
+
+		if ttFont.lazy is False: # Be lazy for None and True
+			self.ensureDecompiled()
+
+	def ensureDecompiled(self, recurse=False):
+		# The recurse argument is unused, but part of the signature of
+		# ensureDecompiled across the library.
+		# Use a zero-length deque to consume the lazy dict
+		deque(self.variations.values(), maxlen=0)
 
 	@staticmethod
 	def decompileOffsets_(data, tableFormat, glyphCount):
