@@ -162,10 +162,17 @@ For a discrete axis:
 ``<labels>`` element (axis)
 ---------------------------
 
-The ``<labels>`` element contains one or more ``<label>`` elements.
+The ``<labels>`` element contains one or more ``<label>`` elements, and can
+indicate this axis' STAT ordering.
 
 .. versionadded:: 5.0
 
+.. rubric:: Attributes
+
+- ``ordering``: optional, int, default: natural position of this axis in the list
+  of axes. STAT table field ``axisOrdering`` for this axis.
+
+  See: `OTSpec STAT Axis Record <https://docs.microsoft.com/en-us/typography/opentype/spec/stat#axis-records>`_
 
 ``<label>`` element (axis)
 ..........................
