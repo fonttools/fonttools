@@ -236,12 +236,11 @@ def _getRibbiStyle(
                 # In the "recursive" case where both the Upright has
                 # linkedUserValue pointing the Italic, and the Italic has
                 # linkedUserValue pointing to the Upright, only consider the
-                # first case: Upright (ital=0, slant=0) has linkedUserValue
-                # pointing to Italic (whatever value). The spec says that
-                # for both axes, Upright must be 0, so we check for that.
-                # https://learn.microsoft.com/en-us/typography/opentype/spec/dvaraxistag_ital
-                # https://learn.microsoft.com/en-us/typography/opentype/spec/dvaraxistag_slnt
-                and upright_label.userValue == 0
+                # first case: Upright (e.g. ital=0, slant=0) has
+                # linkedUserValue pointing to Italic (e.g ital=1, slant=-12 or
+                # slant=12 for backwards italics, in any case higher than
+                # Upright in absolute value, hence the abs() below.
+                and abs(upright_label.userValue) < abs(upright_label.linkedUserValue)
             ):
                 regularUserLocation[axis.name] = upright_label.userValue
                 italic = True
