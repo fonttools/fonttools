@@ -377,7 +377,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 				numberOfContours=glyph.numberOfContours,
 				endPts=list(range(len(glyph.components))),
 				flags=None,
-				components=[c.glyphName for c in glyph.components],
+				components=[(c.glyphName, getattr(c, 'transform', None)) for c in glyph.components],
 			)
 		else:
 			coords, endPts, flags = glyph.getCoordinates(self)
