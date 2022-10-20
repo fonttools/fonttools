@@ -2781,6 +2781,7 @@ def buildStatTable(
             locations, axes, nameTable, windowsNames=windowsNames, macNames=macNames
         )
         axisValues = multiAxisValues + axisValues
+    nameTable.names.sort()
 
     # Store AxisRecords
     axisRecordArray = ot.AxisRecordArray()
@@ -2790,6 +2791,8 @@ def buildStatTable(
     statTable.DesignAxisRecord = axisRecordArray
     statTable.DesignAxisCount = len(axisRecords)
 
+    statTable.AxisValueCount = 0
+    statTable.AxisValueArray = None
     if axisValues:
         # Store AxisValueRecords
         axisValueArray = ot.AxisValueArray()
