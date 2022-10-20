@@ -337,6 +337,7 @@ def addFeatureVariationsRaw(font, table, conditionalSubstitutions, featureTag='r
             langSystems = [lsr.LangSys for lsr in scriptRecord.Script.LangSysRecord]
             for langSys in [scriptRecord.Script.DefaultLangSys] + langSystems:
                 langSys.FeatureIndex.append(varFeatureIndex)
+                langSys.FeatureCount = len(langSys.FeatureIndex)
 
         varFeatureIndices = [varFeatureIndex]
 
@@ -383,6 +384,7 @@ def buildGSUB():
     srec.Script = ot.Script()
     srec.Script.DefaultLangSys = None
     srec.Script.LangSysRecord = []
+    srec.Script.LangSysCount = 0
 
     langrec = ot.LangSysRecord()
     langrec.LangSys = ot.LangSys()
