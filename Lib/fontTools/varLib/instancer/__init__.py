@@ -75,7 +75,6 @@ from fontTools.misc.fixedTools import (
     floatToFixedToFloat,
     strToFixedToFloat,
     otRound,
-    MAX_F2DOT14,
 )
 from fontTools.varLib.models import supportScalar, normalizeValue, piecewiseLinearMap
 from fontTools.ttLib import TTFont
@@ -91,6 +90,7 @@ from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib.merger import MutatorMerger
 from fontTools.varLib.instancer import names
 from fontTools.misc.cliTools import makeOutputFileName
+from fontTools.varLib.instancer import solver
 import collections
 from copy import deepcopy
 from enum import IntEnum
@@ -100,6 +100,15 @@ import re
 
 
 log = logging.getLogger("fontTools.varLib.instancer")
+
+
+def _expand(v):
+    if not isinstance(v, tuple):
+        return (v, v, v)
+    else:
+        if len(v) == 2:
+            return (v[0], None, v[1])
+        return v
 
 
 class AxisRange(collections.namedtuple("AxisRange", "minimum maximum")):
@@ -120,10 +129,27 @@ class NormalizedAxisRange(AxisRange):
         self = super().__new__(cls, *args, **kwargs)
         if self.minimum < -1.0 or self.maximum > 1.0:
             raise ValueError("Axis range values must be normalized to -1..+1 range")
-        if self.minimum > 0:
-            raise ValueError(f"Expected axis range minimum <= 0; got {self.minimum}")
-        if self.maximum < 0:
-            raise ValueError(f"Expected axis range maximum >= 0; got {self.maximum}")
+        return self
+
+
+class AxisTent(collections.namedtuple("AxisTent", "minimum default maximum")):
+    def __new__(cls, *args, **kwargs):
+        self = super().__new__(cls, *args, **kwargs)
+        if not (self.minimum <= self.default <= self.maximum):
+            raise ValueError(
+                f"Tent minimum ({self.minimum:g}) must be <= default ({self.default:g}) which must be <= maximum ({self.maximum:g})"
+            )
+        return self
+
+    def __repr__(self):
+        return f"{type(self).__name__}({self.minimum:g}, {self.default:g}, {self.maximum:g})"
+
+
+class NormalizedAxisTent(AxisTent):
+    def __new__(cls, *args, **kwargs):
+        self = super().__new__(cls, *args, **kwargs)
+        if self.minimum < -1.0 or self.maximum > 1.0:
+            raise ValueError("Axis tent values must be normalized to -1..+1 range")
         return self
 
 
@@ -167,17 +193,8 @@ def instantiateTupleVariationStore(
     Returns:
         List[float]: the overall delta adjustment after applicable deltas were summed.
     """
-    pinnedLocation, axisRanges = splitAxisLocationAndRanges(
-        axisLimits, rangeType=NormalizedAxisRange
-    )
 
-    newVariations = variations
-
-    if pinnedLocation:
-        newVariations = pinTupleVariationAxes(variations, pinnedLocation)
-
-    if axisRanges:
-        newVariations = limitTupleVariationAxisRanges(newVariations, axisRanges)
+    newVariations = changeTupleVariationsAxisLimits(variations, axisLimits)
 
     mergedVariations = collections.OrderedDict()
     for var in newVariations:
@@ -203,129 +220,51 @@ def instantiateTupleVariationStore(
     return defaultVar.coordinates if defaultVar is not None else []
 
 
-def pinTupleVariationAxes(variations, location):
-    newVariations = []
-    for var in variations:
-        # Compute the scalar support of the axes to be pinned at the desired location,
-        # excluding any axes that we are not pinning.
-        # If a TupleVariation doesn't mention an axis, it implies that the axis peak
-        # is 0 (i.e. the axis does not participate).
-        support = {axis: var.axes.pop(axis, (-1, 0, +1)) for axis in location}
-        scalar = supportScalar(location, support)
-        if scalar == 0.0:
-            # no influence, drop the TupleVariation
-            continue
-
-        var.scaleDeltas(scalar)
-        newVariations.append(var)
-    return newVariations
-
-
-def limitTupleVariationAxisRanges(variations, axisRanges):
-    for axisTag, axisRange in sorted(axisRanges.items()):
+def changeTupleVariationsAxisLimits(variations, axisLimits):
+    for axisTag, axisLimit in sorted(axisLimits.items()):
         newVariations = []
         for var in variations:
-            newVariations.extend(limitTupleVariationAxisRange(var, axisTag, axisRange))
+            newVariations.extend(changeTupleVariationAxisLimit(var, axisTag, axisLimit))
         variations = newVariations
     return variations
 
 
-def _negate(*values):
-    yield from (-1 * v for v in values)
+def changeTupleVariationAxisLimit(var, axisTag, axisLimit):
+    if not isinstance(axisLimit, tuple):
+        axisLimit = NormalizedAxisTent(axisLimit, axisLimit, axisLimit)
+    if isinstance(axisLimit, NormalizedAxisRange):
+        axisLimit = NormalizedAxisTent(axisLimit.minimum, 0, axisLimit.maximum)
+    assert isinstance(axisLimit, NormalizedAxisTent)
 
-
-def limitTupleVariationAxisRange(var, axisTag, axisRange):
-    if not isinstance(axisRange, NormalizedAxisRange):
-        axisRange = NormalizedAxisRange(*axisRange)
-
-    # skip when current axis is missing (i.e. doesn't participate), or when the
-    # 'tent' isn't fully on either the negative or positive side
+    # Skip when current axis is missing (i.e. doesn't participate),
     lower, peak, upper = var.axes.get(axisTag, (-1, 0, 1))
-    if peak == 0 or lower > peak or peak > upper or (lower < 0 and upper > 0):
+    if peak == 0:
         return [var]
-
-    negative = lower < 0
-    if negative:
-        if axisRange.minimum == -1.0:
-            return [var]
-        elif axisRange.minimum == 0.0:
-            return []
-    else:
-        if axisRange.maximum == 1.0:
-            return [var]
-        elif axisRange.maximum == 0.0:
-            return []
-
-    limit = axisRange.minimum if negative else axisRange.maximum
-
-    # Rebase axis bounds onto the new limit, which then becomes the new -1.0 or +1.0.
-    # The results are always positive, because both dividend and divisor are either
-    # all positive or all negative.
-    newLower = lower / limit
-    newPeak = peak / limit
-    newUpper = upper / limit
-    # for negative TupleVariation, swap lower and upper to simplify procedure
-    if negative:
-        newLower, newUpper = newUpper, newLower
-
-    # special case when innermost bound == peak == limit
-    if newLower == newPeak == 1.0:
-        var.axes[axisTag] = (-1.0, -1.0, -1.0) if negative else (1.0, 1.0, 1.0)
-        return [var]
-
-    # case 1: the whole deltaset falls outside the new limit; we can drop it
-    elif newLower >= 1.0:
+    # Drop if the var 'tent' isn't well-formed
+    if not (lower <= peak <= upper) or (lower < 0 and upper > 0):
         return []
 
-    # case 2: only the peak and outermost bound fall outside the new limit;
-    # we keep the deltaset, update peak and outermost bound and and scale deltas
-    # by the scalar value for the restricted axis at the new limit.
-    elif newPeak >= 1.0:
-        scalar = supportScalar({axisTag: limit}, {axisTag: (lower, peak, upper)})
-        var.scaleDeltas(scalar)
-        newPeak = 1.0
-        newUpper = 1.0
-        if negative:
-            newLower, newPeak, newUpper = _negate(newUpper, newPeak, newLower)
-        var.axes[axisTag] = (newLower, newPeak, newUpper)
+    if axisTag not in var.axes:
         return [var]
 
-    # case 3: peak falls inside but outermost limit still fits within F2Dot14 bounds;
-    # we keep deltas as is and only scale the axes bounds. Deltas beyond -1.0
-    # or +1.0 will never be applied as implementations must clamp to that range.
-    elif newUpper <= 2.0:
-        if negative:
-            newLower, newPeak, newUpper = _negate(newUpper, newPeak, newLower)
-        elif MAX_F2DOT14 < newUpper <= 2.0:
-            # we clamp +2.0 to the max F2Dot14 (~1.99994) for convenience
-            newUpper = MAX_F2DOT14
-        var.axes[axisTag] = (newLower, newPeak, newUpper)
-        return [var]
+    tent = var.axes[axisTag]
 
-    # case 4: new limit doesn't fit; we need to chop the deltaset into two 'tents',
-    # because the shape of a triangle with part of one side cut off cannot be
-    # represented as a triangle itself. It can be represented as sum of two triangles.
-    # NOTE: This increases the file size!
-    else:
-        # duplicate the tent, then adjust lower/peak/upper so that the outermost limit
-        # of the original tent is +/-2.0, whereas the new tent's starts as the old
-        # one peaks and maxes out at +/-1.0.
-        newVar = TupleVariation(var.axes, var.coordinates)
-        if negative:
-            var.axes[axisTag] = (-2.0, -1 * newPeak, -1 * newLower)
-            newVar.axes[axisTag] = (-1.0, -1.0, -1 * newPeak)
+    solutions = solver.rebaseTent(tent, axisLimit)
+
+    out = []
+    for scalar, tent in solutions:
+        newVar = (
+            TupleVariation(var.axes, var.coordinates) if len(solutions) > 1 else var
+        )
+        if tent is None:
+            newVar.axes.pop(axisTag)
         else:
-            var.axes[axisTag] = (newLower, newPeak, MAX_F2DOT14)
-            newVar.axes[axisTag] = (newPeak, 1.0, 1.0)
-        # the new tent's deltas are scaled by the difference between the scalar value
-        # for the old tent at the desired limit...
-        scalar1 = supportScalar({axisTag: limit}, {axisTag: (lower, peak, upper)})
-        # ... and the scalar value for the clamped tent (with outer limit +/-2.0),
-        # which can be simplified like this:
-        scalar2 = 1 / (2 - newPeak)
-        newVar.scaleDeltas(scalar1 - scalar2)
+            assert tent[1] != 0, tent
+            newVar.axes[axisTag] = tent
+        newVar *= scalar
+        out.append(newVar)
 
-        return [var, newVar]
+    return out
 
 
 def _instantiateGvarGlyph(
@@ -470,13 +409,14 @@ def _remapVarIdxMap(table, attrName, varIndexMapping, glyphOrder):
 
 # TODO(anthrotype) Add support for HVAR/VVAR in CFF2
 def _instantiateVHVAR(varfont, axisLimits, tableFields):
+    location, axisRanges = splitAxisLocationAndRanges(
+        axisLimits, rangeType=NormalizedAxisRange
+    )
     tableTag = tableFields.tableTag
     fvarAxes = varfont["fvar"].axes
     # Deltas from gvar table have already been applied to the hmtx/vmtx. For full
     # instances (i.e. all axes pinned), we can simply drop HVAR/VVAR and return
-    if set(
-        axisTag for axisTag, value in axisLimits.items() if not isinstance(value, tuple)
-    ).issuperset(axis.axisTag for axis in fvarAxes):
+    if set(location).issuperset(axis.axisTag for axis in fvarAxes):
         log.info("Dropping %s table", tableTag)
         del varfont[tableTag]
         return
@@ -572,8 +512,8 @@ class _TupleVarStoreAdapter(object):
 
         pinnedAxes = {
             axisTag
-            for axisTag, value in axisLimits.items()
-            if not isinstance(value, tuple)
+            for axisTag, v in axisLimits.items()
+            if (v.minimum == v.maximum if isinstance(v, tuple) else True)
         }
         self.axisOrder = [
             axisTag for axisTag in self.axisOrder if axisTag not in pinnedAxes
@@ -739,27 +679,27 @@ def _featureVariationRecordIsUnique(rec, seen):
         return True
 
 
-def _limitFeatureVariationConditionRange(condition, axisRange):
+def _limitFeatureVariationConditionRange(condition, axisLimit):
     minValue = condition.FilterRangeMinValue
     maxValue = condition.FilterRangeMaxValue
 
     if (
         minValue > maxValue
-        or minValue > axisRange.maximum
-        or maxValue < axisRange.minimum
+        or minValue > axisLimit.maximum
+        or maxValue < axisLimit.minimum
     ):
         # condition invalid or out of range
         return
 
     values = [minValue, maxValue]
     for i, value in enumerate(values):
-        values[i] = normalizeValue(value, (axisRange.minimum, 0, axisRange.maximum))
+        values[i] = normalizeValue(value, axisLimit)
 
     return AxisRange(*values)
 
 
 def _instantiateFeatureVariationRecord(
-    record, recIdx, location, fvarAxes, axisIndexMap
+    record, recIdx, axisLimits, fvarAxes, axisIndexMap
 ):
     applies = True
     newConditions = []
@@ -767,18 +707,20 @@ def _instantiateFeatureVariationRecord(
         if condition.Format == 1:
             axisIdx = condition.AxisIndex
             axisTag = fvarAxes[axisIdx].axisTag
-            if axisTag in location:
-                minValue = condition.FilterRangeMinValue
-                maxValue = condition.FilterRangeMaxValue
-                v = location[axisTag]
-                if not (minValue <= v <= maxValue):
-                    # condition not met so remove entire record
-                    applies = False
+
+            minValue = condition.FilterRangeMinValue
+            maxValue = condition.FilterRangeMaxValue
+            triple = _expand(axisLimits.get(axisTag, (-1, 0, +1)))
+            v = triple[1]
+            if not (minValue <= v <= maxValue):
+                applies = False
+                # condition not met so remove entire record
+                if triple[0] > maxValue or triple[2] < minValue:
                     newConditions = None
                     break
-            else:
-                # axis not pinned, keep condition with remapped axis index
-                applies = False
+
+            if axisTag in axisIndexMap:
+                # remap axis index
                 condition.AxisIndex = axisIndexMap[axisTag]
                 newConditions.append(condition)
         else:
@@ -798,20 +740,21 @@ def _instantiateFeatureVariationRecord(
     return applies, shouldKeep
 
 
-def _limitFeatureVariationRecord(record, axisRanges, axisOrder):
+def _limitFeatureVariationRecord(record, axisLimits, axisOrder):
     newConditions = []
     for i, condition in enumerate(record.ConditionSet.ConditionTable):
         if condition.Format == 1:
             axisIdx = condition.AxisIndex
             axisTag = axisOrder[axisIdx]
-            if axisTag in axisRanges:
-                axisRange = axisRanges[axisTag]
-                newRange = _limitFeatureVariationConditionRange(condition, axisRange)
+            if axisTag in axisLimits:
+                axisLimit = axisLimits[axisTag]
+                newRange = _limitFeatureVariationConditionRange(condition, axisLimit)
                 if newRange:
                     # keep condition with updated limits and remapped axis index
                     condition.FilterRangeMinValue = newRange.minimum
                     condition.FilterRangeMaxValue = newRange.maximum
-                    newConditions.append(condition)
+                    if newRange.minimum != -1 or newRange.maximum != +1:
+                        newConditions.append(condition)
                 else:
                     # condition out of range, remove entire record
                     newConditions = None
@@ -821,13 +764,8 @@ def _limitFeatureVariationRecord(record, axisRanges, axisOrder):
         else:
             newConditions.append(condition)
 
-    if newConditions:
-        record.ConditionSet.ConditionTable = newConditions
-        shouldKeep = True
-    else:
-        shouldKeep = False
-
-    return shouldKeep
+    record.ConditionSet.ConditionTable = newConditions
+    return newConditions is not None
 
 
 def _instantiateFeatureVariations(table, fvarAxes, axisLimits):
@@ -844,10 +782,10 @@ def _instantiateFeatureVariations(table, fvarAxes, axisLimits):
 
     for i, record in enumerate(table.FeatureVariations.FeatureVariationRecord):
         applies, shouldKeep = _instantiateFeatureVariationRecord(
-            record, i, location, fvarAxes, axisIndexMap
+            record, i, axisLimits, fvarAxes, axisIndexMap
         )
         if shouldKeep:
-            shouldKeep = _limitFeatureVariationRecord(record, axisRanges, axisOrder)
+            shouldKeep = _limitFeatureVariationRecord(record, axisLimits, axisOrder)
 
         if shouldKeep and _featureVariationRecordIsUnique(record, uniqueRecords):
             newRecords.append(record)
@@ -855,7 +793,9 @@ def _instantiateFeatureVariations(table, fvarAxes, axisLimits):
         if applies and not featureVariationApplied:
             assert record.FeatureTableSubstitution.Version == 0x00010000
             for rec in record.FeatureTableSubstitution.SubstitutionRecord:
-                table.FeatureList.FeatureRecord[rec.FeatureIndex].Feature = rec.Feature
+                table.FeatureList.FeatureRecord[rec.FeatureIndex].Feature = deepcopy(
+                    rec.Feature
+                )
             # Set variations only once
             featureVariationApplied = True
 
@@ -917,7 +857,7 @@ def instantiateAvar(varfont, axisLimits):
     # dropping any mappings that fall outside the restricted range.
     # The keys ('fromCoord') are specified in default normalized coordinate space,
     # whereas the values ('toCoord') are "mapped forward" using the SegmentMap.
-    normalizedRanges = normalizeAxisLimits(varfont, axisRanges, usingAvar=False)
+    normalizedRanges = normalizeAxisLimits(varfont, axisLimits, usingAvar=False)
     newSegments = {}
     for axisTag, mapping in segments.items():
         if not _isValidAvarSegmentMap(axisTag, mapping):
@@ -927,6 +867,9 @@ def instantiateAvar(varfont, axisLimits):
             mappedMin = floatToFixedToFloat(
                 piecewiseLinearMap(axisRange.minimum, mapping), 14
             )
+            mappedDef = floatToFixedToFloat(
+                piecewiseLinearMap(axisRange.default, mapping), 14
+            )
             mappedMax = floatToFixedToFloat(
                 piecewiseLinearMap(axisRange.maximum, mapping), 14
             )
@@ -935,17 +878,15 @@ def instantiateAvar(varfont, axisLimits):
 
                 if fromCoord < axisRange.minimum or fromCoord > axisRange.maximum:
                     continue
-                fromCoord = normalizeValue(
-                    fromCoord, (axisRange.minimum, 0, axisRange.maximum)
-                )
+                fromCoord = normalizeValue(fromCoord, axisRange)
 
                 assert mappedMin <= toCoord <= mappedMax
-                toCoord = normalizeValue(toCoord, (mappedMin, 0, mappedMax))
+                toCoord = normalizeValue(toCoord, (mappedMin, mappedDef, mappedMax))
 
                 fromCoord = floatToFixedToFloat(fromCoord, 14)
                 toCoord = floatToFixedToFloat(toCoord, 14)
                 newMapping[fromCoord] = toCoord
-            newMapping.update({-1.0: -1.0, 1.0: 1.0})
+            newMapping.update({-1.0: -1.0, 0.0: 0.0, 1.0: 1.0})
             newSegments[axisTag] = newMapping
         else:
             newSegments[axisTag] = mapping
@@ -981,8 +922,11 @@ def instantiateFvar(varfont, axisLimits):
         axisTag = axis.axisTag
         if axisTag in location:
             continue
-        if axisTag in axisRanges:
-            axis.minValue, axis.maxValue = axisRanges[axisTag]
+        if axisTag in axisLimits:
+            triple = axisLimits[axisTag]
+            if triple.default is None:
+                triple = (triple.minimum, axis.defaultValue, triple.maximum)
+            axis.minValue, axis.defaultValue, axis.maxValue = triple
         axes.append(axis)
     fvar.axes = axes
 
@@ -1098,26 +1042,24 @@ def normalizeAxisLimits(varfont, axisLimits, usingAvar=True):
     if usingAvar and "avar" in varfont:
         avarSegments = varfont["avar"].segments
 
-    for axis_tag, (_, default, _) in axes.items():
-        value = axisLimits[axis_tag]
-        if isinstance(value, tuple):
-            minV, maxV = value
-            if minV > default or maxV < default:
-                raise NotImplementedError(
-                    f"Unsupported range {axis_tag}={minV:g}:{maxV:g}; "
-                    f"can't change default position ({axis_tag}={default:g})"
-                )
-
     normalizedLimits = {}
+
     for axis_tag, triple in axes.items():
-        avarMapping = avarSegments.get(axis_tag, None)
+        default = triple[1]
+
         value = axisLimits[axis_tag]
-        if isinstance(value, tuple):
-            normalizedLimits[axis_tag] = NormalizedAxisRange(
-                *(normalize(v, triple, avarMapping) for v in value)
-            )
-        else:
-            normalizedLimits[axis_tag] = normalize(value, triple, avarMapping)
+
+        minV, defaultV, maxV = _expand(value)
+        if defaultV is None:
+            defaultV = default
+
+        value = (minV, defaultV, maxV)
+
+        avarMapping = avarSegments.get(axis_tag, None)
+        normalizedLimits[axis_tag] = NormalizedAxisTent(
+            *(normalize(v, triple, avarMapping) for v in value)
+        )
+
     return normalizedLimits
 
 
@@ -1133,11 +1075,13 @@ def sanityCheckVariableTables(varfont):
 
 
 def populateAxisDefaults(varfont, axisLimits):
-    if any(value is None for value in axisLimits.values()):
+    if any(None in _expand(value) for value in axisLimits.values()):
         fvar = varfont["fvar"]
         defaultValues = {a.axisTag: a.defaultValue for a in fvar.axes}
         return {
-            axisTag: defaultValues[axisTag] if value is None else value
+            axisTag: tuple(
+                defaultValues[axisTag] if v is None else v for v in _expand(value)
+            )
             for axisTag, value in axisLimits.items()
         }
     return axisLimits
@@ -1252,9 +1196,9 @@ def instantiateVariableFont(
     varLib.set_default_weight_width_slant(
         varfont,
         location={
-            axisTag: limit
+            axisTag: _expand(limit)[1]
             for axisTag, limit in axisLimits.items()
-            if not isinstance(limit, tuple)
+            if _expand(limit)[0] == _expand(limit)[2]
         },
     )
 
@@ -1306,24 +1250,21 @@ def setRibbiBits(font):
 def splitAxisLocationAndRanges(axisLimits, rangeType=AxisRange):
     location, axisRanges = {}, {}
     for axisTag, value in axisLimits.items():
-        if isinstance(value, rangeType):
-            axisRanges[axisTag] = value
-        elif isinstance(value, (int, float)):
-            location[axisTag] = value
-        elif isinstance(value, tuple):
-            axisRanges[axisTag] = rangeType(*value)
+        (minimum, default, maximum) = _expand(value)
+        if minimum == default == maximum:
+            location[axisTag] = default
         else:
-            raise TypeError(
-                f"Expected number or {rangeType.__name__}, "
-                f"got {type(value).__name__}: {value!r}"
-            )
+            axisRanges[axisTag] = rangeType(minimum, maximum)
     return location, axisRanges
 
 
 def parseLimits(limits):
     result = {}
     for limitString in limits:
-        match = re.match(r"^(\w{1,4})=(?:(drop)|(?:([^:]+)(?:[:](.+))?))$", limitString)
+        match = re.match(
+            r"^(\w{1,4})=(?:(drop)|(?:([^:]+)(?:[:]([^:]+))?(?:[:]([^:]+))?))$",
+            limitString,
+        )
         if not match:
             raise ValueError("invalid location format: %r" % limitString)
         tag = match.group(1).ljust(4)
@@ -1331,13 +1272,29 @@ def parseLimits(limits):
             lbound = None
         else:
             lbound = strToFixedToFloat(match.group(3), precisionBits=16)
-        ubound = lbound
+        ubound = default = lbound
         if match.group(4):
-            ubound = strToFixedToFloat(match.group(4), precisionBits=16)
-        if lbound != ubound:
-            result[tag] = AxisRange(lbound, ubound)
-        else:
+            ubound = default = strToFixedToFloat(match.group(4), precisionBits=16)
+            default = None
+        if match.group(5):
+            default = ubound
+            ubound = strToFixedToFloat(match.group(5), precisionBits=16)
+
+        if lbound is not None:
+            if default is None:
+                assert lbound <= ubound
+            else:
+                assert lbound <= default <= ubound
+
+        if lbound == default == ubound:
             result[tag] = lbound
+            continue
+        elif default is None:
+            result[tag] = AxisRange(lbound, ubound)
+            continue
+
+        result[tag] = AxisTent(lbound, default, ubound)
+
     return result
 
 
