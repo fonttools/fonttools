@@ -1,3 +1,21 @@
+- [varLib.instancer] Added support for L4 instancing, i.e. moving the default value of
+  an axis while keeping it variable. Thanks Behdad! (#2728, #2861).  
+  It's now also possible to restrict an axis min/max values beyond the current default
+  value, e.g. a font wght has min=100, def=400, max=900 and you want a partial VF that
+  only varies between 500 and 700, you can now do that.  
+  You can either specify two min/max values (wght=500:700), and the new default will be
+  set to either the minimum or maximum, depending on which one is closer to the current
+  default (e.g. 500 in this case). Or you can specify three values (e.g. wght=500:600:700)
+  to specify the new default value explicitly.
+- [otlLib/featureVars] Set a few Count values so one doesn't need to compile the font
+  to update them (#2860).
+- [varLib.models] Make extrapolation work for 2-master models as well where one master
+  is at the default location (#2843, #2846).  
+  Add optional extrapolate=False to normalizeLocation() (#2847, #2849).
+- [varLib.cff] Fixed sub-optimal packing of CFF2 deltas by no longer rounding them to
+  integer (#2838).
+- [scaleUpem] Calculate numShorts in VarData after scale; handle CFF hintmasks (#2840).
+
 4.37.4 (released 2022-09-30)
 ----------------------------
 
