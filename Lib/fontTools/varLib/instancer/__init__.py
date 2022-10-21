@@ -51,19 +51,30 @@ Note that, unlike varLib.mutator, when an axis is not mentioned in the input
 location, the varLib.instancer will keep the axis and the corresponding deltas,
 whereas mutator implicitly drops the axis at its default coordinate.
 
-The module currently supports only the first three "levels" of partial instancing,
-with the rest planned to be implemented in the future, namely:
+The module supports all the following "levels" of instancing, which can of
+course be combined:
 
 L1
     dropping one or more axes while leaving the default tables unmodified;
+
+    | >>> font = instancer.instantiateVariableFont(varfont, {"wght": None})
+
 L2
     dropping one or more axes while pinning them at non-default locations;
+
+    | >>> font = instancer.instantiateVariableFont(varfont, {"wght": 700})
+
 L3
     restricting the range of variation of one or more axes, by setting either
     a new minimum or maximum, potentially -- though not necessarily -- dropping
     entire regions of variations that fall completely outside this new range.
+
+    | >>> font = instancer.instantiateVariableFont(varfont, {"wght": (100, 300)})
+
 L4
-    moving the default location of an axis.
+    moving the default location of an axis, by specifying (min,defalt,max) values:
+
+    | >>> font = instancer.instantiateVariableFont(varfont, {"wght": (100, 300, 700)})
 
 Currently only TrueType-flavored variable fonts (i.e. containing 'glyf' table)
 are supported, but support for CFF2 variable fonts will be added soon.
@@ -92,65 +103,246 @@ from fontTools.varLib.instancer import names
 from fontTools.misc.cliTools import makeOutputFileName
 from fontTools.varLib.instancer import solver
 import collections
+import dataclasses
 from copy import deepcopy
 from enum import IntEnum
 import logging
 import os
 import re
+from typing import Dict, Iterable, Mapping, Optional, Sequence, Tuple, Union
+import warnings
 
 
 log = logging.getLogger("fontTools.varLib.instancer")
 
 
-def _expand(v):
-    if not isinstance(v, tuple):
-        return (v, v, v)
-    else:
-        if len(v) == 2:
-            return (v[0], None, v[1])
-        return v
+def AxisRange(minimum, maximum):
+    warnings.warn(
+        "AxisRange is deprecated; use AxisTriple instead",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return AxisTriple(minimum, None, maximum)
 
 
-class AxisRange(collections.namedtuple("AxisRange", "minimum maximum")):
-    def __new__(cls, *args, **kwargs):
-        self = super().__new__(cls, *args, **kwargs)
-        if self.minimum > self.maximum:
+def NormalizedAxisRange(minimum, maximum):
+    warnings.warn(
+        "NormalizedAxisRange is deprecated; use AxisTriple instead",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return NormalizedAxisTriple(minimum, None, maximum)
+
+
+@dataclasses.dataclass(frozen=True, order=True)
+class AxisTriple(Sequence):
+    """A triple of (min, default, max) axis values.
+
+    The default value can be None, in which case the populateDefault() method can be
+    used to fill in the missing default value based on the fvar axis default.
+    """
+
+    minimum: float
+    default: Optional[float]  # if None, filled with fvar default by populateDefault
+    maximum: float
+
+    def __post_init__(self):
+        if self.default is None and self.minimum == self.maximum:
+            object.__setattr__(self, "default", self.minimum)
+        if not (
+            (self.minimum <= self.default <= self.maximum)
+            if self.default is not None
+            else (self.minimum <= self.maximum)
+        ):
             raise ValueError(
-                f"Range minimum ({self.minimum:g}) must be <= maximum ({self.maximum:g})"
+                f"{type(self).__name__} minimum ({self.minimum}) must be <= default "
+                f"({self.default}) which must be <= maximum ({self.maximum})"
             )
-        return self
 
-    def __repr__(self):
-        return f"{type(self).__name__}({self.minimum:g}, {self.maximum:g})"
+    def __getitem__(self, i):
+        fields = dataclasses.fields(self)
+        return getattr(self, fields[i].name)
 
+    def __len__(self):
+        return len(dataclasses.fields(self))
 
-class NormalizedAxisRange(AxisRange):
-    def __new__(cls, *args, **kwargs):
-        self = super().__new__(cls, *args, **kwargs)
-        if self.minimum < -1.0 or self.maximum > 1.0:
-            raise ValueError("Axis range values must be normalized to -1..+1 range")
-        return self
+    def _replace(self, **kwargs):
+        return dataclasses.replace(self, **kwargs)
 
+    @classmethod
+    def expand(
+        cls,
+        v: Union[
+            "AxisTriple",
+            float,  # pin axis at single value, same as min==default==max
+            Tuple[float, float],  # (min, max), restrict axis and keep default
+            Tuple[float, float, float],  # (min, default, max)
+        ],
+    ) -> "AxisTriple":
+        """Convert a single value or a tuple into an AxisTriple.
 
-class AxisTent(collections.namedtuple("AxisTent", "minimum default maximum")):
-    def __new__(cls, *args, **kwargs):
-        self = super().__new__(cls, *args, **kwargs)
-        if not (self.minimum <= self.default <= self.maximum):
+        If the input is a single value, it is interpreted as a pin at that value.
+        If the input is a tuple, it is interpreted as (min, max) or (min, default, max).
+        """
+        if isinstance(v, cls):
+            return v
+        if isinstance(v, (int, float)):
+            return cls(v, v, v)
+        try:
+            n = len(v)
+        except TypeError as e:
             raise ValueError(
-                f"Tent minimum ({self.minimum:g}) must be <= default ({self.default:g}) which must be <= maximum ({self.maximum:g})"
+                f"expected float, 2- or 3-tuple of floats; got {type(v)}: {v!r}"
+            ) from e
+        default = None
+        if n == 2:
+            minimum, maximum = v
+        elif n == 3:
+            minimum, default, maximum = v
+        else:
+            raise ValueError(f"expected sequence of 2 or 3; got {n}: {v!r}")
+        return cls(minimum, default, maximum)
+
+    def populateDefault(self, fvarAxisDefault) -> "AxisTriple":
+        """Return a new AxisTriple with the default value filled in.
+
+        Set default to fvar axis default if the latter is within the min/max range,
+        otherwise set default to the min or max value, whichever is closer to the
+        fvar axis default.
+        If the default value is already set, return self.
+        """
+        if self.default is not None:
+            return self
+        default = max(self.minimum, min(self.maximum, fvarAxisDefault))
+        return dataclasses.replace(self, default=default)
+
+
+@dataclasses.dataclass(frozen=True, order=True)
+class NormalizedAxisTriple(AxisTriple):
+    """A triple of (min, default, max) normalized axis values."""
+
+    minimum: float
+    default: float
+    maximum: float
+
+    def __post_init__(self):
+        if self.default is None:
+            object.__setattr__(self, "default", max(self.minimum, min(self.maximum, 0)))
+        if not (-1.0 <= self.minimum <= self.default <= self.maximum <= 1.0):
+            raise ValueError(
+                "Normalized axis values not in -1..+1 range; got "
+                f"minimum={self.minimum:g}, default={self.default:g}, maximum={self.maximum:g})"
             )
-        return self
-
-    def __repr__(self):
-        return f"{type(self).__name__}({self.minimum:g}, {self.default:g}, {self.maximum:g})"
 
 
-class NormalizedAxisTent(AxisTent):
-    def __new__(cls, *args, **kwargs):
-        self = super().__new__(cls, *args, **kwargs)
-        if self.minimum < -1.0 or self.maximum > 1.0:
-            raise ValueError("Axis tent values must be normalized to -1..+1 range")
-        return self
+class _BaseAxisLimits(Mapping[str, AxisTriple]):
+    def __getitem__(self, key: str) -> AxisTriple:
+        return self._data[key]
+
+    def __iter__(self) -> Iterable[str]:
+        return iter(self._data)
+
+    def __len__(self) -> int:
+        return len(self._data)
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}({self._data!r})"
+
+    def pinnedLocation(self) -> Dict[str, float]:
+        """Return a location dict with only the pinned axes."""
+        return {k: v.default for k, v in self.items() if v.minimum == v.maximum}
+
+
+class AxisLimits(_BaseAxisLimits):
+    """Maps axis tags (str) to AxisTriple values."""
+
+    def __init__(self, *args, **kwargs):
+        self.have_defaults = True
+        self._data = data = {}
+        for k, v in dict(*args, **kwargs).items():
+            if v is None:
+                # will be filled in by populateDefaults
+                self.have_defaults = False
+                data[k] = v
+            else:
+                try:
+                    triple = AxisTriple.expand(v)
+                except ValueError as e:
+                    raise ValueError(f"Invalid axis limits for {k!r}: {v!r}") from e
+                if triple.default is None:
+                    # also filled in by populateDefaults
+                    self.have_defaults = False
+                data[k] = triple
+
+    def populateDefaults(self, varfont) -> "AxisLimits":
+        """Return a new AxisLimits with defaults filled in from fvar table.
+
+        If all axis limits already have defaults, return self.
+        """
+        if self.have_defaults:
+            return self
+        fvar = varfont["fvar"]
+        defaultValues = {a.axisTag: a.defaultValue for a in fvar.axes}
+        newLimits = {}
+        for axisTag, triple in self.items():
+            default = defaultValues[axisTag]
+            if triple is None:
+                newLimits[axisTag] = AxisTriple(default, default, default)
+            else:
+                newLimits[axisTag] = triple.populateDefault(default)
+        return type(self)(newLimits)
+
+    def normalize(self, varfont, usingAvar=True) -> "NormalizedAxisLimits":
+        """Return a new NormalizedAxisLimits with normalized -1..0..+1 values.
+
+        If usingAvar is True, the avar table is used to warp the default normalization.
+        """
+        fvar = varfont["fvar"]
+        badLimits = set(self.keys()).difference(a.axisTag for a in fvar.axes)
+        if badLimits:
+            raise ValueError("Cannot limit: {} not present in fvar".format(badLimits))
+
+        axes = {
+            a.axisTag: (a.minValue, a.defaultValue, a.maxValue)
+            for a in fvar.axes
+            if a.axisTag in self
+        }
+
+        avarSegments = {}
+        if usingAvar and "avar" in varfont:
+            avarSegments = varfont["avar"].segments
+
+        normalizedLimits = {}
+
+        for axis_tag, triple in axes.items():
+            if self[axis_tag] is None:
+                normalizedLimits[axis_tag] = NormalizedAxisTriple(0, 0, 0)
+                continue
+
+            minV, defaultV, maxV = self[axis_tag]
+
+            if defaultV is None:
+                defaultV = triple[1]
+
+            avarMapping = avarSegments.get(axis_tag, None)
+            normalizedLimits[axis_tag] = NormalizedAxisTriple(
+                *(normalize(v, triple, avarMapping) for v in (minV, defaultV, maxV))
+            )
+
+        return NormalizedAxisLimits(normalizedLimits)
+
+
+class NormalizedAxisLimits(_BaseAxisLimits):
+    """Maps axis tags (str) to NormalizedAxisTriple values."""
+
+    def __init__(self, *args, **kwargs):
+        self._data = data = {}
+        for k, v in dict(*args, **kwargs).items():
+            try:
+                triple = NormalizedAxisTriple.expand(v)
+            except ValueError as e:
+                raise ValueError(f"Invalid axis limits for {k!r}: {v!r}") from e
+            data[k] = triple
 
 
 class OverlapMode(IntEnum):
@@ -166,8 +358,9 @@ def instantiateTupleVariationStore(
     """Instantiate TupleVariation list at the given location, or limit axes' min/max.
 
     The 'variations' list of TupleVariation objects is modified in-place.
-    The 'axisLimits' (dict) maps axis tags (str) to either a single coordinate along the
-    axis (float), or to minimum/maximum coordinates (NormalizedAxisRange).
+    The 'axisLimits' (dict) maps axis tags (str) to NormalizedAxisTriple namedtuples
+    specifying (minimum, default, maximum) in the -1,0,+1 normalized space. Pinned axes
+    have minimum == default == maximum.
 
     A 'full' instance (i.e. static font) is produced when all the axes are pinned to
     single coordinates; a 'partial' instance (i.e. a less variable font) is produced
@@ -184,8 +377,8 @@ def instantiateTupleVariationStore(
 
     Args:
         variations: List[TupleVariation] from either 'gvar' or 'cvar'.
-        axisLimits: Dict[str, Union[float, NormalizedAxisRange]]: axes' coordinates for
-            the full or partial instance, or ranges for restricting an axis' min/max.
+        axisLimits: NormalizedAxisLimits: map from axis tags to (min, default, max)
+            normalized coordinates for the full or partial instance.
         origCoords: GlyphCoordinates: default instance's coordinates for computing 'gvar'
             inferred points (cf. table__g_l_y_f._getCoordinatesAndControls).
         endPts: List[int]: indices of contour end points, for inferring 'gvar' deltas.
@@ -230,11 +423,7 @@ def changeTupleVariationsAxisLimits(variations, axisLimits):
 
 
 def changeTupleVariationAxisLimit(var, axisTag, axisLimit):
-    if not isinstance(axisLimit, tuple):
-        axisLimit = NormalizedAxisTent(axisLimit, axisLimit, axisLimit)
-    if isinstance(axisLimit, NormalizedAxisRange):
-        axisLimit = NormalizedAxisTent(axisLimit.minimum, 0, axisLimit.maximum)
-    assert isinstance(axisLimit, NormalizedAxisTent)
+    assert isinstance(axisLimit, NormalizedAxisTriple)
 
     # Skip when current axis is missing (i.e. doesn't participate),
     lower, peak, upper = var.axes.get(axisTag, (-1, 0, 1))
@@ -409,9 +598,7 @@ def _remapVarIdxMap(table, attrName, varIndexMapping, glyphOrder):
 
 # TODO(anthrotype) Add support for HVAR/VVAR in CFF2
 def _instantiateVHVAR(varfont, axisLimits, tableFields):
-    location, axisRanges = splitAxisLocationAndRanges(
-        axisLimits, rangeType=NormalizedAxisRange
-    )
+    location = axisLimits.pinnedLocation()
     tableTag = tableFields.tableTag
     fvarAxes = varfont["fvar"].axes
     # Deltas from gvar table have already been applied to the hmtx/vmtx. For full
@@ -510,11 +697,7 @@ class _TupleVarStoreAdapter(object):
         # rebuild regions whose axes were dropped or limited
         self.rebuildRegions()
 
-        pinnedAxes = {
-            axisTag
-            for axisTag, v in axisLimits.items()
-            if (v.minimum == v.maximum if isinstance(v, tuple) else True)
-        }
+        pinnedAxes = set(axisLimits.pinnedLocation())
         self.axisOrder = [
             axisTag for axisTag in self.axisOrder if axisTag not in pinnedAxes
         ]
@@ -559,9 +742,9 @@ def instantiateItemVariationStore(itemVarStore, fvarAxes, axisLimits):
     Args:
         varStore: An otTables.VarStore object (Item Variation Store)
         fvarAxes: list of fvar's Axis objects
-        axisLimits: Dict[str, float] mapping axis tags to normalized axis coordinates
-            (float) or ranges for restricting an axis' min/max (NormalizedAxisRange).
-            May not specify coordinates/ranges for all the fvar axes.
+        axisLimits: NormalizedAxisLimits: mapping axis tags to normalized
+            min/default/max axis coordinates. May not specify coordinates/ranges for
+            all the fvar axes.
 
     Returns:
         defaultDeltas: to be added to the default instance, of type dict of floats
@@ -691,11 +874,7 @@ def _limitFeatureVariationConditionRange(condition, axisLimit):
         # condition invalid or out of range
         return
 
-    values = [minValue, maxValue]
-    for i, value in enumerate(values):
-        values[i] = normalizeValue(value, axisLimit)
-
-    return AxisRange(*values)
+    return tuple(normalizeValue(v, axisLimit) for v in (minValue, maxValue))
 
 
 def _instantiateFeatureVariationRecord(
@@ -703,6 +882,7 @@ def _instantiateFeatureVariationRecord(
 ):
     applies = True
     newConditions = []
+    default_triple = NormalizedAxisTriple(-1, 0, +1)
     for i, condition in enumerate(record.ConditionSet.ConditionTable):
         if condition.Format == 1:
             axisIdx = condition.AxisIndex
@@ -710,12 +890,11 @@ def _instantiateFeatureVariationRecord(
 
             minValue = condition.FilterRangeMinValue
             maxValue = condition.FilterRangeMaxValue
-            triple = _expand(axisLimits.get(axisTag, (-1, 0, +1)))
-            v = triple[1]
-            if not (minValue <= v <= maxValue):
+            triple = axisLimits.get(axisTag, default_triple)
+            if not (minValue <= triple.default <= maxValue):
                 applies = False
                 # condition not met so remove entire record
-                if triple[0] > maxValue or triple[2] < minValue:
+                if triple.minimum > maxValue or triple.maximum < minValue:
                     newConditions = None
                     break
 
@@ -742,7 +921,7 @@ def _instantiateFeatureVariationRecord(
 
 def _limitFeatureVariationRecord(record, axisLimits, axisOrder):
     newConditions = []
-    for i, condition in enumerate(record.ConditionSet.ConditionTable):
+    for condition in record.ConditionSet.ConditionTable:
         if condition.Format == 1:
             axisIdx = condition.AxisIndex
             axisTag = axisOrder[axisIdx]
@@ -750,10 +929,11 @@ def _limitFeatureVariationRecord(record, axisLimits, axisOrder):
                 axisLimit = axisLimits[axisTag]
                 newRange = _limitFeatureVariationConditionRange(condition, axisLimit)
                 if newRange:
-                    # keep condition with updated limits and remapped axis index
-                    condition.FilterRangeMinValue = newRange.minimum
-                    condition.FilterRangeMaxValue = newRange.maximum
-                    if newRange.minimum != -1 or newRange.maximum != +1:
+                    # keep condition with updated limits
+                    minimum, maximum = newRange
+                    condition.FilterRangeMinValue = minimum
+                    condition.FilterRangeMaxValue = maximum
+                    if minimum != -1 or maximum != +1:
                         newConditions.append(condition)
                 else:
                     # condition out of range, remove entire record
@@ -769,10 +949,7 @@ def _limitFeatureVariationRecord(record, axisLimits, axisOrder):
 
 
 def _instantiateFeatureVariations(table, fvarAxes, axisLimits):
-    location, axisRanges = splitAxisLocationAndRanges(
-        axisLimits, rangeType=NormalizedAxisRange
-    )
-    pinnedAxes = set(location.keys())
+    pinnedAxes = set(axisLimits.pinnedLocation())
     axisOrder = [axis.axisTag for axis in fvarAxes if axis.axisTag not in pinnedAxes]
     axisIndexMap = {axisTag: axisOrder.index(axisTag) for axisTag in axisOrder}
 
@@ -833,12 +1010,10 @@ def _isValidAvarSegmentMap(axisTag, segmentMap):
 def instantiateAvar(varfont, axisLimits):
     # 'axisLimits' dict must contain user-space (non-normalized) coordinates.
 
-    location, axisRanges = splitAxisLocationAndRanges(axisLimits)
-
     segments = varfont["avar"].segments
 
     # drop table if we instantiate all the axes
-    pinnedAxes = set(location.keys())
+    pinnedAxes = set(axisLimits.pinnedLocation())
     if pinnedAxes.issuperset(segments):
         log.info("Dropping avar table")
         del varfont["avar"]
@@ -849,7 +1024,7 @@ def instantiateAvar(varfont, axisLimits):
         if axis in segments:
             del segments[axis]
 
-    # First compute the default normalization for axisRanges coordinates: i.e.
+    # First compute the default normalization for axisLimits coordinates: i.e.
     # min = -1.0, default = 0, max = +1.0, and in between values interpolated linearly,
     # without using the avar table's mappings.
     # Then, for each SegmentMap, if we are restricting its axis, compute the new
@@ -857,7 +1032,7 @@ def instantiateAvar(varfont, axisLimits):
     # dropping any mappings that fall outside the restricted range.
     # The keys ('fromCoord') are specified in default normalized coordinate space,
     # whereas the values ('toCoord') are "mapped forward" using the SegmentMap.
-    normalizedRanges = normalizeAxisLimits(varfont, axisLimits, usingAvar=False)
+    normalizedRanges = axisLimits.normalize(varfont, usingAvar=False)
     newSegments = {}
     for axisTag, mapping in segments.items():
         if not _isValidAvarSegmentMap(axisTag, mapping):
@@ -905,7 +1080,7 @@ def isInstanceWithinAxisRanges(location, axisRanges):
 def instantiateFvar(varfont, axisLimits):
     # 'axisLimits' dict must contain user-space (non-normalized) coordinates
 
-    location, axisRanges = splitAxisLocationAndRanges(axisLimits, rangeType=AxisRange)
+    location = axisLimits.pinnedLocation()
 
     fvar = varfont["fvar"]
 
@@ -937,7 +1112,7 @@ def instantiateFvar(varfont, axisLimits):
             continue
         for axisTag in location:
             del instance.coordinates[axisTag]
-        if not isInstanceWithinAxisRanges(instance.coordinates, axisRanges):
+        if not isInstanceWithinAxisRanges(instance.coordinates, axisLimits):
             continue
         instances.append(instance)
     fvar.instances = instances
@@ -962,14 +1137,10 @@ def instantiateSTAT(varfont, axisLimits):
 
 
 def axisValuesFromAxisLimits(stat, axisLimits):
-    location, axisRanges = splitAxisLocationAndRanges(axisLimits, rangeType=AxisRange)
-
     def isAxisValueOutsideLimits(axisTag, axisValue):
-        if axisTag in location and axisValue != location[axisTag]:
-            return True
-        elif axisTag in axisRanges:
-            axisRange = axisRanges[axisTag]
-            if axisValue < axisRange.minimum or axisValue > axisRange.maximum:
+        if axisTag in axisLimits:
+            triple = axisLimits[axisTag]
+            if axisValue < triple.minimum or axisValue > triple.maximum:
                 return True
         return False
 
@@ -1026,43 +1197,6 @@ def normalize(value, triple, avarMapping):
     return floatToFixedToFloat(value, 14)
 
 
-def normalizeAxisLimits(varfont, axisLimits, usingAvar=True):
-    fvar = varfont["fvar"]
-    badLimits = set(axisLimits.keys()).difference(a.axisTag for a in fvar.axes)
-    if badLimits:
-        raise ValueError("Cannot limit: {} not present in fvar".format(badLimits))
-
-    axes = {
-        a.axisTag: (a.minValue, a.defaultValue, a.maxValue)
-        for a in fvar.axes
-        if a.axisTag in axisLimits
-    }
-
-    avarSegments = {}
-    if usingAvar and "avar" in varfont:
-        avarSegments = varfont["avar"].segments
-
-    normalizedLimits = {}
-
-    for axis_tag, triple in axes.items():
-        default = triple[1]
-
-        value = axisLimits[axis_tag]
-
-        minV, defaultV, maxV = _expand(value)
-        if defaultV is None:
-            defaultV = default
-
-        value = (minV, defaultV, maxV)
-
-        avarMapping = avarSegments.get(axis_tag, None)
-        normalizedLimits[axis_tag] = NormalizedAxisTent(
-            *(normalize(v, triple, avarMapping) for v in value)
-        )
-
-    return normalizedLimits
-
-
 def sanityCheckVariableTables(varfont):
     if "fvar" not in varfont:
         raise ValueError("Missing required table fvar")
@@ -1072,19 +1206,6 @@ def sanityCheckVariableTables(varfont):
     # TODO(anthrotype) Remove once we do support partial instancing CFF2
     if "CFF2" in varfont:
         raise NotImplementedError("Instancing CFF2 variable fonts is not supported yet")
-
-
-def populateAxisDefaults(varfont, axisLimits):
-    if any(None in _expand(value) for value in axisLimits.values()):
-        fvar = varfont["fvar"]
-        defaultValues = {a.axisTag: a.defaultValue for a in fvar.axes}
-        return {
-            axisTag: tuple(
-                defaultValues[axisTag] if v is None else v for v in _expand(value)
-            )
-            for axisTag, value in axisLimits.items()
-        }
-    return axisLimits
 
 
 def instantiateVariableFont(
@@ -1139,9 +1260,9 @@ def instantiateVariableFont(
 
     sanityCheckVariableTables(varfont)
 
-    axisLimits = populateAxisDefaults(varfont, axisLimits)
+    axisLimits = AxisLimits(axisLimits).populateDefaults(varfont)
 
-    normalizedLimits = normalizeAxisLimits(varfont, axisLimits)
+    normalizedLimits = axisLimits.normalize(varfont)
 
     log.info("Normalized limits: %s", normalizedLimits)
 
@@ -1193,14 +1314,7 @@ def instantiateVariableFont(
                     ignoreErrors=(overlap == OverlapMode.REMOVE_AND_IGNORE_ERRORS),
                 )
 
-    varLib.set_default_weight_width_slant(
-        varfont,
-        location={
-            axisTag: _expand(limit)[1]
-            for axisTag, limit in axisLimits.items()
-            if _expand(limit)[0] == _expand(limit)[2]
-        },
-    )
+    varLib.set_default_weight_width_slant(varfont, location=axisLimits.pinnedLocation())
 
     if updateFontNames:
         # Set Regular/Italic/Bold/Bold Italic bits as appropriate, after the
@@ -1247,18 +1361,7 @@ def setRibbiBits(font):
     font["OS/2"].fsSelection = selection
 
 
-def splitAxisLocationAndRanges(axisLimits, rangeType=AxisRange):
-    location, axisRanges = {}, {}
-    for axisTag, value in axisLimits.items():
-        (minimum, default, maximum) = _expand(value)
-        if minimum == default == maximum:
-            location[axisTag] = default
-        else:
-            axisRanges[axisTag] = rangeType(minimum, maximum)
-    return location, axisRanges
-
-
-def parseLimits(limits):
+def parseLimits(limits: Iterable[str]) -> Dict[str, Optional[AxisTriple]]:
     result = {}
     for limitString in limits:
         match = re.match(
@@ -1280,20 +1383,11 @@ def parseLimits(limits):
             default = ubound
             ubound = strToFixedToFloat(match.group(5), precisionBits=16)
 
-        if lbound is not None:
-            if default is None:
-                assert lbound <= ubound
-            else:
-                assert lbound <= default <= ubound
-
-        if lbound == default == ubound:
-            result[tag] = lbound
-            continue
-        elif default is None:
-            result[tag] = AxisRange(lbound, ubound)
+        if all(v is None for v in (lbound, default, ubound)):
+            result[tag] = None
             continue
 
-        result[tag] = AxisTent(lbound, default, ubound)
+        result[tag] = AxisTriple(lbound, default, ubound)
 
     return result
 
