@@ -134,7 +134,7 @@ def NormalizedAxisRange(minimum, maximum):
     return NormalizedAxisTriple(minimum, None, maximum)
 
 
-@dataclasses.dataclass(frozen=True, order=True)
+@dataclasses.dataclass(frozen=True, order=True, repr=False)
 class AxisTriple(Sequence):
     """A triple of (min, default, max) axis values.
 
@@ -168,6 +168,11 @@ class AxisTriple(Sequence):
 
     def _replace(self, **kwargs):
         return dataclasses.replace(self, **kwargs)
+
+    def __repr__(self):
+        return (
+            f"({', '.join(format(v, 'g') if v is not None else 'None' for v in self)})"
+        )
 
     @classmethod
     def expand(
@@ -217,7 +222,7 @@ class AxisTriple(Sequence):
         return dataclasses.replace(self, default=default)
 
 
-@dataclasses.dataclass(frozen=True, order=True)
+@dataclasses.dataclass(frozen=True, order=True, repr=False)
 class NormalizedAxisTriple(AxisTriple):
     """A triple of (min, default, max) normalized axis values."""
 
@@ -247,6 +252,9 @@ class _BaseAxisLimits(Mapping[str, AxisTriple]):
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self._data!r})"
+
+    def __str__(self) -> str:
+        return str(self._data)
 
     def pinnedLocation(self) -> Dict[str, float]:
         """Return a location dict with only the pinned axes."""
