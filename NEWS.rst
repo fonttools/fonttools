@@ -1,3 +1,6 @@
+4.38.0 (released 2022-10-21)
+----------------------------
+
 - [varLib.instancer] Added support for L4 instancing, i.e. moving the default value of
   an axis while keeping it variable. Thanks Behdad! (#2728, #2861).  
   It's now also possible to restrict an axis min/max values beyond the current default
