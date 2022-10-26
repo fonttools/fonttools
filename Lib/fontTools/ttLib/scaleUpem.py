@@ -10,6 +10,7 @@ import fontTools.ttLib.tables.otBase as otBase
 import fontTools.ttLib.tables.otTables as otTables
 from fontTools.cffLib import VarStoreData
 import fontTools.cffLib.specializer as cffSpecializer
+from fontTools.varLib import builder  # for VarData.calculateNumShorts
 from fontTools.misc.fixedTools import otRound
 
 
@@ -149,7 +150,8 @@ def visit(visitor, obj, attr, kernTables):
 def _cff_scale(visitor, args):
     for i, arg in enumerate(args):
         if not isinstance(arg, list):
-            args[i] = visitor.scale(arg)
+            if not isinstance(arg, bytes):
+                args[i] = visitor.scale(arg)
         else:
             num_blends = arg[-1]
             _cff_scale(visitor, arg)
@@ -231,6 +233,7 @@ def visit(visitor, varData):
     for item in varData.Item:
         for i, v in enumerate(item):
             item[i] = visitor.scale(v)
+    varData.calculateNumShorts()
 
 
 # COLRv1

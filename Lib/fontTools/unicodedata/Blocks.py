@@ -4,13 +4,13 @@
 # Source: https://unicode.org/Public/UNIDATA/Blocks.txt
 # License: http://unicode.org/copyright.html#License
 #
-# Blocks-14.0.0.txt
-# Date: 2021-01-22, 23:29:00 GMT [KW]
-# © 2021 Unicode®, Inc.
-# For terms of use, see http://www.unicode.org/terms_of_use.html
+# Blocks-15.0.0.txt
+# Date: 2022-01-28, 20:58:00 GMT [KW]
+# © 2022 Unicode®, Inc.
+# For terms of use, see https://www.unicode.org/terms_of_use.html
 #
 # Unicode Character Database
-# For documentation, see http://www.unicode.org/reports/tr44/
+# For documentation, see https://www.unicode.org/reports/tr44/
 #
 # Format:
 # Start Code..End Code; Block Name
@@ -237,7 +237,7 @@ RANGES = [
     0x10D40,  # .. 0x10E5F ; No_Block
     0x10E60,  # .. 0x10E7F ; Rumi Numeral Symbols
     0x10E80,  # .. 0x10EBF ; Yezidi
-    0x10EC0,  # .. 0x10EFF ; No_Block
+    0x10EC0,  # .. 0x10EFF ; Arabic Extended-C
     0x10F00,  # .. 0x10F2F ; Old Sogdian
     0x10F30,  # .. 0x10F6F ; Sogdian
     0x10F70,  # .. 0x10FAF ; Old Uyghur
@@ -276,7 +276,8 @@ RANGES = [
     0x11A50,  # .. 0x11AAF ; Soyombo
     0x11AB0,  # .. 0x11ABF ; Unified Canadian Aboriginal Syllabics Extended-A
     0x11AC0,  # .. 0x11AFF ; Pau Cin Hau
-    0x11B00,  # .. 0x11BFF ; No_Block
+    0x11B00,  # .. 0x11B5F ; Devanagari Extended-A
+    0x11B60,  # .. 0x11BFF ; No_Block
     0x11C00,  # .. 0x11C6F ; Bhaiksuki
     0x11C70,  # .. 0x11CBF ; Marchen
     0x11CC0,  # .. 0x11CFF ; No_Block
@@ -284,7 +285,8 @@ RANGES = [
     0x11D60,  # .. 0x11DAF ; Gunjala Gondi
     0x11DB0,  # .. 0x11EDF ; No_Block
     0x11EE0,  # .. 0x11EFF ; Makasar
-    0x11F00,  # .. 0x11FAF ; No_Block
+    0x11F00,  # .. 0x11F5F ; Kawi
+    0x11F60,  # .. 0x11FAF ; No_Block
     0x11FB0,  # .. 0x11FBF ; Lisu Supplement
     0x11FC0,  # .. 0x11FFF ; Tamil Supplement
     0x12000,  # .. 0x123FF ; Cuneiform
@@ -293,8 +295,8 @@ RANGES = [
     0x12550,  # .. 0x12F8F ; No_Block
     0x12F90,  # .. 0x12FFF ; Cypro-Minoan
     0x13000,  # .. 0x1342F ; Egyptian Hieroglyphs
-    0x13430,  # .. 0x1343F ; Egyptian Hieroglyph Format Controls
-    0x13440,  # .. 0x143FF ; No_Block
+    0x13430,  # .. 0x1345F ; Egyptian Hieroglyph Format Controls
+    0x13460,  # .. 0x143FF ; No_Block
     0x14400,  # .. 0x1467F ; Anatolian Hieroglyphs
     0x14680,  # .. 0x167FF ; No_Block
     0x16800,  # .. 0x16A3F ; Bamum Supplement
@@ -327,7 +329,8 @@ RANGES = [
     0x1D000,  # .. 0x1D0FF ; Byzantine Musical Symbols
     0x1D100,  # .. 0x1D1FF ; Musical Symbols
     0x1D200,  # .. 0x1D24F ; Ancient Greek Musical Notation
-    0x1D250,  # .. 0x1D2DF ; No_Block
+    0x1D250,  # .. 0x1D2BF ; No_Block
+    0x1D2C0,  # .. 0x1D2DF ; Kaktovik Numerals
     0x1D2E0,  # .. 0x1D2FF ; Mayan Numerals
     0x1D300,  # .. 0x1D35F ; Tai Xuan Jing Symbols
     0x1D360,  # .. 0x1D37F ; Counting Rod Numerals
@@ -337,12 +340,15 @@ RANGES = [
     0x1DAB0,  # .. 0x1DEFF ; No_Block
     0x1DF00,  # .. 0x1DFFF ; Latin Extended-G
     0x1E000,  # .. 0x1E02F ; Glagolitic Supplement
-    0x1E030,  # .. 0x1E0FF ; No_Block
+    0x1E030,  # .. 0x1E08F ; Cyrillic Extended-D
+    0x1E090,  # .. 0x1E0FF ; No_Block
     0x1E100,  # .. 0x1E14F ; Nyiakeng Puachue Hmong
     0x1E150,  # .. 0x1E28F ; No_Block
     0x1E290,  # .. 0x1E2BF ; Toto
     0x1E2C0,  # .. 0x1E2FF ; Wancho
-    0x1E300,  # .. 0x1E7DF ; No_Block
+    0x1E300,  # .. 0x1E4CF ; No_Block
+    0x1E4D0,  # .. 0x1E4FF ; Nag Mundari
+    0x1E500,  # .. 0x1E7DF ; No_Block
     0x1E7E0,  # .. 0x1E7FF ; Ethiopic Extended-B
     0x1E800,  # .. 0x1E8DF ; Mende Kikakui
     0x1E8E0,  # .. 0x1E8FF ; No_Block
@@ -381,7 +387,8 @@ RANGES = [
     0x2F800,  # .. 0x2FA1F ; CJK Compatibility Ideographs Supplement
     0x2FA20,  # .. 0x2FFFF ; No_Block
     0x30000,  # .. 0x3134F ; CJK Unified Ideographs Extension G
-    0x31350,  # .. 0xDFFFF ; No_Block
+    0x31350,  # .. 0x323AF ; CJK Unified Ideographs Extension H
+    0x323B0,  # .. 0xDFFFF ; No_Block
     0xE0000,  # .. 0xE007F ; Tags
     0xE0080,  # .. 0xE00FF ; No_Block
     0xE0100,  # .. 0xE01EF ; Variation Selectors Supplement
@@ -611,7 +618,7 @@ VALUES = [
     'No_Block',                                          # 10D40..10E5F
     'Rumi Numeral Symbols',                              # 10E60..10E7F
     'Yezidi',                                            # 10E80..10EBF
-    'No_Block',                                          # 10EC0..10EFF
+    'Arabic Extended-C',                                 # 10EC0..10EFF
     'Old Sogdian',                                       # 10F00..10F2F
     'Sogdian',                                           # 10F30..10F6F
     'Old Uyghur',                                        # 10F70..10FAF
@@ -650,7 +657,8 @@ VALUES = [
     'Soyombo',                                           # 11A50..11AAF
     'Unified Canadian Aboriginal Syllabics Extended-A',  # 11AB0..11ABF
     'Pau Cin Hau',                                       # 11AC0..11AFF
-    'No_Block',                                          # 11B00..11BFF
+    'Devanagari Extended-A',                             # 11B00..11B5F
+    'No_Block',                                          # 11B60..11BFF
     'Bhaiksuki',                                         # 11C00..11C6F
     'Marchen',                                           # 11C70..11CBF
     'No_Block',                                          # 11CC0..11CFF
@@ -658,7 +666,8 @@ VALUES = [
     'Gunjala Gondi',                                     # 11D60..11DAF
     'No_Block',                                          # 11DB0..11EDF
     'Makasar',                                           # 11EE0..11EFF
-    'No_Block',                                          # 11F00..11FAF
+    'Kawi',                                              # 11F00..11F5F
+    'No_Block',                                          # 11F60..11FAF
     'Lisu Supplement',                                   # 11FB0..11FBF
     'Tamil Supplement',                                  # 11FC0..11FFF
     'Cuneiform',                                         # 12000..123FF
@@ -667,8 +676,8 @@ VALUES = [
     'No_Block',                                          # 12550..12F8F
     'Cypro-Minoan',                                      # 12F90..12FFF
     'Egyptian Hieroglyphs',                              # 13000..1342F
-    'Egyptian Hieroglyph Format Controls',               # 13430..1343F
-    'No_Block',                                          # 13440..143FF
+    'Egyptian Hieroglyph Format Controls',               # 13430..1345F
+    'No_Block',                                          # 13460..143FF
     'Anatolian Hieroglyphs',                             # 14400..1467F
     'No_Block',                                          # 14680..167FF
     'Bamum Supplement',                                  # 16800..16A3F
@@ -701,7 +710,8 @@ VALUES = [
     'Byzantine Musical Symbols',                         # 1D000..1D0FF
     'Musical Symbols',                                   # 1D100..1D1FF
     'Ancient Greek Musical Notation',                    # 1D200..1D24F
-    'No_Block',                                          # 1D250..1D2DF
+    'No_Block',                                          # 1D250..1D2BF
+    'Kaktovik Numerals',                                 # 1D2C0..1D2DF
     'Mayan Numerals',                                    # 1D2E0..1D2FF
     'Tai Xuan Jing Symbols',                             # 1D300..1D35F
     'Counting Rod Numerals',                             # 1D360..1D37F
@@ -711,12 +721,15 @@ VALUES = [
     'No_Block',                                          # 1DAB0..1DEFF
     'Latin Extended-G',                                  # 1DF00..1DFFF
     'Glagolitic Supplement',                             # 1E000..1E02F
-    'No_Block',                                          # 1E030..1E0FF
+    'Cyrillic Extended-D',                               # 1E030..1E08F
+    'No_Block',                                          # 1E090..1E0FF
     'Nyiakeng Puachue Hmong',                            # 1E100..1E14F
     'No_Block',                                          # 1E150..1E28F
     'Toto',                                              # 1E290..1E2BF
     'Wancho',                                            # 1E2C0..1E2FF
-    'No_Block',                                          # 1E300..1E7DF
+    'No_Block',                                          # 1E300..1E4CF
+    'Nag Mundari',                                       # 1E4D0..1E4FF
+    'No_Block',                                          # 1E500..1E7DF
     'Ethiopic Extended-B',                               # 1E7E0..1E7FF
     'Mende Kikakui',                                     # 1E800..1E8DF
     'No_Block',                                          # 1E8E0..1E8FF
@@ -755,7 +768,8 @@ VALUES = [
     'CJK Compatibility Ideographs Supplement',           # 2F800..2FA1F
     'No_Block',                                          # 2FA20..2FFFF
     'CJK Unified Ideographs Extension G',                # 30000..3134F
-    'No_Block',                                          # 31350..DFFFF
+    'CJK Unified Ideographs Extension H',                # 31350..323AF
+    'No_Block',                                          # 323B0..DFFFF
     'Tags',                                              # E0000..E007F
     'No_Block',                                          # E0080..E00FF
     'Variation Selectors Supplement',                    # E0100..E01EF

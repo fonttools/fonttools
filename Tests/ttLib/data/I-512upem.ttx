@@ -2277,7 +2277,7 @@
       </VarData>
       <VarData index="1">
         <!-- ItemCount=1 -->
-        <NumShorts value="7"/>
+        <NumShorts value="0"/>
         <!-- VarRegionCount=25 -->
         <VarRegionIndex index="0" value="1"/>
         <VarRegionIndex index="1" value="5"/>

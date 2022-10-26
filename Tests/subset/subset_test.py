@@ -1244,6 +1244,52 @@ def colrv1_path(tmp_path):
 
     return output_path
 
+@pytest.fixture
+def colrv1_cpalv1_path(colrv1_path):
+    # upgrade CPAL from v0 to v1 by adding labels
+    font = TTFont(colrv1_path)
+    fb = FontBuilder(font=font)
+    fb.setupCPAL(
+        [
+            [
+                (1.0, 0.0, 0.0, 1.0),  # red
+                (0.0, 1.0, 0.0, 1.0),  # green
+                (0.0, 0.0, 1.0, 1.0),  # blue
+            ],
+        ],
+        paletteLabels=["test palette"],
+        paletteEntryLabels=["first color", "second color", "third color"]
+    )
+
+    output_path = colrv1_path.parent / "TestCOLRv1CPALv1.ttf"
+    fb.save(output_path)
+
+    return output_path
+
+@pytest.fixture
+def colrv1_cpalv1_share_nameID_path(colrv1_path):
+    font = TTFont(colrv1_path)
+    fb = FontBuilder(font=font)
+    fb.setupCPAL(
+        [
+            [
+                (1.0, 0.0, 0.0, 1.0),  # red
+                (0.0, 1.0, 0.0, 1.0),  # green
+                (0.0, 0.0, 1.0, 1.0),  # blue
+            ],
+        ],
+        paletteLabels=["test palette"],
+        paletteEntryLabels=["first color", "second color", "third color"]
+    )
+
+    # Set the name ID of the first color to use nameID 1 = familyName = "TestCOLRv1"
+    fb.font["CPAL"].paletteEntryLabels[0] = 1
+
+    output_path = colrv1_path.parent / "TestCOLRv1CPALv1.ttf"
+    fb.save(output_path)
+
+    return output_path
+
 
 def test_subset_COLRv1_and_CPAL(colrv1_path):
     subset_path = colrv1_path.parent / (colrv1_path.name + ".subset")
@@ -1320,6 +1366,103 @@ def test_subset_COLRv1_and_CPAL(colrv1_path):
         (0.0, 1.0, 0.0, 1.0),  # green
         (0.0, 0.0, 1.0, 1.0),  # blue
     ]
+
+
+def test_subset_COLRv1_and_CPALv1(colrv1_cpalv1_path):
+    subset_path = colrv1_cpalv1_path.parent / (colrv1_cpalv1_path.name + ".subset")
+
+    subset.main(
+        [
+            str(colrv1_cpalv1_path),
+            "--glyph-names",
+            f"--output-file={subset_path}",
+            "--unicodes=E002,E003,E004",
+        ]
+    )
+    subset_font = TTFont(subset_path)
+
+    assert "CPAL" in subset_font
+    cpal = subset_font["CPAL"]
+    name_table = subset_font["name"]
+    assert [name_table.getDebugName(name_id) for name_id in cpal.paletteEntryLabels] == [
+        # "first color",  # The first color was pruned
+        "second color",
+        "third color",
+    ]
+    # check that the "first color" name is dropped from name table
+    font = TTFont(colrv1_cpalv1_path)
+
+    first_color_nameID = None
+    for n in font["name"].names:
+        if n.toUnicode() == "first color":
+            first_color_nameID = n.nameID
+            break
+    assert first_color_nameID is not None
+    assert all(n.nameID != first_color_nameID for n in name_table.names)
+
+
+def test_subset_COLRv1_and_CPALv1_keep_nameID(colrv1_cpalv1_path):
+    subset_path = colrv1_cpalv1_path.parent / (colrv1_cpalv1_path.name + ".subset")
+
+    # figure out the name ID of first color so we can keep it
+    font = TTFont(colrv1_cpalv1_path)
+
+    first_color_nameID = None
+    for n in font["name"].names:
+        if n.toUnicode() == "first color":
+            first_color_nameID = n.nameID
+            break
+    assert first_color_nameID is not None
+
+    subset.main(
+        [
+            str(colrv1_cpalv1_path),
+            "--glyph-names",
+            f"--output-file={subset_path}",
+            "--unicodes=E002,E003,E004",
+            f"--name-IDs={first_color_nameID}",
+
+        ]
+    )
+    subset_font = TTFont(subset_path)
+
+    assert "CPAL" in subset_font
+    cpal = subset_font["CPAL"]
+    name_table = subset_font["name"]
+    assert [name_table.getDebugName(name_id) for name_id in cpal.paletteEntryLabels] == [
+        # "first color",  # The first color was pruned
+        "second color",
+        "third color",
+    ]
+
+    # Check that the name ID is kept
+    assert any(n.nameID == first_color_nameID for n in name_table.names)
+
+
+def test_subset_COLRv1_and_CPALv1_share_nameID(colrv1_cpalv1_share_nameID_path):
+    subset_path = colrv1_cpalv1_share_nameID_path.parent / (colrv1_cpalv1_share_nameID_path.name + ".subset")
+
+    subset.main(
+        [
+            str(colrv1_cpalv1_share_nameID_path),
+            "--glyph-names",
+            f"--output-file={subset_path}",
+            "--unicodes=E002,E003,E004",
+        ]
+    )
+    subset_font = TTFont(subset_path)
+
+    assert "CPAL" in subset_font
+    cpal = subset_font["CPAL"]
+    name_table = subset_font["name"]
+    assert [name_table.getDebugName(name_id) for name_id in cpal.paletteEntryLabels] == [
+        # "first color",  # The first color was pruned
+        "second color",
+        "third color",
+    ]
+
+    # Check that the name ID 1 is kept
+    assert any(n.nameID == 1 for n in name_table.names)
 
 
 def test_subset_COLRv1_and_CPAL_drop_empty(colrv1_path):
