@@ -195,9 +195,8 @@ class SVGPathPen(BasePen):
         >>> pen = SVGPathPen(None)
         >>> pen.endPath()
         >>> pen._commands
-        ['Z']
+        []
         """
-        self._closePath()
         self._lastCommand = None
         self._lastX = self._lastY = None
 
