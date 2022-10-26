@@ -211,6 +211,9 @@ def instantiateVariableFont(varfont, location, inplace=False, overlap=True):
 	else:
 		glyf = None
 
+	if 'DSIG' in varfont:
+		del varfont['DSIG']
+
 	if 'cvar' in varfont:
 		log.info("Mutating cvt/cvar tables")
 		cvar = varfont['cvar']
