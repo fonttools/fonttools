@@ -16,14 +16,13 @@ from io import BytesIO
 from types import SimpleNamespace
 from fontTools.misc.textTools import Tag
 from fontTools.misc import sstruct
-from fontTools.ttLib import TTLibError
+from fontTools.ttLib import TTLibError, TTLibFileIsCollectionError
 import struct
 from collections import OrderedDict
 import logging
 
 
 log = logging.getLogger(__name__)
-
 
 class SFNTReader(object):
 
@@ -57,7 +56,7 @@ class SFNTReader(object):
 			header = readTTCHeader(self.file)
 			numFonts = header.numFonts
 			if not 0 <= fontNumber < numFonts:
-				raise TTLibError("specify a font number between 0 and %d (inclusive)" % (numFonts - 1))
+				raise TTLibFileIsCollectionError("specify a font number between 0 and %d (inclusive)" % (numFonts - 1))
 			self.numFonts = numFonts
 			self.file.seek(header.offsetTable[fontNumber])
 			data = self.file.read(sfntDirectorySize)
