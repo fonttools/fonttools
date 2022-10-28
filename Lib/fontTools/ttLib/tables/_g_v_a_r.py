@@ -1,3 +1,5 @@
+from collections import UserDict, deque
+from functools import partial
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
 from . import DefaultTable
@@ -35,6 +37,18 @@ GVAR_HEADER_FORMAT = """
 """
 
 GVAR_HEADER_SIZE = sstruct.calcsize(GVAR_HEADER_FORMAT)
+
+class _LazyDict(UserDict):
+	def __init__(self, data):
+		super().__init__()
+		self.data = data
+
+	def __getitem__(self, k):
+		v = self.data[k]
+		if callable(v):
+			v = v()
+			self.data[k] = v
+		return v
 
 
 class table__g_v_a_r(DefaultTable.DefaultTable):
@@ -97,23 +111,29 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		offsets = self.decompileOffsets_(data[GVAR_HEADER_SIZE:], tableFormat=(self.flags & 1), glyphCount=self.glyphCount)
 		sharedCoords = tv.decompileSharedTuples(
 			axisTags, self.sharedTupleCount, data, self.offsetToSharedTuples)
-		self.variations = {}
+		variations = {}
 		offsetToData = self.offsetToGlyphVariationData
 		glyf = ttFont['glyf']
-		for i in range(self.glyphCount):
-			glyphName = glyphs[i]
+
+		def decompileVarGlyph(glyphName, gid):
 			glyph = glyf[glyphName]
 			numPointsInGlyph = self.getNumPoints_(glyph)
-			gvarData = data[offsetToData + offsets[i] : offsetToData + offsets[i + 1]]
-			try:
-				self.variations[glyphName] = decompileGlyph_(
-					numPointsInGlyph, sharedCoords, axisTags, gvarData)
-			except Exception:
-				log.error(
-					"Failed to decompile deltas for glyph '%s' (%d points)",
-					glyphName, numPointsInGlyph,
-				)
-				raise
+			gvarData = data[offsetToData + offsets[gid] : offsetToData + offsets[gid + 1]]
+			return decompileGlyph_(numPointsInGlyph, sharedCoords, axisTags, gvarData)
+
+		for gid in range(self.glyphCount):
+			glyphName = glyphs[gid]
+			variations[glyphName] = partial(decompileVarGlyph, glyphName, gid)
+		self.variations = _LazyDict(variations)
+
+		if ttFont.lazy is False: # Be lazy for None and True
+			self.ensureDecompiled()
+
+	def ensureDecompiled(self, recurse=False):
+		# The recurse argument is unused, but part of the signature of
+		# ensureDecompiled across the library.
+		# Use a zero-length deque to consume the lazy dict
+		deque(self.variations.values(), maxlen=0)
 
 	@staticmethod
 	def decompileOffsets_(data, tableFormat, glyphCount):

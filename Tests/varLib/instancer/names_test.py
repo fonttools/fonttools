@@ -115,7 +115,7 @@ def _test_name_records(varfont, expected, isNonRIBBI, platforms=[0x409]):
         ),
         # Condensed with unpinned weights
         (
-            {"wdth": 79, "wght": instancer.AxisRange(400, 900)},
+            {"wdth": 79, "wght": (400, 900)},
             {
                 (1, 3, 1, 0x409): "Test Variable Font Condensed",
                 (2, 3, 1, 0x409): "Regular",
@@ -123,6 +123,19 @@ def _test_name_records(varfont, expected, isNonRIBBI, platforms=[0x409]):
                 (6, 3, 1, 0x409): "TestVariableFont-Condensed",
                 (16, 3, 1, 0x409): "Test Variable Font",
                 (17, 3, 1, 0x409): "Condensed",
+            },
+            True,
+        ),
+        # Restrict weight and move default, new minimum (500) > old default (400)
+        (
+            {"wght": (500, 900)},
+            {
+                (1, 3, 1, 0x409): "Test Variable Font Medium",
+                (2, 3, 1, 0x409): "Regular",
+                (3, 3, 1, 0x409): "2.001;GOOG;TestVariableFont-Medium",
+                (6, 3, 1, 0x409): "TestVariableFont-Medium",
+                (16, 3, 1, 0x409): "Test Variable Font",
+                (17, 3, 1, 0x409): "Medium",
             },
             True,
         ),
@@ -215,7 +228,7 @@ def test_updateNameTable_with_multilingual_names(varfont, limits, expected, isNo
 
 
 def test_updateNameTable_missing_axisValues(varfont):
-    with pytest.raises(ValueError, match="Cannot find Axis Values \['wght=200'\]"):
+    with pytest.raises(ValueError, match="Cannot find Axis Values {'wght': 200}"):
         instancer.names.updateNameTable(varfont, {"wght": 200})
 
 
@@ -257,7 +270,7 @@ def test_updateNameTable_missing_stat(varfont):
 def test_updateNameTable_vf_with_italic_attribute(
     varfont, limits, expected, isNonRIBBI
 ):
-    font_link_axisValue = varfont["STAT"].table.AxisValueArray.AxisValue[4]
+    font_link_axisValue = varfont["STAT"].table.AxisValueArray.AxisValue[5]
     # Unset ELIDABLE_AXIS_VALUE_NAME flag
     font_link_axisValue.Flags &= ~instancer.names.ELIDABLE_AXIS_VALUE_NAME
     font_link_axisValue.ValueNameID = 294  # Roman --> Italic

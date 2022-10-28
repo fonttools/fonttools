@@ -722,8 +722,11 @@ def _add_COLR(font, model, master_fonts, axisTags, colr_layer_reuse=True):
 	if store:
 		mapping = store.optimize()
 		colr.VarStore = store
+		# don't add DeltaSetIndexMap for identity mapping
+		colr.VarIndexMap = None
 		varIdxes = [mapping[v] for v in merger.varIdxes]
-		colr.VarIndexMap = builder.buildDeltaSetIndexMap(varIdxes)
+		if any(i != varIdxes[i] for i in range(len(varIdxes))):
+			colr.VarIndexMap = builder.buildDeltaSetIndexMap(varIdxes)
 
 
 def load_designspace(designspace):
@@ -912,7 +915,8 @@ def build_many(
 				vfDoc,
 				master_finder,
 				exclude=list(exclude) + ["STAT"],
-				optimize=optimize
+				optimize=optimize,
+				colr_layer_reuse=colr_layer_reuse,
 			)[0]
 			if "STAT" not in exclude:
 				buildVFStatTable(vf, designspace, name)
@@ -954,6 +958,9 @@ def build(
 
 	# Copy the base master to work from it
 	vf = deepcopy(master_fonts[ds.base_idx])
+
+	if "DSIG" in vf:
+		del vf["DSIG"]
 
 	# TODO append masters as named-instances as well; needs .designspace change.
 	fvar = _add_fvar(vf, ds.axes, ds.instances)

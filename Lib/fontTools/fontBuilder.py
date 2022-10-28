@@ -391,7 +391,7 @@ class FontBuilder(object):
         sequence, but this is not policed.
         """
         subTables = []
-        highestUnicode = max(cmapping)
+        highestUnicode = max(cmapping) if cmapping else 0
         if highestUnicode > 0xFFFF:
             cmapping_3_1 = dict((k, v) for k, v in cmapping.items() if k < 0x10000)
             subTable_3_10 = buildCmapSubTable(cmapping, 12, 3, 10)

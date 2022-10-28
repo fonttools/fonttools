@@ -338,10 +338,14 @@ class EblcIndexSubTable(object):
 		# Allow lazy decompile.
 		if attr[:2] == '__':
 			raise AttributeError(attr)
-		if not hasattr(self, "data"):
+		if attr == "data":
 			raise AttributeError(attr)
 		self.decompile()
 		return getattr(self, attr)
+
+	def ensureDecompiled(self, recurse=False):
+		if hasattr(self, "data"):
+			self.decompile()
 
 	# This method just takes care of the indexSubHeader. Implementing subclasses
 	# should call it to compile the indexSubHeader and then continue compiling

@@ -221,23 +221,6 @@ Saving
     path = "myprototype.designspace"
     doc.write(path)
 
-************************
-Reading old designspaces
-************************
-
-Old designspace files might not contain ``axes`` definitions. This is
-how you reconstruct the axes from the extremes of the source locations
-
-.. code:: python
-
-    doc.checkAxes()
-
-This is how you check the default font.
-
-.. code:: python
-
-    doc.checkDefault()
-
 ***********
 Generating?
 ***********

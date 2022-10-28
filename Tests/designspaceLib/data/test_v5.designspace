@@ -21,6 +21,13 @@
         <label uservalue="600" userminimum="450" usermaximum="650" name="Semi Bold"/>
         <label uservalue="700" userminimum="650" usermaximum="850" name="Bold"/>
         <label uservalue="900" userminimum="850" usermaximum="900" name="Black"/>
+        <!--
+          Add "recursive" linked user values, see:
+          https://github.com/fonttools/fonttools/issues/2852
+          https://github.com/fonttools/fonttools/discussions/2790
+        -->
+        <label uservalue="400" name="Regular" elidable="true" linkeduservalue="700"/>
+        <label uservalue="700" name="Bold" linkeduservalue="400"/>
       </labels>
     </axis>
 

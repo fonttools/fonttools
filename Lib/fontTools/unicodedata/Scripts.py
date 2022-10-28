@@ -4,14 +4,14 @@
 # Source: https://unicode.org/Public/UNIDATA/Scripts.txt
 # License: http://unicode.org/copyright.html#License
 #
-# Scripts-14.0.0.txt
-# Date: 2021-07-10, 00:35:31 GMT
-# © 2021 Unicode®, Inc.
+# Scripts-15.0.0.txt
+# Date: 2022-04-26, 23:15:02 GMT
+# © 2022 Unicode®, Inc.
 # Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
-# For terms of use, see http://www.unicode.org/terms_of_use.html
+# For terms of use, see https://www.unicode.org/terms_of_use.html
 #
 # Unicode Character Database
-#   For documentation, see http://www.unicode.org/reports/tr44/
+#   For documentation, see https://www.unicode.org/reports/tr44/
 # For more information, see:
 #   UAX #24, Unicode Script Property: https://www.unicode.org/reports/tr24/
 #     Especially the sections:
@@ -325,8 +325,8 @@ RANGES = [
     0x0CE4,  # .. 0x0CE5 ; Unknown
     0x0CE6,  # .. 0x0CEF ; Kannada
     0x0CF0,  # .. 0x0CF0 ; Unknown
-    0x0CF1,  # .. 0x0CF2 ; Kannada
-    0x0CF3,  # .. 0x0CFF ; Unknown
+    0x0CF1,  # .. 0x0CF3 ; Kannada
+    0x0CF4,  # .. 0x0CFF ; Unknown
     0x0D00,  # .. 0x0D0C ; Malayalam
     0x0D0D,  # .. 0x0D0D ; Unknown
     0x0D0E,  # .. 0x0D10 ; Malayalam
@@ -386,8 +386,8 @@ RANGES = [
     0x0EC5,  # .. 0x0EC5 ; Unknown
     0x0EC6,  # .. 0x0EC6 ; Lao
     0x0EC7,  # .. 0x0EC7 ; Unknown
-    0x0EC8,  # .. 0x0ECD ; Lao
-    0x0ECE,  # .. 0x0ECF ; Unknown
+    0x0EC8,  # .. 0x0ECE ; Lao
+    0x0ECF,  # .. 0x0ECF ; Unknown
     0x0ED0,  # .. 0x0ED9 ; Lao
     0x0EDA,  # .. 0x0EDB ; Unknown
     0x0EDC,  # .. 0x0EDF ; Lao
@@ -1086,7 +1086,8 @@ RANGES = [
     0x10EAB,  # .. 0x10EAD ; Yezidi
     0x10EAE,  # .. 0x10EAF ; Unknown
     0x10EB0,  # .. 0x10EB1 ; Yezidi
-    0x10EB2,  # .. 0x10EFF ; Unknown
+    0x10EB2,  # .. 0x10EFC ; Unknown
+    0x10EFD,  # .. 0x10EFF ; Arabic
     0x10F00,  # .. 0x10F27 ; Old_Sogdian
     0x10F28,  # .. 0x10F2F ; Unknown
     0x10F30,  # .. 0x10F59 ; Sogdian
@@ -1122,8 +1123,8 @@ RANGES = [
     0x111F5,  # .. 0x111FF ; Unknown
     0x11200,  # .. 0x11211 ; Khojki
     0x11212,  # .. 0x11212 ; Unknown
-    0x11213,  # .. 0x1123E ; Khojki
-    0x1123F,  # .. 0x1127F ; Unknown
+    0x11213,  # .. 0x11241 ; Khojki
+    0x11242,  # .. 0x1127F ; Unknown
     0x11280,  # .. 0x11286 ; Multani
     0x11287,  # .. 0x11287 ; Unknown
     0x11288,  # .. 0x11288 ; Multani
@@ -1230,7 +1231,9 @@ RANGES = [
     0x11AA3,  # .. 0x11AAF ; Unknown
     0x11AB0,  # .. 0x11ABF ; Canadian_Aboriginal
     0x11AC0,  # .. 0x11AF8 ; Pau_Cin_Hau
-    0x11AF9,  # .. 0x11BFF ; Unknown
+    0x11AF9,  # .. 0x11AFF ; Unknown
+    0x11B00,  # .. 0x11B09 ; Devanagari
+    0x11B0A,  # .. 0x11BFF ; Unknown
     0x11C00,  # .. 0x11C08 ; Bhaiksuki
     0x11C09,  # .. 0x11C09 ; Unknown
     0x11C0A,  # .. 0x11C36 ; Bhaiksuki
@@ -1272,7 +1275,13 @@ RANGES = [
     0x11DA0,  # .. 0x11DA9 ; Gunjala_Gondi
     0x11DAA,  # .. 0x11EDF ; Unknown
     0x11EE0,  # .. 0x11EF8 ; Makasar
-    0x11EF9,  # .. 0x11FAF ; Unknown
+    0x11EF9,  # .. 0x11EFF ; Unknown
+    0x11F00,  # .. 0x11F10 ; Kawi
+    0x11F11,  # .. 0x11F11 ; Unknown
+    0x11F12,  # .. 0x11F3A ; Kawi
+    0x11F3B,  # .. 0x11F3D ; Unknown
+    0x11F3E,  # .. 0x11F59 ; Kawi
+    0x11F5A,  # .. 0x11FAF ; Unknown
     0x11FB0,  # .. 0x11FB0 ; Lisu
     0x11FB1,  # .. 0x11FBF ; Unknown
     0x11FC0,  # .. 0x11FF1 ; Tamil
@@ -1288,10 +1297,8 @@ RANGES = [
     0x12544,  # .. 0x12F8F ; Unknown
     0x12F90,  # .. 0x12FF2 ; Cypro_Minoan
     0x12FF3,  # .. 0x12FFF ; Unknown
-    0x13000,  # .. 0x1342E ; Egyptian_Hieroglyphs
-    0x1342F,  # .. 0x1342F ; Unknown
-    0x13430,  # .. 0x13438 ; Egyptian_Hieroglyphs
-    0x13439,  # .. 0x143FF ; Unknown
+    0x13000,  # .. 0x13455 ; Egyptian_Hieroglyphs
+    0x13456,  # .. 0x143FF ; Unknown
     0x14400,  # .. 0x14646 ; Anatolian_Hieroglyphs
     0x14647,  # .. 0x167FF ; Unknown
     0x16800,  # .. 0x16A38 ; Bamum
@@ -1350,9 +1357,13 @@ RANGES = [
     0x1B000,  # .. 0x1B000 ; Katakana
     0x1B001,  # .. 0x1B11F ; Hiragana
     0x1B120,  # .. 0x1B122 ; Katakana
-    0x1B123,  # .. 0x1B14F ; Unknown
+    0x1B123,  # .. 0x1B131 ; Unknown
+    0x1B132,  # .. 0x1B132 ; Hiragana
+    0x1B133,  # .. 0x1B14F ; Unknown
     0x1B150,  # .. 0x1B152 ; Hiragana
-    0x1B153,  # .. 0x1B163 ; Unknown
+    0x1B153,  # .. 0x1B154 ; Unknown
+    0x1B155,  # .. 0x1B155 ; Katakana
+    0x1B156,  # .. 0x1B163 ; Unknown
     0x1B164,  # .. 0x1B167 ; Katakana
     0x1B168,  # .. 0x1B16F ; Unknown
     0x1B170,  # .. 0x1B2FB ; Nushu
@@ -1389,7 +1400,9 @@ RANGES = [
     0x1D1AE,  # .. 0x1D1EA ; Common
     0x1D1EB,  # .. 0x1D1FF ; Unknown
     0x1D200,  # .. 0x1D245 ; Greek
-    0x1D246,  # .. 0x1D2DF ; Unknown
+    0x1D246,  # .. 0x1D2BF ; Unknown
+    0x1D2C0,  # .. 0x1D2D3 ; Common
+    0x1D2D4,  # .. 0x1D2DF ; Unknown
     0x1D2E0,  # .. 0x1D2F3 ; Common
     0x1D2F4,  # .. 0x1D2FF ; Unknown
     0x1D300,  # .. 0x1D356 ; Common
@@ -1444,7 +1457,9 @@ RANGES = [
     0x1DAA1,  # .. 0x1DAAF ; SignWriting
     0x1DAB0,  # .. 0x1DEFF ; Unknown
     0x1DF00,  # .. 0x1DF1E ; Latin
-    0x1DF1F,  # .. 0x1DFFF ; Unknown
+    0x1DF1F,  # .. 0x1DF24 ; Unknown
+    0x1DF25,  # .. 0x1DF2A ; Latin
+    0x1DF2B,  # .. 0x1DFFF ; Unknown
     0x1E000,  # .. 0x1E006 ; Glagolitic
     0x1E007,  # .. 0x1E007 ; Unknown
     0x1E008,  # .. 0x1E018 ; Glagolitic
@@ -1454,7 +1469,11 @@ RANGES = [
     0x1E023,  # .. 0x1E024 ; Glagolitic
     0x1E025,  # .. 0x1E025 ; Unknown
     0x1E026,  # .. 0x1E02A ; Glagolitic
-    0x1E02B,  # .. 0x1E0FF ; Unknown
+    0x1E02B,  # .. 0x1E02F ; Unknown
+    0x1E030,  # .. 0x1E06D ; Cyrillic
+    0x1E06E,  # .. 0x1E08E ; Unknown
+    0x1E08F,  # .. 0x1E08F ; Cyrillic
+    0x1E090,  # .. 0x1E0FF ; Unknown
     0x1E100,  # .. 0x1E12C ; Nyiakeng_Puachue_Hmong
     0x1E12D,  # .. 0x1E12F ; Unknown
     0x1E130,  # .. 0x1E13D ; Nyiakeng_Puachue_Hmong
@@ -1468,7 +1487,9 @@ RANGES = [
     0x1E2C0,  # .. 0x1E2F9 ; Wancho
     0x1E2FA,  # .. 0x1E2FE ; Unknown
     0x1E2FF,  # .. 0x1E2FF ; Wancho
-    0x1E300,  # .. 0x1E7DF ; Unknown
+    0x1E300,  # .. 0x1E4CF ; Unknown
+    0x1E4D0,  # .. 0x1E4F9 ; Nag_Mundari
+    0x1E4FA,  # .. 0x1E7DF ; Unknown
     0x1E7E0,  # .. 0x1E7E6 ; Ethiopic
     0x1E7E7,  # .. 0x1E7E7 ; Unknown
     0x1E7E8,  # .. 0x1E7EB ; Ethiopic
@@ -1586,15 +1607,15 @@ RANGES = [
     0x1F260,  # .. 0x1F265 ; Common
     0x1F266,  # .. 0x1F2FF ; Unknown
     0x1F300,  # .. 0x1F6D7 ; Common
-    0x1F6D8,  # .. 0x1F6DC ; Unknown
-    0x1F6DD,  # .. 0x1F6EC ; Common
+    0x1F6D8,  # .. 0x1F6DB ; Unknown
+    0x1F6DC,  # .. 0x1F6EC ; Common
     0x1F6ED,  # .. 0x1F6EF ; Unknown
     0x1F6F0,  # .. 0x1F6FC ; Common
     0x1F6FD,  # .. 0x1F6FF ; Unknown
-    0x1F700,  # .. 0x1F773 ; Common
-    0x1F774,  # .. 0x1F77F ; Unknown
-    0x1F780,  # .. 0x1F7D8 ; Common
-    0x1F7D9,  # .. 0x1F7DF ; Unknown
+    0x1F700,  # .. 0x1F776 ; Common
+    0x1F777,  # .. 0x1F77A ; Unknown
+    0x1F77B,  # .. 0x1F7D9 ; Common
+    0x1F7DA,  # .. 0x1F7DF ; Unknown
     0x1F7E0,  # .. 0x1F7EB ; Common
     0x1F7EC,  # .. 0x1F7EF ; Unknown
     0x1F7F0,  # .. 0x1F7F0 ; Common
@@ -1615,24 +1636,20 @@ RANGES = [
     0x1FA54,  # .. 0x1FA5F ; Unknown
     0x1FA60,  # .. 0x1FA6D ; Common
     0x1FA6E,  # .. 0x1FA6F ; Unknown
-    0x1FA70,  # .. 0x1FA74 ; Common
-    0x1FA75,  # .. 0x1FA77 ; Unknown
-    0x1FA78,  # .. 0x1FA7C ; Common
+    0x1FA70,  # .. 0x1FA7C ; Common
     0x1FA7D,  # .. 0x1FA7F ; Unknown
-    0x1FA80,  # .. 0x1FA86 ; Common
-    0x1FA87,  # .. 0x1FA8F ; Unknown
-    0x1FA90,  # .. 0x1FAAC ; Common
-    0x1FAAD,  # .. 0x1FAAF ; Unknown
-    0x1FAB0,  # .. 0x1FABA ; Common
-    0x1FABB,  # .. 0x1FABF ; Unknown
-    0x1FAC0,  # .. 0x1FAC5 ; Common
-    0x1FAC6,  # .. 0x1FACF ; Unknown
-    0x1FAD0,  # .. 0x1FAD9 ; Common
-    0x1FADA,  # .. 0x1FADF ; Unknown
-    0x1FAE0,  # .. 0x1FAE7 ; Common
-    0x1FAE8,  # .. 0x1FAEF ; Unknown
-    0x1FAF0,  # .. 0x1FAF6 ; Common
-    0x1FAF7,  # .. 0x1FAFF ; Unknown
+    0x1FA80,  # .. 0x1FA88 ; Common
+    0x1FA89,  # .. 0x1FA8F ; Unknown
+    0x1FA90,  # .. 0x1FABD ; Common
+    0x1FABE,  # .. 0x1FABE ; Unknown
+    0x1FABF,  # .. 0x1FAC5 ; Common
+    0x1FAC6,  # .. 0x1FACD ; Unknown
+    0x1FACE,  # .. 0x1FADB ; Common
+    0x1FADC,  # .. 0x1FADF ; Unknown
+    0x1FAE0,  # .. 0x1FAE8 ; Common
+    0x1FAE9,  # .. 0x1FAEF ; Unknown
+    0x1FAF0,  # .. 0x1FAF8 ; Common
+    0x1FAF9,  # .. 0x1FAFF ; Unknown
     0x1FB00,  # .. 0x1FB92 ; Common
     0x1FB93,  # .. 0x1FB93 ; Unknown
     0x1FB94,  # .. 0x1FBCA ; Common
@@ -1641,8 +1658,8 @@ RANGES = [
     0x1FBFA,  # .. 0x1FFFF ; Unknown
     0x20000,  # .. 0x2A6DF ; Han
     0x2A6E0,  # .. 0x2A6FF ; Unknown
-    0x2A700,  # .. 0x2B738 ; Han
-    0x2B739,  # .. 0x2B73F ; Unknown
+    0x2A700,  # .. 0x2B739 ; Han
+    0x2B73A,  # .. 0x2B73F ; Unknown
     0x2B740,  # .. 0x2B81D ; Han
     0x2B81E,  # .. 0x2B81F ; Unknown
     0x2B820,  # .. 0x2CEA1 ; Han
@@ -1652,7 +1669,9 @@ RANGES = [
     0x2F800,  # .. 0x2FA1D ; Han
     0x2FA1E,  # .. 0x2FFFF ; Unknown
     0x30000,  # .. 0x3134A ; Han
-    0x3134B,  # .. 0xE0000 ; Unknown
+    0x3134B,  # .. 0x3134F ; Unknown
+    0x31350,  # .. 0x323AF ; Han
+    0x323B0,  # .. 0xE0000 ; Unknown
     0xE0001,  # .. 0xE0001 ; Common
     0xE0002,  # .. 0xE001F ; Unknown
     0xE0020,  # .. 0xE007F ; Common
@@ -1966,8 +1985,8 @@ VALUES = [
     'Zzzz',  # 0CE4..0CE5 ; Unknown
     'Knda',  # 0CE6..0CEF ; Kannada
     'Zzzz',  # 0CF0..0CF0 ; Unknown
-    'Knda',  # 0CF1..0CF2 ; Kannada
-    'Zzzz',  # 0CF3..0CFF ; Unknown
+    'Knda',  # 0CF1..0CF3 ; Kannada
+    'Zzzz',  # 0CF4..0CFF ; Unknown
     'Mlym',  # 0D00..0D0C ; Malayalam
     'Zzzz',  # 0D0D..0D0D ; Unknown
     'Mlym',  # 0D0E..0D10 ; Malayalam
@@ -2027,8 +2046,8 @@ VALUES = [
     'Zzzz',  # 0EC5..0EC5 ; Unknown
     'Laoo',  # 0EC6..0EC6 ; Lao
     'Zzzz',  # 0EC7..0EC7 ; Unknown
-    'Laoo',  # 0EC8..0ECD ; Lao
-    'Zzzz',  # 0ECE..0ECF ; Unknown
+    'Laoo',  # 0EC8..0ECE ; Lao
+    'Zzzz',  # 0ECF..0ECF ; Unknown
     'Laoo',  # 0ED0..0ED9 ; Lao
     'Zzzz',  # 0EDA..0EDB ; Unknown
     'Laoo',  # 0EDC..0EDF ; Lao
@@ -2727,7 +2746,8 @@ VALUES = [
     'Yezi',  # 10EAB..10EAD ; Yezidi
     'Zzzz',  # 10EAE..10EAF ; Unknown
     'Yezi',  # 10EB0..10EB1 ; Yezidi
-    'Zzzz',  # 10EB2..10EFF ; Unknown
+    'Zzzz',  # 10EB2..10EFC ; Unknown
+    'Arab',  # 10EFD..10EFF ; Arabic
     'Sogo',  # 10F00..10F27 ; Old_Sogdian
     'Zzzz',  # 10F28..10F2F ; Unknown
     'Sogd',  # 10F30..10F59 ; Sogdian
@@ -2763,8 +2783,8 @@ VALUES = [
     'Zzzz',  # 111F5..111FF ; Unknown
     'Khoj',  # 11200..11211 ; Khojki
     'Zzzz',  # 11212..11212 ; Unknown
-    'Khoj',  # 11213..1123E ; Khojki
-    'Zzzz',  # 1123F..1127F ; Unknown
+    'Khoj',  # 11213..11241 ; Khojki
+    'Zzzz',  # 11242..1127F ; Unknown
     'Mult',  # 11280..11286 ; Multani
     'Zzzz',  # 11287..11287 ; Unknown
     'Mult',  # 11288..11288 ; Multani
@@ -2871,7 +2891,9 @@ VALUES = [
     'Zzzz',  # 11AA3..11AAF ; Unknown
     'Cans',  # 11AB0..11ABF ; Canadian_Aboriginal
     'Pauc',  # 11AC0..11AF8 ; Pau_Cin_Hau
-    'Zzzz',  # 11AF9..11BFF ; Unknown
+    'Zzzz',  # 11AF9..11AFF ; Unknown
+    'Deva',  # 11B00..11B09 ; Devanagari
+    'Zzzz',  # 11B0A..11BFF ; Unknown
     'Bhks',  # 11C00..11C08 ; Bhaiksuki
     'Zzzz',  # 11C09..11C09 ; Unknown
     'Bhks',  # 11C0A..11C36 ; Bhaiksuki
@@ -2913,7 +2935,13 @@ VALUES = [
     'Gong',  # 11DA0..11DA9 ; Gunjala_Gondi
     'Zzzz',  # 11DAA..11EDF ; Unknown
     'Maka',  # 11EE0..11EF8 ; Makasar
-    'Zzzz',  # 11EF9..11FAF ; Unknown
+    'Zzzz',  # 11EF9..11EFF ; Unknown
+    'Kawi',  # 11F00..11F10 ; Kawi
+    'Zzzz',  # 11F11..11F11 ; Unknown
+    'Kawi',  # 11F12..11F3A ; Kawi
+    'Zzzz',  # 11F3B..11F3D ; Unknown
+    'Kawi',  # 11F3E..11F59 ; Kawi
+    'Zzzz',  # 11F5A..11FAF ; Unknown
     'Lisu',  # 11FB0..11FB0 ; Lisu
     'Zzzz',  # 11FB1..11FBF ; Unknown
     'Taml',  # 11FC0..11FF1 ; Tamil
@@ -2929,10 +2957,8 @@ VALUES = [
     'Zzzz',  # 12544..12F8F ; Unknown
     'Cpmn',  # 12F90..12FF2 ; Cypro_Minoan
     'Zzzz',  # 12FF3..12FFF ; Unknown
-    'Egyp',  # 13000..1342E ; Egyptian_Hieroglyphs
-    'Zzzz',  # 1342F..1342F ; Unknown
-    'Egyp',  # 13430..13438 ; Egyptian_Hieroglyphs
-    'Zzzz',  # 13439..143FF ; Unknown
+    'Egyp',  # 13000..13455 ; Egyptian_Hieroglyphs
+    'Zzzz',  # 13456..143FF ; Unknown
     'Hluw',  # 14400..14646 ; Anatolian_Hieroglyphs
     'Zzzz',  # 14647..167FF ; Unknown
     'Bamu',  # 16800..16A38 ; Bamum
@@ -2991,9 +3017,13 @@ VALUES = [
     'Kana',  # 1B000..1B000 ; Katakana
     'Hira',  # 1B001..1B11F ; Hiragana
     'Kana',  # 1B120..1B122 ; Katakana
-    'Zzzz',  # 1B123..1B14F ; Unknown
+    'Zzzz',  # 1B123..1B131 ; Unknown
+    'Hira',  # 1B132..1B132 ; Hiragana
+    'Zzzz',  # 1B133..1B14F ; Unknown
     'Hira',  # 1B150..1B152 ; Hiragana
-    'Zzzz',  # 1B153..1B163 ; Unknown
+    'Zzzz',  # 1B153..1B154 ; Unknown
+    'Kana',  # 1B155..1B155 ; Katakana
+    'Zzzz',  # 1B156..1B163 ; Unknown
     'Kana',  # 1B164..1B167 ; Katakana
     'Zzzz',  # 1B168..1B16F ; Unknown
     'Nshu',  # 1B170..1B2FB ; Nushu
@@ -3030,7 +3060,9 @@ VALUES = [
     'Zyyy',  # 1D1AE..1D1EA ; Common
     'Zzzz',  # 1D1EB..1D1FF ; Unknown
     'Grek',  # 1D200..1D245 ; Greek
-    'Zzzz',  # 1D246..1D2DF ; Unknown
+    'Zzzz',  # 1D246..1D2BF ; Unknown
+    'Zyyy',  # 1D2C0..1D2D3 ; Common
+    'Zzzz',  # 1D2D4..1D2DF ; Unknown
     'Zyyy',  # 1D2E0..1D2F3 ; Common
     'Zzzz',  # 1D2F4..1D2FF ; Unknown
     'Zyyy',  # 1D300..1D356 ; Common
@@ -3085,7 +3117,9 @@ VALUES = [
     'Sgnw',  # 1DAA1..1DAAF ; SignWriting
     'Zzzz',  # 1DAB0..1DEFF ; Unknown
     'Latn',  # 1DF00..1DF1E ; Latin
-    'Zzzz',  # 1DF1F..1DFFF ; Unknown
+    'Zzzz',  # 1DF1F..1DF24 ; Unknown
+    'Latn',  # 1DF25..1DF2A ; Latin
+    'Zzzz',  # 1DF2B..1DFFF ; Unknown
     'Glag',  # 1E000..1E006 ; Glagolitic
     'Zzzz',  # 1E007..1E007 ; Unknown
     'Glag',  # 1E008..1E018 ; Glagolitic
@@ -3095,7 +3129,11 @@ VALUES = [
     'Glag',  # 1E023..1E024 ; Glagolitic
     'Zzzz',  # 1E025..1E025 ; Unknown
     'Glag',  # 1E026..1E02A ; Glagolitic
-    'Zzzz',  # 1E02B..1E0FF ; Unknown
+    'Zzzz',  # 1E02B..1E02F ; Unknown
+    'Cyrl',  # 1E030..1E06D ; Cyrillic
+    'Zzzz',  # 1E06E..1E08E ; Unknown
+    'Cyrl',  # 1E08F..1E08F ; Cyrillic
+    'Zzzz',  # 1E090..1E0FF ; Unknown
     'Hmnp',  # 1E100..1E12C ; Nyiakeng_Puachue_Hmong
     'Zzzz',  # 1E12D..1E12F ; Unknown
     'Hmnp',  # 1E130..1E13D ; Nyiakeng_Puachue_Hmong
@@ -3109,7 +3147,9 @@ VALUES = [
     'Wcho',  # 1E2C0..1E2F9 ; Wancho
     'Zzzz',  # 1E2FA..1E2FE ; Unknown
     'Wcho',  # 1E2FF..1E2FF ; Wancho
-    'Zzzz',  # 1E300..1E7DF ; Unknown
+    'Zzzz',  # 1E300..1E4CF ; Unknown
+    'Nagm',  # 1E4D0..1E4F9 ; Nag_Mundari
+    'Zzzz',  # 1E4FA..1E7DF ; Unknown
     'Ethi',  # 1E7E0..1E7E6 ; Ethiopic
     'Zzzz',  # 1E7E7..1E7E7 ; Unknown
     'Ethi',  # 1E7E8..1E7EB ; Ethiopic
@@ -3227,15 +3267,15 @@ VALUES = [
     'Zyyy',  # 1F260..1F265 ; Common
     'Zzzz',  # 1F266..1F2FF ; Unknown
     'Zyyy',  # 1F300..1F6D7 ; Common
-    'Zzzz',  # 1F6D8..1F6DC ; Unknown
-    'Zyyy',  # 1F6DD..1F6EC ; Common
+    'Zzzz',  # 1F6D8..1F6DB ; Unknown
+    'Zyyy',  # 1F6DC..1F6EC ; Common
     'Zzzz',  # 1F6ED..1F6EF ; Unknown
     'Zyyy',  # 1F6F0..1F6FC ; Common
     'Zzzz',  # 1F6FD..1F6FF ; Unknown
-    'Zyyy',  # 1F700..1F773 ; Common
-    'Zzzz',  # 1F774..1F77F ; Unknown
-    'Zyyy',  # 1F780..1F7D8 ; Common
-    'Zzzz',  # 1F7D9..1F7DF ; Unknown
+    'Zyyy',  # 1F700..1F776 ; Common
+    'Zzzz',  # 1F777..1F77A ; Unknown
+    'Zyyy',  # 1F77B..1F7D9 ; Common
+    'Zzzz',  # 1F7DA..1F7DF ; Unknown
     'Zyyy',  # 1F7E0..1F7EB ; Common
     'Zzzz',  # 1F7EC..1F7EF ; Unknown
     'Zyyy',  # 1F7F0..1F7F0 ; Common
@@ -3256,24 +3296,20 @@ VALUES = [
     'Zzzz',  # 1FA54..1FA5F ; Unknown
     'Zyyy',  # 1FA60..1FA6D ; Common
     'Zzzz',  # 1FA6E..1FA6F ; Unknown
-    'Zyyy',  # 1FA70..1FA74 ; Common
-    'Zzzz',  # 1FA75..1FA77 ; Unknown
-    'Zyyy',  # 1FA78..1FA7C ; Common
+    'Zyyy',  # 1FA70..1FA7C ; Common
     'Zzzz',  # 1FA7D..1FA7F ; Unknown
-    'Zyyy',  # 1FA80..1FA86 ; Common
-    'Zzzz',  # 1FA87..1FA8F ; Unknown
-    'Zyyy',  # 1FA90..1FAAC ; Common
-    'Zzzz',  # 1FAAD..1FAAF ; Unknown
-    'Zyyy',  # 1FAB0..1FABA ; Common
-    'Zzzz',  # 1FABB..1FABF ; Unknown
-    'Zyyy',  # 1FAC0..1FAC5 ; Common
-    'Zzzz',  # 1FAC6..1FACF ; Unknown
-    'Zyyy',  # 1FAD0..1FAD9 ; Common
-    'Zzzz',  # 1FADA..1FADF ; Unknown
-    'Zyyy',  # 1FAE0..1FAE7 ; Common
-    'Zzzz',  # 1FAE8..1FAEF ; Unknown
-    'Zyyy',  # 1FAF0..1FAF6 ; Common
-    'Zzzz',  # 1FAF7..1FAFF ; Unknown
+    'Zyyy',  # 1FA80..1FA88 ; Common
+    'Zzzz',  # 1FA89..1FA8F ; Unknown
+    'Zyyy',  # 1FA90..1FABD ; Common
+    'Zzzz',  # 1FABE..1FABE ; Unknown
+    'Zyyy',  # 1FABF..1FAC5 ; Common
+    'Zzzz',  # 1FAC6..1FACD ; Unknown
+    'Zyyy',  # 1FACE..1FADB ; Common
+    'Zzzz',  # 1FADC..1FADF ; Unknown
+    'Zyyy',  # 1FAE0..1FAE8 ; Common
+    'Zzzz',  # 1FAE9..1FAEF ; Unknown
+    'Zyyy',  # 1FAF0..1FAF8 ; Common
+    'Zzzz',  # 1FAF9..1FAFF ; Unknown
     'Zyyy',  # 1FB00..1FB92 ; Common
     'Zzzz',  # 1FB93..1FB93 ; Unknown
     'Zyyy',  # 1FB94..1FBCA ; Common
@@ -3282,8 +3318,8 @@ VALUES = [
     'Zzzz',  # 1FBFA..1FFFF ; Unknown
     'Hani',  # 20000..2A6DF ; Han
     'Zzzz',  # 2A6E0..2A6FF ; Unknown
-    'Hani',  # 2A700..2B738 ; Han
-    'Zzzz',  # 2B739..2B73F ; Unknown
+    'Hani',  # 2A700..2B739 ; Han
+    'Zzzz',  # 2B73A..2B73F ; Unknown
     'Hani',  # 2B740..2B81D ; Han
     'Zzzz',  # 2B81E..2B81F ; Unknown
     'Hani',  # 2B820..2CEA1 ; Han
@@ -3293,7 +3329,9 @@ VALUES = [
     'Hani',  # 2F800..2FA1D ; Han
     'Zzzz',  # 2FA1E..2FFFF ; Unknown
     'Hani',  # 30000..3134A ; Han
-    'Zzzz',  # 3134B..E0000 ; Unknown
+    'Zzzz',  # 3134B..3134F ; Unknown
+    'Hani',  # 31350..323AF ; Han
+    'Zzzz',  # 323B0..E0000 ; Unknown
     'Zyyy',  # E0001..E0001 ; Common
     'Zzzz',  # E0002..E001F ; Unknown
     'Zyyy',  # E0020..E007F ; Common
@@ -3364,6 +3402,7 @@ NAMES = {
     'Java': 'Javanese',
     'Kali': 'Kayah_Li',
     'Kana': 'Katakana',
+    'Kawi': 'Kawi',
     'Khar': 'Kharoshthi',
     'Khmr': 'Khmer',
     'Khoj': 'Khojki',
@@ -3396,6 +3435,7 @@ NAMES = {
     'Mtei': 'Meetei_Mayek',
     'Mult': 'Multani',
     'Mymr': 'Myanmar',
+    'Nagm': 'Nag_Mundari',
     'Nand': 'Nandinagari',
     'Narb': 'Old_North_Arabian',
     'Nbat': 'Nabataean',

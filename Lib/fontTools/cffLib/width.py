@@ -135,13 +135,13 @@ def optimizeWidths(widths):
 	dfltC = nomnCost[nominal] - bestCost[nominal]
 	ends = []
 	if dfltC == dfltCostU[nominal]:
-		starts = [nominal, nominal-108, nominal-1131]
+		starts = [nominal, nominal-108, nominal-1132]
 		for start in starts:
 			while cumMaxU[start] and cumMaxU[start] == cumMaxU[start-1]:
 				start -= 1
 			ends.append(start)
 	else:
-		starts = [nominal, nominal+108, nominal+1131]
+		starts = [nominal, nominal+108, nominal+1132]
 		for start in starts:
 			while cumMaxD[start] and cumMaxD[start] == cumMaxD[start+1]:
 				start += 1

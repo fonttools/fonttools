@@ -78,6 +78,15 @@ def test_read_v5_document_simple(datadir):
                     AxisLabelDescriptor(
                         name="Black", userMinimum=850, userValue=900, userMaximum=900
                     ),
+                    AxisLabelDescriptor(
+                        name="Regular",
+                        userValue=400,
+                        linkedUserValue=700,
+                        elidable=True,
+                    ),
+                    AxisLabelDescriptor(
+                        name="Bold", userValue=700, linkedUserValue=400
+                    ),
                 ],
             ),
             AxisDescriptor(

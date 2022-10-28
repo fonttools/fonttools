@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ttFont sfntVersion="OTTO" ttLibVersion="4.28">
+<ttFont sfntVersion="OTTO" ttLibVersion="4.34">
 
   <GlyphOrder>
     <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
@@ -507,7 +507,7 @@
     <GlyphID id="501" name="vabove-ar"/>
     <GlyphID id="502" name="vbelow-ar"/>
     <GlyphID id="503" name="opendammatan-ar"/>
-    <GlyphID id="504" name=".notdef#1"/>
+    <GlyphID id="504" name=".notdef.1"/>
     <GlyphID id="505" name="A"/>
     <GlyphID id="506" name="Aacute"/>
     <GlyphID id="507" name="Acircumflex"/>
@@ -701,12 +701,12 @@
     <GlyphID id="695" name="onehalf"/>
     <GlyphID id="696" name="onequarter"/>
     <GlyphID id="697" name="threequarters"/>
-    <GlyphID id="698" name="space#1"/>
+    <GlyphID id="698" name="space.1"/>
     <GlyphID id="699" name="period"/>
     <GlyphID id="700" name="comma"/>
     <GlyphID id="701" name="colon"/>
     <GlyphID id="702" name="semicolon"/>
-    <GlyphID id="703" name="exclam#1"/>
+    <GlyphID id="703" name="exclam.1"/>
     <GlyphID id="704" name="exclamdown"/>
     <GlyphID id="705" name="question"/>
     <GlyphID id="706" name="questiondown"/>
@@ -725,8 +725,8 @@
     <GlyphID id="719" name="braceright"/>
     <GlyphID id="720" name="bracketleft"/>
     <GlyphID id="721" name="bracketright"/>
-    <GlyphID id="722" name="quoteleft#1"/>
-    <GlyphID id="723" name="quoteright#1"/>
+    <GlyphID id="722" name="quoteleft.1"/>
+    <GlyphID id="723" name="quoteright.1"/>
     <GlyphID id="724" name="guillemotleft"/>
     <GlyphID id="725" name="guillemotright"/>
     <GlyphID id="726" name="guilsinglleft"/>
@@ -788,12 +788,12 @@
     <!-- Most of this table will be recalculated by the compiler -->
     <tableVersion value="1.0"/>
     <fontRevision value="1.003"/>
-    <checkSumAdjustment value="0x490fa241"/>
+    <checkSumAdjustment value="0x9a87f91"/>
     <magicNumber value="0x5f0f3cf5"/>
     <flags value="00000000 00000011"/>
     <unitsPerEm value="1000"/>
-    <created value="Thu Jan  1 00:00:00 1970"/>
-    <modified value="Thu Jan  1 00:00:00 1970"/>
+    <created value="Sun Aug 14 18:30:31 2022"/>
+    <modified value="Sun Aug 14 18:30:31 2022"/>
     <xMin value="-199"/>
     <yMin value="-364"/>
     <xMax value="1459"/>
@@ -1380,7 +1380,7 @@
           900 300 -900 -300 vlineto
           endchar
         </CharString>
-        <CharString name=".notdef#1">
+        <CharString name=".notdef.1">
           -45 50 -200 rmoveto
           400 1000 -400 -1000 hlineto
           50 50 rmoveto
@@ -4962,7 +4962,7 @@
           -4 3 -5 1 -3 -4 rrcurveto
           endchar
         </CharString>
-        <CharString name="exclam#1">
+        <CharString name="exclam.1">
           -329 112 186 rmoveto
           36 371 rlineto
           3 29 2 29 29 vvcurveto
@@ -9687,7 +9687,7 @@
           -21 14 15 -11 14 hhcurveto
           endchar
         </CharString>
-        <CharString name="quoteleft#1">
+        <CharString name="quoteleft.1">
           -345 115 532 rmoveto
           -9 14 -5 15 16 vvcurveto
           35 28 47 21 36 vhcurveto
@@ -9709,7 +9709,7 @@
           21 -14 -15 11 -14 hhcurveto
           endchar
         </CharString>
-        <CharString name="quoteright#1">
+        <CharString name="quoteright.1">
           -348 66 395 rmoveto
           35 53 54 54 62 vvcurveto
           42 -43 89 -28 -16 -32 -26 -15 -7 8 -16 6 -10 vhcurveto
@@ -11038,7 +11038,7 @@
         <CharString name="space">
           -218 endchar
         </CharString>
-        <CharString name="space#1">
+        <CharString name="space.1">
           -212 endchar
         </CharString>
         <CharString name="sterling">
@@ -29261,7 +29261,7 @@
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <SingleSubst index="0">
-          <Substitution in="space#1" out="space#1"/>
+          <Substitution in="space.1" out="space.1"/>
         </SingleSubst>
       </Lookup>
       <Lookup index="96">
@@ -29269,10 +29269,10 @@
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <SingleSubst index="0">
-          <Substitution in="exclam" out="exclam#1"/>
-          <Substitution in="quoteleft" out="quoteleft#1"/>
-          <Substitution in="quoteright" out="quoteright#1"/>
-          <Substitution in="space" out="space#1"/>
+          <Substitution in="exclam" out="exclam.1"/>
+          <Substitution in="quoteleft" out="quoteleft.1"/>
+          <Substitution in="quoteright" out="quoteright.1"/>
+          <Substitution in="space" out="space.1"/>
         </SingleSubst>
       </Lookup>
     </LookupList>
@@ -29280,7 +29280,7 @@
 
   <hmtx>
     <mtx name=".notdef" width="500" lsb="50"/>
-    <mtx name=".notdef#1" width="500" lsb="50"/>
+    <mtx name=".notdef.1" width="500" lsb="50"/>
     <mtx name="A" width="722" lsb="3"/>
     <mtx name="AE" width="797" lsb="3"/>
     <mtx name="Aacute" width="722" lsb="3"/>
@@ -29503,7 +29503,7 @@
     <mtx name="eth" width="461" lsb="28"/>
     <mtx name="euro" width="638" lsb="25"/>
     <mtx name="exclam" width="253" lsb="26"/>
-    <mtx name="exclam#1" width="216" lsb="54"/>
+    <mtx name="exclam.1" width="216" lsb="54"/>
     <mtx name="exclamdown" width="216" lsb="54"/>
     <mtx name="f" width="329" lsb="-1"/>
     <mtx name="f.alt" width="317" lsb="-1"/>
@@ -29848,9 +29848,9 @@
     <mtx name="quotedblleft" width="444" lsb="91"/>
     <mtx name="quotedblright" width="444" lsb="58"/>
     <mtx name="quoteleft" width="271" lsb="91"/>
-    <mtx name="quoteleft#1" width="200" lsb="41"/>
+    <mtx name="quoteleft.1" width="200" lsb="41"/>
     <mtx name="quoteright" width="271" lsb="58"/>
-    <mtx name="quoteright#1" width="197" lsb="36"/>
+    <mtx name="quoteright.1" width="197" lsb="36"/>
     <mtx name="quotesinglbase" width="271" lsb="58"/>
     <mtx name="quotesingle" width="210" lsb="74"/>
     <mtx name="r" width="416" lsb="0"/>
@@ -29948,7 +29948,7 @@
     <mtx name="slash" width="390" lsb="-17"/>
     <mtx name="softhyphen" width="0" lsb="0"/>
     <mtx name="space" width="146" lsb="0"/>
-    <mtx name="space#1" width="333" lsb="0"/>
+    <mtx name="space.1" width="333" lsb="0"/>
     <mtx name="sterling" width="649" lsb="22"/>
     <mtx name="sukun-ar" width="0" lsb="-98"/>
     <mtx name="sukun-ar.alt" width="0" lsb="-53"/>

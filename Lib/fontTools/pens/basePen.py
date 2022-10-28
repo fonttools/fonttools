@@ -47,6 +47,9 @@ __all__ =  ["AbstractPen", "NullPen", "BasePen", "PenError",
 class PenError(Exception):
 	"""Represents an error during penning."""
 
+class OpenContourError(PenError):
+	pass
+
 
 class AbstractPen:
 

@@ -31,6 +31,7 @@ from .errors import (
     ShouldBeConstant,
     FoundANone,
     MismatchedTypes,
+    NotANone,
     LengthsDiffer,
     KeysDiffer,
     InconsistentGlyphOrder,
@@ -226,6 +227,20 @@ def _merge_GlyphOrders(font, lst, values_lst=None, default=None):
 			   for glyph in order]
 			  for dict_set in dict_sets]
 	return order, padded
+
+@AligningMerger.merger(otBase.ValueRecord)
+def merge(merger, self, lst):
+	# Code below sometimes calls us with self being
+	# a new object. Copy it from lst and recurse.
+	self.__dict__ = lst[0].__dict__.copy()
+	merger.mergeObjects(self, lst)
+
+@AligningMerger.merger(ot.Anchor)
+def merge(merger, self, lst):
+	# Code below sometimes calls us with self being
+	# a new object. Copy it from lst and recurse.
+	self.__dict__ = lst[0].__dict__.copy()
+	merger.mergeObjects(self, lst)
 
 def _Lookup_SinglePos_get_effective_value(merger, subtables, glyph):
 	for self in subtables:

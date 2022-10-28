@@ -448,9 +448,9 @@ class MergeOutlineExtractor(CFFToCFF2OutlineExtractor):
 	into a CFF2 variable font charstring."""
 
 	def __init__(self, pen, localSubrs, globalSubrs,
-			nominalWidthX, defaultWidthX, private=None):
+			nominalWidthX, defaultWidthX, private=None, blender=None):
 		super().__init__(pen, localSubrs,
-			globalSubrs, nominalWidthX, defaultWidthX, private)
+			globalSubrs, nominalWidthX, defaultWidthX, private, blender)
 
 	def countHints(self):
 		args = self.popallWidth()
@@ -502,7 +502,8 @@ class CFF2CharStringMergePen(T2CharStringPen):
 	"""
 	def __init__(
 				self, default_commands, glyphName, num_masters, master_idx,
-				roundTolerance=0.5):
+				roundTolerance=0.01):
+		# For roundTolerance see https://github.com/fonttools/fonttools/issues/2838
 		super().__init__(
 							width=None,
 							glyphSet=None, CFF2=True,
@@ -639,6 +640,7 @@ class CFF2CharStringMergePen(T2CharStringPen):
 						# convert to deltas
 						deltas = get_delta_func(coord)[1:]
 						coord = [coord[0]] + deltas
+						coord.append(1)
 						new_coords.append(coord)
 				cmd[1] = new_coords
 			lastOp = op

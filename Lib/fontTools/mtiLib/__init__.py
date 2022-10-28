@@ -121,7 +121,7 @@ def parseScriptList(lines, featureMap=None):
 				script = script[0].Script
 			else:
 				scriptRec = ot.ScriptRecord()
-				scriptRec.ScriptTag = scriptTag
+				scriptRec.ScriptTag = scriptTag + ' '*(4 - len(scriptTag))
 				scriptRec.Script = ot.Script()
 				records.append(scriptRec)
 				script = scriptRec.Script
@@ -1165,7 +1165,7 @@ def build(f, font, tableTag=None):
 
 
 def main(args=None, font=None):
-	"""Convert a FontDame OTL file to TTX XML.
+	"""Convert a FontDame OTL file to TTX XML
 
 	Writes XML output to stdout.
 

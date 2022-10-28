@@ -1,13 +1,53 @@
+from typing import (
+	Sequence,
+	Tuple,
+	Union,
+)
+from numbers import (
+	Integral,
+	Real
+)
+
+try:
+	import cython
+except ImportError:
+	# if cython not installed, use mock module with no-op decorators and types
+	from fontTools.misc import cython
+
+if cython.compiled:
+	# Yep, I'm compiled.
+	COMPILED = True
+else:
+	# Just a lowly interpreted script.
+	COMPILED = False
+
+
+_Point = Tuple[Real, Real]
+_Delta = Tuple[Real, Real]
+_PointSegment = Sequence[_Point]
+_DeltaSegment = Sequence[_Delta]
+_DeltaOrNone = Union[_Delta, None]
+_DeltaOrNoneSegment = Sequence[_DeltaOrNone]
+_Endpoints = Sequence[Integral]
+
+
 MAX_LOOKBACK = 8
 
-def iup_segment(coords, rc1, rd1, rc2, rd2):
+def iup_segment(coords : _PointSegment,
+		rc1 : _Point,
+		rd1 : _Delta,
+		rc2 : _Point,
+		rd2 : _Delta) -> _DeltaSegment:
+	"""Given two reference coordinates `rc1` & `rc2` and their respective
+	delta vectors `rd1` & `rd2`, returns interpolated deltas for the set of
+	coordinates `coords`. """
+
 	# rc1 = reference coord 1
 	# rd1 = reference delta 1
 	out_arrays = [None, None]
 	for j in 0,1:
 		out_arrays[j] = out = []
 		x1, x2, d1, d2 = rc1[j], rc2[j], rd1[j], rd2[j]
-
 
 		if x1 == x2:
 			n = len(coords)
@@ -38,14 +78,20 @@ def iup_segment(coords, rc1, rd1, rc2, rd2):
 
 	return zip(*out_arrays)
 
-def iup_contour(delta, coords):
-	assert len(delta) == len(coords)
-	if None not in delta:
-		return delta
+def iup_contour(deltas : _DeltaOrNoneSegment,
+		coords : _PointSegment) -> _DeltaSegment:
+	"""For the contour given in `coords`, interpolate any missing
+	delta values in delta vector `deltas`.
 
-	n = len(delta)
+	Returns fully filled-out delta vector."""
+
+	assert len(deltas) == len(coords)
+	if None not in deltas:
+		return deltas
+
+	n = len(deltas)
 	# indices of points with explicit deltas
-	indices = [i for i,v in enumerate(delta) if v is not None]
+	indices = [i for i,v in enumerate(deltas) if v is not None]
 	if not indices:
 		# All deltas are None.  Return 0,0 for all.
 		return [(0,0)]*n
@@ -56,23 +102,31 @@ def iup_contour(delta, coords):
 	if start != 0:
 		# Initial segment that wraps around
 		i1, i2, ri1, ri2 = 0, start, start, indices[-1]
-		out.extend(iup_segment(coords[i1:i2], coords[ri1], delta[ri1], coords[ri2], delta[ri2]))
-	out.append(delta[start])
+		out.extend(iup_segment(coords[i1:i2], coords[ri1], deltas[ri1], coords[ri2], deltas[ri2]))
+	out.append(deltas[start])
 	for end in it:
 		if end - start > 1:
 			i1, i2, ri1, ri2 = start+1, end, start, end
-			out.extend(iup_segment(coords[i1:i2], coords[ri1], delta[ri1], coords[ri2], delta[ri2]))
-		out.append(delta[end])
+			out.extend(iup_segment(coords[i1:i2], coords[ri1], deltas[ri1], coords[ri2], deltas[ri2]))
+		out.append(deltas[end])
 		start = end
 	if start != n-1:
 		# Final segment that wraps around
 		i1, i2, ri1, ri2 = start+1, n, start, indices[0]
-		out.extend(iup_segment(coords[i1:i2], coords[ri1], delta[ri1], coords[ri2], delta[ri2]))
+		out.extend(iup_segment(coords[i1:i2], coords[ri1], deltas[ri1], coords[ri2], deltas[ri2]))
 
-	assert len(delta) == len(out), (len(delta), len(out))
+	assert len(deltas) == len(out), (len(deltas), len(out))
 	return out
 
-def iup_delta(delta, coords, ends):
+def iup_delta(deltas : _DeltaOrNoneSegment,
+	      coords : _PointSegment,
+	      ends: _Endpoints) -> _DeltaSegment:
+	"""For the outline given in `coords`, with contour endpoints given
+	in sorted increasing order in `ends`, interpolate any missing
+	delta values in delta vector `deltas`.
+
+	Returns fully filled-out delta vector."""
+
 	assert sorted(ends) == ends and len(coords) == (ends[-1]+1 if ends else 0) + 4
 	n = len(coords)
 	ends = ends + [n-4, n-3, n-2, n-1]
@@ -80,7 +134,7 @@ def iup_delta(delta, coords, ends):
 	start = 0
 	for end in ends:
 		end += 1
-		contour = iup_contour(delta[start:end], coords[start:end])
+		contour = iup_contour(deltas[start:end], coords[start:end])
 		out.extend(contour)
 		start = end
 
@@ -88,7 +142,15 @@ def iup_delta(delta, coords, ends):
 
 # Optimizer
 
-def can_iup_in_between(deltas, coords, i, j, tolerance):
+def can_iup_in_between(deltas : _DeltaSegment,
+		       coords : _PointSegment,
+		       i : Integral,
+		       j : Integral,
+		       tolerance : Real) -> bool:
+	"""Return true if the deltas for points at `i` and `j` (`i < j`) can be
+	successfully used to interpolate deltas for points in between them within
+	provided error tolerance."""
+
 	assert j - i >= 2
 	interp = list(iup_segment(coords[i+1:j], coords[i], deltas[i], coords[j], deltas[j]))
 	deltas = deltas[i+1:j]
@@ -97,23 +159,25 @@ def can_iup_in_between(deltas, coords, i, j, tolerance):
 
 	return all(abs(complex(x-p, y-q)) <= tolerance for (x,y),(p,q) in zip(deltas, interp))
 
-def _iup_contour_bound_forced_set(delta, coords, tolerance=0):
+def _iup_contour_bound_forced_set(deltas : _DeltaSegment,
+				  coords : _PointSegment,
+				  tolerance : Real = 0) -> set:
 	"""The forced set is a conservative set of points on the contour that must be encoded
 	explicitly (ie. cannot be interpolated).  Calculating this set allows for significantly
 	speeding up the dynamic-programming, as well as resolve circularity in DP.
 
 	The set is precise; that is, if an index is in the returned set, then there is no way
-	that IUP can generate delta for that point, given coords and delta.
+	that IUP can generate delta for that point, given `coords` and `deltas`.
 	"""
-	assert len(delta) == len(coords)
+	assert len(deltas) == len(coords)
 
-	n = len(delta)
+	n = len(deltas)
 	forced = set()
 	# Track "last" and "next" points on the contour as we sweep.
-	for i in range(len(delta)-1, -1, -1):
-		ld, lc = delta[i-1], coords[i-1]
-		d, c = delta[i], coords[i]
-		nd, nc = delta[i-n+1], coords[i-n+1]
+	for i in range(len(deltas)-1, -1, -1):
+		ld, lc = deltas[i-1], coords[i-1]
+		d, c = deltas[i], coords[i]
+		nd, nc = deltas[i-n+1], coords[i-n+1]
 
 		for j in (0,1): # For X and for Y
 			cj = c[j]
@@ -167,7 +231,11 @@ def _iup_contour_bound_forced_set(delta, coords, tolerance=0):
 
 	return forced
 
-def _iup_contour_optimize_dp(delta, coords, forced={}, tolerance=0, lookback=None):
+def _iup_contour_optimize_dp(deltas : _DeltaSegment,
+			     coords : _PointSegment,
+			     forced={},
+			     tolerance : Real = 0,
+			     lookback : Integral =None):
 	"""Straightforward Dynamic-Programming.  For each index i, find least-costly encoding of
 	points 0 to i where i is explicitly encoded.  We find this by considering all previous
 	explicit points j and check whether interpolation can fill points between j and i.
@@ -177,7 +245,7 @@ def _iup_contour_optimize_dp(delta, coords, forced={}, tolerance=0, lookback=Non
 
 	As major speedup, we stop looking further whenever we see a "forced" point."""
 
-	n = len(delta)
+	n = len(deltas)
 	if lookback is None:
 		lookback = n
 	lookback = min(lookback, MAX_LOOKBACK)
@@ -196,7 +264,7 @@ def _iup_contour_optimize_dp(delta, coords, forced={}, tolerance=0, lookback=Non
 
 			cost = costs[j] + 1
 
-			if cost < best_cost and can_iup_in_between(delta, coords, j, i, tolerance):
+			if cost < best_cost and can_iup_in_between(deltas, coords, j, i, tolerance):
 				costs[i] = best_cost = cost
 				chain[i] = j
 
@@ -205,7 +273,7 @@ def _iup_contour_optimize_dp(delta, coords, forced={}, tolerance=0, lookback=Non
 
 	return chain, costs
 
-def _rot_list(l, k):
+def _rot_list(l : list, k : int):
 	"""Rotate list by k items forward.  Ie. item at position 0 will be
 	at position k in returned list.  Negative k is allowed."""
 	n = len(l)
@@ -213,32 +281,41 @@ def _rot_list(l, k):
 	if not k: return l
 	return l[n-k:] + l[:n-k]
 
-def _rot_set(s, k, n):
+def _rot_set(s : set, k : int, n : int):
 	k %= n
 	if not k: return s
 	return {(v + k) % n for v in s}
 
-def iup_contour_optimize(delta, coords, tolerance=0.):
-	n = len(delta)
+def iup_contour_optimize(deltas : _DeltaSegment,
+			 coords : _PointSegment,
+			 tolerance : Real = 0.) -> _DeltaOrNoneSegment:
+	"""For contour with coordinates `coords`, optimize a set of delta
+	values `deltas` within error `tolerance`.
+
+	Returns delta vector that has most number of None items instead of
+	the input delta.
+	"""
+
+	n = len(deltas)
 
 	# Get the easy cases out of the way:
 
 	# If all are within tolerance distance of 0, encode nothing:
-	if all(abs(complex(*p)) <= tolerance for p in delta):
+	if all(abs(complex(*p)) <= tolerance for p in deltas):
 		return [None] * n
 
 	# If there's exactly one point, return it:
 	if n == 1:
-		return delta
+		return deltas
 
 	# If all deltas are exactly the same, return just one (the first one):
-	d0 = delta[0]
-	if all(d0 == d for d in delta):
+	d0 = deltas[0]
+	if all(d0 == d for d in deltas):
 		return [d0] + [None] * (n-1)
 
 	# Else, solve the general problem using Dynamic Programming.
 
-	forced = _iup_contour_bound_forced_set(delta, coords, tolerance)
+	forced = _iup_contour_bound_forced_set(deltas, coords, tolerance)
 	# The _iup_contour_optimize_dp() routine returns the optimal encoding
 	# solution given the constraint that the last point is always encoded.
 	# To remove this constraint, we use two different methods, depending on
@@ -253,13 +330,13 @@ def iup_contour_optimize(delta, coords, tolerance=0.):
 		k = (n-1) - max(forced)
 		assert k >= 0
 
-		delta  = _rot_list(delta, k)
+		deltas  = _rot_list(deltas, k)
 		coords = _rot_list(coords, k)
 		forced = _rot_set(forced, k, n)
 
 		# Debugging: Pass a set() instead of forced variable to the next call
 		# to exercise forced-set computation for under-counting.
-		chain, costs = _iup_contour_optimize_dp(delta, coords, forced, tolerance)
+		chain, costs = _iup_contour_optimize_dp(deltas, coords, forced, tolerance)
 
 		# Assemble solution.
 		solution = set()
@@ -271,18 +348,18 @@ def iup_contour_optimize(delta, coords, tolerance=0.):
 
 		#if not forced <= solution:
 		#	print("coord", coords)
-		#	print("delta", delta)
-		#	print("len", len(delta))
+		#	print("deltas", deltas)
+		#	print("len", len(deltas))
 		assert forced <= solution, (forced, solution)
 
-		delta = [delta[i] if i in solution else None for i in range(n)]
+		deltas = [deltas[i] if i in solution else None for i in range(n)]
 
-		delta = _rot_list(delta, -k)
+		deltas = _rot_list(deltas, -k)
 	else:
 		# Repeat the contour an extra time, solve the new case, then look for solutions of the
 		# circular n-length problem in the solution for new linear case.  I cannot prove that
 		# this always produces the optimal solution...
-		chain, costs = _iup_contour_optimize_dp(delta+delta, coords+coords, {}, tolerance, n)
+		chain, costs = _iup_contour_optimize_dp(deltas+deltas, coords+coords, forced, tolerance, n)
 		best_sol, best_cost = None, n+1
 
 		for start in range(n-1, len(costs) - 1):
@@ -299,23 +376,33 @@ def iup_contour_optimize(delta, coords, tolerance=0.):
 
 		#if not forced <= best_sol:
 		#	print("coord", coords)
-		#	print("delta", delta)
-		#	print("len", len(delta))
+		#	print("deltas", deltas)
+		#	print("len", len(deltas))
 		assert forced <= best_sol, (forced, best_sol)
 
-		delta = [delta[i] if i in best_sol else None for i in range(n)]
+		deltas = [deltas[i] if i in best_sol else None for i in range(n)]
 
 
-	return delta
+	return deltas
 
-def iup_delta_optimize(delta, coords, ends, tolerance=0.):
+def iup_delta_optimize(deltas : _DeltaSegment,
+		       coords : _PointSegment,
+		       ends : _Endpoints,
+		       tolerance : Real = 0.) -> _DeltaOrNoneSegment:
+	"""For the outline given in `coords`, with contour endpoints given
+	in sorted increasing order in `ends`, optimize a set of delta
+	values `deltas` within error `tolerance`.
+
+	Returns delta vector that has most number of None items instead of
+	the input delta.
+	"""
 	assert sorted(ends) == ends and len(coords) == (ends[-1]+1 if ends else 0) + 4
 	n = len(coords)
 	ends = ends + [n-4, n-3, n-2, n-1]
 	out = []
 	start = 0
 	for end in ends:
-		contour = iup_contour_optimize(delta[start:end+1], coords[start:end+1], tolerance)
+		contour = iup_contour_optimize(deltas[start:end+1], coords[start:end+1], tolerance)
 		assert len(contour) == end - start + 1
 		out.extend(contour)
 		start = end+1

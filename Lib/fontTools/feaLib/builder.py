@@ -224,14 +224,12 @@ class Builder(object):
                 del self.font[tag]
         if any(tag in self.font for tag in ("GPOS", "GSUB")) and "OS/2" in self.font:
             self.font["OS/2"].usMaxContext = maxCtxFont(self.font)
-        gdef = self.buildGDEF()  # build unconditionally so we can warn below
         if "GDEF" in tables:
+            gdef = self.buildGDEF()
             if gdef:
                 self.font["GDEF"] = gdef
             elif "GDEF" in self.font:
                 del self.font["GDEF"]
-        elif gdef:
-            log.warning("GDEF is not requested, but is needed")
         if "BASE" in tables:
             base = self.buildBASE()
             if base:
@@ -772,6 +770,7 @@ class Builder(object):
                 gdef.remap_device_varidxes(varidx_map)
                 if 'GPOS' in self.font:
                     self.font['GPOS'].table.remap_device_varidxes(varidx_map)
+            VariableScalar.clear_cache()
         if any(
             (
                 gdef.GlyphClassDef,

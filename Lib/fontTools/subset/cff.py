@@ -3,7 +3,6 @@ from fontTools import ttLib
 from fontTools.pens.basePen import NullPen
 from fontTools.misc.roundTools import otRound
 from fontTools.misc.loggingTools import deprecateFunction
-from fontTools.varLib.varStore import VarStoreInstancer
 from fontTools.subset.util import _add_method, _uniq_sort
 
 
@@ -109,15 +108,7 @@ def subset_glyphs(self, s):
 			del csi.file, csi.offsets
 			if hasattr(font, "FDSelect"):
 				sel = font.FDSelect
-				# XXX We want to set sel.format to None, such that the
-				# most compact format is selected. However, OTS was
-				# broken and couldn't parse a FDSelect format 0 that
-				# happened before CharStrings. As such, always force
-				# format 3 until we fix cffLib to always generate
-				# FDSelect after CharStrings.
-				# https://github.com/khaledhosny/ots/pull/31
-				#sel.format = None
-				sel.format = 3
+				sel.format = None
 				sel.gidArray = [sel.gidArray[i] for i in indices]
 			newCharStrings = {}
 			for indicesIdx, charsetIdx in enumerate(indices):
