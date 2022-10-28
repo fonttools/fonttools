@@ -959,6 +959,9 @@ def build(
 	# Copy the base master to work from it
 	vf = deepcopy(master_fonts[ds.base_idx])
 
+	if "DSIG" in vf:
+		del vf["DSIG"]
+
 	# TODO append masters as named-instances as well; needs .designspace change.
 	fvar = _add_fvar(vf, ds.axes, ds.instances)
 	if 'STAT' not in exclude:
