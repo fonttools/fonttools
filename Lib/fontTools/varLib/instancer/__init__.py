@@ -1277,6 +1277,9 @@ def instantiateVariableFont(
     if not inplace:
         varfont = deepcopy(varfont)
 
+    if "DSIG" in varfont:
+        del varfont["DSIG"]
+
     if updateFontNames:
         log.info("Updating name table")
         names.updateNameTable(varfont, axisLimits)
