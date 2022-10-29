@@ -30,7 +30,7 @@ jobs:
     if: "! contains(toJSON(github.event.commits.*.message), '[skip ci]')"
     strategy:
       matrix:
-        python-version: ["3.7", "3.10"]
+        python-version: ["3.7", "3.11"]
         platform: [ubuntu-latest, macos-latest, windows-latest]
         exclude: # Only test on the latest supported stable Python on macOS and Windows.
           - platform: macos-latest
@@ -71,7 +71,7 @@ jobs:
     - name: Set up Python 3.x
       uses: actions/setup-python@v4
       with:
-        python-version: "3.10"
+        python-version: "3.11"
     - name: Install packages
       run: pip install tox
     - name: Run Tox
