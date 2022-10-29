@@ -92,13 +92,13 @@ def main(args=None):
 			collection = TTCollection(f, lazy=lazy)
 			fonts.extend(collection.fonts)
 
-		if outFile is not None:
-			if len(fonts) == 1:
-				fonts[0].save(outFile)
-			else:
-				collection = TTCollection()
-				collection.fonts = fonts
-				collection.save(outFile)
+	if outFile is not None:
+		if len(fonts) == 1:
+			fonts[0].save(outFile)
+		else:
+			collection = TTCollection()
+			collection.fonts = fonts
+			collection.save(outFile)
 
 if __name__ == "__main__":
 	sys.exit(main())
