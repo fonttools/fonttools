@@ -20,7 +20,7 @@ from fontTools.ttLib.ttCollection import TTCollection
 
 
 def main(args=None):
-	"""Open font with TTFont() or TTCollection()
+	"""Open/save fonts with TTFont() or TTCollection()
 
 	  ./fonttools ttLib [-oFILE] [-yNUMBER] files...
 
@@ -48,25 +48,43 @@ def main(args=None):
 	if args is None:
 		args = sys.argv[1:]
 
-	import getopt
-	options, files = getopt.getopt(args, "o:y:",
-		["lazy", "no-lazy"])
+	import argparse
 
-	fontNumber = -1
-	outFile = None
-	lazy = None
-	for option, value in options:
-		if option == "-o":
-			outFile = value
-		elif option == "-y":
-			fontNumber = int(value)
-		elif option == "--lazy":
-			lazy = True
-		elif option == "--no-lazy":
-			lazy = False
+	parser = argparse.ArgumentParser(
+		"fonttools ttLib",
+		description="Open/save fonts with TTFont() or TTCollection()",
+		epilog="""
+		If multiple files are given on the command-line,
+		they are each opened (as a font or collection),
+		and added to the font list.
+
+		The above, when combined with -o / --output,
+		allows for extracting a single font from a
+		collection, or combining multiple fonts into a
+		collection.
+		"""
+	)
+	parser.add_argument("font", metavar="font", nargs="*", help="Font file.")
+	parser.add_argument(
+		"-o", "--output", metavar="FILE", default=None, help="Output file."
+	)
+	parser.add_argument(
+		"-y",  metavar="NUMBER", default=-1, help="Font number to load from collections."
+	)
+	parser.add_argument(
+		"--lazy", action="store_true", default=None, help="Load fonts lazily."
+	)
+	parser.add_argument(
+		"--no-lazy", dest="lazy", action="store_false", help="Load fonts immediately."
+	)
+	options = parser.parse_args(args)
+
+	fontNumber = int(options.y) if options.y is not None else None
+	outFile = options.output
+	lazy = options.lazy
 
 	fonts = []
-	for f in files:
+	for f in options.font:
 		try:
 			font = TTFont(f, fontNumber=fontNumber, lazy=lazy)
 			fonts.append(font)
