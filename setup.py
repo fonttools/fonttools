@@ -99,9 +99,9 @@ extras_require = {
 	# of the Unicode Character Database instead of the built-in unicodedata
 	# which varies between python versions and may be outdated.
 	"unicode": [
-		# Python 3.11 already has Unicode 14.0, so the backport is not needed.
+		# Python 3.12 will have Unicode 15.0, so the backport is not needed.
 		(
-			"unicodedata2 >= 14.0.0; python_version < '3.11'"
+			"unicodedata2 >= 15.0.0; python_version <= '3.11'"
 		),
 	],
 	# for graphite type tables in ttLib/tables (Silf, Glat, Gloc)
