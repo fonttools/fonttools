@@ -13,4 +13,4 @@ skia-pathops==0.7.3; platform_python_implementation != "PyPy"
 ufoLib2==0.13.1
 pyobjc==8.5.1; sys_platform == "darwin"
 freetype-py==2.3.0
-uharfbuzz==0.31.0
+uharfbuzz==0.32.0
