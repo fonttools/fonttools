@@ -211,6 +211,8 @@ are required to unlock the extra features named "ufo", etc.
   
   * `uharfbuzz <https://pypi.python.org/pypi/uharfbuzz>`__: Streamlined Cython
     bindings for the harfbuzz shaping engine
+    
+  *Extra:* ``repacker``
 
 How to make a new release
 ~~~~~~~~~~~~~~~~~~~~~~~~~
