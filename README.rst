@@ -120,8 +120,7 @@ are required to unlock the extra features named "ufo", etc.
 
   * `unicodedata2 <https://pypi.python.org/pypi/unicodedata2>`__:
     ``unicodedata`` backport for Python 3.x updated to the latest Unicode
-    version 14.0. Note this is not necessary if you use Python 3.11
-    as the latter already comes with an up-to-date ``unicodedata``.
+    version 15.0.
 
   *Extra:* ``unicode``
 
@@ -205,6 +204,13 @@ are required to unlock the extra features named "ufo", etc.
 
   * `freetype-py <https://pypi.python.org/pypi/freetype-py>`__: Python binding
     for the FreeType library.
+    
+- ``Lib/fontTools/ttLib/tables/otBase.py``
+
+  Use the Harfbuzz library to serialize GPOS/GSUB using ``hb_repack`` method, requires:
+  
+  * `uharfbuzz <https://pypi.python.org/pypi/uharfbuzz>`__: Streamlined Cython
+    bindings for the harfbuzz shaping engine
 
 How to make a new release
 ~~~~~~~~~~~~~~~~~~~~~~~~~
