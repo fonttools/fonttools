@@ -1,4 +1,5 @@
 
+from fontTools.ttLib.tables import otTables as ot
 from fontTools.varLib.models import normalizeValue
 from copy import deepcopy
 import logging
@@ -117,6 +118,7 @@ def _instantiateFeatureVariations(table, fvarAxes, axisLimits):
     featureVariationApplied = False
     uniqueRecords = set()
     newRecords = []
+    defaultsSubsts = None
 
     for i, record in enumerate(table.FeatureVariations.FeatureVariationRecord):
         applies, shouldKeep, universal = _instantiateFeatureVariationRecord(
@@ -128,7 +130,10 @@ def _instantiateFeatureVariations(table, fvarAxes, axisLimits):
 
         if applies and not featureVariationApplied:
             assert record.FeatureTableSubstitution.Version == 0x00010000
-            for rec in record.FeatureTableSubstitution.SubstitutionRecord:
+            defaultsSubsts = deepcopy(record.FeatureTableSubstitution)
+            for default,rec in zip(defaultsSubsts.SubstitutionRecord,
+                                   record.FeatureTableSubstitution.SubstitutionRecord):
+                default.Feature = deepcopy(table.FeatureList.FeatureRecord[rec.FeatureIndex].Feature)
                 table.FeatureList.FeatureRecord[rec.FeatureIndex].Feature = deepcopy(
                     rec.Feature
                 )
@@ -138,6 +143,16 @@ def _instantiateFeatureVariations(table, fvarAxes, axisLimits):
         # Further records don't have a chance to apply after a universal record
         if universal:
             break
+
+    # Insert a catch-all record to reinstate the old features if necessary
+    if featureVariationApplied and newRecords and not universal:
+        defaultRecord = ot.FeatureVariationRecord()
+        defaultRecord.ConditionSet = ot.ConditionSet()
+        defaultRecord.ConditionSet.ConditionTable = []
+        defaultRecord.ConditionSet.ConditionCount = 0
+        defaultRecord.FeatureTableSubstitution = defaultsSubsts
+
+        newRecords.append(defaultRecord)
 
     if newRecords:
         table.FeatureVariations.FeatureVariationRecord = newRecords
