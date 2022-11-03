@@ -48,6 +48,7 @@ def _instantiateFeatureVariationRecord(
     record, recIdx, axisLimits, fvarAxes, axisIndexMap
 ):
     applies = True
+    shouldKeep = False
     newConditions = []
     from fontTools.varLib.instancer import NormalizedAxisTriple
     default_triple = NormalizedAxisTriple(-1, 0, +1)
@@ -69,7 +70,23 @@ def _instantiateFeatureVariationRecord(
             if axisTag in axisIndexMap:
                 # remap axis index
                 condition.AxisIndex = axisIndexMap[axisTag]
-                newConditions.append(condition)
+
+                # remap condition limits
+                newRange = _limitFeatureVariationConditionRange(condition, triple)
+                if newRange:
+                    # keep condition with updated limits
+                    minimum, maximum = newRange
+                    condition.FilterRangeMinValue = minimum
+                    condition.FilterRangeMaxValue = maximum
+                    shouldKeep = True
+                    if minimum != -1 or maximum != +1:
+                        newConditions.append(condition)
+                else:
+                    # condition out of range, remove entire record
+                    newConditions = None
+                    break
+
+
         else:
             log.warning(
                 "Condition table {0} of FeatureVariationRecord {1} has "
@@ -78,42 +95,13 @@ def _instantiateFeatureVariationRecord(
             applies = False
             newConditions.append(condition)
 
-    if newConditions:
+    if newConditions is not None and shouldKeep:
         record.ConditionSet.ConditionTable = newConditions
         shouldKeep = True
     else:
         shouldKeep = False
 
     return applies, shouldKeep
-
-
-def _limitFeatureVariationRecord(record, axisLimits, axisOrder):
-    newConditions = []
-    for condition in record.ConditionSet.ConditionTable:
-        if condition.Format == 1:
-            axisIdx = condition.AxisIndex
-            axisTag = axisOrder[axisIdx]
-            if axisTag in axisLimits:
-                axisLimit = axisLimits[axisTag]
-                newRange = _limitFeatureVariationConditionRange(condition, axisLimit)
-                if newRange:
-                    # keep condition with updated limits
-                    minimum, maximum = newRange
-                    condition.FilterRangeMinValue = minimum
-                    condition.FilterRangeMaxValue = maximum
-                    if minimum != -1 or maximum != +1:
-                        newConditions.append(condition)
-                else:
-                    # condition out of range, remove entire record
-                    newConditions = None
-                    break
-            else:
-                newConditions.append(condition)
-        else:
-            newConditions.append(condition)
-
-    record.ConditionSet.ConditionTable = newConditions
-    return newConditions is not None
 
 
 def _instantiateFeatureVariations(table, fvarAxes, axisLimits):
@@ -129,8 +117,6 @@ def _instantiateFeatureVariations(table, fvarAxes, axisLimits):
         applies, shouldKeep = _instantiateFeatureVariationRecord(
             record, i, axisLimits, fvarAxes, axisIndexMap
         )
-        if shouldKeep:
-            shouldKeep = _limitFeatureVariationRecord(record, axisLimits, axisOrder)
 
         if shouldKeep and _featureVariationRecordIsUnique(record, uniqueRecords):
             newRecords.append(record)
