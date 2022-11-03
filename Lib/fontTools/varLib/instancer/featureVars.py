@@ -60,12 +60,14 @@ def _instantiateFeatureVariationRecord(
             minValue = condition.FilterRangeMinValue
             maxValue = condition.FilterRangeMaxValue
             triple = axisLimits.get(axisTag, default_triple)
+
             if not (minValue <= triple.default <= maxValue):
                 applies = False
-                # condition not met so remove entire record
-                if triple.minimum > maxValue or triple.maximum < minValue:
-                    newConditions = None
-                    break
+
+            # if condition not met, remove entire record
+            if triple.minimum > maxValue or triple.maximum < minValue:
+                newConditions = None
+                break
 
             if axisTag in axisIndexMap:
                 # remap axis index
@@ -101,7 +103,10 @@ def _instantiateFeatureVariationRecord(
     else:
         shouldKeep = False
 
-    return applies, shouldKeep
+    # Does this *always* apply?
+    universal = shouldKeep and not newConditions
+
+    return applies, shouldKeep, universal
 
 
 def _instantiateFeatureVariations(table, fvarAxes, axisLimits):
@@ -114,7 +119,7 @@ def _instantiateFeatureVariations(table, fvarAxes, axisLimits):
     newRecords = []
 
     for i, record in enumerate(table.FeatureVariations.FeatureVariationRecord):
-        applies, shouldKeep = _instantiateFeatureVariationRecord(
+        applies, shouldKeep, universal = _instantiateFeatureVariationRecord(
             record, i, axisLimits, fvarAxes, axisIndexMap
         )
 
@@ -129,6 +134,10 @@ def _instantiateFeatureVariations(table, fvarAxes, axisLimits):
                 )
             # Set variations only once
             featureVariationApplied = True
+
+        # Further records don't have a chance to apply after a universal record
+        if universal:
+            break
 
     if newRecords:
         table.FeatureVariations.FeatureVariationRecord = newRecords
