@@ -1663,6 +1663,28 @@ class InstantiateFeatureVariationsTest(object):
                     ),
                 ],
             ),
+            (
+                {"cntr": (0.7, 0.9, 1.0)},
+                {"uni0041": "uni0061"},
+                [
+                    (
+                        {'cntr': (-0.7499999999999999, 1.0), 'wght': (0.20886, 1.0)},
+                        {"uni0024": "uni0024.nostroke", "uni0041": "uni0061"},
+                    ),
+                    (
+                        {'cntr': (-0.7499999999999999, 1.0)},
+                        {"uni0041": "uni0061"},
+                    ),
+                    (
+                        {"wght": (0.20886, 1.0)},
+                        {"uni0024": "uni0024.nostroke"},
+                    ),
+                    (
+                        {},
+                        {},
+                    ),
+                ],
+            ),
         ],
     )
     def test_partial_instance(self, location, appliedSubs, expectedRecords):
