@@ -9,6 +9,7 @@ from fontTools.ttLib.tables import otTables
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools import varLib
 from fontTools.varLib import instancer
+from fontTools.varLib.instancer import featureVars as instancer_featureVars
 from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib import builder
 from fontTools.varLib import featureVars
@@ -1975,7 +1976,7 @@ class LimitTupleVariationAxisRangesTest:
 def test_limitFeatureVariationConditionRange(oldRange, newLimit, expected):
     condition = featureVars.buildConditionTable(0, *oldRange)
 
-    result = instancer._limitFeatureVariationConditionRange(
+    result = instancer_featureVars._limitFeatureVariationConditionRange(
         condition, instancer.NormalizedAxisTriple(*newLimit)
     )
 
