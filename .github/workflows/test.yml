@@ -9,6 +9,10 @@ on:
 permissions:
   contents: read
 
+env:
+  # turns off tox's output redirection so we can debug package installation
+  TOX_OPTIONS: -vv
+
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -23,7 +27,7 @@ jobs:
     - name: Install packages
       run: pip install tox
     - name: Run Tox
-      run: tox -e mypy,package_readme
+      run: tox $TOX_OPTIONS -e mypy,package_readme
 
   test:
     runs-on: ${{ matrix.platform }}
@@ -46,9 +50,9 @@ jobs:
     - name: Install packages
       run: pip install tox coverage
     - name: Run Tox
-      run: tox -e py-cov
+      run: tox $TOX_OPTIONS -e py-cov
     - name: Run Tox without lxml
-      run: tox -e py-cov-nolxml
+      run: tox $TOX_OPTIONS -e py-cov-nolxml
     - name: Produce coverage files
       run: |
         coverage combine
@@ -75,7 +79,7 @@ jobs:
     - name: Install packages
       run: pip install tox
     - name: Run Tox
-      run: tox -e py-cy-nolxml
+      run: tox $TOX_OPTIONS -e py-cy-nolxml
 
   test-pypy3:
     runs-on: ubuntu-latest
@@ -89,4 +93,4 @@ jobs:
     - name: Install packages
       run: pip install tox
     - name: Run Tox
-      run: tox -e pypy3-nolxml
+      run: tox $TOX_OPTIONS -e pypy3-nolxml
