@@ -461,7 +461,7 @@ setup_params = dict(
 	url="http://github.com/fonttools/fonttools",
 	license="MIT",
 	platforms=["Any"],
-	python_requires=">=3.7",
+	python_requires=">=3.8",
 	long_description=long_description,
 	package_dir={'': 'Lib'},
 	packages=find_packages("Lib"),
