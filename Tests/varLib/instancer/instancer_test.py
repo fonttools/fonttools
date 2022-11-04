@@ -1587,13 +1587,13 @@ class InstantiateFeatureVariationsTest(object):
         "location, appliedSubs, expectedRecords",
         [
             ({"wght": 0}, {}, [({"cntr": (0.75, 1.0)}, {"uni0041": "uni0061"})]),
-            # Buggy. See: https://github.com/fonttools/fonttools/issues/2737
             (
                 {"wght": -1.0},
                 {"uni0061": "uni0041"},
                 [
                     ({"cntr": (0, 0.25)}, {"uni0061": "uni0041"}),
                     ({"cntr": (0.75, 1.0)}, {"uni0041": "uni0061"}),
+                    ({}, {}),
                 ],
             ),
             (
@@ -1603,7 +1603,8 @@ class InstantiateFeatureVariationsTest(object):
                     (
                         {"cntr": (0.75, 1.0)},
                         {"uni0024": "uni0024.nostroke", "uni0041": "uni0061"},
-                    )
+                    ),
+                    ({}, {})
                 ],
             ),
             (
@@ -1621,7 +1622,8 @@ class InstantiateFeatureVariationsTest(object):
                     (
                         {"wght": (0.20886, 1.0)},
                         {"uni0024": "uni0024.nostroke", "uni0041": "uni0061"},
-                    )
+                    ),
+                    ({}, {})
                 ],
             ),
             (
@@ -1657,6 +1659,28 @@ class InstantiateFeatureVariationsTest(object):
                     (
                         {},
                         {"uni0041": "uni0061"},
+                    ),
+                ],
+            ),
+            (
+                {"cntr": (0.7, 0.9, 1.0)},
+                {"uni0041": "uni0061"},
+                [
+                    (
+                        {'cntr': (-0.7499999999999999, 1.0), 'wght': (0.20886, 1.0)},
+                        {"uni0024": "uni0024.nostroke", "uni0041": "uni0061"},
+                    ),
+                    (
+                        {'cntr': (-0.7499999999999999, 1.0)},
+                        {"uni0041": "uni0061"},
+                    ),
+                    (
+                        {"wght": (0.20886, 1.0)},
+                        {"uni0024": "uni0024.nostroke"},
+                    ),
+                    (
+                        {},
+                        {},
                     ),
                 ],
             ),
@@ -1975,7 +1999,7 @@ class LimitTupleVariationAxisRangesTest:
 def test_limitFeatureVariationConditionRange(oldRange, newLimit, expected):
     condition = featureVars.buildConditionTable(0, *oldRange)
 
-    result = instancer._limitFeatureVariationConditionRange(
+    result = instancer.featureVars._limitFeatureVariationConditionRange(
         condition, instancer.NormalizedAxisTriple(*newLimit)
     )
 
