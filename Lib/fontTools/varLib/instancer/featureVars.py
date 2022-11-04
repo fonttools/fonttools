@@ -5,7 +5,7 @@ from copy import deepcopy
 import logging
 
 
-log = logging.getLogger("fontTools.varLib.instancer.featureVars")
+log = logging.getLogger("fontTools.varLib.instancer")
 
 
 def _featureVariationRecordIsUnique(rec, seen):
