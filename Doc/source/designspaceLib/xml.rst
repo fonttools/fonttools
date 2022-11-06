@@ -542,13 +542,13 @@ element with an ``xml:lang`` attribute:
 
 Defines the coordinates of this source in the design space.
 
-.. seealso:: `Full documentation of the <location> element <location>`__
+.. seealso:: :ref:`Full documentation of the \<location\> element <location>`
 
 
 ``<dimension>`` element (source)
 ................................
 
-.. seealso:: `Full documentation of the <dimension> element <dimension>`__
+.. seealso:: :ref:`Full documentation of the \<dimension\> element <dimension>`
 
 
 ``<lib>`` element (source)
@@ -836,13 +836,13 @@ The ``<instances>`` element contains one or more ``<instance>`` elements.
 
 Defines the coordinates of this instance in the design space.
 
-.. seealso:: `Full documentation of the <location> element <location>`__
+.. seealso:: :ref:`Full documentation of the \<location\> element <location>`
 
 
 ``<dimension>`` element (instance)
 ..................................
 
-.. seealso:: `Full documentation of the <dimension> element <dimension>`__
+.. seealso:: :ref:`Full documentation of the \<dimension\> element <dimension>`
 
 
 ``<lib>`` element (instance)
