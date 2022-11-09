@@ -284,7 +284,7 @@ Have fun!
 
 .. |CI Build Status| image:: https://github.com/fonttools/fonttools/workflows/Test/badge.svg
    :target: https://github.com/fonttools/fonttools/actions?query=workflow%3ATest
-.. |Coverage Status| image:: https://codecov.io/gh/fonttools/fonttools/branch/master/graph/badge.svg
+.. |Coverage Status| image:: https://codecov.io/gh/fonttools/fonttools/branch/main/graph/badge.svg
    :target: https://codecov.io/gh/fonttools/fonttools
 .. |PyPI| image:: https://img.shields.io/pypi/v/fonttools.svg
    :target: https://pypi.org/project/FontTools

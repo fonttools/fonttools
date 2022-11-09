@@ -101,13 +101,13 @@ Paul Wise.
 License
 -------
 
-`MIT license <https://github.com/fonttools/fonttools/blob/master/LICENSE>`_.  See the full text of the license for details.
+`MIT license <https://github.com/fonttools/fonttools/blob/main/LICENSE>`_.  See the full text of the license for details.
 
 .. |Travis Build Status| image:: https://travis-ci.org/fonttools/fonttools.svg
    :target: https://travis-ci.org/fonttools/fonttools
 .. |Appveyor Build status| image:: https://ci.appveyor.com/api/projects/status/0f7fmee9as744sl7/branch/master?svg=true
    :target: https://ci.appveyor.com/project/fonttools/fonttools/branch/master
-.. |Coverage Status| image:: https://codecov.io/gh/fonttools/fonttools/branch/master/graph/badge.svg
+.. |Coverage Status| image:: https://codecov.io/gh/fonttools/fonttools/branch/main/graph/badge.svg
    :target: https://codecov.io/gh/fonttools/fonttools
 .. |PyPI| image:: https://img.shields.io/pypi/v/fonttools.svg
    :target: https://pypi.org/project/FontTools
