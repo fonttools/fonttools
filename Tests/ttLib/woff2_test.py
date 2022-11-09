@@ -1239,7 +1239,10 @@ class WOFF2RoundtripTest(object):
 
 		_, ttFont2 = self.roundtrip(tmp)
 		assert ttFont2.flavor == "woff2"
-		assert ttFont2["glyf"]["A"].flags[0] == 0
+		# check that the off-curve point is still there
+		assert ttFont2["glyf"]["A"].flags[0] & _g_l_y_f.flagOnCurve == 0
+		# check that the overlap bit is still there
+		assert ttFont2["glyf"]["A"].flags[0] & _g_l_y_f.flagOverlapSimple != 0
 
 class MainTest(object):
 

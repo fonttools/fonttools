@@ -523,7 +523,8 @@ woff2TransformedTableTags = ('glyf', 'loca')
 
 woff2GlyfTableFormat = """
 		> # big endian
-		version:                  L  # = 0x00000000
+		version:                  H  # = 0x0000
+		optionFlags:              H  # Bit 0: we have overlapSimpleBitmap[], Bits 1-15: reserved
 		numGlyphs:                H  # Number of glyphs
 		indexFormat:              H  # Offset format for loca table
 		nContourStreamSize:       L  # Size of nContour stream
@@ -544,6 +545,8 @@ bboxFormat = """
 		xMax:				h
 		yMax:				h
 """
+
+woff2OverlapSimpleBitmapFlag = 0x0001
 
 
 def getKnownTagIndex(tag):
@@ -690,6 +693,13 @@ class WOFF2GlyfTable(getTableClass('glyf')):
 			data = data[size:]
 			offset += size
 
+		hasOverlapSimpleBitmap = self.optionFlags & woff2OverlapSimpleBitmapFlag
+		self.overlapSimpleBitmap = None
+		if hasOverlapSimpleBitmap:
+			overlapSimpleBitmapSize = (self.numGlyphs + 7) >> 3
+			self.overlapSimpleBitmap = array.array('B', data[:overlapSimpleBitmapSize])
+			offset += overlapSimpleBitmapSize
+
 		if offset != inputDataSize:
 			raise TTLibError(
 				"incorrect size of transformed 'glyf' table: expected %d, received %d bytes"
@@ -737,15 +747,22 @@ class WOFF2GlyfTable(getTableClass('glyf')):
 		bboxBitmapSize = ((self.numGlyphs + 31) >> 5) << 2
 		self.bboxBitmap = array.array('B', [0]*bboxBitmapSize)
 
+		self.overlapSimpleBitmap = array.array('B', [0]*((self.numGlyphs + 7) >> 3))
 		for glyphID in range(self.numGlyphs):
 			self._encodeGlyph(glyphID)
+		hasOverlapSimpleBitmap = any(self.overlapSimpleBitmap)
 
 		self.bboxStream = self.bboxBitmap.tobytes() + self.bboxStream
 		for stream in self.subStreams:
 			setattr(self, stream + 'Size', len(getattr(self, stream)))
 		self.version = 0
+		self.optionFlags = 0
+		if hasOverlapSimpleBitmap:
+			self.optionFlags |= woff2OverlapSimpleBitmapFlag
 		data = sstruct.pack(woff2GlyfTableFormat, self)
 		data += bytesjoin([getattr(self, s) for s in self.subStreams])
+		if hasOverlapSimpleBitmap:
+			data += self.overlapSimpleBitmap.tobytes()
 		return data
 
 	def _decodeGlyph(self, glyphID):
@@ -757,6 +774,7 @@ class WOFF2GlyfTable(getTableClass('glyf')):
 			self._decodeComponents(glyph)
 		else:
 			self._decodeCoordinates(glyph)
+			self._decodeOverlapSimpleFlag(glyph, glyphID)
 		self._decodeBBox(glyphID, glyph)
 		return glyph
 
@@ -786,6 +804,14 @@ class WOFF2GlyfTable(getTableClass('glyf')):
 		self.nPointsStream = data
 		self._decodeTriplets(glyph)
 		self._decodeInstructions(glyph)
+
+	def _decodeOverlapSimpleFlag(self, glyph, glyphID):
+		if self.overlapSimpleBitmap is None or glyph.numberOfContours <= 0:
+			return
+		byte = glyphID >> 3
+		bit = glyphID & 7
+		if self.overlapSimpleBitmap[byte] & (0x80 >> bit):
+			glyph.flags[0] |= _g_l_y_f.flagOverlapSimple
 
 	def _decodeInstructions(self, glyph):
 		glyphStream = self.glyphStream
@@ -885,6 +911,7 @@ class WOFF2GlyfTable(getTableClass('glyf')):
 			self._encodeComponents(glyph)
 		else:
 			self._encodeCoordinates(glyph)
+			self._encodeOverlapSimpleFlag(glyph, glyphID)
 		self._encodeBBox(glyphID, glyph)
 
 	def _encodeComponents(self, glyph):
@@ -908,6 +935,14 @@ class WOFF2GlyfTable(getTableClass('glyf')):
 			lastEndPoint = endPoint
 		self._encodeTriplets(glyph)
 		self._encodeInstructions(glyph)
+
+	def _encodeOverlapSimpleFlag(self, glyph, glyphID):
+		if glyph.numberOfContours <= 0:
+			return
+		if glyph.flags[0] & _g_l_y_f.flagOverlapSimple:
+			byte = glyphID >> 3
+			bit = glyphID & 7
+			self.overlapSimpleBitmap[byte] |= 0x80 >> bit
 
 	def _encodeInstructions(self, glyph):
 		instructions = glyph.program.getBytecode()
