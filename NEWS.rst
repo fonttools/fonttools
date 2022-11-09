@@ -910,7 +910,7 @@
   (#1872).
 - [Snippets/otf2ttf] In otf2ttf.py script update LSB in hmtx to match xMin (#1873).
 - [colorLib] Added experimental support for building ``COLR`` v1 tables as per
-  the `colr-gradients-spec <https://github.com/googlefonts/colr-gradients-spec/blob/master/colr-gradients-spec.md>`__
+  the `colr-gradients-spec <https://github.com/googlefonts/colr-gradients-spec/blob/main/colr-gradients-spec.md>`__
   draft proposal. **NOTE**: both the API and the XML dump of ``COLR`` v1 are
   susceptible to change while the proposal is being discussed and formalized (#1822).
 
