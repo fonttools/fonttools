@@ -623,17 +623,22 @@ class WOFF2WriterTTFTest(WOFF2WriterTest):
 	def test_hmtx_trasform(self):
 		tableTransforms = {"glyf", "loca", "hmtx"}
 
-		writer = WOFF2Writer(BytesIO(), self.numTables, self.font.sfntVersion)
-		writer.flavorData = WOFF2FlavorData(transformedTables=tableTransforms)
+		def compile_hmtx(compressed):
+			tableTransforms = woff2TransformedTableTags
+			if compressed:
+				tableTransforms += ("hmtx",)
+			writer = WOFF2Writer(BytesIO(), self.numTables, self.font.sfntVersion)
+			writer.flavorData = WOFF2FlavorData(transformedTables=tableTransforms)
+			for tag in self.tags:
+				writer[tag] = self.font.getTableData(tag)
+			writer.close()
+			return writer.tables["hmtx"].length
 
-		for tag in self.tags:
-			writer[tag] = self.font.getTableData(tag)
-		writer.close()
-
-		length = len(writer.file.getvalue())
+		uncompressed_length = compile_hmtx(compressed=False)
+		compressed_length = compile_hmtx(compressed=True)
 
 		# enabling optional hmtx transform shaves off a few bytes
-		self.assertLess(length, len(TT_WOFF2.getvalue()))
+		self.assertLess(compressed_length, uncompressed_length)
 
 	def test_no_transforms(self):
 		writer = WOFF2Writer(BytesIO(), self.numTables, self.font.sfntVersion)
