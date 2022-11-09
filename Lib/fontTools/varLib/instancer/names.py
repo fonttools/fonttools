@@ -115,7 +115,7 @@ def updateNameTable(varfont, axisLimits):
     # If we're instantiating a partial font, we will populate the unpinned
     # axes with their default axis values from fvar.
     axisLimits = AxisLimits(axisLimits).populateDefaults(varfont)
-    partialDefaults = {k: v.default for k, v in axisLimits.items()}
+    partialDefaults = axisLimits.defaultLocation()
     fvarDefaults = {a.axisTag: a.defaultValue for a in fvar.axes}
     defaultAxisCoords = AxisLimits({**fvarDefaults, **partialDefaults})
     assert all(v.minimum == v.maximum for v in defaultAxisCoords.values())

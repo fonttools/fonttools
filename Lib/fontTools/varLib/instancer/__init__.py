@@ -257,6 +257,10 @@ class _BaseAxisLimits(Mapping[str, AxisTriple]):
     def __str__(self) -> str:
         return str(self._data)
 
+    def defaultLocation(self) -> Dict[str, float]:
+        """Return a dict of default axis values."""
+        return {k: v.default for k, v in self.items()}
+
     def pinnedLocation(self) -> Dict[str, float]:
         """Return a location dict with only the pinned axes."""
         return {k: v.default for k, v in self.items() if v.minimum == v.maximum}
@@ -1167,7 +1171,9 @@ def instantiateVariableFont(
                     ignoreErrors=(overlap == OverlapMode.REMOVE_AND_IGNORE_ERRORS),
                 )
 
-    varLib.set_default_weight_width_slant(varfont, location=axisLimits.pinnedLocation())
+    varLib.set_default_weight_width_slant(
+        varfont, location=axisLimits.defaultLocation()
+    )
 
     if updateFontNames:
         # Set Regular/Italic/Bold/Bold Italic bits as appropriate, after the
