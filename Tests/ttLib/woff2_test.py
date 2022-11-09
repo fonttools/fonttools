@@ -621,7 +621,6 @@ class WOFF2WriterTTFTest(WOFF2WriterTest):
 			self.assertEqual(self.writer.tables[tag].data, normTables[tag])
 
 	def test_hmtx_trasform(self):
-		tableTransforms = {"glyf", "loca", "hmtx"}
 
 		def compile_hmtx(compressed):
 			tableTransforms = woff2TransformedTableTags
