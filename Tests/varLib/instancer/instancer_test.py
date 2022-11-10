@@ -1502,6 +1502,18 @@ class InstantiateVariableFontTest(object):
 
         assert _dump_ttx(instance) == expected
 
+    def test_move_weight_width_axis_default(self, varfont2):
+        # https://github.com/fonttools/fonttools/issues/2885
+        assert varfont2["OS/2"].usWeightClass == 400
+        assert varfont2["OS/2"].usWidthClass == 5
+
+        varfont = instancer.instantiateVariableFont(
+            varfont2, {"wght": (100, 500, 900), "wdth": 87.5}
+        )
+
+        assert varfont["OS/2"].usWeightClass == 500
+        assert varfont["OS/2"].usWidthClass == 4
+
     @pytest.mark.parametrize(
         "overlap, wght",
         [
