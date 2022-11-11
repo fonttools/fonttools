@@ -239,15 +239,13 @@ def ot_tags_from_script(script_code):
     Unicode script code.
     Return ['DFLT'] script tag for invalid/unknown script codes.
     """
+    if script_code in OTTags.SCRIPT_EXCEPTIONS:
+        return [OTTags.SCRIPT_EXCEPTIONS[script_code]]
+
     if script_code not in Scripts.NAMES:
         return [OTTags.DEFAULT_SCRIPT]
 
-    script_tags = [
-        OTTags.SCRIPT_EXCEPTIONS.get(
-            script_code,
-            script_code[0].lower() + script_code[1:]
-        )
-    ]
+    script_tags = [script_code[0].lower() + script_code[1:]]
     if script_code in OTTags.NEW_SCRIPT_TAGS:
         script_tags.extend(OTTags.NEW_SCRIPT_TAGS[script_code])
         script_tags.reverse()  # last in, first out
@@ -277,6 +275,9 @@ def ot_tag_to_script(tag):
 
     if tag in OTTags.NEW_SCRIPT_TAGS_REVERSED:
         return OTTags.NEW_SCRIPT_TAGS_REVERSED[tag]
+
+    if tag in OTTags.SCRIPT_EXCEPTIONS_REVERSED:
+        return OTTags.SCRIPT_EXCEPTIONS_REVERSED[tag]
 
     # This side of the conversion is fully algorithmic
 
