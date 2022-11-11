@@ -210,6 +210,7 @@ def test_ot_tags_from_script():
     assert unicodedata.ot_tags_from_script("Deva") == ["dev2", "deva"]
     # exceptions
     assert unicodedata.ot_tags_from_script("Hira") == ["kana"]
+    assert unicodedata.ot_tags_from_script("Zmth") == ["math"]
     # special script codes map to DFLT
     assert unicodedata.ot_tags_from_script("Zinh") == ["DFLT"]
     assert unicodedata.ot_tags_from_script("Zyyy") == ["DFLT"]
@@ -232,6 +233,7 @@ def test_ot_tag_to_script():
     assert unicodedata.ot_tag_to_script("vai ") == "Vaii"
     assert unicodedata.ot_tag_to_script("lao ") == "Laoo"
     assert unicodedata.ot_tag_to_script("yi") == "Yiii"
+    assert unicodedata.ot_tag_to_script("math") == "Zmth"
     # both 'hang' and 'jamo' tags map to the Hangul script
     assert unicodedata.ot_tag_to_script("hang") == "Hang"
     assert unicodedata.ot_tag_to_script("jamo") == "Hang"
