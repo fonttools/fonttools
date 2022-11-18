@@ -1,6 +1,7 @@
 import logging
 import os
 import tempfile
+import textwrap
 import shutil
 import unittest
 from io import open
@@ -10,6 +11,7 @@ from fontTools.ufoLib.glifLib import (
 )
 from fontTools.ufoLib.errors import GlifLibError, UnsupportedGLIFFormat, UnsupportedUFOFormat
 from fontTools.misc.etree import XML_DECLARATION
+from fontTools.pens.basePen import NullPen
 from fontTools.pens.recordingPen import RecordingPointPen
 import pytest
 
@@ -284,6 +286,25 @@ class ReadWriteFuncTest:
 
 		with pytest.raises(GlifLibError, match="Required y attribute"):
 			readGlyphFromString(s, _Glyph(), pen, validate=False)
+
+	def test_parse_xml_note_cdata(self):
+		g = _Glyph()
+		pen = NullPen()
+
+		s = textwrap.dedent("""\
+		<?xml version='1.0' encoding='UTF-8'?>
+		<glyph name="asterisk" format="2">
+		  <note><![CDATA[반갑슴니다 &amp; etc. <!-- [] -->]]></note>
+		</glyph>
+		""")
+
+		readGlyphFromString(s, g, pen, validate=False)
+		assert g.note == r"반갑슴니다 &amp; etc. <!-- [] -->"
+		from fontTools.misc.etree import CDATA, _have_lxml
+		g.note = CDATA(g.note)
+		s2 = writeGlyphToString(g.name, g)
+		if _have_lxml:
+			assert s == s2
 
 def test_GlyphSet_unsupported_ufoFormatVersion(tmp_path, caplog):
 	with pytest.raises(UnsupportedUFOFormat):
