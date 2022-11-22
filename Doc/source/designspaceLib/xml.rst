@@ -31,7 +31,7 @@ Overview
             <label... />
         </labels>
         <sources>
-            <!-- define masters here -->
+            <!-- define sources here -->
             <source... />
         </sources>
         <variable-fonts>
@@ -603,7 +603,7 @@ Defines the coordinates of this source in the design space.
 .. rubric:: Attributes
 
 -  ``mute``: optional attribute, number 1 or 0. Indicate if this glyph
-   should be ignored as a master.
+   should be ignored as a source.
 
 .. note::
 
@@ -633,7 +633,7 @@ Defines the coordinates of this source in the design space.
 
 .. code:: xml
 
-    <source familyname="MasterFamilyName" filename="masters/masterTest1.ufo" name="master.ufo1" stylename="MasterStyleNameOne">
+    <source familyname="SourceFamilyName" filename="sources/sourceTest1.ufo" name="source.ufo1" stylename="SourceStyleNameOne">
         <location>
             <dimension name="width" xvalue="0.000000" />
             <dimension name="weight" xvalue="0.000000" />
@@ -807,7 +807,7 @@ The ``<instances>`` element contains one or more ``<instance>`` elements.
 -  For use in Varlib the instance element really only needs the names
    and the location. The ``<glyphs>`` element is not required.
 -  MutatorMath uses the ``<glyphs>`` element to describe how certain
-   glyphs need different masters, mainly to describe the effects of
+   glyphs need different sources, mainly to describe the effects of
    conditional rules in Superpolator.
 -  Location in designspace coordinates.
 
@@ -937,7 +937,7 @@ Example for varlib
 ,,,,,,,,,,,,,,,,,,,,,
 
 -  Container for ``<master>`` elements
--  These ``<master>`` elements define an alternative set of glyph masters
+-  These ``<master>`` elements define an alternative set of glyph sources
    for this glyph.
 
 .. deprecated:: 5.0
@@ -946,13 +946,13 @@ Example for varlib
 ``<master>`` element
 ++++++++++++++++++++
 
--  Defines a single alternative master for this glyph.
+-  Defines a single alternative source for this glyph.
 
 .. deprecated:: 5.0
 
 .. rubric:: Attributes
 
--  ``glyphname``: the name of the alternate master glyph.
+-  ``glyphname``: the name of the alternate source glyph.
 -  ``source``: the identifier name of the source this master glyph needs
    to be loaded from
 
@@ -976,7 +976,7 @@ Example for MutatorMath
         </location>
         <note>A note about this glyph</note>
         <masters>
-            <master glyphname="BB" source="master.ufo1">
+            <master glyphname="BB" source="source.ufo1">
             <location>
                 <dimension name="width" xvalue="20" />
                 <dimension name="weight" xvalue="20" />

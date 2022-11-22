@@ -59,7 +59,7 @@ Make a descriptor object and add it to the document.
 -  The ``tag`` attribute is the one of the registered `OpenType
    Variation Axis
    Tags <https://www.microsoft.com/typography/otspec/fvar.htm#VAT>`__
--  The default master is expected at the intersection of all
+-  The default source is expected at the intersection of all
    default values of all axes.
 
 Option: add label names
@@ -101,14 +101,14 @@ outline geometry, kerning and font.info that we want to work with.
 
     s0 = SourceDescriptor()
     s0.path = "my/path/to/thin.ufo"
-    s0.name = "master.thin"
+    s0.name = "source.thin"
     s0.location = dict(weight=0)
     doc.addSource(s0)
 
 -  You'll need to have at least 2 sources in your document, so go ahead
    and add another one.
 -  The **location** attribute is a dictionary with the designspace
-   location for this master.
+   location for this source.
 -  The axis names in the location have to match one of the ``axis.name``
    values you defined before.
 -  The **path** attribute is the absolute path to an existing UFO.
@@ -116,13 +116,13 @@ outline geometry, kerning and font.info that we want to work with.
    track it.
 -  The **layerName** attribute is the name of the UFO3 layer. Default None for ``foreground``.
 
-So go ahead and add another master:
+So go ahead and add another source:
 
 .. code:: python
 
     s1 = SourceDescriptor()
     s1.path = "my/path/to/bold.ufo"
-    s1.name = "master.bold"
+    s1.name = "source.bold"
     s1.location = dict(weight=1000)
     doc.addSource(s1)
 
@@ -177,7 +177,7 @@ and a stylemap styleName.
     i0.styleMapFamilyName = "MyVarProtoMedium"
     i0.styleMapStyleName = "regular"
 
-Option: add glyph specific masters
+Option: add glyph specific sources
 ----------------------------------
 
 This bit is not supported by OpenType variable fonts, but it is needed
@@ -195,16 +195,16 @@ this into something clever.
     # you can specify a different location for a glyph
     glyphData['instanceLocation'] = dict(weight=500)
 
-    # You can specify different masters
+    # You can specify different sources
     # for this specific glyph.
-    # You can also give those masters new
+    # You can also give those sources new
     # locations. It's a miniature designspace.
     # Remember the "name" attribute we assigned to the sources?
-    glyphData['masters'] = [
-        dict(font="master.thin",
+    glyphData['sources'] = [
+        dict(font="source.thin",
             glyphName="dollar.nostroke",
             location=dict(weight=0)),
-        dict(font="master.bold",
+        dict(font="source.bold",
             glyphName="dollar.nostroke",
             location=dict(weight=1000)),
         ]
@@ -232,7 +232,7 @@ You can generate the UFOs with MutatorMath:
     from mutatorMath.ufo import build
     build("whatevs/myprototype.designspace")
 
--  Assuming the outline data in the masters is compatible.
+-  Assuming the outline data in the sources is compatible.
 
 Or you can use the file in making a **variable font** with varlib.
 
