@@ -49,10 +49,13 @@ class StatNames:
 
 
 def getStatNames(
-    doc: DesignSpaceDocument, userLocation: SimpleLocationDict
+    doc: DesignSpaceDocument,
+    userLocation: SimpleLocationDict,
+    defaultElidedFallbackName: Dict[str, str] | None = None,
 ) -> StatNames:
     """Compute the family, style, PostScript names of the given ``userLocation``
-    using the document's STAT information.
+    using the document's STAT information, falling back to the names in
+    ``defaultElidedFallbackName`` if all names are elided.
 
     Also computes localizations.
 
@@ -66,6 +69,9 @@ def getStatNames(
 
     .. versionadded:: 5.0
     """
+    if defaultElidedFallbackName is None:
+        defaultElidedFallbackName = {"en": "Regular"}
+
     familyNames: Dict[str, str] = {}
     defaultSource: Optional[SourceDescriptor] = doc.findDefault()
     if defaultSource is None:
@@ -102,8 +108,13 @@ def getStatNames(
                     for label in labels
                     if not label.elidable
                 )
-                if not styleName and doc.elidedFallbackName is not None:
-                    styleName = doc.elidedFallbackName
+                if not styleName:
+                    if doc.elidedFallbackName is not None:
+                        styleName = doc.elidedFallbackName
+                    else:
+                        styleName = defaultElidedFallbackName.get(
+                            language, defaultElidedFallbackName["en"]
+                        )
                 styleNames[language] = styleName
 
     if "en" not in familyNames or "en" not in styleNames:
@@ -129,7 +140,10 @@ def getStatNames(
     for language in set(familyNames).union(styleNames.keys()):
         familyName = familyNames.get(language, familyNames["en"])
         styleName = styleNamesForStyleMap.get(language, styleNamesForStyleMap["en"])
-        styleMapFamilyNames[language] = (familyName + " " + styleName).strip()
+        if styleName.lower() in BOLD_ITALIC_TO_RIBBI_STYLE.values():
+            styleMapFamilyNames[language] = familyName.strip()
+        else:
+            styleMapFamilyNames[language] = f"{familyName} {styleName}".strip()
 
     return StatNames(
         familyNames=familyNames,
