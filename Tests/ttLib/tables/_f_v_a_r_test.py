@@ -25,6 +25,14 @@ FVAR_INSTANCE_DATA_WITHOUT_PSNAME = deHexStr(
 FVAR_INSTANCE_DATA_WITH_PSNAME = (
     FVAR_INSTANCE_DATA_WITHOUT_PSNAME + deHexStr("02 34"))
 
+FVAR_DATA_WITH_DUPLICATE_AXIS_TAGS = deHexStr(
+    "00 01 00 00 00 10 00 02 00 02 00 14 00 02 00 0C "
+    "44 55 50 50 00 64 00 00 01 90 00 00 03 84 00 00 00 00 01 01 "
+    "44 55 50 50 00 32 00 00 00 64 00 00 00 c8 00 00 00 00 01 02 "
+    "01 03 00 00 01 2c 00 00 00 64 00 00 "
+    "01 04 00 00 01 2c 00 00 00 4b 00 00")
+
+
 
 def xml_lines(writer):
     content = writer.file.getvalue().decode("utf-8")
@@ -104,6 +112,37 @@ class FontVariationTableTest(unittest.TestCase):
         self.assertEqual(["opsz", "slnt"], [a.axisTag for a in fvar.axes])
         self.assertEqual([0, 0x123], [a.flags for a in fvar.axes])
         self.assertEqual([765, 234], [i.subfamilyNameID for i in fvar.instances])
+
+    def test_compile_duplicate_axis_tags(self):
+        font = MakeFont()
+        assert len(font["fvar"].axes) == 2
+        axisMap = dict(wght="DUPP", wdth="DUPP#1")
+        for axis in font["fvar"].axes:
+            axis.axisTag = axisMap[axis.axisTag]
+        for instance in font["fvar"].instances:
+            instance.coordinates = {
+                axisMap[k]: v
+                for k, v in instance.coordinates.items()
+            }
+        h = font["fvar"].compile(font)
+        self.assertEqual(FVAR_DATA_WITH_DUPLICATE_AXIS_TAGS, h)
+
+    def test_decompile_duplicate_axis_tags(self):
+        fvar = table__f_v_a_r()
+        fvar.decompile(FVAR_DATA_WITH_DUPLICATE_AXIS_TAGS, ttFont={"fvar": fvar})
+        expectedAxisTags = ["DUPP", "DUPP#1"]
+        self.assertEqual(expectedAxisTags, [a.axisTag for a in fvar.axes])
+        self.assertEqual([expectedAxisTags] * 2, [sorted(i.coordinates.keys()) for i in fvar.instances])
+
+    def test_compile_duplicate_axis_tags_bad_tag_extension(self):
+        font = MakeFont()
+        assert len(font["fvar"].axes) == 2
+        axisMap = dict(wght="DUPP123", wdth="DUPP#abc")
+        for axis in font["fvar"].axes:
+            axis.axisTag = axisMap[axis.axisTag]
+        font["fvar"].instances = []
+        with self.assertRaises(TTLibError):
+            h = font["fvar"].compile(font)
 
 
 class AxisTest(unittest.TestCase):
