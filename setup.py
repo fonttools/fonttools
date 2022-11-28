@@ -99,9 +99,9 @@ extras_require = {
 	# of the Unicode Character Database instead of the built-in unicodedata
 	# which varies between python versions and may be outdated.
 	"unicode": [
-		# Python 3.11 already has Unicode 14.0, so the backport is not needed.
+		# Python 3.12 will have Unicode 15.0, so the backport is not needed.
 		(
-			"unicodedata2 >= 14.0.0; python_version < '3.11'"
+			"unicodedata2 >= 15.0.0; python_version <= '3.11'"
 		),
 	],
 	# for graphite type tables in ttLib/tables (Silf, Glat, Gloc)
@@ -153,7 +153,11 @@ classifiers = {"classifiers": [
 	"Natural Language :: English",
 	"Operating System :: OS Independent",
 	"Programming Language :: Python",
-	"Programming Language :: Python :: 2",
+	"Programming Language :: Python :: 3.7",
+	"Programming Language :: Python :: 3.8",
+	"Programming Language :: Python :: 3.9",
+	"Programming Language :: Python :: 3.10",
+	"Programming Language :: Python :: 3.11",
 	"Programming Language :: Python :: 3",
 	"Topic :: Text Processing :: Fonts",
 	"Topic :: Multimedia :: Graphics",
@@ -452,7 +456,7 @@ if ext_modules:
 
 setup_params = dict(
 	name="fonttools",
-	version="4.37.5.dev0",
+	version="4.38.1.dev0",
 	description="Tools to manipulate font files",
 	author="Just van Rossum",
 	author_email="just@letterror.com",

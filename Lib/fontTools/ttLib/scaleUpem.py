@@ -178,6 +178,8 @@ def visit(visitor, obj, attr, cff):
                 c.program, getNumRegions=getNumRegions
             )
             for op, args in commands:
+                if op == "vsindex":
+                    continue
                 _cff_scale(visitor, args)
             c.program[:] = cffSpecializer.commandsToProgram(commands)
 

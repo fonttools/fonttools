@@ -564,6 +564,10 @@ class TupleVariation(object):
 			if optimizedLength < unoptimizedLength:
 				self.coordinates = varOpt.coordinates
 
+	def __imul__(self, scalar):
+		self.scaleDeltas(scalar)
+		return self
+
 	def __iadd__(self, other):
 		if not isinstance(other, TupleVariation):
 			return NotImplemented

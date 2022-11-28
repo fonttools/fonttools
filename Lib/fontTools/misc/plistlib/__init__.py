@@ -176,7 +176,7 @@ class PlistTarget:
     True
 
     Links:
-    https://github.com/python/cpython/blob/master/Lib/plistlib.py
+    https://github.com/python/cpython/blob/main/Lib/plistlib.py
     http://lxml.de/parsing.html#the-target-parser-interface
     """
 

@@ -70,7 +70,8 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 			data2 = data[pos:]
 			entries = []
 			for i in range(self.numEntries):
-				docIndexEntry, data2 = sstruct.unpack2(doc_index_entry_format_0, data2, DocumentIndexEntry())
+				record_data = data2[i * doc_index_entry_format_0Size:(i + 1) * doc_index_entry_format_0Size]
+				docIndexEntry = sstruct.unpack(doc_index_entry_format_0, record_data, DocumentIndexEntry())
 				entries.append(docIndexEntry)
 
 			for entry in entries:

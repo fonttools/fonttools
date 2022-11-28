@@ -187,10 +187,10 @@ for more information.
 .. automodule:: fontTools.designspaceLib.split
 
 
-fontTools.designspaceLib.stat
+fontTools.varLib.stat
 =============================
 
-.. automodule:: fontTools.designspaceLib.stat
+.. automodule:: fontTools.varLib.stat
 
 
 fontTools.designspaceLib.statNames

@@ -1,6 +1,7 @@
 # coding=utf-8
 
 import os
+from pathlib import Path
 import re
 
 import pytest
@@ -20,6 +21,8 @@ from fontTools.designspaceLib import (
 )
 from fontTools.designspaceLib.types import Range
 from fontTools.misc import plistlib
+
+from .fixtures import datadir
 
 
 def _axesAsDict(axes):
@@ -1064,3 +1067,10 @@ def test_Range_post_init():
     assert r.minimum == -1
     assert r.maximum == 2
     assert r.default == -1
+
+
+def test_get_axes(datadir: Path) -> None:
+    ds = DesignSpaceDocument.fromfile(datadir / "test_v5.designspace")
+
+    assert ds.getAxis("Width") is ds.getAxisByTag("wdth")
+    assert ds.getAxis("Italic") is ds.getAxisByTag("ital")

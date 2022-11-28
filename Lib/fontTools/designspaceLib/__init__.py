@@ -2691,12 +2691,13 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
             names.append(axisDescriptor.name)
         return names
 
-    def getAxis(self, name):
+    def getAxis(self, name: str) -> AxisDescriptor | DiscreteAxisDescriptor | None:
         """Return the axis with the given ``name``, or ``None`` if no such axis exists."""
-        for axisDescriptor in self.axes:
-            if axisDescriptor.name == name:
-                return axisDescriptor
-        return None
+        return next((axis for axis in self.axes if axis.name == name), None)
+
+    def getAxisByTag(self, tag: str) -> AxisDescriptor | DiscreteAxisDescriptor | None:
+        """Return the axis with the given ``tag``, or ``None`` if no such axis exists."""
+        return next((axis for axis in self.axes if axis.tag == tag), None)
 
     def getLocationLabel(self, name: str) -> Optional[LocationLabelDescriptor]:
         """Return the top-level location label with the given ``name``, or
