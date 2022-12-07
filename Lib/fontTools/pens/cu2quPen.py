@@ -34,7 +34,7 @@ class Cu2QuPen(AbstractPen):
         ignore_single_points: don't emit contours containing only a single point
 
     NOTE: The "ignore_single_points" argument is deprecated since v1.3.0,
-    which dropped Robofab subpport. It's no longer needed to special-case
+    which dropped Robofab support. It's no longer needed to special-case
     UFO2-style anchors (aka "named points") when using ufoLib >= 2.0,
     as these are no longer drawn onto pens as single-point contours,
     but are handled separately as anchors.
