@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from fontTools.cu2qu import curve_to_quadratic
+from fontTools.cu2qu import curve_to_quadratic, curves_to_quadratic
 from fontTools.pens.basePen import AbstractPen, decomposeSuperBezierSegment
 from fontTools.pens.reverseContourPen import ReverseContourPen
 from fontTools.pens.pointPen import BasePointToSegmentPen
@@ -258,3 +258,82 @@ class Cu2QuPointPen(BasePointToSegmentPen):
     def addComponent(self, baseGlyphName, transformation):
         assert self.currentPath is None
         self.pen.addComponent(baseGlyphName, transformation)
+
+
+
+class Cu2QuMultiPen:
+
+    def __init__(self, other_pens, max_err, reverse_direction=False):
+        if reverse_direction:
+            other_pens = [ReverseContourPen(pen) for pen in other_pens]
+        self.pens = other_pens
+        self.max_err = max_err
+        self.start_pts = None
+        self.current_pts = None
+
+    def _check_contour_is_open(self):
+        if self.current_pts is None:
+            raise AssertionError("moveTo is required")
+
+    def _check_contour_is_closed(self):
+        if self.current_pts is not None:
+            raise AssertionError("closePath or endPath is required")
+
+    def _add_moveTo(self):
+        if self.start_pts is not None:
+            for pt,pen in zip(self.start_pts, self.pens):
+                pen.moveTo(*pt)
+            self.start_pts = None
+
+    def moveTo(self, pts):
+        self._check_contour_is_closed()
+        self.start_pts = self.current_pts = pts
+        self._add_moveTo()
+
+    def lineTo(self, pts):
+        self._check_contour_is_open()
+        self._add_moveTo()
+        for pt,pen in zip(pts, self.pens):
+            pen.lineTo(*pt)
+        self.current_pts = pts
+
+    def qCurveTo(self, pointsList):
+        self._check_contour_is_open()
+        self._add_moveTo()
+        self.current_pt = []
+        for points,pen in zip(pointsList, self.pens):
+            pen.qCurveTo(*points)
+            self.current_pt.append(points[-1])
+
+    def _curves_to_quadratic(self, pointsList):
+        curves = []
+        for current_pt,points in zip(self.current_pts, pointsList):
+            curves.append((current_pt) + points)
+        quadratics = curves_to_quadratic(curves, [self.max_err] * len(curves))
+        pointsList = []
+        for quadratic in quadratics:
+            pointsList.append(quadratic[1:])
+        self.qCurveTo(pointsList)
+
+    def curveTo(self, pointsList):
+        self._check_contour_is_open()
+        self._curves_to_quadratic(pointsList)
+
+    def closePath(self):
+        self._check_contour_is_open()
+        if self.start_pts is None:
+            for pen in self.pens:
+                pen.closePath()
+        self.current_pts = self.start_pts = None
+
+    def endPath(self):
+        self._check_contour_is_open()
+        if self.start_pts is None:
+            for pen in self.pens:
+                pen.endPath()
+        self.current_pts = self.start_pts = None
+
+    def addComponent(self, glyphName, transformations):
+        self._check_contour_is_closed()
+        for trans,pen in zip(transformations, self.pens):
+            pen.addComponent(glyphName, trans)
