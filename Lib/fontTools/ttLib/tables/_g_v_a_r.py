@@ -95,9 +95,12 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		result = []
 		glyf = ttFont['glyf']
 		for glyphName in ttFont.getGlyphOrder():
+			variations = self.variations.get(glyphName, [])
+			if not variations:
+				result.append(b"")
+				continue
 			glyph = glyf[glyphName]
 			pointCount = self.getNumPoints_(glyph)
-			variations = self.variations.get(glyphName, [])
 			result.append(compileGlyph_(variations, pointCount,
 			                            axisTags, sharedCoordIndices))
 		return result
