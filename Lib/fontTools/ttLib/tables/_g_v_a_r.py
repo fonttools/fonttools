@@ -99,9 +99,8 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			if not variations:
 				result.append(b"")
 				continue
-			glyph = glyf[glyphName]
-			pointCount = self.getNumPoints_(glyph)
-			result.append(compileGlyph_(variations, pointCount,
+			pointCountUnused = 0 # pointCount is actually unused by compileGlyph
+			result.append(compileGlyph_(variations, pointCountUnused,
 			                            axisTags, sharedCoordIndices))
 		return result
 
