@@ -632,6 +632,8 @@ def compileSharedTuples(axisTags, variations,
 def compileTupleVariationStore(variations, pointCount,
                                axisTags, sharedTupleIndices,
                                useSharedPoints=True):
+	# pointCount is actually unused. Keeping for API compat.
+	del pointCount
 	newVariations = []
 	pointDatas = []
 	# Compile all points and figure out sharing if desired
