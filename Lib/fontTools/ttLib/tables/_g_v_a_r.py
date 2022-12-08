@@ -119,9 +119,11 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		glyf = ttFont['glyf']
 
 		def decompileVarGlyph(glyphName, gid):
+			gvarData = data[offsetToData + offsets[gid] : offsetToData + offsets[gid + 1]]
+			if not gvarData:
+				return []
 			glyph = glyf[glyphName]
 			numPointsInGlyph = self.getNumPoints_(glyph)
-			gvarData = data[offsetToData + offsets[gid] : offsetToData + offsets[gid + 1]]
 			return decompileGlyph_(numPointsInGlyph, sharedCoords, axisTags, gvarData)
 
 		for gid in range(self.glyphCount):
