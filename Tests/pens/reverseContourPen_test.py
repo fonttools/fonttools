@@ -310,6 +310,24 @@ def test_reverse_pen(contour, expected):
         getattr(revpen, operator)(*operands)
     assert recpen.value == expected
 
+def test_reverse_pen_outputImpliedClosingLine():
+    recpen = RecordingPen()
+    revpen = ReverseContourPen(recpen)
+    revpen.moveTo((0, 0))
+    revpen.lineTo((10, 0))
+    revpen.lineTo((0, 10))
+    revpen.lineTo((0, 0))
+    revpen.closePath()
+    assert len(recpen.value) == 4
+
+    recpen = RecordingPen()
+    revpen = ReverseContourPen(recpen, outputImpliedClosingLine=True)
+    revpen.moveTo((0, 0))
+    revpen.lineTo((10, 0))
+    revpen.lineTo((0, 10))
+    revpen.lineTo((0, 0))
+    revpen.closePath()
+    assert len(recpen.value) == 6
 
 @pytest.mark.parametrize("contour, expected", TEST_DATA)
 def test_reverse_point_pen(contour, expected):
