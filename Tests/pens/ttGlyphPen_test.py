@@ -294,6 +294,27 @@ class TTGlyphPenTest(TTGlyphPenTestBase):
         uni0302_uni0300.recalcBounds(glyphSet)
         self.assertGlyphBoundsEqual(uni0302_uni0300, (-278, 745, 148, 1025))
 
+    def test_outputImpliedClosingLine(self):
+        glyphSet = {}
+
+        pen = TTGlyphPen(glyphSet)
+        pen.moveTo((0, 0))
+        pen.lineTo((10, 0))
+        pen.lineTo((0, 10))
+        pen.lineTo((0, 0))
+        pen.closePath()
+        glyph = pen.glyph()
+        assert len(glyph.coordinates) == 3
+
+        pen = TTGlyphPen(glyphSet, outputImpliedClosingLine=True)
+        pen.moveTo((0, 0))
+        pen.lineTo((10, 0))
+        pen.lineTo((0, 10))
+        pen.lineTo((0, 0))
+        pen.closePath()
+        glyph = pen.glyph()
+        assert len(glyph.coordinates) == 4
+
 
 class TTGlyphPointPenTest(TTGlyphPenTestBase):
     penClass = TTGlyphPointPen
@@ -572,7 +593,6 @@ class TTGlyphPointPenTest(TTGlyphPenTestBase):
         # interpret both these paths as equivalent
         assert pen1.points == pen2.points == [(0, 0), (10, 10), (20, 20), (20, 0)]
         assert pen1.types == pen2.types == [1, 1, 0, 1]
-
 
 
 class _TestGlyph(object):
