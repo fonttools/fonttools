@@ -1,5 +1,5 @@
-from typing import Any, Optional, Tuple
-from fontTools.pens.basePen import AbstractPen
+from typing import Any, List, Optional, Tuple
+from fontTools.pens.basePen import AbstractPen, PenPoint
 from fontTools.pens.pointPen import AbstractPointPen
 from fontTools.pens.recordingPen import RecordingPen
 
@@ -72,25 +72,25 @@ class FilterPen(_PassThruComponentsMixin, AbstractPen):
     ('addComponent', ('foo', (1, 0, 0, 1, 0, 0)))
     """
 
-    def __init__(self, outPen):
+    def __init__(self, outPen) -> None:
         self._outPen = outPen
 
-    def moveTo(self, pt):
+    def moveTo(self, pt: PenPoint) -> None:
         self._outPen.moveTo(pt)
 
-    def lineTo(self, pt):
+    def lineTo(self, pt: PenPoint) -> None:
         self._outPen.lineTo(pt)
 
-    def curveTo(self, *points):
+    def curveTo(self, *points: PenPoint) -> None:
         self._outPen.curveTo(*points)
 
-    def qCurveTo(self, *points):
+    def qCurveTo(self, *points: Optional[PenPoint]) -> None:
         self._outPen.qCurveTo(*points)
 
-    def closePath(self):
+    def closePath(self) -> None:
         self._outPen.closePath()
 
-    def endPath(self):
+    def endPath(self) -> None:
         self._outPen.endPath()
 
 
@@ -102,26 +102,26 @@ class ContourFilterPen(_PassThruComponentsMixin, RecordingPen):
     Components are passed through unchanged.
     """
 
-    def __init__(self, outPen):
+    def __init__(self, outPen) -> None:
         super(ContourFilterPen, self).__init__()
         self._outPen = outPen
 
-    def closePath(self):
+    def closePath(self) -> None:
         super(ContourFilterPen, self).closePath()
         self._flushContour()
 
-    def endPath(self):
+    def endPath(self) -> None:
         super(ContourFilterPen, self).endPath()
         self._flushContour()
 
-    def _flushContour(self):
+    def _flushContour(self) -> None:
         result = self.filterContour(self.value)
         if result is not None:
             self.value = result
         self.replay(self._outPen)
         self.value = []
 
-    def filterContour(self, contour):
+    def filterContour(self, contour: List[Tuple[str, Any]]) -> Optional[List[Tuple[str, Any]]]:
         """Subclasses must override this to perform the filtering.
 
         The contour is a list of pen (operator, operands) tuples.
@@ -134,7 +134,7 @@ class ContourFilterPen(_PassThruComponentsMixin, RecordingPen):
         assumed that the argument was modified in-place.
         Otherwise, the return value is drawn with the output pen.
         """
-        return  # or return contour
+        return None # or return contour
 
 
 class FilterPointPen(_PassThruComponentsPointPenMixin, AbstractPointPen):
@@ -162,18 +162,18 @@ class FilterPointPen(_PassThruComponentsPointPenMixin, AbstractPointPen):
     ('endPath', (), {})
     """
 
-    def __init__(self, outPointPen):
+    def __init__(self, outPointPen) -> None:
         self._outPen = outPointPen
 
-    def beginPath(self, **kwargs):
+    def beginPath(self, identifier: Optional[str] = None, **kwargs: Any) -> None:
         self._outPen.beginPath(**kwargs)
 
-    def endPath(self):
+    def endPath(self) -> None:
         self._outPen.endPath()
 
     def addPoint(
         self,
-        pt: Tuple[float, float],
+        pt: PenPoint,
         segmentType: Optional[str] = None,
         smooth: bool = False,
         name: Optional[str] = None,
