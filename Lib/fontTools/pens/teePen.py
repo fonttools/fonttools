@@ -15,24 +15,31 @@ class TeePen(AbstractPen):
 		if len(pens) == 1:
 			pens = pens[0]
 		self.pens = pens
+
 	def moveTo(self, p0: PenPoint) -> None:
 		for pen in self.pens:
 			pen.moveTo(p0)
+
 	def lineTo(self, p1: PenPoint) -> None:
 		for pen in self.pens:
 			pen.lineTo(p1)
+
 	def qCurveTo(self, *points: Optional[PenPoint]) -> None:
 		for pen in self.pens:
 			pen.qCurveTo(*points)
+
 	def curveTo(self, *points: PenPoint) -> None:
 		for pen in self.pens:
 			pen.curveTo(*points)
+
 	def closePath(self) -> None:
 		for pen in self.pens:
 			pen.closePath()
+
 	def endPath(self) -> None:
 		for pen in self.pens:
 			pen.endPath()
+
 	def addComponent(
 		self,
 		glyphName: str,
