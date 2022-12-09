@@ -50,10 +50,10 @@ class RoundingPen(FilterPen):
         )
 
     def addComponent(
-		self,
-		glyphName: str,
-		transformation: Tuple[float, float, float, float, float, float],
-	) -> None:
+        self,
+        glyphName: str,
+        transformation: Tuple[float, float, float, float, float, float],
+    ) -> None:
         self._outPen.addComponent(
             glyphName,
             Transform(
@@ -114,12 +114,12 @@ class RoundingPointPen(FilterPointPen):
         )
 
     def addComponent(
-		self,
-		glyphName: str,
-		transformation: Tuple[float, float, float, float, float, float],
-		identifier: Optional[str] = None,
-		**kwargs: Any
-	) -> None:
+        self,
+        glyphName: str,
+        transformation: Tuple[float, float, float, float, float, float],
+        identifier: Optional[str] = None,
+        **kwargs: Any
+    ) -> None:
         self._outPen.addComponent(
             glyphName,
             Transform(

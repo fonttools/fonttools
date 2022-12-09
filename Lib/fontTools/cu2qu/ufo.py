@@ -65,38 +65,38 @@ class GetSegmentsPen(AbstractPen):
     duplicated between segments.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._last_pt = None
         self.segments = []
 
-    def _add_segment(self, tag, *args):
+    def _add_segment(self, tag, *args) -> None:
         if tag in ['move', 'line', 'qcurve', 'curve']:
             self._last_pt = args[-1]
         self.segments.append((tag, args))
 
-    def moveTo(self, pt):
+    def moveTo(self, pt) -> None:
         self._add_segment('move', pt)
 
-    def lineTo(self, pt):
+    def lineTo(self, pt) -> None:
         self._add_segment('line', pt)
 
-    def qCurveTo(self, *points):
+    def qCurveTo(self, *points) -> None:
         self._add_segment('qcurve', self._last_pt, *points)
 
-    def curveTo(self, *points):
+    def curveTo(self, *points) -> None:
         self._add_segment('curve', self._last_pt, *points)
 
-    def closePath(self):
+    def closePath(self) -> None:
         self._add_segment('close')
 
-    def endPath(self):
+    def endPath(self) -> None:
         self._add_segment('end')
 
     def addComponent(
-		self,
-		glyphName: str,
-		transformation: Tuple[float, float, float, float, float, float],
-	) -> None:
+        self,
+        glyphName: str,
+        transformation: Tuple[float, float, float, float, float, float],
+    ) -> None:
         pass
 
 

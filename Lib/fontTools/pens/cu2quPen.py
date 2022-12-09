@@ -133,10 +133,10 @@ class Cu2QuPen(AbstractPen):
         self.current_pt = self.start_pt = None
 
     def addComponent(
-		self,
-		glyphName: str,
-		transformation: Tuple[float, float, float, float, float, float],
-	) -> None:
+        self,
+        glyphName: str,
+        transformation: Tuple[float, float, float, float, float, float],
+    ) -> None:
         self._check_contour_is_closed()
         self.pen.addComponent(glyphName, transformation)
 
@@ -261,11 +261,11 @@ class Cu2QuPointPen(BasePointToSegmentPen):
         pen.endPath()
 
     def addComponent(
-		self,
-		glyphName: str,
-		transformation: Tuple[float, float, float, float, float, float],
-		identifier: Optional[str] = None,
-		**kwargs: Any
-	) -> None:
+        self,
+        glyphName: str,
+        transformation: Tuple[float, float, float, float, float, float],
+        identifier: Optional[str] = None,
+        **kwargs: Any
+    ) -> None:
         assert self.currentPath is None
         self.pen.addComponent(glyphName, transformation, identifier, **kwargs)

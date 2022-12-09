@@ -27,8 +27,8 @@ class ControlBoundsPen(BasePen):
 		self.init()
 
 	def init(self):
-	    self.bounds = None
-	    self._start = None
+		self.bounds = None
+		self._start = None
 
 	def _moveTo(self, pt):
 		self._start = pt
