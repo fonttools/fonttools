@@ -1,6 +1,7 @@
 """Calculate the area of a glyph."""
 
-from fontTools.pens.basePen import BasePen, PenPoint
+from typing import Any, Dict, Optional
+from fontTools.pens.basePen import BasePen, PenGlyphSet, PenPoint
 
 
 __all__ = ["AreaPen"]
@@ -8,7 +9,7 @@ __all__ = ["AreaPen"]
 
 class AreaPen(BasePen):
 
-	def __init__(self, glyphset=None) -> None:
+	def __init__(self, glyphset: PenGlyphSet = None) -> None:
 		BasePen.__init__(self, glyphset)
 		self.value: float = 0
 

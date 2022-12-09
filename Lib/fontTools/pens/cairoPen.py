@@ -1,7 +1,7 @@
 """Pen to draw to a Cairo graphics library context."""
 
 from typing import Any, Dict, Optional
-from fontTools.pens.basePen import BasePen, PenError, PenPoint
+from fontTools.pens.basePen import BasePen, PenError, PenGlyphSet, PenPoint
 
 
 __all__ = ["CairoPen"]
@@ -10,7 +10,7 @@ __all__ = ["CairoPen"]
 class CairoPen(BasePen):
     """Pen to draw to a Cairo graphics library context."""
 
-    def __init__(self, glyphSet: Optional[Dict[str, Any]] = None, context: Optional[Any] = None) -> None:
+    def __init__(self, glyphSet: PenGlyphSet = None, context: Optional[Any] = None) -> None:
         BasePen.__init__(self, glyphSet)
         if context is None:
             raise PenError("Must supply a context")

@@ -47,6 +47,7 @@ __all__ = [
 ]
 
 
+PenGlyphSet: TypeAlias = Optional[Dict[str, Any]]
 PenPoint: TypeAlias = Tuple[float, float]
 
 
@@ -190,7 +191,7 @@ class DecomposingPen(LoggingPen):
 
 	skipMissingComponents = True
 
-	def __init__(self, glyphSet: Optional[Dict[str, Any]] = None) -> None:
+	def __init__(self, glyphSet: PenGlyphSet = None) -> None:
 		""" Takes a single 'glyphSet' argument (dict), in which the glyphs
 		that are referenced as components are looked up by their name.
 		"""
@@ -227,7 +228,7 @@ class BasePen(DecomposingPen):
 	methods.
 	"""
 
-	def __init__(self, glyphSet: Optional[Dict[str, Any]] = None) -> None:
+	def __init__(self, glyphSet: PenGlyphSet = None) -> None:
 		super(BasePen, self).__init__(glyphSet)
 		self.__currentPoint: Optional[PenPoint] = None
 

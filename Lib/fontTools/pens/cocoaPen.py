@@ -1,4 +1,4 @@
-from fontTools.pens.basePen import BasePen, PenPoint
+from fontTools.pens.basePen import BasePen, PenGlyphSet, PenPoint
 from typing import Any, Dict, Optional
 
 __all__ = ["CocoaPen"]
@@ -6,7 +6,7 @@ __all__ = ["CocoaPen"]
 
 class CocoaPen(BasePen):
 
-	def __init__(self, glyphSet: Optional[Dict[str, Any]], path: Optional[Any] = None) -> None:
+	def __init__(self, glyphSet: PenGlyphSet, path: Optional[Any] = None) -> None:
 		BasePen.__init__(self, glyphSet)
 		if path is None:
 			from AppKit import NSBezierPath

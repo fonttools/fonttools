@@ -1,5 +1,5 @@
 from typing import Callable
-from fontTools.pens.basePen import BasePen
+from fontTools.pens.basePen import BasePen, PenGlyphSet
 
 
 def pointToString(pt, ntos=str):
@@ -36,7 +36,7 @@ class SVGPathPen(BasePen):
             glyphset[glyphname].draw(pen)
             print(tpen.getCommands())
     """
-    def __init__(self, glyphSet, ntos: Callable[[float], str] = str):
+    def __init__(self, glyphSet: PenGlyphSet, ntos: Callable[[float], str] = str):
         BasePen.__init__(self, glyphSet)
         self._commands = []
         self._lastCommand = None
