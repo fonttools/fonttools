@@ -1,6 +1,4 @@
-from typing import Any, List, Optional, Sequence, Tuple, Union
 from fontTools.misc.transform import Transform
-from fontTools.pens.basePen import PenPoint
 from fontTools.pens.filterPen import FilterPen, FilterPointPen
 
 
@@ -13,7 +11,7 @@ class TransformPen(FilterPen):
 	and passes them to another pen.
 	"""
 
-	def __init__(self, outPen, transformation: Union[Transform, Tuple[float, float, float, float, float, float]]) -> None:
+	def __init__(self, outPen, transformation):
 		"""The 'outPen' argument is another pen object. It will receive the
 		transformed coordinates. The 'transformation' argument can either
 		be a six-tuple, or a fontTools.misc.transform.Transform object.
@@ -25,18 +23,18 @@ class TransformPen(FilterPen):
 			transform = Transform(*transformation)
 		self._transformation = transform
 		self._transformPoint = transform.transformPoint
-		self._stack: List[Any] = []
+		self._stack = []
 
-	def moveTo(self, pt: PenPoint) -> None:
+	def moveTo(self, pt):
 		self._outPen.moveTo(self._transformPoint(pt))
 
-	def lineTo(self, pt: PenPoint) -> None:
+	def lineTo(self, pt):
 		self._outPen.lineTo(self._transformPoint(pt))
 
-	def curveTo(self, *points: PenPoint) -> None:
-		self._outPen.curveTo(*self._transformPoints(list(points)))
+	def curveTo(self, *points):
+		self._outPen.curveTo(*self._transformPoints(points))
 
-	def qCurveTo(self, *points: Optional[PenPoint]) -> None:
+	def qCurveTo(self, *points):
 		pt = points[-1]
 		if pt is None:
 			tpoints = self._transformPoints(points[:-1]) + [None]
@@ -44,21 +42,17 @@ class TransformPen(FilterPen):
 			tpoints = self._transformPoints(points)
 		self._outPen.qCurveTo(*tpoints)
 
-	def _transformPoints(self, points: Sequence[PenPoint]) -> List[PenPoint]:
+	def _transformPoints(self, points):
 		transformPoint = self._transformPoint
 		return [transformPoint(pt) for pt in points]
 
-	def closePath(self) -> None:
+	def closePath(self):
 		self._outPen.closePath()
 
-	def endPath(self) -> None:
+	def endPath(self):
 		self._outPen.endPath()
 
-	def addComponent(
-		self,
-		glyphName: str,
-		transformation: Tuple[float, float, float, float, float, float],
-	) -> None:
+	def addComponent(self, glyphName: str, transformation):
 		transformation = self._transformation.transform(transformation)
 		self._outPen.addComponent(glyphName, transformation)
 
@@ -98,26 +92,12 @@ class TransformPointPen(FilterPointPen):
 		self._transformation = transformation
 		self._transformPoint = transformation.transformPoint
 
-	def addPoint(
-		self,
-		pt: PenPoint,
-		segmentType: Optional[str] = None,
-		smooth: bool = False,
-		name: Optional[str] = None,
-		identifier: Optional[str] = None,
-		**kwargs: Any
-	) -> None:
+	def addPoint(self, pt, segmentType=None, smooth=False, name=None, identifier=None, **kwargs):
 		self._outPen.addPoint(
 			self._transformPoint(pt), segmentType, smooth, name, identifier, **kwargs
 		)
 
-	def addComponent(
-		self,
-		glyphName: str,
-		transformation: Tuple[float, float, float, float, float, float],
-		identifier: Optional[str] = None,
-		**kwargs: Any
-	) -> None:
+	def addComponent(self, glyphName, transformation, identifier=None, **kwargs):
 		transformation = self._transformation.transform(transformation)
 		self._outPen.addComponent(glyphName, transformation, identifier, **kwargs)
 
