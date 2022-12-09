@@ -14,3 +14,4 @@ ufoLib2==0.14.0
 pyobjc==9.0; sys_platform == "darwin"
 freetype-py==2.3.0
 uharfbuzz==0.32.0
+typing_extensions
