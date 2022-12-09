@@ -1,3 +1,4 @@
+from typing import Any, Optional, Tuple
 from fontTools.pens.basePen import AbstractPen
 from fontTools.pens.pointPen import AbstractPointPen
 from fontTools.pens.recordingPen import RecordingPen
@@ -5,8 +6,12 @@ from fontTools.pens.recordingPen import RecordingPen
 
 class _PassThruComponentsMixin(object):
 
-    def addComponent(self, glyphName, transformation, **kwargs):
-        self._outPen.addComponent(glyphName, transformation, **kwargs)
+    def addComponent(
+		self,
+		glyphName: str,
+		transformation: Tuple[float, float, float, float, float, float],
+	) -> None:
+        self._outPen.addComponent(glyphName, transformation)
 
 
 class FilterPen(_PassThruComponentsMixin, AbstractPen):

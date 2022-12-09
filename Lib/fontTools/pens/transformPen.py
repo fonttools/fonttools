@@ -1,3 +1,4 @@
+from typing import Any, Optional, Tuple
 from fontTools.pens.filterPen import FilterPen, FilterPointPen
 
 
@@ -49,7 +50,11 @@ class TransformPen(FilterPen):
 	def endPath(self):
 		self._outPen.endPath()
 
-	def addComponent(self, glyphName, transformation):
+	def addComponent(
+		self,
+		glyphName: str,
+		transformation: Tuple[float, float, float, float, float, float],
+	) -> None:
 		transformation = self._transformation.transform(transformation)
 		self._outPen.addComponent(glyphName, transformation)
 

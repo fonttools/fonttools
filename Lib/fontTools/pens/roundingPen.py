@@ -1,3 +1,4 @@
+from typing import Any, Optional, Tuple
 from fontTools.misc.roundTools import otRound
 from fontTools.misc.transform import Transform
 from fontTools.pens.filterPen import FilterPen, FilterPointPen
@@ -48,7 +49,11 @@ class RoundingPen(FilterPen):
             *((self.roundFunc(x), self.roundFunc(y)) for x, y in points)
         )
 
-    def addComponent(self, glyphName, transformation):
+    def addComponent(
+		self,
+		glyphName: str,
+		transformation: Tuple[float, float, float, float, float, float],
+	) -> None:
         self._outPen.addComponent(
             glyphName,
             Transform(

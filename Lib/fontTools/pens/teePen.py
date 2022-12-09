@@ -1,4 +1,5 @@
 """Pen multiplexing drawing to one or more pens."""
+from typing import Tuple
 from fontTools.pens.basePen import AbstractPen
 
 
@@ -32,7 +33,11 @@ class TeePen(AbstractPen):
 	def endPath(self):
 		for pen in self.pens:
 			pen.endPath()
-	def addComponent(self, glyphName, transformation):
+	def addComponent(
+		self,
+		glyphName: str,
+		transformation: Tuple[float, float, float, float, float, float],
+	) -> None:
 		for pen in self.pens:
 			pen.addComponent(glyphName, transformation)
 

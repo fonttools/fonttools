@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Any, Optional, Tuple
 from fontTools.cu2qu import curve_to_quadratic
 from fontTools.pens.basePen import AbstractPen, decomposeSuperBezierSegment
 from fontTools.pens.reverseContourPen import ReverseContourPen
@@ -131,7 +132,11 @@ class Cu2QuPen(AbstractPen):
             self.pen.endPath()
         self.current_pt = self.start_pt = None
 
-    def addComponent(self, glyphName, transformation):
+    def addComponent(
+		self,
+		glyphName: str,
+		transformation: Tuple[float, float, float, float, float, float],
+	) -> None:
         self._check_contour_is_closed()
         self.pen.addComponent(glyphName, transformation)
 

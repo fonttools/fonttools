@@ -36,7 +36,7 @@ Coordinates are usually expressed as (x, y) tuples, but generally any
 sequence of length 2 will do.
 """
 
-from typing import Tuple
+from typing import Any, Optional, Tuple
 
 from fontTools.misc.loggingTools import LogMixin
 
@@ -116,7 +116,7 @@ class AbstractPen:
 	def addComponent(
 		self,
 		glyphName: str,
-		transformation: Tuple[float, float, float, float, float, float]
+		transformation: Tuple[float, float, float, float, float, float],
 	) -> None:
 		"""Add a sub glyph. The 'transformation' argument must be a 6-tuple
 		containing an affine transformation, or a Transform object from the
@@ -149,7 +149,11 @@ class NullPen(AbstractPen):
 	def endPath(self):
 		pass
 
-	def addComponent(self, glyphName, transformation):
+	def addComponent(
+		self,
+		glyphName: str,
+		transformation: Tuple[float, float, float, float, float, float],
+	) -> None:
 		pass
 
 
@@ -186,7 +190,11 @@ class DecomposingPen(LoggingPen):
 		super(DecomposingPen, self).__init__()
 		self.glyphSet = glyphSet
 
-	def addComponent(self, glyphName, transformation):
+	def addComponent(
+		self,
+		glyphName: str,
+		transformation: Tuple[float, float, float, float, float, float],
+	) -> None:
 		""" Transform the points of the base glyph and draw it onto self.
 		"""
 		from fontTools.pens.transformPen import TransformPen

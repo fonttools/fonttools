@@ -24,6 +24,7 @@ the resulting splines are interpolation-compatible.
 """
 
 import logging
+from typing import Tuple
 from fontTools.pens.basePen import AbstractPen
 from fontTools.pens.pointPen import PointToSegmentPen
 from fontTools.pens.reverseContourPen import ReverseContourPen
@@ -91,7 +92,11 @@ class GetSegmentsPen(AbstractPen):
     def endPath(self):
         self._add_segment('end')
 
-    def addComponent(self, glyphName, transformation):
+    def addComponent(
+		self,
+		glyphName: str,
+		transformation: Tuple[float, float, float, float, float, float],
+	) -> None:
         pass
 
 
