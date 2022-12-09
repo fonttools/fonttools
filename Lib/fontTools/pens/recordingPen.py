@@ -131,7 +131,15 @@ class RecordingPointPen(AbstractPointPen):
 	def endPath(self):
 		self.value.append(("endPath", (), {}))
 
-	def addPoint(self, pt, segmentType=None, smooth=False, name=None, identifier=None, **kwargs):
+	def addPoint(
+        self,
+        pt: Tuple[float, float],
+        segmentType: Optional[str] = None,
+        smooth: bool = False,
+        name: Optional[str] = None,
+        identifier: Optional[str] = None,
+        **kwargs,
+    ) -> None:
 		if identifier is not None:
 			kwargs["identifier"] = identifier
 		self.value.append(("addPoint", (pt, segmentType, smooth, name), kwargs))

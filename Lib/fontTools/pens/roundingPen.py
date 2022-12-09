@@ -96,7 +96,15 @@ class RoundingPointPen(FilterPointPen):
         super().__init__(outPen)
         self.roundFunc = roundFunc
 
-    def addPoint(self, pt, segmentType=None, smooth=False, name=None, **kwargs):
+    def addPoint(
+        self,
+        pt: Tuple[float, float],
+        segmentType: Optional[str] = None,
+        smooth: bool = False,
+        name: Optional[str] = None,
+        identifier: Optional[str] = None,
+        **kwargs,
+    ) -> None:
         self._outPen.addPoint(
             (self.roundFunc(pt[0]), self.roundFunc(pt[1])),
             segmentType=segmentType,

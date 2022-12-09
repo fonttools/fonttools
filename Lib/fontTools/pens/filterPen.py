@@ -171,5 +171,13 @@ class FilterPointPen(_PassThruComponentsPointPenMixin, AbstractPointPen):
     def endPath(self):
         self._outPen.endPath()
 
-    def addPoint(self, pt, segmentType=None, smooth=False, name=None, **kwargs):
+    def addPoint(
+        self,
+        pt: Tuple[float, float],
+        segmentType: Optional[str] = None,
+        smooth: bool = False,
+        name: Optional[str] = None,
+        identifier: Optional[str] = None,
+        **kwargs,
+    ) -> None:
         self._outPen.addPoint(pt, segmentType, smooth, name, **kwargs)

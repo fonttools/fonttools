@@ -154,8 +154,15 @@ class BasePointToSegmentPen(AbstractPointPen):
 
 		self._flushContour(segments)
 
-	def addPoint(self, pt, segmentType=None, smooth=False, name=None,
-				 identifier=None, **kwargs):
+	def addPoint(
+        self,
+        pt: Tuple[float, float],
+        segmentType: Optional[str] = None,
+        smooth: bool = False,
+        name: Optional[str] = None,
+        identifier: Optional[str] = None,
+        **kwargs,
+    ) -> None:
 		if self.currentPath is None:
 			raise PenError("Path not begun")
 		self.currentPath.append((pt, segmentType, smooth, name, kwargs))
@@ -398,8 +405,15 @@ class GuessSmoothPointPen(AbstractPointPen):
 		self._outPen.endPath()
 		self._points = None
 
-	def addPoint(self, pt, segmentType=None, smooth=False, name=None,
-				 identifier=None, **kwargs):
+	def addPoint(
+        self,
+        pt: Tuple[float, float],
+        segmentType: Optional[str] = None,
+        smooth: bool = False,
+        name: Optional[str] = None,
+        identifier: Optional[str] = None,
+        **kwargs,
+    ) -> None:
 		if self._points is None:
 			raise PenError("Path not begun")
 		if identifier is not None:
@@ -496,7 +510,15 @@ class ReverseContourPointPen(AbstractPointPen):
 		self._flushContour()
 		self.currentContour = None
 
-	def addPoint(self, pt, segmentType=None, smooth=False, name=None, identifier=None, **kwargs):
+	def addPoint(
+        self,
+        pt: Tuple[float, float],
+        segmentType: Optional[str] = None,
+        smooth: bool = False,
+        name: Optional[str] = None,
+        identifier: Optional[str] = None,
+        **kwargs,
+    ) -> None:
 		if self.currentContour is None:
 			raise PenError("Path not begun")
 		if identifier is not None:

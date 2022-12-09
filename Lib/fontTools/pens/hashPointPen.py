@@ -53,13 +53,13 @@ class HashPointPen(AbstractPointPen):
 
     def addPoint(
         self,
-        pt,
-        segmentType=None,
-        smooth=False,
-        name=None,
-        identifier=None,
+        pt: Tuple[float, float],
+        segmentType: Optional[str] = None,
+        smooth: bool = False,
+        name: Optional[str] = None,
+        identifier: Optional[str] = None,
         **kwargs,
-    ):
+    ) -> None:
         if segmentType is None:
             pt_type = "o"  # offcurve
         else:
