@@ -7,22 +7,22 @@ from fontTools.pens.recordingPen import RecordingPen
 class _PassThruComponentsMixin(object):
 
     def addComponent(
-		self,
-		glyphName: str,
-		transformation: Tuple[float, float, float, float, float, float],
-	) -> None:
+        self,
+        glyphName: str,
+        transformation: Tuple[float, float, float, float, float, float],
+    ) -> None:
         self._outPen.addComponent(glyphName, transformation)
 
 
 class _PassThruComponentsPointPenMixin(object):
 
     def addComponent(
-		self,
-		glyphName: str,
-		transformation: Tuple[float, float, float, float, float, float],
-		identifier: Optional[str] = None,
-		**kwargs: Any
-	) -> None:
+        self,
+        glyphName: str,
+        transformation: Tuple[float, float, float, float, float, float],
+        identifier: Optional[str] = None,
+        **kwargs: Any
+    ) -> None:
         self._outPen.addComponent(glyphName, transformation, identifier, **kwargs)
 
 
