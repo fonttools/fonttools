@@ -6,8 +6,8 @@ Call as:
 $ fonttools varLib.interpolatable font1 font2 ...
 """
 
-from fontTools.pens.basePen import AbstractPen, BasePen
 from typing import Optional, Tuple
+from fontTools.pens.basePen import BasePen
 from fontTools.pens.pointPen import SegmentToPointPen
 from fontTools.pens.recordingPen import RecordingPen
 from fontTools.pens.statisticsPen import StatisticsPen
