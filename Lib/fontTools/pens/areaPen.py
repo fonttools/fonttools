@@ -39,10 +39,10 @@ class AreaPen(BasePen):
 		x2, y2 = p2[0] - x0, p2[1] - y0
 		x3, y3 = p3[0] - x0, p3[1] - y0
 		self.value -= (
-				x1 * (   -   y2 -   y3) +
-				x2 * (y1        - 2*y3) +
-				x3 * (y1 + 2*y2       )
-			      ) * 0.15
+			x1 * (   -   y2 -   y3) +
+			x2 * (y1        - 2*y3) +
+			x3 * (y1 + 2*y2       )
+		) * 0.15
 		self._lineTo(p3)
 		self._p0 = p3
 
