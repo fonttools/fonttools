@@ -1792,7 +1792,13 @@ class GLIFPointPen(AbstractPointPen):
 			self.identifiers.add(identifier)
 		etree.SubElement(self.contour, "point", attrs)
 
-	def addComponent(self, glyphName, transformation, identifier=None, **kwargs):
+	def addComponent(
+		self,
+		glyphName: str,
+		transformation: Tuple[float, float, float, float, float, float],
+		identifier: Optional[str] = None,
+		**kwargs: Any,
+	) -> None:
 		attrs = OrderedDict([("base", glyphName)])
 		for (attr, default), value in zip(_transformationInfo, transformation):
 			if self.validate and not isinstance(value, numberTypes):

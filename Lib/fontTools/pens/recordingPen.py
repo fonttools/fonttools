@@ -1,4 +1,5 @@
 """Pen recording operations that can be accessed or replayed."""
+from typing import Any, Optional, Tuple
 from fontTools.pens.basePen import AbstractPen, DecomposingPen
 from fontTools.pens.pointPen import AbstractPointPen
 
@@ -135,10 +136,16 @@ class RecordingPointPen(AbstractPointPen):
 			kwargs["identifier"] = identifier
 		self.value.append(("addPoint", (pt, segmentType, smooth, name), kwargs))
 
-	def addComponent(self, baseGlyphName, transformation, identifier=None, **kwargs):
+	def addComponent(
+		self,
+		glyphName: str,
+		transformation: Tuple[float, float, float, float, float, float],
+		identifier: Optional[str] = None,
+		**kwargs: Any
+	) -> None:
 		if identifier is not None:
 			kwargs["identifier"] = identifier
-		self.value.append(("addComponent", (baseGlyphName, transformation), kwargs))
+		self.value.append(("addComponent", (glyphName, transformation), kwargs))
 
 	def replay(self, pointPen):
 		for operator, args, kwargs in self.value:

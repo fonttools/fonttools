@@ -14,6 +14,18 @@ class _PassThruComponentsMixin(object):
         self._outPen.addComponent(glyphName, transformation)
 
 
+class _PassThruComponentsPointPenMixin(object):
+
+    def addComponent(
+		self,
+		glyphName: str,
+		transformation: Tuple[float, float, float, float, float, float],
+		identifier: Optional[str] = None,
+		**kwargs: Any
+	) -> None:
+        self._outPen.addComponent(glyphName, transformation, identifier, **kwargs)
+
+
 class FilterPen(_PassThruComponentsMixin, AbstractPen):
 
     """ Base class for pens that apply some transformation to the coordinates
@@ -125,7 +137,7 @@ class ContourFilterPen(_PassThruComponentsMixin, RecordingPen):
         return  # or return contour
 
 
-class FilterPointPen(_PassThruComponentsMixin, AbstractPointPen):
+class FilterPointPen(_PassThruComponentsPointPenMixin, AbstractPointPen):
     """ Baseclass for point pens that apply some transformation to the
     coordinates they receive and pass them to another point pen.
 

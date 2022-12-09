@@ -1,6 +1,7 @@
 # Modified from https://github.com/adobe-type-tools/psautohint/blob/08b346865710ed3c172f1eb581d6ef243b203f99/python/psautohint/ufoFont.py#L800-L838
 import hashlib
 
+from typing import Any, Optional, Tuple
 from fontTools.pens.basePen import MissingComponentError
 from fontTools.pens.pointPen import AbstractPointPen
 
@@ -66,12 +67,16 @@ class HashPointPen(AbstractPointPen):
         self.data.append(f"{pt_type}{pt[0]:g}{pt[1]:+g}")
 
     def addComponent(
-        self, baseGlyphName, transformation, identifier=None, **kwargs
-    ):
+		self,
+		glyphName: str,
+		transformation: Tuple[float, float, float, float, float, float],
+		identifier: Optional[str] = None,
+		**kwargs: Any
+	) -> None:
         tr = "".join([f"{t:+}" for t in transformation])
         self.data.append("[")
         try:
-            self.glyphset[baseGlyphName].drawPoints(self)
+            self.glyphset[glyphName].drawPoints(self)
         except KeyError:
-            raise MissingComponentError(baseGlyphName)
+            raise MissingComponentError(glyphName)
         self.data.append(f"({tr})]")

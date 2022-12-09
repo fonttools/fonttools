@@ -99,9 +99,15 @@ class TransformPointPen(FilterPointPen):
 			self._transformPoint(pt), segmentType, smooth, name, **kwargs
 		)
 
-	def addComponent(self, baseGlyphName, transformation, **kwargs):
+	def addComponent(
+		self,
+		glyphName: str,
+		transformation: Tuple[float, float, float, float, float, float],
+		identifier: Optional[str] = None,
+		**kwargs: Any
+	) -> None:
 		transformation = self._transformation.transform(transformation)
-		self._outPen.addComponent(baseGlyphName, transformation, **kwargs)
+		self._outPen.addComponent(glyphName, transformation, identifier, **kwargs)
 
 
 if __name__ == "__main__":

@@ -52,7 +52,7 @@ class AbstractPointPen:
 
 	def addComponent(
 		self,
-		baseGlyphName: str,
+		glyphName: str,
 		transformation: Tuple[float, float, float, float, float, float],
 		identifier: Optional[str] = None,
 		**kwargs: Any
@@ -240,10 +240,16 @@ class PointToSegmentPen(BasePointToSegmentPen):
 		else:
 			pen.endPath()
 
-	def addComponent(self, glyphName, transform, identifier=None, **kwargs):
+	def addComponent(
+		self,
+		glyphName: str,
+		transformation: Tuple[float, float, float, float, float, float],
+		identifier: Optional[str] = None,
+		**kwargs: Any
+	) -> None:
 		del identifier  # unused
 		del kwargs  # unused
-		self.pen.addComponent(glyphName, transform)
+		self.pen.addComponent(glyphName, transformation)
 
 
 class SegmentToPointPen(AbstractPen):
@@ -318,10 +324,14 @@ class SegmentToPointPen(AbstractPen):
 		self._flushContour()
 		self.contour = None
 
-	def addComponent(self, glyphName, transform):
+	def addComponent(
+		self,
+		glyphName: str,
+		transformation: Tuple[float, float, float, float, float, float],
+	) -> None:
 		if self.contour is not None:
 			raise PenError("Components must be added before or after contours")
-		self.pen.addComponent(glyphName, transform)
+		self.pen.addComponent(glyphName, transformation)
 
 
 class GuessSmoothPointPen(AbstractPointPen):
@@ -396,7 +406,13 @@ class GuessSmoothPointPen(AbstractPointPen):
 			kwargs["identifier"] = identifier
 		self._points.append((pt, segmentType, False, name, kwargs))
 
-	def addComponent(self, glyphName, transformation, identifier=None, **kwargs):
+	def addComponent(
+		self,
+		glyphName: str,
+		transformation: Tuple[float, float, float, float, float, float],
+		identifier: Optional[str] = None,
+		**kwargs: Any
+	) -> None:
 		if self._points is not None:
 			raise PenError("Components must be added before or after contours")
 		if identifier is not None:
@@ -487,7 +503,13 @@ class ReverseContourPointPen(AbstractPointPen):
 			kwargs["identifier"] = identifier
 		self.currentContour.append((pt, segmentType, smooth, name, kwargs))
 
-	def addComponent(self, glyphName, transform, identifier=None, **kwargs):
+	def addComponent(
+		self,
+		glyphName: str,
+		transformation: Tuple[float, float, float, float, float, float],
+		identifier: Optional[str] = None,
+		**kwargs: Any
+	) -> None:
 		if self.currentContour is not None:
 			raise PenError("Components must be added before or after contours")
-		self.pen.addComponent(glyphName, transform, identifier=identifier, **kwargs)
+		self.pen.addComponent(glyphName, transformation, identifier, **kwargs)

@@ -260,6 +260,12 @@ class Cu2QuPointPen(BasePointToSegmentPen):
             pen.addPoint(pt, None, smooth, name, **kwargs)
         pen.endPath()
 
-    def addComponent(self, baseGlyphName, transformation):
+    def addComponent(
+		self,
+		glyphName: str,
+		transformation: Tuple[float, float, float, float, float, float],
+		identifier: Optional[str] = None,
+		**kwargs: Any
+	) -> None:
         assert self.currentPath is None
-        self.pen.addComponent(baseGlyphName, transformation)
+        self.pen.addComponent(glyphName, transformation, identifier, **kwargs)
