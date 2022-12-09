@@ -166,6 +166,8 @@ class FilterPointPen(_PassThruComponentsPointPenMixin, AbstractPointPen):
         self._outPen = outPointPen
 
     def beginPath(self, identifier: Optional[str] = None, **kwargs: Any) -> None:
+        if identifier is not None:
+            kwargs["identifier"] = identifier
         self._outPen.beginPath(**kwargs)
 
     def endPath(self) -> None:
@@ -180,4 +182,6 @@ class FilterPointPen(_PassThruComponentsPointPenMixin, AbstractPointPen):
         identifier: Optional[str] = None,
         **kwargs,
     ) -> None:
+        if identifier is not None:
+            kwargs["identifier"] = identifier
         self._outPen.addPoint(pt, segmentType, smooth, name, **kwargs)
