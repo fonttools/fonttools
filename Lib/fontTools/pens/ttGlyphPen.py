@@ -164,6 +164,15 @@ class TTGlyphPen(_TTGlyphBasePen, LoggingPen):
     drawMethod = "draw"
     transformPen = TransformPen
 
+    def __init__(
+        self,
+        glyphSet: Optional[Dict[str, Any]] = None,
+        handleOverflowingTransforms: bool = True,
+        outputImpliedClosingLine: bool = False,
+    ) -> None:
+        super().__init__(glyphSet, handleOverflowingTransforms)
+        self.outputImpliedClosingLine = outputImpliedClosingLine
+
     def _addPoint(self, pt: Tuple[float, float], onCurve: int) -> None:
         self.points.append(pt)
         self.types.append(onCurve)
@@ -205,13 +214,14 @@ class TTGlyphPen(_TTGlyphBasePen, LoggingPen):
             self._popPoint()
             return
 
-        # if first and last point on this path are the same, remove last
-        startPt = 0
-        if self.endPts:
-            startPt = self.endPts[-1] + 1
-        if self.points[startPt] == self.points[endPt]:
-            self._popPoint()
-            endPt -= 1
+        if not self.outputImpliedClosingLine:
+            # if first and last point on this path are the same, remove last
+            startPt = 0
+            if self.endPts:
+                startPt = self.endPts[-1] + 1
+            if self.points[startPt] == self.points[endPt]:
+                self._popPoint()
+                endPt -= 1
 
         self.endPts.append(endPt)
 
