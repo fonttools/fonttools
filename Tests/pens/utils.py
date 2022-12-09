@@ -28,7 +28,7 @@ class BaseDummyPen(object):
         """Return the pen commands as a string of python code."""
         return _repr_pen_commands(self.commands)
 
-    def addComponent(self, glyphName, transformation, **kwargs):
+    def addComponent(self, glyphName, transformation, identifier=None, **kwargs):
         self.commands.append(('addComponent', (glyphName, transformation), kwargs))
 
 
