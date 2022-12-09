@@ -1,4 +1,6 @@
-from typing import Any, Optional, Tuple
+from typing import Any, List, Optional, Sequence, Tuple, Union
+from fontTools.misc.transform import Transform
+from fontTools.pens.basePen import PenPoint
 from fontTools.pens.filterPen import FilterPen, FilterPointPen
 
 
@@ -11,43 +13,45 @@ class TransformPen(FilterPen):
 	and passes them to another pen.
 	"""
 
-	def __init__(self, outPen, transformation):
+	def __init__(self, outPen, transformation: Union[Transform, Tuple[float, float, float, float, float, float]]) -> None:
 		"""The 'outPen' argument is another pen object. It will receive the
 		transformed coordinates. The 'transformation' argument can either
 		be a six-tuple, or a fontTools.misc.transform.Transform object.
 		"""
 		super(TransformPen, self).__init__(outPen)
-		if not hasattr(transformation, "transformPoint"):
-			from fontTools.misc.transform import Transform
-			transformation = Transform(*transformation)
-		self._transformation = transformation
-		self._transformPoint = transformation.transformPoint
-		self._stack = []
+		if isinstance(transformation, Transform):
+			transform = transformation
+		else:
+			transform = Transform(*transformation)
+		self._transformation = transform
+		self._transformPoint = transform.transformPoint
+		self._stack: List[Any] = []
 
-	def moveTo(self, pt):
+	def moveTo(self, pt: PenPoint) -> None:
 		self._outPen.moveTo(self._transformPoint(pt))
 
-	def lineTo(self, pt):
+	def lineTo(self, pt: PenPoint) -> None:
 		self._outPen.lineTo(self._transformPoint(pt))
 
-	def curveTo(self, *points):
-		self._outPen.curveTo(*self._transformPoints(points))
+	def curveTo(self, *points: PenPoint) -> None:
+		self._outPen.curveTo(*self._transformPoints(list(points)))
 
-	def qCurveTo(self, *points):
-		if points[-1] is None:
-			points = self._transformPoints(points[:-1]) + [None]
+	def qCurveTo(self, *points: Optional[PenPoint]) -> None:
+		pt = points[-1]
+		if pt is None:
+			tpoints = self._transformPoints(points[:-1]) + [None]
 		else:
-			points = self._transformPoints(points)
-		self._outPen.qCurveTo(*points)
+			tpoints = self._transformPoints(points)
+		self._outPen.qCurveTo(*tpoints)
 
-	def _transformPoints(self, points):
+	def _transformPoints(self, points: Sequence[PenPoint]) -> List[PenPoint]:
 		transformPoint = self._transformPoint
 		return [transformPoint(pt) for pt in points]
 
-	def closePath(self):
+	def closePath(self) -> None:
 		self._outPen.closePath()
 
-	def endPath(self):
+	def endPath(self) -> None:
 		self._outPen.endPath()
 
 	def addComponent(
@@ -94,9 +98,17 @@ class TransformPointPen(FilterPointPen):
 		self._transformation = transformation
 		self._transformPoint = transformation.transformPoint
 
-	def addPoint(self, pt, segmentType=None, smooth=False, name=None, **kwargs):
+	def addPoint(
+		self,
+		pt: PenPoint,
+		segmentType: Optional[str] = None,
+		smooth: bool = False,
+		name: Optional[str] = None,
+		identifier: Optional[str] = None,
+		**kwargs: Any
+	) -> None:
 		self._outPen.addPoint(
-			self._transformPoint(pt), segmentType, smooth, name, **kwargs
+			self._transformPoint(pt), segmentType, smooth, name, identifier, **kwargs
 		)
 
 	def addComponent(
