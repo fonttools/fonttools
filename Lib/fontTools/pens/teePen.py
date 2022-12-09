@@ -1,6 +1,6 @@
 """Pen multiplexing drawing to one or more pens."""
-from typing import Tuple
-from fontTools.pens.basePen import AbstractPen
+from typing import Optional, Tuple
+from fontTools.pens.basePen import AbstractPen, PenPoint
 
 
 __all__ = ["TeePen"]
@@ -11,26 +11,26 @@ class TeePen(AbstractPen):
 
 	Use either as TeePen(pen1, pen2, ...) or TeePen(iterableOfPens)."""
 
-	def __init__(self, *pens):
+	def __init__(self, *pens) -> None:
 		if len(pens) == 1:
 			pens = pens[0]
 		self.pens = pens
-	def moveTo(self, p0):
+	def moveTo(self, p0: PenPoint) -> None:
 		for pen in self.pens:
 			pen.moveTo(p0)
-	def lineTo(self, p1):
+	def lineTo(self, p1: PenPoint) -> None:
 		for pen in self.pens:
 			pen.lineTo(p1)
-	def qCurveTo(self, *points):
+	def qCurveTo(self, *points: Optional[PenPoint]) -> None:
 		for pen in self.pens:
 			pen.qCurveTo(*points)
-	def curveTo(self, *points):
+	def curveTo(self, *points: PenPoint) -> None:
 		for pen in self.pens:
 			pen.curveTo(*points)
-	def closePath(self):
+	def closePath(self) -> None:
 		for pen in self.pens:
 			pen.closePath()
-	def endPath(self):
+	def endPath(self) -> None:
 		for pen in self.pens:
 			pen.endPath()
 	def addComponent(
