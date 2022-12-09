@@ -110,6 +110,7 @@ class RoundingPointPen(FilterPointPen):
             segmentType=segmentType,
             smooth=smooth,
             name=name,
+            identifier=identifier,
             **kwargs,
         )
 
