@@ -13,7 +13,6 @@ from fontTools.pens.statisticsPen import StatisticsPen
 from fontTools.pens.momentsPen import OpenContourError
 from collections import OrderedDict
 import itertools
-import sys
 
 
 def _rot_list(ls, k):
