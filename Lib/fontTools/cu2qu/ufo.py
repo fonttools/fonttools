@@ -304,7 +304,7 @@ def fonts_to_quadratic(
 
     if modified and dump_stats:
         spline_lengths = sorted(stats.keys())
-        logger.info("New spline lengths: %s" % (", ".join("%s: %d" % (l, stats[l]) for l in spline_lengths)))
+        logger.info("New spline lengths: %s" % (", ".join("%s: %d" % (sl, stats[sl]) for sl in spline_lengths)))
 
     if remember_curve_type:
         for font in fonts:
