@@ -1,4 +1,6 @@
-# Modified from https://github.com/adobe-type-tools/psautohint/blob/08b346865710ed3c172f1eb581d6ef243b203f99/python/psautohint/ufoFont.py#L800-L838
+# Modified from
+# https://github.com/adobe-type-tools/psautohint/blob/08b346865710ed3c172f1eb581d6ef243b203f99/
+# python/psautohint/ufoFont.py#L800-L838
 import hashlib
 
 from fontTools.pens.basePen import MissingComponentError
@@ -65,9 +67,7 @@ class HashPointPen(AbstractPointPen):
             pt_type = segmentType[0]
         self.data.append(f"{pt_type}{pt[0]:g}{pt[1]:+g}")
 
-    def addComponent(
-        self, baseGlyphName, transformation, identifier=None, **kwargs
-    ):
+    def addComponent(self, baseGlyphName, transformation, identifier=None, **kwargs):
         tr = "".join([f"{t:+}" for t in transformation])
         self.data.append("[")
         try:

@@ -9,7 +9,11 @@ import collections
 import math
 
 import freetype
-from freetype.raw import FT_Outline_Get_Bitmap, FT_Outline_Get_BBox, FT_Outline_Get_CBox
+from freetype.raw import (
+    FT_Outline_Get_Bitmap,
+    FT_Outline_Get_BBox,
+    FT_Outline_Get_CBox,
+)
 from freetype.ft_types import FT_Pos
 from freetype.ft_structs import FT_Vector, FT_BBox, FT_Bitmap, FT_Outline
 from freetype.ft_enums import (
@@ -66,12 +70,30 @@ class FreeTypePen(BasePen):
             from fontTools.misc.transform import Offset
 
             en1, en2, ar, ja = 'Typesetting', 'Jeff', 'صف الحروف', 'たいぷせっと'
-            for text, font_path, direction, typo_ascender, typo_descender, vhea_ascender, vhea_descender, contain, features in (
-                (en1, 'NotoSans-Regular.ttf',       'ltr', 2189, -600, None, None, False, {"kern": True, "liga": True}),
-                (en2, 'NotoSans-Regular.ttf',       'ltr', 2189, -600, None, None, True,  {"kern": True, "liga": True}),
-                (ar,  'NotoSansArabic-Regular.ttf', 'rtl', 1374, -738, None, None, False, {"kern": True, "liga": True}),
-                (ja,  'NotoSansJP-Regular.otf',     'ltr', 880,  -120, 500,  -500, False, {"palt": True, "kern": True}),
-                (ja,  'NotoSansJP-Regular.otf',     'ttb', 880,  -120, 500,  -500, False, {"vert": True, "vpal": True, "vkrn": True})
+            for (
+                text, font_path, direction, typo_ascender, typo_descender,
+                vhea_ascender, vhea_descender, contain, features
+            ) in (
+                (
+                    en1, 'NotoSans-Regular.ttf',
+                    'ltr', 2189, -600, None, None, False, {"kern": True, "liga": True}
+                ),
+                (
+                    en2, 'NotoSans-Regular.ttf',
+                    'ltr', 2189, -600, None, None, True,  {"kern": True, "liga": True}
+                ),
+                (
+                    ar,  'NotoSansArabic-Regular.ttf',
+                    'rtl', 1374, -738, None, None, False, {"kern": True, "liga": True}
+                ),
+                (
+                    ja,  'NotoSansJP-Regular.otf',
+                    'ltr', 880,  -120, 500,  -500, False, {"palt": True, "kern": True}
+                ),
+                (
+                    ja,  'NotoSansJP-Regular.otf',
+                    'ttb', 880,  -120, 500,  -500, False, {"vert": True, "vpal": True, "vkrn": True}
+                ),
             ):
                 blob = hb.Blob.from_file_path(font_path)
                 face = hb.Face(blob)
@@ -130,7 +152,8 @@ class FreeTypePen(BasePen):
                 point = transform.transformPoint(point)
                 points.append(
                     FT_Vector(
-                        FT_Pos(otRound(point[0] * 64)), FT_Pos(otRound(point[1] * 64))
+                        FT_Pos(otRound(point[0] * 64)),
+                        FT_Pos(otRound(point[1] * 64)),
                     )
                 )
         tags = []
@@ -153,7 +176,12 @@ class FreeTypePen(BasePen):
         )
 
     def buffer(
-        self, width=None, height=None, transform=None, contain=False, evenOdd=False
+        self,
+        width=None,
+        height=None,
+        transform=None,
+        contain=False,
+        evenOdd=False,
     ):
         """Renders the current contours within a bitmap buffer.
 
@@ -198,7 +226,10 @@ class FreeTypePen(BasePen):
         transform = transform or Transform()
         if not hasattr(transform, "transformPoint"):
             transform = Transform(*transform)
-        contain_x, contain_y = contain or width is None, contain or height is None
+        contain_x, contain_y = (
+            contain or width is None,
+            contain or height is None,
+        )
         if contain_x or contain_y:
             dx, dy = transform.dx, transform.dy
             bbox = self.bbox
@@ -237,15 +268,18 @@ class FreeTypePen(BasePen):
             (ctypes.c_void_p)(None),
         )
         outline = self.outline(transform=transform, evenOdd=evenOdd)
-        err = FT_Outline_Get_Bitmap(
-            freetype.get_handle(), ctypes.byref(outline), ctypes.byref(bitmap)
-        )
+        err = FT_Outline_Get_Bitmap(freetype.get_handle(), ctypes.byref(outline), ctypes.byref(bitmap))
         if err != 0:
             raise FT_Exception(err)
         return buf.raw, (width, height)
 
     def array(
-        self, width=None, height=None, transform=None, contain=False, evenOdd=False
+        self,
+        width=None,
+        height=None,
+        transform=None,
+        contain=False,
+        evenOdd=False,
     ):
         """Returns the rendered contours as a numpy array. Requires `numpy`.
 
@@ -297,7 +331,12 @@ class FreeTypePen(BasePen):
         return np.frombuffer(buf, "B").reshape((size[1], size[0])) / 255.0
 
     def show(
-        self, width=None, height=None, transform=None, contain=False, evenOdd=False
+        self,
+        width=None,
+        height=None,
+        transform=None,
+        contain=False,
+        evenOdd=False,
     ):
         """Plots the rendered contours with `pyplot`. Requires `numpy` and
         `matplotlib`.
@@ -345,7 +384,12 @@ class FreeTypePen(BasePen):
         plt.show()
 
     def image(
-        self, width=None, height=None, transform=None, contain=False, evenOdd=False
+        self,
+        width=None,
+        height=None,
+        transform=None,
+        contain=False,
+        evenOdd=False,
     ):
         """Returns the rendered contours as a PIL image. Requires `Pillow`.
         Can be used to display a glyph image in Jupyter Notebook.
@@ -409,7 +453,12 @@ class FreeTypePen(BasePen):
         bbox = FT_BBox()
         outline = self.outline()
         FT_Outline_Get_BBox(ctypes.byref(outline), ctypes.byref(bbox))
-        return (bbox.xMin / 64.0, bbox.yMin / 64.0, bbox.xMax / 64.0, bbox.yMax / 64.0)
+        return (
+            bbox.xMin / 64.0,
+            bbox.yMin / 64.0,
+            bbox.xMax / 64.0,
+            bbox.yMax / 64.0,
+        )
 
     @property
     def cbox(self):
@@ -421,7 +470,12 @@ class FreeTypePen(BasePen):
         cbox = FT_BBox()
         outline = self.outline()
         FT_Outline_Get_CBox(ctypes.byref(outline), ctypes.byref(cbox))
-        return (cbox.xMin / 64.0, cbox.yMin / 64.0, cbox.xMax / 64.0, cbox.yMax / 64.0)
+        return (
+            cbox.xMin / 64.0,
+            cbox.yMin / 64.0,
+            cbox.xMax / 64.0,
+            cbox.yMax / 64.0,
+        )
 
     def _moveTo(self, pt):
         contour = Contour([], [])
