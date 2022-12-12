@@ -144,7 +144,6 @@ def test(glyphsets, glyphs=None, names=None):
     if glyphs is None:
         glyphs = glyphsets[0].keys()
 
-    hist = []
     problems = OrderedDict()
 
     def add_problem(glyphname, problem):
@@ -187,7 +186,7 @@ def test(glyphsets, glyphs=None, names=None):
                     stats = StatisticsPen(glyphset=glyphset)
                     try:
                         contour.replay(stats)
-                    except OpenContourError as e:
+                    except OpenContourError:
                         add_problem(
                             glyph_name,
                             {
