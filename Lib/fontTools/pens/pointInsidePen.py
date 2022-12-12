@@ -128,7 +128,6 @@ class PointInsidePen(BasePen):
         bx = (x3 - x2) * 3.0 - cx
         ax = x4 - dx - cx - bx
 
-        above = y1 >= y
         lastT = None
         for t in solutions:
             if t == lastT:
