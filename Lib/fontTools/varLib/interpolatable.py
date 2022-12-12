@@ -6,7 +6,8 @@ Call as:
 $ fonttools varLib.interpolatable font1 font2 ...
 """
 
-from fontTools.pens.basePen import AbstractPen, BasePen
+from typing import Optional, Tuple
+from fontTools.pens.basePen import BasePen
 from fontTools.pens.pointPen import SegmentToPointPen
 from fontTools.pens.recordingPen import RecordingPen
 from fontTools.pens.statisticsPen import StatisticsPen
@@ -59,7 +60,11 @@ class PerContourPen(BasePen):
 
 
 class PerContourOrComponentPen(PerContourPen):
-    def addComponent(self, glyphName, transformation):
+    def addComponent(
+		self,
+		glyphName: str,
+		transformation: Tuple[float, float, float, float, float, float],
+	) -> None:
         self._newItem()
         self.value[-1].addComponent(glyphName, transformation)
 
@@ -75,7 +80,15 @@ class RecordingPointPen(BasePen):
     def endPath(self) -> None:
         pass
 
-    def addPoint(self, pt, segmentType=None):
+    def addPoint(
+        self,
+        pt: Tuple[float, float],
+        segmentType: Optional[str] = None,
+        smooth: bool = False,
+        name: Optional[str] = None,
+        identifier: Optional[str] = None,
+        **kwargs,
+    ) -> None:
         self.value.append((pt, False if segmentType is None else True))
 
 

@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import logging
 import enum
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
 from warnings import warn
 from collections import OrderedDict
 import fs
@@ -1744,7 +1745,15 @@ class GLIFPointPen(AbstractPointPen):
 		self.prevOffCurveCount = 0
 		self.prevPointTypes = []
 
-	def addPoint(self, pt, segmentType=None, smooth=None, name=None, identifier=None, **kwargs):
+	def addPoint(
+		self,
+		pt: Tuple[float, float],
+		segmentType: Optional[str] = None,
+		smooth: bool = False,
+		name: Optional[str] = None,
+		identifier: Optional[str] = None,
+		**kwargs: Any
+	) -> None:
 		attrs = OrderedDict()
 		# coordinates
 		if pt is not None:
@@ -1792,7 +1801,13 @@ class GLIFPointPen(AbstractPointPen):
 			self.identifiers.add(identifier)
 		etree.SubElement(self.contour, "point", attrs)
 
-	def addComponent(self, glyphName, transformation, identifier=None, **kwargs):
+	def addComponent(
+		self,
+		glyphName: str,
+		transformation: Tuple[float, float, float, float, float, float],
+		identifier: Optional[str] = None,
+		**kwargs: Any,
+	) -> None:
 		attrs = OrderedDict([("base", glyphName)])
 		for (attr, default), value in zip(_transformationInfo, transformation):
 			if self.validate and not isinstance(value, numberTypes):

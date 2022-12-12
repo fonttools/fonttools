@@ -24,7 +24,7 @@ def doraise_py_compile(file, cfile=None, dfile=None, doraise=False):
 
 py_compile.compile = doraise_py_compile
 
-setup_requires = []
+setup_requires = ["typing_extensions"]
 
 if {'bdist_wheel'}.intersection(sys.argv):
 	setup_requires.append('wheel')

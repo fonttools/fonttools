@@ -1,3 +1,4 @@
+from fontTools.misc.transform import Transform
 from fontTools.pens.filterPen import FilterPen, FilterPointPen
 
 
@@ -16,11 +17,12 @@ class TransformPen(FilterPen):
 		be a six-tuple, or a fontTools.misc.transform.Transform object.
 		"""
 		super(TransformPen, self).__init__(outPen)
-		if not hasattr(transformation, "transformPoint"):
-			from fontTools.misc.transform import Transform
-			transformation = Transform(*transformation)
-		self._transformation = transformation
-		self._transformPoint = transformation.transformPoint
+		if isinstance(transformation, Transform):
+			transform = transformation
+		else:
+			transform = Transform(*transformation)
+		self._transformation = transform
+		self._transformPoint = transform.transformPoint
 		self._stack = []
 
 	def moveTo(self, pt):
@@ -33,11 +35,12 @@ class TransformPen(FilterPen):
 		self._outPen.curveTo(*self._transformPoints(points))
 
 	def qCurveTo(self, *points):
-		if points[-1] is None:
-			points = self._transformPoints(points[:-1]) + [None]
+		pt = points[-1]
+		if pt is None:
+			tpoints = self._transformPoints(points[:-1]) + [None]
 		else:
-			points = self._transformPoints(points)
-		self._outPen.qCurveTo(*points)
+			tpoints = self._transformPoints(points)
+		self._outPen.qCurveTo(*tpoints)
 
 	def _transformPoints(self, points):
 		transformPoint = self._transformPoint
@@ -49,7 +52,7 @@ class TransformPen(FilterPen):
 	def endPath(self):
 		self._outPen.endPath()
 
-	def addComponent(self, glyphName, transformation):
+	def addComponent(self, glyphName: str, transformation):
 		transformation = self._transformation.transform(transformation)
 		self._outPen.addComponent(glyphName, transformation)
 
@@ -89,14 +92,14 @@ class TransformPointPen(FilterPointPen):
 		self._transformation = transformation
 		self._transformPoint = transformation.transformPoint
 
-	def addPoint(self, pt, segmentType=None, smooth=False, name=None, **kwargs):
+	def addPoint(self, pt, segmentType=None, smooth=False, name=None, identifier=None, **kwargs):
 		self._outPen.addPoint(
-			self._transformPoint(pt), segmentType, smooth, name, **kwargs
+			self._transformPoint(pt), segmentType, smooth, name, identifier, **kwargs
 		)
 
-	def addComponent(self, baseGlyphName, transformation, **kwargs):
+	def addComponent(self, glyphName, transformation, identifier=None, **kwargs):
 		transformation = self._transformation.transform(transformation)
-		self._outPen.addComponent(baseGlyphName, transformation, **kwargs)
+		self._outPen.addComponent(glyphName, transformation, identifier, **kwargs)
 
 
 if __name__ == "__main__":

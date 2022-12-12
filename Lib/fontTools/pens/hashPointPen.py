@@ -1,6 +1,7 @@
 # Modified from https://github.com/adobe-type-tools/psautohint/blob/08b346865710ed3c172f1eb581d6ef243b203f99/python/psautohint/ufoFont.py#L800-L838
 import hashlib
 
+from typing import Any, Dict, Optional, Tuple
 from fontTools.pens.basePen import MissingComponentError
 from fontTools.pens.pointPen import AbstractPointPen
 
@@ -33,32 +34,36 @@ class HashPointPen(AbstractPointPen):
     >    pass
     """
 
-    def __init__(self, glyphWidth=0, glyphSet=None):
+    def __init__(
+        self, glyphWidth: float = 0, glyphSet: Optional[Dict[str, Any]] = None
+    ) -> None:
         self.glyphset = glyphSet
         self.data = ["w%s" % round(glyphWidth, 9)]
 
     @property
-    def hash(self):
+    def hash(self) -> str:
         data = "".join(self.data)
         if len(data) >= 128:
             data = hashlib.sha512(data.encode("ascii")).hexdigest()
         return data
 
-    def beginPath(self, identifier=None, **kwargs):
+    def beginPath(
+        self, identifier: Optional[str] = None, **kwargs: Any
+    ) -> None:
         pass
 
-    def endPath(self):
+    def endPath(self) -> None:
         self.data.append("|")
 
     def addPoint(
         self,
-        pt,
-        segmentType=None,
-        smooth=False,
-        name=None,
-        identifier=None,
-        **kwargs,
-    ):
+        pt: Tuple[float, float],
+        segmentType: Optional[str] = None,
+        smooth: bool = False,
+        name: Optional[str] = None,
+        identifier: Optional[str] = None,
+        **kwargs: Any,
+    ) -> None:
         if segmentType is None:
             pt_type = "o"  # offcurve
         else:
@@ -66,12 +71,16 @@ class HashPointPen(AbstractPointPen):
         self.data.append(f"{pt_type}{pt[0]:g}{pt[1]:+g}")
 
     def addComponent(
-        self, baseGlyphName, transformation, identifier=None, **kwargs
-    ):
+        self,
+        glyphName: str,
+        transformation: Tuple[float, float, float, float, float, float],
+        identifier: Optional[str] = None,
+        **kwargs: Any,
+    ) -> None:
         tr = "".join([f"{t:+}" for t in transformation])
         self.data.append("[")
         try:
-            self.glyphset[baseGlyphName].drawPoints(self)
+            self.glyphset[glyphName].drawPoints(self)
         except KeyError:
-            raise MissingComponentError(baseGlyphName)
+            raise MissingComponentError(glyphName)
         self.data.append(f"({tr})]")

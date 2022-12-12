@@ -1,3 +1,4 @@
+from typing import Any, Optional, Tuple
 from fontTools.misc.roundTools import otRound
 from fontTools.misc.transform import Transform
 from fontTools.pens.filterPen import FilterPen, FilterPointPen
@@ -48,7 +49,11 @@ class RoundingPen(FilterPen):
             *((self.roundFunc(x), self.roundFunc(y)) for x, y in points)
         )
 
-    def addComponent(self, glyphName, transformation):
+    def addComponent(
+        self,
+        glyphName: str,
+        transformation: Tuple[float, float, float, float, float, float],
+    ) -> None:
         self._outPen.addComponent(
             glyphName,
             Transform(
@@ -91,18 +96,33 @@ class RoundingPointPen(FilterPointPen):
         super().__init__(outPen)
         self.roundFunc = roundFunc
 
-    def addPoint(self, pt, segmentType=None, smooth=False, name=None, **kwargs):
+    def addPoint(
+        self,
+        pt: Tuple[float, float],
+        segmentType: Optional[str] = None,
+        smooth: bool = False,
+        name: Optional[str] = None,
+        identifier: Optional[str] = None,
+        **kwargs,
+    ) -> None:
         self._outPen.addPoint(
             (self.roundFunc(pt[0]), self.roundFunc(pt[1])),
             segmentType=segmentType,
             smooth=smooth,
             name=name,
+            identifier=identifier,
             **kwargs,
         )
 
-    def addComponent(self, baseGlyphName, transformation, **kwargs):
+    def addComponent(
+        self,
+        glyphName: str,
+        transformation: Tuple[float, float, float, float, float, float],
+        identifier: Optional[str] = None,
+        **kwargs: Any
+    ) -> None:
         self._outPen.addComponent(
-            baseGlyphName,
+            glyphName,
             Transform(
                 *transformation[:4],
                 self.roundFunc(transformation[4]),
