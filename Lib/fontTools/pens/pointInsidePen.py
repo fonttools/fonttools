@@ -3,7 +3,7 @@ for shapes.
 """
 
 from fontTools.pens.basePen import BasePen
-from fontTools.misc.bezierTools import solveQuadratic, solveCubic
+from fontTools.misc.bezierTools import solveCubic  # solveQuadratic
 
 
 __all__ = ["PointInsidePen"]
@@ -162,22 +162,22 @@ class PointInsidePen(BasePen):
                 # else:
                 #   we're not really intersecting, merely touching
 
-    def _qCurveToOne_unfinished(self, bcp, point):
-        # XXX need to finish this, for now doing it through a cubic
-        # (BasePen implements _qCurveTo in terms of a cubic) will
-        # have to do.
-        x, y = self.testPoint
-        x1, y1 = self._getCurrentPoint()
-        x2, y2 = bcp
-        x3, y3 = point
-        c = y1
-        b = (y2 - c) * 2.0
-        a = y3 - c - b
-        solutions = sorted(solveQuadratic(a, b, c - y))
-        solutions = [t for t in solutions if ZERO_MINUS_EPSILON <= t <= ONE_PLUS_EPSILON]
-        if not solutions:
-            return
-        # XXX
+    # def _qCurveToOne_unfinished(self, bcp, point):
+    #     # XXX need to finish this, for now doing it through a cubic
+    #     # (BasePen implements _qCurveTo in terms of a cubic) will
+    #     # have to do.
+    #     x, y = self.testPoint
+    #     x1, y1 = self._getCurrentPoint()
+    #     x2, y2 = bcp
+    #     x3, y3 = point
+    #     c = y1
+    #     b = (y2 - c) * 2.0
+    #     a = y3 - c - b
+    #     solutions = sorted(solveQuadratic(a, b, c - y))
+    #     solutions = [t for t in solutions if ZERO_MINUS_EPSILON <= t <= ONE_PLUS_EPSILON]
+    #     if not solutions:
+    #         return
+    #     # XXX
 
     def _closePath(self):
         if self._getCurrentPoint() != self.firstPoint:
