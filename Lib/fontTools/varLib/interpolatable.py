@@ -416,10 +416,10 @@ def main(args=None):
                 names.append("()")
                 for loc in sorted(locs, key=lambda v: (len(v), v)):
                     names.append(str(loc))
-                    l = {}
+                    ld = {}
                     for tag, val in loc:
-                        l[tag] = val
-                    new_locs.append(l)
+                        ld[tag] = val
+                    new_locs.append(ld)
                 locs = new_locs
                 del new_locs
                 # locs is all master locations now
