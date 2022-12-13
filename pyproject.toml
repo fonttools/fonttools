@@ -1,3 +1,11 @@
 [tool.black]
 line-length = 120
 target-version = ["py37"]
+include = """
+(
+    ^/Lib/fontTools/pens
+    | ^/Lib/fontTools/cu2qu/ufo.py
+    | ^/Lib/fontTools/ufoLib/glifLib.py
+    | ^/Lib/fontTools/varLib/interpolatable.py
+)
+"""
