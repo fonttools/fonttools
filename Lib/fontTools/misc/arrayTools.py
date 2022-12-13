@@ -23,6 +23,7 @@ def calcBounds(array):
     ys = [y for x, y in array]
     return min(xs), min(ys), max(xs), max(ys)
 
+
 def calcIntBounds(array, round=otRound):
     """Calculate the integer bounding rectangle of a 2D points array.
 
@@ -57,6 +58,7 @@ def updateBounds(bounds, p, min=min, max=max):
     xMin, yMin, xMax, yMax = bounds
     return min(xMin, x), min(yMin, y), max(xMax, x), max(yMax, y)
 
+
 def pointInRect(p, rect):
     """Test if a point is inside a bounding rectangle.
 
@@ -71,6 +73,7 @@ def pointInRect(p, rect):
     (x, y) = p
     xMin, yMin, xMax, yMax = rect
     return (xMin <= x <= xMax) and (yMin <= y <= yMax)
+
 
 def pointsInRect(array, rect):
     """Determine which points are inside a bounding rectangle.
@@ -88,6 +91,7 @@ def pointsInRect(array, rect):
     xMin, yMin, xMax, yMax = rect
     return [(xMin <= x <= xMax) and (yMin <= y <= yMax) for x, y in array]
 
+
 def vectorLength(vector):
     """Calculate the length of the given vector.
 
@@ -100,6 +104,7 @@ def vectorLength(vector):
     x, y = vector
     return math.sqrt(x**2 + y**2)
 
+
 def asInt16(array):
     """Round a list of floats to 16-bit signed integers.
 
@@ -109,7 +114,7 @@ def asInt16(array):
     Returns:
         A list of rounded integers.
     """
-    return [int(math.floor(i+0.5)) for i in array]
+    return [int(math.floor(i + 0.5)) for i in array]
 
 
 def normRect(rect):
@@ -130,6 +135,7 @@ def normRect(rect):
     (xMin, yMin, xMax, yMax) = rect
     return min(xMin, xMax), min(yMin, yMax), max(xMin, xMax), max(yMin, yMax)
 
+
 def scaleRect(rect, x, y):
     """Scale a bounding box rectangle.
 
@@ -145,6 +151,7 @@ def scaleRect(rect, x, y):
     (xMin, yMin, xMax, yMax) = rect
     return xMin * x, yMin * y, xMax * x, yMax * y
 
+
 def offsetRect(rect, dx, dy):
     """Offset a bounding box rectangle.
 
@@ -158,7 +165,8 @@ def offsetRect(rect, dx, dy):
         An offset bounding rectangle.
     """
     (xMin, yMin, xMax, yMax) = rect
-    return xMin+dx, yMin+dy, xMax+dx, yMax+dy
+    return xMin + dx, yMin + dy, xMax + dx, yMax + dy
+
 
 def insetRect(rect, dx, dy):
     """Inset a bounding box rectangle on all sides.
@@ -173,7 +181,8 @@ def insetRect(rect, dx, dy):
         An inset bounding rectangle.
     """
     (xMin, yMin, xMax, yMax) = rect
-    return xMin+dx, yMin+dy, xMax-dx, yMax-dy
+    return xMin + dx, yMin + dy, xMax - dx, yMax - dy
+
 
 def sectRect(rect1, rect2):
     """Test for rectangle-rectangle intersection.
@@ -191,11 +200,16 @@ def sectRect(rect1, rect2):
     """
     (xMin1, yMin1, xMax1, yMax1) = rect1
     (xMin2, yMin2, xMax2, yMax2) = rect2
-    xMin, yMin, xMax, yMax = (max(xMin1, xMin2), max(yMin1, yMin2),
-                              min(xMax1, xMax2), min(yMax1, yMax2))
+    xMin, yMin, xMax, yMax = (
+        max(xMin1, xMin2),
+        max(yMin1, yMin2),
+        min(xMax1, xMax2),
+        min(yMax1, yMax2),
+    )
     if xMin >= xMax or yMin >= yMax:
         return False, (0, 0, 0, 0)
     return True, (xMin, yMin, xMax, yMax)
+
 
 def unionRect(rect1, rect2):
     """Determine union of bounding rectangles.
@@ -211,9 +225,14 @@ def unionRect(rect1, rect2):
     """
     (xMin1, yMin1, xMax1, yMax1) = rect1
     (xMin2, yMin2, xMax2, yMax2) = rect2
-    xMin, yMin, xMax, yMax = (min(xMin1, xMin2), min(yMin1, yMin2),
-                              max(xMax1, xMax2), max(yMax1, yMax2))
+    xMin, yMin, xMax, yMax = (
+        min(xMin1, xMin2),
+        min(yMin1, yMin2),
+        max(xMax1, xMax2),
+        max(yMax1, yMax2),
+    )
     return (xMin, yMin, xMax, yMax)
+
 
 def rectCenter(rect):
     """Determine rectangle center.
@@ -226,7 +245,8 @@ def rectCenter(rect):
         A 2D tuple representing the point at the center of the rectangle.
     """
     (xMin, yMin, xMax, yMax) = rect
-    return (xMin+xMax)/2, (yMin+yMax)/2
+    return (xMin + xMax) / 2, (yMin + yMax) / 2
+
 
 def rectArea(rect):
     """Determine rectangle area.
@@ -240,6 +260,7 @@ def rectArea(rect):
     """
     (xMin, yMin, xMax, yMax) = rect
     return (yMax - yMin) * (xMax - xMin)
+
 
 def intRect(rect):
     """Round a rectangle to integer values.
@@ -262,7 +283,6 @@ def intRect(rect):
 
 
 class Vector(_Vector):
-
     def __init__(self, *args, **kwargs):
         warnings.warn(
             "fontTools.misc.arrayTools.Vector has been deprecated, please use "
@@ -373,7 +393,9 @@ def _test():
     (0, 2, 4, 5)
     """
 
+
 if __name__ == "__main__":
     import sys
     import doctest
+
     sys.exit(doctest.testmod().failed)

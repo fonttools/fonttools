@@ -134,7 +134,8 @@ class Parser(object):
             ]
             raise FeatureLibError(
                 "The following glyph names are referenced but are missing from the "
-                "glyph set:\n" + ("\n".join(error)), None
+                "glyph set:\n" + ("\n".join(error)),
+                None,
             )
         return self.doc_
 
@@ -396,7 +397,8 @@ class Parser(object):
                     self.expect_symbol_("-")
                     range_end = self.expect_cid_()
                     self.check_glyph_name_in_glyph_set(
-                        f"cid{range_start:05d}", f"cid{range_end:05d}",
+                        f"cid{range_start:05d}",
+                        f"cid{range_end:05d}",
                     )
                     glyphs.add_cid_range(
                         range_start,
@@ -696,7 +698,9 @@ class Parser(object):
         location = self.cur_token_location_
         glyphs = self.parse_glyphclass_(accept_glyphname=True)
         if not glyphs.glyphSet():
-            raise FeatureLibError("Empty glyph class in mark class definition", location)
+            raise FeatureLibError(
+                "Empty glyph class in mark class definition", location
+            )
         anchor = self.parse_anchor_()
         name = self.expect_class_name_()
         self.expect_symbol_(";")

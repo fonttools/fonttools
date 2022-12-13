@@ -4,7 +4,6 @@ import pytest
 
 
 class TransformTest(object):
-
     def test_examples(self):
         t = Transform()
         assert repr(t) == "<Transform [1 0 0 1 0 0]>"
@@ -19,9 +18,12 @@ class TransformTest(object):
 
     def test_transformPoints(self):
         t = Transform(2, 0, 0, 3, 0, 0)
-        assert t.transformPoints(
-            [(0, 0), (0, 100), (100, 100), (100, 0)]
-        ) == [(0, 0), (0, 300), (200, 300), (200, 0)]
+        assert t.transformPoints([(0, 0), (0, 100), (100, 100), (100, 0)]) == [
+            (0, 0),
+            (0, 300),
+            (200, 300),
+            (200, 0),
+        ]
 
     def test_transformVector(self):
         t = Transform(2, 0, 0, 3, -10, 30)
@@ -47,7 +49,8 @@ class TransformTest(object):
         assert t.rotate(-math.pi / 2) == Transform(0, -1, 1, 0, 0, 0)
         t = Transform()
         assert tuple(t.rotate(math.radians(30))) == pytest.approx(
-            tuple(Transform(0.866025, 0.5, -0.5, 0.866025, 0, 0)))
+            tuple(Transform(0.866025, 0.5, -0.5, 0.866025, 0, 0))
+        )
 
     def test_skew(self):
         t = Transform().skew(math.pi / 4)
@@ -74,7 +77,7 @@ class TransformTest(object):
 
     def test_toPS(self):
         t = Transform().scale(2, 3).translate(4, 5)
-        assert t.toPS() == '[2 0 0 3 8 15]'
+        assert t.toPS() == "[2 0 0 3 8 15]"
 
     def test__ne__(self):
         assert Transform() != Transform(2, 0, 0, 2, 0, 0)
@@ -90,7 +93,7 @@ class TransformTest(object):
         assert Transform(1, 0, 0, 1, 1, 0)
 
     def test__repr__(self):
-        assert repr(Transform(1, 2, 3, 4, 5, 6)) == '<Transform [1 2 3 4 5 6]>'
+        assert repr(Transform(1, 2, 3, 4, 5, 6)) == "<Transform [1 2 3 4 5 6]>"
 
     def test_Identity(self):
         assert isinstance(Identity, Transform)

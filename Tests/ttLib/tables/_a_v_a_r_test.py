@@ -11,7 +11,8 @@ import unittest
 TEST_DATA = deHexStr(
     "00 01 00 00 00 00 00 02 "
     "00 04 C0 00 C0 00 00 00 00 00 13 33 33 33 40 00 40 00 "
-    "00 03 C0 00 C0 00 00 00 00 00 40 00 40 00")
+    "00 03 C0 00 C0 00 00 00 00 00 40 00 40 00"
+)
 
 
 class AxisVariationTableTest(unittest.TestCase):
@@ -35,43 +36,51 @@ class AxisVariationTableTest(unittest.TestCase):
     def test_decompile(self):
         avar = table__a_v_a_r()
         avar.decompile(TEST_DATA, self.makeFont(["wdth", "wght"]))
-        self.assertAvarAlmostEqual({
-            "wdth": {-1.0: -1.0, 0.0: 0.0, 0.2999878: 0.7999878, 1.0: 1.0},
-            "wght": {-1.0: -1.0, 0.0: 0.0, 1.0: 1.0}
-        }, avar.segments)
+        self.assertAvarAlmostEqual(
+            {
+                "wdth": {-1.0: -1.0, 0.0: 0.0, 0.2999878: 0.7999878, 1.0: 1.0},
+                "wght": {-1.0: -1.0, 0.0: 0.0, 1.0: 1.0},
+            },
+            avar.segments,
+        )
 
     def test_decompile_unsupportedVersion(self):
         avar = table__a_v_a_r()
         font = self.makeFont(["wdth", "wght"])
-        self.assertRaises(TTLibError, avar.decompile, deHexStr("02 01 03 06 00 00 00 00"), font)
+        self.assertRaises(
+            TTLibError, avar.decompile, deHexStr("02 01 03 06 00 00 00 00"), font
+        )
 
     def test_toXML(self):
         avar = table__a_v_a_r()
         avar.segments["opsz"] = {-1.0: -1.0, 0.0: 0.0, 0.2999878: 0.7999878, 1.0: 1.0}
         writer = XMLWriter(BytesIO())
         avar.toXML(writer, self.makeFont(["opsz"]))
-        self.assertEqual([
-            '<segment axis="opsz">',
+        self.assertEqual(
+            [
+                '<segment axis="opsz">',
                 '<mapping from="-1.0" to="-1.0"/>',
                 '<mapping from="0.0" to="0.0"/>',
                 '<mapping from="0.3" to="0.8"/>',
                 '<mapping from="1.0" to="1.0"/>',
-            '</segment>'
-        ], self.xml_lines(writer))
+                "</segment>",
+            ],
+            self.xml_lines(writer),
+        )
 
     def test_fromXML(self):
         avar = table__a_v_a_r()
         for name, attrs, content in parseXML(
-                '<segment axis="wdth">'
-                '    <mapping from="-1.0" to="-1.0"/>'
-                '    <mapping from="0.0" to="0.0"/>'
-                '    <mapping from="0.7" to="0.2"/>'
-                '    <mapping from="1.0" to="1.0"/>'
-                '</segment>'):
+            '<segment axis="wdth">'
+            '    <mapping from="-1.0" to="-1.0"/>'
+            '    <mapping from="0.0" to="0.0"/>'
+            '    <mapping from="0.7" to="0.2"/>'
+            '    <mapping from="1.0" to="1.0"/>'
+            "</segment>"
+        ):
             avar.fromXML(name, attrs, content, ttFont=None)
         self.assertAvarAlmostEqual(
-            {"wdth": {-1: -1, 0: 0, 0.7000122: 0.2000122, 1.0: 1.0}},
-            avar.segments
+            {"wdth": {-1: -1, 0: 0, 0.7000122: 0.2000122, 1.0: 1.0}}, avar.segments
         )
 
     @staticmethod
@@ -92,4 +101,5 @@ class AxisVariationTableTest(unittest.TestCase):
 
 if __name__ == "__main__":
     import sys
+
     sys.exit(unittest.main())

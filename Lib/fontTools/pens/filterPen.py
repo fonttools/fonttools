@@ -4,14 +4,13 @@ from fontTools.pens.recordingPen import RecordingPen
 
 
 class _PassThruComponentsMixin(object):
-
     def addComponent(self, glyphName, transformation, **kwargs):
         self._outPen.addComponent(glyphName, transformation, **kwargs)
 
 
 class FilterPen(_PassThruComponentsMixin, AbstractPen):
 
-    """ Base class for pens that apply some transformation to the coordinates
+    """Base class for pens that apply some transformation to the coordinates
     they receive and pass them to another pen.
 
     You can override any of its methods. The default implementation does
@@ -121,7 +120,7 @@ class ContourFilterPen(_PassThruComponentsMixin, RecordingPen):
 
 
 class FilterPointPen(_PassThruComponentsMixin, AbstractPointPen):
-    """ Baseclass for point pens that apply some transformation to the
+    """Baseclass for point pens that apply some transformation to the
     coordinates they receive and pass them to another point pen.
 
     You can override any of its methods. The default implementation does

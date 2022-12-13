@@ -36,10 +36,12 @@ class _TestPenMixin(object):
 
     def diff(self, expected, actual):
         import difflib
+
         expected = str(self.Glyph(expected)).splitlines(True)
         actual = str(self.Glyph(actual)).splitlines(True)
         diff = difflib.unified_diff(
-            expected, actual, fromfile='expected', tofile='actual')
+            expected, actual, fromfile="expected", tofile="actual"
+        )
         return "".join(diff)
 
     def convert_glyph(self, glyph, **kwargs):
@@ -58,28 +60,27 @@ class _TestPenMixin(object):
             self.fail("converted glyph is different from expected")
 
     def test_convert_simple_glyph(self):
-        self.expect_glyph(CUBIC_GLYPHS['a'], QUAD_GLYPHS['a'])
-        self.expect_glyph(CUBIC_GLYPHS['A'], QUAD_GLYPHS['A'])
+        self.expect_glyph(CUBIC_GLYPHS["a"], QUAD_GLYPHS["a"])
+        self.expect_glyph(CUBIC_GLYPHS["A"], QUAD_GLYPHS["A"])
 
     def test_convert_composite_glyph(self):
-        source = CUBIC_GLYPHS['Aacute']
+        source = CUBIC_GLYPHS["Aacute"]
         converted = self.convert_glyph(source)
         # components don't change after quadratic conversion
         self.assertEqual(converted, source)
 
     def test_convert_mixed_glyph(self):
         # this contains a mix of contours and components
-        self.expect_glyph(CUBIC_GLYPHS['Eacute'], QUAD_GLYPHS['Eacute'])
+        self.expect_glyph(CUBIC_GLYPHS["Eacute"], QUAD_GLYPHS["Eacute"])
 
     def test_reverse_direction(self):
-        for name in ('a', 'A', 'Eacute'):
+        for name in ("a", "A", "Eacute"):
             source = CUBIC_GLYPHS[name]
             normal_glyph = self.convert_glyph(source)
             reversed_glyph = self.convert_glyph(source, reverse_direction=True)
 
             # the number of commands is the same, just their order is iverted
-            self.assertTrue(
-                len(normal_glyph.outline), len(reversed_glyph.outline))
+            self.assertTrue(len(normal_glyph.outline), len(reversed_glyph.outline))
             self.assertNotEqual(normal_glyph, reversed_glyph)
 
     def test_stats(self):
@@ -89,8 +90,8 @@ class _TestPenMixin(object):
             self.convert_glyph(source, stats=stats)
 
         self.assertTrue(stats)
-        self.assertTrue('1' in stats)
-        self.assertEqual(type(stats['1']), int)
+        self.assertTrue("1" in stats)
+        self.assertEqual(type(stats["1"]), int)
 
     def test_addComponent(self):
         pen = self.Pen()
@@ -98,20 +99,22 @@ class _TestPenMixin(object):
         quadpen.addComponent("a", (1, 2, 3, 4, 5.0, 6.0))
 
         # components are passed through without changes
-        self.assertEqual(str(pen).splitlines(), [
-            "pen.addComponent('a', (1, 2, 3, 4, 5.0, 6.0))",
-        ])
+        self.assertEqual(
+            str(pen).splitlines(),
+            [
+                "pen.addComponent('a', (1, 2, 3, 4, 5.0, 6.0))",
+            ],
+        )
 
 
 class TestCu2QuPen(unittest.TestCase, _TestPenMixin):
-
     def __init__(self, *args, **kwargs):
         super(TestCu2QuPen, self).__init__(*args, **kwargs)
         self.Glyph = DummyGlyph
         self.Pen = DummyPen
         self.Cu2QuPen = Cu2QuPen
-        self.pen_getter_name = 'getPen'
-        self.draw_method_name = 'draw'
+        self.pen_getter_name = "getPen"
+        self.draw_method_name = "draw"
 
     def test__check_contour_is_open(self):
         msg = "moveTo is required"
@@ -155,7 +158,8 @@ class TestCu2QuPen(unittest.TestCase, _TestPenMixin):
         quadpen.moveTo((0, 0))
 
         with self.assertRaisesRegex(
-                AssertionError, "illegal qcurve segment point count: 0"):
+            AssertionError, "illegal qcurve segment point count: 0"
+        ):
             quadpen.qCurveTo()
 
     def test_qCurveTo_1_point(self):
@@ -164,10 +168,13 @@ class TestCu2QuPen(unittest.TestCase, _TestPenMixin):
         quadpen.moveTo((0, 0))
         quadpen.qCurveTo((1, 1))
 
-        self.assertEqual(str(pen).splitlines(), [
-            "pen.moveTo((0, 0))",
-            "pen.lineTo((1, 1))",
-        ])
+        self.assertEqual(
+            str(pen).splitlines(),
+            [
+                "pen.moveTo((0, 0))",
+                "pen.lineTo((1, 1))",
+            ],
+        )
 
     def test_qCurveTo_more_than_1_point(self):
         pen = DummyPen()
@@ -175,17 +182,21 @@ class TestCu2QuPen(unittest.TestCase, _TestPenMixin):
         quadpen.moveTo((0, 0))
         quadpen.qCurveTo((1, 1), (2, 2))
 
-        self.assertEqual(str(pen).splitlines(), [
-            "pen.moveTo((0, 0))",
-            "pen.qCurveTo((1, 1), (2, 2))",
-        ])
+        self.assertEqual(
+            str(pen).splitlines(),
+            [
+                "pen.moveTo((0, 0))",
+                "pen.qCurveTo((1, 1), (2, 2))",
+            ],
+        )
 
     def test_curveTo_no_points(self):
         quadpen = Cu2QuPen(DummyPen(), MAX_ERR)
         quadpen.moveTo((0, 0))
 
         with self.assertRaisesRegex(
-                AssertionError, "illegal curve segment point count: 0"):
+            AssertionError, "illegal curve segment point count: 0"
+        ):
             quadpen.curveTo()
 
     def test_curveTo_1_point(self):
@@ -194,10 +205,13 @@ class TestCu2QuPen(unittest.TestCase, _TestPenMixin):
         quadpen.moveTo((0, 0))
         quadpen.curveTo((1, 1))
 
-        self.assertEqual(str(pen).splitlines(), [
-            "pen.moveTo((0, 0))",
-            "pen.lineTo((1, 1))",
-        ])
+        self.assertEqual(
+            str(pen).splitlines(),
+            [
+                "pen.moveTo((0, 0))",
+                "pen.lineTo((1, 1))",
+            ],
+        )
 
     def test_curveTo_2_points(self):
         pen = DummyPen()
@@ -205,10 +219,13 @@ class TestCu2QuPen(unittest.TestCase, _TestPenMixin):
         quadpen.moveTo((0, 0))
         quadpen.curveTo((1, 1), (2, 2))
 
-        self.assertEqual(str(pen).splitlines(), [
-            "pen.moveTo((0, 0))",
-            "pen.qCurveTo((1, 1), (2, 2))",
-        ])
+        self.assertEqual(
+            str(pen).splitlines(),
+            [
+                "pen.moveTo((0, 0))",
+                "pen.qCurveTo((1, 1), (2, 2))",
+            ],
+        )
 
     def test_curveTo_3_points(self):
         pen = DummyPen()
@@ -216,10 +233,13 @@ class TestCu2QuPen(unittest.TestCase, _TestPenMixin):
         quadpen.moveTo((0, 0))
         quadpen.curveTo((1, 1), (2, 2), (3, 3))
 
-        self.assertEqual(str(pen).splitlines(), [
-            "pen.moveTo((0, 0))",
-            "pen.qCurveTo((0.75, 0.75), (2.25, 2.25), (3, 3))",
-        ])
+        self.assertEqual(
+            str(pen).splitlines(),
+            [
+                "pen.moveTo((0, 0))",
+                "pen.qCurveTo((0.75, 0.75), (2.25, 2.25), (3, 3))",
+            ],
+        )
 
     def test_curveTo_more_than_3_points(self):
         # a 'SuperBezier' as described in fontTools.basePen.AbstractPen
@@ -228,11 +248,14 @@ class TestCu2QuPen(unittest.TestCase, _TestPenMixin):
         quadpen.moveTo((0, 0))
         quadpen.curveTo((1, 1), (2, 2), (3, 3), (4, 4))
 
-        self.assertEqual(str(pen).splitlines(), [
-            "pen.moveTo((0, 0))",
-            "pen.qCurveTo((0.75, 0.75), (1.625, 1.625), (2, 2))",
-            "pen.qCurveTo((2.375, 2.375), (3.25, 3.25), (4, 4))",
-        ])
+        self.assertEqual(
+            str(pen).splitlines(),
+            [
+                "pen.moveTo((0, 0))",
+                "pen.qCurveTo((0.75, 0.75), (1.625, 1.625), (2, 2))",
+                "pen.qCurveTo((2.375, 2.375), (3.25, 3.25), (4, 4))",
+            ],
+        )
 
     def test_addComponent(self):
         pen = DummyPen()
@@ -240,9 +263,12 @@ class TestCu2QuPen(unittest.TestCase, _TestPenMixin):
         quadpen.addComponent("a", (1, 2, 3, 4, 5.0, 6.0))
 
         # components are passed through without changes
-        self.assertEqual(str(pen).splitlines(), [
-            "pen.addComponent('a', (1, 2, 3, 4, 5.0, 6.0))",
-        ])
+        self.assertEqual(
+            str(pen).splitlines(),
+            [
+                "pen.addComponent('a', (1, 2, 3, 4, 5.0, 6.0))",
+            ],
+        )
 
     def test_ignore_single_points(self):
         pen = DummyPen()
@@ -259,11 +285,9 @@ class TestCu2QuPen(unittest.TestCase, _TestPenMixin):
 
         self.assertGreaterEqual(len(log.records), 1)
         if sys.version_info < (3, 11):
-            self.assertIn("ignore_single_points is deprecated",
-                          log.records[0].args[0])
+            self.assertIn("ignore_single_points is deprecated", log.records[0].args[0])
         else:
-            self.assertIn("ignore_single_points is deprecated",
-                          log.records[0].msg)
+            self.assertIn("ignore_single_points is deprecated", log.records[0].msg)
 
         # single-point contours were ignored, so the pen commands are empty
         self.assertFalse(pen.commands)
@@ -276,23 +300,25 @@ class TestCu2QuPen(unittest.TestCase, _TestPenMixin):
         quadpen.closePath()
 
         self.assertTrue(pen.commands)
-        self.assertEqual(str(pen).splitlines(), [
-            "pen.moveTo((0, 0))",
-            "pen.endPath()",
-            "pen.moveTo((1, 1))",
-            "pen.closePath()"
-        ])
+        self.assertEqual(
+            str(pen).splitlines(),
+            [
+                "pen.moveTo((0, 0))",
+                "pen.endPath()",
+                "pen.moveTo((1, 1))",
+                "pen.closePath()",
+            ],
+        )
 
 
 class TestCu2QuPointPen(unittest.TestCase, _TestPenMixin):
-
     def __init__(self, *args, **kwargs):
         super(TestCu2QuPointPen, self).__init__(*args, **kwargs)
         self.Glyph = DummyPointGlyph
         self.Pen = DummyPointPen
         self.Cu2QuPen = Cu2QuPointPen
-        self.pen_getter_name = 'getPointPen'
-        self.draw_method_name = 'drawPoints'
+        self.pen_getter_name = "getPointPen"
+        self.draw_method_name = "drawPoints"
 
     def test_super_bezier_curve(self):
         pen = DummyPointPen()
@@ -303,10 +329,13 @@ class TestCu2QuPointPen(unittest.TestCase, _TestPenMixin):
         quadpen.addPoint((2, 2))
         quadpen.addPoint((3, 3))
         quadpen.addPoint(
-            (4, 4), segmentType="curve", smooth=False, name="up", selected=1)
+            (4, 4), segmentType="curve", smooth=False, name="up", selected=1
+        )
         quadpen.endPath()
 
-        self.assertEqual(str(pen).splitlines(), """\
+        self.assertEqual(
+            str(pen).splitlines(),
+            """\
 pen.beginPath()
 pen.addPoint((0, 0), name=None, segmentType='move', smooth=False)
 pen.addPoint((0.75, 0.75), name=None, segmentType=None, smooth=False)
@@ -315,7 +344,8 @@ pen.addPoint((2, 2), name=None, segmentType='qcurve', smooth=True)
 pen.addPoint((2.375, 2.375), name=None, segmentType=None, smooth=False)
 pen.addPoint((3.25, 3.25), name=None, segmentType=None, smooth=False)
 pen.addPoint((4, 4), name='up', segmentType='qcurve', selected=1, smooth=False)
-pen.endPath()""".splitlines())
+pen.endPath()""".splitlines(),
+        )
 
     def test__flushContour_restore_starting_point(self):
         pen = DummyPointPen()
@@ -323,24 +353,34 @@ pen.endPath()""".splitlines())
 
         # collect the output of _flushContour before it's sent to _drawPoints
         new_segments = []
+
         def _drawPoints(segments):
             new_segments.extend(segments)
             Cu2QuPointPen._drawPoints(quadpen, segments)
+
         quadpen._drawPoints = _drawPoints
 
         # a closed path (ie. no "move" segmentType)
-        quadpen._flushContour([
-            ("curve", [
-                ((2, 2), False, None, {}),
-                ((1, 1), False, None, {}),
-                ((0, 0), False, None, {}),
-            ]),
-            ("curve", [
-                ((1, 1), False, None, {}),
-                ((2, 2), False, None, {}),
-                ((3, 3), False, None, {}),
-            ]),
-        ])
+        quadpen._flushContour(
+            [
+                (
+                    "curve",
+                    [
+                        ((2, 2), False, None, {}),
+                        ((1, 1), False, None, {}),
+                        ((0, 0), False, None, {}),
+                    ],
+                ),
+                (
+                    "curve",
+                    [
+                        ((1, 1), False, None, {}),
+                        ((2, 2), False, None, {}),
+                        ((3, 3), False, None, {}),
+                    ],
+                ),
+            ]
+        )
 
         # the original starting point is restored: the last segment has become
         # the first
@@ -349,16 +389,24 @@ pen.endPath()""".splitlines())
 
         new_segments = []
         # an open path (ie. starting with "move")
-        quadpen._flushContour([
-            ("move", [
-                ((0, 0), False, None, {}),
-            ]),
-            ("curve", [
-                ((1, 1), False, None, {}),
-                ((2, 2), False, None, {}),
-                ((3, 3), False, None, {}),
-            ]),
-        ])
+        quadpen._flushContour(
+            [
+                (
+                    "move",
+                    [
+                        ((0, 0), False, None, {}),
+                    ],
+                ),
+                (
+                    "curve",
+                    [
+                        ((1, 1), False, None, {}),
+                        ((2, 2), False, None, {}),
+                        ((3, 3), False, None, {}),
+                    ],
+                ),
+            ]
+        )
 
         # the segment order stays the same before and after _flushContour
         self.assertEqual(new_segments[0][1][-1][0], (0, 0))
@@ -387,7 +435,7 @@ pen.endPath()""".splitlines())
                 pen.addPoint((2, 2), name=None, segmentType=None, smooth=False)
                 pen.addPoint((3, 3), name=None, segmentType=None, smooth=False)
                 pen.endPath()"""
-            )
+            ),
         )
 
 

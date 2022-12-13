@@ -3,7 +3,6 @@ from fontTools.ufoLib.filenames import userNameToFileName, handleClash1, handleC
 
 
 class TestFilenames(unittest.TestCase):
-
     def test_userNameToFileName(self):
         self.assertEqual(userNameToFileName("a"), "a")
         self.assertEqual(userNameToFileName("A"), "A_")
@@ -21,8 +20,7 @@ class TestFilenames(unittest.TestCase):
         self.assertEqual(userNameToFileName("t_h"), "t_h")
         self.assertEqual(userNameToFileName("F_F_I"), "F__F__I_")
         self.assertEqual(userNameToFileName("f_f_i"), "f_f_i")
-        self.assertEqual(userNameToFileName("Aacute_V.swash"),
-                         "A_acute_V_.swash")
+        self.assertEqual(userNameToFileName("Aacute_V.swash"), "A_acute_V_.swash")
         self.assertEqual(userNameToFileName(".notdef"), "_notdef")
         self.assertEqual(userNameToFileName("con"), "_con")
         self.assertEqual(userNameToFileName("CON"), "C_O_N_")
@@ -60,25 +58,22 @@ class TestFilenames(unittest.TestCase):
 
         e = list(existing)
         self.assertEqual(
-            handleClash1(userName="A" * 5, existing=e, prefix=prefix,
-                         suffix=suffix),
-            '00000.AAAAA000000000000001.0000000000'
+            handleClash1(userName="A" * 5, existing=e, prefix=prefix, suffix=suffix),
+            "00000.AAAAA000000000000001.0000000000",
         )
 
         e = list(existing)
         e.append(prefix + "aaaaa" + "1".zfill(15) + suffix)
         self.assertEqual(
-            handleClash1(userName="A" * 5, existing=e, prefix=prefix,
-                         suffix=suffix),
-            '00000.AAAAA000000000000002.0000000000'
+            handleClash1(userName="A" * 5, existing=e, prefix=prefix, suffix=suffix),
+            "00000.AAAAA000000000000002.0000000000",
         )
 
         e = list(existing)
         e.append(prefix + "AAAAA" + "2".zfill(15) + suffix)
         self.assertEqual(
-            handleClash1(userName="A" * 5, existing=e, prefix=prefix,
-                         suffix=suffix),
-            '00000.AAAAA000000000000001.0000000000'
+            handleClash1(userName="A" * 5, existing=e, prefix=prefix, suffix=suffix),
+            "00000.AAAAA000000000000001.0000000000",
         )
 
     def test_handleClash2(self):
@@ -89,19 +84,17 @@ class TestFilenames(unittest.TestCase):
         e = list(existing)
         self.assertEqual(
             handleClash2(existing=e, prefix=prefix, suffix=suffix),
-            '00000.100.0000000000'
+            "00000.100.0000000000",
         )
 
         e = list(existing)
         e.remove(prefix + "1" + suffix)
         self.assertEqual(
-            handleClash2(existing=e, prefix=prefix, suffix=suffix),
-            '00000.1.0000000000'
+            handleClash2(existing=e, prefix=prefix, suffix=suffix), "00000.1.0000000000"
         )
 
         e = list(existing)
         e.remove(prefix + "2" + suffix)
         self.assertEqual(
-            handleClash2(existing=e, prefix=prefix, suffix=suffix),
-            '00000.2.0000000000'
+            handleClash2(existing=e, prefix=prefix, suffix=suffix), "00000.2.0000000000"
         )

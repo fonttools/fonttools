@@ -24,22 +24,22 @@ class T2CharStringPen(BasePen):
         self._CFF2 = CFF2
         self._width = width
         self._commands = []
-        self._p0 = (0,0)
+        self._p0 = (0, 0)
 
     def _p(self, pt):
         p0 = self._p0
         pt = self._p0 = (self.round(pt[0]), self.round(pt[1]))
-        return [pt[0]-p0[0], pt[1]-p0[1]]
+        return [pt[0] - p0[0], pt[1] - p0[1]]
 
     def _moveTo(self, pt):
-        self._commands.append(('rmoveto', self._p(pt)))
+        self._commands.append(("rmoveto", self._p(pt)))
 
     def _lineTo(self, pt):
-        self._commands.append(('rlineto', self._p(pt)))
+        self._commands.append(("rlineto", self._p(pt)))
 
     def _curveToOne(self, pt1, pt2, pt3):
         _p = self._p
-        self._commands.append(('rrcurveto', _p(pt1)+_p(pt2)+_p(pt3)))
+        self._commands.append(("rrcurveto", _p(pt1) + _p(pt2) + _p(pt3)))
 
     def _closePath(self):
         pass
@@ -51,15 +51,18 @@ class T2CharStringPen(BasePen):
         commands = self._commands
         if optimize:
             maxstack = 48 if not self._CFF2 else 513
-            commands = specializeCommands(commands,
-                                          generalizeFirst=False,
-                                          maxstack=maxstack)
+            commands = specializeCommands(
+                commands, generalizeFirst=False, maxstack=maxstack
+            )
         program = commandsToProgram(commands)
         if self._width is not None:
-            assert not self._CFF2, "CFF2 does not allow encoding glyph width in CharString."
+            assert (
+                not self._CFF2
+            ), "CFF2 does not allow encoding glyph width in CharString."
             program.insert(0, otRound(self._width))
         if not self._CFF2:
-            program.append('endchar')
+            program.append("endchar")
         charString = T2CharString(
-            program=program, private=private, globalSubrs=globalSubrs)
+            program=program, private=private, globalSubrs=globalSubrs
+        )
         return charString

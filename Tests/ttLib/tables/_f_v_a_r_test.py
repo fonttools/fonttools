@@ -8,22 +8,19 @@ from io import BytesIO
 import unittest
 
 
-
 FVAR_DATA = deHexStr(
     "00 01 00 00 00 10 00 02 00 02 00 14 00 02 00 0C "
     "77 67 68 74 00 64 00 00 01 90 00 00 03 84 00 00 00 00 01 01 "
     "77 64 74 68 00 32 00 00 00 64 00 00 00 c8 00 00 00 00 01 02 "
     "01 03 00 00 01 2c 00 00 00 64 00 00 "
-    "01 04 00 00 01 2c 00 00 00 4b 00 00")
+    "01 04 00 00 01 2c 00 00 00 4b 00 00"
+)
 
-FVAR_AXIS_DATA = deHexStr(
-    "6F 70 73 7a ff ff 80 00 00 01 4c cd 00 01 80 00 00 00 01 59")
+FVAR_AXIS_DATA = deHexStr("6F 70 73 7a ff ff 80 00 00 01 4c cd 00 01 80 00 00 00 01 59")
 
-FVAR_INSTANCE_DATA_WITHOUT_PSNAME = deHexStr(
-    "01 59 00 00 00 00 b3 33 00 00 80 00")
+FVAR_INSTANCE_DATA_WITHOUT_PSNAME = deHexStr("01 59 00 00 00 00 b3 33 00 00 80 00")
 
-FVAR_INSTANCE_DATA_WITH_PSNAME = (
-    FVAR_INSTANCE_DATA_WITHOUT_PSNAME + deHexStr("02 34"))
+FVAR_INSTANCE_DATA_WITH_PSNAME = FVAR_INSTANCE_DATA_WITHOUT_PSNAME + deHexStr("02 34")
 
 
 def xml_lines(writer):
@@ -38,7 +35,7 @@ def AddName(font, name):
         nameTable.names = []
     namerec = NameRecord()
     namerec.nameID = 1 + max([n.nameID for n in nameTable.names] + [256])
-    namerec.string = name.encode('mac_roman')
+    namerec.string = name.encode("mac_roman")
     namerec.platformID, namerec.platEncID, namerec.langID = (1, 0, 0)
     nameTable.names.append(namerec)
     return namerec
@@ -91,15 +88,16 @@ class FontVariationTableTest(unittest.TestCase):
     def test_fromXML(self):
         fvar = table__f_v_a_r()
         for name, attrs, content in parseXML(
-                '<Axis>'
-                '    <AxisTag>opsz</AxisTag>'
-                '</Axis>'
-                '<Axis>'
-                '    <AxisTag>slnt</AxisTag>'
-                '    <Flags>0x123</Flags>'
-                '</Axis>'
-                '<NamedInstance subfamilyNameID="765"/>'
-                '<NamedInstance subfamilyNameID="234"/>'):
+            "<Axis>"
+            "    <AxisTag>opsz</AxisTag>"
+            "</Axis>"
+            "<Axis>"
+            "    <AxisTag>slnt</AxisTag>"
+            "    <Flags>0x123</Flags>"
+            "</Axis>"
+            '<NamedInstance subfamilyNameID="765"/>'
+            '<NamedInstance subfamilyNameID="234"/>'
+        ):
             fvar.fromXML(name, attrs, content, ttFont=None)
         self.assertEqual(["opsz", "slnt"], [a.axisTag for a in fvar.axes])
         self.assertEqual([0, 0x123], [a.flags for a in fvar.axes])
@@ -109,7 +107,7 @@ class FontVariationTableTest(unittest.TestCase):
 class AxisTest(unittest.TestCase):
     def test_compile(self):
         axis = Axis()
-        axis.axisTag, axis.axisNameID = ('opsz', 345)
+        axis.axisTag, axis.axisNameID = ("opsz", 345)
         axis.minValue, axis.defaultValue, axis.maxValue = (-0.5, 1.3, 1.5)
         self.assertEqual(FVAR_AXIS_DATA, axis.compile())
 
@@ -131,30 +129,34 @@ class AxisTest(unittest.TestCase):
         axis.flags = 0xABC
         writer = XMLWriter(BytesIO())
         axis.toXML(writer, font)
-        self.assertEqual([
-            '',
-            '<!-- Optical Size -->',
-            '<Axis>',
-                '<AxisTag>opsz</AxisTag>',
-                '<Flags>0xABC</Flags>',
-                '<MinValue>-0.5</MinValue>',
-                '<DefaultValue>1.3</DefaultValue>',
-                '<MaxValue>1.5</MaxValue>',
-                '<AxisNameID>256</AxisNameID>',
-            '</Axis>'
-        ], xml_lines(writer))
+        self.assertEqual(
+            [
+                "",
+                "<!-- Optical Size -->",
+                "<Axis>",
+                "<AxisTag>opsz</AxisTag>",
+                "<Flags>0xABC</Flags>",
+                "<MinValue>-0.5</MinValue>",
+                "<DefaultValue>1.3</DefaultValue>",
+                "<MaxValue>1.5</MaxValue>",
+                "<AxisNameID>256</AxisNameID>",
+                "</Axis>",
+            ],
+            xml_lines(writer),
+        )
 
     def test_fromXML(self):
         axis = Axis()
         for name, attrs, content in parseXML(
-                '<Axis>'
-                '    <AxisTag>wght</AxisTag>'
-                '    <Flags>0x123ABC</Flags>'
-                '    <MinValue>100</MinValue>'
-                '    <DefaultValue>400</DefaultValue>'
-                '    <MaxValue>900</MaxValue>'
-                '    <AxisNameID>256</AxisNameID>'
-                '</Axis>'):
+            "<Axis>"
+            "    <AxisTag>wght</AxisTag>"
+            "    <Flags>0x123ABC</Flags>"
+            "    <MinValue>100</MinValue>"
+            "    <DefaultValue>400</DefaultValue>"
+            "    <MaxValue>900</MaxValue>"
+            "    <AxisNameID>256</AxisNameID>"
+            "</Axis>"
+        ):
             axis.fromXML(name, attrs, content, ttFont=None)
         self.assertEqual("wght", axis.axisTag)
         self.assertEqual(0x123ABC, axis.flags)
@@ -175,16 +177,18 @@ class NamedInstanceTest(unittest.TestCase):
         inst.subfamilyNameID = 345
         inst.postscriptNameID = 564
         inst.coordinates = {"wght": 0.7, "wdth": 0.5}
-        self.assertEqual(FVAR_INSTANCE_DATA_WITH_PSNAME,
-                         inst.compile(["wght", "wdth"], True))
+        self.assertEqual(
+            FVAR_INSTANCE_DATA_WITH_PSNAME, inst.compile(["wght", "wdth"], True)
+        )
 
     def test_compile_withoutPostScriptName(self):
         inst = NamedInstance()
         inst.subfamilyNameID = 345
         inst.postscriptNameID = 564
         inst.coordinates = {"wght": 0.7, "wdth": 0.5}
-        self.assertEqual(FVAR_INSTANCE_DATA_WITHOUT_PSNAME,
-                         inst.compile(["wght", "wdth"], False))
+        self.assertEqual(
+            FVAR_INSTANCE_DATA_WITHOUT_PSNAME, inst.compile(["wght", "wdth"], False)
+        )
 
     def test_decompile_withPostScriptName(self):
         inst = NamedInstance()
@@ -209,16 +213,19 @@ class NamedInstanceTest(unittest.TestCase):
         inst.coordinates = {"wght": 0.7, "wdth": 0.5}
         writer = XMLWriter(BytesIO())
         inst.toXML(writer, font)
-        self.assertEqual([
-            '',
-            '<!-- Light Condensed -->',
-            '<!-- PostScript: Test-LightCondensed -->',
-            '<NamedInstance flags="0xE9" postscriptNameID="%s" subfamilyNameID="%s">' % (
-                inst.postscriptNameID, inst.subfamilyNameID),
-              '<coord axis="wght" value="0.7"/>',
-              '<coord axis="wdth" value="0.5"/>',
-            '</NamedInstance>'
-        ], xml_lines(writer))
+        self.assertEqual(
+            [
+                "",
+                "<!-- Light Condensed -->",
+                "<!-- PostScript: Test-LightCondensed -->",
+                '<NamedInstance flags="0xE9" postscriptNameID="%s" subfamilyNameID="%s">'
+                % (inst.postscriptNameID, inst.subfamilyNameID),
+                '<coord axis="wght" value="0.7"/>',
+                '<coord axis="wdth" value="0.5"/>',
+                "</NamedInstance>",
+            ],
+            xml_lines(writer),
+        )
 
     def test_toXML_withoutPostScriptName(self):
         font = MakeFont()
@@ -228,23 +235,27 @@ class NamedInstanceTest(unittest.TestCase):
         inst.coordinates = {"wght": 0.7, "wdth": 0.5}
         writer = XMLWriter(BytesIO())
         inst.toXML(writer, font)
-        self.assertEqual([
-            '',
-            '<!-- Light Condensed -->',
-            '<NamedInstance flags="0xABC" subfamilyNameID="%s">' %
-                inst.subfamilyNameID,
-              '<coord axis="wght" value="0.7"/>',
-              '<coord axis="wdth" value="0.5"/>',
-            '</NamedInstance>'
-        ], xml_lines(writer))
+        self.assertEqual(
+            [
+                "",
+                "<!-- Light Condensed -->",
+                '<NamedInstance flags="0xABC" subfamilyNameID="%s">'
+                % inst.subfamilyNameID,
+                '<coord axis="wght" value="0.7"/>',
+                '<coord axis="wdth" value="0.5"/>',
+                "</NamedInstance>",
+            ],
+            xml_lines(writer),
+        )
 
     def test_fromXML_withPostScriptName(self):
         inst = NamedInstance()
         for name, attrs, content in parseXML(
-                '<NamedInstance flags="0x0" postscriptNameID="257" subfamilyNameID="345">'
-                '    <coord axis="wght" value="0.7"/>'
-                '    <coord axis="wdth" value="0.5"/>'
-                '</NamedInstance>'):
+            '<NamedInstance flags="0x0" postscriptNameID="257" subfamilyNameID="345">'
+            '    <coord axis="wght" value="0.7"/>'
+            '    <coord axis="wdth" value="0.5"/>'
+            "</NamedInstance>"
+        ):
             inst.fromXML(name, attrs, content, ttFont=MakeFont())
         self.assertEqual(257, inst.postscriptNameID)
         self.assertEqual(345, inst.subfamilyNameID)
@@ -253,10 +264,11 @@ class NamedInstanceTest(unittest.TestCase):
     def test_fromXML_withoutPostScriptName(self):
         inst = NamedInstance()
         for name, attrs, content in parseXML(
-                '<NamedInstance flags="0x123ABC" subfamilyNameID="345">'
-                '    <coord axis="wght" value="0.7"/>'
-                '    <coord axis="wdth" value="0.5"/>'
-                '</NamedInstance>'):
+            '<NamedInstance flags="0x123ABC" subfamilyNameID="345">'
+            '    <coord axis="wght" value="0.7"/>'
+            '    <coord axis="wdth" value="0.5"/>'
+            "</NamedInstance>"
+        ):
             inst.fromXML(name, attrs, content, ttFont=MakeFont())
         self.assertEqual(0x123ABC, inst.flags)
         self.assertEqual(345, inst.subfamilyNameID)
@@ -265,4 +277,5 @@ class NamedInstanceTest(unittest.TestCase):
 
 if __name__ == "__main__":
     import sys
+
     sys.exit(unittest.main())

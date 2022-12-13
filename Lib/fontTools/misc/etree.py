@@ -244,7 +244,8 @@ except ImportError:
         except UnicodeDecodeError:
             raise ValueError(
                 "Bytes strings can only contain ASCII characters. "
-                "Use unicode strings for non-ASCII characters.")
+                "Use unicode strings for non-ASCII characters."
+            )
         except AttributeError:
             _raise_serialization_error(s)
         if s and _invalid_xml_string.search(s):
@@ -425,9 +426,7 @@ except ImportError:
             write(_escape_cdata(elem.tail))
 
     def _raise_serialization_error(text):
-        raise TypeError(
-            "cannot serialize %r (type %s)" % (text, type(text).__name__)
-        )
+        raise TypeError("cannot serialize %r (type %s)" % (text, type(text).__name__))
 
     def _escape_cdata(text):
         # escape character data

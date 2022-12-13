@@ -133,9 +133,7 @@ def main(args=None):
     logging.basicConfig(level=level, format="%(message)s")
 
     if options.output_file and len(options.input_fonts) > 1:
-        parser.error(
-            "argument -o/--output-file can't be used with multiple inputs"
-        )
+        parser.error("argument -o/--output-file can't be used with multiple inputs")
     if options.rename_files and (options.inplace or options.output_file):
         parser.error("argument -R not allowed with arguments -i or -o")
 
@@ -151,9 +149,7 @@ def main(args=None):
             output_name = options.output_file
         else:
             if options.rename_files:
-                input_name = rename_file(
-                    input_name, family_name, options.suffix
-                )
+                input_name = rename_file(input_name, family_name, options.suffix)
             output_name = makeOutputFileName(input_name, options.output_dir)
 
         font.save(output_name)

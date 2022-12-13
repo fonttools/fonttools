@@ -7,7 +7,7 @@ def pointToString(pt, ntos=str):
 
 
 class SVGPathPen(BasePen):
-    """ Pen to draw SVG path d commands.
+    """Pen to draw SVG path d commands.
 
     Example::
         >>> pen = SVGPathPen(None)
@@ -36,6 +36,7 @@ class SVGPathPen(BasePen):
             glyphset[glyphname].draw(pen)
             print(tpen.getCommands())
     """
+
     def __init__(self, glyphSet, ntos: Callable[[float], str] = str):
         BasePen.__init__(self, glyphSet)
         self._commands = []
@@ -209,22 +210,25 @@ def main(args=None):
 
     if args is None:
         import sys
+
         args = sys.argv[1:]
 
     from fontTools.ttLib import TTFont
     import argparse
 
     parser = argparse.ArgumentParser(
-        "fonttools pens.svgPathPen", description="Generate SVG from text")
+        "fonttools pens.svgPathPen", description="Generate SVG from text"
+    )
+    parser.add_argument("font", metavar="font.ttf", help="Font file.")
+    parser.add_argument("text", metavar="text", help="Text string.")
     parser.add_argument(
-        "font", metavar="font.ttf", help="Font file.")
-    parser.add_argument(
-        "text", metavar="text", help="Text string.")
-    parser.add_argument(
-        "--variations", metavar="AXIS=LOC", default='',
+        "--variations",
+        metavar="AXIS=LOC",
+        default="",
         help="List of space separated locations. A location consist in "
         "the name of a variation axis, followed by '=' and a number. E.g.: "
-        "wght=700 wdth=80. The default is the location of the base master.")
+        "wght=700 wdth=80. The default is the location of the base master.",
+    )
 
     options = parser.parse_args(args)
 
@@ -233,18 +237,18 @@ def main(args=None):
 
     location = {}
     for tag_v in options.variations.split():
-        fields = tag_v.split('=')
+        fields = tag_v.split("=")
         tag = fields[0].strip()
         v = int(fields[1])
         location[tag] = v
 
-    hhea = font['hhea']
+    hhea = font["hhea"]
     ascent, descent = hhea.ascent, hhea.descent
 
     glyphset = font.getGlyphSet(location=location)
-    cmap = font['cmap'].getBestCmap()
+    cmap = font["cmap"].getBestCmap()
 
-    s = ''
+    s = ""
     width = 0
     for u in text:
         g = cmap[ord(u)]
@@ -254,20 +258,29 @@ def main(args=None):
         glyph.draw(pen)
         commands = pen.getCommands()
 
-        s += '<g transform="translate(%d %d) scale(1 -1)"><path d="%s"/></g>\n' % (width, ascent, commands)
+        s += '<g transform="translate(%d %d) scale(1 -1)"><path d="%s"/></g>\n' % (
+            width,
+            ascent,
+            commands,
+        )
 
         width += glyph.width
 
     print('<?xml version="1.0" encoding="UTF-8"?>')
-    print('<svg width="%d" height="%d" xmlns="http://www.w3.org/2000/svg">' % (width, ascent-descent))
-    print(s, end='')
-    print('</svg>')
+    print(
+        '<svg width="%d" height="%d" xmlns="http://www.w3.org/2000/svg">'
+        % (width, ascent - descent)
+    )
+    print(s, end="")
+    print("</svg>")
 
 
 if __name__ == "__main__":
     import sys
+
     if len(sys.argv) == 1:
         import doctest
+
         sys.exit(doctest.testmod().failed)
 
     sys.exit(main())

@@ -1,5 +1,6 @@
 from .otBase import BaseTTXConverter
 
+
 class table__a_n_k_r(BaseTTXConverter):
     """
     The anchor point table provides a way to define anchor points.
@@ -9,4 +10,5 @@ class table__a_n_k_r(BaseTTXConverter):
 
     See also https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6ankr.html
     """
+
     pass

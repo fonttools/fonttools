@@ -63,7 +63,7 @@ class table__a_v_a_r(DefaultTable.DefaultTable):
             "majorVersion": 1,
             "minorVersion": 0,
             "reserved": 0,
-            "axisCount": len(axisTags)
+            "axisCount": len(axisTags),
         }
         result = [sstruct.pack(AVAR_HEADER_FORMAT, header)]
         for axis in axisTags:
@@ -86,10 +86,10 @@ class table__a_v_a_r(DefaultTable.DefaultTable):
         pos = headerSize
         for axis in axisTags:
             segments = self.segments[axis] = {}
-            numPairs = struct.unpack(">H", data[pos:pos+2])[0]
+            numPairs = struct.unpack(">H", data[pos : pos + 2])[0]
             pos = pos + 2
             for _ in range(numPairs):
-                fromValue, toValue = struct.unpack(">hh", data[pos:pos+4])
+                fromValue, toValue = struct.unpack(">hh", data[pos : pos + 4])
                 segments[fi2fl(fromValue, 14)] = fi2fl(toValue, 14)
                 pos = pos + 4
 
@@ -117,6 +117,7 @@ class table__a_v_a_r(DefaultTable.DefaultTable):
                         fromValue = str2fl(elementAttrs["from"], 14)
                         toValue = str2fl(elementAttrs["to"], 14)
                         if fromValue in segment:
-                            log.warning("duplicate entry for %s in axis '%s'",
-                                        fromValue, axis)
+                            log.warning(
+                                "duplicate entry for %s in axis '%s'", fromValue, axis
+                            )
                         segment[fromValue] = toValue
