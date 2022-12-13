@@ -23,7 +23,7 @@ class ReverseContourPen(ContourFilterPen):
 
 
 def reversedContour(contour, outputImpliedClosingLine=False):
-    """ Generator that takes a list of pen's (operator, operands) tuples,
+    """Generator that takes a list of pen's (operator, operands) tuples,
     and yields them with the winding direction reversed.
     """
     if not contour:
@@ -79,8 +79,10 @@ def reversedContour(contour, outputImpliedClosingLine=False):
                 if secondType == "lineTo" and firstPts != secondPts:
                     del contour[0]
                     if contour:
-                        contour[-1] = (lastType,
-                                       tuple(lastPts[:-1]) + secondPts)
+                        contour[-1] = (
+                            lastType,
+                            tuple(lastPts[:-1]) + secondPts,
+                        )
         else:
             # for open paths, the last point will become the first
             yield firstType, (lastOnCurve,)
