@@ -446,6 +446,7 @@ class Builder(object):
                         assert self.cv_parameters_ids_[tag] is not None
                     nameID = self.cv_parameters_ids_[tag]
             table.setName(string, nameID, platformID, platEncID, langID)
+        table.names.sort()
 
     def build_OS_2(self):
         if not self.os2_:

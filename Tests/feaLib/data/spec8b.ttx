@@ -2,14 +2,14 @@
 <ttFont>
 
   <name>
-    <namerecord nameID="256" platformID="3" platEncID="1" langID="0x409">
-      Win MinionPro Size Name
-    </namerecord>
     <namerecord nameID="256" platformID="1" platEncID="0" langID="0x0" unicode="True">
       Mac MinionPro Size Name
     </namerecord>
     <namerecord nameID="256" platformID="1" platEncID="0" langID="0x5" unicode="True">
       Mac MinionPro Size Name
+    </namerecord>
+    <namerecord nameID="256" platformID="3" platEncID="1" langID="0x409">
+      Win MinionPro Size Name
     </namerecord>
   </name>
 
@@ -37,7 +37,7 @@
           <FeatureParamsSize>
             <DesignSize value="10.0"/>
             <SubfamilyID value="3"/>
-            <SubfamilyNameID value="256"/>  <!-- Win MinionPro Size Name -->
+            <SubfamilyNameID value="256"/>  <!-- Mac MinionPro Size Name -->
             <RangeStart value="8.0"/>
             <RangeEnd value="13.9"/>
           </FeatureParamsSize>

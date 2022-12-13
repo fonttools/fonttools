@@ -260,8 +260,8 @@ Famira, Sam Fishman, Matt Fontaine, Takaaki Fuji, Yannis Haralambous, Greg
 Hitchcock, Jeremie Hornus, Khaled Hosny, John Hudson, Denis Moyogo Jacquerye,
 Jack Jansen, Tom Kacvinsky, Jens Kutilek, Antoine Leca, Werner Lemberg, Tal
 Leming, Peter Lofting, Cosimo Lupo, Olli Meier, Masaya Nakamura, Dave Opstad,
-Laurence Penney, Roozbeh Pournader, Garret Rieger, Read Roberts, Guido
-van Rossum, Just van Rossum, Andreas Seidel, Georg Seifert, Chris
+Laurence Penney, Roozbeh Pournader, Garret Rieger, Read Roberts, Colin Rofls,
+Guido van Rossum, Just van Rossum, Andreas Seidel, Georg Seifert, Chris
 Simpkins, Miguel Sousa, Adam Twardoch, Adrien Tétar, Vitaly Volkov,
 Paul Wise.
 
