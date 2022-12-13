@@ -2,17 +2,17 @@
 <ttFont>
 
   <name>
-    <namerecord nameID="256" platformID="3" platEncID="1" langID="0x409">
-      Feature description for MS Platform, script Unicode, language English
-    </namerecord>
-    <namerecord nameID="256" platformID="3" platEncID="1" langID="0x411">
-      Feature description for MS Platform, script Unicode, language Japanese
-    </namerecord>
     <namerecord nameID="256" platformID="1" platEncID="0" langID="0x0" unicode="True">
       Feature description for Apple Platform, script Roman, language unspecified
     </namerecord>
     <namerecord nameID="256" platformID="1" platEncID="1" langID="0xc" unicode="True">
       Feature description for Apple Platform, script Japanese, language Japanese
+    </namerecord>
+    <namerecord nameID="256" platformID="3" platEncID="1" langID="0x409">
+      Feature description for MS Platform, script Unicode, language English
+    </namerecord>
+    <namerecord nameID="256" platformID="3" platEncID="1" langID="0x411">
+      Feature description for MS Platform, script Unicode, language Japanese
     </namerecord>
   </name>
 
@@ -39,7 +39,7 @@
         <Feature>
           <FeatureParamsStylisticSet>
             <Version value="0"/>
-            <UINameID value="256"/>  <!-- Feature description for MS Platform, script Unicode, language English -->
+            <UINameID value="256"/>  <!-- Feature description for Apple Platform, script Roman, language unspecified -->
           </FeatureParamsStylisticSet>
           <!-- LookupCount=1 -->
           <LookupListIndex index="0" value="0"/>
