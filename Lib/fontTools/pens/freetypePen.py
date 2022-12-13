@@ -268,7 +268,9 @@ class FreeTypePen(BasePen):
             (ctypes.c_void_p)(None),
         )
         outline = self.outline(transform=transform, evenOdd=evenOdd)
-        err = FT_Outline_Get_Bitmap(freetype.get_handle(), ctypes.byref(outline), ctypes.byref(bitmap))
+        err = FT_Outline_Get_Bitmap(
+            freetype.get_handle(), ctypes.byref(outline), ctypes.byref(bitmap)
+        )
         if err != 0:
             raise FT_Exception(err)
         return buf.raw, (width, height)

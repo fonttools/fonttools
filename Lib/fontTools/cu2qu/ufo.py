@@ -294,7 +294,9 @@ def fonts_to_quadratic(
                 glyphs.append(font[name])
                 cur_max_errors.append(error)
         try:
-            modified |= _glyphs_to_quadratic(glyphs, cur_max_errors, reverse_direction, stats)
+            modified |= _glyphs_to_quadratic(
+                glyphs, cur_max_errors, reverse_direction, stats
+            )
         except IncompatibleGlyphsError as exc:
             logger.error(exc)
             glyph_errors[name] = exc
@@ -304,7 +306,10 @@ def fonts_to_quadratic(
 
     if modified and dump_stats:
         spline_lengths = sorted(stats.keys())
-        logger.info("New spline lengths: %s" % (", ".join("%s: %d" % (sl, stats[sl]) for sl in spline_lengths)))
+        logger.info(
+            "New spline lengths: %s"
+            % (", ".join("%s: %d" % (sl, stats[sl]) for sl in spline_lengths))
+        )
 
     if remember_curve_type:
         for font in fonts:

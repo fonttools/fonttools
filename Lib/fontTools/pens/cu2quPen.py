@@ -58,7 +58,8 @@ class Cu2QuPen(AbstractPen):
             import warnings
 
             warnings.warn(
-                "ignore_single_points is deprecated and " "will be removed in future versions",
+                "ignore_single_points is deprecated and "
+                "will be removed in future versions",
                 UserWarning,
                 stacklevel=2,
             )
@@ -208,7 +209,9 @@ class Cu2QuPointPen(BasePointToSegmentPen):
             # a "super" bezier; decompose it
             on_curve, smooth, name, kwargs = points[-1]
             num_sub_segments = n - 1
-            for i, sub_points in enumerate(decomposeSuperBezierSegment([pt for pt, _, _, _ in points])):
+            for i, sub_points in enumerate(
+                decomposeSuperBezierSegment([pt for pt, _, _, _ in points])
+            ):
                 new_segment = []
                 for point in sub_points[:-1]:
                     new_segment.append((point, False, None, {}))
@@ -229,11 +232,15 @@ class Cu2QuPointPen(BasePointToSegmentPen):
         last_offcurves = []
         for i, (segment_type, points) in enumerate(segments):
             if segment_type in ("move", "line"):
-                assert len(points) == 1, "illegal line segment point count: %d" % len(points)
+                assert len(points) == 1, "illegal line segment point count: %d" % len(
+                    points
+                )
                 pt, smooth, name, kwargs = points[0]
                 pen.addPoint(pt, segment_type, smooth, name, **kwargs)
             elif segment_type == "qcurve":
-                assert len(points) >= 2, "illegal qcurve segment point count: %d" % len(points)
+                assert len(points) >= 2, "illegal qcurve segment point count: %d" % len(
+                    points
+                )
                 offcurves = points[:-1]
                 if offcurves:
                     if i == 0:

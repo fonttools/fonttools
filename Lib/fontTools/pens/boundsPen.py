@@ -95,5 +95,7 @@ class BoundsPen(ControlBoundsPen):
         bounds = self.bounds
         bounds = updateBounds(bounds, pt)
         if not pointInRect(bcp, bounds):
-            bounds = unionRect(bounds, calcQuadraticBounds(self._getCurrentPoint(), bcp, pt))
+            bounds = unionRect(
+                bounds, calcQuadraticBounds(self._getCurrentPoint(), bcp, pt)
+            )
         self.bounds = bounds

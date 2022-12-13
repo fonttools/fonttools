@@ -163,7 +163,9 @@ def test(glyphsets, glyphs=None, names=None):
                     continue
                 glyph = glyphset[glyph_name]
 
-                perContourPen = PerContourOrComponentPen(RecordingPen, glyphset=glyphset)
+                perContourPen = PerContourOrComponentPen(
+                    RecordingPen, glyphset=glyphset
+                )
                 try:
                     glyph.draw(perContourPen, outputImpliedClosingLine=True)
                 except TypeError:
@@ -215,9 +217,10 @@ def test(glyphsets, glyphs=None, names=None):
                     points = RecordingPointPen()
                     converter = SegmentToPointPen(points, False)
                     contour.replay(converter)
-                    # points.value is a list of pt,bool where bool is true if on-curve and false if off-curve;
-                    # now check all rotations and mirror-rotations of the contour and build list of isomorphic
-                    # possible starting points.
+                    # points.value is a list of pt,bool where bool is true if on-curve
+                    # and false if off-curve;
+                    # now check all rotations and mirror-rotations of the contour and
+                    # build list of isomorphic possible starting points.
                     bits = 0
                     for pt, b in points.value:
                         bits = (bits << 1) | b
@@ -242,7 +245,9 @@ def test(glyphsets, glyphs=None, names=None):
                     for i in range(n):
                         b = ((reversed_bits << i) & mask) | ((reversed_bits >> (n - i)))
                         if b == bits:
-                            isomorphisms.append(_rot_list([complex(*pt) for pt, bl in mirrored], i))
+                            isomorphisms.append(
+                                _rot_list([complex(*pt) for pt, bl in mirrored], i)
+                            )
 
             # Check each master against the first on in the list.
             m0 = allNodeTypes[0]
@@ -303,7 +308,10 @@ def test(glyphsets, glyphs=None, names=None):
                 matching, matching_cost = min_cost_perfect_bipartite_matching(costs)
                 identity_matching = list(range(len(m0)))
                 identity_cost = sum(costs[i][i] for i in range(len(m0)))
-                if matching != identity_matching and matching_cost < identity_cost * 0.95:
+                if (
+                    matching != identity_matching
+                    and matching_cost < identity_cost * 0.95
+                ):
                     add_problem(
                         glyph_name,
                         {
@@ -325,7 +333,9 @@ def test(glyphsets, glyphs=None, names=None):
                     continue
                 for ix, (contour0, contour1) in enumerate(zip(m0, m1)):
                     c0 = contour0[0]
-                    costs = [v for v in (_complex_vlen(_vdiff(c0, c1)) for c1 in contour1)]
+                    costs = [
+                        v for v in (_complex_vlen(_vdiff(c0, c1)) for c1 in contour1)
+                    ]
                     min_cost = min(costs)
                     first_cost = costs[0]
                     if min_cost < first_cost * 0.95:
@@ -372,7 +382,10 @@ def main(args=None):
     glyphs = None
     # glyphs = ['uni08DB', 'uniFD76']
     # glyphs = ['uni08DE', 'uni0034']
-    # glyphs = ['uni08DE', 'uni0034', 'uni0751', 'uni0753', 'uni0754', 'uni08A4', 'uni08A4.fina', 'uni08A5.fina']
+    # glyphs = [
+    #     'uni08DE', 'uni0034', 'uni0751', 'uni0753', 'uni0754', 'uni08A4',
+    #     'uni08A4.fina', 'uni08A5.fina'
+    # ]
 
     from os.path import basename
 

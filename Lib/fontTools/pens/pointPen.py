@@ -226,7 +226,12 @@ class PointToSegmentPen(BasePointToSegmentPen):
                 # 'outputImpliedClosingLine' option) in order to disambiguate this case from
                 # the implied closing 'lineTo', otherwise the duplicate point would be lost.
                 # See https://github.com/googlefonts/fontmake/issues/572.
-                if i + 1 != nSegments or outputImpliedClosingLine or not closed or pt == lastPt:
+                if (
+                    i + 1 != nSegments
+                    or outputImpliedClosingLine
+                    or not closed
+                    or pt == lastPt
+                ):
                     pen.lineTo(pt)
                     lastPt = pt
             elif segmentType == "curve":
@@ -473,7 +478,9 @@ class ReverseContourPointPen(AbstractPointPen):
                 lastSegmentType = nextSegmentType
             else:
                 segmentType = None
-            pen.addPoint(pt, segmentType=segmentType, smooth=smooth, name=name, **kwargs)
+            pen.addPoint(
+                pt, segmentType=segmentType, smooth=smooth, name=name, **kwargs
+            )
         pen.endPath()
 
     def beginPath(self, identifier=None, **kwargs):

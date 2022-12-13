@@ -27,8 +27,14 @@ class PerimeterPen(BasePen):
         # Choose which algorithm to use for quadratic and for cubic.
         # Quadrature is faster but has fixed error characteristic with no strong
         # error bound.  The cutoff points are derived empirically.
-        self._addCubic = self._addCubicQuadrature if tolerance >= 0.0015 else self._addCubicRecursive
-        self._addQuadratic = self._addQuadraticQuadrature if tolerance >= 0.00075 else self._addQuadraticExact
+        self._addCubic = (
+            self._addCubicQuadrature if tolerance >= 0.0015 else self._addCubicRecursive
+        )
+        self._addQuadratic = (
+            self._addQuadraticQuadrature
+            if tolerance >= 0.00075
+            else self._addQuadraticExact
+        )
 
     def _moveTo(self, p0):
         self.__startPoint = p0
