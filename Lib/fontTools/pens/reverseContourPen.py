@@ -14,12 +14,16 @@ class ReverseContourPen(ContourFilterPen):
     the first point.
     """
 
+    def __init__(self, outPen, outputImpliedClosingLine=False):
+        super().__init__(outPen)
+        self.outputImpliedClosingLine = outputImpliedClosingLine
+
     def filterContour(self, contour):
-        return reversedContour(contour)
+        return reversedContour(contour, self.outputImpliedClosingLine)
 
 
-def reversedContour(contour):
-    """Generator that takes a list of pen's (operator, operands) tuples,
+def reversedContour(contour, outputImpliedClosingLine=False):
+    """ Generator that takes a list of pen's (operator, operands) tuples,
     and yields them with the winding direction reversed.
     """
     if not contour:
@@ -56,7 +60,7 @@ def reversedContour(contour):
         if closed:
             # for closed paths, we keep the starting point
             yield firstType, firstPts
-            if firstOnCurve != lastOnCurve:
+            if outputImpliedClosingLine or firstOnCurve != lastOnCurve:
                 # emit an implied line between the last and first points
                 yield "lineTo", (lastOnCurve,)
                 contour[-1] = (lastType, tuple(lastPts[:-1]) + (firstOnCurve,))
@@ -66,14 +70,17 @@ def reversedContour(contour):
             else:
                 # contour has only two points, the second and last are the same
                 secondType, secondPts = lastType, lastPts
-            # if a lineTo follows the initial moveTo, after reversing it
-            # will be implied by the closePath, so we don't emit one;
-            # unless the lineTo and moveTo overlap, in which case we keep the
-            # duplicate points
-            if secondType == "lineTo" and firstPts != secondPts:
-                del contour[0]
-                if contour:
-                    contour[-1] = (lastType, tuple(lastPts[:-1]) + secondPts)
+
+            if not outputImpliedClosingLine:
+                # if a lineTo follows the initial moveTo, after reversing it
+                # will be implied by the closePath, so we don't emit one;
+                # unless the lineTo and moveTo overlap, in which case we keep the
+                # duplicate points
+                if secondType == "lineTo" and firstPts != secondPts:
+                    del contour[0]
+                    if contour:
+                        contour[-1] = (lastType,
+                                       tuple(lastPts[:-1]) + secondPts)
         else:
             # for open paths, the last point will become the first
             yield firstType, (lastOnCurve,)
