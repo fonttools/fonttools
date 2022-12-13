@@ -27,7 +27,7 @@ jobs:
     - name: Install packages
       run: pip install tox
     - name: Run Tox
-      run: tox -e mypy,package_readme
+      run: tox -e lint,package_readme
 
   test:
     runs-on: ${{ matrix.platform }}
