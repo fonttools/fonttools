@@ -316,7 +316,7 @@ class Cu2QuMultiPen:
     def qCurveTo(self, pointsList):
         self._check_contour_is_open()
         if len(pointsList[0]) == 1:
-            self.lineTo([points[0] for points in pointsList])
+            self.lineTo([(points[0],) for points in pointsList])
             return
         self._add_moveTo()
         current_pts = []

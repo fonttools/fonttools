@@ -15,7 +15,8 @@
 import sys
 import unittest
 
-from fontTools.pens.cu2quPen import Cu2QuPen, Cu2QuPointPen
+from fontTools.pens.cu2quPen import Cu2QuPen, Cu2QuPointPen, Cu2QuMultiPen
+from fontTools.pens.recordingPen import RecordingPen
 from . import CUBIC_GLYPHS, QUAD_GLYPHS
 from .utils import DummyGlyph, DummyPointGlyph
 from .utils import DummyPen, DummyPointPen
@@ -389,6 +390,26 @@ pen.endPath()""".splitlines())
                 pen.endPath()"""
             )
         )
+
+class TestCu2QuMultiPen(unittest.TestCase):
+
+    def test_multi_pen(self):
+
+        pens = [RecordingPen(), RecordingPen()]
+        pen = Cu2QuMultiPen(pens, .1)
+        pen.moveTo([((0,0),), ((0,0),)])
+        pen.lineTo([((0,1),), ((0,1),)])
+        pen.qCurveTo([((0,2),), ((0,2),)])
+        pen.qCurveTo([((0,3),(1,3)), ((0,3),(1,4))])
+        pen.curveTo([((2,3),(0,3),(0,0)), ((1.1,4),(0,4),(0,0))])
+        pen.closePath()
+
+        assert len(pens[0].value) == 6
+        assert len(pens[1].value) == 6
+
+        for op0,op1 in zip(pens[0].value, pens[1].value):
+            assert op0[0] == op0[0]
+            assert op0[0] != 'curveTo'
 
 
 if __name__ == "__main__":
