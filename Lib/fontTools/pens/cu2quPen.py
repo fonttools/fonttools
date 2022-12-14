@@ -20,7 +20,7 @@ from fontTools.pens.pointPen import ReverseContourPointPen
 
 
 class Cu2QuPen(AbstractPen):
-    """ A filter pen to convert cubic bezier curves to quadratic b-splines
+    """A filter pen to convert cubic bezier curves to quadratic b-splines
     using the FontTools SegmentPen protocol.
 
     Args:
@@ -40,8 +40,14 @@ class Cu2QuPen(AbstractPen):
     but are handled separately as anchors.
     """
 
-    def __init__(self, other_pen, max_err, reverse_direction=False,
-                 stats=None, ignore_single_points=False):
+    def __init__(
+        self,
+        other_pen,
+        max_err,
+        reverse_direction=False,
+        stats=None,
+        ignore_single_points=False,
+    ):
         if reverse_direction:
             self.pen = ReverseContourPen(other_pen)
         else:
@@ -50,9 +56,13 @@ class Cu2QuPen(AbstractPen):
         self.stats = stats
         if ignore_single_points:
             import warnings
-            warnings.warn("ignore_single_points is deprecated and "
-                          "will be removed in future versions",
-                          UserWarning, stacklevel=2)
+
+            warnings.warn(
+                "ignore_single_points is deprecated and "
+                "will be removed in future versions",
+                UserWarning,
+                stacklevel=2,
+            )
         self.ignore_single_points = ignore_single_points
         self.start_pt = None
         self.current_pt = None
@@ -137,7 +147,7 @@ class Cu2QuPen(AbstractPen):
 
 
 class Cu2QuPointPen(BasePointToSegmentPen):
-    """ A filter pen to convert cubic bezier curves to quadratic b-splines
+    """A filter pen to convert cubic bezier curves to quadratic b-splines
     using the RoboFab PointPen protocol.
 
     Args:
@@ -149,8 +159,7 @@ class Cu2QuPointPen(BasePointToSegmentPen):
         stats: a dictionary counting the point numbers of quadratic segments.
     """
 
-    def __init__(self, other_point_pen, max_err, reverse_direction=False,
-                 stats=None):
+    def __init__(self, other_point_pen, max_err, reverse_direction=False, stats=None):
         BasePointToSegmentPen.__init__(self)
         if reverse_direction:
             self.pen = ReverseContourPointPen(other_point_pen)
@@ -166,7 +175,7 @@ class Cu2QuPointPen(BasePointToSegmentPen):
         prev_points = segments[-1][1]
         prev_on_curve = prev_points[-1][0]
         for segment_type, points in segments:
-            if segment_type == 'curve':
+            if segment_type == "curve":
                 for sub_points in self._split_super_bezier_segments(points):
                     on_curve, smooth, name, kwargs = sub_points[-1]
                     bcp1, bcp2 = sub_points[0][0], sub_points[1][0]
@@ -200,8 +209,9 @@ class Cu2QuPointPen(BasePointToSegmentPen):
             # a "super" bezier; decompose it
             on_curve, smooth, name, kwargs = points[-1]
             num_sub_segments = n - 1
-            for i, sub_points in enumerate(decomposeSuperBezierSegment([
-                    pt for pt, _, _, _ in points])):
+            for i, sub_points in enumerate(
+                decomposeSuperBezierSegment([pt for pt, _, _, _ in points])
+            ):
                 new_segment = []
                 for point in sub_points[:-1]:
                     new_segment.append((point, False, None, {}))
@@ -213,8 +223,7 @@ class Cu2QuPointPen(BasePointToSegmentPen):
                     new_segment.append((sub_points[-1], True, None, {}))
                 sub_segments.append(new_segment)
         else:
-            raise AssertionError(
-                "expected 2 control points, found: %d" % n)
+            raise AssertionError("expected 2 control points, found: %d" % n)
         return sub_segments
 
     def _drawPoints(self, segments):
@@ -223,13 +232,15 @@ class Cu2QuPointPen(BasePointToSegmentPen):
         last_offcurves = []
         for i, (segment_type, points) in enumerate(segments):
             if segment_type in ("move", "line"):
-                assert len(points) == 1, (
-                    "illegal line segment point count: %d" % len(points))
+                assert len(points) == 1, "illegal line segment point count: %d" % len(
+                    points
+                )
                 pt, smooth, name, kwargs = points[0]
                 pen.addPoint(pt, segment_type, smooth, name, **kwargs)
             elif segment_type == "qcurve":
-                assert len(points) >= 2, (
-                    "illegal qcurve segment point count: %d" % len(points))
+                assert len(points) >= 2, "illegal qcurve segment point count: %d" % len(
+                    points
+                )
                 offcurves = points[:-1]
                 if offcurves:
                     if i == 0:
@@ -249,8 +260,7 @@ class Cu2QuPointPen(BasePointToSegmentPen):
                     pen.addPoint(pt, segment_type, smooth, name, **kwargs)
             else:
                 # 'curve' segments must have been converted to 'qcurve' by now
-                raise AssertionError(
-                    "unexpected segment type: %r" % segment_type)
+                raise AssertionError("unexpected segment type: %r" % segment_type)
         for (pt, smooth, name, kwargs) in last_offcurves:
             pen.addPoint(pt, None, smooth, name, **kwargs)
         pen.endPath()
@@ -258,7 +268,6 @@ class Cu2QuPointPen(BasePointToSegmentPen):
     def addComponent(self, baseGlyphName, transformation):
         assert self.currentPath is None
         self.pen.addComponent(baseGlyphName, transformation)
-
 
 
 class Cu2QuMultiPen:
@@ -281,7 +290,10 @@ class Cu2QuMultiPen:
 
     def __init__(self, other_pens, max_err, reverse_direction=False):
         if reverse_direction:
-            other_pens = [ReverseContourPen(pen, outputImpliedClosingLine=True) for pen in other_pens]
+            other_pens = [
+                ReverseContourPen(pen, outputImpliedClosingLine=True)
+                for pen in other_pens
+            ]
         self.pens = other_pens
         self.max_err = max_err
         self.start_pts = None
@@ -297,7 +309,7 @@ class Cu2QuMultiPen:
 
     def _add_moveTo(self):
         if self.start_pts is not None:
-            for pt,pen in zip(self.start_pts, self.pens):
+            for pt, pen in zip(self.start_pts, self.pens):
                 pen.moveTo(*pt)
             self.start_pts = None
 
@@ -309,7 +321,7 @@ class Cu2QuMultiPen:
     def lineTo(self, pts):
         self._check_contour_is_open()
         self._add_moveTo()
-        for pt,pen in zip(pts, self.pens):
+        for pt, pen in zip(pts, self.pens):
             pen.lineTo(*pt)
         self.current_pts = pts
 
@@ -320,14 +332,14 @@ class Cu2QuMultiPen:
             return
         self._add_moveTo()
         current_pts = []
-        for points,pen in zip(pointsList, self.pens):
+        for points, pen in zip(pointsList, self.pens):
             pen.qCurveTo(*points)
             current_pts.append((points[-1],))
         self.current_pts = current_pts
 
     def _curves_to_quadratic(self, pointsList):
         curves = []
-        for current_pt,points in zip(self.current_pts, pointsList):
+        for current_pt, points in zip(self.current_pts, pointsList):
             curves.append(current_pt + points)
         quadratics = curves_to_quadratic(curves, [self.max_err] * len(curves))
         pointsList = []
@@ -355,5 +367,5 @@ class Cu2QuMultiPen:
 
     def addComponent(self, glyphName, transformations):
         self._check_contour_is_closed()
-        for trans,pen in zip(transformations, self.pens):
+        for trans, pen in zip(transformations, self.pens):
             pen.addComponent(glyphName, trans)

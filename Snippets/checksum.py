@@ -11,11 +11,23 @@ from os.path import basename
 from fontTools.ttLib import TTFont
 
 
-def write_checksum(filepaths, stdout_write=False, use_ttx=False, include_tables=None, exclude_tables=None, do_not_cleanup=False):
+def write_checksum(
+    filepaths,
+    stdout_write=False,
+    use_ttx=False,
+    include_tables=None,
+    exclude_tables=None,
+    do_not_cleanup=False,
+):
     checksum_dict = {}
     for path in filepaths:
         if not os.path.exists(path):
-            sys.stderr.write("[checksum.py] ERROR: " + path + " is not a valid file path" + os.linesep)
+            sys.stderr.write(
+                "[checksum.py] ERROR: "
+                + path
+                + " is not a valid file path"
+                + os.linesep
+            )
             sys.exit(1)
 
         if use_ttx:
@@ -33,12 +45,16 @@ def write_checksum(filepaths, stdout_write=False, use_ttx=False, include_tables=
             checksum_path = temp_ttx_path
         else:
             if include_tables is not None:
-                sys.stderr.write("[checksum.py] -i and --include are not supported for font binary filepaths. \
-                    Use these flags for checksums with the --ttx flag.")
+                sys.stderr.write(
+                    "[checksum.py] -i and --include are not supported for font binary filepaths. \
+                    Use these flags for checksums with the --ttx flag."
+                )
                 sys.exit(1)
             if exclude_tables is not None:
-                sys.stderr.write("[checksum.py] -e and --exclude are not supported for font binary filepaths. \
-                    Use these flags for checksums with the --ttx flag.")
+                sys.stderr.write(
+                    "[checksum.py] -e and --exclude are not supported for font binary filepaths. \
+                    Use these flags for checksums with the --ttx flag."
+                )
                 sys.exit(1)
             checksum_path = path
 
@@ -69,10 +85,12 @@ def check_checksum(filepaths):
     check_failed = False
     for path in filepaths:
         if not os.path.exists(path):
-            sys.stderr.write("[checksum.py] ERROR: " + path + " is not a valid filepath" + os.linesep)
+            sys.stderr.write(
+                "[checksum.py] ERROR: " + path + " is not a valid filepath" + os.linesep
+            )
             sys.exit(1)
 
-        with open(path, mode='r') as file:
+        with open(path, mode="r") as file:
             for line in file.readlines():
                 cleaned_line = line.rstrip()
                 line_list = cleaned_line.split(" ")
@@ -82,7 +100,10 @@ def check_checksum(filepaths):
                     expected_sha1 = line_list[0]
                     test_path = line_list[1]
                 else:
-                    sys.stderr.write("[checksum.py] ERROR: failed to parse checksum file values" + os.linesep)
+                    sys.stderr.write(
+                        "[checksum.py] ERROR: failed to parse checksum file values"
+                        + os.linesep
+                    )
                     sys.exit(1)
 
                 if not os.path.exists(test_path):
@@ -107,25 +128,60 @@ def check_checksum(filepaths):
 
 
 def _read_binary(filepath):
-    with open(filepath, mode='rb') as file:
+    with open(filepath, mode="rb") as file:
         return file.read()
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(prog="checksum.py", description="A SHA1 hash checksum list generator and checksum testing script")
-    parser.add_argument("-t", "--ttx", help="Calculate from ttx file", action="store_true")
-    parser.add_argument("-s", "--stdout", help="Write output to stdout stream", action="store_true")
-    parser.add_argument("-n", "--noclean", help="Do not discard *.ttx files used to calculate SHA1 hashes", action="store_true")
-    parser.add_argument("-c", "--check", help="Verify checksum values vs. files", action="store_true")
-    parser.add_argument("filepaths", nargs="+", help="One or more file paths.  Use checksum file path for -c/--check.  Use paths\
-        to font files for all other commands.")
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        prog="checksum.py",
+        description="A SHA1 hash checksum list generator and checksum testing script",
+    )
+    parser.add_argument(
+        "-t", "--ttx", help="Calculate from ttx file", action="store_true"
+    )
+    parser.add_argument(
+        "-s", "--stdout", help="Write output to stdout stream", action="store_true"
+    )
+    parser.add_argument(
+        "-n",
+        "--noclean",
+        help="Do not discard *.ttx files used to calculate SHA1 hashes",
+        action="store_true",
+    )
+    parser.add_argument(
+        "-c", "--check", help="Verify checksum values vs. files", action="store_true"
+    )
+    parser.add_argument(
+        "filepaths",
+        nargs="+",
+        help="One or more file paths.  Use checksum file path for -c/--check.  Use paths\
+        to font files for all other commands.",
+    )
 
-    parser.add_argument("-i", "--include", action="append", help="Included OpenType tables for ttx data dump")
-    parser.add_argument("-e", "--exclude", action="append", help="Excluded OpenType tables for ttx data dump")
+    parser.add_argument(
+        "-i",
+        "--include",
+        action="append",
+        help="Included OpenType tables for ttx data dump",
+    )
+    parser.add_argument(
+        "-e",
+        "--exclude",
+        action="append",
+        help="Excluded OpenType tables for ttx data dump",
+    )
 
     args = parser.parse_args(sys.argv[1:])
 
     if args.check is True:
         check_checksum(args.filepaths)
     else:
-        write_checksum(args.filepaths, stdout_write=args.stdout, use_ttx=args.ttx, do_not_cleanup=args.noclean, include_tables=args.include, exclude_tables=args.exclude)
+        write_checksum(
+            args.filepaths,
+            stdout_write=args.stdout,
+            use_ttx=args.ttx,
+            do_not_cleanup=args.noclean,
+            include_tables=args.include,
+            exclude_tables=args.exclude,
+        )

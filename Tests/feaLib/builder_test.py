@@ -954,15 +954,14 @@ class BuilderTest(unittest.TestCase):
             FeatureLibError,
             "Empty glyph class in mark class definition",
             self.build,
-            "markClass [] <anchor 150 -10> @TOPMARKS;"
+            "markClass [] <anchor 150 -10> @TOPMARKS;",
         )
         self.assertRaisesRegex(
             FeatureLibError,
             'Expected a glyph class with 1 elements after "by", but found a glyph class with 0 elements',
             self.build,
-            "feature test { sub a by []; test};"
+            "feature test { sub a by []; test};",
         )
-
 
 
 def generate_feature_file_test(name):

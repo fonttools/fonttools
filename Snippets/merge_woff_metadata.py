@@ -9,12 +9,14 @@ def main(args=None):
         args = sys.argv[1:]
 
     if len(args) < 2:
-        print("usage: merge_woff_metadata.py METADATA.xml "
-              "INPUT.woff [OUTPUT.woff]", file=sys.stderr)
+        print(
+            "usage: merge_woff_metadata.py METADATA.xml " "INPUT.woff [OUTPUT.woff]",
+            file=sys.stderr,
+        )
         return 1
 
     metadata_file = args[0]
-    with open(metadata_file, 'rb') as f:
+    with open(metadata_file, "rb") as f:
         metadata = f.read()
 
     infile = args[1]

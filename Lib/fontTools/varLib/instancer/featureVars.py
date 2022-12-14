@@ -1,4 +1,3 @@
-
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.varLib.models import normalizeValue
 from copy import deepcopy
@@ -52,6 +51,7 @@ def _instantiateFeatureVariationRecord(
     shouldKeep = False
     newConditions = []
     from fontTools.varLib.instancer import NormalizedAxisTriple
+
     default_triple = NormalizedAxisTriple(-1, 0, +1)
     for i, condition in enumerate(record.ConditionSet.ConditionTable):
         if condition.Format == 1:
@@ -88,7 +88,6 @@ def _instantiateFeatureVariationRecord(
                     # condition out of range, remove entire record
                     newConditions = None
                     break
-
 
         else:
             log.warning(
@@ -131,9 +130,13 @@ def _instantiateFeatureVariations(table, fvarAxes, axisLimits):
         if applies and not featureVariationApplied:
             assert record.FeatureTableSubstitution.Version == 0x00010000
             defaultsSubsts = deepcopy(record.FeatureTableSubstitution)
-            for default,rec in zip(defaultsSubsts.SubstitutionRecord,
-                                   record.FeatureTableSubstitution.SubstitutionRecord):
-                default.Feature = deepcopy(table.FeatureList.FeatureRecord[rec.FeatureIndex].Feature)
+            for default, rec in zip(
+                defaultsSubsts.SubstitutionRecord,
+                record.FeatureTableSubstitution.SubstitutionRecord,
+            ):
+                default.Feature = deepcopy(
+                    table.FeatureList.FeatureRecord[rec.FeatureIndex].Feature
+                )
                 table.FeatureList.FeatureRecord[rec.FeatureIndex].Feature = deepcopy(
                     rec.Feature
                 )
@@ -175,4 +178,3 @@ def instantiateFeatureVariations(varfont, axisLimits):
         )
         # remove unreferenced lookups
         varfont[tableTag].prune_lookups()
-

@@ -12,14 +12,16 @@ import sys
 font = TTFont(sys.argv[1])
 unicode = sys.argv[2]
 
-cmap = font['cmap'].getBestCmap()
+cmap = font["cmap"].getBestCmap()
 gid = cmap[ord(unicode)]
 
-hhea = font['hhea']
+hhea = font["hhea"]
 glyphset = font.getGlyphSet()
-with cairo.SVGSurface("example.svg", hhea.advanceWidthMax, hhea.ascent-hhea.descent) as surface:
+with cairo.SVGSurface(
+    "example.svg", hhea.advanceWidthMax, hhea.ascent - hhea.descent
+) as surface:
     context = cairo.Context(surface)
-    context.translate(0, +font['hhea'].ascent)
+    context.translate(0, +font["hhea"].ascent)
     context.scale(1, -1)
 
     glyph = glyphset[gid]
@@ -27,7 +29,7 @@ with cairo.SVGSurface("example.svg", hhea.advanceWidthMax, hhea.ascent-hhea.desc
     recording = RecordingPen()
     glyph.draw(recording)
 
-    context.translate((hhea.advanceWidthMax - glyph.width) * .5, 0)
+    context.translate((hhea.advanceWidthMax - glyph.width) * 0.5, 0)
 
     pen = CairoPen(glyphset, context)
     glyph.draw(pen)
@@ -40,14 +42,10 @@ with cairo.SVGSurface("example.svg", hhea.advanceWidthMax, hhea.ascent-hhea.desc
     a = stats.varianceX
     b = stats.covariance
     c = stats.varianceY
-    delta = (((a - c) * .5) ** 2 + b * b) ** .5
-    lambda1 = (a + c) * .5 + delta  # Major eigenvalue
-    lambda2 = (a + c) * .5 - delta  # Minor eigenvalue
-    theta = (
-             math.atan2(lambda1 - a, b)
-             if b != 0 else
-             (math.pi * .5 if a < c else 0)
-            )
+    delta = (((a - c) * 0.5) ** 2 + b * b) ** 0.5
+    lambda1 = (a + c) * 0.5 + delta  # Major eigenvalue
+    lambda2 = (a + c) * 0.5 - delta  # Minor eigenvalue
+    theta = math.atan2(lambda1 - a, b) if b != 0 else (math.pi * 0.5 if a < c else 0)
     mult = 4  # Empirical by drawing '.'
     transform = cairo.Matrix()
     transform.translate(stats.meanX, stats.meanY)
@@ -55,7 +53,7 @@ with cairo.SVGSurface("example.svg", hhea.advanceWidthMax, hhea.ascent-hhea.desc
     transform.scale(math.sqrt(lambda1), math.sqrt(lambda2))
     transform.scale(mult, mult)
 
-    ellipse_area = math.sqrt(lambda1) * math.sqrt(lambda2) * math.pi/4 * mult * mult
+    ellipse_area = math.sqrt(lambda1) * math.sqrt(lambda2) * math.pi / 4 * mult * mult
 
     if stats.area:
         context.save()
@@ -70,7 +68,7 @@ with cairo.SVGSurface("example.svg", hhea.advanceWidthMax, hhea.ascent-hhea.desc
 
         context.save()
         context.set_line_cap(cairo.LINE_CAP_ROUND)
-        context.set_source_rgb(.8, 0, 0)
+        context.set_source_rgb(0.8, 0, 0)
         context.translate(stats.meanX, stats.meanY)
 
         context.move_to(0, 0)
@@ -79,8 +77,8 @@ with cairo.SVGSurface("example.svg", hhea.advanceWidthMax, hhea.ascent-hhea.desc
         context.stroke()
 
         context.transform(cairo.Matrix(1, 0, stats.slant, 1, 0, 0))
-        context.move_to(0, -stats.meanY + font['hhea'].ascent)
-        context.line_to(0, -stats.meanY + font['hhea'].descent)
+        context.move_to(0, -stats.meanY + font["hhea"].ascent)
+        context.line_to(0, -stats.meanY + font["hhea"].descent)
         context.set_line_width(5)
         context.stroke()
 

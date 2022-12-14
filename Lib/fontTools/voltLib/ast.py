@@ -11,15 +11,15 @@ class Pos(NamedTuple):
     dy_adjust_by: dict
 
     def __str__(self):
-        res = ' POS'
-        for attr in ('adv', 'dx', 'dy'):
+        res = " POS"
+        for attr in ("adv", "dx", "dy"):
             value = getattr(self, attr)
             if value is not None:
-                res += f' {attr.upper()} {value}'
-                adjust_by = getattr(self, f'{attr}_adjust_by', {})
+                res += f" {attr.upper()} {value}"
+                adjust_by = getattr(self, f"{attr}_adjust_by", {})
                 for size, adjustment in adjust_by.items():
-                    res += f' ADJUST_BY {adjustment} AT {size}'
-        res += ' END_POS'
+                    res += f" ADJUST_BY {adjustment} AT {size}"
+        res += " END_POS"
         return res
 
 
@@ -52,7 +52,7 @@ class VoltFile(Statement):
             s.build(builder)
 
     def __str__(self):
-        return '\n' + '\n'.join(str(s) for s in self.statements) + ' END\n'
+        return "\n" + "\n".join(str(s) for s in self.statements) + " END\n"
 
 
 class GlyphDefinition(Statement):
@@ -68,15 +68,15 @@ class GlyphDefinition(Statement):
         res = f'DEF_GLYPH "{self.name}" ID {self.id}'
         if self.unicode is not None:
             if len(self.unicode) > 1:
-                unicodes = ','.join(f'U+{u:04X}' for u in self.unicode)
+                unicodes = ",".join(f"U+{u:04X}" for u in self.unicode)
                 res += f' UNICODEVALUES "{unicodes}"'
             else:
-                res += f' UNICODE {self.unicode[0]}'
+                res += f" UNICODE {self.unicode[0]}"
         if self.type is not None:
-            res += f' TYPE {self.type}'
+            res += f" TYPE {self.type}"
         if self.components is not None:
-            res += f' COMPONENTS {self.components}'
-        res += ' END_GLYPH'
+            res += f" COMPONENTS {self.components}"
+        res += " END_GLYPH"
         return res
 
 
@@ -90,8 +90,8 @@ class GroupDefinition(Statement):
     def glyphSet(self, groups=None):
         if groups is not None and self.name in groups:
             raise VoltLibError(
-                'Group "%s" contains itself.' % (self.name),
-                self.location)
+                'Group "%s" contains itself.' % (self.name), self.location
+            )
         if self.glyphs_ is None:
             if groups is None:
                 groups = set({self.name})
@@ -101,12 +101,13 @@ class GroupDefinition(Statement):
         return self.glyphs_
 
     def __str__(self):
-        enum = self.enum and str(self.enum) or ''
+        enum = self.enum and str(self.enum) or ""
         return f'DEF_GROUP "{self.name}"\n{enum}\nEND_GROUP'
 
 
 class GlyphName(Expression):
     """A single glyph name, such as cedilla."""
+
     def __init__(self, glyph, location=None):
         Expression.__init__(self, location)
         self.glyph = glyph
@@ -120,6 +121,7 @@ class GlyphName(Expression):
 
 class Enum(Expression):
     """An enum"""
+
     def __init__(self, enum, location=None):
         Expression.__init__(self, location)
         self.enum = enum
@@ -138,12 +140,13 @@ class Enum(Expression):
         return tuple(glyphs)
 
     def __str__(self):
-        enum = ''.join(str(e) for e in self.enum)
-        return f' ENUM{enum} END_ENUM'
+        enum = "".join(str(e) for e in self.enum)
+        return f" ENUM{enum} END_ENUM"
 
 
 class GroupName(Expression):
     """A glyph group"""
+
     def __init__(self, group, parser, location=None):
         Expression.__init__(self, location)
         self.group = group
@@ -156,8 +159,8 @@ class GroupName(Expression):
             return self.glyphs_
         else:
             raise VoltLibError(
-                'Group "%s" is used but undefined.' % (self.group),
-                self.location)
+                'Group "%s" is used but undefined.' % (self.group), self.location
+            )
 
     def __str__(self):
         return f' GROUP "{self.group}"'
@@ -165,6 +168,7 @@ class GroupName(Expression):
 
 class Range(Expression):
     """A glyph range"""
+
     def __init__(self, start, end, parser, location=None):
         Expression.__init__(self, location)
         self.start = start
@@ -186,13 +190,13 @@ class ScriptDefinition(Statement):
         self.langs = langs
 
     def __str__(self):
-        res = 'DEF_SCRIPT'
+        res = "DEF_SCRIPT"
         if self.name is not None:
             res += f' NAME "{self.name}"'
         res += f' TAG "{self.tag}"\n\n'
         for lang in self.langs:
-            res += f'{lang}'
-        res += 'END_SCRIPT'
+            res += f"{lang}"
+        res += "END_SCRIPT"
         return res
 
 
@@ -204,13 +208,13 @@ class LangSysDefinition(Statement):
         self.features = features
 
     def __str__(self):
-        res = 'DEF_LANGSYS'
+        res = "DEF_LANGSYS"
         if self.name is not None:
             res += f' NAME "{self.name}"'
         res += f' TAG "{self.tag}"\n\n'
         for feature in self.features:
-            res += f'{feature}'
-        res += 'END_LANGSYS\n'
+            res += f"{feature}"
+        res += "END_LANGSYS\n"
         return res
 
 
@@ -223,15 +227,26 @@ class FeatureDefinition(Statement):
 
     def __str__(self):
         res = f'DEF_FEATURE NAME "{self.name}" TAG "{self.tag}"\n'
-        res += ' ' + ' '.join(f'LOOKUP "{l}"' for l in self.lookups) + '\n'
-        res += 'END_FEATURE\n'
+        res += " " + " ".join(f'LOOKUP "{l}"' for l in self.lookups) + "\n"
+        res += "END_FEATURE\n"
         return res
 
 
 class LookupDefinition(Statement):
-    def __init__(self, name, process_base, process_marks, mark_glyph_set,
-                 direction, reversal, comments, context, sub, pos,
-                 location=None):
+    def __init__(
+        self,
+        name,
+        process_base,
+        process_marks,
+        mark_glyph_set,
+        direction,
+        reversal,
+        comments,
+        context,
+        sub,
+        pos,
+        location=None,
+    ):
         Statement.__init__(self, location)
         self.name = name
         self.process_base = process_base
@@ -248,30 +263,30 @@ class LookupDefinition(Statement):
         res = f'DEF_LOOKUP "{self.name}"'
         res += f' {self.process_base and "PROCESS_BASE" or "SKIP_BASE"}'
         if self.process_marks:
-            res += ' PROCESS_MARKS '
+            res += " PROCESS_MARKS "
             if self.mark_glyph_set:
                 res += f'MARK_GLYPH_SET "{self.mark_glyph_set}"'
             elif isinstance(self.process_marks, str):
                 res += f'"{self.process_marks}"'
             else:
-                res += 'ALL'
+                res += "ALL"
         else:
-            res += ' SKIP_MARKS'
+            res += " SKIP_MARKS"
         if self.direction is not None:
-            res += f' DIRECTION {self.direction}'
+            res += f" DIRECTION {self.direction}"
         if self.reversal:
-            res += ' REVERSAL'
+            res += " REVERSAL"
         if self.comments is not None:
-            comments = self.comments.replace('\n', r'\n')
+            comments = self.comments.replace("\n", r"\n")
             res += f'\nCOMMENTS "{comments}"'
         if self.context:
-            res += '\n' + '\n'.join(str(c) for c in self.context)
+            res += "\n" + "\n".join(str(c) for c in self.context)
         else:
-            res += '\nIN_CONTEXT\nEND_CONTEXT'
+            res += "\nIN_CONTEXT\nEND_CONTEXT"
         if self.sub:
-            res += f'\n{self.sub}'
+            res += f"\n{self.sub}"
         if self.pos:
-            res += f'\n{self.pos}'
+            res += f"\n{self.pos}"
         return res
 
 
@@ -281,12 +296,12 @@ class SubstitutionDefinition(Statement):
         self.mapping = mapping
 
     def __str__(self):
-        res = 'AS_SUBSTITUTION\n'
+        res = "AS_SUBSTITUTION\n"
         for src, dst in self.mapping.items():
-            src = ''.join(str(s) for s in src)
-            dst = ''.join(str(d) for d in dst)
-            res += f'SUB{src}\nWITH{dst}\nEND_SUB\n'
-        res += 'END_SUBSTITUTION'
+            src = "".join(str(s) for s in src)
+            dst = "".join(str(d) for d in dst)
+            res += f"SUB{src}\nWITH{dst}\nEND_SUB\n"
+        res += "END_SUBSTITUTION"
         return res
 
 
@@ -313,12 +328,12 @@ class PositionAttachDefinition(Statement):
         self.coverage_to = coverage_to
 
     def __str__(self):
-        coverage = ''.join(str(c) for c in self.coverage)
-        res = f'AS_POSITION\nATTACH{coverage}\nTO'
+        coverage = "".join(str(c) for c in self.coverage)
+        res = f"AS_POSITION\nATTACH{coverage}\nTO"
         for coverage, anchor in self.coverage_to:
-            coverage = ''.join(str(c) for c in coverage)
+            coverage = "".join(str(c) for c in coverage)
             res += f'{coverage} AT ANCHOR "{anchor}"'
-        res += '\nEND_ATTACH\nEND_POSITION'
+        res += "\nEND_ATTACH\nEND_POSITION"
         return res
 
 
@@ -329,14 +344,14 @@ class PositionAttachCursiveDefinition(Statement):
         self.coverages_enter = coverages_enter
 
     def __str__(self):
-        res = 'AS_POSITION\nATTACH_CURSIVE'
+        res = "AS_POSITION\nATTACH_CURSIVE"
         for coverage in self.coverages_exit:
-            coverage = ''.join(str(c) for c in coverage)
-            res += f'\nEXIT {coverage}'
+            coverage = "".join(str(c) for c in coverage)
+            res += f"\nEXIT {coverage}"
         for coverage in self.coverages_enter:
-            coverage = ''.join(str(c) for c in coverage)
-            res += f'\nENTER {coverage}'
-        res += '\nEND_ATTACH\nEND_POSITION'
+            coverage = "".join(str(c) for c in coverage)
+            res += f"\nENTER {coverage}"
+        res += "\nEND_ATTACH\nEND_POSITION"
         return res
 
 
@@ -348,18 +363,18 @@ class PositionAdjustPairDefinition(Statement):
         self.adjust_pair = adjust_pair
 
     def __str__(self):
-        res = 'AS_POSITION\nADJUST_PAIR\n'
+        res = "AS_POSITION\nADJUST_PAIR\n"
         for coverage in self.coverages_1:
-            coverage = ' '.join(str(c) for c in coverage)
-            res += f' FIRST {coverage}'
-        res += '\n'
+            coverage = " ".join(str(c) for c in coverage)
+            res += f" FIRST {coverage}"
+        res += "\n"
         for coverage in self.coverages_2:
-            coverage = ' '.join(str(c) for c in coverage)
-            res += f' SECOND {coverage}'
-        res += '\n'
+            coverage = " ".join(str(c) for c in coverage)
+            res += f" SECOND {coverage}"
+        res += "\n"
         for (id_1, id_2), (pos_1, pos_2) in self.adjust_pair.items():
-            res += f' {id_1} {id_2} BY{pos_1}{pos_2}\n'
-        res += '\nEND_ADJUST\nEND_POSITION'
+            res += f" {id_1} {id_2} BY{pos_1}{pos_2}\n"
+        res += "\nEND_ADJUST\nEND_POSITION"
         return res
 
 
@@ -369,13 +384,12 @@ class PositionAdjustSingleDefinition(Statement):
         self.adjust_single = adjust_single
 
     def __str__(self):
-        res = 'AS_POSITION\nADJUST_SINGLE'
+        res = "AS_POSITION\nADJUST_SINGLE"
         for coverage, pos in self.adjust_single:
-            coverage = ''.join(str(c) for c in coverage)
-            res += f'{coverage} BY{pos}'
-        res += '\nEND_ADJUST\nEND_POSITION'
+            coverage = "".join(str(c) for c in coverage)
+            res += f"{coverage} BY{pos}"
+        res += "\nEND_ADJUST\nEND_POSITION"
         return res
-
 
 
 class ContextDefinition(Statement):
@@ -386,20 +400,19 @@ class ContextDefinition(Statement):
         self.right = right if right is not None else []
 
     def __str__(self):
-        res = self.ex_or_in + '\n'
+        res = self.ex_or_in + "\n"
         for coverage in self.left:
-            coverage = ''.join(str(c) for c in coverage)
-            res += f' LEFT{coverage}\n'
+            coverage = "".join(str(c) for c in coverage)
+            res += f" LEFT{coverage}\n"
         for coverage in self.right:
-            coverage = ''.join(str(c) for c in coverage)
-            res += f' RIGHT{coverage}\n'
-        res += 'END_CONTEXT'
+            coverage = "".join(str(c) for c in coverage)
+            res += f" RIGHT{coverage}\n"
+        res += "END_CONTEXT"
         return res
 
 
 class AnchorDefinition(Statement):
-    def __init__(self, name, gid, glyph_name, component, locked,
-                 pos, location=None):
+    def __init__(self, name, gid, glyph_name, component, locked, pos, location=None):
         Statement.__init__(self, location)
         self.name = name
         self.gid = gid
@@ -409,13 +422,15 @@ class AnchorDefinition(Statement):
         self.pos = pos
 
     def __str__(self):
-        locked = self.locked and ' LOCKED' or ''
-        return (f'DEF_ANCHOR "{self.name}"'
-                f' ON {self.gid}'
-                f' GLYPH {self.glyph_name}'
-                f' COMPONENT {self.component}'
-                f'{locked}'
-                f' AT {self.pos} END_ANCHOR')
+        locked = self.locked and " LOCKED" or ""
+        return (
+            f'DEF_ANCHOR "{self.name}"'
+            f" ON {self.gid}"
+            f" GLYPH {self.glyph_name}"
+            f" COMPONENT {self.component}"
+            f"{locked}"
+            f" AT {self.pos} END_ANCHOR"
+        )
 
 
 class SettingDefinition(Statement):
@@ -426,8 +441,8 @@ class SettingDefinition(Statement):
 
     def __str__(self):
         if self.value is True:
-            return f'{self.name}'
+            return f"{self.name}"
         if isinstance(self.value, (tuple, list)):
             value = " ".join(str(v) for v in self.value)
-            return f'{self.name} {value}'
-        return f'{self.name} {self.value}'
+            return f"{self.name} {value}"
+        return f"{self.name} {self.value}"

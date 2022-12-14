@@ -244,204 +244,325 @@ RANGES = [
 ]
 
 VALUES = [
-    None,                                                      # 0000..0341
-    {'Grek'},                                                  # 0342..0342
-    None,                                                      # 0343..0344
-    {'Grek'},                                                  # 0345..0345
-    None,                                                      # 0346..0362
-    {'Latn'},                                                  # 0363..036F
-    None,                                                      # 0370..0482
-    {'Cyrl', 'Perm'},                                          # 0483..0483
-    {'Cyrl', 'Glag'},                                          # 0484..0484
-    {'Cyrl', 'Latn'},                                          # 0485..0486
-    {'Cyrl', 'Glag'},                                          # 0487..0487
-    None,                                                      # 0488..060B
-    {'Arab', 'Nkoo', 'Rohg', 'Syrc', 'Thaa', 'Yezi'},          # 060C..060C
-    None,                                                      # 060D..061A
-    {'Arab', 'Nkoo', 'Rohg', 'Syrc', 'Thaa', 'Yezi'},          # 061B..061B
-    {'Arab', 'Syrc', 'Thaa'},                                  # 061C..061C
-    None,                                                      # 061D..061E
-    {'Adlm', 'Arab', 'Nkoo', 'Rohg', 'Syrc', 'Thaa', 'Yezi'},  # 061F..061F
-    None,                                                      # 0620..063F
-    {'Adlm', 'Arab', 'Mand', 'Mani', 'Ougr', 'Phlp', 'Rohg', 'Sogd', 'Syrc'},  # 0640..0640
-    None,                                                      # 0641..064A
-    {'Arab', 'Syrc'},                                          # 064B..0655
-    None,                                                      # 0656..065F
-    {'Arab', 'Thaa', 'Yezi'},                                  # 0660..0669
-    None,                                                      # 066A..066F
-    {'Arab', 'Syrc'},                                          # 0670..0670
-    None,                                                      # 0671..06D3
-    {'Arab', 'Rohg'},                                          # 06D4..06D4
-    None,                                                      # 06D5..0950
-    {'Beng', 'Deva', 'Gran', 'Gujr', 'Guru', 'Knda', 'Latn', 'Mlym', 'Orya', 'Shrd', 'Taml', 'Telu', 'Tirh'},  # 0951..0951
-    {'Beng', 'Deva', 'Gran', 'Gujr', 'Guru', 'Knda', 'Latn', 'Mlym', 'Orya', 'Taml', 'Telu', 'Tirh'},  # 0952..0952
-    None,                                                      # 0953..0963
-    {'Beng', 'Deva', 'Dogr', 'Gong', 'Gonm', 'Gran', 'Gujr', 'Guru', 'Knda', 'Mahj', 'Mlym', 'Nand', 'Orya', 'Sind', 'Sinh', 'Sylo', 'Takr', 'Taml', 'Telu', 'Tirh'},  # 0964..0964
-    {'Beng', 'Deva', 'Dogr', 'Gong', 'Gonm', 'Gran', 'Gujr', 'Guru', 'Knda', 'Limb', 'Mahj', 'Mlym', 'Nand', 'Orya', 'Sind', 'Sinh', 'Sylo', 'Takr', 'Taml', 'Telu', 'Tirh'},  # 0965..0965
-    {'Deva', 'Dogr', 'Kthi', 'Mahj'},                          # 0966..096F
-    None,                                                      # 0970..09E5
-    {'Beng', 'Cakm', 'Sylo'},                                  # 09E6..09EF
-    None,                                                      # 09F0..0A65
-    {'Guru', 'Mult'},                                          # 0A66..0A6F
-    None,                                                      # 0A70..0AE5
-    {'Gujr', 'Khoj'},                                          # 0AE6..0AEF
-    None,                                                      # 0AF0..0BE5
-    {'Gran', 'Taml'},                                          # 0BE6..0BF3
-    None,                                                      # 0BF4..0CE5
-    {'Knda', 'Nand'},                                          # 0CE6..0CEF
-    None,                                                      # 0CF0..103F
-    {'Cakm', 'Mymr', 'Tale'},                                  # 1040..1049
-    None,                                                      # 104A..10FA
-    {'Geor', 'Latn'},                                          # 10FB..10FB
-    None,                                                      # 10FC..1734
-    {'Buhd', 'Hano', 'Tagb', 'Tglg'},                          # 1735..1736
-    None,                                                      # 1737..1801
-    {'Mong', 'Phag'},                                          # 1802..1803
-    None,                                                      # 1804..1804
-    {'Mong', 'Phag'},                                          # 1805..1805
-    None,                                                      # 1806..1CCF
-    {'Beng', 'Deva', 'Gran', 'Knda'},                          # 1CD0..1CD0
-    {'Deva'},                                                  # 1CD1..1CD1
-    {'Beng', 'Deva', 'Gran', 'Knda'},                          # 1CD2..1CD2
-    {'Deva', 'Gran'},                                          # 1CD3..1CD3
-    {'Deva'},                                                  # 1CD4..1CD4
-    {'Beng', 'Deva'},                                          # 1CD5..1CD6
-    {'Deva', 'Shrd'},                                          # 1CD7..1CD7
-    {'Beng', 'Deva'},                                          # 1CD8..1CD8
-    {'Deva', 'Shrd'},                                          # 1CD9..1CD9
-    {'Deva', 'Knda', 'Mlym', 'Orya', 'Taml', 'Telu'},          # 1CDA..1CDA
-    {'Deva'},                                                  # 1CDB..1CDB
-    {'Deva', 'Shrd'},                                          # 1CDC..1CDD
-    {'Deva'},                                                  # 1CDE..1CDF
-    {'Deva', 'Shrd'},                                          # 1CE0..1CE0
-    {'Beng', 'Deva'},                                          # 1CE1..1CE1
-    {'Deva'},                                                  # 1CE2..1CE8
-    {'Deva', 'Nand'},                                          # 1CE9..1CE9
-    {'Beng', 'Deva'},                                          # 1CEA..1CEA
-    {'Deva'},                                                  # 1CEB..1CEC
-    {'Beng', 'Deva'},                                          # 1CED..1CED
-    {'Deva'},                                                  # 1CEE..1CF1
-    {'Beng', 'Deva', 'Gran', 'Knda', 'Nand', 'Orya', 'Telu', 'Tirh'},  # 1CF2..1CF2
-    {'Deva', 'Gran'},                                          # 1CF3..1CF3
-    {'Deva', 'Gran', 'Knda'},                                  # 1CF4..1CF4
-    {'Beng', 'Deva'},                                          # 1CF5..1CF6
-    {'Beng'},                                                  # 1CF7..1CF7
-    {'Deva', 'Gran'},                                          # 1CF8..1CF9
-    {'Nand'},                                                  # 1CFA..1CFA
-    None,                                                      # 1CFB..1DBF
-    {'Grek'},                                                  # 1DC0..1DC1
-    None,                                                      # 1DC2..1DF7
-    {'Cyrl', 'Syrc'},                                          # 1DF8..1DF8
-    None,                                                      # 1DF9..1DF9
-    {'Syrc'},                                                  # 1DFA..1DFA
-    None,                                                      # 1DFB..202E
-    {'Latn', 'Mong'},                                          # 202F..202F
-    None,                                                      # 2030..20EF
-    {'Deva', 'Gran', 'Latn'},                                  # 20F0..20F0
-    None,                                                      # 20F1..2E42
-    {'Cyrl', 'Glag'},                                          # 2E43..2E43
-    None,                                                      # 2E44..3000
-    {'Bopo', 'Hang', 'Hani', 'Hira', 'Kana', 'Yiii'},          # 3001..3002
-    {'Bopo', 'Hang', 'Hani', 'Hira', 'Kana'},                  # 3003..3003
-    None,                                                      # 3004..3005
-    {'Hani'},                                                  # 3006..3006
-    None,                                                      # 3007..3007
-    {'Bopo', 'Hang', 'Hani', 'Hira', 'Kana', 'Yiii'},          # 3008..3011
-    None,                                                      # 3012..3012
-    {'Bopo', 'Hang', 'Hani', 'Hira', 'Kana'},                  # 3013..3013
-    {'Bopo', 'Hang', 'Hani', 'Hira', 'Kana', 'Yiii'},          # 3014..301B
-    {'Bopo', 'Hang', 'Hani', 'Hira', 'Kana'},                  # 301C..301F
-    None,                                                      # 3020..3029
-    {'Bopo', 'Hani'},                                          # 302A..302D
-    None,                                                      # 302E..302F
-    {'Bopo', 'Hang', 'Hani', 'Hira', 'Kana'},                  # 3030..3030
-    {'Hira', 'Kana'},                                          # 3031..3035
-    None,                                                      # 3036..3036
-    {'Bopo', 'Hang', 'Hani', 'Hira', 'Kana'},                  # 3037..3037
-    None,                                                      # 3038..303B
-    {'Hani', 'Hira', 'Kana'},                                  # 303C..303D
-    {'Hani'},                                                  # 303E..303F
-    None,                                                      # 3040..3098
-    {'Hira', 'Kana'},                                          # 3099..309C
-    None,                                                      # 309D..309F
-    {'Hira', 'Kana'},                                          # 30A0..30A0
-    None,                                                      # 30A1..30FA
-    {'Bopo', 'Hang', 'Hani', 'Hira', 'Kana', 'Yiii'},          # 30FB..30FB
-    {'Hira', 'Kana'},                                          # 30FC..30FC
-    None,                                                      # 30FD..318F
-    {'Hani'},                                                  # 3190..319F
-    None,                                                      # 31A0..31BF
-    {'Hani'},                                                  # 31C0..31E3
-    None,                                                      # 31E4..321F
-    {'Hani'},                                                  # 3220..3247
-    None,                                                      # 3248..327F
-    {'Hani'},                                                  # 3280..32B0
-    None,                                                      # 32B1..32BF
-    {'Hani'},                                                  # 32C0..32CB
-    None,                                                      # 32CC..32FE
-    {'Hani'},                                                  # 32FF..32FF
-    None,                                                      # 3300..3357
-    {'Hani'},                                                  # 3358..3370
-    None,                                                      # 3371..337A
-    {'Hani'},                                                  # 337B..337F
-    None,                                                      # 3380..33DF
-    {'Hani'},                                                  # 33E0..33FE
-    None,                                                      # 33FF..A66E
-    {'Cyrl', 'Glag'},                                          # A66F..A66F
-    None,                                                      # A670..A6FF
-    {'Hani', 'Latn'},                                          # A700..A707
-    None,                                                      # A708..A82F
-    {'Deva', 'Dogr', 'Gujr', 'Guru', 'Khoj', 'Knda', 'Kthi', 'Mahj', 'Mlym', 'Modi', 'Nand', 'Sind', 'Takr', 'Tirh'},  # A830..A832
-    {'Deva', 'Dogr', 'Gujr', 'Guru', 'Khoj', 'Knda', 'Kthi', 'Mahj', 'Modi', 'Nand', 'Sind', 'Takr', 'Tirh'},  # A833..A835
-    {'Deva', 'Dogr', 'Gujr', 'Guru', 'Khoj', 'Kthi', 'Mahj', 'Modi', 'Sind', 'Takr', 'Tirh'},  # A836..A839
-    None,                                                      # A83A..A8F0
-    {'Beng', 'Deva'},                                          # A8F1..A8F1
-    None,                                                      # A8F2..A8F2
-    {'Deva', 'Taml'},                                          # A8F3..A8F3
-    None,                                                      # A8F4..A92D
-    {'Kali', 'Latn', 'Mymr'},                                  # A92E..A92E
-    None,                                                      # A92F..A9CE
-    {'Bugi', 'Java'},                                          # A9CF..A9CF
-    None,                                                      # A9D0..FD3D
-    {'Arab', 'Nkoo'},                                          # FD3E..FD3F
-    None,                                                      # FD40..FDF1
-    {'Arab', 'Thaa'},                                          # FDF2..FDF2
-    None,                                                      # FDF3..FDFC
-    {'Arab', 'Thaa'},                                          # FDFD..FDFD
-    None,                                                      # FDFE..FE44
-    {'Bopo', 'Hang', 'Hani', 'Hira', 'Kana'},                  # FE45..FE46
-    None,                                                      # FE47..FF60
-    {'Bopo', 'Hang', 'Hani', 'Hira', 'Kana', 'Yiii'},          # FF61..FF65
-    None,                                                      # FF66..FF6F
-    {'Hira', 'Kana'},                                          # FF70..FF70
-    None,                                                      # FF71..FF9D
-    {'Hira', 'Kana'},                                          # FF9E..FF9F
-    None,                                                      # FFA0..100FF
-    {'Cpmn', 'Cprt', 'Linb'},                                  # 10100..10101
-    {'Cprt', 'Linb'},                                          # 10102..10102
-    None,                                                      # 10103..10106
-    {'Cprt', 'Lina', 'Linb'},                                  # 10107..10133
-    None,                                                      # 10134..10136
-    {'Cprt', 'Linb'},                                          # 10137..1013F
-    None,                                                      # 10140..102DF
-    {'Arab', 'Copt'},                                          # 102E0..102FB
-    None,                                                      # 102FC..10AF1
-    {'Mani', 'Ougr'},                                          # 10AF2..10AF2
-    None,                                                      # 10AF3..11300
-    {'Gran', 'Taml'},                                          # 11301..11301
-    None,                                                      # 11302..11302
-    {'Gran', 'Taml'},                                          # 11303..11303
-    None,                                                      # 11304..1133A
-    {'Gran', 'Taml'},                                          # 1133B..1133C
-    None,                                                      # 1133D..11FCF
-    {'Gran', 'Taml'},                                          # 11FD0..11FD1
-    None,                                                      # 11FD2..11FD2
-    {'Gran', 'Taml'},                                          # 11FD3..11FD3
-    None,                                                      # 11FD4..1BC9F
-    {'Dupl'},                                                  # 1BCA0..1BCA3
-    None,                                                      # 1BCA4..1D35F
-    {'Hani'},                                                  # 1D360..1D371
-    None,                                                      # 1D372..1F24F
-    {'Hani'},                                                  # 1F250..1F251
-    None,                                                      # 1F252..10FFFF
+    None,  # 0000..0341
+    {"Grek"},  # 0342..0342
+    None,  # 0343..0344
+    {"Grek"},  # 0345..0345
+    None,  # 0346..0362
+    {"Latn"},  # 0363..036F
+    None,  # 0370..0482
+    {"Cyrl", "Perm"},  # 0483..0483
+    {"Cyrl", "Glag"},  # 0484..0484
+    {"Cyrl", "Latn"},  # 0485..0486
+    {"Cyrl", "Glag"},  # 0487..0487
+    None,  # 0488..060B
+    {"Arab", "Nkoo", "Rohg", "Syrc", "Thaa", "Yezi"},  # 060C..060C
+    None,  # 060D..061A
+    {"Arab", "Nkoo", "Rohg", "Syrc", "Thaa", "Yezi"},  # 061B..061B
+    {"Arab", "Syrc", "Thaa"},  # 061C..061C
+    None,  # 061D..061E
+    {"Adlm", "Arab", "Nkoo", "Rohg", "Syrc", "Thaa", "Yezi"},  # 061F..061F
+    None,  # 0620..063F
+    {
+        "Adlm",
+        "Arab",
+        "Mand",
+        "Mani",
+        "Ougr",
+        "Phlp",
+        "Rohg",
+        "Sogd",
+        "Syrc",
+    },  # 0640..0640
+    None,  # 0641..064A
+    {"Arab", "Syrc"},  # 064B..0655
+    None,  # 0656..065F
+    {"Arab", "Thaa", "Yezi"},  # 0660..0669
+    None,  # 066A..066F
+    {"Arab", "Syrc"},  # 0670..0670
+    None,  # 0671..06D3
+    {"Arab", "Rohg"},  # 06D4..06D4
+    None,  # 06D5..0950
+    {
+        "Beng",
+        "Deva",
+        "Gran",
+        "Gujr",
+        "Guru",
+        "Knda",
+        "Latn",
+        "Mlym",
+        "Orya",
+        "Shrd",
+        "Taml",
+        "Telu",
+        "Tirh",
+    },  # 0951..0951
+    {
+        "Beng",
+        "Deva",
+        "Gran",
+        "Gujr",
+        "Guru",
+        "Knda",
+        "Latn",
+        "Mlym",
+        "Orya",
+        "Taml",
+        "Telu",
+        "Tirh",
+    },  # 0952..0952
+    None,  # 0953..0963
+    {
+        "Beng",
+        "Deva",
+        "Dogr",
+        "Gong",
+        "Gonm",
+        "Gran",
+        "Gujr",
+        "Guru",
+        "Knda",
+        "Mahj",
+        "Mlym",
+        "Nand",
+        "Orya",
+        "Sind",
+        "Sinh",
+        "Sylo",
+        "Takr",
+        "Taml",
+        "Telu",
+        "Tirh",
+    },  # 0964..0964
+    {
+        "Beng",
+        "Deva",
+        "Dogr",
+        "Gong",
+        "Gonm",
+        "Gran",
+        "Gujr",
+        "Guru",
+        "Knda",
+        "Limb",
+        "Mahj",
+        "Mlym",
+        "Nand",
+        "Orya",
+        "Sind",
+        "Sinh",
+        "Sylo",
+        "Takr",
+        "Taml",
+        "Telu",
+        "Tirh",
+    },  # 0965..0965
+    {"Deva", "Dogr", "Kthi", "Mahj"},  # 0966..096F
+    None,  # 0970..09E5
+    {"Beng", "Cakm", "Sylo"},  # 09E6..09EF
+    None,  # 09F0..0A65
+    {"Guru", "Mult"},  # 0A66..0A6F
+    None,  # 0A70..0AE5
+    {"Gujr", "Khoj"},  # 0AE6..0AEF
+    None,  # 0AF0..0BE5
+    {"Gran", "Taml"},  # 0BE6..0BF3
+    None,  # 0BF4..0CE5
+    {"Knda", "Nand"},  # 0CE6..0CEF
+    None,  # 0CF0..103F
+    {"Cakm", "Mymr", "Tale"},  # 1040..1049
+    None,  # 104A..10FA
+    {"Geor", "Latn"},  # 10FB..10FB
+    None,  # 10FC..1734
+    {"Buhd", "Hano", "Tagb", "Tglg"},  # 1735..1736
+    None,  # 1737..1801
+    {"Mong", "Phag"},  # 1802..1803
+    None,  # 1804..1804
+    {"Mong", "Phag"},  # 1805..1805
+    None,  # 1806..1CCF
+    {"Beng", "Deva", "Gran", "Knda"},  # 1CD0..1CD0
+    {"Deva"},  # 1CD1..1CD1
+    {"Beng", "Deva", "Gran", "Knda"},  # 1CD2..1CD2
+    {"Deva", "Gran"},  # 1CD3..1CD3
+    {"Deva"},  # 1CD4..1CD4
+    {"Beng", "Deva"},  # 1CD5..1CD6
+    {"Deva", "Shrd"},  # 1CD7..1CD7
+    {"Beng", "Deva"},  # 1CD8..1CD8
+    {"Deva", "Shrd"},  # 1CD9..1CD9
+    {"Deva", "Knda", "Mlym", "Orya", "Taml", "Telu"},  # 1CDA..1CDA
+    {"Deva"},  # 1CDB..1CDB
+    {"Deva", "Shrd"},  # 1CDC..1CDD
+    {"Deva"},  # 1CDE..1CDF
+    {"Deva", "Shrd"},  # 1CE0..1CE0
+    {"Beng", "Deva"},  # 1CE1..1CE1
+    {"Deva"},  # 1CE2..1CE8
+    {"Deva", "Nand"},  # 1CE9..1CE9
+    {"Beng", "Deva"},  # 1CEA..1CEA
+    {"Deva"},  # 1CEB..1CEC
+    {"Beng", "Deva"},  # 1CED..1CED
+    {"Deva"},  # 1CEE..1CF1
+    {"Beng", "Deva", "Gran", "Knda", "Nand", "Orya", "Telu", "Tirh"},  # 1CF2..1CF2
+    {"Deva", "Gran"},  # 1CF3..1CF3
+    {"Deva", "Gran", "Knda"},  # 1CF4..1CF4
+    {"Beng", "Deva"},  # 1CF5..1CF6
+    {"Beng"},  # 1CF7..1CF7
+    {"Deva", "Gran"},  # 1CF8..1CF9
+    {"Nand"},  # 1CFA..1CFA
+    None,  # 1CFB..1DBF
+    {"Grek"},  # 1DC0..1DC1
+    None,  # 1DC2..1DF7
+    {"Cyrl", "Syrc"},  # 1DF8..1DF8
+    None,  # 1DF9..1DF9
+    {"Syrc"},  # 1DFA..1DFA
+    None,  # 1DFB..202E
+    {"Latn", "Mong"},  # 202F..202F
+    None,  # 2030..20EF
+    {"Deva", "Gran", "Latn"},  # 20F0..20F0
+    None,  # 20F1..2E42
+    {"Cyrl", "Glag"},  # 2E43..2E43
+    None,  # 2E44..3000
+    {"Bopo", "Hang", "Hani", "Hira", "Kana", "Yiii"},  # 3001..3002
+    {"Bopo", "Hang", "Hani", "Hira", "Kana"},  # 3003..3003
+    None,  # 3004..3005
+    {"Hani"},  # 3006..3006
+    None,  # 3007..3007
+    {"Bopo", "Hang", "Hani", "Hira", "Kana", "Yiii"},  # 3008..3011
+    None,  # 3012..3012
+    {"Bopo", "Hang", "Hani", "Hira", "Kana"},  # 3013..3013
+    {"Bopo", "Hang", "Hani", "Hira", "Kana", "Yiii"},  # 3014..301B
+    {"Bopo", "Hang", "Hani", "Hira", "Kana"},  # 301C..301F
+    None,  # 3020..3029
+    {"Bopo", "Hani"},  # 302A..302D
+    None,  # 302E..302F
+    {"Bopo", "Hang", "Hani", "Hira", "Kana"},  # 3030..3030
+    {"Hira", "Kana"},  # 3031..3035
+    None,  # 3036..3036
+    {"Bopo", "Hang", "Hani", "Hira", "Kana"},  # 3037..3037
+    None,  # 3038..303B
+    {"Hani", "Hira", "Kana"},  # 303C..303D
+    {"Hani"},  # 303E..303F
+    None,  # 3040..3098
+    {"Hira", "Kana"},  # 3099..309C
+    None,  # 309D..309F
+    {"Hira", "Kana"},  # 30A0..30A0
+    None,  # 30A1..30FA
+    {"Bopo", "Hang", "Hani", "Hira", "Kana", "Yiii"},  # 30FB..30FB
+    {"Hira", "Kana"},  # 30FC..30FC
+    None,  # 30FD..318F
+    {"Hani"},  # 3190..319F
+    None,  # 31A0..31BF
+    {"Hani"},  # 31C0..31E3
+    None,  # 31E4..321F
+    {"Hani"},  # 3220..3247
+    None,  # 3248..327F
+    {"Hani"},  # 3280..32B0
+    None,  # 32B1..32BF
+    {"Hani"},  # 32C0..32CB
+    None,  # 32CC..32FE
+    {"Hani"},  # 32FF..32FF
+    None,  # 3300..3357
+    {"Hani"},  # 3358..3370
+    None,  # 3371..337A
+    {"Hani"},  # 337B..337F
+    None,  # 3380..33DF
+    {"Hani"},  # 33E0..33FE
+    None,  # 33FF..A66E
+    {"Cyrl", "Glag"},  # A66F..A66F
+    None,  # A670..A6FF
+    {"Hani", "Latn"},  # A700..A707
+    None,  # A708..A82F
+    {
+        "Deva",
+        "Dogr",
+        "Gujr",
+        "Guru",
+        "Khoj",
+        "Knda",
+        "Kthi",
+        "Mahj",
+        "Mlym",
+        "Modi",
+        "Nand",
+        "Sind",
+        "Takr",
+        "Tirh",
+    },  # A830..A832
+    {
+        "Deva",
+        "Dogr",
+        "Gujr",
+        "Guru",
+        "Khoj",
+        "Knda",
+        "Kthi",
+        "Mahj",
+        "Modi",
+        "Nand",
+        "Sind",
+        "Takr",
+        "Tirh",
+    },  # A833..A835
+    {
+        "Deva",
+        "Dogr",
+        "Gujr",
+        "Guru",
+        "Khoj",
+        "Kthi",
+        "Mahj",
+        "Modi",
+        "Sind",
+        "Takr",
+        "Tirh",
+    },  # A836..A839
+    None,  # A83A..A8F0
+    {"Beng", "Deva"},  # A8F1..A8F1
+    None,  # A8F2..A8F2
+    {"Deva", "Taml"},  # A8F3..A8F3
+    None,  # A8F4..A92D
+    {"Kali", "Latn", "Mymr"},  # A92E..A92E
+    None,  # A92F..A9CE
+    {"Bugi", "Java"},  # A9CF..A9CF
+    None,  # A9D0..FD3D
+    {"Arab", "Nkoo"},  # FD3E..FD3F
+    None,  # FD40..FDF1
+    {"Arab", "Thaa"},  # FDF2..FDF2
+    None,  # FDF3..FDFC
+    {"Arab", "Thaa"},  # FDFD..FDFD
+    None,  # FDFE..FE44
+    {"Bopo", "Hang", "Hani", "Hira", "Kana"},  # FE45..FE46
+    None,  # FE47..FF60
+    {"Bopo", "Hang", "Hani", "Hira", "Kana", "Yiii"},  # FF61..FF65
+    None,  # FF66..FF6F
+    {"Hira", "Kana"},  # FF70..FF70
+    None,  # FF71..FF9D
+    {"Hira", "Kana"},  # FF9E..FF9F
+    None,  # FFA0..100FF
+    {"Cpmn", "Cprt", "Linb"},  # 10100..10101
+    {"Cprt", "Linb"},  # 10102..10102
+    None,  # 10103..10106
+    {"Cprt", "Lina", "Linb"},  # 10107..10133
+    None,  # 10134..10136
+    {"Cprt", "Linb"},  # 10137..1013F
+    None,  # 10140..102DF
+    {"Arab", "Copt"},  # 102E0..102FB
+    None,  # 102FC..10AF1
+    {"Mani", "Ougr"},  # 10AF2..10AF2
+    None,  # 10AF3..11300
+    {"Gran", "Taml"},  # 11301..11301
+    None,  # 11302..11302
+    {"Gran", "Taml"},  # 11303..11303
+    None,  # 11304..1133A
+    {"Gran", "Taml"},  # 1133B..1133C
+    None,  # 1133D..11FCF
+    {"Gran", "Taml"},  # 11FD0..11FD1
+    None,  # 11FD2..11FD2
+    {"Gran", "Taml"},  # 11FD3..11FD3
+    None,  # 11FD4..1BC9F
+    {"Dupl"},  # 1BCA0..1BCA3
+    None,  # 1BCA4..1D35F
+    {"Hani"},  # 1D360..1D371
+    None,  # 1D372..1F24F
+    {"Hani"},  # 1F250..1F251
+    None,  # 1F252..10FFFF
 ]

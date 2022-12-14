@@ -12,7 +12,6 @@ __all__ = [
 
 
 class SubTablePath(Tuple[BaseTable.SubTableEntry, ...]):
-
     def __str__(self) -> str:
         path_parts = []
         for entry in self:

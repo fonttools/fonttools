@@ -14,7 +14,7 @@ from collections import OrderedDict
 from .errors import VarLibError, VarLibValidationError
 
 
-def addFeatureVariations(font, conditionalSubstitutions, featureTag='rvrn'):
+def addFeatureVariations(font, conditionalSubstitutions, featureTag="rvrn"):
     """Add conditional substitutions to a Variable Font.
 
     The `conditionalSubstitutions` argument is a list of (Region, Substitutions)
@@ -53,7 +53,9 @@ def addFeatureVariations(font, conditionalSubstitutions, featureTag='rvrn'):
     substitutions = overlayFeatureVariations(conditionalSubstitutions)
 
     # turn substitution dicts into tuples of tuples, so they are hashable
-    conditionalSubstitutions, allSubstitutions = makeSubstitutionsHashable(substitutions)
+    conditionalSubstitutions, allSubstitutions = makeSubstitutionsHashable(
+        substitutions
+    )
     if "GSUB" not in font:
         font["GSUB"] = buildGSUB()
 
@@ -65,23 +67,25 @@ def addFeatureVariations(font, conditionalSubstitutions, featureTag='rvrn'):
     # so rearrange our lookups to match
     conditionsAndLookups = []
     for conditionSet, substitutions in conditionalSubstitutions:
-        conditionsAndLookups.append((conditionSet, [lookupMap[s] for s in substitutions]))
+        conditionsAndLookups.append(
+            (conditionSet, [lookupMap[s] for s in substitutions])
+        )
 
-    addFeatureVariationsRaw(font, font["GSUB"].table,
-                            conditionsAndLookups,
-                            featureTag)
+    addFeatureVariationsRaw(font, font["GSUB"].table, conditionsAndLookups, featureTag)
+
 
 def _checkSubstitutionGlyphsExist(glyphNames, substitutions):
     referencedGlyphNames = set()
     for _, substitution in substitutions:
-        referencedGlyphNames |=  substitution.keys()
-        referencedGlyphNames |=  set(substitution.values())
+        referencedGlyphNames |= substitution.keys()
+        referencedGlyphNames |= set(substitution.values())
     missing = referencedGlyphNames - glyphNames
     if missing:
-       raise VarLibValidationError(
+        raise VarLibValidationError(
             "Missing glyphs are referenced in conditional substitution rules:"
             f" {', '.join(missing)}"
         )
+
 
 def overlayFeatureVariations(conditionalSubstitutions):
     """Compute overlaps between all conditional substitutions.
@@ -131,13 +135,13 @@ def overlayFeatureVariations(conditionalSubstitutions):
 
     # Merge same-substitutions rules, as this creates fewer number oflookups.
     merged = OrderedDict()
-    for value,key in conditionalSubstitutions:
+    for value, key in conditionalSubstitutions:
         key = hashdict(key)
         if key in merged:
             merged[key].extend(value)
         else:
             merged[key] = value
-    conditionalSubstitutions = [(v,dict(k)) for k,v in merged.items()]
+    conditionalSubstitutions = [(v, dict(k)) for k, v in merged.items()]
     del merged
 
     # Merge same-region rules, as this is cheaper.
@@ -146,9 +150,13 @@ def overlayFeatureVariations(conditionalSubstitutions):
     # Reversing is such that earlier entries win in case of conflicting substitution
     # rules for the same region.
     merged = OrderedDict()
-    for key,value in reversed(conditionalSubstitutions):
-        key = tuple(sorted((hashdict(cleanupBox(k)) for k in key),
-                           key=lambda d: tuple(sorted(d.items()))))
+    for key, value in reversed(conditionalSubstitutions):
+        key = tuple(
+            sorted(
+                (hashdict(cleanupBox(k)) for k in key),
+                key=lambda d: tuple(sorted(d.items())),
+            )
+        )
         if key in merged:
             merged[key].update(value)
         else:
@@ -159,17 +167,17 @@ def overlayFeatureVariations(conditionalSubstitutions):
     # Overlay
     #
     # Rank is the bit-set of the index of all contributing layers.
-    initMapInit = ((hashdict(),0),) # Initializer representing the entire space
-    boxMap = OrderedDict(initMapInit) # Map from Box to Rank
-    for i,(currRegion,_) in enumerate(conditionalSubstitutions):
+    initMapInit = ((hashdict(), 0),)  # Initializer representing the entire space
+    boxMap = OrderedDict(initMapInit)  # Map from Box to Rank
+    for i, (currRegion, _) in enumerate(conditionalSubstitutions):
         newMap = OrderedDict(initMapInit)
-        currRank = 1<<i
-        for box,rank in boxMap.items():
+        currRank = 1 << i
+        for box, rank in boxMap.items():
             for currBox in currRegion:
                 intersection, remainder = overlayBox(currBox, box)
                 if intersection is not None:
                     intersection = hashdict(intersection)
-                    newMap[intersection] = newMap.get(intersection, 0) | rank|currRank
+                    newMap[intersection] = newMap.get(intersection, 0) | rank | currRank
                 if remainder is not None:
                     remainder = hashdict(remainder)
                     newMap[remainder] = newMap.get(remainder, 0) | rank
@@ -177,19 +185,20 @@ def overlayFeatureVariations(conditionalSubstitutions):
 
     # Generate output
     items = []
-    for box,rank in sorted(boxMap.items(),
-                           key=(lambda BoxAndRank: -popCount(BoxAndRank[1]))):
+    for box, rank in sorted(
+        boxMap.items(), key=(lambda BoxAndRank: -popCount(BoxAndRank[1]))
+    ):
         # Skip any box that doesn't have any substitution.
         if rank == 0:
             continue
         substsList = []
         i = 0
         while rank:
-          if rank & 1:
-              substsList.append(conditionalSubstitutions[i][1])
-          rank >>= 1
-          i += 1
-        items.append((dict(box),substsList))
+            if rank & 1:
+                substsList.append(conditionalSubstitutions[i][1])
+            rank >>= 1
+            i += 1
+        items.append((dict(box), substsList))
     return items
 
 
@@ -201,6 +210,7 @@ def overlayFeatureVariations(conditionalSubstitutions):
 # Missing dimensions (keys) are substituted by the default min and max values
 # from the corresponding axes.
 #
+
 
 def overlayBox(top, bot):
     """Overlays ``top`` box on top of ``bot`` box.
@@ -223,8 +233,8 @@ def overlayBox(top, bot):
         minimum = max(min1, min2)
         maximum = min(max1, max2)
         if not minimum < maximum:
-            return None, bot # Do not intersect
-        intersection[axisTag] = minimum,maximum
+            return None, bot  # Do not intersect
+        intersection[axisTag] = minimum, maximum
 
     # Remainder
     #
@@ -243,11 +253,11 @@ def overlayBox(top, bot):
     for axisTag in bot:
         if axisTag not in intersection:
             fullyInside = False
-            continue # Axis range lies fully within
+            continue  # Axis range lies fully within
         min1, max1 = intersection[axisTag]
         min2, max2 = bot[axisTag]
         if min1 <= min2 and max2 <= max1:
-            continue # Axis range lies fully within
+            continue  # Axis range lies fully within
 
         # Bot's range doesn't fully lie within that of top's for this axis.
         # We know they intersect, so it cannot lie fully without either; so they
@@ -273,7 +283,7 @@ def overlayBox(top, bot):
             # Remainder leaks out from both sides.  Can't cut either.
             return intersection, bot
 
-        remainder[axisTag] = minimum,maximum
+        remainder[axisTag] = minimum, maximum
 
     if fullyInside:
         # bot is fully within intersection.  Remainder is empty.
@@ -281,15 +291,16 @@ def overlayBox(top, bot):
 
     return intersection, remainder
 
+
 def cleanupBox(box):
     """Return a sparse copy of `box`, without redundant (default) values.
 
-        >>> cleanupBox({})
-        {}
-        >>> cleanupBox({'wdth': (0.0, 1.0)})
-        {'wdth': (0.0, 1.0)}
-        >>> cleanupBox({'wdth': (-1.0, 1.0)})
-        {}
+    >>> cleanupBox({})
+    {}
+    >>> cleanupBox({'wdth': (0.0, 1.0)})
+    {'wdth': (0.0, 1.0)}
+    >>> cleanupBox({'wdth': (-1.0, 1.0)})
+    {}
 
     """
     return {tag: limit for tag, limit in box.items() if limit != (-1.0, 1.0)}
@@ -299,7 +310,8 @@ def cleanupBox(box):
 # Low level implementation
 #
 
-def addFeatureVariationsRaw(font, table, conditionalSubstitutions, featureTag='rvrn'):
+
+def addFeatureVariationsRaw(font, table, conditionalSubstitutions, featureTag="rvrn"):
     """Low level implementation of addFeatureVariations that directly
     models the possibilities of the FeatureVariations table."""
 
@@ -342,7 +354,9 @@ def addFeatureVariationsRaw(font, table, conditionalSubstitutions, featureTag='r
 
         varFeatureIndices = [varFeatureIndex]
 
-    axisIndices = {axis.axisTag: axisIndex for axisIndex, axis in enumerate(font["fvar"].axes)}
+    axisIndices = {
+        axis.axisTag: axisIndex for axisIndex, axis in enumerate(font["fvar"].axes)
+    }
 
     featureVariationRecords = []
     for conditionSet, lookupIndices in conditionalSubstitutions:
@@ -356,9 +370,17 @@ def addFeatureVariationsRaw(font, table, conditionalSubstitutions, featureTag='r
             conditionTable.append(ct)
         records = []
         for varFeatureIndex in varFeatureIndices:
-            existingLookupIndices = table.FeatureList.FeatureRecord[varFeatureIndex].Feature.LookupListIndex
-            records.append(buildFeatureTableSubstitutionRecord(varFeatureIndex, lookupIndices + existingLookupIndices))
-        featureVariationRecords.append(buildFeatureVariationRecord(conditionTable, records))
+            existingLookupIndices = table.FeatureList.FeatureRecord[
+                varFeatureIndex
+            ].Feature.LookupListIndex
+            records.append(
+                buildFeatureTableSubstitutionRecord(
+                    varFeatureIndex, lookupIndices + existingLookupIndices
+                )
+            )
+        featureVariationRecords.append(
+            buildFeatureVariationRecord(conditionTable, records)
+        )
 
     table.FeatureVariations = buildFeatureVariations(featureVariationRecords)
 
@@ -366,6 +388,7 @@ def addFeatureVariationsRaw(font, table, conditionalSubstitutions, featureTag='r
 #
 # Building GSUB/FeatureVariations internals
 #
+
 
 def buildGSUB():
     """Build a GSUB table from scratch."""
@@ -381,7 +404,7 @@ def buildGSUB():
     gsub.LookupList.Lookup = []
 
     srec = ot.ScriptRecord()
-    srec.ScriptTag = 'DFLT'
+    srec.ScriptTag = "DFLT"
     srec.Script = ot.Script()
     srec.Script.DefaultLangSys = None
     srec.Script.LangSysRecord = []
@@ -415,9 +438,11 @@ def makeSubstitutionsHashable(conditionalSubstitutions):
         condSubst.append((conditionSet, substitutions))
     return condSubst, sorted(allSubstitutions)
 
+
 class ShifterVisitor(TTVisitor):
     def __init__(self, shift):
         self.shift = shift
+
 
 @ShifterVisitor.register_attr(ot.Feature, "LookupListIndex")  # GSUB/GPOS
 def visit(visitor, obj, attr, value):
@@ -425,12 +450,13 @@ def visit(visitor, obj, attr, value):
     value = [l + shift for l in value]
     setattr(obj, attr, value)
 
+
 @ShifterVisitor.register_attr(
-    (ot.SubstLookupRecord, ot.PosLookupRecord),
-    "LookupListIndex"
+    (ot.SubstLookupRecord, ot.PosLookupRecord), "LookupListIndex"
 )
 def visit(visitor, obj, attr, value):
     setattr(obj, attr, visitor.shift + value)
+
 
 def buildSubstitutionLookups(gsub, allSubstitutions):
     """Build the lookups for the glyph substitutions, return a dict mapping
@@ -515,10 +541,15 @@ def sortFeatureList(table):
     elsewhere. This is needed after the feature list has been modified.
     """
     # decorate, sort, undecorate, because we need to make an index remapping table
-    tagIndexFea = [(fea.FeatureTag, index, fea) for index, fea in enumerate(table.FeatureList.FeatureRecord)]
+    tagIndexFea = [
+        (fea.FeatureTag, index, fea)
+        for index, fea in enumerate(table.FeatureList.FeatureRecord)
+    ]
     tagIndexFea.sort()
     table.FeatureList.FeatureRecord = [fea for tag, index, fea in tagIndexFea]
-    featureRemap = dict(zip([index for tag, index, fea in tagIndexFea], range(len(tagIndexFea))))
+    featureRemap = dict(
+        zip([index for tag, index, fea in tagIndexFea], range(len(tagIndexFea)))
+    )
 
     # Remap the feature indices
     remapFeatures(table, featureRemap)
@@ -541,11 +572,12 @@ def remapFeatures(table, featureRemap):
 
 
 def _remapLangSys(langSys, featureRemap):
-    if langSys.ReqFeatureIndex != 0xffff:
+    if langSys.ReqFeatureIndex != 0xFFFF:
         langSys.ReqFeatureIndex = featureRemap[langSys.ReqFeatureIndex]
     langSys.FeatureIndex = [featureRemap[index] for index in langSys.FeatureIndex]
 
 
 if __name__ == "__main__":
     import doctest, sys
+
     sys.exit(doctest.testmod().failed)

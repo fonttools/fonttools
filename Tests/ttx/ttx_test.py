@@ -26,7 +26,6 @@ except ImportError:
 
 
 class TTXTest(unittest.TestCase):
-
     def __init__(self, methodName):
         unittest.TestCase.__init__(self, methodName)
         # Python 3 renamed assertRaisesRegexp to assertRaisesRegex,
@@ -69,9 +68,7 @@ class TTXTest(unittest.TestCase):
     def test_parseOptions_no_args(self):
         with self.assertRaises(getopt.GetoptError) as cm:
             ttx.parseOptions([])
-        self.assertTrue(
-            "Must specify at least one input file" in str(cm.exception)
-        )
+        self.assertTrue("Must specify at least one input file" in str(cm.exception))
 
     def test_parseOptions_invalid_path(self):
         file_path = "invalid_font_path"
@@ -151,9 +148,7 @@ class TTXTest(unittest.TestCase):
                 jobs[i][1:],
                 (
                     os.path.join(self.tempdir, file_names[i]),
-                    os.path.join(
-                        self.tempdir, file_names[i].split(".")[0] + ".ttx"
-                    ),
+                    os.path.join(self.tempdir, file_names[i].split(".")[0] + ".ttx"),
                 ),
             )
 
@@ -435,6 +430,7 @@ def test_options_m():
 def test_options_b():
     tto = ttx.Options([("-b", "")], 1)
     assert tto.recalcBBoxes is False
+
 
 def test_options_e():
     tto = ttx.Options([("-e", "")], 1)
@@ -966,9 +962,7 @@ def test_main_system_exit(tmpdir, monkeypatch):
         inpath = os.path.join("Tests", "ttx", "data", "TestTTF.ttx")
         outpath = tmpdir.join("TestTTF.ttf")
         args = ["-o", str(outpath), inpath]
-        monkeypatch.setattr(
-            ttx, "process", (lambda x, y: raise_exception(SystemExit))
-        )
+        monkeypatch.setattr(ttx, "process", (lambda x, y: raise_exception(SystemExit)))
         ttx.main(args)
 
 

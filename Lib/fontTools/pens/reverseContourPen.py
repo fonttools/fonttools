@@ -23,7 +23,7 @@ class ReverseContourPen(ContourFilterPen):
 
 
 def reversedContour(contour, outputImpliedClosingLine=False):
-    """ Generator that takes a list of pen's (operator, operands) tuples,
+    """Generator that takes a list of pen's (operator, operands) tuples,
     and yields them with the winding direction reversed.
     """
     if not contour:
@@ -40,16 +40,14 @@ def reversedContour(contour, outputImpliedClosingLine=False):
 
     firstType, firstPts = contour.pop(0)
     assert firstType in ("moveTo", "qCurveTo"), (
-        "invalid initial segment type: %r" % firstType)
+        "invalid initial segment type: %r" % firstType
+    )
     firstOnCurve = firstPts[-1]
     if firstType == "qCurveTo":
         # special case for TrueType paths contaning only off-curve points
-        assert firstOnCurve is None, (
-            "off-curve only paths must end with 'None'")
-        assert not contour, (
-            "only one qCurveTo allowed per off-curve path")
-        firstPts = ((firstPts[0],) + tuple(reversed(firstPts[1:-1])) +
-                    (None,))
+        assert firstOnCurve is None, "off-curve only paths must end with 'None'"
+        assert not contour, "only one qCurveTo allowed per off-curve path"
+        firstPts = (firstPts[0],) + tuple(reversed(firstPts[1:-1])) + (None,)
 
     if not contour:
         # contour contains only one segment, nothing to reverse
@@ -67,8 +65,7 @@ def reversedContour(contour, outputImpliedClosingLine=False):
             if outputImpliedClosingLine or firstOnCurve != lastOnCurve:
                 # emit an implied line between the last and first points
                 yield "lineTo", (lastOnCurve,)
-                contour[-1] = (lastType,
-                               tuple(lastPts[:-1]) + (firstOnCurve,))
+                contour[-1] = (lastType, tuple(lastPts[:-1]) + (firstOnCurve,))
 
             if len(contour) > 1:
                 secondType, secondPts = contour[0]
@@ -84,8 +81,7 @@ def reversedContour(contour, outputImpliedClosingLine=False):
                 if secondType == "lineTo" and firstPts != secondPts:
                     del contour[0]
                     if contour:
-                        contour[-1] = (lastType,
-                                       tuple(lastPts[:-1]) + secondPts)
+                        contour[-1] = (lastType, tuple(lastPts[:-1]) + secondPts)
         else:
             # for open paths, the last point will become the first
             yield firstType, (lastOnCurve,)
@@ -94,8 +90,7 @@ def reversedContour(contour, outputImpliedClosingLine=False):
         # we iterate over all segment pairs in reverse order, and yield
         # each one with the off-curve points reversed (if any), and
         # with the on-curve point of the following segment
-        for (curType, curPts), (_, nextPts) in pairwise(
-                contour, reverse=True):
+        for (curType, curPts), (_, nextPts) in pairwise(contour, reverse=True):
             yield curType, tuple(reversed(curPts[:-1])) + (nextPts[-1],)
 
     yield "closePath" if closed else "endPath", ()

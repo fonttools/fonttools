@@ -70,7 +70,7 @@ import pytest
         (list(range(512)), 256, [list(range(256)), list(range(256, 512))]),
         (list(range(512 + 1)), 256, [list(range(256)), list(range(256, 512)), 512]),
         (
-            list(range(256 ** 2)),
+            list(range(256**2)),
             256,
             [list(range(k * 256, k * 256 + 256)) for k in range(256)],
         ),

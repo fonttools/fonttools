@@ -7,9 +7,7 @@ import pytest
 @pytest.mark.parametrize(
     "pathdef, expected",
     [
-
         # Examples from the SVG spec
-
         (
             "M 100 100 L 300 100 L 200 300 z",
             [
@@ -18,7 +16,7 @@ import pytest
                 ("lineTo", ((200.0, 300.0),)),
                 ("lineTo", ((100.0, 100.0),)),
                 ("closePath", ()),
-            ]
+            ],
         ),
         # for Z command behavior when there is multiple subpaths
         (
@@ -32,97 +30,76 @@ import pytest
                 ("lineTo", ((200.0, 300.0),)),
                 ("lineTo", ((100.0, 100.0),)),
                 ("closePath", ()),
-            ]
+            ],
         ),
         (
             "M100,200 C100,100 250,100 250,200 S400,300 400,200",
             [
                 ("moveTo", ((100.0, 200.0),)),
-                ("curveTo", ((100.0, 100.0),
-                             (250.0, 100.0),
-                             (250.0, 200.0))),
-                ("curveTo", ((250.0, 300.0),
-                             (400.0, 300.0),
-                             (400.0, 200.0))),
+                ("curveTo", ((100.0, 100.0), (250.0, 100.0), (250.0, 200.0))),
+                ("curveTo", ((250.0, 300.0), (400.0, 300.0), (400.0, 200.0))),
                 ("endPath", ()),
-            ]
+            ],
         ),
         (
             "M100,200 C100,100 400,100 400,200",
             [
                 ("moveTo", ((100.0, 200.0),)),
-                ("curveTo", ((100.0, 100.0),
-                             (400.0, 100.0),
-                             (400.0, 200.0))),
+                ("curveTo", ((100.0, 100.0), (400.0, 100.0), (400.0, 200.0))),
                 ("endPath", ()),
-            ]
+            ],
         ),
         (
             "M100,500 C25,400 475,400 400,500",
             [
                 ("moveTo", ((100.0, 500.0),)),
-                ("curveTo", ((25.0, 400.0),
-                             (475.0, 400.0),
-                             (400.0, 500.0))),
+                ("curveTo", ((25.0, 400.0), (475.0, 400.0), (400.0, 500.0))),
                 ("endPath", ()),
-            ]
+            ],
         ),
         (
             "M100,800 C175,700 325,700 400,800",
             [
                 ("moveTo", ((100.0, 800.0),)),
-                ("curveTo", ((175.0, 700.0),
-                             (325.0, 700.0),
-                             (400.0, 800.0))),
+                ("curveTo", ((175.0, 700.0), (325.0, 700.0), (400.0, 800.0))),
                 ("endPath", ()),
-            ]
+            ],
         ),
         (
             "M600,200 C675,100 975,100 900,200",
             [
                 ("moveTo", ((600.0, 200.0),)),
-                ("curveTo", ((675.0, 100.0),
-                             (975.0, 100.0),
-                             (900.0, 200.0))),
+                ("curveTo", ((675.0, 100.0), (975.0, 100.0), (900.0, 200.0))),
                 ("endPath", ()),
-            ]
+            ],
         ),
         (
             "M600,500 C600,350 900,650 900,500",
             [
                 ("moveTo", ((600.0, 500.0),)),
-                ("curveTo", ((600.0, 350.0),
-                             (900.0, 650.0),
-                             (900.0, 500.0))),
+                ("curveTo", ((600.0, 350.0), (900.0, 650.0), (900.0, 500.0))),
                 ("endPath", ()),
-            ]
+            ],
         ),
         (
             "M600,800 C625,700 725,700 750,800 S875,900 900,800",
             [
                 ("moveTo", ((600.0, 800.0),)),
-                ("curveTo", ((625.0, 700.0),
-                             (725.0, 700.0),
-                             (750.0, 800.0))),
-                ("curveTo", ((775.0, 900.0),
-                             (875.0, 900.0),
-                             (900.0, 800.0))),
+                ("curveTo", ((625.0, 700.0), (725.0, 700.0), (750.0, 800.0))),
+                ("curveTo", ((775.0, 900.0), (875.0, 900.0), (900.0, 800.0))),
                 ("endPath", ()),
-            ]
+            ],
         ),
         (
             "M200,300 Q400,50 600,300 T1000,300",
             [
                 ("moveTo", ((200.0, 300.0),)),
-                ("qCurveTo", ((400.0, 50.0),
-                              (600.0, 300.0))),
-                ("qCurveTo", ((800.0, 550.0),
-                              (1000.0, 300.0))),
+                ("qCurveTo", ((400.0, 50.0), (600.0, 300.0))),
+                ("qCurveTo", ((800.0, 550.0), (1000.0, 300.0))),
                 ("endPath", ()),
-            ]
+            ],
         ),
         # End examples from SVG spec
-
         # Relative moveto
         (
             "M 0 0 L 50 20 m 50 80 L 300 100 L 200 300 z",
@@ -135,28 +112,25 @@ import pytest
                 ("lineTo", ((200.0, 300.0),)),
                 ("lineTo", ((100.0, 100.0),)),
                 ("closePath", ()),
-            ]
+            ],
         ),
         # Initial smooth and relative curveTo
         (
             "M100,200 s 150,-100 150,0",
             [
                 ("moveTo", ((100.0, 200.0),)),
-                ("curveTo", ((100.0, 200.0),
-                             (250.0, 100.0),
-                             (250.0, 200.0))),
+                ("curveTo", ((100.0, 200.0), (250.0, 100.0), (250.0, 200.0))),
                 ("endPath", ()),
-            ]
+            ],
         ),
         # Initial smooth and relative qCurveTo
         (
             "M100,200 t 150,0",
             [
                 ("moveTo", ((100.0, 200.0),)),
-                ("qCurveTo", ((100.0, 200.0),
-                              (250.0, 200.0))),
+                ("qCurveTo", ((100.0, 200.0), (250.0, 200.0))),
                 ("endPath", ()),
-            ]
+            ],
         ),
         # relative l command
         (
@@ -167,17 +141,16 @@ import pytest
                 ("lineTo", ((200.0, 300.0),)),
                 ("lineTo", ((100.0, 100.0),)),
                 ("closePath", ()),
-            ]
+            ],
         ),
         # relative q command
         (
             "M200,300 q200,-250 400,0",
             [
                 ("moveTo", ((200.0, 300.0),)),
-                ("qCurveTo", ((400.0, 50.0),
-                              (600.0, 300.0))),
+                ("qCurveTo", ((400.0, 50.0), (600.0, 300.0))),
                 ("endPath", ()),
-            ]
+            ],
         ),
         # absolute H command
         (
@@ -188,7 +161,7 @@ import pytest
                 ("lineTo", ((200.0, 300.0),)),
                 ("lineTo", ((100.0, 100.0),)),
                 ("closePath", ()),
-            ]
+            ],
         ),
         # relative h command
         (
@@ -199,7 +172,7 @@ import pytest
                 ("lineTo", ((200.0, 300.0),)),
                 ("lineTo", ((100.0, 100.0),)),
                 ("closePath", ()),
-            ]
+            ],
         ),
         # absolute V command
         (
@@ -210,7 +183,7 @@ import pytest
                 ("lineTo", ((200.0, 300.0),)),
                 ("lineTo", ((100.0, 100.0),)),
                 ("closePath", ()),
-            ]
+            ],
         ),
         # relative v command
         (
@@ -221,9 +194,9 @@ import pytest
                 ("lineTo", ((200.0, 300.0),)),
                 ("lineTo", ((100.0, 100.0),)),
                 ("closePath", ()),
-            ]
+            ],
         ),
-    ]
+    ],
 )
 def test_parse_path(pathdef, expected):
     pen = RecordingPen()
@@ -241,22 +214,16 @@ def test_parse_path(pathdef, expected):
             "M100 100L200 200",
         ),
         # repeated implicit command
-        (
-            "M 100 200 L 200 100 L -100 -200",
-            "M 100 200 L 200 100 -100 -200"
-        ),
+        ("M 100 200 L 200 100 L -100 -200", "M 100 200 L 200 100 -100 -200"),
         # don't need spaces before a minus-sign
-        (
-            "M100,200c10-5,20-10,30-20",
-            "M 100 200 c 10 -5 20 -10 30 -20"
-        ),
+        ("M100,200c10-5,20-10,30-20", "M 100 200 c 10 -5 20 -10 30 -20"),
         # closed paths have an implicit lineTo if they don't
         # end on the same point as the initial moveTo
         (
             "M 100 100 L 300 100 L 200 300 z",
-            "M 100 100 L 300 100 L 200 300 L 100 100 z"
-        )
-    ]
+            "M 100 100 L 300 100 L 200 300 L 100 100 z",
+        ),
+    ],
 )
 def test_equivalent_paths(pathdef1, pathdef2):
     pen1 = RecordingPen()
@@ -273,7 +240,7 @@ def test_exponents():
     pen = RecordingPen()
     parse_path("M-3.4e38 3.4E+38L-3.4E-38,3.4e-38", pen)
     expected = [
-        ("moveTo", ((-3.4e+38, 3.4e+38),)),
+        ("moveTo", ((-3.4e38, 3.4e38),)),
         ("lineTo", ((-3.4e-38, 3.4e-38),)),
         ("endPath", ()),
     ]
@@ -283,12 +250,13 @@ def test_exponents():
     pen = RecordingPen()
     parse_path("M-3e38 3E+38L-3E-38,3e-38", pen)
     expected = [
-        ("moveTo", ((-3e+38, 3e+38),)),
+        ("moveTo", ((-3e38, 3e38),)),
         ("lineTo", ((-3e-38, 3e-38),)),
         ("endPath", ()),
     ]
 
     assert pen.value == expected
+
 
 def test_invalid_implicit_command():
     with pytest.raises(ValueError) as exc_info:
@@ -300,34 +268,13 @@ def test_arc_to_cubic_bezier():
     pen = RecordingPen()
     parse_path("M300,200 h-150 a150,150 0 1,0 150,-150 z", pen)
     expected = [
-        ('moveTo', ((300.0, 200.0),)),
-        ('lineTo', ((150.0, 200.0),)),
-        (
-            'curveTo',
-            (
-                (150.0, 282.842),
-                (217.157, 350.0),
-                (300.0, 350.0)
-            )
-        ),
-        (
-            'curveTo',
-            (
-                (382.842, 350.0),
-                (450.0, 282.842),
-                (450.0, 200.0)
-            )
-        ),
-        (
-            'curveTo',
-            (
-                (450.0, 117.157),
-                (382.842, 50.0),
-                (300.0, 50.0)
-            )
-        ),
-        ('lineTo', ((300.0, 200.0),)),
-        ('closePath', ())
+        ("moveTo", ((300.0, 200.0),)),
+        ("lineTo", ((150.0, 200.0),)),
+        ("curveTo", ((150.0, 282.842), (217.157, 350.0), (300.0, 350.0))),
+        ("curveTo", ((382.842, 350.0), (450.0, 282.842), (450.0, 200.0))),
+        ("curveTo", ((450.0, 117.157), (382.842, 50.0), (300.0, 50.0))),
+        ("lineTo", ((300.0, 200.0),)),
+        ("closePath", ()),
     ]
 
     result = list(pen.value)
@@ -339,9 +286,7 @@ def test_arc_to_cubic_bezier():
             assert pt1 == pytest.approx(pt2, rel=1e-5)
 
 
-
 class ArcRecordingPen(RecordingPen):
-
     def arcTo(self, rx, ry, rotation, arc_large, arc_sweep, end_point):
         self.value.append(
             ("arcTo", (rx, ry, rotation, arc_large, arc_sweep, end_point))
@@ -352,11 +297,11 @@ def test_arc_pen_with_arcTo():
     pen = ArcRecordingPen()
     parse_path("M300,200 h-150 a150,150 0 1,0 150,-150 z", pen)
     expected = [
-        ('moveTo', ((300.0, 200.0),)),
-        ('lineTo', ((150.0, 200.0),)),
-        ('arcTo', (150.0, 150.0, 0.0, True, False, (300.0, 50.0))),
-        ('lineTo', ((300.0, 200.0),)),
-        ('closePath', ())
+        ("moveTo", ((300.0, 200.0),)),
+        ("lineTo", ((150.0, 200.0),)),
+        ("arcTo", (150.0, 150.0, 0.0, True, False, (300.0, 50.0))),
+        ("lineTo", ((300.0, 200.0),)),
+        ("closePath", ()),
     ]
 
     assert pen.value == expected
@@ -400,13 +345,12 @@ def test_arc_pen_with_arcTo():
         (
             "M12 7a5 5 0 105 5 5 5 0 00-5-5",
             [
-
                 ("moveTo", ((12.0, 7.0),)),
                 ("arcTo", (5.0, 5.0, 0.0, True, False, (17.0, 12.0))),
                 ("arcTo", (5.0, 5.0, 0.0, False, False, (12.0, 7.0))),
                 ("endPath", ()),
             ],
-        )
+        ),
     ],
 )
 def test_arc_flags_without_spaces(path, expected):
@@ -415,9 +359,7 @@ def test_arc_flags_without_spaces(path, expected):
     assert pen.value == expected
 
 
-@pytest.mark.parametrize(
-    "path", ["A", "A0,0,0,0,0,0", "A 0 0 0 0 0 0 0 0 0 0 0 0 0"]
-)
+@pytest.mark.parametrize("path", ["A", "A0,0,0,0,0,0", "A 0 0 0 0 0 0 0 0 0 0 0 0 0"])
 def test_invalid_arc_not_enough_args(path):
     pen = ArcRecordingPen()
     with pytest.raises(ValueError, match="Invalid arc command") as e:

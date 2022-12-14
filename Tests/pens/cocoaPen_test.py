@@ -7,10 +7,10 @@ try:
 
     PATH_ELEMENTS = {
         # NSBezierPathElement key      desc
-        NSBezierPathElementMoveTo:    'moveto',
-        NSBezierPathElementLineTo:    'lineto',
-        NSBezierPathElementCurveTo:   'curveto',
-        NSBezierPathElementClosePath: 'close',
+        NSBezierPathElementMoveTo: "moveto",
+        NSBezierPathElementLineTo: "lineto",
+        NSBezierPathElementCurveTo: "curveto",
+        NSBezierPathElementClosePath: "close",
     }
 
     PYOBJC_AVAILABLE = True
@@ -45,7 +45,7 @@ class CocoaPenTest(unittest.TestCase):
         draw(pen)
         self.assertEqual(
             "moveto 50.0 0.0 lineto 50.0 500.0 lineto 200.0 500.0 curveto 350.0 500.0 450.0 400.0 450.0 250.0 curveto 450.0 100.0 350.0 0.0 200.0 0.0 close ",
-            cocoaPathToString(pen.path)
+            cocoaPathToString(pen.path),
         )
 
     def test_empty(self):
@@ -53,6 +53,7 @@ class CocoaPenTest(unittest.TestCase):
         self.assertEqual("", cocoaPathToString(pen.path))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
+
     sys.exit(unittest.main())

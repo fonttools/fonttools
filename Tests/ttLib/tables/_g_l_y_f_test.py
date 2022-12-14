@@ -27,139 +27,137 @@ import unittest
 
 
 class GlyphCoordinatesTest(object):
-
     def test_translate(self):
-        g = GlyphCoordinates([(1,2)])
-        g.translate((.5,0))
-        assert g == GlyphCoordinates([(1.5,2.0)])
+        g = GlyphCoordinates([(1, 2)])
+        g.translate((0.5, 0))
+        assert g == GlyphCoordinates([(1.5, 2.0)])
 
     def test_scale(self):
-        g = GlyphCoordinates([(1,2)])
-        g.scale((.5,0))
-        assert g == GlyphCoordinates([(0.5,0.0)])
+        g = GlyphCoordinates([(1, 2)])
+        g.scale((0.5, 0))
+        assert g == GlyphCoordinates([(0.5, 0.0)])
 
     def test_transform(self):
-        g = GlyphCoordinates([(1,2)])
-        g.transform(((.5,0),(.2,.5)))
-        assert g[0] == GlyphCoordinates([(0.9,1.0)])[0]
+        g = GlyphCoordinates([(1, 2)])
+        g.transform(((0.5, 0), (0.2, 0.5)))
+        assert g[0] == GlyphCoordinates([(0.9, 1.0)])[0]
 
     def test__eq__(self):
-        g = GlyphCoordinates([(1,2)])
-        g2 = GlyphCoordinates([(1.0,2)])
-        g3 = GlyphCoordinates([(1.5,2)])
+        g = GlyphCoordinates([(1, 2)])
+        g2 = GlyphCoordinates([(1.0, 2)])
+        g3 = GlyphCoordinates([(1.5, 2)])
         assert g == g2
         assert not g == g3
         assert not g2 == g3
         assert not g == object()
 
     def test__ne__(self):
-        g = GlyphCoordinates([(1,2)])
-        g2 = GlyphCoordinates([(1.0,2)])
-        g3 = GlyphCoordinates([(1.5,2)])
+        g = GlyphCoordinates([(1, 2)])
+        g2 = GlyphCoordinates([(1.0, 2)])
+        g3 = GlyphCoordinates([(1.5, 2)])
         assert not (g != g2)
         assert g != g3
         assert g2 != g3
         assert g != object()
 
     def test__pos__(self):
-        g = GlyphCoordinates([(1,2)])
+        g = GlyphCoordinates([(1, 2)])
         g2 = +g
         assert g == g2
 
     def test__neg__(self):
-        g = GlyphCoordinates([(1,2)])
+        g = GlyphCoordinates([(1, 2)])
         g2 = -g
         assert g2 == GlyphCoordinates([(-1, -2)])
 
-    @pytest.mark.skipif(sys.version_info[0] < 3,
-                        reason="__round___ requires Python 3")
+    @pytest.mark.skipif(sys.version_info[0] < 3, reason="__round___ requires Python 3")
     def test__round__(self):
-        g = GlyphCoordinates([(-1.5,2)])
+        g = GlyphCoordinates([(-1.5, 2)])
         g2 = round(g)
-        assert g2 == GlyphCoordinates([(-1,2)])
+        assert g2 == GlyphCoordinates([(-1, 2)])
 
     def test__add__(self):
-        g1 = GlyphCoordinates([(1,2)])
-        g2 = GlyphCoordinates([(3,4)])
-        g3 = GlyphCoordinates([(4,6)])
+        g1 = GlyphCoordinates([(1, 2)])
+        g2 = GlyphCoordinates([(3, 4)])
+        g3 = GlyphCoordinates([(4, 6)])
         assert g1 + g2 == g3
-        assert g1 + (1, 1) == GlyphCoordinates([(2,3)])
+        assert g1 + (1, 1) == GlyphCoordinates([(2, 3)])
         with pytest.raises(TypeError) as excinfo:
             assert g1 + object()
-        assert 'unsupported operand' in str(excinfo.value)
+        assert "unsupported operand" in str(excinfo.value)
 
     def test__sub__(self):
-        g1 = GlyphCoordinates([(1,2)])
-        g2 = GlyphCoordinates([(3,4)])
-        g3 = GlyphCoordinates([(-2,-2)])
+        g1 = GlyphCoordinates([(1, 2)])
+        g2 = GlyphCoordinates([(3, 4)])
+        g3 = GlyphCoordinates([(-2, -2)])
         assert g1 - g2 == g3
-        assert g1 - (1, 1) == GlyphCoordinates([(0,1)])
+        assert g1 - (1, 1) == GlyphCoordinates([(0, 1)])
         with pytest.raises(TypeError) as excinfo:
             assert g1 - object()
-        assert 'unsupported operand' in str(excinfo.value)
+        assert "unsupported operand" in str(excinfo.value)
 
     def test__rsub__(self):
-        g = GlyphCoordinates([(1,2)])
+        g = GlyphCoordinates([(1, 2)])
         # other + (-self)
-        assert (1, 1) - g == GlyphCoordinates([(0,-1)])
+        assert (1, 1) - g == GlyphCoordinates([(0, -1)])
 
     def test__mul__(self):
-        g = GlyphCoordinates([(1,2)])
-        assert g * 3 == GlyphCoordinates([(3,6)])
-        assert g * (3,2) == GlyphCoordinates([(3,4)])
-        assert g * (1,1) == g
+        g = GlyphCoordinates([(1, 2)])
+        assert g * 3 == GlyphCoordinates([(3, 6)])
+        assert g * (3, 2) == GlyphCoordinates([(3, 4)])
+        assert g * (1, 1) == g
         with pytest.raises(TypeError) as excinfo:
             assert g * object()
-        assert 'unsupported operand' in str(excinfo.value)
+        assert "unsupported operand" in str(excinfo.value)
 
     def test__truediv__(self):
-        g = GlyphCoordinates([(1,2)])
-        assert g / 2 == GlyphCoordinates([(.5,1)])
-        assert g / (1, 2) == GlyphCoordinates([(1,1)])
+        g = GlyphCoordinates([(1, 2)])
+        assert g / 2 == GlyphCoordinates([(0.5, 1)])
+        assert g / (1, 2) == GlyphCoordinates([(1, 1)])
         assert g / (1, 1) == g
         with pytest.raises(TypeError) as excinfo:
             assert g / object()
-        assert 'unsupported operand' in str(excinfo.value)
+        assert "unsupported operand" in str(excinfo.value)
 
     def test__iadd__(self):
-        g = GlyphCoordinates([(1,2)])
-        g += (.5,0)
+        g = GlyphCoordinates([(1, 2)])
+        g += (0.5, 0)
         assert g == GlyphCoordinates([(1.5, 2.0)])
-        g2 = GlyphCoordinates([(3,4)])
+        g2 = GlyphCoordinates([(3, 4)])
         g += g2
         assert g == GlyphCoordinates([(4.5, 6.0)])
 
     def test__isub__(self):
-        g = GlyphCoordinates([(1,2)])
-        g -= (.5, 0)
+        g = GlyphCoordinates([(1, 2)])
+        g -= (0.5, 0)
         assert g == GlyphCoordinates([(0.5, 2.0)])
-        g2 = GlyphCoordinates([(3,4)])
+        g2 = GlyphCoordinates([(3, 4)])
         g -= g2
         assert g == GlyphCoordinates([(-2.5, -2.0)])
 
     def __test__imul__(self):
-        g = GlyphCoordinates([(1,2)])
-        g *= (2,.5)
+        g = GlyphCoordinates([(1, 2)])
+        g *= (2, 0.5)
         g *= 2
         assert g == GlyphCoordinates([(4.0, 2.0)])
-        g = GlyphCoordinates([(1,2)])
+        g = GlyphCoordinates([(1, 2)])
         g *= 2
         assert g == GlyphCoordinates([(2, 4)])
 
     def test__itruediv__(self):
-        g = GlyphCoordinates([(1,3)])
-        g /= (.5,1.5)
+        g = GlyphCoordinates([(1, 3)])
+        g /= (0.5, 1.5)
         g /= 2
         assert g == GlyphCoordinates([(1.0, 1.0)])
 
     def test__bool__(self):
         g = GlyphCoordinates([])
         assert bool(g) == False
-        g = GlyphCoordinates([(0,0), (0.,0)])
+        g = GlyphCoordinates([(0, 0), (0.0, 0)])
         assert bool(g) == True
-        g = GlyphCoordinates([(0,0), (1,0)])
+        g = GlyphCoordinates([(0, 0), (1, 0)])
         assert bool(g) == True
-        g = GlyphCoordinates([(0,.5), (0,0)])
+        g = GlyphCoordinates([(0, 0.5), (0, 0)])
         assert bool(g) == True
 
     def test_double_precision_float(self):
@@ -179,7 +177,7 @@ class GlyphCoordinatesTest(object):
 
 
 CURR_DIR = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
-DATA_DIR = os.path.join(CURR_DIR, 'data')
+DATA_DIR = os.path.join(CURR_DIR, "data")
 
 GLYF_TTX = os.path.join(DATA_DIR, "_g_l_y_f_outline_flag_bit6.ttx")
 GLYF_BIN = os.path.join(DATA_DIR, "_g_l_y_f_outline_flag_bit6.glyf.bin")
@@ -189,11 +187,10 @@ MAXP_BIN = os.path.join(DATA_DIR, "_g_l_y_f_outline_flag_bit6.maxp.bin")
 
 
 def strip_ttLibVersion(string):
-    return re.sub(' ttLibVersion=".*"', '', string)
+    return re.sub(' ttLibVersion=".*"', "", string)
 
 
 class GlyfTableTest(unittest.TestCase):
-
     def __init__(self, methodName):
         unittest.TestCase.__init__(self, methodName)
         # Python 3 renamed assertRaisesRegexp to assertRaisesRegex,
@@ -203,26 +200,26 @@ class GlyfTableTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        with open(GLYF_BIN, 'rb') as f:
+        with open(GLYF_BIN, "rb") as f:
             cls.glyfData = f.read()
-        with open(HEAD_BIN, 'rb') as f:
+        with open(HEAD_BIN, "rb") as f:
             cls.headData = f.read()
-        with open(LOCA_BIN, 'rb') as f:
+        with open(LOCA_BIN, "rb") as f:
             cls.locaData = f.read()
-        with open(MAXP_BIN, 'rb') as f:
+        with open(MAXP_BIN, "rb") as f:
             cls.maxpData = f.read()
-        with open(GLYF_TTX, 'r') as f:
+        with open(GLYF_TTX, "r") as f:
             cls.glyfXML = strip_ttLibVersion(f.read()).splitlines()
 
     def test_toXML(self):
         font = TTFont(sfntVersion="\x00\x01\x00\x00")
-        glyfTable = font['glyf'] = newTable('glyf')
-        font['head'] = newTable('head')
-        font['loca'] = newTable('loca')
-        font['maxp'] = newTable('maxp')
-        font['maxp'].decompile(self.maxpData, font)
-        font['head'].decompile(self.headData, font)
-        font['loca'].decompile(self.locaData, font)
+        glyfTable = font["glyf"] = newTable("glyf")
+        font["head"] = newTable("head")
+        font["loca"] = newTable("loca")
+        font["maxp"] = newTable("maxp")
+        font["maxp"].decompile(self.maxpData, font)
+        font["head"].decompile(self.headData, font)
+        font["loca"].decompile(self.locaData, font)
         glyfTable.decompile(self.glyfData, font)
         out = StringIO()
         font.saveXML(out)
@@ -232,7 +229,7 @@ class GlyfTableTest(unittest.TestCase):
     def test_fromXML(self):
         font = TTFont(sfntVersion="\x00\x01\x00\x00")
         font.importXML(GLYF_TTX)
-        glyfTable = font['glyf']
+        glyfTable = font["glyf"]
         glyfData = glyfTable.compile(font)
         self.assertEqual(glyfData, self.glyfData)
 
@@ -250,7 +247,9 @@ class GlyfTableTest(unittest.TestCase):
         glyph_B = pen_B.glyph()
         glyphSet["A"] = glyph_A
         glyphSet["B"] = glyph_B
-        with self.assertRaisesRegex(TTLibError, "glyph '.' contains a recursive component reference"):
+        with self.assertRaisesRegex(
+            TTLibError, "glyph '.' contains a recursive component reference"
+        ):
             glyph_A.getCoordinates(glyphSet)
 
     def test_trim_remove_hinting_composite_glyph(self):
@@ -260,7 +259,7 @@ class GlyfTableTest(unittest.TestCase):
         pen.addComponent("dummy", (1, 0, 0, 1, 0, 0))
         composite = pen.glyph()
         p = ttProgram.Program()
-        p.fromAssembly(['SVTCA[0]'])
+        p.fromAssembly(["SVTCA[0]"])
         composite.program = p
         glyphSet["composite"] = composite
 
@@ -294,22 +293,24 @@ class GlyfTableTest(unittest.TestCase):
         # glyph00003 contains a bit 6 flag on the first point,
         # which triggered the issue
         font.importXML(GLYF_TTX)
-        glyfTable = font['glyf']
+        glyfTable = font["glyf"]
         pen = RecordingPen()
         glyfTable["glyph00003"].draw(pen, glyfTable=glyfTable)
-        expected = [('moveTo', ((501, 1430),)),
-                    ('lineTo', ((683, 1430),)),
-                    ('lineTo', ((1172, 0),)),
-                    ('lineTo', ((983, 0),)),
-                    ('lineTo', ((591, 1193),)),
-                    ('lineTo', ((199, 0),)),
-                    ('lineTo', ((12, 0),)),
-                    ('closePath', ()),
-                    ('moveTo', ((249, 514),)),
-                    ('lineTo', ((935, 514),)),
-                    ('lineTo', ((935, 352),)),
-                    ('lineTo', ((249, 352),)),
-                    ('closePath', ())]
+        expected = [
+            ("moveTo", ((501, 1430),)),
+            ("lineTo", ((683, 1430),)),
+            ("lineTo", ((1172, 0),)),
+            ("lineTo", ((983, 0),)),
+            ("lineTo", ((591, 1193),)),
+            ("lineTo", ((199, 0),)),
+            ("lineTo", ((12, 0),)),
+            ("closePath", ()),
+            ("moveTo", ((249, 514),)),
+            ("lineTo", ((935, 514),)),
+            ("lineTo", ((935, 352),)),
+            ("lineTo", ((249, 352),)),
+            ("closePath", ()),
+        ]
         self.assertEqual(pen.value, expected)
 
     def test_bit6_draw_to_pointpen(self):
@@ -318,22 +319,22 @@ class GlyfTableTest(unittest.TestCase):
         # glyph00003 contains a bit 6 flag on the first point
         # which triggered the issue
         font.importXML(GLYF_TTX)
-        glyfTable = font['glyf']
+        glyfTable = font["glyf"]
         pen = RecordingPointPen()
         glyfTable["glyph00003"].drawPoints(pen, glyfTable=glyfTable)
         expected = [
-            ('beginPath', (), {}),
-            ('addPoint', ((501, 1430), 'line', False, None), {}),
-            ('addPoint', ((683, 1430), 'line', False, None), {}),
-            ('addPoint', ((1172, 0), 'line', False, None), {}),
-            ('addPoint', ((983, 0), 'line', False, None), {}),
+            ("beginPath", (), {}),
+            ("addPoint", ((501, 1430), "line", False, None), {}),
+            ("addPoint", ((683, 1430), "line", False, None), {}),
+            ("addPoint", ((1172, 0), "line", False, None), {}),
+            ("addPoint", ((983, 0), "line", False, None), {}),
         ]
-        self.assertEqual(pen.value[:len(expected)], expected)
+        self.assertEqual(pen.value[: len(expected)], expected)
 
     def test_draw_vs_drawpoints(self):
         font = TTFont(sfntVersion="\x00\x01\x00\x00")
         font.importXML(GLYF_TTX)
-        glyfTable = font['glyf']
+        glyfTable = font["glyf"]
         pen1 = RecordingPen()
         pen2 = RecordingPen()
         glyfTable["glyph00003"].draw(pen1, glyfTable)
@@ -343,12 +344,12 @@ class GlyfTableTest(unittest.TestCase):
     def test_compile_empty_table(self):
         font = TTFont(sfntVersion="\x00\x01\x00\x00")
         font.importXML(GLYF_TTX)
-        glyfTable = font['glyf']
+        glyfTable = font["glyf"]
         # set all glyphs to zero contours
         glyfTable.glyphs = {glyphName: Glyph() for glyphName in font.getGlyphOrder()}
         glyfData = glyfTable.compile(font)
         self.assertEqual(glyfData, b"\x00")
-        self.assertEqual(list(font["loca"]), [0] * (font["maxp"].numGlyphs+1))
+        self.assertEqual(list(font["loca"]), [0] * (font["maxp"].numGlyphs + 1))
 
     def test_decompile_empty_table(self):
         font = TTFont()
@@ -372,16 +373,16 @@ class GlyfTableTest(unittest.TestCase):
         font["glyf"] = newTable("glyf")
         font["glyf"].decompile(b"\x00", font)
         font["hmtx"] = newTable("hmtx")
-        font["hmtx"].metrics = {".notdef": (100,0)}
+        font["hmtx"].metrics = {".notdef": (100, 0)}
         font["head"] = newTable("head")
         font["head"].unitsPerEm = 1000
         self.assertEqual(
-            font["glyf"].getPhantomPoints(".notdef", font, 0), 
-            [(0, 0), (100, 0), (0, 0), (0, -1000)]
+            font["glyf"].getPhantomPoints(".notdef", font, 0),
+            [(0, 0), (100, 0), (0, 0), (0, -1000)],
         )
 
-class GlyphTest:
 
+class GlyphTest:
     def test_getCoordinates(self):
         glyphSet = {}
         pen = TTGlyphPen(glyphSet)
@@ -472,18 +473,30 @@ class GlyphTest:
         assert flags == array.array("B", [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
         assert list(sum(coords, ())) == pytest.approx(
             [
-                0, 0,
-                100, 0,
-                100, 100,
-                0, 100,
-                100, 100,
-                200, 100,
-                200, 200,
-                100, 200,
-                200, 200,
-                270.7107, 270.7107,
-                200.0, 341.4214,
-                129.2893, 270.7107,
+                0,
+                0,
+                100,
+                0,
+                100,
+                100,
+                0,
+                100,
+                100,
+                100,
+                200,
+                100,
+                200,
+                200,
+                100,
+                200,
+                200,
+                200,
+                270.7107,
+                270.7107,
+                200.0,
+                341.4214,
+                129.2893,
+                270.7107,
             ]
         )
 
@@ -513,7 +526,6 @@ class GlyphTest:
 
 
 class GlyphComponentTest:
-
     def test_toXML_no_transform(self):
         comp = GlyphComponent()
         comp.glyphName = "a"
@@ -625,7 +637,7 @@ class GlyphComponentTest:
         assert hasattr(comp, "transform")
         for value, expected in zip(
             itertools.chain(*comp.transform),
-            [0.5999756, -0.2000122, 0.2000122, 0.2999878]
+            [0.5999756, -0.2000122, 0.2000122, 0.2999878],
         ):
             assert value == pytest.approx(expected)
 
@@ -655,4 +667,5 @@ class GlyphComponentTest:
 
 if __name__ == "__main__":
     import sys
+
     sys.exit(unittest.main())

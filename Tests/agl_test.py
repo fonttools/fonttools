@@ -12,7 +12,8 @@ class AglToUnicodeTest(unittest.TestCase):
         self.assertEqual(agl.toUnicode("uni20ac"), "")
         self.assertEqual(
             agl.toUnicode("Lcommaaccent_uni20AC0308_u1040C.alternate"),
-            "\u013B\u20AC\u0308\U0001040C")
+            "\u013B\u20AC\u0308\U0001040C",
+        )
         self.assertEqual(agl.toUnicode("Lcommaaccent_uni013B_u013B"), "ĻĻĻ")
         self.assertEqual(agl.toUnicode("foo"), "")
         self.assertEqual(agl.toUnicode(".notdef"), "")
@@ -55,4 +56,5 @@ class AglToUnicodeTest(unittest.TestCase):
 
 if __name__ == "__main__":
     import sys
+
     sys.exit(unittest.main())

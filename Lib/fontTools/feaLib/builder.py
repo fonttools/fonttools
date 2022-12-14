@@ -769,8 +769,8 @@ class Builder(object):
                 varidx_map = store.optimize()
 
                 gdef.remap_device_varidxes(varidx_map)
-                if 'GPOS' in self.font:
-                    self.font['GPOS'].table.remap_device_varidxes(varidx_map)
+                if "GPOS" in self.font:
+                    self.font["GPOS"].table.remap_device_varidxes(varidx_map)
             VariableScalar.clear_cache()
         if any(
             (
@@ -1340,7 +1340,9 @@ class Builder(object):
     # GSUB 5/6
     def add_chain_context_subst(self, location, prefix, glyphs, suffix, lookups):
         if not all(glyphs) or not all(prefix) or not all(suffix):
-            raise FeatureLibError("Empty glyph class in contextual substitution", location)
+            raise FeatureLibError(
+                "Empty glyph class in contextual substitution", location
+            )
         lookup = self.get_lookup_(location, ChainContextSubstBuilder)
         lookup.rules.append(
             ChainContextualRule(
@@ -1350,7 +1352,9 @@ class Builder(object):
 
     def add_single_subst_chained_(self, location, prefix, suffix, mapping):
         if not mapping or not all(prefix) or not all(suffix):
-            raise FeatureLibError("Empty glyph class in contextual substitution", location)
+            raise FeatureLibError(
+                "Empty glyph class in contextual substitution", location
+            )
         # https://github.com/fonttools/fonttools/issues/512
         chain = self.get_lookup_(location, ChainContextSubstBuilder)
         sub = chain.find_chainable_single_subst(set(mapping.keys()))
@@ -1378,8 +1382,12 @@ class Builder(object):
             lookup = self.get_lookup_(location, SinglePosBuilder)
             for glyphs, value in pos:
                 if not glyphs:
-                    raise FeatureLibError("Empty glyph class in positioning rule", location)
-                otValueRecord = self.makeOpenTypeValueRecord(location, value, pairPosContext=False)
+                    raise FeatureLibError(
+                        "Empty glyph class in positioning rule", location
+                    )
+                otValueRecord = self.makeOpenTypeValueRecord(
+                    location, value, pairPosContext=False
+                )
                 for glyph in glyphs:
                     try:
                         lookup.add_pos(location, glyph, otValueRecord)
@@ -1389,9 +1397,7 @@ class Builder(object):
     # GPOS 2
     def add_class_pair_pos(self, location, glyphclass1, value1, glyphclass2, value2):
         if not glyphclass1 or not glyphclass2:
-            raise FeatureLibError(
-                "Empty glyph class in positioning rule", location
-            )
+            raise FeatureLibError("Empty glyph class in positioning rule", location)
         lookup = self.get_lookup_(location, PairPosBuilder)
         v1 = self.makeOpenTypeValueRecord(location, value1, pairPosContext=True)
         v2 = self.makeOpenTypeValueRecord(location, value2, pairPosContext=True)
@@ -1459,7 +1465,9 @@ class Builder(object):
     # GPOS 7/8
     def add_chain_context_pos(self, location, prefix, glyphs, suffix, lookups):
         if not all(glyphs) or not all(prefix) or not all(suffix):
-            raise FeatureLibError("Empty glyph class in contextual positioning rule", location)
+            raise FeatureLibError(
+                "Empty glyph class in contextual positioning rule", location
+            )
         lookup = self.get_lookup_(location, ChainContextPosBuilder)
         lookup.rules.append(
             ChainContextualRule(
@@ -1469,7 +1477,9 @@ class Builder(object):
 
     def add_single_pos_chained_(self, location, prefix, suffix, pos):
         if not pos or not all(prefix) or not all(suffix):
-            raise FeatureLibError("Empty glyph class in contextual positioning rule", location)
+            raise FeatureLibError(
+                "Empty glyph class in contextual positioning rule", location
+            )
         # https://github.com/fonttools/fonttools/issues/514
         chain = self.get_lookup_(location, ChainContextPosBuilder)
         targets = []
@@ -1480,7 +1490,9 @@ class Builder(object):
             if value is None:
                 subs.append(None)
                 continue
-            otValue = self.makeOpenTypeValueRecord(location, value, pairPosContext=False)
+            otValue = self.makeOpenTypeValueRecord(
+                location, value, pairPosContext=False
+            )
             sub = chain.find_chainable_single_pos(targets, glyphs, otValue)
             if sub is None:
                 sub = self.get_chained_lookup_(location, SinglePosBuilder)
@@ -1499,7 +1511,9 @@ class Builder(object):
             for markClassDef in markClass.definitions:
                 for mark in markClassDef.glyphs.glyphSet():
                     if mark not in lookupBuilder.marks:
-                        otMarkAnchor = self.makeOpenTypeAnchor(location, markClassDef.anchor)
+                        otMarkAnchor = self.makeOpenTypeAnchor(
+                            location, markClassDef.anchor
+                        )
                         lookupBuilder.marks[mark] = (markClass.name, otMarkAnchor)
                     else:
                         existingMarkClass = lookupBuilder.marks[mark][0]
@@ -1592,11 +1606,15 @@ class Builder(object):
         for dim in ("x", "y"):
             if not isinstance(getattr(anchor, dim), VariableScalar):
                 continue
-            if getattr(anchor, dim+"DeviceTable") is not None:
-                raise FeatureLibError("Can't define a device coordinate and variable scalar", location)
+            if getattr(anchor, dim + "DeviceTable") is not None:
+                raise FeatureLibError(
+                    "Can't define a device coordinate and variable scalar", location
+                )
             if not self.varstorebuilder:
-                raise FeatureLibError("Can't define a variable scalar in a non-variable font", location)
-            varscalar = getattr(anchor,dim)
+                raise FeatureLibError(
+                    "Can't define a variable scalar in a non-variable font", location
+                )
+            varscalar = getattr(anchor, dim)
             varscalar.axes = self.axes
             default, index = varscalar.add_to_variation_store(self.varstorebuilder)
             setattr(anchor, dim, default)
@@ -1607,7 +1625,9 @@ class Builder(object):
                     deviceY = buildVarDevTable(index)
                 variable = True
 
-        otlanchor = otl.buildAnchor(anchor.x, anchor.y, anchor.contourpoint, deviceX, deviceY)
+        otlanchor = otl.buildAnchor(
+            anchor.x, anchor.y, anchor.contourpoint, deviceX, deviceY
+        )
         if variable:
             otlanchor.Format = 3
         return otlanchor
@@ -1617,7 +1637,6 @@ class Builder(object):
         for _, name, isDevice, _ in otBase.valueRecordFormat
         if not name.startswith("Reserved")
     }
-
 
     def makeOpenTypeValueRecord(self, location, v, pairPosContext):
         """ast.ValueRecord --> otBase.ValueRecord"""
@@ -1636,9 +1655,14 @@ class Builder(object):
                 otDeviceName = otName[0:4] + "Device"
                 feaDeviceName = otDeviceName[0].lower() + otDeviceName[1:]
                 if getattr(v, feaDeviceName):
-                    raise FeatureLibError("Can't define a device coordinate and variable scalar", location)
+                    raise FeatureLibError(
+                        "Can't define a device coordinate and variable scalar", location
+                    )
                 if not self.varstorebuilder:
-                    raise FeatureLibError("Can't define a variable scalar in a non-variable font", location)
+                    raise FeatureLibError(
+                        "Can't define a variable scalar in a non-variable font",
+                        location,
+                    )
                 val.axes = self.axes
                 default, index = val.add_to_variation_store(self.varstorebuilder)
                 vr[otName] = default
