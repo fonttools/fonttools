@@ -272,8 +272,10 @@ def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
 		endPts = control.endPts
 
 		for i,(delta,support) in enumerate(zip(deltas[1:], supports[1:])):
+			# For Composite glyphs we want to write at least one entry.
 			if all(v == 0 for v in delta.array) and not isComposite:
 				continue
+			isComposite = False
 			var = TupleVariation(support, delta)
 			if optimize:
 				delta_opt = iup_delta_optimize(delta, origCoords, endPts, tolerance=tolerance)
