@@ -106,7 +106,7 @@ class Merger(object):
         allTags = reduce(set.union, (list(font.keys()) for font in fonts), set())
         allTags.remove("GlyphOrder")
 
-        for tag in allTags:
+        for tag in sorted(allTags):
             if tag in self.options.drop_tables:
                 continue
 
