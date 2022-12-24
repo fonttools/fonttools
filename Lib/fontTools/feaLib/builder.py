@@ -1,4 +1,5 @@
 from fontTools.misc import sstruct
+from fontTools.misc.roundTools import otRound
 from fontTools.misc.textTools import Tag, tostr, binary2num, safeEval
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.feaLib.lookupDebugInfo import (
@@ -103,6 +104,7 @@ class Builder(object):
             "hhea",
             "name",
             "vhea",
+            "vmtx",
             "STAT",
         ]
     )
@@ -172,6 +174,8 @@ class Builder(object):
         self.hhea_ = {}
         # for table 'vhea'
         self.vhea_ = {}
+        # for table 'vmtx'
+        self.vmtx_ = {}
         # for table 'STAT'
         self.stat_ = {}
         # for conditionsets
@@ -205,6 +209,8 @@ class Builder(object):
             self.build_name()
         if "OS/2" in tables:
             self.build_OS_2()
+        if "vmtx" in tables:
+            self.build_vmtx()
         if "STAT" in tables:
             self.build_STAT()
         for tag in ("GPOS", "GSUB"):
@@ -371,6 +377,87 @@ class Builder(object):
             table.descent = self.vhea_["verttypodescender"]
         if "verttypolinegap" in self.vhea_:
             table.lineGap = self.vhea_["verttypolinegap"]
+
+    def build_vmtx(self):
+        if not self.vmtx_:
+            return
+        table = self.font.get("vmtx")
+        if not table:
+            # The font should already have a vmtx table to apply feature file
+            # overrides on top of. If there is no vmtx at this point then
+            # there is probably something wrong upstream
+            return
+
+        outlineTables = ("glyf", "CFF ", "CFF2")
+        if not any(k in self.font for k in outlineTables):
+            log.info(
+                "A 'glyf', 'CFF ', or 'CFF2' table is required to build vmtx."
+            )
+            return
+
+        for tableName in outlineTables:
+            if tableName in self.font:
+                outlineTable = self.font[tableName]
+                break
+
+        if outlineTable.tableTag in ("CFF ", "CFF2"):
+            glyphBounds = {}
+            vorgTable = self.font.get("VORG")
+            if not vorgTable:
+                vorgTable = self.font["VORG"] = newTable("VORG")
+                vorgTable.decompile(b"\0" * 36, self.font)
+                vorgTable.majorVersion = 1
+                vorgTable.minorVersion = 0
+                vorgTable.VOriginRecords = {}
+            # For the VORG table ufo2ft finds the most frequent
+            # verticalOrigin and uses that to set defaultVertOriginY, but
+            # makeotf uses the OS/2.TypoAscender as stated in the
+            # OpenType Feature File Specification 9.h
+            vorgTable.defaultVertOriginY = self.font['OS/2'].sTypoAscender
+
+            topDict = outlineTable.cff[0]
+            glyphSet = self.font.getGlyphSet()
+
+        for glyphName, vmtxKeys in self.vmtx_.items():
+            # This assumes that a vmtx table has already been created so
+            # height and tsb should already exist. If the user only wants to
+            # override one of VertAdvanceY or VertOriginY via feature file
+            # then the other value will come from the existing table
+            height, tsb = table.metrics[glyphName]
+            if outlineTable.tableTag == "glyf":
+                glyph = outlineTable[glyphName]
+                yMax = glyph.yMax
+            else:
+                charString = topDict.CharStrings[glyphName]
+                yMax = 0
+                bounds = charString.calcBounds(glyphSet)
+                if bounds:
+                    yMax = otRound(bounds[3])
+                    glyphBounds[glyphName] = yMax
+
+            if "vertadvancey" in vmtxKeys:
+                height = vmtxKeys["vertadvancey"]
+            if "vertoriginy" in vmtxKeys:
+                tsb = vmtxKeys['vertoriginy'] - yMax
+
+            table.metrics[glyphName] = (height, tsb)
+
+        if outlineTable.tableTag in ("CFF ", "CFF2"):
+            for glyphName, metrics in table.metrics.items():
+                _, tsb = metrics
+                yMax = 0
+                if glyphName in glyphBounds:
+                    yMax = glyphBounds[glyphName]
+                else:
+                    charString = topDict.CharStrings[glyphName]
+                    bounds = charString.calcBounds(glyphSet)
+                    if bounds:
+                        yMax = bounds[3]
+                verticalOrigin = otRound(yMax + tsb)
+                if verticalOrigin == vorgTable.defaultVertOriginY:
+                    continue
+                vorgTable.VOriginRecords[glyphName] = verticalOrigin
+            vorgTable.numVertOriginYMetrics = len(vorgTable.VOriginRecords)
 
     def get_user_name_id(self, table):
         # Try to find first unused font-specific name id
@@ -1570,6 +1657,12 @@ class Builder(object):
 
     def add_vhea_field(self, key, value):
         self.vhea_[key] = value
+
+    def add_vmtx_pos(self, key, glyph, value):
+        glyph_name = glyph.glyph
+        if glyph_name not in self.vmtx_:
+            self.vmtx_[glyph_name] = {}
+        self.vmtx_[glyph_name][key] = value
 
     def add_conditionset(self, key, value):
         if not "fvar" in self.font:

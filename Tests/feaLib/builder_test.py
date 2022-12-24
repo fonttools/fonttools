@@ -20,6 +20,8 @@ import tempfile
 import logging
 import unittest
 
+DATADIR = os.path.join(os.path.dirname(__file__), 'data')
+
 
 def makeTTFont():
     glyphs = """
@@ -139,6 +141,8 @@ class BuilderTest(unittest.TestCase):
                 "STAT",
                 "hhea",
                 "vhea",
+                "vmtx",
+                "VORG",
             ],
         )
         actual = self.read_ttx(path)
@@ -147,6 +151,7 @@ class BuilderTest(unittest.TestCase):
             for i in range(len(expected)):
                 for k, v in replace.items():
                     expected[i] = expected[i].replace(k, v)
+
         if actual != expected:
             for line in difflib.unified_diff(
                 expected, actual, fromfile=expected_ttx, tofile=path
@@ -963,6 +968,51 @@ class BuilderTest(unittest.TestCase):
             "feature test { sub a by []; test};",
         )
 
+    def test_build_vmtx_CFF(self):
+        # this also tests VORG table creation since it relies on
+        # first building the vmtx
+        features = (
+            "table vmtx {"
+            "    VertOriginY cid00800 994;"
+            "    VertAdvanceY cid00800 1130;"
+            "    VertOriginY cid00801 766;"
+            "    VertAdvanceY cid00801 870;"
+            "} vmtx;"
+        )
+        font = TTFont()
+        font.importXML(os.path.join(DATADIR, 'vmtx_override_CFF_src.ttx'))
+        addOpenTypeFeaturesFromString(font, features, tables=["vmtx"])
+        self.expect_ttx(font, self.getpath("vmtx_override_CFF_expected.ttx"))
+
+    def test_build_vmtx_CFF2(self):
+        # this also tests VORG table creation since it relies on
+        # first building the vmtx
+        features = (
+            "table vmtx {"
+            "    VertOriginY cid00800 994;"
+            "    VertAdvanceY cid00800 1130;"
+            "    VertOriginY cid00801 766;"
+            "    VertAdvanceY cid00801 870;"
+            "} vmtx;"
+        )
+        font = TTFont()
+        font.importXML(os.path.join(DATADIR, 'vmtx_override_CFF2_src.ttx'))
+        addOpenTypeFeaturesFromString(font, features, tables=["vmtx"])
+        self.expect_ttx(font, self.getpath("vmtx_override_CFF2_expected.ttx"))
+
+    def test_build_vmtx_glyf(self):
+        features = (
+            "table vmtx {"
+            "    VertOriginY cid00800 994;"
+            "    VertAdvanceY cid00800 1130;"
+            "    VertOriginY cid00801 766;"
+            "    VertAdvanceY cid00801 870;"
+            "} vmtx;"
+        )
+        font = TTFont()
+        font.importXML(os.path.join(DATADIR, 'vmtx_override_glyf_src.ttx'))
+        addOpenTypeFeaturesFromString(font, features, tables=["vmtx"])
+        self.expect_ttx(font, self.getpath("vmtx_override_glyf_expected.ttx"))
 
 def generate_feature_file_test(name):
     return lambda self: self.check_feature_file(name)

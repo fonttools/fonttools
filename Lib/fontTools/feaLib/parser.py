@@ -1058,6 +1058,7 @@ class Parser(object):
             "head": self.parse_table_head_,
             "hhea": self.parse_table_hhea_,
             "vhea": self.parse_table_vhea_,
+            "vmtx": self.parse_table_vmtx_,
             "name": self.parse_table_name_,
             "BASE": self.parse_table_BASE_,
             "OS/2": self.parse_table_OS_2_,
@@ -1169,6 +1170,34 @@ class Parser(object):
                 raise FeatureLibError(
                     "Expected VertTypoAscender, "
                     "VertTypoDescender or VertTypoLineGap",
+                    self.cur_token_location_,
+                )
+
+    def parse_table_vmtx_(self, table):
+        statements = table.statements
+        fields = ("VertOriginY", "VertAdvanceY")
+        while self.next_token_ != "}" or self.cur_comments_:
+            self.advance_lexer_(comments=True)
+            if self.cur_token_type_ is Lexer.COMMENT:
+                statements.append(
+                    self.ast.Comment(self.cur_token_, location=self.cur_token_location_)
+                )
+            elif self.cur_token_type_ is Lexer.NAME and self.cur_token_ in fields:
+                key = self.cur_token_.lower()
+                glyph = self.parse_glyphclass_(accept_glyphname=True)
+                value = self.expect_number_()
+                statements.append(
+                    self.ast.VmtxStatement(glyph, key, value, location=self.cur_token_location_)
+                )
+                if self.next_token_ != ";":
+                    raise FeatureLibError(
+                        "Incomplete statement", self.next_token_location_
+                    )
+            elif self.cur_token_ == ";":
+                continue
+            else:
+                raise FeatureLibError(
+                    "Expected VertOriginY or VertAdvanceY",
                     self.cur_token_location_,
                 )
 
