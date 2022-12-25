@@ -1,6 +1,13 @@
+from __future__ import annotations
+
+from typing import Any, Callable
+
 from fontTools.misc.roundTools import otRound
 from fontTools.misc.transform import Transform
+from fontTools.pens.basePen import AbstractPen
 from fontTools.pens.filterPen import FilterPen, FilterPointPen
+from fontTools.pens.pointPen import AbstractPointPen
+from fontTools.pens.typings import Point, PointType, Transformation
 
 
 __all__ = ["RoundingPen", "RoundingPointPen"]
@@ -28,27 +35,34 @@ class RoundingPen(FilterPen):
     True
     """
 
-    def __init__(self, outPen, roundFunc=otRound):
+    def __init__(
+        self, outPen: AbstractPen, roundFunc: Callable[[float], int] = otRound
+    ) -> None:
         super().__init__(outPen)
         self.roundFunc = roundFunc
 
-    def moveTo(self, pt):
+    def moveTo(self, pt: Point) -> None:
         self._outPen.moveTo((self.roundFunc(pt[0]), self.roundFunc(pt[1])))
 
-    def lineTo(self, pt):
+    def lineTo(self, pt: Point) -> None:
         self._outPen.lineTo((self.roundFunc(pt[0]), self.roundFunc(pt[1])))
 
-    def curveTo(self, *points):
+    def curveTo(self, *points: Point) -> None:
         self._outPen.curveTo(
             *((self.roundFunc(x), self.roundFunc(y)) for x, y in points)
         )
 
-    def qCurveTo(self, *points):
+    def qCurveTo(self, *points: Point | None) -> None:
+        # XXX: This will fail when `points` actually contains a None.
         self._outPen.qCurveTo(
-            *((self.roundFunc(x), self.roundFunc(y)) for x, y in points)
+            *((self.roundFunc(x), self.roundFunc(y)) for x, y in points)  # type: ignore
         )
 
-    def addComponent(self, glyphName, transformation):
+    def addComponent(  # type: ignore
+        self,
+        glyphName: str,
+        transformation: Transformation,
+    ) -> None:
         self._outPen.addComponent(
             glyphName,
             Transform(
@@ -87,20 +101,37 @@ class RoundingPointPen(FilterPointPen):
     True
     """
 
-    def __init__(self, outPen, roundFunc=otRound):
+    def __init__(
+        self, outPen: AbstractPointPen, roundFunc: Callable[[float], int] = otRound
+    ) -> None:
         super().__init__(outPen)
         self.roundFunc = roundFunc
 
-    def addPoint(self, pt, segmentType=None, smooth=False, name=None, **kwargs):
+    def addPoint(
+        self,
+        pt: Point,
+        segmentType: PointType = None,
+        smooth: bool = False,
+        name: str | None = None,
+        identifier: str | None = None,
+        **kwargs: Any,
+    ) -> None:
         self._outPen.addPoint(
             (self.roundFunc(pt[0]), self.roundFunc(pt[1])),
             segmentType=segmentType,
             smooth=smooth,
             name=name,
+            identifier=identifier,
             **kwargs,
         )
 
-    def addComponent(self, baseGlyphName, transformation, **kwargs):
+    def addComponent(  # type: ignore
+        self,
+        baseGlyphName: str,
+        transformation: Transformation,
+        identifier: str | None = None,
+        **kwargs: Any,
+    ) -> None:
         self._outPen.addComponent(
             baseGlyphName,
             Transform(
@@ -108,5 +139,6 @@ class RoundingPointPen(FilterPointPen):
                 self.roundFunc(transformation[4]),
                 self.roundFunc(transformation[5]),
             ),
+            identifier,
             **kwargs,
         )

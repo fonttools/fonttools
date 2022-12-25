@@ -1,7 +1,10 @@
 """Pen calculating area, center of mass, variance and standard-deviation,
 covariance and correlation, and slant, of glyph shapes."""
+from __future__ import annotations
 import math
+from typing import Iterable, Sequence
 from fontTools.pens.momentsPen import MomentsPen
+from fontTools.pens.typings import GlyphSet
 
 __all__ = ["StatisticsPen"]
 
@@ -18,26 +21,26 @@ class StatisticsPen(MomentsPen):
     directions are clockwise.  Moreover, variance might be negative
     if the shapes are self-intersecting in certain ways."""
 
-    def __init__(self, glyphset=None):
+    def __init__(self, glyphset: GlyphSet | None = None) -> None:
         MomentsPen.__init__(self, glyphset=glyphset)
         self.__zero()
 
-    def _closePath(self):
+    def _closePath(self) -> None:
         MomentsPen._closePath(self)
         self.__update()
 
-    def __zero(self):
-        self.meanX = 0
-        self.meanY = 0
-        self.varianceX = 0
-        self.varianceY = 0
-        self.stddevX = 0
-        self.stddevY = 0
-        self.covariance = 0
-        self.correlation = 0
-        self.slant = 0
+    def __zero(self) -> None:
+        self.meanX: float = 0
+        self.meanY: float = 0
+        self.varianceX: float = 0
+        self.varianceY: float = 0
+        self.stddevX: float = 0
+        self.stddevY: float = 0
+        self.covariance: float = 0
+        self.correlation: float = 0
+        self.slant: float = 0
 
-    def __update(self):
+    def __update(self) -> None:
 
         area = self.area
         if not area:
@@ -71,7 +74,7 @@ class StatisticsPen(MomentsPen):
         self.slant = slant if abs(slant) > 1e-3 else 0
 
 
-def _test(glyphset, upem, glyphs):
+def _test(glyphset: GlyphSet, upem: int, glyphs: Iterable[str]) -> None:
     from fontTools.pens.transformPen import TransformPen
     from fontTools.misc.transform import Scale
 
@@ -104,7 +107,7 @@ def _test(glyphset, upem, glyphs):
             print("%s: %g" % (item, getattr(pen, item)))
 
 
-def main(args):
+def main(args: Sequence[str] | None) -> None:
     if not args:
         return
     filename, glyphs = args[0], args[1:]

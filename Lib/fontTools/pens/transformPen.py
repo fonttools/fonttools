@@ -1,4 +1,11 @@
+from __future__ import annotations
+
+from typing import Any, Callable, Sequence, cast
+from fontTools.pens.basePen import AbstractPen
+from fontTools.pens.pointPen import AbstractPointPen
 from fontTools.pens.filterPen import FilterPen, FilterPointPen
+from fontTools.pens.typings import Point, Transformation
+from fontTools.misc.transform import Transform
 
 
 __all__ = ["TransformPen", "TransformPointPen"]
@@ -10,7 +17,9 @@ class TransformPen(FilterPen):
     and passes them to another pen.
     """
 
-    def __init__(self, outPen, transformation):
+    def __init__(
+        self, outPen: AbstractPen, transformation: Transform | Transformation
+    ) -> None:
         """The 'outPen' argument is another pen object. It will receive the
         transformed coordinates. The 'transformation' argument can either
         be a six-tuple, or a fontTools.misc.transform.Transform object.
@@ -20,37 +29,37 @@ class TransformPen(FilterPen):
             from fontTools.misc.transform import Transform
 
             transformation = Transform(*transformation)
+        transformation = cast(Transform, transformation)
         self._transformation = transformation
         self._transformPoint = transformation.transformPoint
-        self._stack = []
 
-    def moveTo(self, pt):
+    def moveTo(self, pt: Point) -> None:
         self._outPen.moveTo(self._transformPoint(pt))
 
-    def lineTo(self, pt):
+    def lineTo(self, pt: Point) -> None:
         self._outPen.lineTo(self._transformPoint(pt))
 
-    def curveTo(self, *points):
+    def curveTo(self, *points: Point) -> None:
         self._outPen.curveTo(*self._transformPoints(points))
 
-    def qCurveTo(self, *points):
+    def qCurveTo(self, *points: Point | None) -> None:
         if points[-1] is None:
-            points = self._transformPoints(points[:-1]) + [None]
+            points = self._transformPoints(points[:-1]) + [None]  # type: ignore
         else:
-            points = self._transformPoints(points)
+            points = self._transformPoints(points)  # type: ignore
         self._outPen.qCurveTo(*points)
 
-    def _transformPoints(self, points):
+    def _transformPoints(self, points: Sequence[Point]) -> list[tuple[float, float]]:
         transformPoint = self._transformPoint
         return [transformPoint(pt) for pt in points]
 
-    def closePath(self):
+    def closePath(self) -> None:
         self._outPen.closePath()
 
-    def endPath(self):
+    def endPath(self) -> None:
         self._outPen.endPath()
 
-    def addComponent(self, glyphName, transformation):
+    def addComponent(self, glyphName: str, transformation: Transform) -> None:  # type: ignore
         transformation = self._transformation.transform(transformation)
         self._outPen.addComponent(glyphName, transformation)
 
@@ -77,7 +86,9 @@ class TransformPointPen(FilterPointPen):
     ('addComponent', ('a', <Transform [2 0 0 2 -30 15]>), {'identifier': 'component-0'})
     """
 
-    def __init__(self, outPointPen, transformation):
+    def __init__(
+        self, outPointPen: AbstractPointPen, transformation: Transform | Transformation
+    ) -> None:
         """The 'outPointPen' argument is another point pen object.
         It will receive the transformed coordinates.
         The 'transformation' argument can either be a six-tuple, or a
@@ -88,17 +99,32 @@ class TransformPointPen(FilterPointPen):
             from fontTools.misc.transform import Transform
 
             transformation = Transform(*transformation)
+        transformation = cast(Transform, transformation)
         self._transformation = transformation
         self._transformPoint = transformation.transformPoint
 
-    def addPoint(self, pt, segmentType=None, smooth=False, name=None, **kwargs):
+    def addPoint(
+        self,
+        pt: Point,
+        segmentType: str | None = None,
+        smooth: bool = False,
+        name: str | None = None,
+        identifier: str | None = None,
+        **kwargs: Any,
+    ) -> None:
         self._outPen.addPoint(
-            self._transformPoint(pt), segmentType, smooth, name, **kwargs
+            self._transformPoint(pt), segmentType, smooth, name, identifier, **kwargs
         )
 
-    def addComponent(self, baseGlyphName, transformation, **kwargs):
+    def addComponent(  # type: ignore
+        self,
+        baseGlyphName: str,
+        transformation: Transform | Transformation,
+        identifier: str | None = None,
+        **kwargs: Any,
+    ) -> None:
         transformation = self._transformation.transform(transformation)
-        self._outPen.addComponent(baseGlyphName, transformation, **kwargs)
+        self._outPen.addComponent(baseGlyphName, transformation, identifier, **kwargs)
 
 
 if __name__ == "__main__":
