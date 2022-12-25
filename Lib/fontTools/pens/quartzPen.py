@@ -1,9 +1,17 @@
+from __future__ import annotations
+
+from typing import Any
+
 from fontTools.pens.basePen import BasePen
-
-from Quartz.CoreGraphics import CGPathCreateMutable, CGPathMoveToPoint
-from Quartz.CoreGraphics import CGPathAddLineToPoint, CGPathAddCurveToPoint
-from Quartz.CoreGraphics import CGPathAddQuadCurveToPoint, CGPathCloseSubpath
-
+from fontTools.pens.typings import GlyphSet, Point
+from Quartz.CoreGraphics import (
+    CGPathAddCurveToPoint,
+    CGPathAddLineToPoint,
+    CGPathAddQuadCurveToPoint,
+    CGPathCloseSubpath,
+    CGPathCreateMutable,
+    CGPathMoveToPoint,
+)
 
 __all__ = ["QuartzPen"]
 
@@ -17,28 +25,28 @@ class QuartzPen(BasePen):
     - xform: an optional CGAffineTransform to apply to the path
     """
 
-    def __init__(self, glyphSet, path=None, xform=None):
+    def __init__(self, glyphSet: GlyphSet, path: Any = None, xform: Any = None) -> None:
         BasePen.__init__(self, glyphSet)
         if path is None:
             path = CGPathCreateMutable()
         self.path = path
         self.xform = xform
 
-    def _moveTo(self, pt):
+    def _moveTo(self, pt: Point) -> None:
         x, y = pt
         CGPathMoveToPoint(self.path, self.xform, x, y)
 
-    def _lineTo(self, pt):
+    def _lineTo(self, pt: Point) -> None:
         x, y = pt
         CGPathAddLineToPoint(self.path, self.xform, x, y)
 
-    def _curveToOne(self, p1, p2, p3):
+    def _curveToOne(self, p1: Point, p2: Point, p3: Point) -> None:
         (x1, y1), (x2, y2), (x3, y3) = p1, p2, p3
         CGPathAddCurveToPoint(self.path, self.xform, x1, y1, x2, y2, x3, y3)
 
-    def _qCurveToOne(self, p1, p2):
+    def _qCurveToOne(self, p1: Point, p2: Point) -> None:
         (x1, y1), (x2, y2) = p1, p2
         CGPathAddQuadCurveToPoint(self.path, self.xform, x1, y1, x2, y2)
 
-    def _closePath(self):
+    def _closePath(self) -> None:
         CGPathCloseSubpath(self.path)
