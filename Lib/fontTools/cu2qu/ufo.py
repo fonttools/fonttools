@@ -23,8 +23,11 @@ Respective curves from multiple fonts will be converted at once to ensure that
 the resulting splines are interpolation-compatible.
 """
 
+from __future__ import annotations
+
 import logging
 from fontTools.pens.basePen import AbstractPen
+from fontTools.pens.typings import Point, Transformation
 from fontTools.pens.pointPen import PointToSegmentPen
 from fontTools.pens.reverseContourPen import ReverseContourPen
 
@@ -69,34 +72,36 @@ class GetSegmentsPen(AbstractPen):
     duplicated between segments.
     """
 
-    def __init__(self):
-        self._last_pt = None
-        self.segments = []
+    def __init__(self) -> None:
+        self._last_pt: Point | None = None
+        self.segments: list[tuple[str, tuple[Point, ...]]] = []
 
-    def _add_segment(self, tag, *args):
+    def _add_segment(self, tag: str, *args: Point) -> None:
         if tag in ["move", "line", "qcurve", "curve"]:
             self._last_pt = args[-1]
         self.segments.append((tag, args))
 
-    def moveTo(self, pt):
+    def moveTo(self, pt: Point) -> None:
         self._add_segment("move", pt)
 
-    def lineTo(self, pt):
+    def lineTo(self, pt: Point) -> None:
         self._add_segment("line", pt)
 
-    def qCurveTo(self, *points):
-        self._add_segment("qcurve", self._last_pt, *points)
+    def qCurveTo(self, *points: Point | None) -> None:
+        assert self._last_pt is not None
+        self._add_segment("qcurve", self._last_pt, *points)  # type: ignore
 
-    def curveTo(self, *points):
+    def curveTo(self, *points: Point) -> None:
+        assert self._last_pt is not None
         self._add_segment("curve", self._last_pt, *points)
 
-    def closePath(self):
+    def closePath(self) -> None:
         self._add_segment("close")
 
-    def endPath(self):
+    def endPath(self) -> None:
         self._add_segment("end")
 
-    def addComponent(self, glyphName, transformation):
+    def addComponent(self, glyphName: str, transformation: Transformation) -> None:
         pass
 
 
