@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import unittest
 
 from fontTools.pens.basePen import AbstractPen
@@ -8,36 +10,37 @@ from fontTools.pens.pointPen import (
     GuessSmoothPointPen,
     ReverseContourPointPen,
 )
+from fontTools.pens.typings import Point, Transformation
 
 
 class _TestSegmentPen(AbstractPen):
-    def __init__(self):
-        self._commands = []
+    def __init__(self) -> None:
+        self._commands: list[str] = []
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return " ".join(self._commands)
 
-    def moveTo(self, pt):
+    def moveTo(self, pt: Point) -> None:
         self._commands.append("%s %s moveto" % (pt[0], pt[1]))
 
-    def lineTo(self, pt):
+    def lineTo(self, pt: Point) -> None:
         self._commands.append("%s %s lineto" % (pt[0], pt[1]))
 
-    def curveTo(self, *pts):
-        pts = ["%s %s" % pt for pt in pts]
-        self._commands.append("%s curveto" % " ".join(pts))
+    def curveTo(self, *pts: Point) -> None:
+        pts_repr = ["%s %s" % pt for pt in pts]
+        self._commands.append("%s curveto" % " ".join(pts_repr))
 
-    def qCurveTo(self, *pts):
-        pts = ["%s %s" % pt if pt is not None else "None" for pt in pts]
-        self._commands.append("%s qcurveto" % " ".join(pts))
+    def qCurveTo(self, *pts: Point | None) -> None:
+        pts_repr = ["%s %s" % pt if pt is not None else "None" for pt in pts]
+        self._commands.append("%s qcurveto" % " ".join(pts_repr))
 
-    def closePath(self):
+    def closePath(self) -> None:
         self._commands.append("closepath")
 
-    def endPath(self):
+    def endPath(self) -> None:
         self._commands.append("endpath")
 
-    def addComponent(self, glyphName, transformation):
+    def addComponent(self, glyphName: str, transformation: Transformation) -> None:
         self._commands.append("'%s' %s addcomponent" % (glyphName, transformation))
 
 

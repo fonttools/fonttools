@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from fontTools.pens.basePen import (
     AbstractPen,
     BasePen,
@@ -5,37 +7,38 @@ from fontTools.pens.basePen import (
     decomposeQuadraticSegment,
 )
 from fontTools.pens.pointPen import AbstractPointPen
+from fontTools.pens.typings import Point
 from fontTools.misc.loggingTools import CapturingLogHandler
 import unittest
 
 
 class _TestPen(BasePen):
-    def __init__(self):
+    def __init__(self) -> None:
         BasePen.__init__(self, glyphSet={})
-        self._commands = []
+        self._commands: list[str] = []
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return " ".join(self._commands)
 
-    def getCurrentPoint(self):
+    def getCurrentPoint(self) -> Point | None:
         return self._getCurrentPoint()
 
-    def _moveTo(self, pt):
+    def _moveTo(self, pt: Point) -> None:
         self._commands.append("%s %s moveto" % (pt[0], pt[1]))
 
-    def _lineTo(self, pt):
+    def _lineTo(self, pt: Point) -> None:
         self._commands.append("%s %s lineto" % (pt[0], pt[1]))
 
-    def _curveToOne(self, bcp1, bcp2, pt):
+    def _curveToOne(self, bcp1: Point, bcp2: Point, pt: Point) -> None:
         self._commands.append(
             "%s %s %s %s %s %s curveto"
             % (bcp1[0], bcp1[1], bcp2[0], bcp2[1], pt[0], pt[1])
         )
 
-    def _closePath(self):
+    def _closePath(self) -> None:
         self._commands.append("closepath")
 
-    def _endPath(self):
+    def _endPath(self) -> None:
         self._commands.append("endpath")
 
 
@@ -189,6 +192,4 @@ class DecomposeSegmentTest(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    import sys
-
-    sys.exit(unittest.main())
+    unittest.main()
