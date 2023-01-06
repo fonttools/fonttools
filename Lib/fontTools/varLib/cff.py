@@ -110,7 +110,7 @@ def lib_convertCFFToCFF2(cff, otFont):
                     if hasattr(privateDict, key):
                         delattr(privateDict, key)
                         # print "Removing privateDict attr", key
-    # Now delete up the decrecated topDict operators from CFF 1.0
+    # Now delete up the deprecated topDict operators from CFF 1.0
     for entry in topDictOperators:
         key = entry[1]
         if key not in opOrder:
