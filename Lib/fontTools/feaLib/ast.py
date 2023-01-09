@@ -912,14 +912,11 @@ class IgnoreSubstStatement(Statement):
         contexts = []
         for prefix, glyphs, suffix in self.chainContexts:
             res = ""
-            if len(prefix) or len(suffix):
-                if len(prefix):
-                    res += " ".join(map(asFea, prefix)) + " "
-                res += " ".join(g.asFea() + "'" for g in glyphs)
-                if len(suffix):
-                    res += " " + " ".join(map(asFea, suffix))
-            else:
-                res += " ".join(map(asFea, glyphs))
+            if len(prefix):
+                res += " ".join(map(asFea, prefix)) + " "
+            res += " ".join(g.asFea() + "'" for g in glyphs)
+            if len(suffix):
+                res += " " + " ".join(map(asFea, suffix))
             contexts.append(res)
         return "ignore sub " + ", ".join(contexts) + ";"
 
