@@ -2083,6 +2083,15 @@ class ParserTest(unittest.TestCase):
         doc = Parser(fea_path, includeDir=include_dir).parse()
         assert len(doc.statements) == 1 and doc.statements[0].text == "# Nothing"
 
+    def test_unmarked_ignore_statement(self):
+        with CapturingLogHandler("fontTools.feaLib.parser", level="WARNING") as caplog:
+            doc = self.parse("lookup foo { ignore sub A; } foo;")
+        self.assertEqual(doc.statements[0].statements[0].asFea(), "ignore sub A';")
+        self.assertEqual(len(caplog.records), 1)
+        caplog.assertRegex(
+            'Ambiguous "ignore sub", there should be least one marked glyph'
+        )
+
     def parse(self, text, glyphNames=GLYPHNAMES, followIncludes=True):
         featurefile = StringIO(text)
         p = Parser(featurefile, glyphNames, followIncludes=followIncludes)
