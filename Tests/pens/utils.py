@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
+from fontTools.pens.typings import Point
 from . import CUBIC_GLYPHS
 from fontTools.pens.pointPen import PointToSegmentPen, SegmentToPointPen
 from math import isclose
@@ -35,22 +38,22 @@ class BaseDummyPen(object):
 class DummyPen(BaseDummyPen):
     """A SegmentPen that records the commands it's called with."""
 
-    def moveTo(self, pt):
+    def moveTo(self, pt: Point) -> None:
         self.commands.append(("moveTo", (pt,), {}))
 
-    def lineTo(self, pt):
+    def lineTo(self, pt: Point) -> None:
         self.commands.append(("lineTo", (pt,), {}))
 
-    def curveTo(self, *points):
+    def curveTo(self, *points: Point) -> None:
         self.commands.append(("curveTo", points, {}))
 
-    def qCurveTo(self, *points):
+    def qCurveTo(self, *points: Point | None) -> None:
         self.commands.append(("qCurveTo", points, {}))
 
-    def closePath(self):
+    def closePath(self) -> None:
         self.commands.append(("closePath", tuple(), {}))
 
-    def endPath(self):
+    def endPath(self) -> None:
         self.commands.append(("endPath", tuple(), {}))
 
 
@@ -167,7 +170,7 @@ class DummyPointGlyph(DummyGlyph):
     """
 
     # the PointPen class used to draw on this glyph type
-    DrawingPen = DummyPointPen
+    DrawingPen = DummyPointPen  # type: ignore
 
     def appendGlyph(self, glyph):
         """Copy another glyph's outline onto self."""

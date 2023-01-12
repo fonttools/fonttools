@@ -1,10 +1,12 @@
+from __future__ import annotations
 from array import array
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Optional, Type
 from fontTools.misc.fixedTools import MAX_F2DOT14, floatToFixedToFloat
 from fontTools.misc.loggingTools import LogMixin
 from fontTools.pens.pointPen import AbstractPointPen
 from fontTools.misc.roundTools import otRound
 from fontTools.pens.basePen import LoggingPen, PenError
+from fontTools.pens.typings import Point, PointType, Transformation, GlyphSet
 from fontTools.pens.transformPen import TransformPen, TransformPointPen
 from fontTools.ttLib.tables import ttProgram
 from fontTools.ttLib.tables._g_l_y_f import Glyph
@@ -16,9 +18,12 @@ __all__ = ["TTGlyphPen", "TTGlyphPointPen"]
 
 
 class _TTGlyphBasePen:
+    drawMethod: str
+    transformPen: Type[TransformPen] | Type[TransformPointPen]
+
     def __init__(
         self,
-        glyphSet: Optional[Dict[str, Any]],
+        glyphSet: GlyphSet | None,
         handleOverflowingTransforms: bool = True,
     ) -> None:
         """
@@ -54,9 +59,10 @@ class _TTGlyphBasePen:
     def _decompose(
         self,
         glyphName: str,
-        transformation: Tuple[float, float, float, float, float, float],
-    ):
-        tpen = self.transformPen(self, transformation)
+        transformation: Transformation,
+    ) -> None:
+        tpen = self.transformPen(self, transformation)  # type: ignore
+        assert self.glyphSet is not None
         getattr(self.glyphSet[glyphName], self.drawMethod)(tpen)
 
     def _isClosed(self):
@@ -66,15 +72,16 @@ class _TTGlyphBasePen:
         raise NotImplementedError
 
     def init(self) -> None:
-        self.points = []
-        self.endPts = []
-        self.types = []
-        self.components = []
+        self.points: list[Point] = []
+        self.endPts: list[int] = []
+        self.types: list[int] = []
+        self.components: list[tuple[str, Transformation]] = []
 
     def addComponent(
         self,
         baseGlyphName: str,
-        transformation: Tuple[float, float, float, float, float, float],
+        transformation: Transformation,
+        # XXX: Remove the rest of the args, they're point pen protocol.
         identifier: Optional[str] = None,
         **kwargs: Any,
     ) -> None:
@@ -152,7 +159,7 @@ class _TTGlyphBasePen:
         return glyph
 
 
-class TTGlyphPen(_TTGlyphBasePen, LoggingPen):
+class TTGlyphPen(_TTGlyphBasePen, LoggingPen):  # type: ignore
     """
     Pen used for drawing to a TrueType glyph.
 
@@ -166,14 +173,14 @@ class TTGlyphPen(_TTGlyphBasePen, LoggingPen):
 
     def __init__(
         self,
-        glyphSet: Optional[Dict[str, Any]] = None,
+        glyphSet: GlyphSet | None = None,
         handleOverflowingTransforms: bool = True,
         outputImpliedClosingLine: bool = False,
     ) -> None:
         super().__init__(glyphSet, handleOverflowingTransforms)
         self.outputImpliedClosingLine = outputImpliedClosingLine
 
-    def _addPoint(self, pt: Tuple[float, float], onCurve: int) -> None:
+    def _addPoint(self, pt: Point, onCurve: int) -> None:
         self.points.append(pt)
         self.types.append(onCurve)
 
@@ -183,24 +190,24 @@ class TTGlyphPen(_TTGlyphBasePen, LoggingPen):
 
     def _isClosed(self) -> bool:
         return (not self.points) or (
-            self.endPts and self.endPts[-1] == len(self.points) - 1
+            self.endPts and self.endPts[-1] == len(self.points) - 1  # type: ignore
         )
 
-    def lineTo(self, pt: Tuple[float, float]) -> None:
+    def lineTo(self, pt: Point) -> None:
         self._addPoint(pt, 1)
 
-    def moveTo(self, pt: Tuple[float, float]) -> None:
+    def moveTo(self, pt: Point) -> None:
         if not self._isClosed():
             raise PenError('"move"-type point must begin a new contour.')
         self._addPoint(pt, 1)
 
-    def curveTo(self, *points) -> None:
+    def curveTo(self, *points: Point) -> None:
         raise NotImplementedError
 
-    def qCurveTo(self, *points) -> None:
+    def qCurveTo(self, *points: Point | None) -> None:
         assert len(points) >= 1
         for pt in points[:-1]:
-            self._addPoint(pt, 0)
+            self._addPoint(pt, 0)  # type: ignore
 
         # last point is None if there are no on-curve points
         if points[-1] is not None:
@@ -244,7 +251,7 @@ class TTGlyphPointPen(_TTGlyphBasePen, LogMixin, AbstractPointPen):
 
     def init(self) -> None:
         super().init()
-        self._currentContourStartIndex = None
+        self._currentContourStartIndex: int | None = None
 
     def _isClosed(self) -> bool:
         return self._currentContourStartIndex is None
@@ -271,8 +278,8 @@ class TTGlyphPointPen(_TTGlyphBasePen, LogMixin, AbstractPointPen):
 
     def addPoint(
         self,
-        pt: Tuple[float, float],
-        segmentType: Optional[str] = None,
+        pt: Point,
+        segmentType: PointType = None,
         smooth: bool = False,
         name: Optional[str] = None,
         identifier: Optional[str] = None,

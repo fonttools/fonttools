@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """Pen to rasterize paths with FreeType."""
+from __future__ import annotations
 
 __all__ = ["FreeTypePen"]
 
@@ -26,8 +27,11 @@ from freetype.ft_enums import (
 from freetype.ft_errors import FT_Exception
 
 from fontTools.pens.basePen import BasePen, PenError
+from fontTools.pens.typings import GlyphSet, Point
 from fontTools.misc.roundTools import otRound
 from fontTools.misc.transform import Transform
+from PIL.Image import Image
+from typing import Any, Optional, Tuple
 
 Contour = collections.namedtuple("Contour", ("points", "tags"))
 
@@ -109,11 +113,13 @@ class FreeTypePen(BasePen):
         you replace ``show()`` with ``image()`` in the examples.
     """
 
-    def __init__(self, glyphSet):
+    def __init__(self, glyphSet: GlyphSet) -> None:
         BasePen.__init__(self, glyphSet)
-        self.contours = []
+        self.contours: list[Contour] = []
 
-    def outline(self, transform=None, evenOdd=False):
+    def outline(
+        self, transform: Transform | None = None, evenOdd: bool = False
+    ) -> FT_Outline:
         """Converts the current contours to ``FT_Outline``.
 
         Args:
@@ -156,8 +162,13 @@ class FreeTypePen(BasePen):
         )
 
     def buffer(
-        self, width=None, height=None, transform=None, contain=False, evenOdd=False
-    ):
+        self,
+        width: Optional[int] = None,
+        height: Optional[int] = None,
+        transform: Transform | None = None,
+        contain: bool = False,
+        evenOdd: bool = False,
+    ) -> Tuple[bytes, Tuple[int, int]]:
         """Renders the current contours within a bitmap buffer.
 
         Args:
@@ -227,13 +238,14 @@ class FreeTypePen(BasePen):
                     dy = dy - min(min(*py), 0.0)
                     height = max(height, max(*py) - min(min(*py), 0.0))
             transform = Transform(*transform[:4], dx, dy)
+        assert width is not None and height is not None
         width, height = math.ceil(width), math.ceil(height)
         buf = ctypes.create_string_buffer(width * height)
         bitmap = FT_Bitmap(
             (ctypes.c_int)(height),
             (ctypes.c_int)(width),
             (ctypes.c_int)(width),
-            (ctypes.POINTER(ctypes.c_ubyte))(buf),
+            (ctypes.POINTER(ctypes.c_ubyte))(buf),  # type: ignore
             (ctypes.c_short)(256),
             (ctypes.c_ubyte)(FT_PIXEL_MODE_GRAY),
             (ctypes.c_char)(0),
@@ -248,8 +260,13 @@ class FreeTypePen(BasePen):
         return buf.raw, (width, height)
 
     def array(
-        self, width=None, height=None, transform=None, contain=False, evenOdd=False
-    ):
+        self,
+        width: int | None = None,
+        height: int | None = None,
+        transform: Transform | None = None,
+        contain: bool = False,
+        evenOdd: bool = False,
+    ) -> Any:  # Avoid imoprting numpy up front. Or should we?
         """Returns the rendered contours as a numpy array. Requires `numpy`.
 
         Args:
@@ -300,8 +317,13 @@ class FreeTypePen(BasePen):
         return np.frombuffer(buf, "B").reshape((size[1], size[0])) / 255.0
 
     def show(
-        self, width=None, height=None, transform=None, contain=False, evenOdd=False
-    ):
+        self,
+        width: int | None = None,
+        height: int | None = None,
+        transform: Transform | None = None,
+        contain: bool = False,
+        evenOdd: bool = False,
+    ) -> None:
         """Plots the rendered contours with `pyplot`. Requires `numpy` and
         `matplotlib`.
 
@@ -348,8 +370,13 @@ class FreeTypePen(BasePen):
         plt.show()
 
     def image(
-        self, width=None, height=None, transform=None, contain=False, evenOdd=False
-    ):
+        self,
+        width: int | None = None,
+        height: int | None = None,
+        transform: Transform | None = None,
+        contain: bool = False,
+        evenOdd: bool = False,
+    ) -> Image:
         """Returns the rendered contours as a PIL image. Requires `Pillow`.
         Can be used to display a glyph image in Jupyter Notebook.
 
@@ -403,7 +430,7 @@ class FreeTypePen(BasePen):
         return img
 
     @property
-    def bbox(self):
+    def bbox(self) -> Tuple[float, ...]:
         """Computes the exact bounding box of an outline.
 
         Returns:
@@ -415,7 +442,7 @@ class FreeTypePen(BasePen):
         return (bbox.xMin / 64.0, bbox.yMin / 64.0, bbox.xMax / 64.0, bbox.yMax / 64.0)
 
     @property
-    def cbox(self):
+    def cbox(self) -> Tuple[float, ...]:
         """Returns an outline's ‘control box’.
 
         Returns:
@@ -426,20 +453,20 @@ class FreeTypePen(BasePen):
         FT_Outline_Get_CBox(ctypes.byref(outline), ctypes.byref(cbox))
         return (cbox.xMin / 64.0, cbox.yMin / 64.0, cbox.xMax / 64.0, cbox.yMax / 64.0)
 
-    def _moveTo(self, pt):
+    def _moveTo(self, pt: Point) -> None:
         contour = Contour([], [])
         self.contours.append(contour)
         contour.points.append(pt)
         contour.tags.append(FT_CURVE_TAG_ON)
 
-    def _lineTo(self, pt):
+    def _lineTo(self, pt: Point) -> None:
         if not (self.contours and len(self.contours[-1].points) > 0):
             raise PenError("Contour missing required initial moveTo")
         contour = self.contours[-1]
         contour.points.append(pt)
         contour.tags.append(FT_CURVE_TAG_ON)
 
-    def _curveToOne(self, p1, p2, p3):
+    def _curveToOne(self, p1: Point, p2: Point, p3: Point) -> None:
         if not (self.contours and len(self.contours[-1].points) > 0):
             raise PenError("Contour missing required initial moveTo")
         t1, t2, t3 = FT_CURVE_TAG_CUBIC, FT_CURVE_TAG_CUBIC, FT_CURVE_TAG_ON
@@ -448,7 +475,7 @@ class FreeTypePen(BasePen):
             contour.points.append(p)
             contour.tags.append(t)
 
-    def _qCurveToOne(self, p1, p2):
+    def _qCurveToOne(self, p1: Point, p2: Point) -> None:
         if not (self.contours and len(self.contours[-1].points) > 0):
             raise PenError("Contour missing required initial moveTo")
         t1, t2 = FT_CURVE_TAG_CONIC, FT_CURVE_TAG_ON

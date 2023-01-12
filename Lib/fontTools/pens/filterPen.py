@@ -1,11 +1,24 @@
+from __future__ import annotations
+
+from typing import Any, Iterator, List, Tuple
 from fontTools.pens.basePen import AbstractPen
 from fontTools.pens.pointPen import AbstractPointPen
 from fontTools.pens.recordingPen import RecordingPen
+from fontTools.pens.typings import Point, PointType, Transformation
 
 
+# XXX: used for pens and point pens???
 class _PassThruComponentsMixin(object):
-    def addComponent(self, glyphName, transformation, **kwargs):
-        self._outPen.addComponent(glyphName, transformation, **kwargs)
+    def addComponent(
+        self,
+        glyphName: str,
+        transformation: Transformation,
+        identifier: str | None = None,
+        **kwargs: Any,
+    ) -> None:
+        if identifier is not None:
+            kwargs["identifier"] = identifier
+        self._outPen.addComponent(glyphName, transformation, **kwargs)  # type: ignore
 
 
 class FilterPen(_PassThruComponentsMixin, AbstractPen):
@@ -54,26 +67,30 @@ class FilterPen(_PassThruComponentsMixin, AbstractPen):
     ('addComponent', ('foo', (1, 0, 0, 1, 0, 0)))
     """
 
-    def __init__(self, outPen):
+    def __init__(self, outPen: AbstractPen) -> None:
         self._outPen = outPen
 
-    def moveTo(self, pt):
+    def moveTo(self, pt: Point) -> None:
         self._outPen.moveTo(pt)
 
-    def lineTo(self, pt):
+    def lineTo(self, pt: Point) -> None:
         self._outPen.lineTo(pt)
 
-    def curveTo(self, *points):
+    def curveTo(self, *points: Point) -> None:
         self._outPen.curveTo(*points)
 
-    def qCurveTo(self, *points):
+    def qCurveTo(self, *points: Point | None) -> None:
         self._outPen.qCurveTo(*points)
 
-    def closePath(self):
+    def closePath(self) -> None:
         self._outPen.closePath()
 
-    def endPath(self):
+    def endPath(self) -> None:
         self._outPen.endPath()
+
+
+ContourDescription = Tuple[str, Tuple[Any, ...]]
+Contour = List[ContourDescription]
 
 
 class ContourFilterPen(_PassThruComponentsMixin, RecordingPen):
@@ -84,26 +101,26 @@ class ContourFilterPen(_PassThruComponentsMixin, RecordingPen):
     Components are passed through unchanged.
     """
 
-    def __init__(self, outPen):
+    def __init__(self, outPen: AbstractPen) -> None:
         super(ContourFilterPen, self).__init__()
         self._outPen = outPen
 
-    def closePath(self):
+    def closePath(self) -> None:
         super(ContourFilterPen, self).closePath()
         self._flushContour()
 
-    def endPath(self):
+    def endPath(self) -> None:
         super(ContourFilterPen, self).endPath()
         self._flushContour()
 
-    def _flushContour(self):
+    def _flushContour(self) -> None:
         result = self.filterContour(self.value)
         if result is not None:
-            self.value = result
+            self.value = result  # type: ignore
         self.replay(self._outPen)
         self.value = []
 
-    def filterContour(self, contour):
+    def filterContour(self, contour: Contour) -> Iterator[ContourDescription] | None:
         """Subclasses must override this to perform the filtering.
 
         The contour is a list of pen (operator, operands) tuples.
@@ -116,10 +133,10 @@ class ContourFilterPen(_PassThruComponentsMixin, RecordingPen):
         assumed that the argument was modified in-place.
         Otherwise, the return value is drawn with the output pen.
         """
-        return  # or return contour
+        return None  # or return contour
 
 
-class FilterPointPen(_PassThruComponentsMixin, AbstractPointPen):
+class FilterPointPen(_PassThruComponentsMixin, AbstractPointPen):  # type: ignore
     """Baseclass for point pens that apply some transformation to the
     coordinates they receive and pass them to another point pen.
 
@@ -144,14 +161,22 @@ class FilterPointPen(_PassThruComponentsMixin, AbstractPointPen):
     ('endPath', (), {})
     """
 
-    def __init__(self, outPointPen):
+    def __init__(self, outPointPen: AbstractPointPen) -> None:
         self._outPen = outPointPen
 
-    def beginPath(self, **kwargs):
-        self._outPen.beginPath(**kwargs)
+    def beginPath(self, identifier: str | None = None, **kwargs: Any) -> None:
+        self._outPen.beginPath(identifier, **kwargs)
 
-    def endPath(self):
+    def endPath(self) -> None:
         self._outPen.endPath()
 
-    def addPoint(self, pt, segmentType=None, smooth=False, name=None, **kwargs):
-        self._outPen.addPoint(pt, segmentType, smooth, name, **kwargs)
+    def addPoint(
+        self,
+        pt: Point,
+        segmentType: PointType = None,
+        smooth: bool = False,
+        name: str | None = None,
+        identifier: str | None = None,
+        **kwargs: Any,
+    ) -> None:
+        self._outPen.addPoint(pt, segmentType, smooth, name, identifier, **kwargs)

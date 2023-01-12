@@ -1,6 +1,9 @@
 """Pen recording operations that can be accessed or replayed."""
+from __future__ import annotations
+from typing import Any, List, Mapping, Tuple
 from fontTools.pens.basePen import AbstractPen, DecomposingPen
 from fontTools.pens.pointPen import AbstractPointPen
+from fontTools.pens.typings import Point, PointType, Transformation
 
 
 __all__ = [
@@ -10,8 +13,11 @@ __all__ = [
     "RecordingPointPen",
 ]
 
+PointRecording = List[Tuple[str, Tuple[Any, ...], Mapping[str, Any]]]
+SegmentRecording = List[Tuple[str, Tuple[Any, ...]]]
 
-def replayRecording(recording, pen):
+
+def replayRecording(recording: SegmentRecording, pen: AbstractPen) -> None:
     """Replay a recording, as produced by RecordingPen or DecomposingRecordingPen,
     to a pen.
 
@@ -46,31 +52,31 @@ class RecordingPen(AbstractPen):
             print(pen.value)
     """
 
-    def __init__(self):
-        self.value = []
+    def __init__(self) -> None:
+        self.value: SegmentRecording = []
 
-    def moveTo(self, p0):
+    def moveTo(self, p0: Point) -> None:
         self.value.append(("moveTo", (p0,)))
 
-    def lineTo(self, p1):
+    def lineTo(self, p1: Point) -> None:
         self.value.append(("lineTo", (p1,)))
 
-    def qCurveTo(self, *points):
+    def qCurveTo(self, *points: Point | None) -> None:
         self.value.append(("qCurveTo", points))
 
-    def curveTo(self, *points):
+    def curveTo(self, *points: Point) -> None:
         self.value.append(("curveTo", points))
 
-    def closePath(self):
+    def closePath(self) -> None:
         self.value.append(("closePath", ()))
 
-    def endPath(self):
+    def endPath(self) -> None:
         self.value.append(("endPath", ()))
 
-    def addComponent(self, glyphName, transformation):
+    def addComponent(self, glyphName: str, transformation: Transformation) -> None:
         self.value.append(("addComponent", (glyphName, transformation)))
 
-    def replay(self, pen):
+    def replay(self, pen: AbstractPen) -> None:
         replayRecording(self.value, pen)
 
 
@@ -128,30 +134,42 @@ class RecordingPointPen(AbstractPointPen):
             pen.replay(new_glyph.getPointPen())
     """
 
-    def __init__(self):
-        self.value = []
+    def __init__(self) -> None:
+        self.value: PointRecording = []
 
-    def beginPath(self, identifier=None, **kwargs):
+    def beginPath(self, identifier: str | None = None, **kwargs: Any) -> None:
         if identifier is not None:
             kwargs["identifier"] = identifier
         self.value.append(("beginPath", (), kwargs))
 
-    def endPath(self):
+    def endPath(self) -> None:
         self.value.append(("endPath", (), {}))
 
     def addPoint(
-        self, pt, segmentType=None, smooth=False, name=None, identifier=None, **kwargs
-    ):
+        self,
+        pt: Point,
+        segmentType: PointType = None,
+        smooth: bool = False,
+        name: str | None = None,
+        identifier: str | None = None,
+        **kwargs: Any,
+    ) -> None:
         if identifier is not None:
             kwargs["identifier"] = identifier
         self.value.append(("addPoint", (pt, segmentType, smooth, name), kwargs))
 
-    def addComponent(self, baseGlyphName, transformation, identifier=None, **kwargs):
+    def addComponent(
+        self,
+        baseGlyphName: str,
+        transformation: Transformation,
+        identifier: str | None = None,
+        **kwargs: Any,
+    ) -> None:
         if identifier is not None:
             kwargs["identifier"] = identifier
         self.value.append(("addComponent", (baseGlyphName, transformation), kwargs))
 
-    def replay(self, pointPen):
+    def replay(self, pointPen: AbstractPointPen) -> None:
         for operator, args, kwargs in self.value:
             getattr(pointPen, operator)(*args, **kwargs)
 

@@ -6,7 +6,11 @@ Call as:
 $ fonttools varLib.interpolatable font1 font2 ...
 """
 
+from __future__ import annotations
+from typing import Type
+
 from fontTools.pens.basePen import AbstractPen, BasePen
+from fontTools.pens.typings import GlyphSet, Point, Transformation
 from fontTools.pens.pointPen import SegmentToPointPen
 from fontTools.pens.recordingPen import RecordingPen
 from fontTools.pens.statisticsPen import StatisticsPen
@@ -27,41 +31,47 @@ def _rot_list(l, k):
 
 
 class PerContourPen(BasePen):
-    def __init__(self, Pen, glyphset=None):
+    def __init__(self, Pen: AbstractPen, glyphset: GlyphSet | None = None) -> None:
         BasePen.__init__(self, glyphset)
         self._glyphset = glyphset
         self._Pen = Pen
-        self._pen = None
-        self.value = []
+        self._pen: AbstractPen | None = None
+        self.value: list[AbstractPen] = []
 
-    def _moveTo(self, p0):
+    def _moveTo(self, p0: Point) -> None:
         self._newItem()
+        assert self._pen is not None
         self._pen.moveTo(p0)
 
-    def _lineTo(self, p1):
+    def _lineTo(self, p1: Point) -> None:
+        assert self._pen is not None
         self._pen.lineTo(p1)
 
-    def _qCurveToOne(self, p1, p2):
+    def _qCurveToOne(self, p1: Point, p2: Point) -> None:
+        assert self._pen is not None
         self._pen.qCurveTo(p1, p2)
 
-    def _curveToOne(self, p1, p2, p3):
+    def _curveToOne(self, p1: Point, p2: Point, p3: Point) -> None:
+        assert self._pen is not None
         self._pen.curveTo(p1, p2, p3)
 
-    def _closePath(self):
+    def _closePath(self) -> None:
+        assert self._pen is not None
         self._pen.closePath()
         self._pen = None
 
-    def _endPath(self):
+    def _endPath(self) -> None:
+        assert self._pen is not None
         self._pen.endPath()
         self._pen = None
 
-    def _newItem(self):
-        self._pen = pen = self._Pen()
+    def _newItem(self) -> None:
+        self._pen = pen = self._Pen()  # type: ignore
         self.value.append(pen)
 
 
 class PerContourOrComponentPen(PerContourPen):
-    def addComponent(self, glyphName, transformation):
+    def addComponent(self, glyphName: str, transformation: Transformation) -> None:
         self._newItem()
         self.value[-1].addComponent(glyphName, transformation)
 

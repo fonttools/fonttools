@@ -14,8 +14,10 @@ from __future__ import annotations
 
 import logging
 import enum
+from typing import Any, Iterable
 from warnings import warn
 from collections import OrderedDict
+from fontTools.pens.typings import Point, PointType, Transformation
 import fs
 import fs.base
 import fs.errors
@@ -82,7 +84,7 @@ class GLIFFormatVersion(tuple, _VersionTupleEnumMixin, enum.Enum):
 
 
 # workaround for py3.11, see https://github.com/fonttools/fonttools/pull/2655
-GLIFFormatVersion.__str__ = _VersionTupleEnumMixin.__str__
+GLIFFormatVersion.__str__ = _VersionTupleEnumMixin.__str__  # type: ignore
 
 
 # ------------
@@ -1297,7 +1299,7 @@ def _readGlyphFromTreeFormat2(
 
 
 _READ_GLYPH_FROM_TREE_FUNCS = {
-    GLIFFormatVersion.FORMAT_1_0: _readGlyphFromTreeFormat1,
+    GLIFFormatVersion.FORMAT_1_0: _readGlyphFromTreeFormat1,  # type: ignore
     GLIFFormatVersion.FORMAT_2_0: _readGlyphFromTreeFormat2,
 }
 
@@ -1869,18 +1871,24 @@ class GLIFPointPen(AbstractPointPen):
     part of .glif files.
     """
 
-    def __init__(self, element, formatVersion=None, identifiers=None, validate=True):
+    def __init__(
+        self,
+        element: etree.Element,
+        formatVersion: Iterable[int] | int | None = None,
+        identifiers: set[str] | None = None,
+        validate: bool = True,
+    ) -> None:
         if identifiers is None:
             identifiers = set()
-        self.formatVersion = GLIFFormatVersion(formatVersion)
+        self.formatVersion = GLIFFormatVersion(formatVersion)  # type: ignore
         self.identifiers = identifiers
         self.outline = element
-        self.contour = None
+        self.contour: etree.Element | None = None
         self.prevOffCurveCount = 0
-        self.prevPointTypes = []
+        self.prevPointTypes: list[str] = []
         self.validate = validate
 
-    def beginPath(self, identifier=None, **kwargs):
+    def beginPath(self, identifier: str | None = None, **kwargs: Any) -> None:
         attrs = OrderedDict()
         if identifier is not None and self.formatVersion.major >= 2:
             if self.validate:
@@ -1897,11 +1905,12 @@ class GLIFPointPen(AbstractPointPen):
         self.contour = etree.SubElement(self.outline, "contour", attrs)
         self.prevOffCurveCount = 0
 
-    def endPath(self):
+    def endPath(self) -> None:
         if self.prevPointTypes and self.prevPointTypes[0] == "move":
             if self.validate and self.prevPointTypes[-1] == "offcurve":
                 raise GlifLibError("open contour has loose offcurve point")
         # prevent lxml from writing self-closing tags
+        assert self.contour is not None
         if not len(self.contour):
             self.contour.text = "\n  "
         self.contour = None
@@ -1910,8 +1919,14 @@ class GLIFPointPen(AbstractPointPen):
         self.prevPointTypes = []
 
     def addPoint(
-        self, pt, segmentType=None, smooth=None, name=None, identifier=None, **kwargs
-    ):
+        self,
+        pt: Point,
+        segmentType: PointType = None,
+        smooth: bool = False,
+        name: str | None = None,
+        identifier: str | None = None,
+        **kwargs: Any,
+    ) -> None:
         attrs = OrderedDict()
         # coordinates
         if pt is not None:
@@ -1967,9 +1982,16 @@ class GLIFPointPen(AbstractPointPen):
                     )
             attrs["identifier"] = identifier
             self.identifiers.add(identifier)
+        assert self.contour is not None
         etree.SubElement(self.contour, "point", attrs)
 
-    def addComponent(self, glyphName, transformation, identifier=None, **kwargs):
+    def addComponent(  # type: ignore
+        self,
+        glyphName: str,
+        transformation: Transformation,
+        identifier: str | None = None,
+        **kwargs: Any,
+    ) -> None:
         attrs = OrderedDict([("base", glyphName)])
         for (attr, default), value in zip(_transformationInfo, transformation):
             if self.validate and not isinstance(value, numberTypes):

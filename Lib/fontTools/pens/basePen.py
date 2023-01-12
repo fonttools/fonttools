@@ -36,9 +36,12 @@ Coordinates are usually expressed as (x, y) tuples, but generally any
 sequence of length 2 will do.
 """
 
-from typing import Tuple
+from __future__ import annotations
+
+from typing import Sequence
 
 from fontTools.misc.loggingTools import LogMixin
+from fontTools.pens.typings import GlyphSet, Point, Transformation
 
 __all__ = [
     "AbstractPen",
@@ -59,17 +62,17 @@ class OpenContourError(PenError):
 
 
 class AbstractPen:
-    def moveTo(self, pt: Tuple[float, float]) -> None:
+    def moveTo(self, pt: Point) -> None:
         """Begin a new sub path, set the current point to 'pt'. You must
         end each sub path with a call to pen.closePath() or pen.endPath().
         """
         raise NotImplementedError
 
-    def lineTo(self, pt: Tuple[float, float]) -> None:
+    def lineTo(self, pt: Point) -> None:
         """Draw a straight line from the current point to 'pt'."""
         raise NotImplementedError
 
-    def curveTo(self, *points: Tuple[float, float]) -> None:
+    def curveTo(self, *points: Point) -> None:
         """Draw a cubic bezier with an arbitrary number of control points.
 
         The last point specified is on-curve, all others are off-curve
@@ -90,7 +93,7 @@ class AbstractPen:
         """
         raise NotImplementedError
 
-    def qCurveTo(self, *points: Tuple[float, float]) -> None:
+    def qCurveTo(self, *points: Point | None) -> None:
         """Draw a whole string of quadratic curve segments.
 
         The last point specified is on-curve, all others are off-curve
@@ -119,11 +122,7 @@ class AbstractPen:
         """
         pass
 
-    def addComponent(
-        self,
-        glyphName: str,
-        transformation: Tuple[float, float, float, float, float, float],
-    ) -> None:
+    def addComponent(self, glyphName: str, transformation: Transformation) -> None:
         """Add a sub glyph. The 'transformation' argument must be a 6-tuple
         containing an affine transformation, or a Transform object from the
         fontTools.misc.transform module. More precisely: it should be a
@@ -136,25 +135,25 @@ class NullPen(AbstractPen):
 
     """A pen that does nothing."""
 
-    def moveTo(self, pt):
+    def moveTo(self, pt: Point) -> None:
         pass
 
-    def lineTo(self, pt):
+    def lineTo(self, pt: Point) -> None:
         pass
 
-    def curveTo(self, *points):
+    def curveTo(self, *points: Point) -> None:
         pass
 
-    def qCurveTo(self, *points):
+    def qCurveTo(self, *points: Point | None) -> None:
         pass
 
-    def closePath(self):
+    def closePath(self) -> None:
         pass
 
-    def endPath(self):
+    def endPath(self) -> None:
         pass
 
-    def addComponent(self, glyphName, transformation):
+    def addComponent(self, glyphName: str, transformation: Transformation) -> None:
         pass
 
 
@@ -184,14 +183,14 @@ class DecomposingPen(LoggingPen):
 
     skipMissingComponents = True
 
-    def __init__(self, glyphSet):
+    def __init__(self, glyphSet: GlyphSet) -> None:
         """Takes a single 'glyphSet' argument (dict), in which the glyphs
         that are referenced as components are looked up by their name.
         """
         super(DecomposingPen, self).__init__()
         self.glyphSet = glyphSet
 
-    def addComponent(self, glyphName, transformation):
+    def addComponent(self, glyphName: str, transformation: Transformation) -> None:
         """Transform the points of the base glyph and draw it onto self."""
         from fontTools.pens.transformPen import TransformPen
 
@@ -214,34 +213,36 @@ class BasePen(DecomposingPen):
     methods.
     """
 
-    def __init__(self, glyphSet=None):
-        super(BasePen, self).__init__(glyphSet)
-        self.__currentPoint = None
+    def __init__(self, glyphSet: GlyphSet | None = None) -> None:
+        # XXX: DecomposingPen needs a glyphSet, changing it changes the API.
+        super(BasePen, self).__init__(glyphSet)  # type: ignore
+        self.__currentPoint: Point | None = None
 
     # must override
 
-    def _moveTo(self, pt):
+    def _moveTo(self, pt: Point) -> None:
         raise NotImplementedError
 
-    def _lineTo(self, pt):
+    def _lineTo(self, pt: Point) -> None:
         raise NotImplementedError
 
-    def _curveToOne(self, pt1, pt2, pt3):
+    def _curveToOne(self, pt1: Point, pt2: Point, pt3: Point) -> None:
         raise NotImplementedError
 
     # may override
 
-    def _closePath(self):
+    def _closePath(self) -> None:
         pass
 
-    def _endPath(self):
+    def _endPath(self) -> None:
         pass
 
-    def _qCurveToOne(self, pt1, pt2):
+    def _qCurveToOne(self, pt1: Point, pt2: Point) -> None:
         """This method implements the basic quadratic curve type. The
         default implementation delegates the work to the cubic curve
         function. Optionally override with a native implementation.
         """
+        assert self.__currentPoint is not None
         pt0x, pt0y = self.__currentPoint
         pt1x, pt1y = pt1
         pt2x, pt2y = pt2
@@ -253,29 +254,29 @@ class BasePen(DecomposingPen):
 
     # don't override
 
-    def _getCurrentPoint(self):
+    def _getCurrentPoint(self) -> Point | None:
         """Return the current point. This is not part of the public
         interface, yet is useful for subclasses.
         """
         return self.__currentPoint
 
-    def closePath(self):
+    def closePath(self) -> None:
         self._closePath()
         self.__currentPoint = None
 
-    def endPath(self):
+    def endPath(self) -> None:
         self._endPath()
         self.__currentPoint = None
 
-    def moveTo(self, pt):
+    def moveTo(self, pt: Point) -> None:
         self._moveTo(pt)
         self.__currentPoint = pt
 
-    def lineTo(self, pt):
+    def lineTo(self, pt: Point) -> None:
         self._lineTo(pt)
         self.__currentPoint = pt
 
-    def curveTo(self, *points):
+    def curveTo(self, *points: Point) -> None:
         n = len(points) - 1  # 'n' is the number of control points
         assert n >= 0
         if n == 2:
@@ -304,7 +305,7 @@ class BasePen(DecomposingPen):
         else:
             raise AssertionError("can't get there from here")
 
-    def qCurveTo(self, *points):
+    def qCurveTo(self, *points: Point | None) -> None:
         n = len(points) - 1  # 'n' is the number of control points
         assert n >= 0
         if points[-1] is None:
@@ -314,6 +315,8 @@ class BasePen(DecomposingPen):
             # point) to be None. We simulate the feature by making the implied
             # on-curve point between the last and the first off-curve points
             # explicit.
+            assert points[0] is not None
+            assert points[-2] is not None
             x, y = points[-2]  # last off-curve point
             nx, ny = points[0]  # first off-curve point
             impliedStartPoint = (0.5 * (x + nx), 0.5 * (y + ny))
@@ -326,14 +329,18 @@ class BasePen(DecomposingPen):
             # there's an implied on-curve point exactly in the middle.
             # This is where the segment splits.
             _qCurveToOne = self._qCurveToOne
-            for pt1, pt2 in decomposeQuadraticSegment(points):
+            assert points[-1] is not None  # Taken care of above
+            for pt1, pt2 in decomposeQuadraticSegment(points):  # type: ignore
                 _qCurveToOne(pt1, pt2)
                 self.__currentPoint = pt2
         else:
+            assert points[0] is not None
             self.lineTo(points[0])
 
 
-def decomposeSuperBezierSegment(points):
+def decomposeSuperBezierSegment(
+    points: Sequence[Point],
+) -> list[tuple[Point, Point, Point]]:
     """Split the SuperBezier described by 'points' into a list of regular
     bezier segments. The 'points' argument must be a sequence with length
     3 or greater, containing (x, y) coordinates. The last point is the
@@ -368,7 +375,7 @@ def decomposeSuperBezierSegment(points):
     return bezierSegments
 
 
-def decomposeQuadraticSegment(points):
+def decomposeQuadraticSegment(points: Sequence[Point]) -> list[tuple[Point, Point]]:
     """Split the quadratic curve segment described by 'points' into a list
     of "atomic" quadratic segments. The 'points' argument must be a sequence
     with length 2 or greater, containing (x, y) coordinates. The last point
@@ -380,7 +387,7 @@ def decomposeQuadraticSegment(points):
     """
     n = len(points) - 1
     assert n > 0
-    quadSegments = []
+    quadSegments: list[tuple[Point, Point]] = []
     for i in range(n - 1):
         x, y = points[i]
         nx, ny = points[i + 1]
@@ -393,19 +400,19 @@ def decomposeQuadraticSegment(points):
 class _TestPen(BasePen):
     """Test class that prints PostScript to stdout."""
 
-    def _moveTo(self, pt):
+    def _moveTo(self, pt: Point) -> None:
         print("%s %s moveto" % (pt[0], pt[1]))
 
-    def _lineTo(self, pt):
+    def _lineTo(self, pt: Point) -> None:
         print("%s %s lineto" % (pt[0], pt[1]))
 
-    def _curveToOne(self, bcp1, bcp2, pt):
+    def _curveToOne(self, bcp1: Point, bcp2: Point, pt: Point) -> None:
         print(
             "%s %s %s %s %s %s curveto"
             % (bcp1[0], bcp1[1], bcp2[0], bcp2[1], pt[0], pt[1])
         )
 
-    def _closePath(self):
+    def _closePath(self) -> None:
         print("closepath")
 
 
