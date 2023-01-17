@@ -824,6 +824,15 @@ class Glyph(object):
             component = GlyphComponent()
             self.components.append(component)
             component.fromXML(name, attrs, content, ttFont)
+        elif name == "varComponent":
+            if self.numberOfContours > 0:
+                raise ttLib.TTLibError("can't mix composites and contours in glyph")
+            self.numberOfContours = -2
+            if not hasattr(self, "components"):
+                self.components = []
+            component = GlyphVarComponent()
+            self.components.append(component)
+            component.fromXML(name, attrs, content, ttFont)
         elif name == "instructions":
             self.program = ttProgram.Program()
             for element in content:
@@ -1769,7 +1778,7 @@ class GlyphVarComponent(object):
 
         return data
 
-    def compile(self, more, haveInstructions, glyfTable):
+    def compile(self, glyfTable):
         data = b""
 
         raise NotImplementedError
@@ -1795,6 +1804,27 @@ class GlyphVarComponent(object):
 
         writer.endtag("varComponent")
         writer.newline()
+
+    def fromXML(self, name, attrs, content, ttFont):
+        self.glyphName = attrs["glyphName"]
+        self.flags = safeEval(attrs["flags"])
+
+        for attr_name, (_, _, _, defaultValue) in var_component_transform_mapping.items():
+            v = getattr(attrs, attr_name, None)
+            v = safeEval(v) if v is not None else defaultValue
+            setattr(self, attr_name, v)
+
+        self.axisIndices = []
+        self.axisValues = []
+        for c in content:
+            if not isinstance(c, tuple):
+                continue
+            name, attrs, content = c
+            assert name == "axis"
+            assert not content
+            self.axisIndices.append(safeEval(attrs["index"]))
+            self.axisValues.append(safeEval(attrs["value"]))
+
 
     def getPointCount(self):
         count = 0
