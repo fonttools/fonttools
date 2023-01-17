@@ -1339,7 +1339,7 @@ class Glyph(object):
             i += coordBytes
             # Remove padding
             data = data[:i]
-        else:
+        elif self.isComposite():
             more = 1
             we_have_instructions = False
             while more:
@@ -1369,6 +1369,8 @@ class Glyph(object):
                 i += 2 + instructionLen
             # Remove padding
             data = data[:i]
+        elif self.isVarComposite():
+            raise NotImplementedError
 
         self.data = data
 
