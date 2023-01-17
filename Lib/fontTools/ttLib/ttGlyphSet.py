@@ -24,6 +24,7 @@ class _TTGlyphSet(Mapping):
         self.glyphsMapping = glyphsMapping
         self.hMetrics = font["hmtx"].metrics
         self.vMetrics = getattr(font.get("vmtx"), "metrics", None)
+        self.hvarTable = None
         if location:
             from fontTools.varLib.varStore import VarStoreInstancer
 
@@ -62,8 +63,7 @@ class _TTGlyphSetGlyf(_TTGlyphSet):
     def __init__(self, font, location):
         self.glyfTable = font["glyf"]
         super().__init__(font, location, self.glyfTable)
-        if location:
-            self.gvarTable = font.get("gvar")
+        self.gvarTable = font.get("gvar")
 
     def __getitem__(self, glyphName):
         return _TTGlyphGlyf(self, glyphName)
@@ -168,7 +168,7 @@ class _TTGlyphGlyf(_TTGlyph):
 
         for comp in glyph.components:
 
-            # TODO Handle missing attributes. Ugh
+            # TODO Handle missing attributes?
             t = Transform()
             t = t.translate(
                 comp.translateX + comp.tCenterX, comp.translateY + comp.tCenterY
@@ -176,7 +176,7 @@ class _TTGlyphGlyf(_TTGlyph):
             t = t.rotate(comp.rotation / 180 * math.pi)
             t = t.scale(comp.scaleX, comp.scaleY)
             t = t.skew(-comp.skewX / 180 * math.pi, comp.skewY / 180 * math.pi)
-            t = t.translate(-comp.tCenterX, -comp.tCenterX)
+            t = t.translate(-comp.tCenterX, -comp.tCenterY)
 
             if isPointPen:
                 tPen = TransformPointPen(pen, t)
