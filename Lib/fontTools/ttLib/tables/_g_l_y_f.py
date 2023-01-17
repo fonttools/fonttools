@@ -404,42 +404,9 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 
             for component in glyph.components:
 
-                if component.flags & VarComponentFlags.AXES_HAVE_VARIATION:
-                    for tag, v in component.location.items():
-                        controls.append(tag)
-                        coords.append((fl2fi(v, 14), 0))
-
-                if component.flags & (
-                    VarComponentFlags.HAVE_TRANSLATE_X
-                    | VarComponentFlags.HAVE_TRANSLATE_Y
-                ):
-                    controls.append("translate")
-                    coords.append((component.translateX, component.translateY))
-                if component.flags & VarComponentFlags.HAVE_ROTATION:
-                    controls.append("rotation")
-                    coords.append((fl2fi(component.rotation / 180, 12), 0))
-                if component.flags & (
-                    VarComponentFlags.HAVE_SCALE_X | VarComponentFlags.HAVE_SCALE_Y
-                ):
-                    controls.append("scale")
-                    coords.append(
-                        (fl2fi(component.scaleX, 10), fl2fi(component.scaleY, 10))
-                    )
-                if component.flags & (
-                    VarComponentFlags.HAVE_SKEW_X | VarComponentFlags.HAVE_SKEW_Y
-                ):
-                    controls.append("skew")
-                    coords.append(
-                        (
-                            fl2fi(component.skewX / 180, 12),
-                            fl2fi(component.skewY / 180, 12),
-                        )
-                    )
-                if component.flags & (
-                    VarComponentFlags.HAVE_TCENTER_X | VarComponentFlags.HAVE_TCENTER_Y
-                ):
-                    controls.append("tCenter")
-                    coords.append((component.tCenterX, component.skewY))
+                componentCoords, componentControls = component.getCoordinatesAndControls()
+                coords.extend(componentCoords)
+                controls.extend(componentControls)
 
             coords = GlyphCoordinates(coords)
 
@@ -1956,6 +1923,50 @@ class GlyphVarComponent(object):
             count += 1
 
         return count
+
+    def getCoordinatesAndControls(self):
+
+        coords = []
+        controls = []
+
+        if self.flags & VarComponentFlags.AXES_HAVE_VARIATION:
+            for tag, v in self.location.items():
+                controls.append(tag)
+                coords.append((fl2fi(v, 14), 0))
+
+        if self.flags & (
+            VarComponentFlags.HAVE_TRANSLATE_X
+            | VarComponentFlags.HAVE_TRANSLATE_Y
+        ):
+            controls.append("translate")
+            coords.append((self.translateX, self.translateY))
+        if self.flags & VarComponentFlags.HAVE_ROTATION:
+            controls.append("rotation")
+            coords.append((fl2fi(self.rotation / 180, 12), 0))
+        if self.flags & (
+            VarComponentFlags.HAVE_SCALE_X | VarComponentFlags.HAVE_SCALE_Y
+        ):
+            controls.append("scale")
+            coords.append(
+                (fl2fi(self.scaleX, 10), fl2fi(self.scaleY, 10))
+            )
+        if self.flags & (
+            VarComponentFlags.HAVE_SKEW_X | VarComponentFlags.HAVE_SKEW_Y
+        ):
+            controls.append("skew")
+            coords.append(
+                (
+                    fl2fi(self.skewX / 180, 12),
+                    fl2fi(self.skewY / 180, 12),
+                )
+            )
+        if self.flags & (
+            VarComponentFlags.HAVE_TCENTER_X | VarComponentFlags.HAVE_TCENTER_Y
+        ):
+            controls.append("tCenter")
+            coords.append((self.tCenterX, self.skewY))
+
+        return coords, controls
 
     def __eq__(self, other):
         if type(self) != type(other):
