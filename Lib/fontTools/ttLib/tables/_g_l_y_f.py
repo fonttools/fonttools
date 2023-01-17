@@ -1090,6 +1090,13 @@ class Glyph(object):
         else:
             return self.numberOfContours == -1
 
+    def isVarComposite(self):
+        """Test whether a glyph has components"""
+        if hasattr(self, "data") and self.data:
+            return struct.unpack(">h", self.data[:2])[0] == -2
+        else:
+            return self.numberOfContours == -2
+
     def getCoordinates(self, glyfTable):
         """Return the coordinates, end points and flags
 
