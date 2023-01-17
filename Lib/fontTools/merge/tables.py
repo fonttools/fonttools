@@ -209,6 +209,7 @@ ttLib.getTableClass("glyf").mergeMap = {
     "tableTag": equal,
     "glyphs": sumDicts,
     "glyphOrder": sumLists,
+    "axisTags": equal,
 }
 
 

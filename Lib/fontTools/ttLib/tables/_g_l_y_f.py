@@ -87,7 +87,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
     padding = 1
 
     def decompile(self, data, ttFont):
-        self.axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
+        self.axisTags = [axis.axisTag for axis in ttFont["fvar"].axes] if "fvar" in ttFont else []
         loca = ttFont["loca"]
         pos = int(loca[0])
         nextPos = 0
@@ -125,7 +125,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
             glyph.expand(self)
 
     def compile(self, ttFont):
-        self.axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
+        self.axisTags = [axis.axisTag for axis in ttFont["fvar"].axes] if "fvar" in ttFont else []
         if not hasattr(self, "glyphOrder"):
             self.glyphOrder = ttFont.getGlyphOrder()
         padding = self.padding
