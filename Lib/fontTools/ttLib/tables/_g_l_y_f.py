@@ -1790,14 +1790,13 @@ class GlyphVarComponent(object):
             data, value = read_transform_component(data, mapping_values)
             setattr(self, attr_name, value)
 
-        if (
-            flags & VarComponentFlags.UNIFORM_SCALE
-            and flags & VarComponentFlags.HAVE_SCALE_X
-            and not (flags & VarComponentFlags.HAVE_SCALE_Y)
-        ):
-            self.scaleY = self.scaleX
+        if flags & VarComponentFlags.UNIFORM_SCALE:
+            if flags & VarComponentFlags.HAVE_SCALE_X and not (
+                flags & VarComponentFlags.HAVE_SCALE_Y
+            ):
+                self.scaleY = self.scaleX
+                flags |= VarComponentFlags.HAVE_SCALE_Y
             flags ^= VarComponentFlags.UNIFORM_SCALE
-            flags |= VarComponentFlags.HAVE_SCALE_Y
 
         return data
 
