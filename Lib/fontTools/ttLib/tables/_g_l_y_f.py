@@ -1819,7 +1819,15 @@ class GlyphVarComponent(object):
     def compile(self, glyfTable):
         data = b""
 
-        flags = self.flags
+        if not hasattr(self, "flags"):
+            flags = 0
+            # Calculate optimal transform component flags
+            for attr_name, mapping_values in var_component_transform_mapping.items():
+                value = getattr(self, attr_name, mapping_values.defaultValue)
+                if value != mapping_values.defaultValue:
+                    flags |= mapping_values.flag
+        else:
+            flags = self.flags
 
         numAxes = len(self.location)
 
@@ -1865,7 +1873,8 @@ class GlyphVarComponent(object):
     def toXML(self, writer, ttFont):
         attrs = [("glyphName", self.glyphName)]
 
-        attrs = attrs + [("flags", hex(self.flags))]
+        if hasattr(self, "flags"):
+            attrs = attrs + [("flags", hex(self.flags))]
 
         for attr_name, (
             _,
@@ -1893,7 +1902,9 @@ class GlyphVarComponent(object):
 
     def fromXML(self, name, attrs, content, ttFont):
         self.glyphName = attrs["glyphName"]
-        self.flags = safeEval(attrs["flags"])
+
+        if "flags" in attrs:
+            self.flags = safeEval(attrs["flags"])
 
         for attr_name, (
             _,
@@ -1920,6 +1931,8 @@ class GlyphVarComponent(object):
                 self.location[safeEval(attrs["index"])] = safeEval(attrs["value"])
 
     def getPointCount(self):
+        assert hasattr(self, "flags"), "VarComponent with variations must have flags"
+
         count = 0
 
         if self.flags & VarComponentFlags.AXES_HAVE_VARIATION:
