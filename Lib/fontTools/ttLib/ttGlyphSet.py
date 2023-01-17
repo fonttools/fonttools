@@ -5,6 +5,8 @@ from collections.abc import Mapping
 from copy import copy
 from fontTools.misc.fixedTools import otRound
 from fontTools.misc.loggingTools import deprecateFunction
+from fontTools.misc.transform import Transform
+from fontTools.pens.transformPen import TransformPen, TransformPointPen
 
 
 class _TTGlyphSet(Mapping):
@@ -16,6 +18,8 @@ class _TTGlyphSet(Mapping):
     def __init__(self, font, location, glyphsMapping):
         self.font = font
         self.location = location
+        self.originalLocation = location
+        self.locationStack = []
         self.glyphsMapping = glyphsMapping
         self.hMetrics = font["hmtx"].metrics
         self.vMetrics = getattr(font.get("vmtx"), "metrics", None)
@@ -28,6 +32,14 @@ class _TTGlyphSet(Mapping):
                     self.hvarTable.VarStore, font["fvar"].axes, location
                 )
             # TODO VVAR, VORG
+
+    def pushLocation(self, location):
+        self.locationStack.append(self.location)
+        self.location = self.originalLocation.copy()
+        self.location.update(location)
+
+    def popLocation(self):
+        self.location = self.locationStack.pop()
 
     def __contains__(self, glyphName):
         return glyphName in self.glyphsMapping
@@ -126,6 +138,14 @@ class _TTGlyphGlyf(_TTGlyph):
         how that works.
         """
         glyph, offset = self._getGlyphAndOffset()
+
+        if self.glyphSet.locationStack:
+            offset = 0  # Offset should only apply at top-level
+
+        if glyph.isVarComposite():
+            self._drawVarComposite(glyph, pen, False)
+            return
+
         glyph.draw(pen, self.glyphSet.glyfTable, offset)
 
     def drawPoints(self, pen):
@@ -133,7 +153,41 @@ class _TTGlyphGlyf(_TTGlyph):
         how that works.
         """
         glyph, offset = self._getGlyphAndOffset()
+
+        if self.glyphSet.locationStack:
+            offset = 0  # Offset should only apply at top-level
+
+        if glyph.isVarComposite():
+            self._drawVarComposite(glyph, pen, True)
+            return
+
         glyph.drawPoints(pen, self.glyphSet.glyfTable, offset)
+
+    def _drawVarComposite(self, glyph, pen, isPointPen):
+
+        for comp in glyph.components:
+
+            # TODO Handle missing attributes. Ugh
+            t = Transform()
+            t = t.translate(
+                comp.translateX + comp.tCenterX, comp.translateY + comp.tCenterY
+            )
+            t = t.rotate(comp.rotation)
+            t = t.scale(comp.scaleX, comp.scaleY)
+            t = t.skew(-comp.skewX, comp.skewY)
+            t = t.translate(-comp.tCenterX, -comp.tCenterX)
+
+            if isPointPen:
+                tPen = TransformPointPen(pen, t)
+            else:
+                tPen = TransformPen(pen, t)
+
+            self.glyphSet.pushLocation(comp.location)
+            if isPointPen:
+                self.glyphSet[comp.glyphName].drawPoints(tPen)
+            else:
+                self.glyphSet[comp.glyphName].draw(tPen)
+            self.glyphSet.popLocation()
 
     def _getGlyphAndOffset(self):
         if self.glyphSet.location and self.glyphSet.gvarTable is not None:
