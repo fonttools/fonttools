@@ -406,6 +406,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
                         controls.append(i)
                         coords.append((v, 0))
 
+                # Err; convert to integers. Ugh.
                 if component.flags & (VarComponentFlags.HAVE_TRANSLATE_X |  VarComponentFlags.HAVE_TRANSLATE_Y):
                     controls.append("translate")
                     coords.append((component.translateX, component.translateY))
@@ -1697,20 +1698,20 @@ class VarComponentFlags (IntFlag):
 
 
 VarComponentTransformMappingValues = namedtuple(
-    "VarComponentTransformMappingValues", ["flag", "fractionalBits", "defaultValue"]
+    "VarComponentTransformMappingValues", ["flag", "fractionalBits", "scale", "defaultValue"]
 )
 
 namedtuple
 var_component_transform_mapping = {
-    "translateX":	VarComponentTransformMappingValues(VarComponentFlags.HAVE_TRANSLATE_X, 0, 0),
-    "translateY":	VarComponentTransformMappingValues(VarComponentFlags.HAVE_TRANSLATE_Y, 0, 0),
-    "rotation":		VarComponentTransformMappingValues(VarComponentFlags.HAVE_ROTATION, 12, 0),
-    "scaleX":		VarComponentTransformMappingValues(VarComponentFlags.HAVE_SCALE_X, 10, 1),
-    "scaleY":		VarComponentTransformMappingValues(VarComponentFlags.HAVE_SCALE_Y, 10, 1),
-    "skewX":		VarComponentTransformMappingValues(VarComponentFlags.HAVE_SKEW_X, 12, 0),
-    "skewY":		VarComponentTransformMappingValues(VarComponentFlags.HAVE_SKEW_Y, 12, 0),
-    "tCenterX":		VarComponentTransformMappingValues(VarComponentFlags.HAVE_TCENTER_X, 0, 0),
-    "tCenterY":		VarComponentTransformMappingValues(VarComponentFlags.HAVE_TCENTER_Y, 0, 0),
+    "translateX":	VarComponentTransformMappingValues(VarComponentFlags.HAVE_TRANSLATE_X, 0, 1, 0),
+    "translateY":	VarComponentTransformMappingValues(VarComponentFlags.HAVE_TRANSLATE_Y, 0, 1, 0),
+    "rotation":		VarComponentTransformMappingValues(VarComponentFlags.HAVE_ROTATION, 12, 180, 0),
+    "scaleX":		VarComponentTransformMappingValues(VarComponentFlags.HAVE_SCALE_X, 10, 1, 1),
+    "scaleY":		VarComponentTransformMappingValues(VarComponentFlags.HAVE_SCALE_Y, 10, 1, 1),
+    "skewX":		VarComponentTransformMappingValues(VarComponentFlags.HAVE_SKEW_X, 12, 180, 0),
+    "skewY":		VarComponentTransformMappingValues(VarComponentFlags.HAVE_SKEW_Y, 12, 180, 0),
+    "tCenterX":		VarComponentTransformMappingValues(VarComponentFlags.HAVE_TCENTER_X, 0, 1, 0),
+    "tCenterY":		VarComponentTransformMappingValues(VarComponentFlags.HAVE_TCENTER_Y, 0, 1, 0),
 }
 
 class GlyphVarComponent(object):
@@ -1758,7 +1759,7 @@ class GlyphVarComponent(object):
 
         def read_transform_component(data, values):
             if flags & values.flag:
-                return data[2:], fi2fl(struct.unpack(">h", data[:2])[0], values.fractionalBits)
+                return data[2:], fi2fl(struct.unpack(">h", data[:2])[0], values.fractionalBits) * values.scale
             else:
                 return data, values.defaultValue
 
@@ -1780,7 +1781,7 @@ class GlyphVarComponent(object):
 
         attrs = attrs + [("flags", hex(self.flags))]
 
-        for attr_name, (_, _, defaultValue) in var_component_transform_mapping.items():
+        for attr_name, (_, _, _, defaultValue) in var_component_transform_mapping.items():
             v = getattr(self, attr_name, defaultValue)
             if v != defaultValue:
                 attrs.append((attr_name, v))
