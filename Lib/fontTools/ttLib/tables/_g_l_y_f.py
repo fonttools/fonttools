@@ -401,7 +401,6 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
         elif glyph.isVarComposite():
             coords = []
             controls = []
-            endPts = []
 
             for component in glyph.components:
 
@@ -442,17 +441,14 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
                     controls.append("tCenter")
                     coords.append((component.tCenterX, component.skewY))
 
-                endPts.append(len(coords))
-
             coords = GlyphCoordinates(coords)
 
-            # XXXXXXXXXXXXXXX
             controls = _GlyphControls(
                 numberOfContours=glyph.numberOfContours,
-                endPts=endPts,
+                endPts=list(range(len(coords))),
                 flags=None,
                 components=[
-                    (c.glyphName, getattr(c, "transform", None))
+                    (c.glyphName, getattr(c, "flags", None))
                     for c in glyph.components
                 ],
             )
