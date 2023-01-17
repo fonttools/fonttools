@@ -1888,8 +1888,7 @@ class GlyphVarComponent(object):
             _,
             defaultValue,
         ) in var_component_transform_mapping.items():
-            v = getattr(attrs, attr_name, None)
-            v = safeEval(v) if v is not None else defaultValue
+            v = safeEval(attrs[attr_name]) if attr_name in attrs else defaultValue
             setattr(self, attr_name, v)
 
         self.axisIndices = []
