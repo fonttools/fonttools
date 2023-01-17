@@ -406,9 +406,8 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
                 if component.flags & VarComponentFlags.AXES_HAVE_VARIATION:
                     for i, v in component.location.items():
                         controls.append(i)
-                        coords.append((v, 0))
+                        coords.append((fl2fi(v, 14), 0))
 
-                # Err; convert to integers. Ugh.
                 if component.flags & (
                     VarComponentFlags.HAVE_TRANSLATE_X
                     | VarComponentFlags.HAVE_TRANSLATE_Y
@@ -417,17 +416,24 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
                     coords.append((component.translateX, component.translateY))
                 if component.flags & VarComponentFlags.HAVE_ROTATION:
                     controls.append("rotation")
-                    coords.append((component.rotation, 0))
+                    coords.append((fl2fi(component.rotation / 180, 12), 0))
                 if component.flags & (
                     VarComponentFlags.HAVE_SCALE_X | VarComponentFlags.HAVE_SCALE_Y
                 ):
                     controls.append("scale")
-                    coords.append((component.scaleX, component.scaleY))
+                    coords.append(
+                        (fl2fi(component.scaleX, 10), fl2fi(component.scaleY, 10))
+                    )
                 if component.flags & (
                     VarComponentFlags.HAVE_SKEW_X | VarComponentFlags.HAVE_SKEW_Y
                 ):
                     controls.append("skew")
-                    coords.append((component.skewX, component.skewY))
+                    coords.append(
+                        (
+                            fl2fi(component.skewX / 180, 12),
+                            fl2fi(component.skewY / 180, 12),
+                        )
+                    )
                 if component.flags & (
                     VarComponentFlags.HAVE_TCENTER_X | VarComponentFlags.HAVE_TCENTER_Y
                 ):
@@ -1792,7 +1798,9 @@ class GlyphVarComponent(object):
         assert len(axisValues) == numAxes
         axisValues = [fi2fl(v, 14) for v in axisValues]
 
-        self.location = {i:v for i,v in zip(axisIndices, axisValues)} # TODO Needs fvar to use tags
+        self.location = {
+            i: v for i, v in zip(axisIndices, axisValues)
+        }  # TODO Needs fvar to use tags
 
         def read_transform_component(data, values):
             if flags & values.flag:
