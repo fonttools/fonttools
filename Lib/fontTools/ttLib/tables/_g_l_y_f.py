@@ -394,6 +394,49 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
                     for c in glyph.components
                 ],
             )
+        elif glyph.isVarComposite():
+            coords = []
+            controls = []
+            endPts = []
+
+            for component in glyph.components:
+
+                if component.flags & VarComponentFlags.AXES_HAVE_VARIATION:
+                    for i,v in zip(component.axisIndices, component.axisValues):
+                        controls.append(i)
+                        coords.append((v, 0))
+
+                if component.flags & (VarComponentFlags.HAVE_TRANSLATE_X |  VarComponentFlags.HAVE_TRANSLATE_Y):
+                    controls.append("translate")
+                    coords.append((component.translateX, component.translateY))
+                if component.flags & VarComponentFlags.HAVE_ROTATION:
+                    controls.append("rotation")
+                    coords.append((component.rotation, 0))
+                if component.flags & (VarComponentFlags.HAVE_SCALE_X |  VarComponentFlags.HAVE_SCALE_Y):
+                    controls.append("scale")
+                    coords.append((component.scaleX, component.scaleY))
+                if component.flags & (VarComponentFlags.HAVE_SKEW_X |  VarComponentFlags.HAVE_SKEW_Y):
+                    controls.append("skew")
+                    coords.append((component.skewX, component.skewY))
+                if component.flags & (VarComponentFlags.HAVE_TCENTER_X |  VarComponentFlags.HAVE_TCENTER_Y):
+                    controls.append("tCenter")
+                    coords.append((component.tCenterX, component.skewY))
+
+                endPts.append(len(coords))
+
+            coords = GlyphCoordinates(coords)
+
+            # XXXXXXXXXXXXXXX
+            controls = _GlyphControls(
+                numberOfContours=glyph.numberOfContours,
+                endPts=endPts,
+                flags=None,
+                components=[
+                    (c.glyphName, getattr(c, "transform", None))
+                    for c in glyph.components
+                ],
+            )
+
         else:
             coords, endPts, flags = glyph.getCoordinates(self)
             coords = coords.copy()
@@ -1648,6 +1691,24 @@ class VarComponentFlags (IntFlag):
     GID_IS_24			    = 0x1000
     AXES_HAVE_VARIATION		= 0x2000
 
+
+VarComponentTransformMappingValues = namedtuple(
+    "VarComponentTransformMappingValues", ["flag", "fractionalBits", "defaultValue"]
+)
+
+namedtuple
+var_component_transform_mapping = {
+    "translateX":	VarComponentTransformMappingValues(VarComponentFlags.HAVE_TRANSLATE_X, 0, 0),
+    "translateY":	VarComponentTransformMappingValues(VarComponentFlags.HAVE_TRANSLATE_Y, 0, 0),
+    "rotation":		VarComponentTransformMappingValues(VarComponentFlags.HAVE_ROTATION, 12, 0),
+    "scaleX":		VarComponentTransformMappingValues(VarComponentFlags.HAVE_SCALE_X, 10, 1),
+    "scaleY":		VarComponentTransformMappingValues(VarComponentFlags.HAVE_SCALE_Y, 10, 1),
+    "skewX":		VarComponentTransformMappingValues(VarComponentFlags.HAVE_SKEW_X, 12, 0),
+    "skewY":		VarComponentTransformMappingValues(VarComponentFlags.HAVE_SKEW_Y, 12, 0),
+    "tCenterX":		VarComponentTransformMappingValues(VarComponentFlags.HAVE_TCENTER_X, 0, 0),
+    "tCenterY":		VarComponentTransformMappingValues(VarComponentFlags.HAVE_TCENTER_Y, 0, 0),
+}
+
 class GlyphVarComponent(object):
 
     def __init__(self):
@@ -1689,21 +1750,15 @@ class GlyphVarComponent(object):
 
         # TODO make axes a dictionary? Needs fvar
 
-        def read_transform_component(data, flag, bits, default):
-            if flags & flag:
-                return data[2:], fl2fi(struct.unpack(">h", data[:2])[0], bits)
+        def read_transform_component(data, values):
+            if flags & values.flag:
+                return data[2:], fl2fi(struct.unpack(">h", data[:2])[0], values.fractionalBits)
             else:
-                return data, default
+                return data, values.defaultValue
 
-        data, self.translateX = read_transform_component(data, VarComponentFlags.HAVE_TRANSLATE_X, 0, 0)
-        data, self.translateY = read_transform_component(data, VarComponentFlags.HAVE_TRANSLATE_Y, 0, 0)
-        data, self.rotation = read_transform_component(data, VarComponentFlags.HAVE_ROTATION, 12, 0)
-        data, self.scaleX = read_transform_component(data, VarComponentFlags.HAVE_SCALE_X, 10, 1)
-        data, self.scaleY = read_transform_component(data, VarComponentFlags.HAVE_SCALE_Y, 10, 1)
-        data, self.skewX = read_transform_component(data, VarComponentFlags.HAVE_SKEW_X, 12, 0)
-        data, self.skewY = read_transform_component(data, VarComponentFlags.HAVE_SKEW_Y, 12, 0)
-        data, self.tCenterX = read_transform_component(data, VarComponentFlags.HAVE_TCENTER_X, 0, 0)
-        data, self.tCenterY = read_transform_component(data, VarComponentFlags.HAVE_TCENTER_Y, 0, 0)
+        for attr_name, mapping_values in var_component_transform_mapping.items():
+            data, value = read_transform_component(data, mapping_values)
+            setattr(self, attr_name, value)
 
         return data
 
@@ -1760,6 +1815,25 @@ class GlyphVarComponent(object):
 
         glyphID = glyfTable.getGlyphID(self.glyphName)
         return struct.pack(">HH", flags, glyphID) + data
+
+    def getPointCount(self):
+        count = 0
+
+        if self.flags & VarComponentFlags.AXES_HAVE_VARIATION:
+            count += len(self.axisValues)
+
+        if self.flags & (VarComponentFlags.HAVE_TRANSLATE_X |  VarComponentFlags.HAVE_TRANSLATE_Y):
+            count += 1
+        if self.flags & VarComponentFlags.HAVE_ROTATION:
+            count += 1
+        if self.flags & (VarComponentFlags.HAVE_SCALE_X |  VarComponentFlags.HAVE_SCALE_Y):
+            count += 1
+        if self.flags & (VarComponentFlags.HAVE_SKEW_X |  VarComponentFlags.HAVE_SKEW_Y):
+            count += 1
+        if self.flags & (VarComponentFlags.HAVE_TCENTER_X |  VarComponentFlags.HAVE_TCENTER_Y):
+            count += 1
+
+        return count
 
     def __eq__(self, other):
         if type(self) != type(other):

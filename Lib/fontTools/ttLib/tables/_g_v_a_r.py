@@ -242,8 +242,14 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
     @staticmethod
     def getNumPoints_(glyph):
         NUM_PHANTOM_POINTS = 4
+
         if glyph.isComposite():
             return len(glyph.components) + NUM_PHANTOM_POINTS
+        elif glyph.isVarComposite():
+            count = 0
+            for component in glyph.components:
+                count += component.getPointCount()
+            return count + NUM_PHANTOM_POINTS
         else:
             # Empty glyphs (eg. space, nonmarkingreturn) have no "coordinates" attribute.
             return len(getattr(glyph, "coordinates", [])) + NUM_PHANTOM_POINTS
