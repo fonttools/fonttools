@@ -78,6 +78,8 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 
     """
 
+    dependencies = ["fvar"]
+
     # this attribute controls the amount of padding applied to glyph data upon compile.
     # Glyph lenghts are aligned to multiples of the specified value.
     # Allowed values are (0, 1, 2, 4). '0' means no padding; '1' (default) also means
@@ -85,6 +87,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
     padding = 1
 
     def decompile(self, data, ttFont):
+        self.axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
         loca = ttFont["loca"]
         pos = int(loca[0])
         nextPos = 0
@@ -122,6 +125,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
             glyph.expand(self)
 
     def compile(self, ttFont):
+        self.axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
         if not hasattr(self, "glyphOrder"):
             self.glyphOrder = ttFont.getGlyphOrder()
         padding = self.padding
@@ -402,8 +406,8 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
             for component in glyph.components:
 
                 if component.flags & VarComponentFlags.AXES_HAVE_VARIATION:
-                    for i, v in component.location.items():
-                        controls.append(i)
+                    for tag, v in component.location.items():
+                        controls.append(tag)
                         coords.append((fl2fi(v, 14), 0))
 
                 if component.flags & (
@@ -1797,8 +1801,8 @@ class GlyphVarComponent(object):
         axisValues = [fi2fl(v, 14) for v in axisValues]
 
         self.location = {
-            i: v for i, v in zip(axisIndices, axisValues)
-        }  # TODO Needs fvar to use tags
+            glyfTable.axisTags[i]: v for i, v in zip(axisIndices, axisValues)
+        }
 
         def read_transform_component(data, values):
             if flags & values.flag:
@@ -1840,7 +1844,7 @@ class GlyphVarComponent(object):
         else:
             data = data + struct.pack(">H", glyphID)
 
-        axisIndices = self.location.keys()
+        axisIndices = [glyfTable.axisTags.index(tag) for tag in self.location.keys()]
         if all(a <= 255 for a in axisIndices):
             axisIndices = array.array("B", axisIndices)
         else:
@@ -1891,8 +1895,8 @@ class GlyphVarComponent(object):
 
         writer.begintag("location")
         writer.newline()
-        for i, v in self.location.items():
-            writer.simpletag("axis", [("index", i), ("value", v)])
+        for tag, v in self.location.items():
+            writer.simpletag("axis", [("tag", tag), ("value", v)])
             writer.newline()
         writer.endtag("location")
         writer.newline()
@@ -1928,7 +1932,7 @@ class GlyphVarComponent(object):
                 name, attrs, content = c
                 assert name == "axis"
                 assert not content
-                self.location[safeEval(attrs["index"])] = safeEval(attrs["value"])
+                self.location[attrs["tag"]] = safeEval(attrs["value"])
 
     def getPointCount(self):
         assert hasattr(self, "flags"), "VarComponent with variations must have flags"
