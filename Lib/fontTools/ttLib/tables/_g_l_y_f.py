@@ -1231,7 +1231,7 @@ class Glyph(object):
                 allFlags.extend(flags)
             return allCoords, allEndPts, allFlags
         elif self.isVarComposite():
-            # XXX
+            # We can't return coordinates for VarComposite glyphs.
             return GlyphCoordinates(), [], bytearray()
         else:
             return GlyphCoordinates(), [], bytearray()
