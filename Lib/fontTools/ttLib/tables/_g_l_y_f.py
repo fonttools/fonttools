@@ -78,6 +78,8 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 
     """
 
+    dependencies = ["fvar"]
+
     # this attribute controls the amount of padding applied to glyph data upon compile.
     # Glyph lenghts are aligned to multiples of the specified value.
     # Allowed values are (0, 1, 2, 4). '0' means no padding; '1' (default) also means
@@ -1781,16 +1783,16 @@ class GlyphVarComponent(object):
             axisIndices = array.array("B", data[:numAxes])
             data = data[numAxes:]
         assert len(axisIndices) == numAxes
-        self.axisIndices = list(axisIndices)
+        axisIndices = list(axisIndices)
 
         axisValues = array.array("h", data[: 2 * numAxes])
         if sys.byteorder != "big":
             axisValues.byteswap()
         data = data[2 * numAxes :]
         assert len(axisValues) == numAxes
-        self.axisValues = [fi2fl(v, 14) for v in axisValues]
+        axisValues = [fi2fl(v, 14) for v in axisValues]
 
-        # TODO make axes a dictionary? Needs fvar
+        self.location = {i:v for i,v in zip(axisIndices, axisValues)} # TODO Needs fvar to use tags
 
         def read_transform_component(data, values):
             if flags & values.flag:
@@ -1813,8 +1815,7 @@ class GlyphVarComponent(object):
 
         flags = self.flags
 
-        assert len(self.axisIndices) == len(self.axisValues)
-        numAxes = len(self.axisIndices)
+        numAxes = len(self.location)
 
         data = data + struct.pack(">B", numAxes)
 
@@ -1825,16 +1826,18 @@ class GlyphVarComponent(object):
         else:
             data = data + struct.pack(">H", glyphID)
 
-        if all(a <= 255 for a in self.axisIndices):
-            axisIndices = array.array("B", self.axisIndices)
+        axisIndices = self.location.keys()
+        if all(a <= 255 for a in axisIndices):
+            axisIndices = array.array("B", axisIndices)
         else:
-            axisIndices = array.array("H", self.axisIndices)
+            axisIndices = array.array("H", axisIndices)
             if sys.byteorder != "big":
                 axisIndices.byteswap()
             flags |= VarComponentFlags.AXIS_INDICES_ARE_SHORT
         data = data + bytes(axisIndices)
 
-        axisValues = array.array("h", (fl2fi(v, 14) for v in self.axisValues))
+        axisValues = self.location.values()
+        axisValues = array.array("h", (fl2fi(v, 14) for v in axisValues))
         if sys.byteorder != "big":
             axisValues.byteswap()
         data = data + bytes(axisValues)
@@ -1871,9 +1874,13 @@ class GlyphVarComponent(object):
         writer.begintag("varComponent", attrs)
         writer.newline()
 
-        for i, v in zip(self.axisIndices, self.axisValues):
+        writer.begintag("location")
+        writer.newline()
+        for i, v in self.location.items():
             writer.simpletag("axis", [("index", i), ("value", v)])
             writer.newline()
+        writer.endtag("location")
+        writer.newline()
 
         writer.endtag("varComponent")
         writer.newline()
@@ -1891,22 +1898,26 @@ class GlyphVarComponent(object):
             v = safeEval(attrs[attr_name]) if attr_name in attrs else defaultValue
             setattr(self, attr_name, v)
 
-        self.axisIndices = []
-        self.axisValues = []
+        self.location = {}
         for c in content:
             if not isinstance(c, tuple):
                 continue
             name, attrs, content = c
-            assert name == "axis"
-            assert not content
-            self.axisIndices.append(safeEval(attrs["index"]))
-            self.axisValues.append(safeEval(attrs["value"]))
+            if name != "location":
+                continue
+            for c in content:
+                if not isinstance(c, tuple):
+                    continue
+                name, attrs, content = c
+                assert name == "axis"
+                assert not content
+                self.location[safeEval(attrs["index"])] = safeEval(attrs["value"])
 
     def getPointCount(self):
         count = 0
 
         if self.flags & VarComponentFlags.AXES_HAVE_VARIATION:
-            count += len(self.axisValues)
+            count += len(self.location)
 
         if self.flags & (
             VarComponentFlags.HAVE_TRANSLATE_X | VarComponentFlags.HAVE_TRANSLATE_Y
