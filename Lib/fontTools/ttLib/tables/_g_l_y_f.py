@@ -404,7 +404,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
             for component in glyph.components:
 
                 if component.flags & VarComponentFlags.AXES_HAVE_VARIATION:
-                    for i, v in zip(component.axisIndices, component.axisValues):
+                    for i, v in component.location.items():
                         controls.append(i)
                         coords.append((v, 0))
 
