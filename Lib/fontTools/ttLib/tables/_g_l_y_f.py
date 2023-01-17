@@ -25,6 +25,7 @@ import os
 from fontTools.misc import xmlWriter
 from fontTools.misc.filenames import userNameToFileName
 from fontTools.misc.loggingTools import deprecateFunction
+from enum import IntFlag
 
 log = logging.getLogger(__name__)
 
@@ -620,6 +621,8 @@ SCALED_COMPONENT_OFFSET = 0x0800  # composite designed to have the component off
 UNSCALED_COMPONENT_OFFSET = 0x1000  # composite designed not to have the component offset scaled (designed for MS)
 
 
+
+
 CompositeMaxpValues = namedtuple(
     "CompositeMaxpValues", ["nPoints", "nContours", "maxComponentDepth"]
 )
@@ -826,6 +829,13 @@ class Glyph(object):
                     len(data),
                 )
 
+    def decompileVarComponents(self, data, glyfTable):
+        self.components = []
+        while data:
+            component = GlyphVarComponent()
+            data = component.decompile(data, glyfTable)
+            self.components.append(component)
+
     def decompileCoordinates(self, data):
         endPtsOfContours = array.array("H")
         endPtsOfContours.frombytes(data[: 2 * self.numberOfContours])
@@ -940,6 +950,12 @@ class Glyph(object):
         if haveInstructions:
             instructions = self.program.getBytecode()
             data = data + struct.pack(">h", len(instructions)) + instructions
+        return data
+
+    def compileVarComponents(self, glyfTable):
+        data = b""
+        for component in self.components:
+            data = data + component.compile(glyfTable)
         return data
 
     def compileCoordinates(self):
@@ -1605,6 +1621,145 @@ class GlyphComponent(object):
             scale = str2fl(attrs["scale"], 14)
             self.transform = [[scale, 0], [0, scale]]
         self.flags = safeEval(attrs["flags"])
+
+    def __eq__(self, other):
+        if type(self) != type(other):
+            return NotImplemented
+        return self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        result = self.__eq__(other)
+        return result if result is NotImplemented else not result
+
+
+class VarComponentFlags (IntFlag):
+    USE_MY_METRICS		    = 0x0001
+    AXIS_INDICES_ARE_SHORT	= 0x0002
+    UNIFORM_SCALE		    = 0x0004
+    HAVE_TRANSLATE_X		= 0x0008
+    HAVE_TRANSLATE_Y		= 0x0010
+    HAVE_ROTATION		    = 0x0020
+    HAVE_SCALE_X		    = 0x0040
+    HAVE_SCALE_Y		    = 0x0080
+    HAVE_SKEW_X			    = 0x0100
+    HAVE_SKEW_Y			    = 0x0200
+    HAVE_TCENTER_X		    = 0x0400
+    HAVE_TCENTER_Y		    = 0x0800
+    GID_IS_24			    = 0x1000
+    AXES_HAVE_VARIATION		= 0x2000
+
+class GlyphVarComponent(object):
+
+    def __init__(self):
+        pass
+
+    def decompile(self, data, glyfTable):
+        flags = struct.unpack(">H", data[:2])[0]
+        self.flags = int(flags)
+        data = data[2:]
+
+        numAxes = int(data[0])
+        data = data[1:]
+
+        if flags & VarComponentFlags.GID_IS_24:
+            glyphID = int(struct.unpack(">L", b'\0'+data[:3])[0])
+            data = data[3:]
+        else:
+            glyphID = int(struct.unpack(">H", data[:2])[0])
+            data = data[2:]
+        self.glyphName = glyfTable.getGlyphName(int(glyphID))
+
+        if flags & VarComponentFlags.AXIS_INDICES_ARE_SHORT:
+            axisIndices = array.array("H", data[:2*numAxes])
+            if sys.byteorder != "big":
+                arrayIndices.byteswap()
+            data = data[2*numAxes:]
+        else:
+            axisIndices = array.array("B", data[:numAxes])
+            data = data[numAxes:]
+        assert len(axisIndices) == numAxes
+        self.axisIndices = list(axisIndices)
+
+        axisValues = array.array("h", data[:2*numAxes])
+        if sys.byteorder != "big":
+            axisValues.byteswap()
+        data = data[2*numAxes:]
+        assert len(axisValues) == numAxes
+        self.axisValues = [fl2fi(v, 14) for v in axisValues]
+
+        # TODO make axes a dictionary? Needs fvar
+
+        def read_transform_component(data, flag, bits, default):
+            if flags & flag:
+                return data[2:], fl2fi(struct.unpack(">h", data[:2])[0], bits)
+            else:
+                return data, default
+
+        data, self.translateX = read_transform_component(data, VarComponentFlags.HAVE_TRANSLATE_X, 0, 0)
+        data, self.translateY = read_transform_component(data, VarComponentFlags.HAVE_TRANSLATE_Y, 0, 0)
+        data, self.rotation = read_transform_component(data, VarComponentFlags.HAVE_ROTATION, 12, 0)
+        data, self.scaleX = read_transform_component(data, VarComponentFlags.HAVE_SCALE_X, 10, 1)
+        data, self.scaleY = read_transform_component(data, VarComponentFlags.HAVE_SCALE_Y, 10, 1)
+        data, self.skewX = read_transform_component(data, VarComponentFlags.HAVE_SKEW_X, 12, 0)
+        data, self.skewY = read_transform_component(data, VarComponentFlags.HAVE_SKEW_Y, 12, 0)
+        data, self.tCenterX = read_transform_component(data, VarComponentFlags.HAVE_TCENTER_X, 0, 0)
+        data, self.tCenterY = read_transform_component(data, VarComponentFlags.HAVE_TCENTER_Y, 0, 0)
+
+        return data
+
+    def compile(self, more, haveInstructions, glyfTable):
+        data = b""
+
+        # reset all flags we will calculate ourselves
+        flags = self.flags & (
+            ROUND_XY_TO_GRID
+            | USE_MY_METRICS
+            | SCALED_COMPONENT_OFFSET
+            | UNSCALED_COMPONENT_OFFSET
+            | NON_OVERLAPPING
+            | OVERLAP_COMPOUND
+        )
+        if more:
+            flags = flags | MORE_COMPONENTS
+        if haveInstructions:
+            flags = flags | WE_HAVE_INSTRUCTIONS
+
+        if hasattr(self, "firstPt"):
+            if (0 <= self.firstPt <= 255) and (0 <= self.secondPt <= 255):
+                data = data + struct.pack(">BB", self.firstPt, self.secondPt)
+            else:
+                data = data + struct.pack(">HH", self.firstPt, self.secondPt)
+                flags = flags | ARG_1_AND_2_ARE_WORDS
+        else:
+            x = otRound(self.x)
+            y = otRound(self.y)
+            flags = flags | ARGS_ARE_XY_VALUES
+            if (-128 <= x <= 127) and (-128 <= y <= 127):
+                data = data + struct.pack(">bb", x, y)
+            else:
+                data = data + struct.pack(">hh", x, y)
+                flags = flags | ARG_1_AND_2_ARE_WORDS
+
+        if hasattr(self, "transform"):
+            transform = [[fl2fi(x, 14) for x in row] for row in self.transform]
+            if transform[0][1] or transform[1][0]:
+                flags = flags | WE_HAVE_A_TWO_BY_TWO
+                data = data + struct.pack(
+                    ">hhhh",
+                    transform[0][0],
+                    transform[0][1],
+                    transform[1][0],
+                    transform[1][1],
+                )
+            elif transform[0][0] != transform[1][1]:
+                flags = flags | WE_HAVE_AN_X_AND_Y_SCALE
+                data = data + struct.pack(">hh", transform[0][0], transform[1][1])
+            else:
+                flags = flags | WE_HAVE_A_SCALE
+                data = data + struct.pack(">h", transform[0][0])
+
+        glyphID = glyfTable.getGlyphID(self.glyphName)
+        return struct.pack(">HH", flags, glyphID) + data
 
     def __eq__(self, other):
         if type(self) != type(other):
