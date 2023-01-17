@@ -678,6 +678,8 @@ class Glyph(object):
             return
         if self.isComposite():
             self.decompileComponents(data, glyfTable)
+        elif self.isVarComposite():
+            self.decompileVarComponents(data, glyfTable)
         else:
             self.decompileCoordinates(data)
 
@@ -695,6 +697,8 @@ class Glyph(object):
         data = sstruct.pack(glyphHeaderFormat, self)
         if self.isComposite():
             data = data + self.compileComponents(glyfTable)
+        elif self.isVarComposite():
+            data = data + self.compileVarComponents(glyfTable)
         else:
             data = data + self.compileCoordinates()
         return data
@@ -1177,7 +1181,7 @@ class Glyph(object):
         empty list) or composite glyphs.
         """
         if not hasattr(self, "data"):
-            if self.isComposite():
+            if self.isComposite() or self.isVarComposite():
                 return [c.glyphName for c in self.components]
             else:
                 return []
@@ -1220,6 +1224,8 @@ class Glyph(object):
                 if self.isComposite():
                     if hasattr(self, "program"):
                         del self.program
+                elif self.isVarComposite():
+                    pass # Doesn't have hinting
                 else:
                     self.program = ttProgram.Program()
                     self.program.fromBytecode([])
