@@ -1765,56 +1765,10 @@ class GlyphVarComponent(object):
     def compile(self, more, haveInstructions, glyfTable):
         data = b""
 
-        # reset all flags we will calculate ourselves
-        flags = self.flags & (
-            ROUND_XY_TO_GRID
-            | USE_MY_METRICS
-            | SCALED_COMPONENT_OFFSET
-            | UNSCALED_COMPONENT_OFFSET
-            | NON_OVERLAPPING
-            | OVERLAP_COMPOUND
-        )
-        if more:
-            flags = flags | MORE_COMPONENTS
-        if haveInstructions:
-            flags = flags | WE_HAVE_INSTRUCTIONS
+        raise NotImplementedError
 
-        if hasattr(self, "firstPt"):
-            if (0 <= self.firstPt <= 255) and (0 <= self.secondPt <= 255):
-                data = data + struct.pack(">BB", self.firstPt, self.secondPt)
-            else:
-                data = data + struct.pack(">HH", self.firstPt, self.secondPt)
-                flags = flags | ARG_1_AND_2_ARE_WORDS
-        else:
-            x = otRound(self.x)
-            y = otRound(self.y)
-            flags = flags | ARGS_ARE_XY_VALUES
-            if (-128 <= x <= 127) and (-128 <= y <= 127):
-                data = data + struct.pack(">bb", x, y)
-            else:
-                data = data + struct.pack(">hh", x, y)
-                flags = flags | ARG_1_AND_2_ARE_WORDS
+        return data
 
-        if hasattr(self, "transform"):
-            transform = [[fl2fi(x, 14) for x in row] for row in self.transform]
-            if transform[0][1] or transform[1][0]:
-                flags = flags | WE_HAVE_A_TWO_BY_TWO
-                data = data + struct.pack(
-                    ">hhhh",
-                    transform[0][0],
-                    transform[0][1],
-                    transform[1][0],
-                    transform[1][1],
-                )
-            elif transform[0][0] != transform[1][1]:
-                flags = flags | WE_HAVE_AN_X_AND_Y_SCALE
-                data = data + struct.pack(">hh", transform[0][0], transform[1][1])
-            else:
-                flags = flags | WE_HAVE_A_SCALE
-                data = data + struct.pack(">h", transform[0][0])
-
-        glyphID = glyfTable.getGlyphID(self.glyphName)
-        return struct.pack(">HH", flags, glyphID) + data
 
     def getPointCount(self):
         count = 0
