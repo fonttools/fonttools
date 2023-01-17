@@ -1748,7 +1748,7 @@ class GlyphVarComponent(object):
         if flags & VarComponentFlags.AXIS_INDICES_ARE_SHORT:
             axisIndices = array.array("H", data[:2*numAxes])
             if sys.byteorder != "big":
-                arrayIndices.byteswap()
+                axisIndices.byteswap()
             data = data[2*numAxes:]
             flags ^= VarComponentFlags.AXIS_INDICES_ARE_SHORT
         else:
@@ -1781,9 +1781,45 @@ class GlyphVarComponent(object):
     def compile(self, glyfTable):
         data = b""
 
-        raise NotImplementedError
+        flags = self.flags
 
-        return data
+        assert len(self.axisIndices) == len(self.axisValues)
+        numAxes = len(self.axisIndices)
+
+        data = data + struct.pack(">B", numAxes)
+
+        glyphID = glyfTable.getGlyphID(self.glyphName)
+        if glyphID > 65535:
+            flags |= VarComponentFlags.GID_IS_24
+            data = data + struct.pack(">L", glyphID)[1:]
+        else:
+            data = data + struct.pack(">H", glyphID)
+
+        if all(a <= 255 for a in self.axisIndices):
+            axisIndices = array.array("B", self.axisIndices)
+        else:
+            axisIndices = array.array("H", self.axisIndices)
+            if sys.byteorder != "big":
+                axisIndices.byteswap()
+            flags |= VarComponentFlags.AXIS_INDICES_ARE_SHORT
+        data = data + bytes(axisIndices)
+
+        axisValues = array.array("h", (fl2fi(v, 14) for v in self.axisValues))
+        if sys.byteorder != "big":
+            axisValues.byteswap()
+        data = data + bytes(axisValues)
+
+        def write_transform_component(data, value, values):
+            if flags & values.flag:
+                return data + struct.pack(">h", fl2fi(value / values.scale, values.fractionalBits))
+            else:
+                return data
+
+        for attr_name, mapping_values in var_component_transform_mapping.items():
+            value = getattr(self, attr_name, mapping_values.defaultValue)
+            data = write_transform_component(data, value, mapping_values)
+
+        return struct.pack(">H", flags) + data
 
     def toXML(self, writer, ttFont):
         attrs = [("glyphName", self.glyphName)]
@@ -1824,7 +1860,6 @@ class GlyphVarComponent(object):
             assert not content
             self.axisIndices.append(safeEval(attrs["index"]))
             self.axisValues.append(safeEval(attrs["value"]))
-
 
     def getPointCount(self):
         count = 0
