@@ -1230,6 +1230,9 @@ class Glyph(object):
                 allCoords.extend(coordinates)
                 allFlags.extend(flags)
             return allCoords, allEndPts, allFlags
+        elif self.isVarComposite():
+            # XXX
+            return GlyphCoordinates(), [], bytearray()
         else:
             return GlyphCoordinates(), [], bytearray()
 
@@ -1977,6 +1980,7 @@ class GlyphVarComponent(object):
             for tag in self.location:
                 newLocation[tag] = fi2fl(coords[i][0], 14)
                 i += 1
+            self.location = newLocation
 
         if self.flags & (
             VarComponentFlags.HAVE_TRANSLATE_X | VarComponentFlags.HAVE_TRANSLATE_Y
