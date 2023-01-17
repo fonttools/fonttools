@@ -1965,9 +1965,45 @@ class GlyphVarComponent(object):
             VarComponentFlags.HAVE_TCENTER_X | VarComponentFlags.HAVE_TCENTER_Y
         ):
             controls.append("tCenter")
-            coords.append((self.tCenterX, self.skewY))
+            coords.append((self.tCenterX, self.tCenterY))
 
         return coords, controls
+
+    def setCoordinates(self, coords):
+        i = 0
+
+        if self.flags & VarComponentFlags.AXES_HAVE_VARIATION:
+            newLocation = {}
+            for tag in self.location:
+                newLocation[tag] = fi2fl(coords[i][0], 14)
+                i += 1
+
+        if self.flags & (
+            VarComponentFlags.HAVE_TRANSLATE_X | VarComponentFlags.HAVE_TRANSLATE_Y
+        ):
+            self.translateX, self.translateY = coords[i]
+            i += 1
+        if self.flags & VarComponentFlags.HAVE_ROTATION:
+            self.rotation = fi2fl(coords[i][0], 12) * 180
+            i += 1
+        if self.flags & (
+            VarComponentFlags.HAVE_SCALE_X | VarComponentFlags.HAVE_SCALE_Y
+        ):
+            self.scaleX, self.scaleY = fi2fl(coords[i][0], 10), fi2fl(coords[i][1], 10)
+            i += 1
+        if self.flags & (VarComponentFlags.HAVE_SKEW_X | VarComponentFlags.HAVE_SKEW_Y):
+            self.skewX, self.skewY = (
+                fi2fl(coords[i][0], 12) * 180,
+                fi2fl(coords[i][1], 12) * 180,
+            )
+            i += 1
+        if self.flags & (
+            VarComponentFlags.HAVE_TCENTER_X | VarComponentFlags.HAVE_TCENTER_Y
+        ):
+            self.tCenterX, self.tCenterY = coords[i]
+            i += 1
+
+        return coords[i:]
 
     def __eq__(self, other):
         if type(self) != type(other):
