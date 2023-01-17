@@ -754,6 +754,10 @@ class Glyph(object):
             for compo in self.components:
                 compo.toXML(writer, ttFont)
             haveInstructions = hasattr(self, "program")
+        if self.isVarComposite():
+            for compo in self.components:
+                compo.toXML(writer, ttFont)
+            haveInstructions = False
         else:
             last = 0
             for i in range(self.numberOfContours):
@@ -1725,6 +1729,7 @@ class GlyphVarComponent(object):
         if flags & VarComponentFlags.GID_IS_24:
             glyphID = int(struct.unpack(">L", b'\0'+data[:3])[0])
             data = data[3:]
+            flags ^= VarComponentFlags.GID_IS_24
         else:
             glyphID = int(struct.unpack(">H", data[:2])[0])
             data = data[2:]
@@ -1735,6 +1740,7 @@ class GlyphVarComponent(object):
             if sys.byteorder != "big":
                 arrayIndices.byteswap()
             data = data[2*numAxes:]
+            flags ^= VarComponentFlags.AXIS_INDICES_ARE_SHORT
         else:
             axisIndices = array.array("B", data[:numAxes])
             data = data[numAxes:]
@@ -1746,13 +1752,13 @@ class GlyphVarComponent(object):
             axisValues.byteswap()
         data = data[2*numAxes:]
         assert len(axisValues) == numAxes
-        self.axisValues = [fl2fi(v, 14) for v in axisValues]
+        self.axisValues = [fi2fl(v, 14) for v in axisValues]
 
         # TODO make axes a dictionary? Needs fvar
 
         def read_transform_component(data, values):
             if flags & values.flag:
-                return data[2:], fl2fi(struct.unpack(">h", data[:2])[0], values.fractionalBits)
+                return data[2:], fi2fl(struct.unpack(">h", data[:2])[0], values.fractionalBits)
             else:
                 return data, values.defaultValue
 
@@ -1769,6 +1775,25 @@ class GlyphVarComponent(object):
 
         return data
 
+    def toXML(self, writer, ttFont):
+        attrs = [("glyphName", self.glyphName)]
+
+        attrs = attrs + [("flags", hex(self.flags))]
+
+        for attr_name, (_, _, defaultValue) in var_component_transform_mapping.items():
+            v = getattr(self, attr_name, defaultValue)
+            if v != defaultValue:
+                attrs.append((attr_name, v))
+
+        writer.begintag("varComponent", attrs)
+        writer.newline()
+
+        for i,v in zip(self.axisIndices, self.axisValues):
+            writer.simpletag("axis", [('index', i), ('value', v)])
+            writer.newline()
+
+        writer.endtag("varComponent")
+        writer.newline()
 
     def getPointCount(self):
         count = 0
