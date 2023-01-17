@@ -1790,6 +1790,15 @@ class GlyphVarComponent(object):
             data, value = read_transform_component(data, mapping_values)
             setattr(self, attr_name, value)
 
+        if (
+            flags & VarComponentFlags.UNIFORM_SCALE
+            and flags & VarComponentFlags.HAVE_SCALE_X
+            and not (flags & VarComponentFlags.HAVE_SCALE_Y)
+        ):
+            self.scaleY = self.scaleX
+            flags ^= VarComponentFlags.UNIFORM_SCALE
+            flags |= VarComponentFlags.HAVE_SCALE_Y
+
         return data
 
     def compile(self, glyfTable):
@@ -1804,6 +1813,14 @@ class GlyphVarComponent(object):
                     flags |= mapping_values.flag
         else:
             flags = self.flags
+
+        if (
+            flags & VarComponentFlags.HAVE_SCALE_X
+            and flags & VarComponentFlags.HAVE_SCALE_Y
+            and self.scaleX == self.scaleY
+        ):
+            flags |= VarComponentFlags.UNIFORM_SCALE
+            flags ^= VarComponentFlags.HAVE_SCALE_Y
 
         numAxes = len(self.location)
 
