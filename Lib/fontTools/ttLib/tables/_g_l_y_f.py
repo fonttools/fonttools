@@ -78,8 +78,6 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 
     """
 
-    dependencies = ["fvar"]
-
     # this attribute controls the amount of padding applied to glyph data upon compile.
     # Glyph lenghts are aligned to multiples of the specified value.
     # Allowed values are (0, 1, 2, 4). '0' means no padding; '1' (default) also means
