@@ -1090,11 +1090,6 @@ class Glyph(object):
         else:
             return self.numberOfContours == -1
 
-    def __getitem__(self, componentIndex):
-        if not self.isComposite():
-            raise ttLib.TTLibError("can't use glyph as sequence")
-        return self.components[componentIndex]
-
     def getCoordinates(self, glyfTable):
         """Return the coordinates, end points and flags
 
