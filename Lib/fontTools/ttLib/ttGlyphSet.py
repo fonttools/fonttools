@@ -1,5 +1,6 @@
 """GlyphSets returned by a TTFont."""
 
+import math
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from copy import copy
@@ -172,9 +173,9 @@ class _TTGlyphGlyf(_TTGlyph):
             t = t.translate(
                 comp.translateX + comp.tCenterX, comp.translateY + comp.tCenterY
             )
-            t = t.rotate(comp.rotation)
+            t = t.rotate(comp.rotation / 180 * math.pi)
             t = t.scale(comp.scaleX, comp.scaleY)
-            t = t.skew(-comp.skewX, comp.skewY)
+            t = t.skew(-comp.skewX / 180 * math.pi, comp.skewY / 180 * math.pi)
             t = t.translate(-comp.tCenterX, -comp.tCenterX)
 
             if isPointPen:
