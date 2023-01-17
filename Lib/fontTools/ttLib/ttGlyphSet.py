@@ -210,6 +210,9 @@ def _setCoordinates(glyph, coord, glyfTable):
         for p, comp in zip(coord, glyph.components):
             if hasattr(comp, "x"):
                 comp.x, comp.y = p
+    elif glyph.isVarComposite():
+        glyph.components = [copy(comp) for comp in glyph.components]  # Shallow copy
+
     elif glyph.numberOfContours == 0:
         assert len(coord) == 0
     else:

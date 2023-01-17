@@ -87,7 +87,9 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
     padding = 1
 
     def decompile(self, data, ttFont):
-        self.axisTags = [axis.axisTag for axis in ttFont["fvar"].axes] if "fvar" in ttFont else []
+        self.axisTags = (
+            [axis.axisTag for axis in ttFont["fvar"].axes] if "fvar" in ttFont else []
+        )
         loca = ttFont["loca"]
         pos = int(loca[0])
         nextPos = 0
@@ -125,7 +127,9 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
             glyph.expand(self)
 
     def compile(self, ttFont):
-        self.axisTags = [axis.axisTag for axis in ttFont["fvar"].axes] if "fvar" in ttFont else []
+        self.axisTags = (
+            [axis.axisTag for axis in ttFont["fvar"].axes] if "fvar" in ttFont else []
+        )
         if not hasattr(self, "glyphOrder"):
             self.glyphOrder = ttFont.getGlyphOrder()
         padding = self.padding
@@ -404,7 +408,10 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 
             for component in glyph.components:
 
-                componentCoords, componentControls = component.getCoordinatesAndControls()
+                (
+                    componentCoords,
+                    componentControls,
+                ) = component.getCoordinatesAndControls()
                 coords.extend(componentCoords)
                 controls.extend(componentControls)
 
@@ -415,8 +422,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
                 endPts=list(range(len(coords))),
                 flags=None,
                 components=[
-                    (c.glyphName, getattr(c, "flags", None))
-                    for c in glyph.components
+                    (c.glyphName, getattr(c, "flags", None)) for c in glyph.components
                 ],
             )
 
@@ -1935,8 +1941,7 @@ class GlyphVarComponent(object):
                 coords.append((fl2fi(v, 14), 0))
 
         if self.flags & (
-            VarComponentFlags.HAVE_TRANSLATE_X
-            | VarComponentFlags.HAVE_TRANSLATE_Y
+            VarComponentFlags.HAVE_TRANSLATE_X | VarComponentFlags.HAVE_TRANSLATE_Y
         ):
             controls.append("translate")
             coords.append((self.translateX, self.translateY))
@@ -1947,12 +1952,8 @@ class GlyphVarComponent(object):
             VarComponentFlags.HAVE_SCALE_X | VarComponentFlags.HAVE_SCALE_Y
         ):
             controls.append("scale")
-            coords.append(
-                (fl2fi(self.scaleX, 10), fl2fi(self.scaleY, 10))
-            )
-        if self.flags & (
-            VarComponentFlags.HAVE_SKEW_X | VarComponentFlags.HAVE_SKEW_Y
-        ):
+            coords.append((fl2fi(self.scaleX, 10), fl2fi(self.scaleY, 10)))
+        if self.flags & (VarComponentFlags.HAVE_SKEW_X | VarComponentFlags.HAVE_SKEW_Y):
             controls.append("skew")
             coords.append(
                 (
