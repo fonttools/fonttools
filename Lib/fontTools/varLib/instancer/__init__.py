@@ -495,11 +495,19 @@ def _instantiateGvarGlyph(
     glyph = glyf[glyphname]
     if glyph.isVarComposite():
         for component in glyph.components:
+            newLocation = {}
             for tag, loc in component.location.items():
-                if tag in axisLimits:
+                if tag not in axisLimits:
+                    newLocation[tag] = loc
+                    continue
+                if component.flags & _g_l_y_f.VarComponentFlags.AXES_HAVE_VARIATION:
                     raise NotImplementedError(
-                        "Instancing accross VarComposite axes is not supported."
+                        "Instancing accross VarComposite axes with variation is not supported."
                     )
+                limits = axisLimits[tag]
+                loc = normalizeValue(loc, limits)
+                newLocation[tag] = loc
+            component.location = newLocation
 
     # _setCoordinates also sets the hmtx/vmtx advance widths and sidebearings from
     # the four phantom points and glyph bounding boxes.
