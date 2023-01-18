@@ -828,7 +828,7 @@ class Glyph(object):
                 self.program.fromXML(name, attrs, content, ttFont)
 
     def getCompositeMaxpValues(self, glyfTable, maxComponentDepth=1):
-        assert self.isComposite()
+        assert self.isComposite() or self.isVarComposite()
         nContours = 0
         nPoints = 0
         initialMaxComponentDepth = maxComponentDepth
