@@ -1818,10 +1818,12 @@ class GlyphVarComponent(object):
         if not hasattr(self, "flags"):
             flags = 0
             # Calculate optimal transform component flags
-            for attr_name, mapping_values in var_component_transform_mapping.items():
-                value = getattr(self, attr_name, mapping_values.defaultValue)
-                if value != mapping_values.defaultValue:
-                    flags |= mapping_values.flag
+            for attr_name, mapping in var_component_transform_mapping.items():
+                value = getattr(self, attr_name, mapping.defaultValue)
+                if fl2fi(value / mapping.scale, mapping.fractionalBits) != fl2fi(
+                    mapping.defaultValue / mapping.scale, mapping.fractionalBits
+                ):
+                    flags |= mapping.flag
         else:
             flags = self.flags
 
