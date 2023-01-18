@@ -874,7 +874,7 @@ class Glyph(object):
 
     def decompileVarComponents(self, data, glyfTable):
         self.components = []
-        while data:
+        while len(data) >= 5:
             component = GlyphVarComponent()
             data = component.decompile(data, glyfTable)
             self.components.append(component)
@@ -1148,15 +1148,15 @@ class Glyph(object):
 
     def isComposite(self):
         """Test whether a glyph has components"""
-        if hasattr(self, "data") and self.data:
-            return struct.unpack(">h", self.data[:2])[0] == -1
+        if hasattr(self, "data"):
+            return struct.unpack(">h", self.data[:2])[0] == -1 if self.data else False
         else:
             return self.numberOfContours == -1
 
     def isVarComposite(self):
         """Test whether a glyph has components"""
-        if hasattr(self, "data") and self.data:
-            return struct.unpack(">h", self.data[:2])[0] == -2
+        if hasattr(self, "data"):
+            return struct.unpack(">h", self.data[:2])[0] == -2 if self.data else False
         else:
             return self.numberOfContours == -2
 
@@ -1242,6 +1242,10 @@ class Glyph(object):
         This method can be used on simple glyphs (in which case it returns an
         empty list) or composite glyphs.
         """
+        if hasattr(self, "data") and self.isVarComposite():
+            # TODO(VarComposite) Add implementation without expanding glyph
+            self.expand(glyfTable)
+
         if not hasattr(self, "data"):
             if self.isComposite() or self.isVarComposite():
                 return [c.glyphName for c in self.components]
