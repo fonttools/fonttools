@@ -18,8 +18,8 @@ class _TTGlyphSet(Mapping):
 
     def __init__(self, font, location, glyphsMapping):
         self.font = font
-        self.location = location
-        self.originalLocation = location
+        self.location = location if location is not None else {}
+        self.originalLocation = location if location is not None else {}
         self.locationStack = []
         self.glyphsMapping = glyphsMapping
         self.hMetrics = font["hmtx"].metrics
