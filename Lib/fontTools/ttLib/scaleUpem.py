@@ -12,6 +12,7 @@ from fontTools.cffLib import VarStoreData
 import fontTools.cffLib.specializer as cffSpecializer
 from fontTools.varLib import builder  # for VarData.calculateNumShorts
 from fontTools.misc.fixedTools import otRound
+from fontTools.ttLib.tables._g_l_y_f import VarComponentFlags
 
 
 __all__ = ["scale_upem", "ScalerVisitor"]
@@ -153,7 +154,41 @@ def visit(visitor, obj, attr, variations):
                     coordinates[i] = visitor.scale(xy[0]), visitor.scale(xy[1])
                 continue
 
-            raise NotImplementedError
+            # VarComposite glyph
+
+            i = 0
+            for component in glyph.components:
+                if component.flags & VarComponentFlags.AXES_HAVE_VARIATION:
+                    i += len(component.location)
+                if component.flags & (
+                    VarComponentFlags.HAVE_TRANSLATE_X
+                    | VarComponentFlags.HAVE_TRANSLATE_Y
+                ):
+                    xy = coordinates[i]
+                    coordinates[i] = visitor.scale(xy[0]), visitor.scale(xy[1])
+                    i += 1
+                if component.flags & VarComponentFlags.HAVE_ROTATION:
+                    i += 1
+                if component.flags & (
+                    VarComponentFlags.HAVE_SCALE_X | VarComponentFlags.HAVE_SCALE_Y
+                ):
+                    i += 1
+                if component.flags & (
+                    VarComponentFlags.HAVE_SKEW_X | VarComponentFlags.HAVE_SKEW_Y
+                ):
+                    i += 1
+                if component.flags & (
+                    VarComponentFlags.HAVE_TCENTER_X | VarComponentFlags.HAVE_TCENTER_Y
+                ):
+                    xy = coordinates[i]
+                    coordinates[i] = visitor.scale(xy[0]), visitor.scale(xy[1])
+                    i += 1
+
+            # Phantom points
+            assert i + 4 == len(coordinates)
+            for i in range(i, len(coordinates)):
+                xy = coordinates[i]
+                coordinates[i] = visitor.scale(xy[0]), visitor.scale(xy[1])
 
 
 @ScalerVisitor.register_attr(ttLib.getTableClass("kern"), "kernTables")
