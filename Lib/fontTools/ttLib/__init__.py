@@ -85,11 +85,18 @@ def main(args=None):
     parser.add_argument(
         "--no-lazy", dest="lazy", action="store_false", help="Load fonts immediately."
     )
+    parser.add_argument(
+        "--flavor",
+        dest="flavor",
+        default=None,
+        help="Flavor of output font. 'woff' or 'woff2'.",
+    )
     options = parser.parse_args(args)
 
     fontNumber = int(options.y) if options.y is not None else None
     outFile = options.output
     lazy = options.lazy
+    flavor = options.flavor
 
     fonts = []
     for f in options.font:
@@ -102,8 +109,11 @@ def main(args=None):
 
     if outFile is not None:
         if len(fonts) == 1:
+            fonts[0].flavor = flavor
             fonts[0].save(outFile)
         else:
+            if flavor is not None:
+                raise TTLibError("Cannot set flavor for collections.")
             collection = TTCollection()
             collection.fonts = fonts
             collection.save(outFile)
