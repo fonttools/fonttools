@@ -1705,6 +1705,7 @@ class VarComponentFlags(IntFlag):
     HAVE_TCENTER_Y = 0x0800
     GID_IS_24 = 0x1000
     AXES_HAVE_VARIATION = 0x2000
+    RESET_UNSPECIFIED_AXES = 0x4000
 
 
 VarComponentTransformMappingValues = namedtuple(

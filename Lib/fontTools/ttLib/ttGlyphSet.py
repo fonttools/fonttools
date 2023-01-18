@@ -35,9 +35,12 @@ class _TTGlyphSet(Mapping):
                 )
             # TODO VVAR, VORG
 
-    def pushLocation(self, location):
+    def pushLocation(self, location, reset: bool):
         self.locationStack.append(self.location)
-        self.location = self.originalLocation.copy()
+        if reset:
+            self.location = self.originalLocation.copy()
+        else:
+            self.location = self.location.copy()
         self.location.update(location)
 
     def popLocation(self):
@@ -166,6 +169,8 @@ class _TTGlyphGlyf(_TTGlyph):
 
     def _drawVarComposite(self, glyph, pen, isPointPen):
 
+        from fontTools.ttLib.tables._g_l_y_f import VarComponentFlags
+
         for comp in glyph.components:
 
             # TODO Handle missing attributes?
@@ -183,7 +188,9 @@ class _TTGlyphGlyf(_TTGlyph):
             else:
                 tPen = TransformPen(pen, t)
 
-            self.glyphSet.pushLocation(comp.location)
+            self.glyphSet.pushLocation(
+                comp.location, comp.flags & VarComponentFlags.RESET_UNSPECIFIED_AXES
+            )
             if isPointPen:
                 self.glyphSet[comp.glyphName].drawPoints(tPen)
             else:
