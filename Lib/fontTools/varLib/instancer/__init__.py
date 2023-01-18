@@ -541,7 +541,7 @@ def instantiateGvar(varfont, axisLimits, optimize=True):
         glyf.glyphOrder,
         key=lambda name: (
             glyf[name].getCompositeMaxpValues(glyf).maxComponentDepth
-            if glyf[name].isComposite()
+            if glyf[name].isComposite() or glyf[name].isVarComposite()
             else 0,
             name,
         ),
