@@ -132,10 +132,10 @@ def visit(visitor, obj, attr, glyphs):
                         setattr(component, attr, visitor.scale(v))
             continue
 
-        glyf = visitor.font["glyf"]
-        coordinates = g.getCoordinates(glyf)[0]
-        for i, (x, y) in enumerate(coordinates):
-            coordinates[i] = visitor.scale(x), visitor.scale(y)
+        if hasattr(g, "coordinates"):
+            coordinates = g.coordinates
+            for i, (x, y) in enumerate(coordinates):
+                coordinates[i] = visitor.scale(x), visitor.scale(y)
 
 
 @ScalerVisitor.register_attr(ttLib.getTableClass("gvar"), "variations")
