@@ -492,6 +492,15 @@ def _instantiateGvarGlyph(
         if defaultDeltas:
             coordinates += _g_l_y_f.GlyphCoordinates(defaultDeltas)
 
+    glyph = glyf[glyphname]
+    if glyph.isVarComposite():
+        for component in glyph.components:
+            for tag, loc in component.location.items():
+                if tag in axisLimits:
+                    raise NotImplementedError(
+                        "Instancing accross VarComposite axes is not supported."
+                    )
+
     # _setCoordinates also sets the hmtx/vmtx advance widths and sidebearings from
     # the four phantom points and glyph bounding boxes.
     # We call it unconditionally even if a glyph has no variations or no deltas are
