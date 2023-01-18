@@ -113,21 +113,24 @@ def visit(visitor, obj, attr, VOriginRecords):
 @ScalerVisitor.register_attr(ttLib.getTableClass("glyf"), "glyphs")
 def visit(visitor, obj, attr, glyphs):
     for g in glyphs.values():
+        for attr in ("xMin", "xMax", "yMin", "yMax"):
+            v = getattr(g, attr, None)
+            if v is not None:
+                setattr(g, attr, visitor.scale(v))
+
         if g.isComposite():
             for component in g.components:
                 component.x = visitor.scale(component.x)
                 component.y = visitor.scale(component.y)
-        elif g.isVarComposite():
+            continue
+
+        if g.isVarComposite():
             for component in g.components:
                 for attr in ("translateX", "translateY", "tCenterX", "tCenterY"):
                     v = getattr(component, attr, None)
                     if v is not None:
                         setattr(component, attr, visitor.scale(v))
-        else:
-            for attr in ("xMin", "xMax", "yMin", "yMax"):
-                v = getattr(g, attr, None)
-                if v is not None:
-                    setattr(g, attr, visitor.scale(v))
+            continue
 
         glyf = visitor.font["glyf"]
         coordinates = g.getCoordinates(glyf)[0]
