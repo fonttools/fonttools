@@ -1147,8 +1147,11 @@ class Glyph(object):
         recomputed when the ``coordinates`` change. The ``table__g_l_y_f`` bounds
         must be provided to resolve component bounds.
         """
-        coords, endPts, flags = self.getCoordinates(glyfTable)
-        self.xMin, self.yMin, self.xMax, self.yMax = calcIntBounds(coords)
+        try:
+            coords, endPts, flags = self.getCoordinates(glyfTable)
+            self.xMin, self.yMin, self.xMax, self.yMax = calcIntBounds(coords)
+        except NotImplementedError:
+            pass
 
     def isComposite(self):
         """Test whether a glyph has components"""
@@ -1235,8 +1238,7 @@ class Glyph(object):
                 allFlags.extend(flags)
             return allCoords, allEndPts, allFlags
         elif self.isVarComposite():
-            # We can't return coordinates for VarComposite glyphs.
-            return GlyphCoordinates(), [], bytearray()
+            raise NotImplementedError
         else:
             return GlyphCoordinates(), [], bytearray()
 
