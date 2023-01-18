@@ -116,6 +116,12 @@ def visit(visitor, obj, attr, glyphs):
             for component in g.components:
                 component.x = visitor.scale(component.x)
                 component.y = visitor.scale(component.y)
+        elif g.isVarComposite():
+            for component in g.components:
+                for attr in ("translateX", "translateY", "tCenterX", "tCenterY"):
+                    v = getattr(component, attr, None)
+                    if v is not None:
+                        setattr(component, attr, visitor.scale(v))
         else:
             for attr in ("xMin", "xMax", "yMin", "yMax"):
                 v = getattr(g, attr, None)
@@ -130,6 +136,7 @@ def visit(visitor, obj, attr, glyphs):
 
 @ScalerVisitor.register_attr(ttLib.getTableClass("gvar"), "variations")
 def visit(visitor, obj, attr, variations):
+    # TODO(VarComposite) We should NOT scale the axisValues variations
     for varlist in variations.values():
         for var in varlist:
             coordinates = var.coordinates
