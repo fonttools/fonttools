@@ -136,14 +136,24 @@ def visit(visitor, obj, attr, glyphs):
 
 @ScalerVisitor.register_attr(ttLib.getTableClass("gvar"), "variations")
 def visit(visitor, obj, attr, variations):
-    # TODO(VarComposite) We should NOT scale the axisValues variations
-    for varlist in variations.values():
+
+    # VarComposites are a pain to handle :-(
+    glyfTable = visitor.font["glyf"]
+
+    for glyphName, varlist in variations.items():
+        glyph = glyfTable[glyphName]
+        isVarComposite = glyph.isVarComposite()
         for var in varlist:
             coordinates = var.coordinates
-            for i, xy in enumerate(coordinates):
-                if xy is None:
-                    continue
-                coordinates[i] = visitor.scale(xy[0]), visitor.scale(xy[1])
+
+            if not isVarComposite:
+                for i, xy in enumerate(coordinates):
+                    if xy is None:
+                        continue
+                    coordinates[i] = visitor.scale(xy[0]), visitor.scale(xy[1])
+                continue
+
+            raise NotImplementedError
 
 
 @ScalerVisitor.register_attr(ttLib.getTableClass("kern"), "kernTables")
