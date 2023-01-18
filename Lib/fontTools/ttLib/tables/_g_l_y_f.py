@@ -470,6 +470,10 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
             for p, comp in zip(coord, glyph.components):
                 if hasattr(comp, "x"):
                     comp.x, comp.y = p
+        elif glyph.isVarComposite():
+            for comp in glyph.components:
+                coord = comp.setCoordinates(coord)
+            assert not coord
         elif glyph.numberOfContours == 0:
             assert len(coord) == 0
         else:
