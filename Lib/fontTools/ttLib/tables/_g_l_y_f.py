@@ -1880,15 +1880,10 @@ class GlyphVarComponent(object):
         if hasattr(self, "flags"):
             attrs = attrs + [("flags", hex(self.flags))]
 
-        for attr_name, (
-            _,
-            _,
-            _,
-            defaultValue,
-        ) in var_component_transform_mapping.items():
-            v = getattr(self, attr_name, defaultValue)
-            if v != defaultValue:
-                attrs.append((attr_name, v))
+        for attr_name, mapping in var_component_transform_mapping.items():
+            v = getattr(self, attr_name, mapping.defaultValue)
+            if v != mapping.defaultValue:
+                attrs.append((attr_name, fl2str(v, mapping.fractionalBits)))
 
         writer.begintag("varComponent", attrs)
         writer.newline()
@@ -1896,7 +1891,7 @@ class GlyphVarComponent(object):
         writer.begintag("location")
         writer.newline()
         for tag, v in self.location.items():
-            writer.simpletag("axis", [("tag", tag), ("value", v)])
+            writer.simpletag("axis", [("tag", tag), ("value", fl2str(v, 14))])
             writer.newline()
         writer.endtag("location")
         writer.newline()
@@ -1910,13 +1905,12 @@ class GlyphVarComponent(object):
         if "flags" in attrs:
             self.flags = safeEval(attrs["flags"])
 
-        for attr_name, (
-            _,
-            _,
-            _,
-            defaultValue,
-        ) in var_component_transform_mapping.items():
-            v = safeEval(attrs[attr_name]) if attr_name in attrs else defaultValue
+        for attr_name, mapping in var_component_transform_mapping.items():
+            v = (
+                str2fl(safeEval(attrs[attr_name]), mapping.fractionalBits)
+                if attr_name in attrs
+                else mapping.defaultValue
+            )
             setattr(self, attr_name, v)
 
         self.location = {}
@@ -1932,7 +1926,7 @@ class GlyphVarComponent(object):
                 name, attrs, content = c
                 assert name == "axis"
                 assert not content
-                self.location[attrs["tag"]] = safeEval(attrs["value"])
+                self.location[attrs["tag"]] = str2fl(safeEval(attrs["value"]), 14)
 
     def getPointCount(self):
         assert hasattr(self, "flags"), "VarComponent with variations must have flags"
