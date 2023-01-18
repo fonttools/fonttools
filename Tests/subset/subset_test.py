@@ -32,9 +32,9 @@ class SubsetTest:
             shutil.rmtree(cls.tempdir, ignore_errors=True)
 
     @staticmethod
-    def getpath(testfile):
+    def getpath(*testfile):
         path, _ = os.path.split(__file__)
-        return os.path.join(path, "data", testfile)
+        return os.path.join(path, "data", *testfile)
 
     @classmethod
     def temp_path(cls, suffix):
@@ -424,6 +424,18 @@ class SubsetTest:
         subset.main([fontpath, "--gids=0,1", "--output-file=%s" % subsetpath])
         subsetfont = TTFont(subsetpath)
         self.expect_ttx(subsetfont, self.getpath("expect_sbix.ttx"), ["sbix"])
+
+    def test_varComposite(self):
+        fontpath = self.getpath("..", "..", "ttLib", "data", "varc-ac00-ac01.ttf")
+        origfont = TTFont(fontpath)
+        assert len(origfont.getGlyphOrder()) == 6
+        subsetpath = self.temp_path(".ttf")
+        subset.main([fontpath, "--unicodes=ac00", "--output-file=%s" % subsetpath])
+        subsetfont = TTFont(subsetpath)
+        assert len(subsetfont.getGlyphOrder()) == 4
+        subset.main([fontpath, "--unicodes=ac01", "--output-file=%s" % subsetpath])
+        subsetfont = TTFont(subsetpath)
+        assert len(subsetfont.getGlyphOrder()) == 5
 
     def test_timing_publishes_parts(self):
         fontpath = self.compile_font(self.getpath("TestTTF-Regular.ttx"), ".ttf")
