@@ -896,6 +896,15 @@ class BaseTable(object):
             for subtable in self.iterSubTables():
                 subtable.value.ensureDecompiled(recurse)
 
+    def __getstate__(self):
+        # before copying/pickling 'lazy' objects, make a shallow copy of OTTableReader
+        # https://github.com/fonttools/fonttools/issues/2965
+        if "reader" in self.__dict__:
+            state = self.__dict__.copy()
+            state["reader"] = self.__dict__["reader"].copy()
+            return state
+        return self.__dict__
+
     @classmethod
     def getRecordSize(cls, reader):
         totalSize = 0
