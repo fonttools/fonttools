@@ -139,12 +139,13 @@ def NormalizedAxisRange(minimum, maximum):
 class AxisTriple(Sequence):
     """A triple of (min, default, max) axis values.
 
-    The default value can be None, in which case the populateDefault() method can be
-    used to fill in the missing default value based on the fvar axis default.
+    The default value can be None, in which case the limitRangeAndPopulateDefault()
+    method can be used to fill in the missing default value based on the fvar axis
+    default.
     """
 
     minimum: float
-    default: Optional[float]  # if None, filled with fvar default by populateDefault
+    default: Optional[float]  # if None, filled with by limitRangeAndPopulateDefault
     maximum: float
 
     def __post_init__(self):
@@ -209,7 +210,7 @@ class AxisTriple(Sequence):
             raise ValueError(f"expected sequence of 2 or 3; got {n}: {v!r}")
         return cls(minimum, default, maximum)
 
-    def populateDefault(self, fvarAxisDefault) -> "AxisTriple":
+    def limitRangeAndPopulateDefault(self, fvarTriple) -> "AxisTriple":
         """Return a new AxisTriple with the default value filled in.
 
         Set default to fvar axis default if the latter is within the min/max range,
@@ -217,10 +218,19 @@ class AxisTriple(Sequence):
         fvar axis default.
         If the default value is already set, return self.
         """
-        if self.default is not None:
-            return self
-        default = max(self.minimum, min(self.maximum, fvarAxisDefault))
-        return dataclasses.replace(self, default=default)
+        minimum = self.minimum
+        maximum = self.maximum
+        default = self.default
+        if default is None:
+            default = fvarTriple[1]
+
+        minimum = max(self.minimum, fvarTriple[0])
+        maximum = max(self.maximum, fvarTriple[0])
+        minimum = min(minimum, fvarTriple[2])
+        maximum = min(maximum, fvarTriple[2])
+        default = max(minimum, min(maximum, default))
+
+        return AxisTriple(minimum, default, maximum)
 
 
 @dataclasses.dataclass(frozen=True, order=True, repr=False)
@@ -270,39 +280,35 @@ class AxisLimits(_BaseAxisLimits):
     """Maps axis tags (str) to AxisTriple values."""
 
     def __init__(self, *args, **kwargs):
-        self.have_defaults = True
         self._data = data = {}
         for k, v in dict(*args, **kwargs).items():
             if v is None:
-                # will be filled in by populateDefaults
-                self.have_defaults = False
+                # will be filled in by limitAxesAndPopulateDefaults
                 data[k] = v
             else:
                 try:
                     triple = AxisTriple.expand(v)
                 except ValueError as e:
                     raise ValueError(f"Invalid axis limits for {k!r}: {v!r}") from e
-                if triple.default is None:
-                    # also filled in by populateDefaults
-                    self.have_defaults = False
                 data[k] = triple
 
-    def populateDefaults(self, varfont) -> "AxisLimits":
+    def limitAxesAndPopulateDefaults(self, varfont) -> "AxisLimits":
         """Return a new AxisLimits with defaults filled in from fvar table.
 
         If all axis limits already have defaults, return self.
         """
-        if self.have_defaults:
-            return self
         fvar = varfont["fvar"]
-        defaultValues = {a.axisTag: a.defaultValue for a in fvar.axes}
+        fvarTriples = {
+            a.axisTag: (a.minValue, a.defaultValue, a.maxValue) for a in fvar.axes
+        }
         newLimits = {}
         for axisTag, triple in self.items():
-            default = defaultValues[axisTag]
+            fvarTriple = fvarTriples[axisTag]
+            default = fvarTriple[1]
             if triple is None:
                 newLimits[axisTag] = AxisTriple(default, default, default)
             else:
-                newLimits[axisTag] = triple.populateDefault(default)
+                newLimits[axisTag] = triple.limitRangeAndPopulateDefault(fvarTriple)
         return type(self)(newLimits)
 
     def normalize(self, varfont, usingAvar=True) -> "NormalizedAxisLimits":
@@ -1114,7 +1120,9 @@ def instantiateVariableFont(
 
     sanityCheckVariableTables(varfont)
 
-    axisLimits = AxisLimits(axisLimits).populateDefaults(varfont)
+    axisLimits = AxisLimits(axisLimits).limitAxesAndPopulateDefaults(varfont)
+
+    log.info("Restricted limits: %s", axisLimits)
 
     normalizedLimits = axisLimits.normalize(varfont)
 
