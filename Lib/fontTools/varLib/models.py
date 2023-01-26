@@ -365,12 +365,12 @@ class VariationModel(object):
             # Walk over previous masters now
             for prev_region in regions[:i]:
                 # Master with extra axes do not participte
-                if not set(prev_region.keys()).issubset(locAxes):
+                if set(prev_region.keys()) != locAxes:
                     continue
                 # If it's NOT in the current box, it does not participate
                 relevant = True
                 for axis, (lower, peak, upper) in region.items():
-                    if axis not in prev_region or not (
+                    if not (
                         prev_region[axis][1] == peak
                         or lower < prev_region[axis][1] < upper
                     ):
