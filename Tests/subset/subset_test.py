@@ -1388,8 +1388,8 @@ def colrv1_path(tmp_path):
         clipBoxes={
             "uniE000": (0, 0, 200, 300),
             "uniE001": (0, 0, 500, 500),
-            "uniE002": (100, 100, 400, 400),
-            "uniE003": (-50, -50, 350, 350),
+            "uniE002": (-50, -50, 400, 400),
+            "uniE003": (-50, -50, 400, 400),
         },
     )
     fb.setupCPAL(
@@ -1520,6 +1520,7 @@ def test_subset_COLRv1_and_CPAL(colrv1_path):
 
     clipBoxes = colr.ClipList.clips
     assert {"uniE001", "uniE002", "uniE003"} == set(clipBoxes)
+    assert clipBoxes["uniE002"] == clipBoxes["uniE003"]
 
     assert "CPAL" in subset_font
     cpal = subset_font["CPAL"]
