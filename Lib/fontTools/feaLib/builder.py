@@ -1356,8 +1356,9 @@ class Builder(object):
                 "Empty glyph class in contextual substitution", location
             )
         # https://github.com/fonttools/fonttools/issues/512
+        # https://github.com/fonttools/fonttools/issues/2150
         chain = self.get_lookup_(location, ChainContextSubstBuilder)
-        sub = chain.find_chainable_single_subst(set(mapping.keys()))
+        sub = chain.find_chainable_single_subst(mapping)
         if sub is None:
             sub = self.get_chained_lookup_(location, SingleSubstBuilder)
         sub.mapping.update(mapping)
