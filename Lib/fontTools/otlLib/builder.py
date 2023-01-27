@@ -764,7 +764,7 @@ class ChainContextSubstBuilder(ChainContextualBuilder):
                             result.setdefault(glyph, set()).update(replacements)
         return result
 
-    def find_chainable_single_subst(self, glyphs):
+    def find_chainable_single_subst(self, mapping):
         """Helper for add_single_subst_chained_()"""
         res = None
         for rule in self.rules[::-1]:
@@ -772,7 +772,7 @@ class ChainContextSubstBuilder(ChainContextualBuilder):
                 return res
             for sub in rule.lookups:
                 if isinstance(sub, SingleSubstBuilder) and not any(
-                    g in glyphs for g in sub.mapping.keys()
+                    g in mapping and mapping[g] != sub.mapping[g] for g in sub.mapping
                 ):
                     res = sub
         return res
