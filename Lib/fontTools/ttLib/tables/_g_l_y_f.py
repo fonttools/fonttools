@@ -1690,6 +1690,12 @@ class GlyphComponent(object):
         return result if result is NotImplemented else not result
 
 
+#
+# Variable Composite glyphs
+# https://github.com/harfbuzz/boring-expansion-spec/blob/main/glyf1.md
+#
+
+
 class VarComponentFlags(IntFlag):
     USE_MY_METRICS = 0x0001
     AXIS_INDICES_ARE_SHORT = 0x0002
