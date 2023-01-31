@@ -294,8 +294,9 @@ class WOFF2Writer(SFNTWriter):
         if self.sfntVersion == "OTTO":
             return
 
-        for tag in ("maxp", "head", "loca", "glyf"):
-            self._decompileTable(tag)
+        for tag in ("maxp", "head", "loca", "glyf", "fvar"):
+            if tag in self.tables:
+                self._decompileTable(tag)
         self.ttFont["glyf"].padding = padding
         for tag in ("glyf", "loca"):
             self._compileTable(tag)

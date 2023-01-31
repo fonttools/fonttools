@@ -1491,6 +1491,20 @@ class UShort255Test(unittest.TestCase):
         )
 
 
+class VarCompositeTest(unittest.TestCase):
+    def test_var_composite(self):
+        input_path = os.path.join(data_dir, "varc-ac00-ac01.ttf")
+        ttf = ttLib.TTFont(input_path)
+        ttf.flavor = "woff2"
+        out = BytesIO()
+        ttf.save(out)
+
+        ttf = ttLib.TTFont(out)
+        ttf.flavor = None
+        out = BytesIO()
+        ttf.save(out)
+
+
 if __name__ == "__main__":
     import sys
 
