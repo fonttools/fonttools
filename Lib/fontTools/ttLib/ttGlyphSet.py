@@ -3,6 +3,7 @@
 import math
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
+from contextlib import contextmanager
 from copy import copy
 from fontTools.misc.fixedTools import otRound
 from fontTools.misc.loggingTools import deprecateFunction
@@ -35,6 +36,7 @@ class _TTGlyphSet(Mapping):
                 )
             # TODO VVAR, VORG
 
+    @contextmanager
     def pushLocation(self, location, reset: bool):
         self.locationStack.append(self.location)
         if reset:
@@ -43,7 +45,8 @@ class _TTGlyphSet(Mapping):
             self.location = self.location.copy()
         self.location.update(location)
 
-    def popLocation(self):
+        yield None
+
         self.location = self.locationStack.pop()
 
     def __contains__(self, glyphName):
@@ -188,14 +191,13 @@ class _TTGlyphGlyf(_TTGlyph):
             else:
                 tPen = TransformPen(pen, t)
 
-            self.glyphSet.pushLocation(
+            with self.glyphSet.pushLocation(
                 comp.location, comp.flags & VarComponentFlags.RESET_UNSPECIFIED_AXES
-            )
-            if isPointPen:
-                self.glyphSet[comp.glyphName].drawPoints(tPen)
-            else:
-                self.glyphSet[comp.glyphName].draw(tPen)
-            self.glyphSet.popLocation()
+            ):
+                if isPointPen:
+                    self.glyphSet[comp.glyphName].drawPoints(tPen)
+                else:
+                    self.glyphSet[comp.glyphName].draw(tPen)
 
     def _getGlyphAndOffset(self):
         if self.glyphSet.location and self.glyphSet.gvarTable is not None:
