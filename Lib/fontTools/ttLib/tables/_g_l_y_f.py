@@ -1161,7 +1161,7 @@ class Glyph(object):
             return self.numberOfContours == -1
 
     def isVarComposite(self):
-        """Test whether a glyph has components"""
+        """Test whether a glyph has variable components"""
         if hasattr(self, "data"):
             return struct.unpack(">h", self.data[:2])[0] == -2 if self.data else False
         else:
