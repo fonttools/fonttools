@@ -84,11 +84,17 @@ class VariableScalar:
         return self.values[key]
 
     def value_at_location(self, location):
-        loc = location
+        if isinstance(location, dict):
+            loc = Location(location)
+        else:
+            loc = location
         if loc in self.values.keys():
             return self.values[loc]
         values = list(self.values.values())
-        return self.model.interpolateFromMasters(loc, values)
+
+        return self.model.interpolateFromMasters(
+            dict(self._normalized_location(location)), values
+        )
 
     @property
     def model(self):
@@ -109,3 +115,88 @@ class VariableScalar:
         store_builder.setSupports(supports)
         index = store_builder.storeDeltas(deltas)
         return int(self.default), index
+
+    def __sub__(self, other):
+        if not isinstance(other, (VariableScalar, float, int)):
+            return NotImplemented
+        new = VariableScalar()
+        new.axes = self.axes
+        for loc in self.values.keys():
+            if isinstance(other, (float, int)):
+                new.add_value(dict(loc), self.value_at_location(loc) - other)
+            elif other.does_vary:
+                new.add_value(
+                    dict(loc),
+                    self.value_at_location(loc) - other.value_at_location(loc),
+                )
+            else:
+                new.add_value(
+                    dict(loc),
+                    self.value_at_location(loc) - list(other.values.values())[0],
+                )
+        return new
+
+    def __add__(self, other):
+        if not isinstance(other, (VariableScalar, float, int)):
+            return NotImplemented
+        new = VariableScalar()
+        new.axes = self.axes
+        for loc in self.values.keys():
+            if isinstance(other, (float, int)):
+                new.add_value(dict(loc), self.value_at_location(loc) + other)
+            elif other.does_vary:
+                new.add_value(
+                    dict(loc),
+                    self.value_at_location(loc) + other.value_at_location(loc),
+                )
+            else:
+                new.add_value(
+                    dict(loc),
+                    self.value_at_location(loc) + list(other.values.values())[0],
+                )
+        return new
+
+    def __mul__(self, other):
+        if not isinstance(other, (float, int)):
+            return NotImplemented
+        new = VariableScalar()
+        new.axes = self.axes
+        for loc in self.values.keys():
+            new.add_value(
+                dict(loc),
+                int(self.value_at_location(loc) * other),
+            )
+        return new
+
+    def __truediv__(self, other):
+        if not isinstance(other, (float, int)):
+            return NotImplemented
+        new = VariableScalar()
+        new.axes = self.axes
+        for loc in self.values.keys():
+            new.add_value(
+                dict(loc),
+                int(self.value_at_location(loc) / other),
+            )
+        return new
+
+    def __pos__(self):
+        new = VariableScalar()
+        new.axes = self.axes
+        for loc, value in self.values.items():
+            new.add_value(dict(loc), +value)
+        return new
+
+    def __neg__(self):
+        new = VariableScalar()
+        new.axes = self.axes
+        for loc, value in self.values.items():
+            new.add_value(dict(loc), -value)
+        return new
+
+    def __abs__(self):
+        new = VariableScalar()
+        new.axes = self.axes
+        for loc, value in self.values.items():
+            new.add_value(dict(loc), abs(value))
+        return new
