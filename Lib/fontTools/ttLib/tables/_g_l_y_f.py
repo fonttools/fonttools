@@ -1719,7 +1719,7 @@ VarComponentTransformMappingValues = namedtuple(
     ["flag", "fractionalBits", "scale", "defaultValue"],
 )
 
-var_component_transform_mapping = {
+VAR_COMPONENT_TRANSFORM_MAPPING = {
     "translateX": VarComponentTransformMappingValues(
         VarComponentFlags.HAVE_TRANSLATE_X, 0, 1, 0
     ),
@@ -1804,7 +1804,7 @@ class GlyphVarComponent(object):
             else:
                 return data, values.defaultValue
 
-        for attr_name, mapping_values in var_component_transform_mapping.items():
+        for attr_name, mapping_values in VAR_COMPONENT_TRANSFORM_MAPPING.items():
             data, value = read_transform_component(data, mapping_values)
             setattr(self, attr_name, value)
 
@@ -1824,7 +1824,7 @@ class GlyphVarComponent(object):
         if not hasattr(self, "flags"):
             flags = 0
             # Calculate optimal transform component flags
-            for attr_name, mapping in var_component_transform_mapping.items():
+            for attr_name, mapping in VAR_COMPONENT_TRANSFORM_MAPPING.items():
                 value = getattr(self, attr_name, mapping.defaultValue)
                 if fl2fi(value / mapping.scale, mapping.fractionalBits) != fl2fi(
                     mapping.defaultValue / mapping.scale, mapping.fractionalBits
@@ -1876,7 +1876,7 @@ class GlyphVarComponent(object):
             else:
                 return data
 
-        for attr_name, mapping_values in var_component_transform_mapping.items():
+        for attr_name, mapping_values in VAR_COMPONENT_TRANSFORM_MAPPING.items():
             value = getattr(self, attr_name, mapping_values.defaultValue)
             data = write_transform_component(data, value, mapping_values)
 
@@ -1888,7 +1888,7 @@ class GlyphVarComponent(object):
         if hasattr(self, "flags"):
             attrs = attrs + [("flags", hex(self.flags))]
 
-        for attr_name, mapping in var_component_transform_mapping.items():
+        for attr_name, mapping in VAR_COMPONENT_TRANSFORM_MAPPING.items():
             v = getattr(self, attr_name, mapping.defaultValue)
             if v != mapping.defaultValue:
                 attrs.append((attr_name, fl2str(v, mapping.fractionalBits)))
@@ -1913,7 +1913,7 @@ class GlyphVarComponent(object):
         if "flags" in attrs:
             self.flags = safeEval(attrs["flags"])
 
-        for attr_name, mapping in var_component_transform_mapping.items():
+        for attr_name, mapping in VAR_COMPONENT_TRANSFORM_MAPPING.items():
             v = (
                 str2fl(safeEval(attrs[attr_name]), mapping.fractionalBits)
                 if attr_name in attrs
