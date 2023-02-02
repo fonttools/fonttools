@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from contextlib import contextmanager
 from copy import copy
+from types import SimpleNamespace
 from fontTools.misc.fixedTools import otRound
 from fontTools.misc.loggingTools import deprecateFunction
 from fontTools.misc.transform import Transform
@@ -173,19 +174,24 @@ class _TTGlyphGlyf(_TTGlyph):
 
     def _drawVarComposite(self, glyph, pen, isPointPen):
 
-        from fontTools.ttLib.tables._g_l_y_f import VarComponentFlags
+        from fontTools.ttLib.tables._g_l_y_f import (
+            VarComponentFlags,
+            VAR_COMPONENT_TRANSFORM_MAPPING,
+        )
 
         for comp in glyph.components:
 
-            # TODO Handle missing attributes?
+            # Create a transform filled in from the component and defaults
+            ct = SimpleNamespace()
+            for key, values in VAR_COMPONENT_TRANSFORM_MAPPING.items():
+                setattr(ct, key, getattr(comp, key, values.defaultValue))
+
             t = Transform()
-            t = t.translate(
-                comp.translateX + comp.tCenterX, comp.translateY + comp.tCenterY
-            )
-            t = t.rotate(math.radians(comp.rotation))
-            t = t.scale(comp.scaleX, comp.scaleY)
-            t = t.skew(-math.radians(comp.skewX), math.radians(comp.skewY))
-            t = t.translate(-comp.tCenterX, -comp.tCenterY)
+            t = t.translate(ct.translateX + ct.tCenterX, ct.translateY + ct.tCenterY)
+            t = t.rotate(math.radians(ct.rotation))
+            t = t.scale(ct.scaleX, ct.scaleY)
+            t = t.skew(-math.radians(ct.skewX), math.radians(ct.skewY))
+            t = t.translate(-ct.tCenterX, -ct.tCenterY)
 
             if isPointPen:
                 tPen = TransformPointPen(pen, t)
