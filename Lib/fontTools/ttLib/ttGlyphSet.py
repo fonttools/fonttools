@@ -45,9 +45,10 @@ class _TTGlyphSet(Mapping):
             self.location = self.location.copy()
         self.location.update(location)
 
-        yield None
-
-        self.location = self.locationStack.pop()
+        try:
+            yield None
+        finally:
+            self.location = self.locationStack.pop()
 
     def __contains__(self, glyphName):
         return glyphName in self.glyphsMapping
