@@ -4,6 +4,7 @@ from collections import namedtuple
 from fontTools.misc import sstruct
 from fontTools import ttLib
 from fontTools import version
+from fontTools.misc.transform import VarTransform
 from fontTools.misc.textTools import tostr, safeEval, pad
 from fontTools.misc.arrayTools import calcIntBounds, pointInRect
 from fontTools.misc.bezierTools import calcQuadraticBounds
@@ -1749,7 +1750,8 @@ VAR_COMPONENT_TRANSFORM_MAPPING = {
 
 class GlyphVarComponent(object):
     def __init__(self):
-        pass
+        self.location = {}
+        self.transform = VarTransform()
 
     def decompile(self, data, glyfTable):
         flags = struct.unpack(">H", data[:2])[0]
@@ -1803,13 +1805,13 @@ class GlyphVarComponent(object):
 
         for attr_name, mapping_values in VAR_COMPONENT_TRANSFORM_MAPPING.items():
             data, value = read_transform_component(data, mapping_values)
-            setattr(self, attr_name, value)
+            setattr(self.transform, attr_name, value)
 
         if flags & VarComponentFlags.UNIFORM_SCALE:
             if flags & VarComponentFlags.HAVE_SCALE_X and not (
                 flags & VarComponentFlags.HAVE_SCALE_Y
             ):
-                self.scaleY = self.scaleX
+                self.transform.scaleY = self.transform.scaleX
                 flags |= VarComponentFlags.HAVE_SCALE_Y
             flags ^= VarComponentFlags.UNIFORM_SCALE
 
@@ -1822,7 +1824,7 @@ class GlyphVarComponent(object):
             flags = 0
             # Calculate optimal transform component flags
             for attr_name, mapping in VAR_COMPONENT_TRANSFORM_MAPPING.items():
-                value = getattr(self, attr_name, mapping.defaultValue)
+                value = getattr(self.transform, attr_name)
                 if fl2fi(value / mapping.scale, mapping.fractionalBits) != fl2fi(
                     mapping.defaultValue / mapping.scale, mapping.fractionalBits
                 ):
@@ -1886,7 +1888,7 @@ class GlyphVarComponent(object):
             attrs = attrs + [("flags", hex(self.flags))]
 
         for attr_name, mapping in VAR_COMPONENT_TRANSFORM_MAPPING.items():
-            v = getattr(self, attr_name, mapping.defaultValue)
+            v = getattr(self.transform, attr_name)
             if v != mapping.defaultValue:
                 attrs.append((attr_name, fl2str(v, mapping.fractionalBits)))
 
@@ -1911,14 +1913,11 @@ class GlyphVarComponent(object):
             self.flags = safeEval(attrs["flags"])
 
         for attr_name, mapping in VAR_COMPONENT_TRANSFORM_MAPPING.items():
-            v = (
-                str2fl(safeEval(attrs[attr_name]), mapping.fractionalBits)
-                if attr_name in attrs
-                else mapping.defaultValue
-            )
-            setattr(self, attr_name, v)
+            if attr_name not in attrs:
+                continue
+            v = str2fl(safeEval(attrs[attr_name]), mapping.fractionalBits)
+            setattr(self.transform, attr_name, v)
 
-        self.location = {}
         for c in content:
             if not isinstance(c, tuple):
                 continue
@@ -1974,28 +1973,30 @@ class GlyphVarComponent(object):
             VarComponentFlags.HAVE_TRANSLATE_X | VarComponentFlags.HAVE_TRANSLATE_Y
         ):
             controls.append("translate")
-            coords.append((self.translateX, self.translateY))
+            coords.append((self.transform.translateX, self.transform.translateY))
         if self.flags & VarComponentFlags.HAVE_ROTATION:
             controls.append("rotation")
-            coords.append((fl2fi(self.rotation / 180, 12), 0))
+            coords.append((fl2fi(self.transform.rotation / 180, 12), 0))
         if self.flags & (
             VarComponentFlags.HAVE_SCALE_X | VarComponentFlags.HAVE_SCALE_Y
         ):
             controls.append("scale")
-            coords.append((fl2fi(self.scaleX, 10), fl2fi(self.scaleY, 10)))
+            coords.append(
+                (fl2fi(self.transform.scaleX, 10), fl2fi(self.transform.scaleY, 10))
+            )
         if self.flags & (VarComponentFlags.HAVE_SKEW_X | VarComponentFlags.HAVE_SKEW_Y):
             controls.append("skew")
             coords.append(
                 (
-                    fl2fi(self.skewX / 180, 12),
-                    fl2fi(self.skewY / 180, 12),
+                    fl2fi(self.transform.skewX / 180, 12),
+                    fl2fi(self.transform.skewY / 180, 12),
                 )
             )
         if self.flags & (
             VarComponentFlags.HAVE_TCENTER_X | VarComponentFlags.HAVE_TCENTER_Y
         ):
             controls.append("tCenter")
-            coords.append((self.tCenterX, self.tCenterY))
+            coords.append((self.transform.tCenterX, self.transform.tCenterY))
 
         return coords, controls
 
@@ -2012,18 +2013,20 @@ class GlyphVarComponent(object):
         if self.flags & (
             VarComponentFlags.HAVE_TRANSLATE_X | VarComponentFlags.HAVE_TRANSLATE_Y
         ):
-            self.translateX, self.translateY = coords[i]
+            self.transform.translateX, self.transform.translateY = coords[i]
             i += 1
         if self.flags & VarComponentFlags.HAVE_ROTATION:
-            self.rotation = fi2fl(coords[i][0], 12) * 180
+            self.transform.rotation = fi2fl(coords[i][0], 12) * 180
             i += 1
         if self.flags & (
             VarComponentFlags.HAVE_SCALE_X | VarComponentFlags.HAVE_SCALE_Y
         ):
-            self.scaleX, self.scaleY = fi2fl(coords[i][0], 10), fi2fl(coords[i][1], 10)
+            self.transform.scaleX, self.transform.scaleY = fi2fl(
+                coords[i][0], 10
+            ), fi2fl(coords[i][1], 10)
             i += 1
         if self.flags & (VarComponentFlags.HAVE_SKEW_X | VarComponentFlags.HAVE_SKEW_Y):
-            self.skewX, self.skewY = (
+            self.transform.skewX, self.transform.skewY = (
                 fi2fl(coords[i][0], 12) * 180,
                 fi2fl(coords[i][1], 12) * 180,
             )
@@ -2031,7 +2034,7 @@ class GlyphVarComponent(object):
         if self.flags & (
             VarComponentFlags.HAVE_TCENTER_X | VarComponentFlags.HAVE_TCENTER_Y
         ):
-            self.tCenterX, self.tCenterY = coords[i]
+            self.transform.tCenterX, self.transform.tCenterY = coords[i]
             i += 1
 
         return coords[i:]

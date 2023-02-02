@@ -127,9 +127,8 @@ def visit(visitor, obj, attr, glyphs):
         if g.isVarComposite():
             for component in g.components:
                 for attr in ("translateX", "translateY", "tCenterX", "tCenterY"):
-                    v = getattr(component, attr, None)
-                    if v is not None:
-                        setattr(component, attr, visitor.scale(v))
+                    v = getattr(component.transform, attr)
+                    setattr(component.transform, attr, visitor.scale(v))
             continue
 
         if hasattr(g, "coordinates"):

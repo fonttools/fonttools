@@ -49,6 +49,7 @@ Scale
 	>>>
 """
 
+import math
 from typing import NamedTuple
 
 
@@ -396,6 +397,30 @@ def Scale(x, y=None):
     if y is None:
         y = x
     return Transform(x, 0, 0, y, 0, 0)
+
+
+class VarTransform:
+
+    translateX: float = 0
+    translateY: float = 0
+    rotation: float = 0  # in degrees, counter-clockwise
+    scaleX: float = 1
+    scaleY: float = 1
+    skewX: float = 0  # in degrees, counter-clockwise
+    skewY: float = 0  # in degrees, counter-clockwise
+    tCenterX: float = 0
+    tCenterY: float = 0
+
+    def toTransform(self):
+        t = Transform()
+        t = t.translate(
+            self.translateX + self.tCenterX, self.translateY + self.tCenterY
+        )
+        t = t.rotate(math.radians(self.rotation))
+        t = t.scale(self.scaleX, self.scaleY)
+        t = t.skew(-math.radians(self.skewX), math.radians(self.skewY))
+        t = t.translate(-self.tCenterX, -self.tCenterY)
+        return t
 
 
 if __name__ == "__main__":

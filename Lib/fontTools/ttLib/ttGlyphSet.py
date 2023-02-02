@@ -1,6 +1,5 @@
 """GlyphSets returned by a TTFont."""
 
-import math
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from contextlib import contextmanager
@@ -181,18 +180,7 @@ class _TTGlyphGlyf(_TTGlyph):
 
         for comp in glyph.components:
 
-            # Create a transform filled in from the component and defaults
-            ct = SimpleNamespace()
-            for key, values in VAR_COMPONENT_TRANSFORM_MAPPING.items():
-                setattr(ct, key, getattr(comp, key, values.defaultValue))
-
-            t = Transform()
-            t = t.translate(ct.translateX + ct.tCenterX, ct.translateY + ct.tCenterY)
-            t = t.rotate(math.radians(ct.rotation))
-            t = t.scale(ct.scaleX, ct.scaleY)
-            t = t.skew(-math.radians(ct.skewX), math.radians(ct.skewY))
-            t = t.translate(-ct.tCenterX, -ct.tCenterY)
-
+            t = comp.transform.toTransform()
             if isPointPen:
                 tPen = TransformPointPen(pen, t)
             else:
