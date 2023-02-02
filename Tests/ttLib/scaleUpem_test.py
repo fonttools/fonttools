@@ -79,6 +79,10 @@ class ScaleUpemTest(unittest.TestCase):
         font = TTFont()
         font.importXML(expected_ttx_path)
 
+        # Scale our other varComposite font as well; without checking the expected
+        font = TTFont(self.get_path("varc-6868.ttf"))
+        scale_upem(font, 500)
+
     def test_scale_upem_otf(self):
 
         # Just test that it doesn't crash
