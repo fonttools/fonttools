@@ -182,9 +182,9 @@ class _TTGlyphGlyf(_TTGlyph):
             t = t.translate(
                 comp.translateX + comp.tCenterX, comp.translateY + comp.tCenterY
             )
-            t = t.rotate(comp.rotation / 180 * math.pi)
+            t = t.rotate(math.radians(comp.rotation))
             t = t.scale(comp.scaleX, comp.scaleY)
-            t = t.skew(-comp.skewX / 180 * math.pi, comp.skewY / 180 * math.pi)
+            t = t.skew(-math.radians(comp.skewX), math.radians(comp.skewY))
             t = t.translate(-comp.tCenterX, -comp.tCenterY)
 
             if isPointPen:
