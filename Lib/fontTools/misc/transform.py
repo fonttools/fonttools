@@ -400,16 +400,27 @@ def Scale(x, y=None):
 
 
 class VarTransform:
-
-    translateX: float = 0
-    translateY: float = 0
-    rotation: float = 0  # in degrees, counter-clockwise
-    scaleX: float = 1
-    scaleY: float = 1
-    skewX: float = 0  # in degrees, counter-clockwise
-    skewY: float = 0  # in degrees, counter-clockwise
-    tCenterX: float = 0
-    tCenterY: float = 0
+    def __init__(
+        self,
+        translateX: float = 0,
+        translateY: float = 0,
+        rotation: float = 0,  # in degrees, counter-clockwise
+        scaleX: float = 1,
+        scaleY: float = 1,
+        skewX: float = 0,  # in degrees, counter-clockwise
+        skewY: float = 0,  # in degrees, counter-clockwise
+        tCenterX: float = 0,
+        tCenterY: float = 0,
+    ):
+        self.translateX = translateX
+        self.translateY = translateY
+        self.rotation = rotation
+        self.scaleX = scaleX
+        self.scaleY = scaleY
+        self.skewX = skewX
+        self.skewY = skewY
+        self.tCenterX = tCenterX
+        self.tCenterY = tCenterY
 
     def toTransform(self):
         t = Transform()
@@ -421,6 +432,22 @@ class VarTransform:
         t = t.skew(-math.radians(self.skewX), math.radians(self.skewY))
         t = t.translate(-self.tCenterX, -self.tCenterY)
         return t
+
+    def __eq__(self, other):
+        return (
+            self.translateX == other.translateX
+            and self.translateY == other.translateY
+            and self.rotation == other.rotation
+            and self.scaleX == other.scaleX
+            and self.scaleY == other.scaleY
+            and self.skewX == other.skewX
+            and self.skewY == other.skewY
+            and self.tCenterX == other.tCenterX
+            and self.tCenterY == other.tCenterY
+        )
+
+    def __repr__(self):
+        return f"VarTransform({self.translateX},{self.translateY},{self.rotation},{self.scaleX},{self.scaleY},{self.skewX},{self.skewY},{self.tCenterX},{self.tCenterY})"
 
 
 if __name__ == "__main__":

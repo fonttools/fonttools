@@ -70,6 +70,9 @@ class RecordingPen(AbstractPen):
     def addComponent(self, glyphName, transformation):
         self.value.append(("addComponent", (glyphName, transformation)))
 
+    def addVarComponent(self, glyphName, transformation, location):
+        self.value.append(("addVarComponent", (glyphName, transformation, location)))
+
     def replay(self, pen):
         replayRecording(self.value, pen)
 
@@ -98,6 +101,9 @@ class DecomposingRecordingPen(DecomposingPen, RecordingPen):
             a: [('moveTo', ((0, 0),)), ('curveTo', ((1, 1), (2, 2), (3, 3))), ('closePath', ())]
             b: [('moveTo', ((-1, 1),)), ('curveTo', ((0, 2), (1, 3), (2, 4))), ('closePath', ())]
     """
+
+    def addVarComponent(self, glyphName, transformation, location):
+        raise NotImplementedError
 
     # raises KeyError if base glyph is not found in glyphSet
     skipMissingComponents = False

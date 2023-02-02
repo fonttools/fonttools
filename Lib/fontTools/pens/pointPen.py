@@ -13,9 +13,10 @@ For instance, whether or not a point is smooth, and its name.
 """
 
 import math
-from typing import Any, Optional, Tuple
+from typing import Any, Optional, Tuple, Dict
 
 from fontTools.pens.basePen import AbstractPen, PenError
+from fontTools.misc.transform import VarTransform
 
 __all__ = [
     "AbstractPointPen",
@@ -58,6 +59,21 @@ class AbstractPointPen:
         **kwargs: Any,
     ) -> None:
         """Add a sub glyph."""
+        raise NotImplementedError
+
+    def addVarComponent(
+        self,
+        glyphName: str,
+        transformation: VarTransform,
+        location: Dict[str, float],
+        identifier: Optional[str] = None,
+        **kwargs: Any,
+    ) -> None:
+        """Add a VarComponent sub glyph. The 'transformation' argument
+        must be a VarTransform from the fontTools.misc.transform module,
+        and the 'location' argument must be a dictionary mapping axis tags
+        to their locations.
+        """
         raise NotImplementedError
 
 

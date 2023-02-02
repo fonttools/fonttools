@@ -20,8 +20,10 @@ class _TTGlyphSet(Mapping):
     def __init__(self, font, location, glyphsMapping):
         self.font = font
         self.location = location if location is not None else {}
+        self.rawLocation = {}  # VarComponent-only location
         self.originalLocation = location if location is not None else {}
         self.locationStack = []
+        self.rawLocationStack = []
         self.glyphsMapping = glyphsMapping
         self.hMetrics = font["hmtx"].metrics
         self.vMetrics = getattr(font.get("vmtx"), "metrics", None)
@@ -39,16 +41,21 @@ class _TTGlyphSet(Mapping):
     @contextmanager
     def pushLocation(self, location, reset: bool):
         self.locationStack.append(self.location)
+        self.rawLocationStack.append(self.rawLocation)
         if reset:
             self.location = self.originalLocation.copy()
+            self.rawLocation = {}
         else:
             self.location = self.location.copy()
+            self.rawLocation = self.rawLocation.copy()
         self.location.update(location)
+        self.rawLocation.update(location)
 
         try:
             yield None
         finally:
             self.location = self.locationStack.pop()
+            self.rawLocation = self.rawLocationStack.pop()
 
     def __contains__(self, glyphName):
         return glyphName in self.glyphsMapping
@@ -180,19 +187,24 @@ class _TTGlyphGlyf(_TTGlyph):
 
         for comp in glyph.components:
 
-            t = comp.transform.toTransform()
-            if isPointPen:
-                tPen = TransformPointPen(pen, t)
-            else:
-                tPen = TransformPen(pen, t)
-
             with self.glyphSet.pushLocation(
                 comp.location, comp.flags & VarComponentFlags.RESET_UNSPECIFIED_AXES
             ):
-                if isPointPen:
-                    self.glyphSet[comp.glyphName].drawPoints(tPen)
-                else:
-                    self.glyphSet[comp.glyphName].draw(tPen)
+                try:
+                    pen.addVarComponent(
+                        comp.glyphName, comp.transform, self.glyphSet.rawLocation
+                    )
+                except NotImplementedError:
+                    t = comp.transform.toTransform()
+                    if isPointPen:
+                        tPen = TransformPointPen(pen, t)
+                    else:
+                        tPen = TransformPen(pen, t)
+
+                        if isPointPen:
+                            self.glyphSet[comp.glyphName].drawPoints(tPen)
+                        else:
+                            self.glyphSet[comp.glyphName].draw(tPen)
 
     def _getGlyphAndOffset(self):
         if self.glyphSet.location and self.glyphSet.gvarTable is not None:

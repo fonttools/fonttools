@@ -1,7 +1,8 @@
 from fontTools.ttLib import TTFont
 from fontTools.ttLib import ttGlyphSet
-from fontTools.pens.recordingPen import RecordingPen
+from fontTools.pens.recordingPen import RecordingPen, DecomposingRecordingPen
 from fontTools.misc.roundTools import otRound
+from fontTools.misc.transform import VarTransform
 import os
 import pytest
 
@@ -158,11 +159,53 @@ class TTGlyphSetTest(object):
 
         assert actual == expected, (location, actual, expected)
 
+    def test_glyphset_varComposite_components(self):
+        font = TTFont(self.getpath("varc-ac00-ac01.ttf"))
+        glyphset = font.getGlyphSet()
+
+        pen = RecordingPen()
+        glyph = glyphset["uniAC00"]
+
+        glyph.draw(pen)
+        actual = pen.value
+
+        expected = [
+            (
+                "addVarComponent",
+                (
+                    "glyph00003",
+                    VarTransform(460.0, 676.0, 0, 1, 1, 0, 0, 0, 0),
+                    {
+                        "0000": 0.84661865234375,
+                        "0001": 0.98944091796875,
+                        "0002": 0.47283935546875,
+                        "0003": 0.446533203125,
+                    },
+                ),
+            ),
+            (
+                "addVarComponent",
+                (
+                    "glyph00004",
+                    VarTransform(932.0, 382.0, 0, 1, 1, 0, 0, 0, 0),
+                    {
+                        "0000": 0.93359375,
+                        "0001": 0.916015625,
+                        "0002": 0.523193359375,
+                        "0003": 0.32806396484375,
+                        "0004": 0.85089111328125,
+                    },
+                ),
+            ),
+        ]
+
+        assert actual == expected, (actual, expected)
+
     def test_glyphset_varComposite1(self):
         font = TTFont(self.getpath("varc-ac00-ac01.ttf"))
         glyphset = font.getGlyphSet(location={"wght": 600})
 
-        pen = RecordingPen()
+        pen = DecomposingRecordingPen(glyphset)
         glyph = glyphset["uniAC00"]
 
         glyph.draw(pen)
@@ -256,7 +299,7 @@ class TTGlyphSetTest(object):
         font = TTFont(self.getpath("varc-6868.ttf"))
         glyphset = font.getGlyphSet(location={"wght": 600})
 
-        pen = RecordingPen()
+        pen = DecomposingRecordingPen(glyphset)
         glyph = glyphset["uni6868"]
 
         glyph.draw(pen)
