@@ -1719,7 +1719,6 @@ VarComponentTransformMappingValues = namedtuple(
     ["flag", "fractionalBits", "scale", "defaultValue"],
 )
 
-namedtuple
 var_component_transform_mapping = {
     "translateX": VarComponentTransformMappingValues(
         VarComponentFlags.HAVE_TRANSLATE_X, 0, 1, 0
