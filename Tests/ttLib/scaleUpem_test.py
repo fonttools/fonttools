@@ -75,6 +75,10 @@ class ScaleUpemTest(unittest.TestCase):
         expected_ttx_path = self.get_path("varc-ac00-ac01-500upem.ttx")
         self.expect_ttx(font, expected_ttx_path, tables)
 
+        # While here just test that we can read the ttx
+        font = TTFont()
+        font.importXML(expected_ttx_path)
+
     def test_scale_upem_otf(self):
 
         # Just test that it doesn't crash
