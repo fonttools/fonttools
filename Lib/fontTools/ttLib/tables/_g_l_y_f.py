@@ -1000,10 +1000,7 @@ class Glyph(object):
         return data
 
     def compileVarComponents(self, glyfTable):
-        data = b""
-        for component in self.components:
-            data = data + component.compile(glyfTable)
-        return data
+        return b"".join(c.compile(glyfTable) for c in self.components)
 
     def compileCoordinates(self):
         assert len(self.coordinates) == len(self.flags)
