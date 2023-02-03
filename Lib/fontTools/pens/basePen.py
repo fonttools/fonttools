@@ -143,7 +143,8 @@ class AbstractPen:
         and the 'location' argument must be a dictionary mapping axis tags
         to their locations.
         """
-        raise NotImplementedError
+        # GlyphSet decomposes for us
+        raise AttributeError
 
 
 class NullPen(AbstractPen):
@@ -221,6 +222,10 @@ class DecomposingPen(LoggingPen):
         else:
             tPen = TransformPen(self, transformation)
             glyph.draw(tPen)
+
+    def addVarComponent(self, glyphName, transformation, location):
+        # GlyphSet decomposes for us
+        raise AttributeError
 
 
 class BasePen(DecomposingPen):
