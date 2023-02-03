@@ -115,6 +115,14 @@ class TransformTest(object):
         assert Scale(2) == Transform(2, 0, 0, 2, 0, 0)
         assert Scale(1, 2) == Transform(1, 0, 0, 2, 0, 0)
 
+    def test_decompose(self):
+        t = Transform(2, 0, 0, 3, 5, 7)
+        d = t.toDecomposed()
+        assert d.scaleX == 2
+        assert d.scaleY == 3
+        assert d.translateX == 5
+        assert d.translateY == 7
+
 
 class DecomposedTransformTest(object):
     def test_identity(self):
