@@ -1,4 +1,10 @@
-from fontTools.misc.transform import Transform, Identity, Offset, Scale
+from fontTools.misc.transform import (
+    Transform,
+    Identity,
+    Offset,
+    Scale,
+    DecomposedTransform,
+)
 import math
 import pytest
 
@@ -108,3 +114,22 @@ class TransformTest(object):
         assert Scale(1) == Transform(1, 0, 0, 1, 0, 0)
         assert Scale(2) == Transform(2, 0, 0, 2, 0, 0)
         assert Scale(1, 2) == Transform(1, 0, 0, 2, 0, 0)
+
+
+class DecomposedTransformTest(object):
+    def test_identity(self):
+        t = DecomposedTransform()
+        assert (
+            repr(t)
+            == "DecomposedTransform(translateX=0, translateY=0, rotation=0, scaleX=1, scaleY=1, skewX=0, skewY=0, tCenterX=0, tCenterY=0)"
+        )
+        assert t == DecomposedTransform(scaleX=1.0)
+
+    def test_scale(self):
+        t = DecomposedTransform(scaleX=2, scaleY=3)
+        assert t.scaleX == 2
+        assert t.scaleY == 3
+
+    def test_toTransform(self):
+        t = DecomposedTransform(scaleX=2, scaleY=3)
+        assert t.toTransform() == (2, 0, 0, 3, 0, 0)
