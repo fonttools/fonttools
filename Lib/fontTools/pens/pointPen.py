@@ -421,6 +421,15 @@ class GuessSmoothPointPen(AbstractPointPen):
             kwargs["identifier"] = identifier
         self._outPen.addComponent(glyphName, transformation, **kwargs)
 
+    def addVarComponent(
+        self, glyphName, transformation, location, identifier=None, **kwargs
+    ):
+        if self._points is not None:
+            raise PenError("VarComponents must be added before or after contours")
+        if identifier is not None:
+            kwargs["identifier"] = identifier
+        self._outPen.addVarComponent(glyphName, transformation, location, **kwargs)
+
 
 class ReverseContourPointPen(AbstractPointPen):
     """
