@@ -1,6 +1,10 @@
 from fontTools.ttLib import TTFont
 from fontTools.ttLib import ttGlyphSet
-from fontTools.pens.recordingPen import RecordingPen, DecomposingRecordingPen
+from fontTools.pens.recordingPen import (
+    RecordingPen,
+    RecordingPointPen,
+    DecomposingRecordingPen,
+)
 from fontTools.misc.roundTools import otRound
 from fontTools.misc.transform import DecomposedTransform
 import os
@@ -293,6 +297,10 @@ class TTGlyphSetTest(object):
 
         assert actual == expected, (actual, expected)
 
+        pen = RecordingPointPen()
+        glyph.drawPoints(pen)
+        assert pen.value
+
     def test_glyphset_varComposite2(self):
         # This test font has axis variations
 
@@ -522,3 +530,7 @@ class TTGlyphSetTest(object):
         ]
 
         assert actual == expected, (actual, expected)
+
+        pen = RecordingPointPen()
+        glyph.drawPoints(pen)
+        assert pen.value
