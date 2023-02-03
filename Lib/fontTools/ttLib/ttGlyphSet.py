@@ -22,6 +22,7 @@ class _TTGlyphSet(Mapping):
         self.location = location if location is not None else {}
         self.rawLocation = {}  # VarComponent-only location
         self.originalLocation = location if location is not None else {}
+        self.depth = 0
         self.locationStack = []
         self.rawLocationStack = []
         self.glyphsMapping = glyphsMapping
@@ -56,6 +57,15 @@ class _TTGlyphSet(Mapping):
         finally:
             self.location = self.locationStack.pop()
             self.rawLocation = self.rawLocationStack.pop()
+
+    @contextmanager
+    def pushDepth(self):
+        try:
+            depth = self.depth
+            self.depth += 1
+            yield depth
+        finally:
+            self.depth -= 1
 
     def __contains__(self, glyphName):
         return glyphName in self.glyphsMapping
@@ -154,14 +164,16 @@ class _TTGlyphGlyf(_TTGlyph):
         """
         glyph, offset = self._getGlyphAndOffset()
 
-        if self.glyphSet.locationStack:
-            offset = 0  # Offset should only apply at top-level
+        with self.glyphSet.pushDepth() as depth:
 
-        if glyph.isVarComposite():
-            self._drawVarComposite(glyph, pen, False)
-            return
+            if depth:
+                offset = 0  # Offset should only apply at top-level
 
-        glyph.draw(pen, self.glyphSet.glyfTable, offset)
+            if glyph.isVarComposite():
+                self._drawVarComposite(glyph, pen, False)
+                return
+
+            glyph.draw(pen, self.glyphSet.glyfTable, offset)
 
     def drawPoints(self, pen):
         """Draw the glyph onto ``pen``. See fontTools.pens.pointPen for details
@@ -169,14 +181,16 @@ class _TTGlyphGlyf(_TTGlyph):
         """
         glyph, offset = self._getGlyphAndOffset()
 
-        if self.glyphSet.locationStack:
-            offset = 0  # Offset should only apply at top-level
+        with self.glyphSet.pushDepth() as depth:
 
-        if glyph.isVarComposite():
-            self._drawVarComposite(glyph, pen, True)
-            return
+            if depth:
+                offset = 0  # Offset should only apply at top-level
 
-        glyph.drawPoints(pen, self.glyphSet.glyfTable, offset)
+            if glyph.isVarComposite():
+                self._drawVarComposite(glyph, pen, True)
+                return
+
+            glyph.drawPoints(pen, self.glyphSet.glyfTable, offset)
 
     def _drawVarComposite(self, glyph, pen, isPointPen):
 
