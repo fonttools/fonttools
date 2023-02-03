@@ -297,6 +297,16 @@ class TTGlyphSetTest(object):
 
         assert actual == expected, (actual, expected)
 
+        # Test that drawing twice works, we accidentally don't change the component
+        pen = DecomposingRecordingPen(glyphset)
+        glyph.draw(pen)
+        actual = pen.value
+        actual = [
+            (op, tuple((otRound(pt[0]), otRound(pt[1])) for pt in args))
+            for op, args in actual
+        ]
+        assert actual == expected, (actual, expected)
+
         pen = RecordingPointPen()
         glyph.drawPoints(pen)
         assert pen.value
