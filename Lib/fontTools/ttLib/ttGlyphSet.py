@@ -194,7 +194,7 @@ class _TTGlyphGlyf(_TTGlyph):
                     pen.addVarComponent(
                         comp.glyphName, comp.transform, self.glyphSet.rawLocation
                     )
-                except NotImplementedError:
+                except (NotImplementedError, AttributeError):
                     t = comp.transform.toTransform()
                     if isPointPen:
                         tPen = TransformPointPen(pen, t)
