@@ -102,9 +102,6 @@ class DecomposingRecordingPen(DecomposingPen, RecordingPen):
             b: [('moveTo', ((-1, 1),)), ('curveTo', ((0, 2), (1, 3), (2, 4))), ('closePath', ())]
     """
 
-    def addVarComponent(self, glyphName, transformation, location):
-        raise NotImplementedError
-
     # raises KeyError if base glyph is not found in glyphSet
     skipMissingComponents = False
 
