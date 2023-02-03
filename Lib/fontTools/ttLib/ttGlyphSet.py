@@ -198,12 +198,9 @@ class _TTGlyphGlyf(_TTGlyph):
                     t = comp.transform.toTransform()
                     if isPointPen:
                         tPen = TransformPointPen(pen, t)
-                    else:
-                        tPen = TransformPen(pen, t)
-
-                    if isPointPen:
                         self.glyphSet[comp.glyphName].drawPoints(tPen)
                     else:
+                        tPen = TransformPen(pen, t)
                         self.glyphSet[comp.glyphName].draw(tPen)
 
     def _getGlyphAndOffset(self):
