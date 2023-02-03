@@ -2010,6 +2010,7 @@ class GlyphVarComponent(object):
                 i += 1
             self.location = newLocation
 
+        self.transform = DecomposedTransform()
         if self.flags & (
             VarComponentFlags.HAVE_TRANSLATE_X | VarComponentFlags.HAVE_TRANSLATE_Y
         ):
