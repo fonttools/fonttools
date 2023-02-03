@@ -4,7 +4,7 @@ from collections import namedtuple
 from fontTools.misc import sstruct
 from fontTools import ttLib
 from fontTools import version
-from fontTools.misc.transform import VarTransform
+from fontTools.misc.transform import DecomposedTransform
 from fontTools.misc.textTools import tostr, safeEval, pad
 from fontTools.misc.arrayTools import calcIntBounds, pointInRect
 from fontTools.misc.bezierTools import calcQuadraticBounds
@@ -1751,7 +1751,7 @@ VAR_COMPONENT_TRANSFORM_MAPPING = {
 class GlyphVarComponent(object):
     def __init__(self):
         self.location = {}
-        self.transform = VarTransform()
+        self.transform = DecomposedTransform()
 
     def decompile(self, data, glyfTable):
         flags = struct.unpack(">H", data[:2])[0]

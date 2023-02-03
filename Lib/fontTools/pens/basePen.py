@@ -39,7 +39,7 @@ sequence of length 2 will do.
 from typing import Tuple, Dict
 
 from fontTools.misc.loggingTools import LogMixin
-from fontTools.misc.transform import VarTransform
+from fontTools.misc.transform import DecomposedTransform
 
 __all__ = [
     "AbstractPen",
@@ -135,11 +135,11 @@ class AbstractPen:
     def addVarComponent(
         self,
         glyphName: str,
-        transformation: VarTransform,
+        transformation: DecomposedTransform,
         location: Dict[str, float],
     ) -> None:
         """Add a VarComponent sub glyph. The 'transformation' argument
-        must be a VarTransform from the fontTools.misc.transform module,
+        must be a DecomposedTransform from the fontTools.misc.transform module,
         and the 'location' argument must be a dictionary mapping axis tags
         to their locations.
         """

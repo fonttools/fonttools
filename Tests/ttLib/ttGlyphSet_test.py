@@ -2,7 +2,7 @@ from fontTools.ttLib import TTFont
 from fontTools.ttLib import ttGlyphSet
 from fontTools.pens.recordingPen import RecordingPen, DecomposingRecordingPen
 from fontTools.misc.roundTools import otRound
-from fontTools.misc.transform import VarTransform
+from fontTools.misc.transform import DecomposedTransform
 import os
 import pytest
 
@@ -174,7 +174,7 @@ class TTGlyphSetTest(object):
                 "addVarComponent",
                 (
                     "glyph00003",
-                    VarTransform(460.0, 676.0, 0, 1, 1, 0, 0, 0, 0),
+                    DecomposedTransform(460.0, 676.0, 0, 1, 1, 0, 0, 0, 0),
                     {
                         "0000": 0.84661865234375,
                         "0001": 0.98944091796875,
@@ -187,7 +187,7 @@ class TTGlyphSetTest(object):
                 "addVarComponent",
                 (
                     "glyph00004",
-                    VarTransform(932.0, 382.0, 0, 1, 1, 0, 0, 0, 0),
+                    DecomposedTransform(932.0, 382.0, 0, 1, 1, 0, 0, 0, 0),
                     {
                         "0000": 0.93359375,
                         "0001": 0.916015625,

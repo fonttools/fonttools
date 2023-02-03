@@ -401,7 +401,7 @@ def Scale(x, y=None):
 
 
 @dataclass
-class VarTransform:
+class DecomposedTransform:
     translateX: float = (0,)
     translateY: float = (0,)
     rotation: float = (0,)  # in degrees, counter-clockwise

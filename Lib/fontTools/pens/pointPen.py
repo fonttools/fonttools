@@ -16,7 +16,7 @@ import math
 from typing import Any, Optional, Tuple, Dict
 
 from fontTools.pens.basePen import AbstractPen, PenError
-from fontTools.misc.transform import VarTransform
+from fontTools.misc.transform import DecomposedTransform
 
 __all__ = [
     "AbstractPointPen",
@@ -64,13 +64,13 @@ class AbstractPointPen:
     def addVarComponent(
         self,
         glyphName: str,
-        transformation: VarTransform,
+        transformation: DecomposedTransform,
         location: Dict[str, float],
         identifier: Optional[str] = None,
         **kwargs: Any,
     ) -> None:
         """Add a VarComponent sub glyph. The 'transformation' argument
-        must be a VarTransform from the fontTools.misc.transform module,
+        must be a DecomposedTransform from the fontTools.misc.transform module,
         and the 'location' argument must be a dictionary mapping axis tags
         to their locations.
         """
