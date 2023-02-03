@@ -402,15 +402,15 @@ def Scale(x, y=None):
 
 @dataclass
 class DecomposedTransform:
-    translateX: float = (0,)
-    translateY: float = (0,)
-    rotation: float = (0,)  # in degrees, counter-clockwise
-    scaleX: float = (1,)
-    scaleY: float = (1,)
-    skewX: float = (0,)  # in degrees, counter-clockwise
-    skewY: float = (0,)  # in degrees, counter-clockwise
-    tCenterX: float = (0,)
-    tCenterY: float = (0,)
+    translateX: float = 0
+    translateY: float = 0
+    rotation: float = 0  # in degrees, counter-clockwise
+    scaleX: float = 1
+    scaleY: float = 1
+    skewX: float = 0  # in degrees, counter-clockwise
+    skewY: float = 0  # in degrees, counter-clockwise
+    tCenterX: float = 0
+    tCenterY: float = 0
 
     def toTransform(self):
         t = Transform()
