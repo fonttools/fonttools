@@ -19,6 +19,9 @@ Offset
 Scale
 	Convenience function that returns a scaling transformation
 
+The DecomposedTransform class implements a transformation with separate
+translate, rotation, scale, skew, and transformation-center components.
+
 :Example:
 
 	>>> t = Transform(2, 0, 0, 3, 0, 0)
@@ -54,7 +57,7 @@ from typing import NamedTuple
 from dataclasses import dataclass
 
 
-__all__ = ["Transform", "Identity", "Offset", "Scale"]
+__all__ = ["Transform", "Identity", "Offset", "Scale", "DecomposedTransform"]
 
 
 _EPSILON = 1e-15
@@ -402,6 +405,10 @@ def Scale(x, y=None):
 
 @dataclass
 class DecomposedTransform:
+    """The DecomposedTransform class implements a transformation with separate
+    translate, rotation, scale, skew, and transformation-center components.
+    """
+
     translateX: float = 0
     translateY: float = 0
     rotation: float = 0  # in degrees, counter-clockwise
@@ -413,6 +420,13 @@ class DecomposedTransform:
     tCenterY: float = 0
 
     def toTransform(self):
+        """Return the Transform() equivalent of this transformation.
+
+        :Example:
+                >>> DecomposedTransform(scaleX=2, scaleY=2).toTransform()
+                <Transform [2 0 0 2 0 0]>
+                >>>
+        """
         t = Transform()
         t = t.translate(
             self.translateX + self.tCenterX, self.translateY + self.tCenterY
