@@ -201,10 +201,10 @@ class _TTGlyphGlyf(_TTGlyph):
                     else:
                         tPen = TransformPen(pen, t)
 
-                        if isPointPen:
-                            self.glyphSet[comp.glyphName].drawPoints(tPen)
-                        else:
-                            self.glyphSet[comp.glyphName].draw(tPen)
+                    if isPointPen:
+                        self.glyphSet[comp.glyphName].drawPoints(tPen)
+                    else:
+                        self.glyphSet[comp.glyphName].draw(tPen)
 
     def _getGlyphAndOffset(self):
         if self.glyphSet.location and self.glyphSet.gvarTable is not None:
