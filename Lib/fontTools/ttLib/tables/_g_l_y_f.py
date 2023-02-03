@@ -1734,7 +1734,7 @@ VAR_COMPONENT_TRANSFORM_MAPPING = {
         VarComponentFlags.HAVE_SCALE_Y, 10, 1, 1
     ),
     "skewX": VarComponentTransformMappingValues(
-        VarComponentFlags.HAVE_SKEW_X, 12, 180, 0
+        VarComponentFlags.HAVE_SKEW_X, 12, -180, 0
     ),
     "skewY": VarComponentTransformMappingValues(
         VarComponentFlags.HAVE_SKEW_Y, 12, 180, 0
@@ -1988,7 +1988,7 @@ class GlyphVarComponent(object):
             controls.append("skew")
             coords.append(
                 (
-                    fl2fi(self.transform.skewX / 180, 12),
+                    fl2fi(self.transform.skewX / -180, 12),
                     fl2fi(self.transform.skewY / 180, 12),
                 )
             )
@@ -2027,7 +2027,7 @@ class GlyphVarComponent(object):
             i += 1
         if self.flags & (VarComponentFlags.HAVE_SKEW_X | VarComponentFlags.HAVE_SKEW_Y):
             self.transform.skewX, self.transform.skewY = (
-                fi2fl(coords[i][0], 12) * 180,
+                fi2fl(coords[i][0], 12) * -180,
                 fi2fl(coords[i][1], 12) * 180,
             )
             i += 1

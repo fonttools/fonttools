@@ -418,7 +418,7 @@ class DecomposedTransform:
     rotation: float = 0  # in degrees, counter-clockwise
     scaleX: float = 1
     scaleY: float = 1
-    skewX: float = 0  # in degrees, counter-clockwise
+    skewX: float = 0  # in degrees, clockwise
     skewY: float = 0  # in degrees, counter-clockwise
     tCenterX: float = 0
     tCenterY: float = 0
@@ -455,7 +455,7 @@ class DecomposedTransform:
             math.degrees(rotation),
             scaleX,
             scaleY,
-            -math.degrees(skewX),
+            math.degrees(skewX),
             math.degrees(skewY),
             0,
             0,
@@ -475,7 +475,7 @@ class DecomposedTransform:
         )
         t = t.rotate(math.radians(self.rotation))
         t = t.scale(self.scaleX, self.scaleY)
-        t = t.skew(-math.radians(self.skewX), math.radians(self.skewY))
+        t = t.skew(math.radians(self.skewX), math.radians(self.skewY))
         t = t.translate(-self.tCenterX, -self.tCenterY)
         return t
 
