@@ -1876,7 +1876,7 @@ class GlyphVarComponent(object):
                 return data
 
         for attr_name, mapping_values in VAR_COMPONENT_TRANSFORM_MAPPING.items():
-            value = getattr(self, attr_name, mapping_values.defaultValue)
+            value = getattr(self.transform, attr_name)
             data = write_transform_component(data, value, mapping_values)
 
         return struct.pack(">H", flags) + data
