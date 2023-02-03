@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from contextlib import contextmanager
-from copy import copy
+from copy import copy, deepcopy
 from types import SimpleNamespace
 from fontTools.misc.fixedTools import otRound
 from fontTools.misc.loggingTools import deprecateFunction
@@ -288,12 +288,14 @@ def _setCoordinates(glyph, coord, glyfTable):
 
     if glyph.isComposite():
         assert len(coord) == len(glyph.components)
-        glyph.components = [copy(comp) for comp in glyph.components]  # Shallow copy
+        # Shallow copy is enough: all attributes that we change are scalars
+        glyph.components = [copy(comp) for comp in glyph.components]
         for p, comp in zip(coord, glyph.components):
             if hasattr(comp, "x"):
                 comp.x, comp.y = p
     elif glyph.isVarComposite():
-        glyph.components = [copy(comp) for comp in glyph.components]  # Shallow copy
+        # Deep copy needed because we mutate comp.transform and comp.location
+        glyph.components = [deepcopy(comp) for comp in glyph.components]
         for comp in glyph.components:
             coord = comp.setCoordinates(coord)
         assert not coord
