@@ -104,12 +104,12 @@
   </OS_2>
 
   <hmtx>
-    <mtx name=".notdef" width="500" lsb="50"/>
-    <mtx name="glyph00003" width="483" lsb="95"/>
-    <mtx name="glyph00004" width="483" lsb="314"/>
-    <mtx name="glyph00005" width="483" lsb="90"/>
-    <mtx name="uniAC00" width="483" lsb="24"/>
-    <mtx name="uniAC01" width="483" lsb="18"/>
+    <mtx name=".notdef" width="500" lsb="0"/>
+    <mtx name="glyph00003" width="483" lsb="-207"/>
+    <mtx name="glyph00004" width="483" lsb="-155"/>
+    <mtx name="glyph00005" width="483" lsb="-258"/>
+    <mtx name="uniAC00" width="483" lsb="0"/>
+    <mtx name="uniAC01" width="483" lsb="0"/>
   </hmtx>
 
   <cmap>
