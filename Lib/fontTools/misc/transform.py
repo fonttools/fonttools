@@ -407,6 +407,10 @@ def Scale(x, y=None):
     return Transform(x, 0, 0, y, 0, 0)
 
 
+def _sign(v):
+    return +1 if v >= 0 else -1
+
+
 @dataclass
 class DecomposedTransform:
     """The DecomposedTransform class implements a transformation with separate
@@ -428,6 +432,12 @@ class DecomposedTransform:
         # Adapted from an answer on
         # https://math.stackexchange.com/questions/13150/extracting-rotation-scale-values-from-2d-transformation-matrix
         a, b, c, d, x, y = transform
+
+        sx = _sign(a)
+        if sx < 0:
+            a *= sx
+            b *= sx
+
         delta = a * d - b * c
 
         rotation = 0
@@ -437,12 +447,14 @@ class DecomposedTransform:
         # Apply the QR-like decomposition.
         if a != 0 or b != 0:
             r = math.sqrt(a * a + b * b)
-            rotation = math.acos(a / r) if b > 0 else -math.acos(a / r)
+            rotation = math.acos(a / r) if b >= 0 else -math.acos(a / r)
             scaleX, scaleY = (r, delta / r)
             skewX, skewY = (math.atan((a * c + b * d) / (r * r)), 0)
         elif c != 0 or d != 0:
             s = math.sqrt(c * c + d * d)
-            rotation = math.pi / 2 - (math.acos(-c / s) if d > 0 else -math.acos(c / s))
+            rotation = math.pi / 2 - (
+                math.acos(-c / s) if d >= 0 else -math.acos(c / s)
+            )
             scaleX, scaleY = (delta / s, s)
             skewX, skewY = (0, math.atan((a * c + b * d) / (s * s)))
         else:
@@ -453,9 +465,9 @@ class DecomposedTransform:
             x,
             y,
             math.degrees(rotation),
-            scaleX,
+            scaleX * sx,
             scaleY,
-            math.degrees(skewX),
+            math.degrees(skewX) * sx,
             math.degrees(skewY),
             0,
             0,

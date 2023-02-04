@@ -123,6 +123,19 @@ class TransformTest(object):
         assert d.translateX == 5
         assert d.translateY == 7
 
+    def test_decompose(self):
+        t = Transform(-1, 0, 0, 1, 0, 0)
+        d = t.toDecomposed()
+        assert d.scaleX == -1
+        assert d.scaleY == 1
+        assert d.rotation == 0
+
+        t = Transform(1, 0, 0, -1, 0, 0)
+        d = t.toDecomposed()
+        assert d.scaleX == 1
+        assert d.scaleY == -1
+        assert d.rotation == 0
+
 
 class DecomposedTransformTest(object):
     def test_identity(self):
@@ -141,3 +154,45 @@ class DecomposedTransformTest(object):
     def test_toTransform(self):
         t = DecomposedTransform(scaleX=2, scaleY=3)
         assert t.toTransform() == (2, 0, 0, 3, 0, 0)
+
+    @pytest.mark.parametrize(
+        "decomposed",
+        [
+            DecomposedTransform(scaleX=1, scaleY=0),
+            DecomposedTransform(scaleX=0, scaleY=1),
+            DecomposedTransform(scaleX=1, scaleY=0, rotation=30),
+            DecomposedTransform(scaleX=0, scaleY=1, rotation=30),
+            DecomposedTransform(scaleX=1, scaleY=1),
+            DecomposedTransform(scaleX=-1, scaleY=1),
+            DecomposedTransform(scaleX=1, scaleY=-1),
+            DecomposedTransform(scaleX=-1, scaleY=-1),
+            DecomposedTransform(rotation=90),
+            DecomposedTransform(rotation=-90),
+            DecomposedTransform(skewX=45),
+            DecomposedTransform(skewY=45),
+            DecomposedTransform(scaleX=-1, skewX=45),
+            DecomposedTransform(scaleX=-1, skewY=45),
+            DecomposedTransform(scaleY=-1, skewX=45),
+            DecomposedTransform(scaleY=-1, skewY=45),
+            DecomposedTransform(scaleX=-1, skewX=45, rotation=30),
+            DecomposedTransform(scaleX=-1, skewY=45, rotation=30),
+            DecomposedTransform(scaleY=-1, skewX=45, rotation=30),
+            DecomposedTransform(scaleY=-1, skewY=45, rotation=30),
+            DecomposedTransform(scaleX=-1, skewX=45, rotation=-30),
+            DecomposedTransform(scaleX=-1, skewY=45, rotation=-30),
+            DecomposedTransform(scaleY=-1, skewX=45, rotation=-30),
+            DecomposedTransform(scaleY=-1, skewY=45, rotation=-30),
+            DecomposedTransform(scaleX=-2, skewX=45, rotation=30),
+            DecomposedTransform(scaleX=-2, skewY=45, rotation=30),
+            DecomposedTransform(scaleY=-2, skewX=45, rotation=30),
+            DecomposedTransform(scaleY=-2, skewY=45, rotation=30),
+            DecomposedTransform(scaleX=-2, skewX=45, rotation=-30),
+            DecomposedTransform(scaleX=-2, skewY=45, rotation=-30),
+            DecomposedTransform(scaleY=-2, skewX=45, rotation=-30),
+            DecomposedTransform(scaleY=-2, skewY=45, rotation=-30),
+        ],
+    )
+    def test_roundtrip(lst, decomposed):
+        assert decomposed.toTransform().toDecomposed().toTransform() == pytest.approx(
+            tuple(decomposed.toTransform())
+        ), decomposed
