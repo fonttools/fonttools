@@ -98,6 +98,13 @@ class ScaleUpemTest(unittest.TestCase):
         # Scale our other varComposite font as well; without checking the expected
         font = TTFont(self.get_path("varc-6868.ttf"))
         scale_upem(font, 500)
+        ttf = BytesIO()
+        font.save(ttf)
+        xml = BytesIO()
+        font.saveXML(xml)
+        xml.seek(0)
+        font = TTFont()
+        font.importXML(xml)
 
     def test_scale_upem_otf(self):
 
