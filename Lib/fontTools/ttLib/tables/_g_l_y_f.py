@@ -1835,7 +1835,7 @@ class GlyphVarComponent(object):
         if (
             flags & VarComponentFlags.HAVE_SCALE_X
             and flags & VarComponentFlags.HAVE_SCALE_Y
-            and fl2fi(self.scaleX, 10) == fl2fi(self.scaleY, 10)
+            and fl2fi(self.transform.scaleX, 10) == fl2fi(self.transform.scaleY, 10)
         ):
             flags |= VarComponentFlags.UNIFORM_SCALE
             flags ^= VarComponentFlags.HAVE_SCALE_Y
