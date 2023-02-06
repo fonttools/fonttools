@@ -74,7 +74,8 @@ class AbstractPointPen:
         and the 'location' argument must be a dictionary mapping axis tags
         to their locations.
         """
-        raise NotImplementedError
+        # ttGlyphSet decomposes for us
+        raise AttributeError
 
 
 class BasePointToSegmentPen(AbstractPointPen):
