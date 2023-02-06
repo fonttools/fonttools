@@ -133,9 +133,9 @@ class Glyph(object):
             # glyph is a "dupe", i.e. a reference to another glyph's image data.
             # in this case imageData contains the glyph id of the reference glyph
             # get glyph id from glyphname
-            self.imageData = struct.pack(
-                ">H", ttFont.getGlyphID(safeEval("'''" + attrs["glyphname"] + "'''"))
-            )
+            glyphname = safeEval("'''" + attrs["glyphname"] + "'''")
+            self.imageData = struct.pack(">H", ttFont.getGlyphID(glyphname))
+            self.referenceGlyphName = glyphname
         elif name == "hexdata":
             self.imageData = readHex(content)
         else:
