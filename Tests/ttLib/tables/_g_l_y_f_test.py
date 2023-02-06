@@ -18,7 +18,7 @@ from fontTools.ttLib.tables._g_l_y_f import (
 from fontTools.ttLib.tables import ttProgram
 import sys
 import array
-from io import StringIO
+from io import StringIO, BytesIO
 import itertools
 import pytest
 import re
@@ -677,6 +677,51 @@ class GlyphComponentTest:
         glyf = font["glyf"]
 
         glyf.glyphs["uni6868"].trim()
+
+    def test_varComposite_basic(self):
+        font_path = os.path.join(DATA_DIR, "..", "..", "data", "varc-ac00-ac01.ttf")
+        font = TTFont(font_path)
+        tables = [
+            table_tag
+            for table_tag in font.keys()
+            if table_tag not in {"head", "maxp", "hhea"}
+        ]
+        xml = StringIO()
+        font.saveXML(xml)
+        xml1 = StringIO()
+        font.saveXML(xml1, tables=tables)
+        xml.seek(0)
+        font = TTFont()
+        font.importXML(xml)
+        ttf = BytesIO()
+        font.save(ttf)
+        ttf.seek(0)
+        font = TTFont(ttf)
+        xml2 = StringIO()
+        font.saveXML(xml2, tables=tables)
+        assert xml1.getvalue() == xml2.getvalue()
+
+        font_path = os.path.join(DATA_DIR, "..", "..", "data", "varc-6868.ttf")
+        font = TTFont(font_path)
+        tables = [
+            table_tag
+            for table_tag in font.keys()
+            if table_tag not in {"head", "maxp", "hhea", "name", "fvar"}
+        ]
+        xml = StringIO()
+        font.saveXML(xml)
+        xml1 = StringIO()
+        font.saveXML(xml1, tables=tables)
+        xml.seek(0)
+        font = TTFont()
+        font.importXML(xml)
+        ttf = BytesIO()
+        font.save(ttf)
+        ttf.seek(0)
+        font = TTFont(ttf)
+        xml2 = StringIO()
+        font.saveXML(xml2, tables=tables)
+        assert xml1.getvalue() == xml2.getvalue()
 
 
 if __name__ == "__main__":

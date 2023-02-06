@@ -2,7 +2,6 @@ from fontTools.ttLib import TTFont
 from fontTools.ttLib.scaleUpem import scale_upem
 import difflib
 import os
-from io import BytesIO
 import shutil
 import sys
 import tempfile
@@ -76,35 +75,9 @@ class ScaleUpemTest(unittest.TestCase):
         expected_ttx_path = self.get_path("varc-ac00-ac01-500upem.ttx")
         self.expect_ttx(font, expected_ttx_path, tables)
 
-        # While here, test a couple roundtrips
-        tables = [
-            table_tag for table_tag in tables if table_tag not in {"maxp", "hhea"}
-        ]
-        xml = BytesIO()
-        font.saveXML(xml)
-        xml1 = BytesIO()
-        font.saveXML(xml1, tables=tables)
-        xml.seek(0)
-        font = TTFont()
-        font.importXML(xml)
-        ttf = BytesIO()
-        font.save(ttf)
-        ttf.seek(0)
-        font = TTFont(ttf)
-        xml2 = BytesIO()
-        font.saveXML(xml2, tables=tables)
-        assert xml1.getvalue() == xml2.getvalue()
-
         # Scale our other varComposite font as well; without checking the expected
         font = TTFont(self.get_path("varc-6868.ttf"))
         scale_upem(font, 500)
-        ttf = BytesIO()
-        font.save(ttf)
-        xml = BytesIO()
-        font.saveXML(xml)
-        xml.seek(0)
-        font = TTFont()
-        font.importXML(xml)
 
     def test_scale_upem_otf(self):
 
