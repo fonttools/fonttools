@@ -407,10 +407,6 @@ def Scale(x, y=None):
     return Transform(x, 0, 0, y, 0, 0)
 
 
-def _sign(v):
-    return +1 if v >= 0 else -1
-
-
 @dataclass
 class DecomposedTransform:
     """The DecomposedTransform class implements a transformation with separate
@@ -433,7 +429,7 @@ class DecomposedTransform:
         # https://math.stackexchange.com/questions/13150/extracting-rotation-scale-values-from-2d-transformation-matrix
         a, b, c, d, x, y = transform
 
-        sx = _sign(a)
+        sx = math.copysign(1, a)
         if sx < 0:
             a *= sx
             b *= sx
