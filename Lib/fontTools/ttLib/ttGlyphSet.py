@@ -19,6 +19,11 @@ class _TTGlyphSet(Mapping):
 
     def __init__(self, font, location, glyphsMapping):
         self.font = font
+        self.defaultLocationNormalized = (
+            {axis.axisTag: 0 for axis in self.font["fvar"].axes}
+            if "fvar" in self.font
+            else {}
+        )
         self.location = location if location is not None else {}
         self.rawLocation = {}  # VarComponent-only location
         self.originalLocation = location if location is not None else {}
@@ -45,10 +50,10 @@ class _TTGlyphSet(Mapping):
         self.rawLocationStack.append(self.rawLocation)
         if reset:
             self.location = self.originalLocation.copy()
-            self.rawLocation = {}
+            self.rawLocation = self.defaultLocationNormalized.copy()
         else:
             self.location = self.location.copy()
-            self.rawLocation = self.rawLocation.copy()
+            self.rawLocation = {}
         self.location.update(location)
         self.rawLocation.update(location)
 
