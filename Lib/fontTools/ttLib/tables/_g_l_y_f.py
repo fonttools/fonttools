@@ -1236,7 +1236,7 @@ class Glyph(object):
                 allFlags.extend(flags)
             return allCoords, allEndPts, allFlags
         elif self.isVarComposite():
-            raise NotImplementedError
+            raise NotImplementedError("use TTGlyphSet to draw VarComposite glyphs")
         else:
             return GlyphCoordinates(), [], bytearray()
 
