@@ -879,7 +879,7 @@ class Glyph(object):
 
     def decompileVarComponents(self, data, glyfTable):
         self.components = []
-        while len(data) >= 5:
+        while len(data) >= GlyphVarComponent.MIN_SIZE:
             component = GlyphVarComponent()
             data = component.decompile(data, glyfTable)
             self.components.append(component)
@@ -1379,8 +1379,9 @@ class Glyph(object):
             data = data[:i]
         elif self.isVarComposite():
             i = 0
-            while len(data[i : i + 5]) >= 5:
-                size = GlyphVarComponent.getSize(data[i : i + 5])
+            MIN_SIZE = GlyphVarComponent.MIN_SIZE
+            while len(data[i : i + MIN_SIZE]) >= MIN_SIZE:
+                size = GlyphVarComponent.getSize(data[i : i + MIN_SIZE])
                 i += size
             data = data[:i]
 
@@ -1753,6 +1754,9 @@ VAR_COMPONENT_TRANSFORM_MAPPING = {
 
 
 class GlyphVarComponent(object):
+
+    MIN_SIZE = 5
+
     def __init__(self):
         self.location = {}
         self.transform = DecomposedTransform()
