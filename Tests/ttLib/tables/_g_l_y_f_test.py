@@ -664,6 +664,20 @@ class GlyphComponentTest:
         assert (comp.firstPt, comp.secondPt) == (1, 2)
         assert not hasattr(comp, "transform")
 
+    def test_trim_varComposite_glyph(self):
+        font_path = os.path.join(DATA_DIR, "..", "..", "data", "varc-ac00-ac01.ttf")
+        font = TTFont(font_path)
+        glyf = font["glyf"]
+
+        glyf.glyphs["uniAC00"].trim()
+        glyf.glyphs["uniAC01"].trim()
+
+        font_path = os.path.join(DATA_DIR, "..", "..", "data", "varc-6868.ttf")
+        font = TTFont(font_path)
+        glyf = font["glyf"]
+
+        glyf.glyphs["uni6868"].trim()
+
 
 if __name__ == "__main__":
     import sys

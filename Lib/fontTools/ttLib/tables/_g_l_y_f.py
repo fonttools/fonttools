@@ -1378,7 +1378,11 @@ class Glyph(object):
             # Remove padding
             data = data[:i]
         elif self.isVarComposite():
-            raise NotImplementedError
+            i = 0
+            while len(data[i : i + 5]) >= 5:
+                size = GlyphVarComponent.getSize(data[i : i + 5])
+                i += size
+            data = data[:i]
 
         self.data = data
 
@@ -1752,6 +1756,28 @@ class GlyphVarComponent(object):
     def __init__(self):
         self.location = {}
         self.transform = DecomposedTransform()
+
+    @staticmethod
+    def getSize(data):
+        size = 5
+        flags = struct.unpack(">H", data[:2])[0]
+        numAxes = int(data[2])
+
+        if flags & VarComponentFlags.GID_IS_24:
+            size += 1
+
+        size += numAxes
+        if flags & VarComponentFlags.AXIS_INDICES_ARE_SHORT:
+            size += 2 * numAxes
+        else:
+            axisIndices = array.array("B", data[:numAxes])
+            size += numAxes
+
+        for attr_name, mapping_values in VAR_COMPONENT_TRANSFORM_MAPPING.items():
+            if flags & mapping_values.flag:
+                size += 2
+
+        return size
 
     def decompile(self, data, glyfTable):
         flags = struct.unpack(">H", data[:2])[0]
