@@ -93,12 +93,7 @@ class Glyph(object):
         if self.graphicType is None:
             self.rawdata = b""
         else:
-            rawdata = sstruct.pack(sbixGlyphHeaderFormat, self)
-        if self.graphicType == "dupe":
-            rawdata += struct.pack(">H", ttFont.getGlyphID(self.referenceGlyphName))
-        else:
-            rawdata += self.imageData
-        self.rawdata = rawdata
+            self.rawdata = sstruct.pack(sbixGlyphHeaderFormat, self) + self.imageData
 
     def toXML(self, xmlWriter, ttFont):
         if self.graphicType == None:
