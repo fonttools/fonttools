@@ -36,9 +36,10 @@ Coordinates are usually expressed as (x, y) tuples, but generally any
 sequence of length 2 will do.
 """
 
-from typing import Tuple
+from typing import Tuple, Dict
 
 from fontTools.misc.loggingTools import LogMixin
+from fontTools.misc.transform import DecomposedTransform
 
 __all__ = [
     "AbstractPen",
@@ -131,6 +132,20 @@ class AbstractPen:
         """
         raise NotImplementedError
 
+    def addVarComponent(
+        self,
+        glyphName: str,
+        transformation: DecomposedTransform,
+        location: Dict[str, float],
+    ) -> None:
+        """Add a VarComponent sub glyph. The 'transformation' argument
+        must be a DecomposedTransform from the fontTools.misc.transform module,
+        and the 'location' argument must be a dictionary mapping axis tags
+        to their locations.
+        """
+        # GlyphSet decomposes for us
+        raise AttributeError
+
 
 class NullPen(AbstractPen):
 
@@ -155,6 +170,9 @@ class NullPen(AbstractPen):
         pass
 
     def addComponent(self, glyphName, transformation):
+        pass
+
+    def addVarComponent(self, glyphName, transformation, location):
         pass
 
 
@@ -205,13 +223,17 @@ class DecomposingPen(LoggingPen):
             tPen = TransformPen(self, transformation)
             glyph.draw(tPen)
 
+    def addVarComponent(self, glyphName, transformation, location):
+        # GlyphSet decomposes for us
+        raise AttributeError
+
 
 class BasePen(DecomposingPen):
 
     """Base class for drawing pens. You must override _moveTo, _lineTo and
     _curveToOne. You may additionally override _closePath, _endPath,
-    addComponent and/or _qCurveToOne. You should not override any other
-    methods.
+    addComponent, addVarComponent, and/or _qCurveToOne. You should not
+    override any other methods.
     """
 
     def __init__(self, glyphSet=None):

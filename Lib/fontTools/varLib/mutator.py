@@ -199,7 +199,7 @@ def instantiateVariableFont(varfont, location, inplace=False, overlap=True):
             gvar.variations.keys(),
             key=lambda name: (
                 glyf[name].getCompositeMaxpValues(glyf).maxComponentDepth
-                if glyf[name].isComposite()
+                if glyf[name].isComposite() or glyf[name].isVarComposite()
                 else 0,
                 name,
             ),

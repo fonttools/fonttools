@@ -1563,6 +1563,26 @@ class InstantiateVariableFontTest(object):
 
         assert _dump_ttx(instance) == expected
 
+    def test_varComposite(self):
+        input_path = os.path.join(
+            TESTDATA, "..", "..", "..", "ttLib", "data", "varc-ac00-ac01.ttf"
+        )
+        varfont = ttLib.TTFont(input_path)
+
+        location = {"wght": 600}
+
+        instance = instancer.instantiateVariableFont(
+            varfont,
+            location,
+        )
+
+        location = {"0000": 0.5}
+
+        instance = instancer.instantiateVariableFont(
+            varfont,
+            location,
+        )
+
 
 def _conditionSetAsDict(conditionSet, axisOrder):
     result = {}

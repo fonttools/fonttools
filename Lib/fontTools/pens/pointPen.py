@@ -13,9 +13,10 @@ For instance, whether or not a point is smooth, and its name.
 """
 
 import math
-from typing import Any, Optional, Tuple
+from typing import Any, Optional, Tuple, Dict
 
 from fontTools.pens.basePen import AbstractPen, PenError
+from fontTools.misc.transform import DecomposedTransform
 
 __all__ = [
     "AbstractPointPen",
@@ -59,6 +60,22 @@ class AbstractPointPen:
     ) -> None:
         """Add a sub glyph."""
         raise NotImplementedError
+
+    def addVarComponent(
+        self,
+        glyphName: str,
+        transformation: DecomposedTransform,
+        location: Dict[str, float],
+        identifier: Optional[str] = None,
+        **kwargs: Any,
+    ) -> None:
+        """Add a VarComponent sub glyph. The 'transformation' argument
+        must be a DecomposedTransform from the fontTools.misc.transform module,
+        and the 'location' argument must be a dictionary mapping axis tags
+        to their locations.
+        """
+        # ttGlyphSet decomposes for us
+        raise AttributeError
 
 
 class BasePointToSegmentPen(AbstractPointPen):
@@ -404,6 +421,15 @@ class GuessSmoothPointPen(AbstractPointPen):
         if identifier is not None:
             kwargs["identifier"] = identifier
         self._outPen.addComponent(glyphName, transformation, **kwargs)
+
+    def addVarComponent(
+        self, glyphName, transformation, location, identifier=None, **kwargs
+    ):
+        if self._points is not None:
+            raise PenError("VarComponents must be added before or after contours")
+        if identifier is not None:
+            kwargs["identifier"] = identifier
+        self._outPen.addVarComponent(glyphName, transformation, location, **kwargs)
 
 
 class ReverseContourPointPen(AbstractPointPen):

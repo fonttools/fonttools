@@ -209,6 +209,7 @@ ttLib.getTableClass("glyf").mergeMap = {
     "tableTag": equal,
     "glyphs": sumDicts,
     "glyphOrder": sumLists,
+    "axisTags": equal,
 }
 
 
@@ -222,7 +223,7 @@ def merge(self, m, tables):
                 g.removeHinting()
             # Expand composite glyphs to load their
             # composite glyph names.
-            if g.isComposite():
+            if g.isComposite() or g.isVarComposite():
                 g.expand(table)
     return DefaultTable.merge(self, m, tables)
 

@@ -70,6 +70,9 @@ class RecordingPen(AbstractPen):
     def addComponent(self, glyphName, transformation):
         self.value.append(("addComponent", (glyphName, transformation)))
 
+    def addVarComponent(self, glyphName, transformation, location):
+        self.value.append(("addVarComponent", (glyphName, transformation, location)))
+
     def replay(self, pen):
         replayRecording(self.value, pen)
 
@@ -150,6 +153,15 @@ class RecordingPointPen(AbstractPointPen):
         if identifier is not None:
             kwargs["identifier"] = identifier
         self.value.append(("addComponent", (baseGlyphName, transformation), kwargs))
+
+    def addVarComponent(
+        self, baseGlyphName, transformation, location, identifier=None, **kwargs
+    ):
+        if identifier is not None:
+            kwargs["identifier"] = identifier
+        self.value.append(
+            ("addVarComponent", (baseGlyphName, transformation, location), kwargs)
+        )
 
     def replay(self, pointPen):
         for operator, args, kwargs in self.value:
