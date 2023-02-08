@@ -13,8 +13,10 @@ def _test_linear(n):
     assert len(overlaps) == 2 * n - 1, overlaps
     return conds, overlaps
 
+
 def test_linear():
     _test_linear(10)
+
 
 def _test_quadratic(n):
     conds = []
@@ -26,8 +28,10 @@ def _test_quadratic(n):
     assert len(overlaps) == n * (n + 1) // 2, overlaps
     return conds, overlaps
 
+
 def test_quadratic():
     _test_quadratic(10)
+
 
 def _merge_substitutions(substitutions):
     merged = {}
