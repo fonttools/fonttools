@@ -1,7 +1,7 @@
 from fontTools.varLib.featureVars import overlayFeatureVariations
 
 
-def test_linear(n=10):
+def _test_linear(n):
     conds = []
     for i in range(n):
         end = i / n
@@ -13,8 +13,10 @@ def test_linear(n=10):
     assert len(overlaps) == 2 * n - 1, overlaps
     return conds, overlaps
 
+def test_linear():
+    _test_linear(10)
 
-def test_quadratic(n=10):
+def _test_quadratic(n):
     conds = []
     for i in range(1, n + 1):
         region = [{"X": (0, i / n), "Y": (0, (n + 1 - i) / n)}]
@@ -24,6 +26,8 @@ def test_quadratic(n=10):
     assert len(overlaps) == n * (n + 1) // 2, overlaps
     return conds, overlaps
 
+def test_quadratic():
+    _test_quadratic(10)
 
 def _merge_substitutions(substitutions):
     merged = {}
@@ -122,5 +126,5 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         n = int(sys.argv[1])
 
-    run(test_linear, n=n, quiet=quiet)
-    run(test_quadratic, n=n, quiet=quiet)
+    run(_test_linear, n=n, quiet=quiet)
+    run(_test_quadratic, n=n, quiet=quiet)
