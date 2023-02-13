@@ -30,6 +30,7 @@ __all__ = [
     "solveCubic",
     "quadraticPointAtT",
     "cubicPointAtT",
+    "cubicPointAtTC",
     "linePointAtT",
     "segmentPointAtT",
     "lineLineIntersections",
@@ -858,6 +859,31 @@ def cubicPointAtT(pt1, pt2, pt3, pt4, t):
         + t * t * t * pt4[1]
     )
     return (x, y)
+
+
+@cython.returns(cython.complex)
+@cython.locals(
+    t=cython.double,
+    pt1=cython.complex,
+    pt2=cython.complex,
+    pt3=cython.complex,
+    pt4=cython.complex,
+)
+@cython.locals(t2=cython.double, t_1 = cython.double, t_1_2 = cython.double)
+def cubicPointAtTC(pt1, pt2, pt3, pt4, t):
+    """Finds the point at time `t` on a cubic curve.
+
+    Args:
+        pt1, pt2, pt3, pt4: Coordinates of the curve as complex numbers.
+        t: The time along the curve.
+
+    Returns:
+        A complex number with the coordinates of the point.
+    """
+    t2 = t * t
+    t_1 = 1 - t
+    t_1_2 = t_1 * t_1
+    return t_1_2 * t_1 * pt1 + 3 * (t_1_2 * t * pt2 + t_1 * t2 * pt3) + t2 * t * pt4
 
 
 def segmentPointAtT(seg, t):
