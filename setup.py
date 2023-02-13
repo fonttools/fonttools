@@ -74,6 +74,9 @@ if with_cython is True or (with_cython is None and has_cython):
         Extension("fontTools.cu2qu.cu2qu", ["Lib/fontTools/cu2qu/cu2qu.py"]),
     )
     ext_modules.append(
+        Extension("fontTools.qu2cu.qu2cu", ["Lib/fontTools/qu2cu/qu2cu.py"]),
+    )
+    ext_modules.append(
         Extension("fontTools.misc.bezierTools", ["Lib/fontTools/misc/bezierTools.py"]),
     )
     ext_modules.append(
