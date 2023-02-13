@@ -932,16 +932,16 @@ def cubicPointAtT(pt1, pt2, pt3, pt4, t):
         A 2D tuple with the coordinates of the point.
     """
     t2 = t * t
-    t_1 = 1 - t
-    t_1_2 = t_1 * t_1
+    _1_t = 1 - t
+    _1_t_2 = _1_t * _1_t
     x = (
-        t_1_2 * t_1 * pt1[0]
-        + 3 * (t_1_2 * t * pt2[0] + t_1 * t2 * pt3[0])
+        _1_t_2 * _1_t * pt1[0]
+        + 3 * (_1_t_2 * t * pt2[0] + _1_t * t2 * pt3[0])
         + t2 * t * pt4[0]
     )
     y = (
-        t_1_2 * t_1 * pt1[1]
-        + 3 * (t_1_2 * t * pt2[1] + t_1 * t2 * pt3[1])
+        _1_t_2 * _1_t * pt1[1]
+        + 3 * (_1_t_2 * t * pt2[1] + _1_t * t2 * pt3[1])
         + t2 * t * pt4[1]
     )
     return (x, y)
@@ -955,7 +955,7 @@ def cubicPointAtT(pt1, pt2, pt3, pt4, t):
     pt3=cython.complex,
     pt4=cython.complex,
 )
-@cython.locals(t2=cython.double, t_1=cython.double, t_1_2=cython.double)
+@cython.locals(t2=cython.double, _1_t=cython.double, _1_t_2=cython.double)
 def cubicPointAtTC(pt1, pt2, pt3, pt4, t):
     """Finds the point at time `t` on a cubic curve.
 
@@ -967,9 +967,9 @@ def cubicPointAtTC(pt1, pt2, pt3, pt4, t):
         A complex number with the coordinates of the point.
     """
     t2 = t * t
-    t_1 = 1 - t
-    t_1_2 = t_1 * t_1
-    return t_1_2 * t_1 * pt1 + 3 * (t_1_2 * t * pt2 + t_1 * t2 * pt3) + t2 * t * pt4
+    _1_t = 1 - t
+    _1_t_2 = _1_t * _1_t
+    return _1_t_2 * _1_t * pt1 + 3 * (_1_t_2 * t * pt2 + _1_t * t2 * pt3) + t2 * t * pt4
 
 
 def segmentPointAtT(seg, t):
