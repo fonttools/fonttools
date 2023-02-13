@@ -7,6 +7,13 @@ from fontTools.misc.transform import Identity
 import math
 from collections import namedtuple
 
+try:
+    import cython
+except ImportError:
+    # if cython not installed, use mock module with no-op decorators and types
+    from fontTools.misc import cython
+
+
 Intersection = namedtuple("Intersection", ["pt", "t1", "t2"])
 
 
@@ -39,6 +46,13 @@ __all__ = [
     "segmentSegmentIntersections",
 ]
 
+if cython.compiled:
+    # Yep, I'm compiled.
+    COMPILED = True
+else:
+    # Just a lowly interpreted script.
+    COMPILED = False
+
 
 def calcCubicArcLength(pt1, pt2, pt3, pt4, tolerance=0.005):
     """Calculates the arc length for a cubic Bezier segment.
@@ -68,6 +82,14 @@ def _split_cubic_into_two(p0, p1, p2, p3):
     )
 
 
+@cython.returns(cython.double)
+@cython.locals(
+    p0=cython.complex,
+    p1=cython.complex,
+    p2=cython.complex,
+    p3=cython.complex,
+)
+@cython.locals(mult=cython.double, arch=cython.double, box=cython.double)
 def _calcCubicArcLengthCRecurse(mult, p0, p1, p2, p3):
     arch = abs(p0 - p3)
     box = abs(p0 - p1) + abs(p1 - p2) + abs(p2 - p3)
@@ -80,6 +102,17 @@ def _calcCubicArcLengthCRecurse(mult, p0, p1, p2, p3):
         )
 
 
+@cython.returns(cython.double)
+@cython.locals(
+    pt1=cython.complex,
+    pt2=cython.complex,
+    pt3=cython.complex,
+    pt4=cython.complex,
+)
+@cython.locals(
+    tolerance=cython.double,
+    mult=cython.double,
+)
 def calcCubicArcLengthC(pt1, pt2, pt3, pt4, tolerance=0.005):
     """Calculates the arc length for a cubic Bezier segment.
 
@@ -98,10 +131,18 @@ epsilonDigits = 6
 epsilon = 1e-10
 
 
+@cython.cfunc
+@cython.inline
+@cython.returns(cython.double)
+@cython.locals(v1=cython.complex, v2=cython.complex)
 def _dot(v1, v2):
     return (v1 * v2.conjugate()).real
 
 
+@cython.cfunc
+@cython.inline
+@cython.returns(cython.double)
+@cython.locals(x=cython.complex)
 def _intSecAtan(x):
     # In : sympy.integrate(sp.sec(sp.atan(x)))
     # Out: x*sqrt(x**2 + 1)/2 + asinh(x)/2
@@ -143,6 +184,25 @@ def calcQuadraticArcLength(pt1, pt2, pt3):
     return calcQuadraticArcLengthC(complex(*pt1), complex(*pt2), complex(*pt3))
 
 
+@cython.returns(cython.double)
+@cython.locals(
+    pt1=cython.complex,
+    pt2=cython.complex,
+    pt3=cython.complex,
+    d0=cython.complex,
+    d1=cython.complex,
+    d=cython.complex,
+    n=cython.complex,
+)
+@cython.locals(
+    scale=cython.double,
+    origDist=cython.double,
+    a=cython.double,
+    b=cython.double,
+    x0=cython.double,
+    x1=cython.double,
+    Len=cython.double,
+)
 def calcQuadraticArcLengthC(pt1, pt2, pt3):
     """Calculates the arc length for a quadratic Bezier segment.
 
@@ -192,6 +252,17 @@ def approximateQuadraticArcLength(pt1, pt2, pt3):
     return approximateQuadraticArcLengthC(complex(*pt1), complex(*pt2), complex(*pt3))
 
 
+@cython.returns(cython.double)
+@cython.locals(
+    pt1=cython.complex,
+    pt2=cython.complex,
+    pt3=cython.complex,
+)
+@cython.locals(
+    v0=cython.double,
+    v1=cython.double,
+    v2=cython.double,
+)
 def approximateQuadraticArcLengthC(pt1, pt2, pt3):
     """Calculates the arc length for a quadratic Bezier segment.
 
@@ -289,6 +360,20 @@ def approximateCubicArcLength(pt1, pt2, pt3, pt4):
     )
 
 
+@cython.returns(cython.double)
+@cython.locals(
+    pt1=cython.complex,
+    pt2=cython.complex,
+    pt3=cython.complex,
+    pt4=cython.complex,
+)
+@cython.locals(
+    v0=cython.double,
+    v1=cython.double,
+    v2=cython.double,
+    v3=cython.double,
+    v4=cython.double,
+)
 def approximateCubicArcLengthC(pt1, pt2, pt3, pt4):
     """Approximates the arc length for a cubic Bezier segment.
 
@@ -870,7 +955,7 @@ def cubicPointAtT(pt1, pt2, pt3, pt4, t):
     pt3=cython.complex,
     pt4=cython.complex,
 )
-@cython.locals(t2=cython.double, t_1 = cython.double, t_1_2 = cython.double)
+@cython.locals(t2=cython.double, t_1=cython.double, t_1_2=cython.double)
 def cubicPointAtTC(pt1, pt2, pt3, pt4, t):
     """Finds the point at time `t` on a cubic curve.
 
