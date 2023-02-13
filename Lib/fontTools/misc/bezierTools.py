@@ -846,17 +846,18 @@ def cubicPointAtT(pt1, pt2, pt3, pt4, t):
     Returns:
         A 2D tuple with the coordinates of the point.
     """
+    t2 = t * t
+    t_1 = 1 - t
+    t_1_2 = t_1 * t_1
     x = (
-        (1 - t) * (1 - t) * (1 - t) * pt1[0]
-        + 3 * (1 - t) * (1 - t) * t * pt2[0]
-        + 3 * (1 - t) * t * t * pt3[0]
-        + t * t * t * pt4[0]
+        t_1_2 * t_1 * pt1[0]
+        + 3 * (t_1_2 * t * pt2[0] + t_1 * t2 * pt3[0])
+        + t2 * t * pt4[0]
     )
     y = (
-        (1 - t) * (1 - t) * (1 - t) * pt1[1]
-        + 3 * (1 - t) * (1 - t) * t * pt2[1]
-        + 3 * (1 - t) * t * t * pt3[1]
-        + t * t * t * pt4[1]
+        t_1_2 * t_1 * pt1[1]
+        + 3 * (t_1_2 * t * pt2[1] + t_1 * t2 * pt3[1])
+        + t2 * t * pt4[1]
     )
     return (x, y)
 
