@@ -47,6 +47,7 @@ else:
 def elevate_quadratic(p0, p1, p2, _1_3=1 / 3, _2_3=2 / 3):
     """Given a quadratic bezier curve, return its degree-elevated cubic."""
 
+    # https://pomax.github.io/bezierinfo/#reordering
     p1_2_3 = p1 * _2_3
     return (
         p0,
@@ -63,6 +64,11 @@ def elevate_quadratic(p0, p1, p2, _1_3=1 / 3, _2_3=2 / 3):
     ratio=cython.double,
 )
 def merge_curves(curves):
+    """Give a cubic-Bezier spline, reconstruct one cubic-Bezier
+    that has the same endpoints and tangents and approxmates
+    the spline."""
+
+    # Reconstruct the t values of the cut segments
     n = len(curves)
     prod_ratio = 1.0
     sum_ratio = 1.0
@@ -88,6 +94,7 @@ def merge_curves(curves):
     p2 = curves[n - 1][2]
     p3 = curves[n - 1][3]
 
+    # Build the curve by scaling the control-points.
     p1 = p0 + (p1 - p0) / (ts[0] if ts else 1)
     p2 = p3 + (p2 - p3) / ((1 - ts[-1]) if ts else 1)
 
@@ -119,6 +126,8 @@ def quadratic_to_curves(p, tolerance=0.5):
         elevate_quadratic(*q[i : i + 3]) for i in range(0, len(q) - 2, 2)
     ]
 
+    # Dynamic- Programming to find the solution with fewest number of
+    # cubic curves, and within those the one with smallest error.
     sols = [(0, 0, 0)]  # (best_num_segments, best_error, start_index)
     for i in range(1, len(elevated_quadratics) + 1):
         best_sol = (len(q) + 1, 0, 1)
@@ -127,6 +136,7 @@ def quadratic_to_curves(p, tolerance=0.5):
             # Fit elevated_quadratics[j:i] into one cubic
             curve, ts = merge_curves(elevated_quadratics[j:i])
             reconstructed = splitCubicAtTC(*curve, *ts)
+            # Knot errors
             error = max(
                 abs(reconst[3] - orig[3])
                 for reconst, orig in zip(reconstructed, elevated_quadratics[j:i])
@@ -137,8 +147,10 @@ def quadratic_to_curves(p, tolerance=0.5):
                 )
                 for seg1, seg2 in zip(reconstructed, elevated_quadratics[j:i])
             ):
+                # Not feasible
                 continue
 
+            # Save best solution
             j_sol_count, j_sol_error, _ = sols[j]
             i_sol_count = j_sol_count + 1
             i_sol_error = max(j_sol_error, error)
@@ -147,6 +159,7 @@ def quadratic_to_curves(p, tolerance=0.5):
                 best_sol = i_sol
 
             if i_sol_count == 1:
+                # Can't get any better than this
                 break
 
         sols.append(best_sol)
