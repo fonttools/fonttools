@@ -122,7 +122,7 @@ def quadratic_to_curves(p, tolerance=0.5):
     sols = [(0, 0, 0)]  # (best_num_segments, best_error, start_index)
     for i in range(1, len(elevated_quadratics) + 1):
         best_sol = (len(q) + 1, 0, 1)
-        for j in range(i - 1, -1, -1):
+        for j in range(0, i):
 
             # Fit elevated_quadratics[j:i] into one cubic
             curve, ts = merge_curves(elevated_quadratics[j:i])
@@ -145,6 +145,9 @@ def quadratic_to_curves(p, tolerance=0.5):
             i_sol = (i_sol_count, i_sol_error, i - j)
             if i_sol < best_sol:
                 best_sol = i_sol
+
+            if i_sol_count == 1:
+                break
 
         sols.append(best_sol)
 
@@ -178,7 +181,7 @@ def main():
         "cu2qu tolerance %g. qu2cu tolerance %g." % (tolerance, reconstruct_tolerance)
     )
     print("One random cubic turned into %d quadratics." % len(quadratics))
-    print(
-        "Those quadratics turned back into %d cubics. "
-        % len(quadratic_to_curves(quadratics, reconstruct_tolerance))
-    )
+    curves = quadratic_to_curves(quadratics, reconstruct_tolerance)
+    print("Those quadratics turned back into %d cubics. " % len(curves))
+    print("Original curve:", curve)
+    print("Reconstructed curve(s):", curves)
