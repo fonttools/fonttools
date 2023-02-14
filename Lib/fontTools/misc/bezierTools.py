@@ -33,6 +33,7 @@ __all__ = [
     "splitCubic",
     "splitQuadraticAtT",
     "splitCubicAtT",
+    "splitCubicAtTC",
     "splitCubicIntoTwoAtTC",
     "solveQuadratic",
     "solveCubic",
@@ -636,6 +637,30 @@ def splitCubicAtT(pt1, pt2, pt3, pt4, *ts):
     return _splitCubicAtT(a, b, c, d, *ts)
 
 
+@cython.locals(
+    pt1=cython.complex,
+    pt2=cython.complex,
+    pt3=cython.complex,
+    pt4=cython.complex,
+    a=cython.complex,
+    b=cython.complex,
+    c=cython.complex,
+    d=cython.complex,
+)
+def splitCubicAtTC(pt1, pt2, pt3, pt4, *ts):
+    """Split a cubic Bezier curve at one or more values of t.
+
+    Args:
+        pt1,pt2,pt3,pt4: Control points of the Bezier as complex numbers..
+        *ts: Positions at which to split the curve.
+
+    Returns:
+        A list of curve segments (each curve segment being four complex numbers).
+    """
+    a, b, c, d = calcCubicParametersC(pt1, pt2, pt3, pt4)
+    return _splitCubicAtTC(a, b, c, d, *ts)
+
+
 @cython.returns(cython.complex)
 @cython.locals(
     t=cython.double,
@@ -734,6 +759,46 @@ def _splitCubicAtT(a, b, c, d, *ts):
         pt1, pt2, pt3, pt4 = calcCubicPoints(
             (a1x, a1y), (b1x, b1y), (c1x, c1y), (d1x, d1y)
         )
+        segments.append((pt1, pt2, pt3, pt4))
+    return segments
+
+
+@cython.locals(
+    a=cython.complex,
+    b=cython.complex,
+    c=cython.complex,
+    d=cython.complex,
+    t1=cython.double,
+    t2=cython.double,
+    delta=cython.double,
+    delta_2=cython.double,
+    delta_3=cython.double,
+    a1=cython.complex,
+    b1=cython.complex,
+    c1=cython.complex,
+    d1=cython.complex,
+)
+def _splitCubicAtTC(a, b, c, d, *ts):
+    ts = list(ts)
+    ts.insert(0, 0.0)
+    ts.append(1.0)
+    segments = []
+    for i in range(len(ts) - 1):
+        t1 = ts[i]
+        t2 = ts[i + 1]
+        delta = t2 - t1
+
+        delta_2 = delta * delta
+        delta_3 = delta * delta_2
+        t1_2 = t1 * t1
+        t1_3 = t1 * t1_2
+
+        # calc new a, b, c and d
+        a1 = a * delta_3
+        b1 = (3 * a * t1 + b) * delta_2
+        c1 = (2 * b * t1 + c + 3 * a * t1_2) * delta
+        d1 = a * t1_3 + b * t1_2 + c * t1 + d
+        pt1, pt2, pt3, pt4 = calcCubicPointsC(a1, b1, c1, d1)
         segments.append((pt1, pt2, pt3, pt4))
     return segments
 
@@ -900,6 +965,22 @@ def calcCubicParameters(pt1, pt2, pt3, pt4):
     return (ax, ay), (bx, by), (cx, cy), (dx, dy)
 
 
+@cython.locals(
+    pt1=cython.complex,
+    pt2=cython.complex,
+    pt3=cython.complex,
+    pt4=cython.complex,
+    a=cython.complex,
+    b=cython.complex,
+    c=cython.complex,
+)
+def calcCubicParametersC(pt1, pt2, pt3, pt4):
+    c = (pt2 - pt1) * 3.0
+    b = (pt3 - pt2) * 3.0 - c
+    a = pt4 - pt1 - c - b
+    return (a, b, c, pt1)
+
+
 def calcQuadraticPoints(a, b, c):
     ax, ay = a
     bx, by = b
@@ -927,6 +1008,23 @@ def calcCubicPoints(a, b, c, d):
     x4 = ax + dx + cx + bx
     y4 = ay + dy + cy + by
     return (x1, y1), (x2, y2), (x3, y3), (x4, y4)
+
+
+@cython.locals(
+    a=cython.complex,
+    b=cython.complex,
+    c=cython.complex,
+    d=cython.complex,
+    p2=cython.complex,
+    p3=cython.complex,
+    p4=cython.complex,
+    _1_3=cython.double,
+)
+def calcCubicPointsC(a, b, c, d, _1_3=1.0 / 3):
+    p2 = (c * _1_3) + d
+    p3 = (b + c) * _1_3 + p2
+    p4 = a + b + c + d
+    return (d, p2, p3, p4)
 
 
 #
