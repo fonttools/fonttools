@@ -1575,7 +1575,8 @@ class Builder(object):
     def add_conditionset(self, key, value):
         if not "fvar" in self.font:
             raise FeatureLibError(
-                "Cannot add feature variations to a font without an 'fvar' table"
+                "Cannot add feature variations to a font without an 'fvar' table",
+                location=None,
             )
 
         # Normalize
