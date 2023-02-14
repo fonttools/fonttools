@@ -22,14 +22,11 @@ except ImportError:
     # if cython not installed, use mock module with no-op decorators and types
     from fontTools.misc import cython
 
-from fontTools.misc.bezierTools import splitCubicIntoTwoAtTC
+from fontTools.misc.bezierTools import splitCubicAtTC
 from fontTools.cu2qu.cu2qu import cubic_farthest_fit_inside
 
 
 __all__ = ["quadratic_to_curves"]
-
-
-NAN = float("NaN")
 
 
 if cython.compiled:
@@ -59,36 +56,51 @@ def elevate_quadratic(p0, p1, p2, _1_3=1 / 3, _2_3=2 / 3):
     )
 
 
-@cython.locals(k=cython.double, k_1=cython.double, t=cython.double)
 @cython.locals(
-    p1=cython.complex,
-    p2=cython.complex,
-    p3=cython.complex,
-    p4=cython.complex,
-    p5=cython.complex,
-    p6=cython.complex,
-    p7=cython.complex,
-    off1=cython.complex,
-    off2=cython.complex,
+    n=cython.int,
+    prod_ratio=cython.double,
+    sum_ratio=cython.double,
+    ratio=cython.double,
 )
-def merge_two_curves(p1, p2, p3, p4, p5, p6, p7):
-    """Return the initial cubic bezier curve subdivided in two segments.
-    Input must be a sequence of 7 points, i.e. two consecutive cubic curve
-    segments sharing the middle point.
-    Inspired by:
-    https://math.stackexchange.com/questions/877725/retrieve-the-initial-cubic-b%C3%A9zier-curve-subdivided-in-two-b%C3%A9zier-curves/879213#879213
-    """
-    k = abs(p5 - p4) / abs(p4 - p3)
-    k_1 = k + 1
-    off1 = k_1 * p2 - k * p1
-    off2 = (k_1 * p6 - p7) / k
-    t = 1 / k_1
-    return (p1, off1, off2, p7), t
+def merge_curves(curves):
+    n = len(curves)
+    prod_ratio = 1.0
+    sum_ratio = 1.0
+    ts = [1]
+    for k in range(1, n):
+        ck = curves[k]
+        c_before = curves[k - 1]
+
+        # |t_(k+1) - t_k| / |t_k - t_(k - 1)| = ratio
+        assert ck[0] == c_before[3]
+        ratio = abs(ck[1] - ck[0]) / abs(c_before[3] - c_before[2])
+
+        prod_ratio *= ratio
+        sum_ratio += prod_ratio
+        ts.append(sum_ratio)
+
+    # (t(n) - t(n - 1)) / (t_(1) - t(0)) = prod_ratio
+
+    ts = [t / sum_ratio for t in ts[:-1]]
+
+    p0 = curves[0][0]
+    p1 = curves[0][1]
+    p2 = curves[n - 1][2]
+    p3 = curves[n - 1][3]
+
+    p1 = p0 + (p1 - p0) / (ts[0] if ts else 1)
+    p2 = p3 + (p2 - p3) / ((1 - ts[-1]) if ts else 1)
+
+    curve = (p0, p1, p2, p3)
+
+    return curve, ts
 
 
 def quadratic_to_curves(p, tolerance=0.5):
     assert len(p) >= 3, "quadratic spline requires at least 3 points"
-    p = [complex(x, y) for (x, y) in p]
+    is_complex = type(p[0]) is complex
+    if not is_complex:
+        p = [complex(x, y) for (x, y) in p]
 
     # if spline has more than one offcurve, insert interpolated oncurves
     q = list(p)
@@ -102,47 +114,71 @@ def quadratic_to_curves(p, tolerance=0.5):
         count += 1
     del p
 
-    # elevate quadratic segments to cubic, and join them together
+    # Elevate quadratic segments to cubic
+    elevated_quadratics = [
+        elevate_quadratic(*q[i : i + 3]) for i in range(0, len(q) - 2, 2)
+    ]
+
+    sols = [(0, 0, 0)]  # (best_num_segments, best_error, start_index)
+    for i in range(1, len(elevated_quadratics) + 1):
+        best_sol = (len(q) + 1, 0, 1)
+        for j in range(i - 1, -1, -1):
+
+            # Fit elevated_quadratics[j:i] into one cubic
+            curve, ts = merge_curves(elevated_quadratics[j:i])
+            reconstructed = splitCubicAtTC(*curve, *ts)
+            error = max(
+                abs(reconst[3] - orig[3])
+                for reconst, orig in zip(reconstructed, elevated_quadratics[j:i])
+            )
+            if error > tolerance or not all(
+                cubic_farthest_fit_inside(
+                    *(v - u for v, u in zip(seg1, seg2)), tolerance
+                )
+                for seg1, seg2 in zip(reconstructed, elevated_quadratics[j:i])
+            ):
+                continue
+
+            j_sol_count, j_sol_error, _ = sols[j]
+            i_sol_count = j_sol_count + 1
+            i_sol_error = max(j_sol_error, error)
+            i_sol = (i_sol_count, i_sol_error, i - j)
+            if i_sol < best_sol:
+                best_sol = i_sol
+
+        sols.append(best_sol)
+
+    # Reconstruct solution
+    splits = []
+    i = len(sols) - 1
+    while i:
+        splits.append(i)
+        _, _, count = sols[i]
+        i -= count
     curves = []
+    j = 0
+    for i in reversed(splits):
+        curves.append(merge_curves(elevated_quadratics[j:i])[0])
+        j = i
 
-    curve = elevate_quadratic(*q[:3])
-    err = 0
-    for i in range(4, len(q), 2):
-        cubic_segment = elevate_quadratic(q[i - 2], q[i - 1], q[i])
-        new_curve, t = merge_two_curves(*(curve + cubic_segment[1:]))
-
-        seg1, seg2 = splitCubicIntoTwoAtTC(*new_curve, t)
-        t_point = seg2[0]
-
-        t_err = abs(t_point - cubic_segment[0])
-        if (
-            t_err > tolerance
-            or not cubic_farthest_fit_inside(
-                *(v - u for v, u in zip(seg1, curve)), tolerance - err
-            )
-            or not cubic_farthest_fit_inside(
-                *(v - u for v, u in zip(seg2, cubic_segment)), tolerance
-            )
-        ):
-            # Error too high. Start a new segment.
-            curves.append(curve)
-            new_curve = cubic_segment
-            err = 0
-            pass
-
-        curve = new_curve
-        err += t_err
-
-    curves.append(curve)
-
-    return [tuple((c.real, c.imag) for c in curve) for curve in curves]
+    if not is_complex:
+        curves = [tuple((c.real, c.imag) for c in curve) for curve in curves]
+    return curves
 
 
 def main():
     from fontTools.cu2qu.benchmark import generate_curve
     from fontTools.cu2qu import curve_to_quadratic
 
+    tolerance = 0.05
+    reconstruct_tolerance = tolerance * 1
     curve = generate_curve()
-    quadratics = curve_to_quadratic(curve, 0.05)
-    print(len(quadratics))
-    print(len(quadratic_to_curves(quadratics, 0.05 * 2)))
+    quadratics = curve_to_quadratic(curve, tolerance)
+    print(
+        "cu2qu tolerance %g. qu2cu tolerance %g." % (tolerance, reconstruct_tolerance)
+    )
+    print("One random cubic turned into %d quadratics." % len(quadratics))
+    print(
+        "Those quadratics turned back into %d cubics. "
+        % len(quadratic_to_curves(quadratics, reconstruct_tolerance))
+    )
