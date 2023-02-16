@@ -23,9 +23,7 @@ def setup_curves_to_quadratic():
     return ([generate_curve() for curve in range(num_curves)], [MAX_ERR] * num_curves)
 
 
-def run_benchmark(
-    benchmark_module, module, function, setup_suffix="", repeat=5, number=1000
-):
+def run_benchmark(module, function, setup_suffix="", repeat=5, number=1000):
     setup_func = "setup_" + function
     if setup_suffix:
         print("%s with %s:" % (function, setup_suffix), end="")
@@ -48,8 +46,8 @@ def run_benchmark(
 
 def main():
     """Benchmark the cu2qu algorithm performance."""
-    run_benchmark("cu2qu.benchmark", "cu2qu", "curve_to_quadratic")
-    run_benchmark("cu2qu.benchmark", "cu2qu", "curves_to_quadratic")
+    run_benchmark("cu2qu", "curve_to_quadratic")
+    run_benchmark("cu2qu", "curves_to_quadratic")
 
 
 if __name__ == "__main__":
