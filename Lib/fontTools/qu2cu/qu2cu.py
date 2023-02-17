@@ -293,3 +293,7 @@ def main():
     print("Those quadratics turned back into %d cubics. " % len(curves))
     print("Original curve:", curve)
     print("Reconstructed curve(s):", curves)
+
+
+if __name__ == "__main__":
+    main()
