@@ -26,32 +26,16 @@ TEST_DATA = [
             ("moveTo", ((0, 0),)),
             ("lineTo", ((1, 1),)),
             ("lineTo", ((2, 2),)),
-            ("lineTo", ((0, 0),)),  # last on move, no implied line
+            ("lineTo", ((3, 3),)),  # last line does not overlap move...
             ("closePath", ()),
         ],
-        False,
+        True,  # outputImpliedClosingLine
         [
             ("moveTo", ((0, 0),)),
+            ("lineTo", ((3, 3),)),
             ("lineTo", ((2, 2),)),
             ("lineTo", ((1, 1),)),
-            ("closePath", ()),
-        ],
-    ),
-    (
-        [
-            ("moveTo", ((0, 0),)),
-            ("lineTo", ((0, 0),)),
-            ("lineTo", ((1, 1),)),
-            ("lineTo", ((2, 2),)),
-            ("closePath", ()),
-        ],
-        False,
-        [
-            ("moveTo", ((0, 0),)),
-            ("lineTo", ((2, 2),)),
-            ("lineTo", ((1, 1),)),
-            ("lineTo", ((0, 0),)),
-            ("lineTo", ((0, 0),)),
+            ("lineTo", ((0, 0),)),  # ... but closing line is NOT implied
             ("closePath", ()),
         ],
     ),
@@ -59,12 +43,95 @@ TEST_DATA = [
         [
             ("moveTo", ((0, 0),)),
             ("lineTo", ((1, 1),)),
+            ("lineTo", ((2, 2),)),
+            ("lineTo", ((0, 0),)),  # last line overlaps move, explicit line
+            ("closePath", ()),
+        ],
+        False,
+        [
+            ("moveTo", ((0, 0),)),
+            ("lineTo", ((2, 2),)),
+            ("lineTo", ((1, 1),)),
+            ("closePath", ()),  # closing line implied
+        ],
+    ),
+    (
+        [
+            ("moveTo", ((0, 0),)),
+            ("lineTo", ((1, 1),)),
+            ("lineTo", ((2, 2),)),
+            ("lineTo", ((0, 0),)),  # last line overlaps move...
+            ("closePath", ()),
+        ],
+        True,
+        [
+            ("moveTo", ((0, 0),)),
+            ("lineTo", ((2, 2),)),
+            ("lineTo", ((1, 1),)),
+            ("lineTo", ((0, 0),)),  # ... but line is NOT implied
+            ("closePath", ()),
+        ],
+    ),
+    (
+        [
+            ("moveTo", ((0, 0),)),
+            ("lineTo", ((0, 0),)),  # duplicate lineTo following moveTo
+            ("lineTo", ((1, 1),)),
+            ("lineTo", ((2, 2),)),
+            ("closePath", ()),
+        ],
+        False,
+        [
+            ("moveTo", ((0, 0),)),
+            ("lineTo", ((2, 2),)),
+            ("lineTo", ((1, 1),)),
+            ("lineTo", ((0, 0),)),  # extra explicit lineTo is always emitted to
+            ("lineTo", ((0, 0),)),  # disambiguate from an implicit closing line
+            ("closePath", ()),
+        ],
+    ),
+    (
+        [
+            ("moveTo", ((0, 0),)),
+            ("lineTo", ((0, 0),)),  # duplicate lineTo following moveTo
+            ("lineTo", ((1, 1),)),
+            ("lineTo", ((2, 2),)),
+            ("closePath", ()),
+        ],
+        True,
+        [
+            ("moveTo", ((0, 0),)),
+            ("lineTo", ((2, 2),)),
+            ("lineTo", ((1, 1),)),
+            ("lineTo", ((0, 0),)),  # duplicate lineTo is retained also in this case,
+            ("lineTo", ((0, 0),)),  # same result as with outputImpliedClosingLine=False
+            ("closePath", ()),
+        ],
+    ),
+    (
+        [
+            ("moveTo", ((0, 0),)),
+            ("lineTo", ((1, 1),)),
             ("closePath", ()),
         ],
         False,
         [
             ("moveTo", ((0, 0),)),
             ("lineTo", ((1, 1),)),
+            ("closePath", ()),
+        ],
+    ),
+    (
+        [
+            ("moveTo", ((0, 0),)),
+            ("lineTo", ((1, 1),)),
+            ("closePath", ()),
+        ],
+        True,
+        [
+            ("moveTo", ((0, 0),)),
+            ("lineTo", ((1, 1),)),
+            ("lineTo", ((0, 0),)),
             ("closePath", ()),
         ],
     ),
@@ -72,12 +139,12 @@ TEST_DATA = [
         [
             ("moveTo", ((0, 0),)),
             ("curveTo", ((1, 1), (2, 2), (3, 3))),
-            ("curveTo", ((4, 4), (5, 5), (0, 0))),
+            ("curveTo", ((4, 4), (5, 5), (0, 0))),  # closed curveTo overlaps moveTo
             ("closePath", ()),
         ],
         False,
         [
-            ("moveTo", ((0, 0),)),
+            ("moveTo", ((0, 0),)),  # no extra lineTo added here
             ("curveTo", ((5, 5), (4, 4), (3, 3))),
             ("curveTo", ((2, 2), (1, 1), (0, 0))),
             ("closePath", ()),
@@ -87,13 +154,44 @@ TEST_DATA = [
         [
             ("moveTo", ((0, 0),)),
             ("curveTo", ((1, 1), (2, 2), (3, 3))),
-            ("curveTo", ((4, 4), (5, 5), (6, 6))),
+            ("curveTo", ((4, 4), (5, 5), (0, 0))),  # closed curveTo overlaps moveTo
+            ("closePath", ()),
+        ],
+        True,
+        [
+            ("moveTo", ((0, 0),)),  # no extra lineTo added here, same as preceding
+            ("curveTo", ((5, 5), (4, 4), (3, 3))),
+            ("curveTo", ((2, 2), (1, 1), (0, 0))),
+            ("closePath", ()),
+        ],
+    ),
+    (
+        [
+            ("moveTo", ((0, 0),)),
+            ("curveTo", ((1, 1), (2, 2), (3, 3))),
+            ("curveTo", ((4, 4), (5, 5), (6, 6))),  # closed curve not overlapping move
             ("closePath", ()),
         ],
         False,
         [
             ("moveTo", ((0, 0),)),
-            ("lineTo", ((6, 6),)),  # implied line
+            ("lineTo", ((6, 6),)),  # the previously implied line
+            ("curveTo", ((5, 5), (4, 4), (3, 3))),
+            ("curveTo", ((2, 2), (1, 1), (0, 0))),
+            ("closePath", ()),
+        ],
+    ),
+    (
+        [
+            ("moveTo", ((0, 0),)),
+            ("curveTo", ((1, 1), (2, 2), (3, 3))),
+            ("curveTo", ((4, 4), (5, 5), (6, 6))),  # closed curve not overlapping move
+            ("closePath", ()),
+        ],
+        True,
+        [
+            ("moveTo", ((0, 0),)),
+            ("lineTo", ((6, 6),)),  # the previously implied line (same as above)
             ("curveTo", ((5, 5), (4, 4), (3, 3))),
             ("curveTo", ((2, 2), (1, 1), (0, 0))),
             ("closePath", ()),
@@ -119,13 +217,31 @@ TEST_DATA = [
     (
         [
             ("moveTo", ((0, 0),)),
+            ("lineTo", ((1, 1),)),  # this line...
+            ("curveTo", ((2, 2), (3, 3), (4, 4))),
+            ("curveTo", ((5, 5), (6, 6), (7, 7))),
+            ("closePath", ()),
+        ],
+        True,
+        [
+            ("moveTo", ((0, 0),)),
+            ("lineTo", ((7, 7),)),
+            ("curveTo", ((6, 6), (5, 5), (4, 4))),
+            ("curveTo", ((3, 3), (2, 2), (1, 1))),
+            ("lineTo", ((0, 0),)),  # ... does NOT become implied
+            ("closePath", ()),
+        ],
+    ),
+    (
+        [
+            ("moveTo", ((0, 0),)),
             ("qCurveTo", ((1, 1), (2, 2))),
-            ("qCurveTo", ((3, 3), (0, 0))),
+            ("qCurveTo", ((3, 3), (0, 0))),  # closed qCurve overlaps move
             ("closePath", ()),
         ],
         False,
         [
-            ("moveTo", ((0, 0),)),
+            ("moveTo", ((0, 0),)),  # no extra lineTo added here
             ("qCurveTo", ((3, 3), (2, 2))),
             ("qCurveTo", ((1, 1), (0, 0))),
             ("closePath", ()),
@@ -135,13 +251,44 @@ TEST_DATA = [
         [
             ("moveTo", ((0, 0),)),
             ("qCurveTo", ((1, 1), (2, 2))),
-            ("qCurveTo", ((3, 3), (4, 4))),
+            ("qCurveTo", ((3, 3), (0, 0))),  # closed qCurve overlaps move
+            ("closePath", ()),
+        ],
+        True,  # <--
+        [
+            ("moveTo", ((0, 0),)),  # no extra lineTo added here, same as above
+            ("qCurveTo", ((3, 3), (2, 2))),
+            ("qCurveTo", ((1, 1), (0, 0))),
+            ("closePath", ()),
+        ],
+    ),
+    (
+        [
+            ("moveTo", ((0, 0),)),
+            ("qCurveTo", ((1, 1), (2, 2))),
+            ("qCurveTo", ((3, 3), (4, 4))),  # closed qCurve not overlapping move
             ("closePath", ()),
         ],
         False,
         [
             ("moveTo", ((0, 0),)),
-            ("lineTo", ((4, 4),)),
+            ("lineTo", ((4, 4),)),  # the previously implied line
+            ("qCurveTo", ((3, 3), (2, 2))),
+            ("qCurveTo", ((1, 1), (0, 0))),
+            ("closePath", ()),
+        ],
+    ),
+    (
+        [
+            ("moveTo", ((0, 0),)),
+            ("qCurveTo", ((1, 1), (2, 2))),
+            ("qCurveTo", ((3, 3), (4, 4))),  # closed qCurve not overlapping move
+            ("closePath", ()),
+        ],
+        True,
+        [
+            ("moveTo", ((0, 0),)),
+            ("lineTo", ((4, 4),)),  # the previously implied line (same as above)
             ("qCurveTo", ((3, 3), (2, 2))),
             ("qCurveTo", ((1, 1), (0, 0))),
             ("closePath", ()),
@@ -286,6 +433,25 @@ TEST_DATA = [
             ("lineTo", ((0, 651),)),
             ("lineTo", ((0, 101),)),
             ("lineTo", ((0, 101),)),
+            ("closePath", ()),
+        ],
+    ),
+    (
+        [
+            ("moveTo", ((0, 651),)),
+            ("lineTo", ((0, 101),)),
+            ("lineTo", ((0, 101),)),
+            ("lineTo", ((0, 651),)),
+            ("lineTo", ((0, 651),)),
+            ("closePath", ()),
+        ],
+        True,
+        [
+            ("moveTo", ((0, 651),)),
+            ("lineTo", ((0, 651),)),
+            ("lineTo", ((0, 101),)),
+            ("lineTo", ((0, 101),)),
+            ("lineTo", ((0, 651),)),  # closing line not implied
             ("closePath", ()),
         ],
     ),
