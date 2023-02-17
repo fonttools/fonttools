@@ -37,7 +37,7 @@ else:
 
 
 # Copied from cu2qu
-#@cython.cfunc
+# @cython.cfunc
 @cython.returns(cython.int)
 @cython.locals(
     tolerance=cython.double,
