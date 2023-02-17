@@ -56,24 +56,31 @@ class FilterPen(_PassThruComponentsMixin, AbstractPen):
 
     def __init__(self, outPen):
         self._outPen = outPen
+        self.current_pt = None
 
     def moveTo(self, pt):
         self._outPen.moveTo(pt)
+        self.current_pt = pt
 
     def lineTo(self, pt):
         self._outPen.lineTo(pt)
+        self.current_pt = pt
 
     def curveTo(self, *points):
         self._outPen.curveTo(*points)
+        self.current_pt = points[-1]
 
     def qCurveTo(self, *points):
         self._outPen.qCurveTo(*points)
+        self.current_pt = points[-1]
 
     def closePath(self):
         self._outPen.closePath()
+        self.current_pt = None
 
     def endPath(self):
         self._outPen.endPath()
+        self.current_pt = None
 
 
 class ContourFilterPen(_PassThruComponentsMixin, RecordingPen):
