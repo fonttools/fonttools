@@ -13,13 +13,14 @@
 # limitations under the License.
 
 from fontTools.cu2qu import curve_to_quadratic, curves_to_quadratic
-from fontTools.pens.basePen import AbstractPen, decomposeSuperBezierSegment
+from fontTools.pens.basePen import decomposeSuperBezierSegment
+from fontTools.pens.filterPen import FilterPen
 from fontTools.pens.reverseContourPen import ReverseContourPen
 from fontTools.pens.pointPen import BasePointToSegmentPen
 from fontTools.pens.pointPen import ReverseContourPointPen
 
 
-class Cu2QuPen(AbstractPen):
+class Cu2QuPen(FilterPen):
     """A filter pen to convert cubic bezier curves to quadratic b-splines
     using the FontTools SegmentPen protocol.
 
@@ -41,42 +42,10 @@ class Cu2QuPen(AbstractPen):
         stats=None,
     ):
         if reverse_direction:
-            self.pen = ReverseContourPen(other_pen)
-        else:
-            self.pen = other_pen
+            other_pen = ReverseContourPen(other_pen)
+        super().__init__(other_pen)
         self.max_err = max_err
         self.stats = stats
-        self.current_pt = None
-
-    def _check_contour_is_open(self):
-        if self.current_pt is None:
-            raise AssertionError("moveTo is required")
-
-    def _check_contour_is_closed(self):
-        if self.current_pt is not None:
-            raise AssertionError("closePath or endPath is required")
-
-    def moveTo(self, pt):
-        self._check_contour_is_closed()
-        self.current_pt = pt
-        self.pen.moveTo(pt)
-        self.current_pt = pt
-
-    def lineTo(self, pt):
-        self._check_contour_is_open()
-        self.pen.lineTo(pt)
-        self.current_pt = pt
-
-    def qCurveTo(self, *points):
-        self._check_contour_is_open()
-        n = len(points)
-        if n == 1:
-            self.lineTo(points[0])
-        elif n > 1:
-            self.pen.qCurveTo(*points)
-            self.current_pt = points[-1]
-        else:
-            raise AssertionError("illegal qcurve segment point count: %d" % n)
 
     def _curve_to_quadratic(self, pt1, pt2, pt3):
         curve = (self.current_pt, pt1, pt2, pt3)
@@ -87,7 +56,6 @@ class Cu2QuPen(AbstractPen):
         self.qCurveTo(*quadratic[1:])
 
     def curveTo(self, *points):
-        self._check_contour_is_open()
         n = len(points)
         if n == 3:
             # this is the most common case, so we special-case it
@@ -95,26 +63,8 @@ class Cu2QuPen(AbstractPen):
         elif n > 3:
             for segment in decomposeSuperBezierSegment(points):
                 self._curve_to_quadratic(*segment)
-        elif n == 2:
-            self.qCurveTo(*points)
-        elif n == 1:
-            self.lineTo(points[0])
         else:
-            raise AssertionError("illegal curve segment point count: %d" % n)
-
-    def closePath(self):
-        self._check_contour_is_open()
-        self.pen.closePath()
-        self.current_pt = None
-
-    def endPath(self):
-        self._check_contour_is_open()
-        self.pen.endPath()
-        self.current_pt = None
-
-    def addComponent(self, glyphName, transformation):
-        self._check_contour_is_closed()
-        self.pen.addComponent(glyphName, transformation)
+            self.qCurveTo(*points)
 
 
 class Cu2QuPointPen(BasePointToSegmentPen):
