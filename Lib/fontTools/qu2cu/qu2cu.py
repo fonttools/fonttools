@@ -156,7 +156,7 @@ def quadratic_to_curves(p, tolerance=0.5):
     if not is_complex:
         p = [complex(x, y) for (x, y) in p]
 
-    # if spline has more than one offcurve, insert interpolated oncurves
+    # If spline has more than one offcurve, insert interpolated oncurves
     q = list(p)
     count = 0
     num_offcurves = len(p) - 2
@@ -173,7 +173,7 @@ def quadratic_to_curves(p, tolerance=0.5):
         elevate_quadratic(*q[i : i + 3]) for i in range(0, len(q) - 2, 2)
     ]
 
-    # Dynamic- Programming to find the solution with fewest number of
+    # Dynamic-Programming to find the solution with fewest number of
     # cubic curves, and within those the one with smallest error.
     sols = [(0, 0, 0)]  # (best_num_segments, best_error, start_index)
     for i in range(1, len(elevated_quadratics) + 1):
@@ -183,9 +183,11 @@ def quadratic_to_curves(p, tolerance=0.5):
             # Fit elevated_quadratics[j:i] into one cubic
             curve, ts = merge_curves(elevated_quadratics[j:i])
 
-            # Knot errors
+            # Now reconstruct the segments from the fitted curve
             reconstructed_iter = splitCubicAtTC(*curve, *ts)
             reconstructed = []
+
+            # Knot errors
             error = 0
             for k, reconst in enumerate(reconstructed_iter):
                 orig = elevated_quadratics[j + k]
