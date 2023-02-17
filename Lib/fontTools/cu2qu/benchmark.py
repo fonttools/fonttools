@@ -4,7 +4,7 @@ from .cu2qu import *
 import random
 import timeit
 
-MAX_ERR = 5
+MAX_ERR = 0.05
 
 
 def generate_curve():
