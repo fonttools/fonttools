@@ -209,6 +209,9 @@ class Cu2QuMultiPen:
     each of the pens in other_pens.
     """
 
+    # TODO Simplify like 3e8ebcdce592fe8a59ca4c3a294cc9724351e1ce
+    # Remove start_pts and _add_moveTO
+
     def __init__(self, other_pens, max_err, reverse_direction=False):
         if reverse_direction:
             other_pens = [
