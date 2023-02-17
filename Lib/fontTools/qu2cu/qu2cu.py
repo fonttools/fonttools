@@ -101,9 +101,14 @@ def elevate_quadratic(p0, p1, p2, _1_3=1 / 3, _2_3=2 / 3):
 
 @cython.locals(
     n=cython.int,
+    k=cython.int,
     prod_ratio=cython.double,
     sum_ratio=cython.double,
     ratio=cython.double,
+    p0=cython.complex,
+    p1=cython.complex,
+    p2=cython.complex,
+    p3=cython.complex,
 )
 def merge_curves(curves):
     """Give a cubic-Bezier spline, reconstruct one cubic-Bezier
