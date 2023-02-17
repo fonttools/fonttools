@@ -1,7 +1,6 @@
 import sys
 
-# from .cli import main
-from .qu2cu import main
+from .cli import main
 
 
 if __name__ == "__main__":

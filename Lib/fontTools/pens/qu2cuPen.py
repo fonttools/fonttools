@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from fontTools.qu2cu import quadratic_to_curve
+from fontTools.qu2cu import quadratic_to_curves
 from fontTools.pens.filterPen import FilterPen
 from fontTools.pens.reverseContourPen import ReverseContourPen
 
