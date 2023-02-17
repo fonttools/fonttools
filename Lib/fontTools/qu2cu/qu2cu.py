@@ -177,12 +177,19 @@ def quadratic_to_curves(p, tolerance=0.5):
 
             # Fit elevated_quadratics[j:i] into one cubic
             curve, ts = merge_curves(elevated_quadratics[j:i])
-            reconstructed = splitCubicAtTC(*curve, *ts)
+
             # Knot errors
-            error = max(
-                abs(reconst[3] - orig[3])
-                for reconst, orig in zip(reconstructed, elevated_quadratics[j:i])
-            )
+            reconstructed_iter = splitCubicAtTC(*curve, *ts)
+            reconstructed = []
+            error = 0
+            for k, reconst in enumerate(reconstructed_iter):
+                orig = elevated_quadratics[j + k]
+                err = abs(reconst[3] - orig[3])
+                error = max(error, err)
+                if error > tolerance:
+                    break
+                reconstructed.append(reconst)
+
             if error > tolerance or not all(
                 cubic_farthest_fit_inside(
                     *(v - u for v, u in zip(seg1, seg2)), tolerance
