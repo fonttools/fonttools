@@ -31,13 +31,6 @@ class Cu2QuPen(AbstractPen):
             value equal, or close to UPEM / 1000.
         reverse_direction: flip the contours' direction but keep starting point.
         stats: a dictionary counting the point numbers of quadratic segments.
-        ignore_single_points: don't emit contours containing only a single point
-
-    NOTE: The "ignore_single_points" argument is deprecated since v1.3.0,
-    which dropped Robofab support. It's no longer needed to special-case
-    UFO2-style anchors (aka "named points") when using ufoLib >= 2.0,
-    as these are no longer drawn onto pens as single-point contours,
-    but are handled separately as anchors.
     """
 
     def __init__(
@@ -46,7 +39,6 @@ class Cu2QuPen(AbstractPen):
         max_err,
         reverse_direction=False,
         stats=None,
-        ignore_single_points=False,
     ):
         if reverse_direction:
             self.pen = ReverseContourPen(other_pen)
@@ -54,17 +46,6 @@ class Cu2QuPen(AbstractPen):
             self.pen = other_pen
         self.max_err = max_err
         self.stats = stats
-        if ignore_single_points:
-            import warnings
-
-            warnings.warn(
-                "ignore_single_points is deprecated and "
-                "will be removed in future versions",
-                UserWarning,
-                stacklevel=2,
-            )
-        self.ignore_single_points = ignore_single_points
-        self.start_pt = None
         self.current_pt = None
 
     def _check_contour_is_open(self):
@@ -75,20 +56,14 @@ class Cu2QuPen(AbstractPen):
         if self.current_pt is not None:
             raise AssertionError("closePath or endPath is required")
 
-    def _add_moveTo(self):
-        if self.start_pt is not None:
-            self.pen.moveTo(self.start_pt)
-            self.start_pt = None
-
     def moveTo(self, pt):
         self._check_contour_is_closed()
-        self.start_pt = self.current_pt = pt
-        if not self.ignore_single_points:
-            self._add_moveTo()
+        self.current_pt = pt
+        self.pen.moveTo(pt)
+        self.current_pt = pt
 
     def lineTo(self, pt):
         self._check_contour_is_open()
-        self._add_moveTo()
         self.pen.lineTo(pt)
         self.current_pt = pt
 
@@ -98,7 +73,6 @@ class Cu2QuPen(AbstractPen):
         if n == 1:
             self.lineTo(points[0])
         elif n > 1:
-            self._add_moveTo()
             self.pen.qCurveTo(*points)
             self.current_pt = points[-1]
         else:
@@ -130,16 +104,13 @@ class Cu2QuPen(AbstractPen):
 
     def closePath(self):
         self._check_contour_is_open()
-        if self.start_pt is None:
-            # if 'start_pt' is _not_ None, we are ignoring single-point paths
-            self.pen.closePath()
-        self.current_pt = self.start_pt = None
+        self.pen.closePath()
+        self.current_pt = None
 
     def endPath(self):
         self._check_contour_is_open()
-        if self.start_pt is None:
-            self.pen.endPath()
-        self.current_pt = self.start_pt = None
+        self.pen.endPath()
+        self.current_pt = None
 
     def addComponent(self, glyphName, transformation):
         self._check_contour_is_closed()
