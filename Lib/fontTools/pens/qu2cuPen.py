@@ -51,12 +51,15 @@ class Qu2CuPen(FilterPen):
         if self.stats is not None:
             n = str(len(curves))
             self.stats[n] = self.stats.get(n, 0) + 1
-        for curve in curves:
-            self.curveTo(*curve[1:])
+        if len(quadratics) <= len(curves) * 3:
+            super().qCurveTo(*quadratics)
+        else:
+            for curve in curves:
+                self.curveTo(*curve[1:])
 
     def qCurveTo(self, *points):
         n = len(points)
-        if n < 2:
-            self.lineTo(*points)
+        if n <= 3:
+            super().qCurveTo(*points)
         else:
             self._quadratic_to_curve(points)
