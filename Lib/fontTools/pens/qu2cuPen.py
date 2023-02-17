@@ -74,18 +74,18 @@ class Qu2CuPen(ContourFilterPen):
         if quadratics:
             newContour.extend(self._quadratics_to_curve(quadratics))
 
-        # Add cubic implicit oncurve points
+        # Add back implicit oncurve points
         contour = newContour
         newContour = []
         for op, args in contour:
-            if (op == "curveTo" and newContour and newContour[-1][0] == "curveTo"):
+            if (op in {"curveTo", "qCurveTo"} and newContour and newContour[-1][0] == op):
                 pt0 = newContour[-1][1][-2]
                 pt1 = newContour[-1][1][-1]
                 pt2 = args[0]
                 if (pt2[0] - pt1[0] == pt1[0] - pt0[0] and
                     pt2[1] - pt1[1] == pt1[1] - pt0[1]):
                     newArgs = newContour[-1][1][:-1] + args
-                    newContour[-1] = ("curveTo", newArgs)
+                    newContour[-1] = (op, newArgs)
                     continue
 
             newContour.append((op, args))
