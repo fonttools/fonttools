@@ -269,7 +269,7 @@ def spline_to_curves(q, tolerance=0.5, all_cubic=False):
     j = 0
     for i in reversed(splits):
         if not all_cubic and j + 1 == i:
-            curves.append(q[j:j+3])
+            curves.append(q[j : j + 3])
         else:
             curves.append(merge_curves(elevated_quadratics[j:i])[0])
         j = i

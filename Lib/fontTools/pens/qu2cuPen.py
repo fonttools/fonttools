@@ -62,8 +62,8 @@ class Qu2CuPen(ContourFilterPen):
         quadratics = []
         currentPt = None
         newContour = []
-        for op,args in contour:
-            if op == 'qCurveTo' and len(args) > 2 and args[-1] is not None:
+        for op, args in contour:
+            if op == "qCurveTo" and len(args) > 2 and args[-1] is not None:
                 quadratics.append((currentPt,) + args)
             else:
                 if quadratics:
