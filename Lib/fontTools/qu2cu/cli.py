@@ -18,7 +18,6 @@ def _font_to_cubic(input_path, output_path=None, **kwargs):
     qu2cu_kwargs = {
         "stats": {} if kwargs["dump_stats"] else None,
         "max_err": kwargs["max_err_em"] * font["head"].unitsPerEm,
-        "reverse_direction": kwargs["reverse_direction"],
     }
 
     assert "gvar" not in font, "Cannot convert variable font"
@@ -53,12 +52,6 @@ def main(args=None):
         metavar="ERROR",
         default=0.001,
         help="maxiumum approximation error measured in EM (default: 0.001)",
-    )
-    parser.add_argument(
-        "--keep-direction",
-        dest="reverse_direction",
-        action="store_false",
-        help="do not reverse the contour direction",
     )
 
     output_parser = parser.add_mutually_exclusive_group()
@@ -110,7 +103,6 @@ def main(args=None):
     kwargs = dict(
         dump_stats=options.verbose > 0,
         max_err_em=options.conversion_error,
-        reverse_direction=options.reverse_direction,
     )
 
     for input_path, output_path in zip(options.infiles, output_paths):
