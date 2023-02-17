@@ -163,7 +163,7 @@ def add_implicit_on_curves(p):
     return q
 
 
-def quadratics_to_curves(pp, tolerance=0.5):
+def quadratics_to_curves(pp, tolerance=0.5, all_cubic=False):
     is_complex = type(pp[0][0]) is complex
     if not is_complex:
         pp = [[complex(x, y) for (x, y) in p] for p in pp]
@@ -173,28 +173,28 @@ def quadratics_to_curves(pp, tolerance=0.5):
         assert q[-1] == p[0]
         q.extend(add_implicit_on_curves(p)[1:])
 
-    curves = spline_to_curves(q, tolerance)
+    curves = spline_to_curves(q, tolerance, all_cubic)
 
     if not is_complex:
         curves = [tuple((c.real, c.imag) for c in curve) for curve in curves]
     return curves
 
 
-def quadratic_to_curves(q, tolerance=0.5):
+def quadratic_to_curves(q, tolerance=0.5, all_cubic=False):
     is_complex = type(q[0]) is complex
     if not is_complex:
         q = [complex(x, y) for (x, y) in q]
 
     q = add_implicit_on_curves(q)
 
-    curves = spline_to_curves(q, tolerance)
+    curves = spline_to_curves(q, tolerance, all_cubic)
 
     if not is_complex:
         curves = [tuple((c.real, c.imag) for c in curve) for curve in curves]
     return curves
 
 
-def spline_to_curves(q, tolerance=0.5):
+def spline_to_curves(q, tolerance=0.5, all_cubic=False):
     assert len(q) >= 3, "quadratic spline requires at least 3 points"
 
     # Elevate quadratic segments to cubic
@@ -268,7 +268,7 @@ def spline_to_curves(q, tolerance=0.5):
     curves = []
     j = 0
     for i in reversed(splits):
-        if j + 1 == i:
+        if not all_cubic and j + 1 == i:
             curves.append(q[j:j+3])
         else:
             curves.append(merge_curves(elevated_quadratics[j:i])[0])

@@ -36,17 +36,19 @@ class Qu2CuPen(ContourFilterPen):
         self,
         other_pen,
         max_err,
+        all_cubic=False,
         reverse_direction=False,
         stats=None,
     ):
         if reverse_direction:
             other_pen = ReverseContourPen(other_pen)
         super().__init__(other_pen)
+        self.all_cubic = all_cubic
         self.max_err = max_err
         self.stats = stats
 
     def _quadratics_to_curve(self, q):
-        curves = quadratics_to_curves(q, self.max_err)
+        curves = quadratics_to_curves(q, self.max_err, self.all_cubic)
         if self.stats is not None:
             n = str(len(curves))
             self.stats[n] = self.stats.get(n, 0) + 1
