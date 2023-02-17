@@ -21,7 +21,7 @@ def setup_quadratic_to_curves():
     return quadratics, MAX_ERR
 
 
-def run_benchmark(module, function, setup_suffix="", repeat=5, number=10):
+def run_benchmark(module, function, setup_suffix="", repeat=10, number=20):
     setup_func = "setup_" + function
     if setup_suffix:
         print("%s with %s:" % (function, setup_suffix), end="")
