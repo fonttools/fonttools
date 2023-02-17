@@ -37,7 +37,7 @@ else:
 
 
 # Copied from cu2qu
-# @cython.cfunc
+@cython.cfunc
 @cython.returns(cython.int)
 @cython.locals(
     tolerance=cython.double,
@@ -194,13 +194,19 @@ def quadratic_to_curves(p, tolerance=0.5):
                 if error > tolerance:
                     break
                 reconstructed.append(reconst)
+            if error > tolerance:
+                # Not feasible
+                continue
 
-            if error > tolerance or not all(
-                cubic_farthest_fit_inside(
-                    *(v - u for v, u in zip(seg1, seg2)), tolerance
-                )
-                for seg1, seg2 in zip(reconstructed, elevated_quadratics[j:i])
-            ):
+            # Interior errors
+            for k, reconst in enumerate(reconstructed):
+                orig = elevated_quadratics[j + k]
+                p0, p1, p2, p3 = tuple(v - u for v, u in zip(reconst, orig))
+
+                if not cubic_farthest_fit_inside(p0, p1, p2, p3, tolerance):
+                    error = tolerance + 1
+                    break
+            if error > tolerance:
                 # Not feasible
                 continue
 
