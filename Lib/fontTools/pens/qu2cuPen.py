@@ -59,7 +59,7 @@ class Qu2CuPen(FilterPen):
 
     def qCurveTo(self, *points):
         n = len(points)
-        if n <= 3:
+        if n <= 3 or points[-1] is None:
             super().qCurveTo(*points)
         else:
             self._quadratic_to_curve(points)
