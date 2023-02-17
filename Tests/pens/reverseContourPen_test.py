@@ -12,6 +12,7 @@ TEST_DATA = [
             ("lineTo", ((3, 3),)),  # last not on move, line is implied
             ("closePath", ()),
         ],
+        False,  # outputImpliedClosingLine
         [
             ("moveTo", ((0, 0),)),
             ("lineTo", ((3, 3),)),
@@ -28,6 +29,7 @@ TEST_DATA = [
             ("lineTo", ((0, 0),)),  # last on move, no implied line
             ("closePath", ()),
         ],
+        False,
         [
             ("moveTo", ((0, 0),)),
             ("lineTo", ((2, 2),)),
@@ -43,6 +45,7 @@ TEST_DATA = [
             ("lineTo", ((2, 2),)),
             ("closePath", ()),
         ],
+        False,
         [
             ("moveTo", ((0, 0),)),
             ("lineTo", ((2, 2),)),
@@ -58,6 +61,7 @@ TEST_DATA = [
             ("lineTo", ((1, 1),)),
             ("closePath", ()),
         ],
+        False,
         [
             ("moveTo", ((0, 0),)),
             ("lineTo", ((1, 1),)),
@@ -71,6 +75,7 @@ TEST_DATA = [
             ("curveTo", ((4, 4), (5, 5), (0, 0))),
             ("closePath", ()),
         ],
+        False,
         [
             ("moveTo", ((0, 0),)),
             ("curveTo", ((5, 5), (4, 4), (3, 3))),
@@ -85,6 +90,7 @@ TEST_DATA = [
             ("curveTo", ((4, 4), (5, 5), (6, 6))),
             ("closePath", ()),
         ],
+        False,
         [
             ("moveTo", ((0, 0),)),
             ("lineTo", ((6, 6),)),  # implied line
@@ -101,6 +107,7 @@ TEST_DATA = [
             ("curveTo", ((5, 5), (6, 6), (7, 7))),
             ("closePath", ()),
         ],
+        False,
         [
             ("moveTo", ((0, 0),)),
             ("lineTo", ((7, 7),)),
@@ -116,6 +123,7 @@ TEST_DATA = [
             ("qCurveTo", ((3, 3), (0, 0))),
             ("closePath", ()),
         ],
+        False,
         [
             ("moveTo", ((0, 0),)),
             ("qCurveTo", ((3, 3), (2, 2))),
@@ -130,6 +138,7 @@ TEST_DATA = [
             ("qCurveTo", ((3, 3), (4, 4))),
             ("closePath", ()),
         ],
+        False,
         [
             ("moveTo", ((0, 0),)),
             ("lineTo", ((4, 4),)),
@@ -145,6 +154,7 @@ TEST_DATA = [
             ("qCurveTo", ((2, 2), (3, 3))),
             ("closePath", ()),
         ],
+        False,
         [
             ("moveTo", ((0, 0),)),
             ("lineTo", ((3, 3),)),
@@ -154,14 +164,16 @@ TEST_DATA = [
     ),
     (
         [("addComponent", ("a", (1, 0, 0, 1, 0, 0)))],
+        False,
         [("addComponent", ("a", (1, 0, 0, 1, 0, 0)))],
     ),
-    ([], []),
+    ([], False, []),
     (
         [
             ("moveTo", ((0, 0),)),
             ("endPath", ()),
         ],
+        False,
         [
             ("moveTo", ((0, 0),)),
             ("endPath", ()),
@@ -172,6 +184,7 @@ TEST_DATA = [
             ("moveTo", ((0, 0),)),
             ("closePath", ()),
         ],
+        False,
         [
             ("moveTo", ((0, 0),)),
             ("endPath", ()),  # single-point paths is always open
@@ -179,10 +192,12 @@ TEST_DATA = [
     ),
     (
         [("moveTo", ((0, 0),)), ("lineTo", ((1, 1),)), ("endPath", ())],
+        False,
         [("moveTo", ((1, 1),)), ("lineTo", ((0, 0),)), ("endPath", ())],
     ),
     (
         [("moveTo", ((0, 0),)), ("curveTo", ((1, 1), (2, 2), (3, 3))), ("endPath", ())],
+        False,
         [("moveTo", ((3, 3),)), ("curveTo", ((2, 2), (1, 1), (0, 0))), ("endPath", ())],
     ),
     (
@@ -192,6 +207,7 @@ TEST_DATA = [
             ("lineTo", ((4, 4),)),
             ("endPath", ()),
         ],
+        False,
         [
             ("moveTo", ((4, 4),)),
             ("lineTo", ((3, 3),)),
@@ -206,6 +222,7 @@ TEST_DATA = [
             ("curveTo", ((2, 2), (3, 3), (4, 4))),
             ("endPath", ()),
         ],
+        False,
         [
             ("moveTo", ((4, 4),)),
             ("curveTo", ((3, 3), (2, 2), (1, 1))),
@@ -215,10 +232,12 @@ TEST_DATA = [
     ),
     (
         [("qCurveTo", ((0, 0), (1, 1), (2, 2), None)), ("closePath", ())],
+        False,
         [("qCurveTo", ((0, 0), (2, 2), (1, 1), None)), ("closePath", ())],
     ),
     (
         [("qCurveTo", ((0, 0), (1, 1), (2, 2), None)), ("endPath", ())],
+        False,
         [
             ("qCurveTo", ((0, 0), (2, 2), (1, 1), None)),
             ("closePath", ()),  # this is always "closed"
@@ -237,6 +256,7 @@ TEST_DATA = [
             ("qCurveTo", ((449, -3), (649, -3), (848, 171), (848, 348))),
             ("closePath", ()),
         ],
+        False,
         [
             ("moveTo", ((848, 348),)),
             ("qCurveTo", ((848, 171), (649, -3), (449, -3), (449, -3))),
@@ -260,6 +280,7 @@ TEST_DATA = [
             ("lineTo", ((0, 651),)),
             ("closePath", ()),
         ],
+        False,
         [
             ("moveTo", ((0, 651),)),
             ("lineTo", ((0, 651),)),
@@ -271,10 +292,10 @@ TEST_DATA = [
 ]
 
 
-@pytest.mark.parametrize("contour, expected", TEST_DATA)
-def test_reverse_pen(contour, expected):
+@pytest.mark.parametrize("contour, outputImpliedClosingLine, expected", TEST_DATA)
+def test_reverse_pen(contour, outputImpliedClosingLine, expected):
     recpen = RecordingPen()
-    revpen = ReverseContourPen(recpen)
+    revpen = ReverseContourPen(recpen, outputImpliedClosingLine)
     for operator, operands in contour:
         getattr(revpen, operator)(*operands)
     assert recpen.value == expected
@@ -312,7 +333,7 @@ def test_reverse_pen_outputImpliedClosingLine():
     ]
 
 
-@pytest.mark.parametrize("contour, expected", TEST_DATA)
+@pytest.mark.parametrize("contour, expected", [(c, e) for c, _, e in TEST_DATA])
 def test_reverse_point_pen(contour, expected):
     from fontTools.ufoLib.pointPen import (
         ReverseContourPointPen,
