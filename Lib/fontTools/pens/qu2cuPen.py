@@ -13,12 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from fontTools.qu2cu import quadratic_to_curves
-from fontTools.pens.filterPen import FilterPen
+from fontTools.qu2cu import quadratics_to_curves
+from fontTools.pens.filterPen import ContourFilterPen
 from fontTools.pens.reverseContourPen import ReverseContourPen
 
 
-class Qu2CuPen(FilterPen):
+class Qu2CuPen(ContourFilterPen):
     """A filter pen to convert quadratic bezier splines to cubic curves
     using the FontTools SegmentPen protocol.
 
@@ -45,21 +45,30 @@ class Qu2CuPen(FilterPen):
         self.max_err = max_err
         self.stats = stats
 
-    def _quadratic_to_curve(self, points):
-        quadratics = (self.current_pt,) + points
-        curves = quadratic_to_curves(quadratics, self.max_err)
+    def _quadratics_to_curve(self, q):
+        curves = quadratics_to_curves(q, self.max_err)
         if self.stats is not None:
             n = str(len(curves))
             self.stats[n] = self.stats.get(n, 0) + 1
-        if len(quadratics) <= len(curves) * 3:
-            super().qCurveTo(*quadratics)
-        else:
-            for curve in curves:
-                self.curveTo(*curve[1:])
+        for curve in curves:
+            if len(curve) == 4:
+                yield ("curveTo", curve[1:])
+            else:
+                yield ("qCurveTo", curve[1:])
 
-    def qCurveTo(self, *points):
-        n = len(points)
-        if n <= 3 or points[-1] is None:
-            super().qCurveTo(*points)
-        else:
-            self._quadratic_to_curve(points)
+    def filterContour(self, contour):
+        quadratics = []
+        currentPt = None
+        newContour = []
+        for op,args in contour:
+            if op == 'qCurveTo' and len(args) > 2 and args[-1] is not None:
+                quadratics.append((currentPt,) + args)
+            else:
+                if quadratics:
+                    newContour.extend(self._quadratics_to_curve(quadratics))
+                    quadratics = []
+                newContour.append((op, args))
+            currentPt = args[-1] if args else None
+        if quadratics:
+            newContour.extend(self._quadratics_to_curve(quadratics))
+        return newContour

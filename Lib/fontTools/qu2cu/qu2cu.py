@@ -171,9 +171,9 @@ def quadratics_to_curves(pp, tolerance=0.5):
     q = [pp[0][0]]
     for p in pp:
         assert q[-1] == p[0]
-        q.extend(spline_to_curves(q)[1:])
+        q.extend(add_implicit_on_curves(p)[1:])
 
-    q = add_implicit_on_curves(q)
+    curves = spline_to_curves(q, tolerance)
 
     if not is_complex:
         curves = [tuple((c.real, c.imag) for c in curve) for curve in curves]
@@ -210,7 +210,10 @@ def spline_to_curves(q, tolerance=0.5):
         for j in range(0, i):
 
             # Fit elevated_quadratics[j:i] into one cubic
-            curve, ts = merge_curves(elevated_quadratics[j:i])
+            try:
+                curve, ts = merge_curves(elevated_quadratics[j:i])
+            except ZeroDivisionError:
+                continue
 
             # Now reconstruct the segments from the fitted curve
             reconstructed_iter = splitCubicAtTC(*curve, *ts)
@@ -265,7 +268,10 @@ def spline_to_curves(q, tolerance=0.5):
     curves = []
     j = 0
     for i in reversed(splits):
-        curves.append(merge_curves(elevated_quadratics[j:i])[0])
+        if j + 1 == i:
+            curves.append(q[j:j+3])
+        else:
+            curves.append(merge_curves(elevated_quadratics[j:i])[0])
         j = i
 
     return curves
