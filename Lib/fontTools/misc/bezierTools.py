@@ -654,11 +654,11 @@ def splitCubicAtTC(pt1, pt2, pt3, pt4, *ts):
         pt1,pt2,pt3,pt4: Control points of the Bezier as complex numbers..
         *ts: Positions at which to split the curve.
 
-    Returns:
-        A list of curve segments (each curve segment being four complex numbers).
+    Yields:
+        Curve segments (each curve segment being four complex numbers).
     """
     a, b, c, d = calcCubicParametersC(pt1, pt2, pt3, pt4)
-    return _splitCubicAtTC(a, b, c, d, *ts)
+    yield from _splitCubicAtTC(a, b, c, d, *ts)
 
 
 @cython.returns(cython.complex)
@@ -782,7 +782,6 @@ def _splitCubicAtTC(a, b, c, d, *ts):
     ts = list(ts)
     ts.insert(0, 0.0)
     ts.append(1.0)
-    segments = []
     for i in range(len(ts) - 1):
         t1 = ts[i]
         t2 = ts[i + 1]
@@ -799,8 +798,7 @@ def _splitCubicAtTC(a, b, c, d, *ts):
         c1 = (2 * b * t1 + c + 3 * a * t1_2) * delta
         d1 = a * t1_3 + b * t1_2 + c * t1 + d
         pt1, pt2, pt3, pt4 = calcCubicPointsC(a1, b1, c1, d1)
-        segments.append((pt1, pt2, pt3, pt4))
-    return segments
+        yield (pt1, pt2, pt3, pt4)
 
 
 #
