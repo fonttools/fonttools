@@ -25,7 +25,7 @@ except ImportError:
 from fontTools.misc.bezierTools import splitCubicAtTC
 
 
-__all__ = ["quadratic_to_curves"]
+__all__ = ["quadratic_to_curves", "quadratics_to_curves"]
 
 
 if cython.compiled:
@@ -150,13 +150,7 @@ def merge_curves(curves):
     return curve, ts
 
 
-def quadratic_to_curves(p, tolerance=0.5):
-    assert len(p) >= 3, "quadratic spline requires at least 3 points"
-    is_complex = type(p[0]) is complex
-    if not is_complex:
-        p = [complex(x, y) for (x, y) in p]
-
-    # If spline has more than one offcurve, insert interpolated oncurves
+def add_implicit_on_curves(p):
     q = list(p)
     count = 0
     num_offcurves = len(p) - 2
@@ -166,7 +160,42 @@ def quadratic_to_curves(p, tolerance=0.5):
         on = off1 + (off2 - off1) * 0.5
         q.insert(i + 1 + count, on)
         count += 1
-    del p
+    return q
+
+
+def quadratics_to_curves(pp, tolerance=0.5):
+    is_complex = type(pp[0][0]) is complex
+    if not is_complex:
+        pp = [[complex(x, y) for (x, y) in p] for p in pp]
+
+    q = [pp[0][0]]
+    for p in pp:
+        assert q[-1] == p[0]
+        q.extend(spline_to_curves(q)[1:])
+
+    q = add_implicit_on_curves(q)
+
+    if not is_complex:
+        curves = [tuple((c.real, c.imag) for c in curve) for curve in curves]
+    return curves
+
+
+def quadratic_to_curves(q, tolerance=0.5):
+    is_complex = type(q[0]) is complex
+    if not is_complex:
+        q = [complex(x, y) for (x, y) in q]
+
+    q = add_implicit_on_curves(q)
+
+    curves = spline_to_curves(q, tolerance)
+
+    if not is_complex:
+        curves = [tuple((c.real, c.imag) for c in curve) for curve in curves]
+    return curves
+
+
+def spline_to_curves(q, tolerance=0.5):
+    assert len(q) >= 3, "quadratic spline requires at least 3 points"
 
     # Elevate quadratic segments to cubic
     elevated_quadratics = [
@@ -239,8 +268,6 @@ def quadratic_to_curves(p, tolerance=0.5):
         curves.append(merge_curves(elevated_quadratics[j:i])[0])
         j = i
 
-    if not is_complex:
-        curves = [tuple((c.real, c.imag) for c in curve) for curve in curves]
     return curves
 
 
