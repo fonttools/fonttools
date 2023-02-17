@@ -288,7 +288,13 @@ def test_reverse_pen_outputImpliedClosingLine():
     revpen.lineTo((0, 10))
     revpen.lineTo((0, 0))
     revpen.closePath()
-    assert len(recpen.value) == 4
+    assert recpen.value == [
+        ("moveTo", ((0, 0),)),
+        ("lineTo", ((0, 10),)),
+        ("lineTo", ((10, 0),)),
+        # ("lineTo", ((0, 0),)),  # implied
+        ("closePath", ()),
+    ]
 
     recpen = RecordingPen()
     revpen = ReverseContourPen(recpen, outputImpliedClosingLine=True)
@@ -297,7 +303,13 @@ def test_reverse_pen_outputImpliedClosingLine():
     revpen.lineTo((0, 10))
     revpen.lineTo((0, 0))
     revpen.closePath()
-    assert len(recpen.value) == 6
+    assert recpen.value == [
+        ("moveTo", ((0, 0),)),
+        ("lineTo", ((0, 10),)),
+        ("lineTo", ((10, 0),)),
+        ("lineTo", ((0, 0),)),  # not implied
+        ("closePath", ()),
+    ]
 
 
 @pytest.mark.parametrize("contour, expected", TEST_DATA)
