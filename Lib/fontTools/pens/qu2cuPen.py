@@ -78,12 +78,14 @@ class Qu2CuPen(ContourFilterPen):
         contour = newContour
         newContour = []
         for op, args in contour:
-            if (op in {"curveTo", "qCurveTo"} and newContour and newContour[-1][0] == op):
+            if op == "qCurveTo" and newContour and newContour[-1][0] == "qCurveTo":
                 pt0 = newContour[-1][1][-2]
                 pt1 = newContour[-1][1][-1]
                 pt2 = args[0]
-                if (pt2[0] - pt1[0] == pt1[0] - pt0[0] and
-                    pt2[1] - pt1[1] == pt1[1] - pt0[1]):
+                if (
+                    pt2[0] - pt1[0] == pt1[0] - pt0[0]
+                    and pt2[1] - pt1[1] == pt1[1] - pt0[1]
+                ):
                     newArgs = newContour[-1][1][:-1] + args
                     newContour[-1] = (op, newArgs)
                     continue
