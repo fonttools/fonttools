@@ -16,10 +16,13 @@ import unittest
 import pytest
 
 from fontTools.qu2cu import quadratic_to_curves, quadratics_to_curves
+from fontTools.qu2cu.qu2cu import main as qu2cu_main
+from fontTools.qu2cu.benchmark import main as benchmark_main
 
 import os
 import json
 from fontTools.cu2qu import curve_to_quadratic
+
 
 class Qu2CuTest:
     @pytest.mark.parametrize(
@@ -100,3 +103,8 @@ class Qu2CuTest:
             assert len(reconst) == 1
             curve = tuple((pytest.approx(p[0]), pytest.approx(p[1])) for p in curve)
             assert curve == reconst[0]
+
+    def test_main(self):
+        # Just for coverage
+        qu2cu_main()
+        benchmark_main()
