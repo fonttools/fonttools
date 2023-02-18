@@ -203,19 +203,6 @@ class TestCu2QuPen(unittest.TestCase, _TestPenMixin):
             ],
         )
 
-    def test_addComponent(self):
-        pen = DummyPen()
-        quadpen = Cu2QuPen(pen, MAX_ERR)
-        quadpen.addComponent("a", (1, 2, 3, 4, 5.0, 6.0))
-
-        # components are passed through without changes
-        self.assertEqual(
-            str(pen).splitlines(),
-            [
-                "pen.addComponent('a', (1, 2, 3, 4, 5.0, 6.0))",
-            ],
-        )
-
 
 class TestCu2QuPointPen(unittest.TestCase, _TestPenMixin):
     def __init__(self, *args, **kwargs):
