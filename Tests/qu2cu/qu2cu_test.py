@@ -17,6 +17,9 @@ import pytest
 
 from fontTools.qu2cu import quadratic_to_curves, quadratics_to_curves
 
+import os
+import json
+from fontTools.cu2qu import curve_to_quadratic
 
 class Qu2CuTest:
     @pytest.mark.parametrize(
@@ -81,3 +84,19 @@ class Qu2CuTest:
 
         c = quadratics_to_curves(quadratics, tolerance, cubic_only)
         assert c == expected
+
+    def test_roundtrip(self):
+
+        DATADIR = os.path.join(os.path.dirname(__file__), "..", "cu2qu", "data")
+        with open(os.path.join(DATADIR, "curves.json"), "r") as fp:
+            curves = json.load(fp)
+
+        tolerance = 1
+
+        splines = [curve_to_quadratic(c, tolerance) for c in curves]
+        reconsts = [quadratic_to_curves(spline, tolerance) for spline in splines]
+
+        for curve, reconst in zip(curves, reconsts):
+            assert len(reconst) == 1
+            curve = tuple((pytest.approx(p[0]), pytest.approx(p[1])) for p in curve)
+            assert curve == reconst[0]
