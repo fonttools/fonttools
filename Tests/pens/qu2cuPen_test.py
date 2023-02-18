@@ -48,7 +48,7 @@ class _TestPenMixin(object):
         # draw source glyph onto a new glyph using a Cu2Qu pen and return it
         converted = self.Glyph()
         pen = getattr(converted, self.pen_getter_name)()
-        cubicpen = self.Qu2CuPen(pen, MAX_ERR, **kwargs)
+        cubicpen = self.Qu2CuPen(pen, MAX_ERR, all_cubic=True, **kwargs)
         getattr(glyph, self.draw_method_name)(cubicpen)
         return converted
 
@@ -144,7 +144,7 @@ class TestQu2CuPen(unittest.TestCase, _TestPenMixin):
             ],
         )
 
-    def test_qCurveTo_3_points(self):
+    def test_qCurveTo_3_points_no_conversion(self):
         pen = DummyPen()
         cubicpen = Qu2CuPen(pen, MAX_ERR)
         cubicpen.moveTo((0, 0))
@@ -155,7 +155,7 @@ class TestQu2CuPen(unittest.TestCase, _TestPenMixin):
             str(pen).splitlines(),
             [
                 "pen.moveTo((0, 0))",
-                "pen.curveTo((0, 4.0), (1, 4.0), (1, 0))",
+                "pen.qCurveTo((0, 3), (1, 3), (1, 0))",
                 "pen.closePath()",
             ],
         )

@@ -169,11 +169,21 @@ def quadratics_to_curves(pp, tolerance=0.5, all_cubic=False):
         pp = [[complex(x, y) for (x, y) in p] for p in pp]
 
     q = [pp[0][0]]
+    cost = 0
+    costs = [0]
     for p in pp:
         assert q[-1] == p[0]
-        q.extend(add_implicit_on_curves(p)[1:])
+        for i in range(len(p) - 2):
+            cost += 1
+            costs.append(cost)
+            costs.append(cost + 1)
+        qq = add_implicit_on_curves(p)[1:]
+        q.extend(qq)
+        cost += 1
+        costs.append(cost)
+    costs.append(cost + 1)
 
-    curves = spline_to_curves(q, tolerance, all_cubic)
+    curves = spline_to_curves(q, costs, tolerance, all_cubic)
 
     if not is_complex:
         curves = [tuple((c.real, c.imag) for c in curve) for curve in curves]
@@ -185,16 +195,22 @@ def quadratic_to_curves(q, tolerance=0.5, all_cubic=False):
     if not is_complex:
         q = [complex(x, y) for (x, y) in q]
 
+    costs = [0]
+    for i in range(len(q) - 2):
+        costs.append(i + 1)
+        costs.append(i + 2)
+    costs.append(len(q) - 1)
+    costs.append(len(q))
     q = add_implicit_on_curves(q)
 
-    curves = spline_to_curves(q, tolerance, all_cubic)
+    curves = spline_to_curves(q, costs, tolerance, all_cubic)
 
     if not is_complex:
         curves = [tuple((c.real, c.imag) for c in curve) for curve in curves]
     return curves
 
 
-def spline_to_curves(q, tolerance=0.5, all_cubic=False):
+def spline_to_curves(q, costs, tolerance=0.5, all_cubic=False):
     assert len(q) >= 3, "quadratic spline requires at least 3 points"
 
     # Elevate quadratic segments to cubic
@@ -204,10 +220,20 @@ def spline_to_curves(q, tolerance=0.5, all_cubic=False):
 
     # Dynamic-Programming to find the solution with fewest number of
     # cubic curves, and within those the one with smallest error.
-    sols = [(0, 0, 0)]  # (best_num_segments, best_error, start_index)
+    sols = [(0, 0, 0, False)]  # (best_num_points, best_error, start_index, cubic)
     for i in range(1, len(elevated_quadratics) + 1):
-        best_sol = (len(q) + 1, 0, 1)
+        best_sol = (len(q) + 2, 0, 1, False)
         for j in range(0, i):
+
+            j_sol_count, j_sol_error, _, _ = sols[j]
+
+            if not all_cubic:
+                # Solution with quadratics between j:i
+                i_sol_count = j_sol_count + costs[2 * i] - costs[2 * j]
+                i_sol_error = j_sol_error
+                i_sol = (i_sol_count, i_sol_error, i - j, False)
+                if i_sol < best_sol:
+                    best_sol = i_sol
 
             # Fit elevated_quadratics[j:i] into one cubic
             try:
@@ -245,14 +271,13 @@ def spline_to_curves(q, tolerance=0.5, all_cubic=False):
                 continue
 
             # Save best solution
-            j_sol_count, j_sol_error, _ = sols[j]
-            i_sol_count = j_sol_count + 1
+            i_sol_count = j_sol_count + 3
             i_sol_error = max(j_sol_error, error)
-            i_sol = (i_sol_count, i_sol_error, i - j)
+            i_sol = (i_sol_count, i_sol_error, i - j, True)
             if i_sol < best_sol:
                 best_sol = i_sol
 
-            if i_sol_count == 1:
+            if i_sol_count == 4:
                 # Can't get any better than this
                 break
 
@@ -260,18 +285,21 @@ def spline_to_curves(q, tolerance=0.5, all_cubic=False):
 
     # Reconstruct solution
     splits = []
+    cubic = []
     i = len(sols) - 1
     while i:
+        _, _, count, is_cubic = sols[i]
         splits.append(i)
-        _, _, count = sols[i]
+        cubic.append(is_cubic)
         i -= count
     curves = []
     j = 0
-    for i in reversed(splits):
-        if not all_cubic and j + 1 == i:
-            curves.append(q[j * 2 : j * 2 + 3])
-        else:
+    for i, is_cubic in reversed(list(zip(splits, cubic))):
+        if is_cubic:
             curves.append(merge_curves(elevated_quadratics[j:i])[0])
+        else:
+            for k in range(j, i):
+                curves.append(q[k * 2 : k * 2 + 3])
         j = i
 
     return curves
