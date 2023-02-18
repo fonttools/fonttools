@@ -29,7 +29,7 @@ def _font_to_cubic(input_path, output_path=None, **kwargs):
         ttpen = TTGlyphPen(glyphSet)
         pen = Qu2CuPen(ttpen, **qu2cu_kwargs)
         glyph.draw(pen)
-        glyf[glyphName] = ttpen.glyph()
+        glyf[glyphName] = ttpen.glyph(preserveTopology=False)
 
     logger.info("Saving %s", output_path)
     font.save(output_path)

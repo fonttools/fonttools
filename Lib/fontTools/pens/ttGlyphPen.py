@@ -7,6 +7,7 @@ from fontTools.misc.roundTools import otRound
 from fontTools.pens.basePen import LoggingPen, PenError
 from fontTools.pens.transformPen import TransformPen, TransformPointPen
 from fontTools.ttLib.tables import ttProgram
+from fontTools.ttLib.tables._g_l_y_f import flagOnCurve
 from fontTools.ttLib.tables._g_l_y_f import Glyph
 from fontTools.ttLib.tables._g_l_y_f import GlyphComponent
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
@@ -124,7 +125,7 @@ class _TTGlyphBasePen:
             components.append(component)
         return components
 
-    def glyph(self, componentFlags: int = 0x4) -> Glyph:
+    def glyph(self, componentFlags: int = 0x4, preserveTopology=True) -> Glyph:
         """
         Returns a :py:class:`~._g_l_y_f.Glyph` object representing the glyph.
         """
@@ -148,6 +149,52 @@ class _TTGlyphBasePen:
             glyph.numberOfContours = len(glyph.endPtsOfContours)
             glyph.program = ttProgram.Program()
             glyph.program.fromBytecode(b"")
+
+        if not preserveTopology:
+
+            # Drop implied on-curve points
+
+            drop = set()
+            start = 0
+            flags = glyph.flags
+            coords = glyph.coordinates
+            for last in glyph.endPtsOfContours:
+                for i in range(start, last + 1):
+                    if not (flags[i] & flagOnCurve):
+                        continue
+                    prv = i - 1 if i > start else last
+                    nxt = i + 1 if i < last else start
+                    if (flags[prv] & flagOnCurve) or flags[prv] != flags[nxt]:
+                        continue
+                    p0 = coords[prv]
+                    p1 = coords[i]
+                    p2 = coords[nxt]
+                    if p1[0] - p0[0] != p2[0] - p1[0] or p1[1] - p0[1] != p2[1] - p1[1]:
+                        continue
+
+                    drop.add(i)
+            if drop:
+                # Do the actual dropping
+                glyph.coordinates = GlyphCoordinates(
+                    coords[i] for i in range(len(coords)) if i not in drop
+                )
+                glyph.flags = array(
+                    "B", (flags[i] for i in range(len(flags)) if i not in drop)
+                )
+
+                endPts = glyph.endPtsOfContours
+                newEndPts = []
+                i = 0
+                delta = 0
+                for d in sorted(drop):
+                    while d > endPts[i]:
+                        newEndPts.append(endPts[i] - delta)
+                        i += 1
+                    delta += 1
+                while i < len(endPts):
+                    newEndPts.append(endPts[i] - delta)
+                    i += 1
+                glyph.endPtsOfContours = newEndPts
 
         return glyph
 
