@@ -23,7 +23,7 @@ except ImportError:
     from fontTools.misc import cython
 
 from fontTools.misc.bezierTools import splitCubicAtTC
-from typing import NamedTuple
+from collections import namedtuple
 
 
 __all__ = ["quadratic_to_curves", "quadratics_to_curves"]
@@ -211,11 +211,7 @@ def quadratic_to_curves(q, tolerance=0.5, all_cubic=False):
     return curves
 
 
-class Solution(NamedTuple):
-    num_points: int
-    error: float
-    start_index: int
-    is_cubic: bool
+Solution = namedtuple("Solution", ["num_points", "error", "start_index", "is_cubic"])
 
 
 def spline_to_curves(q, costs, tolerance=0.5, all_cubic=False):
