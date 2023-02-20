@@ -16,6 +16,7 @@
 from fontTools.qu2cu import quadratic_to_curves
 from fontTools.pens.filterPen import ContourFilterPen
 from fontTools.pens.reverseContourPen import ReverseContourPen
+import math
 
 
 class Qu2CuPen(ContourFilterPen):
@@ -88,9 +89,8 @@ class Qu2CuPen(ContourFilterPen):
                 pt0 = newContour[-1][1][-2]
                 pt1 = newContour[-1][1][-1]
                 pt2 = args[0]
-                if (
-                    pt2[0] - pt1[0] == pt1[0] - pt0[0]
-                    and pt2[1] - pt1[1] == pt1[1] - pt0[1]
+                if math.isclose(pt2[0] - pt1[0], pt1[0] - pt0[0]) and math.isclose(
+                    pt2[1] - pt1[1], pt1[1] - pt0[1]
                 ):
                     newArgs = newContour[-1][1][:-1] + args
                     newContour[-1] = (op, newArgs)
