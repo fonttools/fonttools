@@ -274,7 +274,7 @@ def spline_to_curves(q, costs, tolerance=0.5, all_cubic=False):
     costs: cumulative list of encoding cost of q in terms of number of
       points that need to be encoded.  Implied on-curve points do not
       contribute to the cost. If all points need to be encoded, then
-      costs will be range(len(q)+1).
+      costs will be range(1, len(q)+1).
     """
 
     assert len(q) >= 3, "quadratic spline requires at least 3 points"
