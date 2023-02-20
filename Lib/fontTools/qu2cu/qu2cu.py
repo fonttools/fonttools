@@ -238,11 +238,15 @@ def spline_to_curves(q, costs, tolerance=0.5, all_cubic=False):
 
             if not all_cubic:
                 # Solution with quadratics between j:i
-                i_sol_count = j_sol_count + costs[2 * i] - costs[2 * j]
+                this_count = costs[2 * i] - costs[2 * j]
+                i_sol_count = j_sol_count + this_count
                 i_sol_error = j_sol_error
                 i_sol = Solution(i_sol_count, i_sol_error, i - j, False)
                 if i_sol < best_sol:
                     best_sol = i_sol
+                if this_count == 4:
+                    # Can't get any better than this
+                    break
 
             # Fit elevated_quadratics[j:i] into one cubic
             try:
