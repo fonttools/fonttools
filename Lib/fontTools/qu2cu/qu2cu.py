@@ -232,6 +232,24 @@ def quadratic_to_curves(
 Solution = namedtuple("Solution", ["num_points", "error", "start_index", "is_cubic"])
 
 
+@cython.locals(
+    i=cython.int,
+    j=cython.int,
+    k=cython.int,
+    i_sol_count=cython.int,
+    j_sol_count=cython.int,
+    this_sol_count=cython.int,
+    tolerance=cython.double,
+    err=cython.double,
+    error=cython.double,
+    i_sol_error=cython.double,
+    j_sol_error=cython.double,
+    all_cubic=cython.int,
+    p0=cython.complex,
+    p1=cython.complex,
+    p2=cython.complex,
+    p3=cython.complex,
+)
 def spline_to_curves(q, costs, tolerance=0.5, all_cubic=False):
     """
     q: quadratic spline with alternating on-curve / off-curve points.
