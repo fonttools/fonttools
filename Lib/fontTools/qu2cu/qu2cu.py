@@ -106,6 +106,7 @@ def elevate_quadratic(p0, p1, p2, _1_3=1 / 3, _2_3=2 / 3):
 
 
 @cython.locals(
+    start=cython.int,
     n=cython.int,
     k=cython.int,
     prod_ratio=cython.double,
@@ -117,19 +118,18 @@ def elevate_quadratic(p0, p1, p2, _1_3=1 / 3, _2_3=2 / 3):
     p2=cython.complex,
     p3=cython.complex,
 )
-def merge_curves(curves):
+def merge_curves(curves, start, n):
     """Give a cubic-Bezier spline, reconstruct one cubic-Bezier
     that has the same endpoints and tangents and approxmates
     the spline."""
 
     # Reconstruct the t values of the cut segments
-    n = len(curves)
     prod_ratio = 1.0
     sum_ratio = 1.0
     ts = [1]
     for k in range(1, n):
-        ck = curves[k]
-        c_before = curves[k - 1]
+        ck = curves[start + k]
+        c_before = curves[start + k - 1]
 
         # |t_(k+1) - t_k| / |t_k - t_(k - 1)| = ratio
         assert ck[0] == c_before[3]
@@ -143,10 +143,10 @@ def merge_curves(curves):
 
     ts = [t / sum_ratio for t in ts[:-1]]
 
-    p0 = curves[0][0]
-    p1 = curves[0][1]
-    p2 = curves[n - 1][2]
-    p3 = curves[n - 1][3]
+    p0 = curves[start][0]
+    p1 = curves[start][1]
+    p2 = curves[start + n - 1][2]
+    p3 = curves[start + n - 1][3]
 
     # Build the curve by scaling the control-points.
     p1 = p0 + (p1 - p0) / (ts[0] if ts else 1)
@@ -309,7 +309,7 @@ def spline_to_curves(q, costs, tolerance=0.5, all_cubic=False):
 
             # Fit elevated_quadratics[j:i] into one cubic
             try:
-                curve, ts = merge_curves(elevated_quadratics[j:i])
+                curve, ts = merge_curves(elevated_quadratics, j, i - j)
             except ZeroDivisionError:
                 continue
 
@@ -368,7 +368,7 @@ def spline_to_curves(q, costs, tolerance=0.5, all_cubic=False):
     j = 0
     for i, is_cubic in reversed(list(zip(splits, cubic))):
         if is_cubic:
-            curves.append(merge_curves(elevated_quadratics[j:i])[0])
+            curves.append(merge_curves(elevated_quadratics, j, i - j)[0])
         else:
             for k in range(j, i):
                 curves.append(q[k * 2 : k * 2 + 3])
