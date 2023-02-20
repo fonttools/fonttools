@@ -269,8 +269,8 @@ def spline_to_curves(q, costs, tolerance=0.5, all_cubic=False):
                     best_sol = i_sol
 
                 if this_count <= 3:
-                    # Can't get any better than this
-                    break
+                    # Can't get any better than this in the path below
+                    continue
 
             # Fit elevated_quadratics[j:i] into one cubic
             try:
