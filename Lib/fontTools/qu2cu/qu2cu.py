@@ -170,7 +170,7 @@ def add_implicit_on_curves(p):
 
 def quadratic_to_curves(
     quads: List[Tuple[Tuple[float, float]]],
-    tolerance: float = 0.5,
+    max_err: float = 0.5,
     all_cubic: bool = False,
 ):
     """Converts a connecting list of quadratic splines to a list of quadratic
@@ -189,7 +189,7 @@ def quadratic_to_curves(
     Args:
         quads: quadratic splines
 
-        tolerance: absolute error tolerance; defaults to 0.5
+        max_err: absolute error tolerance; defaults to 0.5
 
         all_cubic: if True, only cubic curves are generated; defaults to False
     """
@@ -212,7 +212,7 @@ def quadratic_to_curves(
         costs.append(cost)
     costs.append(cost + 1)
 
-    curves = spline_to_curves(q, costs, tolerance, all_cubic)
+    curves = spline_to_curves(q, costs, max_err, all_cubic)
 
     if not is_complex:
         curves = [tuple((c.real, c.imag) for c in curve) for curve in curves]
