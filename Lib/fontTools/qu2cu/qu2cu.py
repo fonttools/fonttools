@@ -23,6 +23,7 @@ except ImportError:
     from fontTools.misc import cython
 
 from fontTools.misc.bezierTools import splitCubicAtTC
+from typing import NamedTuple
 
 
 __all__ = ["quadratic_to_curves", "quadratics_to_curves"]
@@ -210,6 +211,13 @@ def quadratic_to_curves(q, tolerance=0.5, all_cubic=False):
     return curves
 
 
+class Solution(NamedTuple):
+    num_points: int
+    error: float
+    start_index: int
+    is_cubic: bool
+
+
 def spline_to_curves(q, costs, tolerance=0.5, all_cubic=False):
     assert len(q) >= 3, "quadratic spline requires at least 3 points"
 
@@ -220,18 +228,18 @@ def spline_to_curves(q, costs, tolerance=0.5, all_cubic=False):
 
     # Dynamic-Programming to find the solution with fewest number of
     # cubic curves, and within those the one with smallest error.
-    sols = [(0, 0, 0, False)]  # (best_num_points, best_error, start_index, cubic)
+    sols = [Solution(0, 0, 0, False)]
     for i in range(1, len(elevated_quadratics) + 1):
-        best_sol = (len(q) + 2, 0, 1, False)
+        best_sol = Solution(len(q) + 2, 0, 1, False)
         for j in range(0, i):
 
-            j_sol_count, j_sol_error, _, _ = sols[j]
+            j_sol_count, j_sol_error = sols[j].num_points, sols[j].error
 
             if not all_cubic:
                 # Solution with quadratics between j:i
                 i_sol_count = j_sol_count + costs[2 * i] - costs[2 * j]
                 i_sol_error = j_sol_error
-                i_sol = (i_sol_count, i_sol_error, i - j, False)
+                i_sol = Solution(i_sol_count, i_sol_error, i - j, False)
                 if i_sol < best_sol:
                     best_sol = i_sol
 
@@ -273,7 +281,7 @@ def spline_to_curves(q, costs, tolerance=0.5, all_cubic=False):
             # Save best solution
             i_sol_count = j_sol_count + 3
             i_sol_error = max(j_sol_error, error)
-            i_sol = (i_sol_count, i_sol_error, i - j, True)
+            i_sol = Solution(i_sol_count, i_sol_error, i - j, True)
             if i_sol < best_sol:
                 best_sol = i_sol
 
@@ -288,7 +296,7 @@ def spline_to_curves(q, costs, tolerance=0.5, all_cubic=False):
     cubic = []
     i = len(sols) - 1
     while i:
-        _, _, count, is_cubic = sols[i]
+        count, is_cubic = sols[i].start_index, sols[i].is_cubic
         splits.append(i)
         cubic.append(is_cubic)
         i -= count
