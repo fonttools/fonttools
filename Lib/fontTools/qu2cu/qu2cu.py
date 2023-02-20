@@ -172,7 +172,7 @@ def quadratic_to_curves(
     quads: List[List[Tuple[float, float]]],
     max_err: float = 0.5,
     all_cubic: bool = False,
-):
+) -> List[Tuple[Tuple[float, float], ...]]:
     """Converts a connecting list of quadratic splines to a list of quadratic
     and cubic curves.
 
