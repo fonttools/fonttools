@@ -160,6 +160,17 @@ class TestQu2CuPen(unittest.TestCase, _TestPenMixin):
             ],
         )
 
+    def test_qCurveTo_no_oncurve_points(self):
+        pen = DummyPen()
+        cubicpen = Qu2CuPen(pen, MAX_ERR)
+        cubicpen.qCurveTo((0, 0), (1, 0), (1, 1), (0, 1), None)
+        cubicpen.closePath()
+
+        self.assertEqual(
+            str(pen).splitlines(),
+            ["pen.qCurveTo((0, 0), (1, 0), (1, 1), (0, 1), None)", "pen.closePath()"],
+        )
+
     def test_curveTo_1_point(self):
         pen = DummyPen()
         cubicpen = Qu2CuPen(pen, MAX_ERR)

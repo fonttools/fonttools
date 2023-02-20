@@ -226,7 +226,11 @@ def _repr_pen_commands(commands):
                 # cast float to int if there're no digits after decimal point,
                 # and round floats to 12 decimal digits (more than enough)
                 args = [
-                    tuple((int(v) if int(v) == v else round(v, 12)) for v in pt)
+                    (
+                        tuple((int(v) if int(v) == v else round(v, 12)) for v in pt)
+                        if pt is not None
+                        else None
+                    )
                     for pt in args
                 ]
             args = ", ".join(repr(a) for a in args)
