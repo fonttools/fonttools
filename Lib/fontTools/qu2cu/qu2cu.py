@@ -208,19 +208,19 @@ def quadratic_to_curves(
         quads = [[complex(x, y) for (x, y) in p] for p in quads]
 
     q = [quads[0][0]]
-    cost = 0
-    costs = [0]
+    costs = [0, 1]
+    cost = 1
     for p in quads:
         assert q[-1] == p[0]
         for i in range(len(p) - 2):
             cost += 1
             costs.append(cost)
-            costs.append(cost + 1)
+            costs.append(cost)
         qq = add_implicit_on_curves(p)[1:]
+        costs.pop()
         q.extend(qq)
         cost += 1
         costs.append(cost)
-    costs.append(cost + 1)
 
     curves = spline_to_curves(q, costs, max_err, all_cubic)
 
