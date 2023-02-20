@@ -111,6 +111,7 @@ def elevate_quadratic(p0, p1, p2, _1_3=1 / 3, _2_3=2 / 3):
     prod_ratio=cython.double,
     sum_ratio=cython.double,
     ratio=cython.double,
+    t=cython.double,
     p0=cython.complex,
     p1=cython.complex,
     p2=cython.complex,
@@ -263,6 +264,8 @@ Solution = namedtuple("Solution", ["num_points", "error", "start_index", "is_cub
     p1=cython.complex,
     p2=cython.complex,
     p3=cython.complex,
+    v=cython.complex,
+    u=cython.complex,
 )
 def spline_to_curves(q, costs, tolerance=0.5, all_cubic=False):
     """
