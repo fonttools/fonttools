@@ -298,7 +298,7 @@ def spline_to_curves(q, costs, tolerance=0.5, all_cubic=False):
             if i_sol < best_sol:
                 best_sol = i_sol
 
-            if i_sol_count == 4:
+            if i_sol_count == 3:
                 # Can't get any better than this
                 break
 
