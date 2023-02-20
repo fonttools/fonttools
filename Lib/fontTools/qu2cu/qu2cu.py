@@ -27,6 +27,7 @@ from collections import namedtuple
 from typing import (
     List,
     Tuple,
+    Union,
 )
 
 
@@ -168,23 +169,32 @@ def add_implicit_on_curves(p):
     return q
 
 
+Point = Union[Tuple[float, float], complex]
+
+
 def quadratic_to_curves(
-    quads: List[List[Tuple[float, float]]],
+    quads: List[List[Point]],
     max_err: float = 0.5,
     all_cubic: bool = False,
-) -> List[Tuple[Tuple[float, float], ...]]:
+) -> List[Tuple[Point, ...]]:
     """Converts a connecting list of quadratic splines to a list of quadratic
     and cubic curves.
 
-    A quadratic spline is specified as a list of points, each of which is
-    a 2-tuple of X,Y coordinates. The first and last points are on-curve points
-    and the rest are off-curve points, with an implied on-curve point in the
-    middle between every two consequtive off-curve points.
+    A quadratic spline is specified as a list of points.  Either each point is
+    a 2-tuple of X,Y coordinates, or each point is a complex number with
+    real/imaginary components representing X,Y coordinates.
+
+    The first and last points are on-curve points and the rest are off-curve
+    points, with an implied on-curve point in the middle between every two
+    consequtive off-curve points.
 
     Returns:
-        The output is a list of tuples. Each tuple is either of length three, for
-        a quadratic curve, or four, for a cubic curve.  Each curve's last point
-        is the same as the next curve's first point.
+        The output is a list of tuples of points. Points are represented
+        in the same format as the input, either as 2-tuples or complex numbers.
+
+        Each tuple is either of length three, for a quadratic curve, or four,
+        for a cubic curve.  Each curve's last point is the same as the next
+        curve's first point.
 
     Args:
         quads: quadratic splines
