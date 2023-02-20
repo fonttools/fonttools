@@ -24,6 +24,10 @@ except ImportError:
 
 from fontTools.misc.bezierTools import splitCubicAtTC
 from collections import namedtuple
+from typing import (
+    List,
+    Tuple,
+)
 
 
 __all__ = ["quadratic_to_curves"]
@@ -164,7 +168,11 @@ def add_implicit_on_curves(p):
     return q
 
 
-def quadratic_to_curves(pp, tolerance=0.5, all_cubic=False):
+def quadratic_to_curves(
+    quads: List[Tuple[Tuple[float, float]]],
+    tolerance: float = 0.5,
+    all_cubic: bool = False,
+):
     """Converts a connecting list of quadratic splines to a list of quadratic
     and cubic curves.
 
@@ -173,22 +181,26 @@ def quadratic_to_curves(pp, tolerance=0.5, all_cubic=False):
     and the rest are off-curve points, with an implied on-curve point in the
     middle between every two consequtive off-curve points.
 
-    The output is a list of tuples. Each tuple is either of length three, for
-    a quadratic curve, or four, for a cubic curve.  Each curve's last point
-    is the same as the next curve's first point.
+    Returns:
+        The output is a list of tuples. Each tuple is either of length three, for
+        a quadratic curve, or four, for a cubic curve.  Each curve's last point
+        is the same as the next curve's first point.
 
-    q: quadratic splines
-    tolerance: absolute error tolerance; defaults to 0.5
-    all_cubic: if True, only cubic curves are generated; defaults to False
+    Args:
+        quads: quadratic splines
+
+        tolerance: absolute error tolerance; defaults to 0.5
+
+        all_cubic: if True, only cubic curves are generated; defaults to False
     """
-    is_complex = type(pp[0][0]) is complex
+    is_complex = type(quads[0][0]) is complex
     if not is_complex:
-        pp = [[complex(x, y) for (x, y) in p] for p in pp]
+        quads = [[complex(x, y) for (x, y) in p] for p in quads]
 
-    q = [pp[0][0]]
+    q = [quads[0][0]]
     cost = 0
     costs = [0]
-    for p in pp:
+    for p in quads:
         assert q[-1] == p[0]
         for i in range(len(p) - 2):
             cost += 1
