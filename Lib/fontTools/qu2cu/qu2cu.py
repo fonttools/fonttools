@@ -169,7 +169,7 @@ def add_implicit_on_curves(p):
 
 
 def quadratic_to_curves(
-    quads: List[Tuple[Tuple[float, float]]],
+    quads: List[Tuple[Tuple[float, float], ...]],
     max_err: float = 0.5,
     all_cubic: bool = False,
 ):
