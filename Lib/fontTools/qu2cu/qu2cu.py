@@ -221,7 +221,7 @@ def quadratic_to_curves(
         quads = [[complex(x, y) for (x, y) in p] for p in quads]
 
     q = [quads[0][0]]
-    costs = [0, 1]
+    costs = [1]
     cost = 1
     for p in quads:
         assert q[-1] == p[0]
@@ -296,7 +296,7 @@ def spline_to_curves(q, costs, tolerance=0.5, all_cubic=False):
 
             if not all_cubic:
                 # Solution with quadratics between j:i
-                this_count = costs[2 * i] - costs[2 * j]
+                this_count = costs[2 * i - 1] - costs[2 * j] + 1
                 i_sol_count = j_sol_count + this_count
                 i_sol_error = j_sol_error
                 i_sol = Solution(i_sol_count, i_sol_error, i - j, False)
