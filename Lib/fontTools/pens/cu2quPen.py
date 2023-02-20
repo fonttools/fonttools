@@ -13,13 +13,14 @@
 # limitations under the License.
 
 from fontTools.cu2qu import curve_to_quadratic, curves_to_quadratic
-from fontTools.pens.basePen import AbstractPen, decomposeSuperBezierSegment
+from fontTools.pens.basePen import decomposeSuperBezierSegment
+from fontTools.pens.filterPen import FilterPen
 from fontTools.pens.reverseContourPen import ReverseContourPen
 from fontTools.pens.pointPen import BasePointToSegmentPen
 from fontTools.pens.pointPen import ReverseContourPointPen
 
 
-class Cu2QuPen(AbstractPen):
+class Cu2QuPen(FilterPen):
     """A filter pen to convert cubic bezier curves to quadratic b-splines
     using the FontTools SegmentPen protocol.
 
@@ -31,13 +32,6 @@ class Cu2QuPen(AbstractPen):
             value equal, or close to UPEM / 1000.
         reverse_direction: flip the contours' direction but keep starting point.
         stats: a dictionary counting the point numbers of quadratic segments.
-        ignore_single_points: don't emit contours containing only a single point
-
-    NOTE: The "ignore_single_points" argument is deprecated since v1.3.0,
-    which dropped Robofab support. It's no longer needed to special-case
-    UFO2-style anchors (aka "named points") when using ufoLib >= 2.0,
-    as these are no longer drawn onto pens as single-point contours,
-    but are handled separately as anchors.
     """
 
     def __init__(
@@ -46,63 +40,12 @@ class Cu2QuPen(AbstractPen):
         max_err,
         reverse_direction=False,
         stats=None,
-        ignore_single_points=False,
     ):
         if reverse_direction:
-            self.pen = ReverseContourPen(other_pen)
-        else:
-            self.pen = other_pen
+            other_pen = ReverseContourPen(other_pen)
+        super().__init__(other_pen)
         self.max_err = max_err
         self.stats = stats
-        if ignore_single_points:
-            import warnings
-
-            warnings.warn(
-                "ignore_single_points is deprecated and "
-                "will be removed in future versions",
-                UserWarning,
-                stacklevel=2,
-            )
-        self.ignore_single_points = ignore_single_points
-        self.start_pt = None
-        self.current_pt = None
-
-    def _check_contour_is_open(self):
-        if self.current_pt is None:
-            raise AssertionError("moveTo is required")
-
-    def _check_contour_is_closed(self):
-        if self.current_pt is not None:
-            raise AssertionError("closePath or endPath is required")
-
-    def _add_moveTo(self):
-        if self.start_pt is not None:
-            self.pen.moveTo(self.start_pt)
-            self.start_pt = None
-
-    def moveTo(self, pt):
-        self._check_contour_is_closed()
-        self.start_pt = self.current_pt = pt
-        if not self.ignore_single_points:
-            self._add_moveTo()
-
-    def lineTo(self, pt):
-        self._check_contour_is_open()
-        self._add_moveTo()
-        self.pen.lineTo(pt)
-        self.current_pt = pt
-
-    def qCurveTo(self, *points):
-        self._check_contour_is_open()
-        n = len(points)
-        if n == 1:
-            self.lineTo(points[0])
-        elif n > 1:
-            self._add_moveTo()
-            self.pen.qCurveTo(*points)
-            self.current_pt = points[-1]
-        else:
-            raise AssertionError("illegal qcurve segment point count: %d" % n)
 
     def _curve_to_quadratic(self, pt1, pt2, pt3):
         curve = (self.current_pt, pt1, pt2, pt3)
@@ -113,7 +56,6 @@ class Cu2QuPen(AbstractPen):
         self.qCurveTo(*quadratic[1:])
 
     def curveTo(self, *points):
-        self._check_contour_is_open()
         n = len(points)
         if n == 3:
             # this is the most common case, so we special-case it
@@ -121,29 +63,8 @@ class Cu2QuPen(AbstractPen):
         elif n > 3:
             for segment in decomposeSuperBezierSegment(points):
                 self._curve_to_quadratic(*segment)
-        elif n == 2:
-            self.qCurveTo(*points)
-        elif n == 1:
-            self.lineTo(points[0])
         else:
-            raise AssertionError("illegal curve segment point count: %d" % n)
-
-    def closePath(self):
-        self._check_contour_is_open()
-        if self.start_pt is None:
-            # if 'start_pt' is _not_ None, we are ignoring single-point paths
-            self.pen.closePath()
-        self.current_pt = self.start_pt = None
-
-    def endPath(self):
-        self._check_contour_is_open()
-        if self.start_pt is None:
-            self.pen.endPath()
-        self.current_pt = self.start_pt = None
-
-    def addComponent(self, glyphName, transformation):
-        self._check_contour_is_closed()
-        self.pen.addComponent(glyphName, transformation)
+            self.qCurveTo(*points)
 
 
 class Cu2QuPointPen(BasePointToSegmentPen):
@@ -287,6 +208,9 @@ class Cu2QuMultiPen:
     arguments that would normally be passed to a SegmentPen, one item for
     each of the pens in other_pens.
     """
+
+    # TODO Simplify like 3e8ebcdce592fe8a59ca4c3a294cc9724351e1ce
+    # Remove start_pts and _add_moveTO
 
     def __init__(self, other_pens, max_err, reverse_direction=False):
         if reverse_direction:

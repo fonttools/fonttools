@@ -1,6 +1,7 @@
-"""Benchmark the cu2qu algorithm performance."""
+"""Benchmark the qu2cu algorithm performance."""
 
-from .cu2qu import *
+from .qu2cu import *
+from fontTools.cu2qu import curve_to_quadratic
 import random
 import timeit
 
@@ -14,16 +15,13 @@ def generate_curve():
     ]
 
 
-def setup_curve_to_quadratic():
-    return generate_curve(), MAX_ERR
+def setup_quadratic_to_curves():
+    curve = generate_curve()
+    quadratics = curve_to_quadratic(curve, MAX_ERR)
+    return [quadratics], MAX_ERR
 
 
-def setup_curves_to_quadratic():
-    num_curves = 3
-    return ([generate_curve() for curve in range(num_curves)], [MAX_ERR] * num_curves)
-
-
-def run_benchmark(module, function, setup_suffix="", repeat=5, number=1000):
+def run_benchmark(module, function, setup_suffix="", repeat=10, number=20):
     setup_func = "setup_" + function
     if setup_suffix:
         print("%s with %s:" % (function, setup_suffix), end="")
@@ -45,9 +43,8 @@ def run_benchmark(module, function, setup_suffix="", repeat=5, number=1000):
 
 
 def main():
-    """Benchmark the cu2qu algorithm performance."""
-    run_benchmark("cu2qu", "curve_to_quadratic")
-    run_benchmark("cu2qu", "curves_to_quadratic")
+    """Benchmark the qu2cu algorithm performance."""
+    run_benchmark("qu2cu", "quadratic_to_curves")
 
 
 if __name__ == "__main__":
