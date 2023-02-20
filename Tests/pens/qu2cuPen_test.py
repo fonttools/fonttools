@@ -219,6 +219,31 @@ class TestQu2CuPen(unittest.TestCase, _TestPenMixin):
             ],
         )
 
+    def test_all_cubic(self):
+        inPen = RecordingPen()
+        inPen.value = [
+            ("moveTo", ((1204, 347),)),
+            ("qCurveTo", ((1255, 347), (1323, 433), (1323, 467))),
+            ("qCurveTo", ((1323, 478), (1310, 492), (1302, 492))),
+            ("qCurveTo", ((1295, 492), (1289, 484))),
+            ("lineTo", ((1272, 461),)),
+            ("qCurveTo", ((1256, 439), (1221, 416), (1200, 416))),
+            ("qCurveTo", ((1181, 416), (1141, 440), (1141, 462))),
+            ("qCurveTo", ((1141, 484), (1190, 565), (1190, 594))),
+            ("qCurveTo", ((1190, 607), (1181, 634), (1168, 634))),
+            ("qCurveTo", ((1149, 634), (1146, 583), (1081, 496), (1081, 463))),
+            ("qCurveTo", ((1081, 417), (1164, 347), (1204, 347))),
+            ("closePath", ()),
+        ]
+
+        outPen = RecordingPen()
+        q2cPen = Qu2CuPen(outPen, 1.0, all_cubic=True)
+        inPen.replay(q2cPen)
+
+        print(outPen.value)
+
+        assert not any(typ == "qCurveTo" for typ, _ in outPen.value)
+
 
 if __name__ == "__main__":
     unittest.main()

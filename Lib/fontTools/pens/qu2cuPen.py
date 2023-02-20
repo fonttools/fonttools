@@ -49,7 +49,7 @@ class Qu2CuPen(ContourFilterPen):
         self.stats = stats
 
     def _quadratics_to_curve(self, q):
-        curves = quadratic_to_curves(q, self.max_err, self.all_cubic)
+        curves = quadratic_to_curves(q, self.max_err, all_cubic=self.all_cubic)
         if self.stats is not None:
             n = str(len(curves))
             self.stats[n] = self.stats.get(n, 0) + 1
@@ -81,21 +81,24 @@ class Qu2CuPen(ContourFilterPen):
         if quadratics:
             newContour.extend(self._quadratics_to_curve(quadratics))
 
-        # Add back implicit oncurve points
-        contour = newContour
-        newContour = []
-        for op, args in contour:
-            if op == "qCurveTo" and newContour and newContour[-1][0] == "qCurveTo":
-                pt0 = newContour[-1][1][-2]
-                pt1 = newContour[-1][1][-1]
-                pt2 = args[0]
-                if math.isclose(pt2[0] - pt1[0], pt1[0] - pt0[0]) and math.isclose(
-                    pt2[1] - pt1[1], pt1[1] - pt0[1]
-                ):
-                    newArgs = newContour[-1][1][:-1] + args
-                    newContour[-1] = (op, newArgs)
-                    continue
+        if not self.all_cubic:
+            # Add back implicit oncurve points
+            contour = newContour
+            newContour = []
+            for op, args in contour:
+                if op == "qCurveTo" and newContour and newContour[-1][0] == "qCurveTo":
+                    pt0 = newContour[-1][1][-2]
+                    pt1 = newContour[-1][1][-1]
+                    pt2 = args[0]
+                    if (
+                        pt1 is not None
+                        and math.isclose(pt2[0] - pt1[0], pt1[0] - pt0[0])
+                        and math.isclose(pt2[1] - pt1[1], pt1[1] - pt0[1])
+                    ):
+                        newArgs = newContour[-1][1][:-1] + args
+                        newContour[-1] = (op, newArgs)
+                        continue
 
-            newContour.append((op, args))
+                newContour.append((op, args))
 
         return newContour

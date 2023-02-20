@@ -253,7 +253,7 @@ def spline_to_curves(q, costs, tolerance=0.5, all_cubic=False):
     # cubic curves, and within those the one with smallest error.
     sols = [Solution(0, 0, 0, False)]
     for i in range(1, len(elevated_quadratics) + 1):
-        best_sol = Solution(len(q) + 2, 0, 1, False)
+        best_sol = Solution(len(q) + 4, 0, 1, False) # Impossible
         for j in range(0, i):
 
             j_sol_count, j_sol_error = sols[j].num_points, sols[j].error
