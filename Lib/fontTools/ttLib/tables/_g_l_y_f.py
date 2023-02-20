@@ -569,10 +569,10 @@ flagRepeat = 0x08
 flagXsame = 0x10
 flagYsame = 0x20
 flagOverlapSimple = 0x40
-flagReserved = 0x80
+flagCubic = 0x80
 
 # These flags are kept for XML output after decompiling the coordinates
-keepFlags = flagOnCurve + flagOverlapSimple
+keepFlags = flagOnCurve + flagOverlapSimple + flagCubic
 
 _flagSignBytes = {
     0: 2,
@@ -764,6 +764,8 @@ class Glyph(object):
                     if self.flags[j] & flagOverlapSimple:
                         # Apple's rasterizer uses flagOverlapSimple in the first contour/first pt to flag glyphs that contain overlapping contours
                         attrs.append(("overlap", 1))
+                    if self.flags[j] & flagCubic:
+                        attrs.append(("cubic", 1))
                     writer.simpletag("pt", attrs)
                     writer.newline()
                 last = self.endPtsOfContours[i] + 1
@@ -797,6 +799,8 @@ class Glyph(object):
                 flag = bool(safeEval(attrs["on"]))
                 if "overlap" in attrs and bool(safeEval(attrs["overlap"])):
                     flag |= flagOverlapSimple
+                if "cubic" in attrs and bool(safeEval(attrs["cubic"])):
+                    flag |= flagCubic
                 flags.append(flag)
             if not hasattr(self, "coordinates"):
                 self.coordinates = coordinates
@@ -1416,20 +1420,27 @@ class Glyph(object):
             end = end + 1
             contour = coordinates[start:end]
             cFlags = [flagOnCurve & f for f in flags[start:end]]
+            cuFlags = [flagCubic & f for f in flags[start:end]]
             start = end
             if 1 not in cFlags:
                 # There is not a single on-curve point on the curve,
                 # use pen.qCurveTo's special case by specifying None
                 # as the on-curve point.
                 contour.append(None)
-                pen.qCurveTo(*contour)
+                assert all(cuFlags) or not any(cuFlags)
+                cubic = all(cuFlags)
+                if cubic:
+                    pen.curveTo(*contour)
+                else:
+                    pen.qCurveTo(*contour)
             else:
-                # Shuffle the points so that contour the is guaranteed
+                # Shuffle the points so that the contour is guaranteed
                 # to *end* in an on-curve point, which we'll use for
                 # the moveTo.
                 firstOnCurve = cFlags.index(1) + 1
                 contour = contour[firstOnCurve:] + contour[:firstOnCurve]
                 cFlags = cFlags[firstOnCurve:] + cFlags[:firstOnCurve]
+                cuFlags = cuFlags[firstOnCurve:] + cuFlags[:firstOnCurve]
                 pen.moveTo(contour[-1])
                 while contour:
                     nextOnCurve = cFlags.index(1) + 1
@@ -1439,9 +1450,22 @@ class Glyph(object):
                         if len(contour) > 1:
                             pen.lineTo(contour[0])
                     else:
-                        pen.qCurveTo(*contour[:nextOnCurve])
+                        cubicFlags = [f for f in cuFlags[: nextOnCurve - 1]]
+                        assert all(cubicFlags) or not any(cubicFlags)
+                        cubic = any(cubicFlags)
+                        if cubic:
+                            assert all(
+                                cubicFlags
+                            ), "Mixed segments not currently supported"
+                            assert (
+                                len(cubicFlags) == 2
+                            ), "Cubic multi-segments not currently supported"
+                            pen.curveTo(*contour[:nextOnCurve])
+                        else:
+                            pen.qCurveTo(*contour[:nextOnCurve])
                     contour = contour[nextOnCurve:]
                     cFlags = cFlags[nextOnCurve:]
+                    cuFlags = cuFlags[nextOnCurve:]
             pen.closePath()
 
     def drawPoints(self, pen, glyfTable, offset=0):
@@ -1474,7 +1498,7 @@ class Glyph(object):
                     segmentType = "line"
                 else:
                     pen.addPoint(pt)
-                    segmentType = "qcurve"
+                    segmentType = "curve" if cFlags[i] & flagCubic else "qcurve"
             pen.endPath()
 
     def __eq__(self, other):

@@ -332,11 +332,11 @@ class TTGlyphPointPenTest(TTGlyphPenTestBase):
         assert glyph.numberOfContours == 1
         assert glyph.endPtsOfContours == [3]
 
-    def test_addPoint_errorOnCurve(self):
+    def test_addPoint_noErrorOnCurve(self):
         pen = TTGlyphPointPen(None)
         pen.beginPath()
-        with pytest.raises(NotImplementedError):
-            pen.addPoint((0, 0), "curve")
+        pen.addPoint((0, 0), "curve")
+        pen.endPath()
 
     def test_beginPath_beginPathOnOpenPath(self):
         pen = TTGlyphPointPen(None)
