@@ -156,6 +156,14 @@ def merge_curves(curves):
     return curve, ts
 
 
+@cython.locals(
+    count=cython.int,
+    num_offcurves=cython.int,
+    i=cython.int,
+    off1=cython.complex,
+    off2=cython.complex,
+    on=cython.complex,
+)
 def add_implicit_on_curves(p):
     q = list(p)
     count = 0
@@ -172,6 +180,10 @@ def add_implicit_on_curves(p):
 Point = Union[Tuple[float, float], complex]
 
 
+@cython.locals(
+    cost=cython.int,
+    is_complex=cython.int,
+)
 def quadratic_to_curves(
     quads: List[List[Point]],
     max_err: float = 0.5,
@@ -245,6 +257,8 @@ Solution = namedtuple("Solution", ["num_points", "error", "start_index", "is_cub
     i_sol_error=cython.double,
     j_sol_error=cython.double,
     all_cubic=cython.int,
+    is_cubic=cython.int,
+    count=cython.int,
     p0=cython.complex,
     p1=cython.complex,
     p2=cython.complex,
