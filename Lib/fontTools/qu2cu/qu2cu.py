@@ -165,7 +165,7 @@ def add_implicit_on_curves(p):
 
 
 def quadratic_to_curves(pp, tolerance=0.5, all_cubic=False):
-    """Convers a connecting list of quadratic splines to a list of quadratic
+    """Converts a connecting list of quadratic splines to a list of quadratic
     and cubic curves.
 
     A quadratic spline is specified as a list of points, each of which is
