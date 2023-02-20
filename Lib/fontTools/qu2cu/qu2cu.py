@@ -165,6 +165,22 @@ def add_implicit_on_curves(p):
 
 
 def quadratics_to_curves(pp, tolerance=0.5, all_cubic=False):
+    """Convers a connecting list of quadratic splines to a list of quadratic
+    and cubic curves.
+
+    A quadratic spline is specified as a list of points, each of which is
+    a 2-tuple of X,Y coordinates. The first and last points are on-curve points
+    and the rest are off-curve points, with an implied on-curve point in the
+    middle between every two consequtive off-curve points.
+
+    The output is a list of tuples. Each tuple is either of length three, for
+    a quadratic curve, or four, for a cubic curve.  Each curve's last point
+    is the same as the next curve's first point.
+
+    q: quadratic splines
+    tolerance: absolute error tolerance; defaults to 0.5
+    all_cubic: if True, only cubic curves are generated; defaults to False
+    """
     is_complex = type(pp[0][0]) is complex
     if not is_complex:
         pp = [[complex(x, y) for (x, y) in p] for p in pp]
@@ -192,6 +208,21 @@ def quadratics_to_curves(pp, tolerance=0.5, all_cubic=False):
 
 
 def quadratic_to_curves(q, tolerance=0.5, all_cubic=False):
+    """Convers a quadratic spline to a list of quadratic and cubic curves.
+
+    The quadratic spline is specified as a list of points, each of which is
+    a 2-tuple of X,Y coordinates. The first and last points are on-curve points
+    and the rest are off-curve points, with an implied on-curve point in the
+    middle between every two consequtive off-curve points.
+
+    The output is a list of tuples. Each tuple is either of length three, for
+    a quadratic curve, or four, for a cubic curve.  Each curve's last point
+    is the same as the next curve's first point.
+
+    q: quadratic spline
+    tolerance: absolute error tolerance; defaults to 0.5
+    all_cubic: if True, only cubic curves are generated; defaults to False
+    """
     is_complex = type(q[0]) is complex
     if not is_complex:
         q = [complex(x, y) for (x, y) in q]
