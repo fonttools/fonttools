@@ -63,7 +63,11 @@ class Qu2CuPen(ContourFilterPen):
         currentPt = None
         newContour = []
         for op, args in contour:
-            if op == "qCurveTo" and len(args) > 2 and args[-1] is not None:
+            if (
+                op == "qCurveTo"
+                and (self.all_cubic or len(args) > 2)
+                and args[-1] is not None
+            ):
                 quadratics.append((currentPt,) + args)
             else:
                 if quadratics:
