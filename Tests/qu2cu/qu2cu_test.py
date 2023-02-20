@@ -15,7 +15,7 @@
 import unittest
 import pytest
 
-from fontTools.qu2cu import quadratic_to_curves, quadratics_to_curves
+from fontTools.qu2cu import quadratic_to_curves
 from fontTools.qu2cu.qu2cu import main as qu2cu_main
 from fontTools.qu2cu.benchmark import main as benchmark_main
 
@@ -81,11 +81,7 @@ class Qu2CuTest:
             for curve in expected
         ]
 
-        if len(quadratics) == 1:
-            c = quadratic_to_curves(quadratics[0], tolerance, cubic_only)
-            assert c == expected
-
-        c = quadratics_to_curves(quadratics, tolerance, cubic_only)
+        c = quadratic_to_curves(quadratics, tolerance, cubic_only)
         assert c == expected
 
     def test_roundtrip(self):
@@ -97,7 +93,7 @@ class Qu2CuTest:
         tolerance = 1
 
         splines = [curve_to_quadratic(c, tolerance) for c in curves]
-        reconsts = [quadratic_to_curves(spline, tolerance) for spline in splines]
+        reconsts = [quadratic_to_curves([spline], tolerance) for spline in splines]
 
         for curve, reconst in zip(curves, reconsts):
             assert len(reconst) == 1

@@ -18,7 +18,7 @@ def generate_curve():
 def setup_quadratic_to_curves():
     curve = generate_curve()
     quadratics = curve_to_quadratic(curve, MAX_ERR)
-    return quadratics, MAX_ERR
+    return [quadratics], MAX_ERR
 
 
 def run_benchmark(module, function, setup_suffix="", repeat=10, number=20):

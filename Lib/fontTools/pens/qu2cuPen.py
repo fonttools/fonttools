@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from fontTools.qu2cu import quadratics_to_curves
+from fontTools.qu2cu import quadratic_to_curves
 from fontTools.pens.filterPen import ContourFilterPen
 from fontTools.pens.reverseContourPen import ReverseContourPen
 
@@ -48,7 +48,7 @@ class Qu2CuPen(ContourFilterPen):
         self.stats = stats
 
     def _quadratics_to_curve(self, q):
-        curves = quadratics_to_curves(q, self.max_err, self.all_cubic)
+        curves = quadratic_to_curves(q, self.max_err, self.all_cubic)
         if self.stats is not None:
             n = str(len(curves))
             self.stats[n] = self.stats.get(n, 0) + 1
