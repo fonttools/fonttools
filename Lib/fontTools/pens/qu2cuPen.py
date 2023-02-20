@@ -63,11 +63,13 @@ class Qu2CuPen(ContourFilterPen):
         currentPt = None
         newContour = []
         for op, args in contour:
-            if (
-                op == "qCurveTo"
-                and (self.all_cubic or len(args) > 2)
-                and args[-1] is not None
+            if op == "qCurveTo" and (
+                self.all_cubic or (len(args) > 2 and args[-1] is not None)
             ):
+                if args[-1] is None:
+                    raise NotImplementedError(
+                        "oncurve-less contours with all_cubic not implemented"
+                    )
                 quadratics.append((currentPt,) + args)
             else:
                 if quadratics:
