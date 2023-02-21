@@ -544,3 +544,38 @@ class TTGlyphSetTest(object):
         pen = RecordingPointPen()
         glyph.drawPoints(pen)
         assert pen.value
+
+    def test_cubic_glyf(self):
+        font = TTFont(self.getpath("dot-cubic.ttf"))
+        glyphset = font.getGlyphSet()
+
+        expected = [
+            ("moveTo", ((76, 181),)),
+            ("curveTo", ((103, 181), (125, 158), (125, 131))),
+            ("curveTo", ((125, 104), (103, 82), (76, 82))),
+            ("curveTo", ((48, 82), (26, 104), (26, 131))),
+            ("curveTo", ((26, 158), (48, 181), (76, 181))),
+            ("closePath", ()),
+        ]
+
+        pen = RecordingPen()
+        glyphset["glyph00001"].draw(pen)
+        assert pen.value == expected
+
+        pen = RecordingPen()
+        glyphset["glyph00002"].draw(pen)
+        assert pen.value == expected
+
+        pen = RecordingPen()
+        glyphset["glyph00003"].draw(pen)
+        assert pen.value == expected
+
+        pen = RecordingPen()
+        glyphset["glyph00004"].draw(pen)
+        assert pen.value == [
+            ("curveTo", ((103, 181), (125, 158), (125, 131))),
+            ("curveTo", ((125, 104), (103, 82), (75.5, 82))),
+            ("curveTo", ((48, 82), (26, 104), (26, 131))),
+            ("curveTo", ((26, 158), (48, 181), (75.5, 181))),
+            ("closePath", ()),
+        ]
