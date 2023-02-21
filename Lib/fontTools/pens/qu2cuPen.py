@@ -51,8 +51,9 @@ class Qu2CuPen(ContourFilterPen):
     def _quadratics_to_curve(self, q):
         curves = quadratic_to_curves(q, self.max_err, all_cubic=self.all_cubic)
         if self.stats is not None:
-            n = str(len(curves))
-            self.stats[n] = self.stats.get(n, 0) + 1
+            for curve in curves:
+                n = str(len(curve))
+                self.stats[n] = self.stats.get(n, 0) + 1
         for curve in curves:
             if len(curve) == 4:
                 yield ("curveTo", curve[1:])
