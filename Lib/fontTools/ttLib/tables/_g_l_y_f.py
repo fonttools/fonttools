@@ -1427,6 +1427,7 @@ class Glyph(object):
                 cubic = all(cuFlags)
                 if cubic:
                     count = len(contour)
+                    assert count % 2 == 0, "Odd number of cubic off-curves undefined"
                     for i in range(0, count, 2):
                         p1 = contour[i]
                         p2 = contour[i + 1]
@@ -1462,11 +1463,23 @@ class Glyph(object):
                         if cubic:
                             assert all(
                                 cubicFlags
-                            ), "Mixed segments not currently supported"
+                            ), "Mixed cubic and quadratic segment undefined"
+
+                            count = nextOnCurve
                             assert (
-                                len(cubicFlags) == 2
-                            ), "Cubic multi-segments not currently supported"
-                            pen.curveTo(*contour[:nextOnCurve])
+                                count >= 3
+                            ), "At least two cubic off-curve points required"
+                            assert (
+                                count - 1
+                            ) % 2 == 0, "Odd number of cubic off-curves undefined"
+                            for i in range(0, count - 3, 2):
+                                p1 = contour[i]
+                                p2 = contour[i + 1]
+                                p4 = contour[i + 2]
+                                p3 = ((p2[0] + p4[0]) * 0.5, (p2[1] + p4[1]) * 0.5)
+                                lastOnCurve = p3
+                                pen.curveTo(p1, p2, p3)
+                            pen.curveTo(*contour[count - 3 : count])
                         else:
                             pen.qCurveTo(*contour[:nextOnCurve])
                     contour = contour[nextOnCurve:]
