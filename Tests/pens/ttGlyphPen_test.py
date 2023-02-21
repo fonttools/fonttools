@@ -4,6 +4,7 @@ import struct
 
 from fontTools import ttLib
 from fontTools.pens.basePen import PenError
+from fontTools.pens.recordingPen import RecordingPen
 from fontTools.pens.ttGlyphPen import TTGlyphPen, TTGlyphPointPen, MAX_F2DOT14
 
 
@@ -593,6 +594,47 @@ class TTGlyphPointPenTest(TTGlyphPenTestBase):
         # interpret both these paths as equivalent
         assert pen1.points == pen2.points == [(0, 0), (10, 10), (20, 20), (20, 0)]
         assert pen1.types == pen2.types == [1, 1, 0, 1]
+
+    def test_cubic(self):
+        spen = TTGlyphPen(None)
+        spen.moveTo((0, 0))
+        spen.curveTo((0, 1), (1, 1), (1, 0))
+        spen.closePath()
+
+        ppen = TTGlyphPointPen(None)
+        ppen.beginPath()
+        ppen.addPoint((0, 0), "move")
+        ppen.addPoint((0, 1))
+        ppen.addPoint((1, 1))
+        ppen.addPoint((1, 0), "curve")
+        ppen.endPath()
+
+        for pen in (spen, ppen):
+
+            glyph = pen.glyph()
+
+            for i in range(2):
+
+                if i == 1:
+                    glyph.compile(None)
+
+                assert list(glyph.coordinates) == [(0, 0), (0, 1), (1, 1), (1, 0)]
+                assert list(glyph.flags) == [0x01, 0x80, 0x80, 0x01]
+
+                rpen = RecordingPen()
+                glyph.draw(rpen, None)
+                assert rpen.value == [
+                    ("moveTo", ((0, 0),)),
+                    (
+                        "curveTo",
+                        (
+                            (0, 1),
+                            (1, 1),
+                            (1, 0),
+                        ),
+                    ),
+                    ("closePath", ()),
+                ]
 
 
 class _TestGlyph(object):
