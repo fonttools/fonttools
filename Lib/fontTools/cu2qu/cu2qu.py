@@ -364,7 +364,7 @@ def cubic_approx_quadratic(cubic, tolerance, _2_3=2 / 3):
     q2=cython.complex,
     d1=cython.complex,
 )
-def cubic_approx_spline(cubic, n, tolerance, _2_3=2 / 3):
+def cubic_approx_spline(cubic, n, tolerance, all_quadratic, _2_3=2 / 3):
     """Approximate a cubic Bezier curve with a spline of n quadratics.
 
     Args:
@@ -383,6 +383,8 @@ def cubic_approx_spline(cubic, n, tolerance, _2_3=2 / 3):
 
     if n == 1:
         return cubic_approx_quadratic(cubic, tolerance)
+    if n == 2 and all_quadratic == False:
+        return cubic
 
     cubics = split_cubic_into_n_iter(cubic[0], cubic[1], cubic[2], cubic[3], n)
 
@@ -423,24 +425,31 @@ def cubic_approx_spline(cubic, n, tolerance, _2_3=2 / 3):
 
 @cython.locals(max_err=cython.double)
 @cython.locals(n=cython.int)
-def curve_to_quadratic(curve, max_err):
+def curve_to_quadratic(curve, max_err, all_quadratic=True):
     """Approximate a cubic Bezier curve with a spline of n quadratics.
 
     Args:
         cubic (sequence): Four 2D tuples representing control points of
             the cubic Bezier curve.
         max_err (double): Permitted deviation from the original curve.
+        all_quadratic (bool): If True (default) returned value is a
+            quadratic spline. If False, it's either a single quadratic
+            curve or a single cubic curve.
 
     Returns:
-        A list of 2D tuples, representing control points of the quadratic
-        spline if it fits within the given tolerance, or ``None`` if no
-        suitable spline could be calculated.
+        If all_quadratic is True: A list of 2D tuples, representing
+        control points of the quadratic spline if it fits within the
+        given tolerance, or ``None`` if no suitable spline could be
+        calculated.
+
+        If all_quadratic is False: Either a quadratic curve (if length
+        of output is 3), or a cubic curve (if length of output is 4).
     """
 
     curve = [complex(*p) for p in curve]
 
     for n in range(1, MAX_N + 1):
-        spline = cubic_approx_spline(curve, n, max_err)
+        spline = cubic_approx_spline(curve, n, max_err, all_quadratic)
         if spline is not None:
             # done. go home
             return [(s.real, s.imag) for s in spline]
@@ -449,7 +458,7 @@ def curve_to_quadratic(curve, max_err):
 
 
 @cython.locals(l=cython.int, last_i=cython.int, i=cython.int)
-def curves_to_quadratic(curves, max_errors):
+def curves_to_quadratic(curves, max_errors, all_quadratic=True):
     """Return quadratic Bezier splines approximating the input cubic Beziers.
 
     Args:
@@ -457,6 +466,9 @@ def curves_to_quadratic(curves, max_errors):
             2D tuples.
         max_errors: A sequence of *n* floats representing the maximum permissible
             deviation from each of the cubic Bezier curves.
+        all_quadratic (bool): If True (default) returned values are a
+            quadratic spline. If False, they are either a single quadratic
+            curve or a single cubic curve.
 
     Example::
 
@@ -472,7 +484,11 @@ def curves_to_quadratic(curves, max_errors):
     ( (75 + 125)/2 , (120 + 91.666..)/2 ) = (100, 83.333...).
 
     Returns:
-        A list of splines, each spline being a list of 2D tuples.
+        If all_quadratic is True, a list of splines, each spline being a list
+        of 2D tuples.
+
+        If all_quadratic is False, a list of curves, each curve being a quadratic
+        (length 3), or cubic (length 4).
 
     Raises:
         fontTools.cu2qu.Errors.ApproxNotFoundError: if no suitable approximation
@@ -487,7 +503,7 @@ def curves_to_quadratic(curves, max_errors):
     last_i = i = 0
     n = 1
     while True:
-        spline = cubic_approx_spline(curves[i], n, max_errors[i])
+        spline = cubic_approx_spline(curves[i], n, max_errors[i], all_quadratic)
         if spline is None:
             if n == MAX_N:
                 break
