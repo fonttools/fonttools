@@ -287,7 +287,7 @@ def spline_to_curves(q, costs, tolerance=0.5, all_cubic=False):
     ]
 
     # Find sharp corners; they have to be oncurves for sure.
-    forced = {0}
+    forced = set()
     for i in range(1, len(elevated_quadratics)):
         p0 = elevated_quadratics[i - 1][2]
         p1 = elevated_quadratics[i][0]
