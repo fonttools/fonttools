@@ -724,6 +724,27 @@ class GlyphComponentTest:
         assert xml1.getvalue() == xml2.getvalue()
 
 
+class GlyphCubicTest:
+    def test_roundtrip(self):
+        font_path = os.path.join(DATA_DIR, "NotoSans-VF-cubic.subset.ttf")
+        font = TTFont(font_path)
+        tables = [table_tag for table_tag in font.keys() if table_tag not in {"head"}]
+        xml = StringIO()
+        font.saveXML(xml)
+        xml1 = StringIO()
+        font.saveXML(xml1, tables=tables)
+        xml.seek(0)
+        font = TTFont()
+        font.importXML(xml)
+        ttf = BytesIO()
+        font.save(ttf)
+        ttf.seek(0)
+        font = TTFont(ttf)
+        xml2 = StringIO()
+        font.saveXML(xml2, tables=tables)
+        assert xml1.getvalue() == xml2.getvalue()
+
+
 if __name__ == "__main__":
     import sys
 
