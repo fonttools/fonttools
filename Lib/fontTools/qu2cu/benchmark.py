@@ -16,7 +16,7 @@ def generate_curves(n):
     ]
     curves = []
     for i in range(n):
-        curves.append(tuple(points[i * 3: i * 3 + 4]))
+        curves.append(tuple(points[i * 3 : i * 3 + 4]))
     return curves
 
 
