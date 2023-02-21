@@ -1423,15 +1423,21 @@ class Glyph(object):
             cuFlags = [flagCubic & f for f in flags[start:end]]
             start = end
             if 1 not in cFlags:
-                # There is not a single on-curve point on the curve,
-                # use pen.qCurveTo's special case by specifying None
-                # as the on-curve point.
-                contour.append(None)
                 assert all(cuFlags) or not any(cuFlags)
                 cubic = all(cuFlags)
                 if cubic:
-                    pen.curveTo(*contour)
+                    count = len(contour)
+                    for i in range(0, count, 2):
+                        p1 = contour[i]
+                        p2 = contour[i + 1]
+                        p4 = contour[i + 2 if i + 2 < count else 0]
+                        p3 = ((p2[0] + p4[0]) * 0.5, (p2[1] + p4[1]) * 0.5)
+                        pen.curveTo(p1, p2, p3)
                 else:
+                    # There is not a single on-curve point on the curve,
+                    # use pen.qCurveTo's special case by specifying None
+                    # as the on-curve point.
+                    contour.append(None)
                     pen.qCurveTo(*contour)
             else:
                 # Shuffle the points so that the contour is guaranteed

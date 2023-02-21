@@ -8,6 +8,7 @@ from fontTools.ttLib.tables._g_l_y_f import (
     Glyph,
     GlyphCoordinates,
     GlyphComponent,
+    flagCubic,
     ARGS_ARE_XY_VALUES,
     SCALED_COMPONENT_OFFSET,
     UNSCALED_COMPONENT_OFFSET,
@@ -743,6 +744,32 @@ class GlyphCubicTest:
         xml2 = StringIO()
         font.saveXML(xml2, tables=tables)
         assert xml1.getvalue() == xml2.getvalue()
+
+    def test_no_oncurves(self):
+        glyph = Glyph()
+        glyph.numberOfContours = 1
+        glyph.coordinates = GlyphCoordinates(
+            [(0, 0), (1, 0), (1, 0), (1, 1), (1, 1), (0, 1), (0, 1), (0, 0)]
+        )
+        glyph.flags = array.array("B", [flagCubic] * 8)
+        glyph.endPtsOfContours = [7]
+        glyph.program = ttProgram.Program()
+
+        for i in range(2):
+
+            if i == 1:
+                glyph.compile(None)
+
+            pen = RecordingPen()
+            glyph.draw(pen, None)
+
+            assert pen.value == [
+                ("curveTo", ((0, 0), (1, 0), (1, 0))),
+                ("curveTo", ((1, 0), (1, 1), (1, 1))),
+                ("curveTo", ((1, 1), (0, 1), (0, 1))),
+                ("curveTo", ((0, 1), (0, 0), (0, 0))),
+                ("closePath", ()),
+            ]
 
 
 if __name__ == "__main__":
