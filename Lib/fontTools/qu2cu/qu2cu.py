@@ -24,6 +24,7 @@ except ImportError:
 
 from fontTools.misc.bezierTools import splitCubicAtTC
 from collections import namedtuple
+import math
 from typing import (
     List,
     Tuple,
@@ -249,6 +250,7 @@ Solution = namedtuple("Solution", ["num_points", "error", "start_index", "is_cub
     i=cython.int,
     j=cython.int,
     k=cython.int,
+    start=cython.int,
     i_sol_count=cython.int,
     j_sol_count=cython.int,
     this_sol_count=cython.int,
@@ -284,13 +286,23 @@ def spline_to_curves(q, costs, tolerance=0.5, all_cubic=False):
         elevate_quadratic(*q[i : i + 3]) for i in range(0, len(q) - 2, 2)
     ]
 
+    # Find sharp corners; the have to be oncurves for sure.
+    forced = {0}
+    for i in range(1, len(elevated_quadratics)):
+        p0 = elevated_quadratics[i - 1][2]
+        p1 = elevated_quadratics[i][0]
+        p2 = elevated_quadratics[i][1]
+        if abs(p1 - p0) + abs(p2 - p1) > tolerance + abs(p2 - p0):
+            forced.add(i)
+
     # Dynamic-Programming to find the solution with fewest number of
     # cubic curves, and within those the one with smallest error.
     sols = [Solution(0, 0, 0, False)]
     impossible = Solution(len(elevated_quadratics) * 3 + 1, 0, 1, False)
+    start = 0
     for i in range(1, len(elevated_quadratics) + 1):
         best_sol = impossible
-        for j in range(0, i):
+        for j in range(start, i):
 
             j_sol_count, j_sol_error = sols[j].num_points, sols[j].error
 
@@ -354,6 +366,8 @@ def spline_to_curves(q, costs, tolerance=0.5, all_cubic=False):
                 break
 
         sols.append(best_sol)
+        if i in forced:
+            start = i
 
     # Reconstruct solution
     splits = []
