@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import operator
 from fontTools.cu2qu import curve_to_quadratic, curves_to_quadratic
 from fontTools.pens.basePen import decomposeSuperBezierSegment
 from fontTools.pens.filterPen import FilterPen
@@ -95,6 +96,13 @@ class Cu2QuPointPen(BasePointToSegmentPen):
             on which one is more economical.
     """
 
+    __points_required = {
+        "move": (1, operator.eq),
+        "line": (1, operator.eq),
+        "qcurve": (2, operator.ge),
+        "curve": (3, operator.eq),
+    }
+
     def __init__(
         self,
         other_point_pen,
@@ -177,16 +185,13 @@ class Cu2QuPointPen(BasePointToSegmentPen):
         pen = self.pen
         pen.beginPath()
         last_offcurves = []
+        points_required = self.__points_required
         for i, (segment_type, points) in enumerate(segments):
-            if segment_type in ("move", "line"):
-                assert len(points) == 1, "illegal line segment point count: %d" % len(
-                    points
-                )
-                pt, smooth, name, kwargs = points[0]
-                pen.addPoint(pt, segment_type, smooth, name, **kwargs)
-            elif segment_type == "qcurve":
-                assert len(points) >= 2, "illegal qcurve segment point count: %d" % len(
-                    points
+            if segment_type in points_required:
+                n, op = points_required[segment_type]
+                assert op(len(points), n), (
+                    f"illegal {segment_type!r} segment point count: "
+                    f"expected {n}, got {len(points)}"
                 )
                 offcurves = points[:-1]
                 if offcurves:
@@ -199,27 +204,13 @@ class Cu2QuPointPen(BasePointToSegmentPen):
                             pen.addPoint(pt, None, smooth, name, **kwargs)
                 pt, smooth, name, kwargs = points[-1]
                 if pt is None:
+                    assert segment_type == "qcurve"
                     # special quadratic contour with no on-curve points:
                     # we need to skip the "None" point. See also the Pen
                     # protocol's qCurveTo() method and fontTools.pens.basePen
                     pass
                 else:
                     pen.addPoint(pt, segment_type, smooth, name, **kwargs)
-            elif segment_type == "curve":
-                assert len(points) == 3, "illegal curve segment point count: %d" % len(
-                    points
-                )
-                offcurves = points[:-1]
-                if offcurves:
-                    if i == 0:
-                        # any off-curve points preceding the first on-curve
-                        # will be appended at the end of the contour
-                        last_offcurves = offcurves
-                    else:
-                        for (pt, smooth, name, kwargs) in offcurves:
-                            pen.addPoint(pt, None, smooth, name, **kwargs)
-                pt, smooth, name, kwargs = points[-1]
-                pen.addPoint(pt, segment_type, smooth, name, **kwargs)
             else:
                 raise AssertionError("unexpected segment type: %r" % segment_type)
         for (pt, smooth, name, kwargs) in last_offcurves:
