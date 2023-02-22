@@ -595,6 +595,8 @@ class TTGlyphPointPenTest(TTGlyphPenTestBase):
         assert pen1.points == pen2.points == [(0, 0), (10, 10), (20, 20), (20, 0)]
         assert pen1.types == pen2.types == [1, 1, 0, 1]
 
+
+class CubicGlyfTest:
     def test_cubic(self):
         spen = TTGlyphPen(None)
         spen.moveTo((0, 0))
@@ -611,7 +613,7 @@ class TTGlyphPointPenTest(TTGlyphPenTestBase):
 
         for pen in (spen, ppen):
 
-            glyph = pen.glyph()
+            glyph = pen.glyph(preserveTopology=False)
 
             for i in range(2):
 
