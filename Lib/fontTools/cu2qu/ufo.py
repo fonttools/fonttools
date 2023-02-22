@@ -155,10 +155,10 @@ def _segments_to_quadratic(segments, max_err, stats, all_quadratic=True):
     spline_length = str(n - 2)
     stats[spline_length] = stats.get(spline_length, 0) + 1
 
-    if all_quadratic:
+    if all_quadratic or n == 3:
         return [("qcurve", p) for p in new_points]
     else:
-        return [("qcurve" if len(p) == 3 else "curve", p) for p in new_points]
+        return [("curve", p) for p in new_points]
 
 
 def _glyphs_to_quadratic(glyphs, max_err, reverse_direction, stats, all_quadratic=True):
