@@ -31,6 +31,9 @@ def _font_to_cubic(input_path, output_path=None, **kwargs):
         glyph.draw(pen)
         glyf[glyphName] = ttpen.glyph(preserveTopology=False)
 
+    if kwargs["dump_stats"]:
+        logger.info("Stats: %s", qu2cu_kwargs["stats"])
+
     logger.info("Saving %s", output_path)
     font.save(output_path)
 
