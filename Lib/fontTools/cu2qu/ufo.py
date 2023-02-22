@@ -185,8 +185,10 @@ def _glyphs_to_quadratic(glyphs, max_err, reverse_direction, stats, all_quadrati
         if not all(s[0] == tag for s in segments[1:]):
             incompatible[i] = [s[0] for s in segments]
         elif tag == "curve":
-            segments = _segments_to_quadratic(segments, max_err, stats, all_quadratic)
-            glyphs_modified = True
+            new_segments = _segments_to_quadratic(segments, max_err, stats, all_quadratic)
+            if all_quadratic or new_segments != segments:
+                glyphs_modified = True
+            segments = new_segments
         new_segments_by_location.append(segments)
 
     if glyphs_modified:
