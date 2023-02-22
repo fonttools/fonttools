@@ -11,9 +11,54 @@ from fontTools.ttLib.tables._g_l_y_f import flagOnCurve, flagCubic
 from fontTools.ttLib.tables._g_l_y_f import Glyph
 from fontTools.ttLib.tables._g_l_y_f import GlyphComponent
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
+import math
 
 
 __all__ = ["TTGlyphPen", "TTGlyphPointPen"]
+
+
+def drop_implied_oncurves(glyph):
+    drop = set()
+    start = 0
+    flags = glyph.flags
+    coords = glyph.coordinates
+    for last in glyph.endPtsOfContours:
+        for i in range(start, last + 1):
+            if not (flags[i] & flagOnCurve):
+                continue
+            prv = i - 1 if i > start else last
+            nxt = i + 1 if i < last else start
+            if (flags[prv] & flagOnCurve) or flags[prv] != flags[nxt]:
+                continue
+            p0 = coords[prv]
+            p1 = coords[i]
+            p2 = coords[nxt]
+            if not math.isclose(p1[0] - p0[0], p2[0] - p1[0]) or not math.isclose(
+                p1[1] - p0[1], p2[1] - p1[1]
+            ):
+                continue
+
+            drop.add(i)
+    if drop:
+        # Do the actual dropping
+        glyph.coordinates = GlyphCoordinates(
+            coords[i] for i in range(len(coords)) if i not in drop
+        )
+        glyph.flags = array("B", (flags[i] for i in range(len(flags)) if i not in drop))
+
+        endPts = glyph.endPtsOfContours
+        newEndPts = []
+        i = 0
+        delta = 0
+        for d in sorted(drop):
+            while d > endPts[i]:
+                newEndPts.append(endPts[i] - delta)
+                i += 1
+            delta += 1
+        while i < len(endPts):
+            newEndPts.append(endPts[i] - delta)
+            i += 1
+        glyph.endPtsOfContours = newEndPts
 
 
 class _TTGlyphBasePen:
@@ -135,9 +180,13 @@ class _TTGlyphBasePen:
 
         glyph = Glyph()
         glyph.coordinates = GlyphCoordinates(self.points)
-        glyph.coordinates.toInt()
         glyph.endPtsOfContours = self.endPts
         glyph.flags = array("B", self.types)
+
+        glyph.coordinates.toInt()
+        if not preserveTopology:
+            drop_implied_oncurves(glyph)
+
         self.init()
 
         if components:
@@ -149,52 +198,6 @@ class _TTGlyphBasePen:
             glyph.numberOfContours = len(glyph.endPtsOfContours)
             glyph.program = ttProgram.Program()
             glyph.program.fromBytecode(b"")
-
-        if not preserveTopology:
-
-            # Drop implied on-curve points
-
-            drop = set()
-            start = 0
-            flags = glyph.flags
-            coords = glyph.coordinates
-            for last in glyph.endPtsOfContours:
-                for i in range(start, last + 1):
-                    if not (flags[i] & flagOnCurve):
-                        continue
-                    prv = i - 1 if i > start else last
-                    nxt = i + 1 if i < last else start
-                    if (flags[prv] & flagOnCurve) or flags[prv] != flags[nxt]:
-                        continue
-                    p0 = coords[prv]
-                    p1 = coords[i]
-                    p2 = coords[nxt]
-                    if p1[0] - p0[0] != p2[0] - p1[0] or p1[1] - p0[1] != p2[1] - p1[1]:
-                        continue
-
-                    drop.add(i)
-            if drop:
-                # Do the actual dropping
-                glyph.coordinates = GlyphCoordinates(
-                    coords[i] for i in range(len(coords)) if i not in drop
-                )
-                glyph.flags = array(
-                    "B", (flags[i] for i in range(len(flags)) if i not in drop)
-                )
-
-                endPts = glyph.endPtsOfContours
-                newEndPts = []
-                i = 0
-                delta = 0
-                for d in sorted(drop):
-                    while d > endPts[i]:
-                        newEndPts.append(endPts[i] - delta)
-                        i += 1
-                    delta += 1
-                while i < len(endPts):
-                    newEndPts.append(endPts[i] - delta)
-                    i += 1
-                glyph.endPtsOfContours = newEndPts
 
         return glyph
 
