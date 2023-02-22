@@ -639,10 +639,10 @@ class CubicGlyfTest:
                 ]
 
     @pytest.mark.parametrize(
-        "preserveTopology, segment_pen_commands, point_pen_commands, expected_coordinates, expected_flags, expected_endPts",
+        "dropImpliedOnCurves, segment_pen_commands, point_pen_commands, expected_coordinates, expected_flags, expected_endPts",
         [
             (  # Two curves that do NOT merge; request merging
-                False,
+                True,
                 [
                     ("moveTo", ((0, 0),)),
                     ("curveTo", ((0, 1), (1, 2), (2, 2))),
@@ -665,7 +665,7 @@ class CubicGlyfTest:
                 [6],
             ),
             (  # Two curves that merge; request merging
-                False,
+                True,
                 [
                     ("moveTo", ((0, 0),)),
                     ("curveTo", ((0, 1), (1, 2), (2, 2))),
@@ -688,7 +688,7 @@ class CubicGlyfTest:
                 [5],
             ),
             (  # Two curves that merge; request NOT merging
-                True,
+                False,
                 [
                     ("moveTo", ((0, 0),)),
                     ("curveTo", ((0, 1), (1, 2), (2, 2))),
@@ -711,7 +711,7 @@ class CubicGlyfTest:
                 [6],
             ),
             (  # Two (duplicate) contours
-                False,
+                True,
                 [
                     ("moveTo", ((0, 0),)),
                     ("curveTo", ((0, 1), (1, 2), (2, 2))),
@@ -776,7 +776,7 @@ class CubicGlyfTest:
     )
     def test_cubic_topology(
         self,
-        preserveTopology,
+        dropImpliedOnCurves,
         segment_pen_commands,
         point_pen_commands,
         expected_coordinates,
@@ -795,7 +795,7 @@ class CubicGlyfTest:
 
         for pen in (spen, ppen):
 
-            glyph = pen.glyph(preserveTopology=preserveTopology)
+            glyph = pen.glyph(dropImpliedOnCurves=dropImpliedOnCurves)
 
             assert list(glyph.coordinates) == expected_coordinates
             assert list(glyph.flags) == expected_flags

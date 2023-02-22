@@ -170,9 +170,14 @@ class _TTGlyphBasePen:
             components.append(component)
         return components
 
-    def glyph(self, componentFlags: int = 0x4, preserveTopology=True) -> Glyph:
+    def glyph(self, componentFlags: int = 0x04, dropImpliedOnCurves=False) -> Glyph:
         """
         Returns a :py:class:`~._g_l_y_f.Glyph` object representing the glyph.
+
+        Args:
+            componentFlags: Flags to use for component glyphs. (default: 0x04)
+
+            dropImpliedOnCurves: Whether to remove implied-oncurve points. (default: False)
         """
         if not self._isClosed():
             raise PenError("Didn't close last contour.")
@@ -184,7 +189,7 @@ class _TTGlyphBasePen:
         glyph.flags = array("B", self.types)
 
         glyph.coordinates.toInt()
-        if not preserveTopology:
+        if dropImpliedOnCurves:
             drop_implied_oncurves(glyph)
 
         self.init()
