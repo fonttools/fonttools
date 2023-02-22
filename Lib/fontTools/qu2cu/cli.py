@@ -15,7 +15,7 @@ def _font_to_cubic(input_path, output_path=None, **kwargs):
     font = TTFont(input_path)
     logger.info("Converting curves for %s", input_path)
 
-    stats = {}
+    stats = {} if kwargs["dump_stats"] else None
     qu2cu_kwargs = {
         "stats": stats,
         "max_err": kwargs["max_err_em"] * font["head"].unitsPerEm,
@@ -32,8 +32,7 @@ def _font_to_cubic(input_path, output_path=None, **kwargs):
         glyph.draw(pen)
         glyf[glyphName] = ttpen.glyph(dropImpliedOnCurves=True)
 
-    if stats["2"]:  # 2 means a cubic segment
-        font["head"].glyphDataFormat = 1
+    font["head"].glyphDataFormat = 1
 
     if kwargs["dump_stats"]:
         logger.info("Stats: %s", stats)
