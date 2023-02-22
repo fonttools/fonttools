@@ -639,7 +639,7 @@ class CubicGlyfTest:
                 ]
 
     @pytest.mark.parametrize(
-        "preserveTopology, segment_pen_commands, point_pen_commands, expected_coordinates, expected_flags",
+        "preserveTopology, segment_pen_commands, point_pen_commands, expected_coordinates, expected_flags, expected_endPts",
         [
             (
                 False,
@@ -662,6 +662,7 @@ class CubicGlyfTest:
                 ],
                 [(0, 0), (0, 1), (1, 2), (3, 2), (4, 1), (4, 0)],
                 [0x01, 0x80, 0x80, 0x80, 0x80, 0x01],
+                [5],
             ),
             (
                 True,
@@ -684,6 +685,69 @@ class CubicGlyfTest:
                 ],
                 [(0, 0), (0, 1), (1, 2), (2, 2), (3, 2), (4, 1), (4, 0)],
                 [0x01, 0x80, 0x80, 0x01, 0x80, 0x80, 0x01],
+                [6],
+            ),
+            (  # Two (duplicate) contours
+                False,
+                [
+                    ("moveTo", ((0, 0),)),
+                    ("curveTo", ((0, 1), (1, 2), (2, 2))),
+                    ("curveTo", ((3, 2), (4, 1), (4, 0))),
+                    ("closePath", ()),
+                    ("moveTo", ((0, 0),)),
+                    ("curveTo", ((0, 1), (1, 2), (2, 2))),
+                    ("curveTo", ((3, 2), (4, 1), (4, 0))),
+                    ("closePath", ()),
+                ],
+                [
+                    ("beginPath", (), {}),
+                    ("addPoint", ((0, 0), "line", None, None), {}),
+                    ("addPoint", ((0, 1), None, None, None), {}),
+                    ("addPoint", ((1, 2), None, None, None), {}),
+                    ("addPoint", ((2, 2), "curve", None, None), {}),
+                    ("addPoint", ((3, 2), None, None, None), {}),
+                    ("addPoint", ((4, 1), None, None, None), {}),
+                    ("addPoint", ((4, 0), "curve", None, None), {}),
+                    ("endPath", (), {}),
+                    ("beginPath", (), {}),
+                    ("addPoint", ((0, 0), "line", None, None), {}),
+                    ("addPoint", ((0, 1), None, None, None), {}),
+                    ("addPoint", ((1, 2), None, None, None), {}),
+                    ("addPoint", ((2, 2), "curve", None, None), {}),
+                    ("addPoint", ((3, 2), None, None, None), {}),
+                    ("addPoint", ((4, 1), None, None, None), {}),
+                    ("addPoint", ((4, 0), "curve", None, None), {}),
+                    ("endPath", (), {}),
+                ],
+                [
+                    (0, 0),
+                    (0, 1),
+                    (1, 2),
+                    (3, 2),
+                    (4, 1),
+                    (4, 0),
+                    (0, 0),
+                    (0, 1),
+                    (1, 2),
+                    (3, 2),
+                    (4, 1),
+                    (4, 0),
+                ],
+                [
+                    0x01,
+                    0x80,
+                    0x80,
+                    0x80,
+                    0x80,
+                    0x01,
+                    0x01,
+                    0x80,
+                    0x80,
+                    0x80,
+                    0x80,
+                    0x01,
+                ],
+                [5, 11],
             ),
         ],
     )
@@ -694,6 +758,7 @@ class CubicGlyfTest:
         point_pen_commands,
         expected_coordinates,
         expected_flags,
+        expected_endPts,
     ):
         spen = TTGlyphPen(None)
         rpen = RecordingPen()
@@ -705,13 +770,13 @@ class CubicGlyfTest:
         rpen.value = point_pen_commands
         rpen.replay(ppen)
 
-
         for pen in (spen, ppen):
 
             glyph = pen.glyph(preserveTopology=preserveTopology)
 
             assert list(glyph.coordinates) == expected_coordinates
             assert list(glyph.flags) == expected_flags
+            assert list(glyph.endPtsOfContours) == expected_endPts
 
             rpen = RecordingPen()
             glyph.draw(rpen, None)
