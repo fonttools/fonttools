@@ -4,7 +4,7 @@ import struct
 
 from fontTools import ttLib
 from fontTools.pens.basePen import PenError
-from fontTools.pens.recordingPen import RecordingPen
+from fontTools.pens.recordingPen import RecordingPen, RecordingPointPen
 from fontTools.pens.ttGlyphPen import TTGlyphPen, TTGlyphPointPen, MAX_F2DOT14
 
 
@@ -638,95 +638,84 @@ class CubicGlyfTest:
                     ("closePath", ()),
                 ]
 
-    def test_cubic_topology(self):
-        for preserveTopology in (False, True):
-            spen = TTGlyphPen(None)
-            spen.moveTo((0, 0))
-            spen.curveTo((0, 1), (1, 2), (2, 2))
-            spen.curveTo((3, 2), (4, 1), (4, 0))
-            spen.closePath()
-
-            ppen = TTGlyphPointPen(None)
-            ppen.beginPath()
-            ppen.addPoint((0, 0), "line")
-            ppen.addPoint((0, 1))
-            ppen.addPoint((1, 2))
-            ppen.addPoint((2, 2), "curve")
-            ppen.addPoint((3, 2))
-            ppen.addPoint((4, 1))
-            ppen.addPoint((4, 0), "curve")
-            ppen.endPath()
-
-            expected_coordinates = (
+    @pytest.mark.parametrize(
+        "preserveTopology, segment_pen_commands, point_pen_commands, expected_coordinates, expected_flags",
+        [
+            (
+                False,
                 [
-                    (0, 0),
-                    (0, 1),
-                    (1, 2),
-                    (2, 2),
-                    (3, 2),
-                    (4, 1),
-                    (4, 0),
-                ]
-                if preserveTopology
-                else [
-                    (0, 0),
-                    (0, 1),
-                    (1, 2),
-                    (3, 2),
-                    (4, 1),
-                    (4, 0),
-                ]
-            )
-            expected_flags = (
-                [
-                    0x01,
-                    0x80,
-                    0x80,
-                    0x01,
-                    0x80,
-                    0x80,
-                    0x01,
-                ]
-                if preserveTopology
-                else [
-                    0x01,
-                    0x80,
-                    0x80,
-                    0x80,
-                    0x80,
-                    0x01,
-                ]
-            )
-
-            for pen in (spen, ppen):
-
-                glyph = pen.glyph(preserveTopology=preserveTopology)
-
-                assert list(glyph.coordinates) == expected_coordinates
-                assert list(glyph.flags) == expected_flags
-
-                rpen = RecordingPen()
-                glyph.draw(rpen, None)
-                assert rpen.value == [
                     ("moveTo", ((0, 0),)),
-                    (
-                        "curveTo",
-                        (
-                            (0, 1),
-                            (1, 2),
-                            (2, 2),
-                        ),
-                    ),
-                    (
-                        "curveTo",
-                        (
-                            (3, 2),
-                            (4, 1),
-                            (4, 0),
-                        ),
-                    ),
+                    ("curveTo", ((0, 1), (1, 2), (2, 2))),
+                    ("curveTo", ((3, 2), (4, 1), (4, 0))),
                     ("closePath", ()),
-                ]
+                ],
+                [
+                    ("beginPath", (), {}),
+                    ("addPoint", ((0, 0), "line", None, None), {}),
+                    ("addPoint", ((0, 1), None, None, None), {}),
+                    ("addPoint", ((1, 2), None, None, None), {}),
+                    ("addPoint", ((2, 2), "curve", None, None), {}),
+                    ("addPoint", ((3, 2), None, None, None), {}),
+                    ("addPoint", ((4, 1), None, None, None), {}),
+                    ("addPoint", ((4, 0), "curve", None, None), {}),
+                    ("endPath", (), {}),
+                ],
+                [(0, 0), (0, 1), (1, 2), (3, 2), (4, 1), (4, 0)],
+                [0x01, 0x80, 0x80, 0x80, 0x80, 0x01],
+            ),
+            (
+                True,
+                [
+                    ("moveTo", ((0, 0),)),
+                    ("curveTo", ((0, 1), (1, 2), (2, 2))),
+                    ("curveTo", ((3, 2), (4, 1), (4, 0))),
+                    ("closePath", ()),
+                ],
+                [
+                    ("beginPath", (), {}),
+                    ("addPoint", ((0, 0), "line", None, None), {}),
+                    ("addPoint", ((0, 1), None, None, None), {}),
+                    ("addPoint", ((1, 2), None, None, None), {}),
+                    ("addPoint", ((2, 2), "curve", None, None), {}),
+                    ("addPoint", ((3, 2), None, None, None), {}),
+                    ("addPoint", ((4, 1), None, None, None), {}),
+                    ("addPoint", ((4, 0), "curve", None, None), {}),
+                    ("endPath", (), {}),
+                ],
+                [(0, 0), (0, 1), (1, 2), (2, 2), (3, 2), (4, 1), (4, 0)],
+                [0x01, 0x80, 0x80, 0x01, 0x80, 0x80, 0x01],
+            ),
+        ],
+    )
+    def test_cubic_topology(
+        self,
+        preserveTopology,
+        segment_pen_commands,
+        point_pen_commands,
+        expected_coordinates,
+        expected_flags,
+    ):
+        spen = TTGlyphPen(None)
+        rpen = RecordingPen()
+        rpen.value = segment_pen_commands
+        rpen.replay(spen)
+
+        ppen = TTGlyphPointPen(None)
+        rpen = RecordingPointPen()
+        rpen.value = point_pen_commands
+        rpen.replay(ppen)
+
+
+        for pen in (spen, ppen):
+
+            glyph = pen.glyph(preserveTopology=preserveTopology)
+
+            assert list(glyph.coordinates) == expected_coordinates
+            assert list(glyph.flags) == expected_flags
+
+            rpen = RecordingPen()
+            glyph.draw(rpen, None)
+            assert rpen.value == segment_pen_commands
 
 
 class _TestGlyph(object):
