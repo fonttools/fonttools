@@ -30,9 +30,9 @@ def _font_to_cubic(input_path, output_path=None, **kwargs):
         ttpen = TTGlyphPen(glyphSet)
         pen = Qu2CuPen(ttpen, **qu2cu_kwargs)
         glyph.draw(pen)
-        glyf[glyphName] = ttpen.glyph(preserveTopology=False)
+        glyf[glyphName] = ttpen.glyph(dropImpliedOnCurves=True)
 
-    if stats["4"]:  # 4 means a cubic segment
+    if stats["2"]:  # 2 means a cubic segment
         font["head"].glyphDataFormat = 1
 
     if kwargs["dump_stats"]:
