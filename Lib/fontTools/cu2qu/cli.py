@@ -84,6 +84,13 @@ def main(args=None):
         help="maxiumum approximation error measured in EM (default: 0.001)",
     )
     parser.add_argument(
+        "-m",
+        "--mixed",
+        default=False,
+        action="store_true",
+        help="whether to used mixed quadratic and cubic curves",
+    )
+    parser.add_argument(
         "--keep-direction",
         dest="reverse_direction",
         action="store_false",
@@ -162,6 +169,7 @@ def main(args=None):
         dump_stats=options.verbose > 0,
         max_err_em=options.conversion_error,
         reverse_direction=options.reverse_direction,
+        all_quadratic=False if options.mixed else True,
     )
 
     if options.interpolatable:

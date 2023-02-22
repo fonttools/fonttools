@@ -86,8 +86,8 @@ class _TestPenMixin(object):
             self.convert_glyph(source, stats=stats)
 
         self.assertTrue(stats)
-        self.assertTrue("4" in stats)
-        self.assertEqual(type(stats["4"]), int)
+        self.assertTrue("2" in stats)
+        self.assertEqual(type(stats["2"]), int)
 
     def test_addComponent(self):
         pen = self.Pen()

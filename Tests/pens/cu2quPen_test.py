@@ -16,7 +16,7 @@ import sys
 import unittest
 
 from fontTools.pens.cu2quPen import Cu2QuPen, Cu2QuPointPen, Cu2QuMultiPen
-from fontTools.pens.recordingPen import RecordingPen
+from fontTools.pens.recordingPen import RecordingPen, RecordingPointPen
 from . import CUBIC_GLYPHS, QUAD_GLYPHS
 from .utils import DummyGlyph, DummyPointGlyph
 from .utils import DummyPen, DummyPointPen
@@ -350,6 +350,75 @@ class TestCu2QuMultiPen(unittest.TestCase):
         for op0, op1 in zip(pens[0].value, pens[1].value):
             assert op0[0] == op0[0]
             assert op0[0] != "curveTo"
+
+
+class TestAllQuadraticFalse(unittest.TestCase):
+    def test_segment_pen_cubic(self):
+        rpen = RecordingPen()
+        pen = Cu2QuPen(rpen, 0.1, all_quadratic=False)
+
+        pen.moveTo((0, 0))
+        pen.curveTo((0, 1), (2, 1), (2, 0))
+        pen.closePath()
+
+        assert rpen.value == [
+            ("moveTo", ((0, 0),)),
+            ("curveTo", ((0, 1), (2, 1), (2, 0))),
+            ("closePath", ()),
+        ]
+
+    def test_segment_pen_quadratic(self):
+        rpen = RecordingPen()
+        pen = Cu2QuPen(rpen, 0.1, all_quadratic=False)
+
+        pen.moveTo((0, 0))
+        pen.curveTo((2, 2), (4, 2), (6, 0))
+        pen.closePath()
+
+        assert rpen.value == [
+            ("moveTo", ((0, 0),)),
+            ("qCurveTo", ((3, 3), (6, 0))),
+            ("closePath", ()),
+        ]
+
+    def test_point_pen_cubic(self):
+        rpen = RecordingPointPen()
+        pen = Cu2QuPointPen(rpen, 0.1, all_quadratic=False)
+
+        pen.beginPath()
+        pen.addPoint((0, 0), "move")
+        pen.addPoint((0, 1))
+        pen.addPoint((2, 1))
+        pen.addPoint((2, 0), "curve")
+        pen.endPath()
+
+        assert rpen.value == [
+            ("beginPath", (), {}),
+            ("addPoint", ((0, 0), "move", False, None), {}),
+            ("addPoint", ((0, 1), None, False, None), {}),
+            ("addPoint", ((2, 1), None, False, None), {}),
+            ("addPoint", ((2, 0), "curve", False, None), {}),
+            ("endPath", (), {}),
+        ]
+
+    def test_point_pen_quadratic(self):
+        rpen = RecordingPointPen()
+        pen = Cu2QuPointPen(rpen, 0.1, all_quadratic=False)
+
+        pen.beginPath()
+        pen.addPoint((0, 0), "move")
+        pen.addPoint((2, 2))
+        pen.addPoint((4, 2))
+        pen.addPoint((6, 0), "curve")
+        pen.endPath()
+
+        assert rpen.value == [
+            ("beginPath", (), {}),
+            ("addPoint", ((0, 0), "move", False, None), {}),
+            ("addPoint", ((3, 3), None, False, None), {}),
+            ("addPoint", ((6, 0), "qcurve", False, None), {}),
+            ("endPath", (), {}),
+        ]
 
 
 if __name__ == "__main__":

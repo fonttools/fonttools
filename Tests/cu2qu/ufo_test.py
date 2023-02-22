@@ -48,9 +48,16 @@ class FontsToQuadraticTest(object):
             fonts_to_quadratic(fonts, dump_stats=True)
         assert captor.assertRegex("New spline lengths:")
 
-    def test_remember_curve_type(self, fonts):
+    def test_remember_curve_type_quadratic(self, fonts):
         fonts_to_quadratic(fonts, remember_curve_type=True)
         assert fonts[0].lib[CURVE_TYPE_LIB_KEY] == "quadratic"
+        with CapturingLogHandler(logger, "INFO") as captor:
+            fonts_to_quadratic(fonts, remember_curve_type=True)
+        assert captor.assertRegex("already converted")
+
+    def test_remember_curve_type_mixed(self, fonts):
+        fonts_to_quadratic(fonts, remember_curve_type=True, all_quadratic=False)
+        assert fonts[0].lib[CURVE_TYPE_LIB_KEY] == "mixed"
         with CapturingLogHandler(logger, "INFO") as captor:
             fonts_to_quadratic(fonts, remember_curve_type=True)
         assert captor.assertRegex("already converted")
@@ -92,6 +99,9 @@ class FontsToQuadraticTest(object):
 
     def test_single_font(self, fonts):
         assert font_to_quadratic(fonts[0], max_err_em=0.002, reverse_direction=True)
+        assert font_to_quadratic(
+            fonts[1], max_err_em=0.002, reverse_direction=True, all_quadratic=False
+        )
 
 
 class GlyphsToQuadraticTest(object):

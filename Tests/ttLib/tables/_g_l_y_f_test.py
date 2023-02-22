@@ -8,6 +8,8 @@ from fontTools.ttLib.tables._g_l_y_f import (
     Glyph,
     GlyphCoordinates,
     GlyphComponent,
+    flagOnCurve,
+    flagCubic,
     ARGS_ARE_XY_VALUES,
     SCALED_COMPONENT_OFFSET,
     UNSCALED_COMPONENT_OFFSET,
@@ -722,6 +724,79 @@ class GlyphComponentTest:
         xml2 = StringIO()
         font.saveXML(xml2, tables=tables)
         assert xml1.getvalue() == xml2.getvalue()
+
+
+class GlyphCubicTest:
+    def test_roundtrip(self):
+        font_path = os.path.join(DATA_DIR, "NotoSans-VF-cubic.subset.ttf")
+        font = TTFont(font_path)
+        tables = [table_tag for table_tag in font.keys() if table_tag not in {"head"}]
+        xml = StringIO()
+        font.saveXML(xml)
+        xml1 = StringIO()
+        font.saveXML(xml1, tables=tables)
+        xml.seek(0)
+        font = TTFont()
+        font.importXML(xml)
+        ttf = BytesIO()
+        font.save(ttf)
+        ttf.seek(0)
+        font = TTFont(ttf)
+        xml2 = StringIO()
+        font.saveXML(xml2, tables=tables)
+        assert xml1.getvalue() == xml2.getvalue()
+
+    def test_no_oncurves(self):
+        glyph = Glyph()
+        glyph.numberOfContours = 1
+        glyph.coordinates = GlyphCoordinates(
+            [(0, 0), (1, 0), (1, 0), (1, 1), (1, 1), (0, 1), (0, 1), (0, 0)]
+        )
+        glyph.flags = array.array("B", [flagCubic] * 8)
+        glyph.endPtsOfContours = [7]
+        glyph.program = ttProgram.Program()
+
+        for i in range(2):
+
+            if i == 1:
+                glyph.compile(None)
+
+            pen = RecordingPen()
+            glyph.draw(pen, None)
+
+            assert pen.value == [
+                ("curveTo", ((0, 0), (1, 0), (1, 0))),
+                ("curveTo", ((1, 0), (1, 1), (1, 1))),
+                ("curveTo", ((1, 1), (0, 1), (0, 1))),
+                ("curveTo", ((0, 1), (0, 0), (0, 0))),
+                ("closePath", ()),
+            ]
+
+    def test_spline(self):
+        glyph = Glyph()
+        glyph.numberOfContours = 1
+        glyph.coordinates = GlyphCoordinates(
+            [(0, 0), (1, 0), (1, 0), (1, 1), (1, 1), (0, 1), (0, 1)]
+        )
+        glyph.flags = array.array("B", [flagOnCurve] + [flagCubic] * 6)
+        glyph.endPtsOfContours = [6]
+        glyph.program = ttProgram.Program()
+
+        for i in range(2):
+
+            if i == 1:
+                glyph.compile(None)
+
+            pen = RecordingPen()
+            glyph.draw(pen, None)
+
+            assert pen.value == [
+                ("moveTo", ((0, 0),)),
+                ("curveTo", ((1, 0), (1, 0), (1.0, 0.5))),
+                ("curveTo", ((1, 1), (1, 1), (0.5, 1.0))),
+                ("curveTo", ((0, 1), (0, 1), (0, 0))),
+                ("closePath", ()),
+            ]
 
 
 if __name__ == "__main__":

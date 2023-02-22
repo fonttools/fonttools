@@ -52,7 +52,7 @@ class Qu2CuPen(ContourFilterPen):
         curves = quadratic_to_curves(q, self.max_err, all_cubic=self.all_cubic)
         if self.stats is not None:
             for curve in curves:
-                n = str(len(curve))
+                n = str(len(curve) - 2)
                 self.stats[n] = self.stats.get(n, 0) + 1
         for curve in curves:
             if len(curve) == 4:

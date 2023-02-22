@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import operator
 from fontTools.cu2qu import curve_to_quadratic, curves_to_quadratic
 from fontTools.pens.basePen import decomposeSuperBezierSegment
 from fontTools.pens.filterPen import FilterPen
@@ -32,6 +33,9 @@ class Cu2QuPen(FilterPen):
             value equal, or close to UPEM / 1000.
         reverse_direction: flip the contours' direction but keep starting point.
         stats: a dictionary counting the point numbers of quadratic segments.
+        all_quadratic: if True (default), only quadratic b-splines are generated.
+            if False, quadratic curves or cubic curves are generated depending
+            on which one is more economical.
     """
 
     def __init__(
@@ -40,36 +44,45 @@ class Cu2QuPen(FilterPen):
         max_err,
         reverse_direction=False,
         stats=None,
+        all_quadratic=True,
     ):
         if reverse_direction:
             other_pen = ReverseContourPen(other_pen)
         super().__init__(other_pen)
         self.max_err = max_err
         self.stats = stats
+        self.all_quadratic = all_quadratic
 
-    def _curve_to_quadratic(self, pt1, pt2, pt3):
+    def _convert_curve(self, pt1, pt2, pt3):
         curve = (self.current_pt, pt1, pt2, pt3)
-        quadratic = curve_to_quadratic(curve, self.max_err)
+        result = curve_to_quadratic(curve, self.max_err, self.all_quadratic)
         if self.stats is not None:
-            n = str(len(quadratic) - 2)
+            n = str(len(result) - 2)
             self.stats[n] = self.stats.get(n, 0) + 1
-        self.qCurveTo(*quadratic[1:])
+        if self.all_quadratic:
+            self.qCurveTo(*result[1:])
+        else:
+            if len(result) == 3:
+                self.qCurveTo(*result[1:])
+            else:
+                assert len(result) == 4
+                super().curveTo(*result[1:])
 
     def curveTo(self, *points):
         n = len(points)
         if n == 3:
             # this is the most common case, so we special-case it
-            self._curve_to_quadratic(*points)
+            self._convert_curve(*points)
         elif n > 3:
             for segment in decomposeSuperBezierSegment(points):
-                self._curve_to_quadratic(*segment)
+                self._convert_curve(*segment)
         else:
             self.qCurveTo(*points)
 
 
 class Cu2QuPointPen(BasePointToSegmentPen):
     """A filter pen to convert cubic bezier curves to quadratic b-splines
-    using the RoboFab PointPen protocol.
+    using the FontTools PointPen protocol.
 
     Args:
         other_point_pen: another PointPen used to draw the transformed outline.
@@ -78,9 +91,26 @@ class Cu2QuPointPen(BasePointToSegmentPen):
             value equal, or close to UPEM / 1000.
         reverse_direction: reverse the winding direction of all contours.
         stats: a dictionary counting the point numbers of quadratic segments.
+        all_quadratic: if True (default), only quadratic b-splines are generated.
+            if False, quadratic curves or cubic curves are generated depending
+            on which one is more economical.
     """
 
-    def __init__(self, other_point_pen, max_err, reverse_direction=False, stats=None):
+    __points_required = {
+        "move": (1, operator.eq),
+        "line": (1, operator.eq),
+        "qcurve": (2, operator.ge),
+        "curve": (3, operator.eq),
+    }
+
+    def __init__(
+        self,
+        other_point_pen,
+        max_err,
+        reverse_direction=False,
+        stats=None,
+        all_quadratic=True,
+    ):
         BasePointToSegmentPen.__init__(self)
         if reverse_direction:
             self.pen = ReverseContourPointPen(other_point_pen)
@@ -88,6 +118,7 @@ class Cu2QuPointPen(BasePointToSegmentPen):
             self.pen = other_point_pen
         self.max_err = max_err
         self.stats = stats
+        self.all_quadratic = all_quadratic
 
     def _flushContour(self, segments):
         assert len(segments) >= 1
@@ -101,13 +132,16 @@ class Cu2QuPointPen(BasePointToSegmentPen):
                     on_curve, smooth, name, kwargs = sub_points[-1]
                     bcp1, bcp2 = sub_points[0][0], sub_points[1][0]
                     cubic = [prev_on_curve, bcp1, bcp2, on_curve]
-                    quad = curve_to_quadratic(cubic, self.max_err)
+                    quad = curve_to_quadratic(cubic, self.max_err, self.all_quadratic)
                     if self.stats is not None:
                         n = str(len(quad) - 2)
                         self.stats[n] = self.stats.get(n, 0) + 1
                     new_points = [(pt, False, None, {}) for pt in quad[1:-1]]
                     new_points.append((on_curve, smooth, name, kwargs))
-                    new_segments.append(["qcurve", new_points])
+                    if self.all_quadratic or len(new_points) == 2:
+                        new_segments.append(["qcurve", new_points])
+                    else:
+                        new_segments.append(["curve", new_points])
                     prev_on_curve = sub_points[-1][0]
             else:
                 new_segments.append([segment_type, points])
@@ -151,28 +185,25 @@ class Cu2QuPointPen(BasePointToSegmentPen):
         pen = self.pen
         pen.beginPath()
         last_offcurves = []
+        points_required = self.__points_required
         for i, (segment_type, points) in enumerate(segments):
-            if segment_type in ("move", "line"):
-                assert len(points) == 1, "illegal line segment point count: %d" % len(
-                    points
-                )
-                pt, smooth, name, kwargs = points[0]
-                pen.addPoint(pt, segment_type, smooth, name, **kwargs)
-            elif segment_type == "qcurve":
-                assert len(points) >= 2, "illegal qcurve segment point count: %d" % len(
-                    points
+            if segment_type in points_required:
+                n, op = points_required[segment_type]
+                assert op(len(points), n), (
+                    f"illegal {segment_type!r} segment point count: "
+                    f"expected {n}, got {len(points)}"
                 )
                 offcurves = points[:-1]
-                if offcurves:
-                    if i == 0:
-                        # any off-curve points preceding the first on-curve
-                        # will be appended at the end of the contour
-                        last_offcurves = offcurves
-                    else:
-                        for (pt, smooth, name, kwargs) in offcurves:
-                            pen.addPoint(pt, None, smooth, name, **kwargs)
+                if i == 0:
+                    # any off-curve points preceding the first on-curve
+                    # will be appended at the end of the contour
+                    last_offcurves = offcurves
+                else:
+                    for (pt, smooth, name, kwargs) in offcurves:
+                        pen.addPoint(pt, None, smooth, name, **kwargs)
                 pt, smooth, name, kwargs = points[-1]
                 if pt is None:
+                    assert segment_type == "qcurve"
                     # special quadratic contour with no on-curve points:
                     # we need to skip the "None" point. See also the Pen
                     # protocol's qCurveTo() method and fontTools.pens.basePen
@@ -180,7 +211,6 @@ class Cu2QuPointPen(BasePointToSegmentPen):
                 else:
                     pen.addPoint(pt, segment_type, smooth, name, **kwargs)
             else:
-                # 'curve' segments must have been converted to 'qcurve' by now
                 raise AssertionError("unexpected segment type: %r" % segment_type)
         for (pt, smooth, name, kwargs) in last_offcurves:
             pen.addPoint(pt, None, smooth, name, **kwargs)

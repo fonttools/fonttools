@@ -1041,6 +1041,8 @@ class WOFF2GlyfTable(getTableClass("glyf")):
 
     def _encodeCoordinates(self, glyph):
         lastEndPoint = -1
+        if _g_l_y_f.flagCubic in glyph.flags:
+            raise NotImplementedError
         for endPoint in glyph.endPtsOfContours:
             ptsOfContour = endPoint - lastEndPoint
             self.nPointsStream += pack255UShort(ptsOfContour)

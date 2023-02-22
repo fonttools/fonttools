@@ -15,9 +15,11 @@ def _font_to_cubic(input_path, output_path=None, **kwargs):
     font = TTFont(input_path)
     logger.info("Converting curves for %s", input_path)
 
+    stats = {} if kwargs["dump_stats"] else None
     qu2cu_kwargs = {
-        "stats": {} if kwargs["dump_stats"] else None,
+        "stats": stats,
         "max_err": kwargs["max_err_em"] * font["head"].unitsPerEm,
+        "all_cubic": kwargs["all_cubic"],
     }
 
     assert "gvar" not in font, "Cannot convert variable font"
@@ -29,7 +31,12 @@ def _font_to_cubic(input_path, output_path=None, **kwargs):
         ttpen = TTGlyphPen(glyphSet)
         pen = Qu2CuPen(ttpen, **qu2cu_kwargs)
         glyph.draw(pen)
-        glyf[glyphName] = ttpen.glyph(preserveTopology=False)
+        glyf[glyphName] = ttpen.glyph(dropImpliedOnCurves=True)
+
+    font["head"].glyphDataFormat = 1
+
+    if kwargs["dump_stats"]:
+        logger.info("Stats: %s", stats)
 
     logger.info("Saving %s", output_path)
     font.save(output_path)
@@ -52,6 +59,13 @@ def main(args=None):
         metavar="ERROR",
         default=0.001,
         help="maxiumum approximation error measured in EM (default: 0.001)",
+    )
+    parser.add_argument(
+        "-c",
+        "--all-cubic",
+        default=False,
+        action="store_true",
+        help="whether to only use cubic curves",
     )
 
     output_parser = parser.add_mutually_exclusive_group()
@@ -103,6 +117,7 @@ def main(args=None):
     kwargs = dict(
         dump_stats=options.verbose > 0,
         max_err_em=options.conversion_error,
+        all_cubic=options.all_cubic,
     )
 
     for input_path, output_path in zip(options.infiles, output_paths):

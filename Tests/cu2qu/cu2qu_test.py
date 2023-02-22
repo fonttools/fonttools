@@ -175,5 +175,18 @@ class CurveToQuadraticTest(unittest.TestCase):
         )
 
 
+class AllQuadraticFalseTest(unittest.TestCase):
+    def test_cubic(self):
+        cubic = [(0, 0), (0, 1), (2, 1), (2, 0)]
+        result = curve_to_quadratic(cubic, 0.1, all_quadratic=False)
+        assert result == cubic
+
+    def test_quadratic(self):
+        cubic = [(0, 0), (2, 2), (4, 2), (6, 0)]
+        result = curve_to_quadratic(cubic, 0.1, all_quadratic=False)
+        quadratic = [(0, 0), (3, 3), (6, 0)]
+        assert result == quadratic
+
+
 if __name__ == "__main__":
     unittest.main()
