@@ -32,7 +32,7 @@ def _font_to_cubic(input_path, output_path=None, **kwargs):
         glyph.draw(pen)
         glyf[glyphName] = ttpen.glyph(preserveTopology=False)
 
-    if stats["4"]:
+    if stats["4"]:  # 4 means a cubic segment
         font["head"].glyphDataFormat = 1
 
     if kwargs["dump_stats"]:
