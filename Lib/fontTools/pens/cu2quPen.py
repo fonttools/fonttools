@@ -194,14 +194,13 @@ class Cu2QuPointPen(BasePointToSegmentPen):
                     f"expected {n}, got {len(points)}"
                 )
                 offcurves = points[:-1]
-                if offcurves:
-                    if i == 0:
-                        # any off-curve points preceding the first on-curve
-                        # will be appended at the end of the contour
-                        last_offcurves = offcurves
-                    else:
-                        for (pt, smooth, name, kwargs) in offcurves:
-                            pen.addPoint(pt, None, smooth, name, **kwargs)
+                if i == 0:
+                    # any off-curve points preceding the first on-curve
+                    # will be appended at the end of the contour
+                    last_offcurves = offcurves
+                else:
+                    for (pt, smooth, name, kwargs) in offcurves:
+                        pen.addPoint(pt, None, smooth, name, **kwargs)
                 pt, smooth, name, kwargs = points[-1]
                 if pt is None:
                     assert segment_type == "qcurve"
