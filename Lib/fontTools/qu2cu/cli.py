@@ -63,7 +63,6 @@ def main(args=None):
     parser.add_argument(
         "-c",
         "--all-cubic",
-        type=bool,
         default=False,
         action="store_true",
         help="whether to only use cubic curves",
