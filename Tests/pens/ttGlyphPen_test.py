@@ -641,7 +641,30 @@ class CubicGlyfTest:
     @pytest.mark.parametrize(
         "preserveTopology, segment_pen_commands, point_pen_commands, expected_coordinates, expected_flags, expected_endPts",
         [
-            (
+            (  # Two curves that do NOT merge; request merging
+                False,
+                [
+                    ("moveTo", ((0, 0),)),
+                    ("curveTo", ((0, 1), (1, 2), (2, 2))),
+                    ("curveTo", ((3, 3), (4, 1), (4, 0))),
+                    ("closePath", ()),
+                ],
+                [
+                    ("beginPath", (), {}),
+                    ("addPoint", ((0, 0), "line", None, None), {}),
+                    ("addPoint", ((0, 1), None, None, None), {}),
+                    ("addPoint", ((1, 2), None, None, None), {}),
+                    ("addPoint", ((2, 2), "curve", None, None), {}),
+                    ("addPoint", ((3, 3), None, None, None), {}),
+                    ("addPoint", ((4, 1), None, None, None), {}),
+                    ("addPoint", ((4, 0), "curve", None, None), {}),
+                    ("endPath", (), {}),
+                ],
+                [(0, 0), (0, 1), (1, 2), (2, 2), (3, 3), (4, 1), (4, 0)],
+                [0x01, 0x80, 0x80, 0x01, 0x80, 0x80, 0x01],
+                [6],
+            ),
+            (  # Two curves that merge; request merging
                 False,
                 [
                     ("moveTo", ((0, 0),)),
@@ -664,7 +687,7 @@ class CubicGlyfTest:
                 [0x01, 0x80, 0x80, 0x80, 0x80, 0x01],
                 [5],
             ),
-            (
+            (  # Two curves that merge; request NOT merging
                 True,
                 [
                     ("moveTo", ((0, 0),)),
