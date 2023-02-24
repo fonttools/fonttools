@@ -1,4 +1,4 @@
-from fontTools.varLib.featureVars import overlayFeatureVariations
+from fontTools.varLib.featureVars import overlayFeatureVariations, overlayBox
 
 
 def _test_linear(n):
@@ -99,6 +99,15 @@ def test_overlaps_2():
     assert subst == {0: 0, 3: 3}
     subst = _match_condition({"abcd": 10}, overlaps)
     assert subst == {1: 1, 3: 3}
+
+
+def test_overlayBox():
+    # https://github.com/fonttools/fonttools/issues/3003
+    top = {"opsz": (0.75, 1.0), "wght": (0.5, 1.0)}
+    bot = {"wght": (0.25, 1.0)}
+    intersection, remainder = overlayBox(top, bot)
+    assert intersection == {"opsz": (0.75, 1.0), "wght": (0.5, 1.0)}
+    assert remainder == {"wght": (0.25, 1.0)}
 
 
 def run(test, n, quiet):
