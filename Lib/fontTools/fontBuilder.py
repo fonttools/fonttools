@@ -800,7 +800,7 @@ class FontBuilder(object):
         )
         self._initTableWithValues("DSIG", {}, values)
 
-    def addOpenTypeFeatures(self, features, filename=None, tables=None):
+    def addOpenTypeFeatures(self, features, filename=None, tables=None, debug=False):
         """Add OpenType features to the font from a string containing
         Feature File syntax.
 
@@ -810,11 +810,14 @@ class FontBuilder(object):
         The optional `tables` argument can be a list of OTL tables tags to
         build, allowing the caller to only build selected OTL tables. See
         `fontTools.feaLib` for details.
+
+        The optional `debug` argument controls whether to add source debugging
+        information to the font in the `Debg` table.
         """
         from .feaLib.builder import addOpenTypeFeaturesFromString
 
         addOpenTypeFeaturesFromString(
-            self.font, features, filename=filename, tables=tables
+            self.font, features, filename=filename, tables=tables, debug=debug
         )
 
     def addFeatureVariations(self, conditionalSubstitutions, featureTag="rvrn"):
