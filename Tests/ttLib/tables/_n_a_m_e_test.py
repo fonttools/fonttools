@@ -72,14 +72,33 @@ class NameTableTest(unittest.TestCase):
         ]
         table.compile(None)
 
-    def test_names_sort_bytes_str_encoding_error(self):
+    def test_names_sort_attributes(self):
         table = table__n_a_m_e()
+        # Create an actual invalid NameRecord object
+        broken = makeName("Test", 25, 3, 1, 0x409)
+        delattr(broken, "platformID")
         table.names = [
-            makeName("Test寬", 25, 1, 0, 0),
-            makeName("Test鬆鬆", 25, 1, 0, 0),
+            makeName("Test", 25, 3, 1, 0x409),
+            broken,
         ]
+        # Sorting these two is impossible, expect an error to be raised
         with self.assertRaises(TypeError):
             table.names.sort()
+
+    def test_names_sort_encoding(self):
+        """
+        Confirm that encoding errors in name table strings do not prevent at
+        least sorting by other IDs
+        """
+        table = table__n_a_m_e()
+        table.names = [
+            makeName("Mac Unicode 寬 encodes ok", 25, 3, 0, 0x409),
+            makeName("Win Latin 寬 fails to encode", 25, 1, 0, 0),
+        ]
+        table.names.sort()
+        # Encoding errors or not, sort based on other IDs nonetheless
+        self.assertEqual(table.names[0].platformID, 1)
+        self.assertEqual(table.names[1].platformID, 3)
 
     def test_addName(self):
         table = table__n_a_m_e()

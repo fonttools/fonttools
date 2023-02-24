@@ -607,34 +607,40 @@ class NameRecord(object):
 
     def __lt__(self, other):
         if type(self) != type(other):
-            return NotImplemented
+            return NotImplemented()
 
         try:
-            # implemented so that list.sort() sorts according to the spec.
             selfTuple = (
                 self.platformID,
                 self.platEncID,
                 self.langID,
                 self.nameID,
-                self.toBytes(),
             )
             otherTuple = (
                 other.platformID,
                 other.platEncID,
                 other.langID,
                 other.nameID,
-                other.toBytes(),
             )
-            return selfTuple < otherTuple
-        except (UnicodeEncodeError, AttributeError):
+        except (AttributeError):
             # This can only happen for
             # 1) an object that is not a NameRecord, or
             # 2) an unlikely incomplete NameRecord object which has not been
-            #    fully populated, or
-            # 3) when all IDs are identical but the strings can't be encoded
-            #    for their platform encoding.
-            # In all cases it is best to return NotImplemented.
-            return NotImplemented
+            #    fully populated
+            return NotImplemented()
+
+        try:
+            # Include the actual NameRecord string in the comparison tuples
+            selfTuple = selfTuple + (self.toBytes(),)
+            otherTuple = otherTuple + (other.toBytes(),)
+        except (UnicodeEncodeError) as e:
+            # toBytes caused an encoding error in either of the two, so content
+            # to sorting based on IDs only
+            log.warning("NameRecord sorting failed to decode: %s" % e)
+
+        # Implemented so that list.sort() sorts according to the spec by using
+        # the order of the tuple items and their comparison
+        return selfTuple < otherTuple
 
     def __repr__(self):
         return "<NameRecord NameID=%d; PlatformID=%d; LanguageID=%d>" % (
