@@ -607,7 +607,7 @@ class NameRecord(object):
 
     def __lt__(self, other):
         if type(self) != type(other):
-            return NotImplemented()
+            return NotImplemented
 
         try:
             selfTuple = (
@@ -622,21 +622,21 @@ class NameRecord(object):
                 other.langID,
                 other.nameID,
             )
-        except (AttributeError):
+        except AttributeError:
             # This can only happen for
             # 1) an object that is not a NameRecord, or
             # 2) an unlikely incomplete NameRecord object which has not been
             #    fully populated
-            return NotImplemented()
+            return NotImplemented
 
         try:
             # Include the actual NameRecord string in the comparison tuples
             selfTuple = selfTuple + (self.toBytes(),)
             otherTuple = otherTuple + (other.toBytes(),)
-        except (UnicodeEncodeError) as e:
+        except UnicodeEncodeError as e:
             # toBytes caused an encoding error in either of the two, so content
             # to sorting based on IDs only
-            log.warning("NameRecord sorting failed to decode: %s" % e)
+            log.error("NameRecord sorting failed to encode: %s" % e)
 
         # Implemented so that list.sort() sorts according to the spec by using
         # the order of the tuple items and their comparison
