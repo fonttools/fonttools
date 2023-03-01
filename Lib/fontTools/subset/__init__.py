@@ -3081,7 +3081,6 @@ class Options(object):
     )
 
     def __init__(self, **kwargs):
-
         self.drop_tables = self._drop_tables_default[:]
         self.no_subset_tables = self._no_subset_tables_default[:]
         self.passthrough_tables = False  # keep/drop tables we can't subset
@@ -3226,7 +3225,6 @@ class Subsetter(object):
         pass
 
     def __init__(self, options=None):
-
         if not options:
             options = Options()
 
@@ -3275,7 +3273,6 @@ class Subsetter(object):
                     log.info("%s pruned", tag)
 
     def _closure_glyphs(self, font):
-
         realGlyphs = set(font.getGlyphOrder())
         self.orig_glyph_order = glyph_order = font.getGlyphOrder()
 
@@ -3465,11 +3462,14 @@ class Subsetter(object):
         for tag in font.keys():
             if tag == "GlyphOrder":
                 continue
-            if tag == "OS/2" and self.options.prune_unicode_ranges:
-                old_uniranges = font[tag].getUnicodeRanges()
-                new_uniranges = font[tag].recalcUnicodeRanges(font, pruneOnly=True)
-                if old_uniranges != new_uniranges:
-                    log.info("%s Unicode ranges pruned: %s", tag, sorted(new_uniranges))
+            if tag == "OS/2":
+                if self.options.prune_unicode_ranges:
+                    old_uniranges = font[tag].getUnicodeRanges()
+                    new_uniranges = font[tag].recalcUnicodeRanges(font, pruneOnly=True)
+                    if old_uniranges != new_uniranges:
+                        log.info(
+                            "%s Unicode ranges pruned: %s", tag, sorted(new_uniranges)
+                        )
                 if self.options.recalc_average_width:
                     old_avg_width = font[tag].xAvgCharWidth
                     new_avg_width = font[tag].recalcAvgCharWidth(font)
@@ -3506,7 +3506,6 @@ class Subsetter(object):
 
 @timer("load font")
 def load_font(fontFile, options, checkChecksums=0, dontLoadGlyphNames=False, lazy=True):
-
     font = ttLib.TTFont(
         fontFile,
         checkChecksums=checkChecksums,

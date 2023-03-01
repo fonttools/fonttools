@@ -1859,5 +1859,33 @@ def test_subset_COLR_glyph_closure(tmp_path):
     assert "grave" not in color_layers
 
 
+def test_subset_recalc_xAvgCharWidth(ttf_path):
+    # Note that the font in in the *ttLib*/data/TestTTF-Regular.ttx file,
+    # not this subset/data folder.
+    font = TTFont(ttf_path)
+    xAvgCharWidth_before = font["OS/2"].xAvgCharWidth
+
+    subset_path = ttf_path.with_suffix(".subset.ttf")
+    subset.main(
+        [
+            str(ttf_path),
+            f"--output-file={subset_path}",
+            # Keep only the ellipsis, which is very wide, that ought to bump up the average
+            "--glyphs=ellipsis",
+            "--recalc-average-width",
+            "--no-prune-unicode-ranges",
+        ]
+    )
+    subset_font = TTFont(subset_path)
+    xAvgCharWidth_after = subset_font["OS/2"].xAvgCharWidth
+
+    # Check that the value gets updated
+    assert xAvgCharWidth_after != xAvgCharWidth_before
+
+    # Check that the value gets updated to the actual new value
+    subset_font["OS/2"].recalcAvgCharWidth(subset_font)
+    assert xAvgCharWidth_after == subset_font["OS/2"].xAvgCharWidth
+
+
 if __name__ == "__main__":
     sys.exit(unittest.main())
