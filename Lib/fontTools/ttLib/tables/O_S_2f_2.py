@@ -340,9 +340,10 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
         """
         avg_width = 0
         hmtx = ttFont.get("hmtx")
-        if hmtx:
-            widths = [m[0] for m in hmtx.metrics.values() if m[0] > 0]
-            avg_width = otRound(sum(widths) / len(widths))
+        if hmtx is not None:
+            widths = [width for width, _ in hmtx.metrics.values() if width > 0]
+            if widths:
+                avg_width = otRound(sum(widths) / len(widths))
         self.xAvgCharWidth = avg_width
         return avg_width
 
