@@ -18,9 +18,13 @@
 
 try:
     import cython
-except ImportError:
+
+    COMPILED = cython.compiled
+except (AttributeError, ImportError):
     # if cython not installed, use mock module with no-op decorators and types
     from fontTools.misc import cython
+
+    COMPILED = False
 
 from fontTools.misc.bezierTools import splitCubicAtTC
 from collections import namedtuple
@@ -33,14 +37,6 @@ from typing import (
 
 
 __all__ = ["quadratic_to_curves"]
-
-
-if cython.compiled:
-    # Yep, I'm compiled.
-    COMPILED = True
-else:
-    # Just a lowly interpreted script.
-    COMPILED = False
 
 
 # Copied from cu2qu
