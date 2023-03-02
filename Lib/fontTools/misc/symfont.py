@@ -123,15 +123,12 @@ def printGreenPen(penName, funcs, file=sys.stdout, docstring=None):
         """from fontTools.pens.basePen import BasePen, OpenContourError
 try:
 	import cython
-except ImportError:
+
+	COMPILED = cython.compiled
+except (AttributeError, ImportError):
 	# if cython not installed, use mock module with no-op decorators and types
 	from fontTools.misc import cython
 
-if cython.compiled:
-	# Yep, I'm compiled.
-	COMPILED = True
-else:
-	# Just a lowly interpreted script.
 	COMPILED = False
 
 

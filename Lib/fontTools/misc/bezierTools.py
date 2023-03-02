@@ -9,9 +9,13 @@ from collections import namedtuple
 
 try:
     import cython
-except ImportError:
+
+    COMPILED = cython.compiled
+except (AttributeError, ImportError):
     # if cython not installed, use mock module with no-op decorators and types
     from fontTools.misc import cython
+
+    COMPILED = False
 
 
 Intersection = namedtuple("Intersection", ["pt", "t1", "t2"])
@@ -47,13 +51,6 @@ __all__ = [
     "curveCurveIntersections",
     "segmentSegmentIntersections",
 ]
-
-if cython.compiled:
-    # Yep, I'm compiled.
-    COMPILED = True
-else:
-    # Just a lowly interpreted script.
-    COMPILED = False
 
 
 def calcCubicArcLength(pt1, pt2, pt3, pt4, tolerance=0.005):

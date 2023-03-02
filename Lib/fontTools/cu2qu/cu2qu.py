@@ -17,9 +17,13 @@
 
 try:
     import cython
-except ImportError:
+
+    COMPILED = cython.compiled
+except (AttributeError, ImportError):
     # if cython not installed, use mock module with no-op decorators and types
     from fontTools.misc import cython
+
+    COMPILED = False
 
 import math
 
@@ -31,14 +35,6 @@ __all__ = ["curve_to_quadratic", "curves_to_quadratic"]
 MAX_N = 100
 
 NAN = float("NaN")
-
-
-if cython.compiled:
-    # Yep, I'm compiled.
-    COMPILED = True
-else:
-    # Just a lowly interpreted script.
-    COMPILED = False
 
 
 @cython.cfunc
