@@ -5,8 +5,9 @@ TTX -- From OpenType To XML And Back
 
 If an input file is a TrueType or OpenType font file, it will be
 decompiled to a TTX file (an XML-based text format).
-If an input file is a TTX file, it will be compiled to whatever 
+If an input file is a TTX file, it will be compiled to whatever
 format the data is in, a TrueType or OpenType/CFF font file.
+A special input value of - means read from the standard input.
 
 Output files are created so they are unique: an existing file is
 never overwritten.
@@ -278,7 +279,13 @@ def ttList(input, output, options):
 
 @Timer(log, "Done dumping TTX in %(time).3f seconds")
 def ttDump(input, output, options):
-    log.info('Dumping "%s" to "%s"...', input, output)
+    input_name = input
+    if input == "-":
+        input, input_name = sys.stdin.buffer, sys.stdin.name
+    output_name = output
+    if output == "-":
+        output, output_name = sys.stdout, sys.stdout.name
+    log.info('Dumping "%s" to "%s"...', input_name, output_name)
     if options.unicodedata:
         setUnicodeData(options.unicodedata)
     ttf = TTFont(
@@ -302,7 +309,13 @@ def ttDump(input, output, options):
 
 @Timer(log, "Done compiling TTX in %(time).3f seconds")
 def ttCompile(input, output, options):
-    log.info('Compiling "%s" to "%s"...' % (input, output))
+    input_name = input
+    if input == "-":
+        input, input_name = sys.stdin, sys.stdin.name
+    output_name = output
+    if output == "-":
+        output, output_name = sys.stdout.buffer, sys.stdout.name
+    log.info('Compiling "%s" to "%s"...' % (input_name, output))
     if options.useZopfli:
         from fontTools.ttLib import sfnt
 
@@ -315,7 +328,7 @@ def ttCompile(input, output, options):
     )
     ttf.importXML(input)
 
-    if options.recalcTimestamp is None and "head" in ttf:
+    if options.recalcTimestamp is None and "head" in ttf and input is not sys.stdin:
         # use TTX file modification time for head "modified" timestamp
         mtime = os.path.getmtime(input)
         ttf["head"].modified = timestampSinceEpoch(mtime)
@@ -324,12 +337,16 @@ def ttCompile(input, output, options):
 
 
 def guessFileType(fileName):
-    base, ext = os.path.splitext(fileName)
-    try:
-        with open(fileName, "rb") as f:
-            header = f.read(256)
-    except IOError:
-        return None
+    if fileName == "-":
+        header = sys.stdin.buffer.peek(256)
+        ext = ""
+    else:
+        base, ext = os.path.splitext(fileName)
+        try:
+            with open(fileName, "rb") as f:
+                header = f.read(256)
+        except IOError:
+            return None
 
     if header.startswith(b"\xef\xbb\xbf<?xml"):
         header = header.lstrip(b"\xef\xbb\xbf")
@@ -381,7 +398,7 @@ def parseOptions(args):
         raise getopt.GetoptError("Must specify at least one input file")
 
     for input in files:
-        if not os.path.isfile(input):
+        if input != "-" and not os.path.isfile(input):
             raise getopt.GetoptError('File not found: "%s"' % input)
         tp = guessFileType(input)
         if tp in ("OTF", "TTF", "TTC", "WOFF", "WOFF2"):
@@ -402,6 +419,8 @@ def parseOptions(args):
         if options.outputFile:
             output = options.outputFile
         else:
+            if input == "-":
+                raise getopt.GetoptError("Must provide -o when reading from stdin")
             output = makeOutputFileName(
                 input, options.outputDir, extension, options.overWrite
             )
