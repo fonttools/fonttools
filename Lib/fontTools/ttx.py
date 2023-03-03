@@ -5,8 +5,9 @@ TTX -- From OpenType To XML And Back
 
 If an input file is a TrueType or OpenType font file, it will be
 decompiled to a TTX file (an XML-based text format).
-If an input file is a TTX file, it will be compiled to whatever 
+If an input file is a TTX file, it will be compiled to whatever
 format the data is in, a TrueType or OpenType/CFF font file.
+A special input value of - means read from the standard input.
 
 Output files are created so they are unique: an existing file is
 never overwritten.
@@ -418,6 +419,8 @@ def parseOptions(args):
         if options.outputFile:
             output = options.outputFile
         else:
+            if input == "-":
+                raise getopt.GetoptError("Must provide -o when reading from stdin")
             output = makeOutputFileName(
                 input, options.outputDir, extension, options.overWrite
             )
