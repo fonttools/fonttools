@@ -146,11 +146,13 @@ class TTFont(object):
         else:
             # assume "file" is a readable file object
             closeStream = False
-            file.seek(0)
+            if file.seekable():
+                file.seek(0)
 
         if not self.lazy:
             # read input file in memory and wrap a stream around it to allow overwriting
-            file.seek(0)
+            if file.seekable():
+                file.seek(0)
             tmp = BytesIO(file.read())
             if hasattr(file, "name"):
                 # save reference to input file name
