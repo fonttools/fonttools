@@ -1755,7 +1755,7 @@ class VarComponentFlags(IntFlag):
     HAVE_SKEW_Y = 0x0200
     HAVE_TCENTER_X = 0x0400
     HAVE_TCENTER_Y = 0x0800
-    GID_IS_24 = 0x1000
+    GID_IS_24BIT = 0x1000
     AXES_HAVE_VARIATION = 0x2000
     RESET_UNSPECIFIED_AXES = 0x4000
 
@@ -1810,7 +1810,7 @@ class GlyphVarComponent(object):
         flags = struct.unpack(">H", data[:2])[0]
         numAxes = int(data[2])
 
-        if flags & VarComponentFlags.GID_IS_24:
+        if flags & VarComponentFlags.GID_IS_24BIT:
             size += 1
 
         size += numAxes
@@ -1834,10 +1834,10 @@ class GlyphVarComponent(object):
         numAxes = int(data[0])
         data = data[1:]
 
-        if flags & VarComponentFlags.GID_IS_24:
+        if flags & VarComponentFlags.GID_IS_24BIT:
             glyphID = int(struct.unpack(">L", b"\0" + data[:3])[0])
             data = data[3:]
-            flags ^= VarComponentFlags.GID_IS_24
+            flags ^= VarComponentFlags.GID_IS_24BIT
         else:
             glyphID = int(struct.unpack(">H", data[:2])[0])
             data = data[2:]
@@ -1919,7 +1919,7 @@ class GlyphVarComponent(object):
 
         glyphID = glyfTable.getGlyphID(self.glyphName)
         if glyphID > 65535:
-            flags |= VarComponentFlags.GID_IS_24
+            flags |= VarComponentFlags.GID_IS_24BIT
             data = data + struct.pack(">L", glyphID)[1:]
         else:
             data = data + struct.pack(">H", glyphID)
