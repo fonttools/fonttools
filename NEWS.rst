@@ -7,12 +7,22 @@
   scenario no glyph has non-zero advance (#3015).
 - [subset] Recompute xAvgCharWidth independently of --no-prune-unicode-ranges,
   previously the two options were involuntarily bundled together (#3012).
+- [fontBuilder] Add ``debug`` parameter to addOpenTypeFeatures method to add source
+  debugging information to the font in the ``Debg`` private table (#3008).
 - [name] Make NameRecord `__lt__` comparison not fail on Unicode encoding errors (#3006).
 - [featureVars] Fixed bug in ``overlayBox`` (#3003, #3005).
-- [glyf] TODO Cubic glyf (#2988).
+- [glyf] Added experimental support for cubic bezier curves in TrueType glyf table, as
+  outlined in glyf v1 proposal (#2988):
+  https://github.com/harfbuzz/boring-expansion-spec/blob/main/glyf1-cubicOutlines.md
 - Added new qu2cu module and related qu2cuPen, the reverse of cu2qu for converting
   TrueType quadratic splines to cubic bezier curves (#2993).
-- [glyf/gvar] TODO VarComposites (#2958).
+- [glyf] Added experimental support for reading and writing Variable Composites/Components
+  as defined in glyf v1 spec proposal (#2958):
+  https://github.com/harfbuzz/boring-expansion-spec/blob/main/glyf1-varComposites.md.
+- [pens]: Added `addVarComponent` method to pen protocols' base classes, which pens can implement
+  to handle varcomponents (by default they get decompo
+- [misc.transform] Added DecomposedTransform class which implements an affine transformation
+  with separate translate, rotation, scale, skew, and transformation-center components (#2598)
 - [sbix] Ensure Glyph.referenceGlyphName is set; fixes error after dumping and
   re-compiling sbix table with 'dupe' glyphs (#2984).
 - [feaLib] Be cleverer when merging chained single substitutions into same lookup
