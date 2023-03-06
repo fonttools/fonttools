@@ -1,3 +1,6 @@
+4.39.0 (released 2023-03-06)
+----------------------------
+
 - [mtiLib] Optionally add `Debg` debug info for MTI feature builds (#3018).
 - [ttx] Support reading input file from standard input using special `-` character,
   similar to existing `-o -` option to write output to standard output (#3020).
