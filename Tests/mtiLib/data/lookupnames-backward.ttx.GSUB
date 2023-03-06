@@ -35,6 +35,7 @@
   </FeatureList>
   <LookupList>
     <!-- LookupCount=2 -->
+    <!-- l1:  -->
     <Lookup index="0">
       <LookupType value="1"/>
       <LookupFlag value="0"/>
@@ -44,6 +45,7 @@
         <Substitution in="uvowelsignkannada" out="uvowelsignaltkannada"/>
       </SingleSubst>
     </Lookup>
+    <!-- l0:  -->
     <Lookup index="1">
       <LookupType value="6"/>
       <LookupFlag value="0"/>

@@ -3,6 +3,7 @@
   <Version value="0x00010000"/>
   <LookupList>
     <!-- LookupCount=1 -->
+    <!-- replace-akhand-telugu:  -->
     <Lookup index="0">
       <LookupType value="2"/>
       <LookupFlag value="0"/>

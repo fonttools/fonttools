@@ -3,6 +3,7 @@
   <Version value="0x00010000"/>
   <LookupList>
     <!-- LookupCount=1 -->
+    <!-- supsToInferiors:  -->
     <Lookup index="0">
       <LookupType value="1"/>
       <LookupFlag value="0"/>
