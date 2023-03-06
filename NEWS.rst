@@ -23,7 +23,7 @@
   as defined in glyf v1 spec proposal (#2958):
   https://github.com/harfbuzz/boring-expansion-spec/blob/main/glyf1-varComposites.md.
 - [pens]: Added `addVarComponent` method to pen protocols' base classes, which pens can implement
-  to handle varcomponents (by default they get decompo
+  to handle varcomponents (by default they get decomposed) (#2958).
 - [misc.transform] Added DecomposedTransform class which implements an affine transformation
   with separate translate, rotation, scale, skew, and transformation-center components (#2598)
 - [sbix] Ensure Glyph.referenceGlyphName is set; fixes error after dumping and
