@@ -1041,7 +1041,11 @@ def parseGSUBGPOS(lines, font, tableTag):
         if "Debg" not in font:
             font["Debg"] = newTable("Debg")
             font["Debg"].data = {}
-        debug = font["Debg"].data.setdefault(LOOKUP_DEBUG_INFO_KEY, {}).setdefault(tableTag, {})
+        debug = (
+            font["Debg"]
+            .data.setdefault(LOOKUP_DEBUG_INFO_KEY, {})
+            .setdefault(tableTag, {})
+        )
         for name, lookup in lookupMap.items():
             debug[str(lookup)] = ["", name, ""]
 
