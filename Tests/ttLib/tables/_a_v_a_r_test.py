@@ -1,7 +1,7 @@
 from fontTools.misc.testTools import parseXML
 from fontTools.misc.textTools import deHexStr
 from fontTools.misc.xmlWriter import XMLWriter
-from fontTools.ttLib import TTLibError
+from fontTools.ttLib import TTFont, TTLibError
 from fontTools.ttLib.tables._a_v_a_r import table__a_v_a_r
 from fontTools.ttLib.tables._f_v_a_r import table__f_v_a_r, Axis
 from io import BytesIO
@@ -44,13 +44,6 @@ class AxisVariationTableTest(unittest.TestCase):
             avar.segments,
         )
 
-    def test_decompile_unsupportedVersion(self):
-        avar = table__a_v_a_r()
-        font = self.makeFont(["wdth", "wght"])
-        self.assertRaises(
-            TTLibError, avar.decompile, deHexStr("02 01 03 06 00 00 00 00"), font
-        )
-
     def test_toXML(self):
         avar = table__a_v_a_r()
         avar.segments["opsz"] = {-1.0: -1.0, 0.0: 0.0, 0.2999878: 0.7999878, 1.0: 1.0}
@@ -91,7 +84,9 @@ class AxisVariationTableTest(unittest.TestCase):
             axis = Axis()
             axis.axisTag = tag
             fvar.axes.append(axis)
-        return {"fvar": fvar}
+        font = TTFont()
+        font["fvar"] = fvar
+        return font
 
     @staticmethod
     def xml_lines(writer):

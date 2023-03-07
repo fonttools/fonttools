@@ -8,6 +8,7 @@ from fontTools.misc.fixedTools import (
 from fontTools.misc.textTools import bytesjoin
 from fontTools.ttLib import TTLibError
 from . import DefaultTable
+from . import otTables
 import struct
 import logging
 
@@ -44,45 +45,41 @@ class table__a_v_a_r(BaseTTXConverter):
     dependencies = ["fvar"]
 
     def __init__(self, tag=None):
-        DefaultTable.DefaultTable.__init__(self, tag)
-        # self.segments = {}
+        super().__init__(tag)
+        self.segments = {}
 
-    """
     def compile(self, ttFont):
         axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
-        header = {
-            "majorVersion": 1,
-            "minorVersion": 0,
-            "reserved": 0,
-            "axisCount": len(axisTags),
-        }
-        result = [sstruct.pack(AVAR_HEADER_FORMAT, header)]
+        if not hasattr(self, "table"):
+            self.table = otTables.avar()
+            self.table.Version = 0x00010000
+            self.table.Reserved = 0
+        self.table.AxisCount = len(axisTags)
+        self.table.AxisSegmentMap = []
         for axis in axisTags:
-            mappings = sorted(self.segments[axis].items())
-            result.append(struct.pack(">H", len(mappings)))
-            for key, value in mappings:
-                fixedKey = fl2fi(key, 14)
-                fixedValue = fl2fi(value, 14)
-                result.append(struct.pack(">hh", fixedKey, fixedValue))
-        return bytesjoin(result)
+            mappings = self.segments[axis]
+            segmentMap = otTables.AxisSegmentMap()
+            segmentMap.PositionMapCount = len(mappings)
+            segmentMap.AxisValueMap = []
+            for key, value in sorted(mappings.items()):
+                valueMap = otTables.AxisValueMap()
+                valueMap.FromCoordinate = key
+                valueMap.ToCoordinate = value
+                segmentMap.AxisValueMap.append(valueMap)
+            self.table.AxisSegmentMap.append(segmentMap)
+        return super().compile(ttFont)
 
     def decompile(self, data, ttFont):
+        super().decompile(data, ttFont)
+        assert self.table.Version >= 0x00010000
+        self.majorVersion = self.table.Version >> 16
         axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
-        header = {}
-        headerSize = sstruct.calcsize(AVAR_HEADER_FORMAT)
-        header = sstruct.unpack(AVAR_HEADER_FORMAT, data[0:headerSize])
-        majorVersion = header["majorVersion"]
-        if majorVersion != 1:
-            raise TTLibError("unsupported 'avar' version %d" % majorVersion)
-        pos = headerSize
         for axis in axisTags:
+            self.segments[axis] = {}
+        for axis, segmentMap in zip(axisTags, self.table.AxisSegmentMap):
             segments = self.segments[axis] = {}
-            numPairs = struct.unpack(">H", data[pos : pos + 2])[0]
-            pos = pos + 2
-            for _ in range(numPairs):
-                fromValue, toValue = struct.unpack(">hh", data[pos : pos + 4])
-                segments[fi2fl(fromValue, 14)] = fi2fl(toValue, 14)
-                pos = pos + 4
+            for segment in segmentMap.AxisValueMap:
+                segments[segment.FromCoordinate] = segment.ToCoordinate
 
     def toXML(self, writer, ttFont):
         axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
@@ -112,4 +109,3 @@ class table__a_v_a_r(BaseTTXConverter):
                                 "duplicate entry for %s in axis '%s'", fromValue, axis
                             )
                         segment[fromValue] = toValue
-    """
