@@ -1,3 +1,70 @@
+4.39.0 (released 2023-03-06)
+----------------------------
+
+- [mtiLib] Optionally add `Debg` debug info for MTI feature builds (#3018).
+- [ttx] Support reading input file from standard input using special `-` character,
+  similar to existing `-o -` option to write output to standard output (#3020).
+- [cython] Prevent ``cython.compiled`` raise AttributeError if cython not installed
+  properly (#3017).
+- [OS/2] Guard against ZeroDivisionError when calculating xAvgCharWidth in the unlikely
+  scenario no glyph has non-zero advance (#3015).
+- [subset] Recompute xAvgCharWidth independently of --no-prune-unicode-ranges,
+  previously the two options were involuntarily bundled together (#3012).
+- [fontBuilder] Add ``debug`` parameter to addOpenTypeFeatures method to add source
+  debugging information to the font in the ``Debg`` private table (#3008).
+- [name] Make NameRecord `__lt__` comparison not fail on Unicode encoding errors (#3006).
+- [featureVars] Fixed bug in ``overlayBox`` (#3003, #3005).
+- [glyf] Added experimental support for cubic bezier curves in TrueType glyf table, as
+  outlined in glyf v1 proposal (#2988):
+  https://github.com/harfbuzz/boring-expansion-spec/blob/main/glyf1-cubicOutlines.md
+- Added new qu2cu module and related qu2cuPen, the reverse of cu2qu for converting
+  TrueType quadratic splines to cubic bezier curves (#2993).
+- [glyf] Added experimental support for reading and writing Variable Composites/Components
+  as defined in glyf v1 spec proposal (#2958):
+  https://github.com/harfbuzz/boring-expansion-spec/blob/main/glyf1-varComposites.md.
+- [pens]: Added `addVarComponent` method to pen protocols' base classes, which pens can implement
+  to handle varcomponents (by default they get decomposed) (#2958).
+- [misc.transform] Added DecomposedTransform class which implements an affine transformation
+  with separate translate, rotation, scale, skew, and transformation-center components (#2598)
+- [sbix] Ensure Glyph.referenceGlyphName is set; fixes error after dumping and
+  re-compiling sbix table with 'dupe' glyphs (#2984).
+- [feaLib] Be cleverer when merging chained single substitutions into same lookup
+  when they are specified using the inline notation (#2150, #2974).
+- [instancer] Clamp user-inputted axis ranges to those of fvar (#2959).
+- [otBase/subset] Define ``__getstate__`` for BaseTable so that a copied/pickled 'lazy'
+  object gets its own OTTableReader to read from; incidentally fixes a bug while
+  subsetting COLRv1 table containing ClipBoxes on python 3.11 (#2965, #2968).
+- [sbix] Handle glyphs with "dupe" graphic type on compile correctly (#2963).
+- [glyf] ``endPointsOfContours`` field should be unsigned! Kudos to behdad for
+  spotting one of the oldest bugs in FT. Probably nobody has ever dared to make
+  glyphs with more than 32767 points... (#2957).
+- [feaLib] Fixed handling of ``ignore`` statements with unmarked glyphs to match
+  makeotf behavior, which assumes the first glyph is marked (#2950).
+- Reformatted code with ``black`` and enforce new code style via CI check (#2925).
+- [feaLib] Sort name table entries following OT spec prescribed order in the builder (#2927).
+- [cu2quPen] Add Cu2QuMultiPen that converts multiple outlines at a time in
+  interpolation compatible way; its methods take a list of tuples arguments
+  that would normally be passed to individual segment pens, and at the end it
+  dispatches the converted outlines to each pen (#2912).
+- [reverseContourPen/ttGlyphPen] Add outputImpliedClosingLine option (#2913, #2914,
+  #2921, #2922, #2995).
+- [gvar] Avoid expanding all glyphs unnecessarily upon compile (#2918).
+- [scaleUpem] Fixed bug whereby CFF2 vsindex was scaled; it should not (#2893, #2894).
+- [designspaceLib] Add DS.getAxisByTag and refactor getAxis (#2891).
+- [unicodedata] map Zmth<->math in ot_tag_{to,from}_script (#1737, #2889).
+- [woff2] Support encoding/decoding OVERLAP_SIMPLE glyf flags (#2576, #2884).
+- [instancer] Update OS/2 class and post.italicAngle when default moved (L4)
+- Dropped support for Python 3.7 which reached EOL, fontTools requires 3.8+.
+- [instancer] Fixed instantiateFeatureVariations logic when a rule range becomes
+  default-applicable (#2737, #2880).
+- [ttLib] Add main to ttFont and ttCollection that just decompile and re-compile the
+  input font (#2869).
+- [featureVars] Insert 'rvrn' lookup at the beginning of LookupList, to work around bug
+  in Apple implementation of 'rvrn' feature which the spec says it should be processed
+  early whereas on macOS 10.15 it follows lookup order (#2140, #2867).
+- [instancer/mutator] Remove 'DSIG' table if present.
+- [svgPathPen] Don't close path in endPath(), assume open unless closePath() (#2089, #2865).
+
 4.38.0 (released 2022-10-21)
 ----------------------------
 
@@ -910,7 +977,7 @@
   (#1872).
 - [Snippets/otf2ttf] In otf2ttf.py script update LSB in hmtx to match xMin (#1873).
 - [colorLib] Added experimental support for building ``COLR`` v1 tables as per
-  the `colr-gradients-spec <https://github.com/googlefonts/colr-gradients-spec/blob/master/colr-gradients-spec.md>`__
+  the `colr-gradients-spec <https://github.com/googlefonts/colr-gradients-spec/blob/main/colr-gradients-spec.md>`__
   draft proposal. **NOTE**: both the API and the XML dump of ``COLR`` v1 are
   susceptible to change while the proposal is being discussed and formalized (#1822).
 

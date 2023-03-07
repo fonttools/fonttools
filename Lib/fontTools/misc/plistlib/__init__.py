@@ -176,7 +176,7 @@ class PlistTarget:
     True
 
     Links:
-    https://github.com/python/cpython/blob/master/Lib/plistlib.py
+    https://github.com/python/cpython/blob/main/Lib/plistlib.py
     http://lxml.de/parsing.html#the-target-parser-interface
     """
 
@@ -353,7 +353,9 @@ def _real_element(value: float, ctx: SimpleNamespace) -> etree.Element:
     return el
 
 
-def _dict_element(d: Mapping[str, PlistEncodable], ctx: SimpleNamespace) -> etree.Element:
+def _dict_element(
+    d: Mapping[str, PlistEncodable], ctx: SimpleNamespace
+) -> etree.Element:
     el = etree.Element("dict")
     items = d.items()
     if ctx.sort_keys:
@@ -371,7 +373,9 @@ def _dict_element(d: Mapping[str, PlistEncodable], ctx: SimpleNamespace) -> etre
     return el
 
 
-def _array_element(array: Sequence[PlistEncodable], ctx: SimpleNamespace) -> etree.Element:
+def _array_element(
+    array: Sequence[PlistEncodable], ctx: SimpleNamespace
+) -> etree.Element:
     el = etree.Element("array")
     if len(array) == 0:
         return el

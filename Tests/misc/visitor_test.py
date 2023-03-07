@@ -8,6 +8,7 @@ class E(enum.Enum):
     E2 = 2
     E3 = 3
 
+
 class A:
     def __init__(self):
         self.a = 1

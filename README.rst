@@ -18,8 +18,9 @@ are available at `Read the Docs <https://fonttools.readthedocs.io/>`_.
 Installation
 ~~~~~~~~~~~~
 
-FontTools requires `Python <http://www.python.org/download/>`__ 3.7
-or later.
+FontTools requires `Python <http://www.python.org/download/>`__ 3.8
+or later. We try to follow the same schedule of minimum Python version support as
+NumPy (see `NEP 29 <https://numpy.org/neps/nep-0029-deprecation_policy.html>`__).
 
 The package is listed in the Python Package Index (PyPI), so you can
 install it with `pip <https://pip.pypa.io>`__:
@@ -120,8 +121,7 @@ are required to unlock the extra features named "ufo", etc.
 
   * `unicodedata2 <https://pypi.python.org/pypi/unicodedata2>`__:
     ``unicodedata`` backport for Python 3.x updated to the latest Unicode
-    version 14.0. Note this is not necessary if you use Python 3.11
-    as the latter already comes with an up-to-date ``unicodedata``.
+    version 15.0.
 
   *Extra:* ``unicode``
 
@@ -205,6 +205,15 @@ are required to unlock the extra features named "ufo", etc.
 
   * `freetype-py <https://pypi.python.org/pypi/freetype-py>`__: Python binding
     for the FreeType library.
+    
+- ``Lib/fontTools/ttLib/tables/otBase.py``
+
+  Use the Harfbuzz library to serialize GPOS/GSUB using ``hb_repack`` method, requires:
+  
+  * `uharfbuzz <https://pypi.python.org/pypi/uharfbuzz>`__: Streamlined Cython
+    bindings for the harfbuzz shaping engine
+    
+  *Extra:* ``repacker``
 
 How to make a new release
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -251,8 +260,8 @@ Famira, Sam Fishman, Matt Fontaine, Takaaki Fuji, Yannis Haralambous, Greg
 Hitchcock, Jeremie Hornus, Khaled Hosny, John Hudson, Denis Moyogo Jacquerye,
 Jack Jansen, Tom Kacvinsky, Jens Kutilek, Antoine Leca, Werner Lemberg, Tal
 Leming, Peter Lofting, Cosimo Lupo, Olli Meier, Masaya Nakamura, Dave Opstad,
-Laurence Penney, Roozbeh Pournader, Garret Rieger, Read Roberts, Guido
-van Rossum, Just van Rossum, Andreas Seidel, Georg Seifert, Chris
+Laurence Penney, Roozbeh Pournader, Garret Rieger, Read Roberts, Colin Rofls,
+Guido van Rossum, Just van Rossum, Andreas Seidel, Georg Seifert, Chris
 Simpkins, Miguel Sousa, Adam Twardoch, Adrien Tétar, Vitaly Volkov,
 Paul Wise.
 
@@ -275,7 +284,7 @@ Have fun!
 
 .. |CI Build Status| image:: https://github.com/fonttools/fonttools/workflows/Test/badge.svg
    :target: https://github.com/fonttools/fonttools/actions?query=workflow%3ATest
-.. |Coverage Status| image:: https://codecov.io/gh/fonttools/fonttools/branch/master/graph/badge.svg
+.. |Coverage Status| image:: https://codecov.io/gh/fonttools/fonttools/branch/main/graph/badge.svg
    :target: https://codecov.io/gh/fonttools/fonttools
 .. |PyPI| image:: https://img.shields.io/pypi/v/fonttools.svg
    :target: https://pypi.org/project/FontTools

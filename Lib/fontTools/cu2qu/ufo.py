@@ -30,12 +30,15 @@ from fontTools.pens.reverseContourPen import ReverseContourPen
 
 from . import curves_to_quadratic
 from .errors import (
-    UnequalZipLengthsError, IncompatibleSegmentNumberError,
-    IncompatibleSegmentTypesError, IncompatibleGlyphsError,
-    IncompatibleFontsError)
+    UnequalZipLengthsError,
+    IncompatibleSegmentNumberError,
+    IncompatibleSegmentTypesError,
+    IncompatibleGlyphsError,
+    IncompatibleFontsError,
+)
 
 
-__all__ = ['fonts_to_quadratic', 'font_to_quadratic']
+__all__ = ["fonts_to_quadratic", "font_to_quadratic"]
 
 # The default approximation error below is a relative value (1/1000 of the EM square).
 # Later on, we convert it to absolute font units by multiplying it by a font's UPEM
@@ -47,6 +50,8 @@ logger = logging.getLogger(__name__)
 
 
 _zip = zip
+
+
 def zip(*args):
     """Ensure each argument to zip has the same length. Also make sure a list is
     returned for python 2/3 compatibility.
@@ -69,27 +74,27 @@ class GetSegmentsPen(AbstractPen):
         self.segments = []
 
     def _add_segment(self, tag, *args):
-        if tag in ['move', 'line', 'qcurve', 'curve']:
+        if tag in ["move", "line", "qcurve", "curve"]:
             self._last_pt = args[-1]
         self.segments.append((tag, args))
 
     def moveTo(self, pt):
-        self._add_segment('move', pt)
+        self._add_segment("move", pt)
 
     def lineTo(self, pt):
-        self._add_segment('line', pt)
+        self._add_segment("line", pt)
 
     def qCurveTo(self, *points):
-        self._add_segment('qcurve', self._last_pt, *points)
+        self._add_segment("qcurve", self._last_pt, *points)
 
     def curveTo(self, *points):
-        self._add_segment('curve', self._last_pt, *points)
+        self._add_segment("curve", self._last_pt, *points)
 
     def closePath(self):
-        self._add_segment('close')
+        self._add_segment("close")
 
     def endPath(self):
-        self._add_segment('end')
+        self._add_segment("end")
 
     def addComponent(self, glyphName, transformation):
         pass
@@ -122,38 +127,41 @@ def _set_segments(glyph, segments, reverse_direction):
     if reverse_direction:
         pen = ReverseContourPen(pen)
     for tag, args in segments:
-        if tag == 'move':
+        if tag == "move":
             pen.moveTo(*args)
-        elif tag == 'line':
+        elif tag == "line":
             pen.lineTo(*args)
-        elif tag == 'curve':
+        elif tag == "curve":
             pen.curveTo(*args[1:])
-        elif tag == 'qcurve':
+        elif tag == "qcurve":
             pen.qCurveTo(*args[1:])
-        elif tag == 'close':
+        elif tag == "close":
             pen.closePath()
-        elif tag == 'end':
+        elif tag == "end":
             pen.endPath()
         else:
             raise AssertionError('Unhandled segment type "%s"' % tag)
 
 
-def _segments_to_quadratic(segments, max_err, stats):
+def _segments_to_quadratic(segments, max_err, stats, all_quadratic=True):
     """Return quadratic approximations of cubic segments."""
 
-    assert all(s[0] == 'curve' for s in segments), 'Non-cubic given to convert'
+    assert all(s[0] == "curve" for s in segments), "Non-cubic given to convert"
 
-    new_points = curves_to_quadratic([s[1] for s in segments], max_err)
+    new_points = curves_to_quadratic([s[1] for s in segments], max_err, all_quadratic)
     n = len(new_points[0])
-    assert all(len(s) == n for s in new_points[1:]), 'Converted incompatibly'
+    assert all(len(s) == n for s in new_points[1:]), "Converted incompatibly"
 
     spline_length = str(n - 2)
     stats[spline_length] = stats.get(spline_length, 0) + 1
 
-    return [('qcurve', p) for p in new_points]
+    if all_quadratic or n == 3:
+        return [("qcurve", p) for p in new_points]
+    else:
+        return [("curve", p) for p in new_points]
 
 
-def _glyphs_to_quadratic(glyphs, max_err, reverse_direction, stats):
+def _glyphs_to_quadratic(glyphs, max_err, reverse_direction, stats, all_quadratic=True):
     """Do the actual conversion of a set of compatible glyphs, after arguments
     have been set up.
 
@@ -176,9 +184,13 @@ def _glyphs_to_quadratic(glyphs, max_err, reverse_direction, stats):
         tag = segments[0][0]
         if not all(s[0] == tag for s in segments[1:]):
             incompatible[i] = [s[0] for s in segments]
-        elif tag == 'curve':
-            segments = _segments_to_quadratic(segments, max_err, stats)
-            glyphs_modified = True
+        elif tag == "curve":
+            new_segments = _segments_to_quadratic(
+                segments, max_err, stats, all_quadratic
+            )
+            if all_quadratic or new_segments != segments:
+                glyphs_modified = True
+            segments = new_segments
         new_segments_by_location.append(segments)
 
     if glyphs_modified:
@@ -192,7 +204,8 @@ def _glyphs_to_quadratic(glyphs, max_err, reverse_direction, stats):
 
 
 def glyphs_to_quadratic(
-        glyphs, max_err=None, reverse_direction=False, stats=None):
+    glyphs, max_err=None, reverse_direction=False, stats=None, all_quadratic=True
+):
     """Convert the curves of a set of compatible of glyphs to quadratic.
 
     All curves will be converted to quadratic at once, ensuring interpolation
@@ -216,12 +229,21 @@ def glyphs_to_quadratic(
         max_errors = [max_err] * len(glyphs)
     assert len(max_errors) == len(glyphs)
 
-    return _glyphs_to_quadratic(glyphs, max_errors, reverse_direction, stats)
+    return _glyphs_to_quadratic(
+        glyphs, max_errors, reverse_direction, stats, all_quadratic
+    )
 
 
 def fonts_to_quadratic(
-        fonts, max_err_em=None, max_err=None, reverse_direction=False,
-        stats=None, dump_stats=False, remember_curve_type=True):
+    fonts,
+    max_err_em=None,
+    max_err=None,
+    reverse_direction=False,
+    stats=None,
+    dump_stats=False,
+    remember_curve_type=True,
+    all_quadratic=True,
+):
     """Convert the curves of a collection of fonts to quadratic.
 
     All curves will be converted to quadratic at once, ensuring interpolation
@@ -243,7 +265,7 @@ def fonts_to_quadratic(
         curve_types = {f.lib.get(CURVE_TYPE_LIB_KEY, "cubic") for f in fonts}
         if len(curve_types) == 1:
             curve_type = next(iter(curve_types))
-            if curve_type == "quadratic":
+            if curve_type in ("quadratic", "mixed"):
                 logger.info("Curves already converted to quadratic")
                 return False
             elif curve_type == "cubic":
@@ -258,7 +280,7 @@ def fonts_to_quadratic(
         stats = {}
 
     if max_err_em and max_err:
-        raise TypeError('Only one of max_err and max_err_em can be specified.')
+        raise TypeError("Only one of max_err and max_err_em can be specified.")
     if not (max_err_em or max_err):
         max_err_em = DEFAULT_MAX_ERR
 
@@ -270,8 +292,7 @@ def fonts_to_quadratic(
 
     if isinstance(max_err_em, (list, tuple)):
         assert len(fonts) == len(max_err_em)
-        max_errors = [f.info.unitsPerEm * e
-                      for f, e in zip(fonts, max_err_em)]
+        max_errors = [f.info.unitsPerEm * e for f, e in zip(fonts, max_err_em)]
     elif max_err_em:
         max_errors = [f.info.unitsPerEm * max_err_em for f in fonts]
 
@@ -286,7 +307,8 @@ def fonts_to_quadratic(
                 cur_max_errors.append(error)
         try:
             modified |= _glyphs_to_quadratic(
-                glyphs, cur_max_errors, reverse_direction, stats)
+                glyphs, cur_max_errors, reverse_direction, stats, all_quadratic
+            )
         except IncompatibleGlyphsError as exc:
             logger.error(exc)
             glyph_errors[name] = exc
@@ -296,14 +318,17 @@ def fonts_to_quadratic(
 
     if modified and dump_stats:
         spline_lengths = sorted(stats.keys())
-        logger.info('New spline lengths: %s' % (', '.join(
-                    '%s: %d' % (l, stats[l]) for l in spline_lengths)))
+        logger.info(
+            "New spline lengths: %s"
+            % (", ".join("%s: %d" % (l, stats[l]) for l in spline_lengths))
+        )
 
     if remember_curve_type:
         for font in fonts:
             curve_type = font.lib.get(CURVE_TYPE_LIB_KEY, "cubic")
-            if curve_type != "quadratic":
-                font.lib[CURVE_TYPE_LIB_KEY] = "quadratic"
+            new_curve_type = "quadratic" if all_quadratic else "mixed"
+            if curve_type != new_curve_type:
+                font.lib[CURVE_TYPE_LIB_KEY] = new_curve_type
                 modified = True
     return modified
 

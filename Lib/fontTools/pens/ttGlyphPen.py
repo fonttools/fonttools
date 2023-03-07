@@ -7,12 +7,58 @@ from fontTools.misc.roundTools import otRound
 from fontTools.pens.basePen import LoggingPen, PenError
 from fontTools.pens.transformPen import TransformPen, TransformPointPen
 from fontTools.ttLib.tables import ttProgram
+from fontTools.ttLib.tables._g_l_y_f import flagOnCurve, flagCubic
 from fontTools.ttLib.tables._g_l_y_f import Glyph
 from fontTools.ttLib.tables._g_l_y_f import GlyphComponent
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
+import math
 
 
 __all__ = ["TTGlyphPen", "TTGlyphPointPen"]
+
+
+def drop_implied_oncurves(glyph):
+    drop = set()
+    start = 0
+    flags = glyph.flags
+    coords = glyph.coordinates
+    for last in glyph.endPtsOfContours:
+        for i in range(start, last + 1):
+            if not (flags[i] & flagOnCurve):
+                continue
+            prv = i - 1 if i > start else last
+            nxt = i + 1 if i < last else start
+            if (flags[prv] & flagOnCurve) or flags[prv] != flags[nxt]:
+                continue
+            p0 = coords[prv]
+            p1 = coords[i]
+            p2 = coords[nxt]
+            if not math.isclose(p1[0] - p0[0], p2[0] - p1[0]) or not math.isclose(
+                p1[1] - p0[1], p2[1] - p1[1]
+            ):
+                continue
+
+            drop.add(i)
+    if drop:
+        # Do the actual dropping
+        glyph.coordinates = GlyphCoordinates(
+            coords[i] for i in range(len(coords)) if i not in drop
+        )
+        glyph.flags = array("B", (flags[i] for i in range(len(flags)) if i not in drop))
+
+        endPts = glyph.endPtsOfContours
+        newEndPts = []
+        i = 0
+        delta = 0
+        for d in sorted(drop):
+            while d > endPts[i]:
+                newEndPts.append(endPts[i] - delta)
+                i += 1
+            delta += 1
+        while i < len(endPts):
+            newEndPts.append(endPts[i] - delta)
+            i += 1
+        glyph.endPtsOfContours = newEndPts
 
 
 class _TTGlyphBasePen:
@@ -124,9 +170,14 @@ class _TTGlyphBasePen:
             components.append(component)
         return components
 
-    def glyph(self, componentFlags: int = 0x4) -> Glyph:
+    def glyph(self, componentFlags: int = 0x04, dropImpliedOnCurves=False) -> Glyph:
         """
         Returns a :py:class:`~._g_l_y_f.Glyph` object representing the glyph.
+
+        Args:
+            componentFlags: Flags to use for component glyphs. (default: 0x04)
+
+            dropImpliedOnCurves: Whether to remove implied-oncurve points. (default: False)
         """
         if not self._isClosed():
             raise PenError("Didn't close last contour.")
@@ -134,9 +185,13 @@ class _TTGlyphBasePen:
 
         glyph = Glyph()
         glyph.coordinates = GlyphCoordinates(self.points)
-        glyph.coordinates.toInt()
         glyph.endPtsOfContours = self.endPts
         glyph.flags = array("B", self.types)
+
+        glyph.coordinates.toInt()
+        if dropImpliedOnCurves:
+            drop_implied_oncurves(glyph)
+
         self.init()
 
         if components:
@@ -164,9 +219,18 @@ class TTGlyphPen(_TTGlyphBasePen, LoggingPen):
     drawMethod = "draw"
     transformPen = TransformPen
 
-    def _addPoint(self, pt: Tuple[float, float], onCurve: int) -> None:
+    def __init__(
+        self,
+        glyphSet: Optional[Dict[str, Any]] = None,
+        handleOverflowingTransforms: bool = True,
+        outputImpliedClosingLine: bool = False,
+    ) -> None:
+        super().__init__(glyphSet, handleOverflowingTransforms)
+        self.outputImpliedClosingLine = outputImpliedClosingLine
+
+    def _addPoint(self, pt: Tuple[float, float], tp: int) -> None:
         self.points.append(pt)
-        self.types.append(onCurve)
+        self.types.append(tp)
 
     def _popPoint(self) -> None:
         self.points.pop()
@@ -178,15 +242,21 @@ class TTGlyphPen(_TTGlyphBasePen, LoggingPen):
         )
 
     def lineTo(self, pt: Tuple[float, float]) -> None:
-        self._addPoint(pt, 1)
+        self._addPoint(pt, flagOnCurve)
 
     def moveTo(self, pt: Tuple[float, float]) -> None:
         if not self._isClosed():
             raise PenError('"move"-type point must begin a new contour.')
-        self._addPoint(pt, 1)
+        self._addPoint(pt, flagOnCurve)
 
     def curveTo(self, *points) -> None:
-        raise NotImplementedError
+        assert len(points) % 2 == 1
+        for pt in points[:-1]:
+            self._addPoint(pt, flagCubic)
+
+        # last point is None if there are no on-curve points
+        if points[-1] is not None:
+            self._addPoint(points[-1], 1)
 
     def qCurveTo(self, *points) -> None:
         assert len(points) >= 1
@@ -205,13 +275,14 @@ class TTGlyphPen(_TTGlyphBasePen, LoggingPen):
             self._popPoint()
             return
 
-        # if first and last point on this path are the same, remove last
-        startPt = 0
-        if self.endPts:
-            startPt = self.endPts[-1] + 1
-        if self.points[startPt] == self.points[endPt]:
-            self._popPoint()
-            endPt -= 1
+        if not self.outputImpliedClosingLine:
+            # if first and last point on this path are the same, remove last
+            startPt = 0
+            if self.endPts:
+                startPt = self.endPts[-1] + 1
+            if self.points[startPt] == self.points[endPt]:
+                self._popPoint()
+                endPt -= 1
 
         self.endPts.append(endPt)
 
@@ -256,8 +327,22 @@ class TTGlyphPointPen(_TTGlyphBasePen, LogMixin, AbstractPointPen):
             raise PenError("Contour is already closed.")
         if self._currentContourStartIndex == len(self.points):
             raise PenError("Tried to end an empty contour.")
+
+        contourStart = self.endPts[-1] + 1 if self.endPts else 0
         self.endPts.append(len(self.points) - 1)
         self._currentContourStartIndex = None
+
+        # Resolve types for any cubic segments
+        flags = self.types
+        for i in range(contourStart, len(flags)):
+            if flags[i] == "curve":
+                j = i - 1
+                if j < contourStart:
+                    j = len(flags) - 1
+                while flags[j] == 0:
+                    flags[j] = flagCubic
+                    j -= 1
+                flags[i] = flagOnCurve
 
     def addPoint(
         self,
@@ -274,11 +359,13 @@ class TTGlyphPointPen(_TTGlyphBasePen, LogMixin, AbstractPointPen):
         if self._isClosed():
             raise PenError("Can't add a point to a closed contour.")
         if segmentType is None:
-            self.types.append(0)  # offcurve
-        elif segmentType in ("qcurve", "line", "move"):
-            self.types.append(1)  # oncurve
+            self.types.append(0)
+        elif segmentType in ("line", "move"):
+            self.types.append(flagOnCurve)
+        elif segmentType == "qcurve":
+            self.types.append(flagOnCurve)
         elif segmentType == "curve":
-            raise NotImplementedError("cubic curves are not supported")
+            self.types.append("curve")
         else:
             raise AssertionError(segmentType)
 

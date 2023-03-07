@@ -22,20 +22,20 @@ from fontTools.misc.textTools import tobytes, tostr
 """
 
 __all__ = [
-    'AxisDescriptor',
-    'AxisLabelDescriptor',
-    'BaseDocReader',
-    'BaseDocWriter',
-    'DesignSpaceDocument',
-    'DesignSpaceDocumentError',
-    'DiscreteAxisDescriptor',
-    'InstanceDescriptor',
-    'LocationLabelDescriptor',
-    'RangeAxisSubsetDescriptor',
-    'RuleDescriptor',
-    'SourceDescriptor',
-    'ValueAxisSubsetDescriptor',
-    'VariableFontDescriptor',
+    "AxisDescriptor",
+    "AxisLabelDescriptor",
+    "BaseDocReader",
+    "BaseDocWriter",
+    "DesignSpaceDocument",
+    "DesignSpaceDocumentError",
+    "DiscreteAxisDescriptor",
+    "InstanceDescriptor",
+    "LocationLabelDescriptor",
+    "RangeAxisSubsetDescriptor",
+    "RuleDescriptor",
+    "SourceDescriptor",
+    "ValueAxisSubsetDescriptor",
+    "VariableFontDescriptor",
 ]
 
 # ElementTree allows to find namespace-prefixed elements, but not attributes
@@ -47,17 +47,18 @@ XML_LANG = XML_NS + "lang"
 def posix(path):
     """Normalize paths using forward slash to work also on Windows."""
     new_path = posixpath.join(*path.split(os.path.sep))
-    if path.startswith('/'):
+    if path.startswith("/"):
         # The above transformation loses absolute paths
-        new_path = '/' + new_path
-    elif path.startswith(r'\\'):
+        new_path = "/" + new_path
+    elif path.startswith(r"\\"):
         # The above transformation loses leading slashes of UNC path mounts
-        new_path = '//' + new_path
+        new_path = "//" + new_path
     return new_path
 
 
 def posixpath_property(private_name):
     """Generate a propery that holds a path always using forward slashes."""
+
     def getter(self):
         # Normal getter
         return getattr(self, private_name)
@@ -77,12 +78,10 @@ class DesignSpaceDocumentError(Exception):
         self.obj = obj
 
     def __str__(self):
-        return str(self.msg) + (
-            ": %r" % self.obj if self.obj is not None else "")
+        return str(self.msg) + (": %r" % self.obj if self.obj is not None else "")
 
 
 class AsDictMixin(object):
-
     def asdict(self):
         d = {}
         for attr, value in self.__dict__.items():
@@ -91,15 +90,13 @@ class AsDictMixin(object):
             if hasattr(value, "asdict"):
                 value = value.asdict()
             elif isinstance(value, list):
-                value = [
-                    v.asdict() if hasattr(v, "asdict") else v for v in value
-                ]
+                value = [v.asdict() if hasattr(v, "asdict") else v for v in value]
             d[attr] = value
         return d
 
 
 class SimpleDescriptor(AsDictMixin):
-    """ Containers for a bunch of attributes"""
+    """Containers for a bunch of attributes"""
 
     # XXX this is ugly. The 'print' is inappropriate here, and instead of
     # assert, it should simply return True/False
@@ -107,13 +104,19 @@ class SimpleDescriptor(AsDictMixin):
         # test if this object contains the same data as the other
         for attr in self._attrs:
             try:
-                assert(getattr(self, attr) == getattr(other, attr))
+                assert getattr(self, attr) == getattr(other, attr)
             except AssertionError:
-                print("failed attribute", attr, getattr(self, attr), "!=", getattr(other, attr))
+                print(
+                    "failed attribute",
+                    attr,
+                    getattr(self, attr),
+                    "!=",
+                    getattr(other, attr),
+                )
 
     def __repr__(self):
         attrs = [f"{a}={repr(getattr(self, a))}," for a in self._attrs]
-        attrs = indent('\n'.join(attrs), '    ')
+        attrs = indent("\n".join(attrs), "    ")
         return f"{self.__class__.__name__}(\n{attrs}\n)"
 
 
@@ -136,13 +139,24 @@ class SourceDescriptor(SimpleDescriptor):
         doc.addSource(s1)
 
     """
+
     flavor = "source"
-    _attrs = ['filename', 'path', 'name', 'layerName',
-              'location', 'copyLib',
-              'copyGroups', 'copyFeatures',
-              'muteKerning', 'muteInfo',
-              'mutedGlyphNames',
-              'familyName', 'styleName', 'localisedFamilyName']
+    _attrs = [
+        "filename",
+        "path",
+        "name",
+        "layerName",
+        "location",
+        "copyLib",
+        "copyGroups",
+        "copyFeatures",
+        "muteKerning",
+        "muteInfo",
+        "mutedGlyphNames",
+        "familyName",
+        "styleName",
+        "localisedFamilyName",
+    ]
 
     filename = posixpath_property("_filename")
     path = posixpath_property("_path")
@@ -194,7 +208,9 @@ class SourceDescriptor(SimpleDescriptor):
         MutatorMath + Varlib.
         """
 
-        self.designLocation = designLocation if designLocation is not None else location or {}
+        self.designLocation = (
+            designLocation if designLocation is not None else location or {}
+        )
         """dict. Axis values for this source, in design space coordinates.
 
         MutatorMath + Varlib.
@@ -312,8 +328,9 @@ class SourceDescriptor(SimpleDescriptor):
         """
         return self.localisedFamilyName.get(languageCode)
 
-
-    def getFullDesignLocation(self, doc: 'DesignSpaceDocument') -> AnisotropicLocationDict:
+    def getFullDesignLocation(
+        self, doc: "DesignSpaceDocument"
+    ) -> AnisotropicLocationDict:
         """Get the complete design location of this source, from its
         :attr:`designLocation` and the document's axis defaults.
 
@@ -355,7 +372,8 @@ class RuleDescriptor(SimpleDescriptor):
             </rule>
         </rules>
     """
-    _attrs = ['name', 'conditionSets', 'subs']   # what do we need here
+
+    _attrs = ["name", "conditionSets", "subs"]  # what do we need here
 
     def __init__(self, *, name=None, conditionSets=None, subs=None):
         self.name = name
@@ -391,14 +409,14 @@ def evaluateConditions(conditions, location):
     - If a condition has no maximum, check for > minimum.
     """
     for cd in conditions:
-        value = location[cd['name']]
-        if cd.get('minimum') is None:
-            if value > cd['maximum']:
+        value = location[cd["name"]]
+        if cd.get("minimum") is None:
+            if value > cd["maximum"]:
                 return False
-        elif cd.get('maximum') is None:
-            if cd['minimum'] > value:
+        elif cd.get("maximum") is None:
+            if cd["minimum"] > value:
                 return False
-        elif not cd['minimum'] <= value <= cd['maximum']:
+        elif not cd["minimum"] <= value <= cd["maximum"]:
             return False
     return True
 
@@ -451,27 +469,30 @@ class InstanceDescriptor(SimpleDescriptor):
         i2.lib['com.coolDesignspaceApp.specimenText'] = 'Hamburgerwhatever'
         doc.addInstance(i2)
     """
+
     flavor = "instance"
     _defaultLanguageCode = "en"
-    _attrs = ['filename',
-              'path',
-              'name',
-              'locationLabel',
-              'designLocation',
-              'userLocation',
-              'familyName',
-              'styleName',
-              'postScriptFontName',
-              'styleMapFamilyName',
-              'styleMapStyleName',
-              'localisedFamilyName',
-              'localisedStyleName',
-              'localisedStyleMapFamilyName',
-              'localisedStyleMapStyleName',
-              'glyphs',
-              'kerning',
-              'info',
-              'lib']
+    _attrs = [
+        "filename",
+        "path",
+        "name",
+        "locationLabel",
+        "designLocation",
+        "userLocation",
+        "familyName",
+        "styleName",
+        "postScriptFontName",
+        "styleMapFamilyName",
+        "styleMapStyleName",
+        "localisedFamilyName",
+        "localisedStyleName",
+        "localisedStyleMapFamilyName",
+        "localisedStyleMapStyleName",
+        "glyphs",
+        "kerning",
+        "info",
+        "lib",
+    ]
 
     filename = posixpath_property("_filename")
     path = posixpath_property("_path")
@@ -535,7 +556,9 @@ class InstanceDescriptor(SimpleDescriptor):
 
         .. versionadded:: 5.0
         """
-        self.designLocation: AnisotropicLocationDict = designLocation if designLocation is not None else (location or {})
+        self.designLocation: AnisotropicLocationDict = (
+            designLocation if designLocation is not None else (location or {})
+        )
         """dict. Axis values for this instance, in design space coordinates.
 
         MutatorMath + Varlib.
@@ -708,7 +731,9 @@ class InstanceDescriptor(SimpleDescriptor):
             if axisName in self.userLocation:
                 del self.userLocation[axisName]
 
-    def getLocationLabelDescriptor(self, doc: 'DesignSpaceDocument') -> Optional[LocationLabelDescriptor]:
+    def getLocationLabelDescriptor(
+        self, doc: "DesignSpaceDocument"
+    ) -> Optional[LocationLabelDescriptor]:
         """Get the :class:`LocationLabelDescriptor` instance that matches
         this instances's :attr:`locationLabel`.
 
@@ -721,12 +746,14 @@ class InstanceDescriptor(SimpleDescriptor):
         label = doc.getLocationLabel(self.locationLabel)
         if label is None:
             raise DesignSpaceDocumentError(
-                'InstanceDescriptor.getLocationLabelDescriptor(): '
-                f'unknown location label `{self.locationLabel}` in instance `{self.name}`.'
+                "InstanceDescriptor.getLocationLabelDescriptor(): "
+                f"unknown location label `{self.locationLabel}` in instance `{self.name}`."
             )
         return label
 
-    def getFullDesignLocation(self, doc: 'DesignSpaceDocument') -> AnisotropicLocationDict:
+    def getFullDesignLocation(
+        self, doc: "DesignSpaceDocument"
+    ) -> AnisotropicLocationDict:
         """Get the complete design location of this instance, by combining data
         from the various location fields, default axis values and mappings, and
         top-level location labels.
@@ -757,7 +784,7 @@ class InstanceDescriptor(SimpleDescriptor):
                 result[axis.name] = axis.map_forward(axis.default)
         return result
 
-    def getFullUserLocation(self, doc: 'DesignSpaceDocument') -> SimpleLocationDict:
+    def getFullUserLocation(self, doc: "DesignSpaceDocument") -> SimpleLocationDict:
         """Get the complete user location for this instance.
 
         .. seealso:: :meth:`getFullDesignLocation`
@@ -770,11 +797,11 @@ class InstanceDescriptor(SimpleDescriptor):
 def tagForAxisName(name):
     # try to find or make a tag name for this axis name
     names = {
-        'weight':   ('wght', dict(en = 'Weight')),
-        'width':    ('wdth', dict(en = 'Width')),
-        'optical':  ('opsz', dict(en = 'Optical Size')),
-        'slant':    ('slnt', dict(en = 'Slant')),
-        'italic':   ('ital', dict(en = 'Italic')),
+        "weight": ("wght", dict(en="Weight")),
+        "width": ("wdth", dict(en="Width")),
+        "optical": ("opsz", dict(en="Optical Size")),
+        "slant": ("slnt", dict(en="Slant")),
+        "italic": ("ital", dict(en="Italic")),
     }
     if name.lower() in names:
         return names[name.lower()]
@@ -848,7 +875,7 @@ class AbstractAxisDescriptor(SimpleDescriptor):
 
 
 class AxisDescriptor(AbstractAxisDescriptor):
-    """ Simple container for the axis data.
+    """Simple container for the axis data.
 
     Add more localisations?
 
@@ -869,7 +896,17 @@ class AxisDescriptor(AbstractAxisDescriptor):
         ]
         doc.addAxis(a1)
     """
-    _attrs = ['tag', 'name', 'maximum', 'minimum', 'default', 'map', 'axisOrdering', 'axisLabels']
+
+    _attrs = [
+        "tag",
+        "name",
+        "maximum",
+        "minimum",
+        "default",
+        "map",
+        "axisOrdering",
+        "axisLabels",
+    ]
 
     def __init__(
         self,
@@ -976,7 +1013,7 @@ class DiscreteAxisDescriptor(AbstractAxisDescriptor):
     """
 
     flavor = "axis"
-    _attrs = ('tag', 'name', 'values', 'default', 'map', 'axisOrdering', 'axisLabels')
+    _attrs = ("tag", "name", "values", "default", "map", "axisOrdering", "axisLabels")
 
     def __init__(
         self,
@@ -1053,7 +1090,16 @@ class AxisLabelDescriptor(SimpleDescriptor):
     """
 
     flavor = "label"
-    _attrs = ('userMinimum', 'userValue', 'userMaximum', 'name', 'elidable', 'olderSibling', 'linkedUserValue', 'labelNames')
+    _attrs = (
+        "userMinimum",
+        "userValue",
+        "userMaximum",
+        "name",
+        "elidable",
+        "olderSibling",
+        "linkedUserValue",
+        "labelNames",
+    )
 
     def __init__(
         self,
@@ -1127,7 +1173,7 @@ class LocationLabelDescriptor(SimpleDescriptor):
     """
 
     flavor = "label"
-    _attrs = ('name', 'elidable', 'olderSibling', 'userLocation', 'labelNames')
+    _attrs = ("name", "elidable", "olderSibling", "userLocation", "labelNames")
 
     def __init__(
         self,
@@ -1168,7 +1214,7 @@ class LocationLabelDescriptor(SimpleDescriptor):
         """Return the English name from :attr:`labelNames` or the :attr:`name`."""
         return self.labelNames.get("en") or self.name
 
-    def getFullUserLocation(self, doc: 'DesignSpaceDocument') -> SimpleLocationDict:
+    def getFullUserLocation(self, doc: "DesignSpaceDocument") -> SimpleLocationDict:
         """Get the complete user location of this label, by combining data
         from the explicit user location and default axis values.
 
@@ -1195,7 +1241,7 @@ class VariableFontDescriptor(SimpleDescriptor):
     """
 
     flavor = "variable-font"
-    _attrs = ('filename', 'axisSubsets', 'lib')
+    _attrs = ("filename", "axisSubsets", "lib")
 
     filename = posixpath_property("_filename")
 
@@ -1213,7 +1259,9 @@ class VariableFontDescriptor(SimpleDescriptor):
 
         If not specified, the :attr:`name` will be used as a basename for the file.
         """
-        self.axisSubsets: List[Union[RangeAxisSubsetDescriptor, ValueAxisSubsetDescriptor]] = axisSubsets or []
+        self.axisSubsets: List[
+            Union[RangeAxisSubsetDescriptor, ValueAxisSubsetDescriptor]
+        ] = (axisSubsets or [])
         """Axis subsets to include in this variable font.
 
         If an axis is not mentioned, assume that we only want the default
@@ -1228,10 +1276,13 @@ class RangeAxisSubsetDescriptor(SimpleDescriptor):
 
     .. versionadded:: 5.0
     """
-    flavor = "axis-subset"
-    _attrs = ('name', 'userMinimum', 'userDefault', 'userMaximum')
 
-    def __init__(self, *, name, userMinimum=-math.inf, userDefault=None, userMaximum=math.inf):
+    flavor = "axis-subset"
+    _attrs = ("name", "userMinimum", "userDefault", "userMaximum")
+
+    def __init__(
+        self, *, name, userMinimum=-math.inf, userDefault=None, userMaximum=math.inf
+    ):
         self.name: str = name
         """Name of the :class:`AxisDescriptor` to subset."""
         self.userMinimum: float = userMinimum
@@ -1256,8 +1307,9 @@ class ValueAxisSubsetDescriptor(SimpleDescriptor):
 
     .. versionadded:: 5.0
     """
+
     flavor = "axis-subset"
-    _attrs = ('name', 'userValue')
+    _attrs = ("name", "userValue")
 
     def __init__(self, *, name, userValue):
         self.name: str = name
@@ -1304,12 +1356,17 @@ class BaseDocWriter(object):
         self.root = ET.Element("designspace")
 
     def write(self, pretty=True, encoding="UTF-8", xml_declaration=True):
-        self.root.attrib['format'] = ".".join(str(i) for i in self.effectiveFormatTuple)
+        self.root.attrib["format"] = ".".join(str(i) for i in self.effectiveFormatTuple)
 
-        if self.documentObject.axes or self.documentObject.elidedFallbackName is not None:
+        if (
+            self.documentObject.axes
+            or self.documentObject.elidedFallbackName is not None
+        ):
             axesElement = ET.Element("axes")
             if self.documentObject.elidedFallbackName is not None:
-                axesElement.attrib['elidedfallbackname'] = self.documentObject.elidedFallbackName
+                axesElement.attrib[
+                    "elidedfallbackname"
+                ] = self.documentObject.elidedFallbackName
             self.root.append(axesElement)
         for axisObject in self.documentObject.axes:
             self._addAxis(axisObject)
@@ -1352,7 +1409,7 @@ class BaseDocWriter(object):
         tree.write(
             self.path,
             encoding=encoding,
-            method='xml',
+            method="xml",
             xml_declaration=xml_declaration,
             pretty_print=pretty,
         )
@@ -1364,20 +1421,16 @@ class BaseDocWriter(object):
         minVersion = self.documentObject.formatTuple
         if (
             any(
-                hasattr(axis, 'values') or
-                axis.axisOrdering is not None or
-                axis.axisLabels
+                hasattr(axis, "values")
+                or axis.axisOrdering is not None
+                or axis.axisLabels
                 for axis in self.documentObject.axes
-            ) or
-            self.documentObject.locationLabels or
-            any(
-                source.localisedFamilyName
-                for source in self.documentObject.sources
-            ) or
-            self.documentObject.variableFonts or
-            any(
-                instance.locationLabel or
-                instance.userLocation
+            )
+            or self.documentObject.locationLabels
+            or any(source.localisedFamilyName for source in self.documentObject.sources)
+            or self.documentObject.variableFonts
+            or any(
+                instance.locationLabel or instance.userLocation
                 for instance in self.documentObject.instances
             )
         ):
@@ -1386,118 +1439,130 @@ class BaseDocWriter(object):
         return minVersion
 
     def _makeLocationElement(self, locationObject, name=None):
-        """ Convert Location dict to a locationElement."""
+        """Convert Location dict to a locationElement."""
         locElement = ET.Element("location")
         if name is not None:
-            locElement.attrib['name'] = name
+            locElement.attrib["name"] = name
         validatedLocation = self.documentObject.newDefaultLocation()
         for axisName, axisValue in locationObject.items():
             if axisName in validatedLocation:
                 # only accept values we know
                 validatedLocation[axisName] = axisValue
         for dimensionName, dimensionValue in validatedLocation.items():
-            dimElement = ET.Element('dimension')
-            dimElement.attrib['name'] = dimensionName
+            dimElement = ET.Element("dimension")
+            dimElement.attrib["name"] = dimensionName
             if type(dimensionValue) == tuple:
-                dimElement.attrib['xvalue'] = self.intOrFloat(dimensionValue[0])
-                dimElement.attrib['yvalue'] = self.intOrFloat(dimensionValue[1])
+                dimElement.attrib["xvalue"] = self.intOrFloat(dimensionValue[0])
+                dimElement.attrib["yvalue"] = self.intOrFloat(dimensionValue[1])
             else:
-                dimElement.attrib['xvalue'] = self.intOrFloat(dimensionValue)
+                dimElement.attrib["xvalue"] = self.intOrFloat(dimensionValue)
             locElement.append(dimElement)
         return locElement, validatedLocation
 
     def intOrFloat(self, num):
         if int(num) == num:
             return "%d" % num
-        return ("%f" % num).rstrip('0').rstrip('.')
+        return ("%f" % num).rstrip("0").rstrip(".")
 
     def _addRule(self, ruleObject):
         # if none of the conditions have minimum or maximum values, do not add the rule.
-        ruleElement = ET.Element('rule')
+        ruleElement = ET.Element("rule")
         if ruleObject.name is not None:
-            ruleElement.attrib['name'] = ruleObject.name
+            ruleElement.attrib["name"] = ruleObject.name
         for conditions in ruleObject.conditionSets:
-            conditionsetElement = ET.Element('conditionset')
+            conditionsetElement = ET.Element("conditionset")
             for cond in conditions:
-                if cond.get('minimum') is None and cond.get('maximum') is None:
+                if cond.get("minimum") is None and cond.get("maximum") is None:
                     # neither is defined, don't add this condition
                     continue
-                conditionElement = ET.Element('condition')
-                conditionElement.attrib['name'] = cond.get('name')
-                if cond.get('minimum') is not None:
-                    conditionElement.attrib['minimum'] = self.intOrFloat(cond.get('minimum'))
-                if cond.get('maximum') is not None:
-                    conditionElement.attrib['maximum'] = self.intOrFloat(cond.get('maximum'))
+                conditionElement = ET.Element("condition")
+                conditionElement.attrib["name"] = cond.get("name")
+                if cond.get("minimum") is not None:
+                    conditionElement.attrib["minimum"] = self.intOrFloat(
+                        cond.get("minimum")
+                    )
+                if cond.get("maximum") is not None:
+                    conditionElement.attrib["maximum"] = self.intOrFloat(
+                        cond.get("maximum")
+                    )
                 conditionsetElement.append(conditionElement)
             if len(conditionsetElement):
                 ruleElement.append(conditionsetElement)
         for sub in ruleObject.subs:
-            subElement = ET.Element('sub')
-            subElement.attrib['name'] = sub[0]
-            subElement.attrib['with'] = sub[1]
+            subElement = ET.Element("sub")
+            subElement.attrib["name"] = sub[0]
+            subElement.attrib["with"] = sub[1]
             ruleElement.append(subElement)
         if len(ruleElement):
-            self.root.findall('.rules')[0].append(ruleElement)
+            self.root.findall(".rules")[0].append(ruleElement)
 
     def _addAxis(self, axisObject):
-        axisElement = ET.Element('axis')
-        axisElement.attrib['tag'] = axisObject.tag
-        axisElement.attrib['name'] = axisObject.name
+        axisElement = ET.Element("axis")
+        axisElement.attrib["tag"] = axisObject.tag
+        axisElement.attrib["name"] = axisObject.name
         self._addLabelNames(axisElement, axisObject.labelNames)
         if axisObject.map:
             for inputValue, outputValue in axisObject.map:
-                mapElement = ET.Element('map')
-                mapElement.attrib['input'] = self.intOrFloat(inputValue)
-                mapElement.attrib['output'] = self.intOrFloat(outputValue)
+                mapElement = ET.Element("map")
+                mapElement.attrib["input"] = self.intOrFloat(inputValue)
+                mapElement.attrib["output"] = self.intOrFloat(outputValue)
                 axisElement.append(mapElement)
         if axisObject.axisOrdering or axisObject.axisLabels:
-            labelsElement = ET.Element('labels')
+            labelsElement = ET.Element("labels")
             if axisObject.axisOrdering is not None:
-                labelsElement.attrib['ordering'] = str(axisObject.axisOrdering)
+                labelsElement.attrib["ordering"] = str(axisObject.axisOrdering)
             for label in axisObject.axisLabels:
                 self._addAxisLabel(labelsElement, label)
             axisElement.append(labelsElement)
         if hasattr(axisObject, "minimum"):
-            axisElement.attrib['minimum'] = self.intOrFloat(axisObject.minimum)
-            axisElement.attrib['maximum'] = self.intOrFloat(axisObject.maximum)
+            axisElement.attrib["minimum"] = self.intOrFloat(axisObject.minimum)
+            axisElement.attrib["maximum"] = self.intOrFloat(axisObject.maximum)
         elif hasattr(axisObject, "values"):
-            axisElement.attrib['values'] = " ".join(self.intOrFloat(v) for v in axisObject.values)
-        axisElement.attrib['default'] = self.intOrFloat(axisObject.default)
+            axisElement.attrib["values"] = " ".join(
+                self.intOrFloat(v) for v in axisObject.values
+            )
+        axisElement.attrib["default"] = self.intOrFloat(axisObject.default)
         if axisObject.hidden:
-            axisElement.attrib['hidden'] = "1"
-        self.root.findall('.axes')[0].append(axisElement)
+            axisElement.attrib["hidden"] = "1"
+        self.root.findall(".axes")[0].append(axisElement)
 
-    def _addAxisLabel(self, axisElement: ET.Element, label: AxisLabelDescriptor) -> None:
-        labelElement = ET.Element('label')
-        labelElement.attrib['uservalue'] = self.intOrFloat(label.userValue)
+    def _addAxisLabel(
+        self, axisElement: ET.Element, label: AxisLabelDescriptor
+    ) -> None:
+        labelElement = ET.Element("label")
+        labelElement.attrib["uservalue"] = self.intOrFloat(label.userValue)
         if label.userMinimum is not None:
-            labelElement.attrib['userminimum'] = self.intOrFloat(label.userMinimum)
+            labelElement.attrib["userminimum"] = self.intOrFloat(label.userMinimum)
         if label.userMaximum is not None:
-            labelElement.attrib['usermaximum'] = self.intOrFloat(label.userMaximum)
-        labelElement.attrib['name'] = label.name
+            labelElement.attrib["usermaximum"] = self.intOrFloat(label.userMaximum)
+        labelElement.attrib["name"] = label.name
         if label.elidable:
-            labelElement.attrib['elidable'] = "true"
+            labelElement.attrib["elidable"] = "true"
         if label.olderSibling:
-            labelElement.attrib['oldersibling'] = "true"
+            labelElement.attrib["oldersibling"] = "true"
         if label.linkedUserValue is not None:
-            labelElement.attrib['linkeduservalue'] = self.intOrFloat(label.linkedUserValue)
+            labelElement.attrib["linkeduservalue"] = self.intOrFloat(
+                label.linkedUserValue
+            )
         self._addLabelNames(labelElement, label.labelNames)
         axisElement.append(labelElement)
 
     def _addLabelNames(self, parentElement, labelNames):
         for languageCode, labelName in sorted(labelNames.items()):
-            languageElement = ET.Element('labelname')
+            languageElement = ET.Element("labelname")
             languageElement.attrib[XML_LANG] = languageCode
             languageElement.text = labelName
             parentElement.append(languageElement)
 
-    def _addLocationLabel(self, parentElement: ET.Element, label: LocationLabelDescriptor) -> None:
-        labelElement = ET.Element('label')
-        labelElement.attrib['name'] = label.name
+    def _addLocationLabel(
+        self, parentElement: ET.Element, label: LocationLabelDescriptor
+    ) -> None:
+        labelElement = ET.Element("label")
+        labelElement.attrib["name"] = label.name
         if label.elidable:
-            labelElement.attrib['elidable'] = "true"
+            labelElement.attrib["elidable"] = "true"
         if label.olderSibling:
-            labelElement.attrib['oldersibling'] = "true"
+            labelElement.attrib["oldersibling"] = "true"
         self._addLabelNames(labelElement, label.labelNames)
         self._addLocationElement(labelElement, userLocation=label.userLocation)
         parentElement.append(labelElement)
@@ -1507,39 +1572,39 @@ class BaseDocWriter(object):
         parentElement,
         *,
         designLocation: AnisotropicLocationDict = None,
-        userLocation: SimpleLocationDict = None
+        userLocation: SimpleLocationDict = None,
     ):
         locElement = ET.Element("location")
         for axis in self.documentObject.axes:
             if designLocation is not None and axis.name in designLocation:
-                dimElement = ET.Element('dimension')
-                dimElement.attrib['name'] = axis.name
+                dimElement = ET.Element("dimension")
+                dimElement.attrib["name"] = axis.name
                 value = designLocation[axis.name]
                 if isinstance(value, tuple):
-                    dimElement.attrib['xvalue'] = self.intOrFloat(value[0])
-                    dimElement.attrib['yvalue'] = self.intOrFloat(value[1])
+                    dimElement.attrib["xvalue"] = self.intOrFloat(value[0])
+                    dimElement.attrib["yvalue"] = self.intOrFloat(value[1])
                 else:
-                    dimElement.attrib['xvalue'] = self.intOrFloat(value)
+                    dimElement.attrib["xvalue"] = self.intOrFloat(value)
                 locElement.append(dimElement)
             elif userLocation is not None and axis.name in userLocation:
-                dimElement = ET.Element('dimension')
-                dimElement.attrib['name'] = axis.name
+                dimElement = ET.Element("dimension")
+                dimElement.attrib["name"] = axis.name
                 value = userLocation[axis.name]
-                dimElement.attrib['uservalue'] = self.intOrFloat(value)
+                dimElement.attrib["uservalue"] = self.intOrFloat(value)
                 locElement.append(dimElement)
         if len(locElement) > 0:
             parentElement.append(locElement)
 
     def _addInstance(self, instanceObject):
-        instanceElement = ET.Element('instance')
+        instanceElement = ET.Element("instance")
         if instanceObject.name is not None:
-            instanceElement.attrib['name'] = instanceObject.name
+            instanceElement.attrib["name"] = instanceObject.name
         if instanceObject.locationLabel is not None:
-            instanceElement.attrib['location'] = instanceObject.locationLabel
+            instanceElement.attrib["location"] = instanceObject.locationLabel
         if instanceObject.familyName is not None:
-            instanceElement.attrib['familyname'] = instanceObject.familyName
+            instanceElement.attrib["familyname"] = instanceObject.familyName
         if instanceObject.styleName is not None:
-            instanceElement.attrib['stylename'] = instanceObject.styleName
+            instanceElement.attrib["stylename"] = instanceObject.styleName
         # add localisations
         if instanceObject.localisedStyleName:
             languageCodes = list(instanceObject.localisedStyleName.keys())
@@ -1547,7 +1612,7 @@ class BaseDocWriter(object):
             for code in languageCodes:
                 if code == "en":
                     continue  # already stored in the element attribute
-                localisedStyleNameElement = ET.Element('stylename')
+                localisedStyleNameElement = ET.Element("stylename")
                 localisedStyleNameElement.attrib[XML_LANG] = code
                 localisedStyleNameElement.text = instanceObject.getStyleName(code)
                 instanceElement.append(localisedStyleNameElement)
@@ -1557,7 +1622,7 @@ class BaseDocWriter(object):
             for code in languageCodes:
                 if code == "en":
                     continue  # already stored in the element attribute
-                localisedFamilyNameElement = ET.Element('familyname')
+                localisedFamilyNameElement = ET.Element("familyname")
                 localisedFamilyNameElement.attrib[XML_LANG] = code
                 localisedFamilyNameElement.text = instanceObject.getFamilyName(code)
                 instanceElement.append(localisedFamilyNameElement)
@@ -1567,9 +1632,11 @@ class BaseDocWriter(object):
             for code in languageCodes:
                 if code == "en":
                     continue
-                localisedStyleMapStyleNameElement = ET.Element('stylemapstylename')
+                localisedStyleMapStyleNameElement = ET.Element("stylemapstylename")
                 localisedStyleMapStyleNameElement.attrib[XML_LANG] = code
-                localisedStyleMapStyleNameElement.text = instanceObject.getStyleMapStyleName(code)
+                localisedStyleMapStyleNameElement.text = (
+                    instanceObject.getStyleMapStyleName(code)
+                )
                 instanceElement.append(localisedStyleMapStyleNameElement)
         if instanceObject.localisedStyleMapFamilyName:
             languageCodes = list(instanceObject.localisedStyleMapFamilyName.keys())
@@ -1577,9 +1644,11 @@ class BaseDocWriter(object):
             for code in languageCodes:
                 if code == "en":
                     continue
-                localisedStyleMapFamilyNameElement = ET.Element('stylemapfamilyname')
+                localisedStyleMapFamilyNameElement = ET.Element("stylemapfamilyname")
                 localisedStyleMapFamilyNameElement.attrib[XML_LANG] = code
-                localisedStyleMapFamilyNameElement.text = instanceObject.getStyleMapFamilyName(code)
+                localisedStyleMapFamilyNameElement.text = (
+                    instanceObject.getStyleMapFamilyName(code)
+                )
                 instanceElement.append(localisedStyleMapFamilyNameElement)
 
         if self.effectiveFormatTuple >= (5, 0):
@@ -1587,127 +1656,151 @@ class BaseDocWriter(object):
                 self._addLocationElement(
                     instanceElement,
                     designLocation=instanceObject.designLocation,
-                    userLocation=instanceObject.userLocation
+                    userLocation=instanceObject.userLocation,
                 )
         else:
             # Pre-version 5.0 code was validating and filling in the location
             # dict while writing it out, as preserved below.
             if instanceObject.location is not None:
-                locationElement, instanceObject.location = self._makeLocationElement(instanceObject.location)
+                locationElement, instanceObject.location = self._makeLocationElement(
+                    instanceObject.location
+                )
                 instanceElement.append(locationElement)
         if instanceObject.filename is not None:
-            instanceElement.attrib['filename'] = instanceObject.filename
+            instanceElement.attrib["filename"] = instanceObject.filename
         if instanceObject.postScriptFontName is not None:
-            instanceElement.attrib['postscriptfontname'] = instanceObject.postScriptFontName
+            instanceElement.attrib[
+                "postscriptfontname"
+            ] = instanceObject.postScriptFontName
         if instanceObject.styleMapFamilyName is not None:
-            instanceElement.attrib['stylemapfamilyname'] = instanceObject.styleMapFamilyName
+            instanceElement.attrib[
+                "stylemapfamilyname"
+            ] = instanceObject.styleMapFamilyName
         if instanceObject.styleMapStyleName is not None:
-            instanceElement.attrib['stylemapstylename'] = instanceObject.styleMapStyleName
+            instanceElement.attrib[
+                "stylemapstylename"
+            ] = instanceObject.styleMapStyleName
         if self.effectiveFormatTuple < (5, 0):
             # Deprecated members as of version 5.0
             if instanceObject.glyphs:
-                if instanceElement.findall('.glyphs') == []:
-                    glyphsElement = ET.Element('glyphs')
+                if instanceElement.findall(".glyphs") == []:
+                    glyphsElement = ET.Element("glyphs")
                     instanceElement.append(glyphsElement)
-                glyphsElement = instanceElement.findall('.glyphs')[0]
+                glyphsElement = instanceElement.findall(".glyphs")[0]
                 for glyphName, data in sorted(instanceObject.glyphs.items()):
-                    glyphElement = self._writeGlyphElement(instanceElement, instanceObject, glyphName, data)
+                    glyphElement = self._writeGlyphElement(
+                        instanceElement, instanceObject, glyphName, data
+                    )
                     glyphsElement.append(glyphElement)
             if instanceObject.kerning:
-                kerningElement = ET.Element('kerning')
+                kerningElement = ET.Element("kerning")
                 instanceElement.append(kerningElement)
             if instanceObject.info:
-                infoElement = ET.Element('info')
+                infoElement = ET.Element("info")
                 instanceElement.append(infoElement)
         self._addLib(instanceElement, instanceObject.lib, 4)
-        self.root.findall('.instances')[0].append(instanceElement)
+        self.root.findall(".instances")[0].append(instanceElement)
 
     def _addSource(self, sourceObject):
         sourceElement = ET.Element("source")
         if sourceObject.filename is not None:
-            sourceElement.attrib['filename'] = sourceObject.filename
+            sourceElement.attrib["filename"] = sourceObject.filename
         if sourceObject.name is not None:
             if sourceObject.name.find("temp_master") != 0:
                 # do not save temporary source names
-                sourceElement.attrib['name'] = sourceObject.name
+                sourceElement.attrib["name"] = sourceObject.name
         if sourceObject.familyName is not None:
-            sourceElement.attrib['familyname'] = sourceObject.familyName
+            sourceElement.attrib["familyname"] = sourceObject.familyName
         if sourceObject.styleName is not None:
-            sourceElement.attrib['stylename'] = sourceObject.styleName
+            sourceElement.attrib["stylename"] = sourceObject.styleName
         if sourceObject.layerName is not None:
-            sourceElement.attrib['layer'] = sourceObject.layerName
+            sourceElement.attrib["layer"] = sourceObject.layerName
         if sourceObject.localisedFamilyName:
             languageCodes = list(sourceObject.localisedFamilyName.keys())
             languageCodes.sort()
             for code in languageCodes:
                 if code == "en":
                     continue  # already stored in the element attribute
-                localisedFamilyNameElement = ET.Element('familyname')
+                localisedFamilyNameElement = ET.Element("familyname")
                 localisedFamilyNameElement.attrib[XML_LANG] = code
                 localisedFamilyNameElement.text = sourceObject.getFamilyName(code)
                 sourceElement.append(localisedFamilyNameElement)
         if sourceObject.copyLib:
-            libElement = ET.Element('lib')
-            libElement.attrib['copy'] = "1"
+            libElement = ET.Element("lib")
+            libElement.attrib["copy"] = "1"
             sourceElement.append(libElement)
         if sourceObject.copyGroups:
-            groupsElement = ET.Element('groups')
-            groupsElement.attrib['copy'] = "1"
+            groupsElement = ET.Element("groups")
+            groupsElement.attrib["copy"] = "1"
             sourceElement.append(groupsElement)
         if sourceObject.copyFeatures:
-            featuresElement = ET.Element('features')
-            featuresElement.attrib['copy'] = "1"
+            featuresElement = ET.Element("features")
+            featuresElement.attrib["copy"] = "1"
             sourceElement.append(featuresElement)
         if sourceObject.copyInfo or sourceObject.muteInfo:
-            infoElement = ET.Element('info')
+            infoElement = ET.Element("info")
             if sourceObject.copyInfo:
-                infoElement.attrib['copy'] = "1"
+                infoElement.attrib["copy"] = "1"
             if sourceObject.muteInfo:
-                infoElement.attrib['mute'] = "1"
+                infoElement.attrib["mute"] = "1"
             sourceElement.append(infoElement)
         if sourceObject.muteKerning:
             kerningElement = ET.Element("kerning")
-            kerningElement.attrib["mute"] = '1'
+            kerningElement.attrib["mute"] = "1"
             sourceElement.append(kerningElement)
         if sourceObject.mutedGlyphNames:
             for name in sourceObject.mutedGlyphNames:
                 glyphElement = ET.Element("glyph")
                 glyphElement.attrib["name"] = name
-                glyphElement.attrib["mute"] = '1'
+                glyphElement.attrib["mute"] = "1"
                 sourceElement.append(glyphElement)
         if self.effectiveFormatTuple >= (5, 0):
-            self._addLocationElement(sourceElement, designLocation=sourceObject.location)
+            self._addLocationElement(
+                sourceElement, designLocation=sourceObject.location
+            )
         else:
             # Pre-version 5.0 code was validating and filling in the location
             # dict while writing it out, as preserved below.
-            locationElement, sourceObject.location = self._makeLocationElement(sourceObject.location)
+            locationElement, sourceObject.location = self._makeLocationElement(
+                sourceObject.location
+            )
             sourceElement.append(locationElement)
-        self.root.findall('.sources')[0].append(sourceElement)
+        self.root.findall(".sources")[0].append(sourceElement)
 
-    def _addVariableFont(self, parentElement: ET.Element, vf: VariableFontDescriptor) -> None:
-        vfElement = ET.Element('variable-font')
-        vfElement.attrib['name'] = vf.name
+    def _addVariableFont(
+        self, parentElement: ET.Element, vf: VariableFontDescriptor
+    ) -> None:
+        vfElement = ET.Element("variable-font")
+        vfElement.attrib["name"] = vf.name
         if vf.filename is not None:
-            vfElement.attrib['filename'] = vf.filename
+            vfElement.attrib["filename"] = vf.filename
         if vf.axisSubsets:
-            subsetsElement = ET.Element('axis-subsets')
+            subsetsElement = ET.Element("axis-subsets")
             for subset in vf.axisSubsets:
-                subsetElement = ET.Element('axis-subset')
-                subsetElement.attrib['name'] = subset.name
+                subsetElement = ET.Element("axis-subset")
+                subsetElement.attrib["name"] = subset.name
                 # Mypy doesn't support narrowing union types via hasattr()
                 # https://mypy.readthedocs.io/en/stable/type_narrowing.html
                 # TODO(Python 3.10): use TypeGuard
                 if hasattr(subset, "userMinimum"):
                     subset = cast(RangeAxisSubsetDescriptor, subset)
                     if subset.userMinimum != -math.inf:
-                        subsetElement.attrib['userminimum'] = self.intOrFloat(subset.userMinimum)
+                        subsetElement.attrib["userminimum"] = self.intOrFloat(
+                            subset.userMinimum
+                        )
                     if subset.userMaximum != math.inf:
-                        subsetElement.attrib['usermaximum'] = self.intOrFloat(subset.userMaximum)
+                        subsetElement.attrib["usermaximum"] = self.intOrFloat(
+                            subset.userMaximum
+                        )
                     if subset.userDefault is not None:
-                        subsetElement.attrib['userdefault'] = self.intOrFloat(subset.userDefault)
+                        subsetElement.attrib["userdefault"] = self.intOrFloat(
+                            subset.userDefault
+                        )
                 elif hasattr(subset, "userValue"):
                     subset = cast(ValueAxisSubsetDescriptor, subset)
-                    subsetElement.attrib['uservalue'] = self.intOrFloat(subset.userValue)
+                    subsetElement.attrib["uservalue"] = self.intOrFloat(
+                        subset.userValue
+                    )
                 subsetsElement.append(subsetElement)
             vfElement.append(subsetsElement)
         self._addLib(vfElement, vf.lib, 4)
@@ -1716,35 +1809,41 @@ class BaseDocWriter(object):
     def _addLib(self, parentElement: ET.Element, data: Any, indent_level: int) -> None:
         if not data:
             return
-        libElement = ET.Element('lib')
+        libElement = ET.Element("lib")
         libElement.append(plistlib.totree(data, indent_level=indent_level))
         parentElement.append(libElement)
 
     def _writeGlyphElement(self, instanceElement, instanceObject, glyphName, data):
-        glyphElement = ET.Element('glyph')
-        if data.get('mute'):
-            glyphElement.attrib['mute'] = "1"
-        if data.get('unicodes') is not None:
-            glyphElement.attrib['unicode'] = " ".join([hex(u) for u in data.get('unicodes')])
-        if data.get('instanceLocation') is not None:
-            locationElement, data['instanceLocation'] = self._makeLocationElement(data.get('instanceLocation'))
+        glyphElement = ET.Element("glyph")
+        if data.get("mute"):
+            glyphElement.attrib["mute"] = "1"
+        if data.get("unicodes") is not None:
+            glyphElement.attrib["unicode"] = " ".join(
+                [hex(u) for u in data.get("unicodes")]
+            )
+        if data.get("instanceLocation") is not None:
+            locationElement, data["instanceLocation"] = self._makeLocationElement(
+                data.get("instanceLocation")
+            )
             glyphElement.append(locationElement)
         if glyphName is not None:
-            glyphElement.attrib['name'] = glyphName
-        if data.get('note') is not None:
-            noteElement = ET.Element('note')
-            noteElement.text = data.get('note')
+            glyphElement.attrib["name"] = glyphName
+        if data.get("note") is not None:
+            noteElement = ET.Element("note")
+            noteElement.text = data.get("note")
             glyphElement.append(noteElement)
-        if data.get('masters') is not None:
+        if data.get("masters") is not None:
             mastersElement = ET.Element("masters")
-            for m in data.get('masters'):
+            for m in data.get("masters"):
                 masterElement = ET.Element("master")
-                if m.get('glyphName') is not None:
-                    masterElement.attrib['glyphname'] = m.get('glyphName')
-                if m.get('font') is not None:
-                    masterElement.attrib['source'] = m.get('font')
-                if m.get('location') is not None:
-                    locationElement, m['location'] = self._makeLocationElement(m.get('location'))
+                if m.get("glyphName") is not None:
+                    masterElement.attrib["glyphname"] = m.get("glyphName")
+                if m.get("font") is not None:
+                    masterElement.attrib["source"] = m.get("font")
+                if m.get("location") is not None:
+                    locationElement, m["location"] = self._makeLocationElement(
+                        m.get("location")
+                    )
                     masterElement.append(locationElement)
                 mastersElement.append(masterElement)
             glyphElement.append(mastersElement)
@@ -1801,7 +1900,8 @@ class BaseDocReader(LogMixin):
             if processingValue not in {"first", "last"}:
                 raise DesignSpaceDocumentError(
                     "<rules> processing attribute value is not valid: %r, "
-                    "expected 'first' or 'last'" % processingValue)
+                    "expected 'first' or 'last'" % processingValue
+                )
             self.documentObject.rulesProcessingLast = processingValue == "last"
         for ruleElement in self.root.findall(".rules/rule"):
             ruleObject = self.ruleDescriptorClass()
@@ -1818,71 +1918,79 @@ class BaseDocReader(LogMixin):
                     "Wrapped them in a new conditionset."
                 )
             # read the conditionsets
-            for conditionSetElement in ruleElement.findall('.conditionset'):
+            for conditionSetElement in ruleElement.findall(".conditionset"):
                 conditionSet = self._readConditionElements(
                     conditionSetElement,
                     ruleName,
                 )
                 if conditionSet is not None:
                     ruleObject.conditionSets.append(conditionSet)
-            for subElement in ruleElement.findall('.sub'):
-                a = subElement.attrib['name']
-                b = subElement.attrib['with']
+            for subElement in ruleElement.findall(".sub"):
+                a = subElement.attrib["name"]
+                b = subElement.attrib["with"]
                 ruleObject.subs.append((a, b))
             rules.append(ruleObject)
         self.documentObject.rules = rules
 
     def _readConditionElements(self, parentElement, ruleName=None):
         cds = []
-        for conditionElement in parentElement.findall('.condition'):
+        for conditionElement in parentElement.findall(".condition"):
             cd = {}
             cdMin = conditionElement.attrib.get("minimum")
             if cdMin is not None:
-                cd['minimum'] = float(cdMin)
+                cd["minimum"] = float(cdMin)
             else:
                 # will allow these to be None, assume axis.minimum
-                cd['minimum'] = None
+                cd["minimum"] = None
             cdMax = conditionElement.attrib.get("maximum")
             if cdMax is not None:
-                cd['maximum'] = float(cdMax)
+                cd["maximum"] = float(cdMax)
             else:
                 # will allow these to be None, assume axis.maximum
-                cd['maximum'] = None
-            cd['name'] = conditionElement.attrib.get("name")
+                cd["maximum"] = None
+            cd["name"] = conditionElement.attrib.get("name")
             # # test for things
-            if cd.get('minimum') is None and cd.get('maximum') is None:
+            if cd.get("minimum") is None and cd.get("maximum") is None:
                 raise DesignSpaceDocumentError(
-                    "condition missing required minimum or maximum in rule" +
-                    (" '%s'" % ruleName if ruleName is not None else ""))
+                    "condition missing required minimum or maximum in rule"
+                    + (" '%s'" % ruleName if ruleName is not None else "")
+                )
             cds.append(cd)
         return cds
 
     def readAxes(self):
         # read the axes elements, including the warp map.
         axesElement = self.root.find(".axes")
-        if axesElement is not None and 'elidedfallbackname' in axesElement.attrib:
-            self.documentObject.elidedFallbackName = axesElement.attrib['elidedfallbackname']
+        if axesElement is not None and "elidedfallbackname" in axesElement.attrib:
+            self.documentObject.elidedFallbackName = axesElement.attrib[
+                "elidedfallbackname"
+            ]
         axisElements = self.root.findall(".axes/axis")
         if not axisElements:
             return
         for axisElement in axisElements:
-            if self.documentObject.formatTuple >= (5, 0) and "values" in axisElement.attrib:
+            if (
+                self.documentObject.formatTuple >= (5, 0)
+                and "values" in axisElement.attrib
+            ):
                 axisObject = self.discreteAxisDescriptorClass()
-                axisObject.values = [float(s) for s in axisElement.attrib["values"].split(" ")]
+                axisObject.values = [
+                    float(s) for s in axisElement.attrib["values"].split(" ")
+                ]
             else:
                 axisObject = self.axisDescriptorClass()
                 axisObject.minimum = float(axisElement.attrib.get("minimum"))
                 axisObject.maximum = float(axisElement.attrib.get("maximum"))
             axisObject.default = float(axisElement.attrib.get("default"))
             axisObject.name = axisElement.attrib.get("name")
-            if axisElement.attrib.get('hidden', False):
+            if axisElement.attrib.get("hidden", False):
                 axisObject.hidden = True
             axisObject.tag = axisElement.attrib.get("tag")
-            for mapElement in axisElement.findall('map'):
-                a = float(mapElement.attrib['input'])
-                b = float(mapElement.attrib['output'])
+            for mapElement in axisElement.findall("map"):
+                a = float(mapElement.attrib["input"])
+                b = float(mapElement.attrib["output"])
                 axisObject.map.append((a, b))
-            for labelNameElement in axisElement.findall('labelname'):
+            for labelNameElement in axisElement.findall("labelname"):
                 # Note: elementtree reads the "xml:lang" attribute name as
                 # '{http://www.w3.org/XML/1998/namespace}lang'
                 for key, lang in labelNameElement.items():
@@ -1898,17 +2006,29 @@ class BaseDocReader(LogMixin):
             self.axisDefaults[axisObject.name] = axisObject.default
 
     def readAxisLabel(self, element: ET.Element):
-        xml_attrs = {'userminimum', 'uservalue', 'usermaximum', 'name', 'elidable', 'oldersibling', 'linkeduservalue'}
+        xml_attrs = {
+            "userminimum",
+            "uservalue",
+            "usermaximum",
+            "name",
+            "elidable",
+            "oldersibling",
+            "linkeduservalue",
+        }
         unknown_attrs = set(element.attrib) - xml_attrs
         if unknown_attrs:
-            raise DesignSpaceDocumentError(f"label element contains unknown attributes: {', '.join(unknown_attrs)}")
+            raise DesignSpaceDocumentError(
+                f"label element contains unknown attributes: {', '.join(unknown_attrs)}"
+            )
 
         name = element.get("name")
         if name is None:
             raise DesignSpaceDocumentError("label element must have a name attribute.")
         valueStr = element.get("uservalue")
         if valueStr is None:
-            raise DesignSpaceDocumentError("label element must have a uservalue attribute.")
+            raise DesignSpaceDocumentError(
+                "label element must have a uservalue attribute."
+            )
         value = float(valueStr)
         minimumStr = element.get("userminimum")
         minimum = float(minimumStr) if minimumStr is not None else None
@@ -1941,18 +2061,24 @@ class BaseDocReader(LogMixin):
         if self.documentObject.formatTuple < (5, 0):
             return
 
-        xml_attrs = {'name', 'elidable', 'oldersibling'}
+        xml_attrs = {"name", "elidable", "oldersibling"}
         for labelElement in self.root.findall(".labels/label"):
             unknown_attrs = set(labelElement.attrib) - xml_attrs
             if unknown_attrs:
-                raise DesignSpaceDocumentError(f"Label element contains unknown attributes: {', '.join(unknown_attrs)}")
+                raise DesignSpaceDocumentError(
+                    f"Label element contains unknown attributes: {', '.join(unknown_attrs)}"
+                )
 
             name = labelElement.get("name")
             if name is None:
-                raise DesignSpaceDocumentError("label element must have a name attribute.")
+                raise DesignSpaceDocumentError(
+                    "label element must have a name attribute."
+                )
             designLocation, userLocation = self.locationFromElement(labelElement)
             if designLocation:
-                raise DesignSpaceDocumentError(f'<label> element "{name}" must only have user locations (using uservalue="").')
+                raise DesignSpaceDocumentError(
+                    f'<label> element "{name}" must only have user locations (using uservalue="").'
+                )
             elidable = True if labelElement.get("elidable") == "true" else False
             olderSibling = True if labelElement.get("oldersibling") == "true" else False
             labelNames = {
@@ -1976,21 +2102,27 @@ class BaseDocReader(LogMixin):
         if self.documentObject.formatTuple < (5, 0):
             return
 
-        xml_attrs = {'name', 'filename'}
+        xml_attrs = {"name", "filename"}
         for variableFontElement in self.root.findall(".variable-fonts/variable-font"):
             unknown_attrs = set(variableFontElement.attrib) - xml_attrs
             if unknown_attrs:
-                raise DesignSpaceDocumentError(f"variable-font element contains unknown attributes: {', '.join(unknown_attrs)}")
+                raise DesignSpaceDocumentError(
+                    f"variable-font element contains unknown attributes: {', '.join(unknown_attrs)}"
+                )
 
             name = variableFontElement.get("name")
             if name is None:
-                raise DesignSpaceDocumentError("variable-font element must have a name attribute.")
+                raise DesignSpaceDocumentError(
+                    "variable-font element must have a name attribute."
+                )
 
             filename = variableFontElement.get("filename")
 
             axisSubsetsElement = variableFontElement.find(".axis-subsets")
             if axisSubsetsElement is None:
-                raise DesignSpaceDocumentError("variable-font element must contain an axis-subsets element.")
+                raise DesignSpaceDocumentError(
+                    "variable-font element must contain an axis-subsets element."
+                )
             axisSubsets = []
             for axisSubset in axisSubsetsElement.iterfind(".axis-subset"):
                 axisSubsets.append(self.readAxisSubset(axisSubset))
@@ -2010,14 +2142,18 @@ class BaseDocReader(LogMixin):
 
     def readAxisSubset(self, element: ET.Element):
         if "uservalue" in element.attrib:
-            xml_attrs = {'name', 'uservalue'}
+            xml_attrs = {"name", "uservalue"}
             unknown_attrs = set(element.attrib) - xml_attrs
             if unknown_attrs:
-                raise DesignSpaceDocumentError(f"axis-subset element contains unknown attributes: {', '.join(unknown_attrs)}")
+                raise DesignSpaceDocumentError(
+                    f"axis-subset element contains unknown attributes: {', '.join(unknown_attrs)}"
+                )
 
             name = element.get("name")
             if name is None:
-                raise DesignSpaceDocumentError("axis-subset element must have a name attribute.")
+                raise DesignSpaceDocumentError(
+                    "axis-subset element must have a name attribute."
+                )
             userValueStr = element.get("uservalue")
             if userValueStr is None:
                 raise DesignSpaceDocumentError(
@@ -2027,19 +2163,27 @@ class BaseDocReader(LogMixin):
 
             return self.valueAxisSubsetDescriptorClass(name=name, userValue=userValue)
         else:
-            xml_attrs = {'name', 'userminimum', 'userdefault', 'usermaximum'}
+            xml_attrs = {"name", "userminimum", "userdefault", "usermaximum"}
             unknown_attrs = set(element.attrib) - xml_attrs
             if unknown_attrs:
-                raise DesignSpaceDocumentError(f"axis-subset element contains unknown attributes: {', '.join(unknown_attrs)}")
+                raise DesignSpaceDocumentError(
+                    f"axis-subset element contains unknown attributes: {', '.join(unknown_attrs)}"
+                )
 
             name = element.get("name")
             if name is None:
-                raise DesignSpaceDocumentError("axis-subset element must have a name attribute.")
+                raise DesignSpaceDocumentError(
+                    "axis-subset element must have a name attribute."
+                )
 
             userMinimum = element.get("userminimum")
             userDefault = element.get("userdefault")
             userMaximum = element.get("usermaximum")
-            if userMinimum is not None and userDefault is not None and userMaximum is not None:
+            if (
+                userMinimum is not None
+                and userDefault is not None
+                and userMaximum is not None
+            ):
                 return self.rangeAxisSubsetDescriptorClass(
                     name=name,
                     userMinimum=float(userMinimum),
@@ -2053,21 +2197,24 @@ class BaseDocReader(LogMixin):
                 "axis-subset element must have min/max/default values or none at all."
             )
 
-
     def readSources(self):
-        for sourceCount, sourceElement in enumerate(self.root.findall(".sources/source")):
-            filename = sourceElement.attrib.get('filename')
+        for sourceCount, sourceElement in enumerate(
+            self.root.findall(".sources/source")
+        ):
+            filename = sourceElement.attrib.get("filename")
             if filename is not None and self.path is not None:
-                sourcePath = os.path.abspath(os.path.join(os.path.dirname(self.path), filename))
+                sourcePath = os.path.abspath(
+                    os.path.join(os.path.dirname(self.path), filename)
+                )
             else:
                 sourcePath = None
-            sourceName = sourceElement.attrib.get('name')
+            sourceName = sourceElement.attrib.get("name")
             if sourceName is None:
                 # add a temporary source name
                 sourceName = "temp_master.%d" % (sourceCount)
             sourceObject = self.sourceDescriptorClass()
-            sourceObject.path = sourcePath        # absolute path to the ufo source
-            sourceObject.filename = filename      # path as it is stored in the document
+            sourceObject.path = sourcePath  # absolute path to the ufo source
+            sourceObject.filename = filename  # path as it is stored in the document
             sourceObject.name = sourceName
             familyName = sourceElement.attrib.get("familyname")
             if familyName is not None:
@@ -2075,40 +2222,42 @@ class BaseDocReader(LogMixin):
             styleName = sourceElement.attrib.get("stylename")
             if styleName is not None:
                 sourceObject.styleName = styleName
-            for familyNameElement in sourceElement.findall('familyname'):
+            for familyNameElement in sourceElement.findall("familyname"):
                 for key, lang in familyNameElement.items():
                     if key == XML_LANG:
                         familyName = familyNameElement.text
                         sourceObject.setFamilyName(familyName, lang)
             designLocation, userLocation = self.locationFromElement(sourceElement)
             if userLocation:
-                raise DesignSpaceDocumentError(f'<source> element "{sourceName}" must only have design locations (using xvalue="").')
+                raise DesignSpaceDocumentError(
+                    f'<source> element "{sourceName}" must only have design locations (using xvalue="").'
+                )
             sourceObject.location = designLocation
-            layerName = sourceElement.attrib.get('layer')
+            layerName = sourceElement.attrib.get("layer")
             if layerName is not None:
                 sourceObject.layerName = layerName
-            for libElement in sourceElement.findall('.lib'):
-                if libElement.attrib.get('copy') == '1':
+            for libElement in sourceElement.findall(".lib"):
+                if libElement.attrib.get("copy") == "1":
                     sourceObject.copyLib = True
-            for groupsElement in sourceElement.findall('.groups'):
-                if groupsElement.attrib.get('copy') == '1':
+            for groupsElement in sourceElement.findall(".groups"):
+                if groupsElement.attrib.get("copy") == "1":
                     sourceObject.copyGroups = True
             for infoElement in sourceElement.findall(".info"):
-                if infoElement.attrib.get('copy') == '1':
+                if infoElement.attrib.get("copy") == "1":
                     sourceObject.copyInfo = True
-                if infoElement.attrib.get('mute') == '1':
+                if infoElement.attrib.get("mute") == "1":
                     sourceObject.muteInfo = True
             for featuresElement in sourceElement.findall(".features"):
-                if featuresElement.attrib.get('copy') == '1':
+                if featuresElement.attrib.get("copy") == "1":
                     sourceObject.copyFeatures = True
             for glyphElement in sourceElement.findall(".glyph"):
-                glyphName = glyphElement.attrib.get('name')
+                glyphName = glyphElement.attrib.get("name")
                 if glyphName is None:
                     continue
-                if glyphElement.attrib.get('mute') == '1':
+                if glyphElement.attrib.get("mute") == "1":
                     sourceObject.mutedGlyphNames.append(glyphName)
             for kerningElement in sourceElement.findall(".kerning"):
-                if kerningElement.attrib.get('mute') == '1':
+                if kerningElement.attrib.get("mute") == "1":
                     sourceObject.muteKerning = True
             self.documentObject.sources.append(sourceObject)
 
@@ -2119,7 +2268,7 @@ class BaseDocReader(LogMixin):
            Return a tuple of (designLocation, userLocation)
         """
         elementLocation = (None, None)
-        for locationElement in element.findall('.location'):
+        for locationElement in element.findall(".location"):
             elementLocation = self.readLocationElement(locationElement)
             break
         return elementLocation
@@ -2138,32 +2287,38 @@ class BaseDocReader(LogMixin):
             dimName = dimensionElement.attrib.get("name")
             if self._strictAxisNames and dimName not in self.axisDefaults:
                 # In case the document contains no axis definitions,
-                self.log.warning("Location with undefined axis: \"%s\".", dimName)
+                self.log.warning('Location with undefined axis: "%s".', dimName)
                 continue
             userValue = xValue = yValue = None
             try:
-                userValue = dimensionElement.attrib.get('uservalue')
+                userValue = dimensionElement.attrib.get("uservalue")
                 if userValue is not None:
                     userValue = float(userValue)
             except ValueError:
-                self.log.warning("ValueError in readLocation userValue %3.3f", userValue)
+                self.log.warning(
+                    "ValueError in readLocation userValue %3.3f", userValue
+                )
             try:
-                xValue = dimensionElement.attrib.get('xvalue')
+                xValue = dimensionElement.attrib.get("xvalue")
                 if xValue is not None:
                     xValue = float(xValue)
             except ValueError:
                 self.log.warning("ValueError in readLocation xValue %3.3f", xValue)
             try:
-                yValue = dimensionElement.attrib.get('yvalue')
+                yValue = dimensionElement.attrib.get("yvalue")
                 if yValue is not None:
                     yValue = float(yValue)
             except ValueError:
                 self.log.warning("ValueError in readLocation yValue %3.3f", yValue)
             if userValue is None == xValue is None:
-                raise DesignSpaceDocumentError(f'Exactly one of uservalue="" or xvalue="" must be provided for location dimension "{dimName}"')
+                raise DesignSpaceDocumentError(
+                    f'Exactly one of uservalue="" or xvalue="" must be provided for location dimension "{dimName}"'
+                )
             if yValue is not None:
                 if xValue is None:
-                    raise DesignSpaceDocumentError(f'Missing xvalue="" for the location dimension "{dimName}"" with yvalue="{yValue}"')
+                    raise DesignSpaceDocumentError(
+                        f'Missing xvalue="" for the location dimension "{dimName}"" with yvalue="{yValue}"'
+                    )
                 designLoc[dimName] = (xValue, yValue)
             elif xValue is not None:
                 designLoc[dimName] = xValue
@@ -2172,70 +2327,81 @@ class BaseDocReader(LogMixin):
         return designLoc, userLoc
 
     def readInstances(self, makeGlyphs=True, makeKerning=True, makeInfo=True):
-        instanceElements = self.root.findall('.instances/instance')
+        instanceElements = self.root.findall(".instances/instance")
         for instanceElement in instanceElements:
-            self._readSingleInstanceElement(instanceElement, makeGlyphs=makeGlyphs, makeKerning=makeKerning, makeInfo=makeInfo)
+            self._readSingleInstanceElement(
+                instanceElement,
+                makeGlyphs=makeGlyphs,
+                makeKerning=makeKerning,
+                makeInfo=makeInfo,
+            )
 
-    def _readSingleInstanceElement(self, instanceElement, makeGlyphs=True, makeKerning=True, makeInfo=True):
-        filename = instanceElement.attrib.get('filename')
+    def _readSingleInstanceElement(
+        self, instanceElement, makeGlyphs=True, makeKerning=True, makeInfo=True
+    ):
+        filename = instanceElement.attrib.get("filename")
         if filename is not None and self.documentObject.path is not None:
-            instancePath = os.path.join(os.path.dirname(self.documentObject.path), filename)
+            instancePath = os.path.join(
+                os.path.dirname(self.documentObject.path), filename
+            )
         else:
             instancePath = None
         instanceObject = self.instanceDescriptorClass()
-        instanceObject.path = instancePath    # absolute path to the instance
-        instanceObject.filename = filename    # path as it is stored in the document
+        instanceObject.path = instancePath  # absolute path to the instance
+        instanceObject.filename = filename  # path as it is stored in the document
         name = instanceElement.attrib.get("name")
         if name is not None:
             instanceObject.name = name
-        familyname = instanceElement.attrib.get('familyname')
+        familyname = instanceElement.attrib.get("familyname")
         if familyname is not None:
             instanceObject.familyName = familyname
-        stylename = instanceElement.attrib.get('stylename')
+        stylename = instanceElement.attrib.get("stylename")
         if stylename is not None:
             instanceObject.styleName = stylename
-        postScriptFontName = instanceElement.attrib.get('postscriptfontname')
+        postScriptFontName = instanceElement.attrib.get("postscriptfontname")
         if postScriptFontName is not None:
             instanceObject.postScriptFontName = postScriptFontName
-        styleMapFamilyName = instanceElement.attrib.get('stylemapfamilyname')
+        styleMapFamilyName = instanceElement.attrib.get("stylemapfamilyname")
         if styleMapFamilyName is not None:
             instanceObject.styleMapFamilyName = styleMapFamilyName
-        styleMapStyleName = instanceElement.attrib.get('stylemapstylename')
+        styleMapStyleName = instanceElement.attrib.get("stylemapstylename")
         if styleMapStyleName is not None:
             instanceObject.styleMapStyleName = styleMapStyleName
         # read localised names
-        for styleNameElement in instanceElement.findall('stylename'):
+        for styleNameElement in instanceElement.findall("stylename"):
             for key, lang in styleNameElement.items():
                 if key == XML_LANG:
                     styleName = styleNameElement.text
                     instanceObject.setStyleName(styleName, lang)
-        for familyNameElement in instanceElement.findall('familyname'):
+        for familyNameElement in instanceElement.findall("familyname"):
             for key, lang in familyNameElement.items():
                 if key == XML_LANG:
                     familyName = familyNameElement.text
                     instanceObject.setFamilyName(familyName, lang)
-        for styleMapStyleNameElement in instanceElement.findall('stylemapstylename'):
+        for styleMapStyleNameElement in instanceElement.findall("stylemapstylename"):
             for key, lang in styleMapStyleNameElement.items():
                 if key == XML_LANG:
                     styleMapStyleName = styleMapStyleNameElement.text
                     instanceObject.setStyleMapStyleName(styleMapStyleName, lang)
-        for styleMapFamilyNameElement in instanceElement.findall('stylemapfamilyname'):
+        for styleMapFamilyNameElement in instanceElement.findall("stylemapfamilyname"):
             for key, lang in styleMapFamilyNameElement.items():
                 if key == XML_LANG:
                     styleMapFamilyName = styleMapFamilyNameElement.text
                     instanceObject.setStyleMapFamilyName(styleMapFamilyName, lang)
         designLocation, userLocation = self.locationFromElement(instanceElement)
-        locationLabel = instanceElement.attrib.get('location')
+        locationLabel = instanceElement.attrib.get("location")
         if (designLocation or userLocation) and locationLabel is not None:
-            raise DesignSpaceDocumentError('instance element must have at most one of the location="..." attribute or the nested location element')
+            raise DesignSpaceDocumentError(
+                'instance element must have at most one of the location="..." attribute or the nested location element'
+            )
         instanceObject.locationLabel = locationLabel
         instanceObject.userLocation = userLocation or {}
         instanceObject.designLocation = designLocation or {}
-        for glyphElement in instanceElement.findall('.glyphs/glyph'):
+        for glyphElement in instanceElement.findall(".glyphs/glyph"):
             self.readGlyphElement(glyphElement, instanceObject)
         for infoElement in instanceElement.findall("info"):
             self.readInfoElement(infoElement, instanceObject)
-        for libElement in instanceElement.findall('lib'):
+        for libElement in instanceElement.findall("lib"):
             self.readLibElement(libElement, instanceObject)
         self.documentObject.instances.append(instanceObject)
 
@@ -2244,7 +2410,7 @@ class BaseDocReader(LogMixin):
         instanceObject.lib = plistlib.fromtree(libElement[0])
 
     def readInfoElement(self, infoElement, instanceObject):
-        """ Read the info element."""
+        """Read the info element."""
         instanceObject.info = True
 
     def readGlyphElement(self, glyphElement, instanceObject):
@@ -2266,47 +2432,53 @@ class BaseDocReader(LogMixin):
             </glyph>
         """
         glyphData = {}
-        glyphName = glyphElement.attrib.get('name')
+        glyphName = glyphElement.attrib.get("name")
         if glyphName is None:
             raise DesignSpaceDocumentError("Glyph object without name attribute")
         mute = glyphElement.attrib.get("mute")
         if mute == "1":
-            glyphData['mute'] = True
+            glyphData["mute"] = True
         # unicode
-        unicodes = glyphElement.attrib.get('unicode')
+        unicodes = glyphElement.attrib.get("unicode")
         if unicodes is not None:
             try:
                 unicodes = [int(u, 16) for u in unicodes.split(" ")]
-                glyphData['unicodes'] = unicodes
+                glyphData["unicodes"] = unicodes
             except ValueError:
-                raise DesignSpaceDocumentError("unicode values %s are not integers" % unicodes)
+                raise DesignSpaceDocumentError(
+                    "unicode values %s are not integers" % unicodes
+                )
 
-        for noteElement in glyphElement.findall('.note'):
-            glyphData['note'] = noteElement.text
+        for noteElement in glyphElement.findall(".note"):
+            glyphData["note"] = noteElement.text
             break
         designLocation, userLocation = self.locationFromElement(glyphElement)
         if userLocation:
-            raise DesignSpaceDocumentError(f'<glyph> element "{glyphName}" must only have design locations (using xvalue="").')
+            raise DesignSpaceDocumentError(
+                f'<glyph> element "{glyphName}" must only have design locations (using xvalue="").'
+            )
         if designLocation is not None:
-            glyphData['instanceLocation'] = designLocation
+            glyphData["instanceLocation"] = designLocation
         glyphSources = None
-        for masterElement in glyphElement.findall('.masters/master'):
-            fontSourceName = masterElement.attrib.get('source')
+        for masterElement in glyphElement.findall(".masters/master"):
+            fontSourceName = masterElement.attrib.get("source")
             designLocation, userLocation = self.locationFromElement(masterElement)
             if userLocation:
-                raise DesignSpaceDocumentError(f'<master> element "{fontSourceName}" must only have design locations (using xvalue="").')
-            masterGlyphName = masterElement.attrib.get('glyphname')
+                raise DesignSpaceDocumentError(
+                    f'<master> element "{fontSourceName}" must only have design locations (using xvalue="").'
+                )
+            masterGlyphName = masterElement.attrib.get("glyphname")
             if masterGlyphName is None:
                 # if we don't read a glyphname, use the one we have
                 masterGlyphName = glyphName
-            d = dict(font=fontSourceName,
-                     location=designLocation,
-                     glyphName=masterGlyphName)
+            d = dict(
+                font=fontSourceName, location=designLocation, glyphName=masterGlyphName
+            )
             if glyphSources is None:
                 glyphSources = []
             glyphSources.append(d)
         if glyphSources is not None:
-            glyphData['masters'] = glyphSources
+            glyphData["masters"] = glyphSources
         instanceObject.glyphs[glyphName] = glyphData
 
     def readLib(self):
@@ -2455,9 +2627,7 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
 
     def tostring(self, encoding=None):
         """Returns the designspace as a string. Default encoding ``utf-8``."""
-        if encoding is str or (
-            encoding is not None and encoding.lower() == "unicode"
-        ):
+        if encoding is str or (encoding is not None and encoding.lower() == "unicode"):
             f = StringIO()
             xml_declaration = False
         elif encoding is None or encoding == "utf-8":
@@ -2644,14 +2814,21 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
             )
         return loc
 
-    def labelForUserLocation(self, userLocation: SimpleLocationDict) -> Optional[LocationLabelDescriptor]:
+    def labelForUserLocation(
+        self, userLocation: SimpleLocationDict
+    ) -> Optional[LocationLabelDescriptor]:
         """Return the :class:`LocationLabel` that matches the given
         ``userLocation``, or ``None`` if no such label exists.
 
         .. versionadded:: 5.0
         """
         return next(
-            (label for label in self.locationLabels if label.userLocation == userLocation), None
+            (
+                label
+                for label in self.locationLabels
+                if label.userLocation == userLocation
+            ),
+            None,
         )
 
     def updateFilenameFromPath(self, masters=True, instances=True, force=False):
@@ -2691,12 +2868,13 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
             names.append(axisDescriptor.name)
         return names
 
-    def getAxis(self, name):
+    def getAxis(self, name: str) -> AxisDescriptor | DiscreteAxisDescriptor | None:
         """Return the axis with the given ``name``, or ``None`` if no such axis exists."""
-        for axisDescriptor in self.axes:
-            if axisDescriptor.name == name:
-                return axisDescriptor
-        return None
+        return next((axis for axis in self.axes if axis.name == name), None)
+
+    def getAxisByTag(self, tag: str) -> AxisDescriptor | DiscreteAxisDescriptor | None:
+        """Return the axis with the given ``tag``, or ``None`` if no such axis exists."""
+        return next((axis for axis in self.axes if axis.tag == tag), None)
 
     def getLocationLabel(self, name: str) -> Optional[LocationLabelDescriptor]:
         """Return the top-level location label with the given ``name``, or
@@ -2723,7 +2901,9 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
             for axis in self.axes
         }
 
-    def map_backward(self, designLocation: AnisotropicLocationDict) -> SimpleLocationDict:
+    def map_backward(
+        self, designLocation: AnisotropicLocationDict
+    ) -> SimpleLocationDict:
         """Map a design location to a user location.
 
         Assume that missing coordinates are at the default location for that axis.
@@ -2800,16 +2980,22 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
         for item in self.instances:
             # glyph masters for this instance
             for _, glyphData in item.glyphs.items():
-                glyphData['instanceLocation'] = self.normalizeLocation(glyphData['instanceLocation'])
-                for glyphMaster in glyphData['masters']:
-                    glyphMaster['location'] = self.normalizeLocation(glyphMaster['location'])
+                glyphData["instanceLocation"] = self.normalizeLocation(
+                    glyphData["instanceLocation"]
+                )
+                for glyphMaster in glyphData["masters"]:
+                    glyphMaster["location"] = self.normalizeLocation(
+                        glyphMaster["location"]
+                    )
             item.location = self.normalizeLocation(item.location)
         # the axes
         for axis in self.axes:
             # scale the map first
             newMap = []
             for inputValue, outputValue in axis.map:
-                newOutputValue = self.normalizeLocation({axis.name: outputValue}).get(axis.name)
+                newOutputValue = self.normalizeLocation({axis.name: outputValue}).get(
+                    axis.name
+                )
                 newMap.append((inputValue, newOutputValue))
             if newMap:
                 axis.map = newMap
@@ -2827,15 +3013,21 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
             for conditions in rule.conditionSets:
                 newConditions = []
                 for cond in conditions:
-                    if cond.get('minimum') is not None:
-                        minimum = self.normalizeLocation({cond['name']: cond['minimum']}).get(cond['name'])
+                    if cond.get("minimum") is not None:
+                        minimum = self.normalizeLocation(
+                            {cond["name"]: cond["minimum"]}
+                        ).get(cond["name"])
                     else:
                         minimum = None
-                    if cond.get('maximum') is not None:
-                        maximum = self.normalizeLocation({cond['name']: cond['maximum']}).get(cond['name'])
+                    if cond.get("maximum") is not None:
+                        maximum = self.normalizeLocation(
+                            {cond["name"]: cond["maximum"]}
+                        ).get(cond["name"])
                     else:
                         maximum = None
-                    newConditions.append(dict(name=cond['name'], minimum=minimum, maximum=maximum))
+                    newConditions.append(
+                        dict(name=cond["name"], minimum=minimum, maximum=maximum)
+                    )
                 newConditionSets.append(newConditions)
             rule.conditionSets = newConditionSets
 
@@ -2919,7 +3111,9 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
 
         variableFonts = []
         discreteAxes = []
-        rangeAxisSubsets: List[Union[RangeAxisSubsetDescriptor, ValueAxisSubsetDescriptor]] = []
+        rangeAxisSubsets: List[
+            Union[RangeAxisSubsetDescriptor, ValueAxisSubsetDescriptor]
+        ] = []
         for axis in self.axes:
             if hasattr(axis, "values"):
                 # Mypy doesn't support narrowing union types via hasattr()
@@ -2938,14 +3132,19 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
                 basename = os.path.splitext(os.path.basename(self.path))[0] + "-VF"
             if basename is None:
                 basename = "VF"
-            axisNames = "".join([f"-{axis.tag}{value}" for axis, value in zip(discreteAxes, values)])
-            variableFonts.append(VariableFontDescriptor(
-                name=f"{basename}{axisNames}",
-                axisSubsets=rangeAxisSubsets + [
-                    ValueAxisSubsetDescriptor(name=axis.name, userValue=value)
-                    for axis, value in zip(discreteAxes, values)
-                ]
-            ))
+            axisNames = "".join(
+                [f"-{axis.tag}{value}" for axis, value in zip(discreteAxes, values)]
+            )
+            variableFonts.append(
+                VariableFontDescriptor(
+                    name=f"{basename}{axisNames}",
+                    axisSubsets=rangeAxisSubsets
+                    + [
+                        ValueAxisSubsetDescriptor(name=axis.name, userValue=value)
+                        for axis, value in zip(discreteAxes, values)
+                    ],
+                )
+            )
         return variableFonts
 
     def deepcopyExceptFonts(self):
@@ -2966,4 +3165,3 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
         finally:
             for source, font in zip(self.sources, fonts):
                 source.font = font
-

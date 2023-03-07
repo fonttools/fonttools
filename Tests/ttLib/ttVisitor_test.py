@@ -21,7 +21,6 @@ class TestVisitor(TTVisitor):
 
 
 class TTVisitorTest(object):
-
     @staticmethod
     def getpath(testfile):
         path = os.path.dirname(__file__)

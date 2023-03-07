@@ -21,10 +21,7 @@ class SingleSubstTest(unittest.TestCase):
     def test_postRead_format1(self):
         table = otTables.SingleSubst()
         table.Format = 1
-        rawTable = {
-            "Coverage": makeCoverage(["A", "B", "C"]),
-            "DeltaGlyphID": 5
-        }
+        rawTable = {"Coverage": makeCoverage(["A", "B", "C"]), "DeltaGlyphID": 5}
         table.postRead(rawTable, self.font)
         self.assertEqual(table.mapping, {"A": "a", "B": "b", "C": "c"})
 
@@ -34,7 +31,7 @@ class SingleSubstTest(unittest.TestCase):
         rawTable = {
             "Coverage": makeCoverage(["A", "B", "C"]),
             "GlyphCount": 3,
-            "Substitute": ["c", "b", "a"]
+            "Substitute": ["c", "b", "a"],
         }
         table.postRead(rawTable, self.font)
         self.assertEqual(table.mapping, {"A": "c", "B": "b", "C": "a"})
@@ -74,18 +71,22 @@ class SingleSubstTest(unittest.TestCase):
         table = otTables.SingleSubst()
         table.mapping = {"A": "a", "B": "b", "C": "c"}
         table.toXML2(writer, self.font)
-        self.assertEqual(writer.file.getvalue().splitlines()[1:], [
-            '<Substitution in="A" out="a"/>',
-            '<Substitution in="B" out="b"/>',
-            '<Substitution in="C" out="c"/>',
-        ])
+        self.assertEqual(
+            writer.file.getvalue().splitlines()[1:],
+            [
+                '<Substitution in="A" out="a"/>',
+                '<Substitution in="B" out="b"/>',
+                '<Substitution in="C" out="c"/>',
+            ],
+        )
 
     def test_fromXML(self):
         table = otTables.SingleSubst()
         for name, attrs, content in parseXML(
-                '<Substitution in="A" out="a"/>'
-                '<Substitution in="B" out="b"/>'
-                '<Substitution in="C" out="c"/>'):
+            '<Substitution in="A" out="a"/>'
+            '<Substitution in="B" out="b"/>'
+            '<Substitution in="C" out="c"/>'
+        ):
             table.fromXML(name, attrs, content, self.font)
         self.assertEqual(table.mapping, {"A": "a", "B": "b", "C": "c"})
 
@@ -101,16 +102,10 @@ class MultipleSubstTest(unittest.TestCase):
         table.Format = 1
         rawTable = {
             "Coverage": makeCoverage(["c_t", "f_f_i"]),
-            "Sequence": [
-                makeSequence(["c", "t"]),
-                makeSequence(["f", "f", "i"])
-            ]
+            "Sequence": [makeSequence(["c", "t"]), makeSequence(["f", "f", "i"])],
         }
         table.postRead(rawTable, self.font)
-        self.assertEqual(table.mapping, {
-            "c_t": ["c", "t"],
-            "f_f_i": ["f", "f", "i"]
-        })
+        self.assertEqual(table.mapping, {"c_t": ["c", "t"], "f_f_i": ["f", "f", "i"]})
 
     def test_postRead_formatUnknown(self):
         table = otTables.MultipleSubst()
@@ -129,60 +124,63 @@ class MultipleSubstTest(unittest.TestCase):
         table = otTables.MultipleSubst()
         table.mapping = {"c_t": ["c", "t"], "f_f_i": ["f", "f", "i"]}
         table.toXML2(writer, self.font)
-        self.assertEqual(writer.file.getvalue().splitlines()[1:], [
-            '<Substitution in="c_t" out="c,t"/>',
-            '<Substitution in="f_f_i" out="f,f,i"/>',
-        ])
+        self.assertEqual(
+            writer.file.getvalue().splitlines()[1:],
+            [
+                '<Substitution in="c_t" out="c,t"/>',
+                '<Substitution in="f_f_i" out="f,f,i"/>',
+            ],
+        )
 
     def test_fromXML(self):
         table = otTables.MultipleSubst()
         for name, attrs, content in parseXML(
-                '<Substitution in="c_t" out="c,t"/>'
-                '<Substitution in="f_f_i" out="f,f,i"/>'):
+            '<Substitution in="c_t" out="c,t"/>'
+            '<Substitution in="f_f_i" out="f,f,i"/>'
+        ):
             table.fromXML(name, attrs, content, self.font)
-        self.assertEqual(table.mapping,
-                         {'c_t': ['c', 't'], 'f_f_i': ['f', 'f', 'i']})
+        self.assertEqual(table.mapping, {"c_t": ["c", "t"], "f_f_i": ["f", "f", "i"]})
 
     def test_fromXML_oldFormat(self):
         table = otTables.MultipleSubst()
         for name, attrs, content in parseXML(
-                '<Coverage>'
-                '  <Glyph value="c_t"/>'
-                '  <Glyph value="f_f_i"/>'
-                '</Coverage>'
-                '<Sequence index="0">'
-                '  <Substitute index="0" value="c"/>'
-                '  <Substitute index="1" value="t"/>'
-                '</Sequence>'
-                '<Sequence index="1">'
-                '  <Substitute index="0" value="f"/>'
-                '  <Substitute index="1" value="f"/>'
-                '  <Substitute index="2" value="i"/>'
-                '</Sequence>'):
+            "<Coverage>"
+            '  <Glyph value="c_t"/>'
+            '  <Glyph value="f_f_i"/>'
+            "</Coverage>"
+            '<Sequence index="0">'
+            '  <Substitute index="0" value="c"/>'
+            '  <Substitute index="1" value="t"/>'
+            "</Sequence>"
+            '<Sequence index="1">'
+            '  <Substitute index="0" value="f"/>'
+            '  <Substitute index="1" value="f"/>'
+            '  <Substitute index="2" value="i"/>'
+            "</Sequence>"
+        ):
             table.fromXML(name, attrs, content, self.font)
-        self.assertEqual(table.mapping,
-                         {'c_t': ['c', 't'], 'f_f_i': ['f', 'f', 'i']})
+        self.assertEqual(table.mapping, {"c_t": ["c", "t"], "f_f_i": ["f", "f", "i"]})
 
     def test_fromXML_oldFormat_bug385(self):
         # https://github.com/fonttools/fonttools/issues/385
         table = otTables.MultipleSubst()
         table.Format = 1
         for name, attrs, content in parseXML(
-                '<Coverage>'
-                '  <Glyph value="o"/>'
-                '  <Glyph value="l"/>'
-                '</Coverage>'
-                '<Sequence>'
-                '  <Substitute value="o"/>'
-                '  <Substitute value="l"/>'
-                '  <Substitute value="o"/>'
-                '</Sequence>'
-                '<Sequence>'
-                '  <Substitute value="o"/>'
-                '</Sequence>'):
+            "<Coverage>"
+            '  <Glyph value="o"/>'
+            '  <Glyph value="l"/>'
+            "</Coverage>"
+            "<Sequence>"
+            '  <Substitute value="o"/>'
+            '  <Substitute value="l"/>'
+            '  <Substitute value="o"/>'
+            "</Sequence>"
+            "<Sequence>"
+            '  <Substitute value="o"/>'
+            "</Sequence>"
+        ):
             table.fromXML(name, attrs, content, self.font)
-        self.assertEqual(table.mapping,
-                         {'o': ['o', 'l', 'o'], 'l': ['o']})
+        self.assertEqual(table.mapping, {"o": ["o", "l", "o"], "l": ["o"]})
 
 
 class LigatureSubstTest(unittest.TestCase):
@@ -210,7 +208,7 @@ class LigatureSubstTest(unittest.TestCase):
         ligs_f.Ligature = self.makeLigatures("ffi ff fi")
         rawTable = {
             "Coverage": makeCoverage(["c", "f"]),
-            "LigatureSet": [ligs_c, ligs_f]
+            "LigatureSet": [ligs_c, ligs_f],
         }
         table.postRead(rawTable, self.font)
         self.assertEqual(set(table.ligatures.keys()), {"c", "f"})
@@ -235,7 +233,7 @@ class LigatureSubstTest(unittest.TestCase):
         table = otTables.LigatureSubst()
         table.ligatures = {
             "c": self.makeLigatures("ct"),
-            "f": self.makeLigatures("ffi ff fi")
+            "f": self.makeLigatures("ffi ff fi"),
         }
         rawTable = table.preWrite(self.font)
         self.assertEqual(table.Format, 1)
@@ -263,27 +261,31 @@ class LigatureSubstTest(unittest.TestCase):
         table = otTables.LigatureSubst()
         table.ligatures = {
             "c": self.makeLigatures("ct"),
-            "f": self.makeLigatures("ffi ff fi")
+            "f": self.makeLigatures("ffi ff fi"),
         }
         table.toXML2(writer, self.font)
-        self.assertEqual(writer.file.getvalue().splitlines()[1:], [
-            '<LigatureSet glyph="c">',
-            '  <Ligature components="c,t" glyph="c_t"/>',
-            '</LigatureSet>',
-            '<LigatureSet glyph="f">',
-            '  <Ligature components="f,f,i" glyph="f_f_i"/>',
-            '  <Ligature components="f,f" glyph="f_f"/>',
-            '  <Ligature components="f,i" glyph="f_i"/>',
-            '</LigatureSet>'
-        ])
+        self.assertEqual(
+            writer.file.getvalue().splitlines()[1:],
+            [
+                '<LigatureSet glyph="c">',
+                '  <Ligature components="c,t" glyph="c_t"/>',
+                "</LigatureSet>",
+                '<LigatureSet glyph="f">',
+                '  <Ligature components="f,f,i" glyph="f_f_i"/>',
+                '  <Ligature components="f,f" glyph="f_f"/>',
+                '  <Ligature components="f,i" glyph="f_i"/>',
+                "</LigatureSet>",
+            ],
+        )
 
     def test_fromXML(self):
         table = otTables.LigatureSubst()
         for name, attrs, content in parseXML(
-                '<LigatureSet glyph="f">'
-                '  <Ligature components="f,f,i" glyph="f_f_i"/>'
-                '  <Ligature components="f,f" glyph="f_f"/>'
-                '</LigatureSet>'):
+            '<LigatureSet glyph="f">'
+            '  <Ligature components="f,f,i" glyph="f_f_i"/>'
+            '  <Ligature components="f,f" glyph="f_f"/>'
+            "</LigatureSet>"
+        ):
             table.fromXML(name, attrs, content, self.font)
         self.assertEqual(set(table.ligatures.keys()), {"f"})
         [ffi, ff] = table.ligatures["f"]
@@ -310,14 +312,11 @@ class AlternateSubstTest(unittest.TestCase):
             "Coverage": makeCoverage(["G", "Z"]),
             "AlternateSet": [
                 self.makeAlternateSet("G.alt2 G.alt1"),
-                self.makeAlternateSet("Z.fina")
-            ]
+                self.makeAlternateSet("Z.fina"),
+            ],
         }
         table.postRead(rawTable, self.font)
-        self.assertEqual(table.alternates, {
-            "G": ["G.alt2", "G.alt1"],
-            "Z": ["Z.fina"]
-        })
+        self.assertEqual(table.alternates, {"G": ["G.alt2", "G.alt1"], "Z": ["Z.fina"]})
 
     def test_postRead_formatUnknown(self):
         table = otTables.AlternateSubst()
@@ -341,36 +340,37 @@ class AlternateSubstTest(unittest.TestCase):
         table = otTables.AlternateSubst()
         table.alternates = {"G": ["G.alt2", "G.alt1"], "Z": ["Z.fina"]}
         table.toXML2(writer, self.font)
-        self.assertEqual(writer.file.getvalue().splitlines()[1:], [
-            '<AlternateSet glyph="G">',
-            '  <Alternate glyph="G.alt2"/>',
-            '  <Alternate glyph="G.alt1"/>',
-            '</AlternateSet>',
-            '<AlternateSet glyph="Z">',
-            '  <Alternate glyph="Z.fina"/>',
-            '</AlternateSet>'
-        ])
+        self.assertEqual(
+            writer.file.getvalue().splitlines()[1:],
+            [
+                '<AlternateSet glyph="G">',
+                '  <Alternate glyph="G.alt2"/>',
+                '  <Alternate glyph="G.alt1"/>',
+                "</AlternateSet>",
+                '<AlternateSet glyph="Z">',
+                '  <Alternate glyph="Z.fina"/>',
+                "</AlternateSet>",
+            ],
+        )
 
     def test_fromXML(self):
         table = otTables.AlternateSubst()
         for name, attrs, content in parseXML(
-                '<AlternateSet glyph="G">'
-                '  <Alternate glyph="G.alt2"/>'
-                '  <Alternate glyph="G.alt1"/>'
-                '</AlternateSet>'
-                '<AlternateSet glyph="Z">'
-                '  <Alternate glyph="Z.fina"/>'
-                '</AlternateSet>'):
+            '<AlternateSet glyph="G">'
+            '  <Alternate glyph="G.alt2"/>'
+            '  <Alternate glyph="G.alt1"/>'
+            "</AlternateSet>"
+            '<AlternateSet glyph="Z">'
+            '  <Alternate glyph="Z.fina"/>'
+            "</AlternateSet>"
+        ):
             table.fromXML(name, attrs, content, self.font)
-        self.assertEqual(table.alternates, {
-            "G": ["G.alt2", "G.alt1"],
-            "Z": ["Z.fina"]
-        })
+        self.assertEqual(table.alternates, {"G": ["G.alt2", "G.alt1"], "Z": ["Z.fina"]})
 
 
 class RearrangementMorphActionTest(unittest.TestCase):
     def setUp(self):
-        self.font = FakeFont(['.notdef', 'A', 'B', 'C'])
+        self.font = FakeFont([".notdef", "A", "B", "C"])
 
     def testCompile(self):
         r = otTables.RearrangementMorphAction()
@@ -387,22 +387,24 @@ class RearrangementMorphActionTest(unittest.TestCase):
 
     def testDecompileToXML(self):
         r = otTables.RearrangementMorphAction()
-        r.decompile(OTTableReader(deHexStr("1234fffd")),
-                    self.font, actionReader=None)
+        r.decompile(OTTableReader(deHexStr("1234fffd")), self.font, actionReader=None)
         toXML = lambda w, f: r.toXML(w, f, {"Test": "Foo"}, "Transition")
-        self.assertEqual(getXML(toXML, self.font), [
+        self.assertEqual(
+            getXML(toXML, self.font),
+            [
                 '<Transition Test="Foo">',
                 '  <NewState value="4660"/>',  # 0x1234 = 4660
                 '  <Flags value="MarkFirst,DontAdvance,MarkLast"/>',
                 '  <ReservedFlags value="0x1FF0"/>',
                 '  <Verb value="13"/><!-- ABxCD ⇒ CDxBA -->',
-                '</Transition>',
-        ])
+                "</Transition>",
+            ],
+        )
 
 
 class ContextualMorphActionTest(unittest.TestCase):
     def setUp(self):
-        self.font = FakeFont(['.notdef', 'A', 'B', 'C'])
+        self.font = FakeFont([".notdef", "A", "B", "C"])
 
     def testCompile(self):
         a = otTables.ContextualMorphAction()
@@ -419,50 +421,55 @@ class ContextualMorphActionTest(unittest.TestCase):
 
     def testDecompileToXML(self):
         a = otTables.ContextualMorphAction()
-        a.decompile(OTTableReader(deHexStr("1234f117deadbeef")),
-                    self.font, actionReader=None)
+        a.decompile(
+            OTTableReader(deHexStr("1234f117deadbeef")), self.font, actionReader=None
+        )
         toXML = lambda w, f: a.toXML(w, f, {"Test": "Foo"}, "Transition")
-        self.assertEqual(getXML(toXML, self.font), [
+        self.assertEqual(
+            getXML(toXML, self.font),
+            [
                 '<Transition Test="Foo">',
                 '  <NewState value="4660"/>',  # 0x1234 = 4660
                 '  <Flags value="SetMark,DontAdvance"/>',
                 '  <ReservedFlags value="0x3117"/>',
                 '  <MarkIndex value="57005"/>',  # 0xDEAD = 57005
                 '  <CurrentIndex value="48879"/>',  # 0xBEEF = 48879
-                '</Transition>',
-        ])
+                "</Transition>",
+            ],
+        )
 
 
 class LigatureMorphActionTest(unittest.TestCase):
     def setUp(self):
-        self.font = FakeFont(['.notdef', 'A', 'B', 'C'])
+        self.font = FakeFont([".notdef", "A", "B", "C"])
 
     def testDecompileToXML(self):
         a = otTables.LigatureMorphAction()
         actionReader = OTTableReader(deHexStr("DEADBEEF 7FFFFFFE 80000003"))
-        a.decompile(OTTableReader(deHexStr("1234FAB30001")),
-                    self.font, actionReader)
+        a.decompile(OTTableReader(deHexStr("1234FAB30001")), self.font, actionReader)
         toXML = lambda w, f: a.toXML(w, f, {"Test": "Foo"}, "Transition")
-        self.assertEqual(getXML(toXML, self.font), [
+        self.assertEqual(
+            getXML(toXML, self.font),
+            [
                 '<Transition Test="Foo">',
                 '  <NewState value="4660"/>',  # 0x1234 = 4660
                 '  <Flags value="SetComponent,DontAdvance"/>',
                 '  <ReservedFlags value="0x1AB3"/>',
                 '  <Action GlyphIndexDelta="-2" Flags="Store"/>',
                 '  <Action GlyphIndexDelta="3"/>',
-                '</Transition>',
-        ])
+                "</Transition>",
+            ],
+        )
 
     def testCompileActions_empty(self):
         act = otTables.LigatureMorphAction()
         actions, actionIndex = act.compileActions(self.font, [])
-        self.assertEqual(actions, b'')
+        self.assertEqual(actions, b"")
         self.assertEqual(actionIndex, {})
 
     def testCompileActions_shouldShareSubsequences(self):
         state = otTables.AATState()
-        t = state.Transitions = {i: otTables.LigatureMorphAction()
-                                 for i in range(3)}
+        t = state.Transitions = {i: otTables.LigatureMorphAction() for i in range(3)}
         ligs = [otTables.LigAction() for _ in range(3)]
         for i, lig in enumerate(ligs):
             lig.GlyphIndexDelta = i
@@ -470,14 +477,16 @@ class LigatureMorphActionTest(unittest.TestCase):
         t[1].Actions = ligs[0:3]
         t[2].Actions = ligs[1:3]
         actions, actionIndex = t[0].compileActions(self.font, [state])
-        self.assertEqual(actions,
-                         deHexStr("00000000 00000001 80000002 80000001"))
-        self.assertEqual(actionIndex, {
-            deHexStr("00000000 00000001 80000002"): 0,
-            deHexStr("00000001 80000002"): 1,
-            deHexStr("80000002"): 2,
-            deHexStr("80000001"): 3,
-        })
+        self.assertEqual(actions, deHexStr("00000000 00000001 80000002 80000001"))
+        self.assertEqual(
+            actionIndex,
+            {
+                deHexStr("00000000 00000001 80000002"): 0,
+                deHexStr("00000001 80000002"): 1,
+                deHexStr("80000002"): 2,
+                deHexStr("80000001"): 3,
+            },
+        )
 
 
 class InsertionMorphActionTest(unittest.TestCase):
@@ -485,25 +494,27 @@ class InsertionMorphActionTest(unittest.TestCase):
         '<Transition Test="Foo">',
         '  <NewState value="4660"/>',  # 0x1234 = 4660
         '  <Flags value="SetMark,DontAdvance,CurrentIsKashidaLike,'
-              'MarkedIsKashidaLike,CurrentInsertBefore,MarkedInsertBefore"/>',
+        'MarkedIsKashidaLike,CurrentInsertBefore,MarkedInsertBefore"/>',
         '  <CurrentInsertionAction glyph="B"/>',
         '  <CurrentInsertionAction glyph="C"/>',
         '  <MarkedInsertionAction glyph="B"/>',
         '  <MarkedInsertionAction glyph="A"/>',
         '  <MarkedInsertionAction glyph="D"/>',
-        '</Transition>'
+        "</Transition>",
     ]
 
     def setUp(self):
-        self.font = FakeFont(['.notdef', 'A', 'B', 'C', 'D'])
+        self.font = FakeFont([".notdef", "A", "B", "C", "D"])
         self.maxDiff = None
 
     def testDecompileToXML(self):
         a = otTables.InsertionMorphAction()
         actionReader = OTTableReader(
-            deHexStr("DEAD BEEF 0002 0001 0004 0002 0003 DEAD BEEF"))
-        a.decompile(OTTableReader(deHexStr("1234 FC43 0005 0002")),
-                    self.font, actionReader)
+            deHexStr("DEAD BEEF 0002 0001 0004 0002 0003 DEAD BEEF")
+        )
+        a.decompile(
+            OTTableReader(deHexStr("1234 FC43 0005 0002")), self.font, actionReader
+        )
         toXML = lambda w, f: a.toXML(w, f, {"Test": "Foo"}, "Transition")
         self.assertEqual(getXML(toXML, self.font), self.MORPH_ACTION_XML)
 
@@ -515,37 +526,39 @@ class InsertionMorphActionTest(unittest.TestCase):
         a.compile(
             writer,
             self.font,
-            actionIndex={('B', 'C'): 9, ('B', 'A', 'D'): 7},
+            actionIndex={("B", "C"): 9, ("B", "A", "D"): 7},
         )
         self.assertEqual(hexStr(writer.getAllData()), "1234fc4300090007")
 
     def testCompileActions_empty(self):
         act = otTables.InsertionMorphAction()
         actions, actionIndex = act.compileActions(self.font, [])
-        self.assertEqual(actions, b'')
+        self.assertEqual(actions, b"")
         self.assertEqual(actionIndex, {})
 
     def testCompileActions_shouldShareSubsequences(self):
         state = otTables.AATState()
-        t = state.Transitions = {i: otTables.InsertionMorphAction()
-                                 for i in range(3)}
+        t = state.Transitions = {i: otTables.InsertionMorphAction() for i in range(3)}
         t[1].CurrentInsertionAction = []
-        t[0].MarkedInsertionAction = ['A']
-        t[1].CurrentInsertionAction = ['C', 'D']
-        t[1].MarkedInsertionAction = ['B']
-        t[2].CurrentInsertionAction = ['B', 'C', 'D']
-        t[2].MarkedInsertionAction = ['C', 'D']
+        t[0].MarkedInsertionAction = ["A"]
+        t[1].CurrentInsertionAction = ["C", "D"]
+        t[1].MarkedInsertionAction = ["B"]
+        t[2].CurrentInsertionAction = ["B", "C", "D"]
+        t[2].MarkedInsertionAction = ["C", "D"]
         actions, actionIndex = t[0].compileActions(self.font, [state])
-        self.assertEqual(actions, deHexStr('0002 0003 0004 0001'))
-        self.assertEqual(actionIndex, {
-            ('A',): 3,
-            ('B',): 0,
-            ('B', 'C'): 0,
-            ('B', 'C', 'D'): 0,
-            ('C',): 1,
-            ('C', 'D'): 1,
-            ('D',): 2,
-        })
+        self.assertEqual(actions, deHexStr("0002 0003 0004 0001"))
+        self.assertEqual(
+            actionIndex,
+            {
+                ("A",): 3,
+                ("B",): 0,
+                ("B", "C"): 0,
+                ("B", "C", "D"): 0,
+                ("C",): 1,
+                ("C", "D"): 1,
+                ("D",): 2,
+            },
+        )
 
 
 class SplitMultipleSubstTest:
@@ -553,28 +566,34 @@ class SplitMultipleSubstTest:
         from fontTools.otlLib.builder import buildMultipleSubstSubtable
         from fontTools.ttLib.tables.otBase import OverflowErrorRecord
 
-        oldSubTable = buildMultipleSubstSubtable({'e': 1, 'a': 2, 'b': 3, 'c': 4, 'd': 5})
+        oldSubTable = buildMultipleSubstSubtable(
+            {"e": 1, "a": 2, "b": 3, "c": 4, "d": 5}
+        )
         newSubTable = otTables.MultipleSubst()
 
-        ok = otTables.splitMultipleSubst(oldSubTable, newSubTable, OverflowErrorRecord((None, None, None, itemName, itemRecord)))
+        ok = otTables.splitMultipleSubst(
+            oldSubTable,
+            newSubTable,
+            OverflowErrorRecord((None, None, None, itemName, itemRecord)),
+        )
 
         assert ok
         return oldSubTable.mapping, newSubTable.mapping
 
     def test_Coverage(self):
-        oldMapping, newMapping = self.overflow('Coverage', None)
-        assert oldMapping == {'a': 2, 'b': 3}
-        assert newMapping == {'c': 4, 'd': 5, 'e': 1}
+        oldMapping, newMapping = self.overflow("Coverage", None)
+        assert oldMapping == {"a": 2, "b": 3}
+        assert newMapping == {"c": 4, "d": 5, "e": 1}
 
     def test_RangeRecord(self):
-        oldMapping, newMapping = self.overflow('RangeRecord', None)
-        assert oldMapping == {'a': 2, 'b': 3}
-        assert newMapping == {'c': 4, 'd': 5, 'e': 1}
+        oldMapping, newMapping = self.overflow("RangeRecord", None)
+        assert oldMapping == {"a": 2, "b": 3}
+        assert newMapping == {"c": 4, "d": 5, "e": 1}
 
     def test_Sequence(self):
-        oldMapping, newMapping = self.overflow('Sequence', 4)
-        assert oldMapping == {'a': 2, 'b': 3,'c': 4}
-        assert newMapping == {'d': 5, 'e': 1}
+        oldMapping, newMapping = self.overflow("Sequence", 4)
+        assert oldMapping == {"a": 2, "b": 3, "c": 4}
+        assert newMapping == {"d": 5, "e": 1}
 
 
 def test_splitMarkBasePos():
@@ -607,95 +626,95 @@ def test_splitMarkBasePos():
 
     assert getXML(oldSubTable.toXML) == [
         '<MarkBasePos Format="1">',
-        '  <MarkCoverage>',
+        "  <MarkCoverage>",
         '    <Glyph value="acutecomb"/>',
         '    <Glyph value="gravecomb"/>',
-        '  </MarkCoverage>',
-        '  <BaseCoverage>',
+        "  </MarkCoverage>",
+        "  <BaseCoverage>",
         '    <Glyph value="a"/>',
         '    <Glyph value="c"/>',
-        '  </BaseCoverage>',
-        '  <!-- ClassCount=1 -->',
-        '  <MarkArray>',
-        '    <!-- MarkCount=2 -->',
+        "  </BaseCoverage>",
+        "  <!-- ClassCount=1 -->",
+        "  <MarkArray>",
+        "    <!-- MarkCount=2 -->",
         '    <MarkRecord index="0">',
         '      <Class value="0"/>',
         '      <MarkAnchor Format="1">',
         '        <XCoordinate value="0"/>',
         '        <YCoordinate value="600"/>',
-        '      </MarkAnchor>',
-        '    </MarkRecord>',
+        "      </MarkAnchor>",
+        "    </MarkRecord>",
         '    <MarkRecord index="1">',
         '      <Class value="0"/>',
         '      <MarkAnchor Format="1">',
         '        <XCoordinate value="0"/>',
         '        <YCoordinate value="590"/>',
-        '      </MarkAnchor>',
-        '    </MarkRecord>',
-        '  </MarkArray>',
-        '  <BaseArray>',
-        '    <!-- BaseCount=2 -->',
+        "      </MarkAnchor>",
+        "    </MarkRecord>",
+        "  </MarkArray>",
+        "  <BaseArray>",
+        "    <!-- BaseCount=2 -->",
         '    <BaseRecord index="0">',
         '      <BaseAnchor index="0" Format="1">',
         '        <XCoordinate value="350"/>',
         '        <YCoordinate value="500"/>',
-        '      </BaseAnchor>',
-        '    </BaseRecord>',
+        "      </BaseAnchor>",
+        "    </BaseRecord>",
         '    <BaseRecord index="1">',
         '      <BaseAnchor index="0" Format="1">',
         '        <XCoordinate value="300"/>',
         '        <YCoordinate value="700"/>',
-        '      </BaseAnchor>',
-        '    </BaseRecord>',
-        '  </BaseArray>',
-        '</MarkBasePos>',
+        "      </BaseAnchor>",
+        "    </BaseRecord>",
+        "  </BaseArray>",
+        "</MarkBasePos>",
     ]
 
     assert getXML(newSubTable.toXML) == [
         '<MarkBasePos Format="1">',
-        '  <MarkCoverage>',
+        "  <MarkCoverage>",
         '    <Glyph value="cedillacomb"/>',
-        '  </MarkCoverage>',
-        '  <BaseCoverage>',
+        "  </MarkCoverage>",
+        "  <BaseCoverage>",
         '    <Glyph value="a"/>',
         '    <Glyph value="c"/>',
-        '  </BaseCoverage>',
-        '  <!-- ClassCount=1 -->',
-        '  <MarkArray>',
-        '    <!-- MarkCount=1 -->',
+        "  </BaseCoverage>",
+        "  <!-- ClassCount=1 -->",
+        "  <MarkArray>",
+        "    <!-- MarkCount=1 -->",
         '    <MarkRecord index="0">',
         '      <Class value="0"/>',
         '      <MarkAnchor Format="1">',
         '        <XCoordinate value="0"/>',
         '        <YCoordinate value="0"/>',
-        '      </MarkAnchor>',
-        '    </MarkRecord>',
-        '  </MarkArray>',
-        '  <BaseArray>',
-        '    <!-- BaseCount=2 -->',
+        "      </MarkAnchor>",
+        "    </MarkRecord>",
+        "  </MarkArray>",
+        "  <BaseArray>",
+        "    <!-- BaseCount=2 -->",
         '    <BaseRecord index="0">',
         '      <BaseAnchor index="0" empty="1"/>',
-        '    </BaseRecord>',
+        "    </BaseRecord>",
         '    <BaseRecord index="1">',
         '      <BaseAnchor index="0" Format="1">',
         '        <XCoordinate value="300"/>',
         '        <YCoordinate value="0"/>',
-        '      </BaseAnchor>',
-        '    </BaseRecord>',
-        '  </BaseArray>',
-        '</MarkBasePos>',
+        "      </BaseAnchor>",
+        "    </BaseRecord>",
+        "  </BaseArray>",
+        "</MarkBasePos>",
     ]
 
 
 class ColrV1Test(unittest.TestCase):
-  def setUp(self):
-      self.font = FakeFont(['.notdef', 'meh'])
+    def setUp(self):
+        self.font = FakeFont([".notdef", "meh"])
 
-  def test_traverseEmptyPaintColrLayersNeedsNoLayerList(self):
-      colr = parseXmlInto(
-          self.font,
-          otTables.COLR(),
-          '''
+    def test_traverseEmptyPaintColrLayersNeedsNoLayerList(self):
+        colr = parseXmlInto(
+            self.font,
+            otTables.COLR(),
+            """
           <Version value="1"/>
           <BaseGlyphList>
             <BaseGlyphPaintRecord index="0">
@@ -706,16 +725,17 @@ class ColrV1Test(unittest.TestCase):
               </Paint>
             </BaseGlyphPaintRecord>
           </BaseGlyphList>
-          ''',
-      )
-      paint = colr.BaseGlyphList.BaseGlyphPaintRecord[0].Paint
+          """,
+        )
+        paint = colr.BaseGlyphList.BaseGlyphPaintRecord[0].Paint
 
-      # Just want to confirm we don't crash
-      visited = []
-      paint.traverse(colr, lambda p: visited.append(p))
-      assert len(visited) == 1
+        # Just want to confirm we don't crash
+        visited = []
+        paint.traverse(colr, lambda p: visited.append(p))
+        assert len(visited) == 1
 
 
 if __name__ == "__main__":
     import sys
+
     sys.exit(unittest.main())

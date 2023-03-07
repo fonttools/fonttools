@@ -15,24 +15,24 @@ from fontTools.ttLib.tables._c_m_a_p import CmapSubtable
 import sys
 
 if len(sys.argv) != 3:
-	print("usage: cmap-format.py fontfile.ttf outfile.ttf")
-	sys.exit(1)
+    print("usage: cmap-format.py fontfile.ttf outfile.ttf")
+    sys.exit(1)
 fontfile = sys.argv[1]
 outfile = sys.argv[2]
 font = TTFont(fontfile)
 
-cmap = font['cmap']
+cmap = font["cmap"]
 outtables = []
 for table in cmap.tables:
-	if table.format in [4, 12, 13, 14]:
-		outtables.append(table)
-	# Convert ot format4
-	newtable = CmapSubtable.newSubtable(4)
-	newtable.platformID = table.platformID
-	newtable.platEncID = table.platEncID
-	newtable.language = table.language
-	newtable.cmap = table.cmap
-	outtables.append(newtable)
+    if table.format in [4, 12, 13, 14]:
+        outtables.append(table)
+    # Convert ot format4
+    newtable = CmapSubtable.newSubtable(4)
+    newtable.platformID = table.platformID
+    newtable.platEncID = table.platEncID
+    newtable.language = table.language
+    newtable.cmap = table.cmap
+    outtables.append(newtable)
 cmap.tables = outtables
 
 font.save(outfile)

@@ -3,7 +3,13 @@ import os
 import re
 import random
 from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
-from fontTools.ttLib import TTFont, TTLibError, newTable, registerCustomTableClass, unregisterCustomTableClass
+from fontTools.ttLib import (
+    TTFont,
+    TTLibError,
+    newTable,
+    registerCustomTableClass,
+    unregisterCustomTableClass,
+)
 from fontTools.ttLib.standardGlyphOrder import standardGlyphOrder
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
 from fontTools.ttLib.tables._c_m_a_p import CmapSubtable
@@ -14,7 +20,6 @@ DATA_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "data")
 
 
 class CustomTableClass(DefaultTable):
-
     def decompile(self, data, ttFont):
         self.numbers = list(data)
 
@@ -171,7 +176,7 @@ def test_ensureDecompiled(lazy):
         feature dist {
             pos period period -30;
         } dist;
-        """
+        """,
     )
     # also add an additional cmap subtable that will be lazily-loaded
     cm = CmapSubtable.newSubtable(14)
@@ -179,7 +184,7 @@ def test_ensureDecompiled(lazy):
     cm.platEncID = 5
     cm.language = 0
     cm.cmap = {}
-    cm.uvsDict = {0xFE00: [(0x002e, None)]}
+    cm.uvsDict = {0xFE00: [(0x002E, None)]}
     font["cmap"].tables.append(cm)
 
     # save and reload, potentially lazily

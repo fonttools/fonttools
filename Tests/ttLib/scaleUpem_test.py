@@ -8,8 +8,8 @@ import tempfile
 import unittest
 import pytest
 
-class ScaleUpemTest(unittest.TestCase):
 
+class ScaleUpemTest(unittest.TestCase):
     def setUp(self):
         self.tempdir = None
         self.num_tempfiles = 0
@@ -26,8 +26,7 @@ class ScaleUpemTest(unittest.TestCase):
     def temp_path(self, suffix):
         self.temp_dir()
         self.num_tempfiles += 1
-        return os.path.join(self.tempdir,
-                            "tmp%d%s" % (self.num_tempfiles, suffix))
+        return os.path.join(self.tempdir, "tmp%d%s" % (self.num_tempfiles, suffix))
 
     def temp_dir(self):
         if not self.tempdir:
@@ -51,7 +50,8 @@ class ScaleUpemTest(unittest.TestCase):
         expected = self.read_ttx(expected_ttx)
         if actual != expected:
             for line in difflib.unified_diff(
-                    expected, actual, fromfile=expected_ttx, tofile=path):
+                expected, actual, fromfile=expected_ttx, tofile=path
+            ):
                 sys.stdout.write(line)
             self.fail("TTX output is different from expected")
 
@@ -65,6 +65,19 @@ class ScaleUpemTest(unittest.TestCase):
         expected_ttx_path = self.get_path("I-512upem.ttx")
         self.expect_ttx(font, expected_ttx_path, tables)
 
+    def test_scale_upem_varComposite(self):
+
+        font = TTFont(self.get_path("varc-ac00-ac01.ttf"))
+        tables = [table_tag for table_tag in font.keys() if table_tag != "head"]
+
+        scale_upem(font, 500)
+
+        expected_ttx_path = self.get_path("varc-ac00-ac01-500upem.ttx")
+        self.expect_ttx(font, expected_ttx_path, tables)
+
+        # Scale our other varComposite font as well; without checking the expected
+        font = TTFont(self.get_path("varc-6868.ttf"))
+        scale_upem(font, 500)
 
     def test_scale_upem_otf(self):
 

@@ -10,8 +10,10 @@ We only define the symbols that we use. E.g. see fontTools.cu2qu
 
 from types import SimpleNamespace
 
+
 def _empty_decorator(x):
     return x
+
 
 compiled = False
 

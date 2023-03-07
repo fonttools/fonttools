@@ -197,7 +197,7 @@ class IncludingLexer(object):
     """A Lexer that follows include statements.
 
     The OpenType feature file specification states that due to
-    historical reasons, relative imports should be resolved in this 
+    historical reasons, relative imports should be resolved in this
     order:
 
     1. If the source font is UFO format, then relative to the UFO's

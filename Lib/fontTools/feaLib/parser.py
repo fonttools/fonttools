@@ -134,7 +134,8 @@ class Parser(object):
             ]
             raise FeatureLibError(
                 "The following glyph names are referenced but are missing from the "
-                "glyph set:\n" + ("\n".join(error)), None
+                "glyph set:\n" + ("\n".join(error)),
+                None,
             )
         return self.doc_
 
@@ -396,7 +397,8 @@ class Parser(object):
                     self.expect_symbol_("-")
                     range_end = self.expect_cid_()
                     self.check_glyph_name_in_glyph_set(
-                        f"cid{range_start:05d}", f"cid{range_end:05d}",
+                        f"cid{range_start:05d}",
+                        f"cid{range_end:05d}",
                     )
                     glyphs.add_cid_range(
                         range_start,
@@ -522,27 +524,33 @@ class Parser(object):
                 )
             return (prefix, glyphs, lookups, values, suffix, hasMarks)
 
-    def parse_chain_context_(self):
+    def parse_ignore_glyph_pattern_(self, sub):
         location = self.cur_token_location_
         prefix, glyphs, lookups, values, suffix, hasMarks = self.parse_glyph_pattern_(
             vertical=False
         )
-        chainContext = [(prefix, glyphs, suffix)]
-        hasLookups = any(lookups)
+        if any(lookups):
+            raise FeatureLibError(
+                f'No lookups can be specified for "ignore {sub}"', location
+            )
+        if not hasMarks:
+            error = FeatureLibError(
+                f'Ambiguous "ignore {sub}", there should be least one marked glyph',
+                location,
+            )
+            log.warning(str(error))
+            suffix, glyphs = glyphs[1:], glyphs[0:1]
+        chainContext = (prefix, glyphs, suffix)
+        return chainContext
+
+    def parse_ignore_context_(self, sub):
+        location = self.cur_token_location_
+        chainContext = [self.parse_ignore_glyph_pattern_(sub)]
         while self.next_token_ == ",":
             self.expect_symbol_(",")
-            (
-                prefix,
-                glyphs,
-                lookups,
-                values,
-                suffix,
-                hasMarks,
-            ) = self.parse_glyph_pattern_(vertical=False)
-            chainContext.append((prefix, glyphs, suffix))
-            hasLookups = hasLookups or any(lookups)
+            chainContext.append(self.parse_ignore_glyph_pattern_(sub))
         self.expect_symbol_(";")
-        return chainContext, hasLookups
+        return chainContext
 
     def parse_ignore_(self):
         # Parses an ignore sub/pos rule.
@@ -550,18 +558,10 @@ class Parser(object):
         location = self.cur_token_location_
         self.advance_lexer_()
         if self.cur_token_ in ["substitute", "sub"]:
-            chainContext, hasLookups = self.parse_chain_context_()
-            if hasLookups:
-                raise FeatureLibError(
-                    'No lookups can be specified for "ignore sub"', location
-                )
+            chainContext = self.parse_ignore_context_("sub")
             return self.ast.IgnoreSubstStatement(chainContext, location=location)
         if self.cur_token_ in ["position", "pos"]:
-            chainContext, hasLookups = self.parse_chain_context_()
-            if hasLookups:
-                raise FeatureLibError(
-                    'No lookups can be specified for "ignore pos"', location
-                )
+            chainContext = self.parse_ignore_context_("pos")
             return self.ast.IgnorePosStatement(chainContext, location=location)
         raise FeatureLibError(
             'Expected "substitute" or "position"', self.cur_token_location_
@@ -696,7 +696,9 @@ class Parser(object):
         location = self.cur_token_location_
         glyphs = self.parse_glyphclass_(accept_glyphname=True)
         if not glyphs.glyphSet():
-            raise FeatureLibError("Empty glyph class in mark class definition", location)
+            raise FeatureLibError(
+                "Empty glyph class in mark class definition", location
+            )
         anchor = self.parse_anchor_()
         name = self.expect_class_name_()
         self.expect_symbol_(";")

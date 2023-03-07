@@ -100,6 +100,7 @@ from fontTools.varLib import builder
 from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib.merger import MutatorMerger
 from fontTools.varLib.instancer import names
+from .featureVars import instantiateFeatureVariations
 from fontTools.misc.cliTools import makeOutputFileName
 from fontTools.varLib.instancer import solver
 import collections
@@ -138,12 +139,13 @@ def NormalizedAxisRange(minimum, maximum):
 class AxisTriple(Sequence):
     """A triple of (min, default, max) axis values.
 
-    The default value can be None, in which case the populateDefault() method can be
-    used to fill in the missing default value based on the fvar axis default.
+    The default value can be None, in which case the limitRangeAndPopulateDefault()
+    method can be used to fill in the missing default value based on the fvar axis
+    default.
     """
 
     minimum: float
-    default: Optional[float]  # if None, filled with fvar default by populateDefault
+    default: Optional[float]  # if None, filled with by limitRangeAndPopulateDefault
     maximum: float
 
     def __post_init__(self):
@@ -208,7 +210,7 @@ class AxisTriple(Sequence):
             raise ValueError(f"expected sequence of 2 or 3; got {n}: {v!r}")
         return cls(minimum, default, maximum)
 
-    def populateDefault(self, fvarAxisDefault) -> "AxisTriple":
+    def limitRangeAndPopulateDefault(self, fvarTriple) -> "AxisTriple":
         """Return a new AxisTriple with the default value filled in.
 
         Set default to fvar axis default if the latter is within the min/max range,
@@ -216,10 +218,19 @@ class AxisTriple(Sequence):
         fvar axis default.
         If the default value is already set, return self.
         """
-        if self.default is not None:
-            return self
-        default = max(self.minimum, min(self.maximum, fvarAxisDefault))
-        return dataclasses.replace(self, default=default)
+        minimum = self.minimum
+        maximum = self.maximum
+        default = self.default
+        if default is None:
+            default = fvarTriple[1]
+
+        minimum = max(self.minimum, fvarTriple[0])
+        maximum = max(self.maximum, fvarTriple[0])
+        minimum = min(minimum, fvarTriple[2])
+        maximum = min(maximum, fvarTriple[2])
+        default = max(minimum, min(maximum, default))
+
+        return AxisTriple(minimum, default, maximum)
 
 
 @dataclasses.dataclass(frozen=True, order=True, repr=False)
@@ -256,6 +267,10 @@ class _BaseAxisLimits(Mapping[str, AxisTriple]):
     def __str__(self) -> str:
         return str(self._data)
 
+    def defaultLocation(self) -> Dict[str, float]:
+        """Return a dict of default axis values."""
+        return {k: v.default for k, v in self.items()}
+
     def pinnedLocation(self) -> Dict[str, float]:
         """Return a location dict with only the pinned axes."""
         return {k: v.default for k, v in self.items() if v.minimum == v.maximum}
@@ -265,39 +280,35 @@ class AxisLimits(_BaseAxisLimits):
     """Maps axis tags (str) to AxisTriple values."""
 
     def __init__(self, *args, **kwargs):
-        self.have_defaults = True
         self._data = data = {}
         for k, v in dict(*args, **kwargs).items():
             if v is None:
-                # will be filled in by populateDefaults
-                self.have_defaults = False
+                # will be filled in by limitAxesAndPopulateDefaults
                 data[k] = v
             else:
                 try:
                     triple = AxisTriple.expand(v)
                 except ValueError as e:
                     raise ValueError(f"Invalid axis limits for {k!r}: {v!r}") from e
-                if triple.default is None:
-                    # also filled in by populateDefaults
-                    self.have_defaults = False
                 data[k] = triple
 
-    def populateDefaults(self, varfont) -> "AxisLimits":
+    def limitAxesAndPopulateDefaults(self, varfont) -> "AxisLimits":
         """Return a new AxisLimits with defaults filled in from fvar table.
 
         If all axis limits already have defaults, return self.
         """
-        if self.have_defaults:
-            return self
         fvar = varfont["fvar"]
-        defaultValues = {a.axisTag: a.defaultValue for a in fvar.axes}
+        fvarTriples = {
+            a.axisTag: (a.minValue, a.defaultValue, a.maxValue) for a in fvar.axes
+        }
         newLimits = {}
         for axisTag, triple in self.items():
-            default = defaultValues[axisTag]
+            fvarTriple = fvarTriples[axisTag]
+            default = fvarTriple[1]
             if triple is None:
                 newLimits[axisTag] = AxisTriple(default, default, default)
             else:
-                newLimits[axisTag] = triple.populateDefault(default)
+                newLimits[axisTag] = triple.limitRangeAndPopulateDefault(fvarTriple)
         return type(self)(newLimits)
 
     def normalize(self, varfont, usingAvar=True) -> "NormalizedAxisLimits":
@@ -481,6 +492,23 @@ def _instantiateGvarGlyph(
         if defaultDeltas:
             coordinates += _g_l_y_f.GlyphCoordinates(defaultDeltas)
 
+    glyph = glyf[glyphname]
+    if glyph.isVarComposite():
+        for component in glyph.components:
+            newLocation = {}
+            for tag, loc in component.location.items():
+                if tag not in axisLimits:
+                    newLocation[tag] = loc
+                    continue
+                if component.flags & _g_l_y_f.VarComponentFlags.AXES_HAVE_VARIATION:
+                    raise NotImplementedError(
+                        "Instancing accross VarComposite axes with variation is not supported."
+                    )
+                limits = axisLimits[tag]
+                loc = normalizeValue(loc, limits)
+                newLocation[tag] = loc
+            component.location = newLocation
+
     # _setCoordinates also sets the hmtx/vmtx advance widths and sidebearings from
     # the four phantom points and glyph bounding boxes.
     # We call it unconditionally even if a glyph has no variations or no deltas are
@@ -530,7 +558,7 @@ def instantiateGvar(varfont, axisLimits, optimize=True):
         glyf.glyphOrder,
         key=lambda name: (
             glyf[name].getCompositeMaxpValues(glyf).maxComponentDepth
-            if glyf[name].isComposite()
+            if glyf[name].isComposite() or glyf[name].isVarComposite()
             else 0,
             name,
         ),
@@ -834,165 +862,6 @@ def instantiateOTL(varfont, axisLimits):
             del varfont["GDEF"]
 
 
-def instantiateFeatureVariations(varfont, axisLimits):
-    for tableTag in ("GPOS", "GSUB"):
-        if tableTag not in varfont or not getattr(
-            varfont[tableTag].table, "FeatureVariations", None
-        ):
-            continue
-        log.info("Instantiating FeatureVariations of %s table", tableTag)
-        _instantiateFeatureVariations(
-            varfont[tableTag].table, varfont["fvar"].axes, axisLimits
-        )
-        # remove unreferenced lookups
-        varfont[tableTag].prune_lookups()
-
-
-def _featureVariationRecordIsUnique(rec, seen):
-    conditionSet = []
-    for cond in rec.ConditionSet.ConditionTable:
-        if cond.Format != 1:
-            # can't tell whether this is duplicate, assume is unique
-            return True
-        conditionSet.append(
-            (cond.AxisIndex, cond.FilterRangeMinValue, cond.FilterRangeMaxValue)
-        )
-    # besides the set of conditions, we also include the FeatureTableSubstitution
-    # version to identify unique FeatureVariationRecords, even though only one
-    # version is currently defined. It's theoretically possible that multiple
-    # records with same conditions but different substitution table version be
-    # present in the same font for backward compatibility.
-    recordKey = frozenset([rec.FeatureTableSubstitution.Version] + conditionSet)
-    if recordKey in seen:
-        return False
-    else:
-        seen.add(recordKey)  # side effect
-        return True
-
-
-def _limitFeatureVariationConditionRange(condition, axisLimit):
-    minValue = condition.FilterRangeMinValue
-    maxValue = condition.FilterRangeMaxValue
-
-    if (
-        minValue > maxValue
-        or minValue > axisLimit.maximum
-        or maxValue < axisLimit.minimum
-    ):
-        # condition invalid or out of range
-        return
-
-    return tuple(normalizeValue(v, axisLimit) for v in (minValue, maxValue))
-
-
-def _instantiateFeatureVariationRecord(
-    record, recIdx, axisLimits, fvarAxes, axisIndexMap
-):
-    applies = True
-    newConditions = []
-    default_triple = NormalizedAxisTriple(-1, 0, +1)
-    for i, condition in enumerate(record.ConditionSet.ConditionTable):
-        if condition.Format == 1:
-            axisIdx = condition.AxisIndex
-            axisTag = fvarAxes[axisIdx].axisTag
-
-            minValue = condition.FilterRangeMinValue
-            maxValue = condition.FilterRangeMaxValue
-            triple = axisLimits.get(axisTag, default_triple)
-            if not (minValue <= triple.default <= maxValue):
-                applies = False
-                # condition not met so remove entire record
-                if triple.minimum > maxValue or triple.maximum < minValue:
-                    newConditions = None
-                    break
-
-            if axisTag in axisIndexMap:
-                # remap axis index
-                condition.AxisIndex = axisIndexMap[axisTag]
-                newConditions.append(condition)
-        else:
-            log.warning(
-                "Condition table {0} of FeatureVariationRecord {1} has "
-                "unsupported format ({2}); ignored".format(i, recIdx, condition.Format)
-            )
-            applies = False
-            newConditions.append(condition)
-
-    if newConditions:
-        record.ConditionSet.ConditionTable = newConditions
-        shouldKeep = True
-    else:
-        shouldKeep = False
-
-    return applies, shouldKeep
-
-
-def _limitFeatureVariationRecord(record, axisLimits, axisOrder):
-    newConditions = []
-    for condition in record.ConditionSet.ConditionTable:
-        if condition.Format == 1:
-            axisIdx = condition.AxisIndex
-            axisTag = axisOrder[axisIdx]
-            if axisTag in axisLimits:
-                axisLimit = axisLimits[axisTag]
-                newRange = _limitFeatureVariationConditionRange(condition, axisLimit)
-                if newRange:
-                    # keep condition with updated limits
-                    minimum, maximum = newRange
-                    condition.FilterRangeMinValue = minimum
-                    condition.FilterRangeMaxValue = maximum
-                    if minimum != -1 or maximum != +1:
-                        newConditions.append(condition)
-                else:
-                    # condition out of range, remove entire record
-                    newConditions = None
-                    break
-            else:
-                newConditions.append(condition)
-        else:
-            newConditions.append(condition)
-
-    record.ConditionSet.ConditionTable = newConditions
-    return newConditions is not None
-
-
-def _instantiateFeatureVariations(table, fvarAxes, axisLimits):
-    pinnedAxes = set(axisLimits.pinnedLocation())
-    axisOrder = [axis.axisTag for axis in fvarAxes if axis.axisTag not in pinnedAxes]
-    axisIndexMap = {axisTag: axisOrder.index(axisTag) for axisTag in axisOrder}
-
-    featureVariationApplied = False
-    uniqueRecords = set()
-    newRecords = []
-
-    for i, record in enumerate(table.FeatureVariations.FeatureVariationRecord):
-        applies, shouldKeep = _instantiateFeatureVariationRecord(
-            record, i, axisLimits, fvarAxes, axisIndexMap
-        )
-        if shouldKeep:
-            shouldKeep = _limitFeatureVariationRecord(record, axisLimits, axisOrder)
-
-        if shouldKeep and _featureVariationRecordIsUnique(record, uniqueRecords):
-            newRecords.append(record)
-
-        if applies and not featureVariationApplied:
-            assert record.FeatureTableSubstitution.Version == 0x00010000
-            for rec in record.FeatureTableSubstitution.SubstitutionRecord:
-                table.FeatureList.FeatureRecord[rec.FeatureIndex].Feature = deepcopy(
-                    rec.Feature
-                )
-            # Set variations only once
-            featureVariationApplied = True
-
-    if newRecords:
-        table.FeatureVariations.FeatureVariationRecord = newRecords
-        table.FeatureVariations.FeatureVariationCount = len(newRecords)
-    else:
-        del table.FeatureVariations
-        # downgrade table version if there are no FeatureVariations left
-        table.Version = 0x00010000
-
-
 def _isValidAvarSegmentMap(axisTag, segmentMap):
     if not segmentMap:
         return True
@@ -1268,7 +1137,9 @@ def instantiateVariableFont(
 
     sanityCheckVariableTables(varfont)
 
-    axisLimits = AxisLimits(axisLimits).populateDefaults(varfont)
+    axisLimits = AxisLimits(axisLimits).limitAxesAndPopulateDefaults(varfont)
+
+    log.info("Restricted limits: %s", axisLimits)
 
     normalizedLimits = axisLimits.normalize(varfont)
 
@@ -1325,7 +1196,9 @@ def instantiateVariableFont(
                     ignoreErrors=(overlap == OverlapMode.REMOVE_AND_IGNORE_ERRORS),
                 )
 
-    varLib.set_default_weight_width_slant(varfont, location=axisLimits.pinnedLocation())
+    varLib.set_default_weight_width_slant(
+        varfont, location=axisLimits.defaultLocation()
+    )
 
     if updateFontNames:
         # Set Regular/Italic/Bold/Bold Italic bits as appropriate, after the

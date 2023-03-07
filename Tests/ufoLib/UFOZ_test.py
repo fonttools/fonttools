@@ -12,9 +12,7 @@ import pytest
 import warnings
 
 
-TESTDATA = fs.osfs.OSFS(
-    os.path.join(os.path.dirname(__file__), "testdata")
-)
+TESTDATA = fs.osfs.OSFS(os.path.join(os.path.dirname(__file__), "testdata"))
 TEST_UFO3 = "TestFont1 (UFO3).ufo"
 TEST_UFOZ = "TestFont1 (UFO3).ufoz"
 
@@ -38,7 +36,6 @@ def testufoz():
 
 
 class TestUFOZ:
-
     def test_read(self, testufoz):
         with UFOReader(testufoz) as reader:
             assert reader.fileStructure == UFOFileStructure.ZIP
@@ -52,9 +49,7 @@ class TestUFOZ:
 
 
 def test_pathlike(testufo):
-
     class PathLike:
-
         def __init__(self, s):
             self._path = s
 
@@ -84,7 +79,6 @@ def memufo():
 
 
 class TestMemoryFS:
-
     def test_init_reader(self, memufo):
         with UFOReader(memufo) as reader:
             assert reader.formatVersion == 3

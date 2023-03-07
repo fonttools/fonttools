@@ -954,15 +954,26 @@ class BuilderTest(unittest.TestCase):
             FeatureLibError,
             "Empty glyph class in mark class definition",
             self.build,
-            "markClass [] <anchor 150 -10> @TOPMARKS;"
+            "markClass [] <anchor 150 -10> @TOPMARKS;",
         )
         self.assertRaisesRegex(
             FeatureLibError,
             'Expected a glyph class with 1 elements after "by", but found a glyph class with 0 elements',
             self.build,
-            "feature test { sub a by []; test};"
+            "feature test { sub a by []; test};",
         )
 
+    def test_unmarked_ignore_statement(self):
+        name = "bug2949"
+        logger = logging.getLogger("fontTools.feaLib.parser")
+        with CapturingLogHandler(logger, level="WARNING") as captor:
+            self.check_feature_file(name)
+        self.check_fea2fea_file(name)
+
+        for line, sub in {(3, "sub"), (8, "pos"), (13, "sub")}:
+            captor.assertRegex(
+                f'{name}.fea:{line}:12: Ambiguous "ignore {sub}", there should be least one marked glyph'
+            )
 
 
 def generate_feature_file_test(name):

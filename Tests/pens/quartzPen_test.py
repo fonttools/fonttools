@@ -12,11 +12,11 @@ try:
 
     PATH_ELEMENTS = {
         # CG constant key                    desc       num_points
-        kCGPathElementMoveToPoint:         ('moveto',   1),
-        kCGPathElementAddLineToPoint:      ('lineto',   1),
-        kCGPathElementAddCurveToPoint:     ('curveto',  3),
-        kCGPathElementAddQuadCurveToPoint: ('qcurveto', 2),
-        kCGPathElementCloseSubpath:        ('close',    0),
+        kCGPathElementMoveToPoint: ("moveto", 1),
+        kCGPathElementAddLineToPoint: ("lineto", 1),
+        kCGPathElementAddCurveToPoint: ("curveto", 3),
+        kCGPathElementAddQuadCurveToPoint: ("qcurveto", 2),
+        kCGPathElementCloseSubpath: ("close", 0),
     }
 
     PYOBJC_AVAILABLE = True
@@ -65,7 +65,7 @@ class QuartzPenTest(unittest.TestCase):
         draw(pen)
         self.assertEqual(
             "moveto 50.0 0.0 lineto 50.0 500.0 lineto 200.0 500.0 curveto 350.0 500.0 450.0 400.0 450.0 250.0 curveto 450.0 100.0 350.0 0.0 200.0 0.0 close ",
-            quartzPathToString(pen.path)
+            quartzPathToString(pen.path),
         )
 
     def test_empty(self):
@@ -73,6 +73,7 @@ class QuartzPenTest(unittest.TestCase):
         self.assertEqual("", quartzPathToString(pen.path))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
+
     sys.exit(unittest.main())

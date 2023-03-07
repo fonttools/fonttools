@@ -7,8 +7,14 @@ from fontTools import ttLib
 
 superclass = ttLib.getTableClass("TSI1")
 
+
 class table_T_S_I__3(superclass):
 
-	extras = {0xfffa: "reserved0", 0xfffb: "reserved1", 0xfffc: "reserved2", 0xfffd: "reserved3"}
+    extras = {
+        0xFFFA: "reserved0",
+        0xFFFB: "reserved1",
+        0xFFFC: "reserved2",
+        0xFFFD: "reserved3",
+    }
 
-	indextable = "TSI2"
+    indextable = "TSI2"

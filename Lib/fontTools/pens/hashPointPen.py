@@ -65,9 +65,7 @@ class HashPointPen(AbstractPointPen):
             pt_type = segmentType[0]
         self.data.append(f"{pt_type}{pt[0]:g}{pt[1]:+g}")
 
-    def addComponent(
-        self, baseGlyphName, transformation, identifier=None, **kwargs
-    ):
+    def addComponent(self, baseGlyphName, transformation, identifier=None, **kwargs):
         tr = "".join([f"{t:+}" for t in transformation])
         self.data.append("[")
         try:
