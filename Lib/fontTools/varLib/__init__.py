@@ -995,11 +995,11 @@ def build_many(
             vf = build(
                 vfDoc,
                 master_finder,
-                exclude=list(exclude) + ["STAT"],
+                exclude=exclude,
                 optimize=optimize,
                 colr_layer_reuse=colr_layer_reuse,
             )[0]
-            if "STAT" not in exclude:
+            if "STAT" not in vf and "STAT" not in exclude:
                 buildVFStatTable(vf, designspace, name)
             res[name] = vf
     return res
