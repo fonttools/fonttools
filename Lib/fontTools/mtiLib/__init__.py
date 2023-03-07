@@ -13,8 +13,9 @@ from fontTools.ttLib.tables.otBase import ValueRecord, valueRecordFormatDict
 from fontTools.otlLib import builder as otl
 from contextlib import contextmanager
 from fontTools.ttLib import newTable
-from fontTools.feaLib.lookupDebugInfo import LOOKUP_DEBUG_INFO_KEY
+from fontTools.feaLib.lookupDebugInfo import LOOKUP_DEBUG_ENV_VAR, LOOKUP_DEBUG_INFO_KEY
 from operator import setitem
+import os
 import logging
 
 
@@ -1038,16 +1039,17 @@ def parseGSUBGPOS(lines, font, tableTag):
         self.LookupList.LookupCount = len(self.LookupList.Lookup)
     if lookupMap is not None:
         lookupMap.applyDeferredMappings()
-        if "Debg" not in font:
-            font["Debg"] = newTable("Debg")
-            font["Debg"].data = {}
-        debug = (
-            font["Debg"]
-            .data.setdefault(LOOKUP_DEBUG_INFO_KEY, {})
-            .setdefault(tableTag, {})
-        )
-        for name, lookup in lookupMap.items():
-            debug[str(lookup)] = ["", name, ""]
+        if os.environ.get(LOOKUP_DEBUG_ENV_VAR):
+            if "Debg" not in font:
+                font["Debg"] = newTable("Debg")
+                font["Debg"].data = {}
+            debug = (
+                font["Debg"]
+                .data.setdefault(LOOKUP_DEBUG_INFO_KEY, {})
+                .setdefault(tableTag, {})
+            )
+            for name, lookup in lookupMap.items():
+                debug[str(lookup)] = ["", name, ""]
 
         featureMap.applyDeferredMappings()
     container.table = self

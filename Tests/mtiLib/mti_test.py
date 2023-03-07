@@ -1,14 +1,20 @@
 from fontTools.misc.xmlWriter import XMLWriter
 from fontTools.ttLib import TTFont
+from fontTools.feaLib.lookupDebugInfo import LOOKUP_DEBUG_ENV_VAR
 from fontTools import mtiLib
 import difflib
 from io import StringIO
 import os
 import sys
-import unittest
+import pytest
 
 
-class MtiTest(unittest.TestCase):
+@pytest.fixture(autouse=True)
+def set_lookup_debug_env_var(monkeypatch):
+    monkeypatch.setenv(LOOKUP_DEBUG_ENV_VAR, "1")
+
+
+class MtiTest:
 
     GLYPH_ORDER = [
         ".notdef",
@@ -396,19 +402,6 @@ class MtiTest(unittest.TestCase):
     #        'mti/contextcoverage'
     #        'mti/context-glyph'
 
-    def __init__(self, methodName):
-        unittest.TestCase.__init__(self, methodName)
-        # Python 3 renamed assertRaisesRegexp to assertRaisesRegex,
-        # and fires deprecation warnings if a program uses the old name.
-        if not hasattr(self, "assertRaisesRegex"):
-            self.assertRaisesRegex = self.assertRaisesRegexp
-
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
-
     @staticmethod
     def getpath(testfile):
         path, _ = os.path.split(__file__)
@@ -423,7 +416,7 @@ class MtiTest(unittest.TestCase):
                 expected, actual, fromfile=fromfile, tofile=tofile
             ):
                 sys.stderr.write(line)
-            self.fail("TTX output is different from expected")
+            pytest.fail("TTX output is different from expected")
 
     @classmethod
     def create_font(celf):
@@ -445,7 +438,7 @@ class MtiTest(unittest.TestCase):
             table = mtiLib.build(f, font, tableTag=tableTag)
 
         if tableTag is not None:
-            self.assertEqual(tableTag, table.tableTag)
+            assert tableTag == table.tableTag
         tableTag = table.tableTag
 
         # Make sure it compiles.
@@ -523,4 +516,4 @@ if __name__ == "__main__":
 
         font = MtiTest.create_font()
         sys.exit(main(sys.argv[1:], font))
-    sys.exit(unittest.main())
+    sys.exit(pytest.main(sys.argv))
