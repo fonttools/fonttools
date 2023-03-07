@@ -493,6 +493,51 @@ class BuildTest(unittest.TestCase):
         expected_ttx_path = self.get_test_output("BuildMain.ttx")
         self.expect_ttx(varfont, expected_ttx_path, tables)
 
+    def test_varLib_main_output_dir(self):
+        self.temp_dir()
+        outdir = os.path.join(self.tempdir, "output_dir_test")
+        self.assertFalse(os.path.exists(outdir))
+
+        ds_path = os.path.join(self.tempdir, "BuildMain.designspace")
+        shutil.copy2(self.get_test_input("Build.designspace"), ds_path)
+
+        shutil.copytree(
+            self.get_test_input("master_ttx_interpolatable_ttf"),
+            os.path.join(outdir, "master_ttx"),
+        )
+
+        finder = "%s/output_dir_test/master_ttx/{stem}.ttx" % self.tempdir
+
+        varLib_main([ds_path, "--output-dir", outdir, "--master-finder", finder])
+
+        self.assertTrue(os.path.isdir(outdir))
+        self.assertTrue(os.path.exists(os.path.join(outdir, "BuildMain-VF.ttf")))
+
+    def test_varLib_main_filter_variable_fonts(self):
+        self.temp_dir()
+        outdir = os.path.join(self.tempdir, "filter_variable_fonts_test")
+        self.assertFalse(os.path.exists(outdir))
+
+        ds_path = os.path.join(self.tempdir, "BuildMain.designspace")
+        shutil.copy2(self.get_test_input("Build.designspace"), ds_path)
+
+        shutil.copytree(
+            self.get_test_input("master_ttx_interpolatable_ttf"),
+            os.path.join(outdir, "master_ttx"),
+        )
+
+        finder = "%s/filter_variable_fonts_test/master_ttx/{stem}.ttx" % self.tempdir
+
+        cmd = [ds_path, "--output-dir", outdir, "--master-finder", finder]
+
+        with pytest.raises(SystemExit):
+            varLib_main(cmd + ["--variable-fonts", "FooBar"])  # no font matches
+
+        varLib_main(cmd + ["--variable-fonts", "Build.*"])  # this does match
+
+        self.assertTrue(os.path.isdir(outdir))
+        self.assertTrue(os.path.exists(os.path.join(outdir, "BuildMain-VF.ttf")))
+
     def test_varlib_build_from_ds_object_in_memory_ttfonts(self):
         ds_path = self.get_test_input("Build.designspace")
         ttx_dir = self.get_test_input("master_ttx_interpolatable_ttf")
