@@ -1,11 +1,17 @@
 from fontTools.misc.xmlWriter import XMLWriter
 from fontTools.ttLib import TTFont
+from fontTools.feaLib.lookupDebugInfo import LOOKUP_DEBUG_ENV_VAR
 from fontTools import mtiLib
 import difflib
 from io import StringIO
 import os
 import sys
 import pytest
+
+
+@pytest.fixture(autouse=True)
+def set_lookup_debug_env_var(monkeypatch):
+    monkeypatch.setenv(LOOKUP_DEBUG_ENV_VAR, "1")
 
 
 class MtiTest:
