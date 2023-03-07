@@ -16,6 +16,7 @@ log = logging.getLogger(__name__)
 
 from .otBase import BaseTTXConverter
 
+
 class table__a_v_a_r(BaseTTXConverter):
     """Axis Variations Table
 
@@ -44,7 +45,7 @@ class table__a_v_a_r(BaseTTXConverter):
 
     def __init__(self, tag=None):
         DefaultTable.DefaultTable.__init__(self, tag)
-        #self.segments = {}
+        # self.segments = {}
 
     """
     def compile(self, ttFont):
