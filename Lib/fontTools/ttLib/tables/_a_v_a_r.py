@@ -52,10 +52,10 @@ class table__a_v_a_r(BaseTTXConverter):
         axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
         if not hasattr(self, "table"):
             self.table = otTables.avar()
-            self.table.Version = (getattr(self, "majorVersion", 1) << 16) | getattr(
-                self, "minorVersion", 0
-            )
             self.table.Reserved = 0
+        self.table.Version = (getattr(self, "majorVersion", 1) << 16) | getattr(
+            self, "minorVersion", 0
+        )
         self.table.AxisCount = len(axisTags)
         self.table.AxisSegmentMap = []
         for axis in axisTags:
