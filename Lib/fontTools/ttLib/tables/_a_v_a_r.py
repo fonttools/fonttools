@@ -104,7 +104,7 @@ class table__a_v_a_r(BaseTTXConverter):
             writer.newline()
         if getattr(self, "majorVersion", 1) >= 2:
             if self.table.VarIdxMap:
-                self.table.VarIdxMap.toXML(writer, ttFont)
+                self.table.VarIdxMap.toXML(writer, ttFont, name="VarIdxMap")
             if self.table.VarStore:
                 self.table.VarStore.toXML(writer, ttFont)
 
@@ -132,5 +132,5 @@ class table__a_v_a_r(BaseTTXConverter):
                                 "duplicate entry for %s in axis '%s'", fromValue, axis
                             )
                         segment[fromValue] = toValue
-        # else:
-        #    super().fromXML(name, attrs, content, ttFont)
+        else:
+            super().fromXML(name, attrs, content, ttFont)
