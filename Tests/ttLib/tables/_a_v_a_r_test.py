@@ -51,6 +51,7 @@ class AxisVariationTableTest(unittest.TestCase):
         avar.toXML(writer, self.makeFont(["opsz"]))
         self.assertEqual(
             [
+                '<version major="1" minor="0"/>',
                 '<segment axis="opsz">',
                 '<mapping from="-1.0" to="-1.0"/>',
                 '<mapping from="0.0" to="0.0"/>',

@@ -85,7 +85,11 @@ class table__a_v_a_r(BaseTTXConverter):
                 segments[segment.FromCoordinate] = segment.ToCoordinate
 
     def toXML(self, writer, ttFont):
-        writer.simpletag("version", major=getattr(self, "majorVersion", 1), minor=getattr(self, "minorVersion", 0))
+        writer.simpletag(
+            "version",
+            major=getattr(self, "majorVersion", 1),
+            minor=getattr(self, "minorVersion", 0),
+        )
         writer.newline()
         axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
         for axis in axisTags:
