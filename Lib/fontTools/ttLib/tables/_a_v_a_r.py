@@ -52,7 +52,9 @@ class table__a_v_a_r(BaseTTXConverter):
         axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
         if not hasattr(self, "table"):
             self.table = otTables.avar()
-            self.table.Version = (getattr(self, "majorVersion", 1) << 16) | getattr(self, "minorVersion", 0)
+            self.table.Version = (getattr(self, "majorVersion", 1) << 16) | getattr(
+                self, "minorVersion", 0
+            )
             self.table.Reserved = 0
         self.table.AxisCount = len(axisTags)
         self.table.AxisSegmentMap = []
@@ -108,7 +110,9 @@ class table__a_v_a_r(BaseTTXConverter):
             self.minorVersion = safeEval(attrs["minor"])
             if not hasattr(self, "table"):
                 self.table = otTables.avar()
-            self.table.Version = (self.majorVersion << 16) | self.minorVersion
+            self.table.Version = (getattr(self, "majorVersion", 1) << 16) | getattr(
+                self, "minorVersion", 0
+            )
         elif name == "segment":
             axis = attrs["axis"]
             segment = self.segments[axis] = {}
@@ -123,5 +127,5 @@ class table__a_v_a_r(BaseTTXConverter):
                                 "duplicate entry for %s in axis '%s'", fromValue, axis
                             )
                         segment[fromValue] = toValue
-        #else:
+        # else:
         #    super().fromXML(name, attrs, content, ttFont)
