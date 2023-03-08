@@ -5,7 +5,7 @@ from fontTools.misc.fixedTools import (
     floatToFixedToStr as fl2str,
     strToFixedToFloat as str2fl,
 )
-from fontTools.misc.textTools import bytesjoin
+from fontTools.misc.textTools import bytesjoin, safeEval
 from fontTools.ttLib import TTLibError
 from . import DefaultTable
 from . import otTables
@@ -52,7 +52,7 @@ class table__a_v_a_r(BaseTTXConverter):
         axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
         if not hasattr(self, "table"):
             self.table = otTables.avar()
-            self.table.Version = 0x00010000
+            self.table.Version = (getattr(self, "majorVersion", 1) << 16) | getattr(self, "minorVersion", 0)
             self.table.Reserved = 0
         self.table.AxisCount = len(axisTags)
         self.table.AxisSegmentMap = []
@@ -73,6 +73,7 @@ class table__a_v_a_r(BaseTTXConverter):
         super().decompile(data, ttFont)
         assert self.table.Version >= 0x00010000
         self.majorVersion = self.table.Version >> 16
+        self.minorVersion = self.table.Version & 0xFFFF
         axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
         for axis in axisTags:
             self.segments[axis] = {}
@@ -82,6 +83,8 @@ class table__a_v_a_r(BaseTTXConverter):
                 segments[segment.FromCoordinate] = segment.ToCoordinate
 
     def toXML(self, writer, ttFont):
+        writer.simpletag("version", major=self.majorVersion, minor=self.minorVersion)
+        writer.newline()
         axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
         for axis in axisTags:
             writer.begintag("segment", axis=axis)
@@ -93,9 +96,20 @@ class table__a_v_a_r(BaseTTXConverter):
                 writer.newline()
             writer.endtag("segment")
             writer.newline()
+        if self.majorVersion >= 2:
+            if self.table.VarIdxMap:
+                self.table.VarIdxMap.toXML(writer, ttFont)
+            if self.table.VarStore:
+                self.table.VarStore.toXML(writer, ttFont)
 
     def fromXML(self, name, attrs, content, ttFont):
-        if name == "segment":
+        if name == "version":
+            self.majorVersion = safeEval(attrs["major"])
+            self.minorVersion = safeEval(attrs["minor"])
+            if not hasattr(self, "table"):
+                self.table = otTables.avar()
+            self.table.Version = (self.majorVersion << 16) | self.minorVersion
+        elif name == "segment":
             axis = attrs["axis"]
             segment = self.segments[axis] = {}
             for element in content:
@@ -109,3 +123,5 @@ class table__a_v_a_r(BaseTTXConverter):
                                 "duplicate entry for %s in axis '%s'", fromValue, axis
                             )
                         segment[fromValue] = toValue
+        #else:
+        #    super().fromXML(name, attrs, content, ttFont)
