@@ -1,0 +1,36 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<designspace format="5.0">
+  <axes>
+    <axis tag="wght" name="Weight" minimum="100" maximum="900" default="100">
+      <map input="100" output="30"/>
+      <map input="900" output="240"/>
+    </axis>
+    <axis tag="wdth" name="Width" minimum="80" maximum="115" default="80"/>
+  </axes>
+  <sources>
+    <source filename="master_no_overwrite_stat/Test-CondensedThin.ttx" name="Test Condensed Thin">
+      <location>
+        <dimension name="Weight" xvalue="30"/>
+        <dimension name="Width" xvalue="80"/>
+      </location>
+    </source>
+    <source filename="master_no_overwrite_stat/Test-CondensedBlack.ttx" name="Test Condensed Black">
+      <location>
+        <dimension name="Weight" xvalue="240"/>
+        <dimension name="Width" xvalue="80"/>
+      </location>
+    </source>
+    <source filename="master_no_overwrite_stat/Test-ExtendedThin.ttx" name="Test Extended Thin">
+      <location>
+        <dimension name="Weight" xvalue="30"/>
+        <dimension name="Width" xvalue="115"/>
+      </location>
+    </source>
+    <source filename="master_no_overwrite_stat/Test-ExtendedBlack.ttx" name="Test Extended Black">
+      <location>
+        <dimension name="Weight" xvalue="240"/>
+        <dimension name="Width" xvalue="115"/>
+      </location>
+    </source>
+  </sources>
+</designspace>
