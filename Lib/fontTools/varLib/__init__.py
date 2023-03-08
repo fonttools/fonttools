@@ -45,6 +45,7 @@ import os.path
 import logging
 from copy import deepcopy
 from pprint import pformat
+from re import fullmatch
 from .errors import VarLibError, VarLibValidationError
 
 log = logging.getLogger("fontTools.varLib")
@@ -995,11 +996,11 @@ def build_many(
             vf = build(
                 vfDoc,
                 master_finder,
-                exclude=list(exclude) + ["STAT"],
+                exclude=exclude,
                 optimize=optimize,
                 colr_layer_reuse=colr_layer_reuse,
             )[0]
-            if "STAT" not in exclude:
+            if "STAT" not in vf and "STAT" not in exclude:
                 buildVFStatTable(vf, designspace, name)
             res[name] = vf
     return res
@@ -1174,14 +1175,22 @@ class MasterFinder(object):
 
 
 def main(args=None):
-    """Build a variable font from a designspace file and masters"""
+    """Build variable fonts from a designspace file and masters"""
     from argparse import ArgumentParser
     from fontTools import configLogger
 
     parser = ArgumentParser(prog="varLib", description=main.__doc__)
     parser.add_argument("designspace")
-    parser.add_argument(
+    output_group = parser.add_mutually_exclusive_group()
+    output_group.add_argument(
         "-o", metavar="OUTPUTFILE", dest="outfile", default=None, help="output file"
+    )
+    output_group.add_argument(
+        "-d",
+        "--output-dir",
+        metavar="OUTPUTDIR",
+        default=None,
+        help="output dir (default: same as input designspace file)",
     )
     parser.add_argument(
         "-x",
@@ -1218,6 +1227,19 @@ def main(args=None):
             'name. The default value is "%(default)s".'
         ),
     )
+    parser.add_argument(
+        "--variable-fonts",
+        default=".*",
+        metavar="VF_NAME",
+        help=(
+            "Filter the list of variable fonts produced from the input "
+            "Designspace v5 file. By default all listed variable fonts are "
+            "generated. To generate a specific variable font (or variable fonts) "
+            'that match a given "name" attribute, you can pass as argument '
+            "the full name or a regular expression. E.g.: --variable-fonts "
+            '"MyFontVF_WeightOnly"; or --variable-fonts "MyFontVFItalic_.*".'
+        ),
+    )
     logging_group = parser.add_mutually_exclusive_group(required=False)
     logging_group.add_argument(
         "-v", "--verbose", action="store_true", help="Run more verbosely."
@@ -1232,23 +1254,58 @@ def main(args=None):
     )
 
     designspace_filename = options.designspace
+    designspace = DesignSpaceDocument.fromfile(designspace_filename)
+
+    vf_descriptors = designspace.getVariableFonts()
+    if not vf_descriptors:
+        parser.error(f"No variable fonts in given designspace {designspace.path!r}")
+
+    vfs_to_build = []
+    for vf in vf_descriptors:
+        # Skip variable fonts that do not match the user's inclusion regex if given.
+        if not fullmatch(options.variable_fonts, vf.name):
+            continue
+        vfs_to_build.append(vf)
+
+    if not vfs_to_build:
+        parser.error(f"No variable fonts matching {options.variable_fonts!r}")
+
+    if options.outfile is not None and len(vfs_to_build) > 1:
+        parser.error(
+            "can't specify -o because there are multiple VFs to build; "
+            "use --output-dir, or select a single VF with --variable-fonts"
+        )
+
+    output_dir = options.output_dir
+    if output_dir is None:
+        output_dir = os.path.dirname(designspace_filename)
+
+    vf_name_to_output_path = {}
+    if len(vfs_to_build) == 1 and options.outfile is not None:
+        vf_name_to_output_path[vfs_to_build[0].name] = options.outfile
+    else:
+        for vf in vfs_to_build:
+            filename = vf.filename if vf.filename is not None else vf.name + ".{ext}"
+            vf_name_to_output_path[vf.name] = os.path.join(output_dir, filename)
+
     finder = MasterFinder(options.master_finder)
 
-    vf, _, _ = build(
-        designspace_filename,
+    vfs = build_many(
+        designspace,
         finder,
         exclude=options.exclude,
         optimize=options.optimize,
         colr_layer_reuse=options.colr_layer_reuse,
     )
 
-    outfile = options.outfile
-    if outfile is None:
+    for vf_name, vf in vfs.items():
         ext = "otf" if vf.sfntVersion == "OTTO" else "ttf"
-        outfile = os.path.splitext(designspace_filename)[0] + "-VF." + ext
-
-    log.info("Saving variation font %s", outfile)
-    vf.save(outfile)
+        output_path = vf_name_to_output_path[vf_name].format(ext=ext)
+        output_dir = os.path.dirname(output_path)
+        if output_dir:
+            os.makedirs(output_dir, exist_ok=True)
+        log.info("Saving variation font %s", output_path)
+        vf.save(output_path)
 
 
 if __name__ == "__main__":

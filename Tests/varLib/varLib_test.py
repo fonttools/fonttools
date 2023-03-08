@@ -1,7 +1,7 @@
 from fontTools.colorLib.builder import buildCOLR
 from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables import otTables as ot
-from fontTools.varLib import build, load_designspace, _add_COLR
+from fontTools.varLib import build, build_many, load_designspace, _add_COLR
 from fontTools.varLib.errors import VarLibValidationError
 import fontTools.varLib.errors as varLibErrors
 from fontTools.varLib.models import VariationModel
@@ -492,6 +492,74 @@ class BuildTest(unittest.TestCase):
         tables = [table_tag for table_tag in varfont.keys() if table_tag != "head"]
         expected_ttx_path = self.get_test_output("BuildMain.ttx")
         self.expect_ttx(varfont, expected_ttx_path, tables)
+
+    def test_varLib_main_output_dir(self):
+        self.temp_dir()
+        outdir = os.path.join(self.tempdir, "output_dir_test")
+        self.assertFalse(os.path.exists(outdir))
+
+        ds_path = os.path.join(self.tempdir, "BuildMain.designspace")
+        shutil.copy2(self.get_test_input("Build.designspace"), ds_path)
+
+        shutil.copytree(
+            self.get_test_input("master_ttx_interpolatable_ttf"),
+            os.path.join(outdir, "master_ttx"),
+        )
+
+        finder = "%s/output_dir_test/master_ttx/{stem}.ttx" % self.tempdir
+
+        varLib_main([ds_path, "--output-dir", outdir, "--master-finder", finder])
+
+        self.assertTrue(os.path.isdir(outdir))
+        self.assertTrue(os.path.exists(os.path.join(outdir, "BuildMain-VF.ttf")))
+
+    def test_varLib_main_filter_variable_fonts(self):
+        self.temp_dir()
+        outdir = os.path.join(self.tempdir, "filter_variable_fonts_test")
+        self.assertFalse(os.path.exists(outdir))
+
+        ds_path = os.path.join(self.tempdir, "BuildMain.designspace")
+        shutil.copy2(self.get_test_input("Build.designspace"), ds_path)
+
+        shutil.copytree(
+            self.get_test_input("master_ttx_interpolatable_ttf"),
+            os.path.join(outdir, "master_ttx"),
+        )
+
+        finder = "%s/filter_variable_fonts_test/master_ttx/{stem}.ttx" % self.tempdir
+
+        cmd = [ds_path, "--output-dir", outdir, "--master-finder", finder]
+
+        with pytest.raises(SystemExit):
+            varLib_main(cmd + ["--variable-fonts", "FooBar"])  # no font matches
+
+        varLib_main(cmd + ["--variable-fonts", "Build.*"])  # this does match
+
+        self.assertTrue(os.path.isdir(outdir))
+        self.assertTrue(os.path.exists(os.path.join(outdir, "BuildMain-VF.ttf")))
+
+    def test_varLib_build_many_no_overwrite_STAT(self):
+        # Ensure that varLib.build_many doesn't overwrite a pre-existing STAT table,
+        # e.g. one built by feaLib from features.fea; the VF simply should inherit the
+        # STAT from the base master: https://github.com/googlefonts/fontmake/issues/985
+        base_master = TTFont()
+        base_master.importXML(
+            self.get_test_input("master_no_overwrite_stat/Test-CondensedThin.ttx")
+        )
+        assert "STAT" in base_master
+
+        vf = next(
+            iter(
+                build_many(
+                    DesignSpaceDocument.fromfile(
+                        self.get_test_input("TestNoOverwriteSTAT.designspace")
+                    )
+                ).values()
+            )
+        )
+        assert "STAT" in vf
+
+        assert vf["STAT"].table == base_master["STAT"].table
 
     def test_varlib_build_from_ds_object_in_memory_ttfonts(self):
         ds_path = self.get_test_input("Build.designspace")
