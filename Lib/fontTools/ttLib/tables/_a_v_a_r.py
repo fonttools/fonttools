@@ -85,7 +85,7 @@ class table__a_v_a_r(BaseTTXConverter):
                 segments[segment.FromCoordinate] = segment.ToCoordinate
 
     def toXML(self, writer, ttFont):
-        writer.simpletag("version", major=self.majorVersion, minor=self.minorVersion)
+        writer.simpletag("version", major=getattr(self, "majorVersion", 1), minor=getattr(self, "minorVersion", 0))
         writer.newline()
         axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
         for axis in axisTags:
@@ -98,18 +98,19 @@ class table__a_v_a_r(BaseTTXConverter):
                 writer.newline()
             writer.endtag("segment")
             writer.newline()
-        if self.majorVersion >= 2:
+        if getattr(self, "majorVersion", 1) >= 2:
             if self.table.VarIdxMap:
                 self.table.VarIdxMap.toXML(writer, ttFont)
             if self.table.VarStore:
                 self.table.VarStore.toXML(writer, ttFont)
 
     def fromXML(self, name, attrs, content, ttFont):
+        if not hasattr(self, "table"):
+            self.table = otTables.avar()
+            self.table.Reserved = 0
         if name == "version":
             self.majorVersion = safeEval(attrs["major"])
             self.minorVersion = safeEval(attrs["minor"])
-            if not hasattr(self, "table"):
-                self.table = otTables.avar()
             self.table.Version = (getattr(self, "majorVersion", 1) << 16) | getattr(
                 self, "minorVersion", 0
             )
