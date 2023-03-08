@@ -9,6 +9,7 @@ import copy
 from enum import IntEnum
 import itertools
 from collections import defaultdict, namedtuple
+from fontTools.ttLib.tables.otTraverse import dfs_base_table
 from fontTools.misc.roundTools import otRound
 from fontTools.misc.textTools import bytesjoin, pad, safeEval
 from .otBase import (
@@ -21,6 +22,7 @@ from .otBase import (
 from fontTools.feaLib.lookupDebugInfo import LookupDebugInfo, LOOKUP_DEBUG_INFO_KEY
 import logging
 import struct
+from typing import TYPE_CHECKING, Iterator, List, Optional, Set
 
 
 log = logging.getLogger(__name__)
@@ -1557,41 +1559,47 @@ class Paint(getFormatSwitchingBaseTableClass("uint8")):
         xmlWriter.endtag(tableName)
         xmlWriter.newline()
 
-    def getChildren(self, colr):
+    def iterPaintSubTables(self, colr: COLR) -> Iterator[BaseTable.SubTableEntry]:
         if self.Format == PaintFormat.PaintColrLayers:
             # https://github.com/fonttools/fonttools/issues/2438: don't die when no LayerList exists
             layers = []
             if colr.LayerList is not None:
                 layers = colr.LayerList.Paint
-            return layers[self.FirstLayerIndex : self.FirstLayerIndex + self.NumLayers]
+            yield from (
+                BaseTable.SubTableEntry(name="Layers", value=v, index=i)
+                for i, v in enumerate(
+                    layers[self.FirstLayerIndex : self.FirstLayerIndex + self.NumLayers]
+                )
+            )
+            return
 
         if self.Format == PaintFormat.PaintColrGlyph:
             for record in colr.BaseGlyphList.BaseGlyphPaintRecord:
                 if record.BaseGlyph == self.Glyph:
-                    return [record.Paint]
+                    yield BaseTable.SubTableEntry(name="BaseGlyph", value=record.Paint)
+                    return
             else:
                 raise KeyError(f"{self.Glyph!r} not in colr.BaseGlyphList")
 
-        children = []
         for conv in self.getConverters():
             if conv.tableClass is not None and issubclass(conv.tableClass, type(self)):
-                children.append(getattr(self, conv.name))
+                value = getattr(self, conv.name)
+                yield BaseTable.SubTableEntry(name=conv.name, value=value)
 
-        return children
+    def getChildren(self, colr) -> List["Paint"]:
+        # this is kept for backward compatibility (e.g. it's used by the subsetter)
+        return [p.value for p in self.iterPaintSubTables(colr)]
 
     def traverse(self, colr: COLR, callback):
         """Depth-first traversal of graph rooted at self, callback on each node."""
         if not callable(callback):
             raise TypeError("callback must be callable")
-        stack = [self]
-        visited = set()
-        while stack:
-            current = stack.pop()
-            if id(current) in visited:
-                continue
-            callback(current)
-            visited.add(id(current))
-            stack.extend(reversed(current.getChildren(colr)))
+
+        for path in dfs_base_table(
+            self, iter_subtables_fn=lambda paint: paint.iterPaintSubTables(colr)
+        ):
+            paint = path[-1].value
+            callback(paint)
 
 
 # For each subtable format there is a class. However, we don't really distinguish
