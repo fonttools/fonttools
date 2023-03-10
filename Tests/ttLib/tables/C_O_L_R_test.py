@@ -1,9 +1,14 @@
 from fontTools import ttLib
 from fontTools.misc.testTools import getXML, parseXML
+from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables.C_O_L_R_ import table_C_O_L_R_
 
+from pathlib import Path
 import binascii
 import pytest
+
+
+TEST_DATA_DIR = Path(__file__).parent / "data"
 
 
 COLR_V0_SAMPLE = (
@@ -610,6 +615,26 @@ class COLR_V1_Test(object):
         colr = table_C_O_L_R_()
         colr.decompile(compiled, font)
         assert getXML(colr.toXML, font) == COLR_V1_XML
+
+    @pytest.mark.parametrize("quantization", [1, 10, 100])
+    @pytest.mark.parametrize("flavor", ["glyf", "cff"])
+    def test_computeClipBoxes(self, flavor, quantization):
+        font = TTFont()
+        font.importXML(TEST_DATA_DIR / f"COLRv1-clip-boxes-{flavor}.ttx")
+        assert font["COLR"].table.ClipList is None
+
+        font["COLR"].table.computeClipBoxes(font.getGlyphSet(), quantization)
+
+        clipList = font["COLR"].table.ClipList
+        assert len(clipList.clips) > 0
+
+        expected = TTFont()
+        expected.importXML(
+            TEST_DATA_DIR / f"COLRv1-clip-boxes-q{quantization}-expected.ttx"
+        )
+        expectedClipList = expected["COLR"].table.ClipList
+
+        assert getXML(clipList.toXML) == getXML(expectedClipList.toXML)
 
 
 class COLR_V1_Variable_Test(object):
