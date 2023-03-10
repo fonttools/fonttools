@@ -1,0 +1,1414 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="4.37">
+
+  <GlyphOrder>
+    <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
+    <GlyphID id="0" name=".notdef"/>
+    <GlyphID id="1" name=".null"/>
+    <GlyphID id="2" name="upem_box_glyph"/>
+    <GlyphID id="3" name="cross_glyph"/>
+    <GlyphID id="4" name="one"/>
+    <GlyphID id="5" name="zero"/>
+    <GlyphID id="6" name="scale_0.5_1.5_center_500.0_500.0"/>
+    <GlyphID id="7" name="scale_1.5_1.5_center_500.0_500.0"/>
+    <GlyphID id="8" name="scale_0.5_1.5_center_0_0"/>
+    <GlyphID id="9" name="scale_1.5_1.5_center_0_0"/>
+    <GlyphID id="10" name="scale_0.5_1.5_center_1000_1000"/>
+    <GlyphID id="11" name="scale_1.5_1.5_center_1000_1000"/>
+    <GlyphID id="12" name="rotate_10_center_0_0"/>
+    <GlyphID id="13" name="rotate_-10_center_1000_1000"/>
+    <GlyphID id="14" name="rotate_25_center_500.0_500.0"/>
+    <GlyphID id="15" name="rotate_-15_center_500.0_500.0"/>
+    <GlyphID id="16" name="skew_25_0_center_0_0"/>
+    <GlyphID id="17" name="skew_25_0_center_500.0_500.0"/>
+    <GlyphID id="18" name="skew_0_15_center_0_0"/>
+    <GlyphID id="19" name="skew_0_15_center_500.0_500.0"/>
+    <GlyphID id="20" name="skew_-10_20_center_500.0_500.0"/>
+    <GlyphID id="21" name="skew_-10_20_center_1000_1000"/>
+    <GlyphID id="22" name="transform_matrix_1_0_0_1_125_125"/>
+    <GlyphID id="23" name="transform_matrix_1.5_0_0_1.5_0_0"/>
+    <GlyphID id="24" name="transform_matrix_0.9659_0.2588_-0.2588_0.9659_0_0"/>
+    <GlyphID id="25" name="transform_matrix_1.0_0.0_0.6_1.0_-300.0_0.0"/>
+    <GlyphID id="26" name="translate_0_0"/>
+    <GlyphID id="27" name="translate_0_100"/>
+    <GlyphID id="28" name="translate_0_-100"/>
+    <GlyphID id="29" name="translate_100_0"/>
+    <GlyphID id="30" name="translate_-100_0"/>
+    <GlyphID id="31" name="translate_200_200"/>
+    <GlyphID id="32" name="translate_-200_-200"/>
+  </GlyphOrder>
+
+  <head>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="1.0"/>
+    <fontRevision value="1.0"/>
+    <checkSumAdjustment value="0x5a54e94d"/>
+    <magicNumber value="0x5f0f3cf5"/>
+    <flags value="00000000 00000011"/>
+    <unitsPerEm value="1000"/>
+    <created value="Fri Mar 10 15:07:35 2023"/>
+    <modified value="Fri Mar 10 15:07:35 2023"/>
+    <xMin value="0"/>
+    <yMin value="0"/>
+    <xMax value="1000"/>
+    <yMax value="1000"/>
+    <macStyle value="00000000 00000000"/>
+    <lowestRecPPEM value="3"/>
+    <fontDirectionHint value="2"/>
+    <indexToLocFormat value="0"/>
+    <glyphDataFormat value="0"/>
+  </head>
+
+  <hhea>
+    <tableVersion value="0x00010000"/>
+    <ascent value="950"/>
+    <descent value="-250"/>
+    <lineGap value="0"/>
+    <advanceWidthMax value="1000"/>
+    <minLeftSideBearing value="0"/>
+    <minRightSideBearing value="0"/>
+    <xMaxExtent value="1000"/>
+    <caretSlopeRise value="1"/>
+    <caretSlopeRun value="0"/>
+    <caretOffset value="0"/>
+    <reserved0 value="0"/>
+    <reserved1 value="0"/>
+    <reserved2 value="0"/>
+    <reserved3 value="0"/>
+    <metricDataFormat value="0"/>
+    <numberOfHMetrics value="3"/>
+  </hhea>
+
+  <maxp>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="0x10000"/>
+    <numGlyphs value="33"/>
+    <maxPoints value="28"/>
+    <maxContours value="2"/>
+    <maxCompositePoints value="0"/>
+    <maxCompositeContours value="0"/>
+    <maxZones value="2"/>
+    <maxTwilightPoints value="0"/>
+    <maxStorage value="0"/>
+    <maxFunctionDefs value="0"/>
+    <maxInstructionDefs value="0"/>
+    <maxStackElements value="0"/>
+    <maxSizeOfInstructions value="0"/>
+    <maxComponentElements value="0"/>
+    <maxComponentDepth value="0"/>
+  </maxp>
+
+  <OS_2>
+    <!-- The fields 'usFirstCharIndex' and 'usLastCharIndex'
+         will be recalculated by the compiler -->
+    <version value="4"/>
+    <xAvgCharWidth value="988"/>
+    <usWeightClass value="400"/>
+    <usWidthClass value="5"/>
+    <fsType value="00000000 00000000"/>
+    <ySubscriptXSize value="0"/>
+    <ySubscriptYSize value="0"/>
+    <ySubscriptXOffset value="0"/>
+    <ySubscriptYOffset value="0"/>
+    <ySuperscriptXSize value="0"/>
+    <ySuperscriptYSize value="0"/>
+    <ySuperscriptXOffset value="0"/>
+    <ySuperscriptYOffset value="0"/>
+    <yStrikeoutSize value="0"/>
+    <yStrikeoutPosition value="0"/>
+    <sFamilyClass value="0"/>
+    <panose>
+      <bFamilyType value="0"/>
+      <bSerifStyle value="0"/>
+      <bWeight value="0"/>
+      <bProportion value="0"/>
+      <bContrast value="0"/>
+      <bStrokeVariation value="0"/>
+      <bArmStyle value="0"/>
+      <bLetterForm value="0"/>
+      <bMidline value="0"/>
+      <bXHeight value="0"/>
+    </panose>
+    <ulUnicodeRange1 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange2 value="00000010 00000000 00000000 00000000"/>
+    <ulUnicodeRange3 value="00000100 00000000 00000000 00000000"/>
+    <ulUnicodeRange4 value="00000000 00000000 00000000 00000000"/>
+    <achVendID value="????"/>
+    <fsSelection value="00000000 10000000"/>
+    <usFirstCharIndex value="65535"/>
+    <usLastCharIndex value="65535"/>
+    <sTypoAscender value="950"/>
+    <sTypoDescender value="0"/>
+    <sTypoLineGap value="0"/>
+    <usWinAscent value="950"/>
+    <usWinDescent value="250"/>
+    <ulCodePageRange1 value="00000000 00000000 00000000 00000000"/>
+    <ulCodePageRange2 value="00000000 00000000 00000000 00000000"/>
+    <sxHeight value="0"/>
+    <sCapHeight value="0"/>
+    <usDefaultChar value="0"/>
+    <usBreakChar value="32"/>
+    <usMaxContext value="0"/>
+  </OS_2>
+
+  <hmtx>
+    <mtx name=".notdef" width="600" lsb="0"/>
+    <mtx name=".null" width="0" lsb="0"/>
+    <mtx name="cross_glyph" width="1000" lsb="250"/>
+    <mtx name="one" width="1000" lsb="184"/>
+    <mtx name="rotate_-10_center_1000_1000" width="1000" lsb="0"/>
+    <mtx name="rotate_-15_center_500.0_500.0" width="1000" lsb="0"/>
+    <mtx name="rotate_10_center_0_0" width="1000" lsb="0"/>
+    <mtx name="rotate_25_center_500.0_500.0" width="1000" lsb="0"/>
+    <mtx name="scale_0.5_1.5_center_0_0" width="1000" lsb="0"/>
+    <mtx name="scale_0.5_1.5_center_1000_1000" width="1000" lsb="0"/>
+    <mtx name="scale_0.5_1.5_center_500.0_500.0" width="1000" lsb="0"/>
+    <mtx name="scale_1.5_1.5_center_0_0" width="1000" lsb="0"/>
+    <mtx name="scale_1.5_1.5_center_1000_1000" width="1000" lsb="0"/>
+    <mtx name="scale_1.5_1.5_center_500.0_500.0" width="1000" lsb="0"/>
+    <mtx name="skew_-10_20_center_1000_1000" width="1000" lsb="0"/>
+    <mtx name="skew_-10_20_center_500.0_500.0" width="1000" lsb="0"/>
+    <mtx name="skew_0_15_center_0_0" width="1000" lsb="0"/>
+    <mtx name="skew_0_15_center_500.0_500.0" width="1000" lsb="0"/>
+    <mtx name="skew_25_0_center_0_0" width="1000" lsb="0"/>
+    <mtx name="skew_25_0_center_500.0_500.0" width="1000" lsb="0"/>
+    <mtx name="transform_matrix_0.9659_0.2588_-0.2588_0.9659_0_0" width="1000" lsb="0"/>
+    <mtx name="transform_matrix_1.0_0.0_0.6_1.0_-300.0_0.0" width="1000" lsb="0"/>
+    <mtx name="transform_matrix_1.5_0_0_1.5_0_0" width="1000" lsb="0"/>
+    <mtx name="transform_matrix_1_0_0_1_125_125" width="1000" lsb="0"/>
+    <mtx name="translate_-100_0" width="1000" lsb="0"/>
+    <mtx name="translate_-200_-200" width="1000" lsb="0"/>
+    <mtx name="translate_0_-100" width="1000" lsb="0"/>
+    <mtx name="translate_0_0" width="1000" lsb="0"/>
+    <mtx name="translate_0_100" width="1000" lsb="0"/>
+    <mtx name="translate_100_0" width="1000" lsb="0"/>
+    <mtx name="translate_200_200" width="1000" lsb="0"/>
+    <mtx name="upem_box_glyph" width="1000" lsb="0"/>
+    <mtx name="zero" width="1000" lsb="173"/>
+  </hmtx>
+
+  <cmap>
+    <tableVersion version="0"/>
+    <cmap_format_4 platformID="0" platEncID="3" language="0">
+    </cmap_format_4>
+    <cmap_format_4 platformID="3" platEncID="1" language="0">
+    </cmap_format_4>
+    <cmap_format_12 platformID="3" platEncID="10" format="12" reserved="0" length="88" language="0" nGroups="6">
+      <map code="0xf0300" name="scale_0.5_1.5_center_500.0_500.0"/><!-- ???? -->
+      <map code="0xf0301" name="scale_1.5_1.5_center_500.0_500.0"/><!-- ???? -->
+      <map code="0xf0302" name="scale_0.5_1.5_center_0_0"/><!-- ???? -->
+      <map code="0xf0303" name="scale_1.5_1.5_center_0_0"/><!-- ???? -->
+      <map code="0xf0304" name="scale_0.5_1.5_center_1000_1000"/><!-- ???? -->
+      <map code="0xf0305" name="scale_1.5_1.5_center_1000_1000"/><!-- ???? -->
+      <map code="0xf0600" name="rotate_10_center_0_0"/><!-- ???? -->
+      <map code="0xf0601" name="rotate_-10_center_1000_1000"/><!-- ???? -->
+      <map code="0xf0602" name="rotate_25_center_500.0_500.0"/><!-- ???? -->
+      <map code="0xf0603" name="rotate_-15_center_500.0_500.0"/><!-- ???? -->
+      <map code="0xf0700" name="skew_25_0_center_0_0"/><!-- ???? -->
+      <map code="0xf0701" name="skew_25_0_center_500.0_500.0"/><!-- ???? -->
+      <map code="0xf0702" name="skew_0_15_center_0_0"/><!-- ???? -->
+      <map code="0xf0703" name="skew_0_15_center_500.0_500.0"/><!-- ???? -->
+      <map code="0xf0704" name="skew_-10_20_center_500.0_500.0"/><!-- ???? -->
+      <map code="0xf0705" name="skew_-10_20_center_1000_1000"/><!-- ???? -->
+      <map code="0xf0800" name="transform_matrix_1_0_0_1_125_125"/><!-- ???? -->
+      <map code="0xf0801" name="transform_matrix_1.5_0_0_1.5_0_0"/><!-- ???? -->
+      <map code="0xf0802" name="transform_matrix_0.9659_0.2588_-0.2588_0.9659_0_0"/><!-- ???? -->
+      <map code="0xf0803" name="transform_matrix_1.0_0.0_0.6_1.0_-300.0_0.0"/><!-- ???? -->
+      <map code="0xf0900" name="translate_0_0"/><!-- ???? -->
+      <map code="0xf0901" name="translate_0_100"/><!-- ???? -->
+      <map code="0xf0902" name="translate_0_-100"/><!-- ???? -->
+      <map code="0xf0903" name="translate_100_0"/><!-- ???? -->
+      <map code="0xf0904" name="translate_-100_0"/><!-- ???? -->
+      <map code="0xf0905" name="translate_200_200"/><!-- ???? -->
+      <map code="0xf0906" name="translate_-200_-200"/><!-- ???? -->
+      <map code="0xfe001" name=".null"/><!-- ???? -->
+      <map code="0xfe002" name="upem_box_glyph"/><!-- ???? -->
+      <map code="0xfe003" name="cross_glyph"/><!-- ???? -->
+      <map code="0xfe004" name="one"/><!-- ???? -->
+      <map code="0xfe005" name="zero"/><!-- ???? -->
+    </cmap_format_12>
+  </cmap>
+
+  <loca>
+    <!-- The 'loca' table will be calculated by the compiler -->
+  </loca>
+
+  <glyf>
+
+    <!-- The xMin, yMin, xMax and yMax values
+         will be recalculated by the compiler. -->
+
+    <TTGlyph name=".notdef"/><!-- contains no outline data -->
+
+    <TTGlyph name=".null"/><!-- contains no outline data -->
+
+    <TTGlyph name="cross_glyph" xMin="250" yMin="250" xMax="750" yMax="750">
+      <contour>
+        <pt x="475" y="525" on="1"/>
+        <pt x="475" y="750" on="1"/>
+        <pt x="525" y="750" on="1"/>
+        <pt x="525" y="525" on="1"/>
+        <pt x="750" y="525" on="1"/>
+        <pt x="750" y="475" on="1"/>
+        <pt x="525" y="475" on="1"/>
+        <pt x="525" y="250" on="1"/>
+        <pt x="475" y="250" on="1"/>
+        <pt x="475" y="475" on="1"/>
+        <pt x="250" y="475" on="1"/>
+        <pt x="250" y="525" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="one" xMin="184" yMin="250" xMax="296" yMax="543">
+      <contour>
+        <pt x="296" y="543" on="1"/>
+        <pt x="296" y="250" on="1"/>
+        <pt x="259" y="250" on="1"/>
+        <pt x="259" y="497" on="1"/>
+        <pt x="184" y="466" on="1"/>
+        <pt x="184" y="503" on="1"/>
+        <pt x="290" y="543" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="rotate_-10_center_1000_1000" xMin="0" yMin="0" xMax="1000" yMax="1000">
+      <contour>
+        <pt x="0" y="0" on="1"/>
+        <pt x="0" y="1000" on="1"/>
+        <pt x="1000" y="1000" on="1"/>
+        <pt x="1000" y="0" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="rotate_-15_center_500.0_500.0" xMin="0" yMin="0" xMax="1000" yMax="1000">
+      <contour>
+        <pt x="0" y="0" on="1"/>
+        <pt x="0" y="1000" on="1"/>
+        <pt x="1000" y="1000" on="1"/>
+        <pt x="1000" y="0" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="rotate_10_center_0_0" xMin="0" yMin="0" xMax="1000" yMax="1000">
+      <contour>
+        <pt x="0" y="0" on="1"/>
+        <pt x="0" y="1000" on="1"/>
+        <pt x="1000" y="1000" on="1"/>
+        <pt x="1000" y="0" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="rotate_25_center_500.0_500.0" xMin="0" yMin="0" xMax="1000" yMax="1000">
+      <contour>
+        <pt x="0" y="0" on="1"/>
+        <pt x="0" y="1000" on="1"/>
+        <pt x="1000" y="1000" on="1"/>
+        <pt x="1000" y="0" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="scale_0.5_1.5_center_0_0" xMin="0" yMin="0" xMax="1000" yMax="1000">
+      <contour>
+        <pt x="0" y="0" on="1"/>
+        <pt x="0" y="1000" on="1"/>
+        <pt x="1000" y="1000" on="1"/>
+        <pt x="1000" y="0" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="scale_0.5_1.5_center_1000_1000" xMin="0" yMin="0" xMax="1000" yMax="1000">
+      <contour>
+        <pt x="0" y="0" on="1"/>
+        <pt x="0" y="1000" on="1"/>
+        <pt x="1000" y="1000" on="1"/>
+        <pt x="1000" y="0" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="scale_0.5_1.5_center_500.0_500.0" xMin="0" yMin="0" xMax="1000" yMax="1000">
+      <contour>
+        <pt x="0" y="0" on="1"/>
+        <pt x="0" y="1000" on="1"/>
+        <pt x="1000" y="1000" on="1"/>
+        <pt x="1000" y="0" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="scale_1.5_1.5_center_0_0" xMin="0" yMin="0" xMax="1000" yMax="1000">
+      <contour>
+        <pt x="0" y="0" on="1"/>
+        <pt x="0" y="1000" on="1"/>
+        <pt x="1000" y="1000" on="1"/>
+        <pt x="1000" y="0" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="scale_1.5_1.5_center_1000_1000" xMin="0" yMin="0" xMax="1000" yMax="1000">
+      <contour>
+        <pt x="0" y="0" on="1"/>
+        <pt x="0" y="1000" on="1"/>
+        <pt x="1000" y="1000" on="1"/>
+        <pt x="1000" y="0" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="scale_1.5_1.5_center_500.0_500.0" xMin="0" yMin="0" xMax="1000" yMax="1000">
+      <contour>
+        <pt x="0" y="0" on="1"/>
+        <pt x="0" y="1000" on="1"/>
+        <pt x="1000" y="1000" on="1"/>
+        <pt x="1000" y="0" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="skew_-10_20_center_1000_1000" xMin="0" yMin="0" xMax="1000" yMax="1000">
+      <contour>
+        <pt x="0" y="0" on="1"/>
+        <pt x="0" y="1000" on="1"/>
+        <pt x="1000" y="1000" on="1"/>
+        <pt x="1000" y="0" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="skew_-10_20_center_500.0_500.0" xMin="0" yMin="0" xMax="1000" yMax="1000">
+      <contour>
+        <pt x="0" y="0" on="1"/>
+        <pt x="0" y="1000" on="1"/>
+        <pt x="1000" y="1000" on="1"/>
+        <pt x="1000" y="0" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="skew_0_15_center_0_0" xMin="0" yMin="0" xMax="1000" yMax="1000">
+      <contour>
+        <pt x="0" y="0" on="1"/>
+        <pt x="0" y="1000" on="1"/>
+        <pt x="1000" y="1000" on="1"/>
+        <pt x="1000" y="0" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="skew_0_15_center_500.0_500.0" xMin="0" yMin="0" xMax="1000" yMax="1000">
+      <contour>
+        <pt x="0" y="0" on="1"/>
+        <pt x="0" y="1000" on="1"/>
+        <pt x="1000" y="1000" on="1"/>
+        <pt x="1000" y="0" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="skew_25_0_center_0_0" xMin="0" yMin="0" xMax="1000" yMax="1000">
+      <contour>
+        <pt x="0" y="0" on="1"/>
+        <pt x="0" y="1000" on="1"/>
+        <pt x="1000" y="1000" on="1"/>
+        <pt x="1000" y="0" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="skew_25_0_center_500.0_500.0" xMin="0" yMin="0" xMax="1000" yMax="1000">
+      <contour>
+        <pt x="0" y="0" on="1"/>
+        <pt x="0" y="1000" on="1"/>
+        <pt x="1000" y="1000" on="1"/>
+        <pt x="1000" y="0" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="transform_matrix_0.9659_0.2588_-0.2588_0.9659_0_0" xMin="0" yMin="0" xMax="1000" yMax="1000">
+      <contour>
+        <pt x="0" y="0" on="1"/>
+        <pt x="0" y="1000" on="1"/>
+        <pt x="1000" y="1000" on="1"/>
+        <pt x="1000" y="0" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="transform_matrix_1.0_0.0_0.6_1.0_-300.0_0.0" xMin="0" yMin="0" xMax="1000" yMax="1000">
+      <contour>
+        <pt x="0" y="0" on="1"/>
+        <pt x="0" y="1000" on="1"/>
+        <pt x="1000" y="1000" on="1"/>
+        <pt x="1000" y="0" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="transform_matrix_1.5_0_0_1.5_0_0" xMin="0" yMin="0" xMax="1000" yMax="1000">
+      <contour>
+        <pt x="0" y="0" on="1"/>
+        <pt x="0" y="1000" on="1"/>
+        <pt x="1000" y="1000" on="1"/>
+        <pt x="1000" y="0" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="transform_matrix_1_0_0_1_125_125" xMin="0" yMin="0" xMax="1000" yMax="1000">
+      <contour>
+        <pt x="0" y="0" on="1"/>
+        <pt x="0" y="1000" on="1"/>
+        <pt x="1000" y="1000" on="1"/>
+        <pt x="1000" y="0" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="translate_-100_0" xMin="0" yMin="0" xMax="1000" yMax="1000">
+      <contour>
+        <pt x="0" y="0" on="1"/>
+        <pt x="0" y="1000" on="1"/>
+        <pt x="1000" y="1000" on="1"/>
+        <pt x="1000" y="0" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="translate_-200_-200" xMin="0" yMin="0" xMax="1000" yMax="1000">
+      <contour>
+        <pt x="0" y="0" on="1"/>
+        <pt x="0" y="1000" on="1"/>
+        <pt x="1000" y="1000" on="1"/>
+        <pt x="1000" y="0" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="translate_0_-100" xMin="0" yMin="0" xMax="1000" yMax="1000">
+      <contour>
+        <pt x="0" y="0" on="1"/>
+        <pt x="0" y="1000" on="1"/>
+        <pt x="1000" y="1000" on="1"/>
+        <pt x="1000" y="0" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="translate_0_0" xMin="0" yMin="0" xMax="1000" yMax="1000">
+      <contour>
+        <pt x="0" y="0" on="1"/>
+        <pt x="0" y="1000" on="1"/>
+        <pt x="1000" y="1000" on="1"/>
+        <pt x="1000" y="0" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="translate_0_100" xMin="0" yMin="0" xMax="1000" yMax="1000">
+      <contour>
+        <pt x="0" y="0" on="1"/>
+        <pt x="0" y="1000" on="1"/>
+        <pt x="1000" y="1000" on="1"/>
+        <pt x="1000" y="0" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="translate_100_0" xMin="0" yMin="0" xMax="1000" yMax="1000">
+      <contour>
+        <pt x="0" y="0" on="1"/>
+        <pt x="0" y="1000" on="1"/>
+        <pt x="1000" y="1000" on="1"/>
+        <pt x="1000" y="0" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="translate_200_200" xMin="0" yMin="0" xMax="1000" yMax="1000">
+      <contour>
+        <pt x="0" y="0" on="1"/>
+        <pt x="0" y="1000" on="1"/>
+        <pt x="1000" y="1000" on="1"/>
+        <pt x="1000" y="0" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="upem_box_glyph" xMin="0" yMin="0" xMax="1000" yMax="1000">
+      <contour>
+        <pt x="0" y="0" on="1"/>
+        <pt x="0" y="1000" on="1"/>
+        <pt x="1000" y="1000" on="1"/>
+        <pt x="1000" y="0" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="zero" xMin="173" yMin="246" xMax="357" yMax="545">
+      <contour>
+        <pt x="357" y="374" on="1"/>
+        <pt x="357" y="303" on="0"/>
+        <pt x="308" y="246" on="0"/>
+        <pt x="265" y="246" on="1"/>
+        <pt x="223" y="246" on="0"/>
+        <pt x="173" y="303" on="0"/>
+        <pt x="173" y="374" on="1"/>
+        <pt x="173" y="419" on="1"/>
+        <pt x="173" y="490" on="0"/>
+        <pt x="223" y="545" on="0"/>
+        <pt x="265" y="545" on="1"/>
+        <pt x="307" y="545" on="0"/>
+        <pt x="357" y="490" on="0"/>
+        <pt x="357" y="419" on="1"/>
+      </contour>
+      <contour>
+        <pt x="320" y="425" on="1"/>
+        <pt x="320" y="474" on="0"/>
+        <pt x="292" y="515" on="0"/>
+        <pt x="265" y="515" on="1"/>
+        <pt x="238" y="515" on="0"/>
+        <pt x="210" y="474" on="0"/>
+        <pt x="210" y="425" on="1"/>
+        <pt x="210" y="368" on="1"/>
+        <pt x="210" y="320" on="0"/>
+        <pt x="239" y="276" on="0"/>
+        <pt x="265" y="276" on="1"/>
+        <pt x="292" y="276" on="0"/>
+        <pt x="320" y="320" on="0"/>
+        <pt x="320" y="368" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+  </glyf>
+
+  <name>
+    <namerecord nameID="1" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      COLRv1 Static Test Glyphs
+    </namerecord>
+    <namerecord nameID="2" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Regular
+    </namerecord>
+    <namerecord nameID="3" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      COLRv1 Static Test Glyphs 2023-03-10T15:07:35.658876
+    </namerecord>
+    <namerecord nameID="4" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      COLRv1 Static Test Glyphs Regular
+    </namerecord>
+    <namerecord nameID="5" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      2023-03-10T15:07:35.658876
+    </namerecord>
+    <namerecord nameID="6" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      COLRv1StaticTestGlyphs-Regular
+    </namerecord>
+    <namerecord nameID="1" platformID="3" platEncID="1" langID="0x409">
+      COLRv1 Static Test Glyphs
+    </namerecord>
+    <namerecord nameID="2" platformID="3" platEncID="1" langID="0x409">
+      Regular
+    </namerecord>
+    <namerecord nameID="3" platformID="3" platEncID="1" langID="0x409">
+      COLRv1 Static Test Glyphs 2023-03-10T15:07:35.658876
+    </namerecord>
+    <namerecord nameID="4" platformID="3" platEncID="1" langID="0x409">
+      COLRv1 Static Test Glyphs Regular
+    </namerecord>
+    <namerecord nameID="5" platformID="3" platEncID="1" langID="0x409">
+      2023-03-10T15:07:35.658876
+    </namerecord>
+    <namerecord nameID="6" platformID="3" platEncID="1" langID="0x409">
+      COLRv1StaticTestGlyphs-Regular
+    </namerecord>
+  </name>
+
+  <post>
+    <formatType value="2.0"/>
+    <italicAngle value="0.0"/>
+    <underlinePosition value="0"/>
+    <underlineThickness value="0"/>
+    <isFixedPitch value="0"/>
+    <minMemType42 value="0"/>
+    <maxMemType42 value="0"/>
+    <minMemType1 value="0"/>
+    <maxMemType1 value="0"/>
+    <psNames>
+      <!-- This file uses unique glyph names based on the information
+           found in the 'post' table. Since these names might not be unique,
+           we have to invent artificial names in case of clashes. In order to
+           be able to retain the original information, we need a name to
+           ps name mapping for those cases where they differ. That's what
+           you see below.
+            -->
+    </psNames>
+    <extraNames>
+      <!-- following are the name that are not taken from the standard Mac glyph order -->
+      <psName name="upem_box_glyph"/>
+      <psName name="cross_glyph"/>
+      <psName name="scale_0.5_1.5_center_500.0_500.0"/>
+      <psName name="scale_1.5_1.5_center_500.0_500.0"/>
+      <psName name="scale_0.5_1.5_center_0_0"/>
+      <psName name="scale_1.5_1.5_center_0_0"/>
+      <psName name="scale_0.5_1.5_center_1000_1000"/>
+      <psName name="scale_1.5_1.5_center_1000_1000"/>
+      <psName name="rotate_10_center_0_0"/>
+      <psName name="rotate_-10_center_1000_1000"/>
+      <psName name="rotate_25_center_500.0_500.0"/>
+      <psName name="rotate_-15_center_500.0_500.0"/>
+      <psName name="skew_25_0_center_0_0"/>
+      <psName name="skew_25_0_center_500.0_500.0"/>
+      <psName name="skew_0_15_center_0_0"/>
+      <psName name="skew_0_15_center_500.0_500.0"/>
+      <psName name="skew_-10_20_center_500.0_500.0"/>
+      <psName name="skew_-10_20_center_1000_1000"/>
+      <psName name="transform_matrix_1_0_0_1_125_125"/>
+      <psName name="transform_matrix_1.5_0_0_1.5_0_0"/>
+      <psName name="transform_matrix_0.9659_0.2588_-0.2588_0.9659_0_0"/>
+      <psName name="transform_matrix_1.0_0.0_0.6_1.0_-300.0_0.0"/>
+      <psName name="translate_0_0"/>
+      <psName name="translate_0_100"/>
+      <psName name="translate_0_-100"/>
+      <psName name="translate_100_0"/>
+      <psName name="translate_-100_0"/>
+      <psName name="translate_200_200"/>
+      <psName name="translate_-200_-200"/>
+    </extraNames>
+  </post>
+
+  <COLR>
+    <Version value="1"/>
+    <!-- BaseGlyphRecordCount=0 -->
+    <!-- LayerRecordCount=0 -->
+    <BaseGlyphList>
+      <!-- BaseGlyphCount=27 -->
+      <BaseGlyphPaintRecord index="0">
+        <BaseGlyph value="scale_0.5_1.5_center_500.0_500.0"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="18"><!-- PaintScaleAroundCenter -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <scaleX value="0.5"/>
+            <scaleY value="1.5"/>
+            <centerX value="500"/>
+            <centerY value="500"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="1">
+        <BaseGlyph value="scale_1.5_1.5_center_500.0_500.0"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="22"><!-- PaintScaleUniformAroundCenter -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <scale value="1.5"/>
+            <centerX value="500"/>
+            <centerY value="500"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="2">
+        <BaseGlyph value="scale_0.5_1.5_center_0_0"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="16"><!-- PaintScale -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <scaleX value="0.5"/>
+            <scaleY value="1.5"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="3">
+        <BaseGlyph value="scale_1.5_1.5_center_0_0"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="20"><!-- PaintScaleUniform -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <scale value="1.5"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="4">
+        <BaseGlyph value="scale_0.5_1.5_center_1000_1000"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="18"><!-- PaintScaleAroundCenter -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <scaleX value="0.5"/>
+            <scaleY value="1.5"/>
+            <centerX value="1000"/>
+            <centerY value="1000"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="5">
+        <BaseGlyph value="scale_1.5_1.5_center_1000_1000"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="22"><!-- PaintScaleUniformAroundCenter -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <scale value="1.5"/>
+            <centerX value="1000"/>
+            <centerY value="1000"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="6">
+        <BaseGlyph value="rotate_10_center_0_0"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="24"><!-- PaintRotate -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <angle value="10.0"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="7">
+        <BaseGlyph value="rotate_-10_center_1000_1000"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="26"><!-- PaintRotateAroundCenter -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <angle value="-10.0"/>
+            <centerX value="1000"/>
+            <centerY value="1000"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="8">
+        <BaseGlyph value="rotate_25_center_500.0_500.0"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="26"><!-- PaintRotateAroundCenter -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <angle value="25.0"/>
+            <centerX value="500"/>
+            <centerY value="500"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="9">
+        <BaseGlyph value="rotate_-15_center_500.0_500.0"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="26"><!-- PaintRotateAroundCenter -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <angle value="-15.0"/>
+            <centerX value="500"/>
+            <centerY value="500"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="10">
+        <BaseGlyph value="skew_25_0_center_0_0"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="28"><!-- PaintSkew -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <xSkewAngle value="25.0"/>
+            <ySkewAngle value="0.0"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="11">
+        <BaseGlyph value="skew_25_0_center_500.0_500.0"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="30"><!-- PaintSkewAroundCenter -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <xSkewAngle value="25.0"/>
+            <ySkewAngle value="0.0"/>
+            <centerX value="500"/>
+            <centerY value="500"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="12">
+        <BaseGlyph value="skew_0_15_center_0_0"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="28"><!-- PaintSkew -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <xSkewAngle value="0.0"/>
+            <ySkewAngle value="15.0"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="13">
+        <BaseGlyph value="skew_0_15_center_500.0_500.0"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="30"><!-- PaintSkewAroundCenter -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <xSkewAngle value="0.0"/>
+            <ySkewAngle value="15.0"/>
+            <centerX value="500"/>
+            <centerY value="500"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="14">
+        <BaseGlyph value="skew_-10_20_center_500.0_500.0"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="30"><!-- PaintSkewAroundCenter -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <xSkewAngle value="-10.0"/>
+            <ySkewAngle value="20.0"/>
+            <centerX value="500"/>
+            <centerY value="500"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="15">
+        <BaseGlyph value="skew_-10_20_center_1000_1000"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="30"><!-- PaintSkewAroundCenter -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <xSkewAngle value="-10.0"/>
+            <ySkewAngle value="20.0"/>
+            <centerX value="1000"/>
+            <centerY value="1000"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="16">
+        <BaseGlyph value="transform_matrix_1_0_0_1_125_125"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="12"><!-- PaintTransform -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <Transform>
+              <xx value="1.0"/>
+              <yx value="0.0"/>
+              <xy value="0.0"/>
+              <yy value="1.0"/>
+              <dx value="125.0"/>
+              <dy value="125.0"/>
+            </Transform>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="17">
+        <BaseGlyph value="transform_matrix_1.5_0_0_1.5_0_0"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="12"><!-- PaintTransform -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <Transform>
+              <xx value="1.5"/>
+              <yx value="0.0"/>
+              <xy value="0.0"/>
+              <yy value="1.5"/>
+              <dx value="0.0"/>
+              <dy value="0.0"/>
+            </Transform>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="18">
+        <BaseGlyph value="transform_matrix_0.9659_0.2588_-0.2588_0.9659_0_0"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="12"><!-- PaintTransform -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <Transform>
+              <xx value="0.9659"/>
+              <yx value="0.2588"/>
+              <xy value="-0.2588"/>
+              <yy value="0.9659"/>
+              <dx value="0.0"/>
+              <dy value="0.0"/>
+            </Transform>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="19">
+        <BaseGlyph value="transform_matrix_1.0_0.0_0.6_1.0_-300.0_0.0"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="12"><!-- PaintTransform -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <Transform>
+              <xx value="1.0"/>
+              <yx value="0.0"/>
+              <xy value="0.6"/>
+              <yy value="1.0"/>
+              <dx value="-300.0"/>
+              <dy value="0.0"/>
+            </Transform>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="20">
+        <BaseGlyph value="translate_0_0"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="14"><!-- PaintTranslate -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <dx value="0"/>
+            <dy value="0"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="21">
+        <BaseGlyph value="translate_0_100"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="14"><!-- PaintTranslate -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <dx value="0"/>
+            <dy value="100"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="22">
+        <BaseGlyph value="translate_0_-100"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="14"><!-- PaintTranslate -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <dx value="0"/>
+            <dy value="-100"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="23">
+        <BaseGlyph value="translate_100_0"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="14"><!-- PaintTranslate -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <dx value="100"/>
+            <dy value="0"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="24">
+        <BaseGlyph value="translate_-100_0"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="14"><!-- PaintTranslate -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <dx value="-100"/>
+            <dy value="0"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="25">
+        <BaseGlyph value="translate_200_200"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="14"><!-- PaintTranslate -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <dx value="200"/>
+            <dy value="200"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="26">
+        <BaseGlyph value="translate_-200_-200"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="14"><!-- PaintTranslate -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <dx value="-200"/>
+            <dy value="-200"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+    </BaseGlyphList>
+  </COLR>
+
+  <CPAL>
+    <version value="1"/>
+    <numPaletteEntries value="7"/>
+    <palette index="0">
+      <color index="0" value="#FF0000FF"/>
+      <color index="1" value="#FFA500FF"/>
+      <color index="2" value="#FFFF00FF"/>
+      <color index="3" value="#008000FF"/>
+      <color index="4" value="#0000FFFF"/>
+      <color index="5" value="#4B0082FF"/>
+      <color index="6" value="#EE82EEFF"/>
+    </palette>
+    <palette index="1" type="2">
+      <color index="0" value="#2A294AFF"/>
+      <color index="1" value="#244163FF"/>
+      <color index="2" value="#1B6388FF"/>
+      <color index="3" value="#157DA3FF"/>
+      <color index="4" value="#0E9AC2FF"/>
+      <color index="5" value="#05BEE8FF"/>
+      <color index="6" value="#00D4FFFF"/>
+    </palette>
+    <palette index="2" type="1">
+      <color index="0" value="#FC7118FF"/>
+      <color index="1" value="#FB8115FF"/>
+      <color index="2" value="#FA9511FF"/>
+      <color index="3" value="#FAA80DFF"/>
+      <color index="4" value="#F9BE09FF"/>
+      <color index="5" value="#F8D304FF"/>
+      <color index="6" value="#F8E700FF"/>
+    </palette>
+  </CPAL>
+
+</ttFont>

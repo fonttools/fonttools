@@ -1,0 +1,919 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="4.39">
+
+  <COLR>
+    <Version value="1"/>
+    <BaseGlyphList>
+      <!-- BaseGlyphCount=27 -->
+      <BaseGlyphPaintRecord index="0">
+        <BaseGlyph value="scale_0.5_1.5_center_500.0_500.0"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="18"><!-- PaintScaleAroundCenter -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <scaleX value="0.5"/>
+            <scaleY value="1.5"/>
+            <centerX value="500"/>
+            <centerY value="500"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="1">
+        <BaseGlyph value="scale_1.5_1.5_center_500.0_500.0"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="22"><!-- PaintScaleUniformAroundCenter -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <scale value="1.5"/>
+            <centerX value="500"/>
+            <centerY value="500"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="2">
+        <BaseGlyph value="scale_0.5_1.5_center_0_0"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="16"><!-- PaintScale -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <scaleX value="0.5"/>
+            <scaleY value="1.5"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="3">
+        <BaseGlyph value="scale_1.5_1.5_center_0_0"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="20"><!-- PaintScaleUniform -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <scale value="1.5"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="4">
+        <BaseGlyph value="scale_0.5_1.5_center_1000_1000"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="18"><!-- PaintScaleAroundCenter -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <scaleX value="0.5"/>
+            <scaleY value="1.5"/>
+            <centerX value="1000"/>
+            <centerY value="1000"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="5">
+        <BaseGlyph value="scale_1.5_1.5_center_1000_1000"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="22"><!-- PaintScaleUniformAroundCenter -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <scale value="1.5"/>
+            <centerX value="1000"/>
+            <centerY value="1000"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="6">
+        <BaseGlyph value="rotate_10_center_0_0"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="24"><!-- PaintRotate -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <angle value="10.0"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="7">
+        <BaseGlyph value="rotate_-10_center_1000_1000"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="26"><!-- PaintRotateAroundCenter -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <angle value="-10.0"/>
+            <centerX value="1000"/>
+            <centerY value="1000"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="8">
+        <BaseGlyph value="rotate_25_center_500.0_500.0"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="26"><!-- PaintRotateAroundCenter -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <angle value="25.0"/>
+            <centerX value="500"/>
+            <centerY value="500"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="9">
+        <BaseGlyph value="rotate_-15_center_500.0_500.0"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="26"><!-- PaintRotateAroundCenter -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <angle value="-15.0"/>
+            <centerX value="500"/>
+            <centerY value="500"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="10">
+        <BaseGlyph value="skew_25_0_center_0_0"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="28"><!-- PaintSkew -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <xSkewAngle value="25.0"/>
+            <ySkewAngle value="0.0"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="11">
+        <BaseGlyph value="skew_25_0_center_500.0_500.0"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="30"><!-- PaintSkewAroundCenter -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <xSkewAngle value="25.0"/>
+            <ySkewAngle value="0.0"/>
+            <centerX value="500"/>
+            <centerY value="500"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="12">
+        <BaseGlyph value="skew_0_15_center_0_0"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="28"><!-- PaintSkew -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <xSkewAngle value="0.0"/>
+            <ySkewAngle value="15.0"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="13">
+        <BaseGlyph value="skew_0_15_center_500.0_500.0"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="30"><!-- PaintSkewAroundCenter -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <xSkewAngle value="0.0"/>
+            <ySkewAngle value="15.0"/>
+            <centerX value="500"/>
+            <centerY value="500"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="14">
+        <BaseGlyph value="skew_-10_20_center_500.0_500.0"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="30"><!-- PaintSkewAroundCenter -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <xSkewAngle value="-10.0"/>
+            <ySkewAngle value="20.0"/>
+            <centerX value="500"/>
+            <centerY value="500"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="15">
+        <BaseGlyph value="skew_-10_20_center_1000_1000"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="30"><!-- PaintSkewAroundCenter -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <xSkewAngle value="-10.0"/>
+            <ySkewAngle value="20.0"/>
+            <centerX value="1000"/>
+            <centerY value="1000"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="16">
+        <BaseGlyph value="transform_matrix_1_0_0_1_125_125"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="12"><!-- PaintTransform -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <Transform>
+              <xx value="1.0"/>
+              <yx value="0.0"/>
+              <xy value="0.0"/>
+              <yy value="1.0"/>
+              <dx value="125.0"/>
+              <dy value="125.0"/>
+            </Transform>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="17">
+        <BaseGlyph value="transform_matrix_1.5_0_0_1.5_0_0"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="12"><!-- PaintTransform -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <Transform>
+              <xx value="1.5"/>
+              <yx value="0.0"/>
+              <xy value="0.0"/>
+              <yy value="1.5"/>
+              <dx value="0.0"/>
+              <dy value="0.0"/>
+            </Transform>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="18">
+        <BaseGlyph value="transform_matrix_0.9659_0.2588_-0.2588_0.9659_0_0"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="12"><!-- PaintTransform -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <Transform>
+              <xx value="0.9659"/>
+              <yx value="0.2588"/>
+              <xy value="-0.2588"/>
+              <yy value="0.9659"/>
+              <dx value="0.0"/>
+              <dy value="0.0"/>
+            </Transform>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="19">
+        <BaseGlyph value="transform_matrix_1.0_0.0_0.6_1.0_-300.0_0.0"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="12"><!-- PaintTransform -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <Transform>
+              <xx value="1.0"/>
+              <yx value="0.0"/>
+              <xy value="0.6"/>
+              <yy value="1.0"/>
+              <dx value="-300.0"/>
+              <dy value="0.0"/>
+            </Transform>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="20">
+        <BaseGlyph value="translate_0_0"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="14"><!-- PaintTranslate -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <dx value="0"/>
+            <dy value="0"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="21">
+        <BaseGlyph value="translate_0_100"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="14"><!-- PaintTranslate -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <dx value="0"/>
+            <dy value="100"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="22">
+        <BaseGlyph value="translate_0_-100"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="14"><!-- PaintTranslate -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <dx value="0"/>
+            <dy value="-100"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="23">
+        <BaseGlyph value="translate_100_0"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="14"><!-- PaintTranslate -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <dx value="100"/>
+            <dy value="0"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="24">
+        <BaseGlyph value="translate_-100_0"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="14"><!-- PaintTranslate -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <dx value="-100"/>
+            <dy value="0"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="25">
+        <BaseGlyph value="translate_200_200"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="14"><!-- PaintTranslate -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <dx value="200"/>
+            <dy value="200"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="26">
+        <BaseGlyph value="translate_-200_-200"/>
+        <Paint Format="32"><!-- PaintComposite -->
+          <SourcePaint Format="14"><!-- PaintTranslate -->
+            <Paint Format="10"><!-- PaintGlyph -->
+              <Paint Format="2"><!-- PaintSolid -->
+                <PaletteIndex value="1"/>
+                <Alpha value="0.7"/>
+              </Paint>
+              <Glyph value="cross_glyph"/>
+            </Paint>
+            <dx value="-200"/>
+            <dy value="-200"/>
+          </SourcePaint>
+          <CompositeMode value="dest_over"/>
+          <BackdropPaint Format="10"><!-- PaintGlyph -->
+            <Paint Format="2"><!-- PaintSolid -->
+              <PaletteIndex value="4"/>
+              <Alpha value="0.5"/>
+            </Paint>
+            <Glyph value="cross_glyph"/>
+          </BackdropPaint>
+        </Paint>
+      </BaseGlyphPaintRecord>
+    </BaseGlyphList>
+    <ClipList Format="1">
+      <Clip>
+        <Glyph value="rotate_-10_center_1000_1000"/>
+        <ClipBox Format="1">
+          <xMin value="170"/>
+          <yMin value="250"/>
+          <xMax value="750"/>
+          <yMax value="845"/>
+        </ClipBox>
+      </Clip>
+      <Clip>
+        <Glyph value="rotate_-15_center_500.0_500.0"/>
+        <Glyph value="rotate_25_center_500.0_500.0"/>
+        <Glyph value="translate_0_0"/>
+        <ClipBox Format="1">
+          <xMin value="250"/>
+          <yMin value="250"/>
+          <xMax value="750"/>
+          <yMax value="750"/>
+        </ClipBox>
+      </Clip>
+      <Clip>
+        <Glyph value="rotate_10_center_0_0"/>
+        <ClipBox Format="1">
+          <xMin value="155"/>
+          <yMin value="250"/>
+          <xMax value="750"/>
+          <yMax value="830"/>
+        </ClipBox>
+      </Clip>
+      <Clip>
+        <Glyph value="scale_0.5_1.5_center_0_0"/>
+        <ClipBox Format="1">
+          <xMin value="125"/>
+          <yMin value="250"/>
+          <xMax value="750"/>
+          <yMax value="1125"/>
+        </ClipBox>
+      </Clip>
+      <Clip>
+        <Glyph value="scale_0.5_1.5_center_1000_1000"/>
+        <ClipBox Format="1">
+          <xMin value="250"/>
+          <yMin value="-125"/>
+          <xMax value="875"/>
+          <yMax value="750"/>
+        </ClipBox>
+      </Clip>
+      <Clip>
+        <Glyph value="scale_0.5_1.5_center_500.0_500.0"/>
+        <ClipBox Format="1">
+          <xMin value="250"/>
+          <yMin value="125"/>
+          <xMax value="750"/>
+          <yMax value="875"/>
+        </ClipBox>
+      </Clip>
+      <Clip>
+        <Glyph value="scale_1.5_1.5_center_0_0"/>
+        <Glyph value="transform_matrix_1.5_0_0_1.5_0_0"/>
+        <ClipBox Format="1">
+          <xMin value="250"/>
+          <yMin value="250"/>
+          <xMax value="1125"/>
+          <yMax value="1125"/>
+        </ClipBox>
+      </Clip>
+      <Clip>
+        <Glyph value="scale_1.5_1.5_center_1000_1000"/>
+        <ClipBox Format="1">
+          <xMin value="-125"/>
+          <yMin value="-125"/>
+          <xMax value="750"/>
+          <yMax value="750"/>
+        </ClipBox>
+      </Clip>
+      <Clip>
+        <Glyph value="scale_1.5_1.5_center_500.0_500.0"/>
+        <ClipBox Format="1">
+          <xMin value="125"/>
+          <yMin value="125"/>
+          <xMax value="875"/>
+          <yMax value="875"/>
+        </ClipBox>
+      </Clip>
+      <Clip>
+        <Glyph value="skew_-10_20_center_1000_1000"/>
+        <ClipBox Format="1">
+          <xMin value="157"/>
+          <yMin value="58"/>
+          <xMax value="750"/>
+          <yMax value="750"/>
+        </ClipBox>
+      </Clip>
+      <Clip>
+        <Glyph value="skew_-10_20_center_500.0_500.0"/>
+        <ClipBox Format="1">
+          <xMin value="245"/>
+          <yMin value="240"/>
+          <xMax value="755"/>
+          <yMax value="760"/>
+        </ClipBox>
+      </Clip>
+      <Clip>
+        <Glyph value="skew_0_15_center_0_0"/>
+        <ClipBox Format="1">
+          <xMin value="250"/>
+          <yMin value="250"/>
+          <xMax value="750"/>
+          <yMax value="891"/>
+        </ClipBox>
+      </Clip>
+      <Clip>
+        <Glyph value="skew_0_15_center_500.0_500.0"/>
+        <ClipBox Format="1">
+          <xMin value="250"/>
+          <yMin value="243"/>
+          <xMax value="750"/>
+          <yMax value="757"/>
+        </ClipBox>
+      </Clip>
+      <Clip>
+        <Glyph value="skew_25_0_center_0_0"/>
+        <ClipBox Format="1">
+          <xMin value="5"/>
+          <yMin value="250"/>
+          <xMax value="750"/>
+          <yMax value="750"/>
+        </ClipBox>
+      </Clip>
+      <Clip>
+        <Glyph value="skew_25_0_center_500.0_500.0"/>
+        <ClipBox Format="1">
+          <xMin value="238"/>
+          <yMin value="250"/>
+          <xMax value="762"/>
+          <yMax value="750"/>
+        </ClipBox>
+      </Clip>
+      <Clip>
+        <Glyph value="transform_matrix_0.9659_0.2588_-0.2588_0.9659_0_0"/>
+        <ClipBox Format="1">
+          <xMin value="105"/>
+          <yMin value="250"/>
+          <xMax value="750"/>
+          <yMax value="861"/>
+        </ClipBox>
+      </Clip>
+      <Clip>
+        <Glyph value="transform_matrix_1.0_0.0_0.6_1.0_-300.0_0.0"/>
+        <ClipBox Format="1">
+          <xMin value="235"/>
+          <yMin value="250"/>
+          <xMax value="766"/>
+          <yMax value="750"/>
+        </ClipBox>
+      </Clip>
+      <Clip>
+        <Glyph value="transform_matrix_1_0_0_1_125_125"/>
+        <ClipBox Format="1">
+          <xMin value="250"/>
+          <yMin value="250"/>
+          <xMax value="875"/>
+          <yMax value="875"/>
+        </ClipBox>
+      </Clip>
+      <Clip>
+        <Glyph value="translate_-100_0"/>
+        <ClipBox Format="1">
+          <xMin value="150"/>
+          <yMin value="250"/>
+          <xMax value="750"/>
+          <yMax value="750"/>
+        </ClipBox>
+      </Clip>
+      <Clip>
+        <Glyph value="translate_-200_-200"/>
+        <ClipBox Format="1">
+          <xMin value="50"/>
+          <yMin value="50"/>
+          <xMax value="750"/>
+          <yMax value="750"/>
+        </ClipBox>
+      </Clip>
+      <Clip>
+        <Glyph value="translate_0_-100"/>
+        <ClipBox Format="1">
+          <xMin value="250"/>
+          <yMin value="150"/>
+          <xMax value="750"/>
+          <yMax value="750"/>
+        </ClipBox>
+      </Clip>
+      <Clip>
+        <Glyph value="translate_0_100"/>
+        <ClipBox Format="1">
+          <xMin value="250"/>
+          <yMin value="250"/>
+          <xMax value="750"/>
+          <yMax value="850"/>
+        </ClipBox>
+      </Clip>
+      <Clip>
+        <Glyph value="translate_100_0"/>
+        <ClipBox Format="1">
+          <xMin value="250"/>
+          <yMin value="250"/>
+          <xMax value="850"/>
+          <yMax value="750"/>
+        </ClipBox>
+      </Clip>
+      <Clip>
+        <Glyph value="translate_200_200"/>
+        <ClipBox Format="1">
+          <xMin value="250"/>
+          <yMin value="250"/>
+          <xMax value="950"/>
+          <yMax value="950"/>
+        </ClipBox>
+      </Clip>
+    </ClipList>
+  </COLR>
+
+</ttFont>
