@@ -20,7 +20,7 @@ Installation
 
 .. note::
 
-    fontTools requires `Python <http://www.python.org/download/>`_ 3.6 or later.
+    fontTools requires `Python <http://www.python.org/download/>`_ 3.8 or later.
 
 The package is listed in the Python Package Index (PyPI), so you can install it with `pip <https://pip.pypa.io/>`_::
 
