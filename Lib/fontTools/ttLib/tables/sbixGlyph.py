@@ -91,7 +91,7 @@ class Glyph(object):
             # (needed if you just want to compile the sbix table on its own)
         self.gid = struct.pack(">H", ttFont.getGlyphID(self.glyphName))
         if self.graphicType is None:
-            self.rawdata = b""
+            rawdata = b""
         else:
             rawdata = sstruct.pack(sbixGlyphHeaderFormat, self)
         if self.graphicType == "dupe":
