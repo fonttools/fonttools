@@ -1667,11 +1667,11 @@ class Paint(getFormatSwitchingBaseTableClass("uint8")):
                 .translate(-self.centerX, -self.centerY)
             )
         elif self.Format == PaintFormat.PaintSkew:
-            return Identity.skew(radians(self.xSkewAngle), radians(self.ySkewAngle))
+            return Identity.skew(radians(-self.xSkewAngle), radians(self.ySkewAngle))
         elif self.Format == PaintFormat.PaintSkewAroundCenter:
             return (
                 Identity.translate(self.centerX, self.centerY)
-                .skew(radians(self.xSkewAngle), radians(self.ySkewAngle))
+                .skew(radians(-self.xSkewAngle), radians(self.ySkewAngle))
                 .translate(-self.centerX, -self.centerY)
             )
         if PaintFormat(self.Format).is_variable():
