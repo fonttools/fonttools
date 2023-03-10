@@ -272,3 +272,5 @@ def test_getGlyphID():
     assert font.getGlyphID("glyph12345") == 12345  # virtual glyph
     with pytest.raises(KeyError):
         font.getGlyphID("non_existent")
+    with pytest.raises(KeyError):
+        font.getGlyphID("glyph_prefix_but_invalid_id")
