@@ -711,9 +711,8 @@ class VarIdxMap(BaseTable):
         if mapping is None:
             mapping = self.mapping = {}
 
-        if type(mapping) == dict:
-            glyphOrder = font.getGlyphOrder()
-            mapping = [mapping[g] for g in glyphOrder]
+        glyphOrder = font.getGlyphOrder()
+        mapping = [mapping[g] for g in glyphOrder]
         while len(mapping) > 1 and mapping[-2] == mapping[-1]:
             del mapping[-1]
 
