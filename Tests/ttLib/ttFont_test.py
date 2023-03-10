@@ -262,3 +262,13 @@ def test_font_normalizeLocation_no_VF():
     ttf = TTFont()
     with pytest.raises(TTLibError, match="Not a variable font"):
         ttf.normalizeLocation({})
+
+
+def test_getGlyphID():
+    font = TTFont()
+    font.importXML(os.path.join(DATA_DIR, "TestTTF-Regular.ttx"))
+
+    assert font.getGlyphID("space") == 3
+    assert font.getGlyphID("glyph12345") == 12345  # virtual glyph
+    with pytest.raises(KeyError):
+        font.getGlyphID("non_existent")
