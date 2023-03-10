@@ -660,6 +660,7 @@ class TTFont(object):
                     return int(glyphName[5:])
                 except (NameError, ValueError):
                     raise KeyError(glyphName)
+            raise
 
     def getGlyphIDMany(self, lst):
         """Converts a list of glyph names into a list of glyph IDs."""
