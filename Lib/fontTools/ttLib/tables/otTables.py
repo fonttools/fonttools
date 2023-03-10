@@ -1238,8 +1238,10 @@ class COLR(BaseTable):
             try:
                 clipBox = rec.Paint.computeClipBox(self, glyphSet, quantization)
             except Exception as e:
+                from fontTools.ttLib import TTLibError
+
                 raise TTLibError(
-                    "Failed to compute COLR ClipBox for {rec.BaseGlyph!r}"
+                    f"Failed to compute COLR ClipBox for {rec.BaseGlyph!r}"
                 ) from e
 
             if clipBox is not None:
