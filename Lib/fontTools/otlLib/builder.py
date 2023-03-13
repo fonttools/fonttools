@@ -369,10 +369,19 @@ class ChainContextualBuilder(LookupBuilder):
 
         rulesets = self.rulesets()
         chaining = any(ruleset.hasPrefixOrSuffix for ruleset in rulesets)
+
+        # https://github.com/fonttools/fonttools/issues/2539
+        #
         # Unfortunately, as of 2022-03-07, Apple's CoreText renderer does not
         # correctly process GPOS7 lookups, so for now we force contextual
         # positioning lookups to be chaining (GPOS8).
-        if self.subtable_type == "Pos":  # horrible separation of concerns breach
+        #
+        # This seems to be fixed as of macOS 13.2, but we keep disabling this
+        # for now until we are no longer concerned about old macOS versions.
+        # But we allow people to opt-out of this with the config key below.
+        write_gpos7 = self.font.cfg.get("fontTools.otlLib.builder:WRITE_GPOS7")
+        # horrible separation of concerns breach
+        if not write_gpos7 and self.subtable_type == "Pos":
             chaining = True
 
         for ruleset in rulesets:

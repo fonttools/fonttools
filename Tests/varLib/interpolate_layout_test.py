@@ -85,10 +85,12 @@ class InterpolateLayoutTest(unittest.TestCase):
         font.save(path)
         self.expect_ttx(TTFont(path), expected_ttx, tables)
 
-    def compile_font(self, path, suffix, temp_dir, features=None):
+    def compile_font(self, path, suffix, temp_dir, features=None, cfg=None):
         ttx_filename = os.path.basename(path)
         savepath = os.path.join(temp_dir, ttx_filename.replace(".ttx", suffix))
         font = TTFont(recalcBBoxes=False, recalcTimestamp=False)
+        if cfg:
+            font.cfg.update(cfg)
         font.importXML(path)
         if features:
             addOpenTypeFeaturesFromString(font, features)
@@ -731,6 +733,94 @@ class InterpolateLayoutTest(unittest.TestCase):
 
         tables = ["GPOS"]
         expected_ttx_path = self.get_test_output("InterpolateLayoutGPOS_6_diff.ttx")
+        self.expect_ttx(instfont, expected_ttx_path, tables)
+        self.check_ttx_dump(instfont, expected_ttx_path, tables, suffix)
+
+    def test_varlib_interpolate_layout_GPOS_only_LookupType_7_same_val_ttf(self):
+        """Only GPOS; LookupType 7; same values in all masters."""
+        suffix = ".ttf"
+        ds_path = self.get_test_input("InterpolateLayout.designspace")
+        ufo_dir = self.get_test_input("master_ufo")
+        ttx_dir = self.get_test_input("master_ttx_interpolatable_ttf")
+
+        fea_str = """
+        markClass uni0303 <anchor 0 500> @MARKS_ABOVE;
+        lookup CNTXT_PAIR_POS {
+            pos A a -23;
+        } CNTXT_PAIR_POS;
+
+        lookup CNTXT_MARK_TO_BASE {
+            pos base a <anchor 260 500> mark @MARKS_ABOVE;
+        } CNTXT_MARK_TO_BASE;
+
+        feature xxxx {
+            pos A' lookup CNTXT_PAIR_POS a' @MARKS_ABOVE' lookup CNTXT_MARK_TO_BASE;
+        } xxxx;
+        """
+        features = [fea_str] * 2
+
+        self.temp_dir()
+        ttx_paths = self.get_file_list(ttx_dir, ".ttx", "TestFamily2-")
+        cfg = {"fontTools.otlLib.builder:WRITE_GPOS7": True}
+        for i, path in enumerate(ttx_paths):
+            self.compile_font(path, suffix, self.tempdir, features[i], cfg)
+
+        finder = lambda s: s.replace(ufo_dir, self.tempdir).replace(".ufo", suffix)
+        instfont = interpolate_layout(ds_path, {"weight": 500}, finder)
+
+        tables = ["GPOS"]
+        expected_ttx_path = self.get_test_output("InterpolateLayoutGPOS_7_same.ttx")
+        self.expect_ttx(instfont, expected_ttx_path, tables)
+        self.check_ttx_dump(instfont, expected_ttx_path, tables, suffix)
+
+    def test_varlib_interpolate_layout_GPOS_only_LookupType_7_diff_val_ttf(self):
+        """Only GPOS; LookupType 7; different values in each master."""
+        suffix = ".ttf"
+        ds_path = self.get_test_input("InterpolateLayout.designspace")
+        ufo_dir = self.get_test_input("master_ufo")
+        ttx_dir = self.get_test_input("master_ttx_interpolatable_ttf")
+
+        fea_str_0 = """
+        markClass uni0303 <anchor 0 500> @MARKS_ABOVE;
+        lookup CNTXT_PAIR_POS {
+            pos A a -23;
+        } CNTXT_PAIR_POS;
+
+        lookup CNTXT_MARK_TO_BASE {
+            pos base a <anchor 260 500> mark @MARKS_ABOVE;
+        } CNTXT_MARK_TO_BASE;
+
+        feature xxxx {
+            pos A' lookup CNTXT_PAIR_POS a' @MARKS_ABOVE' lookup CNTXT_MARK_TO_BASE;
+        } xxxx;
+        """
+        fea_str_1 = """
+        markClass uni0303 <anchor 0 520> @MARKS_ABOVE;
+        lookup CNTXT_PAIR_POS {
+            pos A a 57;
+        } CNTXT_PAIR_POS;
+
+        lookup CNTXT_MARK_TO_BASE {
+            pos base a <anchor 285 520> mark @MARKS_ABOVE;
+        } CNTXT_MARK_TO_BASE;
+
+        feature xxxx {
+            pos A' lookup CNTXT_PAIR_POS a' @MARKS_ABOVE' lookup CNTXT_MARK_TO_BASE;
+        } xxxx;
+        """
+        features = [fea_str_0, fea_str_1]
+
+        self.temp_dir()
+        ttx_paths = self.get_file_list(ttx_dir, ".ttx", "TestFamily2-")
+        cfg = {"fontTools.otlLib.builder:WRITE_GPOS7": True}
+        for i, path in enumerate(ttx_paths):
+            self.compile_font(path, suffix, self.tempdir, features[i], cfg)
+
+        finder = lambda s: s.replace(ufo_dir, self.tempdir).replace(".ufo", suffix)
+        instfont = interpolate_layout(ds_path, {"weight": 500}, finder)
+
+        tables = ["GPOS"]
+        expected_ttx_path = self.get_test_output("InterpolateLayoutGPOS_7_diff.ttx")
         self.expect_ttx(instfont, expected_ttx_path, tables)
         self.check_ttx_dump(instfont, expected_ttx_path, tables, suffix)
 
