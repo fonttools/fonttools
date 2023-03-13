@@ -62,8 +62,8 @@ Config.register_option(
     name="fontTools.otlLib.builder:WRITE_GPOS7",
     help=dedent(
         """\
-        macOS before 13.2 didn’t support GPOS LookupType 7 (none-chaining
-        ContextPos lookups), so FontTools.otLib.builder disables a file size
+        macOS before 13.2 didn’t support GPOS LookupType 7 (non-chaining
+        ContextPos lookups), so FontTools.otlLib.builder disables a file size
         optimisation that would use LookupType 7 instead of 8 when there is no
         chaining (no prefix or suffix). Set to True to enable the optimization.
         """
