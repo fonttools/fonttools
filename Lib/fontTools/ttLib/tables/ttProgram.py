@@ -9,6 +9,8 @@ import logging
 
 log = logging.getLogger(__name__)
 
+# fmt: off
+
 # first, the list of instructions that eat bytes or words from the instruction stream
 
 streamInstructions = [
@@ -148,6 +150,8 @@ instructions = [
     (0x44,	'WCVTP',	0,	'WriteCVTInPixels',	2, 0),	#                                 v, l               -
     (0x42,	'WS',		0,	'WriteStore',		2, 0),	#                                 v, l               -
 ]
+
+# fmt: on
 
 
 def bitRepr(value, bits):
