@@ -2065,7 +2065,7 @@ class ConditionsetStatement(Statement):
         self.conditions = conditions
 
     def build(self, builder):
-        builder.add_conditionset(self.name, self.conditions)
+        builder.add_conditionset(self.location, self.name, self.conditions)
 
     def asFea(self, res="", indent=""):
         res += indent + f"conditionset {self.name} " + "{\n"
