@@ -1069,19 +1069,6 @@ class Program(object):
     def __init__(self) -> None:
         pass
 
-    @property
-    def assembly(self) -> List[str]:
-        return self._assembly
-
-    @assembly.setter
-    def assembly(self, value: List[str] | str):
-        if isinstance(value, list):
-            self._assembly = value
-        elif isinstance(value, str):
-            self._assembly = value.splitlines()
-        else:
-            raise TypeError(f"expected str or List[str], got {type(value).__name__}")
-
     def fromBytecode(self, bytecode) -> None:
         self.bytecode = array.array("B", bytecode)
         if hasattr(self, "_assembly"):
