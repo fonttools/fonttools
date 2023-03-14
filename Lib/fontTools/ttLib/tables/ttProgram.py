@@ -1069,12 +1069,12 @@ class Program(object):
     def __init__(self) -> None:
         pass
 
-    def fromBytecode(self, bytecode) -> None:
+    def fromBytecode(self, bytecode: bytes) -> None:
         self.bytecode = array.array("B", bytecode)
-        if hasattr(self, "_assembly"):
-            del self._assembly
+        if hasattr(self, "assembly"):
+            del self.assembly
 
-    def fromAssembly(self, assembly) -> None:
+    def fromAssembly(self, assembly: List[str] | str) -> None:
         if isinstance(assembly, list):
             self.assembly = assembly
         elif isinstance(assembly, str):
@@ -1090,7 +1090,7 @@ class Program(object):
         return self.bytecode.tobytes()
 
     def getAssembly(self, preserve=True) -> List[str]:
-        if not hasattr(self, "_assembly"):
+        if not hasattr(self, "assembly"):
             self._disassemble(preserve=preserve)
         return self.assembly
 
@@ -1166,7 +1166,7 @@ class Program(object):
         if name == "assembly":
             self.fromAssembly(strjoin(content))
             self._assemble()
-            del self._assembly
+            del self.assembly
         else:
             assert name == "bytecode"
             self.fromBytecode(readHex(content))
