@@ -1,8 +1,10 @@
 """ttLib.tables.ttProgram.py -- Assembler/disassembler for TrueType bytecode programs."""
+from __future__ import annotations
 
 from fontTools.misc.textTools import num2binary, binary2num, readHex, strjoin
 import array
 from io import StringIO
+from typing import List
 import re
 import logging
 
@@ -1067,10 +1069,25 @@ class Program(object):
     def __init__(self):
         pass
 
+    @property
+    def assembly(self):
+        if hasattr(self, "_assembly"):
+            return self._assembly
+        raise AttributeError
+
+    @assembly.setter
+    def assembly(self, value: List[str] | str):
+        if isinstance(value, list):
+            self._assembly = value
+        elif isinstance(value, str):
+            self._assembly = value.splitlines()
+        else:
+            raise TypeError
+
     def fromBytecode(self, bytecode):
         self.bytecode = array.array("B", bytecode)
-        if hasattr(self, "assembly"):
-            del self.assembly
+        if hasattr(self, "_assembly"):
+            del self._assembly
 
     def fromAssembly(self, assembly):
         self.assembly = assembly
@@ -1083,7 +1100,7 @@ class Program(object):
         return self.bytecode.tobytes()
 
     def getAssembly(self, preserve=True):
-        if not hasattr(self, "assembly"):
+        if not hasattr(self, "_assembly"):
             self._disassemble(preserve=preserve)
         return self.assembly
 
@@ -1159,7 +1176,7 @@ class Program(object):
         if name == "assembly":
             self.fromAssembly(strjoin(content))
             self._assemble()
-            del self.assembly
+            del self._assembly
         else:
             assert name == "bytecode"
             self.fromBytecode(readHex(content))
