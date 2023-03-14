@@ -1181,7 +1181,7 @@ class Program(object):
 
     def _assemble(self) -> None:
         assembly = " ".join(getattr(self, "assembly", []))
-        bytecode = []
+        bytecode: List[int] = []
         push = bytecode.append
         lenAssembly = len(assembly)
         pos = _skipWhite(assembly, 0)
