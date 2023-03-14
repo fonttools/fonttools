@@ -34,7 +34,7 @@ from fontTools.otlLib.error import OpenTypeLibError
 from fontTools.varLib.varStore import OnlineVarStoreBuilder
 from fontTools.varLib.builder import buildVarDevTable
 from fontTools.varLib.featureVars import addFeatureVariationsRaw
-from fontTools.varLib.models import normalizeValue
+from fontTools.varLib.models import normalizeValue, piecewiseLinearMap
 from collections import defaultdict
 import itertools
 from io import StringIO
@@ -1588,6 +1588,18 @@ class Builder(object):
             )
             for tag, (bottom, top) in value.items()
         }
+
+        # NOTE: This might result in rounding errors (off-by-ones) compared to
+        # rules in Designspace files, since we're working with what's in the
+        # `avar` table rather than the original values.
+        if "avar" in self.font:
+            mapping = self.font["avar"].segments
+            value = {
+                axis: tuple(
+                    piecewiseLinearMap(v, mapping[axis]) for v in condition_range
+                )
+                for axis, condition_range in value.items()
+            }
 
         self.conditionsets_[key] = value
 
