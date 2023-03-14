@@ -947,11 +947,7 @@ class Builder(object):
         feature_vars = {}
         has_any_variations = False
         # Sort out which lookups to build, gather their indices
-        for (
-            script_,
-            language,
-            feature_tag,
-        ), variations in self.feature_variations_.items():
+        for (_, _, feature_tag), variations in self.feature_variations_.items():
             feature_vars[feature_tag] = []
             for conditionset, builders in variations.items():
                 raw_conditionset = self.conditionsets_[conditionset]
