@@ -52,6 +52,7 @@ class table__a_v_a_r(BaseTTXConverter):
         axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
         if not hasattr(self, "table"):
             self.table = otTables.avar()
+        if not hasattr(self.table, "Reserved"):
             self.table.Reserved = 0
         self.table.Version = (getattr(self, "majorVersion", 1) << 16) | getattr(
             self, "minorVersion", 0
@@ -111,6 +112,7 @@ class table__a_v_a_r(BaseTTXConverter):
     def fromXML(self, name, attrs, content, ttFont):
         if not hasattr(self, "table"):
             self.table = otTables.avar()
+        if not hasattr(self.table, "Reserved"):
             self.table.Reserved = 0
         if name == "version":
             self.majorVersion = safeEval(attrs["major"])
