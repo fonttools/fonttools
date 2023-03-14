@@ -1,8 +1,10 @@
 """ttLib.tables.ttProgram.py -- Assembler/disassembler for TrueType bytecode programs."""
+from __future__ import annotations
 
 from fontTools.misc.textTools import num2binary, binary2num, readHex, strjoin
 import array
 from io import StringIO
+from typing import List
 import re
 import logging
 
@@ -1064,30 +1066,35 @@ def _skipWhite(data, pos):
 
 
 class Program(object):
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
-    def fromBytecode(self, bytecode):
+    def fromBytecode(self, bytecode: bytes) -> None:
         self.bytecode = array.array("B", bytecode)
         if hasattr(self, "assembly"):
             del self.assembly
 
-    def fromAssembly(self, assembly):
-        self.assembly = assembly
+    def fromAssembly(self, assembly: List[str] | str) -> None:
+        if isinstance(assembly, list):
+            self.assembly = assembly
+        elif isinstance(assembly, str):
+            self.assembly = assembly.splitlines()
+        else:
+            raise TypeError(f"expected str or List[str], got {type(assembly).__name__}")
         if hasattr(self, "bytecode"):
             del self.bytecode
 
-    def getBytecode(self):
+    def getBytecode(self) -> bytes:
         if not hasattr(self, "bytecode"):
             self._assemble()
         return self.bytecode.tobytes()
 
-    def getAssembly(self, preserve=True):
+    def getAssembly(self, preserve=True) -> List[str]:
         if not hasattr(self, "assembly"):
             self._disassemble(preserve=preserve)
         return self.assembly
 
-    def toXML(self, writer, ttFont):
+    def toXML(self, writer, ttFont) -> None:
         if (
             not hasattr(ttFont, "disassembleInstructions")
             or ttFont.disassembleInstructions
@@ -1128,7 +1135,7 @@ class Program(object):
                     i = i + 1
                     if m:
                         nValues = int(m.group(1))
-                        line = []
+                        line: List[str] = []
                         j = 0
                         for j in range(nValues):
                             if j and not (j % 25):
@@ -1155,7 +1162,7 @@ class Program(object):
             writer.endtag("bytecode")
             writer.newline()
 
-    def fromXML(self, name, attrs, content, ttFont):
+    def fromXML(self, name, attrs, content, ttFont) -> None:
         if name == "assembly":
             self.fromAssembly(strjoin(content))
             self._assemble()
@@ -1164,11 +1171,9 @@ class Program(object):
             assert name == "bytecode"
             self.fromBytecode(readHex(content))
 
-    def _assemble(self):
-        assembly = getattr(self, "assembly", [])
-        if isinstance(assembly, type([])):
-            assembly = " ".join(assembly)
-        bytecode = []
+    def _assemble(self) -> None:
+        assembly = " ".join(getattr(self, "assembly", []))
+        bytecode: List[int] = []
         push = bytecode.append
         lenAssembly = len(assembly)
         pos = _skipWhite(assembly, 0)
@@ -1311,7 +1316,7 @@ class Program(object):
             assert max(bytecode) < 256 and min(bytecode) >= 0
         self.bytecode = array.array("B", bytecode)
 
-    def _disassemble(self, preserve=False):
+    def _disassemble(self, preserve=False) -> None:
         assembly = []
         i = 0
         bytecode = getattr(self, "bytecode", [])
@@ -1376,7 +1381,7 @@ class Program(object):
                 i = i + 1
         self.assembly = assembly
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         """
         >>> p = Program()
         >>> bool(p)
@@ -1406,12 +1411,12 @@ class Program(object):
 
     __nonzero__ = __bool__
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if type(self) != type(other):
             return NotImplemented
         return self.__dict__ == other.__dict__
 
-    def __ne__(self, other):
+    def __ne__(self, other) -> bool:
         result = self.__eq__(other)
         return result if result is NotImplemented else not result
 

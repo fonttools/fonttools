@@ -12,6 +12,13 @@ DATA_DIR = os.path.join(CURR_DIR, "data")
 TTPROGRAM_TTX = os.path.join(DATA_DIR, "ttProgram.ttx")
 # TTPROGRAM_BIN = os.path.join(DATA_DIR, "ttProgram.bin")
 
+ASSEMBLY = [
+    "PUSH[ ]",
+    "0 4 3",
+    "INSTCTRL[ ]",
+    "POP[ ]",
+]
+
 BYTECODE = deHexStr(
     "403b3a393837363534333231302f2e2d2c2b2a292827262524232221201f1e1d1c1b1a"
     "191817161514131211100f0e0d0c0b0a090807060504030201002c01b0184358456ab0"
@@ -89,6 +96,18 @@ class ProgramTest(unittest.TestCase):
 
         assert p.assembly.pop() == "SVTCA[0]"
         assert not bool(p)
+
+    def test_from_assembly_list(self):
+        p = Program()
+        p.fromAssembly(ASSEMBLY)
+        asm = p.getAssembly()
+        assert ASSEMBLY == asm
+
+    def test_from_assembly_str(self):
+        p = Program()
+        p.fromAssembly("\n".join(ASSEMBLY))
+        asm = p.getAssembly()
+        assert ASSEMBLY == asm
 
     def test_roundtrip(self):
         p = Program()
