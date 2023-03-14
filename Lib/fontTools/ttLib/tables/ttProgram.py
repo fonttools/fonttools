@@ -1180,9 +1180,7 @@ class Program(object):
             self.fromBytecode(readHex(content))
 
     def _assemble(self) -> None:
-        assembly = getattr(self, "assembly", [])
-        if isinstance(assembly, type([])):
-            assembly = " ".join(assembly)
+        assembly = " ".join(getattr(self, "assembly", []))
         bytecode = []
         push = bytecode.append
         lenAssembly = len(assembly)
