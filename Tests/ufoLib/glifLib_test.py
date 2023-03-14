@@ -138,7 +138,8 @@ class GlyphSetTests(unittest.TestCase):
     def testReadGlyphInvalidXml(self):
         """Test that calling readGlyph() to read a .glif with invalid XML raises
         a library error, instead of an exception from the XML dependency that is
-        used internally."""
+        used internally. In addition, check that the raised exception describes
+        the glyph by name and gives the location of the broken .glif file."""
 
         # Create a glyph set with three empty glyphs.
         glyph_set = GlyphSet(self.dstDir)
@@ -150,10 +151,16 @@ class GlyphSetTests(unittest.TestCase):
         invalid_xml = b"<abc></def>"
         Path(self.dstDir, glyph_set.contents["c"]).write_bytes(invalid_xml)
 
-        # Confirm that reading /c raises an appropriate error.
+        # Confirm that reading /a and /b is fine...
         glyph_set.readGlyph("a", _Glyph())
         glyph_set.readGlyph("b", _Glyph())
-        with pytest.raises(GlifLibError, match="GLIF contains invalid XML"):
+
+        # ...but that reading /c raises a descriptive library error.
+        expected_message = (
+            r"GLIF contains invalid XML\.\n"
+            r"The issue is in glyph 'c', located in '.*c\.glif.*\."
+        )
+        with pytest.raises(GlifLibError, match=expected_message):
             glyph_set.readGlyph("c", _Glyph())
 
 
