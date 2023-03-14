@@ -100,13 +100,13 @@ class ProgramTest(unittest.TestCase):
     def test_from_assembly_list(self):
         p = Program()
         p.fromAssembly(ASSEMBLY)
-        asm = p.getAssembly(preserve=True)
+        asm = p.getAssembly()
         assert ASSEMBLY == asm
 
     def test_from_assembly_str(self):
         p = Program()
         p.fromAssembly("\n".join(ASSEMBLY))
-        asm = p.getAssembly(preserve=True)
+        asm = p.getAssembly()
         assert ASSEMBLY == asm
 
     def test_roundtrip(self):

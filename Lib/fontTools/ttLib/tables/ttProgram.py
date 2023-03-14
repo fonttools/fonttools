@@ -1071,9 +1071,7 @@ class Program(object):
 
     @property
     def assembly(self):
-        if hasattr(self, "_assembly"):
-            return self._assembly
-        raise AttributeError
+        return self._assembly
 
     @assembly.setter
     def assembly(self, value: List[str] | str):
@@ -1082,7 +1080,7 @@ class Program(object):
         elif isinstance(value, str):
             self._assembly = value.splitlines()
         else:
-            raise TypeError
+            raise TypeError(f"expected str or List[str], got {type(value).__name__}")
 
     def fromBytecode(self, bytecode):
         self.bytecode = array.array("B", bytecode)
