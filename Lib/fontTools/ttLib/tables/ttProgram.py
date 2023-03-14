@@ -1088,7 +1088,12 @@ class Program(object):
             del self._assembly
 
     def fromAssembly(self, assembly) -> None:
-        self.assembly = assembly
+        if isinstance(assembly, list):
+            self.assembly = assembly
+        elif isinstance(assembly, str):
+            self.assembly = assembly.splitlines()
+        else:
+            raise TypeError(f"expected str or List[str], got {type(assembly).__name__}")
         if hasattr(self, "bytecode"):
             del self.bytecode
 
