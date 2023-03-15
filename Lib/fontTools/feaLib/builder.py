@@ -1655,7 +1655,6 @@ class Builder(object):
             return None
 
         vr = {}
-        variable = False
         for astName, (otName, isDevice) in self._VALUEREC_ATTRS.items():
             val = getattr(v, astName, None)
             if not val:
@@ -1679,7 +1678,6 @@ class Builder(object):
                 vr[otName] = default
                 if index is not None and index != 0xFFFFFFFF:
                     vr[otDeviceName] = buildVarDevTable(index)
-                    variable = True
             else:
                 vr[otName] = val
 
