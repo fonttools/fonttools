@@ -417,6 +417,7 @@
   </post>
 
   <avar>
+    <version major="1" minor="0"/>
     <segment axis="0000">
     </segment>
     <segment axis="0001">

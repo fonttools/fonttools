@@ -1139,6 +1139,7 @@
   </STAT>
 
   <avar>
+    <version major="1" minor="0"/>
     <segment axis="wght">
       <mapping from="-1.0" to="-1.0"/>
       <mapping from="-0.6667" to="-0.7969"/>
