@@ -1614,6 +1614,7 @@ class Builder(object):
             deviceX = otl.buildDevice(dict(anchor.xDeviceTable))
         if anchor.yDeviceTable is not None:
             deviceY = otl.buildDevice(dict(anchor.yDeviceTable))
+        avar = self.font.get("avar")
         for dim in ("x", "y"):
             if not isinstance(getattr(anchor, dim), VariableScalar):
                 continue
@@ -1627,7 +1628,9 @@ class Builder(object):
                 )
             varscalar = getattr(anchor, dim)
             varscalar.axes = self.axes
-            default, index = varscalar.add_to_variation_store(self.varstorebuilder)
+            default, index = varscalar.add_to_variation_store(
+                self.varstorebuilder, avar
+            )
             setattr(anchor, dim, default)
             if index is not None and index != 0xFFFFFFFF:
                 if dim == "x":
@@ -1654,6 +1657,7 @@ class Builder(object):
         if not v:
             return None
 
+        avar = self.font.get("avar")
         vr = {}
         for astName, (otName, isDevice) in self._VALUEREC_ATTRS.items():
             val = getattr(v, astName, None)
@@ -1674,7 +1678,7 @@ class Builder(object):
                         location,
                     )
                 val.axes = self.axes
-                default, index = val.add_to_variation_store(self.varstorebuilder)
+                default, index = val.add_to_variation_store(self.varstorebuilder, avar)
                 vr[otName] = default
                 if index is not None and index != 0xFFFFFFFF:
                     vr[otDeviceName] = buildVarDevTable(index)

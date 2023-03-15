@@ -1034,6 +1034,64 @@ class BuilderTest(unittest.TestCase):
         assert condition_table[0].FilterRangeMinValue == 0.5
         assert condition_table[1].FilterRangeMinValue == 0.7
 
+    def test_variable_scalar_avar(self):
+        """Test that the `avar` table is consulted when normalizing user-space
+        values."""
+
+        features = """
+            languagesystem DFLT dflt;
+        
+            feature kern {
+                pos cursive one <anchor 0 (wght=200:12 wght=900:22 wdth=150,wght=900:42)> <anchor NULL>;
+                pos two <0 (wght=200:12 wght=900:22 wdth=150,wght=900:42) 0 0>;
+            } kern;
+        """
+
+        def make_mock_vf():
+            font = makeTTFont()
+            font["name"] = newTable("name")
+            addFvar(font, self.VARFONT_AXES, [])
+            del font["name"]
+            return font
+
+        def get_region(var_region_axis):
+            return (
+                var_region_axis.StartCoord,
+                var_region_axis.PeakCoord,
+                var_region_axis.EndCoord,
+            )
+
+        # Without `avar` (wght=200, wdth=100 is the default location):
+        font = make_mock_vf()
+        addOpenTypeFeaturesFromString(font, features)
+
+        var_region_list = font.tables["GDEF"].table.VarStore.VarRegionList
+        var_region_axis_wght = var_region_list.Region[0].VarRegionAxis[0]
+        var_region_axis_wdth = var_region_list.Region[0].VarRegionAxis[1]
+        assert get_region(var_region_axis_wght) == (0.0, 0.875, 0.875)
+        assert get_region(var_region_axis_wdth) == (0.0, 0.0, 0.0)
+        var_region_axis_wght = var_region_list.Region[1].VarRegionAxis[0]
+        var_region_axis_wdth = var_region_list.Region[1].VarRegionAxis[1]
+        assert get_region(var_region_axis_wght) == (0.0, 0.875, 0.875)
+        assert get_region(var_region_axis_wdth) == (0.0, 0.5, 0.5)
+
+        # With `avar`, shifting the wght axis' positive midpoint 0.5 a bit to
+        # the right, but leaving the wdth axis alone:
+        font = make_mock_vf()
+        font["avar"] = newTable("avar")
+        font["avar"].segments = {"wght": {-1.0: -1.0, 0.0: 0.0, 0.5: 0.625, 1.0: 1.0}}
+        addOpenTypeFeaturesFromString(font, features)
+
+        var_region_list = font.tables["GDEF"].table.VarStore.VarRegionList
+        var_region_axis_wght = var_region_list.Region[0].VarRegionAxis[0]
+        var_region_axis_wdth = var_region_list.Region[0].VarRegionAxis[1]
+        assert get_region(var_region_axis_wght) == (0.0, 0.90625, 0.90625)
+        assert get_region(var_region_axis_wdth) == (0.0, 0.0, 0.0)
+        var_region_axis_wght = var_region_list.Region[1].VarRegionAxis[0]
+        var_region_axis_wdth = var_region_list.Region[1].VarRegionAxis[1]
+        assert get_region(var_region_axis_wght) == (0.0, 0.90625, 0.90625)
+        assert get_region(var_region_axis_wdth) == (0.0, 0.5, 0.5)
+
 
 def generate_feature_file_test(name):
     return lambda self: self.check_feature_file(name)
