@@ -34,7 +34,7 @@ from fontTools.otlLib.error import OpenTypeLibError
 from fontTools.varLib.varStore import OnlineVarStoreBuilder
 from fontTools.varLib.builder import buildVarDevTable
 from fontTools.varLib.featureVars import addFeatureVariationsRaw
-from fontTools.varLib.models import normalizeValue
+from fontTools.varLib.models import normalizeValue, piecewiseLinearMap
 from collections import defaultdict
 import itertools
 from io import StringIO
@@ -947,11 +947,7 @@ class Builder(object):
         feature_vars = {}
         has_any_variations = False
         # Sort out which lookups to build, gather their indices
-        for (
-            script_,
-            language,
-            feature_tag,
-        ), variations in self.feature_variations_.items():
+        for (_, _, feature_tag), variations in self.feature_variations_.items():
             feature_vars[feature_tag] = []
             for conditionset, builders in variations.items():
                 raw_conditionset = self.conditionsets_[conditionset]
@@ -1572,10 +1568,11 @@ class Builder(object):
     def add_vhea_field(self, key, value):
         self.vhea_[key] = value
 
-    def add_conditionset(self, key, value):
-        if not "fvar" in self.font:
+    def add_conditionset(self, location, key, value):
+        if "fvar" not in self.font:
             raise FeatureLibError(
-                "Cannot add feature variations to a font without an 'fvar' table"
+                "Cannot add feature variations to a font without an 'fvar' table",
+                location,
             )
 
         # Normalize
@@ -1591,6 +1588,18 @@ class Builder(object):
             )
             for tag, (bottom, top) in value.items()
         }
+
+        # NOTE: This might result in rounding errors (off-by-ones) compared to
+        # rules in Designspace files, since we're working with what's in the
+        # `avar` table rather than the original values.
+        if "avar" in self.font:
+            mapping = self.font["avar"].segments
+            value = {
+                axis: tuple(
+                    piecewiseLinearMap(v, mapping[axis]) for v in condition_range
+                )
+                for axis, condition_range in value.items()
+            }
 
         self.conditionsets_[key] = value
 

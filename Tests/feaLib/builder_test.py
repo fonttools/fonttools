@@ -975,6 +975,57 @@ class BuilderTest(unittest.TestCase):
                 f'{name}.fea:{line}:12: Ambiguous "ignore {sub}", there should be least one marked glyph'
             )
 
+    def test_condition_set_avar(self):
+        """Test that the `avar` table is consulted when normalizing user-space
+        values."""
+
+        features = """
+            languagesystem DFLT dflt;
+
+            lookup conditional_sub {
+                sub e by a;
+            } conditional_sub;
+
+            conditionset test {
+                wght 600 1000;
+            } test;
+
+            variation rlig test {
+                lookup conditional_sub;
+            } rlig;
+        """
+
+        def make_mock_vf():
+            font = makeTTFont()
+            font["name"] = newTable("name")
+            addFvar(font, [("wght", 0, 0, 1000, "Weight")], [])
+            del font["name"]
+            return font
+
+        # Without `avar`:
+        font = make_mock_vf()
+        addOpenTypeFeaturesFromString(font, features)
+        assert (
+            font.tables["GSUB"]
+            .table.FeatureVariations.FeatureVariationRecord[0]
+            .ConditionSet.ConditionTable[0]
+            .FilterRangeMinValue
+            == 0.6  # user-space 600
+        )
+
+        # With `avar`, shifting the positive midpoint 0.5 a bit to the right:
+        font = make_mock_vf()
+        font["avar"] = newTable("avar")
+        font["avar"].segments = {"wght": {-1.0: -1.0, 0.0: 0.0, 0.5: 0.625, 1.0: 1.0}}
+        addOpenTypeFeaturesFromString(font, features)
+        assert (
+            font.tables["GSUB"]
+            .table.FeatureVariations.FeatureVariationRecord[0]
+            .ConditionSet.ConditionTable[0]
+            .FilterRangeMinValue
+            == 0.7  # user-space 600 shifted to the right,
+        )
+
 
 def generate_feature_file_test(name):
     return lambda self: self.check_feature_file(name)
