@@ -1,6 +1,7 @@
 from fontTools.misc.testTools import parseXML
 from fontTools.misc.textTools import deHexStr
 from fontTools.misc.xmlWriter import XMLWriter
+from fontTools.misc.fixedTools import floatToFixed as fl2fi
 from fontTools.ttLib import TTFont, TTLibError
 import fontTools.ttLib.tables.otTables as otTables
 from fontTools.ttLib.tables._a_v_a_r import table__a_v_a_r
@@ -122,7 +123,7 @@ class Avar2Test(unittest.TestCase):
         store_builder.setModel(model)
         varIdxes = {}
         for axis in axisTags:
-            masters = [m.get(axis, 0) * (1 << 14) for m in data]
+            masters = [fl2fi(m.get(axis, 0), 14) for m in data]
             varIdxes[axis] = store_builder.storeMasters(masters)[1]
         store = store_builder.finish()
         mapping = store.optimize()
