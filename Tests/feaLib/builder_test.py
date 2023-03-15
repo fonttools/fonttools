@@ -988,6 +988,7 @@ class BuilderTest(unittest.TestCase):
 
             conditionset test {
                 wght 600 1000;
+                wdth 150 200;
             } test;
 
             variation rlig test {
@@ -998,33 +999,40 @@ class BuilderTest(unittest.TestCase):
         def make_mock_vf():
             font = makeTTFont()
             font["name"] = newTable("name")
-            addFvar(font, [("wght", 0, 0, 1000, "Weight")], [])
+            addFvar(
+                font,
+                [("wght", 0, 0, 1000, "Weight"), ("wdth", 100, 100, 200, "Width")],
+                [],
+            )
             del font["name"]
             return font
 
         # Without `avar`:
         font = make_mock_vf()
         addOpenTypeFeaturesFromString(font, features)
-        assert (
+        condition_table = (
             font.tables["GSUB"]
             .table.FeatureVariations.FeatureVariationRecord[0]
-            .ConditionSet.ConditionTable[0]
-            .FilterRangeMinValue
-            == 0.6  # user-space 600
+            .ConditionSet.ConditionTable
         )
+        # user-space wdth=150 and wght=600:
+        assert condition_table[0].FilterRangeMinValue == 0.5
+        assert condition_table[1].FilterRangeMinValue == 0.6
 
-        # With `avar`, shifting the positive midpoint 0.5 a bit to the right:
+        # With `avar`, shifting the wght axis' positive midpoint 0.5 a bit to
+        # the right, but leaving the wdth axis alone:
         font = make_mock_vf()
         font["avar"] = newTable("avar")
         font["avar"].segments = {"wght": {-1.0: -1.0, 0.0: 0.0, 0.5: 0.625, 1.0: 1.0}}
         addOpenTypeFeaturesFromString(font, features)
-        assert (
+        condition_table = (
             font.tables["GSUB"]
             .table.FeatureVariations.FeatureVariationRecord[0]
-            .ConditionSet.ConditionTable[0]
-            .FilterRangeMinValue
-            == 0.7  # user-space 600 shifted to the right,
+            .ConditionSet.ConditionTable
         )
+        # user-space wdth=150 as before and wght=600 shifted to the right:
+        assert condition_table[0].FilterRangeMinValue == 0.5
+        assert condition_table[1].FilterRangeMinValue == 0.7
 
 
 def generate_feature_file_test(name):

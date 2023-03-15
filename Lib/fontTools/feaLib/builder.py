@@ -1596,7 +1596,8 @@ class Builder(object):
             mapping = self.font["avar"].segments
             value = {
                 axis: tuple(
-                    piecewiseLinearMap(v, mapping[axis]) for v in condition_range
+                    piecewiseLinearMap(v, mapping[axis]) if axis in mapping else v
+                    for v in condition_range
                 )
                 for axis, condition_range in value.items()
             }
