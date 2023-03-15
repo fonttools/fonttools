@@ -131,6 +131,7 @@ class Avar2Test(unittest.TestCase):
         del model, store_builder, mapping
 
         varIdxMap = otTables.DeltaSetIndexMap()
+        varIdxMap.Format = 1
         varIdxMap.mapping = []
         for tag in axisTags:
             varIdxMap.mapping.append(varIdxes[tag])
@@ -164,8 +165,7 @@ class Avar2Test(unittest.TestCase):
         writer = XMLWriter(xml2)
         font2["avar"].toXML(writer, font2)
 
-        # We can't compare because VarStore goes through transformation during compile :(
-        # assert xml1.getvalue() == xml2.getvalue(), (xml1.getvalue(), xml2.getvalue())
+        assert xml1.getvalue() == xml2.getvalue(), (xml1.getvalue(), xml2.getvalue())
 
         avar = table__a_v_a_r()
         xml = b"".join(xml2.getvalue().splitlines()[1:])
