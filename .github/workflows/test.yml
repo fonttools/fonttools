@@ -63,7 +63,8 @@ jobs:
         file: coverage.xml
         flags: unittests
         name: codecov-umbrella
-        fail_ci_if_error: true
+        # TODO(anthrotype): Set fail_ci_if_error: true if/when Codecov becomes less flaky
+        fail_ci_if_error: false
         # see https://github.com/codecov/codecov-action/issues/557
         token: ${{ secrets.CODECOV_TOKEN }}
 
