@@ -8,15 +8,6 @@ def Location(loc):
 class VariableScalar:
     """A scalar with different values at different points in the designspace."""
 
-    # We will often use exactly the same locations (i.e. the font's
-    # masters) for a large number of variable scalars. Instead of
-    # creating a model for each, let's share the models.
-    model_pool = {}
-
-    @classmethod
-    def clear_cache(cls):
-        cls.model_pool = {}
-
     def __init__(self, location_value={}):
         self.values = {}
         self.axes = {}
@@ -83,17 +74,17 @@ class VariableScalar:
             # I *guess* we could interpolate one, but I don't know how.
         return self.values[key]
 
-    def value_at_location(self, location, avar=None):
+    def value_at_location(self, location, model_cache, avar=None):
         loc = location
         if loc in self.values.keys():
             return self.values[loc]
         values = list(self.values.values())
-        return self.model(avar).interpolateFromMasters(loc, values)
+        return self.model(model_cache, avar).interpolateFromMasters(loc, values)
 
-    def model(self, avar=None):
+    def model(self, model_cache, avar=None):
         key = tuple(self.values.keys())
-        if key in self.model_pool:
-            return self.model_pool[key]
+        if key in model_cache:
+            return model_cache[key]
         locations = [dict(self._normalized_location(k)) for k in self.values.keys()]
         if avar is not None:
             mapping = avar.segments
@@ -105,15 +96,15 @@ class VariableScalar:
                 for location in locations
             ]
         m = VariationModel(locations)
-        self.model_pool[key] = m
+        model_cache[key] = m
         return m
 
-    def get_deltas_and_supports(self, avar=None):
+    def get_deltas_and_supports(self, model_cache, avar=None):
         values = list(self.values.values())
-        return self.model(avar).getDeltasAndSupports(values)
+        return self.model(model_cache, avar).getDeltasAndSupports(values)
 
-    def add_to_variation_store(self, store_builder, avar=None):
-        deltas, supports = self.get_deltas_and_supports(avar)
+    def add_to_variation_store(self, store_builder, model_cache, avar=None):
+        deltas, supports = self.get_deltas_and_supports(model_cache, avar)
         store_builder.setSupports(supports)
         index = store_builder.storeDeltas(deltas)
         return int(self.default), index

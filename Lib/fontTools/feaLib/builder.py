@@ -176,6 +176,10 @@ class Builder(object):
         self.stat_ = {}
         # for conditionsets
         self.conditionsets_ = {}
+        # We will often use exactly the same locations (i.e. the font's masters)
+        # for a large number of variable scalars. Instead of creating a model
+        # for each, let's share the models.
+        self.model_cache = {}
 
     def build(self, tables=None, debug=False):
         if self.parseTree is None:
@@ -771,7 +775,7 @@ class Builder(object):
                 gdef.remap_device_varidxes(varidx_map)
                 if "GPOS" in self.font:
                     self.font["GPOS"].table.remap_device_varidxes(varidx_map)
-            VariableScalar.clear_cache()
+            self.model_cache.clear()
         if any(
             (
                 gdef.GlyphClassDef,
@@ -1616,7 +1620,8 @@ class Builder(object):
             deviceY = otl.buildDevice(dict(anchor.yDeviceTable))
         avar = self.font.get("avar")
         for dim in ("x", "y"):
-            if not isinstance(getattr(anchor, dim), VariableScalar):
+            varscalar = getattr(anchor, dim)
+            if not isinstance(varscalar, VariableScalar):
                 continue
             if getattr(anchor, dim + "DeviceTable") is not None:
                 raise FeatureLibError(
@@ -1626,10 +1631,9 @@ class Builder(object):
                 raise FeatureLibError(
                     "Can't define a variable scalar in a non-variable font", location
                 )
-            varscalar = getattr(anchor, dim)
             varscalar.axes = self.axes
             default, index = varscalar.add_to_variation_store(
-                self.varstorebuilder, avar
+                self.varstorebuilder, self.model_cache, avar
             )
             setattr(anchor, dim, default)
             if index is not None and index != 0xFFFFFFFF:
@@ -1678,7 +1682,9 @@ class Builder(object):
                         location,
                     )
                 val.axes = self.axes
-                default, index = val.add_to_variation_store(self.varstorebuilder, avar)
+                default, index = val.add_to_variation_store(
+                    self.varstorebuilder, self.model_cache, avar
+                )
                 vr[otName] = default
                 if index is not None and index != 0xFFFFFFFF:
                     vr[otDeviceName] = buildVarDevTable(index)
