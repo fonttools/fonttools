@@ -988,6 +988,22 @@ def build_many(
     Always returns a Dict[str, TTFont] keyed by VariableFontDescriptor.name
     """
     res = {}
+    # varLib.build (used further below) by default only builds an incomplete 'STAT'
+    # with an empty AxisValueArray--unless the VF inherited 'STAT' from its base master.
+    # Designspace version 5 can also be used to define 'STAT' labels or customize
+    # axes ordering, etc. To avoid overwriting a pre-existing 'STAT' or redoing the
+    # same work twice, here we check if designspace contains any 'STAT' info before
+    # proceeding to call buildVFStatTable for each VF.
+    # https://github.com/fonttools/fonttools/pull/3024
+    # https://github.com/fonttools/fonttools/issues/3045
+    doBuildStatFromDSv5 = (
+        "STAT" not in exclude
+        and designspace.formatTuple >= (5, 0)
+        and (
+            any(a.axisLabels or a.axisOrdering is not None for a in designspace.axes)
+            or designspace.locationLabels
+        )
+    )
     for _location, subDoc in splitInterpolable(designspace):
         for name, vfDoc in splitVariableFonts(subDoc):
             if skip_vf(name):
@@ -1000,7 +1016,7 @@ def build_many(
                 optimize=optimize,
                 colr_layer_reuse=colr_layer_reuse,
             )[0]
-            if "STAT" not in vf and "STAT" not in exclude:
+            if doBuildStatFromDSv5:
                 buildVFStatTable(vf, designspace, name)
             res[name] = vf
     return res
