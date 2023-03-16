@@ -1,3 +1,6 @@
+- [varLib] Fixed regression introduced in 4.39.1 whereby an incomplete 'STAT' table
+  would be built even though a DesignSpace v5 did contain 'STAT' definitions (#3045, #3046).
+
 4.39.1 (released 2023-03-16)
 ----------------------------
 
