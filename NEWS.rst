@@ -1,3 +1,22 @@
+- [avar2] Added experimental support for reading/writing avar version 2 as specified in
+  this draft proposal: https://github.com/harfbuzz/boring-expansion-spec/blob/main/avar2.md
+- [glifLib] Wrap underlying XML library exceptions with GlifLibError when parsing GLIFs,
+  and also print the name and path of the glyph that fails to be parsed (#3042).
+- [feaLib] Consult avar for normalizing user-space values in ConditionSets and in
+  VariableScalars (#3042, #3043).
+- [ttProgram] Handle string input to Program.fromAssembly() (#3038).
+- [otlLib] Added a config option to emit GPOS 7 lookups, currently disabled by default
+  because of a macOS bug (#3034).
+- [COLRv1] Added method to automatically compute ClipBoxes (#3027).
+- [ttFont] Fixed getGlyphID to raise KeyError on missing glyphs instead of returning
+  None. The regression was introduced in v4.27.0 (#3032).
+- [sbix] Fixed UnboundLocalError: cannot access local variable 'rawdata' (#3031).
+- [varLib] When building VF, do not overwrite a pre-existing ``STAT`` table that was built
+  with feaLib from FEA feature file. Also, added support for building multiple VFs
+  defined in Designspace v5 from ``fonttools varLib`` script (#3024).
+- [mtiLib] Only add ``Debg`` table with lookup names when ``FONTTOOLS_LOOKUP_DEBUGGING``
+  env variable is set (#3023).
+
 4.39.0 (released 2023-03-06)
 ----------------------------
 
