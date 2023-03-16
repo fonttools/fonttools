@@ -3,6 +3,7 @@ import os
 import tempfile
 import shutil
 import unittest
+from pathlib import Path
 from io import open
 from .testSupport import getDemoFontGlyphSetPath
 from fontTools.ufoLib.glifLib import (
@@ -134,6 +135,34 @@ class GlyphSetTests(unittest.TestCase):
             else:
                 self.assertEqual(g.unicodes, unicodes[glyphName])
 
+    def testReadGlyphInvalidXml(self):
+        """Test that calling readGlyph() to read a .glif with invalid XML raises
+        a library error, instead of an exception from the XML dependency that is
+        used internally. In addition, check that the raised exception describes
+        the glyph by name and gives the location of the broken .glif file."""
+
+        # Create a glyph set with three empty glyphs.
+        glyph_set = GlyphSet(self.dstDir)
+        glyph_set.writeGlyph("a", _Glyph())
+        glyph_set.writeGlyph("b", _Glyph())
+        glyph_set.writeGlyph("c", _Glyph())
+
+        # Corrupt the XML of /c.
+        invalid_xml = b"<abc></def>"
+        Path(self.dstDir, glyph_set.contents["c"]).write_bytes(invalid_xml)
+
+        # Confirm that reading /a and /b is fine...
+        glyph_set.readGlyph("a", _Glyph())
+        glyph_set.readGlyph("b", _Glyph())
+
+        # ...but that reading /c raises a descriptive library error.
+        expected_message = (
+            r"GLIF contains invalid XML\.\n"
+            r"The issue is in glyph 'c', located in '.*c\.glif.*\."
+        )
+        with pytest.raises(GlifLibError, match=expected_message):
+            glyph_set.readGlyph("c", _Glyph())
+
 
 class FileNameTest:
     def test_default_file_name_scheme(self):
@@ -227,6 +256,17 @@ class ReadWriteFuncTest:
         assert g.name == "A"
         assert g.width == 1290
         assert g.unicodes == [0x0041]
+
+    def test_read_invalid_xml(self):
+        """Test that calling readGlyphFromString() with invalid XML raises a
+        library error, instead of an exception from the XML dependency that is
+        used internally."""
+
+        invalid_xml = b"<abc></def>"
+        empty_glyph = _Glyph()
+
+        with pytest.raises(GlifLibError, match="GLIF contains invalid XML"):
+            readGlyphFromString(invalid_xml, empty_glyph)
 
     def test_read_unsupported_format_version(self, caplog):
         s = """<?xml version='1.0' encoding='utf-8'?>

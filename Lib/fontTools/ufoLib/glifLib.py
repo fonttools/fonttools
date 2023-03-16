@@ -416,17 +416,33 @@ class GlyphSet(_UFOBaseIO):
         if validate is None:
             validate = self._validateRead
         text = self.getGLIF(glyphName)
-        tree = _glifTreeFromString(text)
-        formatVersions = GLIFFormatVersion.supported_versions(
-            self.ufoFormatVersionTuple
-        )
-        _readGlyphFromTree(
-            tree,
-            glyphObject,
-            pointPen,
-            formatVersions=formatVersions,
-            validate=validate,
-        )
+        try:
+            tree = _glifTreeFromString(text)
+            formatVersions = GLIFFormatVersion.supported_versions(
+                self.ufoFormatVersionTuple
+            )
+            _readGlyphFromTree(
+                tree,
+                glyphObject,
+                pointPen,
+                formatVersions=formatVersions,
+                validate=validate,
+            )
+        except GlifLibError as glifLibError:
+            # Re-raise with a note that gives extra context, describing where
+            # the error occurred.
+            fileName = self.contents[glyphName]
+            try:
+                glifLocation = f"'{self.fs.getsyspath(fileName)}'"
+            except fs.errors.NoSysPath:
+                # Network or in-memory FS may not map to a local path, so use
+                # the best string representation we have.
+                glifLocation = f"'{fileName}' from '{str(self.fs)}'"
+
+            glifLibError._add_note(
+                f"The issue is in glyph '{glyphName}', located in {glifLocation}."
+            )
+            raise
 
     def writeGlyph(
         self,
@@ -1082,10 +1098,14 @@ def _glifTreeFromFile(aFile):
 
 def _glifTreeFromString(aString):
     data = tobytes(aString, encoding="utf-8")
-    if etree._have_lxml:
-        root = etree.fromstring(data, parser=etree.XMLParser(remove_comments=True))
-    else:
-        root = etree.fromstring(data)
+    try:
+        if etree._have_lxml:
+            root = etree.fromstring(data, parser=etree.XMLParser(remove_comments=True))
+        else:
+            root = etree.fromstring(data)
+    except Exception as etree_exception:
+        raise GlifLibError("GLIF contains invalid XML.") from etree_exception
+
     if root.tag != "glyph":
         raise GlifLibError("The GLIF is not properly formatted.")
     if root.text and root.text.strip() != "":
