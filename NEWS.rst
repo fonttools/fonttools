@@ -1,3 +1,6 @@
+4.39.1 (released 2023-03-16)
+----------------------------
+
 - [avar2] Added experimental support for reading/writing avar version 2 as specified in
   this draft proposal: https://github.com/harfbuzz/boring-expansion-spec/blob/main/avar2.md
 - [glifLib] Wrap underlying XML library exceptions with GlifLibError when parsing GLIFs,
