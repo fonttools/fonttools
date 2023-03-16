@@ -74,17 +74,18 @@ class VariableScalar:
             # I *guess* we could interpolate one, but I don't know how.
         return self.values[key]
 
-    def value_at_location(self, location, model_cache, avar=None):
+    def value_at_location(self, location, model_cache=None, avar=None):
         loc = location
         if loc in self.values.keys():
             return self.values[loc]
         values = list(self.values.values())
         return self.model(model_cache, avar).interpolateFromMasters(loc, values)
 
-    def model(self, model_cache, avar=None):
-        key = tuple(self.values.keys())
-        if key in model_cache:
-            return model_cache[key]
+    def model(self, model_cache=None, avar=None):
+        if model_cache is not None:
+            key = tuple(self.values.keys())
+            if key in model_cache:
+                return model_cache[key]
         locations = [dict(self._normalized_location(k)) for k in self.values.keys()]
         if avar is not None:
             mapping = avar.segments
@@ -96,14 +97,15 @@ class VariableScalar:
                 for location in locations
             ]
         m = VariationModel(locations)
-        model_cache[key] = m
+        if model_cache is not None:
+            model_cache[key] = m
         return m
 
-    def get_deltas_and_supports(self, model_cache, avar=None):
+    def get_deltas_and_supports(self, model_cache=None, avar=None):
         values = list(self.values.values())
         return self.model(model_cache, avar).getDeltasAndSupports(values)
 
-    def add_to_variation_store(self, store_builder, model_cache, avar=None):
+    def add_to_variation_store(self, store_builder, model_cache=None, avar=None):
         deltas, supports = self.get_deltas_and_supports(model_cache, avar)
         store_builder.setSupports(supports)
         index = store_builder.storeDeltas(deltas)
