@@ -2,6 +2,7 @@ import io
 import os
 import re
 import random
+import tempfile
 from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
 from fontTools.ttLib import (
     TTFont,
@@ -274,3 +275,14 @@ def test_getGlyphID():
         font.getGlyphID("non_existent")
     with pytest.raises(KeyError):
         font.getGlyphID("glyph_prefix_but_invalid_id")
+
+
+def test_spooled_tempfile_may_not_have_attribute_seekable():
+    # SpooledTemporaryFile only got a seekable attribute on Python 3.11
+    # https://github.com/fonttools/fonttools/issues/3052
+    font = TTFont()
+    font.importXML(os.path.join(DATA_DIR, "TestTTF-Regular.ttx"))
+    tmp = tempfile.SpooledTemporaryFile()
+    font.save(tmp)
+    # this should not fail
+    _ = TTFont(tmp)
