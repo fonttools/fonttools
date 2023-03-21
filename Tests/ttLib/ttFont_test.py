@@ -286,3 +286,35 @@ def test_spooled_tempfile_may_not_have_attribute_seekable():
     font.save(tmp)
     # this should not fail
     _ = TTFont(tmp)
+
+
+def test_unseekable_file_lazy_loading_fails():
+    class NonSeekableFile:
+        def __init__(self):
+            self.file = io.BytesIO()
+
+        def read(self, size):
+            return self.file.read(size)
+
+        def seekable(self):
+            return False
+
+    f = NonSeekableFile()
+    with pytest.raises(TTLibError, match="Input file must be seekable when lazy=True"):
+        TTFont(f, lazy=True)
+
+
+def test_unsupported_seek_operation_lazy_loading_fails():
+    class UnsupportedSeekFile:
+        def __init__(self):
+            self.file = io.BytesIO()
+
+        def read(self, size):
+            return self.file.read(size)
+
+        def seek(self, offset):
+            raise io.UnsupportedOperation("Unsupported seek operation")
+
+    f = UnsupportedSeekFile()
+    with pytest.raises(TTLibError, match="Input file must be seekable when lazy=True"):
+        TTFont(f, lazy=True)
