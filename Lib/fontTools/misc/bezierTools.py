@@ -214,7 +214,7 @@ def calcQuadraticArcLengthC(pt1, pt2, pt3):
         Arc length value.
     """
     # Analytical solution to the length of a quadratic bezier.
-    # I'll explain how I arrived at this later.
+    # Documentation: https://github.com/fonttools/fonttools/issues/3055
     d0 = pt2 - pt1
     d1 = pt3 - pt2
     d = d1 - d0
