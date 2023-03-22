@@ -6,7 +6,7 @@ from fontTools.misc.loggingTools import deprecateArgument
 from fontTools.ttLib import TTLibError
 from fontTools.ttLib.ttGlyphSet import _TTGlyph, _TTGlyphSetCFF, _TTGlyphSetGlyf
 from fontTools.ttLib.sfnt import SFNTReader, SFNTWriter
-from io import BytesIO, StringIO
+from io import BytesIO, StringIO, UnsupportedOperation
 import os
 import logging
 import traceback
@@ -126,6 +126,7 @@ class TTFont(object):
             self.flavor = flavor
             self.flavorData = None
             return
+        seekable = True
         if not hasattr(file, "read"):
             closeStream = True
             # assume file is a string
@@ -146,12 +147,20 @@ class TTFont(object):
         else:
             # assume "file" is a readable file object
             closeStream = False
-            if file.seekable():
-                file.seek(0)
+            # SFNTReader wants the input file to be seekable.
+            # SpooledTemporaryFile has no seekable() on < 3.11, but still can seek:
+            # https://github.com/fonttools/fonttools/issues/3052
+            if hasattr(file, "seekable"):
+                seekable = file.seekable()
+            elif hasattr(file, "seek"):
+                try:
+                    file.seek(0)
+                except UnsupportedOperation:
+                    seekable = False
 
         if not self.lazy:
             # read input file in memory and wrap a stream around it to allow overwriting
-            if file.seekable():
+            if seekable:
                 file.seek(0)
             tmp = BytesIO(file.read())
             if hasattr(file, "name"):
@@ -160,6 +169,8 @@ class TTFont(object):
             if closeStream:
                 file.close()
             file = tmp
+        elif not seekable:
+            raise TTLibError("Input file must be seekable when lazy=True")
         self._tableCache = _tableCache
         self.reader = SFNTReader(file, checkChecksums, fontNumber=fontNumber)
         self.sfntVersion = self.reader.sfntVersion

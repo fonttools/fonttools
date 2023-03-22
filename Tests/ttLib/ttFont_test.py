@@ -2,6 +2,7 @@ import io
 import os
 import re
 import random
+import tempfile
 from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
 from fontTools.ttLib import (
     TTFont,
@@ -274,3 +275,46 @@ def test_getGlyphID():
         font.getGlyphID("non_existent")
     with pytest.raises(KeyError):
         font.getGlyphID("glyph_prefix_but_invalid_id")
+
+
+def test_spooled_tempfile_may_not_have_attribute_seekable():
+    # SpooledTemporaryFile only got a seekable attribute on Python 3.11
+    # https://github.com/fonttools/fonttools/issues/3052
+    font = TTFont()
+    font.importXML(os.path.join(DATA_DIR, "TestTTF-Regular.ttx"))
+    tmp = tempfile.SpooledTemporaryFile()
+    font.save(tmp)
+    # this should not fail
+    _ = TTFont(tmp)
+
+
+def test_unseekable_file_lazy_loading_fails():
+    class NonSeekableFile:
+        def __init__(self):
+            self.file = io.BytesIO()
+
+        def read(self, size):
+            return self.file.read(size)
+
+        def seekable(self):
+            return False
+
+    f = NonSeekableFile()
+    with pytest.raises(TTLibError, match="Input file must be seekable when lazy=True"):
+        TTFont(f, lazy=True)
+
+
+def test_unsupported_seek_operation_lazy_loading_fails():
+    class UnsupportedSeekFile:
+        def __init__(self):
+            self.file = io.BytesIO()
+
+        def read(self, size):
+            return self.file.read(size)
+
+        def seek(self, offset):
+            raise io.UnsupportedOperation("Unsupported seek operation")
+
+    f = UnsupportedSeekFile()
+    with pytest.raises(TTLibError, match="Input file must be seekable when lazy=True"):
+        TTFont(f, lazy=True)
