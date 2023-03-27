@@ -94,14 +94,15 @@ class Glyph(object):
             rawdata = b""
         else:
             rawdata = sstruct.pack(sbixGlyphHeaderFormat, self)
-        if self.graphicType == "dupe":
-            rawdata += struct.pack(">H", ttFont.getGlyphID(self.referenceGlyphName))
-        else:
-            rawdata += self.imageData
+            if self.graphicType == "dupe":
+                rawdata += struct.pack(">H", ttFont.getGlyphID(self.referenceGlyphName))
+            else:
+                assert self.imageData is not None
+                rawdata += self.imageData
         self.rawdata = rawdata
 
     def toXML(self, xmlWriter, ttFont):
-        if self.graphicType == None:
+        if self.graphicType is None:
             # TODO: ignore empty glyphs?
             # a glyph data entry is required for each glyph,
             # but empty ones can be calculated at compile time
