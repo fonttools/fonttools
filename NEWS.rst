@@ -1,3 +1,6 @@
+4.39.3 (released 2023-03-28)
+----------------------------
+
 - [sbix] Fixed TypeError when compiling empty glyphs whose imageData is None, regression
   was introduced in v4.39 (#3059).
 - [ttFont] Fixed AttributeError on python <= 3.10 when opening a TTFont from a tempfile
