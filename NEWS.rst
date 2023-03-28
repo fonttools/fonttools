@@ -1,3 +1,8 @@
+- [sbix] Fixed TypeError when compiling empty glyphs whose imageData is None, regression
+  was introduced in v4.39 (#3059).
+- [ttFont] Fixed AttributeError on python <= 3.10 when opening a TTFont from a tempfile
+  SpooledTemporaryFile, seekable method only added on python 3.11 (#3052).
+
 4.39.2 (released 2023-03-16)
 ----------------------------
 
