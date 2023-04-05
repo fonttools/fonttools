@@ -248,125 +248,122 @@ def test(glyphsets, glyphs=None, names=None, ignore_missing=False):
                                 _rot_list([complex(*pt) for pt, bl in mirrored], i)
                             )
 
-            if any(allNodeTypes):
-                # m0idx should be the index of the first non-None item in allNodeTypes, 
-                # else give it the first index of the empty list, which is likely 0
-                m0idx = allNodeTypes.index(next((x for x in allNodeTypes if x is not None), None))
-                # m0 is the first non-None item in allNodeTypes, or the first item if all are None
-                m0 = allNodeTypes[m0idx]
-                for i, m1 in enumerate(allNodeTypes[m0idx+1:]): 
-                    if m1 is None:
+            # m0idx should be the index of the first non-None item in allNodeTypes, 
+            # else give it the first index of the empty list, which is likely 0
+            m0idx = allNodeTypes.index(next((x for x in allNodeTypes if x is not None), None))
+            # m0 is the first non-None item in allNodeTypes, or the first item if all are None
+            m0 = allNodeTypes[m0idx]
+            for i, m1 in enumerate(allNodeTypes[m0idx+1:]): 
+                if m1 is None:
+                    continue
+                if len(m0) != len(m1):
+                    add_problem(
+                        glyph_name,
+                        {
+                            "type": "path_count",
+                            "master_1": names[m0idx],
+                            "master_2": names[m0idx + i + 1],
+                            "value_1": len(m0),
+                            "value_2": len(m1),
+                        },
+                    )
+                if m0 == m1:
+                    continue
+                for pathIx, (nodes1, nodes2) in enumerate(zip(m0, m1)):
+                    if nodes1 == nodes2:
                         continue
-                    if len(m0) != len(m1):
+                    if len(nodes1) != len(nodes2):
                         add_problem(
                             glyph_name,
                             {
-                                "type": "path_count",
+                                "type": "node_count",
+                                "path": pathIx,
                                 "master_1": names[m0idx],
                                 "master_2": names[m0idx + i + 1],
-                                "value_1": len(m0),
-                                "value_2": len(m1),
+                                "value_1": len(nodes1),
+                                "value_2": len(nodes2),
                             },
                         )
-                    if m0 == m1:
                         continue
-                    for pathIx, (nodes1, nodes2) in enumerate(zip(m0, m1)):
-                        if nodes1 == nodes2:
-                            continue
-                        if len(nodes1) != len(nodes2):
+                    for nodeIx, (n1, n2) in enumerate(zip(nodes1, nodes2)):
+                        if n1 != n2:
                             add_problem(
                                 glyph_name,
                                 {
-                                    "type": "node_count",
+                                    "type": "node_incompatibility",
                                     "path": pathIx,
-                                    "master_1": names[m0idx],
+                                    "node": nodeIx,
+                                    "master_1": names[0],
                                     "master_2": names[m0idx + i + 1],
-                                    "value_1": len(nodes1),
-                                    "value_2": len(nodes2),
+                                    "value_1": n1,
+                                    "value_2": n2,
                                 },
                             )
                             continue
-                        for nodeIx, (n1, n2) in enumerate(zip(nodes1, nodes2)):
-                            if n1 != n2:
-                                add_problem(
-                                    glyph_name,
-                                    {
-                                        "type": "node_incompatibility",
-                                        "path": pathIx,
-                                        "node": nodeIx,
-                                        "master_1": names[0],
-                                        "master_2": names[m0idx + i + 1],
-                                        "value_1": n1,
-                                        "value_2": n2,
-                                    },
-                                )
-                                continue
 
-            if any(allVectors):
-                # m0idx should be the index of the first non-None item in allVectors, 
-                # else give it the first index of the empty list, which is likely 0
-                m0idx = allVectors.index(next((x for x in allVectors if x is not None), None))
-                # m0 is the first non-None item in allVectors, or the first item if all are None
-                m0 = allVectors[m0idx]
-                for i, m1 in enumerate(allVectors[m0idx+1:]):
-                    if m1 is None:
-                        continue
-                    if len(m0) != len(m1):
-                        # We already reported this
-                        continue
-                    if not m0:
-                        continue
-                    costs = [[_vlen(_vdiff(v0, v1)) for v1 in m1] for v0 in m0]
-                    matching, matching_cost = min_cost_perfect_bipartite_matching(costs)
-                    identity_matching = list(range(len(m0)))
-                    identity_cost = sum(costs[i][i] for i in range(len(m0)))
-                    if (
-                        matching != identity_matching
-                        and matching_cost < identity_cost * 0.95
-                    ):
+            # m0idx should be the index of the first non-None item in allVectors, 
+            # else give it the first index of the empty list, which is likely 0
+            m0idx = allVectors.index(next((x for x in allVectors if x is not None), None))
+            # m0 is the first non-None item in allVectors, or the first item if all are None
+            m0 = allVectors[m0idx]
+            for i, m1 in enumerate(allVectors[m0idx+1:]):
+                if m1 is None:
+                    continue
+                if len(m0) != len(m1):
+                    # We already reported this
+                    continue
+                if not m0:
+                    continue
+                costs = [[_vlen(_vdiff(v0, v1)) for v1 in m1] for v0 in m0]
+                matching, matching_cost = min_cost_perfect_bipartite_matching(costs)
+                identity_matching = list(range(len(m0)))
+                identity_cost = sum(costs[i][i] for i in range(len(m0)))
+                if (
+                    matching != identity_matching
+                    and matching_cost < identity_cost * 0.95
+                ):
+                    add_problem(
+                        glyph_name,
+                        {
+                            "type": "contour_order",
+                            "master_1": names[m0idx],
+                            "master_2": names[m0idx + i + 1],
+                            "value_1": list(range(len(m0))),
+                            "value_2": matching,
+                        },
+                    )
+                    break
+            
+            # m0idx should be the index of the first non-None item in allContourIsomorphisms, 
+            # else give it the first index of the empty list, which is likely 0
+            m0idx = allContourIsomorphisms.index(next((x for x in allContourIsomorphisms if x is not None), None))
+            # m0 is the first non-None item in allContourIsomorphisms, or the first item if all are None
+            m0 = allContourIsomorphisms[m0idx]
+            for i, m1 in enumerate(allContourIsomorphisms[m0idx+1:]):
+                if m1 is None:
+                    continue
+                if len(m0) != len(m1):
+                    # We already reported this
+                    continue
+                if not m0:
+                    continue
+                for ix, (contour0, contour1) in enumerate(zip(m0, m1)):
+                    c0 = contour0[0]
+                    costs = [
+                        v for v in (_complex_vlen(_vdiff(c0, c1)) for c1 in contour1)
+                    ]
+                    min_cost = min(costs)
+                    first_cost = costs[0]
+                    if min_cost < first_cost * 0.95:
                         add_problem(
                             glyph_name,
                             {
-                                "type": "contour_order",
+                                "type": "wrong_start_point",
+                                "contour": ix,
                                 "master_1": names[m0idx],
                                 "master_2": names[m0idx + i + 1],
-                                "value_1": list(range(len(m0))),
-                                "value_2": matching,
                             },
                         )
-                        break
-            
-            if any(allContourIsomorphisms):
-                # m0idx should be the index of the first non-None item in allContourIsomorphisms, 
-                # else give it the first index of the empty list, which is likely 0
-                m0idx = allContourIsomorphisms.index(next((x for x in allContourIsomorphisms if x is not None), None))
-                # m0 is the first non-None item in allContourIsomorphisms, or the first item if all are None
-                m0 = allContourIsomorphisms[m0idx]
-                for i, m1 in enumerate(allContourIsomorphisms[m0idx+1:]):
-                    if m1 is None:
-                        continue
-                    if len(m0) != len(m1):
-                        # We already reported this
-                        continue
-                    if not m0:
-                        continue
-                    for ix, (contour0, contour1) in enumerate(zip(m0, m1)):
-                        c0 = contour0[0]
-                        costs = [
-                            v for v in (_complex_vlen(_vdiff(c0, c1)) for c1 in contour1)
-                        ]
-                        min_cost = min(costs)
-                        first_cost = costs[0]
-                        if min_cost < first_cost * 0.95:
-                            add_problem(
-                                glyph_name,
-                                {
-                                    "type": "wrong_start_point",
-                                    "contour": ix,
-                                    "master_1": names[m0idx],
-                                    "master_2": names[m0idx + i + 1],
-                                },
-                            )
 
         except ValueError as e:
             add_problem(
