@@ -293,7 +293,7 @@ def test(glyphsets, glyphs=None, names=None, ignore_missing=False):
                                     "type": "node_incompatibility",
                                     "path": pathIx,
                                     "node": nodeIx,
-                                    "master_1": names[0],
+                                    "master_1": names[m0idx],
                                     "master_2": names[m0idx + i + 1],
                                     "value_1": n1,
                                     "value_2": n2,
