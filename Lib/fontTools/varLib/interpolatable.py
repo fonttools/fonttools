@@ -249,7 +249,7 @@ def test(glyphsets, glyphs=None, names=None, ignore_missing=False):
                             )
 
             # m0idx should be the index of the first non-None item in allNodeTypes, 
-            # else give it the first index of the empty list, which is likely 0
+            # else give it the first index of None, which is likely 0
             m0idx = allNodeTypes.index(next((x for x in allNodeTypes if x is not None), None))
             # m0 is the first non-None item in allNodeTypes, or the first item if all are None
             m0 = allNodeTypes[m0idx]
@@ -302,7 +302,7 @@ def test(glyphsets, glyphs=None, names=None, ignore_missing=False):
                             continue
 
             # m0idx should be the index of the first non-None item in allVectors, 
-            # else give it the first index of the empty list, which is likely 0
+            # else give it the first index of None, which is likely 0
             m0idx = allVectors.index(next((x for x in allVectors if x is not None), None))
             # m0 is the first non-None item in allVectors, or the first item if all are None
             m0 = allVectors[m0idx]
@@ -335,7 +335,7 @@ def test(glyphsets, glyphs=None, names=None, ignore_missing=False):
                     break
             
             # m0idx should be the index of the first non-None item in allContourIsomorphisms, 
-            # else give it the first index of the empty list, which is likely 0
+            # else give it the first index of None, which is likely 0
             m0idx = allContourIsomorphisms.index(next((x for x in allContourIsomorphisms if x is not None), None))
             # m0 is the first non-None item in allContourIsomorphisms, or the first item if all are None
             m0 = allContourIsomorphisms[m0idx]
