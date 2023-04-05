@@ -92,6 +92,31 @@ class InterpolatableTest(unittest.TestCase):
 
         otf_paths = self.get_file_list(self.tempdir, suffix)
         self.assertIsNone(interpolatable_main(otf_paths))
+    
+    def test_sparse_interpolatable_ttfs(self):
+        suffix = ".ttf"
+        ttx_dir = self.get_test_input("master_ttx_interpolatable_ttf")
+
+        self.temp_dir()
+        ttx_paths = self.get_file_list(ttx_dir, ".ttx", "SparseMasters-")
+        for path in ttx_paths:
+            self.compile_font(path, suffix, self.tempdir)
+
+        ttf_paths = self.get_file_list(self.tempdir, suffix)
+        
+        # without --ignore-missing
+        problems = interpolatable_main(["--quiet"] + ttf_paths)
+        self.assertEqual(problems['a'], [{'type': 'missing', 'master': 'SparseMasters-Medium'}])
+        self.assertEqual(problems['s'], [{'type': 'missing', 'master': 'SparseMasters-Medium'}])
+        self.assertEqual(problems['edotabove'], [{'type': 'missing', 'master': 'SparseMasters-Medium'}])
+        self.assertEqual(problems['dotabovecomb'], [{'type': 'missing', 'master': 'SparseMasters-Medium'}])
+        
+        # normal order, with --ignore-missing
+        self.assertIsNone(interpolatable_main(["--ignore-missing"] + ttf_paths))
+        # purposely putting the sparse master (medium) first
+        self.assertIsNone(interpolatable_main(["--ignore-missing"] + [ttf_paths[1]] + [ttf_paths[0]] + [ttf_paths[2]]))
+        # purposely putting the sparse master (medium) last
+        self.assertIsNone(interpolatable_main(["--ignore-missing"] + [ttf_paths[0]] + [ttf_paths[2]] + [ttf_paths[1]]))
 
     def test_interpolatable_varComposite(self):
         input_path = self.get_test_input(
