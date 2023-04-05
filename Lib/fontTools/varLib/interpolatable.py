@@ -471,10 +471,13 @@ def main(args=None):
 
         names.append(basename(filename).rsplit(".", 1)[0])
 
-    if hasattr(fonts[0], "getGlyphSet"):
-        glyphsets = [dict(font.getGlyphSet().items()) for font in fonts]
-    else:
-        glyphsets = [dict(font.items()) for font in fonts]
+    glyphsets = []
+    for font in fonts:
+        if hasattr(font, "getGlyphSet"):
+            glyphset = font.getGlyphSet()
+        else:
+            glyphset = font
+        glyphsets.append({k:glyphset[k] for k in glyphset.keys()})
     
     if not glyphs:
         glyphs = set([gn for glyphset in glyphsets for gn in glyphset.keys()])
