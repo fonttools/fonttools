@@ -144,7 +144,7 @@ def test(glyphsets, glyphs=None, names=None, ignore_missing=False):
     if glyphs is None:
         # `glyphs = glyphsets[0].keys()` is faster, certainly, but doesn't allow for sparse TTFs/OTFs given out of order
         # ... risks the sparse master being the first one, and only processing a subset of the glyphs
-        glyphs = set([g for glyphset in glyphsets for g in glyphset.keys()])
+        glyphs = {g for glyphset in glyphsets for g in glyphset.keys()}
 
     hist = []
     problems = OrderedDict()
