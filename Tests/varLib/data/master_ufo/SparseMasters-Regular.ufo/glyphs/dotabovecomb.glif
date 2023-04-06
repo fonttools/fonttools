@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<glyph name="dotabovecomb" format="2">
+	<unicode hex="0307"/>
+	<outline>
+		<contour>
+			<point x="-37" y="503" type="line"/>
+			<point x="41" y="501" type="line"/>
+			<point x="50" y="589" type="line"/>
+			<point x="-21" y="597" type="line"/>
+		</contour>
+	</outline>
+</glyph>
