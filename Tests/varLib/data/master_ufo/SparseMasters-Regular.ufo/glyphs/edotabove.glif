@@ -6,7 +6,4 @@
 		<component base="e"/>
 		<component base="dotabovecomb" xOffset="313" yOffset="96"/>
 	</outline>
-	<note>
-		edotabove
-	</note>
 </glyph>

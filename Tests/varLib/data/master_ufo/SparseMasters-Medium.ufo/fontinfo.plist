@@ -10,27 +10,6 @@
 		<integer>-250</integer>
 		<key>familyName</key>
 		<string>Sparse Masters</string>
-		<key>guidelines</key>
-		<array>
-		</array>
-		<key>postscriptBlueValues</key>
-		<array>
-		</array>
-		<key>postscriptFamilyBlues</key>
-		<array>
-		</array>
-		<key>postscriptFamilyOtherBlues</key>
-		<array>
-		</array>
-		<key>postscriptOtherBlues</key>
-		<array>
-		</array>
-		<key>postscriptStemSnapH</key>
-		<array>
-		</array>
-		<key>postscriptStemSnapV</key>
-		<array>
-		</array>
 		<key>styleName</key>
 		<string>Medium</string>
 		<key>unitsPerEm</key>
