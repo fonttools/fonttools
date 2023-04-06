@@ -45,14 +45,6 @@ dotabovecomb
 type = glyphList;
 }
 );
-com.typemytype.robofont.compileSettings.autohint = 1;
-com.typemytype.robofont.compileSettings.checkOutlines = 0;
-com.typemytype.robofont.compileSettings.createDummyDSIG = 1;
-com.typemytype.robofont.compileSettings.decompose = 0;
-com.typemytype.robofont.compileSettings.generateFormat = 0;
-com.typemytype.robofont.compileSettings.releaseMode = 0;
-com.typemytype.robofont.italicSlantOffset = 0;
-com.typemytype.robofont.shouldAddPointsInSplineConversion = 1;
 };
 weightValue = 350;
 xHeight = 500;
@@ -73,14 +65,6 @@ value = Medium;
 descender = -250;
 id = "2B2F6A55-E8C4-4456-AFD7-7A9468BB18B9";
 userData = {
-com.typemytype.robofont.compileSettings.autohint = 1;
-com.typemytype.robofont.compileSettings.checkOutlines = 0;
-com.typemytype.robofont.compileSettings.createDummyDSIG = 1;
-com.typemytype.robofont.compileSettings.decompose = 0;
-com.typemytype.robofont.compileSettings.generateFormat = 0;
-com.typemytype.robofont.compileSettings.releaseMode = 0;
-com.typemytype.robofont.italicSlantOffset = 0;
-com.typemytype.robofont.shouldAddPointsInSplineConversion = 1;
 };
 weightValue = 450;
 xHeight = 500;
@@ -114,14 +98,6 @@ dotabovecomb
 type = glyphList;
 }
 );
-com.typemytype.robofont.compileSettings.autohint = 1;
-com.typemytype.robofont.compileSettings.checkOutlines = 0;
-com.typemytype.robofont.compileSettings.createDummyDSIG = 1;
-com.typemytype.robofont.compileSettings.decompose = 0;
-com.typemytype.robofont.compileSettings.generateFormat = 0;
-com.typemytype.robofont.compileSettings.releaseMode = 0;
-com.typemytype.robofont.italicSlantOffset = 0;
-com.typemytype.robofont.shouldAddPointsInSplineConversion = 1;
 };
 weightValue = 625;
 xHeight = 500;
