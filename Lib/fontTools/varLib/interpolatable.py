@@ -161,7 +161,7 @@ def test(glyphsets, glyphs=None, names=None, ignore_missing=False):
             for glyphset, name in zip(glyphsets, names):
 
                 glyph = glyphset[glyph_name]
-                
+
                 if glyph is None:
                     if not ignore_missing:
                         add_problem(glyph_name, {"type": "missing", "master": name})
@@ -248,12 +248,14 @@ def test(glyphsets, glyphs=None, names=None, ignore_missing=False):
                                 _rot_list([complex(*pt) for pt, bl in mirrored], i)
                             )
 
-            # m0idx should be the index of the first non-None item in allNodeTypes, 
+            # m0idx should be the index of the first non-None item in allNodeTypes,
             # else give it the first index of None, which is likely 0
-            m0idx = allNodeTypes.index(next((x for x in allNodeTypes if x is not None), None))
+            m0idx = allNodeTypes.index(
+                next((x for x in allNodeTypes if x is not None), None)
+            )
             # m0 is the first non-None item in allNodeTypes, or the first item if all are None
             m0 = allNodeTypes[m0idx]
-            for i, m1 in enumerate(allNodeTypes[m0idx+1:]): 
+            for i, m1 in enumerate(allNodeTypes[m0idx + 1 :]):
                 if m1 is None:
                     continue
                 if len(m0) != len(m1):
@@ -301,12 +303,14 @@ def test(glyphsets, glyphs=None, names=None, ignore_missing=False):
                             )
                             continue
 
-            # m0idx should be the index of the first non-None item in allVectors, 
+            # m0idx should be the index of the first non-None item in allVectors,
             # else give it the first index of None, which is likely 0
-            m0idx = allVectors.index(next((x for x in allVectors if x is not None), None))
+            m0idx = allVectors.index(
+                next((x for x in allVectors if x is not None), None)
+            )
             # m0 is the first non-None item in allVectors, or the first item if all are None
             m0 = allVectors[m0idx]
-            for i, m1 in enumerate(allVectors[m0idx+1:]):
+            for i, m1 in enumerate(allVectors[m0idx + 1 :]):
                 if m1 is None:
                     continue
                 if len(m0) != len(m1):
@@ -333,13 +337,15 @@ def test(glyphsets, glyphs=None, names=None, ignore_missing=False):
                         },
                     )
                     break
-            
-            # m0idx should be the index of the first non-None item in allContourIsomorphisms, 
+
+            # m0idx should be the index of the first non-None item in allContourIsomorphisms,
             # else give it the first index of None, which is likely 0
-            m0idx = allContourIsomorphisms.index(next((x for x in allContourIsomorphisms if x is not None), None))
+            m0idx = allContourIsomorphisms.index(
+                next((x for x in allContourIsomorphisms if x is not None), None)
+            )
             # m0 is the first non-None item in allContourIsomorphisms, or the first item if all are None
             m0 = allContourIsomorphisms[m0idx]
-            for i, m1 in enumerate(allContourIsomorphisms[m0idx+1:]):
+            for i, m1 in enumerate(allContourIsomorphisms[m0idx + 1 :]):
                 if m1 is None:
                     continue
                 if len(m0) != len(m1):
@@ -397,7 +403,11 @@ def main(args=None):
         help="Will not report glyphs missing from sparse masters as errors",
     )
     parser.add_argument(
-        "inputs", metavar="FILE", type=str, nargs="+", help="Input a single DesignSpace/Glyphs file, or multiple TTF/UFO files"
+        "inputs",
+        metavar="FILE",
+        type=str,
+        nargs="+",
+        help="Input a single DesignSpace/Glyphs file, or multiple TTF/UFO files",
     )
 
     args = parser.parse_args(args)
@@ -477,11 +487,11 @@ def main(args=None):
             glyphset = font.getGlyphSet()
         else:
             glyphset = font
-        glyphsets.append({k:glyphset[k] for k in glyphset.keys()})
-    
+        glyphsets.append({k: glyphset[k] for k in glyphset.keys()})
+
     if not glyphs:
         glyphs = set([gn for glyphset in glyphsets for gn in glyphset.keys()])
-    
+
     for glyphset in glyphsets:
         glyphSetGlyphNames = set(glyphset.keys())
         diff = glyphs - glyphSetGlyphNames
@@ -489,8 +499,10 @@ def main(args=None):
             for gn in diff:
                 glyphset[gn] = None
 
-    problems = test(glyphsets, glyphs=glyphs, names=names, ignore_missing=args.ignore_missing)
-    
+    problems = test(
+        glyphsets, glyphs=glyphs, names=names, ignore_missing=args.ignore_missing
+    )
+
     if not args.quiet:
         if args.json:
             import json
