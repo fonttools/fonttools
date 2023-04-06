@@ -5,6 +5,7 @@ import shutil
 import sys
 import tempfile
 import unittest
+import pytest
 
 try:
     import scipy
@@ -103,6 +104,7 @@ class InterpolatableTest(unittest.TestCase):
         self.assertIsNone(interpolatable_main([designspace_path]))
 
     def test_glyphsapp(self):
+        pytest.importorskip("glyphsLib")
         glyphsapp_path = self.get_test_input("InterpolateLayout.glyphs")
         self.assertIsNone(interpolatable_main([glyphsapp_path]))
 
@@ -221,7 +223,8 @@ class InterpolatableTest(unittest.TestCase):
         # normal order, with --ignore-missing
         self.assertIsNone(interpolatable_main(["--ignore-missing", designspace_path]))
 
-    def test_sparse_designspace(self):
+    def test_sparse_glyphsapp(self):
+        pytest.importorskip("glyphsLib")
         glyphsapp_path = self.get_test_input("SparseMasters.glyphs")
 
         problems = interpolatable_main(["--quiet", glyphsapp_path])
