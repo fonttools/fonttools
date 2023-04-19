@@ -292,7 +292,7 @@ def merge(self, m, tables):
                 extractor = T2WidthExtractor([], [], nominalWidthX, defaultWidthXToken)
                 extractor.execute(c)
                 width = extractor.width
-                if width != defaultWidthXToken:
+                if width is not defaultWidthXToken:
                     c.program.pop(0)
                 else:
                     width = defaultWidthX
