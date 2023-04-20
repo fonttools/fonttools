@@ -101,7 +101,6 @@ def addOpenTypeFeaturesFromString(
 
 
 class Builder(object):
-
     supportedTables = frozenset(
         Tag(tag)
         for tag in [
@@ -827,18 +826,15 @@ class Builder(object):
 
             self.model_cache.clear()
 
-        if (
-            any(
-                (
-                    gdef.GlyphClassDef,
-                    gdef.AttachList,
-                    gdef.LigCaretList,
-                    gdef.MarkAttachClassDef,
-                    gdef.MarkGlyphSetsDef,
-                )
+        if any(
+            (
+                gdef.glyphClassDef,
+                gdef.AttachList,
+                gdef.LigCaretList,
+                gdef.MarkAttachClassDef,
+                gdef.MarkGlyphSetsDef,
             )
-            or hasattr(gdef, "VarStore")
-        ):
+        ) or hasattr(gdef, "VarStore"):
             result = newTable("GDEF")
             result.table = gdef
             return result
@@ -1322,7 +1318,7 @@ class Builder(object):
         forceChain,
     ):
         if self.cur_feature_name_ == "aalt":
-            for (from_glyph, to_glyph) in mapping.items():
+            for from_glyph, to_glyph in mapping.items():
                 alts: Set[str] = self.aalt_alternates_.setdefault(from_glyph, set())
                 alts.add(to_glyph)
             return
@@ -1331,7 +1327,7 @@ class Builder(object):
             return
         lookup = self.get_lookup_(location, SingleSubstBuilder)
         assert isinstance(lookup, SingleSubstBuilder)
-        for (from_glyph, to_glyph) in mapping.items():
+        for from_glyph, to_glyph in mapping.items():
             if from_glyph in lookup.mapping:
                 if to_glyph == lookup.mapping[from_glyph]:
                     log.info(
