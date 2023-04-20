@@ -1,8 +1,11 @@
 from . import DefaultTable
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import bytesjoin
-from fontTools.ttLib.tables.TupleVariation import \
-    compileTupleVariationStore, decompileTupleVariationStore, TupleVariation
+from fontTools.ttLib.tables.TupleVariation import (
+    compileTupleVariationStore,
+    decompileTupleVariationStore,
+    TupleVariation,
+)
 
 
 # https://www.microsoft.com/typography/otspec/cvar.htm
@@ -34,18 +37,15 @@ class table__c_v_a_r(DefaultTable.DefaultTable):
             pointCount=len(ttFont["cvt "].values),
             axisTags=[axis.axisTag for axis in ttFont["fvar"].axes],
             sharedTupleIndices={},
-            useSharedPoints=useSharedPoints)
+            useSharedPoints=useSharedPoints,
+        )
         header = {
             "majorVersion": self.majorVersion,
             "minorVersion": self.minorVersion,
             "tupleVariationCount": tupleVariationCount,
             "offsetToData": CVAR_HEADER_SIZE + len(tuples),
         }
-        return b''.join([
-            sstruct.pack(CVAR_HEADER_FORMAT, header),
-            tuples,
-            data
-        ])
+        return b"".join([sstruct.pack(CVAR_HEADER_FORMAT, header), tuples, data])
 
     def decompile(self, data, ttFont):
         axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
@@ -55,10 +55,15 @@ class table__c_v_a_r(DefaultTable.DefaultTable):
         self.minorVersion = header["minorVersion"]
         assert self.majorVersion == 1, self.majorVersion
         self.variations = decompileTupleVariationStore(
-            tableTag=self.tableTag, axisTags=axisTags,
+            tableTag=self.tableTag,
+            axisTags=axisTags,
             tupleVariationCount=header["tupleVariationCount"],
-            pointCount=len(ttFont["cvt "].values), sharedTuples=None,
-            data=data, pos=CVAR_HEADER_SIZE, dataPos=header["offsetToData"])
+            pointCount=len(ttFont["cvt "].values),
+            sharedTuples=None,
+            data=data,
+            pos=CVAR_HEADER_SIZE,
+            dataPos=header["offsetToData"],
+        )
 
     def fromXML(self, name, attrs, content, ttFont):
         if name == "version":
@@ -75,8 +80,7 @@ class table__c_v_a_r(DefaultTable.DefaultTable):
 
     def toXML(self, writer, ttFont):
         axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
-        writer.simpletag("version",
-                         major=self.majorVersion, minor=self.minorVersion)
+        writer.simpletag("version", major=self.majorVersion, minor=self.minorVersion)
         writer.newline()
         for var in self.variations:
             var.toXML(writer, axisTags)

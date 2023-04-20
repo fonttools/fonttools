@@ -4,6 +4,7 @@ import struct
 
 from fontTools import ttLib
 from fontTools.pens.basePen import PenError
+from fontTools.pens.recordingPen import RecordingPen, RecordingPointPen
 from fontTools.pens.ttGlyphPen import TTGlyphPen, TTGlyphPointPen, MAX_F2DOT14
 
 
@@ -21,12 +22,11 @@ class TTGlyphPenTestBase:
 
         glyphSet = font.getGlyphSet()
         glyfTable = font["glyf"]
-        pen = self.penClass(font.getGlyphSet())
+        pen = self.penClass(glyphSet)
 
         for name in font.getGlyphOrder():
-            oldGlyph = glyphSet[name]
-            getattr(oldGlyph, self.drawMethod)(pen)
-            oldGlyph = oldGlyph._glyph
+            getattr(glyphSet[name], self.drawMethod)(pen)
+            oldGlyph = glyfTable[name]
             newGlyph = pen.glyph()
 
             if hasattr(oldGlyph, "program"):
@@ -295,6 +295,27 @@ class TTGlyphPenTest(TTGlyphPenTestBase):
         uni0302_uni0300.recalcBounds(glyphSet)
         self.assertGlyphBoundsEqual(uni0302_uni0300, (-278, 745, 148, 1025))
 
+    def test_outputImpliedClosingLine(self):
+        glyphSet = {}
+
+        pen = TTGlyphPen(glyphSet)
+        pen.moveTo((0, 0))
+        pen.lineTo((10, 0))
+        pen.lineTo((0, 10))
+        pen.lineTo((0, 0))
+        pen.closePath()
+        glyph = pen.glyph()
+        assert len(glyph.coordinates) == 3
+
+        pen = TTGlyphPen(glyphSet, outputImpliedClosingLine=True)
+        pen.moveTo((0, 0))
+        pen.lineTo((10, 0))
+        pen.lineTo((0, 10))
+        pen.lineTo((0, 0))
+        pen.closePath()
+        glyph = pen.glyph()
+        assert len(glyph.coordinates) == 4
+
 
 class TTGlyphPointPenTest(TTGlyphPenTestBase):
     penClass = TTGlyphPointPen
@@ -312,11 +333,11 @@ class TTGlyphPointPenTest(TTGlyphPenTestBase):
         assert glyph.numberOfContours == 1
         assert glyph.endPtsOfContours == [3]
 
-    def test_addPoint_errorOnCurve(self):
+    def test_addPoint_noErrorOnCurve(self):
         pen = TTGlyphPointPen(None)
         pen.beginPath()
-        with pytest.raises(NotImplementedError):
-            pen.addPoint((0, 0), "curve")
+        pen.addPoint((0, 0), "curve")
+        pen.endPath()
 
     def test_beginPath_beginPathOnOpenPath(self):
         pen = TTGlyphPointPen(None)
@@ -574,6 +595,215 @@ class TTGlyphPointPenTest(TTGlyphPenTestBase):
         assert pen1.points == pen2.points == [(0, 0), (10, 10), (20, 20), (20, 0)]
         assert pen1.types == pen2.types == [1, 1, 0, 1]
 
+
+class CubicGlyfTest:
+    def test_cubic_simple(self):
+        spen = TTGlyphPen(None)
+        spen.moveTo((0, 0))
+        spen.curveTo((0, 1), (1, 1), (1, 0))
+        spen.closePath()
+
+        ppen = TTGlyphPointPen(None)
+        ppen.beginPath()
+        ppen.addPoint((0, 0), "line")
+        ppen.addPoint((0, 1))
+        ppen.addPoint((1, 1))
+        ppen.addPoint((1, 0), "curve")
+        ppen.endPath()
+
+        for pen in (spen, ppen):
+
+            glyph = pen.glyph()
+
+            for i in range(2):
+
+                if i == 1:
+                    glyph.compile(None)
+
+                assert list(glyph.coordinates) == [(0, 0), (0, 1), (1, 1), (1, 0)]
+                assert list(glyph.flags) == [0x01, 0x80, 0x80, 0x01]
+
+                rpen = RecordingPen()
+                glyph.draw(rpen, None)
+                assert rpen.value == [
+                    ("moveTo", ((0, 0),)),
+                    (
+                        "curveTo",
+                        (
+                            (0, 1),
+                            (1, 1),
+                            (1, 0),
+                        ),
+                    ),
+                    ("closePath", ()),
+                ]
+
+    @pytest.mark.parametrize(
+        "dropImpliedOnCurves, segment_pen_commands, point_pen_commands, expected_coordinates, expected_flags, expected_endPts",
+        [
+            (  # Two curves that do NOT merge; request merging
+                True,
+                [
+                    ("moveTo", ((0, 0),)),
+                    ("curveTo", ((0, 1), (1, 2), (2, 2))),
+                    ("curveTo", ((3, 3), (4, 1), (4, 0))),
+                    ("closePath", ()),
+                ],
+                [
+                    ("beginPath", (), {}),
+                    ("addPoint", ((0, 0), "line", None, None), {}),
+                    ("addPoint", ((0, 1), None, None, None), {}),
+                    ("addPoint", ((1, 2), None, None, None), {}),
+                    ("addPoint", ((2, 2), "curve", None, None), {}),
+                    ("addPoint", ((3, 3), None, None, None), {}),
+                    ("addPoint", ((4, 1), None, None, None), {}),
+                    ("addPoint", ((4, 0), "curve", None, None), {}),
+                    ("endPath", (), {}),
+                ],
+                [(0, 0), (0, 1), (1, 2), (2, 2), (3, 3), (4, 1), (4, 0)],
+                [0x01, 0x80, 0x80, 0x01, 0x80, 0x80, 0x01],
+                [6],
+            ),
+            (  # Two curves that merge; request merging
+                True,
+                [
+                    ("moveTo", ((0, 0),)),
+                    ("curveTo", ((0, 1), (1, 2), (2, 2))),
+                    ("curveTo", ((3, 2), (4, 1), (4, 0))),
+                    ("closePath", ()),
+                ],
+                [
+                    ("beginPath", (), {}),
+                    ("addPoint", ((0, 0), "line", None, None), {}),
+                    ("addPoint", ((0, 1), None, None, None), {}),
+                    ("addPoint", ((1, 2), None, None, None), {}),
+                    ("addPoint", ((2, 2), "curve", None, None), {}),
+                    ("addPoint", ((3, 2), None, None, None), {}),
+                    ("addPoint", ((4, 1), None, None, None), {}),
+                    ("addPoint", ((4, 0), "curve", None, None), {}),
+                    ("endPath", (), {}),
+                ],
+                [(0, 0), (0, 1), (1, 2), (3, 2), (4, 1), (4, 0)],
+                [0x01, 0x80, 0x80, 0x80, 0x80, 0x01],
+                [5],
+            ),
+            (  # Two curves that merge; request NOT merging
+                False,
+                [
+                    ("moveTo", ((0, 0),)),
+                    ("curveTo", ((0, 1), (1, 2), (2, 2))),
+                    ("curveTo", ((3, 2), (4, 1), (4, 0))),
+                    ("closePath", ()),
+                ],
+                [
+                    ("beginPath", (), {}),
+                    ("addPoint", ((0, 0), "line", None, None), {}),
+                    ("addPoint", ((0, 1), None, None, None), {}),
+                    ("addPoint", ((1, 2), None, None, None), {}),
+                    ("addPoint", ((2, 2), "curve", None, None), {}),
+                    ("addPoint", ((3, 2), None, None, None), {}),
+                    ("addPoint", ((4, 1), None, None, None), {}),
+                    ("addPoint", ((4, 0), "curve", None, None), {}),
+                    ("endPath", (), {}),
+                ],
+                [(0, 0), (0, 1), (1, 2), (2, 2), (3, 2), (4, 1), (4, 0)],
+                [0x01, 0x80, 0x80, 0x01, 0x80, 0x80, 0x01],
+                [6],
+            ),
+            (  # Two (duplicate) contours
+                True,
+                [
+                    ("moveTo", ((0, 0),)),
+                    ("curveTo", ((0, 1), (1, 2), (2, 2))),
+                    ("curveTo", ((3, 2), (4, 1), (4, 0))),
+                    ("closePath", ()),
+                    ("moveTo", ((0, 0),)),
+                    ("curveTo", ((0, 1), (1, 2), (2, 2))),
+                    ("curveTo", ((3, 2), (4, 1), (4, 0))),
+                    ("closePath", ()),
+                ],
+                [
+                    ("beginPath", (), {}),
+                    ("addPoint", ((0, 0), "line", None, None), {}),
+                    ("addPoint", ((0, 1), None, None, None), {}),
+                    ("addPoint", ((1, 2), None, None, None), {}),
+                    ("addPoint", ((2, 2), "curve", None, None), {}),
+                    ("addPoint", ((3, 2), None, None, None), {}),
+                    ("addPoint", ((4, 1), None, None, None), {}),
+                    ("addPoint", ((4, 0), "curve", None, None), {}),
+                    ("endPath", (), {}),
+                    ("beginPath", (), {}),
+                    ("addPoint", ((0, 0), "line", None, None), {}),
+                    ("addPoint", ((0, 1), None, None, None), {}),
+                    ("addPoint", ((1, 2), None, None, None), {}),
+                    ("addPoint", ((2, 2), "curve", None, None), {}),
+                    ("addPoint", ((3, 2), None, None, None), {}),
+                    ("addPoint", ((4, 1), None, None, None), {}),
+                    ("addPoint", ((4, 0), "curve", None, None), {}),
+                    ("endPath", (), {}),
+                ],
+                [
+                    (0, 0),
+                    (0, 1),
+                    (1, 2),
+                    (3, 2),
+                    (4, 1),
+                    (4, 0),
+                    (0, 0),
+                    (0, 1),
+                    (1, 2),
+                    (3, 2),
+                    (4, 1),
+                    (4, 0),
+                ],
+                [
+                    0x01,
+                    0x80,
+                    0x80,
+                    0x80,
+                    0x80,
+                    0x01,
+                    0x01,
+                    0x80,
+                    0x80,
+                    0x80,
+                    0x80,
+                    0x01,
+                ],
+                [5, 11],
+            ),
+        ],
+    )
+    def test_cubic_topology(
+        self,
+        dropImpliedOnCurves,
+        segment_pen_commands,
+        point_pen_commands,
+        expected_coordinates,
+        expected_flags,
+        expected_endPts,
+    ):
+        spen = TTGlyphPen(None)
+        rpen = RecordingPen()
+        rpen.value = segment_pen_commands
+        rpen.replay(spen)
+
+        ppen = TTGlyphPointPen(None)
+        rpen = RecordingPointPen()
+        rpen.value = point_pen_commands
+        rpen.replay(ppen)
+
+        for pen in (spen, ppen):
+
+            glyph = pen.glyph(dropImpliedOnCurves=dropImpliedOnCurves)
+
+            assert list(glyph.coordinates) == expected_coordinates
+            assert list(glyph.flags) == expected_flags
+            assert list(glyph.endPtsOfContours) == expected_endPts
+
+            rpen = RecordingPen()
+            glyph.draw(rpen, None)
+            assert rpen.value == segment_pen_commands
 
 
 class _TestGlyph(object):

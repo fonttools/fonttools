@@ -70,6 +70,7 @@ class ControlBoundsPenTest(unittest.TestCase):
         self.assertEqual(None, pen.bounds)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
+
     sys.exit(unittest.main())

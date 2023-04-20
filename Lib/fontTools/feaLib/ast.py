@@ -8,8 +8,7 @@ if typing.TYPE_CHECKING:
     from fontTools.feaLib.variableScalar import VariableScalar
 from collections import OrderedDict
 from collections.abc import Sequence
-from typing import Tuple, List, Optional, Union, Dict, Callable, Set
-from typing_extensions import Protocol
+from typing import Tuple, List, Optional, Union, Dict, Callable, Set, Protocol
 import itertools
 
 SHIFT = " " * 4
@@ -989,6 +988,18 @@ class IgnoreSubstStatement(IgnoreStatement):
             glyphs = [g.glyphSet() for g in glyphs_container]
             suffix = [s.glyphSet() for s in suffix_container]
             builder.add_chain_context_subst(self.location, prefix, glyphs, suffix, [])
+
+    def asFea(self, indent=""):
+        contexts = []
+        for prefix, glyphs, suffix in self.chainContexts:
+            res = ""
+            if len(prefix):
+                res += " ".join([glyph.asFea() for glyph in prefix]) + " "
+            res += " ".join(g.asFea() + "'" for g in glyphs)
+            if len(suffix):
+                res += " " + " ".join([glyph.asFea() for glyph in suffix])
+            contexts.append(res)
+        return "ignore sub " + ", ".join(contexts) + ";"
 
 
 class IncludeStatement(Statement):

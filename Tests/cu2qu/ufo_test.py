@@ -20,7 +20,7 @@ import pytest
 
 ufoLib2 = pytest.importorskip("ufoLib2")
 
-DATADIR = os.path.join(os.path.dirname(__file__), 'data')
+DATADIR = os.path.join(os.path.dirname(__file__), "data")
 
 TEST_UFOS = [
     os.path.join(DATADIR, "RobotoSubset-Regular.ufo"),
@@ -34,7 +34,6 @@ def fonts():
 
 
 class FontsToQuadraticTest(object):
-
     def test_modified(self, fonts):
         modified = fonts_to_quadratic(fonts)
         assert modified
@@ -42,16 +41,23 @@ class FontsToQuadraticTest(object):
     def test_stats(self, fonts):
         stats = {}
         fonts_to_quadratic(fonts, stats=stats)
-        assert stats == {'1': 1, '2': 79, '3': 130, '4': 2}
+        assert stats == {"1": 1, "2": 79, "3": 130, "4": 2}
 
     def test_dump_stats(self, fonts):
         with CapturingLogHandler(logger, "INFO") as captor:
             fonts_to_quadratic(fonts, dump_stats=True)
         assert captor.assertRegex("New spline lengths:")
 
-    def test_remember_curve_type(self, fonts):
+    def test_remember_curve_type_quadratic(self, fonts):
         fonts_to_quadratic(fonts, remember_curve_type=True)
         assert fonts[0].lib[CURVE_TYPE_LIB_KEY] == "quadratic"
+        with CapturingLogHandler(logger, "INFO") as captor:
+            fonts_to_quadratic(fonts, remember_curve_type=True)
+        assert captor.assertRegex("already converted")
+
+    def test_remember_curve_type_mixed(self, fonts):
+        fonts_to_quadratic(fonts, remember_curve_type=True, all_quadratic=False)
+        assert fonts[0].lib[CURVE_TYPE_LIB_KEY] == "mixed"
         with CapturingLogHandler(logger, "INFO") as captor:
             fonts_to_quadratic(fonts, remember_curve_type=True)
         assert captor.assertRegex("already converted")
@@ -62,47 +68,47 @@ class FontsToQuadraticTest(object):
         assert CURVE_TYPE_LIB_KEY not in fonts[0].lib
 
     def test_different_glyphsets(self, fonts):
-        del fonts[0]['a']
-        assert 'a' not in fonts[0]
-        assert 'a' in fonts[1]
+        del fonts[0]["a"]
+        assert "a" not in fonts[0]
+        assert "a" in fonts[1]
         assert fonts_to_quadratic(fonts)
 
     def test_max_err_em_float(self, fonts):
         stats = {}
         fonts_to_quadratic(fonts, max_err_em=0.002, stats=stats)
-        assert stats == {'1': 5, '2': 193, '3': 14}
+        assert stats == {"1": 5, "2": 193, "3": 14}
 
     def test_max_err_em_list(self, fonts):
         stats = {}
         fonts_to_quadratic(fonts, max_err_em=[0.002, 0.002], stats=stats)
-        assert stats == {'1': 5, '2': 193, '3': 14}
+        assert stats == {"1": 5, "2": 193, "3": 14}
 
     def test_max_err_float(self, fonts):
         stats = {}
         fonts_to_quadratic(fonts, max_err=4.096, stats=stats)
-        assert stats == {'1': 5, '2': 193, '3': 14}
+        assert stats == {"1": 5, "2": 193, "3": 14}
 
     def test_max_err_list(self, fonts):
         stats = {}
         fonts_to_quadratic(fonts, max_err=[4.096, 4.096], stats=stats)
-        assert stats == {'1': 5, '2': 193, '3': 14}
+        assert stats == {"1": 5, "2": 193, "3": 14}
 
     def test_both_max_err_and_max_err_em(self, fonts):
         with pytest.raises(TypeError, match="Only one .* can be specified"):
             fonts_to_quadratic(fonts, max_err=1.000, max_err_em=0.001)
 
     def test_single_font(self, fonts):
-        assert font_to_quadratic(fonts[0], max_err_em=0.002,
-                                 reverse_direction=True)
+        assert font_to_quadratic(fonts[0], max_err_em=0.002, reverse_direction=True)
+        assert font_to_quadratic(
+            fonts[1], max_err_em=0.002, reverse_direction=True, all_quadratic=False
+        )
 
 
 class GlyphsToQuadraticTest(object):
-
     @pytest.mark.parametrize(
         ["glyph", "expected"],
-        [('A', False),  # contains no curves, it is not modified
-         ('a', True)],
-        ids=['lines-only', 'has-curves']
+        [("A", False), ("a", True)],  # contains no curves, it is not modified
+        ids=["lines-only", "has-curves"],
     )
     def test_modified(self, fonts, glyph, expected):
         glyphs = [f[glyph] for f in fonts]
@@ -110,28 +116,27 @@ class GlyphsToQuadraticTest(object):
 
     def test_stats(self, fonts):
         stats = {}
-        glyphs_to_quadratic([f['a'] for f in fonts], stats=stats)
-        assert stats == {'2': 1, '3': 7, '4': 3, '5': 1}
+        glyphs_to_quadratic([f["a"] for f in fonts], stats=stats)
+        assert stats == {"2": 1, "3": 7, "4": 3, "5": 1}
 
     def test_max_err_float(self, fonts):
-        glyphs = [f['a'] for f in fonts]
+        glyphs = [f["a"] for f in fonts]
         stats = {}
         glyphs_to_quadratic(glyphs, max_err=4.096, stats=stats)
-        assert stats == {'2': 11, '3': 1}
+        assert stats == {"2": 11, "3": 1}
 
     def test_max_err_list(self, fonts):
-        glyphs = [f['a'] for f in fonts]
+        glyphs = [f["a"] for f in fonts]
         stats = {}
         glyphs_to_quadratic(glyphs, max_err=[4.096, 4.096], stats=stats)
-        assert stats == {'2': 11, '3': 1}
+        assert stats == {"2": 11, "3": 1}
 
     def test_reverse_direction(self, fonts):
-        glyphs = [f['A'] for f in fonts]
+        glyphs = [f["A"] for f in fonts]
         assert glyphs_to_quadratic(glyphs, reverse_direction=True)
 
     def test_single_glyph(self, fonts):
-        assert glyph_to_quadratic(fonts[0]['a'], max_err=4.096,
-                                  reverse_direction=True)
+        assert glyph_to_quadratic(fonts[0]["a"], max_err=4.096, reverse_direction=True)
 
     @pytest.mark.parametrize(
         ["outlines", "exception", "message"],
@@ -139,32 +144,31 @@ class GlyphsToQuadraticTest(object):
             [
                 [
                     [
-                        ('moveTo', ((0, 0),)),
-                        ('curveTo', ((1, 1), (2, 2), (3, 3))),
-                        ('curveTo', ((4, 4), (5, 5), (6, 6))),
-                        ('closePath', ()),
+                        ("moveTo", ((0, 0),)),
+                        ("curveTo", ((1, 1), (2, 2), (3, 3))),
+                        ("curveTo", ((4, 4), (5, 5), (6, 6))),
+                        ("closePath", ()),
                     ],
                     [
-                        ('moveTo', ((7, 7),)),
-                        ('curveTo', ((8, 8), (9, 9), (10, 10))),
-                        ('closePath', ()),
-                    ]
+                        ("moveTo", ((7, 7),)),
+                        ("curveTo", ((8, 8), (9, 9), (10, 10))),
+                        ("closePath", ()),
+                    ],
                 ],
                 IncompatibleSegmentNumberError,
                 "have different number of segments",
             ],
             [
                 [
-
                     [
-                        ('moveTo', ((0, 0),)),
-                        ('curveTo', ((1, 1), (2, 2), (3, 3))),
-                        ('closePath', ()),
+                        ("moveTo", ((0, 0),)),
+                        ("curveTo", ((1, 1), (2, 2), (3, 3))),
+                        ("closePath", ()),
                     ],
                     [
-                        ('moveTo', ((4, 4),)),
-                        ('lineTo', ((5, 5),)),
-                        ('closePath', ()),
+                        ("moveTo", ((4, 4),)),
+                        ("lineTo", ((5, 5),)),
+                        ("closePath", ()),
                     ],
                 ],
                 IncompatibleSegmentTypesError,
@@ -174,7 +178,7 @@ class GlyphsToQuadraticTest(object):
         ids=[
             "unequal-length",
             "different-segment-types",
-        ]
+        ],
     )
     def test_incompatible_glyphs(self, outlines, exception, message):
         glyphs = []
@@ -193,18 +197,22 @@ class GlyphsToQuadraticTest(object):
         font1.info.unitsPerEm = 1000
         glyph1 = font1.newGlyph("a")
         pen1 = glyph1.getPen()
-        for operator, args in [("moveTo", ((0, 0),)),
-                               ("lineTo", ((1, 1),)),
-                               ("endPath", ())]:
+        for operator, args in [
+            ("moveTo", ((0, 0),)),
+            ("lineTo", ((1, 1),)),
+            ("endPath", ()),
+        ]:
             getattr(pen1, operator)(*args)
 
         font2 = ufoLib2.Font()
         font2.info.unitsPerEm = 1000
         glyph2 = font2.newGlyph("a")
         pen2 = glyph2.getPen()
-        for operator, args in [("moveTo", ((0, 0),)),
-                               ("curveTo", ((1, 1), (2, 2), (3, 3))),
-                               ("endPath", ())]:
+        for operator, args in [
+            ("moveTo", ((0, 0),)),
+            ("curveTo", ((1, 1), (2, 2), (3, 3))),
+            ("endPath", ()),
+        ]:
             getattr(pen2, operator)(*args)
 
         with pytest.raises(IncompatibleFontsError) as excinfo:
@@ -212,7 +220,7 @@ class GlyphsToQuadraticTest(object):
         assert excinfo.match("fonts contains incompatible glyphs: 'a'")
 
         assert hasattr(excinfo.value, "glyph_errors")
-        error = excinfo.value.glyph_errors['a']
+        error = excinfo.value.glyph_errors["a"]
         assert isinstance(error, IncompatibleSegmentTypesError)
         assert error.segments == {1: ["line", "curve"]}
 
@@ -238,7 +246,7 @@ class GlyphsToQuadraticTest(object):
     def test_ignore_components(self):
         glyph = ufoLib2.objects.Glyph()
         pen = glyph.getPen()
-        pen.addComponent('a', (1, 0, 0, 1, 0, 0))
+        pen.addComponent("a", (1, 0, 0, 1, 0, 0))
         pen.moveTo((0, 0))
         pen.curveTo((1, 1), (2, 2), (3, 3))
         pen.closePath()
@@ -276,10 +284,5 @@ class GlyphsToQuadraticTest(object):
                 (0, 101),
                 (0, 101),
             ],
-            [
-                (1, 651),
-                (4, 651),
-                (3, 101),
-                (2, 101)
-            ],
+            [(1, 651), (4, 651), (3, 101), (2, 101)],
         ]

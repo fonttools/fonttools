@@ -61,6 +61,28 @@ def test_detect_ribbi_aktiv(datadir):
     )
 
 
+def test_detect_ribbi_recursive(datadir):
+    doc = DesignSpaceDocument.fromfile(datadir / "test_v5.designspace")
+
+    assert getStatNames(doc, {"Weight": 700, "Width": 125, "Italic": 1}) == StatNames(
+        familyNames={
+            "en": "MasterFamilyName",
+            "fr": "Montserrat",
+            "ja": "モンセラート",
+        },
+        styleNames={
+            "en": "Wide Bold Italic",
+        },
+        postScriptFontName="MasterFamilyName-WideBoldItalic",
+        styleMapFamilyNames={
+            "en": "MasterFamilyName Wide",
+            "fr": "Montserrat Wide",
+            "ja": "モンセラート Wide",
+        },
+        styleMapStyleName="bold italic",
+    )
+
+
 def test_getStatNames_on_ds4_doesnt_make_up_bad_names(datadir):
     """See this issue on GitHub: https://github.com/googlefonts/ufo2ft/issues/630
 

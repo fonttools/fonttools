@@ -14,9 +14,8 @@ from fontTools.ufoLib.glifLib import writeGlyphToString
 __all__ = ["svg2glif"]
 
 
-def svg2glif(svg, name, width=0, height=0, unicodes=None, transform=None,
-             version=2):
-    """ Convert an SVG outline to a UFO glyph with given 'name', advance
+def svg2glif(svg, name, width=0, height=0, unicodes=None, transform=None, version=2):
+    """Convert an SVG outline to a UFO glyph with given 'name', advance
     'width' and 'height' (int), and 'unicodes' (list of int).
     Return the resulting string in GLIF format (default: version 2).
     If 'transform' is provided, apply a transformation matrix before the
@@ -33,10 +32,9 @@ def svg2glif(svg, name, width=0, height=0, unicodes=None, transform=None,
         pen = SegmentToPointPen(pointPen)
         outline.draw(pen)
 
-    return writeGlyphToString(name,
-                              glyphObject=glyph,
-                              drawPointsFunc=drawPoints,
-                              formatVersion=version)
+    return writeGlyphToString(
+        name, glyphObject=glyph, drawPointsFunc=drawPoints, formatVersion=version
+    )
 
 
 def parse_args(args):
@@ -60,32 +58,61 @@ def parse_args(args):
             raise argparse.ArgumentTypeError(msg)
 
     parser = argparse.ArgumentParser(
-        description="Convert SVG outlines to UFO glyphs (.glif)")
+        description="Convert SVG outlines to UFO glyphs (.glif)"
+    )
     parser.add_argument(
-        "infile", metavar="INPUT.svg", help="Input SVG file containing "
-        '<path> elements with "d" attributes.')
+        "infile",
+        metavar="INPUT.svg",
+        help="Input SVG file containing " '<path> elements with "d" attributes.',
+    )
     parser.add_argument(
-        "outfile", metavar="OUTPUT.glif", help="Output GLIF file (default: "
-        "print to stdout)", nargs='?')
+        "outfile",
+        metavar="OUTPUT.glif",
+        help="Output GLIF file (default: " "print to stdout)",
+        nargs="?",
+    )
     parser.add_argument(
-        "-n", "--name", help="The glyph name (default: input SVG file "
-        "basename, without the .svg extension)")
+        "-n",
+        "--name",
+        help="The glyph name (default: input SVG file "
+        "basename, without the .svg extension)",
+    )
     parser.add_argument(
-        "-w", "--width", help="The glyph advance width (default: 0)",
-        type=int, default=0)
+        "-w",
+        "--width",
+        help="The glyph advance width (default: 0)",
+        type=int,
+        default=0,
+    )
     parser.add_argument(
-        "-H", "--height", help="The glyph vertical advance (optional if "
-        '"width" is defined)', type=int, default=0)
+        "-H",
+        "--height",
+        help="The glyph vertical advance (optional if " '"width" is defined)',
+        type=int,
+        default=0,
+    )
     parser.add_argument(
-        "-u", "--unicodes", help="List of Unicode code points as hexadecimal "
+        "-u",
+        "--unicodes",
+        help="List of Unicode code points as hexadecimal "
         'numbers (e.g. -u "0041 0042")',
-        type=unicode_hex_list)
+        type=unicode_hex_list,
+    )
     parser.add_argument(
-        "-t", "--transform", help="Transformation matrix as a list of six "
-        'float values (e.g. -t "0.1 0 0 -0.1 -50 200")', type=transform_list)
+        "-t",
+        "--transform",
+        help="Transformation matrix as a list of six "
+        'float values (e.g. -t "0.1 0 0 -0.1 -50 200")',
+        type=transform_list,
+    )
     parser.add_argument(
-        "-f", "--format", help="UFO GLIF format version (default: 2)",
-        type=int, choices=(1, 2), default=2)
+        "-f",
+        "--format",
+        help="UFO GLIF format version (default: 2)",
+        type=int,
+        choices=(1, 2),
+        default=2,
+    )
 
     return parser.parse_args(args)
 
@@ -101,25 +128,30 @@ def main(args=None):
         name = options.name
     else:
         import os
+
         name = os.path.splitext(os.path.basename(svg_file))[0]
 
     with open(svg_file, "r", encoding="utf-8") as f:
         svg = f.read()
 
-    glif = svg2glif(svg, name,
-                    width=options.width,
-                    height=options.height,
-                    unicodes=options.unicodes,
-                    transform=options.transform,
-                    version=options.format)
+    glif = svg2glif(
+        svg,
+        name,
+        width=options.width,
+        height=options.height,
+        unicodes=options.unicodes,
+        transform=options.transform,
+        version=options.format,
+    )
 
     if options.outfile is None:
         print(glif)
     else:
-        with open(options.outfile, 'w', encoding='utf-8') as f:
+        with open(options.outfile, "w", encoding="utf-8") as f:
             f.write(glif)
 
 
 if __name__ == "__main__":
     import sys
+
     sys.exit(main())

@@ -1,0 +1,20 @@
+lookup lookup1 {
+#test-fea2fea: ignore sub three' four;
+    ignore sub three four;
+} lookup1;
+
+lookup lookup2 {
+#test-fea2fea: ignore pos three' four;
+    ignore pos three four;
+} lookup2;
+
+lookup lookup3 {
+#test-fea2fea: ignore sub one' two, three' four;
+    ignore sub one two, three four;
+} lookup3;
+
+feature test {
+    lookup lookup1;
+    lookup lookup2;
+    lookup lookup3;
+} test;

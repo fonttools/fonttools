@@ -3,6 +3,7 @@
   <Version value="0x00010000"/>
   <LookupList>
     <!-- LookupCount=2 -->
+    <!-- raucontext-sinh:  -->
     <Lookup index="0">
       <LookupType value="6"/>
       <LookupFlag value="512"/><!-- markAttachmentType[2] -->
@@ -43,6 +44,7 @@
         </ChainSubRuleSet>
       </ChainContextSubst>
     </Lookup>
+    <!-- u2aelow-sinh:  -->
     <Lookup index="1" empty="1"/>
   </LookupList>
 </GSUB>

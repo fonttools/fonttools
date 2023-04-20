@@ -316,7 +316,9 @@ class ParserTest(unittest.TestCase):
     def test_strict_glyph_name_check(self):
         self.parse("@bad = [a b ccc];", glyphNames=("a", "b", "ccc"))
 
-        with self.assertRaisesRegex(FeatureLibError, "(?s)missing from the glyph set:.*ccc"):
+        with self.assertRaisesRegex(
+            FeatureLibError, "(?s)missing from the glyph set:.*ccc"
+        ):
             self.parse("@bad = [a b ccc];", glyphNames=("a", "b"))
 
     def test_glyphclass(self):
@@ -2084,6 +2086,15 @@ class ParserTest(unittest.TestCase):
     def test_markclass_format_D(self):
         flag = self.parse("markClass A <anchor NULL> @top;")
         self.assertEqual(flag.asFea(), "markClass A <anchor NULL> @top;")
+
+    def test_unmarked_ignore_statement(self):
+        with CapturingLogHandler("fontTools.feaLib.parser", level="WARNING") as caplog:
+            doc = self.parse("lookup foo { ignore sub A; } foo;")
+        self.assertEqual(doc.statements[0].statements[0].asFea(), "ignore sub A';")
+        self.assertEqual(len(caplog.records), 1)
+        caplog.assertRegex(
+            'Ambiguous "ignore sub", there should be least one marked glyph'
+        )
 
     def parse(self, text, glyphNames=GLYPHNAMES, followIncludes=True):
         featurefile = StringIO(text)

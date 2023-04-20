@@ -69,7 +69,7 @@ class BuilderTest(unittest.TestCase):
         spec9a spec9b spec9c1 spec9c2 spec9c3 spec9d spec9e spec9f spec9g
         spec10
         bug453 bug457 bug463 bug501 bug502 bug504 bug505 bug506 bug509
-        bug512 bug514 bug568 bug633 bug1307 bug1459 bug2276
+        bug512 bug514 bug568 bug633 bug1307 bug1459 bug2276 variable_bug2772
         name size size2 multiple_feature_blocks omitted_GlyphClassDef
         ZeroValue_SinglePos_horizontal ZeroValue_SinglePos_vertical
         ZeroValue_PairPos_horizontal ZeroValue_PairPos_vertical
@@ -954,15 +954,143 @@ class BuilderTest(unittest.TestCase):
             FeatureLibError,
             "Empty glyph class in mark class definition",
             self.build,
-            "markClass [] <anchor 150 -10> @TOPMARKS;"
+            "markClass [] <anchor 150 -10> @TOPMARKS;",
         )
         self.assertRaisesRegex(
             FeatureLibError,
             'Expected a glyph class with 1 elements after "by", but found a glyph class with 0 elements',
             self.build,
-            "feature test { sub a by []; test};"
+            "feature test { sub a by []; test};",
         )
 
+    def test_unmarked_ignore_statement(self):
+        name = "bug2949"
+        logger = logging.getLogger("fontTools.feaLib.parser")
+        with CapturingLogHandler(logger, level="WARNING") as captor:
+            self.check_feature_file(name)
+        self.check_fea2fea_file(name)
+
+        for line, sub in {(3, "sub"), (8, "pos"), (13, "sub")}:
+            captor.assertRegex(
+                f'{name}.fea:{line}:12: Ambiguous "ignore {sub}", there should be least one marked glyph'
+            )
+
+    def test_condition_set_avar(self):
+        """Test that the `avar` table is consulted when normalizing user-space
+        values."""
+
+        features = """
+            languagesystem DFLT dflt;
+
+            lookup conditional_sub {
+                sub e by a;
+            } conditional_sub;
+
+            conditionset test {
+                wght 600 1000;
+                wdth 150 200;
+            } test;
+
+            variation rlig test {
+                lookup conditional_sub;
+            } rlig;
+        """
+
+        def make_mock_vf():
+            font = makeTTFont()
+            font["name"] = newTable("name")
+            addFvar(
+                font,
+                [("wght", 0, 0, 1000, "Weight"), ("wdth", 100, 100, 200, "Width")],
+                [],
+            )
+            del font["name"]
+            return font
+
+        # Without `avar`:
+        font = make_mock_vf()
+        addOpenTypeFeaturesFromString(font, features)
+        condition_table = (
+            font.tables["GSUB"]
+            .table.FeatureVariations.FeatureVariationRecord[0]
+            .ConditionSet.ConditionTable
+        )
+        # user-space wdth=150 and wght=600:
+        assert condition_table[0].FilterRangeMinValue == 0.5
+        assert condition_table[1].FilterRangeMinValue == 0.6
+
+        # With `avar`, shifting the wght axis' positive midpoint 0.5 a bit to
+        # the right, but leaving the wdth axis alone:
+        font = make_mock_vf()
+        font["avar"] = newTable("avar")
+        font["avar"].segments = {"wght": {-1.0: -1.0, 0.0: 0.0, 0.5: 0.625, 1.0: 1.0}}
+        addOpenTypeFeaturesFromString(font, features)
+        condition_table = (
+            font.tables["GSUB"]
+            .table.FeatureVariations.FeatureVariationRecord[0]
+            .ConditionSet.ConditionTable
+        )
+        # user-space wdth=150 as before and wght=600 shifted to the right:
+        assert condition_table[0].FilterRangeMinValue == 0.5
+        assert condition_table[1].FilterRangeMinValue == 0.7
+
+    def test_variable_scalar_avar(self):
+        """Test that the `avar` table is consulted when normalizing user-space
+        values."""
+
+        features = """
+            languagesystem DFLT dflt;
+        
+            feature kern {
+                pos cursive one <anchor 0 (wght=200:12 wght=900:22 wdth=150,wght=900:42)> <anchor NULL>;
+                pos two <0 (wght=200:12 wght=900:22 wdth=150,wght=900:42) 0 0>;
+            } kern;
+        """
+
+        def make_mock_vf():
+            font = makeTTFont()
+            font["name"] = newTable("name")
+            addFvar(font, self.VARFONT_AXES, [])
+            del font["name"]
+            return font
+
+        def get_region(var_region_axis):
+            return (
+                var_region_axis.StartCoord,
+                var_region_axis.PeakCoord,
+                var_region_axis.EndCoord,
+            )
+
+        # Without `avar` (wght=200, wdth=100 is the default location):
+        font = make_mock_vf()
+        addOpenTypeFeaturesFromString(font, features)
+
+        var_region_list = font.tables["GDEF"].table.VarStore.VarRegionList
+        var_region_axis_wght = var_region_list.Region[0].VarRegionAxis[0]
+        var_region_axis_wdth = var_region_list.Region[0].VarRegionAxis[1]
+        assert get_region(var_region_axis_wght) == (0.0, 0.875, 0.875)
+        assert get_region(var_region_axis_wdth) == (0.0, 0.0, 0.0)
+        var_region_axis_wght = var_region_list.Region[1].VarRegionAxis[0]
+        var_region_axis_wdth = var_region_list.Region[1].VarRegionAxis[1]
+        assert get_region(var_region_axis_wght) == (0.0, 0.875, 0.875)
+        assert get_region(var_region_axis_wdth) == (0.0, 0.5, 0.5)
+
+        # With `avar`, shifting the wght axis' positive midpoint 0.5 a bit to
+        # the right, but leaving the wdth axis alone:
+        font = make_mock_vf()
+        font["avar"] = newTable("avar")
+        font["avar"].segments = {"wght": {-1.0: -1.0, 0.0: 0.0, 0.5: 0.625, 1.0: 1.0}}
+        addOpenTypeFeaturesFromString(font, features)
+
+        var_region_list = font.tables["GDEF"].table.VarStore.VarRegionList
+        var_region_axis_wght = var_region_list.Region[0].VarRegionAxis[0]
+        var_region_axis_wdth = var_region_list.Region[0].VarRegionAxis[1]
+        assert get_region(var_region_axis_wght) == (0.0, 0.90625, 0.90625)
+        assert get_region(var_region_axis_wdth) == (0.0, 0.0, 0.0)
+        var_region_axis_wght = var_region_list.Region[1].VarRegionAxis[0]
+        var_region_axis_wdth = var_region_list.Region[1].VarRegionAxis[1]
+        assert get_region(var_region_axis_wght) == (0.0, 0.90625, 0.90625)
+        assert get_region(var_region_axis_wdth) == (0.0, 0.5, 0.5)
 
 
 def generate_feature_file_test(name):

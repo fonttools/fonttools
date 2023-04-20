@@ -3,6 +3,7 @@
   <Version value="0x00010000"/>
   <LookupList>
     <!-- LookupCount=2 -->
+    <!-- swashes-knda:  -->
     <Lookup index="0">
       <LookupType value="6"/>
       <LookupFlag value="0"/>
@@ -42,6 +43,7 @@
         </ChainSubClassSet>
       </ChainContextSubst>
     </Lookup>
+    <!-- u-swash-knda:  -->
     <Lookup index="1">
       <LookupType value="1"/>
       <LookupFlag value="0"/>

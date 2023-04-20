@@ -43,7 +43,7 @@ from fontTools.ttLib import newTable, getTableModule
 from fontTools.varLib.varStore import OnlineVarStoreBuilder
 from fontTools.varLib.builder import buildVarDevTable
 from fontTools.varLib.featureVars import addFeatureVariationsRaw
-from fontTools.varLib.models import normalizeValue
+from fontTools.varLib.models import normalizeValue, piecewiseLinearMap
 from fontTools.ttLib.tables import otBase, otTables
 from collections import defaultdict
 from typing import Sequence, Dict, Optional, Tuple, Set, List, Any, FrozenSet, Union
@@ -218,6 +218,10 @@ class Builder(object):
         self.stat_: Dict[str, Any] = {}
         # for conditionsets
         self.conditionsets_: Dict[str, Dict[str, Tuple[float, float]]] = {}
+        # We will often use exactly the same locations (i.e. the font's masters)
+        # for a large number of variable scalars. Instead of creating a model
+        # for each, let's share the models.
+        self.model_cache = {}
 
     def build(self, tables=None, debug=False) -> None:
         if self.parseTree is None:
@@ -266,14 +270,12 @@ class Builder(object):
                 del self.font[tag]
         if any(tag in self.font for tag in ("GPOS", "GSUB")) and "OS/2" in self.font:
             self.font["OS/2"].usMaxContext = maxCtxFont(self.font)
-        gdef = self.buildGDEF()  # build unconditionally so we can warn below
         if "GDEF" in tables:
+            gdef = self.buildGDEF()
             if gdef:
                 self.font["GDEF"] = gdef
             elif "GDEF" in self.font:
                 del self.font["GDEF"]
-        elif gdef:
-            log.warning("GDEF is not requested, but is needed")
         if "BASE" in tables:
             base = self.buildBASE()
             if base:
@@ -497,6 +499,7 @@ class Builder(object):
                         assert self.cv_parameters_ids_[tag] is not None
                     nameID = self.cv_parameters_ids_[tag]
             table.setName(string, nameID, platformID, platEncID, langID)
+        table.names.sort()
 
     def build_OS_2(self) -> None:
         if not self.os2_:
@@ -821,6 +824,9 @@ class Builder(object):
                 gdef.remap_device_varidxes(varidx_map)
                 if "GPOS" in self.font:
                     self.font["GPOS"].table.remap_device_varidxes(varidx_map)
+
+            self.model_cache.clear()
+
         if (
             any(
                 (
@@ -999,11 +1005,7 @@ class Builder(object):
         feature_vars: Dict[str, List[Tuple[Any, Sequence[int]]]] = {}
         has_any_variations = False
         # Sort out which lookups to build, gather their indices
-        for (
-            script_,
-            language,
-            feature_tag,
-        ), variations in self.feature_variations_.items():
+        for (_, _, feature_tag), variations in self.feature_variations_.items():
             feature_vars[feature_tag] = []
             for conditionset, builders in variations.items():
                 raw_conditionset = self.conditionsets_[conditionset]
@@ -1472,9 +1474,10 @@ class Builder(object):
                 "Empty glyph class in contextual substitution", location
             )
         # https://github.com/fonttools/fonttools/issues/512
+        # https://github.com/fonttools/fonttools/issues/2150
         chain = self.get_lookup_(location, ChainContextSubstBuilder)
         assert isinstance(chain, ChainContextSubstBuilder)
-        sub = chain.find_chainable_single_subst(set(mapping.keys()))
+        sub = chain.find_chainable_single_subst(mapping)
         if sub is None:
             sub = self.get_chained_lookup_(location, SingleSubstBuilder)
         sub.mapping.update(mapping)
@@ -1802,6 +1805,19 @@ class Builder(object):
             for tag, (bottom, top) in value.items()
         }
 
+        # NOTE: This might result in rounding errors (off-by-ones) compared to
+        # rules in Designspace files, since we're working with what's in the
+        # `avar` table rather than the original values.
+        if "avar" in self.font:
+            mapping = self.font["avar"].segments
+            value = {
+                axis: tuple(
+                    piecewiseLinearMap(v, mapping[axis]) if axis in mapping else v
+                    for v in condition_range
+                )
+                for axis, condition_range in value.items()
+            }
+
         self.conditionsets_[key] = value
 
     def makeOpenTypeAnchor(self, location: FeatureLibLocation, anchor: Anchor):
@@ -1814,8 +1830,10 @@ class Builder(object):
             deviceX = otl.buildDevice(dict(anchor.xDeviceTable))
         if anchor.yDeviceTable is not None:
             deviceY = otl.buildDevice(dict(anchor.yDeviceTable))
+        avar = self.font.get("avar")
         for dim in ("x", "y"):
-            if not isinstance(getattr(anchor, dim), VariableScalar):
+            varscalar = getattr(anchor, dim)
+            if not isinstance(varscalar, VariableScalar):
                 continue
             if getattr(anchor, dim + "DeviceTable") is not None:
                 raise FeatureLibError(
@@ -1827,7 +1845,9 @@ class Builder(object):
                 )
             varscalar = getattr(anchor, dim)
             varscalar.axes = self.axes
-            default, index = varscalar.add_to_variation_store(self.varstorebuilder)
+            default, index = varscalar.add_to_variation_store(
+                self.varstorebuilder, self.model_cache, avar
+            )
             setattr(anchor, dim, default)
             if index is not None and index != 0xFFFFFFFF:
                 if dim == "x":
@@ -1859,8 +1879,8 @@ class Builder(object):
         if not v:
             return None
 
+        avar = self.font.get("avar")
         vr = {}
-        variable = False
         for astName, (otName, isDevice) in self._VALUEREC_ATTRS.items():
             val = getattr(v, astName, None)
             if not val:
@@ -1880,11 +1900,12 @@ class Builder(object):
                         location,
                     )
                 val.axes = self.axes
-                default, index = val.add_to_variation_store(self.varstorebuilder)
+                default, index = val.add_to_variation_store(
+                    self.varstorebuilder, self.model_cache, avar
+                )
                 vr[otName] = default
                 if index is not None and index != 0xFFFFFFFF:
                     vr[otDeviceName] = buildVarDevTable(index)
-                    variable = True
             else:
                 vr[otName] = val
 

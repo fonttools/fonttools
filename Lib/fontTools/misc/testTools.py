@@ -29,12 +29,14 @@ def parseXML(xmlSnippet):
     if isinstance(xmlSnippet, bytes):
         xml += xmlSnippet
     elif isinstance(xmlSnippet, str):
-        xml += tobytes(xmlSnippet, 'utf-8')
+        xml += tobytes(xmlSnippet, "utf-8")
     elif isinstance(xmlSnippet, Iterable):
-        xml += b"".join(tobytes(s, 'utf-8') for s in xmlSnippet)
+        xml += b"".join(tobytes(s, "utf-8") for s in xmlSnippet)
     else:
-        raise TypeError("expected string or sequence of strings; found %r"
-                        % type(xmlSnippet).__name__)
+        raise TypeError(
+            "expected string or sequence of strings; found %r"
+            % type(xmlSnippet).__name__
+        )
     xml += b"</root>"
     reader.parser.Parse(xml, 0)
     return reader.root[2]
@@ -76,6 +78,7 @@ class FakeFont:
             return self.glyphOrder_[glyphID]
         else:
             return "glyph%.5d" % glyphID
+
     def getGlyphNameMany(self, lst):
         return [self.getGlyphName(gid) for gid in lst]
 
@@ -92,6 +95,7 @@ class FakeFont:
 class TestXMLReader_(object):
     def __init__(self):
         from xml.parsers.expat import ParserCreate
+
         self.parser = ParserCreate()
         self.parser.StartElementHandler = self.startElement_
         self.parser.EndElementHandler = self.endElement_
@@ -114,7 +118,7 @@ class TestXMLReader_(object):
         self.stack[-1][2].append(data)
 
 
-def makeXMLWriter(newlinestr='\n'):
+def makeXMLWriter(newlinestr="\n"):
     # don't write OS-specific new lines
     writer = XMLWriter(BytesIO(), newlinestr=newlinestr)
     # erase XML declaration
@@ -166,7 +170,7 @@ class MockFont(object):
     to its glyphOrder."""
 
     def __init__(self):
-        self._glyphOrder = ['.notdef']
+        self._glyphOrder = [".notdef"]
 
         class AllocatingDict(dict):
             def __missing__(reverseDict, key):
@@ -174,7 +178,8 @@ class MockFont(object):
                 gid = len(reverseDict)
                 reverseDict[key] = gid
                 return gid
-        self._reverseGlyphOrder = AllocatingDict({'.notdef': 0})
+
+        self._reverseGlyphOrder = AllocatingDict({".notdef": 0})
         self.lazy = False
 
     def getGlyphID(self, glyph):
@@ -192,7 +197,6 @@ class MockFont(object):
 
 
 class TestCase(_TestCase):
-
     def __init__(self, methodName):
         _TestCase.__init__(self, methodName)
         # Python 3 renamed assertRaisesRegexp to assertRaisesRegex,
@@ -202,7 +206,6 @@ class TestCase(_TestCase):
 
 
 class DataFilesHandler(TestCase):
-
     def setUp(self):
         self.tempdir = None
         self.num_tempfiles = 0

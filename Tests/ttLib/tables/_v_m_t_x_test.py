@@ -4,7 +4,6 @@ import unittest
 
 
 class VmtxTableTest(_h_m_t_x_test.HmtxTableTest):
-
     @classmethod
     def setUpClass(cls):
         cls.tableClass = table__v_m_t_x
@@ -13,4 +12,5 @@ class VmtxTableTest(_h_m_t_x_test.HmtxTableTest):
 
 if __name__ == "__main__":
     import sys
+
     sys.exit(unittest.main())

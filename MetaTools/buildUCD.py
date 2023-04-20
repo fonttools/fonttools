@@ -27,8 +27,9 @@ UNIDATA_URL = "https://unicode.org/Public/UNIDATA/"
 UNIDATA_LICENSE_URL = "http://unicode.org/copyright.html#License"
 
 # by default save output files to ../Lib/fontTools/unicodedata/
-UNIDATA_PATH = pjoin(abspath(dirname(__file__)), pardir,
-                     "Lib", "fontTools", "unicodedata") + sep
+UNIDATA_PATH = (
+    pjoin(abspath(dirname(__file__)), pardir, "Lib", "fontTools", "unicodedata") + sep
+)
 
 SRC_ENCODING = "# -*- coding: utf-8 -*-\n"
 
@@ -75,7 +76,8 @@ def parse_range_properties(infile, default=None, is_set=False):
         r"([0-9A-F]{4,6})"  # first character code
         r"(?:\.\.([0-9A-F]{4,6}))?"  # optional second character code
         r"\s*;\s*"
-        r"([^#]+)")  # everything up to the potential comment
+        r"([^#]+)"
+    )  # everything up to the potential comment
     for line in infile:
         match = line_regex.match(line)
         if not match:
@@ -103,13 +105,13 @@ def parse_range_properties(infile, default=None, is_set=False):
         assert last_end < start
         assert start <= end
         if start - last_end > 1:
-            full_ranges.append((last_end+1, start-1, default))
+            full_ranges.append((last_end + 1, start - 1, default))
         if is_set:
             value = set(value.split())
         full_ranges.append((start, end, value))
         last_start, last_end = start, end
     if last_end != MAX_UNICODE:
-        full_ranges.append((last_end+1, MAX_UNICODE, default))
+        full_ranges.append((last_end + 1, MAX_UNICODE, default))
 
     # reduce total number of ranges by combining continuous ones
     last_start, last_end, last_value = full_ranges.pop(0)
@@ -118,14 +120,14 @@ def parse_range_properties(infile, default=None, is_set=False):
         if value == last_value:
             continue
         else:
-            merged_ranges.append((last_start, start-1, last_value))
+            merged_ranges.append((last_start, start - 1, last_value))
             last_start, line_end, last_value = start, end, value
     merged_ranges.append((last_start, MAX_UNICODE, last_value))
 
     # make sure that the ranges cover the full unicode repertoire
     assert merged_ranges[0][0] == 0
     for (cs, ce, cv), (ns, ne, nv) in zip(merged_ranges, merged_ranges[1:]):
-        assert ce+1 == ns
+        assert ce + 1 == ns
     assert merged_ranges[-1][1] == MAX_UNICODE
 
     return merged_ranges
@@ -140,21 +142,25 @@ def parse_semicolon_separated_data(infile):
     """
     data = []
     for line in infile:
-        line = line.split('#', 1)[0].strip()  # remove the comment
+        line = line.split("#", 1)[0].strip()  # remove the comment
         if not line:
             continue
-        fields = [str(field.strip()) for field in line.split(';')]
+        fields = [str(field.strip()) for field in line.split(";")]
         data.append(fields)
     return data
 
 
 def _set_repr(value):
-    return 'None' if value is None else "{{{}}}".format(
-        ", ".join(repr(v) for v in sorted(value)))
+    return (
+        "None"
+        if value is None
+        else "{{{}}}".format(", ".join(repr(v) for v in sorted(value)))
+    )
 
 
-def build_ranges(filename, local_ucd=None, output_path=None,
-                 default=None, is_set=False, aliases=None):
+def build_ranges(
+    filename, local_ucd=None, output_path=None, default=None, is_set=False, aliases=None
+):
     """Fetch 'filename' UCD data file from Unicode official website, parse
     the property ranges and values and write them as two Python lists
     to 'fontTools.unicodedata.<filename>.py'.
@@ -196,12 +202,15 @@ def build_ranges(filename, local_ucd=None, output_path=None,
         f.write("# Source: {}{}\n".format(UNIDATA_URL, filename))
         f.write("# License: {}\n".format(UNIDATA_LICENSE_URL))
         f.write("#\n")
-        f.write(header+"\n\n")
+        f.write(header + "\n\n")
 
         f.write("RANGES = [\n")
         for first, last, value in ranges:
-            f.write("    0x{:0>4X},  # .. 0x{:0>4X} ; {}\n".format(
-                first, last, _set_repr(value) if is_set else value))
+            f.write(
+                "    0x{:0>4X},  # .. 0x{:0>4X} ; {}\n".format(
+                    first, last, _set_repr(value) if is_set else value
+                )
+            )
         f.write("]\n")
 
         f.write("\n")
@@ -216,8 +225,9 @@ def build_ranges(filename, local_ucd=None, output_path=None,
                     comment += " ; {}".format(value)
                     value = reversed_aliases[normalize(value)]
                 value_repr = "{!r},".format(value)
-            f.write("    {}  {}\n".format(
-                value_repr.ljust(max_value_length+1), comment))
+            f.write(
+                "    {}  {}\n".format(value_repr.ljust(max_value_length + 1), comment)
+            )
         f.write("]\n")
 
         if aliases:
@@ -232,6 +242,7 @@ def build_ranges(filename, local_ucd=None, output_path=None,
 
 
 _normalize_re = re.compile(r"[-_ ]+")
+
 
 def normalize(string):
     """Remove case, strip space, '-' and '_' for loose matching."""
@@ -258,8 +269,7 @@ def parse_property_value_aliases(property_tag, local_ucd=None):
         header = parse_unidata_header(f)
         data = parse_semicolon_separated_data(f)
 
-    aliases = {item[1]: item[2:] for item in data
-               if item[0] == property_tag}
+    aliases = {item[1]: item[2:] for item in data if item[0] == property_tag}
 
     return aliases
 
@@ -268,10 +278,12 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="Generate fontTools.unicodedata from UCD data files")
+        description="Generate fontTools.unicodedata from UCD data files"
+    )
     parser.add_argument(
-        '--ucd-path', help="Path to local folder containing UCD data files")
-    parser.add_argument('-q', '--quiet', action="store_true")
+        "--ucd-path", help="Path to local folder containing UCD data files"
+    )
+    parser.add_argument("-q", "--quiet", action="store_true")
     options = parser.parse_args()
 
     level = "WARNING" if options.quiet else "INFO"
@@ -280,12 +292,16 @@ def main():
     build_ranges("Blocks.txt", local_ucd=options.ucd_path, default="No_Block")
 
     script_aliases = parse_property_value_aliases("sc", options.ucd_path)
-    build_ranges("Scripts.txt", local_ucd=options.ucd_path, default="Unknown",
-                 aliases=script_aliases)
-    build_ranges("ScriptExtensions.txt", local_ucd=options.ucd_path,
-                 is_set=True)
+    build_ranges(
+        "Scripts.txt",
+        local_ucd=options.ucd_path,
+        default="Unknown",
+        aliases=script_aliases,
+    )
+    build_ranges("ScriptExtensions.txt", local_ucd=options.ucd_path, is_set=True)
 
 
 if __name__ == "__main__":
     import sys
+
     sys.exit(main())

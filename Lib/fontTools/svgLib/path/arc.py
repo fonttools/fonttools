@@ -19,7 +19,6 @@ def _map_point(matrix, pt):
 
 
 class EllipticalArc(object):
-
     def __init__(self, current_point, rx, ry, rotation, large, sweep, target_point):
         self.current_point = current_point
         self.rx = rx

@@ -369,10 +369,19 @@ class ChainContextualBuilder(LookupBuilder):
 
         rulesets = self.rulesets()
         chaining = any(ruleset.hasPrefixOrSuffix for ruleset in rulesets)
+
+        # https://github.com/fonttools/fonttools/issues/2539
+        #
         # Unfortunately, as of 2022-03-07, Apple's CoreText renderer does not
         # correctly process GPOS7 lookups, so for now we force contextual
         # positioning lookups to be chaining (GPOS8).
-        if self.subtable_type == "Pos":  # horrible separation of concerns breach
+        #
+        # This seems to be fixed as of macOS 13.2, but we keep disabling this
+        # for now until we are no longer concerned about old macOS versions.
+        # But we allow people to opt-out of this with the config key below.
+        write_gpos7 = self.font.cfg.get("fontTools.otlLib.builder:WRITE_GPOS7")
+        # horrible separation of concerns breach
+        if not write_gpos7 and self.subtable_type == "Pos":
             chaining = True
 
         for ruleset in rulesets:
@@ -764,7 +773,7 @@ class ChainContextSubstBuilder(ChainContextualBuilder):
                             result.setdefault(glyph, set()).update(replacements)
         return result
 
-    def find_chainable_single_subst(self, glyphs):
+    def find_chainable_single_subst(self, mapping):
         """Helper for add_single_subst_chained_()"""
         res = None
         for rule in self.rules[::-1]:
@@ -772,7 +781,7 @@ class ChainContextSubstBuilder(ChainContextualBuilder):
                 return res
             for sub in rule.lookups:
                 if isinstance(sub, SingleSubstBuilder) and not any(
-                    g in glyphs for g in sub.mapping.keys()
+                    g in mapping and mapping[g] != sub.mapping[g] for g in sub.mapping
                 ):
                     res = sub
         return res
@@ -1387,27 +1396,16 @@ class PairPosBuilder(LookupBuilder):
             lookup.
         """
         builders = {}
-        builder = None
+        builder = ClassPairPosSubtableBuilder(self)
         for glyphclass1, value1, glyphclass2, value2 in self.pairs:
             if glyphclass1 is self.SUBTABLE_BREAK_:
-                if builder is not None:
-                    builder.addSubtableBreak()
+                builder.addSubtableBreak()
                 continue
-            valFormat1, valFormat2 = 0, 0
-            if value1:
-                valFormat1 = value1.getFormat()
-            if value2:
-                valFormat2 = value2.getFormat()
-            builder = builders.get((valFormat1, valFormat2))
-            if builder is None:
-                builder = ClassPairPosSubtableBuilder(self)
-                builders[(valFormat1, valFormat2)] = builder
             builder.addPair(glyphclass1, value1, glyphclass2, value2)
         subtables = []
         if self.glyphPairs:
             subtables.extend(buildPairPosGlyphs(self.glyphPairs, self.glyphMap))
-        for key in sorted(builders.keys()):
-            subtables.extend(builders[key].subtables())
+        subtables.extend(builder.subtables())
         lookup = self.buildLookup_(subtables)
 
         # Compact the lookup
@@ -2792,6 +2790,7 @@ def buildStatTable(
             locations, axes, nameTable, windowsNames=windowsNames, macNames=macNames
         )
         axisValues = multiAxisValues + axisValues
+    nameTable.names.sort()
 
     # Store AxisRecords
     axisRecordArray = ot.AxisRecordArray()
@@ -2801,6 +2800,8 @@ def buildStatTable(
     statTable.DesignAxisRecord = axisRecordArray
     statTable.DesignAxisCount = len(axisRecords)
 
+    statTable.AxisValueCount = 0
+    statTable.AxisValueArray = None
     if axisValues:
         # Store AxisValueRecords
         axisValueArray = ot.AxisValueArray()

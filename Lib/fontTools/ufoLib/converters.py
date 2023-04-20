@@ -3,8 +3,8 @@ Conversion functions.
 """
 
 
-
 # adapted from the UFO spec
+
 
 def convertUFO1OrUFO2KerningToUFO3Kerning(kerning, groups, glyphSet=()):
     # gather known kerning groups based on the prefixes
@@ -62,6 +62,7 @@ def convertUFO1OrUFO2KerningToUFO3Kerning(kerning, groups, glyphSet=()):
     # Return the kerning and the groups.
     return newKerning, groups, dict(side1=firstRenamedGroups, side2=secondRenamedGroups)
 
+
 def findKnownKerningGroups(groups):
     """
     This will find kerning groups with known prefixes.
@@ -93,12 +94,8 @@ def findKnownKerningGroups(groups):
     >>> sorted(second) == ['@MMK_R_1', '@MMK_R_2', '@MMK_R_3']
     True
     """
-    knownFirstGroupPrefixes = [
-        "@MMK_L_"
-    ]
-    knownSecondGroupPrefixes = [
-        "@MMK_R_"
-    ]
+    knownFirstGroupPrefixes = ["@MMK_L_"]
+    knownSecondGroupPrefixes = ["@MMK_R_"]
     firstGroups = set()
     secondGroups = set()
     for groupName in list(groups.keys()):
@@ -123,6 +120,7 @@ def makeUniqueGroupName(name, groupNames, counter=0):
         return makeUniqueGroupName(name, groupNames, counter + 1)
     # Otherwise send back the new name.
     return newName
+
 
 def test():
     """
@@ -330,6 +328,8 @@ def test():
     True
     """
 
+
 if __name__ == "__main__":
     import doctest
+
     doctest.testmod()

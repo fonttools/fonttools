@@ -554,38 +554,33 @@ class Parser(object):
                 )
             return (prefix, glyphs, lookups, values, suffix, hasMarks)
 
-    def parse_chain_context_(
-        self,
-    ) -> Tuple[
-        List[
-            Tuple[
-                List[ast.GlyphContainer],
-                List[ast.GlyphContainer],
-                List[ast.GlyphContainer],
-            ]
-        ],
-        bool,
-    ]:
+    def parse_ignore_glyph_pattern_(self, sub):
         location = self.cur_token_location_
         prefix, glyphs, lookups, values, suffix, hasMarks = self.parse_glyph_pattern_(
             vertical=False
         )
-        chainContext = [(prefix, glyphs, suffix)]
-        hasLookups = any(lookups)
+        if any(lookups):
+            raise FeatureLibError(
+                f'No lookups can be specified for "ignore {sub}"', location
+            )
+        if not hasMarks:
+            error = FeatureLibError(
+                f'Ambiguous "ignore {sub}", there should be least one marked glyph',
+                location,
+            )
+            log.warning(str(error))
+            suffix, glyphs = glyphs[1:], glyphs[0:1]
+        chainContext = (prefix, glyphs, suffix)
+        return chainContext
+
+    def parse_ignore_context_(self, sub):
+        location = self.cur_token_location_
+        chainContext = [self.parse_ignore_glyph_pattern_(sub)]
         while self.next_token_ == ",":
             self.expect_symbol_(",")
-            (
-                prefix,
-                glyphs,
-                lookups,
-                values,
-                suffix,
-                hasMarks,
-            ) = self.parse_glyph_pattern_(vertical=False)
-            chainContext.append((prefix, glyphs, suffix))
-            hasLookups = hasLookups or any(lookups)
+            chainContext.append(self.parse_ignore_glyph_pattern_(sub))
         self.expect_symbol_(";")
-        return chainContext, hasLookups
+        return chainContext
 
     def parse_ignore_(self) -> ast.IgnoreStatement:
         # Parses an ignore sub/pos rule.
@@ -593,18 +588,10 @@ class Parser(object):
         location = self.cur_token_location_
         self.advance_lexer_()
         if self.cur_token_ in ["substitute", "sub"]:
-            chainContext, hasLookups = self.parse_chain_context_()
-            if hasLookups:
-                raise FeatureLibError(
-                    'No lookups can be specified for "ignore sub"', location
-                )
+            chainContext = self.parse_ignore_context_("sub")
             return self.ast.IgnoreSubstStatement(chainContext, location=location)
         if self.cur_token_ in ["position", "pos"]:
-            chainContext, hasLookups = self.parse_chain_context_()
-            if hasLookups:
-                raise FeatureLibError(
-                    'No lookups can be specified for "ignore pos"', location
-                )
+            chainContext = self.parse_ignore_context_("pos")
             return self.ast.IgnorePosStatement(chainContext, location=location)
         raise FeatureLibError(
             'Expected "substitute" or "position"', self.cur_token_location_

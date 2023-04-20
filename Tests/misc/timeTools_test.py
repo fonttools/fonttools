@@ -1,4 +1,10 @@
-from fontTools.misc.timeTools import asctime, timestampNow, timestampToString, timestampFromString, epoch_diff
+from fontTools.misc.timeTools import (
+    asctime,
+    timestampNow,
+    timestampToString,
+    timestampFromString,
+    epoch_diff,
+)
 import os
 import time
 import locale
@@ -7,7 +13,7 @@ import pytest
 
 def test_asctime():
     assert isinstance(asctime(), str)
-    assert asctime(time.gmtime(0)) == 'Thu Jan  1 00:00:00 1970'
+    assert asctime(time.gmtime(0)) == "Thu Jan  1 00:00:00 1970"
 
 
 def test_source_date_epoch():
@@ -27,7 +33,7 @@ def test_source_date_epoch():
 def test_date_parsing_with_locale():
     l = locale.getlocale(locale.LC_TIME)
     try:
-        locale.setlocale(locale.LC_TIME, 'de_DE.utf8')
+        locale.setlocale(locale.LC_TIME, "de_DE.utf8")
     except locale.Error:
         pytest.skip("Locale de_DE not available")
 

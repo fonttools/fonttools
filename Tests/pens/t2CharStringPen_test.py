@@ -3,7 +3,6 @@ import unittest
 
 
 class T2CharStringPenTest(unittest.TestCase):
-
     def __init__(self, methodName):
         unittest.TestCase.__init__(self, methodName)
 
@@ -31,13 +30,24 @@ class T2CharStringPenTest(unittest.TestCase):
         charstring = pen.getCharString(None, None)
 
         self.assertEqual(
-            [100,
-             0, 'hmoveto',
-             10, 10, -10, 'hlineto',
-             10, 'hmoveto',
-             10, -10, -10, 'vlineto',
-             'endchar'],
-            charstring.program)
+            [
+                100,
+                0,
+                "hmoveto",
+                10,
+                10,
+                -10,
+                "hlineto",
+                10,
+                "hmoveto",
+                10,
+                -10,
+                -10,
+                "vlineto",
+                "endchar",
+            ],
+            charstring.program,
+        )
 
     def test_draw_lines(self):
         pen = T2CharStringPen(100, {})
@@ -49,11 +59,9 @@ class T2CharStringPenTest(unittest.TestCase):
         charstring = pen.getCharString(None, None)
 
         self.assertEqual(
-            [100,
-             5, 5, 'rmoveto',
-             20, 10, 10, 20, -20, -10, 'rlineto',
-             'endchar'],
-            charstring.program)
+            [100, 5, 5, "rmoveto", 20, 10, 10, 20, -20, -10, "rlineto", "endchar"],
+            charstring.program,
+        )
 
     def test_draw_h_v_curves(self):
         pen = T2CharStringPen(100, {})
@@ -64,11 +72,23 @@ class T2CharStringPenTest(unittest.TestCase):
         charstring = pen.getCharString(None, None)
 
         self.assertEqual(
-            [100,
-             0, 'hmoveto',
-             10, 10, 10, 10, 10, -10, 10, -10, 'hvcurveto',
-             'endchar'],
-            charstring.program)
+            [
+                100,
+                0,
+                "hmoveto",
+                10,
+                10,
+                10,
+                10,
+                10,
+                -10,
+                10,
+                -10,
+                "hvcurveto",
+                "endchar",
+            ],
+            charstring.program,
+        )
 
     def test_draw_curves(self):
         pen = T2CharStringPen(100, {})
@@ -79,11 +99,28 @@ class T2CharStringPenTest(unittest.TestCase):
         charstring = pen.getCharString(None, None)
 
         self.assertEqual(
-            [100,
-             95, 25, 'rmoveto',
-             20, 19, 0, 32, -20, 19, -19, 19, -32, 1, -19, -20, 'rrcurveto',
-             'endchar'],
-            charstring.program)
+            [
+                100,
+                95,
+                25,
+                "rmoveto",
+                20,
+                19,
+                0,
+                32,
+                -20,
+                19,
+                -19,
+                19,
+                -32,
+                1,
+                -19,
+                -20,
+                "rrcurveto",
+                "endchar",
+            ],
+            charstring.program,
+        )
 
     def test_draw_more_curves(self):
         pen = T2CharStringPen(100, {})
@@ -99,22 +136,61 @@ class T2CharStringPenTest(unittest.TestCase):
         charstring = pen.getCharString(None, None)
 
         self.assertEqual(
-            [100,
-             10, 10, 'rmoveto',
-             10, 30, 0, 10, 'hhcurveto',
-             10, 0, 30, 10, 'vvcurveto',
-             -10, -10, -10, 10, -10, 'hhcurveto',
-             10, -10, -10, -10, -10, 'vvcurveto',
-             -5, -5, -6, -5, 1, 'vhcurveto',
-             -5, -6, 5, 5, 1, 'hvcurveto',
-             -3, -5, -1, -10, 4, -5, 'rrcurveto',
-             'endchar'],
-            charstring.program)
+            [
+                100,
+                10,
+                10,
+                "rmoveto",
+                10,
+                30,
+                0,
+                10,
+                "hhcurveto",
+                10,
+                0,
+                30,
+                10,
+                "vvcurveto",
+                -10,
+                -10,
+                -10,
+                10,
+                -10,
+                "hhcurveto",
+                10,
+                -10,
+                -10,
+                -10,
+                -10,
+                "vvcurveto",
+                -5,
+                -5,
+                -6,
+                -5,
+                1,
+                "vhcurveto",
+                -5,
+                -6,
+                5,
+                5,
+                1,
+                "hvcurveto",
+                -3,
+                -5,
+                -1,
+                -10,
+                4,
+                -5,
+                "rrcurveto",
+                "endchar",
+            ],
+            charstring.program,
+        )
 
     def test_default_width(self):
         pen = T2CharStringPen(None, {})
         charstring = pen.getCharString(None, None)
-        self.assertEqual(['endchar'], charstring.program)
+        self.assertEqual(["endchar"], charstring.program)
 
     def test_no_round(self):
         pen = T2CharStringPen(100.1, {}, roundTolerance=0.0)
@@ -125,12 +201,27 @@ class T2CharStringPenTest(unittest.TestCase):
         charstring = pen.getCharString(None, None)
 
         self.assertAlmostEqualProgram(
-            [100,  # we always round the advance width
-             0, 'hmoveto',
-             10.1, 0.1, 9.8, 9.8, 0.59, 10.59, 'rrcurveto',
-             10, -10.59, 9.41, -9.8, 0.2, 'vhcurveto',
-             'endchar'],
-            charstring.program)
+            [
+                100,  # we always round the advance width
+                0,
+                "hmoveto",
+                10.1,
+                0.1,
+                9.8,
+                9.8,
+                0.59,
+                10.59,
+                "rrcurveto",
+                10,
+                -10.59,
+                9.41,
+                -9.8,
+                0.2,
+                "vhcurveto",
+                "endchar",
+            ],
+            charstring.program,
+        )
 
     def test_round_all(self):
         pen = T2CharStringPen(100.1, {}, roundTolerance=0.5)
@@ -141,11 +232,23 @@ class T2CharStringPenTest(unittest.TestCase):
         charstring = pen.getCharString(None, None)
 
         self.assertEqual(
-            [100,
-             0, 'hmoveto',
-             10, 10, 10, 10, 11, -10, 9, -10, 'hvcurveto',
-             'endchar'],
-            charstring.program)
+            [
+                100,
+                0,
+                "hmoveto",
+                10,
+                10,
+                10,
+                10,
+                11,
+                -10,
+                9,
+                -10,
+                "hvcurveto",
+                "endchar",
+            ],
+            charstring.program,
+        )
 
     def test_round_some(self):
         pen = T2CharStringPen(100, {}, roundTolerance=0.2)
@@ -159,20 +262,34 @@ class T2CharStringPenTest(unittest.TestCase):
         charstring = pen.getCharString(None, None)
 
         self.assertAlmostEqualProgram(
-            [100,
-             0, 'hmoveto',
-             10, 'hlineto',
-             10, 10, 0.49, 10.49, 'rlineto',
-             'endchar'],
-            charstring.program)
+            [
+                100,
+                0,
+                "hmoveto",
+                10,
+                "hlineto",
+                10,
+                10,
+                0.49,
+                10.49,
+                "rlineto",
+                "endchar",
+            ],
+            charstring.program,
+        )
 
     def test_invalid_tolerance(self):
         self.assertRaisesRegex(
             ValueError,
             "Rounding tolerance must be positive",
-            T2CharStringPen, None, {}, roundTolerance=-0.1)
+            T2CharStringPen,
+            None,
+            {},
+            roundTolerance=-0.1,
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
+
     sys.exit(unittest.main())

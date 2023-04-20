@@ -55,7 +55,8 @@ class Parser(object):
             else:
                 raise VoltLibError(
                     "Expected " + ", ".join(sorted(PARSE_FUNCS.keys())),
-                    self.cur_token_location_)
+                    self.cur_token_location_,
+                )
         return self.doc_
 
     def parse_def_glyph_(self):
@@ -71,8 +72,7 @@ class Parser(object):
             self.expect_keyword_("UNICODE")
             gunicode = [self.expect_number_()]
             if gunicode[0] < 0:
-                raise VoltLibError("Invalid glyph UNICODE",
-                                   self.cur_token_location_)
+                raise VoltLibError("Invalid glyph UNICODE", self.cur_token_location_)
         elif self.next_token_ == "UNICODEVALUES":
             self.expect_keyword_("UNICODEVALUES")
             gunicode = self.parse_unicode_values_()
@@ -88,12 +88,11 @@ class Parser(object):
         self.expect_keyword_("END_GLYPH")
         if self.glyphs_.resolve(name) is not None:
             raise VoltLibError(
-                'Glyph "%s" (gid %i) already defined' % (name, gid),
-                location
+                'Glyph "%s" (gid %i) already defined' % (name, gid), location
             )
-        def_glyph = ast.GlyphDefinition(name, gid,
-                                        gunicode, gtype, components,
-                                        location=location)
+        def_glyph = ast.GlyphDefinition(
+            name, gid, gunicode, gtype, components, location=location
+        )
         self.glyphs_.define(name, def_glyph)
         return def_glyph
 
@@ -108,11 +107,10 @@ class Parser(object):
         if self.groups_.resolve(name) is not None:
             raise VoltLibError(
                 'Glyph group "%s" already defined, '
-                'group names are case insensitive' % name,
-                location
+                "group names are case insensitive" % name,
+                location,
             )
-        def_group = ast.GroupDefinition(name, enum,
-                                        location=location)
+        def_group = ast.GroupDefinition(name, enum, location=location)
         self.groups_.define(name, def_group)
         return def_group
 
@@ -128,8 +126,8 @@ class Parser(object):
         if self.scripts_.resolve(tag) is not None:
             raise VoltLibError(
                 'Script "%s" already defined, '
-                'script tags are case insensitive' % tag,
-                location
+                "script tags are case insensitive" % tag,
+                location,
             )
         self.langs_.enter_scope()
         langs = []
@@ -140,8 +138,8 @@ class Parser(object):
             if self.langs_.resolve(lang.tag) is not None:
                 raise VoltLibError(
                     'Language "%s" already defined in script "%s", '
-                    'language tags are case insensitive' % (lang.tag, tag),
-                    location
+                    "language tags are case insensitive" % (lang.tag, tag),
+                    location,
                 )
             self.langs_.define(lang.tag, lang)
             langs.append(lang)
@@ -166,8 +164,7 @@ class Parser(object):
             feature = self.parse_feature_()
             self.expect_keyword_("END_FEATURE")
             features.append(feature)
-        def_langsys = ast.LangSysDefinition(name, tag, features,
-                                            location=location)
+        def_langsys = ast.LangSysDefinition(name, tag, features, location=location)
         return def_langsys
 
     def parse_feature_(self):
@@ -183,8 +180,7 @@ class Parser(object):
             self.expect_keyword_("LOOKUP")
             lookup = self.expect_string_()
             lookups.append(lookup)
-        feature = ast.FeatureDefinition(name, tag, lookups,
-                                        location=location)
+        feature = ast.FeatureDefinition(name, tag, lookups, location=location)
         return feature
 
     def parse_def_lookup_(self):
@@ -193,14 +189,13 @@ class Parser(object):
         name = self.expect_string_()
         if not name[0].isalpha():
             raise VoltLibError(
-                'Lookup name "%s" must start with a letter' % name,
-                location
+                'Lookup name "%s" must start with a letter' % name, location
             )
         if self.lookups_.resolve(name) is not None:
             raise VoltLibError(
                 'Lookup "%s" already defined, '
-                'lookup names are case insensitive' % name,
-                location
+                "lookup names are case insensitive" % name,
+                location,
             )
         process_base = True
         if self.next_token_ == "PROCESS_BASE":
@@ -226,7 +221,8 @@ class Parser(object):
                 raise VoltLibError(
                     "Expected ALL, NONE, MARK_GLYPH_SET or an ID. "
                     "Got %s" % (self.next_token_type_),
-                    location)
+                    location,
+                )
         elif self.next_token_ == "SKIP_MARKS":
             self.advance_lexer_()
             process_marks = False
@@ -242,7 +238,7 @@ class Parser(object):
         comments = None
         if self.next_token_ == "COMMENTS":
             self.expect_keyword_("COMMENTS")
-            comments = self.expect_string_().replace(r'\n', '\n')
+            comments = self.expect_string_().replace(r"\n", "\n")
         context = []
         while self.next_token_ in ("EXCEPT_CONTEXT", "IN_CONTEXT"):
             context = self.parse_context_()
@@ -255,12 +251,22 @@ class Parser(object):
             pos = self.parse_position_()
         else:
             raise VoltLibError(
-                "Expected AS_SUBSTITUTION or AS_POSITION. "
-                "Got %s" % (as_pos_or_sub),
-                location)
+                "Expected AS_SUBSTITUTION or AS_POSITION. " "Got %s" % (as_pos_or_sub),
+                location,
+            )
         def_lookup = ast.LookupDefinition(
-            name, process_base, process_marks, mark_glyph_set, direction,
-            reversal, comments, context, sub, pos, location=location)
+            name,
+            process_base,
+            process_marks,
+            mark_glyph_set,
+            direction,
+            reversal,
+            comments,
+            context,
+            sub,
+            pos,
+            location=location,
+        )
         self.lookups_.define(name, def_lookup)
         return def_lookup
 
@@ -283,8 +289,9 @@ class Parser(object):
                     else:
                         right.append(coverage)
                 self.expect_keyword_("END_CONTEXT")
-                context = ast.ContextDefinition(ex_or_in, left,
-                                                right, location=location)
+                context = ast.ContextDefinition(
+                    ex_or_in, left, right, location=location
+                )
                 contexts.append(context)
             else:
                 self.expect_keyword_("END_CONTEXT")
@@ -307,36 +314,32 @@ class Parser(object):
         max_src = max([len(cov) for cov in src])
         max_dest = max([len(cov) for cov in dest])
         # many to many or mixed is invalid
-        if ((max_src > 1 and max_dest > 1) or
-                (reversal and (max_src > 1 or max_dest > 1))):
-            raise VoltLibError(
-                "Invalid substitution type",
-                location)
+        if (max_src > 1 and max_dest > 1) or (
+            reversal and (max_src > 1 or max_dest > 1)
+        ):
+            raise VoltLibError("Invalid substitution type", location)
         mapping = dict(zip(tuple(src), tuple(dest)))
         if max_src == 1 and max_dest == 1:
             if reversal:
                 sub = ast.SubstitutionReverseChainingSingleDefinition(
-                    mapping, location=location)
+                    mapping, location=location
+                )
             else:
-                sub = ast.SubstitutionSingleDefinition(mapping,
-                                                       location=location)
+                sub = ast.SubstitutionSingleDefinition(mapping, location=location)
         elif max_src == 1 and max_dest > 1:
-            sub = ast.SubstitutionMultipleDefinition(mapping,
-                                                     location=location)
+            sub = ast.SubstitutionMultipleDefinition(mapping, location=location)
         elif max_src > 1 and max_dest == 1:
-            sub = ast.SubstitutionLigatureDefinition(mapping,
-                                                     location=location)
+            sub = ast.SubstitutionLigatureDefinition(mapping, location=location)
         return sub
 
     def parse_position_(self):
         assert self.is_cur_keyword_("AS_POSITION")
         location = self.cur_token_location_
         pos_type = self.expect_name_()
-        if pos_type not in (
-                "ATTACH", "ATTACH_CURSIVE", "ADJUST_PAIR", "ADJUST_SINGLE"):
+        if pos_type not in ("ATTACH", "ATTACH_CURSIVE", "ADJUST_PAIR", "ADJUST_SINGLE"):
             raise VoltLibError(
-                "Expected ATTACH, ATTACH_CURSIVE, ADJUST_PAIR, ADJUST_SINGLE",
-                location)
+                "Expected ATTACH, ATTACH_CURSIVE, ADJUST_PAIR, ADJUST_SINGLE", location
+            )
         if pos_type == "ATTACH":
             position = self.parse_attach_()
         elif pos_type == "ATTACH_CURSIVE":
@@ -362,7 +365,8 @@ class Parser(object):
             coverage_to.append((cov, anchor_name))
         self.expect_keyword_("END_ATTACH")
         position = ast.PositionAttachDefinition(
-            coverage, coverage_to, location=location)
+            coverage, coverage_to, location=location
+        )
         return position
 
     def parse_attach_cursive_(self):
@@ -378,7 +382,8 @@ class Parser(object):
             coverages_enter.append(self.parse_coverage_())
         self.expect_keyword_("END_ATTACH")
         position = ast.PositionAttachCursiveDefinition(
-            coverages_exit, coverages_enter, location=location)
+            coverages_exit, coverages_enter, location=location
+        )
         return position
 
     def parse_adjust_pair_(self):
@@ -404,7 +409,8 @@ class Parser(object):
             adjust_pair[(id_1, id_2)] = (pos_1, pos_2)
         self.expect_keyword_("END_ADJUST")
         position = ast.PositionAdjustPairDefinition(
-            coverages_1, coverages_2, adjust_pair, location=location)
+            coverages_1, coverages_2, adjust_pair, location=location
+        )
         return position
 
     def parse_adjust_single_(self):
@@ -417,8 +423,7 @@ class Parser(object):
             pos = self.parse_pos_()
             adjust_single.append((coverages, pos))
         self.expect_keyword_("END_ADJUST")
-        position = ast.PositionAdjustSingleDefinition(
-            adjust_single, location=location)
+        position = ast.PositionAdjustSingleDefinition(adjust_single, location=location)
         return position
 
     def parse_def_anchor_(self):
@@ -437,8 +442,8 @@ class Parser(object):
             if anchor is not None and anchor.component == component:
                 raise VoltLibError(
                     'Anchor "%s" already defined, '
-                    'anchor names are case insensitive' % name,
-                    location
+                    "anchor names are case insensitive" % name,
+                    location,
                 )
         if self.next_token_ == "LOCKED":
             locked = True
@@ -448,9 +453,9 @@ class Parser(object):
         self.expect_keyword_("AT")
         pos = self.parse_pos_()
         self.expect_keyword_("END_ANCHOR")
-        anchor = ast.AnchorDefinition(name, gid, glyph_name,
-                                      component, locked, pos,
-                                      location=location)
+        anchor = ast.AnchorDefinition(
+            name, gid, glyph_name, component, locked, pos, location=location
+        )
         if glyph_name not in self.anchors_:
             self.anchors_[glyph_name] = SymbolTable()
         self.anchors_[glyph_name].define(name, anchor)
@@ -500,9 +505,7 @@ class Parser(object):
         location = self.cur_token_location_
         try:
             unicode_values = self.expect_string_().split(",")
-            unicode_values = [
-                int(uni[2:], 16)
-                for uni in unicode_values if uni != ""]
+            unicode_values = [int(uni[2:], 16) for uni in unicode_values if uni != ""]
         except ValueError as err:
             raise VoltLibError(str(err), location)
         return unicode_values if unicode_values != [] else None
@@ -560,8 +563,7 @@ class Parser(object):
     def parse_cmap_format(self):
         location = self.cur_token_location_
         name = self.cur_token_
-        value = (self.expect_number_(), self.expect_number_(),
-                 self.expect_number_())
+        value = (self.expect_number_(), self.expect_number_(), self.expect_number_())
         setting = ast.SettingDefinition(name, value, location=location)
         return setting
 
@@ -578,8 +580,7 @@ class Parser(object):
         self.advance_lexer_()
         if self.cur_token_type_ is Lexer.NAME and self.cur_token_ == keyword:
             return self.cur_token_
-        raise VoltLibError("Expected \"%s\"" % keyword,
-                           self.cur_token_location_)
+        raise VoltLibError('Expected "%s"' % keyword, self.cur_token_location_)
 
     def expect_name_(self):
         self.advance_lexer_()
@@ -595,12 +596,18 @@ class Parser(object):
 
     def advance_lexer_(self):
         self.cur_token_type_, self.cur_token_, self.cur_token_location_ = (
-            self.next_token_type_, self.next_token_, self.next_token_location_)
+            self.next_token_type_,
+            self.next_token_,
+            self.next_token_location_,
+        )
         try:
             if self.is_cur_keyword_("END"):
                 raise StopIteration
-            (self.next_token_type_, self.next_token_,
-             self.next_token_location_) = self.lexer_.next()
+            (
+                self.next_token_type_,
+                self.next_token_,
+                self.next_token_location_,
+            ) = self.lexer_.next()
         except StopIteration:
             self.next_token_type_, self.next_token_ = (None, None)
 
@@ -645,5 +652,5 @@ class OrderedSymbolTable(SymbolTable):
             if start in scope and end in scope:
                 start_idx = list(scope.keys()).index(start)
                 end_idx = list(scope.keys()).index(end)
-                return list(scope.keys())[start_idx:end_idx + 1]
+                return list(scope.keys())[start_idx : end_idx + 1]
         return None

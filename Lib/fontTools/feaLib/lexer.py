@@ -3,6 +3,12 @@ from fontTools.feaLib.location import FeatureLibLocation
 import re
 import os
 
+try:
+    import cython
+except ImportError:
+    # if cython not installed, use mock module with no-op decorators and types
+    from fontTools.misc import cython
+
 
 class Lexer(object):
     NUMBER = "NUMBER"
@@ -191,7 +197,7 @@ class IncludingLexer(object):
     """A Lexer that follows include statements.
 
     The OpenType feature file specification states that due to
-    historical reasons, relative imports should be resolved in this 
+    historical reasons, relative imports should be resolved in this
     order:
 
     1. If the source font is UFO format, then relative to the UFO's

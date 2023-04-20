@@ -11,9 +11,9 @@ from .arc import EllipticalArc
 import re
 
 
-COMMANDS = set('MmZzLlHhVvCcSsQqTtAa')
+COMMANDS = set("MmZzLlHhVvCcSsQqTtAa")
 ARC_COMMANDS = set("Aa")
-UPPERCASE = set('MZLHVCSQTA')
+UPPERCASE = set("MZLHVCSQTA")
 
 COMMAND_RE = re.compile("([MmZzLlHhVvCcSsQqTtAa])")
 
@@ -93,7 +93,7 @@ def _tokenize_arc_arguments(arcdef):
 
 
 def parse_path(pathdef, pen, current_pos=(0, 0), arc_class=EllipticalArc):
-    """ Parse SVG path definition (i.e. "d" attribute of <path> elements)
+    """Parse SVG path definition (i.e. "d" attribute of <path> elements)
     and call a 'pen' object's moveTo, lineTo, curveTo, qCurveTo and closePath
     methods.
 
@@ -136,11 +136,13 @@ def parse_path(pathdef, pen, current_pos=(0, 0), arc_class=EllipticalArc):
             # If this element starts with numbers, it is an implicit command
             # and we don't change the command. Check that it's allowed:
             if command is None:
-                raise ValueError("Unallowed implicit command in %s, position %s" % (
-                    pathdef, len(pathdef.split()) - len(elements)))
+                raise ValueError(
+                    "Unallowed implicit command in %s, position %s"
+                    % (pathdef, len(pathdef.split()) - len(elements))
+                )
             last_command = command  # Used by S and T
 
-        if command == 'M':
+        if command == "M":
             # Moveto command.
             x = elements.pop()
             y = elements.pop()
@@ -164,9 +166,9 @@ def parse_path(pathdef, pen, current_pos=(0, 0), arc_class=EllipticalArc):
             # Implicit moveto commands are treated as lineto commands.
             # So we set command to lineto here, in case there are
             # further implicit commands after this moveto.
-            command = 'L'
+            command = "L"
 
-        elif command == 'Z':
+        elif command == "Z":
             # Close path
             if current_pos != start_pos:
                 pen.lineTo((start_pos.real, start_pos.imag))
@@ -175,7 +177,7 @@ def parse_path(pathdef, pen, current_pos=(0, 0), arc_class=EllipticalArc):
             start_pos = None
             command = None  # You can't have implicit commands after closing.
 
-        elif command == 'L':
+        elif command == "L":
             x = elements.pop()
             y = elements.pop()
             pos = float(x) + float(y) * 1j
@@ -184,7 +186,7 @@ def parse_path(pathdef, pen, current_pos=(0, 0), arc_class=EllipticalArc):
             pen.lineTo((pos.real, pos.imag))
             current_pos = pos
 
-        elif command == 'H':
+        elif command == "H":
             x = elements.pop()
             pos = float(x) + current_pos.imag * 1j
             if not absolute:
@@ -192,7 +194,7 @@ def parse_path(pathdef, pen, current_pos=(0, 0), arc_class=EllipticalArc):
             pen.lineTo((pos.real, pos.imag))
             current_pos = pos
 
-        elif command == 'V':
+        elif command == "V":
             y = elements.pop()
             pos = current_pos.real + float(y) * 1j
             if not absolute:
@@ -200,7 +202,7 @@ def parse_path(pathdef, pen, current_pos=(0, 0), arc_class=EllipticalArc):
             pen.lineTo((pos.real, pos.imag))
             current_pos = pos
 
-        elif command == 'C':
+        elif command == "C":
             control1 = float(elements.pop()) + float(elements.pop()) * 1j
             control2 = float(elements.pop()) + float(elements.pop()) * 1j
             end = float(elements.pop()) + float(elements.pop()) * 1j
@@ -210,17 +212,19 @@ def parse_path(pathdef, pen, current_pos=(0, 0), arc_class=EllipticalArc):
                 control2 += current_pos
                 end += current_pos
 
-            pen.curveTo((control1.real, control1.imag),
-                        (control2.real, control2.imag),
-                        (end.real, end.imag))
+            pen.curveTo(
+                (control1.real, control1.imag),
+                (control2.real, control2.imag),
+                (end.real, end.imag),
+            )
             current_pos = end
             last_control = control2
 
-        elif command == 'S':
+        elif command == "S":
             # Smooth curve. First control point is the "reflection" of
             # the second control point in the previous path.
 
-            if last_command not in 'CS':
+            if last_command not in "CS":
                 # If there is no previous command or if the previous command
                 # was not an C, c, S or s, assume the first control point is
                 # coincident with the current point.
@@ -238,13 +242,15 @@ def parse_path(pathdef, pen, current_pos=(0, 0), arc_class=EllipticalArc):
                 control2 += current_pos
                 end += current_pos
 
-            pen.curveTo((control1.real, control1.imag),
-                        (control2.real, control2.imag),
-                        (end.real, end.imag))
+            pen.curveTo(
+                (control1.real, control1.imag),
+                (control2.real, control2.imag),
+                (end.real, end.imag),
+            )
             current_pos = end
             last_control = control2
 
-        elif command == 'Q':
+        elif command == "Q":
             control = float(elements.pop()) + float(elements.pop()) * 1j
             end = float(elements.pop()) + float(elements.pop()) * 1j
 
@@ -256,11 +262,11 @@ def parse_path(pathdef, pen, current_pos=(0, 0), arc_class=EllipticalArc):
             current_pos = end
             last_control = control
 
-        elif command == 'T':
+        elif command == "T":
             # Smooth curve. Control point is the "reflection" of
             # the second control point in the previous path.
 
-            if last_command not in 'QT':
+            if last_command not in "QT":
                 # If there is no previous command or if the previous command
                 # was not an Q, q, T or t, assume the first control point is
                 # coincident with the current point.
@@ -280,7 +286,7 @@ def parse_path(pathdef, pen, current_pos=(0, 0), arc_class=EllipticalArc):
             current_pos = end
             last_control = control
 
-        elif command == 'A':
+        elif command == "A":
             rx = abs(float(elements.pop()))
             ry = abs(float(elements.pop()))
             rotation = float(elements.pop())

@@ -728,7 +728,7 @@
         <AxisOrdering value="2"/>
       </Axis>
     </DesignAxisRecord>
-    <!-- AxisValueCount=5 -->
+    <!-- AxisValueCount=7 -->
     <AxisValueArray>
       <AxisValue index="0" Format="1">
         <AxisIndex value="0"/>
@@ -743,7 +743,13 @@
         <Value value="400.0"/>
         <LinkedValue value="700.0"/>
       </AxisValue>
-      <AxisValue index="2" Format="2">
+      <AxisValue index="2" Format="1">
+        <AxisIndex value="0"/>
+        <Flags value="0"/>
+        <ValueNameID value="262"/>  <!-- Medium -->
+        <Value value="500.0"/>
+      </AxisValue>
+      <AxisValue index="3" Format="2">
         <AxisIndex value="0"/>
         <Flags value="0"/>
         <ValueNameID value="266"/>  <!-- Black -->
@@ -751,7 +757,7 @@
         <RangeMinValue value="801.0"/>
         <RangeMaxValue value="900.0"/>
       </AxisValue>
-      <AxisValue index="3" Format="4">
+      <AxisValue index="4" Format="4">
         <!-- AxisCount=1 -->
         <Flags value="0"/>
         <ValueNameID value="279"/>  <!-- Condensed -->
@@ -760,14 +766,14 @@
           <Value value="79.0"/>
         </AxisValueRecord>
       </AxisValue>
-      <AxisValue index="4" Format="3">
+      <AxisValue index="5" Format="3">
         <AxisIndex value="2"/>
         <Flags value="2"/>
         <ValueNameID value="295"/>  <!-- Upright -->
         <Value value="0.0"/>
         <LinkedValue value="1.0"/>
       </AxisValue>
-      <AxisValue index="3" Format="4">
+      <AxisValue index="6" Format="4">
         <!-- AxisCount=1 -->
         <Flags value="2"/>
         <ValueNameID value="297"/>  <!-- Normal -->
@@ -781,6 +787,7 @@
   </STAT>
 
   <avar>
+    <version major="1" minor="0"/>
     <segment axis="wght">
       <mapping from="-1.0" to="-1.0"/>
       <mapping from="-0.6667" to="-0.7969"/>

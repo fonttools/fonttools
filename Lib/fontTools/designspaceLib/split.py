@@ -352,9 +352,10 @@ def _extractSubSpace(
 def _conditionSetFrom(conditionSet: List[Dict[str, Any]]) -> ConditionSet:
     c: Dict[str, Range] = {}
     for condition in conditionSet:
+        minimum, maximum = condition.get("minimum"), condition.get("maximum")
         c[condition["name"]] = Range(
-            condition.get("minimum", -math.inf),
-            condition.get("maximum", math.inf),
+            minimum if minimum is not None else -math.inf,
+            maximum if maximum is not None else math.inf,
         )
     return c
 

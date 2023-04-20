@@ -1,24 +1,38 @@
 from fontTools.misc.arrayTools import (
-    calcBounds, calcIntBounds, updateBounds, pointInRect, pointsInRect,
-    vectorLength, asInt16, normRect, scaleRect, offsetRect, insetRect,
-    sectRect, unionRect, rectCenter, intRect)
+    calcBounds,
+    calcIntBounds,
+    updateBounds,
+    pointInRect,
+    pointsInRect,
+    vectorLength,
+    asInt16,
+    normRect,
+    scaleRect,
+    offsetRect,
+    insetRect,
+    sectRect,
+    unionRect,
+    rectCenter,
+    intRect,
+)
 import math
 
 
 def test_calcBounds():
     assert calcBounds([]) == (0, 0, 0, 0)
-    assert calcBounds(
-        [(0, 40), (0, 100), (50, 50), (80, 10)]) == (0, 10, 80, 100)
+    assert calcBounds([(0, 40), (0, 100), (50, 50), (80, 10)]) == (0, 10, 80, 100)
 
 
 def test_calcIntBounds():
-    assert calcIntBounds(
-        [(0.1, 40.1), (0.1, 100.1), (49.9, 49.9), (78.5, 9.5)]
-    ) == (0, 10, 79, 100)
+    assert calcIntBounds([(0.1, 40.1), (0.1, 100.1), (49.9, 49.9), (78.5, 9.5)]) == (
+        0,
+        10,
+        79,
+        100,
+    )
 
     assert calcIntBounds(
-        [(0.1, 40.1), (0.1, 100.1), (49.9, 49.9), (78.5, 9.5)],
-        round=round
+        [(0.1, 40.1), (0.1, 100.1), (49.9, 49.9), (78.5, 9.5)], round=round
     ) == (0, 10, 78, 100)
 
 
@@ -36,8 +50,8 @@ def test_pointInRect():
 def test_pointsInRect():
     assert pointsInRect([], (0, 0, 100, 100)) == []
     assert pointsInRect(
-        [(50, 50), (0, 0), (100, 100), (101, 100)],
-        (0, 0, 100, 100)) == [True, True, True, False]
+        [(50, 50), (0, 0), (100, 100), (101, 100)], (0, 0, 100, 100)
+    ) == [True, True, True, False]
 
 
 def test_vectorLength():

@@ -22,9 +22,14 @@ SCRIPT_EXCEPTIONS = {
     "Yiii": "yi  ",
     "Nkoo": "nko ",
     "Vaii": "vai ",
+    "Zmth": "math",
     "Zinh": DEFAULT_SCRIPT,
     "Zyyy": DEFAULT_SCRIPT,
     "Zzzz": DEFAULT_SCRIPT,
+}
+
+SCRIPT_EXCEPTIONS_REVERSED = {
+    "math": "Zmth",
 }
 
 NEW_SCRIPT_TAGS = {

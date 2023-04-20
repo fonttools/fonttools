@@ -1,9 +1,16 @@
+import math
 import shutil
 from pathlib import Path
 
 import pytest
 from fontTools.designspaceLib import DesignSpaceDocument
-from fontTools.designspaceLib.split import splitInterpolable, splitVariableFonts, convert5to4
+from fontTools.designspaceLib.split import (
+    _conditionSetFrom,
+    convert5to4,
+    splitInterpolable,
+    splitVariableFonts,
+)
+from fontTools.designspaceLib.types import ConditionSet, Range
 
 from .fixtures import datadir
 
@@ -74,7 +81,9 @@ def test_split(datadir, tmpdir, test_ds, expected_interpolable_spaces):
         vfs = list(splitVariableFonts(sub_doc))
         assert expected_vf_names == set(vf[0] for vf in vfs)
 
-        loc_str = "_".join(f"{name}_{value}"for name, value in sorted(location.items()))
+        loc_str = "_".join(
+            f"{name}_{value}" for name, value in sorted(location.items())
+        )
         data_out = datadir / "split_output" / f"{temp_in.stem}_{loc_str}.designspace"
         temp_out = Path(tmpdir) / "out" / f"{temp_in.stem}_{loc_str}.designspace"
         temp_out.parent.mkdir(exist_ok=True)
@@ -101,8 +110,6 @@ def test_split(datadir, tmpdir, test_ds, expected_interpolable_spaces):
                 assert data_out.read_text(encoding="utf-8") == temp_out.read_text(
                     encoding="utf-8"
                 )
-
-
 
 
 @pytest.mark.parametrize(
@@ -137,7 +144,9 @@ def test_convert5to4(datadir, tmpdir, test_ds, expected_vfs):
 
     assert variable_fonts.keys() == expected_vfs
     for vf_name, vf in variable_fonts.items():
-        data_out = (datadir / "convert5to4_output" / vf_name).with_suffix(".designspace")
+        data_out = (datadir / "convert5to4_output" / vf_name).with_suffix(
+            ".designspace"
+        )
         temp_out = (Path(tmpdir) / "out" / vf_name).with_suffix(".designspace")
         temp_out.parent.mkdir(exist_ok=True)
         vf.write(temp_out)
@@ -148,3 +157,57 @@ def test_convert5to4(datadir, tmpdir, test_ds, expected_vfs):
             assert data_out.read_text(encoding="utf-8") == temp_out.read_text(
                 encoding="utf-8"
             )
+
+
+@pytest.mark.parametrize(
+    ["unbounded_condition"],
+    [
+        ({"name": "Weight", "minimum": 500},),
+        ({"name": "Weight", "maximum": 500},),
+        ({"name": "Weight", "minimum": 500, "maximum": None},),
+        ({"name": "Weight", "minimum": None, "maximum": 500},),
+    ],
+)
+def test_optional_min_max(unbounded_condition):
+    """Check that split functions can handle conditions that are partially
+    unbounded without tripping over None values and missing keys."""
+    doc = DesignSpaceDocument()
+
+    doc.addAxisDescriptor(
+        name="Weight", tag="wght", minimum=400, maximum=1000, default=400
+    )
+
+    doc.addRuleDescriptor(
+        name="unbounded",
+        conditionSets=[[unbounded_condition]],
+    )
+
+    assert len(list(splitInterpolable(doc))) == 1
+    assert len(list(splitVariableFonts(doc))) == 1
+
+
+@pytest.mark.parametrize(
+    ["condition", "expected_set"],
+    [
+        (
+            {"name": "axis", "minimum": 0.5},
+            {"axis": Range(minimum=0.5, maximum=math.inf)},
+        ),
+        (
+            {"name": "axis", "maximum": 0.5},
+            {"axis": Range(minimum=-math.inf, maximum=0.5)},
+        ),
+        (
+            {"name": "axis", "minimum": 0.5, "maximum": None},
+            {"axis": Range(minimum=0.5, maximum=math.inf)},
+        ),
+        (
+            {"name": "axis", "minimum": None, "maximum": 0.5},
+            {"axis": Range(minimum=-math.inf, maximum=0.5)},
+        ),
+    ],
+)
+def test_optional_min_max_internal(condition, expected_set: ConditionSet):
+    """Check that split's internal helper functions produce the correct output
+    for conditions that are partially unbounded."""
+    assert _conditionSetFrom([condition]) == expected_set

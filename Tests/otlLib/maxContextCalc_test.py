@@ -1,4 +1,3 @@
-
 import os
 import pytest
 from fontTools.ttLib import TTFont
@@ -9,13 +8,13 @@ from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
 def test_max_ctx_calc_no_features():
     font = TTFont()
     assert maxCtxFont(font) == 0
-    font.setGlyphOrder(['.notdef'])
-    addOpenTypeFeaturesFromString(font, '')
+    font.setGlyphOrder([".notdef"])
+    addOpenTypeFeaturesFromString(font, "")
     assert maxCtxFont(font) == 0
 
 
 def test_max_ctx_calc_features():
-    glyphs = '.notdef space A B C a b c'.split()
+    glyphs = ".notdef space A B C a b c".split()
     features = """
     lookup GSUB_EXT useExtension {
         sub a by b;
@@ -59,15 +58,19 @@ def test_max_ctx_calc_features():
     assert maxCtxFont(font) == 3
 
 
-@pytest.mark.parametrize('file_name, max_context', [
-    ('gsub_51', 2),
-    ('gsub_52', 2),
-    ('gsub_71', 1),
-    ('gpos_91', 1),
-])
+@pytest.mark.parametrize(
+    "file_name, max_context",
+    [
+        ("gsub_51", 2),
+        ("gsub_52", 2),
+        ("gsub_71", 1),
+        ("gpos_91", 1),
+    ],
+)
 def test_max_ctx_calc_features_ttx(file_name, max_context):
-    ttx_path = os.path.join(os.path.dirname(__file__),
-                            'data', '{}.ttx'.format(file_name))
+    ttx_path = os.path.join(
+        os.path.dirname(__file__), "data", "{}.ttx".format(file_name)
+    )
     font = TTFont()
     font.importXML(ttx_path)
 

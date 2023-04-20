@@ -8,8 +8,9 @@ def main(args=None):
         args = sys.argv[1:]
 
     if len(args) < 1:
-        print("usage: dump_woff_metadata.py "
-              "INPUT.woff [OUTPUT.xml]", file=sys.stderr)
+        print(
+            "usage: dump_woff_metadata.py " "INPUT.woff [OUTPUT.xml]", file=sys.stderr
+        )
         return 1
 
     infile = args[0]

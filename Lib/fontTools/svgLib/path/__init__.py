@@ -9,7 +9,7 @@ __all__ = [tostr(s) for s in ("SVGPath", "parse_path")]
 
 
 class SVGPath(object):
-    """ Parse SVG ``path`` elements from a file or string, and draw them
+    """Parse SVG ``path`` elements from a file or string, and draw them
     onto a glyph object that supports the FontTools Pen protocol.
 
     For example, reading from an SVG file and drawing to a Defcon Glyph:

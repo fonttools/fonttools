@@ -67,9 +67,7 @@ def _split_format(cls, source):
     assert isinstance(
         fmt, collections.abc.Hashable
     ), f"{cls} Format is not hashable: {fmt!r}"
-    assert (
-        fmt in cls.convertersByName
-    ), f"{cls} invalid Format: {fmt!r}"
+    assert fmt in cls.convertersByName, f"{cls} invalid Format: {fmt!r}"
 
     return fmt, remainder
 

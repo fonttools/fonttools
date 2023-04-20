@@ -13,14 +13,14 @@ About
 
 fontTools is a family of libraries and utilities for manipulating fonts in Python.
 
-The project has an `MIT open-source license <https://github.com/fonttools/fonttools/blob/master/LICENSE>`_. Among other things this means you can use it free of charge.
+The project has an `MIT open-source license <https://github.com/fonttools/fonttools/blob/main/LICENSE>`_. Among other things this means you can use it free of charge.
 
 Installation
 ------------
 
 .. note::
 
-    fontTools requires `Python <http://www.python.org/download/>`_ 3.6 or later.
+    fontTools requires `Python <http://www.python.org/download/>`_ 3.8 or later.
 
 The package is listed in the Python Package Index (PyPI), so you can install it with `pip <https://pip.pypa.io/>`_::
 
@@ -88,7 +88,7 @@ libraries in the fontTools suite:
 - :py:mod:`fontTools.varLib`: Module for dealing with 'gvar'-style font variations
 - :py:mod:`fontTools.voltLib`: Module for dealing with Visual OpenType Layout Tool (VOLT) files
 
-A selection of sample Python programs using these libaries can be found in the `Snippets directory <https://github.com/fonttools/fonttools/blob/master/Snippets/>`_ of the fontTools repository.
+A selection of sample Python programs using these libaries can be found in the `Snippets directory <https://github.com/fonttools/fonttools/blob/main/Snippets/>`_ of the fontTools repository.
 
 Optional Dependencies
 ---------------------
@@ -107,7 +107,7 @@ Information for developers can be found :doc:`here <./developer>`.
 License
 -------
 
-`MIT license <https://github.com/fonttools/fonttools/blob/master/LICENSE>`_.  See the full text of the license for details.
+`MIT license <https://github.com/fonttools/fonttools/blob/main/LICENSE>`_.  See the full text of the license for details.
 
 
 Table of Contents
@@ -148,7 +148,7 @@ Table of Contents
    :target: https://travis-ci.org/fonttools/fonttools
 .. |Appveyor Build status| image:: https://ci.appveyor.com/api/projects/status/0f7fmee9as744sl7/branch/master?svg=true
    :target: https://ci.appveyor.com/project/fonttools/fonttools/branch/master
-.. |Coverage Status| image:: https://codecov.io/gh/fonttools/fonttools/branch/master/graph/badge.svg
+.. |Coverage Status| image:: https://codecov.io/gh/fonttools/fonttools/branch/main/graph/badge.svg
    :target: https://codecov.io/gh/fonttools/fonttools
 .. |PyPI| image:: https://img.shields.io/pypi/v/fonttools.svg
    :target: https://pypi.org/project/FontTools

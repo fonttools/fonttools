@@ -162,10 +162,17 @@ For a discrete axis:
 ``<labels>`` element (axis)
 ---------------------------
 
-The ``<labels>`` element contains one or more ``<label>`` elements.
+The ``<labels>`` element contains one or more ``<label>`` elements, and can
+indicate this axis' STAT ordering.
 
 .. versionadded:: 5.0
 
+.. rubric:: Attributes
+
+- ``ordering``: optional, int, default: natural position of this axis in the list
+  of axes. STAT table field ``axisOrdering`` for this axis.
+
+  See: `OTSpec STAT Axis Record <https://docs.microsoft.com/en-us/typography/opentype/spec/stat#axis-records>`_
 
 ``<label>`` element (axis)
 ..........................
@@ -535,13 +542,13 @@ element with an ``xml:lang`` attribute:
 
 Defines the coordinates of this source in the design space.
 
-.. seealso:: `Full documentation of the <location> element <location>`__
+.. seealso:: :ref:`Full documentation of the \<location\> element <location>`
 
 
 ``<dimension>`` element (source)
 ................................
 
-.. seealso:: `Full documentation of the <dimension> element <dimension>`__
+.. seealso:: :ref:`Full documentation of the \<dimension\> element <dimension>`
 
 
 ``<lib>`` element (source)
@@ -717,7 +724,10 @@ The ``<variable-fonts>`` element contains one or more ``<variable-font>`` elemen
         <axis-subset name="Weight" userminimum="400" usermaximum="500" userdefault="400"/>
 
   3. a specific value along that axis; then the axis is not functional in the VF
-     but the design space is sliced at the given location.
+     but the design space is sliced at the given location. *Note:* While valid to have a
+     specific value that doesn’t have a matching ``<source>`` at that value, currently there
+     isn’t an implentation that supports this. See `this fontmake issue
+     <https://github.com/googlefonts/fontmake/issues/920>`.
 
      .. code:: xml
 
@@ -826,13 +836,13 @@ The ``<instances>`` element contains one or more ``<instance>`` elements.
 
 Defines the coordinates of this instance in the design space.
 
-.. seealso:: `Full documentation of the <location> element <location>`__
+.. seealso:: :ref:`Full documentation of the \<location\> element <location>`
 
 
 ``<dimension>`` element (instance)
 ..................................
 
-.. seealso:: `Full documentation of the <dimension> element <dimension>`__
+.. seealso:: :ref:`Full documentation of the \<dimension\> element <dimension>`
 
 
 ``<lib>`` element (instance)
