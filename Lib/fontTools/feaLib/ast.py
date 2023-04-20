@@ -7,8 +7,7 @@ import typing
 if typing.TYPE_CHECKING:
     from fontTools.feaLib.variableScalar import VariableScalar
 from collections import OrderedDict
-from collections.abc import Sequence
-from typing import Tuple, List, Optional, Union, Dict, Callable, Set, Protocol
+from typing import Tuple, List, Optional, Union, Dict, Callable, Set, Protocol, Sequence
 import itertools
 
 SHIFT = " " * 4
