@@ -828,7 +828,7 @@ class Builder(object):
 
         if any(
             (
-                gdef.glyphClassDef,
+                gdef.GlyphClassDef,
                 gdef.AttachList,
                 gdef.LigCaretList,
                 gdef.MarkAttachClassDef,
