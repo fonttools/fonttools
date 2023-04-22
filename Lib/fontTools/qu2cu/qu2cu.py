@@ -101,6 +101,7 @@ def elevate_quadratic(p0, p1, p2):
     )
 
 
+@cython.cfunc
 @cython.locals(
     start=cython.int,
     n=cython.int,
@@ -298,7 +299,6 @@ def spline_to_curves(q, costs, tolerance=0.5, all_cubic=False):
     for i in range(1, len(elevated_quadratics) + 1):
         best_sol = impossible
         for j in range(start, i):
-
             j_sol_count, j_sol_error = sols[j].num_points, sols[j].error
 
             if not all_cubic:
