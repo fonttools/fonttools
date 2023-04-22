@@ -1017,11 +1017,10 @@ def calcCubicPoints(a, b, c, d):
     p2=cython.complex,
     p3=cython.complex,
     p4=cython.complex,
-    _1_3=cython.double,
 )
-def calcCubicPointsC(a, b, c, d, _1_3=1.0 / 3):
-    p2 = (c * _1_3) + d
-    p3 = (b + c) * _1_3 + p2
+def calcCubicPointsC(a, b, c, d):
+    p2 = c * (1 / 3) + d
+    p3 = (b + c) * (1 / 3) + p2
     p4 = a + b + c + d
     return (d, p2, p3, p4)
 
