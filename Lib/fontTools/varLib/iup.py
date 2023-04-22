@@ -196,12 +196,8 @@ def can_iup_in_between(
     provided error tolerance."""
 
     assert j - i >= 2
-    interp = list(
-        iup_segment(coords[i + 1 : j], coords[i], deltas[i], coords[j], deltas[j])
-    )
+    interp = iup_segment(coords[i + 1 : j], coords[i], deltas[i], coords[j], deltas[j])
     deltas = deltas[i + 1 : j]
-
-    assert len(deltas) == len(interp)
 
     return all(
         abs(complex(x - p, y - q)) <= tolerance
