@@ -300,7 +300,6 @@ def _iup_contour_bound_forced_set(
     return forced
 
 
-@cython.cfunc
 @cython.locals(
     i=cython.int,
     j=cython.int,
