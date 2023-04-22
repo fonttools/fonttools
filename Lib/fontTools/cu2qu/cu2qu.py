@@ -311,7 +311,7 @@ def cubic_farthest_fit_inside(p0, p1, p2, p3, tolerance):
 
 
 @cython.cfunc
-@cython.locals(tolerance=cython.double, _2_3=cython.double)
+@cython.locals(tolerance=cython.double)
 @cython.locals(
     q1=cython.complex,
     c0=cython.complex,
@@ -319,7 +319,7 @@ def cubic_farthest_fit_inside(p0, p1, p2, p3, tolerance):
     c2=cython.complex,
     c3=cython.complex,
 )
-def cubic_approx_quadratic(cubic, tolerance, _2_3=2 / 3):
+def cubic_approx_quadratic(cubic, tolerance):
     """Approximate a cubic Bezier with a single quadratic within a given tolerance.
 
     Args:
@@ -340,15 +340,15 @@ def cubic_approx_quadratic(cubic, tolerance, _2_3=2 / 3):
         return None
     c0 = cubic[0]
     c3 = cubic[3]
-    c1 = c0 + (q1 - c0) * _2_3
-    c2 = c3 + (q1 - c3) * _2_3
+    c1 = c0 + (q1 - c0) * (2 / 3)
+    c2 = c3 + (q1 - c3) * (2 / 3)
     if not cubic_farthest_fit_inside(0, c1 - cubic[1], c2 - cubic[2], 0, tolerance):
         return None
     return c0, q1, c3
 
 
 @cython.cfunc
-@cython.locals(n=cython.int, tolerance=cython.double, _2_3=cython.double)
+@cython.locals(n=cython.int, tolerance=cython.double)
 @cython.locals(i=cython.int)
 @cython.locals(
     c0=cython.complex, c1=cython.complex, c2=cython.complex, c3=cython.complex
@@ -360,7 +360,7 @@ def cubic_approx_quadratic(cubic, tolerance, _2_3=2 / 3):
     q2=cython.complex,
     d1=cython.complex,
 )
-def cubic_approx_spline(cubic, n, tolerance, all_quadratic, _2_3=2 / 3):
+def cubic_approx_spline(cubic, n, tolerance, all_quadratic):
     """Approximate a cubic Bezier curve with a spline of n quadratics.
 
     Args:
@@ -391,7 +391,6 @@ def cubic_approx_spline(cubic, n, tolerance, all_quadratic, _2_3=2 / 3):
     d1 = 0j
     spline = [cubic[0], next_q1]
     for i in range(1, n + 1):
-
         # Current cubic to convert
         c0, c1, c2, c3 = next_cubic
 
@@ -411,7 +410,11 @@ def cubic_approx_spline(cubic, n, tolerance, all_quadratic, _2_3=2 / 3):
         d1 = q2 - c3
 
         if abs(d1) > tolerance or not cubic_farthest_fit_inside(
-            d0, q0 + (q1 - q0) * _2_3 - c1, q2 + (q1 - q2) * _2_3 - c2, d1, tolerance
+            d0,
+            q0 + (q1 - q0) * (2 / 3) - c1,
+            q2 + (q1 - q2) * (2 / 3) - c2,
+            d1,
+            tolerance,
         ):
             return None
     spline.append(cubic[3])
