@@ -83,6 +83,7 @@ def calc_cubic_parameters(p0, p1, p2, p3):
 
 
 @cython.cfunc
+@cython.inline
 @cython.locals(
     p0=cython.complex, p1=cython.complex, p2=cython.complex, p3=cython.complex
 )
@@ -109,10 +110,16 @@ def split_cubic_into_n_iter(p0, p1, p2, p3, n):
         return iter(split_cubic_into_three(p0, p1, p2, p3))
     if n == 4:
         a, b = split_cubic_into_two(p0, p1, p2, p3)
-        return iter(split_cubic_into_two(*a) + split_cubic_into_two(*b))
+        return iter(
+            split_cubic_into_two(a[0], a[1], a[2], a[3])
+            + split_cubic_into_two(b[0], b[1], b[2], b[3])
+        )
     if n == 6:
         a, b = split_cubic_into_two(p0, p1, p2, p3)
-        return iter(split_cubic_into_three(*a) + split_cubic_into_three(*b))
+        return iter(
+            split_cubic_into_three(a[0], a[1], a[2], a[3])
+            + split_cubic_into_three(b[0], b[1], b[2], b[3])
+        )
 
     return _split_cubic_into_n_gen(p0, p1, p2, p3, n)
 
@@ -147,6 +154,8 @@ def _split_cubic_into_n_gen(p0, p1, p2, p3, n):
         yield calc_cubic_points(a1, b1, c1, d1)
 
 
+@cython.cfunc
+@cython.inline
 @cython.locals(
     p0=cython.complex, p1=cython.complex, p2=cython.complex, p3=cython.complex
 )
@@ -174,6 +183,8 @@ def split_cubic_into_two(p0, p1, p2, p3):
     )
 
 
+@cython.cfunc
+@cython.inline
 @cython.locals(
     p0=cython.complex,
     p1=cython.complex,
@@ -201,8 +212,6 @@ def split_cubic_into_three(p0, p1, p2, p3):
         tuple: Three cubic Beziers (each expressed as a tuple of four complex
         values).
     """
-    # we define 1/27 as a keyword argument so that it will be evaluated only
-    # once but still in the scope of this function
     mid1 = (8 * p0 + 12 * p1 + 6 * p2 + p3) * (1 / 27)
     deriv1 = (p3 + 3 * p2 - 4 * p0) * (1 / 27)
     mid2 = (p0 + 6 * p1 + 12 * p2 + 8 * p3) * (1 / 27)
@@ -214,6 +223,8 @@ def split_cubic_into_three(p0, p1, p2, p3):
     )
 
 
+@cython.cfunc
+@cython.inline
 @cython.returns(cython.complex)
 @cython.locals(
     t=cython.double,
@@ -241,6 +252,8 @@ def cubic_approx_control(t, p0, p1, p2, p3):
     return _p1 + (_p2 - _p1) * t
 
 
+@cython.cfunc
+@cython.inline
 @cython.returns(cython.complex)
 @cython.locals(a=cython.complex, b=cython.complex, c=cython.complex, d=cython.complex)
 @cython.locals(ab=cython.complex, cd=cython.complex, p=cython.complex, h=cython.double)
@@ -310,6 +323,7 @@ def cubic_farthest_fit_inside(p0, p1, p2, p3, tolerance):
 
 
 @cython.cfunc
+@cython.inline
 @cython.locals(tolerance=cython.double)
 @cython.locals(
     q1=cython.complex,
@@ -331,10 +345,8 @@ def cubic_approx_quadratic(cubic, tolerance):
         curve if it fits within the given tolerance, or ``None`` if no suitable
         curve could be calculated.
     """
-    # we define 2/3 as a keyword argument so that it will be evaluated only
-    # once but still in the scope of this function
 
-    q1 = calc_intersect(*cubic)
+    q1 = calc_intersect(cubic[0], cubic[1], cubic[2], cubic[3])
     if math.isnan(q1.imag):
         return None
     c0 = cubic[0]
@@ -373,8 +385,6 @@ def cubic_approx_spline(cubic, n, tolerance, all_quadratic):
         quadratic spline if it fits within the given tolerance, or ``None`` if
         no suitable spline could be calculated.
     """
-    # we define 2/3 as a keyword argument so that it will be evaluated only
-    # once but still in the scope of this function
 
     if n == 1:
         return cubic_approx_quadratic(cubic, tolerance)
@@ -385,7 +395,9 @@ def cubic_approx_spline(cubic, n, tolerance, all_quadratic):
 
     # calculate the spline of quadratics and check errors at the same time.
     next_cubic = next(cubics)
-    next_q1 = cubic_approx_control(0, *next_cubic)
+    next_q1 = cubic_approx_control(
+        0, next_cubic[0], next_cubic[1], next_cubic[2], next_cubic[3]
+    )
     q2 = cubic[0]
     d1 = 0j
     spline = [cubic[0], next_q1]
@@ -398,7 +410,9 @@ def cubic_approx_spline(cubic, n, tolerance, all_quadratic):
         q1 = next_q1
         if i < n:
             next_cubic = next(cubics)
-            next_q1 = cubic_approx_control(i / (n - 1), *next_cubic)
+            next_q1 = cubic_approx_control(
+                i / (n - 1), next_cubic[0], next_cubic[1], next_cubic[2], next_cubic[3]
+            )
             spline.append(next_q1)
             q2 = (q1 + next_q1) * 0.5
         else:
