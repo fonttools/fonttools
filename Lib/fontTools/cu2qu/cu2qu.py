@@ -179,7 +179,6 @@ def split_cubic_into_two(p0, p1, p2, p3):
     p1=cython.complex,
     p2=cython.complex,
     p3=cython.complex,
-    _27=cython.double,
 )
 @cython.locals(
     mid1=cython.complex,
@@ -187,7 +186,7 @@ def split_cubic_into_two(p0, p1, p2, p3):
     mid2=cython.complex,
     deriv2=cython.complex,
 )
-def split_cubic_into_three(p0, p1, p2, p3, _27=1 / 27):
+def split_cubic_into_three(p0, p1, p2, p3):
     """Split a cubic Bezier into three equal parts.
 
     Splits the curve into three equal parts at t = 1/3 and t = 2/3
@@ -204,10 +203,10 @@ def split_cubic_into_three(p0, p1, p2, p3, _27=1 / 27):
     """
     # we define 1/27 as a keyword argument so that it will be evaluated only
     # once but still in the scope of this function
-    mid1 = (8 * p0 + 12 * p1 + 6 * p2 + p3) * _27
-    deriv1 = (p3 + 3 * p2 - 4 * p0) * _27
-    mid2 = (p0 + 6 * p1 + 12 * p2 + 8 * p3) * _27
-    deriv2 = (4 * p3 - 3 * p1 - p0) * _27
+    mid1 = (8 * p0 + 12 * p1 + 6 * p2 + p3) * (1 / 27)
+    deriv1 = (p3 + 3 * p2 - 4 * p0) * (1 / 27)
+    mid2 = (p0 + 6 * p1 + 12 * p2 + 8 * p3) * (1 / 27)
+    deriv2 = (4 * p3 - 3 * p1 - p0) * (1 / 27)
     return (
         (p0, (2 * p0 + p1) / 3.0, mid1 - deriv1, mid1),
         (mid1, mid1 + deriv1, mid2 - deriv2, mid2),
