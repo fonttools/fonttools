@@ -961,6 +961,7 @@ def calcCubicParameters(pt1, pt2, pt3, pt4):
 
 
 @cython.cfunc
+@cython.inline
 @cython.locals(
     pt1=cython.complex,
     pt2=cython.complex,
@@ -1007,6 +1008,7 @@ def calcCubicPoints(a, b, c, d):
 
 
 @cython.cfunc
+@cython.inline
 @cython.locals(
     a=cython.complex,
     b=cython.complex,
