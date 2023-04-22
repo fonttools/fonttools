@@ -12,6 +12,7 @@ from fontTools.pens.recordingPen import RecordingPen
 from fontTools.pens.statisticsPen import StatisticsPen
 from fontTools.pens.momentsPen import OpenContourError
 from collections import OrderedDict
+import math
 import itertools
 import sys
 
@@ -138,7 +139,6 @@ def min_cost_perfect_bipartite_matching(G):
 
 
 def test(glyphsets, glyphs=None, names=None, ignore_missing=False):
-
     if names is None:
         names = glyphsets
     if glyphs is None:
@@ -159,7 +159,6 @@ def test(glyphsets, glyphs=None, names=None, ignore_missing=False):
             allNodeTypes = []
             allContourIsomorphisms = []
             for glyphset, name in zip(glyphsets, names):
-
                 glyph = glyphset[glyph_name]
 
                 if glyph is None:
@@ -187,7 +186,6 @@ def test(glyphsets, glyphs=None, names=None, ignore_missing=False):
                 allVectors.append(contourVectors)
                 allContourIsomorphisms.append(contourIsomorphisms)
                 for ix, contour in enumerate(contourPens):
-
                     nodeVecs = tuple(instruction[0] for instruction in contour.value)
                     nodeTypes.append(nodeVecs)
 
@@ -200,7 +198,7 @@ def test(glyphsets, glyphs=None, names=None, ignore_missing=False):
                             {"master": name, "contour": ix, "type": "open_path"},
                         )
                         continue
-                    size = abs(stats.area) ** 0.5 * 0.5
+                    size = math.sqrt(abs(stats.area)) * 0.5
                     vector = (
                         int(size),
                         int(stats.meanX),
