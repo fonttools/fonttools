@@ -3,7 +3,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-from fontTools.ttLib import TTFont, TTCollection
+from fontTools.ttLib import __main__, TTFont, TTCollection
 
 import pytest
 
@@ -42,42 +42,41 @@ def flavor(request):
     return request.param
 
 
+def test_ttLib_main_as_subprocess(ttfont_path):
+    subprocess.run(
+        [sys.executable, "-m", "fontTools.ttLib", str(ttfont_path)], check=True
+    )
+
+
 def test_ttLib_open_ttfont(ttfont_path):
-    subprocess.check_call([sys.executable, "-m", "fontTools.ttLib", ttfont_path])
+    __main__.main([str(ttfont_path)])
 
 
 def test_ttLib_open_save_ttfont(tmp_path, ttfont_path, flavor):
     output_path = tmp_path / "TestTTF-Regular.ttf"
-    args = [sys.executable, "-m", "fontTools.ttLib", "-o", output_path, ttfont_path]
+    args = ["-o", str(output_path), str(ttfont_path)]
     if flavor is not None:
         args.extend(["--flavor", flavor])
-    subprocess.check_call(args)
+
+    __main__.main(args)
+
     assert output_path.exists()
     assert TTFont(output_path).getGlyphOrder() == TTFont(ttfont_path).getGlyphOrder()
 
 
 def test_ttLib_open_ttcollection(ttcollection_path):
-    subprocess.check_call(
-        [sys.executable, "-m", "fontTools.ttLib", "-y", "0", ttcollection_path]
-    )
+    __main__.main(["-y", "0", str(ttcollection_path)])
 
 
 def test_ttLib_open_ttcollection_save_single_font(tmp_path, ttcollection_path, flavor):
     for i in range(2):
         output_path = tmp_path / f"TestTTF-Regular#{i}.ttf"
-        args = [
-            sys.executable,
-            "-m",
-            "fontTools.ttLib",
-            "-y",
-            str(i),
-            "-o",
-            output_path,
-            ttcollection_path,
-        ]
+        args = ["-y", str(i), "-o", str(output_path), str(ttcollection_path)]
         if flavor is not None:
             args.extend(["--flavor", flavor])
-        subprocess.check_call(args)
+
+        __main__.main(args)
+
         assert output_path.exists()
         assert (
             TTFont(output_path).getGlyphOrder()
@@ -87,33 +86,18 @@ def test_ttLib_open_ttcollection_save_single_font(tmp_path, ttcollection_path, f
 
 def test_ttLib_open_ttcollection_save_ttcollection(tmp_path, ttcollection_path):
     output_path = tmp_path / "TestTTF.ttc"
-    subprocess.check_call(
-        [
-            sys.executable,
-            "-m",
-            "fontTools.ttLib",
-            "-o",
-            output_path,
-            ttcollection_path,
-        ]
-    )
+
+    __main__.main(["-o", str(output_path), str(ttcollection_path)])
+
     assert output_path.exists()
     assert len(TTCollection(output_path)) == len(TTCollection(ttcollection_path))
 
 
 def test_ttLib_open_multiple_fonts_save_ttcollection(tmp_path, ttfont_path):
     output_path = tmp_path / "TestTTF.ttc"
-    subprocess.check_call(
-        [
-            sys.executable,
-            "-m",
-            "fontTools.ttLib",
-            "-o",
-            output_path,
-            ttfont_path,
-            ttfont_path,
-        ]
-    )
+
+    __main__.main(["-o", str(output_path), str(ttfont_path), str(ttfont_path)])
+
     assert output_path.exists()
 
     coll = TTCollection(output_path)
