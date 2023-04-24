@@ -12,5 +12,5 @@ skia-pathops==0.7.4; platform_python_implementation != "PyPy"
 ufoLib2==0.14.0
 pyobjc==9.1.1; sys_platform == "darwin"
 freetype-py==2.3.0
-uharfbuzz==0.32.0
+uharfbuzz==0.35.0
 glyphsLib==6.2.1 # this is only required to run Tests/varLib/interpolatable_test.py
