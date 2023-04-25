@@ -186,6 +186,7 @@ GLYF_BIN = os.path.join(DATA_DIR, "_g_l_y_f_outline_flag_bit6.glyf.bin")
 HEAD_BIN = os.path.join(DATA_DIR, "_g_l_y_f_outline_flag_bit6.head.bin")
 LOCA_BIN = os.path.join(DATA_DIR, "_g_l_y_f_outline_flag_bit6.loca.bin")
 MAXP_BIN = os.path.join(DATA_DIR, "_g_l_y_f_outline_flag_bit6.maxp.bin")
+INST_TTX = os.path.join(DATA_DIR, "_g_l_y_f_instructions.ttx")
 
 
 def strip_ttLibVersion(string):
@@ -234,6 +235,18 @@ class GlyfTableTest(unittest.TestCase):
         glyfTable = font["glyf"]
         glyfData = glyfTable.compile(font)
         self.assertEqual(glyfData, self.glyfData)
+
+    def test_instructions_roundtrip(self):
+        font = TTFont(sfntVersion="\x00\x01\x00\x00")
+        font.importXML(INST_TTX)
+        glyfTable = font["glyf"]
+        self.glyfData = glyfTable.compile(font)
+        out = StringIO()
+        font.saveXML(out)
+        glyfXML = strip_ttLibVersion(out.getvalue()).splitlines()
+        with open(INST_TTX, "r") as f:
+            origXML = strip_ttLibVersion(f.read()).splitlines()
+        self.assertEqual(glyfXML, origXML)
 
     def test_recursiveComponent(self):
         glyphSet = {}
