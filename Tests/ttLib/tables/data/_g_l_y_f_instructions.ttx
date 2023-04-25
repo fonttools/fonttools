@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="4.39">
+
+  <GlyphOrder>
+    <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
+    <GlyphID id="0" name=".notdef"/>
+    <GlyphID id="1" name="NULL"/>
+    <GlyphID id="2" name="nonmarkingreturn"/>
+    <GlyphID id="3" name="A"/>
+    <GlyphID id="4" name="B"/>
+  </GlyphOrder>
+
+  <maxp>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="0x10000"/>
+    <numGlyphs value="5"/>
+    <maxPoints value="4"/>
+    <maxContours value="1"/>
+    <maxCompositePoints value="4"/>
+    <maxCompositeContours value="1"/>
+    <maxZones value="1"/>
+    <maxTwilightPoints value="0"/>
+    <maxStorage value="0"/>
+    <maxFunctionDefs value="10"/>
+    <maxInstructionDefs value="0"/>
+    <maxStackElements value="512"/>
+    <maxSizeOfInstructions value="371"/>
+    <maxComponentElements value="1"/>
+    <maxComponentDepth value="1"/>
+  </maxp>
+
+  <loca>
+    <!-- The 'loca' table will be calculated by the compiler -->
+  </loca>
+
+  <glyf>
+
+    <!-- The xMin, yMin, xMax and yMax values
+         will be recalculated by the compiler. -->
+
+    <TTGlyph name=".notdef"/><!-- contains no outline data -->
+
+    <TTGlyph name="A" xMin="100" yMin="0" xMax="477" yMax="700">
+      <contour>
+        <pt x="100" y="700" on="1"/>
+        <pt x="477" y="700" on="1"/>
+        <pt x="477" y="0" on="1"/>
+        <pt x="100" y="0" on="1"/>
+      </contour>
+      <instructions>
+        <assembly>
+          SVTCA[0]	/* SetFPVectorToAxis */
+          PUSHW[ ]	/* 1 value pushed */
+          3
+          MDAP[1]	/* MoveDirectAbsPt */
+          IUP[0]	/* InterpolateUntPts */
+          IUP[1]	/* InterpolateUntPts */
+        </assembly>
+      </instructions>
+    </TTGlyph>
+
+    <TTGlyph name="B" xMin="100" yMin="0" xMax="477" yMax="700">
+      <component glyphName="A" x="0" y="0" flags="0x204"/>
+      <instructions>
+        <assembly>
+          SVTCA[0]	/* SetFPVectorToAxis */
+          PUSHW[ ]	/* 1 value pushed */
+          1
+          MDAP[1]	/* MoveDirectAbsPt */
+          IUP[0]	/* InterpolateUntPts */
+          IUP[1]	/* InterpolateUntPts */
+        </assembly>
+      </instructions>
+    </TTGlyph>
+
+    <TTGlyph name="NULL"/><!-- contains no outline data -->
+
+    <TTGlyph name="nonmarkingreturn"/><!-- contains no outline data -->
+
+  </glyf>
+
+</ttFont>
