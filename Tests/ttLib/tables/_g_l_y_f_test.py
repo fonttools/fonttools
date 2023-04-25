@@ -235,7 +235,7 @@ class GlyfTableTest(unittest.TestCase):
         glyfTable = font["glyf"]
         glyfData = glyfTable.compile(font)
         self.assertEqual(glyfData, self.glyfData)
-    
+
     def test_instructions_roundtrip(self):
         font = TTFont(sfntVersion="\x00\x01\x00\x00")
         font.importXML(INST_TTX)
