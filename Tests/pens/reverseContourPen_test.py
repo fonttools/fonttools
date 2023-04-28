@@ -1,3 +1,4 @@
+from fontTools.pens.basePen import BasePen
 from fontTools.pens.recordingPen import RecordingPen
 from fontTools.pens.reverseContourPen import ReverseContourPen
 import pytest
@@ -66,6 +67,7 @@ TEST_DATA = [
         True,
         [
             ("moveTo", ((0, 0),)),
+            ("lineTo", ((0, 0),)),
             ("lineTo", ((2, 2),)),
             ("lineTo", ((1, 1),)),
             ("lineTo", ((0, 0),)),  # ... but line is NOT implied
@@ -159,7 +161,8 @@ TEST_DATA = [
         ],
         True,
         [
-            ("moveTo", ((0, 0),)),  # no extra lineTo added here, same as preceding
+            ("moveTo", ((0, 0),)),
+            ("lineTo", ((0, 0),)),
             ("curveTo", ((5, 5), (4, 4), (3, 3))),
             ("curveTo", ((2, 2), (1, 1), (0, 0))),
             ("closePath", ()),
@@ -256,7 +259,8 @@ TEST_DATA = [
         ],
         True,  # <--
         [
-            ("moveTo", ((0, 0),)),  # no extra lineTo added here, same as above
+            ("moveTo", ((0, 0),)),
+            ("lineTo", ((0, 0),)),
             ("qCurveTo", ((3, 3), (2, 2))),
             ("qCurveTo", ((1, 1), (0, 0))),
             ("closePath", ()),
@@ -449,9 +453,10 @@ TEST_DATA = [
         [
             ("moveTo", ((0, 651),)),
             ("lineTo", ((0, 651),)),
+            ("lineTo", ((0, 651),)),
             ("lineTo", ((0, 101),)),
             ("lineTo", ((0, 101),)),
-            ("lineTo", ((0, 651),)),  # closing line not implied
+            ("lineTo", ((0, 651),)),
             ("closePath", ()),
         ],
     ),
@@ -492,6 +497,7 @@ def test_reverse_pen_outputImpliedClosingLine():
     revpen.closePath()
     assert recpen.value == [
         ("moveTo", ((0, 0),)),
+        ("lineTo", ((0, 0),)),
         ("lineTo", ((0, 10),)),
         ("lineTo", ((10, 0),)),
         ("lineTo", ((0, 0),)),  # not implied
@@ -513,5 +519,34 @@ def test_reverse_point_pen(contour, outputImpliedClosingLine, expected):
     seg2pt = SegmentToPointPen(revpen)
     for operator, operands in contour:
         getattr(seg2pt, operator)(*operands)
-
     assert recpen.value == expected
+
+
+class CommandPen(BasePen):
+    def __init__(self):
+        self.commands = []
+
+    def _moveTo(self, pt):
+        self.commands.append("M")
+    def _lineTo(self, pt):
+        self.commands.append("L")
+    def _curveToOne(self, pt1, pt2, pt3):
+        self.commands.append("C")
+    def _closePath(self):
+        self.commands.append("Z")
+
+
+# Test case from https://github.com/fonttools/fonttools/issues/3093
+# If output implied closing is true then the sequence of commands should be
+# the same even if the line to implied by the close path is a nop (ends at current position)
+def test_reverse_pen_can_retain_interpolability():
+    def draw(endp):
+        captor = CommandPen()
+        pen = ReverseContourPen(captor, True)
+        pen.moveTo((0, 0))
+        pen.curveTo((1,1), (2,2), (3,3))
+        pen.curveTo((4,4), (5,5), endp)
+        pen.closePath()
+        return "".join(captor.commands)
+
+    assert draw((0,0)) == draw((6,6))

@@ -62,7 +62,7 @@ def reversedContour(contour, outputImpliedClosingLine=False):
         if closed:
             # for closed paths, we keep the starting point
             yield firstType, firstPts
-            if firstOnCurve != lastOnCurve:
+            if firstOnCurve != lastOnCurve or outputImpliedClosingLine:
                 # emit an implied line between the last and first points
                 yield "lineTo", (lastOnCurve,)
                 contour[-1] = (lastType, tuple(lastPts[:-1]) + (firstOnCurve,))
