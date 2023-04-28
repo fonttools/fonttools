@@ -237,6 +237,7 @@ class PointToSegmentPen(BasePointToSegmentPen):
                 # 'outputImpliedClosingLine' option) in order to disambiguate this case from
                 # the implied closing 'lineTo', otherwise the duplicate point would be lost.
                 # See https://github.com/googlefonts/fontmake/issues/572.
+
                 if (
                     i + 1 != nSegments
                     or outputImpliedClosingLine
@@ -270,11 +271,12 @@ class SegmentToPointPen(AbstractPen):
     PointPen protocol.
     """
 
-    def __init__(self, pointPen, guessSmooth=True):
+    def __init__(self, pointPen, guessSmooth=True, outputImpliedClosingLine=False):
         if guessSmooth:
             self.pen = GuessSmoothPointPen(pointPen)
         else:
             self.pen = pointPen
+        self.outputImpliedClosingLine = outputImpliedClosingLine
         self.contour = None
 
     def _flushContour(self):
@@ -318,7 +320,7 @@ class SegmentToPointPen(AbstractPen):
     def closePath(self):
         if self.contour is None:
             raise PenError("Contour missing required initial moveTo")
-        if len(self.contour) > 1 and self.contour[0][0] == self.contour[-1][0]:
+        if len(self.contour) > 1 and self.contour[0][0] == self.contour[-1][0] and not self.outputImpliedClosingLine:
             self.contour[0] = self.contour[-1]
             del self.contour[-1]
         else:

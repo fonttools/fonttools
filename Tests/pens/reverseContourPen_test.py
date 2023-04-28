@@ -516,7 +516,7 @@ def test_reverse_point_pen(contour, outputImpliedClosingLine, expected):
     recpen = RecordingPen()
     pt2seg = PointToSegmentPen(recpen, outputImpliedClosingLine)
     revpen = ReverseContourPointPen(pt2seg)
-    seg2pt = SegmentToPointPen(revpen)
+    seg2pt = SegmentToPointPen(revpen, outputImpliedClosingLine=outputImpliedClosingLine)
     for operator, operands in contour:
         getattr(seg2pt, operator)(*operands)
     assert recpen.value == expected
