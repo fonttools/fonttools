@@ -516,7 +516,9 @@ def test_reverse_point_pen(contour, outputImpliedClosingLine, expected):
     recpen = RecordingPen()
     pt2seg = PointToSegmentPen(recpen, outputImpliedClosingLine)
     revpen = ReverseContourPointPen(pt2seg)
-    seg2pt = SegmentToPointPen(revpen, outputImpliedClosingLine=outputImpliedClosingLine)
+    seg2pt = SegmentToPointPen(
+        revpen, outputImpliedClosingLine=outputImpliedClosingLine
+    )
     for operator, operands in contour:
         getattr(seg2pt, operator)(*operands)
     assert recpen.value == expected
@@ -528,10 +530,13 @@ class CommandPen(BasePen):
 
     def _moveTo(self, pt):
         self.commands.append("M")
+
     def _lineTo(self, pt):
         self.commands.append("L")
+
     def _curveToOne(self, pt1, pt2, pt3):
         self.commands.append("C")
+
     def _closePath(self):
         self.commands.append("Z")
 
@@ -544,9 +549,9 @@ def test_reverse_pen_can_retain_interpolability():
         captor = CommandPen()
         pen = ReverseContourPen(captor, True)
         pen.moveTo((0, 0))
-        pen.curveTo((1,1), (2,2), (3,3))
-        pen.curveTo((4,4), (5,5), endp)
+        pen.curveTo((1, 1), (2, 2), (3, 3))
+        pen.curveTo((4, 4), (5, 5), endp)
         pen.closePath()
         return "".join(captor.commands)
 
-    assert draw((0,0)) == draw((6,6))
+    assert draw((0, 0)) == draw((6, 6))
