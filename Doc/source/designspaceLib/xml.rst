@@ -53,6 +53,29 @@ Overview
             </dict>
         </lib>
     </designspace>
+    
+=====
+Types
+=====
+
+- **number**: A fixed point value `equivalent to Fixed in OpenType <https://docs.microsoft.com/en-us/typography/opentype/spec/otff#data-types>`_ (a 32-bit signed fixed-point number (16.16))
+- **font design (unsigned) float**: A floating point value `equivalent to (U)FWORD in OpenType <https://docs.microsoft.com/en-us/typography/opentype/spec/otff#data-types>`_
+- **float**: A floating point value `equivalent to F2DOT14 in OpenType <https://docs.microsoft.com/en-us/typography/opentype/spec/otff#data-types>`_
+
+     The F2DOT14 format consists of a signed, 2's complement integer and an unsigned fraction.
+
+- **(unsigned) integer**
+- **boolean**: A true/false value, may be expressed as ``0`` or ``1``
+- **string**: A UTF-8 encoded string
+- **OpenType tag**: An ASCII-encoded string of length 4 `equivalent to Tag in OpenType <https://docs.microsoft.com/en-us/typography/opentype/spec/otff#data-types>`_:
+
+      Axis tags must begin with a letter (0x41 to 0x5A, 0x61 to 0x7A) and must use contain letters, digits (0x30 to 0x39) or space (0x20).
+      
+      Space characters must only occur as trailing characters in tags that have fewer than four letters or digits.
+      
+      -- `Syntactic requirements for design-variation axis tags <https://docs.microsoft.com/en-us/typography/opentype/spec/dvaraxisreg#syntactic-requirements-for-design-variation-axis-tags>`_
+
+.. seealso:: `Fixed-point arithmetic § Comparison with floating-point <https://en.wikipedia.org/wiki/Fixed-point_arithmetic#Comparison_with_floating-point>`_
 
 ==================
 ``<axes>`` element
@@ -86,7 +109,7 @@ The ``<axes>`` element contains one or more ``<axis>`` elements.
 -  ``tag``: required, string, 4 letters. Some axis tags are registered
    in the OpenType Specification.
 -  ``default``: required, number. The default value for this axis, in user space coordinates.
--  ``hidden``: optional, 0 or 1. Records whether this axis needs to be
+-  ``hidden``: optional, boolean. Records whether this axis needs to be
    hidden in interfaces.
 
 For a continuous axis:
@@ -602,7 +625,7 @@ Defines the coordinates of this source in the design space.
 
 .. rubric:: Attributes
 
--  ``mute``: optional attribute, number 1 or 0. Indicate if this glyph
+-  ``mute``: optional attribute, boolean. Indicate if this glyph
    should be ignored as a master.
 
 .. note::
@@ -622,7 +645,7 @@ Defines the coordinates of this source in the design space.
 
 .. rubric:: Attributes
 
--  ``mute``: required attribute, number 1 or 0. Indicate if the kerning
+-  ``mute``: required attribute, boolean. Indicate if the kerning
    data from this source is to be excluded from the calculation.
 
    -  If the kerning element is not present, assume ``mute=0``, yes,
@@ -820,15 +843,20 @@ The ``<instances>`` element contains one or more ``<instance>`` elements.
    Corresponds with ``font.info.styleName``
 -  ``name``: required, string. A unique name that can be used to
    identify this font if it needs to be referenced elsewhere.
--  ``filename``: string. Required for MutatorMath. A path to the
+-  ``filename``: optional\ :sup:`†`, string. A path to the
    instance file, relative to the root path of this document. The path
    can be at the same level as the document or lower.
--  ``postscriptfontname``: string. Optional for MutatorMath. Corresponds
+-  ``postscriptfontname``: required\ :sup:`‡`, string. Corresponds
    with ``font.info.postscriptFontName``
--  ``stylemapfamilyname``: string. Optional for MutatorMath. Corresponds
-   with ``styleMapFamilyName``
--  ``stylemapstylename``: string. Optional for MutatorMath. Corresponds
-   with ``styleMapStyleName``
+-  ``stylemapfamilyname``: required\ :sup:`‡`, string. Corresponds
+   with ``font.info.styleMapFamilyName``
+-  ``stylemapstylename``: required\ :sup:`‡`, string. Corresponds
+   with ``font.info.styleMapStyleName``
+   
+======== =========================
+:sup:`†` Required for MutatorMath.
+:sup:`‡` Optional for MutatorMath.
+======== =========================
 
 
 ``<location>`` element (instance)
@@ -921,7 +949,7 @@ Example for varlib
 -  ``name``: string. The name of the glyph.
 -  ``unicode``: string. Unicode values for this glyph, in hexadecimal.
    Multiple values should be separated with a space.
--  ``mute``: optional attribute, number 1 or 0. Indicate if this glyph
+-  ``mute``: optional attribute, boolean. Indicate if this glyph
    should be supressed in the output.
 
 
@@ -1022,3 +1050,16 @@ The ``<lib>`` element contains arbitrary data.
     </lib>
 
 
+Type equivalence (`plist`)
+==========================
+
+- **number**: ``<real>``
+- **font design (unsigned) float**: ``<real>``
+- **float**: ``<real>``
+- **(unsigned) integer**: ``<integer>``
+- **boolean**: ``<true/>`` or ``<false/>``
+
+  Or ``<integer>0</integer>`` and ``<integer>1</integer>`` (*deprecated*)
+
+- **string**: ``<string>``
+- **OpenType tag**: ``<string>``
