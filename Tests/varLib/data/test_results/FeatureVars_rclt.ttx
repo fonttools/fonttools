@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="4.38">
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="4.39">
 
   <fvar>
 
@@ -54,14 +54,14 @@
         <FeatureTag value="rclt"/>
         <Feature>
           <!-- LookupCount=1 -->
-          <LookupListIndex index="0" value="3"/>
+          <LookupListIndex index="0" value="0"/>
         </Feature>
       </FeatureRecord>
       <FeatureRecord index="1">
         <FeatureTag value="rclt"/>
         <Feature>
           <!-- LookupCount=1 -->
-          <LookupListIndex index="0" value="4"/>
+          <LookupListIndex index="0" value="1"/>
         </Feature>
       </FeatureRecord>
     </FeatureList>
@@ -72,7 +72,7 @@
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <SingleSubst index="0">
-          <Substitution in="uni0024" out="uni0024.nostroke"/>
+          <Substitution in="uni0041" out="uni0061"/>
         </SingleSubst>
       </Lookup>
       <Lookup index="1">
@@ -88,7 +88,7 @@
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <SingleSubst index="0">
-          <Substitution in="uni0061" out="uni0041"/>
+          <Substitution in="uni0024" out="uni0024.nostroke"/>
         </SingleSubst>
       </Lookup>
       <Lookup index="3">
@@ -104,7 +104,7 @@
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <SingleSubst index="0">
-          <Substitution in="uni0041" out="uni0061"/>
+          <Substitution in="uni0061" out="uni0041"/>
         </SingleSubst>
       </Lookup>
     </LookupList>
@@ -133,7 +133,7 @@
             <Feature>
               <!-- LookupCount=3 -->
               <LookupListIndex index="0" value="0"/>
-              <LookupListIndex index="1" value="1"/>
+              <LookupListIndex index="1" value="2"/>
               <LookupListIndex index="2" value="3"/>
             </Feature>
           </SubstitutionRecord>
@@ -141,9 +141,9 @@
             <FeatureIndex value="1"/>
             <Feature>
               <!-- LookupCount=3 -->
-              <LookupListIndex index="0" value="0"/>
-              <LookupListIndex index="1" value="1"/>
-              <LookupListIndex index="2" value="4"/>
+              <LookupListIndex index="0" value="1"/>
+              <LookupListIndex index="1" value="2"/>
+              <LookupListIndex index="2" value="3"/>
             </Feature>
           </SubstitutionRecord>
         </FeatureTableSubstitution>
@@ -169,15 +169,15 @@
             <FeatureIndex value="0"/>
             <Feature>
               <!-- LookupCount=2 -->
-              <LookupListIndex index="0" value="2"/>
-              <LookupListIndex index="1" value="3"/>
+              <LookupListIndex index="0" value="0"/>
+              <LookupListIndex index="1" value="4"/>
             </Feature>
           </SubstitutionRecord>
           <SubstitutionRecord index="1">
             <FeatureIndex value="1"/>
             <Feature>
               <!-- LookupCount=2 -->
-              <LookupListIndex index="0" value="2"/>
+              <LookupListIndex index="0" value="1"/>
               <LookupListIndex index="1" value="4"/>
             </Feature>
           </SubstitutionRecord>
@@ -199,7 +199,7 @@
             <FeatureIndex value="0"/>
             <Feature>
               <!-- LookupCount=2 -->
-              <LookupListIndex index="0" value="1"/>
+              <LookupListIndex index="0" value="0"/>
               <LookupListIndex index="1" value="3"/>
             </Feature>
           </SubstitutionRecord>
@@ -208,7 +208,7 @@
             <Feature>
               <!-- LookupCount=2 -->
               <LookupListIndex index="0" value="1"/>
-              <LookupListIndex index="1" value="4"/>
+              <LookupListIndex index="1" value="3"/>
             </Feature>
           </SubstitutionRecord>
         </FeatureTableSubstitution>
@@ -230,15 +230,15 @@
             <Feature>
               <!-- LookupCount=2 -->
               <LookupListIndex index="0" value="0"/>
-              <LookupListIndex index="1" value="3"/>
+              <LookupListIndex index="1" value="2"/>
             </Feature>
           </SubstitutionRecord>
           <SubstitutionRecord index="1">
             <FeatureIndex value="1"/>
             <Feature>
               <!-- LookupCount=2 -->
-              <LookupListIndex index="0" value="0"/>
-              <LookupListIndex index="1" value="4"/>
+              <LookupListIndex index="0" value="1"/>
+              <LookupListIndex index="1" value="2"/>
             </Feature>
           </SubstitutionRecord>
         </FeatureTableSubstitution>
