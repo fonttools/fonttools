@@ -167,7 +167,7 @@ class ParserTest(unittest.TestCase):
             "} test;"
         )
         anchor = doc.statements[0].statements[0].exitAnchor
-        self.assertIsNone(anchor)
+        assert anchor.isNull()
 
     def test_anchor_format_e(self):
         doc = self.parse(
@@ -1245,7 +1245,7 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(glyphstr(pos.prefix), "[A a] [B b]")
         self.assertEqual(glyphstr(pos.glyphs), "I [N n] P")
         self.assertEqual(glyphstr(pos.suffix), "[Y y] [Z z]")
-        self.assertEqual(pos.lookups, [[lookup1], [lookup2], None])
+        self.assertEqual(pos.lookups, [[lookup1], [lookup2], []])
 
     def test_gpos_type_8_lookup_with_values(self):
         self.assertRaisesRegex(
@@ -1610,22 +1610,22 @@ class ParserTest(unittest.TestCase):
         doc = self.parse("lookup Look {substitute f_f_i by f f i;} Look;")
         sub = doc.statements[0].statements[0]
         self.assertIsInstance(sub, ast.MultipleSubstStatement)
-        self.assertEqual(sub.glyph, "f_f_i")
-        self.assertEqual(sub.replacement, ("f", "f", "i"))
+        self.assertEqual(sub.glyph.asFea(), "f_f_i")
+        self.assertEqual([x.asFea() for x in sub.replacement], ["f", "f", "i"])
 
     def test_substitute_multiple_chained(self):  # chain to GSUB LookupType 2
         doc = self.parse("lookup L {sub [A-C] f_f_i' [X-Z] by f f i;} L;")
         sub = doc.statements[0].statements[0]
         self.assertIsInstance(sub, ast.MultipleSubstStatement)
-        self.assertEqual(sub.glyph, "f_f_i")
-        self.assertEqual(sub.replacement, ("f", "f", "i"))
+        self.assertEqual(sub.glyph.asFea(), "f_f_i")
+        self.assertEqual([x.asFea() for x in sub.replacement], ["f", "f", "i"])
 
     def test_substitute_multiple_force_chained(self):
         doc = self.parse("lookup L {sub f_f_i' by f f i;} L;")
         sub = doc.statements[0].statements[0]
         self.assertIsInstance(sub, ast.MultipleSubstStatement)
-        self.assertEqual(sub.glyph, "f_f_i")
-        self.assertEqual(sub.replacement, ("f", "f", "i"))
+        self.assertEqual(sub.glyph.asFea(), "f_f_i")
+        self.assertEqual([x.asFea() for x in sub.replacement], ["f", "f", "i"])
         self.assertEqual(sub.asFea(), "sub f_f_i' by f f i;")
 
     def test_substitute_multiple_by_mutliple(self):
@@ -1690,16 +1690,16 @@ class ParserTest(unittest.TestCase):
         statements = doc.statements[0].statements
         for sub in statements:
             self.assertIsInstance(sub, ast.MultipleSubstStatement)
-        self.assertEqual(statements[1].glyph, "f")
-        self.assertEqual(statements[1].replacement, ["f"])
-        self.assertEqual(statements[3].glyph, "a")
-        self.assertEqual(statements[3].replacement, ["a"])
-        self.assertEqual(statements[4].glyph, "a.sc")
-        self.assertEqual(statements[4].replacement, ["a"])
-        self.assertEqual(statements[5].glyph, "a")
-        self.assertEqual(statements[5].replacement, ["b"])
-        self.assertEqual(statements[6].glyph, "a.sc")
-        self.assertEqual(statements[6].replacement, ["b.sc"])
+        self.assertEqual(statements[1].glyph.asFea(), "f")
+        self.assertEqual([x.asFea() for x in statements[1].replacement], ["f"])
+        self.assertEqual(statements[3].glyph.asFea(), "a")
+        self.assertEqual([x.asFea() for x in statements[3].replacement], ["a"])
+        self.assertEqual(statements[4].glyph.asFea(), "a.sc")
+        self.assertEqual([x.asFea() for x in statements[4].replacement], ["a"])
+        self.assertEqual(statements[5].glyph.asFea(), "a")
+        self.assertEqual([x.asFea() for x in statements[5].replacement], ["b"])
+        self.assertEqual(statements[6].glyph.asFea(), "a.sc")
+        self.assertEqual([x.asFea() for x in statements[6].replacement], ["b.sc"])
 
     def test_substitute_from(self):  # GSUB LookupType 3
         doc = self.parse(
@@ -1753,7 +1753,7 @@ class ParserTest(unittest.TestCase):
         sub = doc.statements[0].statements[0]
         self.assertIsInstance(sub, ast.LigatureSubstStatement)
         self.assertEqual(glyphstr(sub.glyphs), "f f i")
-        self.assertEqual(sub.replacement, "f_f_i")
+        self.assertEqual(glyphstr([sub.replacement]), "f_f_i")
         self.assertEqual(glyphstr(sub.prefix), "")
         self.assertEqual(glyphstr(sub.suffix), "")
 
@@ -1762,15 +1762,15 @@ class ParserTest(unittest.TestCase):
         sub = doc.statements[0].statements[0]
         self.assertIsInstance(sub, ast.LigatureSubstStatement)
         self.assertEqual(glyphstr(sub.glyphs), "f i")
-        self.assertEqual(sub.replacement, "f_i")
+        self.assertEqual(glyphstr([sub.replacement]), "f_i")
         self.assertEqual(glyphstr(sub.prefix), "A B")
         self.assertEqual(glyphstr(sub.suffix), "Z")
 
     def test_substitute_lookups(self):  # GSUB LookupType 6
         doc = Parser(self.getpath("spec5fi1.fea"), GLYPHNAMES).parse()
         [_, _, _, langsys, ligs, sub, feature] = doc.statements
-        self.assertEqual(feature.statements[0].lookups, [[ligs], None, [sub]])
-        self.assertEqual(feature.statements[1].lookups, [[ligs], None, [sub]])
+        self.assertEqual(feature.statements[0].lookups, [[ligs], [], [sub]])
+        self.assertEqual(feature.statements[1].lookups, [[ligs], [], [sub]])
 
     def test_substitute_missing_by(self):
         self.assertRaisesRegex(
@@ -2082,6 +2082,10 @@ class ParserTest(unittest.TestCase):
         include_dir = os.path.dirname(os.path.dirname(fea_path))
         doc = Parser(fea_path, includeDir=include_dir).parse()
         assert len(doc.statements) == 1 and doc.statements[0].text == "# Nothing"
+
+    def test_markclass_format_D(self):
+        flag = self.parse("markClass A <anchor NULL> @top;")
+        self.assertEqual(flag.asFea(), "markClass A <anchor NULL> @top;")
 
     def test_unmarked_ignore_statement(self):
         with CapturingLogHandler("fontTools.feaLib.parser", level="WARNING") as caplog:
