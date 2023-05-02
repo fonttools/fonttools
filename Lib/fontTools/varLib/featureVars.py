@@ -14,9 +14,7 @@ from collections import OrderedDict
 from .errors import VarLibError, VarLibValidationError
 
 
-def addFeatureVariations(
-    font, conditionalSubstitutions, featureTag="rvrn", processLast=None
-):
+def addFeatureVariations(font, conditionalSubstitutions, featureTag="rvrn"):
     """Add conditional substitutions to a Variable Font.
 
     The `conditionalSubstitutions` argument is a list of (Region, Substitutions)
@@ -47,8 +45,7 @@ def addFeatureVariations(
     # >>> f.save(dstPath)
     """
 
-    if processLast is None:
-        processLast = featureTag != "rvrn"
+    processLast = featureTag != "rvrn"
 
     _checkSubstitutionGlyphsExist(
         glyphNames=set(font.getGlyphOrder()),
@@ -78,9 +75,7 @@ def addFeatureVariations(
             (conditionSet, [lookupMap[s] for s in substitutions])
         )
 
-    addFeatureVariationsRaw(
-        font, font["GSUB"].table, conditionsAndLookups, featureTag, processLast
-    )
+    addFeatureVariationsRaw(font, font["GSUB"].table, conditionsAndLookups, featureTag)
 
 
 def _checkSubstitutionGlyphsExist(glyphNames, substitutions):
@@ -325,14 +320,11 @@ def cleanupBox(box):
 #
 
 
-def addFeatureVariationsRaw(
-    font, table, conditionalSubstitutions, featureTag="rvrn", processLast=None
-):
+def addFeatureVariationsRaw(font, table, conditionalSubstitutions, featureTag="rvrn"):
     """Low level implementation of addFeatureVariations that directly
     models the possibilities of the FeatureVariations table."""
 
-    if processLast is None:
-        processLast = featureTag != "rvrn"
+    processLast = featureTag != "rvrn"
 
     #
     # if there is no <featureTag> feature:
