@@ -1642,13 +1642,20 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(glyphstr([sub.glyph]), "[f_i f_l]")
         self.assertEqual(glyphstr(sub.replacement), "f [i l]")
 
+    def test_substitute_multiple_classes_mixed_singleton(self):
+        doc = self.parse("lookup Look {substitute [f_i f_l] by [f] [i l];} Look;")
+        sub = doc.statements[0].statements[0]
+        self.assertIsInstance(sub, ast.MultipleSubstStatement)
+        self.assertEqual(glyphstr([sub.glyph]), "[f_i f_l]")
+        self.assertEqual(glyphstr(sub.replacement), "f [i l]")
+
     def test_substitute_multiple_classes_mismatch(self):
         self.assertRaisesRegex(
             FeatureLibError,
-            'Expected a glyph class with 2 elements after "by", '
-            "but found a glyph class with 1 elements",
+            'Expected a glyph class with 1 or 3 elements after "by", '
+            "but found a glyph class with 2 elements",
             self.parse,
-            "lookup Look {substitute [f_i f_l] by [f] [i l];} Look;",
+            "lookup Look {substitute [f_i f_l f_f_i] by [f f_f] [i l i];} Look;",
         )
 
     def test_substitute_multiple_by_mutliple(self):

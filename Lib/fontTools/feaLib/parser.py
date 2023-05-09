@@ -935,9 +935,9 @@ class Parser(object):
             for n in new:
                 if not list(n.glyphSet()):
                     raise FeatureLibError("Empty class in replacement", location)
-                if not isinstance(n, self.ast.GlyphName) and len(n.glyphSet()) != count:
+                if len(n.glyphSet()) != 1 and len(n.glyphSet()) != count:
                     raise FeatureLibError(
-                        f'Expected a glyph class with {count} elements after "by", '
+                        f'Expected a glyph class with 1 or {count} elements after "by", '
                         f"but found a glyph class with {len(n.glyphSet())} elements",
                         location,
                     )
