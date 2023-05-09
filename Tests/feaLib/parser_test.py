@@ -44,7 +44,7 @@ GLYPHNAMES = (
     a.swash b.swash x.swash y.swash z.swash
     foobar foo.09 foo.1234 foo.9876
     one two five six acute grave dieresis umlaut cedilla ogonek macron
-    a_f_f_i o_f_f_i f_i f_f_i one.fitted one.oldstyle a.1 a.2 a.3 c_t
+    a_f_f_i o_f_f_i f_i f_l f_f_i one.fitted one.oldstyle a.1 a.2 a.3 c_t
     PRE SUF FIX BACK TRACK LOOK AHEAD ampersand ampersand.1 ampersand.2
     cid00001 cid00002 cid00003 cid00004 cid00005 cid00006 cid00007
     cid12345 cid78987 cid00999 cid01000 cid01001 cid00998 cid00995
@@ -1610,23 +1610,46 @@ class ParserTest(unittest.TestCase):
         doc = self.parse("lookup Look {substitute f_f_i by f f i;} Look;")
         sub = doc.statements[0].statements[0]
         self.assertIsInstance(sub, ast.MultipleSubstStatement)
-        self.assertEqual(sub.glyph, "f_f_i")
-        self.assertEqual(sub.replacement, ("f", "f", "i"))
+        self.assertEqual(glyphstr([sub.glyph]), "f_f_i")
+        self.assertEqual(glyphstr(sub.replacement), "f f i")
 
     def test_substitute_multiple_chained(self):  # chain to GSUB LookupType 2
         doc = self.parse("lookup L {sub [A-C] f_f_i' [X-Z] by f f i;} L;")
         sub = doc.statements[0].statements[0]
         self.assertIsInstance(sub, ast.MultipleSubstStatement)
-        self.assertEqual(sub.glyph, "f_f_i")
-        self.assertEqual(sub.replacement, ("f", "f", "i"))
+        self.assertEqual(glyphstr([sub.glyph]), "f_f_i")
+        self.assertEqual(glyphstr(sub.replacement), "f f i")
 
     def test_substitute_multiple_force_chained(self):
         doc = self.parse("lookup L {sub f_f_i' by f f i;} L;")
         sub = doc.statements[0].statements[0]
         self.assertIsInstance(sub, ast.MultipleSubstStatement)
-        self.assertEqual(sub.glyph, "f_f_i")
-        self.assertEqual(sub.replacement, ("f", "f", "i"))
+        self.assertEqual(glyphstr([sub.glyph]), "f_f_i")
+        self.assertEqual(glyphstr(sub.replacement), "f f i")
         self.assertEqual(sub.asFea(), "sub f_f_i' by f f i;")
+
+    def test_substitute_multiple_classes(self):
+        doc = self.parse("lookup Look {substitute [f_i f_l] by [f f] [i l];} Look;")
+        sub = doc.statements[0].statements[0]
+        self.assertIsInstance(sub, ast.MultipleSubstStatement)
+        self.assertEqual(glyphstr([sub.glyph]), "[f_i f_l]")
+        self.assertEqual(glyphstr(sub.replacement), "[f f] [i l]")
+
+    def test_substitute_multiple_classes_mixed(self):
+        doc = self.parse("lookup Look {substitute [f_i f_l] by f [i l];} Look;")
+        sub = doc.statements[0].statements[0]
+        self.assertIsInstance(sub, ast.MultipleSubstStatement)
+        self.assertEqual(glyphstr([sub.glyph]), "[f_i f_l]")
+        self.assertEqual(glyphstr(sub.replacement), "f [i l]")
+
+    def test_substitute_multiple_classes_mismatch(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            'Expected a glyph class with 2 elements after "by", '
+            "but found a glyph class with 1 elements",
+            self.parse,
+            "lookup Look {substitute [f_i f_l] by [f] [i l];} Look;",
+        )
 
     def test_substitute_multiple_by_mutliple(self):
         self.assertRaisesRegex(
