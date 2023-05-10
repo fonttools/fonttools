@@ -1,3 +1,14 @@
+4.39.4 (released 2023-05-10)
+----------------------------
+
+- [varLib.interpolatable] Allow for sparse masters (#3075)
+- [merge] Handle differing default/nominalWidthX in CFF (#3070)
+- [ttLib] Add missing main.py file to ttLib package (#3088)
+- [ttx] Fix missing composite instructions in XML (#3092)
+- [ttx] Fix split tables option to work on filenames containing '%' (#3096)
+- [featureVars] Process lookups for features other than rvrn last (#3099)
+- [feaLib] support multiple substitution with classes (#3103)
+
 4.39.3 (released 2023-03-28)
 ----------------------------
 
