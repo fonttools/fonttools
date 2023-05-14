@@ -29,3 +29,7 @@ lookup l1 {
 feature f5 {
    sub @class' lookup l1 [i l];
 } f5;
+
+feature f6 {
+    sub [f_i f_i]' j by [f f] [i i];
+} f6;
