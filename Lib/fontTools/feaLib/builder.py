@@ -294,9 +294,8 @@ class Builder(object):
             ]
             # "aalt" does not have to specify its own lookups, but it might.
             if not feature and name != "aalt":
-                raise FeatureLibError(
-                    "Feature %s has not been defined" % name, location
-                )
+                warnings.warn("%s: Feature %s has not been defined" % (location, name))
+                continue
             for script, lang, feature, lookups in feature:
                 for lookuplist in lookups:
                     if not isinstance(lookuplist, list):
