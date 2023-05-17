@@ -19,6 +19,7 @@ import sys
 import tempfile
 import logging
 import unittest
+import warnings
 
 
 def makeTTFont():
@@ -330,12 +331,10 @@ class BuilderTest(unittest.TestCase):
         )
 
     def test_feature_undefinedReference(self):
-        self.assertRaisesRegex(
-            FeatureLibError,
-            "Feature none has not been defined",
-            self.build,
-            "feature aalt { feature none; } aalt;",
-        )
+        with warnings.catch_warnings(record=True) as w:
+            self.build("feature aalt { feature none; } aalt;")
+            assert len(w) == 1
+            assert "Feature none has not been defined" in str(w[0].message)
 
     def test_GlyphClassDef_conflictingClasses(self):
         self.assertRaisesRegex(
