@@ -90,7 +90,6 @@ def addOpenTypeFeaturesFromString(
 
 
 class Builder(object):
-
     supportedTables = frozenset(
         Tag(tag)
         for tag in [
@@ -1243,7 +1242,7 @@ class Builder(object):
     # GSUB 1
     def add_single_subst(self, location, prefix, suffix, mapping, forceChain):
         if self.cur_feature_name_ == "aalt":
-            for (from_glyph, to_glyph) in mapping.items():
+            for from_glyph, to_glyph in mapping.items():
                 alts = self.aalt_alternates_.setdefault(from_glyph, set())
                 alts.add(to_glyph)
             return
@@ -1251,7 +1250,7 @@ class Builder(object):
             self.add_single_subst_chained_(location, prefix, suffix, mapping)
             return
         lookup = self.get_lookup_(location, SingleSubstBuilder)
-        for (from_glyph, to_glyph) in mapping.items():
+        for from_glyph, to_glyph in mapping.items():
             if from_glyph in lookup.mapping:
                 if to_glyph == lookup.mapping[from_glyph]:
                     log.info(
