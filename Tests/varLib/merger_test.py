@@ -7,6 +7,7 @@ from fontTools.varLib.models import VariationModel
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables.otBase import OTTableReader, OTTableWriter
+from io import BytesIO
 import pytest
 
 
@@ -1842,3 +1843,41 @@ class COLRVariationMergerTest:
 
         if colr.table.LayerList:
             assert len({id(p) for p in colr.table.LayerList.Paint}) == after_layer_count
+
+
+class SparsePositioningMergerTest:
+    def test_sparse_positioning_at_default(self):
+        # https://github.com/fonttools/fonttools/issues/3111
+
+        pytest.importorskip("ufo2ft")
+        pytest.importorskip("ufoLib2")
+
+        from fontTools.designspaceLib import DesignSpaceDocument
+        from ufo2ft import compileVariableTTF
+        from ufoLib2 import Font
+
+        ds = DesignSpaceDocument()
+        ds.addAxisDescriptor(
+            name="wght", tag="wght", minimum=100, maximum=900, default=400
+        )
+        ds.addSourceDescriptor(font=Font(), location=dict(wght=100))
+        ds.addSourceDescriptor(font=Font(), location=dict(wght=400))
+        ds.addSourceDescriptor(font=Font(), location=dict(wght=900))
+
+        ds.sources[0].font.newGlyph("a").unicode = ord("a")
+        ds.sources[0].font.newGlyph("b").unicode = ord("b")
+        ds.sources[0].font.features.text = "feature kern { pos a b b' 100; } kern;"
+
+        ds.sources[1].font.newGlyph("a").unicode = ord("a")
+        ds.sources[1].font.newGlyph("b").unicode = ord("b")
+        ds.sources[1].font.features.text = "feature kern { pos a b b' 0; } kern;"
+
+        ds.sources[2].font.newGlyph("a").unicode = ord("a")
+        ds.sources[2].font.newGlyph("b").unicode = ord("b")
+        ds.sources[2].font.features.text = "feature kern { pos a b b' -100; } kern;"
+
+        font = compileVariableTTF(ds, inplace=True)
+        b = BytesIO()
+        font.save(b)
+
+        assert font["GDEF"].table.VarStore.VarData[0].Item[0] == [100, -100]
