@@ -1513,6 +1513,12 @@ def closure_glyphs(self, s, cur_glyphs=None):
 def subset_glyphs(self, s):
     self.SubTable = [st for st in self.SubTable if st and st.subset_glyphs(s)]
     self.SubTableCount = len(self.SubTable)
+    if hasattr(self, "MarkFilteringSet") and self.MarkFilteringSet is not None:
+        if self.MarkFilteringSet not in s.used_mark_sets:
+            self.MarkFilteringSet = None
+            self.LookupFlag &= ~0x10
+        else:
+            self.MarkFilteringSet = s.used_mark_sets.index(self.MarkFilteringSet)
     return bool(self.SubTableCount)
 
 
@@ -2091,17 +2097,14 @@ def subset_glyphs(self, s):
         ]
         table.AttachList.GlyphCount = len(table.AttachList.AttachPoint)
     if hasattr(table, "MarkGlyphSetsDef") and table.MarkGlyphSetsDef:
-        for coverage in table.MarkGlyphSetsDef.Coverage:
+        markGlyphSets = table.MarkGlyphSetsDef
+        for coverage in markGlyphSets.Coverage:
             if coverage:
                 coverage.subset(glyphs)
 
-        # TODO: The following is disabled. If enabling, we need to go fixup all
-        # lookups that use MarkFilteringSet and map their set.
-        # indices = table.MarkGlyphSetsDef.Coverage = \
-        #   [c for c in table.MarkGlyphSetsDef.Coverage if c.glyphs]
-        # TODO: The following is disabled, as ots doesn't like it. Phew...
-        # https://github.com/khaledhosny/ots/issues/172
-        # table.MarkGlyphSetsDef.Coverage = [c if c.glyphs else None for c in table.MarkGlyphSetsDef.Coverage]
+        s.used_mark_sets = [i for i, c in enumerate(markGlyphSets.Coverage) if c.glyphs]
+        markGlyphSets.Coverage = [c for c in markGlyphSets.Coverage if c.glyphs]
+
     return True
 
 
@@ -3433,6 +3436,7 @@ class Subsetter(object):
         del self.glyphs
 
     def _subset_glyphs(self, font):
+        self.used_mark_sets = []
         for tag in self._sort_tables(font):
             clazz = ttLib.getTableClass(tag)
 
