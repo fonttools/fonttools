@@ -1889,3 +1889,109 @@ def test_subset_recalc_xAvgCharWidth(ttf_path):
 
 if __name__ == "__main__":
     sys.exit(unittest.main())
+
+
+def test_subset_prune_gdef_markglyphsetsdef():
+    # GDEF_MarkGlyphSetsDef
+    fb = FontBuilder(unitsPerEm=1000, isTTF=True)
+    glyph_order = [
+        ".notdef",
+        "A",
+        "Aacute",
+        "Acircumflex",
+        "Adieresis",
+        "a",
+        "aacute",
+        "acircumflex",
+        "adieresis",
+        "dieresiscomb",
+        "acutecomb",
+        "circumflexcomb",
+    ]
+    fb.setupGlyphOrder(glyph_order)
+    fb.setupGlyf({g: TTGlyphPen(None).glyph() for g in glyph_order})
+    fb.setupHorizontalMetrics({g: (500, 0) for g in glyph_order})
+    fb.setupHorizontalHeader()
+    fb.setupPost()
+    fb.setupNameTable(
+        {"familyName": "TestGDEFMarkGlyphSetsDef", "styleName": "Regular"}
+    )
+    fb.addOpenTypeFeatures(
+        """
+        feature ccmp {
+            lookup ccmp_1 {
+                lookupflag UseMarkFilteringSet [acutecomb];
+                sub a acutecomb by aacute;
+                sub A acutecomb by Aacute;
+            } ccmp_1;
+            lookup ccmp_2 {
+                lookupflag UseMarkFilteringSet [circumflexcomb];
+                sub a circumflexcomb by acircumflex;
+                sub A circumflexcomb by Acircumflex;
+            } ccmp_2;
+            lookup ccmp_3 {
+                lookupflag UseMarkFilteringSet [dieresiscomb];
+                sub a dieresiscomb by adieresis;
+                sub A dieresiscomb by Adieresis;
+                sub A acutecomb by Aacute;
+            } ccmp_3;
+        } ccmp;
+    """
+    )
+
+    buf = io.BytesIO()
+    fb.save(buf)
+    buf.seek(0)
+
+    font = TTFont(buf)
+
+    features = font["GSUB"].table.FeatureList.FeatureRecord
+    assert features[0].FeatureTag == "ccmp"
+    lookups = font["GSUB"].table.LookupList.Lookup
+    assert lookups[0].LookupFlag == 16
+    assert lookups[0].MarkFilteringSet == 0
+    assert lookups[1].LookupFlag == 16
+    assert lookups[1].MarkFilteringSet == 1
+    assert lookups[2].LookupFlag == 16
+    assert lookups[2].MarkFilteringSet == 2
+    marksets = font["GDEF"].table.MarkGlyphSetsDef.Coverage
+    assert marksets[0].glyphs == ["acutecomb"]
+    assert marksets[1].glyphs == ["circumflexcomb"]
+    assert marksets[2].glyphs == ["dieresiscomb"]
+
+    options = subset.Options(layout_features=["*"])
+    subsetter = subset.Subsetter(options)
+    subsetter.populate(glyphs=["A", "a", "acutecomb", "dieresiscomb"])
+    subsetter.subset(font)
+
+    features = font["GSUB"].table.FeatureList.FeatureRecord
+    assert features[0].FeatureTag == "ccmp"
+    lookups = font["GSUB"].table.LookupList.Lookup
+    assert lookups[0].LookupFlag == 16
+    assert lookups[0].MarkFilteringSet == 0
+    assert lookups[1].LookupFlag == 16
+    assert lookups[1].MarkFilteringSet == 1
+    marksets = font["GDEF"].table.MarkGlyphSetsDef.Coverage
+    assert marksets[0].glyphs == ["acutecomb"]
+    assert marksets[1].glyphs == ["dieresiscomb"]
+
+    buf = io.BytesIO()
+    fb.save(buf)
+    buf.seek(0)
+
+    font = TTFont(buf)
+
+    options = subset.Options(layout_features=["*"], layout_closure=False)
+    subsetter = subset.Subsetter(options)
+    subsetter.populate(glyphs=["A", "acutecomb", "Aacute"])
+    subsetter.subset(font)
+
+    features = font["GSUB"].table.FeatureList.FeatureRecord
+    assert features[0].FeatureTag == "ccmp"
+    lookups = font["GSUB"].table.LookupList.Lookup
+    assert lookups[0].LookupFlag == 16
+    assert lookups[0].MarkFilteringSet == 0
+    assert lookups[1].LookupFlag == 0
+    assert lookups[1].MarkFilteringSet == None
+    marksets = font["GDEF"].table.MarkGlyphSetsDef.Coverage
+    assert marksets[0].glyphs == ["acutecomb"]
