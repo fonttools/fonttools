@@ -152,7 +152,7 @@ def test_build_cubic_ttf(tmp_path):
     ):
         fb.setupGlyf(glyphs)
     # can skip check if feeling adventurous
-    fb.setupGlyf(glyphs, checkFormat=False)
+    fb.setupGlyf(glyphs, validateGlyphFormat=False)
 
     # cubics are (will be) allowed in glyf table format 1
     fb = FontBuilder(1000, isTTF=True, glyphDataFormat=1)

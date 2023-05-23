@@ -648,7 +648,7 @@ class FontBuilder(object):
         for fontDict in topDict.FDArray:
             fontDict.Private.vstore = vstore
 
-    def setupGlyf(self, glyphs, calcGlyphBounds=True, checkFormat=True):
+    def setupGlyf(self, glyphs, calcGlyphBounds=True, validateGlyphFormat=True):
         """Create the `glyf` table from a dict, that maps glyph names
         to `fontTools.ttLib.tables._g_l_y_f.Glyph` objects, for example
         as made by `fontTools.pens.ttGlyphPen.TTGlyphPen`.
@@ -657,12 +657,14 @@ class FontBuilder(object):
         calculated. Only pass False if your glyph objects already have
         their bounding box values set.
 
-        If `checkFormat` is True, raise ValueError if any of the glyphs contains
+        If `validateGlyphFormat` is True, raise ValueError if any of the glyphs contains
         cubic curves or is a variable composite but head.glyphDataFormat=0.
+        Set it to False to skip the check if you know in advance all the glyphs are
+        compatible with the specified glyphDataFormat.
         """
         assert self.isTTF
 
-        if checkFormat and self.font["head"].glyphDataFormat == 0:
+        if validateGlyphFormat and self.font["head"].glyphDataFormat == 0:
             for name, g in glyphs.items():
                 if g.isVarComposite():
                     raise ValueError(
