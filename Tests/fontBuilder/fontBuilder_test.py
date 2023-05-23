@@ -137,6 +137,25 @@ def test_build_ttf(tmpdir):
     _verifyOutput(outPath)
 
 
+def test_build_cubic_ttf(tmp_path):
+    pen = TTGlyphPen(None)
+    pen.moveTo((100, 100))
+    pen.curveTo((200, 200), (300, 300), (400, 400))
+    pen.closePath()
+    glyph = pen.glyph()
+    glyphs = {"A": glyph}
+
+    fb = FontBuilder(1000, isTTF=True, glyphDataFormat=0)
+    with pytest.raises(
+        ValueError, match="Glyph 'A' has cubic Bezier outlines, but glyphDataFormat=0"
+    ):
+        fb.setupGlyf(glyphs)
+
+    fb = FontBuilder(1000, isTTF=True, glyphDataFormat=1)
+    fb.setupGlyf(glyphs)
+    assert "A" in fb.font["glyf"].glyphs
+
+
 def test_build_otf(tmpdir):
     outPath = os.path.join(str(tmpdir), "test.otf")
 
