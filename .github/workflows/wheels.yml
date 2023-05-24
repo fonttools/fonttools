@@ -1,0 +1,136 @@
+name: Build + Deploy
+
+on:
+  push:
+    tags: ["*.*.*"]
+  release:
+    types:
+      - published
+  # enables workflow to be run manually
+  # https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#workflow_dispatch
+  workflow_dispatch:
+
+env:
+  PROJECT_NAME: fonttools
+  PACKAGE_DIR: src/fonttools
+  # skip binary wheels for pypy (preferable to use pure-python) and 32-bit Linux
+  CIBW_SKIP: pp* cp*linux_i686
+  CIBW_ENVIRONMENT: FONTTOOLS_WITH_CYTHON=1
+  CIBW_TEST_REQUIRES: tox
+
+jobs:
+
+  build_wheels:
+    name: ${{ matrix.type }} ${{ matrix.arch }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+        arch: [auto64]
+        build: ["*"]
+        test_command: ["tox -e py-cy-nolxml -c {package}/tox.ini --installpkg {wheel}"]
+        include:
+          # # the manylinux1 docker images contain up to python 3.9
+          # - os: ubuntu-latest
+          #   type: manylinux1
+          #   arch: auto
+          #   build: "cp{38,39}-*"
+          #   CIBW_MANYLINUX_X86_64_IMAGE: manylinux1
+          #   CIBW_MANYLINUX_I686_IMAGE: manylinux1
+          # # the manylinux2010 image contains python 3.10
+          # - os: ubuntu-latest
+          #   arch: auto
+          #   type: manylinux2010
+          #   build: "cp310-*"
+          #   CIBW_MANYLINUX_X86_64_IMAGE: manylinux2010
+          #   CIBW_MANYLINUX_I686_IMAGE: manylinux2010
+          # # the manylinux2014 image contains python 3.11
+          #
+          # the manylinux2014 image contains ALL the python versions we support
+          # use that for simplicity, and only if needed build for older manylinuxes
+          - os: ubuntu-latest
+            arch: auto
+            type: manylinux2014
+            # build: "cp311-*"
+            build: "cp{38,39,310,311}-*"
+            CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
+            CIBW_MANYLINUX_I686_IMAGE: manylinux2014
+
+          - os: macos-latest
+            arch: universal2
+            build: "*"
+
+          - os: windows-latest
+            arch: auto32
+            build: "*"
+            # skip running test on 32-bit windows
+            test_command: "python -c \"import fontTools; print(fontTools.__file__, fontTools.__version__)\""
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: "3.x"
+    - name: Install dependencies
+      run: pip install git+https://github.com/anthrotype/cibuildwheel.git@test_command_wheel#egg=cibuildwheel
+
+    - name: Build Wheels
+      run: python -m cibuildwheel --output-dir wheelhouse "${PACKAGE_DIR}"
+      env:
+        CIBW_BUILD: ${{ matrix.build }}
+        CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.CIBW_MANYLINUX_I686_IMAGE }}
+        CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.CIBW_MANYLINUX_X86_64_IMAGE }}
+        CIBW_ARCHS: ${{ matrix.arch }}
+        CIBW_TEST_COMMAND: ${{ matrix.test_command }}
+    - uses: actions/upload-artifact@v2
+      with:
+        path: wheelhouse/*.whl
+
+  build_arch_wheels:
+    name: py${{ matrix.python }} on ${{ matrix.arch }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # aarch64 uses qemu so it's slow, build each py version in parallel jobs
+        python: [38, 39, 310, 311]
+        arch: [aarch64]
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+    - uses: docker/setup-qemu-action@v1.2.0
+      with:
+        platforms: all
+    - name: Install dependencies
+      run: pip install git+https://github.com/anthrotype/cibuildwheel.git@test_command_wheel#egg=cibuildwheel
+    - name: Build Wheels
+      run: python -m cibuildwheel --output-dir wheelhouse "${PACKAGE_DIR}"
+      env:
+        CIBW_BUILD: cp${{ matrix.python }}-*
+        CIBW_ARCHS: ${{ matrix.arch }}
+    - uses: actions/upload-artifact@v2
+      with:
+        path: wheelhouse/*.whl
+
+  deploy:
+    name: Upload if release
+    needs: [build_wheels, build_arch_wheels]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release' && github.event.action == 'published'
+
+    steps:
+    - uses: actions/download-artifact@v2
+      with:
+        name: artifact
+        path: dist
+
+    - uses: pypa/gh-action-pypi-publish@v1.4.2
+      with:
+        user: __token__
+        password: ${{ secrets.PYPI_PASSWORD }}
