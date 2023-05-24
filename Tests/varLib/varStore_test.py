@@ -1,4 +1,6 @@
 import pytest
+from io import StringIO
+from fontTools.misc.xmlWriter import XMLWriter
 from fontTools.varLib.models import VariationModel
 from fontTools.varLib.varStore import OnlineVarStoreBuilder, VarStoreInstancer
 from fontTools.ttLib import TTFont, newTable
@@ -80,3 +82,94 @@ def buildAxis(axisTag):
     axis = Axis()
     axis.axisTag = axisTag
     return axis
+
+
+@pytest.mark.parametrize(
+    "numRegions, varData, expectedNumVarData, expectedBytes",
+    [
+        (
+            5,
+            [
+                [10, 10, 0, 0, 20],
+                {3: 300},
+            ],
+            1,
+            156,
+        ),
+        (
+            5,
+            [
+                [10, 10, 0, 0, 20],
+                [10, 11, 0, 0, 20],
+                [10, 12, 0, 0, 20],
+                [10, 13, 0, 0, 20],
+                {3: 300},
+            ],
+            1,
+            175,
+        ),
+        (
+            5,
+            [
+                [10, 11, 0, 0, 20],
+                [10, 300, 0, 0, 20],
+                [10, 301, 0, 0, 20],
+                [10, 302, 0, 0, 20],
+                [10, 303, 0, 0, 20],
+                [10, 304, 0, 0, 20],
+            ],
+            1,
+            180,
+        ),
+        (
+            5,
+            [
+                [0, 11, 12, 0, 20],
+                [0, 13, 12, 0, 20],
+                [0, 14, 12, 0, 20],
+                [0, 15, 12, 0, 20],
+                [0, 16, 12, 0, 20],
+                [10, 300, 0, 0, 20],
+                [10, 301, 0, 0, 20],
+                [10, 302, 0, 0, 20],
+                [10, 303, 0, 0, 20],
+                [10, 304, 0, 0, 20],
+            ],
+            2,
+            206,
+        ),
+    ],
+)
+def test_optimize(numRegions, varData, expectedNumVarData, expectedBytes):
+    locations = [{i: i / 16384.0} for i in range(numRegions)]
+    axisTags = sorted({k for loc in locations for k in loc})
+
+    model = VariationModel(locations)
+    builder = OnlineVarStoreBuilder(axisTags)
+    builder.setModel(model)
+
+    for data in varData:
+        if type(data) is dict:
+            newData = [0] * numRegions
+            for k, v in data.items():
+                newData[k] = v
+            data = newData
+
+        builder.storeMasters(data)
+
+    varStore = builder.finish()
+    mapping = varStore.optimize()
+
+    assert len(varStore.VarData) == expectedNumVarData
+
+    dummyFont = TTFont()
+
+    writer = XMLWriter(StringIO())
+    varStore.toXML(writer, dummyFont)
+    xml = writer.file.getvalue()
+
+    writer = OTTableWriter()
+    varStore.compile(writer, dummyFont)
+    data = writer.getAllData()
+
+    assert len(data) == expectedBytes, xml

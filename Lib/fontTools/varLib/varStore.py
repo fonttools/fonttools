@@ -210,7 +210,6 @@ class VarStoreInstancer(object):
 def VarStore_subset_varidxes(
     self, varIdxes, optimize=True, retainFirstMap=False, advIdxes=set()
 ):
-
     # Sort out used varIdxes by major/minor.
     used = {}
     for varIdx in varIdxes:
@@ -407,7 +406,7 @@ class _Encoding(object):
     def _characteristic_overhead(chars):
         """Returns overhead in bytes of encoding this characteristic
         as a VarData."""
-        c = 6
+        c = 4 + 6  # 4 bytes for LOffset, 6 bytes for VarData header
         while chars:
             if chars & 0b1111:
                 c += 2
@@ -423,6 +422,8 @@ class _Encoding(object):
             else:
                 new_encoding = None
             self.best_new_encoding = new_encoding
+            if new_encoding:
+                break
 
 
 class _EncodingDict(dict):
@@ -468,6 +469,68 @@ class _EncodingDict(dict):
 def VarStore_optimize(self, use_NO_VARIATION_INDEX=True):
     """Optimize storage. Returns mapping from old VarIdxes to new ones."""
 
+    # Overview:
+    #
+    # For each VarData row, we first extend it with zeroes to have
+    # one column per region in VarRegionList. We then group the
+    # rows into _Encoding objects, by their "characteristic" bitmap.
+    # The characteristic bitmap is a binary number representing how
+    # many bytes each column of the data takes up to encode. Each
+    # column is encoded in four bits. For example, if a column has
+    # only values in the range -128..127, it would only have a single
+    # bit set in the characteristic bitmap for that column. If it has
+    # values in the range -32768..32767, it would have two bits set.
+    # The number of ones in the characteristic bitmap is the "width"
+    # of the encoding.
+    #
+    # Each encoding as such has a number of "active" (ie. non-zero)
+    # columns. The overhead of encoding the characteristic bitmap
+    # is 10 bytes, plus 2 bytes per active column.
+    #
+    # When an encoding is merged into another one, if the characteristic
+    # of the old encoding is a subset of the new one, then the overhead
+    # of the old encoding is completely eliminated. However, each row
+    # now would require more bytes to encode, to the tune of one byte
+    # per characteristic bit that is active in the new encoding but not
+    # in the old one. The number of bits that can be added to an encoding
+    # while still beneficial to merge it into another encoding is called
+    # the "room" for that encoding.
+    #
+    # The "gain" of an encodings is the maximum number of bytes we can
+    # save by merging it into another encoding. The "gain" of merging
+    # two encodings is how many bytes we save by doing so.
+    #
+    # High-level algorithm:
+    #
+    # - Each encoding has a minimal way to encode it. However, because
+    #   of the overhead of encoding the characteristic bitmap, it may
+    #   be beneficial to merge two encodings together, if there is
+    #   gain in doing so. As such, we need to search for the best
+    #   such successive merges.
+    #
+    # Algorithm:
+    #
+    # - For any encoding that has zero gain, encode it as is and put
+    #   it in the "done" list. Put the remaining encodings into the
+    #   "todo" list.
+    # - For each encoding in the todo list, find the encoding in the
+    #   done list that has the highest gain when merged into it; call
+    #   this the "best new encoding".
+    # - Sort todo list by encoding room.
+    # - While todo list is not empty:
+    #   - Pop the first item from todo list, as current item.
+    #   - For each each encoding in the todo list, try combining it
+    #     with the current item. Calculate total gain as the gain of
+    #     this combined encoding minus the gain of combining each of
+    #     the two items with their best new encoding, if any.
+    #   - If the total gain is positive and better than any previously
+    #     remembered match, remember this as new match.
+    #   - If a match was found, combine the two items and put them
+    #     back in the todo list. Otherwise, if the current item's
+    #     best new encoding is not None, combine current item with
+    #     its best new encoding. Otherwise encode the current item
+    #     by itself and put it in the done list.
+
     # TODO
     # Check that no two VarRegions are the same; if they are, fold them.
 
@@ -483,7 +546,6 @@ def VarStore_optimize(self, use_NO_VARIATION_INDEX=True):
         regionIndices = data.VarRegionIndex
 
         for minor, item in enumerate(data.Item):
-
             row = list(zeroes)
             for regionIdx, v in zip(regionIndices, item):
                 row[regionIdx] += v
@@ -553,14 +615,19 @@ def VarStore_optimize(self, use_NO_VARIATION_INDEX=True):
             )
             separate_gain = this_gain + other_gain
 
-            if combined_gain > separate_gain:
+            if combined_gain - separate_gain > best_gain:
                 best_idx = i
                 best_gain = combined_gain - separate_gain
 
         if best_idx is None:
-            # Encoding is decided as is
-            done_by_width[encoding.width].append(encoding)
+            if encoding.best_new_encoding is None:
+                # Encoding is decided as is
+                done_by_width[encoding.width].append(encoding)
+            else:
+                # Merge with its best new encoding
+                encoding.best_new_encoding.extend(encoding.items)
         else:
+            # Combine the two encodings
             other_encoding = todo[best_idx]
             combined_chars = other_encoding.chars | encoding.chars
             combined_encoding = _Encoding(combined_chars)
