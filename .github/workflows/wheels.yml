@@ -12,7 +12,6 @@ on:
 
 env:
   PROJECT_NAME: fonttools
-  PACKAGE_DIR: src/fonttools
   # skip binary wheels for pypy (preferable to use pure-python) and 32-bit Linux
   CIBW_SKIP: pp* cp*linux_i686
   CIBW_ENVIRONMENT: FONTTOOLS_WITH_CYTHON=1
@@ -81,7 +80,7 @@ jobs:
       run: pip install git+https://github.com/anthrotype/cibuildwheel.git@test_command_wheel#egg=cibuildwheel
 
     - name: Build Wheels
-      run: python -m cibuildwheel --output-dir wheelhouse "${PACKAGE_DIR}"
+      run: python -m cibuildwheel --output-dir wheelhouse .
       env:
         CIBW_BUILD: ${{ matrix.build }}
         CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.CIBW_MANYLINUX_I686_IMAGE }}
@@ -110,7 +109,7 @@ jobs:
     - name: Install dependencies
       run: pip install git+https://github.com/anthrotype/cibuildwheel.git@test_command_wheel#egg=cibuildwheel
     - name: Build Wheels
-      run: python -m cibuildwheel --output-dir wheelhouse "${PACKAGE_DIR}"
+      run: python -m cibuildwheel --output-dir wheelhouse .
       env:
         CIBW_BUILD: cp${{ matrix.python }}-*
         CIBW_ARCHS: ${{ matrix.arch }}
