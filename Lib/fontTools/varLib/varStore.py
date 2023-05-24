@@ -498,6 +498,14 @@ def VarStore_optimize(self, use_NO_VARIATION_INDEX=True):
     # save by merging it into another encoding. The "gain" of merging
     # two encodings is how many bytes we save by doing so.
     #
+    # High-level algorithm:
+    #
+    # - Each encoding has a minimal way to encode it. However, because
+    #   of the overhead of encoding the characteristic bitmap, it may
+    #   be beneficial to merge two encodings together, if there is
+    #   gain in doing so. As such, we need to search for the best
+    #   such successive merges.
+    #
     # Algorithm:
     #
     # - For any encoding that has zero gain, encode it as is and put
