@@ -11,7 +11,6 @@ on:
   workflow_dispatch:
 
 env:
-  PROJECT_NAME: fonttools
   # skip binary wheels for pypy (preferable to use pure-python) and 32-bit Linux
   CIBW_SKIP: pp* cp*linux_i686
   CIBW_ENVIRONMENT: FONTTOOLS_WITH_CYTHON=1
@@ -31,7 +30,7 @@ jobs:
         os: [macos-latest, windows-latest]
         arch: [auto64]
         build: ["*"]
-        test_command: ["tox -e py-cy-nolxml -c {package}/tox.ini --installpkg {wheel}"]
+        tox_env: ["py-cy"]
         include:
           # # the manylinux1 docker images contain up to python 3.9
           # - os: ubuntu-latest
@@ -66,8 +65,8 @@ jobs:
           - os: windows-latest
             arch: auto32
             build: "*"
-            # skip running test on 32-bit windows
-            test_command: "python -c \"import fontTools; print(fontTools.__file__, fontTools.__version__)\""
+            # scipy doesn't have wheels for win32 hence run tox with 'noextra'
+            tox_env: py-cy-noextra
     steps:
     - uses: actions/checkout@v2
       with:
@@ -77,6 +76,7 @@ jobs:
       with:
         python-version: "3.x"
     - name: Install dependencies
+      # using fork of cibuildwheel until this is fixed: https://github.com/pypa/cibuildwheel/issues/1504
       run: pip install git+https://github.com/anthrotype/cibuildwheel.git@test_command_wheel#egg=cibuildwheel
 
     - name: Build Wheels
@@ -86,7 +86,7 @@ jobs:
         CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.CIBW_MANYLINUX_I686_IMAGE }}
         CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.CIBW_MANYLINUX_X86_64_IMAGE }}
         CIBW_ARCHS: ${{ matrix.arch }}
-        CIBW_TEST_COMMAND: ${{ matrix.test_command }}
+        CIBW_TEST_COMMAND: "tox -e ${{ matrix.tox_env }} --installpkg {wheel}"
     - uses: actions/upload-artifact@v2
       with:
         path: wheelhouse/*.whl
@@ -107,6 +107,7 @@ jobs:
       with:
         platforms: all
     - name: Install dependencies
+      # using fork of cibuildwheel until this is fixed: https://github.com/pypa/cibuildwheel/issues/1504
       run: pip install git+https://github.com/anthrotype/cibuildwheel.git@test_command_wheel#egg=cibuildwheel
     - name: Build Wheels
       run: python -m cibuildwheel --output-dir wheelhouse .
