@@ -870,11 +870,10 @@ class SubsetTest:
             ["GlyphOrder", "HVAR", "VVAR", "avar", "fvar"],
         )
 
-    def test_subset_flavor(self):
+    def test_subset_flavor_woff(self):
         fontpath = self.compile_font(self.getpath("TestTTF-Regular.ttx"), ".ttf")
-        font = TTFont(fontpath)
-
         woff_path = self.temp_path(".woff")
+
         subset.main(
             [
                 fontpath,
@@ -887,10 +886,16 @@ class SubsetTest:
 
         assert woff.flavor == "woff"
 
+    def test_subset_flavor_woff2(self):
+        # skip if brotli is not importable, required for woff2
+        pytest.importorskip("brotli")
+
+        fontpath = self.compile_font(self.getpath("TestTTF-Regular.ttx"), ".ttf")
         woff2_path = self.temp_path(".woff2")
+
         subset.main(
             [
-                woff_path,
+                fontpath,
                 "*",
                 "--flavor=woff2",
                 "--output-file=%s" % woff2_path,
@@ -900,10 +905,13 @@ class SubsetTest:
 
         assert woff2.flavor == "woff2"
 
+    def test_subset_flavor_none(self):
+        fontpath = self.compile_font(self.getpath("TestTTF-Regular.ttx"), ".ttf")
         ttf_path = self.temp_path(".ttf")
+
         subset.main(
             [
-                woff2_path,
+                fontpath,
                 "*",
                 "--output-file=%s" % ttf_path,
             ]

@@ -12,10 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from . import CUBIC_GLYPHS
 from fontTools.pens.pointPen import PointToSegmentPen, SegmentToPointPen
+from fontTools.ufoLib.glifLib import GlyphSet
 from math import isclose
+import os
 import unittest
+
+
+DATADIR = os.path.join(os.path.dirname(__file__), "data")
+CUBIC_GLYPHS = GlyphSet(os.path.join(DATADIR, "cubic"))
+QUAD_GLYPHS = GlyphSet(os.path.join(DATADIR, "quadratic"))
 
 
 class BaseDummyPen(object):

@@ -8,12 +8,6 @@ from numbers import Integral
 from fontTools.misc import etree
 from fontTools.misc import plistlib
 from fontTools.misc.textTools import tostr
-from fontTools.ufoLib.plistlib import (
-    readPlist,
-    readPlistFromString,
-    writePlist,
-    writePlistToString,
-)
 import pytest
 from collections.abc import Mapping
 
@@ -450,45 +444,51 @@ def test_no_pretty_print(use_builtin_types):
 
 
 def test_readPlist_from_path(pl):
+    old_plistlib = pytest.importorskip("fontTools.ufoLib.plistlib")
     path = os.path.join(datadir, "test.plist")
-    pl2 = readPlist(path)
+    pl2 = old_plistlib.readPlist(path)
     assert isinstance(pl2["someData"], plistlib.Data)
     assert pl2 == pl
 
 
 def test_readPlist_from_file(pl):
+    old_plistlib = pytest.importorskip("fontTools.ufoLib.plistlib")
     with open(os.path.join(datadir, "test.plist"), "rb") as f:
-        pl2 = readPlist(f)
+        pl2 = old_plistlib.readPlist(f)
         assert isinstance(pl2["someData"], plistlib.Data)
         assert pl2 == pl
         assert not f.closed
 
 
 def test_readPlistFromString(pl):
-    pl2 = readPlistFromString(TESTDATA)
+    old_plistlib = pytest.importorskip("fontTools.ufoLib.plistlib")
+    pl2 = old_plistlib.readPlistFromString(TESTDATA)
     assert isinstance(pl2["someData"], plistlib.Data)
     assert pl2 == pl
 
 
 def test_writePlist_to_path(tmpdir, pl_no_builtin_types):
+    old_plistlib = pytest.importorskip("fontTools.ufoLib.plistlib")
     testpath = tmpdir / "test.plist"
-    writePlist(pl_no_builtin_types, str(testpath))
+    old_plistlib.writePlist(pl_no_builtin_types, str(testpath))
     with testpath.open("rb") as fp:
         pl2 = plistlib.load(fp, use_builtin_types=False)
     assert pl2 == pl_no_builtin_types
 
 
 def test_writePlist_to_file(tmpdir, pl_no_builtin_types):
+    old_plistlib = pytest.importorskip("fontTools.ufoLib.plistlib")
     testpath = tmpdir / "test.plist"
     with testpath.open("wb") as fp:
-        writePlist(pl_no_builtin_types, fp)
+        old_plistlib.writePlist(pl_no_builtin_types, fp)
     with testpath.open("rb") as fp:
         pl2 = plistlib.load(fp, use_builtin_types=False)
     assert pl2 == pl_no_builtin_types
 
 
 def test_writePlistToString(pl_no_builtin_types):
-    data = writePlistToString(pl_no_builtin_types)
+    old_plistlib = pytest.importorskip("fontTools.ufoLib.plistlib")
+    data = old_plistlib.writePlistToString(pl_no_builtin_types)
     pl2 = plistlib.loads(data)
     assert pl2 == pl_no_builtin_types
 
