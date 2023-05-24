@@ -15,6 +15,9 @@ env:
   CIBW_SKIP: pp* cp*linux_i686
   CIBW_ENVIRONMENT: FONTTOOLS_WITH_CYTHON=1
   CIBW_TEST_REQUIRES: tox
+  # only test core fonttools library without extras for now, stuff like lxml or scipy
+  # create too many issues when testing on a large matrix of environments...
+  CIBW_TEST_COMMAND: "tox -c {package}/tox.ini -e py-cy-noextra --installpkg {wheel}"
 
 jobs:
 
@@ -27,27 +30,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, windows-latest]
+        os: [macos-latest, windows-latest, ubuntu-latest]
         arch: [auto64]
-        tox_env: ["py-cy"]
         include:
-          # the manylinux2014 image contains ALL the python versions we support
-          # use that for simplicity, and only if needed build for older manylinuxes
-          - os: ubuntu-latest
-            arch: auto
-            type: manylinux2014
-            tox_env: py-cy
-            CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
-            CIBW_MANYLINUX_I686_IMAGE: manylinux2014
-
           - os: macos-latest
             arch: universal2
-            tox_env: py-cy
-
           - os: windows-latest
             arch: auto32
-            # scipy doesn't have wheels for win32 hence run tox with 'noextra'
-            tox_env: py-cy-noextra
     steps:
     - uses: actions/checkout@v2
       with:
@@ -63,10 +52,8 @@ jobs:
     - name: Build Wheels
       run: python -m cibuildwheel --output-dir wheelhouse .
       env:
-        CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.CIBW_MANYLINUX_I686_IMAGE }}
-        CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.CIBW_MANYLINUX_X86_64_IMAGE }}
+        CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
         CIBW_ARCHS: ${{ matrix.arch }}
-        CIBW_TEST_COMMAND: "tox -c {package}/tox.ini -e ${{ matrix.tox_env }} --installpkg {wheel}"
     - uses: actions/upload-artifact@v2
       with:
         path: wheelhouse/*.whl
