@@ -385,6 +385,9 @@ class _Encoding(object):
 
     gain = property(get_gain)
 
+    def gain_sort_key(self):
+        return self.gain, self.chars
+
     def sort_key(self):
         return self.width, self.chars
 
@@ -572,7 +575,7 @@ def VarStore_optimize(self, use_NO_VARIATION_INDEX=True):
 
     # For each encoding that is possibly to be merged, find the best match
     # in the decided encodings, and record that.
-    todo.sort(key=_Encoding.get_gain, reverse=True)
+    todo.sort(key=_Encoding.gain_sort_key, reverse=True)
     for encoding in todo:
         encoding._find_yourself_best_new_encoding(done_by_width)
 
