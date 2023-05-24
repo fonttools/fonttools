@@ -702,16 +702,16 @@ def main(args=None):
 
     varidx_map = store.optimize()
 
-    gdef.table.remap_device_varidxes(varidx_map)
-    if "GPOS" in font:
-        font["GPOS"].table.remap_device_varidxes(varidx_map)
-
     writer = OTTableWriter()
     store.compile(writer, font)
     size = len(writer.getAllData())
     print("After:  %7d bytes" % size)
 
     if outfile is not None:
+        gdef.table.remap_device_varidxes(varidx_map)
+        if "GPOS" in font:
+            font["GPOS"].table.remap_device_varidxes(varidx_map)
+
         font.save(outfile)
 
 
