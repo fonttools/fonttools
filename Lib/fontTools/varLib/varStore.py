@@ -467,6 +467,60 @@ class _EncodingDict(dict):
 def VarStore_optimize(self, use_NO_VARIATION_INDEX=True):
     """Optimize storage. Returns mapping from old VarIdxes to new ones."""
 
+    # Overview:
+    #
+    # For each VarData row, we first extend it with zeroes to have
+    # one column per region in VarRegionList. We then group the
+    # rows into _Encoding objects, by their "characteristic" bitmap.
+    # The characteristic bitmap is a binary number representing how
+    # many bytes each column of the data takes up to encode. Each
+    # column is encoded in four bits. For example, if a column has
+    # only values in the range -128..127, it would only have a single
+    # bit set in the characteristic bitmap for that column. If it has
+    # values in the range -32768..32767, it would have two bits set.
+    # The number of ones in the characteristic bitmap is the "width"
+    # of the encoding.
+    #
+    # Each encoding as such has a number of "active" (ie. non-zero)
+    # columns. The overhead of encoding the characteristic bitmap
+    # is 6 bytes, plus 2 bytes per active column.
+    #
+    # When an encoding is merged into another one, if the characteristic
+    # of the old encoding is a subset of the new one, then the overhead
+    # of the old encoding is completely eliminated. However, each row
+    # now would require more bytes to encode, to the tune of one byte
+    # per characteristic bit that is active in the new encoding but not
+    # in the old one. The number of bits that can be added to an encoding
+    # while still beneficial to merge it into another encoding is called
+    # the "room" for that encoding.
+    #
+    # The "gain" of an encodings is the maximum number of bytes we can
+    # save by merging it into another encoding. The "gain" of merging
+    # two encodings is how many bytes we save by doing so.
+    #
+    # Algorithm:
+    #
+    # - For any encoding that has zero gain, encode it as is and put
+    #   it in the "done" list. Put the remaining encodings into the
+    #   "todo" list.
+    # - For each encoding in the todo list, find the encoding in the
+    #   done list that has the highest gain when merged into it; call
+    #   this the "best new encoding".
+    # - Sort todo list by encoding room.
+    # - While todo list is not empty:
+    #   - Pop the first item from todo list, as current item.
+    #   - For each each encoding in the todo list, try combining it
+    #     with the current item. Calculate total gain as the gain of
+    #     this combined encoding minus the gain of combining each of
+    #     the two items with their best new encoding, if any.
+    #   - If the total gain is positive and better than any previously
+    #     remembered match, remember this as new match.
+    #   - If a match was found, combine the two items and put them
+    #     back in the todo list. Otherwise, if the current item's
+    #     best new encoding is not None, combine current item with
+    #     its best new encoding. Otherwise encode the current item
+    #     by itself and put it in the done list.
+
     # TODO
     # Check that no two VarRegions are the same; if they are, fold them.
 
