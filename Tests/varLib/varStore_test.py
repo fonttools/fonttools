@@ -108,6 +108,19 @@ def buildAxis(axisTag):
             2,
             186,
         ),
+        (
+            5,
+            [
+                [10, 11, 0, 0, 20],
+                [10, 300, 0, 0, 20],
+                [10, 301, 0, 0, 20],
+                [10, 302, 0, 0, 20],
+                [10, 303, 0, 0, 20],
+                [10, 304, 0, 0, 20],
+            ],
+            1,
+            180,
+        ),
     ],
 )
 def test_optimize(numRegions, varData, expectedNumVarData, expectedBytes):

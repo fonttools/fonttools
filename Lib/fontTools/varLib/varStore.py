@@ -422,6 +422,8 @@ class _Encoding(object):
             else:
                 new_encoding = None
             self.best_new_encoding = new_encoding
+            if new_encoding:
+                break
 
 
 class _EncodingDict(dict):
