@@ -158,7 +158,7 @@ def test_optimize(numRegions, varData, expectedNumVarData, expectedBytes):
         builder.storeMasters(data)
 
     varStore = builder.finish()
-    mapping = varStore.optimize()
+    varStore.optimize()
 
     dummyFont = TTFont()
 
