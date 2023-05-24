@@ -160,13 +160,13 @@ def test_optimize(numRegions, varData, expectedNumVarData, expectedBytes):
     varStore = builder.finish()
     mapping = varStore.optimize()
 
-    assert len(varStore.VarData) == expectedNumVarData
-
     dummyFont = TTFont()
 
     writer = XMLWriter(StringIO())
     varStore.toXML(writer, dummyFont)
     xml = writer.file.getvalue()
+
+    assert len(varStore.VarData) == expectedNumVarData, xml
 
     writer = OTTableWriter()
     varStore.compile(writer, dummyFont)
