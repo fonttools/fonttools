@@ -470,7 +470,7 @@ class _EncodingDict(dict):
         return chars
 
 
-def VarStore_optimize(self, use_NO_VARIATION_INDEX=True):
+def VarStore_optimize(self, use_NO_VARIATION_INDEX=True, quantization=1):
     """Optimize storage. Returns mapping from old VarIdxes to new ones."""
 
     # Overview:
@@ -551,8 +551,14 @@ def VarStore_optimize(self, use_NO_VARIATION_INDEX=True):
 
         for minor, item in enumerate(data.Item):
             row = list(zeroes)
-            for regionIdx, v in zip(regionIndices, item):
-                row[regionIdx] += v
+
+            if quantization == 1:
+                for regionIdx, v in zip(regionIndices, item):
+                    row[regionIdx] += v
+            else:
+                for regionIdx, v in zip(regionIndices, item):
+                    row[regionIdx] += v // quantization * quantization
+
             row = tuple(row)
 
             if use_NO_VARIATION_INDEX and not any(row):
