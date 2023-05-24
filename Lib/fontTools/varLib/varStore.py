@@ -377,12 +377,13 @@ class _Encoding(object):
 
     room = property(get_room)
 
-    @property
-    def gain(self):
+    def get_gain(self):
         """Maximum possible byte gain from merging this into another
         characteristic."""
         count = len(self.items)
         return max(0, self.overhead - count)
+
+    gain = property(get_gain)
 
     def sort_key(self):
         return self.width, self.chars
@@ -516,7 +517,7 @@ def VarStore_optimize(self, use_NO_VARIATION_INDEX=True):
     # - For each encoding in the todo list, find the encoding in the
     #   done list that has the highest gain when merged into it; call
     #   this the "best new encoding".
-    # - Sort todo list by encoding room.
+    # - Sort todo list by decreasing gain (empirical).
     # - While todo list is not empty:
     #   - Pop the first item from todo list, as current item.
     #   - For each each encoding in the todo list, try combining it
@@ -571,7 +572,7 @@ def VarStore_optimize(self, use_NO_VARIATION_INDEX=True):
 
     # For each encoding that is possibly to be merged, find the best match
     # in the decided encodings, and record that.
-    todo.sort(key=_Encoding.get_room)
+    todo.sort(key=_Encoding.get_gain, reverse=True)
     for encoding in todo:
         encoding._find_yourself_best_new_encoding(done_by_width)
 
