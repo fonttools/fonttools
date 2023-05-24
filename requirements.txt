@@ -15,4 +15,4 @@ pyobjc==9.0; sys_platform == "darwin"
 freetype-py==2.3.0
 uharfbuzz==0.32.0
 glyphsLib==6.2.1 # this is only required to run Tests/varLib/interpolatable_test.py
-lxml==4.9.0
+lxml==4.9.2
