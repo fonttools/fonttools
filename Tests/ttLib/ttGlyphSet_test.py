@@ -144,7 +144,8 @@ class TTGlyphSetTest(object):
         assert list(glyphset.keys()) == [".notdef", "I"]
 
         assert "I" in glyphset
-        assert glyphset.has_key("I")  # we should really get rid of this...
+        with pytest.deprecated_call():
+            assert glyphset.has_key("I")  # we should really get rid of this...
 
         assert len(glyphset) == 2
 
