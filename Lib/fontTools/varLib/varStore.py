@@ -519,7 +519,7 @@ def VarStore_optimize(self, use_NO_VARIATION_INDEX=True):
     #   this the "best new encoding".
     # - Sort todo list by decreasing gain (empirical).
     # - While todo list is not empty:
-    #   - Pop the first item from todo list, as current item.
+    #   - Pop the last item from todo list, as current item.
     #   - For each each encoding in the todo list, try combining it
     #     with the current item. Calculate total gain as the gain of
     #     this combined encoding minus the gain of combining each of
