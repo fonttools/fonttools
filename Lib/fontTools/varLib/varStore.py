@@ -210,7 +210,6 @@ class VarStoreInstancer(object):
 def VarStore_subset_varidxes(
     self, varIdxes, optimize=True, retainFirstMap=False, advIdxes=set()
 ):
-
     # Sort out used varIdxes by major/minor.
     used = {}
     for varIdx in varIdxes:
@@ -483,7 +482,6 @@ def VarStore_optimize(self, use_NO_VARIATION_INDEX=True):
         regionIndices = data.VarRegionIndex
 
         for minor, item in enumerate(data.Item):
-
             row = list(zeroes)
             for regionIdx, v in zip(regionIndices, item):
                 row[regionIdx] += v
@@ -558,9 +556,14 @@ def VarStore_optimize(self, use_NO_VARIATION_INDEX=True):
                 best_gain = combined_gain - separate_gain
 
         if best_idx is None:
-            # Encoding is decided as is
-            done_by_width[encoding.width].append(encoding)
+            if encoding.best_new_encoding is None:
+                # Encoding is decided as is
+                done_by_width[encoding.width].append(encoding)
+            else:
+                # Merge with its best new encoding
+                encoding.best_new_encoding.extend(encoding.items)
         else:
+            # Combine the two encodings
             other_encoding = todo[best_idx]
             combined_chars = other_encoding.chars | encoding.chars
             combined_encoding = _Encoding(combined_chars)
