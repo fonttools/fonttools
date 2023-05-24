@@ -29,42 +29,23 @@ jobs:
       matrix:
         os: [macos-latest, windows-latest]
         arch: [auto64]
-        build: ["*"]
         tox_env: ["py-cy"]
         include:
-          # # the manylinux1 docker images contain up to python 3.9
-          # - os: ubuntu-latest
-          #   type: manylinux1
-          #   arch: auto
-          #   build: "cp{38,39}-*"
-          #   CIBW_MANYLINUX_X86_64_IMAGE: manylinux1
-          #   CIBW_MANYLINUX_I686_IMAGE: manylinux1
-          # # the manylinux2010 image contains python 3.10
-          # - os: ubuntu-latest
-          #   arch: auto
-          #   type: manylinux2010
-          #   build: "cp310-*"
-          #   CIBW_MANYLINUX_X86_64_IMAGE: manylinux2010
-          #   CIBW_MANYLINUX_I686_IMAGE: manylinux2010
-          # # the manylinux2014 image contains python 3.11
-          #
           # the manylinux2014 image contains ALL the python versions we support
           # use that for simplicity, and only if needed build for older manylinuxes
           - os: ubuntu-latest
             arch: auto
             type: manylinux2014
-            # build: "cp311-*"
-            build: "cp{38,39,310,311}-*"
+            tox_env: py-cy
             CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
             CIBW_MANYLINUX_I686_IMAGE: manylinux2014
 
           - os: macos-latest
             arch: universal2
-            build: "*"
+            tox_env: py-cy
 
           - os: windows-latest
             arch: auto32
-            build: "*"
             # scipy doesn't have wheels for win32 hence run tox with 'noextra'
             tox_env: py-cy-noextra
     steps:
@@ -82,7 +63,6 @@ jobs:
     - name: Build Wheels
       run: python -m cibuildwheel --output-dir wheelhouse .
       env:
-        CIBW_BUILD: ${{ matrix.build }}
         CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.CIBW_MANYLINUX_I686_IMAGE }}
         CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.CIBW_MANYLINUX_X86_64_IMAGE }}
         CIBW_ARCHS: ${{ matrix.arch }}
