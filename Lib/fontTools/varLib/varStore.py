@@ -406,7 +406,7 @@ class _Encoding(object):
     def _characteristic_overhead(chars):
         """Returns overhead in bytes of encoding this characteristic
         as a VarData."""
-        c = 6
+        c = 4 + 6  # 4 bytes for LOffset, 6 bytes for VarData header
         while chars:
             if chars & 0b1111:
                 c += 2
@@ -485,7 +485,7 @@ def VarStore_optimize(self, use_NO_VARIATION_INDEX=True):
     #
     # Each encoding as such has a number of "active" (ie. non-zero)
     # columns. The overhead of encoding the characteristic bitmap
-    # is 6 bytes, plus 2 bytes per active column.
+    # is 10 bytes, plus 2 bytes per active column.
     #
     # When an encoding is merged into another one, if the characteristic
     # of the old encoding is a subset of the new one, then the overhead
