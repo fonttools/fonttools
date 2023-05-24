@@ -551,7 +551,7 @@ def VarStore_optimize(self, use_NO_VARIATION_INDEX=True):
             )
             separate_gain = this_gain + other_gain
 
-            if combined_gain > separate_gain:
+            if combined_gain - separate_gain > best_gain:
                 best_idx = i
                 best_gain = combined_gain - separate_gain
 
