@@ -382,7 +382,7 @@ class _Encoding(object):
         """Maximum possible byte gain from merging this into another
         characteristic."""
         count = len(self.items)
-        return max(0, self.overhead - count * (self.width + 1))
+        return max(0, self.overhead - count)
 
     def sort_key(self):
         return self.width, self.chars
