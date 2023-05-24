@@ -87,7 +87,7 @@ class OnlineVarStoreBuilder(object):
                 self._varDataCaches[key] = {}
             self._cache = self._varDataCaches[key]
 
-    def storeMasters(self, master_values):
+    def storeMasters(self, master_values, *, round=round):
         deltas = self._model.getDeltas(master_values, round=round)
         base = deltas.pop(0)
         return base, self.storeDeltas(deltas, round=noRound)
