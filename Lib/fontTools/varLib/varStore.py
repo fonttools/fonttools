@@ -1,4 +1,5 @@
 from fontTools.misc.roundTools import noRound, otRound
+from fontTools.misc.intTools import bit_count
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.varLib.models import supportScalar
 from fontTools.varLib.builder import (
@@ -360,7 +361,7 @@ ot.GPOS.remap_device_varidxes = Object_remap_device_varidxes
 class _Encoding(object):
     def __init__(self, chars):
         self.chars = chars
-        self.width = self._popcount(chars)
+        self.width = bit_count(chars)
         self.columns = self._columns(chars)
         self.overhead = self._characteristic_overhead(self.columns)
         self.items = set()
@@ -400,13 +401,7 @@ class _Encoding(object):
         return not (chars & ~self.chars)
 
     def __sub__(self, other):
-        return self._popcount(self.chars & ~other.chars)
-
-    @staticmethod
-    def _popcount(n):
-        # Apparently this is the fastest native way to do it...
-        # https://stackoverflow.com/a/9831671
-        return bin(n).count("1")
+        return bit_count(self.chars & ~other.chars)
 
     @staticmethod
     def _characteristic_overhead(columns):
@@ -429,7 +424,7 @@ class _Encoding(object):
 
     def gain_from_merging(self, other_encoding):
         combined_chars = other_encoding.chars | self.chars
-        combined_width = _Encoding._popcount(combined_chars)
+        combined_width = bit_count(combined_chars)
         combined_columns = self.columns | other_encoding.columns
         combined_overhead = _Encoding._characteristic_overhead(combined_columns)
         combined_gain = (
