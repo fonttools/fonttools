@@ -588,10 +588,8 @@ def VarStore_optimize(self, use_NO_VARIATION_INDEX=True, quantization=1):
         if todo[i] is None or todo[j] is None:
             continue
 
-        encoding = todo[i]
-        other_encoding = todo[j]
-        todo[i] = None
-        todo[j] = None
+        encoding, other_encoding = todo[i], todo[j]
+        todo[i], todo[j] = None, None
 
         # Combine the two encodings
         combined_chars = other_encoding.chars | encoding.chars
@@ -600,7 +598,6 @@ def VarStore_optimize(self, use_NO_VARIATION_INDEX=True, quantization=1):
         combined_encoding.extend(other_encoding.items)
 
         for k, enc in enumerate(todo):
-
             if enc is None:
                 continue
 
