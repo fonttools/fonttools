@@ -361,7 +361,8 @@ class _Encoding(object):
     def __init__(self, chars):
         self.chars = chars
         self.width = self._popcount(chars)
-        self.overhead = self._characteristic_overhead(chars)
+        self.columns = self._columns(chars)
+        self.overhead = self._characteristic_overhead(self.columns)
         self.items = set()
 
     def append(self, row):
@@ -408,20 +409,29 @@ class _Encoding(object):
         return bin(n).count("1")
 
     @staticmethod
-    def _characteristic_overhead(chars):
+    def _characteristic_overhead(columns):
         """Returns overhead in bytes of encoding this characteristic
         as a VarData."""
         c = 4 + 6  # 4 bytes for LOffset, 6 bytes for VarData header
+        c += len(columns) * 2
+        return c
+
+    @staticmethod
+    def _columns(chars):
+        cols = set()
+        i = 0
         while chars:
             if chars & 0b1111:
-                c += 2
+                cols.add(i)
             chars >>= 4
-        return c
+            i += 1
+        return cols
 
     def gain_from_merging(self, other_encoding):
         combined_chars = other_encoding.chars | self.chars
         combined_width = _Encoding._popcount(combined_chars)
-        combined_overhead = _Encoding._characteristic_overhead(combined_chars)
+        combined_columns = self.columns | other_encoding.columns
+        combined_overhead = _Encoding._characteristic_overhead(combined_columns)
         combined_gain = (
             +self.overhead
             + other_encoding.overhead
@@ -576,7 +586,6 @@ def VarStore_optimize(self, use_NO_VARIATION_INDEX=True, quantization=1):
     done_by_width = defaultdict(list)
     todo = sorted(encodings.values(), key=_Encoding.gain_sort_key)
     del encodings
-
 
     # Repeatedly pick two best encodings to combine, and combine them.
 
