@@ -545,9 +545,7 @@ def VarStore_optimize(self, use_NO_VARIATION_INDEX=True, quantization=1):
     #
     # Algorithm:
     #
-    # - For any encoding that has zero gain, encode it as is and put
-    #   it in the "done" list. Put the remaining encodings into the
-    #   "todo" list.
+    # - Put all encodings into a "todo" list.
     #
     # - For each encoding in the todo list, find the encoding in the
     #   done list that has the highest gain when merged into it; call
@@ -611,22 +609,12 @@ def VarStore_optimize(self, use_NO_VARIATION_INDEX=True, quantization=1):
             encodings.add_row(row)
             front_mapping[(major << 16) + minor] = row
 
-    # Separate encodings that have no gain (are decided) and those having
-    # possible gain (possibly to be merged into others.)
-    encodings = sorted(encodings.values(), key=_Encoding.__len__, reverse=True)
+    # Prepare for the main algorithm.
     done_by_width = defaultdict(list)
-    todo = []
-    for encoding in encodings:
-        if not encoding.gain:
-            done_by_width[encoding.width].append(encoding)
-        else:
-            todo.append(encoding)
-
-    # For each encoding that is possibly to be merged, find the best match
-    # in the decided encodings, and record that.
-    todo.sort(key=_Encoding.gain_sort_key)
+    todo = sorted(encodings.values(), key=_Encoding.gain_sort_key)
+    del encodings
     for encoding in todo:
-        encoding._find_yourself_best_new_encoding(done_by_width)
+        encoding._find_yourself_best_new_encoding(done_by_width) # Just to set best_new_encoding
 
     # Walk through todo encodings, for each, see if merging it with
     # another todo encoding gains more than each of them merging with
