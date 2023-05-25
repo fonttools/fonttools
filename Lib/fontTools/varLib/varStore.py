@@ -388,7 +388,7 @@ class _Encoding(object):
     def gain_sort_key(self):
         return self.gain, self.chars
 
-    def sort_key(self):
+    def width_sort_key(self):
         return self.width, self.chars
 
     def __len__(self):
@@ -660,7 +660,7 @@ def VarStore_optimize(self, use_NO_VARIATION_INDEX=True, quantization=1):
     # Assemble final store.
     back_mapping = {}  # Mapping from full rows to new VarIdxes
     encodings = sum(done_by_width.values(), [])
-    encodings.sort(key=_Encoding.sort_key)
+    encodings.sort(key=_Encoding.width_sort_key)
     self.VarData = []
     for major, encoding in enumerate(encodings):
         data = ot.VarData()
