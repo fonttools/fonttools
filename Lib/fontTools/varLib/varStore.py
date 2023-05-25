@@ -559,7 +559,7 @@ def VarStore_optimize(self, use_NO_VARIATION_INDEX=True, quantization=1):
                 for regionIdx, v in zip(regionIndices, item):
                     row[regionIdx] += (
                         round(v / quantization) * quantization
-                    )  # TODO: round towards 0
+                    )  # TODO https://github.com/fonttools/fonttools/pull/3126#discussion_r1205439785
 
             row = tuple(row)
 
