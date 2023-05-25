@@ -692,6 +692,7 @@ def main(args=None):
     from fontTools.ttLib.tables.otBase import OTTableWriter
 
     parser = ArgumentParser(prog="varLib.varStore", description=main.__doc__)
+    parser.add_argument("--quantization", type=int, default=1)
     parser.add_argument("fontfile")
     parser.add_argument("outfile", nargs="?")
     options = parser.parse_args(args)
@@ -699,6 +700,7 @@ def main(args=None):
     # TODO: allow user to configure logging via command-line options
     configLogger(level="INFO")
 
+    quantization = options.quantization
     fontfile = options.fontfile
     outfile = options.outfile
 
@@ -711,7 +713,7 @@ def main(args=None):
     size = len(writer.getAllData())
     print("Before: %7d bytes" % size)
 
-    varidx_map = store.optimize()
+    varidx_map = store.optimize(quantization=quantization)
 
     writer = OTTableWriter()
     store.compile(writer, font)
