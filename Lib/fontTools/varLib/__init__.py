@@ -233,10 +233,14 @@ def _add_avar(font, axes, mapping, axisTags):
         model = models.VariationModel(derived, axisTags)
         builder = varStore.OnlineVarStoreBuilder(axisTags)
         builder.setModel(model)
-        varIdxes = {
-            t: builder.storeMasters([fl2fi(m.get(t, 0), 14) for m in source])[1]
-            for t in axisTags
-        }
+        varIdxes = {}
+        for t in axisTags:
+            masterValues = []
+            for m in source:
+                v = m.get(t, 0)
+                masterValues.append(fl2fi(v, 14))
+            varIdxes[t] = builder.storeMasters(masterValues)[1]
+
         store = builder.finish()
         optimized = store.optimize()
         varIdxes = {axis: optimized[value] for axis, value in varIdxes.items()}
