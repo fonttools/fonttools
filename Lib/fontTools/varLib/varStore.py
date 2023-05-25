@@ -647,7 +647,15 @@ def VarStore_optimize(self, use_NO_VARIATION_INDEX=True, quantization=1):
             combined_encoding.extend(other_encoding.items)
             combined_encoding._find_yourself_best_new_encoding(done_by_width)
             del todo[best_idx]
-            todo.append(combined_encoding)
+
+            # In the unlikely event that the same encoding exists already,
+            # combine; otherwise add it back to the todo list.
+            for enc in todo:
+                if enc.chars == combined_chars:
+                    enc.extend(combined_encoding.items)
+                    break
+            else:
+                todo.append(combined_encoding)
 
     # Assemble final store.
     back_mapping = {}  # Mapping from full rows to new VarIdxes
