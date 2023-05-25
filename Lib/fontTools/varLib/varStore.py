@@ -557,7 +557,9 @@ def VarStore_optimize(self, use_NO_VARIATION_INDEX=True, quantization=1):
                     row[regionIdx] += v
             else:
                 for regionIdx, v in zip(regionIndices, item):
-                    row[regionIdx] += v // quantization * quantization
+                    row[regionIdx] += (
+                        round(v / quantization) * quantization
+                    )  # TODO: round towards 0
 
             row = tuple(row)
 
