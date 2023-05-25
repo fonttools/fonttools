@@ -202,3 +202,57 @@ def test_optimize(numRegions, varData, expectedNumVarData, expectedBytes):
     data = writer.getAllData()
 
     assert len(data) == expectedBytes, xml
+
+
+@pytest.mark.parametrize(
+    "quantization, expectedBytes",
+    [
+        (1, 200),
+        (2, 180),
+        (3, 170),
+        (4, 175),
+        (8, 170),
+        (32, 152),
+        (64, 146),
+    ],
+)
+def test_quantize(quantization, expectedBytes):
+    varData = [
+        [0, 11, 12, 0, 20],
+        [0, 13, 12, 0, 20],
+        [0, 14, 12, 0, 20],
+        [0, 15, 12, 0, 20],
+        [0, 16, 12, 0, 20],
+        [10, 300, 0, 0, 20],
+        [10, 301, 0, 0, 20],
+        [10, 302, 0, 0, 20],
+        [10, 303, 0, 0, 20],
+        [10, 304, 0, 0, 20],
+    ]
+
+    numRegions = 5
+    locations = [{i: i / 16384.0} for i in range(numRegions)]
+    axisTags = sorted({k for loc in locations for k in loc})
+
+    model = VariationModel(locations)
+
+    builder = OnlineVarStoreBuilder(axisTags)
+    builder.setModel(model)
+
+    for data in varData:
+        builder.storeMasters(data)
+
+    varStore = builder.finish()
+    varStore.optimize(quantization=quantization)
+
+    dummyFont = TTFont()
+
+    writer = XMLWriter(StringIO())
+    varStore.toXML(writer, dummyFont)
+    xml = writer.file.getvalue()
+
+    writer = OTTableWriter()
+    varStore.compile(writer, dummyFont)
+    data = writer.getAllData()
+
+    assert len(data) == expectedBytes, xml
