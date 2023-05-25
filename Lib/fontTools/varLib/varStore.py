@@ -394,9 +394,6 @@ class _Encoding(object):
     def width_sort_key(self):
         return self.width, self.chars
 
-    def __len__(self):
-        return len(self.items)
-
     @staticmethod
     def _characteristic_overhead(columns):
         """Returns overhead in bytes of encoding this characteristic
@@ -425,8 +422,8 @@ class _Encoding(object):
             +self.overhead
             + other_encoding.overhead
             - combined_overhead
-            - (combined_width - self.width) * len(self)
-            - (combined_width - other_encoding.width) * len(other_encoding)
+            - (combined_width - self.width) * len(self.items)
+            - (combined_width - other_encoding.width) * len(other_encoding.items)
         )
         return combined_gain
 
