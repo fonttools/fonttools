@@ -570,7 +570,7 @@ def VarStore_optimize(self, use_NO_VARIATION_INDEX=True, quantization=1):
 
     # Prepare for the main algorithm.
     todo = sorted(encodings.values(), key=_Encoding.gain_sort_key)
-    encodings = []
+    del encodings
 
     # Repeatedly pick two best encodings to combine, and combine them.
 
@@ -614,10 +614,7 @@ def VarStore_optimize(self, use_NO_VARIATION_INDEX=True, quantization=1):
 
         todo.append(combined_encoding)
 
-    for encoding in todo:
-        if encoding is None:
-            continue
-        encodings.append(encoding)
+    encodings = [encoding for encoding in todo if encoding is not None]
 
     # Assemble final store.
     back_mapping = {}  # Mapping from full rows to new VarIdxes
