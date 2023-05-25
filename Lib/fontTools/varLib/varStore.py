@@ -402,18 +402,18 @@ class _Encoding(object):
         """Returns overhead in bytes of encoding this characteristic
         as a VarData."""
         c = 4 + 6  # 4 bytes for LOffset, 6 bytes for VarData header
-        c += len(columns) * 2
+        c += bit_count(columns) * 2
         return c
 
     @staticmethod
     def _columns(chars):
-        cols = set()
-        i = 0
+        cols = 0
+        i = 1
         while chars:
             if chars & 0b1111:
-                cols.add(i)
+                cols |= i
             chars >>= 4
-            i += 1
+            i <<= 1
         return cols
 
     def gain_from_merging(self, other_encoding):
