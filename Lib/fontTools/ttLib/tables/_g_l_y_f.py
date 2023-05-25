@@ -1531,7 +1531,20 @@ class Glyph(object):
         return result if result is NotImplemented else not result
 
 
-def dropImpliedOnCurvePoints(*interpolatable_glyphs):
+def dropImpliedOnCurvePoints(*interpolatable_glyphs: Glyph) -> None:
+    """Drop impliable on-curve points from the (simple) glyph or glyphs.
+
+    In TrueType glyf outlines, on-curve points can be implied when they are located at
+    the midpoint of the line connecting two consecutive off-curve points.
+
+    If more than one glyphs are passed, these are assumed to be interpolatable masters
+    of the same glyph impliable, and thus only the on-curve points that are impliable
+    for all of them will actually be implied.
+    The input glyph(s) is/are modified in-place.
+
+    Reference:
+    https://developer.apple.com/fonts/TrueType-Reference-Manual/RM01/Chap1.html
+    """
     drop = None
     for glyph in interpolatable_glyphs:
         may_drop = set()
