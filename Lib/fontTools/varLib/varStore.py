@@ -523,7 +523,7 @@ def VarStore_optimize(self, use_NO_VARIATION_INDEX=True, quantization=1):
     # - While priority queue is not empty:
     #   - Pop the first item from the priority queue,
     #   - Merge the two encodings it represents,
-    #   - Remove the two encodings from the todo queue,
+    #   - Remove the two encodings from the todo list,
     #   - Insert positive gains from combining the new encoding with
     #     all existing todo list items into the priority queue,
     #   - If a todo list item with the same characteristic bitmap as
