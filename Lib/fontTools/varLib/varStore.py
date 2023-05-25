@@ -429,6 +429,36 @@ class _Encoding(object):
             if new_encoding:
                 break
 
+    def gain_from_merging(self, other_encoding):
+        combined_chars = other_encoding.chars | self.chars
+        combined_width = _Encoding._popcount(combined_chars)
+        combined_overhead = _Encoding._characteristic_overhead(combined_chars)
+        combined_gain = (
+            +self.overhead
+            + other_encoding.overhead
+            - combined_overhead
+            - (combined_width - self.width) * len(self)
+            - (combined_width - other_encoding.width) * len(other_encoding)
+        )
+        this_gain = (
+            0
+            if self.best_new_encoding is None
+            else (
+                +self.overhead - (self.best_new_encoding.width - self.width) * len(self)
+            )
+        )
+        other_gain = (
+            0
+            if other_encoding.best_new_encoding is None
+            else (
+                +other_encoding.overhead
+                - (other_encoding.best_new_encoding.width - other_encoding.width)
+                * len(other_encoding)
+            )
+        )
+        separate_gain = this_gain + other_gain
+        return combined_gain - separate_gain
+
 
 class _EncodingDict(dict):
     def __missing__(self, chars):
@@ -597,39 +627,11 @@ def VarStore_optimize(self, use_NO_VARIATION_INDEX=True, quantization=1):
         best_idx = None
         best_gain = 0
         for i, other_encoding in enumerate(todo):
-            combined_chars = other_encoding.chars | encoding.chars
-            combined_width = _Encoding._popcount(combined_chars)
-            combined_overhead = _Encoding._characteristic_overhead(combined_chars)
-            combined_gain = (
-                +encoding.overhead
-                + other_encoding.overhead
-                - combined_overhead
-                - (combined_width - encoding.width) * len(encoding)
-                - (combined_width - other_encoding.width) * len(other_encoding)
-            )
-            this_gain = (
-                0
-                if encoding.best_new_encoding is None
-                else (
-                    +encoding.overhead
-                    - (encoding.best_new_encoding.width - encoding.width)
-                    * len(encoding)
-                )
-            )
-            other_gain = (
-                0
-                if other_encoding.best_new_encoding is None
-                else (
-                    +other_encoding.overhead
-                    - (other_encoding.best_new_encoding.width - other_encoding.width)
-                    * len(other_encoding)
-                )
-            )
-            separate_gain = this_gain + other_gain
+            combining_gain = encoding.gain_from_merging(other_encoding)
 
-            if combined_gain - separate_gain > best_gain:
+            if combining_gain > best_gain:
                 best_idx = i
-                best_gain = combined_gain - separate_gain
+                best_gain = combining_gain
 
         if best_idx is None:
             if encoding.best_new_encoding is None:
