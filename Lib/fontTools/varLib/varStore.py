@@ -397,12 +397,6 @@ class _Encoding(object):
     def __len__(self):
         return len(self.items)
 
-    def can_encode(self, chars):
-        return not (chars & ~self.chars)
-
-    def __sub__(self, other):
-        return bit_count(self.chars & ~other.chars)
-
     @staticmethod
     def _characteristic_overhead(columns):
         """Returns overhead in bytes of encoding this characteristic
