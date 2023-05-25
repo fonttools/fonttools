@@ -1,4 +1,5 @@
 from fontTools.misc.roundTools import noRound, otRound
+from fontTools.misc.intTools import bit_count
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.varLib.models import supportScalar
 from fontTools.varLib.builder import (
@@ -9,6 +10,7 @@ from fontTools.varLib.builder import (
 )
 from functools import partial
 from collections import defaultdict
+from heapq import heappush, heappop
 
 
 NO_VARIATION_INDEX = ot.NO_VARIATION_INDEX
@@ -359,8 +361,9 @@ ot.GPOS.remap_device_varidxes = Object_remap_device_varidxes
 class _Encoding(object):
     def __init__(self, chars):
         self.chars = chars
-        self.width = self._popcount(chars)
-        self.overhead = self._characteristic_overhead(chars)
+        self.width = bit_count(chars)
+        self.columns = self._columns(chars)
+        self.overhead = self._characteristic_overhead(self.columns)
         self.items = set()
 
     def append(self, row):
@@ -388,46 +391,41 @@ class _Encoding(object):
     def gain_sort_key(self):
         return self.gain, self.chars
 
-    def sort_key(self):
+    def width_sort_key(self):
         return self.width, self.chars
 
-    def __len__(self):
-        return len(self.items)
-
-    def can_encode(self, chars):
-        return not (chars & ~self.chars)
-
-    def __sub__(self, other):
-        return self._popcount(self.chars & ~other.chars)
-
     @staticmethod
-    def _popcount(n):
-        # Apparently this is the fastest native way to do it...
-        # https://stackoverflow.com/a/9831671
-        return bin(n).count("1")
-
-    @staticmethod
-    def _characteristic_overhead(chars):
+    def _characteristic_overhead(columns):
         """Returns overhead in bytes of encoding this characteristic
         as a VarData."""
         c = 4 + 6  # 4 bytes for LOffset, 6 bytes for VarData header
-        while chars:
-            if chars & 0b1111:
-                c += 2
-            chars >>= 4
+        c += bit_count(columns) * 2
         return c
 
-    def _find_yourself_best_new_encoding(self, done_by_width):
-        self.best_new_encoding = None
-        for new_width in range(self.width + 1, self.width + self.room + 1):
-            for new_encoding in done_by_width[new_width]:
-                if new_encoding.can_encode(self.chars):
-                    break
-            else:
-                new_encoding = None
-            self.best_new_encoding = new_encoding
-            if new_encoding:
-                break
+    @staticmethod
+    def _columns(chars):
+        cols = 0
+        i = 1
+        while chars:
+            if chars & 0b1111:
+                cols |= i
+            chars >>= 4
+            i <<= 1
+        return cols
+
+    def gain_from_merging(self, other_encoding):
+        combined_chars = other_encoding.chars | self.chars
+        combined_width = bit_count(combined_chars)
+        combined_columns = self.columns | other_encoding.columns
+        combined_overhead = _Encoding._characteristic_overhead(combined_columns)
+        combined_gain = (
+            +self.overhead
+            + other_encoding.overhead
+            - combined_overhead
+            - (combined_width - self.width) * len(self.items)
+            - (combined_width - other_encoding.width) * len(other_encoding.items)
+        )
+        return combined_gain
 
 
 class _EncodingDict(dict):
@@ -514,26 +512,26 @@ def VarStore_optimize(self, use_NO_VARIATION_INDEX=True, quantization=1):
     #
     # Algorithm:
     #
-    # - For any encoding that has zero gain, encode it as is and put
-    #   it in the "done" list. Put the remaining encodings into the
-    #   "todo" list.
-    # - For each encoding in the todo list, find the encoding in the
-    #   done list that has the highest gain when merged into it; call
-    #   this the "best new encoding".
-    # - Sort todo list by decreasing gain (empirical).
-    # - While todo list is not empty:
-    #   - Pop the last item from todo list, as current item.
-    #   - For each each encoding in the todo list, try combining it
-    #     with the current item. Calculate total gain as the gain of
-    #     this combined encoding minus the gain of combining each of
-    #     the two items with their best new encoding, if any.
-    #   - If the total gain is positive and better than any previously
-    #     remembered match, remember this as new match.
-    #   - If a match was found, combine the two items and put them
-    #     back in the todo list. Otherwise, if the current item's
-    #     best new encoding is not None, combine current item with
-    #     its best new encoding. Otherwise encode the current item
-    #     by itself and put it in the done list.
+    # - Put all encodings into a "todo" list.
+    #
+    # - Sort todo list by decreasing gain (for stability).
+    #
+    # - Make a priority-queue of the gain from combining each two
+    #   encodings in the todo list. The priority queue is sorted by
+    #   decreasing gain. Only positive gains are included.
+    #
+    # - While priority queue is not empty:
+    #   - Pop the first item from the priority queue,
+    #   - Merge the two encodings it represents,
+    #   - Remove the two encodings from the todo list,
+    #   - Insert positive gains from combining the new encoding with
+    #     all existing todo list items into the priority queue,
+    #   - If a todo list item with the same characteristic bitmap as
+    #     the new encoding exists, remove it from the todo list and
+    #     merge it into the new encoding.
+    #   - Insert the new encoding into the todo list,
+    #
+    # - Encode all remaining items in the todo list.
 
     # TODO
     # Check that no two VarRegions are the same; if they are, fold them.
@@ -570,89 +568,56 @@ def VarStore_optimize(self, use_NO_VARIATION_INDEX=True, quantization=1):
             encodings.add_row(row)
             front_mapping[(major << 16) + minor] = row
 
-    # Separate encodings that have no gain (are decided) and those having
-    # possible gain (possibly to be merged into others.)
-    encodings = sorted(encodings.values(), key=_Encoding.__len__, reverse=True)
-    done_by_width = defaultdict(list)
-    todo = []
-    for encoding in encodings:
-        if not encoding.gain:
-            done_by_width[encoding.width].append(encoding)
-        else:
-            todo.append(encoding)
+    # Prepare for the main algorithm.
+    todo = sorted(encodings.values(), key=_Encoding.gain_sort_key)
+    del encodings
 
-    # For each encoding that is possibly to be merged, find the best match
-    # in the decided encodings, and record that.
-    todo.sort(key=_Encoding.gain_sort_key, reverse=True)
-    for encoding in todo:
-        encoding._find_yourself_best_new_encoding(done_by_width)
+    # Repeatedly pick two best encodings to combine, and combine them.
 
-    # Walk through todo encodings, for each, see if merging it with
-    # another todo encoding gains more than each of them merging with
-    # their best decided encoding. If yes, merge them and add resulting
-    # encoding back to todo queue.  If not, move the enconding to decided
-    # list.  Repeat till done.
-    while todo:
-        encoding = todo.pop()
-        best_idx = None
-        best_gain = 0
-        for i, other_encoding in enumerate(todo):
-            combined_chars = other_encoding.chars | encoding.chars
-            combined_width = _Encoding._popcount(combined_chars)
-            combined_overhead = _Encoding._characteristic_overhead(combined_chars)
-            combined_gain = (
-                +encoding.overhead
-                + other_encoding.overhead
-                - combined_overhead
-                - (combined_width - encoding.width) * len(encoding)
-                - (combined_width - other_encoding.width) * len(other_encoding)
-            )
-            this_gain = (
-                0
-                if encoding.best_new_encoding is None
-                else (
-                    +encoding.overhead
-                    - (encoding.best_new_encoding.width - encoding.width)
-                    * len(encoding)
-                )
-            )
-            other_gain = (
-                0
-                if other_encoding.best_new_encoding is None
-                else (
-                    +other_encoding.overhead
-                    - (other_encoding.best_new_encoding.width - other_encoding.width)
-                    * len(other_encoding)
-                )
-            )
-            separate_gain = this_gain + other_gain
+    heap = []
+    for i, encoding in enumerate(todo):
+        for j in range(i + 1, len(todo)):
+            other_encoding = todo[j]
+            combining_gain = encoding.gain_from_merging(other_encoding)
+            if combining_gain > 0:
+                heappush(heap, (-combining_gain, i, j))
 
-            if combined_gain - separate_gain > best_gain:
-                best_idx = i
-                best_gain = combined_gain - separate_gain
+    while heap:
+        _, i, j = heappop(heap)
+        if todo[i] is None or todo[j] is None:
+            continue
 
-        if best_idx is None:
-            if encoding.best_new_encoding is None:
-                # Encoding is decided as is
-                done_by_width[encoding.width].append(encoding)
-            else:
-                # Merge with its best new encoding
-                encoding.best_new_encoding.extend(encoding.items)
-        else:
-            # Combine the two encodings
-            other_encoding = todo[best_idx]
-            combined_chars = other_encoding.chars | encoding.chars
-            combined_encoding = _Encoding(combined_chars)
-            combined_encoding.extend(encoding.items)
-            combined_encoding.extend(other_encoding.items)
-            combined_encoding._find_yourself_best_new_encoding(done_by_width)
-            del todo[best_idx]
-            todo.append(combined_encoding)
+        encoding, other_encoding = todo[i], todo[j]
+        todo[i], todo[j] = None, None
+
+        # Combine the two encodings
+        combined_chars = other_encoding.chars | encoding.chars
+        combined_encoding = _Encoding(combined_chars)
+        combined_encoding.extend(encoding.items)
+        combined_encoding.extend(other_encoding.items)
+
+        for k, enc in enumerate(todo):
+            if enc is None:
+                continue
+
+            # In the unlikely event that the same encoding exists already,
+            # combine it.
+            if enc.chars == combined_chars:
+                combined_encoding.extend(enc.items)
+                todo[k] = None
+                continue
+
+            combining_gain = combined_encoding.gain_from_merging(enc)
+            if combining_gain > 0:
+                heappush(heap, (-combining_gain, k, len(todo)))
+
+        todo.append(combined_encoding)
+
+    encodings = [encoding for encoding in todo if encoding is not None]
 
     # Assemble final store.
     back_mapping = {}  # Mapping from full rows to new VarIdxes
-    encodings = sum(done_by_width.values(), [])
-    encodings.sort(key=_Encoding.sort_key)
+    encodings.sort(key=_Encoding.width_sort_key)
     self.VarData = []
     for major, encoding in enumerate(encodings):
         data = ot.VarData()
