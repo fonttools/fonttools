@@ -569,9 +569,8 @@ def VarStore_optimize(self, use_NO_VARIATION_INDEX=True, quantization=1):
             front_mapping[(major << 16) + minor] = row
 
     # Prepare for the main algorithm.
-    done_by_width = defaultdict(list)
     todo = sorted(encodings.values(), key=_Encoding.gain_sort_key)
-    del encodings
+    encodings = []
 
     # Repeatedly pick two best encodings to combine, and combine them.
 
@@ -621,11 +620,10 @@ def VarStore_optimize(self, use_NO_VARIATION_INDEX=True, quantization=1):
     for encoding in todo:
         if encoding is None:
             continue
-        done_by_width[encoding.width].append(encoding)
+        encodings.append(encoding)
 
     # Assemble final store.
     back_mapping = {}  # Mapping from full rows to new VarIdxes
-    encodings = sum(done_by_width.values(), [])
     encodings.sort(key=_Encoding.width_sort_key)
     self.VarData = []
     for major, encoding in enumerate(encodings):
