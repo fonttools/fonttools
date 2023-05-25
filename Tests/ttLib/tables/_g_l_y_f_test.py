@@ -391,10 +391,11 @@ class GlyfTableTest(unittest.TestCase):
         font["hmtx"].metrics = {".notdef": (100, 0)}
         font["head"] = newTable("head")
         font["head"].unitsPerEm = 1000
-        self.assertEqual(
-            font["glyf"].getPhantomPoints(".notdef", font, 0),
-            [(0, 0), (100, 0), (0, 0), (0, -1000)],
-        )
+        with pytest.deprecated_call():
+            self.assertEqual(
+                font["glyf"].getPhantomPoints(".notdef", font, 0),
+                [(0, 0), (100, 0), (0, 0), (0, -1000)],
+            )
 
 
 class GlyphTest:
