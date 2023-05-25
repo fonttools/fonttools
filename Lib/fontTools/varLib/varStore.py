@@ -575,8 +575,7 @@ def VarStore_optimize(self, use_NO_VARIATION_INDEX=True, quantization=1):
     # Repeatedly pick two best encodings to combine, and combine them.
 
     heap = []
-    for i, other_encoding in enumerate(todo):
-        encoding = todo[i]
+    for i, encoding in enumerate(todo):
         for j in range(i + 1, len(todo)):
             other_encoding = todo[j]
             combining_gain = encoding.gain_from_merging(other_encoding)
