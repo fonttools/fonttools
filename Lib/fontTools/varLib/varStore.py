@@ -600,20 +600,22 @@ def VarStore_optimize(self, use_NO_VARIATION_INDEX=True, quantization=1):
         combined_encoding.extend(encoding.items)
         combined_encoding.extend(other_encoding.items)
 
-        # In the unlikely event that the same encoding exists already,
-        # combine it.
         for k, enc in enumerate(todo):
-            if enc is not None and enc.chars == combined_chars:
-                combined_encoding.extend(enc.items)
-                todo[k] = None
-                break
 
-        for k, enc in enumerate(todo):
             if enc is None:
                 continue
+
+            # In the unlikely event that the same encoding exists already,
+            # combine it.
+            if enc.chars == combined_chars:
+                combined_encoding.extend(enc.items)
+                todo[k] = None
+                continue
+
             combining_gain = combined_encoding.gain_from_merging(enc)
             if combining_gain > 0:
                 heappush(heap, (-combining_gain, k, len(todo)))
+
         todo.append(combined_encoding)
 
     for encoding in todo:
