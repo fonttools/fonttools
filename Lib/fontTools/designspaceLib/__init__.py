@@ -2006,7 +2006,7 @@ class BaseDocReader(LogMixin):
             self.axisDefaults[axisObject.name] = axisObject.default
 
         mappingElement = self.root.find(".axes/mapping")
-        self.documentObject.mapping = []
+        self.documentObject.axisMappings = []
         if mappingElement is not None:
             for regionElement in mappingElement.findall("region"):
                 inputElement = regionElement.find("input")
@@ -2021,7 +2021,7 @@ class BaseDocReader(LogMixin):
                     tag = dimElement.attrib["tag"]
                     value = float(dimElement.attrib["xvalue"])
                     outputLoc[tag] = value
-                self.documentObject.mapping.append([inputLoc, outputLoc])
+                self.documentObject.axisMappings.append([inputLoc, outputLoc])
 
     def readAxisLabel(self, element: ET.Element):
         xml_attrs = {
@@ -2566,7 +2566,8 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
         self.axes: List[Union[AxisDescriptor, DiscreteAxisDescriptor]] = []
         """List of this document's axes."""
 
-        self.mapping = []
+        self.axisMappings: List = []
+        """List of this document's axis mappings."""
 
         self.locationLabels: List[LocationLabelDescriptor] = []
         """List of this document's STAT format 4 labels.

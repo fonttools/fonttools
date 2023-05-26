@@ -805,7 +805,7 @@ _DesignSpaceData = namedtuple(
     "_DesignSpaceData",
     [
         "axes",
-        "mapping",
+        "axisMappings",
         "internal_axis_supports",
         "base_idx",
         "normalized_master_locs",
@@ -899,8 +899,8 @@ def load_designspace(designspace):
         axes[axis_name] = axis
     log.info("Axes:\n%s", pformat([axis.asdict() for axis in axes.values()]))
 
-    mapping = ds.mapping
-    log.info("Mapping:\n%s", pformat(mapping))
+    axisMappings = ds.axisMappings
+    log.info("Mapping:\n%s", pformat(axisMappings))
 
     # Check all master and instance locations are valid and fill in defaults
     for obj in masters + instances:
@@ -961,7 +961,7 @@ def load_designspace(designspace):
 
     return _DesignSpaceData(
         axes,
-        mapping,
+        axisMappings,
         internal_axis_supports,
         base_idx,
         normalized_master_locs,
@@ -1126,7 +1126,7 @@ def build(
 
     log.info("Building variations tables")
     if "avar" not in exclude:
-        _add_avar(vf, ds.axes, ds.mapping, axisTags)
+        _add_avar(vf, ds.axes, ds.axisMappings, axisTags)
     if "BASE" not in exclude and "BASE" in vf:
         _add_BASE(vf, model, master_fonts, axisTags)
     if "MVAR" not in exclude:
