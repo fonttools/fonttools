@@ -446,6 +446,18 @@ def processRules(rules, location, glyphNames):
     return glyphNames
 
 
+class AxisMappingDescriptor(SimpleDescriptor):
+    """XXX TODO"""
+
+    _attrs = ["inputLocation", "outputLocation"]  # what do we need here
+
+    def __init__(self, *, inputLocation=None, outputLocation=None):
+        self.inputLocation = inputLocation or {}
+        """XXX TODO"""
+        self.outputLocation = outputLocation or {}
+        """XXX TODO"""
+
+
 AnisotropicLocationDict = Dict[str, Union[float, Tuple[float, float]]]
 SimpleLocationDict = Dict[str, float]
 
@@ -1323,6 +1335,7 @@ class ValueAxisSubsetDescriptor(SimpleDescriptor):
 class BaseDocWriter(object):
     _whiteSpace = "    "
     axisDescriptorClass = AxisDescriptor
+    axisMappingDescriptorClass = AxisMappingDescriptor
     discreteAxisDescriptorClass = DiscreteAxisDescriptor
     axisLabelDescriptorClass = AxisLabelDescriptor
     locationLabelDescriptorClass = LocationLabelDescriptor
@@ -1852,6 +1865,7 @@ class BaseDocWriter(object):
 
 class BaseDocReader(LogMixin):
     axisDescriptorClass = AxisDescriptor
+    axisMappingDescriptorClass = AxisMappingDescriptor
     discreteAxisDescriptorClass = DiscreteAxisDescriptor
     axisLabelDescriptorClass = AxisLabelDescriptor
     locationLabelDescriptorClass = LocationLabelDescriptor
@@ -2021,7 +2035,10 @@ class BaseDocReader(LogMixin):
                     tag = dimElement.attrib["tag"]
                     value = float(dimElement.attrib["xvalue"])
                     outputLoc[tag] = value
-                self.documentObject.axisMappings.append([inputLoc, outputLoc])
+                axisMappingObject = self.axisMappingDescriptorClass(
+                    inputLocation=inputLoc, outputLocation=outputLoc
+                )
+                self.documentObject.axisMappings.append(axisMappingObject)
 
     def readAxisLabel(self, element: ET.Element):
         xml_attrs = {
@@ -2528,6 +2545,7 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
         doc.formatVersion
         doc.elidedFallbackName
         doc.axes
+        doc.axisMappings
         doc.locationLabels
         doc.rules
         doc.rulesProcessingLast
@@ -2566,7 +2584,7 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
         self.axes: List[Union[AxisDescriptor, DiscreteAxisDescriptor]] = []
         """List of this document's axes."""
 
-        self.axisMappings: List = []
+        self.axisMappings: List[AxisMappingDescriptor] = []
         """List of this document's axis mappings."""
 
         self.locationLabels: List[LocationLabelDescriptor] = []

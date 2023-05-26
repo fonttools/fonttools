@@ -345,7 +345,7 @@ def _extractSubSpace(
             )
 
     subDoc.lib = doc.lib
-    subDoc.axisMappings = doc.axisMappings  # TODO
+    subDoc.axisMappings = doc.axisMappings  #  XXX TODO
 
     return subDoc
 

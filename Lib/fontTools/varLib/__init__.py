@@ -131,7 +131,7 @@ def _add_fvar(font, axes, instances: List[InstanceDescriptor]):
     return fvar
 
 
-def _add_avar(font, axes, mapping, axisTags):
+def _add_avar(font, axes, mappings, axisTags):
     """
     Add 'avar' table to font.
 
@@ -212,22 +212,22 @@ def _add_avar(font, axes, mapping, axisTags):
         assert +1.0 not in curve or curve[+1.0] == +1.0
         # curve.update({-1.0: -1.0, 0.0: 0.0, 1.0: 1.0})
 
-    if mapping:
+    if mappings:
         interesting = True
 
         derived = [
             {
                 tag: models.normalizeValue(v, vals_triples[tag])
-                for tag, v in inputLoc.items()
+                for tag, v in mapping.inputLocation.items()
             }
-            for inputLoc, outputLoc in mapping
+            for mapping in mappings
         ]
         source = [
             {
                 tag: models.normalizeValue(v, vals_triples[tag])
-                for tag, v in outputLoc.items()
+                for tag, v in mapping.outputLocation.items()
             }
-            for inputLoc, outputLoc in mapping
+            for mapping in mappings
         ]
 
         model = models.VariationModel(derived, axisTags)
