@@ -24,6 +24,7 @@ from fontTools.misc.textTools import tobytes, tostr
 __all__ = [
     "AxisDescriptor",
     "AxisLabelDescriptor",
+    "AxisMappingDescriptor",
     "BaseDocReader",
     "BaseDocWriter",
     "DesignSpaceDocument",
@@ -1335,9 +1336,9 @@ class ValueAxisSubsetDescriptor(SimpleDescriptor):
 class BaseDocWriter(object):
     _whiteSpace = "    "
     axisDescriptorClass = AxisDescriptor
-    axisMappingDescriptorClass = AxisMappingDescriptor
     discreteAxisDescriptorClass = DiscreteAxisDescriptor
     axisLabelDescriptorClass = AxisLabelDescriptor
+    axisMappingDescriptorClass = AxisMappingDescriptor
     locationLabelDescriptorClass = LocationLabelDescriptor
     ruleDescriptorClass = RuleDescriptor
     sourceDescriptorClass = SourceDescriptor
@@ -1349,6 +1350,10 @@ class BaseDocWriter(object):
     @classmethod
     def getAxisDecriptor(cls):
         return cls.axisDescriptorClass()
+
+    @classmethod
+    def getAxisMappingDescriptor(cls):
+        return cls.axisMappingDescriptorClass()
 
     @classmethod
     def getSourceDescriptor(cls):
@@ -1865,9 +1870,9 @@ class BaseDocWriter(object):
 
 class BaseDocReader(LogMixin):
     axisDescriptorClass = AxisDescriptor
-    axisMappingDescriptorClass = AxisMappingDescriptor
     discreteAxisDescriptorClass = DiscreteAxisDescriptor
     axisLabelDescriptorClass = AxisLabelDescriptor
+    axisMappingDescriptorClass = AxisMappingDescriptor
     locationLabelDescriptorClass = LocationLabelDescriptor
     ruleDescriptorClass = RuleDescriptor
     sourceDescriptorClass = SourceDescriptor
@@ -2796,6 +2801,18 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
             axis = self.writerClass.axisDescriptorClass(**kwargs)
         self.addAxis(axis)
         return axis
+
+    def addAxisMapping(self, axisMappingDescriptor: AxisMappingDescriptor):
+        """Add the given ``axisMappingDescriptor`` to :attr:`axisMappings`."""
+        self.axisMappings.append(axisMappingDescriptor)
+
+    def addAxisMappingDescriptor(self, **kwargs):
+        """Instantiate a new :class:`AxisMappingDescriptor` using the given
+        ``kwargs`` and add it to :attr:`rules`.
+        """
+        axisMapping = self.writerClass.axisMappingDescriptorClass(**kwargs)
+        self.addAxisMapping(axisMapping)
+        return axisMapping
 
     def addRule(self, ruleDescriptor: RuleDescriptor):
         """Add the given ``ruleDescriptor`` to :attr:`rules`."""
