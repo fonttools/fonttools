@@ -1613,6 +1613,9 @@ class Builder(object):
             )
 
         varscalar.axes = self.axes
+        if not varscalar.does_vary:
+            return varscalar.default, None
+
         default, index = varscalar.add_to_variation_store(
             self.varstorebuilder, self.model_cache, self.font.get("avar")
         )
