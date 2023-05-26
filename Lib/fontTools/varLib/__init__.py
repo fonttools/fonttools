@@ -236,8 +236,11 @@ def _add_avar(font, axes, mapping, axisTags):
         varIdxes = {}
         for t in axisTags:
             masterValues = []
-            for m in source:
-                v = m.get(t, 0)
+            for ms, md in zip(source, derived):
+                if t not in ms:
+                    masterValues.append(0)
+                    continue
+                v = ms[t] - md.get(t, 0)
                 masterValues.append(fl2fi(v, 14))
             varIdxes[t] = builder.storeMasters(masterValues)[1]
 
