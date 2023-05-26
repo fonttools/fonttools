@@ -1606,6 +1606,23 @@ class Builder(object):
 
         self.conditionsets_[key] = value
 
+    def makeVariablePos(self, location, varscalar):
+        if not self.varstorebuilder:
+            raise FeatureLibError(
+                "Can't define a variable scalar in a non-variable font", location
+            )
+
+        varscalar.axes = self.axes
+        default, index = varscalar.add_to_variation_store(
+            self.varstorebuilder, self.model_cache, self.font.get("avar")
+        )
+
+        device = None
+        if index is not None and index != 0xFFFFFFFF:
+            device = buildVarDevTable(index)
+
+        return default, device
+
     def makeOpenTypeAnchor(self, location, anchor):
         """ast.Anchor --> otTables.Anchor"""
         if anchor is None:
@@ -1616,7 +1633,6 @@ class Builder(object):
             deviceX = otl.buildDevice(dict(anchor.xDeviceTable))
         if anchor.yDeviceTable is not None:
             deviceY = otl.buildDevice(dict(anchor.yDeviceTable))
-        avar = self.font.get("avar")
         for dim in ("x", "y"):
             varscalar = getattr(anchor, dim)
             if not isinstance(varscalar, VariableScalar):
@@ -1625,20 +1641,13 @@ class Builder(object):
                 raise FeatureLibError(
                     "Can't define a device coordinate and variable scalar", location
                 )
-            if not self.varstorebuilder:
-                raise FeatureLibError(
-                    "Can't define a variable scalar in a non-variable font", location
-                )
-            varscalar.axes = self.axes
-            default, index = varscalar.add_to_variation_store(
-                self.varstorebuilder, self.model_cache, avar
-            )
+            default, device = self.makeVariablePos(location, varscalar)
             setattr(anchor, dim, default)
-            if index is not None and index != 0xFFFFFFFF:
+            if device is not None:
                 if dim == "x":
-                    deviceX = buildVarDevTable(index)
+                    deviceX = device
                 else:
-                    deviceY = buildVarDevTable(index)
+                    deviceY = device
                 variable = True
 
         otlanchor = otl.buildAnchor(
@@ -1659,7 +1668,6 @@ class Builder(object):
         if not v:
             return None
 
-        avar = self.font.get("avar")
         vr = {}
         for astName, (otName, isDevice) in self._VALUEREC_ATTRS.items():
             val = getattr(v, astName, None)
@@ -1674,18 +1682,9 @@ class Builder(object):
                     raise FeatureLibError(
                         "Can't define a device coordinate and variable scalar", location
                     )
-                if not self.varstorebuilder:
-                    raise FeatureLibError(
-                        "Can't define a variable scalar in a non-variable font",
-                        location,
-                    )
-                val.axes = self.axes
-                default, index = val.add_to_variation_store(
-                    self.varstorebuilder, self.model_cache, avar
-                )
-                vr[otName] = default
-                if index is not None and index != 0xFFFFFFFF:
-                    vr[otDeviceName] = buildVarDevTable(index)
+                vr[otName], device = self.makeVariablePos(location, val)
+                if device is not None:
+                    vr[otDeviceName] = device
             else:
                 vr[otName] = val
 
