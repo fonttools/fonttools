@@ -707,6 +707,17 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(glyphstr([s.glyphs]), "f_i")
         self.assertEqual(s.carets, [400, 380])
 
+    def test_ligatureCaretByPos_variable_scalar(self):
+        doc = self.parse(
+            "table GDEF {LigatureCaretByPos f_i (wght=200:400 wght=900:1000) 380;} GDEF;"
+        )
+        s = doc.statements[0].statements[0]
+        self.assertIsInstance(s, ast.LigatureCaretByPosStatement)
+        self.assertEqual(glyphstr([s.glyphs]), "f_i")
+        self.assertEqual(len(s.carets), 2)
+        self.assertEqual(str(s.carets[0]), "(wght=200:400 wght=900:1000)")
+        self.assertEqual(s.carets[1], 380)
+
     def test_lookup_block(self):
         [lookup] = self.parse("lookup Ligatures {} Ligatures;").statements
         self.assertEqual(lookup.name, "Ligatures")

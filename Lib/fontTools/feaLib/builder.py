@@ -1553,7 +1553,16 @@ class Builder(object):
             if glyph not in self.ligCaretPoints_:
                 self.ligCaretPoints_[glyph] = carets
 
+    def makeLigCaret(self, location, caret):
+        if not isinstance(caret, VariableScalar):
+            return caret
+        default, device = self.makeVariablePos(location, caret)
+        if device is not None:
+            return (default, device)
+        return default
+
     def add_ligatureCaretByPos_(self, location, glyphs, carets):
+        carets = [self.makeLigCaret(location, caret) for caret in carets]
         for glyph in glyphs:
             if glyph not in self.ligCaretCoords_:
                 self.ligCaretCoords_[glyph] = carets
