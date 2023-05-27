@@ -2024,12 +2024,12 @@ class BaseDocReader(LogMixin):
             self.documentObject.axes.append(axisObject)
             self.axisDefaults[axisObject.name] = axisObject.default
 
-        mappingElement = self.root.find(".axes/mapping")
+        mappingsElement = self.root.find(".axes/mappings")
         self.documentObject.axisMappings = []
-        if mappingElement is not None:
-            for regionElement in mappingElement.findall("region"):
-                inputElement = regionElement.find("input")
-                outputElement = regionElement.find("output")
+        if mappingsElement is not None:
+            for mappingElement in mappingsElement.findall("mapping"):
+                inputElement = mappingElement.find("input")
+                outputElement = mappingElement.find("output")
                 inputLoc = {}
                 outputLoc = {}
                 for dimElement in inputElement.findall(".dimension"):
