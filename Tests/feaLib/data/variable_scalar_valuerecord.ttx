@@ -76,7 +76,7 @@
       <Lookup index="0">
         <LookupType value="1"/>
         <LookupFlag value="0"/>
-        <!-- SubTableCount=2 -->
+        <!-- SubTableCount=3 -->
         <SinglePos index="0" Format="1">
           <Coverage>
             <Glyph value="one"/>
@@ -96,6 +96,13 @@
               <DeltaFormat value="32768"/>
             </YPlaDevice>
           </Value>
+        </SinglePos>
+        <SinglePos index="2" Format="1">
+          <Coverage>
+            <Glyph value="three"/>
+          </Coverage>
+          <ValueFormat value="2"/>
+          <Value YPlacement="12"/>
         </SinglePos>
       </Lookup>
     </LookupList>
