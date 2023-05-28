@@ -217,15 +217,15 @@ def _add_avar(font, axes, mappings, axisTags):
 
         derived = [
             {
-                tag: models.normalizeValue(v, vals_triples[tag])
-                for tag, v in mapping.inputLocation.items()
+                axes[name].tag: models.normalizeValue(v, vals_triples[axes[name].tag])
+                for name, v in mapping.inputLocation.items()
             }
             for mapping in mappings
         ]
         source = [
             {
-                tag: models.normalizeValue(v, vals_triples[tag])
-                for tag, v in mapping.outputLocation.items()
+                axes[name].tag: models.normalizeValue(v, vals_triples[axes[name].tag])
+                for name, v in mapping.outputLocation.items()
             }
             for mapping in mappings
         ]

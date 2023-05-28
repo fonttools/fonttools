@@ -1560,9 +1560,9 @@ class BaseDocWriter(object):
             whatElement = ET.Element(what[:-8])
             mappingElement.append(whatElement)
 
-            for tag, value in whatObject.items():
+            for name, value in whatObject.items():
                 dimensionElement = ET.Element("dimension")
-                dimensionElement.attrib["tag"] = tag
+                dimensionElement.attrib["name"] = name
                 dimensionElement.attrib["xvalue"] = self.intOrFloat(value)
                 whatElement.append(dimensionElement)
 
@@ -2057,13 +2057,13 @@ class BaseDocReader(LogMixin):
                 inputLoc = {}
                 outputLoc = {}
                 for dimElement in inputElement.findall(".dimension"):
-                    tag = dimElement.attrib["tag"]
+                    name = dimElement.attrib["name"]
                     value = float(dimElement.attrib["xvalue"])
-                    inputLoc[tag] = value
+                    inputLoc[name] = value
                 for dimElement in outputElement.findall(".dimension"):
-                    tag = dimElement.attrib["tag"]
+                    name = dimElement.attrib["name"]
                     value = float(dimElement.attrib["xvalue"])
-                    outputLoc[tag] = value
+                    outputLoc[name] = value
                 axisMappingObject = self.axisMappingDescriptorClass(
                     inputLocation=inputLoc, outputLocation=outputLoc
                 )
