@@ -20,6 +20,7 @@ def ttfont_path():
     yield font_path
     font_path.unlink()
 
+
 def test_calcChecksum():
     assert calcChecksum(b"abcd") == 1633837924
     assert calcChecksum(b"abcdxyz") == 3655064932
@@ -73,20 +74,23 @@ class SFNTReaderTest:
                 continue
             assert getattr(reader2, k) == v
 
+
 def test_ttLib_sfnt_write_privData(tmp_path, ttfont_path):
     output_path = tmp_path / "TestTTF-Regular.woff"
-    font = TTFont(ttfont_path)        
-    
+    font = TTFont(ttfont_path)
+
     privData = "Private Eyes".encode()
-    
+
     data = WOFFFlavorData()
-    head = font['head']
-    data.majorVersion, data.minorVersion =map(int, format(head.fontRevision, '.3f').split('.'))
-    
+    head = font["head"]
+    data.majorVersion, data.minorVersion = map(
+        int, format(head.fontRevision, ".3f").split(".")
+    )
+
     data.privData = privData
     font.flavor = "woff"
     font.flavorData = data
     font.save(output_path)
-            
-    assert output_path.exists()        
+
+    assert output_path.exists()
     assert TTFont(output_path).flavorData.privData == privData
