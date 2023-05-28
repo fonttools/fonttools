@@ -447,20 +447,52 @@ def processRules(rules, location, glyphNames):
     return glyphNames
 
 
-class AxisMappingDescriptor(SimpleDescriptor):
-    """XXX TODO"""
-
-    _attrs = ["inputLocation", "outputLocation"]  # what do we need here
-
-    def __init__(self, *, inputLocation=None, outputLocation=None):
-        self.inputLocation = inputLocation or {}
-        """XXX TODO"""
-        self.outputLocation = outputLocation or {}
-        """XXX TODO"""
-
-
 AnisotropicLocationDict = Dict[str, Union[float, Tuple[float, float]]]
 SimpleLocationDict = Dict[str, float]
+
+
+class AxisMappingDescriptor(SimpleDescriptor):
+    """Represents the axis mapping element: mapping an input location
+    to an output location in the designspace.
+
+    .. code:: python
+
+        m1 = AxisMappingDescriptor()
+        m1.inputLocation = {"weight": 900, "width": 150}
+        m1.outputLocation = {"weight": 870}
+
+    .. code:: xml
+
+        <mappings>
+            <mapping>
+                <input>
+                    <dimension name="weight" xvalue="900"/>
+                    <dimension name="width" xvalue="150"/>
+                </input>
+                <output>
+                    <dimension name="weight" xvalue="870"/>
+                </output>
+            </mapping>
+        </mappings>
+    """
+
+    _attrs = ["inputLocation", "outputLocation"]
+
+    def __init__(self, *, inputLocation=None, outputLocation=None):
+        self.inputLocation: SimpleLocationDict = inputLocation or {}
+        """dict. Axis values for the input of the mapping, in design space coordinates.
+
+        Varlib.
+
+        .. versionadded:: REPLACEME
+        """
+        self.outputLocation: SimpleLocationDict = outputLocation or {}
+        """dict. Axis values for the output of the mapping, in design space coordinates.
+
+        Varlib.
+
+        .. versionadded:: REPLACEME
+        """
 
 
 class InstanceDescriptor(SimpleDescriptor):
