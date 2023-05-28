@@ -990,7 +990,7 @@ class MarkBasePosBuilder(LookupBuilder):
             for mc, anchor in anchors.items():
                 if mc not in markClasses:
                     raise ValueError(
-                        "Mark class %s not found for base glyph %s" % (mc, mark)
+                        "Mark class %s not found for base glyph %s" % (mc, glyph)
                     )
                 bases[glyph][markClasses[mc]] = anchor
         subtables = buildMarkBasePos(marks, bases, self.glyphMap)
