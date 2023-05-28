@@ -8,6 +8,7 @@ import pytest
 from fontTools import ttLib
 from fontTools.designspaceLib import (
     AxisDescriptor,
+    AxisMappingDescriptor,
     AxisLabelDescriptor,
     DesignSpaceDocument,
     DesignSpaceDocumentError,
@@ -1055,6 +1056,19 @@ def test_addAxisDescriptor():
     assert axis.minimum == 100
     assert axis.default == 400
     assert axis.maximum == 900
+
+
+def test_addAxisDescriptor():
+    ds = DesignSpaceDocument()
+
+    mapping = ds.addAxisMappingDescriptor(
+        inputLocation={"weight": 900, "width": 150}, outputLocation={"weight": 870}
+    )
+
+    assert ds.axisMappings[0] is mapping
+    assert isinstance(mapping, AxisMappingDescriptor)
+    assert mapping.inputLocation == {"weight": 900, "width": 150}
+    assert mapping.outputLocation == {"weight": 870}
 
 
 def test_addSourceDescriptor():
