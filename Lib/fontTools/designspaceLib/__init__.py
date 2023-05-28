@@ -1378,6 +1378,7 @@ class BaseDocWriter(object):
 
         if (
             self.documentObject.axes
+            or self.documentObject.axisMappings
             or self.documentObject.elidedFallbackName is not None
         ):
             axesElement = ET.Element("axes")
@@ -1388,6 +1389,12 @@ class BaseDocWriter(object):
             self.root.append(axesElement)
         for axisObject in self.documentObject.axes:
             self._addAxis(axisObject)
+
+        if self.documentObject.axisMappings:
+            mappingsElement = ET.Element("mappings")
+            self.root.findall(".axes")[0].append(mappingsElement)
+            for mappingObject in self.documentObject.axisMappings:
+                self._addAxisMapping(mappingsElement, mappingObject)
 
         if self.documentObject.locationLabels:
             labelsElement = ET.Element("labels")
@@ -1543,6 +1550,23 @@ class BaseDocWriter(object):
         if axisObject.hidden:
             axisElement.attrib["hidden"] = "1"
         self.root.findall(".axes")[0].append(axisElement)
+
+    def _addAxisMapping(self, mappingsElement, mappingObject):
+        mappingElement = ET.Element("mapping")
+        for what in ("inputLocation", "outputLocation"):
+            whatObject = getattr(mappingObject, what, None)
+            if whatObject is None:
+                continue
+            whatElement = ET.Element(what[:-8])
+            mappingElement.append(whatElement)
+
+            for tag, value in whatObject.items():
+                dimensionElement = ET.Element("dimension")
+                dimensionElement.attrib["tag"] = tag
+                dimensionElement.attrib["xvalue"] = self.intOrFloat(value)
+                whatElement.append(dimensionElement)
+
+        mappingsElement.append(mappingElement)
 
     def _addAxisLabel(
         self, axisElement: ET.Element, label: AxisLabelDescriptor
