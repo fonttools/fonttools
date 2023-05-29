@@ -54,7 +54,7 @@ jobs:
       env:
         CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
         CIBW_ARCHS: ${{ matrix.arch }}
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         path: wheelhouse/*.whl
 
@@ -81,7 +81,7 @@ jobs:
       env:
         CIBW_BUILD: cp${{ matrix.python }}-*
         CIBW_ARCHS: ${{ matrix.arch }}
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         path: wheelhouse/*.whl
 
