@@ -232,6 +232,11 @@ def _add_avar(font, axes, mappings, axisTags):
             for mapping in mappings
         ]
 
+        # If base-master is missing, insert it at zero location.
+        if not any(all(v == 0 for k, v in loc.items()) for loc in inputLocations):
+            inputLocations.insert(0, {})
+            outputLocations.insert(0, {})
+
         model = models.VariationModel(inputLocations, axisTags)
         builder = varStore.OnlineVarStoreBuilder(axisTags)
         builder.setModel(model)

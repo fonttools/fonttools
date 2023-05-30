@@ -16,13 +16,6 @@
         <mappings>
             <mapping>
                 <input>
-                    <dimension name="weight" xvalue="90"/>
-                </input>
-                <output>
-                </output>
-            </mapping>
-            <mapping>
-                <input>
                     <dimension name="weight" xvalue="128"/>
                 </input>
                 <output>
