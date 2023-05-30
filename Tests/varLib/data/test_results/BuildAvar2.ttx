@@ -14,10 +14,6 @@
       <mapping from="0.8" to="0.79"/>
       <mapping from="1.0" to="1.0"/>
     </segment>
-    <VarIdxMap Format="0">
-      <!-- Omitted values default to 0xFFFF/0xFFFF (no variations) -->
-      <Map index="0" outer="0" inner="0"/>
-    </VarIdxMap>
     <VarStore Format="1">
       <Format value="1"/>
       <VarRegionList>

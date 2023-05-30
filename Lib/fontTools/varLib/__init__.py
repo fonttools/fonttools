@@ -264,6 +264,8 @@ def _add_avar(font, axes, mappings, axisTags):
         varIdxMap = ot.DeltaSetIndexMap()
         varIdxMap.mapping = [varIdxes[t] for t in axisTags]
         varIdxMap.Format = 1 if len(varIdxMap.mapping) > 0xFFFF else 0
+        if all(i == v for i, v in enumerate(varIdxMap.mapping)):
+            varIdxMap = None
 
         avar.majorVersion = 2
         avar.table = ot.avar()
