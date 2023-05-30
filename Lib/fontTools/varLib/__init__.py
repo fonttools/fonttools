@@ -215,6 +215,8 @@ def _add_avar(font, axes, mappings, axisTags):
     if mappings:
         interesting = True
 
+        hiddenAxes = [axis for axis in axes.values() if axis.hidden]
+
         inputLocations = [
             {
                 axes[name].tag: models.normalizeValue(v, vals_triples[axes[name].tag])
@@ -240,6 +242,12 @@ def _add_avar(font, axes, mappings, axisTags):
                 if t not in vo:
                     masterValues.append(0)
                     continue
+                if t not in vi and t not in hiddenAxes:
+                    log.warning(
+                        "No input location specified for non-hidden axis '%s' in axis mapping %s",
+                        t,
+                        vi,
+                    )
                 v = vo[t] - vi.get(t, 0)
                 masterValues.append(fl2fi(v, 14))
             varIdxes[t] = builder.storeMasters(masterValues)[1]
