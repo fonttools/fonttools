@@ -1,8 +1,24 @@
 import io
 import copy
 import pickle
-from fontTools.ttLib.sfnt import calcChecksum, SFNTReader
+import tempfile
+from fontTools.ttLib import TTFont
+from fontTools.ttLib.sfnt import calcChecksum, SFNTReader, WOFFFlavorData
+from pathlib import Path
 import pytest
+
+TEST_DATA = Path(__file__).parent / "data"
+
+
+@pytest.fixture
+def ttfont_path():
+    font = TTFont()
+    font.importXML(TEST_DATA / "TestTTF-Regular.ttx")
+    with tempfile.NamedTemporaryFile(suffix=".ttf", delete=False) as fp:
+        font_path = Path(fp.name)
+        font.save(font_path)
+    yield font_path
+    font_path.unlink()
 
 
 def test_calcChecksum():
@@ -57,3 +73,24 @@ class SFNTReaderTest:
             if k == "file":
                 continue
             assert getattr(reader2, k) == v
+
+
+def test_ttLib_sfnt_write_privData(tmp_path, ttfont_path):
+    output_path = tmp_path / "TestTTF-Regular.woff"
+    font = TTFont(ttfont_path)
+
+    privData = "Private Eyes".encode()
+
+    data = WOFFFlavorData()
+    head = font["head"]
+    data.majorVersion, data.minorVersion = map(
+        int, format(head.fontRevision, ".3f").split(".")
+    )
+
+    data.privData = privData
+    font.flavor = "woff"
+    font.flavorData = data
+    font.save(output_path)
+
+    assert output_path.exists()
+    assert TTFont(output_path).flavorData.privData == privData
