@@ -215,14 +215,14 @@ def _add_avar(font, axes, mappings, axisTags):
     if mappings:
         interesting = True
 
-        derived = [
+        inputLocations = [
             {
                 axes[name].tag: models.normalizeValue(v, vals_triples[axes[name].tag])
                 for name, v in mapping.inputLocation.items()
             }
             for mapping in mappings
         ]
-        source = [
+        outputLocations = [
             {
                 axes[name].tag: models.normalizeValue(v, vals_triples[axes[name].tag])
                 for name, v in mapping.outputLocation.items()
@@ -230,17 +230,17 @@ def _add_avar(font, axes, mappings, axisTags):
             for mapping in mappings
         ]
 
-        model = models.VariationModel(derived, axisTags)
+        model = models.VariationModel(inputLocations, axisTags)
         builder = varStore.OnlineVarStoreBuilder(axisTags)
         builder.setModel(model)
         varIdxes = {}
         for t in axisTags:
             masterValues = []
-            for ms, md in zip(source, derived):
-                if t not in ms:
+            for vo, vi in zip(outputLocations, inputLocations):
+                if t not in vo:
                     masterValues.append(0)
                     continue
-                v = ms[t] - md.get(t, 0)
+                v = vo[t] - vi.get(t, 0)
                 masterValues.append(fl2fi(v, 14))
             varIdxes[t] = builder.storeMasters(masterValues)[1]
 
