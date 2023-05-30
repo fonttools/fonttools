@@ -218,6 +218,18 @@ class RebaseTentTest(object):
                     (1, (0, 0.4, 1.99994)),
                 ],
             ),
+            # https://github.com/fonttools/fonttools/issues/3139
+            pytest.param(
+                (0, 0.5, 1),
+                (-1, 0.25, 1),
+                [
+                    (0.5, None),
+                    (0.5, (0.0, 1 / 3, 2 / 3)),
+                    (-0.5, (2 / 3, 1, 1)),
+                    (-0.5, (-1, -0.2, 0)),
+                    (-0.5, (-1, -1, -0.2)),
+                ],
+            ),
             # Dirac delta at new default. Fancy!
             pytest.param(
                 (0.5, 0.5, 0.5),
@@ -233,7 +245,6 @@ class RebaseTentTest(object):
         ],
     )
     def test_rebaseTent(self, tent, axisRange, expected):
-
         sol = solver.rebaseTent(tent, axisRange)
 
         a = pytest.approx
