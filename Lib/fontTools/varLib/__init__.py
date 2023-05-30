@@ -238,8 +238,8 @@ def _add_avar(font, axes, mappings, axisTags):
             outputLocations.insert(0, {})
 
         model = models.VariationModel(inputLocations, axisTags)
-        builder = varStore.OnlineVarStoreBuilder(axisTags)
-        builder.setModel(model)
+        storeBuilder = varStore.OnlineVarStoreBuilder(axisTags)
+        storeBuilder.setModel(model)
         varIdxes = {}
         for t in axisTags:
             masterValues = []
@@ -255,17 +255,13 @@ def _add_avar(font, axes, mappings, axisTags):
                     )
                 v = vo[t] - vi.get(t, 0)
                 masterValues.append(fl2fi(v, 14))
-            varIdxes[t] = builder.storeMasters(masterValues)[1]
+            varIdxes[t] = storeBuilder.storeMasters(masterValues)[1]
 
-        store = builder.finish()
+        store = storeBuilder.finish()
         optimized = store.optimize()
         varIdxes = {axis: optimized[value] for axis, value in varIdxes.items()}
 
-        varIdxMap = ot.DeltaSetIndexMap()
-        varIdxMap.mapping = [varIdxes[t] for t in axisTags]
-        varIdxMap.Format = 1 if len(varIdxMap.mapping) > 0xFFFF else 0
-        if all(i == v for i, v in enumerate(varIdxMap.mapping)):
-            varIdxMap = None
+        varIdxMap = builder.buildDeltaSetIndexMap(varIdxes[t] for t in axisTags)
 
         avar.majorVersion = 2
         avar.table = ot.avar()
@@ -857,11 +853,8 @@ def _add_COLR(font, model, master_fonts, axisTags, colr_layer_reuse=True):
     if store:
         mapping = store.optimize()
         colr.VarStore = store
-        # don't add DeltaSetIndexMap for identity mapping
-        colr.VarIndexMap = None
         varIdxes = [mapping[v] for v in merger.varIdxes]
-        if any(i != varIdxes[i] for i in range(len(varIdxes))):
-            colr.VarIndexMap = builder.buildDeltaSetIndexMap(varIdxes)
+        colr.VarIndexMap = builder.buildDeltaSetIndexMap(varIdxes)
 
 
 def load_designspace(designspace):
