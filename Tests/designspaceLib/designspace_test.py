@@ -689,6 +689,30 @@ def test_axisMapping():
     assert r == [("ddd", [(0, 0.0), (300, 0.5), (600, 0.5), (1000, 1.0)])]
 
 
+def test_axisMappingsRoundtrip(tmpdir):
+    # tests of axisMappings in a document, roundtripping.
+    import pathlib
+
+    tmpdir = str(tmpdir)
+    testDocPath = (pathlib.Path(__file__) / "../data/test_avar2.designspace").resolve()
+    testDocPath2 = os.path.join(tmpdir, "test_avar2_roundtrip.designspace")
+    doc = DesignSpaceDocument()
+    doc.read(testDocPath)
+    assert doc.axisMappings
+    assert len(doc.axisMappings) == 3
+    assert doc.axisMappings[0].inputLocation == {"Justify": 0.0}
+    doc.write(testDocPath2)
+    # verify these results
+    doc2 = DesignSpaceDocument()
+    doc2.read(testDocPath2)
+    assert [mapping.inputLocation for mapping in doc.axisMappings] == [
+        mapping.inputLocation for mapping in doc2.axisMappings
+    ]
+    assert [mapping.outputLocation for mapping in doc.axisMappings] == [
+        mapping.outputLocation for mapping in doc2.axisMappings
+    ]
+
+
 def test_rulesConditions(tmpdir):
     # tests of rules, conditionsets and conditions
     r1 = RuleDescriptor()
