@@ -701,6 +701,13 @@ def test_axisMappingsRoundtrip(tmpdir):
     assert doc.axisMappings
     assert len(doc.axisMappings) == 3
     assert doc.axisMappings[0].inputLocation == {"Justify": 0.0}
+
+    # This is a bit of a hack, but it's the only way to make sure
+    # that the save works on Windows if the tempdir and the data
+    # dir are on different drives.
+    for descriptor in doc.sources + doc.instances:
+        descriptor.path = None
+
     doc.write(testDocPath2)
     # verify these results
     doc2 = DesignSpaceDocument()
