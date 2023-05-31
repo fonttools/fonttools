@@ -145,7 +145,7 @@ def buildDeltaSetIndexMap(varIdxes):
         return None
     self = ot.DeltaSetIndexMap()
     self.mapping = mapping
-    self.Format = 1 if len(varIdxes) > 0xFFFF else 0
+    self.Format = 1 if len(mapping) > 0xFFFF else 0
     return self
 
 
