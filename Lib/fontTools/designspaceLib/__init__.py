@@ -1493,6 +1493,9 @@ class BaseDocWriter(object):
         ):
             if minVersion < (5, 0):
                 minVersion = (5, 0)
+        if self.documentObject.axisMappings:
+            if minVersion < (5, 1):
+                minVersion = (5, 1)
         return minVersion
 
     def _makeLocationElement(self, locationObject, name=None):
