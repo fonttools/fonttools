@@ -11,6 +11,7 @@ from typing import Any, Callable, Dict, Iterator, List, Tuple, cast
 
 from fontTools.designspaceLib import (
     AxisDescriptor,
+    AxisMappingDescriptor,
     DesignSpaceDocument,
     DiscreteAxisDescriptor,
     InstanceDescriptor,
@@ -225,6 +226,20 @@ def _extractSubSpace(
                 )
             )
 
+    # TODO Trim out-of-range values? :-(
+    subDoc.axisMappings = mappings = []
+    subDocAxes = [axis.name for axis in subDoc.axes]
+    for mapping in doc.axisMappings:
+        if not all(axis in subDocAxes for axis in mapping.inputLocation.keys()):
+            continue
+        assert all(axis in subDocAxes for axis in mapping.outputLocation.keys())
+        mappings.append(
+            AxisMappingDescriptor(
+                inputLocation=mapping.inputLocation,
+                outputLocation=mapping.outputLocation,
+            )
+        )
+
     # Don't include STAT info
     # subDoc.locationLabels = doc.locationLabels
 
@@ -345,7 +360,6 @@ def _extractSubSpace(
             )
 
     subDoc.lib = doc.lib
-    subDoc.axisMappings = doc.axisMappings  #  XXX TODO
 
     return subDoc
 
