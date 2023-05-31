@@ -20,10 +20,15 @@ Overview
 .. code:: xml
 
     <?xml version='1.0' encoding='utf-8'?>
-    <designspace format="5.0">
+    <designspace format="5.1">
         <axes>
             <!-- define axes here -->
             <axis... />
+            <mappings>
+                <!-- define axis mappings here -->
+                <!-- New in version 5.1 -->
+                <mapping... />
+            </mappings>
         </axes>
         <labels>
             <!-- define STAT format 4 labels here -->
@@ -255,6 +260,64 @@ Example of all axis elements together
     </axes>
 
 
+``<mappings>`` element
+======================
+
+-  Define axis mappings.
+-  Child element of ``axes``
+
+
+ .. versionadded:: 5.1
+
+
+``<mapping>`` element
+---------------------
+
+-  Defines an axis mapping.
+-  Child element of ``<mappings>``
+
+
+ .. versionadded:: 5.1
+
+
+``<input>`` element
+...................
+
+-  Defines the input location of an axis mapping.
+-  Child element of ``<mapping>``
+-  Contains one or more ``<dimension>`` elements with designspace locations.
+
+ .. versionadded:: 5.1
+
+
+``<output>`` element
+...................
+
+-  Defines the output location of an axis mapping.
+-  Child element of ``<mapping>``
+-  Contains one or more ``<dimension>`` elements with designspace locations.
+
+ .. versionadded:: 5.1
+
+
+Example of all mappings elements together
+=========================================
+
+.. code:: xml
+
+    <mappings>
+        <mapping>
+            <input>
+                <dimension name="weight" xvalue="900"/>
+                <dimension name="width" xvalue="150"/>
+            </input>
+            <output>
+                <dimension name="weight" xvalue="870"/>
+            </output>
+        </mapping>
+    </mappings>
+
+
 ================================
 ``<labels>`` element (top-level)
 ================================
@@ -304,7 +367,7 @@ See: `OTSpec STAT Axis value table, format 4 <https://docs.microsoft.com/en-us/t
 ``<dimension>`` element
 .......................
 
--  Child element of ``<location>``
+-  Child element of ``<location>``, ``input``, or ``output`` elements
 
 .. rubric:: Attributes
 

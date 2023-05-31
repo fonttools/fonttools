@@ -484,14 +484,14 @@ class AxisMappingDescriptor(SimpleDescriptor):
 
         Varlib.
 
-        .. versionadded:: REPLACEME
+        .. versionadded:: 5.1
         """
         self.outputLocation: SimpleLocationDict = outputLocation or {}
         """dict. Axis values for the output of the mapping, in design space coordinates.
 
         Varlib.
 
-        .. versionadded:: REPLACEME
+        .. versionadded:: 5.1
         """
 
 
