@@ -867,7 +867,7 @@ The ``<instances>`` element contains one or more ``<instance>`` elements.
 
 -  Defines a single font that can be calculated with the designspace.
 -  Child element of ``<instances>``
--  For use in Varlib the instance element really only needs the names
+-  For use in varLib the instance element really only needs the names
    and the location. The ``<glyphs>`` element is not required.
 -  MutatorMath uses the ``<glyphs>`` element to describe how certain
    glyphs need different masters, mainly to describe the effects of
@@ -942,7 +942,7 @@ with an ``xml:lang`` attribute:
     <stylemapfamilyname xml:lang="ja">モンセラート SemiBold</stylemapfamilyname>
 
 
-Example for varlib
+Example for varLib
 ------------------
 
 .. code:: xml

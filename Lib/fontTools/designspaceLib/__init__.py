@@ -206,7 +206,7 @@ class SourceDescriptor(SimpleDescriptor):
         self.name = name
         """string. Optional. Unique identifier name for this source.
 
-        MutatorMath + Varlib.
+        MutatorMath + varLib.
         """
 
         self.designLocation = (
@@ -214,7 +214,7 @@ class SourceDescriptor(SimpleDescriptor):
         )
         """dict. Axis values for this source, in design space coordinates.
 
-        MutatorMath + Varlib.
+        MutatorMath + varLib.
 
         This may be only part of the full design location.
         See :meth:`getFullDesignLocation()`
@@ -231,14 +231,14 @@ class SourceDescriptor(SimpleDescriptor):
         can be extracted from the font, it can be efficient to have it right
         here.
 
-        Varlib.
+        varLib.
         """
         self.styleName = styleName
         """string. Style name of this source. Though this data
         can be extracted from the font, it can be efficient to have it right
         here.
 
-        Varlib.
+        varLib.
         """
         self.localisedFamilyName = localisedFamilyName or {}
         """dict. A dictionary of localised family name strings, keyed by
@@ -304,7 +304,7 @@ class SourceDescriptor(SimpleDescriptor):
     def location(self):
         """dict. Axis values for this source, in design space coordinates.
 
-        MutatorMath + Varlib.
+        MutatorMath + varLib.
 
         .. deprecated:: 5.0
            Use the more explicit alias for this property :attr:`designLocation`.
@@ -482,14 +482,14 @@ class AxisMappingDescriptor(SimpleDescriptor):
         self.inputLocation: SimpleLocationDict = inputLocation or {}
         """dict. Axis values for the input of the mapping, in design space coordinates.
 
-        Varlib.
+        varLib.
 
         .. versionadded:: 5.1
         """
         self.outputLocation: SimpleLocationDict = outputLocation or {}
         """dict. Axis values for the output of the mapping, in design space coordinates.
 
-        Varlib.
+        varLib.
 
         .. versionadded:: 5.1
         """
@@ -606,7 +606,7 @@ class InstanceDescriptor(SimpleDescriptor):
         )
         """dict. Axis values for this instance, in design space coordinates.
 
-        MutatorMath + Varlib.
+        MutatorMath + varLib.
 
         .. seealso:: This may be only part of the full location. See:
            :meth:`getFullDesignLocation`
@@ -617,7 +617,7 @@ class InstanceDescriptor(SimpleDescriptor):
         self.userLocation: SimpleLocationDict = userLocation or {}
         """dict. Axis values for this instance, in user space coordinates.
 
-        MutatorMath + Varlib.
+        MutatorMath + varLib.
 
         .. seealso:: This may be only part of the full location. See:
            :meth:`getFullDesignLocation`
@@ -628,27 +628,27 @@ class InstanceDescriptor(SimpleDescriptor):
         self.familyName = familyName
         """string. Family name of this instance.
 
-        MutatorMath + Varlib.
+        MutatorMath + varLib.
         """
         self.styleName = styleName
         """string. Style name of this instance.
 
-        MutatorMath + Varlib.
+        MutatorMath + varLib.
         """
         self.postScriptFontName = postScriptFontName
         """string. Postscript fontname for this instance.
 
-        MutatorMath + Varlib.
+        MutatorMath + varLib.
         """
         self.styleMapFamilyName = styleMapFamilyName
         """string. StyleMap familyname for this instance.
 
-        MutatorMath + Varlib.
+        MutatorMath + varLib.
         """
         self.styleMapStyleName = styleMapStyleName
         """string. StyleMap stylename for this instance.
 
-        MutatorMath + Varlib.
+        MutatorMath + varLib.
         """
         self.localisedFamilyName = localisedFamilyName or {}
         """dict. A dictionary of localised family name
@@ -698,7 +698,7 @@ class InstanceDescriptor(SimpleDescriptor):
     def location(self):
         """dict. Axis values for this instance.
 
-        MutatorMath + Varlib.
+        MutatorMath + varLib.
 
         .. deprecated:: 5.0
            Use the more explicit alias for this property :attr:`designLocation`.
@@ -883,7 +883,7 @@ class AbstractAxisDescriptor(SimpleDescriptor):
         self.name = name
         """string. Name of the axis as it is used in the location dicts.
 
-        MutatorMath + Varlib.
+        MutatorMath + varLib.
         """
         # names for UI purposes, if this is not a standard axis,
         self.labelNames = labelNames or {}
@@ -901,7 +901,7 @@ class AbstractAxisDescriptor(SimpleDescriptor):
         user space is the same as design space, as in [(minimum, minimum),
         (maximum, maximum)].
 
-        Varlib.
+        varLib.
         """
         self.axisOrdering = axisOrdering
         """STAT table field ``axisOrdering``.
@@ -979,18 +979,18 @@ class AxisDescriptor(AbstractAxisDescriptor):
         self.minimum = minimum
         """number. The minimum value for this axis in user space.
 
-        MutatorMath + Varlib.
+        MutatorMath + varLib.
         """
         self.maximum = maximum
         """number. The maximum value for this axis in user space.
 
-        MutatorMath + Varlib.
+        MutatorMath + varLib.
         """
         self.default = default
         """number. The default value for this axis, i.e. when a new location is
         created, this is the value this axis will get in user space.
 
-        MutatorMath + Varlib.
+        MutatorMath + varLib.
         """
 
     def serialize(self):
