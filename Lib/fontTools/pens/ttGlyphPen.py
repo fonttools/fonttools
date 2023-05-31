@@ -326,7 +326,9 @@ class TTGlyphPointPen(_TTGlyphBasePen, LogMixin, AbstractPointPen):
         if self._isClosed():
             raise PenError("Contour is already closed.")
         if self._currentContourStartIndex == len(self.points):
-            raise PenError("Tried to end an empty contour.")
+            # ignore empty contours
+            self._currentContourStartIndex = None
+            return
 
         contourStart = self.endPts[-1] + 1 if self.endPts else 0
         self.endPts.append(len(self.points) - 1)

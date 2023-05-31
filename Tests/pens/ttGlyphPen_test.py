@@ -353,12 +353,6 @@ class TTGlyphPointPenTest(TTGlyphPenTestBase):
         with pytest.raises(PenError):
             pen.glyph()
 
-    def test_glyph_errorOnEmptyContour(self):
-        pen = TTGlyphPointPen(None)
-        pen.beginPath()
-        with pytest.raises(PenError):
-            pen.endPath()
-
     def test_glyph_decomposes(self):
         componentName = "a"
         glyphSet = {}
@@ -594,6 +588,15 @@ class TTGlyphPointPenTest(TTGlyphPenTestBase):
         # interpret both these paths as equivalent
         assert pen1.points == pen2.points == [(0, 0), (10, 10), (20, 20), (20, 0)]
         assert pen1.types == pen2.types == [1, 1, 0, 1]
+
+    def test_skip_empty_contours(self):
+        pen = TTGlyphPointPen(None)
+        pen.beginPath()
+        pen.endPath()
+        pen.beginPath()
+        pen.endPath()
+        glyph = pen.glyph()
+        assert glyph.numberOfContours == 0
 
 
 class CubicGlyfTest:
