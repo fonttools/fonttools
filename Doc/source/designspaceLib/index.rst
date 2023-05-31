@@ -174,6 +174,14 @@ it can become complex very quickly. So proceed with caution.
 Version history
 ===============
 
+Version 5.1
+-----------
+
+The format was extended to support arbitrary mapping between input and output
+axes. The ``<axes>`` elements now can have a ``<mappings>`` element that
+specifies such mappings, which when present carries data that is used to
+compile to an ``avar`` version 2 table.
+
 Version 5.0
 -----------
 
