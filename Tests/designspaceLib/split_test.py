@@ -211,3 +211,10 @@ def test_optional_min_max_internal(condition, expected_set: ConditionSet):
     """Check that split's internal helper functions produce the correct output
     for conditions that are partially unbounded."""
     assert _conditionSetFrom([condition]) == expected_set
+
+
+def test_avar2(datadir):
+    ds = DesignSpaceDocument()
+    ds.read(datadir / "test_avar2.designspace")
+    out = list(splitInterpolable(ds))[0][1]
+    assert len(out.axisMappings) == 3
