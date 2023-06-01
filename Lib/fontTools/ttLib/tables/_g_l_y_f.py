@@ -22,11 +22,13 @@ import sys
 import struct
 import array
 import logging
+import math
 import os
 from fontTools.misc import xmlWriter
 from fontTools.misc.filenames import userNameToFileName
 from fontTools.misc.loggingTools import deprecateFunction
 from enum import IntFlag
+from typing import Set
 
 log = logging.getLogger(__name__)
 
@@ -1528,6 +1530,85 @@ class Glyph(object):
     def __ne__(self, other):
         result = self.__eq__(other)
         return result if result is NotImplemented else not result
+
+
+def dropImpliedOnCurvePoints(*interpolatable_glyphs: Glyph) -> Set[int]:
+    """Drop impliable on-curve points from the (simple) glyph or glyphs.
+
+    In TrueType glyf outlines, on-curve points can be implied when they are located at
+    the midpoint of the line connecting two consecutive off-curve points.
+
+    If more than one glyphs are passed, these are assumed to be interpolatable masters
+    of the same glyph impliable, and thus only the on-curve points that are impliable
+    for all of them will actually be implied.
+    The input glyph(s) is/are modified in-place.
+
+    Args:
+        interpolatable_glyphs: The glyph or glyphs to modify in-place.
+
+    Returns:
+        The set of point indices that were dropped if any.
+
+    Reference:
+    https://developer.apple.com/fonts/TrueType-Reference-Manual/RM01/Chap1.html
+    """
+    assert len(interpolatable_glyphs) > 0
+
+    drop = None
+    for glyph in interpolatable_glyphs:
+        may_drop = set()
+        start = 0
+        flags = glyph.flags
+        coords = glyph.coordinates
+        for last in glyph.endPtsOfContours:
+            for i in range(start, last + 1):
+                if not (flags[i] & flagOnCurve):
+                    continue
+                prv = i - 1 if i > start else last
+                nxt = i + 1 if i < last else start
+                if (flags[prv] & flagOnCurve) or flags[prv] != flags[nxt]:
+                    continue
+                p0 = coords[prv]
+                p1 = coords[i]
+                p2 = coords[nxt]
+                if not math.isclose(p1[0] - p0[0], p2[0] - p1[0]) or not math.isclose(
+                    p1[1] - p0[1], p2[1] - p1[1]
+                ):
+                    continue
+
+                may_drop.add(i)
+        # we only want to drop if ALL interpolatable glyphs have the same implied oncurves
+        if drop is None:
+            drop = may_drop
+        else:
+            drop.intersection_update(may_drop)
+
+    if drop:
+        # Do the actual dropping
+        for glyph in interpolatable_glyphs:
+            coords = glyph.coordinates
+            glyph.coordinates = GlyphCoordinates(
+                coords[i] for i in range(len(coords)) if i not in drop
+            )
+            glyph.flags = array.array(
+                "B", (flags[i] for i in range(len(flags)) if i not in drop)
+            )
+
+            endPts = glyph.endPtsOfContours
+            newEndPts = []
+            i = 0
+            delta = 0
+            for d in sorted(drop):
+                while d > endPts[i]:
+                    newEndPts.append(endPts[i] - delta)
+                    i += 1
+                delta += 1
+            while i < len(endPts):
+                newEndPts.append(endPts[i] - delta)
+                i += 1
+            glyph.endPtsOfContours = newEndPts
+
+    return drop
 
 
 class GlyphComponent(object):
