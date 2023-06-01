@@ -28,6 +28,7 @@ from fontTools.misc import xmlWriter
 from fontTools.misc.filenames import userNameToFileName
 from fontTools.misc.loggingTools import deprecateFunction
 from enum import IntFlag
+from typing import Set
 
 log = logging.getLogger(__name__)
 
@@ -1531,7 +1532,7 @@ class Glyph(object):
         return result if result is NotImplemented else not result
 
 
-def dropImpliedOnCurvePoints(*interpolatable_glyphs: Glyph) -> None:
+def dropImpliedOnCurvePoints(*interpolatable_glyphs: Glyph) -> Set[int]:
     """Drop impliable on-curve points from the (simple) glyph or glyphs.
 
     In TrueType glyf outlines, on-curve points can be implied when they are located at
@@ -1542,9 +1543,17 @@ def dropImpliedOnCurvePoints(*interpolatable_glyphs: Glyph) -> None:
     for all of them will actually be implied.
     The input glyph(s) is/are modified in-place.
 
+    Args:
+        interpolatable_glyphs: The glyph or glyphs to modify in-place.
+
+    Returns:
+        The set of point indices that were dropped if any.
+
     Reference:
     https://developer.apple.com/fonts/TrueType-Reference-Manual/RM01/Chap1.html
     """
+    assert len(interpolatable_glyphs) > 0
+
     drop = None
     for glyph in interpolatable_glyphs:
         may_drop = set()
@@ -1598,6 +1607,8 @@ def dropImpliedOnCurvePoints(*interpolatable_glyphs: Glyph) -> None:
                 newEndPts.append(endPts[i] - delta)
                 i += 1
             glyph.endPtsOfContours = newEndPts
+
+    return drop
 
 
 class GlyphComponent(object):
