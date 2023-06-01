@@ -1,5 +1,6 @@
 from fontTools.misc.fixedTools import otRound
 from fontTools.misc.testTools import getXML, parseXML
+from fontTools.misc.transform import Transform
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.pens.recordingPen import RecordingPen, RecordingPointPen
 from fontTools.pens.pointPen import PointToSegmentPen
@@ -8,6 +9,7 @@ from fontTools.ttLib.tables._g_l_y_f import (
     Glyph,
     GlyphCoordinates,
     GlyphComponent,
+    dropImpliedOnCurvePoints,
     flagOnCurve,
     flagCubic,
     ARGS_ARE_XY_VALUES,
@@ -20,6 +22,7 @@ from fontTools.ttLib.tables._g_l_y_f import (
 from fontTools.ttLib.tables import ttProgram
 import sys
 import array
+from copy import deepcopy
 from io import StringIO, BytesIO
 import itertools
 import pytest
@@ -811,6 +814,126 @@ class GlyphCubicTest:
                 ("curveTo", ((0, 1), (0, 1), (0, 0))),
                 ("closePath", ()),
             ]
+
+
+def build_interpolatable_glyphs(contours, *transforms):
+    # given a list of lists of (point, flag) tuples (one per contour), build a Glyph
+    # then make len(transforms) copies transformed accordingly, and return a
+    # list of such interpolatable glyphs.
+    glyph1 = Glyph()
+    glyph1.numberOfContours = len(contours)
+    glyph1.coordinates = GlyphCoordinates(
+        [pt for contour in contours for pt, _flag in contour]
+    )
+    glyph1.flags = array.array(
+        "B", [flag for contour in contours for _pt, flag in contour]
+    )
+    glyph1.endPtsOfContours = [
+        sum(len(contour) for contour in contours[: i + 1]) - 1
+        for i in range(len(contours))
+    ]
+    result = [glyph1]
+    for t in transforms:
+        glyph = deepcopy(glyph1)
+        glyph.coordinates.transform((t[0:2], t[2:4]))
+        glyph.coordinates.translate(t[4:6])
+        result.append(glyph)
+    return result
+
+
+def test_dropImpliedOnCurvePoints_all_quad_off_curves():
+    # Two interpolatable glyphs with same structure, the coordinates of one are 2x the
+    # other; all the on-curve points are impliable in each one, thus are dropped from
+    # both, leaving contours with off-curve points only.
+    glyph1, glyph2 = build_interpolatable_glyphs(
+        [
+            [
+                ((0, 1), flagOnCurve),
+                ((1, 1), 0),
+                ((1, 0), flagOnCurve),
+                ((1, -1), 0),
+                ((0, -1), flagOnCurve),
+                ((-1, -1), 0),
+                ((-1, 0), flagOnCurve),
+                ((-1, 1), 0),
+            ]
+        ],
+        Transform().scale(2.0),
+    )
+
+    assert dropImpliedOnCurvePoints(glyph1, glyph2) == {0, 2, 4, 6}
+
+    assert glyph1.flags == glyph2.flags == array.array("B", [0, 0, 0, 0])
+    assert glyph1.coordinates == GlyphCoordinates([(1, 1), (1, -1), (-1, -1), (-1, 1)])
+    assert glyph2.coordinates == GlyphCoordinates([(2, 2), (2, -2), (-2, -2), (-2, 2)])
+    assert glyph1.endPtsOfContours == glyph2.endPtsOfContours == [3]
+
+
+def test_dropImpliedOnCurvePoints_all_cubic_off_curves():
+    # same as above this time using cubic curves
+    glyph1, glyph2 = build_interpolatable_glyphs(
+        [
+            [
+                ((0, 1), flagOnCurve),
+                ((1, 1), flagCubic),
+                ((1, 1), flagCubic),
+                ((1, 0), flagOnCurve),
+                ((1, -1), flagCubic),
+                ((1, -1), flagCubic),
+                ((0, -1), flagOnCurve),
+                ((-1, -1), flagCubic),
+                ((-1, -1), flagCubic),
+                ((-1, 0), flagOnCurve),
+                ((-1, 1), flagCubic),
+                ((-1, 1), flagCubic),
+            ]
+        ],
+        Transform().translate(10.0),
+    )
+
+    assert dropImpliedOnCurvePoints(glyph1, glyph2) == {0, 3, 6, 9}
+
+    assert glyph1.flags == glyph2.flags == array.array("B", [flagCubic] * 8)
+    assert glyph1.coordinates == GlyphCoordinates(
+        [(1, 1), (1, 1), (1, -1), (1, -1), (-1, -1), (-1, -1), (-1, 1), (-1, 1)]
+    )
+    assert glyph2.coordinates == GlyphCoordinates(
+        [(11, 1), (11, 1), (11, -1), (11, -1), (9, -1), (9, -1), (9, 1), (9, 1)]
+    )
+    assert glyph1.endPtsOfContours == glyph2.endPtsOfContours == [7]
+
+
+def test_dropImpliedOnCurvePoints_not_all_impliable():
+    # same input as in in test_dropImpliedOnCurvePoints_all_quad_off_curves but we
+    # perturbate one of the glyphs such that the 2nd on-curve is no longer half-way
+    # between the neighboring off-curves.
+    glyph1, glyph2, glyph3 = build_interpolatable_glyphs(
+        [
+            [
+                ((0, 1), flagOnCurve),
+                ((1, 1), 0),
+                ((1, 0), flagOnCurve),
+                ((1, -1), 0),
+                ((0, -1), flagOnCurve),
+                ((-1, -1), 0),
+                ((-1, 0), flagOnCurve),
+                ((-1, 1), 0),
+            ]
+        ],
+        Transform().translate(10.0),
+        Transform().translate(10.0).scale(2.0),
+    )
+    p2 = glyph2.coordinates[2]
+    glyph2.coordinates[2] = (p2[0] + 2.0, p2[1] - 2.0)
+
+    assert dropImpliedOnCurvePoints(glyph1, glyph2, glyph3) == {
+        0,
+        # 2,  this is NOT implied because it's no longer impliable for all glyphs
+        4,
+        6,
+    }
+
+    assert glyph2.flags == array.array("B", [0, flagOnCurve, 0, 0, 0])
 
 
 if __name__ == "__main__":
