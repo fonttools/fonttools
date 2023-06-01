@@ -3,6 +3,7 @@
 import os
 from pathlib import Path
 import re
+import shutil
 
 import pytest
 from fontTools import ttLib
@@ -693,7 +694,9 @@ def test_axisMappingsRoundtrip(tmpdir):
     # tests of axisMappings in a document, roundtripping.
 
     tmpdir = str(tmpdir)
-    testDocPath = (Path(__file__) / "../data/test_avar2.designspace").resolve()
+    srcDocPath = (Path(__file__) / "../data/test_avar2.designspace").resolve()
+    testDocPath = os.path.join(tmpdir, "test_avar2.designspace")
+    shutil.copy(srcDocPath, testDocPath)
     testDocPath2 = os.path.join(tmpdir, "test_avar2_roundtrip.designspace")
     doc = DesignSpaceDocument()
     doc.read(testDocPath)
