@@ -226,7 +226,6 @@ def _extractSubSpace(
                 )
             )
 
-    # TODO Trim out-of-range values? :-(
     subDoc.axisMappings = mappings = []
     subDocAxes = {axis.name for axis in subDoc.axes}
     for mapping in doc.axisMappings:
@@ -239,6 +238,25 @@ def _extractSubSpace(
                 mapping.outputLocation,
             )
             continue
+
+        mappingAxes = set()
+        mappingAxes.update(mapping.inputLocation.keys())
+        mappingAxes.update(mapping.outputLocation.keys())
+        for axis in doc.axes:
+            if axis.name not in mappingAxes:
+                continue
+            range = userRegion[axis.name]
+            if (
+                range.minimum != axis.minimum
+                or (range.default is not None and range.default != axis.default)
+                or range.maximum != axis.maximum
+            ):
+                LOGGER.error(
+                    "Limiting axis ranges used in <mapping> elements not supported: %s",
+                    axis.name,
+                )
+                continue
+
         mappings.append(
             AxisMappingDescriptor(
                 inputLocation=mapping.inputLocation,
