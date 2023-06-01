@@ -231,6 +231,7 @@ def _add_avar(font, axes, mappings, axisTags):
             }
             for mapping in mappings
         ]
+        assert len(inputLocations) == len(outputLocations)
 
         # If base-master is missing, insert it at zero location.
         if not any(all(v == 0 for k, v in loc.items()) for loc in inputLocations):
@@ -241,21 +242,21 @@ def _add_avar(font, axes, mappings, axisTags):
         storeBuilder = varStore.OnlineVarStoreBuilder(axisTags)
         storeBuilder.setModel(model)
         varIdxes = {}
-        for t in axisTags:
+        for tag in axisTags:
             masterValues = []
             for vo, vi in zip(outputLocations, inputLocations):
-                if t not in vo:
+                if tag not in vo:
                     masterValues.append(0)
                     continue
-                if t not in vi and t not in hiddenAxes:
+                if tag not in vi and tag not in hiddenAxes:
                     log.warning(
-                        "No input location specified for non-hidden axis '%s' in axis mapping %s",
-                        t,
+                        "No input location specified for non-hidden axis '%s' in axis mapping %s; axis default value assumed.",
+                        tag,
                         vi,
                     )
-                v = vo[t] - vi.get(t, 0)
+                v = vo[tag] - vi.get(tag, 0)
                 masterValues.append(fl2fi(v, 14))
-            varIdxes[t] = storeBuilder.storeMasters(masterValues)[1]
+            varIdxes[tag] = storeBuilder.storeMasters(masterValues)[1]
 
         store = storeBuilder.finish()
         optimized = store.optimize()
@@ -908,7 +909,8 @@ def load_designspace(designspace):
     log.info("Axes:\n%s", pformat([axis.asdict() for axis in axes.values()]))
 
     axisMappings = ds.axisMappings
-    log.info("Mapping:\n%s", pformat(axisMappings))
+    if axisMappings:
+        log.info("Mappings:\n%s", pformat(axisMappings))
 
     # Check all master and instance locations are valid and fill in defaults
     for obj in masters + instances:

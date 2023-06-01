@@ -691,16 +691,15 @@ def test_axisMapping():
 
 def test_axisMappingsRoundtrip(tmpdir):
     # tests of axisMappings in a document, roundtripping.
-    import pathlib
 
     tmpdir = str(tmpdir)
-    testDocPath = (pathlib.Path(__file__) / "../data/test_avar2.designspace").resolve()
+    testDocPath = (Path(__file__) / "../data/test_avar2.designspace").resolve()
     testDocPath2 = os.path.join(tmpdir, "test_avar2_roundtrip.designspace")
     doc = DesignSpaceDocument()
     doc.read(testDocPath)
     assert doc.axisMappings
-    assert len(doc.axisMappings) == 3
-    assert doc.axisMappings[0].inputLocation == {"Justify": 0.0}
+    assert len(doc.axisMappings) == 1
+    assert doc.axisMappings[0].inputLocation == {"Justify": -100.0, "Width": 100.0}
 
     # This is a bit of a hack, but it's the only way to make sure
     # that the save works on Windows if the tempdir and the data
@@ -955,19 +954,15 @@ def test_updatePaths(tmpdir):
 
 
 def test_read_with_path_object():
-    import pathlib
-
-    source = (pathlib.Path(__file__) / "../data/test_v4_original.designspace").resolve()
+    source = (Path(__file__) / "../data/test_v4_original.designspace").resolve()
     assert source.exists()
     doc = DesignSpaceDocument()
     doc.read(source)
 
 
 def test_with_with_path_object(tmpdir):
-    import pathlib
-
     tmpdir = str(tmpdir)
-    dest = pathlib.Path(tmpdir) / "test_v4_original.designspace"
+    dest = Path(tmpdir) / "test_v4_original.designspace"
     doc = DesignSpaceDocument()
     doc.write(dest)
     assert dest.exists()

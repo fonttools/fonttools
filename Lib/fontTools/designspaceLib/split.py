@@ -228,11 +228,17 @@ def _extractSubSpace(
 
     # TODO Trim out-of-range values? :-(
     subDoc.axisMappings = mappings = []
-    subDocAxes = [axis.name for axis in subDoc.axes]
+    subDocAxes = {axis.name for axis in subDoc.axes}
     for mapping in doc.axisMappings:
         if not all(axis in subDocAxes for axis in mapping.inputLocation.keys()):
             continue
-        assert all(axis in subDocAxes for axis in mapping.outputLocation.keys())
+        if not all(axis in subDocAxes for axis in mapping.outputLocation.keys()):
+            LOGGER.error(
+                "In axis mapping from input %s, some output axes are not in the variable-font: %s",
+                mapping.inputLocation,
+                mapping.outputLocation,
+            )
+            continue
         mappings.append(
             AxisMappingDescriptor(
                 inputLocation=mapping.inputLocation,

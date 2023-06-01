@@ -216,5 +216,14 @@ def test_optional_min_max_internal(condition, expected_set: ConditionSet):
 def test_avar2(datadir):
     ds = DesignSpaceDocument()
     ds.read(datadir / "test_avar2.designspace")
-    out = list(splitInterpolable(ds))[0][1]
-    assert len(out.axisMappings) == 3
+    _, subDoc = next(splitInterpolable(ds))
+    assert len(subDoc.axisMappings) == 1
+
+    subDocs = list(splitVariableFonts(ds))
+    assert len(subDocs) == 5
+    for i, (_, subDoc) in enumerate(subDocs):
+        # Only the first one should have a mapping, according to the document
+        if i == 0:
+            assert len(subDoc.axisMappings) == 1
+        else:
+            assert len(subDoc.axisMappings) == 0
