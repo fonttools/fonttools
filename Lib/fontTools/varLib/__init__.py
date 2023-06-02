@@ -248,12 +248,6 @@ def _add_avar(font, axes, mappings, axisTags):
                 if tag not in vo:
                     masterValues.append(0)
                     continue
-                if tag not in vi and tag not in hiddenAxes:
-                    log.warning(
-                        "No input location specified for non-hidden axis '%s' in axis mapping %s; axis default value assumed.",
-                        tag,
-                        vi,
-                    )
                 v = vo[tag] - vi.get(tag, 0)
                 masterValues.append(fl2fi(v, 14))
             varIdxes[tag] = storeBuilder.storeMasters(masterValues)[1]
