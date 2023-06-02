@@ -273,7 +273,7 @@ Font table options
 
   Examples:
 
-  --drop-tables-='BASE'
+  --drop-tables-=BASE
       * Drop the default set of tables but keep 'BASE'.
 
   --drop-tables+=GSUB
@@ -313,9 +313,9 @@ Font table options
 
   Examples:
 
-  --hinting-tables-='VDMX'
+  --hinting-tables-=VDMX
       * Drop font-wide hinting tables except 'VDMX'.
-  --hinting-tables=''
+  --hinting-tables=
       * Keep all font-wide hinting tables (but strip hints from glyphs).
 
 --legacy-kern
@@ -339,9 +339,9 @@ codes, see: http://www.microsoft.com/typography/otspec/name.htm
 
   --name-IDs+=7,8,9
       * Also keep Trademark, Manufacturer and Designer name entries.
-  --name-IDs=''
+  --name-IDs=
       * Drop all 'name' table entries.
-  --name-IDs='*'
+  --name-IDs=*
       * keep all 'name' table entries
 
 --name-legacy
@@ -437,9 +437,9 @@ Produce a subset containing the characters ' !"#$%' without performing
 size-reducing optimizations::
 
   $ pyftsubset font.ttf --unicodes="U+0020-0025" \\
-    --layout-features='*' --glyph-names --symbol-cmap --legacy-cmap \\
+    --layout-features=* --glyph-names --symbol-cmap --legacy-cmap \\
     --notdef-glyph --notdef-outline --recommended-glyphs \\
-    --name-IDs='*' --name-legacy --name-languages='*'
+    --name-IDs=* --name-legacy --name-languages=*
 """
 )
 
