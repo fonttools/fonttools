@@ -1541,6 +1541,8 @@ def dropImpliedOnCurvePoints(*interpolatable_glyphs: Glyph) -> Set[int]:
     If more than one glyphs are passed, these are assumed to be interpolatable masters
     of the same glyph impliable, and thus only the on-curve points that are impliable
     for all of them will actually be implied.
+    Composite glyphs or empty glyphs are skipped, only simple glyphs with 1 or more
+    contours are considered.
     The input glyph(s) is/are modified in-place.
 
     Args:
@@ -1549,16 +1551,40 @@ def dropImpliedOnCurvePoints(*interpolatable_glyphs: Glyph) -> Set[int]:
     Returns:
         The set of point indices that were dropped if any.
 
+    Raises:
+        ValueError if simple glyphs are not in fact interpolatable because they have
+        different point flags or number of contours.
+
     Reference:
     https://developer.apple.com/fonts/TrueType-Reference-Manual/RM01/Chap1.html
     """
-    assert len(interpolatable_glyphs) > 0
-
+    numContours = None
+    flags = None
     drop = None
-    for glyph in interpolatable_glyphs:
+    simple_glyphs = []
+    for i, glyph in enumerate(interpolatable_glyphs):
+        if glyph.numberOfContours < 1:
+            # ignore composite or empty glyphs
+            continue
+
+        if numContours is None:
+            numContours = glyph.numberOfContours
+        elif glyph.numberOfContours != numContours:
+            raise ValueError(
+                f"Incompatible number of contours for glyph at master index {i}: "
+                f"expected {numContours}, found {glyph.numberOfContours}"
+            )
+
+        if flags is None:
+            flags = glyph.flags
+        elif glyph.flags != flags:
+            raise ValueError(
+                f"Incompatible flags for simple glyph at master index {i}: "
+                f"expected {flags}, found {glyph.flags}"
+            )
+
         may_drop = set()
         start = 0
-        flags = glyph.flags
         coords = glyph.coordinates
         for last in glyph.endPtsOfContours:
             for i in range(start, last + 1):
@@ -1583,9 +1609,11 @@ def dropImpliedOnCurvePoints(*interpolatable_glyphs: Glyph) -> Set[int]:
         else:
             drop.intersection_update(may_drop)
 
+        simple_glyphs.append(glyph)
+
     if drop:
         # Do the actual dropping
-        for glyph in interpolatable_glyphs:
+        for glyph in simple_glyphs:
             coords = glyph.coordinates
             glyph.coordinates = GlyphCoordinates(
                 coords[i] for i in range(len(coords)) if i not in drop
@@ -1608,7 +1636,7 @@ def dropImpliedOnCurvePoints(*interpolatable_glyphs: Glyph) -> Set[int]:
                 i += 1
             glyph.endPtsOfContours = newEndPts
 
-    return drop
+    return drop if drop is not None else set()
 
 
 class GlyphComponent(object):

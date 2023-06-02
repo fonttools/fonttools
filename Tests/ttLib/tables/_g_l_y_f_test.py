@@ -860,13 +860,17 @@ def test_dropImpliedOnCurvePoints_all_quad_off_curves():
         ],
         Transform().scale(2.0),
     )
+    # also add an empty glyph (will be ignored); we use this trick for 'sparse' masters
+    glyph3 = Glyph()
+    glyph3.numberOfContours = 0
 
-    assert dropImpliedOnCurvePoints(glyph1, glyph2) == {0, 2, 4, 6}
+    assert dropImpliedOnCurvePoints(glyph1, glyph2, glyph3) == {0, 2, 4, 6}
 
     assert glyph1.flags == glyph2.flags == array.array("B", [0, 0, 0, 0])
     assert glyph1.coordinates == GlyphCoordinates([(1, 1), (1, -1), (-1, -1), (-1, 1)])
     assert glyph2.coordinates == GlyphCoordinates([(2, 2), (2, -2), (-2, -2), (-2, 2)])
     assert glyph1.endPtsOfContours == glyph2.endPtsOfContours == [3]
+    assert glyph3.numberOfContours == 0
 
 
 def test_dropImpliedOnCurvePoints_all_cubic_off_curves():
@@ -890,8 +894,10 @@ def test_dropImpliedOnCurvePoints_all_cubic_off_curves():
         ],
         Transform().translate(10.0),
     )
+    glyph3 = Glyph()
+    glyph3.numberOfContours = 0
 
-    assert dropImpliedOnCurvePoints(glyph1, glyph2) == {0, 3, 6, 9}
+    assert dropImpliedOnCurvePoints(glyph1, glyph2, glyph3) == {0, 3, 6, 9}
 
     assert glyph1.flags == glyph2.flags == array.array("B", [flagCubic] * 8)
     assert glyph1.coordinates == GlyphCoordinates(
@@ -901,6 +907,7 @@ def test_dropImpliedOnCurvePoints_all_cubic_off_curves():
         [(11, 1), (11, 1), (11, -1), (11, -1), (9, -1), (9, -1), (9, 1), (9, 1)]
     )
     assert glyph1.endPtsOfContours == glyph2.endPtsOfContours == [7]
+    assert glyph3.numberOfContours == 0
 
 
 def test_dropImpliedOnCurvePoints_not_all_impliable():
@@ -934,6 +941,49 @@ def test_dropImpliedOnCurvePoints_not_all_impliable():
     }
 
     assert glyph2.flags == array.array("B", [0, flagOnCurve, 0, 0, 0])
+
+
+def test_dropImpliedOnCurvePoints_all_empty_glyphs():
+    glyph1 = Glyph()
+    glyph1.numberOfContours = 0
+    glyph2 = Glyph()
+    glyph2.numberOfContours = 0
+
+    assert dropImpliedOnCurvePoints(glyph1, glyph2) == set()
+
+
+def test_dropImpliedOnCurvePoints_incompatible_number_of_contours():
+    glyph1 = Glyph()
+    glyph1.numberOfContours = 1
+    glyph1.endPtsOfContours = [3]
+    glyph1.flags = array.array("B", [1, 1, 1, 1])
+    glyph1.coordinates = GlyphCoordinates([(0, 0), (1, 1), (2, 2), (3, 3)])
+
+    glyph2 = Glyph()
+    glyph2.numberOfContours = 2
+    glyph2.endPtsOfContours = [1, 3]
+    glyph2.flags = array.array("B", [1, 1, 1, 1])
+    glyph2.coordinates = GlyphCoordinates([(0, 0), (1, 1), (2, 2), (3, 3)])
+
+    with pytest.raises(ValueError, match="Incompatible number of contours"):
+        dropImpliedOnCurvePoints(glyph1, glyph2)
+
+
+def test_dropImpliedOnCurvePoints_incompatible_flags():
+    glyph1 = Glyph()
+    glyph1.numberOfContours = 1
+    glyph1.endPtsOfContours = [3]
+    glyph1.flags = array.array("B", [1, 1, 1, 1])
+    glyph1.coordinates = GlyphCoordinates([(0, 0), (1, 1), (2, 2), (3, 3)])
+
+    glyph2 = Glyph()
+    glyph2.numberOfContours = 1
+    glyph2.endPtsOfContours = [3]
+    glyph2.flags = array.array("B", [0, 0, 0, 0])
+    glyph2.coordinates = GlyphCoordinates([(0, 0), (1, 1), (2, 2), (3, 3)])
+
+    with pytest.raises(ValueError, match="Incompatible flags"):
+        dropImpliedOnCurvePoints(glyph1, glyph2)
 
 
 if __name__ == "__main__":
