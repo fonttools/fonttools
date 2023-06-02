@@ -144,10 +144,7 @@ class _TTGlyphBasePen:
         glyph.coordinates = GlyphCoordinates(self.points)
         glyph.endPtsOfContours = self.endPts
         glyph.flags = array("B", self.types)
-
         glyph.coordinates.toInt()
-        if dropImpliedOnCurves:
-            dropImpliedOnCurvePoints(glyph)
 
         self.init()
 
@@ -160,6 +157,8 @@ class _TTGlyphBasePen:
             glyph.numberOfContours = len(glyph.endPtsOfContours)
             glyph.program = ttProgram.Program()
             glyph.program.fromBytecode(b"")
+            if dropImpliedOnCurves:
+                dropImpliedOnCurvePoints(glyph)
 
         return glyph
 
