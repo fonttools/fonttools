@@ -1,0 +1,20 @@
+<?xml version='1.0' encoding='utf-8'?>
+<designspace format="3">
+    <axes>
+        <axis default="400" maximum="1000" minimum="400" name="weight" tag="wght" />
+    </axes>
+    <sources>
+        <source familyname="Test Family" filename="master_ufo/TestFamily-Master1.ttx" name="master_1" stylename="Master1">
+            <location>
+                <dimension name="weight" xvalue="400" />
+            </location>
+        </source>
+        <source familyname="Test Family" filename="master_ufo/TestFamily-Master2.ttx" name="master_2" stylename="Master2">
+            <location>
+                <dimension name="weight" xvalue="1000" />
+            </location>
+        </source>
+    </sources>
+    <instances>
+    </instances>
+</designspace>

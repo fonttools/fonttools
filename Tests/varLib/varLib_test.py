@@ -538,6 +538,31 @@ class BuildTest(unittest.TestCase):
         self.assertTrue(os.path.isdir(outdir))
         self.assertTrue(os.path.exists(os.path.join(outdir, "BuildMain-VF.ttf")))
 
+    def test_varLib_main_drop_implied_oncurves(self):
+        self.temp_dir()
+        outdir = os.path.join(self.tempdir, "drop_implied_oncurves_test")
+        self.assertFalse(os.path.exists(outdir))
+
+        ttf_dir = os.path.join(outdir, "master_ttf_interpolatable")
+        os.makedirs(ttf_dir)
+        ttx_dir = self.get_test_input("master_ttx_drop_oncurves")
+        ttx_paths = self.get_file_list(ttx_dir, ".ttx", "TestFamily-")
+        for path in ttx_paths:
+            self.compile_font(path, ".ttf", ttf_dir)
+
+        ds_copy = os.path.join(outdir, "DropOnCurves.designspace")
+        ds_path = self.get_test_input("DropOnCurves.designspace")
+        shutil.copy2(ds_path, ds_copy)
+
+        finder = "%s/master_ttf_interpolatable/{stem}.ttf" % outdir
+        varLib_main([ds_copy, "--master-finder", finder, "--drop-implied-oncurves"])
+
+        vf_path = os.path.join(outdir, "DropOnCurves-VF.ttf")
+        varfont = TTFont(vf_path)
+        tables = [table_tag for table_tag in varfont.keys() if table_tag != "head"]
+        expected_ttx_path = self.get_test_output("DropOnCurves.ttx")
+        self.expect_ttx(varfont, expected_ttx_path, tables)
+
     def test_varLib_build_many_no_overwrite_STAT(self):
         # Ensure that varLib.build_many doesn't overwrite a pre-existing STAT table,
         # e.g. one built by feaLib from features.fea; the VF simply should inherit the
