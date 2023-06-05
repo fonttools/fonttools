@@ -965,7 +965,7 @@ def test_dropImpliedOnCurvePoints_incompatible_number_of_contours():
     glyph2.flags = array.array("B", [1, 1, 1, 1])
     glyph2.coordinates = GlyphCoordinates([(0, 0), (1, 1), (2, 2), (3, 3)])
 
-    with pytest.raises(ValueError, match="Incompatible number of contours"):
+    with pytest.raises(ValueError, match="Incompatible numberOfContours"):
         dropImpliedOnCurvePoints(glyph1, glyph2)
 
 
@@ -983,6 +983,23 @@ def test_dropImpliedOnCurvePoints_incompatible_flags():
     glyph2.coordinates = GlyphCoordinates([(0, 0), (1, 1), (2, 2), (3, 3)])
 
     with pytest.raises(ValueError, match="Incompatible flags"):
+        dropImpliedOnCurvePoints(glyph1, glyph2)
+
+
+def test_dropImpliedOnCurvePoints_incompatible_endPtsOfContours():
+    glyph1 = Glyph()
+    glyph1.numberOfContours = 2
+    glyph1.endPtsOfContours = [2, 6]
+    glyph1.flags = array.array("B", [1, 1, 1, 1, 1, 1, 1])
+    glyph1.coordinates = GlyphCoordinates([(i, i) for i in range(7)])
+
+    glyph2 = Glyph()
+    glyph2.numberOfContours = 2
+    glyph2.endPtsOfContours = [3, 6]
+    glyph2.flags = array.array("B", [1, 1, 1, 1, 1, 1, 1])
+    glyph2.coordinates = GlyphCoordinates([(i, i) for i in range(7)])
+
+    with pytest.raises(ValueError, match="Incompatible endPtsOfContours"):
         dropImpliedOnCurvePoints(glyph1, glyph2)
 
 

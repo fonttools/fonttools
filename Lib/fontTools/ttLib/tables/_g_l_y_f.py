@@ -28,6 +28,7 @@ from fontTools.misc import xmlWriter
 from fontTools.misc.filenames import userNameToFileName
 from fontTools.misc.loggingTools import deprecateFunction
 from enum import IntFlag
+from types import SimpleNamespace
 from typing import Set
 
 log = logging.getLogger(__name__)
@@ -1558,8 +1559,9 @@ def dropImpliedOnCurvePoints(*interpolatable_glyphs: Glyph) -> Set[int]:
     Reference:
     https://developer.apple.com/fonts/TrueType-Reference-Manual/RM01/Chap1.html
     """
-    numContours = None
-    flags = None
+    staticAttributes = SimpleNamespace(
+        numberOfContours=None, flags=None, endPtsOfContours=None
+    )
     drop = None
     simple_glyphs = []
     for i, glyph in enumerate(interpolatable_glyphs):
@@ -1567,26 +1569,23 @@ def dropImpliedOnCurvePoints(*interpolatable_glyphs: Glyph) -> Set[int]:
             # ignore composite or empty glyphs
             continue
 
-        if numContours is None:
-            numContours = glyph.numberOfContours
-        elif glyph.numberOfContours != numContours:
-            raise ValueError(
-                f"Incompatible number of contours for glyph at master index {i}: "
-                f"expected {numContours}, found {glyph.numberOfContours}"
-            )
-
-        if flags is None:
-            flags = glyph.flags
-        elif glyph.flags != flags:
-            raise ValueError(
-                f"Incompatible flags for simple glyph at master index {i}: "
-                f"expected {flags}, found {glyph.flags}"
-            )
+        for attr in staticAttributes.__dict__:
+            expected = getattr(staticAttributes, attr)
+            found = getattr(glyph, attr)
+            if expected is None:
+                setattr(staticAttributes, attr, found)
+            elif expected != found:
+                raise ValueError(
+                    f"Incompatible {attr} for glyph at master index {i}: "
+                    f"expected {expected}, found {found}"
+                )
 
         may_drop = set()
         start = 0
         coords = glyph.coordinates
-        for last in glyph.endPtsOfContours:
+        flags = staticAttributes.flags
+        endPtsOfContours = staticAttributes.endPtsOfContours
+        for last in endPtsOfContours:
             for i in range(start, last + 1):
                 if not (flags[i] & flagOnCurve):
                     continue
@@ -1613,27 +1612,32 @@ def dropImpliedOnCurvePoints(*interpolatable_glyphs: Glyph) -> Set[int]:
 
     if drop:
         # Do the actual dropping
+        flags = staticAttributes.flags
+        assert flags is not None
+        newFlags = array.array(
+            "B", (flags[i] for i in range(len(flags)) if i not in drop)
+        )
+
+        endPts = staticAttributes.endPtsOfContours
+        assert endPts is not None
+        newEndPts = []
+        i = 0
+        delta = 0
+        for d in sorted(drop):
+            while d > endPts[i]:
+                newEndPts.append(endPts[i] - delta)
+                i += 1
+            delta += 1
+        while i < len(endPts):
+            newEndPts.append(endPts[i] - delta)
+            i += 1
+
         for glyph in simple_glyphs:
             coords = glyph.coordinates
             glyph.coordinates = GlyphCoordinates(
                 coords[i] for i in range(len(coords)) if i not in drop
             )
-            glyph.flags = array.array(
-                "B", (flags[i] for i in range(len(flags)) if i not in drop)
-            )
-
-            endPts = glyph.endPtsOfContours
-            newEndPts = []
-            i = 0
-            delta = 0
-            for d in sorted(drop):
-                while d > endPts[i]:
-                    newEndPts.append(endPts[i] - delta)
-                    i += 1
-                delta += 1
-            while i < len(endPts):
-                newEndPts.append(endPts[i] - delta)
-                i += 1
+            glyph.flags = newFlags
             glyph.endPtsOfContours = newEndPts
 
     return drop if drop is not None else set()
