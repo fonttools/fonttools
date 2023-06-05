@@ -1,0 +1,498 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont>
+
+  <GlyphOrder>
+    <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
+    <GlyphID id="0" name=".notdef"/>
+    <GlyphID id="1" name="uni0020"/>
+    <GlyphID id="2" name="uni0061"/>
+  </GlyphOrder>
+
+  <hhea>
+    <tableVersion value="0x00010000"/>
+    <ascent value="918"/>
+    <descent value="-335"/>
+    <lineGap value="0"/>
+    <advanceWidthMax value="640"/>
+    <minLeftSideBearing value="46"/>
+    <minRightSideBearing value="7"/>
+    <xMaxExtent value="560"/>
+    <caretSlopeRise value="1"/>
+    <caretSlopeRun value="0"/>
+    <caretOffset value="0"/>
+    <reserved0 value="0"/>
+    <reserved1 value="0"/>
+    <reserved2 value="0"/>
+    <reserved3 value="0"/>
+    <metricDataFormat value="0"/>
+    <numberOfHMetrics value="3"/>
+  </hhea>
+
+  <maxp>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="0x10000"/>
+    <numGlyphs value="3"/>
+    <maxPoints value="60"/>
+    <maxContours value="4"/>
+    <maxCompositePoints value="0"/>
+    <maxCompositeContours value="0"/>
+    <maxZones value="1"/>
+    <maxTwilightPoints value="0"/>
+    <maxStorage value="0"/>
+    <maxFunctionDefs value="1"/>
+    <maxInstructionDefs value="0"/>
+    <maxStackElements value="1"/>
+    <maxSizeOfInstructions value="5"/>
+    <maxComponentElements value="0"/>
+    <maxComponentDepth value="0"/>
+  </maxp>
+
+  <OS_2>
+    <!-- The fields 'usFirstCharIndex' and 'usLastCharIndex'
+         will be recalculated by the compiler -->
+    <version value="4"/>
+    <xAvgCharWidth value="506"/>
+    <usWeightClass value="400"/>
+    <usWidthClass value="5"/>
+    <fsType value="00000000 00000100"/>
+    <ySubscriptXSize value="650"/>
+    <ySubscriptYSize value="600"/>
+    <ySubscriptXOffset value="0"/>
+    <ySubscriptYOffset value="75"/>
+    <ySuperscriptXSize value="650"/>
+    <ySuperscriptYSize value="600"/>
+    <ySuperscriptXOffset value="0"/>
+    <ySuperscriptYOffset value="350"/>
+    <yStrikeoutSize value="50"/>
+    <yStrikeoutPosition value="284"/>
+    <sFamilyClass value="0"/>
+    <panose>
+      <bFamilyType value="2"/>
+      <bSerifStyle value="4"/>
+      <bWeight value="6"/>
+      <bProportion value="3"/>
+      <bContrast value="5"/>
+      <bStrokeVariation value="4"/>
+      <bArmStyle value="5"/>
+      <bLetterForm value="2"/>
+      <bMidline value="2"/>
+      <bXHeight value="4"/>
+    </panose>
+    <ulUnicodeRange1 value="00000000 00000000 00000000 00000011"/>
+    <ulUnicodeRange2 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange3 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange4 value="00000000 00000000 00000000 00000000"/>
+    <achVendID value="ADBO"/>
+    <fsSelection value="00000000 01000000"/>
+    <usFirstCharIndex value="32"/>
+    <usLastCharIndex value="97"/>
+    <sTypoAscender value="730"/>
+    <sTypoDescender value="-270"/>
+    <sTypoLineGap value="0"/>
+    <usWinAscent value="918"/>
+    <usWinDescent value="335"/>
+    <ulCodePageRange1 value="00100000 00000000 00000000 00000011"/>
+    <ulCodePageRange2 value="00000000 00000000 00000000 00000000"/>
+    <sxHeight value="474"/>
+    <sCapHeight value="677"/>
+    <usDefaultChar value="0"/>
+    <usBreakChar value="32"/>
+    <usMaxContext value="0"/>
+  </OS_2>
+
+  <hmtx>
+    <mtx name=".notdef" width="640" lsb="80"/>
+    <mtx name="uni0020" width="234" lsb="0"/>
+    <mtx name="uni0061" width="508" lsb="46"/>
+  </hmtx>
+
+  <cmap>
+    <tableVersion version="0"/>
+    <cmap_format_4 platformID="0" platEncID="3" language="0">
+      <map code="0x20" name="uni0020"/><!-- SPACE -->
+      <map code="0x61" name="uni0061"/><!-- LATIN SMALL LETTER A -->
+    </cmap_format_4>
+    <cmap_format_4 platformID="3" platEncID="1" language="0">
+      <map code="0x20" name="uni0020"/><!-- SPACE -->
+      <map code="0x61" name="uni0061"/><!-- LATIN SMALL LETTER A -->
+    </cmap_format_4>
+  </cmap>
+
+  <loca>
+    <!-- The 'loca' table will be calculated by the compiler -->
+  </loca>
+
+  <glyf>
+
+    <!-- The xMin, yMin, xMax and yMax values
+         will be recalculated by the compiler. -->
+
+    <TTGlyph name=".notdef" xMin="80" yMin="0" xMax="560" yMax="670">
+      <contour>
+        <pt x="80" y="0" on="1"/>
+        <pt x="500" y="670" on="1"/>
+        <pt x="560" y="670" on="1"/>
+        <pt x="140" y="0" on="1"/>
+      </contour>
+      <contour>
+        <pt x="560" y="0" on="1"/>
+        <pt x="500" y="0" on="1"/>
+        <pt x="80" y="670" on="1"/>
+        <pt x="140" y="670" on="1"/>
+      </contour>
+      <contour>
+        <pt x="140" y="50" on="1"/>
+        <pt x="500" y="50" on="1"/>
+        <pt x="500" y="620" on="1"/>
+        <pt x="140" y="620" on="1"/>
+      </contour>
+      <contour>
+        <pt x="80" y="0" on="1"/>
+        <pt x="80" y="670" on="1"/>
+        <pt x="560" y="670" on="1"/>
+        <pt x="560" y="0" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="uni0020"/><!-- contains no outline data -->
+
+    <TTGlyph name="uni0061" xMin="46" yMin="-13" xMax="501" yMax="487">
+      <contour>
+        <pt x="46" y="154" on="0"/>
+        <pt x="110" y="225" on="0"/>
+        <pt x="210" y="262" on="1"/>
+        <pt x="242" y="273" on="0"/>
+        <pt x="328" y="297" on="0"/>
+        <pt x="365" y="304" on="1"/>
+        <pt x="365" y="268" on="1"/>
+        <pt x="331" y="261" on="0"/>
+        <pt x="254" y="237" on="0"/>
+        <pt x="231" y="228" on="1"/>
+        <pt x="164" y="202" on="0"/>
+        <pt x="131" y="148" on="0"/>
+        <pt x="131" y="126" on="1"/>
+        <pt x="131" y="86" on="0"/>
+        <pt x="178" y="52" on="0"/>
+        <pt x="212" y="52" on="1"/>
+        <pt x="238" y="52" on="0"/>
+        <pt x="283" y="76" on="0"/>
+        <pt x="330" y="110" on="1"/>
+        <pt x="350" y="125" on="1"/>
+        <pt x="364" y="104" on="1"/>
+        <pt x="335" y="75" on="1"/>
+        <pt x="290" y="30" on="0"/>
+        <pt x="226" y="-13" on="0"/>
+        <pt x="180" y="-13" on="1"/>
+        <pt x="125" y="-13" on="0"/>
+        <pt x="46" y="50" on="0"/>
+      </contour>
+      <contour>
+        <pt x="325" y="92" on="1"/>
+        <pt x="325" y="320" on="1"/>
+        <pt x="325" y="394" on="0"/>
+        <pt x="280" y="442" on="0"/>
+        <pt x="231" y="442" on="1"/>
+        <pt x="214" y="442" on="0"/>
+        <pt x="169" y="435" on="0"/>
+        <pt x="141" y="424" on="1"/>
+        <pt x="181" y="455" on="1"/>
+        <pt x="155" y="369" on="1"/>
+        <pt x="148" y="347" on="0"/>
+        <pt x="124" y="324" on="0"/>
+        <pt x="104" y="324" on="1"/>
+        <pt x="62" y="324" on="0"/>
+        <pt x="59" y="364" on="1"/>
+        <pt x="73" y="421" on="0"/>
+        <pt x="177" y="487" on="0"/>
+        <pt x="252" y="487" on="1"/>
+        <pt x="329" y="487" on="0"/>
+        <pt x="405" y="408" on="0"/>
+        <pt x="405" y="314" on="1"/>
+        <pt x="405" y="102" on="1"/>
+        <pt x="405" y="68" on="0"/>
+        <pt x="425" y="41" on="0"/>
+        <pt x="442" y="41" on="1"/>
+        <pt x="455" y="41" on="0"/>
+        <pt x="473" y="53" on="0"/>
+        <pt x="481" y="63" on="1"/>
+        <pt x="501" y="41" on="1"/>
+        <pt x="469" y="-10" on="0"/>
+        <pt x="416" y="-10" on="1"/>
+        <pt x="375" y="-10" on="0"/>
+        <pt x="325" y="46" on="0"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+  </glyf>
+
+  <name>
+    <namerecord nameID="256" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Weight
+    </namerecord>
+    <namerecord nameID="1" platformID="3" platEncID="1" langID="0x409">
+      Test Family
+    </namerecord>
+    <namerecord nameID="2" platformID="3" platEncID="1" langID="0x409">
+      Regular
+    </namerecord>
+    <namerecord nameID="3" platformID="3" platEncID="1" langID="0x409">
+      Version 1.001;ADBO;Test Family Regular
+    </namerecord>
+    <namerecord nameID="4" platformID="3" platEncID="1" langID="0x409">
+      Test Family
+    </namerecord>
+    <namerecord nameID="5" platformID="3" platEncID="1" langID="0x409">
+      Version 1.001
+    </namerecord>
+    <namerecord nameID="6" platformID="3" platEncID="1" langID="0x409">
+      TestFamily-Master1
+    </namerecord>
+    <namerecord nameID="9" platformID="3" platEncID="1" langID="0x409">
+      Frank Grießhammer
+    </namerecord>
+    <namerecord nameID="17" platformID="3" platEncID="1" langID="0x409">
+      Master 1
+    </namerecord>
+    <namerecord nameID="256" platformID="3" platEncID="1" langID="0x409">
+      Weight
+    </namerecord>
+  </name>
+
+  <post>
+    <formatType value="2.0"/>
+    <italicAngle value="0.0"/>
+    <underlinePosition value="-75"/>
+    <underlineThickness value="50"/>
+    <isFixedPitch value="0"/>
+    <minMemType42 value="0"/>
+    <maxMemType42 value="0"/>
+    <minMemType1 value="0"/>
+    <maxMemType1 value="0"/>
+    <psNames>
+      <!-- This file uses unique glyph names based on the information
+           found in the 'post' table. Since these names might not be unique,
+           we have to invent artificial names in case of clashes. In order to
+           be able to retain the original information, we need a name to
+           ps name mapping for those cases where they differ. That's what
+           you see below.
+            -->
+    </psNames>
+    <extraNames>
+      <!-- following are the name that are not taken from the standard Mac glyph order -->
+      <psName name="uni0020"/>
+      <psName name="uni0061"/>
+    </extraNames>
+  </post>
+
+  <GDEF>
+    <Version value="0x00010003"/>
+    <GlyphClassDef>
+      <ClassDef glyph="uni0061" class="1"/>
+    </GlyphClassDef>
+  </GDEF>
+
+  <HVAR>
+    <Version value="0x00010000"/>
+    <VarStore Format="1">
+      <Format value="1"/>
+      <VarRegionList>
+        <!-- RegionAxisCount=1 -->
+        <!-- RegionCount=1 -->
+        <Region index="0">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+        </Region>
+      </VarRegionList>
+      <!-- VarDataCount=1 -->
+      <VarData index="0">
+        <!-- ItemCount=3 -->
+        <NumShorts value="0"/>
+        <!-- VarRegionCount=1 -->
+        <VarRegionIndex index="0" value="0"/>
+        <Item index="0" value="[0]"/>
+        <Item index="1" value="[-28]"/>
+        <Item index="2" value="[32]"/>
+      </VarData>
+    </VarStore>
+  </HVAR>
+
+  <MVAR>
+    <Version value="0x00010000"/>
+    <Reserved value="0"/>
+    <ValueRecordSize value="8"/>
+    <!-- ValueRecordCount=2 -->
+    <VarStore Format="1">
+      <Format value="1"/>
+      <VarRegionList>
+        <!-- RegionAxisCount=1 -->
+        <!-- RegionCount=1 -->
+        <Region index="0">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+        </Region>
+      </VarRegionList>
+      <!-- VarDataCount=1 -->
+      <VarData index="0">
+        <!-- ItemCount=2 -->
+        <NumShorts value="0"/>
+        <!-- VarRegionCount=1 -->
+        <VarRegionIndex index="0" value="0"/>
+        <Item index="0" value="[8]"/>
+        <Item index="1" value="[13]"/>
+      </VarData>
+    </VarStore>
+    <ValueRecord index="0">
+      <ValueTag value="stro"/>
+      <VarIdx value="0"/>
+    </ValueRecord>
+    <ValueRecord index="1">
+      <ValueTag value="xhgt"/>
+      <VarIdx value="1"/>
+    </ValueRecord>
+  </MVAR>
+
+  <STAT>
+    <Version value="0x00010001"/>
+    <DesignAxisRecordSize value="8"/>
+    <!-- DesignAxisCount=1 -->
+    <DesignAxisRecord>
+      <Axis index="0">
+        <AxisTag value="wght"/>
+        <AxisNameID value="256"/>  <!-- Weight -->
+        <AxisOrdering value="0"/>
+      </Axis>
+    </DesignAxisRecord>
+    <!-- AxisValueCount=0 -->
+    <ElidedFallbackNameID value="2"/>  <!-- Regular -->
+  </STAT>
+
+  <fvar>
+
+    <!-- Weight -->
+    <Axis>
+      <AxisTag>wght</AxisTag>
+      <Flags>0x0</Flags>
+      <MinValue>400.0</MinValue>
+      <DefaultValue>400.0</DefaultValue>
+      <MaxValue>1000.0</MaxValue>
+      <AxisNameID>256</AxisNameID>
+    </Axis>
+  </fvar>
+
+  <gvar>
+    <version value="1"/>
+    <reserved value="0"/>
+    <glyphVariations glyph=".notdef">
+      <tuple>
+        <coord axis="wght" value="1.0"/>
+        <delta pt="0" x="0" y="0"/>
+        <delta pt="1" x="-20" y="-18"/>
+        <delta pt="2" x="0" y="-18"/>
+        <delta pt="3" x="20" y="0"/>
+        <delta pt="4" x="0" y="0"/>
+        <delta pt="5" x="-20" y="0"/>
+        <delta pt="6" x="0" y="-18"/>
+        <delta pt="7" x="20" y="-18"/>
+        <delta pt="8" x="10" y="10"/>
+        <delta pt="9" x="-10" y="10"/>
+        <delta pt="10" x="-10" y="-28"/>
+        <delta pt="11" x="10" y="-28"/>
+        <delta pt="12" x="0" y="0"/>
+        <delta pt="13" x="0" y="-18"/>
+        <delta pt="14" x="0" y="-18"/>
+        <delta pt="15" x="0" y="0"/>
+        <delta pt="16" x="0" y="0"/>
+        <delta pt="17" x="0" y="0"/>
+        <delta pt="18" x="0" y="0"/>
+        <delta pt="19" x="0" y="0"/>
+      </tuple>
+    </glyphVariations>
+    <glyphVariations glyph="uni0020">
+      <tuple>
+        <coord axis="wght" value="1.0"/>
+        <delta pt="0" x="0" y="0"/>
+        <delta pt="1" x="-28" y="0"/>
+        <delta pt="2" x="0" y="0"/>
+        <delta pt="3" x="0" y="0"/>
+      </tuple>
+    </glyphVariations>
+    <glyphVariations glyph="uni0061">
+      <tuple>
+        <coord axis="wght" value="1.0"/>
+        <delta pt="0" x="-21" y="16"/>
+        <delta pt="1" x="-2" y="28"/>
+        <delta pt="2" x="20" y="23"/>
+        <delta pt="3" x="19" y="20"/>
+        <delta pt="4" x="28" y="21"/>
+        <delta pt="5" x="26" y="23"/>
+        <delta pt="6" x="26" y="15"/>
+        <delta pt="7" x="24" y="12"/>
+        <delta pt="8" x="30" y="17"/>
+        <delta pt="9" x="31" y="15"/>
+        <delta pt="10" x="77" y="31"/>
+        <delta pt="11" x="66" y="36"/>
+        <delta pt="12" x="66" y="18"/>
+        <delta pt="13" x="66" y="21"/>
+        <delta pt="14" x="49" y="19"/>
+        <delta pt="15" x="37" y="19"/>
+        <delta pt="16" x="21" y="19"/>
+        <delta pt="17" x="-2" y="5"/>
+        <delta pt="18" x="-34" y="-18"/>
+        <delta pt="19" x="-6" y="3"/>
+        <delta pt="20" x="-11" y="12"/>
+        <delta pt="21" x="-29" y="-11"/>
+        <delta pt="22" x="-17" y="-2"/>
+        <delta pt="23" x="-13" y="-3"/>
+        <delta pt="24" x="-25" y="-3"/>
+        <delta pt="25" x="-29" y="-3"/>
+        <delta pt="26" x="-21" y="2"/>
+        <delta pt="27" x="-34" y="-14"/>
+        <delta pt="28" x="-34" y="17"/>
+        <delta pt="29" x="-34" y="7"/>
+        <delta pt="30" x="-18" y="7"/>
+        <delta pt="31" x="-16" y="7"/>
+        <delta pt="32" x="-18" y="7"/>
+        <delta pt="33" x="-15" y="9"/>
+        <delta pt="34" x="-21" y="12"/>
+        <delta pt="35" x="19" y="23"/>
+        <delta pt="36" x="45" y="46"/>
+        <delta pt="37" x="52" y="7"/>
+        <delta pt="38" x="26" y="-21"/>
+        <delta pt="39" x="14" y="-21"/>
+        <delta pt="40" x="-5" y="-21"/>
+        <delta pt="41" x="-17" y="-7"/>
+        <delta pt="42" x="-31" y="1"/>
+        <delta pt="43" x="-12" y="16"/>
+        <delta pt="44" x="34" y="16"/>
+        <delta pt="45" x="61" y="16"/>
+        <delta pt="46" x="70" y="4"/>
+        <delta pt="47" x="70" y="-5"/>
+        <delta pt="48" x="70" y="-22"/>
+        <delta pt="49" x="70" y="4"/>
+        <delta pt="50" x="59" y="22"/>
+        <delta pt="51" x="50" y="22"/>
+        <delta pt="52" x="43" y="22"/>
+        <delta pt="53" x="37" y="19"/>
+        <delta pt="54" x="38" y="22"/>
+        <delta pt="55" x="47" y="28"/>
+        <delta pt="56" x="46" y="-6"/>
+        <delta pt="57" x="-2" y="-6"/>
+        <delta pt="58" x="-16" y="-6"/>
+        <delta pt="59" x="-25" y="-13"/>
+        <delta pt="60" x="0" y="0"/>
+        <delta pt="61" x="32" y="0"/>
+        <delta pt="62" x="0" y="0"/>
+        <delta pt="63" x="0" y="0"/>
+      </tuple>
+    </glyphVariations>
+  </gvar>
+
+</ttFont>
