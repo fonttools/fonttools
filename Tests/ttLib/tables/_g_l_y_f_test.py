@@ -856,7 +856,17 @@ def test_dropImpliedOnCurvePoints_all_quad_off_curves():
                 ((-1, -1), 0),
                 ((-1, 0), flagOnCurve),
                 ((-1, 1), 0),
-            ]
+            ],
+            [
+                ((0, 2), flagOnCurve),
+                ((2, 2), 0),
+                ((2, 0), flagOnCurve),
+                ((2, -2), 0),
+                ((0, -2), flagOnCurve),
+                ((-2, -2), 0),
+                ((-2, 0), flagOnCurve),
+                ((-2, 2), 0),
+            ],
         ],
         Transform().scale(2.0),
     )
@@ -864,12 +874,25 @@ def test_dropImpliedOnCurvePoints_all_quad_off_curves():
     glyph3 = Glyph()
     glyph3.numberOfContours = 0
 
-    assert dropImpliedOnCurvePoints(glyph1, glyph2, glyph3) == {0, 2, 4, 6}
+    assert dropImpliedOnCurvePoints(glyph1, glyph2, glyph3) == {
+        0,
+        2,
+        4,
+        6,
+        8,
+        10,
+        12,
+        14,
+    }
 
-    assert glyph1.flags == glyph2.flags == array.array("B", [0, 0, 0, 0])
-    assert glyph1.coordinates == GlyphCoordinates([(1, 1), (1, -1), (-1, -1), (-1, 1)])
-    assert glyph2.coordinates == GlyphCoordinates([(2, 2), (2, -2), (-2, -2), (-2, 2)])
-    assert glyph1.endPtsOfContours == glyph2.endPtsOfContours == [3]
+    assert glyph1.flags == glyph2.flags == array.array("B", [0, 0, 0, 0, 0, 0, 0, 0])
+    assert glyph1.coordinates == GlyphCoordinates(
+        [(1, 1), (1, -1), (-1, -1), (-1, 1), (2, 2), (2, -2), (-2, -2), (-2, 2)]
+    )
+    assert glyph2.coordinates == GlyphCoordinates(
+        [(2, 2), (2, -2), (-2, -2), (-2, 2), (4, 4), (4, -4), (-4, -4), (-4, 4)]
+    )
+    assert glyph1.endPtsOfContours == glyph2.endPtsOfContours == [3, 7]
     assert glyph3.numberOfContours == 0
 
 
