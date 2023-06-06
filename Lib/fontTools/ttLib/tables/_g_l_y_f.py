@@ -1602,6 +1602,7 @@ def dropImpliedOnCurvePoints(*interpolatable_glyphs: Glyph) -> Set[int]:
                     continue
 
                 may_drop.add(i)
+            start = last + 1
         # we only want to drop if ALL interpolatable glyphs have the same implied oncurves
         if drop is None:
             drop = may_drop
