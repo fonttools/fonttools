@@ -369,7 +369,9 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
             (0, bottomSideY),
         ]
 
-    def _getCoordinatesAndControls(self, glyphName, hMetrics, vMetrics=None):
+    def _getCoordinatesAndControls(
+        self, glyphName, hMetrics, vMetrics=None, roundCoordinates=True
+    ):
         """Return glyph coordinates and controls as expected by "gvar" table.
 
         The coordinates includes four "phantom points" for the glyph metrics,
@@ -442,6 +444,8 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
         # Add phantom points for (left, right, top, bottom) positions.
         phantomPoints = self._getPhantomPoints(glyphName, hMetrics, vMetrics)
         coords.extend(phantomPoints)
+        if roundCoordinates:
+            coords.toInt()
         return coords, controls
 
     def _setCoordinates(self, glyphName, coord, hMetrics, vMetrics=None):

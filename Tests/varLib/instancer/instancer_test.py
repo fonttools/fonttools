@@ -51,8 +51,15 @@ def fvarAxes():
 def _get_coordinates(varfont, glyphname):
     # converts GlyphCoordinates to a list of (x, y) tuples, so that pytest's
     # assert will give us a nicer diff
-    with pytest.deprecated_call():
-        return list(varfont["glyf"].getCoordinatesAndControls(glyphname, varfont)[0])
+    return list(
+        varfont["glyf"]._getCoordinatesAndControls(
+            glyphname,
+            varfont["hmtx"].metrics,
+            varfont["vmtx"].metrics,
+            # the tests expect float coordinates
+            roundCoordinates=False,
+        )[0]
+    )
 
 
 class InstantiateGvarTest(object):
