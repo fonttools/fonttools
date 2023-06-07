@@ -127,7 +127,12 @@ class _TTGlyphBasePen:
             components.append(component)
         return components
 
-    def glyph(self, componentFlags: int = 0x04, dropImpliedOnCurves=False) -> Glyph:
+    def glyph(
+        self,
+        componentFlags: int = 0x04,
+        dropImpliedOnCurves: bool = False,
+        roundCoordinates: bool = True,
+    ) -> Glyph:
         """
         Returns a :py:class:`~._g_l_y_f.Glyph` object representing the glyph.
 
@@ -144,8 +149,6 @@ class _TTGlyphBasePen:
         glyph.coordinates = GlyphCoordinates(self.points)
         glyph.endPtsOfContours = self.endPts
         glyph.flags = array("B", self.types)
-        glyph.coordinates.toInt()
-
         self.init()
 
         if components:
@@ -159,6 +162,8 @@ class _TTGlyphBasePen:
             glyph.program.fromBytecode(b"")
             if dropImpliedOnCurves:
                 dropImpliedOnCurvePoints(glyph)
+            if roundCoordinates:
+                glyph.coordinates.toInt()
 
         return glyph
 
