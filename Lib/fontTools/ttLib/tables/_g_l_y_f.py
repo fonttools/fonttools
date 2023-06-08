@@ -13,8 +13,9 @@ from fontTools.misc.fixedTools import (
     floatToFixed as fl2fi,
     floatToFixedToStr as fl2str,
     strToFixedToFloat as str2fl,
-    otRound,
 )
+from fontTools.misc.roundTools import noRound, otRound
+from fontTools.misc.vector import Vector
 from numbers import Number
 from . import DefaultTable
 from . import ttProgram
@@ -28,6 +29,7 @@ from fontTools.misc import xmlWriter
 from fontTools.misc.filenames import userNameToFileName
 from fontTools.misc.loggingTools import deprecateFunction
 from enum import IntFlag
+from functools import partial
 from types import SimpleNamespace
 from typing import Set
 
@@ -369,7 +371,9 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
             (0, bottomSideY),
         ]
 
-    def _getCoordinatesAndControls(self, glyphName, hMetrics, vMetrics=None):
+    def _getCoordinatesAndControls(
+        self, glyphName, hMetrics, vMetrics=None, *, round=otRound
+    ):
         """Return glyph coordinates and controls as expected by "gvar" table.
 
         The coordinates includes four "phantom points" for the glyph metrics,
@@ -442,6 +446,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
         # Add phantom points for (left, right, top, bottom) positions.
         phantomPoints = self._getPhantomPoints(glyphName, hMetrics, vMetrics)
         coords.extend(phantomPoints)
+        coords.toInt(round=round)
         return coords, controls
 
     def _setCoordinates(self, glyphName, coord, hMetrics, vMetrics=None):
@@ -1533,6 +1538,19 @@ class Glyph(object):
         return result if result is NotImplemented else not result
 
 
+# Vector.__round__ uses the built-in (Banker's) `round` but we want
+# to use otRound below
+_roundv = partial(Vector.__round__, round=otRound)
+
+
+def _is_mid_point(p0: tuple, p1: tuple, p2: tuple) -> bool:
+    # True if p1 is in the middle of p0 and p2, either before or after rounding
+    p0 = Vector(p0)
+    p1 = Vector(p1)
+    p2 = Vector(p2)
+    return ((p0 + p2) * 0.5).isclose(p1) or _roundv(p0) + _roundv(p2) == _roundv(p1) * 2
+
+
 def dropImpliedOnCurvePoints(*interpolatable_glyphs: Glyph) -> Set[int]:
     """Drop impliable on-curve points from the (simple) glyph or glyphs.
 
@@ -1593,12 +1611,8 @@ def dropImpliedOnCurvePoints(*interpolatable_glyphs: Glyph) -> Set[int]:
                 nxt = i + 1 if i < last else start
                 if (flags[prv] & flagOnCurve) or flags[prv] != flags[nxt]:
                     continue
-                p0 = coords[prv]
-                p1 = coords[i]
-                p2 = coords[nxt]
-                if not math.isclose(p1[0] - p0[0], p2[0] - p1[0]) or not math.isclose(
-                    p1[1] - p0[1], p2[1] - p1[1]
-                ):
+                # we may drop the ith on-curve if halfway between previous/next off-curves
+                if not _is_mid_point(coords[prv], coords[i], coords[nxt]):
                     continue
 
                 may_drop.add(i)
@@ -2307,6 +2321,8 @@ class GlyphCoordinates(object):
             self._a.extend(p)
 
     def toInt(self, *, round=otRound):
+        if round is noRound:
+            return
         a = self._a
         for i in range(len(a)):
             a[i] = round(a[i])

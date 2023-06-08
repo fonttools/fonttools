@@ -1,5 +1,5 @@
 from array import array
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Callable, Dict, Optional, Tuple
 from fontTools.misc.fixedTools import MAX_F2DOT14, floatToFixedToFloat
 from fontTools.misc.loggingTools import LogMixin
 from fontTools.pens.pointPen import AbstractPointPen
@@ -127,7 +127,13 @@ class _TTGlyphBasePen:
             components.append(component)
         return components
 
-    def glyph(self, componentFlags: int = 0x04, dropImpliedOnCurves=False) -> Glyph:
+    def glyph(
+        self,
+        componentFlags: int = 0x04,
+        dropImpliedOnCurves: bool = False,
+        *,
+        round: Callable[[float], int] = otRound,
+    ) -> Glyph:
         """
         Returns a :py:class:`~._g_l_y_f.Glyph` object representing the glyph.
 
@@ -144,8 +150,6 @@ class _TTGlyphBasePen:
         glyph.coordinates = GlyphCoordinates(self.points)
         glyph.endPtsOfContours = self.endPts
         glyph.flags = array("B", self.types)
-        glyph.coordinates.toInt()
-
         self.init()
 
         if components:
@@ -159,6 +163,7 @@ class _TTGlyphBasePen:
             glyph.program.fromBytecode(b"")
             if dropImpliedOnCurves:
                 dropImpliedOnCurvePoints(glyph)
+            glyph.coordinates.toInt(round=round)
 
         return glyph
 
