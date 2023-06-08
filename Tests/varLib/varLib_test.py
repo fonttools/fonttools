@@ -227,6 +227,19 @@ class BuildTest(unittest.TestCase):
             expected_ttx_name=test_name,
         )
 
+    def test_varlib_avar2(self):
+        """Designspace file contains a 'weight' axis with <map> elements
+        modifying the normalization mapping as well as <mappings> element
+        modifying it post-normalization. An 'avar' table is generated.
+        """
+        test_name = "BuildAvar2"
+        self._run_varlib_build_test(
+            designspace_name=test_name,
+            font_name="TestFamily3",
+            tables=["avar"],
+            expected_ttx_name=test_name,
+        )
+
     def test_varlib_build_feature_variations(self):
         """Designspace file contains <rules> element, used to build
         GSUB FeatureVariations table.
@@ -937,7 +950,6 @@ Expected: kern, mark.
 Got: kern.
 """,
         ):
-
             self._run_varlib_build_test(
                 designspace_name="IncompatibleFeatures",
                 font_name="IncompatibleFeatures",

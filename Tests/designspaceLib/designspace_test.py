@@ -3,11 +3,13 @@
 import os
 from pathlib import Path
 import re
+import shutil
 
 import pytest
 from fontTools import ttLib
 from fontTools.designspaceLib import (
     AxisDescriptor,
+    AxisMappingDescriptor,
     AxisLabelDescriptor,
     DesignSpaceDocument,
     DesignSpaceDocumentError,
@@ -688,6 +690,38 @@ def test_axisMapping():
     assert r == [("ddd", [(0, 0.0), (300, 0.5), (600, 0.5), (1000, 1.0)])]
 
 
+def test_axisMappingsRoundtrip(tmpdir):
+    # tests of axisMappings in a document, roundtripping.
+
+    tmpdir = str(tmpdir)
+    srcDocPath = (Path(__file__) / "../data/test_avar2.designspace").resolve()
+    testDocPath = os.path.join(tmpdir, "test_avar2.designspace")
+    shutil.copy(srcDocPath, testDocPath)
+    testDocPath2 = os.path.join(tmpdir, "test_avar2_roundtrip.designspace")
+    doc = DesignSpaceDocument()
+    doc.read(testDocPath)
+    assert doc.axisMappings
+    assert len(doc.axisMappings) == 1
+    assert doc.axisMappings[0].inputLocation == {"Justify": -100.0, "Width": 100.0}
+
+    # This is a bit of a hack, but it's the only way to make sure
+    # that the save works on Windows if the tempdir and the data
+    # dir are on different drives.
+    for descriptor in doc.sources + doc.instances:
+        descriptor.path = None
+
+    doc.write(testDocPath2)
+    # verify these results
+    doc2 = DesignSpaceDocument()
+    doc2.read(testDocPath2)
+    assert [mapping.inputLocation for mapping in doc.axisMappings] == [
+        mapping.inputLocation for mapping in doc2.axisMappings
+    ]
+    assert [mapping.outputLocation for mapping in doc.axisMappings] == [
+        mapping.outputLocation for mapping in doc2.axisMappings
+    ]
+
+
 def test_rulesConditions(tmpdir):
     # tests of rules, conditionsets and conditions
     r1 = RuleDescriptor()
@@ -923,19 +957,15 @@ def test_updatePaths(tmpdir):
 
 
 def test_read_with_path_object():
-    import pathlib
-
-    source = (pathlib.Path(__file__) / "../data/test_v4_original.designspace").resolve()
+    source = (Path(__file__) / "../data/test_v4_original.designspace").resolve()
     assert source.exists()
     doc = DesignSpaceDocument()
     doc.read(source)
 
 
 def test_with_with_path_object(tmpdir):
-    import pathlib
-
     tmpdir = str(tmpdir)
-    dest = pathlib.Path(tmpdir) / "test_v4_original.designspace"
+    dest = Path(tmpdir) / "test_v4_original.designspace"
     doc = DesignSpaceDocument()
     doc.write(dest)
     assert dest.exists()
@@ -1055,6 +1085,19 @@ def test_addAxisDescriptor():
     assert axis.minimum == 100
     assert axis.default == 400
     assert axis.maximum == 900
+
+
+def test_addAxisDescriptor():
+    ds = DesignSpaceDocument()
+
+    mapping = ds.addAxisMappingDescriptor(
+        inputLocation={"weight": 900, "width": 150}, outputLocation={"weight": 870}
+    )
+
+    assert ds.axisMappings[0] is mapping
+    assert isinstance(mapping, AxisMappingDescriptor)
+    assert mapping.inputLocation == {"weight": 900, "width": 150}
+    assert mapping.outputLocation == {"weight": 870}
 
 
 def test_addSourceDescriptor():

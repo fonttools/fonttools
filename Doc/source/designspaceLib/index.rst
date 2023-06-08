@@ -127,20 +127,20 @@ Implementation and differences
 The designspace format has gone through considerable development.
 
  -  the format was originally written for MutatorMath.
- -  the format is now also used in fontTools.varlib.
+ -  the format is now also used in fontTools.varLib.
  -  not all values are be required by all implementations.
 
-Varlib vs. MutatorMath
+varLib vs. MutatorMath
 ----------------------
 
-There are some differences between the way MutatorMath and fontTools.varlib handle designspaces.
+There are some differences between the way MutatorMath and fontTools.varLib handle designspaces.
 
- -  Varlib does not support anisotropic interpolations.
+ -  varLib does not support anisotropic interpolations.
  -  MutatorMath will extrapolate over the boundaries of
-    the axes. Varlib can not (at the moment).
- -  Varlib requires much less data to define an instance than
+    the axes. varLib can not (at the moment).
+ -  varLib requires much less data to define an instance than
     MutatorMath.
- -  The goals of Varlib and MutatorMath are different, so not all
+ -  The goals of varLib and MutatorMath are different, so not all
     attributes are always needed.
 
 
@@ -173,6 +173,14 @@ it can become complex very quickly. So proceed with caution.
 
 Version history
 ===============
+
+Version 5.1
+-----------
+
+The format was extended to support arbitrary mapping between input and output
+designspace locations. The ``<axes>`` elements now can have a ``<mappings>``
+element that specifies such mappings, which when present carries data that is
+used to compile to an ``avar`` version 2 table.
 
 Version 5.0
 -----------

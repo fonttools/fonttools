@@ -234,7 +234,7 @@ You can generate the UFOs with MutatorMath:
 
 -  Assuming the outline data in the masters is compatible.
 
-Or you can use the file in making a **variable font** with varlib.
+Or you can use the file in making a **variable font** with varLib.
 
 
 .. _working_with_v5:

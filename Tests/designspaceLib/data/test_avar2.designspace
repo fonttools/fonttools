@@ -1,0 +1,117 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<designspace format="5.0">
+  <axes>
+    <axis tag="JSTF" name="Justify" minimum="-100" maximum="100" default="0"/>
+    <axis tag="wght" name="Weight" minimum="100" maximum="900" default="400">
+      <map input="100" output="26"/>
+      <map input="200" output="39"/>
+      <map input="300" output="58"/>
+      <map input="400" output="90"/>
+      <map input="500" output="108"/>
+      <map input="600" output="128"/>
+      <map input="700" output="151"/>
+      <map input="800" output="169"/>
+      <map input="900" output="190"/>
+    </axis>
+    <axis tag="wdth" name="Width" minimum="62.5" maximum="100" default="100">
+      <map input="62.5" output="70"/>
+      <map input="75" output="79"/>
+      <map input="87.5" output="89"/>
+      <map input="100" output="100"/>
+    </axis>
+    <mappings>
+      <mapping>
+        <input>
+	  <dimension name="Justify" xvalue="-100"/>
+	  <dimension name="Width" xvalue="100"/>
+        </input>
+        <output>
+	  <dimension name="Width" xvalue="70"/>
+        </output>
+      </mapping>
+    </mappings>
+  </axes>
+  <variable-fonts>
+    <variable-font name="NotoSansArabic_Justify_Width">
+      <axis-subsets>
+        <axis-subset name="Justify"/>
+        <axis-subset name="Width"/>
+      </axis-subsets>
+    </variable-font>
+    <variable-font name="NotoSansArabic_Weight_Width">
+      <axis-subsets>
+        <axis-subset name="Weight"/>
+        <axis-subset name="Width"/>
+      </axis-subsets>
+    </variable-font>
+    <variable-font name="NotoSansArabic_Weight">
+      <axis-subsets>
+        <axis-subset name="Weight"/>
+      </axis-subsets>
+    </variable-font>
+    <variable-font name="NotoSansArabic_Width">
+      <axis-subsets>
+        <axis-subset name="Width"/>
+      </axis-subsets>
+    </variable-font>
+    <variable-font name="NotoSansArabic_Justify">
+      <axis-subsets>
+        <axis-subset name="Justify"/>
+      </axis-subsets>
+    </variable-font>
+  </variable-fonts>
+  <sources>
+    <source filename="NotoSansArabic-Light.ufo" name="Noto Sans Arabic Light" familyname="Noto Sans Arabic" stylename="Light">
+      <location>
+        <dimension name="Weight" xvalue="26"/>
+        <dimension name="Width" xvalue="100"/>
+      </location>
+    </source>
+    <source filename="NotoSansArabic-Regular.ufo" name="Noto Sans Arabic Regular" familyname="Noto Sans Arabic" stylename="Regular">
+      <lib copy="1"/>
+      <groups copy="1"/>
+      <features copy="1"/>
+      <info copy="1"/>
+      <location>
+        <dimension name="Weight" xvalue="90"/>
+        <dimension name="Width" xvalue="100"/>
+      </location>
+    </source>
+    <source filename="NotoSansArabic-SemiBold.ufo" name="Noto Sans Arabic SemiBold" familyname="Noto Sans Arabic" stylename="SemiBold">
+      <location>
+        <dimension name="Weight" xvalue="151"/>
+        <dimension name="Width" xvalue="100"/>
+      </location>
+    </source>
+    <source filename="NotoSansArabic-Bold.ufo" name="Noto Sans Arabic Bold" familyname="Noto Sans Arabic" stylename="Bold">
+      <location>
+        <dimension name="Weight" xvalue="190"/>
+        <dimension name="Width" xvalue="100"/>
+      </location>
+    </source>
+    <source filename="NotoSansArabic-CondensedLight.ufo" name="Noto Sans Arabic Condensed Light" familyname="Noto Sans Arabic" stylename="Condensed Light">
+      <location>
+        <dimension name="Weight" xvalue="26"/>
+        <dimension name="Width" xvalue="70"/>
+      </location>
+    </source>
+    <source filename="NotoSansArabic-Condensed.ufo" name="Noto Sans Arabic Condensed" familyname="Noto Sans Arabic" stylename="Condensed">
+      <location>
+        <dimension name="Weight" xvalue="90"/>
+        <dimension name="Width" xvalue="70"/>
+      </location>
+    </source>
+    <source filename="NotoSansArabic-CondensedSemiBold.ufo" name="Noto Sans Arabic Condensed SemiBold" familyname="Noto Sans Arabic" stylename="Condensed SemiBold">
+      <location>
+        <dimension name="Weight" xvalue="151"/>
+        <dimension name="Width" xvalue="70"/>
+      </location>
+    </source>
+    <source filename="NotoSansArabic-CondensedBold.ufo" name="Noto Sans Arabic Condensed Bold" familyname="Noto Sans Arabic" stylename="Condensed Bold">
+      <location>
+        <dimension name="Weight" xvalue="190"/>
+        <dimension name="Width" xvalue="70"/>
+      </location>
+    </source>
+  </sources>
+</designspace>

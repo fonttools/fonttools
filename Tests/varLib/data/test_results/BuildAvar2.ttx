@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="3.14">
+
+  <avar>
+    <version major="2" minor="0"/>
+    <segment axis="wght">
+      <mapping from="-1.0" to="-1.0"/>
+      <mapping from="-0.6667" to="-0.7969"/>
+      <mapping from="-0.3333" to="-0.5"/>
+      <mapping from="0.0" to="0.0"/>
+      <mapping from="0.2" to="0.18"/>
+      <mapping from="0.4" to="0.38"/>
+      <mapping from="0.6" to="0.61"/>
+      <mapping from="0.8" to="0.79"/>
+      <mapping from="1.0" to="1.0"/>
+    </segment>
+    <VarStore Format="1">
+      <Format value="1"/>
+      <VarRegionList>
+        <!-- RegionAxisCount=1 -->
+        <!-- RegionCount=1 -->
+        <Region index="0">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.38"/>
+            <EndCoord value="0.38"/>
+          </VarRegionAxis>
+        </Region>
+      </VarRegionList>
+      <!-- VarDataCount=1 -->
+      <VarData index="0">
+        <!-- ItemCount=1 -->
+        <NumShorts value="1"/>
+        <!-- VarRegionCount=1 -->
+        <VarRegionIndex index="0" value="0"/>
+        <Item index="0" value="[1638]"/>
+      </VarData>
+    </VarStore>
+  </avar>
+
+</ttFont>
