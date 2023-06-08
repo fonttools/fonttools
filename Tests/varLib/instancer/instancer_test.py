@@ -1,4 +1,5 @@
 from fontTools.misc.fixedTools import floatToFixedToFloat
+from fontTools.misc.roundTools import noRound
 from fontTools.misc.testTools import stripVariableItemsFromTTX
 from fontTools.misc.textTools import Tag
 from fontTools import ttLib
@@ -57,7 +58,7 @@ def _get_coordinates(varfont, glyphname):
             varfont["hmtx"].metrics,
             varfont["vmtx"].metrics,
             # the tests expect float coordinates
-            roundCoordinates=False,
+            round=noRound,
         )[0]
     )
 
