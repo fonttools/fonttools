@@ -13,8 +13,8 @@ from fontTools.misc.fixedTools import (
     floatToFixed as fl2fi,
     floatToFixedToStr as fl2str,
     strToFixedToFloat as str2fl,
-    otRound,
 )
+from fontTools.misc.roundTools import noRound, otRound
 from fontTools.misc.vector import Vector
 from numbers import Number
 from . import DefaultTable
@@ -2322,6 +2322,8 @@ class GlyphCoordinates(object):
             self._a.extend(p)
 
     def toInt(self, *, round=otRound):
+        if round is noRound:
+            return
         a = self._a
         for i in range(len(a)):
             a[i] = round(a[i])
