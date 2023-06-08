@@ -226,6 +226,21 @@ class BuilderTest(unittest.TestCase):
             output.append(l)
         return output
 
+    def make_mock_vf(self):
+        font = makeTTFont()
+        font["name"] = newTable("name")
+        addFvar(font, self.VARFONT_AXES, [])
+        del font["name"]
+        return font
+
+    @staticmethod
+    def get_region(var_region_axis):
+        return (
+            var_region_axis.StartCoord,
+            var_region_axis.PeakCoord,
+            var_region_axis.EndCoord,
+        )
+
     def test_alternateSubst_multipleSubstitutionsForSameGlyph(self):
         self.assertRaisesRegex(
             FeatureLibError,
@@ -1046,37 +1061,23 @@ class BuilderTest(unittest.TestCase):
             } kern;
         """
 
-        def make_mock_vf():
-            font = makeTTFont()
-            font["name"] = newTable("name")
-            addFvar(font, self.VARFONT_AXES, [])
-            del font["name"]
-            return font
-
-        def get_region(var_region_axis):
-            return (
-                var_region_axis.StartCoord,
-                var_region_axis.PeakCoord,
-                var_region_axis.EndCoord,
-            )
-
         # Without `avar` (wght=200, wdth=100 is the default location):
-        font = make_mock_vf()
+        font = self.make_mock_vf()
         addOpenTypeFeaturesFromString(font, features)
 
         var_region_list = font.tables["GDEF"].table.VarStore.VarRegionList
         var_region_axis_wght = var_region_list.Region[0].VarRegionAxis[0]
         var_region_axis_wdth = var_region_list.Region[0].VarRegionAxis[1]
-        assert get_region(var_region_axis_wght) == (0.0, 0.875, 0.875)
-        assert get_region(var_region_axis_wdth) == (0.0, 0.0, 0.0)
+        assert self.get_region(var_region_axis_wght) == (0.0, 0.875, 0.875)
+        assert self.get_region(var_region_axis_wdth) == (0.0, 0.0, 0.0)
         var_region_axis_wght = var_region_list.Region[1].VarRegionAxis[0]
         var_region_axis_wdth = var_region_list.Region[1].VarRegionAxis[1]
-        assert get_region(var_region_axis_wght) == (0.0, 0.875, 0.875)
-        assert get_region(var_region_axis_wdth) == (0.0, 0.5, 0.5)
+        assert self.get_region(var_region_axis_wght) == (0.0, 0.875, 0.875)
+        assert self.get_region(var_region_axis_wdth) == (0.0, 0.5, 0.5)
 
         # With `avar`, shifting the wght axis' positive midpoint 0.5 a bit to
         # the right, but leaving the wdth axis alone:
-        font = make_mock_vf()
+        font = self.make_mock_vf()
         font["avar"] = newTable("avar")
         font["avar"].segments = {"wght": {-1.0: -1.0, 0.0: 0.0, 0.5: 0.625, 1.0: 1.0}}
         addOpenTypeFeaturesFromString(font, features)
@@ -1084,12 +1085,36 @@ class BuilderTest(unittest.TestCase):
         var_region_list = font.tables["GDEF"].table.VarStore.VarRegionList
         var_region_axis_wght = var_region_list.Region[0].VarRegionAxis[0]
         var_region_axis_wdth = var_region_list.Region[0].VarRegionAxis[1]
-        assert get_region(var_region_axis_wght) == (0.0, 0.90625, 0.90625)
-        assert get_region(var_region_axis_wdth) == (0.0, 0.0, 0.0)
+        assert self.get_region(var_region_axis_wght) == (0.0, 0.90625, 0.90625)
+        assert self.get_region(var_region_axis_wdth) == (0.0, 0.0, 0.0)
         var_region_axis_wght = var_region_list.Region[1].VarRegionAxis[0]
         var_region_axis_wdth = var_region_list.Region[1].VarRegionAxis[1]
-        assert get_region(var_region_axis_wght) == (0.0, 0.90625, 0.90625)
-        assert get_region(var_region_axis_wdth) == (0.0, 0.5, 0.5)
+        assert self.get_region(var_region_axis_wght) == (0.0, 0.90625, 0.90625)
+        assert self.get_region(var_region_axis_wdth) == (0.0, 0.5, 0.5)
+
+    def test_ligatureCaretByPos_variable_scalar(self):
+        """Test that the `avar` table is consulted when normalizing user-space
+        values."""
+
+        features = """
+            table GDEF {
+                LigatureCaretByPos f_i (wght=200:400 wght=900:1000) 380;
+            } GDEF;
+        """
+
+        font = self.make_mock_vf()
+        addOpenTypeFeaturesFromString(font, features)
+
+        table = font["GDEF"].table
+        lig_glyph = table.LigCaretList.LigGlyph[0]
+        assert lig_glyph.CaretValue[0].Format == 1
+        assert lig_glyph.CaretValue[0].Coordinate == 380
+        assert lig_glyph.CaretValue[1].Format == 3
+        assert lig_glyph.CaretValue[1].Coordinate == 400
+
+        var_region_list = table.VarStore.VarRegionList
+        var_region_axis = var_region_list.Region[0].VarRegionAxis[0]
+        assert self.get_region(var_region_axis) == (0.0, 0.875, 0.875)
 
 
 def generate_feature_file_test(name):
