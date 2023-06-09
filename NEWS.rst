@@ -1,5 +1,5 @@
 - Published native binary wheels to PyPI for all the python minor versions and platform
-  and architecture currently supported that would benefit from this. They will include
+  and architectures currently supported that would benefit from this. They will include
   precompiled Cython-accelerated modules (e.g. cu2qu) without requiring to compile them
   from source. The pure-python wheel and source distribution will continue to be
   published as always (pip will automatically chose them when no binary wheel is
