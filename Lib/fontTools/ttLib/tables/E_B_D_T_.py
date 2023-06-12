@@ -271,7 +271,7 @@ def _memoize(f):
 # opposite of what makes sense algorithmically and hence this function.
 @_memoize
 def _reverseBytes(data):
-    if len(data) != 1:
+    if isinstance(data, bytes) and len(data) != 1:
         return bytesjoin(map(_reverseBytes, data))
     byte = byteord(data)
     result = 0
