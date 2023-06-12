@@ -7,7 +7,7 @@ scipy==1.10.1; platform_python_implementation != "PyPy"
 munkres==1.1.4; platform_python_implementation == "PyPy"
 zopfli==0.2.2
 fs==2.4.16
-skia-pathops==0.7.3; platform_python_implementation != "PyPy"
+skia-pathops==0.8.0; platform_python_implementation != "PyPy"
 # this is only required to run Tests/cu2qu/{ufo,cli}_test.py
 ufoLib2==0.14.0
 ufo2ft==2.31.0
