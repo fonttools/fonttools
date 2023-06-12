@@ -1,3 +1,6 @@
+4.40.0 (released 2023-06-12)
+----------------------------
+
 - Published native binary wheels to PyPI for all the python minor versions and platform
   and architectures currently supported that would benefit from this. They will include
   precompiled Cython-accelerated modules (e.g. cu2qu) without requiring to compile them
