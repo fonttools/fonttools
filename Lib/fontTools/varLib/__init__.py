@@ -25,7 +25,11 @@ from fontTools.misc.fixedTools import floatToFixed as fl2fi
 from fontTools.misc.textTools import Tag, tostr
 from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables._f_v_a_r import Axis, NamedInstance
-from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates, dropImpliedOnCurvePoints
+from fontTools.ttLib.tables._g_l_y_f import (
+    USE_MY_METRICS,
+    GlyphCoordinates,
+    dropImpliedOnCurvePoints,
+)
 from fontTools.ttLib.tables.ttProgram import Program
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools.ttLib.tables import otTables as ot
@@ -1056,6 +1060,36 @@ def drop_implied_oncurve_points(*masters: TTFont) -> int:
     return count
 
 
+def _fixup_use_my_metrics_component_flags(masters: TTFont) -> None:
+    # Make sue that if USE_MY_METRICS flag is set for a component in some masters
+    # it's either set or unset for all of them.
+    # https://github.com/fonttools/fonttools/issues/3085
+    master_glyfs = list(filter(None, (ttf.get("glyf") for ttf in masters)))
+    for glyph_name in set().union(*(glyf.keys() for glyf in master_glyfs)):
+        for components in zip(
+            *(
+                glyf[glyph_name].components
+                for glyf in master_glyfs
+                if glyph_name in glyf and glyf[glyph_name].isComposite()
+            )
+        ):
+            if len({c.glyphName for c in components}) != 1:
+                # that components are compatible across masters is checked later
+                continue
+            if any(c.flags & USE_MY_METRICS for c in components) and not all(
+                c.flags & USE_MY_METRICS for c in components
+            ):
+                # clear USE_MY_METRICS flags unless all master components have it set
+                for c in components:
+                    c.flags &= ~USE_MY_METRICS
+                log.info(
+                    "Unset USE_MY_METRICS flag on component %r of composite glyph %r "
+                    "because it is not set consistently for all the masters",
+                    components[0].glyphName,
+                    glyph_name,
+                )
+
+
 def build_many(
     designspace: DesignSpaceDocument,
     master_finder=lambda s: s,
@@ -1149,12 +1183,14 @@ def build(
         except AttributeError:
             master_ttfs.append(None)  # in-memory fonts have no path
 
-    if drop_implied_oncurves and "glyf" in master_fonts[ds.base_idx]:
-        drop_count = drop_implied_oncurve_points(*master_fonts)
-        log.info(
-            "Dropped %s on-curve points from simple glyphs in the 'glyf' table",
-            drop_count,
-        )
+    if "glyf" in master_fonts[ds.base_idx]:
+        if drop_implied_oncurves:
+            drop_count = drop_implied_oncurve_points(*master_fonts)
+            log.info(
+                "Dropped %s on-curve points from simple glyphs in the 'glyf' table",
+                drop_count,
+            )
+        _fixup_use_my_metrics_component_flags(master_fonts)
 
     # Copy the base master to work from it
     vf = deepcopy(master_fonts[ds.base_idx])
