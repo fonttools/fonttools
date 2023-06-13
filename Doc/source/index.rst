@@ -56,6 +56,7 @@ This last utility takes a subcommand, which could be one of:
 - ``varLib.models``: Normalize locations on a given designspace
 - ``varLib.mutator``: Instantiate a variation font
 - ``varLib.varStore``: Optimize a font's GDEF variation store
+- ``volto``: Convert MS VOLT to AFDKO feature files.
 
 Libraries
 ---------
@@ -87,6 +88,7 @@ libraries in the fontTools suite:
 - :py:mod:`fontTools.unicodedata`: Convert between Unicode and OpenType script information
 - :py:mod:`fontTools.varLib`: Module for dealing with 'gvar'-style font variations
 - :py:mod:`fontTools.voltLib`: Module for dealing with Visual OpenType Layout Tool (VOLT) files
+- :py:mod:`fontTools.volto`: Convert MS VOLT to AFDKO feature files.
 
 A selection of sample Python programs using these libaries can be found in the `Snippets directory <https://github.com/fonttools/fonttools/blob/main/Snippets/>`_ of the fontTools repository.
 
@@ -142,6 +144,7 @@ Table of Contents
    unicodedata/index
    varLib/index
    voltLib
+   volto
 
 
 .. |Travis Build Status| image:: https://travis-ci.org/fonttools/fonttools.svg
