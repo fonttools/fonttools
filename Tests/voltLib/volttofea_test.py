@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from io import StringIO
 
-from fontTools.volto import VoltToFea
+from fontTools.voltLib.voltToFea import VoltToFea
 
 DATADIR = pathlib.Path(__file__).parent / "data"
 
@@ -1168,7 +1168,9 @@ class ToFeaTest(unittest.TestCase):
             self.assertEqual(fea, "")
         self.assertEqual(
             logs.output,
-            ["WARNING:fontTools.volto:Unsupported setting ignored: CMAP_FORMAT"],
+            [
+                "WARNING:fontTools.voltLib.voltToFea:Unsupported setting ignored: CMAP_FORMAT"
+            ],
         )
 
     def test_sanitize_lookup_name(self):
@@ -1211,30 +1213,30 @@ class ToFeaTest(unittest.TestCase):
     def test_cli_vtp(self):
         vtp = DATADIR / "Nutso.vtp"
         fea = DATADIR / "Nutso.fea"
-        self.volto(vtp, fea)
+        self.cli(vtp, fea)
 
     def test_group_order(self):
         vtp = DATADIR / "NamdhinggoSIL1006.vtp"
         fea = DATADIR / "NamdhinggoSIL1006.fea"
-        self.volto(vtp, fea)
+        self.cli(vtp, fea)
 
     def test_cli_ttf(self):
         ttf = DATADIR / "Nutso.ttf"
         fea = DATADIR / "Nutso.fea"
-        self.volto(ttf, fea)
+        self.cli(ttf, fea)
 
     def test_cli_ttf_no_TSIV(self):
-        from fontTools.volto import main as volto
+        from fontTools.voltLib.voltToFea import main as cli
 
         ttf = DATADIR / "Empty.ttf"
         temp = self.temp_path()
-        self.assertEqual(1, volto([str(ttf), str(temp)]))
+        self.assertEqual(1, cli([str(ttf), str(temp)]))
 
-    def volto(self, source, fea):
-        from fontTools.volto import main as volto
+    def cli(self, source, fea):
+        from fontTools.voltLib.voltToFea import main as cli
 
         temp = self.temp_path()
-        volto([str(source), str(temp)])
+        cli([str(source), str(temp)])
         with temp.open() as f:
             res = f.read()
         with fea.open() as f:

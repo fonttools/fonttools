@@ -7,13 +7,13 @@ Usage
 To convert a VTP project file:
 
 
-    $ fonttools volto input.vtp output.fea
+    $ fonttools voltLib.voltToFea input.vtp output.fea
 
 It is also possible convert font files with `TSIV` table (as saved from Volt),
 in this case the glyph names used in the Volt project will be mapped to the
 actual glyph names in the font files when written to the feature file:
 
-    $ fonttools volto input.ttf output.fea
+    $ fonttools voltLib.voltToFea input.ttf output.fea
 
 The ``--quiet`` option can be used to suppress warnings.
 
@@ -48,7 +48,7 @@ from fontTools.ttLib import TTFont, TTLibError
 from fontTools.voltLib import ast as VAst
 from fontTools.voltLib.parser import Parser as VoltParser
 
-log = logging.getLogger("fontTools.volto")
+log = logging.getLogger("fontTools.voltLib.voltToFea")
 
 TABLES = ["GDEF", "GSUB", "GPOS"]
 
@@ -662,7 +662,9 @@ def main(args=None):
 
     from fontTools import configLogger
 
-    parser = argparse.ArgumentParser("fonttools volto", description=main.__doc__)
+    parser = argparse.ArgumentParser(
+        "fonttools voltLib.voltToFea", description=main.__doc__
+    )
     parser.add_argument(
         "input", metavar="INPUT", type=Path, help="input font/VTP file to process"
     )
