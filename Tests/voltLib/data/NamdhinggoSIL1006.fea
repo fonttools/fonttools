@@ -1,0 +1,506 @@
+# Glyph classes
+@Cons = [uni1901 uni1902 uni1903 uni1904 uni1905 uni1906 uni1907 uni1908 uni1909 uni190A uni190B uni190C uni190D uni190E uni190F uni1910 uni1911 uni1912 uni1913 uni1914 uni1915 uni1916 uni1917 uni1918 uni1919 uni191A uni191B uni191C uni1940];
+@ConsRaU = [uni1901192A1922 uni1902192A1922 uni1903192A1922 uni1904192A1922 uni1905192A1922 uni1906192A1922 uni1907192A1922 uni1908192A1922 uni1909192A1922 uni190A192A1922 uni190B192A1922 uni190C192A1922 uni190D192A1922 uni190192AE1922 uni190F192A1922 uni1910192A1922 uni1911192A1922 uni1912192A1922 uni1913192A1922 uni1914192A1922 uni1915192A1922 uni1916192A1922 uni1917192A1922 uni1918192A1922 uni1919192A1922 uni1919192A1922 uni191A192A1922 uni191B192A1922 uni191C192A1922 uni1940192A1922];
+@ConsU = [uni19011922 uni19021922 uni19031922 uni19041922 uni19051922 uni19061922 uni19071922 uni19081922 uni19091922 uni190A1922 uni190B1922 uni190C1922 uni190D1922 uni190E1922 uni190F1922 uni19101922 uni19111922 uni19121922 uni19131922 uni19141922 uni19151922 uni19161922 uni19171922 uni19181922 uni19191922 uni191A1922 uni191B1922 uni191C1922 uni19401922];
+@Ikar = [uni1921 uni1921193A];
+@Vowels = [uni1920 uni1927 uni1928];
+@YaWa = [uni1929 uni192B];
+@AllCons = [@Cons @ConsU @ConsRaU];
+@VowelsKem = [@Vowels uni193A];
+
+# Mark classes
+markClass uni1920 <anchor -500 1050> @Aabove;
+markClass uni1922 <anchor -150 -15> @U;
+markClass uni1927 <anchor -300 1050> @eo;
+markClass uni1928 <anchor -190 1050> @eo;
+markClass uni193A <anchor -260 1250> @K;
+markClass uni193A <anchor -260 1250> @VK;
+
+# Lookups
+lookup EEAIDecomp {
+    sub uni1925 by uni1920 uni1923;
+    sub uni1926 by uni1920 uni1924;
+} EEAIDecomp;
+
+lookup OoAuKComp {
+    sub uni1923 uni193A by uni1923193A;
+    sub uni1924 uni193A by uni1924193A;
+} OoAuKComp;
+
+lookup OoAuKDecomp {
+    # The OoAuDecomp substitution rule replaces the OO and AU vowels with their visually constitutent components A plus EE or AI respectively. This is so that the 'A' portion can be positioned independently over the consonant when a Glide occurs between the consonant and the vowel.
+    sub uni1923193A by uni193A uni1923;
+    sub uni1924193A by uni193A uni1924;
+} OoAuKDecomp;
+
+lookup GlideVowelComp {
+    sub uni1929 uni1920 uni193A by uni19291920193A;
+    sub uni1929 uni1922 uni193A by uni19291922193A;
+    sub uni1929 uni1927 uni193A by uni19291927193A;
+    sub uni1929 uni1928 uni193A by uni19291928193A;
+    sub uni1929 uni193A by uni1929193A;
+    sub uni1929 uni1920 by uni19291920;
+    sub uni1929 uni1922 by uni19291922;
+    sub uni1929 uni1927 by uni19291927;
+    sub uni1929 uni1928 by uni19291928;
+    sub uni192B uni1920 uni193A by uni192B1920193A;
+    sub uni192B uni1922 uni193A by uni192B1922193A;
+    sub uni192B uni1927 uni193A by uni192B1927193A;
+    sub uni192B uni1928 uni193A by uni192B1928193A;
+    sub uni192B uni193A by uni192B193A;
+    sub uni192B uni1920 by uni192B1920;
+    sub uni192B uni1922 by uni192B1922;
+    sub uni192B uni1927 by uni192B1927;
+    sub uni192B uni1928 by uni192B1928;
+} GlideVowelComp;
+
+lookup GlideVowelDecomp {
+    sub uni19291920193A by uni1920 uni193A uni1929;
+    sub uni19291922193A by uni1922 uni193A uni1929;
+    sub uni19291927193A by uni1927 uni193A uni1929;
+    sub uni19291928193A by uni1928 uni193A uni1929;
+    sub uni1929193A by uni193A uni1929;
+    sub uni19291920 by uni1920 uni1929;
+    sub uni19291922 by uni1922 uni1929;
+    sub uni19291927 by uni1927 uni1929;
+    sub uni19291928 by uni1928 uni1929;
+    sub uni192B1920193A by uni1920 uni193A uni192B;
+    sub uni192B1922193A by uni1922 uni193A uni192B;
+    sub uni192B1927193A by uni1927 uni193A uni192B;
+    sub uni192B1928193A by uni1928 uni193A uni192B;
+    sub uni192B193A by uni193A uni192B;
+    sub uni192B1920 by uni1920 uni192B;
+    sub uni192B1922 by uni1922 uni192B;
+    sub uni192B1927 by uni1927 uni192B;
+    sub uni192B1928 by uni1928 uni192B;
+} GlideVowelDecomp;
+
+lookup RaUkar {
+    # The RaUkar substitution rule replaces Consonant, Ra, Ukar with a ligature.
+    sub @Cons uni192A uni1922 by @ConsRaU;
+} RaUkar;
+
+lookup Ukar {
+    # The Ukar substitution rule replaces Consonant + Ukar with a ligature. It also applies to the Vowel-Carrier, which has its own ligature with ukar.
+    sub @Cons uni1922 by @ConsU;
+    sub uni1900 uni1922 by uni19001922;
+} Ukar;
+
+lookup IkarK {
+    # The IkarK substitution rule replaces Ikar + Kemphreng with a ligature. The ligature is then positioned properly on the base consonant via the positioning rule IEO.
+    sub uni1921 uni193A by uni1921193A;
+} IkarK;
+
+lookup GlideIkar_target {
+    pos @YaWa -475;
+} GlideIkar_target;
+
+lookup GlideIkar {
+    pos [@YaWa]' lookup GlideIkar_target @Ikar;
+} GlideIkar;
+
+lookup IkarKWid_target {
+    pos uni1921193A 110;
+} IkarKWid_target;
+
+lookup IkarKWid {
+    # The IkarKWid lookup, applied to the Kern feature, adds 110 units of width to the IkarKemphreng ligature when followed by a consonant with akar on it. This prevents the akar from overprinting the rightmost dot of the kemphreng. (The dot overhangs to the right slightly, which is OK unless the following character has akar on it).
+    pos [uni1921193A]' lookup IkarKWid_target @Cons uni1920;
+} IkarKWid;
+
+lookup Akar {
+    # The Akar positioning rule positions the Akar on all consonants.
+    pos base uni1901
+        <anchor 487 1050> mark @Aabove;
+    pos base uni1902
+        <anchor 622 1050> mark @Aabove;
+    pos base uni1903
+        <anchor 475 1050> mark @Aabove;
+    pos base uni1904
+        <anchor 460 1050> mark @Aabove;
+    pos base uni1905
+        <anchor 590 1050> mark @Aabove;
+    pos base uni1906
+        <anchor 519 1050> mark @Aabove;
+    pos base uni1907
+        <anchor 570 1050> mark @Aabove;
+    pos base uni1908
+        <anchor 564 1050> mark @Aabove;
+    pos base uni1909
+        <anchor 430 1050> mark @Aabove;
+    pos base uni190A
+        <anchor 575 1050> mark @Aabove;
+    pos base uni190B
+        <anchor 450 1050> mark @Aabove;
+    pos base uni190C
+        <anchor 556 1050> mark @Aabove;
+    pos base uni190D
+        <anchor 515 1050> mark @Aabove;
+    pos base uni190E
+        <anchor 510 1050> mark @Aabove;
+    pos base uni190F
+        <anchor 497 1050> mark @Aabove;
+    pos base uni1910
+        <anchor 657 1050> mark @Aabove;
+    pos base uni1911
+        <anchor 690 1050> mark @Aabove;
+    pos base uni1912
+        <anchor 538 1050> mark @Aabove;
+    pos base uni1913
+        <anchor 571 1050> mark @Aabove;
+    pos base uni1914
+        <anchor 538 1050> mark @Aabove;
+    pos base uni1915
+        <anchor 470 1050> mark @Aabove;
+    pos base uni1916
+        <anchor 503 1050> mark @Aabove;
+    pos base uni1917
+        <anchor 548 1050> mark @Aabove;
+    pos base uni1918
+        <anchor 511 1050> mark @Aabove;
+    pos base uni1919
+        <anchor 560 1050> mark @Aabove;
+    pos base uni191A
+        <anchor 420 1050> mark @Aabove;
+    pos base uni191B
+        <anchor 580 1050> mark @Aabove;
+    pos base uni191C
+        <anchor 540 1050> mark @Aabove;
+    pos base uni1940
+        <anchor 480 1050> mark @Aabove;
+} Akar;
+
+lookup Kemphreng {
+    # The Kemphreng positioning rule positions the Kemphreng on all consonants, including the vowel carrier.
+    pos base uni1901
+        <anchor 500 1050> mark @K;
+    pos base uni1902
+        <anchor 680 1050> mark @K;
+    pos base uni1903
+        <anchor 540 1050> mark @K;
+    pos base uni1904
+        <anchor 500 1050> mark @K;
+    pos base uni1905
+        <anchor 590 1050> mark @K;
+    pos base uni1906
+        <anchor 540 1050> mark @K;
+    pos base uni1907
+        <anchor 620 1050> mark @K;
+    pos base uni1908
+        <anchor 580 1050> mark @K;
+    pos base uni1909
+        <anchor 450 1050> mark @K;
+    pos base uni190A
+        <anchor 580 1050> mark @K;
+    pos base uni190B
+        <anchor 450 1050> mark @K;
+    pos base uni190C
+        <anchor 656 1050> mark @K;
+    pos base uni190D
+        <anchor 570 1050> mark @K;
+    pos base uni190E
+        <anchor 530 1050> mark @K;
+    pos base uni190F
+        <anchor 515 1050> mark @K;
+    pos base uni1910
+        <anchor 680 1050> mark @K;
+    pos base uni1911
+        <anchor 720 1050> mark @K;
+    pos base uni1912
+        <anchor 580 1050> mark @K;
+    pos base uni1913
+        <anchor 600 1050> mark @K;
+    pos base uni1914
+        <anchor 560 1050> mark @K;
+    pos base uni1915
+        <anchor 480 1050> mark @K;
+    pos base uni1916
+        <anchor 520 1050> mark @K;
+    pos base uni1917
+        <anchor 585 1050> mark @K;
+    pos base uni1918
+        <anchor 610 1050> mark @K;
+    pos base uni1919
+        <anchor 520 1050> mark @K;
+    pos base uni191A
+        <anchor 440 1050> mark @K;
+    pos base uni191B
+        <anchor 600 1050> mark @K;
+    pos base uni191C
+        <anchor 600 1050> mark @K;
+    pos base uni1940
+        <anchor 490 1050> mark @K;
+    pos base uni19011922
+        <anchor 500 1050> mark @K;
+    pos base uni19021922
+        <anchor 680 1050> mark @K;
+    pos base uni19031922
+        <anchor 540 1050> mark @K;
+    pos base uni19041922
+        <anchor 500 1050> mark @K;
+    pos base uni19051922
+        <anchor 590 1050> mark @K;
+    pos base uni19061922
+        <anchor 540 1050> mark @K;
+    pos base uni19071922
+        <anchor 620 1050> mark @K;
+    pos base uni19081922
+        <anchor 580 1050> mark @K;
+    pos base uni19091922
+        <anchor 450 1050> mark @K;
+    pos base uni190A1922
+        <anchor 580 1050> mark @K;
+    pos base uni190B1922
+        <anchor 450 1050> mark @K;
+    pos base uni190C1922
+        <anchor 656 1050> mark @K;
+    pos base uni190D1922
+        <anchor 570 1050> mark @K;
+    pos base uni190E1922
+        <anchor 530 1050> mark @K;
+    pos base uni190F1922
+        <anchor 515 1050> mark @K;
+    pos base uni19101922
+        <anchor 680 1050> mark @K;
+    pos base uni19111922
+        <anchor 720 1050> mark @K;
+    pos base uni19121922
+        <anchor 580 1050> mark @K;
+    pos base uni19131922
+        <anchor 600 1050> mark @K;
+    pos base uni19141922
+        <anchor 560 1050> mark @K;
+    pos base uni19151922
+        <anchor 480 1050> mark @K;
+    pos base uni19161922
+        <anchor 520 1050> mark @K;
+    pos base uni19171922
+        <anchor 585 1050> mark @K;
+    pos base uni19181922
+        <anchor 610 1050> mark @K;
+    pos base uni19191922
+        <anchor 520 1050> mark @K;
+    pos base uni191A1922
+        <anchor 440 1050> mark @K;
+    pos base uni191B1922
+        <anchor 600 1050> mark @K;
+    pos base uni191C1922
+        <anchor 600 1050> mark @K;
+    pos base uni19401922
+        <anchor 490 1050> mark @K;
+    pos base uni1901192A1922
+        <anchor 500 1050> mark @K;
+    pos base uni1902192A1922
+        <anchor 680 1050> mark @K;
+    pos base uni1903192A1922
+        <anchor 540 1050> mark @K;
+    pos base uni1904192A1922
+        <anchor 500 1050> mark @K;
+    pos base uni1905192A1922
+        <anchor 590 1050> mark @K;
+    pos base uni1906192A1922
+        <anchor 540 1050> mark @K;
+    pos base uni1907192A1922
+        <anchor 620 1050> mark @K;
+    pos base uni1908192A1922
+        <anchor 580 1050> mark @K;
+    pos base uni1909192A1922
+        <anchor 450 1050> mark @K;
+    pos base uni190A192A1922
+        <anchor 580 1050> mark @K;
+    pos base uni190B192A1922
+        <anchor 450 1050> mark @K;
+    pos base uni190C192A1922
+        <anchor 656 1050> mark @K;
+    pos base uni190D192A1922
+        <anchor 570 1050> mark @K;
+    pos base uni190192AE1922
+        <anchor 530 1050> mark @K;
+    pos base uni190F192A1922
+        <anchor 515 1050> mark @K;
+    pos base uni1910192A1922
+        <anchor 680 1050> mark @K;
+    pos base uni1911192A1922
+        <anchor 720 1050> mark @K;
+    pos base uni1912192A1922
+        <anchor 580 1050> mark @K;
+    pos base uni1913192A1922
+        <anchor 600 1050> mark @K;
+    pos base uni1914192A1922
+        <anchor 560 1050> mark @K;
+    pos base uni1915192A1922
+        <anchor 480 1050> mark @K;
+    pos base uni1916192A1922
+        <anchor 520 1050> mark @K;
+    pos base uni1917192A1922
+        <anchor 585 1050> mark @K;
+    pos base uni1918192A1922
+        <anchor 610 1050> mark @K;
+    pos base uni1919192A1922
+        <anchor 520 1050> mark @K;
+    pos base uni191A192A1922
+        <anchor 440 1050> mark @K;
+    pos base uni191B192A1922
+        <anchor 600 1050> mark @K;
+    pos base uni191C192A1922
+        <anchor 600 1050> mark @K;
+    pos base uni1940192A1922
+        <anchor 490 1050> mark @K;
+    pos base uni1900
+        <anchor 525 1050> mark @K;
+} Kemphreng;
+
+lookup EO {
+    # The IEO positioning rule positions ikar (including the ligature with kemphreng), e and o on all consonants plus the vowel carrier.
+    pos base uni1901
+        <anchor 755 1050> mark @eo;
+    pos base uni1902
+        <anchor 943 1050> mark @eo;
+    pos base uni1903
+        <anchor 790 1050> mark @eo;
+    pos base uni1904
+        <anchor 780 1050> mark @eo;
+    pos base uni1905
+        <anchor 790 1050> mark @eo;
+    pos base uni1906
+        <anchor 878 1050> mark @eo;
+    pos base uni1907
+        <anchor 825 1050> mark @eo;
+    pos base uni1908
+        <anchor 968 1050> mark @eo;
+    pos base uni1909
+        <anchor 660 1050> mark @eo;
+    pos base uni190A
+        <anchor 569 1050> mark @eo;
+    pos base uni190B
+        <anchor 690 1050> mark @eo;
+    pos base uni190C
+        <anchor 649 1050> mark @eo;
+    pos base uni190D
+        <anchor 682 1050> mark @eo;
+    pos base uni190E
+        <anchor 680 1050> mark @eo;
+    pos base uni190F
+        <anchor 778 1050> mark @eo;
+    pos base uni1910
+        <anchor 920 1050> mark @eo;
+    pos base uni1911
+        <anchor 894 1050> mark @eo;
+    pos base uni1912
+        <anchor 782 1050> mark @eo;
+    pos base uni1913
+        <anchor 982 1050> mark @eo;
+    pos base uni1914
+        <anchor 917 1050> mark @eo;
+    pos base uni1915
+        <anchor 730 1050> mark @eo;
+    pos base uni1916
+        <anchor 767 1050> mark @eo;
+    pos base uni1917
+        <anchor 937 1050> mark @eo;
+    pos base uni1918
+        <anchor 862 1050> mark @eo;
+    pos base uni1919
+        <anchor 670 1050> mark @eo;
+    pos base uni191A
+        <anchor 682 1050> mark @eo;
+    pos base uni191B
+        <anchor 921 1050> mark @eo;
+    pos base uni191C
+        <anchor 870 1050> mark @eo;
+    pos base uni1940
+        <anchor 650 1050> mark @eo;
+    pos base uni1900
+        <anchor 810 1050> mark @eo;
+} EO;
+
+lookup VKem {
+    lookupflag MarkAttachmentType @VowelsKem;
+    # The VKem positioning rule positions the kemphreng on all upper vowels (except ikar, which has its own ligature). The vowel itself is positioned on the consonant with the Akar or IEO positioning rule.
+    pos mark uni1920
+        <anchor -260 1250> mark @VK;
+    pos mark uni1927
+        <anchor -300 1250> mark @VK;
+    pos mark uni1928
+        <anchor -150 1455> mark @VK;
+} VKem;
+
+lookup GlideU {
+    # The GlideU positioning rule positions the ukar on the glides Ya and Wa. (There is already a ligature for each consonant with the Ra+Ukar combination).
+    pos base uni1929
+        <anchor -135 -40> mark @U;
+    pos base uni192B
+        <anchor -135 -40> mark @U;
+} GlideU;
+
+# Features
+feature ccmp {
+    script latn;
+    language dflt;
+    lookup EEAIDecomp;
+    lookup OoAuKComp;
+    lookup OoAuKDecomp;
+    lookup GlideVowelComp;
+    lookup GlideVowelDecomp;
+    script limb;
+    language dflt;
+    lookup EEAIDecomp;
+    lookup OoAuKComp;
+    lookup OoAuKDecomp;
+    lookup GlideVowelComp;
+    lookup GlideVowelDecomp;
+} ccmp;
+
+feature kern {
+    script latn;
+    language dflt;
+    lookup GlideIkar;
+    lookup IkarKWid;
+    script limb;
+    language dflt;
+    lookup GlideIkar;
+    lookup IkarKWid;
+} kern;
+
+feature mark {
+    script latn;
+    language dflt;
+    lookup Akar;
+    lookup Kemphreng;
+    lookup EO;
+    script limb;
+    language dflt;
+    lookup Akar;
+    lookup Kemphreng;
+    lookup EO;
+} mark;
+
+feature mkmk {
+    script latn;
+    language dflt;
+    lookup VKem;
+    lookup GlideU;
+    script limb;
+    language dflt;
+    lookup VKem;
+    lookup GlideU;
+} mkmk;
+
+feature liga {
+    script latn;
+    language dflt;
+    lookup RaUkar;
+    lookup Ukar;
+    lookup IkarK;
+    script limb;
+    language dflt;
+    lookup RaUkar;
+    lookup Ukar;
+    lookup IkarK;
+} liga;
+
+@GDEF_base = [glyph0 .null CR space exclam quotedbl numbersign dollar percent quotesingle parenleft parenright asterisk plus comma hyphen period slash zero one two three four five six seven eight nine colon semicolon less equal greater question at A B C D E F G H I J K L M N O P Q R S T U V W X Y Z bracketleft backslash bracketright asciicircum underscore grave a b c d e f g h i j k l m n o p q r s t u v w x y z braceleft bar braceright asciitilde uni0965 uni1900 uni19001922 uni1901 uni19011922 uni1901192A1922 uni1902 uni19021922 uni1902192A1922 uni1903 uni19031922 uni1903192A1922 uni1904 uni19041922 uni1904192A1922 uni1905 uni19051922 uni1905192A1922 uni1906 uni19061922 uni1906192A1922 uni1907 uni19071922 uni1907192A1922 uni1908 uni19081922 uni1908192A1922 uni1909 uni19091922 uni1909192A1922 uni190A uni190A1922 uni190A192A1922 uni190B uni190B1922 uni190B192A1922 uni190C uni190C1922 uni190C192A1922 uni190D uni190D1922 uni190D192A1922 uni190E uni190E1922 uni190192AE1922 uni190F uni190F1922 uni190F192A1922 uni1910 uni19101922 uni1910192A1922 uni1911 uni19111922 uni1911192A1922 uni1912 uni19121922 uni1912192A1922 uni1913 uni19131922 uni1913192A1922 uni1914 uni19141922 uni1914192A1922 uni1915 uni19151922 uni1915192A1922 uni1916 uni19161922 uni1916192A1922 uni1917 uni19171922 uni1917192A1922 uni1918 uni19181922 uni1918192A1922 uni1919 uni19191922 uni1919192A1922 uni191A uni191A1922 uni191A192A1922 uni191B uni191B1922 uni191B192A1922 uni191C uni191C1922 uni191C192A1922 uni1921 uni1923 uni1924 uni1929 uni192B uni1930 uni1931 uni1932 uni1933 uni1934 uni1935 uni1936 uni1937 uni1938 uni1939 uni1940 uni19401922 uni1940192A1922 uni1944 uni1945 uni1946 uni1947 uni1948 uni1949 uni194A uni194B uni194C uni194D uni194E uni194F quoteleft quoteright quotedblleft quotedblright uni1921193A ampersand uni2009 endash emdash uni202F uni1923193A uni1924193A uni19291920 uni19291922 uni19291927 uni19291928 uni1929193A uni19291920193A uni19291922193A uni19291927193A uni19291928193A uni192B1920 uni192B1922 uni192B1927 uni192B1928 uni192B193A uni192B1920193A uni192B1922193A uni192B1927193A uni192B1928193A uni25CC uni191E uni191E1922 uni191E192A1922 uni191D uni191D1922 uni191D192A1922];
+@GDEF_mark = [uni1920 uni1920.widC uni1920.widD uni1922 uni1922.altA uni1922.altB uni1922.altC uni1925 uni1926 uni1927 uni1928 uni192A uni193A uni193A.widC uni193B uni193B.widA uni193B.widB uni193B.widC uni192A1922];
+table GDEF {
+    GlyphClassDef @GDEF_base, , @GDEF_mark, ;
+} GDEF;

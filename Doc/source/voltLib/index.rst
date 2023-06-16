@@ -1,6 +1,11 @@
-#######
-voltLib
-#######
+####################################
+voltLib: Read/write MS VOLT projects
+####################################
+
+.. toctree::
+   :maxdepth: 2
+
+   voltToFea
 
 .. automodule:: fontTools.voltLib
 

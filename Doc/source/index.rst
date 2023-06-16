@@ -56,6 +56,7 @@ This last utility takes a subcommand, which could be one of:
 - ``varLib.models``: Normalize locations on a given designspace
 - ``varLib.mutator``: Instantiate a variation font
 - ``varLib.varStore``: Optimize a font's GDEF variation store
+- ``voltLib.voltToFea``: Convert MS VOLT to AFDKO feature files.
 
 Libraries
 ---------
@@ -141,7 +142,7 @@ Table of Contents
    unicode
    unicodedata/index
    varLib/index
-   voltLib
+   voltLib/index
 
 
 .. |Travis Build Status| image:: https://travis-ci.org/fonttools/fonttools.svg
