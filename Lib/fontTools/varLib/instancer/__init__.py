@@ -240,6 +240,8 @@ class NormalizedAxisTriple(AxisTriple):
     minimum: float
     default: float
     maximum: float
+    distanceNegative: float
+    distancePositive: float
 
     def __post_init__(self):
         if self.default is None:
@@ -334,8 +336,13 @@ class AxisLimits(_BaseAxisLimits):
         normalizedLimits = {}
 
         for axis_tag, triple in axes.items():
+            distanceNegative = triple[1] - triple[0]
+            distancePositive = triple[2] - triple[1]
+
             if self[axis_tag] is None:
-                normalizedLimits[axis_tag] = NormalizedAxisTriple(0, 0, 0)
+                normalizedLimits[axis_tag] = NormalizedAxisTriple(
+                    0, 0, 0, distanceNegative, distancePositive
+                )
                 continue
 
             minV, defaultV, maxV = self[axis_tag]
@@ -345,7 +352,9 @@ class AxisLimits(_BaseAxisLimits):
 
             avarMapping = avarSegments.get(axis_tag, None)
             normalizedLimits[axis_tag] = NormalizedAxisTriple(
-                *(normalize(v, triple, avarMapping) for v in (minV, defaultV, maxV))
+                *(normalize(v, triple, avarMapping) for v in (minV, defaultV, maxV)),
+                distanceNegative,
+                distancePositive,
             )
 
         return NormalizedAxisLimits(normalizedLimits)
@@ -505,7 +514,7 @@ def _instantiateGvarGlyph(
                         "Instancing accross VarComposite axes with variation is not supported."
                     )
                 limits = axisLimits[tag]
-                loc = normalizeValue(loc, limits)
+                loc = solver.normalizeValue(loc, limits)
                 newLocation[tag] = loc
             component.location = newLocation
 
@@ -927,13 +936,21 @@ def instantiateAvar(varfont, axisLimits):
             )
             newMapping = {}
             for fromCoord, toCoord in mapping.items():
-
                 if fromCoord < axisRange.minimum or fromCoord > axisRange.maximum:
                     continue
-                fromCoord = normalizeValue(fromCoord, axisRange)
+                fromCoord = solver.normalizeValue(fromCoord, axisRange)
 
                 assert mappedMin <= toCoord <= mappedMax
-                toCoord = normalizeValue(toCoord, (mappedMin, mappedDef, mappedMax))
+                toCoord = solver.normalizeValue(
+                    toCoord,
+                    (
+                        mappedMin,
+                        mappedDef,
+                        mappedMax,
+                        axisRange.distanceNegative,
+                        axisRange.distancePositive,
+                    ),
+                )
 
                 fromCoord = floatToFixedToFloat(fromCoord, 14)
                 toCoord = floatToFixedToFloat(toCoord, 14)

@@ -41,7 +41,7 @@ def _limitFeatureVariationConditionRange(condition, axisLimit):
         # condition invalid or out of range
         return
 
-    return tuple(normalizeValue(v, axisLimit) for v in (minValue, maxValue))
+    return tuple(normalizeValue(v, tuple(axisLimit)[:3]) for v in (minValue, maxValue))
 
 
 def _instantiateFeatureVariationRecord(
@@ -52,7 +52,7 @@ def _instantiateFeatureVariationRecord(
     newConditions = []
     from fontTools.varLib.instancer import NormalizedAxisTriple
 
-    default_triple = NormalizedAxisTriple(-1, 0, +1)
+    default_triple = NormalizedAxisTriple(-1, 0, +1, 0, 0)
     for i, condition in enumerate(record.ConditionSet.ConditionTable):
         if condition.Format == 1:
             axisIdx = condition.AxisIndex
