@@ -147,7 +147,7 @@ def _solve(tent, axisLimit, negative=False):
 
             # Eternity justify.
             loc2 = (upper, axisMax, axisMax)
-            scalar2 = outGain
+            scalar2 = 0
 
             out.append((scalar1 - gain, loc1))
             out.append((scalar2 - gain, loc2))
