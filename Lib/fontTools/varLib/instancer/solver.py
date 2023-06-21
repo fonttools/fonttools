@@ -100,7 +100,7 @@ def _solve(tent, axisLimit, negative=False):
     if gain > outGain:
 
         # Crossing point on the axis.
-        crossing = peak + ((1 - gain) * (upper - peak) / (1 - outGain))
+        crossing = peak + (1 - gain) * (upper - peak)
 
         loc = (axisDef, peak, crossing)
         scalar = 1
