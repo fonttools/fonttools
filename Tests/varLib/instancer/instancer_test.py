@@ -1950,7 +1950,7 @@ class LimitTupleVariationAxisRangesTest:
         ],
     )
     def test_positive_var(self, var, axisTag, newMax, expected):
-        axisRange = instancer.NormalizedAxisTriple(0, 0, newMax)
+        axisRange = instancer.NormalizedAxisTripleAndDistances(0, 0, newMax, 1, 1)
         self.check_limit_single_var_axis_range(var, axisTag, axisRange, expected)
 
     @pytest.mark.parametrize(
@@ -2029,7 +2029,7 @@ class LimitTupleVariationAxisRangesTest:
         ],
     )
     def test_negative_var(self, var, axisTag, newMin, expected):
-        axisRange = instancer.NormalizedAxisTriple(newMin, 0, 0)
+        axisRange = instancer.NormalizedAxisTripleAndDistances(newMin, 0, 0, 1, 1)
         self.check_limit_single_var_axis_range(var, axisTag, axisRange, expected)
 
 
@@ -2052,7 +2052,7 @@ def test_limitFeatureVariationConditionRange(oldRange, newLimit, expected):
     condition = featureVars.buildConditionTable(0, *oldRange)
 
     result = instancer.featureVars._limitFeatureVariationConditionRange(
-        condition, instancer.NormalizedAxisTriple(*newLimit)
+        condition, instancer.NormalizedAxisTripleAndDistances(*newLimit, 1, 1)
     )
 
     assert result == expected
@@ -2094,9 +2094,9 @@ def test_parseLimits_invalid(limits):
 @pytest.mark.parametrize(
     "limits, expected",
     [
-        ({"wght": (100, 400)}, {"wght": (-1.0, 0, 0)}),
-        ({"wght": (100, 400, 400)}, {"wght": (-1.0, 0, 0)}),
-        ({"wght": (100, 300, 400)}, {"wght": (-1.0, -0.5, 0)}),
+        ({"wght": (100, 400)}, {"wght": (-1.0, 0, 0, 300, 500)}),
+        ({"wght": (100, 400, 400)}, {"wght": (-1.0, 0, 0, 300, 500)}),
+        ({"wght": (100, 300, 400)}, {"wght": (-1.0, -0.5, 0, 300, 500)}),
     ],
 )
 def test_normalizeAxisLimits(varfont, limits, expected):
@@ -2113,7 +2113,7 @@ def test_normalizeAxisLimits_no_avar(varfont):
     limits = instancer.AxisLimits(wght=(400, 400, 500))
     normalized = limits.normalize(varfont)
 
-    assert normalized["wght"] == pytest.approx((0, 0, 0.2), 1e-4)
+    assert normalized["wght"] == pytest.approx((0, 0, 0.2, 300, 500), 1e-4)
 
 
 def test_normalizeAxisLimits_missing_from_fvar(varfont):

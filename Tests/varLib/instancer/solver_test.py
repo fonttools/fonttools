@@ -1,4 +1,5 @@
 from fontTools.varLib.instancer import solver
+from fontTools.varLib.instancer import NormalizedAxisTripleAndDistances
 import pytest
 
 
@@ -264,6 +265,8 @@ class RebaseTentTest(object):
         ],
     )
     def test_rebaseTent(self, tent, axisRange, expected):
+        axisRange = NormalizedAxisTripleAndDistances(*axisRange)
+
         sol = solver.rebaseTent(tent, axisRange)
 
         a = pytest.approx

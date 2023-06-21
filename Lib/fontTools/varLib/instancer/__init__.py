@@ -204,8 +204,8 @@ class AxisTriple(Sequence):
         default = None
         if n == 2:
             minimum, maximum = v
-        elif n == 3:
-            minimum, default, maximum = v
+        elif n >= 3:
+            return cls(*v)
         else:
             raise ValueError(f"expected sequence of 2 or 3; got {n}: {v!r}")
         return cls(minimum, default, maximum)
@@ -234,14 +234,14 @@ class AxisTriple(Sequence):
 
 
 @dataclasses.dataclass(frozen=True, order=True, repr=False)
-class NormalizedAxisTriple(AxisTriple):
+class NormalizedAxisTripleAndDistances(AxisTriple):
     """A triple of (min, default, max) normalized axis values."""
 
     minimum: float
     default: float
     maximum: float
-    distanceNegative: float
-    distancePositive: float
+    distanceNegative: Optional[float] = 1
+    distancePositive: Optional[float] = 1
 
     def __post_init__(self):
         if self.default is None:
@@ -256,15 +256,18 @@ class NormalizedAxisTriple(AxisTriple):
         v = self
         return self.__class__(-v[2], -v[1], -v[0], v[4], v[3])
 
-    def normalizeValue(self, v):
+    def normalizeValue(self, v, extrapolate=True):
         lower, default, upper, distanceNegative, distancePositive = self
         assert lower <= default <= upper
+
+        if not extrapolate:
+            v = max(lower, min(upper, v))
 
         if v == default:
             return 0
 
         if default < 0:
-            return -self.reverse_negate().normalizeValue(-v)
+            return -self.reverse_negate().normalizeValue(-v, extrapolate=extrapolate)
 
         # default >= 0 and v != default
 
@@ -284,6 +287,12 @@ class NormalizedAxisTriple(AxisTriple):
             vDistance = (default - v) * distancePositive
         else:
             vDistance = -v * distanceNegative + distancePositive * default
+
+        if totalDistance == 0:
+            # This happens
+            if default == 0:
+                return -v / lower
+            return 0  # Shouldn't happen
 
         return -vDistance / totalDistance
 
@@ -375,7 +384,7 @@ class AxisLimits(_BaseAxisLimits):
             distancePositive = triple[2] - triple[1]
 
             if self[axis_tag] is None:
-                normalizedLimits[axis_tag] = NormalizedAxisTriple(
+                normalizedLimits[axis_tag] = NormalizedAxisTripleAndDistances(
                     0, 0, 0, distanceNegative, distancePositive
                 )
                 continue
@@ -386,7 +395,7 @@ class AxisLimits(_BaseAxisLimits):
                 defaultV = triple[1]
 
             avarMapping = avarSegments.get(axis_tag, None)
-            normalizedLimits[axis_tag] = NormalizedAxisTriple(
+            normalizedLimits[axis_tag] = NormalizedAxisTripleAndDistances(
                 *(normalize(v, triple, avarMapping) for v in (minV, defaultV, maxV)),
                 distanceNegative,
                 distancePositive,
@@ -402,7 +411,7 @@ class NormalizedAxisLimits(_BaseAxisLimits):
         self._data = data = {}
         for k, v in dict(*args, **kwargs).items():
             try:
-                triple = NormalizedAxisTriple.expand(v)
+                triple = NormalizedAxisTripleAndDistances.expand(v)
             except ValueError as e:
                 raise ValueError(f"Invalid axis limits for {k!r}: {v!r}") from e
             data[k] = triple
@@ -486,7 +495,7 @@ def changeTupleVariationsAxisLimits(variations, axisLimits):
 
 
 def changeTupleVariationAxisLimit(var, axisTag, axisLimit):
-    assert isinstance(axisLimit, NormalizedAxisTriple)
+    assert isinstance(axisLimit, NormalizedAxisTripleAndDistances)
 
     # Skip when current axis is missing (i.e. doesn't participate),
     lower, peak, upper = var.axes.get(axisTag, (-1, 0, 1))
@@ -549,7 +558,7 @@ def _instantiateGvarGlyph(
                         "Instancing accross VarComposite axes with variation is not supported."
                     )
                 limits = axisLimits[tag]
-                loc = limits.normalizeValue(loc)
+                loc = limits.normalizeValue(loc, extrapolate=False)
                 newLocation[tag] = loc
             component.location = newLocation
 
@@ -969,7 +978,7 @@ def instantiateAvar(varfont, axisLimits):
             mappedMax = floatToFixedToFloat(
                 piecewiseLinearMap(axisRange.maximum, mapping), 14
             )
-            mappedAxisLimit = NormalizedAxisTriple(
+            mappedAxisLimit = NormalizedAxisTripleAndDistances(
                 mappedMin,
                 mappedDef,
                 mappedMax,
