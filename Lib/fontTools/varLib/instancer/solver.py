@@ -11,10 +11,6 @@ def _reverse_negate(v):
     return (-v[2], -v[1], -v[0])
 
 
-def _reverse_negate_axisLimit(v):
-    return (-v[2], -v[1], -v[0], v[4], v[3])
-
-
 def _solve(tent, axisLimit, negative=False):
     axisMin, axisDef, axisMax, distanceNegative, distancePositive = axisLimit
     lower, peak, upper = tent
@@ -25,7 +21,7 @@ def _solve(tent, axisLimit, negative=False):
             (scalar, _reverse_negate(t) if t is not None else None)
             for scalar, t in _solve(
                 _reverse_negate(tent),
-                _reverse_negate_axisLimit(axisLimit),
+                axisLimit.reverse_negate(),
                 not negative,
             )
         ]
@@ -286,39 +282,6 @@ def _solve(tent, axisLimit, negative=False):
 
 
 @lru_cache(128)
-def normalizeValue(v, axisLimit):
-    lower, default, upper, distanceNegative, distancePositive = axisLimit
-    assert lower <= default <= upper
-
-    if v == default:
-        return 0
-
-    if default < 0:
-        return -normalizeValue(-v, _reverse_negate_axisLimit(axisLimit))
-
-    # default >= 0 and v != default
-
-    if v > default:
-        return (v - default) / (upper - default)
-
-    # v < default
-
-    if lower >= 0:
-        return (v - default) / (default - lower)
-
-    # lower < 0 and v < default
-
-    totalDistance = distanceNegative * -lower + distancePositive * default
-
-    if v >= 0:
-        vDistance = (default - v) * distancePositive
-    else:
-        vDistance = -v * distanceNegative + distancePositive * default
-
-    return -vDistance / totalDistance
-
-
-@lru_cache(128)
 def rebaseTent(tent, axisLimit):
     """Given a tuple (lower,peak,upper) "tent" and new axis limits
     (axisMin,axisDefault,axisMax), solves how to represent the tent
@@ -341,7 +304,7 @@ def rebaseTent(tent, axisLimit):
 
     sols = _solve(tent, axisLimit)
 
-    n = lambda v: normalizeValue(v, axisLimit)
+    n = lambda v: axisLimit.normalizeValue(v)
     sols = [
         (scalar, (n(v[0]), n(v[1]), n(v[2])) if v is not None else None)
         for scalar, v in sols

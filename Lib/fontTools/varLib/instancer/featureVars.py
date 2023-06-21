@@ -41,7 +41,7 @@ def _limitFeatureVariationConditionRange(condition, axisLimit):
         # condition invalid or out of range
         return
 
-    return tuple(normalizeValue(v, tuple(axisLimit)[:3]) for v in (minValue, maxValue))
+    return tuple(axisLimit.normalizeValue(v) for v in (minValue, maxValue))
 
 
 def _instantiateFeatureVariationRecord(
