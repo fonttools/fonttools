@@ -116,7 +116,7 @@ def _solve(tent, axisLimit, negative=False):
         # the drawing above.
         if upper >= axisMax:
             loc = (crossing, axisMax, axisMax)
-            scalar = supportScalar({"tag": axisMax}, {"tag": tent})
+            scalar = outGain
 
             out.append((scalar - gain, loc))
 
@@ -147,7 +147,7 @@ def _solve(tent, axisLimit, negative=False):
 
             # Eternity justify.
             loc2 = (upper, axisMax, axisMax)
-            scalar2 = supportScalar({"tag": axisMax}, {"tag": tent})
+            scalar2 = outGain
 
             out.append((scalar1 - gain, loc1))
             out.append((scalar2 - gain, loc2))
@@ -202,8 +202,8 @@ def _solve(tent, axisLimit, negative=False):
     # cannot be represented as a triangle itself.
     #
     #            |   peak |
-    #  1.........|......o.|...................
-    #            |     /x\|
+    #  1.........|......o.|....................
+    #  ..........|...../x\|.............outGain
     #            |    |xxy|\_
     #            |   /xxxy|  \_
     #            |  |xxxxy|    \_
@@ -219,7 +219,7 @@ def _solve(tent, axisLimit, negative=False):
         scalar1 = 1
 
         loc2 = (peak, axisMax, axisMax)
-        scalar2 = supportScalar({"tag": axisMax}, {"tag": tent})
+        scalar2 = outGain
 
         out.append((scalar1 - gain, loc1))
         # Don't add a dirac delta!
