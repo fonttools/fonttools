@@ -158,26 +158,25 @@ def _solve(tent, axisLimit, negative=False):
         if axisMax == peak:
             upper = peak
 
-        # Case pre3:
-        # we keep deltas as is and only scale the axis upper to achieve
+        # Case 3:
+        # We keep delta as is and only scale the axis upper to achieve
         # the desired new tent if feasible.
         #
-        #            |           peak |
-        #  1.........|............o...|..................
-        #            |           /x\  |
-        #            |          /xxx\ |
-        #            |         /xxxxx\|
-        #            |        /xxxxxxx+
-        #            |       /xxxxxxxx|\
-        #  0---|-----|------oxxxxxxxxx|xo---------------1
-        #    axisMin |  lower         | upper
-        #            |                |
-        #          axisDef          axisMax
+        #                        peak
+        #  1.....................o....................
+        #                       / \_|
+        #  ..................../....+_.........outGain
+        #                     /     | \
+        #  gain..............+......|..+_.............
+        #                   /|      |  | \
+        #  0---|-----------o |      |  |  o----------1
+        #    axisMin    lower|      |  |   upper
+        #                    |      |  newUpper
+        #              axisDef      axisMax
         #
         newUpper = peak + (1 - gain) * (upper - peak)
-        # I feel like the first condition is always true because
-        # outGain >= gain.
-        if axisMax <= newUpper and newUpper <= axisDef + (axisMax - axisDef) * 2:
+        assert axisMax <= newUpper  # Because outGain >= gain
+        if newUpper <= axisDef + (axisMax - axisDef) * 2:
             upper = newUpper
             if not negative and axisDef + (axisMax - axisDef) * MAX_F2DOT14 < upper:
                 # we clamp +2.0 to the max F2Dot14 (~1.99994) for convenience
@@ -188,43 +187,6 @@ def _solve(tent, axisLimit, negative=False):
             scalar = 1
 
             out.append((scalar - gain, loc))
-
-        # Case 3: Outermost limit still fits within F2Dot14 bounds;
-        # We keep axis bound as is. Deltas beyond -1.0 or +1.0 will never be
-        # applied as implementations must clamp to that range.
-        #
-        # A second tent is needed for cases when gain is positive, though we add it
-        # unconditionally and it will be dropped because scalar ends up 0.
-        #
-        #            |           peak |
-        #  1.........|............o...|..................
-        #            |           /x\  |
-        #            |          /xxx\ |
-        #            |         /xxxxx\|
-        #            |        /xxxxxxx+
-        #            |       /xxxxxxxx|\
-        #  0---|-----|------oxxxxxxxxx|xo---------------1
-        #    axisMin |  lower         | upper
-        #            |                |
-        #          axisDef          axisMax
-        #
-        elif axisDef + (axisMax - axisDef) * 2 >= upper:
-            if not negative and axisDef + (axisMax - axisDef) * MAX_F2DOT14 < upper:
-                # we clamp +2.0 to the max F2Dot14 (~1.99994) for convenience
-                upper = axisDef + (axisMax - axisDef) * MAX_F2DOT14
-                assert peak < upper
-
-            loc1 = (max(axisDef, lower), peak, upper)
-            scalar1 = 1
-
-            loc2 = (peak, upper, upper)
-            scalar2 = 0
-
-            # Don't add a dirac delta!
-            if axisDef < upper:
-                out.append((scalar1 - gain, loc1))
-            if peak < upper:
-                out.append((scalar2 - gain, loc2))
 
         # Case 4: New limit doesn't fit; we need to chop into two tents,
         # because the shape of a triangle with part of one side cut off
