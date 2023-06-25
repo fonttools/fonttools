@@ -716,7 +716,8 @@ class FontBuilder(object):
         from .varLib import _add_avar
 
         if "fvar" not in self.font:
-            raise KeyError("'fvar' table is missing; can't add FeatureVariations.")
+            raise KeyError("'fvar' table is missing; can't add 'avar'.")
+
         axisTags = [axis.axisTag for axis in self.font["fvar"].axes]
         axes = OrderedDict(enumerate(axes))  # Only values are used
         _add_avar(self.font, axes, mappings, axisTags)
