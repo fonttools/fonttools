@@ -1,5 +1,6 @@
 import os
 import pytest
+from fontTools.designspaceLib import AxisDescriptor
 from fontTools.ttLib import TTFont
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.pens.t2CharStringPen import T2CharStringPen
@@ -44,14 +45,20 @@ def _setupFontBuilder(isTTF, unitsPerEm=1024):
 def _setupFontBuilderFvar(fb):
     assert "name" in fb.font, "Must run setupNameTable() first."
 
-    axes = [
-        ("TEST", 0, 0, 100, "Test Axis"),
-    ]
+    testAxis = AxisDescriptor()
+    testAxis.name = "Test Axis"
+    testAxis.tag = "TEST"
+    testAxis.minimum = 0
+    testAxis.default = 0
+    testAxis.maximum = 100
+    testAxis.map = [(0, 0), (40, 60), (100, 100)]
+    axes = [testAxis]
     instances = [
         dict(location=dict(TEST=0), stylename="TotallyNormal"),
         dict(location=dict(TEST=100), stylename="TotallyTested"),
     ]
     fb.setupFvar(axes, instances)
+    fb.setupAvar(axes)
 
     return fb
 
