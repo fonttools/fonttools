@@ -13,6 +13,6 @@ ufoLib2==0.15.0
 ufo2ft==2.32.0
 pyobjc==9.2; sys_platform == "darwin"
 freetype-py==2.4.0
-uharfbuzz==0.32.0
+uharfbuzz==0.37.0
 glyphsLib==6.2.1 # this is only required to run Tests/varLib/interpolatable_test.py
 lxml==4.9.2
