@@ -971,6 +971,8 @@ def addFvar(font, axes, instances):
                 axis_def.maximum,
                 axis_def.name,
             )
+            if axis_def.hidden:
+                axis.flags = 0x0001  # HIDDEN_AXIS
 
         if isinstance(name, str):
             name = dict(en=name)
