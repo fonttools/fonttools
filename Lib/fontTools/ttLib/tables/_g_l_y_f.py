@@ -415,7 +415,6 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
             controls = []
 
             for component in glyph.components:
-
                 (
                     componentCoords,
                     componentControls,
@@ -1445,7 +1444,10 @@ class Glyph(object):
                         p1 = contour[i]
                         p2 = contour[i + 1]
                         p4 = contour[i + 2 if i + 2 < count else 0]
-                        p3 = (maybeInt((p2[0] + p4[0]) * 0.5), maybeInt((p2[1] + p4[1]) * 0.5))
+                        p3 = (
+                            maybeInt((p2[0] + p4[0]) * 0.5),
+                            maybeInt((p2[1] + p4[1]) * 0.5),
+                        )
                         pen.curveTo(p1, p2, p3)
                 else:
                     # There is not a single on-curve point on the curve,
@@ -1489,7 +1491,10 @@ class Glyph(object):
                                 p1 = contour[i]
                                 p2 = contour[i + 1]
                                 p4 = contour[i + 2]
-                                p3 = (maybeInt((p2[0] + p4[0]) * 0.5), maybeInt((p2[1] + p4[1]) * 0.5))
+                                p3 = (
+                                    maybeInt((p2[0] + p4[0]) * 0.5),
+                                    maybeInt((p2[1] + p4[1]) * 0.5),
+                                )
                                 lastOnCurve = p3
                                 pen.curveTo(p1, p2, p3)
                             pen.curveTo(*contour[count - 3 : count])
@@ -1930,7 +1935,6 @@ VAR_COMPONENT_TRANSFORM_MAPPING = {
 
 
 class GlyphVarComponent(object):
-
     MIN_SIZE = 5
 
     def __init__(self):
@@ -2166,7 +2170,6 @@ class GlyphVarComponent(object):
         return count
 
     def getCoordinatesAndControls(self):
-
         coords = []
         controls = []
 

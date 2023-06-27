@@ -774,7 +774,6 @@ class GlyphCubicTest:
         glyph.program = ttProgram.Program()
 
         for i in range(2):
-
             if i == 1:
                 glyph.compile(None)
 
@@ -801,7 +800,6 @@ class GlyphCubicTest:
         glyph.program = ttProgram.Program()
 
         for i in range(2):
-
             if i == 1:
                 glyph.compile(None)
 
