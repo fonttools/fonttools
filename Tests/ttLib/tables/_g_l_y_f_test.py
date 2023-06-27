@@ -782,6 +782,7 @@ class GlyphCubicTest:
             glyph.draw(pen, None)
 
             assert pen.value == [
+                ("moveTo", ((0, 0),)),
                 ("curveTo", ((0, 0), (1, 0), (1, 0))),
                 ("curveTo", ((1, 0), (1, 1), (1, 1))),
                 ("curveTo", ((1, 1), (0, 1), (0, 1))),

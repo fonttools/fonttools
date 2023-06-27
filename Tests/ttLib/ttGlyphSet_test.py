@@ -574,6 +574,7 @@ class TTGlyphSetTest(object):
         pen = RecordingPen()
         glyphset["glyph00004"].draw(pen)
         assert pen.value == [
+            ("moveTo", ((75.5, 181),)),
             ("curveTo", ((103, 181), (125, 158), (125, 131))),
             ("curveTo", ((125, 104), (103, 82), (75.5, 82))),
             ("curveTo", ((48, 82), (26, 104), (26, 131))),
