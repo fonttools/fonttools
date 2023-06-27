@@ -1528,9 +1528,15 @@ class Glyph(object):
             start = end
             pen.beginPath()
             # Start with the appropriate segment type based on the final segment
-            segmentType = "line" if cFlags[-1] == 1 else "qcurve"
+
+            if cFlags[-1] & flagOnCurve:
+                segmentType = "line"
+            elif cFlags[-1] & flagCubic:
+                segmentType = "curve"
+            else:
+                segmentType = "qcurve"
             for i, pt in enumerate(contour):
-                if cFlags[i] & flagOnCurve == 1:
+                if cFlags[i] & flagOnCurve:
                     pen.addPoint(pt, segmentType=segmentType)
                     segmentType = "line"
                 else:
