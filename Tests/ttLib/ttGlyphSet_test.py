@@ -563,13 +563,67 @@ class TTGlyphSetTest(object):
         glyphset["one"].draw(pen)
         assert pen.value == expected
 
+        expectedPoints = [
+            ("beginPath", (), {}),
+            ("addPoint", ((76, 181), "curve", False, None), {}),
+            ("addPoint", ((103, 181), None, False, None), {}),
+            ("addPoint", ((125, 158), None, False, None), {}),
+            ("addPoint", ((125, 104), None, False, None), {}),
+            ("addPoint", ((103, 82), None, False, None), {}),
+            ("addPoint", ((76, 82), "curve", False, None), {}),
+            ("addPoint", ((48, 82), None, False, None), {}),
+            ("addPoint", ((26, 104), None, False, None), {}),
+            ("addPoint", ((26, 158), None, False, None), {}),
+            ("addPoint", ((48, 181), None, False, None), {}),
+            ("endPath", (), {}),
+        ]
+        pen = RecordingPointPen()
+        glyphset["one"].drawPoints(pen)
+        assert pen.value == expectedPoints
+
         pen = RecordingPen()
         glyphset["two"].draw(pen)
         assert pen.value == expected
 
+        expectedPoints = [
+            ("beginPath", (), {}),
+            ("addPoint", ((26, 158), None, False, None), {}),
+            ("addPoint", ((48, 181), None, False, None), {}),
+            ("addPoint", ((76, 181), "curve", False, None), {}),
+            ("addPoint", ((103, 181), None, False, None), {}),
+            ("addPoint", ((125, 158), None, False, None), {}),
+            ("addPoint", ((125, 104), None, False, None), {}),
+            ("addPoint", ((103, 82), None, False, None), {}),
+            ("addPoint", ((76, 82), "curve", False, None), {}),
+            ("addPoint", ((48, 82), None, False, None), {}),
+            ("addPoint", ((26, 104), None, False, None), {}),
+            ("endPath", (), {}),
+        ]
+        pen = RecordingPointPen()
+        glyphset["two"].drawPoints(pen)
+        assert pen.value == expectedPoints
+
         pen = RecordingPen()
         glyphset["three"].draw(pen)
         assert pen.value == expected
+
+        expectedPoints = [
+            ("beginPath", (), {}),
+            ("addPoint", ((48, 82), None, False, None), {}),
+            ("addPoint", ((26, 104), None, False, None), {}),
+            ("addPoint", ((26, 158), None, False, None), {}),
+            ("addPoint", ((48, 181), None, False, None), {}),
+            ("addPoint", ((76, 181), "curve", False, None), {}),
+            ("addPoint", ((103, 181), None, False, None), {}),
+            ("addPoint", ((125, 158), None, False, None), {}),
+            ("addPoint", ((125, 104), None, False, None), {}),
+            ("addPoint", ((103, 82), None, False, None), {}),
+            ("addPoint", ((76, 82), "curve", False, None), {}),
+            ("endPath", (), {}),
+        ]
+        pen = RecordingPointPen()
+        glyphset["three"].drawPoints(pen)
+        assert pen.value == expectedPoints
 
         pen = RecordingPen()
         glyphset["four"].draw(pen)
@@ -581,3 +635,21 @@ class TTGlyphSetTest(object):
             ("curveTo", ((26, 158), (48, 181), (75.5, 181))),
             ("closePath", ()),
         ]
+
+        # Ouch! We can't represent all-cubic-offcurves in pointPen!
+        expectedPoints = [
+            ("beginPath", (), {}),
+            ("addPoint", ((103, 181), None, False, None), {}),
+            ("addPoint", ((125, 158), None, False, None), {}),
+            ("addPoint", ((125, 104), None, False, None), {}),
+            ("addPoint", ((103, 82), None, False, None), {}),
+            ("addPoint", ((48, 82), None, False, None), {}),
+            ("addPoint", ((26, 104), None, False, None), {}),
+            ("addPoint", ((26, 158), None, False, None), {}),
+            ("addPoint", ((48, 181), None, False, None), {}),
+            ("endPath", (), {}),
+        ]
+        pen = RecordingPointPen()
+        glyphset["four"].drawPoints(pen)
+        print(pen.value)
+        assert pen.value == expectedPoints
