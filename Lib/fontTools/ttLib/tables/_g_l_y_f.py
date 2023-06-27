@@ -1424,6 +1424,7 @@ class Glyph(object):
             coordinates = coordinates.copy()
             coordinates.translate((offset, 0))
         start = 0
+        maybeInt = lambda v: int(v) if v == int(v) else v
         for end in endPts:
             end = end + 1
             contour = coordinates[start:end]
@@ -1438,13 +1439,13 @@ class Glyph(object):
                     assert count % 2 == 0, "Odd number of cubic off-curves undefined"
                     l = contour[-1]
                     f = contour[0]
-                    p0 = ((l[0] + f[0]) * 0.5, (l[1] + f[1]) * 0.5)
+                    p0 = (maybeInt((l[0] + f[0]) * 0.5), maybeInt((l[1] + f[1]) * 0.5))
                     pen.moveTo(p0)
                     for i in range(0, count, 2):
                         p1 = contour[i]
                         p2 = contour[i + 1]
                         p4 = contour[i + 2 if i + 2 < count else 0]
-                        p3 = ((p2[0] + p4[0]) * 0.5, (p2[1] + p4[1]) * 0.5)
+                        p3 = (maybeInt((p2[0] + p4[0]) * 0.5), maybeInt((p2[1] + p4[1]) * 0.5))
                         pen.curveTo(p1, p2, p3)
                 else:
                     # There is not a single on-curve point on the curve,
@@ -1488,7 +1489,7 @@ class Glyph(object):
                                 p1 = contour[i]
                                 p2 = contour[i + 1]
                                 p4 = contour[i + 2]
-                                p3 = ((p2[0] + p4[0]) * 0.5, (p2[1] + p4[1]) * 0.5)
+                                p3 = (maybeInt((p2[0] + p4[0]) * 0.5), maybeInt((p2[1] + p4[1]) * 0.5))
                                 lastOnCurve = p3
                                 pen.curveTo(p1, p2, p3)
                             pen.curveTo(*contour[count - 3 : count])
