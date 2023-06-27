@@ -1436,6 +1436,10 @@ class Glyph(object):
                 if cubic:
                     count = len(contour)
                     assert count % 2 == 0, "Odd number of cubic off-curves undefined"
+                    l = contour[-1]
+                    f = contour[0]
+                    p0 = ((l[0] + f[0]) * 0.5, (l[1] + f[1]) * 0.5)
+                    pen.moveTo(p0)
                     for i in range(0, count, 2):
                         p1 = contour[i]
                         p2 = contour[i + 1]
