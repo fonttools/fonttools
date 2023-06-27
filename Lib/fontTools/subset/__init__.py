@@ -15,6 +15,7 @@ from fontTools.subset.util import _add_method, _uniq_sort
 from fontTools.subset.cff import *
 from fontTools.subset.svg import *
 from fontTools.varLib import varStore  # for subset_varidxes
+from fontTools.ttLib.tables._n_a_m_e import NameRecordVisitor
 import sys
 import struct
 import array
@@ -2916,31 +2917,9 @@ def prune_pre_subset(self, font, options):
 
 @_add_method(ttLib.getTableClass("name"))
 def prune_pre_subset(self, font, options):
-    nameIDs = set(options.name_IDs)
-    fvar = font.get("fvar")
-    if fvar:
-        nameIDs.update([axis.axisNameID for axis in fvar.axes])
-        nameIDs.update([inst.subfamilyNameID for inst in fvar.instances])
-        nameIDs.update(
-            [
-                inst.postscriptNameID
-                for inst in fvar.instances
-                if inst.postscriptNameID != 0xFFFF
-            ]
-        )
-    stat = font.get("STAT")
-    if stat:
-        if stat.table.AxisValueArray:
-            nameIDs.update(
-                [val_rec.ValueNameID for val_rec in stat.table.AxisValueArray.AxisValue]
-            )
-        nameIDs.update(
-            [axis_rec.AxisNameID for axis_rec in stat.table.DesignAxisRecord.Axis]
-        )
-    cpal = font.get("CPAL")
-    if cpal and cpal.version == 1:
-        nameIDs.update(cpal.paletteLabels)
-        nameIDs.update(cpal.paletteEntryLabels)
+    visitor = NameRecordVisitor()
+    visitor.visit(font)
+    nameIDs = set(options.name_IDs) | visitor.seen
     if "*" not in options.name_IDs:
         self.names = [n for n in self.names if n.nameID in nameIDs]
     if not options.name_legacy:

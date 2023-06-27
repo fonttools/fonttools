@@ -1198,7 +1198,8 @@ def visit(visitor, obj, attr, value):
 @NameRecordVisitor.register(ttLib.getTableClass("fvar"))
 def visit(visitor, obj):
     for inst in obj.instances:
-        visitor.seen.add(inst.postscriptNameID)
+        if inst.postscriptNameID != 0xFFFF:
+            visitor.seen.add(inst.postscriptNameID)
         visitor.seen.add(inst.subfamilyNameID)
 
     for axis in obj.axes:
@@ -1207,6 +1208,6 @@ def visit(visitor, obj):
 
 @NameRecordVisitor.register(ttLib.getTableClass("CPAL"))
 def visit(visitor, obj):
-    for nameID in obj.paletteLabels:
-        if nameID != C_P_A_L_.table_C_P_A_L_.NO_NAME_ID:
+    for nameID in obj.paletteLabels + obj.paletteEntryLabels:
+        if obj.version == 1:
             visitor.seen.add(nameID)
