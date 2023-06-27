@@ -560,19 +560,19 @@ class TTGlyphSetTest(object):
         ]
 
         pen = RecordingPen()
-        glyphset["glyph00001"].draw(pen)
+        glyphset["one"].draw(pen)
         assert pen.value == expected
 
         pen = RecordingPen()
-        glyphset["glyph00002"].draw(pen)
+        glyphset["two"].draw(pen)
         assert pen.value == expected
 
         pen = RecordingPen()
-        glyphset["glyph00003"].draw(pen)
+        glyphset["three"].draw(pen)
         assert pen.value == expected
 
         pen = RecordingPen()
-        glyphset["glyph00004"].draw(pen)
+        glyphset["four"].draw(pen)
         assert pen.value == [
             ("moveTo", ((75.5, 181),)),
             ("curveTo", ((103, 181), (125, 158), (125, 131))),
