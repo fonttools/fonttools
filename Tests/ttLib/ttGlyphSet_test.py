@@ -637,6 +637,7 @@ class TTGlyphSetTest(object):
         ]
 
         # Ouch! We can't represent all-cubic-offcurves in pointPen!
+        # https://github.com/fonttools/fonttools/issues/3191
         expectedPoints = [
             ("beginPath", (), {}),
             ("addPoint", ((103, 181), None, False, None), {}),
