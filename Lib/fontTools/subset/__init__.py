@@ -2916,7 +2916,7 @@ def prune_pre_subset(self, font, options):
 
 
 @_add_method(ttLib.getTableClass("name"))
-def prune_pre_subset(self, font, options):
+def prune_post_subset(self, font, options):
     visitor = NameRecordVisitor()
     visitor.visit(font)
     nameIDs = set(options.name_IDs) | visitor.seen
@@ -3442,7 +3442,11 @@ class Subsetter(object):
             font.setGlyphOrder(self.new_glyph_order)
 
     def _prune_post_subset(self, font):
-        for tag in font.keys():
+        tableTags = font.keys()
+        if "name" in tableTags:
+            tableTags.remove("name")
+            tableTags.append("name")
+        for tag in tableTags:
             if tag == "GlyphOrder":
                 continue
             if tag == "OS/2":
