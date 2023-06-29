@@ -574,7 +574,7 @@ The ``<sources>`` element contains one or more ``<source>`` elements.
    While this could be extracted from the font data itself, it can be
    more efficient to add it here.
 -  ``stylename``: optional, string. The style name of the source font.
--  ``name``: required, string. A unique name that can be used to
+-  ``name``: optional, string. A unique name that can be used to
    identify this font if it needs to be referenced elsewhere.
 -  ``filename``: required, string. A path to the source file, relative
    to the root path of this document. The path can be at the same level
