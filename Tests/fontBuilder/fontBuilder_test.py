@@ -420,3 +420,49 @@ def test_unicodeVariationSequences(tmpdir):
     fb.setupCharacterMap(cmap, uvs)
     fb.save(outPath)
     _verifyOutput(outPath, tables=["cmap"])
+
+
+def test_setupPanose(is_ttf, keep_glyph_names, make_cff2, post_format):
+    from fontTools.ttLib.tables.O_S_2f_2 import Panose
+
+    fb, advanceWidths, nameStrings = _setupFontBuilder(True)
+
+    pen = TTGlyphPen(None)
+    drawTestGlyph(pen)
+    glyph = pen.glyph()
+    glyphs = {".notdef": glyph, "A": glyph, "a": glyph, ".null": glyph}
+    fb.setupGlyf(glyphs)
+    metrics = {}
+    glyphTable = fb.font["glyf"]
+    for gn, advanceWidth in advanceWidths.items():
+        metrics[gn] = (advanceWidth, glyphTable[gn].xMin)
+    fb.setupHorizontalMetrics(metrics)
+
+    fb.setupHorizontalHeader(ascent=824, descent=200)
+    fb.setupNameTable(nameStrings)
+    fb.setupOS2()
+    fb.setupPost()
+
+    panoseValues = { # sample value of Times New Roman from https://www.w3.org/Printing/stevahn.html
+        "bFamilyType": 2,
+        "bSerifStyle": 2,
+        "bWeight": 6,
+        "bProportion": 3,
+        "bContrast": 5,
+        "bStrokeVariation": 4,
+        "bArmStyle": 5,
+        "bLetterForm": 2,
+        "bMidline": 3,
+        "bXHeight": 4,
+    }
+
+    for name in panoseValues:
+        assert getattr(fb.font["OS/2"].panose, name) == 0
+
+    fb.setupOS2(panoseValues)
+    fb.setupPost()
+
+    for name, value in panoseValues.items():
+        assert getattr(fb.font["OS/2"].panose, name) == value
+
+
