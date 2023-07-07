@@ -135,7 +135,7 @@ from .ttLib.tables._g_l_y_f import flagCubic
 from .misc.timeTools import timestampNow
 import struct
 from collections import OrderedDict
-
+from types import SimpleNamespace
 
 _headDefaults = dict(
     tableVersion=1.0,
@@ -263,7 +263,7 @@ _nameIDs = dict(
 # to insert in setupNameTable doc string:
 # print("\n".join(("%s (nameID %s)" % (k, v)) for k, v in sorted(_nameIDs.items(), key=lambda x: x[1])))
 
-_panoseDefaults = dict(
+_panoseDefaults = SimpleNamespace(
     bFamilyType=0,
     bSerifStyle=0,
     bWeight=0,
