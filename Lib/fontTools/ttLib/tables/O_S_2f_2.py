@@ -25,6 +25,14 @@ panoseFormat = """
 
 
 class Panose(object):
+    def __init__(self, panoseDict=None):
+        formatstring, names, fixes = sstruct.getformat(panoseFormat)
+        for name in names:
+            if panoseDict is not None and name in panoseDict:
+                setattr(self, name, safeEval(panoseDict[name]))
+            else:
+                setattr(self, name, 0)
+
     def toXML(self, writer, ttFont):
         formatstring, names, fixes = sstruct.getformat(panoseFormat)
         for name in names:

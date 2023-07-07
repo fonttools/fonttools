@@ -132,10 +132,11 @@ fb.save("test.otf")
 from .ttLib import TTFont, newTable
 from .ttLib.tables._c_m_a_p import cmap_classes
 from .ttLib.tables._g_l_y_f import flagCubic
+from .ttLib.tables.O_S_2f_2 import Panose
 from .misc.timeTools import timestampNow
 import struct
 from collections import OrderedDict
-from types import SimpleNamespace
+
 
 _headDefaults = dict(
     tableVersion=1.0,
@@ -263,18 +264,7 @@ _nameIDs = dict(
 # to insert in setupNameTable doc string:
 # print("\n".join(("%s (nameID %s)" % (k, v)) for k, v in sorted(_nameIDs.items(), key=lambda x: x[1])))
 
-_panoseDefaults = SimpleNamespace(
-    bFamilyType=0,
-    bSerifStyle=0,
-    bWeight=0,
-    bProportion=0,
-    bContrast=0,
-    bStrokeVariation=0,
-    bArmStyle=0,
-    bLetterForm=0,
-    bMidline=0,
-    bXHeight=0,
-)
+_panoseDefaults = Panose()
 
 _OS2Defaults = dict(
     version=3,
