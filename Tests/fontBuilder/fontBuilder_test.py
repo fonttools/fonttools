@@ -422,7 +422,7 @@ def test_unicodeVariationSequences(tmpdir):
     _verifyOutput(outPath, tables=["cmap"])
 
 
-def test_setupPanose(is_ttf, keep_glyph_names, make_cff2, post_format):
+def test_setupPanose():
     from fontTools.ttLib.tables.O_S_2f_2 import Panose
 
     fb, advanceWidths, nameStrings = _setupFontBuilder(True)
@@ -443,7 +443,7 @@ def test_setupPanose(is_ttf, keep_glyph_names, make_cff2, post_format):
     fb.setupOS2()
     fb.setupPost()
 
-    panoseValues = { # sample value of Times New Roman from https://www.w3.org/Printing/stevahn.html
+    panoseValues = {  # sample value of Times New Roman from https://www.w3.org/Printing/stevahn.html
         "bFamilyType": 2,
         "bSerifStyle": 2,
         "bWeight": 6,
@@ -455,14 +455,13 @@ def test_setupPanose(is_ttf, keep_glyph_names, make_cff2, post_format):
         "bMidline": 3,
         "bXHeight": 4,
     }
+    panoseObj = Panose(**panoseValues)
 
     for name in panoseValues:
         assert getattr(fb.font["OS/2"].panose, name) == 0
 
-    fb.setupOS2(panoseValues)
+    fb.setupOS2(panose=panoseObj)
     fb.setupPost()
 
     for name, value in panoseValues.items():
         assert getattr(fb.font["OS/2"].panose, name) == value
-
-
