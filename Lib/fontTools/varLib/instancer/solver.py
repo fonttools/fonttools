@@ -12,7 +12,7 @@ def _reverse_negate(v):
 
 
 def _solve(tent, axisLimit, negative=False):
-    axisMin, axisDef, axisMax, distanceNegative, distancePositive = axisLimit
+    axisMin, axisDef, axisMax, _distanceNegative, _distancePositive = axisLimit
     lower, peak, upper = tent
 
     # Mirror the problem such that axisDef <= peak
@@ -285,7 +285,7 @@ def rebaseTent(tent, axisLimit):
     If tent value is None, that is a special deltaset that should
     be always-enabled (called "gain")."""
 
-    axisMin, axisDef, axisMax, distanceNegative, distancePositive = axisLimit
+    axisMin, axisDef, axisMax, _distanceNegative, _distancePositive = axisLimit
     assert -1 <= axisMin <= axisDef <= axisMax <= +1
 
     lower, peak, upper = tent
@@ -295,7 +295,7 @@ def rebaseTent(tent, axisLimit):
 
     sols = _solve(tent, axisLimit)
 
-    n = lambda v: axisLimit.normalizeValue(v)
+    n = lambda v: axisLimit.renormalizeValue(v)
     sols = [
         (scalar, (n(v[0]), n(v[1]), n(v[2])) if v is not None else None)
         for scalar, v in sols

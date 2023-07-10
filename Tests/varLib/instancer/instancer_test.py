@@ -1950,7 +1950,7 @@ class LimitTupleVariationAxisRangesTest:
         ],
     )
     def test_positive_var(self, var, axisTag, newMax, expected):
-        axisRange = instancer.NormalizedAxisTripleAndDistances(0, 0, newMax, 1, 1)
+        axisRange = instancer.NormalizedAxisTripleAndDistances(0, 0, newMax)
         self.check_limit_single_var_axis_range(var, axisTag, axisRange, expected)
 
     @pytest.mark.parametrize(
@@ -2094,6 +2094,7 @@ def test_parseLimits_invalid(limits):
 @pytest.mark.parametrize(
     "limits, expected",
     [
+        # 300, 500 come from the font having 100,400,900 fvar axis limits.
         ({"wght": (100, 400)}, {"wght": (-1.0, 0, 0, 300, 500)}),
         ({"wght": (100, 400, 400)}, {"wght": (-1.0, 0, 0, 300, 500)}),
         ({"wght": (100, 300, 400)}, {"wght": (-1.0, -0.5, 0, 300, 500)}),

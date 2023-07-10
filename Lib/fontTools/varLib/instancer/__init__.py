@@ -234,8 +234,28 @@ class AxisTriple(Sequence):
 
 
 @dataclasses.dataclass(frozen=True, order=True, repr=False)
-class NormalizedAxisTripleAndDistances(AxisTriple):
+class NormalizedAxisTriple(AxisTriple):
     """A triple of (min, default, max) normalized axis values."""
+
+    minimum: float
+    default: float
+    maximum: float
+
+    def __post_init__(self):
+        if self.default is None:
+            object.__setattr__(self, "default", max(self.minimum, min(self.maximum, 0)))
+        if not (-1.0 <= self.minimum <= self.default <= self.maximum <= 1.0):
+            raise ValueError(
+                "Normalized axis values not in -1..+1 range; got "
+                f"minimum={self.minimum:g}, default={self.default:g}, maximum={self.maximum:g})"
+            )
+
+
+@dataclasses.dataclass(frozen=True, order=True, repr=False)
+class NormalizedAxisTripleAndDistances(AxisTriple):
+    """A triple of (min, default, max) normalized axis values,
+    with distances between min and default, and default and max,
+    in the *pre-normalized* space."""
 
     minimum: float
     default: float
@@ -256,7 +276,11 @@ class NormalizedAxisTripleAndDistances(AxisTriple):
         v = self
         return self.__class__(-v[2], -v[1], -v[0], v[4], v[3])
 
-    def normalizeValue(self, v, extrapolate=True):
+    def renormalizeValue(self, v, extrapolate=True):
+        """Renormalizes a normalized value v to the range of this axis,
+        considering the pre-normalized distances as well as the new
+        axis limits."""
+
         lower, default, upper, distanceNegative, distancePositive = self
         assert lower <= default <= upper
 
@@ -267,7 +291,7 @@ class NormalizedAxisTripleAndDistances(AxisTriple):
             return 0
 
         if default < 0:
-            return -self.reverse_negate().normalizeValue(-v, extrapolate=extrapolate)
+            return -self.reverse_negate().renormalizeValue(-v, extrapolate=extrapolate)
 
         # default >= 0 and v != default
 
@@ -287,12 +311,6 @@ class NormalizedAxisTripleAndDistances(AxisTriple):
             vDistance = (default - v) * distancePositive
         else:
             vDistance = -v * distanceNegative + distancePositive * default
-
-        if totalDistance == 0:
-            # This happens
-            if default == 0:
-                return -v / lower
-            return 0  # Shouldn't happen
 
         return -vDistance / totalDistance
 
@@ -558,7 +576,7 @@ def _instantiateGvarGlyph(
                         "Instancing accross VarComposite axes with variation is not supported."
                     )
                 limits = axisLimits[tag]
-                loc = limits.normalizeValue(loc, extrapolate=False)
+                loc = limits.renormalizeValue(loc, extrapolate=False)
                 newLocation[tag] = loc
             component.location = newLocation
 
@@ -989,10 +1007,10 @@ def instantiateAvar(varfont, axisLimits):
             for fromCoord, toCoord in mapping.items():
                 if fromCoord < axisRange.minimum or fromCoord > axisRange.maximum:
                     continue
-                fromCoord = axisRange.normalizeValue(fromCoord)
+                fromCoord = axisRange.renormalizeValue(fromCoord)
 
                 assert mappedMin <= toCoord <= mappedMax
-                toCoord = mappedAxisLimit.normalizeValue(toCoord)
+                toCoord = mappedAxisLimit.renormalizeValue(toCoord)
 
                 fromCoord = floatToFixedToFloat(fromCoord, 14)
                 toCoord = floatToFixedToFloat(toCoord, 14)
