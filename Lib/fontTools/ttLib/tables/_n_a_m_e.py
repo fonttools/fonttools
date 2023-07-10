@@ -243,11 +243,11 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
                 toDelete.add(record.nameID)
 
         if not toDelete:
-            log.info("Name table has no redundant records, skipping")
             return
         log.info(f"Deleting name records with NameIDs {toDelete}")
         for nameID in toDelete:
             ttFont["name"].removeNames(nameID)
+        return toDelete
 
     def _findUnusedNameID(self, minNameID=256):
         """Finds an unused name id.
@@ -1208,6 +1208,6 @@ def visit(visitor, obj):
 
 @NameRecordVisitor.register(ttLib.getTableClass("CPAL"))
 def visit(visitor, obj):
-    for nameID in obj.paletteLabels + obj.paletteEntryLabels:
-        if obj.version == 1:
-            visitor.seen.add(nameID)
+    if obj.version == 1:
+        visitor.seen.update(obj.paletteLabels)
+        visitor.seen.update(obj.paletteEntryLabels)

@@ -3428,6 +3428,9 @@ class Subsetter(object):
 
     def _prune_post_subset(self, font):
         tableTags = font.keys()
+        # Prune the name table last because when we're pruning the name table,
+        # we visit each table in the font to see what name table records are
+        # still in use.
         if "name" in tableTags:
             tableTags.remove("name")
             tableTags.append("name")
