@@ -1,3 +1,6 @@
+4.41.0 (released 2023-07-12)
+----------------------------
+
 - [fontBuilder] Fixed bug in setupOS2 with default panose attribute incorrectly being
   set to a dict instead of a Panose object (#3201).
 - [name] Added method to ``removeUnusedNameRecords`` in the user range (#3185).
