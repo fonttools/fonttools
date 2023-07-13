@@ -15,33 +15,30 @@ from . import Blocks, Scripts, ScriptExtensions, OTTags
 
 
 __all__ = [
-    tostr(s)
-    for s in (
-        # names from built-in unicodedata module
-        "lookup",
-        "name",
-        "decimal",
-        "digit",
-        "numeric",
-        "category",
-        "bidirectional",
-        "combining",
-        "east_asian_width",
-        "mirrored",
-        "decomposition",
-        "normalize",
-        "unidata_version",
-        "ucd_3_2_0",
-        # additonal functions
-        "block",
-        "script",
-        "script_extension",
-        "script_name",
-        "script_code",
-        "script_horizontal_direction",
-        "ot_tags_from_script",
-        "ot_tag_to_script",
-    )
+    # names from built-in unicodedata module
+    "lookup",
+    "name",
+    "decimal",
+    "digit",
+    "numeric",
+    "category",
+    "bidirectional",
+    "combining",
+    "east_asian_width",
+    "mirrored",
+    "decomposition",
+    "normalize",
+    "unidata_version",
+    "ucd_3_2_0",
+    # additonal functions
+    "block",
+    "script",
+    "script_extension",
+    "script_name",
+    "script_code",
+    "script_horizontal_direction",
+    "ot_tags_from_script",
+    "ot_tag_to_script",
 ]
 
 
@@ -203,7 +200,7 @@ def script_horizontal_direction(script_code, default=KeyError):
         if isinstance(default, type) and issubclass(default, KeyError):
             raise default(script_code)
         return default
-    return str("RTL") if script_code in RTL_SCRIPTS else str("LTR")
+    return "RTL" if script_code in RTL_SCRIPTS else "LTR"
 
 
 def block(char):
