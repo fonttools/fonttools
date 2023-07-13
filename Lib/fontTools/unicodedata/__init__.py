@@ -1,7 +1,11 @@
+from __future__ import annotations
+
 from fontTools.misc.textTools import byteord, tostr
 
 import re
 from bisect import bisect_right
+from typing import Literal, TypeVar, overload
+
 
 try:
     # use unicodedata backport compatible with python2:
@@ -192,7 +196,25 @@ RTL_SCRIPTS = {
 }
 
 
-def script_horizontal_direction(script_code, default=KeyError):
+HorizDirection = Literal["RTL", "LTR"]
+T = TypeVar("T")
+
+
+@overload
+def script_horizontal_direction(script_code: str, default: T) -> HorizDirection | T:
+    ...
+
+
+@overload
+def script_horizontal_direction(
+    script_code: str, default: type[KeyError] = KeyError
+) -> HorizDirection:
+    ...
+
+
+def script_horizontal_direction(
+    script_code: str, default: T | type[KeyError] = KeyError
+) -> HorizDirection | T:
     """Return "RTL" for scripts that contain right-to-left characters
     according to the Bidi_Class property. Otherwise return "LTR".
     """
