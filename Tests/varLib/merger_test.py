@@ -1846,7 +1846,7 @@ class COLRVariationMergerTest:
 
 
 class SparsePositioningMergerTest:
-    def test_sparse_positioning_at_default(self):
+    def test_zero_kern_at_default(self):
         # https://github.com/fonttools/fonttools/issues/3111
 
         pytest.importorskip("ufo2ft")
@@ -1881,3 +1881,58 @@ class SparsePositioningMergerTest:
         font.save(b)
 
         assert font["GDEF"].table.VarStore.VarData[0].Item[0] == [100, -100]
+
+    def test_sparse_cursive(self):
+        # https://github.com/fonttools/fonttools/issues/3168
+
+        pytest.importorskip("ufo2ft")
+        pytest.importorskip("ufoLib2")
+
+        from fontTools.designspaceLib import DesignSpaceDocument
+        from ufo2ft import compileVariableTTF
+        from ufoLib2 import Font
+
+        ds = DesignSpaceDocument()
+        ds.addAxisDescriptor(
+            name="wght", tag="wght", minimum=100, maximum=900, default=400
+        )
+        ds.addSourceDescriptor(font=Font(), location=dict(wght=100))
+        ds.addSourceDescriptor(font=Font(), location=dict(wght=400))
+        ds.addSourceDescriptor(font=Font(), location=dict(wght=900))
+
+        ds.sources[0].font.newGlyph("a").unicode = ord("a")
+        ds.sources[0].font.newGlyph("b").unicode = ord("b")
+        ds.sources[
+            0
+        ].font.features.text = """
+        feature curs {
+          position cursive a <anchor 400 20> <anchor 0 -20>;
+        } curs;
+        """
+
+        ds.sources[1].font.newGlyph("a").unicode = ord("a")
+        ds.sources[1].font.newGlyph("b").unicode = ord("b")
+        ds.sources[
+            1
+        ].font.features.text = """
+        feature curs {
+          position cursive a <anchor 500 20> <anchor 0 -20>;
+          position cursive b <anchor 50 22> <anchor 0 -10>;
+        } curs;
+        """
+
+        ds.sources[2].font.newGlyph("a").unicode = ord("a")
+        ds.sources[2].font.newGlyph("b").unicode = ord("b")
+        ds.sources[
+            2
+        ].font.features.text = """
+        feature curs {
+          position cursive b <anchor 100 40> <anchor 0 -30>;
+        } curs;
+        """
+
+        font = compileVariableTTF(ds, inplace=True)
+        b = BytesIO()
+        font.save(b)
+
+        assert font["GDEF"].table.VarStore.VarData[0].Item[0] == [-100, 0]
