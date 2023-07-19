@@ -1595,7 +1595,8 @@ class InstantiateVariableFontTest(object):
 
 def _conditionSetAsDict(conditionSet, axisOrder):
     result = {}
-    for cond in conditionSet.ConditionTable:
+    conditionSets = conditionSet.ConditionTable if conditionSet is not None else []
+    for cond in conditionSets:
         assert cond.Format == 1
         axisTag = axisOrder[cond.AxisIndex]
         result[axisTag] = (cond.FilterRangeMinValue, cond.FilterRangeMaxValue)
