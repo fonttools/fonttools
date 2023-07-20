@@ -892,6 +892,11 @@ The ``<instances>`` element contains one or more ``<instance>`` elements.
    with ``styleMapFamilyName``
 -  ``stylemapstylename``: string. Optional for MutatorMath. Corresponds
    with ``styleMapStyleName``
+-  ``location``: string. Optional. Describes the location of this instance,
+   taking it from the root level ``<labels>`` (STAT format 4) element with the
+   same name as the string.
+
+   .. versionadded:: 5.0
 
 
 ``<location>`` element (instance)
@@ -959,6 +964,30 @@ Example for varLib
         </dict>
     </lib>
     </instance>
+
+
+Here is an example using STAT format 4 labels to define the location of the
+instance directly.
+
+.. code:: xml
+
+    <?xml version='1.0' encoding='utf-8'?>
+    <designspace format="5.0">
+        <!-- ... -->
+        <labels>
+            <!-- define STAT format 4 labels here -->
+            <!-- New in version 5.0 -->
+            <label name="Extra Light">
+                <location>
+                    <dimension name="weight" uservalue="123" />
+                </location>
+            </label>
+        </labels>
+        <!-- ... -->
+        <instances>
+            <instance filename="instances/labelled.ufo" location="Extra Light" />
+        </instances>
+    </designspace>
 
 
 ``<glyphs>`` element (instance)
