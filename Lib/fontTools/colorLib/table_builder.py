@@ -127,9 +127,14 @@ class TableBuilder:
         if isinstance(source, cls):
             return source
 
-        key = json.dumps(source, sort_keys=True)
-        if key in self.cache:
-            return copy.deepcopy(self.cache[key])
+        cacheable = True
+        key = None
+        try:
+            key = json.dumps(source, sort_keys=True)
+            if key in self.cache:
+                return copy.deepcopy(self.cache[key])
+        except TypeError:
+            cacheable = False
 
         callbackKey = (cls,)
         fmt = None
@@ -185,7 +190,8 @@ class TableBuilder:
             (BuildCallback.AFTER_BUILD,) + callbackKey, lambda d: d
         )(dest)
 
-        self.cache[key] = dest
+        if cacheable:
+            self.cache[key] = dest
 
         return dest
 
