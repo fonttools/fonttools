@@ -242,9 +242,6 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
             if record.nameID not in visitor.seen:
                 toDelete.add(record.nameID)
 
-        if not toDelete:
-            return
-        log.info(f"Deleting name records with NameIDs {toDelete}")
         for nameID in toDelete:
             ttFont["name"].removeNames(nameID)
         return toDelete
