@@ -1822,6 +1822,24 @@ class InstantiateFeatureVariationsTest(object):
         else:
             assert not gsub.FeatureList.FeatureRecord
 
+    def test_null_conditionset(self):
+        # A null ConditionSet offset should be treated like an empty ConditionTable, i.e.
+        # all contexts are matched; see https://github.com/fonttools/fonttools/issues/3211
+        font = makeFeatureVarsFont(
+            [([{"wght": (-1.0, 1.0)}], {"uni0024": "uni0024.nostroke"})]
+        )
+        gsub = font["GSUB"].table
+        gsub.FeatureVariations.FeatureVariationRecord[0].ConditionSet = None
+
+        location = instancer.NormalizedAxisLimits({"wght": 0.5})
+        instancer.instantiateFeatureVariations(font, location)
+
+        assert not hasattr(gsub, "FeatureVariations")
+        assert gsub.Version == 0x00010000
+
+        lookupIndices = gsub.FeatureList.FeatureRecord[0].Feature.LookupListIndex
+        assert _getSubstitutions(gsub, lookupIndices) == {"uni0024": "uni0024.nostroke"}
+
     def test_unsupported_condition_format(self, caplog):
         font = makeFeatureVarsFont(
             [
