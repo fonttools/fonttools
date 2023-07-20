@@ -77,6 +77,8 @@ def _test(glyphset, upem, glyphs):
 
     print("upem", upem)
 
+    wght_sum = 0
+    wdth_sum = 0
     for glyph_name in glyphs:
         print()
         print("glyph:", glyph_name)
@@ -102,6 +104,13 @@ def _test(glyphset, upem, glyphs):
             "slant",
         ]:
             print("%s: %g" % (item, getattr(pen, item)))
+
+        wght_sum += abs(pen.area)
+        wdth_sum += glyph.width
+
+    print()
+    print("weight: %g" % (wght_sum * upem / wdth_sum))
+    print("width:  %g" % (wdth_sum / upem / len(glyphs)))
 
 
 def main(args):
