@@ -5,6 +5,8 @@ colorLib.table_builder: Generic helper for filling in BaseTable derivatives from
 
 import collections
 import enum
+import json
+import copy
 from fontTools.ttLib.tables.otBase import (
     BaseTable,
     FormatSwitchingBaseTable,
@@ -84,6 +86,7 @@ class TableBuilder:
         if callbackTable is None:
             callbackTable = {}
         self._callbackTable = callbackTable
+        self.cache = {}
 
     def _convert(self, dest, field, converter, value):
         enumClass = getattr(converter, "enumClass", None)
@@ -123,6 +126,10 @@ class TableBuilder:
 
         if isinstance(source, cls):
             return source
+
+        key = json.dumps(source, sort_keys=True)
+        if key in self.cache:
+            return copy.deepcopy(self.cache[key])
 
         callbackKey = (cls,)
         fmt = None
@@ -177,6 +184,8 @@ class TableBuilder:
         dest = self._callbackTable.get(
             (BuildCallback.AFTER_BUILD,) + callbackKey, lambda d: d
         )(dest)
+
+        self.cache[key] = dest
 
         return dest
 
