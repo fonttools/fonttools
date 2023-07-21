@@ -5,8 +5,9 @@ colorLib.table_builder: Generic helper for filling in BaseTable derivatives from
 
 import collections
 import enum
-import json
 import copy
+import pickle
+from hashlib import sha256
 from fontTools.ttLib.tables.otBase import (
     BaseTable,
     FormatSwitchingBaseTable,
@@ -127,14 +128,9 @@ class TableBuilder:
         if isinstance(source, cls):
             return source
 
-        cacheable = True
-        key = None
-        try:
-            key = hash(json.dumps(source, sort_keys=True))
-            if key in self.cache:
-                return copy.deepcopy(self.cache[key])
-        except TypeError:
-            cacheable = False
+        key = sha256(pickle.dumps(source)).digest()
+        if key in self.cache:
+            return copy.deepcopy(self.cache[key])
 
         callbackKey = (cls,)
         fmt = None
@@ -190,8 +186,7 @@ class TableBuilder:
             (BuildCallback.AFTER_BUILD,) + callbackKey, lambda d: d
         )(dest)
 
-        if cacheable:
-            self.cache[key] = dest
+        self.cache[key] = dest
 
         return dest
 
