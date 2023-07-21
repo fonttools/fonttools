@@ -128,7 +128,7 @@ class TableBuilder:
         if isinstance(source, cls):
             return source
 
-        key = sha256(pickle.dumps(source)).digest()
+        key = (cls, sha256(pickle.dumps(source)).digest())
         if key in self.cache:
             # pickle/unpickle is faster than copy.deepcopy
             return pickle.loads(pickle.dumps(self.cache[key]))
