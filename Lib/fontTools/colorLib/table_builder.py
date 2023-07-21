@@ -130,7 +130,7 @@ class TableBuilder:
         cacheable = True
         key = None
         try:
-            key = json.dumps(source, sort_keys=True)
+            key = hash(json.dumps(source, sort_keys=True))
             if key in self.cache:
                 return copy.deepcopy(self.cache[key])
         except TypeError:
