@@ -130,7 +130,8 @@ class TableBuilder:
 
         key = sha256(pickle.dumps(source)).digest()
         if key in self.cache:
-            return copy.deepcopy(self.cache[key])
+            # pickle/unpickle is faster than copy.deepcopy
+            return pickle.loads(pickle.dumps(self.cache[key]))
 
         callbackKey = (cls,)
         fmt = None
