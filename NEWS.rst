@@ -1,3 +1,6 @@
+4.41.1 (released 2023-07-21)
+----------------------------
+
 - [subset] Fixed perf regression in v4.41.0 by making ``NameRecordVisitor`` only visit
   tables that do contain nameID references (#3213, #3214).
 - [varLib.instancer] Support instancing fonts containing null ConditionSet offsets in
