@@ -1,3 +1,12 @@
+- [subset] Fixed perf regression in v4.41.0 by making ``NameRecordVisitor`` only visit
+  tables that do contain nameID references (#3213, #3214).
+- [varLib.instancer] Support instancing fonts containing null ConditionSet offsets in
+  FeatureVariationRecords (#3211, #3212).
+- [statisticsPen] Report font glyph-average weight/width and font-wide slant.
+- [fontBuilder] Fixed head.created date incorrectly set to 0 instead of the current
+  timestamp, regression introduced in v4.40.0 (#3210).
+- [varLib.merger] Support sparse ``CursivePos`` masters (#3209).
+
 4.41.0 (released 2023-07-12)
 ----------------------------
 
