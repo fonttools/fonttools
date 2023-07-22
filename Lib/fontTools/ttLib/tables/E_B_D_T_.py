@@ -258,7 +258,7 @@ def _memoize(f):
     class memodict(dict):
         def __missing__(self, key):
             ret = f(key)
-            if len(key) == 1:
+            if isinstance(key, int) or len(key) == 1:
                 self[key] = ret
             return ret
 
