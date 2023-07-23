@@ -290,15 +290,15 @@ def main(args=None):
     if wghtAxis:
         avar.segments["wght"] = outNormalized
 
-    designspaceSnippet = (
-        '    <axis tag="wght" name="Weight" minimum="%g" maximum="%g" default="%g">\n'
-        % (wghtAxis.minValue, wghtAxis.maxValue, wghtAxis.defaultValue)
-    )
-    for key, value in out.items():
-        designspaceSnippet += '      <map input="%g" output="%g"/>\n' % (key, value)
-    designspaceSnippet += "    </axis>"
-    log.info("Designspace snippet:")
-    print(designspaceSnippet)
+        designspaceSnippet = (
+            '    <axis tag="wght" name="Weight" minimum="%g" maximum="%g" default="%g">\n'
+            % (wghtAxis.minValue, wghtAxis.maxValue, wghtAxis.defaultValue)
+        )
+        for key, value in out.items():
+            designspaceSnippet += '      <map input="%g" output="%g"/>\n' % (key, value)
+        designspaceSnippet += "    </axis>"
+        log.info("Weight axis designspace snippet:")
+        print(designspaceSnippet)
 
     if options.output_file is None:
         outfile = makeOutputFileName(options.font, overWrite=True, suffix=".avar")
