@@ -112,17 +112,17 @@ def planWeightAxis(
     outNormalized = {}
 
     upem = 1  # font["head"].unitsPerEm
-    axisWeightAverage = {}
+    axisBlackness = {}
     for weight in sorted({minValue, defaultValue, maxValue} | set(pins.values())):
         glyphset = glyphSetFunc(location={"wght": weight})
 
         designWeight = piecewiseLinearMap(weight, pins)
 
-        axisWeightAverage[designWeight] = getGlyphsetBlackness(glyphset, glyphs) / (
+        axisBlackness[designWeight] = getGlyphsetBlackness(glyphset, glyphs) / (
             upem * upem
         )
 
-    log.debug("Calculated average glyph black ratio:\n%s", pformat(axisWeightAverage))
+    log.debug("Calculated average glyph black ratio:\n%s", pformat(axisBlackness))
 
     for (rangeMin, targetMin), (rangeMax, targetMax) in zip(
         list(sorted(pins.items()))[:-1],
@@ -139,7 +139,7 @@ def planWeightAxis(
 
         log.info("Planning target weights %s.", sorted(targetWeights))
         log.info("Sampling %u points in range %g,%g.", samples, rangeMin, rangeMax)
-        weightBlackness = axisWeightAverage.copy()
+        weightBlackness = axisBlackness.copy()
         for sample in range(1, samples + 1):
             weight = rangeMin + (rangeMax - rangeMin) * sample / (samples + 1)
             log.info("Sampling weight %g.", weight)
