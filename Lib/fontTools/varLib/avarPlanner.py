@@ -70,6 +70,7 @@ def planWeightAxis(
     weights=None,
     samples=None,
     glyphs=None,
+    designUnits=None,
     pins=None,
 ):
     if weights is None:
@@ -84,6 +85,12 @@ def planWeightAxis(
         pins = pins.copy()
 
     log.info("Weight min %g / default %g / max %g", minValue, defaultValue, maxValue)
+    triple = (minValue, defaultValue, maxValue)
+
+    if designUnits is not None:
+        log.info("Weight design-units min %g / default %g / max %g", *designUnits)
+    else:
+        designUnits = triple
 
     # if "avar" in font:
     #    log.debug("Checking that font doesn't have weight mapping already.")
@@ -93,8 +100,13 @@ def planWeightAxis(
 
     if pins:
         log.info("Pins %s", sorted(pins.items()))
-    pins.update({minValue: minValue, defaultValue: defaultValue, maxValue: maxValue})
-    triple = (minValue, defaultValue, maxValue)
+    pins.update(
+        {
+            minValue: designUnits[0],
+            defaultValue: designUnits[1],
+            maxValue: designUnits[2],
+        }
+    )
 
     out = {}
     outNormalized = {}
@@ -103,7 +115,10 @@ def planWeightAxis(
     axisWeightAverage = {}
     for weight in sorted({minValue, defaultValue, maxValue} | set(pins.values())):
         glyphset = glyphSetFunc(location={"wght": weight})
-        axisWeightAverage[weight] = getGlyphsetBlackness(glyphset, glyphs) / (
+
+        designWeight = piecewiseLinearMap(weight, pins)
+
+        axisWeightAverage[designWeight] = getGlyphsetBlackness(glyphset, glyphs) / (
             upem * upem
         )
 
@@ -119,8 +134,8 @@ def planWeightAxis(
 
         normalizedMin = normalizeValue(rangeMin, triple)
         normalizedMax = normalizeValue(rangeMax, triple)
-        normalizedTargetMin = normalizeValue(targetMin, triple)
-        normalizedTargetMax = normalizeValue(targetMax, triple)
+        normalizedTargetMin = normalizeValue(targetMin, designUnits)
+        normalizedTargetMax = normalizeValue(targetMax, designUnits)
 
         log.info("Planning target weights %s.", sorted(targetWeights))
         log.info("Sampling %u points in range %g,%g.", samples, rangeMin, rangeMax)
@@ -129,7 +144,8 @@ def planWeightAxis(
             weight = rangeMin + (rangeMax - rangeMin) * sample / (samples + 1)
             log.info("Sampling weight %g.", weight)
             glyphset = glyphSetFunc(location={"wght": weight})
-            weightBlackness[weight] = getGlyphsetBlackness(glyphset, glyphs) / (
+            designWeight = piecewiseLinearMap(weight, pins)
+            weightBlackness[designWeight] = getGlyphsetBlackness(glyphset, glyphs) / (
                 upem * upem
             )
         log.debug("Sampled average glyph black ratio:\n%s", pformat(weightBlackness))
@@ -202,6 +218,11 @@ def main(args=None):
         help="Space-separate list of glyphs to use for sampling.",
     )
     parser.add_argument(
+        "--design-units",
+        type=str,
+        help="min:default:max in design units.",
+    )
+    parser.add_argument(
         "--pins",
         type=str,
         help="Space-separate list of before:after pins.",
@@ -253,6 +274,11 @@ def main(args=None):
         else:
             glyphs = None
 
+        if options.design_units is not None:
+            designUnits = [float(d) for d in options.design_units.split(":")]
+        else:
+            designUnits = None
+
         if options.pins is not None:
             pins = {}
             for pin in options.pins.split():
@@ -269,6 +295,7 @@ def main(args=None):
             weights=weights,
             samples=options.samples,
             glyphs=glyphs,
+            designUnits=designUnits,
             pins=pins,
         )
 
