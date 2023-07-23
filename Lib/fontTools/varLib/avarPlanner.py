@@ -165,12 +165,11 @@ def main(args=None):
         log.error("Not a variable font.")
         sys.exit(1)
     fvar = font["fvar"]
-    wghtAxis = slntAxis = None
+    wghtAxis = None
     for axis in fvar.axes:
         if axis.axisTag == "wght":
             wghtAxis = axis
-        elif axis.axisTag == "slnt":
-            slntAxis = axis
+            break
 
     if "avar" in font:
         existingMapping = font["avar"].segments["wght"]
