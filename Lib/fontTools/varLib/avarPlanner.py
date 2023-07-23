@@ -218,14 +218,19 @@ def main(args=None):
         help="Space-separate list of glyphs to use for sampling.",
     )
     parser.add_argument(
-        "--design-units",
+        "--weight-design-units",
         type=str,
-        help="min:default:max in design units.",
+        help="min:default:max in design units for the `wght` axis.",
     )
     parser.add_argument(
-        "--pins",
+        "--width-design-units",
         type=str,
-        help="Space-separate list of before:after pins.",
+        help="min:default:max in design units for the `wdth` axis.",
+    )
+    parser.add_argument(
+        "--weight-pins",
+        type=str,
+        help="Space-separate list of before:after pins. for the `wght` axis.",
     )
     parser.add_argument(
         "-p", "--plot", action="store_true", help="Plot the resulting mapping."
@@ -250,11 +255,12 @@ def main(args=None):
         log.error("Not a variable font.")
         sys.exit(1)
     fvar = font["fvar"]
-    wghtAxis = None
+    wghtAxis = wdthAxis = None
     for axis in fvar.axes:
         if axis.axisTag == "wght":
             wghtAxis = axis
-            break
+        elif axis.axisTag == "wdth":
+            wdthAxis = axis
 
     if "avar" in font:
         existingMapping = font["avar"].segments["wght"]
@@ -282,14 +288,14 @@ def main(args=None):
         else:
             glyphs = None
 
-        if options.design_units is not None:
-            designUnits = [float(d) for d in options.design_units.split(":")]
+        if options.weight_design_units is not None:
+            designUnits = [float(d) for d in options.weight_design_units.split(":")]
         else:
             designUnits = None
 
-        if options.pins is not None:
+        if options.weight_pins is not None:
             pins = {}
-            for pin in options.pins.split():
+            for pin in options.weight_pins.split():
                 before, after = pin.split(":")
                 pins[float(before)] = float(after)
         else:
