@@ -113,6 +113,14 @@ def measureWidth(glyphset, glyphs=None):
     return wdth_sum / freq_sum
 
 
+def sanitizeWidth(userTriple, designTriple, pins, measurements):
+    return True
+
+
+def sanitizeWeight(userTriple, designTriple, pins, measurements):
+    return True
+
+
 def planAxis(
     axisTag,
     measureFunc,
@@ -125,6 +133,7 @@ def planAxis(
     glyphs=None,
     designUnits=None,
     pins=None,
+    sanitizeFunc=None,
 ):
     if samples is None:
         samples = SAMPLES
@@ -163,15 +172,19 @@ def planAxis(
     outNormalized = {}
 
     upem = 1  # font["head"].unitsPerEm
-    axisBlackness = {}
+    axisMeasurements = {}
     for value in sorted({minValue, defaultValue, maxValue} | set(pins.values())):
         glyphset = glyphSetFunc(location={axisTag: value})
 
         designValue = piecewiseLinearMap(value, pins)
 
-        axisBlackness[designValue] = measureFunc(glyphset, glyphs) / (upem * upem)
+        axisMeasurements[designValue] = measureFunc(glyphset, glyphs) / (upem * upem)
 
-    log.debug("Calculated average value:\n%s", pformat(axisBlackness))
+    if sanitizeFunc is not None:
+        log.info("Sanitizing axis limit values for the `%s` axis.", axisTag)
+        sanitizeFunc(triple, designUnits, pins, axisMeasurements)
+
+    log.debug("Calculated average value:\n%s", pformat(axisMeasurements))
 
     for (rangeMin, targetMin), (rangeMax, targetMax) in zip(
         list(sorted(pins.items()))[:-1],
@@ -188,27 +201,29 @@ def planAxis(
 
         log.info("Planning target values %s.", sorted(targetValues))
         log.info("Sampling %u points in range %g,%g.", samples, rangeMin, rangeMax)
-        valueBlackness = axisBlackness.copy()
+        valueMeasurements = axisMeasurements.copy()
         for sample in range(1, samples + 1):
             value = rangeMin + (rangeMax - rangeMin) * sample / (samples + 1)
             log.info("Sampling value %g.", value)
             glyphset = glyphSetFunc(location={axisTag: value})
             designValue = piecewiseLinearMap(value, pins)
-            valueBlackness[designValue] = measureFunc(glyphset, glyphs) / (upem * upem)
-        log.debug("Sampled average value:\n%s", pformat(valueBlackness))
+            valueMeasurements[designValue] = measureFunc(glyphset, glyphs) / (
+                upem * upem
+            )
+        log.debug("Sampled average value:\n%s", pformat(valueMeasurements))
 
-        blacknessValue = {}
-        for value in sorted(valueBlackness):
-            blacknessValue[valueBlackness[value]] = value
+        measurementValue = {}
+        for value in sorted(valueMeasurements):
+            measurementValue[valueMeasurements[value]] = value
 
-        logMin = math.log(valueBlackness[targetMin])
-        logMax = math.log(valueBlackness[targetMax])
+        logMin = math.log(valueMeasurements[targetMin])
+        logMax = math.log(valueMeasurements[targetMax])
         out[rangeMin] = targetMin
         outNormalized[normalizedMin] = normalizedTargetMin
         for value in sorted(targetValues):
             t = (value - rangeMin) / (rangeMax - rangeMin)
-            targetBlackness = math.exp(logMin + t * (logMax - logMin))
-            targetValue = piecewiseLinearMap(targetBlackness, blacknessValue)
+            targetMeasurements = math.exp(logMin + t * (logMax - logMin))
+            targetValue = piecewiseLinearMap(targetMeasurements, measurementValue)
             log.info("Planned mapping value %g to %g." % (value, targetValue))
             out[value] = targetValue
             outNormalized[
@@ -246,6 +261,7 @@ def planWeightAxis(
     glyphs=None,
     designUnits=None,
     pins=None,
+    sanitize=False,
 ):
     if weights is None:
         weights = WEIGHTS
@@ -262,6 +278,7 @@ def planWeightAxis(
         glyphs=glyphs,
         designUnits=designUnits,
         pins=pins,
+        sanitizeFunc=sanitizeWeight if sanitize else None,
     )
 
 
@@ -275,6 +292,7 @@ def planWidthAxis(
     glyphs=None,
     designUnits=None,
     pins=None,
+    sanitize=False,
 ):
     if widths is None:
         widths = WIDTHS
@@ -291,6 +309,7 @@ def planWidthAxis(
         glyphs=glyphs,
         designUnits=designUnits,
         pins=pins,
+        sanitizeFunc=sanitizeWeight if sanitize else None,
     )
 
 
@@ -347,7 +366,10 @@ def main(args=None):
     parser.add_argument(
         "--widths", type=str, help="Space-separate list of widths to generate."
     )
-    parser.add_argument("-s", "--samples", type=int, help="Number of samples.")
+    parser.add_argument("--samples", type=int, help="Number of samples.")
+    parser.add_argument(
+        "-s", "--sanitize", action="store_true", help="Sanitize axis limits"
+    )
     parser.add_argument(
         "-g",
         "--glyphs",
@@ -455,6 +477,7 @@ def main(args=None):
             glyphs=glyphs,
             designUnits=designUnits,
             pins=pins,
+            sanitize=options.sanitize,
         )
 
         if options.plot:
@@ -500,6 +523,7 @@ def main(args=None):
             glyphs=glyphs,
             designUnits=designUnits,
             pins=pins,
+            sanitize=options.sanitize,
         )
 
         if options.plot:
