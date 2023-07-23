@@ -8,21 +8,29 @@ WEIGHTS = [100, 200, 300, 400, 500, 600, 700, 800, 900]
 SAMPLES = 8
 
 
-def getGlyphsetBlackness(glyphset):
+def getGlyphsetBlackness(glyphset, frequencies=None):
     wght_sum = wdth_sum = 0
     for glyph_name in glyphset:
+
+        if frequencies is not None:
+            frequency = frequencies.get(glyph_name, 0)
+            if frequency == 0:
+                continue
+        else:
+            frequency = 1
+
         glyph = glyphset[glyph_name]
 
         pen = AreaPen(glyphset=glyphset)
         glyph.draw(pen)
 
-        wght_sum += abs(pen.value) * glyph.width
-        wdth_sum += glyph.width
+        wght_sum += abs(pen.value) * glyph.width * frequency
+        wdth_sum += glyph.width * frequency
 
     return wght_sum / wdth_sum
 
 
-def planWeightAxis(font, minValue, defaultValue, maxValue, weights=WEIGHTS):
+def planWeightAxis(font, minValue, defaultValue, maxValue, weights=WEIGHTS, frequencies=None):
     print("Weight min/default/max:", minValue, defaultValue, maxValue)
 
     out = {}
@@ -32,7 +40,7 @@ def planWeightAxis(font, minValue, defaultValue, maxValue, weights=WEIGHTS):
     axisWeightAverage = {}
     for weight in sorted({minValue, defaultValue, maxValue}):
         glyphset = font.getGlyphSet(location={"wght": weight})
-        axisWeightAverage[weight] = getGlyphsetBlackness(glyphset) / (upem * upem)
+        axisWeightAverage[weight] = getGlyphsetBlackness(glyphset, frequencies) / (upem * upem)
 
     print("Calculated average glyph black ratio:", axisWeightAverage)
 
@@ -53,7 +61,7 @@ def planWeightAxis(font, minValue, defaultValue, maxValue, weights=WEIGHTS):
             weight = rangeMin + (rangeMax - rangeMin) * sample / (SAMPLES + 1)
             print("Sampling weight", weight)
             glyphset = font.getGlyphSet(location={"wght": weight})
-            weightBlackness[weight] = getGlyphsetBlackness(glyphset) / (upem * upem)
+            weightBlackness[weight] = getGlyphsetBlackness(glyphset, frequencies) / (upem * upem)
         print("Sampled average glyph black ratio:", weightBlackness)
 
         blacknessWeight = {}
