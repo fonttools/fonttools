@@ -164,9 +164,9 @@ def main(args=None):
         description="Plan `avar` table for variable font",
     )
     parser.add_argument("font", metavar="font.ttf", help="Font file.")
-    parser.add_argument("-w", "--weights", type=str, help="Weights to generate.")
+    parser.add_argument("-w", "--weights", type=str, help="Space-separate list of weights to generate.")
     parser.add_argument("-s", "--samples", type=int, help="Number of samples.")
-    parser.add_argument("-g", "--glyphs", type=str, help="Glyphs to use for sampling.")
+    parser.add_argument("-g", "--glyphs", type=str, help="Space-separate list of glyphs to use for sampling.")
     parser.add_argument(
         "-p", "--plot", action="store_true", help="Plot the resulting mapping."
     )
@@ -206,12 +206,12 @@ def main(args=None):
     if wghtAxis:
 
         if options.weights is not None:
-            weights = [float(w) for w in options.weights.split(",")]
+            weights = [float(w) for w in options.weights.split()]
         else:
             weights = options.weights
 
         if options.glyphs is not None:
-            glyphs = options.glyphs.split(",")
+            glyphs = options.glyphs.split()
         else:
             glyphs = None
 
