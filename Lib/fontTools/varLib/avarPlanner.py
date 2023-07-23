@@ -115,12 +115,6 @@ def planWeightAxis(
         outNormalized[bias + 1] = bias + 1
     outNormalized[+1] = +1
 
-    # from matplotlib import pyplot
-    # pyplot.plot(
-    #    sorted(outNormalized), [outNormalized[k] for k in sorted(outNormalized)]
-    # )
-    # pyplot.show()
-
     log.info("Planned mapping:\n%s", pformat(out))
     log.info("Planned normalized mapping:\n%s", pformat(outNormalized))
     return out, outNormalized
@@ -142,6 +136,9 @@ def main(args=None):
         description="Plan `avar` table for variable font",
     )
     parser.add_argument("font", metavar="font.ttf", help="Font file.")
+    parser.add_argument(
+        "-p", "--plot", action="store_true", help="Plot the resulting mapping."
+    )
 
     logging_group = parser.add_mutually_exclusive_group(required=False)
     logging_group.add_argument(
@@ -172,9 +169,17 @@ def main(args=None):
     else:
         existingMapping = None
 
-    _, mapping = planWeightAxis(
+    out, outNormalized = planWeightAxis(
         font, wghtAxis.minValue, wghtAxis.defaultValue, wghtAxis.maxValue
     )
+
+    if options.plot:
+        from matplotlib import pyplot
+
+        pyplot.plot(
+            sorted(outNormalized), [outNormalized[k] for k in sorted(outNormalized)]
+        )
+        pyplot.show()
 
     if existingMapping is not None:
         log.info("Existing weight mapping:\n%s", pformat(existingMapping))
@@ -182,7 +187,7 @@ def main(args=None):
     if "avar" not in font:
         font["avar"] = newTable("avar")
     avar = font["avar"]
-    avar.segments["wght"] = mapping
+    avar.segments["wght"] = outNormalized
 
     outfile = makeOutputFileName(options.font, overWrite=True, suffix=".avar")
     log.info("Saving %s", outfile)
