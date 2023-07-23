@@ -76,7 +76,7 @@ def planWeightAxis(
             upem * upem
         )
 
-    log.info("Calculated average glyph black ratio:\n%s", pformat(axisWeightAverage))
+    log.debug("Calculated average glyph black ratio:\n%s", pformat(axisWeightAverage))
 
     outNormalized[-1] = -1
     for extremeValue in sorted({minValue, maxValue} - {defaultValue}):
@@ -98,7 +98,7 @@ def planWeightAxis(
             weightBlackness[weight] = getGlyphsetBlackness(glyphset, frequencies) / (
                 upem * upem
             )
-        log.info("Sampled average glyph black ratio:\n%s", pformat(weightBlackness))
+        log.debug("Sampled average glyph black ratio:\n%s", pformat(weightBlackness))
 
         blacknessWeight = {}
         for weight in sorted(weightBlackness):
