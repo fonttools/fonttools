@@ -33,6 +33,9 @@ WEIGHTS = [
 SAMPLES = 8
 
 
+__all__ = ["planWeightAxis", "addEmptyAvar", "getGlyphsetBlackness", "main"]
+
+
 def getGlyphsetBlackness(glyphset, frequencies=None):
     wght_sum = wdth_sum = 0
     for glyph_name in glyphset:
