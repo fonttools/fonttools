@@ -58,8 +58,13 @@ def getGlyphsetBlackness(glyphset, frequencies=None):
 
 
 def planWeightAxis(
-    font, minValue, defaultValue, maxValue, weights=WEIGHTS, frequencies=None
+    font, minValue, defaultValue, maxValue, weights=None, samples=None, frequencies=None
 ):
+    if weights is None:
+        weights = WEIGHTS
+    if samples is None:
+        samples = SAMPLES
+
     log.info("Weight min %g / default %g / max %g", minValue, defaultValue, maxValue)
 
     if "avar" in font:
@@ -92,10 +97,10 @@ def planWeightAxis(
         bias = -1 if extremeValue < defaultValue else 0
 
         log.info("Planning target weights %s.", sorted(targetWeights))
-        log.info("Sampling %u points in range %g,%g.", SAMPLES, rangeMin, rangeMax)
+        log.info("Sampling %u points in range %g,%g.", samples, rangeMin, rangeMax)
         weightBlackness = axisWeightAverage.copy()
-        for sample in range(1, SAMPLES + 1):
-            weight = rangeMin + (rangeMax - rangeMin) * sample / (SAMPLES + 1)
+        for sample in range(1, samples + 1):
+            weight = rangeMin + (rangeMax - rangeMin) * sample / (samples + 1)
             log.info("Sampling weight %g.", weight)
             glyphset = font.getGlyphSet(location={"wght": weight})
             weightBlackness[weight] = getGlyphsetBlackness(glyphset, frequencies) / (
@@ -151,6 +156,7 @@ def main(args=None):
         description="Plan `avar` table for variable font",
     )
     parser.add_argument("font", metavar="font.ttf", help="Font file.")
+    parser.add_argument("-s", "--samples", type=int, help="Number of samples.")
     parser.add_argument(
         "-p", "--plot", action="store_true", help="Plot the resulting mapping."
     )
@@ -189,7 +195,11 @@ def main(args=None):
 
     if wghtAxis:
         out, outNormalized = planWeightAxis(
-            font, wghtAxis.minValue, wghtAxis.defaultValue, wghtAxis.maxValue
+            font,
+            wghtAxis.minValue,
+            wghtAxis.defaultValue,
+            wghtAxis.maxValue,
+            samples=options.samples,
         )
 
         if options.plot:
