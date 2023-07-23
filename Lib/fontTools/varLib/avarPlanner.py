@@ -271,6 +271,14 @@ def main(args=None):
 
         if options.glyphs is not None:
             glyphs = options.glyphs.split()
+            if ":" in options.glyphs:
+                glyphs = {}
+                for g in options.glyphs.split():
+                    if ":" in g:
+                        glyph, frequency = g.split(":")
+                        glyphs[glyph] = float(frequency)
+                    else:
+                        glyphs[g] = 1.0
         else:
             glyphs = None
 
