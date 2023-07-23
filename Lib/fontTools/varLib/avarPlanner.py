@@ -1,6 +1,6 @@
 from fontTools.ttLib import newTable
 from fontTools.pens.areaPen import AreaPen
-from fontTools.varLib.models import piecewiseLinearMap
+from fontTools.varLib.models import piecewiseLinearMap, normalizeValue
 from fontTools.misc.cliTools import makeOutputFileName
 import math
 import logging
@@ -70,6 +70,7 @@ def planWeightAxis(
     weights=None,
     samples=None,
     glyphs=None,
+    pins=None,
 ):
     if weights is None:
         weights = WEIGHTS
@@ -77,6 +78,10 @@ def planWeightAxis(
         samples = SAMPLES
     if glyphs is None:
         glyphs = glyphSetFunc({}).keys()
+    if pins is None:
+        pins = {}
+    else:
+        pins = pins.copy()
 
     log.info("Weight min %g / default %g / max %g", minValue, defaultValue, maxValue)
 
@@ -86,12 +91,17 @@ def planWeightAxis(
     #    if existingMapping and existingMapping != {-1: -1, 0: 0, +1: +1}:
     #        log.error("Font already has a `avar` weight mapping. Remove it.")
 
+    if pins:
+        log.info("Pins %s", sorted(pins.items()))
+    pins.update({minValue: minValue, defaultValue: defaultValue, maxValue: maxValue})
+    triple = (minValue, defaultValue, maxValue)
+
     out = {}
     outNormalized = {}
 
     upem = 1  # font["head"].unitsPerEm
     axisWeightAverage = {}
-    for weight in sorted({minValue, defaultValue, maxValue}):
+    for weight in sorted({minValue, defaultValue, maxValue} | set(pins.values())):
         glyphset = glyphSetFunc(location={"wght": weight})
         axisWeightAverage[weight] = getGlyphsetBlackness(glyphset, glyphs) / (
             upem * upem
@@ -99,15 +109,18 @@ def planWeightAxis(
 
     log.debug("Calculated average glyph black ratio:\n%s", pformat(axisWeightAverage))
 
-    outNormalized[-1] = -1
-    for extremeValue in sorted({minValue, maxValue} - {defaultValue}):
-        rangeMin = min(defaultValue, extremeValue)
-        rangeMax = max(defaultValue, extremeValue)
+    for (rangeMin, targetMin), (rangeMax, targetMax) in zip(
+        list(sorted(pins.items()))[:-1],
+        list(sorted(pins.items()))[1:],
+    ):
         targetWeights = {w for w in weights if rangeMin < w < rangeMax}
         if not targetWeights:
             continue
 
-        bias = -1 if extremeValue < defaultValue else 0
+        normalizedMin = normalizeValue(rangeMin, triple)
+        normalizedMax = normalizeValue(rangeMax, triple)
+        normalizedTargetMin = normalizeValue(targetMin, triple)
+        normalizedTargetMax = normalizeValue(targetMax, triple)
 
         log.info("Planning target weights %s.", sorted(targetWeights))
         log.info("Sampling %u points in range %g,%g.", samples, rangeMin, rangeMax)
@@ -125,22 +138,25 @@ def planWeightAxis(
         for weight in sorted(weightBlackness):
             blacknessWeight[weightBlackness[weight]] = weight
 
-        logMin = math.log(weightBlackness[rangeMin])
-        logMax = math.log(weightBlackness[rangeMax])
-        out[rangeMin] = rangeMin
-        outNormalized[bias] = bias
+        logMin = math.log(weightBlackness[targetMin])
+        logMax = math.log(weightBlackness[targetMax])
+        out[rangeMin] = targetMin
+        outNormalized[normalizedMin] = normalizedTargetMin
         for weight in sorted(targetWeights):
             t = (weight - rangeMin) / (rangeMax - rangeMin)
             targetBlackness = math.exp(logMin + t * (logMax - logMin))
             targetWeight = piecewiseLinearMap(targetBlackness, blacknessWeight)
             log.info("Planned mapping weight %g to %g." % (weight, targetWeight))
             out[weight] = targetWeight
-            outNormalized[t + bias] = (targetWeight - rangeMin) / (
-                rangeMax - rangeMin
-            ) + bias
-        out[rangeMax] = rangeMax
-        outNormalized[bias + 1] = bias + 1
-    outNormalized[+1] = +1
+            outNormalized[
+                normalizedMin + t * (normalizedMax - normalizedMin)
+            ] = normalizedTargetMin + (targetWeight - targetMin) / (
+                targetMax - targetMin
+            ) * (
+                normalizedTargetMax - normalizedTargetMin
+            )
+        out[rangeMax] = targetMax
+        outNormalized[normalizedMax] = normalizedTargetMax
 
     log.info("Planned mapping:\n%s", pformat(out))
     log.info("Planned normalized mapping:\n%s", pformat(outNormalized))
@@ -184,6 +200,11 @@ def main(args=None):
         "--glyphs",
         type=str,
         help="Space-separate list of glyphs to use for sampling.",
+    )
+    parser.add_argument(
+        "--pins",
+        type=str,
+        help="Space-separate list of before:after pins.",
     )
     parser.add_argument(
         "-p", "--plot", action="store_true", help="Plot the resulting mapping."
@@ -232,6 +253,14 @@ def main(args=None):
         else:
             glyphs = None
 
+        if options.pins is not None:
+            pins = {}
+            for pin in options.pins.split():
+                before, after = pin.split(":")
+                pins[float(before)] = float(after)
+        else:
+            pins = None
+
         out, outNormalized = planWeightAxis(
             font.getGlyphSet,
             wghtAxis.minValue,
@@ -240,6 +269,7 @@ def main(args=None):
             weights=weights,
             samples=options.samples,
             glyphs=glyphs,
+            pins=pins,
         )
 
         if options.plot:
