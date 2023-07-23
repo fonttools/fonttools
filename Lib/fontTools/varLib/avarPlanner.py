@@ -180,6 +180,12 @@ def main(args=None):
         help="Space-separate list of glyphs to use for sampling.",
     )
     parser.add_argument(
+        "-o",
+        "--output-file",
+        type=str,
+        help="Output font file name.",
+    )
+    parser.add_argument(
         "-p", "--plot", action="store_true", help="Plot the resulting mapping."
     )
 
@@ -264,7 +270,10 @@ def main(args=None):
     log.info("Designspace snippet:")
     print(designspaceSnippet)
 
-    outfile = makeOutputFileName(options.font, overWrite=True, suffix=".avar")
+    if options.output_file is None:
+        outfile = makeOutputFileName(options.font, overWrite=True, suffix=".avar")
+    else:
+        outfile = options.output_file
     log.info("Saving %s", outfile)
     font.save(outfile)
 
