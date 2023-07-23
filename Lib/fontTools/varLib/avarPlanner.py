@@ -170,6 +170,12 @@ def main(args=None):
     )
     parser.add_argument("font", metavar="font.ttf", help="Font file.")
     parser.add_argument(
+        "-o",
+        "--output-file",
+        type=str,
+        help="Output font file name.",
+    )
+    parser.add_argument(
         "-w", "--weights", type=str, help="Space-separate list of weights to generate."
     )
     parser.add_argument("-s", "--samples", type=int, help="Number of samples.")
@@ -178,12 +184,6 @@ def main(args=None):
         "--glyphs",
         type=str,
         help="Space-separate list of glyphs to use for sampling.",
-    )
-    parser.add_argument(
-        "-o",
-        "--output-file",
-        type=str,
-        help="Output font file name.",
     )
     parser.add_argument(
         "-p", "--plot", action="store_true", help="Plot the resulting mapping."
@@ -274,8 +274,9 @@ def main(args=None):
         outfile = makeOutputFileName(options.font, overWrite=True, suffix=".avar")
     else:
         outfile = options.output_file
-    log.info("Saving %s", outfile)
-    font.save(outfile)
+    if outfile:
+        log.info("Saving %s", outfile)
+        font.save(outfile)
 
 
 if __name__ == "__main__":
