@@ -62,7 +62,8 @@ def planWeightAxis(
     if "avar" in font:
         log.debug("Checking that font doesn't have weight mapping already.")
         existingMapping = font["avar"].segments["wght"]
-        assert not existingMapping or existingMapping == {-1: -1, 0: 0, +1: +1}
+        if existingMapping and existingMapping != {-1: -1, 0: 0, +1: +1}:
+            log.error("Font already has a `avar` weight mapping. Remove it.")
 
     out = {}
     outNormalized = {}
@@ -160,6 +161,9 @@ def main(args=None):
     )
 
     font = TTFont(options.font)
+    if not "fvar" in font:
+        log.error("Not a variable font.")
+        sys.exit(1)
     fvar = font["fvar"]
     wghtAxis = slntAxis = None
     for axis in fvar.axes:
@@ -170,29 +174,32 @@ def main(args=None):
 
     if "avar" in font:
         existingMapping = font["avar"].segments["wght"]
-        font["avar"].segments["wght"] = {}
+        if wghtAxis:
+            font["avar"].segments["wght"] = {}
     else:
         existingMapping = None
 
-    out, outNormalized = planWeightAxis(
-        font, wghtAxis.minValue, wghtAxis.defaultValue, wghtAxis.maxValue
-    )
-
-    if options.plot:
-        from matplotlib import pyplot
-
-        pyplot.plot(
-            sorted(outNormalized), [outNormalized[k] for k in sorted(outNormalized)]
+    if wghtAxis:
+        out, outNormalized = planWeightAxis(
+            font, wghtAxis.minValue, wghtAxis.defaultValue, wghtAxis.maxValue
         )
-        pyplot.show()
 
-    if existingMapping is not None:
-        log.info("Existing weight mapping:\n%s", pformat(existingMapping))
+        if options.plot:
+            from matplotlib import pyplot
+
+            pyplot.plot(
+                sorted(outNormalized), [outNormalized[k] for k in sorted(outNormalized)]
+            )
+            pyplot.show()
+
+        if existingMapping is not None:
+            log.info("Existing weight mapping:\n%s", pformat(existingMapping))
 
     if "avar" not in font:
         font["avar"] = newTable("avar")
     avar = font["avar"]
-    avar.segments["wght"] = outNormalized
+    if wghtAxis:
+        avar.segments["wght"] = outNormalized
 
     designspaceSnippet = (
         '    <axis tag="wght" name="Weight" minimum="%g" maximum="%g" default="%g">\n'
