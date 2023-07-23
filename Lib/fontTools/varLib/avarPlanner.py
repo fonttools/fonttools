@@ -6,6 +6,17 @@ import math
 import logging
 from pprint import pformat
 
+__all__ = [
+    "planWeightAxis",
+    "planWidthAxis",
+    "planAxis",
+    "measureBlackness",
+    "measureWidth",
+    "makeDesignspaceSnippet",
+    "addEmptyAvar",
+    "main",
+]
+
 log = logging.getLogger("fontTools.varLib.avarPlanner")
 
 WEIGHTS = [
@@ -30,13 +41,26 @@ WEIGHTS = [
     950,
 ]
 
+WIDTHS = [
+    50.0,
+    62.5,
+    75.0,
+    87.5,
+    100.0,
+    112.5,
+    125.0,
+    137.5,
+    150.0,
+    162.5,
+    175.0,
+    187.5,
+    200.0,
+]
+
 SAMPLES = 8
 
 
-__all__ = ["planWeightAxis", "addEmptyAvar", "getGlyphsetBlackness", "main"]
-
-
-def getGlyphsetBlackness(glyphset, glyphs=None):
+def measureBlackness(glyphset, glyphs=None):
     if isinstance(glyphs, dict):
         frequencies = glyphs
     else:
@@ -62,19 +86,46 @@ def getGlyphsetBlackness(glyphset, glyphs=None):
     return wght_sum / wdth_sum
 
 
-def planWeightAxis(
+def measureWidth(glyphset, glyphs=None):
+    if isinstance(glyphs, dict):
+        frequencies = glyphs
+    else:
+        frequencies = {g: 1 for g in glyphs}
+
+    wdth_sum = 0
+    freq_sum = 0
+    for glyph_name in glyphs:
+        if frequencies is not None:
+            frequency = frequencies.get(glyph_name, 0)
+            if frequency == 0:
+                continue
+        else:
+            frequency = 1
+
+        glyph = glyphset[glyph_name]
+
+        pen = AreaPen(glyphset=glyphset)
+        glyph.draw(pen)
+
+        wdth_sum += glyph.width * frequency
+        freq_sum += frequency
+
+    return wdth_sum / freq_sum
+
+
+def planAxis(
+    axisTag,
+    measureFunc,
     glyphSetFunc,
     minValue,
     defaultValue,
     maxValue,
-    weights=None,
+    values=None,
     samples=None,
     glyphs=None,
     designUnits=None,
     pins=None,
 ):
-    if weights is None:
-        weights = WEIGHTS
     if samples is None:
         samples = SAMPLES
     if glyphs is None:
@@ -84,19 +135,19 @@ def planWeightAxis(
     else:
         pins = pins.copy()
 
-    log.info("Weight min %g / default %g / max %g", minValue, defaultValue, maxValue)
+    log.info("Value min %g / default %g / max %g", minValue, defaultValue, maxValue)
     triple = (minValue, defaultValue, maxValue)
 
     if designUnits is not None:
-        log.info("Weight design-units min %g / default %g / max %g", *designUnits)
+        log.info("Value design-units min %g / default %g / max %g", *designUnits)
     else:
         designUnits = triple
 
     # if "avar" in font:
-    #    log.debug("Checking that font doesn't have weight mapping already.")
-    #    existingMapping = font["avar"].segments["wght"]
+    #    log.debug("Checking that font doesn't have axis mapping already.")
+    #    existingMapping = font["avar"].segments[axisTag]
     #    if existingMapping and existingMapping != {-1: -1, 0: 0, +1: +1}:
-    #        log.error("Font already has a `avar` weight mapping. Remove it.")
+    #        log.error("Font already has a `avar` value mapping. Remove it.")
 
     if pins:
         log.info("Pins %s", sorted(pins.items()))
@@ -113,23 +164,21 @@ def planWeightAxis(
 
     upem = 1  # font["head"].unitsPerEm
     axisBlackness = {}
-    for weight in sorted({minValue, defaultValue, maxValue} | set(pins.values())):
-        glyphset = glyphSetFunc(location={"wght": weight})
+    for value in sorted({minValue, defaultValue, maxValue} | set(pins.values())):
+        glyphset = glyphSetFunc(location={axisTag: value})
 
-        designWeight = piecewiseLinearMap(weight, pins)
+        designValue = piecewiseLinearMap(value, pins)
 
-        axisBlackness[designWeight] = getGlyphsetBlackness(glyphset, glyphs) / (
-            upem * upem
-        )
+        axisBlackness[designValue] = measureFunc(glyphset, glyphs) / (upem * upem)
 
-    log.debug("Calculated average glyph black ratio:\n%s", pformat(axisBlackness))
+    log.debug("Calculated average value:\n%s", pformat(axisBlackness))
 
     for (rangeMin, targetMin), (rangeMax, targetMax) in zip(
         list(sorted(pins.items()))[:-1],
         list(sorted(pins.items()))[1:],
     ):
-        targetWeights = {w for w in weights if rangeMin < w < rangeMax}
-        if not targetWeights:
+        targetValues = {w for w in values if rangeMin < w < rangeMax}
+        if not targetValues:
             continue
 
         normalizedMin = normalizeValue(rangeMin, triple)
@@ -137,36 +186,34 @@ def planWeightAxis(
         normalizedTargetMin = normalizeValue(targetMin, designUnits)
         normalizedTargetMax = normalizeValue(targetMax, designUnits)
 
-        log.info("Planning target weights %s.", sorted(targetWeights))
+        log.info("Planning target values %s.", sorted(targetValues))
         log.info("Sampling %u points in range %g,%g.", samples, rangeMin, rangeMax)
-        weightBlackness = axisBlackness.copy()
+        valueBlackness = axisBlackness.copy()
         for sample in range(1, samples + 1):
-            weight = rangeMin + (rangeMax - rangeMin) * sample / (samples + 1)
-            log.info("Sampling weight %g.", weight)
-            glyphset = glyphSetFunc(location={"wght": weight})
-            designWeight = piecewiseLinearMap(weight, pins)
-            weightBlackness[designWeight] = getGlyphsetBlackness(glyphset, glyphs) / (
-                upem * upem
-            )
-        log.debug("Sampled average glyph black ratio:\n%s", pformat(weightBlackness))
+            value = rangeMin + (rangeMax - rangeMin) * sample / (samples + 1)
+            log.info("Sampling value %g.", value)
+            glyphset = glyphSetFunc(location={axisTag: value})
+            designValue = piecewiseLinearMap(value, pins)
+            valueBlackness[designValue] = measureFunc(glyphset, glyphs) / (upem * upem)
+        log.debug("Sampled average value:\n%s", pformat(valueBlackness))
 
-        blacknessWeight = {}
-        for weight in sorted(weightBlackness):
-            blacknessWeight[weightBlackness[weight]] = weight
+        blacknessValue = {}
+        for value in sorted(valueBlackness):
+            blacknessValue[valueBlackness[value]] = value
 
-        logMin = math.log(weightBlackness[targetMin])
-        logMax = math.log(weightBlackness[targetMax])
+        logMin = math.log(valueBlackness[targetMin])
+        logMax = math.log(valueBlackness[targetMax])
         out[rangeMin] = targetMin
         outNormalized[normalizedMin] = normalizedTargetMin
-        for weight in sorted(targetWeights):
-            t = (weight - rangeMin) / (rangeMax - rangeMin)
+        for value in sorted(targetValues):
+            t = (value - rangeMin) / (rangeMax - rangeMin)
             targetBlackness = math.exp(logMin + t * (logMax - logMin))
-            targetWeight = piecewiseLinearMap(targetBlackness, blacknessWeight)
-            log.info("Planned mapping weight %g to %g." % (weight, targetWeight))
-            out[weight] = targetWeight
+            targetValue = piecewiseLinearMap(targetBlackness, blacknessValue)
+            log.info("Planned mapping value %g to %g." % (value, targetValue))
+            out[value] = targetValue
             outNormalized[
                 normalizedMin + t * (normalizedMax - normalizedMin)
-            ] = normalizedTargetMin + (targetWeight - targetMin) / (
+            ] = normalizedTargetMin + (targetValue - targetMin) / (
                 targetMax - targetMin
             ) * (
                 normalizedTargetMax - normalizedTargetMin
@@ -174,9 +221,96 @@ def planWeightAxis(
         out[rangeMax] = targetMax
         outNormalized[normalizedMax] = normalizedTargetMax
 
-    log.info("Planned mapping:\n%s", pformat(out))
-    log.info("Planned normalized mapping:\n%s", pformat(outNormalized))
+    log.info("Planned mapping for the `%s` axis:\n%s", axisTag, pformat(out))
+    log.info(
+        "Planned normalized mapping for the `%s` axis:\n%s",
+        axisTag,
+        pformat(outNormalized),
+    )
+
+    if all(abs(k - v) < 0.02 for k, v in outNormalized.items()):
+        log.info("Detected identity mapping for the `%s` axis. Dropping.", axisTag)
+        out = {}
+        outNormalized = {}
+
     return out, outNormalized
+
+
+def planWeightAxis(
+    glyphSetFunc,
+    minValue,
+    defaultValue,
+    maxValue,
+    weights=None,
+    samples=None,
+    glyphs=None,
+    designUnits=None,
+    pins=None,
+):
+    if weights is None:
+        weights = WEIGHTS
+
+    return planAxis(
+        "wght",
+        measureBlackness,
+        glyphSetFunc,
+        minValue,
+        defaultValue,
+        maxValue,
+        values=weights,
+        samples=samples,
+        glyphs=glyphs,
+        designUnits=designUnits,
+        pins=pins,
+    )
+
+
+def planWidthAxis(
+    glyphSetFunc,
+    minValue,
+    defaultValue,
+    maxValue,
+    widths=None,
+    samples=None,
+    glyphs=None,
+    designUnits=None,
+    pins=None,
+):
+    if widths is None:
+        widths = WIDTHS
+
+    return planAxis(
+        "wdth",
+        measureWidth,
+        glyphSetFunc,
+        minValue,
+        defaultValue,
+        maxValue,
+        values=widths,
+        samples=samples,
+        glyphs=glyphs,
+        designUnits=designUnits,
+        pins=pins,
+    )
+
+
+def makeDesignspaceSnippet(axisTag, axisName, axisLimit, mapping):
+    designspaceSnippet = (
+        '    <axis tag="%s" name="%s" minimum="%g" default="%g" maximum="%g"'
+        % ((axisTag, axisName) + axisLimit)
+    )
+    if mapping:
+        designspaceSnippet += ">\n"
+    else:
+        designspaceSnippet += "/>"
+
+    for key, value in mapping.items():
+        designspaceSnippet += '      <map input="%g" output="%g"/>\n' % (key, value)
+
+    if mapping:
+        designspaceSnippet += "    </axis>"
+
+    return designspaceSnippet
 
 
 def addEmptyAvar(font):
@@ -208,7 +342,10 @@ def main(args=None):
         help="Output font file name.",
     )
     parser.add_argument(
-        "-w", "--weights", type=str, help="Space-separate list of weights to generate."
+        "--weights", type=str, help="Space-separate list of weights to generate."
+    )
+    parser.add_argument(
+        "--widths", type=str, help="Space-separate list of widths to generate."
     )
     parser.add_argument("-s", "--samples", type=int, help="Number of samples.")
     parser.add_argument(
@@ -231,6 +368,11 @@ def main(args=None):
         "--weight-pins",
         type=str,
         help="Space-separate list of before:after pins. for the `wght` axis.",
+    )
+    parser.add_argument(
+        "--width-pins",
+        type=str,
+        help="Space-separate list of before:after pins. for the `wdth` axis.",
     )
     parser.add_argument(
         "-p", "--plot", action="store_true", help="Plot the resulting mapping."
@@ -269,24 +411,71 @@ def main(args=None):
     else:
         existingMapping = None
 
+    if options.glyphs is not None:
+        glyphs = options.glyphs.split()
+        if ":" in options.glyphs:
+            glyphs = {}
+            for g in options.glyphs.split():
+                if ":" in g:
+                    glyph, frequency = g.split(":")
+                    glyphs[glyph] = float(frequency)
+                else:
+                    glyphs[g] = 1.0
+    else:
+        glyphs = None
+
+    if wdthAxis:
+        log.info("Planning width axis.")
+
+        if options.widths is not None:
+            widths = [float(w) for w in options.widths.split()]
+        else:
+            widths = None
+
+        if options.width_design_units is not None:
+            designUnits = [float(d) for d in options.width_design_units.split(":")]
+        else:
+            designUnits = None
+
+        if options.width_pins is not None:
+            pins = {}
+            for pin in options.width_pins.split():
+                before, after = pin.split(":")
+                pins[float(before)] = float(after)
+        else:
+            pins = None
+
+        widthMapping, widthMappingNormalized = planWidthAxis(
+            font.getGlyphSet,
+            wdthAxis.minValue,
+            wdthAxis.defaultValue,
+            wdthAxis.maxValue,
+            widths=widths,
+            samples=options.samples,
+            glyphs=glyphs,
+            designUnits=designUnits,
+            pins=pins,
+        )
+
+        if options.plot:
+            from matplotlib import pyplot
+
+            pyplot.plot(
+                sorted(widthMappingNormalized),
+                [widthMappingNormalized[k] for k in sorted(widthMappingNormalized)],
+            )
+            pyplot.show()
+
+        if existingMapping is not None:
+            log.info("Existing width mapping:\n%s", pformat(existingMapping))
+
     if wghtAxis:
+        log.info("Planning weight axis.")
+
         if options.weights is not None:
             weights = [float(w) for w in options.weights.split()]
         else:
-            weights = options.weights
-
-        if options.glyphs is not None:
-            glyphs = options.glyphs.split()
-            if ":" in options.glyphs:
-                glyphs = {}
-                for g in options.glyphs.split():
-                    if ":" in g:
-                        glyph, frequency = g.split(":")
-                        glyphs[glyph] = float(frequency)
-                    else:
-                        glyphs[g] = 1.0
-        else:
-            glyphs = None
+            weights = None
 
         if options.weight_design_units is not None:
             designUnits = [float(d) for d in options.weight_design_units.split(":")]
@@ -301,7 +490,7 @@ def main(args=None):
         else:
             pins = None
 
-        out, outNormalized = planWeightAxis(
+        weightMapping, weightMappingNormalized = planWeightAxis(
             font.getGlyphSet,
             wghtAxis.minValue,
             wghtAxis.defaultValue,
@@ -317,7 +506,8 @@ def main(args=None):
             from matplotlib import pyplot
 
             pyplot.plot(
-                sorted(outNormalized), [outNormalized[k] for k in sorted(outNormalized)]
+                sorted(weightMappingNormalized),
+                [weightMappingNormalized[k] for k in sorted(weightMappingNormalized)],
             )
             pyplot.show()
 
@@ -328,16 +518,26 @@ def main(args=None):
         addEmptyAvar(font)
 
     avar = font["avar"]
-    if wghtAxis:
-        avar.segments["wght"] = outNormalized
 
-        designspaceSnippet = (
-            '    <axis tag="wght" name="Weight" minimum="%g" maximum="%g" default="%g">\n'
-            % (wghtAxis.minValue, wghtAxis.maxValue, wghtAxis.defaultValue)
+    if wdthAxis:
+        avar.segments["wdth"] = widthMappingNormalized
+        designspaceSnippet = makeDesignspaceSnippet(
+            "wdth",
+            "Width",
+            (wdthAxis.minValue, wdthAxis.defaultValue, wdthAxis.maxValue),
+            widthMapping,
         )
-        for key, value in out.items():
-            designspaceSnippet += '      <map input="%g" output="%g"/>\n' % (key, value)
-        designspaceSnippet += "    </axis>"
+        log.info("Width axis designspace snippet:")
+        print(designspaceSnippet)
+
+    if wghtAxis:
+        avar.segments["wght"] = weightMappingNormalized
+        designspaceSnippet = makeDesignspaceSnippet(
+            "wght",
+            "Weight",
+            (wghtAxis.minValue, wghtAxis.defaultValue, wghtAxis.maxValue),
+            weightMapping,
+        )
         log.info("Weight axis designspace snippet:")
         print(designspaceSnippet)
 
