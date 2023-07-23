@@ -2,7 +2,11 @@ from fontTools.ttLib import newTable
 from fontTools.pens.areaPen import AreaPen
 from fontTools.varLib.models import piecewiseLinearMap
 from fontTools.misc.cliTools import makeOutputFileName
-from math import exp, log
+import math
+import logging
+from pprint import pformat
+
+log = logging.getLogger("fontTools.varLib.avarPlanner")
 
 WEIGHTS = [
     50,
@@ -53,7 +57,7 @@ def getGlyphsetBlackness(glyphset, frequencies=None):
 def planWeightAxis(
     font, minValue, defaultValue, maxValue, weights=WEIGHTS, frequencies=None
 ):
-    print("Weight min/default/max:", minValue, defaultValue, maxValue)
+    log.info("Weight min %g / default %g / max %g", minValue, defaultValue, maxValue)
 
     out = {}
     outNormalized = {}
@@ -66,7 +70,7 @@ def planWeightAxis(
             upem * upem
         )
 
-    print("Calculated average glyph black ratio:", axisWeightAverage)
+    log.info("Calculated average glyph black ratio:\n%s", pformat(axisWeightAverage))
 
     outNormalized[-1] = -1
     for extremeValue in sorted({minValue, maxValue} - {defaultValue}):
@@ -78,31 +82,31 @@ def planWeightAxis(
 
         bias = -1 if extremeValue < defaultValue else 0
 
-        print("Planning target weights", sorted(targetWeights))
-        print("Sampling", SAMPLES, "points in range", rangeMin, rangeMax)
+        log.info("Planning target weights %s", sorted(targetWeights))
+        log.info("Sampling %u points in range %g,%g", SAMPLES, rangeMin, rangeMax)
         weightBlackness = axisWeightAverage.copy()
         for sample in range(1, SAMPLES + 1):
             weight = rangeMin + (rangeMax - rangeMin) * sample / (SAMPLES + 1)
-            print("Sampling weight", weight)
+            log.info("Sampling weight %g", weight)
             glyphset = font.getGlyphSet(location={"wght": weight})
             weightBlackness[weight] = getGlyphsetBlackness(glyphset, frequencies) / (
                 upem * upem
             )
-        print("Sampled average glyph black ratio:", weightBlackness)
+        log.info("Sampled average glyph black ratio:\n%s", pformat(weightBlackness))
 
         blacknessWeight = {}
         for weight in sorted(weightBlackness):
             blacknessWeight[weightBlackness[weight]] = weight
 
-        logMin = log(weightBlackness[rangeMin])
-        logMax = log(weightBlackness[rangeMax])
+        logMin = math.log(weightBlackness[rangeMin])
+        logMax = math.log(weightBlackness[rangeMax])
         out[rangeMin] = rangeMin
         outNormalized[bias] = bias
         for weight in sorted(targetWeights):
             t = (weight - rangeMin) / (rangeMax - rangeMin)
-            targetBlackness = exp(logMin + t * (logMax - logMin))
+            targetBlackness = math.exp(logMin + t * (logMax - logMin))
             targetWeight = piecewiseLinearMap(targetBlackness, blacknessWeight)
-            print("Planned mapping weight %g to %g" % (weight, targetWeight))
+            log.info("Planned mapping weight %g to %g" % (weight, targetWeight))
             out[weight] = targetWeight
             outNormalized[t + bias] = (targetWeight - rangeMin) / (
                 rangeMax - rangeMin
@@ -117,12 +121,14 @@ def planWeightAxis(
     # )
     # pyplot.show()
 
-    print("Planned mapping:", out)
-    print("Planned normalized mapping:", outNormalized)
+    log.info("Planned mapping:\n%s", pformat(out))
+    log.info("Planned normalized mapping:\n%s", pformat(outNormalized))
     return out, outNormalized
 
 
 def main(args=None):
+    from fontTools import configLogger
+
     if args is None:
         import sys
 
@@ -137,7 +143,19 @@ def main(args=None):
     )
     parser.add_argument("font", metavar="font.ttf", help="Font file.")
 
+    logging_group = parser.add_mutually_exclusive_group(required=False)
+    logging_group.add_argument(
+        "-v", "--verbose", action="store_true", help="Run more verbosely."
+    )
+    logging_group.add_argument(
+        "-q", "--quiet", action="store_true", help="Turn verbosity off."
+    )
+
     options = parser.parse_args(args)
+
+    configLogger(
+        level=("DEBUG" if options.verbose else "ERROR" if options.quiet else "INFO")
+    )
 
     font = TTFont(options.font)
     fvar = font["fvar"]
@@ -159,15 +177,15 @@ def main(args=None):
     )
 
     if existingMapping is not None:
-        print("Existing weight mapping:", existingMapping)
+        log.info("Existing weight mapping:\n%s", pformat(existingMapping))
 
     if "avar" not in font:
         font["avar"] = newTable("avar")
     avar = font["avar"]
     avar.segments["wght"] = mapping
 
-    print("Saving font")
     outfile = makeOutputFileName(options.font, overWrite=True, suffix=".avar")
+    log.info("Saving %s", outfile)
     font.save(outfile)
 
 
