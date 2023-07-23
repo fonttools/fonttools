@@ -111,7 +111,10 @@ def planWeightAxis(
     outNormalized[+1] = +1
 
     from matplotlib import pyplot
-    pyplot.plot(sorted(outNormalized), [outNormalized[k] for k in sorted(outNormalized)])
+
+    pyplot.plot(
+        sorted(outNormalized), [outNormalized[k] for k in sorted(outNormalized)]
+    )
     pyplot.show()
 
     print("Planned mapping:", out)
@@ -165,8 +168,6 @@ def main(args=None):
     print("Saving font")
     outfile = makeOutputFileName(options.font, overWrite=True, suffix=".avar")
     font.save(outfile)
-
-
 
 
 if __name__ == "__main__":
