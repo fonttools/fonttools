@@ -157,6 +157,7 @@ def main(args=None):
     )
     parser.add_argument("font", metavar="font.ttf", help="Font file.")
     parser.add_argument("-s", "--samples", type=int, help="Number of samples.")
+    parser.add_argument("-w", "--weights", type=str, help="Number of samples.")
     parser.add_argument(
         "-p", "--plot", action="store_true", help="Plot the resulting mapping."
     )
@@ -194,11 +195,18 @@ def main(args=None):
         existingMapping = None
 
     if wghtAxis:
+
+        if options.weights is not None:
+            weights = [float(w) for w in options.weights.split(",")]
+        else:
+            weights = options.weights
+
         out, outNormalized = planWeightAxis(
             font,
             wghtAxis.minValue,
             wghtAxis.defaultValue,
             wghtAxis.maxValue,
+            weights=weights,
             samples=options.samples,
         )
 
