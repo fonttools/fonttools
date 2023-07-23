@@ -1,3 +1,4 @@
+from fontTools.ttLib import newTable
 from fontTools.pens.areaPen import AreaPen
 from fontTools.varLib.models import piecewiseLinearMap
 from fontTools.misc.cliTools import makeOutputFileName
@@ -110,12 +111,11 @@ def planWeightAxis(
         outNormalized[bias + 1] = bias + 1
     outNormalized[+1] = +1
 
-    from matplotlib import pyplot
-
-    pyplot.plot(
-        sorted(outNormalized), [outNormalized[k] for k in sorted(outNormalized)]
-    )
-    pyplot.show()
+    # from matplotlib import pyplot
+    # pyplot.plot(
+    #    sorted(outNormalized), [outNormalized[k] for k in sorted(outNormalized)]
+    # )
+    # pyplot.show()
 
     print("Planned mapping:", out)
     print("Planned normalized mapping:", outNormalized)
@@ -150,7 +150,7 @@ def main(args=None):
 
     if "avar" in font:
         existingMapping = font["avar"].segments["wght"]
-        del font["avar"]
+        font["avar"].segments["wght"] = {}
     else:
         existingMapping = None
 
