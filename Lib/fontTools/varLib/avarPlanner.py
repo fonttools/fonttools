@@ -150,6 +150,7 @@ def main(args=None):
 
     if "avar" in font:
         existingMapping = font["avar"].segments["wght"]
+        del font["avar"]
     else:
         existingMapping = None
 
