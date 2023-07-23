@@ -197,6 +197,9 @@ def main(args=None):
 
     if "avar" not in font:
         font["avar"] = newTable("avar")
+        for axis in fvar.axes:
+            font["avar"].segments[axis.axisTag] = {}
+
     avar = font["avar"]
     if wghtAxis:
         avar.segments["wght"] = outNormalized
