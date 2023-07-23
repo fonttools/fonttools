@@ -37,7 +37,6 @@ __all__ = ["planWeightAxis", "addEmptyAvar", "getGlyphsetBlackness", "main"]
 
 
 def getGlyphsetBlackness(glyphset, glyphs=None):
-
     if isinstance(glyphs, dict):
         frequencies = glyphs
     else:
@@ -64,30 +63,36 @@ def getGlyphsetBlackness(glyphset, glyphs=None):
 
 
 def planWeightAxis(
-    font, minValue, defaultValue, maxValue, weights=None, samples=None, glyphs=None
+    glyphSetFunc,
+    minValue,
+    defaultValue,
+    maxValue,
+    weights=None,
+    samples=None,
+    glyphs=None,
 ):
     if weights is None:
         weights = WEIGHTS
     if samples is None:
         samples = SAMPLES
     if glyphs is None:
-        glyphs = font.getGlyphOrder()
+        glyphs = glyphSetFunc({}).keys()
 
     log.info("Weight min %g / default %g / max %g", minValue, defaultValue, maxValue)
 
-    if "avar" in font:
-        log.debug("Checking that font doesn't have weight mapping already.")
-        existingMapping = font["avar"].segments["wght"]
-        if existingMapping and existingMapping != {-1: -1, 0: 0, +1: +1}:
-            log.error("Font already has a `avar` weight mapping. Remove it.")
+    # if "avar" in font:
+    #    log.debug("Checking that font doesn't have weight mapping already.")
+    #    existingMapping = font["avar"].segments["wght"]
+    #    if existingMapping and existingMapping != {-1: -1, 0: 0, +1: +1}:
+    #        log.error("Font already has a `avar` weight mapping. Remove it.")
 
     out = {}
     outNormalized = {}
 
-    upem = font["head"].unitsPerEm
+    upem = 1  # font["head"].unitsPerEm
     axisWeightAverage = {}
     for weight in sorted({minValue, defaultValue, maxValue}):
-        glyphset = font.getGlyphSet(location={"wght": weight})
+        glyphset = glyphSetFunc(location={"wght": weight})
         axisWeightAverage[weight] = getGlyphsetBlackness(glyphset, glyphs) / (
             upem * upem
         )
@@ -110,7 +115,7 @@ def planWeightAxis(
         for sample in range(1, samples + 1):
             weight = rangeMin + (rangeMax - rangeMin) * sample / (samples + 1)
             log.info("Sampling weight %g.", weight)
-            glyphset = font.getGlyphSet(location={"wght": weight})
+            glyphset = glyphSetFunc(location={"wght": weight})
             weightBlackness[weight] = getGlyphsetBlackness(glyphset, glyphs) / (
                 upem * upem
             )
@@ -164,9 +169,16 @@ def main(args=None):
         description="Plan `avar` table for variable font",
     )
     parser.add_argument("font", metavar="font.ttf", help="Font file.")
-    parser.add_argument("-w", "--weights", type=str, help="Space-separate list of weights to generate.")
+    parser.add_argument(
+        "-w", "--weights", type=str, help="Space-separate list of weights to generate."
+    )
     parser.add_argument("-s", "--samples", type=int, help="Number of samples.")
-    parser.add_argument("-g", "--glyphs", type=str, help="Space-separate list of glyphs to use for sampling.")
+    parser.add_argument(
+        "-g",
+        "--glyphs",
+        type=str,
+        help="Space-separate list of glyphs to use for sampling.",
+    )
     parser.add_argument(
         "-p", "--plot", action="store_true", help="Plot the resulting mapping."
     )
@@ -204,7 +216,6 @@ def main(args=None):
         existingMapping = None
 
     if wghtAxis:
-
         if options.weights is not None:
             weights = [float(w) for w in options.weights.split()]
         else:
@@ -216,7 +227,7 @@ def main(args=None):
             glyphs = None
 
         out, outNormalized = planWeightAxis(
-            font,
+            font.getGlyphSet,
             wghtAxis.minValue,
             wghtAxis.defaultValue,
             wghtAxis.maxValue,
