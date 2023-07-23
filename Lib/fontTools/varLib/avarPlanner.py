@@ -36,9 +36,15 @@ SAMPLES = 8
 __all__ = ["planWeightAxis", "addEmptyAvar", "getGlyphsetBlackness", "main"]
 
 
-def getGlyphsetBlackness(glyphset, frequencies=None):
+def getGlyphsetBlackness(glyphset, glyphs=None):
+
+    if isinstance(glyphs, dict):
+        frequencies = glyphs
+    else:
+        frequencies = {g: 1 for g in glyphs}
+
     wght_sum = wdth_sum = 0
-    for glyph_name in glyphset:
+    for glyph_name in glyphs:
         if frequencies is not None:
             frequency = frequencies.get(glyph_name, 0)
             if frequency == 0:
@@ -58,12 +64,14 @@ def getGlyphsetBlackness(glyphset, frequencies=None):
 
 
 def planWeightAxis(
-    font, minValue, defaultValue, maxValue, weights=None, samples=None, frequencies=None
+    font, minValue, defaultValue, maxValue, weights=None, samples=None, glyphs=None
 ):
     if weights is None:
         weights = WEIGHTS
     if samples is None:
         samples = SAMPLES
+    if glyphs is None:
+        glyphs = font.getGlyphOrder()
 
     log.info("Weight min %g / default %g / max %g", minValue, defaultValue, maxValue)
 
@@ -80,7 +88,7 @@ def planWeightAxis(
     axisWeightAverage = {}
     for weight in sorted({minValue, defaultValue, maxValue}):
         glyphset = font.getGlyphSet(location={"wght": weight})
-        axisWeightAverage[weight] = getGlyphsetBlackness(glyphset, frequencies) / (
+        axisWeightAverage[weight] = getGlyphsetBlackness(glyphset, glyphs) / (
             upem * upem
         )
 
@@ -103,7 +111,7 @@ def planWeightAxis(
             weight = rangeMin + (rangeMax - rangeMin) * sample / (samples + 1)
             log.info("Sampling weight %g.", weight)
             glyphset = font.getGlyphSet(location={"wght": weight})
-            weightBlackness[weight] = getGlyphsetBlackness(glyphset, frequencies) / (
+            weightBlackness[weight] = getGlyphsetBlackness(glyphset, glyphs) / (
                 upem * upem
             )
         log.debug("Sampled average glyph black ratio:\n%s", pformat(weightBlackness))
@@ -156,8 +164,9 @@ def main(args=None):
         description="Plan `avar` table for variable font",
     )
     parser.add_argument("font", metavar="font.ttf", help="Font file.")
+    parser.add_argument("-w", "--weights", type=str, help="Weights to generate.")
     parser.add_argument("-s", "--samples", type=int, help="Number of samples.")
-    parser.add_argument("-w", "--weights", type=str, help="Number of samples.")
+    parser.add_argument("-g", "--glyphs", type=str, help="Glyphs to use for sampling.")
     parser.add_argument(
         "-p", "--plot", action="store_true", help="Plot the resulting mapping."
     )
@@ -201,6 +210,11 @@ def main(args=None):
         else:
             weights = options.weights
 
+        if options.glyphs is not None:
+            glyphs = options.glyphs.split(",")
+        else:
+            glyphs = None
+
         out, outNormalized = planWeightAxis(
             font,
             wghtAxis.minValue,
@@ -208,6 +222,7 @@ def main(args=None):
             wghtAxis.maxValue,
             weights=weights,
             samples=options.samples,
+            glyphs=glyphs,
         )
 
         if options.plot:
