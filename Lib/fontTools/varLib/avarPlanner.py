@@ -59,6 +59,11 @@ def planWeightAxis(
 ):
     log.info("Weight min %g / default %g / max %g", minValue, defaultValue, maxValue)
 
+    if "avar" in font:
+        log.debug("Checking that font doesn't have weight mapping already.")
+        existingMapping = font["avar"].segments["wght"]
+        assert not existingMapping or existingMapping == {-1: -1, 0: 0, +1: +1}
+
     out = {}
     outNormalized = {}
 
@@ -82,12 +87,12 @@ def planWeightAxis(
 
         bias = -1 if extremeValue < defaultValue else 0
 
-        log.info("Planning target weights %s", sorted(targetWeights))
-        log.info("Sampling %u points in range %g,%g", SAMPLES, rangeMin, rangeMax)
+        log.info("Planning target weights %s.", sorted(targetWeights))
+        log.info("Sampling %u points in range %g,%g.", SAMPLES, rangeMin, rangeMax)
         weightBlackness = axisWeightAverage.copy()
         for sample in range(1, SAMPLES + 1):
             weight = rangeMin + (rangeMax - rangeMin) * sample / (SAMPLES + 1)
-            log.info("Sampling weight %g", weight)
+            log.info("Sampling weight %g.", weight)
             glyphset = font.getGlyphSet(location={"wght": weight})
             weightBlackness[weight] = getGlyphsetBlackness(glyphset, frequencies) / (
                 upem * upem
@@ -106,7 +111,7 @@ def planWeightAxis(
             t = (weight - rangeMin) / (rangeMax - rangeMin)
             targetBlackness = math.exp(logMin + t * (logMax - logMin))
             targetWeight = piecewiseLinearMap(targetBlackness, blacknessWeight)
-            log.info("Planned mapping weight %g to %g" % (weight, targetWeight))
+            log.info("Planned mapping weight %g to %g." % (weight, targetWeight))
             out[weight] = targetWeight
             outNormalized[t + bias] = (targetWeight - rangeMin) / (
                 rangeMax - rangeMin
