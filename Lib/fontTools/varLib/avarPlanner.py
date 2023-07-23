@@ -3,7 +3,27 @@ from fontTools.varLib.models import piecewiseLinearMap
 from fontTools.misc.cliTools import makeOutputFileName
 from math import exp, log
 
-WEIGHTS = [100, 200, 300, 400, 500, 600, 700, 800, 900]
+WEIGHTS = [
+    50,
+    100,
+    150,
+    200,
+    250,
+    300,
+    350,
+    400,
+    450,
+    500,
+    550,
+    600,
+    650,
+    700,
+    750,
+    800,
+    850,
+    900,
+    950,
+]
 
 SAMPLES = 8
 
@@ -11,7 +31,6 @@ SAMPLES = 8
 def getGlyphsetBlackness(glyphset, frequencies=None):
     wght_sum = wdth_sum = 0
     for glyph_name in glyphset:
-
         if frequencies is not None:
             frequency = frequencies.get(glyph_name, 0)
             if frequency == 0:
@@ -30,7 +49,9 @@ def getGlyphsetBlackness(glyphset, frequencies=None):
     return wght_sum / wdth_sum
 
 
-def planWeightAxis(font, minValue, defaultValue, maxValue, weights=WEIGHTS, frequencies=None):
+def planWeightAxis(
+    font, minValue, defaultValue, maxValue, weights=WEIGHTS, frequencies=None
+):
     print("Weight min/default/max:", minValue, defaultValue, maxValue)
 
     out = {}
@@ -40,7 +61,9 @@ def planWeightAxis(font, minValue, defaultValue, maxValue, weights=WEIGHTS, freq
     axisWeightAverage = {}
     for weight in sorted({minValue, defaultValue, maxValue}):
         glyphset = font.getGlyphSet(location={"wght": weight})
-        axisWeightAverage[weight] = getGlyphsetBlackness(glyphset, frequencies) / (upem * upem)
+        axisWeightAverage[weight] = getGlyphsetBlackness(glyphset, frequencies) / (
+            upem * upem
+        )
 
     print("Calculated average glyph black ratio:", axisWeightAverage)
 
@@ -54,14 +77,16 @@ def planWeightAxis(font, minValue, defaultValue, maxValue, weights=WEIGHTS, freq
 
         bias = -1 if extremeValue < defaultValue else 0
 
-        print("Planning target weights", targetWeights)
+        print("Planning target weights", sorted(targetWeights))
         print("Sampling", SAMPLES, "points in range", rangeMin, rangeMax)
         weightBlackness = axisWeightAverage.copy()
         for sample in range(1, SAMPLES + 1):
             weight = rangeMin + (rangeMax - rangeMin) * sample / (SAMPLES + 1)
             print("Sampling weight", weight)
             glyphset = font.getGlyphSet(location={"wght": weight})
-            weightBlackness[weight] = getGlyphsetBlackness(glyphset, frequencies) / (upem * upem)
+            weightBlackness[weight] = getGlyphsetBlackness(glyphset, frequencies) / (
+                upem * upem
+            )
         print("Sampled average glyph black ratio:", weightBlackness)
 
         blacknessWeight = {}
@@ -126,6 +151,7 @@ def main(args=None):
     avar = font["avar"]
     avar.segments["wght"] = mapping
 
+    print("Saving font")
     outfile = makeOutputFileName(options.font, overWrite=True, suffix=".avar")
     font.save(outfile)
 
