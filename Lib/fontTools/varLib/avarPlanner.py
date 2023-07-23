@@ -110,6 +110,10 @@ def planWeightAxis(
         outNormalized[bias + 1] = bias + 1
     outNormalized[+1] = +1
 
+    from matplotlib import pyplot
+    pyplot.plot(sorted(outNormalized), [outNormalized[k] for k in sorted(outNormalized)])
+    pyplot.show()
+
     print("Planned mapping:", out)
     print("Planned normalized mapping:", outNormalized)
     return out, outNormalized
@@ -141,12 +145,19 @@ def main(args=None):
         elif axis.axisTag == "slnt":
             slntAxis = axis
 
+    if "avar" in font:
+        existingMapping = font["avar"].segments["wght"]
+    else:
+        existingMapping = None
+
     _, mapping = planWeightAxis(
         font, wghtAxis.minValue, wghtAxis.defaultValue, wghtAxis.maxValue
     )
-    if "avar" in font:
-        print("Existing weight mapping:", font["avar"].segments["wght"])
-    else:
+
+    if existingMapping is not None:
+        print("Existing weight mapping:", existingMapping)
+
+    if "avar" not in font:
         font["avar"] = newTable("avar")
     avar = font["avar"]
     avar.segments["wght"] = mapping
@@ -154,6 +165,8 @@ def main(args=None):
     print("Saving font")
     outfile = makeOutputFileName(options.font, overWrite=True, suffix=".avar")
     font.save(outfile)
+
+
 
 
 if __name__ == "__main__":
