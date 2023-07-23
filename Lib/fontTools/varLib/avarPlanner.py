@@ -126,6 +126,12 @@ def planWeightAxis(
     return out, outNormalized
 
 
+def addEmptyAvar(font):
+    font["avar"] = newTable("avar")
+    for axis in fvar.axes:
+        font["avar"].segments[axis.axisTag] = {}
+
+
 def main(args=None):
     from fontTools import configLogger
 
@@ -195,9 +201,7 @@ def main(args=None):
             log.info("Existing weight mapping:\n%s", pformat(existingMapping))
 
     if "avar" not in font:
-        font["avar"] = newTable("avar")
-        for axis in fvar.axes:
-            font["avar"].segments[axis.axisTag] = {}
+        addEmptyAvar(font)
 
     avar = font["avar"]
     if wghtAxis:
