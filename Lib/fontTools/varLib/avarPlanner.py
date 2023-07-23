@@ -16,7 +16,7 @@ def getGlyphsetBlackness(glyphset):
         pen = AreaPen(glyphset=glyphset)
         glyph.draw(pen)
 
-        wght_sum += abs(pen.value)
+        wght_sum += abs(pen.value) * glyph.width
         wdth_sum += glyph.width
 
     return wght_sum / wdth_sum
@@ -32,7 +32,7 @@ def planWeightAxis(font, minValue, defaultValue, maxValue, weights=WEIGHTS):
     axisWeightAverage = {}
     for weight in sorted({minValue, defaultValue, maxValue}):
         glyphset = font.getGlyphSet(location={"wght": weight})
-        axisWeightAverage[weight] = getGlyphsetBlackness(glyphset) / upem
+        axisWeightAverage[weight] = getGlyphsetBlackness(glyphset) / (upem * upem)
 
     print("Calculated average glyph black ratio:", axisWeightAverage)
 
@@ -53,7 +53,7 @@ def planWeightAxis(font, minValue, defaultValue, maxValue, weights=WEIGHTS):
             weight = rangeMin + (rangeMax - rangeMin) * sample / (SAMPLES + 1)
             print("Sampling weight", weight)
             glyphset = font.getGlyphSet(location={"wght": weight})
-            weightBlackness[weight] = getGlyphsetBlackness(glyphset) / upem
+            weightBlackness[weight] = getGlyphsetBlackness(glyphset) / (upem * upem)
         print("Sampled average glyph black ratio:", weightBlackness)
 
         blacknessWeight = {}
