@@ -533,7 +533,14 @@ def planWeightAxis(
     pins=None,
     sanitize=False,
 ):
-    """Plan a weight axis."""
+    """Plan a weight (`wght`) axis.
+
+    weights: A list of weight values to plan for. If None, the default
+    values are used.
+
+    This function simply calls planAxis with values=weights, and the appropriate
+    arguments. See documenation for planAxis for more information.
+    """
 
     if weights is None:
         weights = WEIGHTS
@@ -564,7 +571,14 @@ def planWidthAxis(
     pins=None,
     sanitize=False,
 ):
-    """Plan a width axis."""
+    """Plan a width (`wdth`) axis.
+
+    widths: A list of width values (percentages) to plan for. If None, the default
+    values are used.
+
+    This function simply calls planAxis with values=widths, and the appropriate
+    arguments. See documenation for planAxis for more information.
+    """
 
     if widths is None:
         widths = WIDTHS
@@ -595,7 +609,14 @@ def planSlantAxis(
     pins=None,
     sanitize=False,
 ):
-    """Plan a slant axis."""
+    """Plan a slant (`slnt`) axis.
+
+    slants: A list slant angles to plan for. If None, the default
+    values are used.
+
+    This function simply calls planAxis with values=slants, and the appropriate
+    arguments. See documenation for planAxis for more information.
+    """
 
     if slants is None:
         slants = SLANTS
@@ -626,7 +647,14 @@ def planOpticalSizeAxis(
     pins=None,
     sanitize=False,
 ):
-    """Plan a slant axis."""
+    """Plan a optical-size (`opsz`) axis.
+
+    sizes: A list of optical size values to plan for. If None, the default
+    values are used.
+
+    This function simply calls planAxis with values=sizes, and the appropriate
+    arguments. See documenation for planAxis for more information.
+    """
 
     if sizes is None:
         sizes = SIZES
