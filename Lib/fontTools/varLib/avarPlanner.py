@@ -298,7 +298,7 @@ def planAxis(
     values=None,
     samples=None,
     glyphs=None,
-    designUnits=None,
+    designLimits=None,
     pins=None,
     sanitizeFunc=None,
 ):
@@ -314,10 +314,10 @@ def planAxis(
     log.info("Value min %g / default %g / max %g", minValue, defaultValue, maxValue)
     triple = (minValue, defaultValue, maxValue)
 
-    if designUnits is not None:
-        log.info("Value design-units min %g / default %g / max %g", *designUnits)
+    if designLimits is not None:
+        log.info("Value design-limits min %g / default %g / max %g", *designLimits)
     else:
-        designUnits = triple
+        designLimits = triple
 
     # if "avar" in font:
     #    log.debug("Checking that font doesn't have axis mapping already.")
@@ -329,9 +329,9 @@ def planAxis(
         log.info("Pins %s", sorted(pins.items()))
     pins.update(
         {
-            minValue: designUnits[0],
-            defaultValue: designUnits[1],
-            maxValue: designUnits[2],
+            minValue: designLimits[0],
+            defaultValue: designLimits[1],
+            maxValue: designLimits[2],
         }
     )
 
@@ -346,7 +346,7 @@ def planAxis(
 
     if sanitizeFunc is not None:
         log.info("Sanitizing axis limit values for the `%s` axis.", axisTag)
-        sanitizeFunc(triple, designUnits, pins, axisMeasurements)
+        sanitizeFunc(triple, designLimits, pins, axisMeasurements)
 
     log.debug("Calculated average value:\n%s", pformat(axisMeasurements))
 
@@ -360,8 +360,8 @@ def planAxis(
 
         normalizedMin = normalizeValue(rangeMin, triple)
         normalizedMax = normalizeValue(rangeMax, triple)
-        normalizedTargetMin = normalizeValue(targetMin, designUnits)
-        normalizedTargetMax = normalizeValue(targetMax, designUnits)
+        normalizedTargetMin = normalizeValue(targetMin, designLimits)
+        normalizedTargetMax = normalizeValue(targetMax, designLimits)
 
         log.info("Planning target values %s.", sorted(targetValues))
         log.info("Sampling %u points in range %g,%g.", samples, rangeMin, rangeMax)
@@ -421,7 +421,7 @@ def planWeightAxis(
     weights=None,
     samples=None,
     glyphs=None,
-    designUnits=None,
+    designLimits=None,
     pins=None,
     sanitize=False,
 ):
@@ -439,7 +439,7 @@ def planWeightAxis(
         values=weights,
         samples=samples,
         glyphs=glyphs,
-        designUnits=designUnits,
+        designLimits=designLimits,
         pins=pins,
         sanitizeFunc=sanitizeWeight if sanitize else None,
     )
@@ -453,7 +453,7 @@ def planWidthAxis(
     widths=None,
     samples=None,
     glyphs=None,
-    designUnits=None,
+    designLimits=None,
     pins=None,
     sanitize=False,
 ):
@@ -471,7 +471,7 @@ def planWidthAxis(
         values=widths,
         samples=samples,
         glyphs=glyphs,
-        designUnits=designUnits,
+        designLimits=designLimits,
         pins=pins,
         sanitizeFunc=sanitizeWidth if sanitize else None,
     )
@@ -485,7 +485,7 @@ def planSlantAxis(
     slants=None,
     samples=None,
     glyphs=None,
-    designUnits=None,
+    designLimits=None,
     pins=None,
     sanitize=False,
 ):
@@ -503,7 +503,7 @@ def planSlantAxis(
         values=slants,
         samples=samples,
         glyphs=glyphs,
-        designUnits=designUnits,
+        designLimits=designLimits,
         pins=pins,
         sanitizeFunc=sanitizeSlant if sanitize else None,
     )
@@ -576,17 +576,17 @@ def main(args=None):
         help="Space-separate list of glyphs to use for sampling.",
     )
     parser.add_argument(
-        "--weight-design-units",
+        "--weight-design-limits",
         type=str,
         help="min:default:max in design units for the `wght` axis.",
     )
     parser.add_argument(
-        "--width-design-units",
+        "--width-design-limits",
         type=str,
         help="min:default:max in design units for the `wdth` axis.",
     )
     parser.add_argument(
-        "--slant-design-units",
+        "--slant-design-limits",
         type=str,
         help="min:default:max in design units for the `slnt` axis.",
     )
@@ -665,11 +665,11 @@ def main(args=None):
         else:
             widths = None
 
-        if options.width_design_units is not None:
-            designUnits = [float(d) for d in options.width_design_units.split(":")]
-            assert len(designUnits) == 3 and designUnits[0] <= designUnits[1] <= designUnits[2]
+        if options.width_design_limits is not None:
+            designLimits = [float(d) for d in options.width_design_limits.split(":")]
+            assert len(designLimits) == 3 and designLimits[0] <= designLimits[1] <= designLimits[2]
         else:
-            designUnits = None
+            designLimits = None
 
         if options.width_pins is not None:
             pins = {}
@@ -687,7 +687,7 @@ def main(args=None):
             widths=widths,
             samples=options.samples,
             glyphs=glyphs,
-            designUnits=designUnits,
+            designLimits=designLimits,
             pins=pins,
             sanitize=options.sanitize,
         )
@@ -712,11 +712,11 @@ def main(args=None):
         else:
             weights = None
 
-        if options.weight_design_units is not None:
-            designUnits = [float(d) for d in options.weight_design_units.split(":")]
-            assert len(designUnits) == 3 and designUnits[0] <= designUnits[1] <= designUnits[2]
+        if options.weight_design_limits is not None:
+            designLimits = [float(d) for d in options.weight_design_limits.split(":")]
+            assert len(designLimits) == 3 and designLimits[0] <= designLimits[1] <= designLimits[2]
         else:
-            designUnits = None
+            designLimits = None
 
         if options.weight_pins is not None:
             pins = {}
@@ -734,7 +734,7 @@ def main(args=None):
             weights=weights,
             samples=options.samples,
             glyphs=glyphs,
-            designUnits=designUnits,
+            designLimits=designLimits,
             pins=pins,
             sanitize=options.sanitize,
         )
@@ -759,11 +759,11 @@ def main(args=None):
         else:
             slants = None
 
-        if options.slant_design_units is not None:
-            designUnits = [float(d) for d in options.slant_design_units.split(":")]
-            assert len(designUnits) == 3 and designUnits[0] <= designUnits[1] <= designUnits[2]
+        if options.slant_design_limits is not None:
+            designLimits = [float(d) for d in options.slant_design_limits.split(":")]
+            assert len(designLimits) == 3 and designLimits[0] <= designLimits[1] <= designLimits[2]
         else:
-            designUnits = None
+            designLimits = None
 
         if options.slant_pins is not None:
             pins = {}
@@ -781,7 +781,7 @@ def main(args=None):
             slants=slants,
             samples=options.samples,
             glyphs=glyphs,
-            designUnits=designUnits,
+            designLimits=designLimits,
             pins=pins,
             sanitize=options.sanitize,
         )
