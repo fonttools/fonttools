@@ -55,7 +55,7 @@ jobs:
           - os: windows-latest
             arch: auto32
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: recursive
     - name: Set up Python
@@ -84,7 +84,7 @@ jobs:
         python: [38, 39, 310, 311]
         arch: [aarch64]
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: true
     - uses: docker/setup-qemu-action@v2.1.0
