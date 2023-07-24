@@ -367,14 +367,51 @@ def planAxis(
     glyphSetFunc,
     axisTag,
     axisLimits,
-    values=None,
+    values,
     samples=None,
     glyphs=None,
     designLimits=None,
     pins=None,
     sanitizeFunc=None,
 ):
-    """Plan an axis."""
+    """Plan an axis.
+
+    measureFunc: callable that takes a glyphset and an optional
+    list of glyphnames, and returns the glyphset-wide measurement
+    to be used for the axis.
+
+    normalizeFunc: callable that takes a measurement and a minimum
+    and maximum, and normalizes the measurement into the range 0..1,
+    possibly extrapolating too.
+
+    interpolateFunc: callable that takes a normalized t value, and a
+    minimum and maximum, and returns the interpolated value,
+    possibly extrapolating too.
+
+    glyphSetFunc: callable that takes a variations "location" dictionary,
+    and returns a glyphset.
+
+    axisTag: the axis tag string.
+
+    axisLimits: a triple of minimum, default, and maximum values for
+    the axis. Or an `fvar` Axis object.
+
+    values: a list of output values to map for this axis.
+
+    samples: the number of samples to use when sampling. Default 8.
+
+    glyphs: a list of glyph names to use when sampling. Defaults to None,
+    which will process all glyphs.
+
+    designLimits: an optional triple of minimum, default, and maximum values
+    represenging the "design" limits for the axis. If not provided, the
+    axisLimits will be used.
+
+    pins: an optional dictionary of before/after mapping entries to pin in
+    the output.
+
+    sanitizeFunc: an optional callable to call to sanitize the axis limits.
+    """
 
     if isinstance(axisLimits, fvarAxis):
         axisLimits = (axisLimits.minValue, axisLimits.defaultValue, axisLimits.maxValue)
