@@ -574,7 +574,7 @@ def addEmptyAvar(font):
 
 
 def main(args=None):
-    """Plan the `avar` table for a variable font"""
+    """Plan the weight/width/slant axis mappings for a variable font"""
     from fontTools import configLogger
 
     if args is None:
