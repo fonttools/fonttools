@@ -22,8 +22,9 @@ __all__ = [
     "measureWidth",
     "measureSlant",
     "normalizeLinear",
-    "interpolateLinear",
     "normalizeLog",
+    "normalizeDegrees",
+    "interpolateLinear",
     "interpolateLog",
     "makeDesignspaceSnippet",
     "addEmptyAvar",
@@ -119,6 +120,13 @@ def interpolateLog(t, a, b):
     logA = math.log(a)
     logB = math.log(b)
     return math.exp(logA + t * (logB - logA))
+
+
+def normalizeDegrees(value, rangeMin, rangeMax):
+    """Angularly normalize value in [rangeMin, rangeMax] to [0, 1], with extrapolation."""
+    tanMin = math.tan(math.radians(rangeMin))
+    tanMax = math.tan(math.radians(rangeMax))
+    return (math.tan(math.radians(value)) - tanMin) / (tanMax - tanMin)
 
 
 def measureWeight(glyphset, glyphs=None):
@@ -473,7 +481,7 @@ def planAxis(
         pformat(outNormalized),
     )
 
-    if all(abs(k - v) < 0.02 for k, v in outNormalized.items()):
+    if all(abs(k - v) < 0.01 for k, v in outNormalized.items()):
         log.info("Detected identity mapping for the `%s` axis. Dropping.", axisTag)
         out = {}
         outNormalized = {}
@@ -561,7 +569,7 @@ def planSlantAxis(
     return planAxis(
         "slnt",
         measureSlant,
-        normalizeLinear,
+        normalizeDegrees,
         interpolateLinear,
         glyphSetFunc,
         axisLimits,
