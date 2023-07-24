@@ -649,6 +649,8 @@ def processAxis(
     sanitize=False,
     plot=False,
 ):
+    """Process a single axis."""
+
     if axisLimits is None:
         return ""
 
