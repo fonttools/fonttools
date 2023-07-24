@@ -26,6 +26,7 @@ __all__ = [
     "normalizeDegrees",
     "interpolateLinear",
     "interpolateLog",
+    "processAxis",
     "makeDesignspaceSnippet",
     "addEmptyAvar",
     "main",
@@ -396,12 +397,6 @@ def planAxis(
     else:
         designLimits = triple
 
-    # if "avar" in font:
-    #    log.debug("Checking that font doesn't have axis mapping already.")
-    #    existingMapping = font["avar"].segments[axisTag]
-    #    if existingMapping and existingMapping != {-1: -1, 0: 0, +1: +1}:
-    #        log.error("Font already has a `avar` value mapping. Remove it.")
-
     if pins:
         log.info("Pins %s", sorted(pins.items()))
     pins.update(
@@ -640,6 +635,94 @@ def addEmptyAvar(font):
         avar.segments[axis.axisTag] = {}
 
 
+def processAxis(
+    font,
+    planFunc,
+    axisTag,
+    axisName,
+    axisLimits,
+    values,
+    samples=None,
+    glyphs=None,
+    designLimits=None,
+    pins=None,
+    sanitize=False,
+    plot=False,
+):
+    if axisLimits is None:
+        return ""
+
+    log.info("Planning %s axis.", axisName)
+
+    if "avar" in font:
+        existingMapping = font["avar"].segments[axisTag]
+        font["avar"].segments[axisTag] = {}
+    else:
+        existingMapping = None
+
+    if values is not None and isinstance(values, str):
+        values = [float(w) for w in values.split()]
+
+    if designLimits is not None and isinstance(designLimits, str):
+        designLimits = [float(d) for d in options.designLimits.split(":")]
+        assert (
+            len(designLimits) == 3
+            and designLimits[0] <= designLimits[1] <= designLimits[2]
+        )
+    else:
+        designLimits = None
+
+    if pins is not None and isinstance(pins, str):
+        newPins = {}
+        for pin in pins.split():
+            before, after = pin.split(":")
+            newPins[float(before)] = float(after)
+        pins = newPins
+        del newPins
+
+    mapping, mappingNormalized = planFunc(
+        font.getGlyphSet,
+        axisLimits,
+        values,
+        samples=samples,
+        glyphs=glyphs,
+        designLimits=designLimits,
+        pins=pins,
+        sanitize=sanitize,
+    )
+
+    if plot:
+        from matplotlib import pyplot
+
+        pyplot.plot(
+            sorted(mappingNormalized),
+            [mappingNormalized[k] for k in sorted(mappingNormalized)],
+        )
+        pyplot.show()
+
+    if existingMapping is not None:
+        log.info("Existing %s mapping:\n%s", axisName, pformat(existingMapping))
+
+    if mapping:
+        if "avar" not in font:
+            addEmptyAvar(font)
+        font["avar"].segments[axisTag] = mappingNormalized
+    else:
+        if "avar" in font:
+            font["avar"].segments[axisTag] = {}
+
+    if isinstance(axisLimits, fvarAxis):
+        axisLimits = (axisLimits.minValue, axisLimits.defaultValue, axisLimits.maxValue)
+
+    designspaceSnippet = makeDesignspaceSnippet(
+        axisTag,
+        axisName,
+        axisLimits,
+        mapping,
+    )
+    return designspaceSnippet
+
+
 def main(args=None):
     """Plan the standard axis mappings for a variable font"""
     from fontTools import configLogger
@@ -772,273 +855,77 @@ def main(args=None):
     else:
         glyphs = None
 
-    if wghtAxis:
-        log.info("Planning weight axis.")
+    designspaceSnippets = []
 
-        if "avar" in font:
-            wghtExistingMapping = font["avar"].segments["wght"]
-            font["avar"].segments["wght"] = {}
-        else:
-            wghtExistingMapping = None
-
-        if options.weights is not None:
-            weights = [float(w) for w in options.weights.split()]
-        else:
-            weights = None
-
-        if options.weight_design_limits is not None:
-            designLimits = [float(d) for d in options.weight_design_limits.split(":")]
-            assert (
-                len(designLimits) == 3
-                and designLimits[0] <= designLimits[1] <= designLimits[2]
-            )
-        else:
-            designLimits = None
-
-        if options.weight_pins is not None:
-            pins = {}
-            for pin in options.weight_pins.split():
-                before, after = pin.split(":")
-                pins[float(before)] = float(after)
-        else:
-            pins = None
-
-        weightMapping, weightMappingNormalized = planWeightAxis(
-            font.getGlyphSet,
-            wghtAxis,
-            weights=weights,
-            samples=options.samples,
-            glyphs=glyphs,
-            designLimits=designLimits,
-            pins=pins,
-            sanitize=options.sanitize,
-        )
-
-        if options.plot:
-            from matplotlib import pyplot
-
-            pyplot.plot(
-                sorted(weightMappingNormalized),
-                [weightMappingNormalized[k] for k in sorted(weightMappingNormalized)],
-            )
-            pyplot.show()
-
-        if wghtExistingMapping is not None:
-            log.info("Existing weight mapping:\n%s", pformat(wghtExistingMapping))
-
-    if wdthAxis:
-        log.info("Planning width axis.")
-
-        if "avar" in font:
-            wdthExistingMapping = font["avar"].segments["wdth"]
-            font["avar"].segments["wdth"] = {}
-        else:
-            wdthExistingMapping = None
-
-        if options.widths is not None:
-            widths = [float(w) for w in options.widths.split()]
-        else:
-            widths = None
-
-        if options.width_design_limits is not None:
-            designLimits = [float(d) for d in options.width_design_limits.split(":")]
-            assert (
-                len(designLimits) == 3
-                and designLimits[0] <= designLimits[1] <= designLimits[2]
-            )
-        else:
-            designLimits = None
-
-        if options.width_pins is not None:
-            pins = {}
-            for pin in options.width_pins.split():
-                before, after = pin.split(":")
-                pins[float(before)] = float(after)
-        else:
-            pins = None
-
-        widthMapping, widthMappingNormalized = planWidthAxis(
-            font.getGlyphSet,
-            wdthAxis,
-            widths=widths,
-            samples=options.samples,
-            glyphs=glyphs,
-            designLimits=designLimits,
-            pins=pins,
-            sanitize=options.sanitize,
-        )
-
-        if options.plot:
-            from matplotlib import pyplot
-
-            pyplot.plot(
-                sorted(widthMappingNormalized),
-                [widthMappingNormalized[k] for k in sorted(widthMappingNormalized)],
-            )
-            pyplot.show()
-
-        if wdthExistingMapping is not None:
-            log.info("Existing width mapping:\n%s", pformat(wdthExistingMapping))
-
-    if slntAxis:
-        log.info("Planning slant axis.")
-
-        if "avar" in font:
-            slntExistingMapping = font["avar"].segments["slnt"]
-            font["avar"].segments["slnt"] = {}
-        else:
-            slntExistingMapping = None
-
-        if options.slants is not None:
-            slants = [float(w) for w in options.slants.split()]
-        else:
-            slants = None
-
-        if options.slant_design_limits is not None:
-            designLimits = [float(d) for d in options.slant_design_limits.split(":")]
-            assert (
-                len(designLimits) == 3
-                and designLimits[0] <= designLimits[1] <= designLimits[2]
-            )
-        else:
-            designLimits = None
-
-        if options.slant_pins is not None:
-            pins = {}
-            for pin in options.slant_pins.split():
-                before, after = pin.split(":")
-                pins[float(before)] = float(after)
-        else:
-            pins = None
-
-        slantMapping, slantMappingNormalized = planSlantAxis(
-            font.getGlyphSet,
-            slntAxis,
-            slants=slants,
-            samples=options.samples,
-            glyphs=glyphs,
-            designLimits=designLimits,
-            pins=pins,
-            sanitize=options.sanitize,
-        )
-
-        if options.plot:
-            from matplotlib import pyplot
-
-            pyplot.plot(
-                sorted(slantMappingNormalized),
-                [slantMappingNormalized[k] for k in sorted(slantMappingNormalized)],
-            )
-            pyplot.show()
-
-        if slntExistingMapping is not None:
-            log.info("Existing slant mapping:\n%s", pformat(slntExistingMapping))
-
-    if opszAxis:
-        log.info("Planning optical-size axis.")
-
-        if "avar" in font:
-            opszExistingMapping = font["avar"].segments["opsz"]
-            font["avar"].segments["opsz"] = {}
-        else:
-            opszExistingMapping = None
-
-        if options.sizes is not None:
-            sizes = [float(w) for w in options.sizes.split()]
-        else:
-            sizes = None
-
-        if options.optical_size_design_limits is not None:
-            designLimits = [
-                float(d) for d in options.optical_size_design_limits.split(":")
-            ]
-            assert (
-                len(designLimits) == 3
-                and designLimits[0] <= designLimits[1] <= designLimits[2]
-            )
-        else:
-            designLimits = None
-
-        if options.optical_size_pins is not None:
-            pins = {}
-            for pin in options.optical_size_pins.split():
-                before, after = pin.split(":")
-                pins[float(before)] = float(after)
-        else:
-            pins = None
-
-        opticalSizeMapping, opticalSizeMappingNormalized = planOpticalSizeAxis(
-            font.getGlyphSet,
-            opszAxis,
-            sizes=sizes,
-            samples=options.samples,
-            glyphs=glyphs,
-            designLimits=designLimits,
-            pins=pins,
-            sanitize=options.sanitize,
-        )
-
-        if options.plot:
-            from matplotlib import pyplot
-
-            pyplot.plot(
-                sorted(opticalSizeMappingNormalized),
-                [
-                    opticalSizeMappingNormalized[k]
-                    for k in sorted(opticalSizeMappingNormalized)
-                ],
-            )
-            pyplot.show()
-
-        if opszExistingMapping is not None:
-            log.info("Existing size mapping:\n%s", pformat(opszExistingMapping))
-
-    if "avar" not in font:
-        addEmptyAvar(font)
-
-    avar = font["avar"]
-
-    log.info("Designspace snippet:")
-
-    if wghtAxis:
-        avar.segments["wght"] = weightMappingNormalized
-        designspaceSnippet = makeDesignspaceSnippet(
+    designspaceSnippets.append(
+        processAxis(
+            font,
+            planWeightAxis,
             "wght",
             "Weight",
-            (wghtAxis.minValue, wghtAxis.defaultValue, wghtAxis.maxValue),
-            weightMapping,
+            wghtAxis,
+            values=options.weights,
+            samples=options.samples,
+            glyphs=glyphs,
+            designLimits=options.weight_design_limits,
+            pins=options.weight_pins,
+            sanitize=options.sanitize,
+            plot=options.plot,
         )
-        print(designspaceSnippet)
-
-    if wdthAxis:
-        avar.segments["wdth"] = widthMappingNormalized
-        designspaceSnippet = makeDesignspaceSnippet(
+    )
+    designspaceSnippets.append(
+        processAxis(
+            font,
+            planWidthAxis,
             "wdth",
             "Width",
-            (wdthAxis.minValue, wdthAxis.defaultValue, wdthAxis.maxValue),
-            widthMapping,
+            wdthAxis,
+            values=options.widths,
+            samples=options.samples,
+            glyphs=glyphs,
+            designLimits=options.width_design_limits,
+            pins=options.width_pins,
+            sanitize=options.sanitize,
+            plot=options.plot,
         )
-        print(designspaceSnippet)
-
-    if slntAxis:
-        avar.segments["slnt"] = slantMappingNormalized
-        designspaceSnippet = makeDesignspaceSnippet(
+    )
+    designspaceSnippets.append(
+        processAxis(
+            font,
+            planSlantAxis,
             "slnt",
             "Slant",
-            (slntAxis.minValue, slntAxis.defaultValue, slntAxis.maxValue),
-            slantMapping,
+            wdthAxis,
+            values=options.slants,
+            samples=options.samples,
+            glyphs=glyphs,
+            designLimits=options.slant_design_limits,
+            pins=options.slant_pins,
+            sanitize=options.sanitize,
+            plot=options.plot,
         )
-        print(designspaceSnippet)
-
-    if opszAxis:
-        avar.segments["opsz"] = opticalSizeMappingNormalized
-        designspaceSnippet = makeDesignspaceSnippet(
+    )
+    designspaceSnippets.append(
+        processAxis(
+            font,
+            planOpticalSizeAxis,
             "opsz",
             "OpticalSize",
-            (opszAxis.minValue, opszAxis.defaultValue, opszAxis.maxValue),
-            opticalSizeMapping,
+            wdthAxis,
+            values=options.sizes,
+            samples=options.samples,
+            glyphs=glyphs,
+            designLimits=options.optical_size_design_limits,
+            pins=options.optical_size_pins,
+            sanitize=options.sanitize,
+            plot=options.plot,
         )
-        print(designspaceSnippet)
+    )
+
+    log.info("Designspace snippet:")
+    for snippet in designspaceSnippets:
+        if snippet:
+            print(snippet)
 
     if options.output_file is None:
         outfile = makeOutputFileName(options.font, overWrite=True, suffix=".avar")
