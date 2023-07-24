@@ -71,11 +71,9 @@ class StatisticsPen(MomentsPen):
         self.slant = slant if abs(slant) > 1e-3 else 0
 
 
-def _test(glyphset, upem, glyphs):
+def _test(glyphset, upem, glyphs, quiet=False):
     from fontTools.pens.transformPen import TransformPen
     from fontTools.misc.transform import Scale
-
-    print("upem", upem)
 
     wght_sum = 0
     wght_sum_perceptual = 0
@@ -83,12 +81,23 @@ def _test(glyphset, upem, glyphs):
     slnt_sum = 0
     slnt_sum_perceptual = 0
     for glyph_name in glyphs:
-        print()
-        print("glyph:", glyph_name)
         glyph = glyphset[glyph_name]
         pen = StatisticsPen(glyphset=glyphset)
         transformer = TransformPen(pen, Scale(1.0 / upem))
         glyph.draw(transformer)
+
+        wght_sum += abs(pen.area)
+        wght_sum_perceptual += abs(pen.area) * glyph.width
+        wdth_sum += glyph.width
+        slnt_sum += pen.slant
+        slnt_sum_perceptual += pen.slant * glyph.width
+
+        if quiet:
+            continue
+
+        print()
+        print("glyph:", glyph_name)
+
         for item in [
             "area",
             "momentX",
@@ -108,13 +117,10 @@ def _test(glyphset, upem, glyphs):
         ]:
             print("%s: %g" % (item, getattr(pen, item)))
 
-        wght_sum += abs(pen.area)
-        wght_sum_perceptual += abs(pen.area) * glyph.width
-        wdth_sum += glyph.width
-        slnt_sum += pen.slant
-        slnt_sum_perceptual += pen.slant * glyph.width
+    if not quiet:
+        print()
+        print("font:")
 
-    print()
     print("weight: %g" % (wght_sum * upem / wdth_sum))
     print("weight (perceptual): %g" % (wght_sum_perceptual / wdth_sum))
     print("width:  %g" % (wdth_sum / upem / len(glyphs)))
@@ -142,6 +148,7 @@ def main(args):
     parser.add_argument("font", metavar="font.ttf", help="Font file.")
     parser.add_argument("glyphs", metavar="glyph-name", help="Glyph names.", nargs="*")
     parser.add_argument("-y", metavar="<number>", help="Face index into a collection to open. Zero based.")
+    parser.add_argument("-q", "--quiet", action="store_true", help="Only report font-wide statistics.")
     parser.add_argument(
         "--variations",
         metavar="AXIS=LOC",
@@ -169,7 +176,7 @@ def main(args):
     font = TTFont(options.font, fontNumber=fontNumber)
     if not glyphs:
         glyphs = font.getGlyphOrder()
-    _test(font.getGlyphSet(location=location), font["head"].unitsPerEm, glyphs)
+    _test(font.getGlyphSet(location=location), font["head"].unitsPerEm, glyphs, quiet=options.quiet)
 
 
 if __name__ == "__main__":
