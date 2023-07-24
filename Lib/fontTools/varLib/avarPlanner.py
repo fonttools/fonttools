@@ -667,6 +667,7 @@ def main(args=None):
 
         if options.width_design_units is not None:
             designUnits = [float(d) for d in options.width_design_units.split(":")]
+            assert len(designUnits) == 3 and designUnits[0] <= designUnits[1] <= designUnits[2]
         else:
             designUnits = None
 
@@ -713,6 +714,7 @@ def main(args=None):
 
         if options.weight_design_units is not None:
             designUnits = [float(d) for d in options.weight_design_units.split(":")]
+            assert len(designUnits) == 3 and designUnits[0] <= designUnits[1] <= designUnits[2]
         else:
             designUnits = None
 
@@ -759,6 +761,7 @@ def main(args=None):
 
         if options.slant_design_units is not None:
             designUnits = [float(d) for d in options.slant_design_units.split(":")]
+            assert len(designUnits) == 3 and designUnits[0] <= designUnits[1] <= designUnits[2]
         else:
             designUnits = None
 
