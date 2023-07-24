@@ -1,5 +1,7 @@
 from fontTools.ttLib import newTable
 from fontTools.pens.areaPen import AreaPen
+from fontTools.pens.basePen import NullPen
+from fontTools.pens.statisticsPen import StatisticsPen
 from fontTools.varLib.models import piecewiseLinearMap, normalizeValue
 from fontTools.misc.cliTools import makeOutputFileName
 import math
@@ -9,11 +11,16 @@ from pprint import pformat
 __all__ = [
     "planWeightAxis",
     "planWidthAxis",
+    "planSlantAxis",
     "planAxis",
     "sanitizeWeight",
     "sanitizeWidth",
-    "measureBlackness",
+    "sanitizeSlant",
+    "measureWeight",
     "measureWidth",
+    "measureSlant",
+    "interpolateLinear",
+    "interpolateLog",
     "makeDesignspaceSnippet",
     "addEmptyAvar",
     "main",
@@ -59,10 +66,22 @@ WIDTHS = [
     200.0,
 ]
 
+SLANTS = list(math.degrees(math.atan(d / 20.0)) for d in range(-20, 21))
+
 SAMPLES = 8
 
 
-def measureBlackness(glyphset, glyphs=None):
+def interpolateLinear(t, a, b):
+    return a + t * (b - a)
+
+
+def interpolateLog(t, a, b):
+    logA = math.log(a)
+    logB = math.log(b)
+    return math.exp(logA + t * (logB - logA))
+
+
+def measureWeight(glyphset, glyphs=None):
     if isinstance(glyphs, dict):
         frequencies = glyphs
     else:
@@ -106,13 +125,40 @@ def measureWidth(glyphset, glyphs=None):
 
         glyph = glyphset[glyph_name]
 
-        pen = AreaPen(glyphset=glyphset)
+        pen = NullPen()
         glyph.draw(pen)
 
         wdth_sum += glyph.width * frequency
         freq_sum += frequency
 
     return wdth_sum / freq_sum
+
+
+def measureSlant(glyphset, glyphs=None):
+    if isinstance(glyphs, dict):
+        frequencies = glyphs
+    else:
+        frequencies = {g: 1 for g in glyphs}
+
+    slnt_sum = 0
+    freq_sum = 0
+    for glyph_name in glyphs:
+        if frequencies is not None:
+            frequency = frequencies.get(glyph_name, 0)
+            if frequency == 0:
+                continue
+        else:
+            frequency = 1
+
+        glyph = glyphset[glyph_name]
+
+        pen = StatisticsPen(glyphset=glyphset)
+        glyph.draw(pen)
+
+        slnt_sum += pen.slant * frequency
+        freq_sum += frequency
+
+    return -math.degrees(math.atan(slnt_sum / freq_sum))
 
 
 def sanitizeWidth(userTriple, designTriple, pins, measurements):
@@ -128,9 +174,9 @@ def sanitizeWidth(userTriple, designTriple, pins, measurements):
     calculatedMinVal = userTriple[0] * (minVal / defaultVal)
     calculatedMaxVal = userTriple[2] * (maxVal / defaultVal)
 
-    log.info("Original axis limits: %g:%g:%g", *userTriple)
+    log.info("Original width axis limits: %g:%g:%g", *userTriple)
     log.info(
-        "Calculated axis limits: %g:%g:%g",
+        "Calculated width axis limits: %g:%g:%g",
         calculatedMinVal,
         userTriple[1],
         calculatedMaxVal,
@@ -172,16 +218,16 @@ def sanitizeWeight(userTriple, designTriple, pins, measurements):
     t = (y - minVal) / (maxVal - minVal)
     calculatedDefaultVal = userTriple[0] + t * (userTriple[2] - userTriple[0])
 
-    log.info("Original axis limits: %g:%g:%g", *userTriple)
+    log.info("Original weight axis limits: %g:%g:%g", *userTriple)
     log.info(
-        "Calculated axis limits: %g:%g:%g",
+        "Calculated weight axis limits: %g:%g:%g",
         userTriple[0],
         calculatedDefaultVal,
         userTriple[2],
     )
 
     if abs(calculatedDefaultVal - userTriple[1]) / userTriple[1] > 0.05:
-        log.warning("Calculated axis default does not match user input.")
+        log.warning("Calculated weight axis default does not match user input.")
         log.warning(
             "  Suggested axis limits, changing default: %g:%g:%g",
             userTriple[0],
@@ -216,9 +262,37 @@ def sanitizeWeight(userTriple, designTriple, pins, measurements):
     return True
 
 
+def sanitizeSlant(userTriple, designTriple, pins, measurements):
+    log.info("Original slant axis limits: %g:%g:%g", *userTriple)
+    log.info(
+        "Calculated slant axis limits: %g:%g:%g",
+        measurements[designTriple[0]],
+        measurements[designTriple[1]],
+        measurements[designTriple[2]],
+    )
+
+    if (
+        abs(measurements[designTriple[0]] - userTriple[0]) > 1
+        or abs(measurements[designTriple[1]] - userTriple[1]) > 1
+        or abs(measurements[designTriple[2]] - userTriple[2]) > 1
+    ):
+        log.warning("Calculated slant axis min/default/max do not match user input.")
+        log.warning(
+            "  Suggested axis limits: %g:%g:%g",
+            measurements[designTriple[0]],
+            measurements[designTriple[1]],
+            measurements[designTriple[2]],
+        )
+
+        return False
+
+    return True
+
+
 def planAxis(
     axisTag,
     measureFunc,
+    interpolateFunc,
     glyphSetFunc,
     minValue,
     defaultValue,
@@ -311,14 +385,14 @@ def planAxis(
         for value in sorted(valueMeasurements):
             measurementValue[valueMeasurements[value]] = value
 
-        logMin = math.log(valueMeasurements[targetMin])
-        logMax = math.log(valueMeasurements[targetMax])
         out[rangeMin] = targetMin
         outNormalized[normalizedMin] = normalizedTargetMin
         for value in sorted(targetValues):
             t = (value - rangeMin) / (rangeMax - rangeMin)
-            targetMeasurements = math.exp(logMin + t * (logMax - logMin))
-            targetValue = piecewiseLinearMap(targetMeasurements, measurementValue)
+            targetMeasurement = interpolateFunc(
+                t, valueMeasurements[targetMin], valueMeasurements[targetMax]
+            )
+            targetValue = piecewiseLinearMap(targetMeasurement, measurementValue)
             log.info("Planned mapping value %g to %g." % (value, targetValue))
             out[value] = targetValue
             outNormalized[
@@ -363,7 +437,8 @@ def planWeightAxis(
 
     return planAxis(
         "wght",
-        measureBlackness,
+        measureWeight,
+        interpolateLog,
         glyphSetFunc,
         minValue,
         defaultValue,
@@ -395,6 +470,7 @@ def planWidthAxis(
     return planAxis(
         "wdth",
         measureWidth,
+        interpolateLinear,
         glyphSetFunc,
         minValue,
         defaultValue,
@@ -405,6 +481,38 @@ def planWidthAxis(
         designUnits=designUnits,
         pins=pins,
         sanitizeFunc=sanitizeWidth if sanitize else None,
+    )
+
+
+def planSlantAxis(
+    glyphSetFunc,
+    minValue,
+    defaultValue,
+    maxValue,
+    slants=None,
+    samples=None,
+    glyphs=None,
+    designUnits=None,
+    pins=None,
+    sanitize=False,
+):
+    if slants is None:
+        slants = SLANTS
+
+    return planAxis(
+        "slnt",
+        measureSlant,
+        interpolateLinear,
+        glyphSetFunc,
+        minValue,
+        defaultValue,
+        maxValue,
+        values=slants,
+        samples=samples,
+        glyphs=glyphs,
+        designUnits=designUnits,
+        pins=pins,
+        sanitizeFunc=sanitizeSlant if sanitize else None,
     )
 
 
@@ -461,6 +569,9 @@ def main(args=None):
     parser.add_argument(
         "--widths", type=str, help="Space-separate list of widths to generate."
     )
+    parser.add_argument(
+        "--slants", type=str, help="Space-separate list of slants to generate."
+    )
     parser.add_argument("--samples", type=int, help="Number of samples.")
     parser.add_argument(
         "-s", "--sanitize", action="store_true", help="Sanitize axis limits"
@@ -482,6 +593,11 @@ def main(args=None):
         help="min:default:max in design units for the `wdth` axis.",
     )
     parser.add_argument(
+        "--slant-design-units",
+        type=str,
+        help="min:default:max in design units for the `slnt` axis.",
+    )
+    parser.add_argument(
         "--weight-pins",
         type=str,
         help="Space-separate list of before:after pins. for the `wght` axis.",
@@ -490,6 +606,11 @@ def main(args=None):
         "--width-pins",
         type=str,
         help="Space-separate list of before:after pins. for the `wdth` axis.",
+    )
+    parser.add_argument(
+        "--slant-pins",
+        type=str,
+        help="Space-separate list of before:after pins. for the `slnt` axis.",
     )
     parser.add_argument(
         "-p", "--plot", action="store_true", help="Plot the resulting mapping."
@@ -514,12 +635,14 @@ def main(args=None):
         log.error("Not a variable font.")
         sys.exit(1)
     fvar = font["fvar"]
-    wghtAxis = wdthAxis = None
+    wghtAxis = wdthAxis = slntAxis = None
     for axis in fvar.axes:
         if axis.axisTag == "wght":
             wghtAxis = axis
         elif axis.axisTag == "wdth":
             wdthAxis = axis
+        elif axis.axisTag == "slnt":
+            slntAxis = axis
 
     if "avar" in font:
         existingMapping = font["avar"].segments["wght"]
@@ -633,6 +756,52 @@ def main(args=None):
         if existingMapping is not None:
             log.info("Existing weight mapping:\n%s", pformat(existingMapping))
 
+    if slntAxis:
+        log.info("Planning slant axis.")
+
+        if options.slants is not None:
+            slants = [float(w) for w in options.slants.split()]
+        else:
+            slants = None
+
+        if options.slant_design_units is not None:
+            designUnits = [float(d) for d in options.slant_design_units.split(":")]
+        else:
+            designUnits = None
+
+        if options.slant_pins is not None:
+            pins = {}
+            for pin in options.slant_pins.split():
+                before, after = pin.split(":")
+                pins[float(before)] = float(after)
+        else:
+            pins = None
+
+        slantMapping, slantMappingNormalized = planSlantAxis(
+            font.getGlyphSet,
+            slntAxis.minValue,
+            slntAxis.defaultValue,
+            slntAxis.maxValue,
+            slants=slants,
+            samples=options.samples,
+            glyphs=glyphs,
+            designUnits=designUnits,
+            pins=pins,
+            sanitize=options.sanitize,
+        )
+
+        if options.plot:
+            from matplotlib import pyplot
+
+            pyplot.plot(
+                sorted(slantMappingNormalized),
+                [slantMappingNormalized[k] for k in sorted(slantMappingNormalized)],
+            )
+            pyplot.show()
+
+        if existingMapping is not None:
+            log.info("Existing slant mapping:\n%s", pformat(existingMapping))
+
     if "avar" not in font:
         addEmptyAvar(font)
 
@@ -658,6 +827,17 @@ def main(args=None):
             weightMapping,
         )
         log.info("Weight axis designspace snippet:")
+        print(designspaceSnippet)
+
+    if slntAxis:
+        avar.segments["slant"] = slantMappingNormalized
+        designspaceSnippet = makeDesignspaceSnippet(
+            "slant",
+            "Slant",
+            (slntAxis.minValue, slntAxis.defaultValue, slntAxis.maxValue),
+            slantMapping,
+        )
+        log.info("Slant axis designspace snippet:")
         print(designspaceSnippet)
 
     if options.output_file is None:
