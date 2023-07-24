@@ -21,7 +21,9 @@ __all__ = [
     "measureWeight",
     "measureWidth",
     "measureSlant",
+    "normalizeLinear",
     "interpolateLinear",
+    "normalizeLog",
     "interpolateLog",
     "makeDesignspaceSnippet",
     "addEmptyAvar",
@@ -87,15 +89,29 @@ SIZES = [
     60,
     72,
     96,
+    120,
+    144,
 ]
 
 
 SAMPLES = 8
 
 
+def normalizeLinear(value, rangeMin, rangeMax):
+    """Linearly normalize value in [rangeMin, rangeMax] to [0, 1], with extrapolation."""
+    return (value - rangeMin) / (rangeMax - rangeMin)
+
+
 def interpolateLinear(t, a, b):
     """Linear interpolation between a and b, with t typically in [0, 1]."""
     return a + t * (b - a)
+
+
+def normalizeLog(value, rangeMin, rangeMax):
+    """Logarithmically normalize value in [rangeMin, rangeMax] to [0, 1], with extrapolation."""
+    logMin = math.log(rangeMin)
+    logMax = math.log(rangeMax)
+    return (math.log(value) - logMin) / (logMax - logMin)
 
 
 def interpolateLog(t, a, b):
@@ -338,6 +354,7 @@ def sanitizeSlant(userTriple, designTriple, pins, measurements):
 def planAxis(
     axisTag,
     measureFunc,
+    normalizeFunc,
     interpolateFunc,
     glyphSetFunc,
     axisLimits,
@@ -433,20 +450,19 @@ def planAxis(
         out[rangeMin] = targetMin
         outNormalized[normalizedMin] = normalizedTargetMin
         for value in sorted(targetValues):
-            t = (value - rangeMin) / (rangeMax - rangeMin)
+            t = normalizeFunc(value, rangeMin, rangeMax)
             targetMeasurement = interpolateFunc(
                 t, valueMeasurements[targetMin], valueMeasurements[targetMax]
             )
             targetValue = piecewiseLinearMap(targetMeasurement, measurementValue)
             log.debug("Planned mapping value %g to %g." % (value, targetValue))
             out[value] = targetValue
-            outNormalized[
-                normalizedMin + t * (normalizedMax - normalizedMin)
-            ] = normalizedTargetMin + (targetValue - targetMin) / (
-                targetMax - targetMin
-            ) * (
-                normalizedTargetMax - normalizedTargetMin
-            )
+            valueNormalized = normalizedMin + (value - rangeMin) / (
+                rangeMax - rangeMin
+            ) * (normalizedMax - normalizedMin)
+            outNormalized[valueNormalized] = normalizedTargetMin + (
+                targetValue - targetMin
+            ) / (targetMax - targetMin) * (normalizedTargetMax - normalizedTargetMin)
         out[rangeMax] = targetMax
         outNormalized[normalizedMax] = normalizedTargetMax
 
@@ -483,6 +499,7 @@ def planWeightAxis(
     return planAxis(
         "wght",
         measureWeight,
+        normalizeLinear,
         interpolateLog,
         glyphSetFunc,
         axisLimits,
@@ -513,6 +530,7 @@ def planWidthAxis(
     return planAxis(
         "wdth",
         measureWidth,
+        normalizeLinear,
         interpolateLinear,
         glyphSetFunc,
         axisLimits,
@@ -543,6 +561,7 @@ def planSlantAxis(
     return planAxis(
         "slnt",
         measureSlant,
+        normalizeLinear,
         interpolateLinear,
         glyphSetFunc,
         axisLimits,
@@ -573,7 +592,8 @@ def planOpticalSizeAxis(
     return planAxis(
         "opsz",
         measureWeight,
-        interpolateLog,
+        normalizeLog,
+        interpolateLinear,
         glyphSetFunc,
         axisLimits,
         values=sizes,
@@ -731,12 +751,22 @@ def main(args=None):
         elif axis.axisTag == "opsz":
             opszAxis = axis
 
+    wghtExistingMapping = (
+        wdthExistingMapping
+    ) = slntExistingMapping = opszExistingMapping = None
     if "avar" in font:
-        existingMapping = font["avar"].segments["wght"]
         if wghtAxis:
+            wghtExistingMapping = font["avar"].segments["wght"]
             font["avar"].segments["wght"] = {}
-    else:
-        existingMapping = None
+        if wdthAxis:
+            wdthExistingMapping = font["avar"].segments["wdth"]
+            font["avar"].segments["wdth"] = {}
+        if slntAxis:
+            slntExistingMapping = font["avar"].segments["slnt"]
+            font["avar"].segments["slnt"] = {}
+        if opszAxis:
+            opszExistingMapping = font["avar"].segments["opsz"]
+            font["avar"].segments["opsz"] = {}
 
     if options.glyphs is not None:
         glyphs = options.glyphs.split()
@@ -796,8 +826,8 @@ def main(args=None):
             )
             pyplot.show()
 
-        if existingMapping is not None:
-            log.info("Existing weight mapping:\n%s", pformat(existingMapping))
+        if wghtExistingMapping is not None:
+            log.info("Existing weight mapping:\n%s", pformat(wghtExistingMapping))
 
     if wdthAxis:
         log.info("Planning width axis.")
@@ -844,8 +874,8 @@ def main(args=None):
             )
             pyplot.show()
 
-        if existingMapping is not None:
-            log.info("Existing width mapping:\n%s", pformat(existingMapping))
+        if wdthExistingMapping is not None:
+            log.info("Existing width mapping:\n%s", pformat(wdthExistingMapping))
 
     if slntAxis:
         log.info("Planning slant axis.")
@@ -892,8 +922,8 @@ def main(args=None):
             )
             pyplot.show()
 
-        if existingMapping is not None:
-            log.info("Existing slant mapping:\n%s", pformat(existingMapping))
+        if slntExistingMapping is not None:
+            log.info("Existing slant mapping:\n%s", pformat(slntExistingMapping))
 
     if opszAxis:
         log.info("Planning optical-size axis.")
@@ -945,8 +975,8 @@ def main(args=None):
             )
             pyplot.show()
 
-        if existingMapping is not None:
-            log.info("Existing size mapping:\n%s", pformat(existingMapping))
+        if opszExistingMapping is not None:
+            log.info("Existing size mapping:\n%s", pformat(opszExistingMapping))
 
     if "avar" not in font:
         addEmptyAvar(font)
