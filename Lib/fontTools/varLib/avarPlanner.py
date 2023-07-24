@@ -186,7 +186,7 @@ def sanitizeWidth(userTriple, designTriple, pins, measurements):
     ):
         log.warning("Calculated width axis min/max do not match user input.")
         log.warning(
-            "  Suggested axis limits: %g:%g:%g",
+            "  Suggested width axis limits: %g:%g:%g",
             calculatedMinVal,
             userTriple[1],
             calculatedMaxVal,
@@ -227,7 +227,7 @@ def sanitizeWeight(userTriple, designTriple, pins, measurements):
     if abs(calculatedDefaultVal - userTriple[1]) / userTriple[1] > 0.05:
         log.warning("Calculated weight axis default does not match user input.")
         log.warning(
-            "  Suggested axis limits, changing default: %g:%g:%g",
+            "  Suggested weight axis limits, changing default: %g:%g:%g",
             userTriple[0],
             calculatedDefaultVal,
             userTriple[2],
@@ -238,7 +238,7 @@ def sanitizeWeight(userTriple, designTriple, pins, measurements):
         t = (y - minVal) / (defaultVal - minVal)
         calculatedMaxVal = userTriple[0] + t * (userTriple[1] - userTriple[0])
         log.warning(
-            "  Suggested axis limits, changing maximum: %g:%g:%g",
+            "  Suggested weight axis limits, changing maximum: %g:%g:%g",
             userTriple[0],
             userTriple[1],
             calculatedMaxVal,
@@ -249,7 +249,7 @@ def sanitizeWeight(userTriple, designTriple, pins, measurements):
         t = (y - maxVal) / (defaultVal - maxVal)
         calculatedMinVal = userTriple[2] + t * (userTriple[1] - userTriple[2])
         log.warning(
-            "  Suggested axis limits, changing minimum: %g:%g:%g",
+            "  Suggested weight axis limits, changing minimum: %g:%g:%g",
             calculatedMinVal,
             userTriple[1],
             userTriple[2],
@@ -276,7 +276,7 @@ def sanitizeSlant(userTriple, designTriple, pins, measurements):
     ):
         log.warning("Calculated slant axis min/default/max do not match user input.")
         log.warning(
-            "  Suggested axis limits: %g:%g:%g",
+            "  Suggested slant axis limits: %g:%g:%g",
             measurements[designTriple[0]],
             measurements[designTriple[1]],
             measurements[designTriple[2]],
