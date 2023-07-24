@@ -338,14 +338,13 @@ def planAxis(
     out = {}
     outNormalized = {}
 
-    upem = 1  # font["head"].unitsPerEm
     axisMeasurements = {}
     for value in sorted({minValue, defaultValue, maxValue} | set(pins.values())):
         glyphset = glyphSetFunc(location={axisTag: value})
 
         designValue = piecewiseLinearMap(value, pins)
 
-        axisMeasurements[designValue] = measureFunc(glyphset, glyphs) / (upem * upem)
+        axisMeasurements[designValue] = measureFunc(glyphset, glyphs)
 
     if sanitizeFunc is not None:
         log.info("Sanitizing axis limit values for the `%s` axis.", axisTag)
@@ -374,9 +373,7 @@ def planAxis(
             log.info("Sampling value %g.", value)
             glyphset = glyphSetFunc(location={axisTag: value})
             designValue = piecewiseLinearMap(value, pins)
-            valueMeasurements[designValue] = measureFunc(glyphset, glyphs) / (
-                upem * upem
-            )
+            valueMeasurements[designValue] = measureFunc(glyphset, glyphs)
         log.debug("Sampled average value:\n%s", pformat(valueMeasurements))
 
         measurementValue = {}
