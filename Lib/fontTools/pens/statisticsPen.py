@@ -127,15 +127,47 @@ def _test(glyphset, upem, glyphs):
 
 
 def main(args):
-    if not args:
-        return
-    filename, glyphs = args[0], args[1:]
+    """Report font glyph shape geometricsl statistics"""
+
+    if args is None:
+        import sys
+
+        args = sys.argv[1:]
+
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        "fonttools pens.statisticsPen", description="Report font glyph shape geometricsl statistics"
+    )
+    parser.add_argument("font", metavar="font.ttf", help="Font file.")
+    parser.add_argument("glyphs", metavar="glyph-name", help="Glyph names.", nargs="*")
+    parser.add_argument(
+        "--variations",
+        metavar="AXIS=LOC",
+        default="",
+        help="List of space separated locations. A location consist in "
+        "the name of a variation axis, followed by '=' and a number. E.g.: "
+        "wght=700 wdth=80. The default is the location of the base master.",
+    )
+
+    options = parser.parse_args(args)
+
+    filename, glyphs = options.font, options.glyphs
+
+    location = {}
+    for tag_v in options.variations.split():
+        fields = tag_v.split("=")
+        tag = fields[0].strip()
+        v = int(fields[1])
+        location[tag] = v
+
+
     from fontTools.ttLib import TTFont
 
     font = TTFont(filename)
     if not glyphs:
         glyphs = font.getGlyphOrder()
-    _test(font.getGlyphSet(), font["head"].unitsPerEm, glyphs)
+    _test(font.getGlyphSet(location=location), font["head"].unitsPerEm, glyphs)
 
 
 if __name__ == "__main__":
