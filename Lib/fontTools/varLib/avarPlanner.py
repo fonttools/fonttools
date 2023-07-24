@@ -13,6 +13,7 @@ __all__ = [
     "planWeightAxis",
     "planWidthAxis",
     "planSlantAxis",
+    "planOpticalSizeAxis",
     "planAxis",
     "sanitizeWeight",
     "sanitizeWidth",
@@ -70,6 +71,24 @@ WIDTHS = [
 ]
 
 SLANTS = list(math.degrees(math.atan(d / 20.0)) for d in range(-20, 21))
+
+SIZES = [
+    8,
+    9,
+    10,
+    11,
+    12,
+    14,
+    18,
+    24,
+    30,
+    36,
+    48,
+    60,
+    72,
+    96,
+]
+
 
 SAMPLES = 8
 
@@ -536,6 +555,36 @@ def planSlantAxis(
     )
 
 
+def planOpticalSizeAxis(
+    glyphSetFunc,
+    axisLimits,
+    sizes=None,
+    samples=None,
+    glyphs=None,
+    designLimits=None,
+    pins=None,
+    sanitize=False,
+):
+    """Plan a slant axis."""
+
+    if sizes is None:
+        sizes = SIZES
+
+    return planAxis(
+        "opsz",
+        measureWeight,
+        interpolateLog,
+        glyphSetFunc,
+        axisLimits,
+        values=sizes,
+        samples=samples,
+        glyphs=glyphs,
+        designLimits=designLimits,
+        pins=pins,
+        sanitizeFunc=sanitizeSlant if sanitize else None,
+    )
+
+
 def makeDesignspaceSnippet(axisTag, axisName, axisLimit, mapping):
     """Make a designspace snippet for a single axis."""
 
@@ -565,7 +614,7 @@ def addEmptyAvar(font):
 
 
 def main(args=None):
-    """Plan the weight/width/slant axis mappings for a variable font"""
+    """Plan the standard axis mappings for a variable font"""
     from fontTools import configLogger
 
     if args is None:
@@ -596,6 +645,9 @@ def main(args=None):
     parser.add_argument(
         "--slants", type=str, help="Space-separate list of slants to generate."
     )
+    parser.add_argument(
+        "--sizes", type=str, help="Space-separate list of optical-sizes to generate."
+    )
     parser.add_argument("--samples", type=int, help="Number of samples.")
     parser.add_argument(
         "-s", "--sanitize", action="store_true", help="Sanitize axis limits"
@@ -622,6 +674,11 @@ def main(args=None):
         help="min:default:max in design units for the `slnt` axis.",
     )
     parser.add_argument(
+        "--optical-size-design-limits",
+        type=str,
+        help="min:default:max in design units for the `opsz` axis.",
+    )
+    parser.add_argument(
         "--weight-pins",
         type=str,
         help="Space-separate list of before:after pins for the `wght` axis.",
@@ -635,6 +692,11 @@ def main(args=None):
         "--slant-pins",
         type=str,
         help="Space-separate list of before:after pins for the `slnt` axis.",
+    )
+    parser.add_argument(
+        "--optical-size-pins",
+        type=str,
+        help="Space-separate list of before:after pins for the `opsz` axis.",
     )
     parser.add_argument(
         "-p", "--plot", action="store_true", help="Plot the resulting mapping."
@@ -659,7 +721,7 @@ def main(args=None):
         log.error("Not a variable font.")
         sys.exit(1)
     fvar = font["fvar"]
-    wghtAxis = wdthAxis = slntAxis = None
+    wghtAxis = wdthAxis = slntAxis = opszAxis = None
     for axis in fvar.axes:
         if axis.axisTag == "wght":
             wghtAxis = axis
@@ -667,6 +729,8 @@ def main(args=None):
             wdthAxis = axis
         elif axis.axisTag == "slnt":
             slntAxis = axis
+        elif axis.axisTag == "opsz":
+            opszAxis = axis
 
     if "avar" in font:
         existingMapping = font["avar"].segments["wght"]
@@ -832,6 +896,57 @@ def main(args=None):
         if existingMapping is not None:
             log.info("Existing slant mapping:\n%s", pformat(existingMapping))
 
+    if opszAxis:
+        log.info("Planning optical-size axis.")
+
+        if options.sizes is not None:
+            sizes = [float(w) for w in options.sizes.split()]
+        else:
+            sizes = None
+
+        if options.optical_size_design_limits is not None:
+            designLimits = [float(d) for d in options.optical_size_design_limits.split(":")]
+            assert (
+                len(designLimits) == 3
+                and designLimits[0] <= designLimits[1] <= designLimits[2]
+            )
+        else:
+            designLimits = None
+
+        if options.optical_size_pins is not None:
+            pins = {}
+            for pin in options.optical_size_pins.split():
+                before, after = pin.split(":")
+                pins[float(before)] = float(after)
+        else:
+            pins = None
+
+        opticalSizeMapping, opticalSizeMappingNormalized = planOpticalSizeAxis(
+            font.getGlyphSet,
+            slntAxis,
+            sizes=sizes,
+            samples=options.samples,
+            glyphs=glyphs,
+            designLimits=designLimits,
+            pins=pins,
+            sanitize=options.sanitize,
+        )
+
+        if options.plot:
+            from matplotlib import pyplot
+
+            pyplot.plot(
+                sorted(opticalSizeMappingNormalized),
+                [
+                    opticalSizeMappingNormalized[k]
+                    for k in sorted(opticalSizeMappingNormalized)
+                ],
+            )
+            pyplot.show()
+
+        if existingMapping is not None:
+            log.info("Existing size mapping:\n%s", pformat(existingMapping))
+
     if "avar" not in font:
         addEmptyAvar(font)
 
@@ -860,12 +975,22 @@ def main(args=None):
         print(designspaceSnippet)
 
     if slntAxis:
-        avar.segments["slant"] = slantMappingNormalized
+        avar.segments["slnt"] = slantMappingNormalized
         designspaceSnippet = makeDesignspaceSnippet(
             "slnt",
             "Slant",
             (slntAxis.minValue, slntAxis.defaultValue, slntAxis.maxValue),
             slantMapping,
+        )
+        print(designspaceSnippet)
+
+    if opszAxis:
+        avar.segments["opsz"] = opticalSizeMappingNormalized
+        designspaceSnippet = makeDesignspaceSnippet(
+            "opsz",
+            "OpticalSize",
+            (opszAxis.minValue, opszAxis.defaultValue, opszAxis.maxValue),
+            opticalSizeMapping,
         )
         print(designspaceSnippet)
 
