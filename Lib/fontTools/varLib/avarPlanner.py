@@ -680,56 +680,6 @@ def main(args=None):
     else:
         glyphs = None
 
-    if wdthAxis:
-        log.info("Planning width axis.")
-
-        if options.widths is not None:
-            widths = [float(w) for w in options.widths.split()]
-        else:
-            widths = None
-
-        if options.width_design_limits is not None:
-            designLimits = [float(d) for d in options.width_design_limits.split(":")]
-            assert (
-                len(designLimits) == 3
-                and designLimits[0] <= designLimits[1] <= designLimits[2]
-            )
-        else:
-            designLimits = None
-
-        if options.width_pins is not None:
-            pins = {}
-            for pin in options.width_pins.split():
-                before, after = pin.split(":")
-                pins[float(before)] = float(after)
-        else:
-            pins = None
-
-        widthMapping, widthMappingNormalized = planWidthAxis(
-            font.getGlyphSet,
-            wdthAxis.minValue,
-            wdthAxis.defaultValue,
-            wdthAxis.maxValue,
-            widths=widths,
-            samples=options.samples,
-            glyphs=glyphs,
-            designLimits=designLimits,
-            pins=pins,
-            sanitize=options.sanitize,
-        )
-
-        if options.plot:
-            from matplotlib import pyplot
-
-            pyplot.plot(
-                sorted(widthMappingNormalized),
-                [widthMappingNormalized[k] for k in sorted(widthMappingNormalized)],
-            )
-            pyplot.show()
-
-        if existingMapping is not None:
-            log.info("Existing width mapping:\n%s", pformat(existingMapping))
-
     if wghtAxis:
         log.info("Planning weight axis.")
 
@@ -779,6 +729,56 @@ def main(args=None):
 
         if existingMapping is not None:
             log.info("Existing weight mapping:\n%s", pformat(existingMapping))
+
+    if wdthAxis:
+        log.info("Planning width axis.")
+
+        if options.widths is not None:
+            widths = [float(w) for w in options.widths.split()]
+        else:
+            widths = None
+
+        if options.width_design_limits is not None:
+            designLimits = [float(d) for d in options.width_design_limits.split(":")]
+            assert (
+                len(designLimits) == 3
+                and designLimits[0] <= designLimits[1] <= designLimits[2]
+            )
+        else:
+            designLimits = None
+
+        if options.width_pins is not None:
+            pins = {}
+            for pin in options.width_pins.split():
+                before, after = pin.split(":")
+                pins[float(before)] = float(after)
+        else:
+            pins = None
+
+        widthMapping, widthMappingNormalized = planWidthAxis(
+            font.getGlyphSet,
+            wdthAxis.minValue,
+            wdthAxis.defaultValue,
+            wdthAxis.maxValue,
+            widths=widths,
+            samples=options.samples,
+            glyphs=glyphs,
+            designLimits=designLimits,
+            pins=pins,
+            sanitize=options.sanitize,
+        )
+
+        if options.plot:
+            from matplotlib import pyplot
+
+            pyplot.plot(
+                sorted(widthMappingNormalized),
+                [widthMappingNormalized[k] for k in sorted(widthMappingNormalized)],
+            )
+            pyplot.show()
+
+        if existingMapping is not None:
+            log.info("Existing width mapping:\n%s", pformat(existingMapping))
 
     if slntAxis:
         log.info("Planning slant axis.")
@@ -836,15 +836,6 @@ def main(args=None):
     avar = font["avar"]
 
     log.info("Designspace snippet:")
-    if wdthAxis:
-        avar.segments["wdth"] = widthMappingNormalized
-        designspaceSnippet = makeDesignspaceSnippet(
-            "wdth",
-            "Width",
-            (wdthAxis.minValue, wdthAxis.defaultValue, wdthAxis.maxValue),
-            widthMapping,
-        )
-        print(designspaceSnippet)
 
     if wghtAxis:
         avar.segments["wght"] = weightMappingNormalized
@@ -853,6 +844,16 @@ def main(args=None):
             "Weight",
             (wghtAxis.minValue, wghtAxis.defaultValue, wghtAxis.maxValue),
             weightMapping,
+        )
+        print(designspaceSnippet)
+
+    if wdthAxis:
+        avar.segments["wdth"] = widthMappingNormalized
+        designspaceSnippet = makeDesignspaceSnippet(
+            "wdth",
+            "Width",
+            (wdthAxis.minValue, wdthAxis.defaultValue, wdthAxis.maxValue),
+            widthMapping,
         )
         print(designspaceSnippet)
 
