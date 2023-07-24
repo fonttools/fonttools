@@ -141,6 +141,7 @@ def main(args):
     )
     parser.add_argument("font", metavar="font.ttf", help="Font file.")
     parser.add_argument("glyphs", metavar="glyph-name", help="Glyph names.", nargs="*")
+    parser.add_argument("-y", metavar="<number>", help="Face index into a collection to open. Zero based.")
     parser.add_argument(
         "--variations",
         metavar="AXIS=LOC",
@@ -152,7 +153,8 @@ def main(args):
 
     options = parser.parse_args(args)
 
-    filename, glyphs = options.font, options.glyphs
+    glyphs = options.glyphs
+    fontNumber = int(options.y) if options.y is not None else 0
 
     location = {}
     for tag_v in options.variations.split():
@@ -164,7 +166,7 @@ def main(args):
 
     from fontTools.ttLib import TTFont
 
-    font = TTFont(filename)
+    font = TTFont(options.font, fontNumber=fontNumber)
     if not glyphs:
         glyphs = font.getGlyphOrder()
     _test(font.getGlyphSet(location=location), font["head"].unitsPerEm, glyphs)

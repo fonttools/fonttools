@@ -221,6 +221,7 @@ def main(args=None):
     )
     parser.add_argument("font", metavar="font.ttf", help="Font file.")
     parser.add_argument("text", metavar="text", help="Text string.")
+    parser.add_argument("-y", metavar="<number>", help="Face index into a collection to open. Zero based.")
     parser.add_argument(
         "--variations",
         metavar="AXIS=LOC",
@@ -232,7 +233,9 @@ def main(args=None):
 
     options = parser.parse_args(args)
 
-    font = TTFont(options.font)
+    fontNumber = int(options.y) if options.y is not None else 0
+
+    font = TTFont(options.font, fontNumber=fontNumber)
     text = options.text
 
     location = {}
