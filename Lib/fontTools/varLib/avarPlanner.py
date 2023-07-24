@@ -162,7 +162,6 @@ def measureSlant(glyphset, glyphs=None):
 
 
 def sanitizeWidth(userTriple, designTriple, pins, measurements):
-
     minVal, defaultVal, maxVal = (
         measurements[designTriple[0]],
         measurements[designTriple[1]],
@@ -667,7 +666,10 @@ def main(args=None):
 
         if options.width_design_limits is not None:
             designLimits = [float(d) for d in options.width_design_limits.split(":")]
-            assert len(designLimits) == 3 and designLimits[0] <= designLimits[1] <= designLimits[2]
+            assert (
+                len(designLimits) == 3
+                and designLimits[0] <= designLimits[1] <= designLimits[2]
+            )
         else:
             designLimits = None
 
@@ -714,7 +716,10 @@ def main(args=None):
 
         if options.weight_design_limits is not None:
             designLimits = [float(d) for d in options.weight_design_limits.split(":")]
-            assert len(designLimits) == 3 and designLimits[0] <= designLimits[1] <= designLimits[2]
+            assert (
+                len(designLimits) == 3
+                and designLimits[0] <= designLimits[1] <= designLimits[2]
+            )
         else:
             designLimits = None
 
@@ -761,7 +766,10 @@ def main(args=None):
 
         if options.slant_design_limits is not None:
             designLimits = [float(d) for d in options.slant_design_limits.split(":")]
-            assert len(designLimits) == 3 and designLimits[0] <= designLimits[1] <= designLimits[2]
+            assert (
+                len(designLimits) == 3
+                and designLimits[0] <= designLimits[1] <= designLimits[2]
+            )
         else:
             designLimits = None
 
