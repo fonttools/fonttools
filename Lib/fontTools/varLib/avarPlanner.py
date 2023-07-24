@@ -642,7 +642,6 @@ def processAxis(
     planFunc,
     axisTag,
     axisName,
-    axisLimits,
     values,
     samples=None,
     glyphs=None,
@@ -653,8 +652,14 @@ def processAxis(
 ):
     """Process a single axis."""
 
+    axisLimits = None
+    for axis in font["fvar"].axes:
+        if axis.axisTag == axisTag:
+            axisLimits = axis
+            break
     if axisLimits is None:
         return ""
+    axisLimits = (axisLimits.minValue, axisLimits.defaultValue, axisLimits.maxValue)
 
     log.info("Planning %s axis.", axisName)
 
@@ -714,9 +719,6 @@ def processAxis(
     else:
         if "avar" in font:
             font["avar"].segments[axisTag] = {}
-
-    if isinstance(axisLimits, fvarAxis):
-        axisLimits = (axisLimits.minValue, axisLimits.defaultValue, axisLimits.maxValue)
 
     designspaceSnippet = makeDesignspaceSnippet(
         axisTag,
@@ -834,17 +836,6 @@ def main(args=None):
     if not "fvar" in font:
         log.error("Not a variable font.")
         sys.exit(1)
-    fvar = font["fvar"]
-    wghtAxis = wdthAxis = slntAxis = opszAxis = None
-    for axis in fvar.axes:
-        if axis.axisTag == "wght":
-            wghtAxis = axis
-        elif axis.axisTag == "wdth":
-            wdthAxis = axis
-        elif axis.axisTag == "slnt":
-            slntAxis = axis
-        elif axis.axisTag == "opsz":
-            opszAxis = axis
 
     if options.glyphs is not None:
         glyphs = options.glyphs.split()
@@ -867,7 +858,6 @@ def main(args=None):
             planWeightAxis,
             "wght",
             "Weight",
-            wghtAxis,
             values=options.weights,
             samples=options.samples,
             glyphs=glyphs,
@@ -883,7 +873,6 @@ def main(args=None):
             planWidthAxis,
             "wdth",
             "Width",
-            wdthAxis,
             values=options.widths,
             samples=options.samples,
             glyphs=glyphs,
@@ -899,7 +888,6 @@ def main(args=None):
             planSlantAxis,
             "slnt",
             "Slant",
-            slntAxis,
             values=options.slants,
             samples=options.samples,
             glyphs=glyphs,
@@ -915,7 +903,6 @@ def main(args=None):
             planOpticalSizeAxis,
             "opsz",
             "OpticalSize",
-            opszAxis,
             values=options.sizes,
             samples=options.samples,
             glyphs=glyphs,
