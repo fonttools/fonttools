@@ -389,11 +389,11 @@ def planAxis(
     else:
         pins = pins.copy()
 
-    log.info("Value min %g / default %g / max %g", minValue, defaultValue, maxValue)
+    log.info("Axis limits min %g / default %g / max %g", minValue, defaultValue, maxValue)
     triple = (minValue, defaultValue, maxValue)
 
     if designLimits is not None:
-        log.info("Value design-limits min %g / default %g / max %g", *designLimits)
+        log.info("Axis design-limits min %g / default %g / max %g", *designLimits)
     else:
         designLimits = triple
 
