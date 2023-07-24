@@ -5,7 +5,6 @@ colorLib.table_builder: Generic helper for filling in BaseTable derivatives from
 
 import collections
 import enum
-import copy
 import pickle
 from hashlib import sha256
 from fontTools.ttLib.tables.otBase import (
