@@ -162,8 +162,6 @@ def measureSlant(glyphset, glyphs=None):
 
 
 def sanitizeWidth(userTriple, designTriple, pins, measurements):
-    if len(set(userTriple)) < 3:
-        return True
 
     minVal, defaultVal, maxVal = (
         measurements[designTriple[0]],
