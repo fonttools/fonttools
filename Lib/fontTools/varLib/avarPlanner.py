@@ -169,8 +169,8 @@ def sanitizeWidth(userTriple, designTriple, pins, measurements):
         measurements[designTriple[2]],
     )
 
-    calculatedMinVal = userTriple[0] * (minVal / defaultVal)
-    calculatedMaxVal = userTriple[2] * (maxVal / defaultVal)
+    calculatedMinVal = userTriple[1] * (minVal / defaultVal)
+    calculatedMaxVal = userTriple[1] * (maxVal / defaultVal)
 
     log.info("Original width axis limits: %g:%g:%g", *userTriple)
     log.info(
