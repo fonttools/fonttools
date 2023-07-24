@@ -382,7 +382,7 @@ def planAxis(
         valueMeasurements = axisMeasurements.copy()
         for sample in range(1, samples + 1):
             value = rangeMin + (rangeMax - rangeMin) * sample / (samples + 1)
-            log.info("Sampling value %g.", value)
+            log.debug("Sampling value %g.", value)
             glyphset = glyphSetFunc(location={axisTag: value})
             designValue = piecewiseLinearMap(value, pins)
             valueMeasurements[designValue] = measureFunc(glyphset, glyphs)
@@ -400,7 +400,7 @@ def planAxis(
                 t, valueMeasurements[targetMin], valueMeasurements[targetMax]
             )
             targetValue = piecewiseLinearMap(targetMeasurement, measurementValue)
-            log.info("Planned mapping value %g to %g." % (value, targetValue))
+            log.debug("Planned mapping value %g to %g." % (value, targetValue))
             out[value] = targetValue
             outNormalized[
                 normalizedMin + t * (normalizedMax - normalizedMin)
@@ -835,6 +835,7 @@ def main(args=None):
 
     avar = font["avar"]
 
+    log.info("Designspace snippet:")
     if wdthAxis:
         avar.segments["wdth"] = widthMappingNormalized
         designspaceSnippet = makeDesignspaceSnippet(
@@ -843,7 +844,6 @@ def main(args=None):
             (wdthAxis.minValue, wdthAxis.defaultValue, wdthAxis.maxValue),
             widthMapping,
         )
-        log.info("Width axis designspace snippet:")
         print(designspaceSnippet)
 
     if wghtAxis:
@@ -854,7 +854,6 @@ def main(args=None):
             (wghtAxis.minValue, wghtAxis.defaultValue, wghtAxis.maxValue),
             weightMapping,
         )
-        log.info("Weight axis designspace snippet:")
         print(designspaceSnippet)
 
     if slntAxis:
@@ -865,7 +864,6 @@ def main(args=None):
             (slntAxis.minValue, slntAxis.defaultValue, slntAxis.maxValue),
             slantMapping,
         )
-        log.info("Slant axis designspace snippet:")
         print(designspaceSnippet)
 
     if options.output_file is None:
