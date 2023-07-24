@@ -616,17 +616,17 @@ def main(args=None):
     parser.add_argument(
         "--weight-pins",
         type=str,
-        help="Space-separate list of before:after pins. for the `wght` axis.",
+        help="Space-separate list of before:after pins for the `wght` axis.",
     )
     parser.add_argument(
         "--width-pins",
         type=str,
-        help="Space-separate list of before:after pins. for the `wdth` axis.",
+        help="Space-separate list of before:after pins for the `wdth` axis.",
     )
     parser.add_argument(
         "--slant-pins",
         type=str,
-        help="Space-separate list of before:after pins. for the `slnt` axis.",
+        help="Space-separate list of before:after pins for the `slnt` axis.",
     )
     parser.add_argument(
         "-p", "--plot", action="store_true", help="Plot the resulting mapping."
