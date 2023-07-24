@@ -72,16 +72,19 @@ SAMPLES = 8
 
 
 def interpolateLinear(t, a, b):
+    """Linear interpolation between a and b, with t typically in [0, 1]."""
     return a + t * (b - a)
 
 
 def interpolateLog(t, a, b):
+    """Logarithmic interpolation between a and b, with t typically in [0, 1]."""
     logA = math.log(a)
     logB = math.log(b)
     return math.exp(logA + t * (logB - logA))
 
 
 def measureWeight(glyphset, glyphs=None):
+    """Measure the perceptual-average weight of the given glyphs."""
     if isinstance(glyphs, dict):
         frequencies = glyphs
     else:
@@ -108,6 +111,7 @@ def measureWeight(glyphset, glyphs=None):
 
 
 def measureWidth(glyphset, glyphs=None):
+    """Measure the average width of the given glyphs."""
     if isinstance(glyphs, dict):
         frequencies = glyphs
     else:
@@ -135,6 +139,7 @@ def measureWidth(glyphset, glyphs=None):
 
 
 def measureSlant(glyphset, glyphs=None):
+    """Measure the average slant angle of the given glyphs."""
     if isinstance(glyphs, dict):
         frequencies = glyphs
     else:
@@ -162,6 +167,8 @@ def measureSlant(glyphset, glyphs=None):
 
 
 def sanitizeWidth(userTriple, designTriple, pins, measurements):
+    """Sanitize the width axis limits."""
+
     minVal, defaultVal, maxVal = (
         measurements[designTriple[0]],
         measurements[designTriple[1]],
@@ -197,6 +204,8 @@ def sanitizeWidth(userTriple, designTriple, pins, measurements):
 
 
 def sanitizeWeight(userTriple, designTriple, pins, measurements):
+    """Sanitize the weight axis limits."""
+
     if len(set(userTriple)) < 3:
         return True
 
@@ -260,6 +269,8 @@ def sanitizeWeight(userTriple, designTriple, pins, measurements):
 
 
 def sanitizeSlant(userTriple, designTriple, pins, measurements):
+    """Sanitize the slant axis limits."""
+
     log.info("Original slant axis limits: %g:%g:%g", *userTriple)
     log.info(
         "Calculated slant axis limits: %g:%g:%g",
@@ -301,6 +312,8 @@ def planAxis(
     pins=None,
     sanitizeFunc=None,
 ):
+    """Plan an axis."""
+
     if samples is None:
         samples = SAMPLES
     if glyphs is None:
@@ -424,6 +437,8 @@ def planWeightAxis(
     pins=None,
     sanitize=False,
 ):
+    """Plan a weight axis."""
+
     if weights is None:
         weights = WEIGHTS
 
@@ -456,6 +471,8 @@ def planWidthAxis(
     pins=None,
     sanitize=False,
 ):
+    """Plan a width axis."""
+
     if widths is None:
         widths = WIDTHS
 
@@ -488,6 +505,8 @@ def planSlantAxis(
     pins=None,
     sanitize=False,
 ):
+    """Plan a slant axis."""
+
     if slants is None:
         slants = SLANTS
 
@@ -509,6 +528,8 @@ def planSlantAxis(
 
 
 def makeDesignspaceSnippet(axisTag, axisName, axisLimit, mapping):
+    """Make a designspace snippet for a single axis."""
+
     designspaceSnippet = (
         '    <axis tag="%s" name="%s" minimum="%g" default="%g" maximum="%g"'
         % ((axisTag, axisName) + axisLimit)
@@ -528,9 +549,10 @@ def makeDesignspaceSnippet(axisTag, axisName, axisLimit, mapping):
 
 
 def addEmptyAvar(font):
-    font["avar"] = newTable("avar")
+    """Add an empty `avar` table to the font."""
+    font["avar"] = avar = newTable("avar")
     for axis in fvar.axes:
-        font["avar"].segments[axis.axisTag] = {}
+        avar.segments[axis.axisTag] = {}
 
 
 def main(args=None):
