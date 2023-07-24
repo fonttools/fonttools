@@ -1,4 +1,5 @@
 from fontTools.ttLib import newTable
+from fontTools.ttLib.tables._f_v_a_r import Axis as fvarAxis
 from fontTools.pens.areaPen import AreaPen
 from fontTools.pens.basePen import NullPen
 from fontTools.pens.statisticsPen import StatisticsPen
@@ -320,9 +321,7 @@ def planAxis(
     measureFunc,
     interpolateFunc,
     glyphSetFunc,
-    minValue,
-    defaultValue,
-    maxValue,
+    axisLimits,
     values=None,
     samples=None,
     glyphs=None,
@@ -331,6 +330,10 @@ def planAxis(
     sanitizeFunc=None,
 ):
     """Plan an axis."""
+
+    if isinstance(axisLimits, fvarAxis):
+        axisLimits = (axisLimits.minValue, axisLimits.defaultValue, axisLimits.maxValue)
+    minValue, defaultValue, maxValue = axisLimits
 
     if samples is None:
         samples = SAMPLES
@@ -445,9 +448,7 @@ def planAxis(
 
 def planWeightAxis(
     glyphSetFunc,
-    minValue,
-    defaultValue,
-    maxValue,
+    axisLimits,
     weights=None,
     samples=None,
     glyphs=None,
@@ -465,9 +466,7 @@ def planWeightAxis(
         measureWeight,
         interpolateLog,
         glyphSetFunc,
-        minValue,
-        defaultValue,
-        maxValue,
+        axisLimits,
         values=weights,
         samples=samples,
         glyphs=glyphs,
@@ -479,9 +478,7 @@ def planWeightAxis(
 
 def planWidthAxis(
     glyphSetFunc,
-    minValue,
-    defaultValue,
-    maxValue,
+    axisLimits,
     widths=None,
     samples=None,
     glyphs=None,
@@ -499,9 +496,7 @@ def planWidthAxis(
         measureWidth,
         interpolateLinear,
         glyphSetFunc,
-        minValue,
-        defaultValue,
-        maxValue,
+        axisLimits,
         values=widths,
         samples=samples,
         glyphs=glyphs,
@@ -513,9 +508,7 @@ def planWidthAxis(
 
 def planSlantAxis(
     glyphSetFunc,
-    minValue,
-    defaultValue,
-    maxValue,
+    axisLimits,
     slants=None,
     samples=None,
     glyphs=None,
@@ -533,9 +526,7 @@ def planSlantAxis(
         measureSlant,
         interpolateLinear,
         glyphSetFunc,
-        minValue,
-        defaultValue,
-        maxValue,
+        axisLimits,
         values=slants,
         samples=samples,
         glyphs=glyphs,
@@ -724,9 +715,7 @@ def main(args=None):
 
         weightMapping, weightMappingNormalized = planWeightAxis(
             font.getGlyphSet,
-            wghtAxis.minValue,
-            wghtAxis.defaultValue,
-            wghtAxis.maxValue,
+            wghtAxis,
             weights=weights,
             samples=options.samples,
             glyphs=glyphs,
@@ -774,9 +763,7 @@ def main(args=None):
 
         widthMapping, widthMappingNormalized = planWidthAxis(
             font.getGlyphSet,
-            wdthAxis.minValue,
-            wdthAxis.defaultValue,
-            wdthAxis.maxValue,
+            wdthAxis,
             widths=widths,
             samples=options.samples,
             glyphs=glyphs,
@@ -824,9 +811,7 @@ def main(args=None):
 
         slantMapping, slantMappingNormalized = planSlantAxis(
             font.getGlyphSet,
-            slntAxis.minValue,
-            slntAxis.defaultValue,
-            slntAxis.maxValue,
+            slntAxis,
             slants=slants,
             samples=options.samples,
             glyphs=glyphs,
