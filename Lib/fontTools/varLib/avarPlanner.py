@@ -361,11 +361,11 @@ def sanitizeSlant(userTriple, designTriple, pins, measurements):
 
 
 def planAxis(
-    axisTag,
     measureFunc,
     normalizeFunc,
     interpolateFunc,
     glyphSetFunc,
+    axisTag,
     axisLimits,
     values=None,
     samples=None,
@@ -502,11 +502,11 @@ def planWeightAxis(
         weights = WEIGHTS
 
     return planAxis(
-        "wght",
         measureWeight,
         normalizeLinear,
         interpolateLog,
         glyphSetFunc,
+        "wght",
         axisLimits,
         values=weights,
         samples=samples,
@@ -533,11 +533,11 @@ def planWidthAxis(
         widths = WIDTHS
 
     return planAxis(
-        "wdth",
         measureWidth,
         normalizeLinear,
         interpolateLinear,
         glyphSetFunc,
+        "wdth",
         axisLimits,
         values=widths,
         samples=samples,
@@ -564,11 +564,11 @@ def planSlantAxis(
         slants = SLANTS
 
     return planAxis(
-        "slnt",
         measureSlant,
         normalizeDegrees,
         interpolateLinear,
         glyphSetFunc,
+        "slnt",
         axisLimits,
         values=slants,
         samples=samples,
@@ -595,11 +595,11 @@ def planOpticalSizeAxis(
         sizes = SIZES
 
     return planAxis(
-        "opsz",
         measureWeight,
         normalizeLog,
         interpolateLinear,
         glyphSetFunc,
+        "opsz",
         axisLimits,
         values=sizes,
         samples=samples,
