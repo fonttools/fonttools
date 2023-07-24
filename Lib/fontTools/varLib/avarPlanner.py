@@ -581,7 +581,6 @@ def planOpticalSizeAxis(
         glyphs=glyphs,
         designLimits=designLimits,
         pins=pins,
-        sanitizeFunc=sanitizeSlant if sanitize else None,
     )
 
 
@@ -905,7 +904,9 @@ def main(args=None):
             sizes = None
 
         if options.optical_size_design_limits is not None:
-            designLimits = [float(d) for d in options.optical_size_design_limits.split(":")]
+            designLimits = [
+                float(d) for d in options.optical_size_design_limits.split(":")
+            ]
             assert (
                 len(designLimits) == 3
                 and designLimits[0] <= designLimits[1] <= designLimits[2]
@@ -923,7 +924,7 @@ def main(args=None):
 
         opticalSizeMapping, opticalSizeMappingNormalized = planOpticalSizeAxis(
             font.getGlyphSet,
-            slntAxis,
+            opszAxis,
             sizes=sizes,
             samples=options.samples,
             glyphs=glyphs,
