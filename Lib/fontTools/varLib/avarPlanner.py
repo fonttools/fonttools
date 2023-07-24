@@ -339,11 +339,9 @@ def planAxis(
     outNormalized = {}
 
     axisMeasurements = {}
-    for value in sorted({minValue, defaultValue, maxValue} | set(pins.values())):
+    for value in sorted({minValue, defaultValue, maxValue} | set(pins.keys())):
         glyphset = glyphSetFunc(location={axisTag: value})
-
-        designValue = piecewiseLinearMap(value, pins)
-
+        designValue = pins[value]
         axisMeasurements[designValue] = measureFunc(glyphset, glyphs)
 
     if sanitizeFunc is not None:
