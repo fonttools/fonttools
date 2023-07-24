@@ -118,8 +118,12 @@ def _test(glyphset, upem, glyphs):
     print("weight: %g" % (wght_sum * upem / wdth_sum))
     print("weight (perceptual): %g" % (wght_sum_perceptual / wdth_sum))
     print("width:  %g" % (wdth_sum / upem / len(glyphs)))
-    print("slant:  %g" % (slnt_sum / len(glyphs)))
-    print("slant (perceptual):  %g" % (slnt_sum_perceptual / wdth_sum))
+    slant = slnt_sum / len(glyphs)
+    print("slant:  %g" % slant)
+    print("slant angle:  %g" % -math.degrees(math.atan(slant)))
+    slant_perceptual = slnt_sum_perceptual / wdth_sum
+    print("slant (perceptual):  %g" % slant_perceptual)
+    print("slant (perceptual) angle:  %g" % -math.degrees(math.atan(slant_perceptual)))
 
 
 def main(args):
