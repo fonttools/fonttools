@@ -38,7 +38,6 @@ class StatisticsPen(MomentsPen):
         self.slant = 0
 
     def __update(self):
-
         area = self.area
         if not area:
             self.__zero()
@@ -143,12 +142,19 @@ def main(args):
     import argparse
 
     parser = argparse.ArgumentParser(
-        "fonttools pens.statisticsPen", description="Report font glyph shape geometricsl statistics"
+        "fonttools pens.statisticsPen",
+        description="Report font glyph shape geometricsl statistics",
     )
     parser.add_argument("font", metavar="font.ttf", help="Font file.")
     parser.add_argument("glyphs", metavar="glyph-name", help="Glyph names.", nargs="*")
-    parser.add_argument("-y", metavar="<number>", help="Face index into a collection to open. Zero based.")
-    parser.add_argument("-q", "--quiet", action="store_true", help="Only report font-wide statistics.")
+    parser.add_argument(
+        "-y",
+        metavar="<number>",
+        help="Face index into a collection to open. Zero based.",
+    )
+    parser.add_argument(
+        "-q", "--quiet", action="store_true", help="Only report font-wide statistics."
+    )
     parser.add_argument(
         "--variations",
         metavar="AXIS=LOC",
@@ -170,13 +176,17 @@ def main(args):
         v = int(fields[1])
         location[tag] = v
 
-
     from fontTools.ttLib import TTFont
 
     font = TTFont(options.font, fontNumber=fontNumber)
     if not glyphs:
         glyphs = font.getGlyphOrder()
-    _test(font.getGlyphSet(location=location), font["head"].unitsPerEm, glyphs, quiet=options.quiet)
+    _test(
+        font.getGlyphSet(location=location),
+        font["head"].unitsPerEm,
+        glyphs,
+        quiet=options.quiet,
+    )
 
 
 if __name__ == "__main__":
