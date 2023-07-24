@@ -825,7 +825,7 @@ def main(args=None):
     if slntAxis:
         avar.segments["slant"] = slantMappingNormalized
         designspaceSnippet = makeDesignspaceSnippet(
-            "slant",
+            "slnt",
             "Slant",
             (slntAxis.minValue, slntAxis.defaultValue, slntAxis.maxValue),
             slantMapping,
