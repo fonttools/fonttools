@@ -194,6 +194,10 @@ def sanitizeWidth(userTriple, designTriple, pins, measurements):
     ):
         log.warning("Calculated width axis min/max do not match user input.")
         log.warning(
+            "  Current width axis limits: %g:%g:%g",
+            *userTriple,
+        )
+        log.warning(
             "  Suggested width axis limits: %g:%g:%g",
             calculatedMinVal,
             userTriple[1],
@@ -236,6 +240,12 @@ def sanitizeWeight(userTriple, designTriple, pins, measurements):
 
     if abs(calculatedDefaultVal - userTriple[1]) / userTriple[1] > 0.05:
         log.warning("Calculated weight axis default does not match user input.")
+
+        log.warning(
+            "  Current weight axis limits: %g:%g:%g",
+            *userTriple,
+        )
+
         log.warning(
             "  Suggested weight axis limits, changing default: %g:%g:%g",
             userTriple[0],
@@ -287,6 +297,10 @@ def sanitizeSlant(userTriple, designTriple, pins, measurements):
         or abs(measurements[designTriple[2]] - userTriple[2]) > 1
     ):
         log.warning("Calculated slant axis min/default/max do not match user input.")
+        log.warning(
+            "  Current slant axis limits: %g:%g:%g",
+            *userTriple,
+        )
         log.warning(
             "  Suggested slant axis limits: %g:%g:%g",
             measurements[designTriple[0]],
