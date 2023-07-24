@@ -759,23 +759,6 @@ def main(args=None):
         elif axis.axisTag == "opsz":
             opszAxis = axis
 
-    wghtExistingMapping = (
-        wdthExistingMapping
-    ) = slntExistingMapping = opszExistingMapping = None
-    if "avar" in font:
-        if wghtAxis:
-            wghtExistingMapping = font["avar"].segments["wght"]
-            font["avar"].segments["wght"] = {}
-        if wdthAxis:
-            wdthExistingMapping = font["avar"].segments["wdth"]
-            font["avar"].segments["wdth"] = {}
-        if slntAxis:
-            slntExistingMapping = font["avar"].segments["slnt"]
-            font["avar"].segments["slnt"] = {}
-        if opszAxis:
-            opszExistingMapping = font["avar"].segments["opsz"]
-            font["avar"].segments["opsz"] = {}
-
     if options.glyphs is not None:
         glyphs = options.glyphs.split()
         if ":" in options.glyphs:
@@ -791,6 +774,12 @@ def main(args=None):
 
     if wghtAxis:
         log.info("Planning weight axis.")
+
+        if "avar" in font:
+            wghtExistingMapping = font["avar"].segments["wght"]
+            font["avar"].segments["wght"] = {}
+        else:
+            wghtExistingMapping = None
 
         if options.weights is not None:
             weights = [float(w) for w in options.weights.split()]
@@ -840,6 +829,12 @@ def main(args=None):
     if wdthAxis:
         log.info("Planning width axis.")
 
+        if "avar" in font:
+            wdthExistingMapping = font["avar"].segments["wdth"]
+            font["avar"].segments["wdth"] = {}
+        else:
+            wdthExistingMapping = None
+
         if options.widths is not None:
             widths = [float(w) for w in options.widths.split()]
         else:
@@ -888,6 +883,12 @@ def main(args=None):
     if slntAxis:
         log.info("Planning slant axis.")
 
+        if "avar" in font:
+            slntExistingMapping = font["avar"].segments["slnt"]
+            font["avar"].segments["slnt"] = {}
+        else:
+            slntExistingMapping = None
+
         if options.slants is not None:
             slants = [float(w) for w in options.slants.split()]
         else:
@@ -935,6 +936,12 @@ def main(args=None):
 
     if opszAxis:
         log.info("Planning optical-size axis.")
+
+        if "avar" in font:
+            opszExistingMapping = font["avar"].segments["opsz"]
+            font["avar"].segments["opsz"] = {}
+        else:
+            opszExistingMapping = None
 
         if options.sizes is not None:
             sizes = [float(w) for w in options.sizes.split()]
