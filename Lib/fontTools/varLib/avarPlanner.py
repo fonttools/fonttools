@@ -84,7 +84,7 @@ def interpolateLog(t, a, b):
 
 
 def measureWeight(glyphset, glyphs=None):
-    """Measure the perceptual-average weight of the given glyphs."""
+    """Measure the perceptual average weight of the given glyphs."""
     if isinstance(glyphs, dict):
         frequencies = glyphs
     else:
@@ -104,8 +104,9 @@ def measureWeight(glyphset, glyphs=None):
         pen = AreaPen(glyphset=glyphset)
         glyph.draw(pen)
 
-        wght_sum += abs(pen.value) * glyph.width * frequency
-        wdth_sum += glyph.width * frequency
+        mult = glyph.width * frequency
+        wght_sum += mult * abs(pen.value)
+        wdth_sum += mult
 
     return wght_sum / wdth_sum
 
@@ -139,7 +140,7 @@ def measureWidth(glyphset, glyphs=None):
 
 
 def measureSlant(glyphset, glyphs=None):
-    """Measure the average slant angle of the given glyphs."""
+    """Measure the perceptual average slant angle of the given glyphs."""
     if isinstance(glyphs, dict):
         frequencies = glyphs
     else:
@@ -160,8 +161,9 @@ def measureSlant(glyphset, glyphs=None):
         pen = StatisticsPen(glyphset=glyphset)
         glyph.draw(pen)
 
-        slnt_sum += pen.slant * frequency
-        freq_sum += frequency
+        mult = glyph.width * frequency
+        slnt_sum += mult * pen.slant
+        freq_sum += mult
 
     return -math.degrees(math.atan(slnt_sum / freq_sum))
 
