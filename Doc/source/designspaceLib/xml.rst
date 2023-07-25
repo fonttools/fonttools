@@ -1097,6 +1097,8 @@ Example for MutatorMath
 The ``<lib>`` element contains arbitrary data.
 
 - Child element of ``<designspace>``, ``<variable-font>`` and ``<instance>``
+- If present, content must be an XML Property List (plist).
+  <https://en.wikipedia.org/wiki/Property_list>__
 - Contains arbitrary data about the whole document or about a specific
   variable font or instance.
 - Items in the dict need to use **reverse domain name notation**
