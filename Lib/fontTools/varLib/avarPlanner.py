@@ -77,6 +77,9 @@ WIDTHS = [
 SLANTS = list(math.degrees(math.atan(d / 20.0)) for d in range(-20, 21))
 
 SIZES = [
+    5,
+    6,
+    7,
     8,
     9,
     10,
@@ -93,6 +96,9 @@ SIZES = [
     96,
     120,
     144,
+    192,
+    240,
+    288,
 ]
 
 
