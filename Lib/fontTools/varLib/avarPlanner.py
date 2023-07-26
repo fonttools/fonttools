@@ -662,7 +662,7 @@ def planOpticalSizeAxis(
     return planAxis(
         measureWeight,
         normalizeLog,
-        interpolateLinear,
+        interpolateLog,
         glyphSetFunc,
         "opsz",
         axisLimits,
