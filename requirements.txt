@@ -3,7 +3,7 @@
 brotli==1.0.9; platform_python_implementation != "PyPy"
 brotlicffi==1.0.9.2; platform_python_implementation == "PyPy"
 unicodedata2==15.0.0; python_version <= '3.11'
-scipy==1.10.0; platform_python_implementation != "PyPy"
+scipy==1.11.1; platform_python_implementation != "PyPy"
 munkres==1.1.4; platform_python_implementation == "PyPy"
 zopfli==0.2.1
 fs==2.4.16
