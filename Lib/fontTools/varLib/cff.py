@@ -357,7 +357,6 @@ def _get_cs(charstrings, glyphName, filterEmpty=False):
 
     if filterEmpty:
         cs.decompile()
-        # print(cs.program)
         if cs.program == []:  # CFF2 empty charstring
             return None
         elif (
@@ -393,6 +392,7 @@ def merge_charstrings(glyphOrder, num_masters, top_dicts, masterModel):
     masterSupports = []
     default_charstrings = top_dicts[0].CharStrings
     for gid, gname in enumerate(glyphOrder):
+        # interpret empty non-default masters as missing glyphs from a sparse master
         all_cs = [
             _get_cs(td.CharStrings, gname, i != 0) for i, td in enumerate(top_dicts)
         ]
