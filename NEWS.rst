@@ -1,3 +1,6 @@
+4.42.0 (released 2023-08-02)
+----------------------------
+
 - [varLib] Use sentinel value 0xFFFF to mark a glyph advance in hmtx/vmtx as non
   participating, allowing sparse masters to contain glyphs for variation purposes other
   than {H,V}VAR (#3235).
