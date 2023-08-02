@@ -1,0 +1,23 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<designspace format="5.0">
+  <axes>
+    <axis tag="wght" name="Weight" minimum="350" maximum="625" default="350"/>
+  </axes>
+  <sources>
+    <source filename="master_sparse_cff2_empty/SparseCFF-Regular.ttx" name="Sparse Font Regular" familyname="Sparse Font" stylename="Regular">
+      <location>
+        <dimension name="Weight" xvalue="350"/>
+      </location>
+    </source>
+    <source filename="master_sparse_cff2_empty/SparseCFF-Medium.ttx" name="Sparse Font Medium" familyname="Sparse Font" stylename="Medium">
+      <location>
+        <dimension name="Weight" xvalue="450"/>
+      </location>
+    </source>
+    <source filename="master_sparse_cff2_empty/SparseCFF-Bold.ttx" name="Sparse Font Bold" familyname="Sparse Font" stylename="Bold">
+      <location>
+        <dimension name="Weight" xvalue="625"/>
+      </location>
+    </source>
+  </sources>
+</designspace>

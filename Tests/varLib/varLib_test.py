@@ -999,6 +999,16 @@ Expected to see .ScriptCount==1, instead saw 0""",
             save_before_dump=True,
         )
 
+    def test_varlib_build_variable_cff2_with_empty_sparse_glyph(self):
+        # https://github.com/fonttools/fonttools/issues/3233
+        self._run_varlib_build_test(
+            designspace_name="SparseCFF2",
+            font_name="SparseCFF2",
+            tables=["GlyphOrder", "CFF2", "fvar"],
+            expected_ttx_name="SparseCFF2-VF",
+            save_before_dump=True,
+        )
+
 
 def test_load_masters_layerName_without_required_font():
     ds = DesignSpaceDocument()
