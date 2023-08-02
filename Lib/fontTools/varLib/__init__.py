@@ -563,11 +563,11 @@ def _get_advance_metrics(
 ):
     vhAdvanceDeltasAndSupports = {}
     vOrigDeltasAndSupports = {}
-    # HACK: we treat width 65535 and lsb -32768 as sentinel values to signal that a
-    # glyph from a non-default master should not participate in computing {H,V}VAR,
+    # HACK: we treat width 65535 and lsb 0 as sentinel values to signal that a glyph
+    # from a non-default master should not participate in computing {H,V}VAR,
     # as if it were missing. Allows to variate other glyph-related data independently
     # from glyph metrics
-    sparse_metrics = (0xFFFF, -0x8000)
+    sparse_metrics = (0xFFFF, 0)
     for glyph in glyphOrder:
         vhAdvances = [
             metrics[glyph][0]
