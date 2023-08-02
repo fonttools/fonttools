@@ -294,7 +294,7 @@
   </GSUB>
 
   <hmtx>
-    <mtx name=".notdef" width="500" lsb="50"/>
+    <mtx name=".notdef" width="800" lsb="200"/>
     <mtx name="a" width="600" lsb="9"/>
     <mtx name="e" width="600" lsb="9"/>
   </hmtx>

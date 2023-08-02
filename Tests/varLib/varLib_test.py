@@ -1004,7 +1004,7 @@ Expected to see .ScriptCount==1, instead saw 0""",
         self._run_varlib_build_test(
             designspace_name="SparseCFF2",
             font_name="SparseCFF2",
-            tables=["GlyphOrder", "CFF2", "fvar"],
+            tables=["GlyphOrder", "CFF2", "fvar", "hmtx", "HVAR"],
             expected_ttx_name="SparseCFF2-VF",
             save_before_dump=True,
         )
