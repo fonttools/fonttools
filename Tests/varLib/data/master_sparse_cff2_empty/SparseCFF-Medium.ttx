@@ -93,7 +93,7 @@
   </CFF>
 
   <hmtx>
-    <mtx name=".notdef" width="500" lsb="0"/>
+    <mtx name=".notdef" width="65535" lsb="-32768"/>
     <mtx name="e" width="600" lsb="40"/>
   </hmtx>
 
