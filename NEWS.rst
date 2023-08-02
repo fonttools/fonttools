@@ -1,3 +1,11 @@
+- [varLib] Use sentinel value 0xFFFF to mark a glyph advance in hmtx/vmtx as non
+  participating, allowing sparse masters to contain glyphs for variation purposes other
+  than {H,V}VAR (#3235).
+- [varLib/cff] Treat empty glyphs in non-default masters as missing, thus not participating
+  in CFF2 delta computation, similarly to how varLib already treats them for gvar (#3234).
+- Added varLib.avarPlanner script to deduce 'correct' avar v1 axis mappings based on
+  glyph average weights (#3223).
+
 4.41.1 (released 2023-07-21)
 ----------------------------
 
