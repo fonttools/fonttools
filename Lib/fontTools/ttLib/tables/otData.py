@@ -6157,6 +6157,36 @@ otData = [
             ),
         ],
     ),
+    # PaintTemplateInstance
+    (
+        "PaintFormat33",
+        [
+            ("uint8", "PaintFormat", None, None, "Format identifier-format = 34"),
+            (
+                "LOffset24To(Paint)",
+                "TemplatePaint",
+                None,
+                None,
+                "Offset (from beginning of PaintTemplateInstance table) to template Paint subtable.",
+            ),
+            ("uint8", "NumArguments", None, None, ""),
+            (
+                "LOffset24To(Paint)",
+                "Arguments",
+                "NumArguments",
+                0,
+                "Offset (from beginning of PaintTemplateInstance table) to Paint arguments.",
+            ),
+        ],
+    ),
+    # PaintTemplateArgument
+    (
+        "PaintFormat34",
+        [
+            ("uint8", "PaintFormat", None, None, "Format identifier-format = 33"),
+            ("uint8", "ArgumentIndex", None, None, ""),
+        ],
+    ),
     #
     # avar
     #
