@@ -390,16 +390,16 @@ class OffsetToWriter(object):
         # only works after self._doneWriting() has been called
         return hash((self.subWriter, self.offsetSize))
 
+
 class OTTableWriter(object):
 
     """Helper class to gather and assemble data for OpenType tables."""
 
-    def __init__(self, localState=None, tableTag=None, offsetSize=2):
+    def __init__(self, localState=None, tableTag=None):
         self.items = []
         self.pos = None
         self.localState = localState
         self.tableTag = tableTag
-        self.offsetSize = offsetSize
         self.parent = None
 
     def __setitem__(self, name, value):
@@ -515,7 +515,9 @@ class OTTableWriter(object):
                 # seen yet. We therefore replace the subwriter object with an equivalent
                 # object, which deduplicates the tree.
                 if not dontShare:
-                    items[i].subWriter = internedTables.setdefault(item.subWriter, item.subWriter)
+                    items[i].subWriter = internedTables.setdefault(
+                        item.subWriter, item.subWriter
+                    )
         self.items = tuple(items)
 
     def _gatherTables(self, tables, extTables, done):
@@ -549,7 +551,10 @@ class OTTableWriter(object):
             # Find coverage table
             for i in range(numItems):
                 item = self.items[i]
-                if hasattr(item, "subWriter") and getattr(item.subWriter, "name", None) == "Coverage":
+                if (
+                    hasattr(item, "subWriter")
+                    and getattr(item.subWriter, "name", None) == "Coverage"
+                ):
                     sortCoverageLast = True
                     break
             if id(item.subWriter) not in done:
@@ -704,10 +709,8 @@ class OTTableWriter(object):
 
     # interface for gathering data, as used by table.compile()
 
-    def getSubWriter(self, offsetSize=2):
-        subwriter = self.__class__(
-            self.localState, self.tableTag, offsetSize=offsetSize
-        )
+    def getSubWriter(self):
+        subwriter = self.__class__(self.localState, self.tableTag)
         subwriter.parent = (
             self  # because some subtables have idential values, we discard
         )
@@ -779,9 +782,8 @@ class OTTableWriter(object):
         assert len(tag) == 4, tag
         self.items.append(tag)
 
-    def writeSubTable(self, subWriter):
-        self.items.append(OffsetToWriter(subWriter, subWriter.offsetSize))
-        del subWriter.offsetSize
+    def writeSubTable(self, subWriter, offsetSize):
+        self.items.append(OffsetToWriter(subWriter, offsetSize))
 
     def writeCountReference(self, table, name, size=2, value=None):
         ref = CountReference(table, name, size=size, value=value)
@@ -1372,7 +1374,7 @@ class ValueRecordFactory(object):
             if isDevice:
                 if value:
                     subWriter = writer.getSubWriter()
-                    writer.writeSubTable(subWriter)
+                    writer.writeSubTable(subWriter, offsetSize=2)
                     value.compile(subWriter, font)
                 else:
                     writer.writeUShort(0)
