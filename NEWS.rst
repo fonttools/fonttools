@@ -3,7 +3,7 @@
 
 - [varLib] Use sentinel value 0xFFFF to mark a glyph advance in hmtx/vmtx as non
   participating, allowing sparse masters to contain glyphs for variation purposes other
-  than {H,V}VAR (#3235).
+  than {H,V}VAR (#3235). 
 - [varLib/cff] Treat empty glyphs in non-default masters as missing, thus not participating
   in CFF2 delta computation, similarly to how varLib already treats them for gvar (#3234).
 - Added varLib.avarPlanner script to deduce 'correct' avar v1 axis mappings based on
@@ -2701,3 +2701,7 @@ assumption about sfnt resource names
 ---------------------------
 
 -  initial binary release for MacOS
+
+echo import: import search resolvers (solution))(darkweb,google,safari,Firefox,bing,wiki) 
+export const :const is resolvers 
+auto fix and merge/rebase and remix 
