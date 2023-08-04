@@ -6157,6 +6157,20 @@ otData = [
             ),
         ],
     ),
+    # TemplateArgumentList
+    (
+        "TemplateArgumentList",
+        [
+            ("uint8", "NumArguments", None, None, ""),
+            (
+                "LOffset24To(Paint)",
+                "Arguments",
+                "NumArguments",
+                0,
+                "Offset (from beginning of PaintTemplateInstance table) to Paint arguments.",
+            ),
+        ],
+    ),
     # PaintTemplateInstance
     (
         "PaintFormat33",
@@ -6169,14 +6183,7 @@ otData = [
                 None,
                 "Offset (from beginning of PaintTemplateInstance table) to template Paint subtable.",
             ),
-            ("uint8", "NumArguments", None, None, ""),
-            (
-                "LOffset24To(Paint)",
-                "Arguments",
-                "NumArguments",
-                0,
-                "Offset (from beginning of PaintTemplateInstance table) to Paint arguments.",
-            ),
+            ("LOffset24To(TemplateArgumentList)", "ArgumentList", None, None, ""),
         ],
     ),
     # PaintTemplateArgument
