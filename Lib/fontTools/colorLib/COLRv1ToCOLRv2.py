@@ -1,7 +1,5 @@
 """
-Loads a COLRv1 font and tries to detect paint graphs that can
-use templatization, and proceeds to produce a font with such
-templates.
+Loads a COLRv1 font and upgrades it to COLRv2.
 """
 
 from fontTools.ttLib.tables.otBase import OTTableWriter
@@ -16,7 +14,7 @@ __all__ = [
     "main",
 ]
 
-log = logging.getLogger("fontTools.colorLib.templatize")
+log = logging.getLogger("fontTools.colorLib.COLRv1ToCOLRv2")
 
 
 def objectToTuple(obj, layerList):
@@ -41,6 +39,55 @@ def objectToTuple(obj, layerList):
         (attr, objectToTuple(getattr(obj, attr), layerList))
         for attr in sorted(obj.__dict__.keys())
     )
+
+
+def replaceSelfAndDeltaPaintGlyphs(glyphName, obj, reverseGlyphMap=None):
+    if isinstance(obj, (int, float, str)):
+        return obj
+
+    if obj[0] in ("list", "PaintColrLayers"):
+        return tuple(
+            replaceSelfAndDeltaPaintGlyphs(glyphName, o, reverseGlyphMap) for o in obj
+        )
+
+    if obj[0] != "Paint":
+        return obj
+
+    paintFormat = None
+    paintGlyphName = None
+    paintPaint = None
+    for attr, val in obj[1:]:
+        if attr == "Format":
+            paintFormat = val
+        if attr == "Glyph":
+            paintGlyphName = val
+        elif attr == "Paint":
+            paintPaint = val
+
+    if paintFormat != PaintFormat.PaintGlyph:
+        return ("Paint",) + tuple(
+            (k, replaceSelfAndDeltaPaintGlyphs(glyphName, v, reverseGlyphMap))
+            for k, v in obj[1:]
+        )
+
+    # PaintGlyph
+
+    if glyphName == paintGlyphName:
+        return ("Paint", ("Format", PaintFormat.PaintGlyphSelf), ("Paint", paintPaint))
+
+    if reverseGlyphMap is not None:
+        glyphID = reverseGlyphMap.get(glyphName)
+        paintGlyphID = reverseGlyphMap.get(paintGlyphName)
+        delta = (paintGlyphID - glyphID) % 65536
+        if delta < 65536 and ((glyphID + delta) % 65536 == paintGlyphID):
+            return (
+                "Paint",
+                ("Format", PaintFormat.PaintGlyphDelta),
+                ("DeltaGlyphID", delta),
+                ("Paint", paintPaint),
+            )
+
+    return obj
 
 
 def templateForObjectTuple(objTuple):
@@ -316,12 +363,12 @@ def rebuildColr(font, paintTuples):
         colr.compile(writer, font)
         data = writer.getAllData()
         l = len(data)
-        log.info("Reconstructed COLR table is %d bytes", l)
+        log.info("Constructed COLRv2 table is %d bytes", l)
         return l
 
 
 def main(args=None):
-    """Templatize a COLRv1 color font"""
+    """Convert a COLRv1 color font to COLRv2"""
     from fontTools import configLogger
 
     if args is None:
@@ -333,8 +380,8 @@ def main(args=None):
     import argparse
 
     parser = argparse.ArgumentParser(
-        "fonttools colorLib.templatize",
-        description="Templatize a COLRv1 color font.",
+        "fonttools colorLib.COLRv1ToCOLRv2",
+        description="Convert a COLRv1 color font to COLRv2.",
     )
     parser.add_argument("font", metavar="font.ttf", help="Font file.")
     parser.add_argument(
@@ -378,17 +425,26 @@ def main(args=None):
         paintTuple = objectToTuple(paint, layerList)
         paintTuples[glyphName] = paintTuple
 
-    originalSize = None
+    v1Size = None
     if log.isEnabledFor(logging.INFO):
         writer = OTTableWriter()
         colr.compile(writer, font)
         data = writer.getAllData()
-        originalSize = len(data)
-        log.info("Original COLR table is %d bytes", originalSize)
+        v1Size = len(data)
+        log.info("Original COLRv1 table is %d bytes", v1Size)
 
     if False:
         log.info("Rebuilding original font.")
         rebuildColr(font, paintTuples)
+
+    log.info("Detecting self/delta glyph paints.")
+    reverseGlyphMap = font.getReverseGlyphMap()
+    paintTuples = {
+        k: replaceSelfAndDeltaPaintGlyphs(k, v, reverseGlyphMap)
+        for k, v in paintTuples.items()
+    }
+
+    log.info("Templatizing paints.")
 
     genericTemplates = defaultdict(list)
     for glyphName, paintTuple in paintTuples.items():
@@ -470,19 +526,17 @@ def main(args=None):
             paintTuples[glyphName] = paintTuple
     log.info("Skipped %d templates as they didn't save space", skipped)
 
-    log.info("Building templatized font")
-    templatizedSize = rebuildColr(font, paintTuples)
+    log.info("Building COLRv2 font")
+    v2Size = rebuildColr(font, paintTuples)
 
-    if originalSize is not None:
+    if v1Size is not None:
         log.info(
-            "Templatized COLR table is %.3g%% smaller.",
-            100 * (1 - templatizedSize / originalSize),
+            "COLRv2 table is %.3g%% smaller.",
+            100 * (1 - v2Size / v1Size),
         )
 
     if options.output_file is None:
-        outfile = makeOutputFileName(
-            options.font, overWrite=True, suffix=".templatized"
-        )
+        outfile = makeOutputFileName(options.font, overWrite=True, suffix=".COLRv2")
     else:
         outfile = options.output_file
     if outfile:
