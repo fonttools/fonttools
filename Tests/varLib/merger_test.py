@@ -1902,32 +1902,38 @@ class SparsePositioningMergerTest:
 
         ds.sources[0].font.newGlyph("a").unicode = ord("a")
         ds.sources[0].font.newGlyph("b").unicode = ord("b")
+        ds.sources[0].font.newGlyph("c").unicode = ord("c")
         ds.sources[
             0
         ].font.features.text = """
         feature curs {
           position cursive a <anchor 400 20> <anchor 0 -20>;
+          position cursive c <anchor NULL> <anchor 0 -20>;
         } curs;
         """
 
         ds.sources[1].font.newGlyph("a").unicode = ord("a")
         ds.sources[1].font.newGlyph("b").unicode = ord("b")
+        ds.sources[1].font.newGlyph("c").unicode = ord("c")
         ds.sources[
             1
         ].font.features.text = """
         feature curs {
           position cursive a <anchor 500 20> <anchor 0 -20>;
           position cursive b <anchor 50 22> <anchor 0 -10>;
+          position cursive c <anchor NULL> <anchor 0 -20>;
         } curs;
         """
 
         ds.sources[2].font.newGlyph("a").unicode = ord("a")
         ds.sources[2].font.newGlyph("b").unicode = ord("b")
+        ds.sources[2].font.newGlyph("c").unicode = ord("c")
         ds.sources[
             2
         ].font.features.text = """
         feature curs {
           position cursive b <anchor 100 40> <anchor 0 -30>;
+          position cursive c <anchor NULL> <anchor 0 -20>;
         } curs;
         """
 
