@@ -79,6 +79,10 @@ def replaceSelfAndDeltaPaintGlyphs(glyphName, obj, reverseGlyphMap=None):
         glyphID = reverseGlyphMap.get(glyphName)
         paintGlyphID = reverseGlyphMap.get(paintGlyphName)
         delta = (paintGlyphID - glyphID) % 65536
+
+        if abs(delta) > 8:
+            return obj
+
         if delta < 65536 and ((glyphID + delta) % 65536 == paintGlyphID):
             return (
                 "Paint",
