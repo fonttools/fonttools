@@ -144,7 +144,8 @@ def templateForObjectTuples(allTuples, arguments):
     if ret is not None:
         return ret
 
-    if v0[0] == "Paint":
+    # If length is 2, this is a key,value pair, not an object.
+    if len(v0) > 2 and v0[0] == "Paint":
         paint = (
             "Paint",
             ("Format", PaintFormat.PaintTemplateArgument),
@@ -294,6 +295,41 @@ def serializeObjectTuple(objTuple):
     for attr, value in objTuple[1:]:
         setattr(obj, attr, serializeObjectTuple(value))
     return obj
+
+
+def expandRecursivePaintColrLayers(paintTuple):
+    if not isinstance(paintTuple, tuple):
+        return paintTuple
+
+    if paintTuple[0] == "list":
+        # Nothing to expand in lists at this point
+        return paintTuple
+        # return ("list",) + tuple(expandRecursivePaintColrLayers(o) for o in paintTuple[1:])
+
+    if paintTuple[0] != "PaintColrLayers":
+        return (paintTuple[0],) + tuple(
+            (k, expandRecursivePaintColrLayers(v)) for k, v in paintTuple[1:]
+        )
+
+    paintTuples = tuple(
+        expandRecursivePaintColrLayers(layer) for layer in paintTuple[1:]
+    )
+
+    layers = []
+    for layer in paintTuples:
+        if len(layers) > 255:
+            break
+
+        if not isinstance(layer, tuple) or layer[0] != "PaintColrLayers":
+            layers.append(layer)
+            continue
+
+        layers.extend(layer[1:])
+
+    if len(layers) > 255:
+        return ("PaintColrLayers",) + paintTuples
+
+    return ("PaintColrLayers",) + tuple(layers)
 
 
 def collectPaintColrLayers(paint, allPaintColrLayers):
@@ -449,6 +485,8 @@ def main(args=None):
 
     log.info("Templatizing paints.")
 
+    paintTuples = {k: expandRecursivePaintColrLayers(v) for k, v in paintTuples.items()}
+
     genericTemplates = defaultdict(list)
     for glyphName, paintTuple in paintTuples.items():
         paintTemplate = templateForObjectTuple(paintTuple)
@@ -527,6 +565,7 @@ def main(args=None):
                 ("Arguments", ("list",) + tuple(args[i] for args in arguments)),
             )
             paintTuples[glyphName] = paintTuple
+
     log.info("Skipped %d templates as they didn't save space", skipped)
 
     log.info("Building COLRv2 font")
