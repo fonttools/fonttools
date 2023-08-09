@@ -426,8 +426,7 @@ def main(args=None):
         glyphName = glyph.BaseGlyph
         paint = glyph.Paint
 
-        paintTuple = objectToTuple(paint, layerList)
-        paintTuples[glyphName] = paintTuple
+        paintTuples[glyphName] = objectToTuple(paint, layerList)
 
     v1Size = None
     if log.isEnabledFor(logging.INFO):
