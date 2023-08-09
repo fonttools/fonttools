@@ -325,7 +325,7 @@ def serializeLayers(glyphList, layerList):
         if cached is not None:
             paint.FirstLayerIndex = cached
         else:
-            assert len(paint.layers) > 1, paint.layersTuple
+            assert len(paint.layers) != 1, paint.layersTuple
             firstLayerIndex = paint.FirstLayerIndex = len(layerList)
             layerList.extend(paint.layers)
 
