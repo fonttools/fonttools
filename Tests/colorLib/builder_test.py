@@ -1086,11 +1086,13 @@ def test_buildColrV1():
                     },
                     "f",
                 ),
+                (ot.PaintFormat.PaintGlyph, (ot.PaintFormat.PaintSolid, 5), "h"),
             ],
         ),
         "g": (
-            ot.PaintFormat.PaintColrLayers,
-            [(ot.PaintFormat.PaintGlyph, (ot.PaintFormat.PaintSolid, 5), "h")],
+            ot.PaintFormat.PaintGlyph,
+            (ot.PaintFormat.PaintSolid, 5),
+            "h",
         ),
     }
     glyphMap = {
@@ -1111,12 +1113,16 @@ def test_buildColrV1():
     assert baseGlyphs.BaseGlyphPaintRecord[0].BaseGlyph == "d"
     assert baseGlyphs.BaseGlyphPaintRecord[1].BaseGlyph == "a"
     assert baseGlyphs.BaseGlyphPaintRecord[2].BaseGlyph == "g"
+    # Glyph "d" has most number of layers and should be first.
+    assert baseGlyphs.BaseGlyphPaintRecord[0].Paint.FirstLayerIndex == 0
 
     layers, baseGlyphs = builder.buildColrV1(colorGlyphs)
     assert baseGlyphs.BaseGlyphCount == len(colorGlyphs)
     assert baseGlyphs.BaseGlyphPaintRecord[0].BaseGlyph == "a"
     assert baseGlyphs.BaseGlyphPaintRecord[1].BaseGlyph == "d"
     assert baseGlyphs.BaseGlyphPaintRecord[2].BaseGlyph == "g"
+    # Glyph "d" has most number of layers and should be first.
+    assert baseGlyphs.BaseGlyphPaintRecord[1].Paint.FirstLayerIndex == 0
 
 
 def test_buildColrV1_more_than_255_paints():
@@ -1393,25 +1399,24 @@ def test_build_layerv1list_with_sharing():
     assertIsColrV1(colr)
     assertNoV0Content(colr)
 
-    # 2 v1 glyphs, 4 paints in LayerList
     # A single shared backdrop isn't worth accessing by slice
     baseGlyphs = colr.table.BaseGlyphList.BaseGlyphPaintRecord
     assert colr.table.BaseGlyphList.BaseGlyphCount == 3
     assert len(baseGlyphs) == 3
     assert _paint_names([b.Paint for b in baseGlyphs]) == [
-        "Layers[0:3]",
-        "Layers[3:6]",
+        "Layers[4:6]",
+        "Layers[0:4]",
         "Layers[6:8]",
     ]
     assert _paint_names(colr.table.LayerList.Paint) == [
+        "b_back",
         "back1",
         "back2",
-        "a_fore",
-        "b_back",
-        "Layers[0:2]",
         "b_fore",
+        "Layers[1:3]",
+        "a_fore",
         "c_back",
-        "Layers[0:2]",
+        "Layers[1:3]",
     ]
     assert colr.table.LayerList.LayerCount == 8
 
@@ -1451,20 +1456,18 @@ def test_build_layerv1list_with_overlaps():
         "b",
         "c",
         "d",
-        "Layers[0:4]",
         "e",
         "f",
-        "Layers[2:4]",
-        "Layers[5:7]",
+        "Layers[2:6]",
         "g",
         "h",
     ]
     assert _paint_names([b.Paint for b in baseGlyphs]) == [
         "Layers[0:4]",
-        "Layers[4:7]",
-        "Layers[7:11]",
+        "Layers[0:6]",
+        "Layers[6:9]",
     ]
-    assert colr.table.LayerList.LayerCount == 11
+    assert colr.table.LayerList.LayerCount == 9
 
 
 def test_explicit_version_1():

@@ -629,22 +629,33 @@ def buildColrV1(
     *,
     allowLayerReuse: bool = True,
 ) -> Tuple[Optional[ot.LayerList], ot.BaseGlyphList]:
-    if glyphMap is not None:
-        colorGlyphItems = sorted(
-            colorGlyphs.items(), key=lambda item: glyphMap[item[0]]
-        )
-    else:
-        colorGlyphItems = colorGlyphs.items()
+    if glyphMap is None:
+        glyphMap = {k: i for i, k in enumerate(colorGlyphs)}
 
     errors = {}
     baseGlyphs = []
     layerBuilder = LayerListBuilder(allowLayerReuse=allowLayerReuse)
-    for baseGlyph, paint in colorGlyphItems:
+
+    for baseGlyph, paint in sorted(
+        colorGlyphs.items(),
+        key=lambda item: (
+            -len(item[1][1])
+            if isinstance(item[1], collections.abc.Sequence)
+            and item[1][0] == ot.PaintFormat.PaintColrLayers
+            else -len(item[1]["Layers"])
+            if isinstance(item[1], Dict)
+            and item[1].get("Format", None) == ot.PaintFormat.PaintColrLayers
+            else 0,
+            glyphMap[item[0]],
+        ),
+    ):
         try:
             baseGlyphs.append(buildBaseGlyphPaintRecord(baseGlyph, layerBuilder, paint))
 
         except (ColorLibError, OverflowError, ValueError, TypeError) as e:
             errors[baseGlyph] = e
+
+    baseGlyphs = sorted(baseGlyphs, key=lambda item: glyphMap[item.BaseGlyph])
 
     if errors:
         failed_glyphs = _format_glyph_errors(errors)
