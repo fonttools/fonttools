@@ -324,6 +324,15 @@ class NameTableTest(unittest.TestCase):
             nameTable.addMultilingualName({"en": "A", "la": "ⱾƤℚⱤ"})
         captor.assertRegex("cannot store language la into 'ltag' table")
 
+    def test_addMultilingualName_TTFont(self):
+        # if ttFont argument is passed, it should not WARN about not being able
+        # to create ltag table.
+        font = FakeFont(glyphs=[".notdef", "A"])
+        nameTable = newTable("name")
+        with CapturingLogHandler(log, "WARNING") as captor:
+            nameTable.addMultilingualName({"en": "A", "ar": "ع"}, ttFont=font)
+        self.assertFalse(captor.records)
+
     def test_addMultilingualName_minNameID(self):
         table = table__n_a_m_e()
         names, namesSubSet, namesSuperSet = self._get_test_names()
