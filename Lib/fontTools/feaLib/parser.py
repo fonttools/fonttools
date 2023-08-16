@@ -2072,9 +2072,9 @@ class Parser(object):
         self.advance_lexer_()
         if self.cur_token_type_ is Lexer.NAME:
             self.cur_token_ = self.cur_token_.lstrip("\\")
-            if len(self.cur_token_) > 63:
+            if len(self.cur_token_) > 127:
                 raise FeatureLibError(
-                    "Glyph names must not be longer than 63 characters",
+                    "Glyph names must not be longer than 127 characters",
                     self.cur_token_location_,
                 )
             return self.cur_token_
