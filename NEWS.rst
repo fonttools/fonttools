@@ -1,3 +1,9 @@
+- [t1Lib] Fixed several Type 1 issues (#3238, #3240).
+- [otBase/packer] Allow sharing tables reached by different offset sizes (#3241, #3236).
+- [varLib/merger] Fix Cursive attachment merging error when all anchors are NULL (#3248, #3247).
+- [ttLib] Fixed warning when calling ``addMultilingualName`` and ``ttFont`` parameter was not
+  passed on to ``findMultilingualName`` (#3253).
+
 4.42.0 (released 2023-08-02)
 ----------------------------
 
