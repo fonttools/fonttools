@@ -443,7 +443,7 @@ class OTTableWriter(object):
                         items[i] = packUShort(item.subWriter.pos - pos)
                     except struct.error:
                         # provide data to fix overflow problem.
-                        overflowErrorRecord = self.getOverflowErrorRecord(item)
+                        overflowErrorRecord = self.getOverflowErrorRecord(item.subWriter)
 
                         raise OTLOffsetOverflowError(overflowErrorRecord)
                 elif item.offsetSize == 3:
