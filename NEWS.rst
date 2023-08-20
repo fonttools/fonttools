@@ -1,3 +1,6 @@
+4.42.1 (released 2023-08-20)
+----------------------------
+
 - [t1Lib] Fixed several Type 1 issues (#3238, #3240).
 - [otBase/packer] Allow sharing tables reached by different offset sizes (#3241, #3236).
 - [varLib/merger] Fix Cursive attachment merging error when all anchors are NULL (#3248, #3247).
