@@ -47,10 +47,22 @@ def varcToCOLR(font):
                              'angle': transform.rotation}
 
                 if transform.scaleX != 1.0 or transform.scaleY != 1.0:
-                    paint = {'Format': ot.PaintFormat.PaintScale,
-                             'Paint': paint,
-                             'scaleX': transform.scaleX,
-                             'scaleY': transform.scaleY}
+                    if (abs(transform.scaleX) < 2.0 and abs(transform.scaleY) < 2.0):
+                        paint = {'Format': ot.PaintFormat.PaintScale,
+                                 'Paint': paint,
+                                 'scaleX': transform.scaleX,
+                                 'scaleY': transform.scaleY}
+                    else:
+                        affine = ot.Affine2x3()
+                        affine.xx = transform.scaleX
+                        affine.xy = 0.0
+                        affine.yx = 0.0
+                        affine.yy = transform.scaleX
+                        affine.dx = 0.0
+                        affine.dy = 0.0
+                        paint = {'Format': ot.PaintFormat.PaintTransform,
+                                 'Paint': paint,
+                                 'Transform': affine}
 
                 if transform.skewX or transform.skewY:
                     paint = {'Format': ot.PaintFormat.PaintSkew,
