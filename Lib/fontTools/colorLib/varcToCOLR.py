@@ -84,6 +84,7 @@ def varcToCOLR(font):
                         axisValues.append(value)
 
                     AxisList = ot.AxisList()
+                    AxisList.Format = 1
                     AxisList.Axis = axisList
 
                     AxisValues = ot.AxisValues()

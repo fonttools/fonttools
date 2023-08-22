@@ -6157,10 +6157,26 @@ otData = [
             ),
         ],
     ),
-    # AxisList
+    # AxisListFormat1
     (
-        "AxisList",
+        "AxisListFormat1",
         [
+            ("uint8", "Format", None, None, "Number of axis indices"),
+            ("uint8", "AxisCount", None, None, "Number of axis indices"),
+            (
+                "uint8",
+                "Axis",
+                "AxisCount",
+                0,
+                "Array of axis indices",
+            ),
+        ],
+    ),
+    # AxisListFormat2
+    (
+        "AxisListFormat2",
+        [
+            ("uint8", "Format", None, None, "Number of axis indices"),
             ("uint8", "AxisCount", None, None, "Number of axis indices"),
             (
                 "uint16",
