@@ -6157,6 +6157,63 @@ otData = [
             ),
         ],
     ),
+    # AxisList
+    (
+        "AxisList",
+        [
+            ("uint8", "AxisCount", None, None, "Number of axis indices"),
+            (
+                "uint16",
+                "Axis",
+                "AxisCount",
+                0,
+                "Array of axis indices",
+            ),
+        ],
+    ),
+    # AxisValues
+    (
+        "AxisValues",
+        [
+            ("uint8", "AxisCount", None, None, "Number of axis indices"),
+            (
+                "F2Dot14",
+                "Value",
+                "AxisCount",
+                0,
+                "Array of axis values",
+            ),
+        ],
+    ),
+    # PaintLocation
+    (
+        "PaintFormat33",
+        [
+            ("uint8", "PaintFormat", None, None, "Format identifier-format = 33"),
+            (
+                "LOffset24To(Paint)",
+                "Paint",
+                None,
+                None,
+                "Offset (from beginning of PaintLocation table) to source Paint subtable.",
+            ),
+            (
+                "LOffset24To(AxisList)",
+                "AxisList",
+                None,
+                None,
+                "",
+            ),
+            (
+                "AxisValues",
+                "AxisValues",
+                None,
+                None,
+                "",
+            ),
+        ],
+    ),
+
     #
     # avar
     #

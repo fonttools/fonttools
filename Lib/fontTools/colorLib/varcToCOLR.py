@@ -6,6 +6,9 @@ from fontTools.misc.fixedTools import floatToFixed as fl2fi
 def varcToCOLR(font):
     glyf = font["glyf"]
 
+    axisTags = glyf.axisTags
+    axisIndices = {tag: i for i, tag in enumerate(axisTags)}
+
     paintForeground = {'Format': ot.PaintFormat.PaintSolid,
                        'PaletteIndex': 0xFFFF,
                        'Alpha': 1.0}
@@ -60,6 +63,24 @@ def varcToCOLR(font):
                              'Paint': paint,
                              'dx': -transform.tCenterX,
                              'dy': -transform.tCenterY}
+
+                if component.location:
+                    axisList = []
+                    axisValues = []
+                    for axisTag, value in component.location.items():
+                        axisList.append(axisIndices[axisTag])
+                        axisValues.append(value)
+
+                    AxisList = ot.AxisList()
+                    AxisList.Axis = axisList
+
+                    AxisValues = ot.AxisValues()
+                    AxisValues.Value = axisValues
+
+                    paint = {'Format': ot.PaintFormat.PaintLocation,
+                             'Paint': paint,
+                             'AxisList': AxisList,
+                             'AxisValues': AxisValues}
 
                 layers.append(paint)
 
