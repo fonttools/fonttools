@@ -94,7 +94,7 @@ def buildAxis(axisTag):
                 {3: 300},
             ],
             1,
-            156,
+            126,
         ),
         (
             5,
@@ -212,8 +212,8 @@ def test_optimize(numRegions, varData, expectedNumVarData, expectedBytes):
         (3, 170),
         (4, 175),
         (8, 170),
-        (32, 152),
-        (64, 146),
+        (32, 92),
+        (64, 56),
     ],
 )
 def test_quantize(quantization, expectedBytes):

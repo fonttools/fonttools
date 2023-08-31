@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="3.19">
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="4.42">
 
   <GlyphOrder>
     <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
@@ -629,7 +629,7 @@
       <Format value="1"/>
       <VarRegionList>
         <!-- RegionAxisCount=2 -->
-        <!-- RegionCount=5 -->
+        <!-- RegionCount=2 -->
         <Region index="0">
           <VarRegionAxis index="0">
             <StartCoord value="-1.0"/>
@@ -654,58 +654,29 @@
             <EndCoord value="0.0"/>
           </VarRegionAxis>
         </Region>
-        <Region index="2">
-          <VarRegionAxis index="0">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="1">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="1.0"/>
-            <EndCoord value="1.0"/>
-          </VarRegionAxis>
-        </Region>
-        <Region index="3">
-          <VarRegionAxis index="0">
-            <StartCoord value="-1.0"/>
-            <PeakCoord value="-1.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="1">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="1.0"/>
-            <EndCoord value="1.0"/>
-          </VarRegionAxis>
-        </Region>
-        <Region index="4">
-          <VarRegionAxis index="0">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="1.0"/>
-            <EndCoord value="1.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="1">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="1.0"/>
-            <EndCoord value="1.0"/>
-          </VarRegionAxis>
-        </Region>
       </VarRegionList>
       <!-- VarDataCount=1 -->
       <VarData index="0">
-        <!-- ItemCount=6 -->
+        <!-- ItemCount=5 -->
         <NumShorts value="0"/>
         <!-- VarRegionCount=2 -->
         <VarRegionIndex index="0" value="0"/>
         <VarRegionIndex index="1" value="1"/>
-        <Item index="0" value="[0, 0]"/>
-        <Item index="1" value="[14, -28]"/>
-        <Item index="2" value="[-10, 17]"/>
-        <Item index="3" value="[-3, 32]"/>
-        <Item index="4" value="[-7, 63]"/>
-        <Item index="5" value="[-7, 63]"/>
+        <Item index="0" value="[-10, 17]"/>
+        <Item index="1" value="[-7, 63]"/>
+        <Item index="2" value="[-3, 32]"/>
+        <Item index="3" value="[0, 0]"/>
+        <Item index="4" value="[14, -28]"/>
       </VarData>
     </VarStore>
+    <AdvWidthMap>
+      <Map glyph=".notdef" outer="0" inner="3"/>
+      <Map glyph="uni0020" outer="0" inner="4"/>
+      <Map glyph="uni0024" outer="0" inner="1"/>
+      <Map glyph="uni0024.nostroke" outer="0" inner="1"/>
+      <Map glyph="uni0041" outer="0" inner="0"/>
+      <Map glyph="uni0061" outer="0" inner="2"/>
+    </AdvWidthMap>
   </HVAR>
 
   <MVAR>
@@ -717,7 +688,7 @@
       <Format value="1"/>
       <VarRegionList>
         <!-- RegionAxisCount=2 -->
-        <!-- RegionCount=5 -->
+        <!-- RegionCount=2 -->
         <Region index="0">
           <VarRegionAxis index="0">
             <StartCoord value="-1.0"/>
@@ -740,42 +711,6 @@
             <StartCoord value="0.0"/>
             <PeakCoord value="0.0"/>
             <EndCoord value="0.0"/>
-          </VarRegionAxis>
-        </Region>
-        <Region index="2">
-          <VarRegionAxis index="0">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="1">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="1.0"/>
-            <EndCoord value="1.0"/>
-          </VarRegionAxis>
-        </Region>
-        <Region index="3">
-          <VarRegionAxis index="0">
-            <StartCoord value="-1.0"/>
-            <PeakCoord value="-1.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="1">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="1.0"/>
-            <EndCoord value="1.0"/>
-          </VarRegionAxis>
-        </Region>
-        <Region index="4">
-          <VarRegionAxis index="0">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="1.0"/>
-            <EndCoord value="1.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="1">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="1.0"/>
-            <EndCoord value="1.0"/>
           </VarRegionAxis>
         </Region>
       </VarRegionList>

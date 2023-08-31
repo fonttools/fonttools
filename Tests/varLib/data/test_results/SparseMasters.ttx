@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="3.35">
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="4.42">
 
   <GlyphOrder>
     <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
@@ -440,28 +440,7 @@
       <Format value="1"/>
       <VarRegionList>
         <!-- RegionAxisCount=1 -->
-        <!-- RegionCount=3 -->
-        <Region index="0">
-          <VarRegionAxis index="0">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.36365"/>
-            <EndCoord value="1.0"/>
-          </VarRegionAxis>
-        </Region>
-        <Region index="1">
-          <VarRegionAxis index="0">
-            <StartCoord value="0.36365"/>
-            <PeakCoord value="1.0"/>
-            <EndCoord value="1.0"/>
-          </VarRegionAxis>
-        </Region>
-        <Region index="2">
-          <VarRegionAxis index="0">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="1.0"/>
-            <EndCoord value="1.0"/>
-          </VarRegionAxis>
-        </Region>
+        <!-- RegionCount=0 -->
       </VarRegionList>
       <!-- VarDataCount=1 -->
       <VarData index="0">
