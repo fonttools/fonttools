@@ -1,18 +1,21 @@
 # we use the official Brotli module on CPython and the CFFI-based
 # extension 'brotlipy' on PyPy
-brotli==1.0.9; platform_python_implementation != "PyPy"
+brotli==1.1.0; platform_python_implementation != "PyPy"
 brotlicffi==1.0.9.2; platform_python_implementation == "PyPy"
 unicodedata2==15.0.0; python_version <= '3.11'
-scipy==1.10.0; platform_python_implementation != "PyPy"
+scipy==1.11.2; platform_python_implementation != "PyPy"
+# numpy is only required by scipy; we need prerelease to get a wheel for 3.12
+# TODO(anthrotype): Remove this once stable numpy 1.26 is released
+numpy==1.26.0rc1; platform_python_implementation != "PyPy"
 munkres==1.1.4; platform_python_implementation == "PyPy"
 zopfli==0.2.1
 fs==2.4.16
-skia-pathops==0.7.3; platform_python_implementation != "PyPy"
+skia-pathops==0.8.0.post1; platform_python_implementation != "PyPy"
 # this is only required to run Tests/cu2qu/{ufo,cli}_test.py
-ufoLib2==0.14.0
+ufoLib2==0.16.0
 ufo2ft==2.31.0
-pyobjc==9.0; sys_platform == "darwin"
-freetype-py==2.3.0
-uharfbuzz==0.32.0
-glyphsLib==6.2.1 # this is only required to run Tests/varLib/interpolatable_test.py
-lxml==4.9.2
+pyobjc==9.2; sys_platform == "darwin"
+freetype-py==2.4.0
+uharfbuzz==0.37.2
+glyphsLib==6.4.0 # this is only required to run Tests/varLib/interpolatable_test.py
+lxml==4.9.3
