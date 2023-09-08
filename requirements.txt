@@ -8,7 +8,7 @@ scipy==1.11.2; platform_python_implementation != "PyPy" and python_version > '3.
 # TODO(anthrotype): Remove this once stable numpy 1.26 is released
 numpy==1.26.0rc1; platform_python_implementation != "PyPy" and python_version > '3.8'
 munkres==1.1.4; platform_python_implementation == "PyPy" or python_version == '3.8'
-zopfli==0.2.1
+zopfli==0.2.3
 fs==2.4.16
 skia-pathops==0.8.0.post1; platform_python_implementation != "PyPy"
 # this is only required to run Tests/cu2qu/{ufo,cli}_test.py
