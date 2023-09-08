@@ -3,11 +3,11 @@
 brotli==1.1.0; platform_python_implementation != "PyPy"
 brotlicffi==1.0.9.2; platform_python_implementation == "PyPy"
 unicodedata2==15.0.0; python_version <= '3.11'
-scipy==1.11.2; platform_python_implementation != "PyPy"
+scipy==1.11.2; platform_python_implementation != "PyPy" and python_version > '3.8'
 # numpy is only required by scipy; we need prerelease to get a wheel for 3.12
 # TODO(anthrotype): Remove this once stable numpy 1.26 is released
-numpy==1.26.0rc1; platform_python_implementation != "PyPy"
-munkres==1.1.4; platform_python_implementation == "PyPy"
+numpy==1.26.0rc1; platform_python_implementation != "PyPy" and python_version > '3.8'
+munkres==1.1.4; platform_python_implementation == "PyPy" or python_version == '3.8'
 zopfli==0.2.1
 fs==2.4.16
 skia-pathops==0.8.0.post1; platform_python_implementation != "PyPy"
