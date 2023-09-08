@@ -63,8 +63,7 @@ jobs:
       with:
         python-version: "3.x"
     - name: Install dependencies
-      # using fork of cibuildwheel until this is fixed: https://github.com/pypa/cibuildwheel/issues/1504
-      run: pip install git+https://github.com/anthrotype/cibuildwheel.git@test_command_wheel#egg=cibuildwheel
+      run: pip install cibuildwheel
 
     - name: Build Wheels
       run: python -m cibuildwheel --output-dir wheelhouse .
@@ -81,7 +80,7 @@ jobs:
     strategy:
       matrix:
         # aarch64 uses qemu so it's slow, build each py version in parallel jobs
-        python: [38, 39, 310, 311]
+        python: [38, 39, 310, 311, 312]
         arch: [aarch64]
     steps:
     - uses: actions/checkout@v3
