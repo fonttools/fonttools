@@ -90,8 +90,7 @@ jobs:
       with:
         platforms: all
     - name: Install dependencies
-      # using fork of cibuildwheel until this is fixed: https://github.com/pypa/cibuildwheel/issues/1504
-      run: pip install git+https://github.com/anthrotype/cibuildwheel.git@test_command_wheel#egg=cibuildwheel
+      run: pip install cibuildwheel
     - name: Build Wheels
       run: python -m cibuildwheel --output-dir wheelhouse .
       env:
