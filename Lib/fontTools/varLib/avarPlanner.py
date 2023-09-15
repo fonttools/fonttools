@@ -802,13 +802,13 @@ def processAxis(
 
 def main(args=None):
     """Plan the standard axis mappings for a variable font"""
-    from fontTools import configLogger
 
     if args is None:
         import sys
 
         args = sys.argv[1:]
 
+    from fontTools import configLogger
     from fontTools.ttLib import TTFont
     import argparse
 
