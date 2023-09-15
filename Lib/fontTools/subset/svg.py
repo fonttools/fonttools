@@ -226,7 +226,7 @@ def subset_glyphs(self, s) -> bool:
                 # dangling tail text after removing an element when pretty_print=True
                 remove_blank_text=True,
                 # don't replace entities; we don't expect any in OT-SVG and they may
-                # aboused for XXE attacks
+                # be abused for XXE attacks
                 resolve_entities=False,
             ),
         )
