@@ -135,7 +135,7 @@ def _add_avar(font, axes, mappings, axisTags):
     """
     Add 'avar' table to font.
 
-    axes is an ordered list of the axis tags.
+    axes is an ordered dictionary of AxisDescriptor objects.
     """
 
     assert axes
