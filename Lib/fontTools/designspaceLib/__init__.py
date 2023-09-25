@@ -1286,11 +1286,43 @@ class VariableFontDescriptor(SimpleDescriptor):
     """
 
     flavor = "variable-font"
-    _attrs = ("filename", "axisSubsets", "lib")
+    _attrs = (
+        "filename",
+        "path",
+        "name",
+        "axisSubsets",
+        "familyName",
+        "styleName",
+        "postScriptFontName",
+        "styleMapFamilyName",
+        "styleMapStyleName",
+        "localisedFamilyName",
+        "localisedStyleName",
+        "localisedStyleMapFamilyName",
+        "localisedStyleMapStyleName",
+        "lib",
+    )
 
     filename = posixpath_property("_filename")
 
-    def __init__(self, *, name, filename=None, axisSubsets=None, lib=None):
+    def __init__(
+        self,
+        *,
+        name,
+        filename=None,
+        path=None,
+        axisSubsets=None,
+        familyName=None,
+        styleName=None,
+        postScriptFontName=None,
+        styleMapFamilyName=None,
+        styleMapStyleName=None,
+        localisedFamilyName=None,
+        localisedStyleName=None,
+        localisedStyleMapFamilyName=None,
+        localisedStyleMapStyleName=None,
+        lib=None,
+    ):
         self.name: str = name
         """string, required. Name of this variable to identify it during the
         build process and from other parts of the document, and also as a
@@ -1304,6 +1336,10 @@ class VariableFontDescriptor(SimpleDescriptor):
 
         If not specified, the :attr:`name` will be used as a basename for the file.
         """
+        self.path = path
+        """Absolute path to the variable font file, calculated from the document path and
+        the string in the filename attr. The file may or may not exist.
+        """
         self.axisSubsets: List[
             Union[RangeAxisSubsetDescriptor, ValueAxisSubsetDescriptor]
         ] = (axisSubsets or [])
@@ -1312,8 +1348,51 @@ class VariableFontDescriptor(SimpleDescriptor):
         If an axis is not mentioned, assume that we only want the default
         location of that axis (same as a :class:`ValueAxisSubsetDescriptor`).
         """
+        self.familyName = familyName
+        """Family name of this variable font."""
+        self.styleName = styleName
+        """Style name of this variable font."""
+        self.postScriptFontName = postScriptFontName
+        """Postscript fontname for this variable font."""
+        self.styleMapFamilyName = styleMapFamilyName
+        """StyleMap familyname for this variable font."""
+        self.styleMapStyleName = styleMapStyleName
+        """StyleMap stylename for this variable font."""
+        self.localisedFamilyName = localisedFamilyName or {}
+        """A dictionary of localised family name strings, keyed by language code."""
+        self.localisedStyleName = localisedStyleName or {}
+        """A dictionary of localised stylename strings, keyed by language code."""
+        self.localisedStyleMapFamilyName = localisedStyleMapFamilyName or {}
+        """A dictionary of localised style map familyname strings, keyed by language code."""
+        self.localisedStyleMapStyleName = localisedStyleMapStyleName or {}
+        """A dictionary of localised style map stylename strings, keyed by language code."""
         self.lib: MutableMapping[str, Any] = lib or {}
         """Custom data associated with this variable font."""
+
+    def setFamilyName(self, familyName, languageCode="en"):
+        self.localisedFamilyName[languageCode] = tostr(familyName)
+
+    def getFamilyName(self, languageCode="en"):
+        return self.localisedFamilyName.get(languageCode)
+
+    def setStyleName(self, styleName, languageCode="en"):
+        """These methods give easier access to the localised names."""
+        self.localisedStyleName[languageCode] = tostr(styleName)
+
+    def getStyleName(self, languageCode="en"):
+        return self.localisedStyleName.get(languageCode)
+
+    def setStyleMapStyleName(self, styleMapStyleName, languageCode="en"):
+        self.localisedStyleMapStyleName[languageCode] = tostr(styleMapStyleName)
+
+    def getStyleMapStyleName(self, languageCode="en"):
+        return self.localisedStyleMapStyleName.get(languageCode)
+
+    def setStyleMapFamilyName(self, styleMapFamilyName, languageCode="en"):
+        self.localisedStyleMapFamilyName[languageCode] = tostr(styleMapFamilyName)
+
+    def getStyleMapFamilyName(self, languageCode="en"):
+        return self.localisedStyleMapFamilyName.get(languageCode)
 
 
 class RangeAxisSubsetDescriptor(SimpleDescriptor):
