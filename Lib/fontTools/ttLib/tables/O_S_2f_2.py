@@ -165,6 +165,10 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
                 "OS/2 table version 4 and up: version %s",
                 self.version,
             )
+
+        if self.achVendID:
+            self.achVendID = self.padVendorID(self.achVendID)
+
         self.panose = sstruct.pack(panoseFormat, self.panose)
         if self.version == 0:
             data = sstruct.pack(OS2_format_0, self)
@@ -353,6 +357,11 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
                 avg_width = otRound(sum(widths) / len(widths))
         self.xAvgCharWidth = avg_width
         return avg_width
+
+    def padVendorID(self, achVendorID):
+        """Pad the Vendor ID with spaces as required for Tag types
+        in the OpenType specification."""
+        return achVendorID.ljust(4)
 
 
 # Unicode ranges data from the OpenType OS/2 table specification v1.7

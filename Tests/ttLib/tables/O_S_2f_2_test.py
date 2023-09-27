@@ -55,6 +55,11 @@ class OS2TableTest(unittest.TestCase):
             (set(range(123)) - {9, 57, 122}),
         )
 
+    def test_vendorIdPadding(self):
+        os2 = newTable("OS/2")
+        self.assertEqual(os2.padVendorID("T"), "T   ")
+        self.assertEqual(os2.padVendorID("TEST"), "TEST")
+
 
 if __name__ == "__main__":
     import sys
