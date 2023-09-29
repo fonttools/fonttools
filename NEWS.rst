@@ -1,3 +1,6 @@
+4.43.0 (released 2023-09-29)
+----------------------------
+
 - [subset] Set up lxml ``XMLParser(resolve_entities=False)`` when parsing OT-SVG documents
   to prevent XML External Entity (XXE) attacks (9f61271dc):
   https://codeql.github.com/codeql-query-help/python/py-xxe/
