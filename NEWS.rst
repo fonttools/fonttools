@@ -1,3 +1,15 @@
+- [subset] Set up lxml ``XMLParser(resolve_entities=False)`` when parsing OT-SVG documents
+  to prevent XML External Entity (XXE) attacks (9f61271dc):
+  https://codeql.github.com/codeql-query-help/python/py-xxe/
+- [varLib.iup] Added workaround for a Cython bug in ``iup_delta_optimize`` that was
+  leading to IUP tolerance being incorrectly initialised, resulting in sub-optimal deltas
+  (60126435d, cython/cython#5732).
+- [varLib] Added new command-line entry point ``fonttools varLib.avar`` to add an
+  ``avar`` table to an existing VF from axes mappings in a .designspace file (0a3360e52).
+- [instancer] Fixed bug whereby no longer used variation regions were not correctly pruned
+  after VarData optimization (#3268).
+- Added support for Python 3.12 (#3283).
+
 4.42.1 (released 2023-08-20)
 ----------------------------
 
