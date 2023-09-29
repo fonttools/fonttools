@@ -21,7 +21,7 @@ jobs:
   build_pure:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
@@ -55,7 +55,7 @@ jobs:
           - os: windows-latest
             arch: auto32
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: recursive
     - name: Set up Python
@@ -83,7 +83,7 @@ jobs:
         python: [38, 39, 310, 311, 312]
         arch: [aarch64]
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
     - uses: docker/setup-qemu-action@v2.2.0
