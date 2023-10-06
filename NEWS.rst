@@ -1,3 +1,11 @@
+- [EBDT] Fixed TypeError exception in `_reverseBytes` method triggered when dumping
+  some bitmap fonts with `ttx -z bitwise` option (#3162).
+- [v/hhea] Fixed UnboundLocalError exception in ``recalc`` method when no vmtx or hmtx
+  tables are present (#3290).
+- [bezierTools] Fixed incorrectly typed cython local variable leading to TypeError when
+  calling ``calcQuadraticArcLength`` (#3288).
+- [feaLib/otlLib] Better error message when building Coverage table with missing glyph (#3286).
+
 4.43.0 (released 2023-09-29)
 ----------------------------
 
