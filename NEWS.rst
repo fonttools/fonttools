@@ -1,3 +1,6 @@
+4.43.1 (released 2023-10-06)
+----------------------------
+
 - [EBDT] Fixed TypeError exception in `_reverseBytes` method triggered when dumping
   some bitmap fonts with `ttx -z bitwise` option (#3162).
 - [v/hhea] Fixed UnboundLocalError exception in ``recalc`` method when no vmtx or hmtx
