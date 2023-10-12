@@ -11,7 +11,7 @@ from fontTools.pens.pointPen import SegmentToPointPen
 from fontTools.pens.recordingPen import RecordingPen
 from fontTools.pens.statisticsPen import StatisticsPen
 from fontTools.pens.momentsPen import OpenContourError
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 import math
 import itertools
 import sys
@@ -444,30 +444,34 @@ def main(args=None):
             if "gvar" in font:
                 # Is variable font
                 gvar = font["gvar"]
-                # Gather all "master" locations
-                locs = set()
-                for variations in gvar.variations.values():
+                # Gather all glyphs at their "master" locations
+                ttGlyphSets = {}
+                glyphsets = defaultdict(dict)
+
+                for glyphname, variations in gvar.variations.items():
                     for var in variations:
+                        locDict = {}
                         loc = []
                         for tag, val in sorted(var.axes.items()):
+                            locDict[tag] = val[1]
                             loc.append((tag, val[1]))
-                        locs.add(tuple(loc))
-                # Rebuild locs as dictionaries
-                new_locs = [{}]
-                names.append("()")
-                for loc in sorted(locs, key=lambda v: (len(v), v)):
-                    names.append(str(loc))
-                    l = {}
-                    for tag, val in loc:
-                        l[tag] = val
-                    new_locs.append(l)
-                locs = new_locs
-                del new_locs
-                # locs is all master locations now
 
-                for loc in locs:
-                    fonts.append(font.getGlyphSet(location=loc, normalized=True))
+                        locTuple = tuple(loc)
+                        if locTuple not in ttGlyphSets:
+                            ttGlyphSets[locTuple] = font.getGlyphSet(
+                                location=locDict, normalized=True
+                            )
 
+                        glyphsets[locTuple][glyphname] = ttGlyphSets[locTuple][
+                            glyphname
+                        ]
+
+                names = ["()"]
+                fonts = [font.getGlyphSet()]
+                for locTuple in sorted(glyphsets.keys(), key=lambda v: (len(v), v)):
+                    names.append(str(locTuple))
+                    fonts.append(glyphsets[locTuple])
+                args.ignore_missing = True
                 args.inputs = []
 
     for filename in args.inputs:
