@@ -450,8 +450,10 @@ def main(args=None):
                 ttGlyphSets = {}
                 glyphsets = defaultdict(dict)
 
-                for glyphname, variations in gvar.variations.items():
-                    for var in variations:
+                if glyphs is None:
+                    glyphs = gvar.variations.keys()
+                for glyphname in glyphs:
+                    for var in gvar.variations[glyphname]:
                         locDict = {}
                         loc = []
                         for tag, val in sorted(var.axes.items()):
