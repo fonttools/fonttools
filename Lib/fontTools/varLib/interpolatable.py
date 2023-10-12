@@ -95,7 +95,7 @@ def _vlen(vec):
 def _complex_vlen(vec):
     v = 0
     for x in vec:
-        v += abs(x) * abs(x)
+        v += x.real * x.real + x.imag * x.imag
     return v
 
 
