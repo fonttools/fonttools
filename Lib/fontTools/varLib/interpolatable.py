@@ -158,8 +158,10 @@ def test(glyphsets, glyphs=None, names=None, ignore_missing=False):
             allVectors = []
             allNodeTypes = []
             allContourIsomorphisms = []
-            for glyphset, name in zip(glyphsets, names):
-                glyph = glyphset[glyph_name]
+            allGlyphs = [glyphset[glyph_name] for glyphset in glyphsets]
+            if len([1 for glyph in allGlyphs if glyph is not None]) <= 1:
+                continue
+            for glyph, glyphset, name in zip(allGlyphs, glyphsets, names):
 
                 if glyph is None:
                     if not ignore_missing:
