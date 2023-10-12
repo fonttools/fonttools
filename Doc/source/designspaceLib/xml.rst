@@ -457,7 +457,7 @@ glyphname pairs: the glyphs that need to be substituted. For a rule to be trigge
 
 -  Defines a named rule.
 -  Each ``<rule>`` element contains one or more ``<conditionset>`` elements.
--  **Only one** ``<conditionset>`` needs to be true to trigger the rule (logical OR).
+-  **Only one** ``<conditionset>`` needs to be true to trigger the rule (logical OR). An empty condition set is considered to be true, as in, the rule will be always-on.
 -  **All** conditions in a ``<conditionset>`` must be true to make the ``<conditionset>`` true. (logical AND)
 -  For backwards compatibility a ``<rule>`` can contain ``<condition>`` elements outside of a conditionset. These are then understood to be part of a single, implied, ``<conditionset>``. Note: these conditions should be written wrapped in a conditionset.
 -  A rule element needs to contain one or more ``<sub>`` elements in order to be compiled to a variable font.
@@ -475,7 +475,7 @@ glyphname pairs: the glyphs that need to be substituted. For a rule to be trigge
 --------------------------
 
 -  Child element of ``<rule>``
--  Contains one or more ``<condition>`` elements.
+-  Contains zero or more ``<condition>`` elements.
 
 
 ``<condition>`` element
