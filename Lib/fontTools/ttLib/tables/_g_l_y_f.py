@@ -6,7 +6,7 @@ from fontTools import ttLib
 from fontTools import version
 from fontTools.misc.transform import DecomposedTransform
 from fontTools.misc.textTools import tostr, safeEval, pad
-from fontTools.misc.arrayTools import calcIntBounds, updateBounds, pointInRect
+from fontTools.misc.arrayTools import updateBounds, pointInRect
 from fontTools.misc.bezierTools import calcQuadraticBounds
 from fontTools.misc.fixedTools import (
     fixedToFloat as fi2fl,
@@ -1160,12 +1160,12 @@ class Glyph(object):
         must be provided to resolve component bounds.
         """
         if self.isComposite() and self.recalcBoundsComposite(
-                glyfTable, boundsDone=boundsDone
+            glyfTable, boundsDone=boundsDone
         ):
             return
         try:
             coords, endPts, flags = self.getCoordinates(glyfTable)
-            self.xMin, self.yMin, self.xMax, self.yMax = calcIntBounds(coords)
+            self.xMin, self.yMin, self.xMax, self.yMax = coords.calcIntBounds()
         except NotImplementedError:
             pass
 
@@ -2389,6 +2389,17 @@ class GlyphCoordinates(object):
         a = self._a
         for i in range(len(a)):
             a[i] = round(a[i])
+
+    def calcBounds(self):
+        a = self._a
+        if not a:
+            return 0, 0, 0, 0
+        xs = a[0::2]
+        ys = a[1::2]
+        return min(xs), min(ys), max(xs), max(ys)
+
+    def calcIntBounds(self, round=otRound):
+        return tuple(round(v) for v in self.calcBounds())
 
     def relativeToAbsolute(self):
         a = self._a
