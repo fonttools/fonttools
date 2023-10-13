@@ -2300,10 +2300,16 @@ class GlyphCoordinates(object):
 
     def __getitem__(self, k):
         """Returns a two element tuple (x,y)"""
+        a = self._a
         if isinstance(k, slice):
             indices = range(*k.indices(len(self)))
-            return [self[i] for i in indices]
-        a = self._a
+            # Instead of calling ourselves recursively, duplicate code; faster
+            ret = []
+            for k in indices:
+                x = a[2 * k]
+                y = a[2 * k + 1]
+                ret.append((int(x) if x.is_integer() else x, int(y) if y.is_integer() else y))
+            return ret
         x = a[2 * k]
         y = a[2 * k + 1]
         return (int(x) if x.is_integer() else x, int(y) if y.is_integer() else y)
