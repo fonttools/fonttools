@@ -376,6 +376,15 @@ def test(glyphsets, glyphs=None, names=None, ignore_missing=False):
     return problems
 
 
+def recursivelyAddGlyph(glyphname, glyphset, ttGlyphSet, glyf):
+    if glyphname in glyphset:
+        return
+    glyphset[glyphname] = ttGlyphSet[glyphname]
+
+    for component in getattr(glyf[glyphname], "components", []):
+        recursivelyAddGlyph(component.glyphName, glyphset, ttGlyphSet, glyf)
+
+
 def main(args=None):
     """Test for interpolatability issues between fonts"""
     import argparse
@@ -443,6 +452,7 @@ def main(args=None):
             if "gvar" in font:
                 # Is variable font
                 gvar = font["gvar"]
+                glyf = font["glyf"]
                 # Gather all glyphs at their "master" locations
                 ttGlyphSets = {}
                 glyphsets = defaultdict(dict)
@@ -463,9 +473,9 @@ def main(args=None):
                                 location=locDict, normalized=True
                             )
 
-                        glyphsets[locTuple][glyphname] = ttGlyphSets[locTuple][
-                            glyphname
-                        ]
+                        recursivelyAddGlyph(
+                            glyphname, glyphsets[locTuple], ttGlyphSets[locTuple], glyf
+                        )
 
                 names = ["()"]
                 fonts = [font.getGlyphSet()]
