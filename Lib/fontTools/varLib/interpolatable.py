@@ -81,22 +81,20 @@ class RecordingPointPen(BasePen):
         self.value.append((pt, False if segmentType is None else True))
 
 
-def _vdiff(v0, v1):
-    return tuple(b - a for a, b in zip(v0, v1))
+def _vdiff_hypot2(v0, v1):
+    s = 0
+    for x0, x1 in zip(v0, v1):
+        d = x1 - x0
+        s += d * d
+    return s
 
 
-def _vlen(vec):
-    v = 0
-    for x in vec:
-        v += x * x
-    return v
-
-
-def _complex_vlen(vec):
-    v = 0
-    for x in vec:
-        v += x.real * x.real + x.imag * x.imag
-    return v
+def _vdiff_hypot2_complex(v0, v1):
+    s = 0
+    for x0, x1 in zip(v0, v1):
+        d = x1 - x0
+        s += d.real * d.real + d.imag * d.imag
+    return s
 
 
 def _matching_cost(G, matching):
@@ -162,7 +160,6 @@ def test(glyphsets, glyphs=None, names=None, ignore_missing=False):
             if len([1 for glyph in allGlyphs if glyph is not None]) <= 1:
                 continue
             for glyph, glyphset, name in zip(allGlyphs, glyphsets, names):
-
                 if glyph is None:
                     if not ignore_missing:
                         add_problem(glyph_name, {"type": "missing", "master": name})
@@ -318,7 +315,7 @@ def test(glyphsets, glyphs=None, names=None, ignore_missing=False):
                     continue
                 if not m0:
                     continue
-                costs = [[_vlen(_vdiff(v0, v1)) for v1 in m1] for v0 in m0]
+                costs = [[_vdiff_hypot2(v0, v1) for v1 in m1] for v0 in m0]
                 matching, matching_cost = min_cost_perfect_bipartite_matching(costs)
                 identity_matching = list(range(len(m0)))
                 identity_cost = sum(costs[i][i] for i in range(len(m0)))
@@ -356,7 +353,7 @@ def test(glyphsets, glyphs=None, names=None, ignore_missing=False):
                 for ix, (contour0, contour1) in enumerate(zip(m0, m1)):
                     c0 = contour0[0]
                     costs = [
-                        v for v in (_complex_vlen(_vdiff(c0, c1)) for c1 in contour1)
+                        v for v in (_vdiff_hypot2_complex(c0, c1) for c1 in contour1)
                     ]
                     min_cost = min(costs)
                     first_cost = costs[0]
