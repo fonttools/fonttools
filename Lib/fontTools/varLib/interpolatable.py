@@ -423,7 +423,7 @@ def main(args=None):
 
     args = parser.parse_args(args)
 
-    glyphs = set(args.glyphs.split()) if args.glyphs else None
+    glyphs = args.glyphs.split() if args.glyphs else None
 
     from os.path import basename
 
@@ -458,7 +458,7 @@ def main(args=None):
                 glyphsets = defaultdict(dict)
 
                 if glyphs is None:
-                    glyphs = gvar.variations.keys()
+                    glyphs = sorted(gvar.variations.keys())
                 for glyphname in glyphs:
                     for var in gvar.variations[glyphname]:
                         locDict = {}
@@ -506,11 +506,12 @@ def main(args=None):
         glyphsets.append({k: glyphset[k] for k in glyphset.keys()})
 
     if not glyphs:
-        glyphs = set([gn for glyphset in glyphsets for gn in glyphset.keys()])
+        glyphs = sorted(set([gn for glyphset in glyphsets for gn in glyphset.keys()]))
 
+    glyphsSet = set(glyphs)
     for glyphset in glyphsets:
         glyphSetGlyphNames = set(glyphset.keys())
-        diff = glyphs - glyphSetGlyphNames
+        diff = glyphsSet - glyphSetGlyphNames
         if diff:
             for gn in diff:
                 glyphset[gn] = None
