@@ -6,7 +6,7 @@ from fontTools import ttLib
 from fontTools import version
 from fontTools.misc.transform import DecomposedTransform
 from fontTools.misc.textTools import tostr, safeEval, pad
-from fontTools.misc.arrayTools import calcIntBounds, pointInRect
+from fontTools.misc.arrayTools import calcIntBounds, updateBounds, pointInRect
 from fontTools.misc.bezierTools import calcQuadraticBounds
 from fontTools.misc.fixedTools import (
     fixedToFloat as fi2fl,
@@ -144,9 +144,10 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
         currentLocation = 0
         dataList = []
         recalcBBoxes = ttFont.recalcBBoxes
+        boundsDone = set()
         for glyphName in self.glyphOrder:
             glyph = self.glyphs[glyphName]
-            glyphData = glyph.compile(self, recalcBBoxes)
+            glyphData = glyph.compile(self, recalcBBoxes, boundsDone=boundsDone)
             if padding > 1:
                 glyphData = pad(glyphData, size=padding)
             locations.append(currentLocation)
@@ -728,7 +729,7 @@ class Glyph(object):
         else:
             self.decompileCoordinates(data)
 
-    def compile(self, glyfTable, recalcBBoxes=True):
+    def compile(self, glyfTable, recalcBBoxes=True, *, boundsDone=None):
         if hasattr(self, "data"):
             if recalcBBoxes:
                 # must unpack glyph in order to recalculate bounding box
@@ -737,8 +738,10 @@ class Glyph(object):
                 return self.data
         if self.numberOfContours == 0:
             return b""
+
         if recalcBBoxes:
-            self.recalcBounds(glyfTable)
+            self.recalcBounds(glyfTable, boundsDone=boundsDone)
+
         data = sstruct.pack(glyphHeaderFormat, self)
         if self.isComposite():
             data = data + self.compileComponents(glyfTable)
@@ -1148,7 +1151,7 @@ class Glyph(object):
 
         return (compressedFlags, compressedXs, compressedYs)
 
-    def recalcBounds(self, glyfTable):
+    def recalcBounds(self, glyfTable, *, boundsDone=None):
         """Recalculates the bounds of the glyph.
 
         Each glyph object stores its bounding box in the
@@ -1156,11 +1159,49 @@ class Glyph(object):
         recomputed when the ``coordinates`` change. The ``table__g_l_y_f`` bounds
         must be provided to resolve component bounds.
         """
+        if self.isComposite() and self.recalcBoundsComposite(
+                glyfTable, boundsDone=boundsDone
+        ):
+            return
         try:
             coords, endPts, flags = self.getCoordinates(glyfTable)
             self.xMin, self.yMin, self.xMax, self.yMax = calcIntBounds(coords)
         except NotImplementedError:
             pass
+
+    def recalcBoundsComposite(self, glyfTable, *, boundsDone=None):
+        """Recalculates the bounds of the glyph.
+
+        Each glyph object stores its bounding box in the
+        ``xMin``/``yMin``/``xMax``/``yMax`` attributes. These bounds must be
+        recomputed when the ``coordinates`` change. The ``table__g_l_y_f`` bounds
+        must be provided to resolve component bounds.
+        """
+        for compo in self.components:
+            if hasattr(compo, "firstPt") or hasattr(compo, "transform"):
+                return False
+            if not float(compo.x).is_integer() or not float(compo.y).is_integer():
+                return False
+
+        # All components are untransformed and have an integer x/y translate
+        bounds = None
+        for compo in self.components:
+            glyphName = compo.glyphName
+            g = glyfTable[glyphName]
+
+            if boundsDone is None or glyphName not in boundsDone:
+                g.recalcBounds(glyfTable, boundsDone=boundsDone)
+                if boundsDone is not None:
+                    boundsDone.add(glyphName)
+
+            x, y = compo.x, compo.y
+            bounds = updateBounds(bounds, (g.xMin + x, g.yMin + y))
+            bounds = updateBounds(bounds, (g.xMax + x, g.yMax + y))
+
+        if bounds is None:
+            bounds = (0, 0, 0, 0)
+        self.xMin, self.yMin, self.xMax, self.yMax = bounds
+        return True
 
     def isComposite(self):
         """Test whether a glyph has components"""
@@ -2308,7 +2349,9 @@ class GlyphCoordinates(object):
             for k in indices:
                 x = a[2 * k]
                 y = a[2 * k + 1]
-                ret.append((int(x) if x.is_integer() else x, int(y) if y.is_integer() else y))
+                ret.append(
+                    (int(x) if x.is_integer() else x, int(y) if y.is_integer() else y)
+                )
             return ret
         x = a[2 * k]
         y = a[2 * k + 1]
