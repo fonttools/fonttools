@@ -260,11 +260,9 @@ def test(glyphsets, glyphs=None, names=None, ignore_missing=False):
                             )
 
             # m0idx should be the index of the first non-None item in allNodeTypes,
-            # else give it the first index of None, which is likely 0
-            m0idx = allNodeTypes.index(
-                next((x for x in allNodeTypes if x is not None), None)
-            )
-            # m0 is the first non-None item in allNodeTypes, or the first item if all are None
+            # else give it the last item.
+            m0idx = next((i for i,x in enumerate(allNodeTypes) if x is not None), len(allNodeTypes) - 1)
+            # m0 is the first non-None item in allNodeTypes, or last one if all None
             m0 = allNodeTypes[m0idx]
             for i, m1 in enumerate(allNodeTypes[m0idx + 1 :]):
                 if m1 is None:
@@ -315,11 +313,9 @@ def test(glyphsets, glyphs=None, names=None, ignore_missing=False):
                             continue
 
             # m0idx should be the index of the first non-None item in allVectors,
-            # else give it the first index of None, which is likely 0
-            m0idx = allVectors.index(
-                next((x for x in allVectors if x is not None), None)
-            )
-            # m0 is the first non-None item in allVectors, or the first item if all are None
+            # else give it the last item.
+            m0idx = next((i for i,x in enumerate(allVectors) if x is not None), len(allVectors) - 1)
+            # m0 is the first non-None item in allVectors, or last one if all None
             m0 = allVectors[m0idx]
             if m0:
                 for i, m1 in enumerate(allVectors[m0idx + 1 :]):
