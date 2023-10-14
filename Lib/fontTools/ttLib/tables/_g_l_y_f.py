@@ -102,6 +102,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
         noname = 0
         self.glyphs = {}
         self.glyphOrder = glyphOrder = ttFont.getGlyphOrder()
+        self._reverseGlyphOrder = {}
         for i in range(0, len(loca) - 1):
             try:
                 glyphName = glyphOrder[i]
@@ -282,6 +283,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
                 glyphOrder ([str]): List of glyph names in order.
         """
         self.glyphOrder = glyphOrder
+        self._reverseGlyphOrder = {}
 
     def getGlyphName(self, glyphID):
         """Returns the name for the glyph with the given ID.
@@ -290,13 +292,24 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
         """
         return self.glyphOrder[glyphID]
 
+    def _buildReverseGlyphOrderDict(self):
+        self._reverseGlyphOrder = d = {}
+        for glyphID, glyphName in enumerate(self.glyphOrder):
+            d[glyphName] = glyphID
+
     def getGlyphID(self, glyphName):
         """Returns the ID of the glyph with the given name.
 
         Raises a ``ValueError`` if the glyph is not found in the font.
         """
-        # XXX optimize with reverse dict!!!
-        return self.glyphOrder.index(glyphName)
+        glyphOrder = self.glyphOrder
+        id = getattr(self, "_reverseGlyphOrder", {}).get(glyphName)
+        if id is None or id >= len(glyphOrder) or glyphOrder[id] != glyphName:
+            self._buildReverseGlyphOrderDict()
+            id = self._reverseGlyphOrder.get(glyphName)
+        if id is None:
+            raise ValueError()
+        return id
 
     def removeHinting(self):
         """Removes TrueType hints from all glyphs in the glyphset.
