@@ -101,26 +101,23 @@ def _matching_cost(G, matching):
     return sum(G[i][j] for i, j in enumerate(matching))
 
 
-def min_cost_perfect_bipartite_matching(G):
+def min_cost_perfect_bipartite_matching_scipy(G):
     n = len(G)
-    try:
-        from scipy.optimize import linear_sum_assignment
+    rows, cols = linear_sum_assignment(G)
+    assert (rows == list(range(n))).all()
+    return list(cols), _matching_cost(G, cols)
 
-        rows, cols = linear_sum_assignment(G)
-        assert (rows == list(range(n))).all()
-        return list(cols), _matching_cost(G, cols)
-    except ImportError:
-        pass
 
-    try:
-        from munkres import Munkres
+def min_cost_perfect_bipartite_matching_munkres(G):
+    n = len(G)
+    cols = [None] * n
+    for row, col in Munkres().compute(G):
+        cols[row] = col
+    return cols, _matching_cost(G, cols)
 
-        cols = [None] * n
-        for row, col in Munkres().compute(G):
-            cols[row] = col
-        return cols, _matching_cost(G, cols)
-    except ImportError:
-        pass
+
+def min_cost_perfect_bipartite_matching_bruteforce(G):
+    n = len(G)
 
     if n > 6:
         raise Exception("Install Python module 'munkres' or 'scipy >= 0.17.0'")
@@ -134,6 +131,23 @@ def min_cost_perfect_bipartite_matching(G):
         if cost < best_cost:
             best, best_cost = list(p), cost
     return best, best_cost
+
+
+try:
+    from scipy.optimize import linear_sum_assignment
+
+    min_cost_perfect_bipartite_matching = min_cost_perfect_bipartite_matching_scipy
+except ImportError:
+    try:
+        from munkres import Munkres
+
+        min_cost_perfect_bipartite_matching = (
+            min_cost_perfect_bipartite_matching_munkres
+        )
+    except ImportError:
+        min_cost_perfect_bipartite_matching = (
+            min_cost_perfect_bipartite_matching_bruteforce
+        )
 
 
 def test(glyphsets, glyphs=None, names=None, ignore_missing=False):
