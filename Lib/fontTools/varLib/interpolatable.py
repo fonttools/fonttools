@@ -321,33 +321,32 @@ def test(glyphsets, glyphs=None, names=None, ignore_missing=False):
             )
             # m0 is the first non-None item in allVectors, or the first item if all are None
             m0 = allVectors[m0idx]
-            for i, m1 in enumerate(allVectors[m0idx + 1 :]):
-                if m1 is None:
-                    continue
-                if len(m0) != len(m1):
-                    # We already reported this
-                    continue
-                if not m0:
-                    continue
-                costs = [[_vdiff_hypot2(v0, v1) for v1 in m1] for v0 in m0]
-                matching, matching_cost = min_cost_perfect_bipartite_matching(costs)
-                identity_matching = list(range(len(m0)))
-                identity_cost = sum(costs[i][i] for i in range(len(m0)))
-                if (
-                    matching != identity_matching
-                    and matching_cost < identity_cost * 0.95
-                ):
-                    add_problem(
-                        glyph_name,
-                        {
-                            "type": "contour_order",
-                            "master_1": names[m0idx],
-                            "master_2": names[m0idx + i + 1],
-                            "value_1": list(range(len(m0))),
-                            "value_2": matching,
-                        },
-                    )
-                    break
+            if m0:
+                for i, m1 in enumerate(allVectors[m0idx + 1 :]):
+                    if m1 is None:
+                        continue
+                    if len(m0) != len(m1):
+                        # We already reported this
+                        continue
+                    costs = [[_vdiff_hypot2(v0, v1) for v1 in m1] for v0 in m0]
+                    matching, matching_cost = min_cost_perfect_bipartite_matching(costs)
+                    identity_matching = list(range(len(m0)))
+                    identity_cost = sum(costs[i][i] for i in range(len(m0)))
+                    if (
+                        matching != identity_matching
+                        and matching_cost < identity_cost * 0.95
+                    ):
+                        add_problem(
+                            glyph_name,
+                            {
+                                "type": "contour_order",
+                                "master_1": names[m0idx],
+                                "master_2": names[m0idx + i + 1],
+                                "value_1": list(range(len(m0))),
+                                "value_2": matching,
+                            },
+                        )
+                        break
 
             # m0idx should be the index of the first non-None item in allContourIsomorphisms,
             # else give it the first index of None, which is likely 0
@@ -356,31 +355,30 @@ def test(glyphsets, glyphs=None, names=None, ignore_missing=False):
             )
             # m0 is the first non-None item in allContourIsomorphisms, or the first item if all are None
             m0 = allContourIsomorphisms[m0idx]
-            for i, m1 in enumerate(allContourIsomorphisms[m0idx + 1 :]):
-                if m1 is None:
-                    continue
-                if len(m0) != len(m1):
-                    # We already reported this
-                    continue
-                if not m0:
-                    continue
-                for ix, (contour0, contour1) in enumerate(zip(m0, m1)):
-                    c0 = contour0[0]
-                    costs = [
-                        v for v in (_vdiff_hypot2_complex(c0, c1) for c1 in contour1)
-                    ]
-                    min_cost = min(costs)
-                    first_cost = costs[0]
-                    if min_cost < first_cost * 0.95:
-                        add_problem(
-                            glyph_name,
-                            {
-                                "type": "wrong_start_point",
-                                "contour": ix,
-                                "master_1": names[m0idx],
-                                "master_2": names[m0idx + i + 1],
-                            },
-                        )
+            if m0:
+                for i, m1 in enumerate(allContourIsomorphisms[m0idx + 1 :]):
+                    if m1 is None:
+                        continue
+                    if len(m0) != len(m1):
+                        # We already reported this
+                        continue
+                    for ix, (contour0, contour1) in enumerate(zip(m0, m1)):
+                        c0 = contour0[0]
+                        costs = [
+                            v for v in (_vdiff_hypot2_complex(c0, c1) for c1 in contour1)
+                        ]
+                        min_cost = min(costs)
+                        first_cost = costs[0]
+                        if min_cost < first_cost * 0.95:
+                            add_problem(
+                                glyph_name,
+                                {
+                                    "type": "wrong_start_point",
+                                    "contour": ix,
+                                    "master_1": names[m0idx],
+                                    "master_2": names[m0idx + i + 1],
+                                },
+                            )
 
         except ValueError as e:
             add_problem(
