@@ -502,7 +502,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
             assert len(coord) == len(glyph.coordinates)
             glyph.coordinates = GlyphCoordinates(coord)
 
-        glyph.recalcBounds(self)
+        glyph.recalcBounds(self, boundsDone=set())
 
         horizontalAdvanceWidth = otRound(rightSideX - leftSideX)
         if horizontalAdvanceWidth < 0:
