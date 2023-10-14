@@ -261,7 +261,10 @@ def test(glyphsets, glyphs=None, names=None, ignore_missing=False):
 
             # m0idx should be the index of the first non-None item in allNodeTypes,
             # else give it the last item.
-            m0idx = next((i for i,x in enumerate(allNodeTypes) if x is not None), len(allNodeTypes) - 1)
+            m0idx = next(
+                (i for i, x in enumerate(allNodeTypes) if x is not None),
+                len(allNodeTypes) - 1,
+            )
             # m0 is the first non-None item in allNodeTypes, or last one if all None
             m0 = allNodeTypes[m0idx]
             for i, m1 in enumerate(allNodeTypes[m0idx + 1 :]):
@@ -314,10 +317,13 @@ def test(glyphsets, glyphs=None, names=None, ignore_missing=False):
 
             # m0idx should be the index of the first non-None item in allVectors,
             # else give it the last item.
-            m0idx = next((i for i,x in enumerate(allVectors) if x is not None), len(allVectors) - 1)
+            m0idx = next(
+                (i for i, x in enumerate(allVectors) if x is not None),
+                len(allVectors) - 1,
+            )
             # m0 is the first non-None item in allVectors, or last one if all None
             m0 = allVectors[m0idx]
-            if m0:
+            if m0 is not None and len(m0) > 1:
                 for i, m1 in enumerate(allVectors[m0idx + 1 :]):
                     if m1 is None:
                         continue
@@ -361,7 +367,8 @@ def test(glyphsets, glyphs=None, names=None, ignore_missing=False):
                     for ix, (contour0, contour1) in enumerate(zip(m0, m1)):
                         c0 = contour0[0]
                         costs = [
-                            v for v in (_vdiff_hypot2_complex(c0, c1) for c1 in contour1)
+                            v
+                            for v in (_vdiff_hypot2_complex(c0, c1) for c1 in contour1)
                         ]
                         min_cost = min(costs)
                         first_cost = costs[0]
