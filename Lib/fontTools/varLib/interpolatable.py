@@ -245,9 +245,7 @@ def test(glyphsets, glyphs=None, names=None, ignore_missing=False):
                     for i in range(n):
                         b = ((bits << i) & mask) | ((bits >> (n - i)))
                         if b == bits:
-                            isomorphisms.append(
-                                _rot_list(complexPoints, i)
-                            )
+                            isomorphisms.append(_rot_list(complexPoints, i))
                     # Add mirrored rotations
                     mirrored = list(reversed(points.value))
                     reversed_bits = 0
@@ -257,9 +255,7 @@ def test(glyphsets, glyphs=None, names=None, ignore_missing=False):
                     for i in range(n):
                         b = ((reversed_bits << i) & mask) | ((reversed_bits >> (n - i)))
                         if b == bits:
-                            isomorphisms.append(
-                                _rot_list(complexPoints, i)
-                            )
+                            isomorphisms.append(_rot_list(complexPoints, i))
 
             # m0idx should be the index of the first non-None item in allNodeTypes,
             # else give it the last item.
@@ -368,10 +364,7 @@ def test(glyphsets, glyphs=None, names=None, ignore_missing=False):
                         continue
                     for ix, (contour0, contour1) in enumerate(zip(m0, m1)):
                         c0 = contour0[0]
-                        costs = [
-                            v
-                            for v in (_vdiff_hypot2_complex(c0, c1) for c1 in contour1)
-                        ]
+                        costs = [_vdiff_hypot2_complex(c0, c1) for c1 in contour1]
                         min_cost = min(costs)
                         first_cost = costs[0]
                         if min_cost < first_cost * 0.95:
