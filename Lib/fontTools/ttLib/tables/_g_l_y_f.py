@@ -308,7 +308,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
             self._buildReverseGlyphOrderDict()
             id = self._reverseGlyphOrder.get(glyphName)
         if id is None:
-            raise ValueError()
+            raise ValueError(glyphName)
         return id
 
     def removeHinting(self):
@@ -1172,7 +1172,7 @@ class Glyph(object):
         recomputed when the ``coordinates`` change. The ``table__g_l_y_f`` bounds
         must be provided to resolve component bounds.
         """
-        if self.isComposite() and self.recalcBoundsComposite(
+        if self.isComposite() and self.tryRecalcBoundsComposite(
             glyfTable, boundsDone=boundsDone
         ):
             return
@@ -1182,13 +1182,18 @@ class Glyph(object):
         except NotImplementedError:
             pass
 
-    def recalcBoundsComposite(self, glyfTable, *, boundsDone=None):
-        """Recalculates the bounds of the glyph.
+    def tryRecalcBoundsComposite(self, glyfTable, *, boundsDone=None):
+        """Try recalculating the bounds of a composite glyph that has
+        certain constrained properties. Namely, none of the components
+        have a transform other than an integer translate, and none
+        uses the anchor points.
 
         Each glyph object stores its bounding box in the
         ``xMin``/``yMin``/``xMax``/``yMax`` attributes. These bounds must be
         recomputed when the ``coordinates`` change. The ``table__g_l_y_f`` bounds
         must be provided to resolve component bounds.
+
+        Return True if bounds were calculated, False otherwise.
         """
         for compo in self.components:
             if hasattr(compo, "firstPt") or hasattr(compo, "transform"):
