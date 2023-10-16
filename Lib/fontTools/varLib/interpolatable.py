@@ -7,7 +7,7 @@ $ fonttools varLib.interpolatable font1 font2 ...
 """
 
 from fontTools.pens.basePen import AbstractPen, BasePen
-from fontTools.pens.pointPen import SegmentToPointPen
+from fontTools.pens.pointPen import AbstractPointPen, SegmentToPointPen
 from fontTools.pens.recordingPen import RecordingPen
 from fontTools.pens.statisticsPen import StatisticsPen
 from fontTools.pens.momentsPen import OpenContourError
@@ -67,7 +67,7 @@ class PerContourOrComponentPen(PerContourPen):
         self.value[-1].addComponent(glyphName, transformation)
 
 
-class RecordingPointPen(BasePen):
+class RecordingPointPen(AbstractPointPen):
     def __init__(self):
         self.value = []
 
