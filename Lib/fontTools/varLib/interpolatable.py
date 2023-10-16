@@ -349,11 +349,12 @@ def test(glyphsets, glyphs=None, names=None, ignore_missing=False):
                         break
 
             # m0idx should be the index of the first non-None item in allContourIsomorphisms,
-            # else give it the first index of None, which is likely 0
-            m0idx = allContourIsomorphisms.index(
-                next((x for x in allContourIsomorphisms if x is not None), None)
+            # else give it the last item.
+            m0idx = next(
+                (i for i, x in enumerate(allContourIsomorphisms) if x is not None),
+                len(allVectors) - 1,
             )
-            # m0 is the first non-None item in allContourIsomorphisms, or the first item if all are None
+            # m0 is the first non-None item in allContourIsomorphisms, or last one if all None
             m0 = allContourIsomorphisms[m0idx]
             if m0:
                 for i, m1 in enumerate(allContourIsomorphisms[m0idx + 1 :]):
