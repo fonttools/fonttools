@@ -400,6 +400,25 @@ class GlyfTableTest(unittest.TestCase):
                 [(0, 0), (100, 0), (0, 0), (0, -1000)],
             )
 
+    def test_getGlyphID(self):
+        # https://github.com/fonttools/fonttools/pull/3301#discussion_r1360405861
+        glyf = newTable("glyf")
+        glyf.setGlyphOrder([".notdef", "a", "b"])
+        glyf.glyphs = {}
+        for glyphName in glyf.glyphOrder:
+            glyf[glyphName] = Glyph()
+
+        assert glyf.getGlyphID("a") == 1
+
+        with pytest.raises(ValueError):
+            glyf.getGlyphID("c")
+
+        glyf["c"] = Glyph()
+        assert glyf.getGlyphID("c") == 3
+
+        del glyf["b"]
+        assert glyf.getGlyphID("c") == 2
+
 
 class GlyphTest:
     def test_getCoordinates(self):
