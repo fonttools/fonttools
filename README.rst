@@ -8,7 +8,7 @@ What is this?
   fonts to and from an XML text format, which is also called TTX. It
   supports TrueType, OpenType, AFM and to an extent Type 1 and some
   Mac-specific formats. The project has an `MIT open-source
-  licence <LICENSE>`__.
+  license <LICENSE>`__.
 | Among other things this means you can use it free of charge.
 
 `User documentation <https://fonttools.readthedocs.io/en/latest/>`_ and
@@ -247,7 +247,7 @@ How to make a new release
    automate that too.
 
 
-Acknowledgements
+Acknowledgments
 ~~~~~~~~~~~~~~~~
 
 In alphabetical order:
