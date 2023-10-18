@@ -3666,7 +3666,10 @@ def main(args=None):
     )
 
     if outfile is None:
-        outfile = makeOutputFileName(fontfile, overWrite=True, suffix=".subset")
+        ext = "." + options.flavor.lower() if options.flavor is not None else None
+        outfile = makeOutputFileName(
+            fontfile, extension=ext, overWrite=True, suffix=".subset"
+        )
 
     with timer("compile glyph list"):
         if wildcard_glyphs:
