@@ -1074,6 +1074,26 @@ class SubsetTest:
             in caplog.text
         ) ^ ok
 
+    def test_retain_east_asian_spacing_features(self):
+        # This test font contains halt and vhal features, check that
+        # they are retained by default after subsetting.
+        ttx_path = self.getpath("NotoSansCJKjp-Regular.subset.ttx")
+        ttx = pathlib.Path(ttx_path).read_text()
+        assert 'FeatureTag value="halt"' in ttx
+        assert 'FeatureTag value="vhal"' in ttx
+
+        fontpath = self.compile_font(ttx_path, ".otf")
+        subsetpath = self.temp_path(".otf")
+        subset.main(
+            [
+                fontpath,
+                "--unicodes=*",
+                "--output-file=%s" % subsetpath,
+            ]
+        )
+        # subset output is the same as the input
+        self.expect_ttx(TTFont(subsetpath), ttx_path)
+
 
 @pytest.fixture
 def featureVarsTestFont():
