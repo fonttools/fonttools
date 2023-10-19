@@ -35,7 +35,7 @@ with cairo.SVGSurface(
     glyph.draw(pen)
     context.fill()
 
-    stats = StatisticsPen()
+    stats = StatisticsPen(glyphset)
     glyph.draw(stats)
 
     # https://cookierobotics.com/007/
