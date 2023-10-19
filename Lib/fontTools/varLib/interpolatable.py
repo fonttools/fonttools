@@ -429,7 +429,7 @@ def main(args=None):
         metavar="FILE",
         type=str,
         nargs="+",
-        help="Input a single DesignSpace/Glyphs file, or multiple TTF/UFO files",
+        help="Input a single variable font / DesignSpace / Glyphs file, or multiple TTF/UFO files",
     )
 
     args = parser.parse_args(args)
