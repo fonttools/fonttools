@@ -276,6 +276,14 @@ class RebaseTentTest(object):
                     (1.0, (0.5, 1.0, 1.0)),
                 ],
             ),
+            # https://github.com/fonttools/fonttools/issues/3291
+            pytest.param(
+                (0.6, 0.7, 0.8),
+                (-1, 0.2, +1, 1, 1),
+                [
+                    (1.0, (0.5, 0.625, 0.75)),
+                ],
+            ),
         ],
     )
     def test_rebaseTent(self, tent, axisRange, expected):
