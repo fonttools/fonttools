@@ -1,6 +1,7 @@
 import pytest
 from io import StringIO
 from fontTools.misc.xmlWriter import XMLWriter
+from fontTools.misc.roundTools import noRound
 from fontTools.varLib.models import VariationModel
 from fontTools.varLib.varStore import OnlineVarStoreBuilder, VarStoreInstancer
 from fontTools.ttLib import TTFont, newTable
@@ -269,7 +270,7 @@ def test_optimize_overflow():
 
     for data in range(0, 0xFFFF * 2):
         data = [0, data]
-        builder.storeMasters(data)
+        builder.storeMasters(data, round=noRound)
 
     varStore = builder.finish()
     varStore.optimize()
