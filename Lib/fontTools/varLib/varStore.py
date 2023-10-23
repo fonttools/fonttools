@@ -619,14 +619,21 @@ def VarStore_optimize(self, use_NO_VARIATION_INDEX=True, quantization=1):
     back_mapping = {}  # Mapping from full rows to new VarIdxes
     encodings.sort(key=_Encoding.width_sort_key)
     self.VarData = []
-    for major, encoding in enumerate(encodings):
-        data = ot.VarData()
-        self.VarData.append(data)
-        data.VarRegionIndex = range(n)
-        data.VarRegionCount = len(data.VarRegionIndex)
-        data.Item = sorted(encoding.items)
-        for minor, item in enumerate(data.Item):
-            back_mapping[item] = (major << 16) + minor
+    for encoding in encodings:
+        items = sorted(encoding.items)
+
+        while items:
+            major = len(self.VarData)
+            data = ot.VarData()
+            self.VarData.append(data)
+            data.VarRegionIndex = range(n)
+            data.VarRegionCount = len(data.VarRegionIndex)
+
+            # Each major can only encode up to 0xFFFF entries.
+            data.Item, items = items[:0xFFFF], items[0xFFFF:]
+
+            for minor, item in enumerate(data.Item):
+                back_mapping[item] = (major << 16) + minor
 
     # Compile final mapping.
     varidx_map = {NO_VARIATION_INDEX: NO_VARIATION_INDEX}

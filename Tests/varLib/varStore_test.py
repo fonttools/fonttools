@@ -256,3 +256,30 @@ def test_quantize(quantization, expectedBytes):
     data = writer.getAllData()
 
     assert len(data) == expectedBytes, xml
+
+
+def test_optimize_overflow():
+    numRegions = 1
+    locations = [{"wght": 0}, {"wght": 0.5}]
+    axisTags = ["wght"]
+
+    model = VariationModel(locations)
+    builder = OnlineVarStoreBuilder(axisTags)
+    builder.setModel(model)
+
+    for data in range(0, 0xFFFF * 2):
+        data = [0, data]
+        builder.storeMasters(data)
+
+    varStore = builder.finish()
+    varStore.optimize()
+
+    for s in varStore.VarData:
+        print(len(s.Item))
+
+    # 5 data-sets:
+    # - 0..127: 1-byte dataset
+    # - 128..32767: 2-byte dataset
+    # - 32768..32768+65535-1: 4-byte dataset
+    # - 32768+65535..65535+65535-1: 4-byte dataset
+    assert len(varStore.VarData) == 4
