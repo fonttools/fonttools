@@ -95,8 +95,7 @@ class OnlineVarStoreBuilder(object):
         return base, self.storeDeltas(deltas, round=noRound)
 
     def storeDeltas(self, deltas, *, round=round):
-        if round != noRound:
-            deltas = [round(d) for d in deltas]
+        deltas = [round(d) for d in deltas]
         if len(deltas) == len(self._supports) + 1:
             deltas = tuple(deltas[1:])
         else:
@@ -122,8 +121,7 @@ class OnlineVarStoreBuilder(object):
 
 
 def VarData_addItem(self, deltas, *, round=round):
-    if round != noRound:
-        deltas = [round(d) for d in deltas]
+    deltas = [round(d) for d in deltas]
 
     countUs = self.VarRegionCount
     countThem = len(deltas)
