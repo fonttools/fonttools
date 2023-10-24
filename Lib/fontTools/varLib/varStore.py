@@ -532,6 +532,23 @@ def VarStore_optimize(self, use_NO_VARIATION_INDEX=True, quantization=1):
     #   - Insert the new encoding into the todo list,
     #
     # - Encode all remaining items in the todo list.
+    #
+    # The output is then sorted for stability, in the following way:
+    # - The VarRegionList of the input is kept intact.
+    # - All encodings are sorted before the main algorithm, by
+    #   gain_key_sort(), which is a tuple of the following items:
+    #   * The gain of the encoding.
+    #   * The characteristic bitmap of the encoding, with higher-numbered
+    #     columns compared first.
+    # - The VarData is sorted by width_sort_key(), which is a tuple
+    #   of the following items:
+    #   * The "width" of the encoding.
+    #   * The characteristic bitmap of the encoding, with higher-numbered
+    #     columns compared first.
+    # - Within each VarData, the items are sorted as vectors of numbers.
+    #
+    # Finally, each VarData is optimized to remove the empty columns and
+    # reorder columns as needed.
 
     # TODO
     # Check that no two VarRegions are the same; if they are, fold them.
