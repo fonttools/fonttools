@@ -870,6 +870,7 @@ def subset_glyphs(self, s):
         for m in self.MarkArray.MarkRecord:
             m.Class = class_indices.index(m.Class)
         for l in self.LigatureArray.LigatureAttach:
+            if l is None: continue
             for c in l.ComponentRecord:
                 c.LigatureAnchor = _list_subset(c.LigatureAnchor, class_indices)
         return bool(
