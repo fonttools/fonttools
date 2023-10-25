@@ -37,11 +37,11 @@ def programToString(program):
 
 
 def programToCommands(program, getNumRegions=None):
-    r"""Takes a T2CharString program list and returns list of commands.
+    """Takes a T2CharString program list and returns list of commands.
     Each command is a two-tuple of commandname,arg-list.  The commandname might
     be empty string if no commandname shall be emitted (used for glyph width,
     hintmask/cntrmask argument, as well as stray arguments at the end of the
-    program (¯\_(ツ)_/¯).
+    program (🤷).
     'getNumRegions' may be None, or a callable object. It must return the
     number of regions. 'getNumRegions' takes a single argument, vsindex. If
     the vsindex argument is None, getNumRegions returns the default number
