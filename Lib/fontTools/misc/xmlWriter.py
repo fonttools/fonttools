@@ -83,6 +83,16 @@ class XMLWriter(object):
         """Writes text without indentation."""
         self._writeraw(escape(string), indent=False)
 
+    def write_multiline_indented(self, string):
+        """Writes multiline string which each line indented."""
+        lines = escape(string).splitlines()
+        last = len(lines) - 1
+        for i, line in enumerate(lines):
+            self.write(line)
+            if i < last:
+                # caller may or may not want a newline after the last line
+                self.newline()
+
     def _writeraw(self, data, indent=True, strip=False):
         """Writes bytes, possibly indented."""
         if indent and self.needindent:
