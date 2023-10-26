@@ -1,3 +1,4 @@
+from textwrap import dedent
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import bytesjoin, strjoin, readHex
 from fontTools.ttLib import TTLibError
@@ -23,6 +24,14 @@ DATA_MAP_FORMAT = """
 """
 
 
+REGISTERED_TAGS = ["dlng", "slng"]
+
+KNOWN_TEXT_TAGS = REGISTERED_TAGS + [
+    # private tag used to store dependencies information by e.g. gftools
+    "DEPS",
+]
+
+
 class table__m_e_t_a(DefaultTable.DefaultTable):
     def __init__(self, tag=None):
         DefaultTable.DefaultTable.__init__(self, tag)
@@ -42,7 +51,7 @@ class table__m_e_t_a(DefaultTable.DefaultTable):
             tag = dataMap["tag"]
             offset = dataMap["dataOffset"]
             self.data[tag] = data[offset : offset + dataMap["dataLength"]]
-            if tag in ["dlng", "slng"]:
+            if tag in KNOWN_TEXT_TAGS:
                 self.data[tag] = self.data[tag].decode("utf-8")
 
     def compile(self, ttFont):
@@ -61,7 +70,7 @@ class table__m_e_t_a(DefaultTable.DefaultTable):
         dataMaps = []
         dataBlocks = []
         for tag in keys:
-            if tag in ["dlng", "slng"]:
+            if tag in KNOWN_TEXT_TAGS:
                 data = self.data[tag].encode("utf-8")
             else:
                 data = self.data[tag]
@@ -77,10 +86,10 @@ class table__m_e_t_a(DefaultTable.DefaultTable):
 
     def toXML(self, writer, ttFont):
         for tag in sorted(self.data.keys()):
-            if tag in ["dlng", "slng"]:
+            if tag in KNOWN_TEXT_TAGS:
                 writer.begintag("text", tag=tag)
                 writer.newline()
-                writer.write(self.data[tag])
+                writer.write_multiline_indented(self.data[tag])
                 writer.newline()
                 writer.endtag("text")
                 writer.newline()
@@ -98,7 +107,34 @@ class table__m_e_t_a(DefaultTable.DefaultTable):
     def fromXML(self, name, attrs, content, ttFont):
         if name == "hexdata":
             self.data[attrs["tag"]] = readHex(content)
-        elif name == "text" and attrs["tag"] in ["dlng", "slng"]:
-            self.data[attrs["tag"]] = strjoin(content).strip()
+        elif name == "text" and attrs["tag"] in KNOWN_TEXT_TAGS:
+            print(content)
+            self.data[attrs["tag"]] = dedent(strjoin(content)).strip()
         else:
             raise TTLibError("can't handle '%s' element" % name)
+
+
+def main():
+    """Print the content of the given 'meta' table tag to stdout"""
+    import argparse
+    from fontTools.ttLib import TTFont
+
+    parser = argparse.ArgumentParser(description=main.__doc__)
+    parser.add_argument("font", help="font file")
+    parser.add_argument("tag", help="metadata tag to print")
+
+    args = parser.parse_args()
+
+    font = TTFont(args.font)
+    meta = font.get("meta")
+    if meta is None:
+        parser.error("no 'meta' table found")
+
+    try:
+        print(meta.data[args.tag])
+    except KeyError:
+        parser.error("tag '%s' not found" % args.tag)
+
+
+if __name__ == "__main__":
+    main()
