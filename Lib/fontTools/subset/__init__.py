@@ -890,6 +890,8 @@ def prune_post_subset(self, font, options):
             if m.MarkAnchor:
                 m.MarkAnchor.prune_hints()
         for l in self.LigatureArray.LigatureAttach:
+            if l is None:
+              continue
             for c in l.ComponentRecord:
                 for a in c.LigatureAnchor:
                     if a:
