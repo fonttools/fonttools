@@ -534,9 +534,7 @@ def main(args=None):
         if args.json:
             import json
 
-            for glyphname, problem in problems_gen(
-                glyphsets, glyphs, names, ignore_missing
-            ):
+            for glyphname, problem in problems_gen:
                 problems[glyphname].append(problem)
 
             print(json.dumps(problems))
@@ -609,9 +607,7 @@ def main(args=None):
                         )
                     )
     else:
-        for glyphname, problem in problems_gen(
-            glyphsets, glyphs, names, ignore_missing
-        ):
+        for glyphname, problem in problems_gen:
             problems[glyphname].append(problem)
 
     if problems:
