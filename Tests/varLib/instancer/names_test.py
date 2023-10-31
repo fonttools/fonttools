@@ -333,3 +333,21 @@ def test_updateNameTable_existing_subfamily_name_is_not_regular(varfont):
     instancer.names.updateNameTable(varfont, {"wght": 100})
     expected = {(2, 3, 1, 0x409): "Regular", (17, 3, 1, 0x409): "Thin"}
     _test_name_records(varfont, expected, isNonRIBBI=True)
+
+
+def test_name_irrelevant_axes(varfont):
+    # Cannot update name table if not on a named axis value location
+    with pytest.raises(ValueError) as excinfo:
+        location = {"wght": 400, "wdth": 90}
+        instance = instancer.instantiateVariableFont(
+            varfont, location, updateFontNames=True
+        )
+    assert "Cannot find Axis Values" in str(excinfo.value)
+
+    # Now let's make the wdth axis "irrelevant" to naming (no axis values)
+    varfont["STAT"].table.AxisValueArray.AxisValue.pop(6)
+    varfont["STAT"].table.AxisValueArray.AxisValue.pop(4)
+    location = {"wght": 400, "wdth": 90}
+    instance = instancer.instantiateVariableFont(
+        varfont, location, updateFontNames=True
+    )
