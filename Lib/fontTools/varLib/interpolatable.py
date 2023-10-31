@@ -11,7 +11,7 @@ from fontTools.pens.pointPen import AbstractPointPen, SegmentToPointPen
 from fontTools.pens.recordingPen import RecordingPen
 from fontTools.pens.statisticsPen import StatisticsPen
 from fontTools.pens.momentsPen import OpenContourError
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 import math
 import itertools
 import sys
@@ -155,10 +155,10 @@ def test(glyphsets, glyphs=None, names=None, ignore_missing=False):
         glyphs = {g for glyphset in glyphsets for g in glyphset.keys()}
 
     hist = []
-    problems = OrderedDict()
+    problems = defaultdict(list)
 
     def add_problem(glyphname, problem):
-        problems.setdefault(glyphname, []).append(problem)
+        problems[glyphname].append(problem)
 
     for glyph_name in glyphs:
         try:
