@@ -525,78 +525,95 @@ def main(args=None):
             for gn in diff:
                 glyphset[gn] = None
 
-    problems = test(
+    problems_gen = test_gen(
         glyphsets, glyphs=glyphs, names=names, ignore_missing=args.ignore_missing
     )
+    problems = defaultdict(list)
 
     if not args.quiet:
         if args.json:
             import json
 
+            for glyphname, problem in problems_gen(
+                glyphsets, glyphs, names, ignore_missing
+            ):
+                problems[glyphname].append(problem)
+
             print(json.dumps(problems))
         else:
-            for glyph, glyph_problems in problems.items():
-                print(f"Glyph {glyph} was not compatible: ")
-                for p in glyph_problems:
-                    if p["type"] == "missing":
-                        print("    Glyph was missing in master %s" % p["master"])
-                    if p["type"] == "open_path":
-                        print("    Glyph has an open path in master %s" % p["master"])
-                    if p["type"] == "path_count":
-                        print(
-                            "    Path count differs: %i in %s, %i in %s"
-                            % (p["value_1"], p["master_1"], p["value_2"], p["master_2"])
+            last_glyphname = None
+            for glyphname, p in problems_gen:
+                problems[glyphname].append(p)
+
+                if glyphname != last_glyphname:
+                    print(f"Glyph {glyphname} was not compatible: ")
+                    last_glyphname = glyphname
+
+                if p["type"] == "missing":
+                    print("    Glyph was missing in master %s" % p["master"])
+                if p["type"] == "open_path":
+                    print("    Glyph has an open path in master %s" % p["master"])
+                if p["type"] == "path_count":
+                    print(
+                        "    Path count differs: %i in %s, %i in %s"
+                        % (p["value_1"], p["master_1"], p["value_2"], p["master_2"])
+                    )
+                if p["type"] == "node_count":
+                    print(
+                        "    Node count differs in path %i: %i in %s, %i in %s"
+                        % (
+                            p["path"],
+                            p["value_1"],
+                            p["master_1"],
+                            p["value_2"],
+                            p["master_2"],
                         )
-                    if p["type"] == "node_count":
-                        print(
-                            "    Node count differs in path %i: %i in %s, %i in %s"
-                            % (
-                                p["path"],
-                                p["value_1"],
-                                p["master_1"],
-                                p["value_2"],
-                                p["master_2"],
-                            )
+                    )
+                if p["type"] == "node_incompatibility":
+                    print(
+                        "    Node %o incompatible in path %i: %s in %s, %s in %s"
+                        % (
+                            p["node"],
+                            p["path"],
+                            p["value_1"],
+                            p["master_1"],
+                            p["value_2"],
+                            p["master_2"],
                         )
-                    if p["type"] == "node_incompatibility":
-                        print(
-                            "    Node %o incompatible in path %i: %s in %s, %s in %s"
-                            % (
-                                p["node"],
-                                p["path"],
-                                p["value_1"],
-                                p["master_1"],
-                                p["value_2"],
-                                p["master_2"],
-                            )
+                    )
+                if p["type"] == "contour_order":
+                    print(
+                        "    Contour order differs: %s in %s, %s in %s"
+                        % (
+                            p["value_1"],
+                            p["master_1"],
+                            p["value_2"],
+                            p["master_2"],
                         )
-                    if p["type"] == "contour_order":
-                        print(
-                            "    Contour order differs: %s in %s, %s in %s"
-                            % (
-                                p["value_1"],
-                                p["master_1"],
-                                p["value_2"],
-                                p["master_2"],
-                            )
+                    )
+                if p["type"] == "wrong_start_point":
+                    print(
+                        "    Contour %d start point differs: %s, %s"
+                        % (
+                            p["contour"],
+                            p["master_1"],
+                            p["master_2"],
                         )
-                    if p["type"] == "wrong_start_point":
-                        print(
-                            "    Contour %d start point differs: %s, %s"
-                            % (
-                                p["contour"],
-                                p["master_1"],
-                                p["master_2"],
-                            )
+                    )
+                if p["type"] == "math_error":
+                    print(
+                        "    Miscellaneous error in %s: %s"
+                        % (
+                            p["master"],
+                            p["error"],
                         )
-                    if p["type"] == "math_error":
-                        print(
-                            "    Miscellaneous error in %s: %s"
-                            % (
-                                p["master"],
-                                p["error"],
-                            )
-                        )
+                    )
+    else:
+        for glyphname, problem in problems_gen(
+            glyphsets, glyphs, names, ignore_missing
+        ):
+            problems[glyphname].append(problem)
+
     if problems:
         return problems
 
