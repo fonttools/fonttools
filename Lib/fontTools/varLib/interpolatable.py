@@ -146,7 +146,7 @@ except ImportError:
         )
 
 
-def test(glyphsets, glyphs=None, names=None, ignore_missing=False):
+def test_gen(glyphsets, glyphs=None, names=None, ignore_missing=False):
     if names is None:
         names = glyphsets
     if glyphs is None:
@@ -155,10 +155,6 @@ def test(glyphsets, glyphs=None, names=None, ignore_missing=False):
         glyphs = {g for glyphset in glyphsets for g in glyphset.keys()}
 
     hist = []
-    problems = defaultdict(list)
-
-    def add_problem(glyphname, problem):
-        problems[glyphname].append(problem)
 
     for glyph_name in glyphs:
         try:
@@ -172,7 +168,7 @@ def test(glyphsets, glyphs=None, names=None, ignore_missing=False):
             for glyph, glyphset, name in zip(allGlyphs, glyphsets, names):
                 if glyph is None:
                     if not ignore_missing:
-                        add_problem(glyph_name, {"type": "missing", "master": name})
+                        yield (glyph_name, {"type": "missing", "master": name})
                     allNodeTypes.append(None)
                     allVectors.append(None)
                     allContourIsomorphisms.append(None)
@@ -202,7 +198,7 @@ def test(glyphsets, glyphs=None, names=None, ignore_missing=False):
                     try:
                         contour.replay(stats)
                     except OpenContourError as e:
-                        add_problem(
+                        yield (
                             glyph_name,
                             {"master": name, "contour": ix, "type": "open_path"},
                         )
@@ -265,7 +261,7 @@ def test(glyphsets, glyphs=None, names=None, ignore_missing=False):
                 if m1 is None:
                     continue
                 if len(m0) != len(m1):
-                    add_problem(
+                    yield (
                         glyph_name,
                         {
                             "type": "path_count",
@@ -281,7 +277,7 @@ def test(glyphsets, glyphs=None, names=None, ignore_missing=False):
                     if nodes1 == nodes2:
                         continue
                     if len(nodes1) != len(nodes2):
-                        add_problem(
+                        yield (
                             glyph_name,
                             {
                                 "type": "node_count",
@@ -295,7 +291,7 @@ def test(glyphsets, glyphs=None, names=None, ignore_missing=False):
                         continue
                     for nodeIx, (n1, n2) in enumerate(zip(nodes1, nodes2)):
                         if n1 != n2:
-                            add_problem(
+                            yield (
                                 glyph_name,
                                 {
                                     "type": "node_incompatibility",
@@ -332,7 +328,7 @@ def test(glyphsets, glyphs=None, names=None, ignore_missing=False):
                         matching != identity_matching
                         and matching_cost < identity_cost * 0.95
                     ):
-                        add_problem(
+                        yield (
                             glyph_name,
                             {
                                 "type": "contour_order",
@@ -365,7 +361,7 @@ def test(glyphsets, glyphs=None, names=None, ignore_missing=False):
                         min_cost = min(costs)
                         first_cost = costs[0]
                         if min_cost < first_cost * 0.95:
-                            add_problem(
+                            yield (
                                 glyph_name,
                                 {
                                     "type": "wrong_start_point",
@@ -376,10 +372,16 @@ def test(glyphsets, glyphs=None, names=None, ignore_missing=False):
                             )
 
         except ValueError as e:
-            add_problem(
+            yield (
                 glyph_name,
                 {"type": "math_error", "master": name, "error": e},
             )
+
+
+def test(glyphsets, glyphs=None, names=None, ignore_missing=False):
+    problems = defaultdict(list)
+    for glyphname, problem in test_gen(glyphsets, glyphs, names, ignore_missing):
+        problems[glyphname].append(problem)
     return problems
 
 
