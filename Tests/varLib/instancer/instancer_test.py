@@ -1280,16 +1280,29 @@ class InstantiateFvarTest(object):
 
         assert "fvar" not in varfont
 
-    def test_out_of_range_instance(self, varfont):
-        location = instancer.AxisLimits({"wght": (30, 40, 700)})
+    @pytest.mark.parametrize(
+        "location, expected",
+        [
+            ({"wght": (30, 40, 700)}, (100, 100, 700)),
+            ({"wght": (30, 40, None)}, (100, 100, 900)),
+            ({"wght": (30, None, 700)}, (100, 400, 700)),
+            ({"wght": (None, 200, 700)}, (100, 200, 700)),
+            ({"wght": (40, None, None)}, (100, 400, 900)),
+            ({"wght": (None, 40, None)}, (100, 100, 900)),
+            ({"wght": (None, None, 700)}, (100, 400, 700)),
+            ({"wght": (None, None, None)}, (100, 400, 900)),
+        ],
+    )
+    def test_axis_limits(self, varfont, location, expected):
+        location = instancer.AxisLimits(location)
 
         varfont = instancer.instantiateVariableFont(varfont, location)
 
         fvar = varfont["fvar"]
         axes = {a.axisTag: a for a in fvar.axes}
-        assert axes["wght"].minValue == 100
-        assert axes["wght"].defaultValue == 100
-        assert axes["wght"].maxValue == 700
+        assert axes["wght"].minValue == expected[0]
+        assert axes["wght"].defaultValue == expected[1]
+        assert axes["wght"].maxValue == expected[2]
 
 
 class InstantiateSTATTest(object):
