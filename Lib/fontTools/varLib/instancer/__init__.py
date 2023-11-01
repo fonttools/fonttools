@@ -87,7 +87,7 @@ from fontTools.misc.fixedTools import (
     strToFixedToFloat,
     otRound,
 )
-from fontTools.varLib.models import supportScalar, normalizeValue, piecewiseLinearMap
+from fontTools.varLib.models import normalizeValue, piecewiseLinearMap
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools.ttLib.tables import _g_l_y_f
