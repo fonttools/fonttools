@@ -73,8 +73,8 @@
           <ClassDef1>
           </ClassDef1>
           <ClassDef2>
-            <ClassDef glyph="g" class="2"/>
-            <ClassDef glyph="y" class="1"/>
+            <ClassDef glyph="g" class="1"/>
+            <ClassDef glyph="y" class="2"/>
           </ClassDef2>
           <!-- Class1Count=1 -->
           <!-- Class2Count=3 -->
@@ -83,6 +83,9 @@
               <Value1 XAdvance="0"/>
             </Class2Record>
             <Class2Record index="1">
+              <Value1 XAdvance="-5"/>
+            </Class2Record>
+            <Class2Record index="2">
               <Value1 XAdvance="0">
                 <XAdvDevice>
                   <StartSize value="0"/>
@@ -90,9 +93,6 @@
                   <DeltaFormat value="32768"/>
                 </XAdvDevice>
               </Value1>
-            </Class2Record>
-            <Class2Record index="2">
-              <Value1 XAdvance="-5"/>
             </Class2Record>
           </Class1Record>
         </PairPos>

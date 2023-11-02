@@ -66,9 +66,9 @@
             <ClassDef glyph="z" class="1"/>
           </BacktrackClassDef>
           <InputClassDef>
-            <ClassDef glyph="a" class="3"/>
+            <ClassDef glyph="a" class="1"/>
             <ClassDef glyph="d" class="2"/>
-            <ClassDef glyph="n" class="1"/>
+            <ClassDef glyph="n" class="3"/>
           </InputClassDef>
           <LookAheadClassDef>
             <ClassDef glyph="a" class="1"/>
@@ -103,18 +103,12 @@
             <!-- ChainSubClassRuleCount=0 -->
           </ChainSubClassSet>
           <ChainSubClassSet index="1">
-            <!-- ChainSubClassRuleCount=0 -->
-          </ChainSubClassSet>
-          <ChainSubClassSet index="2">
-            <!-- ChainSubClassRuleCount=0 -->
-          </ChainSubClassSet>
-          <ChainSubClassSet index="3">
             <!-- ChainSubClassRuleCount=3 -->
             <ChainSubClassRule index="0">
               <!-- BacktrackGlyphCount=1 -->
               <Backtrack index="0" value="1"/>
               <!-- InputGlyphCount=3 -->
-              <Input index="0" value="1"/>
+              <Input index="0" value="3"/>
               <Input index="1" value="2"/>
               <!-- LookAheadGlyphCount=0 -->
               <!-- SubstCount=0 -->
@@ -122,7 +116,7 @@
             <ChainSubClassRule index="1">
               <!-- BacktrackGlyphCount=0 -->
               <!-- InputGlyphCount=3 -->
-              <Input index="0" value="1"/>
+              <Input index="0" value="3"/>
               <Input index="1" value="2"/>
               <!-- LookAheadGlyphCount=1 -->
               <LookAhead index="0" value="1"/>
@@ -131,7 +125,7 @@
             <ChainSubClassRule index="2">
               <!-- BacktrackGlyphCount=0 -->
               <!-- InputGlyphCount=3 -->
-              <Input index="0" value="1"/>
+              <Input index="0" value="3"/>
               <Input index="1" value="2"/>
               <!-- LookAheadGlyphCount=0 -->
               <!-- SubstCount=1 -->
@@ -140,6 +134,12 @@
                 <LookupListIndex value="1"/>
               </SubstLookupRecord>
             </ChainSubClassRule>
+          </ChainSubClassSet>
+          <ChainSubClassSet index="2">
+            <!-- ChainSubClassRuleCount=0 -->
+          </ChainSubClassSet>
+          <ChainSubClassSet index="3">
+            <!-- ChainSubClassRuleCount=0 -->
           </ChainSubClassSet>
         </ChainContextSubst>
       </Lookup>

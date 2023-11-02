@@ -93,14 +93,14 @@
           <ValueFormat1 value="4"/>
           <ValueFormat2 value="0"/>
           <ClassDef1>
-            <ClassDef glyph="b" class="1"/>
-            <ClassDef glyph="o" class="1"/>
-          </ClassDef1>
-          <ClassDef2>
-            <ClassDef glyph="c" class="2"/>
-            <ClassDef glyph="d" class="2"/>
             <ClassDef glyph="v" class="1"/>
             <ClassDef glyph="w" class="1"/>
+          </ClassDef1>
+          <ClassDef2>
+            <ClassDef glyph="c" class="1"/>
+            <ClassDef glyph="d" class="1"/>
+            <ClassDef glyph="v" class="2"/>
+            <ClassDef glyph="w" class="2"/>
           </ClassDef2>
           <!-- Class1Count=2 -->
           <!-- Class2Count=3 -->
@@ -112,7 +112,7 @@
               <Value1 XAdvance="0"/>
             </Class2Record>
             <Class2Record index="2">
-              <Value1 XAdvance="-20"/>
+              <Value1 XAdvance="-10"/>
             </Class2Record>
           </Class1Record>
           <Class1Record index="1">
@@ -120,7 +120,7 @@
               <Value1 XAdvance="0"/>
             </Class2Record>
             <Class2Record index="1">
-              <Value1 XAdvance="-10"/>
+              <Value1 XAdvance="-20"/>
             </Class2Record>
             <Class2Record index="2">
               <Value1 XAdvance="0"/>
