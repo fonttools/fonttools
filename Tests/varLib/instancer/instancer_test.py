@@ -2098,6 +2098,15 @@ def test_limitFeatureVariationConditionRange(oldRange, newLimit, expected):
         (["wght=400:700:900"], {"wght": (400, 700, 900)}),
         (["slnt=11.4"], {"slnt": 11.399994}),
         (["ABCD=drop"], {"ABCD": None}),
+        (["wght=:500:"], {"wght": (None, 500, None)}),
+        (["wght=::700"], {"wght": (None, None, 700)}),
+        (["wght=200::"], {"wght": (200, None, None)}),
+        (["wght=200:300:"], {"wght": (200, 300, None)}),
+        (["wght=:300:500"], {"wght": (None, 300, 500)}),
+        (["wght=300::700"], {"wght": (300, None, 700)}),
+        (["wght=300:700"], {"wght": (300, None, 700)}),
+        (["wght=:700"], {"wght": (None, None, 700)}),
+        (["wght=200:"], {"wght": (200, None, None)}),
     ],
 )
 def test_parseLimits(limits, expected):
