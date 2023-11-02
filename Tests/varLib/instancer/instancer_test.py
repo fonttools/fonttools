@@ -1280,16 +1280,29 @@ class InstantiateFvarTest(object):
 
         assert "fvar" not in varfont
 
-    def test_out_of_range_instance(self, varfont):
-        location = instancer.AxisLimits({"wght": (30, 40, 700)})
+    @pytest.mark.parametrize(
+        "location, expected",
+        [
+            ({"wght": (30, 40, 700)}, (100, 100, 700)),
+            ({"wght": (30, 40, None)}, (100, 100, 900)),
+            ({"wght": (30, None, 700)}, (100, 400, 700)),
+            ({"wght": (None, 200, 700)}, (100, 200, 700)),
+            ({"wght": (40, None, None)}, (100, 400, 900)),
+            ({"wght": (None, 40, None)}, (100, 100, 900)),
+            ({"wght": (None, None, 700)}, (100, 400, 700)),
+            ({"wght": (None, None, None)}, (100, 400, 900)),
+        ],
+    )
+    def test_axis_limits(self, varfont, location, expected):
+        location = instancer.AxisLimits(location)
 
         varfont = instancer.instantiateVariableFont(varfont, location)
 
         fvar = varfont["fvar"]
         axes = {a.axisTag: a for a in fvar.axes}
-        assert axes["wght"].minValue == 100
-        assert axes["wght"].defaultValue == 100
-        assert axes["wght"].maxValue == 700
+        assert axes["wght"].minValue == expected[0]
+        assert axes["wght"].defaultValue == expected[1]
+        assert axes["wght"].maxValue == expected[2]
 
 
 class InstantiateSTATTest(object):
@@ -2085,6 +2098,15 @@ def test_limitFeatureVariationConditionRange(oldRange, newLimit, expected):
         (["wght=400:700:900"], {"wght": (400, 700, 900)}),
         (["slnt=11.4"], {"slnt": 11.399994}),
         (["ABCD=drop"], {"ABCD": None}),
+        (["wght=:500:"], {"wght": (None, 500, None)}),
+        (["wght=::700"], {"wght": (None, None, 700)}),
+        (["wght=200::"], {"wght": (200, None, None)}),
+        (["wght=200:300:"], {"wght": (200, 300, None)}),
+        (["wght=:300:500"], {"wght": (None, 300, 500)}),
+        (["wght=300::700"], {"wght": (300, None, 700)}),
+        (["wght=300:700"], {"wght": (300, None, 700)}),
+        (["wght=:700"], {"wght": (None, None, 700)}),
+        (["wght=200:"], {"wght": (200, None, None)}),
     ],
 )
 def test_parseLimits(limits, expected):
