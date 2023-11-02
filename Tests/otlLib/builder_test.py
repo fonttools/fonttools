@@ -1080,7 +1080,7 @@ class ClassDefBuilderTest(object):
         b.add({"e", "f", "g", "h"})
         cdef = b.build()
         assert isinstance(cdef, otTables.ClassDef)
-        assert cdef.classDefs == {"a": 2, "b": 2, "c": 3, "aa": 1, "bb": 1}
+        assert cdef.classDefs == {"a": 1, "b": 1, "c": 3, "aa": 2, "bb": 2}
 
     def test_build_notUsingClass0(self):
         b = builder.ClassDefBuilder(useClass0=False)
