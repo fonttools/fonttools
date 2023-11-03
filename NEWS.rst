@@ -1,3 +1,6 @@
+4.44.0 (released 2023-11-03)
+----------------------------
+
 - [instancer] Recalc OS/2 AvgCharWidth after instancing if default changes (#3317).
 - [otlLib] Make ClassDefBuilder class order match varLib.merger's, i.e. large
   classes first, then glyph lexicographic order (#3321, #3324).
