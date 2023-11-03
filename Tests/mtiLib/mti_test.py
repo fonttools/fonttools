@@ -15,7 +15,6 @@ def set_lookup_debug_env_var(monkeypatch):
 
 
 class MtiTest:
-
     GLYPH_ORDER = [
         ".notdef",
         "a",
@@ -425,7 +424,6 @@ class MtiTest:
         return font
 
     def check_mti_file(self, name, tableTag=None):
-
         xml_expected_path = self.getpath(
             "%s.ttx" % name + ("." + tableTag if tableTag is not None else "")
         )

@@ -339,7 +339,6 @@ pen.endPath()""".splitlines(),
 
 class TestCu2QuMultiPen(unittest.TestCase):
     def test_multi_pen(self):
-
         pens = [RecordingPen(), RecordingPen()]
         pen = Cu2QuMultiPen(pens, 0.1)
         pen.moveTo([((0, 0),), ((0, 0),)])

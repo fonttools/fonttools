@@ -4,7 +4,6 @@ import pytest
 
 
 class IupTest:
-
     # -----
     # Tests
     # -----

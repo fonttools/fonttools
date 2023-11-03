@@ -394,7 +394,6 @@ class IsCloseTests(unittest.TestCase):
 
 
 class TestRedirectStream:
-
     redirect_stream = None
     orig_stream = None
 
@@ -444,13 +443,11 @@ class TestRedirectStream:
 
 
 class TestRedirectStdout(TestRedirectStream, unittest.TestCase):
-
     redirect_stream = redirect_stdout
     orig_stream = "stdout"
 
 
 class TestRedirectStderr(TestRedirectStream, unittest.TestCase):
-
     redirect_stream = redirect_stderr
     orig_stream = "stderr"
 

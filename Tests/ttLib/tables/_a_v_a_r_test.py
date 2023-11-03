@@ -101,7 +101,6 @@ class AxisVariationTableTest(unittest.TestCase):
 
 class Avar2Test(unittest.TestCase):
     def test(self):
-
         axisTags = ["wght", "wdth"]
         fvar = table__f_v_a_r()
         for tag in axisTags:

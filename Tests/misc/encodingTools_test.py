@@ -4,7 +4,6 @@ from fontTools.misc.encodingTools import getEncoding
 
 class EncodingTest(unittest.TestCase):
     def test_encoding_unicode(self):
-
         self.assertEqual(
             getEncoding(3, 0, None), "utf_16_be"
         )  # MS Symbol is Unicode as well

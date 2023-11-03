@@ -75,7 +75,6 @@ class Qu2CuTest:
         ],
     )
     def test_simple(self, quadratics, expected, tolerance, cubic_only):
-
         expected = [
             tuple((pytest.approx(p[0]), pytest.approx(p[1])) for p in curve)
             for curve in expected
@@ -85,7 +84,6 @@ class Qu2CuTest:
         assert c == expected
 
     def test_roundtrip(self):
-
         DATADIR = os.path.join(os.path.dirname(__file__), "..", "cu2qu", "data")
         with open(os.path.join(DATADIR, "curves.json"), "r") as fp:
             curves = json.load(fp)

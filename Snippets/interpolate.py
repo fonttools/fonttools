@@ -85,7 +85,7 @@ def AddGlyphVariations(font, thin, regular, black):
             continue
         thinDelta = []
         blackDelta = []
-        for ((regX, regY), (blackX, blackY), (thinX, thinY)) in zip(
+        for (regX, regY), (blackX, blackY), (thinX, thinY) in zip(
             regularCoord, blackCoord, thinCoord
         ):
             thinDelta.append(((thinX - regX, thinY - regY)))

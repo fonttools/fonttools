@@ -139,7 +139,6 @@ def visit(self, obj):
 
 
 if __name__ == "__main__":
-
     from fontTools.ttLib import TTFont
     import sys
 
