@@ -92,7 +92,7 @@ jobs:
     - name: Set up Python pypy3
       uses: actions/setup-python@v4
       with:
-        python-version: "pypy-3.8"
+        python-version: "pypy-3.9"
     - name: Install packages
       run: pip install tox
     - name: Run Tox
