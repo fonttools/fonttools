@@ -1,3 +1,21 @@
+- [instancer] Recalc OS/2 AvgCharWidth after instancing if default changes (#3317).
+- [otlLib] Make ClassDefBuilder class order match varLib.merger's, i.e. large
+  classes first, then glyph lexicographic order (#3321, #3324).
+- [instancer] Allow not specifying any of min:default:max values and let be filled
+  up with fvar's values (#3322, #3323).
+- [instancer] When running --update-name-table ignore axes that have no STAT axis
+  values (#3318, #3319).
+- [Debg] When dumping to ttx, write the embedded JSON as multi-line string with
+  indentation (92cbfee0d).
+- [varStore] Handle > 65535 items per encoding by splitting VarData subtable (#3310).
+- [subset] Handle null-offsets in MarkLigPos subtables.
+- [subset] Keep East Asian spacing fatures vhal, halt, chws, vchw by default (#3305).
+- [instancer.solver] Fixed case where axisDef < lower and upper < axisMax (#3304).
+- [glyf] Speed up compilation, mostly around ``recalcBounds`` (#3301).
+- [varLib.interpolatable] Speed it up when working on variable fonts, plus various
+  micro-optimizations (#3300).
+- Require unicodedata2 >= 15.1.0 when installed with 'unicode' extra, contains UCD 15.1.
+
 4.43.1 (released 2023-10-06)
 ----------------------------
 
