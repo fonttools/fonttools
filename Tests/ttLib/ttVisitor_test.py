@@ -27,7 +27,6 @@ class TTVisitorTest(object):
         return os.path.join(path, "data", testfile)
 
     def test_ttvisitor(self):
-
         font = TTFont(self.getpath("TestVGID-Regular.otf"))
         visitor = TestVisitor()
 

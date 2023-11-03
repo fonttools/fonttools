@@ -120,7 +120,7 @@ class T2CharStringTest(unittest.TestCase):
             (-456.8, "ff fe 37 33 33", -456.8000031),
         ]
 
-        for (value, expected_hex, expected_float) in testNums:
+        for value, expected_hex, expected_float in testNums:
             encoded_result = encodeFixed(value)
 
             # check to see if we got the expected bytes

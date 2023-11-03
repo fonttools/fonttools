@@ -111,7 +111,6 @@ def test_overlayBox():
 
 
 def run(test, n, quiet):
-
     print()
     print("%s:" % test.__name__)
     input, output = test(n)

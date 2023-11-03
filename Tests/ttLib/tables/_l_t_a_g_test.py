@@ -7,7 +7,6 @@ from fontTools.ttLib import newTable
 
 
 class Test_l_t_a_g(unittest.TestCase):
-
     DATA_ = (
         struct.pack(b">LLLHHHHHH", 1, 0, 3, 24 + 0, 2, 24 + 2, 7, 24 + 2, 2)
         + b"enzh-Hant"

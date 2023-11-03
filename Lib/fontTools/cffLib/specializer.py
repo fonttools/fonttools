@@ -513,7 +513,6 @@ def specializeCommands(
     preserveTopology=False,
     maxstack=48,
 ):
-
     # We perform several rounds of optimizations.  They are carefully ordered and are:
     #
     # 0. Generalize commands.

@@ -137,7 +137,7 @@ class GVARTableTest(unittest.TestCase):
         for glyphName, variations1 in vars1.items():
             variations2 = vars2[glyphName]
             self.assertEqual(len(variations1), len(variations2))
-            for (v1, v2) in zip(variations1, variations2):
+            for v1, v2 in zip(variations1, variations2):
                 self.assertSetEqual(set(v1.axes), set(v2.axes))
                 for axisTag, support1 in v1.axes.items():
                     support2 = v2.axes[axisTag]

@@ -56,7 +56,6 @@ class ScaleUpemTest(unittest.TestCase):
             self.fail("TTX output is different from expected")
 
     def test_scale_upem_ttf(self):
-
         font = TTFont(self.get_path("I.ttf"))
         tables = [table_tag for table_tag in font.keys() if table_tag != "head"]
 
@@ -66,7 +65,6 @@ class ScaleUpemTest(unittest.TestCase):
         self.expect_ttx(font, expected_ttx_path, tables)
 
     def test_scale_upem_varComposite(self):
-
         font = TTFont(self.get_path("varc-ac00-ac01.ttf"))
         tables = [table_tag for table_tag in font.keys() if table_tag != "head"]
 
@@ -80,7 +78,6 @@ class ScaleUpemTest(unittest.TestCase):
         scale_upem(font, 500)
 
     def test_scale_upem_otf(self):
-
         # Just test that it doesn't crash
 
         font = TTFont(self.get_path("TestVGID-Regular.otf"))

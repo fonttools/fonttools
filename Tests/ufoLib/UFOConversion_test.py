@@ -125,7 +125,6 @@ class TestInfoObject:
 
 
 class KerningUpConversionTestCase(unittest.TestCase):
-
     expectedKerning = {
         ("public.kern1.BGroup", "public.kern2.CGroup"): 7,
         ("public.kern1.BGroup", "public.kern2.DGroup"): 8,
@@ -239,7 +238,6 @@ class KerningUpConversionTestCase(unittest.TestCase):
 
 
 class KerningDownConversionTestCase(unittest.TestCase):
-
     expectedKerning = {
         ("public.kern1.BGroup", "public.kern2.CGroup"): 7,
         ("public.kern1.BGroup", "public.kern2.DGroup"): 8,

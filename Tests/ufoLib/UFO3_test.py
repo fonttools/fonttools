@@ -4712,7 +4712,6 @@ class UFO3WriteDataTestCase(unittest.TestCase):
 
 
 class TestLayerInfoObject:
-
     color = guidelines = lib = None
 
 

@@ -615,11 +615,9 @@ class CubicGlyfTest:
         ppen.endPath()
 
         for pen in (spen, ppen):
-
             glyph = pen.glyph()
 
             for i in range(2):
-
                 if i == 1:
                     glyph.compile(None)
 
@@ -797,7 +795,6 @@ class CubicGlyfTest:
         rpen.replay(ppen)
 
         for pen in (spen, ppen):
-
             glyph = pen.glyph(dropImpliedOnCurves=dropImpliedOnCurves)
 
             assert list(glyph.coordinates) == expected_coordinates
