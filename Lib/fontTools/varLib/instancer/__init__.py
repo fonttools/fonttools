@@ -1287,6 +1287,9 @@ def instantiateVariableFont(
                     ignoreErrors=(overlap == OverlapMode.REMOVE_AND_IGNORE_ERRORS),
                 )
 
+    if "OS/2" in varfont:
+        varfont["OS/2"].recalcAvgCharWidth(varfont)
+
     varLib.set_default_weight_width_slant(
         varfont, location=axisLimits.defaultLocation()
     )
