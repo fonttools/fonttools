@@ -98,7 +98,7 @@
     <sTypoLineGap value="0"/>
     <usWinAscent value="1160"/>
     <usWinDescent value="288"/>
-    <ulCodePageRange1 value="01100000 00101110 00000001 00000111"/>
+    <ulCodePageRange1 value="00000000 00000000 00000000 00000001"/>
     <ulCodePageRange2 value="00000000 00000000 00000000 00000000"/>
     <sxHeight value="543"/>
     <sCapHeight value="733"/>
