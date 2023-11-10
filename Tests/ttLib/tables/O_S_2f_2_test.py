@@ -4,6 +4,18 @@ import unittest
 
 
 class OS2TableTest(unittest.TestCase):
+    @staticmethod
+    def makeOS2_cmap(mapping):
+        font = TTFont()
+        font["OS/2"] = os2 = newTable("OS/2")
+        font["cmap"] = cmap = newTable("cmap")
+        st = getTableModule("cmap").CmapSubtable.newSubtable(4)
+        st.platformID, st.platEncID, st.language = 3, 1, 0
+        st.cmap = mapping
+        cmap.tables = []
+        cmap.tables.append(st)
+        return font, os2, cmap
+
     def test_getUnicodeRanges(self):
         table = table_O_S_2f_2()
         table.ulUnicodeRange1 = 0xFFFFFFFF
@@ -27,14 +39,9 @@ class OS2TableTest(unittest.TestCase):
             table.setUnicodeRanges([-1, 127, 255])
 
     def test_recalcUnicodeRanges(self):
-        font = TTFont()
-        font["OS/2"] = os2 = newTable("OS/2")
-        font["cmap"] = cmap = newTable("cmap")
-        st = getTableModule("cmap").CmapSubtable.newSubtable(4)
-        st.platformID, st.platEncID, st.language = 3, 1, 0
-        st.cmap = {0x0041: "A", 0x03B1: "alpha", 0x0410: "Acyr"}
-        cmap.tables = []
-        cmap.tables.append(st)
+        font, os2, cmap = self.makeOS2_cmap(
+            {0x0041: "A", 0x03B1: "alpha", 0x0410: "Acyr"}
+        )
         os2.setUnicodeRanges({0, 1, 9})
         # 'pruneOnly' will clear any bits for which there's no intersection:
         # bit 1 ('Latin 1 Supplement'), in this case. However, it won't set
@@ -43,7 +50,7 @@ class OS2TableTest(unittest.TestCase):
         # try again with pruneOnly=False: bit 7 is now set.
         self.assertEqual(os2.recalcUnicodeRanges(font), {0, 7, 9})
         # add a non-BMP char from 'Mahjong Tiles' block (bit 122)
-        st.cmap[0x1F000] = "eastwindtile"
+        cmap.tables[0].cmap[0x1F000] = "eastwindtile"
         # the bit 122 and the special bit 57 ('Non Plane 0') are also enabled
         self.assertEqual(os2.recalcUnicodeRanges(font), {0, 7, 9, 57, 122})
 
@@ -54,6 +61,49 @@ class OS2TableTest(unittest.TestCase):
             intersectUnicodeRanges([0x0410, 0x1F000], inverse=True),
             (set(range(123)) - {9, 57, 122}),
         )
+
+    def test_getCodePageRanges(self):
+        table = table_O_S_2f_2()
+        table.ulCodePageRange1 = 0xFFFFFFFF
+        table.ulCodePageRange2 = 0xFFFFFFFF
+        bits = table.getCodePageRanges()
+        for i in range(63):
+            self.assertIn(i, bits)
+
+    def test_setCodePageRanges(self):
+        table = table_O_S_2f_2()
+        table.ulCodePageRange1 = 0
+        table.ulCodePageRange2 = 0
+        bits = set(range(64))
+        table.setCodePageRanges(bits)
+        self.assertEqual(table.getCodePageRanges(), bits)
+        with self.assertRaises(ValueError):
+            table.setCodePageRanges([-1])
+        with self.assertRaises(ValueError):
+            table.setCodePageRanges([64])
+        with self.assertRaises(ValueError):
+            table.setCodePageRanges([255])
+
+    def test_recalcCodePageRanges(self):
+        font, os2, cmap = self.makeOS2_cmap(
+            {ord("A"): "A", ord("Ά"): "Alphatonos", ord("Б"): "Be"}
+        )
+        os2.setCodePageRanges({0, 2, 9})
+
+        # With pruneOnly=True, should clear any CodePage for which there are no
+        # characters in the cmap.
+        self.assertEqual(os2.recalcCodePageRanges(font, pruneOnly=True), {2})
+
+        # With pruneOnly=False, should also set CodePages not initially set.
+        self.assertEqual(os2.recalcCodePageRanges(font), {2, 3})
+
+        # Add a Korean character, should set CodePage 21 (Korean Johab)
+        cmap.tables[0].cmap[ord("곴")] = "goss"
+        self.assertEqual(os2.recalcCodePageRanges(font), {2, 3, 21})
+
+        # Remove all characters from cmap, should still set CodePage 0 (Latin 1)
+        cmap.tables[0].cmap = {}
+        self.assertEqual(os2.recalcCodePageRanges(font), {0})
 
 
 if __name__ == "__main__":
