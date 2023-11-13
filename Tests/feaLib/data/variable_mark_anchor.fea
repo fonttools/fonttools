@@ -1,0 +1,10 @@
+markClass macron <anchor 0 (wght=200:150 wght=900:152)> @MC_top;
+
+lookup one {
+ pos base a
+ <anchor 0 0> mark @MC_top;
+} one;
+lookup two {
+  pos base a
+  <anchor 0 0> mark @MC_top;
+} two;
