@@ -11,6 +11,7 @@ from fontTools.pens.pointPen import AbstractPointPen, SegmentToPointPen
 from fontTools.pens.recordingPen import RecordingPen
 from fontTools.pens.statisticsPen import StatisticsPen
 from fontTools.pens.momentsPen import OpenContourError
+from fontTools.varLib.models import piecewiseLinearMap
 from collections import defaultdict
 import math
 import itertools
@@ -468,6 +469,31 @@ def main(args=None):
             font = TTFont(args.inputs[0])
             if "gvar" in font:
                 # Is variable font
+
+                axisMapping = {}
+                fvar = font["fvar"]
+                for axis in fvar.axes:
+                    axisMapping[axis.axisTag] = {
+                        -1: axis.minValue,
+                        0: axis.defaultValue,
+                        1: axis.maxValue,
+                    }
+                if "avar" in font:
+                    avar = font["avar"]
+                    for axisTag, segments in avar.segments.items():
+                        for location, value in segments.items():
+                            if value > 0:
+                                value = (
+                                    axis.defaultValue
+                                    + (axis.maxValue - axis.defaultValue) * value
+                                )
+                            elif value < 0:
+                                value = (
+                                    axis.defaultValue
+                                    + (axis.defaultValue - axis.minValue) * value
+                                )
+                            axisMapping[axisTag][value] = location
+
                 gvar = font["gvar"]
                 glyf = font["glyf"]
                 # Gather all glyphs at their "master" locations
@@ -494,10 +520,18 @@ def main(args=None):
                             glyphname, glyphsets[locTuple], ttGlyphSets[locTuple], glyf
                         )
 
-                names = ["()"]
+                names = ["''"]
                 fonts = [font.getGlyphSet()]
                 for locTuple in sorted(glyphsets.keys(), key=lambda v: (len(v), v)):
-                    names.append(str(locTuple))
+                    name = (
+                        "'"
+                        + " ".join(
+                            "%s=%s" % (k, piecewiseLinearMap(v, axisMapping[k]))
+                            for k, v in locTuple
+                        )
+                        + "'"
+                    )
+                    names.append(name)
                     fonts.append(glyphsets[locTuple])
                 args.ignore_missing = True
                 args.inputs = []
