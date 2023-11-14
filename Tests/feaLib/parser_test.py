@@ -729,6 +729,43 @@ class ParserTest(unittest.TestCase):
         self.assertTrue(lookup.use_extension)
         self.assertEqual(lookup.asFea(), "lookup Foo useExtension {\n    \n} Foo;\n")
 
+    def test_standalone_lookup(self):
+        doc = self.parse("feature test { standalone lookup Foo {} Foo; } test;")
+        [feature] = doc.statements
+        [lookup] = feature.statements
+        self.assertIsInstance(lookup, ast.LookupBlock)
+        self.assertIsInstance(feature, ast.FeatureBlock)
+        self.assertEqual(feature.name, "test")
+        self.assertEqual(len(feature.statements), 1)
+        self.assertEqual(lookup.name, "Foo")
+        self.assertTrue(lookup.standalone)
+        self.assertEqual(
+            doc.asFea(),
+            "feature test {\n    standalone lookup Foo {\n        \n    } Foo;\n\n} test;\n",
+        )
+
+    def test_satandalone_lookup_top_level(self):
+        doc = self.parse("standalone lookup Foo {} Foo;")
+        [lookup] = doc.statements
+        self.assertIsInstance(lookup, ast.LookupBlock)
+        self.assertEqual(lookup.name, "Foo")
+        self.assertEqual(doc.asFea(), "standalone lookup Foo {\n    \n} Foo;\n")
+
+    def test_standalone(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            'Expected "lookup"',
+            self.parse,
+            "standalone feature test {} test;",
+        )
+
+        self.assertRaisesRegex(
+            FeatureLibError,
+            'Expected "lookup"',
+            self.parse,
+            "feature test { standalone Foo {} Foo; } test;",
+        )
+
     def test_lookup_block_name_mismatch(self):
         self.assertRaisesRegex(
             FeatureLibError, 'Expected "Foo"', self.parse, "lookup Foo {} Bar;"

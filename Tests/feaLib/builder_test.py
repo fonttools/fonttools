@@ -81,7 +81,7 @@ class BuilderTest(unittest.TestCase):
         MultipleLookupsPerGlyph MultipleLookupsPerGlyph2 GSUB_6_formats
         GSUB_5_formats delete_glyph STAT_test STAT_test_elidedFallbackNameID
         variable_scalar_valuerecord variable_scalar_anchor variable_conditionset
-        variable_mark_anchor
+        variable_mark_anchor standalone_lookup
     """.split()
 
     VARFONT_AXES = [

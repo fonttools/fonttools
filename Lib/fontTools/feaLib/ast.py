@@ -428,18 +428,22 @@ class NestedBlock(Block):
 class LookupBlock(Block):
     """A named lookup, containing ``statements``."""
 
-    def __init__(self, name, use_extension=False, location=None):
+    def __init__(self, name, use_extension=False, location=None, standalone=False):
         Block.__init__(self, location)
         self.name, self.use_extension = name, use_extension
+        self.standalone = standalone
 
     def build(self, builder):
         # TODO(sascha): Handle use_extension.
-        builder.start_lookup_block(self.location, self.name)
+        builder.start_lookup_block(self.location, self.name, standalone=self.standalone)
         Block.build(self, builder)
         builder.end_lookup_block()
 
     def asFea(self, indent=""):
-        res = "lookup {} ".format(self.name)
+        res = ""
+        if self.standalone:
+            res += "standalone "
+        res += "lookup {} ".format(self.name)
         if self.use_extension:
             res += "useExtension "
         res += "{\n"

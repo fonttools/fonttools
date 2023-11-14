@@ -98,6 +98,9 @@ class Parser(object):
                 statements.append(self.parse_languagesystem_())
             elif self.is_cur_keyword_("lookup"):
                 statements.append(self.parse_lookup_(vertical=False))
+            elif self.is_cur_keyword_("standalone"):
+                self.expect_keyword_("lookup")
+                statements.append(self.parse_lookup_(vertical=False, standalone=True))
             elif self.is_cur_keyword_("markClass"):
                 statements.append(self.parse_markClass_())
             elif self.is_cur_keyword_("feature"):
@@ -608,7 +611,7 @@ class Parser(object):
         self.expect_symbol_(";")
         return self.ast.LigatureCaretByPosStatement(glyphs, carets, location=location)
 
-    def parse_lookup_(self, vertical):
+    def parse_lookup_(self, vertical, standalone=False):
         # Parses a ``lookup`` - either a lookup block, or a lookup reference
         # inside a feature.
         assert self.is_cur_keyword_("lookup")
@@ -628,7 +631,9 @@ class Parser(object):
             self.expect_keyword_("useExtension")
             use_extension = True
 
-        block = self.ast.LookupBlock(name, use_extension, location=location)
+        block = self.ast.LookupBlock(
+            name, use_extension, location=location, standalone=standalone
+        )
         self.parse_block_(block, vertical)
         self.lookups_.define(name, block)
         return block
@@ -1954,6 +1959,9 @@ class Parser(object):
                 statements.append(self.parse_language_())
             elif self.is_cur_keyword_("lookup"):
                 statements.append(self.parse_lookup_(vertical))
+            elif self.is_cur_keyword_("standalone"):
+                self.expect_keyword_("lookup")
+                statements.append(self.parse_lookup_(vertical, standalone=True))
             elif self.is_cur_keyword_("lookupflag"):
                 statements.append(self.parse_lookupflag_())
             elif self.is_cur_keyword_("markClass"):

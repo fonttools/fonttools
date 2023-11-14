@@ -131,6 +131,7 @@ class Builder(object):
         self.named_lookups_ = {}
         self.cur_lookup_ = None
         self.cur_lookup_name_ = None
+        self.cur_lookup_is_standalone = False
         self.cur_feature_name_ = None
         self.lookups_ = []
         self.lookup_locations = {"GSUB": {}, "GPOS": {}}
@@ -276,7 +277,7 @@ class Builder(object):
         if self.cur_lookup_name_:
             # We are starting a lookup rule inside a named lookup block.
             self.named_lookups_[self.cur_lookup_name_] = self.cur_lookup_
-        if self.cur_feature_name_:
+        if self.cur_feature_name_ and not self.cur_lookup_is_standalone:
             # We are starting a lookup rule inside a feature. This includes
             # lookup rules inside named lookups inside features.
             self.add_lookup_to_feature_(self.cur_lookup_, self.cur_feature_name_)
@@ -1043,7 +1044,7 @@ class Builder(object):
         self.lookupflag_ = 0
         self.lookupflag_markFilterSet_ = None
 
-    def start_lookup_block(self, location, name):
+    def start_lookup_block(self, location, name, standalone=False):
         if name in self.named_lookups_:
             raise FeatureLibError(
                 'Lookup "%s" has already been defined' % name, location
@@ -1057,6 +1058,7 @@ class Builder(object):
         self.cur_lookup_name_ = name
         self.named_lookups_[name] = None
         self.cur_lookup_ = None
+        self.cur_lookup_is_standalone = standalone
         if self.cur_feature_name_ is None:
             self.lookupflag_ = 0
             self.lookupflag_markFilterSet_ = None
@@ -1065,6 +1067,7 @@ class Builder(object):
         assert self.cur_lookup_name_ is not None
         self.cur_lookup_name_ = None
         self.cur_lookup_ = None
+        self.cur_lookup_is_standalone = False
         if self.cur_feature_name_ is None:
             self.lookupflag_ = 0
             self.lookupflag_markFilterSet_ = None

@@ -1,0 +1,16 @@
+standalone lookup test_1 {
+  sub a by b;
+} test_1;
+
+feature test {
+  lookup test_2 {
+    sub a by c;
+  } test_2;
+
+  standalone lookup test_3 {
+    sub c by d;
+  } test_3;
+
+  sub a' lookup test_1 x;
+  sub c' lookup test_3 x;
+} test;
