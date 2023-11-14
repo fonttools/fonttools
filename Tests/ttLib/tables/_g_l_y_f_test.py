@@ -562,6 +562,23 @@ class GlyphTest:
         assert glyphSet["percent"].getCompositeMaxpValues(glyphSet)[2] == 2
         assert glyphSet["perthousand"].getCompositeMaxpValues(glyphSet)[2] == 2
 
+    def test_recalcBounds_empty_components(self):
+        glyphSet = {}
+        pen = TTGlyphPen(glyphSet)
+        # empty simple glyph
+        foo = glyphSet["foo"] = pen.glyph()
+        # use the empty 'foo' glyph as a component in 'bar' with some x/y offsets
+        pen.addComponent("foo", (1, 0, 0, 1, -80, 50))
+        bar = glyphSet["bar"] = pen.glyph()
+
+        foo.recalcBounds(glyphSet)
+        bar.recalcBounds(glyphSet)
+
+        # we expect both the empty simple glyph and the composite referencing it
+        # to have empty bounding boxes (0, 0, 0, 0) no matter the component's shift
+        assert (foo.xMin, foo.yMin, foo.xMax, foo.yMax) == (0, 0, 0, 0)
+        assert (bar.xMin, bar.yMin, bar.xMax, bar.yMax) == (0, 0, 0, 0)
+
 
 class GlyphComponentTest:
     def test_toXML_no_transform(self):
