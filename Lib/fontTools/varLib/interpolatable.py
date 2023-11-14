@@ -438,7 +438,7 @@ def main(args=None):
 
     from fontTools import configLogger
 
-    configLogger(level=("DEBUG" if args.verbose else "ERROR"))
+    configLogger(level=("INFO" if args.verbose else "ERROR"))
 
     glyphs = args.glyphs.split() if args.glyphs else None
 
