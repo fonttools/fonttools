@@ -1,3 +1,6 @@
+4.44.2 (released 2023-11-14)
+----------------------------
+
 - [glyf] Have ``Glyph.recalcBounds`` skip empty components (base glyph with no contours)
   when computing the bounding box of composite glyphs. This simply restores the existing
   behavior before some changes were introduced in fonttools 4.44.0 (#3333).
