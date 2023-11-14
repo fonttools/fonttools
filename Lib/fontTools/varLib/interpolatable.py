@@ -15,6 +15,9 @@ from collections import defaultdict
 import math
 import itertools
 import sys
+import logging
+
+log = logging.getLogger("fontTools.varLib.interpolatable")
 
 
 def _rot_list(l, k):
@@ -429,8 +432,13 @@ def main(args=None):
         nargs="+",
         help="Input a single variable font / DesignSpace / Glyphs file, or multiple TTF/UFO files",
     )
+    parser.add_argument("-v", "--verbose", action="store_true", help="Run verbosely.")
 
     args = parser.parse_args(args)
+
+    from fontTools import configLogger
+
+    configLogger(level=("DEBUG" if args.verbose else "ERROR"))
 
     glyphs = args.glyphs.split() if args.glyphs else None
 
@@ -525,6 +533,7 @@ def main(args=None):
             for gn in diff:
                 glyphset[gn] = None
 
+    log.info("Running on %d glyphsets", len(glyphsets))
     problems_gen = test_gen(
         glyphsets, glyphs=glyphs, names=names, ignore_missing=args.ignore_missing
     )
