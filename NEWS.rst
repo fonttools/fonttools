@@ -1,3 +1,8 @@
+- [feaLib] Ensure variable mark anchors are deep-copied while building since they
+  get modified in-place and later reused (#3330).
+- [OS/2|subset] Added method to ``recalcCodePageRanges`` to OS/2 table class; added
+  ``--prune-codepage-ranges`` to `fonttools subset` command (#3328, #2607).
+
 4.44.0 (released 2023-11-03)
 ----------------------------
 
