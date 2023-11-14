@@ -1,3 +1,6 @@
+4.44.1 (released 2023-11-14)
+----------------------------
+
 - [feaLib] Ensure variable mark anchors are deep-copied while building since they
   get modified in-place and later reused (#3330).
 - [OS/2|subset] Added method to ``recalcCodePageRanges`` to OS/2 table class; added
