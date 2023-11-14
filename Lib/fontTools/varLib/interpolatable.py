@@ -481,18 +481,11 @@ def main(args=None):
                 if "avar" in font:
                     avar = font["avar"]
                     for axisTag, segments in avar.segments.items():
+                        fvarMapping = axisMapping[axisTag].copy()
                         for location, value in segments.items():
-                            if value > 0:
-                                value = (
-                                    axis.defaultValue
-                                    + (axis.maxValue - axis.defaultValue) * value
-                                )
-                            elif value < 0:
-                                value = (
-                                    axis.defaultValue
-                                    + (axis.defaultValue - axis.minValue) * value
-                                )
-                            axisMapping[axisTag][value] = location
+                            axisMapping[axisTag][value] = piecewiseLinearMap(
+                                location, fvarMapping
+                            )
 
                 gvar = font["gvar"]
                 glyf = font["glyf"]
