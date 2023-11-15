@@ -417,6 +417,11 @@ def main(args=None):
         help="Output report in JSON format",
     )
     parser.add_argument(
+        "--pdf",
+        action="store",
+        help="Output report in PDF format",
+    )
+    parser.add_argument(
         "--quiet",
         action="store_true",
         help="Only exit with code 1 or 0, no output",
@@ -645,6 +650,11 @@ def main(args=None):
     else:
         for glyphname, problem in problems_gen:
             problems[glyphname].append(problem)
+
+    if args.pdf:
+        from .interpolatablePdf import InterpolatablePdf
+        with InterpolatablePdf(args.pdf, glyphsets=glyphsets, names=names) as pdf:
+            pdf.add_problems(problems)
 
     if problems:
         return problems
