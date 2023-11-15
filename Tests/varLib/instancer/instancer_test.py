@@ -304,38 +304,68 @@ class InstantiateMVARTest(object):
         assert len(mvar.VarStore.VarData) == 1
 
     @pytest.mark.parametrize(
-        "location, expected",
+        "location, expected, sync_vmetrics",
         [
             pytest.param(
                 {"wght": 1.0, "wdth": 0.0},
-                {"strs": 100, "undo": -200, "unds": 150},
+                {"strs": 100, "undo": -200, "unds": 150, "hasc": 1100},
+                True,
                 id="wght=1.0,wdth=0.0",
             ),
             pytest.param(
                 {"wght": 0.0, "wdth": -1.0},
-                {"strs": 20, "undo": -100, "unds": 50},
+                {"strs": 20, "undo": -100, "unds": 50, "hasc": 1000},
+                True,
                 id="wght=0.0,wdth=-1.0",
             ),
             pytest.param(
                 {"wght": 0.5, "wdth": -0.5},
-                {"strs": 55, "undo": -145, "unds": 95},
+                {"strs": 55, "undo": -145, "unds": 95, "hasc": 1050},
+                True,
                 id="wght=0.5,wdth=-0.5",
             ),
             pytest.param(
                 {"wght": 1.0, "wdth": -1.0},
-                {"strs": 50, "undo": -180, "unds": 130},
+                {"strs": 50, "undo": -180, "unds": 130, "hasc": 1100},
+                True,
                 id="wght=0.5,wdth=-0.5",
+            ),
+            pytest.param(
+                {"wght": 1.0, "wdth": 0.0},
+                {"strs": 100, "undo": -200, "unds": 150, "hasc": 1100},
+                False,
+                id="wght=1.0,wdth=0.0,no_sync_vmetrics",
             ),
         ],
     )
-    def test_full_instance(self, varfont, location, expected):
+    def test_full_instance(self, varfont, location, sync_vmetrics, expected):
         location = instancer.NormalizedAxisLimits(location)
+
+        # check vertical metrics are in sync before...
+        if sync_vmetrics:
+            assert varfont["OS/2"].sTypoAscender == varfont["hhea"].ascender
+            assert varfont["OS/2"].sTypoDescender == varfont["hhea"].descender
+            assert varfont["OS/2"].sTypoLineGap == varfont["hhea"].lineGap
+        else:
+            # force them not to be in sync
+            varfont["OS/2"].sTypoDescender -= 100
+            varfont["OS/2"].sTypoLineGap += 200
 
         instancer.instantiateMVAR(varfont, location)
 
         for mvar_tag, expected_value in expected.items():
             table_tag, item_name = MVAR_ENTRIES[mvar_tag]
             assert getattr(varfont[table_tag], item_name) == expected_value
+
+        # ... as well as after instancing, but only if they were already
+        # https://github.com/fonttools/fonttools/issues/3297
+        if sync_vmetrics:
+            assert varfont["OS/2"].sTypoAscender == varfont["hhea"].ascender
+            assert varfont["OS/2"].sTypoDescender == varfont["hhea"].descender
+            assert varfont["OS/2"].sTypoLineGap == varfont["hhea"].lineGap
+        else:
+            assert varfont["OS/2"].sTypoDescender != varfont["hhea"].descender
+            assert varfont["OS/2"].sTypoLineGap != varfont["hhea"].lineGap
 
         assert "MVAR" not in varfont
 

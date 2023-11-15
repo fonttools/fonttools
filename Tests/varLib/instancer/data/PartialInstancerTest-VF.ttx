@@ -108,9 +108,9 @@
     <fsSelection value="00000000 01000000"/>
     <usFirstCharIndex value="32"/>
     <usLastCharIndex value="8722"/>
-    <sTypoAscender value="800"/>
+    <sTypoAscender value="1000"/>
     <sTypoDescender value="-200"/>
-    <sTypoLineGap value="200"/>
+    <sTypoLineGap value="0"/>
     <usWinAscent value="1000"/>
     <usWinDescent value="200"/>
     <ulCodePageRange1 value="00000000 00000000 00000000 00000001"/>
@@ -687,6 +687,7 @@
         <!-- VarRegionCount=1 -->
         <VarRegionIndex index="0" value="0"/>
         <Item index="0" value="[30]"/>
+        <Item index="1" value="[100]"/>
       </VarData>
     </VarStore>
     <ValueRecord index="0">
@@ -704,6 +705,10 @@
     <ValueRecord index="3">
       <ValueTag value="xhgt"/>
       <VarIdx value="65536"/>
+    </ValueRecord>
+    <ValueRecord index="3">
+      <ValueTag value="hasc"/>
+      <VarIdx value="65537"/>
     </ValueRecord>
   </MVAR>
 
