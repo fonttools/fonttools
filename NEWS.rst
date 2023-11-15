@@ -1,3 +1,6 @@
+4.44.3 (released 2023-11-15)
+----------------------------
+
 - [subset] Only prune codepage ranges for OS/2.version >= 1, ignore otherwise (#3334).
 - [instancer] Ensure hhea vertical metrics stay in sync with OS/2 ones after instancing
   MVAR table containing 'hasc', 'hdsc' or 'hlgp' tags (#3297).
