@@ -8,6 +8,7 @@ class OS2TableTest(unittest.TestCase):
     def makeOS2_cmap(mapping):
         font = TTFont()
         font["OS/2"] = os2 = newTable("OS/2")
+        os2.version = 4
         font["cmap"] = cmap = newTable("cmap")
         st = getTableModule("cmap").CmapSubtable.newSubtable(4)
         st.platformID, st.platEncID, st.language = 3, 1, 0
@@ -64,6 +65,11 @@ class OS2TableTest(unittest.TestCase):
 
     def test_getCodePageRanges(self):
         table = table_O_S_2f_2()
+        # version 0 doesn't define these fields so by definition defines no cp ranges
+        table.version = 0
+        self.assertEqual(table.getCodePageRanges(), set())
+        # version 1 and above do contain ulCodePageRange1 and 2 fields
+        table.version = 1
         table.ulCodePageRange1 = 0xFFFFFFFF
         table.ulCodePageRange2 = 0xFFFFFFFF
         bits = table.getCodePageRanges()
@@ -72,6 +78,7 @@ class OS2TableTest(unittest.TestCase):
 
     def test_setCodePageRanges(self):
         table = table_O_S_2f_2()
+        table.version = 4
         table.ulCodePageRange1 = 0
         table.ulCodePageRange2 = 0
         bits = set(range(64))
@@ -83,6 +90,16 @@ class OS2TableTest(unittest.TestCase):
             table.setCodePageRanges([64])
         with self.assertRaises(ValueError):
             table.setCodePageRanges([255])
+
+    def test_setCodePageRanges_bump_version(self):
+        # Setting codepage ranges on a OS/2 table version 0 automatically makes it
+        # a version 1 table
+        table = table_O_S_2f_2()
+        table.version = 0
+        self.assertEqual(table.getCodePageRanges(), set())
+        table.setCodePageRanges({0, 1, 2})
+        self.assertEqual(table.getCodePageRanges(), {0, 1, 2})
+        self.assertEqual(table.version, 1)
 
     def test_recalcCodePageRanges(self):
         font, os2, cmap = self.makeOS2_cmap(
