@@ -17,3 +17,4 @@ freetype-py==2.4.0
 uharfbuzz==0.37.3
 glyphsLib==6.4.1 # this is only required to run Tests/varLib/interpolatable_test.py
 lxml==4.9.3
+sympy==1.12
