@@ -12,11 +12,9 @@ class StatisticsPen(MomentsPen):
     standard-deviation, covariance and correlation, and slant,
     of glyph shapes.
 
-    Note that all the calculated values are 'signed'. Ie. if the
-    glyph shape is self-intersecting, the values are not correct
-    (but well-defined). As such, area will be negative if contour
-    directions are clockwise.  Moreover, variance might be negative
-    if the shapes are self-intersecting in certain ways."""
+    Note that if the glyph shape is self-intersecting, the values
+    are not correct (but well-defined). Moreover, area will be
+    negative if contour directions are clockwise."""
 
     def __init__(self, glyphset=None):
         MomentsPen.__init__(self, glyphset=glyphset)
