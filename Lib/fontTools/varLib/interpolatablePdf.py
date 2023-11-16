@@ -85,7 +85,8 @@ class InterpolatablePdf:
             self.draw_label(name, y=y, color=self.label_color, align=0.5)
             y += self.line_height + self.pad
 
-            self.draw_glyph(glyphset, glyphname, p, x=x, y=y)
+            if glyphset[glyphname] is not None:
+                self.draw_glyph(glyphset, glyphname, p, x=x, y=y)
 
             y += self.height + self.pad
 
