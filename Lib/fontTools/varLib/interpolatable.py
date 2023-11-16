@@ -209,7 +209,7 @@ def test_gen(glyphsets, glyphs=None, names=None, ignore_missing=False):
                         continue
                     size = math.sqrt(abs(stats.area)) * 0.5
                     vector = (
-                        int(size),
+                        math.copysign(int(size), stats.area),
                         int(stats.meanX),
                         int(stats.meanY),
                         int(stats.stddevX * 2),
