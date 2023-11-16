@@ -27,8 +27,9 @@ class InterpolatablePdf:
     offcurve_node_diameter = 8
     handle_color = (0.2, 1, 0.2)
     handle_width = 1
+    start_point_color = (1, 0, 0)
     start_point_width = 15
-    start_handle_color = (1, 0.2, 0.2)
+    start_handle_color = (0.5, 0, 0)
     start_handle_width = 5
     contour_colors = ((1, 0, 0), (0, 0, 1), (0, 1, 0), (1, 1, 0), (1, 0, 1), (0, 1, 1))
     contour_alpha = 0.5
@@ -211,6 +212,24 @@ class InterpolatablePdf:
 
         if problem_type == "wrong_start_point":
             idx = problem["contour"]
+
+            # Start point
+
+            cr.set_line_cap(cairo.LINE_CAP_ROUND)
+            i = 0
+            for segment, args in recording.value:
+                if segment == "moveTo":
+                    if i == idx:
+                        cr.move_to(*args[0])
+                        cr.line_to(*args[0])
+                    i += 1
+
+            cr.set_source_rgb(*self.start_point_color)
+            cr.set_line_width(self.start_point_width / scale)
+            cr.stroke()
+
+            # Start handle
+
             cr.set_line_cap(cairo.LINE_CAP_SQUARE)
             first_pt = None
             i = 0
@@ -231,19 +250,6 @@ class InterpolatablePdf:
 
             cr.set_source_rgb(*self.start_handle_color)
             cr.set_line_width(self.start_handle_width / scale)
-            cr.stroke()
-
-            cr.set_line_cap(cairo.LINE_CAP_ROUND)
-            i = 0
-            for segment, args in recording.value:
-                if segment == "moveTo":
-                    if i == idx:
-                        cr.move_to(*args[0])
-                        cr.line_to(*args[0])
-                    i += 1
-
-            cr.set_source_rgb(*self.start_handle_color)
-            cr.set_line_width(self.start_point_width / scale)
             cr.stroke()
 
         if problem_type == "contour_order":
