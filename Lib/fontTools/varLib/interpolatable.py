@@ -244,7 +244,7 @@ def test_gen(
                     for i in range(n):
                         b = ((bits << i) & mask) | ((bits >> (n - i)))
                         if b == bits:
-                            isomorphisms.append(_rot_list(complexPoints, i))
+                            isomorphisms.append((_rot_list(complexPoints, i), i, False))
                     # Add mirrored rotations
                     mirrored = list(reversed(points.value))
                     reversed_bits = 0
@@ -254,7 +254,7 @@ def test_gen(
                     for i in range(n):
                         b = ((reversed_bits << i) & mask) | ((reversed_bits >> (n - i)))
                         if b == bits:
-                            isomorphisms.append(_rot_list(complexPoints, i))
+                            isomorphisms.append((_rot_list(complexPoints, i), n - i, True))
 
             # m0idx should be the index of the first non-None item in allNodeTypes,
             # else give it the last item.
@@ -368,8 +368,8 @@ def test_gen(
                         if matchings[m0idx + i + 1][ix] != ix:
                             continue
                         c0 = contour0[0]
-                        costs = [_vdiff_hypot2_complex(c0, c1) for c1 in contour1]
-                        min_cost = min(costs)
+                        costs = [_vdiff_hypot2_complex(c0[0], c1[0]) for c1 in contour1]
+                        min_cost_idx, min_cost = min(enumerate(costs), key=lambda x: x[1])
                         first_cost = costs[0]
                         if min_cost < first_cost * tolerance:
                             yield (
@@ -379,6 +379,9 @@ def test_gen(
                                     "contour": ix,
                                     "master_1": names[m0idx],
                                     "master_2": names[m0idx + i + 1],
+                                    "value_1": 0,
+                                    "value_2": contour1[min_cost_idx][1],
+                                    "reversed": contour1[min_cost_idx][2],
                                 },
                             )
 
