@@ -4,6 +4,7 @@ from fontTools.pens.cairoPen import CairoPen
 from fontTools.varLib.interpolatable import PerContourOrComponentPen
 from itertools import cycle
 import cairo
+import math
 
 
 class InterpolatablePdf:
@@ -26,8 +27,10 @@ class InterpolatablePdf:
     handle_width = 1
     start_point_color = (1, 0, 0)
     start_point_width = 15
-    start_handle_color = (0.5, 0, 0)
+    start_handle_color = (0.8, 0, 0)
     start_handle_width = 5
+    start_handle_length = 100
+    start_handle_arrow_length = 5
     contour_colors = ((1, 0, 0), (0, 0, 1), (0, 1, 0), (1, 1, 0), (1, 0, 1), (0, 1, 1))
     contour_alpha = 0.5
     cupcake_color = (0.3, 0, 0.3)
@@ -237,8 +240,7 @@ class InterpolatablePdf:
         if problem_type == "wrong_start_point":
             idx = problem["contour"]
 
-            # Start point
-
+            # Draw start point
             cr.set_line_cap(cairo.LINE_CAP_ROUND)
             i = 0
             for segment, args in recording.value:
@@ -252,8 +254,7 @@ class InterpolatablePdf:
             cr.set_line_width(self.start_point_width / scale)
             cr.stroke()
 
-            # Start handle
-
+            # Draw arrow
             cr.set_line_cap(cairo.LINE_CAP_SQUARE)
             first_pt = None
             i = 0
@@ -266,8 +267,39 @@ class InterpolatablePdf:
                 second_pt = args[0]
 
                 if i == idx:
-                    cr.move_to(*first_pt)
-                    cr.line_to(*second_pt)
+                    first_pt = complex(*first_pt)
+                    second_pt = complex(*second_pt)
+                    length = abs(second_pt - first_pt)
+                    if length:
+                        # Draw handle
+                        length *= scale
+                        second_pt = (
+                            first_pt
+                            + (second_pt - first_pt) / length * self.start_handle_length
+                        )
+                        cr.move_to(first_pt.real, first_pt.imag)
+                        cr.line_to(second_pt.real, second_pt.imag)
+                        # Draw arrowhead
+                        cr.save()
+                        cr.translate(second_pt.real, second_pt.imag)
+                        cr.rotate(
+                            math.atan2(
+                                second_pt.imag - first_pt.imag,
+                                second_pt.real - first_pt.real,
+                            )
+                        )
+                        cr.move_to(0, 0)
+                        cr.scale(1 / scale, 1 / scale)
+                        cr.line_to(
+                            -self.start_handle_arrow_length,
+                            -self.start_handle_arrow_length,
+                        )
+                        cr.line_to(
+                            -self.start_handle_arrow_length,
+                            self.start_handle_arrow_length,
+                        )
+                        cr.close_path()
+                        cr.restore()
 
                 first_pt = None
                 i += 1
