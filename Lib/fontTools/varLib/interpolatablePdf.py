@@ -346,6 +346,8 @@ class InterpolatablePdf:
             extents = cr.text_extents(line)
             width = max(width, extents.width)
             height += extents.height
+        if not width:
+            return
         cr.scale(self.width / width, self.height / height)
         for line in cupcake:
             cr.translate(0, cr.text_extents(line).height)
@@ -361,6 +363,8 @@ class InterpolatablePdf:
             "monospace", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL
         )
         extents = cr.text_extents(self.shrug)
+        if not extents.width:
+            return
         cr.translate(0, self.height * 0.6)
         scale = self.width / extents.width
         cr.scale(scale, scale)
