@@ -16,7 +16,6 @@ from collections import defaultdict
 from functools import wraps
 import math
 import itertools
-import sys
 import logging
 
 log = logging.getLogger("fontTools.varLib.interpolatable")

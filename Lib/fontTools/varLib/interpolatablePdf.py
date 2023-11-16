@@ -1,11 +1,9 @@
-from fontTools.ttLib import TTFont
 from fontTools.pens.recordingPen import RecordingPen
 from fontTools.pens.boundsPen import ControlBoundsPen
 from fontTools.pens.cairoPen import CairoPen
 from fontTools.varLib.interpolatable import PerContourOrComponentPen
 from itertools import cycle
 import cairo
-import math
 
 
 class InterpolatablePdf:
