@@ -88,6 +88,12 @@ class InterpolatablePdf:
         master_keys = ("master",) if "master" in p else ("master_1", "master_2")
         master_indices = [self.names.index(p[k]) for k in master_keys]
 
+        if p["type"] == "missing":
+            sample_glyph = next(
+                i for i, m in enumerate(self.glyphsets) if m[glyphname] is not None
+            )
+            master_indices.insert(0, sample_glyph)
+
         total_width = self.width + 2 * self.pad
         total_height = (
             self.pad
@@ -116,7 +122,7 @@ class InterpolatablePdf:
             if glyphset[glyphname] is not None:
                 self.draw_glyph(glyphset, glyphname, p, x=x, y=y)
             else:
-                self.draw_shrug()
+                self.draw_shrug(x=x, y=y)
 
             y += self.height + self.pad
 
@@ -346,16 +352,17 @@ class InterpolatablePdf:
             cr.move_to(0, 0)
             cr.show_text(line)
 
-    def draw_shrug(self):
+    def draw_shrug(self, x=0, y=0):
         cr = cairo.Context(self.surface)
+        cr.translate(x, y)
         cr.set_source_rgb(*self.shrug_color)
         cr.set_font_size(self.line_height)
         cr.select_font_face(
             "monospace", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL
         )
         extents = cr.text_extents(self.shrug)
-        cr.translate(0, self.height * 0.8)
-        scale = min(self.width / extents.width, self.height / extents.height)
+        cr.translate(0, self.height * 0.6)
+        scale = self.width / extents.width
         cr.scale(scale, scale)
-        cr.move_to(0, 0)
+        cr.move_to(-extents.x_bearing, 0)
         cr.show_text(self.shrug)
