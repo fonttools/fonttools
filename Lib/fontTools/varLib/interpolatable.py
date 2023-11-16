@@ -12,6 +12,7 @@ from fontTools.pens.recordingPen import RecordingPen
 from fontTools.pens.statisticsPen import StatisticsPen
 from fontTools.pens.momentsPen import OpenContourError
 from fontTools.varLib.models import piecewiseLinearMap
+from fontTools.misc.fixedTools import floatToFixedToStr
 from collections import defaultdict
 from functools import wraps
 import math
@@ -537,7 +538,13 @@ def main(args=None):
                     name = (
                         "'"
                         + " ".join(
-                            "%s=%s" % (k, piecewiseLinearMap(v, axisMapping[k]))
+                            "%s=%s"
+                            % (
+                                k,
+                                floatToFixedToStr(
+                                    piecewiseLinearMap(v, axisMapping[k]), 14
+                                ),
+                            )
                             for k, v in locTuple
                         )
                         + "'"
