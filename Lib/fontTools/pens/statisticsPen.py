@@ -49,11 +49,14 @@ class StatisticsPen(MomentsPen):
         self.meanY = meanY = self.momentY / area
 
         #  Var(X) = E[X^2] - E[X]^2
-        self.varianceX = varianceX = self.momentXX / area - meanX**2
-        self.varianceY = varianceY = self.momentYY / area - meanY**2
+        # XXX The above formula should never produce a negative value,
+        # but due to reasons I don't understand, it does. So we take
+        # the absolute value here.
+        self.varianceX = varianceX = abs(self.momentXX / area - meanX**2)
+        self.varianceY = varianceY = abs(self.momentYY / area - meanY**2)
 
-        self.stddevX = stddevX = math.copysign(abs(varianceX) ** 0.5, varianceX)
-        self.stddevY = stddevY = math.copysign(abs(varianceY) ** 0.5, varianceY)
+        self.stddevX = stddevX = varianceX**0.5
+        self.stddevY = stddevY = varianceY**0.5
 
         #  Covariance(X,Y) = ( E[X.Y] - E[X]E[Y] )
         self.covariance = covariance = self.momentXY / area - meanX * meanY
