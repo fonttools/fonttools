@@ -2,6 +2,8 @@ from fontTools.ttLib import TTFont
 from fontTools.pens.recordingPen import RecordingPen
 from fontTools.pens.boundsPen import ControlBoundsPen
 from fontTools.pens.cairoPen import CairoPen
+from fontTools.varLib.interpolatable import PerContourOrComponentPen
+from itertools import cycle
 import cairo
 import math
 
@@ -28,6 +30,8 @@ class InterpolatablePdf:
     start_point_width = 15
     start_handle_color = (1, .5, .5)
     start_handle_width = 5
+    contour_colors = ((1, 0, 0), (0, 0, 1), (0, 1, 0), (1, 1, 0), (1, 0, 1), (0, 1, 1))
+    contour_alpha = 0.5
 
     def __init__(self, outfile, glyphsets, names=None, **kwargs):
         self.outfile = outfile
@@ -234,3 +238,13 @@ class InterpolatablePdf:
             cr.set_source_rgb(*self.start_handle_color)
             cr.set_line_width(self.start_point_width / scale)
             cr.stroke()
+
+        if problem_type == "contour_order":
+            perContourPen = PerContourOrComponentPen(
+                RecordingPen, glyphset=glyphset
+            )
+            recording.replay(perContourPen)
+            for contour, color in zip(perContourPen.value, cycle(self.contour_colors)):
+                contour.replay(CairoPen(glyphset, cr))
+                cr.set_source_rgba(*color, self.contour_alpha)
+                cr.fill()
