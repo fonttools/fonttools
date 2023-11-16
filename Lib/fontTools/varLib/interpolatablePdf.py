@@ -28,7 +28,7 @@ class InterpolatablePdf:
     handle_color = (0.2, 1, 0.2)
     handle_width = 1
     start_point_width = 15
-    start_handle_color = (1, 0.5, 0.5)
+    start_handle_color = (1, 0.2, 0.2)
     start_handle_width = 5
     contour_colors = ((1, 0, 0), (0, 0, 1), (0, 1, 0), (1, 1, 0), (1, 0, 1), (0, 1, 1))
     contour_alpha = 0.5
@@ -84,7 +84,7 @@ class InterpolatablePdf:
             self.draw_label(name, y=y, color=self.label_color, align=0.5)
             y += self.line_height + self.pad
 
-            self.draw_glyph(glyphset, glyphname, p["type"], x=x, y=y)
+            self.draw_glyph(glyphset, glyphname, p, x=x, y=y)
 
             y += self.height + self.pad
 
@@ -115,7 +115,8 @@ class InterpolatablePdf:
         cr.move_to(label_x, label_y)
         cr.show_text(label)
 
-    def draw_glyph(self, glyphset, glyphname, problem_type, *, x=0, y=0):
+    def draw_glyph(self, glyphset, glyphname, problem, *, x=0, y=0):
+        problem_type = problem["type"]
         glyph = glyphset[glyphname]
 
         recording = RecordingPen()
@@ -209,8 +210,10 @@ class InterpolatablePdf:
             cr.stroke()
 
         if problem_type == "wrong_start_point":
+            idx = problem["contour"]
             cr.set_line_cap(cairo.LINE_CAP_SQUARE)
             first_pt = None
+            i = 0
             for segment, args in recording.value:
                 if segment == "moveTo":
                     first_pt = args[0]
@@ -219,20 +222,25 @@ class InterpolatablePdf:
                     continue
                 second_pt = args[0]
 
-                cr.move_to(*first_pt)
-                cr.line_to(*second_pt)
+                if i == idx:
+                    cr.move_to(*first_pt)
+                    cr.line_to(*second_pt)
 
                 first_pt = None
+                i += 1
 
             cr.set_source_rgb(*self.start_handle_color)
             cr.set_line_width(self.start_handle_width / scale)
             cr.stroke()
 
             cr.set_line_cap(cairo.LINE_CAP_ROUND)
+            i = 0
             for segment, args in recording.value:
                 if segment == "moveTo":
-                    cr.move_to(*args[0])
-                    cr.line_to(*args[0])
+                    if i == idx:
+                        cr.move_to(*args[0])
+                        cr.line_to(*args[0])
+                    i += 1
 
             cr.set_source_rgb(*self.start_handle_color)
             cr.set_line_width(self.start_point_width / scale)
