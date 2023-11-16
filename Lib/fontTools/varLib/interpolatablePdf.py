@@ -288,6 +288,7 @@ class InterpolatablePdf:
                                 second_pt.real - first_pt.real,
                             )
                         )
+                        cr.translate(self.start_handle_width, 0)
                         cr.move_to(0, 0)
                         cr.scale(1 / scale, 1 / scale)
                         cr.line_to(
