@@ -210,14 +210,14 @@ def test_gen(
                             {"master": name, "contour": ix, "type": "open_path"},
                         )
                         continue
-                    size = math.sqrt(abs(stats.area)) * 0.5
+                    size = math.sqrt(abs(stats.area))
                     vector = (
-                        math.copysign(int(size), stats.area),
-                        int(stats.meanX),
-                        int(stats.meanY),
-                        int(stats.stddevX * 2),
-                        int(stats.stddevY * 2),
-                        int(stats.correlation * size),
+                        math.copysign((size), stats.area),
+                        stats.meanX,
+                        stats.meanY,
+                        stats.stddevX * 2,
+                        stats.stddevY * 2,
+                        stats.correlation * size,
                     )
                     contourVectors.append(vector)
                     # print(vector)
