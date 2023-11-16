@@ -13,6 +13,7 @@ from fontTools.pens.statisticsPen import StatisticsPen
 from fontTools.pens.momentsPen import OpenContourError
 from fontTools.varLib.models import piecewiseLinearMap
 from collections import defaultdict
+from functools import wraps
 import math
 import itertools
 import sys
@@ -150,7 +151,9 @@ except ImportError:
         )
 
 
-def test_gen(glyphsets, glyphs=None, names=None, ignore_missing=False):
+def test_gen(
+    glyphsets, glyphs=None, names=None, ignore_missing=False, *, tolerance=0.95
+):
     if names is None:
         names = glyphsets
     if glyphs is None:
@@ -209,7 +212,7 @@ def test_gen(glyphsets, glyphs=None, names=None, ignore_missing=False):
                         continue
                     size = math.sqrt(abs(stats.area)) * 0.5
                     vector = (
-                        int(size),
+                        math.copysign(int(size), stats.area),
                         int(stats.meanX),
                         int(stats.meanY),
                         int(stats.stddevX * 2),
@@ -330,7 +333,7 @@ def test_gen(glyphsets, glyphs=None, names=None, ignore_missing=False):
                     identity_cost = sum(costs[i][i] for i in range(len(m0)))
                     if (
                         matching != identity_matching
-                        and matching_cost < identity_cost * 0.95
+                        and matching_cost < identity_cost * tolerance
                     ):
                         yield (
                             glyph_name,
@@ -364,7 +367,7 @@ def test_gen(glyphsets, glyphs=None, names=None, ignore_missing=False):
                         costs = [_vdiff_hypot2_complex(c0, c1) for c1 in contour1]
                         min_cost = min(costs)
                         first_cost = costs[0]
-                        if min_cost < first_cost * 0.95:
+                        if min_cost < first_cost * tolerance:
                             yield (
                                 glyph_name,
                                 {
@@ -382,9 +385,10 @@ def test_gen(glyphsets, glyphs=None, names=None, ignore_missing=False):
             )
 
 
-def test(glyphsets, glyphs=None, names=None, ignore_missing=False):
+@wraps(test_gen)
+def test(*args, **kwargs):
     problems = defaultdict(list)
-    for glyphname, problem in test_gen(glyphsets, glyphs, names, ignore_missing):
+    for glyphname, problem in test_gen(*args, **kwargs):
         problems[glyphname].append(problem)
     return problems
 
@@ -412,9 +416,20 @@ def main(args=None):
         help="Space-separate name of glyphs to check",
     )
     parser.add_argument(
+        "--tolerance",
+        action="store",
+        type=float,
+        help="Error tolerance. Default 0.95",
+    )
+    parser.add_argument(
         "--json",
         action="store_true",
         help="Output report in JSON format",
+    )
+    parser.add_argument(
+        "--pdf",
+        action="store",
+        help="Output report in PDF format",
     )
     parser.add_argument(
         "--quiet",
@@ -562,7 +577,11 @@ def main(args=None):
 
     log.info("Running on %d glyphsets", len(glyphsets))
     problems_gen = test_gen(
-        glyphsets, glyphs=glyphs, names=names, ignore_missing=args.ignore_missing
+        glyphsets,
+        glyphs=glyphs,
+        names=names,
+        ignore_missing=args.ignore_missing,
+        tolerance=args.tolerance or 0.95,
     )
     problems = defaultdict(list)
 
@@ -645,6 +664,12 @@ def main(args=None):
     else:
         for glyphname, problem in problems_gen:
             problems[glyphname].append(problem)
+
+    if args.pdf:
+        from .interpolatablePdf import InterpolatablePdf
+
+        with InterpolatablePdf(args.pdf, glyphsets=glyphsets, names=names) as pdf:
+            pdf.add_problems(problems)
 
     if problems:
         return problems
