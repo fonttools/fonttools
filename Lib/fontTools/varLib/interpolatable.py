@@ -320,6 +320,7 @@ def test_gen(
             )
             # m0 is the first non-None item in allVectors, or last one if all None
             m0 = allVectors[m0idx]
+            matchings = [list(range(len(m0)))] * len(allVectors)
             if m0 is not None and len(m0) > 1:
                 for i, m1 in enumerate(allVectors[m0idx + 1 :]):
                     if m1 is None:
@@ -345,6 +346,7 @@ def test_gen(
                                 "value_2": matching,
                             },
                         )
+                        matchings[m0idx + i + 1] = matching
 
             # m0idx should be the index of the first non-None item in allContourIsomorphisms,
             # else give it the last item.
@@ -362,6 +364,9 @@ def test_gen(
                         # We already reported this
                         continue
                     for ix, (contour0, contour1) in enumerate(zip(m0, m1)):
+                        # If contour-order is wrong, don't try reporting starting-point
+                        if matchings[m0idx + i + 1][ix] != ix:
+                            continue
                         c0 = contour0[0]
                         costs = [_vdiff_hypot2_complex(c0, c1) for c1 in contour1]
                         min_cost = min(costs)
