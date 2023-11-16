@@ -59,6 +59,8 @@ class InterpolatablePdf:
              \\\\  ||||  ||||  ||||  //
               ||||||||||||||||||||||||
 """
+    shrug_color = (0, 0.3, 0.3)
+    shrug = r"""¯\_(")_/¯"""
 
     def __init__(self, outfile, glyphsets, names=None, **kwargs):
         self.outfile = outfile
@@ -113,6 +115,8 @@ class InterpolatablePdf:
 
             if glyphset[glyphname] is not None:
                 self.draw_glyph(glyphset, glyphname, p, x=x, y=y)
+            else:
+                self.draw_shrug()
 
             y += self.height + self.pad
 
@@ -341,3 +345,17 @@ class InterpolatablePdf:
             cr.translate(0, cr.text_extents(line).height)
             cr.move_to(0, 0)
             cr.show_text(line)
+
+    def draw_shrug(self):
+        cr = cairo.Context(self.surface)
+        cr.set_source_rgb(*self.shrug_color)
+        cr.set_font_size(self.line_height)
+        cr.select_font_face(
+            "monospace", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL
+        )
+        extents = cr.text_extents(self.shrug)
+        cr.translate(0, self.height * 0.8)
+        scale = min(self.width / extents.width, self.height / extents.height)
+        cr.scale(scale, scale)
+        cr.move_to(0, 0)
+        cr.show_text(self.shrug)
