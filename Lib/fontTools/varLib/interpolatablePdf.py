@@ -19,6 +19,12 @@ class InterpolatablePdf:
     fill_color = (0.8, 0.8, 0.8)
     stroke_color = (0.1, 0.1, 0.1)
     stroke_width = 2
+    oncurve_node_color = (0, .8, 0)
+    oncurve_node_diameter = 10
+    offcurve_node_color = (0, .5, 0)
+    offcurve_node_diameter = 8
+    handle_color = (.2, 1, .2)
+    handle_width = 1
 
     def __init__(self, outfile, glyphsets, names=None, **kwargs):
         self.outfile = outfile
@@ -71,7 +77,7 @@ class InterpolatablePdf:
             self.draw_label(name, y=y, color=self.label_color, align=0.5)
             y += self.line_height + self.pad
 
-            self.draw_glyph(glyphset, glyphname, x=x, y=y)
+            self.draw_glyph(glyphset, glyphname, p['type'], x=x, y=y)
 
             y += self.height + self.pad
 
@@ -102,7 +108,7 @@ class InterpolatablePdf:
         cr.move_to(label_x, label_y)
         cr.show_text(label)
 
-    def draw_glyph(self, glyphset, glyphname, *, x=0, y=0):
+    def draw_glyph(self, glyphset, glyphname, problem_type, *, x=0, y=0):
         glyph = glyphset[glyphname]
 
         recording = RecordingPen()
@@ -134,7 +140,7 @@ class InterpolatablePdf:
             cr.set_line_width(self.border_width / scale)
             cr.stroke()
 
-        if self.fill_color:
+        if self.fill_color and problem_type != "open_path":
             pen = CairoPen(glyphset, cr)
             recording.replay(pen)
             cr.set_source_rgb(*self.fill_color)
@@ -145,4 +151,52 @@ class InterpolatablePdf:
             recording.replay(pen)
             cr.set_source_rgb(*self.stroke_color)
             cr.set_line_width(self.stroke_width / scale)
+            cr.stroke()
+
+        if problem_type in ("node_count", "node_incompatibility"):
+            cr.set_line_cap(cairo.LINE_CAP_ROUND)
+
+            # Oncurve nodes
+            for segment, args in recording.value:
+                if not args:
+                    continue
+                x, y = args[-1]
+                cr.move_to(x, y)
+                cr.line_to(x, y)
+            cr.set_source_rgb(*self.oncurve_node_color)
+            cr.set_line_width(self.oncurve_node_diameter / scale)
+            cr.stroke()
+
+            # Offcurve nodes
+            for segment, args in recording.value:
+                for x, y in args[:-1]:
+                    cr.move_to(x, y)
+                    cr.line_to(x, y)
+            cr.set_source_rgb(*self.offcurve_node_color)
+            cr.set_line_width(self.offcurve_node_diameter / scale)
+            cr.stroke()
+
+            # Handles
+            for segment, args in recording.value:
+                if not args:
+                    pass
+                elif segment in ('moveTo', 'lineTo'):
+                    cr.move_to (*args[0])
+                elif segment == 'qCurveTo':
+                    for x, y in args:
+                        cr.line_to(x, y)
+                    cr.new_sub_path()
+                    cr.move_to (*args[-1])
+                elif segment == 'curveTo':
+                    cr.line_to(*args[0])
+                    cr.new_sub_path()
+                    cr.move_to(*args[1])
+                    cr.line_to(*args[2])
+                    cr.new_sub_path()
+                    cr.move_to (*args[-1])
+                else:
+                    assert False
+
+            cr.set_source_rgb(*self.handle_color)
+            cr.set_line_width(self.handle_width / scale)
             cr.stroke()
