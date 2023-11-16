@@ -21,14 +21,14 @@ class InterpolatablePdf:
     fill_color = (0.8, 0.8, 0.8)
     stroke_color = (0.1, 0.1, 0.1)
     stroke_width = 2
-    oncurve_node_color = (0, .8, 0)
+    oncurve_node_color = (0, 0.8, 0)
     oncurve_node_diameter = 10
-    offcurve_node_color = (0, .5, 0)
+    offcurve_node_color = (0, 0.5, 0)
     offcurve_node_diameter = 8
-    handle_color = (.2, 1, .2)
+    handle_color = (0.2, 1, 0.2)
     handle_width = 1
     start_point_width = 15
-    start_handle_color = (1, .5, .5)
+    start_handle_color = (1, 0.5, 0.5)
     start_handle_width = 5
     contour_colors = ((1, 0, 0), (0, 0, 1), (0, 1, 0), (1, 1, 0), (1, 0, 1), (0, 1, 1))
     contour_alpha = 0.5
@@ -84,7 +84,7 @@ class InterpolatablePdf:
             self.draw_label(name, y=y, color=self.label_color, align=0.5)
             y += self.line_height + self.pad
 
-            self.draw_glyph(glyphset, glyphname, p['type'], x=x, y=y)
+            self.draw_glyph(glyphset, glyphname, p["type"], x=x, y=y)
 
             y += self.height + self.pad
 
@@ -187,20 +187,20 @@ class InterpolatablePdf:
             for segment, args in recording.value:
                 if not args:
                     pass
-                elif segment in ('moveTo', 'lineTo'):
-                    cr.move_to (*args[0])
-                elif segment == 'qCurveTo':
+                elif segment in ("moveTo", "lineTo"):
+                    cr.move_to(*args[0])
+                elif segment == "qCurveTo":
                     for x, y in args:
                         cr.line_to(x, y)
                     cr.new_sub_path()
-                    cr.move_to (*args[-1])
-                elif segment == 'curveTo':
+                    cr.move_to(*args[-1])
+                elif segment == "curveTo":
                     cr.line_to(*args[0])
                     cr.new_sub_path()
                     cr.move_to(*args[1])
                     cr.line_to(*args[2])
                     cr.new_sub_path()
-                    cr.move_to (*args[-1])
+                    cr.move_to(*args[-1])
                 else:
                     assert False
 
@@ -209,11 +209,10 @@ class InterpolatablePdf:
             cr.stroke()
 
         if problem_type == "wrong_start_point":
-
             cr.set_line_cap(cairo.LINE_CAP_SQUARE)
             first_pt = None
             for segment, args in recording.value:
-                if segment == 'moveTo':
+                if segment == "moveTo":
                     first_pt = args[0]
                     continue
                 if first_pt is None:
@@ -231,7 +230,7 @@ class InterpolatablePdf:
 
             cr.set_line_cap(cairo.LINE_CAP_ROUND)
             for segment, args in recording.value:
-                if segment == 'moveTo':
+                if segment == "moveTo":
                     cr.move_to(*args[0])
                     cr.line_to(*args[0])
 
@@ -240,9 +239,7 @@ class InterpolatablePdf:
             cr.stroke()
 
         if problem_type == "contour_order":
-            perContourPen = PerContourOrComponentPen(
-                RecordingPen, glyphset=glyphset
-            )
+            perContourPen = PerContourOrComponentPen(RecordingPen, glyphset=glyphset)
             recording.replay(perContourPen)
             for contour, color in zip(perContourPen.value, cycle(self.contour_colors)):
                 contour.replay(CairoPen(glyphset, cr))

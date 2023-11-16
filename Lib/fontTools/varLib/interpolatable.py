@@ -653,6 +653,7 @@ def main(args=None):
 
     if args.pdf:
         from .interpolatablePdf import InterpolatablePdf
+
         with InterpolatablePdf(args.pdf, glyphsets=glyphsets, names=names) as pdf:
             pdf.add_problems(problems)
 
