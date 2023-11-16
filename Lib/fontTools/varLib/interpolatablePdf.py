@@ -253,9 +253,14 @@ class InterpolatablePdf:
             cr.stroke()
 
         if problem_type == "contour_order":
+            matching = problem["value_2"]
+            colors = cycle(self.contour_colors)
             perContourPen = PerContourOrComponentPen(RecordingPen, glyphset=glyphset)
             recording.replay(perContourPen)
-            for contour, color in zip(perContourPen.value, cycle(self.contour_colors)):
+            for i, contour in enumerate(perContourPen.value):
+                if matching[i] == i:
+                    continue
+                color = next(colors)
                 contour.replay(CairoPen(glyphset, cr))
                 cr.set_source_rgba(*color, self.contour_alpha)
                 cr.fill()
