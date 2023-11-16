@@ -674,6 +674,8 @@ def main(args=None):
 
         with InterpolatablePdf(args.pdf, glyphsets=glyphsets, names=names) as pdf:
             pdf.add_problems(problems)
+            if not problems:
+                pdf.draw_cupcake()
 
     if problems:
         return problems

@@ -265,3 +265,48 @@ class InterpolatablePdf:
                 contour.replay(CairoPen(glyphset, cr))
                 cr.set_source_rgba(*color, self.contour_alpha)
                 cr.fill()
+
+    def draw_cupcake(self):
+        cupcake = r"""
+                          ,@.
+                        ,@.@@,.
+                  ,@@,.@@@.  @.@@@,.
+                ,@@. @@@.     @@. @@,.
+        ,@@@.@,.@.              @.  @@@@,.@.@@,.
+   ,@@.@.     @@.@@.            @,.    .@’ @’  @@,
+ ,@@. @.          .@@.@@@.  @@’                  @,
+,@.  @@.                                          @,
+@.     @,@@,.     ,                             .@@,
+@,.       .@,@@,.         .@@,.  ,       .@@,  @, @,
+@.                             .@. @ @@,.    ,      @
+ @,.@@.     @,.      @@,.      @.           @,.    @’
+  @@||@,.  @’@,.       @@,.  @@ @,.        @’@@,  @’
+     \\@@@@’  @,.      @’@@@@’   @@,.   @@@’ //@@@’
+      |||||||| @@,.  @@’ |||||||  |@@@|@||  ||
+       \\\\\\\  ||@@@||  |||||||  |||||||  //
+        |||||||  ||||||  ||||||   ||||||  ||
+         \\\\\\  ||||||  ||||||  ||||||  //
+          ||||||  |||||  |||||   |||||  ||
+           \\\\\  |||||  |||||  |||||  //
+            |||||  ||||  |||||  ||||  ||
+             \\\\  ||||  ||||  ||||  //
+              ||||||||||||||||||||||||
+"""
+        cupcake = cupcake.splitlines()
+        cr = cairo.Context(self.surface)
+        cr.set_source_rgb(0.3, 0, 0.3)
+        cr.set_font_size(self.line_height)
+        cr.select_font_face(
+            "monospace", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL
+        )
+        width = 0
+        height = 0
+        for line in cupcake:
+            extents = cr.text_extents(line)
+            width = max(width, extents.width)
+            height += extents.height
+        cr.scale(self.width / width, self.height / height)
+        for line in cupcake:
+            cr.translate(0, cr.text_extents(line).height)
+            cr.move_to(0, 0)
+            cr.show_text(line)
