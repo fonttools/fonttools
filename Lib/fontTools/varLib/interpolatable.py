@@ -345,7 +345,6 @@ def test_gen(
                                 "value_2": matching,
                             },
                         )
-                        break
 
             # m0idx should be the index of the first non-None item in allContourIsomorphisms,
             # else give it the last item.
