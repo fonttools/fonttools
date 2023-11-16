@@ -1,4 +1,5 @@
 from fontTools.ttLib import TTFont
+from fontTools.pens.recordingPen import RecordingPen
 from fontTools.pens.boundsPen import ControlBoundsPen
 from fontTools.pens.cairoPen import CairoPen
 import cairo
@@ -104,8 +105,11 @@ class InterpolatablePdf:
     def draw_glyph(self, glyphset, glyphname, *, x=0, y=0):
         glyph = glyphset[glyphname]
 
+        recording = RecordingPen()
+        glyph.draw(recording)
+
         boundsPen = ControlBoundsPen(glyphset)
-        glyph.draw(boundsPen)
+        recording.replay(boundsPen)
 
         glyph_width = boundsPen.bounds[2] - boundsPen.bounds[0]
         glyph_height = boundsPen.bounds[3] - boundsPen.bounds[1]
@@ -132,13 +136,13 @@ class InterpolatablePdf:
 
         if self.fill_color:
             pen = CairoPen(glyphset, cr)
-            glyph.draw(pen)
+            recording.replay(pen)
             cr.set_source_rgb(*self.fill_color)
             cr.fill()
 
         if self.stroke_color:
             pen = CairoPen(glyphset, cr)
-            glyph.draw(pen)
+            recording.replay(pen)
             cr.set_source_rgb(*self.stroke_color)
             cr.set_line_width(self.stroke_width / scale)
             cr.stroke()
