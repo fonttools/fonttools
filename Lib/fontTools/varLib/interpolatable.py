@@ -695,7 +695,7 @@ def main(args=None):
 
         with InterpolatablePDF(args.pdf, glyphsets=glyphsets, names=names) as pdf:
             pdf.add_problems(problems)
-            if not problems:
+            if not problems and not args.quiet:
                 pdf.draw_cupcake()
 
     if args.html:
@@ -704,7 +704,7 @@ def main(args=None):
         svgs = []
         with InterpolatableSVG(svgs, glyphsets=glyphsets, names=names) as svg:
             svg.add_problems(problems)
-            if not problems:
+            if not problems and not args.quiet:
                 svg.draw_cupcake()
 
         with open(args.html, "wb") as f:

@@ -436,6 +436,10 @@ class InterpolatableSVG(InterpolatablePlot):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    def __enter__(self):
+        self.surface = None
+        return self
+
     def __exit__(self, type, value, traceback):
         if self.surface is not None:
             self.show_page()
