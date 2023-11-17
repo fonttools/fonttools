@@ -27,9 +27,9 @@ class InterpolatablePdf:
     handle_color = (0.2, 1, 0.2)
     handle_width = 1
     other_start_point_color = (0, 0, 1)
+    reversed_start_point_color = (0, 1, 0)
     start_point_color = (1, 0, 0)
     start_point_width = 15
-    start_handle_color = (0.8, 0, 0)
     start_handle_width = 5
     start_handle_length = 100
     start_handle_arrow_length = 5
@@ -279,7 +279,10 @@ class InterpolatablePdf:
                         cr.line_to(*args[0])
                     i += 1
 
-            cr.set_source_rgb(*self.start_point_color)
+            if which == 0 or not problem["reversed"]:
+                cr.set_source_rgb(*self.start_point_color)
+            else:
+                cr.set_source_rgb(*self.reversed_start_point_color)
             cr.set_line_width(self.start_point_width / scale)
             cr.stroke()
 
@@ -334,7 +337,6 @@ class InterpolatablePdf:
                 first_pt = None
                 i += 1
 
-            cr.set_source_rgb(*self.start_handle_color)
             cr.set_line_width(self.start_handle_width / scale)
             cr.stroke()
 
