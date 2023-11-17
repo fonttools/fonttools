@@ -487,10 +487,11 @@ def main(args=None):
             args.inputs = [master.path for master in designspace.sources]
 
         elif args.inputs[0].endswith(".glyphs"):
-            from glyphsLib import GSFont, to_ufos
+            from glyphsLib import GSFont, to_designspace
 
             gsfont = GSFont(args.inputs[0])
-            fonts.extend(to_ufos(gsfont))
+            ds = to_designspace(gsfont)
+            fonts = [source.font for source in ds.sources]
             names = ["%s-%s" % (f.info.familyName, f.info.styleName) for f in fonts]
             args.inputs = []
 
