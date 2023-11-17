@@ -215,15 +215,13 @@ def test_gen(
         log.info("Order: %s", order)
         log.info("Parents: %s", parents)
 
-    def grand_parent(i, glyphname, skips={}):
+    def grand_parent(i, glyphname):
         if i is None:
             return None
         i = parents[i]
         if i is None:
             return None
-        while parents[i] is not None and (
-            glyphsets[i][glyphname] is None or i in skips
-        ):
+        while parents[i] is not None and glyphsets[i][glyphname] is None:
             i = parents[i]
         return i
 
@@ -329,19 +327,17 @@ def test_gen(
                                 (_rot_list(complexPoints, i), n - i, True)
                             )
 
-            skip = set()
             for m1idx in order:
                 m1 = allNodeTypes[m1idx]
                 if m1 is None:
                     continue
-                m0idx = grand_parent(m1idx, glyph_name, skip)
+                m0idx = grand_parent(m1idx, glyph_name)
                 if m0idx is None:
                     continue
                 m0 = allNodeTypes[m0idx]
                 if m0 is None:
                     continue
                 if len(m0) != len(m1):
-                    skip.add(m1idx)
                     yield (
                         glyph_name,
                         {
@@ -386,20 +382,18 @@ def test_gen(
                             )
                             continue
 
-            skip = set()
             matchings = [None] * len(allVectors)
             for m1idx in order:
                 m1 = allVectors[m1idx]
                 if not m1:
                     continue
-                m0idx = grand_parent(m1idx, glyph_name, skip)
+                m0idx = grand_parent(m1idx, glyph_name)
                 if m0idx is None:
                     continue
                 m0 = allVectors[m0idx]
                 if m0 is None:
                     continue
                 if len(m0) != len(m1):
-                    skip.add(m1idx)
                     # We already reported this
                     continue
                 costs = [[_vdiff_hypot2(v0, v1) for v1 in m1] for v0 in m0]
@@ -410,7 +404,6 @@ def test_gen(
                     matching != identity_matching
                     and matching_cost < identity_cost * tolerance
                 ):
-                    skip.add(m1idx)
                     yield (
                         glyph_name,
                         {
@@ -423,12 +416,11 @@ def test_gen(
                     )
                     matchings[m1idx] = matching
 
-            skip = set()
             for m1idx in order:
                 m1 = allContourIsomorphisms[m1idx]
                 if m1 is None:
                     continue
-                m0idx = grand_parent(m1idx, glyph_name, skip)
+                m0idx = grand_parent(m1idx, glyph_name)
                 if m0idx is None:
                     continue
                 m0 = allContourIsomorphisms[m0idx]
@@ -436,19 +428,16 @@ def test_gen(
                     continue
                 if len(m0) != len(m1):
                     # We already reported this
-                    skip.add(m1idx)
                     continue
                 for ix, (contour0, contour1) in enumerate(zip(m0, m1)):
                     # If contour-order is wrong, don't try reporting starting-point
                     if matchings[m1idx] is not None and matchings[m1idx][ix] != ix:
-                        skip.add(m1idx)
                         continue
                     c0 = contour0[0]
                     costs = [_vdiff_hypot2_complex(c0[0], c1[0]) for c1 in contour1]
                     min_cost_idx, min_cost = min(enumerate(costs), key=lambda x: x[1])
                     first_cost = costs[0]
                     if min_cost < first_cost * tolerance:
-                        skip.add(m1idx)
                         yield (
                             glyph_name,
                             {
