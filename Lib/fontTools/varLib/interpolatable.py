@@ -165,6 +165,7 @@ def test_gen(
         names = glyphsets
 
     parents = [None] + list(range(len(glyphsets) - 1))
+    order = list(range(len(glyphsets)))
     if locations:
         # Order base master first
         bases = (i for i, l in enumerate(locations) if all(v == 0 for v in l.values()))
