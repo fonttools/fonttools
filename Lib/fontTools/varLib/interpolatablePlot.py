@@ -360,6 +360,7 @@ class InterpolatablePlot:
                 cr.fill()
 
     def draw_cupcake(self):
+        self.set_size(self.width, self.height)
         cupcake = self.cupcake.splitlines()
         cr = cairo.Context(self.surface)
         cr.set_source_rgb(*self.cupcake_color)
@@ -434,6 +435,10 @@ class InterpolatableSVG(InterpolatablePlot):
     @wraps(InterpolatablePlot.__init__)
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+    def __exit__(self, type, value, traceback):
+        if self.surface is not None:
+            self.show_page()
 
     def set_size(self, width, height):
         self.sink = BytesIO()
