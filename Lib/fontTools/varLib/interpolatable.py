@@ -324,7 +324,7 @@ def test_gen(
                         b = ((reversed_bits << i) & mask) | ((reversed_bits >> (n - i)))
                         if b == bits:
                             isomorphisms.append(
-                                (_rot_list(complexPoints, i), n - i, True)
+                                (_rot_list(complexPoints, i), n - 1 - i, True)
                             )
 
             for m1idx in order:
