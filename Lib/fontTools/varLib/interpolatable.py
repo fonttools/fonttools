@@ -686,7 +686,7 @@ def main(args=None):
             problems[glyphname].append(problem)
 
     if args.pdf:
-        from .interpolatablePdf import InterpolatablePdf
+        from .interpolatablePlot import InterpolatablePdf
 
         with InterpolatablePdf(args.pdf, glyphsets=glyphsets, names=names) as pdf:
             pdf.add_problems(problems)
