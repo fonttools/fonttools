@@ -707,11 +707,15 @@ def main(args=None):
             if not problems and not args.quiet:
                 svg.draw_cupcake()
 
+        import base64
+
         with open(args.html, "wb") as f:
             f.write(b"<!DOCTYPE html>\n")
             f.write(b"<html><body>\n")
             for svg in svgs:
-                f.write(svg)
+                f.write("<img src='data:image/svg+xml;base64,".encode("utf-8"))
+                f.write(base64.b64encode(svg))
+                f.write(b"' />\n")
                 f.write(b"<hr>\n")
             f.write(b"</body></html>\n")
 
