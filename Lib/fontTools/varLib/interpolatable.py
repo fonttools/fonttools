@@ -387,6 +387,9 @@ def test_gen(
                         # We already reported this
                         continue
                     for ix, (contour0, contour1) in enumerate(zip(m0, m1)):
+                        if len(contour0) != len(contour1):
+                            # We already reported this
+                            continue
                         # If contour-order is wrong, don't try reporting starting-point
                         if matchings[m0idx + i + 1][ix] != ix:
                             continue
