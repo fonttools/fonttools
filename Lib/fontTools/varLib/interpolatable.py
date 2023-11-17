@@ -663,11 +663,14 @@ def main(args=None):
                     )
                 if p["type"] == "wrong_start_point":
                     print(
-                        "    Contour %d start point differs: %s, %s"
+                        "    Contour %d start point differs: %s in %s, %s in %s; reversed: %s"
                         % (
                             p["contour"],
+                            p["value_1"],
                             p["master_1"],
+                            p["value_2"],
                             p["master_2"],
+                            p["reversed"],
                         )
                     )
                 if p["type"] == "math_error":
