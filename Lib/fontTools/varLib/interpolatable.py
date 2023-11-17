@@ -318,7 +318,7 @@ def test_gen(
                         thisPoints, thisPoints[1:] + thisPoints[:1]
                     ):
                         complexPoints.append(complex(*pt0))
-                        complexPoints.append(complex(*pt1) - complex(*pt0))
+                        complexPoints.append((complex(*pt1) - complex(*pt0)) * 2)
                     for i in range(n):
                         b = ((bits << i) & mask) | ((bits >> (n - i)))
                         if b == bits:
@@ -336,7 +336,7 @@ def test_gen(
                         thisPoints, thisPoints[1:] + thisPoints[:1]
                     ):
                         complexPoints.append(complex(*pt0))
-                        complexPoints.append(complex(*pt1) - complex(*pt0))
+                        complexPoints.append((complex(*pt1) - complex(*pt0)) * 2)
                     for i in range(n):
                         b = ((reversed_bits << i) & mask) | ((reversed_bits >> (n - i)))
                         if b == bits:
