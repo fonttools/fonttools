@@ -98,6 +98,8 @@ class InterpolatablePlot:
                 self.show_page()
 
     def add_problem(self, glyphname, p):
+        log.info("Drawing %s: %s", glyphname, p["type"])
+
         master_keys = ("master",) if "master" in p else ("master_1", "master_2")
         master_indices = [self.names.index(p[k]) for k in master_keys]
 
@@ -165,8 +167,6 @@ class InterpolatablePlot:
         cr.show_text(label)
 
     def draw_glyph(self, glyphset, glyphname, problem, which, *, x=0, y=0):
-        log.info("Drawing %s: %s", glyphname, problem["type"])
-
         problem_type = problem["type"]
         glyph = glyphset[glyphname]
 
