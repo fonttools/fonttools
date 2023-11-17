@@ -428,13 +428,25 @@ def test(*args, **kwargs):
     return problems
 
 
-def recursivelyAddGlyph(glyphname, glyphset, ttGlyphSet, glyf):
+def recursivelyAddGlyph(glyphname, glyphset, ttGlyphSet, hbFont, glyf, reverseGlyphMap):
     if glyphname in glyphset:
         return
-    glyphset[glyphname] = ttGlyphSet[glyphname]
 
-    for component in getattr(glyf[glyphname], "components", []):
-        recursivelyAddGlyph(component.glyphName, glyphset, ttGlyphSet, glyf)
+    glyph = glyf[glyphname]
+    components = getattr(glyph, "components", [])
+
+    # Can't use hb for composite glyphs, because it doesn't
+    # emit addComponent() calls.
+    if not components and hbFont is not None:
+        recording = RecordingPen()
+        hbFont.draw_glyph_with_pen(reverseGlyphMap[glyphname], recording)
+        recording.draw = recording.replay
+        glyphset[glyphname] = recording
+    else:
+        glyphset[glyphname] = ttGlyphSet[glyphname]
+
+    for component in components:
+        recursivelyAddGlyph(component.glyphName, glyphset, ttGlyphSet, hbFont, glyf, reverseGlyphMap)
 
 
 def main(args=None):
@@ -546,6 +558,14 @@ def main(args=None):
             if "gvar" in font:
                 # Is variable font
 
+                reverseGlyphMap = font.getReverseGlyphMap()
+
+                try:
+                    import uharfbuzz as hb
+                    hbFace = hb.Face(hb.Blob.from_file_path(args.inputs[0]))
+                except ImportError:
+                    hbFace = None
+
                 axisMapping = {}
                 fvar = font["fvar"]
                 for axis in fvar.axes:
@@ -567,6 +587,7 @@ def main(args=None):
                 glyf = font["glyf"]
                 # Gather all glyphs at their "master" locations
                 ttGlyphSets = {}
+                hbFonts = {}
                 glyphsets = defaultdict(dict)
 
                 if glyphs is None:
@@ -584,9 +605,17 @@ def main(args=None):
                             ttGlyphSets[locTuple] = font.getGlyphSet(
                                 location=locDict, normalized=True
                             )
+                        if locTuple not in hbFonts:
+                            if hbFace is not None:
+                                hbFont = hb.Font(hbFace)
+                                hbCoords = [var.axes.get(axis.axisTag, (0,0,0))[1] for axis in fvar.axes]
+                                hbFont.set_var_coords_normalized(hbCoords)
+                                hbFonts[locTuple] = hbFont
+                            else:
+                                hbFonts[locTuple] = None
 
                         recursivelyAddGlyph(
-                            glyphname, glyphsets[locTuple], ttGlyphSets[locTuple], glyf
+                            glyphname, glyphsets[locTuple], ttGlyphSets[locTuple], hbFonts[locTuple], glyf, reverseGlyphMap
                         )
 
                 names = ["''"]
