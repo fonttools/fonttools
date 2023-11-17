@@ -15,6 +15,7 @@ from fontTools.varLib.models import piecewiseLinearMap, normalizeLocation
 from fontTools.misc.fixedTools import floatToFixedToStr
 from collections import defaultdict
 from functools import wraps
+from pprint import pformat
 import math
 import itertools
 import logging
@@ -169,6 +170,7 @@ def test_gen(
         bases = (i for i, l in enumerate(locations) if all(v == 0 for v in l.values()))
         if bases:
             base = next(bases)
+            logging.info("Base master index %s, location %s", base, locations[base])
             order = list(range(len(glyphsets)))
             order.remove(base)
             order.insert(0, base)
@@ -197,9 +199,38 @@ def test_gen(
             rows, cols = tree.nonzero()
             for row, col in zip(rows, cols):
                 parents[col] = row
+
+            # Reorder such that parent always comes before child
+            # Do this by a DFS. This is not the most efficient way,
+            # but it's simple.
+            order = []
+            visited = set()
+            stack = [0]
+            parents_map = {}
+            while stack:
+                n = stack.pop()
+                if n in visited:
+                    continue
+                visited.add(n)
+                parents_map[n] = len(order)
+                order.append(n)
+
+                for i, p in enumerate(parents):
+                    if p == n:
+                        stack.append(i)
+            parents = [parents_map[parents[i]] for i in order]
+
         except ImportError:
             for i in range(1, len(locations)):
                 parents[i] = i - 1
+
+        glyphsets = [glyphsets[i] for i in order]
+        names = [names[i] for i in order]
+        locations = [locations[i] for i in order]
+
+        log.info("Order: %s", order)
+        log.info("Parents: %s", parents)
+        log.info("Reordered locations: %s", pformat(locations))
 
     def grand_parent(i, glyphname, skips={}):
         if i == 0:
@@ -666,7 +697,7 @@ def main(args=None):
     locations = [normalizeLocation(loc, axis_triples) for loc in locations]
 
     log.info("Running on %d glyphsets", len(glyphsets))
-    log.info("Locations: %s", locations)
+    log.info("Locations: %s", pformat(locations))
     problems_gen = test_gen(
         glyphsets,
         glyphs=glyphs,
