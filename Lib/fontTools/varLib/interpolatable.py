@@ -11,7 +11,7 @@ from fontTools.pens.pointPen import AbstractPointPen, SegmentToPointPen
 from fontTools.pens.recordingPen import RecordingPen
 from fontTools.pens.statisticsPen import StatisticsPen
 from fontTools.pens.momentsPen import OpenContourError
-from fontTools.varLib.models import piecewiseLinearMap
+from fontTools.varLib.models import piecewiseLinearMap, normalizeLocation
 from fontTools.misc.fixedTools import floatToFixedToStr
 from collections import defaultdict
 from functools import wraps
@@ -152,10 +152,31 @@ except ImportError:
 
 
 def test_gen(
-    glyphsets, glyphs=None, names=None, ignore_missing=False, *, tolerance=0.95
+    glyphsets,
+    glyphs=None,
+    names=None,
+    ignore_missing=False,
+    *,
+    locations=None,
+    tolerance=0.95,
 ):
     if names is None:
         names = glyphsets
+
+    if locations:
+        # Order the glyphsets by something
+        order = list(range(len(glyphsets)))
+        bases = (i for i, l in enumerate(locations) if all(v == 0 for v in l.values()))
+        if bases:
+            base = next(bases)
+            order.remove(base)
+            order.insert(0, base)
+        else:
+            logging.warning("No base master location found")
+
+        glyphsets = [glyphsets[i] for i in order]
+        names = [names[i] for i in order]
+
     if glyphs is None:
         # `glyphs = glyphsets[0].keys()` is faster, certainly, but doesn't allow for sparse TTFs/OTFs given out of order
         # ... risks the sparse master being the first one, and only processing a subset of the glyphs
@@ -480,13 +501,21 @@ def main(args=None):
     names = []
 
     if len(args.inputs) == 1:
+        designspace = None
         if args.inputs[0].endswith(".designspace"):
             from fontTools.designspaceLib import DesignSpaceDocument
 
             designspace = DesignSpaceDocument.fromfile(args.inputs[0])
             args.inputs = [master.path for master in designspace.sources]
             locations = [master.location for master in designspace.sources]
-            axis_triples = {a.name: (a.minimum, a.default, a.maximum) for a in designspace.axes}
+            axis_triples = {
+                a.name: (a.minimum, a.default, a.maximum) for a in designspace.axes
+            }
+            axis_mappings = {a.name: a.map for a in designspace.axes}
+            axis_triples = {
+                k: tuple(piecewiseLinearMap(v, dict(axis_mappings[k])) for v in vv)
+                for k, vv in axis_triples.items()
+            }
 
         elif args.inputs[0].endswith(".glyphs"):
             from glyphsLib import GSFont, to_designspace
@@ -497,7 +526,14 @@ def main(args=None):
             names = ["%s-%s" % (f.info.familyName, f.info.styleName) for f in fonts]
             args.inputs = []
             locations = [master.location for master in designspace.sources]
-            axis_triples = {a.name: (a.minimum, a.default, a.maximum) for a in designspace.axes}
+            axis_triples = {
+                a.name: (a.minimum, a.default, a.maximum) for a in designspace.axes
+            }
+            axis_mappings = {a.name: a.map for a in designspace.axes}
+            axis_triples = {
+                k: tuple(piecewiseLinearMap(v, dict(axis_mappings[k])) for v in vv)
+                for k, vv in axis_triples.items()
+            }
 
         elif args.inputs[0].endswith(".ttf"):
             from fontTools.ttLib import TTFont
@@ -605,13 +641,16 @@ def main(args=None):
             for gn in diff:
                 glyphset[gn] = None
 
+    # Normalize locations
+    locations = [normalizeLocation(loc, axis_triples) for loc in locations]
+
     log.info("Running on %d glyphsets", len(glyphsets))
-    log.info("Axis triples: %s", axis_triples)
     log.info("Locations: %s", locations)
     problems_gen = test_gen(
         glyphsets,
         glyphs=glyphs,
         names=names,
+        locations=locations,
         ignore_missing=args.ignore_missing,
         tolerance=args.tolerance or 0.95,
     )
