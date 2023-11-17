@@ -1,7 +1,8 @@
 from fontTools.pens.recordingPen import RecordingPen
 from fontTools.pens.boundsPen import ControlBoundsPen
 from fontTools.pens.cairoPen import CairoPen
-from fontTools.varLib.interpolatable import PerContourOrComponentPen
+from fontTools.pens.pointPen import SegmentToPointPen
+from fontTools.varLib.interpolatable import PerContourOrComponentPen, RecordingPointPen
 from itertools import cycle
 import cairo
 import math
@@ -25,6 +26,7 @@ class InterpolatablePdf:
     offcurve_node_diameter = 8
     handle_color = (0.2, 1, 0.2)
     handle_width = 1
+    other_start_point_color = (0, 0, 1)
     start_point_color = (1, 0, 0)
     start_point_width = 15
     start_handle_color = (0.8, 0, 0)
@@ -112,7 +114,7 @@ class InterpolatablePdf:
         self.draw_label(p["type"], y=y, color=self.head_color, align=1)
         y += self.line_height + self.pad
 
-        for master_idx in master_indices:
+        for which, master_idx in enumerate(master_indices):
             glyphset = self.glyphsets[master_idx]
             name = self.names[master_idx]
 
@@ -120,7 +122,7 @@ class InterpolatablePdf:
             y += self.line_height + self.pad
 
             if glyphset[glyphname] is not None:
-                self.draw_glyph(glyphset, glyphname, p, x=x, y=y)
+                self.draw_glyph(glyphset, glyphname, p, which, x=x, y=y)
             else:
                 self.draw_shrug(x=x, y=y)
 
@@ -153,7 +155,7 @@ class InterpolatablePdf:
         cr.move_to(label_x, label_y)
         cr.show_text(label)
 
-    def draw_glyph(self, glyphset, glyphname, problem, *, x=0, y=0):
+    def draw_glyph(self, glyphset, glyphname, problem, which, *, x=0, y=0):
         problem_type = problem["type"]
         glyph = glyphset[glyphname]
 
@@ -249,6 +251,23 @@ class InterpolatablePdf:
 
         if problem_type == "wrong_start_point":
             idx = problem["contour"]
+
+            # Draw suggested point
+            if which == 0:
+                perContourPen = PerContourOrComponentPen(
+                    RecordingPen, glyphset=glyphset
+                )
+                recording.replay(perContourPen)
+                points = RecordingPointPen()
+                converter = SegmentToPointPen(points, False)
+                perContourPen.value[idx].replay(converter)
+                targetPoint = points.value[problem["value_2"]][0]
+                cr.move_to(*targetPoint)
+                cr.line_to(*targetPoint)
+                cr.set_line_cap(cairo.LINE_CAP_ROUND)
+                cr.set_source_rgb(*self.other_start_point_color)
+                cr.set_line_width(self.start_point_width / scale)
+                cr.stroke()
 
             # Draw start point
             cr.set_line_cap(cairo.LINE_CAP_ROUND)
