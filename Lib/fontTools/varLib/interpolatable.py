@@ -310,22 +310,38 @@ def test_gen(
                     mask = (1 << n) - 1
                     isomorphisms = []
                     contourIsomorphisms.append(isomorphisms)
-                    complexPoints = [complex(*pt) for pt, bl in points.value]
+
+                    # Add rotations
+                    complexPoints = []
+                    thisPoints = points.value
+                    for (pt0, _), (pt1, _) in zip(
+                        thisPoints, thisPoints[1:] + thisPoints[:1]
+                    ):
+                        complexPoints.append(complex(*pt0))
+                        complexPoints.append(complex(*pt1) - complex(*pt0))
                     for i in range(n):
                         b = ((bits << i) & mask) | ((bits >> (n - i)))
                         if b == bits:
-                            isomorphisms.append((_rot_list(complexPoints, i), i, False))
+                            isomorphisms.append(
+                                (_rot_list(complexPoints, i * 2), i, False)
+                            )
+
                     # Add mirrored rotations
-                    mirrored = list(reversed(points.value))
+                    thisPoints = list(reversed(thisPoints))
                     reversed_bits = 0
-                    for pt, b in mirrored:
+                    for pt, b in thisPoints:
                         reversed_bits = (reversed_bits << 1) | b
-                    complexPoints = list(reversed(complexPoints))
+                    complexPoints = []
+                    for (pt0, _), (pt1, _) in zip(
+                        thisPoints, thisPoints[1:] + thisPoints[:1]
+                    ):
+                        complexPoints.append(complex(*pt0))
+                        complexPoints.append(complex(*pt1) - complex(*pt0))
                     for i in range(n):
                         b = ((reversed_bits << i) & mask) | ((reversed_bits >> (n - i)))
                         if b == bits:
                             isomorphisms.append(
-                                (_rot_list(complexPoints, i), n - 1 - i, True)
+                                (_rot_list(complexPoints, i * 2), n - 1 - i, True)
                             )
 
             for m1idx in order:
