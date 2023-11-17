@@ -443,6 +443,11 @@ def main(args=None):
         help="Output report in PDF format",
     )
     parser.add_argument(
+        "--html",
+        action="store",
+        help="Output report in HTML format",
+    )
+    parser.add_argument(
         "--quiet",
         action="store_true",
         help="Only exit with code 1 or 0, no output",
@@ -692,6 +697,23 @@ def main(args=None):
             pdf.add_problems(problems)
             if not problems:
                 pdf.draw_cupcake()
+
+    if args.html:
+        from .interpolatablePlot import InterpolatableSVG
+
+        svgs = []
+        with InterpolatableSVG(svgs, glyphsets=glyphsets, names=names) as svg:
+            svg.add_problems(problems)
+            if not problems:
+                svg.draw_cupcake()
+
+        with open(args.html, "wb") as f:
+            f.write(b"<!DOCTYPE html>\n")
+            f.write(b"<html><body>\n")
+            for svg in svgs:
+                f.write(svg)
+                f.write(b"<hr>\n")
+            f.write(b"</body></html>\n")
 
     if problems:
         return problems

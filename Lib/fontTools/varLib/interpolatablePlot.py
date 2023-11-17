@@ -5,6 +5,7 @@ from fontTools.pens.pointPen import SegmentToPointPen
 from fontTools.varLib.interpolatable import PerContourOrComponentPen, RecordingPointPen
 from itertools import cycle
 from functools import wraps
+from io import BytesIO
 import cairo
 import math
 
@@ -76,10 +77,10 @@ class InterpolatablePlot:
             setattr(self, k, v)
 
     def __enter__(self):
-        raise NotImplementedError
+        return self
 
     def __exit__(self, type, value, traceback):
-        raise NotImplementedError
+        pass
 
     def set_size(self, width, height):
         raise NotImplementedError
@@ -427,3 +428,18 @@ class InterpolatablePDF(InterpolatablePostscriptLike):
     def __enter__(self):
         self.surface = cairo.PDFSurface(self.out, self.width, self.height)
         return self
+
+
+class InterpolatableSVG(InterpolatablePlot):
+    @wraps(InterpolatablePlot.__init__)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def set_size(self, width, height):
+        self.sink = BytesIO()
+        self.surface = cairo.SVGSurface(self.sink, width, height)
+
+    def show_page(self):
+        self.surface.finish()
+        self.out.append(self.sink.getvalue())
+        self.surface = None
