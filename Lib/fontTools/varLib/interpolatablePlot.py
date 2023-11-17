@@ -4,11 +4,12 @@ from fontTools.pens.cairoPen import CairoPen
 from fontTools.pens.pointPen import SegmentToPointPen
 from fontTools.varLib.interpolatable import PerContourOrComponentPen, RecordingPointPen
 from itertools import cycle
+from functools import wraps
 import cairo
 import math
 
 
-class InterpolatablePdf:
+class InterpolatablePlot:
     width = 640
     height = 480
     pad = 16
@@ -64,8 +65,8 @@ class InterpolatablePdf:
     shrug_color = (0, 0.3, 0.3)
     shrug = r"""¯\_(")_/¯"""
 
-    def __init__(self, outfile, glyphsets, names=None, **kwargs):
-        self.outfile = outfile
+    def __init__(self, out, glyphsets, names=None, **kwargs):
+        self.out = out
         self.glyphsets = glyphsets
         self.names = names or [repr(g) for g in glyphsets]
 
@@ -75,16 +76,22 @@ class InterpolatablePdf:
             setattr(self, k, v)
 
     def __enter__(self):
-        self.surface = cairo.PDFSurface(self.outfile, self.width, self.height)
-        return self
+        raise NotImplementedError
 
     def __exit__(self, type, value, traceback):
-        self.surface.finish()
+        raise NotImplementedError
+
+    def set_size(self, width, height):
+        raise NotImplementedError
+
+    def show_page(self):
+        raise NotImplementedError
 
     def add_problems(self, problems):
         for glyph, glyph_problems in problems.items():
             for p in glyph_problems:
                 self.add_problem(glyph, p)
+                self.show_page()
 
     def add_problem(self, glyphname, p):
         master_keys = ("master",) if "master" in p else ("master_1", "master_2")
@@ -105,7 +112,7 @@ class InterpolatablePdf:
             + self.pad
         )
 
-        self.surface.set_size(total_width, total_height)
+        self.set_size(total_width, total_height)
 
         x = self.pad
         y = self.pad
@@ -127,8 +134,6 @@ class InterpolatablePdf:
                 self.draw_shrug(x=x, y=y)
 
             y += self.height + self.pad
-
-        self.surface.show_page()
 
     def draw_label(self, label, *, y=0, color=(0, 0, 0), align=0):
         cr = cairo.Context(self.surface)
@@ -391,3 +396,22 @@ class InterpolatablePdf:
         cr.scale(scale, scale)
         cr.move_to(-extents.x_bearing, 0)
         cr.show_text(self.shrug)
+
+
+class InterpolatablePdf(InterpolatablePlot):
+    @wraps(InterpolatablePlot.__init__)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def __enter__(self):
+        self.surface = cairo.PDFSurface(self.out, self.width, self.height)
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.surface.finish()
+
+    def set_size(self, width, height):
+        self.surface.set_size(width, height)
+
+    def show_page(self):
+        self.surface.show_page()
