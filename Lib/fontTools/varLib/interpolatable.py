@@ -499,6 +499,7 @@ def main(args=None):
 
     fonts = []
     names = []
+    locations = []
 
     if len(args.inputs) == 1:
         designspace = None
@@ -609,6 +610,9 @@ def main(args=None):
                     locations.append(dict(locTuple))
                 args.ignore_missing = True
                 args.inputs = []
+
+    if not locations:
+        locations = [{} for _ in fonts]
 
     for filename in args.inputs:
         if filename.endswith(".ufo"):
