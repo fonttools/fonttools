@@ -398,14 +398,10 @@ class InterpolatablePlot:
         cr.show_text(self.shrug)
 
 
-class InterpolatablePdf(InterpolatablePlot):
+class InterpolatablePsPdf(InterpolatablePlot):
     @wraps(InterpolatablePlot.__init__)
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-    def __enter__(self):
-        self.surface = cairo.PDFSurface(self.out, self.width, self.height)
-        return self
 
     def __exit__(self, type, value, traceback):
         self.surface.finish()
@@ -415,3 +411,19 @@ class InterpolatablePdf(InterpolatablePlot):
 
     def show_page(self):
         self.surface.show_page()
+
+    def __enter__(self):
+        self.surface = cairo.PSSurface(self.out, self.width, self.height)
+        return self
+
+
+class InterpolatablePs(InterpolatablePsPdf):
+    def __enter__(self):
+        self.surface = cairo.PSSurface(self.out, self.width, self.height)
+        return self
+
+
+class InterpolatablePdf(InterpolatablePsPdf):
+    def __enter__(self):
+        self.surface = cairo.PDFSurface(self.out, self.width, self.height)
+        return self
