@@ -795,6 +795,7 @@ def main(args=None):
             problems[glyphname].append(problem)
 
     if args.pdf:
+        log.info("Writing PDF to %s", args.pdf)
         from .interpolatablePlot import InterpolatablePDF
 
         with InterpolatablePDF(args.pdf, glyphsets=glyphsets, names=names) as pdf:
@@ -803,6 +804,7 @@ def main(args=None):
                 pdf.draw_cupcake()
 
     if args.html:
+        log.info("Writing HTML to %s", args.html)
         from .interpolatablePlot import InterpolatableSVG
 
         svgs = []
