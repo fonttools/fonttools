@@ -711,7 +711,7 @@ def main(args=None):
 
         with open(args.html, "wb") as f:
             f.write(b"<!DOCTYPE html>\n")
-            f.write(b"<html><body>\n")
+            f.write(b"<html><body align=center>\n")
             for svg in svgs:
                 f.write("<img src='data:image/svg+xml;base64,".encode("utf-8"))
                 f.write(base64.b64encode(svg))
