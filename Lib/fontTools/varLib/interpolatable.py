@@ -216,12 +216,13 @@ def test_gen(
         log.info("Parents: %s", parents)
 
     def grand_parent(i, glyphname, skips={}):
-        if i is None: return None
+        if i is None:
+            return None
         i = parents[i]
-        if i is None: return None
-        while (
-            parents[i] is not None and
-            (glyphsets[i][glyphname] is None or i in skips)
+        if i is None:
+            return None
+        while parents[i] is not None and (
+            glyphsets[i][glyphname] is None or i in skips
         ):
             i = parents[i]
         return i
