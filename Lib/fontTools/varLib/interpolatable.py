@@ -13,7 +13,7 @@ from fontTools.pens.statisticsPen import StatisticsPen
 from fontTools.pens.momentsPen import OpenContourError
 from fontTools.varLib.models import piecewiseLinearMap, normalizeLocation
 from fontTools.misc.fixedTools import floatToFixedToStr
-from collections import defaultdict
+from collections import defaultdict, deque
 from functools import wraps
 from pprint import pformat
 import math
@@ -164,20 +164,15 @@ def test_gen(
     if names is None:
         names = glyphsets
 
-    parents = [0] * len(glyphsets)
+    parents = [None] + list(range(len(glyphsets) - 1))
     if locations:
         # Order base master first
         bases = (i for i, l in enumerate(locations) if all(v == 0 for v in l.values()))
         if bases:
             base = next(bases)
             logging.info("Base master index %s, location %s", base, locations[base])
-            order = list(range(len(glyphsets)))
-            order.remove(base)
-            order.insert(0, base)
-            glyphsets = [glyphsets[i] for i in order]
-            names = [names[i] for i in order]
-            locations = [locations[i] for i in order]
         else:
+            base = 0
             logging.warning("No base master location found")
 
         # Form a minimum spanning tree of the locations
@@ -189,58 +184,47 @@ def test_gen(
             for l in locations:
                 axes.update(l.keys())
             axes = sorted(axes)
+            vectors = [tuple(l.get(k, 0) for k in axes) for l in locations]
             for i, j in itertools.combinations(range(len(locations)), 2):
-                graph[i][j] = _vdiff_hypot2(
-                    (locations[i].get(k, 0) for k in axes),
-                    (locations[j].get(k, 0) for k in axes),
-                )
+                graph[i][j] = _vdiff_hypot2(vectors[i], vectors[j])
 
             tree = minimum_spanning_tree(graph)
             rows, cols = tree.nonzero()
+            graph = defaultdict(set)
             for row, col in zip(rows, cols):
-                parents[col] = row
+                graph[row].add(col)
+                graph[col].add(row)
 
-            # Reorder such that parent always comes before child
-            # Do this by a DFS. This is not the most efficient way,
-            # but it's simple.
+            # Traverse graph from the base and assign parents
+            parents = [None] * len(locations)
             order = []
             visited = set()
-            stack = [0]
-            parents_map = {}
-            while stack:
-                n = stack.pop()
-                if n in visited:
-                    continue
-                visited.add(n)
-                parents_map[n] = len(order)
-                order.append(n)
-
-                for i, p in enumerate(parents):
-                    if p == n:
-                        stack.append(i)
-            parents = [parents_map[parents[i]] for i in order]
+            queue = deque([base])
+            while queue:
+                i = queue.popleft()
+                visited.add(i)
+                order.append(i)
+                for j in sorted(graph[i]):
+                    if j not in visited:
+                        parents[j] = i
+                        queue.append(j)
 
         except ImportError:
-            for i in range(1, len(locations)):
-                parents[i] = i - 1
-
-        glyphsets = [glyphsets[i] for i in order]
-        names = [names[i] for i in order]
-        locations = [locations[i] for i in order]
+            pass
 
         log.info("Order: %s", order)
         log.info("Parents: %s", parents)
-        log.info("Reordered locations: %s", pformat(locations))
 
     def grand_parent(i, glyphname, skips={}):
-        if i == 0:
-            return 0
-        parent = parents[i]
+        if i is None: return None
+        i = parents[i]
+        if i is None: return None
         while (
-            glyphsets[parent][glyphname] is None and parent != 0 and parent not in skips
+            parents[i] is not None and
+            (glyphsets[i][glyphname] is None or i in skips)
         ):
-            parent = parents[parent]
-        return parent
+            i = parents[i]
+        return i
 
     if glyphs is None:
         # `glyphs = glyphsets[0].keys()` is faster, certainly, but doesn't allow for sparse TTFs/OTFs given out of order
@@ -250,6 +234,7 @@ def test_gen(
     hist = []
 
     for glyph_name in glyphs:
+        log.info("Testing glyph %s", glyph_name)
         try:
             allVectors = []
             allNodeTypes = []
@@ -344,21 +329,24 @@ def test_gen(
                             )
 
             skip = set()
-            for i, m1 in enumerate(allNodeTypes):
+            for m1idx in order:
+                m1 = allNodeTypes[m1idx]
                 if m1 is None:
                     continue
-                m0idx = grand_parent(i, glyph_name, skip)
+                m0idx = grand_parent(m1idx, glyph_name, skip)
+                if m0idx is None:
+                    continue
                 m0 = allNodeTypes[m0idx]
-                if m0 is None or m0 == m1:
+                if m0 is None:
                     continue
                 if len(m0) != len(m1):
-                    skip.add(i)
+                    skip.add(m1idx)
                     yield (
                         glyph_name,
                         {
                             "type": "path_count",
                             "master_1": names[m0idx],
-                            "master_2": names[i],
+                            "master_2": names[m1idx],
                             "value_1": len(m0),
                             "value_2": len(m1),
                         },
@@ -375,7 +363,7 @@ def test_gen(
                                 "type": "node_count",
                                 "path": pathIx,
                                 "master_1": names[m0idx],
-                                "master_2": names[i],
+                                "master_2": names[m1idx],
                                 "value_1": len(nodes1),
                                 "value_2": len(nodes2),
                             },
@@ -390,7 +378,7 @@ def test_gen(
                                     "path": pathIx,
                                     "node": nodeIx,
                                     "master_1": names[m0idx],
-                                    "master_2": names[i],
+                                    "master_2": names[m1idx],
                                     "value_1": n1,
                                     "value_2": n2,
                                 },
@@ -399,15 +387,18 @@ def test_gen(
 
             skip = set()
             matchings = [None] * len(allVectors)
-            for i, m1 in enumerate(allVectors):
+            for m1idx in order:
+                m1 = allVectors[m1idx]
                 if not m1:
                     continue
-                m0idx = grand_parent(i, glyph_name, skip)
+                m0idx = grand_parent(m1idx, glyph_name, skip)
+                if m0idx is None:
+                    continue
                 m0 = allVectors[m0idx]
-                if m0 is None or m0 == m1:
+                if m0 is None:
                     continue
                 if len(m0) != len(m1):
-                    skip.add(i)
+                    skip.add(m1idx)
                     # We already reported this
                     continue
                 costs = [[_vdiff_hypot2(v0, v1) for v1 in m1] for v0 in m0]
@@ -418,49 +409,52 @@ def test_gen(
                     matching != identity_matching
                     and matching_cost < identity_cost * tolerance
                 ):
-                    skip.add(i)
+                    skip.add(m1idx)
                     yield (
                         glyph_name,
                         {
                             "type": "contour_order",
                             "master_1": names[m0idx],
-                            "master_2": names[i],
+                            "master_2": names[m1idx],
                             "value_1": list(range(len(m0))),
                             "value_2": matching,
                         },
                     )
-                    matchings[i] = matching
+                    matchings[m1idx] = matching
 
             skip = set()
-            for i, m1 in enumerate(allContourIsomorphisms):
+            for m1idx in order:
+                m1 = allContourIsomorphisms[m1idx]
                 if m1 is None:
                     continue
-                m0idx = grand_parent(i, glyph_name, skip)
+                m0idx = grand_parent(m1idx, glyph_name, skip)
+                if m0idx is None:
+                    continue
                 m0 = allContourIsomorphisms[m0idx]
-                if m0 is None or m0 == m1:
+                if m0 is None:
                     continue
                 if len(m0) != len(m1):
                     # We already reported this
-                    skip.add(i)
+                    skip.add(m1idx)
                     continue
                 for ix, (contour0, contour1) in enumerate(zip(m0, m1)):
                     # If contour-order is wrong, don't try reporting starting-point
-                    if matchings[i] is not None and matchings[i][ix] != ix:
-                        skip.add(i)
+                    if matchings[m1idx] is not None and matchings[m1idx][ix] != ix:
+                        skip.add(m1idx)
                         continue
                     c0 = contour0[0]
                     costs = [_vdiff_hypot2_complex(c0[0], c1[0]) for c1 in contour1]
                     min_cost_idx, min_cost = min(enumerate(costs), key=lambda x: x[1])
                     first_cost = costs[0]
                     if min_cost < first_cost * tolerance:
-                        skip.add(i)
+                        skip.add(m1idx)
                         yield (
                             glyph_name,
                             {
                                 "type": "wrong_start_point",
                                 "contour": ix,
                                 "master_1": names[m0idx],
-                                "master_2": names[i],
+                                "master_2": names[m1idx],
                                 "value_1": 0,
                                 "value_2": contour1[min_cost_idx][1],
                                 "reversed": contour1[min_cost_idx][2],
