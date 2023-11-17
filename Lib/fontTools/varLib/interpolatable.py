@@ -485,15 +485,19 @@ def main(args=None):
 
             designspace = DesignSpaceDocument.fromfile(args.inputs[0])
             args.inputs = [master.path for master in designspace.sources]
+            locations = [master.location for master in designspace.sources]
+            axis_triples = {a.name: (a.minimum, a.default, a.maximum) for a in designspace.axes}
 
         elif args.inputs[0].endswith(".glyphs"):
             from glyphsLib import GSFont, to_designspace
 
             gsfont = GSFont(args.inputs[0])
-            ds = to_designspace(gsfont)
-            fonts = [source.font for source in ds.sources]
+            designspace = to_designspace(gsfont)
+            fonts = [source.font for source in designspace.sources]
             names = ["%s-%s" % (f.info.familyName, f.info.styleName) for f in fonts]
             args.inputs = []
+            locations = [master.location for master in designspace.sources]
+            axis_triples = {a.name: (a.minimum, a.default, a.maximum) for a in designspace.axes}
 
         elif args.inputs[0].endswith(".ttf"):
             from fontTools.ttLib import TTFont
@@ -547,6 +551,8 @@ def main(args=None):
 
                 names = ["''"]
                 fonts = [font.getGlyphSet()]
+                locations = [{}]
+                axis_triples = {a: (-1, 0, +1) for a in sorted(axisMapping.keys())}
                 for locTuple in sorted(glyphsets.keys(), key=lambda v: (len(v), v)):
                     name = (
                         "'"
@@ -564,6 +570,7 @@ def main(args=None):
                     )
                     names.append(name)
                     fonts.append(glyphsets[locTuple])
+                    locations.append(dict(locTuple))
                 args.ignore_missing = True
                 args.inputs = []
 
@@ -599,6 +606,8 @@ def main(args=None):
                 glyphset[gn] = None
 
     log.info("Running on %d glyphsets", len(glyphsets))
+    log.info("Axis triples: %s", axis_triples)
+    log.info("Locations: %s", locations)
     problems_gen = test_gen(
         glyphsets,
         glyphs=glyphs,
