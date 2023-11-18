@@ -20,11 +20,42 @@ class StatisticsPen(MomentsPen):
         MomentsPen.__init__(self, glyphset=glyphset)
         self.__zero()
 
+    def _moveTo(self, pt):
+        MomentsPen._moveTo(self, pt)
+        self.sumNodesX += pt[0]
+        self.sumNodesY += pt[1]
+        self.numNodes += 1
+
+    def _lineTo(self, pt):
+        MomentsPen._lineTo(self, pt)
+        self.sumNodesX += pt[0]
+        self.sumNodesY += pt[1]
+        self.numNodes += 1
+
+    def _qCurveToOne(self, pt1, pt2):
+        MomentsPen._qCurveToOne(self, pt1, pt2)
+        for pt in (pt1, pt2):
+            self.sumNodesX += pt[0]
+            self.sumNodesY += pt[1]
+        self.numNodes += 2
+
+    def _curveToOne(self, pt1, pt2, pt3):
+        MomentsPen._curveToOne(self, pt1, pt2, pt3)
+        for pt in (pt1, pt2, pt3):
+            self.sumNodesX += pt[0]
+            self.sumNodesY += pt[1]
+        self.numNodes += 3
+
     def _closePath(self):
         MomentsPen._closePath(self)
         self.__update()
 
-    def __zero(self):
+    def __zero(self, nodes=True):
+        if nodes:
+            self.sumNodesX = 0
+            self.sumNodesY = 0
+            self.numNodes = 0
+        self.area = 0
         self.meanX = 0
         self.meanY = 0
         self.varianceX = 0
@@ -38,7 +69,10 @@ class StatisticsPen(MomentsPen):
     def __update(self):
         area = self.area
         if not area:
-            self.__zero()
+            self.__zero(nodes=False)
+            if self.numNodes:
+                self.meanX = self.sumNodesX / self.numNodes
+                self.meanY = self.sumNodesY / self.numNodes
             return
 
         # Center of mass
