@@ -527,6 +527,7 @@ def recursivelyAddGlyph(glyphname, glyphset, ttGlyphSet, glyf):
 def main(args=None):
     """Test for interpolatability issues between fonts"""
     import argparse
+    import sys
 
     parser = argparse.ArgumentParser(
         "fonttools varLib.interpolatable",
@@ -562,6 +563,11 @@ def main(args=None):
         "--quiet",
         action="store_true",
         help="Only exit with code 1 or 0, no output",
+    )
+    parser.add_argument(
+        "--output",
+        action="store",
+        help="Output file for the problem report; Default: stdout",
     )
     parser.add_argument(
         "--ignore-missing",
@@ -753,6 +759,8 @@ def main(args=None):
     )
     problems = defaultdict(list)
 
+    f = sys.stdout if args.output is None else open(args.output, "w")
+
     if not args.quiet:
         if args.json:
             import json
@@ -760,24 +768,27 @@ def main(args=None):
             for glyphname, problem in problems_gen:
                 problems[glyphname].append(problem)
 
-            print(json.dumps(problems))
+            print(json.dumps(problems), file=f)
         else:
             last_glyphname = None
             for glyphname, p in problems_gen:
                 problems[glyphname].append(p)
 
                 if glyphname != last_glyphname:
-                    print(f"Glyph {glyphname} was not compatible: ")
+                    print(f"Glyph {glyphname} was not compatible: ", file=f)
                     last_glyphname = glyphname
 
                 if p["type"] == "missing":
-                    print("    Glyph was missing in master %s" % p["master"])
+                    print("    Glyph was missing in master %s" % p["master"], file=f)
                 if p["type"] == "open_path":
-                    print("    Glyph has an open path in master %s" % p["master"])
+                    print(
+                        "    Glyph has an open path in master %s" % p["master"], file=f
+                    )
                 if p["type"] == "path_count":
                     print(
                         "    Path count differs: %i in %s, %i in %s"
-                        % (p["value_1"], p["master_1"], p["value_2"], p["master_2"])
+                        % (p["value_1"], p["master_1"], p["value_2"], p["master_2"]),
+                        file=f,
                     )
                 if p["type"] == "node_count":
                     print(
@@ -788,7 +799,8 @@ def main(args=None):
                             p["master_1"],
                             p["value_2"],
                             p["master_2"],
-                        )
+                        ),
+                        file=f,
                     )
                 if p["type"] == "node_incompatibility":
                     print(
@@ -800,7 +812,8 @@ def main(args=None):
                             p["master_1"],
                             p["value_2"],
                             p["master_2"],
-                        )
+                        ),
+                        file=f,
                     )
                 if p["type"] == "contour_order":
                     print(
@@ -810,7 +823,8 @@ def main(args=None):
                             p["master_1"],
                             p["value_2"],
                             p["master_2"],
-                        )
+                        ),
+                        file=f,
                     )
                 if p["type"] == "wrong_start_point":
                     print(
@@ -822,7 +836,8 @@ def main(args=None):
                             p["value_2"],
                             p["master_2"],
                             p["reversed"],
-                        )
+                        ),
+                        file=f,
                     )
                 if p["type"] == "math_error":
                     print(
@@ -830,7 +845,8 @@ def main(args=None):
                         % (
                             p["master"],
                             p["error"],
-                        )
+                        ),
+                        file=f,
                     )
     else:
         for glyphname, problem in problems_gen:
