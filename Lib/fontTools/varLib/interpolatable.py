@@ -172,12 +172,16 @@ def _points_characteristic_bits(points):
 
 
 def _points_complex_vector(points):
-    complexPoints = []
+    vector = []
     points = [complex(*pt) for pt, _ in points]
-    for p0, p1 in zip(points, points[1:] + points[:1]):
-        complexPoints.append(p0)
-        complexPoints.append((p1 - p0) * 2)
-    return complexPoints
+    n = len(points)
+    points.extend(points[:1])
+    for i in range(n):
+        p0 = points[i]
+        p1 = points[i + 1]
+        vector.append(p0)
+        vector.append((p1 - p0) * 2)
+    return vector
 
 
 def _add_isomorphisms(points, reference_bits, isomorphisms, reverse):
