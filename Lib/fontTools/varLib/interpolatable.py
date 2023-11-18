@@ -152,6 +152,37 @@ except ImportError:
         )
 
 
+def _points_characteristic_bits(points):
+    bits = 0
+    for pt, b in points:
+        bits = (bits << 1) | b
+    return bits
+
+
+def _points_complex_vector(points):
+    complexPoints = []
+    for (pt0, _), (pt1, _) in zip(points, points[1:] + points[:1]):
+        complexPoints.append(complex(*pt0))
+        complexPoints.append((complex(*pt1) - complex(*pt0)) * 2)
+    return complexPoints
+
+
+def _add_isomorphisms(points, reference_bits, isomorphisms, reverse):
+    n = len(points)
+
+    bits = _points_characteristic_bits(points)
+    vector = _points_complex_vector(points)
+
+    assert len(vector) % n == 0
+    mult = len(vector) // n
+    mask = (1 << n) - 1
+
+    for i in range(n):
+        b = ((bits << i) & mask) | ((bits >> (n - i)))
+        if b == reference_bits:
+            isomorphisms.append((_rot_list(vector, i * mult), i, reverse))
+
+
 def test_gen(
     glyphsets,
     glyphs=None,
@@ -303,47 +334,17 @@ def test_gen(
                     # points.value is a list of pt,bool where bool is true if on-curve and false if off-curve;
                     # now check all rotations and mirror-rotations of the contour and build list of isomorphic
                     # possible starting points.
-                    n = len(points.value)
-                    mask = (1 << n) - 1
+
                     isomorphisms = []
                     contourIsomorphisms.append(isomorphisms)
 
+                    reference_bits = _points_characteristic_bits(points.value)
                     # Add rotations
-
-                    thisPoints = points.value
-                    bits = 0
-                    for pt, b in thisPoints:
-                        bits = (bits << 1) | b
-                    complexPoints = []
-                    for (pt0, _), (pt1, _) in zip(
-                        thisPoints, thisPoints[1:] + thisPoints[:1]
-                    ):
-                        complexPoints.append(complex(*pt0))
-                        complexPoints.append((complex(*pt1) - complex(*pt0)) * 2)
-                    for i in range(n):
-                        b = ((bits << i) & mask) | ((bits >> (n - i)))
-                        if b == bits:
-                            isomorphisms.append(
-                                (_rot_list(complexPoints, i * 2), i, False)
-                            )
-
+                    _add_isomorphisms(points.value, reference_bits, isomorphisms, False)
                     # Add mirrored rotations
-                    thisPoints = list(reversed(thisPoints))
-                    reversed_bits = 0
-                    for pt, b in thisPoints:
-                        reversed_bits = (reversed_bits << 1) | b
-                    complexPoints = []
-                    for (pt0, _), (pt1, _) in zip(
-                        thisPoints, thisPoints[1:] + thisPoints[:1]
-                    ):
-                        complexPoints.append(complex(*pt0))
-                        complexPoints.append((complex(*pt1) - complex(*pt0)) * 2)
-                    for i in range(n):
-                        b = ((reversed_bits << i) & mask) | ((reversed_bits >> (n - i)))
-                        if b == bits:
-                            isomorphisms.append(
-                                (_rot_list(complexPoints, i * 2), n - 1 - i, True)
-                            )
+                    _add_isomorphisms(
+                        list(reversed(points.value)), reference_bits, isomorphisms, True
+                    )
 
             for m1idx in order:
                 m1 = allNodeTypes[m1idx]
