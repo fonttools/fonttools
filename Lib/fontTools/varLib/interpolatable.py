@@ -201,10 +201,16 @@ def _points_complex_vector(points):
     return vector
 
 
-def _add_isomorphisms(points, reference_bits, isomorphisms, reverse):
+def _add_isomorphisms(points, isomorphisms, reverse):
+    reference_bits = _points_characteristic_bits(points)
     n = len(points)
 
-    bits = _points_characteristic_bits(points)
+    if reverse:
+        points = points[::-1]
+        bits = _points_characteristic_bits(points)
+    else:
+        bits = reference_bits
+
     vector = _points_complex_vector(points)
 
     assert len(vector) % n == 0
@@ -214,7 +220,7 @@ def _add_isomorphisms(points, reference_bits, isomorphisms, reverse):
     for i in range(n):
         b = ((bits << i) & mask) | ((bits >> (n - i)))
         if b == reference_bits:
-            isomorphisms.append((_rot_list(vector, i * mult), i, reverse))
+            isomorphisms.append((_rot_list(vector, i * mult), n - 1 - i if reverse else i, reverse))
 
 
 def _find_parents_and_order(glyphsets, locations):
@@ -362,12 +368,10 @@ def test_gen(
                 isomorphisms = []
                 contourIsomorphisms.append(isomorphisms)
 
-                reference_bits = _points_characteristic_bits(points.value)
                 # Add rotations
-                _add_isomorphisms(points.value, reference_bits, isomorphisms, False)
+                _add_isomorphisms(points.value, isomorphisms, False)
                 # Add mirrored rotations
-                _add_isomorphisms(
-                    list(reversed(points.value)), reference_bits, isomorphisms, True
+                _add_isomorphisms(points.value, isomorphisms, True
                 )
 
         for m1idx in order:
