@@ -173,9 +173,10 @@ def _points_characteristic_bits(points):
 
 def _points_complex_vector(points):
     complexPoints = []
-    for (pt0, _), (pt1, _) in zip(points, points[1:] + points[:1]):
-        complexPoints.append(complex(*pt0))
-        complexPoints.append((complex(*pt1) - complex(*pt0)) * 2)
+    points = [complex(*pt) for pt, _ in points]
+    for p0, p1 in zip(points, points[1:] + points[:1]):
+        complexPoints.append(p0)
+        complexPoints.append((p1 - p0) * 2)
     return complexPoints
 
 
