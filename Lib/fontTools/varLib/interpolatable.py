@@ -216,18 +216,7 @@ def _add_isomorphisms(points, reference_bits, isomorphisms, reverse):
         if b == reference_bits:
             isomorphisms.append((_rot_list(vector, i * mult), i, reverse))
 
-
-def test_gen(
-    glyphsets,
-    glyphs=None,
-    names=None,
-    ignore_missing=False,
-    *,
-    locations=None,
-    tolerance=0.95,
-):
-    if names is None:
-        names = glyphsets
+def _find_parents_and_order(glyphsets, locations):
 
     parents = [None] + list(range(len(glyphsets) - 1))
     order = list(range(len(glyphsets)))
@@ -278,8 +267,29 @@ def test_gen(
         except ImportError:
             pass
 
-        log.info("Order: %s", order)
         log.info("Parents: %s", parents)
+        log.info("Order: %s", order)
+    return parents, order
+
+
+def test_gen(
+    glyphsets,
+    glyphs=None,
+    names=None,
+    ignore_missing=False,
+    *,
+    locations=None,
+    tolerance=0.95,
+):
+    if names is None:
+        names = glyphsets
+
+    if glyphs is None:
+        # `glyphs = glyphsets[0].keys()` is faster, certainly, but doesn't allow for sparse TTFs/OTFs given out of order
+        # ... risks the sparse master being the first one, and only processing a subset of the glyphs
+        glyphs = {g for glyphset in glyphsets for g in glyphset.keys()}
+
+    parents, order = _find_parents_and_order(glyphsets, locations)
 
     def grand_parent(i, glyphname):
         if i is None:
@@ -290,11 +300,6 @@ def test_gen(
         while parents[i] is not None and glyphsets[i][glyphname] is None:
             i = parents[i]
         return i
-
-    if glyphs is None:
-        # `glyphs = glyphsets[0].keys()` is faster, certainly, but doesn't allow for sparse TTFs/OTFs given out of order
-        # ... risks the sparse master being the first one, and only processing a subset of the glyphs
-        glyphs = {g for glyphset in glyphsets for g in glyphset.keys()}
 
     for glyph_name in glyphs:
         log.info("Testing glyph %s", glyph_name)
