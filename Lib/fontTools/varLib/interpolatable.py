@@ -303,208 +303,199 @@ def test_gen(
 
     for glyph_name in glyphs:
         log.info("Testing glyph %s", glyph_name)
-        try:
-            allVectors = []
-            allNodeTypes = []
-            allContourIsomorphisms = []
-            allGlyphs = [glyphset[glyph_name] for glyphset in glyphsets]
-            if len([1 for glyph in allGlyphs if glyph is not None]) <= 1:
+        allVectors = []
+        allNodeTypes = []
+        allContourIsomorphisms = []
+        allGlyphs = [glyphset[glyph_name] for glyphset in glyphsets]
+        if len([1 for glyph in allGlyphs if glyph is not None]) <= 1:
+            continue
+        for glyph, glyphset, name in zip(allGlyphs, glyphsets, names):
+            if glyph is None:
+                if not ignore_missing:
+                    yield (glyph_name, {"type": "missing", "master": name})
+                allNodeTypes.append(None)
+                allVectors.append(None)
+                allContourIsomorphisms.append(None)
                 continue
-            for glyph, glyphset, name in zip(allGlyphs, glyphsets, names):
-                if glyph is None:
-                    if not ignore_missing:
-                        yield (glyph_name, {"type": "missing", "master": name})
-                    allNodeTypes.append(None)
-                    allVectors.append(None)
-                    allContourIsomorphisms.append(None)
-                    continue
 
-                perContourPen = PerContourOrComponentPen(
-                    RecordingPen, glyphset=glyphset
-                )
+            perContourPen = PerContourOrComponentPen(RecordingPen, glyphset=glyphset)
+            try:
+                glyph.draw(perContourPen, outputImpliedClosingLine=True)
+            except TypeError:
+                glyph.draw(perContourPen)
+            contourPens = perContourPen.value
+            del perContourPen
+
+            contourVectors = []
+            contourIsomorphisms = []
+            nodeTypes = []
+            allNodeTypes.append(nodeTypes)
+            allVectors.append(contourVectors)
+            allContourIsomorphisms.append(contourIsomorphisms)
+            for ix, contour in enumerate(contourPens):
+                contourOps = tuple(op for op, arg in contour.value)
+                nodeTypes.append(contourOps)
+
+                stats = StatisticsPen(glyphset=glyphset)
                 try:
-                    glyph.draw(perContourPen, outputImpliedClosingLine=True)
-                except TypeError:
-                    glyph.draw(perContourPen)
-                contourPens = perContourPen.value
-                del perContourPen
-
-                contourVectors = []
-                contourIsomorphisms = []
-                nodeTypes = []
-                allNodeTypes.append(nodeTypes)
-                allVectors.append(contourVectors)
-                allContourIsomorphisms.append(contourIsomorphisms)
-                for ix, contour in enumerate(contourPens):
-                    contourOps = tuple(op for op, arg in contour.value)
-                    nodeTypes.append(contourOps)
-
-                    stats = StatisticsPen(glyphset=glyphset)
-                    try:
-                        contour.replay(stats)
-                    except OpenContourError as e:
-                        yield (
-                            glyph_name,
-                            {"master": name, "contour": ix, "type": "open_path"},
-                        )
-                        continue
-                    contourVectors.append(_contour_vector_from_stats(stats))
-
-                    # Check starting point
-                    if contourOps[0] == "addComponent":
-                        continue
-                    assert contourOps[0] == "moveTo"
-                    assert contourOps[-1] in ("closePath", "endPath")
-                    points = RecordingPointPen()
-                    converter = SegmentToPointPen(points, False)
-                    contour.replay(converter)
-                    # points.value is a list of pt,bool where bool is true if on-curve and false if off-curve;
-                    # now check all rotations and mirror-rotations of the contour and build list of isomorphic
-                    # possible starting points.
-
-                    isomorphisms = []
-                    contourIsomorphisms.append(isomorphisms)
-
-                    reference_bits = _points_characteristic_bits(points.value)
-                    # Add rotations
-                    _add_isomorphisms(points.value, reference_bits, isomorphisms, False)
-                    # Add mirrored rotations
-                    _add_isomorphisms(
-                        list(reversed(points.value)), reference_bits, isomorphisms, True
+                    contour.replay(stats)
+                except OpenContourError as e:
+                    yield (
+                        glyph_name,
+                        {"master": name, "contour": ix, "type": "open_path"},
                     )
+                    continue
+                contourVectors.append(_contour_vector_from_stats(stats))
 
-            for m1idx in order:
-                m1 = allNodeTypes[m1idx]
-                if m1 is None:
+                # Check starting point
+                if contourOps[0] == "addComponent":
                     continue
-                m0idx = grand_parent(m1idx, glyph_name)
-                if m0idx is None:
+                assert contourOps[0] == "moveTo"
+                assert contourOps[-1] in ("closePath", "endPath")
+                points = RecordingPointPen()
+                converter = SegmentToPointPen(points, False)
+                contour.replay(converter)
+                # points.value is a list of pt,bool where bool is true if on-curve and false if off-curve;
+                # now check all rotations and mirror-rotations of the contour and build list of isomorphic
+                # possible starting points.
+
+                isomorphisms = []
+                contourIsomorphisms.append(isomorphisms)
+
+                reference_bits = _points_characteristic_bits(points.value)
+                # Add rotations
+                _add_isomorphisms(points.value, reference_bits, isomorphisms, False)
+                # Add mirrored rotations
+                _add_isomorphisms(
+                    list(reversed(points.value)), reference_bits, isomorphisms, True
+                )
+
+        for m1idx in order:
+            m1 = allNodeTypes[m1idx]
+            if m1 is None:
+                continue
+            m0idx = grand_parent(m1idx, glyph_name)
+            if m0idx is None:
+                continue
+            m0 = allNodeTypes[m0idx]
+            if m0 is None:
+                continue
+            if len(m0) != len(m1):
+                yield (
+                    glyph_name,
+                    {
+                        "type": "path_count",
+                        "master_1": names[m0idx],
+                        "master_2": names[m1idx],
+                        "value_1": len(m0),
+                        "value_2": len(m1),
+                    },
+                )
+            if m0 == m1:
+                continue
+            for pathIx, (nodes1, nodes2) in enumerate(zip(m0, m1)):
+                if nodes1 == nodes2:
                     continue
-                m0 = allNodeTypes[m0idx]
-                if m0 is None:
-                    continue
-                if len(m0) != len(m1):
+                if len(nodes1) != len(nodes2):
                     yield (
                         glyph_name,
                         {
-                            "type": "path_count",
+                            "type": "node_count",
+                            "path": pathIx,
                             "master_1": names[m0idx],
                             "master_2": names[m1idx],
-                            "value_1": len(m0),
-                            "value_2": len(m1),
+                            "value_1": len(nodes1),
+                            "value_2": len(nodes2),
                         },
                     )
-                if m0 == m1:
                     continue
-                for pathIx, (nodes1, nodes2) in enumerate(zip(m0, m1)):
-                    if nodes1 == nodes2:
-                        continue
-                    if len(nodes1) != len(nodes2):
+                for nodeIx, (n1, n2) in enumerate(zip(nodes1, nodes2)):
+                    if n1 != n2:
                         yield (
                             glyph_name,
                             {
-                                "type": "node_count",
+                                "type": "node_incompatibility",
                                 "path": pathIx,
+                                "node": nodeIx,
                                 "master_1": names[m0idx],
                                 "master_2": names[m1idx],
-                                "value_1": len(nodes1),
-                                "value_2": len(nodes2),
+                                "value_1": n1,
+                                "value_2": n2,
                             },
                         )
                         continue
-                    for nodeIx, (n1, n2) in enumerate(zip(nodes1, nodes2)):
-                        if n1 != n2:
-                            yield (
-                                glyph_name,
-                                {
-                                    "type": "node_incompatibility",
-                                    "path": pathIx,
-                                    "node": nodeIx,
-                                    "master_1": names[m0idx],
-                                    "master_2": names[m1idx],
-                                    "value_1": n1,
-                                    "value_2": n2,
-                                },
-                            )
-                            continue
 
-            matchings = [None] * len(allVectors)
-            for m1idx in order:
-                m1 = allVectors[m1idx]
-                if not m1:
-                    continue
-                m0idx = grand_parent(m1idx, glyph_name)
-                if m0idx is None:
-                    continue
-                m0 = allVectors[m0idx]
-                if m0 is None:
-                    continue
-                if len(m0) != len(m1):
+        matchings = [None] * len(allVectors)
+        for m1idx in order:
+            m1 = allVectors[m1idx]
+            if not m1:
+                continue
+            m0idx = grand_parent(m1idx, glyph_name)
+            if m0idx is None:
+                continue
+            m0 = allVectors[m0idx]
+            if m0 is None:
+                continue
+            if len(m0) != len(m1):
+                # We already reported this
+                continue
+            costs = [[_vdiff_hypot2(v0, v1) for v1 in m1] for v0 in m0]
+            matching, matching_cost = min_cost_perfect_bipartite_matching(costs)
+            identity_matching = list(range(len(m0)))
+            identity_cost = sum(costs[i][i] for i in range(len(m0)))
+            if (
+                matching != identity_matching
+                and matching_cost < identity_cost * tolerance
+            ):
+                yield (
+                    glyph_name,
+                    {
+                        "type": "contour_order",
+                        "master_1": names[m0idx],
+                        "master_2": names[m1idx],
+                        "value_1": list(range(len(m0))),
+                        "value_2": matching,
+                    },
+                )
+                matchings[m1idx] = matching
+
+        for m1idx in order:
+            m1 = allContourIsomorphisms[m1idx]
+            if m1 is None:
+                continue
+            m0idx = grand_parent(m1idx, glyph_name)
+            if m0idx is None:
+                continue
+            m0 = allContourIsomorphisms[m0idx]
+            if m0 is None:
+                continue
+            if len(m0) != len(m1):
+                # We already reported this
+                continue
+            for ix, (contour0, contour1) in enumerate(zip(m0, m1)):
+                if len(contour0) != len(contour1):
                     # We already reported this
                     continue
-                costs = [[_vdiff_hypot2(v0, v1) for v1 in m1] for v0 in m0]
-                matching, matching_cost = min_cost_perfect_bipartite_matching(costs)
-                identity_matching = list(range(len(m0)))
-                identity_cost = sum(costs[i][i] for i in range(len(m0)))
-                if (
-                    matching != identity_matching
-                    and matching_cost < identity_cost * tolerance
-                ):
+                # If contour-order is wrong, don't try reporting starting-point
+                if matchings[m1idx] is not None and matchings[m1idx][ix] != ix:
+                    continue
+                c0 = contour0[0]
+                costs = [_vdiff_hypot2_complex(c0[0], c1[0]) for c1 in contour1]
+                min_cost_idx, min_cost = min(enumerate(costs), key=lambda x: x[1])
+                first_cost = costs[0]
+                if min_cost < first_cost * tolerance:
                     yield (
                         glyph_name,
                         {
-                            "type": "contour_order",
+                            "type": "wrong_start_point",
+                            "contour": ix,
                             "master_1": names[m0idx],
                             "master_2": names[m1idx],
-                            "value_1": list(range(len(m0))),
-                            "value_2": matching,
+                            "value_1": 0,
+                            "value_2": contour1[min_cost_idx][1],
+                            "reversed": contour1[min_cost_idx][2],
                         },
                     )
-                    matchings[m1idx] = matching
-
-            for m1idx in order:
-                m1 = allContourIsomorphisms[m1idx]
-                if m1 is None:
-                    continue
-                m0idx = grand_parent(m1idx, glyph_name)
-                if m0idx is None:
-                    continue
-                m0 = allContourIsomorphisms[m0idx]
-                if m0 is None:
-                    continue
-                if len(m0) != len(m1):
-                    # We already reported this
-                    continue
-                for ix, (contour0, contour1) in enumerate(zip(m0, m1)):
-                    if len(contour0) != len(contour1):
-                        # We already reported this
-                        continue
-                    # If contour-order is wrong, don't try reporting starting-point
-                    if matchings[m1idx] is not None and matchings[m1idx][ix] != ix:
-                        continue
-                    c0 = contour0[0]
-                    costs = [_vdiff_hypot2_complex(c0[0], c1[0]) for c1 in contour1]
-                    min_cost_idx, min_cost = min(enumerate(costs), key=lambda x: x[1])
-                    first_cost = costs[0]
-                    if min_cost < first_cost * tolerance:
-                        yield (
-                            glyph_name,
-                            {
-                                "type": "wrong_start_point",
-                                "contour": ix,
-                                "master_1": names[m0idx],
-                                "master_2": names[m1idx],
-                                "value_1": 0,
-                                "value_2": contour1[min_cost_idx][1],
-                                "reversed": contour1[min_cost_idx][2],
-                            },
-                        )
-
-        except ValueError as e:
-            yield (
-                glyph_name,
-                {"type": "math_error", "master": name, "error": e},
-            )
 
 
 @wraps(test_gen)
@@ -836,15 +827,6 @@ def main(args=None):
                             p["value_2"],
                             p["master_2"],
                             p["reversed"],
-                        ),
-                        file=f,
-                    )
-                if p["type"] == "math_error":
-                    print(
-                        "    Miscellaneous error in %s: %s"
-                        % (
-                            p["master"],
-                            p["error"],
                         ),
                         file=f,
                     )
