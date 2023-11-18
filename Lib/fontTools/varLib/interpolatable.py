@@ -16,7 +16,7 @@ from fontTools.misc.fixedTools import floatToFixedToStr
 from collections import defaultdict, deque
 from functools import wraps
 from pprint import pformat
-import math
+from math import sqrt, copysign
 import itertools
 import logging
 
@@ -152,6 +152,71 @@ except ImportError:
         )
 
 
+def _contour_vector_from_stats(stats):
+    size = sqrt(abs(stats.area))
+    return (
+        copysign((size), stats.area),
+        stats.meanX,
+        stats.meanY,
+        stats.stddevX * 2,
+        stats.stddevY * 2,
+        stats.correlation * size,
+    )
+
+
+def _points_characteristic_bits(points):
+    bits = 0
+    for pt, b in points:
+        bits = (bits << 1) | b
+    return bits
+
+
+def _points_complex_vector(points):
+    vector = []
+    points = [complex(*pt) for pt, _ in points]
+    n = len(points)
+    points.extend(points[:2])
+    for i in range(n):
+        p0 = points[i]
+
+        # The point itself
+        vector.append(p0)
+
+        # The distance to the next point;
+        # Emphasized by 2 empirically
+        p1 = points[i + 1]
+        d0 = p1 - p0
+        vector.append(d0 * 2)
+
+        """
+        # The angle to the next point, as a cross product;
+        # Square root of, to match dimentionality of distance.
+        p2 = points[i + 2]
+        d1 = p2 - p1
+        cross = d0.real * d1.imag - d0.imag * d1.real
+        cross = copysign(sqrt(abs(cross)), cross)
+        vector.append(cross)
+        """
+
+    return vector
+
+
+def _add_isomorphisms(points, reference_bits, isomorphisms, reverse):
+    n = len(points)
+
+    bits = _points_characteristic_bits(points)
+    vector = _points_complex_vector(points)
+
+    assert len(vector) % n == 0
+    mult = len(vector) // n
+    mask = (1 << n) - 1
+
+    for i in range(n):
+        b = ((bits << i) & mask) | ((bits >> (n - i)))
+        if b == reference_bits:
+            isomorphisms.append((_rot_list(vector, i * mult), i, reverse))
+
+
 def test_gen(
     glyphsets,
     glyphs=None,
@@ -231,8 +296,6 @@ def test_gen(
         # ... risks the sparse master being the first one, and only processing a subset of the glyphs
         glyphs = {g for glyphset in glyphsets for g in glyphset.keys()}
 
-    hist = []
-
     for glyph_name in glyphs:
         log.info("Testing glyph %s", glyph_name)
         try:
@@ -268,8 +331,8 @@ def test_gen(
                 allVectors.append(contourVectors)
                 allContourIsomorphisms.append(contourIsomorphisms)
                 for ix, contour in enumerate(contourPens):
-                    nodeVecs = tuple(instruction[0] for instruction in contour.value)
-                    nodeTypes.append(nodeVecs)
+                    contourOps = tuple(op for op, arg in contour.value)
+                    nodeTypes.append(contourOps)
 
                     stats = StatisticsPen(glyphset=glyphset)
                     try:
@@ -280,69 +343,30 @@ def test_gen(
                             {"master": name, "contour": ix, "type": "open_path"},
                         )
                         continue
-                    size = math.sqrt(abs(stats.area))
-                    vector = (
-                        math.copysign((size), stats.area),
-                        stats.meanX,
-                        stats.meanY,
-                        stats.stddevX * 2,
-                        stats.stddevY * 2,
-                        stats.correlation * size,
-                    )
-                    contourVectors.append(vector)
-                    # print(vector)
+                    contourVectors.append(_contour_vector_from_stats(stats))
 
                     # Check starting point
-                    if nodeVecs[0] == "addComponent":
+                    if contourOps[0] == "addComponent":
                         continue
-                    assert nodeVecs[0] == "moveTo"
-                    assert nodeVecs[-1] in ("closePath", "endPath")
+                    assert contourOps[0] == "moveTo"
+                    assert contourOps[-1] in ("closePath", "endPath")
                     points = RecordingPointPen()
                     converter = SegmentToPointPen(points, False)
                     contour.replay(converter)
                     # points.value is a list of pt,bool where bool is true if on-curve and false if off-curve;
                     # now check all rotations and mirror-rotations of the contour and build list of isomorphic
                     # possible starting points.
-                    bits = 0
-                    for pt, b in points.value:
-                        bits = (bits << 1) | b
-                    n = len(points.value)
-                    mask = (1 << n) - 1
+
                     isomorphisms = []
                     contourIsomorphisms.append(isomorphisms)
 
+                    reference_bits = _points_characteristic_bits(points.value)
                     # Add rotations
-                    complexPoints = []
-                    thisPoints = points.value
-                    for (pt0, _), (pt1, _) in zip(
-                        thisPoints, thisPoints[1:] + thisPoints[:1]
-                    ):
-                        complexPoints.append(complex(*pt0))
-                        complexPoints.append((complex(*pt1) - complex(*pt0)) * 2)
-                    for i in range(n):
-                        b = ((bits << i) & mask) | ((bits >> (n - i)))
-                        if b == bits:
-                            isomorphisms.append(
-                                (_rot_list(complexPoints, i * 2), i, False)
-                            )
-
+                    _add_isomorphisms(points.value, reference_bits, isomorphisms, False)
                     # Add mirrored rotations
-                    thisPoints = list(reversed(thisPoints))
-                    reversed_bits = 0
-                    for pt, b in thisPoints:
-                        reversed_bits = (reversed_bits << 1) | b
-                    complexPoints = []
-                    for (pt0, _), (pt1, _) in zip(
-                        thisPoints, thisPoints[1:] + thisPoints[:1]
-                    ):
-                        complexPoints.append(complex(*pt0))
-                        complexPoints.append((complex(*pt1) - complex(*pt0)) * 2)
-                    for i in range(n):
-                        b = ((reversed_bits << i) & mask) | ((reversed_bits >> (n - i)))
-                        if b == bits:
-                            isomorphisms.append(
-                                (_rot_list(complexPoints, i * 2), n - 1 - i, True)
-                            )
+                    _add_isomorphisms(
+                        list(reversed(points.value)), reference_bits, isomorphisms, True
+                    )
 
             for m1idx in order:
                 m1 = allNodeTypes[m1idx]
