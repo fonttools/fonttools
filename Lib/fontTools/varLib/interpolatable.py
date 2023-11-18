@@ -303,17 +303,18 @@ def test_gen(
                     # points.value is a list of pt,bool where bool is true if on-curve and false if off-curve;
                     # now check all rotations and mirror-rotations of the contour and build list of isomorphic
                     # possible starting points.
-                    bits = 0
-                    for pt, b in points.value:
-                        bits = (bits << 1) | b
                     n = len(points.value)
                     mask = (1 << n) - 1
                     isomorphisms = []
                     contourIsomorphisms.append(isomorphisms)
 
                     # Add rotations
-                    complexPoints = []
+
                     thisPoints = points.value
+                    bits = 0
+                    for pt, b in thisPoints:
+                        bits = (bits << 1) | b
+                    complexPoints = []
                     for (pt0, _), (pt1, _) in zip(
                         thisPoints, thisPoints[1:] + thisPoints[:1]
                     ):
