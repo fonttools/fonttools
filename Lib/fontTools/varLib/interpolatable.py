@@ -216,8 +216,8 @@ def _add_isomorphisms(points, reference_bits, isomorphisms, reverse):
         if b == reference_bits:
             isomorphisms.append((_rot_list(vector, i * mult), i, reverse))
 
-def _find_parents_and_order(glyphsets, locations):
 
+def _find_parents_and_order(glyphsets, locations):
     parents = [None] + list(range(len(glyphsets) - 1))
     order = list(range(len(glyphsets)))
     if locations:

@@ -331,9 +331,9 @@ class InterpolatablePlot:
                                 second_pt.real - first_pt.real,
                             )
                         )
+                        cr.scale(1 / scale, 1 / scale)
                         cr.translate(self.start_handle_width, 0)
                         cr.move_to(0, 0)
-                        cr.scale(1 / scale, 1 / scale)
                         cr.line_to(
                             -self.start_handle_arrow_length,
                             -self.start_handle_arrow_length,
