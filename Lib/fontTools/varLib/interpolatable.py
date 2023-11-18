@@ -152,6 +152,18 @@ except ImportError:
         )
 
 
+def _contour_vector_from_stats(stats):
+    size = math.sqrt(abs(stats.area))
+    return (
+        math.copysign((size), stats.area),
+        stats.meanX,
+        stats.meanY,
+        stats.stddevX * 2,
+        stats.stddevY * 2,
+        stats.correlation * size,
+    )
+
+
 def _points_characteristic_bits(points):
     bits = 0
     for pt, b in points:
@@ -311,17 +323,7 @@ def test_gen(
                             {"master": name, "contour": ix, "type": "open_path"},
                         )
                         continue
-                    size = math.sqrt(abs(stats.area))
-                    vector = (
-                        math.copysign((size), stats.area),
-                        stats.meanX,
-                        stats.meanY,
-                        stats.stddevX * 2,
-                        stats.stddevY * 2,
-                        stats.correlation * size,
-                    )
-                    contourVectors.append(vector)
-                    # print(vector)
+                    contourVectors.append(_contour_vector_from_stats(stats))
 
                     # Check starting point
                     if nodeVecs[0] == "addComponent":
