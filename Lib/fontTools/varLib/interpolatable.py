@@ -13,8 +13,9 @@ from fontTools.pens.statisticsPen import StatisticsPen
 from fontTools.pens.momentsPen import OpenContourError
 from fontTools.varLib.models import piecewiseLinearMap, normalizeLocation
 from fontTools.misc.fixedTools import floatToFixedToStr
-from collections import defaultdict
+from collections import defaultdict, deque
 from functools import wraps
+from pprint import pformat
 import math
 import itertools
 import logging
@@ -163,19 +164,67 @@ def test_gen(
     if names is None:
         names = glyphsets
 
+    parents = [None] + list(range(len(glyphsets) - 1))
+    order = list(range(len(glyphsets)))
     if locations:
-        # Order the glyphsets by something
-        order = list(range(len(glyphsets)))
+        # Order base master first
         bases = (i for i, l in enumerate(locations) if all(v == 0 for v in l.values()))
         if bases:
             base = next(bases)
-            order.remove(base)
-            order.insert(0, base)
+            logging.info("Base master index %s, location %s", base, locations[base])
         else:
+            base = 0
             logging.warning("No base master location found")
 
-        glyphsets = [glyphsets[i] for i in order]
-        names = [names[i] for i in order]
+        # Form a minimum spanning tree of the locations
+        try:
+            from scipy.sparse.csgraph import minimum_spanning_tree
+
+            graph = [[0] * len(locations) for _ in range(len(locations))]
+            axes = set()
+            for l in locations:
+                axes.update(l.keys())
+            axes = sorted(axes)
+            vectors = [tuple(l.get(k, 0) for k in axes) for l in locations]
+            for i, j in itertools.combinations(range(len(locations)), 2):
+                graph[i][j] = _vdiff_hypot2(vectors[i], vectors[j])
+
+            tree = minimum_spanning_tree(graph)
+            rows, cols = tree.nonzero()
+            graph = defaultdict(set)
+            for row, col in zip(rows, cols):
+                graph[row].add(col)
+                graph[col].add(row)
+
+            # Traverse graph from the base and assign parents
+            parents = [None] * len(locations)
+            order = []
+            visited = set()
+            queue = deque([base])
+            while queue:
+                i = queue.popleft()
+                visited.add(i)
+                order.append(i)
+                for j in sorted(graph[i]):
+                    if j not in visited:
+                        parents[j] = i
+                        queue.append(j)
+
+        except ImportError:
+            pass
+
+        log.info("Order: %s", order)
+        log.info("Parents: %s", parents)
+
+    def grand_parent(i, glyphname):
+        if i is None:
+            return None
+        i = parents[i]
+        if i is None:
+            return None
+        while parents[i] is not None and glyphsets[i][glyphname] is None:
+            i = parents[i]
+        return i
 
     if glyphs is None:
         # `glyphs = glyphsets[0].keys()` is faster, certainly, but doesn't allow for sparse TTFs/OTFs given out of order
@@ -185,8 +234,8 @@ def test_gen(
     hist = []
 
     for glyph_name in glyphs:
+        log.info("Testing glyph %s", glyph_name)
         try:
-            m0idx = 0
             allVectors = []
             allNodeTypes = []
             allContourIsomorphisms = []
@@ -261,34 +310,49 @@ def test_gen(
                     mask = (1 << n) - 1
                     isomorphisms = []
                     contourIsomorphisms.append(isomorphisms)
-                    complexPoints = [complex(*pt) for pt, bl in points.value]
+
+                    # Add rotations
+                    complexPoints = []
+                    thisPoints = points.value
+                    for (pt0, _), (pt1, _) in zip(
+                        thisPoints, thisPoints[1:] + thisPoints[:1]
+                    ):
+                        complexPoints.append(complex(*pt0))
+                        complexPoints.append(complex(*pt1) - complex(*pt0))
                     for i in range(n):
                         b = ((bits << i) & mask) | ((bits >> (n - i)))
                         if b == bits:
-                            isomorphisms.append((_rot_list(complexPoints, i), i, False))
+                            isomorphisms.append(
+                                (_rot_list(complexPoints, i * 2), i, False)
+                            )
+
                     # Add mirrored rotations
-                    mirrored = list(reversed(points.value))
+                    thisPoints = list(reversed(thisPoints))
                     reversed_bits = 0
-                    for pt, b in mirrored:
+                    for pt, b in thisPoints:
                         reversed_bits = (reversed_bits << 1) | b
-                    complexPoints = list(reversed(complexPoints))
+                    complexPoints = []
+                    for (pt0, _), (pt1, _) in zip(
+                        thisPoints, thisPoints[1:] + thisPoints[:1]
+                    ):
+                        complexPoints.append(complex(*pt0))
+                        complexPoints.append(complex(*pt1) - complex(*pt0))
                     for i in range(n):
                         b = ((reversed_bits << i) & mask) | ((reversed_bits >> (n - i)))
                         if b == bits:
                             isomorphisms.append(
-                                (_rot_list(complexPoints, i), n - i, True)
+                                (_rot_list(complexPoints, i * 2), n - 1 - i, True)
                             )
 
-            # m0idx should be the index of the first non-None item in allNodeTypes,
-            # else give it the last item.
-            m0idx = next(
-                (i for i, x in enumerate(allNodeTypes) if x is not None),
-                len(allNodeTypes) - 1,
-            )
-            # m0 is the first non-None item in allNodeTypes, or last one if all None
-            m0 = allNodeTypes[m0idx]
-            for i, m1 in enumerate(allNodeTypes[m0idx + 1 :]):
+            for m1idx in order:
+                m1 = allNodeTypes[m1idx]
                 if m1 is None:
+                    continue
+                m0idx = grand_parent(m1idx, glyph_name)
+                if m0idx is None:
+                    continue
+                m0 = allNodeTypes[m0idx]
+                if m0 is None:
                     continue
                 if len(m0) != len(m1):
                     yield (
@@ -296,7 +360,7 @@ def test_gen(
                         {
                             "type": "path_count",
                             "master_1": names[m0idx],
-                            "master_2": names[m0idx + i + 1],
+                            "master_2": names[m1idx],
                             "value_1": len(m0),
                             "value_2": len(m1),
                         },
@@ -313,7 +377,7 @@ def test_gen(
                                 "type": "node_count",
                                 "path": pathIx,
                                 "master_1": names[m0idx],
-                                "master_2": names[m0idx + i + 1],
+                                "master_2": names[m1idx],
                                 "value_1": len(nodes1),
                                 "value_2": len(nodes2),
                             },
@@ -328,90 +392,84 @@ def test_gen(
                                     "path": pathIx,
                                     "node": nodeIx,
                                     "master_1": names[m0idx],
-                                    "master_2": names[m0idx + i + 1],
+                                    "master_2": names[m1idx],
                                     "value_1": n1,
                                     "value_2": n2,
                                 },
                             )
                             continue
 
-            # m0idx should be the index of the first non-None item in allVectors,
-            # else give it the last item.
-            m0idx = next(
-                (i for i, x in enumerate(allVectors) if x is not None),
-                len(allVectors) - 1,
-            )
-            # m0 is the first non-None item in allVectors, or last one if all None
-            m0 = allVectors[m0idx]
-            matchings = [list(range(len(m0)))] * len(allVectors)
-            if m0 is not None and len(m0) > 1:
-                for i, m1 in enumerate(allVectors[m0idx + 1 :]):
-                    if m1 is None:
-                        continue
-                    if len(m0) != len(m1):
+            matchings = [None] * len(allVectors)
+            for m1idx in order:
+                m1 = allVectors[m1idx]
+                if not m1:
+                    continue
+                m0idx = grand_parent(m1idx, glyph_name)
+                if m0idx is None:
+                    continue
+                m0 = allVectors[m0idx]
+                if m0 is None:
+                    continue
+                if len(m0) != len(m1):
+                    # We already reported this
+                    continue
+                costs = [[_vdiff_hypot2(v0, v1) for v1 in m1] for v0 in m0]
+                matching, matching_cost = min_cost_perfect_bipartite_matching(costs)
+                identity_matching = list(range(len(m0)))
+                identity_cost = sum(costs[i][i] for i in range(len(m0)))
+                if (
+                    matching != identity_matching
+                    and matching_cost < identity_cost * tolerance
+                ):
+                    yield (
+                        glyph_name,
+                        {
+                            "type": "contour_order",
+                            "master_1": names[m0idx],
+                            "master_2": names[m1idx],
+                            "value_1": list(range(len(m0))),
+                            "value_2": matching,
+                        },
+                    )
+                    matchings[m1idx] = matching
+
+            for m1idx in order:
+                m1 = allContourIsomorphisms[m1idx]
+                if m1 is None:
+                    continue
+                m0idx = grand_parent(m1idx, glyph_name)
+                if m0idx is None:
+                    continue
+                m0 = allContourIsomorphisms[m0idx]
+                if m0 is None:
+                    continue
+                if len(m0) != len(m1):
+                    # We already reported this
+                    continue
+                for ix, (contour0, contour1) in enumerate(zip(m0, m1)):
+                    if len(contour0) != len(contour1):
                         # We already reported this
                         continue
-                    costs = [[_vdiff_hypot2(v0, v1) for v1 in m1] for v0 in m0]
-                    matching, matching_cost = min_cost_perfect_bipartite_matching(costs)
-                    identity_matching = list(range(len(m0)))
-                    identity_cost = sum(costs[i][i] for i in range(len(m0)))
-                    if (
-                        matching != identity_matching
-                        and matching_cost < identity_cost * tolerance
-                    ):
+                    # If contour-order is wrong, don't try reporting starting-point
+                    if matchings[m1idx] is not None and matchings[m1idx][ix] != ix:
+                        continue
+                    c0 = contour0[0]
+                    costs = [_vdiff_hypot2_complex(c0[0], c1[0]) for c1 in contour1]
+                    min_cost_idx, min_cost = min(enumerate(costs), key=lambda x: x[1])
+                    first_cost = costs[0]
+                    if min_cost < first_cost * tolerance:
                         yield (
                             glyph_name,
                             {
-                                "type": "contour_order",
+                                "type": "wrong_start_point",
+                                "contour": ix,
                                 "master_1": names[m0idx],
-                                "master_2": names[m0idx + i + 1],
-                                "value_1": list(range(len(m0))),
-                                "value_2": matching,
+                                "master_2": names[m1idx],
+                                "value_1": 0,
+                                "value_2": contour1[min_cost_idx][1],
+                                "reversed": contour1[min_cost_idx][2],
                             },
                         )
-                        matchings[m0idx + i + 1] = matching
-
-            # m0idx should be the index of the first non-None item in allContourIsomorphisms,
-            # else give it the last item.
-            m0idx = next(
-                (i for i, x in enumerate(allContourIsomorphisms) if x is not None),
-                len(allVectors) - 1,
-            )
-            # m0 is the first non-None item in allContourIsomorphisms, or last one if all None
-            m0 = allContourIsomorphisms[m0idx]
-            if m0:
-                for i, m1 in enumerate(allContourIsomorphisms[m0idx + 1 :]):
-                    if m1 is None:
-                        continue
-                    if len(m0) != len(m1):
-                        # We already reported this
-                        continue
-                    for ix, (contour0, contour1) in enumerate(zip(m0, m1)):
-                        if len(contour0) != len(contour1):
-                            # We already reported this
-                            continue
-                        # If contour-order is wrong, don't try reporting starting-point
-                        if matchings[m0idx + i + 1][ix] != ix:
-                            continue
-                        c0 = contour0[0]
-                        costs = [_vdiff_hypot2_complex(c0[0], c1[0]) for c1 in contour1]
-                        min_cost_idx, min_cost = min(
-                            enumerate(costs), key=lambda x: x[1]
-                        )
-                        first_cost = costs[0]
-                        if min_cost < first_cost * tolerance:
-                            yield (
-                                glyph_name,
-                                {
-                                    "type": "wrong_start_point",
-                                    "contour": ix,
-                                    "master_1": names[m0idx],
-                                    "master_2": names[m0idx + i + 1],
-                                    "value_1": 0,
-                                    "value_2": contour1[min_cost_idx][1],
-                                    "reversed": contour1[min_cost_idx][2],
-                                },
-                            )
 
         except ValueError as e:
             yield (
@@ -652,7 +710,7 @@ def main(args=None):
     locations = [normalizeLocation(loc, axis_triples) for loc in locations]
 
     log.info("Running on %d glyphsets", len(glyphsets))
-    log.info("Locations: %s", locations)
+    log.info("Locations: %s", pformat(locations))
     problems_gen = test_gen(
         glyphsets,
         glyphs=glyphs,
@@ -747,6 +805,7 @@ def main(args=None):
             problems[glyphname].append(problem)
 
     if args.pdf:
+        log.info("Writing PDF to %s", args.pdf)
         from .interpolatablePlot import InterpolatablePDF
 
         with InterpolatablePDF(args.pdf, glyphsets=glyphsets, names=names) as pdf:
@@ -755,6 +814,7 @@ def main(args=None):
                 pdf.draw_cupcake()
 
     if args.html:
+        log.info("Writing HTML to %s", args.html)
         from .interpolatablePlot import InterpolatableSVG
 
         svgs = []

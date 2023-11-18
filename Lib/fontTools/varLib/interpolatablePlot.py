@@ -8,6 +8,9 @@ from functools import wraps
 from io import BytesIO
 import cairo
 import math
+import logging
+
+log = logging.getLogger("fontTools.varLib.interpolatable")
 
 
 class InterpolatablePlot:
@@ -95,6 +98,8 @@ class InterpolatablePlot:
                 self.show_page()
 
     def add_problem(self, glyphname, p):
+        log.info("Drawing %s: %s", glyphname, p["type"])
+
         master_keys = ("master",) if "master" in p else ("master_1", "master_2")
         master_indices = [self.names.index(p[k]) for k in master_keys]
 
