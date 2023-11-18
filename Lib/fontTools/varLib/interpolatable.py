@@ -16,7 +16,7 @@ from fontTools.misc.fixedTools import floatToFixedToStr
 from collections import defaultdict, deque
 from functools import wraps
 from pprint import pformat
-import math
+from math import sqrt, copysign
 import itertools
 import logging
 
@@ -153,9 +153,9 @@ except ImportError:
 
 
 def _contour_vector_from_stats(stats):
-    size = math.sqrt(abs(stats.area))
+    size = sqrt(abs(stats.area))
     return (
-        math.copysign((size), stats.area),
+        copysign((size), stats.area),
         stats.meanX,
         stats.meanY,
         stats.stddevX * 2,
@@ -175,12 +175,29 @@ def _points_complex_vector(points):
     vector = []
     points = [complex(*pt) for pt, _ in points]
     n = len(points)
-    points.extend(points[:1])
+    points.extend(points[:2])
     for i in range(n):
         p0 = points[i]
-        p1 = points[i + 1]
+
+        # The point itself
         vector.append(p0)
-        vector.append((p1 - p0) * 2)
+
+        # The distance to the next point;
+        # Emphasized by 2 empirically
+        p1 = points[i + 1]
+        d0 = p1 - p0
+        vector.append(d0 * 2)
+
+        """
+        # The angle to the next point, as a cross product;
+        # Square root of, to match dimentionality of distance.
+        p2 = points[i + 2]
+        d1 = p2 - p1
+        cross = d0.real * d1.imag - d0.imag * d1.real
+        cross = copysign(sqrt(abs(cross)), cross)
+        vector.append(cross)
+        """
+
     return vector
 
 
