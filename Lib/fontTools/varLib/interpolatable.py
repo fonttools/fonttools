@@ -274,8 +274,6 @@ def test_gen(
         # ... risks the sparse master being the first one, and only processing a subset of the glyphs
         glyphs = {g for glyphset in glyphsets for g in glyphset.keys()}
 
-    hist = []
-
     for glyph_name in glyphs:
         log.info("Testing glyph %s", glyph_name)
         try:
