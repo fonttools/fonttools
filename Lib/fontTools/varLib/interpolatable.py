@@ -311,8 +311,8 @@ def test_gen(
                 allVectors.append(contourVectors)
                 allContourIsomorphisms.append(contourIsomorphisms)
                 for ix, contour in enumerate(contourPens):
-                    nodeVecs = tuple(instruction[0] for instruction in contour.value)
-                    nodeTypes.append(nodeVecs)
+                    contourOps = tuple(op for op, arg in contour.value)
+                    nodeTypes.append(contourOps)
 
                     stats = StatisticsPen(glyphset=glyphset)
                     try:
@@ -326,10 +326,10 @@ def test_gen(
                     contourVectors.append(_contour_vector_from_stats(stats))
 
                     # Check starting point
-                    if nodeVecs[0] == "addComponent":
+                    if contourOps[0] == "addComponent":
                         continue
-                    assert nodeVecs[0] == "moveTo"
-                    assert nodeVecs[-1] in ("closePath", "endPath")
+                    assert contourOps[0] == "moveTo"
+                    assert contourOps[-1] in ("closePath", "endPath")
                     points = RecordingPointPen()
                     converter = SegmentToPointPen(points, False)
                     contour.replay(converter)
