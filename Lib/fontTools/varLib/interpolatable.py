@@ -724,6 +724,9 @@ def main(args=None):
             glyphset = font
         glyphsets.append({k: glyphset[k] for k in glyphset.keys()})
 
+    if len(glyphsets) == 1:
+        return None
+
     if not glyphs:
         glyphs = sorted(set([gn for glyphset in glyphsets for gn in glyphset.keys()]))
 
