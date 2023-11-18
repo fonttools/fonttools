@@ -766,7 +766,7 @@ def main(args=None):
                 problems[glyphname].append(p)
 
                 if glyphname != last_glyphname:
-                    print(f"Glyph {glyphname} was not compatible: ", file=f)
+                    print(f"Glyph {glyphname} was not compatible:", file=f)
                     last_glyphname = glyphname
 
                 if p["type"] == "missing":
