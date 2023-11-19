@@ -166,7 +166,7 @@ def _contour_vector_from_stats(stats):
 
 def _points_characteristic_bits(points):
     bits = 0
-    for pt, b in points:
+    for pt, b in reversed(points):
         bits = (bits << 1) | b
     return bits
 
@@ -205,6 +205,9 @@ def _add_isomorphisms(points, isomorphisms, reverse):
     reference_bits = _points_characteristic_bits(points)
     n = len(points)
 
+    # if points[0][0] == points[-1][0]:
+    #   abort
+
     if reverse:
         points = points[::-1]
         bits = _points_characteristic_bits(points)
@@ -218,10 +221,10 @@ def _add_isomorphisms(points, isomorphisms, reverse):
     mask = (1 << n) - 1
 
     for i in range(n):
-        b = ((bits << i) & mask) | ((bits >> (n - i)))
+        b = ((bits << (n - i)) & mask) | (bits >> i)
         if b == reference_bits:
             isomorphisms.append(
-                (_rot_list(vector, i * mult), n - 1 - i if reverse else i, reverse)
+                (_rot_list(vector, -i * mult), n - 1 - i if reverse else i, reverse)
             )
 
 

@@ -264,7 +264,7 @@ class InterpolatablePlot:
             idx = problem["contour"]
 
             # Draw suggested point
-            if which == 0:
+            if which == 1:
                 perContourPen = PerContourOrComponentPen(
                     RecordingPen, glyphset=glyphset
                 )
