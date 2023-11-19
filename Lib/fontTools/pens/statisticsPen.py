@@ -1,6 +1,6 @@
 """Pen calculating area, center of mass, variance and standard-deviation,
 covariance and correlation, and slant, of glyph shapes."""
-import math
+from math import sqrt, degrees, atan
 from fontTools.pens.momentsPen import MomentsPen
 
 __all__ = ["StatisticsPen"]
@@ -19,42 +19,31 @@ class StatisticsPen(MomentsPen):
     def __init__(self, glyphset=None):
         MomentsPen.__init__(self, glyphset=glyphset)
         self.__zero()
+        self.nodes = []
 
     def _moveTo(self, pt):
         MomentsPen._moveTo(self, pt)
-        self.sumNodesX += pt[0]
-        self.sumNodesY += pt[1]
-        self.numNodes += 1
+        self.nodes.append(complex(*pt))
 
     def _lineTo(self, pt):
         MomentsPen._lineTo(self, pt)
-        self.sumNodesX += pt[0]
-        self.sumNodesY += pt[1]
-        self.numNodes += 1
+        self.nodes.append(complex(*pt))
 
     def _qCurveToOne(self, pt1, pt2):
         MomentsPen._qCurveToOne(self, pt1, pt2)
         for pt in (pt1, pt2):
-            self.sumNodesX += pt[0]
-            self.sumNodesY += pt[1]
-        self.numNodes += 2
+            self.nodes.append(complex(*pt))
 
     def _curveToOne(self, pt1, pt2, pt3):
         MomentsPen._curveToOne(self, pt1, pt2, pt3)
         for pt in (pt1, pt2, pt3):
-            self.sumNodesX += pt[0]
-            self.sumNodesY += pt[1]
-        self.numNodes += 3
+            self.nodes.append(complex(*pt))
 
     def _closePath(self):
         MomentsPen._closePath(self)
         self.__update()
 
-    def __zero(self, nodes=True):
-        if nodes:
-            self.sumNodesX = 0
-            self.sumNodesY = 0
-            self.numNodes = 0
+    def __zero(self):
         self.area = 0
         self.meanX = 0
         self.meanY = 0
@@ -68,32 +57,60 @@ class StatisticsPen(MomentsPen):
 
     def __update(self):
         area = self.area
-        if not area:
-            self.__zero(nodes=False)
-            if self.numNodes:
-                self.meanX = self.sumNodesX / self.numNodes
-                self.meanY = self.sumNodesY / self.numNodes
-            return
+        if area:
+            # Center of mass
+            # https://en.wikipedia.org/wiki/Center_of_mass#A_continuous_volume
+            self.meanX = meanX = self.momentX / area
+            self.meanY = meanY = self.momentY / area
 
-        # Center of mass
-        # https://en.wikipedia.org/wiki/Center_of_mass#A_continuous_volume
-        self.meanX = meanX = self.momentX / area
-        self.meanY = meanY = self.momentY / area
+            # Var(X) = E[X^2] - E[X]^2
+            # XXX The above formula should never produce a negative value,
+            # but due to reasons I don't understand, it does. So we take
+            # the absolute value here.
+            self.varianceX = varianceX = abs(self.momentXX / area - meanX * meanX)
+            self.varianceY = varianceY = abs(self.momentYY / area - meanY * meanY)
 
-        #  Var(X) = E[X^2] - E[X]^2
-        # XXX The above formula should never produce a negative value,
-        # but due to reasons I don't understand, it does. So we take
-        # the absolute value here.
-        self.varianceX = varianceX = abs(self.momentXX / area - meanX**2)
-        self.varianceY = varianceY = abs(self.momentYY / area - meanY**2)
+            # Covariance(X,Y) = (E[X.Y] - E[X]E[Y])
+            self.covariance = covariance = self.momentXY / area - meanX * meanY
 
-        self.stddevX = stddevX = varianceX**0.5
-        self.stddevY = stddevY = varianceY**0.5
+        else:
+            # Use the nodes to calculate things.
 
-        #  Covariance(X,Y) = ( E[X.Y] - E[X]E[Y] )
-        self.covariance = covariance = self.momentXY / area - meanX * meanY
+            nodes = self.nodes
+            n = len(nodes)
 
-        #  Correlation(X,Y) = Covariance(X,Y) / ( stddev(X) * stddev(Y) )
+            # Center of mass
+            # https://en.wikipedia.org/wiki/Center_of_mass#A_system_of_particles
+            sumNodes = sum(nodes)
+            self.meanX = meanX = sumNodes.real / n
+            self.meanY = meanY = sumNodes.imag / n
+
+            if n > 1:
+                # Var(X) = (sum[X^2] - sum[X]^2 / n) / (n - 1)
+                # https://www.statisticshowto.com/probability-and-statistics/descriptive-statistics/sample-variance/
+                self.varianceX = varianceX = (
+                    sum(p.real * p.real for p in nodes)
+                    - (sumNodes.real * sumNodes.real) / n
+                ) / (n - 1)
+                self.varianceY = varianceY = (
+                    sum(p.imag * p.imag for p in nodes)
+                    - (sumNodes.imag * sumNodes.imag) / n
+                ) / (n - 1)
+
+                # Covariance(X,Y) = (sum[X.Y] - sum[X].sum[Y] / n) / (n - 1)
+                self.covariance = covariance = (
+                    sum(p.real * p.imag for p in nodes)
+                    - (sumNodes.real * sumNodes.imag) / n
+                ) / (n - 1)
+            else:
+                self.varianceX = varianceX = 0
+                self.varianceY = varianceY = 0
+                self.covariance = covariance = 0
+
+        self.stddevX = stddevX = sqrt(varianceX)
+        self.stddevY = stddevY = sqrt(varianceY)
+
+        # Correlation(X,Y) = Covariance(X,Y) / ( stddev(X) * stddev(Y) )
         # https://en.wikipedia.org/wiki/Pearson_product-moment_correlation_coefficient
         if stddevX * stddevY == 0:
             correlation = float("NaN")
@@ -166,10 +183,10 @@ def _test(glyphset, upem, glyphs, quiet=False):
     print("width:  %g" % (wdth_sum / upem / len(glyphs)))
     slant = slnt_sum / len(glyphs)
     print("slant:  %g" % slant)
-    print("slant angle:  %g" % -math.degrees(math.atan(slant)))
+    print("slant angle:  %g" % -degrees(atan(slant)))
     slant_perceptual = slnt_sum_perceptual / wdth_sum
     print("slant (perceptual):  %g" % slant_perceptual)
-    print("slant (perceptual) angle:  %g" % -math.degrees(math.atan(slant_perceptual)))
+    print("slant (perceptual) angle:  %g" % -degrees(atan(slant_perceptual)))
 
 
 def main(args):
