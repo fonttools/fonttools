@@ -44,6 +44,14 @@ class LerpGlyph:
             getattr(pen, op1)(*mid_args)
 
 
+class OverridingDict(dict):
+    def __init__(self, parent_dict):
+        self.parent_dict = parent_dict
+
+    def __missing__(self, key):
+        return self.parent_dict[key]
+
+
 class InterpolatablePlot:
     width = 640
     height = 480
@@ -169,13 +177,15 @@ class InterpolatablePlot:
                 self.draw_glyph(glyphset, glyphname, problem, which, x=x, y=y)
             else:
                 self.draw_shrug(x=x, y=y)
-
             y += self.height + self.pad
 
         if problem["type"] in ("wrong_start_point", "contour_order"):
             x = self.pad + self.width + self.pad
             y = self.pad
             y += self.line_height + self.pad
+
+            glyphset1 = self.glyphsets[master_indices[0]]
+            glyphset2 = self.glyphsets[master_indices[1]]
 
             # Draw the mid-way of the two masters
 
@@ -184,10 +194,35 @@ class InterpolatablePlot:
             )
             y += self.line_height + self.pad
 
-            glyphset = LerpGlyphSet(
-                self.glyphsets[master_indices[0]], self.glyphsets[master_indices[1]]
-            )
+            glyphset = LerpGlyphSet(glyphset1, glyphset2)
             self.draw_glyph(glyphset, glyphname, {"type": "midway"}, None, x=x, y=y)
+            y += self.height + self.pad
+
+            # Draw the fixed mid-way of the two masters
+
+            self.draw_label("proposed fix", x=x, y=y, color=self.head_color, align=0.5)
+            y += self.line_height + self.pad
+
+            overriding = OverridingDict(glyphset)
+            perContourPen = PerContourOrComponentPen(RecordingPen, glyphset=overriding)
+            glyphset2[glyphname].draw(perContourPen)
+
+            if problem["type"] == "wrong_start_point":
+                pass
+                # overriding[glyphname].startPoint = perContourPen.value.startPoint
+            elif problem["type"] == "contour_order":
+                fixed_contours = [perContourPen.value[i] for i in problem["value_2"]]
+                fixed_recording = RecordingPen()
+                for contour in fixed_contours:
+                    fixed_recording.value.extend(contour.value)
+                fixed_recording.draw = fixed_recording.replay
+                overriding[glyphname] = fixed_recording
+            else:
+                assert False
+
+            glyphset = LerpGlyphSet(glyphset1, overriding)
+            self.draw_glyph(glyphset, glyphname, {"type": "fixed"}, None, x=x, y=y)
+            y += self.height + self.pad
 
     def draw_label(self, label, *, x, y, color=(0, 0, 0), align=0):
         cr = cairo.Context(self.surface)
