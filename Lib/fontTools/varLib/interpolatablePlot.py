@@ -1,4 +1,4 @@
-from fontTools.pens.recordingPen import RecordingPen
+from fontTools.pens.recordingPen import RecordingPen, DecomposingRecordingPen
 from fontTools.pens.boundsPen import ControlBoundsPen
 from fontTools.pens.cairoPen import CairoPen
 from fontTools.pens.pointPen import SegmentToPointPen
@@ -11,6 +11,37 @@ import math
 import logging
 
 log = logging.getLogger("fontTools.varLib.interpolatable")
+
+
+class LerpGlyphSet:
+    def __init__(self, glyphset1, glyphset2, factor=0.5):
+        self.glyphset1 = glyphset1
+        self.glyphset2 = glyphset2
+        self.factor = factor
+
+    def __getitem__(self, glyphname):
+        return LerpGlyph(glyphname, self)
+
+
+class LerpGlyph:
+    def __init__(self, glyphname, glyphset):
+        self.glyphset = glyphset
+        self.glyphname = glyphname
+
+    def draw(self, pen):
+        recording1 = DecomposingRecordingPen(self.glyphset.glyphset1)
+        self.glyphset.glyphset1[self.glyphname].draw(recording1)
+        recording2 = DecomposingRecordingPen(self.glyphset.glyphset2)
+        self.glyphset.glyphset2[self.glyphname].draw(recording2)
+
+        factor = self.glyphset.factor
+        for (op1, args1), (op2, args2) in zip(recording1.value, recording2.value):
+            assert op1 == op2
+            mid_args = [
+                (x1 + (x2 - x1) * factor, y1 + (y2 - y1) * factor)
+                for (x1, y1), (x2, y2) in zip(args1, args2)
+            ]
+            getattr(pen, op1)(*mid_args)
 
 
 class InterpolatablePlot:
@@ -109,7 +140,7 @@ class InterpolatablePlot:
             )
             master_indices.insert(0, sample_glyph)
 
-        total_width = self.width + 2 * self.pad
+        total_width = self.width * 2 + 3 * self.pad
         total_height = (
             self.pad
             + self.line_height
@@ -123,15 +154,15 @@ class InterpolatablePlot:
         x = self.pad
         y = self.pad
 
-        self.draw_label(glyphname, y=y, color=self.head_color, align=0)
-        self.draw_label(problem["type"], y=y, color=self.head_color, align=1)
+        self.draw_label(glyphname, x=x, y=y, color=self.head_color, align=0)
+        self.draw_label(problem["type"], x=x, y=y, color=self.head_color, align=1)
         y += self.line_height + self.pad
 
         for which, master_idx in enumerate(master_indices):
             glyphset = self.glyphsets[master_idx]
             name = self.names[master_idx]
 
-            self.draw_label(name, y=y, color=self.label_color, align=0.5)
+            self.draw_label(name, x=x, y=y, color=self.label_color, align=0.5)
             y += self.line_height + self.pad
 
             if glyphset[glyphname] is not None:
@@ -141,7 +172,24 @@ class InterpolatablePlot:
 
             y += self.height + self.pad
 
-    def draw_label(self, label, *, y=0, color=(0, 0, 0), align=0):
+        if problem["type"] in ("wrong_start_point", "contour_order"):
+            x = self.pad + self.width + self.pad
+            y = self.pad
+            y += self.line_height + self.pad
+
+            # Draw the mid-way of the two masters
+
+            self.draw_label(
+                "midway interpolation", x=x, y=y, color=self.head_color, align=0.5
+            )
+            y += self.line_height + self.pad
+
+            glyphset = LerpGlyphSet(
+                self.glyphsets[master_indices[0]], self.glyphsets[master_indices[1]]
+            )
+            self.draw_glyph(glyphset, glyphname, {"type": "midway"}, None, x=x, y=y)
+
+    def draw_label(self, label, *, x, y, color=(0, 0, 0), align=0):
         cr = cairo.Context(self.surface)
         cr.select_font_face("@cairo", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
         cr.set_font_size(self.line_height)
@@ -161,7 +209,7 @@ class InterpolatablePlot:
             extents = cr.text_extents(label)
 
         # Center
-        label_x = (self.width - extents.width) * align + self.pad
+        label_x = x + (self.width - extents.width) * align
         label_y = y + font_extents[0]
         cr.move_to(label_x, label_y)
         cr.show_text(label)
