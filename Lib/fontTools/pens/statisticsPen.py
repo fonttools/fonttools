@@ -64,11 +64,13 @@ class StatisticsPen(MomentsPen):
             self.meanY = meanY = self.momentY / area
 
             # Var(X) = E[X^2] - E[X]^2
+            self.varianceX = varianceX = self.momentXX / area - meanX * meanX
+            self.varianceY = varianceY = self.momentYY / area - meanY * meanY
             # XXX The above formula should never produce a negative value,
             # but due to reasons I don't understand, it does. So we take
             # the absolute value here.
-            self.varianceX = varianceX = abs(self.momentXX / area - meanX * meanX)
-            self.varianceY = varianceY = abs(self.momentYY / area - meanY * meanY)
+            self.varianceX = varianceX = abs(varianceX)
+            self.varianceY = varianceY = abs(varianceY)
 
             # Covariance(X,Y) = (E[X.Y] - E[X]E[Y])
             self.covariance = covariance = self.momentXY / area - meanX * meanY
@@ -96,6 +98,11 @@ class StatisticsPen(MomentsPen):
                     sum(p.imag * p.imag for p in nodes)
                     - (sumNodes.imag * sumNodes.imag) / n
                 ) / (n - 1)
+                # XXX The above formula should never produce a negative value,
+                # but due to reasons I don't understand, it does. So we take
+                # the absolute value here.
+                self.varianceX = varianceX = abs(varianceX)
+                self.varianceY = varianceY = abs(varianceY)
 
                 # Covariance(X,Y) = (sum[X.Y] - sum[X].sum[Y] / n) / (n - 1)
                 self.covariance = covariance = (
