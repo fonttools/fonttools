@@ -98,7 +98,11 @@ class StatisticsPen(MomentsPen):
         if stddevX * stddevY == 0:
             correlation = float("NaN")
         else:
+            # XXX The above formula should never produce a value outside
+            # the range [-1, 1], but due to reasons I don't understand,
+            # (probably the same issue as above), it does. So we clamp.
             correlation = covariance / (stddevX * stddevY)
+            correlation = max(-1, min(1, correlation))
         self.correlation = correlation if abs(correlation) > 1e-3 else 0
 
         slant = covariance / varianceY if varianceY != 0 else float("NaN")
