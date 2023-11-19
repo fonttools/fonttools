@@ -9,7 +9,7 @@ $ fonttools varLib.interpolatable font1 font2 ...
 from fontTools.pens.basePen import AbstractPen, BasePen
 from fontTools.pens.pointPen import AbstractPointPen, SegmentToPointPen
 from fontTools.pens.recordingPen import RecordingPen
-from fontTools.pens.statisticsPen import StatisticsPen
+from fontTools.pens.statisticsPen import StatisticsPen, StatisticsControlPen
 from fontTools.pens.momentsPen import OpenContourError
 from fontTools.varLib.models import piecewiseLinearMap, normalizeLocation
 from fontTools.misc.fixedTools import floatToFixedToStr
@@ -314,7 +314,8 @@ def test_gen(
 
     for glyph_name in glyphs:
         log.info("Testing glyph %s", glyph_name)
-        allVectors = []
+        allGreenVectors = []
+        allControlVectors = []
         allNodeTypes = []
         allContourIsomorphisms = []
         allGlyphs = [glyphset[glyph_name] for glyphset in glyphsets]
@@ -325,7 +326,8 @@ def test_gen(
                 if not ignore_missing:
                     yield (glyph_name, {"type": "missing", "master": name})
                 allNodeTypes.append(None)
-                allVectors.append(None)
+                allControlVectors.append(None)
+                allGreenVectors.append(None)
                 allContourIsomorphisms.append(None)
                 continue
 
@@ -337,26 +339,31 @@ def test_gen(
             contourPens = perContourPen.value
             del perContourPen
 
-            contourVectors = []
+            contourControlVectors = []
+            contourGreenVectors = []
             contourIsomorphisms = []
             nodeTypes = []
             allNodeTypes.append(nodeTypes)
-            allVectors.append(contourVectors)
+            allControlVectors.append(contourControlVectors)
+            allGreenVectors.append(contourGreenVectors)
             allContourIsomorphisms.append(contourIsomorphisms)
             for ix, contour in enumerate(contourPens):
                 contourOps = tuple(op for op, arg in contour.value)
                 nodeTypes.append(contourOps)
 
-                stats = StatisticsPen(glyphset=glyphset)
+                greenStats = StatisticsPen(glyphset=glyphset)
+                controlStats = StatisticsControlPen(glyphset=glyphset)
                 try:
-                    contour.replay(stats)
+                    contour.replay(greenStats)
+                    contour.replay(controlStats)
                 except OpenContourError as e:
                     yield (
                         glyph_name,
                         {"master": name, "contour": ix, "type": "open_path"},
                     )
                     continue
-                contourVectors.append(_contour_vector_from_stats(stats))
+                contourGreenVectors.append(_contour_vector_from_stats(greenStats))
+                contourControlVectors.append(_contour_vector_from_stats(controlStats))
 
                 # Check starting point
                 if contourOps[0] == "addComponent":
@@ -433,35 +440,74 @@ def test_gen(
                         )
                         continue
 
-        matchings = [None] * len(allVectors)
+        matchings = [None] * len(allControlVectors)
         for m1idx in order:
-            m1 = allVectors[m1idx]
-            if not m1:
+            m1Control = allControlVectors[m1idx]
+            m1Green = allGreenVectors[m1idx]
+            if m1Control is None or m1Green is None:
+                continue
+            if len(m1Control) <= 1:
                 continue
             m0idx = grand_parent(m1idx, glyph_name)
             if m0idx is None:
                 continue
-            m0 = allVectors[m0idx]
-            if m0 is None:
+            m0Control = allControlVectors[m0idx]
+            m0Green = allGreenVectors[m0idx]
+            if m0Control is None or m0Green is None:
                 continue
-            if len(m0) != len(m1):
+            if len(m0Control) != len(m1Control):
                 # We already reported this
                 continue
-            costs = [[_vdiff_hypot2(v0, v1) for v1 in m1] for v0 in m0]
-            matching, matching_cost = min_cost_perfect_bipartite_matching(costs)
-            identity_matching = list(range(len(m0)))
-            identity_cost = sum(costs[i][i] for i in range(len(m0)))
+
+            costsControl = [
+                [_vdiff_hypot2(v0, v1) for v1 in m1Control] for v0 in m0Control
+            ]
+            costsGreen = [[_vdiff_hypot2(v0, v1) for v1 in m1Green] for v0 in m0Green]
+
+            (
+                matching_control,
+                matching_cost_control,
+            ) = min_cost_perfect_bipartite_matching(costsControl)
+            matching_green, matching_cost_green = min_cost_perfect_bipartite_matching(
+                costsGreen
+            )
+
+            identity_matching = list(range(len(m0Control)))
+            identity_cost_control = sum(
+                costsControl[i][i] for i in range(len(m0Control))
+            )
+            identity_cost_green = sum(costsGreen[i][i] for i in range(len(m0Control)))
+
+            # If either found a identity matching, accept it.
             if (
-                matching != identity_matching
-                and matching_cost < identity_cost * tolerance
+                matching_cost_control == identity_cost_control
+                or matching_cost_green == identity_cost_green
             ):
+                continue
+
+            # Otherwise, use the worst of the two matchings.
+            if (
+                matching_cost_control / identity_cost_control
+                < matching_cost_green / identity_cost_green
+            ):
+                matching = matching_control
+                matching_cost = matching_cost_control
+                identity_cost = identity_cost_control
+            else:
+                matching = matching_green
+                matching_cost = matching_cost_green
+                identity_cost = identity_cost_green
+
+            if matching_cost < identity_cost * tolerance:
+                # print(matching_cost_control / identity_cost_control, matching_cost_green / identity_cost_green)
+
                 yield (
                     glyph_name,
                     {
                         "type": "contour_order",
                         "master_1": names[m0idx],
                         "master_2": names[m1idx],
-                        "value_1": list(range(len(m0))),
+                        "value_1": list(range(len(m0Control))),
                         "value_2": matching,
                     },
                 )
