@@ -459,30 +459,29 @@ def test_gen(
                 # We already reported this
                 continue
 
+            identity_matching = list(range(len(m0Control)))
+
+            # If either method found a identity matching, accept it.
+
             costsControl = [
                 [_vdiff_hypot2(v0, v1) for v1 in m1Control] for v0 in m0Control
             ]
-            costsGreen = [[_vdiff_hypot2(v0, v1) for v1 in m1Green] for v0 in m0Green]
-
             (
                 matching_control,
                 matching_cost_control,
             ) = min_cost_perfect_bipartite_matching(costsControl)
-            matching_green, matching_cost_green = min_cost_perfect_bipartite_matching(
-                costsGreen
-            )
-
-            identity_matching = list(range(len(m0Control)))
             identity_cost_control = sum(
                 costsControl[i][i] for i in range(len(m0Control))
             )
-            identity_cost_green = sum(costsGreen[i][i] for i in range(len(m0Control)))
+            if matching_cost_control == identity_cost_control:
+                continue
 
-            # If either found a identity matching, accept it.
-            if (
-                matching_cost_control == identity_cost_control
-                or matching_cost_green == identity_cost_green
-            ):
+            costsGreen = [[_vdiff_hypot2(v0, v1) for v1 in m1Green] for v0 in m0Green]
+            matching_green, matching_cost_green = min_cost_perfect_bipartite_matching(
+                costsGreen
+            )
+            identity_cost_green = sum(costsGreen[i][i] for i in range(len(m0Control)))
+            if matching_cost_green == identity_cost_green:
                 continue
 
             # Otherwise, use the worst of the two matchings.
