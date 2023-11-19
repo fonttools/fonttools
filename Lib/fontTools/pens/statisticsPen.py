@@ -1,49 +1,17 @@
 """Pen calculating area, center of mass, variance and standard-deviation,
 covariance and correlation, and slant, of glyph shapes."""
 from math import sqrt, degrees, atan
+from fontTools.pens.basePen import BasePen, OpenContourError
 from fontTools.pens.momentsPen import MomentsPen
 
-__all__ = ["StatisticsPen"]
+__all__ = ["StatisticsPen", "StatisticsControlPen"]
 
 
-class StatisticsPen(MomentsPen):
+class StatisticsBase:
+    def __init__(self):
+        self._zero()
 
-    """Pen calculating area, center of mass, variance and
-    standard-deviation, covariance and correlation, and slant,
-    of glyph shapes.
-
-    Note that if the glyph shape is self-intersecting, the values
-    are not correct (but well-defined). Moreover, area will be
-    negative if contour directions are clockwise."""
-
-    def __init__(self, glyphset=None):
-        MomentsPen.__init__(self, glyphset=glyphset)
-        self.__zero()
-        self.nodes = []
-
-    def _moveTo(self, pt):
-        MomentsPen._moveTo(self, pt)
-        self.nodes.append(complex(*pt))
-
-    def _lineTo(self, pt):
-        MomentsPen._lineTo(self, pt)
-        self.nodes.append(complex(*pt))
-
-    def _qCurveToOne(self, pt1, pt2):
-        MomentsPen._qCurveToOne(self, pt1, pt2)
-        for pt in (pt1, pt2):
-            self.nodes.append(complex(*pt))
-
-    def _curveToOne(self, pt1, pt2, pt3):
-        MomentsPen._curveToOne(self, pt1, pt2, pt3)
-        for pt in (pt1, pt2, pt3):
-            self.nodes.append(complex(*pt))
-
-    def _closePath(self):
-        MomentsPen._closePath(self)
-        self.__update()
-
-    def __zero(self):
+    def _zero(self):
         self.area = 0
         self.meanX = 0
         self.meanY = 0
@@ -55,67 +23,15 @@ class StatisticsPen(MomentsPen):
         self.correlation = 0
         self.slant = 0
 
-    def __update(self):
-        area = self.area
-        if area:
-            # Center of mass
-            # https://en.wikipedia.org/wiki/Center_of_mass#A_continuous_volume
-            self.meanX = meanX = self.momentX / area
-            self.meanY = meanY = self.momentY / area
+    def _update(self):
+        # XXX The variance formulas should never produce a negative value,
+        # but due to reasons I don't understand, both of our pens do.
+        # So we take the absolute value here.
+        self.varianceX = abs(self.varianceX)
+        self.varianceY = abs(self.varianceY)
 
-            # Var(X) = E[X^2] - E[X]^2
-            self.varianceX = varianceX = self.momentXX / area - meanX * meanX
-            self.varianceY = varianceY = self.momentYY / area - meanY * meanY
-            # XXX The above formula should never produce a negative value,
-            # but due to reasons I don't understand, it does. So we take
-            # the absolute value here.
-            self.varianceX = varianceX = abs(varianceX)
-            self.varianceY = varianceY = abs(varianceY)
-
-            # Covariance(X,Y) = (E[X.Y] - E[X]E[Y])
-            self.covariance = covariance = self.momentXY / area - meanX * meanY
-
-        else:
-            # Use the nodes to calculate things.
-
-            nodes = self.nodes
-            n = len(nodes)
-
-            # Center of mass
-            # https://en.wikipedia.org/wiki/Center_of_mass#A_system_of_particles
-            sumNodes = sum(nodes)
-            self.meanX = meanX = sumNodes.real / n
-            self.meanY = meanY = sumNodes.imag / n
-
-            if n > 1:
-                # Var(X) = (sum[X^2] - sum[X]^2 / n) / (n - 1)
-                # https://www.statisticshowto.com/probability-and-statistics/descriptive-statistics/sample-variance/
-                self.varianceX = varianceX = (
-                    sum(p.real * p.real for p in nodes)
-                    - (sumNodes.real * sumNodes.real) / n
-                ) / (n - 1)
-                self.varianceY = varianceY = (
-                    sum(p.imag * p.imag for p in nodes)
-                    - (sumNodes.imag * sumNodes.imag) / n
-                ) / (n - 1)
-                # XXX The above formula should never produce a negative value,
-                # but due to reasons I don't understand, it does. So we take
-                # the absolute value here.
-                self.varianceX = varianceX = abs(varianceX)
-                self.varianceY = varianceY = abs(varianceY)
-
-                # Covariance(X,Y) = (sum[X.Y] - sum[X].sum[Y] / n) / (n - 1)
-                self.covariance = covariance = (
-                    sum(p.real * p.imag for p in nodes)
-                    - (sumNodes.real * sumNodes.imag) / n
-                ) / (n - 1)
-            else:
-                self.varianceX = varianceX = 0
-                self.varianceY = varianceY = 0
-                self.covariance = covariance = 0
-
-        self.stddevX = stddevX = sqrt(varianceX)
-        self.stddevY = stddevY = sqrt(varianceY)
+        self.stddevX = stddevX = sqrt(self.varianceX)
+        self.stddevY = stddevY = sqrt(self.varianceY)
 
         # Correlation(X,Y) = Covariance(X,Y) / ( stddev(X) * stddev(Y) )
         # https://en.wikipedia.org/wiki/Pearson_product-moment_correlation_coefficient
@@ -125,15 +41,139 @@ class StatisticsPen(MomentsPen):
             # XXX The above formula should never produce a value outside
             # the range [-1, 1], but due to reasons I don't understand,
             # (probably the same issue as above), it does. So we clamp.
-            correlation = covariance / (stddevX * stddevY)
+            correlation = self.covariance / (stddevX * stddevY)
             correlation = max(-1, min(1, correlation))
         self.correlation = correlation if abs(correlation) > 1e-3 else 0
 
-        slant = covariance / varianceY if varianceY != 0 else float("NaN")
+        slant = (
+            self.covariance / self.varianceY if self.varianceY != 0 else float("NaN")
+        )
         self.slant = slant if abs(slant) > 1e-3 else 0
 
 
-def _test(glyphset, upem, glyphs, quiet=False):
+class StatisticsPen(StatisticsBase, MomentsPen):
+
+    """Pen calculating area, center of mass, variance and
+    standard-deviation, covariance and correlation, and slant,
+    of glyph shapes.
+
+    Note that if the glyph shape is self-intersecting, the values
+    are not correct (but well-defined). Moreover, area will be
+    negative if contour directions are clockwise."""
+
+    def __init__(self, glyphset=None):
+        MomentsPen.__init__(self, glyphset=glyphset)
+        StatisticsBase.__init__(self)
+
+    def _closePath(self):
+        MomentsPen._closePath(self)
+        self._update()
+
+    def _update(self):
+        area = self.area
+
+        # Center of mass
+        # https://en.wikipedia.org/wiki/Center_of_mass#A_continuous_volume
+        self.meanX = meanX = self.momentX / area
+        self.meanY = meanY = self.momentY / area
+
+        # Var(X) = E[X^2] - E[X]^2
+        self.varianceX = self.momentXX / area - meanX * meanX
+        self.varianceY = self.momentYY / area - meanY * meanY
+
+        # Covariance(X,Y) = (E[X.Y] - E[X]E[Y])
+        self.covariance = self.momentXY / area - meanX * meanY
+
+        StatisticsBase._update(self)
+
+
+class StatisticsControlPen(StatisticsBase, BasePen):
+
+    """Pen calculating area, center of mass, variance and
+    standard-deviation, covariance and correlation, and slant,
+    of glyph shapes, using the control polygon only.
+
+    Note that if the glyph shape is self-intersecting, the values
+    are not correct (but well-defined). Moreover, area will be
+    negative if contour directions are clockwise."""
+
+    def __init__(self, glyphset=None):
+        BasePen.__init__(self, glyphset)
+        StatisticsBase.__init__(self)
+        self._nodes = []
+
+    def _moveTo(self, pt):
+        self._nodes.append(complex(*pt))
+
+    def _lineTo(self, pt):
+        self._nodes.append(complex(*pt))
+
+    def _qCurveToOne(self, pt1, pt2):
+        for pt in (pt1, pt2):
+            self._nodes.append(complex(*pt))
+
+    def _curveToOne(self, pt1, pt2, pt3):
+        for pt in (pt1, pt2, pt3):
+            self._nodes.append(complex(*pt))
+
+    def _closePath(self):
+        self._update()
+
+    def _endPath(self):
+        p0 = self._getCurrentPoint()
+        if p0 != self.__startPoint:
+            raise OpenContourError("Glyph statistics not defined on open contours.")
+
+    def _update(self):
+        nodes = self._nodes
+        n = len(nodes)
+
+        # Triangle formula
+        self.area = (
+            sum(
+                (p0.real * p1.imag - p1.real * p0.imag)
+                for p0, p1 in zip(nodes, nodes[1:] + nodes[:1])
+            )
+            / 2
+        )
+
+        # Center of mass
+        # https://en.wikipedia.org/wiki/Center_of_mass#A_system_of_particles
+        sumNodes = sum(nodes)
+        self.meanX = meanX = sumNodes.real / n
+        self.meanY = meanY = sumNodes.imag / n
+
+        if n > 1:
+            # Var(X) = (sum[X^2] - sum[X]^2 / n) / (n - 1)
+            # https://www.statisticshowto.com/probability-and-statistics/descriptive-statistics/sample-variance/
+            self.varianceX = varianceX = (
+                sum(p.real * p.real for p in nodes)
+                - (sumNodes.real * sumNodes.real) / n
+            ) / (n - 1)
+            self.varianceY = varianceY = (
+                sum(p.imag * p.imag for p in nodes)
+                - (sumNodes.imag * sumNodes.imag) / n
+            ) / (n - 1)
+            # XXX The above formula should never produce a negative value,
+            # but due to reasons I don't understand, it does. So we take
+            # the absolute value here.
+            self.varianceX = varianceX = abs(varianceX)
+            self.varianceY = varianceY = abs(varianceY)
+
+            # Covariance(X,Y) = (sum[X.Y] - sum[X].sum[Y] / n) / (n - 1)
+            self.covariance = covariance = (
+                sum(p.real * p.imag for p in nodes)
+                - (sumNodes.real * sumNodes.imag) / n
+            ) / (n - 1)
+        else:
+            self.varianceX = varianceX = 0
+            self.varianceY = varianceY = 0
+            self.covariance = covariance = 0
+
+        StatisticsBase._update(self)
+
+
+def _test(glyphset, upem, glyphs, quiet=False, *, control=False):
     from fontTools.pens.transformPen import TransformPen
     from fontTools.misc.transform import Scale
 
@@ -144,7 +184,10 @@ def _test(glyphset, upem, glyphs, quiet=False):
     slnt_sum_perceptual = 0
     for glyph_name in glyphs:
         glyph = glyphset[glyph_name]
-        pen = StatisticsPen(glyphset=glyphset)
+        if control:
+            pen = StatisticsControlPen(glyphset=glyphset)
+        else:
+            pen = StatisticsPen(glyphset=glyphset)
         transformer = TransformPen(pen, Scale(1.0 / upem))
         glyph.draw(transformer)
 
@@ -218,6 +261,12 @@ def main(args):
         help="Face index into a collection to open. Zero based.",
     )
     parser.add_argument(
+        "-c",
+        "--control",
+        action="store_true",
+        help="Use the control-box pen instead of the Green therem.",
+    )
+    parser.add_argument(
         "-q", "--quiet", action="store_true", help="Only report font-wide statistics."
     )
     parser.add_argument(
@@ -251,6 +300,7 @@ def main(args):
         font["head"].unitsPerEm,
         glyphs,
         quiet=options.quiet,
+        control=options.control,
     )
 
 
