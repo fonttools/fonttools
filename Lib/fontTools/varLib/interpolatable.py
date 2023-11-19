@@ -220,7 +220,9 @@ def _add_isomorphisms(points, isomorphisms, reverse):
     for i in range(n):
         b = ((bits << i) & mask) | ((bits >> (n - i)))
         if b == reference_bits:
-            isomorphisms.append((_rot_list(vector, i * mult), n - 1 - i if reverse else i, reverse))
+            isomorphisms.append(
+                (_rot_list(vector, i * mult), n - 1 - i if reverse else i, reverse)
+            )
 
 
 def _find_parents_and_order(glyphsets, locations):
@@ -371,8 +373,7 @@ def test_gen(
                 # Add rotations
                 _add_isomorphisms(points.value, isomorphisms, False)
                 # Add mirrored rotations
-                _add_isomorphisms(points.value, isomorphisms, True
-                )
+                _add_isomorphisms(points.value, isomorphisms, True)
 
         for m1idx in order:
             m1 = allNodeTypes[m1idx]
