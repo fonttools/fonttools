@@ -433,6 +433,10 @@ class InterpolatablePS(InterpolatablePostscriptLike):
 class InterpolatablePDF(InterpolatablePostscriptLike):
     def __enter__(self):
         self.surface = cairo.PDFSurface(self.out, self.width, self.height)
+        self.surface.set_metadata(
+            cairo.PDF_METADATA_CREATOR, "fonttools varLib.interpolatable"
+        )
+        self.surface.set_metadata(cairo.PDF_METADATA_CREATE_DATE, "")
         return self
 
 
