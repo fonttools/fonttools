@@ -461,7 +461,16 @@ def test_gen(
 
             identity_matching = list(range(len(m0Control)))
 
+            # We try matching both the StatisticsControlPen vector
+            # and the StatisticsPen vector.
             # If either method found a identity matching, accept it.
+            # This is crucial for fonts like Kablammo[MORF].ttf and
+            # Nabla[EDPT,EHLT].ttf, since they really confuse the
+            # StatisticsPen vector because of their area=0 contours.
+            #
+            # TODO: Optimize by only computing the StatisticsPen vector
+            # and then checking if it is the identity vector. Only if
+            # not, compute the StatisticsControlPen vector and check both.
 
             costsControl = [
                 [_vdiff_hypot2(v0, v1) for v1 in m1Control] for v0 in m0Control
