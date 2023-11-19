@@ -97,13 +97,13 @@ class InterpolatablePlot:
                 self.add_problem(glyph, p)
                 self.show_page()
 
-    def add_problem(self, glyphname, p):
-        log.info("Drawing %s: %s", glyphname, p["type"])
+    def add_problem(self, glyphname, problem):
+        log.info("Drawing %s: %s", glyphname, problem["type"])
 
-        master_keys = ("master",) if "master" in p else ("master_1", "master_2")
-        master_indices = [self.names.index(p[k]) for k in master_keys]
+        master_keys = ("master",) if "master" in problem else ("master_1", "master_2")
+        master_indices = [self.names.index(problem[k]) for k in master_keys]
 
-        if p["type"] == "missing":
+        if problem["type"] == "missing":
             sample_glyph = next(
                 i for i, m in enumerate(self.glyphsets) if m[glyphname] is not None
             )
@@ -124,7 +124,7 @@ class InterpolatablePlot:
         y = self.pad
 
         self.draw_label(glyphname, y=y, color=self.head_color, align=0)
-        self.draw_label(p["type"], y=y, color=self.head_color, align=1)
+        self.draw_label(problem["type"], y=y, color=self.head_color, align=1)
         y += self.line_height + self.pad
 
         for which, master_idx in enumerate(master_indices):
@@ -135,7 +135,7 @@ class InterpolatablePlot:
             y += self.line_height + self.pad
 
             if glyphset[glyphname] is not None:
-                self.draw_glyph(glyphset, glyphname, p, which, x=x, y=y)
+                self.draw_glyph(glyphset, glyphname, problem, which, x=x, y=y)
             else:
                 self.draw_shrug(x=x, y=y)
 
