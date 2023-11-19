@@ -157,11 +157,6 @@ class StatisticsControlPen(StatisticsBase, BasePen):
                 sum(p.imag * p.imag for p in nodes)
                 - (sumNodes.imag * sumNodes.imag) / n
             ) / (n - 1)
-            # XXX The above formula should never produce a negative value,
-            # but due to reasons I don't understand, it does. So we take
-            # the absolute value here.
-            self.varianceX = varianceX = abs(varianceX)
-            self.varianceY = varianceY = abs(varianceY)
 
             # Covariance(X,Y) = (sum[X.Y] - sum[X].sum[Y] / n) / (n - 1)
             self.covariance = covariance = (
