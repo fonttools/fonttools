@@ -71,6 +71,9 @@ class StatisticsPen(StatisticsBase, MomentsPen):
 
     def _update(self):
         area = self.area
+        if not area:
+            self._zero()
+            return
 
         # Center of mass
         # https://en.wikipedia.org/wiki/Center_of_mass#A_continuous_volume
