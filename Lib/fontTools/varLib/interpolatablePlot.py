@@ -463,7 +463,9 @@ class InterpolatablePlot:
             if problem["type"] == "contour_order":
                 matching = problem["value_2"]
                 colors = cycle(self.contour_colors)
-                perContourPen = PerContourOrComponentPen(RecordingPen, glyphset=glyphset)
+                perContourPen = PerContourOrComponentPen(
+                    RecordingPen, glyphset=glyphset
+                )
                 recording.replay(perContourPen)
                 for i, contour in enumerate(perContourPen.value):
                     if matching[i] == i:

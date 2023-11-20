@@ -449,7 +449,6 @@ def test_gen(
             m0Control = allControlVectors[m0idx]
             m0Green = allGreenVectors[m0idx]
             if len(m1Control) > 1:
-
                 identity_matching = list(range(len(m0Control)))
 
                 # We try matching both the StatisticsControlPen vector
@@ -476,11 +475,16 @@ def test_gen(
                 done = matching_cost_control == identity_cost_control
 
                 if not done:
-                    costsGreen = [[_vdiff_hypot2(v0, v1) for v1 in m1Green] for v0 in m0Green]
-                    matching_green, matching_cost_green = min_cost_perfect_bipartite_matching(
-                        costsGreen
+                    costsGreen = [
+                        [_vdiff_hypot2(v0, v1) for v1 in m1Green] for v0 in m0Green
+                    ]
+                    (
+                        matching_green,
+                        matching_cost_green,
+                    ) = min_cost_perfect_bipartite_matching(costsGreen)
+                    identity_cost_green = sum(
+                        costsGreen[i][i] for i in range(len(m0Control))
                     )
-                    identity_cost_green = sum(costsGreen[i][i] for i in range(len(m0Control)))
                     done = matching_cost_green == identity_cost_green
 
                 if not done:
