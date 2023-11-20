@@ -520,7 +520,7 @@ def test_gen(
             m0 = allContourIsomorphisms[m0idx]
 
             # If contour-order is wrong, adjust it
-            if matchings[m1idx] is not None and m1: # m1 is empty for composite glyphs
+            if matchings[m1idx] is not None and m1:  # m1 is empty for composite glyphs
                 m1 = [m1[i] for i in matchings[m1idx]]
 
             for ix, (contour0, contour1) in enumerate(zip(m0, m1)):
