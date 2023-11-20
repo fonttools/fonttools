@@ -257,7 +257,6 @@ class InterpolatablePlot:
 
             for problem in problems:
                 if problem["type"] == "contour_order":
-                    assert len(problems) == 1
                     fixed_contours = [
                         perContourPen2.value[i] for i in problems[0]["value_2"]
                     ]
