@@ -171,7 +171,7 @@ class InterpolatablePlot:
         problem_type = problems[0]["type"]
         problem_types = set(problem["type"] for problem in problems)
         if not all(pt == problem_type for pt in problem_types):
-            problem_type = ', '.join(sorted({problem["type"] for problem in problems}))
+            problem_type = ", ".join(sorted({problem["type"] for problem in problems}))
 
         log.info("Drawing %s: %s", glyphname, problem_type)
 
@@ -202,7 +202,14 @@ class InterpolatablePlot:
         y = self.pad
 
         self.draw_label(glyphname, x=x, y=y, color=self.head_color, align=0, bold=True)
-        self.draw_label(problem_type, x=x + self.width + self.pad, y=y, color=self.head_color, align=1, bold=True)
+        self.draw_label(
+            problem_type,
+            x=x + self.width + self.pad,
+            y=y,
+            color=self.head_color,
+            align=1,
+            bold=True,
+        )
         y += self.line_height + self.pad
 
         for which, master_idx in enumerate(master_indices):
@@ -319,7 +326,6 @@ class InterpolatablePlot:
             overriding2[glyphname] = fixed2
 
             try:
-                raise ValueError
                 midway_glyphset = LerpGlyphSet(overriding1, overriding2)
                 self.draw_glyph(
                     midway_glyphset, glyphname, {"type": "fixed"}, None, x=x, y=y
@@ -330,7 +336,11 @@ class InterpolatablePlot:
 
     def draw_label(self, label, *, x, y, color=(0, 0, 0), align=0, bold=False):
         cr = cairo.Context(self.surface)
-        cr.select_font_face("@cairo:", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD if bold else cairo.FONT_WEIGHT_NORMAL)
+        cr.select_font_face(
+            "@cairo:",
+            cairo.FONT_SLANT_NORMAL,
+            cairo.FONT_WEIGHT_BOLD if bold else cairo.FONT_WEIGHT_NORMAL,
+        )
         cr.set_font_size(self.line_height)
         font_extents = cr.font_extents()
         font_size = self.line_height * self.line_height / font_extents[2]
