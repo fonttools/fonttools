@@ -47,7 +47,7 @@ class InterpolatableTest(unittest.TestCase):
         for p in all_files:
             if p.startswith(prefix) and p.endswith(suffix):
                 file_list.append(os.path.abspath(os.path.join(folder, p)))
-        return file_list
+        return sorted(file_list)
 
     def temp_path(self, suffix):
         self.temp_dir()
