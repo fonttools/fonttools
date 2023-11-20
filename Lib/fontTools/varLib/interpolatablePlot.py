@@ -5,7 +5,11 @@ from fontTools.pens.recordingPen import (
 )
 from fontTools.pens.boundsPen import ControlBoundsPen
 from fontTools.pens.cairoPen import CairoPen
-from fontTools.pens.pointPen import SegmentToPointPen, PointToSegmentPen
+from fontTools.pens.pointPen import (
+    SegmentToPointPen,
+    PointToSegmentPen,
+    ReverseContourPointPen,
+)
 from fontTools.varLib.interpolatable import (
     PerContourOrComponentPen,
     SimpleRecordingPointPen,
@@ -240,15 +244,22 @@ class InterpolatablePlot:
                 converter = SegmentToPointPen(points2, False)
                 wrongContour2.replay(converter)
 
-                # Rotate points2 so that the first point is the same as in points1
                 proposed_start = problem["value_2"]
-                pts = points2.value
-                points2.value = (
-                    pts[:1]
-                    + pts[1 + proposed_start : -1]  # beginPath
-                    + pts[1 : proposed_start + 1]
-                    + pts[-1:]  # endPath
-                )
+
+                # See if we need reversing; fragile but worth a try
+                if problem["reversed"]:
+                    new_points2 = RecordingPointPen()
+                    reversedPen = ReverseContourPointPen(new_points2)
+                    points2.replay(reversedPen)
+                    points2 = new_points2
+                    proposed_start = len(points2.value) - 2 - proposed_start
+
+                # Rotate points2 so that the first point is the same as in points1
+                beginPath = points2.value[:1]
+                endPath = points2.value[-1:]
+                pts = points2.value[1:-1]
+                pts = pts[proposed_start:] + pts[:proposed_start]
+                points2.value = beginPath + pts + endPath
 
                 # Convert the point pens back to segment pens
                 segment1 = RecordingPen()
