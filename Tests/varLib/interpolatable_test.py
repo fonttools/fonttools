@@ -47,7 +47,7 @@ class InterpolatableTest(unittest.TestCase):
         for p in all_files:
             if p.startswith(prefix) and p.endswith(suffix):
                 file_list.append(os.path.abspath(os.path.join(folder, p)))
-        return file_list
+        return sorted(file_list)
 
     def temp_path(self, suffix):
         self.temp_dir()
@@ -136,18 +136,20 @@ class InterpolatableTest(unittest.TestCase):
         # without --ignore-missing
         problems = interpolatable_main(["--quiet"] + ttf_paths)
         self.assertEqual(
-            problems["a"], [{"type": "missing", "master": "SparseMasters-Medium"}]
+            problems["a"],
+            [{"type": "missing", "master": "SparseMasters-Medium", "master_idx": 1}],
         )
         self.assertEqual(
-            problems["s"], [{"type": "missing", "master": "SparseMasters-Medium"}]
+            problems["s"],
+            [{"type": "missing", "master": "SparseMasters-Medium", "master_idx": 1}],
         )
         self.assertEqual(
             problems["edotabove"],
-            [{"type": "missing", "master": "SparseMasters-Medium"}],
+            [{"type": "missing", "master": "SparseMasters-Medium", "master_idx": 1}],
         )
         self.assertEqual(
             problems["dotabovecomb"],
-            [{"type": "missing", "master": "SparseMasters-Medium"}],
+            [{"type": "missing", "master": "SparseMasters-Medium", "master_idx": 1}],
         )
 
         # normal order, with --ignore-missing
@@ -172,18 +174,20 @@ class InterpolatableTest(unittest.TestCase):
         # without --ignore-missing
         problems = interpolatable_main(["--quiet"] + ufo_paths)
         self.assertEqual(
-            problems["a"], [{"type": "missing", "master": "SparseMasters-Medium"}]
+            problems["a"],
+            [{"type": "missing", "master": "SparseMasters-Medium", "master_idx": 1}],
         )
         self.assertEqual(
-            problems["s"], [{"type": "missing", "master": "SparseMasters-Medium"}]
+            problems["s"],
+            [{"type": "missing", "master": "SparseMasters-Medium", "master_idx": 1}],
         )
         self.assertEqual(
             problems["edotabove"],
-            [{"type": "missing", "master": "SparseMasters-Medium"}],
+            [{"type": "missing", "master": "SparseMasters-Medium", "master_idx": 1}],
         )
         self.assertEqual(
             problems["dotabovecomb"],
-            [{"type": "missing", "master": "SparseMasters-Medium"}],
+            [{"type": "missing", "master": "SparseMasters-Medium", "master_idx": 1}],
         )
 
         # normal order, with --ignore-missing
@@ -206,18 +210,20 @@ class InterpolatableTest(unittest.TestCase):
 
         problems = interpolatable_main(["--quiet", designspace_path])
         self.assertEqual(
-            problems["a"], [{"type": "missing", "master": "SparseMasters-Medium"}]
+            problems["a"],
+            [{"type": "missing", "master": "SparseMasters-Medium", "master_idx": 1}],
         )
         self.assertEqual(
-            problems["s"], [{"type": "missing", "master": "SparseMasters-Medium"}]
+            problems["s"],
+            [{"type": "missing", "master": "SparseMasters-Medium", "master_idx": 1}],
         )
         self.assertEqual(
             problems["edotabove"],
-            [{"type": "missing", "master": "SparseMasters-Medium"}],
+            [{"type": "missing", "master": "SparseMasters-Medium", "master_idx": 1}],
         )
         self.assertEqual(
             problems["dotabovecomb"],
-            [{"type": "missing", "master": "SparseMasters-Medium"}],
+            [{"type": "missing", "master": "SparseMasters-Medium", "master_idx": 1}],
         )
 
         # normal order, with --ignore-missing
@@ -229,18 +235,20 @@ class InterpolatableTest(unittest.TestCase):
 
         problems = interpolatable_main(["--quiet", glyphsapp_path])
         self.assertEqual(
-            problems["a"], [{"type": "missing", "master": "Sparse Masters-Medium"}]
+            problems["a"],
+            [{"type": "missing", "master": "Sparse Masters-Medium", "master_idx": 1}],
         )
         self.assertEqual(
-            problems["s"], [{"type": "missing", "master": "Sparse Masters-Medium"}]
+            problems["s"],
+            [{"type": "missing", "master": "Sparse Masters-Medium", "master_idx": 1}],
         )
         self.assertEqual(
             problems["edotabove"],
-            [{"type": "missing", "master": "Sparse Masters-Medium"}],
+            [{"type": "missing", "master": "Sparse Masters-Medium", "master_idx": 1}],
         )
         self.assertEqual(
             problems["dotabovecomb"],
-            [{"type": "missing", "master": "Sparse Masters-Medium"}],
+            [{"type": "missing", "master": "Sparse Masters-Medium", "master_idx": 1}],
         )
 
         # normal order, with --ignore-missing

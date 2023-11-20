@@ -148,7 +148,9 @@ class InterpolatablePlot:
             current_glyph_problems = []
             for p in glyph_problems:
                 masters = (
-                    p["master"] if "master" in p else (p["master_1"], p["master_2"])
+                    p["master_idx"]
+                    if "master_idx" in p
+                    else (p["master_1_idx"], p["master_2_idx"])
                 )
                 if masters == last_masters:
                     current_glyph_problems.append(p)
@@ -176,10 +178,11 @@ class InterpolatablePlot:
         log.info("Drawing %s: %s", glyphname, problem_type)
 
         master_keys = (
-            ("master",) if "master" in problems[0] else ("master_1", "master_2")
+            ("master_idx",)
+            if "master_idx" in problems[0]
+            else ("master_1_idx", "master_2_idx")
         )
-        master_names = [problems[0][k] for k in master_keys]
-        master_indices = [self.names.index(n) for n in master_names]
+        master_indices = [problems[0][k] for k in master_keys]
 
         if problem_type == "missing":
             sample_glyph = next(
