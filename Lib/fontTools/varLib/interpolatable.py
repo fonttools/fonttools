@@ -519,9 +519,14 @@ def test_gen(
             m1 = allContourIsomorphisms[m1idx]
             m0 = allContourIsomorphisms[m0idx]
 
+            # If contour-order is wrong, adjust it
+            if matchings[m1idx] is not None and m1: # m1 is empty for composite glyphs
+                m1 = [m1[i] for i in matchings[m1idx]]
+
             for ix, (contour0, contour1) in enumerate(zip(m0, m1)):
                 if len(contour0) == 0 or len(contour0) != len(contour1):
-                    # We already reported this; or nothing to do
+                    # We already reported this; or nothing to do; or not compatible
+                    # after reordering above.
                     continue
 
                 c0 = contour0[0]
@@ -530,14 +535,6 @@ def test_gen(
                 first_cost = costs[0]
                 if min_cost < first_cost * tolerance:
                     reverse = contour1[min_cost_idx][2]
-
-                    # If contour-order is wrong, don't report a reversing
-                    if (
-                        reverse
-                        and matchings[m1idx] is not None
-                        and matchings[m1idx][ix] != ix
-                    ):
-                        continue
 
                     yield (
                         glyph_name,
