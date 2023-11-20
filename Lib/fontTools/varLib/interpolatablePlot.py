@@ -118,7 +118,7 @@ class InterpolatablePlot:
               ||||||||||||||||||||||||
 """
     shrug_color = (0, 0.3, 0.3)
-    shrug = r"""¯\_(")_/¯"""
+    shrug = r"""\_(")_/"""
 
     def __init__(self, out, glyphsets, names=None, **kwargs):
         self.out = out
@@ -171,7 +171,7 @@ class InterpolatablePlot:
         problem_type = problems[0]["type"]
         problem_types = set(problem["type"] for problem in problems)
         if not all(pt == problem_type for pt in problem_types):
-            problem_type = "mixed"
+            problem_type = ', '.join(sorted({problem["type"] for problem in problems}))
 
         log.info("Drawing %s: %s", glyphname, problem_type)
 
@@ -201,8 +201,8 @@ class InterpolatablePlot:
         x = self.pad
         y = self.pad
 
-        self.draw_label(glyphname, x=x, y=y, color=self.head_color, align=0)
-        self.draw_label(problem_type, x=x, y=y, color=self.head_color, align=1)
+        self.draw_label(glyphname, x=x, y=y, color=self.head_color, align=0, bold=True)
+        self.draw_label(problem_type, x=x + self.width + self.pad, y=y, color=self.head_color, align=1, bold=True)
         y += self.line_height + self.pad
 
         for which, master_idx in enumerate(master_indices):
@@ -319,6 +319,7 @@ class InterpolatablePlot:
             overriding2[glyphname] = fixed2
 
             try:
+                raise ValueError
                 midway_glyphset = LerpGlyphSet(overriding1, overriding2)
                 self.draw_glyph(
                     midway_glyphset, glyphname, {"type": "fixed"}, None, x=x, y=y
@@ -327,9 +328,9 @@ class InterpolatablePlot:
                 self.draw_shrug(x=x, y=y)
             y += self.height + self.pad
 
-    def draw_label(self, label, *, x, y, color=(0, 0, 0), align=0):
+    def draw_label(self, label, *, x, y, color=(0, 0, 0), align=0, bold=False):
         cr = cairo.Context(self.surface)
-        cr.select_font_face("@cairo", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
+        cr.select_font_face("@cairo:", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD if bold else cairo.FONT_WEIGHT_NORMAL)
         cr.set_font_size(self.line_height)
         font_extents = cr.font_extents()
         font_size = self.line_height * self.line_height / font_extents[2]
@@ -569,7 +570,7 @@ class InterpolatablePlot:
         cr.set_source_rgb(*self.cupcake_color)
         cr.set_font_size(self.line_height)
         cr.select_font_face(
-            "monospace", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL
+            "@cairo:monospace", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL
         )
         width = 0
         height = 0
@@ -591,7 +592,7 @@ class InterpolatablePlot:
         cr.set_source_rgb(*self.shrug_color)
         cr.set_font_size(self.line_height)
         cr.select_font_face(
-            "monospace", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL
+            "@cairo:monospace", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL
         )
         extents = cr.text_extents(self.shrug)
         if not extents.width:
