@@ -400,7 +400,6 @@ def test_gen(
 
         matchings = [None] * len(allControlVectors)
 
-        showed = False
         for m1idx in order:
             if allNodeTypes[m1idx] is None:
                 continue

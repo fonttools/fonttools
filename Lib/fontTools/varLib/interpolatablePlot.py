@@ -488,7 +488,7 @@ class InterpolatablePlot:
 
         for problem in problems:
             if problem["type"] in ("nothing", "wrong_start_point"):
-                idx = getattr(problem, "contour", None)
+                idx = problem.get("contour")
 
                 # Draw suggested point
                 if idx is not None and which == 1:
@@ -519,7 +519,7 @@ class InterpolatablePlot:
                             cr.line_to(*args[0])
                         i += 1
 
-                if which == 0 or not getattr(problem, "reversed", False):
+                if which == 0 or not problem.get("reversed"):
                     cr.set_source_rgb(*self.start_point_color)
                 else:
                     cr.set_source_rgb(*self.reversed_start_point_color)
