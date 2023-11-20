@@ -293,6 +293,7 @@ def test_gen(
     *,
     locations=None,
     tolerance=0.95,
+    show_all=False,
 ):
     if names is None:
         names = glyphsets
@@ -399,6 +400,7 @@ def test_gen(
 
         matchings = [None] * len(allControlVectors)
 
+        showed = False
         for m1idx in order:
             if allNodeTypes[m1idx] is None:
                 continue
@@ -408,9 +410,12 @@ def test_gen(
             if allNodeTypes[m0idx] is None:
                 continue
 
+            showed = False
+
             m1 = allNodeTypes[m1idx]
             m0 = allNodeTypes[m0idx]
             if len(m0) != len(m1):
+                showed = True
                 yield (
                     glyph_name,
                     {
@@ -430,6 +435,7 @@ def test_gen(
                     if nodes1 == nodes2:
                         continue
                     if len(nodes1) != len(nodes2):
+                        showed = True
                         yield (
                             glyph_name,
                             {
@@ -446,6 +452,7 @@ def test_gen(
                         continue
                     for nodeIx, (n1, n2) in enumerate(zip(nodes1, nodes2)):
                         if n1 != n2:
+                            showed = True
                             yield (
                                 glyph_name,
                                 {
@@ -522,6 +529,7 @@ def test_gen(
                     if matching_cost < identity_cost * tolerance:
                         # print(matching_cost_control / identity_cost_control, matching_cost_green / identity_cost_green)
 
+                        showed = True
                         yield (
                             glyph_name,
                             {
@@ -554,8 +562,7 @@ def test_gen(
                 min_cost_idx, min_cost = min(enumerate(costs), key=lambda x: x[1])
                 first_cost = costs[0]
                 if min_cost < first_cost * tolerance:
-                    reverse = contour1[min_cost_idx][2]
-
+                    showed = True
                     yield (
                         glyph_name,
                         {
@@ -567,9 +574,21 @@ def test_gen(
                             "master_2_idx": m1idx,
                             "value_1": 0,
                             "value_2": contour1[min_cost_idx][1],
-                            "reversed": reverse,
+                            "reversed": contour1[min_cost_idx][2],
                         },
                     )
+
+            if show_all and not showed:
+                yield (
+                    glyph_name,
+                    {
+                        "type": "nothing",
+                        "master_1": names[m0idx],
+                        "master_2": names[m1idx],
+                        "master_1_idx": m0idx,
+                        "master_2_idx": m1idx,
+                    },
+                )
 
 
 @wraps(test_gen)
@@ -602,6 +621,11 @@ def main(args=None):
         "--glyphs",
         action="store",
         help="Space-separate name of glyphs to check",
+    )
+    parser.add_argument(
+        "--show-all",
+        action="store_true",
+        help="Show all glyph pairs, even if no problems are found",
     )
     parser.add_argument(
         "--tolerance",
@@ -824,6 +848,7 @@ def main(args=None):
             locations=locations,
             ignore_missing=args.ignore_missing,
             tolerance=args.tolerance or 0.95,
+            show_all=args.show_all,
         )
         problems = defaultdict(list)
 

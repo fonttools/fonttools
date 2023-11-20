@@ -228,7 +228,10 @@ class InterpolatablePlot:
                 self.draw_shrug(x=x, y=y)
             y += self.height + self.pad
 
-        if any(pt in ("wrong_start_point", "contour_order") for pt in problem_types):
+        if any(
+            pt in ("nothing", "wrong_start_point", "contour_order")
+            for pt in problem_types
+        ):
             x = self.pad + self.width + self.pad
             y = self.pad
             y += self.line_height + self.pad
@@ -418,7 +421,7 @@ class InterpolatablePlot:
             cr.set_line_width(self.stroke_width / scale)
             cr.stroke()
 
-        if problem_type in ("node_count", "node_incompatibility"):
+        if problem_type in ("nothing", "node_count", "node_incompatibility"):
             cr.set_line_cap(cairo.LINE_CAP_ROUND)
 
             # Oncurve nodes
@@ -484,11 +487,11 @@ class InterpolatablePlot:
                     cr.fill()
 
         for problem in problems:
-            if problem["type"] == "wrong_start_point":
-                idx = problem["contour"]
+            if problem["type"] in ("nothing", "wrong_start_point"):
+                idx = getattr(problem, "contour", None)
 
                 # Draw suggested point
-                if which == 1:
+                if idx is not None and which == 1:
                     perContourPen = PerContourOrComponentPen(
                         RecordingPen, glyphset=glyphset
                     )
@@ -511,12 +514,12 @@ class InterpolatablePlot:
                 i = 0
                 for segment, args in recording.value:
                     if segment == "moveTo":
-                        if i == idx:
+                        if idx is None or i == idx:
                             cr.move_to(*args[0])
                             cr.line_to(*args[0])
                         i += 1
 
-                if which == 0 or not problem["reversed"]:
+                if which == 0 or not getattr(problem, "reversed", False):
                     cr.set_source_rgb(*self.start_point_color)
                 else:
                     cr.set_source_rgb(*self.reversed_start_point_color)
@@ -535,7 +538,7 @@ class InterpolatablePlot:
                         continue
                     second_pt = args[0]
 
-                    if i == idx:
+                    if idx is None or i == idx:
                         first_pt = complex(*first_pt)
                         second_pt = complex(*second_pt)
                         length = abs(second_pt - first_pt)
