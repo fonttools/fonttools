@@ -832,9 +832,11 @@ def main(args=None):
                     last_glyphname = glyphname
                     last_masters = None
 
-                masters = (p['master']) if 'master' in p else (p['master_1'], p['master_2'])
+                masters = (
+                    (p["master"]) if "master" in p else (p["master_1"], p["master_2"])
+                )
                 if masters != last_masters:
-                    print(f"  Masters: %s:" % ', '.join(masters), file=f)
+                    print(f"  Masters: %s:" % ", ".join(masters), file=f)
                     last_masters = masters
 
                 if p["type"] == "missing":

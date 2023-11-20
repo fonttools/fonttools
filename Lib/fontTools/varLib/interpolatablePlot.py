@@ -147,7 +147,9 @@ class InterpolatablePlot:
             last_masters = None
             current_glyph_problems = []
             for p in glyph_problems:
-                masters = p["master"] if "master" in p else (p["master_1"], p["master_2"])
+                masters = (
+                    p["master"] if "master" in p else (p["master_1"], p["master_2"])
+                )
                 if masters == last_masters:
                     current_glyph_problems.append(p)
                     continue
@@ -163,7 +165,6 @@ class InterpolatablePlot:
                 self.show_page()
 
     def add_problem(self, glyphname, problems):
-
         if type(problems) not in (list, tuple):
             problems = [problems]
 
@@ -172,7 +173,9 @@ class InterpolatablePlot:
 
         log.info("Drawing %s: %s", glyphname, problem_type)
 
-        master_keys = ("master",) if "master" in problems[0] else ("master_1", "master_2")
+        master_keys = (
+            ("master",) if "master" in problems[0] else ("master_1", "master_2")
+        )
         master_names = [problems[0][k] for k in master_keys]
         master_indices = [self.names.index(n) for n in master_names]
 
@@ -311,7 +314,9 @@ class InterpolatablePlot:
 
             elif problem_type == "contour_order":
                 assert len(problems) == 1
-                fixed_contours = [perContourPen.value[i] for i in problems[0]["value_2"]]
+                fixed_contours = [
+                    perContourPen.value[i] for i in problems[0]["value_2"]
+                ]
                 fixed_recording = RecordingPen()
                 for contour in fixed_contours:
                     fixed_recording.value.extend(contour.value)
@@ -355,7 +360,6 @@ class InterpolatablePlot:
         cr.show_text(label)
 
     def draw_glyph(self, glyphset, glyphname, problems, which, *, x=0, y=0):
-
         if type(problems) not in (list, tuple):
             problems = [problems]
 
@@ -455,7 +459,6 @@ class InterpolatablePlot:
             cr.stroke()
 
         if problem_type == "wrong_start_point":
-
             for problem in problems:
                 idx = problem["contour"]
 
@@ -514,7 +517,9 @@ class InterpolatablePlot:
                             length *= scale
                             second_pt = (
                                 first_pt
-                                + (second_pt - first_pt) / length * self.start_handle_length
+                                + (second_pt - first_pt)
+                                / length
+                                * self.start_handle_length
                             )
                             cr.move_to(first_pt.real, first_pt.imag)
                             cr.line_to(second_pt.real, second_pt.imag)
