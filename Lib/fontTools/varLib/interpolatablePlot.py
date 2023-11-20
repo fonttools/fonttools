@@ -169,7 +169,9 @@ class InterpolatablePlot:
             problems = [problems]
 
         problem_type = problems[0]["type"]
-        assert all(p["type"] == problem_type for p in problems)
+        problem_types = set(problem["type"] for problem in problems)
+        if not all(pt == problem_type for pt in problem_types):
+            problem_type = "mixed"
 
         log.info("Drawing %s: %s", glyphname, problem_type)
 
@@ -216,7 +218,7 @@ class InterpolatablePlot:
                 self.draw_shrug(x=x, y=y)
             y += self.height + self.pad
 
-        if problem_type in ("wrong_start_point", "contour_order"):
+        if any(pt in ("wrong_start_point", "contour_order") for pt in problem_types):
             x = self.pad + self.width + self.pad
             y = self.pad
             y += self.line_height + self.pad
@@ -244,20 +246,25 @@ class InterpolatablePlot:
 
             overriding1 = OverridingDict(glyphset1)
             overriding2 = OverridingDict(glyphset2)
-            perContourPen = PerContourOrComponentPen(RecordingPen, glyphset=overriding2)
-            glyphset2[glyphname].draw(perContourPen)
+            perContourPen1 = PerContourOrComponentPen(
+                RecordingPen, glyphset=overriding1
+            )
+            perContourPen2 = PerContourOrComponentPen(
+                RecordingPen, glyphset=overriding2
+            )
+            glyphset1[glyphname].draw(perContourPen1)
+            glyphset2[glyphname].draw(perContourPen2)
 
-            if problem_type == "wrong_start_point":
-                perContourPen1 = PerContourOrComponentPen(
-                    RecordingPen, glyphset=glyphset
-                )
-                glyphset1[glyphname].draw(perContourPen1)
-                perContourPen2 = PerContourOrComponentPen(
-                    RecordingPen, glyphset=glyphset
-                )
-                glyphset2[glyphname].draw(perContourPen2)
+            for problem in problems:
+                if problem["type"] == "contour_order":
+                    assert len(problems) == 1
+                    fixed_contours = [
+                        perContourPen2.value[i] for i in problems[0]["value_2"]
+                    ]
+                    perContourPen2.value = fixed_contours
 
-                for problem in problems:
+            for problem in problems:
+                if problem["type"] == "wrong_start_point":
                     # Save the wrong contours
                     wrongContour1 = perContourPen1.value[problem["contour"]]
                     wrongContour2 = perContourPen2.value[problem["contour"]]
@@ -299,31 +306,18 @@ class InterpolatablePlot:
                     wrongContour1.value = segment1.value
                     wrongContour2.value = segment2.value
 
-                # Assemble
-                fixed1 = RecordingPen()
-                fixed2 = RecordingPen()
-                for contour in perContourPen1.value:
-                    fixed1.value.extend(contour.value)
-                for contour in perContourPen2.value:
-                    fixed2.value.extend(contour.value)
-                fixed1.draw = fixed1.replay
-                fixed2.draw = fixed2.replay
+            # Assemble
+            fixed1 = RecordingPen()
+            fixed2 = RecordingPen()
+            for contour in perContourPen1.value:
+                fixed1.value.extend(contour.value)
+            for contour in perContourPen2.value:
+                fixed2.value.extend(contour.value)
+            fixed1.draw = fixed1.replay
+            fixed2.draw = fixed2.replay
 
-                overriding1[glyphname] = fixed1
-                overriding2[glyphname] = fixed2
-
-            elif problem_type == "contour_order":
-                assert len(problems) == 1
-                fixed_contours = [
-                    perContourPen.value[i] for i in problems[0]["value_2"]
-                ]
-                fixed_recording = RecordingPen()
-                for contour in fixed_contours:
-                    fixed_recording.value.extend(contour.value)
-                fixed_recording.draw = fixed_recording.replay
-                overriding2[glyphname] = fixed_recording
-            else:
-                assert False
+            overriding1[glyphname] = fixed1
+            overriding2[glyphname] = fixed2
 
             try:
                 midway_glyphset = LerpGlyphSet(overriding1, overriding2)
