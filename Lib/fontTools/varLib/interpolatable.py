@@ -662,6 +662,8 @@ def main(args=None):
     names = []
     locations = []
 
+    original_args_inputs = tuple(args.inputs)
+
     if len(args.inputs) == 1:
         designspace = None
         if args.inputs[0].endswith(".designspace"):
@@ -812,147 +814,161 @@ def main(args=None):
     # Normalize locations
     locations = [normalizeLocation(loc, axis_triples) for loc in locations]
 
-    log.info("Running on %d glyphsets", len(glyphsets))
-    log.info("Locations: %s", pformat(locations))
-    problems_gen = test_gen(
-        glyphsets,
-        glyphs=glyphs,
-        names=names,
-        locations=locations,
-        ignore_missing=args.ignore_missing,
-        tolerance=args.tolerance or 0.95,
-    )
-    problems = defaultdict(list)
+    try:
+        log.info("Running on %d glyphsets", len(glyphsets))
+        log.info("Locations: %s", pformat(locations))
+        problems_gen = test_gen(
+            glyphsets,
+            glyphs=glyphs,
+            names=names,
+            locations=locations,
+            ignore_missing=args.ignore_missing,
+            tolerance=args.tolerance or 0.95,
+        )
+        problems = defaultdict(list)
 
-    f = sys.stdout if args.output is None else open(args.output, "w")
+        f = sys.stdout if args.output is None else open(args.output, "w")
 
-    if not args.quiet:
-        if args.json:
-            import json
+        if not args.quiet:
+            if args.json:
+                import json
 
+                for glyphname, problem in problems_gen:
+                    problems[glyphname].append(problem)
+
+                print(json.dumps(problems), file=f)
+            else:
+                last_glyphname = None
+                for glyphname, p in problems_gen:
+                    problems[glyphname].append(p)
+
+                    if glyphname != last_glyphname:
+                        print(f"Glyph {glyphname} was not compatible:", file=f)
+                        last_glyphname = glyphname
+                        last_master_idxs = None
+
+                    master_idxs = (
+                        (p["master_idx"])
+                        if "master_idx" in p
+                        else (p["master_1_idx"], p["master_2_idx"])
+                    )
+                    if master_idxs != last_master_idxs:
+                        master_names = (
+                            (p["master"])
+                            if "master" in p
+                            else (p["master_1"], p["master_2"])
+                        )
+                        print(f"  Masters: %s:" % ", ".join(master_names), file=f)
+                        last_master_idxs = master_idxs
+
+                    if p["type"] == "missing":
+                        print(
+                            "    Glyph was missing in master %s" % p["master"], file=f
+                        )
+                    if p["type"] == "open_path":
+                        print(
+                            "    Glyph has an open path in master %s" % p["master"],
+                            file=f,
+                        )
+                    if p["type"] == "path_count":
+                        print(
+                            "    Path count differs: %i in %s, %i in %s"
+                            % (
+                                p["value_1"],
+                                p["master_1"],
+                                p["value_2"],
+                                p["master_2"],
+                            ),
+                            file=f,
+                        )
+                    if p["type"] == "node_count":
+                        print(
+                            "    Node count differs in path %i: %i in %s, %i in %s"
+                            % (
+                                p["path"],
+                                p["value_1"],
+                                p["master_1"],
+                                p["value_2"],
+                                p["master_2"],
+                            ),
+                            file=f,
+                        )
+                    if p["type"] == "node_incompatibility":
+                        print(
+                            "    Node %o incompatible in path %i: %s in %s, %s in %s"
+                            % (
+                                p["node"],
+                                p["path"],
+                                p["value_1"],
+                                p["master_1"],
+                                p["value_2"],
+                                p["master_2"],
+                            ),
+                            file=f,
+                        )
+                    if p["type"] == "contour_order":
+                        print(
+                            "    Contour order differs: %s in %s, %s in %s"
+                            % (
+                                p["value_1"],
+                                p["master_1"],
+                                p["value_2"],
+                                p["master_2"],
+                            ),
+                            file=f,
+                        )
+                    if p["type"] == "wrong_start_point":
+                        print(
+                            "    Contour %d start point differs: %s in %s, %s in %s; reversed: %s"
+                            % (
+                                p["contour"],
+                                p["value_1"],
+                                p["master_1"],
+                                p["value_2"],
+                                p["master_2"],
+                                p["reversed"],
+                            ),
+                            file=f,
+                        )
+        else:
             for glyphname, problem in problems_gen:
                 problems[glyphname].append(problem)
 
-            print(json.dumps(problems), file=f)
-        else:
-            last_glyphname = None
-            for glyphname, p in problems_gen:
-                problems[glyphname].append(p)
+        if args.pdf:
+            log.info("Writing PDF to %s", args.pdf)
+            from .interpolatablePlot import InterpolatablePDF
 
-                if glyphname != last_glyphname:
-                    print(f"Glyph {glyphname} was not compatible:", file=f)
-                    last_glyphname = glyphname
-                    last_master_idxs = None
+            with InterpolatablePDF(args.pdf, glyphsets=glyphsets, names=names) as pdf:
+                pdf.add_problems(problems)
+                if not problems and not args.quiet:
+                    pdf.draw_cupcake()
 
-                master_idxs = (
-                    (p["master_idx"])
-                    if "master_idx" in p
-                    else (p["master_1_idx"], p["master_2_idx"])
-                )
-                if master_idxs != last_master_idxs:
-                    master_names = (
-                        (p["master"])
-                        if "master" in p
-                        else (p["master_1"], p["master_2"])
-                    )
-                    print(f"  Masters: %s:" % ", ".join(master_names), file=f)
-                    last_master_idxs = master_idxs
+        if args.html:
+            log.info("Writing HTML to %s", args.html)
+            from .interpolatablePlot import InterpolatableSVG
 
-                if p["type"] == "missing":
-                    print("    Glyph was missing in master %s" % p["master"], file=f)
-                if p["type"] == "open_path":
-                    print(
-                        "    Glyph has an open path in master %s" % p["master"], file=f
-                    )
-                if p["type"] == "path_count":
-                    print(
-                        "    Path count differs: %i in %s, %i in %s"
-                        % (p["value_1"], p["master_1"], p["value_2"], p["master_2"]),
-                        file=f,
-                    )
-                if p["type"] == "node_count":
-                    print(
-                        "    Node count differs in path %i: %i in %s, %i in %s"
-                        % (
-                            p["path"],
-                            p["value_1"],
-                            p["master_1"],
-                            p["value_2"],
-                            p["master_2"],
-                        ),
-                        file=f,
-                    )
-                if p["type"] == "node_incompatibility":
-                    print(
-                        "    Node %o incompatible in path %i: %s in %s, %s in %s"
-                        % (
-                            p["node"],
-                            p["path"],
-                            p["value_1"],
-                            p["master_1"],
-                            p["value_2"],
-                            p["master_2"],
-                        ),
-                        file=f,
-                    )
-                if p["type"] == "contour_order":
-                    print(
-                        "    Contour order differs: %s in %s, %s in %s"
-                        % (
-                            p["value_1"],
-                            p["master_1"],
-                            p["value_2"],
-                            p["master_2"],
-                        ),
-                        file=f,
-                    )
-                if p["type"] == "wrong_start_point":
-                    print(
-                        "    Contour %d start point differs: %s in %s, %s in %s; reversed: %s"
-                        % (
-                            p["contour"],
-                            p["value_1"],
-                            p["master_1"],
-                            p["value_2"],
-                            p["master_2"],
-                            p["reversed"],
-                        ),
-                        file=f,
-                    )
-    else:
-        for glyphname, problem in problems_gen:
-            problems[glyphname].append(problem)
+            svgs = []
+            with InterpolatableSVG(svgs, glyphsets=glyphsets, names=names) as svg:
+                svg.add_problems(problems)
+                if not problems and not args.quiet:
+                    svg.draw_cupcake()
 
-    if args.pdf:
-        log.info("Writing PDF to %s", args.pdf)
-        from .interpolatablePlot import InterpolatablePDF
+            import base64
 
-        with InterpolatablePDF(args.pdf, glyphsets=glyphsets, names=names) as pdf:
-            pdf.add_problems(problems)
-            if not problems and not args.quiet:
-                pdf.draw_cupcake()
+            with open(args.html, "wb") as f:
+                f.write(b"<!DOCTYPE html>\n")
+                f.write(b"<html><body align=center>\n")
+                for svg in svgs:
+                    f.write("<img src='data:image/svg+xml;base64,".encode("utf-8"))
+                    f.write(base64.b64encode(svg))
+                    f.write(b"' />\n")
+                    f.write(b"<hr>\n")
+                f.write(b"</body></html>\n")
 
-    if args.html:
-        log.info("Writing HTML to %s", args.html)
-        from .interpolatablePlot import InterpolatableSVG
-
-        svgs = []
-        with InterpolatableSVG(svgs, glyphsets=glyphsets, names=names) as svg:
-            svg.add_problems(problems)
-            if not problems and not args.quiet:
-                svg.draw_cupcake()
-
-        import base64
-
-        with open(args.html, "wb") as f:
-            f.write(b"<!DOCTYPE html>\n")
-            f.write(b"<html><body align=center>\n")
-            for svg in svgs:
-                f.write("<img src='data:image/svg+xml;base64,".encode("utf-8"))
-                f.write(base64.b64encode(svg))
-                f.write(b"' />\n")
-                f.write(b"<hr>\n")
-            f.write(b"</body></html>\n")
+    except Exception as e:
+        e.args += original_args_inputs
+        log.error(e)
+        raise
 
     if problems:
         return problems
