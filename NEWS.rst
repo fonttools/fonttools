@@ -1,3 +1,8 @@
+- [varLib.interpolator] Vastly improved algorithms. Also available now is `--pdf`
+  and `--html` options to generate a PDF or HTML report of the interpolation issues.
+  The PDF/HTML report showcases the problematic masters, the interpolated broken
+  glyph, as well as the proposed fixed version.
+
 4.44.3 (released 2023-11-15)
 ----------------------------
 
