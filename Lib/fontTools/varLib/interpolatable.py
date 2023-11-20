@@ -321,10 +321,15 @@ def test_gen(
         allGlyphs = [glyphset[glyph_name] for glyphset in glyphsets]
         if len([1 for glyph in allGlyphs if glyph is not None]) <= 1:
             continue
-        for glyph, glyphset, name in zip(allGlyphs, glyphsets, names):
+        for master_idx, (glyph, glyphset, name) in enumerate(
+            zip(allGlyphs, glyphsets, names)
+        ):
             if glyph is None:
                 if not ignore_missing:
-                    yield (glyph_name, {"type": "missing", "master": name})
+                    yield (
+                        glyph_name,
+                        {"type": "missing", "master": name, "master_idx": master_idx},
+                    )
                 allNodeTypes.append(None)
                 allControlVectors.append(None)
                 allGreenVectors.append(None)
@@ -359,7 +364,12 @@ def test_gen(
                 except OpenContourError as e:
                     yield (
                         glyph_name,
-                        {"master": name, "contour": ix, "type": "open_path"},
+                        {
+                            "master": name,
+                            "master_idx": master_idx,
+                            "contour": ix,
+                            "type": "open_path",
+                        },
                     )
                     continue
                 contourGreenVectors.append(_contour_vector_from_stats(greenStats))
@@ -405,6 +415,8 @@ def test_gen(
                         "type": "path_count",
                         "master_1": names[m0idx],
                         "master_2": names[m1idx],
+                        "master_1_idx": m0idx,
+                        "master_2_idx": m1idx,
                         "value_1": len(m0),
                         "value_2": len(m1),
                     },
@@ -423,6 +435,8 @@ def test_gen(
                                 "path": pathIx,
                                 "master_1": names[m0idx],
                                 "master_2": names[m1idx],
+                                "master_1_idx": m0idx,
+                                "master_2_idx": m1idx,
                                 "value_1": len(nodes1),
                                 "value_2": len(nodes2),
                             },
@@ -438,6 +452,8 @@ def test_gen(
                                     "node": nodeIx,
                                     "master_1": names[m0idx],
                                     "master_2": names[m1idx],
+                                    "master_1_idx": m0idx,
+                                    "master_2_idx": m1idx,
                                     "value_1": n1,
                                     "value_2": n2,
                                 },
@@ -510,6 +526,8 @@ def test_gen(
                                 "type": "contour_order",
                                 "master_1": names[m0idx],
                                 "master_2": names[m1idx],
+                                "master_1_idx": m0idx,
+                                "master_2_idx": m1idx,
                                 "value_1": list(range(len(m0Control))),
                                 "value_2": matching,
                             },
@@ -543,6 +561,8 @@ def test_gen(
                             "contour": ix,
                             "master_1": names[m0idx],
                             "master_2": names[m1idx],
+                            "master_1_idx": m0idx,
+                            "master_2_idx": m1idx,
                             "value_1": 0,
                             "value_2": contour1[min_cost_idx][1],
                             "reversed": reverse,
@@ -820,14 +840,21 @@ def main(args=None):
                 if glyphname != last_glyphname:
                     print(f"Glyph {glyphname} was not compatible:", file=f)
                     last_glyphname = glyphname
-                    last_masters = None
+                    last_master_idxs = None
 
-                masters = (
-                    (p["master"]) if "master" in p else (p["master_1"], p["master_2"])
+                master_idxs = (
+                    (p["master_idx"])
+                    if "master_idx" in p
+                    else (p["master_1_idx"], p["master_2_idx"])
                 )
-                if masters != last_masters:
-                    print(f"  Masters: %s:" % ", ".join(masters), file=f)
-                    last_masters = masters
+                if master_idxs != last_master_idxs:
+                    master_names = (
+                        (p["master"])
+                        if "master" in p
+                        else (p["master_1"], p["master_2"])
+                    )
+                    print(f"  Masters: %s:" % ", ".join(master_names), file=f)
+                    last_master_idxs = master_idxs
 
                 if p["type"] == "missing":
                     print("    Glyph was missing in master %s" % p["master"], file=f)
