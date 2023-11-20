@@ -173,9 +173,13 @@ def _points_characteristic_bits(points):
 
 def _points_complex_vector(points):
     vector = []
+    if not points:
+        return vector
     points = [complex(*pt) for pt, _ in points]
     n = len(points)
     points.extend(points[:2])
+    if n == 1:
+        points.append(points[0])  # We need at least three points
     for i in range(n):
         p0 = points[i]
 
@@ -188,15 +192,13 @@ def _points_complex_vector(points):
         d0 = p1 - p0
         vector.append(d0 * 2)
 
-        """
         # The angle to the next point, as a cross product;
         # Square root of, to match dimentionality of distance.
         p2 = points[i + 2]
         d1 = p2 - p1
         cross = d0.real * d1.imag - d0.imag * d1.real
         cross = copysign(sqrt(abs(cross)), cross)
-        vector.append(cross)
-        """
+        vector.append(cross * 4)
 
     return vector
 
