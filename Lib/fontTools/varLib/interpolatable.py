@@ -385,16 +385,19 @@ def test_gen(
                 # Add mirrored rotations
                 _add_isomorphisms(points.value, isomorphisms, True)
 
+        matchings = [None] * len(allControlVectors)
+
         for m1idx in order:
-            m1 = allNodeTypes[m1idx]
-            if m1 is None:
+            if allNodeTypes[m1idx] is None:
                 continue
             m0idx = grand_parent(m1idx, glyph_name)
             if m0idx is None:
                 continue
-            m0 = allNodeTypes[m0idx]
-            if m0 is None:
+            if allNodeTypes[m0idx] is None:
                 continue
+
+            m1 = allNodeTypes[m1idx]
+            m0 = allNodeTypes[m0idx]
             if len(m0) != len(m1):
                 yield (
                     glyph_name,
@@ -406,134 +409,111 @@ def test_gen(
                         "value_2": len(m1),
                     },
                 )
-            if m0 == m1:
                 continue
-            for pathIx, (nodes1, nodes2) in enumerate(zip(m0, m1)):
-                if nodes1 == nodes2:
-                    continue
-                if len(nodes1) != len(nodes2):
-                    yield (
-                        glyph_name,
-                        {
-                            "type": "node_count",
-                            "path": pathIx,
-                            "master_1": names[m0idx],
-                            "master_2": names[m1idx],
-                            "value_1": len(nodes1),
-                            "value_2": len(nodes2),
-                        },
-                    )
-                    continue
-                for nodeIx, (n1, n2) in enumerate(zip(nodes1, nodes2)):
-                    if n1 != n2:
+
+            if m0 != m1:
+                for pathIx, (nodes1, nodes2) in enumerate(zip(m0, m1)):
+                    if nodes1 == nodes2:
+                        continue
+                    if len(nodes1) != len(nodes2):
                         yield (
                             glyph_name,
                             {
-                                "type": "node_incompatibility",
+                                "type": "node_count",
                                 "path": pathIx,
-                                "node": nodeIx,
                                 "master_1": names[m0idx],
                                 "master_2": names[m1idx],
-                                "value_1": n1,
-                                "value_2": n2,
+                                "value_1": len(nodes1),
+                                "value_2": len(nodes2),
                             },
                         )
                         continue
+                    for nodeIx, (n1, n2) in enumerate(zip(nodes1, nodes2)):
+                        if n1 != n2:
+                            yield (
+                                glyph_name,
+                                {
+                                    "type": "node_incompatibility",
+                                    "path": pathIx,
+                                    "node": nodeIx,
+                                    "master_1": names[m0idx],
+                                    "master_2": names[m1idx],
+                                    "value_1": n1,
+                                    "value_2": n2,
+                                },
+                            )
+                            continue
 
-        matchings = [None] * len(allControlVectors)
-        for m1idx in order:
             m1Control = allControlVectors[m1idx]
             m1Green = allGreenVectors[m1idx]
-            if m1Control is None or m1Green is None:
-                continue
-            if len(m1Control) <= 1:
-                continue
-            m0idx = grand_parent(m1idx, glyph_name)
-            if m0idx is None:
-                continue
             m0Control = allControlVectors[m0idx]
             m0Green = allGreenVectors[m0idx]
-            if m0Control is None or m0Green is None:
-                continue
-            if len(m0Control) != len(m1Control):
-                # We already reported this
-                continue
+            if len(m1Control) > 1:
 
-            identity_matching = list(range(len(m0Control)))
+                identity_matching = list(range(len(m0Control)))
 
-            # We try matching both the StatisticsControlPen vector
-            # and the StatisticsPen vector.
-            # If either method found a identity matching, accept it.
-            # This is crucial for fonts like Kablammo[MORF].ttf and
-            # Nabla[EDPT,EHLT].ttf, since they really confuse the
-            # StatisticsPen vector because of their area=0 contours.
-            #
-            # TODO: Optimize by only computing the StatisticsPen vector
-            # and then checking if it is the identity vector. Only if
-            # not, compute the StatisticsControlPen vector and check both.
+                # We try matching both the StatisticsControlPen vector
+                # and the StatisticsPen vector.
+                # If either method found a identity matching, accept it.
+                # This is crucial for fonts like Kablammo[MORF].ttf and
+                # Nabla[EDPT,EHLT].ttf, since they really confuse the
+                # StatisticsPen vector because of their area=0 contours.
+                #
+                # TODO: Optimize by only computing the StatisticsPen vector
+                # and then checking if it is the identity vector. Only if
+                # not, compute the StatisticsControlPen vector and check both.
 
-            costsControl = [
-                [_vdiff_hypot2(v0, v1) for v1 in m1Control] for v0 in m0Control
-            ]
-            (
-                matching_control,
-                matching_cost_control,
-            ) = min_cost_perfect_bipartite_matching(costsControl)
-            identity_cost_control = sum(
-                costsControl[i][i] for i in range(len(m0Control))
-            )
-            if matching_cost_control == identity_cost_control:
-                continue
-
-            costsGreen = [[_vdiff_hypot2(v0, v1) for v1 in m1Green] for v0 in m0Green]
-            matching_green, matching_cost_green = min_cost_perfect_bipartite_matching(
-                costsGreen
-            )
-            identity_cost_green = sum(costsGreen[i][i] for i in range(len(m0Control)))
-            if matching_cost_green == identity_cost_green:
-                continue
-
-            # Otherwise, use the worst of the two matchings.
-            if (
-                matching_cost_control / identity_cost_control
-                < matching_cost_green / identity_cost_green
-            ):
-                matching = matching_control
-                matching_cost = matching_cost_control
-                identity_cost = identity_cost_control
-            else:
-                matching = matching_green
-                matching_cost = matching_cost_green
-                identity_cost = identity_cost_green
-
-            if matching_cost < identity_cost * tolerance:
-                # print(matching_cost_control / identity_cost_control, matching_cost_green / identity_cost_green)
-
-                yield (
-                    glyph_name,
-                    {
-                        "type": "contour_order",
-                        "master_1": names[m0idx],
-                        "master_2": names[m1idx],
-                        "value_1": list(range(len(m0Control))),
-                        "value_2": matching,
-                    },
+                costsControl = [
+                    [_vdiff_hypot2(v0, v1) for v1 in m1Control] for v0 in m0Control
+                ]
+                (
+                    matching_control,
+                    matching_cost_control,
+                ) = min_cost_perfect_bipartite_matching(costsControl)
+                identity_cost_control = sum(
+                    costsControl[i][i] for i in range(len(m0Control))
                 )
-                matchings[m1idx] = matching
+                done = matching_cost_control == identity_cost_control
 
-        for m1idx in order:
+                if not done:
+                    costsGreen = [[_vdiff_hypot2(v0, v1) for v1 in m1Green] for v0 in m0Green]
+                    matching_green, matching_cost_green = min_cost_perfect_bipartite_matching(
+                        costsGreen
+                    )
+                    identity_cost_green = sum(costsGreen[i][i] for i in range(len(m0Control)))
+                    done = matching_cost_green == identity_cost_green
+
+                if not done:
+                    # Otherwise, use the worst of the two matchings.
+                    if (
+                        matching_cost_control / identity_cost_control
+                        < matching_cost_green / identity_cost_green
+                    ):
+                        matching = matching_control
+                        matching_cost = matching_cost_control
+                        identity_cost = identity_cost_control
+                    else:
+                        matching = matching_green
+                        matching_cost = matching_cost_green
+                        identity_cost = identity_cost_green
+
+                    if matching_cost < identity_cost * tolerance:
+                        # print(matching_cost_control / identity_cost_control, matching_cost_green / identity_cost_green)
+
+                        yield (
+                            glyph_name,
+                            {
+                                "type": "contour_order",
+                                "master_1": names[m0idx],
+                                "master_2": names[m1idx],
+                                "value_1": list(range(len(m0Control))),
+                                "value_2": matching,
+                            },
+                        )
+                        matchings[m1idx] = matching
+
             m1 = allContourIsomorphisms[m1idx]
-            if m1 is None:
-                continue
-            m0idx = grand_parent(m1idx, glyph_name)
-            if m0idx is None:
-                continue
             m0 = allContourIsomorphisms[m0idx]
-            if m0 is None:
-                continue
-            if len(m0) != len(m1):
-                # We already reported this
-                continue
             for ix, (contour0, contour1) in enumerate(zip(m0, m1)):
                 if len(contour0) != len(contour1):
                     # We already reported this

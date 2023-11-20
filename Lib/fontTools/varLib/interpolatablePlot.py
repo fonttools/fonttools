@@ -364,7 +364,8 @@ class InterpolatablePlot:
             problems = [problems]
 
         problem_type = problems[0]["type"]
-        if not all(problem["type"] == problem_type for problem in problems):
+        problem_types = set(problem["type"] for problem in problems)
+        if not all(pt == problem_type for pt in problem_types):
             problem_type = "mixed"
         glyph = glyphset[glyphname]
 
@@ -458,8 +459,22 @@ class InterpolatablePlot:
             cr.set_line_width(self.handle_width / scale)
             cr.stroke()
 
-        if problem_type == "wrong_start_point":
-            for problem in problems:
+        for problem in problems:
+            if problem["type"] == "contour_order":
+                matching = problem["value_2"]
+                colors = cycle(self.contour_colors)
+                perContourPen = PerContourOrComponentPen(RecordingPen, glyphset=glyphset)
+                recording.replay(perContourPen)
+                for i, contour in enumerate(perContourPen.value):
+                    if matching[i] == i:
+                        continue
+                    color = next(colors)
+                    contour.replay(CairoPen(glyphset, cr))
+                    cr.set_source_rgba(*color, self.contour_alpha)
+                    cr.fill()
+
+        for problem in problems:
+            if problem["type"] == "wrong_start_point":
                 idx = problem["contour"]
 
                 # Draw suggested point
@@ -551,20 +566,6 @@ class InterpolatablePlot:
 
                 cr.set_line_width(self.start_handle_width / scale)
                 cr.stroke()
-
-        if problem_type == "contour_order":
-            assert len(problems) == 1
-            matching = problems[0]["value_2"]
-            colors = cycle(self.contour_colors)
-            perContourPen = PerContourOrComponentPen(RecordingPen, glyphset=glyphset)
-            recording.replay(perContourPen)
-            for i, contour in enumerate(perContourPen.value):
-                if matching[i] == i:
-                    continue
-                color = next(colors)
-                contour.replay(CairoPen(glyphset, cr))
-                cr.set_source_rgba(*color, self.contour_alpha)
-                cr.fill()
 
     def draw_cupcake(self):
         self.set_size(self.width, self.height)
