@@ -830,6 +830,12 @@ def main(args=None):
                 if glyphname != last_glyphname:
                     print(f"Glyph {glyphname} was not compatible:", file=f)
                     last_glyphname = glyphname
+                    last_masters = None
+
+                masters = (p['master']) if 'master' in p else (p['master_1'], p['master_2'])
+                if masters != last_masters:
+                    print(f"  Masters: %s:" % ', '.join(masters), file=f)
+                    last_masters = masters
 
                 if p["type"] == "missing":
                     print("    Glyph was missing in master %s" % p["master"], file=f)
