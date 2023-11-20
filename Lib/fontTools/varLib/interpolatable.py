@@ -518,18 +518,27 @@ def test_gen(
 
             m1 = allContourIsomorphisms[m1idx]
             m0 = allContourIsomorphisms[m0idx]
+
             for ix, (contour0, contour1) in enumerate(zip(m0, m1)):
-                if len(contour0) != len(contour1):
-                    # We already reported this
+                if len(contour0) == 0 or len(contour0) != len(contour1):
+                    # We already reported this; or nothing to do
                     continue
-                # If contour-order is wrong, don't try reporting starting-point
-                if matchings[m1idx] is not None and matchings[m1idx][ix] != ix:
-                    continue
+
                 c0 = contour0[0]
                 costs = [_vdiff_hypot2_complex(c0[0], c1[0]) for c1 in contour1]
                 min_cost_idx, min_cost = min(enumerate(costs), key=lambda x: x[1])
                 first_cost = costs[0]
                 if min_cost < first_cost * tolerance:
+                    reverse = contour1[min_cost_idx][2]
+
+                    # If contour-order is wrong, don't report a reversing
+                    if (
+                        reverse
+                        and matchings[m1idx] is not None
+                        and matchings[m1idx][ix] != ix
+                    ):
+                        continue
+
                     yield (
                         glyph_name,
                         {
@@ -539,7 +548,7 @@ def test_gen(
                             "master_2": names[m1idx],
                             "value_1": 0,
                             "value_2": contour1[min_cost_idx][1],
-                            "reversed": contour1[min_cost_idx][2],
+                            "reversed": reverse,
                         },
                     )
 
