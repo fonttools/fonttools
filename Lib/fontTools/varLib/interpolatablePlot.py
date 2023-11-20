@@ -1,8 +1,15 @@
-from fontTools.pens.recordingPen import RecordingPen, DecomposingRecordingPen
+from fontTools.pens.recordingPen import (
+    RecordingPen,
+    DecomposingRecordingPen,
+    RecordingPointPen,
+)
 from fontTools.pens.boundsPen import ControlBoundsPen
 from fontTools.pens.cairoPen import CairoPen
-from fontTools.pens.pointPen import SegmentToPointPen
-from fontTools.varLib.interpolatable import PerContourOrComponentPen, RecordingPointPen
+from fontTools.pens.pointPen import SegmentToPointPen, PointToSegmentPen
+from fontTools.varLib.interpolatable import (
+    PerContourOrComponentPen,
+    SimpleRecordingPointPen,
+)
 from itertools import cycle
 from functools import wraps
 from io import BytesIO
@@ -36,7 +43,8 @@ class LerpGlyph:
 
         factor = self.glyphset.factor
         for (op1, args1), (op2, args2) in zip(recording1.value, recording2.value):
-            assert op1 == op2
+            if op1 != op2:
+                raise ValueError("Mismatching operations: %s, %s" % (op1, op2))
             mid_args = [
                 (x1 + (x2 - x1) * factor, y1 + (y2 - y1) * factor)
                 for (x1, y1), (x2, y2) in zip(args1, args2)
@@ -194,8 +202,10 @@ class InterpolatablePlot:
             )
             y += self.line_height + self.pad
 
-            glyphset = LerpGlyphSet(glyphset1, glyphset2)
-            self.draw_glyph(glyphset, glyphname, {"type": "midway"}, None, x=x, y=y)
+            midway_glyphset = LerpGlyphSet(glyphset1, glyphset2)
+            self.draw_glyph(
+                midway_glyphset, glyphname, {"type": "midway"}, None, x=x, y=y
+            )
             y += self.height + self.pad
 
             # Draw the fixed mid-way of the two masters
@@ -203,25 +213,85 @@ class InterpolatablePlot:
             self.draw_label("proposed fix", x=x, y=y, color=self.head_color, align=0.5)
             y += self.line_height + self.pad
 
-            overriding = OverridingDict(glyphset)
-            perContourPen = PerContourOrComponentPen(RecordingPen, glyphset=overriding)
+            overriding1 = OverridingDict(glyphset1)
+            overriding2 = OverridingDict(glyphset2)
+            perContourPen = PerContourOrComponentPen(RecordingPen, glyphset=overriding2)
             glyphset2[glyphname].draw(perContourPen)
 
             if problem["type"] == "wrong_start_point":
-                pass
-                # overriding[glyphname].startPoint = perContourPen.value.startPoint
+                perContourPen1 = PerContourOrComponentPen(
+                    RecordingPen, glyphset=glyphset
+                )
+                glyphset1[glyphname].draw(perContourPen1)
+                perContourPen2 = PerContourOrComponentPen(
+                    RecordingPen, glyphset=glyphset
+                )
+                glyphset2[glyphname].draw(perContourPen2)
+
+                # Save the wrong contours
+                wrongContour1 = perContourPen1.value[problem["contour"]]
+                wrongContour2 = perContourPen2.value[problem["contour"]]
+
+                # Convert the wrong contours to point pens
+                points1 = RecordingPointPen()
+                converter = SegmentToPointPen(points1, False)
+                wrongContour1.replay(converter)
+                points2 = RecordingPointPen()
+                converter = SegmentToPointPen(points2, False)
+                wrongContour2.replay(converter)
+
+                # Rotate points2 so that the first point is the same as in points1
+                proposed_start = problem["value_2"]
+                pts = points2.value
+                points2.value = (
+                    pts[:1]
+                    + pts[1 + proposed_start : -1]  # beginPath
+                    + pts[1 : proposed_start + 1]
+                    + pts[-1:]  # endPath
+                )
+
+                # Convert the point pens back to segment pens
+                segment1 = RecordingPen()
+                converter = PointToSegmentPen(segment1, True)
+                points1.replay(converter)
+                segment2 = RecordingPen()
+                converter = PointToSegmentPen(segment2, True)
+                points2.replay(converter)
+
+                # Replace the wrong contours
+                wrongContour1.value = segment1.value
+                wrongContour2.value = segment2.value
+
+                # Assemble
+                fixed1 = RecordingPen()
+                fixed2 = RecordingPen()
+                for contour in perContourPen1.value:
+                    fixed1.value.extend(contour.value)
+                for contour in perContourPen2.value:
+                    fixed2.value.extend(contour.value)
+                fixed1.draw = fixed1.replay
+                fixed2.draw = fixed2.replay
+
+                overriding1[glyphname] = fixed1
+                overriding2[glyphname] = fixed2
+
             elif problem["type"] == "contour_order":
                 fixed_contours = [perContourPen.value[i] for i in problem["value_2"]]
                 fixed_recording = RecordingPen()
                 for contour in fixed_contours:
                     fixed_recording.value.extend(contour.value)
                 fixed_recording.draw = fixed_recording.replay
-                overriding[glyphname] = fixed_recording
+                overriding2[glyphname] = fixed_recording
             else:
                 assert False
 
-            glyphset = LerpGlyphSet(glyphset1, overriding)
-            self.draw_glyph(glyphset, glyphname, {"type": "fixed"}, None, x=x, y=y)
+            try:
+                midway_glyphset = LerpGlyphSet(overriding1, overriding2)
+                self.draw_glyph(
+                    midway_glyphset, glyphname, {"type": "fixed"}, None, x=x, y=y
+                )
+            except ValueError:
+                self.draw_shrug(x=x, y=y)
             y += self.height + self.pad
 
     def draw_label(self, label, *, x, y, color=(0, 0, 0), align=0):
@@ -352,7 +422,7 @@ class InterpolatablePlot:
                     RecordingPen, glyphset=glyphset
                 )
                 recording.replay(perContourPen)
-                points = RecordingPointPen()
+                points = SimpleRecordingPointPen()
                 converter = SegmentToPointPen(points, False)
                 perContourPen.value[idx].replay(converter)
                 targetPoint = points.value[problem["value_2"]][0]

@@ -69,7 +69,7 @@ class PerContourOrComponentPen(PerContourPen):
         self.value[-1].addComponent(glyphName, transformation)
 
 
-class RecordingPointPen(AbstractPointPen):
+class SimpleRecordingPointPen(AbstractPointPen):
     def __init__(self):
         self.value = []
 
@@ -370,7 +370,7 @@ def test_gen(
                     continue
                 assert contourOps[0] == "moveTo"
                 assert contourOps[-1] in ("closePath", "endPath")
-                points = RecordingPointPen()
+                points = SimpleRecordingPointPen()
                 converter = SegmentToPointPen(points, False)
                 contour.replay(converter)
                 # points.value is a list of pt,bool where bool is true if on-curve and false if off-curve;
