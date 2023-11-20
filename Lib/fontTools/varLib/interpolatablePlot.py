@@ -466,6 +466,7 @@ class InterpolatablePlot:
             cr.set_line_width(self.handle_width / scale)
             cr.stroke()
 
+        matching = None
         for problem in problems:
             if problem["type"] == "contour_order":
                 matching = problem["value_2"]
@@ -494,7 +495,9 @@ class InterpolatablePlot:
                     recording.replay(perContourPen)
                     points = SimpleRecordingPointPen()
                     converter = SegmentToPointPen(points, False)
-                    perContourPen.value[idx].replay(converter)
+                    perContourPen.value[
+                        idx if matching is None else matching[idx]
+                    ].replay(converter)
                     targetPoint = points.value[problem["value_2"]][0]
                     cr.move_to(*targetPoint)
                     cr.line_to(*targetPoint)
