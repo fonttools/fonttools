@@ -144,17 +144,39 @@ class InterpolatablePlot:
 
     def add_problems(self, problems):
         for glyph, glyph_problems in problems.items():
+            last_masters = None
+            current_glyph_problems = []
             for p in glyph_problems:
-                self.add_problem(glyph, p)
+                masters = p["master"] if "master" in p else (p["master_1"], p["master_2"])
+                if masters == last_masters:
+                    current_glyph_problems.append(p)
+                    continue
+                # Flush
+                if current_glyph_problems:
+                    self.add_problem(glyph, current_glyph_problems)
+                    self.show_page()
+                    current_glyph_problems = []
+                last_masters = masters
+                current_glyph_problems.append(p)
+            if current_glyph_problems:
+                self.add_problem(glyph, current_glyph_problems)
                 self.show_page()
 
-    def add_problem(self, glyphname, problem):
-        log.info("Drawing %s: %s", glyphname, problem["type"])
+    def add_problem(self, glyphname, problems):
 
-        master_keys = ("master",) if "master" in problem else ("master_1", "master_2")
-        master_indices = [self.names.index(problem[k]) for k in master_keys]
+        if type(problems) not in (list, tuple):
+            problems = [problems]
 
-        if problem["type"] == "missing":
+        problem_type = problems[0]["type"]
+        assert all(p["type"] == problem_type for p in problems)
+
+        log.info("Drawing %s: %s", glyphname, problem_type)
+
+        master_keys = ("master",) if "master" in problems[0] else ("master_1", "master_2")
+        master_names = [problems[0][k] for k in master_keys]
+        master_indices = [self.names.index(n) for n in master_names]
+
+        if problem_type == "missing":
             sample_glyph = next(
                 i for i, m in enumerate(self.glyphsets) if m[glyphname] is not None
             )
@@ -175,7 +197,7 @@ class InterpolatablePlot:
         y = self.pad
 
         self.draw_label(glyphname, x=x, y=y, color=self.head_color, align=0)
-        self.draw_label(problem["type"], x=x, y=y, color=self.head_color, align=1)
+        self.draw_label(problem_type, x=x, y=y, color=self.head_color, align=1)
         y += self.line_height + self.pad
 
         for which, master_idx in enumerate(master_indices):
@@ -186,12 +208,12 @@ class InterpolatablePlot:
             y += self.line_height + self.pad
 
             if glyphset[glyphname] is not None:
-                self.draw_glyph(glyphset, glyphname, problem, which, x=x, y=y)
+                self.draw_glyph(glyphset, glyphname, problems, which, x=x, y=y)
             else:
                 self.draw_shrug(x=x, y=y)
             y += self.height + self.pad
 
-        if problem["type"] in ("wrong_start_point", "contour_order"):
+        if problem_type in ("wrong_start_point", "contour_order"):
             x = self.pad + self.width + self.pad
             y = self.pad
             y += self.line_height + self.pad
@@ -222,7 +244,7 @@ class InterpolatablePlot:
             perContourPen = PerContourOrComponentPen(RecordingPen, glyphset=overriding2)
             glyphset2[glyphname].draw(perContourPen)
 
-            if problem["type"] == "wrong_start_point":
+            if problem_type == "wrong_start_point":
                 perContourPen1 = PerContourOrComponentPen(
                     RecordingPen, glyphset=glyphset
                 )
@@ -232,46 +254,47 @@ class InterpolatablePlot:
                 )
                 glyphset2[glyphname].draw(perContourPen2)
 
-                # Save the wrong contours
-                wrongContour1 = perContourPen1.value[problem["contour"]]
-                wrongContour2 = perContourPen2.value[problem["contour"]]
+                for problem in problems:
+                    # Save the wrong contours
+                    wrongContour1 = perContourPen1.value[problem["contour"]]
+                    wrongContour2 = perContourPen2.value[problem["contour"]]
 
-                # Convert the wrong contours to point pens
-                points1 = RecordingPointPen()
-                converter = SegmentToPointPen(points1, False)
-                wrongContour1.replay(converter)
-                points2 = RecordingPointPen()
-                converter = SegmentToPointPen(points2, False)
-                wrongContour2.replay(converter)
+                    # Convert the wrong contours to point pens
+                    points1 = RecordingPointPen()
+                    converter = SegmentToPointPen(points1, False)
+                    wrongContour1.replay(converter)
+                    points2 = RecordingPointPen()
+                    converter = SegmentToPointPen(points2, False)
+                    wrongContour2.replay(converter)
 
-                proposed_start = problem["value_2"]
+                    proposed_start = problem["value_2"]
 
-                # See if we need reversing; fragile but worth a try
-                if problem["reversed"]:
-                    new_points2 = RecordingPointPen()
-                    reversedPen = ReverseContourPointPen(new_points2)
-                    points2.replay(reversedPen)
-                    points2 = new_points2
-                    proposed_start = len(points2.value) - 2 - proposed_start
+                    # See if we need reversing; fragile but worth a try
+                    if problem["reversed"]:
+                        new_points2 = RecordingPointPen()
+                        reversedPen = ReverseContourPointPen(new_points2)
+                        points2.replay(reversedPen)
+                        points2 = new_points2
+                        proposed_start = len(points2.value) - 2 - proposed_start
 
-                # Rotate points2 so that the first point is the same as in points1
-                beginPath = points2.value[:1]
-                endPath = points2.value[-1:]
-                pts = points2.value[1:-1]
-                pts = pts[proposed_start:] + pts[:proposed_start]
-                points2.value = beginPath + pts + endPath
+                    # Rotate points2 so that the first point is the same as in points1
+                    beginPath = points2.value[:1]
+                    endPath = points2.value[-1:]
+                    pts = points2.value[1:-1]
+                    pts = pts[proposed_start:] + pts[:proposed_start]
+                    points2.value = beginPath + pts + endPath
 
-                # Convert the point pens back to segment pens
-                segment1 = RecordingPen()
-                converter = PointToSegmentPen(segment1, True)
-                points1.replay(converter)
-                segment2 = RecordingPen()
-                converter = PointToSegmentPen(segment2, True)
-                points2.replay(converter)
+                    # Convert the point pens back to segment pens
+                    segment1 = RecordingPen()
+                    converter = PointToSegmentPen(segment1, True)
+                    points1.replay(converter)
+                    segment2 = RecordingPen()
+                    converter = PointToSegmentPen(segment2, True)
+                    points2.replay(converter)
 
-                # Replace the wrong contours
-                wrongContour1.value = segment1.value
-                wrongContour2.value = segment2.value
+                    # Replace the wrong contours
+                    wrongContour1.value = segment1.value
+                    wrongContour2.value = segment2.value
 
                 # Assemble
                 fixed1 = RecordingPen()
@@ -286,8 +309,9 @@ class InterpolatablePlot:
                 overriding1[glyphname] = fixed1
                 overriding2[glyphname] = fixed2
 
-            elif problem["type"] == "contour_order":
-                fixed_contours = [perContourPen.value[i] for i in problem["value_2"]]
+            elif problem_type == "contour_order":
+                assert len(problems) == 1
+                fixed_contours = [perContourPen.value[i] for i in problems[0]["value_2"]]
                 fixed_recording = RecordingPen()
                 for contour in fixed_contours:
                     fixed_recording.value.extend(contour.value)
@@ -330,8 +354,14 @@ class InterpolatablePlot:
         cr.move_to(label_x, label_y)
         cr.show_text(label)
 
-    def draw_glyph(self, glyphset, glyphname, problem, which, *, x=0, y=0):
-        problem_type = problem["type"]
+    def draw_glyph(self, glyphset, glyphname, problems, which, *, x=0, y=0):
+
+        if type(problems) not in (list, tuple):
+            problems = [problems]
+
+        problem_type = problems[0]["type"]
+        if not all(problem["type"] == problem_type for problem in problems):
+            problem_type = "mixed"
         glyph = glyphset[glyphname]
 
         recording = RecordingPen()
@@ -425,98 +455,101 @@ class InterpolatablePlot:
             cr.stroke()
 
         if problem_type == "wrong_start_point":
-            idx = problem["contour"]
 
-            # Draw suggested point
-            if which == 1:
-                perContourPen = PerContourOrComponentPen(
-                    RecordingPen, glyphset=glyphset
-                )
-                recording.replay(perContourPen)
-                points = SimpleRecordingPointPen()
-                converter = SegmentToPointPen(points, False)
-                perContourPen.value[idx].replay(converter)
-                targetPoint = points.value[problem["value_2"]][0]
-                cr.move_to(*targetPoint)
-                cr.line_to(*targetPoint)
+            for problem in problems:
+                idx = problem["contour"]
+
+                # Draw suggested point
+                if which == 1:
+                    perContourPen = PerContourOrComponentPen(
+                        RecordingPen, glyphset=glyphset
+                    )
+                    recording.replay(perContourPen)
+                    points = SimpleRecordingPointPen()
+                    converter = SegmentToPointPen(points, False)
+                    perContourPen.value[idx].replay(converter)
+                    targetPoint = points.value[problem["value_2"]][0]
+                    cr.move_to(*targetPoint)
+                    cr.line_to(*targetPoint)
+                    cr.set_line_cap(cairo.LINE_CAP_ROUND)
+                    cr.set_source_rgb(*self.other_start_point_color)
+                    cr.set_line_width(self.start_point_width / scale)
+                    cr.stroke()
+
+                # Draw start point
                 cr.set_line_cap(cairo.LINE_CAP_ROUND)
-                cr.set_source_rgb(*self.other_start_point_color)
+                i = 0
+                for segment, args in recording.value:
+                    if segment == "moveTo":
+                        if i == idx:
+                            cr.move_to(*args[0])
+                            cr.line_to(*args[0])
+                        i += 1
+
+                if which == 0 or not problem["reversed"]:
+                    cr.set_source_rgb(*self.start_point_color)
+                else:
+                    cr.set_source_rgb(*self.reversed_start_point_color)
                 cr.set_line_width(self.start_point_width / scale)
                 cr.stroke()
 
-            # Draw start point
-            cr.set_line_cap(cairo.LINE_CAP_ROUND)
-            i = 0
-            for segment, args in recording.value:
-                if segment == "moveTo":
+                # Draw arrow
+                cr.set_line_cap(cairo.LINE_CAP_SQUARE)
+                first_pt = None
+                i = 0
+                for segment, args in recording.value:
+                    if segment == "moveTo":
+                        first_pt = args[0]
+                        continue
+                    if first_pt is None:
+                        continue
+                    second_pt = args[0]
+
                     if i == idx:
-                        cr.move_to(*args[0])
-                        cr.line_to(*args[0])
+                        first_pt = complex(*first_pt)
+                        second_pt = complex(*second_pt)
+                        length = abs(second_pt - first_pt)
+                        if length:
+                            # Draw handle
+                            length *= scale
+                            second_pt = (
+                                first_pt
+                                + (second_pt - first_pt) / length * self.start_handle_length
+                            )
+                            cr.move_to(first_pt.real, first_pt.imag)
+                            cr.line_to(second_pt.real, second_pt.imag)
+                            # Draw arrowhead
+                            cr.save()
+                            cr.translate(second_pt.real, second_pt.imag)
+                            cr.rotate(
+                                math.atan2(
+                                    second_pt.imag - first_pt.imag,
+                                    second_pt.real - first_pt.real,
+                                )
+                            )
+                            cr.scale(1 / scale, 1 / scale)
+                            cr.translate(self.start_handle_width, 0)
+                            cr.move_to(0, 0)
+                            cr.line_to(
+                                -self.start_handle_arrow_length,
+                                -self.start_handle_arrow_length,
+                            )
+                            cr.line_to(
+                                -self.start_handle_arrow_length,
+                                self.start_handle_arrow_length,
+                            )
+                            cr.close_path()
+                            cr.restore()
+
+                    first_pt = None
                     i += 1
 
-            if which == 0 or not problem["reversed"]:
-                cr.set_source_rgb(*self.start_point_color)
-            else:
-                cr.set_source_rgb(*self.reversed_start_point_color)
-            cr.set_line_width(self.start_point_width / scale)
-            cr.stroke()
-
-            # Draw arrow
-            cr.set_line_cap(cairo.LINE_CAP_SQUARE)
-            first_pt = None
-            i = 0
-            for segment, args in recording.value:
-                if segment == "moveTo":
-                    first_pt = args[0]
-                    continue
-                if first_pt is None:
-                    continue
-                second_pt = args[0]
-
-                if i == idx:
-                    first_pt = complex(*first_pt)
-                    second_pt = complex(*second_pt)
-                    length = abs(second_pt - first_pt)
-                    if length:
-                        # Draw handle
-                        length *= scale
-                        second_pt = (
-                            first_pt
-                            + (second_pt - first_pt) / length * self.start_handle_length
-                        )
-                        cr.move_to(first_pt.real, first_pt.imag)
-                        cr.line_to(second_pt.real, second_pt.imag)
-                        # Draw arrowhead
-                        cr.save()
-                        cr.translate(second_pt.real, second_pt.imag)
-                        cr.rotate(
-                            math.atan2(
-                                second_pt.imag - first_pt.imag,
-                                second_pt.real - first_pt.real,
-                            )
-                        )
-                        cr.scale(1 / scale, 1 / scale)
-                        cr.translate(self.start_handle_width, 0)
-                        cr.move_to(0, 0)
-                        cr.line_to(
-                            -self.start_handle_arrow_length,
-                            -self.start_handle_arrow_length,
-                        )
-                        cr.line_to(
-                            -self.start_handle_arrow_length,
-                            self.start_handle_arrow_length,
-                        )
-                        cr.close_path()
-                        cr.restore()
-
-                first_pt = None
-                i += 1
-
-            cr.set_line_width(self.start_handle_width / scale)
-            cr.stroke()
+                cr.set_line_width(self.start_handle_width / scale)
+                cr.stroke()
 
         if problem_type == "contour_order":
-            matching = problem["value_2"]
+            assert len(problems) == 1
+            matching = problems[0]["value_2"]
             colors = cycle(self.contour_colors)
             perContourPen = PerContourOrComponentPen(RecordingPen, glyphset=glyphset)
             recording.replay(perContourPen)
