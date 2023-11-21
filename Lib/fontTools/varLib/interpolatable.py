@@ -197,6 +197,8 @@ def _points_complex_vector(points):
     for i in range(n):
         p0 = points[i]
 
+        # Apparently the 1, 2, 4 weights are magically good empirically.
+
         # The point itself
         vector.append(p0)
 
