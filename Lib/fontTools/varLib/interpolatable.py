@@ -889,12 +889,12 @@ def main(args=None):
                         print(
                             "    Glyph was missing in master %s" % p["master"], file=f
                         )
-                    if p["type"] == "open_path":
+                    elif p["type"] == "open_path":
                         print(
                             "    Glyph has an open path in master %s" % p["master"],
                             file=f,
                         )
-                    if p["type"] == "path_count":
+                    elif p["type"] == "path_count":
                         print(
                             "    Path count differs: %i in %s, %i in %s"
                             % (
@@ -905,7 +905,7 @@ def main(args=None):
                             ),
                             file=f,
                         )
-                    if p["type"] == "node_count":
+                    elif p["type"] == "node_count":
                         print(
                             "    Node count differs in path %i: %i in %s, %i in %s"
                             % (
@@ -917,7 +917,7 @@ def main(args=None):
                             ),
                             file=f,
                         )
-                    if p["type"] == "node_incompatibility":
+                    elif p["type"] == "node_incompatibility":
                         print(
                             "    Node %o incompatible in path %i: %s in %s, %s in %s"
                             % (
@@ -930,7 +930,7 @@ def main(args=None):
                             ),
                             file=f,
                         )
-                    if p["type"] == "contour_order":
+                    elif p["type"] == "contour_order":
                         print(
                             "    Contour order differs: %s in %s, %s in %s"
                             % (
@@ -941,7 +941,7 @@ def main(args=None):
                             ),
                             file=f,
                         )
-                    if p["type"] == "wrong_start_point":
+                    elif p["type"] == "wrong_start_point":
                         print(
                             "    Contour %d start point differs: %s in %s, %s in %s; reversed: %s"
                             % (
