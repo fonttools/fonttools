@@ -254,12 +254,12 @@ class InterpolatablePlot:
 
             # Draw the fixed mid-way of the two masters
 
+            self.draw_label("proposed fix", x=x, y=y, color=self.head_color, align=0.5)
+            y += self.line_height + self.pad
+
             if problem_type == "wrong_structure":
                 self.draw_shrug(x=x, y=y)
                 return
-
-            self.draw_label("proposed fix", x=x, y=y, color=self.head_color, align=0.5)
-            y += self.line_height + self.pad
 
             overriding1 = OverridingDict(glyphset1)
             overriding2 = OverridingDict(glyphset2)
