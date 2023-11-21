@@ -954,6 +954,15 @@ def main(args=None):
                             ),
                             file=f,
                         )
+                    elif p["type"] == "nothing":
+                        print(
+                            "    Nothing wrong between %s and %s"
+                            % (
+                                p["master_1"],
+                                p["master_2"],
+                            ),
+                            file=f,
+                        )
         else:
             for glyphname, problem in problems_gen:
                 problems[glyphname].append(problem)
