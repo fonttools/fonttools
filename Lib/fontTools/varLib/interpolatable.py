@@ -612,6 +612,7 @@ def test_gen(
                             stddevY = vector[4] / 2
                             correlation = vector[5] / abs(vector[0])
 
+                            # https://cookierobotics.com/007/
                             a = stddevX * stddevX  # VarianceX
                             c = stddevY * stddevY  # VarianceY
                             b = correlation * stddevX * stddevY  # Covariance
