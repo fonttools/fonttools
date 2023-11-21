@@ -181,7 +181,7 @@ def _points_characteristic_bits(points):
     return bits
 
 
-_NUM_ITEMS_PER_POINTS_COMPLEX_VECTOR = 3
+_NUM_ITEMS_PER_POINTS_COMPLEX_VECTOR = 4
 
 
 def _points_complex_vector(points):
@@ -190,28 +190,29 @@ def _points_complex_vector(points):
         return vector
     points = [complex(*pt) for pt, _ in points]
     n = len(points)
-    assert _NUM_ITEMS_PER_POINTS_COMPLEX_VECTOR == 3
+    assert _NUM_ITEMS_PER_POINTS_COMPLEX_VECTOR == 4
     points.extend(points[: _NUM_ITEMS_PER_POINTS_COMPLEX_VECTOR - 1])
-    if n == 1:
-        points.append(points[0])  # We need at least three points
+    while len(points) < _NUM_ITEMS_PER_POINTS_COMPLEX_VECTOR:
+        points.extend(points[: _NUM_ITEMS_PER_POINTS_COMPLEX_VECTOR - 1])
     for i in range(n):
-        p0 = points[i]
-
-        # Apparently the 1, 2, 4 weights are magically good empirically.
+        # The weights are magic numbers.
 
         # The point itself
+        p0 = points[i]
         vector.append(p0)
 
-        # The vector to the next point;
-        # Emphasized by 2 empirically
+        # The vector to the next point
         p1 = points[i + 1]
         d0 = p1 - p0
         vector.append(d0 * 2)
 
-        # The angle to the next point, as a cross product;
-        # Square root of, to match dimentionality of distance.
+        # The turn vector
         p2 = points[i + 2]
         d1 = p2 - p1
+        vector.append((d1 - d0))
+
+        # The angle to the next point, as a cross product;
+        # Square root of, to match dimentionality of distance.
         cross = d0.real * d1.imag - d0.imag * d1.real
         cross = copysign(sqrt(abs(cross)), cross)
         vector.append(cross * 4)
