@@ -876,7 +876,7 @@ def main(args=None):
                         locTuple = tuple(loc)
                         if locTuple not in ttGlyphSets:
                             ttGlyphSets[locTuple] = font.getGlyphSet(
-                                location=locDict, normalized=True
+                                location=locDict, normalized=True, recalcBounds=False
                             )
 
                         recursivelyAddGlyph(
