@@ -13,10 +13,11 @@ from fontTools.pens.statisticsPen import StatisticsPen, StatisticsControlPen
 from fontTools.pens.momentsPen import OpenContourError
 from fontTools.varLib.models import piecewiseLinearMap, normalizeLocation
 from fontTools.misc.fixedTools import floatToFixedToStr
+from fontTools.misc.transform import Transform
 from collections import defaultdict, deque
 from functools import wraps
 from pprint import pformat
-from math import sqrt, copysign
+from math import sqrt, copysign, atan2, pi
 import itertools
 import logging
 
@@ -153,6 +154,9 @@ except ImportError:
 
 
 def _contour_vector_from_stats(stats):
+    # Don't change the order of items here.
+    # It's okay to add to the end, but otherwise, other
+    # code depends on it. Search for "covariance".
     size = sqrt(abs(stats.area))
     return (
         copysign((size), stats.area),
@@ -321,6 +325,7 @@ def test_gen(
         allControlVectors = []
         allNodeTypes = []
         allContourIsomorphisms = []
+        allContourPoints = []
         allGlyphs = [glyphset[glyph_name] for glyphset in glyphsets]
         if len([1 for glyph in allGlyphs if glyph is not None]) <= 1:
             continue
@@ -337,6 +342,7 @@ def test_gen(
                 allControlVectors.append(None)
                 allGreenVectors.append(None)
                 allContourIsomorphisms.append(None)
+                allContourPoints.append(None)
                 continue
 
             perContourPen = PerContourOrComponentPen(RecordingPen, glyphset=glyphset)
@@ -350,11 +356,13 @@ def test_gen(
             contourControlVectors = []
             contourGreenVectors = []
             contourIsomorphisms = []
+            contourPoints = []
             nodeTypes = []
             allNodeTypes.append(nodeTypes)
             allControlVectors.append(contourControlVectors)
             allGreenVectors.append(contourGreenVectors)
             allContourIsomorphisms.append(contourIsomorphisms)
+            allContourPoints.append(contourPoints)
             for ix, contour in enumerate(contourPens):
                 contourOps = tuple(op for op, arg in contour.value)
                 nodeTypes.append(contourOps)
@@ -397,6 +405,8 @@ def test_gen(
                 _add_isomorphisms(points.value, isomorphisms, False)
                 # Add mirrored rotations
                 _add_isomorphisms(points.value, isomorphisms, True)
+
+                contourPoints.append(points.value)
 
         matchings = [None] * len(allControlVectors)
 
@@ -557,25 +567,115 @@ def test_gen(
                     continue
 
                 c0 = contour0[0]
+                # Next few lines duplicated below.
                 costs = [_vdiff_hypot2_complex(c0[0], c1[0]) for c1 in contour1]
                 min_cost_idx, min_cost = min(enumerate(costs), key=lambda x: x[1])
                 first_cost = costs[0]
                 if min_cost < first_cost * tolerance:
-                    showed = True
-                    yield (
-                        glyph_name,
-                        {
-                            "type": "wrong_start_point",
-                            "contour": ix,
-                            "master_1": names[m0idx],
-                            "master_2": names[m1idx],
-                            "master_1_idx": m0idx,
-                            "master_2_idx": m1idx,
-                            "value_1": 0,
-                            "value_2": contour1[min_cost_idx][1],
-                            "reversed": contour1[min_cost_idx][2],
-                        },
-                    )
+                    # c0 is the first isomorphism of the m0 master
+                    # contour1 is list of all isomorphisms of the m1 master
+                    #
+                    # If the two shapes are both circle-ish and slightly
+                    # rotated, we detect wrong start point. This is for
+                    # example the case hundreds of times in
+                    # RobotoSerif-Italic[GRAD,opsz,wdth,wght].ttf
+                    #
+                    # If the proposed point is only one off from the first
+                    # point (and not reversed), try harder:
+                    #
+                    # Find the major eigenvector of the covariance matrix,
+                    # and rotate the contours by that angle. Then find the
+                    # closest point again.  If it matches this time, let it
+                    # pass.
+
+                    proposed_point = contour1[min_cost_idx][1]
+                    reverse = contour1[min_cost_idx][2]
+                    num_points = len(allContourPoints[m1idx][ix])
+                    leeway = 3
+                    okay = False
+                    if not reverse and (
+                        proposed_point <= leeway
+                        or proposed_point >= num_points - leeway
+                    ):
+                        # Try harder
+
+                        m0Vectors = allGreenVectors[m1idx][ix]
+                        m1Vectors = allGreenVectors[m1idx][ix]
+
+                        # Recover the covariance matrix from the GreenVectors.
+                        # This is a 2x2 matrix.
+                        transforms = []
+                        for vector in (m0Vectors, m1Vectors):
+                            meanX = vector[1]
+                            meanY = vector[2]
+                            stddevX = vector[3] / 2
+                            stddevY = vector[4] / 2
+                            correlation = vector[5] / abs(vector[0])
+
+                            a = stddevX * stddevX  # VarianceX
+                            c = stddevY * stddevY  # VarianceY
+                            b = correlation * stddevX * stddevY  # Covariance
+
+                            delta = (((a - c) * 0.5) ** 2 + b * b) ** 0.5
+                            lambda1 = (a + c) * 0.5 + delta  # Major eigenvalue
+                            lambda2 = (a + c) * 0.5 - delta  # Minor eigenvalue
+                            theta = (
+                                atan2(lambda1 - a, b)
+                                if b != 0
+                                else (pi * 0.5 if a < c else 0)
+                            )
+                            trans = Transform()
+                            trans = trans.translate(meanX, meanY)
+                            trans = trans.rotate(theta)
+                            trans = trans.scale(sqrt(lambda1), sqrt(lambda2))
+                            transforms.append(trans)
+
+                        trans = transforms[0]
+                        new_c0 = (
+                            [
+                                complex(*trans.transformPoint((pt.real, pt.imag)))
+                                for pt in c0[0]
+                            ],
+                        ) + c0[1:]
+                        new_contour1 = []
+                        for c1 in contour1:
+                            new_c1 = (
+                                [
+                                    complex(*trans.transformPoint((pt.real, pt.imag)))
+                                    for pt in c1[0]
+                                ],
+                            ) + c1[1:]
+                            new_contour1.append(new_c1)
+
+                        # Next few lines duplicate from above.
+                        costs = [
+                            _vdiff_hypot2_complex(new_c0[0], new_c1[0])
+                            for new_c1 in new_contour1
+                        ]
+                        min_cost_idx, min_cost = min(
+                            enumerate(costs), key=lambda x: x[1]
+                        )
+                        first_cost = costs[0]
+                        # Only accept a perfect match
+                        if min_cost == first_cost:
+                            okay = True
+
+                    if not okay:
+                        showed = True
+                        yield (
+                            glyph_name,
+                            {
+                                "type": "wrong_start_point",
+                                "contour": ix,
+                                "master_1": names[m0idx],
+                                "master_2": names[m1idx],
+                                "master_1_idx": m0idx,
+                                "master_2_idx": m1idx,
+                                "value_1": 0,
+                                "value_2": proposed_point,
+                                "reversed": reverse,
+                            },
+                        )
 
             if show_all and not showed:
                 yield (
