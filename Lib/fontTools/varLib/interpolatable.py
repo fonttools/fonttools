@@ -637,6 +637,7 @@ def test_gen(
                                 for pt in c0[0]
                             ],
                         ) + c0[1:]
+                        trans = transforms[1]
                         new_contour1 = []
                         for c1 in contour1:
                             new_c1 = (
@@ -657,7 +658,7 @@ def test_gen(
                         )
                         first_cost = costs[0]
                         # Only accept a perfect match
-                        if min_cost == first_cost:
+                        if min_cost_idx == 0:
                             okay = True
 
                     if not okay:
