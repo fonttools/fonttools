@@ -102,6 +102,10 @@ def _vdiff_hypot2_complex(v0, v1):
     return s
 
 
+def _hypot2_complex(d):
+    return d.real * d.real + d.imag * d.imag
+
+
 def _matching_cost(G, matching):
     return sum(G[i][j] for i, j in enumerate(matching))
 
@@ -177,13 +181,17 @@ def _points_characteristic_bits(points):
     return bits
 
 
+_NUM_ITEMS_PER_POINTS_COMPLEX_VECTOR = 3
+
+
 def _points_complex_vector(points):
     vector = []
     if not points:
         return vector
     points = [complex(*pt) for pt, _ in points]
     n = len(points)
-    points.extend(points[:2])
+    assert _NUM_ITEMS_PER_POINTS_COMPLEX_VECTOR == 3
+    points.extend(points[: _NUM_ITEMS_PER_POINTS_COMPLEX_VECTOR - 1])
     if n == 1:
         points.append(points[0])  # We need at least three points
     for i in range(n):
@@ -573,6 +581,7 @@ def test_gen(
                 costs = [_vdiff_hypot2_complex(c0[0], c1[0]) for c1 in contour1]
                 min_cost_idx, min_cost = min(enumerate(costs), key=lambda x: x[1])
                 first_cost = costs[0]
+
                 if min_cost < first_cost * tolerance:
                     # c0 is the first isomorphism of the m0 master
                     # contour1 is list of all isomorphisms of the m1 master
@@ -680,6 +689,59 @@ def test_gen(
                                 "reversed": reverse,
                             },
                         )
+                else:
+                    # If first_cost is Too Large™, do further inspection.
+                    # This can happen specially in the case of TrueType
+                    # fonts, where the original contour had wrong start point,
+                    # but because of the cubic->quadratic conversion, we don't
+                    # have many isomorphisms to work with.
+
+                    # The threshold here is all black magic. It's just here to
+                    # speed things up so we don't end up doing a full matching
+                    # on every contour that is correct.
+                    threshold = (
+                        len(c0[0]) * (allControlVectors[m0idx][ix][0] * 0.5) ** 2 / 4
+                    )  # Magic only
+                    c1 = contour1[min_cost_idx]
+
+                    # If point counts are different it's because of the contour
+                    # reordering above. We can in theory still try, but our
+                    # bipartite-matching implementations currently assume
+                    # equal number of vertices on both sides. I'm lazy to update
+                    # all three different implementations!
+
+                    if len(c0[0]) == len(c1[0]) and first_cost > threshold:
+                        # Do a quick(!) matching between the points. If it's way off,
+                        # flag it. This can happen specially in the case of TrueType
+                        # fonts, where the original contour had wrong start point, but
+                        # because of the cubic->quadratic conversion, we don't have many
+                        # isomorphisms.
+                        points0 = c0[0][::_NUM_ITEMS_PER_POINTS_COMPLEX_VECTOR]
+                        points1 = c1[0][::_NUM_ITEMS_PER_POINTS_COMPLEX_VECTOR]
+
+                        graph = [
+                            [_hypot2_complex(p0 - p1) for p1 in points1]
+                            for p0 in points0
+                        ]
+                        matching, matching_cost = min_cost_perfect_bipartite_matching(
+                            graph
+                        )
+                        identity_cost = sum(graph[i][i] for i in range(len(graph)))
+
+                        if matching_cost < identity_cost / 8:  # Heuristic
+                            # print(matching_cost, identity_cost, matching)
+                            showed = True
+                            yield (
+                                glyph_name,
+                                {
+                                    "type": "wrong_structure",
+                                    "contour": ix,
+                                    "master_1": names[m0idx],
+                                    "master_2": names[m1idx],
+                                    "master_1_idx": m0idx,
+                                    "master_2_idx": m1idx,
+                                },
+                            )
 
             if show_all and not showed:
                 yield (
@@ -1073,6 +1135,16 @@ def main(args=None):
                                 p["value_2"],
                                 p["master_2"],
                                 p["reversed"],
+                            ),
+                            file=f,
+                        )
+                    elif p["type"] == "wrong_structure":
+                        print(
+                            "    Contour %d structures differ: %s, %s"
+                            % (
+                                p["contour"],
+                                p["master_1"],
+                                p["master_2"],
                             ),
                             file=f,
                         )

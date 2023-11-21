@@ -229,7 +229,7 @@ class InterpolatablePlot:
             y += self.height + self.pad
 
         if any(
-            pt in ("nothing", "wrong_start_point", "contour_order")
+            pt in ("nothing", "wrong_start_point", "contour_order", "wrong_structure")
             for pt in problem_types
         ):
             x = self.pad + self.width + self.pad
@@ -253,6 +253,10 @@ class InterpolatablePlot:
             y += self.height + self.pad
 
             # Draw the fixed mid-way of the two masters
+
+            if problem_type == "wrong_structure":
+                self.draw_shrug(x=x, y=y)
+                return
 
             self.draw_label("proposed fix", x=x, y=y, color=self.head_color, align=0.5)
             y += self.line_height + self.pad
@@ -421,7 +425,12 @@ class InterpolatablePlot:
             cr.set_line_width(self.stroke_width / scale)
             cr.stroke()
 
-        if problem_type in ("nothing", "node_count", "node_incompatibility"):
+        if problem_type in (
+            "nothing",
+            "node_count",
+            "node_incompatibility",
+            "wrong_structure",
+        ):
             cr.set_line_cap(cairo.LINE_CAP_ROUND)
 
             # Oncurve nodes
@@ -487,11 +496,11 @@ class InterpolatablePlot:
                     cr.fill()
 
         for problem in problems:
-            if problem["type"] in ("nothing", "wrong_start_point"):
+            if problem["type"] in ("nothing", "wrong_start_point", "wrong_structure"):
                 idx = problem.get("contour")
 
                 # Draw suggested point
-                if idx is not None and which == 1:
+                if idx is not None and which == 1 and "value_2" in problem:
                     perContourPen = PerContourOrComponentPen(
                         RecordingPen, glyphset=glyphset
                     )
