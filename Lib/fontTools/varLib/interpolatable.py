@@ -770,6 +770,13 @@ def main(args=None):
         nargs="+",
         help="Input a single variable font / DesignSpace / Glyphs file, or multiple TTF/UFO files",
     )
+    parser.add_argument(
+        "--name",
+        metavar="NAME",
+        type=str,
+        action="append",
+        help="Name of the master to use in the report. If not provided, all are used.",
+    )
     parser.add_argument("-v", "--verbose", action="store_true", help="Run verbosely.")
 
     args = parser.parse_args(args)
@@ -921,8 +928,19 @@ def main(args=None):
             glyphset = font
         glyphsets.append({k: glyphset[k] for k in glyphset.keys()})
 
-    if len(glyphsets) == 1:
-        return None
+    if args.name:
+        accepted_names = set(args.name)
+        glyphsets = [
+            glyphset
+            for name, glyphset in zip(names, glyphsets)
+            if name in accepted_names
+        ]
+        locations = [
+            location
+            for name, location in zip(names, locations)
+            if name in accepted_names
+        ]
+        names = [name for name in names if name in accepted_names]
 
     if not glyphs:
         glyphs = sorted(set([gn for glyphset in glyphsets for gn in glyphset.keys()]))
