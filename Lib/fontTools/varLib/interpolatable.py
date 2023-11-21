@@ -202,7 +202,7 @@ def _points_complex_vector(points):
         # The point itself
         vector.append(p0)
 
-        # The distance to the next point;
+        # The vector to the next point;
         # Emphasized by 2 empirically
         p1 = points[i + 1]
         d0 = p1 - p0
