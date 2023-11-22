@@ -392,7 +392,16 @@ class InterpolatablePlot:
         glyph_width = boundsPen.bounds[2] - boundsPen.bounds[0]
         glyph_height = boundsPen.bounds[3] - boundsPen.bounds[1]
 
-        scale = min(self.width / glyph_width, self.height / glyph_height)
+        scale = None
+        if glyph_width:
+            scale = self.width / glyph_width
+        if glyph_height:
+            if scale is None:
+                scale = self.height / glyph_height
+            else:
+                scale = min(scale, self.height / glyph_height)
+        if scale is None:
+            scale = 1
 
         cr = cairo.Context(self.surface)
         cr.translate(x, y)
