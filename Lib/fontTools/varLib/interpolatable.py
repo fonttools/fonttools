@@ -209,7 +209,7 @@ def _points_complex_vector(points):
         # The turn vector
         p2 = points[i + 2]
         d1 = p2 - p1
-        vector.append((d1 - d0))
+        vector.append(d1 - d0)
 
         # The angle to the next point, as a cross product;
         # Square root of, to match dimentionality of distance.
