@@ -204,7 +204,7 @@ def _points_complex_vector(points):
         # The vector to the next point
         p1 = points[i + 1]
         d0 = p1 - p0
-        vector.append(d0 * 2)
+        vector.append(d0 * 3)
 
         # The turn vector
         p2 = points[i + 2]
