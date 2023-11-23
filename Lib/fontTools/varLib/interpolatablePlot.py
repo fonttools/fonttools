@@ -680,7 +680,7 @@ class InterpolatablePlot:
                 cr.stroke()
 
     def draw_cupcake(self):
-        self.set_size(self.width, self.height)
+        self.set_size(self.total_width(), self.total_height())
         cupcake = self.cupcake.splitlines()
         cr = cairo.Context(self.surface)
         cr.set_source_rgb(*self.cupcake_color)
@@ -696,7 +696,7 @@ class InterpolatablePlot:
             height += extents.height
         if not width:
             return
-        cr.scale(self.width / width, self.height / height)
+        cr.scale(self.total_width() / width, self.total_height() / height)
         for line in cupcake:
             cr.translate(0, cr.text_extents(line).height)
             cr.move_to(0, 0)
