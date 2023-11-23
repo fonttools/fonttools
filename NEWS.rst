@@ -1,3 +1,6 @@
+4.45.1 (released 2023-11-23)
+----------------------------
+
 - [varLib.interpolatable] Various bugfixes and improvements, better reporting, reduced
   false positives.
 - [ttGlyphSet] Added option to not recalculate glyf bounds (#3348).
