@@ -287,7 +287,9 @@ class InterpolatablePlot:
             y += self.line_height + self.pad
 
             if glyphset[glyphname] is not None:
-                scales.append(self.draw_glyph(glyphset, glyphname, problems, which, x=x, y=y))
+                scales.append(
+                    self.draw_glyph(glyphset, glyphname, problems, which, x=x, y=y)
+                )
             else:
                 self.draw_shrug(x=x, y=y)
             y += self.height + self.pad
@@ -312,8 +314,13 @@ class InterpolatablePlot:
 
             midway_glyphset = LerpGlyphSet(glyphset1, glyphset2)
             self.draw_glyph(
-                midway_glyphset, glyphname, {"type": "midway"}, None, x=x, y=y,
-                scale=min(scales)
+                midway_glyphset,
+                glyphname,
+                {"type": "midway"},
+                None,
+                x=x,
+                y=y,
+                scale=min(scales),
             )
             y += self.height + self.pad
 
