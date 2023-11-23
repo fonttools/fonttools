@@ -177,7 +177,7 @@ def _contour_vector_from_stats(stats):
 def _matching_for_vectors(m0, m1):
     n = len(m0)
     if n <= 1:
-        return [0] * n, 0
+        return [0] * n, 0, 0
 
     identity_matching = list(range(n))
 
