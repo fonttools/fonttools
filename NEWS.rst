@@ -1,7 +1,11 @@
+- [varLib.interpolatable] Various bugfixes and improvements, better reporting, reduced
+  false positives.
+- [ttGlyphSet] Added option to not recalculate glyf bounds (#3348).
+
 4.45.0 (released 2023-11-20)
 ----------------------------
 
-- [varLib.interpolator] Vastly improved algorithms. Also available now is ``--pdf``
+- [varLib.interpolatable] Vastly improved algorithms. Also available now is ``--pdf``
   and ``--html`` options to generate a PDF or HTML report of the interpolation issues.
   The PDF/HTML report showcases the problematic masters, the interpolated broken
   glyph, as well as the proposed fixed version.
