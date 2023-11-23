@@ -175,8 +175,8 @@ class InterpolatablePlot:
             self.draw_label(base_file, x=x, y=y, bold=True, width=width)
             y += self.line_height
 
-            h = hashlib.sha256(open(file, "rb").read()).hexdigest()
-            self.draw_label("sha256: %s" % h, x=x + pad, y=y, width=width)
+            h = hashlib.sha1(open(file, "rb").read()).hexdigest()
+            self.draw_label("sha1: %s" % h, x=x + pad, y=y, width=width)
             y += self.line_height
 
             if file.endswith(".ttf"):
