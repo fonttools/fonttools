@@ -278,6 +278,7 @@ class InterpolatablePlot:
         )
         y += self.line_height + self.pad
 
+        scales = []
         for which, master_idx in enumerate(master_indices):
             glyphset = self.glyphsets[master_idx]
             name = self.names[master_idx]
@@ -286,7 +287,7 @@ class InterpolatablePlot:
             y += self.line_height + self.pad
 
             if glyphset[glyphname] is not None:
-                self.draw_glyph(glyphset, glyphname, problems, which, x=x, y=y)
+                scales.append(self.draw_glyph(glyphset, glyphname, problems, which, x=x, y=y))
             else:
                 self.draw_shrug(x=x, y=y)
             y += self.height + self.pad
@@ -311,7 +312,8 @@ class InterpolatablePlot:
 
             midway_glyphset = LerpGlyphSet(glyphset1, glyphset2)
             self.draw_glyph(
-                midway_glyphset, glyphname, {"type": "midway"}, None, x=x, y=y
+                midway_glyphset, glyphname, {"type": "midway"}, None, x=x, y=y,
+                scale=min(scales)
             )
             y += self.height + self.pad
 
@@ -451,7 +453,7 @@ class InterpolatablePlot:
         cr.move_to(label_x, label_y)
         cr.show_text(label)
 
-    def draw_glyph(self, glyphset, glyphname, problems, which, *, x=0, y=0):
+    def draw_glyph(self, glyphset, glyphname, problems, which, *, x=0, y=0, scale=None):
         if type(problems) not in (list, tuple):
             problems = [problems]
 
@@ -473,9 +475,11 @@ class InterpolatablePlot:
         glyph_width = bounds[2] - bounds[0]
         glyph_height = bounds[3] - bounds[1]
 
-        scale = None
         if glyph_width:
-            scale = self.width / glyph_width
+            if scale is None:
+                scale = self.width / glyph_width
+            else:
+                scale = min(scale, self.height / glyph_height)
         if glyph_height:
             if scale is None:
                 scale = self.height / glyph_height
@@ -678,6 +682,8 @@ class InterpolatablePlot:
 
                 cr.set_line_width(self.start_handle_width / scale)
                 cr.stroke()
+
+        return scale
 
     def draw_cupcake(self):
         self.set_size(self.total_width(), self.total_height())
