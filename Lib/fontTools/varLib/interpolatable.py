@@ -176,8 +176,6 @@ def _contour_vector_from_stats(stats):
 
 def _matching_for_vectors(m0, m1):
     n = len(m0)
-    if n <= 1:
-        return [0] * n, 0, 0
 
     identity_matching = list(range(n))
 
@@ -519,18 +517,20 @@ def test_gen(
             # and then checking if it is the identity vector. Only if
             # not, compute the StatisticsControlPen vector and check both.
 
-            m1Control = allControlVectors[m1idx]
-            m1Green = allGreenVectors[m1idx]
-            m0Control = allControlVectors[m0idx]
-            m0Green = allGreenVectors[m0idx]
-
-            (
-                matching_control,
-                matching_cost_control,
-                identity_cost_control,
-            ) = _matching_for_vectors(m0Control, m1Control)
-            done = matching_cost_control == identity_cost_control
+            n = len(allControlVectors[m0idx])
+            done = n <= 1
             if not done:
+                m1Control = allControlVectors[m1idx]
+                m0Control = allControlVectors[m0idx]
+                (
+                    matching_control,
+                    matching_cost_control,
+                    identity_cost_control,
+                ) = _matching_for_vectors(m0Control, m1Control)
+                done = matching_cost_control == identity_cost_control
+            if not done:
+                m1Green = allGreenVectors[m1idx]
+                m0Green = allGreenVectors[m0idx]
                 (
                     matching_green,
                     matching_cost_green,
@@ -539,36 +539,63 @@ def test_gen(
                 done = matching_cost_green == identity_cost_green
 
             if not done:
-                # Otherwise, use the worst of the two matchings.
-                if (
-                    matching_cost_control / identity_cost_control
-                    < matching_cost_green / identity_cost_green
-                ):
-                    matching = matching_control
-                    matching_cost = matching_cost_control
-                    identity_cost = identity_cost_control
-                else:
-                    matching = matching_green
-                    matching_cost = matching_cost_green
-                    identity_cost = identity_cost_green
-
-                if matching_cost < identity_cost * tolerance:
-                    # print(matching_cost_control / identity_cost_control, matching_cost_green / identity_cost_green)
-
-                    showed = True
-                    yield (
-                        glyph_name,
-                        {
-                            "type": "contour_order",
-                            "master_1": names[m0idx],
-                            "master_2": names[m1idx],
-                            "master_1_idx": m0idx,
-                            "master_2_idx": m1idx,
-                            "value_1": list(range(len(m0Control))),
-                            "value_2": matching,
-                        },
+                # See if reversing contours in one master helps.
+                # That's a common problem.  Then the wrong_start_point
+                # test will fix them.
+                #
+                # Reverse the sign of the area (0); the rest stay the same.
+                if not done:
+                    m1ControlReversed = [(-m[0],) + m[1:] for m in m1Control]
+                    (
+                        matching_control_reversed,
+                        matching_cost_control_reversed,
+                        identity_cost_control_reversed,
+                    ) = _matching_for_vectors(m0Control, m1ControlReversed)
+                    done = (
+                        matching_cost_control_reversed == identity_cost_control_reversed
                     )
-                    matchings[m1idx] = matching
+                if not done:
+                    m1GreenReversed = [(-m[0],) + m[1:] for m in m1Green]
+                    (
+                        matching_control_reversed,
+                        matching_cost_control_reversed,
+                        identity_cost_control_reversed,
+                    ) = _matching_for_vectors(m0Control, m1ControlReversed)
+                    done = (
+                        matching_cost_control_reversed == identity_cost_control_reversed
+                    )
+
+                if not done:
+                    # Otherwise, use the worst of the two matchings.
+                    if (
+                        matching_cost_control / identity_cost_control
+                        < matching_cost_green / identity_cost_green
+                    ):
+                        matching = matching_control
+                        matching_cost = matching_cost_control
+                        identity_cost = identity_cost_control
+                    else:
+                        matching = matching_green
+                        matching_cost = matching_cost_green
+                        identity_cost = identity_cost_green
+
+                    if matching_cost < identity_cost * tolerance:
+                        # print(matching_cost_control / identity_cost_control, matching_cost_green / identity_cost_green)
+
+                        showed = True
+                        yield (
+                            glyph_name,
+                            {
+                                "type": "contour_order",
+                                "master_1": names[m0idx],
+                                "master_2": names[m1idx],
+                                "master_1_idx": m0idx,
+                                "master_2_idx": m1idx,
+                                "value_1": list(range(n)),
+                                "value_2": matching,
+                            },
+                        )
+                        matchings[m1idx] = matching
 
             m1 = allContourIsomorphisms[m1idx]
             m0 = allContourIsomorphisms[m0idx]
