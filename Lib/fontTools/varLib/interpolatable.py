@@ -165,7 +165,7 @@ def _contour_vector_from_stats(stats):
     # code depends on it. Search for "covariance".
     size = sqrt(abs(stats.area))
     return (
-        size,
+        copysign((size), stats.area),
         stats.meanX,
         stats.meanY,
         stats.stddevX * 2,
