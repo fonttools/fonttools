@@ -174,6 +174,22 @@ def _contour_vector_from_stats(stats):
     )
 
 
+def _matching_for_vectors(m0, m1):
+    n = len(m0)
+    if n <= 1:
+        return [0] * n, 0
+
+    identity_matching = list(range(n))
+
+    costs = [[_vdiff_hypot2(v0, v1) for v1 in m1] for v0 in m0]
+    (
+        matching,
+        matching_cost,
+    ) = min_cost_perfect_bipartite_matching(costs)
+    identity_cost = sum(costs[i][i] for i in range(n))
+    return matching, matching_cost, identity_cost
+
+
 def _points_characteristic_bits(points):
     bits = 0
     for pt, b in reversed(points):
@@ -491,80 +507,68 @@ def test_gen(
                             )
                             continue
 
+            # We try matching both the StatisticsControlPen vector
+            # and the StatisticsPen vector.
+            #
+            # If either method found a identity matching, accept it.
+            # This is crucial for fonts like Kablammo[MORF].ttf and
+            # Nabla[EDPT,EHLT].ttf, since they really confuse the
+            # StatisticsPen vector because of their area=0 contours.
+            #
+            # TODO: Optimize by only computing the StatisticsPen vector
+            # and then checking if it is the identity vector. Only if
+            # not, compute the StatisticsControlPen vector and check both.
+
             m1Control = allControlVectors[m1idx]
             m1Green = allGreenVectors[m1idx]
             m0Control = allControlVectors[m0idx]
             m0Green = allGreenVectors[m0idx]
-            if len(m1Control) > 1:
-                identity_matching = list(range(len(m0Control)))
 
-                # We try matching both the StatisticsControlPen vector
-                # and the StatisticsPen vector.
-                # If either method found a identity matching, accept it.
-                # This is crucial for fonts like Kablammo[MORF].ttf and
-                # Nabla[EDPT,EHLT].ttf, since they really confuse the
-                # StatisticsPen vector because of their area=0 contours.
-                #
-                # TODO: Optimize by only computing the StatisticsPen vector
-                # and then checking if it is the identity vector. Only if
-                # not, compute the StatisticsControlPen vector and check both.
-
-                costsControl = [
-                    [_vdiff_hypot2(v0, v1) for v1 in m1Control] for v0 in m0Control
-                ]
+            (
+                matching_control,
+                matching_cost_control,
+                identity_cost_control,
+            ) = _matching_for_vectors(m0Control, m1Control)
+            done = matching_cost_control == identity_cost_control
+            if not done:
                 (
-                    matching_control,
-                    matching_cost_control,
-                ) = min_cost_perfect_bipartite_matching(costsControl)
-                identity_cost_control = sum(
-                    costsControl[i][i] for i in range(len(m0Control))
-                )
-                done = matching_cost_control == identity_cost_control
+                    matching_green,
+                    matching_cost_green,
+                    identity_cost_green,
+                ) = _matching_for_vectors(m0Green, m1Green)
+                done = matching_cost_green == identity_cost_green
 
-                if not done:
-                    costsGreen = [
-                        [_vdiff_hypot2(v0, v1) for v1 in m1Green] for v0 in m0Green
-                    ]
-                    (
-                        matching_green,
-                        matching_cost_green,
-                    ) = min_cost_perfect_bipartite_matching(costsGreen)
-                    identity_cost_green = sum(
-                        costsGreen[i][i] for i in range(len(m0Control))
+            if not done:
+                # Otherwise, use the worst of the two matchings.
+                if (
+                    matching_cost_control / identity_cost_control
+                    < matching_cost_green / identity_cost_green
+                ):
+                    matching = matching_control
+                    matching_cost = matching_cost_control
+                    identity_cost = identity_cost_control
+                else:
+                    matching = matching_green
+                    matching_cost = matching_cost_green
+                    identity_cost = identity_cost_green
+
+                if matching_cost < identity_cost * tolerance:
+                    # print(matching_cost_control / identity_cost_control, matching_cost_green / identity_cost_green)
+
+                    showed = True
+                    yield (
+                        glyph_name,
+                        {
+                            "type": "contour_order",
+                            "master_1": names[m0idx],
+                            "master_2": names[m1idx],
+                            "master_1_idx": m0idx,
+                            "master_2_idx": m1idx,
+                            "value_1": list(range(len(m0Control))),
+                            "value_2": matching,
+                        },
                     )
-                    done = matching_cost_green == identity_cost_green
-
-                if not done:
-                    # Otherwise, use the worst of the two matchings.
-                    if (
-                        matching_cost_control / identity_cost_control
-                        < matching_cost_green / identity_cost_green
-                    ):
-                        matching = matching_control
-                        matching_cost = matching_cost_control
-                        identity_cost = identity_cost_control
-                    else:
-                        matching = matching_green
-                        matching_cost = matching_cost_green
-                        identity_cost = identity_cost_green
-
-                    if matching_cost < identity_cost * tolerance:
-                        # print(matching_cost_control / identity_cost_control, matching_cost_green / identity_cost_green)
-
-                        showed = True
-                        yield (
-                            glyph_name,
-                            {
-                                "type": "contour_order",
-                                "master_1": names[m0idx],
-                                "master_2": names[m1idx],
-                                "master_1_idx": m0idx,
-                                "master_2_idx": m1idx,
-                                "value_1": list(range(len(m0Control))),
-                                "value_2": matching,
-                            },
-                        )
-                        matchings[m1idx] = matching
+                    matchings[m1idx] = matching
 
             m1 = allContourIsomorphisms[m1idx]
             m0 = allContourIsomorphisms[m0idx]
