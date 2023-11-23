@@ -1169,6 +1169,7 @@ def main(args=None):
             from .interpolatablePlot import InterpolatablePDF
 
             with InterpolatablePDF(args.pdf, glyphsets=glyphsets, names=names) as pdf:
+                pdf.add_title_page(original_args_inputs)
                 pdf.add_problems(problems)
                 if not problems and not args.quiet:
                     pdf.draw_cupcake()
@@ -1179,6 +1180,7 @@ def main(args=None):
 
             svgs = []
             with InterpolatableSVG(svgs, glyphsets=glyphsets, names=names) as svg:
+                svg.add_title_page(original_args_inputs)
                 svg.add_problems(problems)
                 if not problems and not args.quiet:
                     svg.draw_cupcake()

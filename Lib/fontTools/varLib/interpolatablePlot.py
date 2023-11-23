@@ -1,3 +1,4 @@
+from fontTools.ttLib import TTFont
 from fontTools.pens.recordingPen import (
     RecordingPen,
     DecomposingRecordingPen,
@@ -19,6 +20,7 @@ from functools import wraps
 from io import BytesIO
 import cairo
 import math
+import os
 import logging
 
 log = logging.getLogger("fontTools.varLib.interpolatable")
@@ -142,6 +144,76 @@ class InterpolatablePlot:
     def show_page(self):
         raise NotImplementedError
 
+    def total_width(self):
+        return self.width * 2 + self.pad * 3
+
+    def total_height(self):
+        return (
+            self.pad
+            + self.line_height
+            + self.pad
+            + 2 * (self.height + self.pad * 2 + self.line_height)
+            + self.pad
+        )
+
+    def add_title_page(self, files):
+        self.set_size(self.total_width(), self.total_height())
+
+        pad = self.pad
+        width = self.total_width() - 3 * self.pad
+        height = self.total_height() - 2 * self.pad
+        x = y = pad
+
+        self.draw_label("Problem report for:", x=x, y=y, bold=True, width=width)
+        y += self.line_height
+
+        import hashlib
+
+        for file in files:
+            base_file = os.path.basename(file)
+            y += self.line_height
+            self.draw_label(base_file, x=x, y=y, bold=True, width=width)
+            y += self.line_height
+
+            h = hashlib.sha256(open(file, "rb").read()).hexdigest()
+            self.draw_label("sha256: %s" % h, x=x + pad, y=y, width=width)
+            y += self.line_height
+
+            if file.endswith(".ttf"):
+                ttFont = TTFont(file)
+                name = ttFont["name"] if "name" in ttFont else None
+                if name:
+                    for what, nameIDs in (
+                        ("Family name", (21, 16, 1)),
+                        ("Version", (5,)),
+                    ):
+                        n = name.getFirstDebugName(nameIDs)
+                        if n is None:
+                            continue
+                        self.draw_label(
+                            "%s: %s" % (what, n), x=x + pad, y=y, width=width
+                        )
+                        y += self.line_height
+            elif file.endswith(".glyphs"):
+                from glyphsLib import GSFont
+
+                f = GSFont(file)
+                print(vars(f).keys())
+                for what, field in (
+                    ("Family name", "familyName"),
+                    ("VersionMajor", "versionMajor"),
+                    ("VersionMinor", "_versionMinor"),
+                ):
+                    self.draw_label(
+                        "%s: %s" % (what, getattr(f, field)),
+                        x=x + pad,
+                        y=y,
+                        width=width,
+                    )
+                    y += self.line_height
+
+        self.show_page()
+
     def add_problems(self, problems):
         for glyph, glyph_problems in problems.items():
             last_masters = None
@@ -190,16 +262,7 @@ class InterpolatablePlot:
             )
             master_indices.insert(0, sample_glyph)
 
-        total_width = self.width * 2 + 3 * self.pad
-        total_height = (
-            self.pad
-            + self.line_height
-            + self.pad
-            + len(master_indices) * (self.height + self.pad * 2 + self.line_height)
-            + self.pad
-        )
-
-        self.set_size(total_width, total_height)
+        self.set_size(self.total_width(), self.total_height())
 
         x = self.pad
         y = self.pad
@@ -344,7 +407,22 @@ class InterpolatablePlot:
                 self.draw_shrug(x=x, y=y)
             y += self.height + self.pad
 
-    def draw_label(self, label, *, x, y, color=(0, 0, 0), align=0, bold=False):
+    def draw_label(
+        self,
+        label,
+        *,
+        x=0,
+        y=0,
+        color=(0, 0, 0),
+        align=0,
+        bold=False,
+        width=None,
+        height=None,
+    ):
+        if width is None:
+            width = self.width
+        if height is None:
+            height = self.height
         cr = cairo.Context(self.surface)
         cr.select_font_face(
             "@cairo:",
@@ -360,15 +438,15 @@ class InterpolatablePlot:
         cr.set_source_rgb(*color)
 
         extents = cr.text_extents(label)
-        if extents.width > self.width:
+        if extents.width > width:
             # Shrink
-            font_size *= self.width / extents.width
+            font_size *= width / extents.width
             cr.set_font_size(font_size)
             font_extents = cr.font_extents()
             extents = cr.text_extents(label)
 
         # Center
-        label_x = x + (self.width - extents.width) * align
+        label_x = x + (width - extents.width) * align
         label_y = y + font_extents[0]
         cr.move_to(label_x, label_y)
         cr.show_text(label)
@@ -388,9 +466,12 @@ class InterpolatablePlot:
 
         boundsPen = ControlBoundsPen(glyphset)
         recording.replay(boundsPen)
+        bounds = boundsPen.bounds
+        if bounds is None:
+            bounds = (0, 0, 0, 0)
 
-        glyph_width = boundsPen.bounds[2] - boundsPen.bounds[0]
-        glyph_height = boundsPen.bounds[3] - boundsPen.bounds[1]
+        glyph_width = bounds[2] - bounds[0]
+        glyph_height = bounds[3] - bounds[1]
 
         scale = None
         if glyph_width:
@@ -411,13 +492,11 @@ class InterpolatablePlot:
             (self.height - glyph_height * scale) / 2,
         )
         cr.scale(scale, -scale)
-        cr.translate(-boundsPen.bounds[0], -boundsPen.bounds[3])
+        cr.translate(-bounds[0], -bounds[3])
 
         if self.border_color:
             cr.set_source_rgb(*self.border_color)
-            cr.rectangle(
-                boundsPen.bounds[0], boundsPen.bounds[1], glyph_width, glyph_height
-            )
+            cr.rectangle(bounds[0], bounds[1], glyph_width, glyph_height)
             cr.set_line_width(self.border_width / scale)
             cr.stroke()
 
