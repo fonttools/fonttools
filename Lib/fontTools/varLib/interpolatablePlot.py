@@ -690,17 +690,24 @@ class InterpolatablePlot:
         )
         width = 0
         height = 0
+        font_extents = cr.font_extents()
+        font_line_height = font_extents[2]
+        font_ascent = font_extents[0]
         for line in cupcake:
             extents = cr.text_extents(line)
             width = max(width, extents.width)
-            height += extents.height
+            height += font_line_height
         if not width:
             return
-        cr.scale(self.total_width() / width, self.total_height() / height)
+        cr.scale(
+            (self.total_width() - 2 * self.pad) / width,
+            (self.total_height() - 2 * self.pad) / height,
+        )
+        cr.translate(self.pad, self.pad + font_ascent)
         for line in cupcake:
-            cr.translate(0, cr.text_extents(line).height)
             cr.move_to(0, 0)
             cr.show_text(line)
+            cr.translate(0, font_line_height)
 
     def draw_shrug(self, x=0, y=0):
         cr = cairo.Context(self.surface)
