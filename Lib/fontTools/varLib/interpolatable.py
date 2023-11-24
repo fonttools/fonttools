@@ -23,6 +23,8 @@ import logging
 
 log = logging.getLogger("fontTools.varLib.interpolatable")
 
+DEFAULT_TOLERANCE = 0.95
+
 
 def _rot_list(l, k):
     """Rotate list by k items forward.  Ie. item at position 0 will be
@@ -323,7 +325,7 @@ def test_gen(
     ignore_missing=False,
     *,
     locations=None,
-    tolerance=0.95,
+    tolerance=DEFAULT_TOLERANCE,
     show_all=False,
 ):
     if names is None:
@@ -832,7 +834,7 @@ def main(args=None):
         "--tolerance",
         action="store",
         type=float,
-        help="Error tolerance. Default 0.95",
+        help="Error tolerance. Default %s" % DEFAULT_TOLERANCE,
     )
     parser.add_argument(
         "--json",
@@ -1066,7 +1068,7 @@ def main(args=None):
             names=names,
             locations=locations,
             ignore_missing=args.ignore_missing,
-            tolerance=args.tolerance or 0.95,
+            tolerance=args.tolerance or DEFAULT_TOLERANCE,
             show_all=args.show_all,
         )
         problems = defaultdict(list)
