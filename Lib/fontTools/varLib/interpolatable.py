@@ -705,7 +705,7 @@ def test_gen(
                         )
                         first_cost = costs[0]
                         # Only accept a perfect match
-                        if not(min_cost < first_cost * tolerance):
+                        if not (min_cost < first_cost * tolerance):
                             okay = True
 
                     if not okay:
