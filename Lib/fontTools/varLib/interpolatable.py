@@ -644,7 +644,7 @@ def test_gen(
                     ):
                         # Try harder
 
-                        m0Vectors = allGreenVectors[m1idx][ix]
+                        m0Vectors = allGreenVectors[m0idx][ix]
                         m1Vectors = allGreenVectors[m1idx][ix]
 
                         # Recover the covariance matrix from the GreenVectors.
