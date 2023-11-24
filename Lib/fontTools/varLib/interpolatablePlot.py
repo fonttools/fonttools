@@ -224,6 +224,11 @@ class InterpolatablePlot:
         xx = x + self.pad * 2
         xxx = x + self.pad * 4
 
+        self.draw_label(
+            "Tolerance: badness; closer to zero the worse", x=xxx, y=y, width=width
+        )
+        y -= self.pad + self.line_height
+
         self.draw_label("Suggested new contour start point", x=xxx, y=y, width=width)
         self.draw_circle(
             cr,
@@ -328,7 +333,14 @@ class InterpolatablePlot:
         x = self.pad
         y = self.pad
 
-        self.draw_label(glyphname, x=x, y=y, color=self.head_color, align=0, bold=True)
+        self.draw_label(
+            "Glyph name: " + glyphname,
+            x=x,
+            y=y,
+            color=self.head_color,
+            align=0,
+            bold=True,
+        )
         tolerance = min(p.get("tolerance", 1) for p in problems)
         if tolerance < 1:
             self.draw_label(
