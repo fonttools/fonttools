@@ -210,6 +210,8 @@ def _points_complex_vector(points):
     points.extend(points[: _NUM_ITEMS_PER_POINTS_COMPLEX_VECTOR - 1])
     while len(points) < _NUM_ITEMS_PER_POINTS_COMPLEX_VECTOR:
         points.extend(points[: _NUM_ITEMS_PER_POINTS_COMPLEX_VECTOR - 1])
+
+    mult1 = sqrt(n)
     for i in range(n):
         # The weights are magic numbers.
 
@@ -220,7 +222,7 @@ def _points_complex_vector(points):
         # The vector to the next point
         p1 = points[i + 1]
         d0 = p1 - p0
-        vector.append(d0 * 3)
+        vector.append(d0 * mult1)
 
         # The turn vector
         p2 = points[i + 2]
