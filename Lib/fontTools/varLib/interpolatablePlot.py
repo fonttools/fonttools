@@ -198,7 +198,6 @@ class InterpolatablePlot:
                 from glyphsLib import GSFont
 
                 f = GSFont(file)
-                print(vars(f).keys())
                 for what, field in (
                     ("Family name", "familyName"),
                     ("VersionMajor", "versionMajor"),
