@@ -84,13 +84,11 @@ class InterpolatablePlot:
     offcurve_node_diameter = 8
     handle_color = (0.2, 1, 0.2)
     handle_width = 1
-    other_start_point_color = (0, 0, 1)
-    reversed_start_point_color = (0, 1, 0)
-    start_point_color = (1, 0, 0)
-    start_point_width = 15
-    start_handle_width = 5
-    start_handle_length = 100
-    start_handle_arrow_length = 5
+    corrected_start_point_color = (0, 0.9, 0)
+    corrected_start_point_size = 15
+    reversed_start_point_color = (1, 0, 0)
+    start_point_color = (0, 0, 1)
+    start_arrow_length = 20
     contour_colors = ((1, 0, 0), (0, 0, 1), (0, 1, 0), (1, 1, 0), (1, 0, 1), (0, 1, 1))
     contour_alpha = 0.5
     cupcake_color = (0.3, 0, 0.3)
@@ -152,6 +150,8 @@ class InterpolatablePlot:
             self.pad
             + self.line_height
             + self.pad
+            + self.line_height
+            + self.pad
             + 2 * (self.height + self.pad * 2 + self.line_height)
             + self.pad
         )
@@ -211,7 +211,69 @@ class InterpolatablePlot:
                     )
                     y += self.line_height
 
+        self.draw_legend()
         self.show_page()
+
+    def draw_legend(self):
+        cr = cairo.Context(self.surface)
+
+        x = self.pad
+        y = self.total_height() - self.pad - self.line_height * 2
+        width = self.total_width() - 2 * self.pad
+
+        xx = x + self.pad * 2
+        xxx = x + self.pad * 4
+
+        self.draw_label("Suggested new contour start point", x=xxx, y=y, width=width)
+        self.draw_circle(
+            cr,
+            x=xx,
+            y=y + self.line_height * 0.5,
+            diameter=self.corrected_start_point_size,
+            color=self.corrected_start_point_color,
+        )
+        y -= self.pad + self.line_height
+
+        self.draw_label(
+            "Contour start point in contours with wrong direction",
+            x=xxx,
+            y=y,
+            width=width,
+        )
+        self.draw_arrow(
+            cr,
+            x=xx - self.start_arrow_length * 0.3,
+            y=y + self.line_height * 0.5,
+            color=self.reversed_start_point_color,
+        )
+        y -= self.pad + self.line_height
+
+        self.draw_label(
+            "Contour start point when the first two points overlap",
+            x=xxx,
+            y=y,
+            width=width,
+        )
+        self.draw_circle(
+            cr,
+            x=xx,
+            y=y + self.line_height * 0.5,
+            diameter=self.corrected_start_point_size,
+            color=self.start_point_color,
+        )
+        y -= self.pad + self.line_height
+
+        self.draw_label("Contour start point and direction", x=xxx, y=y, width=width)
+        self.draw_arrow(
+            cr,
+            x=xx - self.start_arrow_length * 0.3,
+            y=y + self.line_height * 0.5,
+            color=self.start_point_color,
+        )
+        y -= self.pad + self.line_height
+
+        self.draw_label("Legend:", x=x, y=y, width=width, bold=True)
+        y -= self.pad + self.line_height
 
     def add_problems(self, problems):
         for glyph, glyph_problems in problems.items():
@@ -267,17 +329,26 @@ class InterpolatablePlot:
         y = self.pad
 
         self.draw_label(glyphname, x=x, y=y, color=self.head_color, align=0, bold=True)
-        self.draw_label(
-            problem_type,
-            x=x + self.width + self.pad,
-            y=y,
-            color=self.head_color,
-            align=1,
-            bold=True,
-        )
         tolerance = min(p.get("tolerance", 1) for p in problems)
         if tolerance < 1:
-            self.draw_label("tolerance: %.2f" % tolerance, x=x, y=y, align=1)
+            self.draw_label(
+                "tolerance: %.2f" % tolerance,
+                x=x,
+                y=y,
+                width=self.total_width() - 2 * self.pad,
+                align=1,
+                bold=True,
+            )
+        y += self.line_height + self.pad
+        self.draw_label(
+            problem_type,
+            x=x,
+            y=y,
+            width=self.total_width() - 2 * self.pad,
+            color=self.head_color,
+            align=0.5,
+            bold=True,
+        )
         y += self.line_height + self.pad
 
         scales = []
@@ -302,6 +373,7 @@ class InterpolatablePlot:
         ):
             x = self.pad + self.width + self.pad
             y = self.pad
+            y += self.line_height + self.pad
             y += self.line_height + self.pad
 
             glyphset1 = self.glyphsets[master_indices[0]]
@@ -612,34 +684,24 @@ class InterpolatablePlot:
                         idx if matching is None else matching[idx]
                     ].replay(converter)
                     targetPoint = points.value[problem["value_2"]][0]
-                    cr.move_to(*targetPoint)
-                    cr.line_to(*targetPoint)
-                    cr.set_line_cap(cairo.LINE_CAP_ROUND)
-                    cr.set_source_rgb(*self.other_start_point_color)
-                    cr.set_line_width(self.start_point_width / scale)
-                    cr.stroke()
+                    cr.save()
+                    cr.translate(*targetPoint)
+                    cr.scale(1 / scale, 1 / scale)
+                    self.draw_circle(
+                        cr,
+                        diameter=self.corrected_start_point_size,
+                        color=self.corrected_start_point_color,
+                    )
+                    cr.restore()
 
-                # Draw start point
-                cr.set_line_cap(cairo.LINE_CAP_ROUND)
-                i = 0
-                for segment, args in recording.value:
-                    if segment == "moveTo":
-                        if idx is None or i == idx:
-                            cr.move_to(*args[0])
-                            cr.line_to(*args[0])
-                        i += 1
-
+                # Draw start-point arrow
                 if which == 0 or not problem.get("reversed"):
-                    cr.set_source_rgb(*self.start_point_color)
+                    color = self.start_point_color
                 else:
-                    cr.set_source_rgb(*self.reversed_start_point_color)
-                cr.set_line_width(self.start_point_width / scale)
-                cr.stroke()
-
-                # Draw arrow
-                cr.set_line_cap(cairo.LINE_CAP_SQUARE)
+                    color = self.reversed_start_point_color
                 first_pt = None
                 i = 0
+                cr.save()
                 for segment, args in recording.value:
                     if segment == "moveTo":
                         first_pt = args[0]
@@ -652,20 +714,9 @@ class InterpolatablePlot:
                         first_pt = complex(*first_pt)
                         second_pt = complex(*second_pt)
                         length = abs(second_pt - first_pt)
+                        cr.translate(first_pt.real, first_pt.imag)
                         if length:
-                            # Draw handle
-                            length *= scale
-                            second_pt = (
-                                first_pt
-                                + (second_pt - first_pt)
-                                / length
-                                * self.start_handle_length
-                            )
-                            cr.move_to(first_pt.real, first_pt.imag)
-                            cr.line_to(second_pt.real, second_pt.imag)
                             # Draw arrowhead
-                            cr.save()
-                            cr.translate(second_pt.real, second_pt.imag)
                             cr.rotate(
                                 math.atan2(
                                     second_pt.imag - first_pt.imag,
@@ -673,26 +724,50 @@ class InterpolatablePlot:
                                 )
                             )
                             cr.scale(1 / scale, 1 / scale)
-                            cr.translate(self.start_handle_width, 0)
-                            cr.move_to(0, 0)
-                            cr.line_to(
-                                -self.start_handle_arrow_length,
-                                -self.start_handle_arrow_length,
+                            self.draw_arrow(cr, color=color)
+                        else:
+                            # Draw circle
+                            cr.scale(1 / scale, 1 / scale)
+                            self.draw_circle(
+                                cr,
+                                diameter=self.corrected_start_point_size,
+                                color=color,
                             )
-                            cr.line_to(
-                                -self.start_handle_arrow_length,
-                                self.start_handle_arrow_length,
-                            )
-                            cr.close_path()
-                            cr.restore()
+                        break
 
                     first_pt = None
                     i += 1
 
-                cr.set_line_width(self.start_handle_width / scale)
-                cr.stroke()
+                cr.restore()
 
         return scale
+
+    def draw_circle(self, cr, *, x=0, y=0, color=(0, 0, 0), diameter=10):
+        cr.save()
+        cr.set_line_width(diameter)
+        cr.set_line_cap(cairo.LINE_CAP_ROUND)
+        cr.move_to(x, y)
+        cr.line_to(x, y)
+        cr.set_source_rgb(*color)
+        cr.stroke()
+        cr.restore()
+
+    def draw_arrow(self, cr, *, x=0, y=0, color=(0, 0, 0)):
+        cr.save()
+        cr.set_source_rgb(*color)
+        cr.translate(self.start_arrow_length + x, y)
+        cr.move_to(0, 0)
+        cr.line_to(
+            -self.start_arrow_length,
+            -self.start_arrow_length * 0.4,
+        )
+        cr.line_to(
+            -self.start_arrow_length,
+            self.start_arrow_length * 0.4,
+        )
+        cr.close_path()
+        cr.fill()
+        cr.restore()
 
     def draw_cupcake(self):
         self.set_size(self.total_width(), self.total_height())
