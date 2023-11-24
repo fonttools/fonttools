@@ -678,7 +678,7 @@ def test_gen(
                             # Don't translate here. We are working on the complex-vector
                             # that includes more than just the points. It's horrible what
                             # we are doing anyway...
-                            #trans = trans.translate(meanX, meanY)
+                            # trans = trans.translate(meanX, meanY)
                             trans = trans.rotate(theta)
                             trans = trans.scale(sqrt(lambda1), sqrt(lambda2))
                             transforms.append(trans)
@@ -712,8 +712,8 @@ def test_gen(
                         first_cost = costs[0]
                         if min_cost < first_cost * tolerance:
                             pass
-                            #this_tolerance = min_cost / first_cost
-                            #proposed_point = new_contour1[min_cost_idx][1]
+                            # this_tolerance = min_cost / first_cost
+                            # proposed_point = new_contour1[min_cost_idx][1]
                         else:
                             okay = True
 
