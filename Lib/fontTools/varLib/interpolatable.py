@@ -620,6 +620,7 @@ def test_gen(
                 first_cost = costs[0]
 
                 if min_cost < first_cost * tolerance:
+                    this_tolerance = min_cost / first_cost
                     # c0 is the first isomorphism of the m0 master
                     # contour1 is list of all isomorphisms of the m1 master
                     #
@@ -707,7 +708,9 @@ def test_gen(
                         )
                         first_cost = costs[0]
                         # Only accept a perfect match
-                        if not (min_cost < first_cost * tolerance):
+                        if min_cost < first_cost * tolerance:
+                            this_tolerance = min_cost / first_cost
+                        else:
                             okay = True
 
                     if not okay:
@@ -724,7 +727,7 @@ def test_gen(
                                 "value_1": 0,
                                 "value_2": proposed_point,
                                 "reversed": reverse,
-                                "tolerance": min_cost / first_cost,
+                                "tolerance": this_tolerance,
                             },
                         )
                 else:
