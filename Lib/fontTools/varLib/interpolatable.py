@@ -593,6 +593,7 @@ def test_gen(
                                 "master_2_idx": m1idx,
                                 "value_1": list(range(n)),
                                 "value_2": matching,
+                                "tolerance": matching_cost / identity_cost,
                             },
                         )
                         matchings[m1idx] = matching
@@ -721,6 +722,7 @@ def test_gen(
                                 "value_1": 0,
                                 "value_2": proposed_point,
                                 "reversed": reverse,
+                                "tolerance": min_cost / first_cost,
                             },
                         )
                 else:

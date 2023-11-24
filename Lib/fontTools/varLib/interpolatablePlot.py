@@ -275,6 +275,9 @@ class InterpolatablePlot:
             align=1,
             bold=True,
         )
+        tolerance = min(p.get("tolerance", 1) for p in problems)
+        if tolerance < 1:
+            self.draw_label("tolerance: %.2f" % tolerance, x=x, y=y, align=1)
         y += self.line_height + self.pad
 
         scales = []
