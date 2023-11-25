@@ -156,7 +156,7 @@ class InterpolatablePlot:
             + self.pad
         )
 
-    def add_title_page(self, files):
+    def add_title_page(self, files, *, show_tolerance=True):
         self.set_size(self.total_width(), self.total_height())
 
         pad = self.pad
@@ -211,10 +211,10 @@ class InterpolatablePlot:
                     )
                     y += self.line_height
 
-        self.draw_legend()
+        self.draw_legend(show_tolerance=show_tolerance)
         self.show_page()
 
-    def draw_legend(self):
+    def draw_legend(self, *, show_tolerance=True):
         cr = cairo.Context(self.surface)
 
         x = self.pad
@@ -224,10 +224,11 @@ class InterpolatablePlot:
         xx = x + self.pad * 2
         xxx = x + self.pad * 4
 
-        self.draw_label(
-            "Tolerance: badness; closer to zero the worse", x=xxx, y=y, width=width
-        )
-        y -= self.pad + self.line_height
+        if show_tolerance:
+            self.draw_label(
+                "Tolerance: badness; closer to zero the worse", x=xxx, y=y, width=width
+            )
+            y -= self.pad + self.line_height
 
         self.draw_label(
             "Colored contours: contours with the wrong order", x=xxx, y=y, width=width

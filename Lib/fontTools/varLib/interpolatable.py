@@ -1223,7 +1223,7 @@ def main(args=None):
             svgs = []
             glyph_starts = {}
             with InterpolatableSVG(svgs, glyphsets=glyphsets, names=names) as svg:
-                svg.add_title_page(original_args_inputs)
+                svg.add_title_page(original_args_inputs, show_tolerance=False)
                 for glyph, glyph_problems in problems.items():
                     glyph_starts[len(svgs)] = glyph
                     svg.add_problems({glyph: glyph_problems}, show_tolerance=False)
