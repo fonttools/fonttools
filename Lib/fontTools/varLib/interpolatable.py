@@ -1221,9 +1221,12 @@ def main(args=None):
             from .interpolatablePlot import InterpolatableSVG
 
             svgs = []
+            glyph_starts = {}
             with InterpolatableSVG(svgs, glyphsets=glyphsets, names=names) as svg:
                 svg.add_title_page(original_args_inputs)
-                svg.add_problems(problems)
+                for glyph, glyph_problems in problems.items():
+                    glyph_starts[len(svgs)] = glyph
+                    svg.add_problems({glyph: glyph_problems})
                 if not problems and not args.quiet:
                     svg.draw_cupcake()
 
@@ -1231,8 +1234,13 @@ def main(args=None):
 
             with open(args.html, "wb") as f:
                 f.write(b"<!DOCTYPE html>\n")
-                f.write(b"<html><body align=center>\n")
-                for svg in svgs:
+                f.write(
+                    b'<html><body align="center" style="font-family: sans-serif; text-color: #222">\n'
+                )
+                f.write(b"<title>fonttools varLib.interpolatable report</title>\n")
+                for i, svg in enumerate(svgs):
+                    if i in glyph_starts:
+                        f.write(f"<h1>Glyph {glyph_starts[i]}</h1>\n".encode("utf-8"))
                     f.write("<img src='data:image/svg+xml;base64,".encode("utf-8"))
                     f.write(base64.b64encode(svg))
                     f.write(b"' />\n")
