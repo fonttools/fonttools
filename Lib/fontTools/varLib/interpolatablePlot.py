@@ -313,7 +313,10 @@ class InterpolatablePlot:
                 # Flush
                 if current_glyph_problems:
                     self.add_problem(
-                        glyph, current_glyph_problems, show_tolerance=show_tolerance
+                        glyph,
+                        current_glyph_problems,
+                        show_tolerance=show_tolerance,
+                        show_page_number=show_page_number,
                     )
                     self.show_page()
                     current_glyph_problems = []
