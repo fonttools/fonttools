@@ -450,6 +450,10 @@ def test_gen(
 
             showed = False
 
+            #
+            # Basic compatibility checks
+            #
+
             m1 = allNodeTypes[m1idx]
             m0 = allNodeTypes[m0idx]
             if len(m0) != len(m1):
@@ -506,6 +510,10 @@ def test_gen(
                                 },
                             )
                             continue
+
+            #
+            # "contour_order" check
+            #
 
             # We try matching both the StatisticsControlPen vector
             # and the StatisticsPen vector.
@@ -599,6 +607,10 @@ def test_gen(
                             },
                         )
                         matchings[m1idx] = matching
+
+            #
+            # "wrong_start_point" check
+            #
 
             m1 = allContourIsomorphisms[m1idx]
             m0 = allContourIsomorphisms[m0idx]
@@ -787,6 +799,10 @@ def test_gen(
                                     "master_2_idx": m1idx,
                                 },
                             )
+
+            #
+            # --show-all
+            #
 
             if show_all and not showed:
                 yield (
