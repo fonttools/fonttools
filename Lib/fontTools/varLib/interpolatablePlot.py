@@ -234,12 +234,10 @@ class InterpolatablePlot:
         )
         cr.rectangle(xx - self.pad * 0.7, y, 1.5 * self.pad, self.line_height)
         cr.set_source_rgb(*self.fill_color)
-        cr.fill()
-        cr.rectangle(xx - self.pad * 0.7, y, 1.5 * self.pad, self.line_height)
+        cr.fill_preserve()
         cr.set_source_rgb(*self.stroke_color)
         cr.set_line_width(self.stroke_width)
-        cr.stroke()
-        cr.rectangle(xx - self.pad * 0.7, y, 1.5 * self.pad, self.line_height)
+        cr.stroke_preserve()
         cr.set_source_rgba(*self.contour_colors[0], self.contour_alpha)
         cr.fill()
         y -= self.pad + self.line_height
@@ -612,18 +610,20 @@ class InterpolatablePlot:
             cr.set_line_width(self.border_width / scale)
             cr.stroke()
 
-        if self.fill_color and problem_type != "open_path":
+        if self.fill_color or self.stroke_color:
             pen = CairoPen(glyphset, cr)
             recording.replay(pen)
-            cr.set_source_rgb(*self.fill_color)
-            cr.fill()
 
-        if self.stroke_color:
-            pen = CairoPen(glyphset, cr)
-            recording.replay(pen)
-            cr.set_source_rgb(*self.stroke_color)
-            cr.set_line_width(self.stroke_width / scale)
-            cr.stroke()
+            if self.fill_color and problem_type != "open_path":
+                cr.set_source_rgb(*self.fill_color)
+                cr.fill_preserve()
+
+            if self.stroke_color:
+                cr.set_source_rgb(*self.stroke_color)
+                cr.set_line_width(self.stroke_width / scale)
+                cr.stroke_preserve()
+
+            cr.new_path()
 
         if problem_type in (
             "nothing",
