@@ -15,6 +15,7 @@ from fontTools.varLib.models import piecewiseLinearMap, normalizeLocation
 from fontTools.misc.fixedTools import floatToFixedToStr
 from fontTools.misc.transform import Transform
 from collections import defaultdict, deque
+from types import SimpleNamespace
 from functools import wraps
 from pprint import pformat
 from math import sqrt, copysign, atan2, pi
@@ -1162,13 +1163,17 @@ def main(args=None):
         if filename.endswith(".ufo"):
             from fontTools.ufoLib import UFOReader
 
-            fonts.append(UFOReader(filename))
-            upem = fonts[-1].info.unitsPerEm
+            font = UFOReader(filename)
+            info = SimpleNamespace()
+            font.readInfo(info)
+            upem = info.unitsPerEm
+            fonts.append(font)
         else:
             from fontTools.ttLib import TTFont
 
-            fonts.append(TTFont(filename))
-            upem = fonts[-1]["head"].unitsPerEm
+            font = TTFont(filename)
+            upem = font["head"].unitsPerEm
+            fonts.append(font)
 
         names.append(basename(filename).rsplit(".", 1)[0])
 
