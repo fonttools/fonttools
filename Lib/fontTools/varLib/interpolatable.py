@@ -24,6 +24,8 @@ import logging
 log = logging.getLogger("fontTools.varLib.interpolatable")
 
 DEFAULT_TOLERANCE = 0.95
+DEFAULT_UPEM = 1000
+DEFAULT_MIN_KINK_LENGTH = 0.01
 
 
 def _rot_list(l, k):
@@ -327,6 +329,7 @@ def test_gen(
     locations=None,
     tolerance=DEFAULT_TOLERANCE,
     kinkiness=0,
+    upem=DEFAULT_UPEM,
     show_all=False,
 ):
     assert 0 <= tolerance <= 1
@@ -847,7 +850,7 @@ def test_gen(
                     pt0_next = complex(*pt0_next[0])
                     pt1_next = complex(*pt1_next[0])
 
-                    min_length = 10 # XXX This has to be UPEM dependent :-(
+                    min_length = upem * DEFAULT_MIN_KINK_LENGTH
                     if (
                         abs(pt0 - pt0_next) < min_length
                         or abs(pt1 - pt1_next) < min_length
@@ -869,7 +872,9 @@ def test_gen(
 
                     assert -1 <= kinkiness <= 1
                     mult = 2 - kinkiness
-                    t = (1 - tolerance) * mult  # ~sin(radian(6)) for tolerance 0.95 & kinkiness 0
+                    t = (
+                        1 - tolerance
+                    ) * mult  # ~sin(radian(6)) for tolerance 0.95 & kinkiness 0
 
                     cross0 /= abs(pt0 - pt0_prev) * abs(pt0_next - pt0)
                     cross1 /= abs(pt1 - pt1_prev) * abs(pt1_next - pt1)
@@ -1034,6 +1039,7 @@ def main(args=None):
     fonts = []
     names = []
     locations = []
+    upem = DEFAULT_UPEM
 
     original_args_inputs = tuple(args.inputs)
 
@@ -1058,6 +1064,7 @@ def main(args=None):
             from glyphsLib import GSFont, to_designspace
 
             gsfont = GSFont(args.inputs[0])
+            upem = gsfont.upm
             designspace = to_designspace(gsfont)
             fonts = [source.font for source in designspace.sources]
             names = ["%s-%s" % (f.info.familyName, f.info.styleName) for f in fonts]
@@ -1076,6 +1083,7 @@ def main(args=None):
             from fontTools.ttLib import TTFont
 
             font = TTFont(args.inputs[0])
+            upem = font["head"].unitsPerEm
             if "gvar" in font:
                 # Is variable font
 
@@ -1155,10 +1163,12 @@ def main(args=None):
             from fontTools.ufoLib import UFOReader
 
             fonts.append(UFOReader(filename))
+            upem = fonts[-1].info.unitsPerEm
         else:
             from fontTools.ttLib import TTFont
 
             fonts.append(TTFont(filename))
+            upem = fonts[-1]["head"].unitsPerEm
 
         names.append(basename(filename).rsplit(".", 1)[0])
 
@@ -1206,6 +1216,7 @@ def main(args=None):
             glyphs=glyphs,
             names=names,
             locations=locations,
+            upem=upem,
             ignore_missing=args.ignore_missing,
             tolerance=args.tolerance or DEFAULT_TOLERANCE,
             kinkiness=args.kinkiness or 0,
