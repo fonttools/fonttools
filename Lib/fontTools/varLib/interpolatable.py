@@ -326,8 +326,11 @@ def test_gen(
     *,
     locations=None,
     tolerance=DEFAULT_TOLERANCE,
+    kinkiness=0,
     show_all=False,
 ):
+    assert 0 <= tolerance <= 1
+
     if names is None:
         names = glyphsets
 
@@ -864,8 +867,9 @@ def test_gen(
                     if not cross0 or not cross1:
                         continue
 
-                    mult = 2
-                    t = (1 - tolerance) * mult  # ~sin(radian(6)) for tolerance 0.95
+                    assert -1 <= kinkiness <= 1
+                    mult = 2 - kinkiness
+                    t = (1 - tolerance) * mult  # ~sin(radian(6)) for tolerance 0.95 & kinkiness 0
 
                     cross0 /= abs(pt0 - pt0_prev) * abs(pt0_next - pt0)
                     cross1 /= abs(pt1 - pt1_prev) * abs(pt1_next - pt1)
@@ -963,7 +967,13 @@ def main(args=None):
         "--tolerance",
         action="store",
         type=float,
-        help="Error tolerance. Default %s" % DEFAULT_TOLERANCE,
+        help="Error tolerance. Between 0 and 1. Default %s" % DEFAULT_TOLERANCE,
+    )
+    parser.add_argument(
+        "--kinkiness",
+        action="store",
+        type=float,
+        help="How aggressive report kinks. Between -1 and 1. Default 0",
     )
     parser.add_argument(
         "--json",
@@ -1198,6 +1208,7 @@ def main(args=None):
             locations=locations,
             ignore_missing=args.ignore_missing,
             tolerance=args.tolerance or DEFAULT_TOLERANCE,
+            kinkiness=args.kinkiness or 0,
             show_all=args.show_all,
         )
         problems = defaultdict(list)
