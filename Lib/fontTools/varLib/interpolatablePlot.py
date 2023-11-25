@@ -91,6 +91,8 @@ class InterpolatablePlot:
     start_arrow_length = 20
     contour_colors = ((1, 0, 0), (0, 0, 1), (0, 1, 0), (1, 1, 0), (1, 0, 1), (0, 1, 1))
     contour_alpha = 0.5
+    no_issues_label = "Your font's good! Have a cupcake..."
+    no_issues_label_color = (0, 0.5, 0)
     cupcake_color = (0.3, 0, 0.3)
     cupcake = r"""
                           ,@.
@@ -807,6 +809,17 @@ class InterpolatablePlot:
 
     def draw_cupcake(self):
         self.set_size(self.total_width(), self.total_height())
+
+        self.draw_label(
+            self.no_issues_label,
+            x=self.pad,
+            y=self.pad,
+            color=self.no_issues_label_color,
+            width=self.total_width() - 2 * self.pad,
+            align=0.5,
+            bold=True,
+        )
+
         cupcake = self.cupcake.splitlines()
         cr = cairo.Context(self.surface)
         cr.set_source_rgb(*self.cupcake_color)
@@ -827,9 +840,9 @@ class InterpolatablePlot:
             return
         cr.scale(
             (self.total_width() - 2 * self.pad) / width,
-            (self.total_height() - 2 * self.pad) / height,
+            (self.total_height() - 2 * self.pad - self.line_height) / height,
         )
-        cr.translate(self.pad, self.pad + font_ascent)
+        cr.translate(self.pad, self.pad + font_ascent + self.line_height)
         for line in cupcake:
             cr.move_to(0, 0)
             cr.show_text(line)
