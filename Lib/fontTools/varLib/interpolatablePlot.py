@@ -248,6 +248,16 @@ class InterpolatablePlot:
         cr.fill()
         y -= self.pad + self.line_height
 
+        self.draw_label("Point causing kink in the contour", x=xxx, y=y, width=width)
+        self.draw_circle(
+            cr,
+            x=xx,
+            y=y + self.line_height * 0.5,
+            diameter=self.kink_point_size,
+            color=self.kink_point_color,
+        )
+        y -= self.pad + self.line_height
+
         self.draw_label("Suggested new contour start point", x=xxx, y=y, width=width)
         self.draw_circle(
             cr,
