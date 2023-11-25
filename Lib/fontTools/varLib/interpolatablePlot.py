@@ -738,6 +738,7 @@ class InterpolatablePlot:
                     second_pt = args[0]
 
                     if idx is None or i == idx:
+                        cr.save()
                         first_pt = complex(*first_pt)
                         second_pt = complex(*second_pt)
                         length = abs(second_pt - first_pt)
@@ -760,7 +761,10 @@ class InterpolatablePlot:
                                 diameter=self.corrected_start_point_size,
                                 color=color,
                             )
-                        break
+                        cr.restore()
+
+                        if idx is not None:
+                            break
 
                     first_pt = None
                     i += 1
