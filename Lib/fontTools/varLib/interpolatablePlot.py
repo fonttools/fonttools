@@ -71,6 +71,7 @@ class InterpolatablePlot:
     height = 480
     pad = 16
     line_height = 36
+    page_number = 1
     head_color = (0.3, 0.3, 0.3)
     label_color = (0.2, 0.2, 0.2)
     border_color = (0.9, 0.9, 0.9)
@@ -142,7 +143,7 @@ class InterpolatablePlot:
         raise NotImplementedError
 
     def show_page(self):
-        raise NotImplementedError
+        self.page_number += 1
 
     def total_width(self):
         return self.width * 2 + self.pad * 3
@@ -522,6 +523,15 @@ class InterpolatablePlot:
                 self.draw_shrug(x=x, y=y)
             y += self.height + self.pad
 
+            self.draw_label(
+                str(self.page_number),
+                x=0,
+                y=self.total_height() - self.line_height,
+                width=self.total_width(),
+                color=self.head_color,
+                align=0.5,
+            )
+
     def draw_label(
         self,
         label,
@@ -878,6 +888,7 @@ class InterpolatablePostscriptLike(InterpolatablePlot):
         self.surface.set_size(width, height)
 
     def show_page(self):
+        super().show_page()
         self.surface.show_page()
 
     def __enter__(self):
@@ -919,6 +930,7 @@ class InterpolatableSVG(InterpolatablePlot):
         self.surface = cairo.SVGSurface(self.sink, width, height)
 
     def show_page(self):
+        super().show_page()
         self.surface.finish()
         self.out.append(self.sink.getvalue())
         self.surface = None
