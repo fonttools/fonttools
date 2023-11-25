@@ -651,11 +651,15 @@ class InterpolatablePlot:
 
             cr.new_path()
 
-        if problem_type in (
+        if any (
+            t in problem_types
+            for t in
+            (
             "nothing",
             "node_count",
             "node_incompatibility",
             "wrong_structure",
+            )
         ):
             cr.set_line_cap(cairo.LINE_CAP_ROUND)
 
