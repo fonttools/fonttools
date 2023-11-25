@@ -87,9 +87,11 @@ class InterpolatablePlot:
     handle_width = 1
     corrected_start_point_color = (0, 0.9, 0)
     corrected_start_point_size = 15
-    reversed_start_point_color = (1, 0, 0)
+    wrong_start_point_color = (1, 0, 0)
     start_point_color = (0, 0, 1)
     start_arrow_length = 20
+    kink_point_size = 10
+    kink_point_color = (1, 0, 1, 0.5)
     contour_colors = ((1, 0, 0), (0, 0, 1), (0, 1, 0), (1, 1, 0), (1, 0, 1), (0, 1, 1))
     contour_alpha = 0.5
     no_issues_label = "Your font's good! Have a cupcake..."
@@ -266,7 +268,7 @@ class InterpolatablePlot:
             cr,
             x=xx - self.start_arrow_length * 0.3,
             y=y + self.line_height * 0.5,
-            color=self.reversed_start_point_color,
+            color=self.wrong_start_point_color,
         )
         y -= self.pad + self.line_height
 
@@ -409,7 +411,14 @@ class InterpolatablePlot:
             y += self.height + self.pad
 
         if any(
-            pt in ("nothing", "wrong_start_point", "contour_order", "wrong_structure")
+            pt
+            in (
+                "nothing",
+                "wrong_start_point",
+                "contour_order",
+                "wrong_structure",
+                "kink",
+            )
             for pt in problem_types
         ):
             x = self.pad + self.width + self.pad
@@ -444,7 +453,7 @@ class InterpolatablePlot:
             self.draw_label("proposed fix", x=x, y=y, color=self.head_color, align=0.5)
             y += self.line_height + self.pad
 
-            if problem_type == "wrong_structure":
+            if problem_type in ("wrong_structure", "kink"):
                 self.draw_shrug(x=x, y=y)
                 return
 
@@ -651,15 +660,14 @@ class InterpolatablePlot:
 
             cr.new_path()
 
-        if any (
+        if any(
             t in problem_types
-            for t in
-            (
-            "nothing",
-            "node_count",
-            "node_incompatibility",
-            "wrong_structure",
-            )
+            for t in {
+                "nothing",
+                "node_count",
+                "node_incompatibility",
+                "wrong_structure",
+            }
         ):
             cr.set_line_cap(cairo.LINE_CAP_ROUND)
 
@@ -755,7 +763,7 @@ class InterpolatablePlot:
                 if which == 0 or not problem.get("reversed"):
                     color = self.start_point_color
                 else:
-                    color = self.reversed_start_point_color
+                    color = self.wrong_start_point_color
                 first_pt = None
                 i = 0
                 cr.save()
@@ -801,6 +809,28 @@ class InterpolatablePlot:
 
                 cr.restore()
 
+            if problem["type"] == "kink":
+                idx = problem.get("contour")
+                perContourPen = PerContourOrComponentPen(
+                    RecordingPen, glyphset=glyphset
+                )
+                recording.replay(perContourPen)
+                points = SimpleRecordingPointPen()
+                converter = SegmentToPointPen(points, False)
+                perContourPen.value[idx if matching is None else matching[idx]].replay(
+                    converter
+                )
+                targetPoint = points.value[problem["value"]][0]
+                cr.save()
+                cr.translate(*targetPoint)
+                cr.scale(1 / scale, 1 / scale)
+                self.draw_circle(
+                    cr,
+                    diameter=self.kink_point_size,
+                    color=self.kink_point_color,
+                )
+                cr.restore()
+
         return scale
 
     def draw_circle(self, cr, *, x=0, y=0, color=(0, 0, 0), diameter=10):
@@ -809,13 +839,17 @@ class InterpolatablePlot:
         cr.set_line_cap(cairo.LINE_CAP_ROUND)
         cr.move_to(x, y)
         cr.line_to(x, y)
-        cr.set_source_rgb(*color)
+        if len(color) == 3:
+            color = color + (1,)
+        cr.set_source_rgba(*color)
         cr.stroke()
         cr.restore()
 
     def draw_arrow(self, cr, *, x=0, y=0, color=(0, 0, 0)):
         cr.save()
-        cr.set_source_rgb(*color)
+        if len(color) == 3:
+            color = color + (1,)
+        cr.set_source_rgba(*color)
         cr.translate(self.start_arrow_length + x, y)
         cr.move_to(0, 0)
         cr.line_to(

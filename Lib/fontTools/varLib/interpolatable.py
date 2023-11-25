@@ -801,6 +801,112 @@ def test_gen(
                             )
 
             #
+            # "kink" detector
+            #
+            m1 = allContourPoints[m1idx]
+            m0 = allContourPoints[m0idx]
+
+            # If contour-order is wrong, adjust it
+            if matchings[m1idx] is not None and m1:  # m1 is empty for composite glyphs
+                m1 = [m1[i] for i in matchings[m1idx]]
+
+            for ix, (contour0, contour1) in enumerate(zip(m0, m1)):
+                if len(contour0) == 0 or len(contour0) != len(contour1):
+                    # We already reported this; or nothing to do; or not compatible
+                    # after reordering above.
+                    continue
+
+                # Walk the contour, keeping track of three consecutive points, with
+                # middle one being an on-curve. If the three are co-linear then
+                # check for kinky-ness.
+                for i in range(len(contour0)):
+                    pt0 = contour0[i]
+                    pt1 = contour1[i]
+                    if not pt0[1] or not pt1[1]:
+                        # Skip off-curves
+                        continue
+                    pt0_prev = contour0[i - 1]
+                    pt1_prev = contour1[i - 1]
+                    pt0_next = contour0[(i + 1) % len(contour0)]
+                    pt1_next = contour1[(i + 1) % len(contour1)]
+
+                    if pt0_prev[1] and pt1_prev[1]:
+                        # At least one off-curve is required
+                        continue
+                    if pt0_prev[1] and pt1_prev[1]:
+                        # At least one off-curve is required
+                        continue
+
+                    pt0 = complex(*pt0[0])
+                    pt1 = complex(*pt1[0])
+                    pt0_prev = complex(*pt0_prev[0])
+                    pt1_prev = complex(*pt1_prev[0])
+                    pt0_next = complex(*pt0_next[0])
+                    pt1_next = complex(*pt1_next[0])
+
+                    min_length = 10 # XXX This has to be UPEM dependent :-(
+                    if (
+                        abs(pt0 - pt0_next) < min_length
+                        or abs(pt1 - pt1_next) < min_length
+                        or abs(pt0 - pt0_prev) < min_length
+                        or abs(pt1 - pt1_prev) < min_length
+                    ):
+                        continue
+
+                    # We have three consecutive points. Check whether
+                    # they are colinear.
+                    cross0 = (pt0 - pt0_prev).real * (pt0_next - pt0).imag - (
+                        pt0 - pt0_prev
+                    ).imag * (pt0_next - pt0).real
+                    cross1 = (pt1 - pt1_prev).real * (pt1_next - pt1).imag - (
+                        pt1 - pt1_prev
+                    ).imag * (pt1_next - pt1).real
+                    if not cross0 or not cross1:
+                        continue
+
+                    mult = 2
+                    t = (1 - tolerance) * mult  # ~sin(radian(6)) for tolerance 0.95
+
+                    cross0 /= abs(pt0 - pt0_prev) * abs(pt0_next - pt0)
+                    cross1 /= abs(pt1 - pt1_prev) * abs(pt1_next - pt1)
+                    # print("cross", abs(cross0), abs(cross1))
+                    if abs(cross0) > t or abs(cross1) > t:
+                        # Not colinear / smooth.
+                        continue
+
+                    mid = (pt0 + pt1) / 2
+                    mid_prev = (pt0_prev + pt1_prev) / 2
+                    mid_next = (pt0_next + pt1_next) / 2
+
+                    cross_mid = (mid - mid_prev).real * (mid_next - mid).imag - (
+                        mid - mid_prev
+                    ).imag * (mid_next - mid).real
+                    if not cross_mid:
+                        continue
+                    cross_mid /= abs(mid - mid_prev) * abs(mid_next - mid)
+                    # print("mid_cross", abs(cross_mid))
+                    if abs(cross_mid) <= t:
+                        # Smooth / not a kink.
+                        continue
+
+                    this_tolerance = 1 - abs(cross_mid) / mult
+
+                    showed = True
+                    yield (
+                        glyph_name,
+                        {
+                            "type": "kink",
+                            "contour": ix,
+                            "master_1": names[m0idx],
+                            "master_2": names[m1idx],
+                            "master_1_idx": m0idx,
+                            "master_2_idx": m1idx,
+                            "value": i,
+                            "tolerance": this_tolerance,
+                        },
+                    )
+
+            #
             # --show-all
             #
 
@@ -1204,6 +1310,17 @@ def main(args=None):
                             "    Contour %d structures differ: %s, %s"
                             % (
                                 p["contour"],
+                                p["master_1"],
+                                p["master_2"],
+                            ),
+                            file=f,
+                        )
+                    elif p["type"] == "kink":
+                        print(
+                            "    Contour %d has a kink at %s: %s, %s"
+                            % (
+                                p["contour"],
+                                p["value"],
                                 p["master_1"],
                                 p["master_2"],
                             ),
