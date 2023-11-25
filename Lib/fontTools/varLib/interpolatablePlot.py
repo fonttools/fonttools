@@ -297,7 +297,7 @@ class InterpolatablePlot:
         self.draw_label("Legend:", x=x, y=y, width=width, bold=True)
         y -= self.pad + self.line_height
 
-    def add_problems(self, problems, *, show_tolerance=True):
+    def add_problems(self, problems, *, show_tolerance=True, show_page_number=True):
         for glyph, glyph_problems in problems.items():
             last_masters = None
             current_glyph_problems = []
@@ -321,11 +321,16 @@ class InterpolatablePlot:
                 current_glyph_problems.append(p)
             if current_glyph_problems:
                 self.add_problem(
-                    glyph, current_glyph_problems, show_tolerance=show_tolerance
+                    glyph,
+                    current_glyph_problems,
+                    show_tolerance=show_tolerance,
+                    show_page_number=show_page_number,
                 )
                 self.show_page()
 
-    def add_problem(self, glyphname, problems, *, show_tolerance=True):
+    def add_problem(
+        self, glyphname, problems, *, show_tolerance=True, show_page_number=True
+    ):
         if type(problems) not in (list, tuple):
             problems = [problems]
 
@@ -523,14 +528,15 @@ class InterpolatablePlot:
                 self.draw_shrug(x=x, y=y)
             y += self.height + self.pad
 
-            self.draw_label(
-                str(self.page_number),
-                x=0,
-                y=self.total_height() - self.line_height,
-                width=self.total_width(),
-                color=self.head_color,
-                align=0.5,
-            )
+            if show_page_number:
+                self.draw_label(
+                    str(self.page_number),
+                    x=0,
+                    y=self.total_height() - self.line_height,
+                    width=self.total_width(),
+                    color=self.head_color,
+                    align=0.5,
+                )
 
     def draw_label(
         self,
