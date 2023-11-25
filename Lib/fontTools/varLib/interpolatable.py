@@ -1226,7 +1226,7 @@ def main(args=None):
                 svg.add_title_page(original_args_inputs)
                 for glyph, glyph_problems in problems.items():
                     glyph_starts[len(svgs)] = glyph
-                    svg.add_problems({glyph: glyph_problems})
+                    svg.add_problems({glyph: glyph_problems}, show_tolerance=False)
                 if not problems and not args.quiet:
                     svg.draw_cupcake()
 

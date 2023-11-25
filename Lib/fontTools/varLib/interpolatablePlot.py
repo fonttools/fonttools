@@ -293,7 +293,7 @@ class InterpolatablePlot:
         self.draw_label("Legend:", x=x, y=y, width=width, bold=True)
         y -= self.pad + self.line_height
 
-    def add_problems(self, problems):
+    def add_problems(self, problems, *, show_tolerance=True):
         for glyph, glyph_problems in problems.items():
             last_masters = None
             current_glyph_problems = []
@@ -308,16 +308,20 @@ class InterpolatablePlot:
                     continue
                 # Flush
                 if current_glyph_problems:
-                    self.add_problem(glyph, current_glyph_problems)
+                    self.add_problem(
+                        glyph, current_glyph_problems, show_tolerance=show_tolerance
+                    )
                     self.show_page()
                     current_glyph_problems = []
                 last_masters = masters
                 current_glyph_problems.append(p)
             if current_glyph_problems:
-                self.add_problem(glyph, current_glyph_problems)
+                self.add_problem(
+                    glyph, current_glyph_problems, show_tolerance=show_tolerance
+                )
                 self.show_page()
 
-    def add_problem(self, glyphname, problems):
+    def add_problem(self, glyphname, problems, *, show_tolerance=True):
         if type(problems) not in (list, tuple):
             problems = [problems]
 
@@ -355,7 +359,7 @@ class InterpolatablePlot:
             bold=True,
         )
         tolerance = min(p.get("tolerance", 1) for p in problems)
-        if tolerance < 1:
+        if tolerance < 1 and show_tolerance:
             self.draw_label(
                 "tolerance: %.2f" % tolerance,
                 x=x,
