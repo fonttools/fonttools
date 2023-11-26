@@ -664,9 +664,11 @@ class InterpolatablePlot:
 
         recording = RecordingPen()
         glyph.draw(recording)
+        decomposedRecording = DecomposingRecordingPen(glyphset)
+        glyph.draw(decomposedRecording)
 
         boundsPen = ControlBoundsPen(glyphset)
-        recording.replay(boundsPen)
+        decomposedRecording.replay(boundsPen)
         bounds = boundsPen.bounds
         if bounds is None:
             bounds = (0, 0, 0, 0)
@@ -705,7 +707,7 @@ class InterpolatablePlot:
 
         if self.fill_color or self.stroke_color:
             pen = CairoPen(glyphset, cr)
-            recording.replay(pen)
+            decomposedRecording.replay(pen)
 
             if self.fill_color and problem_type != "open_path":
                 cr.set_source_rgb(*self.fill_color)
@@ -730,7 +732,7 @@ class InterpolatablePlot:
             cr.set_line_cap(cairo.LINE_CAP_ROUND)
 
             # Oncurve nodes
-            for segment, args in recording.value:
+            for segment, args in decomposedRecording.value:
                 if not args:
                     continue
                 x, y = args[-1]
@@ -741,7 +743,9 @@ class InterpolatablePlot:
             cr.stroke()
 
             # Offcurve nodes
-            for segment, args in recording.value:
+            for segment, args in decomposedRecording.value:
+                if not args:
+                    continue
                 for x, y in args[:-1]:
                     cr.move_to(x, y)
                     cr.line_to(x, y)
@@ -750,7 +754,7 @@ class InterpolatablePlot:
             cr.stroke()
 
             # Handles
-            for segment, args in recording.value:
+            for segment, args in decomposedRecording.value:
                 if not args:
                     pass
                 elif segment in ("moveTo", "lineTo"):
@@ -768,7 +772,7 @@ class InterpolatablePlot:
                     cr.new_sub_path()
                     cr.move_to(*args[-1])
                 else:
-                    assert False
+                    continue
 
             cr.set_source_rgb(*self.handle_color)
             cr.set_line_width(self.handle_width / scale)
@@ -800,7 +804,7 @@ class InterpolatablePlot:
                     perContourPen = PerContourOrComponentPen(
                         RecordingPen, glyphset=glyphset
                     )
-                    recording.replay(perContourPen)
+                    decomposedRecording.replay(perContourPen)
                     points = SimpleRecordingPointPen()
                     converter = SegmentToPointPen(points, False)
                     perContourPen.value[
@@ -825,7 +829,7 @@ class InterpolatablePlot:
                 first_pt = None
                 i = 0
                 cr.save()
-                for segment, args in recording.value:
+                for segment, args in decomposedRecording.value:
                     if segment == "moveTo":
                         first_pt = args[0]
                         continue
@@ -872,7 +876,7 @@ class InterpolatablePlot:
                 perContourPen = PerContourOrComponentPen(
                     RecordingPen, glyphset=glyphset
                 )
-                recording.replay(perContourPen)
+                decomposedRecording.replay(perContourPen)
                 points = SimpleRecordingPointPen()
                 converter = SegmentToPointPen(points, False)
                 perContourPen.value[idx if matching is None else matching[idx]].replay(
