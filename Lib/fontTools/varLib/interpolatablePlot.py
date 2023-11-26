@@ -575,15 +575,15 @@ class InterpolatablePlot:
                 self.draw_shrug(x=x, y=y)
             y += self.height + self.pad
 
-            if show_page_number:
-                self.draw_label(
-                    str(self.page_number),
-                    x=0,
-                    y=self.total_height() - self.line_height,
-                    width=self.total_width(),
-                    color=self.head_color,
-                    align=0.5,
-                )
+        if show_page_number:
+            self.draw_label(
+                str(self.page_number),
+                x=0,
+                y=self.total_height() - self.line_height,
+                width=self.total_width(),
+                color=self.head_color,
+                align=0.5,
+            )
 
     def draw_label(
         self,
