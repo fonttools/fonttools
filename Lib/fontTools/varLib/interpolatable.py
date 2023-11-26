@@ -339,7 +339,7 @@ def test_gen(
     assert 0 <= tolerance <= 1
     if kinkiness >= 10:
         kinkiness *= 0.01
-    assert 0 < kinkiness
+    assert 0 <= kinkiness
 
     if names is None:
         names = glyphsets
@@ -894,7 +894,7 @@ def test_gen(
                         continue
 
                     # print("mid_cross", abs(cross_mid))
-                    if abs(cross_mid) <= t / (tolerance * kinkiness):
+                    if abs(cross_mid) * (tolerance * kinkiness) <= t:
                         # Smooth / not a kink.
                         continue
 
@@ -1212,7 +1212,7 @@ def main(args=None):
     # Normalize locations
     locations = [normalizeLocation(loc, axis_triples) for loc in locations]
     tolerance = args.tolerance or DEFAULT_TOLERANCE
-    kinkiness = args.kinkiness or DEFAULT_KINKINESS
+    kinkiness = args.kinkiness if args.kinkiness is not None else DEFAULT_KINKINESS
 
     try:
         log.info("Running on %d glyphsets", len(glyphsets))
