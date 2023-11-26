@@ -26,7 +26,7 @@ log = logging.getLogger("fontTools.varLib.interpolatable")
 
 DEFAULT_TOLERANCE = 0.95
 DEFAULT_KINKINESS = 0.5
-DEFAULT_KINKINESS_LENGTH = 0.001  # ratio of UPEM
+DEFAULT_KINKINESS_LENGTH = 0.003  # ratio of UPEM
 DEFAULT_UPEM = 1000
 
 
@@ -340,7 +340,6 @@ def test_gen(
     if kinkiness >= 10:
         kinkiness *= 0.01
     assert 0 <= kinkiness
-    r_diff_threshold = upem * DEFAULT_KINKINESS_LENGTH / kinkiness
 
     if names is None:
         names = glyphsets
@@ -878,10 +877,11 @@ def test_gen(
                         # Sharp corner.
                         continue
 
-                    r0 = sqrt(abs(d0_prev) * abs(d1_next))
-                    r1 = sqrt(abs(d1_prev) * abs(d0_next))
+                    # Fine, if handle ratios are similar...
+                    r0 = abs(d0_prev) / (abs(d0_prev) + abs(d0_next))
+                    r1 = abs(d1_prev) / (abs(d1_prev) + abs(d1_next))
                     r_diff = abs(r0 - r1)
-                    if r_diff < r_diff_threshold:
+                    if abs(r_diff) < t:
                         # Smooth enough.
                         continue
 
@@ -898,12 +898,25 @@ def test_gen(
                     except ZeroDivisionError:
                         continue
 
+                    # ...or if the angles are similar.
                     if abs(sin_mid) * (tolerance * kinkiness) <= t:
                         # Smooth enough.
                         continue
 
+                    # How visible is the kink?
+
+                    cross = sin_mid * abs(mid_d0) * abs(mid_d1)
+                    arc_len = abs(mid_d0 + mid_d1)
+                    deviation = abs(cross / arc_len)
+                    if deviation < upem * DEFAULT_KINKINESS_LENGTH:
+                        continue
+                    deviation_ratio = deviation / arc_len
+                    if deviation_ratio > t:
+                        continue
+
                     this_tolerance = t / (abs(sin_mid) * kinkiness)
 
+                    #print(deviation, deviation_ratio, sin_mid, r_diff, this_tolerance)
                     yield (
                         glyph_name,
                         {
