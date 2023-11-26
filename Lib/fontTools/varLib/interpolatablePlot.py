@@ -585,7 +585,13 @@ class InterpolatablePlot:
                 try:
                     midway_glyphset = LerpGlyphSet(overriding1, overriding2)
                     self.draw_glyph(
-                        midway_glyphset, glyphname, {"type": "fixed"}, None, x=x, y=y
+                        midway_glyphset,
+                        glyphname,
+                        {"type": "fixed"},
+                        None,
+                        x=x,
+                        y=y,
+                        scale=min(scales),
                     )
                 except ValueError:
                     self.draw_shrug(x=x, y=y)
