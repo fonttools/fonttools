@@ -916,7 +916,7 @@ def test_gen(
 
                     this_tolerance = t / (abs(sin_mid) * kinkiness)
 
-                    #print(deviation, deviation_ratio, sin_mid, r_diff, this_tolerance)
+                    # print(deviation, deviation_ratio, sin_mid, r_diff, this_tolerance)
                     yield (
                         glyph_name,
                         {
