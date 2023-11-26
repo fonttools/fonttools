@@ -859,12 +859,9 @@ def test_gen(
                     d1_next = pt1_next - pt1
 
                     min_length = upem * DEFAULT_MIN_KINK_LENGTH
-                    if (
-                        abs(d0_prev) < min_length
-                        and abs(d0_next) < min_length
-                        and abs(d1_prev) < min_length
-                        and abs(d1_next) < min_length
-                    ):
+                    if abs(d0_prev) < min_length and abs(d1_prev) < min_length:
+                        continue
+                    if abs(d0_next) < min_length and abs(d1_next) < min_length:
                         continue
 
                     cross0 = d0_prev.real * d0_next.imag - d0_prev.imag * d0_next.real
