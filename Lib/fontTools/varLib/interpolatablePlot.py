@@ -91,9 +91,10 @@ class InterpolatablePlot:
     start_point_color = (0, 0, 1)
     start_arrow_length = 20
     kink_point_size = 10
-    kink_point_color = (1, 0, 1, 0.5)
-    kink_circle_size = 20
-    kink_circle_color = (1, 0, 1, 0.1)
+    kink_point_color = (1, 0, 1, 0.7)
+    kink_circle_size = 25
+    kink_circle_stroke_width = 1.5
+    kink_circle_color = (1, 0, 1, 0.5)
     contour_colors = ((1, 0, 0), (0, 0, 1), (0, 1, 0), (1, 1, 0), (1, 0, 1), (0, 1, 1))
     contour_alpha = 0.5
     no_issues_label = "Your font's good! Have a cupcake..."
@@ -260,12 +261,13 @@ class InterpolatablePlot:
             x=xx,
             y=y + self.line_height * 0.5,
             diameter=self.kink_circle_size,
+            stroke_width=self.kink_circle_stroke_width,
             color=self.kink_circle_color,
         )
         y -= self.pad + self.line_height
 
         self.draw_label("Point causing kink in the contour", x=xxx, y=y, width=width)
-        self.draw_circle(
+        self.draw_dot(
             cr,
             x=xx,
             y=y + self.line_height * 0.5,
@@ -275,7 +277,7 @@ class InterpolatablePlot:
         y -= self.pad + self.line_height
 
         self.draw_label("Suggested new contour start point", x=xxx, y=y, width=width)
-        self.draw_circle(
+        self.draw_dot(
             cr,
             x=xx,
             y=y + self.line_height * 0.5,
@@ -304,7 +306,7 @@ class InterpolatablePlot:
             y=y,
             width=width,
         )
-        self.draw_circle(
+        self.draw_dot(
             cr,
             x=xx,
             y=y + self.line_height * 0.5,
@@ -814,7 +816,7 @@ class InterpolatablePlot:
                     cr.save()
                     cr.translate(*targetPoint)
                     cr.scale(1 / scale, 1 / scale)
-                    self.draw_circle(
+                    self.draw_dot(
                         cr,
                         diameter=self.corrected_start_point_size,
                         color=self.corrected_start_point_color,
@@ -856,7 +858,7 @@ class InterpolatablePlot:
                         else:
                             # Draw circle
                             cr.scale(1 / scale, 1 / scale)
-                            self.draw_circle(
+                            self.draw_dot(
                                 cr,
                                 diameter=self.corrected_start_point_size,
                                 color=color,
@@ -886,25 +888,42 @@ class InterpolatablePlot:
                 cr.save()
                 cr.translate(*targetPoint)
                 cr.scale(1 / scale, 1 / scale)
-                self.draw_circle(
-                    cr,
-                    diameter=self.kink_point_size
-                    if not midway
-                    else self.kink_circle_size,
-                    color=self.kink_point_color
-                    if not midway
-                    else self.kink_circle_color,
-                )
+                if midway:
+                    self.draw_circle(
+                        cr,
+                        diameter=self.kink_circle_size,
+                        stroke_width=self.kink_circle_stroke_width,
+                        color=self.kink_circle_color,
+                    )
+                else:
+                    self.draw_dot(
+                        cr,
+                        diameter=self.kink_point_size,
+                        color=self.kink_point_color,
+                    )
                 cr.restore()
 
         return scale
 
-    def draw_circle(self, cr, *, x=0, y=0, color=(0, 0, 0), diameter=10):
+    def draw_dot(self, cr, *, x=0, y=0, color=(0, 0, 0), diameter=10):
         cr.save()
         cr.set_line_width(diameter)
         cr.set_line_cap(cairo.LINE_CAP_ROUND)
         cr.move_to(x, y)
         cr.line_to(x, y)
+        if len(color) == 3:
+            color = color + (1,)
+        cr.set_source_rgba(*color)
+        cr.stroke()
+        cr.restore()
+
+    def draw_circle(
+        self, cr, *, x=0, y=0, color=(0, 0, 0), diameter=10, stroke_width=1
+    ):
+        cr.save()
+        cr.set_line_width(stroke_width)
+        cr.set_line_cap(cairo.LINE_CAP_SQUARE)
+        cr.arc(x, y, diameter / 2, 0, 2 * math.pi)
         if len(color) == 3:
             color = color + (1,)
         cr.set_source_rgba(*color)
