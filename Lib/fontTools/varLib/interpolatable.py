@@ -27,7 +27,7 @@ log = logging.getLogger("fontTools.varLib.interpolatable")
 DEFAULT_TOLERANCE = 0.95
 DEFAULT_KINKINESS = 0.5
 DEFAULT_UPEM = 1000
-DEFAULT_MIN_KINK_LENGTH = 0.01
+DEFAULT_MIN_KINK_LENGTH = 0.005
 
 
 def _rot_list(l, k):
@@ -861,14 +861,16 @@ def test_gen(
                     cross1 = (pt1 - pt1_prev).real * (pt1_next - pt1).imag - (
                         pt1 - pt1_prev
                     ).imag * (pt1_next - pt1).real
-                    if not cross0 or not cross1:
-                        continue
 
                     assert 0 < kinkiness
                     t = 0.1  # ~sin(radian(6)) for tolerance 0.95
 
-                    cross0 /= abs(pt0 - pt0_prev) * abs(pt0_next - pt0)
-                    cross1 /= abs(pt1 - pt1_prev) * abs(pt1_next - pt1)
+                    try:
+                        cross0 /= abs(pt0 - pt0_prev) * abs(pt0_next - pt0)
+                        cross1 /= abs(pt1 - pt1_prev) * abs(pt1_next - pt1)
+                    except ZeroDivisionError:
+                        continue
+
                     # print("cross", abs(cross0), abs(cross1))
                     if abs(cross0) > t or abs(cross1) > t:
                         # Not colinear / not smooth.
@@ -881,9 +883,12 @@ def test_gen(
                     cross_mid = (mid - mid_prev).real * (mid_next - mid).imag - (
                         mid - mid_prev
                     ).imag * (mid_next - mid).real
-                    if not cross_mid:
+
+                    try:
+                        cross_mid /= abs(mid - mid_prev) * abs(mid_next - mid)
+                    except ZeroDivisionError:
                         continue
-                    cross_mid /= abs(mid - mid_prev) * abs(mid_next - mid)
+
                     # print("mid_cross", abs(cross_mid))
                     if abs(cross_mid) <= t / (tolerance * kinkiness):
                         # Smooth / not a kink.
