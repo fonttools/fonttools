@@ -92,6 +92,8 @@ class InterpolatablePlot:
     start_arrow_length = 20
     kink_point_size = 10
     kink_point_color = (1, 0, 1, 0.5)
+    kink_circle_size = 20
+    kink_circle_color = (1, 0, 1, 0.1)
     contour_colors = ((1, 0, 0), (0, 0, 1), (0, 1, 0), (1, 1, 0), (1, 0, 1), (0, 1, 1))
     contour_alpha = 0.5
     no_issues_label = "Your font's good! Have a cupcake..."
@@ -250,6 +252,16 @@ class InterpolatablePlot:
         cr.stroke_preserve()
         cr.set_source_rgba(*self.contour_colors[0], self.contour_alpha)
         cr.fill()
+        y -= self.pad + self.line_height
+
+        self.draw_label("Kink artifact", x=xxx, y=y, width=width)
+        self.draw_circle(
+            cr,
+            x=xx,
+            y=y + self.line_height * 0.5,
+            diameter=self.kink_circle_size,
+            color=self.kink_circle_color,
+        )
         y -= self.pad + self.line_height
 
         self.draw_label("Point causing kink in the contour", x=xxx, y=y, width=width)
@@ -475,12 +487,17 @@ class InterpolatablePlot:
             self.draw_glyph(
                 midway_glyphset,
                 glyphname,
-                {"type": "midway"},
+                [{"type": "midway"}] + [p for p in problems if p["type"] == "kink"],
                 None,
                 x=x,
                 y=y,
                 scale=min(scales),
             )
+
+            if "kink" in problem_types:
+                pen = PerContourOrComponentPen(RecordingPen)
+                midway_glyphset[glyphname].draw(pen)
+
             y += self.height + self.pad
 
             # Draw the proposed fix
@@ -632,6 +649,7 @@ class InterpolatablePlot:
         if type(problems) not in (list, tuple):
             problems = [problems]
 
+        midway = any(problem["type"] == "midway" for problem in problems)
         problem_type = problems[0]["type"]
         problem_types = set(problem["type"] for problem in problems)
         if not all(pt == problem_type for pt in problem_types):
@@ -860,8 +878,12 @@ class InterpolatablePlot:
                 cr.scale(1 / scale, 1 / scale)
                 self.draw_circle(
                     cr,
-                    diameter=self.kink_point_size,
-                    color=self.kink_point_color,
+                    diameter=self.kink_point_size
+                    if not midway
+                    else self.kink_circle_size,
+                    color=self.kink_point_color
+                    if not midway
+                    else self.kink_circle_color,
                 )
                 cr.restore()
 
