@@ -862,16 +862,17 @@ def test_gen(
 
                     # We have three consecutive points. Check whether
                     # they are colinear.
-                    cross0 = (pt0 - pt0_prev).real * (pt0_next - pt0).imag - (
-                        pt0 - pt0_prev
-                    ).imag * (pt0_next - pt0).real
-                    cross1 = (pt1 - pt1_prev).real * (pt1_next - pt1).imag - (
-                        pt1 - pt1_prev
-                    ).imag * (pt1_next - pt1).real
+                    d0_prev = pt0 - pt0_prev
+                    d0_next = pt1_next - pt1
+                    d1_prev = pt1 - pt1_prev
+                    d1_next = pt1_next - pt1
+
+                    cross0 = d0_prev.real * d0_next.imag - d0_prev.imag * d0_next.real
+                    cross1 = d1_prev.real * d1_next.imag - d1_prev.imag * d1_next.real
 
                     try:
-                        cross0 /= abs(pt0 - pt0_prev) * abs(pt0_next - pt0)
-                        cross1 /= abs(pt1 - pt1_prev) * abs(pt1_next - pt1)
+                        cross0 /= abs(d0_prev) * abs(d0_next)
+                        cross1 /= abs(d1_prev) * abs(d1_next)
                     except ZeroDivisionError:
                         continue
 
