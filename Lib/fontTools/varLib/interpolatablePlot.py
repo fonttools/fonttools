@@ -483,97 +483,96 @@ class InterpolatablePlot:
             )
             y += self.height + self.pad
 
-            # Draw the fixed mid-way of the two masters
+            # Draw the proposed fix
 
             self.draw_label("proposed fix", x=x, y=y, color=self.head_color, align=0.5)
             y += self.line_height + self.pad
 
             if problem_type in ("wrong_structure", "kink"):
                 self.draw_shrug(x=x, y=y)
-                return
-
-            overriding1 = OverridingDict(glyphset1)
-            overriding2 = OverridingDict(glyphset2)
-            perContourPen1 = PerContourOrComponentPen(
-                RecordingPen, glyphset=overriding1
-            )
-            perContourPen2 = PerContourOrComponentPen(
-                RecordingPen, glyphset=overriding2
-            )
-            glyphset1[glyphname].draw(perContourPen1)
-            glyphset2[glyphname].draw(perContourPen2)
-
-            for problem in problems:
-                if problem["type"] == "contour_order":
-                    fixed_contours = [
-                        perContourPen2.value[i] for i in problems[0]["value_2"]
-                    ]
-                    perContourPen2.value = fixed_contours
-
-            for problem in problems:
-                if problem["type"] == "wrong_start_point":
-                    # Save the wrong contours
-                    wrongContour1 = perContourPen1.value[problem["contour"]]
-                    wrongContour2 = perContourPen2.value[problem["contour"]]
-
-                    # Convert the wrong contours to point pens
-                    points1 = RecordingPointPen()
-                    converter = SegmentToPointPen(points1, False)
-                    wrongContour1.replay(converter)
-                    points2 = RecordingPointPen()
-                    converter = SegmentToPointPen(points2, False)
-                    wrongContour2.replay(converter)
-
-                    proposed_start = problem["value_2"]
-
-                    # See if we need reversing; fragile but worth a try
-                    if problem["reversed"]:
-                        new_points2 = RecordingPointPen()
-                        reversedPen = ReverseContourPointPen(new_points2)
-                        points2.replay(reversedPen)
-                        points2 = new_points2
-                        proposed_start = len(points2.value) - 2 - proposed_start
-
-                    # Rotate points2 so that the first point is the same as in points1
-                    beginPath = points2.value[:1]
-                    endPath = points2.value[-1:]
-                    pts = points2.value[1:-1]
-                    pts = pts[proposed_start:] + pts[:proposed_start]
-                    points2.value = beginPath + pts + endPath
-
-                    # Convert the point pens back to segment pens
-                    segment1 = RecordingPen()
-                    converter = PointToSegmentPen(segment1, True)
-                    points1.replay(converter)
-                    segment2 = RecordingPen()
-                    converter = PointToSegmentPen(segment2, True)
-                    points2.replay(converter)
-
-                    # Replace the wrong contours
-                    wrongContour1.value = segment1.value
-                    wrongContour2.value = segment2.value
-
-            # Assemble
-            fixed1 = RecordingPen()
-            fixed2 = RecordingPen()
-            for contour in perContourPen1.value:
-                fixed1.value.extend(contour.value)
-            for contour in perContourPen2.value:
-                fixed2.value.extend(contour.value)
-            fixed1.draw = fixed1.replay
-            fixed2.draw = fixed2.replay
-
-            overriding1[glyphname] = fixed1
-            overriding2[glyphname] = fixed2
-
-            try:
-                midway_glyphset = LerpGlyphSet(overriding1, overriding2)
-                self.draw_glyph(
-                    midway_glyphset, glyphname, {"type": "fixed"}, None, x=x, y=y
+            else:
+                overriding1 = OverridingDict(glyphset1)
+                overriding2 = OverridingDict(glyphset2)
+                perContourPen1 = PerContourOrComponentPen(
+                    RecordingPen, glyphset=overriding1
                 )
-            except ValueError:
-                self.draw_shrug(x=x, y=y)
-            y += self.height + self.pad
+                perContourPen2 = PerContourOrComponentPen(
+                    RecordingPen, glyphset=overriding2
+                )
+                glyphset1[glyphname].draw(perContourPen1)
+                glyphset2[glyphname].draw(perContourPen2)
+
+                for problem in problems:
+                    if problem["type"] == "contour_order":
+                        fixed_contours = [
+                            perContourPen2.value[i] for i in problems[0]["value_2"]
+                        ]
+                        perContourPen2.value = fixed_contours
+
+                for problem in problems:
+                    if problem["type"] == "wrong_start_point":
+                        # Save the wrong contours
+                        wrongContour1 = perContourPen1.value[problem["contour"]]
+                        wrongContour2 = perContourPen2.value[problem["contour"]]
+
+                        # Convert the wrong contours to point pens
+                        points1 = RecordingPointPen()
+                        converter = SegmentToPointPen(points1, False)
+                        wrongContour1.replay(converter)
+                        points2 = RecordingPointPen()
+                        converter = SegmentToPointPen(points2, False)
+                        wrongContour2.replay(converter)
+
+                        proposed_start = problem["value_2"]
+
+                        # See if we need reversing; fragile but worth a try
+                        if problem["reversed"]:
+                            new_points2 = RecordingPointPen()
+                            reversedPen = ReverseContourPointPen(new_points2)
+                            points2.replay(reversedPen)
+                            points2 = new_points2
+                            proposed_start = len(points2.value) - 2 - proposed_start
+
+                        # Rotate points2 so that the first point is the same as in points1
+                        beginPath = points2.value[:1]
+                        endPath = points2.value[-1:]
+                        pts = points2.value[1:-1]
+                        pts = pts[proposed_start:] + pts[:proposed_start]
+                        points2.value = beginPath + pts + endPath
+
+                        # Convert the point pens back to segment pens
+                        segment1 = RecordingPen()
+                        converter = PointToSegmentPen(segment1, True)
+                        points1.replay(converter)
+                        segment2 = RecordingPen()
+                        converter = PointToSegmentPen(segment2, True)
+                        points2.replay(converter)
+
+                        # Replace the wrong contours
+                        wrongContour1.value = segment1.value
+                        wrongContour2.value = segment2.value
+
+                # Assemble
+                fixed1 = RecordingPen()
+                fixed2 = RecordingPen()
+                for contour in perContourPen1.value:
+                    fixed1.value.extend(contour.value)
+                for contour in perContourPen2.value:
+                    fixed2.value.extend(contour.value)
+                fixed1.draw = fixed1.replay
+                fixed2.draw = fixed2.replay
+
+                overriding1[glyphname] = fixed1
+                overriding2[glyphname] = fixed2
+
+                try:
+                    midway_glyphset = LerpGlyphSet(overriding1, overriding2)
+                    self.draw_glyph(
+                        midway_glyphset, glyphname, {"type": "fixed"}, None, x=x, y=y
+                    )
+                except ValueError:
+                    self.draw_shrug(x=x, y=y)
+                y += self.height + self.pad
 
         if show_page_number:
             self.draw_label(
