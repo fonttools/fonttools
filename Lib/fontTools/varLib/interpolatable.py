@@ -786,7 +786,7 @@ def test_gen(
                         )
                         identity_cost = sum(graph[i][i] for i in range(len(graph)))
 
-                        if matching_cost < identity_cost / 4:  # Heuristic
+                        if matching_cost < identity_cost / 5:  # Heuristic
                             # print(matching_cost, identity_cost, matching)
                             yield (
                                 glyph_name,
