@@ -26,8 +26,8 @@ log = logging.getLogger("fontTools.varLib.interpolatable")
 
 DEFAULT_TOLERANCE = 0.95
 DEFAULT_KINKINESS = 0.5
+DEFAULT_KINKINESS_LENGTH = 0.01  # ratio of UPEM
 DEFAULT_UPEM = 1000
-DEFAULT_MIN_KINK_LENGTH = 0.01
 
 
 def _rot_list(l, k):
@@ -340,6 +340,7 @@ def test_gen(
     if kinkiness >= 10:
         kinkiness *= 0.01
     assert 0 <= kinkiness
+    r_diff_threshold = upem * DEFAULT_KINKINESS_LENGTH / kinkiness
 
     if names is None:
         names = glyphsets
@@ -858,12 +859,6 @@ def test_gen(
                     d1_prev = pt1 - pt1_prev
                     d1_next = pt1_next - pt1
 
-                    min_length = upem * DEFAULT_MIN_KINK_LENGTH
-                    if abs(d0_prev) < min_length and abs(d1_prev) < min_length:
-                        continue
-                    if abs(d0_next) < min_length and abs(d1_next) < min_length:
-                        continue
-
                     cross0 = d0_prev.real * d0_next.imag - d0_prev.imag * d0_next.real
                     cross1 = d1_prev.real * d1_next.imag - d1_prev.imag * d1_next.real
 
@@ -881,6 +876,14 @@ def test_gen(
                     dot0 = d0_prev.real * d0_next.real + d0_prev.imag * d0_next.imag
                     dot1 = d1_prev.real * d1_next.real + d1_prev.imag * d1_next.imag
                     if dot0 < 0 or dot1 < 0:
+                        # Sharp corner.
+                        continue
+
+                    r0 = sqrt(abs(d0_prev) * abs(d1_next))
+                    r1 = sqrt(abs(d1_prev) * abs(d0_next))
+                    r_diff = abs(r0 - r1)
+                    if r_diff < r_diff_threshold:
+                        # Smooth enough.
                         continue
 
                     mid = (pt0 + pt1) / 2
@@ -896,7 +899,6 @@ def test_gen(
                     except ZeroDivisionError:
                         continue
 
-                    # print("mid_cross", abs(cross_mid))
                     if abs(cross_mid) * (tolerance * kinkiness) <= t:
                         # Smooth / not a kink.
                         continue
