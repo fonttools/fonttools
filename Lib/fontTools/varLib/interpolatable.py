@@ -854,7 +854,7 @@ def test_gen(
                     # We have three consecutive points. Check whether
                     # they are colinear.
                     d0_prev = pt0 - pt0_prev
-                    d0_next = pt1_next - pt1
+                    d0_next = pt0_next - pt0
                     d1_prev = pt1 - pt1_prev
                     d1_next = pt1_next - pt1
 
