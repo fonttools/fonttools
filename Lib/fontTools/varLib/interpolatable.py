@@ -25,7 +25,7 @@ import logging
 log = logging.getLogger("fontTools.varLib.interpolatable")
 
 DEFAULT_TOLERANCE = 0.95
-DEFAULT_KINKINESS = 0.5
+DEFAULT_KINKINESS = 0.42
 DEFAULT_UPEM = 1000
 DEFAULT_MIN_KINK_LENGTH = 0.02
 
@@ -334,7 +334,12 @@ def test_gen(
     upem=DEFAULT_UPEM,
     show_all=False,
 ):
+    if tolerance > 10:
+        tolerance *= 0.01
     assert 0 <= tolerance <= 1
+    if kinkiness > 10:
+        kinkiness *= 0.01
+    assert 0 < kinkiness
 
     if names is None:
         names = glyphsets
@@ -810,7 +815,6 @@ def test_gen(
             if matchings[m1idx] is not None and m1:  # m1 is empty for composite glyphs
                 m1 = [m1[i] for i in matchings[m1idx]]
 
-            assert 0 < kinkiness
             t = 0.1  # ~sin(radian(6)) for tolerance 0.95
 
             for ix, (contour0, contour1) in enumerate(zip(m0, m1)):
