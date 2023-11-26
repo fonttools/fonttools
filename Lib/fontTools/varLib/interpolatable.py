@@ -25,6 +25,7 @@ import logging
 log = logging.getLogger("fontTools.varLib.interpolatable")
 
 DEFAULT_TOLERANCE = 0.95
+DEFAULT_KINKINESS = 1
 DEFAULT_UPEM = 1000
 DEFAULT_MIN_KINK_LENGTH = 0.01
 
@@ -329,7 +330,7 @@ def test_gen(
     *,
     locations=None,
     tolerance=DEFAULT_TOLERANCE,
-    kinkiness=0,
+    kinkiness=DEFAULT_KINKINESS,
     upem=DEFAULT_UPEM,
     show_all=False,
 ):
@@ -871,11 +872,8 @@ def test_gen(
                     if not cross0 or not cross1:
                         continue
 
-                    assert -1 <= kinkiness <= 1
-                    mult = 2 - kinkiness
-                    t = (
-                        1 - tolerance
-                    ) * mult  # ~sin(radian(6)) for tolerance 0.95 & kinkiness 0
+                    assert 0 < kinkiness
+                    t = .1 # ~sin(radian(6)) for tolerance 0.95
 
                     cross0 /= abs(pt0 - pt0_prev) * abs(pt0_next - pt0)
                     cross1 /= abs(pt1 - pt1_prev) * abs(pt1_next - pt1)
@@ -895,11 +893,11 @@ def test_gen(
                         continue
                     cross_mid /= abs(mid - mid_prev) * abs(mid_next - mid)
                     # print("mid_cross", abs(cross_mid))
-                    if abs(cross_mid) <= t:
+                    if abs(cross_mid) <= t / (tolerance * kinkiness):
                         # Smooth / not a kink.
                         continue
 
-                    this_tolerance = 1 - abs(cross_mid) / mult
+                    this_tolerance = t / (abs(cross_mid) * kinkiness)
 
                     showed = True
                     yield (
@@ -979,7 +977,7 @@ def main(args=None):
         "--kinkiness",
         action="store",
         type=float,
-        help="How aggressive report kinks. Between -1 and 1. Default 0",
+        help="How aggressively report kinks. Number around 1. Default %s" % DEFAULT_KINKINESS,
     )
     parser.add_argument(
         "--json",
@@ -1224,7 +1222,7 @@ def main(args=None):
             upem=upem,
             ignore_missing=args.ignore_missing,
             tolerance=args.tolerance or DEFAULT_TOLERANCE,
-            kinkiness=args.kinkiness or 0,
+            kinkiness=args.kinkiness or DEFAULT_KINKINESS,
             show_all=args.show_all,
         )
         problems = defaultdict(list)
