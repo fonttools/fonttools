@@ -456,8 +456,6 @@ def test_gen(
             if allNodeTypes[m0idx] is None:
                 continue
 
-            showed = False
-
             #
             # Basic compatibility checks
             #
@@ -465,7 +463,6 @@ def test_gen(
             m1 = allNodeTypes[m1idx]
             m0 = allNodeTypes[m0idx]
             if len(m0) != len(m1):
-                showed = True
                 yield (
                     glyph_name,
                     {
@@ -485,7 +482,6 @@ def test_gen(
                     if nodes1 == nodes2:
                         continue
                     if len(nodes1) != len(nodes2):
-                        showed = True
                         yield (
                             glyph_name,
                             {
@@ -502,7 +498,6 @@ def test_gen(
                         continue
                     for nodeIx, (n1, n2) in enumerate(zip(nodes1, nodes2)):
                         if n1 != n2:
-                            showed = True
                             yield (
                                 glyph_name,
                                 {
@@ -600,7 +595,6 @@ def test_gen(
                     if matching_cost < identity_cost * tolerance:
                         # print(matching_cost_control / identity_cost_control, matching_cost_green / identity_cost_green)
 
-                        showed = True
                         yield (
                             glyph_name,
                             {
@@ -738,7 +732,6 @@ def test_gen(
                             okay = True
 
                     if not okay:
-                        showed = True
                         yield (
                             glyph_name,
                             {
@@ -795,7 +788,6 @@ def test_gen(
 
                         if matching_cost < identity_cost / 8:  # Heuristic
                             # print(matching_cost, identity_cost, matching)
-                            showed = True
                             yield (
                                 glyph_name,
                                 {
@@ -899,7 +891,6 @@ def test_gen(
 
                     this_tolerance = t / (abs(cross_mid) * kinkiness)
 
-                    showed = True
                     yield (
                         glyph_name,
                         {
@@ -918,7 +909,7 @@ def test_gen(
             # --show-all
             #
 
-            if show_all and not showed:
+            if show_all:
                 yield (
                     glyph_name,
                     {
