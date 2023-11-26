@@ -881,6 +881,12 @@ def test_gen(
                         # Not colinear / not smooth.
                         continue
 
+                    # Check the mid-point is actually, well, in the middle.
+                    dot0 = d0_prev.real * d0_next.real + d0_prev.imag * d0_next.imag
+                    dot1 = d1_prev.real * d1_next.real + d1_prev.imag * d1_next.imag
+                    if dot0 < 0 or dot1 < 0:
+                        continue
+
                     mid = (pt0 + pt1) / 2
                     mid_prev = (pt0_prev + pt1_prev) / 2
                     mid_next = (pt0_next + pt1_next) / 2
