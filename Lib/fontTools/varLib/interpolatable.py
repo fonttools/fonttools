@@ -816,6 +816,9 @@ def test_gen(
                 m1 = [m1[i] for i in matchings[m1idx]]
 
             t = 0.1  # ~sin(radian(6)) for tolerance 0.95
+            deviation_threshold = (
+                upem * DEFAULT_KINKINESS_LENGTH * DEFAULT_KINKINESS / kinkiness
+            )
 
             for ix, (contour0, contour1) in enumerate(zip(m0, m1)):
                 if len(contour0) == 0 or len(contour0) != len(contour1):
@@ -908,7 +911,7 @@ def test_gen(
                     cross = sin_mid * abs(mid_d0) * abs(mid_d1)
                     arc_len = abs(mid_d0 + mid_d1)
                     deviation = abs(cross / arc_len)
-                    if deviation < upem * DEFAULT_KINKINESS_LENGTH:
+                    if deviation < deviation_threshold:
                         continue
                     deviation_ratio = deviation / arc_len
                     if deviation_ratio > t:
@@ -994,8 +997,7 @@ def main(args=None):
         "--kinkiness",
         action="store",
         type=float,
-        help="How aggressively report kinks. Number around 1. Default %s"
-        % DEFAULT_KINKINESS,
+        help="How aggressively report kinks. Default %s" % DEFAULT_KINKINESS,
     )
     parser.add_argument(
         "--json",
