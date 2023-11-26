@@ -26,7 +26,7 @@ log = logging.getLogger("fontTools.varLib.interpolatable")
 
 DEFAULT_TOLERANCE = 0.95
 DEFAULT_KINKINESS = 0.5
-DEFAULT_KINKINESS_LENGTH = 0.01  # ratio of UPEM
+DEFAULT_KINKINESS_LENGTH = 0.001  # ratio of UPEM
 DEFAULT_UPEM = 1000
 
 
@@ -859,16 +859,15 @@ def test_gen(
                     d1_prev = pt1 - pt1_prev
                     d1_next = pt1_next - pt1
 
-                    cross0 = d0_prev.real * d0_next.imag - d0_prev.imag * d0_next.real
-                    cross1 = d1_prev.real * d1_next.imag - d1_prev.imag * d1_next.real
-
+                    sin0 = d0_prev.real * d0_next.imag - d0_prev.imag * d0_next.real
+                    sin1 = d1_prev.real * d1_next.imag - d1_prev.imag * d1_next.real
                     try:
-                        cross0 /= abs(d0_prev) * abs(d0_next)
-                        cross1 /= abs(d1_prev) * abs(d1_next)
+                        sin0 /= abs(d0_prev) * abs(d0_next)
+                        sin1 /= abs(d1_prev) * abs(d1_next)
                     except ZeroDivisionError:
                         continue
 
-                    if abs(cross0) > t or abs(cross1) > t:
+                    if abs(sin0) > t or abs(sin1) > t:
                         # Not colinear / not smooth.
                         continue
 
@@ -890,20 +889,20 @@ def test_gen(
                     mid_prev = (pt0_prev + pt1_prev) / 2
                     mid_next = (pt0_next + pt1_next) / 2
 
-                    cross_mid = (mid - mid_prev).real * (mid_next - mid).imag - (
-                        mid - mid_prev
-                    ).imag * (mid_next - mid).real
+                    mid_d0 = mid - mid_prev
+                    mid_d1 = mid_next - mid
 
+                    sin_mid = mid_d0.real * mid_d1.imag - mid_d0.imag * mid_d1.real
                     try:
-                        cross_mid /= abs(mid - mid_prev) * abs(mid_next - mid)
+                        sin_mid /= abs(mid_d0) * abs(mid_d1)
                     except ZeroDivisionError:
                         continue
 
-                    if abs(cross_mid) * (tolerance * kinkiness) <= t:
-                        # Smooth / not a kink.
+                    if abs(sin_mid) * (tolerance * kinkiness) <= t:
+                        # Smooth enough.
                         continue
 
-                    this_tolerance = t / (abs(cross_mid) * kinkiness)
+                    this_tolerance = t / (abs(sin_mid) * kinkiness)
 
                     yield (
                         glyph_name,
