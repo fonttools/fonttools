@@ -25,7 +25,7 @@ import logging
 log = logging.getLogger("fontTools.varLib.interpolatable")
 
 DEFAULT_TOLERANCE = 0.95
-DEFAULT_KINKINESS = 1
+DEFAULT_KINKINESS = .5
 DEFAULT_UPEM = 1000
 DEFAULT_MIN_KINK_LENGTH = 0.01
 
