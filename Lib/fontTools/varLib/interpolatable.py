@@ -851,21 +851,21 @@ def test_gen(
                     pt0_next = complex(*pt0_next[0])
                     pt1_next = complex(*pt1_next[0])
 
-                    min_length = upem * DEFAULT_MIN_KINK_LENGTH
-                    if (
-                        abs(pt0 - pt0_next) < min_length
-                        and abs(pt1 - pt1_next) < min_length
-                        and abs(pt0 - pt0_prev) < min_length
-                        and abs(pt1 - pt1_prev) < min_length
-                    ):
-                        continue
-
                     # We have three consecutive points. Check whether
                     # they are colinear.
                     d0_prev = pt0 - pt0_prev
                     d0_next = pt1_next - pt1
                     d1_prev = pt1 - pt1_prev
                     d1_next = pt1_next - pt1
+
+                    min_length = upem * DEFAULT_MIN_KINK_LENGTH
+                    if (
+                        abs(d0_prev) < min_length
+                        and abs(d0_next) < min_length
+                        and abs(d1_prev) < min_length
+                        and abs(d1_next) < min_length
+                    ):
+                        continue
 
                     cross0 = d0_prev.real * d0_next.imag - d0_prev.imag * d0_next.real
                     cross1 = d1_prev.real * d1_next.imag - d1_prev.imag * d1_next.real
@@ -876,7 +876,6 @@ def test_gen(
                     except ZeroDivisionError:
                         continue
 
-                    # print("cross", abs(cross0), abs(cross1))
                     if abs(cross0) > t or abs(cross1) > t:
                         # Not colinear / not smooth.
                         continue
