@@ -27,7 +27,7 @@ log = logging.getLogger("fontTools.varLib.interpolatable")
 DEFAULT_TOLERANCE = 0.95
 DEFAULT_KINKINESS = 0.5
 DEFAULT_UPEM = 1000
-DEFAULT_MIN_KINK_LENGTH = 0.02
+DEFAULT_MIN_KINK_LENGTH = 0.01
 
 
 def _rot_list(l, k):
