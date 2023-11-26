@@ -27,7 +27,7 @@ log = logging.getLogger("fontTools.varLib.interpolatable")
 DEFAULT_TOLERANCE = 0.95
 DEFAULT_KINKINESS = 0.5
 DEFAULT_UPEM = 1000
-DEFAULT_MIN_KINK_LENGTH = 0.005
+DEFAULT_MIN_KINK_LENGTH = 0.02
 
 
 def _rot_list(l, k):
@@ -847,9 +847,9 @@ def test_gen(
                     min_length = upem * DEFAULT_MIN_KINK_LENGTH
                     if (
                         abs(pt0 - pt0_next) < min_length
-                        or abs(pt1 - pt1_next) < min_length
-                        or abs(pt0 - pt0_prev) < min_length
-                        or abs(pt1 - pt1_prev) < min_length
+                        and abs(pt1 - pt1_next) < min_length
+                        and abs(pt0 - pt0_prev) < min_length
+                        and abs(pt1 - pt1_prev) < min_length
                     ):
                         continue
 
