@@ -873,7 +873,7 @@ def test_gen(
                         continue
 
                     assert 0 < kinkiness
-                    t = .1 # ~sin(radian(6)) for tolerance 0.95
+                    t = 0.1  # ~sin(radian(6)) for tolerance 0.95
 
                     cross0 /= abs(pt0 - pt0_prev) * abs(pt0_next - pt0)
                     cross1 /= abs(pt1 - pt1_prev) * abs(pt1_next - pt1)
@@ -977,7 +977,8 @@ def main(args=None):
         "--kinkiness",
         action="store",
         type=float,
-        help="How aggressively report kinks. Number around 1. Default %s" % DEFAULT_KINKINESS,
+        help="How aggressively report kinks. Number around 1. Default %s"
+        % DEFAULT_KINKINESS,
     )
     parser.add_argument(
         "--json",
