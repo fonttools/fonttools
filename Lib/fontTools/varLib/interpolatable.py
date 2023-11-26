@@ -26,7 +26,7 @@ log = logging.getLogger("fontTools.varLib.interpolatable")
 
 DEFAULT_TOLERANCE = 0.95
 DEFAULT_KINKINESS = 0.5
-DEFAULT_KINKINESS_LENGTH = 0.003  # ratio of UPEM
+DEFAULT_KINKINESS_LENGTH = 0.002  # ratio of UPEM
 DEFAULT_UPEM = 1000
 
 
