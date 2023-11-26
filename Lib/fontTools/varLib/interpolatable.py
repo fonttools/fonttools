@@ -1347,7 +1347,7 @@ def main(args=None):
                         )
                     elif p["type"] == "nothing":
                         print(
-                            "    Nothing wrong between %s and %s"
+                            "    Showing %s and %s"
                             % (
                                 p["master_1"],
                                 p["master_2"],
