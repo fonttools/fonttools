@@ -161,7 +161,9 @@ class InterpolatablePlot:
             + self.pad
         )
 
-    def add_title_page(self, files, *, show_tolerance=True):
+    def add_title_page(
+        self, files, *, show_tolerance=True, tolerance=None, kinkiness=None
+    ):
         self.set_size(self.total_width(), self.total_height())
 
         pad = self.pad
@@ -216,10 +218,12 @@ class InterpolatablePlot:
                     )
                     y += self.line_height
 
-        self.draw_legend(show_tolerance=show_tolerance)
+        self.draw_legend(
+            show_tolerance=show_tolerance, tolerance=tolerance, kinkiness=kinkiness
+        )
         self.show_page()
 
-    def draw_legend(self, *, show_tolerance=True):
+    def draw_legend(self, *, show_tolerance=True, tolerance=None, kinkiness=None):
         cr = cairo.Context(self.surface)
 
         x = self.pad
@@ -248,7 +252,6 @@ class InterpolatablePlot:
         cr.fill()
         y -= self.pad + self.line_height
 
-        """
         self.draw_label("Point causing kink in the contour", x=xxx, y=y, width=width)
         self.draw_circle(
             cr,
@@ -258,7 +261,6 @@ class InterpolatablePlot:
             color=self.kink_point_color,
         )
         y -= self.pad + self.line_height
-        """
 
         self.draw_label("Suggested new contour start point", x=xxx, y=y, width=width)
         self.draw_circle(
@@ -309,6 +311,27 @@ class InterpolatablePlot:
         y -= self.pad + self.line_height
 
         self.draw_label("Legend:", x=x, y=y, width=width, bold=True)
+        y -= self.pad + self.line_height
+
+        if kinkiness is not None:
+            self.draw_label(
+                "Kink-reporting aggressiveness: %g" % kinkiness,
+                x=xxx,
+                y=y,
+                width=width,
+            )
+            y -= self.pad + self.line_height
+
+        if tolerance is not None:
+            self.draw_label(
+                "Error tolerance: %g" % tolerance,
+                x=xxx,
+                y=y,
+                width=width,
+            )
+            y -= self.pad + self.line_height
+
+        self.draw_label("Parameters:", x=x, y=y, width=width, bold=True)
         y -= self.pad + self.line_height
 
     def add_problems(self, problems, *, show_tolerance=True, show_page_number=True):

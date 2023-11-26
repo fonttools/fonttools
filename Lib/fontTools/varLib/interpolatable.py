@@ -1211,6 +1211,8 @@ def main(args=None):
 
     # Normalize locations
     locations = [normalizeLocation(loc, axis_triples) for loc in locations]
+    tolerance = args.tolerance or DEFAULT_TOLERANCE
+    kinkiness = args.kinkiness or DEFAULT_KINKINESS
 
     try:
         log.info("Running on %d glyphsets", len(glyphsets))
@@ -1222,8 +1224,8 @@ def main(args=None):
             locations=locations,
             upem=upem,
             ignore_missing=args.ignore_missing,
-            tolerance=args.tolerance or DEFAULT_TOLERANCE,
-            kinkiness=args.kinkiness or DEFAULT_KINKINESS,
+            tolerance=tolerance,
+            kinkiness=kinkiness,
             show_all=args.show_all,
         )
         problems = defaultdict(list)
@@ -1370,7 +1372,9 @@ def main(args=None):
             from .interpolatablePlot import InterpolatablePDF
 
             with InterpolatablePDF(args.pdf, glyphsets=glyphsets, names=names) as pdf:
-                pdf.add_title_page(original_args_inputs)
+                pdf.add_title_page(
+                    original_args_inputs, tolerance=tolerance, kinkiness=kinkiness
+                )
                 pdf.add_problems(problems)
                 if not problems and not args.quiet:
                     pdf.draw_cupcake()
@@ -1382,7 +1386,12 @@ def main(args=None):
             svgs = []
             glyph_starts = {}
             with InterpolatableSVG(svgs, glyphsets=glyphsets, names=names) as svg:
-                svg.add_title_page(original_args_inputs, show_tolerance=False)
+                svg.add_title_page(
+                    original_args_inputs,
+                    show_tolerance=False,
+                    tolerance=tolerance,
+                    kinkiness=kinkiness,
+                )
                 for glyph, glyph_problems in problems.items():
                     glyph_starts[len(svgs)] = glyph
                     svg.add_problems(
