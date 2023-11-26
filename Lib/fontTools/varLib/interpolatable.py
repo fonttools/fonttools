@@ -810,6 +810,9 @@ def test_gen(
             if matchings[m1idx] is not None and m1:  # m1 is empty for composite glyphs
                 m1 = [m1[i] for i in matchings[m1idx]]
 
+            assert 0 < kinkiness
+            t = 0.1  # ~sin(radian(6)) for tolerance 0.95
+
             for ix, (contour0, contour1) in enumerate(zip(m0, m1)):
                 if len(contour0) == 0 or len(contour0) != len(contour1):
                     # We already reported this; or nothing to do; or not compatible
@@ -861,9 +864,6 @@ def test_gen(
                     cross1 = (pt1 - pt1_prev).real * (pt1_next - pt1).imag - (
                         pt1 - pt1_prev
                     ).imag * (pt1_next - pt1).real
-
-                    assert 0 < kinkiness
-                    t = 0.1  # ~sin(radian(6)) for tolerance 0.95
 
                     try:
                         cross0 /= abs(pt0 - pt0_prev) * abs(pt0_next - pt0)
