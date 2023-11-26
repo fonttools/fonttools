@@ -25,7 +25,7 @@ import logging
 log = logging.getLogger("fontTools.varLib.interpolatable")
 
 DEFAULT_TOLERANCE = 0.95
-DEFAULT_KINKINESS = 0.42
+DEFAULT_KINKINESS = 0.5
 DEFAULT_UPEM = 1000
 DEFAULT_MIN_KINK_LENGTH = 0.02
 
@@ -334,10 +334,10 @@ def test_gen(
     upem=DEFAULT_UPEM,
     show_all=False,
 ):
-    if tolerance > 10:
+    if tolerance >= 10:
         tolerance *= 0.01
     assert 0 <= tolerance <= 1
-    if kinkiness > 10:
+    if kinkiness >= 10:
         kinkiness *= 0.01
     assert 0 < kinkiness
 
