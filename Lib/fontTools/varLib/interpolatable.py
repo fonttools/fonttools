@@ -871,7 +871,7 @@ def test_gen(
                     cross1 /= abs(pt1 - pt1_prev) * abs(pt1_next - pt1)
                     # print("cross", abs(cross0), abs(cross1))
                     if abs(cross0) > t or abs(cross1) > t:
-                        # Not colinear / smooth.
+                        # Not colinear / not smooth.
                         continue
 
                     mid = (pt0 + pt1) / 2
