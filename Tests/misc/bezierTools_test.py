@@ -4,6 +4,7 @@ from fontTools.misc.bezierTools import (
     calcQuadraticArcLength,
     calcCubicBounds,
     curveLineIntersections,
+    curveCurveIntersections,
     segmentPointAtT,
     splitLine,
     splitQuadratic,
@@ -189,3 +190,10 @@ def test_calcQuadraticArcLength():
     assert calcQuadraticArcLength(
         (210, 333), (289, 333), (326.5, 290.5)
     ) == pytest.approx(127.9225)
+
+
+def test_intersections_linelike():
+    seg1 = [(0.0, 0.0), (0.0, 0.25), (0.0, 0.75), (0.0, 1.0)]
+    seg2 = [(0.0, 0.5), (0.25, 0.5), (0.75, 0.5), (1.0, 0.5)]
+    pt = curveCurveIntersections(seg1, seg2)[0][0]
+    assert pt == (0.0, 0.5)
