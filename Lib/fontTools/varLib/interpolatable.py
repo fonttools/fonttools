@@ -637,6 +637,11 @@ def test_gen(
                     # after reordering above.
                     continue
 
+                from .interpolatablePlot import LerpGlyphSet
+                midGlyphset = LerpGlyphSet(glyphsets[m0idx], glyphsets[m1idx])
+                midContours = PerContourOrComponentPen(RecordingPen)
+                midGlyphset[glyph_name].draw(midContours)
+
                 c0 = contour0[0]
                 # Next few lines duplicated below.
                 costs = [_vdiff_hypot2_complex(c0[0], c1[0]) for c1 in contour1]
@@ -820,12 +825,7 @@ def test_gen(
 
                     contour0 = allContourPens[m0idx][ix]
                     contour1 = allContourPens[m1idx][ix]
-                    from .interpolatablePlot import LerpGlyphSet
-                    midGlyphset = LerpGlyphSet(glyphsets[m0idx], glyphsets[m1idx])
-
-                    pen = PerContourOrComponentPen(RecordingPen)
-                    midGlyphset[glyph_name].draw(pen)
-                    contour = pen.value[ix]
+                    contour = midContours.value[ix]
 
                     midStats = StatisticsPen(glyphset=glyphset)
                     contour.replay(midStats)
