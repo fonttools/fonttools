@@ -815,8 +815,8 @@ def test_gen(
                     # area of the two masters.
                     # This is a bit of a hack, but it's a good sanity check.
 
-                    sqrtArea0 = m0Vectors[ix][0]
-                    sqrtArea1 = m1Vectors[ix][0]
+                    area0 = m0Vectors[ix][0] * m0Vectors[ix][0]
+                    area1 = m1Vectors[ix][0] * m1Vectors[ix][0]
 
                     contour0 = allContourPens[m0idx][ix]
                     contour1 = allContourPens[m1idx][ix]
@@ -830,16 +830,14 @@ def test_gen(
                     midStats = StatisticsPen(glyphset=glyphset)
                     contour.replay(midStats)
                     midVector = _contour_vector_from_stats(midStats)
-                    midSqrtArea = midVector[0]
+                    midArea = midVector[0] * midVector[0]
 
-                    sign = -1 if midSqrtArea < 0 else 1
-                    midSqrtArea = abs(midSqrtArea)
-                    minSqrtArea = min(sqrtArea0 * sign, sqrtArea1 * sign)
-                    maxSqrtArea = max(sqrtArea0 * sign, sqrtArea1 * sign)
-                    avg = (maxSqrtArea + minSqrtArea) * 0.5
+                    minArea = min(area0, area1)
+                    maxArea = max(area0, area1)
+                    avg = (maxArea + minArea) * 0.5
                     t = avg * (1 - tolerance)
-                    if not (minSqrtArea - t <= midSqrtArea <= maxSqrtArea + t):
-                        print("wrong_structure2", minSqrtArea , midSqrtArea, maxSqrtArea, t)
+                    if not (avg - t <= midArea <= avg + t):
+                        print("wrong_structure2", minArea , midArea, maxArea, avg, t)
                         this_tolerance = 0
                         yield (
                             glyph_name,
