@@ -841,7 +841,7 @@ def test_gen(
                     minAvg = min(geomAvg, linAvg)
                     maxAvg = max(geomAvg, linAvg)
                     if not (
-                           (minAvg * tolerance <= midArea <= maxArea / tolerance)):
+                           (minAvg * tolerance <= midArea <= maxArea / tolerance * 1.5)):
                         print("min", minArea, "max", maxArea)
                         print("lin", linAvg, "geom", geomAvg)
                         print("wrong_structure2", "avgs", minAvg, midArea, maxAvg)
