@@ -507,7 +507,7 @@ class InterpolatablePlot:
             self.draw_label("proposed fix", x=x, y=y, color=self.head_color, align=0.5)
             y += self.line_height + self.pad
 
-            if problem_type in ("wrong_structure", "kink"):
+            if problem_type in ("wrong_structure"):
                 self.draw_shrug(x=x, y=y)
             else:
                 overriding1 = OverridingDict(glyphset1)
@@ -558,6 +558,72 @@ class InterpolatablePlot:
                         pts = points2.value[1:-1]
                         pts = pts[proposed_start:] + pts[:proposed_start]
                         points2.value = beginPath + pts + endPath
+
+                        # Convert the point pens back to segment pens
+                        segment1 = RecordingPen()
+                        converter = PointToSegmentPen(segment1, True)
+                        points1.replay(converter)
+                        segment2 = RecordingPen()
+                        converter = PointToSegmentPen(segment2, True)
+                        points2.replay(converter)
+
+                        # Replace the wrong contours
+                        wrongContour1.value = segment1.value
+                        wrongContour2.value = segment2.value
+
+                for problem in problems:
+                    if problem["type"] == "kink":
+                        # Save the wrong contours
+                        wrongContour1 = perContourPen1.value[problem["contour"]]
+                        wrongContour2 = perContourPen2.value[problem["contour"]]
+
+                        # Convert the wrong contours to point pens
+                        points1 = RecordingPointPen()
+                        converter = SegmentToPointPen(points1, False)
+                        wrongContour1.replay(converter)
+                        points2 = RecordingPointPen()
+                        converter = SegmentToPointPen(points2, False)
+                        wrongContour2.replay(converter)
+
+                        i = problem["value"]
+
+                        # Position points to be around the same ratio
+                        # beginPath / endPath dance
+                        j = i + 1
+                        pt0 = points1.value[j][1][0]
+                        pt1 = points2.value[j][1][0]
+                        j_prev = (i - 1) % (len(points1.value) - 2) + 1
+                        pt0_prev = points1.value[j_prev][1][0]
+                        pt1_prev = points2.value[j_prev][1][0]
+                        j_next = (i + 1) % (len(points1.value) - 2) + 1
+                        pt0_next = points1.value[j_next][1][0]
+                        pt1_next = points2.value[j_next][1][0]
+
+                        pt0 = complex(*pt0)
+                        pt1 = complex(*pt1)
+                        pt0_prev = complex(*pt0_prev)
+                        pt1_prev = complex(*pt1_prev)
+                        pt0_next = complex(*pt0_next)
+                        pt1_next = complex(*pt1_next)
+
+                        # Find the ratio of the distance between the points
+                        r0 = abs(pt0 - pt0_prev) / abs(pt0_next - pt0_prev)
+                        r1 = abs(pt1 - pt1_prev) / abs(pt1_next - pt1_prev)
+                        r_mid = (r0 + r1) / 2
+
+                        pt0 = pt0_prev + r_mid * (pt0_next - pt0_prev)
+                        pt1 = pt1_prev + r_mid * (pt1_next - pt1_prev)
+
+                        points1.value[j] = (
+                            points1.value[j][0],
+                            (((pt0.real, pt0.imag),) + points1.value[j][1][1:]),
+                            points1.value[j][2],
+                        )
+                        points2.value[j] = (
+                            points2.value[j][0],
+                            (((pt1.real, pt1.imag),) + points2.value[j][1][1:]),
+                            points2.value[j][2],
+                        )
 
                         # Convert the point pens back to segment pens
                         segment1 = RecordingPen()
