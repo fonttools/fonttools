@@ -840,13 +840,12 @@ def test_gen(
                     # sometimes inverts that slightly.
                     minAvg = min(geomAvg, linAvg)
                     maxAvg = max(geomAvg, linAvg)
-                    t = 1 - (1 - tolerance) * 3 # Magic
                     if not (
-                           (minAvg * tolerance <= midArea <= maxAvg / t)):
+                           (minAvg * tolerance <= midArea <= maxArea / tolerance)):
                         print("min", minArea, "max", maxArea)
                         print("lin", linAvg, "geom", geomAvg)
                         print("wrong_structure2", "avgs", minAvg, midArea, maxAvg)
-                        print("wrong_structure2", "bounds", minAvg * tolerance, midArea, maxAvg / t)
+                        print("wrong_structure2", "bounds", minAvg * tolerance, midArea, maxArea / tolerance)
                         try:
                             this_tolerance = min(midArea / minAvg, maxAvg / midArea)
                         except ZeroDivisionError:
