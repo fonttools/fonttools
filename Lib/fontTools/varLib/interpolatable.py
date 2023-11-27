@@ -832,22 +832,11 @@ def test_gen(
                     midVector = _contour_vector_from_stats(midStats)
                     midArea = midVector[0] * midVector[0]
 
-                    minArea = min(area0, area1)
-                    maxArea = max(area0, area1)
                     geomAvg = sqrt(area0 * area1)
-                    linAvg = .5 * (area0 + area1)
-                    # In theory geomAvg is always <= linAvg; but float precision
-                    # sometimes inverts that slightly.
-                    minAvg = min(geomAvg, linAvg)
-                    maxAvg = max(geomAvg, linAvg)
-                    if not (
-                           (minAvg * tolerance <= midArea <= maxArea / tolerance * 1.5)):
-                        print("min", minArea, "max", maxArea)
-                        print("lin", linAvg, "geom", geomAvg)
-                        print("wrong_structure2", "avgs", minAvg, midArea, maxAvg)
-                        print("wrong_structure2", "bounds", minAvg * tolerance, midArea, maxArea / tolerance)
+                    if not (geomAvg * tolerance <= midArea):
+                        print("geom", geomAvg, "mid", midArea)
                         try:
-                            this_tolerance = min(midArea / minAvg, maxAvg / midArea)
+                            this_tolerance = midArea / geomAvg
                         except ZeroDivisionError:
                             this_tolerance = 0
                         yield (
