@@ -496,10 +496,6 @@ class InterpolatablePlot:
                 scale=min(scales),
             )
 
-            if "kink" in problem_types:
-                pen = PerContourOrComponentPen(RecordingPen)
-                midway_glyphset[glyphname].draw(pen)
-
             y += self.height + self.pad
 
             # Draw the proposed fix
@@ -570,6 +566,8 @@ class InterpolatablePlot:
                         # Replace the wrong contours
                         wrongContour1.value = segment1.value
                         wrongContour2.value = segment2.value
+                        perContourPen1.value[problem["contour"]] = wrongContour1
+                        perContourPen2.value[problem["contour"]] = wrongContour2
 
                 for problem in problems:
                     # If we have a kink, try to fix it.
@@ -951,6 +949,15 @@ class InterpolatablePlot:
                 perContourPen.value[idx if matching is None else matching[idx]].replay(
                     converter
                 )
+
+                if which == 1 or midway:
+                    wrong_start_point_problem = [pt for pt in problems if pt["type"] == "wrong_start_point" and pt.get("contour") == idx]
+                    if wrong_start_point_problem:
+                        proposed_start = wrong_start_point_problem[0]["value_2"]
+                        points.value = points.value[proposed_start:] + points.value[:proposed_start]
+                        if wrong_start_point_problem[0]["reversed"]:
+                            points.value = points.value[::-1]
+
                 targetPoint = points.value[problem["value"]][0]
                 cr.save()
                 cr.translate(*targetPoint)
