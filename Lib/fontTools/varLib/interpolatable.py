@@ -834,11 +834,18 @@ def test_gen(
 
                     minArea = min(area0, area1)
                     maxArea = max(area0, area1)
-                    avg = (maxArea + minArea) * 0.5
-                    t = avg * (1 - tolerance)
-                    if not (avg - t <= midArea <= avg + t):
-                        print("wrong_structure2", minArea , midArea, maxArea, avg, t)
-                        this_tolerance = 0
+                    geomAvg = sqrt(area0 * area1)
+                    linAvg = .5 * (area0 + area1)
+                    minAvg = min(geomAvg, linAvg)
+                    maxAvg = max(geomAvg, linAvg)
+                    if not (minAvg * tolerance <= midArea <= maxAvg / tolerance):
+                        print("min", minArea, "max", maxArea)
+                        print("lin", linAvg, "geom", geomAvg)
+                        print("wrong_structure2", "avgs", minAvg * tolerance, midArea, maxAvg / tolerance)
+                        try:
+                            this_tolerance = min(midArea / minAvg, maxAvg / midArea)
+                        except ZeroDivisionError:
+                            this_tolerance = 0
                         yield (
                             glyph_name,
                             {
