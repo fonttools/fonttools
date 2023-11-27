@@ -951,10 +951,18 @@ class InterpolatablePlot:
                 )
 
                 if which == 1 or midway:
-                    wrong_start_point_problem = [pt for pt in problems if pt["type"] == "wrong_start_point" and pt.get("contour") == idx]
+                    wrong_start_point_problem = [
+                        pt
+                        for pt in problems
+                        if pt["type"] == "wrong_start_point"
+                        and pt.get("contour") == idx
+                    ]
                     if wrong_start_point_problem:
                         proposed_start = wrong_start_point_problem[0]["value_2"]
-                        points.value = points.value[proposed_start:] + points.value[:proposed_start]
+                        points.value = (
+                            points.value[proposed_start:]
+                            + points.value[:proposed_start]
+                        )
                         if wrong_start_point_problem[0]["reversed"]:
                             points.value = points.value[::-1]
 
