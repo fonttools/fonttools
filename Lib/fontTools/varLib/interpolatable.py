@@ -321,6 +321,21 @@ def _find_parents_and_order(glyphsets, locations):
         log.info("Order: %s", order)
     return parents, order
 
+def lerp_recordings(recording1, recording2, factor=.5):
+    pen = RecordingPen()
+    value = pen.value
+    for (op1, args1), (op2, args2) in zip(recording1.value, recording2.value):
+        if op1 != op2:
+            raise ValueError("Mismatching operations: %s, %s" % (op1, op2))
+        if op1 == "addComponent":
+            mid_args = args1 # XXX Interpolate transformation?
+        else:
+            mid_args = [
+                (x1 + (x2 - x1) * factor, y1 + (y2 - y1) * factor)
+                for (x1, y1), (x2, y2) in zip(args1, args2)
+            ]
+        value.append((op1, mid_args))
+    return pen
 
 def test_gen(
     glyphsets,
@@ -626,21 +641,22 @@ def test_gen(
             m0 = allContourIsomorphisms[m0idx]
             m1Vectors = allGreenVectors[m1idx]
             m0Vectors = allGreenVectors[m0idx]
+            recording0 = allContourPens[m0idx]
+            recording1 = allContourPens[m1idx]
 
             # If contour-order is wrong, adjust it
             if matchings[m1idx] is not None and m1:  # m1 is empty for composite glyphs
                 m1 = [m1[i] for i in matchings[m1idx]]
+                m0Vectors = [m0Vectors[i] for i in matchings[m1idx]]
+                recording1 = [recording1[i] for i in matchings[m1idx]]
+
+            midRecording = [lerp_recordings(c0, c1) for c0, c1 in zip(recording0, recording1)]
 
             for ix, (contour0, contour1) in enumerate(zip(m0, m1)):
                 if len(contour0) == 0 or len(contour0) != len(contour1):
                     # We already reported this; or nothing to do; or not compatible
                     # after reordering above.
                     continue
-
-                from .interpolatablePlot import LerpGlyphSet
-                midGlyphset = LerpGlyphSet(glyphsets[m0idx], glyphsets[m1idx])
-                midContours = PerContourOrComponentPen(RecordingPen)
-                midGlyphset[glyph_name].draw(midContours)
 
                 c0 = contour0[0]
                 # Next few lines duplicated below.
@@ -823,9 +839,7 @@ def test_gen(
                     area0 = m0Vectors[ix][0] * m0Vectors[ix][0]
                     area1 = m1Vectors[ix][0] * m1Vectors[ix][0]
 
-                    contour0 = allContourPens[m0idx][ix]
-                    contour1 = allContourPens[m1idx][ix]
-                    contour = midContours.value[ix]
+                    contour = midRecording[ix]
 
                     midStats = StatisticsPen(glyphset=glyphset)
                     contour.replay(midStats)
