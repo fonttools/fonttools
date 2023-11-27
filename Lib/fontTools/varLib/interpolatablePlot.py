@@ -572,7 +572,13 @@ class InterpolatablePlot:
                         wrongContour2.value = segment2.value
 
                 for problem in problems:
-                    if problem["type"] == "kink":
+                    # If we have a kink and the contour start point is not incorrect,
+                    # try to fix it.
+                    if problem["type"] == "kink" and not any(
+                        pt["type"] == "wrong_start_point"
+                        and pt["contour"] == problem["contour"]
+                        for pt in problems
+                    ):
                         # Save the wrong contours
                         wrongContour1 = perContourPen1.value[problem["contour"]]
                         wrongContour2 = perContourPen2.value[problem["contour"]]
