@@ -737,6 +737,13 @@ def test_gen(
                             okay = True
 
                     if not okay:
+                        # Adjust contour points for further operations.
+                        points = allContourPoints[m1idx][ix]
+                        # Rotate them
+                        points = points[proposed_point:] + points[:proposed_point]
+                        if reverse:
+                            points = points[::-1]
+                        allContourPoints[m1idx][ix] = points
                         yield (
                             glyph_name,
                             {
