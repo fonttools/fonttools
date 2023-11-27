@@ -368,6 +368,7 @@ def test_gen(
         allNodeTypes = []
         allContourIsomorphisms = []
         allContourPoints = []
+        allContourPens = []
         allGlyphs = [glyphset[glyph_name] for glyphset in glyphsets]
         if len([1 for glyph in allGlyphs if glyph is not None]) <= 1:
             continue
@@ -385,6 +386,7 @@ def test_gen(
                 allGreenVectors.append(None)
                 allContourIsomorphisms.append(None)
                 allContourPoints.append(None)
+                allContourPens.append(None)
                 continue
 
             perContourPen = PerContourOrComponentPen(RecordingPen, glyphset=glyphset)
@@ -405,6 +407,7 @@ def test_gen(
             allGreenVectors.append(contourGreenVectors)
             allContourIsomorphisms.append(contourIsomorphisms)
             allContourPoints.append(contourPoints)
+            allContourPens.append(contourPens)
             for ix, contour in enumerate(contourPens):
                 contourOps = tuple(op for op, arg in contour.value)
                 nodeTypes.append(contourOps)
@@ -616,11 +619,13 @@ def test_gen(
                         matchings[m1idx] = matching
 
             #
-            # "wrong_start_point" check
+            # "wrong_start_point" / "wrong_structure" check
             #
 
             m1 = allContourIsomorphisms[m1idx]
             m0 = allContourIsomorphisms[m0idx]
+            m1Vectors = allGreenVectors[m1idx]
+            m0Vectors = allGreenVectors[m0idx]
 
             # If contour-order is wrong, adjust it
             if matchings[m1idx] is not None and m1:  # m1 is empty for composite glyphs
@@ -667,13 +672,10 @@ def test_gen(
                     ):
                         # Try harder
 
-                        m0Vectors = allGreenVectors[m0idx][ix]
-                        m1Vectors = allGreenVectors[m1idx][ix]
-
                         # Recover the covariance matrix from the GreenVectors.
                         # This is a 2x2 matrix.
                         transforms = []
-                        for vector in (m0Vectors, m1Vectors):
+                        for vector in (m0Vectors[ix], m1Vectors[ix]):
                             meanX = vector[1]
                             meanY = vector[2]
                             stddevX = vector[3] / 2
@@ -763,7 +765,7 @@ def test_gen(
                     # speed things up so we don't end up doing a full matching
                     # on every contour that is correct.
                     threshold = (
-                        len(c0[0]) * (allControlVectors[m0idx][ix][0] * 0.5) ** 2 / 4
+                        len(c0[0]) * (allControlVectors[m0idx][ix][0] * 0.5) ** 2 / 8
                     )  # Magic only
                     c1 = contour1[min_cost_idx]
 
@@ -791,19 +793,66 @@ def test_gen(
                         )
                         identity_cost = sum(graph[i][i] for i in range(len(graph)))
 
-                        if matching_cost < identity_cost / 5:  # Heuristic
-                            # print(matching_cost, identity_cost, matching)
-                            yield (
-                                glyph_name,
-                                {
-                                    "type": "wrong_structure",
-                                    "contour": ix,
-                                    "master_1": names[m0idx],
-                                    "master_2": names[m1idx],
-                                    "master_1_idx": m0idx,
-                                    "master_2_idx": m1idx,
-                                },
-                            )
+                        threshold = .5 # Magic only
+                        if matching_cost < identity_cost * tolerance * threshold:  # Heuristic
+                            pass
+                            #print("wrong_structure1", matching_cost / identity_cost)
+                            #this_tolerance = matching_cost / (identity_cost * threshold)
+                            #yield (
+                            #    glyph_name,
+                            #    {
+                            #        "type": "wrong_structure",
+                            #        "contour": ix,
+                            #        "master_1": names[m0idx],
+                            #        "master_2": names[m1idx],
+                            #        "master_1_idx": m0idx,
+                            #        "master_2_idx": m1idx,
+                            #        "tolerance": this_tolerance,
+                            #    },
+                            #)
+
+                    # Check that area of mid-way interpolation is between the
+                    # area of the two masters.
+                    # This is a bit of a hack, but it's a good sanity check.
+
+                    sqrtArea0 = m0Vectors[ix][0]
+                    sqrtArea1 = m1Vectors[ix][0]
+
+                    contour0 = allContourPens[m0idx][ix]
+                    contour1 = allContourPens[m1idx][ix]
+                    from .interpolatablePlot import LerpGlyphSet
+                    midGlyphset = LerpGlyphSet(glyphsets[m0idx], glyphsets[m1idx])
+
+                    pen = PerContourOrComponentPen(RecordingPen)
+                    midGlyphset[glyph_name].draw(pen)
+                    contour = pen.value[ix]
+
+                    midStats = StatisticsPen(glyphset=glyphset)
+                    contour.replay(midStats)
+                    midVector = _contour_vector_from_stats(midStats)
+                    midSqrtArea = midVector[0]
+
+                    sign = -1 if midSqrtArea < 0 else 1
+                    midSqrtArea = abs(midSqrtArea)
+                    minSqrtArea = min(sqrtArea0 * sign, sqrtArea1 * sign)
+                    maxSqrtArea = max(sqrtArea0 * sign, sqrtArea1 * sign)
+                    avg = (maxSqrtArea + minSqrtArea) * 0.5
+                    t = avg * (1 - tolerance)
+                    if not (minSqrtArea - t <= midSqrtArea <= maxSqrtArea + t):
+                        print("wrong_structure2", minSqrtArea , midSqrtArea, maxSqrtArea, t)
+                        this_tolerance = 0
+                        yield (
+                            glyph_name,
+                            {
+                                "type": "wrong_structure",
+                                "contour": ix,
+                                "master_1": names[m0idx],
+                                "master_2": names[m1idx],
+                                "master_1_idx": m0idx,
+                                "master_2_idx": m1idx,
+                                "tolerance": this_tolerance,
+                            },
+                        )
 
             #
             # "kink" detector
