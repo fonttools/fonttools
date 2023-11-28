@@ -806,32 +806,48 @@ def test_gen(
                         midVector = _contour_vector_from_stats(midStats)
                         midSize = midVector[0] * midVector[0]
 
-                        geomAvg = (size0 * size1) ** 0.5
-                        if not (geomAvg * tolerance <= midSize + 1e-5):
-                            try:
-                                this_tolerance = midSize / geomAvg
-                            except ZeroDivisionError:
-                                this_tolerance = 0
-                            log.debug(
-                                "average size %g; actual size %g; master sizes: %g, %g",
-                                geomAvg,
-                                midSize,
-                                size0,
-                                size1,
-                            )
-                            log.debug("tolerance %g", this_tolerance)
-                            yield (
-                                glyph_name,
-                                {
-                                    "type": "underweight",
-                                    "contour": ix,
-                                    "master_1": names[m0idx],
-                                    "master_2": names[m1idx],
-                                    "master_1_idx": m0idx,
-                                    "master_2_idx": m1idx,
-                                    "tolerance": this_tolerance,
-                                },
-                            )
+                        for overweight, problem_type in enumerate(("underweight", "overweight")):
+
+                            if overweight:
+                                try:
+                                    expectedSize = 1 / (((1 / size0) * (1 / size1)) ** 0.5)
+                                except ZeroDivisionError:
+                                    continue
+                            else:
+                                expectedSize = (size0 * size1) ** 0.5
+
+                            if (
+                                (not overweight and expectedSize * tolerance > midSize + 1e-5)
+                                or
+                                (overweight and 1e-5 + expectedSize < midSize * tolerance)
+                            ):
+                                try:
+                                    if overweight:
+                                        this_tolerance = expectedSize / midSize
+                                    else:
+                                        this_tolerance = midSize / expectedSize
+                                except ZeroDivisionError:
+                                    this_tolerance = 0
+                                log.debug(
+                                    "actual size %g; threshold size %g, master sizes: %g, %g",
+                                    midSize,
+                                    expectedSize,
+                                    size0,
+                                    size1,
+                                )
+                                log.debug("tolerance %g", this_tolerance)
+                                yield (
+                                    glyph_name,
+                                    {
+                                        "type": problem_type,
+                                        "contour": ix,
+                                        "master_1": names[m0idx],
+                                        "master_2": names[m1idx],
+                                        "master_1_idx": m0idx,
+                                        "master_2_idx": m1idx,
+                                        "tolerance": this_tolerance,
+                                    },
+                                )
 
             #
             # "kink" detector
@@ -1393,6 +1409,16 @@ def main(args=None):
                     elif p["type"] == "underweight":
                         print(
                             "    Contour %d interpolation is underweight: %s, %s"
+                            % (
+                                p["contour"],
+                                p["master_1"],
+                                p["master_2"],
+                            ),
+                            file=f,
+                        )
+                    elif p["type"] == "overweight":
+                        print(
+                            "    Contour %d interpolation is overweight: %s, %s"
                             % (
                                 p["contour"],
                                 p["master_1"],

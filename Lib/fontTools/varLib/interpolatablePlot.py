@@ -133,6 +133,11 @@ class InterpolatablePlot:
 /|\
 / \
 """
+    overweight = r"""
+ o
+/O\
+/ \
+"""
 
     def __init__(self, out, glyphsets, names=None, **kwargs):
         self.out = out
@@ -484,6 +489,7 @@ class InterpolatablePlot:
                 "contour_order",
                 "kink",
                 "underweight",
+                "overweight",
             )
             for pt in problem_types
         ):
@@ -507,7 +513,7 @@ class InterpolatablePlot:
                 midway_glyphset,
                 glyphname,
                 [{"type": "midway"}]
-                + [p for p in problems if p["type"] in ("kink", "underweight")],
+                + [p for p in problems if p["type"] in ("kink", "underweight", "overweight")],
                 None,
                 x=x,
                 y=y,
@@ -693,6 +699,8 @@ class InterpolatablePlot:
             emoticon = self.shrug
             if "underweight" in problem_types:
                 emoticon = self.underweight
+            elif "overweight" in problem_types:
+                emoticon = self.overweight
             self.draw_emoticon(emoticon, x=x, y=y)
 
         if show_page_number:
@@ -818,11 +826,11 @@ class InterpolatablePlot:
 
             cr.new_path()
 
-        if "underweight" in problem_types:
+        if "underweight" in problem_types or "overweight" in problem_types:
             perContourPen = PerContourOrComponentPen(RecordingPen, glyphset=glyphset)
             recording.replay(perContourPen)
             for problem in problems:
-                if problem["type"] == "underweight":
+                if problem["type"] in ("underweight", "overweight"):
                     contour = perContourPen.value[problem["contour"]]
                     contour.replay(CairoPen(glyphset, cr))
                     cr.set_source_rgba(*self.weight_issue_contour_color)
