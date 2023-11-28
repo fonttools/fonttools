@@ -852,7 +852,7 @@ def test_gen(
                     # The sign difference can happen if it's a werido
                     # self-intersecting contour; ignore it.
                     contour = midRecording[ix]
-                    if contour and (m0Vectors[ix][0] < 0 == m1Vectors[ix][0] < 0):
+                    if contour and (m0Vectors[ix][0] < 0) == (m1Vectors[ix][0] < 0):
                         area0 = m0Vectors[ix][0] * m0Vectors[ix][0]
                         area1 = m1Vectors[ix][0] * m1Vectors[ix][0]
 
