@@ -618,8 +618,9 @@ def test_gen(
                         identity_cost = identity_cost_green
 
                     if matching_cost < identity_cost * tolerance:
-                        # print(matching_cost_control / identity_cost_control, matching_cost_green / identity_cost_green)
-
+                        log.debug("matching_control_ratio %g; matching_green_ratio %g.", matching_cost_control / identity_cost_control, matching_cost_green / identity_cost_green)
+                        this_tolerance = matching_cost / identity_cost
+                        log.debug("tolerance", this_tolerance)
                         yield (
                             glyph_name,
                             {
@@ -630,7 +631,7 @@ def test_gen(
                                 "master_2_idx": m1idx,
                                 "value_1": list(range(n)),
                                 "value_2": matching,
-                                "tolerance": matching_cost / identity_cost,
+                                "tolerance": this_tolerance
                             },
                         )
                         matchings[m1idx] = matching
@@ -649,7 +650,7 @@ def test_gen(
             # If contour-order is wrong, adjust it
             if matchings[m1idx] is not None and m1:  # m1 is empty for composite glyphs
                 m1 = [m1[i] for i in matchings[m1idx]]
-                m0Vectors = [m0Vectors[i] for i in matchings[m1idx]]
+                m1Vectors = [m1Vectors[i] for i in matchings[m1idx]]
                 recording1 = [recording1[i] for i in matchings[m1idx]]
 
             midRecording = []
@@ -804,12 +805,12 @@ def test_gen(
 
                         geomAvg = (size0 * size1) ** .5
                         if not (geomAvg * tolerance <= midSize + 1e-5):
-                            print(size0, size1, "geom", geomAvg, "mid", midSize)
                             try:
                                 this_tolerance = (midSize / geomAvg)
-                                print("this_tolerance", this_tolerance, glyph_name)
                             except ZeroDivisionError:
                                 this_tolerance = 0
+                            log.debug("average size %g; actual size %g; master sizes: %g, %g", geomAvg, midSize, size0, size1)
+                            log.debug("tolerance %g", this_tolerance)
                             yield (
                                 glyph_name,
                                 {
@@ -937,7 +938,8 @@ def test_gen(
 
                     this_tolerance = t / (abs(sin_mid) * kinkiness)
 
-                    # print(deviation, deviation_ratio, sin_mid, r_diff, this_tolerance)
+                    log.debug("deviation %g; deviation_ratio %g; sin_mid %g; r_diff %g", deviation, deviation_ratio, sin_mid, r_diff)
+                    log.debug("tolerance %g", this_tolerance)
                     yield (
                         glyph_name,
                         {
@@ -1062,12 +1064,15 @@ def main(args=None):
         help="Name of the master to use in the report. If not provided, all are used.",
     )
     parser.add_argument("-v", "--verbose", action="store_true", help="Run verbosely.")
+    parser.add_argument("--debug", action="store_true", help="Run with debug output.")
 
     args = parser.parse_args(args)
 
     from fontTools import configLogger
 
     configLogger(level=("INFO" if args.verbose else "ERROR"))
+    if args.debug:
+        configLogger(level="DEBUG")
 
     glyphs = args.glyphs.split() if args.glyphs else None
 
