@@ -812,10 +812,18 @@ def test_gen(
 
                             if overweight:
                                 expectedSize = (size0 * size1) ** 0.5
-                                expectedSize += (size0 + size1) - expectedSize
+                                expectedSize = (size0 + size1) - expectedSize
                             else:
                                 expectedSize = (size0 * size1) ** 0.5
 
+                            log.debug(
+                                "%s: actual size %g; threshold size %g, master sizes: %g, %g",
+                                problem_type,
+                                midSize,
+                                expectedSize,
+                                size0,
+                                size1,
+                            )
                             if (
                                 (not overweight and expectedSize * tolerance > midSize + 1e-5)
                                 or
@@ -828,13 +836,6 @@ def test_gen(
                                         this_tolerance = midSize / expectedSize
                                 except ZeroDivisionError:
                                     this_tolerance = 0
-                                log.debug(
-                                    "actual size %g; threshold size %g, master sizes: %g, %g",
-                                    midSize,
-                                    expectedSize,
-                                    size0,
-                                    size1,
-                                )
                                 log.debug("tolerance %g", this_tolerance)
                                 yield (
                                     glyph_name,
