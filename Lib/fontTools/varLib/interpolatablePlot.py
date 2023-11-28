@@ -126,8 +126,13 @@ class InterpolatablePlot:
              \\\\  ||||  ||||  ||||  //
               ||||||||||||||||||||||||
 """
-    shrug_color = (0, 0.3, 0.3)
+    emoticon_color = (0, 0.3, 0.3)
     shrug = r"""\_(")_/"""
+    underweight = r"""
+ o
+/|\
+/ \
+"""
 
     def __init__(self, out, glyphsets, names=None, **kwargs):
         self.out = out
@@ -468,7 +473,7 @@ class InterpolatablePlot:
                     self.draw_glyph(glyphset, glyphname, problems, which, x=x, y=y)
                 )
             else:
-                self.draw_shrug(x=x, y=y)
+                self.draw_emoticon(self.shrug, x=x, y=y)
             y += self.height + self.pad
 
         if any(
@@ -681,11 +686,14 @@ class InterpolatablePlot:
                     scale=min(scales),
                 )
             except ValueError:
-                self.draw_shrug(x=x, y=y)
+                self.draw_emoticon(self.shrug, x=x, y=y)
             y += self.height + self.pad
 
         else:
-            self.draw_shrug(x=x, y=y)
+            emoticon = self.shrug
+            if "underweight" in problem_types:
+                emoticon = self.underweight
+            self.draw_emoticon(emoticon, x=x, y=y)
 
         if show_page_number:
             self.draw_label(
@@ -1047,6 +1055,44 @@ class InterpolatablePlot:
         cr.fill()
         cr.restore()
 
+    def draw_text(self, text, *, x=0, y=0, color=(0, 0, 0), width=None, height=None):
+        if width is None:
+            width = self.width
+        if height is None:
+            height = self.height
+
+        text = text.splitlines()
+        cr = cairo.Context(self.surface)
+        cr.set_source_rgb(*color)
+        cr.set_font_size(self.line_height)
+        cr.select_font_face(
+            "@cairo:monospace", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL
+        )
+        text_width = 0
+        text_height = 0
+        font_extents = cr.font_extents()
+        font_line_height = font_extents[2]
+        font_ascent = font_extents[0]
+        for line in text:
+            extents = cr.text_extents(line)
+            text_width = max(text_width, extents.width)
+            text_height += font_line_height
+        if not text_width:
+            return
+        cr.translate(x, y)
+        scale = min(width / text_width, height / text_height)
+        # center
+        cr.translate(
+            (width - text_width * scale) / 2, (height - text_height * scale) / 2
+        )
+        cr.scale(scale, scale)
+
+        cr.translate(0, font_ascent)
+        for line in text:
+            cr.move_to(0, 0)
+            cr.show_text(line)
+            cr.translate(0, font_line_height)
+
     def draw_cupcake(self):
         self.set_size(self.total_width(), self.total_height())
 
@@ -1060,50 +1106,17 @@ class InterpolatablePlot:
             bold=True,
         )
 
-        cupcake = self.cupcake.splitlines()
-        cr = cairo.Context(self.surface)
-        cr.set_source_rgb(*self.cupcake_color)
-        cr.set_font_size(self.line_height)
-        cr.select_font_face(
-            "@cairo:monospace", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL
+        self.draw_text(
+            self.cupcake,
+            x=self.pad,
+            y=self.pad + self.line_height,
+            width=self.total_width() - 2 * self.pad,
+            height=self.total_height() - 2 * self.pad - self.line_height,
+            color=self.cupcake_color,
         )
-        width = 0
-        height = 0
-        font_extents = cr.font_extents()
-        font_line_height = font_extents[2]
-        font_ascent = font_extents[0]
-        for line in cupcake:
-            extents = cr.text_extents(line)
-            width = max(width, extents.width)
-            height += font_line_height
-        if not width:
-            return
-        cr.scale(
-            (self.total_width() - 2 * self.pad) / width,
-            (self.total_height() - 2 * self.pad - self.line_height) / height,
-        )
-        cr.translate(self.pad, self.pad + font_ascent + self.line_height)
-        for line in cupcake:
-            cr.move_to(0, 0)
-            cr.show_text(line)
-            cr.translate(0, font_line_height)
 
-    def draw_shrug(self, x=0, y=0):
-        cr = cairo.Context(self.surface)
-        cr.translate(x, y)
-        cr.set_source_rgb(*self.shrug_color)
-        cr.set_font_size(self.line_height)
-        cr.select_font_face(
-            "@cairo:monospace", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL
-        )
-        extents = cr.text_extents(self.shrug)
-        if not extents.width:
-            return
-        cr.translate(0, self.height * 0.6)
-        scale = self.width / extents.width
-        cr.scale(scale, scale)
-        cr.move_to(-extents.x_bearing, 0)
-        cr.show_text(self.shrug)
+    def draw_emoticon(self, emoticon, x=0, y=0):
+        self.draw_text(emoticon, x=x, y=y, color=self.emoticon_color)
 
 
 class InterpolatablePostscriptLike(InterpolatablePlot):
