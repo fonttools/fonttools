@@ -801,6 +801,8 @@ def test_gen(
                         size0 = m0Vectors[ix][0] * m0Vectors[ix][0]
                         size1 = m1Vectors[ix][0] * m1Vectors[ix][0]
 
+                        size0, size1 = sorted((size0, size1))
+
                         midStats = StatisticsPen(glyphset=glyphset)
                         contour.replay(midStats)
                         midVector = _contour_vector_from_stats(midStats)
@@ -809,10 +811,8 @@ def test_gen(
                         for overweight, problem_type in enumerate(("underweight", "overweight")):
 
                             if overweight:
-                                try:
-                                    expectedSize = 1 / (((1 / size0) * (1 / size1)) ** 0.5)
-                                except ZeroDivisionError:
-                                    continue
+                                expectedSize = (size0 * size1) ** 0.5
+                                expectedSize += (size0 + size1) - expectedSize
                             else:
                                 expectedSize = (size0 * size1) ** 0.5
 
