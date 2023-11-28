@@ -808,8 +808,9 @@ def test_gen(
                         midVector = _contour_vector_from_stats(midStats)
                         midSize = midVector[0] * midVector[0]
 
-                        for overweight, problem_type in enumerate(("underweight", "overweight")):
-
+                        for overweight, problem_type in enumerate(
+                            ("underweight", "overweight")
+                        ):
                             if overweight:
                                 expectedSize = (size0 * size1) ** 0.5
                                 expectedSize = (size0 + size1) - expectedSize
@@ -825,9 +826,10 @@ def test_gen(
                                 size1,
                             )
                             if (
-                                (not overweight and expectedSize * tolerance > midSize + 1e-5)
-                                or
-                                (overweight and 1e-5 + expectedSize < midSize * tolerance)
+                                not overweight
+                                and expectedSize * tolerance > midSize + 1e-5
+                            ) or (
+                                overweight and 1e-5 + expectedSize < midSize * tolerance
                             ):
                                 try:
                                     if overweight:
@@ -1060,6 +1062,11 @@ def main(args=None):
         "--pdf",
         action="store",
         help="Output report in PDF format",
+    )
+    parser.add_argument(
+        "--ps",
+        action="store",
+        help="Output report in PostScript format",
     )
     parser.add_argument(
         "--html",
@@ -1462,6 +1469,18 @@ def main(args=None):
                 pdf.add_problems(problems)
                 if not problems and not args.quiet:
                     pdf.draw_cupcake()
+
+        if args.ps:
+            log.info("Writing PS to %s", args.pdf)
+            from .interpolatablePlot import InterpolatablePS
+
+            with InterpolatablePS(args.ps, glyphsets=glyphsets, names=names) as ps:
+                ps.add_title_page(
+                    original_args_inputs, tolerance=tolerance, kinkiness=kinkiness
+                )
+                ps.add_problems(problems)
+                if not problems and not args.quiet:
+                    ps.draw_cupcake()
 
         if args.html:
             log.info("Writing HTML to %s", args.html)

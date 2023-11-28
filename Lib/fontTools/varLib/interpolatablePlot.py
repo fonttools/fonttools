@@ -513,7 +513,11 @@ class InterpolatablePlot:
                 midway_glyphset,
                 glyphname,
                 [{"type": "midway"}]
-                + [p for p in problems if p["type"] in ("kink", "underweight", "overweight")],
+                + [
+                    p
+                    for p in problems
+                    if p["type"] in ("kink", "underweight", "overweight")
+                ],
                 None,
                 x=x,
                 y=y,
