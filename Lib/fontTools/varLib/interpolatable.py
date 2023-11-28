@@ -853,19 +853,21 @@ def test_gen(
                     # self-intersecting contour; ignore it.
                     contour = midRecording[ix]
                     if contour and (m0Vectors[ix][0] < 0) == (m1Vectors[ix][0] < 0):
-                        area0 = m0Vectors[ix][0] * m0Vectors[ix][0]
-                        area1 = m1Vectors[ix][0] * m1Vectors[ix][0]
+
+                        power = 2 + (1 - tolerance) * .3 # Magic
+                        size0 = abs(m0Vectors[ix][0]) ** power
+                        size1 = abs(m1Vectors[ix][0]) ** power
 
                         midStats = StatisticsPen(glyphset=glyphset)
                         contour.replay(midStats)
                         midVector = _contour_vector_from_stats(midStats)
-                        midArea = midVector[0] * midVector[0]
+                        midSize = abs(midVector[0]) ** power
 
-                        geomAvg = sqrt(area0 * area1)
-                        if not (geomAvg * tolerance <= midArea):
-                            print(area0, area1, "geom", geomAvg, "mid", midArea)
+                        geomAvg = (size0 * size1) ** (1 / power)
+                        if not (geomAvg * tolerance <= midSize + 1e-5):
+                            print(size0, size1, "geom", geomAvg, "mid", midSize)
                             try:
-                                this_tolerance = midArea / geomAvg
+                                this_tolerance = midSize / geomAvg
                             except ZeroDivisionError:
                                 this_tolerance = 0
                             yield (
