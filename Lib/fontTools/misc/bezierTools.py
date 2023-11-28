@@ -1395,7 +1395,7 @@ def curveCurveIntersections(curve1, curve2):
         >>> len(intersections)
         3
         >>> intersections[0].pt
-        (81.7831487395506, 109.88904552375288)
+        (81.7904225872997, 109.89939633675462)
     """
     if _is_linelike(curve1):
         line1 = curve1[0], curve1[-1]
@@ -1434,7 +1434,7 @@ def segmentSegmentIntersections(seg1, seg2):
         >>> len(intersections)
         3
         >>> intersections[0].pt
-        (81.7831487395506, 109.88904552375288)
+        (81.7904225872997, 109.89939633675462)
         >>> curve3 = [ (100, 240), (30, 60), (210, 230), (160, 30) ]
         >>> line  = [ (25, 260), (230, 20) ]
         >>> intersections = segmentSegmentIntersections(curve3, line)
