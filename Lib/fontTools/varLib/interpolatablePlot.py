@@ -1121,10 +1121,6 @@ class InterpolatablePostscriptLike(InterpolatablePlot):
         super().show_page()
         self.surface.show_page()
 
-    def __enter__(self):
-        self.surface = cairo.PSSurface(self.out, self.width, self.height)
-        return self
-
 
 class InterpolatablePS(InterpolatablePostscriptLike):
     def __enter__(self):
