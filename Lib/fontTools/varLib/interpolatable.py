@@ -322,6 +322,23 @@ def _find_parents_and_order(glyphsets, locations):
     return parents, order
 
 
+def lerp_recordings(recording1, recording2, factor=0.5):
+    pen = RecordingPen()
+    value = pen.value
+    for (op1, args1), (op2, args2) in zip(recording1.value, recording2.value):
+        if op1 != op2:
+            raise ValueError("Mismatched operations: %s, %s" % (op1, op2))
+        if op1 == "addComponent":
+            mid_args = args1  # XXX Interpolate transformation?
+        else:
+            mid_args = [
+                (x1 + (x2 - x1) * factor, y1 + (y2 - y1) * factor)
+                for (x1, y1), (x2, y2) in zip(args1, args2)
+            ]
+        value.append((op1, mid_args))
+    return pen
+
+
 def test_gen(
     glyphsets,
     glyphs=None,
@@ -368,6 +385,7 @@ def test_gen(
         allNodeTypes = []
         allContourIsomorphisms = []
         allContourPoints = []
+        allContourPens = []
         allGlyphs = [glyphset[glyph_name] for glyphset in glyphsets]
         if len([1 for glyph in allGlyphs if glyph is not None]) <= 1:
             continue
@@ -385,6 +403,7 @@ def test_gen(
                 allGreenVectors.append(None)
                 allContourIsomorphisms.append(None)
                 allContourPoints.append(None)
+                allContourPens.append(None)
                 continue
 
             perContourPen = PerContourOrComponentPen(RecordingPen, glyphset=glyphset)
@@ -405,6 +424,7 @@ def test_gen(
             allGreenVectors.append(contourGreenVectors)
             allContourIsomorphisms.append(contourIsomorphisms)
             allContourPoints.append(contourPoints)
+            allContourPens.append(contourPens)
             for ix, contour in enumerate(contourPens):
                 contourOps = tuple(op for op, arg in contour.value)
                 nodeTypes.append(contourOps)
@@ -598,8 +618,13 @@ def test_gen(
                         identity_cost = identity_cost_green
 
                     if matching_cost < identity_cost * tolerance:
-                        # print(matching_cost_control / identity_cost_control, matching_cost_green / identity_cost_green)
-
+                        log.debug(
+                            "matching_control_ratio %g; matching_green_ratio %g.",
+                            matching_cost_control / identity_cost_control,
+                            matching_cost_green / identity_cost_green,
+                        )
+                        this_tolerance = matching_cost / identity_cost
+                        log.debug("tolerance", this_tolerance)
                         yield (
                             glyph_name,
                             {
@@ -610,21 +635,35 @@ def test_gen(
                                 "master_2_idx": m1idx,
                                 "value_1": list(range(n)),
                                 "value_2": matching,
-                                "tolerance": matching_cost / identity_cost,
+                                "tolerance": this_tolerance,
                             },
                         )
                         matchings[m1idx] = matching
 
             #
-            # "wrong_start_point" check
+            # "wrong_start_point" / weight check
             #
 
             m1 = allContourIsomorphisms[m1idx]
             m0 = allContourIsomorphisms[m0idx]
+            m1Vectors = allGreenVectors[m1idx]
+            m0Vectors = allGreenVectors[m0idx]
+            recording0 = allContourPens[m0idx]
+            recording1 = allContourPens[m1idx]
 
             # If contour-order is wrong, adjust it
             if matchings[m1idx] is not None and m1:  # m1 is empty for composite glyphs
                 m1 = [m1[i] for i in matchings[m1idx]]
+                m1Vectors = [m1Vectors[i] for i in matchings[m1idx]]
+                recording1 = [recording1[i] for i in matchings[m1idx]]
+
+            midRecording = []
+            for c0, c1 in zip(recording0, recording1):
+                try:
+                    midRecording.append(lerp_recordings(c0, c1))
+                except ValueError:
+                    # Mismatch because of the reordering above
+                    midRecording.append(None)
 
             for ix, (contour0, contour1) in enumerate(zip(m0, m1)):
                 if len(contour0) == 0 or len(contour0) != len(contour1):
@@ -667,13 +706,10 @@ def test_gen(
                     ):
                         # Try harder
 
-                        m0Vectors = allGreenVectors[m0idx][ix]
-                        m1Vectors = allGreenVectors[m1idx][ix]
-
                         # Recover the covariance matrix from the GreenVectors.
                         # This is a 2x2 matrix.
                         transforms = []
-                        for vector in (m0Vectors, m1Vectors):
+                        for vector in (m0Vectors[ix], m1Vectors[ix]):
                             meanX = vector[1]
                             meanY = vector[2]
                             stddevX = vector[3] / 2
@@ -753,55 +789,47 @@ def test_gen(
                             },
                         )
                 else:
-                    # If first_cost is Too Large™, do further inspection.
-                    # This can happen specially in the case of TrueType
-                    # fonts, where the original contour had wrong start point,
-                    # but because of the cubic->quadratic conversion, we don't
-                    # have many isomorphisms to work with.
+                    # Weight check.
+                    #
+                    # If contour could be mid-interpolated, and the two
+                    # contours have the same area sign, proceeed.
+                    #
+                    # The sign difference can happen if it's a werido
+                    # self-intersecting contour; ignore it.
+                    contour = midRecording[ix]
+                    if contour and (m0Vectors[ix][0] < 0) == (m1Vectors[ix][0] < 0):
+                        size0 = m0Vectors[ix][0] * m0Vectors[ix][0]
+                        size1 = m1Vectors[ix][0] * m1Vectors[ix][0]
 
-                    # The threshold here is all black magic. It's just here to
-                    # speed things up so we don't end up doing a full matching
-                    # on every contour that is correct.
-                    threshold = (
-                        len(c0[0]) * (allControlVectors[m0idx][ix][0] * 0.5) ** 2 / 4
-                    )  # Magic only
-                    c1 = contour1[min_cost_idx]
+                        midStats = StatisticsPen(glyphset=glyphset)
+                        contour.replay(midStats)
+                        midVector = _contour_vector_from_stats(midStats)
+                        midSize = midVector[0] * midVector[0]
 
-                    # If point counts are different it's because of the contour
-                    # reordering above. We can in theory still try, but our
-                    # bipartite-matching implementations currently assume
-                    # equal number of vertices on both sides. I'm lazy to update
-                    # all three different implementations!
-
-                    if len(c0[0]) == len(c1[0]) and first_cost > threshold:
-                        # Do a quick(!) matching between the points. If it's way off,
-                        # flag it. This can happen specially in the case of TrueType
-                        # fonts, where the original contour had wrong start point, but
-                        # because of the cubic->quadratic conversion, we don't have many
-                        # isomorphisms.
-                        points0 = c0[0][::_NUM_ITEMS_PER_POINTS_COMPLEX_VECTOR]
-                        points1 = c1[0][::_NUM_ITEMS_PER_POINTS_COMPLEX_VECTOR]
-
-                        graph = [
-                            [_hypot2_complex(p0 - p1) for p1 in points1]
-                            for p0 in points0
-                        ]
-                        matching, matching_cost = min_cost_perfect_bipartite_matching(
-                            graph
-                        )
-                        identity_cost = sum(graph[i][i] for i in range(len(graph)))
-
-                        if matching_cost < identity_cost / 5:  # Heuristic
-                            # print(matching_cost, identity_cost, matching)
+                        geomAvg = (size0 * size1) ** 0.5
+                        if not (geomAvg * tolerance <= midSize + 1e-5):
+                            try:
+                                this_tolerance = midSize / geomAvg
+                            except ZeroDivisionError:
+                                this_tolerance = 0
+                            log.debug(
+                                "average size %g; actual size %g; master sizes: %g, %g",
+                                geomAvg,
+                                midSize,
+                                size0,
+                                size1,
+                            )
+                            log.debug("tolerance %g", this_tolerance)
                             yield (
                                 glyph_name,
                                 {
-                                    "type": "wrong_structure",
+                                    "type": "underweight",
                                     "contour": ix,
                                     "master_1": names[m0idx],
                                     "master_2": names[m1idx],
                                     "master_1_idx": m0idx,
                                     "master_2_idx": m1idx,
+                                    "tolerance": this_tolerance,
                                 },
                             )
 
@@ -919,7 +947,14 @@ def test_gen(
 
                     this_tolerance = t / (abs(sin_mid) * kinkiness)
 
-                    # print(deviation, deviation_ratio, sin_mid, r_diff, this_tolerance)
+                    log.debug(
+                        "deviation %g; deviation_ratio %g; sin_mid %g; r_diff %g",
+                        deviation,
+                        deviation_ratio,
+                        sin_mid,
+                        r_diff,
+                    )
+                    log.debug("tolerance %g", this_tolerance)
                     yield (
                         glyph_name,
                         {
@@ -1044,12 +1079,15 @@ def main(args=None):
         help="Name of the master to use in the report. If not provided, all are used.",
     )
     parser.add_argument("-v", "--verbose", action="store_true", help="Run verbosely.")
+    parser.add_argument("--debug", action="store_true", help="Run with debug output.")
 
     args = parser.parse_args(args)
 
     from fontTools import configLogger
 
     configLogger(level=("INFO" if args.verbose else "ERROR"))
+    if args.debug:
+        configLogger(level="DEBUG")
 
     glyphs = args.glyphs.split() if args.glyphs else None
 
@@ -1352,9 +1390,9 @@ def main(args=None):
                             ),
                             file=f,
                         )
-                    elif p["type"] == "wrong_structure":
+                    elif p["type"] == "underweight":
                         print(
-                            "    Contour %d structures differ: %s, %s"
+                            "    Contour %d interpolation is underweight: %s, %s"
                             % (
                                 p["contour"],
                                 p["master_1"],

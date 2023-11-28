@@ -97,6 +97,7 @@ class InterpolatablePlot:
     kink_circle_color = (1, 0, 1, 0.5)
     contour_colors = ((1, 0, 0), (0, 0, 1), (0, 1, 0), (1, 1, 0), (1, 0, 1), (0, 1, 1))
     contour_alpha = 0.5
+    weight_issue_contour_color = (0, 0, 0, 0.5)
     no_issues_label = "Your font's good! Have a cupcake..."
     no_issues_label_color = (0, 0.5, 0)
     cupcake_color = (0.3, 0, 0.3)
@@ -241,6 +242,17 @@ class InterpolatablePlot:
                 "Tolerance: badness; closer to zero the worse", x=xxx, y=y, width=width
             )
             y -= self.pad + self.line_height
+
+        self.draw_label("Underweight contours", x=xxx, y=y, width=width)
+        cr.rectangle(xx - self.pad * 0.7, y, 1.5 * self.pad, self.line_height)
+        cr.set_source_rgb(*self.fill_color)
+        cr.fill_preserve()
+        cr.set_source_rgb(*self.stroke_color)
+        cr.set_line_width(self.stroke_width)
+        cr.stroke_preserve()
+        cr.set_source_rgba(*self.weight_issue_contour_color)
+        cr.fill()
+        y -= self.pad + self.line_height
 
         self.draw_label(
             "Colored contours: contours with the wrong order", x=xxx, y=y, width=width
@@ -465,8 +477,8 @@ class InterpolatablePlot:
                 "nothing",
                 "wrong_start_point",
                 "contour_order",
-                "wrong_structure",
                 "kink",
+                "underweight",
             )
             for pt in problem_types
         ):
@@ -489,7 +501,8 @@ class InterpolatablePlot:
             self.draw_glyph(
                 midway_glyphset,
                 glyphname,
-                [{"type": "midway"}] + [p for p in problems if p["type"] == "kink"],
+                [{"type": "midway"}]
+                + [p for p in problems if p["type"] in ("kink", "underweight")],
                 None,
                 x=x,
                 y=y,
@@ -498,171 +511,181 @@ class InterpolatablePlot:
 
             y += self.height + self.pad
 
+        if any(
+            pt
+            in (
+                "nothing",
+                "wrong_start_point",
+                "contour_order",
+                "kink",
+            )
+            for pt in problem_types
+        ):
             # Draw the proposed fix
 
             self.draw_label("proposed fix", x=x, y=y, color=self.head_color, align=0.5)
             y += self.line_height + self.pad
 
-            if problem_type in ("wrong_structure"):
-                self.draw_shrug(x=x, y=y)
-            else:
-                overriding1 = OverridingDict(glyphset1)
-                overriding2 = OverridingDict(glyphset2)
-                perContourPen1 = PerContourOrComponentPen(
-                    RecordingPen, glyphset=overriding1
-                )
-                perContourPen2 = PerContourOrComponentPen(
-                    RecordingPen, glyphset=overriding2
-                )
-                glyphset1[glyphname].draw(perContourPen1)
-                glyphset2[glyphname].draw(perContourPen2)
+            overriding1 = OverridingDict(glyphset1)
+            overriding2 = OverridingDict(glyphset2)
+            perContourPen1 = PerContourOrComponentPen(
+                RecordingPen, glyphset=overriding1
+            )
+            perContourPen2 = PerContourOrComponentPen(
+                RecordingPen, glyphset=overriding2
+            )
+            glyphset1[glyphname].draw(perContourPen1)
+            glyphset2[glyphname].draw(perContourPen2)
 
-                for problem in problems:
-                    if problem["type"] == "contour_order":
-                        fixed_contours = [
-                            perContourPen2.value[i] for i in problems[0]["value_2"]
-                        ]
-                        perContourPen2.value = fixed_contours
+            for problem in problems:
+                if problem["type"] == "contour_order":
+                    fixed_contours = [
+                        perContourPen2.value[i] for i in problems[0]["value_2"]
+                    ]
+                    perContourPen2.value = fixed_contours
 
-                for problem in problems:
-                    if problem["type"] == "wrong_start_point":
-                        # Save the wrong contours
-                        wrongContour1 = perContourPen1.value[problem["contour"]]
-                        wrongContour2 = perContourPen2.value[problem["contour"]]
+            for problem in problems:
+                if problem["type"] == "wrong_start_point":
+                    # Save the wrong contours
+                    wrongContour1 = perContourPen1.value[problem["contour"]]
+                    wrongContour2 = perContourPen2.value[problem["contour"]]
 
-                        # Convert the wrong contours to point pens
-                        points1 = RecordingPointPen()
-                        converter = SegmentToPointPen(points1, False)
-                        wrongContour1.replay(converter)
-                        points2 = RecordingPointPen()
-                        converter = SegmentToPointPen(points2, False)
-                        wrongContour2.replay(converter)
+                    # Convert the wrong contours to point pens
+                    points1 = RecordingPointPen()
+                    converter = SegmentToPointPen(points1, False)
+                    wrongContour1.replay(converter)
+                    points2 = RecordingPointPen()
+                    converter = SegmentToPointPen(points2, False)
+                    wrongContour2.replay(converter)
 
-                        proposed_start = problem["value_2"]
+                    proposed_start = problem["value_2"]
 
-                        # See if we need reversing; fragile but worth a try
-                        if problem["reversed"]:
-                            new_points2 = RecordingPointPen()
-                            reversedPen = ReverseContourPointPen(new_points2)
-                            points2.replay(reversedPen)
-                            points2 = new_points2
-                            proposed_start = len(points2.value) - 2 - proposed_start
+                    # See if we need reversing; fragile but worth a try
+                    if problem["reversed"]:
+                        new_points2 = RecordingPointPen()
+                        reversedPen = ReverseContourPointPen(new_points2)
+                        points2.replay(reversedPen)
+                        points2 = new_points2
+                        proposed_start = len(points2.value) - 2 - proposed_start
 
-                        # Rotate points2 so that the first point is the same as in points1
-                        beginPath = points2.value[:1]
-                        endPath = points2.value[-1:]
-                        pts = points2.value[1:-1]
-                        pts = pts[proposed_start:] + pts[:proposed_start]
-                        points2.value = beginPath + pts + endPath
+                    # Rotate points2 so that the first point is the same as in points1
+                    beginPath = points2.value[:1]
+                    endPath = points2.value[-1:]
+                    pts = points2.value[1:-1]
+                    pts = pts[proposed_start:] + pts[:proposed_start]
+                    points2.value = beginPath + pts + endPath
 
-                        # Convert the point pens back to segment pens
-                        segment1 = RecordingPen()
-                        converter = PointToSegmentPen(segment1, True)
-                        points1.replay(converter)
-                        segment2 = RecordingPen()
-                        converter = PointToSegmentPen(segment2, True)
-                        points2.replay(converter)
+                    # Convert the point pens back to segment pens
+                    segment1 = RecordingPen()
+                    converter = PointToSegmentPen(segment1, True)
+                    points1.replay(converter)
+                    segment2 = RecordingPen()
+                    converter = PointToSegmentPen(segment2, True)
+                    points2.replay(converter)
 
-                        # Replace the wrong contours
-                        wrongContour1.value = segment1.value
-                        wrongContour2.value = segment2.value
-                        perContourPen1.value[problem["contour"]] = wrongContour1
-                        perContourPen2.value[problem["contour"]] = wrongContour2
+                    # Replace the wrong contours
+                    wrongContour1.value = segment1.value
+                    wrongContour2.value = segment2.value
+                    perContourPen1.value[problem["contour"]] = wrongContour1
+                    perContourPen2.value[problem["contour"]] = wrongContour2
 
-                for problem in problems:
-                    # If we have a kink, try to fix it.
-                    if problem["type"] == "kink":
-                        # Save the wrong contours
-                        wrongContour1 = perContourPen1.value[problem["contour"]]
-                        wrongContour2 = perContourPen2.value[problem["contour"]]
+            for problem in problems:
+                # If we have a kink, try to fix it.
+                if problem["type"] == "kink":
+                    # Save the wrong contours
+                    wrongContour1 = perContourPen1.value[problem["contour"]]
+                    wrongContour2 = perContourPen2.value[problem["contour"]]
 
-                        # Convert the wrong contours to point pens
-                        points1 = RecordingPointPen()
-                        converter = SegmentToPointPen(points1, False)
-                        wrongContour1.replay(converter)
-                        points2 = RecordingPointPen()
-                        converter = SegmentToPointPen(points2, False)
-                        wrongContour2.replay(converter)
+                    # Convert the wrong contours to point pens
+                    points1 = RecordingPointPen()
+                    converter = SegmentToPointPen(points1, False)
+                    wrongContour1.replay(converter)
+                    points2 = RecordingPointPen()
+                    converter = SegmentToPointPen(points2, False)
+                    wrongContour2.replay(converter)
 
-                        i = problem["value"]
+                    i = problem["value"]
 
-                        # Position points to be around the same ratio
-                        # beginPath / endPath dance
-                        j = i + 1
-                        pt0 = points1.value[j][1][0]
-                        pt1 = points2.value[j][1][0]
-                        j_prev = (i - 1) % (len(points1.value) - 2) + 1
-                        pt0_prev = points1.value[j_prev][1][0]
-                        pt1_prev = points2.value[j_prev][1][0]
-                        j_next = (i + 1) % (len(points1.value) - 2) + 1
-                        pt0_next = points1.value[j_next][1][0]
-                        pt1_next = points2.value[j_next][1][0]
+                    # Position points to be around the same ratio
+                    # beginPath / endPath dance
+                    j = i + 1
+                    pt0 = points1.value[j][1][0]
+                    pt1 = points2.value[j][1][0]
+                    j_prev = (i - 1) % (len(points1.value) - 2) + 1
+                    pt0_prev = points1.value[j_prev][1][0]
+                    pt1_prev = points2.value[j_prev][1][0]
+                    j_next = (i + 1) % (len(points1.value) - 2) + 1
+                    pt0_next = points1.value[j_next][1][0]
+                    pt1_next = points2.value[j_next][1][0]
 
-                        pt0 = complex(*pt0)
-                        pt1 = complex(*pt1)
-                        pt0_prev = complex(*pt0_prev)
-                        pt1_prev = complex(*pt1_prev)
-                        pt0_next = complex(*pt0_next)
-                        pt1_next = complex(*pt1_next)
+                    pt0 = complex(*pt0)
+                    pt1 = complex(*pt1)
+                    pt0_prev = complex(*pt0_prev)
+                    pt1_prev = complex(*pt1_prev)
+                    pt0_next = complex(*pt0_next)
+                    pt1_next = complex(*pt1_next)
 
-                        # Find the ratio of the distance between the points
-                        r0 = abs(pt0 - pt0_prev) / abs(pt0_next - pt0_prev)
-                        r1 = abs(pt1 - pt1_prev) / abs(pt1_next - pt1_prev)
-                        r_mid = (r0 + r1) / 2
+                    # Find the ratio of the distance between the points
+                    r0 = abs(pt0 - pt0_prev) / abs(pt0_next - pt0_prev)
+                    r1 = abs(pt1 - pt1_prev) / abs(pt1_next - pt1_prev)
+                    r_mid = (r0 + r1) / 2
 
-                        pt0 = pt0_prev + r_mid * (pt0_next - pt0_prev)
-                        pt1 = pt1_prev + r_mid * (pt1_next - pt1_prev)
+                    pt0 = pt0_prev + r_mid * (pt0_next - pt0_prev)
+                    pt1 = pt1_prev + r_mid * (pt1_next - pt1_prev)
 
-                        points1.value[j] = (
-                            points1.value[j][0],
-                            (((pt0.real, pt0.imag),) + points1.value[j][1][1:]),
-                            points1.value[j][2],
-                        )
-                        points2.value[j] = (
-                            points2.value[j][0],
-                            (((pt1.real, pt1.imag),) + points2.value[j][1][1:]),
-                            points2.value[j][2],
-                        )
-
-                        # Convert the point pens back to segment pens
-                        segment1 = RecordingPen()
-                        converter = PointToSegmentPen(segment1, True)
-                        points1.replay(converter)
-                        segment2 = RecordingPen()
-                        converter = PointToSegmentPen(segment2, True)
-                        points2.replay(converter)
-
-                        # Replace the wrong contours
-                        wrongContour1.value = segment1.value
-                        wrongContour2.value = segment2.value
-
-                # Assemble
-                fixed1 = RecordingPen()
-                fixed2 = RecordingPen()
-                for contour in perContourPen1.value:
-                    fixed1.value.extend(contour.value)
-                for contour in perContourPen2.value:
-                    fixed2.value.extend(contour.value)
-                fixed1.draw = fixed1.replay
-                fixed2.draw = fixed2.replay
-
-                overriding1[glyphname] = fixed1
-                overriding2[glyphname] = fixed2
-
-                try:
-                    midway_glyphset = LerpGlyphSet(overriding1, overriding2)
-                    self.draw_glyph(
-                        midway_glyphset,
-                        glyphname,
-                        {"type": "fixed"},
-                        None,
-                        x=x,
-                        y=y,
-                        scale=min(scales),
+                    points1.value[j] = (
+                        points1.value[j][0],
+                        (((pt0.real, pt0.imag),) + points1.value[j][1][1:]),
+                        points1.value[j][2],
                     )
-                except ValueError:
-                    self.draw_shrug(x=x, y=y)
-                y += self.height + self.pad
+                    points2.value[j] = (
+                        points2.value[j][0],
+                        (((pt1.real, pt1.imag),) + points2.value[j][1][1:]),
+                        points2.value[j][2],
+                    )
+
+                    # Convert the point pens back to segment pens
+                    segment1 = RecordingPen()
+                    converter = PointToSegmentPen(segment1, True)
+                    points1.replay(converter)
+                    segment2 = RecordingPen()
+                    converter = PointToSegmentPen(segment2, True)
+                    points2.replay(converter)
+
+                    # Replace the wrong contours
+                    wrongContour1.value = segment1.value
+                    wrongContour2.value = segment2.value
+
+            # Assemble
+            fixed1 = RecordingPen()
+            fixed2 = RecordingPen()
+            for contour in perContourPen1.value:
+                fixed1.value.extend(contour.value)
+            for contour in perContourPen2.value:
+                fixed2.value.extend(contour.value)
+            fixed1.draw = fixed1.replay
+            fixed2.draw = fixed2.replay
+
+            overriding1[glyphname] = fixed1
+            overriding2[glyphname] = fixed2
+
+            try:
+                midway_glyphset = LerpGlyphSet(overriding1, overriding2)
+                self.draw_glyph(
+                    midway_glyphset,
+                    glyphname,
+                    {"type": "fixed"},
+                    None,
+                    x=x,
+                    y=y,
+                    scale=min(scales),
+                )
+            except ValueError:
+                self.draw_shrug(x=x, y=y)
+            y += self.height + self.pad
+
+        else:
+            self.draw_shrug(x=x, y=y)
 
         if show_page_number:
             self.draw_label(
@@ -787,13 +810,22 @@ class InterpolatablePlot:
 
             cr.new_path()
 
+        if "underweight" in problem_types:
+            perContourPen = PerContourOrComponentPen(RecordingPen, glyphset=glyphset)
+            recording.replay(perContourPen)
+            for problem in problems:
+                if problem["type"] == "underweight":
+                    contour = perContourPen.value[problem["contour"]]
+                    contour.replay(CairoPen(glyphset, cr))
+                    cr.set_source_rgba(*self.weight_issue_contour_color)
+                    cr.fill()
+
         if any(
             t in problem_types
             for t in {
                 "nothing",
                 "node_count",
                 "node_incompatibility",
-                "wrong_structure",
             }
         ):
             cr.set_line_cap(cairo.LINE_CAP_ROUND)
@@ -863,7 +895,7 @@ class InterpolatablePlot:
                     cr.fill()
 
         for problem in problems:
-            if problem["type"] in ("nothing", "wrong_start_point", "wrong_structure"):
+            if problem["type"] in ("nothing", "wrong_start_point"):
                 idx = problem.get("contour")
 
                 # Draw suggested point
