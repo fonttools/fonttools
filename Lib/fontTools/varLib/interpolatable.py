@@ -624,7 +624,7 @@ def test_gen(
                             matching_cost_green / identity_cost_green,
                         )
                         this_tolerance = matching_cost / identity_cost
-                        log.debug("tolerance", this_tolerance)
+                        log.debug("tolerance: %g", this_tolerance)
                         yield (
                             glyph_name,
                             {
