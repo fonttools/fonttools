@@ -465,7 +465,7 @@ class InterpolatablePlot:
                 "nothing",
                 "wrong_start_point",
                 "contour_order",
-                "wrong_structure",
+                "underweight",
                 "kink",
             )
             for pt in problem_types
@@ -503,7 +503,7 @@ class InterpolatablePlot:
             self.draw_label("proposed fix", x=x, y=y, color=self.head_color, align=0.5)
             y += self.line_height + self.pad
 
-            if problem_type in ("wrong_structure"):
+            if problem_type in ("underweight"):
                 self.draw_shrug(x=x, y=y)
             else:
                 overriding1 = OverridingDict(glyphset1)
@@ -793,7 +793,6 @@ class InterpolatablePlot:
                 "nothing",
                 "node_count",
                 "node_incompatibility",
-                "wrong_structure",
             }
         ):
             cr.set_line_cap(cairo.LINE_CAP_ROUND)
@@ -863,7 +862,7 @@ class InterpolatablePlot:
                     cr.fill()
 
         for problem in problems:
-            if problem["type"] in ("nothing", "wrong_start_point", "wrong_structure"):
+            if problem["type"] in ("nothing", "wrong_start_point", "underweight"):
                 idx = problem.get("contour")
 
                 # Draw suggested point

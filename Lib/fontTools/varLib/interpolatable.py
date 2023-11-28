@@ -636,7 +636,7 @@ def test_gen(
                         matchings[m1idx] = matching
 
             #
-            # "wrong_start_point" / "wrong_structure" check
+            # "wrong_start_point" / weight check
             #
 
             m1 = allContourIsomorphisms[m1idx]
@@ -784,68 +784,8 @@ def test_gen(
                             },
                         )
                 else:
-                    # If first_cost is Too Large™, do further inspection.
-                    # This can happen specially in the case of TrueType
-                    # fonts, where the original contour had wrong start point,
-                    # but because of the cubic->quadratic conversion, we don't
-                    # have many isomorphisms to work with.
-
-                    # The threshold here is all black magic. It's just here to
-                    # speed things up so we don't end up doing a full matching
-                    # on every contour that is correct.
-                    threshold = (
-                        len(c0[0]) * (allControlVectors[m0idx][ix][0] * 0.5) ** 2 / 8
-                    )  # Magic only
-                    c1 = contour1[min_cost_idx]
-
-                    # If point counts are different it's because of the contour
-                    # reordering above. We can in theory still try, but our
-                    # bipartite-matching implementations currently assume
-                    # equal number of vertices on both sides. I'm lazy to update
-                    # all three different implementations!
-
-                    if len(c0[0]) == len(c1[0]) and first_cost > threshold:
-                        # Do a quick(!) matching between the points. If it's way off,
-                        # flag it. This can happen specially in the case of TrueType
-                        # fonts, where the original contour had wrong start point, but
-                        # because of the cubic->quadratic conversion, we don't have many
-                        # isomorphisms.
-                        points0 = c0[0][::_NUM_ITEMS_PER_POINTS_COMPLEX_VECTOR]
-                        points1 = c1[0][::_NUM_ITEMS_PER_POINTS_COMPLEX_VECTOR]
-
-                        graph = [
-                            [_hypot2_complex(p0 - p1) for p1 in points1]
-                            for p0 in points0
-                        ]
-                        matching, matching_cost = min_cost_perfect_bipartite_matching(
-                            graph
-                        )
-                        identity_cost = sum(graph[i][i] for i in range(len(graph)))
-
-                        threshold = 0.5  # Magic only
-                        if (
-                            matching_cost < identity_cost * tolerance * threshold
-                        ):  # Heuristic
-                            pass
-                            # print("wrong_structure1", matching_cost / identity_cost)
-                            # this_tolerance = matching_cost / (identity_cost * threshold)
-                            # yield (
-                            #    glyph_name,
-                            #    {
-                            #        "type": "wrong_structure",
-                            #        "contour": ix,
-                            #        "master_1": names[m0idx],
-                            #        "master_2": names[m1idx],
-                            #        "master_1_idx": m0idx,
-                            #        "master_2_idx": m1idx,
-                            #        "tolerance": this_tolerance,
-                            #    },
-                            # )
-
-                    # Check that area of mid-way interpolation is between the
-                    # area of the two masters.
-                    # This is a bit of a hack, but it's a good sanity check.
-
+                    # Weight check.
+                    #
                     # If contour could be mid-interpolated, and the two
                     # contours have the same area sign, proceeed.
                     #
@@ -873,7 +813,7 @@ def test_gen(
                             yield (
                                 glyph_name,
                                 {
-                                    "type": "wrong_structure",
+                                    "type": "underweight",
                                     "contour": ix,
                                     "master_1": names[m0idx],
                                     "master_2": names[m1idx],
@@ -1430,9 +1370,9 @@ def main(args=None):
                             ),
                             file=f,
                         )
-                    elif p["type"] == "wrong_structure":
+                    elif p["type"] == "underweight":
                         print(
-                            "    Contour %d structures differ: %s, %s"
+                            "    Contour %d interpolation is underweight: %s, %s"
                             % (
                                 p["contour"],
                                 p["master_1"],
