@@ -854,17 +854,15 @@ def test_gen(
                     contour = midRecording[ix]
                     if contour and (m0Vectors[ix][0] < 0) == (m1Vectors[ix][0] < 0):
 
-                        mult = .25 # Magic
-                        power = 2 #+ (1 - tolerance) * mult
-                        size0 = abs(m0Vectors[ix][0]) ** power
-                        size1 = abs(m1Vectors[ix][0]) ** power
+                        size0 = m0Vectors[ix][0] * m0Vectors[ix][0]
+                        size1 = m1Vectors[ix][0] * m1Vectors[ix][0]
 
                         midStats = StatisticsPen(glyphset=glyphset)
                         contour.replay(midStats)
                         midVector = _contour_vector_from_stats(midStats)
-                        midSize = abs(midVector[0]) ** power
+                        midSize = midVector[0] * midVector[0]
 
-                        geomAvg = (size0 * size1) ** (1 / power)
+                        geomAvg = (size0 * size1) ** .5
                         if not (geomAvg * tolerance <= midSize + 1e-5):
                             print(size0, size1, "geom", geomAvg, "mid", midSize)
                             try:
