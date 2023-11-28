@@ -618,7 +618,11 @@ def test_gen(
                         identity_cost = identity_cost_green
 
                     if matching_cost < identity_cost * tolerance:
-                        log.debug("matching_control_ratio %g; matching_green_ratio %g.", matching_cost_control / identity_cost_control, matching_cost_green / identity_cost_green)
+                        log.debug(
+                            "matching_control_ratio %g; matching_green_ratio %g.",
+                            matching_cost_control / identity_cost_control,
+                            matching_cost_green / identity_cost_green,
+                        )
                         this_tolerance = matching_cost / identity_cost
                         log.debug("tolerance", this_tolerance)
                         yield (
@@ -631,7 +635,7 @@ def test_gen(
                                 "master_2_idx": m1idx,
                                 "value_1": list(range(n)),
                                 "value_2": matching,
-                                "tolerance": this_tolerance
+                                "tolerance": this_tolerance,
                             },
                         )
                         matchings[m1idx] = matching
@@ -794,7 +798,6 @@ def test_gen(
                     # self-intersecting contour; ignore it.
                     contour = midRecording[ix]
                     if contour and (m0Vectors[ix][0] < 0) == (m1Vectors[ix][0] < 0):
-
                         size0 = m0Vectors[ix][0] * m0Vectors[ix][0]
                         size1 = m1Vectors[ix][0] * m1Vectors[ix][0]
 
@@ -803,13 +806,19 @@ def test_gen(
                         midVector = _contour_vector_from_stats(midStats)
                         midSize = midVector[0] * midVector[0]
 
-                        geomAvg = (size0 * size1) ** .5
+                        geomAvg = (size0 * size1) ** 0.5
                         if not (geomAvg * tolerance <= midSize + 1e-5):
                             try:
-                                this_tolerance = (midSize / geomAvg)
+                                this_tolerance = midSize / geomAvg
                             except ZeroDivisionError:
                                 this_tolerance = 0
-                            log.debug("average size %g; actual size %g; master sizes: %g, %g", geomAvg, midSize, size0, size1)
+                            log.debug(
+                                "average size %g; actual size %g; master sizes: %g, %g",
+                                geomAvg,
+                                midSize,
+                                size0,
+                                size1,
+                            )
                             log.debug("tolerance %g", this_tolerance)
                             yield (
                                 glyph_name,
@@ -938,7 +947,13 @@ def test_gen(
 
                     this_tolerance = t / (abs(sin_mid) * kinkiness)
 
-                    log.debug("deviation %g; deviation_ratio %g; sin_mid %g; r_diff %g", deviation, deviation_ratio, sin_mid, r_diff)
+                    log.debug(
+                        "deviation %g; deviation_ratio %g; sin_mid %g; r_diff %g",
+                        deviation,
+                        deviation_ratio,
+                        sin_mid,
+                        r_diff,
+                    )
                     log.debug("tolerance %g", this_tolerance)
                     yield (
                         glyph_name,

@@ -97,7 +97,7 @@ class InterpolatablePlot:
     kink_circle_color = (1, 0, 1, 0.5)
     contour_colors = ((1, 0, 0), (0, 0, 1), (0, 1, 0), (1, 1, 0), (1, 0, 1), (0, 1, 1))
     contour_alpha = 0.5
-    weight_issue_contour_color = (0, 0, 0, .5)
+    weight_issue_contour_color = (0, 0, 0, 0.5)
     no_issues_label = "Your font's good! Have a cupcake..."
     no_issues_label_color = (0, 0.5, 0)
     cupcake_color = (0.3, 0, 0.3)
@@ -243,9 +243,7 @@ class InterpolatablePlot:
             )
             y -= self.pad + self.line_height
 
-        self.draw_label(
-            "Underweight contours", x=xxx, y=y, width=width
-        )
+        self.draw_label("Underweight contours", x=xxx, y=y, width=width)
         cr.rectangle(xx - self.pad * 0.7, y, 1.5 * self.pad, self.line_height)
         cr.set_source_rgb(*self.fill_color)
         cr.fill_preserve()
@@ -503,7 +501,8 @@ class InterpolatablePlot:
             self.draw_glyph(
                 midway_glyphset,
                 glyphname,
-                [{"type": "midway"}] + [p for p in problems if p["type"] in ("kink", "underweight")],
+                [{"type": "midway"}]
+                + [p for p in problems if p["type"] in ("kink", "underweight")],
                 None,
                 x=x,
                 y=y,
@@ -511,7 +510,6 @@ class InterpolatablePlot:
             )
 
             y += self.height + self.pad
-
 
         if any(
             pt
@@ -813,9 +811,7 @@ class InterpolatablePlot:
             cr.new_path()
 
         if "underweight" in problem_types:
-            perContourPen = PerContourOrComponentPen(
-                RecordingPen, glyphset=glyphset
-            )
+            perContourPen = PerContourOrComponentPen(RecordingPen, glyphset=glyphset)
             recording.replay(perContourPen)
             for problem in problems:
                 if problem["type"] == "underweight":
