@@ -197,3 +197,10 @@ def test_intersections_linelike():
     seg2 = [(0.0, 0.5), (0.25, 0.5), (0.75, 0.5), (1.0, 0.5)]
     pt = curveCurveIntersections(seg1, seg2)[0][0]
     assert pt == (0.0, 0.5)
+
+
+def test_curve_curve_touching_each_other():
+    seg1 = [(0, 0), (0, 100), (100, 100), (100, 0)]
+    seg2 = [(0, 150), (0, 50), (100, 50), (100, 150)]
+    pt = curveCurveIntersections(seg1, seg2)[0][0]
+    assert pt == pytest.approx((50.0, 75.0), rel=1e-2)
