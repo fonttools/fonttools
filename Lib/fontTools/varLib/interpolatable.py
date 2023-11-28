@@ -854,7 +854,8 @@ def test_gen(
                     contour = midRecording[ix]
                     if contour and (m0Vectors[ix][0] < 0) == (m1Vectors[ix][0] < 0):
 
-                        power = 2 + (1 - tolerance) * .3 # Magic
+                        mult = .25 # Magic
+                        power = 2 + (1 - tolerance) * mult
                         size0 = abs(m0Vectors[ix][0]) ** power
                         size1 = abs(m1Vectors[ix][0]) ** power
 
@@ -864,10 +865,11 @@ def test_gen(
                         midSize = abs(midVector[0]) ** power
 
                         geomAvg = (size0 * size1) ** (1 / power)
-                        if not (geomAvg * tolerance <= midSize + 1e-5):
+                        if not (geomAvg <= midSize + 1e-5):
                             print(size0, size1, "geom", geomAvg, "mid", midSize)
                             try:
-                                this_tolerance = midSize / geomAvg
+                                this_tolerance = (midSize / geomAvg) ** 2
+                                print("this_tolerance", this_tolerance)
                             except ZeroDivisionError:
                                 this_tolerance = 0
                             yield (
