@@ -125,7 +125,7 @@ public.fontInfo
 
 This lib key, when included in the ``<lib>`` element inside an ``<instance>`` or 
 ``<variable-font>`` tag, allows for direct manipulation of font info data in 
-instances and variable fonts. The lib value should follow the 
+instances and variable fonts. The lib value must follow the 
 `UFO3 fontinfo.plist specification <https://unifiedfontobject.org/versions/ufo3/fontinfo.plist/>`_,
 and should functionally appear to be a property list dictionary with the same 
 structure as the ``fontinfo.plist`` file in a UFO.
