@@ -1323,7 +1323,8 @@ def _curve_curve_intersections_t(
         return 0.5 * (r[0] + r[1])
 
     # If they do overlap but they're tiny, approximate
-    if rectArea(bounds1) < precision and rectArea(bounds2) < precision:
+    precision2 = precision * precision
+    if rectArea(bounds1) < precision2 and rectArea(bounds2) < precision2:
         return [(midpoint(range1), midpoint(range2))]
 
     c11, c12 = _split_segment_at_t(curve1, 0.5)
@@ -1356,7 +1357,7 @@ def _curve_curve_intersections_t(
         )
     )
 
-    unique_key = lambda ts: (int(ts[0] / precision), int(ts[1] / precision))
+    unique_key = lambda ts: (round(ts[0] / precision), round(ts[1] / precision))
     seen = set()
     unique_values = []
 
