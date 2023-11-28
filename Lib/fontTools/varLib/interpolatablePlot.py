@@ -79,25 +79,25 @@ class InterpolatablePlot:
     fill_color = (0.8, 0.8, 0.8)
     stroke_color = (0.1, 0.1, 0.1)
     stroke_width = 2
-    oncurve_node_color = (0, 0.8, 0)
+    oncurve_node_color = (0, 0.8, 0, 0.7)
     oncurve_node_diameter = 10
-    offcurve_node_color = (0, 0.5, 0)
+    offcurve_node_color = (0, 0.5, 0, 0.7)
     offcurve_node_diameter = 8
-    handle_color = (0.2, 1, 0.2)
+    handle_color = (0.2, 1, 0.2, 0.5)
     handle_width = 1
-    corrected_start_point_color = (0, 0.9, 0)
+    corrected_start_point_color = (0, 0.9, 0, 0.7)
     corrected_start_point_size = 15
-    wrong_start_point_color = (1, 0, 0)
-    start_point_color = (0, 0, 1)
+    wrong_start_point_color = (1, 0, 0, 0.7)
+    start_point_color = (0, 0, 1, 0.7)
     start_arrow_length = 20
     kink_point_size = 10
     kink_point_color = (1, 0, 1, 0.7)
     kink_circle_size = 25
     kink_circle_stroke_width = 1.5
-    kink_circle_color = (1, 0, 1, 0.5)
+    kink_circle_color = (1, 0, 1, 0.7)
     contour_colors = ((1, 0, 0), (0, 0, 1), (0, 1, 0), (1, 1, 0), (1, 0, 1), (0, 1, 1))
     contour_alpha = 0.5
-    weight_issue_contour_color = (0, 0, 0, 0.5)
+    weight_issue_contour_color = (0, 0, 0, 0.4)
     no_issues_label = "Your font's good! Have a cupcake..."
     no_issues_label_color = (0, 0.5, 0)
     cupcake_color = (0.3, 0, 0.3)
@@ -837,7 +837,7 @@ class InterpolatablePlot:
                 x, y = args[-1]
                 cr.move_to(x, y)
                 cr.line_to(x, y)
-            cr.set_source_rgb(*self.oncurve_node_color)
+            cr.set_source_rgba(*self.oncurve_node_color)
             cr.set_line_width(self.oncurve_node_diameter / scale)
             cr.stroke()
 
@@ -848,7 +848,7 @@ class InterpolatablePlot:
                 for x, y in args[:-1]:
                     cr.move_to(x, y)
                     cr.line_to(x, y)
-            cr.set_source_rgb(*self.offcurve_node_color)
+            cr.set_source_rgba(*self.offcurve_node_color)
             cr.set_line_width(self.offcurve_node_diameter / scale)
             cr.stroke()
 
@@ -873,7 +873,7 @@ class InterpolatablePlot:
                 else:
                     continue
 
-            cr.set_source_rgb(*self.handle_color)
+            cr.set_source_rgba(*self.handle_color)
             cr.set_line_width(self.handle_width / scale)
             cr.stroke()
 
