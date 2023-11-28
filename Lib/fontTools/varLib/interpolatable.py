@@ -326,7 +326,7 @@ def lerp_recordings(recording1, recording2, factor=.5):
     value = pen.value
     for (op1, args1), (op2, args2) in zip(recording1.value, recording2.value):
         if op1 != op2:
-            raise ValueError("Mismatching operations: %s, %s" % (op1, op2))
+            value.append(("wrong", ()))
         if op1 == "addComponent":
             mid_args = args1 # XXX Interpolate transformation?
         else:
@@ -840,31 +840,32 @@ def test_gen(
                     area1 = m1Vectors[ix][0] * m1Vectors[ix][0]
 
                     contour = midRecording[ix]
+                    if contour:
 
-                    midStats = StatisticsPen(glyphset=glyphset)
-                    contour.replay(midStats)
-                    midVector = _contour_vector_from_stats(midStats)
-                    midArea = midVector[0] * midVector[0]
+                        midStats = StatisticsPen(glyphset=glyphset)
+                        contour.replay(midStats)
+                        midVector = _contour_vector_from_stats(midStats)
+                        midArea = midVector[0] * midVector[0]
 
-                    geomAvg = sqrt(area0 * area1)
-                    if not (geomAvg * tolerance <= midArea):
-                        print("geom", geomAvg, "mid", midArea)
-                        try:
-                            this_tolerance = midArea / geomAvg
-                        except ZeroDivisionError:
-                            this_tolerance = 0
-                        yield (
-                            glyph_name,
-                            {
-                                "type": "wrong_structure",
-                                "contour": ix,
-                                "master_1": names[m0idx],
-                                "master_2": names[m1idx],
-                                "master_1_idx": m0idx,
-                                "master_2_idx": m1idx,
-                                "tolerance": this_tolerance,
-                            },
-                        )
+                        geomAvg = sqrt(area0 * area1)
+                        if not (geomAvg * tolerance <= midArea):
+                            print("geom", geomAvg, "mid", midArea)
+                            try:
+                                this_tolerance = midArea / geomAvg
+                            except ZeroDivisionError:
+                                this_tolerance = 0
+                            yield (
+                                glyph_name,
+                                {
+                                    "type": "wrong_structure",
+                                    "contour": ix,
+                                    "master_1": names[m0idx],
+                                    "master_2": names[m1idx],
+                                    "master_1_idx": m0idx,
+                                    "master_2_idx": m1idx,
+                                    "tolerance": this_tolerance,
+                                },
+                            )
 
             #
             # "kink" detector
