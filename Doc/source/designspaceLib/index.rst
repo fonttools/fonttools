@@ -120,6 +120,34 @@ any of the UFOs. If the lib key is empty or not present in the Designspace, all
 glyphs should be exported, regardless of what the same lib key in any of the
 UFOs says.
 
+public.fontInfo
+-----------------------
+
+This lib key, when included in the ``<lib>`` element inside an ``<instance>`` or 
+``<variable-font>`` tag, allows for direct manipulation of font info data in 
+instances and variable fonts. The lib value should follow the 
+`UFO3 fontinfo.plist specification <https://unifiedfontobject.org/versions/ufo3/fontinfo.plist/>`_,
+and should functionally appear to be a property list dictionary with the same 
+structure as the ``fontinfo.plist`` file in a UFO.
+
+
+All font info items in the UFO fontinfo.plist specification should be able to 
+be defined in the ``public.fontInfo`` lib. Checking validity of the data using 
+``fontTools.ufoLib.validators`` is recommended but not required. 
+
+A tool generating the font should copy the font info directly from the 
+``public.fontInfo`` lib item to the instance or the variable font, superceding 
+all other settings. All info **not** supplied in ``public.fontInfo`` should be 
+inherited from the name attributes in the ``<instance>`` or ``<variable-font>`` 
+elements (first) and the UFO font info from the source at the origin (second). 
+Absence of a key from the ``public.fontInfo`` lib does **not** mean a that piece 
+of font info should be interpreted as being undefined unless it is also left 
+undefined in the other locations. In the case of information in ``public.fontInfo`` 
+conflicting with supplied name strings in the ``<instance>`` or ``<variable-font>`` 
+elements, or the info supplied from the source at the origin, the data in 
+``public.fontInfo`` should supercede that information because it is understood 
+that the designer is using ``public.fontInfo`` to gain more granular control 
+over the resulting font. 
 
 Implementation and differences
 ==============================
