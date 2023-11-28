@@ -321,14 +321,15 @@ def _find_parents_and_order(glyphsets, locations):
         log.info("Order: %s", order)
     return parents, order
 
-def lerp_recordings(recording1, recording2, factor=.5):
+
+def lerp_recordings(recording1, recording2, factor=0.5):
     pen = RecordingPen()
     value = pen.value
     for (op1, args1), (op2, args2) in zip(recording1.value, recording2.value):
         if op1 != op2:
-            value.append(("wrong", ()))
+            raise ValueError("Mismatched operations: %s, %s" % (op1, op2))
         if op1 == "addComponent":
-            mid_args = args1 # XXX Interpolate transformation?
+            mid_args = args1  # XXX Interpolate transformation?
         else:
             mid_args = [
                 (x1 + (x2 - x1) * factor, y1 + (y2 - y1) * factor)
@@ -336,6 +337,7 @@ def lerp_recordings(recording1, recording2, factor=.5):
             ]
         value.append((op1, mid_args))
     return pen
+
 
 def test_gen(
     glyphsets,
@@ -650,7 +652,13 @@ def test_gen(
                 m0Vectors = [m0Vectors[i] for i in matchings[m1idx]]
                 recording1 = [recording1[i] for i in matchings[m1idx]]
 
-            midRecording = [lerp_recordings(c0, c1) for c0, c1 in zip(recording0, recording1)]
+            midRecording = []
+            for c0, c1 in zip(recording0, recording1):
+                try:
+                    midRecording.append(lerp_recordings(c0, c1))
+                except ValueError:
+                    # Mismatch because of the reordering above
+                    midRecording.append(None)
 
             for ix, (contour0, contour1) in enumerate(zip(m0, m1)):
                 if len(contour0) == 0 or len(contour0) != len(contour1):
@@ -814,12 +822,14 @@ def test_gen(
                         )
                         identity_cost = sum(graph[i][i] for i in range(len(graph)))
 
-                        threshold = .5 # Magic only
-                        if matching_cost < identity_cost * tolerance * threshold:  # Heuristic
+                        threshold = 0.5  # Magic only
+                        if (
+                            matching_cost < identity_cost * tolerance * threshold
+                        ):  # Heuristic
                             pass
-                            #print("wrong_structure1", matching_cost / identity_cost)
-                            #this_tolerance = matching_cost / (identity_cost * threshold)
-                            #yield (
+                            # print("wrong_structure1", matching_cost / identity_cost)
+                            # this_tolerance = matching_cost / (identity_cost * threshold)
+                            # yield (
                             #    glyph_name,
                             #    {
                             #        "type": "wrong_structure",
@@ -830,17 +840,21 @@ def test_gen(
                             #        "master_2_idx": m1idx,
                             #        "tolerance": this_tolerance,
                             #    },
-                            #)
+                            # )
 
                     # Check that area of mid-way interpolation is between the
                     # area of the two masters.
                     # This is a bit of a hack, but it's a good sanity check.
 
-                    area0 = m0Vectors[ix][0] * m0Vectors[ix][0]
-                    area1 = m1Vectors[ix][0] * m1Vectors[ix][0]
-
+                    # If contour could be mid-interpolated, and the two
+                    # contours have the same area sign, proceeed.
+                    #
+                    # The sign difference can happen if it's a werido
+                    # self-intersecting contour; ignore it.
                     contour = midRecording[ix]
-                    if contour:
+                    if contour and (m0Vectors[ix][0] < 0 == m1Vectors[ix][0] < 0):
+                        area0 = m0Vectors[ix][0] * m0Vectors[ix][0]
+                        area1 = m1Vectors[ix][0] * m1Vectors[ix][0]
 
                         midStats = StatisticsPen(glyphset=glyphset)
                         contour.replay(midStats)
@@ -849,7 +863,7 @@ def test_gen(
 
                         geomAvg = sqrt(area0 * area1)
                         if not (geomAvg * tolerance <= midArea):
-                            print("geom", geomAvg, "mid", midArea)
+                            print(area0, area1, "geom", geomAvg, "mid", midArea)
                             try:
                                 this_tolerance = midArea / geomAvg
                             except ZeroDivisionError:
