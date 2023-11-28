@@ -812,25 +812,19 @@ def test_gen(
 
                         bounds0Pen = ControlBoundsPen(glyphsets[m0idx])
                         bounds1Pen = ControlBoundsPen(glyphsets[m1idx])
-                        boundsMidPen = ControlBoundsPen(midGlyphset)
                         recording0[ix].replay(bounds0Pen)
                         recording1[ix].replay(bounds1Pen)
-                        contour.replay(boundsMidPen)
                         bounds0 = bounds0Pen.bounds or (0, 0, 0, 0)
                         bounds1 = bounds1Pen.bounds or (0, 0, 0, 0)
-                        boundsMid = boundsMidPen.bounds or (0, 0, 0, 0)
                         width0, height0 = bounds0[2] - bounds0[0], bounds0[3] - bounds0[1]
                         width1, height1 = bounds1[2] - bounds1[0], bounds1[3] - bounds1[1]
-                        widthMid, heightMid = boundsMid[2] - boundsMid[0], boundsMid[3] - boundsMid[1]
 
                         try:
                             size0 /= width0 * height0
                             size1 /= width1 * height1
-                            midSize /= widthMid * heightMid
+                            midSize /= (width0 + width1) * .5 * (height0 + height1) * .5
                         except ZeroDivisionError:
                             continue
-
-                        size0, size1 = sorted((size0, size1))
 
                         for overweight, problem_type in enumerate(
                             ("underweight", "overweight")
