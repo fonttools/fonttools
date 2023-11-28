@@ -9,6 +9,7 @@ $ fonttools varLib.interpolatable font1 font2 ...
 from fontTools.pens.basePen import AbstractPen, BasePen
 from fontTools.pens.pointPen import AbstractPointPen, SegmentToPointPen
 from fontTools.pens.recordingPen import RecordingPen
+from fontTools.pens.boundsPen import ControlBoundsPen
 from fontTools.pens.statisticsPen import StatisticsPen, StatisticsControlPen
 from fontTools.pens.momentsPen import OpenContourError
 from fontTools.varLib.models import piecewiseLinearMap, normalizeLocation
@@ -798,23 +799,41 @@ def test_gen(
                     # self-intersecting contour; ignore it.
                     contour = midRecording[ix]
                     if contour and (m0Vectors[ix][0] < 0) == (m1Vectors[ix][0] < 0):
-                        size0 = m0Vectors[ix][0] * m0Vectors[ix][0]
-                        size1 = m1Vectors[ix][0] * m1Vectors[ix][0]
-
-                        size0, size1 = sorted((size0, size1))
 
                         midStats = StatisticsPen(glyphset=glyphset)
                         contour.replay(midStats)
                         midVector = _contour_vector_from_stats(midStats)
+
+                        size0 = m0Vectors[ix][0] * m0Vectors[ix][0]
+                        size1 = m1Vectors[ix][0] * m1Vectors[ix][0]
                         midSize = midVector[0] * midVector[0]
+
+                        bounds0Pen = ControlBoundsPen(glyphsets[m0idx])
+                        bounds1Pen = ControlBoundsPen(glyphsets[m1idx])
+                        recording0[ix].replay(bounds0Pen)
+                        recording1[ix].replay(bounds1Pen)
+                        bounds0 = bounds0Pen.bounds or (0, 0, 0, 0)
+                        bounds1 = bounds1Pen.bounds or (0, 0, 0, 0)
+                        width0, height0 = bounds0[2] - bounds0[0], bounds0[3] - bounds0[1]
+                        width1, height1 = bounds1[2] - bounds1[0], bounds1[3] - bounds1[1]
+
+                        try:
+                            size0 /= width0 * height0
+                            size1 /= width1 * height1
+                            midSize /= (width0 + width1) * .5 * (height0 + height1) * .5
+                        except ZeroDivisionError:
+                            continue
+
+                        size0, size1 = sorted((size0, size1))
 
                         for overweight, problem_type in enumerate(
                             ("underweight", "overweight")
                         ):
                             if overweight:
-                                #expectedSize = (size0 * size1) ** 0.5
-                                #expectedSize = (size0 + size1) - expectedSize
-                                expectedSize = (size0 + size1) * .5
+                                expectedSize = (size0 * size1) ** 0.5
+                                expectedSize = (size0 + size1) - expectedSize
+
+                                #expectedSize = (size0 + size1) * .5
                             else:
                                 expectedSize = (size0 * size1) ** 0.5
 
