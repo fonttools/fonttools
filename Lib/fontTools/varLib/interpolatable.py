@@ -812,8 +812,9 @@ def test_gen(
                             ("underweight", "overweight")
                         ):
                             if overweight:
-                                expectedSize = (size0 * size1) ** 0.5
-                                expectedSize = (size0 + size1) - expectedSize
+                                #expectedSize = (size0 * size1) ** 0.5
+                                #expectedSize = (size0 + size1) - expectedSize
+                                expectedSize = (size0 + size1) * .5
                             else:
                                 expectedSize = (size0 * size1) ** 0.5
 
