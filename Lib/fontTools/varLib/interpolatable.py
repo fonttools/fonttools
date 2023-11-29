@@ -820,9 +820,10 @@ def test_gen(
                         width1, height1 = bounds1[2] - bounds1[0], bounds1[3] - bounds1[1]
 
                         try:
-                            size0 /= width0 * height0
-                            size1 /= width1 * height1
-                            midSize /= (width0 + width1) * .5 * (height0 + height1) * .5
+                            pass
+                            #size0 /= width0 * height0
+                            #size1 /= width1 * height1
+                            #midSize /= (width0 + width1) * .5 * (height0 + height1) * .5
                         except ZeroDivisionError:
                             continue
 
@@ -833,7 +834,7 @@ def test_gen(
                                 expectedSize = (size0 * size1) ** 0.5
                                 expectedSize = (size0 + size1) - expectedSize
 
-                                #expectedSize = (size0 + size1) * .5
+                                expectedSize = (size0 + size1) * .5
                             else:
                                 expectedSize = (size0 * size1) ** 0.5
 
@@ -845,17 +846,19 @@ def test_gen(
                                 size0,
                                 size1,
                             )
+                            power = 1 / tolerance
+                            t = tolerance ** power
                             if (
                                 not overweight
-                                and expectedSize * tolerance * tolerance > midSize + 1e-5
+                                and expectedSize * t > midSize + 1e-5
                             ) or (
-                                overweight and 1e-5 + expectedSize < midSize * tolerance
+                                overweight and 1e-5 + expectedSize < midSize * t
                             ):
                                 try:
                                     if overweight:
-                                        this_tolerance = expectedSize / midSize
+                                        this_tolerance = (expectedSize / midSize) ** (1 / power)
                                     else:
-                                        this_tolerance = sqrt(midSize / expectedSize)
+                                        this_tolerance = (midSize / expectedSize) ** (1 / power)
                                 except ZeroDivisionError:
                                     this_tolerance = 0
                                 log.debug("tolerance %g", this_tolerance)
