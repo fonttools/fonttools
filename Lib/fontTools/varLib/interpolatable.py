@@ -847,7 +847,7 @@ def test_gen(
                             )
                             if (
                                 not overweight
-                                and expectedSize * tolerance > midSize + 1e-5
+                                and expectedSize * tolerance * tolerance > midSize + 1e-5
                             ) or (
                                 overweight and 1e-5 + expectedSize < midSize * tolerance
                             ):
@@ -855,7 +855,7 @@ def test_gen(
                                     if overweight:
                                         this_tolerance = expectedSize / midSize
                                     else:
-                                        this_tolerance = midSize / expectedSize
+                                        this_tolerance = sqrt(midSize / expectedSize)
                                 except ZeroDivisionError:
                                     this_tolerance = 0
                                 log.debug("tolerance %g", this_tolerance)
