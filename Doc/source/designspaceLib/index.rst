@@ -137,7 +137,7 @@ be defined in the ``public.fontInfo`` lib. Checking validity of the data using
 
 A tool generating the font should copy the font info directly from the 
 ``public.fontInfo`` lib item to the instance or the variable font, superceding 
-all other settings. All info **not** supplied in ``public.fontInfo`` should be 
+all other settings. All info **not** supplied in ``public.fontInfo`` must be 
 inherited from the name attributes in the ``<instance>`` or ``<variable-font>`` 
 elements (first) and the UFO font info from the source at the origin (second). 
 Absence of a key from the ``public.fontInfo`` lib does **not** mean a that piece 
@@ -145,7 +145,7 @@ of font info should be interpreted as being undefined unless it is also left
 undefined in the other locations. In the case of information in ``public.fontInfo`` 
 conflicting with supplied name strings in the ``<instance>`` or ``<variable-font>`` 
 elements, or the info supplied from the source at the origin, the data in 
-``public.fontInfo`` should supercede that information because it is understood 
+``public.fontInfo`` must supercede that information because it is understood 
 that the designer is using ``public.fontInfo`` to gain more granular control 
 over the resulting font. 
 
