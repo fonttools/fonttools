@@ -52,7 +52,7 @@ class InterpolatablePlot:
     oncurve_node_diameter = 10
     offcurve_node_color = (0, 0.5, 0, 0.7)
     offcurve_node_diameter = 8
-    handle_color = (0.2, 1, 0.2, 0.5)
+    handle_color = (0, 0.5, 0, 0.7)
     handle_width = 1
     corrected_start_point_color = (0, 0.9, 0, 0.7)
     corrected_start_point_size = 15
