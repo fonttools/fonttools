@@ -389,14 +389,18 @@ class GlyphSet:
 
 class Contour:
 
-    def __init__(self, recording, decomposeRecording):
+    def __init__(self, recording, glyphset):
         self.recording = recording
-        self.decomposedRecording = decomposeRecording
+        self.glyphset = glyphset
         self._populate()
 
     def _populate(self):
 
         self.ops = tuple(op for op, arg in self.recording.value)
+        self.isComposite = "addComponent" in self.ops
+
+        self.decomposedRecording = DecomposingRecordingPen(self.glyphset)
+        self.recording.replay(self.decomposedRecording)
 
         self.greenStats = StatisticsPen(glyphset=None)
         self.controlStats = StatisticsControlPen(glyphset=None)
@@ -416,6 +420,13 @@ class Contour:
         self.decomposedRecording.replay(converter)
         self.points = pointsPen.value
 
+        self.isomorphisms = []
+        # Add rotations
+        _add_isomorphisms(self.points, self.isomorphisms, False)
+        # Add mirrored rotations
+        _add_isomorphisms(self.points, self.isomorphisms, True)
+
+
 class Glyph:
 
     def __init__(self, glyphname, glyphset):
@@ -434,10 +445,7 @@ class Glyph:
 
         for contourRecording in perContourPen.value:
 
-            decomposedRecording = DecomposingRecordingPen(self.glyphset)
-            contourRecording.replay(decomposedRecording)
-
-            contour = Contour(contourRecording, decomposedRecording)
+            contour = Contour(contourRecording, self.glyphset)
             self.contours.append(contour)
 
 def test_gen(
