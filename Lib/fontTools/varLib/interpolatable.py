@@ -324,7 +324,7 @@ def _find_parents_and_order(glyphsets, locations):
     return parents, order
 
 
-def transform_from_stats(stats, inverse=False):
+def _transform_from_stats(stats, inverse=False):
 
     # https://cookierobotics.com/007/
     a = stats.varianceX
@@ -503,7 +503,7 @@ def test_gen(
 
                 try:
                     rpen = DecomposingRecordingPen(glyphset)
-                    tpen = TransformPen(rpen, transform_from_stats(greenStats, inverse=True))
+                    tpen = TransformPen(rpen, _transform_from_stats(greenStats, inverse=True))
                     contour.replay(tpen)
                     contourPensNormalized.append(rpen)
                 except ZeroDivisionError:
@@ -875,7 +875,7 @@ def test_gen(
                         contour.replay(midStats)
 
                         midStatsNormalized = StatisticsPen(glyphset=None)
-                        tpen = TransformPen(midStatsNormalized, transform_from_stats(midStats, inverse=True))
+                        tpen = TransformPen(midStatsNormalized, _transform_from_stats(midStats, inverse=True))
                         contour.replay(tpen)
 
                         midVectorNormalized = _contour_vector_from_stats(midStatsNormalized)
