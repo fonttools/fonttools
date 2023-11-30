@@ -869,7 +869,7 @@ def test_gen(
                         size0 = m0GreenVectors[ix][0] * m0GreenVectors[ix][0]
                         size1 = m1GreenVectors[ix][0] * m1GreenVectors[ix][0]
 
-                        midStats = StatisticsPen(glyphset=glyphset)
+                        midStats = StatisticsPen(glyphset=None)
                         contour.replay(midStats)
                         midVector = _contour_vector_from_stats(midStats)
                         midSize = midVector[0] * midVector[0]
