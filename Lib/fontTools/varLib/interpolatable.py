@@ -651,7 +651,7 @@ def test_gen(
                 #
                 # Reverse the sign of the area (0); the rest stay the same.
                 if not done:
-                    controVectors1Reversed = [(-m[0],) + m[1:] for m in controVectors1]
+                    controVectors1Reversed = [(-m[0],) + m[1:] for m in controlVectors1]
                     (
                         matching_control_reversed,
                         matching_cost_control_reversed,
