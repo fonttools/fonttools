@@ -884,7 +884,7 @@ def test_gen(
                         size1 = m1VectorsNormalized[ix][0] * m1VectorsNormalized[ix][0]
                         midSize = midVectorNormalized[0] * midVectorNormalized[0]
 
-                        power = 2
+                        power = 1
                         t = tolerance ** power
 
                         for overweight, problem_type in enumerate(
@@ -896,11 +896,12 @@ def test_gen(
                                 expectedSize = size1 + (midSize - size1) * t + 1e-1
 
                                 #expectedSize = (size0 + size1) * .5
+                                continue
                             else:
                                 #expectedSize = sqrt(size0 * size1)
                                 expectedSize = sqrt(size0 * size1)
-                                expectedSize = size0 + (midSize - size0) * t + 1e-1
-                                expectedSize = sqrt(size0 * size1 * t) + 1e-1
+                                #expectedSize = size0 + (midSize - size0) * t + 1e-1
+                                #expectedSize = sqrt(size0 * size1 * t) + 1e-1
 
                             log.debug(
                                 "%s: actual size %g; threshold size %g, master sizes: %g, %g",
