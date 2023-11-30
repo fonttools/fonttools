@@ -14,6 +14,7 @@ from fontTools.pens.pointPen import (
 from fontTools.varLib.interpolatable import (
     PerContourOrComponentPen,
     SimpleRecordingPointPen,
+    LerpGlyphSet,
 )
 from itertools import cycle
 from functools import wraps
@@ -24,38 +25,6 @@ import os
 import logging
 
 log = logging.getLogger("fontTools.varLib.interpolatable")
-
-
-class LerpGlyphSet:
-    def __init__(self, glyphset1, glyphset2, factor=0.5):
-        self.glyphset1 = glyphset1
-        self.glyphset2 = glyphset2
-        self.factor = factor
-
-    def __getitem__(self, glyphname):
-        return LerpGlyph(glyphname, self)
-
-
-class LerpGlyph:
-    def __init__(self, glyphname, glyphset):
-        self.glyphset = glyphset
-        self.glyphname = glyphname
-
-    def draw(self, pen):
-        recording1 = DecomposingRecordingPen(self.glyphset.glyphset1)
-        self.glyphset.glyphset1[self.glyphname].draw(recording1)
-        recording2 = DecomposingRecordingPen(self.glyphset.glyphset2)
-        self.glyphset.glyphset2[self.glyphname].draw(recording2)
-
-        factor = self.glyphset.factor
-        for (op1, args1), (op2, args2) in zip(recording1.value, recording2.value):
-            if op1 != op2:
-                raise ValueError("Mismatching operations: %s, %s" % (op1, op2))
-            mid_args = [
-                (x1 + (x2 - x1) * factor, y1 + (y2 - y1) * factor)
-                for (x1, y1), (x2, y2) in zip(args1, args2)
-            ]
-            getattr(pen, op1)(*mid_args)
 
 
 class OverridingDict(dict):

@@ -359,6 +359,38 @@ def _transform_from_stats(stats, inverse=False):
     return trans
 
 
+class LerpGlyphSet:
+    def __init__(self, glyphset1, glyphset2, factor=0.5):
+        self.glyphset1 = glyphset1
+        self.glyphset2 = glyphset2
+        self.factor = factor
+
+    def __getitem__(self, glyphname):
+        return LerpGlyph(glyphname, self)
+
+
+class LerpGlyph:
+    def __init__(self, glyphname, glyphset):
+        self.glyphset = glyphset
+        self.glyphname = glyphname
+
+    def draw(self, pen):
+        recording1 = DecomposingRecordingPen(self.glyphset.glyphset1)
+        self.glyphset.glyphset1[self.glyphname].draw(recording1)
+        recording2 = DecomposingRecordingPen(self.glyphset.glyphset2)
+        self.glyphset.glyphset2[self.glyphname].draw(recording2)
+
+        factor = self.glyphset.factor
+        for (op1, args1), (op2, args2) in zip(recording1.value, recording2.value):
+            if op1 != op2:
+                raise ValueError("Mismatching operations: %s, %s" % (op1, op2))
+            mid_args = [
+                (x1 + (x2 - x1) * factor, y1 + (y2 - y1) * factor)
+                for (x1, y1), (x2, y2) in zip(args1, args2)
+            ]
+            getattr(pen, op1)(*mid_args)
+
+
 def lerp_recordings(recording1, recording2, factor=0.5):
     pen = RecordingPen()
     value = pen.value
@@ -867,7 +899,6 @@ def test_gen(
                     # The sign difference can happen if it's a werido
                     # self-intersecting contour; ignore it.
                     contour = midRecording[ix]
-                    from .interpolatablePlot import LerpGlyphSet
 
                     normalized = False
                     if contour and (m0Vectors[ix][0] < 0) == (m1Vectors[ix][0] < 0):
