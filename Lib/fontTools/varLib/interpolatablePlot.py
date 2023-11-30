@@ -923,7 +923,10 @@ class InterpolatablePlot:
                         continue
                     if first_pt is None:
                         continue
-                    second_pt = args[0]
+                    if segment == "closePath":
+                        second_pt = first_pt
+                    else:
+                        second_pt = args[0]
 
                     if idx is None or i == idx:
                         cr.save()
