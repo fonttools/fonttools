@@ -393,8 +393,7 @@ def test_gen(
         kinkiness *= 0.01
     assert 0 <= kinkiness
 
-    if names is None:
-        names = glyphsets
+    names = names or [repr(g) for g in glyphsets]
 
     if glyphs is None:
         # `glyphs = glyphsets[0].keys()` is faster, certainly, but doesn't allow for sparse TTFs/OTFs given out of order
