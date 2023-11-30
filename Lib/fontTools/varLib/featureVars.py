@@ -43,9 +43,18 @@ def addFeatureVariations(font, conditionalSubstitutions, featureTag="rvrn"):
     # ... ]
     # >>> addFeatureVariations(f, condSubst)
     # >>> f.save(dstPath)
+
+    The `featureTag` parameter takes either a str or a iterable of str (the single str
+    is kept for backwards compatibility), and defines which feature(s) will be
+    associated with the feature variations.
+    Note, if this is "rvrn", then the substitution lookup will be inserted at the
+    beginning of the lookup list so that it is processed before others, otherwise
+    for any other feature tags it will be appended last.
     """
 
-    processLast = featureTag != "rvrn"
+    # process first when "rvrn" is the only listed tag
+    featureTags = [featureTag] if isinstance(featureTag, str) else sorted(featureTag)
+    processLast = "rvrn" not in featureTags or len(featureTags) > 1
 
     _checkSubstitutionGlyphsExist(
         glyphNames=set(font.getGlyphOrder()),
@@ -75,7 +84,7 @@ def addFeatureVariations(font, conditionalSubstitutions, featureTag="rvrn"):
             (conditionSet, [lookupMap[s] for s in substitutions])
         )
 
-    addFeatureVariationsRaw(font, font["GSUB"].table, conditionsAndLookups, featureTag)
+    addFeatureVariationsRaw(font, font["GSUB"].table, conditionsAndLookups, featureTags)
 
 
 def _checkSubstitutionGlyphsExist(glyphNames, substitutions):
@@ -324,13 +333,16 @@ def addFeatureVariationsRaw(font, table, conditionalSubstitutions, featureTag="r
     """Low level implementation of addFeatureVariations that directly
     models the possibilities of the FeatureVariations table."""
 
-    processLast = featureTag != "rvrn"
+    featureTags = [featureTag] if isinstance(featureTag, str) else sorted(featureTag)
+    processLast = "rvrn" not in featureTags or len(featureTags) > 1
 
     #
-    # if there is no <featureTag> feature:
+    # if a <featureTag> feature is not present:
     #     make empty <featureTag> feature
     #     sort features, get <featureTag> feature index
     #     add <featureTag> feature to all scripts
+    # if a <featureTag> feature is present:
+    #     reuse <featureTag> feature index
     # make lookups
     # add feature variations
     #
@@ -339,31 +351,48 @@ def addFeatureVariationsRaw(font, table, conditionalSubstitutions, featureTag="r
 
     table.FeatureVariations = None  # delete any existing FeatureVariations
 
-    varFeatureIndices = []
-    for index, feature in enumerate(table.FeatureList.FeatureRecord):
-        if feature.FeatureTag == featureTag:
-            varFeatureIndices.append(index)
+    varFeatureIndices = set()
 
-    if not varFeatureIndices:
-        varFeature = buildFeatureRecord(featureTag, [])
-        table.FeatureList.FeatureRecord.append(varFeature)
+    existingTags = {
+        feature.FeatureTag
+        for feature in table.FeatureList.FeatureRecord
+        if feature.FeatureTag in featureTags
+    }
+
+    newTags = set(featureTags) - existingTags
+    if newTags:
+        varFeatures = []
+        for featureTag in sorted(newTags):
+            varFeature = buildFeatureRecord(featureTag, [])
+            table.FeatureList.FeatureRecord.append(varFeature)
+            varFeatures.append(varFeature)
         table.FeatureList.FeatureCount = len(table.FeatureList.FeatureRecord)
 
         sortFeatureList(table)
-        varFeatureIndex = table.FeatureList.FeatureRecord.index(varFeature)
 
-        for scriptRecord in table.ScriptList.ScriptRecord:
-            if scriptRecord.Script.DefaultLangSys is None:
-                raise VarLibError(
-                    "Feature variations require that the script "
-                    f"'{scriptRecord.ScriptTag}' defines a default language system."
-                )
-            langSystems = [lsr.LangSys for lsr in scriptRecord.Script.LangSysRecord]
-            for langSys in [scriptRecord.Script.DefaultLangSys] + langSystems:
-                langSys.FeatureIndex.append(varFeatureIndex)
-                langSys.FeatureCount = len(langSys.FeatureIndex)
+        for varFeature in varFeatures:
+            varFeatureIndex = table.FeatureList.FeatureRecord.index(varFeature)
 
-        varFeatureIndices = [varFeatureIndex]
+            for scriptRecord in table.ScriptList.ScriptRecord:
+                if scriptRecord.Script.DefaultLangSys is None:
+                    raise VarLibError(
+                        "Feature variations require that the script "
+                        f"'{scriptRecord.ScriptTag}' defines a default language system."
+                    )
+                langSystems = [lsr.LangSys for lsr in scriptRecord.Script.LangSysRecord]
+                for langSys in [scriptRecord.Script.DefaultLangSys] + langSystems:
+                    langSys.FeatureIndex.append(varFeatureIndex)
+                    langSys.FeatureCount = len(langSys.FeatureIndex)
+            varFeatureIndices.add(varFeatureIndex)
+
+    if existingTags:
+        # indices may have changed if we inserted new features and sorted feature list
+        # so we must do this after the above
+        varFeatureIndices.update(
+            index
+            for index, feature in enumerate(table.FeatureList.FeatureRecord)
+            if feature.FeatureTag in existingTags
+        )
 
     axisIndices = {
         axis.axisTag: axisIndex for axisIndex, axis in enumerate(font["fvar"].axes)
@@ -380,7 +409,7 @@ def addFeatureVariationsRaw(font, table, conditionalSubstitutions, featureTag="r
             ct = buildConditionTable(axisIndices[axisTag], minValue, maxValue)
             conditionTable.append(ct)
         records = []
-        for varFeatureIndex in varFeatureIndices:
+        for varFeatureIndex in sorted(varFeatureIndices):
             existingLookupIndices = table.FeatureList.FeatureRecord[
                 varFeatureIndex
             ].Feature.LookupListIndex
