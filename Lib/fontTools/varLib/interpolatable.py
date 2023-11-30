@@ -448,6 +448,8 @@ class Glyph:
             contour = Contour(contourRecording, self.glyphset)
             self.contours.append(contour)
 
+        self.isComposite = any(c.isComposite for c in self.contours)
+
 def test_gen(
     glyphsets,
     glyphs=None,
@@ -492,9 +494,6 @@ def test_gen(
         if len([1 for glyph in allGlyphs if glyph is not None]) <= 1:
             continue
 
-        allControlVectors = []
-        allContourIsomorphisms = []
-        allContourPoints = []
         allContourPens = []
         #allGlyphs = [glyphset[glyph_name] for glyphset in glyphsets]
         for master_idx, (glyph, glyphset, name) in enumerate(
@@ -506,22 +505,14 @@ def test_gen(
                         glyph_name,
                         {"type": "missing", "master": name, "master_idx": master_idx},
                     )
-                allControlVectors.append(None)
-                allContourIsomorphisms.append(None)
-                allContourPoints.append(None)
                 allContourPens.append(None)
                 continue
 
             contours = glyph.contours
             contourPens = [c.recording for c in glyph.contours]
 
-            contourControlVectors = []
-            contourIsomorphisms = []
             contourPoints = []
             nodeTypes = []
-            allControlVectors.append(contourControlVectors)
-            allContourIsomorphisms.append(contourIsomorphisms)
-            allContourPoints.append(contourPoints)
             allContourPens.append(contourPens)
             for ix, contour in enumerate(contours):
                 contourOps = contour.ops
@@ -539,28 +530,13 @@ def test_gen(
                     )
                     continue
 
-                contourControlVectors.append(contour.controlVector)
-
                 # Check starting point
                 if contour.ops[0] == "addComponent":
                     continue
                 assert contour.ops[0] == "moveTo"
                 assert contour.ops[-1] in ("closePath", "endPath")
 
-                # now check all rotations and mirror-rotations of the contour and build list of isomorphic
-                # possible starting points.
-
-                isomorphisms = []
-                contourIsomorphisms.append(isomorphisms)
-
-                # Add rotations
-                _add_isomorphisms(contour.points, isomorphisms, False)
-                # Add mirrored rotations
-                _add_isomorphisms(contour.points, isomorphisms, True)
-
-                contourPoints.append(contour.points)
-
-        matchings = [None] * len(allControlVectors)
+        matchings = [None] * len(allGlyphs)
 
         for m1idx in order:
             glyph1 = allGlyphs[m1idx]
@@ -647,16 +623,21 @@ def test_gen(
             # and then checking if it is the identity vector. Only if
             # not, compute the StatisticsControlPen vector and check both.
 
-            n = len(allControlVectors[m0idx])
+            controlVectors0 = [
+                contour.controlVector for contour in glyph0.contours
+            ]
+            controlVectors1 = [
+                contour.controlVector for contour in glyph1.contours
+            ]
+            assert len(controlVectors0) == len(controlVectors1)
+            n = len(controlVectors0)
             done = n <= 1
             if not done:
-                m1Control = allControlVectors[m1idx]
-                m0Control = allControlVectors[m0idx]
                 (
                     matching_control,
                     matching_cost_control,
                     identity_cost_control,
-                ) = _matching_for_vectors(m0Control, m1Control)
+                ) = _matching_for_vectors(controlVectors0, controlVectors1)
                 done = matching_cost_control == identity_cost_control
             if not done:
                 m0Green = [contour.greenVector for contour in allGlyphs[m0idx].contours]
@@ -675,12 +656,12 @@ def test_gen(
                 #
                 # Reverse the sign of the area (0); the rest stay the same.
                 if not done:
-                    m1ControlReversed = [(-m[0],) + m[1:] for m in m1Control]
+                    controVectors1Reversed = [(-m[0],) + m[1:] for m in controVectors1]
                     (
                         matching_control_reversed,
                         matching_cost_control_reversed,
                         identity_cost_control_reversed,
-                    ) = _matching_for_vectors(m0Control, m1ControlReversed)
+                    ) = _matching_for_vectors(controlVectors0, controVectors1Reversed)
                     done = (
                         matching_cost_control_reversed == identity_cost_control_reversed
                     )
@@ -690,7 +671,7 @@ def test_gen(
                         matching_control_reversed,
                         matching_cost_control_reversed,
                         identity_cost_control_reversed,
-                    ) = _matching_for_vectors(m0Control, m1ControlReversed)
+                    ) = _matching_for_vectors(controlVectors0, controVectors1Reversed)
                     done = (
                         matching_cost_control_reversed == identity_cost_control_reversed
                     )
@@ -736,10 +717,10 @@ def test_gen(
             # "wrong_start_point" / weight check
             #
 
-            m1 = allContourIsomorphisms[m1idx]
-            m0 = allContourIsomorphisms[m0idx]
-            m0GreenVectors = [contour.greenVector for contour in allGlyphs[m0idx].contours]
-            m1GreenVectors = [contour.greenVector for contour in allGlyphs[m1idx].contours]
+            m0 = [contour.isomorphisms for contour in glyph0.contours]
+            m1 = [contour.isomorphisms for contour in glyph1.contours]
+            m0GreenVectors = [contour.greenVector for contour in glyph0.contours]
+            m1GreenVectors = [contour.greenVector for contour in glyph1.contours]
             recording0 = allContourPens[m0idx]
             recording1 = allContourPens[m1idx]
 
@@ -789,7 +770,7 @@ def test_gen(
 
                     proposed_point = contour1[min_cost_idx][1]
                     reverse = contour1[min_cost_idx][2]
-                    num_points = len(allContourPoints[m1idx][ix])
+                    num_points = len(glyph1.contours[ix].points)
                     leeway = 3
                     okay = False
                     if not reverse and (
@@ -928,138 +909,140 @@ def test_gen(
             #
             # "kink" detector
             #
-            m1 = allContourPoints[m1idx]
-            m0 = allContourPoints[m0idx]
+            assert glyph1.isComposite == glyph0.isComposite
+            if not glyph1.isComposite:
+                m0 = [contour.points for contour in glyph0.contours]
+                m1 = [contour.points for contour in glyph1.contours]
 
-            # If contour-order is wrong, adjust it
-            if matchings[m1idx] is not None and m1:  # m1 is empty for composite glyphs
-                m1 = [m1[i] for i in matchings[m1idx]]
+                # If contour-order is wrong, adjust it
+                if matchings[m1idx] is not None and m1:  # m1 is empty for composite glyphs
+                    m1 = [m1[i] for i in matchings[m1idx]]
 
-            t = 0.1  # ~sin(radian(6)) for tolerance 0.95
-            deviation_threshold = (
-                upem * DEFAULT_KINKINESS_LENGTH * DEFAULT_KINKINESS / kinkiness
-            )
+                t = 0.1  # ~sin(radian(6)) for tolerance 0.95
+                deviation_threshold = (
+                    upem * DEFAULT_KINKINESS_LENGTH * DEFAULT_KINKINESS / kinkiness
+                )
 
-            for ix, (contour0, contour1) in enumerate(zip(m0, m1)):
-                if len(contour0) == 0 or len(contour0) != len(contour1):
-                    # We already reported this; or nothing to do; or not compatible
-                    # after reordering above.
-                    continue
-
-                # Walk the contour, keeping track of three consecutive points, with
-                # middle one being an on-curve. If the three are co-linear then
-                # check for kinky-ness.
-                for i in range(len(contour0)):
-                    pt0 = contour0[i]
-                    pt1 = contour1[i]
-                    if not pt0[1] or not pt1[1]:
-                        # Skip off-curves
-                        continue
-                    pt0_prev = contour0[i - 1]
-                    pt1_prev = contour1[i - 1]
-                    pt0_next = contour0[(i + 1) % len(contour0)]
-                    pt1_next = contour1[(i + 1) % len(contour1)]
-
-                    if pt0_prev[1] and pt1_prev[1]:
-                        # At least one off-curve is required
-                        continue
-                    if pt0_prev[1] and pt1_prev[1]:
-                        # At least one off-curve is required
+                for ix, (contour0, contour1) in enumerate(zip(m0, m1)):
+                    if len(contour0) == 0 or len(contour0) != len(contour1):
+                        # We already reported this; or nothing to do; or not compatible
+                        # after reordering above.
                         continue
 
-                    pt0 = complex(*pt0[0])
-                    pt1 = complex(*pt1[0])
-                    pt0_prev = complex(*pt0_prev[0])
-                    pt1_prev = complex(*pt1_prev[0])
-                    pt0_next = complex(*pt0_next[0])
-                    pt1_next = complex(*pt1_next[0])
+                    # Walk the contour, keeping track of three consecutive points, with
+                    # middle one being an on-curve. If the three are co-linear then
+                    # check for kinky-ness.
+                    for i in range(len(contour0)):
+                        pt0 = contour0[i]
+                        pt1 = contour1[i]
+                        if not pt0[1] or not pt1[1]:
+                            # Skip off-curves
+                            continue
+                        pt0_prev = contour0[i - 1]
+                        pt1_prev = contour1[i - 1]
+                        pt0_next = contour0[(i + 1) % len(contour0)]
+                        pt1_next = contour1[(i + 1) % len(contour1)]
 
-                    # We have three consecutive points. Check whether
-                    # they are colinear.
-                    d0_prev = pt0 - pt0_prev
-                    d0_next = pt0_next - pt0
-                    d1_prev = pt1 - pt1_prev
-                    d1_next = pt1_next - pt1
+                        if pt0_prev[1] and pt1_prev[1]:
+                            # At least one off-curve is required
+                            continue
+                        if pt0_prev[1] and pt1_prev[1]:
+                            # At least one off-curve is required
+                            continue
 
-                    sin0 = d0_prev.real * d0_next.imag - d0_prev.imag * d0_next.real
-                    sin1 = d1_prev.real * d1_next.imag - d1_prev.imag * d1_next.real
-                    try:
-                        sin0 /= abs(d0_prev) * abs(d0_next)
-                        sin1 /= abs(d1_prev) * abs(d1_next)
-                    except ZeroDivisionError:
-                        continue
+                        pt0 = complex(*pt0[0])
+                        pt1 = complex(*pt1[0])
+                        pt0_prev = complex(*pt0_prev[0])
+                        pt1_prev = complex(*pt1_prev[0])
+                        pt0_next = complex(*pt0_next[0])
+                        pt1_next = complex(*pt1_next[0])
 
-                    if abs(sin0) > t or abs(sin1) > t:
-                        # Not colinear / not smooth.
-                        continue
+                        # We have three consecutive points. Check whether
+                        # they are colinear.
+                        d0_prev = pt0 - pt0_prev
+                        d0_next = pt0_next - pt0
+                        d1_prev = pt1 - pt1_prev
+                        d1_next = pt1_next - pt1
 
-                    # Check the mid-point is actually, well, in the middle.
-                    dot0 = d0_prev.real * d0_next.real + d0_prev.imag * d0_next.imag
-                    dot1 = d1_prev.real * d1_next.real + d1_prev.imag * d1_next.imag
-                    if dot0 < 0 or dot1 < 0:
-                        # Sharp corner.
-                        continue
+                        sin0 = d0_prev.real * d0_next.imag - d0_prev.imag * d0_next.real
+                        sin1 = d1_prev.real * d1_next.imag - d1_prev.imag * d1_next.real
+                        try:
+                            sin0 /= abs(d0_prev) * abs(d0_next)
+                            sin1 /= abs(d1_prev) * abs(d1_next)
+                        except ZeroDivisionError:
+                            continue
 
-                    # Fine, if handle ratios are similar...
-                    r0 = abs(d0_prev) / (abs(d0_prev) + abs(d0_next))
-                    r1 = abs(d1_prev) / (abs(d1_prev) + abs(d1_next))
-                    r_diff = abs(r0 - r1)
-                    if abs(r_diff) < t:
-                        # Smooth enough.
-                        continue
+                        if abs(sin0) > t or abs(sin1) > t:
+                            # Not colinear / not smooth.
+                            continue
 
-                    mid = (pt0 + pt1) / 2
-                    mid_prev = (pt0_prev + pt1_prev) / 2
-                    mid_next = (pt0_next + pt1_next) / 2
+                        # Check the mid-point is actually, well, in the middle.
+                        dot0 = d0_prev.real * d0_next.real + d0_prev.imag * d0_next.imag
+                        dot1 = d1_prev.real * d1_next.real + d1_prev.imag * d1_next.imag
+                        if dot0 < 0 or dot1 < 0:
+                            # Sharp corner.
+                            continue
 
-                    mid_d0 = mid - mid_prev
-                    mid_d1 = mid_next - mid
+                        # Fine, if handle ratios are similar...
+                        r0 = abs(d0_prev) / (abs(d0_prev) + abs(d0_next))
+                        r1 = abs(d1_prev) / (abs(d1_prev) + abs(d1_next))
+                        r_diff = abs(r0 - r1)
+                        if abs(r_diff) < t:
+                            # Smooth enough.
+                            continue
 
-                    sin_mid = mid_d0.real * mid_d1.imag - mid_d0.imag * mid_d1.real
-                    try:
-                        sin_mid /= abs(mid_d0) * abs(mid_d1)
-                    except ZeroDivisionError:
-                        continue
+                        mid = (pt0 + pt1) / 2
+                        mid_prev = (pt0_prev + pt1_prev) / 2
+                        mid_next = (pt0_next + pt1_next) / 2
 
-                    # ...or if the angles are similar.
-                    if abs(sin_mid) * (tolerance * kinkiness) <= t:
-                        # Smooth enough.
-                        continue
+                        mid_d0 = mid - mid_prev
+                        mid_d1 = mid_next - mid
 
-                    # How visible is the kink?
+                        sin_mid = mid_d0.real * mid_d1.imag - mid_d0.imag * mid_d1.real
+                        try:
+                            sin_mid /= abs(mid_d0) * abs(mid_d1)
+                        except ZeroDivisionError:
+                            continue
 
-                    cross = sin_mid * abs(mid_d0) * abs(mid_d1)
-                    arc_len = abs(mid_d0 + mid_d1)
-                    deviation = abs(cross / arc_len)
-                    if deviation < deviation_threshold:
-                        continue
-                    deviation_ratio = deviation / arc_len
-                    if deviation_ratio > t:
-                        continue
+                        # ...or if the angles are similar.
+                        if abs(sin_mid) * (tolerance * kinkiness) <= t:
+                            # Smooth enough.
+                            continue
 
-                    this_tolerance = t / (abs(sin_mid) * kinkiness)
+                        # How visible is the kink?
 
-                    log.debug(
-                        "deviation %g; deviation_ratio %g; sin_mid %g; r_diff %g",
-                        deviation,
-                        deviation_ratio,
-                        sin_mid,
-                        r_diff,
-                    )
-                    log.debug("tolerance %g", this_tolerance)
-                    yield (
-                        glyph_name,
-                        {
-                            "type": "kink",
-                            "contour": ix,
-                            "master_1": names[m0idx],
-                            "master_2": names[m1idx],
-                            "master_1_idx": m0idx,
-                            "master_2_idx": m1idx,
-                            "value": i,
-                            "tolerance": this_tolerance,
-                        },
-                    )
+                        cross = sin_mid * abs(mid_d0) * abs(mid_d1)
+                        arc_len = abs(mid_d0 + mid_d1)
+                        deviation = abs(cross / arc_len)
+                        if deviation < deviation_threshold:
+                            continue
+                        deviation_ratio = deviation / arc_len
+                        if deviation_ratio > t:
+                            continue
+
+                        this_tolerance = t / (abs(sin_mid) * kinkiness)
+
+                        log.debug(
+                            "deviation %g; deviation_ratio %g; sin_mid %g; r_diff %g",
+                            deviation,
+                            deviation_ratio,
+                            sin_mid,
+                            r_diff,
+                        )
+                        log.debug("tolerance %g", this_tolerance)
+                        yield (
+                            glyph_name,
+                            {
+                                "type": "kink",
+                                "contour": ix,
+                                "master_1": names[m0idx],
+                                "master_2": names[m1idx],
+                                "master_1_idx": m0idx,
+                                "master_2_idx": m1idx,
+                                "value": i,
+                                "tolerance": this_tolerance,
+                            },
+                        )
 
             #
             # --show-all
