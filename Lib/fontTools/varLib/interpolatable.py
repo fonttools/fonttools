@@ -6,9 +6,11 @@ Call as:
 $ fonttools varLib.interpolatable font1 font2 ...
 """
 
-from fontTools.pens.basePen import AbstractPen, BasePen
+from fontTools.pens.basePen import AbstractPen, BasePen, DecomposingPen
 from fontTools.pens.pointPen import AbstractPointPen, SegmentToPointPen
-from fontTools.pens.recordingPen import RecordingPen
+from fontTools.pens.recordingPen import RecordingPen, DecomposingRecordingPen
+from fontTools.pens.transformPen import TransformPen
+from fontTools.pens.boundsPen import ControlBoundsPen
 from fontTools.pens.statisticsPen import StatisticsPen, StatisticsControlPen
 from fontTools.pens.momentsPen import OpenContourError
 from fontTools.varLib.models import piecewiseLinearMap, normalizeLocation
@@ -415,11 +417,13 @@ def test_gen(
     for glyph_name in glyphs:
         log.info("Testing glyph %s", glyph_name)
         allGreenVectors = []
+        allGreenVectorsNormalized = []
         allControlVectors = []
         allNodeTypes = []
         allContourIsomorphisms = []
         allContourPoints = []
         allContourPens = []
+        allContourPensNormalized = []
         allGlyphs = [glyphset[glyph_name] for glyphset in glyphsets]
         if len([1 for glyph in allGlyphs if glyph is not None]) <= 1:
             continue
@@ -435,9 +439,11 @@ def test_gen(
                 allNodeTypes.append(None)
                 allControlVectors.append(None)
                 allGreenVectors.append(None)
+                allGreenVectorsNormalized.append(None)
                 allContourIsomorphisms.append(None)
                 allContourPoints.append(None)
                 allContourPens.append(None)
+                allContourPensNormalized.append(None)
                 continue
 
             perContourPen = PerContourOrComponentPen(RecordingPen, glyphset=glyphset)
@@ -447,18 +453,22 @@ def test_gen(
                 glyph.draw(perContourPen)
             contourPens = perContourPen.value
             del perContourPen
+            contourPensNormalized = []
 
             contourControlVectors = []
             contourGreenVectors = []
+            contourGreenVectorsNormalized = []
             contourIsomorphisms = []
             contourPoints = []
             nodeTypes = []
             allNodeTypes.append(nodeTypes)
             allControlVectors.append(contourControlVectors)
             allGreenVectors.append(contourGreenVectors)
+            allGreenVectorsNormalized.append(contourGreenVectorsNormalized)
             allContourIsomorphisms.append(contourIsomorphisms)
             allContourPoints.append(contourPoints)
             allContourPens.append(contourPens)
+            allContourPensNormalized.append(contourPensNormalized)
             for ix, contour in enumerate(contourPens):
                 contourOps = tuple(op for op, arg in contour.value)
                 nodeTypes.append(contourOps)
@@ -481,6 +491,24 @@ def test_gen(
                     continue
                 contourGreenVectors.append(_contour_vector_from_stats(greenStats))
                 contourControlVectors.append(_contour_vector_from_stats(controlStats))
+
+                # Save a "normalized" version of the outlines
+
+                try:
+                    rpen = DecomposingRecordingPen(glyphset)
+                    tpen = TransformPen(
+                        rpen, _transform_from_stats(greenStats, inverse=True)
+                    )
+                    contour.replay(tpen)
+                    contourPensNormalized.append(rpen)
+                except ZeroDivisionError:
+                    contourPensNormalized.append(None)
+
+                greenStats = StatisticsPen(glyphset=glyphset)
+                rpen.replay(greenStats)
+                contourGreenVectorsNormalized.append(
+                    _contour_vector_from_stats(greenStats)
+                )
 
                 # Check starting point
                 if contourOps[0] == "addComponent":
@@ -682,14 +710,22 @@ def test_gen(
             m0 = allContourIsomorphisms[m0idx]
             m1Vectors = allGreenVectors[m1idx]
             m0Vectors = allGreenVectors[m0idx]
+            m1VectorsNormalized = allGreenVectorsNormalized[m1idx]
+            m0VectorsNormalized = allGreenVectorsNormalized[m0idx]
             recording0 = allContourPens[m0idx]
             recording1 = allContourPens[m1idx]
+            recording0Normalized = allContourPensNormalized[m0idx]
+            recording1Normalized = allContourPensNormalized[m1idx]
 
             # If contour-order is wrong, adjust it
             if matchings[m1idx] is not None and m1:  # m1 is empty for composite glyphs
                 m1 = [m1[i] for i in matchings[m1idx]]
                 m1Vectors = [m1Vectors[i] for i in matchings[m1idx]]
+                m1VectorsNormalized = [m1VectorsNormalized[i] for i in matchings[m1idx]]
                 recording1 = [recording1[i] for i in matchings[m1idx]]
+                recording1Normalized = [
+                    recording1Normalized[i] for i in matchings[m1idx]
+                ]
 
             midRecording = []
             for c0, c1 in zip(recording0, recording1):
@@ -831,41 +867,87 @@ def test_gen(
                     # The sign difference can happen if it's a werido
                     # self-intersecting contour; ignore it.
                     contour = midRecording[ix]
-                    if contour and (m0Vectors[ix][0] < 0) == (m1Vectors[ix][0] < 0):
-                        size0 = m0Vectors[ix][0] * m0Vectors[ix][0]
-                        size1 = m1Vectors[ix][0] * m1Vectors[ix][0]
+                    from .interpolatablePlot import LerpGlyphSet
 
-                        midStats = StatisticsPen(glyphset=glyphset)
-                        contour.replay(midStats)
+                    normalized = False
+                    if contour and (m0Vectors[ix][0] < 0) == (m1Vectors[ix][0] < 0):
+                        if normalized:
+                            midStats = StatisticsPen(glyphset=None)
+                            tpen = TransformPen(
+                                midStats, _transform_from_stats(midStats, inverse=True)
+                            )
+                            contour.replay(tpen)
+                        else:
+                            midStats = StatisticsPen(glyphset=None)
+                            contour.replay(midStats)
+
                         midVector = _contour_vector_from_stats(midStats)
+
+                        m0Vec = (
+                            m0Vectors[ix] if not normalized else m0VectorsNormalized[ix]
+                        )
+                        m1Vec = (
+                            m1Vectors[ix] if not normalized else m1VectorsNormalized[ix]
+                        )
+                        size0 = m0Vec[0] * m0Vec[0]
+                        size1 = m1Vec[0] * m1Vec[0]
                         midSize = midVector[0] * midVector[0]
 
-                        geomAvg = (size0 * size1) ** 0.5
-                        if not (geomAvg * tolerance <= midSize + 1e-5):
-                            try:
-                                this_tolerance = midSize / geomAvg
-                            except ZeroDivisionError:
-                                this_tolerance = 0
+                        power = 1
+                        t = tolerance**power
+
+                        for overweight, problem_type in enumerate(
+                            ("underweight", "overweight")
+                        ):
+                            if overweight:
+                                expectedSize = sqrt(size0 * size1)
+                                expectedSize = (size0 + size1) - expectedSize
+                                expectedSize = size1 + (midSize - size1)
+                                continue
+                            else:
+                                expectedSize = sqrt(size0 * size1)
+
                             log.debug(
-                                "average size %g; actual size %g; master sizes: %g, %g",
-                                geomAvg,
+                                "%s: actual size %g; threshold size %g, master sizes: %g, %g",
+                                problem_type,
                                 midSize,
+                                expectedSize,
                                 size0,
                                 size1,
                             )
-                            log.debug("tolerance %g", this_tolerance)
-                            yield (
-                                glyph_name,
-                                {
-                                    "type": "underweight",
-                                    "contour": ix,
-                                    "master_1": names[m0idx],
-                                    "master_2": names[m1idx],
-                                    "master_1_idx": m0idx,
-                                    "master_2_idx": m1idx,
-                                    "tolerance": this_tolerance,
-                                },
-                            )
+
+                            size0, size1 = sorted((size0, size1))
+
+                            if (
+                                not overweight
+                                and expectedSize * tolerance + 1e-5 > midSize
+                            ) or (
+                                overweight and 1e-5 + expectedSize / tolerance < midSize
+                            ):
+                                try:
+                                    if overweight:
+                                        this_tolerance = (expectedSize / midSize) ** (
+                                            1 / power
+                                        )
+                                    else:
+                                        this_tolerance = (midSize / expectedSize) ** (
+                                            1 / power
+                                        )
+                                except ZeroDivisionError:
+                                    this_tolerance = 0
+                                log.debug("tolerance %g", this_tolerance)
+                                yield (
+                                    glyph_name,
+                                    {
+                                        "type": problem_type,
+                                        "contour": ix,
+                                        "master_1": names[m0idx],
+                                        "master_2": names[m1idx],
+                                        "master_1_idx": m0idx,
+                                        "master_2_idx": m1idx,
+                                        "tolerance": this_tolerance,
+                                    },
+                                )
 
             #
             # "kink" detector
@@ -1077,6 +1159,11 @@ def main(args=None):
         "--pdf",
         action="store",
         help="Output report in PDF format",
+    )
+    parser.add_argument(
+        "--ps",
+        action="store",
+        help="Output report in PostScript format",
     )
     parser.add_argument(
         "--html",
@@ -1434,6 +1521,16 @@ def main(args=None):
                             ),
                             file=f,
                         )
+                    elif p["type"] == "overweight":
+                        print(
+                            "    Contour %d interpolation is overweight: %s, %s"
+                            % (
+                                p["contour"],
+                                p["master_1"],
+                                p["master_2"],
+                            ),
+                            file=f,
+                        )
                     elif p["type"] == "kink":
                         print(
                             "    Contour %d has a kink at %s: %s, %s"
@@ -1469,6 +1566,18 @@ def main(args=None):
                 pdf.add_problems(problems)
                 if not problems and not args.quiet:
                     pdf.draw_cupcake()
+
+        if args.ps:
+            log.info("Writing PS to %s", args.pdf)
+            from .interpolatablePlot import InterpolatablePS
+
+            with InterpolatablePS(args.ps, glyphsets=glyphsets, names=names) as ps:
+                ps.add_title_page(
+                    original_args_inputs, tolerance=tolerance, kinkiness=kinkiness
+                )
+                ps.add_problems(problems)
+                if not problems and not args.quiet:
+                    ps.draw_cupcake()
 
         if args.html:
             log.info("Writing HTML to %s", args.html)
