@@ -494,8 +494,6 @@ def test_gen(
         if len([1 for glyph in allGlyphs if glyph is not None]) <= 1:
             continue
 
-        allContourPens = []
-        #allGlyphs = [glyphset[glyph_name] for glyphset in glyphsets]
         for master_idx, (glyph, glyphset, name) in enumerate(
             zip(allGlyphs, glyphsets, names)
         ):
@@ -505,15 +503,12 @@ def test_gen(
                         glyph_name,
                         {"type": "missing", "master": name, "master_idx": master_idx},
                     )
-                allContourPens.append(None)
                 continue
 
             contours = glyph.contours
             contourPens = [c.recording for c in glyph.contours]
 
-            contourPoints = []
             nodeTypes = []
-            allContourPens.append(contourPens)
             for ix, contour in enumerate(contours):
                 contourOps = contour.ops
                 nodeTypes.append(contour.ops)
@@ -721,8 +716,8 @@ def test_gen(
             m1 = [contour.isomorphisms for contour in glyph1.contours]
             m0GreenVectors = [contour.greenVector for contour in glyph0.contours]
             m1GreenVectors = [contour.greenVector for contour in glyph1.contours]
-            recording0 = allContourPens[m0idx]
-            recording1 = allContourPens[m1idx]
+            recording0 = [contour.recording for contour in glyph0.contours]
+            recording1 = [contour.recording for contour in glyph1.contours]
 
             # If contour-order is wrong, adjust it
             if matchings[m1idx] is not None and m1:  # m1 is empty for composite glyphs
