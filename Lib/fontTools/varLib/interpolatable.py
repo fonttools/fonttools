@@ -6,9 +6,10 @@ Call as:
 $ fonttools varLib.interpolatable font1 font2 ...
 """
 
-from fontTools.pens.basePen import AbstractPen, BasePen
+from fontTools.pens.basePen import AbstractPen, BasePen, DecomposingPen
 from fontTools.pens.pointPen import AbstractPointPen, SegmentToPointPen
-from fontTools.pens.recordingPen import RecordingPen
+from fontTools.pens.recordingPen import RecordingPen, DecomposingRecordingPen
+from fontTools.pens.transformPen import TransformPen
 from fontTools.pens.boundsPen import ControlBoundsPen
 from fontTools.pens.statisticsPen import StatisticsPen, StatisticsControlPen
 from fontTools.pens.momentsPen import OpenContourError
@@ -323,6 +324,46 @@ def _find_parents_and_order(glyphsets, locations):
     return parents, order
 
 
+def transform_from_stats(stats, inverse=False):
+
+    # https://cookierobotics.com/007/
+    a = stats.varianceX
+    b = stats.covariance
+    c = stats.varianceY
+
+    delta = (((a - c) * 0.5) ** 2 + b * b) ** 0.5
+    lambda1 = (a + c) * 0.5 + delta  # Major eigenvalue
+    lambda2 = (a + c) * 0.5 - delta  # Minor eigenvalue
+    theta = (
+        atan2(lambda1 - a, b)
+        if b != 0
+        else (pi * 0.5 if a < c else 0)
+    )
+    trans = Transform()
+
+    if lambda2 < 0:
+        # XXX This is a hack.
+        # The problem is that the covariance matrix is singular.
+        # This happens when the contour is a line, or a circle.
+        # In that case, the covariance matrix is not a good
+        # representation of the contour.
+        # We should probably detect this earlier and avoid
+        # computing the covariance matrix in the first place.
+        # But for now, we just avoid the division by zero.
+        lambda2 = 0
+
+    if inverse:
+        trans = trans.translate(-stats.meanX, -stats.meanY)
+        trans = trans.rotate(-theta)
+        trans = trans.scale(1 / sqrt(lambda1), 1 / sqrt(lambda2))
+    else:
+        trans = trans.scale(sqrt(lambda1), sqrt(lambda2))
+        trans = trans.rotate(theta)
+        trans = trans.translate(stats.meanX, stats.meanY)
+
+    return trans
+
+
 def lerp_recordings(recording1, recording2, factor=0.5):
     pen = RecordingPen()
     value = pen.value
@@ -382,11 +423,13 @@ def test_gen(
     for glyph_name in glyphs:
         log.info("Testing glyph %s", glyph_name)
         allGreenVectors = []
+        allGreenVectorsNormalized = []
         allControlVectors = []
         allNodeTypes = []
         allContourIsomorphisms = []
         allContourPoints = []
         allContourPens = []
+        allContourPensNormalized = []
         allGlyphs = [glyphset[glyph_name] for glyphset in glyphsets]
         if len([1 for glyph in allGlyphs if glyph is not None]) <= 1:
             continue
@@ -402,9 +445,11 @@ def test_gen(
                 allNodeTypes.append(None)
                 allControlVectors.append(None)
                 allGreenVectors.append(None)
+                allGreenVectorsNormalized.append(None)
                 allContourIsomorphisms.append(None)
                 allContourPoints.append(None)
                 allContourPens.append(None)
+                allContourPensNormalized.append(None)
                 continue
 
             perContourPen = PerContourOrComponentPen(RecordingPen, glyphset=glyphset)
@@ -414,18 +459,22 @@ def test_gen(
                 glyph.draw(perContourPen)
             contourPens = perContourPen.value
             del perContourPen
+            contourPensNormalized = []
 
             contourControlVectors = []
             contourGreenVectors = []
+            contourGreenVectorsNormalized = []
             contourIsomorphisms = []
             contourPoints = []
             nodeTypes = []
             allNodeTypes.append(nodeTypes)
             allControlVectors.append(contourControlVectors)
             allGreenVectors.append(contourGreenVectors)
+            allGreenVectorsNormalized.append(contourGreenVectorsNormalized)
             allContourIsomorphisms.append(contourIsomorphisms)
             allContourPoints.append(contourPoints)
             allContourPens.append(contourPens)
+            allContourPensNormalized.append(contourPensNormalized)
             for ix, contour in enumerate(contourPens):
                 contourOps = tuple(op for op, arg in contour.value)
                 nodeTypes.append(contourOps)
@@ -448,6 +497,21 @@ def test_gen(
                     continue
                 contourGreenVectors.append(_contour_vector_from_stats(greenStats))
                 contourControlVectors.append(_contour_vector_from_stats(controlStats))
+
+
+                # Save a "normalized" version of the outlines
+
+                try:
+                    rpen = DecomposingRecordingPen(glyphset)
+                    tpen = TransformPen(rpen, transform_from_stats(greenStats, inverse=True))
+                    contour.replay(tpen)
+                    contourPensNormalized.append(rpen)
+                except ZeroDivisionError:
+                    contourPensNormalized.append(None)
+
+                greenStats = StatisticsPen(glyphset=glyphset)
+                rpen.replay(greenStats)
+                contourGreenVectorsNormalized.append(_contour_vector_from_stats(greenStats))
 
                 # Check starting point
                 if contourOps[0] == "addComponent":
@@ -649,14 +713,20 @@ def test_gen(
             m0 = allContourIsomorphisms[m0idx]
             m1Vectors = allGreenVectors[m1idx]
             m0Vectors = allGreenVectors[m0idx]
+            m1VectorsNormalized = allGreenVectorsNormalized[m1idx]
+            m0VectorsNormalized = allGreenVectorsNormalized[m0idx]
             recording0 = allContourPens[m0idx]
             recording1 = allContourPens[m1idx]
+            recording0Normalized = allContourPensNormalized[m0idx]
+            recording1Normalized = allContourPensNormalized[m1idx]
 
             # If contour-order is wrong, adjust it
             if matchings[m1idx] is not None and m1:  # m1 is empty for composite glyphs
                 m1 = [m1[i] for i in matchings[m1idx]]
                 m1Vectors = [m1Vectors[i] for i in matchings[m1idx]]
+                m1VectorsNormalized = [m1VectorsNormalized[i] for i in matchings[m1idx]]
                 recording1 = [recording1[i] for i in matchings[m1idx]]
+                recording1Normalized = [recording1Normalized[i] for i in matchings[m1idx]]
 
             midRecording = []
             for c0, c1 in zip(recording0, recording1):
@@ -799,44 +869,38 @@ def test_gen(
                     # self-intersecting contour; ignore it.
                     contour = midRecording[ix]
                     from .interpolatablePlot import LerpGlyphSet
-                    if contour and (m0Vectors[ix][0] < 0) == (m1Vectors[ix][0] < 0):
+                    if contour and (m0VectorsNormalized[ix][0] < 0) == (m1VectorsNormalized[ix][0] < 0):
 
-                        midGlyphset = LerpGlyphSet(glyphsets[m0idx], glyphsets[m1idx])
-                        midStats = StatisticsPen(glyphset=midGlyphset)
+                        midStats = StatisticsPen(glyphset=None)
                         contour.replay(midStats)
-                        midVector = _contour_vector_from_stats(midStats)
 
-                        size0 = m0Vectors[ix][0] * m0Vectors[ix][0]
-                        size1 = m1Vectors[ix][0] * m1Vectors[ix][0]
-                        midSize = midVector[0] * midVector[0]
+                        midStatsNormalized = StatisticsPen(glyphset=None)
+                        tpen = TransformPen(midStatsNormalized, transform_from_stats(midStats, inverse=True))
+                        contour.replay(tpen)
 
-                        bounds0Pen = ControlBoundsPen(glyphsets[m0idx])
-                        bounds1Pen = ControlBoundsPen(glyphsets[m1idx])
-                        recording0[ix].replay(bounds0Pen)
-                        recording1[ix].replay(bounds1Pen)
-                        bounds0 = bounds0Pen.bounds or (0, 0, 0, 0)
-                        bounds1 = bounds1Pen.bounds or (0, 0, 0, 0)
-                        width0, height0 = bounds0[2] - bounds0[0], bounds0[3] - bounds0[1]
-                        width1, height1 = bounds1[2] - bounds1[0], bounds1[3] - bounds1[1]
+                        midVectorNormalized = _contour_vector_from_stats(midStatsNormalized)
 
-                        try:
-                            pass
-                            #size0 /= width0 * height0
-                            #size1 /= width1 * height1
-                            #midSize /= (width0 + width1) * .5 * (height0 + height1) * .5
-                        except ZeroDivisionError:
-                            continue
+                        size0 = m0VectorsNormalized[ix][0] * m0VectorsNormalized[ix][0]
+                        size1 = m1VectorsNormalized[ix][0] * m1VectorsNormalized[ix][0]
+                        midSize = midVectorNormalized[0] * midVectorNormalized[0]
+
+                        power = 2
+                        t = tolerance ** power
 
                         for overweight, problem_type in enumerate(
                             ("underweight", "overweight")
                         ):
                             if overweight:
-                                expectedSize = (size0 * size1) ** 0.5
+                                expectedSize = sqrt(size0 * size1)
                                 expectedSize = (size0 + size1) - expectedSize
+                                expectedSize = size1 + (midSize - size1) * t + 1e-1
 
-                                expectedSize = (size0 + size1) * .5
+                                #expectedSize = (size0 + size1) * .5
                             else:
-                                expectedSize = (size0 * size1) ** 0.5
+                                #expectedSize = sqrt(size0 * size1)
+                                expectedSize = sqrt(size0 * size1)
+                                expectedSize = size0 + (midSize - size0) * t + 1e-1
+                                expectedSize = sqrt(size0 * size1 * t) + 1e-1
 
                             log.debug(
                                 "%s: actual size %g; threshold size %g, master sizes: %g, %g",
@@ -846,13 +910,13 @@ def test_gen(
                                 size0,
                                 size1,
                             )
-                            power = 1 / tolerance
-                            t = tolerance ** power
+
+                            size0, size1 = sorted((size0, size1))
+
                             if (
-                                not overweight
-                                and expectedSize * t > midSize + 1e-5
+                                not overweight and expectedSize < midSize
                             ) or (
-                                overweight and 1e-5 + expectedSize < midSize * t
+                                overweight and 1e-5 + expectedSize < midSize
                             ):
                                 try:
                                     if overweight:
