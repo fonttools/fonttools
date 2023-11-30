@@ -226,9 +226,10 @@ class InterpolatablePlot:
         cr.rectangle(xx - self.pad * 0.7, y, 1.5 * self.pad, self.line_height)
         cr.set_source_rgb(*self.fill_color)
         cr.fill_preserve()
-        cr.set_source_rgb(*self.stroke_color)
-        cr.set_line_width(self.stroke_width)
-        cr.stroke_preserve()
+        if self.stroke_color:
+            cr.set_source_rgb(*self.stroke_color)
+            cr.set_line_width(self.stroke_width)
+            cr.stroke_preserve()
         cr.set_source_rgba(*self.weight_issue_contour_color)
         cr.fill()
         y -= self.pad + self.line_height
@@ -237,11 +238,13 @@ class InterpolatablePlot:
             "Colored contours: contours with the wrong order", x=xxx, y=y, width=width
         )
         cr.rectangle(xx - self.pad * 0.7, y, 1.5 * self.pad, self.line_height)
-        cr.set_source_rgb(*self.fill_color)
-        cr.fill_preserve()
-        cr.set_source_rgb(*self.stroke_color)
-        cr.set_line_width(self.stroke_width)
-        cr.stroke_preserve()
+        if self.fill_color:
+            cr.set_source_rgb(*self.fill_color)
+            cr.fill_preserve()
+        if self.stroke_color:
+            cr.set_source_rgb(*self.stroke_color)
+            cr.set_line_width(self.stroke_width)
+            cr.stroke_preserve()
         cr.set_source_rgba(*self.contour_colors[0], self.contour_alpha)
         cr.fill()
         y -= self.pad + self.line_height
