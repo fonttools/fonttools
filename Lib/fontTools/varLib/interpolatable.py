@@ -869,20 +869,24 @@ def test_gen(
                     # self-intersecting contour; ignore it.
                     contour = midRecording[ix]
                     from .interpolatablePlot import LerpGlyphSet
-                    if contour and (m0VectorsNormalized[ix][0] < 0) == (m1VectorsNormalized[ix][0] < 0):
+                    normalized = False
+                    if contour and (m0Vectors[ix][0] < 0) == (m1Vectors[ix][0] < 0):
 
-                        midStats = StatisticsPen(glyphset=None)
-                        contour.replay(midStats)
+                        if normalized:
+                            midStats = StatisticsPen(glyphset=None)
+                            tpen = TransformPen(midStats, _transform_from_stats(midStats, inverse=True))
+                            contour.replay(tpen)
+                        else:
+                            midStats = StatisticsPen(glyphset=None)
+                            contour.replay(midStats)
 
-                        midStatsNormalized = StatisticsPen(glyphset=None)
-                        tpen = TransformPen(midStatsNormalized, _transform_from_stats(midStats, inverse=True))
-                        contour.replay(tpen)
+                        midVector = _contour_vector_from_stats(midStats)
 
-                        midVectorNormalized = _contour_vector_from_stats(midStatsNormalized)
-
-                        size0 = m0VectorsNormalized[ix][0] * m0VectorsNormalized[ix][0]
-                        size1 = m1VectorsNormalized[ix][0] * m1VectorsNormalized[ix][0]
-                        midSize = midVectorNormalized[0] * midVectorNormalized[0]
+                        m0Vec = m0Vectors[ix] if not normalized else m0VectorsNormalized[ix]
+                        m1Vec = m1Vectors[ix] if not normalized else m1VectorsNormalized[ix]
+                        size0 = m0Vec[0] * m0Vec[0]
+                        size1 = m1Vec[0] * m1Vec[0]
+                        midSize = midVector[0] * midVector[0]
 
                         power = 1
                         t = tolerance ** power
@@ -893,15 +897,10 @@ def test_gen(
                             if overweight:
                                 expectedSize = sqrt(size0 * size1)
                                 expectedSize = (size0 + size1) - expectedSize
-                                expectedSize = size1 + (midSize - size1) * t + 1e-1
-
-                                #expectedSize = (size0 + size1) * .5
+                                expectedSize = size1 + (midSize - size1)
                                 continue
                             else:
-                                #expectedSize = sqrt(size0 * size1)
                                 expectedSize = sqrt(size0 * size1)
-                                #expectedSize = size0 + (midSize - size0) * t + 1e-1
-                                #expectedSize = sqrt(size0 * size1 * t) + 1e-1
 
                             log.debug(
                                 "%s: actual size %g; threshold size %g, master sizes: %g, %g",
@@ -915,9 +914,9 @@ def test_gen(
                             size0, size1 = sorted((size0, size1))
 
                             if (
-                                not overweight and expectedSize < midSize
+                                not overweight and expectedSize * tolerance + 1e-5 > midSize
                             ) or (
-                                overweight and 1e-5 + expectedSize < midSize
+                                overweight and 1e-5 + expectedSize / tolerance < midSize
                             ):
                                 try:
                                     if overweight:
