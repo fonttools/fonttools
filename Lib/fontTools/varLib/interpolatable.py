@@ -322,6 +322,41 @@ def _find_parents_and_order(glyphsets, locations):
     return parents, order
 
 
+def _transform_from_stats(stats, inverse=False):
+    # https://cookierobotics.com/007/
+    a = stats.varianceX
+    b = stats.covariance
+    c = stats.varianceY
+
+    delta = (((a - c) * 0.5) ** 2 + b * b) ** 0.5
+    lambda1 = (a + c) * 0.5 + delta  # Major eigenvalue
+    lambda2 = (a + c) * 0.5 - delta  # Minor eigenvalue
+    theta = atan2(lambda1 - a, b) if b != 0 else (pi * 0.5 if a < c else 0)
+    trans = Transform()
+
+    if lambda2 < 0:
+        # XXX This is a hack.
+        # The problem is that the covariance matrix is singular.
+        # This happens when the contour is a line, or a circle.
+        # In that case, the covariance matrix is not a good
+        # representation of the contour.
+        # We should probably detect this earlier and avoid
+        # computing the covariance matrix in the first place.
+        # But for now, we just avoid the division by zero.
+        lambda2 = 0
+
+    if inverse:
+        trans = trans.translate(-stats.meanX, -stats.meanY)
+        trans = trans.rotate(-theta)
+        trans = trans.scale(1 / sqrt(lambda1), 1 / sqrt(lambda2))
+    else:
+        trans = trans.scale(sqrt(lambda1), sqrt(lambda2))
+        trans = trans.rotate(theta)
+        trans = trans.translate(stats.meanX, stats.meanY)
+
+    return trans
+
+
 def lerp_recordings(recording1, recording2, factor=0.5):
     pen = RecordingPen()
     value = pen.value
