@@ -951,7 +951,7 @@ def test_gen(
 
                             if (
                                 not overweight
-                                and expectedSize * tolerance + 1e-5 > midSize
+                                and expectedSize * tolerance > midSize + 1e-5
                             ) or (
                                 overweight and 1e-5 + expectedSize / tolerance < midSize
                             ):
