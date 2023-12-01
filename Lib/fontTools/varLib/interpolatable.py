@@ -29,6 +29,114 @@ DEFAULT_KINKINESS_LENGTH = 0.002  # ratio of UPEM
 DEFAULT_UPEM = 1000
 
 
+class Glyph:
+    ITEMS = (
+        "recordings",
+        "recordingsNormalized",
+        "greenStats",
+        "controlStats",
+        "greenVectors",
+        "greenVectorsNormalized",
+        "controlVectors",
+        "nodeTypes",
+        "isomorphisms",
+        "points",
+        "openContours",
+    )
+
+    def __init__(self, glyphname, glyphset):
+        self.name = glyphname
+        for item in self.ITEMS:
+            setattr(self, item, [])
+        self._populate(glyphset)
+
+    def _fill_in(self, ix):
+        for item in self.ITEMS:
+            if len(getattr(self, item)) == ix:
+                getattr(self, item).append(None)
+
+    def _populate(self, glyphset):
+        glyph = glyphset[self.name]
+        self.doesnt_exist = glyph is None
+        if self.doesnt_exist:
+            return
+
+        perContourPen = PerContourOrComponentPen(RecordingPen, glyphset=glyphset)
+        try:
+            glyph.draw(perContourPen, outputImpliedClosingLine=True)
+        except TypeError:
+            glyph.draw(perContourPen)
+        self.recordings = perContourPen.value
+        del perContourPen
+
+        for ix, contour in enumerate(self.recordings):
+            nodeTypes = [op for op, arg in contour.value]
+            self.nodeTypes.append(nodeTypes)
+
+            greenStats = StatisticsPen(glyphset=glyphset)
+            controlStats = StatisticsControlPen(glyphset=glyphset)
+            try:
+                contour.replay(greenStats)
+                contour.replay(controlStats)
+                self.openContours.append(False)
+            except OpenContourError as e:
+                self.openContours.append(True)
+                self._fill_in(ix)
+                continue
+            self.greenStats.append(greenStats)
+            self.controlStats.append(controlStats)
+            self.greenVectors.append(contour_vector_from_stats(greenStats))
+            self.controlVectors.append(contour_vector_from_stats(controlStats))
+
+            # Save a "normalized" version of the outlines
+            try:
+                rpen = DecomposingRecordingPen(glyphset)
+                tpen = TransformPen(
+                    rpen, transform_from_stats(greenStats, inverse=True)
+                )
+                contour.replay(tpen)
+                self.recordingsNormalized.append(rpen)
+            except ZeroDivisionError:
+                self.recordingsNormalized.append(None)
+
+            greenStats = StatisticsPen(glyphset=glyphset)
+            rpen.replay(greenStats)
+            self.greenVectorsNormalized.append(
+                contour_vector_from_stats(greenStats)
+            )
+
+            # Check starting point
+            if nodeTypes[0] == "addComponent":
+                self._fill_in(ix)
+                continue
+
+            assert nodeTypes[0] == "moveTo"
+            assert nodeTypes[-1] in ("closePath", "endPath")
+            points = SimpleRecordingPointPen()
+            converter = SegmentToPointPen(points, False)
+            contour.replay(converter)
+            # points.value is a list of pt,bool where bool is true if on-curve and false if off-curve;
+            # now check all rotations and mirror-rotations of the contour and build list of isomorphic
+            # possible starting points.
+            self.points.append(points.value)
+
+            isomorphisms = []
+            self.isomorphisms.append(isomorphisms)
+
+            # Add rotations
+            add_isomorphisms(points.value, isomorphisms, False)
+            # Add mirrored rotations
+            add_isomorphisms(points.value, isomorphisms, True)
+
+
+    def draw(self, pen, countor_idx = None):
+        if countor_idx is None:
+            for contour in self.recordings:
+                contour.draw(pen)
+        else:
+            self.recordings[countor_idx].draw(pen)
+
+
 def test_gen(
     glyphsets,
     glyphs=None,
@@ -69,139 +177,52 @@ def test_gen(
 
     for glyph_name in glyphs:
         log.info("Testing glyph %s", glyph_name)
-        allGreenVectors = []
-        allGreenVectorsNormalized = []
-        allControlVectors = []
-        allNodeTypes = []
-        allContourIsomorphisms = []
-        allContourPoints = []
-        allContourPens = []
-        allContourPensNormalized = []
-        allGlyphs = [glyphset[glyph_name] for glyphset in glyphsets]
+        allGlyphs = [Glyph(glyph_name, glyphset) for glyphset in glyphsets]
         if len([1 for glyph in allGlyphs if glyph is not None]) <= 1:
             continue
         for master_idx, (glyph, glyphset, name) in enumerate(
             zip(allGlyphs, glyphsets, names)
         ):
-            if glyph is None:
+            if glyph.doesnt_exist:
                 if not ignore_missing:
                     yield (
                         glyph_name,
                         {"type": "missing", "master": name, "master_idx": master_idx},
                     )
-                allNodeTypes.append(None)
-                allControlVectors.append(None)
-                allGreenVectors.append(None)
-                allGreenVectorsNormalized.append(None)
-                allContourIsomorphisms.append(None)
-                allContourPoints.append(None)
-                allContourPens.append(None)
-                allContourPensNormalized.append(None)
                 continue
 
-            perContourPen = PerContourOrComponentPen(RecordingPen, glyphset=glyphset)
-            try:
-                glyph.draw(perContourPen, outputImpliedClosingLine=True)
-            except TypeError:
-                glyph.draw(perContourPen)
-            contourPens = perContourPen.value
-            del perContourPen
-            contourPensNormalized = []
-
-            contourControlVectors = []
-            contourGreenVectors = []
-            contourGreenVectorsNormalized = []
-            contourIsomorphisms = []
-            contourPoints = []
-            nodeTypes = []
-            allNodeTypes.append(nodeTypes)
-            allControlVectors.append(contourControlVectors)
-            allGreenVectors.append(contourGreenVectors)
-            allGreenVectorsNormalized.append(contourGreenVectorsNormalized)
-            allContourIsomorphisms.append(contourIsomorphisms)
-            allContourPoints.append(contourPoints)
-            allContourPens.append(contourPens)
-            allContourPensNormalized.append(contourPensNormalized)
-            for ix, contour in enumerate(contourPens):
-                contourOps = tuple(op for op, arg in contour.value)
-                nodeTypes.append(contourOps)
-
-                greenStats = StatisticsPen(glyphset=glyphset)
-                controlStats = StatisticsControlPen(glyphset=glyphset)
-                try:
-                    contour.replay(greenStats)
-                    contour.replay(controlStats)
-                except OpenContourError as e:
-                    yield (
-                        glyph_name,
-                        {
-                            "master": name,
-                            "master_idx": master_idx,
-                            "contour": ix,
-                            "type": "open_path",
-                        },
-                    )
+            for ix, open in enumerate(glyph.openContours):
+                if not open:
                     continue
-                contourGreenVectors.append(contour_vector_from_stats(greenStats))
-                contourControlVectors.append(contour_vector_from_stats(controlStats))
-
-                # Save a "normalized" version of the outlines
-
-                try:
-                    rpen = DecomposingRecordingPen(glyphset)
-                    tpen = TransformPen(
-                        rpen, transform_from_stats(greenStats, inverse=True)
-                    )
-                    contour.replay(tpen)
-                    contourPensNormalized.append(rpen)
-                except ZeroDivisionError:
-                    contourPensNormalized.append(None)
-
-                greenStats = StatisticsPen(glyphset=glyphset)
-                rpen.replay(greenStats)
-                contourGreenVectorsNormalized.append(
-                    contour_vector_from_stats(greenStats)
+                yield (
+                    glyph_name,
+                    {
+                        "master": name,
+                        "master_idx": master_idx,
+                        "contour": ix,
+                        "type": "open_path",
+                    },
                 )
 
-                # Check starting point
-                if contourOps[0] == "addComponent":
-                    continue
-                assert contourOps[0] == "moveTo"
-                assert contourOps[-1] in ("closePath", "endPath")
-                points = SimpleRecordingPointPen()
-                converter = SegmentToPointPen(points, False)
-                contour.replay(converter)
-                # points.value is a list of pt,bool where bool is true if on-curve and false if off-curve;
-                # now check all rotations and mirror-rotations of the contour and build list of isomorphic
-                # possible starting points.
-
-                isomorphisms = []
-                contourIsomorphisms.append(isomorphisms)
-
-                # Add rotations
-                add_isomorphisms(points.value, isomorphisms, False)
-                # Add mirrored rotations
-                add_isomorphisms(points.value, isomorphisms, True)
-
-                contourPoints.append(points.value)
-
-        matchings = [None] * len(allControlVectors)
+        matchings = [None] * len(glyphsets)
 
         for m1idx in order:
-            if allNodeTypes[m1idx] is None:
+            glyph1 = allGlyphs[m1idx]
+            if glyph1 is None or not glyph1.nodeTypes:
                 continue
             m0idx = grand_parent(m1idx, glyph_name)
             if m0idx is None:
                 continue
-            if allNodeTypes[m0idx] is None:
+            glyph0 = allGlyphs[m0idx]
+            if glyph0 is None or not glyph0.nodeTypes:
                 continue
 
             #
             # Basic compatibility checks
             #
 
-            m1 = allNodeTypes[m1idx]
-            m0 = allNodeTypes[m0idx]
+            m1 = glyph0.nodeTypes
+            m0 = glyph1.nodeTypes
             if len(m0) != len(m1):
                 yield (
                     glyph_name,
@@ -270,11 +291,11 @@ def test_gen(
             # and then checking if it is the identity vector. Only if
             # not, compute the StatisticsControlPen vector and check both.
 
-            n = len(allControlVectors[m0idx])
+            n = len(glyph0.controlVectors)
             done = n <= 1
             if not done:
-                m1Control = allControlVectors[m1idx]
-                m0Control = allControlVectors[m0idx]
+                m0Control = glyph0.controlVectors
+                m1Control = glyph1.controlVectors
                 (
                     matching_control,
                     matching_cost_control,
@@ -282,8 +303,8 @@ def test_gen(
                 ) = matching_for_vectors(m0Control, m1Control)
                 done = matching_cost_control == identity_cost_control
             if not done:
-                m1Green = allGreenVectors[m1idx]
-                m0Green = allGreenVectors[m0idx]
+                m0Green = glyph0.greenVectors
+                m1Green = glyph1.greenVectors
                 (
                     matching_green,
                     matching_cost_green,
@@ -359,16 +380,16 @@ def test_gen(
             # "wrong_start_point" / weight check
             #
 
-            m1 = allContourIsomorphisms[m1idx]
-            m0 = allContourIsomorphisms[m0idx]
-            m1Vectors = allGreenVectors[m1idx]
-            m0Vectors = allGreenVectors[m0idx]
-            m1VectorsNormalized = allGreenVectorsNormalized[m1idx]
-            m0VectorsNormalized = allGreenVectorsNormalized[m0idx]
-            recording0 = allContourPens[m0idx]
-            recording1 = allContourPens[m1idx]
-            recording0Normalized = allContourPensNormalized[m0idx]
-            recording1Normalized = allContourPensNormalized[m1idx]
+            m0 = glyph0.isomorphisms
+            m1 = glyph1.isomorphisms
+            m0Vectors = glyph0.greenVectors
+            m1Vectors = glyph1.greenVectors
+            m0VectorsNormalized = glyph0.greenVectorsNormalized
+            m1VectorsNormalized = glyph1.greenVectorsNormalized
+            recording0 = glyph0.recordings
+            recording1 = glyph1.recordings
+            recording0Normalized = glyph0.recordingsNormalized
+            recording1Normalized = glyph1.recordingsNormalized
 
             # If contour-order is wrong, adjust it
             if matchings[m1idx] is not None and m1:  # m1 is empty for composite glyphs
@@ -389,7 +410,7 @@ def test_gen(
                     midRecording.append(None)
 
             for ix, (contour0, contour1) in enumerate(zip(m0, m1)):
-                if len(contour0) == 0 or len(contour0) != len(contour1):
+                if contour0 is None or contour1 is None or len(contour0) == 0 or len(contour0) != len(contour1):
                     # We already reported this; or nothing to do; or not compatible
                     # after reordering above.
                     continue
@@ -420,7 +441,7 @@ def test_gen(
 
                     proposed_point = contour1[min_cost_idx][1]
                     reverse = contour1[min_cost_idx][2]
-                    num_points = len(allContourPoints[m1idx][ix])
+                    num_points = len(glyph1.points[ix])
                     leeway = 3
                     okay = False
                     if not reverse and (
@@ -604,8 +625,8 @@ def test_gen(
             #
             # "kink" detector
             #
-            m1 = allContourPoints[m1idx]
-            m0 = allContourPoints[m0idx]
+            m0 = glyph0.points
+            m1 = glyph1.points
 
             # If contour-order is wrong, adjust it
             if matchings[m1idx] is not None and m1:  # m1 is empty for composite glyphs
@@ -617,7 +638,7 @@ def test_gen(
             )
 
             for ix, (contour0, contour1) in enumerate(zip(m0, m1)):
-                if len(contour0) == 0 or len(contour0) != len(contour1):
+                if contour0 is None or contour1 is None or len(contour0) == 0 or len(contour0) != len(contour1):
                     # We already reported this; or nothing to do; or not compatible
                     # after reordering above.
                     continue
