@@ -191,9 +191,11 @@ def test_gen(
                     )
                 continue
 
+            has_open = False
             for ix, open in enumerate(glyph.openContours):
                 if not open:
                     continue
+                has_open = True
                 yield (
                     glyph_name,
                     {
@@ -203,6 +205,8 @@ def test_gen(
                         "type": "open_path",
                     },
                 )
+            if has_open:
+                continue
 
         matchings = [None] * len(glyphsets)
 
