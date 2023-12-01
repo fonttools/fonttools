@@ -9,7 +9,7 @@ def test_starting_point(glyph0, glyph1, ix, tolerance, matching):
     m0Vectors = glyph0.greenVectors
     m1Vectors = [glyph1.greenVectors[i] for i in matching]
 
-    starting_point = 0
+    proposed_point = 0
     reverse = False
     min_cost = first_cost = 1
 
@@ -99,4 +99,4 @@ def test_starting_point(glyph0, glyph1, ix, tolerance, matching):
                 this_tolerance = min_cost / first_cost
                 proposed_point = new_contour1[min_cost_idx][1]
 
-    return starting_point, reverse, min_cost, first_cost
+    return proposed_point, reverse, min_cost, first_cost
