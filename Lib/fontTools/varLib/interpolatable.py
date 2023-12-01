@@ -321,14 +321,13 @@ def test_gen(
             recording1Normalized = glyph1.recordingsNormalized
 
             # If contour-order is wrong, adjust it
-            if matchings[m1idx] is not None and m1:  # m1 is empty for composite glyphs
-                m1 = [m1[i] for i in matchings[m1idx]]
-                m1Vectors = [m1Vectors[i] for i in matchings[m1idx]]
-                m1VectorsNormalized = [m1VectorsNormalized[i] for i in matchings[m1idx]]
-                recording1 = [recording1[i] for i in matchings[m1idx]]
-                recording1Normalized = [
-                    recording1Normalized[i] for i in matchings[m1idx]
-                ]
+            matching = matchings[m1idx]
+            if matching is not None and m1:  # m1 is empty for composite glyphs
+                m1 = [m1[i] for i in matching]
+                m1Vectors = [m1Vectors[i] for i in matching]
+                m1VectorsNormalized = [m1VectorsNormalized[i] for i in matching]
+                recording1 = [recording1[i] for i in matching]
+                recording1Normalized = [recording1Normalized[i] for i in matching]
 
             midRecording = []
             for c0, c1 in zip(recording0, recording1):
@@ -352,7 +351,7 @@ def test_gen(
                     continue
 
                 proposed_point, reverse, min_cost, first_cost = test_starting_point(
-                    glyph0, glyph1, ix, tolerance
+                    glyph0, glyph1, ix, tolerance, matching
                 )
 
                 if proposed_point or reverse:

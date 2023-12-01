@@ -1,11 +1,13 @@
 from .interpolatableHelpers import *
 
 
-def test_starting_point(glyph0, glyph1, ix, tolerance):
+def test_starting_point(glyph0, glyph1, ix, tolerance, matching):
+    if matching is None:
+        matching = range(len(glyph0.isomorphisms))
     contour0 = glyph0.isomorphisms[ix]
-    contour1 = glyph1.isomorphisms[ix]
-    m0Vectors = glyph0.greenVectors
-    m1Vectors = glyph1.greenVectors
+    contour1 = glyph1.isomorphisms[matching[ix]]
+    m0Vectors = glyph0.greenVectors[ix]
+    m1Vectors = glyph1.greenVectors[matching[ix]]
 
     starting_point = 0
     reverse = False
