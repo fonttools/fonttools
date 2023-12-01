@@ -102,9 +102,7 @@ class Glyph:
 
             greenStats = StatisticsPen(glyphset=glyphset)
             rpen.replay(greenStats)
-            self.greenVectorsNormalized.append(
-                contour_vector_from_stats(greenStats)
-            )
+            self.greenVectorsNormalized.append(contour_vector_from_stats(greenStats))
 
             # Check starting point
             if nodeTypes[0] == "addComponent":
@@ -129,8 +127,7 @@ class Glyph:
             # Add mirrored rotations
             add_isomorphisms(points.value, isomorphisms, True)
 
-
-    def draw(self, pen, countor_idx = None):
+    def draw(self, pen, countor_idx=None):
         if countor_idx is None:
             for contour in self.recordings:
                 contour.draw(pen)
@@ -284,14 +281,11 @@ def test_gen(
             # "contour_order" check
             #
 
-            matching, matching_cost, identity_cost = test_contour_order(
-                glyph0, glyph1
-            )
+            matching, matching_cost, identity_cost = test_contour_order(glyph0, glyph1)
             if matching_cost < identity_cost * tolerance:
                 log.debug(
-                    "matching_control_ratio %g; matching_green_ratio %g.",
-                    matching_cost_control / identity_cost_control,
-                    matching_cost_green / identity_cost_green,
+                    "matching_ratio %g",
+                    matching_cost / identity_cost,
                 )
                 this_tolerance = matching_cost / identity_cost
                 log.debug("tolerance: %g", this_tolerance)
@@ -303,7 +297,7 @@ def test_gen(
                         "master_2": names[m1idx],
                         "master_1_idx": m0idx,
                         "master_2_idx": m1idx,
-                        "value_1": list(range(n)),
+                        "value_1": list(range(len(matching))),
                         "value_2": matching,
                         "tolerance": this_tolerance,
                     },
@@ -344,7 +338,12 @@ def test_gen(
                     midRecording.append(None)
 
             for ix, (contour0, contour1) in enumerate(zip(m0, m1)):
-                if contour0 is None or contour1 is None or len(contour0) == 0 or len(contour0) != len(contour1):
+                if (
+                    contour0 is None
+                    or contour1 is None
+                    or len(contour0) == 0
+                    or len(contour0) != len(contour1)
+                ):
                     # We already reported this; or nothing to do; or not compatible
                     # after reordering above.
                     continue
@@ -572,7 +571,12 @@ def test_gen(
             )
 
             for ix, (contour0, contour1) in enumerate(zip(m0, m1)):
-                if contour0 is None or contour1 is None or len(contour0) == 0 or len(contour0) != len(contour1):
+                if (
+                    contour0 is None
+                    or contour1 is None
+                    or len(contour0) == 0
+                    or len(contour0) != len(contour1)
+                ):
                     # We already reported this; or nothing to do; or not compatible
                     # after reordering above.
                     continue

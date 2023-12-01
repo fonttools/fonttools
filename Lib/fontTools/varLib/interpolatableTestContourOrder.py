@@ -1,5 +1,6 @@
 from .interpolatableHelpers import *
 
+
 def test_contour_order(glyph0, glyph1):
     # We try matching both the StatisticsControlPen vector
     # and the StatisticsPen vector.
@@ -46,9 +47,7 @@ def test_contour_order(glyph0, glyph1):
                 matching_cost_control_reversed,
                 identity_cost_control_reversed,
             ) = matching_for_vectors(m0Control, m1ControlReversed)
-            done = (
-                matching_cost_control_reversed == identity_cost_control_reversed
-            )
+            done = matching_cost_control_reversed == identity_cost_control_reversed
         if not done:
             m1GreenReversed = [(-m[0],) + m[1:] for m in m1Green]
             (
@@ -56,9 +55,7 @@ def test_contour_order(glyph0, glyph1):
                 matching_cost_control_reversed,
                 identity_cost_control_reversed,
             ) = matching_for_vectors(m0Control, m1ControlReversed)
-            done = (
-                matching_cost_control_reversed == identity_cost_control_reversed
-            )
+            done = matching_cost_control_reversed == identity_cost_control_reversed
 
         if not done:
             # Otherwise, use the worst of the two matchings.
