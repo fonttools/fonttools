@@ -69,6 +69,14 @@ def addFeatureVariations(font, conditionalSubstitutions, featureTag="rvrn"):
     )
     if "GSUB" not in font:
         font["GSUB"] = buildGSUB()
+    else:
+        existingTags = _existingVariableFeatures(font["GSUB"].table).intersection(
+            featureTags
+        )
+        if existingTags:
+            raise VarLibError(
+                f"FeatureVariations already exist for feature tag(s): {existingTags}"
+            )
 
     # setup lookups
     lookupMap = buildSubstitutionLookups(
@@ -85,6 +93,16 @@ def addFeatureVariations(font, conditionalSubstitutions, featureTag="rvrn"):
         )
 
     addFeatureVariationsRaw(font, font["GSUB"].table, conditionsAndLookups, featureTags)
+
+
+def _existingVariableFeatures(table):
+    existingFeatureVarsTags = set()
+    if hasattr(table, "FeatureVariations") and table.FeatureVariations is not None:
+        features = table.FeatureList.FeatureRecord
+        for fvr in table.FeatureVariations.FeatureVariationRecord:
+            for ftsr in fvr.FeatureTableSubstitution.SubstitutionRecord:
+                existingFeatureVarsTags.add(features[ftsr.FeatureIndex].FeatureTag)
+    return existingFeatureVarsTags
 
 
 def _checkSubstitutionGlyphsExist(glyphNames, substitutions):
@@ -349,8 +367,6 @@ def addFeatureVariationsRaw(font, table, conditionalSubstitutions, featureTag="r
     if table.Version < 0x00010001:
         table.Version = 0x00010001  # allow table.FeatureVariations
 
-    table.FeatureVariations = None  # delete any existing FeatureVariations
-
     varFeatureIndices = set()
 
     existingTags = {
@@ -428,7 +444,18 @@ def addFeatureVariationsRaw(font, table, conditionalSubstitutions, featureTag="r
             buildFeatureVariationRecord(conditionTable, records)
         )
 
-    table.FeatureVariations = buildFeatureVariations(featureVariationRecords)
+    if hasattr(table, "FeatureVariations") and table.FeatureVariations is not None:
+        if table.FeatureVariations.Version != 0x00010000:
+            raise VarLibError(
+                "Unsupported FeatureVariations table version: "
+                f"0x{table.FeatureVariations.Version:08x} (expected 0x00010000)."
+            )
+        table.FeatureVariations.FeatureVariationRecord.extend(featureVariationRecords)
+        table.FeatureVariations.FeatureVariationCount = len(
+            table.FeatureVariations.FeatureVariationRecord
+        )
+    else:
+        table.FeatureVariations = buildFeatureVariations(featureVariationRecords)
 
 
 #
