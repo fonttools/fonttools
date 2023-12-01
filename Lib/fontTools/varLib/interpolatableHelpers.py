@@ -10,6 +10,7 @@ import logging
 
 log = logging.getLogger("fontTools.varLib.interpolatable")
 
+
 def rot_list(l, k):
     """Rotate list by k items forward.  Ie. item at position 0 will be
     at position k in returned list.  Negative k is allowed."""
@@ -380,5 +381,3 @@ def lerp_recordings(recording1, recording2, factor=0.5):
             ]
         value.append((op1, mid_args))
     return pen
-
-
