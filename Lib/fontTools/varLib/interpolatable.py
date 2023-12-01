@@ -7,6 +7,7 @@ $ fonttools varLib.interpolatable font1 font2 ...
 """
 
 from .interpolatableHelpers import *
+from .interpolatableTestContourOrder import test_contour_order
 from fontTools.pens.recordingPen import RecordingPen, DecomposingRecordingPen
 from fontTools.pens.transformPen import TransformPen
 from fontTools.pens.statisticsPen import StatisticsPen, StatisticsControlPen
@@ -283,102 +284,31 @@ def test_gen(
             # "contour_order" check
             #
 
-            # We try matching both the StatisticsControlPen vector
-            # and the StatisticsPen vector.
-            #
-            # If either method found a identity matching, accept it.
-            # This is crucial for fonts like Kablammo[MORF].ttf and
-            # Nabla[EDPT,EHLT].ttf, since they really confuse the
-            # StatisticsPen vector because of their area=0 contours.
-            #
-            # TODO: Optimize by only computing the StatisticsPen vector
-            # and then checking if it is the identity vector. Only if
-            # not, compute the StatisticsControlPen vector and check both.
-
-            n = len(glyph0.controlVectors)
-            done = n <= 1
-            if not done:
-                m0Control = glyph0.controlVectors
-                m1Control = glyph1.controlVectors
-                (
-                    matching_control,
-                    matching_cost_control,
-                    identity_cost_control,
-                ) = matching_for_vectors(m0Control, m1Control)
-                done = matching_cost_control == identity_cost_control
-            if not done:
-                m0Green = glyph0.greenVectors
-                m1Green = glyph1.greenVectors
-                (
-                    matching_green,
-                    matching_cost_green,
-                    identity_cost_green,
-                ) = matching_for_vectors(m0Green, m1Green)
-                done = matching_cost_green == identity_cost_green
-
-            if not done:
-                # See if reversing contours in one master helps.
-                # That's a common problem.  Then the wrong_start_point
-                # test will fix them.
-                #
-                # Reverse the sign of the area (0); the rest stay the same.
-                if not done:
-                    m1ControlReversed = [(-m[0],) + m[1:] for m in m1Control]
-                    (
-                        matching_control_reversed,
-                        matching_cost_control_reversed,
-                        identity_cost_control_reversed,
-                    ) = matching_for_vectors(m0Control, m1ControlReversed)
-                    done = (
-                        matching_cost_control_reversed == identity_cost_control_reversed
-                    )
-                if not done:
-                    m1GreenReversed = [(-m[0],) + m[1:] for m in m1Green]
-                    (
-                        matching_control_reversed,
-                        matching_cost_control_reversed,
-                        identity_cost_control_reversed,
-                    ) = matching_for_vectors(m0Control, m1ControlReversed)
-                    done = (
-                        matching_cost_control_reversed == identity_cost_control_reversed
-                    )
-
-                if not done:
-                    # Otherwise, use the worst of the two matchings.
-                    if (
-                        matching_cost_control / identity_cost_control
-                        < matching_cost_green / identity_cost_green
-                    ):
-                        matching = matching_control
-                        matching_cost = matching_cost_control
-                        identity_cost = identity_cost_control
-                    else:
-                        matching = matching_green
-                        matching_cost = matching_cost_green
-                        identity_cost = identity_cost_green
-
-                    if matching_cost < identity_cost * tolerance:
-                        log.debug(
-                            "matching_control_ratio %g; matching_green_ratio %g.",
-                            matching_cost_control / identity_cost_control,
-                            matching_cost_green / identity_cost_green,
-                        )
-                        this_tolerance = matching_cost / identity_cost
-                        log.debug("tolerance: %g", this_tolerance)
-                        yield (
-                            glyph_name,
-                            {
-                                "type": "contour_order",
-                                "master_1": names[m0idx],
-                                "master_2": names[m1idx],
-                                "master_1_idx": m0idx,
-                                "master_2_idx": m1idx,
-                                "value_1": list(range(n)),
-                                "value_2": matching,
-                                "tolerance": this_tolerance,
-                            },
-                        )
-                        matchings[m1idx] = matching
+            matching, matching_cost, identity_cost = test_contour_order(
+                glyph0, glyph1
+            )
+            if matching_cost < identity_cost * tolerance:
+                log.debug(
+                    "matching_control_ratio %g; matching_green_ratio %g.",
+                    matching_cost_control / identity_cost_control,
+                    matching_cost_green / identity_cost_green,
+                )
+                this_tolerance = matching_cost / identity_cost
+                log.debug("tolerance: %g", this_tolerance)
+                yield (
+                    glyph_name,
+                    {
+                        "type": "contour_order",
+                        "master_1": names[m0idx],
+                        "master_2": names[m1idx],
+                        "master_1_idx": m0idx,
+                        "master_2_idx": m1idx,
+                        "value_1": list(range(n)),
+                        "value_2": matching,
+                        "tolerance": this_tolerance,
+                    },
+                )
+                matchings[m1idx] = matching
 
             #
             # "wrong_start_point" / weight check
