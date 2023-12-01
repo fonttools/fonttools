@@ -6,8 +6,8 @@ def test_starting_point(glyph0, glyph1, ix, tolerance, matching):
         matching = list(range(len(glyph0.isomorphisms)))
     contour0 = glyph0.isomorphisms[ix]
     contour1 = glyph1.isomorphisms[matching[ix]]
-    m0Vectors = glyph0.greenVectors[ix]
-    m1Vectors = glyph1.greenVectors[matching[ix]]
+    m0Vectors = glyph0.greenVectors
+    m1Vectors = [glyph1.greenVectors[i] for i in matching]
 
     starting_point = 0
     reverse = False
