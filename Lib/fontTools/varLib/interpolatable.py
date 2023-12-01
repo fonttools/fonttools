@@ -8,6 +8,7 @@ $ fonttools varLib.interpolatable font1 font2 ...
 
 from .interpolatableHelpers import *
 from .interpolatableTestContourOrder import test_contour_order
+from .interpolatableTestStartingPoint import test_starting_point
 from fontTools.pens.recordingPen import RecordingPen, DecomposingRecordingPen
 from fontTools.pens.transformPen import TransformPen
 from fontTools.pens.statisticsPen import StatisticsPen, StatisticsControlPen
@@ -308,8 +309,8 @@ def test_gen(
             # "wrong_start_point" / weight check
             #
 
-            m0 = glyph0.isomorphisms
-            m1 = glyph1.isomorphisms
+            m0Isomorphisms = glyph0.isomorphisms
+            m1Isomorphisms = glyph1.isomorphisms
             m0Vectors = glyph0.greenVectors
             m1Vectors = glyph1.greenVectors
             m0VectorsNormalized = glyph0.greenVectorsNormalized
@@ -337,7 +338,9 @@ def test_gen(
                     # Mismatch because of the reordering above
                     midRecording.append(None)
 
-            for ix, (contour0, contour1) in enumerate(zip(m0, m1)):
+            for ix, (contour0, contour1) in enumerate(
+                zip(m0Isomorphisms, m1Isomorphisms)
+            ):
                 if (
                     contour0 is None
                     or contour1 is None
@@ -348,108 +351,14 @@ def test_gen(
                     # after reordering above.
                     continue
 
-                c0 = contour0[0]
-                # Next few lines duplicated below.
-                costs = [vdiff_hypot2_complex(c0[0], c1[0]) for c1 in contour1]
-                min_cost_idx, min_cost = min(enumerate(costs), key=lambda x: x[1])
-                first_cost = costs[0]
+                proposed_point, reverse, min_cost, first_cost = test_starting_point(
+                    glyph0, glyph1, ix, tolerance
+                )
 
-                if min_cost < first_cost * tolerance:
+                if proposed_point or reverse:
                     this_tolerance = min_cost / first_cost
-                    # c0 is the first isomorphism of the m0 master
-                    # contour1 is list of all isomorphisms of the m1 master
-                    #
-                    # If the two shapes are both circle-ish and slightly
-                    # rotated, we detect wrong start point. This is for
-                    # example the case hundreds of times in
-                    # RobotoSerif-Italic[GRAD,opsz,wdth,wght].ttf
-                    #
-                    # If the proposed point is only one off from the first
-                    # point (and not reversed), try harder:
-                    #
-                    # Find the major eigenvector of the covariance matrix,
-                    # and rotate the contours by that angle. Then find the
-                    # closest point again.  If it matches this time, let it
-                    # pass.
-
-                    proposed_point = contour1[min_cost_idx][1]
-                    reverse = contour1[min_cost_idx][2]
-                    num_points = len(glyph1.points[ix])
-                    leeway = 3
-                    okay = False
-                    if not reverse and (
-                        proposed_point <= leeway
-                        or proposed_point >= num_points - leeway
-                    ):
-                        # Try harder
-
-                        # Recover the covariance matrix from the GreenVectors.
-                        # This is a 2x2 matrix.
-                        transforms = []
-                        for vector in (m0Vectors[ix], m1Vectors[ix]):
-                            meanX = vector[1]
-                            meanY = vector[2]
-                            stddevX = vector[3] * 0.5
-                            stddevY = vector[4] * 0.5
-                            correlation = vector[5] / abs(vector[0])
-
-                            # https://cookierobotics.com/007/
-                            a = stddevX * stddevX  # VarianceX
-                            c = stddevY * stddevY  # VarianceY
-                            b = correlation * stddevX * stddevY  # Covariance
-
-                            delta = (((a - c) * 0.5) ** 2 + b * b) ** 0.5
-                            lambda1 = (a + c) * 0.5 + delta  # Major eigenvalue
-                            lambda2 = (a + c) * 0.5 - delta  # Minor eigenvalue
-                            theta = (
-                                atan2(lambda1 - a, b)
-                                if b != 0
-                                else (pi * 0.5 if a < c else 0)
-                            )
-                            trans = Transform()
-                            # Don't translate here. We are working on the complex-vector
-                            # that includes more than just the points. It's horrible what
-                            # we are doing anyway...
-                            # trans = trans.translate(meanX, meanY)
-                            trans = trans.rotate(theta)
-                            trans = trans.scale(sqrt(lambda1), sqrt(lambda2))
-                            transforms.append(trans)
-
-                        trans = transforms[0]
-                        new_c0 = (
-                            [
-                                complex(*trans.transformPoint((pt.real, pt.imag)))
-                                for pt in c0[0]
-                            ],
-                        ) + c0[1:]
-                        trans = transforms[1]
-                        new_contour1 = []
-                        for c1 in contour1:
-                            new_c1 = (
-                                [
-                                    complex(*trans.transformPoint((pt.real, pt.imag)))
-                                    for pt in c1[0]
-                                ],
-                            ) + c1[1:]
-                            new_contour1.append(new_c1)
-
-                        # Next few lines duplicate from above.
-                        costs = [
-                            vdiff_hypot2_complex(new_c0[0], new_c1[0])
-                            for new_c1 in new_contour1
-                        ]
-                        min_cost_idx, min_cost = min(
-                            enumerate(costs), key=lambda x: x[1]
-                        )
-                        first_cost = costs[0]
-                        if min_cost < first_cost * tolerance:
-                            pass
-                            # this_tolerance = min_cost / first_cost
-                            # proposed_point = new_contour1[min_cost_idx][1]
-                        else:
-                            okay = True
-
-                    if not okay:
+                    log.debug("tolerance: %g", this_tolerance)
+                    if min_cost < first_cost * tolerance:
                         yield (
                             glyph_name,
                             {
