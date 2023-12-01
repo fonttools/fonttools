@@ -322,8 +322,8 @@ def test_gen(
 
             # If contour-order is wrong, adjust it
             matching = matchings[m1idx]
-            if matching is not None and m1:  # m1 is empty for composite glyphs
-                m1 = [m1[i] for i in matching]
+            if matching is not None and m1Isomorphisms:  # m1 is empty for composite glyphs
+                m1Isomorphisms = [m1Isomorphisms[i] for i in matching]
                 m1Vectors = [m1Vectors[i] for i in matching]
                 m1VectorsNormalized = [m1VectorsNormalized[i] for i in matching]
                 recording1 = [recording1[i] for i in matching]
