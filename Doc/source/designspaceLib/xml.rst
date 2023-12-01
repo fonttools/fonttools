@@ -438,8 +438,8 @@ glyphname pairs: the glyphs that need to be substituted. For a rule to be trigge
       See the following issues for more information:
       `fontTools#1371 <https://github.com/fonttools/fonttools/issues/1371#issuecomment-590214572>`__
       `fontTools#2050 <https://github.com/fonttools/fonttools/issues/2050#issuecomment-678691020>`__
-   -  If you want to use a different feature altogether, e.g. ``calt``,
-      use the lib key ``com.github.fonttools.varLib.featureVarsFeatureTag``
+   -  If you want to use a different feature(s) altogether, e.g. ``calt``,
+      use the lib key ``com.github.fonttools.varLib.featureVarsFeatureTag``.
 
       .. code:: xml
 
@@ -449,6 +449,9 @@ glyphname pairs: the glyphs that need to be substituted. For a rule to be trigge
                    <string>calt</string>
                </dict>
            </lib>
+
+      This can also take a comma-separated list of feature tags, e.g. ``salt,ss01``,
+      if you wish the same rules to be applied with several features.
 
 
 
