@@ -52,7 +52,8 @@ from .errors import VarLibError, VarLibValidationError
 log = logging.getLogger("fontTools.varLib")
 
 # This is a lib key for the designspace document. The value should be
-# an OpenType feature tag, to be used as the FeatureVariations feature.
+# a comma-separated list of OpenType feature tag(s), to be used as the
+# FeatureVariations feature.
 # If present, the DesignSpace <rules processing="..."> flag is ignored.
 FEAVAR_FEATURETAG_LIB_KEY = "com.github.fonttools.varLib.featureVarsFeatureTag"
 
@@ -781,7 +782,9 @@ def _merge_OTL(font, model, master_fonts, axisTags):
         font["GPOS"].table.remap_device_varidxes(varidx_map)
 
 
-def _add_GSUB_feature_variations(font, axes, internal_axis_supports, rules, featureTag):
+def _add_GSUB_feature_variations(
+    font, axes, internal_axis_supports, rules, featureTags
+):
     def normalize(name, value):
         return models.normalizeLocation({name: value}, internal_axis_supports)[name]
 
@@ -812,7 +815,7 @@ def _add_GSUB_feature_variations(font, axes, internal_axis_supports, rules, feat
 
         conditional_subs.append((region, subs))
 
-    addFeatureVariations(font, conditional_subs, featureTag)
+    addFeatureVariations(font, conditional_subs, featureTags)
 
 
 _DesignSpaceData = namedtuple(
@@ -1204,11 +1207,9 @@ def build(
     if "cvar" not in exclude and "glyf" in vf:
         _merge_TTHinting(vf, model, master_fonts)
     if "GSUB" not in exclude and ds.rules:
-        featureTag = ds.lib.get(
-            FEAVAR_FEATURETAG_LIB_KEY, "rclt" if ds.rulesProcessingLast else "rvrn"
-        )
+        featureTags = _feature_variations_tags(ds)
         _add_GSUB_feature_variations(
-            vf, ds.axes, ds.internal_axis_supports, ds.rules, featureTag
+            vf, ds.axes, ds.internal_axis_supports, ds.rules, featureTags
         )
     if "CFF2" not in exclude and ("CFF " in vf or "CFF2" in vf):
         _add_CFF2(vf, model, master_fonts)
@@ -1297,6 +1298,14 @@ class MasterFinder(object):
             ext=ext,
         )
         return os.path.normpath(path)
+
+
+def _feature_variations_tags(ds):
+    raw_tags = ds.lib.get(
+        FEAVAR_FEATURETAG_LIB_KEY,
+        "rclt" if ds.rulesProcessingLast else "rvrn",
+    )
+    return sorted({t.strip() for t in raw_tags.split(",")})
 
 
 def main(args=None):

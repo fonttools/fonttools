@@ -71,7 +71,7 @@
     <lib>
         <dict>
             <key>com.github.fonttools.varLib.featureVarsFeatureTag</key>
-            <string>calt</string>
+            <string>rclt,calt</string>
         </dict>
     </lib>
 </designspace>
