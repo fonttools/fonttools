@@ -3,7 +3,7 @@ from .interpolatableHelpers import *
 
 def test_starting_point(glyph0, glyph1, ix, tolerance, matching):
     if matching is None:
-        matching = range(len(glyph0.isomorphisms))
+        matching = list(range(len(glyph0.isomorphisms)))
     contour0 = glyph0.isomorphisms[ix]
     contour1 = glyph1.isomorphisms[matching[ix]]
     m0Vectors = glyph0.greenVectors[ix]
