@@ -107,6 +107,7 @@ class InterpolatablePlot:
 /O\
 / \
 """
+    yay = r""" \o/ """
 
     def __init__(self, out, glyphsets, names=None, **kwargs):
         self.out = out
@@ -501,7 +502,6 @@ class InterpolatablePlot:
         if any(
             pt
             in (
-                "nothing",
                 "wrong_start_point",
                 "contour_order",
                 "kink",
@@ -677,6 +677,8 @@ class InterpolatablePlot:
                 emoticon = self.underweight
             elif "overweight" in problem_types:
                 emoticon = self.overweight
+            elif "nothing" in problem_types:
+                emoticon = self.yay
             self.draw_emoticon(emoticon, x=x, y=y)
 
         if show_page_number:
@@ -1062,7 +1064,7 @@ class InterpolatablePlot:
         font_ascent = font_extents[0]
         for line in text:
             extents = cr.text_extents(line)
-            text_width = max(text_width, extents.width)
+            text_width = max(text_width, extents.x_advance)
             text_height += font_line_height
         if not text_width:
             return
