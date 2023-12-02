@@ -1,4 +1,136 @@
-from fontTools.varLib.featureVars import overlayFeatureVariations, overlayBox
+from collections import OrderedDict
+from fontTools.designspaceLib import AxisDescriptor
+from fontTools.ttLib import TTFont, newTable
+from fontTools import varLib
+from fontTools.varLib.featureVars import (
+    addFeatureVariations,
+    overlayFeatureVariations,
+    overlayBox,
+)
+import pytest
+
+
+def makeVariableFont(glyphOrder, axes):
+    font = TTFont()
+    font.setGlyphOrder(glyphOrder)
+    font["name"] = newTable("name")
+    ds_axes = OrderedDict()
+    for axisTag, (minimum, default, maximum) in axes.items():
+        axis = AxisDescriptor()
+        axis.name = axis.tag = axis.labelNames["en"] = axisTag
+        axis.minimum, axis.default, axis.maximum = minimum, default, maximum
+        ds_axes[axisTag] = axis
+    varLib._add_fvar(font, ds_axes, instances=())
+    return font
+
+
+@pytest.fixture
+def varfont():
+    return makeVariableFont(
+        [".notdef", "space", "A", "B", "A.alt", "B.alt"],
+        {"wght": (100, 400, 900)},
+    )
+
+
+def test_addFeatureVariations(varfont):
+    assert "GSUB" not in varfont
+
+    addFeatureVariations(varfont, [([{"wght": (0.5, 1.0)}], {"A": "A.alt"})])
+
+    assert "GSUB" in varfont
+    gsub = varfont["GSUB"].table
+
+    assert len(gsub.ScriptList.ScriptRecord) == 1
+    assert gsub.ScriptList.ScriptRecord[0].ScriptTag == "DFLT"
+
+    assert len(gsub.FeatureList.FeatureRecord) == 1
+    assert gsub.FeatureList.FeatureRecord[0].FeatureTag == "rvrn"
+
+    assert len(gsub.LookupList.Lookup) == 1
+    assert gsub.LookupList.Lookup[0].LookupType == 1
+    assert len(gsub.LookupList.Lookup[0].SubTable) == 1
+    assert gsub.LookupList.Lookup[0].SubTable[0].mapping == {"A": "A.alt"}
+
+    assert gsub.FeatureVariations is not None
+    assert len(gsub.FeatureVariations.FeatureVariationRecord) == 1
+    fvr = gsub.FeatureVariations.FeatureVariationRecord[0]
+    assert len(fvr.ConditionSet.ConditionTable) == 1
+    cst = fvr.ConditionSet.ConditionTable[0]
+    assert cst.AxisIndex == 0
+    assert cst.FilterRangeMinValue == 0.5
+    assert cst.FilterRangeMaxValue == 1.0
+    assert len(fvr.FeatureTableSubstitution.SubstitutionRecord) == 1
+    ftsr = fvr.FeatureTableSubstitution.SubstitutionRecord[0]
+    assert ftsr.FeatureIndex == 0
+    assert ftsr.Feature.LookupListIndex == [0]
+
+
+def _substitution_features(gsub, rec_index):
+    fea_tags = [feature.FeatureTag for feature in gsub.FeatureList.FeatureRecord]
+    fea_indices = [
+        gsub.FeatureVariations.FeatureVariationRecord[rec_index]
+        .FeatureTableSubstitution.SubstitutionRecord[i]
+        .FeatureIndex
+        for i in range(
+            len(
+                gsub.FeatureVariations.FeatureVariationRecord[
+                    rec_index
+                ].FeatureTableSubstitution.SubstitutionRecord
+            )
+        )
+    ]
+    return [(i, fea_tags[i]) for i in fea_indices]
+
+
+def test_addFeatureVariations_existing_variable_feature(varfont):
+    assert "GSUB" not in varfont
+
+    addFeatureVariations(varfont, [([{"wght": (0.5, 1.0)}], {"A": "A.alt"})])
+
+    gsub = varfont["GSUB"].table
+    assert len(gsub.FeatureList.FeatureRecord) == 1
+    assert gsub.FeatureList.FeatureRecord[0].FeatureTag == "rvrn"
+    assert len(gsub.FeatureVariations.FeatureVariationRecord) == 1
+    assert _substitution_features(gsub, rec_index=0) == [(0, "rvrn")]
+
+    # can't add feature variations for an existing feature tag that already has some,
+    # in this case the default 'rvrn'
+    with pytest.raises(
+        varLib.VarLibError,
+        match=r"FeatureVariations already exist for feature tag\(s\): {'rvrn'}",
+    ):
+        addFeatureVariations(varfont, [([{"wght": (0.5, 1.0)}], {"A": "A.alt"})])
+
+
+def test_addFeatureVariations_new_feature(varfont):
+    assert "GSUB" not in varfont
+
+    addFeatureVariations(varfont, [([{"wght": (0.5, 1.0)}], {"A": "A.alt"})])
+
+    gsub = varfont["GSUB"].table
+    assert len(gsub.FeatureList.FeatureRecord) == 1
+    assert gsub.FeatureList.FeatureRecord[0].FeatureTag == "rvrn"
+    assert len(gsub.LookupList.Lookup) == 1
+    assert len(gsub.FeatureVariations.FeatureVariationRecord) == 1
+    assert _substitution_features(gsub, rec_index=0) == [(0, "rvrn")]
+
+    # we can add feature variations for a feature tag that does not have
+    # any feature variations yet
+    addFeatureVariations(
+        varfont, [([{"wght": (-1.0, 0.0)}], {"B": "B.alt"})], featureTag="rclt"
+    )
+
+    assert len(gsub.FeatureList.FeatureRecord) == 2
+    # Note 'rclt' is now first (index=0) in the feature list sorted by tag, and
+    # 'rvrn' is second (index=1)
+    assert gsub.FeatureList.FeatureRecord[0].FeatureTag == "rclt"
+    assert gsub.FeatureList.FeatureRecord[1].FeatureTag == "rvrn"
+    assert len(gsub.LookupList.Lookup) == 2
+    assert len(gsub.FeatureVariations.FeatureVariationRecord) == 2
+    # The new 'rclt' feature variation record is appended to the end;
+    # the feature index for 'rvrn' feature table substitution record is now 1
+    assert _substitution_features(gsub, rec_index=0) == [(1, "rvrn")]
+    assert _substitution_features(gsub, rec_index=1) == [(0, "rclt")]
 
 
 def _test_linear(n):
