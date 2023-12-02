@@ -97,7 +97,7 @@ def test_starting_point(glyph0, glyph1, ix, tolerance, matching):
             first_cost = costs[0]
             if min_cost < first_cost * tolerance:
                 # Don't report this
-                min_cost = first_cost
+                # min_cost = first_cost
                 # reverse = False
                 # proposed_point = 0  # new_contour1[min_cost_idx][1]
                 pass
