@@ -1,7 +1,13 @@
 from fontTools.colorLib.builder import buildCOLR
 from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables import otTables as ot
-from fontTools.varLib import build, build_many, load_designspace, _add_COLR
+from fontTools.varLib import (
+    build,
+    build_many,
+    load_designspace,
+    _add_COLR,
+    addGSUBFeatureVariations,
+)
 from fontTools.varLib.errors import VarLibValidationError
 import fontTools.varLib.errors as varLibErrors
 from fontTools.varLib.models import VariationModel
@@ -1008,6 +1014,32 @@ Expected to see .ScriptCount==1, instead saw 0""",
             expected_ttx_name="SparseCFF2-VF",
             save_before_dump=True,
         )
+
+    def test_varlib_addGSUBFeatureVariations(self):
+        ttx_dir = self.get_test_input("master_ttx_interpolatable_ttf")
+
+        ds = DesignSpaceDocument.fromfile(
+            self.get_test_input("FeatureVars.designspace")
+        )
+        for source in ds.sources:
+            ttx_dump = TTFont()
+            ttx_dump.importXML(
+                os.path.join(
+                    ttx_dir, os.path.basename(source.filename).replace(".ufo", ".ttx")
+                )
+            )
+            source.font = ttx_dump
+
+        varfont, _, _ = build(ds, exclude=["GSUB"])
+        assert "GSUB" not in varfont
+
+        addGSUBFeatureVariations(varfont, ds)
+        assert "GSUB" in varfont
+
+        tables = ["fvar", "GSUB"]
+        expected_ttx_path = self.get_test_output("FeatureVars.ttx")
+        self.expect_ttx(varfont, expected_ttx_path, tables)
+        self.check_ttx_dump(varfont, expected_ttx_path, tables, ".ttf")
 
 
 def test_load_masters_layerName_without_required_font():
