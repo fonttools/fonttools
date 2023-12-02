@@ -1,3 +1,5 @@
+- [varLib.interpolatable] Various bugfixes and rendering improvements. In particular, a new test for "underweight" glyphs. The new test reports quite a few falsse-positives though. Please send feedback.
+
 4.45.1 (released 2023-11-23)
 ----------------------------
 
