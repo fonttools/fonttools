@@ -282,14 +282,8 @@ def test_gen(
             # "contour_order" check
             #
 
-            matching, matching_cost, identity_cost = test_contour_order(glyph0, glyph1)
-            if matching_cost < identity_cost * tolerance:
-                log.debug(
-                    "matching_ratio %g",
-                    matching_cost / identity_cost,
-                )
-                this_tolerance = matching_cost / identity_cost
-                log.debug("tolerance: %g", this_tolerance)
+            this_tolerance, matching = test_contour_order(glyph0, glyph1)
+            if this_tolerance < tolerance:
                 yield (
                     glyph_name,
                     {
@@ -352,14 +346,12 @@ def test_gen(
                     # after reordering above.
                     continue
 
-                proposed_point, reverse, min_cost, first_cost = test_starting_point(
+                this_tolerance, proposed_point, reverse = test_starting_point(
                     glyph0, glyph1, ix, tolerance, matching
                 )
 
                 if proposed_point or reverse:
-                    this_tolerance = min_cost / first_cost
-                    log.debug("tolerance: %g", this_tolerance)
-                    if min_cost < first_cost * tolerance:
+                    if this_tolerance < tolerance:
                         yield (
                             glyph_name,
                             {
@@ -381,7 +373,7 @@ def test_gen(
                     # If contour could be mid-interpolated, and the two
                     # contours have the same area sign, proceeed.
                     #
-                    # The sign difference can happen if it's a werido
+                    # The sign difference can happen if it's a weirdo
                     # self-intersecting contour; ignore it.
                     contour = midRecording[ix]
 

@@ -102,4 +102,9 @@ def test_starting_point(glyph0, glyph1, ix, tolerance, matching):
                 # proposed_point = 0  # new_contour1[min_cost_idx][1]
                 pass
 
-    return proposed_point, reverse, min_cost, first_cost
+    this_tolerance = min_cost / first_cost if first_cost else 1
+    log.debug(
+        "test-starting-point: tolerance %g",
+        this_tolerance,
+    )
+    return this_tolerance, proposed_point, reverse
