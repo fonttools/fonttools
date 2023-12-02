@@ -96,7 +96,8 @@ def test_starting_point(glyph0, glyph1, ix, tolerance, matching):
             min_cost_idx, min_cost = min(enumerate(costs), key=lambda x: x[1])
             first_cost = costs[0]
             if min_cost < first_cost * tolerance:
-                this_tolerance = min_cost / first_cost
-                proposed_point = new_contour1[min_cost_idx][1]
+                # Don't report this
+                min_cost = first_cost
+                proposed_point = 0  # new_contour1[min_cost_idx][1]
 
     return proposed_point, reverse, min_cost, first_cost
