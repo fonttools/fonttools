@@ -350,23 +350,22 @@ def test_gen(
                     glyph0, glyph1, ix, tolerance, matching
                 )
 
-                if proposed_point or reverse:
-                    if this_tolerance < tolerance:
-                        yield (
-                            glyph_name,
-                            {
-                                "type": "wrong_start_point",
-                                "contour": ix,
-                                "master_1": names[m0idx],
-                                "master_2": names[m1idx],
-                                "master_1_idx": m0idx,
-                                "master_2_idx": m1idx,
-                                "value_1": 0,
-                                "value_2": proposed_point,
-                                "reversed": reverse,
-                                "tolerance": this_tolerance,
-                            },
-                        )
+                if this_tolerance < tolerance:
+                    yield (
+                        glyph_name,
+                        {
+                            "type": "wrong_start_point",
+                            "contour": ix,
+                            "master_1": names[m0idx],
+                            "master_2": names[m1idx],
+                            "master_1_idx": m0idx,
+                            "master_2_idx": m1idx,
+                            "value_1": 0,
+                            "value_2": proposed_point,
+                            "reversed": reverse,
+                            "tolerance": this_tolerance,
+                        },
+                    )
                 else:
                     # Weight check.
                     #
