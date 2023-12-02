@@ -1,3 +1,6 @@
+4.46.0 (released 2023-12-02)
+----------------------------
+
 - [featureVars] Allow to register the same set of substitution rules to multiple features.
   The ``addFeatureVariations`` function can now take a list of featureTags; similarly, the
   lib key 'com.github.fonttools.varLib.featureVarsFeatureTag' can now take a
