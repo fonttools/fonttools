@@ -366,95 +366,95 @@ def test_gen(
                             "tolerance": this_tolerance,
                         },
                     )
-                else:
-                    # Weight check.
-                    #
-                    # If contour could be mid-interpolated, and the two
-                    # contours have the same area sign, proceeed.
-                    #
-                    # The sign difference can happen if it's a weirdo
-                    # self-intersecting contour; ignore it.
-                    contour = midRecording[ix]
 
-                    normalized = False
-                    if contour and (m0Vectors[ix][0] < 0) == (m1Vectors[ix][0] < 0):
-                        if normalized:
-                            midStats = StatisticsPen(glyphset=None)
-                            tpen = TransformPen(
-                                midStats, transform_from_stats(midStats, inverse=True)
-                            )
-                            contour.replay(tpen)
+                # Weight check.
+                #
+                # If contour could be mid-interpolated, and the two
+                # contours have the same area sign, proceeed.
+                #
+                # The sign difference can happen if it's a weirdo
+                # self-intersecting contour; ignore it.
+                contour = midRecording[ix]
+
+                normalized = False
+                if contour and (m0Vectors[ix][0] < 0) == (m1Vectors[ix][0] < 0):
+                    if normalized:
+                        midStats = StatisticsPen(glyphset=None)
+                        tpen = TransformPen(
+                            midStats, transform_from_stats(midStats, inverse=True)
+                        )
+                        contour.replay(tpen)
+                    else:
+                        midStats = StatisticsPen(glyphset=None)
+                        contour.replay(midStats)
+
+                    midVector = contour_vector_from_stats(midStats)
+
+                    m0Vec = (
+                        m0Vectors[ix] if not normalized else m0VectorsNormalized[ix]
+                    )
+                    m1Vec = (
+                        m1Vectors[ix] if not normalized else m1VectorsNormalized[ix]
+                    )
+                    size0 = m0Vec[0] * m0Vec[0]
+                    size1 = m1Vec[0] * m1Vec[0]
+                    midSize = midVector[0] * midVector[0]
+
+                    power = 1
+                    t = tolerance**power
+
+                    for overweight, problem_type in enumerate(
+                        ("underweight", "overweight")
+                    ):
+                        if overweight:
+                            expectedSize = sqrt(size0 * size1)
+                            expectedSize = (size0 + size1) - expectedSize
+                            expectedSize = size1 + (midSize - size1)
+                            continue
                         else:
-                            midStats = StatisticsPen(glyphset=None)
-                            contour.replay(midStats)
+                            expectedSize = sqrt(size0 * size1)
 
-                        midVector = contour_vector_from_stats(midStats)
-
-                        m0Vec = (
-                            m0Vectors[ix] if not normalized else m0VectorsNormalized[ix]
+                        log.debug(
+                            "%s: actual size %g; threshold size %g, master sizes: %g, %g",
+                            problem_type,
+                            midSize,
+                            expectedSize,
+                            size0,
+                            size1,
                         )
-                        m1Vec = (
-                            m1Vectors[ix] if not normalized else m1VectorsNormalized[ix]
-                        )
-                        size0 = m0Vec[0] * m0Vec[0]
-                        size1 = m1Vec[0] * m1Vec[0]
-                        midSize = midVector[0] * midVector[0]
 
-                        power = 1
-                        t = tolerance**power
+                        size0, size1 = sorted((size0, size1))
 
-                        for overweight, problem_type in enumerate(
-                            ("underweight", "overweight")
+                        if (
+                            not overweight
+                            and expectedSize * tolerance > midSize + 1e-5
+                        ) or (
+                            overweight and 1e-5 + expectedSize / tolerance < midSize
                         ):
-                            if overweight:
-                                expectedSize = sqrt(size0 * size1)
-                                expectedSize = (size0 + size1) - expectedSize
-                                expectedSize = size1 + (midSize - size1)
-                                continue
-                            else:
-                                expectedSize = sqrt(size0 * size1)
-
-                            log.debug(
-                                "%s: actual size %g; threshold size %g, master sizes: %g, %g",
-                                problem_type,
-                                midSize,
-                                expectedSize,
-                                size0,
-                                size1,
+                            try:
+                                if overweight:
+                                    this_tolerance = (expectedSize / midSize) ** (
+                                        1 / power
+                                    )
+                                else:
+                                    this_tolerance = (midSize / expectedSize) ** (
+                                        1 / power
+                                    )
+                            except ZeroDivisionError:
+                                this_tolerance = 0
+                            log.debug("tolerance %g", this_tolerance)
+                            yield (
+                                glyph_name,
+                                {
+                                    "type": problem_type,
+                                    "contour": ix,
+                                    "master_1": names[m0idx],
+                                    "master_2": names[m1idx],
+                                    "master_1_idx": m0idx,
+                                    "master_2_idx": m1idx,
+                                    "tolerance": this_tolerance,
+                                },
                             )
-
-                            size0, size1 = sorted((size0, size1))
-
-                            if (
-                                not overweight
-                                and expectedSize * tolerance > midSize + 1e-5
-                            ) or (
-                                overweight and 1e-5 + expectedSize / tolerance < midSize
-                            ):
-                                try:
-                                    if overweight:
-                                        this_tolerance = (expectedSize / midSize) ** (
-                                            1 / power
-                                        )
-                                    else:
-                                        this_tolerance = (midSize / expectedSize) ** (
-                                            1 / power
-                                        )
-                                except ZeroDivisionError:
-                                    this_tolerance = 0
-                                log.debug("tolerance %g", this_tolerance)
-                                yield (
-                                    glyph_name,
-                                    {
-                                        "type": problem_type,
-                                        "contour": ix,
-                                        "master_1": names[m0idx],
-                                        "master_2": names[m1idx],
-                                        "master_1_idx": m0idx,
-                                        "master_2_idx": m1idx,
-                                        "tolerance": this_tolerance,
-                                    },
-                                )
 
             #
             # "kink" detector
