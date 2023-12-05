@@ -42,9 +42,7 @@ class Glyph:
         "controlVectors",
         "nodeTypes",
         "isomorphisms",
-        "isomorphismsNormalized",
         "points",
-        "pointsNormalized",
         "openContours",
     )
 
@@ -95,12 +93,12 @@ class Glyph:
             # Save a "normalized" version of the outlines
             try:
                 rpen = DecomposingRecordingPen(glyphset)
-                transform = transform_from_stats(greenStats, inverse=True)
-                tpen = TransformPen(rpen, transform)
+                tpen = TransformPen(
+                    rpen, transform_from_stats(greenStats, inverse=True)
+                )
                 contour.replay(tpen)
                 self.recordingsNormalized.append(rpen)
             except ZeroDivisionError:
-                transform = Transform()
                 self.recordingsNormalized.append(None)
 
             greenStats = StatisticsPen(glyphset=glyphset)
@@ -114,7 +112,6 @@ class Glyph:
 
             assert nodeTypes[0] == "moveTo"
             assert nodeTypes[-1] in ("closePath", "endPath")
-
             points = SimpleRecordingPointPen()
             converter = SegmentToPointPen(points, False)
             contour.replay(converter)
@@ -123,25 +120,13 @@ class Glyph:
             # possible starting points.
             self.points.append(points.value)
 
-            pointsNormalized = SimpleRecordingPointPen()
-            converter = SegmentToPointPen(pointsNormalized, False)
-            converter = TransformPen(converter, transform)
-            contour.replay(converter)
-            self.pointsNormalized.append(pointsNormalized.value)
-
             isomorphisms = []
             self.isomorphisms.append(isomorphisms)
+
             # Add rotations
             add_isomorphisms(points.value, isomorphisms, False)
             # Add mirrored rotations
             add_isomorphisms(points.value, isomorphisms, True)
-
-            isomorphisms = []
-            self.isomorphismsNormalized.append(isomorphisms)
-            # Add rotations
-            add_isomorphisms(pointsNormalized.value, isomorphisms, False)
-            # Add mirrored rotations
-            add_isomorphisms(pointsNormalized.value, isomorphisms, True)
 
     def draw(self, pen, countor_idx=None):
         if countor_idx is None:
