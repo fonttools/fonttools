@@ -123,31 +123,38 @@ UFOs says.
 public.fontInfo
 -----------------------
 
-This lib key, when included in the ``<lib>`` element inside an ``<instance>`` or 
-``<variable-font>`` tag, allows for direct manipulation of font info data in 
+This lib key, when included in the ``<lib>`` element inside an ``<instance>`` 
+or ``<variable-font>`` tag, or the ``<lib>`` element at the root of a 
+designspace document, allows for direct manipulation of font info data in 
 instances and variable fonts. The lib value must follow the 
 `UFO3 fontinfo.plist specification <https://unifiedfontobject.org/versions/ufo3/fontinfo.plist/>`_,
 and should functionally appear to be a property list dictionary with the same 
 structure as the ``fontinfo.plist`` file in a UFO.
 
-
 All font info items in the UFO fontinfo.plist specification should be able to 
 be defined in the ``public.fontInfo`` lib. Checking validity of the data using 
 ``fontTools.ufoLib.validators`` is recommended but not required. 
 
-A tool generating the font should copy the font info directly from the 
-``public.fontInfo`` lib item to the instance or the variable font, superceding 
-all other settings. All info **not** supplied in ``public.fontInfo`` must be 
-inherited from the name attributes in the ``<instance>`` or ``<variable-font>`` 
-elements (first) and the UFO font info from the source at the origin (second). 
-Absence of a key from the ``public.fontInfo`` lib does **not** mean a that piece 
-of font info should be interpreted as being undefined unless it is also left 
-undefined in the other locations. In the case of information in ``public.fontInfo`` 
-conflicting with supplied name strings in the ``<instance>`` or ``<variable-font>`` 
-elements, or the info supplied from the source at the origin, the data in 
-``public.fontInfo`` must supercede that information because it is understood 
-that the designer is using ``public.fontInfo`` to gain more granular control 
-over the resulting font. 
+All font info items for a variable font or an instance must be inherited using 
+the following order, in order of descending priority:
+
+#. The ``public.fontInfo`` key in the ``<lib>`` element of the ``<variable-font>``
+   or ``<instance>`` elements.
+#. The ``<varaiable-font>`` or ``<instance>`` XML attributes for names (i.e.
+   ``familyname``, ``stylename``, etc.)
+#. The ``public.fontInfo`` key found in the ``<lib>`` element of the designspace
+   document's root.
+#. The ``fontinfo.plist`` in the UFO source at the origin of the interpolation 
+   space.
+
+Absence of a font info key from the value of a ``public.fontInfo`` lib does 
+**not** mean a that piece of font info should be interpreted as being undefined. 
+A tool generating the variable font or instance should continue on to the next 
+level of the inheritence order and apply the value found there, if any. If the 
+tool makes it to the end of the inheritence order without finding a valid value 
+for a given font info key, it should then be considered undefined. In the case 
+of any conflicting values for a font info key, the value highest in the 
+inheritance order must be chosen over the others.
 
 Implementation and differences
 ==============================
