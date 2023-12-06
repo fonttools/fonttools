@@ -26,7 +26,6 @@ class InterpolatableProblem:
     OVERWEIGHT = "overweight"
 
     severity = {
-        NOTHING: 0,
         MISSING: 1,
         OPEN_PATH: 2,
         PATH_COUNT: 3,
@@ -37,6 +36,7 @@ class InterpolatableProblem:
         KINK: 8,
         UNDERWEIGHT: 9,
         OVERWEIGHT: 10,
+        NOTHING: 11,
     }
 
 
@@ -45,7 +45,15 @@ def sort_problems(problems):
     return dict(
         sorted(
             problems.items(),
-            key=lambda _: max(InterpolatableProblem.severity[p["type"]] for p in _[1]),
+            key=lambda _: max(
+                (
+                    InterpolatableProblem.severity[p["type"]]
+                    for p in _[1]
+                    if InterpolatableProblem.severity[p["type"]]
+                    != InterpolatableProblem.severity[InterpolatableProblem.NOTHING]
+                ),
+                default=InterpolatableProblem.severity[InterpolatableProblem.NOTHING],
+            ),
         )
     )
 
