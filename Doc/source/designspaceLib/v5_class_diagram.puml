@@ -112,7 +112,7 @@ class Source {
 + path: str
 + layerName: Optional[str]
 + <color:brown><s><<Deprecated>> location: Location
-+ <color:green><b><<New>> designLocation: AnisotropicLocation
++ <color:green><b><<New>> designLocation: SimpleLocation
 ....
 + font: Optional[Font]
 ....
