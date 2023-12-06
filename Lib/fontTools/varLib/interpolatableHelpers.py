@@ -46,13 +46,7 @@ def sort_problems(problems):
         sorted(
             problems.items(),
             key=lambda _: -min(
-                (
-                    InterpolatableProblem.severity[p["type"]]
-                    for p in _[1]
-                    if InterpolatableProblem.severity[p["type"]]
-                    != InterpolatableProblem.severity[InterpolatableProblem.NOTHING]
-                ),
-                default=InterpolatableProblem.severity[InterpolatableProblem.NOTHING],
+                (InterpolatableProblem.severity[p["type"]] for p in _[1]),
             ),
             reverse=True,
         )
