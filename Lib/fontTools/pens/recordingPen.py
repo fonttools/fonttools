@@ -46,8 +46,8 @@ class RecordingPen(AbstractPen):
             print(pen.value)
     """
 
-    def __init__(self):
-        self.value = []
+    def __init__(self, value=None):
+        self.value = [] if value is None else list(value)
 
     def moveTo(self, p0):
         self.value.append(("moveTo", (p0,)))
@@ -133,8 +133,8 @@ class RecordingPointPen(AbstractPointPen):
             pen.replay(new_glyph.getPointPen())
     """
 
-    def __init__(self):
-        self.value = []
+    def __init__(self, value=None):
+        self.value = [] if value is None else list(value)
 
     def beginPath(self, identifier=None, **kwargs):
         if identifier is not None:
