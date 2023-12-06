@@ -1067,6 +1067,8 @@ def main(args=None):
             for glyphname, problem in problems_gen:
                 problems[glyphname].append(problem)
 
+        problems = sort_problems(problems)
+
         if args.pdf:
             log.info("Writing PDF to %s", args.pdf)
             from .interpolatablePlot import InterpolatablePDF

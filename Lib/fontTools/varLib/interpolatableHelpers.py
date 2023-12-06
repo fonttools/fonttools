@@ -21,9 +21,33 @@ class InterpolatableProblem:
     NODE_INCOMPATIBILITY = "node_incompatibility"
     CONTOUR_ORDER = "contour_order"
     WRONG_START_POINT = "wrong_start_point"
+    KINK = "kink"
     UNDERWEIGHT = "underweight"
     OVERWEIGHT = "overweight"
-    KINK = "kink"
+
+    severity = {
+        NOTHING: 0,
+        MISSING: 1,
+        OPEN_PATH: 2,
+        PATH_COUNT: 3,
+        NODE_COUNT: 4,
+        NODE_INCOMPATIBILITY: 5,
+        CONTOUR_ORDER: 6,
+        WRONG_START_POINT: 7,
+        KINK: 8,
+        UNDERWEIGHT: 9,
+        OVERWEIGHT: 10,
+    }
+
+
+def sort_problems(problems):
+    """Sort problems by severity, then by glyph name, then by problem message."""
+    return dict(
+        sorted(
+            problems.items(),
+            key=lambda _: max(InterpolatableProblem.severity[p["type"]] for p in _[1]),
+        )
+    )
 
 
 def rot_list(l, k):
