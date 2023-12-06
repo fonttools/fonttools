@@ -186,7 +186,11 @@ def test_gen(
                 if not ignore_missing:
                     yield (
                         glyph_name,
-                        {"type": "missing", "master": name, "master_idx": master_idx},
+                        {
+                            "type": InterpolatableProblem.MISSING,
+                            "master": name,
+                            "master_idx": master_idx,
+                        },
                     )
                 continue
 
@@ -198,10 +202,10 @@ def test_gen(
                 yield (
                     glyph_name,
                     {
+                        "type": InterpolatableProblem.OPEN_PATH,
                         "master": name,
                         "master_idx": master_idx,
                         "contour": ix,
-                        "type": "open_path",
                     },
                 )
             if has_open:
@@ -230,7 +234,7 @@ def test_gen(
                 yield (
                     glyph_name,
                     {
-                        "type": "path_count",
+                        "type": InterpolatableProblem.PATH_COUNT,
                         "master_1": names[m0idx],
                         "master_2": names[m1idx],
                         "master_1_idx": m0idx,
@@ -249,7 +253,7 @@ def test_gen(
                         yield (
                             glyph_name,
                             {
-                                "type": "node_count",
+                                "type": InterpolatableProblem.NODE_COUNT,
                                 "path": pathIx,
                                 "master_1": names[m0idx],
                                 "master_2": names[m1idx],
@@ -265,7 +269,7 @@ def test_gen(
                             yield (
                                 glyph_name,
                                 {
-                                    "type": "node_incompatibility",
+                                    "type": InterpolatableProblem.NODE_INCOMPATIBILITY,
                                     "path": pathIx,
                                     "node": nodeIx,
                                     "master_1": names[m0idx],
@@ -279,7 +283,7 @@ def test_gen(
                             continue
 
             #
-            # "contour_order" check
+            # InterpolatableProblem.CONTOUR_ORDER check
             #
 
             this_tolerance, matching = test_contour_order(glyph0, glyph1)
@@ -287,7 +291,7 @@ def test_gen(
                 yield (
                     glyph_name,
                     {
-                        "type": "contour_order",
+                        "type": InterpolatableProblem.CONTOUR_ORDER,
                         "master_1": names[m0idx],
                         "master_2": names[m1idx],
                         "master_1_idx": m0idx,
@@ -300,7 +304,7 @@ def test_gen(
                 matchings[m1idx] = matching
 
             #
-            # "wrong_start_point" / weight check
+            # wrong-start-point / weight check
             #
 
             m0Isomorphisms = glyph0.isomorphisms
@@ -354,7 +358,7 @@ def test_gen(
                     yield (
                         glyph_name,
                         {
-                            "type": "wrong_start_point",
+                            "type": InterpolatableProblem.WRONG_START_POINT,
                             "contour": ix,
                             "master_1": names[m0idx],
                             "master_2": names[m1idx],
@@ -400,7 +404,10 @@ def test_gen(
                     t = tolerance**power
 
                     for overweight, problem_type in enumerate(
-                        ("underweight", "overweight")
+                        (
+                            InterpolatableProblem.UNDERWEIGHT,
+                            InterpolatableProblem.OVERWEIGHT,
+                        )
                     ):
                         if overweight:
                             expectedSize = sqrt(size0 * size1)
@@ -579,7 +586,7 @@ def test_gen(
                     yield (
                         glyph_name,
                         {
-                            "type": "kink",
+                            "type": InterpolatableProblem.KINK,
                             "contour": ix,
                             "master_1": names[m0idx],
                             "master_2": names[m1idx],
@@ -598,7 +605,7 @@ def test_gen(
                 yield (
                     glyph_name,
                     {
-                        "type": "nothing",
+                        "type": InterpolatableProblem.NOTHING,
                         "master_1": names[m0idx],
                         "master_2": names[m1idx],
                         "master_1_idx": m0idx,
@@ -947,16 +954,16 @@ def main(args=None):
                         print(f"  Masters: %s:" % ", ".join(master_names), file=f)
                         last_master_idxs = master_idxs
 
-                    if p["type"] == "missing":
+                    if p["type"] == InterpolatableProblem.MISSING:
                         print(
                             "    Glyph was missing in master %s" % p["master"], file=f
                         )
-                    elif p["type"] == "open_path":
+                    elif p["type"] == InterpolatableProblem.OPEN_PATH:
                         print(
                             "    Glyph has an open path in master %s" % p["master"],
                             file=f,
                         )
-                    elif p["type"] == "path_count":
+                    elif p["type"] == InterpolatableProblem.PATH_COUNT:
                         print(
                             "    Path count differs: %i in %s, %i in %s"
                             % (
@@ -967,7 +974,7 @@ def main(args=None):
                             ),
                             file=f,
                         )
-                    elif p["type"] == "node_count":
+                    elif p["type"] == InterpolatableProblem.NODE_COUNT:
                         print(
                             "    Node count differs in path %i: %i in %s, %i in %s"
                             % (
@@ -979,7 +986,7 @@ def main(args=None):
                             ),
                             file=f,
                         )
-                    elif p["type"] == "node_incompatibility":
+                    elif p["type"] == InterpolatableProblem.NODE_INCOMPATIBILITY:
                         print(
                             "    Node %o incompatible in path %i: %s in %s, %s in %s"
                             % (
@@ -992,7 +999,7 @@ def main(args=None):
                             ),
                             file=f,
                         )
-                    elif p["type"] == "contour_order":
+                    elif p["type"] == InterpolatableProblem.CONTOUR_ORDER:
                         print(
                             "    Contour order differs: %s in %s, %s in %s"
                             % (
@@ -1003,7 +1010,7 @@ def main(args=None):
                             ),
                             file=f,
                         )
-                    elif p["type"] == "wrong_start_point":
+                    elif p["type"] == InterpolatableProblem.WRONG_START_POINT:
                         print(
                             "    Contour %d start point differs: %s in %s, %s in %s; reversed: %s"
                             % (
@@ -1016,7 +1023,7 @@ def main(args=None):
                             ),
                             file=f,
                         )
-                    elif p["type"] == "underweight":
+                    elif p["type"] == InterpolatableProblem.UNDERWEIGHT:
                         print(
                             "    Contour %d interpolation is underweight: %s, %s"
                             % (
@@ -1026,7 +1033,7 @@ def main(args=None):
                             ),
                             file=f,
                         )
-                    elif p["type"] == "overweight":
+                    elif p["type"] == InterpolatableProblem.OVERWEIGHT:
                         print(
                             "    Contour %d interpolation is overweight: %s, %s"
                             % (
@@ -1036,7 +1043,7 @@ def main(args=None):
                             ),
                             file=f,
                         )
-                    elif p["type"] == "kink":
+                    elif p["type"] == InterpolatableProblem.KINK:
                         print(
                             "    Contour %d has a kink at %s: %s, %s"
                             % (
@@ -1047,7 +1054,7 @@ def main(args=None):
                             ),
                             file=f,
                         )
-                    elif p["type"] == "nothing":
+                    elif p["type"] == InterpolatableProblem.NOTHING:
                         print(
                             "    Showing %s and %s"
                             % (
@@ -1059,6 +1066,8 @@ def main(args=None):
         else:
             for glyphname, problem in problems_gen:
                 problems[glyphname].append(problem)
+
+        problems = sort_problems(problems)
 
         if args.pdf:
             log.info("Writing PDF to %s", args.pdf)

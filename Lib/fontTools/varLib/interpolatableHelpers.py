@@ -4,11 +4,59 @@ from fontTools.pens.recordingPen import RecordingPen, DecomposingRecordingPen
 from fontTools.misc.transform import Transform
 from collections import defaultdict, deque
 from math import sqrt, copysign, atan2, pi
+from enum import Enum
 import itertools
 
 import logging
 
 log = logging.getLogger("fontTools.varLib.interpolatable")
+
+
+class InterpolatableProblem:
+    NOTHING = "nothing"
+    MISSING = "missing"
+    OPEN_PATH = "open_path"
+    PATH_COUNT = "path_count"
+    NODE_COUNT = "node_count"
+    NODE_INCOMPATIBILITY = "node_incompatibility"
+    CONTOUR_ORDER = "contour_order"
+    WRONG_START_POINT = "wrong_start_point"
+    KINK = "kink"
+    UNDERWEIGHT = "underweight"
+    OVERWEIGHT = "overweight"
+
+    severity = {
+        MISSING: 1,
+        OPEN_PATH: 2,
+        PATH_COUNT: 3,
+        NODE_COUNT: 4,
+        NODE_INCOMPATIBILITY: 5,
+        CONTOUR_ORDER: 6,
+        WRONG_START_POINT: 7,
+        KINK: 8,
+        UNDERWEIGHT: 9,
+        OVERWEIGHT: 10,
+        NOTHING: 11,
+    }
+
+
+def sort_problems(problems):
+    """Sort problems by severity, then by glyph name, then by problem message."""
+    return dict(
+        sorted(
+            problems.items(),
+            key=lambda _: -min(
+                (
+                    InterpolatableProblem.severity[p["type"]]
+                    for p in _[1]
+                    if InterpolatableProblem.severity[p["type"]]
+                    != InterpolatableProblem.severity[InterpolatableProblem.NOTHING]
+                ),
+                default=InterpolatableProblem.severity[InterpolatableProblem.NOTHING],
+            ),
+            reverse=True,
+        )
+    )
 
 
 def rot_list(l, k):
