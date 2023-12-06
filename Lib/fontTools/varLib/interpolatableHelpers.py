@@ -4,11 +4,26 @@ from fontTools.pens.recordingPen import RecordingPen, DecomposingRecordingPen
 from fontTools.misc.transform import Transform
 from collections import defaultdict, deque
 from math import sqrt, copysign, atan2, pi
+from enum import Enum
 import itertools
 
 import logging
 
 log = logging.getLogger("fontTools.varLib.interpolatable")
+
+
+class InterpolatableProblem:
+    NOTHING = "nothing"
+    MISSING = "missing"
+    OPEN_PATH = "open_path"
+    PATH_COUNT = "path_count"
+    NODE_COUNT = "node_count"
+    NODE_INCOMPATIBILITY = "node_incompatibility"
+    CONTOUR_ORDER = "contour_order"
+    WRONG_START_POINT = "wrong_start_point"
+    UNDERWEIGHT = "underweight"
+    OVERWEIGHT = "overweight"
+    KINK = "kink"
 
 
 def rot_list(l, k):

@@ -1,3 +1,4 @@
+from .interpolatableHelpers import *
 from fontTools.ttLib import TTFont
 from fontTools.pens.recordingPen import (
     RecordingPen,
@@ -397,7 +398,7 @@ class InterpolatablePlot:
         )
         master_indices = [problems[0][k] for k in master_keys]
 
-        if problem_type == "missing":
+        if problem_type == InterpolatableProblem.MISSING:
             sample_glyph = next(
                 i for i, m in enumerate(self.glyphsets) if m[glyphname] is not None
             )
@@ -457,12 +458,12 @@ class InterpolatablePlot:
         if any(
             pt
             in (
-                "nothing",
-                "wrong_start_point",
-                "contour_order",
-                "kink",
-                "underweight",
-                "overweight",
+                InterpolatableProblem.NOTHING,
+                InterpolatableProblem.WRONG_START_POINT,
+                InterpolatableProblem.CONTOUR_ORDER,
+                InterpolatableProblem.KINK,
+                InterpolatableProblem.UNDERWEIGHT,
+                InterpolatableProblem.OVERWEIGHT,
             )
             for pt in problem_types
         ):
@@ -489,7 +490,12 @@ class InterpolatablePlot:
                 + [
                     p
                     for p in problems
-                    if p["type"] in ("kink", "underweight", "overweight")
+                    if p["type"]
+                    in (
+                        InterpolatableProblem.KINK,
+                        InterpolatableProblem.UNDERWEIGHT,
+                        InterpolatableProblem.OVERWEIGHT,
+                    )
                 ],
                 None,
                 x=x,
@@ -502,9 +508,9 @@ class InterpolatablePlot:
         if any(
             pt
             in (
-                "wrong_start_point",
-                "contour_order",
-                "kink",
+                InterpolatableProblem.WRONG_START_POINT,
+                InterpolatableProblem.CONTOUR_ORDER,
+                InterpolatableProblem.KINK,
             )
             for pt in problem_types
         ):
@@ -525,14 +531,14 @@ class InterpolatablePlot:
             glyphset2[glyphname].draw(perContourPen2)
 
             for problem in problems:
-                if problem["type"] == "contour_order":
+                if problem["type"] == InterpolatableProblem.CONTOUR_ORDER:
                     fixed_contours = [
                         perContourPen2.value[i] for i in problems[0]["value_2"]
                     ]
                     perContourPen2.value = fixed_contours
 
             for problem in problems:
-                if problem["type"] == "wrong_start_point":
+                if problem["type"] == InterpolatableProblem.WRONG_START_POINT:
                     # Save the wrong contours
                     wrongContour1 = perContourPen1.value[problem["contour"]]
                     wrongContour2 = perContourPen2.value[problem["contour"]]
@@ -578,7 +584,7 @@ class InterpolatablePlot:
 
             for problem in problems:
                 # If we have a kink, try to fix it.
-                if problem["type"] == "kink":
+                if problem["type"] == InterpolatableProblem.KINK:
                     # Save the wrong contours
                     wrongContour1 = perContourPen1.value[problem["contour"]]
                     wrongContour2 = perContourPen2.value[problem["contour"]]
@@ -673,11 +679,11 @@ class InterpolatablePlot:
 
         else:
             emoticon = self.shrug
-            if "underweight" in problem_types:
+            if InterpolatableProblem.UNDERWEIGHT in problem_types:
                 emoticon = self.underweight
-            elif "overweight" in problem_types:
+            elif InterpolatableProblem.OVERWEIGHT in problem_types:
                 emoticon = self.overweight
-            elif "nothing" in problem_types:
+            elif InterpolatableProblem.NOTHING in problem_types:
                 emoticon = self.yay
             self.draw_emoticon(emoticon, x=x, y=y)
 
@@ -793,7 +799,7 @@ class InterpolatablePlot:
             pen = CairoPen(glyphset, cr)
             decomposedRecording.replay(pen)
 
-            if self.fill_color and problem_type != "open_path":
+            if self.fill_color and problem_type != InterpolatableProblem.OPEN_PATH:
                 cr.set_source_rgb(*self.fill_color)
                 cr.fill_preserve()
 
@@ -804,11 +810,17 @@ class InterpolatablePlot:
 
             cr.new_path()
 
-        if "underweight" in problem_types or "overweight" in problem_types:
+        if (
+            InterpolatableProblem.UNDERWEIGHT in problem_types
+            or InterpolatableProblem.OVERWEIGHT in problem_types
+        ):
             perContourPen = PerContourOrComponentPen(RecordingPen, glyphset=glyphset)
             recording.replay(perContourPen)
             for problem in problems:
-                if problem["type"] in ("underweight", "overweight"):
+                if problem["type"] in (
+                    InterpolatableProblem.UNDERWEIGHT,
+                    InterpolatableProblem.OVERWEIGHT,
+                ):
                     contour = perContourPen.value[problem["contour"]]
                     contour.replay(CairoPen(glyphset, cr))
                     cr.set_source_rgba(*self.weight_issue_contour_color)
@@ -817,9 +829,9 @@ class InterpolatablePlot:
         if any(
             t in problem_types
             for t in {
-                "nothing",
-                "node_count",
-                "node_incompatibility",
+                InterpolatableProblem.NOTHING,
+                InterpolatableProblem.NODE_COUNT,
+                InterpolatableProblem.NODE_INCOMPATIBILITY,
             }
         ):
             cr.set_line_cap(cairo.LINE_CAP_ROUND)
@@ -873,7 +885,7 @@ class InterpolatablePlot:
 
         matching = None
         for problem in problems:
-            if problem["type"] == "contour_order":
+            if problem["type"] == InterpolatableProblem.CONTOUR_ORDER:
                 matching = problem["value_2"]
                 colors = cycle(self.contour_colors)
                 perContourPen = PerContourOrComponentPen(
@@ -889,7 +901,10 @@ class InterpolatablePlot:
                     cr.fill()
 
         for problem in problems:
-            if problem["type"] in ("nothing", "wrong_start_point"):
+            if problem["type"] in (
+                InterpolatableProblem.NOTHING,
+                InterpolatableProblem.WRONG_START_POINT,
+            ):
                 idx = problem.get("contour")
 
                 # Draw suggested point
@@ -967,7 +982,7 @@ class InterpolatablePlot:
 
                 cr.restore()
 
-            if problem["type"] == "kink":
+            if problem["type"] == InterpolatableProblem.KINK:
                 idx = problem.get("contour")
                 perContourPen = PerContourOrComponentPen(
                     RecordingPen, glyphset=glyphset
