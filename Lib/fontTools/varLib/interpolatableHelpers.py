@@ -45,7 +45,7 @@ def sort_problems(problems):
     return dict(
         sorted(
             problems.items(),
-            key=lambda _: max(
+            key=lambda _: -min(
                 (
                     InterpolatableProblem.severity[p["type"]]
                     for p in _[1]
@@ -54,6 +54,7 @@ def sort_problems(problems):
                 ),
                 default=InterpolatableProblem.severity[InterpolatableProblem.NOTHING],
             ),
+            reverse=True,
         )
     )
 
