@@ -9,7 +9,11 @@ $ fonttools varLib.interpolatable font1 font2 ...
 from .interpolatableHelpers import *
 from .interpolatableTestContourOrder import test_contour_order
 from .interpolatableTestStartingPoint import test_starting_point
-from fontTools.pens.recordingPen import RecordingPen, DecomposingRecordingPen
+from fontTools.pens.recordingPen import (
+    RecordingPen,
+    DecomposingRecordingPen,
+    lerp_recordings,
+)
 from fontTools.pens.transformPen import TransformPen
 from fontTools.pens.statisticsPen import StatisticsPen, StatisticsControlPen
 from fontTools.pens.momentsPen import OpenContourError
@@ -332,7 +336,9 @@ def test_gen(
             midRecording = []
             for c0, c1 in zip(recording0, recording1):
                 try:
-                    midRecording.append(lerp_recordings(c0, c1))
+                    r = RecordingPen()
+                    r.value = lerp_recordings(c0.value, c1.value)
+                    midRecording.append(r)
                 except ValueError:
                     # Mismatch because of the reordering above
                     midRecording.append(None)

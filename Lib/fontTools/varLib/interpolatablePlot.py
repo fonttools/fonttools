@@ -1,5 +1,6 @@
 from .interpolatableHelpers import *
 from fontTools.ttLib import TTFont
+from fontTools.ttLib.ttGlyphSet import LerpGlyphSet
 from fontTools.pens.recordingPen import (
     RecordingPen,
     DecomposingRecordingPen,
@@ -12,10 +13,9 @@ from fontTools.pens.pointPen import (
     PointToSegmentPen,
     ReverseContourPointPen,
 )
-from fontTools.varLib.interpolatable import (
+from fontTools.varLib.interpolatableHelpers import (
     PerContourOrComponentPen,
     SimpleRecordingPointPen,
-    LerpGlyphSet,
 )
 from itertools import cycle
 from functools import wraps
