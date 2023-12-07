@@ -589,7 +589,6 @@ def test_gen(
                         r_diff,
                     )
                     log.debug("tolerance %g", this_tolerance)
-                    continue
                     yield (
                         glyph_name,
                         {
