@@ -1,5 +1,6 @@
 from fontTools.ttLib import TTFont
 from fontTools.ttLib import ttGlyphSet
+from fontTools.ttLib.ttGlyphSet import LerpGlyphSet
 from fontTools.pens.recordingPen import (
     RecordingPen,
     RecordingPointPen,
@@ -163,6 +164,53 @@ class TTGlyphSetTest(object):
         actual = pen.value
 
         assert actual == expected, (location, actual, expected)
+
+    @pytest.mark.parametrize(
+        "fontfile, locations, factor, expected",
+        [
+            (
+                "I.ttf",
+                ({"wght": 400}, {"wght": 1000}),
+                0.5,
+                [
+                    ("moveTo", ((151.5, 0.0),)),
+                    ("lineTo", ((458.5, 0.0),)),
+                    ("lineTo", ((458.5, 1456.0),)),
+                    ("lineTo", ((151.5, 1456.0),)),
+                    ("closePath", ()),
+                ],
+            ),
+            (
+                "I.ttf",
+                ({"wght": 400}, {"wght": 1000}),
+                0.25,
+                [
+                    ("moveTo", ((163.25, 0.0),)),
+                    ("lineTo", ((412.75, 0.0),)),
+                    ("lineTo", ((412.75, 1456.0),)),
+                    ("lineTo", ((163.25, 1456.0),)),
+                    ("closePath", ()),
+                ],
+            ),
+        ],
+    )
+    def test_lerp_glyphset(self, fontfile, locations, factor, expected):
+        font = TTFont(self.getpath(fontfile))
+        glyphset1 = font.getGlyphSet(location=locations[0])
+        glyphset2 = font.getGlyphSet(location=locations[1])
+        glyphset = LerpGlyphSet(glyphset1, glyphset2, factor)
+
+        assert "I" in glyphset
+
+        pen = RecordingPen()
+        glyph = glyphset["I"]
+
+        assert glyphset.get("foobar") is None
+
+        glyph.draw(pen)
+        actual = pen.value
+
+        assert actual == expected, (locations, actual, expected)
 
     def test_glyphset_varComposite_components(self):
         font = TTFont(self.getpath("varc-ac00-ac01.ttf"))
