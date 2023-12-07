@@ -140,7 +140,7 @@ the following order, in order of descending priority:
 
 #. The ``public.fontInfo`` key in the ``<lib>`` element of the ``<variable-font>``
    or ``<instance>`` elements.
-#. The ``<varaiable-font>`` or ``<instance>`` XML attributes for names (i.e.
+#. The ``<variable-font>`` or ``<instance>`` XML attributes for names (i.e.
    ``familyname``, ``stylename``, etc.)
 #. The ``public.fontInfo`` key found in the ``<lib>`` element of the designspace
    document's root.
