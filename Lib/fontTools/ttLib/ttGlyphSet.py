@@ -9,7 +9,11 @@ from fontTools.misc.fixedTools import otRound
 from fontTools.misc.loggingTools import deprecateFunction
 from fontTools.misc.transform import Transform
 from fontTools.pens.transformPen import TransformPen, TransformPointPen
-from fontTools.pens.recordingPen import DecomposingRecordingPen
+from fontTools.pens.recordingPen import (
+    DecomposingRecordingPen,
+    RecordingPen,
+    lerp_recordings,
+)
 
 
 class _TTGlyphSet(Mapping):
@@ -370,16 +374,6 @@ class LerpGlyph:
 
         factor = self.glyphset.factor
 
-        if len(recording1.value) != len(recording2.value):
-            raise ValueError(
-                "Mismatching number of operations: %d, %d"
-                % (len(recording1.value), len(recording2.value))
-            )
-        for (op1, args1), (op2, args2) in zip(recording1.value, recording2.value):
-            if op1 != op2:
-                raise ValueError("Mismatching operations: %s, %s" % (op1, op2))
-            mid_args = [
-                (x1 + (x2 - x1) * factor, y1 + (y2 - y1) * factor)
-                for (x1, y1), (x2, y2) in zip(args1, args2)
-            ]
-            getattr(pen, op1)(*mid_args)
+        lerped = RecordingPen()
+        lerped.value = lerp_recordings(recording1.value, recording2.value, factor)
+        lerped.replay(pen)
