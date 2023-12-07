@@ -1986,7 +1986,10 @@ class LimitTupleVariationAxisRangesTest:
                 TupleVariation({"wght": (0.0, 0.5, 1.0)}, [100, 100]),
                 "wght",
                 0.6,
-                [TupleVariation({"wght": (0.0, 0.833334, 1.666667)}, [100, 100])],
+                [
+                    TupleVariation({"wght": (0.0, 0.833334, 1.0)}, [100, 100]),
+                    TupleVariation({"wght": (0.833334, 1.0, 1.0)}, [80, 80]),
+                ],
             ),
             (
                 TupleVariation({"wght": (0.0, 0.2, 1.0)}, [100, 100]),
@@ -2001,7 +2004,10 @@ class LimitTupleVariationAxisRangesTest:
                 TupleVariation({"wght": (0.0, 0.2, 1.0)}, [100, 100]),
                 "wght",
                 0.5,
-                [TupleVariation({"wght": (0.0, 0.4, 1.99994)}, [100, 100])],
+                [
+                    TupleVariation({"wght": (0.0, 0.4, 1)}, [100, 100]),
+                    TupleVariation({"wght": (0.4, 1, 1)}, [62.5, 62.5]),
+                ],
             ),
             (
                 TupleVariation({"wght": (0.5, 0.5, 1.0)}, [100, 100]),
@@ -2065,7 +2071,10 @@ class LimitTupleVariationAxisRangesTest:
                 TupleVariation({"wght": (-1.0, -0.5, 0.0)}, [100, 100]),
                 "wght",
                 -0.6,
-                [TupleVariation({"wght": (-1.666667, -0.833334, 0.0)}, [100, 100])],
+                [
+                    TupleVariation({"wght": (-1.0, -0.833334, 0.0)}, [100, 100]),
+                    TupleVariation({"wght": (-1.0, -1.0, -0.833334)}, [80, 80]),
+                ],
             ),
             (
                 TupleVariation({"wght": (-1.0, -0.2, 0.0)}, [100, 100]),
@@ -2080,7 +2089,10 @@ class LimitTupleVariationAxisRangesTest:
                 TupleVariation({"wght": (-1.0, -0.2, 0.0)}, [100, 100]),
                 "wght",
                 -0.5,
-                [TupleVariation({"wght": (-2.0, -0.4, 0.0)}, [100, 100])],
+                [
+                    TupleVariation({"wght": (-1.0, -0.4, 0.0)}, [100, 100]),
+                    TupleVariation({"wght": (-1.0, -1.0, -0.4)}, [62.5, 62.5]),
+                ],
             ),
             (
                 TupleVariation({"wght": (-1.0, -0.5, -0.5)}, [100, 100]),

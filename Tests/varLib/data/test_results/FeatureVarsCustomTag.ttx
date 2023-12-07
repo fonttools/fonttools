@@ -33,17 +33,24 @@
         <Script>
           <DefaultLangSys>
             <ReqFeatureIndex value="65535"/>
-            <!-- FeatureCount=1 -->
+            <!-- FeatureCount=2 -->
             <FeatureIndex index="0" value="0"/>
+            <FeatureIndex index="1" value="1"/>
           </DefaultLangSys>
           <!-- LangSysCount=0 -->
         </Script>
       </ScriptRecord>
     </ScriptList>
     <FeatureList>
-      <!-- FeatureCount=1 -->
+      <!-- FeatureCount=2 -->
       <FeatureRecord index="0">
         <FeatureTag value="calt"/>
+        <Feature>
+          <!-- LookupCount=0 -->
+        </Feature>
+      </FeatureRecord>
+      <FeatureRecord index="1">
+        <FeatureTag value="rclt"/>
         <Feature>
           <!-- LookupCount=0 -->
         </Feature>
@@ -95,9 +102,17 @@
         </ConditionSet>
         <FeatureTableSubstitution>
           <Version value="0x00010000"/>
-          <!-- SubstitutionCount=1 -->
+          <!-- SubstitutionCount=2 -->
           <SubstitutionRecord index="0">
             <FeatureIndex value="0"/>
+            <Feature>
+              <!-- LookupCount=2 -->
+              <LookupListIndex index="0" value="0"/>
+              <LookupListIndex index="1" value="1"/>
+            </Feature>
+          </SubstitutionRecord>
+          <SubstitutionRecord index="1">
+            <FeatureIndex value="1"/>
             <Feature>
               <!-- LookupCount=2 -->
               <LookupListIndex index="0" value="0"/>
@@ -122,9 +137,16 @@
         </ConditionSet>
         <FeatureTableSubstitution>
           <Version value="0x00010000"/>
-          <!-- SubstitutionCount=1 -->
+          <!-- SubstitutionCount=2 -->
           <SubstitutionRecord index="0">
             <FeatureIndex value="0"/>
+            <Feature>
+              <!-- LookupCount=1 -->
+              <LookupListIndex index="0" value="2"/>
+            </Feature>
+          </SubstitutionRecord>
+          <SubstitutionRecord index="1">
+            <FeatureIndex value="1"/>
             <Feature>
               <!-- LookupCount=1 -->
               <LookupListIndex index="0" value="2"/>
@@ -143,9 +165,16 @@
         </ConditionSet>
         <FeatureTableSubstitution>
           <Version value="0x00010000"/>
-          <!-- SubstitutionCount=1 -->
+          <!-- SubstitutionCount=2 -->
           <SubstitutionRecord index="0">
             <FeatureIndex value="0"/>
+            <Feature>
+              <!-- LookupCount=1 -->
+              <LookupListIndex index="0" value="1"/>
+            </Feature>
+          </SubstitutionRecord>
+          <SubstitutionRecord index="1">
+            <FeatureIndex value="1"/>
             <Feature>
               <!-- LookupCount=1 -->
               <LookupListIndex index="0" value="1"/>
@@ -164,9 +193,16 @@
         </ConditionSet>
         <FeatureTableSubstitution>
           <Version value="0x00010000"/>
-          <!-- SubstitutionCount=1 -->
+          <!-- SubstitutionCount=2 -->
           <SubstitutionRecord index="0">
             <FeatureIndex value="0"/>
+            <Feature>
+              <!-- LookupCount=1 -->
+              <LookupListIndex index="0" value="0"/>
+            </Feature>
+          </SubstitutionRecord>
+          <SubstitutionRecord index="1">
+            <FeatureIndex value="1"/>
             <Feature>
               <!-- LookupCount=1 -->
               <LookupListIndex index="0" value="0"/>

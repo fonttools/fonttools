@@ -241,7 +241,7 @@ class release(Command):
     ]
 
     changelog_name = "NEWS.rst"
-    version_RE = re.compile("^[0-9]+\.[0-9]+")
+    version_RE = re.compile(r"^[0-9]+\.[0-9]+")
     date_fmt = "%Y-%m-%d"
     header_fmt = "%s (released %s)"
     commit_message = "Release {new_version}"
@@ -467,7 +467,7 @@ if ext_modules:
 
 setup_params = dict(
     name="fonttools",
-    version="4.45.2.dev0",
+    version="4.46.1.dev0",
     description="Tools to manipulate font files",
     author="Just van Rossum",
     author_email="just@letterror.com",

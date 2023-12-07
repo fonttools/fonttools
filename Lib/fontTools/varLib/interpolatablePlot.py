@@ -1,4 +1,6 @@
+from .interpolatableHelpers import *
 from fontTools.ttLib import TTFont
+from fontTools.ttLib.ttGlyphSet import LerpGlyphSet
 from fontTools.pens.recordingPen import (
     RecordingPen,
     DecomposingRecordingPen,
@@ -11,7 +13,7 @@ from fontTools.pens.pointPen import (
     PointToSegmentPen,
     ReverseContourPointPen,
 )
-from fontTools.varLib.interpolatable import (
+from fontTools.varLib.interpolatableHelpers import (
     PerContourOrComponentPen,
     SimpleRecordingPointPen,
 )
@@ -24,38 +26,6 @@ import os
 import logging
 
 log = logging.getLogger("fontTools.varLib.interpolatable")
-
-
-class LerpGlyphSet:
-    def __init__(self, glyphset1, glyphset2, factor=0.5):
-        self.glyphset1 = glyphset1
-        self.glyphset2 = glyphset2
-        self.factor = factor
-
-    def __getitem__(self, glyphname):
-        return LerpGlyph(glyphname, self)
-
-
-class LerpGlyph:
-    def __init__(self, glyphname, glyphset):
-        self.glyphset = glyphset
-        self.glyphname = glyphname
-
-    def draw(self, pen):
-        recording1 = DecomposingRecordingPen(self.glyphset.glyphset1)
-        self.glyphset.glyphset1[self.glyphname].draw(recording1)
-        recording2 = DecomposingRecordingPen(self.glyphset.glyphset2)
-        self.glyphset.glyphset2[self.glyphname].draw(recording2)
-
-        factor = self.glyphset.factor
-        for (op1, args1), (op2, args2) in zip(recording1.value, recording2.value):
-            if op1 != op2:
-                raise ValueError("Mismatching operations: %s, %s" % (op1, op2))
-            mid_args = [
-                (x1 + (x2 - x1) * factor, y1 + (y2 - y1) * factor)
-                for (x1, y1), (x2, y2) in zip(args1, args2)
-            ]
-            getattr(pen, op1)(*mid_args)
 
 
 class OverridingDict(dict):
@@ -79,24 +49,25 @@ class InterpolatablePlot:
     fill_color = (0.8, 0.8, 0.8)
     stroke_color = (0.1, 0.1, 0.1)
     stroke_width = 2
-    oncurve_node_color = (0, 0.8, 0)
+    oncurve_node_color = (0, 0.8, 0, 0.7)
     oncurve_node_diameter = 10
-    offcurve_node_color = (0, 0.5, 0)
+    offcurve_node_color = (0, 0.5, 0, 0.7)
     offcurve_node_diameter = 8
-    handle_color = (0.2, 1, 0.2)
+    handle_color = (0, 0.5, 0, 0.7)
     handle_width = 1
-    corrected_start_point_color = (0, 0.9, 0)
+    corrected_start_point_color = (0, 0.9, 0, 0.7)
     corrected_start_point_size = 15
-    wrong_start_point_color = (1, 0, 0)
-    start_point_color = (0, 0, 1)
+    wrong_start_point_color = (1, 0, 0, 0.7)
+    start_point_color = (0, 0, 1, 0.7)
     start_arrow_length = 20
     kink_point_size = 10
     kink_point_color = (1, 0, 1, 0.7)
     kink_circle_size = 25
     kink_circle_stroke_width = 1.5
-    kink_circle_color = (1, 0, 1, 0.5)
+    kink_circle_color = (1, 0, 1, 0.7)
     contour_colors = ((1, 0, 0), (0, 0, 1), (0, 1, 0), (1, 1, 0), (1, 0, 1), (0, 1, 1))
     contour_alpha = 0.5
+    weight_issue_contour_color = (0, 0, 0, 0.4)
     no_issues_label = "Your font's good! Have a cupcake..."
     no_issues_label_color = (0, 0.5, 0)
     cupcake_color = (0.3, 0, 0.3)
@@ -125,8 +96,19 @@ class InterpolatablePlot:
              \\\\  ||||  ||||  ||||  //
               ||||||||||||||||||||||||
 """
-    shrug_color = (0, 0.3, 0.3)
+    emoticon_color = (0, 0.3, 0.3)
     shrug = r"""\_(")_/"""
+    underweight = r"""
+ o
+/|\
+/ \
+"""
+    overweight = r"""
+ o
+/O\
+/ \
+"""
+    yay = r""" \o/ """
 
     def __init__(self, out, glyphsets, names=None, **kwargs):
         self.out = out
@@ -242,15 +224,29 @@ class InterpolatablePlot:
             )
             y -= self.pad + self.line_height
 
+        self.draw_label("Underweight contours", x=xxx, y=y, width=width)
+        cr.rectangle(xx - self.pad * 0.7, y, 1.5 * self.pad, self.line_height)
+        cr.set_source_rgb(*self.fill_color)
+        cr.fill_preserve()
+        if self.stroke_color:
+            cr.set_source_rgb(*self.stroke_color)
+            cr.set_line_width(self.stroke_width)
+            cr.stroke_preserve()
+        cr.set_source_rgba(*self.weight_issue_contour_color)
+        cr.fill()
+        y -= self.pad + self.line_height
+
         self.draw_label(
             "Colored contours: contours with the wrong order", x=xxx, y=y, width=width
         )
         cr.rectangle(xx - self.pad * 0.7, y, 1.5 * self.pad, self.line_height)
-        cr.set_source_rgb(*self.fill_color)
-        cr.fill_preserve()
-        cr.set_source_rgb(*self.stroke_color)
-        cr.set_line_width(self.stroke_width)
-        cr.stroke_preserve()
+        if self.fill_color:
+            cr.set_source_rgb(*self.fill_color)
+            cr.fill_preserve()
+        if self.stroke_color:
+            cr.set_source_rgb(*self.stroke_color)
+            cr.set_line_width(self.stroke_width)
+            cr.stroke_preserve()
         cr.set_source_rgba(*self.contour_colors[0], self.contour_alpha)
         cr.fill()
         y -= self.pad + self.line_height
@@ -402,7 +398,7 @@ class InterpolatablePlot:
         )
         master_indices = [problems[0][k] for k in master_keys]
 
-        if problem_type == "missing":
+        if problem_type == InterpolatableProblem.MISSING:
             sample_glyph = next(
                 i for i, m in enumerate(self.glyphsets) if m[glyphname] is not None
             )
@@ -456,17 +452,18 @@ class InterpolatablePlot:
                     self.draw_glyph(glyphset, glyphname, problems, which, x=x, y=y)
                 )
             else:
-                self.draw_shrug(x=x, y=y)
+                self.draw_emoticon(self.shrug, x=x, y=y)
             y += self.height + self.pad
 
         if any(
             pt
             in (
-                "nothing",
-                "wrong_start_point",
-                "contour_order",
-                "wrong_structure",
-                "kink",
+                InterpolatableProblem.NOTHING,
+                InterpolatableProblem.WRONG_START_POINT,
+                InterpolatableProblem.CONTOUR_ORDER,
+                InterpolatableProblem.KINK,
+                InterpolatableProblem.UNDERWEIGHT,
+                InterpolatableProblem.OVERWEIGHT,
             )
             for pt in problem_types
         ):
@@ -489,7 +486,17 @@ class InterpolatablePlot:
             self.draw_glyph(
                 midway_glyphset,
                 glyphname,
-                [{"type": "midway"}] + [p for p in problems if p["type"] == "kink"],
+                [{"type": "midway"}]
+                + [
+                    p
+                    for p in problems
+                    if p["type"]
+                    in (
+                        InterpolatableProblem.KINK,
+                        InterpolatableProblem.UNDERWEIGHT,
+                        InterpolatableProblem.OVERWEIGHT,
+                    )
+                ],
                 None,
                 x=x,
                 y=y,
@@ -498,171 +505,187 @@ class InterpolatablePlot:
 
             y += self.height + self.pad
 
+        if any(
+            pt
+            in (
+                InterpolatableProblem.WRONG_START_POINT,
+                InterpolatableProblem.CONTOUR_ORDER,
+                InterpolatableProblem.KINK,
+            )
+            for pt in problem_types
+        ):
             # Draw the proposed fix
 
             self.draw_label("proposed fix", x=x, y=y, color=self.head_color, align=0.5)
             y += self.line_height + self.pad
 
-            if problem_type in ("wrong_structure"):
-                self.draw_shrug(x=x, y=y)
-            else:
-                overriding1 = OverridingDict(glyphset1)
-                overriding2 = OverridingDict(glyphset2)
-                perContourPen1 = PerContourOrComponentPen(
-                    RecordingPen, glyphset=overriding1
-                )
-                perContourPen2 = PerContourOrComponentPen(
-                    RecordingPen, glyphset=overriding2
-                )
-                glyphset1[glyphname].draw(perContourPen1)
-                glyphset2[glyphname].draw(perContourPen2)
+            overriding1 = OverridingDict(glyphset1)
+            overriding2 = OverridingDict(glyphset2)
+            perContourPen1 = PerContourOrComponentPen(
+                RecordingPen, glyphset=overriding1
+            )
+            perContourPen2 = PerContourOrComponentPen(
+                RecordingPen, glyphset=overriding2
+            )
+            glyphset1[glyphname].draw(perContourPen1)
+            glyphset2[glyphname].draw(perContourPen2)
 
-                for problem in problems:
-                    if problem["type"] == "contour_order":
-                        fixed_contours = [
-                            perContourPen2.value[i] for i in problems[0]["value_2"]
-                        ]
-                        perContourPen2.value = fixed_contours
+            for problem in problems:
+                if problem["type"] == InterpolatableProblem.CONTOUR_ORDER:
+                    fixed_contours = [
+                        perContourPen2.value[i] for i in problems[0]["value_2"]
+                    ]
+                    perContourPen2.value = fixed_contours
 
-                for problem in problems:
-                    if problem["type"] == "wrong_start_point":
-                        # Save the wrong contours
-                        wrongContour1 = perContourPen1.value[problem["contour"]]
-                        wrongContour2 = perContourPen2.value[problem["contour"]]
+            for problem in problems:
+                if problem["type"] == InterpolatableProblem.WRONG_START_POINT:
+                    # Save the wrong contours
+                    wrongContour1 = perContourPen1.value[problem["contour"]]
+                    wrongContour2 = perContourPen2.value[problem["contour"]]
 
-                        # Convert the wrong contours to point pens
-                        points1 = RecordingPointPen()
-                        converter = SegmentToPointPen(points1, False)
-                        wrongContour1.replay(converter)
-                        points2 = RecordingPointPen()
-                        converter = SegmentToPointPen(points2, False)
-                        wrongContour2.replay(converter)
+                    # Convert the wrong contours to point pens
+                    points1 = RecordingPointPen()
+                    converter = SegmentToPointPen(points1, False)
+                    wrongContour1.replay(converter)
+                    points2 = RecordingPointPen()
+                    converter = SegmentToPointPen(points2, False)
+                    wrongContour2.replay(converter)
 
-                        proposed_start = problem["value_2"]
+                    proposed_start = problem["value_2"]
 
-                        # See if we need reversing; fragile but worth a try
-                        if problem["reversed"]:
-                            new_points2 = RecordingPointPen()
-                            reversedPen = ReverseContourPointPen(new_points2)
-                            points2.replay(reversedPen)
-                            points2 = new_points2
-                            proposed_start = len(points2.value) - 2 - proposed_start
+                    # See if we need reversing; fragile but worth a try
+                    if problem["reversed"]:
+                        new_points2 = RecordingPointPen()
+                        reversedPen = ReverseContourPointPen(new_points2)
+                        points2.replay(reversedPen)
+                        points2 = new_points2
+                        proposed_start = len(points2.value) - 2 - proposed_start
 
-                        # Rotate points2 so that the first point is the same as in points1
-                        beginPath = points2.value[:1]
-                        endPath = points2.value[-1:]
-                        pts = points2.value[1:-1]
-                        pts = pts[proposed_start:] + pts[:proposed_start]
-                        points2.value = beginPath + pts + endPath
+                    # Rotate points2 so that the first point is the same as in points1
+                    beginPath = points2.value[:1]
+                    endPath = points2.value[-1:]
+                    pts = points2.value[1:-1]
+                    pts = pts[proposed_start:] + pts[:proposed_start]
+                    points2.value = beginPath + pts + endPath
 
-                        # Convert the point pens back to segment pens
-                        segment1 = RecordingPen()
-                        converter = PointToSegmentPen(segment1, True)
-                        points1.replay(converter)
-                        segment2 = RecordingPen()
-                        converter = PointToSegmentPen(segment2, True)
-                        points2.replay(converter)
+                    # Convert the point pens back to segment pens
+                    segment1 = RecordingPen()
+                    converter = PointToSegmentPen(segment1, True)
+                    points1.replay(converter)
+                    segment2 = RecordingPen()
+                    converter = PointToSegmentPen(segment2, True)
+                    points2.replay(converter)
 
-                        # Replace the wrong contours
-                        wrongContour1.value = segment1.value
-                        wrongContour2.value = segment2.value
-                        perContourPen1.value[problem["contour"]] = wrongContour1
-                        perContourPen2.value[problem["contour"]] = wrongContour2
+                    # Replace the wrong contours
+                    wrongContour1.value = segment1.value
+                    wrongContour2.value = segment2.value
+                    perContourPen1.value[problem["contour"]] = wrongContour1
+                    perContourPen2.value[problem["contour"]] = wrongContour2
 
-                for problem in problems:
-                    # If we have a kink, try to fix it.
-                    if problem["type"] == "kink":
-                        # Save the wrong contours
-                        wrongContour1 = perContourPen1.value[problem["contour"]]
-                        wrongContour2 = perContourPen2.value[problem["contour"]]
+            for problem in problems:
+                # If we have a kink, try to fix it.
+                if problem["type"] == InterpolatableProblem.KINK:
+                    # Save the wrong contours
+                    wrongContour1 = perContourPen1.value[problem["contour"]]
+                    wrongContour2 = perContourPen2.value[problem["contour"]]
 
-                        # Convert the wrong contours to point pens
-                        points1 = RecordingPointPen()
-                        converter = SegmentToPointPen(points1, False)
-                        wrongContour1.replay(converter)
-                        points2 = RecordingPointPen()
-                        converter = SegmentToPointPen(points2, False)
-                        wrongContour2.replay(converter)
+                    # Convert the wrong contours to point pens
+                    points1 = RecordingPointPen()
+                    converter = SegmentToPointPen(points1, False)
+                    wrongContour1.replay(converter)
+                    points2 = RecordingPointPen()
+                    converter = SegmentToPointPen(points2, False)
+                    wrongContour2.replay(converter)
 
-                        i = problem["value"]
+                    i = problem["value"]
 
-                        # Position points to be around the same ratio
-                        # beginPath / endPath dance
-                        j = i + 1
-                        pt0 = points1.value[j][1][0]
-                        pt1 = points2.value[j][1][0]
-                        j_prev = (i - 1) % (len(points1.value) - 2) + 1
-                        pt0_prev = points1.value[j_prev][1][0]
-                        pt1_prev = points2.value[j_prev][1][0]
-                        j_next = (i + 1) % (len(points1.value) - 2) + 1
-                        pt0_next = points1.value[j_next][1][0]
-                        pt1_next = points2.value[j_next][1][0]
+                    # Position points to be around the same ratio
+                    # beginPath / endPath dance
+                    j = i + 1
+                    pt0 = points1.value[j][1][0]
+                    pt1 = points2.value[j][1][0]
+                    j_prev = (i - 1) % (len(points1.value) - 2) + 1
+                    pt0_prev = points1.value[j_prev][1][0]
+                    pt1_prev = points2.value[j_prev][1][0]
+                    j_next = (i + 1) % (len(points1.value) - 2) + 1
+                    pt0_next = points1.value[j_next][1][0]
+                    pt1_next = points2.value[j_next][1][0]
 
-                        pt0 = complex(*pt0)
-                        pt1 = complex(*pt1)
-                        pt0_prev = complex(*pt0_prev)
-                        pt1_prev = complex(*pt1_prev)
-                        pt0_next = complex(*pt0_next)
-                        pt1_next = complex(*pt1_next)
+                    pt0 = complex(*pt0)
+                    pt1 = complex(*pt1)
+                    pt0_prev = complex(*pt0_prev)
+                    pt1_prev = complex(*pt1_prev)
+                    pt0_next = complex(*pt0_next)
+                    pt1_next = complex(*pt1_next)
 
-                        # Find the ratio of the distance between the points
-                        r0 = abs(pt0 - pt0_prev) / abs(pt0_next - pt0_prev)
-                        r1 = abs(pt1 - pt1_prev) / abs(pt1_next - pt1_prev)
-                        r_mid = (r0 + r1) / 2
+                    # Find the ratio of the distance between the points
+                    r0 = abs(pt0 - pt0_prev) / abs(pt0_next - pt0_prev)
+                    r1 = abs(pt1 - pt1_prev) / abs(pt1_next - pt1_prev)
+                    r_mid = (r0 + r1) / 2
 
-                        pt0 = pt0_prev + r_mid * (pt0_next - pt0_prev)
-                        pt1 = pt1_prev + r_mid * (pt1_next - pt1_prev)
+                    pt0 = pt0_prev + r_mid * (pt0_next - pt0_prev)
+                    pt1 = pt1_prev + r_mid * (pt1_next - pt1_prev)
 
-                        points1.value[j] = (
-                            points1.value[j][0],
-                            (((pt0.real, pt0.imag),) + points1.value[j][1][1:]),
-                            points1.value[j][2],
-                        )
-                        points2.value[j] = (
-                            points2.value[j][0],
-                            (((pt1.real, pt1.imag),) + points2.value[j][1][1:]),
-                            points2.value[j][2],
-                        )
-
-                        # Convert the point pens back to segment pens
-                        segment1 = RecordingPen()
-                        converter = PointToSegmentPen(segment1, True)
-                        points1.replay(converter)
-                        segment2 = RecordingPen()
-                        converter = PointToSegmentPen(segment2, True)
-                        points2.replay(converter)
-
-                        # Replace the wrong contours
-                        wrongContour1.value = segment1.value
-                        wrongContour2.value = segment2.value
-
-                # Assemble
-                fixed1 = RecordingPen()
-                fixed2 = RecordingPen()
-                for contour in perContourPen1.value:
-                    fixed1.value.extend(contour.value)
-                for contour in perContourPen2.value:
-                    fixed2.value.extend(contour.value)
-                fixed1.draw = fixed1.replay
-                fixed2.draw = fixed2.replay
-
-                overriding1[glyphname] = fixed1
-                overriding2[glyphname] = fixed2
-
-                try:
-                    midway_glyphset = LerpGlyphSet(overriding1, overriding2)
-                    self.draw_glyph(
-                        midway_glyphset,
-                        glyphname,
-                        {"type": "fixed"},
-                        None,
-                        x=x,
-                        y=y,
-                        scale=min(scales),
+                    points1.value[j] = (
+                        points1.value[j][0],
+                        (((pt0.real, pt0.imag),) + points1.value[j][1][1:]),
+                        points1.value[j][2],
                     )
-                except ValueError:
-                    self.draw_shrug(x=x, y=y)
-                y += self.height + self.pad
+                    points2.value[j] = (
+                        points2.value[j][0],
+                        (((pt1.real, pt1.imag),) + points2.value[j][1][1:]),
+                        points2.value[j][2],
+                    )
+
+                    # Convert the point pens back to segment pens
+                    segment1 = RecordingPen()
+                    converter = PointToSegmentPen(segment1, True)
+                    points1.replay(converter)
+                    segment2 = RecordingPen()
+                    converter = PointToSegmentPen(segment2, True)
+                    points2.replay(converter)
+
+                    # Replace the wrong contours
+                    wrongContour1.value = segment1.value
+                    wrongContour2.value = segment2.value
+
+            # Assemble
+            fixed1 = RecordingPen()
+            fixed2 = RecordingPen()
+            for contour in perContourPen1.value:
+                fixed1.value.extend(contour.value)
+            for contour in perContourPen2.value:
+                fixed2.value.extend(contour.value)
+            fixed1.draw = fixed1.replay
+            fixed2.draw = fixed2.replay
+
+            overriding1[glyphname] = fixed1
+            overriding2[glyphname] = fixed2
+
+            try:
+                midway_glyphset = LerpGlyphSet(overriding1, overriding2)
+                self.draw_glyph(
+                    midway_glyphset,
+                    glyphname,
+                    {"type": "fixed"},
+                    None,
+                    x=x,
+                    y=y,
+                    scale=min(scales),
+                )
+            except ValueError:
+                self.draw_emoticon(self.shrug, x=x, y=y)
+            y += self.height + self.pad
+
+        else:
+            emoticon = self.shrug
+            if InterpolatableProblem.UNDERWEIGHT in problem_types:
+                emoticon = self.underweight
+            elif InterpolatableProblem.OVERWEIGHT in problem_types:
+                emoticon = self.overweight
+            elif InterpolatableProblem.NOTHING in problem_types:
+                emoticon = self.yay
+            self.draw_emoticon(emoticon, x=x, y=y)
 
         if show_page_number:
             self.draw_label(
@@ -776,7 +799,7 @@ class InterpolatablePlot:
             pen = CairoPen(glyphset, cr)
             decomposedRecording.replay(pen)
 
-            if self.fill_color and problem_type != "open_path":
+            if self.fill_color and problem_type != InterpolatableProblem.OPEN_PATH:
                 cr.set_source_rgb(*self.fill_color)
                 cr.fill_preserve()
 
@@ -787,13 +810,28 @@ class InterpolatablePlot:
 
             cr.new_path()
 
+        if (
+            InterpolatableProblem.UNDERWEIGHT in problem_types
+            or InterpolatableProblem.OVERWEIGHT in problem_types
+        ):
+            perContourPen = PerContourOrComponentPen(RecordingPen, glyphset=glyphset)
+            recording.replay(perContourPen)
+            for problem in problems:
+                if problem["type"] in (
+                    InterpolatableProblem.UNDERWEIGHT,
+                    InterpolatableProblem.OVERWEIGHT,
+                ):
+                    contour = perContourPen.value[problem["contour"]]
+                    contour.replay(CairoPen(glyphset, cr))
+                    cr.set_source_rgba(*self.weight_issue_contour_color)
+                    cr.fill()
+
         if any(
             t in problem_types
             for t in {
-                "nothing",
-                "node_count",
-                "node_incompatibility",
-                "wrong_structure",
+                InterpolatableProblem.NOTHING,
+                InterpolatableProblem.NODE_COUNT,
+                InterpolatableProblem.NODE_INCOMPATIBILITY,
             }
         ):
             cr.set_line_cap(cairo.LINE_CAP_ROUND)
@@ -805,7 +843,7 @@ class InterpolatablePlot:
                 x, y = args[-1]
                 cr.move_to(x, y)
                 cr.line_to(x, y)
-            cr.set_source_rgb(*self.oncurve_node_color)
+            cr.set_source_rgba(*self.oncurve_node_color)
             cr.set_line_width(self.oncurve_node_diameter / scale)
             cr.stroke()
 
@@ -816,7 +854,7 @@ class InterpolatablePlot:
                 for x, y in args[:-1]:
                     cr.move_to(x, y)
                     cr.line_to(x, y)
-            cr.set_source_rgb(*self.offcurve_node_color)
+            cr.set_source_rgba(*self.offcurve_node_color)
             cr.set_line_width(self.offcurve_node_diameter / scale)
             cr.stroke()
 
@@ -841,13 +879,13 @@ class InterpolatablePlot:
                 else:
                     continue
 
-            cr.set_source_rgb(*self.handle_color)
+            cr.set_source_rgba(*self.handle_color)
             cr.set_line_width(self.handle_width / scale)
             cr.stroke()
 
         matching = None
         for problem in problems:
-            if problem["type"] == "contour_order":
+            if problem["type"] == InterpolatableProblem.CONTOUR_ORDER:
                 matching = problem["value_2"]
                 colors = cycle(self.contour_colors)
                 perContourPen = PerContourOrComponentPen(
@@ -863,7 +901,10 @@ class InterpolatablePlot:
                     cr.fill()
 
         for problem in problems:
-            if problem["type"] in ("nothing", "wrong_start_point", "wrong_structure"):
+            if problem["type"] in (
+                InterpolatableProblem.NOTHING,
+                InterpolatableProblem.WRONG_START_POINT,
+            ):
                 idx = problem.get("contour")
 
                 # Draw suggested point
@@ -902,7 +943,10 @@ class InterpolatablePlot:
                         continue
                     if first_pt is None:
                         continue
-                    second_pt = args[0]
+                    if segment == "closePath":
+                        second_pt = first_pt
+                    else:
+                        second_pt = args[0]
 
                     if idx is None or i == idx:
                         cr.save()
@@ -938,7 +982,7 @@ class InterpolatablePlot:
 
                 cr.restore()
 
-            if problem["type"] == "kink":
+            if problem["type"] == InterpolatableProblem.KINK:
                 idx = problem.get("contour")
                 perContourPen = PerContourOrComponentPen(
                     RecordingPen, glyphset=glyphset
@@ -949,22 +993,6 @@ class InterpolatablePlot:
                 perContourPen.value[idx if matching is None else matching[idx]].replay(
                     converter
                 )
-
-                if which == 1 or midway:
-                    wrong_start_point_problem = [
-                        pt
-                        for pt in problems
-                        if pt["type"] == "wrong_start_point"
-                        and pt.get("contour") == idx
-                    ]
-                    if wrong_start_point_problem:
-                        proposed_start = wrong_start_point_problem[0]["value_2"]
-                        points.value = (
-                            points.value[proposed_start:]
-                            + points.value[:proposed_start]
-                        )
-                        if wrong_start_point_problem[0]["reversed"]:
-                            points.value = points.value[::-1]
 
                 targetPoint = points.value[problem["value"]][0]
                 cr.save()
@@ -1031,6 +1059,44 @@ class InterpolatablePlot:
         cr.fill()
         cr.restore()
 
+    def draw_text(self, text, *, x=0, y=0, color=(0, 0, 0), width=None, height=None):
+        if width is None:
+            width = self.width
+        if height is None:
+            height = self.height
+
+        text = text.splitlines()
+        cr = cairo.Context(self.surface)
+        cr.set_source_rgb(*color)
+        cr.set_font_size(self.line_height)
+        cr.select_font_face(
+            "@cairo:monospace", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL
+        )
+        text_width = 0
+        text_height = 0
+        font_extents = cr.font_extents()
+        font_line_height = font_extents[2]
+        font_ascent = font_extents[0]
+        for line in text:
+            extents = cr.text_extents(line)
+            text_width = max(text_width, extents.x_advance)
+            text_height += font_line_height
+        if not text_width:
+            return
+        cr.translate(x, y)
+        scale = min(width / text_width, height / text_height)
+        # center
+        cr.translate(
+            (width - text_width * scale) / 2, (height - text_height * scale) / 2
+        )
+        cr.scale(scale, scale)
+
+        cr.translate(0, font_ascent)
+        for line in text:
+            cr.move_to(0, 0)
+            cr.show_text(line)
+            cr.translate(0, font_line_height)
+
     def draw_cupcake(self):
         self.set_size(self.total_width(), self.total_height())
 
@@ -1044,50 +1110,17 @@ class InterpolatablePlot:
             bold=True,
         )
 
-        cupcake = self.cupcake.splitlines()
-        cr = cairo.Context(self.surface)
-        cr.set_source_rgb(*self.cupcake_color)
-        cr.set_font_size(self.line_height)
-        cr.select_font_face(
-            "@cairo:monospace", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL
+        self.draw_text(
+            self.cupcake,
+            x=self.pad,
+            y=self.pad + self.line_height,
+            width=self.total_width() - 2 * self.pad,
+            height=self.total_height() - 2 * self.pad - self.line_height,
+            color=self.cupcake_color,
         )
-        width = 0
-        height = 0
-        font_extents = cr.font_extents()
-        font_line_height = font_extents[2]
-        font_ascent = font_extents[0]
-        for line in cupcake:
-            extents = cr.text_extents(line)
-            width = max(width, extents.width)
-            height += font_line_height
-        if not width:
-            return
-        cr.scale(
-            (self.total_width() - 2 * self.pad) / width,
-            (self.total_height() - 2 * self.pad - self.line_height) / height,
-        )
-        cr.translate(self.pad, self.pad + font_ascent + self.line_height)
-        for line in cupcake:
-            cr.move_to(0, 0)
-            cr.show_text(line)
-            cr.translate(0, font_line_height)
 
-    def draw_shrug(self, x=0, y=0):
-        cr = cairo.Context(self.surface)
-        cr.translate(x, y)
-        cr.set_source_rgb(*self.shrug_color)
-        cr.set_font_size(self.line_height)
-        cr.select_font_face(
-            "@cairo:monospace", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL
-        )
-        extents = cr.text_extents(self.shrug)
-        if not extents.width:
-            return
-        cr.translate(0, self.height * 0.6)
-        scale = self.width / extents.width
-        cr.scale(scale, scale)
-        cr.move_to(-extents.x_bearing, 0)
-        cr.show_text(self.shrug)
+    def draw_emoticon(self, emoticon, x=0, y=0):
+        self.draw_text(emoticon, x=x, y=y, color=self.emoticon_color)
 
 
 class InterpolatablePostscriptLike(InterpolatablePlot):
@@ -1104,10 +1137,6 @@ class InterpolatablePostscriptLike(InterpolatablePlot):
     def show_page(self):
         super().show_page()
         self.surface.show_page()
-
-    def __enter__(self):
-        self.surface = cairo.PSSurface(self.out, self.width, self.height)
-        return self
 
 
 class InterpolatablePS(InterpolatablePostscriptLike):
