@@ -472,6 +472,22 @@ class VariationModel(object):
             for support in self.supports
         ]
 
+    def _getMasterScalarsRecurse(self, out, j, weights, scalar=1):
+        for i, weight in weights.items():
+            influence = -weight * scalar
+            out[i] += influence
+            self._getMasterScalarsRecurse(out, i, self.deltaWeights[i], influence)
+
+    def getMasterScalars(self, targetLocation):
+        out = []
+        for i, (weights, support) in enumerate(zip(self.deltaWeights, self.supports)):
+            scalar = supportScalar(targetLocation, support)
+            out.append(scalar)
+            self._getMasterScalarsRecurse(out, i, weights, scalar)
+
+        out = [out[self.mapping[i]] for i in range(len(out))]
+        return out
+
     @staticmethod
     def interpolateFromDeltasAndScalars(deltas, scalars):
         v = None

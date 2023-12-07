@@ -397,7 +397,7 @@ class VariationModelTest(object):
             )
 
     @pytest.mark.parametrize(
-        "locations, axisOrder, masterValues, instanceLocation, expectedValue",
+        "locations, axisOrder, masterValues, instanceLocation, expectedValue, masterScalars",
         [
             (
                 [
@@ -422,6 +422,7 @@ class VariationModelTest(object):
                     "axis_B": 0.5,
                 },
                 37.5,
+                [0.25, 0.0, 0.0, -0.25, 0.5, 0.5],
             ),
         ],
     )
@@ -432,8 +433,11 @@ class VariationModelTest(object):
         masterValues,
         instanceLocation,
         expectedValue,
+        masterScalars,
     ):
         model = VariationModel(locations, axisOrder=axisOrder)
-        interpolatedValue = model.interpolateFromMasters(instanceLocation, masterValues)
 
+        interpolatedValue = model.interpolateFromMasters(instanceLocation, masterValues)
         assert interpolatedValue == expectedValue
+
+        assert masterScalars == model.getMasterScalars(instanceLocation)
