@@ -140,8 +140,8 @@ the following order, in order of descending priority:
 
 #. The ``public.fontInfo`` key in the ``<lib>`` element of the ``<variable-font>``
    or ``<instance>`` elements.
-#. The ``<variable-font>`` or ``<instance>`` XML attributes for names (i.e.
-   ``familyname``, ``stylename``, etc.)
+#. XML attributes for names (i.e. ``familyname``, ``stylename``, etc.), if the
+   target is an ``<instance>`` element.
 #. The ``public.fontInfo`` key found in the ``<lib>`` element of the designspace
    document's root.
 #. The ``fontinfo.plist`` in the UFO source at the origin of the interpolation 
@@ -149,12 +149,12 @@ the following order, in order of descending priority:
 
 Absence of a font info key from the value of a ``public.fontInfo`` lib does 
 **not** mean a that piece of font info should be interpreted as being undefined. 
-A tool generating the variable font or instance should continue on to the next 
-level of the inheritence order and apply the value found there, if any. If the 
-tool makes it to the end of the inheritence order without finding a valid value 
-for a given font info key, it should then be considered undefined. In the case 
-of any conflicting values for a font info key, the value highest in the 
-inheritance order must be chosen over the others.
+A tool generating the variable font or instance should recursively continue on 
+to the next level of the inheritence order and apply the value found there, if 
+any. If the tool makes it to the end of the inheritence order without finding a 
+valid value for a given font info key, it should then be considered undefined. 
+In the case of any conflicting values for a font info key, the value highest in 
+the inheritance order must be chosen over the others.
 
 Implementation and differences
 ==============================
