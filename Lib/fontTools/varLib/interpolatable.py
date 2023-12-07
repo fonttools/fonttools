@@ -582,13 +582,14 @@ def test_gen(
                     this_tolerance = t / (abs(sin_mid) * kinkiness)
 
                     log.debug(
-                        "deviation %g; deviation_ratio %g; sin_mid %g; r_diff %g",
+                        "kink: deviation %g; deviation_ratio %g; sin_mid %g; r_diff %g",
                         deviation,
                         deviation_ratio,
                         sin_mid,
                         r_diff,
                     )
                     log.debug("tolerance %g", this_tolerance)
+                    continue
                     yield (
                         glyph_name,
                         {
