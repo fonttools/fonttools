@@ -8,6 +8,7 @@ __all__ = [
     "RecordingPen",
     "DecomposingRecordingPen",
     "RecordingPointPen",
+    "lerpRecordings",
 ]
 
 
@@ -172,7 +173,7 @@ class RecordingPointPen(AbstractPointPen):
     drawPoints = replay
 
 
-def lerp_recordings(recording1, recording2, factor=0.5):
+def lerpRecordings(recording1, recording2, factor=0.5):
     """Linearly interpolate between two recordings. The recordings
     must be decomposed, i.e. they must not contain any components.
 
@@ -181,9 +182,8 @@ def lerp_recordings(recording1, recording2, factor=0.5):
     two recordings. Other values are possible, and can be useful to
     extrapolate. Defaults to 0.5.
 
-    Returns the new recording.
+    Returns a generator with the new recording.
     """
-    value = []
     if len(recording1) != len(recording2):
         raise ValueError(
             "Mismatched lengths: %d and %d" % (len(recording1), len(recording2))
@@ -198,8 +198,7 @@ def lerp_recordings(recording1, recording2, factor=0.5):
                 (x1 + (x2 - x1) * factor, y1 + (y2 - y1) * factor)
                 for (x1, y1), (x2, y2) in zip(args1, args2)
             ]
-        value.append((op1, mid_args))
-    return value
+        yield (op1, mid_args)
 
 
 if __name__ == "__main__":

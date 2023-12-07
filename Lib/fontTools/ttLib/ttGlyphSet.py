@@ -11,8 +11,8 @@ from fontTools.misc.transform import Transform
 from fontTools.pens.transformPen import TransformPen, TransformPointPen
 from fontTools.pens.recordingPen import (
     DecomposingRecordingPen,
-    RecordingPen,
-    lerp_recordings,
+    lerpRecordings,
+    replayRecording,
 )
 
 
@@ -374,6 +374,4 @@ class LerpGlyph:
 
         factor = self.glyphset.factor
 
-        lerped = RecordingPen()
-        lerped.value = lerp_recordings(recording1.value, recording2.value, factor)
-        lerped.replay(pen)
+        replayRecording(lerpRecordings(recording1.value, recording2.value, factor), pen)

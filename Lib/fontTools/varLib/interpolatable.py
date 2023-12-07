@@ -12,7 +12,7 @@ from .interpolatableTestStartingPoint import test_starting_point
 from fontTools.pens.recordingPen import (
     RecordingPen,
     DecomposingRecordingPen,
-    lerp_recordings,
+    lerpRecordings,
 )
 from fontTools.pens.transformPen import TransformPen
 from fontTools.pens.statisticsPen import StatisticsPen, StatisticsControlPen
@@ -337,7 +337,7 @@ def test_gen(
             for c0, c1 in zip(recording0, recording1):
                 try:
                     r = RecordingPen()
-                    r.value = lerp_recordings(c0.value, c1.value)
+                    r.value = list(lerpRecordings(c0.value, c1.value))
                     midRecording.append(r)
                 except ValueError:
                     # Mismatch because of the reordering above
