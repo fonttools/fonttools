@@ -271,6 +271,12 @@ class VariationModel(object):
         self._subModels = {}
 
     def getSubModel(self, items):
+        """Return a sub-model and the items that are not None.
+
+        The sub-model is necessary for working with the subset
+        of items when some are None.
+
+        The sub-model is cached."""
         if None not in items:
             return self, items
         key = tuple(v is not None for v in items)
@@ -472,18 +478,11 @@ class VariationModel(object):
             for support in self.supports
         ]
 
-    def _getMasterScalarsRecurse(self, out, j, weights, scalar=1):
-        for i, weight in weights.items():
-            influence = -weight * scalar
-            out[i] += influence
-            self._getMasterScalarsRecurse(out, i, self.deltaWeights[i], influence)
-
     def getMasterScalars(self, targetLocation):
-        out = []
-        for i, (weights, support) in enumerate(zip(self.deltaWeights, self.supports)):
-            scalar = supportScalar(targetLocation, support)
-            out.append(scalar)
-            self._getMasterScalarsRecurse(out, i, weights, scalar)
+        out = self.getScalars(targetLocation)
+        for i, weights in reversed(list(enumerate(self.deltaWeights))):
+            for j, weight in weights.items():
+                out[j] -= out[i] * weight
 
         out = [out[self.mapping[i]] for i in range(len(out))]
         return out
