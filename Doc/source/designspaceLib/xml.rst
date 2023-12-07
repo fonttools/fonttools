@@ -1027,7 +1027,7 @@ control over the font info of the instances.
 ``openTypeNameWWSFamilyName`` and ``openTypeNameWWSSubfamilyName`` are not able to 
 be set by attributes on the ``<instance>`` element. The ``openTypeOS2WeightClass`` 
 key is superseding the value that would have been set by the ``weight`` axis value. 
-The ``trademark`` key is superceding the value that would have been set by UFO source 
+The ``trademark`` key is superseding the value that would have been set by UFO source 
 at the origin. If the designer wishes to set name records for other encodings, 
 platforms or laguages, they should do so using the ``openTypeNameRecords`` key, like 
 they would in a UFO source.
