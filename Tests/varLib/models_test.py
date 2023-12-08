@@ -192,6 +192,17 @@ def test_modeling_error(numLocations, numSamples):
         #    print("{:d}	{:.2}	{:.2}".format(i, err, err_bad))
 
 
+locationsA = [{}, {"wght": 1}, {"wdth": 1}]
+locationsB = [{}, {"wght": 1}, {"wdth": 1}, {"wght": 1, "wdth": 1}]
+locationsC = [
+    {},
+    {"wght": 0.5},
+    {"wght": 1},
+    {"wdth": 1},
+    {"wght": 1, "wdth": 1},
+]
+
+
 class VariationModelTest(object):
     @pytest.mark.parametrize(
         "locations, axisOrder, sortedLocs, supports, deltaWeights",
@@ -397,7 +408,7 @@ class VariationModelTest(object):
             )
 
     @pytest.mark.parametrize(
-        "locations, axisOrder, masterValues, instanceLocation, expectedValue",
+        "locations, axisOrder, masterValues, instanceLocation, expectedValue, masterScalars",
         [
             (
                 [
@@ -422,6 +433,7 @@ class VariationModelTest(object):
                     "axis_B": 0.5,
                 },
                 37.5,
+                [0.25, 0.0, 0.0, -0.25, 0.5, 0.5],
             ),
         ],
     )
@@ -432,8 +444,92 @@ class VariationModelTest(object):
         masterValues,
         instanceLocation,
         expectedValue,
+        masterScalars,
     ):
         model = VariationModel(locations, axisOrder=axisOrder)
-        interpolatedValue = model.interpolateFromMasters(instanceLocation, masterValues)
 
+        interpolatedValue = model.interpolateFromMasters(instanceLocation, masterValues)
         assert interpolatedValue == expectedValue
+
+        assert masterScalars == model.getMasterScalars(instanceLocation)
+        assert (
+            sum(v * s for v, s in zip(masterValues, masterScalars)) == interpolatedValue
+        )
+
+    @pytest.mark.parametrize(
+        "masterLocations, location, expected",
+        [
+            (locationsA, {"wght": 0, "wdth": 0}, [1, 0, 0]),
+            (
+                locationsA,
+                {"wght": 0.5, "wdth": 0},
+                [0.5, 0.5, 0],
+            ),
+            (locationsA, {"wght": 1, "wdth": 0}, [0, 1, 0]),
+            (
+                locationsA,
+                {"wght": 0, "wdth": 0.5},
+                [0.5, 0, 0.5],
+            ),
+            (locationsA, {"wght": 0, "wdth": 1}, [0, 0, 1]),
+            (locationsA, {"wght": 1, "wdth": 1}, [-1, 1, 1]),
+            (
+                locationsA,
+                {"wght": 0.5, "wdth": 0.5},
+                [0, 0.5, 0.5],
+            ),
+            (
+                locationsA,
+                {"wght": 0.75, "wdth": 0.75},
+                [-0.5, 0.75, 0.75],
+            ),
+            (
+                locationsB,
+                {"wght": 1, "wdth": 1},
+                [0, 0, 0, 1],
+            ),
+            (
+                locationsB,
+                {"wght": 0.5, "wdth": 0},
+                [0.5, 0.5, 0, 0],
+            ),
+            (
+                locationsB,
+                {"wght": 1, "wdth": 0.5},
+                [0, 0.5, 0, 0.5],
+            ),
+            (
+                locationsB,
+                {"wght": 0.5, "wdth": 0.5},
+                [0.25, 0.25, 0.25, 0.25],
+            ),
+            (
+                locationsC,
+                {"wght": 0.5, "wdth": 0},
+                [0, 1, 0, 0, 0],
+            ),
+            (
+                locationsC,
+                {"wght": 0.25, "wdth": 0},
+                [0.5, 0.5, 0, 0, 0],
+            ),
+            (
+                locationsC,
+                {"wght": 0.75, "wdth": 0},
+                [0, 0.5, 0.5, 0, 0],
+            ),
+            (
+                locationsC,
+                {"wght": 0.5, "wdth": 1},
+                [-0.5, 1, -0.5, 0.5, 0.5],
+            ),
+            (
+                locationsC,
+                {"wght": 0.75, "wdth": 1},
+                [-0.25, 0.5, -0.25, 0.25, 0.75],
+            ),
+        ],
+    )
+    def test_getMasterScalars(self, masterLocations, location, expected):
+        model = VariationModel(masterLocations)
+        assert model.getMasterScalars(location) == expected

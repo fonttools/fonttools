@@ -271,6 +271,12 @@ class VariationModel(object):
         self._subModels = {}
 
     def getSubModel(self, items):
+        """Return a sub-model and the items that are not None.
+
+        The sub-model is necessary for working with the subset
+        of items when some are None.
+
+        The sub-model is cached."""
         if None not in items:
             return self, items
         key = tuple(v is not None for v in items)
@@ -465,6 +471,10 @@ class VariationModel(object):
         return model.getDeltas(items, round=round), model.supports
 
     def getScalars(self, loc):
+        """Return scalars for each delta, for the given location.
+        If interpolating many master-values at the same location,
+        this function allows speed up by fetching the scalars once
+        and using them with interpolateFromMastersAndScalars()"""
         return [
             supportScalar(
                 loc, support, extrapolate=self.extrapolate, axisRanges=self.axisRanges
@@ -472,8 +482,25 @@ class VariationModel(object):
             for support in self.supports
         ]
 
+    def getMasterScalars(self, targetLocation):
+        """Return multipliers for each master, for the given location.
+        If interpolating many master-values at the same location,
+        this function allows speed up by fetching the scalars once.
+
+        Note that the scalars used in interpolateFromMastersAndScalars(),
+        are *not* the same as the ones returned here. They are the result
+        of getScalars()."""
+        out = self.getScalars(targetLocation)
+        for i, weights in reversed(list(enumerate(self.deltaWeights))):
+            for j, weight in weights.items():
+                out[j] -= out[i] * weight
+
+        out = [out[self.mapping[i]] for i in range(len(out))]
+        return out
+
     @staticmethod
     def interpolateFromDeltasAndScalars(deltas, scalars):
+        """Interpolate from deltas and scalars fetched from getScalars()."""
         v = None
         assert len(deltas) == len(scalars)
         for delta, scalar in zip(deltas, scalars):
@@ -487,14 +514,19 @@ class VariationModel(object):
         return v
 
     def interpolateFromDeltas(self, loc, deltas):
+        """Interpolate from deltas, at location loc."""
         scalars = self.getScalars(loc)
         return self.interpolateFromDeltasAndScalars(deltas, scalars)
 
     def interpolateFromMasters(self, loc, masterValues, *, round=noRound):
+        """Interpolate from master-values, at location loc."""
         deltas = self.getDeltas(masterValues, round=round)
         return self.interpolateFromDeltas(loc, deltas)
 
     def interpolateFromMastersAndScalars(self, masterValues, scalars, *, round=noRound):
+        """Interpolate from master-values, and scalars fetched from
+        getScalars(), which is useful when you want to interpolate
+        multiple master-values with the same location."""
         deltas = self.getDeltas(masterValues, round=round)
         return self.interpolateFromDeltasAndScalars(deltas, scalars)
 
