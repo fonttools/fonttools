@@ -120,6 +120,41 @@ any of the UFOs. If the lib key is empty or not present in the Designspace, all
 glyphs should be exported, regardless of what the same lib key in any of the
 UFOs says.
 
+public.fontInfo
+-----------------------
+
+This lib key, when included in the ``<lib>`` element inside an ``<instance>`` 
+or ``<variable-font>`` tag, or the ``<lib>`` element at the root of a 
+designspace document, allows for direct manipulation of font info data in 
+instances and variable fonts. The lib value must follow the 
+`UFO3 fontinfo.plist specification <https://unifiedfontobject.org/versions/ufo3/fontinfo.plist/>`_,
+and should functionally appear to be a property list dictionary with the same 
+structure as the ``fontinfo.plist`` file in a UFO.
+
+All font info items in the UFO fontinfo.plist specification should be able to 
+be defined in the ``public.fontInfo`` lib. Checking validity of the data using 
+``fontTools.ufoLib.validators`` is recommended but not required. 
+
+All font info items for a variable font or an instance must be inherited using 
+the following order, in order of descending priority:
+
+#. The ``public.fontInfo`` key in the ``<lib>`` element of the ``<variable-font>``
+   or ``<instance>`` elements.
+#. XML attributes for names (i.e. ``familyname``, ``stylename``, etc.), if the
+   target is an ``<instance>`` element.
+#. The ``public.fontInfo`` key found in the ``<lib>`` element of the designspace
+   document's root.
+#. The ``fontinfo.plist`` in the UFO source at the origin of the interpolation 
+   space.
+
+Absence of a font info key from the value of a ``public.fontInfo`` lib does 
+**not** mean a that piece of font info should be interpreted as being undefined. 
+A tool generating the variable font or instance should recursively continue on 
+to the next level of the inheritence order and apply the value found there, if 
+any. If the tool makes it to the end of the inheritence order without finding a 
+valid value for a given font info key, it should then be considered undefined. 
+In the case of any conflicting values for a font info key, the value highest in 
+the inheritance order must be chosen over the others.
 
 Implementation and differences
 ==============================
