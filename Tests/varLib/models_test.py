@@ -452,6 +452,9 @@ class VariationModelTest(object):
         assert interpolatedValue == expectedValue
 
         assert masterScalars == model.getMasterScalars(instanceLocation)
+        assert (
+            sum(v * s for v, s in zip(masterValues, masterScalars)) == interpolatedValue
+        )
 
     @pytest.mark.parametrize(
         "masterLocations, location, expected",
@@ -527,6 +530,6 @@ class VariationModelTest(object):
             ),
         ],
     )
-    def test_getMasterLocations(self, masterLocations, location, expected):
+    def test_getMasterScalars(self, masterLocations, location, expected):
         model = VariationModel(masterLocations)
         assert model.getMasterScalars(location) == expected
