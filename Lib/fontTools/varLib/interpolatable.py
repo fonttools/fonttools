@@ -26,6 +26,7 @@ from functools import wraps
 from pprint import pformat
 from math import sqrt, atan2, pi
 import logging
+import os
 
 log = logging.getLogger("fontTools.varLib.interpolatable")
 
@@ -634,6 +635,13 @@ def recursivelyAddGlyph(glyphname, glyphset, ttGlyphSet, glyf):
         recursivelyAddGlyph(component.glyphName, glyphset, ttGlyphSet, glyf)
 
 
+def ensure_parent_dir(path):
+    dirname = os.path.dirname(path)
+    if dirname:
+        os.makedirs(dirname, exist_ok=True)
+    return path
+
+
 def main(args=None):
     """Test for interpolatability issues between fonts"""
     import argparse
@@ -923,7 +931,11 @@ def main(args=None):
         )
         problems = defaultdict(list)
 
-        f = sys.stdout if args.output is None else open(args.output, "w")
+        f = (
+            sys.stdout
+            if args.output is None
+            else open(ensure_parent_dir(args.output), "w")
+        )
 
         if not args.quiet:
             if args.json:
@@ -1076,7 +1088,9 @@ def main(args=None):
             log.info("Writing PDF to %s", args.pdf)
             from .interpolatablePlot import InterpolatablePDF
 
-            with InterpolatablePDF(args.pdf, glyphsets=glyphsets, names=names) as pdf:
+            with InterpolatablePDF(
+                ensure_parent_dir(args.pdf), glyphsets=glyphsets, names=names
+            ) as pdf:
                 pdf.add_title_page(
                     original_args_inputs, tolerance=tolerance, kinkiness=kinkiness
                 )
@@ -1088,7 +1102,9 @@ def main(args=None):
             log.info("Writing PS to %s", args.pdf)
             from .interpolatablePlot import InterpolatablePS
 
-            with InterpolatablePS(args.ps, glyphsets=glyphsets, names=names) as ps:
+            with InterpolatablePS(
+                ensure_parent_dir(args.ps), glyphsets=glyphsets, names=names
+            ) as ps:
                 ps.add_title_page(
                     original_args_inputs, tolerance=tolerance, kinkiness=kinkiness
                 )
@@ -1121,7 +1137,7 @@ def main(args=None):
 
             import base64
 
-            with open(args.html, "wb") as f:
+            with open(ensure_parent_dir(args.html), "wb") as f:
                 f.write(b"<!DOCTYPE html>\n")
                 f.write(
                     b'<html><body align="center" style="font-family: sans-serif; text-color: #222">\n'
