@@ -418,7 +418,6 @@ def test_gen(
                         if overweight:
                             expectedSize = sqrt(size0 * size1)
                             expectedSize = (size0 + size1) - expectedSize
-                            expectedSize = size1 + (midSize - size1)
                             continue
                         else:
                             expectedSize = sqrt(size0 * size1)
@@ -431,8 +430,6 @@ def test_gen(
                             size0,
                             size1,
                         )
-
-                        size0, size1 = sorted((size0, size1))
 
                         if (
                             not overweight and expectedSize * tolerance > midSize + 1e-5
