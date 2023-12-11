@@ -474,7 +474,7 @@ class VariationModel(object):
         """Return scalars for each delta, for the given location.
         If interpolating many master-values at the same location,
         this function allows speed up by fetching the scalars once
-        and using them with interpolateFromMastersAndScalars()"""
+        and using them with interpolateFromMastersAndScalars()."""
         return [
             supportScalar(
                 loc, support, extrapolate=self.extrapolate, axisRanges=self.axisRanges
@@ -485,7 +485,8 @@ class VariationModel(object):
     def getMasterScalars(self, targetLocation):
         """Return multipliers for each master, for the given location.
         If interpolating many master-values at the same location,
-        this function allows speed up by fetching the scalars once.
+        this function allows speed up by fetching the scalars once
+        and using them with interpolateFromMastersAndMasterScalars().
 
         Note that the scalars used in interpolateFromMastersAndScalars(),
         are *not* the same as the ones returned here. They are the result
@@ -529,6 +530,22 @@ class VariationModel(object):
         multiple master-values with the same location."""
         deltas = self.getDeltas(masterValues, round=round)
         return self.interpolateFromDeltasAndScalars(deltas, scalars)
+
+    @staticmethod
+    def interpolateFromMastersAndMasterScalars(masterValues, masterScalars):
+        """Interpolate from master-values and master-scalars fetched
+        from getMasterScalars()."""
+        v = None
+        assert len(masterValues) == len(masterScalars)
+        for master, scalar in zip(masterValues, masterScalars):
+            if not scalar:
+                continue
+            contribution = master * scalar
+            if v is None:
+                v = contribution
+            else:
+                v += contribution
+        return v
 
 
 def piecewiseLinearMap(v, mapping):
