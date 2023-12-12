@@ -500,19 +500,24 @@ class VariationModel(object):
         return out
 
     @staticmethod
-    def interpolateFromDeltasAndScalars(deltas, scalars):
-        """Interpolate from deltas and scalars fetched from getScalars()."""
+    def interpolateFromValuesAndScalars(values, scalars):
+        """Interpolate from values and scalars coefficients."""
         v = None
-        assert len(deltas) == len(scalars)
-        for delta, scalar in zip(deltas, scalars):
+        assert len(values) == len(scalars)
+        for value, scalar in zip(values, scalars):
             if not scalar:
                 continue
-            contribution = delta * scalar
+            contribution = value * scalar
             if v is None:
                 v = contribution
             else:
                 v += contribution
         return v
+
+    @staticmethod
+    def interpolateFromDeltasAndScalars(deltas, scalars):
+        """Interpolate from deltas and scalars fetched from getScalars()."""
+        return VariationModel.interpolateFromValuesAndScalars(deltas, scalars)
 
     def interpolateFromDeltas(self, loc, deltas):
         """Interpolate from deltas, at location loc."""
@@ -535,17 +540,9 @@ class VariationModel(object):
     def interpolateFromMastersAndMasterScalars(masterValues, masterScalars):
         """Interpolate from master-values and master-scalars fetched
         from getMasterScalars()."""
-        v = None
-        assert len(masterValues) == len(masterScalars)
-        for master, scalar in zip(masterValues, masterScalars):
-            if not scalar:
-                continue
-            contribution = master * scalar
-            if v is None:
-                v = contribution
-            else:
-                v += contribution
-        return v
+        return VariationModel.interpolateFromValuesAndScalars(
+            masterValues, masterScalars
+        )
 
 
 def piecewiseLinearMap(v, mapping):
