@@ -1069,7 +1069,7 @@ def merge(merger, self, lst):
     model = merger.model
     masterScalars = merger.masterScalars
     self.Coordinate = otRound(
-        model.interpolateFromMastersAndMasterScalars(Coords, masterScalars)
+        model.interpolateFromValuesAndScalars(Coords, masterScalars)
     )
 
 
@@ -1081,10 +1081,10 @@ def merge(merger, self, lst):
     model = merger.model
     masterScalars = merger.masterScalars
     self.XCoordinate = otRound(
-        model.interpolateFromMastersAndMasterScalars(XCoords, masterScalars)
+        model.interpolateFromValuesAndScalars(XCoords, masterScalars)
     )
     self.YCoordinate = otRound(
-        model.interpolateFromMastersAndMasterScalars(YCoords, masterScalars)
+        model.interpolateFromValuesAndScalars(YCoords, masterScalars)
     )
 
 
@@ -1104,7 +1104,7 @@ def merge(merger, self, lst):
         if hasattr(self, name):
             values = [getattr(a, name, 0) for a in lst]
             value = otRound(
-                model.interpolateFromMastersAndMasterScalars(values, masterScalars)
+                model.interpolateFromValuesAndScalars(values, masterScalars)
             )
             setattr(self, name, value)
 

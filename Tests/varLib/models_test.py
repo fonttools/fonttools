@@ -453,7 +453,7 @@ class VariationModelTest(object):
 
         assert masterScalars == model.getMasterScalars(instanceLocation)
 
-        assert model.interpolateFromMastersAndMasterScalars(
+        assert model.interpolateFromValuesAndScalars(
             masterValues, masterScalars
         ) == pytest.approx(interpolatedValue)
 

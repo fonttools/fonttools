@@ -486,7 +486,7 @@ class VariationModel(object):
         """Return multipliers for each master, for the given location.
         If interpolating many master-values at the same location,
         this function allows speed up by fetching the scalars once
-        and using them with interpolateFromMastersAndMasterScalars().
+        and using them with interpolateFromValuesAndScalars().
 
         Note that the scalars used in interpolateFromMastersAndScalars(),
         are *not* the same as the ones returned here. They are the result
@@ -501,7 +501,15 @@ class VariationModel(object):
 
     @staticmethod
     def interpolateFromValuesAndScalars(values, scalars):
-        """Interpolate from values and scalars coefficients."""
+        """Interpolate from values and scalars coefficients.
+
+        If the values are master-values, then the scalars should be
+        fetched from getMasterScalars().
+
+        If the values are deltas, then the scalars should be fetched
+        from getScalars(); in which case this is the same as
+        interpolateFromDeltasAndScalars().
+        """
         v = None
         assert len(values) == len(scalars)
         for value, scalar in zip(values, scalars):
@@ -527,7 +535,7 @@ class VariationModel(object):
     def interpolateFromMasters(self, loc, masterValues, *, round=noRound):
         """Interpolate from master-values, at location loc."""
         scalars = self.getMasterScalars(loc)
-        return self.interpolateFromMastersAndMasterScalars(masterValues, scalars)
+        return self.interpolateFromValuesAndScalars(masterValues, scalars)
 
     def interpolateFromMastersAndScalars(self, masterValues, scalars, *, round=noRound):
         """Interpolate from master-values, and scalars fetched from
@@ -535,14 +543,6 @@ class VariationModel(object):
         multiple master-values with the same location."""
         deltas = self.getDeltas(masterValues, round=round)
         return self.interpolateFromDeltasAndScalars(deltas, scalars)
-
-    @staticmethod
-    def interpolateFromMastersAndMasterScalars(masterValues, masterScalars):
-        """Interpolate from master-values and master-scalars fetched
-        from getMasterScalars()."""
-        return VariationModel.interpolateFromValuesAndScalars(
-            masterValues, masterScalars
-        )
 
 
 def piecewiseLinearMap(v, mapping):
