@@ -526,8 +526,8 @@ class VariationModel(object):
 
     def interpolateFromMasters(self, loc, masterValues, *, round=noRound):
         """Interpolate from master-values, at location loc."""
-        deltas = self.getDeltas(masterValues, round=round)
-        return self.interpolateFromDeltas(loc, deltas)
+        scalars = self.getMasterScalars(loc)
+        return self.interpolateFromMastersAndMasterScalars(masterValues, scalars)
 
     def interpolateFromMastersAndScalars(self, masterValues, scalars, *, round=noRound):
         """Interpolate from master-values, and scalars fetched from
