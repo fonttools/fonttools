@@ -452,9 +452,10 @@ class VariationModelTest(object):
         assert interpolatedValue == expectedValue
 
         assert masterScalars == model.getMasterScalars(instanceLocation)
-        assert (
-            sum(v * s for v, s in zip(masterValues, masterScalars)) == interpolatedValue
-        )
+
+        assert model.interpolateFromValuesAndScalars(
+            masterValues, masterScalars
+        ) == pytest.approx(interpolatedValue)
 
     @pytest.mark.parametrize(
         "masterLocations, location, expected",
