@@ -114,6 +114,7 @@ class InterpolatablePlot:
         self.out = out
         self.glyphsets = glyphsets
         self.names = names or [repr(g) for g in glyphsets]
+        self.toc = {}
 
         for k, v in kwargs.items():
             if not hasattr(self, k):
@@ -347,6 +348,33 @@ class InterpolatablePlot:
         self.draw_label("Parameters:", x=x, y=y, width=width, bold=True)
         y -= self.pad + self.line_height
 
+    def add_table_of_contents(self):
+        self.set_size(self.total_width(), self.total_height())
+
+        pad = self.pad
+        width = self.total_width() - 3 * self.pad
+        height = self.total_height() - 2 * self.pad
+        x = y = pad
+
+        self.draw_label("Table of contents:", x=x, y=y, bold=True, width=width)
+        y += self.line_height * 2
+
+        last_glyphname = None
+        for page_no, (glyphname, problems) in sorted(self.toc.items()):
+            if glyphname == last_glyphname:
+                continue
+            last_glyphname = glyphname
+            if y + self.line_height > height:
+                self.show_page()
+                y = self.line_height + pad
+            self.draw_label(glyphname, x=x + 2 * pad, y=y, width=width - 2 * pad)
+            self.draw_label(
+                str(page_no), x=x + 2 * pad, y=y, width=width - 2 * pad, align=1
+            )
+            y += self.line_height
+
+        self.show_page()
+
     def add_problems(self, problems, *, show_tolerance=True, show_page_number=True):
         for glyph, glyph_problems in problems.items():
             last_masters = None
@@ -386,6 +414,8 @@ class InterpolatablePlot:
     ):
         if type(problems) not in (list, tuple):
             problems = [problems]
+
+        self.toc[self.page_number] = (glyphname, problems)
 
         problem_type = problems[0]["type"]
         problem_types = set(problem["type"] for problem in problems)
