@@ -39,11 +39,9 @@ DEFAULT_UPEM = 1000
 class Glyph:
     ITEMS = (
         "recordings",
-        "recordingsNormalized",
         "greenStats",
         "controlStats",
         "greenVectors",
-        "greenVectorsNormalized",
         "controlVectors",
         "nodeTypes",
         "isomorphisms",
@@ -94,21 +92,6 @@ class Glyph:
             self.controlStats.append(controlStats)
             self.greenVectors.append(contour_vector_from_stats(greenStats))
             self.controlVectors.append(contour_vector_from_stats(controlStats))
-
-            # Save a "normalized" version of the outlines
-            try:
-                rpen = DecomposingRecordingPen(glyphset)
-                tpen = TransformPen(
-                    rpen, transform_from_stats(greenStats, inverse=True)
-                )
-                contour.replay(tpen)
-                self.recordingsNormalized.append(rpen)
-            except ZeroDivisionError:
-                self.recordingsNormalized.append(None)
-
-            greenStats = StatisticsPen(glyphset=glyphset)
-            rpen.replay(greenStats)
-            self.greenVectorsNormalized.append(contour_vector_from_stats(greenStats))
 
             # Check starting point
             if nodeTypes[0] == "addComponent":
@@ -316,12 +299,8 @@ def test_gen(
             m1Isomorphisms = glyph1.isomorphisms
             m0Vectors = glyph0.greenVectors
             m1Vectors = glyph1.greenVectors
-            m0VectorsNormalized = glyph0.greenVectorsNormalized
-            m1VectorsNormalized = glyph1.greenVectorsNormalized
             recording0 = glyph0.recordings
             recording1 = glyph1.recordings
-            recording0Normalized = glyph0.recordingsNormalized
-            recording1Normalized = glyph1.recordingsNormalized
 
             # If contour-order is wrong, adjust it
             matching = matchings[m1idx]
@@ -330,9 +309,7 @@ def test_gen(
             ):  # m1 is empty for composite glyphs
                 m1Isomorphisms = [m1Isomorphisms[i] for i in matching]
                 m1Vectors = [m1Vectors[i] for i in matching]
-                m1VectorsNormalized = [m1VectorsNormalized[i] for i in matching]
                 recording1 = [recording1[i] for i in matching]
-                recording1Normalized = [recording1Normalized[i] for i in matching]
 
             midRecording = []
             for c0, c1 in zip(recording0, recording1):
@@ -387,22 +364,14 @@ def test_gen(
                 # self-intersecting contour; ignore it.
                 contour = midRecording[ix]
 
-                normalized = False
                 if contour and (m0Vectors[ix][0] < 0) == (m1Vectors[ix][0] < 0):
-                    if normalized:
-                        midStats = StatisticsPen(glyphset=None)
-                        tpen = TransformPen(
-                            midStats, transform_from_stats(midStats, inverse=True)
-                        )
-                        contour.replay(tpen)
-                    else:
-                        midStats = StatisticsPen(glyphset=None)
-                        contour.replay(midStats)
+                    midStats = StatisticsPen(glyphset=None)
+                    contour.replay(midStats)
 
                     midVector = contour_vector_from_stats(midStats)
 
-                    m0Vec = m0Vectors[ix] if not normalized else m0VectorsNormalized[ix]
-                    m1Vec = m1Vectors[ix] if not normalized else m1VectorsNormalized[ix]
+                    m0Vec = m0Vectors[ix]
+                    m1Vec = m1Vectors[ix]
                     size0 = m0Vec[0] * m0Vec[0]
                     size1 = m1Vec[0] * m1Vec[0]
                     midSize = midVector[0] * midVector[0]
