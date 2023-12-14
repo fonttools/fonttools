@@ -348,6 +348,44 @@ class InterpolatablePlot:
         self.draw_label("Parameters:", x=x, y=y, width=width, bold=True)
         y -= self.pad + self.line_height
 
+    def add_summary(self):
+        self.set_size(self.total_width(), self.total_height())
+
+        pad = self.pad
+        width = self.total_width() - 3 * self.pad
+        height = self.total_height() - 2 * self.pad
+        x = y = pad
+
+        self.draw_label("Summary", x=x, y=y, bold=True, width=width)
+        y += self.line_height
+
+        glyphs_per_problem = defaultdict(set)
+        for glyphname, problems in self.toc.values():
+            for problem in problems:
+                glyphs_per_problem[problem["type"]].add(glyphname)
+
+        for problem_type in sorted(
+            glyphs_per_problem, key=lambda x: InterpolatableProblem.severity[x]
+        ):
+            y += self.line_height
+            self.draw_label(
+                "%s: %d" % (problem_type, len(glyphs_per_problem[problem_type])),
+                x=x,
+                y=y,
+                width=width,
+                bold=True,
+            )
+            y += self.line_height
+
+            for glyphname in sorted(glyphs_per_problem[problem_type]):
+                if y + self.line_height > height:
+                    self.show_page()
+                    y = self.line_height + pad
+                self.draw_label(glyphname, x=x + 2 * pad, y=y, width=width - 2 * pad)
+                y += self.line_height
+
+        self.show_page()
+
     def _add_listing(self, title, items):
         self.set_size(self.total_width(), self.total_height())
 
