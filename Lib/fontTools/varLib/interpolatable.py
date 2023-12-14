@@ -1103,6 +1103,7 @@ def main(args=None):
                 if not problems and not args.quiet:
                     doc.draw_cupcake()
                 if problems:
+                    doc.add_index()
                     doc.add_table_of_contents()
 
         if args.html:

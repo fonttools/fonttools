@@ -348,7 +348,7 @@ class InterpolatablePlot:
         self.draw_label("Parameters:", x=x, y=y, width=width, bold=True)
         y -= self.pad + self.line_height
 
-    def add_table_of_contents(self):
+    def _add_listing(self, title, items):
         self.set_size(self.total_width(), self.total_height())
 
         pad = self.pad
@@ -356,11 +356,11 @@ class InterpolatablePlot:
         height = self.total_height() - 2 * self.pad
         x = y = pad
 
-        self.draw_label("Table of contents:", x=x, y=y, bold=True, width=width)
+        self.draw_label(title, x=x, y=y, bold=True, width=width)
         y += self.line_height * 2
 
         last_glyphname = None
-        for page_no, (glyphname, problems) in sorted(self.toc.items()):
+        for page_no, (glyphname, problems) in items:
             if glyphname == last_glyphname:
                 continue
             last_glyphname = glyphname
@@ -374,6 +374,12 @@ class InterpolatablePlot:
             y += self.line_height
 
         self.show_page()
+
+    def add_table_of_contents(self):
+        self._add_listing("Table of contents", sorted(self.toc.items()))
+
+    def add_index(self):
+        self._add_listing("Index", sorted(self.toc.items(), key=lambda x: x[1][0]))
 
     def add_problems(self, problems, *, show_tolerance=True, show_page_number=True):
         for glyph, glyph_problems in problems.items():
