@@ -348,7 +348,7 @@ class InterpolatablePlot:
         self.draw_label("Parameters:", x=x, y=y, width=width, bold=True)
         y -= self.pad + self.line_height
 
-    def add_summary(self):
+    def add_summary(self, problems):
         self.set_size(self.total_width(), self.total_height())
 
         pad = self.pad
@@ -356,11 +356,11 @@ class InterpolatablePlot:
         height = self.total_height() - 2 * self.pad
         x = y = pad
 
-        self.draw_label("Summary", x=x, y=y, bold=True, width=width)
+        self.draw_label("Summary of problems", x=x, y=y, bold=True, width=width)
         y += self.line_height
 
         glyphs_per_problem = defaultdict(set)
-        for glyphname, problems in self.toc.values():
+        for glyphname, problems in sorted(problems.items()):
             for problem in problems:
                 glyphs_per_problem[problem["type"]].add(glyphname)
 

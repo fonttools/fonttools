@@ -1099,11 +1099,12 @@ def main(args=None):
                 doc.add_title_page(
                     original_args_inputs, tolerance=tolerance, kinkiness=kinkiness
                 )
+                if problems:
+                    doc.add_summary(problems)
                 doc.add_problems(problems)
                 if not problems and not args.quiet:
                     doc.draw_cupcake()
                 if problems:
-                    doc.add_summary()
                     doc.add_index()
                     doc.add_table_of_contents()
 
