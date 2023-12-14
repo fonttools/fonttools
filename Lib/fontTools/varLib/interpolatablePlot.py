@@ -37,8 +37,8 @@ class OverridingDict(dict):
 
 
 class InterpolatablePlot:
-    width = 640
-    height = 480
+    panel_width = 640
+    panel_height = 480
     pad = 16
     line_height = 36
     page_number = 1
@@ -127,14 +127,14 @@ class InterpolatablePlot:
     def __exit__(self, type, value, traceback):
         pass
 
-    def set_size(self, width, height):
+    def set_size(self, panel_width, panel_height):
         raise NotImplementedError
 
     def show_page(self):
         self.page_number += 1
 
     def total_width(self):
-        return self.width * 2 + self.pad * 3
+        return self.panel_width * 2 + self.pad * 3
 
     def total_height(self):
         return (
@@ -143,7 +143,7 @@ class InterpolatablePlot:
             + self.pad
             + self.line_height
             + self.pad
-            + 2 * (self.height + self.pad * 2 + self.line_height)
+            + 2 * (self.panel_height + self.pad * 2 + self.line_height)
             + self.pad
         )
 
@@ -153,11 +153,11 @@ class InterpolatablePlot:
         self.set_size(self.total_width(), self.total_height())
 
         pad = self.pad
-        width = self.total_width() - 3 * self.pad
-        height = self.total_height() - 2 * self.pad
+        panel_width = self.total_width() - 3 * self.pad
+        panel_height = self.total_height() - 2 * self.pad
         x = y = pad
 
-        self.draw_label("Problem report for:", x=x, y=y, bold=True, width=width)
+        self.draw_label("Problem report for:", x=x, y=y, bold=True, panel_width=panel_width)
         y += self.line_height
 
         import hashlib
@@ -165,12 +165,13 @@ class InterpolatablePlot:
         for file in files:
             base_file = os.path.basename(file)
             y += self.line_height
-            self.draw_label(base_file, x=x, y=y, bold=True, width=width)
+            self.draw_label(base_file, x=x, y=y, bold=True, panel_width=panel_width)
             y += self.line_height
 
             try:
                 h = hashlib.sha1(open(file, "rb").read()).hexdigest()
                 self.draw_label("sha1: %s" % h, x=x + pad, y=y, width=width)
+                self.draw_label("sha1: %s" % h, x=x + pad, y=y, panel_width=panel_width)
                 y += self.line_height
             except IsADirectoryError:
                 pass
@@ -187,7 +188,7 @@ class InterpolatablePlot:
                         if n is None:
                             continue
                         self.draw_label(
-                            "%s: %s" % (what, n), x=x + pad, y=y, width=width
+                            "%s: %s" % (what, n), x=x + pad, y=y, panel_width=panel_width
                         )
                         y += self.line_height
             elif file.endswith((".glyphs", ".glyphspackage")):
@@ -203,7 +204,7 @@ class InterpolatablePlot:
                         "%s: %s" % (what, getattr(f, field)),
                         x=x + pad,
                         y=y,
-                        width=width,
+                        panel_width=panel_width,
                     )
                     y += self.line_height
 
@@ -217,18 +218,18 @@ class InterpolatablePlot:
 
         x = self.pad
         y = self.total_height() - self.pad - self.line_height * 2
-        width = self.total_width() - 2 * self.pad
+        panel_width = self.total_width() - 2 * self.pad
 
         xx = x + self.pad * 2
         xxx = x + self.pad * 4
 
         if show_tolerance:
             self.draw_label(
-                "Tolerance: badness; closer to zero the worse", x=xxx, y=y, width=width
+                "Tolerance: badness; closer to zero the worse", x=xxx, y=y, panel_width=panel_width
             )
             y -= self.pad + self.line_height
 
-        self.draw_label("Underweight contours", x=xxx, y=y, width=width)
+        self.draw_label("Underweight contours", x=xxx, y=y, panel_width=panel_width)
         cr.rectangle(xx - self.pad * 0.7, y, 1.5 * self.pad, self.line_height)
         cr.set_source_rgb(*self.fill_color)
         cr.fill_preserve()
@@ -241,7 +242,7 @@ class InterpolatablePlot:
         y -= self.pad + self.line_height
 
         self.draw_label(
-            "Colored contours: contours with the wrong order", x=xxx, y=y, width=width
+            "Colored contours: contours with the wrong order", x=xxx, y=y, panel_width=panel_width
         )
         cr.rectangle(xx - self.pad * 0.7, y, 1.5 * self.pad, self.line_height)
         if self.fill_color:
@@ -255,7 +256,7 @@ class InterpolatablePlot:
         cr.fill()
         y -= self.pad + self.line_height
 
-        self.draw_label("Kink artifact", x=xxx, y=y, width=width)
+        self.draw_label("Kink artifact", x=xxx, y=y, panel_width=panel_width)
         self.draw_circle(
             cr,
             x=xx,
@@ -266,7 +267,7 @@ class InterpolatablePlot:
         )
         y -= self.pad + self.line_height
 
-        self.draw_label("Point causing kink in the contour", x=xxx, y=y, width=width)
+        self.draw_label("Point causing kink in the contour", x=xxx, y=y, panel_width=panel_width)
         self.draw_dot(
             cr,
             x=xx,
@@ -276,7 +277,7 @@ class InterpolatablePlot:
         )
         y -= self.pad + self.line_height
 
-        self.draw_label("Suggested new contour start point", x=xxx, y=y, width=width)
+        self.draw_label("Suggested new contour start point", x=xxx, y=y, panel_width=panel_width)
         self.draw_dot(
             cr,
             x=xx,
@@ -290,7 +291,7 @@ class InterpolatablePlot:
             "Contour start point in contours with wrong direction",
             x=xxx,
             y=y,
-            width=width,
+            panel_width=panel_width,
         )
         self.draw_arrow(
             cr,
@@ -304,7 +305,7 @@ class InterpolatablePlot:
             "Contour start point when the first two points overlap",
             x=xxx,
             y=y,
-            width=width,
+            panel_width=panel_width,
         )
         self.draw_dot(
             cr,
@@ -315,7 +316,7 @@ class InterpolatablePlot:
         )
         y -= self.pad + self.line_height
 
-        self.draw_label("Contour start point and direction", x=xxx, y=y, width=width)
+        self.draw_label("Contour start point and direction", x=xxx, y=y, panel_width=panel_width)
         self.draw_arrow(
             cr,
             x=xx - self.start_arrow_length * 0.3,
@@ -324,7 +325,7 @@ class InterpolatablePlot:
         )
         y -= self.pad + self.line_height
 
-        self.draw_label("Legend:", x=x, y=y, width=width, bold=True)
+        self.draw_label("Legend:", x=x, y=y, panel_width=panel_width, bold=True)
         y -= self.pad + self.line_height
 
         if kinkiness is not None:
@@ -332,7 +333,7 @@ class InterpolatablePlot:
                 "Kink-reporting aggressiveness: %g" % kinkiness,
                 x=xxx,
                 y=y,
-                width=width,
+                panel_width=panel_width,
             )
             y -= self.pad + self.line_height
 
@@ -341,22 +342,22 @@ class InterpolatablePlot:
                 "Error tolerance: %g" % tolerance,
                 x=xxx,
                 y=y,
-                width=width,
+                panel_width=panel_width,
             )
             y -= self.pad + self.line_height
 
-        self.draw_label("Parameters:", x=x, y=y, width=width, bold=True)
+        self.draw_label("Parameters:", x=x, y=y, panel_width=panel_width, bold=True)
         y -= self.pad + self.line_height
 
     def add_summary(self, problems):
         self.set_size(self.total_width(), self.total_height())
 
         pad = self.pad
-        width = self.total_width() - 3 * self.pad
-        height = self.total_height() - 2 * self.pad
+        panel_width = self.total_width() - 3 * self.pad
+        panel_height = self.total_height() - 2 * self.pad
         x = y = pad
 
-        self.draw_label("Summary of problems", x=x, y=y, bold=True, width=width)
+        self.draw_label("Summary of problems", x=x, y=y, bold=True, panel_width=panel_width)
         y += self.line_height
 
         glyphs_per_problem = defaultdict(set)
@@ -372,16 +373,16 @@ class InterpolatablePlot:
                 "%s: %d" % (problem_type, len(glyphs_per_problem[problem_type])),
                 x=x,
                 y=y,
-                width=width,
+                panel_width=panel_width,
                 bold=True,
             )
             y += self.line_height
 
             for glyphname in sorted(glyphs_per_problem[problem_type]):
-                if y + self.line_height > height:
+                if y + self.line_height > panel_height:
                     self.show_page()
                     y = self.line_height + pad
-                self.draw_label(glyphname, x=x + 2 * pad, y=y, width=width - 2 * pad)
+                self.draw_label(glyphname, x=x + 2 * pad, y=y, panel_width=panel_width - 2 * pad)
                 y += self.line_height
 
         self.show_page()
@@ -390,11 +391,11 @@ class InterpolatablePlot:
         self.set_size(self.total_width(), self.total_height())
 
         pad = self.pad
-        width = self.total_width() - 3 * self.pad
-        height = self.total_height() - 2 * self.pad
+        panel_width = self.total_width() - 3 * self.pad
+        panel_height = self.total_height() - 2 * self.pad
         x = y = pad
 
-        self.draw_label(title, x=x, y=y, bold=True, width=width)
+        self.draw_label(title, x=x, y=y, bold=True, panel_width=panel_width)
         y += self.line_height * 2
 
         last_glyphname = None
@@ -402,12 +403,12 @@ class InterpolatablePlot:
             if glyphname == last_glyphname:
                 continue
             last_glyphname = glyphname
-            if y + self.line_height > height:
+            if y + self.line_height > panel_height:
                 self.show_page()
                 y = self.line_height + pad
-            self.draw_label(glyphname, x=x + 2 * pad, y=y, width=width - 2 * pad)
+            self.draw_label(glyphname, x=x + 2 * pad, y=y, panel_width=panel_width - 2 * pad)
             self.draw_label(
-                str(page_no), x=x + 2 * pad, y=y, width=width - 2 * pad, align=1
+                str(page_no), x=x + 2 * pad, y=y, panel_width=panel_width - 2 * pad, align=1
             )
             y += self.line_height
 
@@ -500,7 +501,7 @@ class InterpolatablePlot:
                 "tolerance: %.2f" % tolerance,
                 x=x,
                 y=y,
-                width=self.total_width() - 2 * self.pad,
+                panel_width=self.total_width() - 2 * self.pad,
                 align=1,
                 bold=True,
             )
@@ -509,7 +510,7 @@ class InterpolatablePlot:
             problem_type,
             x=x,
             y=y,
-            width=self.total_width() - 2 * self.pad,
+            panel_width=self.total_width() - 2 * self.pad,
             color=self.head_color,
             align=0.5,
             bold=True,
@@ -530,7 +531,7 @@ class InterpolatablePlot:
                 )
             else:
                 self.draw_emoticon(self.shrug, x=x, y=y)
-            y += self.height + self.pad
+            y += self.panel_height + self.pad
 
         if any(
             pt
@@ -544,7 +545,7 @@ class InterpolatablePlot:
             )
             for pt in problem_types
         ):
-            x = self.pad + self.width + self.pad
+            x = self.pad + self.panel_width + self.pad
             y = self.pad
             y += self.line_height + self.pad
             y += self.line_height + self.pad
@@ -580,7 +581,7 @@ class InterpolatablePlot:
                 scale=min(scales),
             )
 
-            y += self.height + self.pad
+            y += self.panel_height + self.pad
 
         if any(
             pt
@@ -752,7 +753,7 @@ class InterpolatablePlot:
                 )
             except ValueError:
                 self.draw_emoticon(self.shrug, x=x, y=y)
-            y += self.height + self.pad
+            y += self.panel_height + self.pad
 
         else:
             emoticon = self.shrug
@@ -769,7 +770,7 @@ class InterpolatablePlot:
                 str(self.page_number),
                 x=0,
                 y=self.total_height() - self.line_height,
-                width=self.total_width(),
+                panel_width=self.total_width(),
                 color=self.head_color,
                 align=0.5,
             )
@@ -783,13 +784,13 @@ class InterpolatablePlot:
         color=(0, 0, 0),
         align=0,
         bold=False,
-        width=None,
-        height=None,
+        panel_width=None,
+        panel_height=None,
     ):
-        if width is None:
-            width = self.width
-        if height is None:
-            height = self.height
+        if panel_width is None:
+            panel_width = self.panel_width
+        if panel_height is None:
+            panel_height = self.panel_height
         cr = cairo.Context(self.surface)
         cr.select_font_face(
             "@cairo:",
@@ -805,15 +806,15 @@ class InterpolatablePlot:
         cr.set_source_rgb(*color)
 
         extents = cr.text_extents(label)
-        if extents.width > width:
+        if extents.width > panel_width:
             # Shrink
-            font_size *= width / extents.width
+            font_size *= panel_width / extents.width
             cr.set_font_size(font_size)
             font_extents = cr.font_extents()
             extents = cr.text_extents(label)
 
         # Center
-        label_x = x + (width - extents.width) * align
+        label_x = x + (panel_width - extents.width) * align
         label_y = y + font_extents[0]
         cr.move_to(label_x, label_y)
         cr.show_text(label)
@@ -845,14 +846,14 @@ class InterpolatablePlot:
 
         if glyph_width:
             if scale is None:
-                scale = self.width / glyph_width
+                scale = self.panel_width / glyph_width
             else:
-                scale = min(scale, self.height / glyph_height)
+                scale = min(scale, self.panel_height / glyph_height)
         if glyph_height:
             if scale is None:
-                scale = self.height / glyph_height
+                scale = self.panel_height / glyph_height
             else:
-                scale = min(scale, self.height / glyph_height)
+                scale = min(scale, self.panel_height / glyph_height)
         if scale is None:
             scale = 1
 
@@ -860,8 +861,8 @@ class InterpolatablePlot:
         cr.translate(x, y)
         # Center
         cr.translate(
-            (self.width - glyph_width * scale) / 2,
-            (self.height - glyph_height * scale) / 2,
+            (self.panel_width - glyph_width * scale) / 2,
+            (self.panel_height - glyph_height * scale) / 2,
         )
         cr.scale(scale, -scale)
         cr.translate(-bounds[0], -bounds[3])
@@ -1136,11 +1137,11 @@ class InterpolatablePlot:
         cr.fill()
         cr.restore()
 
-    def draw_text(self, text, *, x=0, y=0, color=(0, 0, 0), width=None, height=None):
-        if width is None:
-            width = self.width
-        if height is None:
-            height = self.height
+    def draw_text(self, text, *, x=0, y=0, color=(0, 0, 0), panel_width=None, panel_height=None):
+        if panel_width is None:
+            panel_width = self.panel_width
+        if panel_height is None:
+            panel_height = self.panel_height
 
         text = text.splitlines()
         cr = cairo.Context(self.surface)
@@ -1161,10 +1162,10 @@ class InterpolatablePlot:
         if not text_width:
             return
         cr.translate(x, y)
-        scale = min(width / text_width, height / text_height)
+        scale = min(panel_width / text_width, panel_height / text_height)
         # center
         cr.translate(
-            (width - text_width * scale) / 2, (height - text_height * scale) / 2
+            (panel_width - text_width * scale) / 2, (panel_height - text_height * scale) / 2
         )
         cr.scale(scale, scale)
 
@@ -1182,7 +1183,7 @@ class InterpolatablePlot:
             x=self.pad,
             y=self.pad,
             color=self.no_issues_label_color,
-            width=self.total_width() - 2 * self.pad,
+            panel_width=self.total_width() - 2 * self.pad,
             align=0.5,
             bold=True,
         )
@@ -1191,8 +1192,8 @@ class InterpolatablePlot:
             self.cupcake,
             x=self.pad,
             y=self.pad + self.line_height,
-            width=self.total_width() - 2 * self.pad,
-            height=self.total_height() - 2 * self.pad - self.line_height,
+            panel_width=self.total_width() - 2 * self.pad,
+            panel_height=self.total_height() - 2 * self.pad - self.line_height,
             color=self.cupcake_color,
         )
 
@@ -1208,8 +1209,8 @@ class InterpolatablePostscriptLike(InterpolatablePlot):
     def __exit__(self, type, value, traceback):
         self.surface.finish()
 
-    def set_size(self, width, height):
-        self.surface.set_size(width, height)
+    def set_size(self, panel_width, panel_height):
+        self.surface.set_size(panel_width, panel_height)
 
     def show_page(self):
         super().show_page()
@@ -1218,13 +1219,13 @@ class InterpolatablePostscriptLike(InterpolatablePlot):
 
 class InterpolatablePS(InterpolatablePostscriptLike):
     def __enter__(self):
-        self.surface = cairo.PSSurface(self.out, self.width, self.height)
+        self.surface = cairo.PSSurface(self.out, self.panel_width, self.panel_height)
         return self
 
 
 class InterpolatablePDF(InterpolatablePostscriptLike):
     def __enter__(self):
-        self.surface = cairo.PDFSurface(self.out, self.width, self.height)
+        self.surface = cairo.PDFSurface(self.out, self.panel_width, self.panel_height)
         self.surface.set_metadata(
             cairo.PDF_METADATA_CREATOR, "fonttools varLib.interpolatable"
         )
@@ -1245,9 +1246,9 @@ class InterpolatableSVG(InterpolatablePlot):
         if self.surface is not None:
             self.show_page()
 
-    def set_size(self, width, height):
+    def set_size(self, panel_width, panel_height):
         self.sink = BytesIO()
-        self.surface = cairo.SVGSurface(self.sink, width, height)
+        self.surface = cairo.SVGSurface(self.sink, total_width(), total_height())
 
     def show_page(self):
         super().show_page()
