@@ -761,7 +761,9 @@ def main(args=None):
                 for k, vv in axis_triples.items()
             }
 
-        elif args.inputs[0].endswith(".glyphs"):
+        elif args.inputs[0].endswith(".glyphs") or args.inputs[0].endswith(
+            ".glyphspackage"
+        ):
             from glyphsLib import GSFont, to_designspace
 
             gsfont = GSFont(args.inputs[0])
