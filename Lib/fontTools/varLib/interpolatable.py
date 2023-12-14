@@ -1084,33 +1084,29 @@ def main(args=None):
 
         problems = sort_problems(problems)
 
-        if args.pdf:
-            log.info("Writing PDF to %s", args.pdf)
-            from .interpolatablePlot import InterpolatablePDF
+        for p in "ps", "pdf":
+            arg = getattr(args, p)
+            if arg is None:
+                continue
+            log.info("Writing %s to %s", p.upper(), arg)
+            from .interpolatablePlot import InterpolatablePS, InterpolatablePDF
 
-            with InterpolatablePDF(
-                ensure_parent_dir(args.pdf), glyphsets=glyphsets, names=names
-            ) as pdf:
-                pdf.add_title_page(
+            PlotterClass = InterpolatablePS if p == "ps" else InterpolatablePDF
+
+            with PlotterClass(
+                ensure_parent_dir(arg), glyphsets=glyphsets, names=names
+            ) as doc:
+                doc.add_title_page(
                     original_args_inputs, tolerance=tolerance, kinkiness=kinkiness
                 )
-                pdf.add_problems(problems)
+                if problems:
+                    doc.add_summary(problems)
+                doc.add_problems(problems)
                 if not problems and not args.quiet:
-                    pdf.draw_cupcake()
-
-        if args.ps:
-            log.info("Writing PS to %s", args.ps)
-            from .interpolatablePlot import InterpolatablePS
-
-            with InterpolatablePS(
-                ensure_parent_dir(args.ps), glyphsets=glyphsets, names=names
-            ) as ps:
-                ps.add_title_page(
-                    original_args_inputs, tolerance=tolerance, kinkiness=kinkiness
-                )
-                ps.add_problems(problems)
-                if not problems and not args.quiet:
-                    ps.draw_cupcake()
+                    doc.draw_cupcake()
+                if problems:
+                    doc.add_index()
+                    doc.add_table_of_contents()
 
         if args.html:
             log.info("Writing HTML to %s", args.html)
