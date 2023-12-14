@@ -18,6 +18,7 @@ from .otBase import (
 )
 from .otTables import (
     lookupTypes,
+    VarCompositeGlyphRecord,
     AATStateTable,
     AATState,
     AATAction,
@@ -29,7 +30,7 @@ from .otTables import (
     CompositeMode as _CompositeMode,
     NO_VARIATION_INDEX,
 )
-from itertools import zip_longest
+from itertools import zip_longest, accumulate
 from functools import partial
 import re
 import struct
@@ -78,7 +79,7 @@ def buildConverters(tableSpec, tableNamespace):
         conv = converterClass(name, repeat, aux, description=descr)
 
         if conv.tableClass:
-            # A "template" such as OffsetTo(AType) knowss the table class already
+            # A "template" such as OffsetTo(AType) knows the table class already
             tableClass = conv.tableClass
         elif tp in ("MortChain", "MortSubtable", "MorxChain"):
             tableClass = tableNamespace.get(tp)
@@ -1833,6 +1834,83 @@ class VarDataValue(BaseConverter):
         return safeEval(attrs["value"])
 
 
+class CFF2Index(BaseConverter):
+    def __init__(
+        self, name, repeat, aux, tableClass=None, *, itemClass=None, description=""
+    ):
+        BaseConverter.__init__(
+            self, name, repeat, aux, tableClass, description=description
+        )
+        self.itemClass = itemClass
+
+    def read(self, reader, font, tableDict):
+        count = reader.readULong()
+        if count == 0:
+            return []
+        offSize = reader.readUInt8()
+        readArray = {
+            1: reader.readUInt8Array,
+            2: reader.readUShortArray,
+            3: reader.readUInt24Array,
+            4: reader.readULongArray,
+        }[offSize]
+        offsets = readArray(count + 1)
+
+        items = []
+        lastOffset = offsets[0]
+        reader.readData(lastOffset)  # In case first offset is not 0
+        for offset in offsets[1:]:
+            assert lastOffset <= offset
+            items.append(reader.readData(offset - lastOffset))
+            lastOffset = offset
+
+        if self.itemClass is not None:
+            newItems = []
+            for item in items:
+                obj = self.itemClass()
+                obj.decompile(item, font)
+                newItems.append(obj)
+            items = newItems
+
+        return items
+
+    def write(self, writer, font, tableDict, values, repeatIndex=None):
+        items = values
+
+        writer.writeULong(len(items))
+        if not len(items):
+            return
+
+        if self.itemClass is not None:
+            items = [item.compile(font) for item in items]
+
+        offsets = [len(item) for item in items]
+        offsets = [0] + list(accumulate(offsets))
+
+        lastOffset = offsets[-1]
+        offSize = (
+            1
+            if lastOffset < 0x100
+            else 2
+            if lastOffset < 0x10000
+            else 3
+            if lastOffset < 0x1000000
+            else 4
+        )
+        writer.writeUInt8(offSize)
+
+        writeArray = {
+            1: writer.writeUInt8Array,
+            2: writer.writeUShortArray,
+            3: writer.writeUInt24Array,
+            4: writer.writeULongArray,
+        }[offSize]
+
+        writeArray(offsets)
+        for item in items:
+            writer.writeData(item)
+
+
 class LookupFlag(UShort):
     def xmlWrite(self, xmlWriter, font, value, name, attrs):
         xmlWriter.simpletag(name, attrs + [("value", value)])
@@ -1910,6 +1988,7 @@ converterMapping = {
     "ExtendMode": ExtendMode,
     "CompositeMode": CompositeMode,
     "STATFlags": STATFlags,
+    "VarCompositeGlyphRecords": partial(CFF2Index, itemClass=VarCompositeGlyphRecord),
     # AAT
     "CIDGlyphMap": CIDGlyphMap,
     "GlyphCIDMap": GlyphCIDMap,

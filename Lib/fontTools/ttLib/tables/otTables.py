@@ -14,7 +14,7 @@ from collections import defaultdict, namedtuple
 from fontTools.ttLib.tables.otTraverse import dfs_base_table
 from fontTools.misc.arrayTools import quantizeRect
 from fontTools.misc.roundTools import otRound
-from fontTools.misc.transform import Transform, Identity
+from fontTools.misc.transform import Transform, Identity, DecomposedTransform
 from fontTools.misc.textTools import bytesjoin, pad, safeEval
 from fontTools.pens.boundsPen import ControlBoundsPen
 from fontTools.pens.transformPen import TransformPen
@@ -25,9 +25,18 @@ from .otBase import (
     CountReference,
     getFormatSwitchingBaseTableClass,
 )
+from fontTools.misc.fixedTools import (
+    fixedToFloat as fi2fl,
+    floatToFixed as fl2fi,
+    floatToFixedToStr as fl2str,
+    strToFixedToFloat as str2fl,
+)
 from fontTools.feaLib.lookupDebugInfo import LookupDebugInfo, LOOKUP_DEBUG_INFO_KEY
 import logging
 import struct
+import array
+import sys
+from enum import IntFlag
 from typing import TYPE_CHECKING, Iterator, List, Optional, Set
 
 if TYPE_CHECKING:
@@ -35,6 +44,294 @@ if TYPE_CHECKING:
 
 
 log = logging.getLogger(__name__)
+
+
+class VarComponentFlags(IntFlag):
+    GID_IS_24BIT = 0x0001
+    AXIS_INDICES_ARE_SHORT = 0x0002
+    AXIS_VALUES_HAVE_VARIATION = 0x0004
+    HAVE_TRANSLATE_X = 0x0008
+    HAVE_TRANSLATE_Y = 0x0010
+    HAVE_ROTATION = 0x0020
+    HAVE_SCALE_X = 0x0040
+    HAVE_SCALE_Y = 0x0080
+    HAVE_SKEW_X = 0x0100
+    HAVE_SKEW_Y = 0x0200
+    HAVE_TCENTER_X = 0x0400
+    HAVE_TCENTER_Y = 0x0800
+    TRANSFORM_HAS_VARIATION = 0x1000
+    RESET_UNSPECIFIED_AXES = 0x2000
+    USE_MY_METRICS = 0x4000
+
+
+VarComponentTransformMappingValues = namedtuple(
+    "VarComponentTransformMappingValues",
+    ["flag", "fractionalBits", "scale", "defaultValue"],
+)
+
+VAR_COMPONENT_TRANSFORM_MAPPING = {
+    "translateX": VarComponentTransformMappingValues(
+        VarComponentFlags.HAVE_TRANSLATE_X, 0, 1, 0
+    ),
+    "translateY": VarComponentTransformMappingValues(
+        VarComponentFlags.HAVE_TRANSLATE_Y, 0, 1, 0
+    ),
+    "rotation": VarComponentTransformMappingValues(
+        VarComponentFlags.HAVE_ROTATION, 12, 180, 0
+    ),
+    "scaleX": VarComponentTransformMappingValues(
+        VarComponentFlags.HAVE_SCALE_X, 10, 1, 1
+    ),
+    "scaleY": VarComponentTransformMappingValues(
+        VarComponentFlags.HAVE_SCALE_Y, 10, 1, 1
+    ),
+    "skewX": VarComponentTransformMappingValues(
+        VarComponentFlags.HAVE_SKEW_X, 12, -180, 0
+    ),
+    "skewY": VarComponentTransformMappingValues(
+        VarComponentFlags.HAVE_SKEW_Y, 12, 180, 0
+    ),
+    "tCenterX": VarComponentTransformMappingValues(
+        VarComponentFlags.HAVE_TCENTER_X, 0, 1, 0
+    ),
+    "tCenterY": VarComponentTransformMappingValues(
+        VarComponentFlags.HAVE_TCENTER_Y, 0, 1, 0
+    ),
+}
+
+
+class VarComponentRecord:
+    def __init__(self):
+        self.glyphName = None
+        self.location = {}
+        self.locationVarIdxBase = NO_VARIATION_INDEX
+        self.transform = DecomposedTransform()
+        self.transformVarIdxBase = NO_VARIATION_INDEX
+
+    def decompile(self, data, font):
+        i = 0
+        flags = struct.unpack(">H", data[i : i + 2])[0]
+        i += 2
+        self.flags = flags
+
+        numAxes = data[i]
+        i += 1
+
+        if flags & VarComponentFlags.GID_IS_24BIT:
+            glyphID = struct.unpack(">L", b"\0" + data[i : i + 3])[0]
+            i += 3
+            flags ^= VarComponentFlags.GID_IS_24BIT
+        else:
+            glyphID = struct.unpack(">H", data[i : i + 2])[0]
+            i += 2
+        self.glyphName = font.glyphOrder[glyphID]
+
+        if flags & VarComponentFlags.AXIS_INDICES_ARE_SHORT:
+            axisIndices = array.array("H", data[i : i + 2 * numAxes])
+            i += 2 * numAxes
+            if sys.byteorder != "big":
+                axisIndices.byteswap()
+            flags ^= VarComponentFlags.AXIS_INDICES_ARE_SHORT
+        else:
+            axisIndices = array.array("B", data[i : i + numAxes])
+            i += numAxes
+        assert len(axisIndices) == numAxes
+        axisIndices = list(axisIndices)
+
+        axisValues = array.array("h", data[i : i + 2 * numAxes])
+        i += 2 * numAxes
+        if sys.byteorder != "big":
+            axisValues.byteswap()
+        assert len(axisValues) == numAxes
+        axisValues = [fi2fl(v, 14) for v in axisValues]
+
+        axes = font["fvar"].axes
+        self.location = {axes[i].axisTag: v for i, v in zip(axisIndices, axisValues)}
+
+        if flags & VarComponentFlags.AXIS_VALUES_HAVE_VARIATION:
+            self.locationVarIdxBase = struct.unpack(">L", data[i : i + 4])[0]
+            i += 4
+
+        def read_transform_component(data, values):
+            nonlocal i
+            if flags & values.flag:
+                v = (
+                    fi2fl(
+                        struct.unpack(">h", data[i : i + 2])[0], values.fractionalBits
+                    )
+                    * values.scale,
+                )
+                i += 2
+                return v
+            else:
+                return values.defaultValue
+
+        for attr_name, mapping_values in VAR_COMPONENT_TRANSFORM_MAPPING.items():
+            value = read_transform_component(data, mapping_values)
+            setattr(self.transform, attr_name, value)
+
+        if not (flags & VarComponentFlags.HAVE_SCALE_Y):
+            self.transform.scaleY = self.transform.scaleX
+
+        if flags & VarComponentFlags.TRANSFORM_HAS_VARIATION:
+            self.transformVarIdxBase = struct.unpack(">L", data[i : i + 4])[0]
+            i += 4
+
+        return data[i:]
+
+    def compile(self, font):
+        data = []
+
+        if not hasattr(self, "flags"):
+            flags = 0
+            # Calculate optimal transform component flags
+            for attr_name, mapping in VAR_COMPONENT_TRANSFORM_MAPPING.items():
+                value = getattr(self.transform, attr_name)
+                if fl2fi(value / mapping.scale, mapping.fractionalBits) != fl2fi(
+                    mapping.defaultValue / mapping.scale, mapping.fractionalBits
+                ):
+                    flags |= mapping.flag
+            if (flags & VarComponentFlags.HAVE_SCALE_Y) and fl2fi(
+                self.transform.scaleX, 10
+            ) == fl2fi(self.transform.scaleY, 10):
+                flags ^= VarComponentFlags.HAVE_SCALE_Y
+        else:
+            flags = self.flags
+
+        numAxes = len(self.location)
+
+        data.append(struct.pack(">B", numAxes))
+
+        glyphID = font.getGlyphID(self.glyphName)
+        if glyphID > 65535:
+            flags |= VarComponentFlags.GID_IS_24BIT
+            data.append(struct.pack(">L", glyphID)[1:])
+        else:
+            data.append(struct.pack(">H", glyphID))
+
+        fvarAxisIndices = {axis.axisTag: i for i, axis in enumerate(font["fvar"].axes)}
+        axisIndices = [fvarAxisIndices[tag] for tag in self.location.keys()]
+        if all(a <= 255 for a in axisIndices):
+            axisIndices = array.array("B", axisIndices)
+        else:
+            axisIndices = array.array("H", axisIndices)
+            if sys.byteorder != "big":
+                axisIndices.byteswap()
+            flags |= VarComponentFlags.AXIS_INDICES_ARE_SHORT
+        data.append(bytes(axisIndices))
+
+        axisValues = self.location.values()
+        axisValues = array.array("h", (fl2fi(v, 14) for v in axisValues))
+        if sys.byteorder != "big":
+            axisValues.byteswap()
+        data.append(bytes(axisValues))
+
+        if self.locationVarIdxBase != NO_VARIATION_INDEX:
+            flags |= VarComponentFlags.AXIS_VALUES_HAVE_VARIATION
+            data.append(struct.pack(">L", self.locationVarIdxBase))
+
+        def write_transform_component(value, values):
+            if flags & values.flag:
+                return struct.pack(
+                    ">h", fl2fi(value / values.scale, values.fractionalBits)
+                )
+            else:
+                return b""
+
+        for attr_name, mapping_values in VAR_COMPONENT_TRANSFORM_MAPPING.items():
+            value = getattr(self.transform, attr_name)
+            data.append(write_transform_component(value, mapping_values))
+
+        if self.transformVarIdxBase != NO_VARIATION_INDEX:
+            flags |= VarComponentFlags.TRANSFORM_HAS_VARIATION
+            data.append(struct.pack(">L", self.transformVarIdxBase))
+
+        return struct.pack(">H", flags) + bytesjoin(data)
+
+    def toXML(self, writer, ttFont):
+        attrs = [("glyphName", self.glyphName)]
+
+        if hasattr(self, "flags"):
+            attrs = attrs + [("flags", hex(self.flags))]
+
+        for attr_name, mapping in VAR_COMPONENT_TRANSFORM_MAPPING.items():
+            v = getattr(self.transform, attr_name)
+            if v != mapping.defaultValue:
+                attrs.append((attr_name, fl2str(v, mapping.fractionalBits)))
+
+        writer.begintag("varComponent", attrs)
+        writer.newline()
+
+        writer.begintag("location")
+        writer.newline()
+        for tag, v in self.location.items():
+            writer.simpletag("axis", [("tag", tag), ("value", fl2str(v, 14))])
+            writer.newline()
+        writer.endtag("location")
+        writer.newline()
+
+        writer.endtag("varComponent")
+        writer.newline()
+
+    def fromXML(self, name, attrs, content, ttFont):
+        self.glyphName = attrs["glyphName"]
+
+        if "flags" in attrs:
+            self.flags = safeEval(attrs["flags"])
+
+        for attr_name, mapping in VAR_COMPONENT_TRANSFORM_MAPPING.items():
+            if attr_name not in attrs:
+                continue
+            v = str2fl(safeEval(attrs[attr_name]), mapping.fractionalBits)
+            setattr(self.transform, attr_name, v)
+
+        for c in content:
+            if not isinstance(c, tuple):
+                continue
+            name, attrs, content = c
+            if name != "location":
+                continue
+            for c in content:
+                if not isinstance(c, tuple):
+                    continue
+                name, attrs, content = c
+                assert name == "axis"
+                assert not content
+                self.location[attrs["tag"]] = str2fl(safeEval(attrs["value"]), 14)
+
+    def __eq__(self, other):
+        if type(self) != type(other):
+            return NotImplemented
+        return self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        result = self.__eq__(other)
+        return result if result is NotImplemented else not result
+
+
+class VarCompositeGlyphRecord:
+    def populateDefaults(self, propagator=None):
+        if not hasattr(self, "components"):
+            self.components = []
+
+    def decompile(self, data, font):
+        self.components = []
+        while data:
+            component = VarComponentRecord()
+            data = component.decompile(data, font)
+            self.components.append(component)
+
+    def compile(self, font):
+        data = []
+        for component in self.components:
+            data.append(component.compile(font))
+        return bytesjoin(data)
+
+    def toXML(self, xmlWriter, font, attrs, name):
+        raise NotImplementedError
+
+    def fromXML(self, name, attrs, content, font):
+        raise NotImplementedError
 
 
 class AATStateTable(object):

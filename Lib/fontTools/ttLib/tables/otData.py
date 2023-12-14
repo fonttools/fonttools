@@ -3322,6 +3322,35 @@ otData = [
             ("VarIdxMapValue", "mapping", "", 0, "Array of compressed data"),
         ],
     ),
+    # VariableComposites
+    (
+        "VARC",
+        [
+            (
+                "Version",
+                "Version",
+                None,
+                None,
+                "Version of the HVAR table-initially = 0x00010000",
+            ),
+            ("LOffset", "Coverage", None, None, ""),
+            (
+                "LOffsetTo(DeltaSetIndexMap)",
+                "VarIndexMap",
+                None,
+                None,
+                "Offset to DeltaSetIndexMap table (may be NULL)",
+            ),
+            ("LOffset", "VarStore", None, None, "(may be NULL)"),
+            ("LOffset", "VarCompositeGlyphs", None, None, ""),
+        ],
+    ),
+    (
+        "VarCompositeGlyphs",
+        [
+            ("VarCompositeGlyphRecords", "items", None, None, ""),
+        ],
+    ),
     # Glyph advance variations
     (
         "HVAR",
