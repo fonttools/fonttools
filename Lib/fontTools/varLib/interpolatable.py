@@ -1099,7 +1099,7 @@ def main(args=None):
                     pdf.draw_cupcake()
 
         if args.ps:
-            log.info("Writing PS to %s", args.pdf)
+            log.info("Writing PS to %s", args.ps)
             from .interpolatablePlot import InterpolatablePS
 
             with InterpolatablePS(
