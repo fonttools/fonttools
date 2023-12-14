@@ -120,6 +120,9 @@ extras_require = {
         # use pure-python alternative on pypy
         "scipy; platform_python_implementation != 'PyPy'",
         "munkres; platform_python_implementation == 'PyPy'",
+        # to output PDF or HTML reports. NOTE: wheels are only available for
+        # windows currently, other platforms will need to build from source.
+        "pycairo",
     ],
     # for fontTools.varLib.plot, to visualize DesignSpaceDocument and resulting
     # VariationModel
