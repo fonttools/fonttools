@@ -37,33 +37,34 @@ class OverridingDict(dict):
 
 
 class InterpolatablePlot:
-    panel_width = 640
-    panel_height = 480
-    pad = 16
-    line_height = 36
+    width = 8.5 * 72
+    height = 11 * 72
+    pad = 0.1 * 72
+    title_font_size = 24
+    font_size = 16
     page_number = 1
     head_color = (0.3, 0.3, 0.3)
     label_color = (0.2, 0.2, 0.2)
     border_color = (0.9, 0.9, 0.9)
-    border_width = 1
+    border_width = 0.5
     fill_color = (0.8, 0.8, 0.8)
     stroke_color = (0.1, 0.1, 0.1)
-    stroke_width = 2
+    stroke_width = 1
     oncurve_node_color = (0, 0.8, 0, 0.7)
-    oncurve_node_diameter = 10
+    oncurve_node_diameter = 6
     offcurve_node_color = (0, 0.5, 0, 0.7)
-    offcurve_node_diameter = 8
+    offcurve_node_diameter = 4
     handle_color = (0, 0.5, 0, 0.7)
-    handle_width = 1
+    handle_width = 0.5
     corrected_start_point_color = (0, 0.9, 0, 0.7)
-    corrected_start_point_size = 15
+    corrected_start_point_size = 7
     wrong_start_point_color = (1, 0, 0, 0.7)
     start_point_color = (0, 0, 1, 0.7)
-    start_arrow_length = 20
-    kink_point_size = 10
+    start_arrow_length = 9
+    kink_point_size = 7
     kink_point_color = (1, 0, 1, 0.7)
-    kink_circle_size = 25
-    kink_circle_stroke_width = 1.5
+    kink_circle_size = 15
+    kink_circle_stroke_width = 1
     kink_circle_color = (1, 0, 1, 0.7)
     contour_colors = ((1, 0, 0), (0, 0, 1), (0, 1, 0), (1, 1, 0), (1, 0, 1), (0, 1, 1))
     contour_alpha = 0.5
@@ -121,58 +122,50 @@ class InterpolatablePlot:
                 raise TypeError("Unknown keyword argument: %s" % k)
             setattr(self, k, v)
 
+        self.panel_width = self.width / 2 - self.pad * 3
+        self.panel_height = (
+            self.height / 2 - self.pad * 6 - self.font_size * 2 - self.title_font_size
+        )
+
     def __enter__(self):
         return self
 
     def __exit__(self, type, value, traceback):
         pass
 
-    def set_size(self, panel_width, panel_height):
-        raise NotImplementedError
-
     def show_page(self):
         self.page_number += 1
-
-    def total_width(self):
-        return self.panel_width * 2 + self.pad * 3
-
-    def total_height(self):
-        return (
-            self.pad
-            + self.line_height
-            + self.pad
-            + self.line_height
-            + self.pad
-            + 2 * (self.panel_height + self.pad * 2 + self.line_height)
-            + self.pad
-        )
 
     def add_title_page(
         self, files, *, show_tolerance=True, tolerance=None, kinkiness=None
     ):
-        self.set_size(self.total_width(), self.total_height())
-
         pad = self.pad
-        panel_width = self.total_width() - 3 * self.pad
-        panel_height = self.total_height() - 2 * self.pad
+        width = self.width - 3 * self.pad
+        height = self.height - 2 * self.pad
         x = y = pad
 
-        self.draw_label("Problem report for:", x=x, y=y, bold=True, panel_width=panel_width)
-        y += self.line_height
+        self.draw_label(
+            "Problem report for:",
+            x=x,
+            y=y,
+            bold=True,
+            width=width,
+            font_size=self.title_font_size,
+        )
+        y += self.title_font_size
 
         import hashlib
 
         for file in files:
             base_file = os.path.basename(file)
-            y += self.line_height
-            self.draw_label(base_file, x=x, y=y, bold=True, panel_width=panel_width)
-            y += self.line_height
+            y += self.font_size + self.pad
+            self.draw_label(base_file, x=x, y=y, bold=True, width=width)
+            y += self.font_size + self.pad
 
             try:
                 h = hashlib.sha1(open(file, "rb").read()).hexdigest()
                 self.draw_label("sha1: %s" % h, x=x + pad, y=y, width=width)
-                self.draw_label("sha1: %s" % h, x=x + pad, y=y, panel_width=panel_width)
-                y += self.line_height
+                y += self.font_size
             except IsADirectoryError:
                 pass
 
@@ -188,9 +181,9 @@ class InterpolatablePlot:
                         if n is None:
                             continue
                         self.draw_label(
-                            "%s: %s" % (what, n), x=x + pad, y=y, panel_width=panel_width
+                            "%s: %s" % (what, n), x=x + pad, y=y, width=width
                         )
-                        y += self.line_height
+                        y += self.font_size + self.pad
             elif file.endswith((".glyphs", ".glyphspackage")):
                 from glyphsLib import GSFont
 
@@ -204,9 +197,9 @@ class InterpolatablePlot:
                         "%s: %s" % (what, getattr(f, field)),
                         x=x + pad,
                         y=y,
-                        panel_width=panel_width,
+                        width=width,
                     )
-                    y += self.line_height
+                    y += self.font_size + self.pad
 
         self.draw_legend(
             show_tolerance=show_tolerance, tolerance=tolerance, kinkiness=kinkiness
@@ -217,20 +210,20 @@ class InterpolatablePlot:
         cr = cairo.Context(self.surface)
 
         x = self.pad
-        y = self.total_height() - self.pad - self.line_height * 2
-        panel_width = self.total_width() - 2 * self.pad
+        y = self.height - self.pad - self.font_size * 2
+        width = self.width - 2 * self.pad
 
         xx = x + self.pad * 2
         xxx = x + self.pad * 4
 
         if show_tolerance:
             self.draw_label(
-                "Tolerance: badness; closer to zero the worse", x=xxx, y=y, panel_width=panel_width
+                "Tolerance: badness; closer to zero the worse", x=xxx, y=y, width=width
             )
-            y -= self.pad + self.line_height
+            y -= self.pad + self.font_size
 
-        self.draw_label("Underweight contours", x=xxx, y=y, panel_width=panel_width)
-        cr.rectangle(xx - self.pad * 0.7, y, 1.5 * self.pad, self.line_height)
+        self.draw_label("Underweight contours", x=xxx, y=y, width=width)
+        cr.rectangle(xx - self.pad * 0.7, y, 1.5 * self.pad, self.font_size)
         cr.set_source_rgb(*self.fill_color)
         cr.fill_preserve()
         if self.stroke_color:
@@ -239,12 +232,12 @@ class InterpolatablePlot:
             cr.stroke_preserve()
         cr.set_source_rgba(*self.weight_issue_contour_color)
         cr.fill()
-        y -= self.pad + self.line_height
+        y -= self.pad + self.font_size
 
         self.draw_label(
-            "Colored contours: contours with the wrong order", x=xxx, y=y, panel_width=panel_width
+            "Colored contours: contours with the wrong order", x=xxx, y=y, width=width
         )
-        cr.rectangle(xx - self.pad * 0.7, y, 1.5 * self.pad, self.line_height)
+        cr.rectangle(xx - self.pad * 0.7, y, 1.5 * self.pad, self.font_size)
         if self.fill_color:
             cr.set_source_rgb(*self.fill_color)
             cr.fill_preserve()
@@ -254,163 +247,169 @@ class InterpolatablePlot:
             cr.stroke_preserve()
         cr.set_source_rgba(*self.contour_colors[0], self.contour_alpha)
         cr.fill()
-        y -= self.pad + self.line_height
+        y -= self.pad + self.font_size
 
-        self.draw_label("Kink artifact", x=xxx, y=y, panel_width=panel_width)
+        self.draw_label("Kink artifact", x=xxx, y=y, width=width)
         self.draw_circle(
             cr,
             x=xx,
-            y=y + self.line_height * 0.5,
+            y=y + self.font_size * 0.5,
             diameter=self.kink_circle_size,
             stroke_width=self.kink_circle_stroke_width,
             color=self.kink_circle_color,
         )
-        y -= self.pad + self.line_height
+        y -= self.pad + self.font_size
 
-        self.draw_label("Point causing kink in the contour", x=xxx, y=y, panel_width=panel_width)
+        self.draw_label("Point causing kink in the contour", x=xxx, y=y, width=width)
         self.draw_dot(
             cr,
             x=xx,
-            y=y + self.line_height * 0.5,
+            y=y + self.font_size * 0.5,
             diameter=self.kink_point_size,
             color=self.kink_point_color,
         )
-        y -= self.pad + self.line_height
+        y -= self.pad + self.font_size
 
-        self.draw_label("Suggested new contour start point", x=xxx, y=y, panel_width=panel_width)
+        self.draw_label("Suggested new contour start point", x=xxx, y=y, width=width)
         self.draw_dot(
             cr,
             x=xx,
-            y=y + self.line_height * 0.5,
+            y=y + self.font_size * 0.5,
             diameter=self.corrected_start_point_size,
             color=self.corrected_start_point_color,
         )
-        y -= self.pad + self.line_height
+        y -= self.pad + self.font_size
 
         self.draw_label(
             "Contour start point in contours with wrong direction",
             x=xxx,
             y=y,
-            panel_width=panel_width,
+            width=width,
         )
         self.draw_arrow(
             cr,
             x=xx - self.start_arrow_length * 0.3,
-            y=y + self.line_height * 0.5,
+            y=y + self.font_size * 0.5,
             color=self.wrong_start_point_color,
         )
-        y -= self.pad + self.line_height
+        y -= self.pad + self.font_size
 
         self.draw_label(
             "Contour start point when the first two points overlap",
             x=xxx,
             y=y,
-            panel_width=panel_width,
+            width=width,
         )
         self.draw_dot(
             cr,
             x=xx,
-            y=y + self.line_height * 0.5,
+            y=y + self.font_size * 0.5,
             diameter=self.corrected_start_point_size,
             color=self.start_point_color,
         )
-        y -= self.pad + self.line_height
+        y -= self.pad + self.font_size
 
-        self.draw_label("Contour start point and direction", x=xxx, y=y, panel_width=panel_width)
+        self.draw_label("Contour start point and direction", x=xxx, y=y, width=width)
         self.draw_arrow(
             cr,
             x=xx - self.start_arrow_length * 0.3,
-            y=y + self.line_height * 0.5,
+            y=y + self.font_size * 0.5,
             color=self.start_point_color,
         )
-        y -= self.pad + self.line_height
+        y -= self.pad + self.font_size
 
-        self.draw_label("Legend:", x=x, y=y, panel_width=panel_width, bold=True)
-        y -= self.pad + self.line_height
+        self.draw_label("Legend:", x=x, y=y, width=width, bold=True)
+        y -= self.pad + self.font_size
 
         if kinkiness is not None:
             self.draw_label(
                 "Kink-reporting aggressiveness: %g" % kinkiness,
                 x=xxx,
                 y=y,
-                panel_width=panel_width,
+                width=width,
             )
-            y -= self.pad + self.line_height
+            y -= self.pad + self.font_size
 
         if tolerance is not None:
             self.draw_label(
                 "Error tolerance: %g" % tolerance,
                 x=xxx,
                 y=y,
-                panel_width=panel_width,
+                width=width,
             )
-            y -= self.pad + self.line_height
+            y -= self.pad + self.font_size
 
-        self.draw_label("Parameters:", x=x, y=y, panel_width=panel_width, bold=True)
-        y -= self.pad + self.line_height
+        self.draw_label("Parameters:", x=x, y=y, width=width, bold=True)
+        y -= self.pad + self.font_size
 
     def add_summary(self, problems):
-        self.set_size(self.total_width(), self.total_height())
-
         pad = self.pad
-        panel_width = self.total_width() - 3 * self.pad
-        panel_height = self.total_height() - 2 * self.pad
+        width = self.width - 3 * self.pad
+        height = self.height - 2 * self.pad
         x = y = pad
 
-        self.draw_label("Summary of problems", x=x, y=y, bold=True, panel_width=panel_width)
-        y += self.line_height
+        self.draw_label(
+            "Summary of problems",
+            x=x,
+            y=y,
+            bold=True,
+            width=width,
+            font_size=self.title_font_size,
+        )
+        y += self.title_font_size
 
         glyphs_per_problem = defaultdict(set)
         for glyphname, problems in sorted(problems.items()):
             for problem in problems:
                 glyphs_per_problem[problem["type"]].add(glyphname)
 
+        if "nothing" in glyphs_per_problem:
+            del glyphs_per_problem["nothing"]
+
         for problem_type in sorted(
             glyphs_per_problem, key=lambda x: InterpolatableProblem.severity[x]
         ):
-            y += self.line_height
+            y += self.font_size
             self.draw_label(
                 "%s: %d" % (problem_type, len(glyphs_per_problem[problem_type])),
                 x=x,
                 y=y,
-                panel_width=panel_width,
+                width=width,
                 bold=True,
             )
-            y += self.line_height
+            y += self.font_size
 
             for glyphname in sorted(glyphs_per_problem[problem_type]):
-                if y + self.line_height > panel_height:
+                if y + self.font_size > height:
                     self.show_page()
-                    y = self.line_height + pad
-                self.draw_label(glyphname, x=x + 2 * pad, y=y, panel_width=panel_width - 2 * pad)
-                y += self.line_height
+                    y = self.font_size + pad
+                self.draw_label(glyphname, x=x + 2 * pad, y=y, width=width - 2 * pad)
+                y += self.font_size
 
         self.show_page()
 
     def _add_listing(self, title, items):
-        self.set_size(self.total_width(), self.total_height())
-
         pad = self.pad
-        panel_width = self.total_width() - 3 * self.pad
-        panel_height = self.total_height() - 2 * self.pad
+        width = self.width - 2 * self.pad
+        height = self.height - 2 * self.pad
         x = y = pad
 
-        self.draw_label(title, x=x, y=y, bold=True, panel_width=panel_width)
-        y += self.line_height * 2
+        self.draw_label(
+            title, x=x, y=y, bold=True, width=width, font_size=self.title_font_size
+        )
+        y += self.title_font_size + self.pad
 
         last_glyphname = None
         for page_no, (glyphname, problems) in items:
             if glyphname == last_glyphname:
                 continue
             last_glyphname = glyphname
-            if y + self.line_height > panel_height:
+            if y + self.font_size > height:
                 self.show_page()
-                y = self.line_height + pad
-            self.draw_label(glyphname, x=x + 2 * pad, y=y, panel_width=panel_width - 2 * pad)
-            self.draw_label(
-                str(page_no), x=x + 2 * pad, y=y, panel_width=panel_width - 2 * pad, align=1
-            )
-            y += self.line_height
+                y = self.font_size + pad
+            self.draw_label(glyphname, x=x + 5 * pad, y=y, width=width - 2 * pad)
+            self.draw_label(str(page_no), x=x, y=y, width=4 * pad, align=1)
+            y += self.font_size
 
         self.show_page()
 
@@ -482,8 +481,6 @@ class InterpolatablePlot:
             )
             master_indices.insert(0, sample_glyph)
 
-        self.set_size(self.total_width(), self.total_height())
-
         x = self.pad
         y = self.pad
 
@@ -494,6 +491,7 @@ class InterpolatablePlot:
             color=self.head_color,
             align=0,
             bold=True,
+            font_size=self.title_font_size,
         )
         tolerance = min(p.get("tolerance", 1) for p in problems)
         if tolerance < 1 and show_tolerance:
@@ -501,29 +499,35 @@ class InterpolatablePlot:
                 "tolerance: %.2f" % tolerance,
                 x=x,
                 y=y,
-                panel_width=self.total_width() - 2 * self.pad,
+                width=self.width - 2 * self.pad,
                 align=1,
                 bold=True,
             )
-        y += self.line_height + self.pad
+        y += self.title_font_size + self.pad
         self.draw_label(
-            problem_type,
+            "Problems: " + problem_type,
             x=x,
             y=y,
-            panel_width=self.total_width() - 2 * self.pad,
+            width=self.width - 2 * self.pad,
             color=self.head_color,
-            align=0.5,
             bold=True,
         )
-        y += self.line_height + self.pad
+        y += self.font_size + self.pad * 2
 
         scales = []
         for which, master_idx in enumerate(master_indices):
             glyphset = self.glyphsets[master_idx]
             name = self.names[master_idx]
 
-            self.draw_label(name, x=x, y=y, color=self.label_color, align=0.5)
-            y += self.line_height + self.pad
+            self.draw_label(
+                name,
+                x=x,
+                y=y,
+                color=self.label_color,
+                width=self.panel_width,
+                align=0.5,
+            )
+            y += self.font_size + self.pad
 
             if glyphset[glyphname] is not None:
                 scales.append(
@@ -531,7 +535,7 @@ class InterpolatablePlot:
                 )
             else:
                 self.draw_emoticon(self.shrug, x=x, y=y)
-            y += self.panel_height + self.pad
+            y += self.panel_height + self.font_size + self.pad
 
         if any(
             pt
@@ -547,8 +551,8 @@ class InterpolatablePlot:
         ):
             x = self.pad + self.panel_width + self.pad
             y = self.pad
-            y += self.line_height + self.pad
-            y += self.line_height + self.pad
+            y += self.title_font_size + self.pad * 2
+            y += self.font_size + self.pad
 
             glyphset1 = self.glyphsets[master_indices[0]]
             glyphset2 = self.glyphsets[master_indices[1]]
@@ -556,9 +560,14 @@ class InterpolatablePlot:
             # Draw the mid-way of the two masters
 
             self.draw_label(
-                "midway interpolation", x=x, y=y, color=self.head_color, align=0.5
+                "midway interpolation",
+                x=x,
+                y=y,
+                color=self.head_color,
+                width=self.panel_width,
+                align=0.5,
             )
-            y += self.line_height + self.pad
+            y += self.font_size + self.pad
 
             midway_glyphset = LerpGlyphSet(glyphset1, glyphset2)
             self.draw_glyph(
@@ -581,7 +590,7 @@ class InterpolatablePlot:
                 scale=min(scales),
             )
 
-            y += self.panel_height + self.pad
+            y += self.panel_height + self.font_size + self.pad
 
         if any(
             pt
@@ -594,8 +603,15 @@ class InterpolatablePlot:
         ):
             # Draw the proposed fix
 
-            self.draw_label("proposed fix", x=x, y=y, color=self.head_color, align=0.5)
-            y += self.line_height + self.pad
+            self.draw_label(
+                "proposed fix",
+                x=x,
+                y=y,
+                color=self.head_color,
+                width=self.panel_width,
+                align=0.5,
+            )
+            y += self.font_size + self.pad
 
             overriding1 = OverridingDict(glyphset1)
             overriding2 = OverridingDict(glyphset2)
@@ -769,8 +785,8 @@ class InterpolatablePlot:
             self.draw_label(
                 str(self.page_number),
                 x=0,
-                y=self.total_height() - self.line_height,
-                panel_width=self.total_width(),
+                y=self.height - self.font_size - self.pad,
+                width=self.width,
                 color=self.head_color,
                 align=0.5,
             )
@@ -784,37 +800,40 @@ class InterpolatablePlot:
         color=(0, 0, 0),
         align=0,
         bold=False,
-        panel_width=None,
-        panel_height=None,
+        width=None,
+        height=None,
+        font_size=None,
     ):
-        if panel_width is None:
-            panel_width = self.panel_width
-        if panel_height is None:
-            panel_height = self.panel_height
+        if width is None:
+            width = self.width
+        if height is None:
+            height = self.height
+        if font_size is None:
+            font_size = self.font_size
         cr = cairo.Context(self.surface)
         cr.select_font_face(
             "@cairo:",
             cairo.FONT_SLANT_NORMAL,
             cairo.FONT_WEIGHT_BOLD if bold else cairo.FONT_WEIGHT_NORMAL,
         )
-        cr.set_font_size(self.line_height)
+        cr.set_font_size(font_size)
         font_extents = cr.font_extents()
-        font_size = self.line_height * self.line_height / font_extents[2]
+        font_size = font_size * font_size / font_extents[2]
         cr.set_font_size(font_size)
         font_extents = cr.font_extents()
 
         cr.set_source_rgb(*color)
 
         extents = cr.text_extents(label)
-        if extents.width > panel_width:
+        if extents.width > width:
             # Shrink
-            font_size *= panel_width / extents.width
+            font_size *= width / extents.width
             cr.set_font_size(font_size)
             font_extents = cr.font_extents()
             extents = cr.text_extents(label)
 
         # Center
-        label_x = x + (panel_width - extents.width) * align
+        label_x = x + (width - extents.width) * align
         label_y = y + font_extents[0]
         cr.move_to(label_x, label_y)
         cr.show_text(label)
@@ -1137,35 +1156,35 @@ class InterpolatablePlot:
         cr.fill()
         cr.restore()
 
-    def draw_text(self, text, *, x=0, y=0, color=(0, 0, 0), panel_width=None, panel_height=None):
-        if panel_width is None:
-            panel_width = self.panel_width
-        if panel_height is None:
-            panel_height = self.panel_height
+    def draw_text(self, text, *, x=0, y=0, color=(0, 0, 0), width=None, height=None):
+        if width is None:
+            width = self.width
+        if height is None:
+            height = self.height
 
         text = text.splitlines()
         cr = cairo.Context(self.surface)
         cr.set_source_rgb(*color)
-        cr.set_font_size(self.line_height)
+        cr.set_font_size(self.font_size)
         cr.select_font_face(
             "@cairo:monospace", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL
         )
         text_width = 0
         text_height = 0
         font_extents = cr.font_extents()
-        font_line_height = font_extents[2]
+        font_font_size = font_extents[2]
         font_ascent = font_extents[0]
         for line in text:
             extents = cr.text_extents(line)
             text_width = max(text_width, extents.x_advance)
-            text_height += font_line_height
+            text_height += font_font_size
         if not text_width:
             return
         cr.translate(x, y)
-        scale = min(panel_width / text_width, panel_height / text_height)
+        scale = min(width / text_width, height / text_height)
         # center
         cr.translate(
-            (panel_width - text_width * scale) / 2, (panel_height - text_height * scale) / 2
+            (width - text_width * scale) / 2, (height - text_height * scale) / 2
         )
         cr.scale(scale, scale)
 
@@ -1173,44 +1192,43 @@ class InterpolatablePlot:
         for line in text:
             cr.move_to(0, 0)
             cr.show_text(line)
-            cr.translate(0, font_line_height)
+            cr.translate(0, font_font_size)
 
     def draw_cupcake(self):
-        self.set_size(self.total_width(), self.total_height())
-
         self.draw_label(
             self.no_issues_label,
             x=self.pad,
             y=self.pad,
             color=self.no_issues_label_color,
-            panel_width=self.total_width() - 2 * self.pad,
+            width=self.width - 2 * self.pad,
             align=0.5,
             bold=True,
+            font_size=self.title_font_size,
         )
 
         self.draw_text(
             self.cupcake,
             x=self.pad,
-            y=self.pad + self.line_height,
-            panel_width=self.total_width() - 2 * self.pad,
-            panel_height=self.total_height() - 2 * self.pad - self.line_height,
+            y=self.pad + self.font_size,
+            width=self.width - 2 * self.pad,
+            height=self.height - 2 * self.pad - self.font_size,
             color=self.cupcake_color,
         )
 
     def draw_emoticon(self, emoticon, x=0, y=0):
-        self.draw_text(emoticon, x=x, y=y, color=self.emoticon_color)
+        self.draw_text(
+            emoticon,
+            x=x,
+            y=y,
+            color=self.emoticon_color,
+            width=self.panel_width,
+            height=self.panel_height,
+        )
 
 
 class InterpolatablePostscriptLike(InterpolatablePlot):
-    @wraps(InterpolatablePlot.__init__)
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
     def __exit__(self, type, value, traceback):
         self.surface.finish()
-
-    def set_size(self, panel_width, panel_height):
-        self.surface.set_size(panel_width, panel_height)
 
     def show_page(self):
         super().show_page()
@@ -1219,13 +1237,13 @@ class InterpolatablePostscriptLike(InterpolatablePlot):
 
 class InterpolatablePS(InterpolatablePostscriptLike):
     def __enter__(self):
-        self.surface = cairo.PSSurface(self.out, self.panel_width, self.panel_height)
+        self.surface = cairo.PSSurface(self.out, self.width, self.height)
         return self
 
 
 class InterpolatablePDF(InterpolatablePostscriptLike):
     def __enter__(self):
-        self.surface = cairo.PDFSurface(self.out, self.panel_width, self.panel_height)
+        self.surface = cairo.PDFSurface(self.out, self.width, self.height)
         self.surface.set_metadata(
             cairo.PDF_METADATA_CREATOR, "fonttools varLib.interpolatable"
         )
@@ -1234,24 +1252,18 @@ class InterpolatablePDF(InterpolatablePostscriptLike):
 
 
 class InterpolatableSVG(InterpolatablePlot):
-    @wraps(InterpolatablePlot.__init__)
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
     def __enter__(self):
-        self.surface = None
+        self.sink = BytesIO()
+        self.surface = cairo.SVGSurface(self.sink, self.width, self.height)
         return self
 
     def __exit__(self, type, value, traceback):
         if self.surface is not None:
             self.show_page()
 
-    def set_size(self, panel_width, panel_height):
-        self.sink = BytesIO()
-        self.surface = cairo.SVGSurface(self.sink, total_width(), total_height())
-
     def show_page(self):
         super().show_page()
         self.surface.finish()
         self.out.append(self.sink.getvalue())
-        self.surface = None
+        self.sink = BytesIO()
+        self.surface = cairo.SVGSurface(self.sink, self.width, self.height)
