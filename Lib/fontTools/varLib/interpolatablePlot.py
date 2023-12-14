@@ -167,9 +167,12 @@ class InterpolatablePlot:
             self.draw_label(base_file, x=x, y=y, bold=True, width=width)
             y += self.line_height
 
-            h = hashlib.sha1(open(file, "rb").read()).hexdigest()
-            self.draw_label("sha1: %s" % h, x=x + pad, y=y, width=width)
-            y += self.line_height
+            try:
+                h = hashlib.sha1(open(file, "rb").read()).hexdigest()
+                self.draw_label("sha1: %s" % h, x=x + pad, y=y, width=width)
+                y += self.line_height
+            except IsADirectoryError:
+                pass
 
             if file.endswith(".ttf"):
                 ttFont = TTFont(file)
@@ -186,7 +189,7 @@ class InterpolatablePlot:
                             "%s: %s" % (what, n), x=x + pad, y=y, width=width
                         )
                         y += self.line_height
-            elif file.endswith(".glyphs"):
+            elif file.endswith(".glyphs") or file.endswith(".glyphspackage"):
                 from glyphsLib import GSFont
 
                 f = GSFont(file)
