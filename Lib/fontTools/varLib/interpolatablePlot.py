@@ -189,7 +189,7 @@ class InterpolatablePlot:
                             "%s: %s" % (what, n), x=x + pad, y=y, width=width
                         )
                         y += self.line_height
-            elif file.endswith(".glyphs") or file.endswith(".glyphspackage"):
+            elif file.endswith((".glyphs", ".glyphspackage")):
                 from glyphsLib import GSFont
 
                 f = GSFont(file)
