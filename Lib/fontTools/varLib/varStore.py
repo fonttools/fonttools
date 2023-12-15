@@ -137,9 +137,11 @@ class OnlineVarStoreBuilder(object):
             # Full array. Start new one.
             self._add_VarData()
             return self.storeDeltasMany(deltas_list, round=noRound)
-        for deltas in deltas_list:
+        for i, deltas in enumerate(deltas_list):
             self._data.addItem(deltas, round=noRound)
-            # TODO Insert into the cache
+
+            varIdx = (self._outer << 16) + inner + i
+            self._cache[deltas] = varIdx
 
         varIdx = (self._outer << 16) + inner
         return varIdx
