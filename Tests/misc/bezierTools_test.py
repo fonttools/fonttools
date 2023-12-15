@@ -205,3 +205,5 @@ def test_intersections_samestart():
     seg2 = [(250, 1000), (250, 400)]
     pt = lineLineIntersections(*seg1, *seg2)[0][0]
     assert pt == (250.0, 1000.0)
+    seg3 = [(250, 810), (250, 500)]
+    assert lineLineIntersections(*seg1, *seg3) == []
