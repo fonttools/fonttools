@@ -94,6 +94,14 @@ class OnlineVarStoreBuilder(object):
         base = deltas.pop(0)
         return base, self.storeDeltas(deltas, round=noRound)
 
+    def storeMastersMany(self, master_values_list, *, round=round):
+        deltas_list = [
+            self._model.getDeltas(master_values, round=round)
+            for master_values in master_values_list
+        ]
+        base_list = [deltas.pop(0) for deltas in deltas_list]
+        return base_list, self.storeDeltasMany(deltas_list, round=noRound)
+
     def storeDeltas(self, deltas, *, round=round):
         deltas = [round(d) for d in deltas]
         if len(deltas) == len(self._supports) + 1:
@@ -112,11 +120,28 @@ class OnlineVarStoreBuilder(object):
         if inner == 0xFFFF:
             # Full array. Start new one.
             self._add_VarData()
-            return self.storeDeltas(deltas)
+            return self.storeDeltas(deltas, round=noRound)
         self._data.addItem(deltas, round=noRound)
 
         varIdx = (self._outer << 16) + inner
         self._cache[deltas] = varIdx
+        return varIdx
+
+    def storeDeltasMany(self, deltas_list, *, round=round):
+        deltas_list = [[round(d) for d in deltas] for deltas in deltas_list]
+
+        if not self._data:
+            self._add_VarData()
+        inner = len(self._data.Item)
+        if inner + len(deltas_list) > 0xFFFF:
+            # Full array. Start new one.
+            self._add_VarData()
+            return self.storeDeltasMany(deltas_list, round=noRound)
+        for deltas in deltas_list:
+            self._data.addItem(deltas, round=noRound)
+            # TODO Insert into the cache
+
+        varIdx = (self._outer << 16) + inner
         return varIdx
 
 
