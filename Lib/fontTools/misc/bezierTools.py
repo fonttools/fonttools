@@ -1184,6 +1184,8 @@ def lineLineIntersections(s1, e1, s2, e2):
     if math.isclose(s1x, e1x) and math.isclose(s1y, e1y):  # Line segment is tiny
         return []
     if math.isclose(e1x, s1x):
+        if math.isclose(e2x, s2x) and math.isclose(s1y, s2y):
+            return [Intersection(pt=(s1x, s1y), t1=0, t2=0)]
         x = s1x
         slope34 = (e2y - s2y) / (e2x - s2x)
         y = slope34 * (x - s2x) + s2y
@@ -1194,6 +1196,8 @@ def lineLineIntersections(s1, e1, s2, e2):
             )
         ]
     if math.isclose(s2x, e2x):
+        if math.isclose(s1x, e1x) and math.isclose(e1y, e2y):
+            return [Intersection(pt=(e1x, e1y), t1=1, t2=1)]
         x = s2x
         slope12 = (e1y - s1y) / (e1x - s1x)
         y = slope12 * (x - s1x) + s1y
