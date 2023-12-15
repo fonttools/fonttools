@@ -32,7 +32,7 @@ class OnlineVarStoreBuilder(object):
         self._supports = None
         self._varDataIndices = {}
         self._varDataCaches = {}
-        self._cache = {}
+        self._cache = None
 
     def setModel(self, model):
         self.setSupports(model.supports)
@@ -43,7 +43,7 @@ class OnlineVarStoreBuilder(object):
         self._supports = list(supports)
         if not self._supports[0]:
             del self._supports[0]  # Drop base master support
-        self._cache = {}
+        self._cache = None
         self._data = None
 
     def finish(self, optimize=True):
@@ -110,12 +110,13 @@ class OnlineVarStoreBuilder(object):
             assert len(deltas) == len(self._supports)
             deltas = tuple(deltas)
 
+        if not self._data:
+            self._add_VarData()
+
         varIdx = self._cache.get(deltas)
         if varIdx is not None:
             return varIdx
 
-        if not self._data:
-            self._add_VarData()
         inner = len(self._data.Item)
         if inner == 0xFFFF:
             # Full array. Start new one.
@@ -131,12 +132,13 @@ class OnlineVarStoreBuilder(object):
         deltas_list = [[round(d) for d in deltas] for deltas in deltas_list]
         deltas_list = tuple(tuple(deltas) for deltas in deltas_list)
 
+        if not self._data:
+            self._add_VarData(len(deltas_list))
+
         varIdx = self._cache.get(deltas_list)
         if varIdx is not None:
             return varIdx
 
-        if not self._data:
-            self._add_VarData(len(deltas_list))
         inner = len(self._data.Item)
         if inner + len(deltas_list) > 0xFFFF:
             # Full array. Start new one.
