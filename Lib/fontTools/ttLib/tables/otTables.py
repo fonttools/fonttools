@@ -100,7 +100,7 @@ VAR_COMPONENT_TRANSFORM_MAPPING = {
 }
 
 
-class VarComponentRecord:
+class VarComponent:
     def __init__(self):
         self.glyphName = None
         self.location = {}
@@ -159,7 +159,7 @@ class VarComponentRecord:
                     fi2fl(
                         struct.unpack(">h", data[i : i + 2])[0], values.fractionalBits
                     )
-                    * values.scale,
+                    * values.scale
                 )
                 i += 2
                 return v
@@ -207,12 +207,16 @@ class VarComponentRecord:
             flags |= VarComponentFlags.GID_IS_24BIT
             data.append(struct.pack(">L", glyphID)[1:])
         else:
+            if flags & VarComponentFlags.GID_IS_24BIT:
+                flags ^= VarComponentFlags.GID_IS_24BIT
             data.append(struct.pack(">H", glyphID))
 
         fvarAxisIndices = {axis.axisTag: i for i, axis in enumerate(font["fvar"].axes)}
         axisIndices = [fvarAxisIndices[tag] for tag in self.location.keys()]
         if all(a <= 255 for a in axisIndices):
             axisIndices = array.array("B", axisIndices)
+            if flags & VarComponentFlags.AXIS_INDICES_ARE_SHORT:
+                flags ^= VarComponentFlags.AXIS_INDICES_ARE_SHORT
         else:
             axisIndices = array.array("H", axisIndices)
             if sys.byteorder != "big":
@@ -229,6 +233,8 @@ class VarComponentRecord:
         if self.locationVarIdxBase != NO_VARIATION_INDEX:
             flags |= VarComponentFlags.AXIS_VALUES_HAVE_VARIATION
             data.append(struct.pack(">L", self.locationVarIdxBase))
+        elif flags & VarComponentFlags.AXIS_VALUES_HAVE_VARIATION:
+            flags ^= VarComponentFlags.AXIS_VALUES_HAVE_VARIATION
 
         def write_transform_component(value, values):
             if flags & values.flag:
@@ -245,11 +251,13 @@ class VarComponentRecord:
         if self.transformVarIdxBase != NO_VARIATION_INDEX:
             flags |= VarComponentFlags.TRANSFORM_HAS_VARIATION
             data.append(struct.pack(">L", self.transformVarIdxBase))
+        elif flags & VarComponentFlags.TRANSFORM_HAS_VARIATION:
+            flags ^= VarComponentFlags.TRANSFORM_HAS_VARIATION
 
         return struct.pack(">H", flags) + bytesjoin(data)
 
-    def toXML(self, writer, ttFont):
-        attrs = [("glyphName", self.glyphName)]
+    def toXML(self, writer, ttFont, attrs):
+        attrs.append(("glyphName", self.glyphName))
 
         if hasattr(self, "flags"):
             attrs = attrs + [("flags", hex(self.flags))]
@@ -259,7 +267,7 @@ class VarComponentRecord:
             if v != mapping.defaultValue:
                 attrs.append((attr_name, fl2str(v, mapping.fractionalBits)))
 
-        writer.begintag("varComponent", attrs)
+        writer.begintag("VarComponent", attrs)
         writer.newline()
 
         writer.begintag("location")
@@ -270,7 +278,7 @@ class VarComponentRecord:
         writer.endtag("location")
         writer.newline()
 
-        writer.endtag("varComponent")
+        writer.endtag("VarComponent")
         writer.newline()
 
     def fromXML(self, name, attrs, content, ttFont):
@@ -309,7 +317,8 @@ class VarComponentRecord:
         return result if result is NotImplemented else not result
 
 
-class VarCompositeGlyphRecord:
+class VarCompositeGlyph(BaseTable):
+
     def populateDefaults(self, propagator=None):
         if not hasattr(self, "components"):
             self.components = []
@@ -317,7 +326,7 @@ class VarCompositeGlyphRecord:
     def decompile(self, data, font):
         self.components = []
         while data:
-            component = VarComponentRecord()
+            component = VarComponent()
             data = component.decompile(data, font)
             self.components.append(component)
 
@@ -328,11 +337,34 @@ class VarCompositeGlyphRecord:
         return bytesjoin(data)
 
     def toXML(self, xmlWriter, font, attrs, name):
-        raise NotImplementedError
+        xmlWriter.begintag("VarCompositeGlyph", attrs)
+        xmlWriter.newline()
+        for i, component in enumerate(self.components):
+            component.toXML(xmlWriter, font, [("index", i)])
+        xmlWriter.endtag("VarCompositeGlyph")
+        xmlWriter.newline()
 
     def fromXML(self, name, attrs, content, font):
-        raise NotImplementedError
+        self.populateDefaults()
+        if name == "VarComponent":
+            component = VarComponent()
+            component.fromXML(name, attrs, content, font)
+            self.components.append(component)
 
+class VarCompositeGlyphs(BaseTable):
+
+    def populateDefaults(self, propagator=None):
+        if not hasattr(self, "glyphs"):
+            self.glyphs = []
+
+    def fromXML(self, name, attrs, content, font):
+        self.populateDefaults()
+        if name == "VarCompositeGlyph":
+            glyph = VarCompositeGlyph()
+            content = [t for t in content if isinstance(t, tuple)]
+            for eltName, eltAttrs, eltContent in content:
+                glyph.fromXML(eltName, eltAttrs, eltContent, font)
+            self.glyphs.append(glyph)
 
 class AATStateTable(object):
     def __init__(self):

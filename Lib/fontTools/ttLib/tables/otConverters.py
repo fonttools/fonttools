@@ -18,7 +18,7 @@ from .otBase import (
 )
 from .otTables import (
     lookupTypes,
-    VarCompositeGlyphRecord,
+    VarCompositeGlyph,
     AATStateTable,
     AATState,
     AATAction,
@@ -1910,6 +1910,18 @@ class CFF2Index(BaseConverter):
         for item in items:
             writer.writeData(item)
 
+    def xmlRead(self, attrs, content, font):
+        abort
+        items = []
+        for eName, eAttrs, _eContent in filter(istuple, content):
+            print(eName)
+        return items
+
+    def xmlWrite(self, xmlWriter, font, value, name, attrs):
+        for i, item in enumerate(value):
+            item.toXML(xmlWriter, font, [("index", i)], name)
+
+
 
 class LookupFlag(UShort):
     def xmlWrite(self, xmlWriter, font, value, name, attrs):
@@ -1988,7 +2000,7 @@ converterMapping = {
     "ExtendMode": ExtendMode,
     "CompositeMode": CompositeMode,
     "STATFlags": STATFlags,
-    "VarCompositeGlyphRecords": partial(CFF2Index, itemClass=VarCompositeGlyphRecord),
+    "VarCompositeGlyphList": partial(CFF2Index, itemClass=VarCompositeGlyph),
     # AAT
     "CIDGlyphMap": CIDGlyphMap,
     "GlyphCIDMap": GlyphCIDMap,

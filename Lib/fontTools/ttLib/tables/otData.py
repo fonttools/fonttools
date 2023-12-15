@@ -3348,7 +3348,7 @@ otData = [
     (
         "VarCompositeGlyphs",
         [
-            ("VarCompositeGlyphRecords", "items", None, None, ""),
+            ("VarCompositeGlyphList", "glyphs", None, None, ""),
         ],
     ),
     # Glyph advance variations
