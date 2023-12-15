@@ -130,6 +130,29 @@ def buildVarStore(varRegionList, varDataList):
     return self
 
 
+def buildMultiVarData(varRegionIndices, items):
+    self = ot.MultiVarData()
+    self.Format = 1
+    self.VarRegionIndex = list(varRegionIndices)
+    regionCount = self.VarRegionCount = len(self.VarRegionIndex)
+    records = self.Item = []
+    if items:
+        for item in items:
+            assert len(item) == regionCount
+            records.append(list(item))
+    self.ItemCount = len(self.Item)
+    return self
+
+
+def buildMultiVarStore(varRegionList, varDataList):
+    self = ot.MultiVarStore()
+    self.Format = 1
+    self.VarRegionList = varRegionList
+    self.VarData = list(varDataList)
+    self.VarDataCount = len(self.VarData)
+    return self
+
+
 # Variation helpers
 
 

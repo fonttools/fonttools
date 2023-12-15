@@ -3322,6 +3322,25 @@ otData = [
             ("VarIdxMapValue", "mapping", "", 0, "Array of compressed data"),
         ],
     ),
+    # MultiVariationStore
+    (
+        "MultiVarData",
+        [
+            ("uint8", "Format", None, None, "Set to 1."),
+            ("uint16", "VarRegionCount", None, None, ""),
+            ("uint16", "VarRegionIndex", "VarRegionCount", 0, ""),
+            ("MultiVarDataValue", "Item", "", 0, ""),
+        ],
+    ),
+    (
+        "MultiVarStore",
+        [
+            ("uint16", "Format", None, None, "Set to 1."),
+            ("LOffset", "VarRegionList", None, None, ""),
+            ("uint16", "VarDataCount", None, None, ""),
+            ("LOffsetTo(MultiVarData)", "VarData", "VarDataCount", 0, ""),
+        ],
+    ),
     # VariableComposites
     (
         "VARC",
@@ -3334,14 +3353,7 @@ otData = [
                 "Version of the HVAR table-initially = 0x00010000",
             ),
             ("LOffset", "Coverage", None, None, ""),
-            (
-                "LOffsetTo(DeltaSetIndexMap)",
-                "VarIndexMap",
-                None,
-                None,
-                "Offset to DeltaSetIndexMap table (may be NULL)",
-            ),
-            ("LOffset", "VarStore", None, None, "(may be NULL)"),
+            ("LOffset", "MultiVarStore", None, None, "(may be NULL)"),
             ("LOffset", "VarCompositeGlyphs", None, None, ""),
         ],
     ),

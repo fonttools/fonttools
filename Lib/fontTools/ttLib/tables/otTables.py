@@ -317,6 +317,35 @@ class VarComponent:
         return result if result is NotImplemented else not result
 
 
+class CvarEncodedValues(BaseTable):
+    def __init__(self, values=None):
+        self.values = values or []
+
+    def populateDefaults(self, propagator=None):
+        if not hasattr(self, "values"):
+            self.values = ()
+
+    def decompile(self, data, font):
+        values = array.array("h", data)
+        if sys.byteorder != "big":
+            values.byteswap()
+        self.values = list(values)
+
+    def compile(self, font):
+        values = array.array("h", self.values)
+        if sys.byteorder != "big":
+            values.byteswap()
+        return bytes(values)
+
+    def toXML(self, xmlWriter, font, attrs, name):
+        xmlWriter.simpletag(name, attrs + [("value", self.values)])
+        xmlWriter.newline()
+
+    def fromXML(self, name, attrs, content, font):
+        self.populateDefaults()
+        values = safeEval(attrs["value"])
+
+
 class VarCompositeGlyph(BaseTable):
     def populateDefaults(self, propagator=None):
         if not hasattr(self, "components"):
