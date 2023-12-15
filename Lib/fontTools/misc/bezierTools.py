@@ -1171,6 +1171,10 @@ def lineLineIntersections(s1, e1, s2, e2):
     e1x, e1y = e1
     s2x, s2y = s2
     e2x, e2y = e2
+
+    def closepoints(pt1, pt2):
+        return math.isclose(pt1[0], pt2[0]) and math.isclose(pt1[1], pt2[1])
+
     if (
         math.isclose(s2x, e2x) and math.isclose(s1x, e1x) and not math.isclose(s1x, s2x)
     ):  # Parallel vertical
@@ -1179,15 +1183,19 @@ def lineLineIntersections(s1, e1, s2, e2):
         math.isclose(s2y, e2y) and math.isclose(s1y, e1y) and not math.isclose(s1y, s2y)
     ):  # Parallel horizontal
         return []
-    if math.isclose(s2x, e2x) and math.isclose(s2y, e2y):  # Line segment is tiny
+    if closepoints(s2, e2) or closepoints(s1, e1):  # Line segment is tiny
         return []
-    if math.isclose(s1x, e1x) and math.isclose(s1y, e1y):  # Line segment is tiny
-        return []
+    if closepoints(s1, s2):  # Coincident at starts
+        return [Intersection(pt=s1, t1=0, t2=0)]
+    if closepoints(e1, e2):  # Coincident at ends
+        return [Intersection(pt=e1, t1=1, t2=1)]
+    if closepoints(s1, e2):
+        return [Intersection(pt=s1, t1=0, t2=1)]
+    if closepoints(s2, e1):
+        return [Intersection(pt=s2, t1=1, t2=0)]
+
     if math.isclose(e1x, s1x):
-        if math.isclose(e2x, s2x):  # Same start
-            if math.isclose(s1y, s2y):
-                return [Intersection(pt=(s1x, s1y), t1=0, t2=0)]
-            # Degenerate coincident case
+        if math.isclose(e2x, s2x):
             return []
         x = s1x
         slope34 = (e2y - s2y) / (e2x - s2x)
@@ -1200,9 +1208,6 @@ def lineLineIntersections(s1, e1, s2, e2):
         ]
     if math.isclose(s2x, e2x):
         if math.isclose(s1x, e1x):
-            if math.isclose(e1y, e2y):  # Same end
-                return [Intersection(pt=(e1x, e1y), t1=1, t2=1)]
-            # Degenerate coincident case
             return []
         x = s2x
         slope12 = (e1y - s1y) / (e1x - s1x)
