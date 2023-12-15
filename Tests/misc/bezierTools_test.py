@@ -5,6 +5,7 @@ from fontTools.misc.bezierTools import (
     calcCubicBounds,
     curveLineIntersections,
     curveCurveIntersections,
+    lineLineIntersections,
     segmentPointAtT,
     splitLine,
     splitQuadratic,
@@ -197,3 +198,10 @@ def test_intersections_linelike():
     seg2 = [(0.0, 0.5), (0.25, 0.5), (0.75, 0.5), (1.0, 0.5)]
     pt = curveCurveIntersections(seg1, seg2)[0][0]
     assert pt == (0.0, 0.5)
+
+
+def test_intersections_samestart():
+    seg1 = [(250, 1000), (250, 810)]
+    seg2 = [(250, 1000), (250, 400)]
+    pt = lineLineIntersections(*seg1, *seg2)[0][0]
+    assert pt == (250.0, 1000.0)
