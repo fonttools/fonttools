@@ -104,9 +104,8 @@ class VarComponent:
     def __init__(self):
         self.glyphName = None
         self.location = {}
-        self.locationVarIdxBase = NO_VARIATION_INDEX
         self.transform = DecomposedTransform()
-        self.transformVarIdxBase = NO_VARIATION_INDEX
+        self.varIndexBase = NO_VARIATION_INDEX
 
     def decompile(self, data, font):
         i = 0
@@ -148,10 +147,6 @@ class VarComponent:
         axes = font["fvar"].axes
         self.location = {axes[i].axisTag: v for i, v in zip(axisIndices, axisValues)}
 
-        if flags & VarComponentFlags.AXIS_VALUES_HAVE_VARIATION:
-            self.locationVarIdxBase = struct.unpack(">L", data[i : i + 4])[0]
-            i += 4
-
         def read_transform_component(data, values):
             nonlocal i
             if flags & values.flag:
@@ -173,8 +168,11 @@ class VarComponent:
         if not (flags & VarComponentFlags.HAVE_SCALE_Y):
             self.transform.scaleY = self.transform.scaleX
 
-        if flags & VarComponentFlags.TRANSFORM_HAS_VARIATION:
-            self.transformVarIdxBase = struct.unpack(">L", data[i : i + 4])[0]
+        if flags & (
+            VarComponentFlags.AXIS_VALUES_HAVE_VARIATION
+            | VarComponentFlags.TRANSFORM_HAS_VARIATION
+        ):
+            self.varIndexBase = struct.unpack(">L", data[i : i + 4])[0]
             i += 4
 
         return data[i:]
@@ -230,12 +228,6 @@ class VarComponent:
             axisValues.byteswap()
         data.append(bytes(axisValues))
 
-        if self.locationVarIdxBase != NO_VARIATION_INDEX:
-            flags |= VarComponentFlags.AXIS_VALUES_HAVE_VARIATION
-            data.append(struct.pack(">L", self.locationVarIdxBase))
-        elif flags & VarComponentFlags.AXIS_VALUES_HAVE_VARIATION:
-            flags ^= VarComponentFlags.AXIS_VALUES_HAVE_VARIATION
-
         def write_transform_component(value, values):
             if flags & values.flag:
                 return struct.pack(
@@ -248,11 +240,11 @@ class VarComponent:
             value = getattr(self.transform, attr_name)
             data.append(write_transform_component(value, mapping_values))
 
-        if self.transformVarIdxBase != NO_VARIATION_INDEX:
-            flags |= VarComponentFlags.TRANSFORM_HAS_VARIATION
-            data.append(struct.pack(">L", self.transformVarIdxBase))
-        elif flags & VarComponentFlags.TRANSFORM_HAS_VARIATION:
-            flags ^= VarComponentFlags.TRANSFORM_HAS_VARIATION
+        if flags & (
+            VarComponentFlags.AXIS_VALUES_HAVE_VARIATION
+            | VarComponentFlags.TRANSFORM_HAS_VARIATION
+        ):
+            data.append(struct.pack(">L", self.varIndexBase))
 
         return struct.pack(">H", flags) + bytesjoin(data)
 
@@ -262,6 +254,11 @@ class VarComponent:
         if hasattr(self, "flags"):
             attrs = attrs + [("flags", hex(self.flags))]
 
+        # TODO Move to an element?
+        if self.varIndexBase != NO_VARIATION_INDEX:
+            attrs = attrs + [("varIndexBase", self.varIndexBase)]
+
+        # TODO Move transform into it's own element?
         for attr_name, mapping in VAR_COMPONENT_TRANSFORM_MAPPING.items():
             v = getattr(self.transform, attr_name)
             if v != mapping.defaultValue:
@@ -286,6 +283,9 @@ class VarComponent:
 
         if "flags" in attrs:
             self.flags = safeEval(attrs["flags"])
+
+        if "varIndexBase" in attrs:
+            self.varIndexBase = safeEval(attrs["varIndexBase"])
 
         for attr_name, mapping in VAR_COMPONENT_TRANSFORM_MAPPING.items():
             if attr_name not in attrs:
@@ -318,7 +318,6 @@ class VarComponent:
 
 
 class VarCompositeGlyph(BaseTable):
-
     def populateDefaults(self, propagator=None):
         if not hasattr(self, "components"):
             self.components = []
@@ -351,8 +350,8 @@ class VarCompositeGlyph(BaseTable):
             component.fromXML(name, attrs, content, font)
             self.components.append(component)
 
-class VarCompositeGlyphs(BaseTable):
 
+class VarCompositeGlyphs(BaseTable):
     def populateDefaults(self, propagator=None):
         if not hasattr(self, "glyphs"):
             self.glyphs = []
@@ -365,6 +364,7 @@ class VarCompositeGlyphs(BaseTable):
             for eltName, eltAttrs, eltContent in content:
                 glyph.fromXML(eltName, eltAttrs, eltContent, font)
             self.glyphs.append(glyph)
+
 
 class AATStateTable(object):
     def __init__(self):
