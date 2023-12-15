@@ -54,7 +54,7 @@ class OnlineVarStoreBuilder(object):
             data.calculateNumShorts(optimize=optimize)
         return self._store
 
-    def _add_VarData(self):
+    def _add_VarData(self, num_items=1):
         regionMap = self._regionMap
         regionList = self._regionList
 
@@ -76,7 +76,7 @@ class OnlineVarStoreBuilder(object):
             self._outer = varDataIdx
             self._data = self._store.VarData[varDataIdx]
             self._cache = self._varDataCaches[key]
-            if len(self._data.Item) == 0xFFFF:
+            if len(self._data.Item) + num_items > 0xFFFF:
                 # This is full.  Need new one.
                 varDataIdx = None
 
@@ -129,13 +129,18 @@ class OnlineVarStoreBuilder(object):
 
     def storeDeltasMany(self, deltas_list, *, round=round):
         deltas_list = [[round(d) for d in deltas] for deltas in deltas_list]
+        deltas_list = tuple(tuple(deltas) for deltas in deltas_list)
+
+        varIdx = self._cache.get(deltas_list)
+        if varIdx is not None:
+            return varIdx
 
         if not self._data:
-            self._add_VarData()
+            self._add_VarData(len(deltas_list))
         inner = len(self._data.Item)
         if inner + len(deltas_list) > 0xFFFF:
             # Full array. Start new one.
-            self._add_VarData()
+            self._add_VarData(len(deltas_list))
             return self.storeDeltasMany(deltas_list, round=noRound)
         for i, deltas in enumerate(deltas_list):
             self._data.addItem(deltas, round=noRound)
@@ -144,6 +149,8 @@ class OnlineVarStoreBuilder(object):
             self._cache[deltas] = varIdx
 
         varIdx = (self._outer << 16) + inner
+        self._cache[deltas_list] = varIdx
+
         return varIdx
 
 
