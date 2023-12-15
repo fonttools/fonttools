@@ -106,7 +106,8 @@ class VarComponent:
         self.glyphName = None
         self.location = {}
         self.transform = DecomposedTransform()
-        self.varIndexBase = NO_VARIATION_INDEX
+        self.locationVarIndex = NO_VARIATION_INDEX
+        self.transformVarIndex = NO_VARIATION_INDEX
 
     def decompile(self, data, font):
         i = 0
@@ -148,6 +149,10 @@ class VarComponent:
         axes = font["fvar"].axes
         self.location = {axes[i].axisTag: v for i, v in zip(axisIndices, axisValues)}
 
+        if flags & VarComponentFlags.AXIS_VALUES_HAVE_VARIATION:
+            self.locationVarIndex = struct.unpack(">L", data[i : i + 4])[0]
+            i += 4
+
         def read_transform_component(data, values):
             nonlocal i
             if flags & values.flag:
@@ -169,11 +174,8 @@ class VarComponent:
         if not (flags & VarComponentFlags.HAVE_SCALE_Y):
             self.transform.scaleY = self.transform.scaleX
 
-        if flags & (
-            VarComponentFlags.AXIS_VALUES_HAVE_VARIATION
-            | VarComponentFlags.TRANSFORM_HAS_VARIATION
-        ):
-            self.varIndexBase = struct.unpack(">L", data[i : i + 4])[0]
+        if flags & VarComponentFlags.TRANSFORM_HAS_VARIATION:
+            self.transformVarIndex = struct.unpack(">L", data[i : i + 4])[0]
             i += 4
 
         return data[i:]
@@ -229,6 +231,9 @@ class VarComponent:
             axisValues.byteswap()
         data.append(bytes(axisValues))
 
+        if flags & VarComponentFlags.AXIS_VALUES_HAVE_VARIATION:
+            data.append(struct.pack(">L", self.locationVarIndex))
+
         def write_transform_component(value, values):
             if flags & values.flag:
                 return struct.pack(
@@ -241,11 +246,8 @@ class VarComponent:
             value = getattr(self.transform, attr_name)
             data.append(write_transform_component(value, mapping_values))
 
-        if flags & (
-            VarComponentFlags.AXIS_VALUES_HAVE_VARIATION
-            | VarComponentFlags.TRANSFORM_HAS_VARIATION
-        ):
-            data.append(struct.pack(">L", self.varIndexBase))
+        if flags & VarComponentFlags.TRANSFORM_HAS_VARIATION:
+            data.append(struct.pack(">L", self.transformVarIndex))
 
         return struct.pack(">H", flags) + bytesjoin(data)
 
@@ -256,8 +258,10 @@ class VarComponent:
             attrs = attrs + [("flags", hex(self.flags))]
 
         # TODO Move to an element?
-        if self.varIndexBase != NO_VARIATION_INDEX:
-            attrs = attrs + [("varIndexBase", self.varIndexBase)]
+        if self.locationVarIndex != NO_VARIATION_INDEX:
+            attrs = attrs + [("locationVarIndex", self.locationVarIndex)]
+        if self.transformVarIndex != NO_VARIATION_INDEX:
+            attrs = attrs + [("transformVarIndex", self.transformVarIndex)]
 
         # TODO Move transform into it's own element?
         for attr_name, mapping in VAR_COMPONENT_TRANSFORM_MAPPING.items():
@@ -285,8 +289,10 @@ class VarComponent:
         if "flags" in attrs:
             self.flags = safeEval(attrs["flags"])
 
-        if "varIndexBase" in attrs:
-            self.varIndexBase = safeEval(attrs["varIndexBase"])
+        if "locationVarIndex" in attrs:
+            self.locationVarIndex = safeEval(attrs["locationVarIndex"])
+        if "transformVarIndex" in attrs:
+            self.transformVarIndex = safeEval(attrs["transformVarIndex"])
 
         for attr_name, mapping in VAR_COMPONENT_TRANSFORM_MAPPING.items():
             if attr_name not in attrs:
