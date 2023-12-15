@@ -12,6 +12,7 @@ from math import radians
 import itertools
 from collections import defaultdict, namedtuple
 from fontTools.ttLib.tables.otTraverse import dfs_base_table
+from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools.misc.arrayTools import quantizeRect
 from fontTools.misc.roundTools import otRound
 from fontTools.misc.transform import Transform, Identity, DecomposedTransform
@@ -323,19 +324,13 @@ class CvarEncodedValues(BaseTable):
 
     def populateDefaults(self, propagator=None):
         if not hasattr(self, "values"):
-            self.values = ()
+            self.values = []
 
     def decompile(self, data, font):
-        values = array.array("h", data)
-        if sys.byteorder != "big":
-            values.byteswap()
-        self.values = list(values)
+        self.values = TupleVariation.decompileDeltas_(None, data)[0]
 
     def compile(self, font):
-        values = array.array("h", self.values)
-        if sys.byteorder != "big":
-            values.byteswap()
-        return bytes(values)
+        return bytes(TupleVariation.compileDeltaValues_(self.values, bytearr=None))
 
     def toXML(self, xmlWriter, font, attrs, name):
         xmlWriter.simpletag(name, attrs + [("value", self.values)])

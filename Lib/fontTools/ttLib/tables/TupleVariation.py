@@ -420,6 +420,12 @@ class TupleVariation(object):
         numDeltas = len(deltas)
         while pos < numDeltas:
             value = deltas[pos]
+
+            if value == 32768:
+                # Special case for the value -32768, which cannot
+                # be represented as a 16-bit signed integer.
+                value -= 1
+
             # Within a word-encoded run of deltas, it is easiest
             # to start a new run (with a different encoding)
             # whenever we encounter a zero value. For example,
@@ -461,11 +467,11 @@ class TupleVariation(object):
         return pos
 
     @staticmethod
-    def decompileDeltas_(numDeltas, data, offset):
+    def decompileDeltas_(numDeltas, data, offset=0):
         """(numDeltas, data, offset) --> ([delta, delta, ...], newOffset)"""
         result = []
         pos = offset
-        while len(result) < numDeltas:
+        while len(result) < numDeltas if numDeltas is not None else pos < len(data):
             runHeader = data[pos]
             pos += 1
             numDeltasInRun = (runHeader & DELTA_RUN_COUNT_MASK) + 1
@@ -484,7 +490,7 @@ class TupleVariation(object):
                 assert len(deltas) == numDeltasInRun
                 pos += deltasSize
                 result.extend(deltas)
-        assert len(result) == numDeltas
+        assert numDeltas is None or len(result) == numDeltas
         return (result, pos)
 
     @staticmethod
