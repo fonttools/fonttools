@@ -513,7 +513,7 @@ class TupleVariation(object):
                 deltas.frombytes(data[pos : pos + deltasSize])
                 if sys.byteorder != "big":
                     deltas.byteswap()
-                assert len(deltas) == numDeltasInRun
+                assert len(deltas) == numDeltasInRun, (len(deltas), numDeltasInRun)
                 pos += deltasSize
                 result.extend(deltas)
         assert numDeltas is None or len(result) == numDeltas
