@@ -102,6 +102,15 @@ class _TTGlyphSetGlyf(_TTGlyphSet):
     def __getitem__(self, glyphName):
         return _TTGlyphGlyf(self, glyphName, recalcBounds=self.recalcBounds)
 
+class _TTGlyphSetGlyf(_TTGlyphSet):
+    def __init__(self, font, location, recalcBounds=True):
+        self.glyfTable = font["glyf"]
+        super().__init__(font, location, self.glyfTable, recalcBounds=recalcBounds)
+        self.gvarTable = font.get("gvar")
+
+    def __getitem__(self, glyphName):
+        return _TTGlyphGlyf(self, glyphName, recalcBounds=self.recalcBounds)
+
 
 class _TTGlyphSetCFF(_TTGlyphSet):
     def __init__(self, font, location):
@@ -121,6 +130,19 @@ class _TTGlyphSetCFF(_TTGlyphSet):
 
     def __getitem__(self, glyphName):
         return _TTGlyphCFF(self, glyphName)
+
+
+class _TTGlyphSetVARC(_TTGlyphSet):
+    def __init__(self, font, location, glyphSet):
+        self.glyphSet = glyphSet
+        super().__init__(font, location, glyphSet)
+        self.varcTable = font["VARC"].table
+
+    def __getitem__(self, glyphName):
+        varc = self.varcTable
+        if glyphName not in varc.Coverage.glyphs:
+            return self.glyphSet[glyphName]
+        return _TTGlyphVARC(self, glyphName)
 
 
 class _TTGlyph(ABC):
@@ -250,6 +272,49 @@ class _TTGlyphCFF(_TTGlyph):
         how that works.
         """
         self.glyphSet.charStrings[self.name].draw(pen, self.glyphSet.blender)
+
+
+class _TTGlyphVARC(_TTGlyph):
+
+    def _draw(self, pen, isPointPen):
+        """Draw the glyph onto ``pen``. See fontTools.pens.basePen for details
+        how that works.
+        """
+        from fontTools.ttLib.tables.otTables import VarComponentFlags
+        glyphSet = self.glyphSet
+        varc = glyphSet.varcTable
+        idx = varc.Coverage.glyphs.index(self.name)
+        glyph = varc.VarCompositeGlyphs.glyphs[idx]
+
+        from fontTools.varLib.multiVarStore import MultiVarStoreInstancer
+
+        instancer = MultiVarStoreInstancer(varc.MultiVarStore, self.glyphSet.font["fvar"].axes, self.glyphSet.location)
+
+        for comp in glyph.components:
+
+            comp = copy(comp) # Shallow copy
+
+            with self.glyphSet.glyphSet.pushLocation(
+                comp.location, comp.flags & VarComponentFlags.RESET_UNSPECIFIED_AXES
+            ):
+                try:
+                    pen.addVarComponent(
+                        comp.glyphName, comp.transform, self.glyphSet.rawLocation
+                    )
+                except AttributeError:
+                    t = comp.transform.toTransform()
+                    if isPointPen:
+                        tPen = TransformPointPen(pen, t)
+                        self.glyphSet[comp.glyphName].drawPoints(tPen)
+                    else:
+                        tPen = TransformPen(pen, t)
+                        self.glyphSet[comp.glyphName].draw(tPen)
+
+    def draw(self, pen):
+        self._draw(pen, False)
+
+    def drawPoints(self, pen):
+        self._draw(pen, True)
 
 
 def _setCoordinates(glyph, coord, glyfTable, *, recalcBounds=True):

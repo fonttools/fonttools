@@ -1,5 +1,6 @@
 from fontTools.misc.roundTools import noRound, otRound
 from fontTools.misc.intTools import bit_count
+from fontTools.misc.vector import Vector
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.varLib.models import supportScalar
 from fontTools.varLib.builder import (
@@ -8,6 +9,7 @@ from fontTools.varLib.builder import (
     buildMultiVarStore,
     buildMultiVarData,
 )
+from itertools import batched
 from functools import partial
 from collections import defaultdict
 from heapq import heappush, heappop
@@ -137,3 +139,52 @@ def MultiVarStore___bool__(self):
 
 
 ot.MultiVarStore.__bool__ = MultiVarStore___bool__
+
+
+class MultiVarStoreInstancer(object):
+    def __init__(self, multivarstore, fvar_axes, location={}):
+        self.fvar_axes = fvar_axes
+        assert multivarstore is None or multivarstore.Format == 1
+        self._varData = multivarstore.MultiVarData if multivarstore else []
+        self._regions = multivarstore.VarRegionList.Region if multivarstore else []
+        self.setLocation(location)
+
+    def setLocation(self, location):
+        self.location = dict(location)
+        self._clearCaches()
+
+    def _clearCaches(self):
+        self._scalars = {}
+
+    def _getScalar(self, regionIdx):
+        scalar = self._scalars.get(regionIdx)
+        if scalar is None:
+            support = self._regions[regionIdx].get_support(self.fvar_axes)
+            scalar = supportScalar(self.location, support)
+            self._scalars[regionIdx] = scalar
+        return scalar
+
+    @staticmethod
+    def interpolateFromDeltasAndScalars(deltas, scalars):
+        assert len(deltas) % len(scalars) == 0
+        m = len(deltas) // len(scalars)
+        delta = Vector([0] * m)
+        for d, s in zip((Vector(d) for d in batched(deltas, m)), scalars):
+            if not s:
+                continue
+            delta += d * s
+        return tuple(delta)
+
+    def __getitem__(self, varidx):
+        major, minor = varidx >> 16, varidx & 0xFFFF
+        if varidx == NO_VARIATION_INDEX:
+            return ()
+        varData = self._varData
+        scalars = [self._getScalar(ri) for ri in varData[major].VarRegionIndex]
+        deltas = varData[major].Item[minor]
+        return self.interpolateFromDeltasAndScalars(deltas, scalars)
+
+    def interpolateFromDeltas(self, varDataIndex, deltas):
+        varData = self._varData
+        scalars = [self._getScalar(ri) for ri in varData[varDataIndex].VarRegionIndex]
+        return self.interpolateFromDeltasAndScalars(deltas, scalars)
