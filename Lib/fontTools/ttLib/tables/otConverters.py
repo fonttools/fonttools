@@ -1846,6 +1846,8 @@ class CFF2Index(BaseConverter):
         self.itemClass = itemClass
 
     def read(self, reader, font, tableDict):
+        lazy = font.lazy and count > 8
+
         count = reader.readULong()
         if count == 0:
             return []
@@ -1861,18 +1863,18 @@ class CFF2Index(BaseConverter):
         items = []
         lastOffset = offsets[0]
         reader.readData(lastOffset)  # In case first offset is not 0
+
         for offset in offsets[1:]:
             assert lastOffset <= offset
-            items.append(reader.readData(offset - lastOffset))
-            lastOffset = offset
+            item = reader.readData(offset - lastOffset)
 
-        if self.itemClass is not None:
-            newItems = []
-            for item in items:
+            if self.itemClass is not None:
                 obj = self.itemClass()
                 obj.decompile(item, font)
-                newItems.append(obj)
-            items = newItems
+                item = obj
+
+            items.append(item)
+            lastOffset = offset
 
         return items
 
