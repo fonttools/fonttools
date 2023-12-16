@@ -447,6 +447,10 @@ class TupleVariation(object):
                 and (-128 <= deltas[pos + 1] <= 127)
             ):
                 break
+
+            if not (-32768 <= value <= 32767):
+                break
+
             pos += 1
         runLength = pos - offset
         while runLength >= 64:
@@ -471,11 +475,13 @@ class TupleVariation(object):
         numDeltas = len(deltas)
         while pos < numDeltas:
             value = deltas[pos]
+            if -32768 <= value <= 32767:
+                break
             pos += 1
         runLength = pos - offset
         while runLength >= 64:
             bytearr.append(DELTAS_ARE_LONGS | 63)
-            a = array.array("l", deltas[offset : offset + 64])
+            a = array.array("i", deltas[offset : offset + 64])
             if sys.byteorder != "big":
                 a.byteswap()
             bytearr.extend(a)
@@ -483,7 +489,7 @@ class TupleVariation(object):
             runLength -= 64
         if runLength:
             bytearr.append(DELTAS_ARE_LONGS | (runLength - 1))
-            a = array.array("l", deltas[offset:pos])
+            a = array.array("i", deltas[offset:pos])
             if sys.byteorder != "big":
                 a.byteswap()
             bytearr.extend(a)
@@ -502,9 +508,9 @@ class TupleVariation(object):
                 result.extend([0] * numDeltasInRun)
             else:
                 if (runHeader & DELTAS_SIZE_MASK) == DELTAS_ARE_LONGS:
-                    deltas = array.array("l")
+                    deltas = array.array("i")
                     deltasSize = numDeltasInRun * 4
-                if (runHeader & DELTAS_SIZE_MASK) == DELTAS_ARE_WORDS:
+                elif (runHeader & DELTAS_SIZE_MASK) == DELTAS_ARE_WORDS:
                     deltas = array.array("h")
                     deltasSize = numDeltasInRun * 2
                 else:
