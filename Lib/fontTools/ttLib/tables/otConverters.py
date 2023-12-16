@@ -121,7 +121,7 @@ class _LazyList(UserList):
             return [self[i] for i in indices]
         v = self.data[k]
         if callable(v):
-            v = v()
+            v = v(self, k)
             self.data[k] = v
         return v
 
@@ -187,23 +187,20 @@ class BaseConverter(object):
                 l.append(self.read(reader, font, tableDict))
             return l
         else:
-            closure = SimpleNamespace()
-            closure.reader = reader.copy()
-            closure.pos = closure.reader.pos
-            closure.font = font
-            closure.conv = self
-            closure.recordSize = recordSize
+            def read_item(self, i):
+                self.reader.seek(self.pos + i * self.recordSize)
+                return self.conv.read(self.reader, self.font, {})
 
-            def get_callable(i):
-                def read_item(i):
-                    closure.reader.seek(closure.pos + i * closure.recordSize)
-                    return closure.conv.read(closure.reader, closure.font, {})
-
-                return lambda: read_item(i)
+            l = _LazyList(read_item for i in range(count))
+            l.reader = reader.copy()
+            l.pos = l.reader.pos
+            l.font = font
+            l.conv = self
+            l.recordSize = recordSize
 
             reader.advance(count * recordSize)
 
-            return _LazyList(get_callable(i) for i in range(count))
+            return l
 
     def getRecordSize(self, reader):
         if hasattr(self, "staticSize"):
@@ -1877,28 +1874,25 @@ class CFF2Index(BaseConverter):
                 lastOffset = offset
             return items
         else:
-            closure = SimpleNamespace()
-            closure.reader = reader.copy()
-            closure.pos = closure.reader.pos
-            closure.font = font
-            closure.itemClass = self.itemClass
-            closure.offsets = offsets
+            def read_item(self, i):
+                self.reader.seek(self.pos + self.offsets[i])
+                item = self.reader.readData(self.offsets[i + 1] - self.offsets[i])
 
-            def get_callable(i):
-                def read_item(i):
-                    closure.reader.seek(closure.pos + closure.offsets[i])
-                    item = closure.reader.readData(closure.offsets[i + 1] - closure.offsets[i])
+                if self.itemClass is not None:
+                    obj = self.itemClass()
+                    obj.decompile(item, self.font)
+                    item = obj
 
-                    if closure.itemClass is not None:
-                        obj = closure.itemClass()
-                        obj.decompile(item, closure.font)
-                        item = obj
+                return item
 
-                    return item
+            l = _LazyList(read_item for i in range(count))
+            l.reader = reader.copy()
+            l.pos = l.reader.pos
+            l.font = font
+            l.itemClass = self.itemClass
+            l.offsets = offsets
 
-                return lambda: read_item(i)
-
-            return _LazyList(get_callable(i) for i in range(count))
+            return l
 
     def write(self, writer, font, tableDict, values, repeatIndex=None):
         items = values
