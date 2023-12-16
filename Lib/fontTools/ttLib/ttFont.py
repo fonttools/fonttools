@@ -4,7 +4,12 @@ from fontTools.misc.configTools import AbstractConfig
 from fontTools.misc.textTools import Tag, byteord, tostr
 from fontTools.misc.loggingTools import deprecateArgument
 from fontTools.ttLib import TTLibError
-from fontTools.ttLib.ttGlyphSet import _TTGlyph, _TTGlyphSetCFF, _TTGlyphSetGlyf, _TTGlyphSetVARC
+from fontTools.ttLib.ttGlyphSet import (
+    _TTGlyph,
+    _TTGlyphSetCFF,
+    _TTGlyphSetGlyf,
+    _TTGlyphSetVARC,
+)
 from fontTools.ttLib.sfnt import SFNTReader, SFNTWriter
 from io import BytesIO, StringIO, UnsupportedOperation
 import os
