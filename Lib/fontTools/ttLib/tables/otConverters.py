@@ -1846,8 +1846,6 @@ class CFF2Index(BaseConverter):
         self.itemClass = itemClass
 
     def read(self, reader, font, tableDict):
-        lazy = font.lazy and count > 8
-
         count = reader.readULong()
         if count == 0:
             return []
@@ -1860,23 +1858,47 @@ class CFF2Index(BaseConverter):
         }[offSize]
         offsets = readArray(count + 1)
 
-        items = []
-        lastOffset = offsets[0]
-        reader.readData(lastOffset)  # In case first offset is not 0
+        lazy = font.lazy is not False and count > 8
+        if not lazy:
+            items = []
+            lastOffset = offsets.pop(0)
+            reader.readData(lastOffset)  # In case first offset is not 0
 
-        for offset in offsets[1:]:
-            assert lastOffset <= offset
-            item = reader.readData(offset - lastOffset)
+            for offset in offsets:
+                assert lastOffset <= offset
+                item = reader.readData(offset - lastOffset)
 
-            if self.itemClass is not None:
-                obj = self.itemClass()
-                obj.decompile(item, font)
-                item = obj
+                if self.itemClass is not None:
+                    obj = self.itemClass()
+                    obj.decompile(item, font)
+                    item = obj
 
-            items.append(item)
-            lastOffset = offset
+                items.append(item)
+                lastOffset = offset
+            return items
+        else:
+            closure = SimpleNamespace()
+            closure.reader = reader.copy()
+            closure.pos = closure.reader.pos
+            closure.font = font
+            closure.itemClass = self.itemClass
+            closure.offsets = offsets
 
-        return items
+            def get_callable(i):
+                def read_item(i):
+                    closure.reader.seek(closure.pos + closure.offsets[i])
+                    item = closure.reader.readData(closure.offsets[i + 1] - closure.offsets[i])
+
+                    if closure.itemClass is not None:
+                        obj = closure.itemClass()
+                        obj.decompile(item, closure.font)
+                        item = obj
+
+                    return item
+
+                return lambda: read_item(i)
+
+            return _LazyList(get_callable(i) for i in range(count))
 
     def write(self, writer, font, tableDict, values, repeatIndex=None):
         items = values
