@@ -1146,7 +1146,7 @@ class BaseTable(object):
         except KeyError:
             raise  # XXX on KeyError, raise nice error
         value = conv.xmlRead(attrs, content, font)
-        if conv.repeat:
+        if conv.repeat is not None:
             seq = getattr(self, conv.name, None)
             if seq is None:
                 seq = []

@@ -144,12 +144,12 @@ def buildMultiVarData(varRegionIndices, items):
     return self
 
 
-def buildMultiVarStore(varRegionList, varDataList):
+def buildMultiVarStore(varRegionList, multiVarDataList):
     self = ot.MultiVarStore()
     self.Format = 1
     self.VarRegionList = varRegionList
-    self.VarData = list(varDataList)
-    self.VarDataCount = len(self.VarData)
+    self.MultiVarData = list(multiVarDataList)
+    self.MultiVarDataCount = len(self.MultiVarData)
     return self
 
 

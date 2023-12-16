@@ -48,7 +48,7 @@ class OnlineMultiVarStoreBuilder(object):
 
     def finish(self, optimize=True):
         self._regionList.RegionCount = len(self._regionList.Region)
-        self._store.VarDataCount = len(self._store.VarData)
+        self._store.MultiVarDataCount = len(self._store.MultiVarData)
         return self._store
 
     def _add_MultiVarData(self):
@@ -71,7 +71,7 @@ class OnlineMultiVarStoreBuilder(object):
         varDataIdx = self._varDataIndices.get(key)
         if varDataIdx is not None:
             self._outer = varDataIdx
-            self._data = self._store.VarData[varDataIdx]
+            self._data = self._store.MultiVarData[varDataIdx]
             self._cache = self._varDataCaches[key]
             if len(self._data.Item) == 0xFFFF:
                 # This is full.  Need new one.
@@ -79,8 +79,8 @@ class OnlineMultiVarStoreBuilder(object):
 
         if varDataIdx is None:
             self._data = buildMultiVarData(regionIndices, [])
-            self._outer = len(self._store.VarData)
-            self._store.VarData.append(self._data)
+            self._outer = len(self._store.MultiVarData)
+            self._store.MultiVarData.append(self._data)
             self._varDataIndices[key] = self._outer
             if key not in self._varDataCaches:
                 self._varDataCaches[key] = {}
@@ -133,7 +133,7 @@ ot.MultiVarData.addItem = MultiVarData_addItem
 
 
 def MultiVarStore___bool__(self):
-    return bool(self.VarData)
+    return bool(self.MultiVarData)
 
 
 ot.MultiVarStore.__bool__ = MultiVarStore___bool__

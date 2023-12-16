@@ -1912,11 +1912,9 @@ class CFF2Index(BaseConverter):
             writer.writeData(item)
 
     def xmlRead(self, attrs, content, font):
-        abort
-        items = []
-        for eName, eAttrs, _eContent in filter(istuple, content):
-            print(eName)
-        return items
+        obj = self.itemClass()
+        obj.fromXML(None, attrs, content, font)
+        return obj
 
     def xmlWrite(self, xmlWriter, font, value, name, attrs):
         for i, item in enumerate(value):

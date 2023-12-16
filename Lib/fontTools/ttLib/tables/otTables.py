@@ -344,7 +344,7 @@ class CvarEncodedValues(BaseTable):
 
     def fromXML(self, name, attrs, content, font):
         self.populateDefaults()
-        values = safeEval(attrs["value"])
+        self.values = safeEval(attrs["value"])
 
 
 class VarCompositeGlyph(BaseTable):

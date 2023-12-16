@@ -3337,8 +3337,8 @@ otData = [
         [
             ("uint16", "Format", None, None, "Set to 1."),
             ("LOffset", "VarRegionList", None, None, ""),
-            ("uint16", "VarDataCount", None, None, ""),
-            ("LOffsetTo(MultiVarData)", "VarData", "VarDataCount", 0, ""),
+            ("uint16", "MultiVarDataCount", None, None, ""),
+            ("LOffset", "MultiVarData", "MultiVarDataCount", 0, ""),
         ],
     ),
     # VariableComposites
