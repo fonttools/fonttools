@@ -102,6 +102,7 @@ class _TTGlyphSetGlyf(_TTGlyphSet):
     def __getitem__(self, glyphName):
         return _TTGlyphGlyf(self, glyphName, recalcBounds=self.recalcBounds)
 
+
 class _TTGlyphSetGlyf(_TTGlyphSet):
     def __init__(self, font, location, recalcBounds=True):
         self.glyfTable = font["glyf"]
@@ -275,12 +276,15 @@ class _TTGlyphCFF(_TTGlyph):
 
 
 class _TTGlyphVARC(_TTGlyph):
-
     def _draw(self, pen, isPointPen):
         """Draw the glyph onto ``pen``. See fontTools.pens.basePen for details
         how that works.
         """
-        from fontTools.ttLib.tables.otTables import VarComponentFlags
+        from fontTools.ttLib.tables.otTables import (
+            VarComponentFlags,
+            NO_VARIATION_INDEX,
+        )
+
         glyphSet = self.glyphSet
         varc = glyphSet.varcTable
         idx = varc.Coverage.glyphs.index(self.name)
@@ -288,27 +292,42 @@ class _TTGlyphVARC(_TTGlyph):
 
         from fontTools.varLib.multiVarStore import MultiVarStoreInstancer
 
-        instancer = MultiVarStoreInstancer(varc.MultiVarStore, self.glyphSet.font["fvar"].axes, self.glyphSet.location)
+        instancer = MultiVarStoreInstancer(
+            varc.MultiVarStore, self.glyphSet.font["fvar"].axes, self.glyphSet.location
+        )
+        instancer.setLocation(self.glyphSet.location)
 
         for comp in glyph.components:
+            comp = copy(comp)  # Shallow copy
+            locationValues, transformValues = comp.getComponentValues()
 
-            comp = copy(comp) # Shallow copy
+            if comp.locationVarIndex != NO_VARIATION_INDEX:
+                assert locationValues
+                locationDeltas = instancer[comp.locationVarIndex]
+                locationValues = list(locationValues + locationDeltas)
+            if comp.transformVarIndex != NO_VARIATION_INDEX:
+                assert transformValues
+                transformDeltas = instancer[comp.transformVarIndex]
+                transformValues = list(transformValues + transformDeltas)
 
             with self.glyphSet.glyphSet.pushLocation(
                 comp.location, comp.flags & VarComponentFlags.RESET_UNSPECIFIED_AXES
             ):
-                try:
-                    pen.addVarComponent(
-                        comp.glyphName, comp.transform, self.glyphSet.rawLocation
-                    )
-                except AttributeError:
-                    t = comp.transform.toTransform()
-                    if isPointPen:
-                        tPen = TransformPointPen(pen, t)
-                        self.glyphSet[comp.glyphName].drawPoints(tPen)
-                    else:
-                        tPen = TransformPen(pen, t)
-                        self.glyphSet[comp.glyphName].draw(tPen)
+                with self.glyphSet.pushLocation(
+                    comp.location, comp.flags & VarComponentFlags.RESET_UNSPECIFIED_AXES
+                ):
+                    try:
+                        pen.addVarComponent(
+                            comp.glyphName, comp.transform, self.glyphSet.rawLocation
+                        )
+                    except AttributeError:
+                        t = comp.transform.toTransform()
+                        if isPointPen:
+                            tPen = TransformPointPen(pen, t)
+                            self.glyphSet[comp.glyphName].drawPoints(tPen)
+                        else:
+                            tPen = TransformPen(pen, t)
+                            self.glyphSet[comp.glyphName].draw(tPen)
 
     def draw(self, pen):
         self._draw(pen, False)

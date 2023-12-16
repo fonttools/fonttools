@@ -166,19 +166,22 @@ class MultiVarStoreInstancer(object):
 
     @staticmethod
     def interpolateFromDeltasAndScalars(deltas, scalars):
-        assert len(deltas) % len(scalars) == 0
+        deltas = deltas.values
+        if not deltas:
+            return Vector([])
+        assert len(deltas) % len(scalars) == 0, (len(deltas), len(scalars))
         m = len(deltas) // len(scalars)
         delta = Vector([0] * m)
-        for d, s in zip((Vector(d) for d in batched(deltas, m)), scalars):
+        for d, s in zip(batched(deltas, m), scalars):
             if not s:
                 continue
-            delta += d * s
-        return tuple(delta)
+            delta += Vector(d) * s
+        return delta
 
     def __getitem__(self, varidx):
         major, minor = varidx >> 16, varidx & 0xFFFF
         if varidx == NO_VARIATION_INDEX:
-            return ()
+            return Vector([])
         varData = self._varData
         scalars = [self._getScalar(ri) for ri in varData[major].VarRegionIndex]
         deltas = varData[major].Item[minor]

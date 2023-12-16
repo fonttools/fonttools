@@ -17,6 +17,7 @@ from fontTools.misc.arrayTools import quantizeRect
 from fontTools.misc.roundTools import otRound
 from fontTools.misc.transform import Transform, Identity, DecomposedTransform
 from fontTools.misc.textTools import bytesjoin, pad, safeEval
+from fontTools.misc.vector import Vector
 from fontTools.pens.boundsPen import ControlBoundsPen
 from fontTools.pens.transformPen import TransformPen
 from .otBase import (
@@ -244,6 +245,7 @@ class VarComponent:
 
         for attr_name, mapping_values in VAR_COMPONENT_TRANSFORM_MAPPING.items():
             value = getattr(self.transform, attr_name)
+            # How to drop scaleX == scaleY here?
             data.append(write_transform_component(value, mapping_values))
 
         if flags & VarComponentFlags.TRANSFORM_HAS_VARIATION:
@@ -322,6 +324,30 @@ class VarComponent:
     def __ne__(self, other):
         result = self.__eq__(other)
         return result if result is NotImplemented else not result
+
+    def getComponentValues(self):
+        flags = self.flags
+
+        if flags & VarComponentFlags.AXIS_VALUES_HAVE_VARIATION:
+            locationValues = [fl2fi(v, 14) for v in self.location.values()]
+        else:
+            locationValues = []
+
+        transformValues = []
+
+        def append_transform_component(value, values):
+            nonlocal transformValues
+            if flags & values.flag:
+                transformValues.append(
+                    fl2fi(value / values.scale, values.fractionalBits)
+                )
+
+        if flags & VarComponentFlags.TRANSFORM_HAS_VARIATION:
+            for attr_name, mapping_values in VAR_COMPONENT_TRANSFORM_MAPPING.items():
+                value = getattr(self.transform, attr_name)
+                append_transform_component(value, mapping_values)
+
+        return Vector(locationValues), Vector(transformValues)
 
 
 class CvarEncodedValues(BaseTable):
