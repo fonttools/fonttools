@@ -1847,16 +1847,19 @@ class CFF2Index(BaseConverter):
         if count == 0:
             return []
         offSize = reader.readUInt8()
-        readArray = {
-            1: reader.readUInt8Array,
-            2: reader.readUShortArray,
-            3: reader.readUInt24Array,
-            4: reader.readULongArray,
-        }[offSize]
-        offsets = readArray(count + 1)
+
+        def getReadArray(reader, offSize):
+            return {
+                1: reader.readUInt8Array,
+                2: reader.readUShortArray,
+                3: reader.readUInt24Array,
+                4: reader.readULongArray,
+            }[offSize]
+        readArray = getReadArray(reader, offSize)
 
         lazy = font.lazy is not False and count > 8
         if not lazy:
+            offsets = readArray(count + 1)
             items = []
             lastOffset = offsets.pop(0)
             reader.readData(lastOffset)  # In case first offset is not 0
@@ -1875,8 +1878,10 @@ class CFF2Index(BaseConverter):
             return items
         else:
             def read_item(self, i):
-                self.reader.seek(self.pos + self.offsets[i])
-                item = self.reader.readData(self.offsets[i + 1] - self.offsets[i])
+                self.reader.seek(self.offset_pos + i * self.offSize)
+                offsets = self.readArray(2)
+                self.reader.seek(self.data_pos + offsets[0])
+                item = self.reader.readData(offsets[1] - offsets[0])
 
                 if self.itemClass is not None:
                     obj = self.itemClass()
@@ -1885,12 +1890,16 @@ class CFF2Index(BaseConverter):
 
                 return item
 
-            l = _LazyList(read_item for i in range(count))
+            l = _LazyList([read_item] * count)
             l.reader = reader.copy()
-            l.pos = l.reader.pos
+            l.offset_pos = l.reader.pos
+            l.data_pos = l.offset_pos + (count + 1) * offSize
             l.font = font
             l.itemClass = self.itemClass
-            l.offsets = offsets
+            l.offSize = offSize
+            l.readArray = getReadArray(l.reader, offSize)
+
+            # TODO: Advance reader
 
             return l
 
