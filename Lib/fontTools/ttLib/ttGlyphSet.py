@@ -302,11 +302,11 @@ class _TTGlyphVARC(_TTGlyph):
             locationValues, transformValues = comp.getComponentValues()
 
             if comp.locationVarIndex != NO_VARIATION_INDEX:
-                assert locationValues
+                assert len(locationValues)
                 locationDeltas = instancer[comp.locationVarIndex]
                 locationValues = list(locationValues + locationDeltas)
             if comp.transformVarIndex != NO_VARIATION_INDEX:
-                assert transformValues
+                assert len(transformValues)
                 transformDeltas = instancer[comp.transformVarIndex]
                 transformValues = list(transformValues + transformDeltas)
 
