@@ -350,29 +350,6 @@ class VarComponent:
         return Vector(locationValues), Vector(transformValues)
 
 
-class CvarEncodedValues(BaseTable):
-    def __init__(self, values=None):
-        self.values = values or []
-
-    def populateDefaults(self, propagator=None):
-        if not hasattr(self, "values"):
-            self.values = []
-
-    def decompile(self, data, font):
-        self.values = TupleVariation.decompileDeltas_(None, data)[0]
-
-    def compile(self, font):
-        return bytes(TupleVariation.compileDeltaValues_(self.values, bytearr=None))
-
-    def toXML(self, xmlWriter, font, attrs, name):
-        xmlWriter.simpletag(name, attrs + [("value", self.values)])
-        xmlWriter.newline()
-
-    def fromXML(self, name, attrs, content, font):
-        self.populateDefaults()
-        self.values = safeEval(attrs["value"])
-
-
 class VarCompositeGlyph(BaseTable):
     def populateDefaults(self, propagator=None):
         if not hasattr(self, "components"):
@@ -420,6 +397,29 @@ class VarCompositeGlyphs(BaseTable):
             for eltName, eltAttrs, eltContent in content:
                 glyph.fromXML(eltName, eltAttrs, eltContent, font)
             self.glyphs.append(glyph)
+
+
+class CvarEncodedValues(BaseTable):
+    def __init__(self, values=None):
+        self.values = values or []
+
+    def populateDefaults(self, propagator=None):
+        if not hasattr(self, "values"):
+            self.values = []
+
+    def decompile(self, data, font):
+        self.values = TupleVariation.decompileDeltas_(None, data)[0]
+
+    def compile(self, font):
+        return bytes(TupleVariation.compileDeltaValues_(self.values, bytearr=None))
+
+    def toXML(self, xmlWriter, font, attrs, name):
+        xmlWriter.simpletag(name, attrs + [("value", self.values)])
+        xmlWriter.newline()
+
+    def fromXML(self, name, attrs, content, font):
+        self.populateDefaults()
+        self.values = safeEval(attrs["value"])
 
 
 class AATStateTable(object):
