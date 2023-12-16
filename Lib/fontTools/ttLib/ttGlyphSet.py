@@ -30,6 +30,11 @@ class _TTGlyphSet(Mapping):
             else {}
         )
         self.location = location if location is not None else {}
+        self.rawLocation = {}  # VarComponent-only location
+        self.originalLocation = location if location is not None else {}
+        self.depth = 0
+        self.locationStack = []
+        self.rawLocationStack = []
         self.glyphsMapping = glyphsMapping
         self.hMetrics = font["hmtx"].metrics
         self.vMetrics = getattr(font.get("vmtx"), "metrics", None)
@@ -43,6 +48,34 @@ class _TTGlyphSet(Mapping):
                     self.hvarTable.VarStore, font["fvar"].axes, location
                 )
             # TODO VVAR, VORG
+
+    @contextmanager
+    def pushLocation(self, location, reset: bool):
+        self.locationStack.append(self.location)
+        self.rawLocationStack.append(self.rawLocation)
+        if reset:
+            self.location = self.originalLocation.copy()
+            self.rawLocation = self.defaultLocationNormalized.copy()
+        else:
+            self.location = self.location.copy()
+            self.rawLocation = {}
+        self.location.update(location)
+        self.rawLocation.update(location)
+
+        try:
+            yield None
+        finally:
+            self.location = self.locationStack.pop()
+            self.rawLocation = self.rawLocationStack.pop()
+
+    @contextmanager
+    def pushDepth(self):
+        try:
+            depth = self.depth
+            self.depth += 1
+            yield depth
+        finally:
+            self.depth -= 1
 
     def __contains__(self, glyphName):
         return glyphName in self.glyphsMapping
@@ -140,14 +173,24 @@ class _TTGlyphGlyf(_TTGlyph):
         how that works.
         """
         glyph, offset = self._getGlyphAndOffset()
-        glyph.draw(pen, self.glyphSet.glyfTable, offset)
+
+        with self.glyphSet.pushDepth() as depth:
+            if depth:
+                offset = 0  # Offset should only apply at top-level
+
+            glyph.draw(pen, self.glyphSet.glyfTable, offset)
 
     def drawPoints(self, pen):
         """Draw the glyph onto ``pen``. See fontTools.pens.pointPen for details
         how that works.
         """
         glyph, offset = self._getGlyphAndOffset()
-        glyph.drawPoints(pen, self.glyphSet.glyfTable, offset)
+
+        with self.glyphSet.pushDepth() as depth:
+            if depth:
+                offset = 0  # Offset should only apply at top-level
+
+            glyph.drawPoints(pen, self.glyphSet.glyfTable, offset)
 
     def _getGlyphAndOffset(self):
         if self.glyphSet.location and self.glyphSet.gvarTable is not None:
