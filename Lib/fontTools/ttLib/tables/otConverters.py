@@ -33,6 +33,7 @@ from .otTables import (
 )
 from itertools import zip_longest, accumulate
 from functools import partial
+from types import SimpleNamespace
 import re
 import struct
 from typing import Optional
@@ -107,10 +108,6 @@ def buildConverters(tableSpec, tableNamespace):
     return converters, convertersByName
 
 
-class _MissingItem(tuple):
-    __slots__ = ()
-
-
 try:
     from collections import UserList
 except ImportError:
@@ -118,19 +115,15 @@ except ImportError:
 
 
 class _LazyList(UserList):
-    def __getslice__(self, i, j):
-        return self.__getitem__(slice(i, j))
-
     def __getitem__(self, k):
         if isinstance(k, slice):
             indices = range(*k.indices(len(self)))
             return [self[i] for i in indices]
-        item = self.data[k]
-        if isinstance(item, _MissingItem):
-            self.reader.seek(self.pos + item[0] * self.recordSize)
-            item = self.conv.read(self.reader, self.font, {})
-            self.data[k] = item
-        return item
+        v = self.data[k]
+        if callable(v):
+            v = v()
+            self.data[k] = v
+        return v
 
     def __add__(self, other):
         if isinstance(other, _LazyList):
@@ -194,15 +187,23 @@ class BaseConverter(object):
                 l.append(self.read(reader, font, tableDict))
             return l
         else:
-            l = _LazyList()
-            l.reader = reader.copy()
-            l.pos = l.reader.pos
-            l.font = font
-            l.conv = self
-            l.recordSize = recordSize
-            l.extend(_MissingItem([i]) for i in range(count))
+            closure = SimpleNamespace()
+            closure.reader = reader.copy()
+            closure.pos = closure.reader.pos
+            closure.font = font
+            closure.conv = self
+            closure.recordSize = recordSize
+
+            def get_callable(i):
+                def read_item(i):
+                    closure.reader.seek(closure.pos + i * closure.recordSize)
+                    return closure.conv.read(closure.reader, closure.font, {})
+
+                return lambda: read_item(i)
+
             reader.advance(count * recordSize)
-            return l
+
+            return _LazyList(get_callable(i) for i in range(count))
 
     def getRecordSize(self, reader):
         if hasattr(self, "staticSize"):

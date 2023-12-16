@@ -438,23 +438,6 @@ class LazyListTest(unittest.TestCase):
 
         self.assertEqual([11, 12], ll[1:3])
 
-    def test_getitem(self):
-        count = 2
-        reader = OTTableReader(b"\x00\xFE\xFF\x00\x00\x00", offset=1)
-        converter = otConverters.UInt8("UInt8", 0, None, None)
-        recordSize = converter.staticSize
-        l = otConverters._LazyList()
-        l.reader = reader
-        l.pos = l.reader.pos
-        l.font = None
-        l.conv = converter
-        l.recordSize = recordSize
-        l.extend(otConverters._MissingItem([i]) for i in range(count))
-        reader.advance(count * recordSize)
-
-        self.assertEqual(l[0], 254)
-        self.assertEqual(l[1], 255)
-
     def test_add_both_LazyList(self):
         ll1 = otConverters._LazyList([1])
         ll2 = otConverters._LazyList([2])
