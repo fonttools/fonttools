@@ -125,7 +125,7 @@ def MultiVarData_addItem(self, deltas, *, round=round):
     for d in deltas:
         values.extend(d)
 
-    values = ot.CvarEncodedValues(values)
+    values = ot.TupleValues(values)
 
     self.Item.append(values)
     self.ItemCount = len(self.Item)

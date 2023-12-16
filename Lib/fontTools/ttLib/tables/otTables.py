@@ -424,7 +424,7 @@ class VarCompositeGlyphs(BaseTable):
             self.glyphs.append(glyph)
 
 
-class CvarEncodedValues(BaseTable):
+class TupleValues(BaseTable):
     def __init__(self, values=None):
         self.values = values or []
 
