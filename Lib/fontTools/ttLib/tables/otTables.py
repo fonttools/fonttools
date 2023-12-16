@@ -328,10 +328,7 @@ class VarComponent:
     def getComponentValues(self):
         flags = self.flags
 
-        if flags & VarComponentFlags.AXIS_VALUES_HAVE_VARIATION:
-            locationValues = [fl2fi(v, 14) for v in self.location.values()]
-        else:
-            locationValues = []
+        locationValues = [fl2fi(v, 14) for v in self.location.values()]
 
         transformValues = []
 
@@ -348,6 +345,34 @@ class VarComponent:
                 append_transform_component(value, mapping_values)
 
         return Vector(locationValues), Vector(transformValues)
+
+    def setComponentValues(self, locationValues, transformValues):
+        flags = self.flags
+
+        assert len(locationValues) == len(self.location), (
+            len(locationValues),
+            len(self.location),
+        )
+        self.location = {
+            tag: fi2fl(v, 14) for tag, v in zip(self.location.keys(), locationValues)
+        }
+
+        self.transform = DecomposedTransform(self.transform)
+        i = 0
+
+        def read_transform_component(values):
+            nonlocal transformValues, i
+            if flags & values.flag:
+                v = fi2fl(transformValues[i], values.fractionalBits) * values.scale
+                i += 1
+                return v
+            else:
+                return values.defaultValue
+
+        for attr_name, mapping_values in VAR_COMPONENT_TRANSFORM_MAPPING.items():
+            value = read_transform_component(mapping_values)
+            setattr(self.transform, attr_name, value)
+        assert i == len(transformValues), (i, len(transformValues))
 
 
 class VarCompositeGlyph(BaseTable):

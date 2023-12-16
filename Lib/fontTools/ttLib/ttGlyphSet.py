@@ -310,6 +310,8 @@ class _TTGlyphVARC(_TTGlyph):
                 transformDeltas = instancer[comp.transformVarIndex]
                 transformValues = list(transformValues + transformDeltas)
 
+            comp.setComponentValues(locationValues, transformValues)
+
             with self.glyphSet.glyphSet.pushLocation(
                 comp.location, comp.flags & VarComponentFlags.RESET_UNSPECIFIED_AXES
             ):
