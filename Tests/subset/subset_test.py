@@ -428,14 +428,14 @@ class SubsetTest:
     def test_varComposite(self):
         fontpath = self.getpath("..", "..", "ttLib", "data", "varc-ac00-ac01.ttf")
         origfont = TTFont(fontpath)
-        assert len(origfont.getGlyphOrder()) == 6
+        assert len(origfont.getGlyphOrder()) == 11
         subsetpath = self.temp_path(".ttf")
         subset.main([fontpath, "--unicodes=ac00", "--output-file=%s" % subsetpath])
         subsetfont = TTFont(subsetpath)
-        assert len(subsetfont.getGlyphOrder()) == 4
+        assert len(subsetfont.getGlyphOrder()) == 6
         subset.main([fontpath, "--unicodes=ac01", "--output-file=%s" % subsetpath])
         subsetfont = TTFont(subsetpath)
-        assert len(subsetfont.getGlyphOrder()) == 5
+        assert len(subsetfont.getGlyphOrder()) == 8
 
     def test_timing_publishes_parts(self):
         fontpath = self.compile_font(self.getpath("TestTTF-Regular.ttx"), ".ttf")
