@@ -4,6 +4,10 @@ __all__ = ["LazyDict", "LazyList"]
 
 
 class LazyDict(UserDict):
+    def __init__(self, data):
+        super().__init__()
+        self.data = data
+
     def __getitem__(self, k):
         v = self.data[k]
         if callable(v):
