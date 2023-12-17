@@ -3318,20 +3318,6 @@ class Subsetter(object):
                     self.glyphs.add(font.getGlyphName(i))
                 log.info("Added first four glyphs to subset")
 
-        if self.options.layout_closure and "GSUB" in font:
-            with timer("close glyph list over 'GSUB'"):
-                log.info(
-                    "Closing glyph list over 'GSUB': %d glyphs before", len(self.glyphs)
-                )
-                log.glyphs(self.glyphs, font=font)
-                font["GSUB"].closure_glyphs(self)
-                self.glyphs.intersection_update(realGlyphs)
-                log.info(
-                    "Closed glyph list over 'GSUB': %d glyphs after", len(self.glyphs)
-                )
-                log.glyphs(self.glyphs, font=font)
-        self.glyphs_gsubed = frozenset(self.glyphs)
-
         if "MATH" in font:
             with timer("close glyph list over 'MATH'"):
                 log.info(
@@ -3345,6 +3331,20 @@ class Subsetter(object):
                 )
                 log.glyphs(self.glyphs, font=font)
         self.glyphs_mathed = frozenset(self.glyphs)
+
+        if self.options.layout_closure and "GSUB" in font:
+            with timer("close glyph list over 'GSUB'"):
+                log.info(
+                    "Closing glyph list over 'GSUB': %d glyphs before", len(self.glyphs)
+                )
+                log.glyphs(self.glyphs, font=font)
+                font["GSUB"].closure_glyphs(self)
+                self.glyphs.intersection_update(realGlyphs)
+                log.info(
+                    "Closed glyph list over 'GSUB': %d glyphs after", len(self.glyphs)
+                )
+                log.glyphs(self.glyphs, font=font)
+        self.glyphs_gsubed = frozenset(self.glyphs)
 
         for table in ("COLR", "bsln"):
             if table in font:
