@@ -324,12 +324,13 @@ class _TTGlyphVARC(_TTGlyph):
                         )
                     except AttributeError:
                         t = comp.transform.toTransform()
+                        glyph = self.glyphSet[comp.glyphName]
                         if isPointPen:
                             tPen = TransformPointPen(pen, t)
-                            self.glyphSet[comp.glyphName].drawPoints(tPen)
+                            glyph.drawPoints(tPen)
                         else:
                             tPen = TransformPen(pen, t)
-                            self.glyphSet[comp.glyphName].draw(tPen)
+                            glyph.draw(tPen)
 
     def draw(self, pen):
         self._draw(pen, False)
