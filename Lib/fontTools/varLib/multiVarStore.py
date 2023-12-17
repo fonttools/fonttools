@@ -3,6 +3,7 @@ from fontTools.misc.intTools import bit_count
 from fontTools.misc.vector import Vector
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.varLib.models import supportScalar
+import fontTools.varLib.varStore  # For monkey-patching
 from fontTools.varLib.builder import (
     buildVarRegionList,
     buildVarRegion,
@@ -191,3 +192,29 @@ class MultiVarStoreInstancer(object):
         varData = self._varData
         scalars = [self._getScalar(ri) for ri in varData[varDataIndex].VarRegionIndex]
         return self.interpolateFromDeltasAndScalars(deltas, scalars)
+
+
+def MultiVarStore_subset_varidxes(self, varIdxes):
+    return ot.VarStore.subset_varidxes(self, varIdxes, VarData="MultiVarData")
+
+
+ot.MultiVarStore.prune_regions = ot.VarStore.prune_regions
+ot.MultiVarStore.subset_varidxes = MultiVarStore_subset_varidxes
+
+
+def VARC_collect_varidxes(self, varidxes):
+    for glyph in self.VarCompositeGlyphs.glyphs:
+        for component in glyph.components:
+            varidxes.add(component.locationVarIndex)
+            varidxes.add(component.transformVarIndex)
+
+
+def VARC_remap_varidxes(self, varidxes_map):
+    for glyph in self.VarCompositeGlyphs.glyphs:
+        for component in glyph.components:
+            component.locationVarIndex = varidxes_map[component.locationVarIndex]
+            component.transformVarIndex = varidxes_map[component.transformVarIndex]
+
+
+ot.VARC.collect_varidxes = VARC_collect_varidxes
+ot.VARC.remap_varidxes = VARC_remap_varidxes

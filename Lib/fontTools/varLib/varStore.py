@@ -246,26 +246,29 @@ class VarStoreInstancer(object):
 
 
 def VarStore_subset_varidxes(
-    self, varIdxes, optimize=True, retainFirstMap=False, advIdxes=set()
+    self,
+    varIdxes,
+    optimize=True,
+    retainFirstMap=False,
+    advIdxes=set(),
+    *,
+    VarData="VarData",
 ):
     # Sort out used varIdxes by major/minor.
-    used = {}
+    used = defaultdict(set)
     for varIdx in varIdxes:
         if varIdx == NO_VARIATION_INDEX:
             continue
         major = varIdx >> 16
         minor = varIdx & 0xFFFF
-        d = used.get(major)
-        if d is None:
-            d = used[major] = set()
-        d.add(minor)
+        used[major].add(minor)
     del varIdxes
 
     #
     # Subset VarData
     #
 
-    varData = self.VarData
+    varData = getattr(self, VarData)
     newVarData = []
     varDataMap = {NO_VARIATION_INDEX: NO_VARIATION_INDEX}
     for major, data in enumerate(varData):
@@ -296,12 +299,13 @@ def VarStore_subset_varidxes(
         data.Item = newItems
         data.ItemCount = len(data.Item)
 
-        data.calculateNumShorts(optimize=optimize)
+        if VarData == "VarData":
+            data.calculateNumShorts(optimize=optimize)
 
-    self.VarData = newVarData
-    self.VarDataCount = len(self.VarData)
+    setattr(self, VarData, newVarData)
+    setattr(self, VarData + "Count", len(newVarData))
 
-    self.prune_regions()
+    self.prune_regions(VarData=VarData)
 
     return varDataMap
 
@@ -309,7 +313,7 @@ def VarStore_subset_varidxes(
 ot.VarStore.subset_varidxes = VarStore_subset_varidxes
 
 
-def VarStore_prune_regions(self):
+def VarStore_prune_regions(self, *, VarData="VarData"):
     """Remove unused VarRegions."""
     #
     # Subset VarRegionList
@@ -317,7 +321,7 @@ def VarStore_prune_regions(self):
 
     # Collect.
     usedRegions = set()
-    for data in self.VarData:
+    for data in getattr(self, VarData):
         usedRegions.update(data.VarRegionIndex)
     # Subset.
     regionList = self.VarRegionList
@@ -330,7 +334,7 @@ def VarStore_prune_regions(self):
     regionList.Region = newRegions
     regionList.RegionCount = len(regionList.Region)
     # Map.
-    for data in self.VarData:
+    for data in getattr(self, VarData):
         data.VarRegionIndex = [regionMap[i] for i in data.VarRegionIndex]
 
 

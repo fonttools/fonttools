@@ -14,7 +14,7 @@ from fontTools.misc.cliTools import makeOutputFileName
 from fontTools.subset.util import _add_method, _uniq_sort
 from fontTools.subset.cff import *
 from fontTools.subset.svg import *
-from fontTools.varLib import varStore  # for subset_varidxes
+from fontTools.varLib import varStore, multiVarStore  # For monkey-patching
 from fontTools.ttLib.tables._n_a_m_e import NameRecordVisitor
 import sys
 import struct
@@ -2629,12 +2629,16 @@ def closure_glyphs(self, s):
 
     s.glyphs.update(variants)
 
+
 @_add_method(ttLib.getTableClass("VARC"))
 def subset_glyphs(self, s):
     indices = self.table.Coverage.subset(s.glyphs)
     # TODO Subset MultiVarStore
-    self.table.VarCompositeGlyphs.glyphs = _list_subset(self.table.VarCompositeGlyphs.glyphs, indices)
+    self.table.VarCompositeGlyphs.glyphs = _list_subset(
+        self.table.VarCompositeGlyphs.glyphs, indices
+    )
     return bool(self.table.VarCompositeGlyphs.glyphs)
+
 
 @_add_method(ttLib.getTableClass("VARC"))
 def closure_glyphs(self, s):
@@ -2649,6 +2653,30 @@ def closure_glyphs(self, s):
                     if name not in glyphs:
                         glyphs.add(name)
                         new.add(name)
+
+
+@_add_method(ttLib.getTableClass("VARC"))
+def prune_post_subset(self, font, options):
+    table = self.table
+
+    if not hasattr(table, "MultiVarStore"):
+        return True
+
+    store = table.MultiVarStore
+
+    usedVarIdxes = set()
+
+    # Collect.
+    table.collect_varidxes(usedVarIdxes)
+
+    # Subset.
+    varidx_map = store.subset_varidxes(usedVarIdxes)
+
+    # Map.
+    table.remap_varidxes(varidx_map)
+
+    return True
+
 
 @_add_method(ttLib.getTableClass("MATH"))
 def closure_glyphs(self, s):
