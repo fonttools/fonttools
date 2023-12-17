@@ -8,6 +8,7 @@ from fontTools.misc.fixedTools import (
 )
 from fontTools.misc.roundTools import nearestMultipleShortestRepr, otRound
 from fontTools.misc.textTools import bytesjoin, tobytes, tostr, pad, safeEval
+from fontTools.misc.lazyTools import LazyList
 from fontTools.ttLib import getSearchRange
 from .otBase import (
     CountReference,
@@ -108,38 +109,6 @@ def buildConverters(tableSpec, tableNamespace):
     return converters, convertersByName
 
 
-try:
-    from collections import UserList
-except ImportError:
-    from UserList import UserList
-
-
-class _LazyList(UserList):
-    def __getitem__(self, k):
-        if isinstance(k, slice):
-            indices = range(*k.indices(len(self)))
-            return [self[i] for i in indices]
-        v = self.data[k]
-        if callable(v):
-            v = v(self, k)
-            self.data[k] = v
-        return v
-
-    def __add__(self, other):
-        if isinstance(other, _LazyList):
-            other = list(other)
-        elif isinstance(other, list):
-            pass
-        else:
-            return NotImplemented
-        return list(self) + other
-
-    def __radd__(self, other):
-        if not isinstance(other, list):
-            return NotImplemented
-        return other + list(self)
-
-
 def _base_converter_read_item(self, i):
     self.reader.seek(self.pos + i * self.recordSize)
     return self.conv.read(self.reader, self.font, {})
@@ -192,7 +161,7 @@ class BaseConverter(object):
                 l.append(self.read(reader, font, tableDict))
             return l
         else:
-            l = _LazyList(_base_converter_read_item for i in range(count))
+            l = LazyList(_base_converter_read_item for i in range(count))
             l.reader = reader.copy()
             l.pos = l.reader.pos
             l.font = font
@@ -1893,7 +1862,7 @@ class CFF2Index(BaseConverter):
                 lastOffset = offset
             return items
         else:
-            l = _LazyList([cff2_index_read_item] * count)
+            l = LazyList([cff2_index_read_item] * count)
             l.reader = reader.copy()
             l.offset_pos = l.reader.pos
             l.data_pos = l.offset_pos + (count + 1) * offSize

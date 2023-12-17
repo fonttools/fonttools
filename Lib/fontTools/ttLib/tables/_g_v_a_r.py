@@ -1,7 +1,8 @@
-from collections import UserDict, deque
+from collections import deque
 from functools import partial
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
+from fontTools.misc.lazyTools import LazyDict
 from . import DefaultTable
 import array
 import itertools
@@ -37,19 +38,6 @@ GVAR_HEADER_FORMAT = """
 """
 
 GVAR_HEADER_SIZE = sstruct.calcsize(GVAR_HEADER_FORMAT)
-
-
-class _LazyDict(UserDict):
-    def __init__(self, data):
-        super().__init__()
-        self.data = data
-
-    def __getitem__(self, k):
-        v = self.data[k]
-        if callable(v):
-            v = v(self, k)
-            self.data[k] = v
-        return v
 
 
 def _decompileVarGlyph(self, glyphName):
@@ -143,7 +131,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
         offsetToData = self.offsetToGlyphVariationData
         glyf = ttFont["glyf"]
 
-        l = _LazyDict(
+        l = LazyDict(
             {glyphs[gid]: _decompileVarGlyph for gid in range(self.glyphCount)}
         )
         l.reverseGlyphMap = ttFont.getReverseGlyphMap()
