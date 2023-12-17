@@ -8,6 +8,7 @@ from fontTools.misc.transform import DecomposedTransform
 from fontTools.misc.textTools import tostr, safeEval, pad
 from fontTools.misc.arrayTools import updateBounds, pointInRect
 from fontTools.misc.bezierTools import calcQuadraticBounds
+from fontTools.misc.lazyTools import LazyDict
 from fontTools.misc.fixedTools import (
     fixedToFloat as fi2fl,
     floatToFixed as fl2fi,
@@ -51,6 +52,19 @@ version = ".".join(version.split(".")[:2])
 # (eg. Charcoal)...
 #
 SCALE_COMPONENT_OFFSET_DEFAULT = 0  # 0 == MS, 1 == Apple
+
+
+def _load_glyph(self, glyphName):
+    gid = self.reverseGlyphMap[glyphName]
+    offsets = self.loca[gid : gid + 2]
+    glyphdata = self.glyphData[offsets[0] : offsets[1]]
+    if len(glyphdata) != offsets[1] - offsets[0]:
+        raise ttLib.TTLibError(
+            "not enough glyph data for glyph '%s' at "
+            "offset %d: expected %d bytes, found %d"
+            % (glyphName, offsets[0], offsets[1] - offsets[0], len(glyphdata))
+        )
+    return Glyph(glyphdata)
 
 
 class table__g_l_y_f(DefaultTable.DefaultTable):
@@ -97,33 +111,13 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
             [axis.axisTag for axis in ttFont["fvar"].axes] if "fvar" in ttFont else []
         )
         loca = ttFont["loca"]
-        pos = int(loca[0])
-        nextPos = 0
-        noname = 0
-        self.glyphs = {}
-        self.glyphOrder = glyphOrder = ttFont.getGlyphOrder()
-        self._reverseGlyphOrder = {}
-        for i in range(0, len(loca) - 1):
-            try:
-                glyphName = glyphOrder[i]
-            except IndexError:
-                noname = noname + 1
-                glyphName = "ttxautoglyph%s" % i
-            nextPos = int(loca[i + 1])
-            glyphdata = data[pos:nextPos]
-            if len(glyphdata) != (nextPos - pos):
-                raise ttLib.TTLibError("not enough 'glyf' table data")
-            glyph = Glyph(glyphdata)
-            self.glyphs[glyphName] = glyph
-            pos = nextPos
-        if len(data) - nextPos >= 4:
-            log.warning(
-                "too much 'glyf' table data: expected %d, received %d bytes",
-                nextPos,
-                len(data),
-            )
-        if noname:
-            log.warning("%s glyphs have no name", noname)
+        self.glyphOrder = ttFont.getGlyphOrder()
+
+        l = self.glyphs = LazyDict({k: _load_glyph for k in self.glyphOrder})
+        l.reverseGlyphMap = self._reverseGlyphOrder = ttFont.getReverseGlyphMap()
+        l.loca = loca
+        l.glyphData = data
+
         if ttFont.lazy is False:  # Be lazy for None and True
             self.ensureDecompiled()
 
