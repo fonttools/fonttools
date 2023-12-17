@@ -339,10 +339,9 @@ class VarComponent:
                     fl2fi(value / values.scale, values.fractionalBits)
                 )
 
-        if flags & VarComponentFlags.TRANSFORM_HAS_VARIATION:
-            for attr_name, mapping_values in VAR_COMPONENT_TRANSFORM_MAPPING.items():
-                value = getattr(self.transform, attr_name)
-                append_transform_component(value, mapping_values)
+        for attr_name, mapping_values in VAR_COMPONENT_TRANSFORM_MAPPING.items():
+            value = getattr(self.transform, attr_name)
+            append_transform_component(value, mapping_values)
 
         return Vector(locationValues), Vector(transformValues)
 
