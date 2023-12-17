@@ -142,6 +142,20 @@ def visit(visitor, obj, attr, variations):
                 coordinates[i] = visitor.scale(xy[0]), visitor.scale(xy[1])
 
 
+@ScalerVisitor.register_attr(ttLib.getTableClass("VARC"), "table")
+def visit(visitor, obj, attr, varc):
+    # VarComposite variations are a pain
+    for g in varc.VarCompositeGlyphs.glyphs:
+        for component in g.components:
+            t = component.transform
+            t.translateX = visitor.scale(t.translateX)
+            t.translateY = visitor.scale(t.translateY)
+            t.tCenterX = visitor.scale(t.tCenterX)
+            t.tCenterY = visitor.scale(t.tCenterY)
+
+    # TODO: MultiVarStore
+
+
 @ScalerVisitor.register_attr(ttLib.getTableClass("kern"), "kernTables")
 def visit(visitor, obj, attr, kernTables):
     for table in kernTables:
