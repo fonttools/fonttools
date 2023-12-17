@@ -47,7 +47,7 @@ class _LazyDict(UserDict):
     def __getitem__(self, k):
         v = self.data[k]
         if callable(v):
-            v = v()
+            v = v(self, k)
             self.data[k] = v
         return v
 
@@ -128,20 +128,23 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
         offsetToData = self.offsetToGlyphVariationData
         glyf = ttFont["glyf"]
 
-        def decompileVarGlyph(glyphName, gid):
+        def decompileVarGlyph(self, glyphName):
+            gid = self.reverseGlyphMap[glyphName]
             gvarData = data[
                 offsetToData + offsets[gid] : offsetToData + offsets[gid + 1]
             ]
             if not gvarData:
                 return []
-            glyph = glyf[glyphName]
-            numPointsInGlyph = self.getNumPoints_(glyph)
+            glyph = self._glyf[glyphName]
+            numPointsInGlyph = self._gvar.getNumPoints_(glyph)
             return decompileGlyph_(numPointsInGlyph, sharedCoords, axisTags, gvarData)
 
-        for gid in range(self.glyphCount):
-            glyphName = glyphs[gid]
-            variations[glyphName] = partial(decompileVarGlyph, glyphName, gid)
-        self.variations = _LazyDict(variations)
+        l = _LazyDict({glyphs[gid]: decompileVarGlyph for gid in range(self.glyphCount)})
+        l.reverseGlyphMap = ttFont.getReverseGlyphMap()
+        l._glyf = glyf
+        l._gvar = self
+
+        self.variations = l
 
         if ttFont.lazy is False:  # Be lazy for None and True
             self.ensureDecompiled()
