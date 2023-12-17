@@ -719,8 +719,8 @@ class GlyphComponentTest:
         assert (comp.firstPt, comp.secondPt) == (1, 2)
         assert not hasattr(comp, "transform")
 
-class GlyphCubicTest:
 
+class GlyphCubicTest:
     def test_roundtrip(self):
         font_path = os.path.join(DATA_DIR, "NotoSans-VF-cubic.subset.ttf")
         font = TTFont(font_path)
