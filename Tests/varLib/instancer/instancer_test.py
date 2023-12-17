@@ -1712,10 +1712,14 @@ class InstantiateVariableFontTest(object):
 
         location = {"0000": 0.5}
 
-        instance = instancer.instantiateVariableFont(
-            varfont,
-            location,
-        )
+        with pytest.raises(
+            NotImplementedError,
+            match="Instancing accross VarComponent axes with variation is not supported.",
+        ):
+            instance = instancer.instantiateVariableFont(
+                varfont,
+                location,
+            )
 
 
 def _conditionSetAsDict(conditionSet, axisOrder):
