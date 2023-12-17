@@ -2643,11 +2643,22 @@ def subset_glyphs(self, s):
 @_add_method(ttLib.getTableClass("VARC"))
 def closure_glyphs(self, s):
     if self.table.VarCompositeGlyphs:
+        allGlyphs = {
+            glyphName: glyph
+            for glyphName, glyph in zip(
+                self.table.Coverage.glyphs, self.table.VarCompositeGlyphs.glyphs
+            )
+        }
+
         glyphs = s.glyphs
-        new = True
+        new = set(s.glyphs)
         while new:
+            oldNew = new
             new = set()
-            for glyph in self.table.VarCompositeGlyphs.glyphs:
+            for glyphName in oldNew:
+                glyph = allGlyphs.get(glyphName)
+                if glyph is None:
+                    continue
                 for comp in glyph.components:
                     name = comp.glyphName
                     if name not in glyphs:
