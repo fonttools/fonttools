@@ -1809,8 +1809,8 @@ def cff2_index_read_item(self, i):
     self.reader.seek(self.data_pos + offsets[0])
     item = self.reader.readData(offsets[1] - offsets[0])
 
-    if self.itemClass is not None:
-        obj = self.itemClass()
+    if self._itemClass is not None:
+        obj = self._itemClass()
         obj.decompile(item, self.font)
         item = obj
 
@@ -1824,7 +1824,7 @@ class CFF2Index(BaseConverter):
         BaseConverter.__init__(
             self, name, repeat, aux, tableClass, description=description
         )
-        self.itemClass = itemClass
+        self._itemClass = itemClass
 
     def read(self, reader, font, tableDict):
         count = reader.readULong()
@@ -1853,8 +1853,8 @@ class CFF2Index(BaseConverter):
                 assert lastOffset <= offset
                 item = reader.readData(offset - lastOffset)
 
-                if self.itemClass is not None:
-                    obj = self.itemClass()
+                if self._itemClass is not None:
+                    obj = self._itemClass()
                     obj.decompile(item, font)
                     item = obj
 
@@ -1867,7 +1867,7 @@ class CFF2Index(BaseConverter):
             l.offset_pos = l.reader.pos
             l.data_pos = l.offset_pos + (count + 1) * offSize
             l.font = font
-            l.itemClass = self.itemClass
+            l._itemClass = self._itemClass
             l.offSize = offSize
             l.readArray = getReadArray(l.reader, offSize)
 
@@ -1882,7 +1882,7 @@ class CFF2Index(BaseConverter):
         if not len(items):
             return
 
-        if self.itemClass is not None:
+        if self._itemClass is not None:
             items = [item.compile(font) for item in items]
 
         offsets = [len(item) for item in items]
@@ -1912,7 +1912,7 @@ class CFF2Index(BaseConverter):
             writer.writeData(item)
 
     def xmlRead(self, attrs, content, font):
-        obj = self.itemClass()
+        obj = self._itemClass()
         obj.fromXML(None, attrs, content, font)
         return obj
 
