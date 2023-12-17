@@ -2629,6 +2629,26 @@ def closure_glyphs(self, s):
 
     s.glyphs.update(variants)
 
+@_add_method(ttLib.getTableClass("VARC"))
+def subset_glyphs(self, s):
+    indices = self.table.Coverage.subset(s.glyphs)
+    # TODO Subset MultiVarStore
+    self.table.VarCompositeGlyphs.glyphs = _list_subset(self.table.VarCompositeGlyphs.glyphs, indices)
+    return bool(self.table.VarCompositeGlyphs.glyphs)
+
+@_add_method(ttLib.getTableClass("VARC"))
+def closure_glyphs(self, s):
+    if self.table.VarCompositeGlyphs:
+        glyphs = s.glyphs
+        new = True
+        while new:
+            new = set()
+            for glyph in self.table.VarCompositeGlyphs.glyphs:
+                for comp in glyph.components:
+                    name = comp.glyphName
+                    if name not in glyphs:
+                        glyphs.add(name)
+                        new.add(name)
 
 @_add_method(ttLib.getTableClass("MATH"))
 def closure_glyphs(self, s):
@@ -3344,6 +3364,20 @@ class Subsetter(object):
                     )
                     log.glyphs(self.glyphs, font=font)
             setattr(self, f"glyphs_{table.lower()}ed", frozenset(self.glyphs))
+
+        if "VARC" in font:
+            with timer("close glyph list over 'VARC'"):
+                log.info(
+                    "Closing glyph list over 'VARC': %d glyphs before", len(self.glyphs)
+                )
+                log.glyphs(self.glyphs, font=font)
+                font["VARC"].closure_glyphs(self)
+                self.glyphs.intersection_update(realGlyphs)
+                log.info(
+                    "Closed glyph list over 'VARC': %d glyphs after", len(self.glyphs)
+                )
+                log.glyphs(self.glyphs, font=font)
+        self.glyphs_glyfed = frozenset(self.glyphs)
 
         if "glyf" in font:
             with timer("close glyph list over 'glyf'"):
