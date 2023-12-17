@@ -52,6 +52,26 @@ class _LazyDict(UserDict):
         return v
 
 
+def _decompileVarGlyph(self, glyphName):
+    gid = self.reverseGlyphMap[glyphName]
+    offsetSize = 2 if self.tableFormat == 0 else 4
+    startOffset = GVAR_HEADER_SIZE + offsetSize * gid
+    endOffset = startOffset + offsetSize * 2
+    offsets = table__g_v_a_r.decompileOffsets_(
+        self.gvarData[startOffset:endOffset],
+        tableFormat=self.tableFormat,
+        glyphCount=1,
+    )
+    gvarData = self.gvarData[
+        self.offsetToData + offsets[0] : self.offsetToData + offsets[1]
+    ]
+    if not gvarData:
+        return []
+    glyph = self._glyf[glyphName]
+    numPointsInGlyph = self._gvar.getNumPoints_(glyph)
+    return decompileGlyph_(numPointsInGlyph, self.sharedCoords, self.axisTags, gvarData)
+
+
 class table__g_v_a_r(DefaultTable.DefaultTable):
     dependencies = ["fvar", "glyf"]
 
@@ -116,11 +136,6 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
         sstruct.unpack(GVAR_HEADER_FORMAT, data[0:GVAR_HEADER_SIZE], self)
         assert len(glyphs) == self.glyphCount
         assert len(axisTags) == self.axisCount
-        offsets = self.decompileOffsets_(
-            data[GVAR_HEADER_SIZE:],
-            tableFormat=(self.flags & 1),
-            glyphCount=self.glyphCount,
-        )
         sharedCoords = tv.decompileSharedTuples(
             axisTags, self.sharedTupleCount, data, self.offsetToSharedTuples
         )
@@ -128,21 +143,17 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
         offsetToData = self.offsetToGlyphVariationData
         glyf = ttFont["glyf"]
 
-        def decompileVarGlyph(self, glyphName):
-            gid = self.reverseGlyphMap[glyphName]
-            gvarData = data[
-                offsetToData + offsets[gid] : offsetToData + offsets[gid + 1]
-            ]
-            if not gvarData:
-                return []
-            glyph = self._glyf[glyphName]
-            numPointsInGlyph = self._gvar.getNumPoints_(glyph)
-            return decompileGlyph_(numPointsInGlyph, sharedCoords, axisTags, gvarData)
-
-        l = _LazyDict({glyphs[gid]: decompileVarGlyph for gid in range(self.glyphCount)})
+        l = _LazyDict(
+            {glyphs[gid]: _decompileVarGlyph for gid in range(self.glyphCount)}
+        )
         l.reverseGlyphMap = ttFont.getReverseGlyphMap()
         l._glyf = glyf
         l._gvar = self
+        l.gvarData = data
+        l.offsetToData = offsetToData
+        l.sharedCoords = sharedCoords
+        l.axisTags = axisTags
+        l.tableFormat = self.flags & 1
 
         self.variations = l
 
