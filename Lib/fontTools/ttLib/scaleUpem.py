@@ -165,6 +165,8 @@ def visit(visitor, obj, attr, varc):
 
             if component.flags & otTables.VarComponentFlags.AXIS_VALUES_HAVE_VARIATION:
                 varIdx = component.locationVarIndex
+                # TODO Move this code duplicated below to MultiVarStore.__getitem__,
+                # or a getDeltasAndSupports().
                 if varIdx == otTables.NO_VARIATION_INDEX:
                     continue
                 major = varIdx >> 16
