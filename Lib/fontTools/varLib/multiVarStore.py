@@ -10,7 +10,7 @@ from fontTools.varLib.builder import (
     buildMultiVarStore,
     buildMultiVarData,
 )
-from itertools import batched
+from fontTools.misc.iterTools import batched
 from functools import partial
 from collections import defaultdict
 from heapq import heappush, heappop

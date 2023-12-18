@@ -13,7 +13,7 @@ from fontTools.varLib import builder  # for VarData.calculateNumShorts
 from fontTools.varLib.multiVarStore import OnlineMultiVarStoreBuilder
 from fontTools.misc.vector import Vector
 from fontTools.misc.fixedTools import otRound
-from itertools import batched
+from fontTools.misc.iterTools import batched
 
 
 __all__ = ["scale_upem", "ScalerVisitor"]
