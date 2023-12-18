@@ -3324,6 +3324,29 @@ otData = [
     ),
     # MultiVariationStore
     (
+        "SparseVarRegionAxis",
+        [
+            ("uint16", "AxisIndex", None, None, ""),
+            ("F2Dot14", "StartCoord", None, None, ""),
+            ("F2Dot14", "PeakCoord", None, None, ""),
+            ("F2Dot14", "EndCoord", None, None, ""),
+        ],
+    ),
+    (
+        "SparseVarRegion",
+        [
+            ("uint16", "SparseRegionCount", None, None, ""),
+            ("struct", "SparseVarRegionAxis", "SparseRegionCount", 0, ""),
+        ],
+    ),
+    (
+        "SparseVarRegionList",
+        [
+            ("uint16", "RegionCount", None, None, ""),
+            ("LOffsetTo(SparseVarRegion)", "Region", "RegionCount", 0, ""),
+        ],
+    ),
+    (
         "MultiVarData",
         [
             ("uint8", "Format", None, None, "Set to 1."),
@@ -3336,7 +3359,7 @@ otData = [
         "MultiVarStore",
         [
             ("uint16", "Format", None, None, "Set to 1."),
-            ("LOffset", "VarRegionList", None, None, ""),
+            ("LOffset", "SparseVarRegionList", None, None, ""),
             ("uint16", "MultiVarDataCount", None, None, ""),
             ("LOffset", "MultiVarData", "MultiVarDataCount", 0, ""),
         ],

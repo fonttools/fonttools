@@ -469,7 +469,9 @@ class OverlapMode(IntEnum):
 def instantiateVARC(varfont, axisLimits):
     log.info("Instantiating VARC tables")
 
-    # TODO(behdad) My confidence in this function is rather low
+    # TODO(behdad) My confidence in this function is rather low;
+    # It needs more testing. Specially with partial-instancing,
+    # I don't think it currently works.
 
     varc = varfont["VARC"].table
     if varc.VarCompositeGlyphs:
@@ -495,29 +497,28 @@ def instantiateVARC(varfont, axisLimits):
 
         fvar = varfont["fvar"]
         location = axisLimits.pinnedLocation()
-        for region in store.VarRegionList.Region:
-            assert len(region.VarRegionAxis) == len(fvar.axes)
+        for region in store.SparseVarRegionList.Region:
             newRegionAxis = []
-            for regionTriple, fvarAxis in zip(region.VarRegionAxis, fvar.axes):
-                tag = fvarAxis.axisTag
+            for regionRecord in region.SparseVarRegionAxis:
+                tag = fvar.axes[regionRecord.AxisIndex].axisTag
                 if tag in location:
                     continue
                 if tag in axisLimits:
                     limits = axisLimits[tag]
                     triple = (
-                        regionTriple.StartCoord,
-                        regionTriple.PeakCoord,
-                        regionTriple.EndCoord,
+                        regionRecord.StartCoord,
+                        regionRecord.PeakCoord,
+                        regionRecord.EndCoord,
                     )
                     triple = tuple(
                         limits.renormalizeValue(v, extrapolate=False) for v in triple
                     )
                     (
-                        regionTriple.StartCoord,
-                        regionTriple.PeakCoord,
-                        regionTriple.EndCoord,
+                        regionRecord.StartCoord,
+                        regionRecord.PeakCoord,
+                        regionRecord.EndCoord,
                     ) = triple
-                newRegionAxis.append(regionTriple)
+                newRegionAxis.append(regionRecord)
             region.VarRegionAxis = newRegionAxis
             region.VarRegionAxisCount = len(newRegionAxis)
 

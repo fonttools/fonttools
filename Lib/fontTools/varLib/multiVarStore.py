@@ -6,7 +6,8 @@ from fontTools.varLib.models import supportScalar
 import fontTools.varLib.varStore  # For monkey-patching
 from fontTools.varLib.builder import (
     buildVarRegionList,
-    buildVarRegion,
+    buildSparseVarRegionList,
+    buildSparseVarRegion,
     buildMultiVarStore,
     buildMultiVarData,
 )
@@ -28,7 +29,7 @@ class OnlineMultiVarStoreBuilder(object):
     def __init__(self, axisTags):
         self._axisTags = axisTags
         self._regionMap = {}
-        self._regionList = buildVarRegionList([], axisTags)
+        self._regionList = buildSparseVarRegionList([], axisTags)
         self._store = buildMultiVarStore(self._regionList, [])
         self._data = None
         self._model = None
@@ -64,7 +65,7 @@ class OnlineMultiVarStoreBuilder(object):
             key = _getLocationKey(region)
             idx = regionMap.get(key)
             if idx is None:
-                varRegion = buildVarRegion(region, self._axisTags)
+                varRegion = buildSparseVarRegion(region, self._axisTags)
                 idx = regionMap[key] = len(regionList.Region)
                 regionList.Region.append(varRegion)
             regionIndices.append(idx)
@@ -133,6 +134,16 @@ def MultiVarData_addItem(self, deltas, *, round=round):
 ot.MultiVarData.addItem = MultiVarData_addItem
 
 
+def SparseVarRegion_get_support(self, fvar_axes):
+    return {
+        fvar_axes[reg.AxisIndex].axisTag: (reg.StartCoord, reg.PeakCoord, reg.EndCoord)
+        for reg in self.SparseVarRegionAxis
+    }
+
+
+ot.SparseVarRegion.get_support = SparseVarRegion_get_support
+
+
 def MultiVarStore___bool__(self):
     return bool(self.MultiVarData)
 
@@ -145,7 +156,9 @@ class MultiVarStoreInstancer(object):
         self.fvar_axes = fvar_axes
         assert multivarstore is None or multivarstore.Format == 1
         self._varData = multivarstore.MultiVarData if multivarstore else []
-        self._regions = multivarstore.VarRegionList.Region if multivarstore else []
+        self._regions = (
+            multivarstore.SparseVarRegionList.Region if multivarstore else []
+        )
         self.setLocation(location)
 
     def setLocation(self, location):
@@ -195,8 +208,10 @@ def MultiVarStore_subset_varidxes(self, varIdxes):
     return ot.VarStore.subset_varidxes(self, varIdxes, VarData="MultiVarData")
 
 
-def MultiVarStore_prune_regions(self, *, VarData="VarData"):
-    return ot.VarStore.prune_regions(self, VarData="MultiVarData")
+def MultiVarStore_prune_regions(self):
+    return ot.VarStore.prune_regions(
+        self, VarData="MultiVarData", VarRegionList="SparseVarRegionList"
+    )
 
 
 ot.MultiVarStore.prune_regions = MultiVarStore_prune_regions
@@ -207,7 +222,7 @@ def MultiVarStore_get_supports(self, major, fvarAxes):
     supports = []
     varData = self.MultiVarData[major]
     for regionIdx in varData.VarRegionIndex:
-        region = self.VarRegionList.Region[regionIdx]
+        region = self.SparseVarRegionList.Region[regionIdx]
         support = region.get_support(fvarAxes)
         supports.append(support)
     return supports

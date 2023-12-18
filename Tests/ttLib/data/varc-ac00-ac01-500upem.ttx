@@ -245,271 +245,42 @@
     </Coverage>
     <MultiVarStore Format="1">
       <Format value="1"/>
-      <VarRegionList>
-        <!-- RegionAxisCount=17 -->
+      <SparseVarRegionList>
         <!-- RegionCount=3 -->
         <Region index="0">
-          <VarRegionAxis index="0">
+          <!-- SparseRegionCount=1 -->
+          <SparseVarRegionAxis index="0">
+            <AxisIndex value="0"/>
             <StartCoord value="0.0"/>
             <PeakCoord value="1.0"/>
             <EndCoord value="1.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="1">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="2">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="3">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="4">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="5">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="6">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="7">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="8">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="9">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="10">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="11">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="12">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="13">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="14">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="15">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="16">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
+          </SparseVarRegionAxis>
         </Region>
         <Region index="1">
-          <VarRegionAxis index="0">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="1">
+          <!-- SparseRegionCount=1 -->
+          <SparseVarRegionAxis index="0">
+            <AxisIndex value="1"/>
             <StartCoord value="0.0"/>
             <PeakCoord value="1.0"/>
             <EndCoord value="1.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="2">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="3">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="4">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="5">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="6">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="7">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="8">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="9">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="10">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="11">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="12">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="13">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="14">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="15">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="16">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
+          </SparseVarRegionAxis>
         </Region>
         <Region index="2">
-          <VarRegionAxis index="0">
+          <!-- SparseRegionCount=2 -->
+          <SparseVarRegionAxis index="0">
+            <AxisIndex value="0"/>
             <StartCoord value="0.0"/>
             <PeakCoord value="1.0"/>
             <EndCoord value="1.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="1">
+          </SparseVarRegionAxis>
+          <SparseVarRegionAxis index="1">
+            <AxisIndex value="1"/>
             <StartCoord value="0.0"/>
             <PeakCoord value="1.0"/>
             <EndCoord value="1.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="2">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="3">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="4">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="5">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="6">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="7">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="8">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="9">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="10">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="11">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="12">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="13">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="14">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="15">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="16">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
+          </SparseVarRegionAxis>
         </Region>
-      </VarRegionList>
+      </SparseVarRegionList>
       <!-- MultiVarDataCount=1 -->
       <MultiVarData index="0" Format="1">
         <Format value="1"/>

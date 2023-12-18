@@ -305,7 +305,7 @@ def VarStore_subset_varidxes(
     setattr(self, VarData, newVarData)
     setattr(self, VarData + "Count", len(newVarData))
 
-    self.prune_regions(VarData=VarData)
+    self.prune_regions()
 
     return varDataMap
 
@@ -313,7 +313,7 @@ def VarStore_subset_varidxes(
 ot.VarStore.subset_varidxes = VarStore_subset_varidxes
 
 
-def VarStore_prune_regions(self, *, VarData="VarData"):
+def VarStore_prune_regions(self, *, VarData="VarData", VarRegionList="VarRegionList"):
     """Remove unused VarRegions."""
     #
     # Subset VarRegionList
@@ -324,7 +324,7 @@ def VarStore_prune_regions(self, *, VarData="VarData"):
     for data in getattr(self, VarData):
         usedRegions.update(data.VarRegionIndex)
     # Subset.
-    regionList = self.VarRegionList
+    regionList = getattr(self, VarRegionList)
     regions = regionList.Region
     newRegions = []
     regionMap = {}
