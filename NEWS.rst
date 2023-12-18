@@ -1,3 +1,10 @@
+
+- [varLib.models] New API for VariationModel: ``getMasterScalars`` and
+  ``interpolateFromValuesAndScalars``.
+- [varLib.interpolatable] Various bugfixes and rendering improvements. In particular,
+  add a Summary page in the front, and an Index and Table-of-Contents in the back.
+  Change the page size to Letter.
+
 4.46.0 (released 2023-12-02)
 ----------------------------
 
