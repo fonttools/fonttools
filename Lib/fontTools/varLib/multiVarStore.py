@@ -205,6 +205,17 @@ def MultiVarStore_prune_regions(self, *, VarData="VarData"):
 ot.MultiVarStore.prune_regions = MultiVarStore_prune_regions
 ot.MultiVarStore.subset_varidxes = MultiVarStore_subset_varidxes
 
+def MultiVarStore_get_supports(self, major, fvarAxes):
+    supports = []
+    varData = self.MultiVarData[major]
+    for regionIdx in varData.VarRegionIndex:
+        region = self.VarRegionList.Region[regionIdx]
+        support = region.get_support(fvarAxes)
+        supports.append(support)
+    return supports
+
+ot.MultiVarStore.get_supports = MultiVarStore_get_supports
+
 
 def VARC_collect_varidxes(self, varidxes):
     for glyph in self.VarCompositeGlyphs.glyphs:
