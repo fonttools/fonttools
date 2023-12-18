@@ -173,9 +173,9 @@ def visit(visitor, obj, attr, varc):
                     varData = store.MultiVarData[major]
                     vec = varData.Item[minor]
                     storeBuilder.setSupports(store.get_supports(major, fvar.axes))
-                    if vec.values:
-                        m = len(vec.values) // varData.VarRegionCount
-                        vec = list(batched(vec.values, m))
+                    if vec:
+                        m = len(vec) // varData.VarRegionCount
+                        vec = list(batched(vec, m))
                         vec = [Vector(v) for v in vec]
                         component.locationVarIndex = storeBuilder.storeDeltas(vec)
                     else:
@@ -192,10 +192,10 @@ def visit(visitor, obj, attr, varc):
                     varData = store.MultiVarData[major]
                     vec = varData.Item[minor]
                     storeBuilder.setSupports(store.get_supports(major, fvar.axes))
-                    if vec.values:
-                        m = len(vec.values) // varData.VarRegionCount
+                    if vec:
+                        m = len(vec) // varData.VarRegionCount
                         flags = component.flags
-                        vec = list(batched(vec.values, m))
+                        vec = list(batched(vec, m))
                         newVec = []
                         for v in vec:
                             v = list(v)

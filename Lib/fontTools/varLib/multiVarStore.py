@@ -126,8 +126,6 @@ def MultiVarData_addItem(self, deltas, *, round=round):
     for d in deltas:
         values.extend(d)
 
-    values = ot.TupleValues(values)
-
     self.Item.append(values)
     self.ItemCount = len(self.Item)
 
@@ -167,7 +165,6 @@ class MultiVarStoreInstancer(object):
 
     @staticmethod
     def interpolateFromDeltasAndScalars(deltas, scalars):
-        deltas = deltas.values
         if not deltas:
             return Vector([])
         assert len(deltas) % len(scalars) == 0, (len(deltas), len(scalars))

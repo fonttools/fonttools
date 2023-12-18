@@ -12,7 +12,6 @@ from math import radians
 import itertools
 from collections import defaultdict, namedtuple
 from fontTools.ttLib.tables.otTraverse import dfs_base_table
-from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools.misc.arrayTools import quantizeRect
 from fontTools.misc.roundTools import otRound
 from fontTools.misc.transform import Transform, Identity, DecomposedTransform
@@ -421,29 +420,6 @@ class VarCompositeGlyphs(BaseTable):
             for eltName, eltAttrs, eltContent in content:
                 glyph.fromXML(eltName, eltAttrs, eltContent, font)
             self.glyphs.append(glyph)
-
-
-class TupleValues(BaseTable):
-    def __init__(self, values=None):
-        self.values = values or []
-
-    def populateDefaults(self, propagator=None):
-        if not hasattr(self, "values"):
-            self.values = []
-
-    def decompile(self, data, font):
-        self.values = TupleVariation.decompileDeltas_(None, data)[0]
-
-    def compile(self, font):
-        return bytes(TupleVariation.compileDeltaValues_(self.values, bytearr=None))
-
-    def toXML(self, xmlWriter, font, attrs, name):
-        xmlWriter.simpletag(name, attrs + [("value", self.values)])
-        xmlWriter.newline()
-
-    def fromXML(self, name, attrs, content, font):
-        self.populateDefaults()
-        self.values = safeEval(attrs["value"])
 
 
 class AATStateTable(object):

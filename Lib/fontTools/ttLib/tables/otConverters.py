@@ -6,6 +6,7 @@ from fontTools.misc.fixedTools import (
     ensureVersionIsLong as fi2ve,
     versionToFixed as ve2fi,
 )
+from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools.misc.roundTools import nearestMultipleShortestRepr, otRound
 from fontTools.misc.textTools import bytesjoin, tobytes, tostr, pad, safeEval
 from fontTools.misc.lazyTools import LazyList
@@ -20,7 +21,6 @@ from .otBase import (
 from .otTables import (
     lookupTypes,
     VarCompositeGlyph,
-    TupleValues,
     AATStateTable,
     AATState,
     AATAction,
@@ -1803,6 +1803,21 @@ class VarDataValue(BaseConverter):
         return safeEval(attrs["value"])
 
 
+class TupleValues:
+    def read(self, data, font):
+        return TupleVariation.decompileDeltas_(None, data)[0]
+
+    def write(self, writer, font, values):
+        return bytes(TupleVariation.compileDeltaValues_(values))
+
+    def xmlRead(self, attrs, content, font):
+        return safeEval(attrs["value"])
+
+    def xmlWrite(self, xmlWriter, font, value, name, attrs):
+        xmlWriter.simpletag(name, attrs + [("value", value)])
+        xmlWriter.newline()
+
+
 def cff2_index_read_item(self, i):
     self.reader.seek(self.offset_pos + i * self.offSize)
     offsets = self.readArray(2)
@@ -1813,18 +1828,30 @@ def cff2_index_read_item(self, i):
         obj = self._itemClass()
         obj.decompile(item, self.font)
         item = obj
-
+    elif self._converter is not None:
+        item = self._converter.read(item, self.font)
     return item
 
 
 class CFF2Index(BaseConverter):
     def __init__(
-        self, name, repeat, aux, tableClass=None, *, itemClass=None, description=""
+        self,
+        name,
+        repeat,
+        aux,
+        tableClass=None,
+        *,
+        itemClass=None,
+        itemConverterClass=None,
+        description="",
     ):
         BaseConverter.__init__(
             self, name, repeat, aux, tableClass, description=description
         )
         self._itemClass = itemClass
+        self._converter = (
+            itemConverterClass() if itemConverterClass is not None else None
+        )
 
     def read(self, reader, font, tableDict):
         count = reader.readULong()
@@ -1857,6 +1884,8 @@ class CFF2Index(BaseConverter):
                     obj = self._itemClass()
                     obj.decompile(item, font)
                     item = obj
+                elif self._converter is not None:
+                    item = self._converter.read(item, font)
 
                 items.append(item)
                 lastOffset = offset
@@ -1870,6 +1899,7 @@ class CFF2Index(BaseConverter):
             l._itemClass = self._itemClass
             l.offSize = offSize
             l.readArray = getReadArray(l.reader, offSize)
+            l._converter = self._converter
 
             # TODO: Advance reader
 
@@ -1884,6 +1914,8 @@ class CFF2Index(BaseConverter):
 
         if self._itemClass is not None:
             items = [item.compile(font) for item in items]
+        elif self._converter is not None:
+            items = [self._converter.write(writer, font, item) for item in items]
 
         offsets = [len(item) for item in items]
         offsets = [0] + list(accumulate(offsets))
@@ -1912,13 +1944,26 @@ class CFF2Index(BaseConverter):
             writer.writeData(item)
 
     def xmlRead(self, attrs, content, font):
-        obj = self._itemClass()
-        obj.fromXML(None, attrs, content, font)
-        return obj
+        if self._itemClass is not None:
+            obj = self._itemClass()
+            obj.fromXML(None, attrs, content, font)
+            return obj
+        elif self._converter is not None:
+            return self._converter.xmlRead(attrs, content, font)
+        else:
+            raise NotImplementedError()
 
     def xmlWrite(self, xmlWriter, font, value, name, attrs):
-        for i, item in enumerate(value):
-            item.toXML(xmlWriter, font, [("index", i)], name)
+        if self._itemClass is not None:
+            for i, item in enumerate(value):
+                item.toXML(xmlWriter, font, [("index", i)], name)
+        elif self._converter is not None:
+            for i, item in enumerate(value):
+                self._converter.xmlWrite(
+                    xmlWriter, font, item, name, attrs + [("index", i)]
+                )
+        else:
+            raise NotImplementedError()
 
 
 class LookupFlag(UShort):
@@ -1999,7 +2044,7 @@ converterMapping = {
     "CompositeMode": CompositeMode,
     "STATFlags": STATFlags,
     "VarCompositeGlyphList": partial(CFF2Index, itemClass=VarCompositeGlyph),
-    "MultiVarDataValue": partial(CFF2Index, itemClass=TupleValues),
+    "MultiVarDataValue": partial(CFF2Index, itemConverterClass=TupleValues),
     # AAT
     "CIDGlyphMap": CIDGlyphMap,
     "GlyphCIDMap": GlyphCIDMap,
