@@ -5,4 +5,4 @@ sphinx>=1.5.5
 mypy>=0.782
 
 # Pin black as each version could change formatting, breaking CI randomly.
-black==23.11.0
+black==23.12.0
