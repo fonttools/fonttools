@@ -1,3 +1,6 @@
+4.47.0 (released 2023-12-18)
+----------------------------
+
 - [varLib.models] New API for VariationModel: ``getMasterScalars`` and
   ``interpolateFromValuesAndScalars``.
 - [varLib.interpolatable] Various bugfixes and rendering improvements. In particular,
