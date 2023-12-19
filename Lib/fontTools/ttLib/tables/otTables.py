@@ -143,6 +143,8 @@ class VarTransform:
         else:
             flags = self.flags
 
+        data.append(struct.pack(">H", flags))
+
         if flags & VarTransformFlags.HAVE_VARIATIONS:
             data.append(struct.pack(">L", self.varIndex))
 
@@ -158,7 +160,7 @@ class VarTransform:
             value = getattr(self.transform, attr_name)
             data.append(write_transform_component(value, mapping_values))
 
-        return struct.pack(">H", flags) + bytesjoin(data)
+        return bytesjoin(data)
 
     def toXML(self, writer, ttFont, attrs, name):
         if self.varIndex != NO_VARIATION_INDEX:
@@ -183,6 +185,26 @@ class VarTransform:
                 continue
             v = str2fl(safeEval(attrs[attr_name]), mapping.fractionalBits)
             setattr(self.transform, attr_name, v)
+
+    def applyDeltas(deltas):
+        i = 0
+
+        def read_transform_component_delta(data, values):
+            nonlocal i
+            if self.flags & values.flag:
+                v = fi2fl(data[i], values.fractionalBits) * values.scale
+                i += 1
+                return v
+            else:
+                return 0
+
+        for attr_name, mapping_values in VAR_TRANSFORM_MAPPING.items():
+            value = read_transform_component_delta(data, mapping_values)
+            setattr(
+                self.transform, attr_name, getattr(self.transform, attr_name) + value
+            )
+
+        assert i == len(deltas)
 
     def __eq__(self, other):
         if type(self) != type(other):

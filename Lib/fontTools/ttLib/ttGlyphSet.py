@@ -5,9 +5,10 @@ from collections.abc import Mapping
 from contextlib import contextmanager
 from copy import copy
 from types import SimpleNamespace
+from fontTools.misc.vector import Vector
 from fontTools.misc.fixedTools import otRound
 from fontTools.misc.loggingTools import deprecateFunction
-from fontTools.misc.transform import Transform
+from fontTools.misc.transform import Transform, DecomposedTransform
 from fontTools.pens.transformPen import TransformPen, TransformPointPen
 from fontTools.pens.recordingPen import (
     DecomposingRecordingPen,
@@ -288,42 +289,54 @@ class _TTGlyphVARC(_TTGlyph):
         glyphSet = self.glyphSet
         varc = glyphSet.varcTable
         idx = varc.Coverage.glyphs.index(self.name)
-        glyph = varc.VarCompositeGlyphs.glyphs[idx]
+        glyph = varc.VarCompositeGlyphs.VarCompositeGlyph[idx]
 
         from fontTools.varLib.multiVarStore import MultiVarStoreInstancer
 
+        fvarAxes = glyphSet.font["fvar"].axes
         instancer = MultiVarStoreInstancer(
-            varc.MultiVarStore, self.glyphSet.font["fvar"].axes, self.glyphSet.location
+            varc.MultiVarStore, fvarAxes, self.glyphSet.location
         )
-        instancer.setLocation(self.glyphSet.location)
 
         for comp in glyph.components:
-            comp = copy(comp)  # Shallow copy
-            locationValues, transformValues = comp.getComponentValues()
+            location = {}
+            assert (comp.AxisIndicesIndex is None) == (comp.AxisValuesIndex is None)
+            if comp.AxisIndicesIndex is not None:
+                axisIndices = varc.AxisIndicesList.Item[comp.AxisIndicesIndex]
+                axisValues = Vector(varc.AxisValuesList.Item[comp.AxisValuesIndex])
+                # Apply variations
+                varIdx = NO_VARIATION_INDEX
+                if comp.AxisValuesIndex < varc.AxisValuesList.VarIndicesCount:
+                    varIdx = varc.AxisValuesList.VarIndices[comp.AxisValuesIndex]
+                if varIdx != NO_VARIATION_INDEX:
+                    axisValues = (
+                        axisValues + instancer[varIdx]
+                    )  # TODO Implement __iadd__ for Vector
+                location = {
+                    fvarAxes[i].axisTag: v for i, v in zip(axisIndices, axisValues)
+                }
 
-            if comp.locationVarIndex != NO_VARIATION_INDEX:
-                assert len(locationValues)
-                locationDeltas = instancer[comp.locationVarIndex]
-                locationValues = list(locationValues + locationDeltas)
-            if comp.transformVarIndex != NO_VARIATION_INDEX:
-                assert len(transformValues)
-                transformDeltas = instancer[comp.transformVarIndex]
-                transformValues = list(transformValues + transformDeltas)
-
-            comp.setComponentValues(locationValues, transformValues)
+            transform = DecomposedTransform()
+            if comp.TransformIndex is not None:
+                varTransform = varc.TransformList.VarTransform[comp.TransformIndex]
+                varIdx = varTransform.varIndex
+                if varIdx != NO_VARIATION_INDEX:
+                    deltas = instancer[varIdx]
+                    varTransform.applyDeltas(deltas)
+                transform = varTransform.transform
 
             with self.glyphSet.glyphSet.pushLocation(
-                comp.location, comp.flags & VarComponentFlags.RESET_UNSPECIFIED_AXES
+                location, comp.flags & VarComponentFlags.RESET_UNSPECIFIED_AXES
             ):
                 with self.glyphSet.pushLocation(
-                    comp.location, comp.flags & VarComponentFlags.RESET_UNSPECIFIED_AXES
+                    location, comp.flags & VarComponentFlags.RESET_UNSPECIFIED_AXES
                 ):
                     try:
                         pen.addVarComponent(
-                            comp.glyphName, comp.transform, self.glyphSet.rawLocation
+                            comp.glyphName, transform, self.glyphSet.rawLocation
                         )
                     except AttributeError:
-                        t = comp.transform.toTransform()
+                        t = transform.toTransform()
                         compGlyphSet = (
                             self.glyphSet
                             if comp.glyphName != self.name
