@@ -97,6 +97,10 @@ class OnlineMultiVarStoreBuilder(object):
 
     def storeDeltas(self, deltas, *, round=round):
         deltas = tuple(round(d) for d in deltas)
+
+        if not any(deltas):
+            return NO_VARIATION_INDEX
+
         deltas_tuple = tuple(tuple(d) for d in deltas)
 
         if not self._data:

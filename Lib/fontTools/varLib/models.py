@@ -453,7 +453,10 @@ class VariationModel(object):
             self.deltaWeights.append(deltaWeight)
 
     def getDeltas(self, masterValues, *, round=noRound):
-        assert len(masterValues) == len(self.deltaWeights)
+        assert len(masterValues) == len(self.deltaWeights), (
+            len(masterValues),
+            len(self.deltaWeights),
+        )
         mapping = self.reverseMapping
         out = []
         for i, weights in enumerate(self.deltaWeights):

@@ -21,6 +21,7 @@ from .otBase import (
 from .otTables import (
     lookupTypes,
     VarCompositeGlyph,
+    VarTransform,
     AATStateTable,
     AATState,
     AATAction,
@@ -1945,9 +1946,13 @@ class CFF2Index(BaseConverter):
 
     def xmlRead(self, attrs, content, font):
         if self._itemClass is not None:
-            obj = self._itemClass()
-            obj.fromXML(None, attrs, content, font)
-            return obj
+            lst = []
+            content = [t for t in content if isinstance(t, tuple)]
+            for eltName, eltAttrs, eltContent in content:
+                obj = self._itemClass()
+                obj.fromXML(eltName, eltAttrs, eltContent, font)
+                lst.append(obj)
+            return lst
         elif self._converter is not None:
             return self._converter.xmlRead(attrs, content, font)
         else:
@@ -2043,8 +2048,9 @@ converterMapping = {
     "ExtendMode": ExtendMode,
     "CompositeMode": CompositeMode,
     "STATFlags": STATFlags,
+    "TupleList": partial(CFF2Index, itemConverterClass=TupleValues),
     "VarCompositeGlyphList": partial(CFF2Index, itemClass=VarCompositeGlyph),
-    "MultiVarDataValue": partial(CFF2Index, itemConverterClass=TupleValues),
+    "VarTransformList": partial(CFF2Index, itemClass=VarTransform),
     # AAT
     "CIDGlyphMap": CIDGlyphMap,
     "GlyphCIDMap": GlyphCIDMap,

@@ -3352,7 +3352,7 @@ otData = [
             ("uint8", "Format", None, None, "Set to 1."),
             ("uint16", "VarRegionCount", None, None, ""),
             ("uint16", "VarRegionIndex", "VarRegionCount", 0, ""),
-            ("MultiVarDataValue", "Item", "", 0, ""),
+            ("TupleList", "Item", "", 0, ""),
         ],
     ),
     (
@@ -3377,13 +3377,39 @@ otData = [
             ),
             ("LOffset", "Coverage", None, None, ""),
             ("LOffset", "MultiVarStore", None, None, "(may be NULL)"),
+            ("LOffset", "AxisIndicesList", None, None, "(may be NULL)"),
+            ("LOffset", "AxisValuesList", None, None, "(may be NULL)"),
+            ("LOffset", "TransformList", None, None, "(may be NULL)"),
             ("LOffset", "VarCompositeGlyphs", None, None, ""),
+        ],
+    ),
+    (
+        "AxisIndicesList",
+        [
+            ("TupleList", "Item", "", 0, ""),
+        ],
+    ),
+    (
+        "AxisValuesList",
+        [
+            # A hack here would be to encode the VarIndex as the first member
+            # of the tuple to stored. But I find that ugly. The current
+            # design is not ideal but cleaner.
+            ("uint32", "VarIndicesCount", None, None, ""),
+            ("VarIndex", "VarIndices", "VarIndicesCount", 0, ""),
+            ("TupleList", "Item", "", 0, ""),
+        ],
+    ),
+    (
+        "TransformList",
+        [
+            ("VarTransformList", "VarTransform", "", None, ""),
         ],
     ),
     (
         "VarCompositeGlyphs",
         [
-            ("VarCompositeGlyphList", "glyphs", None, None, ""),
+            ("VarCompositeGlyphList", "VarCompositeGlyph", "", None, ""),
         ],
     ),
     # Glyph advance variations
