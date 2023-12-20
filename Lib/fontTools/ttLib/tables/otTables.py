@@ -97,6 +97,7 @@ class VarTransform:
         if flags & VarTransformFlags.HAVE_VARIATIONS:
             self.varIndex = struct.unpack(">L", data[i : i + 4])[0]
             i += 4
+            flags = flags & ~VarTransformFlags.HAVE_VARIATIONS
 
         def read_transform_component(data, values):
             nonlocal i
@@ -141,10 +142,11 @@ class VarTransform:
         else:
             flags = self.flags
 
-        data.append(struct.pack(">H", flags))
-
-        if flags & VarTransformFlags.HAVE_VARIATIONS:
+        if self.varIndex != NO_VARIATION_INDEX:
             data.append(struct.pack(">L", self.varIndex))
+            flags |= VarTransformFlags.HAVE_VARIATIONS
+        else:
+            flags &= ~VarTransformFlags.HAVE_VARIATIONS
 
         def write_transform_component(value, values):
             if flags & values.flag:
@@ -158,7 +160,7 @@ class VarTransform:
             value = getattr(self.transform, attr_name)
             data.append(write_transform_component(value, mapping_values))
 
-        return bytesjoin(data)
+        return struct.pack(">H", flags) + bytesjoin(data)
 
     def toXML(self, writer, ttFont, attrs, name):
         if self.varIndex != NO_VARIATION_INDEX:
