@@ -204,6 +204,9 @@ class VarTransform:
                 self.transform, attr_name, getattr(self.transform, attr_name) + value
             )
 
+        if not (self.flags & VarTransformFlags.HAVE_SCALE_Y):
+            self.transform.scaleY = self.transform.scaleX
+
         assert i == len(deltas)
 
     def __eq__(self, other):
