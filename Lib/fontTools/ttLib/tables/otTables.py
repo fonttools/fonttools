@@ -253,23 +253,50 @@ class VarComponent:
 
         if self.axisIndicesIndex is not None:
             attrs.append(("axisIndicesIndex", self.axisIndicesIndex))
+            attrs.append(("axisValues", self.axisValues))
 
-        # XXX TODO
+        if self.axisValuesVarIndex != NO_VARIATION_INDEX:
+            attrs.append(("axisValuesVarIndex", self.axisValuesVarIndex))
+        if self.transformVarIndex != NO_VARIATION_INDEX:
+            attrs.append(("transformVarIndex", self.transformVarIndex))
+
+        for attr_name, mapping in VAR_TRANSFORM_MAPPING.items():
+            v = getattr(self.transform, attr_name)
+            if v != mapping.defaultValue:
+                attrs.append((attr_name, fl2str(v, mapping.fractionalBits)))
 
         writer.simpletag("VarComponent", attrs)
         writer.newline()
 
     def fromXML(self, name, attrs, content, ttFont):
-        self.flags = safeEval(attrs["flags"]) & VarComponentFlags.RETAIN_FLAGS
+        self.flags = safeEval(attrs["flags"])
         self.glyphName = attrs["glyphName"]
 
-        # XXX TODO
-        assert ("AxisIndicesIndex" in attrs) == ("AxisValuesIndex" in attrs)
-        if "AxisIndicesIndex" in attrs:
-            self.AxisIndicesIndex = safeEval(attrs["AxisIndicesIndex"])
-            self.AxisValuesIndex = safeEval(attrs["AxisValuesIndex"])
-        if "TransformIndex" in attrs:
-            self.TransformIndex = safeEval(attrs["TransformIndex"])
+        assert ("axisIndicesIndex" in attrs) == ("axisValues" in attrs)
+        if "axisIndicesIndex" in attrs:
+            self.axisIndicesIndex = safeEval(attrs["axisIndicesIndex"])
+            self.axisValues = safeEval(attrs["axisValues"])
+        else:
+            self.axisIndicesIndex = None
+            self.axisValues = ()
+
+        if "axisValuesVarIndex" in attrs:
+            self.axisValuesVarIndex = safeEval(attrs["axisValuesVarIndex"])
+        else:
+            self.axisValuesVarIndex = NO_VARIATION_INDEX
+        if "transformVarIndex" in attrs:
+            self.transformVarIndex = safeEval(attrs["transformVarIndex"])
+        else:
+            self.transformVarIndex = NO_VARIATION_INDEX
+
+        self.transform = DecomposedTransform()
+        for attr_name, mapping in VAR_TRANSFORM_MAPPING.items():
+            if attr_name in attrs:
+                setattr(
+                    self.transform,
+                    attr_name,
+                    safeEval(attrs[attr_name]),
+                )
 
     def applyTransformDeltas(self, deltas):
         i = 0
@@ -305,7 +332,6 @@ class VarComponent:
 
 
 class VarCompositeGlyph:
-
     def __init__(self, components=None):
         self.components = components if components is not None else []
 
@@ -331,7 +357,9 @@ class VarCompositeGlyph:
         xmlWriter.newline()
 
     def fromXML(self, name, attrs, content, font):
-        if name == "VarComponent":
+        content = [c for c in content if isinstance(c, tuple)]
+        for name, attrs, content in content:
+            assert name == "VarComponent"
             component = VarComponent()
             component.fromXML(name, attrs, content, font)
             self.components.append(component)

@@ -1949,13 +1949,9 @@ class CFF2Index(BaseConverter):
 
     def xmlRead(self, attrs, content, font):
         if self._itemClass is not None:
-            lst = []
-            content = [t for t in content if isinstance(t, tuple)]
-            for eltName, eltAttrs, eltContent in content:
-                obj = self._itemClass()
-                obj.fromXML(eltName, eltAttrs, eltContent, font)
-                lst.append(obj)
-            return lst
+            obj = self._itemClass()
+            obj.fromXML(None, attrs, content, font)
+            return obj
         elif self._converter is not None:
             return self._converter.xmlRead(attrs, content, font)
         else:
