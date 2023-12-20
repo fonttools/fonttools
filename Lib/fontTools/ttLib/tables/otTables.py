@@ -186,7 +186,7 @@ class VarTransform:
             v = str2fl(safeEval(attrs[attr_name]), mapping.fractionalBits)
             setattr(self.transform, attr_name, v)
 
-    def applyDeltas(deltas):
+    def applyDeltas(self, deltas):
         i = 0
 
         def read_transform_component_delta(data, values):
@@ -199,7 +199,7 @@ class VarTransform:
                 return 0
 
         for attr_name, mapping_values in VAR_TRANSFORM_MAPPING.items():
-            value = read_transform_component_delta(data, mapping_values)
+            value = read_transform_component_delta(deltas, mapping_values)
             setattr(
                 self.transform, attr_name, getattr(self.transform, attr_name) + value
             )
