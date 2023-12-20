@@ -307,7 +307,9 @@ class _TTGlyphVARC(_TTGlyph):
                 # Apply variations
                 varIdx = NO_VARIATION_INDEX
                 if comp.AxisValuesIndex < len(varc.AxisValuesList.VarIndices.mapping):
-                    varIdx = varc.AxisValuesList.VarIndices.mapping[comp.AxisValuesIndex]
+                    varIdx = varc.AxisValuesList.VarIndices.mapping[
+                        comp.AxisValuesIndex
+                    ]
                 if varIdx != NO_VARIATION_INDEX:
                     axisValues = (
                         axisValues + instancer[varIdx]

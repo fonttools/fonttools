@@ -220,14 +220,16 @@ class VarTransform:
 
 
 class VarComponentFlags(IntFlag):
-    INDICES_SIZE = 0x03 # Currently has to be the first two bits; search for indicesSize
+    INDICES_SIZE = (
+        0x03  # Currently has to be the first two bits; search for indicesSize
+    )
     GID_IS_24BIT = 0x04
     USE_MY_METRICS = 0x8
     HAVE_LOCATION = 0x10
     HAVE_TRANSFORM = 0x20
     RESET_UNSPECIFIED_AXES = 0x40
     RETAIN_FLAGS = RESET_UNSPECIFIED_AXES | USE_MY_METRICS
-    RESERVED = 0x40 | 0x80
+    RESERVED = 0x80
 
 
 class VarComponent:
