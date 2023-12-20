@@ -311,9 +311,7 @@ class _TTGlyphVARC(_TTGlyph):
                         comp.AxisValuesIndex
                     ]
                 if varIdx != NO_VARIATION_INDEX:
-                    axisValues = (
-                        axisValues + instancer[varIdx]
-                    )  # TODO Implement __iadd__ for Vector
+                    axisValues += instancer[varIdx]
                 assert len(axisIndices) == len(axisValues), (
                     len(axisIndices),
                     len(axisValues),
