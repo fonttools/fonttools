@@ -2633,58 +2633,68 @@ def closure_glyphs(self, s):
 @_add_method(ttLib.getTableClass("VARC"))
 def subset_glyphs(self, s):
     indices = self.table.Coverage.subset(s.glyphs)
-    # TODO Subset MultiVarStore
-    self.table.VarCompositeGlyphs.glyphs = _list_subset(
-        self.table.VarCompositeGlyphs.glyphs, indices
+    self.table.VarCompositeGlyphs.VarCompositeGlyph = _list_subset(
+        self.table.VarCompositeGlyphs.VarCompositeGlyph, indices
     )
-    return bool(self.table.VarCompositeGlyphs.glyphs)
+    return bool(self.table.VarCompositeGlyphs.VarCompositeGlyph)
 
 
 @_add_method(ttLib.getTableClass("VARC"))
 def closure_glyphs(self, s):
-    if self.table.VarCompositeGlyphs:
-        allGlyphs = {
-            glyphName: glyph
-            for glyphName, glyph in zip(
-                self.table.Coverage.glyphs, self.table.VarCompositeGlyphs.glyphs
-            )
-        }
+    if self.table.VarCompositeGlyphs is None:
+        return
 
-        glyphs = s.glyphs
-        new = set(s.glyphs)
-        while new:
-            oldNew = new
-            new = set()
-            for glyphName in oldNew:
-                glyph = allGlyphs.get(glyphName)
-                if glyph is None:
-                    continue
-                for comp in glyph.components:
-                    name = comp.glyphName
-                    if name not in glyphs:
-                        glyphs.add(name)
-                        new.add(name)
+    allGlyphs = {
+        glyphName: glyph
+        for glyphName, glyph in zip(
+            self.table.Coverage.glyphs, self.table.VarCompositeGlyphs.VarCompositeGlyph
+        )
+    }
+
+    glyphs = s.glyphs
+    covered = set()
+    new = set(glyphs)
+    while new:
+        oldNew = new
+        new = set()
+        for glyphName in oldNew:
+            if glyphName in covered:
+                continue
+            glyph = allGlyphs.get(glyphName)
+            if glyph is None:
+                continue
+            for comp in glyph.components:
+                name = comp.glyphName
+                glyphs.add(name)
+                if name not in covered:
+                    new.add(name)
 
 
 @_add_method(ttLib.getTableClass("VARC"))
 def prune_post_subset(self, font, options):
     table = self.table
 
-    if not hasattr(table, "MultiVarStore"):
-        return True
-
     store = table.MultiVarStore
+    if store is not None:
+        usedVarIdxes = set()
+        table.collect_varidxes(usedVarIdxes)
+        varidx_map = store.subset_varidxes(usedVarIdxes)
+        table.remap_varidxes(varidx_map)
 
-    usedVarIdxes = set()
-
-    # Collect.
-    table.collect_varidxes(usedVarIdxes)
-
-    # Subset.
-    varidx_map = store.subset_varidxes(usedVarIdxes)
-
-    # Map.
-    table.remap_varidxes(varidx_map)
+    axisIndicesList = table.AxisIndicesList.Item
+    if axisIndicesList is not None:
+        usedIndices = set()
+        for glyph in table.VarCompositeGlyphs.VarCompositeGlyph:
+            for comp in glyph.components:
+                if comp.axisIndicesIndex is not None:
+                    usedIndices.add(comp.axisIndicesIndex)
+        usedIndices = sorted(usedIndices)
+        table.AxisIndicesList.Item = _list_subset(axisIndicesList, usedIndices)
+        mapping = {old: new for new, old in enumerate(usedIndices)}
+        for glyph in table.VarCompositeGlyphs.VarCompositeGlyph:
+            for comp in glyph.components:
+                if comp.axisIndicesIndex is not None:
+                    comp.axisIndicesIndex = mapping[comp.axisIndicesIndex]
 
     return True
 

@@ -236,16 +236,16 @@ ot.MultiVarStore.get_supports = MultiVarStore_get_supports
 
 
 def VARC_collect_varidxes(self, varidxes):
-    for glyph in self.VarCompositeGlyphs.glyphs:
+    for glyph in self.VarCompositeGlyphs.VarCompositeGlyph:
         for component in glyph.components:
-            varidxes.add(component.locationVarIndex)
+            varidxes.add(component.axisValuesVarIndex)
             varidxes.add(component.transformVarIndex)
 
 
 def VARC_remap_varidxes(self, varidxes_map):
-    for glyph in self.VarCompositeGlyphs.glyphs:
+    for glyph in self.VarCompositeGlyphs.VarCompositeGlyph:
         for component in glyph.components:
-            component.locationVarIndex = varidxes_map[component.locationVarIndex]
+            component.axisValuesVarIndex = varidxes_map[component.axisValuesVarIndex]
             component.transformVarIndex = varidxes_map[component.transformVarIndex]
 
 
