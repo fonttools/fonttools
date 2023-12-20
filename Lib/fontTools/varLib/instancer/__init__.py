@@ -475,70 +475,31 @@ def instantiateVARC(varfont, axisLimits):
 
     varc = varfont["VARC"].table
     fvarAxes = varfont["fvar"].axes if "fvar" in varfont else []
-    if varc.VarCompositeGlyphs is not None:
-        for glyph in varc.VarCompositeGlyphs.VarCompositeGlyph:
-            for comp in glyph.components:
-                if comp.axisIndicesIndex is None:
-                    continue
 
-                axisIndices = varc.AxisIndicesList.Item[comp.axisIndicesIndex]
-                axisValues = comp.axisValues
+    location = axisLimits.pinnedLocation()
+    axisMap = [i for i, axis in enumerate(fvarAxes) if axis.axisTag not in location]
+    reverseAxisMap = {i: j for j, i in enumerate(axisMap)}
 
-                comp.axisValues = []
-                for axisIndex, axisValue in zip(axisIndices, axisValues):
-                    tag = fvarAxes[axisIndex].axisTag
-                    if tag in axisLimits:
-                        axisValue = axisLimits[tag].renormalizeValue(
-                            axisValue, extrapolate=False
-                        )
-                    comp.axisValues.append(axisValue)
-
-                """
-                newLocation = {}
-                for tag, loc in component.location.items():
-                    if tag not in axisLimits:
-                        newLocation[tag] = loc
-                        continue
-                    if comp.flags & VarComponentFlags.AXIS_VALUES_HAVE_VARIATION:
-                        raise NotImplementedError(
-                            "Instancing accross VarComponent axes with variation is not supported."
-                        )
-                    limits = axisLimits[tag]
-                    loc = limits.renormalizeValue(loc, extrapolate=False)
-                    newLocation[tag] = loc
-                component.location = newLocation
-                """
+    if varc.AxisIndicesList:
+        axisIndicesList = varc.AxisIndicesList.Item
+        for i, axisIndices in enumerate(axisIndicesList):
+            if any(fvarAxes[j].axisTag in axisLimits for j in axisIndices):
+                raise NotImplementedError(
+                    "Instancing across VarComponent axes is not supported."
+                )
+            axisIndicesList[i] = [reverseAxisMap[j] for j in axisIndices]
 
     store = varc.MultiVarStore
     if store:
-        store.prune_regions()  # Needed?
-
-        fvar = varfont["fvar"]
-        location = axisLimits.pinnedLocation()
         for region in store.SparseVarRegionList.Region:
             newRegionAxis = []
             for regionRecord in region.SparseVarRegionAxis:
-                tag = fvar.axes[regionRecord.AxisIndex].axisTag
-                if tag in location:
-                    continue
+                tag = fvarAxes[regionRecord.AxisIndex].axisTag
                 if tag in axisLimits:
-                    limits = axisLimits[tag]
-                    triple = (
-                        regionRecord.StartCoord,
-                        regionRecord.PeakCoord,
-                        regionRecord.EndCoord,
+                    raise NotImplementedError(
+                        "Instancing across VarComponent axes is not supported."
                     )
-                    triple = tuple(
-                        limits.renormalizeValue(v, extrapolate=False) for v in triple
-                    )
-                    (
-                        regionRecord.StartCoord,
-                        regionRecord.PeakCoord,
-                        regionRecord.EndCoord,
-                    ) = triple
-                newRegionAxis.append(regionRecord)
-            region.VarRegionAxis = newRegionAxis
-            region.VarRegionAxisCount = len(newRegionAxis)
+                regionRecord.AxisIndex = reverseAxisMap[regionRecord.AxisIndex]
 
 
 def instantiateTupleVariationStore(

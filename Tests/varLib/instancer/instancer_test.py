@@ -1699,22 +1699,28 @@ class InstantiateVariableFontTest(object):
 
     def test_varComposite(self):
         input_path = os.path.join(
-            TESTDATA, "..", "..", "..", "ttLib", "data", "varc-ac00-ac01.ttf"
+            TESTDATA, "..", "..", "..", "ttLib", "data", "varc-6868.ttf"
         )
         varfont = ttLib.TTFont(input_path)
 
         location = {"wght": 600}
 
-        instance = instancer.instantiateVariableFont(
-            varfont,
-            location,
-        )
+        # We currently do not allow this either; although in theory
+        # it should be possible.
+        with pytest.raises(
+            NotImplementedError,
+            match="is not supported.",
+        ):
+            instance = instancer.instantiateVariableFont(
+                varfont,
+                location,
+            )
 
         location = {"0000": 0.5}
 
         with pytest.raises(
             NotImplementedError,
-            match="Instancing accross VarComponent axes with variation is not supported.",
+            match="is not supported.",
         ):
             instance = instancer.instantiateVariableFont(
                 varfont,
