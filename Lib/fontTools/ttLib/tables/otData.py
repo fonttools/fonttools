@@ -3392,11 +3392,7 @@ otData = [
     (
         "AxisValuesList",
         [
-            # A hack here would be to encode the VarIndex as the first member
-            # of the tuple to stored. But I find that ugly. The current
-            # design is not ideal but cleaner.
-            ("uint32", "VarIndicesCount", None, None, ""),
-            ("VarIndex", "VarIndices", "VarIndicesCount", 0, ""),
+            ("LOffsetTo(DeltaSetIndexMap)", "VarIndices", None, None, ""),
             ("TupleList", "Item", "", 0, ""),
         ],
     ),
