@@ -220,12 +220,12 @@ class VarTransform:
 
 
 class VarComponentFlags(IntFlag):
-    GID_IS_24BIT = 0x01
-    INDICES_ARE_LONG = 0x02
-    HAVE_LOCATION = 0x04
-    HAVE_TRANSFORM = 0x08
-    RESET_UNSPECIFIED_AXES = 0x10
-    USE_MY_METRICS = 0x20
+    INDICES_SIZE = 0x03 # Currently has to be the first two bits; search for indicesSize
+    GID_IS_24BIT = 0x04
+    USE_MY_METRICS = 0x8
+    HAVE_LOCATION = 0x10
+    HAVE_TRANSFORM = 0x20
+    RESET_UNSPECIFIED_AXES = 0x40
     RETAIN_FLAGS = RESET_UNSPECIFIED_AXES | USE_MY_METRICS
     RESERVED = 0x40 | 0x80
 
@@ -252,18 +252,23 @@ class VarComponent:
             i += 2
         self.glyphName = font.glyphOrder[glyphID]
 
-        fmt = "L" if flags & VarComponentFlags.INDICES_ARE_LONG else "H"
+        indicesSize = (flags & VarComponentFlags.INDICES_SIZE) + 1
+        unpacker = {
+            1: lambda v: struct.unpack(">B", v)[0],
+            2: lambda v: struct.unpack(">H", v)[0],
+            3: lambda v: struct.unpack(">L", b"\0" + v)[0],
+            4: lambda v: struct.unpack(">L", v)[0],
+        }[indicesSize]
+
         self.AxisIndicesIndex = self.AxisValuesIndex = self.TransformIndex = None
         if flags & VarComponentFlags.HAVE_LOCATION:
-            l = 8 if flags & VarComponentFlags.INDICES_ARE_LONG else 4
-            self.AxisIndicesIndex, self.AxisValuesIndex = struct.unpack(
-                ">" + fmt * 2, data[i : i + l]
-            )
-            i += l
+            self.AxisIndicesIndex = unpacker(data[i : i + indicesSize])
+            i += indicesSize
+            self.AxisValuesIndex = unpacker(data[i : i + indicesSize])
+            i += indicesSize
         if flags & VarComponentFlags.HAVE_TRANSFORM:
-            l = 4 if flags & VarComponentFlags.INDICES_ARE_LONG else 2
-            self.TransformIndex = struct.unpack(">" + fmt, data[i : i + l])[0]
-            i += l
+            self.TransformIndex = unpacker(data[i : i + indicesSize])
+            i += indicesSize
 
         return data[i:]
 
@@ -279,25 +284,33 @@ class VarComponent:
         else:
             data.append(struct.pack(">H", glyphID))
 
+        indicesSize = 1
         for attr in ("AxisIndicesIndex", "AxisValuesIndex", "TransformIndex"):
             value = getattr(self, attr)
-            if value is not None and value > 65535:
-                flags |= VarComponentFlags.INDICES_ARE_LONG
-                break
+            if value is not None:
+                if value > 0xFFFFFF:
+                    indicesSize = max(indicesSize, 4)
+                elif value > 0xFFFF:
+                    indicesSize = max(indicesSize, 3)
+                elif value > 0xFF:
+                    indicesSize = max(indicesSize, 2)
+        flags |= indicesSize - 1
 
-        fmt = "L" if flags & VarComponentFlags.INDICES_ARE_LONG else "H"
+        packer = {
+            1: lambda v: struct.pack(">B", v),
+            2: lambda v: struct.pack(">H", v),
+            3: lambda v: struct.pack(">L", v)[1:],
+            4: lambda v: struct.pack(">L", v),
+        }[indicesSize]
 
         assert (self.AxisIndicesIndex is None) == (self.AxisValuesIndex is None)
         if self.AxisIndicesIndex is not None:
             flags |= VarComponentFlags.HAVE_LOCATION
-            data.append(
-                struct.pack(
-                    ">" + (fmt * 2), self.AxisIndicesIndex, self.AxisValuesIndex
-                )
-            )
+            data.append(packer(self.AxisIndicesIndex))
+            data.append(packer(self.AxisValuesIndex))
         if self.TransformIndex is not None:
             flags |= VarComponentFlags.HAVE_TRANSFORM
-            data.append(struct.pack(">" + fmt, self.TransformIndex))
+            data.append(packer(self.TransformIndex))
 
         return struct.pack("B", flags) + bytesjoin(data)
 
