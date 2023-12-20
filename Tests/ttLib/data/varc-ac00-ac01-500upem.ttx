@@ -288,84 +288,44 @@
         <VarRegionIndex index="0" value="0"/>
         <VarRegionIndex index="1" value="1"/>
         <VarRegionIndex index="2" value="2"/>
-        <Item index="0" value="[-964, 406, 0, 0, 0, 16384, 0, 0, 0]"/>
-        <Item index="1" value="[-295, 0, -327, 1092, 273, 393, 0, 0, 0, 0, 0, 0, 0, 0, 0]"/>
+        <Item index="0" value="[-964, 0, 406, 0, 16384, 0, 0, 0, 0]"/>
+        <Item index="1" value="[-295, -327, 0, 1092, 273, 393, 0, 0, 0, 0, 0, 0, 0, 0, 0]"/>
         <Item index="2" value="[0, 0, 0, 6, 0, 0]"/>
         <Item index="3" value="[-328, 0, 2185, 0, 1546, 0, 0, 0, 0]"/>
         <Item index="4" value="[0, -5, -26, 0, 0, 0]"/>
-        <Item index="5" value="[0, 0, -327, 1704, 0, 0, 0, 0, 0]"/>
+        <Item index="5" value="[0, -327, 0, 1704, 0, 0, 0, 0, 0]"/>
         <Item index="6" value="[0, 0, 0, 8, 0, 0]"/>
       </MultiVarData>
     </MultiVarStore>
+    <AxisIndicesList>
+      <Item index="0" value="[2, 3, 4]"/>
+      <Item index="1" value="[2, 3, 4, 5, 6]"/>
+      <Item index="2" value="[4]"/>
+    </AxisIndicesList>
     <VarCompositeGlyphs>
       <VarCompositeGlyph index="0">
-        <VarComponent index="0" glyphName="glyph00007" flags="0x0">
-          <location>
-          </location>
-        </VarComponent>
-        <VarComponent index="1" glyphName="glyph00003" flags="0x0">
-          <location>
-          </location>
-        </VarComponent>
+        <VarComponent index="0" glyphName="glyph00007" flags="0"/>
+        <VarComponent index="1" glyphName="glyph00003" flags="0"/>
       </VarCompositeGlyph>
       <VarCompositeGlyph index="1">
-        <VarComponent index="0" glyphName="glyph00005" flags="0x0">
-          <location>
-          </location>
-        </VarComponent>
-        <VarComponent index="1" glyphName="glyph00004" flags="0x0">
-          <location>
-          </location>
-        </VarComponent>
-        <VarComponent index="2" glyphName="glyph00006" flags="0x0">
-          <location>
-          </location>
-        </VarComponent>
+        <VarComponent index="0" glyphName="glyph00005" flags="0"/>
+        <VarComponent index="1" glyphName="glyph00004" flags="0"/>
+        <VarComponent index="2" glyphName="glyph00006" flags="0"/>
       </VarCompositeGlyph>
       <VarCompositeGlyph index="2">
-        <VarComponent index="0" glyphName="glyph00008" flags="0x8" translateX="-6.0">
-          <location>
-            <axis tag="0001" value="0.2159"/>
-          </location>
-        </VarComponent>
+        <VarComponent index="0" glyphName="glyph00008" flags="65" axisIndicesIndex="2" axisValues="(3537,)" translateX="-6.0"/>
       </VarCompositeGlyph>
       <VarCompositeGlyph index="3">
-        <VarComponent index="0" glyphName="glyph00008" flags="0xc" locationVarIndex="0" translateX="-3.0">
-          <location>
-            <axis tag="0000" value="-0.8047"/>
-            <axis tag="0001" value="0.4839"/>
-            <axis tag="0003" value="0.0"/>
-          </location>
-        </VarComponent>
+        <VarComponent index="0" glyphName="glyph00008" flags="81" axisIndicesIndex="0" axisValues="(-13184, 0, 7928)" axisValuesVarIndex="0" translateX="-3.0"/>
       </VarCompositeGlyph>
       <VarCompositeGlyph index="4">
-        <VarComponent index="0" glyphName="glyph00009" flags="0x101c" locationVarIndex="1" transformVarIndex="2" translateX="-5.0" translateY="24.0">
-          <location>
-            <axis tag="0000" value="-0.54"/>
-            <axis tag="0001" value="-0.5178"/>
-            <axis tag="0002" value="0.04"/>
-            <axis tag="0004" value="0.0"/>
-            <axis tag="0006" value="0.0"/>
-          </location>
-        </VarComponent>
+        <VarComponent index="0" glyphName="glyph00009" flags="241" axisIndicesIndex="1" axisValues="(-8847, 655, -8484, 0, 0)" axisValuesVarIndex="1" transformVarIndex="2" translateX="-5.0" translateY="24.0"/>
       </VarCompositeGlyph>
       <VarCompositeGlyph index="5">
-        <VarComponent index="0" glyphName="glyph00010" flags="0x101c" locationVarIndex="3" transformVarIndex="4" translateX="53.0" translateY="-231.0">
-          <location>
-            <axis tag="0000" value="-0.776"/>
-            <axis tag="0001" value="-0.3566"/>
-            <axis tag="0003" value="0.0"/>
-          </location>
-        </VarComponent>
+        <VarComponent index="0" glyphName="glyph00010" flags="241" axisIndicesIndex="0" axisValues="(-12714, -5843, 0)" axisValuesVarIndex="3" transformVarIndex="4" translateX="53.0" translateY="-231.0"/>
       </VarCompositeGlyph>
       <VarCompositeGlyph index="6">
-        <VarComponent index="0" glyphName="glyph00009" flags="0x101c" locationVarIndex="5" transformVarIndex="6" translateX="-5.0" translateY="12.0">
-          <location>
-            <axis tag="0000" value="-0.258"/>
-            <axis tag="0001" value="-0.5178"/>
-            <axis tag="0002" value="0.05"/>
-          </location>
-        </VarComponent>
+        <VarComponent index="0" glyphName="glyph00009" flags="241" axisIndicesIndex="0" axisValues="(-4227, 819, -8484)" axisValuesVarIndex="5" transformVarIndex="6" translateX="-5.0" translateY="12.0"/>
       </VarCompositeGlyph>
     </VarCompositeGlyphs>
   </VARC>
@@ -563,7 +523,7 @@
         <delta pt="11" x="0" y="0"/>
       </tuple>
       <tuple>
-        <coord axis="0001" value="1.0"/>
+        <coord axis="0002" value="1.0"/>
         <delta pt="0" x="0" y="202"/>
         <delta pt="1" x="0" y="202"/>
         <delta pt="2" x="0" y="202"/>
@@ -593,7 +553,7 @@
         <delta pt="11" x="0" y="0"/>
       </tuple>
       <tuple>
-        <coord axis="0003" value="1.0"/>
+        <coord axis="0001" value="1.0"/>
         <delta pt="0" x="0" y="0"/>
         <delta pt="1" x="0" y="0"/>
         <delta pt="2" x="0" y="0"/>
@@ -608,7 +568,7 @@
         <delta pt="11" x="0" y="0"/>
       </tuple>
       <tuple>
-        <coord axis="0004" value="-1.0"/>
+        <coord axis="0003" value="-1.0"/>
         <delta pt="0" x="0" y="0"/>
         <delta pt="1" x="-50" y="0"/>
         <delta pt="2" x="-50" y="0"/>
@@ -640,7 +600,7 @@
       </tuple>
       <tuple>
         <coord axis="wght" value="1.0"/>
-        <coord axis="0001" value="1.0"/>
+        <coord axis="0002" value="1.0"/>
         <delta pt="0" x="0" y="0"/>
         <delta pt="1" x="0" y="0"/>
         <delta pt="2" x="0" y="0"/>
@@ -680,7 +640,7 @@
         <delta pt="19" x="0" y="0"/>
       </tuple>
       <tuple>
-        <coord axis="0001" value="-1.0"/>
+        <coord axis="0002" value="-1.0"/>
         <delta pt="0" x="58" y="0"/>
         <delta pt="1" x="-28" y="12"/>
         <delta pt="2" x="-164" y="21"/>
@@ -703,7 +663,7 @@
         <delta pt="19" x="0" y="0"/>
       </tuple>
       <tuple>
-        <coord axis="0002" value="1.0"/>
+        <coord axis="0001" value="1.0"/>
         <delta pt="0" x="417" y="0"/>
         <delta pt="1" x="320" y="26"/>
         <delta pt="2" x="165" y="43"/>
@@ -749,7 +709,7 @@
         <delta pt="19" x="0" y="0"/>
       </tuple>
       <tuple>
-        <coord axis="0004" value="1.0"/>
+        <coord axis="0003" value="1.0"/>
         <delta pt="0" x="0" y="0"/>
         <delta pt="1" x="0" y="0"/>
         <delta pt="2" x="0" y="0"/>
@@ -795,7 +755,7 @@
         <delta pt="19" x="0" y="0"/>
       </tuple>
       <tuple>
-        <coord axis="0006" value="1.0"/>
+        <coord axis="0004" value="1.0"/>
         <delta pt="0" x="0" y="0"/>
         <delta pt="1" x="0" y="0"/>
         <delta pt="2" x="0" y="0"/>
@@ -819,7 +779,7 @@
       </tuple>
       <tuple>
         <coord axis="0000" value="-1.0"/>
-        <coord axis="0001" value="-1.0"/>
+        <coord axis="0002" value="-1.0"/>
         <delta pt="0" x="-57" y="3"/>
         <delta pt="1" x="-53" y="-8"/>
         <delta pt="2" x="-35" y="-15"/>
@@ -843,7 +803,7 @@
       </tuple>
       <tuple>
         <coord axis="0000" value="-1.0"/>
-        <coord axis="0002" value="1.0"/>
+        <coord axis="0001" value="1.0"/>
         <delta pt="0" x="-42" y="-5"/>
         <delta pt="1" x="-43" y="-23"/>
         <delta pt="2" x="-31" y="-33"/>
@@ -890,8 +850,8 @@
         <delta pt="19" x="0" y="0"/>
       </tuple>
       <tuple>
-        <coord axis="0001" value="-1.0"/>
-        <coord axis="0002" value="1.0"/>
+        <coord axis="0001" value="1.0"/>
+        <coord axis="0002" value="-1.0"/>
         <delta pt="0" x="-367" y="0"/>
         <delta pt="1" x="-282" y="-12"/>
         <delta pt="2" x="-146" y="-21"/>
@@ -915,7 +875,7 @@
       </tuple>
       <tuple>
         <coord axis="wght" value="1.0"/>
-        <coord axis="0001" value="-1.0"/>
+        <coord axis="0002" value="-1.0"/>
         <delta pt="0" x="0" y="0"/>
         <delta pt="1" x="0" y="0"/>
         <delta pt="2" x="0" y="1"/>
@@ -939,7 +899,7 @@
       </tuple>
       <tuple>
         <coord axis="wght" value="1.0"/>
-        <coord axis="0002" value="1.0"/>
+        <coord axis="0001" value="1.0"/>
         <delta pt="0" x="5" y="0"/>
         <delta pt="1" x="4" y="1"/>
         <delta pt="2" x="2" y="2"/>
@@ -963,8 +923,8 @@
       </tuple>
       <tuple>
         <coord axis="0000" value="-1.0"/>
-        <coord axis="0001" value="-1.0"/>
-        <coord axis="0002" value="1.0"/>
+        <coord axis="0001" value="1.0"/>
+        <coord axis="0002" value="-1.0"/>
         <delta pt="0" x="57" y="-2"/>
         <delta pt="1" x="53" y="8"/>
         <delta pt="2" x="35" y="16"/>
@@ -989,7 +949,7 @@
       <tuple>
         <coord axis="wght" value="1.0"/>
         <coord axis="0000" value="-1.0"/>
-        <coord axis="0001" value="-1.0"/>
+        <coord axis="0002" value="-1.0"/>
         <delta pt="0" x="8" y="0"/>
         <delta pt="1" x="5" y="1"/>
         <delta pt="2" x="3" y="0"/>
@@ -1014,7 +974,7 @@
       <tuple>
         <coord axis="wght" value="1.0"/>
         <coord axis="0000" value="-1.0"/>
-        <coord axis="0002" value="1.0"/>
+        <coord axis="0001" value="1.0"/>
         <delta pt="0" x="13" y="0"/>
         <delta pt="1" x="9" y="1"/>
         <delta pt="2" x="5" y="1"/>
@@ -1038,8 +998,8 @@
       </tuple>
       <tuple>
         <coord axis="wght" value="1.0"/>
-        <coord axis="0001" value="-1.0"/>
-        <coord axis="0002" value="1.0"/>
+        <coord axis="0001" value="1.0"/>
+        <coord axis="0002" value="-1.0"/>
         <delta pt="0" x="0" y="0"/>
         <delta pt="1" x="0" y="0"/>
         <delta pt="2" x="1" y="0"/>
@@ -1064,8 +1024,8 @@
       <tuple>
         <coord axis="wght" value="1.0"/>
         <coord axis="0000" value="-1.0"/>
-        <coord axis="0001" value="-1.0"/>
-        <coord axis="0002" value="1.0"/>
+        <coord axis="0001" value="1.0"/>
+        <coord axis="0002" value="-1.0"/>
         <delta pt="0" x="-7" y="0"/>
         <delta pt="1" x="-5" y="0"/>
         <delta pt="2" x="-3" y="0"/>
@@ -1135,7 +1095,7 @@
         <delta pt="11" x="0" y="0"/>
       </tuple>
       <tuple>
-        <coord axis="0003" value="1.0"/>
+        <coord axis="0002" value="1.0"/>
         <delta pt="0" x="0" y="0"/>
         <delta pt="1" x="0" y="0"/>
         <delta pt="2" x="0" y="0"/>
@@ -1150,7 +1110,7 @@
         <delta pt="11" x="0" y="0"/>
       </tuple>
       <tuple>
-        <coord axis="0004" value="1.0"/>
+        <coord axis="0003" value="1.0"/>
         <delta pt="0" x="0" y="0"/>
         <delta pt="1" x="0" y="0"/>
         <delta pt="2" x="0" y="0"/>

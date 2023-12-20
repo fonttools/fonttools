@@ -474,15 +474,32 @@ def instantiateVARC(varfont, axisLimits):
     # I don't think it currently works.
 
     varc = varfont["VARC"].table
-    if varc.VarCompositeGlyphs:
-        for glyph in varc.VarCompositeGlyphs.glyphs:
-            for component in glyph.components:
+    fvarAxes = varfont["fvar"].axes if "fvar" in varfont else []
+    if varc.VarCompositeGlyphs is not None:
+        for glyph in varc.VarCompositeGlyphs.VarCompositeGlyph:
+            for comp in glyph.components:
+                if comp.axisIndicesIndex is None:
+                    continue
+
+                axisIndices = varc.AxisIndicesList.Item[comp.axisIndicesIndex]
+                axisValues = comp.axisValues
+
+                comp.axisValues = []
+                for axisIndex, axisValue in zip(axisIndices, axisValues):
+                    tag = fvarAxes[axisIndex].axisTag
+                    if tag in axisLimits:
+                        axisValue = axisLimits[tag].renormalizeValue(
+                            axisValue, extrapolate=False
+                        )
+                    comp.axisValues.append(axisValue)
+
+                """
                 newLocation = {}
                 for tag, loc in component.location.items():
                     if tag not in axisLimits:
                         newLocation[tag] = loc
                         continue
-                    if component.flags & VarComponentFlags.AXIS_VALUES_HAVE_VARIATION:
+                    if comp.flags & VarComponentFlags.AXIS_VALUES_HAVE_VARIATION:
                         raise NotImplementedError(
                             "Instancing accross VarComponent axes with variation is not supported."
                         )
@@ -490,9 +507,10 @@ def instantiateVARC(varfont, axisLimits):
                     loc = limits.renormalizeValue(loc, extrapolate=False)
                     newLocation[tag] = loc
                 component.location = newLocation
+                """
 
-    if varc.MultiVarStore:
-        store = varc.MultiVarStore
+    store = varc.MultiVarStore
+    if store:
         store.prune_regions()  # Needed?
 
         fvar = varfont["fvar"]

@@ -155,7 +155,7 @@ def visit(visitor, obj, attr, varc):
     store = varc.MultiVarStore
     storeBuilder = OnlineMultiVarStoreBuilder(fvarAxes)
 
-    for g in varc.VarCompositeGlyphs.glyphs:
+    for g in varc.VarCompositeGlyphs.VarCompositeGlyph:
         for component in g.components:
             t = component.transform
             t.translateX = visitor.scale(t.translateX)
@@ -163,8 +163,8 @@ def visit(visitor, obj, attr, varc):
             t.tCenterX = visitor.scale(t.tCenterX)
             t.tCenterY = visitor.scale(t.tCenterY)
 
-            if component.flags & otTables.VarComponentFlags.AXIS_VALUES_HAVE_VARIATION:
-                varIdx = component.locationVarIndex
+            if component.axisValuesVarIndex != otTables.NO_VARIATION_INDEX:
+                varIdx = component.axisValuesVarIndex
                 # TODO Move this code duplicated below to MultiVarStore.__getitem__,
                 # or a getDeltasAndSupports().
                 if varIdx != otTables.NO_VARIATION_INDEX:
@@ -177,11 +177,11 @@ def visit(visitor, obj, attr, varc):
                         m = len(vec) // varData.VarRegionCount
                         vec = list(batched(vec, m))
                         vec = [Vector(v) for v in vec]
-                        component.locationVarIndex = storeBuilder.storeDeltas(vec)
+                        component.axisValuesVarIndex = storeBuilder.storeDeltas(vec)
                     else:
-                        component.transformVarIndex = otTables.NO_VARIATION_INDEX
+                        component.axisValuesVarIndex = otTables.NO_VARIATION_INDEX
 
-            if component.flags & otTables.VarComponentFlags.TRANSFORM_HAS_VARIATION:
+            if component.transformVarIndex != otTables.NO_VARIATION_INDEX:
                 varIdx = component.transformVarIndex
                 if varIdx != otTables.NO_VARIATION_INDEX:
                     major = varIdx >> 16
