@@ -247,25 +247,18 @@ class VarComponent:
             i += 2
         self.glyphName = font.glyphOrder[glyphID]
 
+        fmt = "L" if flags & VarComponentFlags.INDICES_ARE_LONG else "H"
         self.AxisIndicesIndex = self.AxisValuesIndex = self.TransformIndex = None
-        if flags & VarComponentFlags.INDICES_ARE_LONG:
-            if flags & VarComponentFlags.HAVE_LOCATION:
-                self.AxisIndicesIndex, self.AxisValuesIndex = struct.unpack(
-                    ">LL", data[i : i + 8]
-                )
-                i += 8
-            if flags & VarComponentFlags.HAVE_TRANSFORM:
-                self.TransformIndex = struct.unpack(">L", data[i : i + 4])[0]
-                i += 4
-        else:
-            if flags & VarComponentFlags.HAVE_LOCATION:
-                self.AxisIndicesIndex, self.AxisValuesIndex = struct.unpack(
-                    ">HH", data[i : i + 4]
-                )
-                i += 4
-            if flags & VarComponentFlags.HAVE_TRANSFORM:
-                self.TransformIndex = struct.unpack(">H", data[i : i + 2])[0]
-                i += 2
+        if flags & VarComponentFlags.HAVE_LOCATION:
+            l = 8 if flags & VarComponentFlags.INDICES_ARE_LONG else 4
+            self.AxisIndicesIndex, self.AxisValuesIndex = struct.unpack(
+                ">" + fmt * 2, data[i : i + l]
+            )
+            i += l
+        if flags & VarComponentFlags.HAVE_TRANSFORM:
+            l = 4 if flags & VarComponentFlags.INDICES_ARE_LONG else 2
+            self.TransformIndex = struct.unpack(">" + fmt, data[i : i + l])[0]
+            i += l
 
         return data[i:]
 
