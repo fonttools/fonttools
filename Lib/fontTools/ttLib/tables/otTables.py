@@ -244,14 +244,13 @@ class VarComponent:
         if flags & VarComponentFlags.GID_IS_24BIT:
             glyphID = struct.unpack(">L", b"\0" + data[i : i + 3])[0]
             i += 3
-            flags ^= VarComponentFlags.GID_IS_24BIT
         else:
             glyphID = struct.unpack(">H", data[i : i + 2])[0]
             i += 2
         self.glyphName = font.glyphOrder[glyphID]
 
         self.AxisIndicesIndex = self.AxisValuesIndex = self.TransformIndex = None
-        if flags & VarComponentFlags.INDICES_ARE_LONG == 0x0004:
+        if flags & VarComponentFlags.INDICES_ARE_LONG:
             if flags & VarComponentFlags.HAVE_LOCATION:
                 self.AxisIndicesIndex, self.AxisValuesIndex = struct.unpack(
                     ">LL", data[i : i + 8]
