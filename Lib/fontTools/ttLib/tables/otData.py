@@ -3378,8 +3378,6 @@ otData = [
             ("LOffset", "Coverage", None, None, ""),
             ("LOffset", "MultiVarStore", None, None, "(may be NULL)"),
             ("LOffset", "AxisIndicesList", None, None, "(may be NULL)"),
-            ("LOffset", "AxisValuesList", None, None, "(may be NULL)"),
-            ("LOffset", "TransformList", None, None, "(may be NULL)"),
             ("LOffset", "VarCompositeGlyphs", None, None, ""),
         ],
     ),
@@ -3387,19 +3385,6 @@ otData = [
         "AxisIndicesList",
         [
             ("TupleList", "Item", "", 0, ""),
-        ],
-    ),
-    (
-        "AxisValuesList",
-        [
-            ("LOffsetTo(DeltaSetIndexMap)", "VarIndices", None, None, ""),
-            ("TupleList", "Item", "", 0, ""),
-        ],
-    ),
-    (
-        "TransformList",
-        [
-            ("VarTransformList", "VarTransform", "", None, ""),
         ],
     ),
     (

@@ -300,18 +300,11 @@ class _TTGlyphVARC(_TTGlyph):
 
         for comp in glyph.components:
             location = {}
-            assert (comp.AxisIndicesIndex is None) == (comp.AxisValuesIndex is None)
-            if comp.AxisIndicesIndex is not None:
-                axisIndices = varc.AxisIndicesList.Item[comp.AxisIndicesIndex]
-                axisValues = Vector(varc.AxisValuesList.Item[comp.AxisValuesIndex])
-                # Apply variations
-                varIdx = NO_VARIATION_INDEX
-                if comp.AxisValuesIndex < len(varc.AxisValuesList.VarIndices.mapping):
-                    varIdx = varc.AxisValuesList.VarIndices.mapping[
-                        comp.AxisValuesIndex
-                    ]
-                if varIdx != NO_VARIATION_INDEX:
-                    axisValues += instancer[varIdx]
+            if comp.axisIndicesIndex is not None:
+                axisIndices = varc.AxisIndicesList.Item[comp.axisIndicesIndex]
+                axisValues = Vector(comp.axisValues)
+                if comp.axisValuesVarIndex != NO_VARIATION_INDEX:
+                    axisValues += instancer[comp.axisValuesVarIndex]
                 assert len(axisIndices) == len(axisValues), (
                     len(axisIndices),
                     len(axisValues),
@@ -321,14 +314,11 @@ class _TTGlyphVARC(_TTGlyph):
                     for i, v in zip(axisIndices, axisValues)
                 }
 
-            transform = DecomposedTransform()
-            if comp.TransformIndex is not None:
-                varTransform = varc.TransformList.VarTransform[comp.TransformIndex]
-                varIdx = varTransform.varIndex
-                if varIdx != NO_VARIATION_INDEX:
-                    deltas = instancer[varIdx]
-                    varTransform.applyDeltas(deltas)
-                transform = varTransform.transform
+            if comp.transformVarIndex != NO_VARIATION_INDEX:
+                deltas = instancer[comp.transformVarIndex]
+                comp = copy(comp)  # Shallow copy
+                comp.applyTransformDeltas(deltas)
+            transform = comp.transform
 
             reset = comp.flags & VarComponentFlags.RESET_UNSPECIFIED_AXES
             with self.glyphSet.glyphSet.pushLocation(location, reset):
