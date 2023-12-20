@@ -2644,12 +2644,8 @@ def closure_glyphs(self, s):
     if self.table.VarCompositeGlyphs is None:
         return
 
-    allGlyphs = {
-        glyphName: glyph
-        for glyphName, glyph in zip(
-            self.table.Coverage.glyphs, self.table.VarCompositeGlyphs.VarCompositeGlyph
-        )
-    }
+    glyphMap = {glyphName: i for i, glyphName in enumerate(self.table.Coverage.glyphs)}
+    glyphRecords = self.table.VarCompositeGlyphs.VarCompositeGlyph
 
     glyphs = s.glyphs
     covered = set()
@@ -2660,9 +2656,10 @@ def closure_glyphs(self, s):
         for glyphName in oldNew:
             if glyphName in covered:
                 continue
-            glyph = allGlyphs.get(glyphName)
-            if glyph is None:
+            idx = glyphMap.get(glyphName)
+            if idx is None:
                 continue
+            glyph = glyphRecords[idx]
             for comp in glyph.components:
                 name = comp.glyphName
                 glyphs.add(name)
