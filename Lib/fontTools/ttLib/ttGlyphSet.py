@@ -347,13 +347,13 @@ class _TTGlyphVARC(_TTGlyph):
                             if comp.glyphName != self.name
                             else glyphSet.glyphSet
                         )
-                        glyph = compGlyphSet[comp.glyphName]
+                        g = compGlyphSet[comp.glyphName]
                         if isPointPen:
                             tPen = TransformPointPen(pen, t)
-                            glyph.drawPoints(tPen)
+                            g.drawPoints(tPen)
                         else:
                             tPen = TransformPen(pen, t)
-                            glyph.draw(tPen)
+                            g.draw(tPen)
 
     def draw(self, pen):
         self._draw(pen, False)
