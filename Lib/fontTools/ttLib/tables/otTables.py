@@ -58,7 +58,7 @@ class VarTransformFlags(IntFlag):
     HAVE_TCENTER_X = 0x0080
     HAVE_TCENTER_Y = 0x0100
     HAVE_VARIATIONS = 0x0200
-    RESERVED = 0x0400 | 0x0800 | 0x1000 | 0x2000 | 0x4000
+    RESERVED = 0x0400 | 0x0800 | 0x1000 | 0x2000 | 0x4000 | 0x8000
 
 
 VarTransformMappingValues = namedtuple(
