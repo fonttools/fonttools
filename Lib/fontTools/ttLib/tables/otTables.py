@@ -189,17 +189,17 @@ class VarTransform:
     def applyDeltas(self, deltas):
         i = 0
 
-        def read_transform_component_delta(data, values):
+        def read_transform_component_delta(values):
             nonlocal i
             if self.flags & values.flag:
-                v = fi2fl(data[i], values.fractionalBits) * values.scale
+                v = fi2fl(deltas[i], values.fractionalBits) * values.scale
                 i += 1
                 return v
             else:
                 return 0
 
         for attr_name, mapping_values in VAR_TRANSFORM_MAPPING.items():
-            value = read_transform_component_delta(deltas, mapping_values)
+            value = read_transform_component_delta(mapping_values)
             setattr(
                 self.transform, attr_name, getattr(self.transform, attr_name) + value
             )
