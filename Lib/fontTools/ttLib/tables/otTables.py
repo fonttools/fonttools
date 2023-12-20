@@ -304,10 +304,10 @@ class VarComponent:
         return result if result is NotImplemented else not result
 
 
-class VarCompositeGlyph(BaseTable):
-    def populateDefaults(self, propagator=None):
-        if not hasattr(self, "components"):
-            self.components = []
+class VarCompositeGlyph:
+
+    def __init__(self, components=None):
+        self.components = components if components is not None else []
 
     def decompile(self, data, font, localState):
         self.components = []
@@ -331,7 +331,6 @@ class VarCompositeGlyph(BaseTable):
         xmlWriter.newline()
 
     def fromXML(self, name, attrs, content, font):
-        self.populateDefaults()
         if name == "VarComponent":
             component = VarComponent()
             component.fromXML(name, attrs, content, font)
