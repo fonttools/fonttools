@@ -134,10 +134,8 @@ class VarTransform:
                     mapping.defaultValue / mapping.scale, mapping.fractionalBits
                 ):
                     flags |= mapping.flag
-            if (flags & VarTransformFlags.HAVE_SCALE_Y) and fl2fi(
-                self.transform.scaleX, 10
-            ) == fl2fi(self.transform.scaleY, 10):
-                flags ^= VarTransformFlags.HAVE_SCALE_Y
+            if fl2fi(self.transform.scaleX, 10) == fl2fi(self.transform.scaleY, 10):
+                flags &= ~VarTransformFlags.HAVE_SCALE_Y
             if self.varIndex != NO_VARIATION_INDEX:
                 flags |= VarTransformFlags.HAVE_VARIATIONS
         else:
