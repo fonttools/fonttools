@@ -312,9 +312,13 @@ class _TTGlyphVARC(_TTGlyph):
                     axisValues = (
                         axisValues + instancer[varIdx]
                     )  # TODO Implement __iadd__ for Vector
-                assert len(axisIndices) == len(axisValues), (len(axisIndices), len(axisValues))
+                assert len(axisIndices) == len(axisValues), (
+                    len(axisIndices),
+                    len(axisValues),
+                )
                 location = {
-                    fvarAxes[i].axisTag: fi2fl(v, 14) for i, v in zip(axisIndices, axisValues)
+                    fvarAxes[i].axisTag: fi2fl(v, 14)
+                    for i, v in zip(axisIndices, axisValues)
                 }
 
             transform = DecomposedTransform()
