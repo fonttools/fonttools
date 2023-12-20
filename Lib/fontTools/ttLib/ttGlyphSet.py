@@ -330,12 +330,9 @@ class _TTGlyphVARC(_TTGlyph):
                     varTransform.applyDeltas(deltas)
                 transform = varTransform.transform
 
-            with self.glyphSet.glyphSet.pushLocation(
-                location, comp.flags & VarComponentFlags.RESET_UNSPECIFIED_AXES
-            ):
-                with self.glyphSet.pushLocation(
-                    location, comp.flags & VarComponentFlags.RESET_UNSPECIFIED_AXES
-                ):
+            reset = comp.flags & VarComponentFlags.RESET_UNSPECIFIED_AXES
+            with self.glyphSet.glyphSet.pushLocation(location, reset):
+                with self.glyphSet.pushLocation(location, reset):
                     try:
                         pen.addVarComponent(
                             comp.glyphName, transform, self.glyphSet.rawLocation
