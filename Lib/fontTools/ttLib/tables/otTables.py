@@ -98,12 +98,52 @@ _packer = {
     3: lambda v: struct.pack(">L", v)[1:],
     4: lambda v: struct.pack(">L", v),
 }
-_unpackers = {
+_unpacker = {
     1: lambda v: struct.unpack(">B", v)[0],
     2: lambda v: struct.unpack(">H", v)[0],
     3: lambda v: struct.unpack(">L", b"\0" + v)[0],
     4: lambda v: struct.unpack(">L", v)[0],
 }
+
+
+def _read_var_length_number(data, i):
+    """Read a variable-length number from data starting at index i.
+
+    Return the number and the next index.
+    """
+
+    b0 = data[i]
+    if b0 < 0x80:
+        return b0, i + 1
+    elif b0 < 0xC0:
+        return (b0 - 0x80) << 8 | data[i + 1], i + 2
+    elif b0 < 0xE0:
+        return (b0 - 0xC0) << 16 | data[i + 1] << 8 | data[i + 2], i + 3
+    elif b0 < 0xF0:
+        return (b0 - 0xE0) << 24 | data[i + 1] << 16 | data[i + 2] << 8 | data[
+            i + 3
+        ], i + 4
+    else:
+        return (b0 - 0xF0) << 32 | data[i + 1] << 24 | data[i + 2] << 16 | data[
+            i + 3
+        ] << 8 | data[i + 4], i + 5
+
+
+def _write_var_length_number(v):
+    """Write a variable-length number.
+
+    Return the data.
+    """
+    if v < 0x80:
+        return struct.pack(">B", v)
+    elif v < 0x4000:
+        return struct.pack(">H", (v | 0x8000))
+    elif v < 0x200000:
+        return struct.pack(">L", (v | 0xC00000))[1:]
+    elif v < 0x10000000:
+        return struct.pack(">L", (v | 0xE0000000))
+    else:
+        return struct.pack(">B", 0xF0) + struct.pack(">L", v)
 
 
 class VarComponent:
@@ -118,11 +158,11 @@ class VarComponent:
 
     def decompile(self, data, font, localState):
         i = 0
-        self.flags = flags = _unpackers[2](data[i : i + 2])
+        self.flags = flags = _unpacker[2](data[i : i + 2])
         i += 2
 
         gidSize = 3 if flags & VarComponentFlags.GID_IS_24BIT else 2
-        glyphID = _unpackers[gidSize](data[i : i + gidSize])
+        glyphID = _unpacker[gidSize](data[i : i + gidSize])
         i += gidSize
         self.glyphName = font.glyphOrder[glyphID]
 
@@ -131,7 +171,7 @@ class VarComponent:
         self.axisIndicesIndex = (
             None
             if axisIndicesIndexSize == 0
-            else _unpackers[axisIndicesIndexSize](data[i : i + axisIndicesIndexSize])
+            else _unpacker[axisIndicesIndexSize](data[i : i + axisIndicesIndexSize])
         )
         i += axisIndicesIndexSize
 
@@ -146,13 +186,11 @@ class VarComponent:
         self.axisValues = tuple(axisValues)
 
         if flags & VarComponentFlags.AXIS_VALUES_HAVE_VARIATION:
-            self.axisValuesVarIndex = _unpackers[4](data[i : i + 4])
-            i += 4
+            self.axisValuesVarIndex, i = _read_var_length_number(data, i)
         else:
             self.axisValuesVarIndex = NO_VARIATION_INDEX
         if flags & VarComponentFlags.TRANSFORM_HAS_VARIATION:
-            self.transformVarIndex = _unpackers[4](data[i : i + 4])
-            i += 4
+            self.transformVarIndex, i = _read_var_length_number(data, i)
         else:
             self.transformVarIndex = NO_VARIATION_INDEX
 
@@ -219,12 +257,12 @@ class VarComponent:
 
         if self.axisValuesVarIndex != NO_VARIATION_INDEX:
             flags |= VarComponentFlags.AXIS_VALUES_HAVE_VARIATION
-            data.append(struct.pack(">L", self.axisValuesVarIndex))
+            data.append(_write_var_length_number(self.axisValuesVarIndex))
         else:
             flags &= ~VarComponentFlags.AXIS_VALUES_HAVE_VARIATION
         if self.transformVarIndex != NO_VARIATION_INDEX:
             flags |= VarComponentFlags.TRANSFORM_HAS_VARIATION
-            data.append(struct.pack(">L", self.transformVarIndex))
+            data.append(_write_var_length_number(self.transformVarIndex))
         else:
             flags &= ~VarComponentFlags.TRANSFORM_HAS_VARIATION
 
