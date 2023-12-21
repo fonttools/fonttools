@@ -11,6 +11,7 @@ from functools import reduce
 from math import radians
 import itertools
 from collections import defaultdict, namedtuple
+from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools.ttLib.tables.otTraverse import dfs_base_table
 from fontTools.misc.arrayTools import quantizeRect
 from fontTools.misc.roundTools import otRound
@@ -140,10 +141,7 @@ class VarComponent:
             axisIndices = localState["AxisIndicesList"].Item[self.axisIndicesIndex]
             numAxes = len(axisIndices)
 
-        axisValues = array.array("h", data[i : i + 2 * numAxes])
-        i += 2 * numAxes
-        if sys.byteorder != "big":
-            axisValues.byteswap()
+        axisValues, i = TupleVariation.decompileDeltas_(numAxes, data, i)
         assert len(axisValues) == numAxes
         self.axisValues = tuple(axisValues)
 
@@ -217,10 +215,7 @@ class VarComponent:
         if axisIndicesIndexSize:
             data.append(_packer[axisIndicesIndexSize](self.axisIndicesIndex))
 
-        axisValues = array.array("h", self.axisValues)
-        if sys.byteorder != "big":
-            axisValues.byteswap()
-        data.append(axisValues.tobytes())
+        data.append(TupleVariation.compileDeltaValues_(self.axisValues))
 
         if self.axisValuesVarIndex != NO_VARIATION_INDEX:
             flags |= VarComponentFlags.AXIS_VALUES_HAVE_VARIATION
