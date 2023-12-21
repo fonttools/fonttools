@@ -49,10 +49,12 @@ log = logging.getLogger(__name__)
 
 
 class VarComponentFlags(IntFlag):
-    AXIS_INDICES_INDEX_SIZE = 0x0003  # Keep it first; we rely on that.
+    USE_MY_METRICS = 0x0001
+    RESET_UNSPECIFIED_AXES = 0x0002
 
-    USE_MY_METRICS = 0x0004
-    RESET_UNSPECIFIED_AXES = 0x0008
+    GID_IS_24BIT = 0x0004
+
+    HAVE_AXES = 0x0008
 
     AXIS_VALUES_HAVE_VARIATION = 0x0010
     TRANSFORM_HAS_VARIATION = 0x0020
@@ -67,7 +69,7 @@ class VarComponentFlags(IntFlag):
     HAVE_TCENTER_X = 0x2000
     HAVE_TCENTER_Y = 0x4000
 
-    GID_IS_24BIT = 0x8000
+    RESERVED = 0x8000
 
 
 VarTransformMappingValues = namedtuple(
@@ -106,7 +108,7 @@ _unpacker = {
 }
 
 
-def _read_var_length_number(data, i):
+def _readVarInt32(data, i):
     """Read a variable-length number from data starting at index i.
 
     Return the number and the next index.
@@ -129,7 +131,7 @@ def _read_var_length_number(data, i):
         ] << 8 | data[i + 4], i + 5
 
 
-def _write_var_length_number(v):
+def _writeVarInt32(v):
     """Write a variable-length number.
 
     Return the data.
@@ -166,14 +168,10 @@ class VarComponent:
         i += gidSize
         self.glyphName = font.glyphOrder[glyphID]
 
-        axisIndicesIndexSize = flags & VarComponentFlags.AXIS_INDICES_INDEX_SIZE
-        axisIndicesIndexSize = {0: 0, 1: 1, 2: 2, 3: 4}[axisIndicesIndexSize]
-        self.axisIndicesIndex = (
-            None
-            if axisIndicesIndexSize == 0
-            else _unpacker[axisIndicesIndexSize](data[i : i + axisIndicesIndexSize])
-        )
-        i += axisIndicesIndexSize
+        if flags & VarComponentFlags.HAVE_AXES:
+            self.axisIndicesIndex, i = _readVarInt32(data, i)
+        else:
+            self.axisIndicesIndex = None
 
         if self.axisIndicesIndex is None:
             numAxes = 0
@@ -186,11 +184,11 @@ class VarComponent:
         self.axisValues = tuple(axisValues)
 
         if flags & VarComponentFlags.AXIS_VALUES_HAVE_VARIATION:
-            self.axisValuesVarIndex, i = _read_var_length_number(data, i)
+            self.axisValuesVarIndex, i = _readVarInt32(data, i)
         else:
             self.axisValuesVarIndex = NO_VARIATION_INDEX
         if flags & VarComponentFlags.TRANSFORM_HAS_VARIATION:
-            self.transformVarIndex, i = _read_var_length_number(data, i)
+            self.transformVarIndex, i = _readVarInt32(data, i)
         else:
             self.transformVarIndex = NO_VARIATION_INDEX
 
@@ -234,35 +232,21 @@ class VarComponent:
 
         numAxes = len(self.axisValues)
 
-        axisIndicesIndexSize = (
-            0
-            if self.axisIndicesIndex == None
-            else 1
-            if self.axisIndicesIndex < 256
-            else 2
-            if self.axisIndicesIndex < 65536
-            else 3
-        )
-        assert (
-            axisIndicesIndexSize & VarComponentFlags.AXIS_INDICES_INDEX_SIZE
-            == axisIndicesIndexSize
-        )
-        flags &= ~VarComponentFlags.AXIS_INDICES_INDEX_SIZE
-        flags |= axisIndicesIndexSize
-        axisIndicesIndexSize = {0: 0, 1: 1, 2: 2, 3: 4}[axisIndicesIndexSize]
-        if axisIndicesIndexSize:
-            data.append(_packer[axisIndicesIndexSize](self.axisIndicesIndex))
-
-        data.append(TupleVariation.compileDeltaValues_(self.axisValues))
+        if numAxes:
+            flags |= VarComponentFlags.HAVE_AXES
+            data.append(_writeVarInt32(self.axisIndicesIndex))
+            data.append(TupleVariation.compileDeltaValues_(self.axisValues))
+        else:
+            flags &= ~VarComponentFlags.HAVE_AXES
 
         if self.axisValuesVarIndex != NO_VARIATION_INDEX:
             flags |= VarComponentFlags.AXIS_VALUES_HAVE_VARIATION
-            data.append(_write_var_length_number(self.axisValuesVarIndex))
+            data.append(_writeVarInt32(self.axisValuesVarIndex))
         else:
             flags &= ~VarComponentFlags.AXIS_VALUES_HAVE_VARIATION
         if self.transformVarIndex != NO_VARIATION_INDEX:
             flags |= VarComponentFlags.TRANSFORM_HAS_VARIATION
-            data.append(_write_var_length_number(self.transformVarIndex))
+            data.append(_writeVarInt32(self.transformVarIndex))
         else:
             flags &= ~VarComponentFlags.TRANSFORM_HAS_VARIATION
 
