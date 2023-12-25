@@ -49,27 +49,28 @@ log = logging.getLogger(__name__)
 
 
 class VarComponentFlags(IntFlag):
-    USE_MY_METRICS = 0x0001
-    RESET_UNSPECIFIED_AXES = 0x0002
+    RESET_UNSPECIFIED_AXES = 0x0001
 
-    GID_IS_24BIT = 0x0004
+    HAVE_AXES = 0x0002
 
-    HAVE_AXES = 0x0008
+    AXIS_VALUES_HAVE_VARIATION = 0x0004
+    TRANSFORM_HAS_VARIATION = 0x0008
 
-    AXIS_VALUES_HAVE_VARIATION = 0x0010
-    TRANSFORM_HAS_VARIATION = 0x0020
+    HAVE_TRANSLATE_X = 0x0010
+    HAVE_TRANSLATE_Y = 0x0020
+    HAVE_ROTATION = 0x0040
 
-    HAVE_TRANSLATE_X = 0x0040
-    HAVE_TRANSLATE_Y = 0x0080
-    HAVE_ROTATION = 0x0100
-    HAVE_SCALE_X = 0x0200
-    HAVE_SCALE_Y = 0x0400
-    HAVE_SKEW_X = 0x0800
-    HAVE_SKEW_Y = 0x1000
-    HAVE_TCENTER_X = 0x2000
-    HAVE_TCENTER_Y = 0x4000
+    USE_MY_METRICS = 0x0080
 
-    RESERVED = 0x8000
+    HAVE_SCALE_X = 0x0100
+    HAVE_SCALE_Y = 0x0200
+    HAVE_TCENTER_X = 0x0400
+    HAVE_TCENTER_Y = 0x0800
+
+    GID_IS_24BIT = 0x4000
+
+    HAVE_SKEW_X = 0x1000
+    HAVE_SKEW_Y = 0x2000
 
 
 VarTransformMappingValues = namedtuple(
@@ -160,8 +161,8 @@ class VarComponent:
 
     def decompile(self, data, font, localState):
         i = 0
-        self.flags = flags = _unpacker[2](data[i : i + 2])
-        i += 2
+        self.flags, i = _readVarInt32(data, i)
+        flags = self.flags
 
         gidSize = 3 if flags & VarComponentFlags.GID_IS_24BIT else 2
         glyphID = _unpacker[gidSize](data[i : i + gidSize])
@@ -262,7 +263,7 @@ class VarComponent:
             value = getattr(self.transform, attr_name)
             data.append(write_transform_component(value, mapping_values))
 
-        return struct.pack(">H", flags) + bytesjoin(data)
+        return _writeVarInt32(flags) + bytesjoin(data)
 
     def toXML(self, writer, ttFont, attrs):
         attrs.append(("glyphName", self.glyphName))
