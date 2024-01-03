@@ -387,6 +387,7 @@ def test_gen(
                     ):
                         if overweight:
                             expectedSize = max(size0, size1)
+                            continue
                         else:
                             expectedSize = sqrt(size0 * size1)
 
