@@ -109,7 +109,7 @@ _unpacker = {
 }
 
 
-def _readVarInt32(data, i):
+def _read_uint32var(data, i):
     """Read a variable-length number from data starting at index i.
 
     Return the number and the next index.
@@ -132,7 +132,7 @@ def _readVarInt32(data, i):
         ] << 8 | data[i + 4], i + 5
 
 
-def _writeVarInt32(v):
+def _write_uint32var(v):
     """Write a variable-length number.
 
     Return the data.
@@ -161,7 +161,7 @@ class VarComponent:
 
     def decompile(self, data, font, localState):
         i = 0
-        self.flags, i = _readVarInt32(data, i)
+        self.flags, i = _read_uint32var(data, i)
         flags = self.flags
 
         gidSize = 3 if flags & VarComponentFlags.GID_IS_24BIT else 2
@@ -170,7 +170,7 @@ class VarComponent:
         self.glyphName = font.glyphOrder[glyphID]
 
         if flags & VarComponentFlags.HAVE_AXES:
-            self.axisIndicesIndex, i = _readVarInt32(data, i)
+            self.axisIndicesIndex, i = _read_uint32var(data, i)
         else:
             self.axisIndicesIndex = None
 
@@ -185,11 +185,11 @@ class VarComponent:
         self.axisValues = tuple(axisValues)
 
         if flags & VarComponentFlags.AXIS_VALUES_HAVE_VARIATION:
-            self.axisValuesVarIndex, i = _readVarInt32(data, i)
+            self.axisValuesVarIndex, i = _read_uint32var(data, i)
         else:
             self.axisValuesVarIndex = NO_VARIATION_INDEX
         if flags & VarComponentFlags.TRANSFORM_HAS_VARIATION:
-            self.transformVarIndex, i = _readVarInt32(data, i)
+            self.transformVarIndex, i = _read_uint32var(data, i)
         else:
             self.transformVarIndex = NO_VARIATION_INDEX
 
@@ -235,19 +235,19 @@ class VarComponent:
 
         if numAxes:
             flags |= VarComponentFlags.HAVE_AXES
-            data.append(_writeVarInt32(self.axisIndicesIndex))
+            data.append(_write_uint32var(self.axisIndicesIndex))
             data.append(TupleVariation.compileDeltaValues_(self.axisValues))
         else:
             flags &= ~VarComponentFlags.HAVE_AXES
 
         if self.axisValuesVarIndex != NO_VARIATION_INDEX:
             flags |= VarComponentFlags.AXIS_VALUES_HAVE_VARIATION
-            data.append(_writeVarInt32(self.axisValuesVarIndex))
+            data.append(_write_uint32var(self.axisValuesVarIndex))
         else:
             flags &= ~VarComponentFlags.AXIS_VALUES_HAVE_VARIATION
         if self.transformVarIndex != NO_VARIATION_INDEX:
             flags |= VarComponentFlags.TRANSFORM_HAS_VARIATION
-            data.append(_writeVarInt32(self.transformVarIndex))
+            data.append(_write_uint32var(self.transformVarIndex))
         else:
             flags &= ~VarComponentFlags.TRANSFORM_HAS_VARIATION
 
@@ -263,7 +263,7 @@ class VarComponent:
             value = getattr(self.transform, attr_name)
             data.append(write_transform_component(value, mapping_values))
 
-        return _writeVarInt32(flags) + bytesjoin(data)
+        return _write_uint32var(flags) + bytesjoin(data)
 
     def toXML(self, writer, ttFont, attrs):
         attrs.append(("glyphName", self.glyphName))
