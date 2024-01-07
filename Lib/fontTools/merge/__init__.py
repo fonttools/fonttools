@@ -202,6 +202,10 @@ def main(args=None):
 
     merger = Merger(options=options)
     font = merger.merge(fontfiles)
+    
+    if (options.import_file):
+        font.importXML(options.import_file)
+
     with timer("compile and save font"):
         font.save(options.output_file)
 
