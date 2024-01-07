@@ -183,10 +183,13 @@ def main(args=None):
     options = Options()
     args = options.parse_opts(args)
     fontfiles = []
+    if options.input_file:
+        with open(options.input_file) as inputfile:
+            fontfiles = [line.strip() for line in inputfile.readlines() if not line.lstrip().startswith("#")]
     for g in args:
         fontfiles.append(g)
-
-    if len(args) < 1:
+    
+    if len(fontfiles) < 1:
         print("usage: pyftmerge font... [--output-file=merged.ttf]", file=sys.stderr)
         return 1
 
