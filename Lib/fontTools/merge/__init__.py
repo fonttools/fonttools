@@ -139,6 +139,7 @@ class Merger(object):
             *(vars(table).keys() for table in tables if table is not NotImplemented),
         )
         for key in allKeys:
+            log.info(" %s", key)
             try:
                 mergeLogic = logic[key]
             except KeyError:
