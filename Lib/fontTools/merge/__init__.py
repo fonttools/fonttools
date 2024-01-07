@@ -190,7 +190,7 @@ def main(args=None):
         fontfiles.append(g)
     
     if len(fontfiles) < 1:
-        print("usage: pyftmerge font... [--output-file=merged.ttf]", file=sys.stderr)
+        print("usage: pyftmerge [--input-file=filelist.txt] font... [--output-file=merged.ttf] [--drop-tables=GDEF,head] [--verbose] [--timing]", file=sys.stderr)
         return 1
 
     configLogger(level=logging.INFO if options.verbose else logging.WARNING)
