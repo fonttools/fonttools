@@ -181,17 +181,13 @@ def main(args=None):
         args = sys.argv[1:]
 
     options = Options()
-    args = options.parse_opts(args, ignore_unknown=["output-file"])
-    outfile = "merged.ttf"
+    args = options.parse_opts(args)
     fontfiles = []
     for g in args:
-        if g.startswith("--output-file="):
-            outfile = g[14:]
-            continue
         fontfiles.append(g)
 
     if len(args) < 1:
-        print("usage: pyftmerge font...", file=sys.stderr)
+        print("usage: pyftmerge font... [--output-file=merged.ttf]", file=sys.stderr)
         return 1
 
     configLogger(level=logging.INFO if options.verbose else logging.WARNING)
@@ -203,7 +199,7 @@ def main(args=None):
     merger = Merger(options=options)
     font = merger.merge(fontfiles)
     with timer("compile and save font"):
-        font.save(outfile)
+        font.save(options.output_file)
 
 
 if __name__ == "__main__":
