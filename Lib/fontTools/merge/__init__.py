@@ -186,20 +186,45 @@ def main(args=None):
     fontfiles = []
     if options.input_file:
         with open(options.input_file) as inputfile:
-            fontfiles = [line.strip() for line in inputfile.readlines() if not line.lstrip().startswith("#")]
+            fontfiles = [
+                line.strip()
+                for line in inputfile.readlines()
+                if not line.lstrip().startswith("#")
+            ]
     for g in args:
         fontfiles.append(g)
-    
+
     if len(fontfiles) < 1:
-        print("usage: pyftmerge [font1 ... fontN] [--input-file=filelist.txt] [--output-file=merged.ttf] [--import-file=tables.ttx]", file=sys.stderr)
-        print("                                   [--drop-tables=tags] [--verbose] [--timing]", file=sys.stderr)
+        print(
+            "usage: pyftmerge [font1 ... fontN] [--input-file=filelist.txt] [--output-file=merged.ttf] [--import-file=tables.ttx]",
+            file=sys.stderr,
+        )
+        print(
+            "                                   [--drop-tables=tags] [--verbose] [--timing]",
+            file=sys.stderr,
+        )
         print("", file=sys.stderr)
         print(" font1 ... fontN              Files to merge.", file=sys.stderr)
-        print(" --input-file=<filename>      Read files to merge from a text file, each path new line. # Comment lines allowed.", file=sys.stderr)
-        print(" --output-file=<filename>     Specify output file name (default: merged.ttf).", file=sys.stderr)
-        print(" --import-file=<filename>     TTX file to import after merging. This can be used to set metadata.", file=sys.stderr)
-        print(" --drop-tables=<table tags>   Comma separated list of table tags to skip, case sensitive.", file=sys.stderr)
-        print(" --verbose                    Output progress information.", file=sys.stderr)
+        print(
+            " --input-file=<filename>      Read files to merge from a text file, each path new line. # Comment lines allowed.",
+            file=sys.stderr,
+        )
+        print(
+            " --output-file=<filename>     Specify output file name (default: merged.ttf).",
+            file=sys.stderr,
+        )
+        print(
+            " --import-file=<filename>     TTX file to import after merging. This can be used to set metadata.",
+            file=sys.stderr,
+        )
+        print(
+            " --drop-tables=<table tags>   Comma separated list of table tags to skip, case sensitive.",
+            file=sys.stderr,
+        )
+        print(
+            " --verbose                    Output progress information.",
+            file=sys.stderr,
+        )
         print(" --timing                     Output progress timing.", file=sys.stderr)
         return 1
 
@@ -211,8 +236,8 @@ def main(args=None):
 
     merger = Merger(options=options)
     font = merger.merge(fontfiles)
-    
-    if (options.import_file):
+
+    if options.import_file:
         font.importXML(options.import_file)
 
     with timer("compile and save font"):
