@@ -191,7 +191,16 @@ def main(args=None):
         fontfiles.append(g)
     
     if len(fontfiles) < 1:
-        print("usage: pyftmerge [--input-file=filelist.txt] font... [--output-file=merged.ttf] [--drop-tables=GDEF,head] [--verbose] [--timing]", file=sys.stderr)
+        print("usage: pyftmerge [font1 ... fontN] [--input-file=filelist.txt] [--output-file=merged.ttf] [--import-file=tables.ttx]", file=sys.stderr)
+        print("                                   [--drop-tables=tags] [--verbose] [--timing]", file=sys.stderr)
+        print("", file=sys.stderr)
+        print(" font1 ... fontN              Files to merge.", file=sys.stderr)
+        print(" --input-file=<filename>      Read files to merge from a text file, each path new line. # Comment lines allowed.", file=sys.stderr)
+        print(" --output-file=<filename>     Specify output file name (default: merged.ttf).", file=sys.stderr)
+        print(" --import-file=<filename>     TTX file to import after merging. This can be used to set metadata.", file=sys.stderr)
+        print(" --drop-tables=<table tags>   Comma separated list of table tags to skip, case sensitive.", file=sys.stderr)
+        print(" --verbose                    Output progress information.", file=sys.stderr)
+        print(" --timing                     Output progress timing.", file=sys.stderr)
         return 1
 
     configLogger(level=logging.INFO if options.verbose else logging.WARNING)
