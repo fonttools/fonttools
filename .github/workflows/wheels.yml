@@ -32,7 +32,7 @@ jobs:
     - name: Build source distribution and pure-python wheel
       run: |
         python setup.py sdist bdist_wheel
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         path: |
           dist/*.whl
@@ -70,7 +70,7 @@ jobs:
       env:
         CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
         CIBW_ARCHS: ${{ matrix.arch }}
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         path: wheelhouse/*.whl
 
@@ -96,7 +96,7 @@ jobs:
       env:
         CIBW_BUILD: cp${{ matrix.python }}-*
         CIBW_ARCHS: ${{ matrix.arch }}
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         path: wheelhouse/*.whl
 
