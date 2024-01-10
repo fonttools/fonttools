@@ -637,14 +637,14 @@ def findFeatureVariationRecord(featureVariations, conditionTable):
     for fvr in featureVariations.FeatureVariationRecord:
         if fvr.ConditionSet.ConditionCount != len(conditionTable):
             continue
-        for ct1, ct2 in zip(conditionTable, fvr.ConditionSet.ConditionTable):
-            if (
-                ct1.Format == ct2.Format
-                and ct1.AxisIndex == ct2.AxisIndex
-                and ct1.FilterRangeMinValue == ct2.FilterRangeMinValue
-                and ct1.FilterRangeMaxValue == ct2.FilterRangeMaxValue
-            ):
-                return fvr
+        if all(
+            ct1.Format == ct2.Format
+            and ct1.AxisIndex == ct2.AxisIndex
+            and ct1.FilterRangeMinValue == ct2.FilterRangeMinValue
+            and ct1.FilterRangeMaxValue == ct2.FilterRangeMaxValue
+            for ct1, ct2 in zip(conditionTable, fvr.ConditionSet.ConditionTable)
+        ):
+            return fvr
 
     return None
 
