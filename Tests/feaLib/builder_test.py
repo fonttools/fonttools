@@ -990,6 +990,47 @@ class BuilderTest(unittest.TestCase):
                 f'{name}.fea:{line}:12: Ambiguous "ignore {sub}", there should be least one marked glyph'
             )
 
+    def test_conditionset_multiple_features(self):
+        """Test that using the same `conditionset` for multiple features reuses the
+        `FeatureVariationRecord`."""
+
+        features = """
+            languagesystem DFLT dflt;
+
+            conditionset test {
+                wght 600 1000;
+                wdth 150 200;
+            } test;
+
+            variation ccmp test {
+                sub e by a;
+            } ccmp;
+
+            variation rlig test {
+                sub b by c;
+            } rlig;
+        """
+
+        def make_mock_vf():
+            font = makeTTFont()
+            font["name"] = newTable("name")
+            addFvar(
+                font,
+                [("wght", 0, 0, 1000, "Weight"), ("wdth", 100, 100, 200, "Width")],
+                [],
+            )
+            del font["name"]
+            return font
+
+        font = make_mock_vf()
+        addOpenTypeFeaturesFromString(font, features)
+
+        table = font["GSUB"].table
+        assert table.FeatureVariations.FeatureVariationCount == 1
+
+        fvr = table.FeatureVariations.FeatureVariationRecord[0]
+        assert fvr.FeatureTableSubstitution.SubstitutionCount == 2
+
     def test_condition_set_avar(self):
         """Test that the `avar` table is consulted when normalizing user-space
         values."""

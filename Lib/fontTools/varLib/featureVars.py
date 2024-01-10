@@ -414,6 +414,10 @@ def addFeatureVariationsRaw(font, table, conditionalSubstitutions, featureTag="r
         axis.axisTag: axisIndex for axisIndex, axis in enumerate(font["fvar"].axes)
     }
 
+    hasFeatureVariations = (
+        hasattr(table, "FeatureVariations") and table.FeatureVariations is not None
+    )
+
     featureVariationRecords = []
     for conditionSet, lookupIndices in conditionalSubstitutions:
         conditionTable = []
@@ -440,11 +444,19 @@ def addFeatureVariationsRaw(font, table, conditionalSubstitutions, featureTag="r
                     varFeatureIndex, combinedLookupIndices
                 )
             )
-        featureVariationRecords.append(
-            buildFeatureVariationRecord(conditionTable, records)
-        )
+        if hasFeatureVariations and (
+            fvr := findFeatureVariationRecord(table.FeatureVariations, conditionTable)
+        ):
+            fvr.FeatureTableSubstitution.SubstitutionRecord.extend(records)
+            fvr.FeatureTableSubstitution.SubstitutionCount = len(
+                fvr.FeatureTableSubstitution.SubstitutionRecord
+            )
+        else:
+            featureVariationRecords.append(
+                buildFeatureVariationRecord(conditionTable, records)
+            )
 
-    if hasattr(table, "FeatureVariations") and table.FeatureVariations is not None:
+    if hasFeatureVariations:
         if table.FeatureVariations.Version != 0x00010000:
             raise VarLibError(
                 "Unsupported FeatureVariations table version: "
@@ -612,6 +624,29 @@ def buildConditionTable(axisIndex, filterRangeMinValue, filterRangeMaxValue):
     ct.FilterRangeMinValue = filterRangeMinValue
     ct.FilterRangeMaxValue = filterRangeMaxValue
     return ct
+
+
+def findFeatureVariationRecord(featureVariations, conditionTable):
+    """Find a FeatureVariationRecord that has the same conditionTable."""
+    if featureVariations.Version != 0x00010000:
+        raise VarLibError(
+            "Unsupported FeatureVariations table version: "
+            f"0x{featureVariations.Version:08x} (expected 0x00010000)."
+        )
+
+    for fvr in featureVariations.FeatureVariationRecord:
+        if fvr.ConditionSet.ConditionCount != len(conditionTable):
+            continue
+        for ct1, ct2 in zip(conditionTable, fvr.ConditionSet.ConditionTable):
+            if (
+                ct1.Format == ct2.Format
+                and ct1.AxisIndex == ct2.AxisIndex
+                and ct1.FilterRangeMinValue == ct2.FilterRangeMinValue
+                and ct1.FilterRangeMaxValue == ct2.FilterRangeMaxValue
+            ):
+                return fvr
+
+    return None
 
 
 def sortFeatureList(table):
