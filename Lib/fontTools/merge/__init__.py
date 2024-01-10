@@ -10,6 +10,7 @@ from fontTools.merge.cmap import (
     renameCFFCharStrings,
 )
 from fontTools.merge.layout import layoutPreMerge, layoutPostMerge
+from fontTools.merge.names import namesPreMerge, namesPostMerge
 from fontTools.merge.options import Options
 import fontTools.merge.tables
 from fontTools.misc.loggingTools import Timer
@@ -58,7 +59,8 @@ class Merger(object):
 
     def _openFonts(self, fontfiles):
         fonts = [ttLib.TTFont(fontfile) for fontfile in fontfiles]
-        for font, fontfile in zip(fonts, fontfiles):
+        for i, (font, fontfile) in enumerate(zip(fonts, fontfiles)):
+            log.debug(" %i %s", i, fontfile)
             font._merger__fontfile = fontfile
             font._merger__name = font["name"].getDebugName(4)
         return fonts
@@ -73,6 +75,9 @@ class Merger(object):
                 A :class:`fontTools.ttLib.TTFont` object. Call the ``save`` method on
                 this to write it out to an OTF file.
         """
+
+        log.info("Loading fonts")
+
         #
         # Settle on a mega glyph order.
         #
@@ -101,6 +106,7 @@ class Merger(object):
             self._preMerge(font)
 
         self.fonts = fonts
+        self.mega = mega
 
         allTags = reduce(set.union, (list(font.keys()) for font in fonts), set())
         allTags.remove("GlyphOrder")
@@ -125,6 +131,7 @@ class Merger(object):
 
         del self.duplicateGlyphsPerFont
         del self.fonts
+        del self.mega
 
         self._postMerge(mega)
 
@@ -139,7 +146,7 @@ class Merger(object):
             *(vars(table).keys() for table in tables if table is not NotImplemented),
         )
         for key in allKeys:
-            log.info(" %s", key)
+            log.debug(" %s", key)
             try:
                 mergeLogic = logic[key]
             except KeyError:
@@ -159,10 +166,18 @@ class Merger(object):
         return returnTable
 
     def _preMerge(self, font):
+        log.info("Pre-merge %s", font._merger__fontfile)
         layoutPreMerge(font)
 
+        with timer("find names to merge"):
+            namesPreMerge(font)
+
     def _postMerge(self, font):
+        log.info("Post-merge")
         layoutPostMerge(font)
+
+        with timer("store merged names"):
+            namesPostMerge(font)
 
         if "OS/2" in font:
             # https://github.com/fonttools/fonttools/issues/2538
@@ -200,7 +215,7 @@ def main(args=None):
             file=sys.stderr,
         )
         print(
-            "                                   [--drop-tables=tags] [--verbose] [--timing]",
+            "                                   [--drop-tables=tags] [--merge-names] [--verbose] [--timing]",
             file=sys.stderr,
         )
         print("", file=sys.stderr)
@@ -219,6 +234,10 @@ def main(args=None):
         )
         print(
             " --drop-tables=<table tags>   Comma separated list of table tags to skip, case sensitive.",
+            file=sys.stderr,
+        )
+        print(
+            " --merge-names                Concatenate system names (default: first font's names used).",
             file=sys.stderr,
         )
         print(

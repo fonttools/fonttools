@@ -7,6 +7,7 @@ from fontTools.ttLib.tables.DefaultTable import DefaultTable
 from fontTools.ttLib.tables import otTables
 from fontTools.merge.base import add_method, mergeObjects
 from fontTools.merge.util import *
+from fontTools.merge.names import setNames, concat
 import logging
 
 
@@ -18,10 +19,26 @@ def mergeLookupLists(lst):
     return sumLists(lst)
 
 
+def mergeFeatureParams(lst):
+    if lst:
+        first = equal(type(l) for l in lst)
+        if first is otTables.FeatureParamsStylisticSet:
+            self = otTables.FeatureParamsStylisticSet()
+            self.Version = 0
+            setNames(self, "UINameID", lst, concat)
+            return self
+
+    # TODO merge FeatureParamsCharacterVariants
+
+    return None
+
+
 def mergeFeatures(lst):
     assert lst
     self = otTables.Feature()
-    self.FeatureParams = None
+    self.FeatureParams = mergeFeatureParams(
+        [l.FeatureParams for l in lst if l.FeatureParams]
+    )
     self.LookupListIndex = mergeLookupLists(
         [l.LookupListIndex for l in lst if l.LookupListIndex]
     )
@@ -458,8 +475,6 @@ def layoutPreMerge(font):
             featureMap = {i: v for i, v in enumerate(t.table.FeatureList.FeatureRecord)}
             t.table.ScriptList.mapFeatures(featureMap)
 
-    # TODO FeatureParams nameIDs
-
 
 def layoutPostMerge(font):
     # Map references back to indices
@@ -526,5 +541,3 @@ def layoutPostMerge(font):
                     GDEF.table.MarkGlyphSetsDef.Coverage
                 )
                 t.table.LookupList.mapMarkFilteringSets(markFilteringSetMap)
-
-    # TODO FeatureParams nameIDs
