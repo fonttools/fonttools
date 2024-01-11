@@ -1,3 +1,6 @@
+4.47.1 (released 2024-01-11)
+----------------------------
+
 - [merge] Improve help message and add standard command line options (#3408)
 - [otlLib] Pass ``ttFont`` to ``name.addName`` in ``buildStatTable`` (#3406)
 - [featureVars] Re-use ``FeatureVariationRecord``s when possible (#3413)
