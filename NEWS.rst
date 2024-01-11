@@ -1,3 +1,6 @@
+4.47.2 (released 2024-01-11)
+----------------------------
+
 Minor release to fix uploading wheels to PyPI.
 
 4.47.1 (released 2024-01-11)
