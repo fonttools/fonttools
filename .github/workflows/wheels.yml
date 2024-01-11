@@ -34,6 +34,7 @@ jobs:
         python setup.py sdist bdist_wheel
     - uses: actions/upload-artifact@v4
       with:
+        name: pure
         path: |
           dist/*.whl
           dist/*.tar.gz
@@ -72,6 +73,7 @@ jobs:
         CIBW_ARCHS: ${{ matrix.arch }}
     - uses: actions/upload-artifact@v4
       with:
+        name: wheels
         path: wheelhouse/*.whl
 
   build_arch_wheels:
@@ -98,6 +100,7 @@ jobs:
         CIBW_ARCHS: ${{ matrix.arch }}
     - uses: actions/upload-artifact@v4
       with:
+        name: aarch64-wheels
         path: wheelhouse/*.whl
 
   deploy:
@@ -112,7 +115,8 @@ jobs:
     steps:
     - uses: actions/download-artifact@v4
       with:
-        name: artifact
+        # so that all artifacts are downloaded in the same directory specified by 'path'
+        merge-multiple: true
         path: dist
     - uses: pypa/gh-action-pypi-publish@v1.8.11
       with:
