@@ -97,7 +97,7 @@ extras_require = {
     # for fontTools.misc.etree and fontTools.misc.plistlib: use lxml to
     # read/write XML files (faster/safer than built-in ElementTree)
     "lxml": [
-        "lxml >= 4.0, < 5",
+        "lxml >= 4.0",
     ],
     # for fontTools.sfnt and fontTools.woff2: to compress/uncompress
     # WOFF 1.0 and WOFF 2.0 webfonts.
