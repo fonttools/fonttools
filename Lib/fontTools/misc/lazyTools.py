@@ -11,7 +11,7 @@ class LazyDict(UserDict):
     def __getitem__(self, k):
         v = self.data[k]
         if callable(v):
-            v = v(self, k)
+            v = v(k)
             self.data[k] = v
         return v
 
@@ -23,7 +23,7 @@ class LazyList(UserList):
             return [self[i] for i in indices]
         v = self.data[k]
         if callable(v):
-            v = v(self, k)
+            v = v(k)
             self.data[k] = v
         return v
 

@@ -40,26 +40,6 @@ GVAR_HEADER_FORMAT = """
 GVAR_HEADER_SIZE = sstruct.calcsize(GVAR_HEADER_FORMAT)
 
 
-def _decompileVarGlyph(self, glyphName):
-    gid = self.reverseGlyphMap[glyphName]
-    offsetSize = 2 if self.tableFormat == 0 else 4
-    startOffset = GVAR_HEADER_SIZE + offsetSize * gid
-    endOffset = startOffset + offsetSize * 2
-    offsets = table__g_v_a_r.decompileOffsets_(
-        self.gvarData[startOffset:endOffset],
-        tableFormat=self.tableFormat,
-        glyphCount=1,
-    )
-    gvarData = self.gvarData[
-        self.offsetToData + offsets[0] : self.offsetToData + offsets[1]
-    ]
-    if not gvarData:
-        return []
-    glyph = self._glyf[glyphName]
-    numPointsInGlyph = self._gvar.getNumPoints_(glyph)
-    return decompileGlyph_(numPointsInGlyph, self.sharedCoords, self.axisTags, gvarData)
-
-
 class table__g_v_a_r(DefaultTable.DefaultTable):
     dependencies = ["fvar", "glyf"]
 
@@ -131,17 +111,33 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
         offsetToData = self.offsetToGlyphVariationData
         glyf = ttFont["glyf"]
 
-        l = LazyDict(
-            {glyphs[gid]: _decompileVarGlyph for gid in range(self.glyphCount)}
-        )
-        l.reverseGlyphMap = ttFont.getReverseGlyphMap()
-        l._glyf = glyf
-        l._gvar = self
-        l.gvarData = data
-        l.offsetToData = offsetToData
-        l.sharedCoords = sharedCoords
-        l.axisTags = axisTags
-        l.tableFormat = self.flags & 1
+        def get_read_item():
+            reverseGlyphMap = ttFont.getReverseGlyphMap()
+            tableFormat = self.flags & 1
+
+            def read_item(glyphName):
+                gid = reverseGlyphMap[glyphName]
+                offsetSize = 2 if tableFormat == 0 else 4
+                startOffset = GVAR_HEADER_SIZE + offsetSize * gid
+                endOffset = startOffset + offsetSize * 2
+                offsets = table__g_v_a_r.decompileOffsets_(
+                    data[startOffset:endOffset],
+                    tableFormat=tableFormat,
+                    glyphCount=1,
+                )
+                gvarData = data[offsetToData + offsets[0] : offsetToData + offsets[1]]
+                if not gvarData:
+                    return []
+                glyph = glyf[glyphName]
+                numPointsInGlyph = self.getNumPoints_(glyph)
+                return decompileGlyph_(
+                    numPointsInGlyph, sharedCoords, axisTags, gvarData
+                )
+
+            return read_item
+
+        read_item = get_read_item()
+        l = LazyDict({glyphs[gid]: read_item for gid in range(self.glyphCount)})
 
         self.variations = l
 

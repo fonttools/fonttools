@@ -109,11 +109,6 @@ def buildConverters(tableSpec, tableNamespace):
     return converters, convertersByName
 
 
-def _base_converter_read_item(self, i):
-    self.reader.seek(self.pos + i * self.recordSize)
-    return self.conv.read(self.reader, self.font, {})
-
-
 class BaseConverter(object):
     """Base class for converter objects. Apart from the constructor, this
     is an abstract class."""
@@ -162,13 +157,19 @@ class BaseConverter(object):
                 l.append(self.read(reader, font, tableDict))
             return l
         else:
-            l = LazyList(_base_converter_read_item for i in range(count))
-            l.reader = reader.copy()
-            l.pos = l.reader.pos
-            l.font = font
-            l.conv = self
-            l.recordSize = recordSize
 
+            def get_read_item():
+                reader_copy = reader.copy()
+                pos = reader.pos
+
+                def read_item(i):
+                    reader_copy.seek(pos + i * recordSize)
+                    return self.read(reader_copy, font, {})
+
+                return read_item
+
+            read_item = get_read_item()
+            l = LazyList(read_item for i in range(count))
             reader.advance(count * recordSize)
 
             return l
@@ -1819,21 +1820,6 @@ class TupleValues:
         xmlWriter.newline()
 
 
-def cff2_index_read_item(self, i):
-    self.reader.seek(self.offset_pos + i * self.offSize)
-    offsets = self.readArray(2)
-    self.reader.seek(self.data_pos + offsets[0])
-    item = self.reader.readData(offsets[1] - offsets[0])
-
-    if self._itemClass is not None:
-        obj = self._itemClass()
-        obj.decompile(item, self.font, self.reader.localState)
-        item = obj
-    elif self._converter is not None:
-        item = self._converter.read(item, self.font)
-    return item
-
-
 class CFF2Index(BaseConverter):
     def __init__(
         self,
@@ -1892,15 +1878,31 @@ class CFF2Index(BaseConverter):
                 lastOffset = offset
             return items
         else:
-            l = LazyList([cff2_index_read_item] * count)
-            l.reader = reader.copy()
-            l.offset_pos = l.reader.pos
-            l.data_pos = l.offset_pos + (count + 1) * offSize
-            l.font = font
-            l._itemClass = self._itemClass
-            l.offSize = offSize
-            l.readArray = getReadArray(l.reader, offSize)
-            l._converter = self._converter
+
+            def get_read_item():
+                reader_copy = reader.copy()
+                offset_pos = reader.pos
+                data_pos = offset_pos + (count + 1) * offSize
+                readArray = getReadArray(reader_copy, offSize)
+
+                def read_item(i):
+                    reader_copy.seek(offset_pos + i * offSize)
+                    offsets = readArray(2)
+                    reader_copy.seek(data_pos + offsets[0])
+                    item = reader_copy.readData(offsets[1] - offsets[0])
+
+                    if self._itemClass is not None:
+                        obj = self._itemClass()
+                        obj.decompile(item, self.font, reader_copy.localState)
+                        item = obj
+                    elif self._converter is not None:
+                        item = self._converter.read(item, font)
+                    return item
+
+                return read_item
+
+            read_item = get_read_item()
+            l = LazyList([read_item] * count)
 
             # TODO: Advance reader
 
