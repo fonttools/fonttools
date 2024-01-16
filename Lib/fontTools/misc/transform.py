@@ -422,26 +422,6 @@ class DecomposedTransform:
     tCenterX: float = 0
     tCenterY: float = 0
 
-    def __eq__(self, other):
-        if not isinstance(other, DecomposedTransform):
-            return NotImplemented
-        return (
-            self.translateX == other.translateX
-            and self.translateY == other.translateY
-            and self.rotation == other.rotation
-            and self.scaleX == other.scaleX
-            and self.scaleY == other.scaleY
-            and self.skewX == other.skewX
-            and self.skewY == other.skewY
-            and self.tCenterX == other.tCenterX
-            and self.tCenterY == other.tCenterY
-        )
-
-    def __ne__(self, other):
-        if not isinstance(other, DecomposedTransform):
-            return NotImplemented
-        return not self == other
-
     def __bool__(self):
         return (
             self.translateX != 0
