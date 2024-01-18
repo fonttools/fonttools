@@ -304,14 +304,13 @@ class _TTGlyphVARC(_TTGlyph):
                 axisIndices = varc.AxisIndicesList.Item[comp.axisIndicesIndex]
                 axisValues = Vector(comp.axisValues)
                 if comp.axisValuesVarIndex != NO_VARIATION_INDEX:
-                    axisValues += instancer[comp.axisValuesVarIndex]
+                    axisValues += fi2fl(instancer[comp.axisValuesVarIndex], 14)
                 assert len(axisIndices) == len(axisValues), (
                     len(axisIndices),
                     len(axisValues),
                 )
                 location = {
-                    fvarAxes[i].axisTag: fi2fl(v, 14)
-                    for i, v in zip(axisIndices, axisValues)
+                    fvarAxes[i].axisTag: v for i, v in zip(axisIndices, axisValues)
                 }
 
             if comp.transformVarIndex != NO_VARIATION_INDEX:

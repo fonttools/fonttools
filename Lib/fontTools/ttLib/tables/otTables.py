@@ -185,7 +185,7 @@ class VarComponent:
 
         axisValues, i = TupleVariation.decompileDeltas_(numAxes, data, i)
         assert len(axisValues) == numAxes
-        self.axisValues = tuple(axisValues)
+        self.axisValues = tuple(fi2fl(v, 14) for v in axisValues)
 
         if flags & VarComponentFlags.AXIS_VALUES_HAVE_VARIATION:
             self.axisValuesVarIndex, i = _read_uint32var(data, i)
@@ -239,7 +239,11 @@ class VarComponent:
         if numAxes:
             flags |= VarComponentFlags.HAVE_AXES
             data.append(_write_uint32var(self.axisIndicesIndex))
-            data.append(TupleVariation.compileDeltaValues_(self.axisValues))
+            data.append(
+                TupleVariation.compileDeltaValues_(
+                    [fl2fi(v, 14) for v in self.axisValues]
+                )
+            )
         else:
             flags &= ~VarComponentFlags.HAVE_AXES
 
@@ -282,7 +286,7 @@ class VarComponent:
 
         if self.axisIndicesIndex is not None:
             write("axisIndicesIndex", self.axisIndicesIndex)
-            write("axisValues", self.axisValues)
+            write("axisValues", [float(fl2str(v, 14)) for v in self.axisValues])
 
         if self.axisValuesVarIndex != NO_VARIATION_INDEX:
             write("axisValuesVarIndex", self.axisValuesVarIndex)
@@ -313,7 +317,7 @@ class VarComponent:
             elif name == "axisIndicesIndex":
                 self.axisIndicesIndex = safeEval(v)
             elif name == "axisValues":
-                self.axisValues = safeEval(v)
+                self.axisValues = tuple(str2fl(v, 14) for v in safeEval(v))
             elif name == "axisValuesVarIndex":
                 self.axisValuesVarIndex = safeEval(v)
             elif name == "transformVarIndex":
