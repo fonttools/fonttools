@@ -304,28 +304,83 @@
     </AxisIndicesList>
     <VarCompositeGlyphs>
       <VarCompositeGlyph index="0">
-        <VarComponent index="0" glyphName="glyph00007" flags="0"/>
-        <VarComponent index="1" glyphName="glyph00003" flags="0"/>
+        <VarComponent index="0">
+          <glyphName value="glyph00007"/>
+          <flags value="0x0"/>
+        </VarComponent>
+        <VarComponent index="1">
+          <glyphName value="glyph00003"/>
+          <flags value="0x0"/>
+        </VarComponent>
       </VarCompositeGlyph>
       <VarCompositeGlyph index="1">
-        <VarComponent index="0" glyphName="glyph00005" flags="0"/>
-        <VarComponent index="1" glyphName="glyph00004" flags="0"/>
-        <VarComponent index="2" glyphName="glyph00006" flags="0"/>
+        <VarComponent index="0">
+          <glyphName value="glyph00005"/>
+          <flags value="0x0"/>
+        </VarComponent>
+        <VarComponent index="1">
+          <glyphName value="glyph00004"/>
+          <flags value="0x0"/>
+        </VarComponent>
+        <VarComponent index="2">
+          <glyphName value="glyph00006"/>
+          <flags value="0x0"/>
+        </VarComponent>
       </VarCompositeGlyph>
       <VarCompositeGlyph index="2">
-        <VarComponent index="0" glyphName="glyph00008" flags="18" axisIndicesIndex="2" axisValues="(3537,)" translateX="-6.0"/>
+        <VarComponent index="0">
+          <glyphName value="glyph00008"/>
+          <flags value="0x12"/>
+          <axisIndicesIndex value="2"/>
+          <axisValues value="(3537,)"/>
+          <translateX value="-6.0"/>
+        </VarComponent>
       </VarCompositeGlyph>
       <VarCompositeGlyph index="3">
-        <VarComponent index="0" glyphName="glyph00008" flags="22" axisIndicesIndex="0" axisValues="(-13184, 0, 7928)" axisValuesVarIndex="0" translateX="-3.0"/>
+        <VarComponent index="0">
+          <glyphName value="glyph00008"/>
+          <flags value="0x16"/>
+          <axisIndicesIndex value="0"/>
+          <axisValues value="(-13184, 0, 7928)"/>
+          <axisValuesVarIndex value="0"/>
+          <translateX value="-3.0"/>
+        </VarComponent>
       </VarCompositeGlyph>
       <VarCompositeGlyph index="4">
-        <VarComponent index="0" glyphName="glyph00009" flags="62" axisIndicesIndex="1" axisValues="(-8847, 655, -8484, 0, 0)" axisValuesVarIndex="1" transformVarIndex="2" translateX="-5.0" translateY="24.0"/>
+        <VarComponent index="0">
+          <glyphName value="glyph00009"/>
+          <flags value="0x3e"/>
+          <axisIndicesIndex value="1"/>
+          <axisValues value="(-8847, 655, -8484, 0, 0)"/>
+          <axisValuesVarIndex value="1"/>
+          <transformVarIndex value="2"/>
+          <translateX value="-5.0"/>
+          <translateY value="24.0"/>
+        </VarComponent>
       </VarCompositeGlyph>
       <VarCompositeGlyph index="5">
-        <VarComponent index="0" glyphName="glyph00010" flags="62" axisIndicesIndex="0" axisValues="(-12714, -5843, 0)" axisValuesVarIndex="3" transformVarIndex="4" translateX="53.0" translateY="-231.0"/>
+        <VarComponent index="0">
+          <glyphName value="glyph00010"/>
+          <flags value="0x3e"/>
+          <axisIndicesIndex value="0"/>
+          <axisValues value="(-12714, -5843, 0)"/>
+          <axisValuesVarIndex value="3"/>
+          <transformVarIndex value="4"/>
+          <translateX value="53.0"/>
+          <translateY value="-231.0"/>
+        </VarComponent>
       </VarCompositeGlyph>
       <VarCompositeGlyph index="6">
-        <VarComponent index="0" glyphName="glyph00009" flags="62" axisIndicesIndex="0" axisValues="(-4227, 819, -8484)" axisValuesVarIndex="5" transformVarIndex="6" translateX="-5.0" translateY="12.0"/>
+        <VarComponent index="0">
+          <glyphName value="glyph00009"/>
+          <flags value="0x3e"/>
+          <axisIndicesIndex value="0"/>
+          <axisValues value="(-4227, 819, -8484)"/>
+          <axisValuesVarIndex value="5"/>
+          <transformVarIndex value="6"/>
+          <translateX value="-5.0"/>
+          <translateY value="12.0"/>
+        </VarComponent>
       </VarCompositeGlyph>
     </VarCompositeGlyphs>
   </VARC>

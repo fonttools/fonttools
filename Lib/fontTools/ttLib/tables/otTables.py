@@ -151,6 +151,9 @@ def _write_uint32var(v):
 
 class VarComponent:
     def __init__(self):
+        self.populateDefaults()
+
+    def populateDefaults(self, propagator=None):
         self.flags = 0
         self.glyphName = None
         self.axisIndicesIndex = None
@@ -266,55 +269,63 @@ class VarComponent:
         return _write_uint32var(flags) + bytesjoin(data)
 
     def toXML(self, writer, ttFont, attrs):
-        attrs.append(("glyphName", self.glyphName))
-        attrs.append(("flags", self.flags))
+        writer.begintag("VarComponent", attrs)
+        writer.newline()
+
+        def write(name, value):
+            if value is not None:
+                writer.simpletag(name, value=value)
+                writer.newline()
+
+        write("glyphName", self.glyphName)
+        write("flags", hex(self.flags))
 
         if self.axisIndicesIndex is not None:
-            attrs.append(("axisIndicesIndex", self.axisIndicesIndex))
-            attrs.append(("axisValues", self.axisValues))
+            write("axisIndicesIndex", self.axisIndicesIndex)
+            write("axisValues", self.axisValues)
 
         if self.axisValuesVarIndex != NO_VARIATION_INDEX:
-            attrs.append(("axisValuesVarIndex", self.axisValuesVarIndex))
+            write("axisValuesVarIndex", self.axisValuesVarIndex)
         if self.transformVarIndex != NO_VARIATION_INDEX:
-            attrs.append(("transformVarIndex", self.transformVarIndex))
+            write("transformVarIndex", self.transformVarIndex)
 
         for attr_name, mapping in VAR_TRANSFORM_MAPPING.items():
             v = getattr(self.transform, attr_name)
             if v != mapping.defaultValue:
-                attrs.append((attr_name, fl2str(v, mapping.fractionalBits)))
+                write(attr_name, fl2str(v, mapping.fractionalBits))
 
-        writer.simpletag("VarComponent", attrs)
+        writer.endtag("VarComponent")
         writer.newline()
 
     def fromXML(self, name, attrs, content, ttFont):
-        self.flags = safeEval(attrs["flags"])
-        self.glyphName = attrs["glyphName"]
+        content = [c for c in content if isinstance(c, tuple)]
 
-        assert ("axisIndicesIndex" in attrs) == ("axisValues" in attrs)
-        if "axisIndicesIndex" in attrs:
-            self.axisIndicesIndex = safeEval(attrs["axisIndicesIndex"])
-            self.axisValues = safeEval(attrs["axisValues"])
-        else:
-            self.axisIndicesIndex = None
-            self.axisValues = ()
+        self.populateDefaults()
 
-        if "axisValuesVarIndex" in attrs:
-            self.axisValuesVarIndex = safeEval(attrs["axisValuesVarIndex"])
-        else:
-            self.axisValuesVarIndex = NO_VARIATION_INDEX
-        if "transformVarIndex" in attrs:
-            self.transformVarIndex = safeEval(attrs["transformVarIndex"])
-        else:
-            self.transformVarIndex = NO_VARIATION_INDEX
+        for name, attrs, content in content:
+            assert not content
+            v = attrs["value"]
 
-        self.transform = DecomposedTransform()
-        for attr_name, mapping in VAR_TRANSFORM_MAPPING.items():
-            if attr_name in attrs:
+            if name == "glyphName":
+                self.glyphName = v
+            elif name == "flags":
+                self.flags = safeEval(v)
+            elif name == "axisIndicesIndex":
+                self.axisIndicesIndex = safeEval(v)
+            elif name == "axisValues":
+                self.axisValues = safeEval(v)
+            elif name == "axisValuesVarIndex":
+                self.axisValuesVarIndex = safeEval(v)
+            elif name == "transformVarIndex":
+                self.transformVarIndex = safeEval(v)
+            elif name in VAR_TRANSFORM_MAPPING:
                 setattr(
                     self.transform,
-                    attr_name,
-                    safeEval(attrs[attr_name]),
+                    name,
+                    safeEval(v),
                 )
+            else:
+                assert False, name
 
     def applyTransformDeltas(self, deltas):
         i = 0
