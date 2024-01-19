@@ -1,8 +1,10 @@
 # Modified from https://github.com/adobe-type-tools/psautohint/blob/08b346865710ed3c172f1eb581d6ef243b203f99/python/psautohint/ufoFont.py#L800-L838
 import hashlib
 
+from fontTools.misc.fixedTools import floatToFixedToFloat
 from fontTools.pens.basePen import MissingComponentError
 from fontTools.pens.pointPen import AbstractPointPen
+from functools import partial
 
 
 class HashPointPen(AbstractPointPen):
@@ -33,8 +35,14 @@ class HashPointPen(AbstractPointPen):
     >    pass
     """
 
-    def __init__(self, glyphWidth=0, glyphSet=None):
+    def __init__(
+        self,
+        glyphWidth=0,
+        glyphSet=None,
+        roundFunction=partial(floatToFixedToFloat, precisionBits=14),
+    ):
         self.glyphset = glyphSet
+        self.roundFunction = roundFunction
         self.data = ["w%s" % round(glyphWidth, 9)]
 
     @property
@@ -66,7 +74,17 @@ class HashPointPen(AbstractPointPen):
         self.data.append(f"{pt_type}{pt[0]:g}{pt[1]:+g}")
 
     def addComponent(self, baseGlyphName, transformation, identifier=None, **kwargs):
-        tr = "".join([f"{t:+}" for t in transformation])
+        xx, xy, yx, yy, dx, dy = transformation
+        tr = "".join(
+            [
+                f"{self.roundFunction(xx):+}",
+                f"{self.roundFunction(xy):+}",
+                f"{self.roundFunction(yx):+}",
+                f"{self.roundFunction(yy):+}",
+                f"{dx:+}",
+                f"{dy:+}",
+            ]
+        )
         self.data.append("[")
         try:
             self.glyphset[baseGlyphName].drawPoints(self)
