@@ -282,7 +282,8 @@ class VarComponent:
                 writer.newline()
 
         write("glyphName", self.glyphName)
-        write("flags", hex(self.flags))
+        if self.flags & VarComponentFlags.RESET_UNSPECIFIED_AXES:
+            write("resetUnspecifiedAxes", True)
 
         if self.axisIndicesIndex is not None:
             write("axisIndicesIndex", self.axisIndicesIndex)
@@ -293,10 +294,13 @@ class VarComponent:
         if self.transformVarIndex != NO_VARIATION_INDEX:
             write("transformVarIndex", self.transformVarIndex)
 
+        # Only write transform components that are specified in the
+        # flags, even if they are the default value.
         for attr_name, mapping in VAR_TRANSFORM_MAPPING.items():
+            if not (self.flags & mapping.flag):
+                continue
             v = getattr(self.transform, attr_name)
-            if v != mapping.defaultValue:
-                write(attr_name, fl2str(v, mapping.fractionalBits))
+            write(attr_name, fl2str(v, mapping.fractionalBits))
 
         writer.endtag("VarComponent")
         writer.newline()
@@ -312,6 +316,8 @@ class VarComponent:
 
             if name == "glyphName":
                 self.glyphName = v
+            elif name == "resetUnspecifiedAxes":
+                self.flags = VarComponentFlags.RESET_UNSPECIFIED_AXES if v else 0
             elif name == "flags":
                 self.flags = safeEval(v)
             elif name == "axisIndicesIndex":
@@ -328,6 +334,7 @@ class VarComponent:
                     name,
                     safeEval(v),
                 )
+                self.flags |= VAR_TRANSFORM_MAPPING[name].flag
             else:
                 assert False, name
 

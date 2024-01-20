@@ -306,31 +306,25 @@
       <VarCompositeGlyph index="0">
         <VarComponent index="0">
           <glyphName value="glyph00007"/>
-          <flags value="0x0"/>
         </VarComponent>
         <VarComponent index="1">
           <glyphName value="glyph00003"/>
-          <flags value="0x0"/>
         </VarComponent>
       </VarCompositeGlyph>
       <VarCompositeGlyph index="1">
         <VarComponent index="0">
           <glyphName value="glyph00005"/>
-          <flags value="0x0"/>
         </VarComponent>
         <VarComponent index="1">
           <glyphName value="glyph00004"/>
-          <flags value="0x0"/>
         </VarComponent>
         <VarComponent index="2">
           <glyphName value="glyph00006"/>
-          <flags value="0x0"/>
         </VarComponent>
       </VarCompositeGlyph>
       <VarCompositeGlyph index="2">
         <VarComponent index="0">
           <glyphName value="glyph00008"/>
-          <flags value="0x12"/>
           <axisIndicesIndex value="2"/>
           <axisValues value="[0.2159]"/>
           <translateX value="-6.0"/>
@@ -339,7 +333,6 @@
       <VarCompositeGlyph index="3">
         <VarComponent index="0">
           <glyphName value="glyph00008"/>
-          <flags value="0x16"/>
           <axisIndicesIndex value="0"/>
           <axisValues value="[-0.8047, 0.0, 0.4839]"/>
           <axisValuesVarIndex value="0"/>
@@ -349,7 +342,6 @@
       <VarCompositeGlyph index="4">
         <VarComponent index="0">
           <glyphName value="glyph00009"/>
-          <flags value="0x3e"/>
           <axisIndicesIndex value="1"/>
           <axisValues value="[-0.54, 0.04, -0.5178, 0.0, 0.0]"/>
           <axisValuesVarIndex value="1"/>
@@ -361,7 +353,6 @@
       <VarCompositeGlyph index="5">
         <VarComponent index="0">
           <glyphName value="glyph00010"/>
-          <flags value="0x3e"/>
           <axisIndicesIndex value="0"/>
           <axisValues value="[-0.776, -0.3566, 0.0]"/>
           <axisValuesVarIndex value="3"/>
@@ -373,7 +364,6 @@
       <VarCompositeGlyph index="6">
         <VarComponent index="0">
           <glyphName value="glyph00009"/>
-          <flags value="0x3e"/>
           <axisIndicesIndex value="0"/>
           <axisValues value="[-0.258, 0.05, -0.5178]"/>
           <axisValuesVarIndex value="5"/>
