@@ -183,9 +183,12 @@ class VarComponent:
             axisIndices = localState["AxisIndicesList"].Item[self.axisIndicesIndex]
             numAxes = len(axisIndices)
 
-        axisValues, i = TupleVariation.decompileDeltas_(numAxes, data, i)
-        assert len(axisValues) == numAxes
-        self.axisValues = tuple(fi2fl(v, 14) for v in axisValues)
+        if flags & VarComponentFlags.HAVE_AXES:
+            axisValues, i = TupleVariation.decompileDeltas_(numAxes, data, i)
+            self.axisValues = tuple(fi2fl(v, 14) for v in axisValues)
+        else:
+            self.axisValues = ()
+        assert len(self.axisValues) == numAxes
 
         if flags & VarComponentFlags.AXIS_VALUES_HAVE_VARIATION:
             self.axisValuesVarIndex, i = _read_uint32var(data, i)
