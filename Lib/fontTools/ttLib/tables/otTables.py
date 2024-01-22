@@ -279,18 +279,24 @@ class VarComponent:
         writer.begintag("VarComponent", attrs)
         writer.newline()
 
-        def write(name, value):
+        def write(name, value, attrs=()):
             if value is not None:
-                writer.simpletag(name, value=value)
+                writer.simpletag(name, (("value", value),) + attrs)
                 writer.newline()
 
         write("glyphName", self.glyphName)
-        if self.flags & VarComponentFlags.RESET_UNSPECIFIED_AXES:
-            write("resetUnspecifiedAxes", True)
 
         if self.axisIndicesIndex is not None:
             write("axisIndicesIndex", self.axisIndicesIndex)
-            write("axisValues", [float(fl2str(v, 14)) for v in self.axisValues])
+        if (
+            self.axisIndicesIndex is not None
+            or self.flags & VarComponentFlags.RESET_UNSPECIFIED_AXES
+        ):
+            if self.flags & VarComponentFlags.RESET_UNSPECIFIED_AXES:
+                attrs = (("resetUnspecifiedAxes", 1),)
+            else:
+                attrs = ()
+            write("axisValues", [float(fl2str(v, 14)) for v in self.axisValues], attrs)
 
         if self.axisValuesVarIndex != NO_VARIATION_INDEX:
             write("axisValuesVarIndex", self.axisValuesVarIndex)
@@ -319,14 +325,12 @@ class VarComponent:
 
             if name == "glyphName":
                 self.glyphName = v
-            elif name == "resetUnspecifiedAxes":
-                self.flags = VarComponentFlags.RESET_UNSPECIFIED_AXES if v else 0
-            elif name == "flags":
-                self.flags = safeEval(v)
             elif name == "axisIndicesIndex":
                 self.axisIndicesIndex = safeEval(v)
             elif name == "axisValues":
                 self.axisValues = tuple(str2fl(v, 14) for v in safeEval(v))
+                if safeEval(attrs.get("resetUnspecifiedAxes", "0")):
+                    self.flags |= VarComponentFlags.RESET_UNSPECIFIED_AXES
             elif name == "axisValuesVarIndex":
                 self.axisValuesVarIndex = safeEval(v)
             elif name == "transformVarIndex":
