@@ -1,5 +1,5 @@
 from fontTools.misc.transform import Identity
-from fontTools.pens.hashPointPen import HashPointPen
+from fontTools.pens.hashPointPen import HashPointPen, ttScaleRound
 import pytest
 
 
@@ -62,15 +62,35 @@ class HashPointPenTest(object):
     def test_addComponent(self):
         pen = HashPointPen(_TestGlyph().width, {"a": _TestGlyph()})
         pen.addComponent("a", (2, 0, 0, 3, -10, 5))
-        assert pen.hash == "w500[l0+0l10+110o50+75o60+50c50+0|(+2.0+0.0+0.0+3.0-10+5)]"
+        assert pen.hash == "w500[l0+0l10+110o50+75o60+50c50+0|(+2+0+0+3-10+5)]"
+
+    def test_addComponentWithFractionalScaleTTRound(self):
+        pen = HashPointPen(
+            _TestGlyph().width, {"a": _TestGlyph()}, roundFunction=ttScaleRound
+        )
+        pen.addComponent("a", (0.913, 0.0, 0.0, 0.913, -10, 5))
+        assert (
+            pen.hash == "w500[l0+0l10+110o50+75o60+50c50+0|(+0.913+0.0+0.0+0.913-10+5)]"
+        )
 
     def test_addComponentWithFractionalScale(self):
         pen = HashPointPen(_TestGlyph().width, {"a": _TestGlyph()})
-        pen.addComponent("a", (0.913, 0, 0, 0.913, -10, 5))
+        pen.addComponent("a", (0.913, 0.0, 0.0, 0.913, -10, 5))
         assert (
-            pen.hash
-            == "w500[l0+0l10+110o50+75o60+50c50+0|(+0.91302490234375+0.0+0.0+0.91302490234375-10+5)]"
+            pen.hash == "w500[l0+0l10+110o50+75o60+50c50+0|(+0.913+0.0+0.0+0.913-10+5)]"
         )
+
+    def test_addComponentWithFractionalNegativeScaleTTRound(self):
+        pen = HashPointPen(
+            _TestGlyph().width, {"a": _TestGlyph()}, roundFunction=ttScaleRound
+        )
+        pen.addComponent("a", (-1.0, 0.0, 0.0, -1.0, -10, 5))
+        assert pen.hash == "w500[l0+0l10+110o50+75o60+50c50+0|(-1.0+0.0+0.0-1.0-10+5)]"
+
+    def test_addComponentWithFractionalNegativeScale(self):
+        pen = HashPointPen(_TestGlyph().width, {"a": _TestGlyph()})
+        pen.addComponent("a", (-1.0, 0.0, 0.0, -1.0, -10, 5))
+        assert pen.hash == "w500[l0+0l10+110o50+75o60+50c50+0|(-1.0+0.0+0.0-1.0-10+5)]"
 
     def test_NestedComponents(self):
         pen = HashPointPen(
@@ -80,7 +100,7 @@ class HashPointPenTest(object):
 
         assert (
             pen.hash
-            == "w500[[l0+0l10+110o50+75o60+50c50+0|(+1.0+0.0+0.0+1.0+0+0)](+2.0+0.0+0.0+3.0-10+5)]"
+            == "w500[[l0+0l10+110o50+75o60+50c50+0|(+1+0+0+1+0+0)](+2+0+0+3-10+5)]"
         )
 
     def test_outlineAndComponent(self):
@@ -91,7 +111,7 @@ class HashPointPenTest(object):
 
         assert (
             pen.hash
-            == "w500l0+0l10+110o50+75o60+50c50+0|[l0+0l10+110o50+75o60+50c50+0|(+2.0+0.0+0.0+2.0-10+5)]"
+            == "w500l0+0l10+110o50+75o60+50c50+0|[l0+0l10+110o50+75o60+50c50+0|(+2+0+0+2-10+5)]"
         )
 
     def test_addComponent_missing_raises(self):
