@@ -54,6 +54,7 @@ GLYPHNAMES = (
 """
     ).split()
     + ["foo.%d" % i for i in range(1, 200)]
+    + ["G" * 600]
 )
 
 
@@ -327,12 +328,10 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(gc.glyphSet(), ("endash", "emdash", "figuredash"))
 
     def test_glyphclass_glyphNameTooLong(self):
-        self.assertRaisesRegex(
-            FeatureLibError,
-            "must not be longer than 63 characters",
-            self.parse,
-            "@GlyphClass = [%s];" % ("G" * 64),
-        )
+        gname = "G" * 600
+        [gc] = self.parse(f"@GlyphClass = [{gname}];").statements
+        self.assertEqual(gc.name, "GlyphClass")
+        self.assertEqual(gc.glyphSet(), (gname,))
 
     def test_glyphclass_bad(self):
         self.assertRaisesRegex(
