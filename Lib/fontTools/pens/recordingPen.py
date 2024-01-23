@@ -69,7 +69,7 @@ class RecordingPen(AbstractPen):
         self.value.append(("endPath", ()))
 
     def addComponent(self, glyphName, transformation):
-        self.value.append(("addComponent", (glyphName, tuple(transformation))))
+        self.value.append(("addComponent", (glyphName, transformation)))
 
     def addVarComponent(self, glyphName, transformation, location):
         self.value.append(("addVarComponent", (glyphName, transformation, location)))
@@ -155,9 +155,7 @@ class RecordingPointPen(AbstractPointPen):
     def addComponent(self, baseGlyphName, transformation, identifier=None, **kwargs):
         if identifier is not None:
             kwargs["identifier"] = identifier
-        self.value.append(
-            ("addComponent", (baseGlyphName, tuple(transformation)), kwargs)
-        )
+        self.value.append(("addComponent", (baseGlyphName, transformation), kwargs))
 
     def addVarComponent(
         self, baseGlyphName, transformation, location, identifier=None, **kwargs
