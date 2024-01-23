@@ -1,10 +1,10 @@
-from fontTools.misc.fixedTools import floatToFixedToFloat
+from fontTools.misc.fixedTools import floatToFixedToStr
 from fontTools.pens.recordingPen import RecordingPen, RecordingPointPen
 from fontTools.pens.roundingPen import RoundingPen, RoundingPointPen
-from functools import partial
 
 
-tt_scale_round = partial(floatToFixedToFloat, precisionBits=14)
+def tt_scale_round(value):
+    return float(floatToFixedToStr(value, precisionBits=14))
 
 
 class RoundingPenTest(object):
@@ -27,10 +27,11 @@ class RoundingPenTest(object):
     def test_transform_round(self):
         recpen = RecordingPen()
         roundpen = RoundingPen(recpen, transformRoundFunc=tt_scale_round)
-        roundpen.addComponent("a", (0.913, 0, 0, -1, 10.5, -10.5))
-        # The 0.913 should have been rounded to F2Dot14 precision
+        # The 0.9130000305 is taken from a ttx dump of a scaled component.
+        roundpen.addComponent("a", (0.9130000305, 0, 0, -1, 10.5, -10.5))
+        # The value should compare equal to the shorter representation
         assert recpen.value == [
-            ("addComponent", ("a", (0.913025, 0, 0, -1, 11, -10))),
+            ("addComponent", ("a", (0.913, 0, 0, -1, 11, -10))),
         ]
 
 
@@ -60,8 +61,9 @@ class RoundingPointPenTest(object):
     def test_transform_round(self):
         recpen = RecordingPointPen()
         roundpen = RoundingPointPen(recpen, transformRoundFunc=tt_scale_round)
-        roundpen.addComponent("a", (0.913, 0, 0, -1, 10.5, -10.5))
-        # The 0.913 should have been rounded to F2Dot14 precision
+        # The 0.9130000305 is taken from a ttx dump of a scaled component.
+        roundpen.addComponent("a", (0.9130000305, 0, 0, -1, 10.5, -10.5))
+        # The value should compare equal to the shorter representation
         assert recpen.value == [
-            ("addComponent", ("a", (0.913025, 0, 0, -1, 11, -10)), {}),
+            ("addComponent", ("a", (0.913, 0, 0, -1, 11, -10)), {}),
         ]
