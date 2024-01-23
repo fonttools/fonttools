@@ -17,11 +17,11 @@ class RoundingPenTest(object):
         roundpen.curveTo((6.4, 8.6), (7.3, 9.7), (8.9, 10.1))
         roundpen.addComponent("a", (1.5, 0, 0, 1.5, 10.5, -10.5))
         assert recpen.value == [
-            ('moveTo', ((0, 1),)),
-            ('lineTo', ((2, 3),)),
-            ('qCurveTo', ((2, 5), (3, 6), (5, 6))),
-            ('curveTo', ((6, 9), (7, 10), (9, 10))),
-            ('addComponent', ('a', (1.5, 0, 0, 1.5, 11, -10))),
+            ("moveTo", ((0, 1),)),
+            ("lineTo", ((2, 3),)),
+            ("qCurveTo", ((2, 5), (3, 6), (5, 6))),
+            ("curveTo", ((6, 9), (7, 10), (9, 10))),
+            ("addComponent", ("a", (1.5, 0, 0, 1.5, 11, -10))),
         ]
 
     def test_transform_round(self):
