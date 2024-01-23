@@ -9,8 +9,8 @@ __all__ = ["RoundingPen", "RoundingPointPen"]
 class RoundingPen(FilterPen):
     """
     Filter pen that rounds point coordinates and component XY offsets to integer. For
-    rounding the component scale values, a separate round function can be passed to the
-    pen.
+    rounding the component transform values, a separate round function can be passed to
+    the pen.
 
     >>> from fontTools.pens.recordingPen import RecordingPen
     >>> recpen = RecordingPen()

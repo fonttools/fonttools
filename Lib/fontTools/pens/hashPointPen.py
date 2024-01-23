@@ -36,7 +36,7 @@ class HashPointPen(AbstractPointPen):
     coordinates and transformations against a glyph from a format which has restrictions
     on the precision of floats, e.g. UFO vs. TTF, you must use an appropriate rounding
     function to make the values comparable. For TTF fonts with composites, this
-    construct can be used to make scale values conform to F2Dot14:
+    construct can be used to make the transform values conform to F2Dot14:
 
     > ttf_hash_pen = HashPointPen(ttf_glyph_width, ttFont.getGlyphSet())
     > ttf_round_pen = RoundingPointPen(ttf_hash_pen, transformRoundFunc=partial(floatToFixedToFloat, precisionBits=14))
