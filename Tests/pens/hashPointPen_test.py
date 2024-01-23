@@ -68,7 +68,7 @@ class HashPointPenTest(object):
         pen = HashPointPen(
             _TestGlyph().width, {"a": _TestGlyph()}, roundFunction=ttScaleRound
         )
-        pen.addComponent("a", (0.913, 0.0, 0.0, 0.913, -10, 5))
+        pen.addComponent("a", (0.913, 0, 0, 0.913, -10, 5))
         assert (
             pen.hash == "w500[l0+0l10+110o50+75o60+50c50+0|(+0.913+0.0+0.0+0.913-10+5)]"
         )
@@ -84,7 +84,7 @@ class HashPointPenTest(object):
         pen = HashPointPen(
             _TestGlyph().width, {"a": _TestGlyph()}, roundFunction=ttScaleRound
         )
-        pen.addComponent("a", (-1.0, 0.0, 0.0, -1.0, -10, 5))
+        pen.addComponent("a", (-1, 0, 0, -1, -10, 5))
         assert pen.hash == "w500[l0+0l10+110o50+75o60+50c50+0|(-1.0+0.0+0.0-1.0-10+5)]"
 
     def test_addComponentWithFractionalNegativeScale(self):
