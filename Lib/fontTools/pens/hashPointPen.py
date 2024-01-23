@@ -63,10 +63,20 @@ class HashPointPen(AbstractPointPen):
             pt_type = "o"  # offcurve
         else:
             pt_type = segmentType[0]
-        self.data.append(f"{pt_type}{pt[0]:g}{pt[1]:+g}")
+        self.data.append(f"{pt_type}{round(pt[0], 3):g}{round(pt[1], 3):+g}")
 
     def addComponent(self, baseGlyphName, transformation, identifier=None, **kwargs):
-        tr = "".join([f"{t:+}" for t in transformation])
+        xx, xy, yx, yy, dx, dy = transformation
+        tr = "".join(
+            [
+                f"{round(xx, 8):+g}",
+                f"{round(xy, 8):+g}",
+                f"{round(yx, 8):+g}",
+                f"{round(yy, 8):+g}",
+                f"{round(dx, 3):+g}",
+                f"{round(dy, 3):+g}",
+            ]
+        )
         self.data.append("[")
         try:
             self.glyphset[baseGlyphName].drawPoints(self)
