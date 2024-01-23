@@ -27,9 +27,9 @@ class RoundingPenTest(object):
     def test_transform_round(self):
         recpen = RecordingPen()
         roundpen = RoundingPen(recpen, transformRoundFunc=tt_scale_round)
-        # The 0.9130000305 is taken from a ttx dump of a scaled component.
+        # The 0.913 is equal to 91.3% scale in a source editor
         roundpen.addComponent("a", (0.9130000305, 0, 0, -1, 10.5, -10.5))
-        # The value should compare equal to the shorter representation
+        # The value should compare equal to its F2Dot14 representation
         assert recpen.value == [
             ("addComponent", ("a", (0.91302490234375, 0, 0, -1, 11, -10))),
         ]
@@ -61,9 +61,9 @@ class RoundingPointPenTest(object):
     def test_transform_round(self):
         recpen = RecordingPointPen()
         roundpen = RoundingPointPen(recpen, transformRoundFunc=tt_scale_round)
-        # The 0.9130000305 is taken from a ttx dump of a scaled component.
-        roundpen.addComponent("a", (0.9130000305, 0, 0, -1, 10.5, -10.5))
-        # The value should compare equal to the shorter representation
+        # The 0.913 is equal to 91.3% scale in a source editor
+        roundpen.addComponent("a", (0.913, 0, 0, -1, 10.5, -10.5))
+        # The value should compare equal to its F2Dot14 representation
         assert recpen.value == [
             ("addComponent", ("a", (0.91302490234375, 0, 0, -1, 11, -10)), {}),
         ]
