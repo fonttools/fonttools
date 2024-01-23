@@ -1,10 +1,10 @@
-from fontTools.misc.fixedTools import floatToFixedToStr
+from fontTools.misc.fixedTools import floatToFixedToFloat
 from fontTools.pens.recordingPen import RecordingPen, RecordingPointPen
 from fontTools.pens.roundingPen import RoundingPen, RoundingPointPen
+from functools import partial
 
 
-def tt_scale_round(value):
-    return float(floatToFixedToStr(value, precisionBits=14))
+tt_scale_round = partial(floatToFixedToFloat, precisionBits=14)
 
 
 class RoundingPenTest(object):
@@ -31,7 +31,7 @@ class RoundingPenTest(object):
         roundpen.addComponent("a", (0.9130000305, 0, 0, -1, 10.5, -10.5))
         # The value should compare equal to the shorter representation
         assert recpen.value == [
-            ("addComponent", ("a", (0.913, 0, 0, -1, 11, -10))),
+            ("addComponent", ("a", (0.91302490234375, 0, 0, -1, 11, -10))),
         ]
 
 
@@ -65,5 +65,5 @@ class RoundingPointPenTest(object):
         roundpen.addComponent("a", (0.9130000305, 0, 0, -1, 10.5, -10.5))
         # The value should compare equal to the shorter representation
         assert recpen.value == [
-            ("addComponent", ("a", (0.913, 0, 0, -1, 11, -10)), {}),
+            ("addComponent", ("a", (0.91302490234375, 0, 0, -1, 11, -10)), {}),
         ]
