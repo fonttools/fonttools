@@ -1051,11 +1051,11 @@ class BuilderTest(object):
         func = lambda writer, font: value.toXML(writer, font, valueName="Val")
         assert getXML(func) == ['<Val XPlacement="7" YPlacement="23"/>']
 
-    def test_getLigatureKey(self):
+    def test_getLigatureSortKey(self):
         components = lambda s: [tuple(word) for word in s.split()]
         c = components("fi fl ff ffi fff")
-        c.sort(key=builder._getLigatureKey)
-        assert c == components("fff ffi ff fi fl")
+        c.sort(key=otTables.LigatureSubst._getLigatureSortKey)
+        assert c == components("ffi fff fi fl ff")
 
     def test_getSinglePosValueKey(self):
         device = builder.buildDevice({10: 1, 11: 3})
