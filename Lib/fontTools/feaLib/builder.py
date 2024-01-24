@@ -1338,7 +1338,7 @@ class Builder(object):
         # substitutions to be specified on target sequences that contain
         # glyph classes, the implementation software will enumerate
         # all specific glyph sequences if glyph classes are detected"
-        for g in sorted(itertools.product(*glyphs)):
+        for g in itertools.product(*glyphs):
             lookup.ligatures[g] = replacement
 
     # GSUB 5/6

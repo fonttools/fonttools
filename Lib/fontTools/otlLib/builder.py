@@ -1567,19 +1567,6 @@ def buildAlternateSubstSubtable(mapping):
     return self
 
 
-def _getLigatureKey(components):
-    # Computes a key for ordering ligatures in a GSUB Type-4 lookup.
-
-    # When building the OpenType lookup, we need to make sure that
-    # the longest sequence of components is listed first, so we
-    # use the negative length as the primary key for sorting.
-    # To make buildLigatureSubstSubtable() deterministic, we use the
-    # component sequence as the secondary key.
-
-    # For example, this will sort (f,f,f) < (f,f,i) < (f,f) < (f,i) < (f,l).
-    return (-len(components), components)
-
-
 def buildLigatureSubstSubtable(mapping):
     """Builds a ligature substitution (GSUB4) subtable.
 
@@ -1613,7 +1600,7 @@ def buildLigatureSubstSubtable(mapping):
     # with fontTools >= 3.1:
     # self.ligatures = dict(mapping)
     self.ligatures = {}
-    for components in sorted(mapping.keys(), key=_getLigatureKey):
+    for components in sorted(mapping.keys(), key=self._getLigatureSortKey):
         ligature = ot.Ligature()
         ligature.Component = components[1:]
         ligature.CompCount = len(ligature.Component) + 1
