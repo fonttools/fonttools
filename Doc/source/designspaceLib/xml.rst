@@ -869,9 +869,9 @@ info of the sources.
             <key>styleName</key>
             <string>Regular</string>
             <key>postscriptFontName</key>
-            <integer>MyFontNarrVF-Regular</integer>
+            <string>MyFontNarrVF-Regular</string>
             <key>trademark</key>
-            <integer>My Font Narrow VF is a registered trademark...</integer>
+            <string>My Font Narrow VF is a registered trademark...</string>
           </dict>
         </dict>
       </lib>
