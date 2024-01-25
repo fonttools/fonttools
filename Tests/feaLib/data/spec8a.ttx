@@ -99,18 +99,18 @@
         <!-- SubTableCount=1 -->
         <AlternateSubst index="0">
           <AlternateSet glyph="a">
-            <Alternate glyph="A.sc"/>
             <Alternate glyph="a.alt1"/>
             <Alternate glyph="a.alt2"/>
             <Alternate glyph="a.alt3"/>
+            <Alternate glyph="A.sc"/>
           </AlternateSet>
           <AlternateSet glyph="b">
-            <Alternate glyph="B.sc"/>
             <Alternate glyph="b.alt"/>
+            <Alternate glyph="B.sc"/>
           </AlternateSet>
           <AlternateSet glyph="c">
-            <Alternate glyph="C.sc"/>
             <Alternate glyph="c.mid"/>
+            <Alternate glyph="C.sc"/>
           </AlternateSet>
           <AlternateSet glyph="d">
             <Alternate glyph="d.alt"/>
