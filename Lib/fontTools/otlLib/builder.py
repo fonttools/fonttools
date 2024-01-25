@@ -774,7 +774,10 @@ class ChainContextSubstBuilder(ChainContextualBuilder):
                     if lookup is not None:
                         alts = lookup.getAlternateGlyphs()
                         for glyph, replacements in alts.items():
-                            result.setdefault(glyph, set()).update(replacements)
+                            alts_for_glyph = result.setdefault(glyph, [])
+                            alts_for_glyph.extend(
+                                g for g in replacements if g not in alts_for_glyph
+                            )
         return result
 
     def find_chainable_single_subst(self, mapping):
@@ -1238,7 +1241,7 @@ class SingleSubstBuilder(LookupBuilder):
         return self.buildLookup_(subtables)
 
     def getAlternateGlyphs(self):
-        return {glyph: set([repl]) for glyph, repl in self.mapping.items()}
+        return {glyph: [repl] for glyph, repl in self.mapping.items()}
 
     def add_subtable_break(self, location):
         self.mapping[(self.SUBTABLE_BREAK_, location)] = self.SUBTABLE_BREAK_
