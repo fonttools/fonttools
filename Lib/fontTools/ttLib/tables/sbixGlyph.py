@@ -71,7 +71,7 @@ class Glyph(object):
                 sbixGlyphHeaderFormat, self.rawdata[:sbixGlyphHeaderFormatSize], self
             )
 
-            if self.graphicType == "dupe":
+            if self.graphicType == "dupe" or self.graphicType == "flip":
                 # this glyph is a reference to another glyph's image data
                 (gid,) = struct.unpack(">H", self.rawdata[sbixGlyphHeaderFormatSize:])
                 self.referenceGlyphName = ttFont.getGlyphName(gid)
@@ -94,7 +94,7 @@ class Glyph(object):
             rawdata = b""
         else:
             rawdata = sstruct.pack(sbixGlyphHeaderFormat, self)
-            if self.graphicType == "dupe":
+            if self.graphicType == "dupe" or self.graphicType == "flip":
                 rawdata += struct.pack(">H", ttFont.getGlyphID(self.referenceGlyphName))
             else:
                 assert self.imageData is not None
@@ -117,8 +117,8 @@ class Glyph(object):
             originOffsetY=self.originOffsetY,
         )
         xmlWriter.newline()
-        if self.graphicType == "dupe":
-            # graphicType == "dupe" is a reference to another glyph id.
+        if self.graphicType == "dupe" or self.graphicType == "flip":
+            # graphicType == "dupe" or graphicType == "flip" is a reference to another glyph id.
             xmlWriter.simpletag("ref", glyphname=self.referenceGlyphName)
         else:
             xmlWriter.begintag("hexdata")
@@ -131,7 +131,7 @@ class Glyph(object):
 
     def fromXML(self, name, attrs, content, ttFont):
         if name == "ref":
-            # glyph is a "dupe", i.e. a reference to another glyph's image data.
+            # glyph is a "dupe" or a "flip", i.e. a reference to another glyph's image data.
             # in this case imageData contains the glyph id of the reference glyph
             # get glyph id from glyphname
             glyphname = safeEval("'''" + attrs["glyphname"] + "'''")
