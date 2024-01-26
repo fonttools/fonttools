@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from contextlib import contextmanager
-from copy import copy
+from copy import copy, deepcopy
 from types import SimpleNamespace
 from fontTools.misc.vector import Vector
 from fontTools.misc.fixedTools import otRound, fixedToFloat as fi2fl
@@ -315,7 +315,7 @@ class _TTGlyphVARC(_TTGlyph):
 
             if comp.transformVarIndex != NO_VARIATION_INDEX:
                 deltas = instancer[comp.transformVarIndex]
-                comp = copy(comp)  # Shallow copy
+                comp = deepcopy(comp)
                 comp.applyTransformDeltas(deltas)
             transform = comp.transform
 
