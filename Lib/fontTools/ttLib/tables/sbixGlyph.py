@@ -55,7 +55,7 @@ class Glyph(object):
                 self.graphicType += "    "[: (4 - len(self.graphicType))]
 
     def is_reference_type(self):
-	# if true, this glyph is a reference to another glyph id.
+	"""Returns True if this glyph is a reference to another glyph's image data."""
         return self.graphicType == "dupe" or self.graphicType == "flip"
 
     def decompile(self, ttFont):
