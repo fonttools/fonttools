@@ -216,8 +216,6 @@ def _add_avar(font, axes, mappings, axisTags):
     if mappings:
         interesting = True
 
-        hiddenAxes = [axis for axis in axes.values() if axis.hidden]
-
         inputLocations = [
             {
                 axes[name].tag: models.normalizeValue(v, vals_triples[axes[name].tag])
