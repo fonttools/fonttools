@@ -75,7 +75,7 @@ class Glyph(object):
                 sbixGlyphHeaderFormat, self.rawdata[:sbixGlyphHeaderFormatSize], self
             )
 
-            if is_reference_type():
+            if self.is_reference_type():
                 # this glyph is a reference to another glyph's image data
                 (gid,) = struct.unpack(">H", self.rawdata[sbixGlyphHeaderFormatSize:])
                 self.referenceGlyphName = ttFont.getGlyphName(gid)
@@ -122,7 +122,7 @@ class Glyph(object):
         )
         xmlWriter.newline()
         if self.is_reference_type():
-	    # this glyph is a reference to another glyph's image data
+	    # this glyph is a reference to another glyph id.
             xmlWriter.simpletag("ref", glyphname=self.referenceGlyphName)
         else:
             xmlWriter.begintag("hexdata")
