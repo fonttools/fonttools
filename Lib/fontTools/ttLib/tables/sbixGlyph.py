@@ -122,6 +122,7 @@ class Glyph(object):
         )
         xmlWriter.newline()
         if self.is_reference_type():
+	    # this glyph is a reference to another glyph's image data
             xmlWriter.simpletag("ref", glyphname=self.referenceGlyphName)
         else:
             xmlWriter.begintag("hexdata")
