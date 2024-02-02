@@ -720,6 +720,12 @@ def test_axisMappingsRoundtrip(tmpdir):
     assert [mapping.outputLocation for mapping in doc.axisMappings] == [
         mapping.outputLocation for mapping in doc2.axisMappings
     ]
+    assert [mapping.description for mapping in doc.axisMappings] == [
+        mapping.description for mapping in doc2.axisMappings
+    ]
+    assert [mapping.groupDescription for mapping in doc.axisMappings] == [
+        mapping.groupDescription for mapping in doc2.axisMappings
+    ]
 
 
 def test_rulesConditions(tmpdir):
