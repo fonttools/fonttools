@@ -19,8 +19,8 @@
       <map input="87.5" output="89"/>
       <map input="100" output="100"/>
     </axis>
-    <mappings>
-      <mapping>
+    <mappings description="all mappings">
+      <mapping description="test mapping">
         <input>
 	  <dimension name="Justify" xvalue="-100"/>
 	  <dimension name="Width" xvalue="100"/>

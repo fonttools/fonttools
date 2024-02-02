@@ -263,11 +263,14 @@ Example of all axis elements together
 ``<mappings>`` element
 ======================
 
--  Define axis mappings.
+-  Define an axis mappings group.
 -  Child element of ``axes``
 
+.. rubric:: Attributes
 
- .. versionadded:: 5.1
+- ``description``: optional, string. the description of this mappings group
+
+ .. versionadded:: 5.2
 
 
 ``<mapping>`` element
@@ -276,8 +279,11 @@ Example of all axis elements together
 -  Defines an axis mapping.
 -  Child element of ``<mappings>``
 
+.. rubric:: Attributes
 
- .. versionadded:: 5.1
+- ``description``: optional, string. the description of this mapping
+
+ .. versionadded:: 5.2
 
 
 ``<input>`` element
