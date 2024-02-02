@@ -3279,3 +3279,23 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
         finally:
             for source, font in zip(self.sources, fonts):
                 source.font = font
+
+
+def main(args=None):
+    """Roundtrip .designspace file through the DesignSpaceDocument class"""
+
+    if args is None:
+        import sys
+
+        args = sys.argv[1:]
+
+    from argparse import ArgumentParser
+
+    parser = ArgumentParser(prog="designspaceLib", description=main.__doc__)
+    parser.add_argument("input")
+    parser.add_argument("output")
+
+    options = parser.parse_args(args)
+
+    ds = DesignSpaceDocument.fromfile(options.input)
+    ds.write(options.output)
