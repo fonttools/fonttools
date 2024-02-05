@@ -353,15 +353,9 @@ class ChainContextualBuilder(LookupBuilder):
     def getCompiledSize_(self, subtables):
         if not subtables:
             return 0
-        table = ot.Lookup()
-        table.LookupType = subtables[0].LookupType
-        table.LookupFlag = 0
-        table.SubTable = []
-        for st in subtables:
-            assert st.LookupType == table.LookupType
-            # We need to make a copy here because compiling
-            # modifies the subtable (finalizing formats etc.)
-            table.SubTable.append(copy.deepcopy(st))
+        # We need to make a copy here because compiling
+        # modifies the subtable (finalizing formats etc.)
+        table = self.buildLookup_(copy.deepcopy(subtables))
         w = OTTableWriter()
         table.compile(w, self.font)
         size = len(w.getAllData())
