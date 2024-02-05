@@ -354,7 +354,7 @@ class ChainContextualBuilder(LookupBuilder):
         if not subtables:
             return 0
         table = ot.Lookup()
-        table.LookupType = next(iter(subtables)).LookupType
+        table.LookupType = subtables[0].LookupType
         table.LookupFlag = 0
         table.SubTable = []
         for st in subtables:
