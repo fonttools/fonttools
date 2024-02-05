@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ttFont sfntVersion="true" ttLibVersion="3.0">
+<ttFont>
 
   <GSUB>
     <Version value="0x00010000"/>
@@ -32,115 +32,111 @@
       <Lookup index="0">
         <LookupType value="6"/>
         <LookupFlag value="0"/>
-        <!-- SubTableCount=1 -->
-        <ChainContextSubst index="0" Format="2">
-          <Coverage>
+        <!-- SubTableCount=3 -->
+        <ChainContextSubst index="0" Format="3">
+          <!-- BacktrackGlyphCount=1 -->
+          <BacktrackCoverage index="0">
             <Glyph value="a"/>
-          </Coverage>
-          <BacktrackClassDef>
-            <ClassDef glyph="a" class="1"/>
-            <ClassDef glyph="b" class="1"/>
-            <ClassDef glyph="c" class="1"/>
-            <ClassDef glyph="d" class="1"/>
-            <ClassDef glyph="e" class="1"/>
-            <ClassDef glyph="f" class="1"/>
-            <ClassDef glyph="g" class="1"/>
-            <ClassDef glyph="h" class="1"/>
-            <ClassDef glyph="i" class="1"/>
-            <ClassDef glyph="j" class="1"/>
-            <ClassDef glyph="k" class="1"/>
-            <ClassDef glyph="l" class="1"/>
-            <ClassDef glyph="m" class="1"/>
-            <ClassDef glyph="n" class="1"/>
-            <ClassDef glyph="o" class="1"/>
-            <ClassDef glyph="p" class="1"/>
-            <ClassDef glyph="q" class="1"/>
-            <ClassDef glyph="r" class="1"/>
-            <ClassDef glyph="s" class="1"/>
-            <ClassDef glyph="t" class="1"/>
-            <ClassDef glyph="u" class="1"/>
-            <ClassDef glyph="v" class="1"/>
-            <ClassDef glyph="w" class="1"/>
-            <ClassDef glyph="x" class="1"/>
-            <ClassDef glyph="y" class="1"/>
-            <ClassDef glyph="z" class="1"/>
-          </BacktrackClassDef>
-          <InputClassDef>
-            <ClassDef glyph="a" class="1"/>
-            <ClassDef glyph="d" class="2"/>
-            <ClassDef glyph="n" class="3"/>
-          </InputClassDef>
-          <LookAheadClassDef>
-            <ClassDef glyph="a" class="1"/>
-            <ClassDef glyph="b" class="1"/>
-            <ClassDef glyph="c" class="1"/>
-            <ClassDef glyph="d" class="1"/>
-            <ClassDef glyph="e" class="1"/>
-            <ClassDef glyph="f" class="1"/>
-            <ClassDef glyph="g" class="1"/>
-            <ClassDef glyph="h" class="1"/>
-            <ClassDef glyph="i" class="1"/>
-            <ClassDef glyph="j" class="1"/>
-            <ClassDef glyph="k" class="1"/>
-            <ClassDef glyph="l" class="1"/>
-            <ClassDef glyph="m" class="1"/>
-            <ClassDef glyph="n" class="1"/>
-            <ClassDef glyph="o" class="1"/>
-            <ClassDef glyph="p" class="1"/>
-            <ClassDef glyph="q" class="1"/>
-            <ClassDef glyph="r" class="1"/>
-            <ClassDef glyph="s" class="1"/>
-            <ClassDef glyph="t" class="1"/>
-            <ClassDef glyph="u" class="1"/>
-            <ClassDef glyph="v" class="1"/>
-            <ClassDef glyph="w" class="1"/>
-            <ClassDef glyph="x" class="1"/>
-            <ClassDef glyph="y" class="1"/>
-            <ClassDef glyph="z" class="1"/>
-          </LookAheadClassDef>
-          <!-- ChainSubClassSetCount=4 -->
-          <ChainSubClassSet index="0">
-            <!-- ChainSubClassRuleCount=0 -->
-          </ChainSubClassSet>
-          <ChainSubClassSet index="1">
-            <!-- ChainSubClassRuleCount=3 -->
-            <ChainSubClassRule index="0">
-              <!-- BacktrackGlyphCount=1 -->
-              <Backtrack index="0" value="1"/>
-              <!-- InputGlyphCount=3 -->
-              <Input index="0" value="3"/>
-              <Input index="1" value="2"/>
-              <!-- LookAheadGlyphCount=0 -->
-              <!-- SubstCount=0 -->
-            </ChainSubClassRule>
-            <ChainSubClassRule index="1">
-              <!-- BacktrackGlyphCount=0 -->
-              <!-- InputGlyphCount=3 -->
-              <Input index="0" value="3"/>
-              <Input index="1" value="2"/>
-              <!-- LookAheadGlyphCount=1 -->
-              <LookAhead index="0" value="1"/>
-              <!-- SubstCount=0 -->
-            </ChainSubClassRule>
-            <ChainSubClassRule index="2">
-              <!-- BacktrackGlyphCount=0 -->
-              <!-- InputGlyphCount=3 -->
-              <Input index="0" value="3"/>
-              <Input index="1" value="2"/>
-              <!-- LookAheadGlyphCount=0 -->
-              <!-- SubstCount=1 -->
-              <SubstLookupRecord index="0">
-                <SequenceIndex value="0"/>
-                <LookupListIndex value="1"/>
-              </SubstLookupRecord>
-            </ChainSubClassRule>
-          </ChainSubClassSet>
-          <ChainSubClassSet index="2">
-            <!-- ChainSubClassRuleCount=0 -->
-          </ChainSubClassSet>
-          <ChainSubClassSet index="3">
-            <!-- ChainSubClassRuleCount=0 -->
-          </ChainSubClassSet>
+            <Glyph value="b"/>
+            <Glyph value="c"/>
+            <Glyph value="d"/>
+            <Glyph value="e"/>
+            <Glyph value="f"/>
+            <Glyph value="g"/>
+            <Glyph value="h"/>
+            <Glyph value="i"/>
+            <Glyph value="j"/>
+            <Glyph value="k"/>
+            <Glyph value="l"/>
+            <Glyph value="m"/>
+            <Glyph value="n"/>
+            <Glyph value="o"/>
+            <Glyph value="p"/>
+            <Glyph value="q"/>
+            <Glyph value="r"/>
+            <Glyph value="s"/>
+            <Glyph value="t"/>
+            <Glyph value="u"/>
+            <Glyph value="v"/>
+            <Glyph value="w"/>
+            <Glyph value="x"/>
+            <Glyph value="y"/>
+            <Glyph value="z"/>
+          </BacktrackCoverage>
+          <!-- InputGlyphCount=3 -->
+          <InputCoverage index="0">
+            <Glyph value="a"/>
+          </InputCoverage>
+          <InputCoverage index="1">
+            <Glyph value="n"/>
+          </InputCoverage>
+          <InputCoverage index="2">
+            <Glyph value="d"/>
+          </InputCoverage>
+          <!-- LookAheadGlyphCount=0 -->
+          <!-- SubstCount=0 -->
+        </ChainContextSubst>
+        <ChainContextSubst index="1" Format="3">
+          <!-- BacktrackGlyphCount=0 -->
+          <!-- InputGlyphCount=3 -->
+          <InputCoverage index="0">
+            <Glyph value="a"/>
+          </InputCoverage>
+          <InputCoverage index="1">
+            <Glyph value="n"/>
+          </InputCoverage>
+          <InputCoverage index="2">
+            <Glyph value="d"/>
+          </InputCoverage>
+          <!-- LookAheadGlyphCount=1 -->
+          <LookAheadCoverage index="0">
+            <Glyph value="a"/>
+            <Glyph value="b"/>
+            <Glyph value="c"/>
+            <Glyph value="d"/>
+            <Glyph value="e"/>
+            <Glyph value="f"/>
+            <Glyph value="g"/>
+            <Glyph value="h"/>
+            <Glyph value="i"/>
+            <Glyph value="j"/>
+            <Glyph value="k"/>
+            <Glyph value="l"/>
+            <Glyph value="m"/>
+            <Glyph value="n"/>
+            <Glyph value="o"/>
+            <Glyph value="p"/>
+            <Glyph value="q"/>
+            <Glyph value="r"/>
+            <Glyph value="s"/>
+            <Glyph value="t"/>
+            <Glyph value="u"/>
+            <Glyph value="v"/>
+            <Glyph value="w"/>
+            <Glyph value="x"/>
+            <Glyph value="y"/>
+            <Glyph value="z"/>
+          </LookAheadCoverage>
+          <!-- SubstCount=0 -->
+        </ChainContextSubst>
+        <ChainContextSubst index="2" Format="3">
+          <!-- BacktrackGlyphCount=0 -->
+          <!-- InputGlyphCount=3 -->
+          <InputCoverage index="0">
+            <Glyph value="a"/>
+          </InputCoverage>
+          <InputCoverage index="1">
+            <Glyph value="n"/>
+          </InputCoverage>
+          <InputCoverage index="2">
+            <Glyph value="d"/>
+          </InputCoverage>
+          <!-- LookAheadGlyphCount=0 -->
+          <!-- SubstCount=1 -->
+          <SubstLookupRecord index="0">
+            <SequenceIndex value="0"/>
+            <LookupListIndex value="1"/>
+          </SubstLookupRecord>
         </ChainContextSubst>
       </Lookup>
       <Lookup index="1">
