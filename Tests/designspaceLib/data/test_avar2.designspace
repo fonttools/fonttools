@@ -19,14 +19,25 @@
       <map input="87.5" output="89"/>
       <map input="100" output="100"/>
     </axis>
-    <mappings description="all mappings">
-      <mapping description="test mapping">
+    <mappings description="mappings 1">
+      <mapping description="justify low">
         <input>
 	  <dimension name="Justify" xvalue="-100"/>
 	  <dimension name="Width" xvalue="100"/>
         </input>
         <output>
 	  <dimension name="Width" xvalue="70"/>
+        </output>
+      </mapping>
+    </mappings>
+    <mappings description="mappings 2">
+      <mapping description="test mapping">
+        <input>
+	  <dimension name="Justify" xvalue="100"/>
+	  <dimension name="Width" xvalue="70"/>
+        </input>
+        <output>
+	  <dimension name="Width" xvalue="100"/>
         </output>
       </mapping>
     </mappings>

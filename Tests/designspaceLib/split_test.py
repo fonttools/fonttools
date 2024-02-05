@@ -217,13 +217,13 @@ def test_avar2(datadir):
     ds = DesignSpaceDocument()
     ds.read(datadir / "test_avar2.designspace")
     _, subDoc = next(splitInterpolable(ds))
-    assert len(subDoc.axisMappings) == 1
+    assert len(subDoc.axisMappings) == 2
 
     subDocs = list(splitVariableFonts(ds))
     assert len(subDocs) == 5
     for i, (_, subDoc) in enumerate(subDocs):
         # Only the first one should have a mapping, according to the document
         if i == 0:
-            assert len(subDoc.axisMappings) == 1
+            assert len(subDoc.axisMappings) == 2
         else:
             assert len(subDoc.axisMappings) == 0
