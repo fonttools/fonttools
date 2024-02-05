@@ -62,9 +62,11 @@
       <Lookup index="1">
         <LookupType value="5"/>
         <LookupFlag value="0"/>
-        <!-- SubTableCount=1 -->
-        <ContextSubst index="0" Format="2">
-          <Coverage>
+        <!-- SubTableCount=3 -->
+        <ContextSubst index="0" Format="3">
+          <!-- GlyphCount=3 -->
+          <!-- SubstCount=0 -->
+          <Coverage index="0">
             <Glyph value="a"/>
             <Glyph value="b"/>
             <Glyph value="c"/>
@@ -92,91 +94,160 @@
             <Glyph value="y"/>
             <Glyph value="z"/>
           </Coverage>
-          <ClassDef>
-            <ClassDef glyph="A" class="3"/>
-            <ClassDef glyph="B" class="3"/>
-            <ClassDef glyph="C" class="3"/>
-            <ClassDef glyph="D" class="3"/>
-            <ClassDef glyph="E" class="3"/>
-            <ClassDef glyph="F" class="3"/>
-            <ClassDef glyph="G" class="3"/>
-            <ClassDef glyph="H" class="3"/>
-            <ClassDef glyph="I" class="2"/>
-            <ClassDef glyph="J" class="2"/>
-            <ClassDef glyph="K" class="2"/>
-            <ClassDef glyph="L" class="2"/>
-            <ClassDef glyph="M" class="2"/>
-            <ClassDef glyph="N" class="2"/>
-            <ClassDef glyph="O" class="2"/>
-            <ClassDef glyph="P" class="2"/>
-            <ClassDef glyph="Q" class="2"/>
-            <ClassDef glyph="R" class="2"/>
-            <ClassDef glyph="S" class="2"/>
-            <ClassDef glyph="T" class="2"/>
-            <ClassDef glyph="U" class="2"/>
-            <ClassDef glyph="V" class="2"/>
-            <ClassDef glyph="W" class="2"/>
-            <ClassDef glyph="X" class="2"/>
-            <ClassDef glyph="Y" class="2"/>
-            <ClassDef glyph="Z" class="2"/>
-            <ClassDef glyph="a" class="1"/>
-            <ClassDef glyph="b" class="1"/>
-            <ClassDef glyph="c" class="1"/>
-            <ClassDef glyph="d" class="1"/>
-            <ClassDef glyph="e" class="1"/>
-            <ClassDef glyph="f" class="1"/>
-            <ClassDef glyph="g" class="1"/>
-            <ClassDef glyph="h" class="1"/>
-            <ClassDef glyph="i" class="1"/>
-            <ClassDef glyph="j" class="1"/>
-            <ClassDef glyph="k" class="1"/>
-            <ClassDef glyph="l" class="1"/>
-            <ClassDef glyph="m" class="1"/>
-            <ClassDef glyph="n" class="1"/>
-            <ClassDef glyph="o" class="1"/>
-            <ClassDef glyph="p" class="1"/>
-            <ClassDef glyph="q" class="1"/>
-            <ClassDef glyph="r" class="1"/>
-            <ClassDef glyph="s" class="1"/>
-            <ClassDef glyph="t" class="1"/>
-            <ClassDef glyph="u" class="1"/>
-            <ClassDef glyph="v" class="1"/>
-            <ClassDef glyph="w" class="1"/>
-            <ClassDef glyph="x" class="1"/>
-            <ClassDef glyph="y" class="1"/>
-            <ClassDef glyph="z" class="1"/>
-          </ClassDef>
-          <!-- SubClassSetCount=4 -->
-          <SubClassSet index="0">
-            <!-- SubClassRuleCount=0 -->
-          </SubClassSet>
-          <SubClassSet index="1">
-            <!-- SubClassRuleCount=3 -->
-            <SubClassRule index="0">
-              <!-- GlyphCount=3 -->
-              <!-- SubstCount=0 -->
-              <Class index="0" value="3"/>
-              <Class index="1" value="2"/>
-            </SubClassRule>
-            <SubClassRule index="1">
-              <!-- GlyphCount=3 -->
-              <!-- SubstCount=0 -->
-              <Class index="0" value="3"/>
-              <Class index="1" value="2"/>
-            </SubClassRule>
-            <SubClassRule index="2">
-              <!-- GlyphCount=3 -->
-              <!-- SubstCount=0 -->
-              <Class index="0" value="2"/>
-              <Class index="1" value="3"/>
-            </SubClassRule>
-          </SubClassSet>
-          <SubClassSet index="2">
-            <!-- SubClassRuleCount=0 -->
-          </SubClassSet>
-          <SubClassSet index="3">
-            <!-- SubClassRuleCount=0 -->
-          </SubClassSet>
+          <Coverage index="1">
+            <Glyph value="A"/>
+            <Glyph value="B"/>
+            <Glyph value="C"/>
+            <Glyph value="D"/>
+            <Glyph value="E"/>
+            <Glyph value="F"/>
+            <Glyph value="G"/>
+            <Glyph value="H"/>
+          </Coverage>
+          <Coverage index="2">
+            <Glyph value="I"/>
+            <Glyph value="J"/>
+            <Glyph value="K"/>
+            <Glyph value="L"/>
+            <Glyph value="M"/>
+            <Glyph value="N"/>
+            <Glyph value="O"/>
+            <Glyph value="P"/>
+            <Glyph value="Q"/>
+            <Glyph value="R"/>
+            <Glyph value="S"/>
+            <Glyph value="T"/>
+            <Glyph value="U"/>
+            <Glyph value="V"/>
+            <Glyph value="W"/>
+            <Glyph value="X"/>
+            <Glyph value="Y"/>
+            <Glyph value="Z"/>
+          </Coverage>
+        </ContextSubst>
+        <ContextSubst index="1" Format="3">
+          <!-- GlyphCount=3 -->
+          <!-- SubstCount=0 -->
+          <Coverage index="0">
+            <Glyph value="a"/>
+            <Glyph value="b"/>
+            <Glyph value="c"/>
+            <Glyph value="d"/>
+            <Glyph value="e"/>
+            <Glyph value="f"/>
+            <Glyph value="g"/>
+            <Glyph value="h"/>
+            <Glyph value="i"/>
+            <Glyph value="j"/>
+            <Glyph value="k"/>
+            <Glyph value="l"/>
+            <Glyph value="m"/>
+            <Glyph value="n"/>
+            <Glyph value="o"/>
+            <Glyph value="p"/>
+            <Glyph value="q"/>
+            <Glyph value="r"/>
+            <Glyph value="s"/>
+            <Glyph value="t"/>
+            <Glyph value="u"/>
+            <Glyph value="v"/>
+            <Glyph value="w"/>
+            <Glyph value="x"/>
+            <Glyph value="y"/>
+            <Glyph value="z"/>
+          </Coverage>
+          <Coverage index="1">
+            <Glyph value="A"/>
+            <Glyph value="B"/>
+            <Glyph value="C"/>
+            <Glyph value="D"/>
+            <Glyph value="E"/>
+            <Glyph value="F"/>
+            <Glyph value="G"/>
+            <Glyph value="H"/>
+          </Coverage>
+          <Coverage index="2">
+            <Glyph value="I"/>
+            <Glyph value="J"/>
+            <Glyph value="K"/>
+            <Glyph value="L"/>
+            <Glyph value="M"/>
+            <Glyph value="N"/>
+            <Glyph value="O"/>
+            <Glyph value="P"/>
+            <Glyph value="Q"/>
+            <Glyph value="R"/>
+            <Glyph value="S"/>
+            <Glyph value="T"/>
+            <Glyph value="U"/>
+            <Glyph value="V"/>
+            <Glyph value="W"/>
+            <Glyph value="X"/>
+            <Glyph value="Y"/>
+            <Glyph value="Z"/>
+          </Coverage>
+        </ContextSubst>
+        <ContextSubst index="2" Format="3">
+          <!-- GlyphCount=3 -->
+          <!-- SubstCount=0 -->
+          <Coverage index="0">
+            <Glyph value="a"/>
+            <Glyph value="b"/>
+            <Glyph value="c"/>
+            <Glyph value="d"/>
+            <Glyph value="e"/>
+            <Glyph value="f"/>
+            <Glyph value="g"/>
+            <Glyph value="h"/>
+            <Glyph value="i"/>
+            <Glyph value="j"/>
+            <Glyph value="k"/>
+            <Glyph value="l"/>
+            <Glyph value="m"/>
+            <Glyph value="n"/>
+            <Glyph value="o"/>
+            <Glyph value="p"/>
+            <Glyph value="q"/>
+            <Glyph value="r"/>
+            <Glyph value="s"/>
+            <Glyph value="t"/>
+            <Glyph value="u"/>
+            <Glyph value="v"/>
+            <Glyph value="w"/>
+            <Glyph value="x"/>
+            <Glyph value="y"/>
+            <Glyph value="z"/>
+          </Coverage>
+          <Coverage index="1">
+            <Glyph value="I"/>
+            <Glyph value="J"/>
+            <Glyph value="K"/>
+            <Glyph value="L"/>
+            <Glyph value="M"/>
+            <Glyph value="N"/>
+            <Glyph value="O"/>
+            <Glyph value="P"/>
+            <Glyph value="Q"/>
+            <Glyph value="R"/>
+            <Glyph value="S"/>
+            <Glyph value="T"/>
+            <Glyph value="U"/>
+            <Glyph value="V"/>
+            <Glyph value="W"/>
+            <Glyph value="X"/>
+            <Glyph value="Y"/>
+            <Glyph value="Z"/>
+          </Coverage>
+          <Coverage index="2">
+            <Glyph value="A"/>
+            <Glyph value="B"/>
+            <Glyph value="C"/>
+            <Glyph value="D"/>
+            <Glyph value="E"/>
+            <Glyph value="F"/>
+            <Glyph value="G"/>
+            <Glyph value="H"/>
+          </Coverage>
         </ContextSubst>
       </Lookup>
       <Lookup index="2">

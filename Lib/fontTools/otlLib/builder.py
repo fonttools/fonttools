@@ -6,6 +6,7 @@ from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables.otBase import (
     ValueRecord,
     valueRecordFormatDict,
+    OTLOffsetOverflowError,
     OTTableWriter,
     CountReference,
 )
@@ -350,16 +351,14 @@ class ChainContextualBuilder(LookupBuilder):
         return [x for x in ruleset if len(x.rules) > 0]
 
     def getCompiledSize_(self, subtables):
-        size = 0
-        for st in subtables:
-            w = OTTableWriter()
-            w["LookupType"] = CountReference(
-                {"LookupType": st.LookupType}, "LookupType"
-            )
-            # We need to make a copy here because compiling
-            # modifies the subtable (finalizing formats etc.)
-            copy.deepcopy(st).compile(w, self.font)
-            size += len(w.getAllData())
+        if not subtables:
+            return 0
+        # We need to make a copy here because compiling
+        # modifies the subtable (finalizing formats etc.)
+        table = self.buildLookup_(copy.deepcopy(subtables))
+        w = OTTableWriter()
+        table.compile(w, self.font)
+        size = len(w.getAllData())
         return size
 
     def build(self):
@@ -414,7 +413,7 @@ class ChainContextualBuilder(LookupBuilder):
                 if candidates[i]:
                     try:
                         self.getCompiledSize_(candidates[i])
-                    except Exception as e:
+                    except OTLOffsetOverflowError as e:
                         log.warning(
                             "Contextual format %i at %s overflowed (%s)"
                             % (i, str(self.location), e)
