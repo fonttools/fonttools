@@ -1,3 +1,5 @@
+- Fixed uploading wheels to PyPI, no code changes since v4.48.0.
+
 4.48.0 (released 2024-02-06)
 ----------------------------
 
