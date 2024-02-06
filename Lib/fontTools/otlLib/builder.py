@@ -409,22 +409,23 @@ class ChainContextualBuilder(LookupBuilder):
             if not ruleset.hasAnyGlyphClasses:
                 candidates[1] = [self.buildFormat1Subtable(ruleset, chaining)]
 
+            candidates_by_size = []
             for i in [1, 2, 3]:
                 if candidates[i]:
                     try:
-                        self.getCompiledSize_(candidates[i])
+                        size = self.getCompiledSize_(candidates[i])
                     except OTLOffsetOverflowError as e:
                         log.warning(
                             "Contextual format %i at %s overflowed (%s)"
                             % (i, str(self.location), e)
                         )
-                        candidates[i] = None
+                    else:
+                        candidates_by_size.append((size, candidates[i]))
 
-            candidates = [x for x in candidates if x is not None]
-            if not candidates:
+            if not candidates_by_size:
                 raise OpenTypeLibError("All candidates overflowed", self.location)
 
-            winner = min(candidates, key=self.getCompiledSize_)
+            _min_size, winner = min(candidates_by_size, key=lambda x: x[0])
             subtables.extend(winner)
 
         # If we are not chaining, lookup type will be automatically fixed by
