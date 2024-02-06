@@ -928,9 +928,11 @@ def instantiateGvar(varfont, axisLimits, optimize=True):
     glyphnames = sorted(
         glyf.glyphOrder,
         key=lambda name: (
-            glyf[name].getCompositeMaxpValues(glyf).maxComponentDepth
-            if glyf[name].isComposite()
-            else 0,
+            (
+                glyf[name].getCompositeMaxpValues(glyf).maxComponentDepth
+                if glyf[name].isComposite()
+                else 0
+            ),
             name,
         ),
     )

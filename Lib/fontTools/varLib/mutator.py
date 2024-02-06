@@ -199,9 +199,11 @@ def instantiateVariableFont(varfont, location, inplace=False, overlap=True):
         glyphnames = sorted(
             gvar.variations.keys(),
             key=lambda name: (
-                glyf[name].getCompositeMaxpValues(glyf).maxComponentDepth
-                if glyf[name].isComposite()
-                else 0,
+                (
+                    glyf[name].getCompositeMaxpValues(glyf).maxComponentDepth
+                    if glyf[name].isComposite()
+                    else 0
+                ),
                 name,
             ),
         )
@@ -305,9 +307,9 @@ def instantiateVariableFont(varfont, location, inplace=False, overlap=True):
             if applies:
                 assert record.FeatureTableSubstitution.Version == 0x00010000
                 for rec in record.FeatureTableSubstitution.SubstitutionRecord:
-                    table.FeatureList.FeatureRecord[
-                        rec.FeatureIndex
-                    ].Feature = rec.Feature
+                    table.FeatureList.FeatureRecord[rec.FeatureIndex].Feature = (
+                        rec.Feature
+                    )
                 break
         del table.FeatureVariations
 
