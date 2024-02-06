@@ -46,9 +46,7 @@ env_with_cython = os.environ.get("FONTTOOLS_WITH_CYTHON")
 with_cython = (
     True
     if env_with_cython in {"1", "true", "yes"}
-    else False
-    if env_with_cython in {"0", "false", "no"}
-    else None
+    else False if env_with_cython in {"0", "false", "no"} else None
 )
 # --with-cython/--without-cython options override environment variables
 opt_with_cython = {"--with-cython"}.intersection(sys.argv)
