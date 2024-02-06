@@ -11,7 +11,6 @@ from fontTools.cffLib import VarStoreData
 import fontTools.cffLib.specializer as cffSpecializer
 from fontTools.varLib import builder  # for VarData.calculateNumShorts
 from fontTools.misc.fixedTools import otRound
-from fontTools.ttLib.tables._g_l_y_f import VarComponentFlags
 
 
 __all__ = ["scale_upem", "ScalerVisitor"]
@@ -123,13 +122,6 @@ def visit(visitor, obj, attr, glyphs):
                 component.y = visitor.scale(component.y)
             continue
 
-        if g.isVarComposite():
-            for component in g.components:
-                for attr in ("translateX", "translateY", "tCenterX", "tCenterY"):
-                    v = getattr(component.transform, attr)
-                    setattr(component.transform, attr, visitor.scale(v))
-            continue
-
         if hasattr(g, "coordinates"):
             coordinates = g.coordinates
             for i, (x, y) in enumerate(coordinates):
@@ -138,56 +130,15 @@ def visit(visitor, obj, attr, glyphs):
 
 @ScalerVisitor.register_attr(ttLib.getTableClass("gvar"), "variations")
 def visit(visitor, obj, attr, variations):
-    # VarComposites are a pain to handle :-(
     glyfTable = visitor.font["glyf"]
 
     for glyphName, varlist in variations.items():
         glyph = glyfTable[glyphName]
-        isVarComposite = glyph.isVarComposite()
         for var in varlist:
             coordinates = var.coordinates
-
-            if not isVarComposite:
-                for i, xy in enumerate(coordinates):
-                    if xy is None:
-                        continue
-                    coordinates[i] = visitor.scale(xy[0]), visitor.scale(xy[1])
-                continue
-
-            # VarComposite glyph
-
-            i = 0
-            for component in glyph.components:
-                if component.flags & VarComponentFlags.AXES_HAVE_VARIATION:
-                    i += len(component.location)
-                if component.flags & (
-                    VarComponentFlags.HAVE_TRANSLATE_X
-                    | VarComponentFlags.HAVE_TRANSLATE_Y
-                ):
-                    xy = coordinates[i]
-                    coordinates[i] = visitor.scale(xy[0]), visitor.scale(xy[1])
-                    i += 1
-                if component.flags & VarComponentFlags.HAVE_ROTATION:
-                    i += 1
-                if component.flags & (
-                    VarComponentFlags.HAVE_SCALE_X | VarComponentFlags.HAVE_SCALE_Y
-                ):
-                    i += 1
-                if component.flags & (
-                    VarComponentFlags.HAVE_SKEW_X | VarComponentFlags.HAVE_SKEW_Y
-                ):
-                    i += 1
-                if component.flags & (
-                    VarComponentFlags.HAVE_TCENTER_X | VarComponentFlags.HAVE_TCENTER_Y
-                ):
-                    xy = coordinates[i]
-                    coordinates[i] = visitor.scale(xy[0]), visitor.scale(xy[1])
-                    i += 1
-
-            # Phantom points
-            assert i + 4 == len(coordinates)
-            for i in range(i, len(coordinates)):
-                xy = coordinates[i]
+            for i, xy in enumerate(coordinates):
+                if xy is None:
+                    continue
                 coordinates[i] = visitor.scale(xy[0]), visitor.scale(xy[1])
 
 

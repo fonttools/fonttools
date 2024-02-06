@@ -843,23 +843,6 @@ def _instantiateGvarGlyph(
         if defaultDeltas:
             coordinates += _g_l_y_f.GlyphCoordinates(defaultDeltas)
 
-    glyph = glyf[glyphname]
-    if glyph.isVarComposite():
-        for component in glyph.components:
-            newLocation = {}
-            for tag, loc in component.location.items():
-                if tag not in axisLimits:
-                    newLocation[tag] = loc
-                    continue
-                if component.flags & _g_l_y_f.VarComponentFlags.AXES_HAVE_VARIATION:
-                    raise NotImplementedError(
-                        "Instancing accross VarComposite axes with variation is not supported."
-                    )
-                limits = axisLimits[tag]
-                loc = limits.renormalizeValue(loc, extrapolate=False)
-                newLocation[tag] = loc
-            component.location = newLocation
-
     # _setCoordinates also sets the hmtx/vmtx advance widths and sidebearings from
     # the four phantom points and glyph bounding boxes.
     # We call it unconditionally even if a glyph has no variations or no deltas are
@@ -908,11 +891,9 @@ def instantiateGvar(varfont, axisLimits, optimize=True):
     glyphnames = sorted(
         glyf.glyphOrder,
         key=lambda name: (
-            (
-                glyf[name].getCompositeMaxpValues(glyf).maxComponentDepth
-                if glyf[name].isComposite() or glyf[name].isVarComposite()
-                else 0
-            ),
+            glyf[name].getCompositeMaxpValues(glyf).maxComponentDepth
+            if glyf[name].isComposite()
+            else 0,
             name,
         ),
     )

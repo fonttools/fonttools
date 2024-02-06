@@ -178,10 +178,6 @@ class _TTGlyphGlyf(_TTGlyph):
             if depth:
                 offset = 0  # Offset should only apply at top-level
 
-            if glyph.isVarComposite():
-                self._drawVarComposite(glyph, pen, False)
-                return
-
             glyph.draw(pen, self.glyphSet.glyfTable, offset)
 
     def drawPoints(self, pen):
@@ -194,34 +190,7 @@ class _TTGlyphGlyf(_TTGlyph):
             if depth:
                 offset = 0  # Offset should only apply at top-level
 
-            if glyph.isVarComposite():
-                self._drawVarComposite(glyph, pen, True)
-                return
-
             glyph.drawPoints(pen, self.glyphSet.glyfTable, offset)
-
-    def _drawVarComposite(self, glyph, pen, isPointPen):
-        from fontTools.ttLib.tables._g_l_y_f import (
-            VarComponentFlags,
-            VAR_COMPONENT_TRANSFORM_MAPPING,
-        )
-
-        for comp in glyph.components:
-            with self.glyphSet.pushLocation(
-                comp.location, comp.flags & VarComponentFlags.RESET_UNSPECIFIED_AXES
-            ):
-                try:
-                    pen.addVarComponent(
-                        comp.glyphName, comp.transform, self.glyphSet.rawLocation
-                    )
-                except AttributeError:
-                    t = comp.transform.toTransform()
-                    if isPointPen:
-                        tPen = TransformPointPen(pen, t)
-                        self.glyphSet[comp.glyphName].drawPoints(tPen)
-                    else:
-                        tPen = TransformPen(pen, t)
-                        self.glyphSet[comp.glyphName].draw(tPen)
 
     def _getGlyphAndOffset(self):
         if self.glyphSet.location and self.glyphSet.gvarTable is not None:
@@ -300,11 +269,6 @@ def _setCoordinates(glyph, coord, glyfTable, *, recalcBounds=True):
         for p, comp in zip(coord, glyph.components):
             if hasattr(comp, "x"):
                 comp.x, comp.y = p
-    elif glyph.isVarComposite():
-        glyph.components = [copy(comp) for comp in glyph.components]  # Shallow copy
-        for comp in glyph.components:
-            coord = comp.setCoordinates(coord)
-        assert not coord
     elif glyph.numberOfContours == 0:
         assert len(coord) == 0
     else:
