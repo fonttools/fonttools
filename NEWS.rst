@@ -1,3 +1,21 @@
+- [varLib] Do not log when there are no OTL tables to be merged.
+- [setup.py] Do not restrict lxml<5 any more, tests pass just fine with lxml>=5.
+- [feaLib] Remove glyph and class names length restrictions in FEA (#3424).
+- [roundingPens] Added ``transformRoundFunc`` parameter to the rounding pens to allow
+  for custom rounding of the components' transforms (#3426).
+- [feaLib] Keep declaration order of ligature components within a ligature set, instead
+  of sorting by glyph name (#3429).
+- [feaLib] Fixed ordering of alternates in ``aalt`` lookups, following the declaration
+  order of feature references within the ``aalt`` feature block (#3430).
+- [varLib.instancer] Fixed a bug in the instancer's IUP optimization (#3432).
+- [sbix] Support sbix glyphs with new graphicType "flip" (#3433).
+- [svgPathPen] Added ``--glyphs`` option to dump the SVG paths for the named glyphs
+  in the font (0572f78).
+- [designspaceLib] Added "description" attribute to ``<mappings>`` and ``<mapping>``
+  elements, and allow multiple ``<mappings>`` elements to group ``<mapping>`` elements
+  that are logically related (#3435, #3437).
+- [otlLib] Correctly choose the most compact GSUB contextual lookup format (#3439).
+
 4.47.2 (released 2024-01-11)
 ----------------------------
 
