@@ -1,3 +1,6 @@
+4.48.0 (released 2024-02-06)
+----------------------------
+
 - [varLib] Do not log when there are no OTL tables to be merged.
 - [setup.py] Do not restrict lxml<5 any more, tests pass just fine with lxml>=5.
 - [feaLib] Remove glyph and class names length restrictions in FEA (#3424).
