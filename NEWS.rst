@@ -1,3 +1,6 @@
+4.49.0 (released 2024-02-15)
+----------------------------
+
 - [otlLib] Add API for building ``MATH`` table (#3446)
 
 4.48.1 (released 2024-02-06)
