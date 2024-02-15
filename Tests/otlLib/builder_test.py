@@ -1549,6 +1549,310 @@ def test_stat_infinities():
     assert struct.pack(">l", posInf) == b"\x7f\xff\xff\xff"
 
 
+def test_buildMathTable_empty():
+    ttFont = ttLib.TTFont()
+    ttFont.setGlyphOrder([])
+    builder.buildMathTable(ttFont)
+
+    assert "MATH" in ttFont
+    mathTable = ttFont["MATH"].table
+    assert mathTable.Version == 0x00010000
+
+    assert mathTable.MathConstants is None
+    assert mathTable.MathGlyphInfo is None
+    assert mathTable.MathVariants is None
+
+
+def test_buildMathTable_constants():
+    ttFont = ttLib.TTFont()
+    ttFont.setGlyphOrder([])
+    constants = {
+        "AccentBaseHeight": 516,
+        "AxisHeight": 262,
+        "DelimitedSubFormulaMinHeight": 1500,
+        "DisplayOperatorMinHeight": 2339,
+        "FlattenedAccentBaseHeight": 698,
+        "FractionDenomDisplayStyleGapMin": 198,
+        "FractionDenominatorDisplayStyleShiftDown": 698,
+        "FractionDenominatorGapMin": 66,
+        "FractionDenominatorShiftDown": 465,
+        "FractionNumDisplayStyleGapMin": 198,
+        "FractionNumeratorDisplayStyleShiftUp": 774,
+        "FractionNumeratorGapMin": 66,
+        "FractionNumeratorShiftUp": 516,
+        "FractionRuleThickness": 66,
+        "LowerLimitBaselineDropMin": 585,
+        "LowerLimitGapMin": 132,
+        "MathLeading": 300,
+        "OverbarExtraAscender": 66,
+        "OverbarRuleThickness": 66,
+        "OverbarVerticalGap": 198,
+        "RadicalDegreeBottomRaisePercent": 75,
+        "RadicalDisplayStyleVerticalGap": 195,
+        "RadicalExtraAscender": 66,
+        "RadicalKernAfterDegree": -556,
+        "RadicalKernBeforeDegree": 278,
+        "RadicalRuleThickness": 66,
+        "RadicalVerticalGap": 82,
+        "ScriptPercentScaleDown": 70,
+        "ScriptScriptPercentScaleDown": 55,
+        "SkewedFractionHorizontalGap": 66,
+        "SkewedFractionVerticalGap": 77,
+        "SpaceAfterScript": 42,
+        "StackBottomDisplayStyleShiftDown": 698,
+        "StackBottomShiftDown": 465,
+        "StackDisplayStyleGapMin": 462,
+        "StackGapMin": 198,
+        "StackTopDisplayStyleShiftUp": 774,
+        "StackTopShiftUp": 516,
+        "StretchStackBottomShiftDown": 585,
+        "StretchStackGapAboveMin": 132,
+        "StretchStackGapBelowMin": 132,
+        "StretchStackTopShiftUp": 165,
+        "SubSuperscriptGapMin": 264,
+        "SubscriptBaselineDropMin": 105,
+        "SubscriptShiftDown": 140,
+        "SubscriptTopMax": 413,
+        "SuperscriptBaselineDropMax": 221,
+        "SuperscriptBottomMaxWithSubscript": 413,
+        "SuperscriptBottomMin": 129,
+        "SuperscriptShiftUp": 477,
+        "SuperscriptShiftUpCramped": 358,
+        "UnderbarExtraDescender": 66,
+        "UnderbarRuleThickness": 66,
+        "UnderbarVerticalGap": 198,
+        "UpperLimitBaselineRiseMin": 165,
+        "UpperLimitGapMin": 132,
+    }
+    builder.buildMathTable(ttFont, constants=constants)
+    mathTable = ttFont["MATH"].table
+    assert mathTable.MathConstants
+    assert mathTable.MathGlyphInfo is None
+    assert mathTable.MathVariants is None
+    for k, v in constants.items():
+        r = getattr(mathTable.MathConstants, k)
+        try:
+            r = r.Value
+        except AttributeError:
+            pass
+        assert r == v
+
+
+def test_buildMathTable_italicsCorrection():
+    ttFont = ttLib.TTFont()
+    ttFont.setGlyphOrder(["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"])
+    italicsCorrections = {"A": 100, "C": 300, "D": 400, "E": 500}
+    builder.buildMathTable(ttFont, italicsCorrections=italicsCorrections)
+    mathTable = ttFont["MATH"].table
+    assert mathTable.MathConstants is None
+    assert mathTable.MathGlyphInfo
+    assert mathTable.MathVariants is None
+    assert set(
+        mathTable.MathGlyphInfo.MathItalicsCorrectionInfo.Coverage.glyphs
+    ) == set(italicsCorrections.keys())
+    for glyph, correction in zip(
+        mathTable.MathGlyphInfo.MathItalicsCorrectionInfo.Coverage.glyphs,
+        mathTable.MathGlyphInfo.MathItalicsCorrectionInfo.ItalicsCorrection,
+    ):
+        assert correction.Value == italicsCorrections[glyph]
+
+
+def test_buildMathTable_topAccentAttachment():
+    ttFont = ttLib.TTFont()
+    ttFont.setGlyphOrder(["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"])
+    topAccentAttachments = {"A": 10, "B": 20, "C": 30, "E": 50}
+    builder.buildMathTable(ttFont, topAccentAttachments=topAccentAttachments)
+    mathTable = ttFont["MATH"].table
+    assert mathTable.MathConstants is None
+    assert mathTable.MathGlyphInfo
+    assert mathTable.MathVariants is None
+    assert set(
+        mathTable.MathGlyphInfo.MathTopAccentAttachment.TopAccentCoverage.glyphs
+    ) == set(topAccentAttachments.keys())
+    for glyph, attachment in zip(
+        mathTable.MathGlyphInfo.MathTopAccentAttachment.TopAccentCoverage.glyphs,
+        mathTable.MathGlyphInfo.MathTopAccentAttachment.TopAccentAttachment,
+    ):
+        assert attachment.Value == topAccentAttachments[glyph]
+
+
+def test_buildMathTable_extendedShape():
+    ttFont = ttLib.TTFont()
+    ttFont.setGlyphOrder(["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"])
+    extendedShapes = {"A", "C", "E", "F"}
+    builder.buildMathTable(ttFont, extendedShapes=extendedShapes)
+    mathTable = ttFont["MATH"].table
+    assert mathTable.MathConstants is None
+    assert mathTable.MathGlyphInfo
+    assert mathTable.MathVariants is None
+    assert set(mathTable.MathGlyphInfo.ExtendedShapeCoverage.glyphs) == extendedShapes
+
+
+def test_buildMathTable_mathKern():
+    ttFont = ttLib.TTFont()
+    ttFont.setGlyphOrder(["A", "B"])
+    mathKerns = {
+        "A": {
+            "TopRight": ([10, 20], [10, 20, 30]),
+            "BottomRight": ([], [10]),
+            "TopLeft": ([10], [0, 20]),
+            "BottomLeft": ([-10, 0], [0, 10, 20]),
+        },
+    }
+    builder.buildMathTable(ttFont, mathKerns=mathKerns)
+    mathTable = ttFont["MATH"].table
+    assert mathTable.MathConstants is None
+    assert mathTable.MathGlyphInfo
+    assert mathTable.MathVariants is None
+    assert set(mathTable.MathGlyphInfo.MathKernInfo.MathKernCoverage.glyphs) == set(
+        mathKerns.keys()
+    )
+    for glyph, record in zip(
+        mathTable.MathGlyphInfo.MathKernInfo.MathKernCoverage.glyphs,
+        mathTable.MathGlyphInfo.MathKernInfo.MathKernInfoRecords,
+    ):
+        h, k = mathKerns[glyph]["TopRight"]
+        assert [v.Value for v in record.TopRightMathKern.CorrectionHeight] == h
+        assert [v.Value for v in record.TopRightMathKern.KernValue] == k
+        h, k = mathKerns[glyph]["BottomRight"]
+        assert [v.Value for v in record.BottomRightMathKern.CorrectionHeight] == h
+        assert [v.Value for v in record.BottomRightMathKern.KernValue] == k
+        h, k = mathKerns[glyph]["TopLeft"]
+        assert [v.Value for v in record.TopLeftMathKern.CorrectionHeight] == h
+        assert [v.Value for v in record.TopLeftMathKern.KernValue] == k
+        h, k = mathKerns[glyph]["BottomLeft"]
+        assert [v.Value for v in record.BottomLeftMathKern.CorrectionHeight] == h
+        assert [v.Value for v in record.BottomLeftMathKern.KernValue] == k
+
+
+def test_buildMathTable_vertVariants():
+    ttFont = ttLib.TTFont()
+    ttFont.setGlyphOrder(["A", "A.size1", "A.size2"])
+    vertGlyphVariants = {"A": [("A.size1", 100), ("A.size2", 200)]}
+    builder.buildMathTable(ttFont, vertGlyphVariants=vertGlyphVariants)
+    mathTable = ttFont["MATH"].table
+    assert mathTable.MathConstants is None
+    assert mathTable.MathGlyphInfo is None
+    assert mathTable.MathVariants
+    assert set(mathTable.MathVariants.VertGlyphCoverage.glyphs) == set(
+        vertGlyphVariants.keys()
+    )
+    for glyph, construction in zip(
+        mathTable.MathVariants.VertGlyphCoverage.glyphs,
+        mathTable.MathVariants.VertGlyphConstruction,
+    ):
+        assert [
+            (r.VariantGlyph, r.AdvanceMeasurement)
+            for r in construction.MathGlyphVariantRecord
+        ] == vertGlyphVariants[glyph]
+
+
+def test_buildMathTable_horizVariants():
+    ttFont = ttLib.TTFont()
+    ttFont.setGlyphOrder(["A", "A.size1", "A.size2"])
+    horizGlyphVariants = {"A": [("A.size1", 100), ("A.size2", 200)]}
+    builder.buildMathTable(ttFont, horizGlyphVariants=horizGlyphVariants)
+    mathTable = ttFont["MATH"].table
+    assert mathTable.MathConstants is None
+    assert mathTable.MathGlyphInfo is None
+    assert mathTable.MathVariants
+    assert set(mathTable.MathVariants.HorizGlyphCoverage.glyphs) == set(
+        horizGlyphVariants.keys()
+    )
+    for glyph, construction in zip(
+        mathTable.MathVariants.HorizGlyphCoverage.glyphs,
+        mathTable.MathVariants.HorizGlyphConstruction,
+    ):
+        assert [
+            (r.VariantGlyph, r.AdvanceMeasurement)
+            for r in construction.MathGlyphVariantRecord
+        ] == horizGlyphVariants[glyph]
+
+
+def test_buildMathTable_vertAssembly():
+    ttFont = ttLib.TTFont()
+    ttFont.setGlyphOrder(["A", "A.top", "A.middle", "A.bottom", "A.extender"])
+    vertGlyphAssembly = {
+        "A": [
+            [
+                ("A.bottom", 0, 0, 100, 200),
+                ("A.extender", 1, 50, 50, 100),
+                ("A.middle", 0, 100, 100, 200),
+                ("A.extender", 1, 50, 50, 100),
+                ("A.top", 0, 100, 0, 200),
+            ],
+            10,
+        ],
+    }
+    builder.buildMathTable(ttFont, vertGlyphAssembly=vertGlyphAssembly)
+    mathTable = ttFont["MATH"].table
+    assert mathTable.MathConstants is None
+    assert mathTable.MathGlyphInfo is None
+    assert mathTable.MathVariants
+    assert set(mathTable.MathVariants.VertGlyphCoverage.glyphs) == set(
+        vertGlyphAssembly.keys()
+    )
+    for glyph, construction in zip(
+        mathTable.MathVariants.VertGlyphCoverage.glyphs,
+        mathTable.MathVariants.VertGlyphConstruction,
+    ):
+        assert [
+            [
+                (
+                    r.glyph,
+                    r.PartFlags,
+                    r.StartConnectorLength,
+                    r.EndConnectorLength,
+                    r.FullAdvance,
+                )
+                for r in construction.GlyphAssembly.PartRecords
+            ],
+            construction.GlyphAssembly.ItalicsCorrection.Value,
+        ] == vertGlyphAssembly[glyph]
+
+
+def test_buildMathTable_horizAssembly():
+    ttFont = ttLib.TTFont()
+    ttFont.setGlyphOrder(["A", "A.top", "A.middle", "A.bottom", "A.extender"])
+    horizGlyphAssembly = {
+        "A": [
+            [
+                ("A.bottom", 0, 0, 100, 200),
+                ("A.extender", 1, 50, 50, 100),
+                ("A.middle", 0, 100, 100, 200),
+                ("A.extender", 1, 50, 50, 100),
+                ("A.top", 0, 100, 0, 200),
+            ],
+            10,
+        ],
+    }
+    builder.buildMathTable(ttFont, horizGlyphAssembly=horizGlyphAssembly)
+    mathTable = ttFont["MATH"].table
+    assert mathTable.MathConstants is None
+    assert mathTable.MathGlyphInfo is None
+    assert mathTable.MathVariants
+    assert set(mathTable.MathVariants.HorizGlyphCoverage.glyphs) == set(
+        horizGlyphAssembly.keys()
+    )
+    for glyph, construction in zip(
+        mathTable.MathVariants.HorizGlyphCoverage.glyphs,
+        mathTable.MathVariants.HorizGlyphConstruction,
+    ):
+        assert [
+            [
+                (
+                    r.glyph,
+                    r.PartFlags,
+                    r.StartConnectorLength,
+                    r.EndConnectorLength,
+                    r.FullAdvance,
+                )
+                for r in construction.GlyphAssembly.PartRecords
+            ],
+            construction.GlyphAssembly.ItalicsCorrection.Value,
+        ] == horizGlyphAssembly[glyph]
+
+
 class ChainContextualRulesetTest(object):
     def test_makeRulesets(self):
         font = ttLib.TTFont()
