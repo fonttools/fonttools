@@ -2959,7 +2959,7 @@ def buildMathTable(
     connector length, end connector length, and full advance height.
 
     'horizGlyphAssembly' is a dictionary of horizontal glyph assemblies. The
-    keys are the glyph names, and the values are tuples tuples of assembly parts
+    keys are the glyph names, and the values are tuples of assembly parts
     and italics correction. The assembly parts are tuples of glyph name, flags,
     start connector length, end connector length, and full advance width.
 
