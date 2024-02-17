@@ -15,9 +15,9 @@ class Visitor(object):
         def wrapper(method):
             assert method.__name__ == "visit"
             for clazzes, attrs in clazzes_attrs:
-                if type(clazzes) != tuple:
+                if not isinstance(clazzes, tuple):
                     clazzes = (clazzes,)
-                if type(attrs) == str:
+                if isinstance(attrs, str):
                     attrs = (attrs,)
                 for clazz in clazzes:
                     _visitors = celf._visitors.setdefault(clazz, {})
@@ -33,16 +33,16 @@ class Visitor(object):
 
     @classmethod
     def register(celf, clazzes):
-        if type(clazzes) != tuple:
+        if not isinstance(clazzes, tuple):
             clazzes = (clazzes,)
         return celf._register([(clazzes, (None,))])
 
     @classmethod
     def register_attr(celf, clazzes, attrs):
         clazzes_attrs = []
-        if type(clazzes) != tuple:
+        if not isinstance(clazzes, tuple):
             clazzes = (clazzes,)
-        if type(attrs) == str:
+        if isinstance(attrs, str):
             attrs = (attrs,)
         for clazz in clazzes:
             clazzes_attrs.append((clazz, attrs))

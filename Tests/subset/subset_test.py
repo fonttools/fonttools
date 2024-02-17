@@ -2020,6 +2020,6 @@ def test_subset_prune_gdef_markglyphsetsdef():
     assert lookups[0].LookupFlag == 16
     assert lookups[0].MarkFilteringSet == 0
     assert lookups[1].LookupFlag == 0
-    assert lookups[1].MarkFilteringSet == None
+    assert lookups[1].MarkFilteringSet is None
     marksets = font["GDEF"].table.MarkGlyphSetsDef.Coverage
     assert marksets[0].glyphs == ["acutecomb"]

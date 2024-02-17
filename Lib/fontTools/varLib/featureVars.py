@@ -85,7 +85,7 @@ def addFeatureVariations(font, conditionalSubstitutions, featureTag="rvrn"):
     )
 
     # addFeatureVariationsRaw takes a list of
-    #  ( {condition}, [ lookup indices ] )
+    #  ({condition}, [ lookup indices ])
     # so rearrange our lookups to match
     conditionsAndLookups = []
     for conditionSet, substitutions in conditionalSubstitutions:

@@ -563,12 +563,12 @@ class MarkClassDefinition(Statement):
         .. code:: python
 
             mc = MarkClass("FRENCH_ACCENTS")
-            mc.addDefinition( MarkClassDefinition(mc, Anchor(350, 800),
+            mc.addDefinition(MarkClassDefinition(mc, Anchor(350, 800),
                 GlyphClass([ GlyphName("acute"), GlyphName("grave") ])
-            ) )
-            mc.addDefinition( MarkClassDefinition(mc, Anchor(350, -200),
+            ))
+            mc.addDefinition(MarkClassDefinition(mc, Anchor(350, -200),
                 GlyphClass([ GlyphName("cedilla") ])
-            ) )
+            ))
 
             mc.asFea()
             # markClass [acute grave] <anchor 350 800> @FRENCH_ACCENTS;
