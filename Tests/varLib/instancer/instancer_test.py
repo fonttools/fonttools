@@ -2015,6 +2015,19 @@ class LimitTupleVariationAxisRangesTest:
                 0.5,
                 [TupleVariation({"wght": (1.0, 1.0, 1.0)}, [100, 100])],
             ),
+            # test case from https://github.com/fonttools/fonttools/issues/3453
+            (
+                TupleVariation(
+                    {
+                        "wght": (0.0, 1.0, 1.0),
+                        "ital": (0.0, 0.0, 1.0),  # no-op axis gets dropped
+                    },
+                    [100, 100],
+                ),
+                "ital",
+                0.0,
+                [TupleVariation({"wght": (0.0, 1.0, 1.0)}, [100, 100])],
+            ),
         ],
     )
     def test_positive_var(self, var, axisTag, newMax, expected):
