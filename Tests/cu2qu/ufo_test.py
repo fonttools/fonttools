@@ -35,8 +35,14 @@ def fonts():
 
 class FontsToQuadraticTest(object):
     def test_modified(self, fonts):
+        # previously this method returned True/False, now it returns a set of modified
+        # glyph names.
         modified = fonts_to_quadratic(fonts)
+        # the first assertion continues to work whether the return value is a bool/set
+        # so the change is backward compatible
         assert modified
+        assert len(modified) > 0
+        assert "B" in modified
 
     def test_stats(self, fonts):
         stats = {}
