@@ -8,6 +8,7 @@ __all__ = [
     "replayRecording",
     "RecordingPen",
     "DecomposingRecordingPen",
+    "DecomposingRecordingPointPen",
     "RecordingPointPen",
     "lerpRecordings",
 ]
