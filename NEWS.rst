@@ -1,3 +1,7 @@
+- [pens] Added decomposing filter pens that draw components as regular contours (#3460).
+- [instancer] Drop explicit no-op axes from TupleVariations (#3457).
+- [cu2qu/ufo] Return set of modified glyph names from fonts_to_quadratic (#3456).
+
 4.49.0 (released 2024-02-15)
 ----------------------------
 
