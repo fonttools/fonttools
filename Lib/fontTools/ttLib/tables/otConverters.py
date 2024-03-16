@@ -1861,7 +1861,7 @@ class CFF2Index(BaseConverter):
             offsets = readArray(count + 1)
             items = []
             lastOffset = offsets.pop(0)
-            reader.readData(lastOffset)  # In case first offset is not 0
+            reader.readData(lastOffset - 1)  # In case first offset is not 1
 
             for offset in offsets:
                 assert lastOffset <= offset
@@ -1882,7 +1882,7 @@ class CFF2Index(BaseConverter):
             def get_read_item():
                 reader_copy = reader.copy()
                 offset_pos = reader.pos
-                data_pos = offset_pos + (count + 1) * offSize
+                data_pos = offset_pos + (count + 1) * offSize - 1
                 readArray = getReadArray(reader_copy, offSize)
 
                 def read_item(i):
@@ -1924,7 +1924,7 @@ class CFF2Index(BaseConverter):
             ]
 
         offsets = [len(item) for item in items]
-        offsets = [0] + list(accumulate(offsets))
+        offsets = list(accumulate(offsets, initial=1))
 
         lastOffset = offsets[-1]
         offSize = (
