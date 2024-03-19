@@ -115,6 +115,33 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
                     return namerecord
         return None  # not found
 
+    def getNameIDs(self, minNameID=0, maxNameID=None):
+        nameIDs = set(
+            namerecord.nameID
+            for namerecord in self.names
+            if (
+                namerecord.nameID >= minNameID
+                and (maxNameID is None or namerecord.nameID <= maxNameID)
+            )
+        )
+        return nameIDs
+
+    def getLanguages(self):
+        languages = set(namerecord.getLanguage() for namerecord in self.names)
+        return languages
+
+    def getNames(self, nameID):
+        names = NameDict()
+        for namerecord in self.names:
+            if namerecord.nameID == nameID:
+                l = namerecord.getLanguage()
+                if l:
+                    names[l] = namerecord.toUnicode()
+
+                names.platforms.add(namerecord.platformID)
+
+        return names
+
     def getDebugName(self, nameID):
         englishName = someName = None
         for name in self.names:
@@ -589,6 +616,13 @@ class NameRecord(object):
         return tobytes(self.string, encoding=self.getEncoding(), errors=errors)
 
     toStr = toUnicode
+
+    def getLanguage(self):
+        if self.platformID == 1:
+            return _MAC_LANGUAGES.get(self.langID)
+        if self.platformID == 3:
+            return _WINDOWS_LANGUAGES.get(self.langID)
+        return None
 
     def toXML(self, writer, ttFont):
         try:
@@ -1172,6 +1206,15 @@ class NameRecordVisitor(TTVisitor):
     def __init__(self):
         self.seen = set()
 
+    def see(self, obj, attr, value):
+        if attr == "FirstParamUILabelNameID":
+            value = range(value, value + obj.NumNamedParameters)
+
+        if isinstance(value, int):
+            self.seen.add(value)
+        else:
+            self.seen.update(value)
+
 
 @NameRecordVisitor.register_attrs(
     (
@@ -1194,25 +1237,25 @@ class NameRecordVisitor(TTVisitor):
     )
 )
 def visit(visitor, obj, attr, value):
-    visitor.seen.add(value)
+    visitor.see(obj, attr, value)
 
 
 @NameRecordVisitor.register(ttLib.getTableClass("fvar"))
 def visit(visitor, obj):
     for inst in obj.instances:
         if inst.postscriptNameID != 0xFFFF:
-            visitor.seen.add(inst.postscriptNameID)
-        visitor.seen.add(inst.subfamilyNameID)
+            visitor.see(inst, "postscriptNameID", inst.postscriptNameID)
+        visitor.see(inst, "subfamilyNameID", inst.subfamilyNameID)
 
     for axis in obj.axes:
-        visitor.seen.add(axis.axisNameID)
+        visitor.see(axis, "AxisNameID", axis.axisNameID)
 
 
 @NameRecordVisitor.register(ttLib.getTableClass("CPAL"))
 def visit(visitor, obj):
     if obj.version == 1:
-        visitor.seen.update(obj.paletteLabels)
-        visitor.seen.update(obj.paletteEntryLabels)
+        visitor.see(obj, "paletteLabels", obj.paletteLabels)
+        visitor.see(obj, "paletteEntryLabels", obj.paletteEntryLabels)
 
 
 @NameRecordVisitor.register(ttLib.TTFont)
@@ -1226,3 +1269,14 @@ def visit(visitor, font, *args, **kwargs):
             visitor.visit(font[tag], *args, **kwargs)
     del visitor.font
     return False
+
+
+class NameDict(dict):
+    def __init__(self):
+        self.platforms = set()
+
+    def hasMac(self):
+        return 1 in self.platforms
+
+    def hasWindows(self):
+        return 3 in self.platforms
