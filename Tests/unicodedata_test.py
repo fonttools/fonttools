@@ -240,8 +240,8 @@ def test_ot_tags_from_script():
 def test_ot_tag_to_script():
     assert unicodedata.ot_tag_to_script("latn") == "Latn"
     assert unicodedata.ot_tag_to_script("kana") == "Kana"
-    assert unicodedata.ot_tag_to_script("DFLT") == None
-    assert unicodedata.ot_tag_to_script("aaaa") == None
+    assert unicodedata.ot_tag_to_script("DFLT") is None
+    assert unicodedata.ot_tag_to_script("aaaa") is None
     assert unicodedata.ot_tag_to_script("beng") == "Beng"
     assert unicodedata.ot_tag_to_script("bng2") == "Beng"
     assert unicodedata.ot_tag_to_script("dev2") == "Deva"

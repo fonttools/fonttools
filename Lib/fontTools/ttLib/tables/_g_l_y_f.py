@@ -6,8 +6,7 @@ from fontTools import ttLib
 from fontTools import version
 from fontTools.misc.transform import DecomposedTransform
 from fontTools.misc.textTools import tostr, safeEval, pad
-from fontTools.misc.arrayTools import updateBounds, pointInRect
-from fontTools.misc.bezierTools import calcQuadraticBounds
+from fontTools.misc.arrayTools import updateBounds
 from fontTools.misc.fixedTools import (
     fixedToFloat as fi2fl,
     floatToFixed as fl2fi,
@@ -23,7 +22,6 @@ import sys
 import struct
 import array
 import logging
-import math
 import os
 from fontTools.misc import xmlWriter
 from fontTools.misc.filenames import userNameToFileName
@@ -196,7 +194,6 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
             writer.comment(notice)
             writer.newline()
             writer.newline()
-        numGlyphs = len(glyphNames)
         if splitGlyphs:
             path, ext = os.path.splitext(writer.file.name)
             existingGlyphFiles = set()
@@ -574,12 +571,12 @@ _GlyphControls = namedtuple(
 
 
 glyphHeaderFormat = """
-		>	# big endian
-		numberOfContours:	h
-		xMin:				h
-		yMin:				h
-		xMax:				h
-		yMax:				h
+    >	# big endian
+    numberOfContours:	h
+    xMin:				h
+    yMin:				h
+    xMax:				h
+    yMax:				h
 """
 
 # flags
@@ -1106,7 +1103,6 @@ class Glyph(object):
         candidates = []
         bestTuple = None
         bestCost = 0
-        repeat = 0
         for flag, (x, y) in zip(flags, deltas):
             # Oh, the horrors of TrueType
             flag, coordBytes = flagBest(x, y, flag)
@@ -1607,7 +1603,7 @@ class Glyph(object):
             pen.endPath()
 
     def __eq__(self, other):
-        if type(self) != type(other):
+        if type(self) is not type(other):
             return NotImplemented
         return self.__dict__ == other.__dict__
 
@@ -1933,7 +1929,7 @@ class GlyphComponent(object):
         self.flags = safeEval(attrs["flags"])
 
     def __eq__(self, other):
-        if type(self) != type(other):
+        if type(self) is not type(other):
             return NotImplemented
         return self.__dict__ == other.__dict__
 
@@ -2318,7 +2314,7 @@ class GlyphVarComponent(object):
         return coords[i:]
 
     def __eq__(self, other):
-        if type(self) != type(other):
+        if type(self) is not type(other):
             return NotImplemented
         return self.__dict__ == other.__dict__
 
@@ -2489,7 +2485,7 @@ class GlyphCoordinates(object):
         >>> g2 == g3
         False
         """
-        if type(self) != type(other):
+        if type(self) is not type(other):
             return NotImplemented
         return self._a == other._a
 

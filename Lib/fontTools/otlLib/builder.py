@@ -698,7 +698,7 @@ class ChainContextPosBuilder(ChainContextualBuilder):
         suffix  = [ ["E"] ]
         glyphs  = [ ["x"], ["y"], ["z"] ]
         lookups = [ [lu1], None,  [lu2] ]
-        builder.rules.append( (prefix, glyphs, suffix, lookups) )
+        builder.rules.append((prefix, glyphs, suffix, lookups))
 
     Attributes:
         font (``fontTools.TTLib.TTFont``): A font object.
@@ -743,7 +743,7 @@ class ChainContextSubstBuilder(ChainContextualBuilder):
         suffix  = [ ["E"] ]
         glyphs  = [ ["x"], ["y"], ["z"] ]
         lookups = [ [lu1], None,  [lu2] ]
-        builder.rules.append( (prefix, glyphs, suffix, lookups) )
+        builder.rules.append((prefix, glyphs, suffix, lookups))
 
     Attributes:
         font (``fontTools.TTLib.TTFont``): A font object.
@@ -1155,7 +1155,7 @@ class ReverseChainSingleSubstBuilder(LookupBuilder):
         prefix = [ ["a", "e", "n"] ]
         suffix = []
         mapping = { "d": "d.alt" }
-        builder.substitutions.append( (prefix, suffix, mapping) )
+        builder.substitutions.append((prefix, suffix, mapping))
 
     Attributes:
         font (``fontTools.TTLib.TTFont``): A font object.
@@ -2092,7 +2092,7 @@ def buildPairPosClassesSubtable(pairs, glyphMap, valueFormat1=None, valueFormat2
         pairs[(
             [ "K", "X" ],
             [ "W", "V" ]
-        )] = ( buildValue(xAdvance=+5), buildValue() )
+        )] = (buildValue(xAdvance=+5), buildValue())
         # pairs[(... , ...)] = (..., ...)
 
         pairpos = buildPairPosClassesSubtable(pairs, font.getReverseGlyphMap())
@@ -2163,8 +2163,8 @@ def buildPairPosGlyphs(pairs, glyphMap):
     Example::
 
         pairs = {
-            ("K", "W"): ( buildValue(xAdvance=+5), buildValue() ),
-            ("K", "V"): ( buildValue(xAdvance=+5), buildValue() ),
+            ("K", "W"): (buildValue(xAdvance=+5), buildValue()),
+            ("K", "V"): (buildValue(xAdvance=+5), buildValue()),
             # ...
         }
 
@@ -2206,8 +2206,8 @@ def buildPairPosGlyphsSubtable(pairs, glyphMap, valueFormat1=None, valueFormat2=
     Example::
 
         pairs = {
-            ("K", "W"): ( buildValue(xAdvance=+5), buildValue() ),
-            ("K", "V"): ( buildValue(xAdvance=+5), buildValue() ),
+            ("K", "W"): (buildValue(xAdvance=+5), buildValue()),
+            ("K", "V"): (buildValue(xAdvance=+5), buildValue()),
             # ...
         }
 

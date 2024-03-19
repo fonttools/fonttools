@@ -482,8 +482,8 @@ def test_pathNameResolve(tmpdir):
     doc.write(testDocPath1)
     verify = DesignSpaceDocument()
     verify.read(testDocPath1)
-    assert verify.sources[0].filename == None
-    assert verify.sources[0].path == None
+    assert verify.sources[0].filename is None
+    assert verify.sources[0].path is None
 
     # Case 2: filename is empty, path points somewhere: calculate a new filename.
     doc = DesignSpaceDocument()

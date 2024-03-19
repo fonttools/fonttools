@@ -98,7 +98,7 @@ instructions = [
     (0x63,  'MUL',           0,    'Multiply',               2,  1),    #                               n2, n1    (n1 * n2)/64
     (0x65,  'NEG',           0,    'Negate',                 1,  1),    #                                    n              -n
     (0x55,  'NEQ',           0,    'NotEqual',               2,  1),    #                               e2, e1               b
-    (0x5c,  'NOT',           0,    'LogicalNot',             1,  1),    #                                    e       ( not e )
+    (0x5c,  'NOT',           0,    'LogicalNot',             1,  1),    #                                    e         (not e)
     (0x6c,  'NROUND',        2,    'NoRound',                1,  1),    #                                   n1              n2
     (0x56,  'ODD',           0,    'Odd',                    1,  1),    #                                    e               b
     (0x5b,  'OR',            0,    'LogicalOr',              2,  1),    #                               e2, e1               b
@@ -563,7 +563,7 @@ class Program(object):
     __nonzero__ = __bool__
 
     def __eq__(self, other) -> bool:
-        if type(self) != type(other):
+        if type(self) is not type(other):
             return NotImplemented
         return self.__dict__ == other.__dict__
 

@@ -23,7 +23,7 @@ class Vector(tuple):
                 "the 'keep' argument has been deprecated",
                 DeprecationWarning,
             )
-        if type(values) == Vector:
+        if isinstance(values, Vector):
             # No need to create a new object
             return values
         return super().__new__(cls, values)

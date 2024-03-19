@@ -86,11 +86,11 @@ class TupleVariation(object):
                 writer.newline()
         wrote_any_deltas = False
         for i, delta in enumerate(self.coordinates):
-            if type(delta) == tuple and len(delta) == 2:
+            if isinstance(delta, tuple) and len(delta) == 2:
                 writer.simpletag("delta", pt=i, x=delta[0], y=delta[1])
                 writer.newline()
                 wrote_any_deltas = True
-            elif type(delta) == int:
+            elif isinstance(delta, int):
                 writer.simpletag("delta", cvt=i, value=delta)
                 writer.newline()
                 wrote_any_deltas = True

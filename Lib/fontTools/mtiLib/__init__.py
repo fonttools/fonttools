@@ -1283,7 +1283,7 @@ class Tokenizer(object):
 
     @contextmanager
     def until(self, tags):
-        if type(tags) is not tuple:
+        if not isinstance(tags, tuple):
             tags = (tags,)
         self.stoppers.extend(tags)
         yield

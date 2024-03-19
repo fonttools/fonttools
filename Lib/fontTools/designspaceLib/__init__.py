@@ -1539,7 +1539,7 @@ class BaseDocWriter(object):
         for dimensionName, dimensionValue in validatedLocation.items():
             dimElement = ET.Element("dimension")
             dimElement.attrib["name"] = dimensionName
-            if type(dimensionValue) == tuple:
+            if isinstance(dimensionValue, tuple):
                 dimElement.attrib["xvalue"] = self.intOrFloat(dimensionValue[0])
                 dimElement.attrib["yvalue"] = self.intOrFloat(dimensionValue[1])
             else:
@@ -2813,8 +2813,8 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
         ::
 
             case 1.
-            descriptor.filename == None
-            descriptor.path == None
+            descriptor.filename is None
+            descriptor.path is None
 
             -- action:
             write as is, descriptors will not have a filename attr.
@@ -2823,14 +2823,14 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
 
             case 2.
             descriptor.filename == "../something"
-            descriptor.path == None
+            descriptor.path is None
 
             -- action:
             write as is. The filename attr should not be touched.
 
 
             case 3.
-            descriptor.filename == None
+            descriptor.filename is None
             descriptor.path == "~/absolute/path/there"
 
             -- action:

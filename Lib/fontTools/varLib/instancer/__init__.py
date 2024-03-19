@@ -33,7 +33,7 @@ If the input location specifies all the axes, the resulting instance is no longe
 
 | >>> instance = instancer.instantiateVariableFont(
 | ...     varfont, {"wght": 700, "wdth": 67.5}
-| ... )
+| ...)
 | >>> "fvar" not in instance
 | True
 

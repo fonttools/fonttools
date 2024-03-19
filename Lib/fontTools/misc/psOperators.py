@@ -512,7 +512,7 @@ class PSOperators(object):
             else:
                 if i < limit:
                     break
-            if type(i) == type(0.0):
+            if isinstance(i, float):
                 self.push(ps_real(i))
             else:
                 self.push(ps_integer(i))
