@@ -60,7 +60,7 @@ class VarComponentFlags(IntFlag):
     HAVE_TRANSLATE_Y = 1 << 5
     HAVE_ROTATION = 1 << 6
 
-    USE_MY_METRICS = 1 << 7
+    HAVE_CONDITION = 1 << 7
 
     HAVE_SCALE_X = 1 << 8
     HAVE_SCALE_Y = 1 << 9
@@ -158,6 +158,7 @@ class VarComponent:
     def populateDefaults(self, propagator=None):
         self.flags = 0
         self.glyphName = None
+        self.conditionSetIndex = None
         self.axisIndicesIndex = None
         self.axisValues = ()
         self.axisValuesVarIndex = NO_VARIATION_INDEX
@@ -173,6 +174,9 @@ class VarComponent:
         glyphID = _unpacker[gidSize](data[i : i + gidSize])
         i += gidSize
         self.glyphName = font.glyphOrder[glyphID]
+
+        if flags & VarComponentFlags.HAVE_CONDITION:
+            self.conditionSetIndex, i = _read_uint32var(data, i)
 
         if flags & VarComponentFlags.HAVE_AXES:
             self.axisIndicesIndex, i = _read_uint32var(data, i)
@@ -244,6 +248,10 @@ class VarComponent:
             flags &= ~VarComponentFlags.GID_IS_24BIT
             data.append(_packer[2](glyphID))
 
+        if self.conditionSetIndex is not None:
+            flags |= VarComponentFlags.HAVE_CONDITION
+            data.append(_write_uint32var(self.conditionSetIndex))
+
         numAxes = len(self.axisValues)
 
         if numAxes:
@@ -293,6 +301,8 @@ class VarComponent:
 
         write("glyphName", self.glyphName)
 
+        if self.conditionSetIndex is not None:
+            write("conditionSetIndex", self.conditionSetIndex)
         if self.axisIndicesIndex is not None:
             write("axisIndicesIndex", self.axisIndicesIndex)
         if (
@@ -332,6 +342,8 @@ class VarComponent:
 
             if name == "glyphName":
                 self.glyphName = v
+            elif name == "conditionSetIndex":
+                self.conditionSetIndex = safeEval(v)
             elif name == "axisIndicesIndex":
                 self.axisIndicesIndex = safeEval(v)
             elif name == "axisValues":

@@ -226,7 +226,7 @@ class TTGlyphSetTest(object):
             (
                 "addVarComponent",
                 (
-                    "glyph00007",
+                    "glyph00003",
                     DecomposedTransform(
                         translateX=0,
                         translateY=0,
@@ -244,7 +244,7 @@ class TTGlyphSetTest(object):
             (
                 "addVarComponent",
                 (
-                    "glyph00003",
+                    "glyph00005",
                     DecomposedTransform(
                         translateX=0,
                         translateY=0,

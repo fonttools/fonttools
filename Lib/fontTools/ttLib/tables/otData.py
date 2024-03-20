@@ -3169,6 +3169,25 @@ otData = [
         ],
     ),
     (
+        "ConditionSetList",
+        [
+            (
+                "uint32",
+                "ConditionSetCount",
+                None,
+                None,
+                "Number of condition-set tables in the ConditionSet array",
+            ),
+            (
+                "LOffset",
+                "ConditionSet",
+                "ConditionSetCount",
+                0,
+                "Array of condition-set tables.",
+            ),
+        ],
+    ),
+    (
         "ConditionSet",
         [
             (
@@ -3377,6 +3396,7 @@ otData = [
             ),
             ("LOffset", "Coverage", None, None, ""),
             ("LOffset", "MultiVarStore", None, None, "(may be NULL)"),
+            ("LOffset", "ConditionSetList", None, None, "(may be NULL)"),
             ("LOffset", "AxisIndicesList", None, None, "(may be NULL)"),
             ("LOffset", "VarCompositeGlyphs", None, None, ""),
         ],

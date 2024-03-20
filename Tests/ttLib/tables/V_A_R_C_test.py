@@ -9,7 +9,7 @@ DATA_DIR = os.path.join(CURR_DIR, "data")
 
 
 class VarCompositeTest(unittest.TestCase):
-    def test_trim_varComposite_glyph(self):
+    def test_basic(self):
         font_path = os.path.join(DATA_DIR, "..", "..", "data", "varc-ac00-ac01.ttf")
         font = TTFont(font_path)
         varc = font["VARC"]
@@ -18,10 +18,10 @@ class VarCompositeTest(unittest.TestCase):
             "uniAC00",
             "uniAC01",
             "glyph00003",
-            "glyph00004",
             "glyph00005",
-            "glyph00006",
             "glyph00007",
+            "glyph00008",
+            "glyph00009",
         ]
 
         font_path = os.path.join(DATA_DIR, "..", "..", "data", "varc-6868.ttf")
@@ -31,11 +31,11 @@ class VarCompositeTest(unittest.TestCase):
         assert varc.table.Coverage.glyphs == [
             "uni6868",
             "glyph00002",
-            "glyph00003",
-            "glyph00004",
+            "glyph00005",
+            "glyph00007",
         ]
 
-    def test_varComposite_basic(self):
+    def test_roundtrip(self):
         font_path = os.path.join(DATA_DIR, "..", "..", "data", "varc-ac00-ac01.ttf")
         font = TTFont(font_path)
         tables = [

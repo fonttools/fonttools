@@ -299,6 +299,28 @@ class _TTGlyphVARC(_TTGlyph):
         )
 
         for comp in glyph.components:
+
+            if comp.flags & VarComponentFlags.HAVE_CONDITION:
+                conditionSet = varc.ConditionSetList.ConditionSet[
+                    comp.conditionSetIndex
+                ]
+                # Evaluate condition
+                show = True
+                for condition in conditionSet.ConditionTable:
+                    if condition.Format == 1:
+                        axisIndex = condition.AxisIndex
+                        axisTag = fvarAxes[axisIndex].axisTag
+                        axisValue = self.glyphSet.location[axisTag]
+                        minValue = condition.FilterRangeMinValue
+                        maxValue = condition.FilterRangeMaxValue
+                        if not (minValue <= axisValue <= maxValue):
+                            show = False
+                            break
+                    else:
+                        show = False  # Unkonwn condition format
+                if not show:
+                    continue
+
             location = {}
             if comp.axisIndicesIndex is not None:
                 axisIndices = varc.AxisIndicesList.Item[comp.axisIndicesIndex]
