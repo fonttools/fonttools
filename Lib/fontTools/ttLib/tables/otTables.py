@@ -49,28 +49,30 @@ log = logging.getLogger(__name__)
 
 
 class VarComponentFlags(IntFlag):
-    RESET_UNSPECIFIED_AXES = 0x0001
+    RESET_UNSPECIFIED_AXES = 1 << 0
 
-    HAVE_AXES = 0x0002
+    HAVE_AXES = 1 << 1
 
-    AXIS_VALUES_HAVE_VARIATION = 0x0004
-    TRANSFORM_HAS_VARIATION = 0x0008
+    AXIS_VALUES_HAVE_VARIATION = 1 << 2
+    TRANSFORM_HAS_VARIATION = 1 << 3
 
-    HAVE_TRANSLATE_X = 0x0010
-    HAVE_TRANSLATE_Y = 0x0020
-    HAVE_ROTATION = 0x0040
+    HAVE_TRANSLATE_X = 1 << 4
+    HAVE_TRANSLATE_Y = 1 << 5
+    HAVE_ROTATION = 1 << 6
 
-    USE_MY_METRICS = 0x0080
+    USE_MY_METRICS = 1 << 7
 
-    HAVE_SCALE_X = 0x0100
-    HAVE_SCALE_Y = 0x0200
-    HAVE_TCENTER_X = 0x0400
-    HAVE_TCENTER_Y = 0x0800
+    HAVE_SCALE_X = 1 << 8
+    HAVE_SCALE_Y = 1 << 9
+    HAVE_TCENTER_X = 1 << 10
+    HAVE_TCENTER_Y = 1 << 11
 
-    GID_IS_24BIT = 0x4000
+    GID_IS_24BIT = 1 << 12
 
-    HAVE_SKEW_X = 0x1000
-    HAVE_SKEW_Y = 0x2000
+    HAVE_SKEW_X = 1 << 13
+    HAVE_SKEW_Y = 1 << 14
+
+    RESERVED_MASK = (1 << 32) - (1 << 15)
 
 
 VarTransformMappingValues = namedtuple(
@@ -221,6 +223,11 @@ class VarComponent:
 
         if not (flags & VarComponentFlags.HAVE_SCALE_Y):
             self.transform.scaleY = self.transform.scaleX
+
+        n = flags & VarComponentFlags.RESERVED_MASK
+        while n:
+            _, i = _read_uint32var(data, i)
+            n &= n - 1
 
         return data[i:]
 
