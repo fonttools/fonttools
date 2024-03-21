@@ -310,7 +310,7 @@ class _TTGlyphVARC(_TTGlyph):
                     if condition.Format == 1:
                         axisIndex = condition.AxisIndex
                         axisTag = fvarAxes[axisIndex].axisTag
-                        axisValue = self.glyphSet.location[axisTag]
+                        axisValue = self.glyphSet.location.get(axisTag, 0)
                         minValue = condition.FilterRangeMinValue
                         maxValue = condition.FilterRangeMaxValue
                         if not (minValue <= axisValue <= maxValue):
