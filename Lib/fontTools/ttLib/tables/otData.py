@@ -3169,6 +3169,25 @@ otData = [
         ],
     ),
     (
+        "ConditionSetList",
+        [
+            (
+                "uint32",
+                "ConditionSetCount",
+                None,
+                None,
+                "Number of condition-set tables in the ConditionSet array",
+            ),
+            (
+                "LOffset",
+                "ConditionSet",
+                "ConditionSetCount",
+                0,
+                "Array of condition-set tables.",
+            ),
+        ],
+    ),
+    (
         "ConditionSet",
         [
             (
@@ -3320,6 +3339,78 @@ otData = [
             ("uint8", "EntryFormat", None, None, ""),  # Automatically computed
             ("uint32", "MappingCount", None, None, ""),  # Automatically computed
             ("VarIdxMapValue", "mapping", "", 0, "Array of compressed data"),
+        ],
+    ),
+    # MultiVariationStore
+    (
+        "SparseVarRegionAxis",
+        [
+            ("uint16", "AxisIndex", None, None, ""),
+            ("F2Dot14", "StartCoord", None, None, ""),
+            ("F2Dot14", "PeakCoord", None, None, ""),
+            ("F2Dot14", "EndCoord", None, None, ""),
+        ],
+    ),
+    (
+        "SparseVarRegion",
+        [
+            ("uint16", "SparseRegionCount", None, None, ""),
+            ("struct", "SparseVarRegionAxis", "SparseRegionCount", 0, ""),
+        ],
+    ),
+    (
+        "SparseVarRegionList",
+        [
+            ("uint16", "RegionCount", None, None, ""),
+            ("LOffsetTo(SparseVarRegion)", "Region", "RegionCount", 0, ""),
+        ],
+    ),
+    (
+        "MultiVarData",
+        [
+            ("uint8", "Format", None, None, "Set to 1."),
+            ("uint16", "VarRegionCount", None, None, ""),
+            ("uint16", "VarRegionIndex", "VarRegionCount", 0, ""),
+            ("TupleList", "Item", "", 0, ""),
+        ],
+    ),
+    (
+        "MultiVarStore",
+        [
+            ("uint16", "Format", None, None, "Set to 1."),
+            ("LOffset", "SparseVarRegionList", None, None, ""),
+            ("uint16", "MultiVarDataCount", None, None, ""),
+            ("LOffset", "MultiVarData", "MultiVarDataCount", 0, ""),
+        ],
+    ),
+    # VariableComposites
+    (
+        "VARC",
+        [
+            (
+                "Version",
+                "Version",
+                None,
+                None,
+                "Version of the HVAR table-initially = 0x00010000",
+            ),
+            ("LOffset", "Coverage", None, None, ""),
+            ("LOffset", "MultiVarStore", None, None, "(may be NULL)"),
+            ("LOffset", "ConditionSetList", None, None, "(may be NULL)"),
+            ("LOffset", "AxisIndicesList", None, None, "(may be NULL)"),
+            ("LOffset", "VarCompositeGlyphs", None, None, ""),
+        ],
+    ),
+    (
+        "AxisIndicesList",
+        [
+            ("TupleList", "Item", "", 0, ""),
+        ],
+    ),
+    (
+        "VarCompositeGlyphs",
+        [
+            ("VarCompositeGlyphList", "VarCompositeGlyph", "", None, ""),
         ],
     ),
     # Glyph advance variations

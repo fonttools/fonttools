@@ -719,65 +719,6 @@ class GlyphComponentTest:
         assert (comp.firstPt, comp.secondPt) == (1, 2)
         assert not hasattr(comp, "transform")
 
-    def test_trim_varComposite_glyph(self):
-        font_path = os.path.join(DATA_DIR, "..", "..", "data", "varc-ac00-ac01.ttf")
-        font = TTFont(font_path)
-        glyf = font["glyf"]
-
-        glyf.glyphs["uniAC00"].trim()
-        glyf.glyphs["uniAC01"].trim()
-
-        font_path = os.path.join(DATA_DIR, "..", "..", "data", "varc-6868.ttf")
-        font = TTFont(font_path)
-        glyf = font["glyf"]
-
-        glyf.glyphs["uni6868"].trim()
-
-    def test_varComposite_basic(self):
-        font_path = os.path.join(DATA_DIR, "..", "..", "data", "varc-ac00-ac01.ttf")
-        font = TTFont(font_path)
-        tables = [
-            table_tag
-            for table_tag in font.keys()
-            if table_tag not in {"head", "maxp", "hhea"}
-        ]
-        xml = StringIO()
-        font.saveXML(xml)
-        xml1 = StringIO()
-        font.saveXML(xml1, tables=tables)
-        xml.seek(0)
-        font = TTFont()
-        font.importXML(xml)
-        ttf = BytesIO()
-        font.save(ttf)
-        ttf.seek(0)
-        font = TTFont(ttf)
-        xml2 = StringIO()
-        font.saveXML(xml2, tables=tables)
-        assert xml1.getvalue() == xml2.getvalue()
-
-        font_path = os.path.join(DATA_DIR, "..", "..", "data", "varc-6868.ttf")
-        font = TTFont(font_path)
-        tables = [
-            table_tag
-            for table_tag in font.keys()
-            if table_tag not in {"head", "maxp", "hhea", "name", "fvar"}
-        ]
-        xml = StringIO()
-        font.saveXML(xml)
-        xml1 = StringIO()
-        font.saveXML(xml1, tables=tables)
-        xml.seek(0)
-        font = TTFont()
-        font.importXML(xml)
-        ttf = BytesIO()
-        font.save(ttf)
-        ttf.seek(0)
-        font = TTFont(ttf)
-        xml2 = StringIO()
-        font.saveXML(xml2, tables=tables)
-        assert xml1.getvalue() == xml2.getvalue()
-
 
 class GlyphCubicTest:
     def test_roundtrip(self):
