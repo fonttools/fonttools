@@ -263,6 +263,21 @@ class TTGlyphSetTest(object):
 
         assert actual == expected, (actual, expected)
 
+    def test_glyphset_varComposite_conditional(self):
+        font = TTFont(self.getpath("varc-ac01-conditional.ttf"))
+
+        glyphset = font.getGlyphSet()
+        pen = RecordingPen()
+        glyph = glyphset["uniAC01"]
+        glyph.draw(pen)
+        assert len(pen.value) == 2
+
+        glyphset = font.getGlyphSet(location={"wght": 800})
+        pen = RecordingPen()
+        glyph = glyphset["uniAC01"]
+        glyph.draw(pen)
+        assert len(pen.value) == 3
+
     def test_glyphset_varComposite1(self):
         font = TTFont(self.getpath("varc-ac00-ac01.ttf"))
         glyphset = font.getGlyphSet(location={"wght": 600})
