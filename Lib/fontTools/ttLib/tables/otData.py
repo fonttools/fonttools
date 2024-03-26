@@ -6157,6 +6157,71 @@ otData = [
             ),
         ],
     ),
+    # PaintTemplateInstance
+    (
+        "PaintFormat33",
+        [
+            ("uint8", "PaintFormat", None, None, "Format identifier-format = 34"),
+            (
+                "LOffset24To(Paint)",
+                "TemplatePaint",
+                None,
+                None,
+                "Offset (from beginning of PaintTemplateInstance table) to template Paint subtable.",
+            ),
+            ("uint8", "NumArguments", None, None, ""),
+            (
+                "LOffset24To(Paint)",
+                "Arguments",
+                "NumArguments",
+                0,
+                "Offset (from beginning of PaintTemplateInstance table) to Paint arguments.",
+            ),
+        ],
+    ),
+    # PaintTemplateArgument
+    (
+        "PaintFormat34",
+        [
+            ("uint8", "PaintFormat", None, None, "Format identifier-format = 33"),
+            ("uint8", "ArgumentIndex", None, None, ""),
+        ],
+    ),
+    # PaintGlyphSelf
+    (
+        "PaintFormat35",
+        [
+            ("uint8", "PaintFormat", None, None, "Format identifier-format = 35"),
+            (
+                "Offset24",
+                "Paint",
+                None,
+                None,
+                "Offset (from beginning of PaintGlyphSelf table) to Paint subtable.",
+            ),
+        ],
+    ),
+    # PaintGlyphDelta
+    (
+        "PaintFormat36",
+        [
+            ("uint8", "PaintFormat", None, None, "Format identifier-format = 36"),
+            (
+                "Offset24",
+                "Paint",
+                None,
+                None,
+                "Offset (from beginning of PaintGlyphDelta table) to Paint subtable.",
+            ),
+            (
+                "uint16",
+                "DeltaGlyphID",
+                None,
+                None,
+                "Add to original GlyphID modulo 65536 to get substitute GlyphID",
+            ),
+        ],
+    ),
     #
     # avar
     #

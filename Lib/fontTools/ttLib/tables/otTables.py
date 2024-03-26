@@ -1588,6 +1588,10 @@ class PaintFormat(IntEnum):
     PaintSkewAroundCenter = 30
     PaintVarSkewAroundCenter = 31
     PaintComposite = 32
+    PaintTemplateInstance = 33
+    PaintTemplateArgument = 34
+    PaintGlyphSelf = 35
+    PaintGlyphDelta = 36
 
     def is_variable(self):
         return self.name.startswith("PaintVar")
