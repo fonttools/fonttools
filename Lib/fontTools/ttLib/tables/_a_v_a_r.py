@@ -169,10 +169,7 @@ class table__a_v_a_r(BaseTTXConverter):
         for varIdx, v in enumerate(coords):
 
             if varIdxMap is not None:
-                if varIdx < len(varIdxMap.mapping):
-                    varIdx = varIdxMap.mapping[varIdx]
-                else:
-                    varIdx = NO_VARIATION_INDEX
+                varIdx = varIdxMap[varIdx]
 
             if varStore is not None:
                 delta = instancer[varIdx]
