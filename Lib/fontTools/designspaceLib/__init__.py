@@ -12,7 +12,7 @@ from typing import Any, Dict, List, MutableMapping, Optional, Tuple, Union, cast
 
 from fontTools.misc import etree as ET
 from fontTools.misc import plistlib
-from fontTools.misc.loggingTools import LogMixin
+from fontTools.misc.loggingTools import LogMixin, deprecateFunction
 from fontTools.misc.textTools import tobytes, tostr
 
 """
