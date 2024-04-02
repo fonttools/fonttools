@@ -6,6 +6,7 @@ from fontTools.misc.fixedTools import (
     strToFixedToFloat as str2fl,
 )
 from fontTools.misc.textTools import bytesjoin, safeEval
+from fontTools.varLib.models import piecewiseLinearMap
 from fontTools.ttLib import TTLibError
 from . import DefaultTable
 from . import otTables
@@ -136,3 +137,13 @@ class table__a_v_a_r(BaseTTXConverter):
                         segment[fromValue] = toValue
         else:
             super().fromXML(name, attrs, content, ttFont)
+
+    def renormalizeLocation(self, location):
+        avarSegments = self.segments
+        mappedLocation = {}
+        for axisTag, value in location.items():
+            avarMapping = avarSegments.get(axisTag, None)
+            if avarMapping is not None:
+                value = piecewiseLinearMap(value, avarMapping)
+            mappedLocation[axisTag] = value
+        return mappedLocation
