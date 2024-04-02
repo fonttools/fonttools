@@ -789,7 +789,7 @@ class TTFont(object):
         axes = self["fvar"].getAxes()
         location = normalizeLocation(location, axes)
         if "avar" in self:
-            location = self["avar"].renormalizeLocation(location)
+            location = self["avar"].renormalizeLocation(location, self)
         return location
 
     def getBestCmap(

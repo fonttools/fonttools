@@ -6,7 +6,9 @@ from fontTools.misc.fixedTools import (
     strToFixedToFloat as str2fl,
 )
 from fontTools.misc.textTools import bytesjoin, safeEval
+from fontTools.misc.roundTools import otRound
 from fontTools.varLib.models import piecewiseLinearMap
+from fontTools.varLib.varStore import VarStoreInstancer, NO_VARIATION_INDEX
 from fontTools.ttLib import TTLibError
 from . import DefaultTable
 from . import otTables
@@ -138,7 +140,10 @@ class table__a_v_a_r(BaseTTXConverter):
         else:
             super().fromXML(name, attrs, content, ttFont)
 
-    def renormalizeLocation(self, location):
+    def renormalizeLocation(self, location, font):
+
+        assert self.majorVersion in (1, 2), "Unknown avar table version"
+
         avarSegments = self.segments
         mappedLocation = {}
         for axisTag, value in location.items():
@@ -146,4 +151,38 @@ class table__a_v_a_r(BaseTTXConverter):
             if avarMapping is not None:
                 value = piecewiseLinearMap(value, avarMapping)
             mappedLocation[axisTag] = value
+
+        if self.majorVersion < 2:
+            return mappedLocation
+
+        # Version 2
+
+        varIdxMap = self.table.VarIdxMap
+        varStore = self.table.VarStore
+        axes = font["fvar"].axes
+        if varStore is not None:
+            instancer = VarStoreInstancer(varStore, axes, mappedLocation)
+
+        coords = list(fl2fi(mappedLocation.get(axis.axisTag, 0), 14) for axis in axes)
+
+        out = []
+        for varIdx, v in enumerate(coords):
+
+            if varIdxMap is not None:
+                if varIdx < len(varIdxMap.mapping):
+                    varIdx = varIdxMap.mapping[varIdx]
+                else:
+                    varIdx = NO_VARIATION_INDEX
+
+            if varStore is not None:
+                delta = instancer[varIdx]
+                v += otRound(delta)
+                v = min(max(v, -(1 << 14)), +(1 << 14))
+
+            out.append(v)
+
+        mappedLocation = {
+            axis.axisTag: fi2fl(v, 14) for v, axis in zip(out, axes) if v != 0
+        }
+
         return mappedLocation
