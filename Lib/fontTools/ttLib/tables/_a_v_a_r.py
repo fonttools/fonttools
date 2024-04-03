@@ -77,9 +77,10 @@ class table__a_v_a_r(BaseTTXConverter):
 
     def decompile(self, data, ttFont):
         super().decompile(data, ttFont)
-        assert self.table.Version >= 0x00010000
         self.majorVersion = self.table.Version >> 16
         self.minorVersion = self.table.Version & 0xFFFF
+        if self.majorVersion not in (1, 2):
+            raise NotImplementedError("Unknown avar table version")
         axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
         for axis in axisTags:
             self.segments[axis] = {}
@@ -142,7 +143,8 @@ class table__a_v_a_r(BaseTTXConverter):
 
     def renormalizeLocation(self, location, font):
 
-        assert self.majorVersion in (1, 2), "Unknown avar table version"
+        if self.majorVersion not in (1, 2):
+            raise NotImplementedError("Unknown avar table version")
 
         avarSegments = self.segments
         mappedLocation = {}
