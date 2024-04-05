@@ -1,3 +1,6 @@
+4.51.0 (released 2024-04-05)
+----------------------------
+
 - [ttLib] Optimization on loading aux fields (#3464).
 - [ttFont] Add reorderGlyphs (#3468).
 
