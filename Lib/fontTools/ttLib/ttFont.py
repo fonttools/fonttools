@@ -781,26 +781,15 @@ class TTFont(object):
 
         Raises ``TTLibError`` if the font is not a variable font.
         """
-        from fontTools.varLib.models import normalizeLocation, piecewiseLinearMap
+        from fontTools.varLib.models import normalizeLocation
 
         if "fvar" not in self:
             raise TTLibError("Not a variable font")
 
-        axes = {
-            a.axisTag: (a.minValue, a.defaultValue, a.maxValue)
-            for a in self["fvar"].axes
-        }
+        axes = self["fvar"].getAxes()
         location = normalizeLocation(location, axes)
         if "avar" in self:
-            avar = self["avar"]
-            avarSegments = avar.segments
-            mappedLocation = {}
-            for axisTag, value in location.items():
-                avarMapping = avarSegments.get(axisTag, None)
-                if avarMapping is not None:
-                    value = piecewiseLinearMap(value, avarMapping)
-                mappedLocation[axisTag] = value
-            location = mappedLocation
+            location = self["avar"].renormalizeLocation(location, self)
         return location
 
     def getBestCmap(

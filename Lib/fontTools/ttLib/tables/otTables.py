@@ -703,6 +703,9 @@ class DeltaSetIndexMap(getFormatSwitchingBaseTableClass("uint8")):
         assert inner <= 0xFFFF
         mapping.insert(index, (outer << 16) | inner)
 
+    def __getitem__(self, i):
+        return self.mapping[i] if i < len(self.mapping) else NO_VARIATION_INDEX
+
 
 class VarIdxMap(BaseTable):
     def populateDefaults(self, propagator=None):
@@ -754,6 +757,9 @@ class VarIdxMap(BaseTable):
         inner = safeEval(attrs["inner"])
         assert inner <= 0xFFFF
         mapping[glyph] = (outer << 16) | inner
+
+    def __getitem__(self, glyphName):
+        return self.mapping.get(glyphName, NO_VARIATION_INDEX)
 
 
 class VarRegionList(BaseTable):
