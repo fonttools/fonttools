@@ -1291,7 +1291,10 @@ def instantiateVariableFont(
 
     if updateFontNames:
         log.info("Updating name table")
-        names.updateNameTable(varfont, axisLimits)
+        try:
+            names.updateNameTable(varfont, axisLimits)
+        except ValueError as e:
+            log.info("Failed to update name table: %s", e)
 
     if "gvar" in varfont:
         instantiateGvar(varfont, normalizedLimits, optimize=optimize)
