@@ -47,7 +47,7 @@ class T2CharStringPen(BasePen):
     def _endPath(self):
         pass
 
-    def getCharString(self, private=None, globalSubrs=None, optimize=True):
+    def getProgram(self, optimize=True):
         commands = self._commands
         if optimize:
             maxstack = 48 if not self._CFF2 else 513
@@ -62,6 +62,10 @@ class T2CharStringPen(BasePen):
             program.insert(0, otRound(self._width))
         if not self._CFF2:
             program.append("endchar")
+        return program
+
+    def getCharString(self, private=None, globalSubrs=None, optimize=True):
+        program = self.getProgram(optimize=optimize)
         charString = T2CharString(
             program=program, private=private, globalSubrs=globalSubrs
         )
