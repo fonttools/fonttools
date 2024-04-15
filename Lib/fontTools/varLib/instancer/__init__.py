@@ -1019,7 +1019,11 @@ def _isValidAvarSegmentMap(axisTag, segmentMap):
 def instantiateAvar(varfont, axisLimits):
     # 'axisLimits' dict must contain user-space (non-normalized) coordinates.
 
-    segments = varfont["avar"].segments
+    avar = varfont["avar"]
+    if getattr(avar, "majorVersion", 1) >= 2 and avar.table.VarStore:
+        raise NotImplementedError("avar table with VarStore is not supported")
+
+    segments = avar.segments
 
     # drop table if we instantiate all the axes
     pinnedAxes = set(axisLimits.pinnedLocation())
@@ -1080,7 +1084,7 @@ def instantiateAvar(varfont, axisLimits):
             newSegments[axisTag] = newMapping
         else:
             newSegments[axisTag] = mapping
-    varfont["avar"].segments = newSegments
+    avar.segments = newSegments
 
 
 def isInstanceWithinAxisRanges(location, axisRanges):
