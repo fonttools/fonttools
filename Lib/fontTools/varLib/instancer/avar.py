@@ -1,6 +1,7 @@
 from fontTools.varLib.varStore import VarStoreInstancer, NO_VARIATION_INDEX
 from fontTools.ttLib.tables.otTables import VarStore
 from fontTools.ttLib.tables._f_v_a_r import Axis
+from fontTools.varLib import instancer
 
 
 def VarStore_getExtremes(self, varIdx, nullAxes=set(), cache=None):
@@ -48,8 +49,8 @@ def VarStore_getExtremes(self, varIdx, nullAxes=set(), cache=None):
             location[str(i)] = peak
         if skip:
             continue
-        instancer = VarStoreInstancer(varStore, fvar_axes, location)
-        v = instancer[varIdx]
+        varStoreInstancer = VarStoreInstancer(varStore, fvar_axes, location)
+        v = varStoreInstancer[varIdx]
 
         assert thisAxes, "Empty region in VarStore!"
         minOther, maxOther = self.getExtremes(varIdx, nullAxes | thisAxes, cache)
@@ -70,15 +71,24 @@ if __name__ == "__main__":
     from fontTools.ttLib import TTFont
 
     font = TTFont(sys.argv[1])
+
+    limits = sys.argv[2:]
+    limits = instancer.parseLimits(limits)
+    limits = instancer.AxisLimits(limits).limitAxesAndPopulateDefaults(font)
+    limits = limits.normalize(font, usingAvar=True)
+    print(limits)
+
     fvar = font["fvar"]
     avar = font["avar"]
 
     varIdxMap = avar.table.VarIdxMap
     varStore = avar.table.VarStore
 
+    defaultDeltas = instancer.instantiateItemVariationStore(varStore, fvar.axes, limits)
+
     for axisIdx, axis in enumerate(fvar.axes):
         varIdx = axisIdx
         if varIdxMap is not None:
             varIdx = varIdxMap[varIdx]
         minV, maxV = varStore.getExtremes(varIdx)
-        print(axis.axisTag, (minV / 16384, maxV / 16384))
+        print(axis.axisTag, defaultDeltas[varIdx] / 16384, (minV / 16384, maxV / 16384))
