@@ -17,14 +17,16 @@ def VarStore_getExtremes(self, varIdx, nullAxes=set(), cache=None):
         return cache[key]
 
     regionList = self.VarRegionList
-    fvar_axes = []
-    for i in range(regionList.RegionAxisCount):
-        axis = Axis()
-        axis.axisTag = str(i)
-        axis.minValue = -1.0
-        axis.defaultValue = 0.0
-        axis.maxValue = 1.0
-        fvar_axes.append(axis)
+
+    if not hasattr(self, "_fvar_axes"):
+        self._fvar_axes = []
+        for i in range(regionList.RegionAxisCount):
+            axis = Axis()
+            axis.axisTag = str(i)
+            axis.minValue = -1.0
+            axis.defaultValue = 0.0
+            axis.maxValue = 1.0
+            self._fvar_axes.append(axis)
 
     major = varIdx >> 16
     minor = varIdx & 0xFFFF
@@ -49,7 +51,7 @@ def VarStore_getExtremes(self, varIdx, nullAxes=set(), cache=None):
             location[str(i)] = peak
         if skip:
             continue
-        varStoreInstancer = VarStoreInstancer(varStore, fvar_axes, location)
+        varStoreInstancer = VarStoreInstancer(varStore, self._fvar_axes, location)
         v = varStoreInstancer[varIdx]
 
         assert thisAxes, "Empty region in VarStore!"
