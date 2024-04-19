@@ -12,7 +12,7 @@ def VarStore_getExtremes(self, varIdx, nullAxes=set(), cache=None):
     if cache is None:
         cache = {}
 
-    key = (varIdx, frozenset(nullAxes))
+    key = frozenset(nullAxes)
     if key in cache:
         return cache[key]
 
