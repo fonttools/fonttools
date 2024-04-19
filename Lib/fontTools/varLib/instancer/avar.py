@@ -4,10 +4,15 @@ from fontTools.ttLib.tables._f_v_a_r import Axis
 from fontTools.varLib import instancer
 
 
-def VarStore_getExtremes(self, varIdx, nullAxes=set(), cache=None):
+def VarStore_getExtremes(
+    self, varIdx, identityAxisIndex=None, nullAxes=set(), cache=None
+):
 
     if varIdx == NO_VARIATION_INDEX:
-        return 0, 0
+        if identityAxisIndex is None:
+            return 0, 0
+        else:
+            return -16384, 16384
 
     if cache is None:
         cache = {}
@@ -51,14 +56,30 @@ def VarStore_getExtremes(self, varIdx, nullAxes=set(), cache=None):
             location[str(i)] = peak
         if skip:
             continue
-        varStoreInstancer = VarStoreInstancer(varStore, self._fvar_axes, location)
-        v = varStoreInstancer[varIdx]
 
-        assert thisAxes, "Empty region in VarStore!"
-        minOther, maxOther = self.getExtremes(varIdx, nullAxes | thisAxes, cache)
+        locs = [None]
+        if identityAxisIndex in thisAxes:
+            locs = []
+            locs.append(-1)
+            locs.append(region.VarRegionAxis[identityAxisIndex].StartCoord)
+            locs.append(region.VarRegionAxis[identityAxisIndex].PeakCoord)
+            locs.append(region.VarRegionAxis[identityAxisIndex].EndCoord)
+            locs.append(+1)
 
-        minV = min(minV, v + minOther)
-        maxV = max(maxV, v + maxOther)
+        for loc in locs:
+            if loc is not None:
+                location[str(identityAxisIndex)] = loc
+
+            varStoreInstancer = VarStoreInstancer(varStore, self._fvar_axes, location)
+            v = varStoreInstancer[varIdx] + (0 if loc is None else round(loc * 16384))
+
+            assert thisAxes, "Empty region in VarStore!"
+            minOther, maxOther = self.getExtremes(
+                varIdx, identityAxisIndex, nullAxes | thisAxes, cache
+            )
+
+            minV = min(minV, v + minOther)
+            maxV = max(maxV, v + maxOther)
 
     cache[key] = (minV, maxV)
 
@@ -92,5 +113,7 @@ if __name__ == "__main__":
         varIdx = axisIdx
         if varIdxMap is not None:
             varIdx = varIdxMap[varIdx]
-        minV, maxV = varStore.getExtremes(varIdx)
+        # Only for public axes
+        identityAxisIndex = None if axis.flags & 0x1 else axisIdx
+        minV, maxV = varStore.getExtremes(varIdx, identityAxisIndex)
         print(axis.axisTag, defaultDeltas[varIdx] / 16384, (minV / 16384, maxV / 16384))
