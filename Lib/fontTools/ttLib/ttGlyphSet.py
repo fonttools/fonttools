@@ -276,6 +276,33 @@ class _TTGlyphCFF(_TTGlyph):
         self.glyphSet.charStrings[self.name].draw(pen, self.glyphSet.blender)
 
 
+def _evaluateCondition(condition, fvarAxes, location):
+    if condition.Format == 1:
+        axisIndex = condition.AxisIndex
+        axisTag = fvarAxes[axisIndex].axisTag
+        axisValue = location.get(axisTag, 0)
+        minValue = condition.FilterRangeMinValue
+        maxValue = condition.FilterRangeMaxValue
+        return minValue <= axisValue <= maxValue
+    elif condition.Format == 2:
+        # ConditionAnd
+        for subcondition in condition.ConditionTable:
+            if not _evaluateCondition(subcondition, fvarAxes, location):
+                return False
+        return True
+    elif condition.Format == 3:
+        # ConditionOr
+        for subcondition in condition.ConditionTable:
+            if _evaluateCondition(subcondition, fvarAxes, location):
+                return True
+        return False
+    elif condition.Format == 4:
+        # ConditionNegate
+        return not _evaluateCondition(condition.conditionTable, fvarAxes, location)
+    else:
+        return False  # Unkonwn condition format
+
+
 class _TTGlyphVARC(_TTGlyph):
     def _draw(self, pen, isPointPen):
         """Draw the glyph onto ``pen``. See fontTools.pens.basePen for details
@@ -301,24 +328,8 @@ class _TTGlyphVARC(_TTGlyph):
         for comp in glyph.components:
 
             if comp.flags & VarComponentFlags.HAVE_CONDITION:
-                conditionSet = varc.ConditionSetList.ConditionSet[
-                    comp.conditionSetIndex
-                ]
-                # Evaluate condition
-                show = True
-                for condition in conditionSet.ConditionTable:
-                    if condition.Format == 1:
-                        axisIndex = condition.AxisIndex
-                        axisTag = fvarAxes[axisIndex].axisTag
-                        axisValue = self.glyphSet.location.get(axisTag, 0)
-                        minValue = condition.FilterRangeMinValue
-                        maxValue = condition.FilterRangeMaxValue
-                        if not (minValue <= axisValue <= maxValue):
-                            show = False
-                            break
-                    else:
-                        show = False  # Unkonwn condition format
-                if not show:
+                condition = varc.ConditionList.ConditionTable[comp.conditionIndex]
+                if not _evaluateCondition(condition, fvarAxes, self.glyphSet.location):
                     continue
 
             location = {}

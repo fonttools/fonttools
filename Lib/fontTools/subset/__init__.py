@@ -2693,21 +2693,21 @@ def prune_post_subset(self, font, options):
                 if comp.axisIndicesIndex is not None:
                     comp.axisIndicesIndex = mapping[comp.axisIndicesIndex]
 
-    conditionSetList = table.ConditionSetList
-    if conditionSetList is not None:
-        conditionSets = conditionSetList.ConditionSet
+    conditionList = table.ConditionList
+    if conditionList is not None:
+        conditionTables = conditionList.ConditionTable
         usedIndices = set()
         for glyph in table.VarCompositeGlyphs.VarCompositeGlyph:
             for comp in glyph.components:
-                if comp.conditionSetIndex is not None:
-                    usedIndices.add(comp.conditionSetIndex)
+                if comp.conditionIndex is not None:
+                    usedIndices.add(comp.conditionIndex)
         usedIndices = sorted(usedIndices)
-        conditionSetList.ConditionSet = _list_subset(conditionSets, usedIndices)
+        conditionList.ConditionTable = _list_subset(conditionTables, usedIndices)
         mapping = {old: new for new, old in enumerate(usedIndices)}
         for glyph in table.VarCompositeGlyphs.VarCompositeGlyph:
             for comp in glyph.components:
-                if comp.conditionSetIndex is not None:
-                    comp.conditionSetIndex = mapping[comp.conditionSetIndex]
+                if comp.conditionIndex is not None:
+                    comp.conditionIndex = mapping[comp.conditionIndex]
 
     return True
 
