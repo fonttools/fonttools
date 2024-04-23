@@ -288,7 +288,7 @@ def _evaluateCondition(condition, fvarAxes, location, instancer):
     elif condition.Format == 2:
         # ConditionValue
         value = condition.DefaultValue
-        value += instancer[condition.VarIdx]
+        value += instancer[condition.VarIdx][0]
         return value > 0
     elif condition.Format == 3:
         # ConditionAnd
@@ -333,19 +333,13 @@ class _TTGlyphVARC(_TTGlyph):
         instancer = MultiVarStoreInstancer(
             varc.MultiVarStore, fvarAxes, self.glyphSet.location
         )
-        gdef = glyphSet.font.get("GDEF") if "GDEF" in glyphSet.font else None
-        gdefInstancer = VarStoreInstancer(
-            getattr(gdef.table, "VarStore") if gdef is not None else None,
-            fvarAxes,
-            self.glyphSet.location,
-        )
 
         for comp in glyph.components:
 
             if comp.flags & VarComponentFlags.HAVE_CONDITION:
                 condition = varc.ConditionList.ConditionTable[comp.conditionIndex]
                 if not _evaluateCondition(
-                    condition, fvarAxes, self.glyphSet.location, gdefInstancer
+                    condition, fvarAxes, self.glyphSet.location, instancer
                 ):
                     continue
 
