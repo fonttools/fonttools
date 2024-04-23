@@ -3238,18 +3238,18 @@ otData = [
         [
             ("uint16", "Format", None, None, "Format, = 2"),
             (
-                "uint8",
-                "ConditionCount",
+                "int16",
+                "DefaultValue",
                 None,
                 None,
-                "Index for the variation axis within the fvar table, base 0.",
+                "Value at default instance.",
             ),
             (
-                "Offset24",
-                "ConditionTable",
-                "ConditionCount",
-                0,
-                "Array of condition tables for this conjunction (AND) expression.",
+                "uint32",
+                "VarIdx",
+                None,
+                None,
+                "Variation index to vary the value based on current designspace location.",
             ),
         ],
     ),
@@ -3269,7 +3269,7 @@ otData = [
                 "ConditionTable",
                 "ConditionCount",
                 0,
-                "Array of condition tables for this disjunction (OR) expression.",
+                "Array of condition tables for this conjunction (AND) expression.",
             ),
         ],
     ),
@@ -3277,6 +3277,26 @@ otData = [
         "ConditionTableFormat4",
         [
             ("uint16", "Format", None, None, "Format, = 4"),
+            (
+                "uint8",
+                "ConditionCount",
+                None,
+                None,
+                "Index for the variation axis within the fvar table, base 0.",
+            ),
+            (
+                "Offset24",
+                "ConditionTable",
+                "ConditionCount",
+                0,
+                "Array of condition tables for this disjunction (OR) expression.",
+            ),
+        ],
+    ),
+    (
+        "ConditionTableFormat5",
+        [
+            ("uint16", "Format", None, None, "Format, = 5"),
             (
                 "Offset24",
                 "ConditionTable",

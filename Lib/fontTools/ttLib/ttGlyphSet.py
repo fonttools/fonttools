@@ -276,8 +276,9 @@ class _TTGlyphCFF(_TTGlyph):
         self.glyphSet.charStrings[self.name].draw(pen, self.glyphSet.blender)
 
 
-def _evaluateCondition(condition, fvarAxes, location):
+def _evaluateCondition(condition, fvarAxes, location, instancer):
     if condition.Format == 1:
+        # ConditionAxisRange
         axisIndex = condition.AxisIndex
         axisTag = fvarAxes[axisIndex].axisTag
         axisValue = location.get(axisTag, 0)
@@ -285,20 +286,27 @@ def _evaluateCondition(condition, fvarAxes, location):
         maxValue = condition.FilterRangeMaxValue
         return minValue <= axisValue <= maxValue
     elif condition.Format == 2:
+        # ConditionValue
+        value = condition.DefaultValue
+        value += instancer[condition.VarIdx]
+        return value > 0
+    elif condition.Format == 3:
         # ConditionAnd
         for subcondition in condition.ConditionTable:
-            if not _evaluateCondition(subcondition, fvarAxes, location):
+            if not _evaluateCondition(subcondition, fvarAxes, location, instancer):
                 return False
         return True
-    elif condition.Format == 3:
+    elif condition.Format == 4:
         # ConditionOr
         for subcondition in condition.ConditionTable:
-            if _evaluateCondition(subcondition, fvarAxes, location):
+            if _evaluateCondition(subcondition, fvarAxes, location, instancer):
                 return True
         return False
-    elif condition.Format == 4:
+    elif condition.Format == 5:
         # ConditionNegate
-        return not _evaluateCondition(condition.conditionTable, fvarAxes, location)
+        return not _evaluateCondition(
+            condition.conditionTable, fvarAxes, location, instancer
+        )
     else:
         return False  # Unkonwn condition format
 
@@ -319,17 +327,26 @@ class _TTGlyphVARC(_TTGlyph):
         glyph = varc.VarCompositeGlyphs.VarCompositeGlyph[idx]
 
         from fontTools.varLib.multiVarStore import MultiVarStoreInstancer
+        from fontTools.varLib.varStore import VarStoreInstancer
 
         fvarAxes = glyphSet.font["fvar"].axes
         instancer = MultiVarStoreInstancer(
             varc.MultiVarStore, fvarAxes, self.glyphSet.location
+        )
+        gdef = glyphSet.font.get("GDEF") if "GDEF" in glyphSet.font else None
+        gdefInstancer = VarStoreInstancer(
+            getattr(gdef.table, "VarStore") if gdef is not None else None,
+            fvarAxes,
+            self.glyphSet.location,
         )
 
         for comp in glyph.components:
 
             if comp.flags & VarComponentFlags.HAVE_CONDITION:
                 condition = varc.ConditionList.ConditionTable[comp.conditionIndex]
-                if not _evaluateCondition(condition, fvarAxes, self.glyphSet.location):
+                if not _evaluateCondition(
+                    condition, fvarAxes, self.glyphSet.location, gdefInstancer
+                ):
                     continue
 
             location = {}
