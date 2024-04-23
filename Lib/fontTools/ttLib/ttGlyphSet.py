@@ -355,11 +355,17 @@ class _TTGlyphVARC(_TTGlyph):
             reset = comp.flags & VarComponentFlags.RESET_UNSPECIFIED_AXES
             with self.glyphSet.glyphSet.pushLocation(location, reset):
                 with self.glyphSet.pushLocation(location, reset):
-                    try:
-                        pen.addVarComponent(
-                            comp.glyphName, transform, self.glyphSet.rawLocation
-                        )
-                    except AttributeError:
+                    shouldDecompose = self.name == comp.glyphName
+
+                    if not shouldDecompose:
+                        try:
+                            pen.addVarComponent(
+                                comp.glyphName, transform, self.glyphSet.rawLocation
+                            )
+                        except AttributeError:
+                            shouldDecompose = True
+
+                    if shouldDecompose:
                         t = transform.toTransform()
                         compGlyphSet = (
                             self.glyphSet
