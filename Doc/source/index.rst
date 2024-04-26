@@ -4,10 +4,9 @@
    :alt: Font Tools
    :align: center
 
-====================
-fontTools Documentation
-====================
 
+---fontTools Documentation---
+=======
 About
 -----
 
@@ -24,7 +23,6 @@ Installation
 
 To install fontTools, use `pip <https://pip.pypa.io/>`_:
 
-.. code-block:: bash
 
     pip install fonttools
 
