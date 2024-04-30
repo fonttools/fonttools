@@ -3,7 +3,7 @@ import os
 import pytest
 import py
 
-from fontTools.qu2cu.cli import main
+from fontTools.qu2cu.cli import _main as main
 from fontTools.ttLib import TTFont
 
 
