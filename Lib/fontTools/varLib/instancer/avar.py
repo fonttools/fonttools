@@ -5,7 +5,13 @@ from fontTools.varLib import instancer
 
 
 def VarStore_getExtremes(
-    self, varIdx, identityAxisIndex=None, nullAxes=set(), cache=None
+    self,
+    varIdx,
+    fvarAxes,
+    axisLimits,
+    identityAxisIndex=None,
+    nullAxes=set(),
+    cache=None,
 ):
 
     if varIdx == NO_VARIATION_INDEX:
@@ -22,16 +28,6 @@ def VarStore_getExtremes(
         return cache[key]
 
     regionList = self.VarRegionList
-
-    if not hasattr(self, "_fvar_axes"):
-        self._fvar_axes = []
-        for i in range(regionList.RegionAxisCount):
-            axis = Axis()
-            axis.axisTag = str(i)
-            axis.minValue = -1.0
-            axis.defaultValue = 0.0
-            axis.maxValue = 1.0
-            self._fvar_axes.append(axis)
 
     major = varIdx >> 16
     minor = varIdx & 0xFFFF
@@ -53,9 +49,10 @@ def VarStore_getExtremes(
                 skip = True
                 break
             thisAxes.add(i)
-            location[str(i)] = peak
+            location[fvarAxes[i].axisTag] = peak
         if skip:
             continue
+        assert thisAxes, "Empty region in VarStore!"
 
         locs = [None]
         if identityAxisIndex in thisAxes:
@@ -68,18 +65,37 @@ def VarStore_getExtremes(
 
         for loc in locs:
             if loc is not None:
-                location[str(identityAxisIndex)] = loc
+                location[fvarAxes[identityAxisIndex].axisTag] = loc
 
-            varStoreInstancer = VarStoreInstancer(varStore, self._fvar_axes, location)
+            scalar = 1
+            for j, regionAxis in enumerate(region.VarRegionAxis):
+                peak = regionAxis.PeakCoord
+                if peak == 0:
+                    continue
+                axis = fvarAxes[j]
+                try:
+                    limits = axisLimits[axis.axisTag]
+                    if peak > 0:
+                        scalar *= limits[2] - limits[1]
+                    else:
+                        scalar *= limits[1] - limits[0]
+                except KeyError:
+                    pass
+
+            varStoreInstancer = VarStoreInstancer(varStore, fvarAxes, location)
             v = varStoreInstancer[varIdx] + (0 if loc is None else round(loc * 16384))
 
-            assert thisAxes, "Empty region in VarStore!"
             minOther, maxOther = self.getExtremes(
-                varIdx, identityAxisIndex, nullAxes | thisAxes, cache
+                varIdx,
+                fvarAxes,
+                axisLimits,
+                identityAxisIndex,
+                nullAxes | thisAxes,
+                cache,
             )
 
-            minV = min(minV, v + minOther)
-            maxV = max(maxV, v + maxOther)
+            minV = min(minV, (v + minOther) * scalar)
+            maxV = max(maxV, (v + maxOther) * scalar)
 
     cache[key] = (minV, maxV)
 
@@ -107,13 +123,29 @@ if __name__ == "__main__":
     varIdxMap = avar.table.VarIdxMap
     varStore = avar.table.VarStore
 
+    for axis in fvar.axes:
+        if axis.axisTag in limits:
+            continue
+        private = axis.flags & 0x1
+        if not private:
+            continue
+        # if private, pin at default
+        limits[axis.axisTag] = instancer.NormalizedAxisTripleAndDistances(0, 0, 0)
+
     defaultDeltas = instancer.instantiateItemVariationStore(varStore, fvar.axes, limits)
 
-    for axisIdx, axis in enumerate(fvar.axes):
+    axes = fvar.axes
+
+    for axisIdx, axis in enumerate(axes):
         varIdx = axisIdx
         if varIdxMap is not None:
             varIdx = varIdxMap[varIdx]
         # Only for public axes
-        identityAxisIndex = None if axis.flags & 0x1 else axisIdx
-        minV, maxV = varStore.getExtremes(varIdx, identityAxisIndex)
-        print(axis.axisTag, defaultDeltas[varIdx] / 16384, (minV / 16384, maxV / 16384))
+        private = axis.flags & 0x1
+        identityAxisIndex = None if private else axisIdx
+        minV, maxV = varStore.getExtremes(varIdx, axes, limits, identityAxisIndex)
+        print(
+            "%s%s" % (axis.axisTag, "*" if private else ""),
+            defaultDeltas[varIdx] / 16384,
+            (minV / 16384, maxV / 16384),
+        )

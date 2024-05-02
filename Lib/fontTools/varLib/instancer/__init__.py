@@ -359,6 +359,9 @@ class _BaseAxisLimits(Mapping[str, AxisTriple]):
     def __getitem__(self, key: str) -> AxisTriple:
         return self._data[key]
 
+    def __setitem__(self, key, value):
+        self._data[key] = value
+
     def __iter__(self) -> Iterable[str]:
         return iter(self._data)
 
