@@ -123,6 +123,9 @@ if __name__ == "__main__":
     varIdxMap = avar.table.VarIdxMap
     varStore = avar.table.VarStore
 
+    pinnedAxes = limits.pinnedLocation()
+    unpinnedAxes = [axis for axis in fvar.axes if axis.axisTag not in pinnedAxes]
+
     for axis in fvar.axes:
         if axis.axisTag in limits:
             continue
@@ -134,18 +137,31 @@ if __name__ == "__main__":
 
     defaultDeltas = instancer.instantiateItemVariationStore(varStore, fvar.axes, limits)
 
-    axes = fvar.axes
-
-    for axisIdx, axis in enumerate(axes):
+    for axisIdx, axis in enumerate(fvar.axes):
+        if axis.axisTag in pinnedAxes:
+            limits[axis.axisTag] = instancer.NormalizedAxisTripleAndDistances(0, 0, 0)
+            continue
         varIdx = axisIdx
         if varIdxMap is not None:
             varIdx = varIdxMap[varIdx]
         # Only for public axes
         private = axis.flags & 0x1
         identityAxisIndex = None if private else axisIdx
-        minV, maxV = varStore.getExtremes(varIdx, axes, limits, identityAxisIndex)
+        minV, maxV = varStore.getExtremes(
+            varIdx, unpinnedAxes, limits, identityAxisIndex
+        )
+        limits[axis.axisTag] = instancer.NormalizedAxisTripleAndDistances(
+            max(-1, min(minV / 16384, +1)),
+            0,
+            max(-1, min(maxV / 16384, +1)),
+        )
         print(
             "%s%s" % (axis.axisTag, "*" if private else ""),
             defaultDeltas[varIdx] / 16384,
             (minV / 16384, maxV / 16384),
         )
+
+    defaultDeltas = instancer.instantiateItemVariationStore(
+        varStore, unpinnedAxes, limits
+    )
+    print(defaultDeltas)
