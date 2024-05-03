@@ -208,7 +208,7 @@ class table__a_v_a_r(BaseTTXConverter):
             mappedAxisLimits[axisTag] = triple
 
         if self.majorVersion < 2 or versionOneOnly:
-            return {NO_VARIATION_INDEX: 0}, instancer.NormalizedAxisLimits(
+            return instancer.NormalizedAxisLimits(
                 mappedAxisLimits
             )
 
@@ -267,4 +267,4 @@ class table__a_v_a_r(BaseTTXConverter):
             )
         limits = newLimits
 
-        return defaultDeltas, instancer.NormalizedAxisLimits(limits)
+        return instancer.NormalizedAxisLimits(limits)

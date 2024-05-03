@@ -25,7 +25,7 @@ if __name__ == "__main__":
     pinnedAxes = limits.pinnedLocation()
     unpinnedAxes = [axis for axis in fvar.axes if axis.axisTag not in pinnedAxes]
 
-    defaultDeltas, limits = avar.renormalizeAxisLimits(limits, font)
+    limits = avar.renormalizeAxisLimits(limits, font)
 
     for axisIdx, axis in enumerate(fvar.axes):
         varIdx = axisIdx
@@ -34,6 +34,5 @@ if __name__ == "__main__":
         private = axis.flags & 0x1
         print(
             "%s%s" % (axis.axisTag, "*" if private else ""),
-            defaultDeltas[varIdx] / 16384,
             limits.get(axis.axisTag, None),
         )
