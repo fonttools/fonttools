@@ -124,6 +124,7 @@ from fontTools.varLib import builder
 from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib.merger import MutatorMerger
 from fontTools.varLib.instancer import names
+from fontTools.varLib.varStore import OnlineVarStoreBuilder
 from .featureVars import instantiateFeatureVariations
 from fontTools.misc.cliTools import makeOutputFileName
 from fontTools.varLib.instancer import solver
@@ -1387,7 +1388,7 @@ def _isValidAvarSegmentMap(axisTag, segmentMap):
     return True
 
 
-def instantiateAvar(varfont, axisLimits):
+def instantiateAvar(varfont, axisLimits, normalizedLimits):
     # 'axisLimits' dict must contain user-space (non-normalized) coordinates.
 
     avar = varfont["avar"]
@@ -1454,6 +1455,45 @@ def instantiateAvar(varfont, axisLimits):
         else:
             newSegments[axisTag] = mapping
     avar.segments = newSegments
+
+    if avar.majorVersion == 1:
+        return
+
+    assert avar.majorVersion == 2
+    fvarAxes = varfont["fvar"].axes
+    varStore = getattr(avar.table, "VarStore", None)
+    if varStore is not None:
+        varIdxMap = getattr(avar.table, "VarIdxMap", None)
+        varStoreBuilder = OnlineVarStoreBuilder([axis.axisTag for axis in fvarAxes])
+        newVarIdxMapping = []
+        for i in range(len(fvarAxes)):
+            if i in pinnedAxes:
+                continue
+            varIdx = i
+            if varIdxMap:
+                varIdx = varIdxMap[varIdx]
+            if varIdx != varStore.NO_VARIATION_INDEX:
+                VarData = varStore.VarData[varIdx >> 16]
+                supports = [
+                    varStore.VarRegionList.Region[regionIndex].get_support(fvarAxes)
+                    for regionIndex in VarData.VarRegionIndex
+                ]
+                varStoreBuilder.setSupports(supports)
+                row = VarData.Item[varIdx & 0xFFFF]
+                # XXX Manipulate row
+                varIdx = varStoreBuilder.storeDeltas(row)
+
+            newVarIdxMapping.append(varIdx)
+
+        varStore = avar.table.VarStore = varStoreBuilder.finish()
+        if varIdxMap is not None:
+            varIdxMap.mapping = newVarIdxMapping
+
+        # TODO: Optimize VarStore
+
+        defaultDeltas = instantiateItemVariationStore(
+            varStore, fvarAxes, normalizedLimits
+        )
 
 
 def isInstanceWithinAxisRanges(location, axisRanges):
@@ -1695,7 +1735,7 @@ def instantiateVariableFont(
     instantiateFeatureVariations(varfont, normalizedLimits)
 
     if "avar" in varfont:
-        instantiateAvar(varfont, axisLimits)
+        instantiateAvar(varfont, axisLimits, normalizedLimits)
 
     with names.pruningUnusedNames(varfont):
         if "STAT" in varfont:

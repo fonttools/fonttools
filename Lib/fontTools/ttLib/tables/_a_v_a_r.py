@@ -257,10 +257,11 @@ class table__a_v_a_r(BaseTTXConverter):
                 varIdx, fvar.axes, limits, identityAxisIndex
             )
             # TODO: To 2.14 and back...
+            default = defaultDeltas[varIdx]
             newLimits[axis.axisTag] = instancer.NormalizedAxisTripleAndDistances(
-                max(-1, min(minV / 16384, +1)),
-                0,
-                max(-1, min(maxV / 16384, +1)),
+                max(-1, min((default + minV) / 16384, +1)),
+                default / 16384,
+                max(-1, min((default + maxV) / 16384, +1)),
                 axis.defaultValue - axis.minValue,
                 axis.maxValue - axis.defaultValue,
             )
