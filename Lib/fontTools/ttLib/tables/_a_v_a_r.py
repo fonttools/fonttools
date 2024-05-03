@@ -194,7 +194,8 @@ class table__a_v_a_r(BaseTTXConverter):
 
     def renormalizeAxisLimits(self, axisLimits, font, *, versionOneOnly=False):
 
-        if self.majorVersion not in (1, 2):
+        version = getattr(self, "majorVersion", 1)
+        if version not in (1, 2):
             raise NotImplementedError("Unknown avar table version")
 
         avarSegments = self.segments
@@ -207,10 +208,8 @@ class table__a_v_a_r(BaseTTXConverter):
                 )
             mappedAxisLimits[axisTag] = triple
 
-        if self.majorVersion < 2 or versionOneOnly:
-            return instancer.NormalizedAxisLimits(
-                mappedAxisLimits
-            )
+        if version == 1 or versionOneOnly:
+            return instancer.NormalizedAxisLimits(mappedAxisLimits)
 
         # Version 2
 
