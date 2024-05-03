@@ -10,8 +10,10 @@ from fontTools.misc.roundTools import otRound
 from fontTools.varLib.models import piecewiseLinearMap
 from fontTools.varLib.varStore import VarStoreInstancer, NO_VARIATION_INDEX
 from fontTools.ttLib import TTLibError
+from fontTools.varLib import instancer
 from . import DefaultTable
 from . import otTables
+from copy import deepcopy
 import struct
 import logging
 
@@ -167,7 +169,7 @@ class table__a_v_a_r(BaseTTXConverter):
         varStore = self.table.VarStore
         axes = font["fvar"].axes
         if varStore is not None:
-            instancer = VarStoreInstancer(varStore, axes, mappedLocation)
+            varStoreInstancer = VarStoreInstancer(varStore, axes, mappedLocation)
 
         coords = list(fl2fi(mappedLocation.get(axis.axisTag, 0), 14) for axis in axes)
 
@@ -178,7 +180,7 @@ class table__a_v_a_r(BaseTTXConverter):
                 varIdx = varIdxMap[varIdx]
 
             if varStore is not None:
-                delta = instancer[varIdx]
+                delta = varStoreInstancer[varIdx]
                 v += otRound(delta)
                 v = min(max(v, -(1 << 14)), +(1 << 14))
 
@@ -190,7 +192,7 @@ class table__a_v_a_r(BaseTTXConverter):
 
         return mappedLocation
 
-    def renormalizeAxisLimits(self, axisLimits, font):
+    def renormalizeAxisLimits(self, axisLimits, font, *, versionOneOnly=False):
 
         if self.majorVersion not in (1, 2):
             raise NotImplementedError("Unknown avar table version")
@@ -203,38 +205,55 @@ class table__a_v_a_r(BaseTTXConverter):
                 triple = tuple(piecewiseLinearMap(value, avarMapping) for value in triple)
             mappedAxisLimits[axisTag] = triple
 
-        if self.majorVersion < 2:
-            return mappedAxisLimits
+        if self.majorVersion < 2 or versionOneOnly:
+            return {NO_VARIATION_INDEX: 0}, instancer.NormalizedAxisLimits(mappedAxisLimits)
 
         # Version 2
 
+        limits = deepcopy(axisLimits)
+        fvar = font["fvar"]
+        avar = self
+
         varIdxMap = getattr(avar.table, "VarIdxMap", None)
         varStore = getattr(avar.table, "VarStore", None)
+        if varStore is not None:
+            varStore = deepcopy(varStore)
         axes = font["fvar"].axes
 
-        pinnedAxes = limits.pinnedLocation()
+        pinnedAxes = axisLimits.pinnedLocation()
         unpinnedAxes = [axis for axis in fvar.axes if axis.axisTag not in pinnedAxes]
 
-        if varStore is not None:
-            instancer = VarStoreInstancer(varStore, axes, mappedLocation)
+        defaultDeltas = instancer.instantiateItemVariationStore(varStore, fvar.axes, limits)
 
-        coords = list(fl2fi(mappedLocation.get(axis.axisTag, 0), 14) for axis in axes)
+        for axis in fvar.axes:
+            if axis.axisTag in limits:
+                continue
+            private = axis.flags & 0x1
+            if not private:
+                continue
+            # if private, pin at default
+            limits[axis.axisTag] = instancer.NormalizedAxisTripleAndDistances(0, 0, 0)
 
-        out = []
-        for varIdx, v in enumerate(coords):
-
+        for axisIdx, axis in enumerate(fvar.axes):
+            if axis.axisTag in pinnedAxes:
+                limits[axis.axisTag] = instancer.NormalizedAxisTripleAndDistances(0, 0, 0)
+                continue
+            varIdx = axisIdx
             if varIdxMap is not None:
                 varIdx = varIdxMap[varIdx]
+            # Only for public axes
+            private = axis.flags & 0x1
+            identityAxisIndex = None if private else axisIdx
+            minV, maxV = varStore.getExtremes(
+                varIdx, unpinnedAxes, limits, identityAxisIndex
+            )
+            # TODO: To 2.14 and back...
+            limits[axis.axisTag] = instancer.NormalizedAxisTripleAndDistances(
+                max(-1, min(minV / 16384, +1)),
+                0,
+                max(-1, min(maxV / 16384, +1)),
+                axis.defaultValue - axis.minValue,
+                axis.maxValue - axis.defaultValue,
+            )
 
-            if varStore is not None:
-                delta = instancer[varIdx]
-                v += otRound(delta)
-                v = min(max(v, -(1 << 14)), +(1 << 14))
-
-            out.append(v)
-
-        mappedLocation = {
-            axis.axisTag: fi2fl(v, 14) for v, axis in zip(out, axes) if v != 0
-        }
-
-        return mappedLocation
+        return defaultDeltas, instancer.NormalizedAxisLimits(limits)

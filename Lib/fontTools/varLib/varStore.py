@@ -685,6 +685,106 @@ def VarStore_optimize(self, use_NO_VARIATION_INDEX=True, quantization=1):
 ot.VarStore.optimize = VarStore_optimize
 
 
+def VarStore_getExtremes(
+    self,
+    varIdx,
+    fvarAxes,
+    axisLimits,
+    identityAxisIndex=None,
+    nullAxes=set(),
+    cache=None,
+):
+
+    if varIdx == NO_VARIATION_INDEX:
+        if identityAxisIndex is None:
+            return 0, 0
+        else:
+            return -16384, 16384
+
+    if cache is None:
+        cache = {}
+
+    key = frozenset(nullAxes)
+    if key in cache:
+        return cache[key]
+
+    regionList = self.VarRegionList
+
+    major = varIdx >> 16
+    minor = varIdx & 0xFFFF
+    varData = self.VarData[major]
+    regionIndices = varData.VarRegionIndex
+
+    minV = 0
+    maxV = 0
+    for regionIndex in regionIndices:
+        location = {}
+        region = regionList.Region[regionIndex]
+        skip = False
+        thisAxes = set()
+        for i, regionAxis in enumerate(region.VarRegionAxis):
+            peak = regionAxis.PeakCoord
+            if peak == 0:
+                continue
+            if i in nullAxes:
+                skip = True
+                break
+            thisAxes.add(i)
+            location[fvarAxes[i].axisTag] = peak
+        if skip:
+            continue
+        assert thisAxes, "Empty region in VarStore!"
+
+        locs = [None]
+        if identityAxisIndex in thisAxes:
+            locs = []
+            locs.append(-1)
+            locs.append(region.VarRegionAxis[identityAxisIndex].StartCoord)
+            locs.append(region.VarRegionAxis[identityAxisIndex].PeakCoord)
+            locs.append(region.VarRegionAxis[identityAxisIndex].EndCoord)
+            locs.append(+1)
+
+        for loc in locs:
+            if loc is not None:
+                location[fvarAxes[identityAxisIndex].axisTag] = loc
+
+            scalar = 1
+            for j, regionAxis in enumerate(region.VarRegionAxis):
+                peak = regionAxis.PeakCoord
+                if peak == 0:
+                    continue
+                axis = fvarAxes[j]
+                try:
+                    limits = axisLimits[axis.axisTag]
+                    if peak > 0:
+                        scalar *= limits[2] - limits[1]
+                    else:
+                        scalar *= limits[1] - limits[0]
+                except KeyError:
+                    pass
+
+            varStoreInstancer = VarStoreInstancer(self, fvarAxes, location)
+            v = varStoreInstancer[varIdx] + (0 if loc is None else round(loc * 16384))
+
+            minOther, maxOther = self.getExtremes(
+                varIdx,
+                fvarAxes,
+                axisLimits,
+                identityAxisIndex,
+                nullAxes | thisAxes,
+                cache,
+            )
+
+            minV = min(minV, (v + minOther) * scalar)
+            maxV = max(maxV, (v + maxOther) * scalar)
+
+    cache[key] = (minV, maxV)
+
+    return minV, maxV
+
+
+ot.VarStore.getExtremes = VarStore_getExtremes
+
 def main(args=None):
     """Optimize a font's GDEF variation store"""
     from argparse import ArgumentParser
