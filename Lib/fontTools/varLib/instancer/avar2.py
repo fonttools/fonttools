@@ -17,15 +17,19 @@ if __name__ == "__main__":
     print(limits)
 
     fvar = font["fvar"]
-    avar = font["avar"]
+    avar = font.get("avar", None)
 
-    varIdxMap = avar.table.VarIdxMap
-    varStore = avar.table.VarStore
+    varIdxMap = None
+    varStore = None
+    if avar and hasattr(avar, "table"):
+        varIdxMap = getattr(avar.table, "VarIdxMap", None)
+        varStore = getattr(avar.table, "VarStore", None)
 
     pinnedAxes = limits.pinnedLocation()
     unpinnedAxes = [axis for axis in fvar.axes if axis.axisTag not in pinnedAxes]
 
-    limits = avar.renormalizeAxisLimits(limits, font)
+    if avar:
+        limits = avar.renormalizeAxisLimits(limits, font)
 
     for axisIdx, axis in enumerate(fvar.axes):
         varIdx = axisIdx
@@ -34,5 +38,5 @@ if __name__ == "__main__":
         private = axis.flags & 0x1
         print(
             "%s%s" % (axis.axisTag, "*" if private else ""),
-            limits.get(axis.axisTag, None),
+            limits.get(axis.axisTag, (0, 0, 0) if private else (-1, 0, +1)),
         )
