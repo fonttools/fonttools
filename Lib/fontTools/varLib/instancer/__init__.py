@@ -1391,8 +1391,6 @@ def instantiateAvar(varfont, axisLimits):
     # 'axisLimits' dict must contain user-space (non-normalized) coordinates.
 
     avar = varfont["avar"]
-    if getattr(avar, "majorVersion", 1) == 2 and avar.table.VarStore:
-        raise NotImplementedError("avar table with VarStore is not supported")
 
     segments = avar.segments
 

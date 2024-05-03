@@ -225,7 +225,6 @@ class table__a_v_a_r(BaseTTXConverter):
         axes = font["fvar"].axes
 
         pinnedAxes = axisLimits.pinnedLocation()
-        unpinnedAxes = [axis for axis in fvar.axes if axis.axisTag not in pinnedAxes]
 
         defaultDeltas = instancer.instantiateItemVariationStore(
             varStore, fvar.axes, limits
@@ -243,8 +242,9 @@ class table__a_v_a_r(BaseTTXConverter):
         newLimits = {}
         for axisIdx, axis in enumerate(fvar.axes):
             if axis.axisTag in pinnedAxes:
+                v = axisLimits[axis.axisTag][0]
                 newLimits[axis.axisTag] = instancer.NormalizedAxisTripleAndDistances(
-                    0, 0, 0
+                    v, v, v
                 )
                 continue
             varIdx = axisIdx
@@ -254,7 +254,7 @@ class table__a_v_a_r(BaseTTXConverter):
             private = axis.flags & 0x1
             identityAxisIndex = None if private else axisIdx
             minV, maxV = varStore.getExtremes(
-                varIdx, unpinnedAxes, limits, identityAxisIndex
+                varIdx, fvar.axes, limits, identityAxisIndex
             )
             # TODO: To 2.14 and back...
             newLimits[axis.axisTag] = instancer.NormalizedAxisTripleAndDistances(
