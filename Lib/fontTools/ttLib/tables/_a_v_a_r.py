@@ -264,6 +264,6 @@ class table__a_v_a_r(BaseTTXConverter):
                 axis.defaultValue - axis.minValue,
                 axis.maxValue - axis.defaultValue,
             )
-        limits = instancer.NormalizedAxisLimits(newLimits)
+        limits = newLimits
 
         return defaultDeltas, instancer.NormalizedAxisLimits(limits)
