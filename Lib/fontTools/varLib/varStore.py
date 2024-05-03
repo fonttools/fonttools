@@ -785,6 +785,7 @@ def VarStore_getExtremes(
 
 ot.VarStore.getExtremes = VarStore_getExtremes
 
+
 def main(args=None):
     """Optimize a font's GDEF variation store"""
     from argparse import ArgumentParser

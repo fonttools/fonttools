@@ -4,8 +4,6 @@ from fontTools.ttLib.tables._f_v_a_r import Axis
 from fontTools.varLib import instancer
 
 
-
-
 if __name__ == "__main__":
     import sys
     from fontTools.ttLib import TTFont
