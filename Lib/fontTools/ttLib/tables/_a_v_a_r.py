@@ -205,13 +205,16 @@ class table__a_v_a_r(BaseTTXConverter):
 
         if self.majorVersion < 2:
             return mappedAxisLimits
-        return mappedAxisLimits
 
         # Version 2
 
-        varIdxMap = self.table.VarIdxMap
-        varStore = self.table.VarStore
+        varIdxMap = getattr(avar.table, "VarIdxMap", None)
+        varStore = getattr(avar.table, "VarStore", None)
         axes = font["fvar"].axes
+
+        pinnedAxes = limits.pinnedLocation()
+        unpinnedAxes = [axis for axis in fvar.axes if axis.axisTag not in pinnedAxes]
+
         if varStore is not None:
             instancer = VarStoreInstancer(varStore, axes, mappedLocation)
 
