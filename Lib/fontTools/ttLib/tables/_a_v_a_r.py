@@ -189,3 +189,49 @@ class table__a_v_a_r(BaseTTXConverter):
         }
 
         return mappedLocation
+
+    def renormalizeAxisLimits(self, axisLimits, font):
+
+        if self.majorVersion not in (1, 2):
+            raise NotImplementedError("Unknown avar table version")
+
+        avarSegments = self.segments
+        mappedAxisLimits = {}
+        for axisTag, triple in axisLimits.items():
+            avarMapping = avarSegments.get(axisTag, None)
+            if avarMapping is not None:
+                triple = tuple(piecewiseLinearMap(value, avarMapping) for value in triple)
+            mappedAxisLimits[axisTag] = triple
+
+        if self.majorVersion < 2:
+            return mappedAxisLimits
+        return mappedAxisLimits
+
+        # Version 2
+
+        varIdxMap = self.table.VarIdxMap
+        varStore = self.table.VarStore
+        axes = font["fvar"].axes
+        if varStore is not None:
+            instancer = VarStoreInstancer(varStore, axes, mappedLocation)
+
+        coords = list(fl2fi(mappedLocation.get(axis.axisTag, 0), 14) for axis in axes)
+
+        out = []
+        for varIdx, v in enumerate(coords):
+
+            if varIdxMap is not None:
+                varIdx = varIdxMap[varIdx]
+
+            if varStore is not None:
+                delta = instancer[varIdx]
+                v += otRound(delta)
+                v = min(max(v, -(1 << 14)), +(1 << 14))
+
+            out.append(v)
+
+        mappedLocation = {
+            axis.axisTag: fi2fl(v, 14) for v, axis in zip(out, axes) if v != 0
+        }
+
+        return mappedLocation

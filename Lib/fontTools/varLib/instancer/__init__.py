@@ -434,20 +434,12 @@ class AxisLimits(_BaseAxisLimits):
             if a.axisTag in self
         }
 
-        avarSegments = {}
-        if usingAvar and "avar" in varfont:
-            avarSegments = varfont["avar"].segments
-
         normalizedLimits = {}
 
         for axis_tag, triple in axes.items():
-            distanceNegative = triple[1] - triple[0]
-            distancePositive = triple[2] - triple[1]
 
-            if self[axis_tag] is None:
-                normalizedLimits[axis_tag] = NormalizedAxisTripleAndDistances(
-                    0, 0, 0, distanceNegative, distancePositive
-                )
+            if self[axis_tag] is None:  # Drop
+                normalizedLimits[axis_tag] = (0, 0, 0)
                 continue
 
             minV, defaultV, maxV = self[axis_tag]
@@ -455,11 +447,29 @@ class AxisLimits(_BaseAxisLimits):
             if defaultV is None:
                 defaultV = triple[1]
 
-            avarMapping = avarSegments.get(axis_tag, None)
-            normalizedLimits[axis_tag] = NormalizedAxisTripleAndDistances(
-                *(normalize(v, triple, avarMapping) for v in (minV, defaultV, maxV)),
-                distanceNegative,
-                distancePositive,
+            normalizedLimits[axis_tag] = tuple(
+                normalize(v, triple) for v in (minV, defaultV, maxV)
+            )
+
+
+        if usingAvar and "avar" in varfont:
+            avar = varfont["avar"]
+            normalizedLimits = avar.renormalizeAxisLimits(normalizedLimits, varfont)
+
+        fvarAxes = fvar.getAxes()
+        for tag, triple in normalizedLimits.items():
+            minV, defaultV, maxV = fvarAxes[tag]
+            if defaultV is None:
+                defaultV = triple[1]
+            distanceNegative = defaultV - minV
+            distancePositive = maxV - defaultV
+
+            if triple is None:  # Drop
+                normalizedLimits[tag] = NormalizedAxisTripleAndDistances(0, 0, 0, distanceNegative, distancePositive)
+                continue
+
+            normalizedLimits[tag] = NormalizedAxisTripleAndDistances(
+                *triple, distanceNegative, distancePositive
             )
 
         return NormalizedAxisLimits(normalizedLimits)
@@ -1376,7 +1386,7 @@ def instantiateAvar(varfont, axisLimits):
     # 'axisLimits' dict must contain user-space (non-normalized) coordinates.
 
     avar = varfont["avar"]
-    if getattr(avar, "majorVersion", 1) >= 2 and avar.table.VarStore:
+    if getattr(avar, "majorVersion", 1) == 2 and avar.table.VarStore:
         raise NotImplementedError("avar table with VarStore is not supported")
 
     segments = avar.segments
@@ -1564,7 +1574,7 @@ def setMacOverlapFlags(glyfTable):
             glyph.flags[0] |= flagOverlapSimple
 
 
-def normalize(value, triple, avarMapping):
+def normalize(value, triple, avarMapping=None):
     value = normalizeValue(value, triple)
     if avarMapping:
         value = piecewiseLinearMap(value, avarMapping)
