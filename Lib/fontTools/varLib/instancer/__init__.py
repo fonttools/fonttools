@@ -473,9 +473,11 @@ class AxisLimits(_BaseAxisLimits):
 
         if usingAvar and "avar" in varfont:
             avar = varfont["avar"]
-            normalizedLimits = avar.renormalizeAxisLimits(normalizedLimits, varfont)
+            defaultValues, normalizedLimits = avar.renormalizeAxisLimits(
+                normalizedLimits, varfont
+            )
 
-        return normalizedLimits
+        return NormalizedAxisLimits(normalizedLimits)
 
 
 class NormalizedAxisLimits(_BaseAxisLimits):
