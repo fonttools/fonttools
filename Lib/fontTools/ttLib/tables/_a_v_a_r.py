@@ -234,9 +234,10 @@ class table__a_v_a_r(BaseTTXConverter):
             # if private, pin at default
             limits[axis.axisTag] = instancer.NormalizedAxisTripleAndDistances(0, 0, 0)
 
+        newLimits = {}
         for axisIdx, axis in enumerate(fvar.axes):
             if axis.axisTag in pinnedAxes:
-                limits[axis.axisTag] = instancer.NormalizedAxisTripleAndDistances(0, 0, 0)
+                newLimits[axis.axisTag] = instancer.NormalizedAxisTripleAndDistances(0, 0, 0)
                 continue
             varIdx = axisIdx
             if varIdxMap is not None:
@@ -248,12 +249,13 @@ class table__a_v_a_r(BaseTTXConverter):
                 varIdx, unpinnedAxes, limits, identityAxisIndex
             )
             # TODO: To 2.14 and back...
-            limits[axis.axisTag] = instancer.NormalizedAxisTripleAndDistances(
+            newLimits[axis.axisTag] = instancer.NormalizedAxisTripleAndDistances(
                 max(-1, min(minV / 16384, +1)),
                 0,
                 max(-1, min(maxV / 16384, +1)),
                 axis.defaultValue - axis.minValue,
                 axis.maxValue - axis.defaultValue,
             )
+        limits = instancer.NormalizedAxisLimits(newLimits)
 
         return defaultDeltas, instancer.NormalizedAxisLimits(limits)
