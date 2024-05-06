@@ -4,17 +4,17 @@ brotli==1.1.0; platform_python_implementation != "PyPy"
 brotlicffi==1.1.0.0; platform_python_implementation == "PyPy"
 unicodedata2==15.1.0; python_version <= '3.11'
 scipy==1.10.0; platform_python_implementation != "PyPy" and python_version <= '3.8'  # pyup: ignore
-scipy==1.12.0; platform_python_implementation != "PyPy" and python_version >= '3.9'
+scipy==1.13.0; platform_python_implementation != "PyPy" and python_version >= '3.9'
 munkres==1.1.4; platform_python_implementation == "PyPy"
 zopfli==0.2.3
 fs==2.4.16
 skia-pathops==0.8.0.post1; platform_python_implementation != "PyPy"
 # this is only required to run Tests/cu2qu/{ufo,cli}_test.py
 ufoLib2==0.16.0
-ufo2ft==3.2.0
+ufo2ft==3.2.1
 pyobjc==10.2; sys_platform == "darwin"
 freetype-py==2.4.0
 uharfbuzz==0.39.1
-glyphsLib==6.7.0 # this is only required to run Tests/varLib/interpolatable_test.py
-lxml==5.2.0
+glyphsLib==6.7.1 # this is only required to run Tests/varLib/interpolatable_test.py
+lxml==5.2.1
 sympy==1.12
