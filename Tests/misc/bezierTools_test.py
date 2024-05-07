@@ -3,6 +3,7 @@ from fontTools.misc.bezierTools import (
     calcQuadraticBounds,
     calcQuadraticArcLength,
     calcCubicBounds,
+    calcCubicArcLength,
     curveLineIntersections,
     curveCurveIntersections,
     segmentPointAtT,
@@ -190,6 +191,25 @@ def test_calcQuadraticArcLength():
     assert calcQuadraticArcLength(
         (210, 333), (289, 333), (326.5, 290.5)
     ) == pytest.approx(127.9225)
+
+
+@pytest.mark.parametrize(
+    "segment, expectedLength",
+    [
+        (
+            # https://github.com/fonttools/fonttools/issues/3502
+            ((377, 469), (377, 468), (377, 472), (377, 472)),  # off by one unit
+            3.32098765445,
+        ),
+        (
+            # https://github.com/fonttools/fonttools/issues/3502
+            ((242, 402), (242, 403), (242, 399), (242, 399)),  # off by one unit
+            3.32098765445,
+        ),
+    ],
+)
+def test_calcCubicArcLength(segment, expectedLength):
+    assert calcCubicArcLength(*segment) == pytest.approx(expectedLength)
 
 
 def test_intersections_linelike():
