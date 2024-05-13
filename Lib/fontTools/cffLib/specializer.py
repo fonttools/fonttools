@@ -813,7 +813,7 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(
-        "fonttools cffLib.specialer",
+        "fonttools cffLib.specializer",
         description="CFF CharString generalizer/specializer",
     )
     parser.add_argument("program", metavar="command", nargs="*", help="Commands.")
