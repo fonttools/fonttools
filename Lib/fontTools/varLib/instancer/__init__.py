@@ -580,10 +580,13 @@ def instantiateCFF2(
     fvarAxes = varfont["fvar"].axes
 
     cff = varfont["CFF2"].cff
-    cff.desubroutinize()
     topDict = cff.topDictIndex[0]
-
     varStore = topDict.VarStore.otVarStore
+    if not varStore:
+        return
+
+    cff.desubroutinize()
+
     varStore2 = topDict.CharStrings.varStore.otVarStore
 
     assert varStore is varStore2  # Who knows why it's in two places?!
@@ -694,6 +697,35 @@ def instantiateCFF2(
         varData.Item = []
         varData.ItemCount = 0
 
+    # Remove vsindex commands that are no longer needed
+    for commands in allCommands:
+        if any(isinstance(arg, list) for command in commands for arg in command[1]):
+            continue
+        commands[:] = [command for command in commands if command[0] != "vsindex"]
+
+    # Collect used vsindex values
+    usedVsindex = set()
+    for commands in allCommands:
+        for command in commands:
+            if command[0] == "vsindex":
+                usedVsindex.add(command[1][0])
+
+    # Remove unused VarData and update vsindex values
+    vsindexMapping = {v:i for i,v in enumerate(sorted(usedVsindex))}
+    varStore.VarData = [varData for i, varData in enumerate(varStore.VarData) if i in usedVsindex]
+    for commands in allCommands:
+        for command in commands:
+            if command[0] == "vsindex":
+                command[1][0] = vsindexMapping[command[1][0]]
+
+    # Remove empty VarStore
+    if not varStore.VarData:
+        topDict.VarStore = None
+        topDict.CharStrings.varStore = None
+        for cs in charStrings:
+            cs.private.vstore = None
+
+    # Ship it!
     for cs, commands in zip(charStrings, allCommands):
         cs.program = commandsToProgram(commands)
 

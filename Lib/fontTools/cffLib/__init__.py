@@ -2132,6 +2132,9 @@ class FDSelectCompiler(object):
 class VarStoreCompiler(object):
     def __init__(self, varStoreData, parent):
         self.parent = parent
+        if varStoreData is None:
+            self.data = b""
+            return
         if not varStoreData.data:
             varStoreData.compile()
         data = [packCard16(len(varStoreData.data)), varStoreData.data]
