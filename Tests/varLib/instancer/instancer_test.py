@@ -63,6 +63,50 @@ def _get_coordinates(varfont, glyphname):
     )
 
 
+class InstantiateCFF2Test(object):
+    @pytest.mark.parametrize(
+        "location, expected",
+        [
+            (
+                {},
+                [
+                    44,
+                    256,
+                    6,
+                    -29,
+                    2,
+                    "blend",
+                    "rmoveto",
+                    239,
+                    35,
+                    -239,
+                    44,
+                    90,
+                    -44,
+                    3,
+                    "blend",
+                    "hlineto",
+                ],
+            ),
+            ({"wght": 0}, [44, 256, "rmoveto", 239, 35, -239, "hlineto"]),
+            ({"wght": 0.5}, [47, 242, "rmoveto", 261, 80, -261, "hlineto"]),
+            ({"wght": 1}, [50, 227, "rmoveto", 283, 125, -283, "hlineto"]),
+        ],
+    )
+    def test_pin_and_drop_axis(self, varfont, location, expected):
+
+        varfont = ttLib.TTFont()
+        varfont.importXML(os.path.join(TESTDATA, "CFF2Instancer-VF.ttx"))
+
+        location = instancer.NormalizedAxisLimits(location)
+
+        instancer.instantiateCFF2(varfont, location)
+        instancer.instantiateHVAR(varfont, location)
+
+        program = varfont["CFF2"].cff.topDictIndex[0].CharStrings.values()[1].program
+        assert program == expected
+
+
 class InstantiateGvarTest(object):
     @pytest.mark.parametrize("glyph_name", ["hyphen"])
     @pytest.mark.parametrize(

@@ -588,10 +588,6 @@ def instantiateCFF2(
 
     cff.desubroutinize()
 
-    assert (
-        varStore is topDict.CharStrings.varStore.otVarStore
-    )  # Who knows why it's in two places?!
-
     def getNumRegions(vsindex):
         return varStore.VarData[vsindex if vsindex is not None else 0].VarRegionCount
 
@@ -1182,6 +1178,8 @@ def instantiateItemVariationStore(itemVarStore, fvarAxes, axisLimits):
     newItemVarStore = tupleVarStore.asItemVarStore()
 
     itemVarStore.VarRegionList = newItemVarStore.VarRegionList
+    if not hasattr(itemVarStore, "VarDataCount"):  # Happens fromXML
+        itemVarStore.VarDataCount = len(newItemVarStore.VarData)
     assert itemVarStore.VarDataCount == newItemVarStore.VarDataCount
     itemVarStore.VarData = newItemVarStore.VarData
 
