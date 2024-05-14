@@ -584,6 +584,9 @@ def instantiateCFF2(
     topDict = cff.topDictIndex[0]
 
     varStore = topDict.VarStore.otVarStore
+    varStore2 = topDict.CharStrings.varStore.otVarStore
+
+    assert varStore is varStore2  # Who knows why it's in two places?!
 
     def getNumRegions(vsindex):
         return len(
@@ -593,6 +596,7 @@ def instantiateCFF2(
     charStrings = topDict.CharStrings.values()
     allCommands = []
     for cs in charStrings:
+        assert cs.private.vstore.otVarStore is varStore  # Or in many places!!
         commands = programToCommands(cs.program, getNumRegions=getNumRegions)
         if generalize:
             commands = generalizeCommands(commands)
