@@ -576,6 +576,12 @@ def changeTupleVariationAxisLimit(var, axisTag, axisLimit):
 def instantiateCFF2(
     varfont, axisLimits, *, round=round, specialize=True, generalize=False
 ):
+    # The algorithm here is rather simple: Take all blend operations and
+    # store their deltas in the (otherwise empty) CFF2 VarStore. Then,
+    # instantiate the VarStore with the given axis limits, and read back
+    # the new deltas. This is done for both the CharStrings and the Private
+    # dicts.
+
     log.info("Instantiating CFF2 table")
 
     fvarAxes = varfont["fvar"].axes
