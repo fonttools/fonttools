@@ -749,6 +749,12 @@ def instantiateCFF2(
 
             setattr(private, name, newValues)
 
+    # Empty out the VarStore
+    for i, varData in enumerate(varStore.VarData):
+        assert varDataCursor[i] == varData.ItemCount, (varDataCursor[i], varData.ItemCount)
+        varData.Item = []
+        varData.ItemCount = 0
+
     # Remove vsindex commands that are no longer needed, collect those that are.
     usedVsindex = set()
     for commands in allCommands:
@@ -776,12 +782,6 @@ def instantiateCFF2(
     # Ship the charstrings!
     for cs, commands in zip(charStrings, allCommands):
         cs.program = commandsToProgram(commands)
-
-    # Empty out the VarStore
-    for i, varData in enumerate(varStore.VarData):
-        assert varDataCursor[i] == varData.ItemCount
-        varData.Item = []
-        varData.ItemCount = 0
 
     # Remove empty VarStore
     if not varStore.VarData:

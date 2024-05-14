@@ -106,6 +106,40 @@ class InstantiateCFF2Test(object):
         program = varfont["CFF2"].cff.topDictIndex[0].CharStrings.values()[1].program
         assert program == expected
 
+    def test_full_instance(self, varfont):
+        varfont = ttLib.TTFont()
+        varfont.importXML(os.path.join(TESTDATA, "CFF2Instancer-VF-2.ttx"))
+        s = BytesIO()
+        varfont.save(s)
+        s.seek(0)
+        varfont = ttLib.TTFont(s)
+
+        instance = instancer.instantiateVariableFont(varfont, {"wght": 400})
+        s = BytesIO()
+        instance.save(s)
+        s.seek(0)
+        instance = ttLib.TTFont(s)
+
+        s = StringIO()
+        instance.saveXML(s)
+        actual = stripVariableItemsFromTTX(s.getvalue())
+
+        expected = ttLib.TTFont()
+        expected.importXML(
+            os.path.join(
+                TESTDATA, "test_results", "CFF2Instancer-VF-2-instance-400.ttx"
+            )
+        )
+        s = BytesIO()
+        expected.save(s)
+        s.seek(0)
+        expected = ttLib.TTFont(s)
+        s = StringIO()
+        expected.saveXML(s)
+        expected = stripVariableItemsFromTTX(s.getvalue())
+
+        assert actual == expected
+
 
 class InstantiateGvarTest(object):
     @pytest.mark.parametrize("glyph_name", ["hyphen"])
