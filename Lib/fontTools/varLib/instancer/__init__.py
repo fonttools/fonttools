@@ -607,10 +607,10 @@ def instantiateCFF2(
     def storeBlendsToVarStore(arg):
         if not isinstance(arg, list):
             return
-        for subarg in arg[:-1]:
-            if isinstance(subarg, list):
-                raise NotImplementedError("Nested blend lists not supported (yet)")
-            storeBlendsToVarStore(subarg)
+
+        if any(isinstance(subarg, list) for subarg in arg[:-1]):
+            raise NotImplementedError("Nested blend lists not supported (yet)")
+
         count = arg[-1]
         assert (len(arg) - 1) % count == 0
         nRegions = (len(arg) - 1) // count - 1
@@ -624,11 +624,10 @@ def instantiateCFF2(
 
     def fetchBlendsFromVarStore(arg):
         if not isinstance(arg, list):
-            return
-        for subarg in arg[:-1]:
-            if isinstance(subarg, list):
-                raise NotImplementedError("Nested blend lists not supported (yet)")
-            fetchBlendsFromVarStore(subarg)
+            return [arg]
+
+        if any(isinstance(subarg, list) for subarg in arg[:-1]):
+            raise NotImplementedError("Nested blend lists not supported (yet)")
 
         count = arg[-1]
         assert (len(arg) - 1) % count == 0
@@ -651,10 +650,12 @@ def instantiateCFF2(
             varData = varStore.VarData[major]
             deltas = varData.Item[minor]
             assert len(deltas) == numRegions
-            assert len(deltas)  # TODO: relax
             newDeltas.extend(deltas)
 
-        arg[:-1] = newDefaults + newDeltas
+        if not numRegions:
+            return newDefaults  # No deltas, just return the defaults
+
+        return [newDefaults + newDeltas + [count]]
 
     # Check VarData's are empty
     for varData in varStore.VarData:
@@ -682,8 +683,10 @@ def instantiateCFF2(
             if command[0] == "vsindex":
                 vsindex = command[1][0]
                 continue
+            newArgs = []
             for arg in command[1]:
-                fetchBlendsFromVarStore(arg)
+                newArgs.extend(fetchBlendsFromVarStore(arg))
+            command[1][:] = newArgs
 
     # Empty out the VarStore
     for i, varData in enumerate(varStore.VarData):
@@ -898,16 +901,18 @@ def _instantiateVHVAR(varfont, axisLimits, tableFields, *, round=round):
     location = axisLimits.pinnedLocation()
     tableTag = tableFields.tableTag
     fvarAxes = varfont["fvar"].axes
-    # Deltas from gvar table have already been applied to the hmtx/vmtx. For full
-    # instances (i.e. all axes pinned), we can simply drop HVAR/VVAR and return
-    if set(location).issuperset(axis.axisTag for axis in fvarAxes):
-        log.info("Dropping %s table", tableTag)
-        del varfont[tableTag]
-        return
 
     log.info("Instantiating %s table", tableTag)
     vhvar = varfont[tableTag].table
     varStore = vhvar.VarStore
+
+    if "gvar" in varfont:
+        # Deltas from gvar table have already been applied to the hmtx/vmtx. For full
+        # instances (i.e. all axes pinned), we can simply drop HVAR/VVAR and return
+        if set(location).issuperset(axis.axisTag for axis in fvarAxes):
+            log.info("Dropping %s table", tableTag)
+            del varfont[tableTag]
+            return
 
     defaultDeltas = instantiateItemVariationStore(varStore, fvarAxes, axisLimits)
 
@@ -929,6 +934,12 @@ def _instantiateVHVAR(varfont, axisLimits, tableFields, *, round=round):
 
             # TODO if tableTag == "VVAR" and getattr(vhvar, tableFields.vOrigMapping),
             # update VORG table as well
+
+            # For full instances (i.e. all axes pinned), we can simply drop HVAR/VVAR and return
+            if set(location).issuperset(axis.axisTag for axis in fvarAxes):
+                log.info("Dropping %s table", tableTag)
+                del varfont[tableTag]
+                return
 
     if varStore.VarRegionList.Region:
         # Only re-optimize VarStore if the HVAR/VVAR already uses indirect AdvWidthMap
