@@ -894,7 +894,7 @@ def _remapVarIdxMap(table, attrName, varIndexMapping, glyphOrder):
 
 
 # TODO(anthrotype) Add support for HVAR/VVAR in CFF2
-def _instantiateVHVAR(varfont, axisLimits, tableFields):
+def _instantiateVHVAR(varfont, axisLimits, tableFields, *, round=round):
     location = axisLimits.pinnedLocation()
     tableTag = tableFields.tableTag
     fvarAxes = varfont["fvar"].axes
@@ -908,8 +908,27 @@ def _instantiateVHVAR(varfont, axisLimits, tableFields):
     log.info("Instantiating %s table", tableTag)
     vhvar = varfont[tableTag].table
     varStore = vhvar.VarStore
-    # since deltas were already applied, the return value here is ignored
-    instantiateItemVariationStore(varStore, fvarAxes, axisLimits)
+
+    defaultDeltas = instantiateItemVariationStore(varStore, fvarAxes, axisLimits)
+
+    if "gvar" not in varfont:
+        # CFF2 fonts need hmtx/vmtx updated here. For gvar fonts, the instantiateGvar
+        # function already updated the hmtx/vmtx from phantom points. Maybe remove
+        # that and do it here for both CFF2 and gvar fonts?
+        metricsTag = "vmtx" if tableTag == "VVAR" else "hmtx"
+        if metricsTag in varfont:
+            advMapping = getattr(vhvar, tableFields.advMapping)
+            metricsTable = varfont[metricsTag]
+            metrics = metricsTable.metrics
+            for glyphName, (advanceWidth, sb) in metrics.items():
+                if advMapping:
+                    varIdx = advMapping.mapping[glyphName]
+                else:
+                    varIdx = varfont.getGlyphID(glyphName)
+                metrics[glyphName] = (advanceWidth + round(defaultDeltas[varIdx]), sb)
+
+            # TODO if tableTag == "VVAR" and getattr(vhvar, tableFields.vOrigMapping),
+            # update VORG table as well
 
     if varStore.VarRegionList.Region:
         # Only re-optimize VarStore if the HVAR/VVAR already uses indirect AdvWidthMap
