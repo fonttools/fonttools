@@ -711,8 +711,10 @@ def instantiateCFF2(
                 usedVsindex.add(command[1][0])
 
     # Remove unused VarData and update vsindex values
-    vsindexMapping = {v:i for i,v in enumerate(sorted(usedVsindex))}
-    varStore.VarData = [varData for i, varData in enumerate(varStore.VarData) if i in usedVsindex]
+    vsindexMapping = {v: i for i, v in enumerate(sorted(usedVsindex))}
+    varStore.VarData = [
+        varData for i, varData in enumerate(varStore.VarData) if i in usedVsindex
+    ]
     for commands in allCommands:
         for command in commands:
             if command[0] == "vsindex":
@@ -938,7 +940,7 @@ def _instantiateVHVAR(varfont, axisLimits, tableFields, *, round=round):
     vhvar = varfont[tableTag].table
     varStore = vhvar.VarStore
 
-    if "gvar" in varfont:
+    if "glyf" in varfont:
         # Deltas from gvar table have already been applied to the hmtx/vmtx. For full
         # instances (i.e. all axes pinned), we can simply drop HVAR/VVAR and return
         if set(location).issuperset(axis.axisTag for axis in fvarAxes):
@@ -948,10 +950,13 @@ def _instantiateVHVAR(varfont, axisLimits, tableFields, *, round=round):
 
     defaultDeltas = instantiateItemVariationStore(varStore, fvarAxes, axisLimits)
 
-    if "gvar" not in varfont:
-        # CFF2 fonts need hmtx/vmtx updated here. For gvar fonts, the instantiateGvar
+    if "glyf" not in varfont:
+        # CFF2 fonts need hmtx/vmtx updated here. For glyf fonts, the instantiateGvar
         # function already updated the hmtx/vmtx from phantom points. Maybe remove
-        # that and do it here for both CFF2 and gvar fonts?
+        # that and do it here for both CFF2 and glyf fonts?
+        #
+        # Specially, if a font has glyf but not gvar, the hmtx/vmtx will not have been
+        # updated by instantiateGvar. Though one can call that a faulty font.
         metricsTag = "vmtx" if tableTag == "VVAR" else "hmtx"
         if metricsTag in varfont:
             advMapping = getattr(vhvar, tableFields.advMapping)
