@@ -1050,6 +1050,7 @@ class VarStoreData(object):
             reader = OTTableReader(self.data, globalState)
             self.otVarStore = ot.VarStore()
             self.otVarStore.decompile(reader, self.font)
+            self.data = None
         return self
 
     def compile(self):
