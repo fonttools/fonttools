@@ -97,6 +97,12 @@ from fontTools import varLib
 # we import the `subset` module because we use the `prune_lookups` method on the GSUB
 # table class, and that method is only defined dynamically upon importing `subset`
 from fontTools import subset  # noqa: F401
+from fontTools.cffLib.specializer import (
+    programToCommands,
+    commandsToProgram,
+    specializeCommands,
+    generalizeCommands,
+)
 from fontTools.varLib import builder
 from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib.merger import MutatorMerger
@@ -564,6 +570,121 @@ def changeTupleVariationAxisLimit(var, axisTag, axisLimit):
         out.append(newVar)
 
     return out
+
+
+def instantiateCFF2(varfont, axisLimits, round=round):
+    log.info("Instantiating CFF2 table")
+
+    fvarAxes = varfont["fvar"].axes
+
+    cff = varfont["CFF2"].cff
+    cff.desubroutinize()
+    topDict = cff.topDictIndex[0]
+
+    varStore = topDict.VarStore.otVarStore
+
+    def getNumRegions(vsindex):
+        return len(
+            varStore.VarData[vsindex if vsindex is not None else 0].VarRegionIndex
+        )
+
+    charStrings = topDict.CharStrings.values()
+    allCommands = []
+    for cs in charStrings:
+        commands = programToCommands(cs.program, getNumRegions=getNumRegions)
+        # commands = specializeCommands(commands) # While we're here...
+        commands = generalizeCommands(commands)  # While we're here...
+        allCommands.append(commands)
+
+    def storeBlendsToVarStore(arg):
+        if not isinstance(arg, list):
+            return
+        for subarg in arg[:-1]:
+            if isinstance(subarg, list):
+                raise NotImplementedError("Nested blend lists not supported (yet)")
+            storeBlendsToVarStore(subarg)
+        count = arg[-1]
+        assert (len(arg) - 1) % count == 0
+        nRegions = (len(arg) - 1) // count - 1
+        assert nRegions == getNumRegions(vsindex)
+        for i in range(count, len(arg) - 1, nRegions):
+            deltas = arg[i : i + nRegions]
+            assert len(deltas) == nRegions
+            varData = varStore.VarData[vsindex]
+            varData.Item.append(deltas)
+            varData.ItemCount += 1
+
+    def fetchBlendsFromVarStore(arg):
+        if not isinstance(arg, list):
+            return
+        for subarg in arg[:-1]:
+            if isinstance(subarg, list):
+                raise NotImplementedError("Nested blend lists not supported (yet)")
+            fetchBlendsFromVarStore(subarg)
+
+        count = arg[-1]
+        assert (len(arg) - 1) % count == 0
+        numRegions = getNumRegions(vsindex)
+        newDefaults = []
+        newDeltas = []
+        for i in range(count):
+
+            defaultValue = arg[i]
+
+            major = vsindex
+            minor = varDataCursor[major]
+            varDataCursor[major] += 1
+
+            varIdx = (major << 16) + minor
+
+            defaultValue += round(defaultDeltas[varIdx])
+            newDefaults.append(defaultValue)
+
+            varData = varStore.VarData[major]
+            deltas = varData.Item[minor]
+            assert len(deltas) == numRegions
+            assert len(deltas)  # TODO: relax
+            newDeltas.extend(deltas)
+
+        arg[:-1] = newDefaults + newDeltas
+
+    # Check VarData's are empty
+    for varData in varStore.VarData:
+        assert varData.Item == []
+        assert varData.ItemCount == 0
+
+    # Add blend lists to VarStore so we can instantiate them
+    for commands in allCommands:
+        vsindex = 0
+        for command in commands:
+            if command[0] == "vsindex":
+                vsindex = command[1][0]
+                continue
+            for arg in command[1]:
+                storeBlendsToVarStore(arg)
+
+    # Instantiate VarStore
+    defaultDeltas = instantiateItemVariationStore(varStore, fvarAxes, axisLimits)
+
+    # Read back new blends from the instantiated VarStore
+    varDataCursor = [0] * len(varStore.VarData)
+    for commands in allCommands:
+        vsindex = 0
+        for command in commands:
+            if command[0] == "vsindex":
+                vsindex = command[1][0]
+                continue
+            for arg in command[1]:
+                fetchBlendsFromVarStore(arg)
+
+    # Empty out the VarStore
+    for i, varData in enumerate(varStore.VarData):
+        assert varDataCursor[i] == varData.ItemCount
+        varData.Item = []
+        varData.ItemCount = 0
+
+    for cs, commands in zip(charStrings, allCommands):
+        cs.program = commandsToProgram(commands)
 
 
 def _instantiateGvarGlyph(
@@ -1222,9 +1343,6 @@ def sanityCheckVariableTables(varfont):
     if "gvar" in varfont:
         if "glyf" not in varfont:
             raise ValueError("Can't have gvar without glyf")
-    # TODO(anthrotype) Remove once we do support partial instancing CFF2
-    if "CFF2" in varfont:
-        raise NotImplementedError("Instancing CFF2 variable fonts is not supported yet")
 
 
 def instantiateVariableFont(
@@ -1296,6 +1414,9 @@ def instantiateVariableFont(
     if updateFontNames:
         log.info("Updating name table")
         names.updateNameTable(varfont, axisLimits)
+
+    if "CFF2" in varfont:
+        instantiateCFF2(varfont, normalizedLimits)
 
     if "gvar" in varfont:
         instantiateGvar(varfont, normalizedLimits, optimize=optimize)
