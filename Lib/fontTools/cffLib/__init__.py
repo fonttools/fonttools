@@ -99,9 +99,6 @@ class _DesubroutinizingT2Decompiler(psCharStrings.SimpleT2Decompiler):
                 desubroutinized = desubroutinized[
                     : desubroutinized.index("endchar") + 1
                 ]
-            else:
-                if not len(desubroutinized) or desubroutinized[-1] != "return":
-                    desubroutinized.append("return")
 
         charString._desubroutinized = desubroutinized
         del charString._patches
@@ -472,8 +469,7 @@ class CFFFontSet(object):
         for fontName in self.fontNames:
             font = self[fontName]
             cs = font.CharStrings
-            for g in font.charset:
-                c, _ = cs.getItemAndSelector(g)
+            for c in cs.values():
                 c.decompile()
                 subrs = getattr(c.private, "Subrs", [])
                 decompiler = _DesubroutinizingT2Decompiler(
@@ -2861,9 +2857,11 @@ class PrivateDict(BaseDict):
             # Provide dummy values. This avoids needing to provide
             # an isCFF2 state in a lot of places.
             self.nominalWidthX = self.defaultWidthX = None
+            self._isCFF2 = True
         else:
             self.defaults = buildDefaults(privateDictOperators)
             self.order = buildOrder(privateDictOperators)
+            self._isCFF2 = False
 
     @property
     def in_cff2(self):
