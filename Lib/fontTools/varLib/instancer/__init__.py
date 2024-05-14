@@ -97,6 +97,7 @@ from fontTools import varLib
 # we import the `subset` module because we use the `prune_lookups` method on the GSUB
 # table class, and that method is only defined dynamically upon importing `subset`
 from fontTools import subset  # noqa: F401
+from fontTools.cffLib import privateDictOperators2
 from fontTools.cffLib.specializer import (
     programToCommands,
     commandsToProgram,
@@ -588,7 +589,6 @@ def instantiateCFF2(
     cff.desubroutinize()
 
     varStore2 = topDict.CharStrings.varStore.otVarStore
-
     assert varStore is varStore2  # Who knows why it's in two places?!
 
     def getNumRegions(vsindex):
@@ -597,6 +597,18 @@ def instantiateCFF2(
         )
 
     charStrings = topDict.CharStrings.values()
+
+    # Gather all unique private dicts
+    uniquePrivateDicts = set()
+    privateDicts = []
+    if hasattr(topDict, "Private"):
+        uniquePrivateDicts.add(topDict.Private)
+        privateDicts.append(topDict.Private)
+    for cs in charStrings:
+        if cs.private not in uniquePrivateDicts:
+            uniquePrivateDicts.add(cs.private)
+            privateDicts.append(cs.private)
+
     allCommands = []
     for cs in charStrings:
         assert cs.private.vstore.otVarStore is varStore  # Or in many places!!
@@ -697,18 +709,19 @@ def instantiateCFF2(
         varData.Item = []
         varData.ItemCount = 0
 
-    # Remove vsindex commands that are no longer needed
-    for commands in allCommands:
-        if any(isinstance(arg, list) for command in commands for arg in command[1]):
-            continue
-        commands[:] = [command for command in commands if command[0] != "vsindex"]
-
-    # Collect used vsindex values
+    # Remove vsindex commands that are no longer needed, collect those that are.
     usedVsindex = set()
     for commands in allCommands:
-        for command in commands:
-            if command[0] == "vsindex":
-                usedVsindex.add(command[1][0])
+        if any(isinstance(arg, list) for command in commands for arg in command[1]):
+            vsindex = 0
+            for command in commands:
+                if command[0] == "vsindex":
+                    vsindex = command[1][0]
+                    continue
+                if any(isinstance(arg, list) for arg in command[1]):
+                    usedVsindex.add(vsindex)
+        else:
+            commands[:] = [command for command in commands if command[0] != "vsindex"]
 
     # Remove unused VarData and update vsindex values
     vsindexMapping = {v: i for i, v in enumerate(sorted(usedVsindex))}
@@ -720,16 +733,49 @@ def instantiateCFF2(
             if command[0] == "vsindex":
                 command[1][0] = vsindexMapping[command[1][0]]
 
+    # Ship the charstrings!
+    for cs, commands in zip(charStrings, allCommands):
+        cs.program = commandsToProgram(commands)
+
+    # TODO We don't currently instantiate the private-dict
+    # variable values, as I couldn't find any fonts using those.
+    # File a bug if you need this.
+
+    # Now to instantiate private values
+    for opcode, name, arg_type, default, converter in privateDictOperators2:
+        if arg_type not in ("number", "delta", "array"):
+            continue
+
+        for private in privateDicts:
+            if not hasattr(private, name):
+                continue
+            values = getattr(private, name)
+            if arg_type == "number":
+                values = [values]
+
+            newValues = []
+            for value in values:
+                if not isinstance(value, list):
+                    newValues.append(value)
+                    continue
+
+                raise NotImplementedError(
+                    "File an issue to instantiate private-dict values."
+                )
+
+                newValues.extend(fetchBlendsFromVarStore(value))
+
+            if arg_type == "number":
+                newValues = newValues[0]
+
+            setattr(private, name, newValues)
+
     # Remove empty VarStore
     if not varStore.VarData:
         topDict.VarStore = None
         topDict.CharStrings.varStore = None
-        for cs in charStrings:
-            cs.private.vstore = None
-
-    # Ship it!
-    for cs, commands in zip(charStrings, allCommands):
-        cs.program = commandsToProgram(commands)
+        for private in privateDicts:
+            private.vstore = None
 
 
 def _instantiateGvarGlyph(
