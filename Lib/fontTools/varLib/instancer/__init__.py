@@ -593,9 +593,7 @@ def instantiateCFF2(
     )  # Who knows why it's in two places?!
 
     def getNumRegions(vsindex):
-        return len(
-            varStore.VarData[vsindex if vsindex is not None else 0].VarRegionIndex
-        )
+        return varStore.VarData[vsindex if vsindex is not None else 0].VarRegionCount
 
     charStrings = topDict.CharStrings.values()
 
@@ -791,10 +789,10 @@ def instantiateCFF2(
 
     # Remove empty VarStore
     if not varStore.VarData:
-        topDict.VarStore = None
-        topDict.CharStrings.varStore = None
+        del topDict.VarStore
+        del topDict.CharStrings.varStore
         for private in privateDicts:
-            private.vstore = None
+            del private.vstore
 
 
 def _instantiateGvarGlyph(
