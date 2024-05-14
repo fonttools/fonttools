@@ -183,7 +183,6 @@
         <CharString name=".notdef">
         </CharString>
         <CharString name="A">
-          0 vsindex
           9 30 1 blend
           hmoveto
           122 31 1 blend

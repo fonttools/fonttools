@@ -751,7 +751,10 @@ def instantiateCFF2(
 
     # Empty out the VarStore
     for i, varData in enumerate(varStore.VarData):
-        assert varDataCursor[i] == varData.ItemCount, (varDataCursor[i], varData.ItemCount)
+        assert varDataCursor[i] == varData.ItemCount, (
+            varDataCursor[i],
+            varData.ItemCount,
+        )
         varData.Item = []
         varData.ItemCount = 0
 
@@ -778,6 +781,11 @@ def instantiateCFF2(
         for command in commands:
             if command[0] == "vsindex":
                 command[1][0] = vsindexMapping[command[1][0]]
+
+    # Remove initial vsindex commands that are implied
+    for commands in allCommands:
+        if commands and commands[0] == ("vsindex", [0]):
+            commands.pop(0)
 
     # Ship the charstrings!
     for cs, commands in zip(charStrings, allCommands):
