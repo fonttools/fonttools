@@ -96,7 +96,7 @@ class InstantiateCFF2Test(object):
     def test_pin_and_drop_axis(self, varfont, location, expected):
 
         varfont = ttLib.TTFont()
-        varfont.importXML(os.path.join(TESTDATA, "CFF2Instancer-VF.ttx"))
+        varfont.importXML(os.path.join(TESTDATA, "CFF2Instancer-VF-1.ttx"))
 
         location = instancer.NormalizedAxisLimits(location)
 
@@ -109,6 +109,7 @@ class InstantiateCFF2Test(object):
     @pytest.mark.parametrize(
         "source_ttx, expected_ttx",
         [
+            ("CFF2Instancer-VF-1.ttx", "CFF2Instancer-VF-1-instance-400.ttx"),
             ("CFF2Instancer-VF-2.ttx", "CFF2Instancer-VF-2-instance-400.ttx"),
             ("CFF2Instancer-VF-3.ttx", "CFF2Instancer-VF-3-instance-400.ttx"),
         ],
