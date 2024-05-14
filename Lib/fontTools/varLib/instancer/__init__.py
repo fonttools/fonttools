@@ -572,7 +572,9 @@ def changeTupleVariationAxisLimit(var, axisTag, axisLimit):
     return out
 
 
-def instantiateCFF2(varfont, axisLimits, round=round):
+def instantiateCFF2(
+    varfont, axisLimits, *, round=round, specialize=True, generalize=False
+):
     log.info("Instantiating CFF2 table")
 
     fvarAxes = varfont["fvar"].axes
@@ -592,8 +594,10 @@ def instantiateCFF2(varfont, axisLimits, round=round):
     allCommands = []
     for cs in charStrings:
         commands = programToCommands(cs.program, getNumRegions=getNumRegions)
-        # commands = specializeCommands(commands) # While we're here...
-        commands = generalizeCommands(commands)  # While we're here...
+        if generalize:
+            commands = generalizeCommands(commands)
+        if specialize:
+            commands = specializeCommands(commands, generalizeFirst=not generalize)
         allCommands.append(commands)
 
     def storeBlendsToVarStore(arg):
