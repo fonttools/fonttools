@@ -588,8 +588,9 @@ def instantiateCFF2(
 
     cff.desubroutinize()
 
-    varStore2 = topDict.CharStrings.varStore.otVarStore
-    assert varStore is varStore2  # Who knows why it's in two places?!
+    assert (
+        varStore is topDict.CharStrings.varStore.otVarStore
+    )  # Who knows why it's in two places?!
 
     def getNumRegions(vsindex):
         return len(
@@ -601,13 +602,10 @@ def instantiateCFF2(
     # Gather all unique private dicts
     uniquePrivateDicts = set()
     privateDicts = []
-    if hasattr(topDict, "Private"):
-        uniquePrivateDicts.add(topDict.Private)
-        privateDicts.append(topDict.Private)
-    for cs in charStrings:
-        if cs.private not in uniquePrivateDicts:
-            uniquePrivateDicts.add(cs.private)
-            privateDicts.append(cs.private)
+    for fd in topDict.FDArray:
+        if fd.Private not in uniquePrivateDicts:
+            uniquePrivateDicts.add(fd.Private)
+            privateDicts.append(fd.Private)
 
     allCommands = []
     for cs in charStrings:
@@ -677,7 +675,7 @@ def instantiateCFF2(
         assert varData.Item == []
         assert varData.ItemCount == 0
 
-    # Add blend lists to VarStore so we can instantiate them
+    # Add charstring blend lists to VarStore so we can instantiate them
     for commands in allCommands:
         vsindex = 0
         for command in commands:
@@ -687,10 +685,37 @@ def instantiateCFF2(
             for arg in command[1]:
                 storeBlendsToVarStore(arg)
 
+    # Add private blend lists to VarStore so we can instantiate values
+    vsindex = 0
+    for opcode, name, arg_type, default, converter in privateDictOperators2:
+        if arg_type not in ("number", "delta", "array"):
+            continue
+
+        vsindex = 0
+        for private in privateDicts:
+            if not hasattr(private, name):
+                continue
+            values = getattr(private, name)
+
+            if name == "vsindex":
+                vsindex = values[0]
+                continue
+
+            if arg_type == "number":
+                values = [values]
+
+            for value in values:
+                if not isinstance(value, list):
+                    continue
+
+                assert len(value) % (getNumRegions(vsindex) + 1) == 0
+                count = len(value) // (getNumRegions(vsindex) + 1)
+                storeBlendsToVarStore(value + [count])
+
     # Instantiate VarStore
     defaultDeltas = instantiateItemVariationStore(varStore, fvarAxes, axisLimits)
 
-    # Read back new blends from the instantiated VarStore
+    # Read back new charstring blends from the instantiated VarStore
     varDataCursor = [0] * len(varStore.VarData)
     for commands in allCommands:
         vsindex = 0
@@ -703,11 +728,32 @@ def instantiateCFF2(
                 newArgs.extend(fetchBlendsFromVarStore(arg))
             command[1][:] = newArgs
 
-    # Empty out the VarStore
-    for i, varData in enumerate(varStore.VarData):
-        assert varDataCursor[i] == varData.ItemCount
-        varData.Item = []
-        varData.ItemCount = 0
+    # Read back new private blends from the instantiated VarStore
+    for opcode, name, arg_type, default, converter in privateDictOperators2:
+        if arg_type not in ("number", "delta", "array"):
+            continue
+
+        for private in privateDicts:
+            if not hasattr(private, name):
+                continue
+            values = getattr(private, name)
+            if arg_type == "number":
+                values = [values]
+
+            newValues = []
+            for value in values:
+                if not isinstance(value, list):
+                    newValues.append(value)
+                    continue
+
+                value.append(1)
+                value = fetchBlendsFromVarStore(value)
+                newValues.extend(v[:-1] if isinstance(v, list) else v for v in value)
+
+            if arg_type == "number":
+                newValues = newValues[0]
+
+            setattr(private, name, newValues)
 
     # Remove vsindex commands that are no longer needed, collect those that are.
     usedVsindex = set()
@@ -737,38 +783,11 @@ def instantiateCFF2(
     for cs, commands in zip(charStrings, allCommands):
         cs.program = commandsToProgram(commands)
 
-    # TODO We don't currently instantiate the private-dict
-    # variable values, as I couldn't find any fonts using those.
-    # File a bug if you need this.
-
-    # Now to instantiate private values
-    for opcode, name, arg_type, default, converter in privateDictOperators2:
-        if arg_type not in ("number", "delta", "array"):
-            continue
-
-        for private in privateDicts:
-            if not hasattr(private, name):
-                continue
-            values = getattr(private, name)
-            if arg_type == "number":
-                values = [values]
-
-            newValues = []
-            for value in values:
-                if not isinstance(value, list):
-                    newValues.append(value)
-                    continue
-
-                raise NotImplementedError(
-                    "File an issue to instantiate private-dict values."
-                )
-
-                newValues.extend(fetchBlendsFromVarStore(value))
-
-            if arg_type == "number":
-                newValues = newValues[0]
-
-            setattr(private, name, newValues)
+    # Empty out the VarStore
+    for i, varData in enumerate(varStore.VarData):
+        assert varDataCursor[i] == varData.ItemCount
+        varData.Item = []
+        varData.ItemCount = 0
 
     # Remove empty VarStore
     if not varStore.VarData:
