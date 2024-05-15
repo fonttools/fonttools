@@ -576,11 +576,15 @@ def changeTupleVariationAxisLimit(var, axisTag, axisLimit):
 def instantiateCFF2(
     varfont, axisLimits, *, round=round, specialize=True, generalize=False
 ):
-    # The algorithm here is rather simple: Take all blend operations and
-    # store their deltas in the (otherwise empty) CFF2 VarStore. Then,
-    # instantiate the VarStore with the given axis limits, and read back
-    # the new deltas. This is done for both the CharStrings and the Private
-    # dicts.
+    # The algorithm here is rather simple:
+    #
+    # Take all blend operations and store their deltas in the (otherwise empty)
+    # CFF2 VarStore. Then, instantiate the VarStore with the given axis limits,
+    # and read back the new deltas. This is done for both the CharStrings and
+    # the Private dicts.
+    #
+    # Then prune unused things and possibly drop the VarStore if it's empty.
+    # In which case, TODO: downgrade to CFF table.
 
     log.info("Instantiating CFF2 table")
 
@@ -590,6 +594,7 @@ def instantiateCFF2(
     topDict = cff.topDictIndex[0]
     varStore = topDict.VarStore.otVarStore
     if not varStore:
+        # TODO Downgrade to CFF if requested.
         return
 
     cff.desubroutinize()
@@ -803,6 +808,8 @@ def instantiateCFF2(
         del topDict.CharStrings.varStore
         for private in privateDicts:
             del private.vstore
+
+        # TODO Downgrade to CFF if requested.
 
 
 def _instantiateGvarGlyph(
