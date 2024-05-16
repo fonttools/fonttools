@@ -40,13 +40,6 @@ def convertCFFToCFF2(cff, otFont):
     opOrder = buildOrder(topDictOperators2)
     topDict.order = opOrder
     topDict.cff2GetGlyphOrder = cff2GetGlyphOrder
-    for entry in topDictOperators:
-        key = entry[1]
-        if key not in opOrder:
-            if key in topDict.rawDict:
-                del topDict.rawDict[key]
-            if hasattr(topDict, key):
-                delattr(topDict, key)
 
     if not hasattr(topDict, "FDArray"):
         fdArray = topDict.FDArray = FDArrayIndex()
@@ -63,28 +56,7 @@ def convertCFFToCFF2(cff, otFont):
         fdArray.append(fontDict)
         fontDict.Private = privateDict
         privateOpOrder = buildOrder(privateDictOperators2)
-        for entry in privateDictOperators:
-            key = entry[1]
-            if key not in privateOpOrder:
-                if key in privateDict.rawDict:
-                    # print "Removing private dict", key
-                    del privateDict.rawDict[key]
-                if hasattr(privateDict, key):
-                    delattr(privateDict, key)
-                    # print "Removing privateDict attr", key
-    else:
-        # clean up the PrivateDicts in the fdArray
-        fdArray = topDict.FDArray
-        privateOpOrder = buildOrder(privateDictOperators2)
-        for fontDict in fdArray:
-            fontDict.setCFF2(True)
-            for key in fontDict.rawDict.keys():
-                if key not in fontDict.order:
-                    del fontDict.rawDict[key]
-                    if hasattr(fontDict, key):
-                        delattr(fontDict, key)
-
-            privateDict = fontDict.Private
+        if privateDict is not None:
             for entry in privateDictOperators:
                 key = entry[1]
                 if key not in privateOpOrder:
@@ -94,6 +66,37 @@ def convertCFFToCFF2(cff, otFont):
                     if hasattr(privateDict, key):
                         delattr(privateDict, key)
                         # print "Removing privateDict attr", key
+    else:
+        # clean up the PrivateDicts in the fdArray
+        fdArray = topDict.FDArray
+        privateOpOrder = buildOrder(privateDictOperators2)
+        for fontDict in fdArray:
+            fontDict.setCFF2(True)
+            for key in list(fontDict.rawDict.keys()):
+                if key not in fontDict.order:
+                    del fontDict.rawDict[key]
+                    if hasattr(fontDict, key):
+                        delattr(fontDict, key)
+
+            privateDict = fontDict.Private
+            for entry in privateDictOperators:
+                key = entry[1]
+                if key not in privateOpOrder:
+                    if key in list(privateDict.rawDict.keys()):
+                        # print "Removing private dict", key
+                        del privateDict.rawDict[key]
+                    if hasattr(privateDict, key):
+                        delattr(privateDict, key)
+                        # print "Removing privateDict attr", key
+
+    # Now delete up the deprecated topDict operators from CFF 1.0
+    for entry in topDictOperators:
+        key = entry[1]
+        if key not in opOrder:
+            if key in topDict.rawDict:
+                del topDict.rawDict[key]
+            if hasattr(topDict, key):
+                delattr(topDict, key)
 
     # TODO(behdad): What does the following comment even mean? Both CFF and CFF2
     # use the same T2Charstring class.
