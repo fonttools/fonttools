@@ -1,6 +1,5 @@
 """CFF to CFF2 converter."""
 
-from fontTools.ttLib import TTFont
 from fontTools.ttLib import TTFont, newTable
 from fontTools.misc.cliTools import makeOutputFileName
 from fontTools.cffLib import (
@@ -14,8 +13,12 @@ from fontTools.cffLib import (
     privateDictOperators2,
 )
 from io import BytesIO
+import logging
 
 __all__ = ["convertCFFToCFF2", "main"]
+
+
+log = logging.getLogger("fontTools.cffLib")
 
 
 def convertCFFToCFF2(cff, otFont):
@@ -139,7 +142,20 @@ def main(args=None):
         action="store_false",
         help="Don't set the output font's timestamp to the current time.",
     )
+    loggingGroup = parser.add_mutually_exclusive_group(required=False)
+    loggingGroup.add_argument(
+        "-v", "--verbose", action="store_true", help="Run more verbosely."
+    )
+    loggingGroup.add_argument(
+        "-q", "--quiet", action="store_true", help="Turn verbosity off."
+    )
     options = parser.parse_args(args)
+
+    from fontTools import configLogger
+
+    configLogger(
+        level=("DEBUG" if options.verbose else "ERROR" if options.quiet else "INFO")
+    )
 
     import os
 
@@ -153,7 +169,7 @@ def main(args=None):
         else options.output
     )
 
-    font = TTFont(infile)
+    font = TTFont(infile, recalcTimestamp=options.recalc_timestamp, recalcBBoxes=False)
     cff = font["CFF "].cff
     del font["CFF "]
 
@@ -161,6 +177,12 @@ def main(args=None):
 
     table = font["CFF2"] = newTable("CFF2")
     table.cff = cff
+
+    log.info(
+        "Saving %s",
+        outfile,
+    )
+    font.save(outfile)
 
 
 if __name__ == "__main__":
