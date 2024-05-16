@@ -79,12 +79,18 @@ def _convertCFF2ToCFF(cff, otFont):
             cs.program.insert(0, width - private.nominalWidthX)
 
 
-def convertCFF2ToCFF(font):
+def convertCFF2ToCFF(font, *, updatePostTable=True):
     cff = font["CFF2"].cff
     _convertCFF2ToCFF(cff, font)
     del font["CFF2"]
     table = font["CFF "] = newTable("CFF ")
     table.cff = cff
+
+    if updatePostTable and "post" in font:
+        # Only version supported for fonts with CFF table is 0x00030000 not 0x20000
+        post = font["post"]
+        if post.formatType == 2.0:
+            post.formatType = 3.0
 
 
 def main(args=None):
