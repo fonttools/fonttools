@@ -21,7 +21,7 @@ __all__ = ["convertCFFToCFF2", "main"]
 log = logging.getLogger("fontTools.cffLib")
 
 
-def convertCFFToCFF2(cff, otFont):
+def _convertCFFToCFF2(cff, otFont):
     """Converts this object from CFF format to CFF2 format. This conversion
     is done 'in-place'. The conversion cannot be reversed.
 
@@ -113,6 +113,14 @@ def convertCFFToCFF2(cff, otFont):
     cff.decompile(file, otFont, isCFF2=True)
 
 
+def convertCFFToCFF2(font):
+    cff = font["CFF "].cff
+    del font["CFF "]
+    _convertCFFToCFF2(cff, font)
+    table = font["CFF2"] = newTable("CFF2")
+    table.cff = cff
+
+
 def main(args=None):
     """Convert CFF OTF font to CFF2 OTF font"""
     if args is None:
@@ -170,13 +178,8 @@ def main(args=None):
     )
 
     font = TTFont(infile, recalcTimestamp=options.recalc_timestamp, recalcBBoxes=False)
-    cff = font["CFF "].cff
-    del font["CFF "]
 
-    cff.convertCFFToCFF2(font)
-
-    table = font["CFF2"] = newTable("CFF2")
-    table.cff = cff
+    convertCFFToCFF2(font)
 
     log.info(
         "Saving %s",

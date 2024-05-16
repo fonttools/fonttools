@@ -601,10 +601,9 @@ def instantiateCFF2(
     varStore = topDict.VarStore.otVarStore
     if not varStore:
         if downgrade:
-            table = varfont["CFF "] = newTable("CFF ")
-            table.cff = cff
-            cff.convertCFF2ToCFF(varfont)
-            del varfont["CFF2"]
+            from fontTools.cffLib.CFF2ToCFF import convertCFF2ToCFF
+
+            convertCFF2ToCFF(varfont)
         return
 
     cff.desubroutinize()
@@ -821,10 +820,9 @@ def instantiateCFF2(
             del private.vstore
 
         if downgrade:
-            table = varfont["CFF "] = newTable("CFF ")
-            table.cff = cff
-            cff.convertCFF2ToCFF(varfont)
-            del varfont["CFF2"]
+            from fontTools.cffLib.CFF2ToCFF import convertCFF2ToCFF
+
+            convertCFF2ToCFF(varfont)
 
 
 def _instantiateGvarGlyph(

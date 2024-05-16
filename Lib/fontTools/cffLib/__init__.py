@@ -386,14 +386,14 @@ class CFFFontSet(object):
             self.minor = int(attrs["value"])
 
     def convertCFFToCFF2(self, otFont):
-        from .CFFToCFF2 import convertCFFToCFF2
+        from .CFFToCFF2 import _convertCFFToCFF2
 
-        convertCFFToCFF2(self, otFont)
+        _convertCFFToCFF2(self, otFont)
 
     def convertCFF2ToCFF(self, otFont):
-        from .CFF2ToCFF import convertCFF2ToCFF
+        from .CFF2ToCFF import _convertCFF2ToCFF
 
-        convertCFF2ToCFF(self, otFont)
+        _convertCFF2ToCFF(self, otFont)
 
     def desubroutinize(self):
         for fontName in self.fontNames:

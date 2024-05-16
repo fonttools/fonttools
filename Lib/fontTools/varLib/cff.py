@@ -13,7 +13,6 @@ from fontTools.cffLib import (
 )
 from io import BytesIO
 from fontTools.cffLib.specializer import specializeCommands, commandsToProgram
-from fontTools.cffLib.CFFToCFF2 import convertCFFToCFF2 as lib_convertCFFToCFF2
 from fontTools.ttLib import newTable
 from fontTools import varLib
 from fontTools.varLib.models import allEqual
@@ -48,16 +47,6 @@ def addCFFVarStore(varFont, varModel, varDataList, masterSupports):
         for fontDict in fdArray:
             if hasattr(fontDict, "Private"):
                 fontDict.Private.vstore = topDict.VarStore
-
-
-def convertCFFtoCFF2(varFont):
-    # Convert base font to a single master CFF2 font.
-    cffTable = varFont["CFF "]
-    lib_convertCFFToCFF2(cffTable.cff, varFont)
-    newCFF2 = newTable("CFF2")
-    newCFF2.cff = cffTable.cff
-    varFont["CFF2"] = newCFF2
-    del varFont["CFF "]
 
 
 def conv_to_int(num):
