@@ -458,12 +458,53 @@ class CFFFontSet(object):
                         if hasattr(privateDict, key):
                             delattr(privateDict, key)
                             # print "Removing privateDict attr", key
+
+        # TODO(behdad): What does the following comment even mean? Both CFF and CFF2
+        # use the same T2Charstring class.
+        # What I see missing is dropping the endchar and return operators...
+
         # At this point, the Subrs and Charstrings are all still T2Charstring class
         # easiest to fix this by compiling, then decompiling again
         file = BytesIO()
         self.compile(file, otFont, isCFF2=True)
         file.seek(0)
         self.decompile(file, otFont, isCFF2=True)
+
+    def convertCFF2ToCFF(self, otFont):
+        """Converts this object from CFF2 format to CFF format. This conversion
+        is done 'in-place'. The conversion cannot be reversed.
+
+        The CFF2 font cannot be variable. This method will remove the VarStore,
+        but will not process the CharStrings in any way (TODO instantiate to default).
+
+        This assumes a decompiled CFF table. (i.e. that the object has been
+        filled via :meth:`decompile`.)"""
+        self.major = 1
+        topDictData = TopDictIndex(None)
+        topDictData.items = self.topDictIndex.items
+        self.topDictIndex = topDictData
+        topDict = topDictData[0]
+        if hasattr(topDict, "Private"):
+            privateDict = topDict.Private
+        else:
+            privateDict = None
+        opOrder = buildOrder(topDictOperators)
+        topDict.order = opOrder
+
+        fdArray = topDict.FDArray
+        charStrings = topDict.CharStrings
+
+        for cs in charStrings.values():
+            cs.program.append("endchar")
+
+        # TODO Add "return" to subrs that don't end in endchar?
+
+        # At this point, the Subrs and Charstrings are all still T2Charstring class
+        # easiest to fix this by compiling, then decompiling again
+        # file = BytesIO()
+        # self.compile(file, otFont, isCFF2=False)
+        # file.seek(0)
+        # self.decompile(file, otFont, isCFF2=False)
 
     def desubroutinize(self):
         for fontName in self.fontNames:

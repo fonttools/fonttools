@@ -89,7 +89,7 @@ from fontTools.misc.fixedTools import (
     otRound,
 )
 from fontTools.varLib.models import normalizeValue, piecewiseLinearMap
-from fontTools.ttLib import TTFont
+from fontTools.ttLib import TTFont, getTableClass
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools.ttLib.tables import _g_l_y_f
 from fontTools import varLib
@@ -574,7 +574,13 @@ def changeTupleVariationAxisLimit(var, axisTag, axisLimit):
 
 
 def instantiateCFF2(
-    varfont, axisLimits, *, round=round, specialize=True, generalize=False
+    varfont,
+    axisLimits,
+    *,
+    round=round,
+    specialize=True,
+    generalize=False,
+    downgrade=False,
 ):
     # The algorithm here is rather simple:
     #
@@ -594,7 +600,11 @@ def instantiateCFF2(
     topDict = cff.topDictIndex[0]
     varStore = topDict.VarStore.otVarStore
     if not varStore:
-        # TODO Downgrade to CFF if requested.
+        if downgrade:
+            table = varfont["CFF "] = getTableClass("CFF ")()
+            table.cff = cff
+            cff.convertCFF2ToCFF(varfont)
+            del varfont["CFF2"]
         return
 
     cff.desubroutinize()
@@ -653,7 +663,6 @@ def instantiateCFF2(
         newDefaults = []
         newDeltas = []
         for i in range(count):
-
             defaultValue = arg[i]
 
             major = vsindex
@@ -804,12 +813,18 @@ def instantiateCFF2(
 
     # Remove empty VarStore
     if not varStore.VarData:
+        if "VarStore" in topDict.rawDict:
+            del topDict.rawDict["VarStore"]
         del topDict.VarStore
         del topDict.CharStrings.varStore
         for private in privateDicts:
             del private.vstore
 
-        # TODO Downgrade to CFF if requested.
+        if downgrade:
+            table = varfont["CFF "] = getTableClass("CFF ")()
+            table.cff = cff
+            cff.convertCFF2ToCFF(varfont)
+            del varfont["CFF2"]
 
 
 def _instantiateGvarGlyph(
