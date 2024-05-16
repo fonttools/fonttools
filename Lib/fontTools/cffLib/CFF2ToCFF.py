@@ -19,7 +19,7 @@ def convertCFF2ToCFF(cff, otFont):
     default instance?)
 
     This assumes a decompiled CFF table. (i.e. that the object has been
-    filled via :meth:`decompile`.)"""
+    filled via :meth:`decompile` and e.g. not loaded from XML.)"""
 
     cff.major = 1
     topDict = cff.topDictIndex[0]
