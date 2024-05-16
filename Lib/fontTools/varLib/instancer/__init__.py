@@ -89,7 +89,7 @@ from fontTools.misc.fixedTools import (
     otRound,
 )
 from fontTools.varLib.models import normalizeValue, piecewiseLinearMap
-from fontTools.ttLib import TTFont, getTableClass
+from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools.ttLib.tables import _g_l_y_f
 from fontTools import varLib
@@ -601,7 +601,7 @@ def instantiateCFF2(
     varStore = topDict.VarStore.otVarStore
     if not varStore:
         if downgrade:
-            table = varfont["CFF "] = getTableClass("CFF ")()
+            table = varfont["CFF "] = newTable("CFF ")
             table.cff = cff
             cff.convertCFF2ToCFF(varfont)
             del varfont["CFF2"]
@@ -821,7 +821,7 @@ def instantiateCFF2(
             del private.vstore
 
         if downgrade:
-            table = varfont["CFF "] = getTableClass("CFF ")()
+            table = varfont["CFF "] = newTable("CFF ")
             table.cff = cff
             cff.convertCFF2ToCFF(varfont)
             del varfont["CFF2"]

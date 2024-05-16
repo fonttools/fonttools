@@ -386,125 +386,14 @@ class CFFFontSet(object):
             self.minor = int(attrs["value"])
 
     def convertCFFToCFF2(self, otFont):
-        """Converts this object from CFF format to CFF2 format. This conversion
-        is done 'in-place'. The conversion cannot be reversed.
+        from .CFFToCFF2 import convertCFFToCFF2
 
-        This assumes a decompiled CFF table. (i.e. that the object has been
-        filled via :meth:`decompile`.)"""
-        self.major = 2
-        cff2GetGlyphOrder = self.otFont.getGlyphOrder
-        topDictData = TopDictIndex(None, cff2GetGlyphOrder)
-        topDictData.items = self.topDictIndex.items
-        self.topDictIndex = topDictData
-        topDict = topDictData[0]
-        if hasattr(topDict, "Private"):
-            privateDict = topDict.Private
-        else:
-            privateDict = None
-        opOrder = buildOrder(topDictOperators2)
-        topDict.order = opOrder
-        topDict.cff2GetGlyphOrder = cff2GetGlyphOrder
-        for entry in topDictOperators:
-            key = entry[1]
-            if key not in opOrder:
-                if key in topDict.rawDict:
-                    del topDict.rawDict[key]
-                if hasattr(topDict, key):
-                    delattr(topDict, key)
-
-        if not hasattr(topDict, "FDArray"):
-            fdArray = topDict.FDArray = FDArrayIndex()
-            fdArray.strings = None
-            fdArray.GlobalSubrs = topDict.GlobalSubrs
-            topDict.GlobalSubrs.fdArray = fdArray
-            charStrings = topDict.CharStrings
-            if charStrings.charStringsAreIndexed:
-                charStrings.charStringsIndex.fdArray = fdArray
-            else:
-                charStrings.fdArray = fdArray
-            fontDict = FontDict()
-            fontDict.setCFF2(True)
-            fdArray.append(fontDict)
-            fontDict.Private = privateDict
-            privateOpOrder = buildOrder(privateDictOperators2)
-            for entry in privateDictOperators:
-                key = entry[1]
-                if key not in privateOpOrder:
-                    if key in privateDict.rawDict:
-                        # print "Removing private dict", key
-                        del privateDict.rawDict[key]
-                    if hasattr(privateDict, key):
-                        delattr(privateDict, key)
-                        # print "Removing privateDict attr", key
-        else:
-            # clean up the PrivateDicts in the fdArray
-            fdArray = topDict.FDArray
-            privateOpOrder = buildOrder(privateDictOperators2)
-            for fontDict in fdArray:
-                fontDict.setCFF2(True)
-                for key in fontDict.rawDict.keys():
-                    if key not in fontDict.order:
-                        del fontDict.rawDict[key]
-                        if hasattr(fontDict, key):
-                            delattr(fontDict, key)
-
-                privateDict = fontDict.Private
-                for entry in privateDictOperators:
-                    key = entry[1]
-                    if key not in privateOpOrder:
-                        if key in privateDict.rawDict:
-                            # print "Removing private dict", key
-                            del privateDict.rawDict[key]
-                        if hasattr(privateDict, key):
-                            delattr(privateDict, key)
-                            # print "Removing privateDict attr", key
-
-        # TODO(behdad): What does the following comment even mean? Both CFF and CFF2
-        # use the same T2Charstring class.
-        # What I see missing is dropping the endchar and return operators...
-
-        # At this point, the Subrs and Charstrings are all still T2Charstring class
-        # easiest to fix this by compiling, then decompiling again
-        file = BytesIO()
-        self.compile(file, otFont, isCFF2=True)
-        file.seek(0)
-        self.decompile(file, otFont, isCFF2=True)
+        convertCFFToCFF2(self, otFont)
 
     def convertCFF2ToCFF(self, otFont):
-        """Converts this object from CFF2 format to CFF format. This conversion
-        is done 'in-place'. The conversion cannot be reversed.
+        from .CFF2ToCFF import convertCFF2ToCFF
 
-        The CFF2 font cannot be variable. This method will remove the VarStore,
-        but will not process the CharStrings in any way (TODO instantiate to default).
-
-        This assumes a decompiled CFF table. (i.e. that the object has been
-        filled via :meth:`decompile`.)"""
-        self.major = 1
-        topDictData = TopDictIndex(None)
-        topDictData.items = self.topDictIndex.items
-        self.topDictIndex = topDictData
-        topDict = topDictData[0]
-        if hasattr(topDict, "Private"):
-            privateDict = topDict.Private
-        else:
-            privateDict = None
-        opOrder = buildOrder(topDictOperators)
-        topDict.order = opOrder
-
-        fdArray = topDict.FDArray
-        charStrings = topDict.CharStrings
-
-        for cs in charStrings.values():
-            cs.program.append("endchar")
-
-        # TODO Add "return" to subrs that don't end in endchar?
-
-        # At this point, the Subrs and Charstrings are all still T2Charstring class
-        # easiest to fix this by compiling, then decompiling again
-        # file = BytesIO()
-        # self.compile(file, otFont, isCFF2=False)
-        # file.seek(0)
-        # self.decompile(file, otFont, isCFF2=False)
+        convertCFF2ToCFF(self, otFont)
 
     def desubroutinize(self):
         for fontName in self.fontNames:
@@ -801,8 +690,8 @@ class Index(object):
     compilerClass = IndexCompiler
 
     def __init__(self, file=None, isCFF2=None):
-        assert (isCFF2 is None) == (file is None)
         self.items = []
+        self.offsets = offsets = []
         name = self.__class__.__name__
         if file is None:
             return
@@ -819,7 +708,6 @@ class Index(object):
         offSize = readCard8(file)
         log.log(DEBUG, "    index count: %s offSize: %s", count, offSize)
         assert offSize <= 4, "offSize too large: %s" % offSize
-        self.offsets = offsets = []
         pad = b"\0" * (4 - offSize)
         for index in range(count + 1):
             chunk = file.read(offSize)
@@ -997,7 +885,6 @@ class TopDictIndex(Index):
     compilerClass = TopDictIndexCompiler
 
     def __init__(self, file=None, cff2GetGlyphOrder=None, topSize=0, isCFF2=None):
-        assert (isCFF2 is None) == (file is None)
         self.cff2GetGlyphOrder = cff2GetGlyphOrder
         if file is not None and isCFF2:
             self._isCFF2 = isCFF2
