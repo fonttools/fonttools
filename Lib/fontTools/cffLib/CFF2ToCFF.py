@@ -25,9 +25,6 @@ def convertCFF2ToCFF(cff, otFont):
     filled via :meth:`decompile` and e.g. not loaded from XML.)"""
 
     cff.major = 1
-    topDict = cff.topDictIndex[0]
-    if hasattr(topDict, "VarStore"):
-        raise ValueError("Variable CFF2 font cannot be converted to CFF format.")
 
     topDictData = TopDictIndex(None, isCFF2=True)
     for item in cff.topDictIndex:
@@ -35,6 +32,10 @@ def convertCFF2ToCFF(cff, otFont):
         topDictData.append(item)
     cff.topDictIndex = topDictData
     topDict = topDictData[0]
+
+    if hasattr(topDict, "VarStore"):
+        raise ValueError("Variable CFF2 font cannot be converted to CFF format.")
+
     if hasattr(topDict, "Private"):
         privateDict = topDict.Private
     else:
@@ -46,11 +47,13 @@ def convertCFF2ToCFF(cff, otFont):
     charStrings = topDict.CharStrings
 
     for cs in charStrings.values():
+        cs.decompile()
         cs.program.append("endchar")
     for subrSets in [cff.GlobalSubrs] + [
         getattr(fd.Private, "Subrs", []) for fd in fdArray
     ]:
         for cs in subrSets:
+            cs.decompile()
             cs.program.append("return")
 
     # Add (optimal) width to CharStrings that need it.
