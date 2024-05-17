@@ -53,7 +53,6 @@ def _convertCFF2ToCFF(cff, otFont):
         getattr(fd.Private, "Subrs", []) for fd in fdArray
     ]:
         for cs in subrSets:
-            cs.decompile()
             cs.program.append("return")
 
     # Add (optimal) width to CharStrings that need it.
