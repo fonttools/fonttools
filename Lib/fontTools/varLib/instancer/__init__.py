@@ -590,7 +590,7 @@ def instantiateCFF2(
     # the Private dicts.
     #
     # Then prune unused things and possibly drop the VarStore if it's empty.
-    # In which case, TODO: downgrade to CFF table.
+    # In which case, downgrade to CFF table if requested.
 
     log.info("Instantiating CFF2 table")
 
