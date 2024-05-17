@@ -1915,10 +1915,6 @@ def test_subset_recalc_xAvgCharWidth(ttf_path):
     assert xAvgCharWidth_after == subset_font["OS/2"].xAvgCharWidth
 
 
-if __name__ == "__main__":
-    sys.exit(unittest.main())
-
-
 def test_subset_prune_gdef_markglyphsetsdef():
     # GDEF_MarkGlyphSetsDef
     fb = FontBuilder(unitsPerEm=1000, isTTF=True)
@@ -2023,3 +2019,57 @@ def test_subset_prune_gdef_markglyphsetsdef():
     assert lookups[1].MarkFilteringSet == None
     marksets = font["GDEF"].table.MarkGlyphSetsDef.Coverage
     assert marksets[0].glyphs == ["acutecomb"]
+
+
+def test_prune_user_name_IDs_with_keep_all(ttf_path):
+    font = TTFont(ttf_path)
+
+    keepNameIDs = {n.nameID for n in font["name"].names}
+
+    for i in range(10):
+        font["name"].addName(f"Test{i}")
+
+    options = subset.Options()
+    options.name_IDs = ["*"]
+    options.name_legacy = True
+    options.name_languages = ["*"]
+
+    subsetter = subset.Subsetter(options)
+    subsetter.populate(unicodes=font.getBestCmap().keys())
+    subsetter.subset(font)
+
+    nameIDs = {n.nameID for n in font["name"].names}
+    assert not any(n > 255 for n in nameIDs)
+    assert nameIDs == keepNameIDs
+
+
+def test_prune_unused_user_name_IDs_with_keep_all(ttf_path):
+    font = TTFont(ttf_path)
+
+    keepNameIDs = {n.nameID for n in font["name"].names}
+
+    for i in range(10):
+        font["name"].addName(f"Test{i}")
+
+    nameID = font["name"].addName("Test STAT")
+    keepNameIDs.add(nameID)
+
+    font["STAT"] = newTable("STAT")
+    font["STAT"].table = ot.STAT()
+    font["STAT"].table.ElidedFallbackNameID = nameID
+
+    options = subset.Options()
+    options.name_IDs = ["*"]
+    options.name_legacy = True
+    options.name_languages = ["*"]
+
+    subsetter = subset.Subsetter(options)
+    subsetter.populate(unicodes=font.getBestCmap().keys())
+    subsetter.subset(font)
+
+    nameIDs = {n.nameID for n in font["name"].names}
+    assert nameIDs == keepNameIDs
+
+
+if __name__ == "__main__":
+    sys.exit(unittest.main())
