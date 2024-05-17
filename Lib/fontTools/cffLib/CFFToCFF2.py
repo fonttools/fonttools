@@ -29,6 +29,70 @@ def _convertCFFToCFF2(cff, otFont):
     This assumes a decompiled CFF table. (i.e. that the object has been
     filled via :meth:`decompile` and e.g. not loaded from XML.)"""
 
+    # Clean up T2CharStrings
+
+    topDict = cff.topDictIndex[0]
+    fdArray = topDict.FDArray if hasattr(topDict, "FDArray") else None
+    charStrings = topDict.CharStrings
+    globalSubrs = cff.GlobalSubrs
+    localSubrs = [getattr(fd.Private, "Subrs", []) for fd in fdArray] if fdArray else []
+
+    for glyphName in charStrings.keys():
+        cs, fdIndex = charStrings.getItemAndSelector(glyphName)
+        cs.decompile()
+
+    # Clean up subroutines first
+    for subrs in [globalSubrs] + localSubrs:
+        for subr in subrs:
+            program = subr.program
+            i = j = len(program)
+            try:
+                i = program.index("return")
+            except ValueError:
+                pass
+            try:
+                j = program.index("endchar")
+            except ValueError:
+                pass
+            program[min(i, j) :] = []
+
+    # Clean up glyph charstrings
+    for glyphName in charStrings.keys():
+        cs, fdIndex = charStrings.getItemAndSelector(glyphName)
+        program = cs.program
+        if fdIndex == None:
+            fdIndex = 0
+
+        # Intentionally use None for nominalWidthX, such that any
+        # CharString that has an explicit width encoded will throw.
+        extractor = T2WidthExtractor(
+            localSubrs[fdIndex] if localSubrs else [], globalSubrs, None, 0
+        )
+        try:
+            extractor.execute(cs)
+        except TypeError:
+            # Program has explicit width. We want to drop it, but can't
+            # just pop the first number since it may be a subroutine call.
+            # Instead, when seeing that, we embed the subroutine and recurse.
+            # This has the problem that some subroutines might become unused.
+            # We don't currently prune those. Subset module has code for this
+            # kind of stuff, possibly plug it in here if pruning becomes needed.
+            while program[1] in ["callsubr", "callgsubr"]:
+                subrNumber = program.pop(0)
+                op = program.pop(0)
+                bias = extractor.localBias if op == "callsubr" else extractor.globalBias
+                subrNumber += bias
+                subrSet = localSubrs[fdIndex] if op == "callsubr" else globalSubrs
+                subrProgram = subrSet[subrNumber].program
+                program[:0] = subrProgram
+            # Now pop the actual width
+            program.pop(0)
+
+        if program and program[-1] == "endchar":
+            program.pop()
+
+    # Upconvert TopDict
+
     cff.major = 2
     cff2GetGlyphOrder = cff.otFont.getGlyphOrder
     topDictData = TopDictIndex(None, cff2GetGlyphOrder)
@@ -101,64 +165,6 @@ def _convertCFFToCFF2(cff, otFont):
                 del topDict.rawDict[key]
             if hasattr(topDict, key):
                 delattr(topDict, key)
-
-    # Clean up T2CharStrings
-
-    charStrings = topDict.CharStrings
-    globalSubrs = cff.GlobalSubrs
-    localSubrs = [getattr(fd.Private, "Subrs", []) for fd in fdArray]
-
-    for glyphName in charStrings.keys():
-        cs, fdIndex = charStrings.getItemAndSelector(glyphName)
-        cs.decompile()
-
-    # Clean up subroutines first
-    for subrs in [globalSubrs] + localSubrs:
-        for subr in subrs:
-            program = subr.program
-            i = j = len(program)
-            try:
-                i = program.index("return")
-            except ValueError:
-                pass
-            try:
-                j = program.index("endchar")
-            except ValueError:
-                pass
-            program[min(i, j) :] = []
-
-    # Clean up glyph charstrings
-    for glyphName in charStrings.keys():
-        cs, fdIndex = charStrings.getItemAndSelector(glyphName)
-        program = cs.program
-        if fdIndex == None:
-            fdIndex = 0
-
-        # Intentionally use None for nominalWidthX, such that any
-        # CharString that has an explicit width encoded will throw.
-        extractor = T2WidthExtractor(localSubrs[fdIndex], globalSubrs, None, 0)
-        try:
-            extractor.execute(cs)
-        except TypeError:
-            # Program has explicit width. We want to drop it, but can't
-            # just pop the first number since it may be a subroutine call.
-            # Instead, when seeing that, we embed the subroutine and recurse.
-            # This has the problem that some subroutines might become unused.
-            # We don't currently prune those. Subset module has code for this
-            # kind of stuff, possibly plug it in here if pruning becomes needed.
-            while program[1] in ["callsubr", "callgsubr"]:
-                subrNumber = program.pop(0)
-                op = program.pop(0)
-                bias = extractor.localBias if op == "callsubr" else extractor.globalBias
-                subrNumber += bias
-                subrSet = localSubrs[fdIndex] if op == "callsubr" else globalSubrs
-                subrProgram = subrSet[subrNumber].program
-                program[:0] = subrProgram
-            # Now pop the actual width
-            program.pop(0)
-
-        if program and program[-1] == "endchar":
-            program.pop()
 
     # TODO(behdad): What does the following comment even mean? Both CFF and CFF2
     # use the same T2Charstring class.
