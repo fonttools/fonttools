@@ -796,6 +796,7 @@ def instantiateCFF2(
     varStore.VarData = [
         varData for i, varData in enumerate(varStore.VarData) if i in usedVsindex
     ]
+    varStore.VarDataCount = len(varStore.VarData)
     for commands in allCommands:
         for command in commands:
             if command[0] == "vsindex":
