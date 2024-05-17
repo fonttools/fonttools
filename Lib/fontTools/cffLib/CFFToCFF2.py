@@ -167,7 +167,10 @@ def _convertCFFToCFF2(cff, otFont):
                 delattr(topDict, key)
 
     # TODO(behdad): What does the following comment even mean? Both CFF and CFF2
-    # use the same T2Charstring class.
+    # use the same T2Charstring class. I *think* what it means is that the CharStrings
+    # were loaded for CFF1, and we need to reload them for CFF2 to set varstore, etc
+    # on them. At least that's what I understand. It's probably safe to remove this
+    # and just set vstore where needed.
 
     # At this point, the Subrs and Charstrings are all still T2Charstring class
     # easiest to fix this by compiling, then decompiling again
