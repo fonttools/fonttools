@@ -2,6 +2,7 @@
 
 from fontTools.ttLib import TTFont, newTable
 from fontTools.misc.cliTools import makeOutputFileName
+from fontTools.misc.psCharStrings import T2WidthExtractor
 from fontTools.cffLib import (
     TopDictIndex,
     FDArrayIndex,
@@ -101,9 +102,66 @@ def _convertCFFToCFF2(cff, otFont):
             if hasattr(topDict, key):
                 delattr(topDict, key)
 
+    # Clean up T2CharStrings
+
+    charStrings = topDict.CharStrings
+    globalSubrs = cff.GlobalSubrs
+    localSubrs = [getattr(fd.Private, "Subrs", []) for fd in fdArray]
+
+    for glyphName in charStrings.keys():
+        cs, fdIndex = charStrings.getItemAndSelector(glyphName)
+        cs.decompile()
+
+    # Clean up subroutines first
+    for subrs in [globalSubrs] + localSubrs:
+        for subr in subrs:
+            program = subr.program
+            i = j = len(program)
+            try:
+                i = program.index("return")
+            except ValueError:
+                pass
+            try:
+                j = program.index("endchar")
+            except ValueError:
+                pass
+            program[min(i, j) :] = []
+
+    # Clean up glyph charstrings
+    for glyphName in charStrings.keys():
+        cs, fdIndex = charStrings.getItemAndSelector(glyphName)
+        program = cs.program
+        if fdIndex == None:
+            fdIndex = 0
+
+        # Intentionally use None for nominalWidthX, such that any
+        # CharString that has an explicit width encoded will throw.
+        extractor = T2WidthExtractor(localSubrs[fdIndex], globalSubrs, None, 0)
+        try:
+            extractor.execute(cs)
+        except TypeError:
+            # Program has explicit width. We want to drop it, but can't
+            # just pop the first number since it may be a subroutine call.
+            # Instead, when seeing that, we embed the subroutine and recurse.
+            # This has the problem that some subroutines might become unused.
+            # We don't currently prune those. Subset module has code for this
+            # kind of stuff, possibly plug it in here if pruning becomes needed.
+            while program[1] in ["callsubr", "callgsubr"]:
+                subrNumber = program.pop(0)
+                op = program.pop(0)
+                bias = extractor.localBias if op == "callsubr" else extractor.globalBias
+                subrNumber += bias
+                subrSet = localSubrs[fdIndex] if op == "callsubr" else globalSubrs
+                subrProgram = subrSet[subrNumber].program
+                program[:0] = subrProgram
+            # Now pop the actual width
+            program.pop(0)
+
+        if program and program[-1] == "endchar":
+            program.pop()
+
     # TODO(behdad): What does the following comment even mean? Both CFF and CFF2
     # use the same T2Charstring class.
-    # What I see missing is dropping the endchar and return operators...
 
     # At this point, the Subrs and Charstrings are all still T2Charstring class
     # easiest to fix this by compiling, then decompiling again
