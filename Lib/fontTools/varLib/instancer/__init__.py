@@ -1063,8 +1063,13 @@ def _instantiateVHVAR(varfont, axisLimits, tableFields, *, round=round):
                     varIdx = varfont.getGlyphID(glyphName)
                 metrics[glyphName] = (advanceWidth + round(defaultDeltas[varIdx]), sb)
 
-            # TODO if tableTag == "VVAR" and getattr(vhvar, tableFields.vOrigMapping),
-            # update VORG table as well
+            if (
+                tableTag == "VVAR"
+                and getattr(vhvar, tableFields.vOrigMapping) is not None
+            ):
+                log.warning(
+                    "VORG table not yet updated to reflect changes in VVAR table"
+                )
 
             # For full instances (i.e. all axes pinned), we can simply drop HVAR/VVAR and return
             if set(location).issuperset(axis.axisTag for axis in fvarAxes):
