@@ -1018,6 +1018,15 @@ def test_main_ttx_compile_stdin_to_stdout(tmp_path):
     assert outpath.is_file()
 
 
+def test_main_gnu_style_opts_and_args_intermixed(tmpdir):
+    # https://github.com/fonttools/fonttools/issues/3507
+    inpath = os.path.join("Tests", "ttx", "data", "TestTTF.ttf")
+    outpath = tmpdir.join("TestTTF.ttx")
+    args = ["-t", "cmap", inpath, "-o", str(outpath)]
+    ttx.main(args)
+    assert outpath.check(file=True)
+
+
 def test_roundtrip_DSIG_split_at_XML_parse_buffer_size(tmp_path):
     inpath = Path("Tests").joinpath(
         "ttx", "data", "roundtrip_DSIG_split_at_XML_parse_buffer_size.ttx"
