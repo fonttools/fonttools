@@ -1522,6 +1522,8 @@ def instantiateVariableFont(
     optimize=True,
     overlap=OverlapMode.KEEP_AND_SET_FLAGS,
     updateFontNames=False,
+    *,
+    downgradeCFF2=False,
 ):
     """Instantiate variable font, either fully or partially.
 
@@ -1561,6 +1563,11 @@ def instantiateVariableFont(
             in the head and OS/2 table will be updated so they conform to the R/I/B/BI
             model. If the STAT table is missing or an Axis Value table is missing for
             a given axis coordinate, a ValueError will be raised.
+        downgradeCFF2 (bool): if True, downgrade the CFF2 table to CFF table when possible
+            ie. full instancing of all axes. This is useful for compatibility with older
+            software that does not support CFF2. Defaults to False. Note that this
+            operation also removes overlaps within glyph shapes, as CFF does not support
+            overlaps but CFF2 does.
     """
     # 'overlap' used to be bool and is now enum; for backward compat keep accepting bool
     overlap = OverlapMode(int(overlap))
@@ -1586,7 +1593,7 @@ def instantiateVariableFont(
         names.updateNameTable(varfont, axisLimits)
 
     if "CFF2" in varfont:
-        instantiateCFF2(varfont, normalizedLimits)
+        instantiateCFF2(varfont, normalizedLimits, downgrade=downgradeCFF2)
 
     if "gvar" in varfont:
         instantiateGvar(varfont, normalizedLimits, optimize=optimize)
@@ -1780,6 +1787,11 @@ def parseArgs(args):
         "a STAT table with Axis Value Tables",
     )
     parser.add_argument(
+        "--downgrade-cff2",
+        action="store_true",
+        help="If all axes are pinned, downgrade CFF2 to CFF table format",
+    )
+    parser.add_argument(
         "--no-recalc-timestamp",
         dest="recalc_timestamp",
         action="store_false",
@@ -1850,6 +1862,7 @@ def main(args=None):
         optimize=options.optimize,
         overlap=options.overlap,
         updateFontNames=options.update_name_table,
+        downgradeCFF2=options.downgrade_cff2,
     )
 
     suffix = "-instance" if isFullInstance else "-partial"
