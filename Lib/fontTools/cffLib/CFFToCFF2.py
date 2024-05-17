@@ -22,6 +22,14 @@ __all__ = ["convertCFFToCFF2", "main"]
 log = logging.getLogger("fontTools.cffLib")
 
 
+class _NominalWidthUsedError(Exception):
+    def __add__(self, other):
+        raise self
+
+    def __radd__(self, other):
+        raise self
+
+
 def _convertCFFToCFF2(cff, otFont):
     """Converts this object from CFF format to CFF2 format. This conversion
     is done 'in-place'. The conversion cannot be reversed.
@@ -57,20 +65,24 @@ def _convertCFFToCFF2(cff, otFont):
             program[min(i, j) :] = []
 
     # Clean up glyph charstrings
+    nominalWidthXError = _NominalWidthUsedError()
     for glyphName in charStrings.keys():
         cs, fdIndex = charStrings.getItemAndSelector(glyphName)
         program = cs.program
         if fdIndex == None:
             fdIndex = 0
 
-        # Intentionally use None for nominalWidthX, such that any
-        # CharString that has an explicit width encoded will throw.
+        # Intentionally use custom type for nominalWidthX, such that any
+        # CharString that has an explicit width encoded will throw back to us.
         extractor = T2WidthExtractor(
-            localSubrs[fdIndex] if localSubrs else [], globalSubrs, None, 0
+            localSubrs[fdIndex] if localSubrs else [],
+            globalSubrs,
+            nominalWidthXError,
+            0,
         )
         try:
             extractor.execute(cs)
-        except TypeError:
+        except _NominalWidthUsedError:
             # Program has explicit width. We want to drop it, but can't
             # just pop the first number since it may be a subroutine call.
             # Instead, when seeing that, we embed the subroutine and recurse.
