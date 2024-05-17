@@ -43,10 +43,8 @@ def programToCommands(program, getNumRegions=None):
     hintmask/cntrmask argument, as well as stray arguments at the end of the
     program (🤷).
     'getNumRegions' may be None, or a callable object. It must return the
-    number of regions. 'getNumRegions' takes a single argument, vsindex. If
-    the vsindex argument is None, getNumRegions returns the default number
-    of regions for the charstring, else it returns the numRegions for
-    the vsindex.
+    number of regions. 'getNumRegions' takes a single argument, vsindex. It
+    returns the numRegions for the vsindex.
     The Charstring may or may not start with a width value. If the first
     non-blend operator has an odd number of arguments, then the first argument is
     a width, and is popped off. This is complicated with blend operators, as
@@ -61,7 +59,7 @@ def programToCommands(program, getNumRegions=None):
     """
 
     seenWidthOp = False
-    vsIndex = None
+    vsIndex = 0
     lenBlendStack = 0
     lastBlendIndex = 0
     commands = []

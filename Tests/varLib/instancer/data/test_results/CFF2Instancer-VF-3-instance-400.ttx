@@ -1,0 +1,377 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="OTTO" ttLibVersion="4.51">
+
+  <GlyphOrder>
+    <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
+    <GlyphID id="0" name=".notdef"/>
+    <GlyphID id="1" name="uni6868"/>
+  </GlyphOrder>
+
+  <head>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="1.0"/>
+    <fontRevision value="2.004"/>
+    <checkSumAdjustment value="0x25b28144"/>
+    <magicNumber value="0x5f0f3cf5"/>
+    <flags value="00000000 00000011"/>
+    <unitsPerEm value="1000"/>
+    <created value="Thu Apr 29 17:39:47 2021"/>
+    <modified value="Tue May 14 19:41:58 2024"/>
+    <xMin value="36"/>
+    <yMin value="-81"/>
+    <xMax value="966"/>
+    <yMax value="841"/>
+    <macStyle value="00000000 00000000"/>
+    <lowestRecPPEM value="3"/>
+    <fontDirectionHint value="2"/>
+    <indexToLocFormat value="0"/>
+    <glyphDataFormat value="0"/>
+  </head>
+
+  <hhea>
+    <tableVersion value="0x00010000"/>
+    <ascent value="1160"/>
+    <descent value="-288"/>
+    <lineGap value="0"/>
+    <advanceWidthMax value="1000"/>
+    <minLeftSideBearing value="46"/>
+    <minRightSideBearing value="24"/>
+    <xMaxExtent value="976"/>
+    <caretSlopeRise value="1"/>
+    <caretSlopeRun value="0"/>
+    <caretOffset value="0"/>
+    <reserved0 value="0"/>
+    <reserved1 value="0"/>
+    <reserved2 value="0"/>
+    <reserved3 value="0"/>
+    <metricDataFormat value="0"/>
+    <numberOfHMetrics value="1"/>
+  </hhea>
+
+  <maxp>
+    <tableVersion value="0x5000"/>
+    <numGlyphs value="2"/>
+  </maxp>
+
+  <OS_2>
+    <!-- The fields 'usFirstCharIndex' and 'usLastCharIndex'
+         will be recalculated by the compiler -->
+    <version value="3"/>
+    <xAvgCharWidth value="1000"/>
+    <usWeightClass value="400"/>
+    <usWidthClass value="5"/>
+    <fsType value="00000000 00000000"/>
+    <ySubscriptXSize value="650"/>
+    <ySubscriptYSize value="600"/>
+    <ySubscriptXOffset value="0"/>
+    <ySubscriptYOffset value="75"/>
+    <ySuperscriptXSize value="650"/>
+    <ySuperscriptYSize value="600"/>
+    <ySuperscriptXOffset value="0"/>
+    <ySuperscriptYOffset value="350"/>
+    <yStrikeoutSize value="50"/>
+    <yStrikeoutPosition value="325"/>
+    <sFamilyClass value="0"/>
+    <panose>
+      <bFamilyType value="2"/>
+      <bSerifStyle value="11"/>
+      <bWeight value="2"/>
+      <bProportion value="0"/>
+      <bContrast value="0"/>
+      <bStrokeVariation value="0"/>
+      <bArmStyle value="0"/>
+      <bLetterForm value="0"/>
+      <bMidline value="0"/>
+      <bXHeight value="0"/>
+    </panose>
+    <ulUnicodeRange1 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange2 value="00001000 00000000 00000000 00000000"/>
+    <ulUnicodeRange3 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange4 value="00000000 00000000 00000000 00000000"/>
+    <achVendID value="ADBO"/>
+    <fsSelection value="00000000 00000000"/>
+    <usFirstCharIndex value="26728"/>
+    <usLastCharIndex value="26728"/>
+    <sTypoAscender value="880"/>
+    <sTypoDescender value="-120"/>
+    <sTypoLineGap value="0"/>
+    <usWinAscent value="1160"/>
+    <usWinDescent value="288"/>
+    <ulCodePageRange1 value="00000000 00000000 00000000 00000001"/>
+    <ulCodePageRange2 value="00000000 00000000 00000000 00000000"/>
+    <sxHeight value="543"/>
+    <sCapHeight value="733"/>
+    <usDefaultChar value="0"/>
+    <usBreakChar value="32"/>
+    <usMaxContext value="6"/>
+  </OS_2>
+
+  <hmtx>
+    <mtx name=".notdef" width="1000" lsb="100"/>
+    <mtx name="uni6868" width="1000" lsb="46"/>
+  </hmtx>
+
+  <cmap>
+    <tableVersion version="0"/>
+    <cmap_format_4 platformID="0" platEncID="3" language="0">
+      <map code="0x6868" name="uni6868"/><!-- CJK UNIFIED IDEOGRAPH-6868 -->
+    </cmap_format_4>
+    <cmap_format_4 platformID="3" platEncID="1" language="0">
+      <map code="0x6868" name="uni6868"/><!-- CJK UNIFIED IDEOGRAPH-6868 -->
+    </cmap_format_4>
+  </cmap>
+
+  <name>
+    <namerecord nameID="0" platformID="3" platEncID="1" langID="0x409">
+      © 2014-2021 Adobe (http://www.adobe.com/), with Reserved Font Name 'Source'.
+    </namerecord>
+    <namerecord nameID="1" platformID="3" platEncID="1" langID="0x409">
+      Noto Sans SC
+    </namerecord>
+    <namerecord nameID="2" platformID="3" platEncID="1" langID="0x409">
+      Regular
+    </namerecord>
+    <namerecord nameID="3" platformID="3" platEncID="1" langID="0x409">
+      2.004;ADBO;NotoSansSC-Thin;ADOBE
+    </namerecord>
+    <namerecord nameID="4" platformID="3" platEncID="1" langID="0x409">
+      Noto Sans SC
+    </namerecord>
+    <namerecord nameID="5" platformID="3" platEncID="1" langID="0x409">
+      Version 2.004;hotconv 1.0.118;makeotfexe 2.5.65603
+    </namerecord>
+    <namerecord nameID="6" platformID="3" platEncID="1" langID="0x409">
+      NotoSansSC-Thin
+    </namerecord>
+    <namerecord nameID="256" platformID="3" platEncID="1" langID="0x409">
+      Regular
+    </namerecord>
+    <namerecord nameID="261" platformID="3" platEncID="1" langID="0x409">
+      Regular
+    </namerecord>
+    <namerecord nameID="265" platformID="3" platEncID="1" langID="0x409">
+      Weight
+    </namerecord>
+  </name>
+
+  <post>
+    <formatType value="3.0"/>
+    <italicAngle value="0.0"/>
+    <underlinePosition value="-125"/>
+    <underlineThickness value="50"/>
+    <isFixedPitch value="0"/>
+    <minMemType42 value="0"/>
+    <maxMemType42 value="0"/>
+    <minMemType1 value="0"/>
+    <maxMemType1 value="0"/>
+  </post>
+
+  <CFF2>
+    <major value="2"/>
+    <minor value="0"/>
+    <CFFFont name="CFF2Font">
+      <FontMatrix value="0.001 0 0 0.001 0 0"/>
+      <FDSelect format="0"/>
+      <FDArray>
+        <FontDict index="0">
+          <Private>
+            <BlueValues value="-250 -250 1100 1100"/>
+            <BlueScale value="0.039625"/>
+            <BlueShift value="7"/>
+            <BlueFuzz value="1"/>
+            <StdHW value="35"/>
+            <StdVW value="28"/>
+            <StemSnapV value="28 46"/>
+            <LanguageGroup value="1"/>
+            <ExpansionFactor value="0.06"/>
+          </Private>
+        </FontDict>
+        <FontDict index="1">
+          <Private>
+            <BlueValues value="-250 -250 1100 1100"/>
+            <BlueScale value="0.039625"/>
+            <BlueShift value="7"/>
+            <BlueFuzz value="1"/>
+            <StdHW value="35"/>
+            <StdVW value="28"/>
+            <StemSnapV value="28 46"/>
+            <LanguageGroup value="1"/>
+            <ExpansionFactor value="0.06"/>
+          </Private>
+        </FontDict>
+      </FDArray>
+      <CharStrings>
+        <CharString name=".notdef" fdSelectIndex="0">
+        </CharString>
+        <CharString name="uni6868" fdSelectIndex="1">
+          63 284 rmoveto
+          -67 872 67 vlineto
+          -475 79 rmoveto
+          -444 76 444 vlineto
+          -111 -111 rmoveto
+          -83 -103 -161 -95 -145 -44 16 -15 23 -29 11 -19 145 52 163 105 90 119 rrcurveto
+          86 25 rmoveto
+          -61 -28 rlineto
+          91 -118 163 -103 152 -50 11 20 23 28 17 15 -152 41 -163 90 -82 104 rrcurveto
+          -498 508 rmoveto
+          38 -49 40 -67 15 -43 rrcurveto
+          62 35 -16 42 -42 64 -38 47 rlinecurve
+          149 53 rmoveto
+          -492 71 492 vlineto
+          -306 -367 rmoveto
+          32 -65 69 36 88 47 82 45 rlinecurve
+          -19 60 -93 -47 -95 -47 -63 -28 rlinecurve
+          474 133 rmoveto
+          50 -43 58 -62 26 -41 rrcurveto
+          59 37 -28 41 -58 60 -49 41 rlinecurve
+          -17 116 rmoveto
+          -64 329 64 vlineto
+          -292 88 rmoveto
+          -35 -76 -83 -82 -88 -48 14 -12 20 -25 10 -15 95 54 89 92 48 92 rrcurveto
+          203 -66 rmoveto
+          -12 vlineto
+          -69 -199 -189 -87 -235 -35 13 -15 20 -31 8 -18 243 45 200 98 84 231 rrcurveto
+          -45 25 -14 -3 rlineto
+        </CharString>
+      </CharStrings>
+    </CFFFont>
+
+    <GlobalSubrs>
+      <!-- The 'index' attribute is only for humans; it is ignored when parsed. -->
+    </GlobalSubrs>
+  </CFF2>
+
+  <GPOS>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=1 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=0 -->
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=0 -->
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=0 -->
+    </LookupList>
+  </GPOS>
+
+  <GSUB>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=6 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=0 -->
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+      <ScriptRecord index="1">
+        <ScriptTag value="cyrl"/>
+        <Script>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+      <ScriptRecord index="2">
+        <ScriptTag value="grek"/>
+        <Script>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+      <ScriptRecord index="3">
+        <ScriptTag value="hani"/>
+        <Script>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+      <ScriptRecord index="4">
+        <ScriptTag value="kana"/>
+        <Script>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+      <ScriptRecord index="5">
+        <ScriptTag value="latn"/>
+        <Script>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=0 -->
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=0 -->
+    </LookupList>
+  </GSUB>
+
+  <STAT>
+    <Version value="0x00010001"/>
+    <DesignAxisRecordSize value="8"/>
+    <!-- DesignAxisCount=1 -->
+    <DesignAxisRecord>
+      <Axis index="0">
+        <AxisTag value="wght"/>
+        <AxisNameID value="265"/>  <!-- Weight -->
+        <AxisOrdering value="0"/>
+      </Axis>
+    </DesignAxisRecord>
+    <!-- AxisValueCount=1 -->
+    <AxisValueArray>
+      <AxisValue index="0" Format="2">
+        <AxisIndex value="0"/>
+        <Flags value="2"/>  <!-- ElidableAxisValueName -->
+        <ValueNameID value="261"/>  <!-- Regular -->
+        <NominalValue value="400.0"/>
+        <RangeMinValue value="400.0"/>
+        <RangeMaxValue value="499.0"/>
+      </AxisValue>
+    </AxisValueArray>
+    <ElidedFallbackNameID value="256"/>  <!-- Regular -->
+  </STAT>
+
+  <VORG>
+    <majorVersion value="1"/>
+    <minorVersion value="0"/>
+    <defaultVertOriginY value="880"/>
+    <numVertOriginYMetrics value="0"/>
+  </VORG>
+
+  <vhea>
+    <tableVersion value="0x00011000"/>
+    <ascent value="500"/>
+    <descent value="-500"/>
+    <lineGap value="0"/>
+    <advanceHeightMax value="1000"/>
+    <minTopSideBearing value="47"/>
+    <minBottomSideBearing value="31"/>
+    <yMaxExtent value="969"/>
+    <caretSlopeRise value="0"/>
+    <caretSlopeRun value="1"/>
+    <caretOffset value="0"/>
+    <reserved1 value="0"/>
+    <reserved2 value="0"/>
+    <reserved3 value="0"/>
+    <reserved4 value="0"/>
+    <metricDataFormat value="0"/>
+    <numberOfVMetrics value="1"/>
+  </vhea>
+
+  <vmtx>
+    <mtx name=".notdef" height="1000" tsb="0"/>
+    <mtx name="uni6868" height="1000" tsb="47"/>
+  </vmtx>
+
+</ttFont>

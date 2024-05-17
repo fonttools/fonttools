@@ -99,9 +99,6 @@ class _DesubroutinizingT2Decompiler(psCharStrings.SimpleT2Decompiler):
                 desubroutinized = desubroutinized[
                     : desubroutinized.index("endchar") + 1
                 ]
-            else:
-                if not len(desubroutinized) or desubroutinized[-1] != "return":
-                    desubroutinized.append("return")
 
         charString._desubroutinized = desubroutinized
         del charString._patches
@@ -389,91 +386,20 @@ class CFFFontSet(object):
             self.minor = int(attrs["value"])
 
     def convertCFFToCFF2(self, otFont):
-        """Converts this object from CFF format to CFF2 format. This conversion
-        is done 'in-place'. The conversion cannot be reversed.
+        from .CFFToCFF2 import _convertCFFToCFF2
 
-        This assumes a decompiled CFF table. (i.e. that the object has been
-        filled via :meth:`decompile`.)"""
-        self.major = 2
-        cff2GetGlyphOrder = self.otFont.getGlyphOrder
-        topDictData = TopDictIndex(None, cff2GetGlyphOrder)
-        topDictData.items = self.topDictIndex.items
-        self.topDictIndex = topDictData
-        topDict = topDictData[0]
-        if hasattr(topDict, "Private"):
-            privateDict = topDict.Private
-        else:
-            privateDict = None
-        opOrder = buildOrder(topDictOperators2)
-        topDict.order = opOrder
-        topDict.cff2GetGlyphOrder = cff2GetGlyphOrder
-        for entry in topDictOperators:
-            key = entry[1]
-            if key not in opOrder:
-                if key in topDict.rawDict:
-                    del topDict.rawDict[key]
-                if hasattr(topDict, key):
-                    delattr(topDict, key)
+        _convertCFFToCFF2(self, otFont)
 
-        if not hasattr(topDict, "FDArray"):
-            fdArray = topDict.FDArray = FDArrayIndex()
-            fdArray.strings = None
-            fdArray.GlobalSubrs = topDict.GlobalSubrs
-            topDict.GlobalSubrs.fdArray = fdArray
-            charStrings = topDict.CharStrings
-            if charStrings.charStringsAreIndexed:
-                charStrings.charStringsIndex.fdArray = fdArray
-            else:
-                charStrings.fdArray = fdArray
-            fontDict = FontDict()
-            fontDict.setCFF2(True)
-            fdArray.append(fontDict)
-            fontDict.Private = privateDict
-            privateOpOrder = buildOrder(privateDictOperators2)
-            for entry in privateDictOperators:
-                key = entry[1]
-                if key not in privateOpOrder:
-                    if key in privateDict.rawDict:
-                        # print "Removing private dict", key
-                        del privateDict.rawDict[key]
-                    if hasattr(privateDict, key):
-                        delattr(privateDict, key)
-                        # print "Removing privateDict attr", key
-        else:
-            # clean up the PrivateDicts in the fdArray
-            fdArray = topDict.FDArray
-            privateOpOrder = buildOrder(privateDictOperators2)
-            for fontDict in fdArray:
-                fontDict.setCFF2(True)
-                for key in fontDict.rawDict.keys():
-                    if key not in fontDict.order:
-                        del fontDict.rawDict[key]
-                        if hasattr(fontDict, key):
-                            delattr(fontDict, key)
+    def convertCFF2ToCFF(self, otFont):
+        from .CFF2ToCFF import _convertCFF2ToCFF
 
-                privateDict = fontDict.Private
-                for entry in privateDictOperators:
-                    key = entry[1]
-                    if key not in privateOpOrder:
-                        if key in privateDict.rawDict:
-                            # print "Removing private dict", key
-                            del privateDict.rawDict[key]
-                        if hasattr(privateDict, key):
-                            delattr(privateDict, key)
-                            # print "Removing privateDict attr", key
-        # At this point, the Subrs and Charstrings are all still T2Charstring class
-        # easiest to fix this by compiling, then decompiling again
-        file = BytesIO()
-        self.compile(file, otFont, isCFF2=True)
-        file.seek(0)
-        self.decompile(file, otFont, isCFF2=True)
+        _convertCFF2ToCFF(self, otFont)
 
     def desubroutinize(self):
         for fontName in self.fontNames:
             font = self[fontName]
             cs = font.CharStrings
-            for g in font.charset:
-                c, _ = cs.getItemAndSelector(g)
+            for c in cs.values():
                 c.decompile()
                 subrs = getattr(c.private, "Subrs", [])
                 decompiler = _DesubroutinizingT2Decompiler(
@@ -764,8 +690,8 @@ class Index(object):
     compilerClass = IndexCompiler
 
     def __init__(self, file=None, isCFF2=None):
-        assert (isCFF2 is None) == (file is None)
         self.items = []
+        self.offsets = offsets = []
         name = self.__class__.__name__
         if file is None:
             return
@@ -782,7 +708,6 @@ class Index(object):
         offSize = readCard8(file)
         log.log(DEBUG, "    index count: %s offSize: %s", count, offSize)
         assert offSize <= 4, "offSize too large: %s" % offSize
-        self.offsets = offsets = []
         pad = b"\0" * (4 - offSize)
         for index in range(count + 1):
             chunk = file.read(offSize)
@@ -960,7 +885,6 @@ class TopDictIndex(Index):
     compilerClass = TopDictIndexCompiler
 
     def __init__(self, file=None, cff2GetGlyphOrder=None, topSize=0, isCFF2=None):
-        assert (isCFF2 is None) == (file is None)
         self.cff2GetGlyphOrder = cff2GetGlyphOrder
         if file is not None and isCFF2:
             self._isCFF2 = isCFF2
@@ -2861,9 +2785,11 @@ class PrivateDict(BaseDict):
             # Provide dummy values. This avoids needing to provide
             # an isCFF2 state in a lot of places.
             self.nominalWidthX = self.defaultWidthX = None
+            self._isCFF2 = True
         else:
             self.defaults = buildDefaults(privateDictOperators)
             self.order = buildOrder(privateDictOperators)
+            self._isCFF2 = False
 
     @property
     def in_cff2(self):
