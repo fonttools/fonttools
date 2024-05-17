@@ -1,4 +1,4 @@
-"""CFF to CFF2 converter."""
+"""CFF2 to CFF converter."""
 
 from fontTools.ttLib import TTFont, newTable
 from fontTools.misc.cliTools import makeOutputFileName
