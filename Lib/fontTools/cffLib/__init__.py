@@ -313,6 +313,16 @@ class CFFFontSet(object):
 
         desubroutinize(self)
 
+    def remove_hints(self):
+        from .transforms import remove_hints
+
+        remove_hints(self)
+
+    def remove_unused_subroutines(self):
+        from .transforms import remove_unused_subroutines
+
+        remove_unused_subroutines(self)
+
 
 class CFFWriter(object):
     """Helper class for serializing CFF data to binary. Used by
