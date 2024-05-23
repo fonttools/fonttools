@@ -172,6 +172,15 @@ def _convertCFFToCFF2(cff, otFont):
     # Now delete up the deprecated topDict operators from CFF 1.0
     for entry in topDictOperators:
         key = entry[1]
+        # We seem to need to keep the charset operator for now,
+        # or we fail to compile with some fonts, like AdditionFont.otf.
+        # I don't know which kind of CFF font those are. But keeping
+        # charset seems to work. It will be removed when we save and
+        # read the font again.
+        #
+        # AdditionFont.otf has <Encoding name="StandardEncoding"/>.
+        if key == "charset":
+            continue
         if key not in opOrder:
             if key in topDict.rawDict:
                 del topDict.rawDict[key]
@@ -183,6 +192,8 @@ def _convertCFFToCFF2(cff, otFont):
     # were loaded for CFF1, and we need to reload them for CFF2 to set varstore, etc
     # on them. At least that's what I understand. It's probably safe to remove this
     # and just set vstore where needed.
+    #
+    # See comment above about charset as well.
 
     # At this point, the Subrs and Charstrings are all still T2Charstring class
     # easiest to fix this by compiling, then decompiling again
