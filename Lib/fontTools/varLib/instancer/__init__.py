@@ -465,6 +465,60 @@ class OverlapMode(IntEnum):
     REMOVE_AND_IGNORE_ERRORS = 3
 
 
+def instantiateVARC(varfont, axisLimits):
+    log.info("Instantiating VARC tables")
+
+    varc = varfont["VARC"].table
+    if varc.VarCompositeGlyphs:
+        for glyph in varc.VarCompositeGlyphs.glyphs:
+            for component in glyph.components:
+                newLocation = {}
+                for tag, loc in component.location.items():
+                    if tag not in axisLimits:
+                        newLocation[tag] = loc
+                        continue
+                    if component.flags & VarComponentFlags.AXES_HAVE_VARIATION:
+                        raise NotImplementedError(
+                            "Instancing accross VarComponent axes with variation is not supported."
+                        )
+                    limits = axisLimits[tag]
+                    loc = limits.renormalizeValue(loc, extrapolate=False)
+                    newLocation[tag] = loc
+                component.location = newLocation
+
+    if varc.MultiVarStore:
+        store = varc.MultiVarStore
+        store.prune_regions()
+
+        fvar = varfont["fvar"]
+        location = axisLimits.pinnedLocation()
+        for region in store.VarRegionList.Region:
+            assert len(region.VarRegionAxis) == len(fvar.axes)
+            newRegionAxis = []
+            for regionTriple, fvarAxis in zip(region.VarRegionAxis, fvar.axes):
+                tag = fvarAxis.axisTag
+                if tag in location:
+                    continue
+                if tag in axisLimits:
+                    limits = axisLimits[tag]
+                    triple = (
+                        regionTriple.StartCoord,
+                        regionTriple.PeakCoord,
+                        regionTriple.EndCoord,
+                    )
+                    triple = tuple(
+                        limits.renormalizeValue(v, extrapolate=False) for v in triple
+                    )
+                    (
+                        regionTriple.StartCoord,
+                        regionTriple.PeakCoord,
+                        regionTriple.EndCoord,
+                    ) = triple
+                newRegionAxis.append(regionTriple)
+            region.VarRegionAxis = newRegionAxis
+            region.VarRegionAxisCount = len(newRegionAxis)
+
+
 def instantiateTupleVariationStore(
     variations, axisLimits, origCoords=None, endPts=None
 ):
@@ -1578,6 +1632,9 @@ def instantiateVariableFont(
     if updateFontNames:
         log.info("Updating name table")
         names.updateNameTable(varfont, axisLimits)
+
+    if "VARC" in varfont:
+        instantiateVARC(varfont, normalizedLimits)
 
     if "CFF2" in varfont:
         instantiateCFF2(varfont, normalizedLimits, downgrade=downgradeCFF2)

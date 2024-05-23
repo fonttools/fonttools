@@ -198,7 +198,11 @@ def MultiVarStore_subset_varidxes(self, varIdxes):
     return ot.VarStore.subset_varidxes(self, varIdxes, VarData="MultiVarData")
 
 
-ot.MultiVarStore.prune_regions = ot.VarStore.prune_regions
+def MultiVarStore_prune_regions(self, *, VarData="VarData"):
+    return ot.VarStore.prune_regions(self, VarData="MultiVarData")
+
+
+ot.MultiVarStore.prune_regions = MultiVarStore_prune_regions
 ot.MultiVarStore.subset_varidxes = MultiVarStore_subset_varidxes
 
 
