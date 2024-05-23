@@ -39,7 +39,7 @@ def mergeObjects(lst):
         return None
 
     clazz = lst[0].__class__
-    assert all(type(item) == clazz for item in lst), lst
+    assert all(isinstance(item, clazz) for item in lst), lst
 
     logic = clazz.mergeMap
     returnTable = clazz()

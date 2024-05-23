@@ -40,7 +40,7 @@ class DefaultTable(object):
         return "<'%s' table at %x>" % (self.tableTag, id(self))
 
     def __eq__(self, other):
-        if type(self) != type(other):
+        if type(self) is not type(other):
             return NotImplemented
         return self.__dict__ == other.__dict__
 

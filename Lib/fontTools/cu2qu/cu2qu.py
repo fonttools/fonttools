@@ -487,16 +487,16 @@ def curves_to_quadratic(curves, max_errors, all_quadratic=True):
 
     Example::
 
-        >>> curves_to_quadratic( [
-        ...   [ (50,50), (100,100), (150,100), (200,50) ],
-        ...   [ (75,50), (120,100), (150,75),  (200,60) ]
-        ... ], [1,1] )
+        >>> curves_to_quadratic([
+        ...   [(50,50), (100,100), (150,100), (200,50)],
+        ...   [(75,50), (120,100), (150,75),  (200,60)]
+        ...], [1,1])
         [[(50.0, 50.0), (75.0, 75.0), (125.0, 91.66666666666666), (175.0, 75.0), (200.0, 50.0)], [(75.0, 50.0), (97.5, 75.0), (135.41666666666666, 82.08333333333333), (175.0, 67.5), (200.0, 60.0)]]
 
     The returned splines have "implied oncurve points" suitable for use in
     TrueType ``glif`` outlines - i.e. in the first spline returned above,
     the first quadratic segment runs from (50,50) to
-    ( (75 + 125)/2 , (120 + 91.666..)/2 ) = (100, 83.333...).
+    ((75 + 125) / 2 , (120 + 91.666..) / 2) = (100, 83.333...).
 
     Returns:
         If all_quadratic is True, a list of splines, each spline being a list

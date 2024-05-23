@@ -1137,7 +1137,7 @@ class AATLookupWithDataOffset(BaseConverter):
             value[glyph].compile(subWriter, font)
             data = subWriter.getAllData()
             offset = offsetByData.get(data, None)
-            if offset == None:
+            if offset is None:
                 offset = dataLen
                 dataLen = dataLen + len(data)
                 offsetByData[data] = offset

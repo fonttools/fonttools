@@ -198,7 +198,7 @@ class AbstractConfig(MutableMapping):
         class MyConfig(AbstractConfig):
             options = Options()
 
-        MyConfig.register_option( "test:option_name", "This is an option", 0, int, lambda v: isinstance(v, int))
+        MyConfig.register_option("test:option_name", "This is an option", 0, int, lambda v: isinstance(v, int))
 
         cfg = MyConfig({"test:option_name": 10})
 

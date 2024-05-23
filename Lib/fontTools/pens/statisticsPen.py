@@ -34,7 +34,7 @@ class StatisticsBase:
         self.stddevX = stddevX = sqrt(self.varianceX)
         self.stddevY = stddevY = sqrt(self.varianceY)
 
-        # Correlation(X,Y) = Covariance(X,Y) / ( stddev(X) * stddev(Y) )
+        # Correlation(X,Y) = Covariance(X,Y) / (stddev(X) * stddev(Y))
         # https://en.wikipedia.org/wiki/Pearson_product-moment_correlation_coefficient
         if stddevX * stddevY == 0:
             correlation = float("NaN")

@@ -14,7 +14,6 @@ from fontTools.ttLib import newTable
 from fontTools.ttLib.ttVisitor import TTVisitor
 from fontTools import ttLib
 import fontTools.ttLib.tables.otTables as otTables
-from fontTools.ttLib.tables import C_P_A_L_
 from . import DefaultTable
 import struct
 import logging
@@ -23,13 +22,13 @@ import logging
 log = logging.getLogger(__name__)
 
 nameRecordFormat = """
-		>	# big endian
-		platformID:	H
-		platEncID:	H
-		langID:		H
-		nameID:		H
-		length:		H
-		offset:		H
+    >	# big endian
+    platformID:	H
+    platEncID:	H
+    langID:		H
+    nameID:		H
+    length:		H
+    offset:		H
 """
 
 nameRecordSize = sstruct.calcsize(nameRecordFormat)
@@ -79,7 +78,6 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
         n = len(names)
         stringOffset = 6 + n * sstruct.calcsize(nameRecordFormat)
         data = struct.pack(b">HHH", format, n, stringOffset)
-        lastoffset = 0
         done = {}  # remember the data so we can reuse the "pointers"
         for name in names:
             string = name.toBytes()
@@ -631,7 +629,7 @@ class NameRecord(object):
             self.string = s.encode("latin1")
 
     def __lt__(self, other):
-        if type(self) != type(other):
+        if type(self) is not type(other):
             return NotImplemented
 
         try:

@@ -380,7 +380,7 @@ class OffsetToWriter(object):
         self.offsetSize = offsetSize
 
     def __eq__(self, other):
-        if type(self) != type(other):
+        if type(self) is not type(other):
             return NotImplemented
         return self.subWriter == other.subWriter and self.offsetSize == other.offsetSize
 
@@ -475,7 +475,7 @@ class OTTableWriter(object):
         return result if result is NotImplemented else not result
 
     def __eq__(self, other):
-        if type(self) != type(other):
+        if type(self) is not type(other):
             return NotImplemented
         return self.items == other.items
 
@@ -1160,7 +1160,7 @@ class BaseTable(object):
         return result if result is NotImplemented else not result
 
     def __eq__(self, other):
-        if type(self) != type(other):
+        if type(self) is not type(other):
             return NotImplemented
 
         self.ensureDecompiled()
@@ -1457,6 +1457,6 @@ class ValueRecord(object):
         return result if result is NotImplemented else not result
 
     def __eq__(self, other):
-        if type(self) != type(other):
+        if type(self) is not type(other):
             return NotImplemented
         return self.__dict__ == other.__dict__

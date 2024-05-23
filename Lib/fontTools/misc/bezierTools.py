@@ -870,7 +870,7 @@ def solveCubic(a, b, c, d):
         [0.5, 0.5, 0.5]
         >>> solveCubic(
         ...     9.0, 0.0, 0.0, -7.62939453125e-05
-        ... ) == [-0.0, -0.0, -0.0]
+        ...) == [-0.0, -0.0, -0.0]
         True
     """
     #
@@ -1161,7 +1161,7 @@ def lineLineIntersections(s1, e1, s2, e2):
 
     Examples::
 
-        >>> a = lineLineIntersections( (310,389), (453, 222), (289, 251), (447, 367))
+        >>> a = lineLineIntersections((310,389), (453, 222), (289, 251), (447, 367))
         >>> len(a)
         1
         >>> intersection = a[0]
