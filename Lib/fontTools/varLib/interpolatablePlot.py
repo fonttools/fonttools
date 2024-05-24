@@ -181,7 +181,7 @@ class InterpolatablePlot:
                         if n is None:
                             continue
                         self.draw_label(
-                            "%s: %s" % (what, n), x=x + pad, y=y, width=width
+                            "{}: {}".format(what, n), x=x + pad, y=y, width=width
                         )
                         y += self.font_size + self.pad
             elif file.endswith((".glyphs", ".glyphspackage")):
@@ -194,7 +194,7 @@ class InterpolatablePlot:
                     ("VersionMinor", "_versionMinor"),
                 ):
                     self.draw_label(
-                        "%s: %s" % (what, getattr(f, field)),
+                        "{}: {}".format(what, getattr(f, field)),
                         x=x + pad,
                         y=y,
                         width=width,
@@ -462,7 +462,7 @@ class InterpolatablePlot:
         self.toc[self.page_number] = (glyphname, problems)
 
         problem_type = problems[0]["type"]
-        problem_types = set(problem["type"] for problem in problems)
+        problem_types = {problem["type"] for problem in problems}
         if not all(pt == problem_type for pt in problem_types):
             problem_type = ", ".join(sorted({problem["type"] for problem in problems}))
 
@@ -844,7 +844,7 @@ class InterpolatablePlot:
 
         midway = any(problem["type"] == "midway" for problem in problems)
         problem_type = problems[0]["type"]
-        problem_types = set(problem["type"] for problem in problems)
+        problem_types = {problem["type"] for problem in problems}
         if not all(pt == problem_type for pt in problem_types):
             problem_type = "mixed"
         glyph = glyphset[glyphname]

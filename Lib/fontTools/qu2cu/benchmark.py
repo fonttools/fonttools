@@ -29,7 +29,7 @@ def setup_quadratic_to_curves():
 def run_benchmark(module, function, setup_suffix="", repeat=25, number=1):
     setup_func = "setup_" + function
     if setup_suffix:
-        print("%s with %s:" % (function, setup_suffix), end="")
+        print("{} with {}:".format(function, setup_suffix), end="")
         setup_func += "_" + setup_suffix
     else:
         print("%s:" % function, end="")

@@ -88,7 +88,7 @@ def AddGlyphVariations(font, thin, regular, black):
         for (regX, regY), (blackX, blackY), (thinX, thinY) in zip(
             regularCoord, blackCoord, thinCoord
         ):
-            thinDelta.append(((thinX - regX, thinY - regY)))
+            thinDelta.append((thinX - regX, thinY - regY))
             blackDelta.append((blackX - regX, blackY - regY))
         thinVar = TupleVariation({"wght": (-1.0, -1.0, 0.0)}, thinDelta)
         blackVar = TupleVariation({"wght": (0.0, 1.0, 1.0)}, blackDelta)

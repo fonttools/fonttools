@@ -36,14 +36,14 @@ def xpath(path):
     return etree.XPath(path, namespaces=NAMESPACES)
 
 
-def group_elements_by_id(tree: etree.Element) -> Dict[str, etree.Element]:
+def group_elements_by_id(tree: etree.Element) -> dict[str, etree.Element]:
     # select all svg elements with 'id' attribute no matter where they are
     # including the root element itself:
     # https://github.com/fonttools/fonttools/issues/2548
     return {el.attrib["id"]: el for el in xpath("//svg:*[@id]")(tree)}
 
 
-def parse_css_declarations(style_attr: str) -> Dict[str, str]:
+def parse_css_declarations(style_attr: str) -> dict[str, str]:
     # https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/style
     # https://developer.mozilla.org/en-US/docs/Web/CSS/Syntax#css_declarations
     result = {}
@@ -88,13 +88,13 @@ def iter_referenced_ids(tree: etree.Element) -> Iterator[str]:
 
 
 def closure_element_ids(
-    elements: Dict[str, etree.Element], element_ids: Set[str]
+    elements: dict[str, etree.Element], element_ids: set[str]
 ) -> None:
     # Expand the initial subset of element ids to include ids that can be reached
     # via references from the initial set.
     unvisited = element_ids
     while unvisited:
-        referenced: Set[str] = set()
+        referenced: set[str] = set()
         for el_id in unvisited:
             if el_id not in elements:
                 # ignore dangling reference; not our job to validate svg
@@ -105,7 +105,7 @@ def closure_element_ids(
         unvisited = referenced
 
 
-def subset_elements(el: etree.Element, retained_ids: Set[str]) -> bool:
+def subset_elements(el: etree.Element, retained_ids: set[str]) -> bool:
     # Keep elements if their id is in the subset, or any of their children's id is.
     # Drop elements whose id is not in the subset, and either have no children,
     # or all their children are being dropped.
@@ -125,8 +125,8 @@ def subset_elements(el: etree.Element, retained_ids: Set[str]) -> bool:
 
 
 def remap_glyph_ids(
-    svg: etree.Element, glyph_index_map: Dict[int, int]
-) -> Dict[str, str]:
+    svg: etree.Element, glyph_index_map: dict[int, int]
+) -> dict[str, str]:
     # Given {old_gid: new_gid} map, rename all elements containing id="glyph{gid}"
     # special attributes
     elements = group_elements_by_id(svg)
@@ -156,7 +156,7 @@ def remap_glyph_ids(
     return id_map
 
 
-def href_local_target(el: etree.Element) -> Optional[str]:
+def href_local_target(el: etree.Element) -> str | None:
     if XLINK_HREF in el.attrib:
         href = el.attrib[XLINK_HREF]
         if href.startswith("#") and len(href) > 1:
@@ -164,7 +164,7 @@ def href_local_target(el: etree.Element) -> Optional[str]:
     return None
 
 
-def update_glyph_href_links(svg: etree.Element, id_map: Dict[str, str]) -> None:
+def update_glyph_href_links(svg: etree.Element, id_map: dict[str, str]) -> None:
     # update all xlink:href="#glyph..." attributes to point to the new glyph ids
     for el in xpath(".//svg:*[starts-with(@xlink:href, '#glyph')]")(svg):
         old_id = href_local_target(el)
@@ -174,7 +174,7 @@ def update_glyph_href_links(svg: etree.Element, id_map: Dict[str, str]) -> None:
             el.attrib[XLINK_HREF] = f"#{new_id}"
 
 
-def ranges(ints: Iterable[int]) -> Iterator[Tuple[int, int]]:
+def ranges(ints: Iterable[int]) -> Iterator[tuple[int, int]]:
     # Yield sorted, non-overlapping (min, max) ranges of consecutive integers
     sorted_ints = iter(sorted(set(ints)))
     try:
@@ -196,13 +196,13 @@ def subset_glyphs(self, s) -> bool:
         raise ImportError("No module named 'lxml', required to subset SVG")
 
     # glyph names (before subsetting)
-    glyph_order: List[str] = s.orig_glyph_order
+    glyph_order: list[str] = s.orig_glyph_order
     # map from glyph names to original glyph indices
-    rev_orig_glyph_map: Dict[str, int] = s.reverseOrigGlyphMap
+    rev_orig_glyph_map: dict[str, int] = s.reverseOrigGlyphMap
     # map from original to new glyph indices (after subsetting)
-    glyph_index_map: Dict[int, int] = s.glyph_index_map
+    glyph_index_map: dict[int, int] = s.glyph_index_map
 
-    new_docs: List[SVGDocument] = []
+    new_docs: list[SVGDocument] = []
     for doc in self.docList:
         glyphs = {
             glyph_order[i] for i in range(doc.startGlyphID, doc.endGlyphID + 1)

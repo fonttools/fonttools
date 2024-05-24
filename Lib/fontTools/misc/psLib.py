@@ -60,7 +60,7 @@ class PSError(Exception):
     pass
 
 
-class PSTokenizer(object):
+class PSTokenizer:
     def __init__(self, buf=b"", encoding="ascii"):
         # Force self.buf to be a byte string
         buf = tobytes(buf)
@@ -334,7 +334,7 @@ class PSInterpreter(PSOperators):
         if types:
             if object.type not in types:
                 raise PSError(
-                    "typecheck, expected %s, found %s" % (repr(types), object.type)
+                    "typecheck, expected {}, found {}".format(repr(types), object.type)
                 )
         del stack[-1]
         return object

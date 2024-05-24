@@ -485,7 +485,7 @@ def intersect(self, glyphs):
 @_add_method(otTables.Coverage)
 def intersect_glyphs(self, glyphs):
     """Returns set of intersecting glyphs."""
-    return set(g for g in self.glyphs if g in glyphs)
+    return {g for g in self.glyphs if g in glyphs}
 
 
 @_add_method(otTables.Coverage)
@@ -515,8 +515,8 @@ def intersect(self, glyphs):
 def intersect_class(self, glyphs, klass):
     """Returns set of glyphs matching class."""
     if klass == 0:
-        return set(g for g in glyphs if g not in self.classDefs)
-    return set(g for g, v in self.classDefs.items() if v == klass and g in glyphs)
+        return {g for g in glyphs if g not in self.classDefs}
+    return {g for g, v in self.classDefs.items() if v == klass and g in glyphs}
 
 
 @_add_method(otTables.ClassDef)
@@ -1016,7 +1016,7 @@ def may_have_non_1to1(self):
     otTables.ChainContextPos,
 )
 def __subset_classify_context(self):
-    class ContextHelper(object):
+    class ContextHelper:
         def __init__(self, klass, Format):
             if klass.__name__.endswith("Subst"):
                 Typ = "Sub"
@@ -3041,7 +3041,7 @@ def prune_post_subset(self, font, options):
 # TODO(behdad) Drop old-spec Indic scripts
 
 
-class Options(object):
+class Options:
     class OptionError(Exception):
         pass
 
@@ -3239,7 +3239,7 @@ class Options(object):
 
             ov = getattr(self, k)
             if v == "?":
-                print("Current setting for '%s' is: %s" % (ok, ov))
+                print("Current setting for '{}' is: {}".format(ok, ov))
                 continue
             if isinstance(ov, bool):
                 v = bool(v)
@@ -3274,7 +3274,7 @@ class Options(object):
         return posargs + passthru_options
 
 
-class Subsetter(object):
+class Subsetter:
     class SubsettingError(Exception):
         pass
 

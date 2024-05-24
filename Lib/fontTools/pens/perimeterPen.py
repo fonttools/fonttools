@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Calculate the perimeter of a glyph."""
 
 from fontTools.pens.basePen import BasePen

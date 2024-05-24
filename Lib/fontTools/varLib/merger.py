@@ -43,7 +43,7 @@ from .errors import (
 )
 
 
-class Merger(object):
+class Merger:
     def __init__(self, font=None):
         self.font = font
         # mergeTables populates this from the parent's master ttfs
@@ -1243,7 +1243,7 @@ class VariationMerger(AligningMerger):
             model, lst = masterModel.getSubModel(lst)
             self.setModel(model)
 
-        super(VariationMerger, self).mergeThings(out, lst)
+        super().mergeThings(out, lst)
 
         if masterModel:
             self.setModel(masterModel)

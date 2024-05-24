@@ -2,7 +2,7 @@ from fontTools.misc.textTools import Tag
 from fontTools.ttLib import getClassTag
 
 
-class DefaultTable(object):
+class DefaultTable:
     dependencies = []
 
     def __init__(self, tag=None):
@@ -37,7 +37,7 @@ class DefaultTable(object):
         self.decompile(readHex(content), ttFont)
 
     def __repr__(self):
-        return "<'%s' table at %x>" % (self.tableTag, id(self))
+        return "<'{}' table at {:x}>".format(self.tableTag, id(self))
 
     def __eq__(self, other):
         if type(self) != type(other):

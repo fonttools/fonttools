@@ -1,7 +1,7 @@
 from fontTools.voltLib.error import VoltLibError
 
 
-class Lexer(object):
+class Lexer:
     NUMBER = "NUMBER"
     STRING = "STRING"
     NAME = "NAME"

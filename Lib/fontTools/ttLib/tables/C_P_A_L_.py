@@ -272,7 +272,7 @@ class table_C_P_A_L_(DefaultTable.DefaultTable):
 
 class Color(namedtuple("Color", "blue green red alpha")):
     def hex(self):
-        return "#%02X%02X%02X%02X" % (self.red, self.green, self.blue, self.alpha)
+        return "#{:02X}{:02X}{:02X}{:02X}".format(self.red, self.green, self.blue, self.alpha)
 
     def __repr__(self):
         return self.hex()

@@ -507,7 +507,7 @@ def test_dump_use_builtin_types_default(pl_no_builtin_types):
 
 def test_non_ascii_bytes():
     with pytest.raises(ValueError, match="invalid non-ASCII bytes"):
-        plistlib.dumps("\U0001f40d".encode("utf-8"), use_builtin_types=False)
+        plistlib.dumps("\U0001f40d".encode(), use_builtin_types=False)
 
 
 class CustomMapping(Mapping):

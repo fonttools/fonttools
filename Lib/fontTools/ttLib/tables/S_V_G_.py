@@ -181,7 +181,7 @@ class table_S_V_G_(DefaultTable.DefaultTable):
             log.warning("Unknown %s %s", name, content)
 
 
-class DocumentIndexEntry(object):
+class DocumentIndexEntry:
     def __init__(self):
         self.startGlyphID = None  # USHORT
         self.endGlyphID = None  # USHORT

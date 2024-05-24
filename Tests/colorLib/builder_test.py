@@ -1487,7 +1487,7 @@ def test_explicit_version_1():
     assert colr.table.VarStore is None
 
 
-class BuildCOLRTest(object):
+class BuildCOLRTest:
     def test_automatic_version_all_solid_color_glyphs(self):
         colr = builder.buildCOLR({"a": [("b", 0), ("c", 1)]})
         assert colr.version == 0

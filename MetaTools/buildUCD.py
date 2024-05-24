@@ -13,7 +13,6 @@ import re
 from codecs import iterdecode
 import logging
 import os
-from io import open
 from os.path import abspath, dirname, join as pjoin, pardir, sep
 
 
@@ -180,7 +179,7 @@ def build_ranges(
 
     if local_ucd:
         log.info("loading '%s' from local directory '%s'", filename, local_ucd)
-        cm = open(pjoin(local_ucd, filename), "r", encoding="utf-8")
+        cm = open(pjoin(local_ucd, filename), encoding="utf-8")
     else:
         log.info("downloading '%s' from '%s'", filename, UNIDATA_URL)
         cm = open_unidata_file(filename)
@@ -199,8 +198,8 @@ def build_ranges(
         f.write(SRC_ENCODING)
         f.write("#\n")
         f.write(NOTICE)
-        f.write("# Source: {}{}\n".format(UNIDATA_URL, filename))
-        f.write("# License: {}\n".format(UNIDATA_LICENSE_URL))
+        f.write(f"# Source: {UNIDATA_URL}{filename}\n")
+        f.write(f"# License: {UNIDATA_LICENSE_URL}\n")
         f.write("#\n")
         f.write(header + "\n\n")
 
@@ -216,17 +215,17 @@ def build_ranges(
         f.write("\n")
         f.write("VALUES = [\n")
         for first, last, value in ranges:
-            comment = "# {:0>4X}..{:0>4X}".format(first, last)
+            comment = f"# {first:0>4X}..{last:0>4X}"
             if is_set:
-                value_repr = "{},".format(_set_repr(value))
+                value_repr = f"{_set_repr(value)},"
             else:
                 if aliases:
                     # append long name to comment and use the short code
-                    comment += " ; {}".format(value)
+                    comment += f" ; {value}"
                     value = reversed_aliases[normalize(value)]
-                value_repr = "{!r},".format(value)
+                value_repr = f"{value!r},"
             f.write(
-                "    {}  {}\n".format(value_repr.ljust(max_value_length + 1), comment)
+                f"    {value_repr.ljust(max_value_length + 1)}  {comment}\n"
             )
         f.write("]\n")
 
@@ -235,7 +234,7 @@ def build_ranges(
             f.write("NAMES = {\n")
             for value, names in sorted(aliases.items()):
                 # we only write the first preferred alias
-                f.write("    {!r}: {!r},\n".format(value, names[0]))
+                f.write(f"    {value!r}: {names[0]!r},\n")
             f.write("}\n")
 
     log.info("saved new file: '%s'", os.path.normpath(output_path))
@@ -260,7 +259,7 @@ def parse_property_value_aliases(property_tag, local_ucd=None):
     filename = "PropertyValueAliases.txt"
     if local_ucd:
         log.info("loading '%s' from local directory '%s'", filename, local_ucd)
-        cm = open(pjoin(local_ucd, filename), "r", encoding="utf-8")
+        cm = open(pjoin(local_ucd, filename), encoding="utf-8")
     else:
         log.info("downloading '%s' from '%s'", filename, UNIDATA_URL)
         cm = open_unidata_file(filename)

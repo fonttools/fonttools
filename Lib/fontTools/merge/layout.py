@@ -281,7 +281,7 @@ def mapLookups(self, lookupMap):
     otTables.ChainContextPos,
 )
 def __merge_classify_context(self):
-    class ContextHelper(object):
+    class ContextHelper:
         def __init__(self, klass, Format):
             if klass.__name__.endswith("Subst"):
                 Typ = "Sub"

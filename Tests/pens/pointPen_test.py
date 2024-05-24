@@ -18,10 +18,10 @@ class _TestSegmentPen(AbstractPen):
         return " ".join(self._commands)
 
     def moveTo(self, pt):
-        self._commands.append("%s %s moveto" % (pt[0], pt[1]))
+        self._commands.append("{} {} moveto".format(pt[0], pt[1]))
 
     def lineTo(self, pt):
-        self._commands.append("%s %s lineto" % (pt[0], pt[1]))
+        self._commands.append("{} {} lineto".format(pt[0], pt[1]))
 
     def curveTo(self, *pts):
         pts = ["%s %s" % pt for pt in pts]
@@ -38,7 +38,7 @@ class _TestSegmentPen(AbstractPen):
         self._commands.append("endpath")
 
     def addComponent(self, glyphName, transformation):
-        self._commands.append("'%s' %s addcomponent" % (glyphName, transformation))
+        self._commands.append("'{}' {} addcomponent".format(glyphName, transformation))
 
 
 def _reprKwargs(kwargs):
@@ -46,9 +46,9 @@ def _reprKwargs(kwargs):
     for key in sorted(kwargs):
         value = kwargs[key]
         if isinstance(value, str):
-            items.append("%s='%s'" % (key, value))
+            items.append("{}='{}'".format(key, value))
         else:
-            items.append("%s=%s" % (key, value))
+            items.append("{}={}".format(key, value))
     return items
 
 
@@ -69,7 +69,7 @@ class _TestPointPen(AbstractPointPen):
     def addPoint(
         self, pt, segmentType=None, smooth=False, name=None, identifier=None, **kwargs
     ):
-        items = ["%s" % (pt,)]
+        items = ["{}".format(pt)]
         if segmentType is not None:
             items.append("segmentType='%s'" % segmentType)
         if smooth:

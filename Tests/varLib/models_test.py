@@ -203,7 +203,7 @@ locationsC = [
 ]
 
 
-class VariationModelTest(object):
+class VariationModelTest:
     @pytest.mark.parametrize(
         "locations, axisOrder, sortedLocs, supports, deltaWeights",
         [

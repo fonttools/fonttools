@@ -427,12 +427,12 @@ class MtiTest:
         xml_expected_path = self.getpath(
             "%s.ttx" % name + ("." + tableTag if tableTag is not None else "")
         )
-        with open(xml_expected_path, "rt", encoding="utf-8") as xml_expected_file:
+        with open(xml_expected_path, encoding="utf-8") as xml_expected_file:
             xml_expected = xml_expected_file.read()
 
         font = self.create_font()
 
-        with open(self.getpath("%s.txt" % name), "rt", encoding="utf-8") as f:
+        with open(self.getpath("%s.txt" % name), encoding="utf-8") as f:
             table = mtiLib.build(f, font, tableTag=tableTag)
 
         if tableTag is not None:
@@ -503,7 +503,7 @@ for tableTag, tests in MtiTest.TESTS.items():
     for name in tests:
         setattr(
             MtiTest,
-            "test_MtiFile_%s%s" % (name, "_" + tableTag if tableTag else ""),
+            "test_MtiFile_{}{}".format(name, "_" + tableTag if tableTag else ""),
             generate_mti_file_test(name, tableTag=tableTag),
         )
 

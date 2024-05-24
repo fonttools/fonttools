@@ -255,8 +255,8 @@ def getpath(testfile):
 
 def read_expected_ttx(testfile, tableTag):
     name = os.path.splitext(testfile)[0]
-    xml_expected_path = getpath("%s.ttx.%s" % (name, tagToXML(tableTag)))
-    with open(xml_expected_path, "r", encoding="utf-8") as xml_file:
+    xml_expected_path = getpath("{}.ttx.{}".format(name, tagToXML(tableTag)))
+    with open(xml_expected_path, encoding="utf-8") as xml_file:
         xml_expected = ttLibVersion_RE.sub("", xml_file.read())
     return xml_expected
 
@@ -312,7 +312,7 @@ def test_xml_from_xml(testfile, tableTag):
 
     font = load_ttx(xml_expected)
     name = os.path.splitext(testfile)[0]
-    setupfile = getpath("%s.ttx.%s.setup" % (name, tagToXML(tableTag)))
+    setupfile = getpath("{}.ttx.{}.setup".format(name, tagToXML(tableTag)))
     if os.path.exists(setupfile):
         #        import pdb; pdb.set_trace()
         font.importXML(setupfile)

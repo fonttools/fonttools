@@ -21,7 +21,7 @@ sbixStrikeHeaderFormatSize = sstruct.calcsize(sbixStrikeHeaderFormat)
 sbixGlyphDataOffsetFormatSize = sstruct.calcsize(sbixGlyphDataOffsetFormat)
 
 
-class Strike(object):
+class Strike:
     def __init__(self, rawdata=None, ppem=0, resolution=72):
         self.data = rawdata
         self.ppem = ppem

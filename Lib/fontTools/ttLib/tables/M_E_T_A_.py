@@ -204,7 +204,7 @@ class table_M_E_T_A_(DefaultTable.DefaultTable):
             setattr(self, name, safeEval(attrs["value"]))
 
 
-class GlyphRecord(object):
+class GlyphRecord:
     def __init__(self):
         self.glyphID = -1
         self.nMetaEntry = -1
@@ -260,7 +260,7 @@ class GlyphRecord(object):
 
 
 def mapXMLToUTF8(string):
-    uString = str()
+    uString = ''
     strLen = len(string)
     i = 0
     while i < strLen:
@@ -296,7 +296,7 @@ def mapUTF8toXML(string):
     return string
 
 
-class StringRecord(object):
+class StringRecord:
     def toXML(self, writer, ttFont):
         writer.begintag("StringRecord")
         writer.newline()

@@ -132,9 +132,9 @@ def b64encode(b):
     return strjoin(items)
 
 
-class SignatureRecord(object):
+class SignatureRecord:
     def __repr__(self):
-        return "<%s: %s>" % (self.__class__.__name__, self.__dict__)
+        return "<{}: {}>".format(self.__class__.__name__, self.__dict__)
 
     def toXML(self, writer, ttFont):
         writer.begintag(self.__class__.__name__, format=self.ulFormat)

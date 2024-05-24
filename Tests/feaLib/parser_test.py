@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from fontTools.misc.loggingTools import CapturingLogHandler
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.feaLib.parser import Parser, SymbolTable
@@ -1842,7 +1841,7 @@ class ParserTest(unittest.TestCase):
 
     def test_table_comment(self):
         for table in "BASE GDEF OS/2 head hhea name vhea".split():
-            doc = self.parse("table %s { # Comment\n } %s;" % (table, table))
+            doc = self.parse("table {} {{ # Comment\n }} {};".format(table, table))
             comment = doc.statements[0].statements[0]
             self.assertIsInstance(comment, ast.Comment)
             self.assertEqual(comment.text, "# Comment")
@@ -1917,7 +1916,7 @@ class ParserTest(unittest.TestCase):
 
     def test_valuerecord_format_a_vertical_contexts_(self):
         for tag in "vkrn vpal vhal valt".split():
-            doc = self.parse("feature %s {valueRecordDef 77 foo;} %s;" % (tag, tag))
+            doc = self.parse("feature {} {{valueRecordDef 77 foo;}} {};".format(tag, tag))
             value = doc.statements[0].statements[0].value
             if value.yAdvance != 77:
                 self.fail(
@@ -2114,7 +2113,7 @@ class ParserTest(unittest.TestCase):
         doc = self.parse(";;;")
         self.assertFalse(doc.statements)
         for table in "BASE GDEF OS/2 head hhea name vhea".split():
-            doc = self.parse("table %s { ;;; } %s;" % (table, table))
+            doc = self.parse("table {} {{ ;;; }} {};".format(table, table))
             self.assertEqual(doc.statements[0].statements, [])
 
     def test_ufo_features_parse_include_dir(self):

@@ -3,7 +3,7 @@
 # Google Author(s): Behdad Esfahbod, Roozbeh Pournader
 
 
-class Options(object):
+class Options:
     class UnknownOptionError(Exception):
         pass
 

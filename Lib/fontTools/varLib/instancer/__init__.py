@@ -407,7 +407,7 @@ class AxisLimits(_BaseAxisLimits):
         fvar = varfont["fvar"]
         badLimits = set(self.keys()).difference(a.axisTag for a in fvar.axes)
         if badLimits:
-            raise ValueError("Cannot limit: {} not present in fvar".format(badLimits))
+            raise ValueError(f"Cannot limit: {badLimits} not present in fvar")
 
         axes = {
             a.axisTag: (a.minValue, a.defaultValue, a.maxValue)
@@ -1123,7 +1123,7 @@ def instantiateVVAR(varfont, axisLimits):
     return _instantiateVHVAR(varfont, axisLimits, varLib.VVAR_FIELDS)
 
 
-class _TupleVarStoreAdapter(object):
+class _TupleVarStoreAdapter:
     def __init__(self, regions, axisOrder, tupleVarData, itemCounts):
         self.regions = regions
         self.axisOrder = axisOrder
@@ -1151,11 +1151,9 @@ class _TupleVarStoreAdapter(object):
         # Collect the set of all unique region axes from the current TupleVariations.
         # We use an OrderedDict to de-duplicate regions while keeping the order.
         uniqueRegions = collections.OrderedDict.fromkeys(
-            (
                 frozenset(var.axes.items())
                 for variations in self.tupleVarData
                 for var in variations
-            )
         )
         # Maintain the original order for the regions that pre-existed, appending
         # the new regions at the end of the region list.
@@ -1851,7 +1849,7 @@ def parseArgs(args):
 
     infile = options.input
     if not os.path.isfile(infile):
-        parser.error("No such file '{}'".format(infile))
+        parser.error(f"No such file '{infile}'")
 
     configLogger(
         level=("DEBUG" if options.verbose else "ERROR" if options.quiet else "INFO")

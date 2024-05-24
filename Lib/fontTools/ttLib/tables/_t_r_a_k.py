@@ -313,7 +313,7 @@ class TrackTableEntry(MutableMapping):
     sizes = keys
 
     def __repr__(self):
-        return "TrackTableEntry({}, nameIndex={})".format(self._map, self.nameIndex)
+        return f"TrackTableEntry({self._map}, nameIndex={self.nameIndex})"
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):

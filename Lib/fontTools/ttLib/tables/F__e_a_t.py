@@ -140,5 +140,5 @@ class table_F__e_a_t(DefaultTable.DefaultTable):
                     fobj.settings[int(safeEval(a["value"]))] = int(safeEval(a["label"]))
 
 
-class Feature(object):
+class Feature:
     pass

@@ -10,7 +10,7 @@ except ImportError:
     from fontTools.misc import cython
 
 
-class Lexer(object):
+class Lexer:
     NUMBER = "NUMBER"
     HEXADECIMAL = "HEXADECIMAL"
     OCTAL = "OCTAL"
@@ -189,7 +189,7 @@ class Lexer(object):
         return (Lexer.ANONYMOUS_BLOCK, split[0], location)
 
 
-class IncludingLexer(object):
+class IncludingLexer:
     """A Lexer that follows include statements.
 
     The OpenType feature file specification states that due to
@@ -269,7 +269,7 @@ class IncludingLexer(object):
             fileobj, closing = file_or_path, False
         else:
             filename, closing = file_or_path, True
-            fileobj = open(filename, "r", encoding="utf-8")
+            fileobj = open(filename, encoding="utf-8")
         data = fileobj.read()
         filename = getattr(fileobj, "name", None)
         if closing:

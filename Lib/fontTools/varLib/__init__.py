@@ -1293,7 +1293,7 @@ def load_masters(designspace, master_finder=lambda s: s):
     return designspace.loadSourceFonts(_open_font, master_finder=master_finder)
 
 
-class MasterFinder(object):
+class MasterFinder:
     def __init__(self, template):
         self.template = template
 

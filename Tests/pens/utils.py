@@ -24,7 +24,7 @@ CUBIC_GLYPHS = GlyphSet(os.path.join(DATADIR, "cubic"))
 QUAD_GLYPHS = GlyphSet(os.path.join(DATADIR, "quadratic"))
 
 
-class BaseDummyPen(object):
+class BaseDummyPen:
     """Base class for pens that record the commands they are called with."""
 
     def __init__(self, *args, **kwargs):
@@ -76,7 +76,7 @@ class DummyPointPen(BaseDummyPen):
         self.commands.append(("addPoint", (pt,), kwargs))
 
 
-class DummyGlyph(object):
+class DummyGlyph:
     """Provides a minimal interface for storing a glyph's outline data in a
     SegmentPen-oriented way. The glyph's outline consists in the list of
     SegmentPen commands required to draw it.
@@ -241,13 +241,13 @@ def _repr_pen_commands(commands):
                 ]
             args = ", ".join(repr(a) for a in args)
         if kwargs:
-            kwargs = ", ".join("%s=%r" % (k, v) for k, v in sorted(kwargs.items()))
+            kwargs = ", ".join("{}={!r}".format(k, v) for k, v in sorted(kwargs.items()))
         if args and kwargs:
-            s.append("pen.%s(%s, %s)" % (cmd, args, kwargs))
+            s.append("pen.{}({}, {})".format(cmd, args, kwargs))
         elif args:
-            s.append("pen.%s(%s)" % (cmd, args))
+            s.append("pen.{}({})".format(cmd, args))
         elif kwargs:
-            s.append("pen.%s(%s)" % (cmd, kwargs))
+            s.append("pen.{}({})".format(cmd, kwargs))
         else:
             s.append("pen.%s()" % cmd)
     return "\n".join(s)

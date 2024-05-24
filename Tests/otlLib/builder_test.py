@@ -8,7 +8,7 @@ from fontTools.ttLib.tables import otTables
 import pytest
 
 
-class BuilderTest(object):
+class BuilderTest:
     GLYPHS = (
         ".notdef space zero one two three four five six "
         "A B C a b c grave acute cedilla f_f_i f_i c_t"
@@ -1071,7 +1071,7 @@ class BuilderTest(object):
         assert hash(keyA1) != hash(keyB)
 
 
-class ClassDefBuilderTest(object):
+class ClassDefBuilderTest:
     def test_build_usingClass0(self):
         b = builder.ClassDefBuilder(useClass0=True)
         b.add({"aa", "bb"})
@@ -1853,7 +1853,7 @@ def test_buildMathTable_horizAssembly():
         ] == horizGlyphAssembly[glyph]
 
 
-class ChainContextualRulesetTest(object):
+class ChainContextualRulesetTest:
     def test_makeRulesets(self):
         font = ttLib.TTFont()
         font.setGlyphOrder(["a", "b", "c", "d", "A", "B", "C", "D", "E"])
@@ -1887,8 +1887,8 @@ class ChainContextualRulesetTest(object):
         assert rulesets[0].hasPrefixOrSuffix
         assert not rulesets[0].hasAnyGlyphClasses
         cd = rulesets[0].format2ClassDefs()
-        assert set(cd[0].classes()[1:]) == set([("d",), ("b",), ("a",)])
-        assert set(cd[1].classes()[1:]) == set([("c",)])
+        assert set(cd[0].classes()[1:]) == {("d",), ("b",), ("a",)}
+        assert set(cd[1].classes()[1:]) == {("c",)}
         assert set(cd[2].classes()[1:]) == set()
 
         assert rulesets[1].hasPrefixOrSuffix
@@ -1900,7 +1900,7 @@ class ChainContextualRulesetTest(object):
         assert rulesets[2].format2ClassDefs()
         cd = rulesets[2].format2ClassDefs()
         assert set(cd[0].classes()[1:]) == set()
-        assert set(cd[1].classes()[1:]) == set([("C", "D"), ("E",)])
+        assert set(cd[1].classes()[1:]) == {("C", "D"), ("E",)}
         assert set(cd[2].classes()[1:]) == set()
 
 

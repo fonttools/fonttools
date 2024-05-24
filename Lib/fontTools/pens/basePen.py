@@ -221,7 +221,7 @@ class DecomposingPen(LoggingPen):
         The optional 'skipMissingComponents' argument can be set to True/False to
         override the homonymous class attribute for a given pen instance.
         """
-        super(DecomposingPen, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.glyphSet = glyphSet
         self.skipMissingComponents = (
             self.__class__.skipMissingComponents
@@ -268,7 +268,7 @@ class BasePen(DecomposingPen):
     """
 
     def __init__(self, glyphSet=None):
-        super(BasePen, self).__init__(glyphSet)
+        super().__init__(glyphSet)
         self.__currentPoint = None
 
     # must override
@@ -447,10 +447,10 @@ class _TestPen(BasePen):
     """Test class that prints PostScript to stdout."""
 
     def _moveTo(self, pt):
-        print("%s %s moveto" % (pt[0], pt[1]))
+        print("{} {} moveto".format(pt[0], pt[1]))
 
     def _lineTo(self, pt):
-        print("%s %s lineto" % (pt[0], pt[1]))
+        print("{} {} lineto".format(pt[0], pt[1]))
 
     def _curveToOne(self, bcp1, bcp2, pt):
         print(

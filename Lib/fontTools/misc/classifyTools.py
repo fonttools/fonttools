@@ -2,7 +2,7 @@
 """
 
 
-class Classifier(object):
+class Classifier:
     """
     Main Classifier object, used to classify things into similar sets.
     """

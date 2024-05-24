@@ -45,7 +45,7 @@ class SubsetTest:
 
     @staticmethod
     def read_ttx(path):
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             ttx = f.read()
         # don't care whether TTF or OTF, thus strip sfntVersion as well
         return stripVariableItemsFromTTX(ttx, sfntVersion=True).splitlines(True)

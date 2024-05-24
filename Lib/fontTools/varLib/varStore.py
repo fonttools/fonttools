@@ -21,7 +21,7 @@ def _getLocationKey(loc):
     return tuple(sorted(loc.items(), key=lambda kv: kv[0]))
 
 
-class OnlineVarStoreBuilder(object):
+class OnlineVarStoreBuilder:
     def __init__(self, axisTags):
         self._axisTags = axisTags
         self._regionMap = {}
@@ -191,7 +191,7 @@ def VarStore___bool__(self):
 ot.VarStore.__bool__ = VarStore___bool__
 
 
-class VarStoreInstancer(object):
+class VarStoreInstancer:
     def __init__(self, varstore, fvar_axes, location={}):
         self.fvar_axes = fvar_axes
         assert varstore is None or varstore.Format == 1
@@ -398,7 +398,7 @@ ot.GDEF.remap_device_varidxes = Object_remap_device_varidxes
 ot.GPOS.remap_device_varidxes = Object_remap_device_varidxes
 
 
-class _Encoding(object):
+class _Encoding:
     def __init__(self, chars):
         self.chars = chars
         self.width = bit_count(chars)

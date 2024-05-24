@@ -12,7 +12,7 @@ import re
 log = logging.getLogger(__name__)
 
 
-class Parser(object):
+class Parser:
     """Initializes a Parser object.
 
     Example:
@@ -128,7 +128,7 @@ class Parser(object):
         # Report any missing glyphs at the end of parsing
         if self.missing:
             error = [
-                " %s (first found at %s)" % (name, loc)
+                " {} (first found at {})".format(name, loc)
                 for name, loc in self.missing.items()
             ]
             raise FeatureLibError(
@@ -323,7 +323,7 @@ class Parser(object):
                 location,
             )
         else:
-            ranges = " or ".join(['"%s - %s"' % (s, l) for s, l in solutions])
+            ranges = " or ".join(['"{} - {}"'.format(s, l) for s, l in solutions])
             raise FeatureLibError(
                 'Ambiguous glyph range "%s"; '
                 "please use %s to clarify what you mean" % (name, ranges),
@@ -2044,7 +2044,7 @@ class Parser(object):
 
     def is_cur_keyword_(self, k):
         if self.cur_token_type_ is Lexer.NAME:
-            if isinstance(k, type("")):  # basestring is gone in Python3
+            if isinstance(k, str):  # basestring is gone in Python3
                 return self.cur_token_ == k
             else:
                 return self.cur_token_ in k
@@ -2297,7 +2297,7 @@ class Parser(object):
         result = list()
         if len(start) != len(limit):
             raise FeatureLibError(
-                'Bad range: "%s" and "%s" should have the same length' % (start, limit),
+                'Bad range: "{}" and "{}" should have the same length'.format(start, limit),
                 location,
             )
 
@@ -2332,13 +2332,13 @@ class Parser(object):
         if digits.match(start_range) and digits.match(limit_range):
             for i in range(int(start_range, 10), int(limit_range, 10) + 1):
                 number = ("000" + str(i))[-len(start_range) :]
-                result.append("%s%s%s" % (prefix, number, suffix))
+                result.append("{}{}{}".format(prefix, number, suffix))
             return result
 
-        raise FeatureLibError('Bad range: "%s-%s"' % (start, limit), location)
+        raise FeatureLibError('Bad range: "{}-{}"'.format(start, limit), location)
 
 
-class SymbolTable(object):
+class SymbolTable:
     def __init__(self):
         self.scopes_ = [{}]
 

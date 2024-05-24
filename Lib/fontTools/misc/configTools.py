@@ -98,11 +98,11 @@ class Option:
     """Default value for this option."""
     parse: Callable[[str], Any]
     """Turn input (e.g. string) into proper type. Only when reading from file."""
-    validate: Optional[Callable[[Any], bool]] = None
+    validate: Callable[[Any], bool] | None = None
     """Return true if the given value is an acceptable value."""
 
     @staticmethod
-    def parse_optional_bool(v: str) -> Optional[bool]:
+    def parse_optional_bool(v: str) -> bool | None:
         s = str(v).lower()
         if s in {"0", "no", "false"}:
             return False
@@ -125,9 +125,9 @@ class Options(Mapping):
     Access existing options using the Mapping interface.
     """
 
-    __options: Dict[str, Option]
+    __options: dict[str, Option]
 
-    def __init__(self, other: "Options" = None) -> None:
+    def __init__(self, other: Options = None) -> None:
         self.__options = {}
         if other is not None:
             for option in other.values():
@@ -139,7 +139,7 @@ class Options(Mapping):
         help: str,
         default: Any,
         parse: Callable[[str], Any],
-        validate: Optional[Callable[[Any], bool]] = None,
+        validate: Callable[[Any], bool] | None = None,
     ) -> Option:
         """Create and register a new option."""
         return self.register_option(Option(name, help, default, parse, validate))
@@ -213,18 +213,18 @@ class AbstractConfig(MutableMapping):
         help: str,
         default: Any,
         parse: Callable[[str], Any],
-        validate: Optional[Callable[[Any], bool]] = None,
+        validate: Callable[[Any], bool] | None = None,
     ) -> Option:
         """Register an available option in this config system."""
         return cls.options.register(
             name, help=help, default=default, parse=parse, validate=validate
         )
 
-    _values: Dict[str, Any]
+    _values: dict[str, Any]
 
     def __init__(
         self,
-        values: Union[AbstractConfig, Dict[Union[Option, str], Any]] = {},
+        values: AbstractConfig | dict[Option | str, Any] = {},
         parse_values: bool = False,
         skip_unknown: bool = False,
     ):
@@ -233,7 +233,7 @@ class AbstractConfig(MutableMapping):
         for name, value in values_dict.items():
             self.set(name, value, parse_values, skip_unknown)
 
-    def _resolve_option(self, option_or_name: Union[Option, str]) -> Option:
+    def _resolve_option(self, option_or_name: Option | str) -> Option:
         if isinstance(option_or_name, Option):
             option = option_or_name
             if not self.options.is_registered(option):
@@ -253,7 +253,7 @@ class AbstractConfig(MutableMapping):
 
     def set(
         self,
-        option_or_name: Union[Option, str],
+        option_or_name: Option | str,
         value: Any,
         parse_values: bool = False,
         skip_unknown: bool = False,
@@ -295,7 +295,7 @@ class AbstractConfig(MutableMapping):
         self._values[option.name] = value
 
     def get(
-        self, option_or_name: Union[Option, str], default: Any = _USE_GLOBAL_DEFAULT
+        self, option_or_name: Option | str, default: Any = _USE_GLOBAL_DEFAULT
     ) -> Any:
         """
         Get the value of an option. The value which is returned is the first
@@ -329,13 +329,13 @@ class AbstractConfig(MutableMapping):
     def copy(self):
         return self.__class__(self._values)
 
-    def __getitem__(self, option_or_name: Union[Option, str]) -> Any:
+    def __getitem__(self, option_or_name: Option | str) -> Any:
         return self.get(option_or_name)
 
-    def __setitem__(self, option_or_name: Union[Option, str], value: Any) -> None:
+    def __setitem__(self, option_or_name: Option | str, value: Any) -> None:
         return self.set(option_or_name, value)
 
-    def __delitem__(self, option_or_name: Union[Option, str]) -> None:
+    def __delitem__(self, option_or_name: Option | str) -> None:
         option = self._resolve_option(option_or_name)
         del self._values[option.name]
 

@@ -206,7 +206,7 @@ def supportScalar(location, support, ot=True, extrapolate=False, axisRanges=None
     return scalar
 
 
-class VariationModel(object):
+class VariationModel:
     """Locations must have the base master at the origin (ie. 0).
 
     If the extrapolate argument is set to True, then values are extrapolated
@@ -253,7 +253,7 @@ class VariationModel(object):
     """
 
     def __init__(self, locations, axisOrder=None, extrapolate=False):
-        if len(set(tuple(sorted(l.items())) for l in locations)) != len(locations):
+        if len({tuple(sorted(l.items())) for l in locations}) != len(locations):
             raise VariationModelError("Locations must be unique.")
 
         self.origLocations = locations
@@ -315,7 +315,7 @@ class VariationModel(object):
                 axisPoints[axis] = {0.0}
             assert (
                 value not in axisPoints[axis]
-            ), 'Value "%s" in axisPoints["%s"] -->  %s' % (value, axis, axisPoints)
+            ), 'Value "{}" in axisPoints["{}"] -->  {}'.format(value, axis, axisPoints)
             axisPoints[axis].add(value)
 
         def getKey(axisPoints, axisOrder):

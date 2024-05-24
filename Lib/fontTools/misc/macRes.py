@@ -40,7 +40,7 @@ class ResourceReader(MutableMapping):
                 self.file = self.openResourceFork(fileOrPath)
                 self._readFile()
                 return
-            except (ResourceError, IOError):
+            except (ResourceError, OSError):
                 # if it fails, use the data fork
                 self.file = self.openDataFork(fileOrPath)
         self._readFile()
@@ -186,7 +186,7 @@ class ResourceReader(MutableMapping):
             self.file.close()
 
 
-class Resource(object):
+class Resource:
     """Represents a resource stored within a resource fork.
 
     Attributes:

@@ -17,14 +17,14 @@ from fontTools.misc.textTools import bytechr, bytesjoin, byteord
 
 def _decryptChar(cipher, R):
     cipher = byteord(cipher)
-    plain = ((cipher ^ (R >> 8))) & 0xFF
+    plain = (cipher ^ (R >> 8)) & 0xFF
     R = ((cipher + R) * 52845 + 22719) & 0xFFFF
     return bytechr(plain), R
 
 
 def _encryptChar(plain, R):
     plain = byteord(plain)
-    cipher = ((plain ^ (R >> 8))) & 0xFF
+    cipher = (plain ^ (R >> 8)) & 0xFF
     R = ((cipher + R) * 52845 + 22719) & 0xFFFF
     return bytechr(cipher), R
 

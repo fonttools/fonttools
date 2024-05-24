@@ -90,7 +90,7 @@ def addOpenTypeFeaturesFromString(
     addOpenTypeFeatures(font, featurefile, tables=tables, debug=debug)
 
 
-class Builder(object):
+class Builder:
     supportedTables = frozenset(
         Tag(tag)
         for tag in [
@@ -298,7 +298,7 @@ class Builder(object):
             ]
             # "aalt" does not have to specify its own lookups, but it might.
             if not feature and name != "aalt":
-                warnings.warn("%s: Feature %s has not been defined" % (location, name))
+                warnings.warn("{}: Feature {} has not been defined".format(location, name))
                 continue
             for script, lang, feature, lookups in feature:
                 for lookuplist in lookups:

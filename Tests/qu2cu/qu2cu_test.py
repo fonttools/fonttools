@@ -85,7 +85,7 @@ class Qu2CuTest:
 
     def test_roundtrip(self):
         DATADIR = os.path.join(os.path.dirname(__file__), "..", "cu2qu", "data")
-        with open(os.path.join(DATADIR, "curves.json"), "r") as fp:
+        with open(os.path.join(DATADIR, "curves.json")) as fp:
             curves = json.load(fp)
 
         tolerance = 1

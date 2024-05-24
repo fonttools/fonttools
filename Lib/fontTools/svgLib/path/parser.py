@@ -45,8 +45,7 @@ def _tokenize_path(pathdef):
             except ValueError as e:
                 raise ValueError(f"Invalid arc command: '{arc_cmd}{x}'") from e
         else:
-            for token in FLOAT_RE.findall(x):
-                yield token
+            yield from FLOAT_RE.findall(x)
 
 
 ARC_ARGUMENT_TYPES = (

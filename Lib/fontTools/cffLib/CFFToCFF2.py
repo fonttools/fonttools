@@ -262,7 +262,7 @@ def main(args=None):
 
     infile = options.input
     if not os.path.isfile(infile):
-        parser.error("No such file '{}'".format(infile))
+        parser.error(f"No such file '{infile}'")
 
     outfile = (
         makeOutputFileName(infile, overWrite=True, suffix="-CFF2")

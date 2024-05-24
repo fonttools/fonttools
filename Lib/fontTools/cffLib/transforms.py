@@ -140,7 +140,7 @@ class _MarkingT2Decompiler(SimpleT2Decompiler):
 
 
 class _DehintingT2Decompiler(T2WidthExtractor):
-    class Hints(object):
+    class Hints:
         def __init__(self):
             # Whether calling this charstring produces any hint stems
             # Note that if a charstring starts with hintmask, it will

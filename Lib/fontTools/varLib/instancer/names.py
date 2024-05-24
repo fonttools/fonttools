@@ -181,7 +181,7 @@ def _sortAxisValues(axisValues):
     )
 
     for val in format4:
-        axisIndexes = set(r.AxisIndex for r in val.AxisValueRecord)
+        axisIndexes = {r.AxisIndex for r in val.AxisValueRecord}
         minIndex = min(axisIndexes)
         if not seenAxes & axisIndexes:
             seenAxes |= axisIndexes
@@ -210,7 +210,7 @@ def _updateNameRecords(varfont, axisValues):
     elidedNameIsRibbi = _isRibbi(nametable, elidedNameID)
 
     getName = nametable.getName
-    platforms = set((r.platformID, r.platEncID, r.langID) for r in nametable.names)
+    platforms = {(r.platformID, r.platEncID, r.langID) for r in nametable.names}
     for platform in platforms:
         if not all(getName(i, *platform) for i in (1, 2, elidedNameID)):
             # Since no family name and subfamily name records were found,

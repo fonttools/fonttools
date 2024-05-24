@@ -27,7 +27,7 @@ def test_paths(tmpdir):
     return result
 
 
-class MainTest(object):
+class MainTest:
     @staticmethod
     def run_main(*args):
         main([str(p) for p in args if p])
@@ -52,7 +52,7 @@ class MainTest(object):
         self.run_main("-d", output_dir, *TEST_UFOS)
 
         assert output_dir.check(dir=1)
-        outputs = set(p.basename for p in output_dir.listdir())
+        outputs = {p.basename for p in output_dir.listdir()}
         assert "RobotoSubset-Regular.ufo" in outputs
         assert "RobotoSubset-Bold.ufo" in outputs
 

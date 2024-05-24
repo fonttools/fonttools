@@ -3,7 +3,7 @@
 import enum
 
 
-class Visitor(object):
+class Visitor:
     defaultStop = False
 
     @classmethod

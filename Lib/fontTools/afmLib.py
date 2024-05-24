@@ -120,7 +120,7 @@ class error(Exception):
     pass
 
 
-class AFM(object):
+class AFM:
     _attrs = None
 
     _keywords = [
@@ -200,7 +200,7 @@ class AFM(object):
 
     def parseattr(self, word, rest):
         if word == "FontBBox":
-            l, b, r, t = [int(thing) for thing in rest.split()]
+            l, b, r, t = (int(thing) for thing in rest.split())
             self._attrs[word] = l, b, r, t
         elif word == "Comment":
             self._comments.append(rest)
@@ -302,9 +302,9 @@ class AFM(object):
             composites = sorted(self._composites.items())
             lines.append("StartComposites %s" % len(self._composites))
             for charname, components in composites:
-                line = "CC %s %s ;" % (charname, len(components))
+                line = "CC {} {} ;".format(charname, len(components))
                 for basechar, xoffset, yoffset in components:
-                    line = line + " PCC %s %s %s ;" % (basechar, xoffset, yoffset)
+                    line = line + " PCC {} {} {} ;".format(basechar, xoffset, yoffset)
                 lines.append(line)
             lines.append("EndComposites")
 
@@ -407,7 +407,7 @@ class AFM(object):
 
 
 def readlines(path):
-    with open(path, "r", encoding="ascii") as f:
+    with open(path, encoding="ascii") as f:
         data = f.read()
     return data.splitlines()
 

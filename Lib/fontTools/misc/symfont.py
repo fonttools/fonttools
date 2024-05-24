@@ -218,11 +218,11 @@ class %s(BasePen):
                 file=file,
             )
         for name, value in defs:
-            print("		%s = %s" % (name, value), file=file)
+            print("		{} = {}".format(name, value), file=file)
 
         print(file=file)
         for name, value in zip([f[0] for f in funcs], exprs):
-            print("		self.%s += %s" % (name, value), file=file)
+            print("		self.{} += {}".format(name, value), file=file)
 
     print(
         """
@@ -233,7 +233,7 @@ if __name__ == '__main__':
         file=file,
     )
     for name, f in funcs:
-        print("		      ('%s', %s)," % (name, str(f)), file=file)
+        print("		      ('{}', {}),".format(name, str(f)), file=file)
     print("		     ])", file=file)
 
 

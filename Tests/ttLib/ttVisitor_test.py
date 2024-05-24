@@ -20,7 +20,7 @@ class TestVisitor(TTVisitor):
         self.depth -= 1
 
 
-class TTVisitorTest(object):
+class TTVisitorTest:
     @staticmethod
     def getpath(testfile):
         path = os.path.dirname(__file__)

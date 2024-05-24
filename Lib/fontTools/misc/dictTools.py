@@ -31,9 +31,9 @@ class hashdict(dict):
         return tuple(sorted(self.items()))
 
     def __repr__(self):
-        return "{0}({1})".format(
+        return "{}({})".format(
             self.__class__.__name__,
-            ", ".join("{0}={1}".format(str(i[0]), repr(i[1])) for i in self.__key()),
+            ", ".join(f"{str(i[0])}={repr(i[1])}" for i in self.__key()),
         )
 
     def __hash__(self):
@@ -41,37 +41,37 @@ class hashdict(dict):
 
     def __setitem__(self, key, value):
         raise TypeError(
-            "{0} does not support item assignment".format(self.__class__.__name__)
+            f"{self.__class__.__name__} does not support item assignment"
         )
 
     def __delitem__(self, key):
         raise TypeError(
-            "{0} does not support item assignment".format(self.__class__.__name__)
+            f"{self.__class__.__name__} does not support item assignment"
         )
 
     def clear(self):
         raise TypeError(
-            "{0} does not support item assignment".format(self.__class__.__name__)
+            f"{self.__class__.__name__} does not support item assignment"
         )
 
     def pop(self, *args, **kwargs):
         raise TypeError(
-            "{0} does not support item assignment".format(self.__class__.__name__)
+            f"{self.__class__.__name__} does not support item assignment"
         )
 
     def popitem(self, *args, **kwargs):
         raise TypeError(
-            "{0} does not support item assignment".format(self.__class__.__name__)
+            f"{self.__class__.__name__} does not support item assignment"
         )
 
     def setdefault(self, *args, **kwargs):
         raise TypeError(
-            "{0} does not support item assignment".format(self.__class__.__name__)
+            f"{self.__class__.__name__} does not support item assignment"
         )
 
     def update(self, *args, **kwargs):
         raise TypeError(
-            "{0} does not support item assignment".format(self.__class__.__name__)
+            f"{self.__class__.__name__} does not support item assignment"
         )
 
     # update is not ok because it mutates the object

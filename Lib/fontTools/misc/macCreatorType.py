@@ -26,7 +26,7 @@ def getMacCreatorAndType(path):
     if xattr is not None:
         try:
             finderInfo = xattr.getxattr(path, "com.apple.FinderInfo")
-        except (KeyError, IOError):
+        except (KeyError, OSError):
             pass
         else:
             fileType = Tag(finderInfo[:4])

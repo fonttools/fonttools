@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # The tables below are taken from
 # https://github.com/adobe-type-tools/agl-aglfn/raw/4036a9ca80a62f64f9de4f7321a9a045ad0ecfd6/glyphlist.txt
 # and

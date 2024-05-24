@@ -79,7 +79,7 @@ def test_ttLib_sfnt_write_privData(tmp_path, ttfont_path):
     output_path = tmp_path / "TestTTF-Regular.woff"
     font = TTFont(ttfont_path)
 
-    privData = "Private Eyes".encode()
+    privData = b"Private Eyes"
 
     data = WOFFFlavorData()
     head = font["head"]

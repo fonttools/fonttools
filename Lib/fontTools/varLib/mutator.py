@@ -401,7 +401,7 @@ def instantiateVariableFont(varfont, location, inplace=False, overlap=True):
                 for n in varfont["name"].names
                 if n.nameID in exclude and n.platformID == 0 and n.langID != 0xFFFF
             ]
-            if set(excludedUnicodeLangIDs) == set(range(len((varfont["ltag"].tags)))):
+            if set(excludedUnicodeLangIDs) == set(range(len(varfont["ltag"].tags))):
                 del varfont["ltag"]
         varfont["name"].names[:] = [
             n for n in varfont["name"].names if n.nameID not in exclude

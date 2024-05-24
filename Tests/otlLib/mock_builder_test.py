@@ -50,13 +50,13 @@ def ttfont():
         damma hamza sukun kasratan lam_meem_jeem noon.final noon.initial
         by feature lookup sub table uni0327 uni0328 e.fina
     """.split()
-    glyphs.extend("cid{:05d}".format(cid) for cid in range(800, 1001 + 1))
+    glyphs.extend(f"cid{cid:05d}" for cid in range(800, 1001 + 1))
     font = TTFont()
     font.setGlyphOrder(glyphs)
     return font
 
 
-class MockBuilderLocation(object):
+class MockBuilderLocation:
     def __init__(self, location):
         self.location = location
 

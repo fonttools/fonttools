@@ -42,11 +42,11 @@ BOLD_ITALIC_TO_RIBBI_STYLE = {
 class StatNames:
     """Name data generated from the STAT table information."""
 
-    familyNames: Dict[str, str]
-    styleNames: Dict[str, str]
-    postScriptFontName: Optional[str]
-    styleMapFamilyNames: Dict[str, str]
-    styleMapStyleName: Optional[RibbiStyle]
+    familyNames: dict[str, str]
+    styleNames: dict[str, str]
+    postScriptFontName: str | None
+    styleMapFamilyNames: dict[str, str]
+    styleMapStyleName: RibbiStyle | None
 
 
 def getStatNames(
@@ -63,8 +63,8 @@ def getStatNames(
 
     .. versionadded:: 5.0
     """
-    familyNames: Dict[str, str] = {}
-    defaultSource: Optional[SourceDescriptor] = doc.findDefault()
+    familyNames: dict[str, str] = {}
+    defaultSource: SourceDescriptor | None = doc.findDefault()
     if defaultSource is None:
         LOGGER.warning("Cannot determine default source to look up family name.")
     elif defaultSource.familyName is None:
@@ -77,7 +77,7 @@ def getStatNames(
             **defaultSource.localisedFamilyName,
         }
 
-    styleNames: Dict[str, str] = {}
+    styleNames: dict[str, str] = {}
     # If a free-standing label matches the location, use it for name generation.
     label = doc.labelForUserLocation(userLocation)
     if label is not None:
@@ -89,9 +89,9 @@ def getStatNames(
         # whenever a translation is missing.
         labels = _getAxisLabelsForUserLocation(doc.axes, userLocation)
         if labels:
-            languages = set(
+            languages = {
                 language for label in labels for language in label.labelNames
-            )
+            }
             languages.add("en")
             for language in languages:
                 styleName = " ".join(
@@ -138,8 +138,8 @@ def getStatNames(
 
 
 def _getSortedAxisLabels(
-    axes: list[Union[AxisDescriptor, DiscreteAxisDescriptor]],
-) -> Dict[str, list[AxisLabelDescriptor]]:
+    axes: list[AxisDescriptor | DiscreteAxisDescriptor],
+) -> dict[str, list[AxisLabelDescriptor]]:
     """Returns axis labels sorted by their ordering, with unordered ones appended as
     they are listed."""
 
@@ -148,7 +148,7 @@ def _getSortedAxisLabels(
         (axis for axis in axes if axis.axisOrdering is not None),
         key=lambda a: a.axisOrdering,
     )
-    sortedLabels: Dict[str, list[AxisLabelDescriptor]] = {
+    sortedLabels: dict[str, list[AxisLabelDescriptor]] = {
         axis.name: axis.axisLabels for axis in sortedAxes
     }
 
@@ -162,7 +162,7 @@ def _getSortedAxisLabels(
 
 
 def _getAxisLabelsForUserLocation(
-    axes: list[Union[AxisDescriptor, DiscreteAxisDescriptor]],
+    axes: list[AxisDescriptor | DiscreteAxisDescriptor],
     userLocation: SimpleLocationDict,
 ) -> list[AxisLabelDescriptor]:
     labels: list[AxisLabelDescriptor] = []
@@ -176,7 +176,7 @@ def _getAxisLabelsForUserLocation(
 
     for axisName, axisLabels in allAxisLabels.items():
         userValue = userLocation[axisName]
-        label: Optional[AxisLabelDescriptor] = next(
+        label: AxisLabelDescriptor | None = next(
             (
                 l
                 for l in axisLabels
@@ -201,7 +201,7 @@ def _getAxisLabelsForUserLocation(
 
 def _getRibbiStyle(
     self: DesignSpaceDocument, userLocation: SimpleLocationDict
-) -> Tuple[RibbiStyle, SimpleLocationDict]:
+) -> tuple[RibbiStyle, SimpleLocationDict]:
     """Compute the RIBBI style name of the given user location,
     return the location of the matching Regular in the RIBBI group.
 

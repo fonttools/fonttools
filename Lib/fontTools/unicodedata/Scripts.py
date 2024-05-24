@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # NOTE: This file was auto-generated with MetaTools/buildUCD.py.
 # Source: https://unicode.org/Public/UNIDATA/Scripts.txt

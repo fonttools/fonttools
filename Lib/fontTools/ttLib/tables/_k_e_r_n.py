@@ -100,7 +100,7 @@ class table__k_e_r_n(DefaultTable.DefaultTable):
         subtable.fromXML(name, attrs, content, ttFont)
 
 
-class KernTable_format_0(object):
+class KernTable_format_0:
     # 'version' is kept for backward compatibility
     version = format = 0
 
@@ -252,7 +252,7 @@ class KernTable_format_0(object):
         del self.kernTable[pair]
 
 
-class KernTable_format_unkown(object):
+class KernTable_format_unkown:
     def __init__(self, format):
         self.format = format
 

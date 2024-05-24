@@ -9,7 +9,7 @@ import math
 import pytest
 
 
-class TransformTest(object):
+class TransformTest:
     def test_examples(self):
         t = Transform()
         assert repr(t) == "<Transform [1 0 0 1 0 0]>"
@@ -137,7 +137,7 @@ class TransformTest(object):
         assert d.rotation == 0
 
 
-class DecomposedTransformTest(object):
+class DecomposedTransformTest:
     def test_identity(self):
         t = DecomposedTransform()
         assert (

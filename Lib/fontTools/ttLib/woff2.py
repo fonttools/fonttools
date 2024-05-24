@@ -756,7 +756,7 @@ class WOFF2LocaTable(getTableClass("loca")):
             data = locations.tobytes()
         else:
             # use the most compact indexFormat given the current glyph offsets
-            data = super(WOFF2LocaTable, self).compile(ttFont)
+            data = super().compile(ttFont)
         return data
 
 
@@ -1324,7 +1324,7 @@ class WOFF2FlavorData(WOFFFlavorData):
             and "glyf" not in transformedTables
         ):
             raise ValueError("'glyf' and 'loca' must be transformed (or not) together")
-        super(WOFF2FlavorData, self).__init__(reader=reader)
+        super().__init__(reader=reader)
         if reader:
             transformedTables = [
                 tag for tag, entry in reader.tables.items() if entry.transformed
@@ -1511,7 +1511,7 @@ def compress(input_file, output_file, transform_tables=None):
                     and 'loca' tables are transformed. An empty set means disable all
                     transformations.
     """
-    log.info("Processing %s => %s" % (input_file, output_file))
+    log.info("Processing {} => {}".format(input_file, output_file))
 
     font = TTFont(input_file, recalcBBoxes=False, recalcTimestamp=False)
     font.flavor = "woff2"
@@ -1533,7 +1533,7 @@ def decompress(input_file, output_file):
             output_file: a file path, file or file-like object where to save the
                     decompressed OpenType font.
     """
-    log.info("Processing %s => %s" % (input_file, output_file))
+    log.info("Processing {} => {}".format(input_file, output_file))
 
     font = TTFont(input_file, recalcBBoxes=False, recalcTimestamp=False)
     font.flavor = None

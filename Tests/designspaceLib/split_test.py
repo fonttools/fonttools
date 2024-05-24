@@ -79,7 +79,7 @@ def test_split(datadir, tmpdir, test_ds, expected_interpolable_spaces):
         expected_location, expected_vf_names = expected_interpolable_spaces[i]
         assert location == expected_location
         vfs = list(splitVariableFonts(sub_doc))
-        assert expected_vf_names == set(vf[0] for vf in vfs)
+        assert expected_vf_names == {vf[0] for vf in vfs}
 
         loc_str = "_".join(
             f"{name}_{value}" for name, value in sorted(location.items())

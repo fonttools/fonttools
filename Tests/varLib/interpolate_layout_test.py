@@ -58,7 +58,7 @@ class InterpolateLayoutTest(unittest.TestCase):
 
     def read_ttx(self, path):
         lines = []
-        with open(path, "r", encoding="utf-8") as ttx:
+        with open(path, encoding="utf-8") as ttx:
             for line in ttx.readlines():
                 # Elide ttFont attributes because ttLibVersion may change.
                 if line.startswith("<ttFont "):

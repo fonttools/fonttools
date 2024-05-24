@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # fontTools documentation build configuration file, created by
 # sphinx-quickstart on Thu Apr 20 11:07:39 2017.

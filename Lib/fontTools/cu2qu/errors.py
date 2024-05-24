@@ -32,14 +32,14 @@ class IncompatibleGlyphsError(Error):
     def __init__(self, glyphs):
         assert len(glyphs) > 1
         self.glyphs = glyphs
-        names = set(repr(g.name) for g in glyphs)
+        names = {repr(g.name) for g in glyphs}
         if len(names) > 1:
             self.combined_name = "{%s}" % ", ".join(sorted(names))
         else:
             self.combined_name = names.pop()
 
     def __repr__(self):
-        return "<%s %s>" % (type(self).__name__, self.combined_name)
+        return "<{} {}>".format(type(self).__name__, self.combined_name)
 
 
 class IncompatibleSegmentNumberError(IncompatibleGlyphsError):
@@ -59,9 +59,9 @@ class IncompatibleSegmentTypesError(IncompatibleGlyphsError):
         ndigits = len(str(max(self.segments)))
         for i, tags in sorted(self.segments.items()):
             lines.append(
-                "%s: (%s)" % (str(i).rjust(ndigits), ", ".join(repr(t) for t in tags))
+                "{}: ({})".format(str(i).rjust(ndigits), ", ".join(repr(t) for t in tags))
             )
-        return "Glyphs named %s have incompatible segment types:\n  %s" % (
+        return "Glyphs named {} have incompatible segment types:\n  {}".format(
             self.combined_name,
             "\n  ".join(lines),
         )

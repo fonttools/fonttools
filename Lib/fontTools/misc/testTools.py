@@ -92,7 +92,7 @@ class FakeFont:
         return sorted(self.getGlyphOrder())
 
 
-class TestXMLReader_(object):
+class TestXMLReader_:
     def __init__(self):
         from xml.parsers.expat import ParserCreate
 
@@ -165,7 +165,7 @@ def stripVariableItemsFromTTX(
     return string
 
 
-class MockFont(object):
+class MockFont:
     """A font-like object that automatically adds any looked up glyphname
     to its glyphOrder."""
 

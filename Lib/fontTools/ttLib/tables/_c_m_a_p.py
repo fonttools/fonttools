@@ -236,7 +236,7 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
         self.tables.append(table)
 
 
-class CmapSubtable(object):
+class CmapSubtable:
     """Base class for all cmap subtable formats.
 
     Subclasses which handle the individual subtable formats are named
@@ -419,7 +419,7 @@ class cmap_format_0(CmapSubtable):
 subHeaderFormat = ">HHhH"
 
 
-class SubHeader(object):
+class SubHeader:
     def __init__(self):
         self.firstCode = None
         self.entryCount = None

@@ -47,7 +47,7 @@ try:
     _have_lxml = True
 except ImportError:
     try:
-        from xml.etree.cElementTree import *
+        from xml.etree.ElementTree import *
 
         # the cElementTree version of XML function doesn't support
         # the optional 'parser' keyword argument
@@ -83,7 +83,7 @@ except ImportError:
         """Element subclass that keeps the order of attributes."""
 
         def __init__(self, tag, attrib=_Attrib(), **extra):
-            super(Element, self).__init__(tag)
+            super().__init__(tag)
             self.attrib = _Attrib()
             if attrib:
                 self.attrib.update(attrib)
@@ -103,8 +103,7 @@ except ImportError:
         if include and "start" in events:
             yield ("start", element)
         for e in element:
-            for item in _iterwalk(e, events, tag):
-                yield item
+            yield from _iterwalk(e, events, tag)
         if include:
             yield ("end", element)
 
@@ -119,8 +118,7 @@ except ImportError:
             element = element_or_tree.getroot()
         if tag == "*":
             tag = None
-        for item in _iterwalk(element, events, tag):
-            yield item
+        yield from _iterwalk(element, events, tag)
 
     _ElementTree = ElementTree
 
@@ -143,7 +141,7 @@ except ImportError:
         ):
             if method and method != "xml":
                 # delegate to super-class
-                super(ElementTree, self).write(
+                super().write(
                     file_or_filename,
                     encoding=encoding,
                     xml_declaration=xml_declaration,
@@ -342,7 +340,7 @@ except ImportError:
                         if prefix != "xml":
                             namespaces[uri] = prefix
                     if prefix:
-                        qnames[qname] = "%s:%s" % (prefix, tag)
+                        qnames[qname] = "{}:{}".format(prefix, tag)
                     else:
                         qnames[qname] = tag  # default element
                 else:
@@ -395,7 +393,7 @@ except ImportError:
                     ):  # sort on prefix
                         if prefix:
                             prefix = ":" + prefix
-                        write(' xmlns%s="%s"' % (prefix, _escape_attrib(uri)))
+                        write(' xmlns{}="{}"'.format(prefix, _escape_attrib(uri)))
                 attrs = elem.attrib
                 if attrs:
                     # try to keep existing attrib order
@@ -413,7 +411,7 @@ except ImportError:
                             v = qnames[_tounicode(v.text)]
                         else:
                             v = _escape_attrib(v)
-                        write(' %s="%s"' % (qnames[k], v))
+                        write(' {}="{}"'.format(qnames[k], v))
                 if text is not None or len(elem):
                     write(">")
                     if text:
@@ -427,7 +425,7 @@ except ImportError:
             write(_escape_cdata(elem.tail))
 
     def _raise_serialization_error(text):
-        raise TypeError("cannot serialize %r (type %s)" % (text, type(text).__name__))
+        raise TypeError("cannot serialize {!r} (type {})".format(text, type(text).__name__))
 
     def _escape_cdata(text):
         # escape character data

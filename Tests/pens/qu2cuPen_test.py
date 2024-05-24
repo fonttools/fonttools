@@ -30,7 +30,7 @@ except ImportError as e:
 MAX_ERR = 1.0
 
 
-class _TestPenMixin(object):
+class _TestPenMixin:
     """Collection of tests that are shared by both the SegmentPen and the
     PointPen test cases, plus some helper methods.
     Note: We currently don't have a PointPen.
@@ -109,7 +109,7 @@ class _TestPenMixin(object):
 
 class TestQu2CuPen(unittest.TestCase, _TestPenMixin):
     def __init__(self, *args, **kwargs):
-        super(TestQu2CuPen, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.Glyph = DummyGlyph
         self.Pen = DummyPen
         self.Qu2CuPen = Qu2CuPen

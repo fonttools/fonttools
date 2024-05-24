@@ -122,7 +122,7 @@ log = logging.getLogger("fontTools.ttx")
 opentypeheaderRE = re.compile("""sfntVersion=['"]OTTO["']""")
 
 
-class Options(object):
+class Options:
     listTables = False
     outputDir = None
     outputFile = None
@@ -313,7 +313,7 @@ def ttCompile(input, output, options):
     output_name = output
     if output == "-":
         output, output_name = sys.stdout.buffer, sys.stdout.name
-    log.info('Compiling "%s" to "%s"...' % (input_name, output))
+    log.info('Compiling "{}" to "{}"...'.format(input_name, output))
     if options.useZopfli:
         from fontTools.ttLib import sfnt
 
@@ -343,7 +343,7 @@ def guessFileType(fileName):
         try:
             with open(fileName, "rb") as f:
                 header = f.read(256)
-        except IOError:
+        except OSError:
             return None
 
     if header.startswith(b"\xef\xbb\xbf<?xml"):
@@ -443,7 +443,7 @@ def main(args=None):
     try:
         jobs, options = parseOptions(args)
     except getopt.GetoptError as e:
-        print("%s\nERROR: %s" % (__doc__, e), file=sys.stderr)
+        print("{}\nERROR: {}".format(__doc__, e), file=sys.stderr)
         sys.exit(2)
 
     configLogger(level=options.logLevel)

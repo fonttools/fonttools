@@ -53,7 +53,7 @@ CPAL_DATA_V1 = deHexStr(
 )  # paletteEntryLabel=[513, 514, 515]
 
 
-class FakeNameTable(object):
+class FakeNameTable:
     def __init__(self, names):
         self.names = names
 

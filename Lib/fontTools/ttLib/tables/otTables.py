@@ -1,4 +1,3 @@
-# coding: utf-8
 """fontTools.ttLib.tables.otTables -- A collection of classes representing the various
 OpenType subtables.
 
@@ -431,19 +430,19 @@ class VarCompositeGlyph:
             self.components.append(component)
 
 
-class AATStateTable(object):
+class AATStateTable:
     def __init__(self):
         self.GlyphClasses = {}  # GlyphID --> GlyphClass
         self.States = []  # List of AATState, indexed by state number
         self.PerGlyphLookups = []  # [{GlyphID:GlyphID}, ...]
 
 
-class AATState(object):
+class AATState:
     def __init__(self):
         self.Transitions = {}  # GlyphClass --> AATAction
 
 
-class AATAction(object):
+class AATAction:
     _FLAGS = None
 
     @staticmethod
@@ -614,7 +613,7 @@ class ContextualMorphAction(AATAction):
                 self.CurrentIndex = safeEval(eltAttrs["value"])
 
 
-class LigAction(object):
+class LigAction:
     def __init__(self):
         self.Store = False
         # GlyphIndexDelta is a (possibly negative) delta that gets
@@ -909,7 +908,7 @@ class FeatureParams(BaseTable):
     def compile(self, writer, font):
         assert (
             featureParamTypes.get(writer["FeatureTag"]) == self.__class__
-        ), "Wrong FeatureParams type for feature '%s': %s" % (
+        ), "Wrong FeatureParams type for feature '{}': {}".format(
             writer["FeatureTag"],
             self.__class__.__name__,
         )
@@ -2412,7 +2411,7 @@ def splitPairPos(oldSubTable, newSubTable, overflowRecord):
         records = oldSubTable.Class1Record
 
         oldCount = len(oldSubTable.Class1Record) // 2
-        newGlyphs = set(k for k, v in classDefs.items() if v >= oldCount)
+        newGlyphs = {k for k, v in classDefs.items() if v >= oldCount}
 
         oldSubTable.Coverage.glyphs = [g for g in coverage if g not in newGlyphs]
         oldSubTable.ClassDef1.classDefs = {

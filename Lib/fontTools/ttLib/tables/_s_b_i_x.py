@@ -115,5 +115,5 @@ class table__s_b_i_x(DefaultTable.DefaultTable):
 # Helper classes
 
 
-class sbixStrikeOffset(object):
+class sbixStrikeOffset:
     pass

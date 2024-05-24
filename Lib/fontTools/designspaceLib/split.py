@@ -56,7 +56,7 @@ def splitInterpolable(
     makeNames: bool = True,
     expandLocations: bool = True,
     makeInstanceFilename: MakeInstanceFilenameCallable = defaultMakeInstanceFilename,
-) -> Iterator[Tuple[SimpleLocationDict, DesignSpaceDocument]]:
+) -> Iterator[tuple[SimpleLocationDict, DesignSpaceDocument]]:
     """Split the given DS5 into several interpolable sub-designspaces.
     There are as many interpolable sub-spaces as there are combinations of
     discrete axis values.
@@ -123,7 +123,7 @@ def splitVariableFonts(
     makeNames: bool = False,
     expandLocations: bool = False,
     makeInstanceFilename: MakeInstanceFilenameCallable = defaultMakeInstanceFilename,
-) -> Iterator[Tuple[str, DesignSpaceDocument]]:
+) -> Iterator[tuple[str, DesignSpaceDocument]]:
     """Convert each variable font listed in this document into a standalone
     designspace. This can be used to compile all the variable fonts from a
     format 5 designspace using tools that can only deal with 1 VF at a time.
@@ -157,7 +157,7 @@ def splitVariableFonts(
 
 def convert5to4(
     doc: DesignSpaceDocument,
-) -> Dict[str, DesignSpaceDocument]:
+) -> dict[str, DesignSpaceDocument]:
     """Convert each variable font listed in this document into a standalone
     format 4 designspace. This can be used to compile all the variable fonts
     from a format 5 designspace using tools that only know about format 4.
@@ -388,8 +388,8 @@ def _extractSubSpace(
     return subDoc
 
 
-def _conditionSetFrom(conditionSet: List[Dict[str, Any]]) -> ConditionSet:
-    c: Dict[str, Range] = {}
+def _conditionSetFrom(conditionSet: list[dict[str, Any]]) -> ConditionSet:
+    c: dict[str, Range] = {}
     for condition in conditionSet:
         minimum, maximum = condition.get("minimum"), condition.get("maximum")
         c[condition["name"]] = Range(
@@ -400,8 +400,8 @@ def _conditionSetFrom(conditionSet: List[Dict[str, Any]]) -> ConditionSet:
 
 
 def _subsetRulesBasedOnConditions(
-    rules: List[RuleDescriptor], designRegion: Region
-) -> List[RuleDescriptor]:
+    rules: list[RuleDescriptor], designRegion: Region
+) -> list[RuleDescriptor]:
     # What rules to keep:
     #  - Keep the rule if any conditionset is relevant.
     #  - A conditionset is relevant if all conditions are relevant or it is empty.
@@ -417,14 +417,14 @@ def _subsetRulesBasedOnConditions(
     #       - (C-AR-inter) and intersection(axis range, condition range) not empty:
     #         keep the condition with the smaller range (= intersection)
     #       - (C-AR-none) else, whole conditionset can be discarded
-    newRules: List[RuleDescriptor] = []
+    newRules: list[RuleDescriptor] = []
     for rule in rules:
         newRule: RuleDescriptor = RuleDescriptor(
             name=rule.name, conditionSets=[], subs=rule.subs
         )
         for conditionset in rule.conditionSets:
             cs = _conditionSetFrom(conditionset)
-            newConditionset: List[Dict[str, Any]] = []
+            newConditionset: list[dict[str, Any]] = []
             discardConditionset = False
             for selectionName, selectionValue in designRegion.items():
                 # TODO: Ensure that all(key in conditionset for key in region.keys())?
@@ -466,8 +466,8 @@ def _subsetRulesBasedOnConditions(
 
 def _filterLocation(
     userRegion: Region,
-    location: Dict[str, float],
-) -> Dict[str, float]:
+    location: dict[str, float],
+) -> dict[str, float]:
     return {
         name: value
         for name, value in location.items()

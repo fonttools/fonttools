@@ -25,7 +25,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class SFNTReader(object):
+class SFNTReader:
     def __new__(cls, *args, **kwargs):
         """Return an instance of the SFNTReader sub-class which is compatible
         with the input file type.
@@ -194,7 +194,7 @@ def compress(data, level=ZLIB_COMPRESSION_LEVEL):
         return compress(data, numiterations=ZOPFLI_LEVELS[level])
 
 
-class SFNTWriter(object):
+class SFNTWriter:
     def __new__(cls, *args, **kwargs):
         """Return an instance of the SFNTWriter sub-class which is compatible
         with the specified 'flavor'.
@@ -482,7 +482,7 @@ woffDirectoryEntryFormat = """
 woffDirectoryEntrySize = sstruct.calcsize(woffDirectoryEntryFormat)
 
 
-class DirectoryEntry(object):
+class DirectoryEntry:
     def __init__(self):
         self.uncompressed = False  # if True, always embed entry raw
 
@@ -497,9 +497,9 @@ class DirectoryEntry(object):
 
     def __repr__(self):
         if hasattr(self, "tag"):
-            return "<%s '%s' at %x>" % (self.__class__.__name__, self.tag, id(self))
+            return "<{} '{}' at {:x}>".format(self.__class__.__name__, self.tag, id(self))
         else:
-            return "<%s at %x>" % (self.__class__.__name__, id(self))
+            return "<{} at {:x}>".format(self.__class__.__name__, id(self))
 
     def loadData(self, file):
         file.seek(self.offset)
@@ -533,7 +533,7 @@ class WOFFDirectoryEntry(DirectoryEntry):
     formatSize = woffDirectoryEntrySize
 
     def __init__(self):
-        super(WOFFDirectoryEntry, self).__init__()
+        super().__init__()
         # With fonttools<=3.1.2, the only way to set a different zlib
         # compression level for WOFF directory entries was to set the class
         # attribute 'zlibCompressionLevel'. This is now replaced by a globally

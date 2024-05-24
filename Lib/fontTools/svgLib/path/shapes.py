@@ -33,7 +33,7 @@ def _transform(raw_value):
     return matrix
 
 
-class PathBuilder(object):
+class PathBuilder:
     def __init__(self):
         self.paths = []
         self.transforms = []
@@ -54,7 +54,7 @@ class PathBuilder(object):
         self.paths[-1] = path
 
     def _move(self, c, x, y):
-        self._add("%s%s,%s" % (c, _ntos(x), _ntos(y)))
+        self._add("{}{},{}".format(c, _ntos(x), _ntos(y)))
 
     def M(self, x, y):
         self._move("M", x, y)
@@ -75,7 +75,7 @@ class PathBuilder(object):
         self._arc("a", rx, ry, x, y, large_arc)
 
     def _vhline(self, c, x):
-        self._add("%s%s" % (c, _ntos(x)))
+        self._add("{}{}".format(c, _ntos(x)))
 
     def H(self, x):
         self._vhline("H", x)
@@ -90,7 +90,7 @@ class PathBuilder(object):
         self._vhline("v", y)
 
     def _line(self, c, x, y):
-        self._add("%s%s,%s" % (c, _ntos(x), _ntos(y)))
+        self._add("{}{},{}".format(c, _ntos(x), _ntos(y)))
 
     def L(self, x, y):
         self._line("L", x, y)

@@ -24,7 +24,7 @@ panoseFormat = """
 """
 
 
-class Panose(object):
+class Panose:
     def __init__(self, **kwargs):
         _, names, _ = sstruct.getformat(panoseFormat)
         for name in names:

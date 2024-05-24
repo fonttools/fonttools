@@ -19,7 +19,7 @@ sbixGlyphHeaderFormat = """
 sbixGlyphHeaderFormatSize = sstruct.calcsize(sbixGlyphHeaderFormat)
 
 
-class Glyph(object):
+class Glyph:
     def __init__(
         self,
         glyphName=None,

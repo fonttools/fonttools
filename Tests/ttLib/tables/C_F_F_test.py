@@ -23,7 +23,7 @@ class CFFTableTest(unittest.TestCase):
     def setUpClass(cls):
         with open(CFF_BIN, "rb") as f:
             cls.cffData = f.read()
-        with open(CFF_TTX, "r") as f:
+        with open(CFF_TTX) as f:
             cls.cffXML = strip_ttLibVersion(f.read()).splitlines()
 
     def test_toXML(self):

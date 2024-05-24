@@ -25,7 +25,7 @@ except ImportError:
 USE_HARFBUZZ_REPACKER = OPTIONS[f"{__name__}:USE_HARFBUZZ_REPACKER"]
 
 
-class OverflowErrorRecord(object):
+class OverflowErrorRecord:
     def __init__(self, overflowTuple):
         self.tableType = overflowTuple[0]
         self.LookupListIndex = overflowTuple[1]
@@ -258,7 +258,7 @@ assert len(struct.pack("i", 0)) == 4
 assert array.array("i").itemsize == 4, "Oops, file a bug against fonttools."
 
 
-class OTTableReader(object):
+class OTTableReader:
     """Helper class to retrieve data from an OpenType table."""
 
     __slots__ = ("data", "offset", "pos", "localState", "tableTag")
@@ -374,7 +374,7 @@ class OTTableReader(object):
         return self.localState and name in self.localState
 
 
-class OffsetToWriter(object):
+class OffsetToWriter:
     def __init__(self, subWriter, offsetSize):
         self.subWriter = subWriter
         self.offsetSize = offsetSize
@@ -389,7 +389,7 @@ class OffsetToWriter(object):
         return hash((self.subWriter, self.offsetSize))
 
 
-class OTTableWriter(object):
+class OTTableWriter:
     """Helper class to gather and assemble data for OpenType tables."""
 
     def __init__(self, localState=None, tableTag=None):
@@ -832,7 +832,7 @@ class OTTableWriter(object):
         )
 
 
-class CountReference(object):
+class CountReference:
     """A reference to a Count value, not a count of references."""
 
     def __init__(self, table, name, size=None, value=None):
@@ -878,7 +878,7 @@ def packUInt24(value):
     return struct.pack(">I", value)[1:]
 
 
-class BaseTable(object):
+class BaseTable:
     """Generic base class for all OpenType (sub)tables."""
 
     def __getattr__(self, attr):
@@ -1266,7 +1266,7 @@ def getFormatSwitchingBaseTableClass(formatType):
 
 
 # memoize since these are parsed from otData.py, thus stay constant
-@lru_cache()
+@lru_cache
 def getVariableAttrs(cls: BaseTable, fmt: Optional[int] = None) -> Tuple[str]:
     """Return sequence of variable table field names (can be empty).
 
@@ -1332,7 +1332,7 @@ def _buildDict():
 valueRecordFormatDict = _buildDict()
 
 
-class ValueRecordFactory(object):
+class ValueRecordFactory:
     """Given a format code, this object convert ValueRecords."""
 
     def __init__(self, valueFormat):
@@ -1383,7 +1383,7 @@ class ValueRecordFactory(object):
                 writer.writeUShort(value)
 
 
-class ValueRecord(object):
+class ValueRecord:
     # see ValueRecordFactory
 
     def __init__(self, valueFormat=None, src=None):

@@ -129,7 +129,7 @@ def buildLookup(subtables, flags=0, markFilterSet=None):
     return self
 
 
-class LookupBuilder(object):
+class LookupBuilder:
     SUBTABLE_BREAK_ = "SUBTABLE_BREAK"
 
     def __init__(self, font, location, table, lookup_type):
@@ -489,7 +489,7 @@ class ChainContextualBuilder(LookupBuilder):
                 st.BacktrackClassDef,
                 st.InputClassDef,
                 st.LookAheadClassDef,
-            ) = [c.build() for c in classdefs]
+            ) = (c.build() for c in classdefs)
         else:
             st.ClassDef = classdefs[1].build()
 
@@ -989,7 +989,7 @@ class MarkBasePosBuilder(LookupBuilder):
         for mark, (mc, anchor) in self.marks.items():
             if mc not in markClasses:
                 raise ValueError(
-                    "Mark class %s not found for mark glyph %s" % (mc, mark)
+                    "Mark class {} not found for mark glyph {}".format(mc, mark)
                 )
             marks[mark] = (markClasses[mc], anchor)
         bases = {}
@@ -998,7 +998,7 @@ class MarkBasePosBuilder(LookupBuilder):
             for mc, anchor in anchors.items():
                 if mc not in markClasses:
                     raise ValueError(
-                        "Mark class %s not found for base glyph %s" % (mc, glyph)
+                        "Mark class {} not found for base glyph {}".format(mc, glyph)
                     )
                 bases[glyph][markClasses[mc]] = anchor
         subtables = buildMarkBasePos(marks, bases, self.glyphMap)
@@ -1248,7 +1248,7 @@ class SingleSubstBuilder(LookupBuilder):
         self.mapping[(self.SUBTABLE_BREAK_, location)] = self.SUBTABLE_BREAK_
 
 
-class ClassPairPosSubtableBuilder(object):
+class ClassPairPosSubtableBuilder:
     """Builds class-based Pair Positioning (GPOS2 format 2) subtables.
 
     Note that this does *not* build a GPOS2 ``otTables.Lookup`` directly,
@@ -2619,7 +2619,7 @@ def buildMarkGlyphSetsDef(markSets, glyphMap):
     return self
 
 
-class ClassDefBuilder(object):
+class ClassDefBuilder:
     """Helper for building ClassDef tables."""
 
     def __init__(self, useClass0):

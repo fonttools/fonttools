@@ -350,7 +350,7 @@ class TFM:
             if cmd.skip_byte == 255:
                 self.right_boundary_char = cmd.next_char
 
-            cmd = lig_kern_command(lig_step((sizes.nl - 1)))
+            cmd = lig_kern_command(lig_step(sizes.nl - 1))
             if cmd.skip_byte == 255:
                 self.left_boundary_char = 256
                 r = 256 * cmd.op_byte + cmd.remainder

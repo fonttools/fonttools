@@ -517,7 +517,7 @@ def parseMarkToSomething(lines, font, c):
     # Base
     self.classCount = 0 if not baseData else 1 + max(k[1] for k, v in baseData.items())
     baseCoverage = makeCoverage(
-        set([k[0] for k in baseData.keys()]), font, c.BaseCoverageClass
+        {k[0] for k in baseData.keys()}, font, c.BaseCoverageClass
     )
     baseArray = c.BaseArrayClass()
     if c.Base == "Ligature":
@@ -532,7 +532,7 @@ def parseMarkToSomething(lines, font, c):
     return self
 
 
-class MarkHelper(object):
+class MarkHelper:
     def __init__(self):
         for Which in ("Mark", "Base"):
             for What in ("Coverage", "Array", "Count", "Record", "Anchor"):
@@ -588,7 +588,7 @@ def intSplitComma(line):
 
 
 # Copied from fontTools.subset
-class ContextHelper(object):
+class ContextHelper:
     def __init__(self, klassName, Format):
         if klassName.endswith("Subst"):
             Typ = "Sub"
@@ -826,7 +826,7 @@ def parseContext(lines, font, Type, lookupMap=None):
             recs = parseLookupRecords(line[1 + c.DataLen :], c.LookupRecord, lookupMap)
             rules.append((seq, recs))
 
-        firstGlyphs = set(seq[c.InputIdx][0] for seq, recs in rules)
+        firstGlyphs = {seq[c.InputIdx][0] for seq, recs in rules}
         self.Coverage = makeCoverage(firstGlyphs, font)
         bucketizeRules(self, c, rules, self.Coverage.glyphs)
     elif typ.endswith("class"):
@@ -857,10 +857,10 @@ def parseContext(lines, font, Type, lookupMap=None):
             seq = tuple(intSplitComma(i) for i in line[1 : 1 + c.DataLen])
             recs = parseLookupRecords(line[1 + c.DataLen :], c.LookupRecord, lookupMap)
             rules.append((seq, recs))
-        firstClasses = set(seq[c.InputIdx][0] for seq, recs in rules)
-        firstGlyphs = set(
+        firstClasses = {seq[c.InputIdx][0] for seq, recs in rules}
+        firstGlyphs = {
             g for g, c in classDefs[c.InputIdx].classDefs.items() if c in firstClasses
-        )
+        }
         self.Coverage = makeCoverage(firstGlyphs, font)
         bucketizeRules(self, c, rules, range(max(firstClasses) + 1))
     elif typ.endswith("coverage"):
@@ -1150,10 +1150,10 @@ def parseCmap(lines, font):
     tables = []
     while lines.peek() is not None:
         lines.expect("cmap subtable %d" % len(tables))
-        platId, encId, fmt, lang = [
+        platId, encId, fmt, lang = (
             parseCmapId(lines, field)
             for field in ("platformID", "encodingID", "format", "language")
-        ]
+        )
         table = cmap_classes[fmt](fmt)
         table.platformID = platId
         table.platEncID = encId
@@ -1203,7 +1203,7 @@ def parseTable(lines, font, tableTag=None):
     }[tableTag](lines, font)
 
 
-class Tokenizer(object):
+class Tokenizer:
     def __init__(self, f):
         # TODO BytesIO / StringIO as needed?  also, figure out whether we work on bytes or unicode
         lines = iter(f)
@@ -1292,13 +1292,13 @@ class Tokenizer(object):
     def expect(self, s):
         line = next(self)
         tag = line[0].lower()
-        assert tag == s, "Expected '%s', got '%s'" % (s, tag)
+        assert tag == s, "Expected '{}', got '{}'".format(s, tag)
         return line
 
     def expectendswith(self, s):
         line = next(self)
         tag = line[0].lower()
-        assert tag.endswith(s), "Expected '*%s', got '%s'" % (s, tag)
+        assert tag.endswith(s), "Expected '*{}', got '{}'".format(s, tag)
         return line
 
 
@@ -1377,7 +1377,7 @@ def main(args=None, font=None):
 
     for f in args.inputs:
         log.debug("Processing %s", f)
-        with open(f, "rt", encoding="utf-8") as f:
+        with open(f, encoding="utf-8") as f:
             table = build(f, font, tableTag=args.tableTag)
         blob = table.compile(font)  # Make sure it compiles
         decompiled = table.__class__()

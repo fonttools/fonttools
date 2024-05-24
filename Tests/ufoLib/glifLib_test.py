@@ -4,7 +4,6 @@ import tempfile
 import shutil
 import unittest
 from pathlib import Path
-from io import open
 from .testSupport import getDemoFontGlyphSetPath
 from fontTools.ufoLib.glifLib import (
     GlyphSet,
@@ -50,9 +49,9 @@ class GlyphSetTests(unittest.TestCase):
         # compare raw file data:
         for glyphName in sorted(src.keys()):
             fileName = src.contents[glyphName]
-            with open(os.path.join(srcDir, fileName), "r") as f:
+            with open(os.path.join(srcDir, fileName)) as f:
                 org = f.read()
-            with open(os.path.join(dstDir, fileName), "r") as f:
+            with open(os.path.join(dstDir, fileName)) as f:
                 new = f.read()
             added = []
             removed = []

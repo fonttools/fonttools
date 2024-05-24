@@ -49,7 +49,7 @@ def makeTTFont():
         damma hamza sukun kasratan lam_meem_jeem noon.final noon.initial
         by feature lookup sub table uni0327 uni0328 e.fina
     """.split()
-    glyphs.extend("cid{:05d}".format(cid) for cid in range(800, 1001 + 1))
+    glyphs.extend(f"cid{cid:05d}" for cid in range(800, 1001 + 1))
     font = TTFont()
     font.setGlyphOrder(glyphs)
     return font
@@ -117,7 +117,7 @@ class BuilderTest(unittest.TestCase):
 
     def read_ttx(self, path):
         lines = []
-        with open(path, "r", encoding="utf-8") as ttx:
+        with open(path, encoding="utf-8") as ttx:
             for line in ttx.readlines():
                 # Elide ttFont attributes because ttLibVersion may change.
                 if line.startswith("<ttFont "):
@@ -190,7 +190,7 @@ class BuilderTest(unittest.TestCase):
         p = parser(self.getpath(fname), glyphNames=font.getGlyphOrder())
         doc = p.parse()
         actual = self.normal_fea(doc.asFea().split("\n"))
-        with open(self.getpath(base or fname), "r", encoding="utf-8") as ofile:
+        with open(self.getpath(base or fname), encoding="utf-8") as ofile:
             expected = self.normal_fea(ofile.readlines())
 
         if expected != actual:
@@ -778,21 +778,21 @@ class BuilderTest(unittest.TestCase):
                     res = ""
                     for bcd in self.base.markClass.definitions:
                         if res != "":
-                            res += "\n{}".format(indent)
+                            res += f"\n{indent}"
                         res += "pos base {} {}".format(
                             bcd.glyphs.asFea(), bcd.anchor.asFea()
                         )
                         for m in self.marks:
-                            res += " mark @{}".format(m.name)
+                            res += f" mark @{m.name}"
                         res += ";"
                 else:
-                    res = "pos base {}".format(self.base.asFea())
+                    res = f"pos base {self.base.asFea()}"
                     for a, m in self.marks:
-                        res += " {} mark @{}".format(a.asFea(), m.name)
+                        res += f" {a.asFea()} mark @{m.name}"
                     res += ";"
                 return res
 
-        class testAst(object):
+        class testAst:
             MarkBasePosStatement = ast_MarkBasePosStatement
 
             def __getattr__(self, name):
@@ -1174,7 +1174,7 @@ def generate_fea2fea_file_test(name):
 for name in BuilderTest.TEST_FEATURE_FILES:
     setattr(
         BuilderTest,
-        "test_Fea2feaFile_{}".format(name),
+        f"test_Fea2feaFile_{name}",
         generate_fea2fea_file_test(name),
     )
 

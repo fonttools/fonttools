@@ -3,7 +3,7 @@ from fontTools.varLib.instancer import NormalizedAxisTripleAndDistances
 import pytest
 
 
-class RebaseTentTest(object):
+class RebaseTentTest:
     @pytest.mark.parametrize(
         "tent, axisRange, expected",
         [

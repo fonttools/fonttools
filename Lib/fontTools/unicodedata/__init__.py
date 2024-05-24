@@ -271,7 +271,7 @@ def ot_tag_to_script(tag):
         tag = OTTags.SCRIPT_ALIASES[tag]
 
     while len(tag) != 4:
-        tag += str(" ")  # pad with spaces
+        tag += " "  # pad with spaces
 
     if tag == OTTags.DEFAULT_SCRIPT:
         # it's unclear which Unicode script the "DFLT" OpenType tag maps to,

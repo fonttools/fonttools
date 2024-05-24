@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """T2CharString operator specializer and generalizer.
 
 PostScript glyph drawing operations can be expressed in multiple different
@@ -159,7 +157,7 @@ def _everyN(el, n):
         yield el[i : i + n]
 
 
-class _GeneralizerDecombinerCommandsMap(object):
+class _GeneralizerDecombinerCommandsMap:
     @staticmethod
     def rmoveto(args):
         if len(args) != 2:

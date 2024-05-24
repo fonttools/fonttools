@@ -135,7 +135,7 @@ class WOFF2ReaderTest(unittest.TestCase):
         self.assertEqual(header["numTables"], len(tags))
 
     def test_table_tags(self):
-        tags = set([t for t in self.font.keys() if t not in ("GlyphOrder", "DSIG")])
+        tags = {t for t in self.font.keys() if t not in ("GlyphOrder", "DSIG")}
         reader = WOFF2Reader(self.file)
         self.assertEqual(set(reader.keys()), tags)
 
@@ -881,7 +881,7 @@ class WOFF2GlyfTableTest(unittest.TestCase):
 
 @pytest.fixture(scope="module")
 def fontfile():
-    class Glyph(object):
+    class Glyph:
         def __init__(self, empty=False, **kwargs):
             if not empty:
                 self.draw = partial(self.drawRect, **kwargs)
@@ -896,7 +896,7 @@ def fontfile():
             pen.lineTo((xMax, 0))
             pen.closePath()
 
-    class CompositeGlyph(object):
+    class CompositeGlyph:
         def __init__(self, components):
             self.components = components
 
@@ -981,7 +981,7 @@ def ttFont(fontfile):
     return ttLib.TTFont(fontfile, recalcBBoxes=False, recalcTimestamp=False)
 
 
-class WOFF2HmtxTableTest(object):
+class WOFF2HmtxTableTest:
     def test_transform_no_sidebearings(self, ttFont):
         hmtxTable = WOFF2HmtxTable()
         hmtxTable.metrics = ttFont["hmtx"].metrics
@@ -1184,7 +1184,7 @@ class WOFF2HmtxTableTest(object):
             hmtxTable.reconstruct(data, ttFont)
 
 
-class WOFF2RoundtripTest(object):
+class WOFF2RoundtripTest:
     @staticmethod
     def roundtrip(infile):
         infile.seek(0)
@@ -1274,7 +1274,7 @@ class WOFF2RoundtripTest(object):
         assert ttFont2["glyf"]["A"].flags[0] & _g_l_y_f.flagOverlapSimple != 0
 
 
-class MainTest(object):
+class MainTest:
     @staticmethod
     def make_ttf(tmpdir):
         ttFont = ttLib.TTFont(recalcBBoxes=False, recalcTimestamp=False)

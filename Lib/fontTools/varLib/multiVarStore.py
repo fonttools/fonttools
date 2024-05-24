@@ -25,7 +25,7 @@ def _getLocationKey(loc):
     return tuple(sorted(loc.items(), key=lambda kv: kv[0]))
 
 
-class OnlineMultiVarStoreBuilder(object):
+class OnlineMultiVarStoreBuilder:
     def __init__(self, axisTags):
         self._axisTags = axisTags
         self._regionMap = {}
@@ -155,7 +155,7 @@ def MultiVarStore___bool__(self):
 ot.MultiVarStore.__bool__ = MultiVarStore___bool__
 
 
-class MultiVarStoreInstancer(object):
+class MultiVarStoreInstancer:
     def __init__(self, multivarstore, fvar_axes, location={}):
         self.fvar_axes = fvar_axes
         assert multivarstore is None or multivarstore.Format == 1

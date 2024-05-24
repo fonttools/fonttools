@@ -114,7 +114,7 @@ class table__f_v_a_r(DefaultTable.DefaultTable):
         return {a.axisTag: (a.minValue, a.defaultValue, a.maxValue) for a in self.axes}
 
 
-class Axis(object):
+class Axis:
     def __init__(self):
         self.axisTag = None
         self.axisNameID = 0
@@ -168,7 +168,7 @@ class Axis(object):
                 )
 
 
-class NamedInstance(object):
+class NamedInstance:
     def __init__(self):
         self.subfamilyNameID = 0
         self.postscriptNameID = 0xFFFF

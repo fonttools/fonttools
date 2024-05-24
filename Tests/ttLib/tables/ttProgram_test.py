@@ -73,7 +73,7 @@ BYTECODE = deHexStr(
 )
 
 
-class TestFont(object):
+class TestFont:
     disassembleInstructions = True
 
 
@@ -117,7 +117,7 @@ class ProgramTest(unittest.TestCase):
         assert BYTECODE == p.getBytecode()
 
     def test_xml_indentation(self):
-        with open(TTPROGRAM_TTX, "r", encoding="utf-8") as f:
+        with open(TTPROGRAM_TTX, encoding="utf-8") as f:
             ttProgramXML = f.read()
         p = Program()
         p.fromBytecode(BYTECODE)

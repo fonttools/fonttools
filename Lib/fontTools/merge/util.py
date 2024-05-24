@@ -95,7 +95,7 @@ def mergeBits(bitmap):
     return wrapper
 
 
-class AttendanceRecordingIdentityDict(object):
+class AttendanceRecordingIdentityDict:
     """A dictionary-like object that records indices of items actually accessed
     from a list."""
 
@@ -109,13 +109,13 @@ class AttendanceRecordingIdentityDict(object):
         return v
 
 
-class GregariousIdentityDict(object):
+class GregariousIdentityDict:
     """A dictionary-like object that welcomes guests without reservations and
     adds them to the end of the guest list."""
 
     def __init__(self, lst):
         self.l = lst
-        self.s = set(id(v) for v in lst)
+        self.s = {id(v) for v in lst}
 
     def __getitem__(self, v):
         if id(v) not in self.s:
@@ -124,7 +124,7 @@ class GregariousIdentityDict(object):
         return v
 
 
-class NonhashableDict(object):
+class NonhashableDict:
     """A dictionary-like object mapping objects to values."""
 
     def __init__(self, keys, values=None):

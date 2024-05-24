@@ -657,7 +657,7 @@ CompositeMaxpValues = namedtuple(
 )
 
 
-class Glyph(object):
+class Glyph:
     """This class represents an individual TrueType glyph.
 
     TrueType glyph objects come in two flavours: simple and composite. Simple
@@ -1660,7 +1660,7 @@ def dropImpliedOnCurvePoints(*interpolatable_glyphs: Glyph) -> Set[int]:
     return drop if drop is not None else set()
 
 
-class GlyphComponent(object):
+class GlyphComponent:
     """Represents a component within a composite glyph.
 
     The component is represented internally with four attributes: ``glyphName``,
@@ -1866,7 +1866,7 @@ class GlyphComponent(object):
         return result if result is NotImplemented else not result
 
 
-class GlyphCoordinates(object):
+class GlyphCoordinates:
     """A list of glyph coordinates.
 
     Unlike an ordinary list, this is a numpy-like matrix object which supports

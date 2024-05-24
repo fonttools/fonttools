@@ -3,7 +3,7 @@ from fontTools.pens.hashPointPen import HashPointPen
 import pytest
 
 
-class _TestGlyph(object):
+class _TestGlyph:
     width = 500
 
     def drawPoints(self, pen):
@@ -58,7 +58,7 @@ class _TestGlyph5(_TestGlyph):
         pen.addComponent("b", Identity)
 
 
-class HashPointPenTest(object):
+class HashPointPenTest:
     def test_addComponent(self):
         pen = HashPointPen(_TestGlyph().width, {"a": _TestGlyph()})
         pen.addComponent("a", (2, 0, 0, 3, -10, 5))

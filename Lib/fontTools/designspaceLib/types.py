@@ -31,12 +31,12 @@ class Range:
         self.minimum, self.maximum = sorted((self.minimum, self.maximum))
         self.default = clamp(self.default, self.minimum, self.maximum)
 
-    def __contains__(self, value: Union[float, Range]) -> bool:
+    def __contains__(self, value: float | Range) -> bool:
         if isinstance(value, Range):
             return self.minimum <= value.minimum and value.maximum <= self.maximum
         return self.minimum <= value <= self.maximum
 
-    def intersection(self, other: Range) -> Optional[Range]:
+    def intersection(self, other: Range) -> Range | None:
         if self.maximum < other.minimum or self.minimum > other.maximum:
             return None
         else:

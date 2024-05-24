@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import (
     bytechr,
@@ -398,7 +397,7 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
             self.names = []
         if not isinstance(string, str):
             raise TypeError(
-                "expected str, found %s: %r" % (type(string).__name__, string)
+                "expected str, found {}: {!r}".format(type(string).__name__, string)
             )
         nameID = self._findUnusedNameID(minNameID + 1)
         for platformID, platEncID, langID in platforms:
@@ -491,7 +490,7 @@ def _makeMacName(name, nameID, language, font=None):
         return None
 
 
-class NameRecord(object):
+class NameRecord:
     def getEncoding(self, default="ascii"):
         """Returns the Python encoding name for this name entry based on its platformID,
         platEncID, and langID.  If encoding for these values is not known, by default

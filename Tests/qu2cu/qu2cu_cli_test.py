@@ -24,7 +24,7 @@ def test_paths(tmpdir):
     return result
 
 
-class MainTest(object):
+class MainTest:
     @staticmethod
     def run_main(*args):
         main([str(p) for p in args if p])

@@ -195,7 +195,7 @@ aCode_info = (
     ("BITSET", ">HH"),
     ("SET_FEAT", "Bb"),
 )
-aCode_map = dict([(x[0], (i, x[1])) for i, x in enumerate(aCode_info)])
+aCode_map = {x[0]: (i, x[1]) for i, x in enumerate(aCode_info)}
 
 
 def disassemble(aCode):
@@ -305,7 +305,7 @@ pass_attrs_fsm = ("numRows", "numTransitional", "numSuccess", "numColumns")
 
 
 def writesimple(tag, self, writer, *attrkeys):
-    attrs = dict([(k, getattr(self, k)) for k in attrkeys])
+    attrs = {k: getattr(self, k) for k in attrkeys}
     writer.simpletag(tag, **attrs)
     writer.newline()
 
@@ -423,7 +423,7 @@ class table_S__i_l_f(DefaultTable.DefaultTable):
                 s.fromXML(tag, attrs, subcontent, ttFont, self.version)
 
 
-class Silf(object):
+class Silf:
     """A particular Silf subtable"""
 
     def __init__(self):
@@ -559,7 +559,7 @@ class Silf(object):
             writer.newline()
             jformat, jnames, jfixes = sstruct.getformat(Silf_justify_format)
             for i, j in enumerate(self.jLevels):
-                attrs = dict([(k, getattr(j, k)) for k in jnames])
+                attrs = {k: getattr(j, k) for k in jnames}
                 writer.simpletag("justify", **attrs)
                 writer.newline()
             writer.endtag("justifications")
@@ -660,7 +660,7 @@ class Silf(object):
                     self.passes.append(p)
 
 
-class Classes(object):
+class Classes:
     def __init__(self):
         self.linear = []
         self.nonLinear = []
@@ -687,7 +687,7 @@ class Classes(object):
             nonLinids = [
                 struct.unpack(">HH", data[x : x + 4]) for x in range(s + 8, e, 4)
             ]
-            nonLin = dict([(ttFont.getGlyphName(x[0]), x[1]) for x in nonLinids])
+            nonLin = {ttFont.getGlyphName(x[0]): x[1] for x in nonLinids}
             self.nonLinear.append(nonLin)
 
     def compile(self, ttFont, version=2.0):
@@ -770,7 +770,7 @@ class Classes(object):
                     self.nonLinear.append(l)
 
 
-class Pass(object):
+class Pass:
     def __init__(self):
         self.colMap = {}
         self.rules = []
@@ -869,7 +869,7 @@ class Pass(object):
             lambda a, x: (a[0] + len(x), a[1] + [a[0]]), self.rules + [[]], (0, [])
         )[1]
         passRanges = []
-        gidcolmap = dict([(ttFont.getGlyphID(x[0]), x[1]) for x in self.colMap.items()])
+        gidcolmap = {ttFont.getGlyphID(x[0]): x[1] for x in self.colMap.items()}
         for e in grUtils.entries(gidcolmap, sameval=True):
             if e[1]:
                 passRanges.append((e[0], e[0] + e[1] - 1, e[2][0]))

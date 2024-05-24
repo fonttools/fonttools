@@ -19,7 +19,7 @@ def _map_point(matrix, pt):
     return r[0] + r[1] * 1j
 
 
-class EllipticalArc(object):
+class EllipticalArc:
     def __init__(self, current_point, rx, ry, rotation, large, sweep, target_point):
         self.current_point = current_point
         self.rx = rx

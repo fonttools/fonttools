@@ -198,7 +198,7 @@ class tt_instructions_error(Exception):
 _comment = r"/\*.*?\*/"
 _instruction = r"([A-Z][A-Z0-9]*)\s*\[(.*?)\]"
 _number = r"-?[0-9]+"
-_token = "(%s)|(%s)|(%s)" % (_instruction, _number, _comment)
+_token = "({})|({})|({})".format(_instruction, _number, _comment)
 
 _tokenRE = re.compile(_token)
 _whiteRE = re.compile(r"\s*")
@@ -216,7 +216,7 @@ def _skipWhite(data, pos):
     return newPos
 
 
-class Program(object):
+class Program:
     def __init__(self) -> None:
         pass
 
@@ -225,7 +225,7 @@ class Program(object):
         if hasattr(self, "assembly"):
             del self.assembly
 
-    def fromAssembly(self, assembly: List[str] | str) -> None:
+    def fromAssembly(self, assembly: list[str] | str) -> None:
         if isinstance(assembly, list):
             self.assembly = assembly
         elif isinstance(assembly, str):
@@ -240,7 +240,7 @@ class Program(object):
             self._assemble()
         return self.bytecode.tobytes()
 
-    def getAssembly(self, preserve=True) -> List[str]:
+    def getAssembly(self, preserve=True) -> list[str]:
         if not hasattr(self, "assembly"):
             self._disassemble(preserve=preserve)
         return self.assembly
@@ -286,7 +286,7 @@ class Program(object):
                     i = i + 1
                     if m:
                         nValues = int(m.group(1))
-                        line: List[str] = []
+                        line: list[str] = []
                         j = 0
                         for j in range(nValues):
                             if j and not (j % 25):
@@ -324,7 +324,7 @@ class Program(object):
 
     def _assemble(self) -> None:
         assembly = " ".join(getattr(self, "assembly", []))
-        bytecode: List[int] = []
+        bytecode: list[int] = []
         push = bytecode.append
         lenAssembly = len(assembly)
         pos = _skipWhite(assembly, 0)
@@ -349,7 +349,7 @@ class Program(object):
                 op, argBits, name = mnemonicDict[mnemonic]
                 if len(arg) != argBits:
                     raise tt_instructions_error(
-                        "Incorrect number of argument bits (%s[%s])" % (mnemonic, arg)
+                        "Incorrect number of argument bits ({}[{}])".format(mnemonic, arg)
                     )
                 if arg:
                     arg = binary2num(arg)
@@ -515,7 +515,7 @@ class Program(object):
                         assembly.append("%s[ ]	/* 1 value pushed */" % mnemonic)
                     else:
                         assembly.append(
-                            "%s[ ]	/* %s values pushed */" % (mnemonic, nValues)
+                            "{}[ ]	/* {} values pushed */".format(mnemonic, nValues)
                         )
                     assembly.extend(values)
                 else:
@@ -525,7 +525,7 @@ class Program(object):
                 if argBits:
                     assembly.append(
                         mnemonic
-                        + "[%s]	/* %s */" % (num2binary(op - argoffset, argBits), name)
+                        + "[{}]	/* {} */".format(num2binary(op - argoffset, argBits), name)
                     )
                 else:
                     assembly.append(mnemonic + "[ ]	/* %s */" % name)

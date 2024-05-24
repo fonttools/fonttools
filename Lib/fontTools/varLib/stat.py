@@ -47,7 +47,7 @@ def buildVFStatTable(ttFont: TTFont, doc: DesignSpaceDocument, vfName: str) -> N
     )
 
 
-def getStatAxes(doc: DesignSpaceDocument, userRegion: Region) -> List[Dict]:
+def getStatAxes(doc: DesignSpaceDocument, userRegion: Region) -> list[dict]:
     """Return a list of axis dicts suitable for use as the ``axes``
     argument to :func:`fontTools.otlLib.builder.buildStatTable()`.
 
@@ -81,7 +81,7 @@ def getStatAxes(doc: DesignSpaceDocument, userRegion: Region) -> List[Dict]:
     ]
 
 
-def getStatLocations(doc: DesignSpaceDocument, userRegion: Region) -> List[Dict]:
+def getStatLocations(doc: DesignSpaceDocument, userRegion: Region) -> list[dict]:
     """Return a list of location dicts suitable for use as the ``locations``
     argument to :func:`fontTools.otlLib.builder.buildStatTable()`.
 
@@ -104,7 +104,7 @@ def getStatLocations(doc: DesignSpaceDocument, userRegion: Region) -> List[Dict]
     ]
 
 
-def _labelToFlags(label: Union[AxisLabelDescriptor, LocationLabelDescriptor]) -> int:
+def _labelToFlags(label: AxisLabelDescriptor | LocationLabelDescriptor) -> int:
     flags = 0
     if label.olderSibling:
         flags |= 1
@@ -115,7 +115,7 @@ def _labelToFlags(label: Union[AxisLabelDescriptor, LocationLabelDescriptor]) ->
 
 def _axisLabelToStatLocation(
     label: AxisLabelDescriptor,
-) -> Dict:
+) -> dict:
     label_format = label.getFormat()
     name = {"en": label.name, **label.labelNames}
     flags = _labelToFlags(label)
