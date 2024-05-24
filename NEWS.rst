@@ -1,3 +1,6 @@
+4.52.0 (released 2024-05-24)
+----------------------------
+
 - Added support for the new ``VARC`` (Variable Composite) table that is being
   proposed to OpenType spec (#3395). More more info:
   https://github.com/harfbuzz/boring-expansion-spec/blob/main/VARC.md
