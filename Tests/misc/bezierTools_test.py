@@ -206,6 +206,16 @@ def test_calcQuadraticArcLength():
             ((242, 402), (242, 403), (242, 399), (242, 399)),  # off by one unit
             3.32098765445,
         ),
+        (
+            # https://github.com/fonttools/fonttools/issues/3514
+            (
+                (626.9918761593156, 1000.0),
+                (639.133178223544, 1000.0),
+                (650.1152019577394, 1000.0),
+                (626.9918761593156, 1000.0),
+            ),  # infinite recursion with Cython
+            27.06159516422008,
+        ),
     ],
 )
 def test_calcCubicArcLength(segment, expectedLength):
