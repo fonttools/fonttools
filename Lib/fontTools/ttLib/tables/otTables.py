@@ -8,21 +8,17 @@ import copy
 from enum import IntEnum
 from functools import reduce
 from math import radians
-import itertools
 from collections import defaultdict, namedtuple
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools.ttLib.tables.otTraverse import dfs_base_table
 from fontTools.misc.arrayTools import quantizeRect
-from fontTools.misc.roundTools import otRound
 from fontTools.misc.transform import Transform, Identity, DecomposedTransform
 from fontTools.misc.textTools import bytesjoin, pad, safeEval
-from fontTools.misc.vector import Vector
 from fontTools.pens.boundsPen import ControlBoundsPen
 from fontTools.pens.transformPen import TransformPen
 from .otBase import (
     BaseTable,
     FormatSwitchingBaseTable,
-    ValueRecord,
     CountReference,
     getFormatSwitchingBaseTableClass,
 )
@@ -35,10 +31,8 @@ from fontTools.misc.fixedTools import (
 from fontTools.feaLib.lookupDebugInfo import LookupDebugInfo, LOOKUP_DEBUG_INFO_KEY
 import logging
 import struct
-import array
-import sys
 from enum import IntFlag
-from typing import TYPE_CHECKING, Iterator, List, Optional, Set
+from typing import TYPE_CHECKING, Iterator, List, Optional
 
 if TYPE_CHECKING:
     from fontTools.ttLib.ttGlyphSet import _TTGlyphSet

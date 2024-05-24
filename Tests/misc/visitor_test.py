@@ -1,6 +1,5 @@
 from fontTools.misc.visitor import Visitor
 import enum
-import pytest
 
 
 class E(enum.Enum):

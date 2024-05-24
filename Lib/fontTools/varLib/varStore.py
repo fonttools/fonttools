@@ -1,4 +1,4 @@
-from fontTools.misc.roundTools import noRound, otRound
+from fontTools.misc.roundTools import noRound
 from fontTools.misc.intTools import bit_count
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.varLib.models import supportScalar

@@ -1,9 +1,6 @@
 import pkgutil
 import sys
 import fontTools
-import importlib
-import os
-from pathlib import Path
 
 
 def main():
@@ -16,7 +13,7 @@ def main():
     ):
         try:
             imports = __import__(pkg, globals(), locals(), ["main"])
-        except ImportError as e:
+        except ImportError:
             continue
         try:
             description = imports.main.__doc__
@@ -25,7 +22,7 @@ def main():
                 pkg = pkg.replace("fontTools.", "").replace(".__main__", "")
                 # show the docstring's first line only
                 descriptions[pkg] = description.splitlines()[0]
-        except AttributeError as e:
+        except AttributeError:
             pass
     for pkg, description in descriptions.items():
         print("fonttools %-25s %s" % (pkg, description), file=sys.stderr)

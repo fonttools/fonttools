@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from functools import lru_cache
 from itertools import chain, count
-from typing import Dict, Iterable, Iterator, List, Optional, Set, Tuple
+from typing import Iterable, Iterator
 
 try:
     from lxml import etree

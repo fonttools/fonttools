@@ -1,6 +1,5 @@
 from . import DefaultTable
 from fontTools.misc import sstruct
-from fontTools.misc.textTools import bytesjoin
 from fontTools.ttLib.tables.TupleVariation import (
     compileTupleVariationStore,
     decompileTupleVariationStore,

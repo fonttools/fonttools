@@ -1,4 +1,3 @@
-from fontTools.voltLib import ast
 from fontTools.voltLib.error import VoltLibError
 from fontTools.voltLib.parser import Parser
 from io import StringIO

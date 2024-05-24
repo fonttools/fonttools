@@ -12,7 +12,6 @@ from fontTools.ttLib.tables._g_l_y_f import Glyph
 from fontTools.ttLib.tables._g_l_y_f import GlyphComponent
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 from fontTools.ttLib.tables._g_l_y_f import dropImpliedOnCurvePoints
-import math
 
 
 __all__ = ["TTGlyphPen", "TTGlyphPointPen"]

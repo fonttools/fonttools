@@ -1,6 +1,5 @@
 from fontTools.misc import etree
 from collections import OrderedDict
-import io
 import pytest
 
 

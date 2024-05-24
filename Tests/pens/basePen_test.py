@@ -1,10 +1,8 @@
 from fontTools.pens.basePen import (
-    AbstractPen,
     BasePen,
     decomposeSuperBezierSegment,
     decomposeQuadraticSegment,
 )
-from fontTools.pens.pointPen import AbstractPointPen
 from fontTools.misc.loggingTools import CapturingLogHandler
 import unittest
 

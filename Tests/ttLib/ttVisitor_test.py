@@ -1,7 +1,6 @@
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.ttVisitor import TTVisitor
 import os
-import pytest
 
 
 class TestVisitor(TTVisitor):

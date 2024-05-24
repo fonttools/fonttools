@@ -1,19 +1,9 @@
 from collections import namedtuple
 from fontTools.cffLib import (
     maxStackLimit,
-    TopDictIndex,
-    buildOrder,
-    topDictOperators,
-    topDictOperators2,
-    privateDictOperators,
-    privateDictOperators2,
-    FDArrayIndex,
-    FontDict,
     VarStoreData,
 )
-from io import BytesIO
 from fontTools.cffLib.specializer import specializeCommands, commandsToProgram
-from fontTools.ttLib import newTable
 from fontTools import varLib
 from fontTools.varLib.models import allEqual
 from fontTools.misc.roundTools import roundFunc

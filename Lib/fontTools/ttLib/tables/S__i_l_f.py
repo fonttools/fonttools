@@ -7,7 +7,9 @@ from . import DefaultTable
 from . import grUtils
 from array import array
 from functools import reduce
-import struct, re, sys
+import struct
+import re
+import sys
 
 Silf_hdr_format = """
     >
@@ -235,7 +237,7 @@ def assemble(instrs):
     res = b""
     for inst in instrs:
         m = instre.match(inst)
-        if not m or not m.group(1) in aCode_map:
+        if not m or m.group(1) not in aCode_map:
             continue
         opcode, parmfmt = aCode_map[m.group(1)]
         res += struct.pack("B", opcode)

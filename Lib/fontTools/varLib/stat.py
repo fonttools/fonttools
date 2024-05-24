@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Dict, List, Union
 
 import fontTools.otlLib.builder
 from fontTools.designspaceLib import (

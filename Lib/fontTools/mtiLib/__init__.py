@@ -306,9 +306,9 @@ def parsePair(lines, font, _lookupMap=None):
             mask = valueRecordFormatDict[what][0]
             glyph1, glyph2 = makeGlyphs(line[1:3])
             value = int(line[3])
-            if not glyph1 in values:
+            if glyph1 not in values:
                 values[glyph1] = {}
-            if not glyph2 in values[glyph1]:
+            if glyph2 not in values[glyph1]:
                 values[glyph1][glyph2] = (ValueRecord(), ValueRecord())
             rec2 = values[glyph1][glyph2]
             if side == "left":

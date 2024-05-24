@@ -25,7 +25,6 @@ from fontTools.otlLib.builder import (
     MarkMarkPosBuilder,
     ReverseChainSingleSubstBuilder,
     SingleSubstBuilder,
-    ClassPairPosSubtableBuilder,
     PairPosBuilder,
     SinglePosBuilder,
     ChainContextualRule,

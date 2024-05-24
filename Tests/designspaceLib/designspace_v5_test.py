@@ -1,6 +1,5 @@
 import re
 import shutil
-from pathlib import Path
 
 import pytest
 from fontTools.designspaceLib import (
@@ -17,7 +16,6 @@ from fontTools.designspaceLib import (
     posix,
 )
 
-from .fixtures import datadir
 
 
 def assert_descriptors_equal(actual, expected):

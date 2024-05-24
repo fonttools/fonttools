@@ -5,11 +5,8 @@ are de-subroutinized."""
 
 from fontTools.ttLib.ttVisitor import TTVisitor
 import fontTools.ttLib as ttLib
-import fontTools.ttLib.tables.otBase as otBase
 import fontTools.ttLib.tables.otTables as otTables
-from fontTools.cffLib import VarStoreData
 import fontTools.cffLib.specializer as cffSpecializer
-from fontTools.varLib import builder  # for VarData.calculateNumShorts
 from fontTools.varLib.multiVarStore import OnlineMultiVarStoreBuilder
 from fontTools.misc.vector import Vector
 from fontTools.misc.fixedTools import otRound

@@ -895,7 +895,7 @@ def load_designspace(designspace, log_enabled=True):
 
     # Setup axes
     if not ds.axes:
-        raise VarLibValidationError(f"Designspace must have at least one axis.")
+        raise VarLibValidationError("Designspace must have at least one axis.")
 
     axes = OrderedDict()
     for axis_index, axis in enumerate(ds.axes):

@@ -19,7 +19,6 @@ from copy import deepcopy
 from io import BytesIO, StringIO
 import logging
 import os
-import re
 from types import SimpleNamespace
 import pytest
 

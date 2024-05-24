@@ -5,7 +5,6 @@ from .BitmapGlyphMetrics import (
     BigGlyphMetrics,
     bigGlyphMetricsFormat,
     SmallGlyphMetrics,
-    smallGlyphMetricsFormat,
 )
 import struct
 import itertools

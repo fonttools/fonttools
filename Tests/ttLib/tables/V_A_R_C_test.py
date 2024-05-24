@@ -1,6 +1,5 @@
 from fontTools.ttLib import TTFont
 from io import StringIO, BytesIO
-import pytest
 import os
 import unittest
 

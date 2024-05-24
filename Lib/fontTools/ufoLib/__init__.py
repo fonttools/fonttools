@@ -1120,7 +1120,7 @@ class UFOWriter(UFOReader):
         path = fsdecode(path)
         try:
             return self.fs.open(path, mode=mode, encoding=encoding)
-        except fs.errors.ResourceNotFound as e:
+        except fs.errors.ResourceNotFound:
             m = mode[0]
             if m == "r":
                 # XXX I think we should just let it raise. The docstring,

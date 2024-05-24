@@ -2,10 +2,7 @@
 
 __all__ = ["FreeTypePen"]
 
-import os
 import ctypes
-import platform
-import subprocess
 import collections
 import math
 

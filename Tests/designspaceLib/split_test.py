@@ -12,7 +12,6 @@ from fontTools.designspaceLib.split import (
 )
 from fontTools.designspaceLib.types import ConditionSet, Range
 
-from .fixtures import datadir
 
 UPDATE_REFERENCE_OUT_FILES_INSTEAD_OF_TESTING = False
 

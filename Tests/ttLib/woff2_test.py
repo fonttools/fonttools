@@ -7,7 +7,6 @@ from fontTools.ttLib.woff2 import (
     woff2DirectoryFormat,
     woff2FlagsSize,
     woff2UnknownTagSize,
-    woff2Base128MaxSize,
     WOFF2DirectoryEntry,
     getKnownTagIndex,
     packBase128,

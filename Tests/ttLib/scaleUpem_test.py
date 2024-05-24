@@ -7,7 +7,6 @@ import shutil
 import sys
 import tempfile
 import unittest
-import pytest
 
 
 class ScaleUpemTest(unittest.TestCase):

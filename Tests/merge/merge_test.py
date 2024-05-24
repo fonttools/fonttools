@@ -11,7 +11,6 @@ import shutil
 import sys
 import tempfile
 import unittest
-import pathlib
 import pytest
 
 

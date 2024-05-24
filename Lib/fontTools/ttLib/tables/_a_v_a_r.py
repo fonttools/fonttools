@@ -1,18 +1,14 @@
-from fontTools.misc import sstruct
 from fontTools.misc.fixedTools import (
     fixedToFloat as fi2fl,
     floatToFixed as fl2fi,
     floatToFixedToStr as fl2str,
     strToFixedToFloat as str2fl,
 )
-from fontTools.misc.textTools import bytesjoin, safeEval
+from fontTools.misc.textTools import safeEval
 from fontTools.misc.roundTools import otRound
 from fontTools.varLib.models import piecewiseLinearMap
-from fontTools.varLib.varStore import VarStoreInstancer, NO_VARIATION_INDEX
-from fontTools.ttLib import TTLibError
-from . import DefaultTable
+from fontTools.varLib.varStore import VarStoreInstancer
 from . import otTables
-import struct
 import logging
 
 

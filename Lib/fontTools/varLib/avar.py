@@ -15,7 +15,6 @@ def main(args=None):
 
     from fontTools import configLogger
     from fontTools.ttLib import TTFont
-    from fontTools.designspaceLib import DesignSpaceDocument
     import argparse
 
     parser = argparse.ArgumentParser(
@@ -41,7 +40,7 @@ def main(args=None):
     configLogger(level=("INFO" if options.verbose else "WARNING"))
 
     font = TTFont(options.font)
-    if not "fvar" in font:
+    if "fvar" not in font:
         log.error("Not a variable font.")
         return 1
 

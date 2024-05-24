@@ -4,7 +4,6 @@ from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables.C_O_L_R_ import table_C_O_L_R_
 
 from pathlib import Path
-import binascii
 import pytest
 
 

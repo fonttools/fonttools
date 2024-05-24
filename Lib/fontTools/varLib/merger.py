@@ -2,7 +2,6 @@
 Merge OpenType Layout tables (GDEF / GPOS / GSUB).
 """
 
-import os
 import copy
 import enum
 from operator import ior
@@ -15,10 +14,8 @@ from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables import otBase as otBase
 from fontTools.ttLib.tables.otConverters import BaseFixedValue
 from fontTools.ttLib.tables.otTraverse import dfs_base_table
-from fontTools.ttLib.tables.DefaultTable import DefaultTable
-from fontTools.varLib import builder, models, varStore
+from fontTools.varLib import builder, varStore
 from fontTools.varLib.models import nonNone, allNone, allEqual, allEqualTo, subList
-from fontTools.varLib.varStore import VarStoreInstancer
 from functools import reduce
 from fontTools.otlLib.builder import buildSinglePos
 from fontTools.otlLib.optimize.gpos import (

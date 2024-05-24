@@ -8,10 +8,8 @@ from fontTools import ttLib
 from fontTools.designspaceLib import (
     AxisDescriptor,
     AxisMappingDescriptor,
-    AxisLabelDescriptor,
     DesignSpaceDocument,
     DesignSpaceDocumentError,
-    DiscreteAxisDescriptor,
     InstanceDescriptor,
     RuleDescriptor,
     SourceDescriptor,
@@ -22,7 +20,6 @@ from fontTools.designspaceLib import (
 from fontTools.designspaceLib.types import Range
 from fontTools.misc import plistlib
 
-from .fixtures import datadir
 
 
 def _axesAsDict(axes):

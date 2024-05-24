@@ -2,7 +2,7 @@ import os
 import shutil
 import unittest
 import tempfile
-from fontTools.ufoLib import UFOReader, UFOWriter, UFOLibError
+from fontTools.ufoLib import UFOReader, UFOWriter
 from fontTools.ufoLib import plistlib
 from .testSupport import fontInfoVersion1, fontInfoVersion2
 

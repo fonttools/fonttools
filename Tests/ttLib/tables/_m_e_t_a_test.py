@@ -1,7 +1,6 @@
 from fontTools.misc.testTools import parseXML
 from fontTools.misc.textTools import deHexStr
 from fontTools.misc.xmlWriter import XMLWriter
-from fontTools.ttLib import TTLibError
 from fontTools.ttLib.tables._m_e_t_a import table__m_e_t_a
 from io import BytesIO
 import unittest

@@ -165,6 +165,7 @@ def classify(list_of_sets, sort=True):
 
 
 if __name__ == "__main__":
-    import sys, doctest
+    import sys
+    import doctest
 
     sys.exit(doctest.testmod(optionflags=doctest.ELLIPSIS).failed)

@@ -8,15 +8,11 @@ import enum
 from fontTools.ttLib.tables.otBase import (
     BaseTable,
     FormatSwitchingBaseTable,
-    UInt8FormatSwitchingBaseTable,
 )
 from fontTools.ttLib.tables.otConverters import (
     ComputedInt,
     SimpleValue,
     Struct,
-    Short,
-    UInt8,
-    UShort,
     IntValue,
     FloatValue,
     OptionalValue,

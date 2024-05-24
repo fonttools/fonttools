@@ -7,7 +7,7 @@ from __future__ import annotations
 import itertools
 import logging
 import math
-from typing import Any, Callable, Dict, Iterator, List, Tuple, cast
+from typing import Any, Callable, Iterator, cast
 
 from fontTools.designspaceLib import (
     AxisDescriptor,

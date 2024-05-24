@@ -1,7 +1,5 @@
-from fontTools.ttLib.tables import otTables  # trigger setup to occur
 from fontTools.ttLib.tables.otConverters import UShort
 from fontTools.colorLib.table_builder import TableBuilder
-import pytest
 
 
 class WriteMe:

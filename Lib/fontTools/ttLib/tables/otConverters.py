@@ -32,9 +32,8 @@ from .otTables import (
     CompositeMode as _CompositeMode,
     NO_VARIATION_INDEX,
 )
-from itertools import zip_longest, accumulate
+from itertools import accumulate
 from functools import partial
-from types import SimpleNamespace
 import re
 import struct
 from typing import Optional
@@ -73,7 +72,7 @@ def buildConverters(tableSpec, tableNamespace):
         elif name in ("CIDGlyphMapping", "GlyphCIDMapping"):
             converterClass = StructWithLength
         else:
-            if not tp in converterMapping and "(" not in tp:
+            if tp not in converterMapping and "(" not in tp:
                 tableName = tp
                 converterClass = Struct
             else:

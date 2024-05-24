@@ -1,6 +1,6 @@
 import io
 import struct
-from fontTools.misc.fixedTools import floatToFixed, fixedToFloat
+from fontTools.misc.fixedTools import floatToFixed
 from fontTools.misc.testTools import getXML
 from fontTools.otlLib import builder, error
 from fontTools import ttLib

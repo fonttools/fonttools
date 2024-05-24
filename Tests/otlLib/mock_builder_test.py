@@ -1,17 +1,6 @@
 from fontTools.otlLib.builder import (
-    AlternateSubstBuilder,
     ChainContextPosBuilder,
-    ChainContextSubstBuilder,
-    LigatureSubstBuilder,
-    MultipleSubstBuilder,
-    CursivePosBuilder,
-    MarkBasePosBuilder,
-    MarkLigPosBuilder,
-    MarkMarkPosBuilder,
-    ReverseChainSingleSubstBuilder,
     SingleSubstBuilder,
-    ClassPairPosSubtableBuilder,
-    PairPosBuilder,
     SinglePosBuilder,
     ChainContextualRule,
 )

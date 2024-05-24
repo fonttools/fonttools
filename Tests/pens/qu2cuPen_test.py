@@ -12,12 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
 import unittest
 
 from fontTools.pens.qu2cuPen import Qu2CuPen
 from fontTools.pens.recordingPen import RecordingPen
-from textwrap import dedent
 import pytest
 
 try:

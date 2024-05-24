@@ -11,20 +11,17 @@ from .interpolatableTestContourOrder import test_contour_order
 from .interpolatableTestStartingPoint import test_starting_point
 from fontTools.pens.recordingPen import (
     RecordingPen,
-    DecomposingRecordingPen,
     lerpRecordings,
 )
-from fontTools.pens.transformPen import TransformPen
 from fontTools.pens.statisticsPen import StatisticsPen, StatisticsControlPen
 from fontTools.pens.momentsPen import OpenContourError
 from fontTools.varLib.models import piecewiseLinearMap, normalizeLocation
 from fontTools.misc.fixedTools import floatToFixedToStr
-from fontTools.misc.transform import Transform
 from collections import defaultdict
 from types import SimpleNamespace
 from functools import wraps
 from pprint import pformat
-from math import sqrt, atan2, pi
+from math import sqrt
 import logging
 import os
 
@@ -84,7 +81,7 @@ class Glyph:
                 contour.replay(greenStats)
                 contour.replay(controlStats)
                 self.openContours.append(False)
-            except OpenContourError as e:
+            except OpenContourError:
                 self.openContours.append(True)
                 self._fill_in(ix)
                 continue
@@ -934,7 +931,7 @@ def main(args=None):
                             if "master" in p
                             else (p["master_1"], p["master_2"])
                         )
-                        print(f"  Masters: %s:" % ", ".join(master_names), file=f)
+                        print("  Masters: %s:" % ", ".join(master_names), file=f)
                         last_master_idxs = master_idxs
 
                     if p["type"] == InterpolatableProblem.MISSING:

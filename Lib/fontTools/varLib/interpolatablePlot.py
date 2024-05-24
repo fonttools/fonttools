@@ -18,7 +18,6 @@ from fontTools.varLib.interpolatableHelpers import (
     SimpleRecordingPointPen,
 )
 from itertools import cycle
-from functools import wraps
 from io import BytesIO
 import cairo
 import math

@@ -629,7 +629,8 @@ def main(args=None):
 
 
 if __name__ == "__main__":
-    import doctest, sys
+    import doctest
+    import sys
 
     if len(sys.argv) > 1:
         sys.exit(main())

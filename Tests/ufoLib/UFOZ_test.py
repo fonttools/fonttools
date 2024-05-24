@@ -1,6 +1,4 @@
 from fontTools.ufoLib import UFOReader, UFOWriter, UFOFileStructure
-from fontTools.ufoLib.errors import UFOLibError, GlifLibError
-from fontTools.misc import plistlib
 from fontTools.misc.textTools import tostr
 import sys
 import os
@@ -9,7 +7,6 @@ import fs.tempfs
 import fs.memoryfs
 import fs.copy
 import pytest
-import warnings
 
 
 TESTDATA = fs.osfs.OSFS(os.path.join(os.path.dirname(__file__), "testdata"))

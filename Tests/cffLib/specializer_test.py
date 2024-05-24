@@ -9,9 +9,8 @@ from fontTools.cffLib.specializer import (
     specializeCommands,
 )
 from fontTools.ttLib import TTFont
-import os
 import unittest
-from fontTools.misc.testTools import parseXML, DataFilesHandler
+from fontTools.misc.testTools import DataFilesHandler
 
 # TODO
 # https://github.com/fonttools/fonttools/pull/959#commitcomment-22059841

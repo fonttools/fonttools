@@ -15,7 +15,7 @@ try:
 except ImportError:
     try:
         import defcon as ufo_module
-    except ImportError as e:
+    except ImportError:
         pass
 
 

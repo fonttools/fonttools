@@ -4,11 +4,9 @@ from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from contextlib import contextmanager
 from copy import copy, deepcopy
-from types import SimpleNamespace
 from fontTools.misc.vector import Vector
 from fontTools.misc.fixedTools import otRound, fixedToFloat as fi2fl
 from fontTools.misc.loggingTools import deprecateFunction
-from fontTools.misc.transform import Transform, DecomposedTransform
 from fontTools.pens.transformPen import TransformPen, TransformPointPen
 from fontTools.pens.recordingPen import (
     DecomposingRecordingPen,
@@ -327,7 +325,6 @@ class _TTGlyphVARC(_TTGlyph):
         glyph = varc.VarCompositeGlyphs.VarCompositeGlyph[idx]
 
         from fontTools.varLib.multiVarStore import MultiVarStoreInstancer
-        from fontTools.varLib.varStore import VarStoreInstancer
 
         fvarAxes = glyphSet.font["fvar"].axes
         instancer = MultiVarStoreInstancer(

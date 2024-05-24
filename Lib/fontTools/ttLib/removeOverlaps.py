@@ -235,7 +235,7 @@ def main(args=None):
 
     if len(args) < 2:
         print(
-            f"usage: fonttools ttLib.removeOverlaps INPUT.ttf OUTPUT.ttf [GLYPHS ...]"
+            "usage: fonttools ttLib.removeOverlaps INPUT.ttf OUTPUT.ttf [GLYPHS ...]"
         )
         sys.exit(1)
 

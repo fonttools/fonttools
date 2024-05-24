@@ -8,12 +8,10 @@ from fontTools.feaLib.error import FeatureLibError
 from fontTools.ttLib import TTFont, newTable
 from fontTools.feaLib.parser import Parser
 from fontTools.feaLib import ast
-from fontTools.feaLib.lexer import Lexer
 from fontTools.fontBuilder import addFvar
 import difflib
 from io import StringIO
 import os
-import re
 import shutil
 import sys
 import tempfile

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Union, cast
+from typing import Dict, List, Union, cast
 
 from fontTools.designspaceLib import (
     AxisDescriptor,
@@ -76,7 +76,7 @@ def locationInRegion(location: SimpleLocationDict, region: Region) -> bool:
 
 def regionInRegion(region: Region, superRegion: Region) -> bool:
     for name, value in region.items():
-        if not name in superRegion:
+        if name not in superRegion:
             return False
         superValue = superRegion[name]
         if isinstance(superValue, (float, int)):

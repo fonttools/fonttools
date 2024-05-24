@@ -904,7 +904,7 @@ def main(args=None):
     )
 
     font = TTFont(options.font)
-    if not "fvar" in font:
+    if "fvar" not in font:
         log.error("Not a variable font.")
         return 1
 

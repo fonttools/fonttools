@@ -1,7 +1,6 @@
 """Helpers for instantiating name table records."""
 
 from contextlib import contextmanager
-from copy import deepcopy
 from enum import IntEnum
 import re
 

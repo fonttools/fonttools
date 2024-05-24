@@ -28,7 +28,7 @@ FLOAT_RE = re.compile(
     r")"
 )
 BOOL_RE = re.compile("^[01]")
-SEPARATOR_RE = re.compile(f"[, \t]")
+SEPARATOR_RE = re.compile("[, \t]")
 
 
 def _tokenize_path(pathdef):

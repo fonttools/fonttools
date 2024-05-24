@@ -15,7 +15,7 @@ else:
     font = TTFont(fontfile)
 
 for tag in ("GSUB", "GPOS"):
-    if not tag in font:
+    if tag not in font:
         continue
     print("Table:", tag)
     table = font[tag].table

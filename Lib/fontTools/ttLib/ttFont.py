@@ -5,7 +5,6 @@ from fontTools.misc.textTools import Tag, byteord, tostr
 from fontTools.misc.loggingTools import deprecateArgument
 from fontTools.ttLib import TTLibError
 from fontTools.ttLib.ttGlyphSet import (
-    _TTGlyph,
     _TTGlyphSetCFF,
     _TTGlyphSetGlyf,
     _TTGlyphSetVARC,
