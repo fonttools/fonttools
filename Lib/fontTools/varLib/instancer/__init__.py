@@ -111,6 +111,7 @@ from fontTools.varLib.instancer import names
 from .featureVars import instantiateFeatureVariations
 from fontTools.misc.cliTools import makeOutputFileName
 from fontTools.varLib.instancer import solver
+from fontTools.ttLib.tables.otTables import VarComponentFlags
 import collections
 import dataclasses
 from contextlib import contextmanager
@@ -463,6 +464,42 @@ class OverlapMode(IntEnum):
     KEEP_AND_SET_FLAGS = 1
     REMOVE = 2
     REMOVE_AND_IGNORE_ERRORS = 3
+
+
+def instantiateVARC(varfont, axisLimits):
+    log.info("Instantiating VARC tables")
+
+    # TODO(behdad) My confidence in this function is rather low;
+    # It needs more testing. Specially with partial-instancing,
+    # I don't think it currently works.
+
+    varc = varfont["VARC"].table
+    fvarAxes = varfont["fvar"].axes if "fvar" in varfont else []
+
+    location = axisLimits.pinnedLocation()
+    axisMap = [i for i, axis in enumerate(fvarAxes) if axis.axisTag not in location]
+    reverseAxisMap = {i: j for j, i in enumerate(axisMap)}
+
+    if varc.AxisIndicesList:
+        axisIndicesList = varc.AxisIndicesList.Item
+        for i, axisIndices in enumerate(axisIndicesList):
+            if any(fvarAxes[j].axisTag in axisLimits for j in axisIndices):
+                raise NotImplementedError(
+                    "Instancing across VarComponent axes is not supported."
+                )
+            axisIndicesList[i] = [reverseAxisMap[j] for j in axisIndices]
+
+    store = varc.MultiVarStore
+    if store:
+        for region in store.SparseVarRegionList.Region:
+            newRegionAxis = []
+            for regionRecord in region.SparseVarRegionAxis:
+                tag = fvarAxes[regionRecord.AxisIndex].axisTag
+                if tag in axisLimits:
+                    raise NotImplementedError(
+                        "Instancing across VarComponent axes is not supported."
+                    )
+                regionRecord.AxisIndex = reverseAxisMap[regionRecord.AxisIndex]
 
 
 def instantiateTupleVariationStore(
@@ -843,23 +880,6 @@ def _instantiateGvarGlyph(
         if defaultDeltas:
             coordinates += _g_l_y_f.GlyphCoordinates(defaultDeltas)
 
-    glyph = glyf[glyphname]
-    if glyph.isVarComposite():
-        for component in glyph.components:
-            newLocation = {}
-            for tag, loc in component.location.items():
-                if tag not in axisLimits:
-                    newLocation[tag] = loc
-                    continue
-                if component.flags & _g_l_y_f.VarComponentFlags.AXES_HAVE_VARIATION:
-                    raise NotImplementedError(
-                        "Instancing accross VarComposite axes with variation is not supported."
-                    )
-                limits = axisLimits[tag]
-                loc = limits.renormalizeValue(loc, extrapolate=False)
-                newLocation[tag] = loc
-            component.location = newLocation
-
     # _setCoordinates also sets the hmtx/vmtx advance widths and sidebearings from
     # the four phantom points and glyph bounding boxes.
     # We call it unconditionally even if a glyph has no variations or no deltas are
@@ -910,7 +930,7 @@ def instantiateGvar(varfont, axisLimits, optimize=True):
         key=lambda name: (
             (
                 glyf[name].getCompositeMaxpValues(glyf).maxComponentDepth
-                if glyf[name].isComposite() or glyf[name].isVarComposite()
+                if glyf[name].isComposite()
                 else 0
             ),
             name,
@@ -1597,6 +1617,9 @@ def instantiateVariableFont(
     if updateFontNames:
         log.info("Updating name table")
         names.updateNameTable(varfont, axisLimits)
+
+    if "VARC" in varfont:
+        instantiateVARC(varfont, normalizedLimits)
 
     if "CFF2" in varfont:
         instantiateCFF2(varfont, normalizedLimits, downgrade=downgradeCFF2)

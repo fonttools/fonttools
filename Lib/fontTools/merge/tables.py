@@ -225,7 +225,7 @@ def merge(self, m, tables):
                 g.removeHinting()
             # Expand composite glyphs to load their
             # composite glyph names.
-            if g.isComposite() or g.isVarComposite():
+            if g.isComposite():
                 g.expand(table)
     return DefaultTable.merge(self, m, tables)
 

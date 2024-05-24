@@ -4,7 +4,12 @@ from fontTools.misc.configTools import AbstractConfig
 from fontTools.misc.textTools import Tag, byteord, tostr
 from fontTools.misc.loggingTools import deprecateArgument
 from fontTools.ttLib import TTLibError
-from fontTools.ttLib.ttGlyphSet import _TTGlyph, _TTGlyphSetCFF, _TTGlyphSetGlyf
+from fontTools.ttLib.ttGlyphSet import (
+    _TTGlyph,
+    _TTGlyphSetCFF,
+    _TTGlyphSetGlyf,
+    _TTGlyphSetVARC,
+)
 from fontTools.ttLib.sfnt import SFNTReader, SFNTWriter
 from io import BytesIO, StringIO, UnsupportedOperation
 import os
@@ -764,12 +769,16 @@ class TTFont(object):
             location = None
         if location and not normalized:
             location = self.normalizeLocation(location)
+        glyphSet = None
         if ("CFF " in self or "CFF2" in self) and (preferCFF or "glyf" not in self):
-            return _TTGlyphSetCFF(self, location)
+            glyphSet = _TTGlyphSetCFF(self, location)
         elif "glyf" in self:
-            return _TTGlyphSetGlyf(self, location, recalcBounds=recalcBounds)
+            glyphSet = _TTGlyphSetGlyf(self, location, recalcBounds=recalcBounds)
         else:
             raise TTLibError("Font contains no outlines")
+        if "VARC" in self:
+            glyphSet = _TTGlyphSetVARC(self, location, glyphSet)
+        return glyphSet
 
     def normalizeLocation(self, location):
         """Normalize a ``location`` from the font's defined axes space (also

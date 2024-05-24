@@ -427,9 +427,12 @@ class AATLookupTest(unittest.TestCase):
         )
 
 
+from fontTools.misc.lazyTools import LazyList
+
+
 class LazyListTest(unittest.TestCase):
     def test_slice(self):
-        ll = otConverters._LazyList([10, 11, 12, 13])
+        ll = LazyList([10, 11, 12, 13])
         sl = ll[:]
 
         self.assertIsNot(sl, ll)
@@ -438,26 +441,9 @@ class LazyListTest(unittest.TestCase):
 
         self.assertEqual([11, 12], ll[1:3])
 
-    def test_getitem(self):
-        count = 2
-        reader = OTTableReader(b"\x00\xFE\xFF\x00\x00\x00", offset=1)
-        converter = otConverters.UInt8("UInt8", 0, None, None)
-        recordSize = converter.staticSize
-        l = otConverters._LazyList()
-        l.reader = reader
-        l.pos = l.reader.pos
-        l.font = None
-        l.conv = converter
-        l.recordSize = recordSize
-        l.extend(otConverters._MissingItem([i]) for i in range(count))
-        reader.advance(count * recordSize)
-
-        self.assertEqual(l[0], 254)
-        self.assertEqual(l[1], 255)
-
     def test_add_both_LazyList(self):
-        ll1 = otConverters._LazyList([1])
-        ll2 = otConverters._LazyList([2])
+        ll1 = LazyList([1])
+        ll2 = LazyList([2])
 
         l3 = ll1 + ll2
 
@@ -465,7 +451,7 @@ class LazyListTest(unittest.TestCase):
         self.assertEqual([1, 2], l3)
 
     def test_add_LazyList_and_list(self):
-        ll1 = otConverters._LazyList([1])
+        ll1 = LazyList([1])
         l2 = [2]
 
         l3 = ll1 + l2
@@ -475,13 +461,13 @@ class LazyListTest(unittest.TestCase):
 
     def test_add_not_implemented(self):
         with self.assertRaises(TypeError):
-            otConverters._LazyList() + 0
+            LazyList() + 0
         with self.assertRaises(TypeError):
-            otConverters._LazyList() + tuple()
+            LazyList() + tuple()
 
     def test_radd_list_and_LazyList(self):
         l1 = [1]
-        ll2 = otConverters._LazyList([2])
+        ll2 = LazyList([2])
 
         l3 = l1 + ll2
 
@@ -490,9 +476,9 @@ class LazyListTest(unittest.TestCase):
 
     def test_radd_not_implemented(self):
         with self.assertRaises(TypeError):
-            0 + otConverters._LazyList()
+            0 + LazyList()
         with self.assertRaises(TypeError):
-            tuple() + otConverters._LazyList()
+            tuple() + LazyList()
 
 
 if __name__ == "__main__":
