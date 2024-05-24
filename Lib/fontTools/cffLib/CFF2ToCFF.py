@@ -2,7 +2,13 @@
 
 from fontTools.ttLib import TTFont, newTable
 from fontTools.misc.cliTools import makeOutputFileName
-from fontTools.cffLib import TopDictIndex, buildOrder, topDictOperators
+from fontTools.cffLib import (
+    TopDictIndex,
+    buildOrder,
+    buildDefaults,
+    topDictOperators,
+    privateDictOperators,
+)
 from .width import optimizeWidths
 from collections import defaultdict
 import logging
@@ -38,9 +44,29 @@ def _convertCFF2ToCFF(cff, otFont):
 
     opOrder = buildOrder(topDictOperators)
     topDict.order = opOrder
+    for key in topDict.rawDict.keys():
+        if key not in opOrder:
+            del topDict.rawDict[key]
+            if hasattr(topDict, key):
+                delattr(topDict, key)
 
     fdArray = topDict.FDArray
     charStrings = topDict.CharStrings
+
+    defaults = buildDefaults(privateDictOperators)
+    order = buildOrder(privateDictOperators)
+    for fd in fdArray:
+        fd.setCFF2(False)
+        privateDict = fd.Private
+        privateDict.order = order
+        for key in order:
+            if key not in privateDict.rawDict and key in defaults:
+                privateDict.rawDict[key] = defaults[key]
+        for key in privateDict.rawDict.keys():
+            if key not in order:
+                del privateDict.rawDict[key]
+                if hasattr(privateDict, key):
+                    delattr(privateDict, key)
 
     for cs in charStrings.values():
         cs.decompile()
