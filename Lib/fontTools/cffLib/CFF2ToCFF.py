@@ -36,10 +36,6 @@ def _convertCFF2ToCFF(cff, otFont):
     if hasattr(topDict, "VarStore"):
         raise ValueError("Variable CFF2 font cannot be converted to CFF format.")
 
-    if hasattr(topDict, "Private"):
-        privateDict = topDict.Private
-    else:
-        privateDict = None
     opOrder = buildOrder(topDictOperators)
     topDict.order = opOrder
 
