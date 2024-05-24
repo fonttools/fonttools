@@ -362,8 +362,7 @@ def remove_hints(cff):
         #    we have seen any non-hint operators so far and do the right
         #    thing, recursively... Good luck understanding that :(
         css = set()
-        for g in font.charset:
-            c, _ = cs.getItemAndSelector(g)
+        for c in cs.values():
             c.decompile()
             subrs = getattr(c.private, "Subrs", [])
             decompiler = _DehintingT2Decompiler(
@@ -422,8 +421,7 @@ def remove_unused_subroutines(cff):
         # Renumber subroutines to remove unused ones
 
         # Mark all used subroutines
-        for g in font.charset:
-            c, _ = cs.getItemAndSelector(g)
+        for c in cs.values():
             subrs = getattr(c.private, "Subrs", [])
             decompiler = _MarkingT2Decompiler(subrs, c.globalSubrs, c.private)
             decompiler.execute(c)
@@ -449,8 +447,7 @@ def remove_unused_subroutines(cff):
             subrs._new_bias = calcSubrBias(subrs._used)
 
         # Renumber glyph charstrings
-        for g in font.charset:
-            c, _ = cs.getItemAndSelector(g)
+        for c in cs.values():
             subrs = getattr(c.private, "Subrs", None)
             _cs_subset_subroutines(c, subrs, font.GlobalSubrs)
 

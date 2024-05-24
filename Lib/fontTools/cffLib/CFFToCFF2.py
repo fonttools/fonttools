@@ -65,6 +65,7 @@ def _convertCFFToCFF2(cff, otFont):
             program[min(i, j) :] = []
 
     # Clean up glyph charstrings
+    removeUnusedSubrs = False
     nominalWidthXError = _NominalWidthUsedError()
     for glyphName in charStrings.keys():
         cs, fdIndex = charStrings.getItemAndSelector(glyphName)
@@ -86,10 +87,9 @@ def _convertCFFToCFF2(cff, otFont):
             # Program has explicit width. We want to drop it, but can't
             # just pop the first number since it may be a subroutine call.
             # Instead, when seeing that, we embed the subroutine and recurse.
-            # This has the problem that some subroutines might become unused.
-            # We don't currently prune those. Subset module has code for this
-            # kind of stuff, possibly plug it in here if pruning becomes needed.
+            # If this ever happened, we later prune unused subroutines.
             while program[1] in ["callsubr", "callgsubr"]:
+                removeUnusedSubrs = True
                 subrNumber = program.pop(0)
                 op = program.pop(0)
                 bias = extractor.localBias if op == "callsubr" else extractor.globalBias
@@ -102,6 +102,9 @@ def _convertCFFToCFF2(cff, otFont):
 
         if program and program[-1] == "endchar":
             program.pop()
+
+    if removeUnusedSubrs:
+        cff.remove_unused_subroutines()
 
     # Upconvert TopDict
 
