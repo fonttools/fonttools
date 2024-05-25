@@ -242,6 +242,7 @@ def _remove_cff_overlaps(
     glyphSet: _TTGlyphMapping,
     removeHinting: bool,
     ignoreErrors: bool,
+    removeUnusedSubroutines: bool = True,
 ) -> None:
     cffFontSet = font["CFF "].cff
     modified = set()
@@ -265,7 +266,8 @@ def _remove_cff_overlaps(
     if removeHinting:
         cffFontSet.remove_hints()
 
-    cffFontSet.remove_unused_subroutines()
+    if removeUnusedSubroutines:
+        cffFontSet.remove_unused_subroutines()
 
     log.debug("Removed overlaps for %s glyphs:\n%s", len(modified), " ".join(modified))
 
@@ -275,6 +277,7 @@ def removeOverlaps(
     glyphNames: Optional[Iterable[str]] = None,
     removeHinting: bool = True,
     ignoreErrors: bool = False,
+    removeUnusedSubroutines: bool = True,
 ) -> None:
     """Simplify glyphs in TTFont by merging overlapping contours.
 
@@ -294,6 +297,9 @@ def removeOverlaps(
         removeHinting (bool): set to False to keep hinting for unmodified glyphs.
         ignoreErrors (bool): set to True to ignore errors while removing overlaps,
             thus keeping the tricky glyphs unchanged (fonttools/fonttools#2363).
+        removeUnusedSubroutines (bool): set to False to keep unused subroutines
+            in CFF table after removing overlaps. Default is to remove them if
+            any glyphs are modified.
     """
 
     if "glyf" not in font and "CFF " not in font:
@@ -311,7 +317,14 @@ def removeOverlaps(
         _remove_glyf_overlaps(font, glyphNames, glyphSet, removeHinting, ignoreErrors)
 
     if "CFF " in font:
-        _remove_cff_overlaps(font, glyphNames, glyphSet, removeHinting, ignoreErrors)
+        _remove_cff_overlaps(
+            font,
+            glyphNames,
+            glyphSet,
+            removeHinting,
+            ignoreErrors,
+            removeUnusedSubroutines,
+        )
 
 
 def main(args=None):
@@ -342,6 +355,12 @@ def main(args=None):
         help="ignore errors while removing overlaps, "
         "thus keeping the tricky glyphs unchanged",
     )
+    parser.add_argument(
+        "--keep-unused-subroutines",
+        action="store_true",
+        help="Keep unused subroutines in CFF table after removing overlaps, "
+        "default is to remove them if any glyphs are modified",
+    )
     args = parser.parse_args(args)
 
     with ttFont.TTFont(args.input) as font:
@@ -350,6 +369,7 @@ def main(args=None):
             glyphNames=args.glyphs or None,
             removeHinting=not args.keep_hinting,
             ignoreErrors=args.ignore_errors,
+            removeUnusedSubroutines=not args.keep_unused_subroutines,
         )
         font.save(args.output)
 
