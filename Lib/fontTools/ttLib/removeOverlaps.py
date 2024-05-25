@@ -311,24 +311,25 @@ def removeOverlaps(
 def main(args=None):
     """Simplify glyphs in TTFont by merging overlapping contours."""
 
-    import sys
+    import argparse
 
-    if args is None:
-        args = sys.argv[1:]
+    parser = argparse.ArgumentParser(
+        "fonttools ttLib.removeOverlaps", description=__doc__
+    )
 
-    if len(args) < 2:
-        print(
-            f"usage: fonttools ttLib.removeOverlaps INPUT.ttf OUTPUT.ttf [GLYPHS ...]"
-        )
-        sys.exit(1)
+    parser.add_argument("input", metavar="INPUT.ttf", help="Input font file")
+    parser.add_argument("output", metavar="OUTPUT.ttf", help="Output font file")
+    parser.add_argument(
+        "glyphs",
+        metavar="GLYPHS",
+        nargs="*",
+        help="Optional list of glyph names to remove overlaps from",
+    )
+    args = parser.parse_args(args)
 
-    src = args[0]
-    dst = args[1]
-    glyphNames = args[2:] or None
-
-    with ttFont.TTFont(src) as f:
-        removeOverlaps(f, glyphNames)
-        f.save(dst)
+    with ttFont.TTFont(args.input) as f:
+        removeOverlaps(f, args.glyphs or None)
+        f.save(args.output)
 
 
 if __name__ == "__main__":
