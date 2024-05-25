@@ -325,11 +325,27 @@ def main(args=None):
         nargs="*",
         help="Optional list of glyph names to remove overlaps from",
     )
+    parser.add_argument(
+        "--keep-hinting",
+        action="store_true",
+        help="Keep hinting for unmodified glyphs, default is to drop hinting",
+    )
+    parser.add_argument(
+        "--ignore-errors",
+        action="store_true",
+        help="ignore errors while removing overlaps, "
+        "thus keeping the tricky glyphs unchanged",
+    )
     args = parser.parse_args(args)
 
-    with ttFont.TTFont(args.input) as f:
-        removeOverlaps(f, args.glyphs or None)
-        f.save(args.output)
+    with ttFont.TTFont(args.input) as font:
+        removeOverlaps(
+            font=font,
+            glyphNames=args.glyphs or None,
+            removeHinting=not args.keep_hinting,
+            ignoreErrors=args.ignore_errors,
+        )
+        font.save(args.output)
 
 
 if __name__ == "__main__":
