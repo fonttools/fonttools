@@ -261,6 +261,8 @@ def _remove_cff_overlaps(
     if removeHinting:
         cffFontSet.remove_hints()
 
+    cffFontSet.remove_unused_subroutines()
+
     log.debug("Removed overlaps for %s glyphs:\n%s", len(modified), " ".join(modified))
 
 
