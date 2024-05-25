@@ -221,7 +221,6 @@ def _remove_charstring_overlaps(
     glyphName: str,
     glyphSet: _TTGlyphMapping,
     cffFontSet: CFFFontSet,
-    removeHinting: bool,
 ) -> bool:
     path = skPathFromGlyph(glyphName, glyphSet)
 
@@ -234,10 +233,6 @@ def _remove_charstring_overlaps(
         charStrings[glyphName] = _charString_from_SkPath(path2, charStrings[glyphName])
         return True
 
-    if removeHinting:
-        raise NotImplementedError(
-            "Hinting removal is not implemented for CFF fonts yet"
-        )
     return False
 
 
@@ -256,13 +251,15 @@ def _remove_cff_overlaps(
                 glyphName,
                 glyphSet,
                 cffFontSet,
-                removeHinting,
             ):
                 modified.add(glyphName)
         except RemoveOverlapsError:
             if not ignoreErrors:
                 raise
             log.error("Failed to remove overlaps for '%s'", glyphName)
+
+    if removeHinting:
+        cffFontSet.remove_hints()
 
     log.debug("Removed overlaps for %s glyphs:\n%s", len(modified), " ".join(modified))
 
