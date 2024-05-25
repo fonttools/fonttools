@@ -104,6 +104,7 @@ def _round_path(
 def _simplify(
     path: pathops.Path,
     debugGlyphName: str,
+    *,
     round: Callable[[float], float] = otRound,
 ) -> pathops.Path:
     # skia-pathops has a bug where it sometimes fails to simplify paths when there
@@ -179,6 +180,7 @@ def removeTTGlyphOverlaps(
 
 
 def _remove_glyf_overlaps(
+    *,
     font: ttFont.TTFont,
     glyphNames: Iterable[str],
     glyphSet: _TTGlyphMapping,
@@ -218,6 +220,7 @@ def _remove_glyf_overlaps(
 
 
 def _remove_charstring_overlaps(
+    *,
     glyphName: str,
     glyphSet: _TTGlyphMapping,
     cffFontSet: CFFFontSet,
@@ -237,6 +240,7 @@ def _remove_charstring_overlaps(
 
 
 def _remove_cff_overlaps(
+    *,
     font: ttFont.TTFont,
     glyphNames: Iterable[str],
     glyphSet: _TTGlyphMapping,
@@ -249,9 +253,9 @@ def _remove_cff_overlaps(
     for glyphName in glyphNames:
         try:
             if _remove_charstring_overlaps(
-                glyphName,
-                glyphSet,
-                cffFontSet,
+                glyphName=glyphName,
+                glyphSet=glyphSet,
+                cffFontSet=cffFontSet,
             ):
                 modified.add(glyphName)
         except RemoveOverlapsError:
@@ -277,6 +281,7 @@ def removeOverlaps(
     glyphNames: Optional[Iterable[str]] = None,
     removeHinting: bool = True,
     ignoreErrors: bool = False,
+    *,
     removeUnusedSubroutines: bool = True,
 ) -> None:
     """Simplify glyphs in TTFont by merging overlapping contours.
@@ -314,16 +319,22 @@ def removeOverlaps(
     glyphSet = font.getGlyphSet()
 
     if "glyf" in font:
-        _remove_glyf_overlaps(font, glyphNames, glyphSet, removeHinting, ignoreErrors)
+        _remove_glyf_overlaps(
+            font=font,
+            glyphNames=glyphNames,
+            glyphSet=glyphSet,
+            removeHinting=removeHinting,
+            ignoreErrors=ignoreErrors,
+        )
 
     if "CFF " in font:
         _remove_cff_overlaps(
-            font,
-            glyphNames,
-            glyphSet,
-            removeHinting,
-            ignoreErrors,
-            removeUnusedSubroutines,
+            font=font,
+            glyphNames=glyphNames,
+            glyphSet=glyphSet,
+            removeHinting=removeHinting,
+            ignoreErrors=ignoreErrors,
+            removeUnusedSubroutines=removeUnusedSubroutines,
         )
 
 
