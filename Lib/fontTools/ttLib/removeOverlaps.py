@@ -258,6 +258,10 @@ def _remove_cff_overlaps(
                 raise
             log.error("Failed to remove overlaps for '%s'", glyphName)
 
+    if not modified:
+        log.debug("No overlaps found in the specified CFF glyphs")
+        return
+
     if removeHinting:
         cffFontSet.remove_hints()
 
