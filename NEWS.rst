@@ -1,3 +1,6 @@
+4.52.4 (released 2024-05-27)
+----------------------------
+
 - [varLib.cff] Restore and deprecate convertCFFtoCFF2 that was removed in 4.52.0
   release as it is used by downstream projects (#3535).
 
