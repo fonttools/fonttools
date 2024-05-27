@@ -32,7 +32,7 @@ def _convertCFF2ToCFF(cff, otFont):
 
     cff.major = 1
 
-    topDictData = TopDictIndex(None, isCFF2=True)
+    topDictData = TopDictIndex(None)
     for item in cff.topDictIndex:
         # Iterate over, such that all are decompiled
         topDictData.append(item)
