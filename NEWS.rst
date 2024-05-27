@@ -1,3 +1,6 @@
+4.52.3 (released 2024-05-27)
+----------------------------
+
 - Fixed a small syntax error in the reStructuredText-formatted NEWS.rst file
   which caused the upload to PyPI to fail for 4.52.2. No other code changes.
 
