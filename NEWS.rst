@@ -1,3 +1,9 @@
+- [varLib.interpolatable] Ensure that scipy/numpy output is JSON-serializable
+  (#3522, #3526)
+- [housekeeping] Regenerate table lists, to fix pyinstaller packaging of the new
+ ``VARC`` table (#3531, #3529)
+- [cffLib] Make CFFToCFF2 and CFF2ToCFF more robust (#3521, #3525)
+
 4.52.1 (released 2024-05-24)
 ----------------------------
 
