@@ -1,3 +1,6 @@
+4.52.2 (released 2024-05-27)
+----------------------------
+
 - [varLib.interpolatable] Ensure that scipy/numpy output is JSON-serializable
   (#3522, #3526)
 - [housekeeping] Regenerate table lists, to fix pyinstaller packaging of the new
