@@ -100,6 +100,21 @@ def _convertCFF2ToCFF(cff, otFont):
         if width != private.defaultWidthX:
             cs.program.insert(0, width - private.nominalWidthX)
 
+    mapping = {
+        name: ("cid" + str(n) if n else ".notdef")
+        for n, name in enumerate(topDict.charset)
+    }
+    topDict.charset = [
+        "cid" + str(n) if n else ".notdef" for n in range(len(topDict.charset))
+    ]
+    charStrings.charStrings = {
+        mapping[name]: v for name, v in charStrings.charStrings.items()
+    }
+
+    # I'm not sure why the following is *not* necessary. And it breaks
+    # the output if I add it.
+    # topDict.ROS = ("Adobe", "Identity", 0)
+
 
 def convertCFF2ToCFF(font, *, updatePostTable=True):
     cff = font["CFF2"].cff
