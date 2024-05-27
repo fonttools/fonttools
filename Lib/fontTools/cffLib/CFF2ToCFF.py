@@ -35,6 +35,7 @@ def _convertCFF2ToCFF(cff, otFont):
     topDictData = TopDictIndex(None)
     for item in cff.topDictIndex:
         # Iterate over, such that all are decompiled
+        item.cff2GetGlyphOrder = None
         topDictData.append(item)
     cff.topDictIndex = topDictData
     topDict = topDictData[0]
