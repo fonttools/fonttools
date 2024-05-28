@@ -175,8 +175,8 @@ class table_G__l_a_t(DefaultTable.DefaultTable):
                 for k in names:
                     if k == "subboxBitmap":
                         continue
-                    vals[k] = "{:.3f}%".format(getattr(o, k) * 100.0 / 255)
-                vals["bitmap"] = "{:0X}".format(o.subboxBitmap)
+                    vals[k] = f"{getattr(o, k) * 100.0 / 255:.3f}%"
+                vals["bitmap"] = f"{o.subboxBitmap:0X}"
                 writer.begintag("octaboxes", **vals)
                 writer.newline()
                 formatstring, names, fixes = sstruct.getformat(
@@ -185,7 +185,7 @@ class table_G__l_a_t(DefaultTable.DefaultTable):
                 for s in o.subboxes:
                     vals = {}
                     for k in names:
-                        vals[k] = "{:.3f}%".format(getattr(s, k) * 100.0 / 255)
+                        vals[k] = f"{getattr(s, k) * 100.0 / 255:.3f}%"
                     writer.simpletag("octabox", **vals)
                     writer.newline()
                 writer.endtag("octaboxes")

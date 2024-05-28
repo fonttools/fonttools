@@ -6,7 +6,7 @@ from fontTools.pens.recordingPen import (
 import pytest
 
 
-class _TestGlyph(object):
+class _TestGlyph:
     def draw(self, pen):
         pen.moveTo((0.0, 0.0))
         pen.lineTo((0.0, 100.0))
@@ -23,14 +23,14 @@ class _TestGlyph(object):
         pen.endPath()
 
 
-class RecordingPenTest(object):
+class RecordingPenTest:
     def test_addComponent(self):
         pen = RecordingPen()
         pen.addComponent("a", (2, 0, 0, 3, -10, 5))
         assert pen.value == [("addComponent", ("a", (2, 0, 0, 3, -10, 5)))]
 
 
-class DecomposingRecordingPenTest(object):
+class DecomposingRecordingPenTest:
     def test_addComponent_decomposed(self):
         pen = DecomposingRecordingPen({"a": _TestGlyph()})
         pen.addComponent("a", (2, 0, 0, 3, -10, 5))

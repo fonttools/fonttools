@@ -1,7 +1,6 @@
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.ttVisitor import TTVisitor
 import os
-import pytest
 
 
 class TestVisitor(TTVisitor):
@@ -20,7 +19,7 @@ class TestVisitor(TTVisitor):
         self.depth -= 1
 
 
-class TTVisitorTest(object):
+class TTVisitorTest:
     @staticmethod
     def getpath(testfile):
         path = os.path.dirname(__file__)

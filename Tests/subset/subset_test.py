@@ -45,7 +45,7 @@ class SubsetTest:
 
     @staticmethod
     def read_ttx(path):
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             ttx = f.read()
         # don't care whether TTF or OTF, thus strip sfntVersion as well
         return stripVariableItemsFromTTX(ttx, sfntVersion=True).splitlines(True)
@@ -1752,7 +1752,7 @@ def test_subset_COLRv1_drop_all_v0_glyphs(colrv1_path):
     assert colr.table.BaseGlyphRecordCount == 0
     assert colr.table.BaseGlyphRecordArray is None
     assert colr.table.LayerRecordArray is None
-    assert colr.table.LayerRecordCount is 0
+    assert colr.table.LayerRecordCount == 0
 
 
 def test_subset_COLRv1_no_ClipList(colrv1_path):

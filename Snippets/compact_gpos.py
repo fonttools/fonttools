@@ -24,7 +24,7 @@ import csv
 import time
 import sys
 from pathlib import Path
-from typing import Any, Iterable, List, Optional, Sequence, Tuple
+from typing import Any, Iterable, List, Optional, Tuple
 
 from fontTools.ttLib import TTFont
 from fontTools.otlLib.optimize import compact
@@ -67,7 +67,7 @@ def main(args: Optional[List[str]] = None):
             fonts[mode] = TTFont(font_paths[mode])
             sizes[mode] = len(fonts[mode].getTableData("GPOS")) / 1024
 
-        print(f"    Runtimes:", file=sys.stderr)
+        print("    Runtimes:", file=sys.stderr)
         for mode, times in runtimes.items():
             print(
                 f"        {mode:10} {' '.join(f'{t:5.2f}' for t in times)}",
@@ -75,7 +75,7 @@ def main(args: Optional[List[str]] = None):
             )
 
         # Bonus: measure WOFF2 file sizes.
-        print(f"    Measuring WOFF2 sizes", file=sys.stderr)
+        print("    Measuring WOFF2 sizes", file=sys.stderr)
         size_woff_orig = woff_size(font, font_path) / 1024
         sizes_woff = {
             mode: woff_size(fonts[mode], font_paths[mode]) / 1024 for mode in MODES

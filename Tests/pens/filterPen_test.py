@@ -4,7 +4,7 @@ from types import MappingProxyType
 from fontTools.pens.basePen import MissingComponentError
 from fontTools.pens.filterPen import DecomposingFilterPen, DecomposingFilterPointPen
 from fontTools.pens.pointPen import PointToSegmentPen
-from fontTools.pens.recordingPen import RecordingPen, RecordingPointPen
+from fontTools.pens.recordingPen import RecordingPen
 
 import pytest
 

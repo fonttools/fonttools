@@ -11,14 +11,14 @@ class TestXMLReader(unittest.TestCase):
     def test_decode_utf8(self):
         class DebugXMLReader(XMLReader):
             def __init__(self, fileOrPath, ttFont, progress=None):
-                super(DebugXMLReader, self).__init__(fileOrPath, ttFont, progress)
+                super().__init__(fileOrPath, ttFont, progress)
                 self.contents = []
 
             def _endElementHandler(self, name):
                 if self.stackSize == 3:
                     name, attrs, content = self.root
                     self.contents.append(content)
-                super(DebugXMLReader, self)._endElementHandler(name)
+                super()._endElementHandler(name)
 
         expected = "fôôbär"
         data = (
@@ -44,7 +44,7 @@ class TestXMLReader(unittest.TestCase):
     def test_normalise_newlines(self):
         class DebugXMLReader(XMLReader):
             def __init__(self, fileOrPath, ttFont, progress=None):
-                super(DebugXMLReader, self).__init__(fileOrPath, ttFont, progress)
+                super().__init__(fileOrPath, ttFont, progress)
                 self.newlines = []
 
             def _characterDataHandler(self, data):

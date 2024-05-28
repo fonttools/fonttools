@@ -2,7 +2,7 @@ from fontTools.ttLib import TTFont
 from fontTools.varLib import build
 from fontTools.varLib.interpolate_layout import interpolate_layout
 from fontTools.varLib.interpolate_layout import main as interpolate_layout_main
-from fontTools.designspaceLib import DesignSpaceDocument, DesignSpaceDocumentError
+from fontTools.designspaceLib import DesignSpaceDocumentError
 from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
 import difflib
 import os
@@ -58,7 +58,7 @@ class InterpolateLayoutTest(unittest.TestCase):
 
     def read_ttx(self, path):
         lines = []
-        with open(path, "r", encoding="utf-8") as ttx:
+        with open(path, encoding="utf-8") as ttx:
             for line in ttx.readlines():
                 # Elide ttFont attributes because ttLibVersion may change.
                 if line.startswith("<ttFont "):

@@ -3,7 +3,7 @@ from fontTools.misc.textTools import deHexStr
 from fontTools.misc.xmlWriter import XMLWriter
 from fontTools.misc.fixedTools import floatToFixed as fl2fi
 from fontTools.pens.statisticsPen import StatisticsPen
-from fontTools.ttLib import TTFont, TTLibError
+from fontTools.ttLib import TTFont
 import fontTools.ttLib.tables.otTables as otTables
 from fontTools.ttLib.tables._a_v_a_r import table__a_v_a_r
 from fontTools.ttLib.tables._f_v_a_r import table__f_v_a_r, Axis

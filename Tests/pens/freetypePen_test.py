@@ -54,17 +54,17 @@ def star(pen):
 #   http://netpbm.sourceforge.net/doc/pgm.html
 def load_pgm(filename):
     with open(filename, "rb") as fp:
-        assert fp.readline() == "P5\n".encode()
+        assert fp.readline() == b"P5\n"
         w, h = (int(c) for c in fp.readline().decode().rstrip().split(" "))
-        assert fp.readline() == "255\n".encode()
+        assert fp.readline() == b"255\n"
         return fp.read(), (w, h)
 
 
 def save_pgm(filename, buf, size):
     with open(filename, "wb") as fp:
-        fp.write("P5\n".encode())
-        fp.write("{0:d} {1:d}\n".format(*size).encode())
-        fp.write("255\n".encode())
+        fp.write(b"P5\n")
+        fp.write("{:d} {:d}\n".format(*size).encode())
+        fp.write(b"255\n")
         fp.write(buf)
 
 

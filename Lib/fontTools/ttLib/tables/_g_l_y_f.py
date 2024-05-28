@@ -4,10 +4,8 @@ from collections import namedtuple
 from fontTools.misc import sstruct
 from fontTools import ttLib
 from fontTools import version
-from fontTools.misc.transform import DecomposedTransform
 from fontTools.misc.textTools import tostr, safeEval, pad
-from fontTools.misc.arrayTools import updateBounds, pointInRect
-from fontTools.misc.bezierTools import calcQuadraticBounds
+from fontTools.misc.arrayTools import updateBounds
 from fontTools.misc.fixedTools import (
     fixedToFloat as fi2fl,
     floatToFixed as fl2fi,
@@ -23,12 +21,10 @@ import sys
 import struct
 import array
 import logging
-import math
 import os
 from fontTools.misc import xmlWriter
 from fontTools.misc.filenames import userNameToFileName
 from fontTools.misc.loggingTools import deprecateFunction
-from enum import IntFlag
 from functools import partial
 from types import SimpleNamespace
 from typing import Set
@@ -657,7 +653,7 @@ CompositeMaxpValues = namedtuple(
 )
 
 
-class Glyph(object):
+class Glyph:
     """This class represents an individual TrueType glyph.
 
     TrueType glyph objects come in two flavours: simple and composite. Simple
@@ -1660,7 +1656,7 @@ def dropImpliedOnCurvePoints(*interpolatable_glyphs: Glyph) -> Set[int]:
     return drop if drop is not None else set()
 
 
-class GlyphComponent(object):
+class GlyphComponent:
     """Represents a component within a composite glyph.
 
     The component is represented internally with four attributes: ``glyphName``,
@@ -1866,7 +1862,7 @@ class GlyphComponent(object):
         return result if result is NotImplemented else not result
 
 
-class GlyphCoordinates(object):
+class GlyphCoordinates:
     """A list of glyph coordinates.
 
     Unlike an ordinary list, this is a numpy-like matrix object which supports
@@ -2217,6 +2213,7 @@ class GlyphCoordinates(object):
 
 
 if __name__ == "__main__":
-    import doctest, sys
+    import doctest
+    import sys
 
     sys.exit(doctest.testmod().failed)

@@ -49,7 +49,7 @@ class T1Error(Exception):
     pass
 
 
-class T1Font(object):
+class T1Font:
     """Type 1 font class.
 
     Uses a minimal interpeter that supports just about enough PS to parse
@@ -318,7 +318,7 @@ def write(path, data, kind="OTHER", dohex=False):
     kind = kind.upper()
     try:
         os.remove(path)
-    except os.error:
+    except OSError:
         pass
     err = 1
     try:
@@ -333,7 +333,7 @@ def write(path, data, kind="OTHER", dohex=False):
         if err and not DEBUG:
             try:
                 os.remove(path)
-            except os.error:
+            except OSError:
                 pass
 
 

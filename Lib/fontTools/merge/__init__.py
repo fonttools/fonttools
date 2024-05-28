@@ -22,7 +22,7 @@ log = logging.getLogger("fontTools.merge")
 timer = Timer(logger=logging.getLogger(__name__ + ".timer"), level=logging.INFO)
 
 
-class Merger(object):
+class Merger:
     """Font merger.
 
     This class merges multiple files into a single OpenType font, taking into

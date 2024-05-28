@@ -1,5 +1,3 @@
-# coding=utf-8
-
 import os
 from pathlib import Path
 import re
@@ -10,10 +8,8 @@ from fontTools import ttLib
 from fontTools.designspaceLib import (
     AxisDescriptor,
     AxisMappingDescriptor,
-    AxisLabelDescriptor,
     DesignSpaceDocument,
     DesignSpaceDocumentError,
-    DiscreteAxisDescriptor,
     InstanceDescriptor,
     RuleDescriptor,
     SourceDescriptor,
@@ -24,7 +20,6 @@ from fontTools.designspaceLib import (
 from fontTools.designspaceLib.types import Range
 from fontTools.misc import plistlib
 
-from .fixtures import datadir
 
 
 def _axesAsDict(axes):
@@ -274,9 +269,9 @@ def test_unicodes(tmpdir):
     new.read(testDocPath)
     new.write(testDocPath2)
     # compare the file contents
-    with open(testDocPath, "r", encoding="utf-8") as f1:
+    with open(testDocPath, encoding="utf-8") as f1:
         t1 = f1.read()
-    with open(testDocPath2, "r", encoding="utf-8") as f2:
+    with open(testDocPath2, encoding="utf-8") as f2:
         t2 = f2.read()
     assert t1 == t2
     # check the unicode values read from the document
@@ -376,9 +371,9 @@ def test_localisedNames(tmpdir):
     new = DesignSpaceDocument()
     new.read(testDocPath)
     new.write(testDocPath2)
-    with open(testDocPath, "r", encoding="utf-8") as f1:
+    with open(testDocPath, encoding="utf-8") as f1:
         t1 = f1.read()
-    with open(testDocPath2, "r", encoding="utf-8") as f2:
+    with open(testDocPath2, encoding="utf-8") as f2:
         t2 = f2.read()
     assert t1 == t2
 
@@ -886,7 +881,7 @@ def _addUnwrappedCondition(path):
     # only for testing, so we can make an invalid designspace file
     # older designspace files may have conditions that are not wrapped in a conditionset
     # These can be read into a new conditionset.
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         d = f.read()
     print(d)
     d = d.replace(

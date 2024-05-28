@@ -24,7 +24,7 @@ GMAPRecordFormat1 = """
 """
 
 
-class GMAPRecord(object):
+class GMAPRecord:
     def __init__(self, uv=0, cid=0, gid=0, ggid=0, name=""):
         self.UV = uv
         self.cid = cid

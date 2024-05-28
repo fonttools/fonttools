@@ -12,7 +12,7 @@ def _makeunicodes(f):
     return unicodes
 
 
-class _UnicodeCustom(object):
+class _UnicodeCustom:
     def __init__(self, f):
         if isinstance(f, str):
             with open(f) as fd:
@@ -28,7 +28,7 @@ class _UnicodeCustom(object):
             return "????"
 
 
-class _UnicodeBuiltin(object):
+class _UnicodeBuiltin:
     def __getitem__(self, charCode):
         try:
             # use unicodedata backport to python2, if available:

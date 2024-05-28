@@ -11,7 +11,6 @@ import shutil
 import sys
 import tempfile
 import unittest
-import pathlib
 import pytest
 
 
@@ -41,7 +40,7 @@ class MergeIntegrationTest(unittest.TestCase):
 
     def read_ttx(self, path):
         lines = []
-        with open(path, "r", encoding="utf-8") as ttx:
+        with open(path, encoding="utf-8") as ttx:
             for line in ttx.readlines():
                 # Elide lines with data that often change.
                 if self.IGNORED_LINES_RE.match(line):

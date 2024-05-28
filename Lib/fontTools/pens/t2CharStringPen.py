@@ -19,7 +19,7 @@ class T2CharStringPen(BasePen):
     """
 
     def __init__(self, width, glyphSet, roundTolerance=0.5, CFF2=False):
-        super(T2CharStringPen, self).__init__(glyphSet)
+        super().__init__(glyphSet)
         self.round = roundFunc(roundTolerance)
         self._CFF2 = CFF2
         self._width = width

@@ -1,20 +1,14 @@
-from fontTools.misc.roundTools import noRound, otRound
-from fontTools.misc.intTools import bit_count
+from fontTools.misc.roundTools import noRound
 from fontTools.misc.vector import Vector
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.varLib.models import supportScalar
-import fontTools.varLib.varStore  # For monkey-patching
 from fontTools.varLib.builder import (
-    buildVarRegionList,
     buildSparseVarRegionList,
     buildSparseVarRegion,
     buildMultiVarStore,
     buildMultiVarData,
 )
 from fontTools.misc.iterTools import batched
-from functools import partial
-from collections import defaultdict
-from heapq import heappush, heappop
 
 
 NO_VARIATION_INDEX = ot.NO_VARIATION_INDEX
@@ -25,7 +19,7 @@ def _getLocationKey(loc):
     return tuple(sorted(loc.items(), key=lambda kv: kv[0]))
 
 
-class OnlineMultiVarStoreBuilder(object):
+class OnlineMultiVarStoreBuilder:
     def __init__(self, axisTags):
         self._axisTags = axisTags
         self._regionMap = {}
@@ -155,7 +149,7 @@ def MultiVarStore___bool__(self):
 ot.MultiVarStore.__bool__ = MultiVarStore___bool__
 
 
-class MultiVarStoreInstancer(object):
+class MultiVarStoreInstancer:
     def __init__(self, multivarstore, fvar_axes, location={}):
         self.fvar_axes = fvar_axes
         assert multivarstore is None or multivarstore.Format == 1

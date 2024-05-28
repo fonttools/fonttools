@@ -4,7 +4,6 @@ from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables.C_O_L_R_ import table_C_O_L_R_
 
 from pathlib import Path
-import binascii
 import pytest
 
 
@@ -74,7 +73,7 @@ def font():
     return font
 
 
-class COLR_V0_Test(object):
+class COLR_V0_Test:
     def test_decompile_and_compile(self, font):
         colr = table_C_O_L_R_()
         colr.decompile(COLR_V0_DATA, font)
@@ -598,7 +597,7 @@ COLR_V1_VAR_XML = [
 ]
 
 
-class COLR_V1_Test(object):
+class COLR_V1_Test:
     def test_decompile_and_compile(self, font):
         colr = table_C_O_L_R_()
         colr.decompile(COLR_V1_DATA, font)
@@ -648,7 +647,7 @@ class COLR_V1_Test(object):
         assert getXML(clipList.toXML) == getXML(expectedClipList.toXML)
 
 
-class COLR_V1_Variable_Test(object):
+class COLR_V1_Variable_Test:
     def test_round_trip_xml(self, font):
         colr = table_C_O_L_R_()
         xml = COLR_V1_XML + COLR_V1_VAR_XML

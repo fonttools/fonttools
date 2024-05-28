@@ -57,7 +57,7 @@ def zip(*args):
     returned for python 2/3 compatibility.
     """
 
-    if len(set(len(a) for a in args)) != 1:
+    if len({len(a) for a in args}) != 1:
         raise UnequalZipLengthsError(*args)
     return list(_zip(*args))
 

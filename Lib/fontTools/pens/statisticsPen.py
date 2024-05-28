@@ -219,7 +219,7 @@ def _test(glyphset, upem, glyphs, quiet=False, *, control=False):
             "correlation",
             "slant",
         ]:
-            print("%s: %g" % (item, getattr(pen, item)))
+            print("{}: {:g}".format(item, getattr(pen, item)))
 
     if not quiet:
         print()

@@ -50,5 +50,5 @@ class SFNTResourceReader(BytesIO):
             raise ttLib.TTLibError("sfnt resource not found: %s" % res_name_or_index)
         reader.close()
         self.rsrc = rsrc
-        super(SFNTResourceReader, self).__init__(rsrc.data)
+        super().__init__(rsrc.data)
         self.name = path

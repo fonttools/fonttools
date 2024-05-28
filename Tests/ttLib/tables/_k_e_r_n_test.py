@@ -131,7 +131,7 @@ KERN_VER_0_FMT_0_OVERFLOWING_DATA = deHexStr(
     "4266 "  # 16: rangeShift=16998
 ) + deHexStr(
     " ".join(
-        "%04X %04X %04X" % (a, b, 0)
+        "{:04X} {:04X} {:04X}".format(a, b, 0)
         for (a, b) in itertools.product(range(105), repeat=2)
     )
 )
@@ -147,7 +147,7 @@ def overflowing_font():
     return FakeFont(["glyph%i" % i for i in range(105)])
 
 
-class KernTableTest(object):
+class KernTableTest:
     @pytest.mark.parametrize(
         "data, version",
         [
@@ -281,12 +281,12 @@ class KernTableTest(object):
             if version > 0:
                 coverage = 0
                 header_fmt = deHexStr(
-                    "%08X %02X %02X %04X" % (st_length, coverage, unknown_fmt, 0)
+                    "{:08X} {:02X} {:02X} {:04X}".format(st_length, coverage, unknown_fmt, 0)
                 )
             else:
                 coverage = 1
                 header_fmt = deHexStr(
-                    "%04X %04X %02X %02X" % (0, st_length, unknown_fmt, coverage)
+                    "{:04X} {:04X} {:02X} {:02X}".format(0, st_length, unknown_fmt, coverage)
                 )
             st = KernTable_format_unkown(unknown_fmt)
             st.data = header_fmt + deHexStr(kern_data)
@@ -354,7 +354,7 @@ class KernTableTest(object):
         table.kernTables.append(st1)
 
 
-class KernTable_format_0_Test(object):
+class KernTable_format_0_Test:
     def test_decompileBadGlyphId(self, font):
         subtable = KernTable_format_0()
         subtable.decompile(

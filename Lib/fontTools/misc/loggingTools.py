@@ -68,7 +68,7 @@ class LevelFormatter(logging.Formatter):
             default_format = custom_formats.pop("*", None)
         else:
             raise TypeError("fmt must be a str or a dict of str: %r" % fmt)
-        super(LevelFormatter, self).__init__(default_format, datefmt)
+        super().__init__(default_format, datefmt)
         self.default_format = self._fmt
         self.custom_formats = {}
         for level, fmt in custom_formats.items():
@@ -83,7 +83,7 @@ class LevelFormatter(logging.Formatter):
                 # for python >= 3.2, _style needs to be set if _fmt changes
                 if PercentStyle:
                     self._style = PercentStyle(fmt)
-        return super(LevelFormatter, self).format(record)
+        return super().format(record)
 
 
 def configLogger(**kwargs):
@@ -226,7 +226,7 @@ def _resetExistingLoggers(parent="root"):
             logger.disabled = False
 
 
-class Timer(object):
+class Timer:
     """Keeps track of overall time and split/lap times.
 
     >>> import time
@@ -436,7 +436,7 @@ class ChannelsFilter(logging.Filter):
 
 class CapturingLogHandler(logging.Handler):
     def __init__(self, logger, level):
-        super(CapturingLogHandler, self).__init__(level=level)
+        super().__init__(level=level)
         self.records = []
         if isinstance(logger, str):
             self.logger = logging.getLogger(logger)
@@ -478,7 +478,7 @@ class CapturingLogHandler(logging.Handler):
         assert 0, msg
 
 
-class LogMixin(object):
+class LogMixin:
     """Mixin class that adds logging functionality to another class.
 
     You can define a new class that subclasses from ``LogMixin`` as well as
@@ -516,7 +516,7 @@ class LogMixin(object):
 
 def deprecateArgument(name, msg, category=UserWarning):
     """Raise a warning about deprecated function argument 'name'."""
-    warnings.warn("%r is deprecated; %s" % (name, msg), category=category, stacklevel=3)
+    warnings.warn("{!r} is deprecated; {}".format(name, msg), category=category, stacklevel=3)
 
 
 def deprecateFunction(msg, category=UserWarning):
@@ -526,7 +526,7 @@ def deprecateFunction(msg, category=UserWarning):
         @wraps(func)
         def wrapper(*args, **kwargs):
             warnings.warn(
-                "%r is deprecated; %s" % (func.__name__, msg),
+                "{!r} is deprecated; {}".format(func.__name__, msg),
                 category=category,
                 stacklevel=2,
             )

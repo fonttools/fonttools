@@ -24,7 +24,7 @@ panoseFormat = """
 """
 
 
-class Panose(object):
+class Panose:
     def __init__(self, **kwargs):
         _, names, _ = sstruct.getformat(panoseFormat)
         for name in names:
@@ -740,6 +740,7 @@ def calcCodePageRanges(unicodes):
 
 
 if __name__ == "__main__":
-    import doctest, sys
+    import doctest
+    import sys
 
     sys.exit(doctest.testmod().failed)

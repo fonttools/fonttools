@@ -8,7 +8,7 @@ import string
 INDENT = "  "
 
 
-class XMLWriter(object):
+class XMLWriter:
     def __init__(
         self,
         fileOrPath,
@@ -112,12 +112,12 @@ class XMLWriter(object):
 
     def simpletag(self, _TAG_, *args, **kwargs):
         attrdata = self.stringifyattrs(*args, **kwargs)
-        data = "<%s%s/>" % (_TAG_, attrdata)
+        data = "<{}{}/>".format(_TAG_, attrdata)
         self._writeraw(data)
 
     def begintag(self, _TAG_, *args, **kwargs):
         attrdata = self.stringifyattrs(*args, **kwargs)
-        data = "<%s%s>" % (_TAG_, attrdata)
+        data = "<{}{}>".format(_TAG_, attrdata)
         self._writeraw(data)
         self.stack.append(_TAG_)
         self.indent()
@@ -163,7 +163,7 @@ class XMLWriter(object):
         for attr, value in attributes:
             if not isinstance(value, (bytes, str)):
                 value = str(value)
-            data = data + ' %s="%s"' % (attr, escapeattr(value))
+            data = data + ' {}="{}"'.format(attr, escapeattr(value))
         return data
 
 

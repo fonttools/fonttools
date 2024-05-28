@@ -19,7 +19,6 @@ from copy import deepcopy
 from io import BytesIO, StringIO
 import logging
 import os
-import re
 from types import SimpleNamespace
 import pytest
 
@@ -63,7 +62,7 @@ def _get_coordinates(varfont, glyphname):
     )
 
 
-class InstantiateCFF2Test(object):
+class InstantiateCFF2Test:
     @pytest.mark.parametrize(
         "location, expected",
         [
@@ -145,7 +144,7 @@ class InstantiateCFF2Test(object):
         assert actual == expected
 
 
-class InstantiateGvarTest(object):
+class InstantiateGvarTest:
     @pytest.mark.parametrize("glyph_name", ["hyphen"])
     @pytest.mark.parametrize(
         "location, expected",
@@ -288,7 +287,7 @@ class InstantiateGvarTest(object):
         assert vmtx["minus"] == (536, 250)  # 'minus' top sidebearing too
 
 
-class InstantiateCvarTest(object):
+class InstantiateCvarTest:
     @pytest.mark.parametrize(
         "location, expected",
         [
@@ -321,7 +320,7 @@ class InstantiateCvarTest(object):
         assert "cvar" not in varfont
 
 
-class InstantiateMVARTest(object):
+class InstantiateMVARTest:
     @pytest.mark.parametrize(
         "location, expected",
         [
@@ -452,7 +451,7 @@ class InstantiateMVARTest(object):
         assert "MVAR" not in varfont
 
 
-class InstantiateHVARTest(object):
+class InstantiateHVARTest:
     # the 'expectedDeltas' below refer to the VarData item deltas for the "hyphen"
     # glyph in the PartialInstancerTest-VF.ttx test font, that are left after
     # partial instancing
@@ -538,7 +537,7 @@ class InstantiateHVARTest(object):
         assert varStore.VarRegionList.RegionAxisCount == 1
 
 
-class InstantiateItemVariationStoreTest(object):
+class InstantiateItemVariationStoreTest:
     def test_VarRegion_get_support(self):
         axisOrder = ["wght", "wdth", "opsz"]
         regionAxes = {"wdth": (-1.0, -1.0, 0.0), "wght": (0.0, 1.0, 1.0)}
@@ -609,7 +608,7 @@ class InstantiateItemVariationStoreTest(object):
         assert varStore.VarRegionList.RegionCount == num_regions
 
 
-class TupleVarStoreAdapterTest(object):
+class TupleVarStoreAdapterTest:
     def test_instantiate(self):
         regions = [
             {"wght": (-1.0, -1.0, 0)},
@@ -869,7 +868,7 @@ def varfontGPOS2():
     return makeParametrizedVF(glyphOrder, features, values, increments)
 
 
-class InstantiateOTLTest(object):
+class InstantiateOTLTest:
     @pytest.mark.parametrize(
         "location, expected",
         [
@@ -1116,7 +1115,7 @@ class InstantiateOTLTest(object):
         assert valueRec1.XAdvance == -25
 
 
-class InstantiateAvarTest(object):
+class InstantiateAvarTest:
     @pytest.mark.parametrize("location", [{"wght": 0.0}, {"wdth": 0.0}])
     def test_pin_and_drop_axis(self, varfont, location):
         location = instancer.AxisLimits(location)
@@ -1339,7 +1338,7 @@ class InstantiateAvarTest(object):
         )
 
 
-class InstantiateFvarTest(object):
+class InstantiateFvarTest:
     @pytest.mark.parametrize(
         "location, instancesLeft",
         [
@@ -1417,7 +1416,7 @@ class InstantiateFvarTest(object):
         assert axes["wght"].maxValue == expected[2]
 
 
-class InstantiateSTATTest(object):
+class InstantiateSTATTest:
     @pytest.mark.parametrize(
         "location, expected",
         [
@@ -1619,13 +1618,12 @@ def _get_expected_instance_ttx(
         filename += "-no-overlaps"
     with open(
         os.path.join(TESTDATA, "test_results", f"{filename}.ttx"),
-        "r",
         encoding="utf-8",
     ) as fp:
         return stripVariableItemsFromTTX(fp.read())
 
 
-class InstantiateVariableFontTest(object):
+class InstantiateVariableFontTest:
     @pytest.mark.parametrize(
         "wght, wdth",
         [(100, 100), (400, 100), (900, 100), (100, 62.5), (400, 62.5), (900, 62.5)],
@@ -1770,7 +1768,7 @@ def makeFeatureVarsFont(conditionalSubstitutions):
     return varfont
 
 
-class InstantiateFeatureVariationsTest(object):
+class InstantiateFeatureVariationsTest:
     @pytest.mark.parametrize(
         "location, appliedSubs, expectedRecords",
         [

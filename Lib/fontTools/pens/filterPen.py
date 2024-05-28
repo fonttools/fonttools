@@ -5,7 +5,7 @@ from fontTools.pens.pointPen import AbstractPointPen, DecomposingPointPen
 from fontTools.pens.recordingPen import RecordingPen
 
 
-class _PassThruComponentsMixin(object):
+class _PassThruComponentsMixin:
     def addComponent(self, glyphName, transformation, **kwargs):
         self._outPen.addComponent(glyphName, transformation, **kwargs)
 
@@ -93,15 +93,15 @@ class ContourFilterPen(_PassThruComponentsMixin, RecordingPen):
     """
 
     def __init__(self, outPen):
-        super(ContourFilterPen, self).__init__()
+        super().__init__()
         self._outPen = outPen
 
     def closePath(self):
-        super(ContourFilterPen, self).closePath()
+        super().closePath()
         self._flushContour()
 
     def endPath(self):
-        super(ContourFilterPen, self).endPath()
+        super().endPath()
         self._flushContour()
 
     def _flushContour(self):

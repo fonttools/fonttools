@@ -309,7 +309,7 @@ _OS2Defaults = dict(
 )
 
 
-class FontBuilder(object):
+class FontBuilder:
     def __init__(self, unitsPerEm=None, font=None, isTTF=True, glyphDataFormat=0):
         """Initialize a FontBuilder instance.
 
@@ -400,7 +400,7 @@ class FontBuilder(object):
         subTables = []
         highestUnicode = max(cmapping) if cmapping else 0
         if highestUnicode > 0xFFFF:
-            cmapping_3_1 = dict((k, v) for k, v in cmapping.items() if k < 0x10000)
+            cmapping_3_1 = {k: v for k, v in cmapping.items() if k < 0x10000}
             subTable_3_10 = buildCmapSubTable(cmapping, 12, 3, 10)
             subTables.append(subTable_3_10)
         else:

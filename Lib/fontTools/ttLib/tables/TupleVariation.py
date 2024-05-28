@@ -8,7 +8,6 @@ from fontTools.misc.fixedTools import (
 from fontTools.misc.textTools import safeEval
 import array
 from collections import Counter, defaultdict
-import io
 import logging
 import struct
 import sys
@@ -36,16 +35,16 @@ TUPLE_INDEX_MASK = 0x0FFF
 log = logging.getLogger(__name__)
 
 
-class TupleVariation(object):
+class TupleVariation:
     def __init__(self, axes, coordinates):
         self.axes = axes.copy()
         self.coordinates = list(coordinates)
 
     def __repr__(self):
         axes = ",".join(
-            sorted(["%s=%s" % (name, value) for (name, value) in self.axes.items()])
+            sorted(["{}={}".format(name, value) for (name, value) in self.axes.items()])
         )
-        return "<TupleVariation %s %s>" % (axes, self.coordinates)
+        return "<TupleVariation {} {}>".format(axes, self.coordinates)
 
     def __eq__(self, other):
         return self.coordinates == other.coordinates and self.axes == other.axes

@@ -7,7 +7,7 @@ from functools import partial
 tt_scale_round = partial(floatToFixedToFloat, precisionBits=14)
 
 
-class RoundingPenTest(object):
+class RoundingPenTest:
     def test_general(self):
         recpen = RecordingPen()
         roundpen = RoundingPen(recpen)
@@ -35,7 +35,7 @@ class RoundingPenTest(object):
         ]
 
 
-class RoundingPointPenTest(object):
+class RoundingPointPenTest:
     def test_general(self):
         recpen = RecordingPointPen()
         roundpen = RoundingPointPen(recpen)

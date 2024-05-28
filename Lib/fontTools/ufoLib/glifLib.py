@@ -1128,7 +1128,7 @@ def _readGlyphFromTree(
             (int(formatVersionMajor), int(formatVersionMinor))
         )
     except ValueError as e:
-        msg = "Unsupported GLIF format: %s.%s" % (
+        msg = "Unsupported GLIF format: {}.{}".format(
             formatVersionMajor,
             formatVersionMinor,
         )

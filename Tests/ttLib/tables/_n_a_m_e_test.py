@@ -6,10 +6,9 @@ from fontTools.misc.xmlWriter import XMLWriter
 from io import BytesIO
 import struct
 import unittest
-from fontTools.ttLib import TTFont, newTable
+from fontTools.ttLib import newTable
 from fontTools.ttLib.tables._n_a_m_e import (
     table__n_a_m_e,
-    NameRecord,
     nameRecordFormat,
     nameRecordSize,
     makeName,

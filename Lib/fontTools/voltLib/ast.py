@@ -23,7 +23,7 @@ class Pos(NamedTuple):
         return res
 
 
-class Element(object):
+class Element:
     def __init__(self, location=None):
         self.location = location
 
@@ -127,8 +127,7 @@ class Enum(Expression):
         self.enum = enum
 
     def __iter__(self):
-        for e in self.glyphSet():
-            yield e
+        yield from self.glyphSet()
 
     def glyphSet(self, groups=None):
         glyphs = []

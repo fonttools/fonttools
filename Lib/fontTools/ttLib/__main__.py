@@ -28,7 +28,6 @@ def main(args=None):
     If --lazy or --no-lazy are give, those are passed
     to the TTFont() or TTCollection() constructors.
     """
-    from fontTools import configLogger
 
     if args is None:
         args = sys.argv[1:]

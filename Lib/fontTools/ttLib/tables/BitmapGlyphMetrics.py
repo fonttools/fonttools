@@ -29,7 +29,7 @@ smallGlyphMetricsFormat = """
 """
 
 
-class BitmapGlyphMetrics(object):
+class BitmapGlyphMetrics:
     def toXML(self, writer, ttFont):
         writer.begintag(self.__class__.__name__)
         writer.newline()

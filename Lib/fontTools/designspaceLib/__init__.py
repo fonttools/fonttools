@@ -82,7 +82,7 @@ class DesignSpaceDocumentError(Exception):
         return str(self.msg) + (": %r" % self.obj if self.obj is not None else "")
 
 
-class AsDictMixin(object):
+class AsDictMixin:
     def asdict(self):
         d = {}
         for attr, value in self.__dict__.items():
@@ -312,7 +312,7 @@ class SourceDescriptor(SimpleDescriptor):
         return self.designLocation
 
     @location.setter
-    def location(self, location: Optional[SimpleLocationDict]):
+    def location(self, location: SimpleLocationDict | None):
         self.designLocation = location or {}
 
     def setFamilyName(self, familyName, languageCode="en"):
@@ -329,7 +329,7 @@ class SourceDescriptor(SimpleDescriptor):
         """
         return self.localisedFamilyName.get(languageCode)
 
-    def getFullDesignLocation(self, doc: "DesignSpaceDocument") -> SimpleLocationDict:
+    def getFullDesignLocation(self, doc: DesignSpaceDocument) -> SimpleLocationDict:
         """Get the complete design location of this source, from its
         :attr:`designLocation` and the document's axis defaults.
 
@@ -725,7 +725,7 @@ class InstanceDescriptor(SimpleDescriptor):
         return self.designLocation
 
     @location.setter
-    def location(self, location: Optional[AnisotropicLocationDict]):
+    def location(self, location: AnisotropicLocationDict | None):
         self.designLocation = location or {}
 
     def setStyleName(self, styleName, languageCode="en"):
@@ -753,7 +753,7 @@ class InstanceDescriptor(SimpleDescriptor):
     def getStyleMapFamilyName(self, languageCode="en"):
         return self.localisedStyleMapFamilyName.get(languageCode)
 
-    def clearLocation(self, axisName: Optional[str] = None):
+    def clearLocation(self, axisName: str | None = None):
         """Clear all location-related fields. Ensures that
         :attr:``designLocation`` and :attr:``userLocation`` are dictionaries
         (possibly empty if clearing everything).
@@ -796,8 +796,8 @@ class InstanceDescriptor(SimpleDescriptor):
                 del self.userLocation[axisName]
 
     def getLocationLabelDescriptor(
-        self, doc: "DesignSpaceDocument"
-    ) -> Optional[LocationLabelDescriptor]:
+        self, doc: DesignSpaceDocument
+    ) -> LocationLabelDescriptor | None:
         """Get the :class:`LocationLabelDescriptor` instance that matches
         this instances's :attr:`locationLabel`.
 
@@ -816,7 +816,7 @@ class InstanceDescriptor(SimpleDescriptor):
         return label
 
     def getFullDesignLocation(
-        self, doc: "DesignSpaceDocument"
+        self, doc: DesignSpaceDocument
     ) -> AnisotropicLocationDict:
         """Get the complete design location of this instance, by combining data
         from the various location fields, default axis values and mappings, and
@@ -848,7 +848,7 @@ class InstanceDescriptor(SimpleDescriptor):
                 result[axis.name] = axis.map_forward(axis.default)
         return result
 
-    def getFullUserLocation(self, doc: "DesignSpaceDocument") -> SimpleLocationDict:
+    def getFullUserLocation(self, doc: DesignSpaceDocument) -> SimpleLocationDict:
         """Get the complete user location for this instance.
 
         .. seealso:: :meth:`getFullDesignLocation`
@@ -929,7 +929,7 @@ class AbstractAxisDescriptor(SimpleDescriptor):
 
         .. versionadded:: 5.0
         """
-        self.axisLabels: List[AxisLabelDescriptor] = axisLabels or []
+        self.axisLabels: list[AxisLabelDescriptor] = axisLabels or []
         """STAT table entries for Axis Value Tables format 1, 2, 3.
 
         See: `OTSpec STAT Axis Value Tables <https://docs.microsoft.com/en-us/typography/opentype/spec/stat#axis-value-tables>`_
@@ -1112,7 +1112,7 @@ class DiscreteAxisDescriptor(AbstractAxisDescriptor):
         -  it doesn't provide the reference glyph set for the designspace, as
            fonts at each value can have different glyph sets.
         """
-        self.values: List[float] = values or []
+        self.values: list[float] = values or []
         """List of possible values for this axis. Contrary to continuous axes,
         only the values in this list can be taken by the axis, nothing in-between.
         """
@@ -1177,11 +1177,11 @@ class AxisLabelDescriptor(SimpleDescriptor):
         linkedUserValue=None,
         labelNames=None,
     ):
-        self.userMinimum: Optional[float] = userMinimum
+        self.userMinimum: float | None = userMinimum
         """STAT field ``rangeMinValue`` (format 2)."""
         self.userValue: float = userValue
         """STAT field ``value`` (format 1, 3) or ``nominalValue`` (format 2)."""
-        self.userMaximum: Optional[float] = userMaximum
+        self.userMaximum: float | None = userMaximum
         """STAT field ``rangeMaxValue`` (format 2)."""
         self.name: str = name
         """Label for this axis location, STAT field ``valueNameID``."""
@@ -1195,7 +1195,7 @@ class AxisLabelDescriptor(SimpleDescriptor):
 
         See: `OTSpec STAT Flags <https://docs.microsoft.com/en-us/typography/opentype/spec/stat#flags>`_
         """
-        self.linkedUserValue: Optional[float] = linkedUserValue
+        self.linkedUserValue: float | None = linkedUserValue
         """STAT field ``linkedValue`` (format 3)."""
         self.labelNames: MutableMapping[str, str] = labelNames or {}
         """User-facing translations of this location's label. Keyed by
@@ -1268,7 +1268,7 @@ class LocationLabelDescriptor(SimpleDescriptor):
 
         See: `OTSpec STAT Flags <https://docs.microsoft.com/en-us/typography/opentype/spec/stat#flags>`_
         """
-        self.labelNames: Dict[str, str] = labelNames or {}
+        self.labelNames: dict[str, str] = labelNames or {}
         """User-facing translations of this location's label. Keyed by
         xml:lang code.
         """
@@ -1278,7 +1278,7 @@ class LocationLabelDescriptor(SimpleDescriptor):
         """Return the English name from :attr:`labelNames` or the :attr:`name`."""
         return self.labelNames.get("en") or self.name
 
-    def getFullUserLocation(self, doc: "DesignSpaceDocument") -> SimpleLocationDict:
+    def getFullUserLocation(self, doc: DesignSpaceDocument) -> SimpleLocationDict:
         """Get the complete user location of this label, by combining data
         from the explicit user location and default axis values.
 
@@ -1323,8 +1323,8 @@ class VariableFontDescriptor(SimpleDescriptor):
 
         If not specified, the :attr:`name` will be used as a basename for the file.
         """
-        self.axisSubsets: List[
-            Union[RangeAxisSubsetDescriptor, ValueAxisSubsetDescriptor]
+        self.axisSubsets: list[
+            RangeAxisSubsetDescriptor | ValueAxisSubsetDescriptor
         ] = (axisSubsets or [])
         """Axis subsets to include in this variable font.
 
@@ -1354,7 +1354,7 @@ class RangeAxisSubsetDescriptor(SimpleDescriptor):
         If not specified, assume the same minimum value as the full axis.
         (default = ``-math.inf``)
         """
-        self.userDefault: Optional[float] = userDefault
+        self.userDefault: float | None = userDefault
         """New default value of the axis in the target variable font.
         If not specified, assume the same default value as the full axis.
         (default = ``None``)
@@ -1384,7 +1384,7 @@ class ValueAxisSubsetDescriptor(SimpleDescriptor):
         """Value in user coordinates at which to freeze the given axis."""
 
 
-class BaseDocWriter(object):
+class BaseDocWriter:
     _whiteSpace = "    "
     axisDescriptorClass = AxisDescriptor
     discreteAxisDescriptorClass = DiscreteAxisDescriptor
@@ -2668,10 +2668,10 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
         possible "good" filename, in case one wants to save the file somewhere.
         """
 
-        self.formatVersion: Optional[str] = None
+        self.formatVersion: str | None = None
         """Format version for this document, as a string. E.g. "4.0" """
 
-        self.elidedFallbackName: Optional[str] = None
+        self.elidedFallbackName: str | None = None
         """STAT Style Attributes Header field ``elidedFallbackNameID``.
 
         See: `OTSpec STAT Style Attributes Header <https://docs.microsoft.com/en-us/typography/opentype/spec/stat#style-attributes-header>`_
@@ -2679,17 +2679,17 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
         .. versionadded:: 5.0
         """
 
-        self.axes: List[Union[AxisDescriptor, DiscreteAxisDescriptor]] = []
+        self.axes: list[AxisDescriptor | DiscreteAxisDescriptor] = []
         """List of this document's axes."""
 
-        self.axisMappings: List[AxisMappingDescriptor] = []
+        self.axisMappings: list[AxisMappingDescriptor] = []
         """List of this document's axis mappings."""
 
-        self.locationLabels: List[LocationLabelDescriptor] = []
+        self.locationLabels: list[LocationLabelDescriptor] = []
         """List of this document's STAT format 4 labels.
 
         .. versionadded:: 5.0"""
-        self.rules: List[RuleDescriptor] = []
+        self.rules: list[RuleDescriptor] = []
         """List of this document's rules."""
         self.rulesProcessingLast: bool = False
         """This flag indicates whether the substitution rules should be applied
@@ -2715,22 +2715,22 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
                 </dict>
             </lib>
         """
-        self.sources: List[SourceDescriptor] = []
+        self.sources: list[SourceDescriptor] = []
         """List of this document's sources."""
-        self.variableFonts: List[VariableFontDescriptor] = []
+        self.variableFonts: list[VariableFontDescriptor] = []
         """List of this document's variable fonts.
 
         .. versionadded:: 5.0"""
-        self.instances: List[InstanceDescriptor] = []
+        self.instances: list[InstanceDescriptor] = []
         """List of this document's instances."""
-        self.lib: Dict = {}
+        self.lib: dict = {}
         """User defined, custom data associated with the whole document.
 
         Use reverse-DNS notation to identify your own data.
         Respect the data stored by others.
         """
 
-        self.default: Optional[str] = None
+        self.default: str | None = None
         """Name of the default master.
 
         This attribute is updated by the :meth:`findDefault`
@@ -2877,7 +2877,7 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
         self.addInstance(instance)
         return instance
 
-    def addAxis(self, axisDescriptor: Union[AxisDescriptor, DiscreteAxisDescriptor]):
+    def addAxis(self, axisDescriptor: AxisDescriptor | DiscreteAxisDescriptor):
         """Add the given ``axisDescriptor`` to :attr:`axes`."""
         self.axes.append(axisDescriptor)
 
@@ -2966,7 +2966,7 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
 
     def labelForUserLocation(
         self, userLocation: SimpleLocationDict
-    ) -> Optional[LocationLabelDescriptor]:
+    ) -> LocationLabelDescriptor | None:
         """Return the :class:`LocationLabel` that matches the given
         ``userLocation``, or ``None`` if no such label exists.
 
@@ -3026,7 +3026,7 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
         """Return the axis with the given ``tag``, or ``None`` if no such axis exists."""
         return next((axis for axis in self.axes if axis.tag == tag), None)
 
-    def getLocationLabel(self, name: str) -> Optional[LocationLabelDescriptor]:
+    def getLocationLabel(self, name: str) -> LocationLabelDescriptor | None:
         """Return the top-level location label with the given ``name``, or
         ``None`` if no such label exists.
 
@@ -3241,7 +3241,7 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
         minor = next(numbers, 0)
         return (major, minor)
 
-    def getVariableFonts(self) -> List[VariableFontDescriptor]:
+    def getVariableFonts(self) -> list[VariableFontDescriptor]:
         """Return all variable fonts defined in this document, or implicit
         variable fonts that can be built from the document's continuous axes.
 
@@ -3261,8 +3261,8 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
 
         variableFonts = []
         discreteAxes = []
-        rangeAxisSubsets: List[
-            Union[RangeAxisSubsetDescriptor, ValueAxisSubsetDescriptor]
+        rangeAxisSubsets: list[
+            RangeAxisSubsetDescriptor | ValueAxisSubsetDescriptor
         ] = []
         for axis in self.axes:
             if hasattr(axis, "values"):

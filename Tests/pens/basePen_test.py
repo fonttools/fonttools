@@ -1,10 +1,8 @@
 from fontTools.pens.basePen import (
-    AbstractPen,
     BasePen,
     decomposeSuperBezierSegment,
     decomposeQuadraticSegment,
 )
-from fontTools.pens.pointPen import AbstractPointPen
 from fontTools.misc.loggingTools import CapturingLogHandler
 import unittest
 
@@ -21,10 +19,10 @@ class _TestPen(BasePen):
         return self._getCurrentPoint()
 
     def _moveTo(self, pt):
-        self._commands.append("%s %s moveto" % (pt[0], pt[1]))
+        self._commands.append("{} {} moveto".format(pt[0], pt[1]))
 
     def _lineTo(self, pt):
-        self._commands.append("%s %s lineto" % (pt[0], pt[1]))
+        self._commands.append("{} {} lineto".format(pt[0], pt[1]))
 
     def _curveToOne(self, bcp1, bcp2, pt):
         self._commands.append(

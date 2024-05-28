@@ -11,20 +11,17 @@ from .interpolatableTestContourOrder import test_contour_order
 from .interpolatableTestStartingPoint import test_starting_point
 from fontTools.pens.recordingPen import (
     RecordingPen,
-    DecomposingRecordingPen,
     lerpRecordings,
 )
-from fontTools.pens.transformPen import TransformPen
 from fontTools.pens.statisticsPen import StatisticsPen, StatisticsControlPen
 from fontTools.pens.momentsPen import OpenContourError
 from fontTools.varLib.models import piecewiseLinearMap, normalizeLocation
 from fontTools.misc.fixedTools import floatToFixedToStr
-from fontTools.misc.transform import Transform
 from collections import defaultdict
 from types import SimpleNamespace
 from functools import wraps
 from pprint import pformat
-from math import sqrt, atan2, pi
+from math import sqrt
 import logging
 import os
 
@@ -84,7 +81,7 @@ class Glyph:
                 contour.replay(greenStats)
                 contour.replay(controlStats)
                 self.openContours.append(False)
-            except OpenContourError as e:
+            except OpenContourError:
                 self.openContours.append(True)
                 self._fill_in(ix)
                 continue
@@ -729,7 +726,7 @@ def main(args=None):
             upem = gsfont.upm
             designspace = to_designspace(gsfont)
             fonts = [source.font for source in designspace.sources]
-            names = ["%s-%s" % (f.info.familyName, f.info.styleName) for f in fonts]
+            names = ["{}-{}".format(f.info.familyName, f.info.styleName) for f in fonts]
             args.inputs = []
             locations = [master.location for master in designspace.sources]
             axis_triples = {
@@ -868,7 +865,7 @@ def main(args=None):
         names = [name for name in names if name in accepted_names]
 
     if not glyphs:
-        glyphs = sorted(set([gn for glyphset in glyphsets for gn in glyphset.keys()]))
+        glyphs = sorted({gn for glyphset in glyphsets for gn in glyphset.keys()})
 
     glyphsSet = set(glyphs)
     for glyphset in glyphsets:
@@ -934,7 +931,7 @@ def main(args=None):
                             if "master" in p
                             else (p["master_1"], p["master_2"])
                         )
-                        print(f"  Masters: %s:" % ", ".join(master_names), file=f)
+                        print("  Masters: %s:" % ", ".join(master_names), file=f)
                         last_master_idxs = master_idxs
 
                     if p["type"] == InterpolatableProblem.MISSING:
@@ -1109,8 +1106,8 @@ def main(args=None):
                 f.write(b"<title>fonttools varLib.interpolatable report</title>\n")
                 for i, svg in enumerate(svgs):
                     if i in glyph_starts:
-                        f.write(f"<h1>Glyph {glyph_starts[i]}</h1>\n".encode("utf-8"))
-                    f.write("<img src='data:image/svg+xml;base64,".encode("utf-8"))
+                        f.write(f"<h1>Glyph {glyph_starts[i]}</h1>\n".encode())
+                    f.write(b"<img src='data:image/svg+xml;base64,")
                     f.write(base64.b64encode(svg))
                     f.write(b"' />\n")
                     f.write(b"<hr>\n")

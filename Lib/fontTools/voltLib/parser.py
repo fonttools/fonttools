@@ -1,7 +1,6 @@
 import fontTools.voltLib.ast as ast
 from fontTools.voltLib.lexer import Lexer
 from fontTools.voltLib.error import VoltLibError
-from io import open
 
 PARSE_FUNCS = {
     "DEF_GLYPH": "parse_def_glyph_",
@@ -19,7 +18,7 @@ PARSE_FUNCS = {
 }
 
 
-class Parser(object):
+class Parser:
     def __init__(self, path):
         self.doc_ = ast.VoltFile()
         self.glyphs_ = OrderedSymbolTable()
@@ -39,7 +38,7 @@ class Parser(object):
             data = file_or_path.read()
         else:
             filename = file_or_path
-            with open(file_or_path, "r") as f:
+            with open(file_or_path) as f:
                 data = f.read()
         self.lexer_ = Lexer(data, filename)
 
@@ -612,7 +611,7 @@ class Parser(object):
             self.next_token_type_, self.next_token_ = (None, None)
 
 
-class SymbolTable(object):
+class SymbolTable:
     def __init__(self):
         self.scopes_ = [{}]
 

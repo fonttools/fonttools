@@ -12,7 +12,7 @@ class JsonVisitor(TTVisitor):
 
     def _close(self, s):
         self._indent = self._indent[: -len(self.indent)]
-        print("\n%s%s" % (self._indent, s), end="", file=self.file)
+        print("\n{}{}".format(self._indent, s), end="", file=self.file)
         self.comma = True
 
     def __init__(self, file, indent="  "):
@@ -26,7 +26,7 @@ class JsonVisitor(TTVisitor):
         if self.comma:
             print(",", end="", file=self.file)
         print(
-            '\n%s"type": "%s"' % (self._indent, obj.__class__.__name__),
+            '\n{}"type": "{}"'.format(self._indent, obj.__class__.__name__),
             end="",
             file=self.file,
         )
@@ -35,7 +35,7 @@ class JsonVisitor(TTVisitor):
     def visitAttr(self, obj, attr, value):
         if self.comma:
             print(",", file=self.file)
-        print('%s"%s": ' % (self._indent, attr), end="", file=self.file)
+        print('{}"{}": '.format(self._indent, attr), end="", file=self.file)
         self.visit(value)
         self.comma = True
 
@@ -58,7 +58,7 @@ class JsonVisitor(TTVisitor):
             if comma:
                 print(",", end="", file=self.file)
                 print(file=self.file)
-            print('%s"%s": ' % (self._indent, key), end="", file=self.file)
+            print('{}"{}": '.format(self._indent, key), end="", file=self.file)
             self.visit(value, *args, **kwargs)
             comma = True
         self._close("}")
@@ -95,7 +95,7 @@ def visit(self, font):
     for tag in font.keys():
         if self.comma:
             print(",", file=self.file)
-        print('\n%s"%s": ' % (self._indent, tag), end="", file=self.file)
+        print('\n{}"{}": '.format(self._indent, tag), end="", file=self.file)
         visitor.visit(font[tag])
     self._close("}")
 

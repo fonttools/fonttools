@@ -39,7 +39,7 @@ class VariableScalar:
         normalized_location = {}
         for axtag in location.keys():
             if axtag not in self.axes_dict:
-                raise ValueError("Unknown axis %s in %s" % (axtag, location))
+                raise ValueError("Unknown axis {} in {}".format(axtag, location))
             axis = self.axes_dict[axtag]
             normalized_location[axtag] = normalizeValue(
                 location[axtag], (axis.minValue, axis.defaultValue, axis.maxValue)

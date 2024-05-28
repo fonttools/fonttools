@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """T2CharString glyph width optimizer.
 
 CFF glyphs whose width equals the CFF Private dictionary's ``defaultWidthX``

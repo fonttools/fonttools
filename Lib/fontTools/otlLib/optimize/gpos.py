@@ -320,8 +320,8 @@ def cluster_pairs_by_class2_coverage_custom_cost(
         return [pairs]
 
     # Sorted for reproducibility/determinism
-    all_class1 = sorted(set(pair[0] for pair in pairs))
-    all_class2 = sorted(set(pair[1] for pair in pairs))
+    all_class1 = sorted({pair[0] for pair in pairs})
+    all_class2 = sorted({pair[1] for pair in pairs})
 
     # Use Python's big ints for binary vectors representing each line
     lines = [

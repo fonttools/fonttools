@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Union, cast
+from typing import Dict, List, Union, cast
 
 from fontTools.designspaceLib import (
     AxisDescriptor,
@@ -31,12 +31,12 @@ class Range:
         self.minimum, self.maximum = sorted((self.minimum, self.maximum))
         self.default = clamp(self.default, self.minimum, self.maximum)
 
-    def __contains__(self, value: Union[float, Range]) -> bool:
+    def __contains__(self, value: float | Range) -> bool:
         if isinstance(value, Range):
             return self.minimum <= value.minimum and value.maximum <= self.maximum
         return self.minimum <= value <= self.maximum
 
-    def intersection(self, other: Range) -> Optional[Range]:
+    def intersection(self, other: Range) -> Range | None:
         if self.maximum < other.minimum or self.minimum > other.maximum:
             return None
         else:
@@ -76,7 +76,7 @@ def locationInRegion(location: SimpleLocationDict, region: Region) -> bool:
 
 def regionInRegion(region: Region, superRegion: Region) -> bool:
     for name, value in region.items():
-        if not name in superRegion:
+        if name not in superRegion:
             return False
         superValue = superRegion[name]
         if isinstance(superValue, (float, int)):

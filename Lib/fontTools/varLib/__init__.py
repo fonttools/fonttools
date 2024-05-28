@@ -895,7 +895,7 @@ def load_designspace(designspace, log_enabled=True):
 
     # Setup axes
     if not ds.axes:
-        raise VarLibValidationError(f"Designspace must have at least one axis.")
+        raise VarLibValidationError("Designspace must have at least one axis.")
 
     axes = OrderedDict()
     for axis_index, axis in enumerate(ds.axes):
@@ -1293,7 +1293,7 @@ def load_masters(designspace, master_finder=lambda s: s):
     return designspace.loadSourceFonts(_open_font, master_finder=master_finder)
 
 
-class MasterFinder(object):
+class MasterFinder:
     def __init__(self, template):
         self.template = template
 

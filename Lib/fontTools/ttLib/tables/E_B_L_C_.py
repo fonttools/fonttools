@@ -5,7 +5,6 @@ from .BitmapGlyphMetrics import (
     BigGlyphMetrics,
     bigGlyphMetricsFormat,
     SmallGlyphMetrics,
-    smallGlyphMetricsFormat,
 )
 import struct
 import itertools
@@ -259,7 +258,7 @@ class table_E_B_L_C_(DefaultTable.DefaultTable):
             self.strikes[strikeIndex] = curStrike
 
 
-class Strike(object):
+class Strike:
     def __init__(self):
         self.bitmapSizeTable = BitmapSizeTable()
         self.indexSubTables = []
@@ -293,7 +292,7 @@ class Strike(object):
                 self.indexSubTables.append(indexSubTable)
 
 
-class BitmapSizeTable(object):
+class BitmapSizeTable:
     # Returns all the simple metric names that bitmap size table
     # cares about in terms of XML creation.
     def _getXMLMetricNames(self):
@@ -336,7 +335,7 @@ class BitmapSizeTable(object):
                 log.warning("unknown name '%s' being ignored in BitmapSizeTable.", name)
 
 
-class SbitLineMetrics(object):
+class SbitLineMetrics:
     def toXML(self, name, writer, ttFont):
         writer.begintag("sbitLineMetrics", [("direction", name)])
         writer.newline()
@@ -360,7 +359,7 @@ class SbitLineMetrics(object):
 _indexSubTableSubclassPrefix = "eblc_index_sub_table_"
 
 
-class EblcIndexSubTable(object):
+class EblcIndexSubTable:
     def __init__(self, data, ttFont):
         self.data = data
         self.ttFont = ttFont
@@ -476,7 +475,7 @@ def _createOffsetArrayIndexSubTableMixin(formatStringForDataType):
     dataFormat = ">" + formatStringForDataType
     offsetDataSize = struct.calcsize(dataFormat)
 
-    class OffsetArrayIndexSubTableMixin(object):
+    class OffsetArrayIndexSubTableMixin:
         def decompile(self):
             numGlyphs = self.lastGlyphIndex - self.firstGlyphIndex + 1
             indexingOffsets = [
@@ -546,7 +545,7 @@ def _createOffsetArrayIndexSubTableMixin(formatStringForDataType):
 # A Mixin for functionality shared between the different kinds
 # of fixed sized data handling. Both kinds have big metrics so
 # that kind of special processing is also handled in this mixin.
-class FixedSizeIndexSubTableMixin(object):
+class FixedSizeIndexSubTableMixin:
     def writeMetrics(self, writer, ttFont):
         writer.simpletag("imageSize", value=self.imageSize)
         writer.newline()

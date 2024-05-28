@@ -66,7 +66,7 @@ if __name__ == "__main__":
 
     w, h = g.width, 1000
     from reportlab.graphics import renderPM
-    from reportlab.graphics.shapes import Group, Drawing, scale
+    from reportlab.graphics.shapes import Group, Drawing
 
     # Everything is wrapped in a group to allow transformations.
     g = Group(pen.path)

@@ -2,10 +2,8 @@ import os
 import shutil
 import unittest
 import tempfile
-from io import open
 from fontTools.ufoLib import UFOReader, UFOWriter
 from fontTools.ufoLib import plistlib
-from .testSupport import expectedFontInfo1To2Conversion, expectedFontInfo2To1Conversion
 
 
 # the format version 1 lib.plist contains some data

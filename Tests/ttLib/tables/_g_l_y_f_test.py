@@ -31,7 +31,7 @@ import os
 import unittest
 
 
-class GlyphCoordinatesTest(object):
+class GlyphCoordinatesTest:
     def test_translate(self):
         g = GlyphCoordinates([(1, 2)])
         g.translate((0.5, 0))
@@ -214,7 +214,7 @@ class GlyfTableTest(unittest.TestCase):
             cls.locaData = f.read()
         with open(MAXP_BIN, "rb") as f:
             cls.maxpData = f.read()
-        with open(GLYF_TTX, "r") as f:
+        with open(GLYF_TTX) as f:
             cls.glyfXML = strip_ttLibVersion(f.read()).splitlines()
 
     def test_toXML(self):
@@ -247,7 +247,7 @@ class GlyfTableTest(unittest.TestCase):
         out = StringIO()
         font.saveXML(out)
         glyfXML = strip_ttLibVersion(out.getvalue()).splitlines()
-        with open(INST_TTX, "r") as f:
+        with open(INST_TTX) as f:
             origXML = strip_ttLibVersion(f.read()).splitlines()
         self.assertEqual(glyfXML, origXML)
 

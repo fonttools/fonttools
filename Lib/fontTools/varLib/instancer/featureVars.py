@@ -99,8 +99,8 @@ def _instantiateFeatureVariationRecord(
 
         else:
             log.warning(
-                "Condition table {0} of FeatureVariationRecord {1} has "
-                "unsupported format ({2}); ignored".format(i, recIdx, condition.Format)
+                "Condition table {} of FeatureVariationRecord {} has "
+                "unsupported format ({}); ignored".format(i, recIdx, condition.Format)
             )
             applies = False
             newConditions.append(condition)

@@ -79,7 +79,7 @@ class HmtxTableTest(unittest.TestCase):
     def test_decompile_num_metrics_greater_than_glyphs(self):
         font = self.makeFont(numGlyphs=1, numberOfMetrics=2)
         mtxTable = newTable(self.tag)
-        msg = "The %s.%s exceeds the maxp.numGlyphs" % (
+        msg = "The {}.{} exceeds the maxp.numGlyphs".format(
             self.tableClass.headerTag,
             self.tableClass.numberOfMetricsName,
         )

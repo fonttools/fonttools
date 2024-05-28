@@ -1,6 +1,6 @@
 from fontTools.misc.testTools import parseXML, getXML
 from fontTools.misc.textTools import deHexStr
-from fontTools.ttLib import TTFont, TTLibError
+from fontTools.ttLib import TTLibError
 from fontTools.ttLib.tables._t_r_a_k import *
 from fontTools.ttLib.tables._n_a_m_e import table__n_a_m_e, NameRecord
 import unittest

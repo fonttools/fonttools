@@ -1,7 +1,6 @@
 from fontTools.designspaceLib import DesignSpaceDocument
 from fontTools.designspaceLib.statNames import StatNames, getStatNames
 
-from .fixtures import datadir
 
 
 def test_instance_getStatNames(datadir):

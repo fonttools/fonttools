@@ -1,6 +1,5 @@
 #! /usr/bin/env python3
 
-from __future__ import print_function
 import io
 import sys
 import os
@@ -176,10 +175,10 @@ classifiers = {
 
 # concatenate README.rst and NEWS.rest into long_description so they are
 # displayed on the FontTols project page on PyPI
-with io.open("README.rst", "r", encoding="utf-8") as readme:
+with open("README.rst", encoding="utf-8") as readme:
     long_description = readme.read()
 long_description += "\nChangelog\n~~~~~~~~~\n\n"
-with io.open("NEWS.rst", "r", encoding="utf-8") as changelog:
+with open("NEWS.rst", encoding="utf-8") as changelog:
     long_description += changelog.read()
 
 
@@ -307,7 +306,7 @@ class release(Command):
         Optionally 'sign' the tag with the user's GPG key.
         """
         log.info(
-            "creating %s git tag '%s'" % ("signed" if sign else "annotated", version)
+            "creating {} git tag '{}'".format("signed" if sign else "annotated", version)
         )
         if self.dry_run:
             return
@@ -316,7 +315,7 @@ class release(Command):
         tag_name = self.tag_name.format(new_version=version)
         proc = sp.Popen(["git", "tag", tag_opt, "-F", "-", tag_name], stdin=sp.PIPE)
         # use the latest changes from the changelog file as the tag message
-        tag_message = "%s\n\n%s" % (tag_name, message)
+        tag_message = "{}\n\n{}".format(tag_name, message)
         proc.communicate(tag_message.encode("utf-8"))
         if proc.returncode != 0:
             sys.exit(proc.returncode)
@@ -354,7 +353,7 @@ class release(Command):
         log.info("formatting changelog")
 
         changes = []
-        with io.open(self.changelog_name, "r+", encoding="utf-8") as f:
+        with open(self.changelog_name, "r+", encoding="utf-8") as f:
             for ln in f:
                 if self.version_RE.match(ln):
                     break

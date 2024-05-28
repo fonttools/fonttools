@@ -209,7 +209,7 @@ class IncludingLexerTest(unittest.TestCase):
     def test_featurefilepath_None(self):
         lexer = IncludingLexer(StringIO("# foobar"))
         self.assertIsNone(lexer.featurefilepath)
-        files = set(loc.file for _, _, loc in lexer)
+        files = {loc.file for _, _, loc in lexer}
         self.assertIn("<features>", files)
 
     def test_include_absolute_path(self):
@@ -227,7 +227,7 @@ class IncludingLexerTest(unittest.TestCase):
         including = StringIO("include(%s);" % included.name)
         try:
             lexer = IncludingLexer(including)
-            files = set(loc.file for _, _, loc in lexer)
+            files = {loc.file for _, _, loc in lexer}
             self.assertIn(included.name, files)
         finally:
             os.remove(included.name)
@@ -256,7 +256,7 @@ class IncludingLexerTest(unittest.TestCase):
             # an in-memory stream, so it will use the current working
             # directory to resolve relative include statements
             lexer = IncludingLexer(StringIO("include(included.fea);"))
-            files = set(os.path.realpath(loc.file) for _, _, loc in lexer)
+            files = {os.path.realpath(loc.file) for _, _, loc in lexer}
             expected = os.path.realpath(included.name)
             self.assertIn(expected, files)
         finally:

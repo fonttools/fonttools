@@ -1,13 +1,8 @@
-# -*- coding: utf-8 -*-
-
 """Pen to rasterize paths with FreeType."""
 
 __all__ = ["FreeTypePen"]
 
-import os
 import ctypes
-import platform
-import subprocess
 import collections
 import math
 
@@ -126,7 +121,7 @@ class FreeTypePen(BasePen):
         if not hasattr(transform, "transformPoint"):
             transform = Transform(*transform)
         n_contours = len(self.contours)
-        n_points = sum((len(contour.points) for contour in self.contours))
+        n_points = sum(len(contour.points) for contour in self.contours)
         points = []
         for contour in self.contours:
             for point in contour.points:

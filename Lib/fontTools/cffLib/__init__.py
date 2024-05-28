@@ -45,7 +45,7 @@ maxStackLimit = 513
 # maxstack operator has been deprecated. max stack is now always 513.
 
 
-class CFFFontSet(object):
+class CFFFontSet:
     """A CFF font "file" can contain more than one font, although this is
     extremely rare (and not allowed within OpenType fonts).
 
@@ -324,7 +324,7 @@ class CFFFontSet(object):
         remove_unused_subroutines(self)
 
 
-class CFFWriter(object):
+class CFFWriter:
     """Helper class for serializing CFF data to binary. Used by
     :meth:`CFFFontSet.compile`."""
 
@@ -386,7 +386,7 @@ def calcOffSize(largestOffset):
     return offSize
 
 
-class IndexCompiler(object):
+class IndexCompiler:
     """Base class for writing CFF `INDEX data <https://docs.microsoft.com/en-us/typography/opentype/spec/cff2#5-index-data>`_
     to binary."""
 
@@ -487,20 +487,20 @@ class TopDictIndexCompiler(IndexCompiler):
             offsets = [0, self.items[0].getDataLength()]
             return offsets
         else:
-            return super(TopDictIndexCompiler, self).getOffsets()
+            return super().getOffsets()
 
     def getDataLength(self):
         if self.isCFF2:
             dataLength = self.items[0].getDataLength()
             return dataLength
         else:
-            return super(TopDictIndexCompiler, self).getDataLength()
+            return super().getDataLength()
 
     def toFile(self, file):
         if self.isCFF2:
             self.items[0].toFile(file)
         else:
-            super(TopDictIndexCompiler, self).toFile(file)
+            super().toFile(file)
 
 
 class FDArrayIndexCompiler(IndexCompiler):
@@ -580,7 +580,7 @@ class CharStringsCompiler(GlobalSubrsCompiler):
         self.parent.rawDict["CharStrings"] = pos
 
 
-class Index(object):
+class Index:
     """This class represents what the CFF spec calls an INDEX (an array of
     variable-sized objects). `Index` items can be addressed and set using
     Python list indexing."""
@@ -698,7 +698,7 @@ class GlobalSubrsIndex(Index):
         fdArray=None,
         isCFF2=None,
     ):
-        super(GlobalSubrsIndex, self).__init__(file, isCFF2=isCFF2)
+        super().__init__(file, isCFF2=isCFF2)
         self.globalSubrs = globalSubrs
         self.private = private
         if fdSelect:
@@ -798,7 +798,7 @@ class TopDictIndex(Index):
             file.seek(self.offsetBase + topSize)
             log.log(DEBUG, "    end of %s at %s", name, file.tell())
         else:
-            super(TopDictIndex, self).__init__(file, isCFF2=isCFF2)
+            super().__init__(file, isCFF2=isCFF2)
 
     def produceItem(self, index, data, file, offset):
         top = TopDict(
@@ -856,7 +856,7 @@ class FDArrayIndex(Index):
         self.append(fontDict)
 
 
-class VarStoreData(object):
+class VarStoreData:
     def __init__(self, file=None, otVarStore=None):
         self.file = file
         self.data = None
@@ -906,7 +906,7 @@ class VarStoreData(object):
         return numRegions
 
 
-class FDSelect(object):
+class FDSelect:
     def __init__(self, file=None, numGlyphs=None, format=None):
         if file:
             # read data in from file
@@ -970,7 +970,7 @@ class FDSelect(object):
         self.gidArray.append(fdSelectValue)
 
 
-class CharStrings(object):
+class CharStrings:
     """The ``CharStrings`` in the font represent the instructions for drawing
     each glyph. This object presents a dictionary interface to the font's
     CharStrings, indexed by glyph name:
@@ -1187,7 +1187,7 @@ def buildConverters(table):
     return d
 
 
-class SimpleConverter(object):
+class SimpleConverter:
     def read(self, parent, value):
         if not hasattr(parent, "file"):
             return self._read(parent, value)
@@ -1497,7 +1497,7 @@ class CharsetConverter(SimpleConverter):
         pass
 
 
-class CharsetCompiler(object):
+class CharsetCompiler:
     def __init__(self, strings, charset, parent):
         assert charset[0] == ".notdef"
         isCID = hasattr(parent.dictObj, "ROS")
@@ -1632,7 +1632,7 @@ def parseCharset(numGlyphs, file, strings, isCID, fmt):
     return charset
 
 
-class EncodingCompiler(object):
+class EncodingCompiler:
     def __init__(self, strings, encoding, parent):
         assert not isinstance(encoding, str)
         data0 = packEncoding0(parent.dictObj.charset, encoding, parent.strings)
@@ -1918,7 +1918,7 @@ def packFDSelect4(fdSelectArray):
     return bytesjoin(data)
 
 
-class FDSelectCompiler(object):
+class FDSelectCompiler:
     def __init__(self, fdSelect, parent):
         fmt = fdSelect.format
         fdSelectArray = fdSelect.gidArray
@@ -1951,7 +1951,7 @@ class FDSelectCompiler(object):
         file.write(self.data)
 
 
-class VarStoreCompiler(object):
+class VarStoreCompiler:
     def __init__(self, varStoreData, parent):
         self.parent = parent
         if not varStoreData.data:
@@ -2131,7 +2131,7 @@ class PrivateDictDecompiler(psCharStrings.DictDecompiler):
     operators = buildOperatorDict(privateDictOperators)
 
 
-class DictCompiler(object):
+class DictCompiler:
     maxBlendStack = 0
 
     def __init__(self, dictObj, strings, parent, isCFF2=None):
@@ -2369,7 +2369,7 @@ class FontDictCompiler(DictCompiler):
     opcodes = buildOpcodeDict(topDictOperators)
 
     def __init__(self, dictObj, strings, parent, isCFF2=None):
-        super(FontDictCompiler, self).__init__(dictObj, strings, parent, isCFF2=isCFF2)
+        super().__init__(dictObj, strings, parent, isCFF2=isCFF2)
         #
         # We now take some effort to detect if there were any key/value pairs
         # supplied that were ignored in the FontDict context, and issue a warning
@@ -2426,7 +2426,7 @@ class PrivateDictCompiler(DictCompiler):
         return children
 
 
-class BaseDict(object):
+class BaseDict:
     def __init__(self, strings=None, file=None, offset=None, isCFF2=None):
         assert (isCFF2 is None) == (file is None)
         self.rawDict = {}
@@ -2542,7 +2542,7 @@ class TopDict(BaseDict):
         cff2GetGlyphOrder=None,
         isCFF2=None,
     ):
-        super(TopDict, self).__init__(strings, file, offset, isCFF2=isCFF2)
+        super().__init__(strings, file, offset, isCFF2=isCFF2)
         self.cff2GetGlyphOrder = cff2GetGlyphOrder
         self.GlobalSubrs = GlobalSubrs
         if isCFF2:
@@ -2653,7 +2653,7 @@ class FontDict(BaseDict):
         isCFF2=None,
         vstore=None,
     ):
-        super(FontDict, self).__init__(strings, file, offset, isCFF2=isCFF2)
+        super().__init__(strings, file, offset, isCFF2=isCFF2)
         self.vstore = vstore
         self.setCFF2(isCFF2)
 
@@ -2675,7 +2675,7 @@ class PrivateDict(BaseDict):
     compilerClass = PrivateDictCompiler
 
     def __init__(self, strings=None, file=None, offset=None, isCFF2=None, vstore=None):
-        super(PrivateDict, self).__init__(strings, file, offset, isCFF2=isCFF2)
+        super().__init__(strings, file, offset, isCFF2=isCFF2)
         self.vstore = vstore
         if isCFF2:
             self.defaults = buildDefaults(privateDictOperators2)
@@ -2704,7 +2704,7 @@ class PrivateDict(BaseDict):
         return numRegions
 
 
-class IndexedStrings(object):
+class IndexedStrings:
     """SID -> string mapping."""
 
     def __init__(self, file=None):

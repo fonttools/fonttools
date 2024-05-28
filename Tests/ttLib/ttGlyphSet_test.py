@@ -12,7 +12,7 @@ import os
 import pytest
 
 
-class TTGlyphSetTest(object):
+class TTGlyphSetTest:
     @staticmethod
     def getpath(testfile):
         path = os.path.dirname(__file__)

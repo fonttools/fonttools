@@ -61,7 +61,7 @@ def test_LevelFormatter():
     )
 
 
-class TimerTest(object):
+class TimerTest:
     def test_split(self):
         timer = Timer()
         time.sleep(0.01)
@@ -163,7 +163,7 @@ def test_ChannelsFilter(logger):
 
 
 def test_LogMixin():
-    class Base(object):
+    class Base:
         pass
 
     class A(LogMixin, Base):

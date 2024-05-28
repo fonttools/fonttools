@@ -309,7 +309,7 @@ def lerpRecordings(recording1, recording2, factor=0.5):
         )
     for (op1, args1), (op2, args2) in zip(recording1, recording2):
         if op1 != op2:
-            raise ValueError("Mismatched operations: %s, %s" % (op1, op2))
+            raise ValueError("Mismatched operations: {}, {}".format(op1, op2))
         if op1 == "addComponent":
             raise ValueError("Cannot interpolate components")
         else:

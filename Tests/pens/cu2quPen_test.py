@@ -12,14 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
 import unittest
 
 from fontTools.pens.cu2quPen import Cu2QuPen, Cu2QuPointPen, Cu2QuMultiPen
 from fontTools.pens.recordingPen import RecordingPen, RecordingPointPen
-from fontTools.misc.loggingTools import CapturingLogHandler
 from textwrap import dedent
-import logging
 import pytest
 
 try:
@@ -33,7 +30,7 @@ except ImportError as e:
 MAX_ERR = 1.0
 
 
-class _TestPenMixin(object):
+class _TestPenMixin:
     """Collection of tests that are shared by both the SegmentPen and the
     PointPen test cases, plus some helper methods.
     """
@@ -115,7 +112,7 @@ class _TestPenMixin(object):
 
 class TestCu2QuPen(unittest.TestCase, _TestPenMixin):
     def __init__(self, *args, **kwargs):
-        super(TestCu2QuPen, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.Glyph = DummyGlyph
         self.Pen = DummyPen
         self.Cu2QuPen = Cu2QuPen
@@ -211,7 +208,7 @@ class TestCu2QuPen(unittest.TestCase, _TestPenMixin):
 
 class TestCu2QuPointPen(unittest.TestCase, _TestPenMixin):
     def __init__(self, *args, **kwargs):
-        super(TestCu2QuPointPen, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.Glyph = DummyPointGlyph
         self.Pen = DummyPointPen
         self.Cu2QuPen = Cu2QuPointPen

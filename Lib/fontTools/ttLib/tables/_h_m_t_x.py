@@ -73,7 +73,7 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
             advanceWidth, sideBearing = self.metrics[glyphName]
             if advanceWidth < 0:
                 log.error(
-                    "Glyph %r has negative advance %s" % (glyphName, self.advanceName)
+                    "Glyph {!r} has negative advance {}".format(glyphName, self.advanceName)
                 )
                 hasNegativeAdvances = True
             metrics.append([advanceWidth, sideBearing])

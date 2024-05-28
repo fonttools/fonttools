@@ -23,7 +23,6 @@ from fontTools.varLib.merger import MutatorMerger
 from fontTools.varLib.varStore import VarStoreInstancer
 from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib.iup import iup_delta
-import fontTools.subset.cff
 import os.path
 import logging
 from io import BytesIO
@@ -282,7 +281,7 @@ def instantiateVariableFont(varfont, location, inplace=False, overlap=True):
 
     log.info("Mutating FeatureVariations")
     for tableTag in "GSUB", "GPOS":
-        if not tableTag in varfont:
+        if tableTag not in varfont:
             continue
         table = varfont[tableTag].table
         if not getattr(table, "FeatureVariations", None):
@@ -401,7 +400,7 @@ def instantiateVariableFont(varfont, location, inplace=False, overlap=True):
                 for n in varfont["name"].names
                 if n.nameID in exclude and n.platformID == 0 and n.langID != 0xFFFF
             ]
-            if set(excludedUnicodeLangIDs) == set(range(len((varfont["ltag"].tags)))):
+            if set(excludedUnicodeLangIDs) == set(range(len(varfont["ltag"].tags))):
                 del varfont["ltag"]
         varfont["name"].names[:] = [
             n for n in varfont["name"].names if n.nameID not in exclude

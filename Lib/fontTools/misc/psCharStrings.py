@@ -287,7 +287,7 @@ def encodeFloat(f):
             exponent = int(s[eIndex + 1 :])
             newExponent = exponent - len(fractionalPart)
             if newExponent == 1:
-                s = "%s%s0" % (integerPart, fractionalPart)
+                s = "{}{}0".format(integerPart, fractionalPart)
             else:
                 s = "%s%sE%d" % (integerPart, fractionalPart, newExponent)
     if s.startswith((".0", "-.0")):
@@ -320,7 +320,7 @@ class CharStringCompileError(Exception):
     pass
 
 
-class SimpleT2Decompiler(object):
+class SimpleT2Decompiler:
     def __init__(self, localSubrs, globalSubrs, private=None, blender=None):
         self.localSubrs = localSubrs
         self.localBias = calcSubrBias(localSubrs)
@@ -1111,7 +1111,7 @@ class T1OutlineExtractor(T2OutlineExtractor):
         self.popall()  # XXX
 
 
-class T2CharString(object):
+class T2CharString:
     operandEncoding = t2OperandEncoding
     operators, opcodes = buildOperatorDict(t2Operators)
     decompilerClass = SimpleT2Decompiler
@@ -1137,9 +1137,9 @@ class T2CharString(object):
 
     def __repr__(self):
         if self.bytecode is None:
-            return "<%s (source) at %x>" % (self.__class__.__name__, id(self))
+            return "<{} (source) at {:x}>".format(self.__class__.__name__, id(self))
         else:
-            return "<%s (bytecode) at %x>" % (self.__class__.__name__, id(self))
+            return "<{} (bytecode) at {:x}>".format(self.__class__.__name__, id(self))
 
     def getIntEncoder(self):
         return encodeIntT2
@@ -1364,7 +1364,7 @@ class T1CharString(T2CharString):
         self.width = extractor.width
 
 
-class DictDecompiler(object):
+class DictDecompiler:
     operandEncoding = cffDictOperandEncoding
 
     def __init__(self, strings, parent=None):

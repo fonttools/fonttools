@@ -1,7 +1,6 @@
 """Various low level data validators."""
 
 import calendar
-from io import open
 import fs.base
 import fs.osfs
 

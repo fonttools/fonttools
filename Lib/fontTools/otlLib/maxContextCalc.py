@@ -63,19 +63,19 @@ def maxCtxContextualSubtable(maxCtx, st, ruleType, chain=""):
     """Calculate usMaxContext based on a contextual feature subtable."""
 
     if st.Format == 1:
-        for ruleset in getattr(st, "%s%sRuleSet" % (chain, ruleType)):
+        for ruleset in getattr(st, "{}{}RuleSet".format(chain, ruleType)):
             if ruleset is None:
                 continue
-            for rule in getattr(ruleset, "%s%sRule" % (chain, ruleType)):
+            for rule in getattr(ruleset, "{}{}Rule".format(chain, ruleType)):
                 if rule is None:
                     continue
                 maxCtx = maxCtxContextualRule(maxCtx, rule, chain)
 
     elif st.Format == 2:
-        for ruleset in getattr(st, "%s%sClassSet" % (chain, ruleType)):
+        for ruleset in getattr(st, "{}{}ClassSet".format(chain, ruleType)):
             if ruleset is None:
                 continue
-            for rule in getattr(ruleset, "%s%sClassRule" % (chain, ruleType)):
+            for rule in getattr(ruleset, "{}{}ClassRule".format(chain, ruleType)):
                 if rule is None:
                     continue
                 maxCtx = maxCtxContextualRule(maxCtx, rule, chain)

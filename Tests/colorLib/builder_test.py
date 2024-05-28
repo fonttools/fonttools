@@ -4,7 +4,6 @@ from fontTools.ttLib.tables import otTables as ot
 from fontTools.colorLib import builder
 from fontTools.colorLib.geometry import round_start_circle_stable_containment, Circle
 from fontTools.colorLib.builder import LayerListBuilder
-from fontTools.colorLib.table_builder import TableBuilder
 from fontTools.colorLib.errors import ColorLibError
 import pytest
 from typing import List
@@ -1487,7 +1486,7 @@ def test_explicit_version_1():
     assert colr.table.VarStore is None
 
 
-class BuildCOLRTest(object):
+class BuildCOLRTest:
     def test_automatic_version_all_solid_color_glyphs(self):
         colr = builder.buildCOLR({"a": [("b", 0), ("c", 1)]})
         assert colr.version == 0

@@ -2,10 +2,10 @@
 #
 # Google Author(s): Behdad Esfahbod, Roozbeh Pournader
 
-from fontTools import ttLib, cffLib
+from fontTools import ttLib
 from fontTools.misc.psCharStrings import T2WidthExtractor
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
-from fontTools.merge.base import add_method, mergeObjects
+from fontTools.merge.base import add_method
 from fontTools.merge.cmap import computeMegaCmap
 from fontTools.merge.util import *
 import logging

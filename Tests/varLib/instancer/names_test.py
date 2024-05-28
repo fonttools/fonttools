@@ -40,7 +40,7 @@ def _test_name_records(varfont, expected, isNonRIBBI, platforms=[0x409]):
             continue
         assert font_names[k] == expected[k]
 
-    font_nameids = set(i[0] for i in font_names)
+    font_nameids = {i[0] for i in font_names}
     if isNonRIBBI:
         assert 16 in font_nameids
         assert 17 in font_nameids

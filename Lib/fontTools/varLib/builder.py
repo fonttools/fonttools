@@ -1,4 +1,3 @@
-from fontTools import ttLib
 from fontTools.ttLib.tables import otTables as ot
 
 # VariationStore
@@ -6,14 +5,14 @@ from fontTools.ttLib.tables import otTables as ot
 
 def buildVarRegionAxis(axisSupport):
     self = ot.VarRegionAxis()
-    self.StartCoord, self.PeakCoord, self.EndCoord = [float(v) for v in axisSupport]
+    self.StartCoord, self.PeakCoord, self.EndCoord = (float(v) for v in axisSupport)
     return self
 
 
 def buildSparseVarRegionAxis(axisIndex, axisSupport):
     self = ot.SparseVarRegionAxis()
     self.AxisIndex = axisIndex
-    self.StartCoord, self.PeakCoord, self.EndCoord = [float(v) for v in axisSupport]
+    self.StartCoord, self.PeakCoord, self.EndCoord = (float(v) for v in axisSupport)
     return self
 
 

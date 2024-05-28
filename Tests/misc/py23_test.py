@@ -270,13 +270,13 @@ class IsCloseTests(unittest.TestCase):
     def assertIsClose(self, a, b, *args, **kwargs):
         self.assertTrue(
             self.isclose(a, b, *args, **kwargs),
-            msg="%s and %s should be close!" % (a, b),
+            msg="{} and {} should be close!".format(a, b),
         )
 
     def assertIsNotClose(self, a, b, *args, **kwargs):
         self.assertFalse(
             self.isclose(a, b, *args, **kwargs),
-            msg="%s and %s should not be close!" % (a, b),
+            msg="{} and {} should not be close!".format(a, b),
         )
 
     def assertAllClose(self, examples, *args, **kwargs):

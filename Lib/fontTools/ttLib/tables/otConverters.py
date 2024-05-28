@@ -32,9 +32,8 @@ from .otTables import (
     CompositeMode as _CompositeMode,
     NO_VARIATION_INDEX,
 )
-from itertools import zip_longest, accumulate
+from itertools import accumulate
 from functools import partial
-from types import SimpleNamespace
 import re
 import struct
 from typing import Optional
@@ -73,7 +72,7 @@ def buildConverters(tableSpec, tableNamespace):
         elif name in ("CIDGlyphMapping", "GlyphCIDMapping"):
             converterClass = StructWithLength
         else:
-            if not tp in converterMapping and "(" not in tp:
+            if tp not in converterMapping and "(" not in tp:
                 tableName = tp
                 converterClass = Struct
             else:
@@ -109,7 +108,7 @@ def buildConverters(tableSpec, tableNamespace):
     return converters, convertersByName
 
 
-class BaseConverter(object):
+class BaseConverter:
     """Base class for converter objects. Apart from the constructor, this
     is an abstract class."""
 
@@ -370,7 +369,7 @@ class UInt24(IntValue):
 class ComputedInt(IntValue):
     def xmlWrite(self, xmlWriter, font, value, name, attrs):
         if value is not None:
-            xmlWriter.comment("%s=%s" % (name, value))
+            xmlWriter.comment("{}={}".format(name, value))
             xmlWriter.newline()
 
 
@@ -756,7 +755,7 @@ class SubStruct(Struct):
         return self.__class__(self.name, self.repeat, self.aux, tableClass)
 
     def xmlWrite(self, xmlWriter, font, value, name, attrs):
-        super(SubStruct, self).xmlWrite(xmlWriter, font, value, None, attrs)
+        super().xmlWrite(xmlWriter, font, value, None, attrs)
 
 
 class SubTable(Table):
@@ -765,7 +764,7 @@ class SubTable(Table):
         return self.__class__(self.name, self.repeat, self.aux, tableClass)
 
     def xmlWrite(self, xmlWriter, font, value, name, attrs):
-        super(SubTable, self).xmlWrite(xmlWriter, font, value, None, attrs)
+        super().xmlWrite(xmlWriter, font, value, None, attrs)
 
 
 class ExtSubTable(LTable, SubTable):

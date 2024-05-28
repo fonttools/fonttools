@@ -8,7 +8,7 @@ from .shapes import PathBuilder
 __all__ = [tostr(s) for s in ("SVGPath", "parse_path")]
 
 
-class SVGPath(object):
+class SVGPath:
     """Parse SVG ``path`` elements from a file or string, and draw them
     onto a glyph object that supports the FontTools Pen protocol.
 

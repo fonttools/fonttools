@@ -499,7 +499,7 @@ def test_subset_svg_empty_table(empty_svg_font, tmp_path):
     subset_path = svg_font_path.with_suffix(".subset.ttf")
 
     # there's no gid=2 in SVG table, drop the empty table
-    subset.main([str(svg_font_path), f"--output-file={subset_path}", f"--gids=2"])
+    subset.main([str(svg_font_path), f"--output-file={subset_path}", "--gids=2"])
 
     assert "SVG " not in TTFont(subset_path)
 
@@ -524,7 +524,7 @@ def test_subset_svg_missing_glyph(empty_svg_font, tmp_path):
     subset_path = svg_font_path.with_suffix(".subset.ttf")
 
     # make sure we don't crash when we don't find the expected "glyph2" element
-    subset.main([str(svg_font_path), f"--output-file={subset_path}", f"--gids=1"])
+    subset.main([str(svg_font_path), f"--output-file={subset_path}", "--gids=1"])
 
     subset_font = TTFont(subset_path)
     assert getXML(subset_font["SVG "].toXML, subset_font) == [
@@ -535,7 +535,7 @@ def test_subset_svg_missing_glyph(empty_svg_font, tmp_path):
 
     # ignore the missing gid even if included in the subset; in this test case we
     # end up with an empty svg document--which is dropped, along with the empty table
-    subset.main([str(svg_font_path), f"--output-file={subset_path}", f"--gids=2"])
+    subset.main([str(svg_font_path), f"--output-file={subset_path}", "--gids=2"])
 
     assert "SVG " not in TTFont(subset_path)
 

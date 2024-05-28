@@ -19,9 +19,7 @@ from typing import (
     Deque,
     Iterable,
     List,
-    NamedTuple,
     Tuple,
-    Union,
 )
 
 

@@ -30,7 +30,7 @@ class CFFTableTest(unittest.TestCase):
             font = TTFont(file=CFF_BIN)
             cffTable = font["CFF2"]
             cls.cff2Data = cffTable.compile(font)
-        with open(CFF_TTX, "r") as f:
+        with open(CFF_TTX) as f:
             cff2XML = f.read()
             cff2XML = strip_VariableItems(cff2XML)
             cls.cff2XML = cff2XML.splitlines()

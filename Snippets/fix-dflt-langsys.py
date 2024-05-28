@@ -28,7 +28,7 @@ def ProcessTable(table):
         return False
     else:
         for rec in table.ScriptList.ScriptRecord:
-            tags = set([r.LangSysTag for r in rec.Script.LangSysRecord])
+            tags = {r.LangSysTag for r in rec.Script.LangSysRecord}
             found -= tags
 
         if found:

@@ -30,7 +30,7 @@ class CurveToQuadraticTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """Do the curve conversion ahead of time, and run tests on results."""
-        with open(os.path.join(DATADIR, "curves.json"), "r") as fp:
+        with open(os.path.join(DATADIR, "curves.json")) as fp:
             curves = json.load(fp)
 
         cls.single_splines = [curve_to_quadratic(c, MAX_ERR) for c in curves]

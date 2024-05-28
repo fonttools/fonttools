@@ -1,6 +1,5 @@
 from fontTools.misc.visitor import Visitor
 import enum
-import pytest
 
 
 class E(enum.Enum):
@@ -60,7 +59,7 @@ def visit(self, obj, attr, value):
     self._add("B a")
 
 
-class VisitorTest(object):
+class VisitorTest:
     def test_visitor(self):
         b = B()
         visitor = TestVisitor()

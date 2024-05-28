@@ -3,7 +3,6 @@
 import decimal as _decimal
 import math as _math
 import warnings
-from contextlib import redirect_stderr, redirect_stdout
 from io import BytesIO
 from io import StringIO as UnicodeIO
 from types import SimpleNamespace

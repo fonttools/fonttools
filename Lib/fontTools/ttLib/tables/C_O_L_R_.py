@@ -140,7 +140,7 @@ class table_C_O_L_R_(DefaultTable.DefaultTable):
         del self.ColorLayers[glyphName]
 
 
-class LayerRecord(object):
+class LayerRecord:
     def __init__(self, name=None, colorID=None):
         self.name = name
         self.colorID = colorID

@@ -14,7 +14,7 @@ class TransformPen(FilterPen):
         transformed coordinates. The 'transformation' argument can either
         be a six-tuple, or a fontTools.misc.transform.Transform object.
         """
-        super(TransformPen, self).__init__(outPen)
+        super().__init__(outPen)
         if not hasattr(transformation, "transformPoint"):
             from fontTools.misc.transform import Transform
 

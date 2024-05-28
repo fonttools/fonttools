@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 import argparse
 import hashlib
@@ -90,7 +89,7 @@ def check_checksum(filepaths):
             )
             sys.exit(1)
 
-        with open(path, mode="r") as file:
+        with open(path) as file:
             for line in file.readlines():
                 cleaned_line = line.rstrip()
                 line_list = cleaned_line.split(" ")

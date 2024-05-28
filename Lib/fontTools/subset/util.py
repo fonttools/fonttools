@@ -14,7 +14,7 @@ def _add_method(*clazzes):
             assert clazz.__name__ != "DefaultTable", "Oops, table class not found."
             assert not hasattr(
                 clazz, method.__name__
-            ), "Oops, class '%s' has method '%s'." % (clazz.__name__, method.__name__)
+            ), "Oops, class '{}' has method '{}'.".format(clazz.__name__, method.__name__)
             setattr(clazz, method.__name__, method)
         return None
 

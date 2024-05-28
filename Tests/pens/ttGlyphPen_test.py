@@ -806,7 +806,7 @@ class CubicGlyfTest:
             assert rpen.value == segment_pen_commands
 
 
-class _TestGlyph(object):
+class _TestGlyph:
     def __init__(self, glyph):
         self.coordinates = glyph.coordinates
 

@@ -1,7 +1,7 @@
 _accessstrings = {0: "", 1: "readonly", 2: "executeonly", 3: "noaccess"}
 
 
-class ps_object(object):
+class ps_object:
     literal = 1
     access = 0
     value = None
@@ -11,7 +11,7 @@ class ps_object(object):
         self.type = self.__class__.__name__[3:] + "type"
 
     def __repr__(self):
-        return "<%s %s>" % (self.__class__.__name__[3:], repr(self.value))
+        return "<{} {}>".format(self.__class__.__name__[3:], repr(self.value))
 
 
 class ps_operator(ps_object):
@@ -109,14 +109,14 @@ def _type1_item_repr(key, value):
     if access:
         access = access + " "
     if key == "CharStrings":
-        psstring = psstring + "/%s %s def\n" % (
+        psstring = psstring + "/{} {} def\n".format(
             key,
             _type1_CharString_repr(value.value),
         )
     elif key == "Encoding":
         psstring = psstring + _type1_Encoding_repr(value, access)
     else:
-        psstring = psstring + "/%s %s %sdef\n" % (str(key), str(value), access)
+        psstring = psstring + "/{} {} {}def\n".format(str(key), str(value), access)
     return psstring
 
 
@@ -181,7 +181,7 @@ class ps_dict(ps_object):
             access = _accessstrings[value.access]
             if access:
                 access = access + " "
-            psstring = psstring + "/%s %s %sdef\n" % (str(key), str(value), access)
+            psstring = psstring + "/{} {} {}def\n".format(str(key), str(value), access)
         return psstring + "end "
 
     def __repr__(self):
@@ -228,7 +228,7 @@ class ps_real(ps_object):
         return repr(self.value)
 
 
-class PSOperators(object):
+class PSOperators:
     def ps_def(self):
         obj = self.pop()
         name = self.pop()
@@ -512,7 +512,7 @@ class PSOperators(object):
             else:
                 if i < limit:
                     break
-            if type(i) == type(0.0):
+            if type(i) == float:
                 self.push(ps_real(i))
             else:
                 self.push(ps_integer(i))

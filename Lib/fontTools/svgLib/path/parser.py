@@ -28,7 +28,7 @@ FLOAT_RE = re.compile(
     r")"
 )
 BOOL_RE = re.compile("^[01]")
-SEPARATOR_RE = re.compile(f"[, \t]")
+SEPARATOR_RE = re.compile("[, \t]")
 
 
 def _tokenize_path(pathdef):
@@ -45,8 +45,7 @@ def _tokenize_path(pathdef):
             except ValueError as e:
                 raise ValueError(f"Invalid arc command: '{arc_cmd}{x}'") from e
         else:
-            for token in FLOAT_RE.findall(x):
-                yield token
+            yield from FLOAT_RE.findall(x)
 
 
 ARC_ARGUMENT_TYPES = (

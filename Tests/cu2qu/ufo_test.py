@@ -33,7 +33,7 @@ def fonts():
     return [ufoLib2.Font.open(ufo) for ufo in TEST_UFOS]
 
 
-class FontsToQuadraticTest(object):
+class FontsToQuadraticTest:
     def test_modified(self, fonts):
         # previously this method returned True/False, now it returns a set of modified
         # glyph names.
@@ -110,7 +110,7 @@ class FontsToQuadraticTest(object):
         )
 
 
-class GlyphsToQuadraticTest(object):
+class GlyphsToQuadraticTest:
     @pytest.mark.parametrize(
         ["glyph", "expected"],
         [("A", False), ("a", True)],  # contains no curves, it is not modified

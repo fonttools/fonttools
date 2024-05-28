@@ -4,7 +4,7 @@ from fontTools.misc.xmlWriter import XMLWriter
 from fontTools.misc.roundTools import noRound
 from fontTools.varLib.models import VariationModel
 from fontTools.varLib.varStore import OnlineVarStoreBuilder, VarStoreInstancer
-from fontTools.ttLib import TTFont, newTable
+from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables._f_v_a_r import Axis
 from fontTools.ttLib.tables.otBase import OTTableReader, OTTableWriter
 from fontTools.ttLib.tables.otTables import VarStore
