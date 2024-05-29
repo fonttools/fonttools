@@ -25,13 +25,7 @@ class _TTGlyphSet(Mapping):
     def __init__(self, font, location, glyphsMapping, *, recalcBounds=True):
         self.recalcBounds = recalcBounds
         self.font = font
-        self.defaultLocationNormalized = (
-            {axis.axisTag: 0 for axis in self.font["fvar"].axes}
-            if "fvar" in self.font
-            else {}
-        )
         self.location = location if location is not None else {}
-        self.rawLocation = {}  # VarComponent-only location
         self.originalLocation = location if location is not None else {}
         self.depth = 0
         self.locationStack = []
@@ -53,21 +47,16 @@ class _TTGlyphSet(Mapping):
     @contextmanager
     def pushLocation(self, location, reset: bool):
         self.locationStack.append(self.location)
-        self.rawLocationStack.append(self.rawLocation)
         if reset:
             self.location = self.originalLocation.copy()
-            self.rawLocation = self.defaultLocationNormalized.copy()
         else:
             self.location = self.location.copy()
-            self.rawLocation = {}
         self.location.update(location)
-        self.rawLocation.update(location)
 
         try:
             yield None
         finally:
             self.location = self.locationStack.pop()
-            self.rawLocation = self.rawLocationStack.pop()
 
     @contextmanager
     def pushDepth(self):
@@ -371,7 +360,7 @@ class _TTGlyphVARC(_TTGlyph):
                     if not shouldDecompose:
                         try:
                             pen.addVarComponent(
-                                comp.glyphName, transform, self.glyphSet.rawLocation
+                                comp.glyphName, transform, self.glyphSet.location
                             )
                         except AttributeError:
                             shouldDecompose = True
