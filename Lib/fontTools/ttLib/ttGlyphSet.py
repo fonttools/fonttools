@@ -30,11 +30,16 @@ class _TTGlyphSet(Mapping):
             if "fvar" in self.font
             else {}
         )
-        hiddenAxisTags = {
-            axis.axisTag
-            for axis in self.font["fvar"].axes
-            if not axis.flags & 0x0001  # HIDDEN_AXIS
-        }
+        hiddenAxisTags = (
+            {
+                axis.axisTag
+                for axis in self.font["fvar"].axes
+                if not axis.flags & 0x0001  # HIDDEN_AXIS
+            }
+            if "fvar" in self.font
+            else set()
+        )
+
         self.location = location if location is not None else {}
         # For VarComponents and addVarComponent() we need to maintain a sparse
         # location, so the addVarComponent() client can know which axes are set,
