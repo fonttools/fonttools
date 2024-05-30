@@ -25,20 +25,12 @@ class _TTGlyphSet(Mapping):
     def __init__(self, font, location, glyphsMapping, *, recalcBounds=True):
         self.recalcBounds = recalcBounds
         self.font = font
-        defaultLocationNormalized = (
-            {axis.axisTag: 0 for axis in self.font["fvar"].axes}
-            if "fvar" in self.font
-            else {}
-        )
-        hiddenAxisTags = (
-            {
-                axis.axisTag
-                for axis in self.font["fvar"].axes
-                if axis.flags & 0x0001  # HIDDEN_AXIS
-            }
-            if "fvar" in self.font
-            else set()
-        )
+
+        axes = self.font["fvar"].axes if "fvar" in self.font else []
+        defaultLocationNormalized = {axis.axisTag: 0 for axis in axes}
+        hiddenAxisTags = {
+            axis.axisTag for axis in axes if axis.flags & 0x0001  # HIDDEN_AXIS
+        }
 
         self.location = location if location is not None else {}
         # For VarComponents and addVarComponent() we need to maintain a sparse
