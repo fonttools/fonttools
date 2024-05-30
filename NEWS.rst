@@ -1,3 +1,5 @@
+- [SVGPathPen] Revert rounding coordinates to two decimal places by default.
+
 4.52.4 (released 2024-05-27)
 ----------------------------
 
