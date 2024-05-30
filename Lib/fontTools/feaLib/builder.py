@@ -297,7 +297,9 @@ class Builder:
             ]
             # "aalt" does not have to specify its own lookups, but it might.
             if not feature and name != "aalt":
-                warnings.warn("{}: Feature {} has not been defined".format(location, name))
+                warnings.warn(
+                    "{}: Feature {} has not been defined".format(location, name)
+                )
                 continue
             for script, lang, feature, lookups in feature:
                 for lookuplist in lookups:

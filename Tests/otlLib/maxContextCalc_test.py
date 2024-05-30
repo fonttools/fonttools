@@ -68,9 +68,7 @@ def test_max_ctx_calc_features():
     ],
 )
 def test_max_ctx_calc_features_ttx(file_name, max_context):
-    ttx_path = os.path.join(
-        os.path.dirname(__file__), "data", f"{file_name}.ttx"
-    )
+    ttx_path = os.path.join(os.path.dirname(__file__), "data", f"{file_name}.ttx")
     font = TTFont()
     font.importXML(ttx_path)
 

@@ -59,7 +59,9 @@ class IncompatibleSegmentTypesError(IncompatibleGlyphsError):
         ndigits = len(str(max(self.segments)))
         for i, tags in sorted(self.segments.items()):
             lines.append(
-                "{}: ({})".format(str(i).rjust(ndigits), ", ".join(repr(t) for t in tags))
+                "{}: ({})".format(
+                    str(i).rjust(ndigits), ", ".join(repr(t) for t in tags)
+                )
             )
         return "Glyphs named {} have incompatible segment types:\n  {}".format(
             self.combined_name,

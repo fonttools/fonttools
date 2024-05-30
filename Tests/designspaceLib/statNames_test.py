@@ -2,7 +2,6 @@ from fontTools.designspaceLib import DesignSpaceDocument
 from fontTools.designspaceLib.statNames import StatNames, getStatNames
 
 
-
 def test_instance_getStatNames(datadir):
     doc = DesignSpaceDocument.fromfile(datadir / "test_v5_sourceserif.designspace")
 

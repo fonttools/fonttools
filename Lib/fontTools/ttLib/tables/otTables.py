@@ -4,6 +4,7 @@ OpenType subtables.
 Most are constructed upon import from data in otData.py, all are populated with
 converter objects from otConverters.py.
 """
+
 import copy
 from enum import IntEnum
 from functools import reduce

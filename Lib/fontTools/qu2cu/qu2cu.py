@@ -394,7 +394,9 @@ def main():
     curve = generate_curve()
     quadratics = curve_to_quadratic(curve, tolerance)
     print(
-        "cu2qu tolerance {:g}. qu2cu tolerance {:g}.".format(tolerance, reconstruct_tolerance)
+        "cu2qu tolerance {:g}. qu2cu tolerance {:g}.".format(
+            tolerance, reconstruct_tolerance
+        )
     )
     print("One random cubic turned into %d quadratics." % len(quadratics))
     curves = quadratic_to_curves([quadratics], reconstruct_tolerance)

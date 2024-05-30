@@ -21,7 +21,6 @@ from fontTools.designspaceLib.types import Range
 from fontTools.misc import plistlib
 
 
-
 def _axesAsDict(axes):
     """
     Make the axis data we have available in

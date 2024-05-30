@@ -348,7 +348,9 @@ class Program:
                 op, argBits, name = mnemonicDict[mnemonic]
                 if len(arg) != argBits:
                     raise tt_instructions_error(
-                        "Incorrect number of argument bits ({}[{}])".format(mnemonic, arg)
+                        "Incorrect number of argument bits ({}[{}])".format(
+                            mnemonic, arg
+                        )
                     )
                 if arg:
                     arg = binary2num(arg)
@@ -524,7 +526,9 @@ class Program:
                 if argBits:
                     assembly.append(
                         mnemonic
-                        + "[{}]	/* {} */".format(num2binary(op - argoffset, argBits), name)
+                        + "[{}]	/* {} */".format(
+                            num2binary(op - argoffset, argBits), name
+                        )
                     )
                 else:
                     assembly.append(mnemonic + "[ ]	/* %s */" % name)

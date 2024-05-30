@@ -80,7 +80,9 @@ def pack(fmt, obj):
             struct.pack(names[name], value)
         except Exception as e:
             raise ValueError(
-                "Value {} does not fit in format {} for {}".format(value, names[name], name)
+                "Value {} does not fit in format {} for {}".format(
+                    value, names[name], name
+                )
             ) from e
     data = struct.pack(*(formatstring,) + tuple(elements))
     return data

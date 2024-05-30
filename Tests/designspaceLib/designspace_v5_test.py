@@ -17,7 +17,6 @@ from fontTools.designspaceLib import (
 )
 
 
-
 def assert_descriptors_equal(actual, expected):
     assert len(actual) == len(expected)
     for a, e in zip(actual, expected):

@@ -224,9 +224,7 @@ def build_ranges(
                     comment += f" ; {value}"
                     value = reversed_aliases[normalize(value)]
                 value_repr = f"{value!r},"
-            f.write(
-                f"    {value_repr.ljust(max_value_length + 1)}  {comment}\n"
-            )
+            f.write(f"    {value_repr.ljust(max_value_length + 1)}  {comment}\n")
         f.write("]\n")
 
         if aliases:

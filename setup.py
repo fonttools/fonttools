@@ -306,7 +306,9 @@ class release(Command):
         Optionally 'sign' the tag with the user's GPG key.
         """
         log.info(
-            "creating {} git tag '{}'".format("signed" if sign else "annotated", version)
+            "creating {} git tag '{}'".format(
+                "signed" if sign else "annotated", version
+            )
         )
         if self.dry_run:
             return

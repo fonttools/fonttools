@@ -281,12 +281,16 @@ class KernTableTest:
             if version > 0:
                 coverage = 0
                 header_fmt = deHexStr(
-                    "{:08X} {:02X} {:02X} {:04X}".format(st_length, coverage, unknown_fmt, 0)
+                    "{:08X} {:02X} {:02X} {:04X}".format(
+                        st_length, coverage, unknown_fmt, 0
+                    )
                 )
             else:
                 coverage = 1
                 header_fmt = deHexStr(
-                    "{:04X} {:04X} {:02X} {:02X}".format(0, st_length, unknown_fmt, coverage)
+                    "{:04X} {:04X} {:02X} {:02X}".format(
+                        0, st_length, unknown_fmt, coverage
+                    )
                 )
             st = KernTable_format_unkown(unknown_fmt)
             st.data = header_fmt + deHexStr(kern_data)

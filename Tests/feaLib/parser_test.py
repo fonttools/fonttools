@@ -1916,7 +1916,9 @@ class ParserTest(unittest.TestCase):
 
     def test_valuerecord_format_a_vertical_contexts_(self):
         for tag in "vkrn vpal vhal valt".split():
-            doc = self.parse("feature {} {{valueRecordDef 77 foo;}} {};".format(tag, tag))
+            doc = self.parse(
+                "feature {} {{valueRecordDef 77 foo;}} {};".format(tag, tag)
+            )
             value = doc.statements[0].statements[0].value
             if value.yAdvance != 77:
                 self.fail(

@@ -260,7 +260,7 @@ class GlyphRecord:
 
 
 def mapXMLToUTF8(string):
-    uString = ''
+    uString = ""
     strLen = len(string)
     i = 0
     while i < strLen:

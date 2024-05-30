@@ -425,7 +425,9 @@ except ImportError:
             write(_escape_cdata(elem.tail))
 
     def _raise_serialization_error(text):
-        raise TypeError("cannot serialize {!r} (type {})".format(text, type(text).__name__))
+        raise TypeError(
+            "cannot serialize {!r} (type {})".format(text, type(text).__name__)
+        )
 
     def _escape_cdata(text):
         # escape character data

@@ -1151,9 +1151,9 @@ class _TupleVarStoreAdapter:
         # Collect the set of all unique region axes from the current TupleVariations.
         # We use an OrderedDict to de-duplicate regions while keeping the order.
         uniqueRegions = collections.OrderedDict.fromkeys(
-                frozenset(var.axes.items())
-                for variations in self.tupleVarData
-                for var in variations
+            frozenset(var.axes.items())
+            for variations in self.tupleVarData
+            for var in variations
         )
         # Maintain the original order for the regions that pre-existed, appending
         # the new regions at the end of the region list.

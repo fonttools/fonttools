@@ -146,7 +146,9 @@ class _UFOBaseIO:
         except fs.errors.ResourceNotFound:
             if default is None:
                 raise UFOLibError(
-                    "'{}' is missing on {}. This file is required".format(fileName, self.fs)
+                    "'{}' is missing on {}. This file is required".format(
+                        fileName, self.fs
+                    )
                 )
             else:
                 return default

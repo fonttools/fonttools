@@ -9,7 +9,6 @@ We only define the symbols that we use. E.g. see fontTools.cu2qu
 """
 
 
-
 def _empty_decorator(x):
     return x
 

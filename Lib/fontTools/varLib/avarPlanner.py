@@ -693,7 +693,9 @@ def makeDesignspaceSnippet(axisTag, axisName, axisLimit, mapping):
         designspaceSnippet += "/>"
 
     for key, value in mapping.items():
-        designspaceSnippet += '      <map input="{:g}" output="{:g}"/>\n'.format(key, value)
+        designspaceSnippet += '      <map input="{:g}" output="{:g}"/>\n'.format(
+            key, value
+        )
 
     if mapping:
         designspaceSnippet += "    </axis>"

@@ -40,39 +40,25 @@ class hashdict(dict):
         return hash(self.__key())
 
     def __setitem__(self, key, value):
-        raise TypeError(
-            f"{self.__class__.__name__} does not support item assignment"
-        )
+        raise TypeError(f"{self.__class__.__name__} does not support item assignment")
 
     def __delitem__(self, key):
-        raise TypeError(
-            f"{self.__class__.__name__} does not support item assignment"
-        )
+        raise TypeError(f"{self.__class__.__name__} does not support item assignment")
 
     def clear(self):
-        raise TypeError(
-            f"{self.__class__.__name__} does not support item assignment"
-        )
+        raise TypeError(f"{self.__class__.__name__} does not support item assignment")
 
     def pop(self, *args, **kwargs):
-        raise TypeError(
-            f"{self.__class__.__name__} does not support item assignment"
-        )
+        raise TypeError(f"{self.__class__.__name__} does not support item assignment")
 
     def popitem(self, *args, **kwargs):
-        raise TypeError(
-            f"{self.__class__.__name__} does not support item assignment"
-        )
+        raise TypeError(f"{self.__class__.__name__} does not support item assignment")
 
     def setdefault(self, *args, **kwargs):
-        raise TypeError(
-            f"{self.__class__.__name__} does not support item assignment"
-        )
+        raise TypeError(f"{self.__class__.__name__} does not support item assignment")
 
     def update(self, *args, **kwargs):
-        raise TypeError(
-            f"{self.__class__.__name__} does not support item assignment"
-        )
+        raise TypeError(f"{self.__class__.__name__} does not support item assignment")
 
     # update is not ok because it mutates the object
     # __add__ is ok because it creates a new object

@@ -497,7 +497,9 @@ class DirectoryEntry:
 
     def __repr__(self):
         if hasattr(self, "tag"):
-            return "<{} '{}' at {:x}>".format(self.__class__.__name__, self.tag, id(self))
+            return "<{} '{}' at {:x}>".format(
+                self.__class__.__name__, self.tag, id(self)
+            )
         else:
             return "<{} at {:x}>".format(self.__class__.__name__, id(self))
 

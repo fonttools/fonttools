@@ -516,7 +516,9 @@ class LogMixin:
 
 def deprecateArgument(name, msg, category=UserWarning):
     """Raise a warning about deprecated function argument 'name'."""
-    warnings.warn("{!r} is deprecated; {}".format(name, msg), category=category, stacklevel=3)
+    warnings.warn(
+        "{!r} is deprecated; {}".format(name, msg), category=category, stacklevel=3
+    )
 
 
 def deprecateFunction(msg, category=UserWarning):

@@ -2297,7 +2297,9 @@ class Parser:
         result = list()
         if len(start) != len(limit):
             raise FeatureLibError(
-                'Bad range: "{}" and "{}" should have the same length'.format(start, limit),
+                'Bad range: "{}" and "{}" should have the same length'.format(
+                    start, limit
+                ),
                 location,
             )
 

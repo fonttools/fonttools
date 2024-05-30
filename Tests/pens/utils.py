@@ -241,7 +241,9 @@ def _repr_pen_commands(commands):
                 ]
             args = ", ".join(repr(a) for a in args)
         if kwargs:
-            kwargs = ", ".join("{}={!r}".format(k, v) for k, v in sorted(kwargs.items()))
+            kwargs = ", ".join(
+                "{}={!r}".format(k, v) for k, v in sorted(kwargs.items())
+            )
         if args and kwargs:
             s.append("pen.{}({}, {})".format(cmd, args, kwargs))
         elif args:

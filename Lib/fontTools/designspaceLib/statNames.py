@@ -87,9 +87,7 @@ def getStatNames(
         # whenever a translation is missing.
         labels = _getAxisLabelsForUserLocation(doc.axes, userLocation)
         if labels:
-            languages = {
-                language for label in labels for language in label.labelNames
-            }
+            languages = {language for label in labels for language in label.labelNames}
             languages.add("en")
             for language in languages:
                 styleName = " ".join(
