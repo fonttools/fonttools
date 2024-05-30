@@ -27,7 +27,6 @@ class _TTGlyphSet(Mapping):
         self.font = font
 
         axes = self.font["fvar"].axes if "fvar" in self.font else []
-        defaultLocationNormalized = {axis.axisTag: 0 for axis in axes}
         hiddenAxisTags = {
             axis.axisTag for axis in axes if axis.flags & 0x0001  # HIDDEN_AXIS
         }
@@ -38,9 +37,10 @@ class _TTGlyphSet(Mapping):
         # and which to infer from the current global font location
         self.sparseVarComponentLocation = {}  # VarComponent-only location
         self.originalLocation = location if location is not None else {}
-        self.originalLocationNonHidden = defaultLocationNormalized | {
-            k: v for k, v in self.originalLocation.items() if k not in hiddenAxisTags
+        self.originalLocationNonHidden = {
+            k: 0 if k in hiddenAxisTags else v for k, v in self.originalLocation.items()
         }
+
         self.depth = 0
         self.locationStack = []
         self.sparseVarComponentLocationStack = []
