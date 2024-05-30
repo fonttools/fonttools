@@ -34,7 +34,7 @@ class _TTGlyphSet(Mapping):
             {
                 axis.axisTag
                 for axis in self.font["fvar"].axes
-                if not axis.flags & 0x0001  # HIDDEN_AXIS
+                if axis.flags & 0x0001  # HIDDEN_AXIS
             }
             if "fvar" in self.font
             else set()
@@ -47,7 +47,7 @@ class _TTGlyphSet(Mapping):
         self.sparseVarComponentLocation = {}  # VarComponent-only location
         self.originalLocation = location if location is not None else {}
         self.originalLocationNonHidden = defaultLocationNormalized | {
-            k: v for k, v in self.originalLocation.items() if k in hiddenAxisTags
+            k: v for k, v in self.originalLocation.items() if k not in hiddenAxisTags
         }
         self.depth = 0
         self.locationStack = []
