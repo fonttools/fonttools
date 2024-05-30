@@ -36,6 +36,9 @@ class _TTGlyphSet(Mapping):
             if not axis.flags & 0x0001  # HIDDEN_AXIS
         }
         self.location = location if location is not None else {}
+        # For VarComponents and addVarComponent() we need to maintain a sparse
+        # location, so the addVarComponent() client can know which axes are set,
+        # and which to infer from the current global font location
         self.rawLocation = {}  # VarComponent-only location
         self.originalLocation = location if location is not None else {}
         self.originalLocationNonHidden = defaultLocationNormalized | {
