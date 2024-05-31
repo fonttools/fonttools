@@ -443,10 +443,19 @@ class TestGLIF2(unittest.TestCase):
 		glyph.guidelines = [{"angle" : 45, "y" : 1}]
 		"""
         result = self.pyToGLIF(py)
-        expected = '<glyph name="a" format="2">\n  <guideline y="1" angle="45"/>\n  <outline>\n  </outline>\n</glyph>'
+        expected = """
+		<glyph name="a" format="2">
+			<guideline y="1" angle="45"/>
+			<outline>
+			</outline>
+		</glyph>
+		"""
         self.assertEqual(result, expected)
         result = self.glifToPy(glif)
-        expected = 'glyph.name = "a"\nglyph.guidelines = [{"angle" : 45, "x" : 0, "y" : 1}]'
+        expected = """
+		glyph.name = "a"
+		glyph.guidelines = [{"angle" : 45, "x" : 0, "y" : 1}]
+		"""
         self.assertEqual(result, expected)
 
     def testGuidelines_y_missing(self):
@@ -463,10 +472,19 @@ class TestGLIF2(unittest.TestCase):
 		glyph.guidelines = [{"angle" : 45, "x" : 1}]
 		"""
         result = self.pyToGLIF(py)
-        expected = '<glyph name="a" format="2">\n  <guideline x="1" angle="45"/>\n  <outline>\n  </outline>\n</glyph>'
+        expected = """
+		<glyph name="a" format="2">
+			<guideline x="1" angle="45"/>
+			<outline>
+			</outline>
+		</glyph>
+		"""
         self.assertEqual(result, expected)
         result = self.glifToPy(glif)
-        expected = 'glyph.name = "a"\nglyph.guidelines = [{"angle" : 45, "x" : 1, "y" : 0}]'
+        expected = """
+		glyph.name = "a"
+		glyph.guidelines = [{"angle" : 45, "x" : 1, "y" : 0}]
+		"""
         self.assertEqual(result, expected)
 
     def testGuidelines_angle_missing(self):
@@ -483,10 +501,19 @@ class TestGLIF2(unittest.TestCase):
 		glyph.guidelines = [{"x" : 1, "y" : 1, "angle" : 0}]
 		"""
         result = self.pyToGLIF(py)
-        expected = '<glyph name="a" format="2">\n  <guideline x="1" y="1"/>\n  <outline>\n  </outline>\n</glyph>'
+        expected = """
+		<glyph name="a" format="2">
+			<guideline x="1" y="1"/>
+			<outline>
+			</outline>
+		</glyph>
+		"""
         self.assertEqual(result, expected)
         result = self.glifToPy(glif)
-        expected = 'glyph.name = "a"\nglyph.guidelines = [{"angle" : 0, "x" : 1, "y" : 1}]'
+        expected = """
+		glyph.name = "a"
+		glyph.guidelines = [{"angle" : 0, "x" : 1, "y" : 1}]
+		"""
         self.assertEqual(result, expected)
 
     def testGuidelines_illegal_angle_out_of_range(self):
