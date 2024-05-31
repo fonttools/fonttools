@@ -1,3 +1,6 @@
+4.53.0 (released 2024-05-31)
+----------------------------
+
 - [ttLib.removeOverlaps] Support CFF table to aid in downconverting CFF2 fonts (#3528)
 - [avar] Fix crash when accessing not-yet-existing attribute (#3550)
 - [docs] Add buildMathTable to otlLib.builder documentation (#3540)
