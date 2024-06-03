@@ -8,6 +8,7 @@ from os.path import isfile, join as pjoin
 from glob import glob
 from setuptools import setup, find_packages, Command, Extension
 from setuptools.command.build_ext import build_ext as _build_ext
+from setuptools.errors import SetupError
 from distutils import log
 from distutils.util import convert_path
 import subprocess as sp
@@ -33,7 +34,7 @@ if {"bdist_wheel"}.intersection(sys.argv):
     setup_requires.append("wheel")
 
 if {"release"}.intersection(sys.argv):
-    setup_requires.append("bump2version")
+    setup_requires.extend(["bump2version", "readme_renderer"])
 
 try:
     __import__("cython")
@@ -266,7 +267,19 @@ class release(Command):
             raise DistutilsOptionError("--major/--minor are mutually exclusive")
         self.part = "major" if self.major else "minor" if self.minor else None
 
+    def check_long_description_syntax(self):
+        import readme_renderer.rst
+
+        result = readme_renderer.rst.render(long_description, stream=sys.stderr)
+        if result is None:
+            raise SetupError(
+                "`long_description` has syntax errors in markup"
+                " and would not be rendered on PyPI."
+            )
+
     def run(self):
+        self.check_long_description_syntax()
+
         if self.part is not None:
             log.info("bumping '%s' version" % self.part)
             self.bumpversion(self.part, commit=False)
