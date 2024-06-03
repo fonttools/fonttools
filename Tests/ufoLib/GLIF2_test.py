@@ -308,7 +308,7 @@ class TestGLIF2(unittest.TestCase):
 
         # illegal
         glif = """
-		<glyph name="a" format="1">
+		<glyph name="a" format="2">
 			<unicode />
 			<outline>
 			</outline>
