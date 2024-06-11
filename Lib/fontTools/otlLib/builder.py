@@ -2881,8 +2881,10 @@ def _buildAxisValuesFormat4(locations, axes, ttFont, windowsNames=True, macNames
 
 def _addName(ttFont, value, minNameID=0, windows=True, mac=True):
     nameTable = ttFont["name"]
+    # Already a nameID
     if isinstance(value, int):
-        # Already a nameID
+        if not any(nr.nameID == value for nr in nameTable.names):
+            raise ValueError(f"NameID {value} not found in name table")
         return value
     if isinstance(value, str):
         names = dict(en=value)
