@@ -24,6 +24,10 @@ class B:
         self.a = A()
 
 
+class C(B):
+    pass
+
+
 class TestVisitor(Visitor):
     def __init__(self):
         self.value = []
@@ -71,3 +75,9 @@ class VisitorTest(object):
         visitor.defaultStop = True
         visitor.visit(b)
         assert visitor.value == ["B", "B a"]
+
+    def test_visitor_inheritance(self):
+        b = C()  # Should behave just like a B()
+        visitor = TestVisitor()
+        visitor.visit(b)
+        assert visitor.value == ["B", "B a", "A", 1, 2, 3, 5, 7, "e", E.E2, 10]
