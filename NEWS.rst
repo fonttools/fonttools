@@ -1,3 +1,10 @@
+4.53.1 (released 2024-07-05)
+----------------------------
+
+- [feaLib] Improve the sharing of inline chained lookups (#3559)
+- [otlLib] Correct the calculation of OS/2.usMaxContext with reversed chaining contextual single substitutions (#3569)
+- [misc.visitor] Visitors search the inheritance chain of objects they are visiting (#3581)
+
 4.53.0 (released 2024-05-31)
 ----------------------------
 
