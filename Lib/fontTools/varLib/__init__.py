@@ -308,16 +308,22 @@ def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
         )
         for m in master_ttfs
     ]
+    log.info("Gathering gvar data")
+    gvar_data = {
+        glyph: (
+            glyf[glyph].isComposite(),
+            [
+                m.glyf._getCoordinatesAndControls(glyph, m.hMetrics, m.vMetrics)
+                for m in master_datas
+            ],
+        )
+        for glyph in font.getGlyphOrder()
+    }
 
-    def compute_a_variation(glyph):
-        log.debug("building gvar for glyph '%s'", glyph)
-        isComposite = glyf[glyph].isComposite()
-
-        allData = [
-            m.glyf._getCoordinatesAndControls(glyph, m.hMetrics, m.vMetrics)
-            for m in master_datas
-        ]
-
+    def compute_a_variation(item):
+        glyphname, gdata = item
+        log.debug("building gvar for glyph '%s'", glyphname)
+        isComposite, allData = gdata
         if allData[defaultMasterIndex][1].numberOfContours != 0:
             # If the default master is not empty, interpret empty non-default masters
             # as missing glyphs from a sparse master
@@ -333,7 +339,7 @@ def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
         control = allControls[0]
         if not models.allEqual(allControls):
             log.warning("glyph %s has incompatible masters; skipping" % glyph)
-            return glyph, []
+            return glyphname, []
         del allControls
 
         # Update gvar
@@ -382,12 +388,12 @@ def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
                     if optimized_len < unoptimized_len:
                         var = var_opt
             vars.append(var)
-        return glyph, vars
+        return glyphname, vars
 
-    with ThreadPoolExecutor() as executor:
-        glyph_variations = executor.map(
-            compute_a_variation, font.getGlyphOrder(), chunksize=16
-        )
+    log.info("Creating variations")
+    with ThreadPoolExecutor(max_workers=32) as executor:
+        glyph_variations = executor.map(compute_a_variation, gvar_data.items())
+    log.info("Applying variations")
     for glyph, variations in glyph_variations:
         gvar.variations[glyph] = variations
 
