@@ -19,6 +19,7 @@ Then you can make a variable-font this way:
 API *will* change in near future.
 """
 
+from concurrent.futures import ThreadPoolExecutor
 from typing import List
 from fontTools.misc.vector import Vector
 from fontTools.misc.roundTools import noRound, otRound
@@ -308,7 +309,7 @@ def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
         for m in master_ttfs
     ]
 
-    for glyph in font.getGlyphOrder():
+    def compute_a_variation(glyph):
         log.debug("building gvar for glyph '%s'", glyph)
         isComposite = glyf[glyph].isComposite()
 
@@ -332,11 +333,10 @@ def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
         control = allControls[0]
         if not models.allEqual(allControls):
             log.warning("glyph %s has incompatible masters; skipping" % glyph)
-            continue
+            return glyph, []
         del allControls
 
         # Update gvar
-        gvar.variations[glyph] = []
         deltas = model.getDeltas(
             allCoords, round=partial(GlyphCoordinates.__round__, round=round)
         )
@@ -346,6 +346,7 @@ def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
         # Prepare for IUP optimization
         origCoords = deltas[0]
         endPts = control.endPts
+        vars = []
 
         for i, (delta, support) in enumerate(zip(deltas[1:], supports[1:])):
             if all(v == 0 for v in delta.array) and not isComposite:
@@ -380,8 +381,15 @@ def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
 
                     if optimized_len < unoptimized_len:
                         var = var_opt
+            vars.append(var)
+        return glyph, vars
 
-            gvar.variations[glyph].append(var)
+    with ThreadPoolExecutor() as executor:
+        glyph_variations = executor.map(
+            compute_a_variation, font.getGlyphOrder(), chunksize=16
+        )
+    for glyph, variations in glyph_variations:
+        gvar.variations[glyph] = variations
 
 
 def _remove_TTHinting(font):
