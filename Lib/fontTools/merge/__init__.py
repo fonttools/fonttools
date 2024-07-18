@@ -27,8 +27,8 @@ class Merger(object):
 
     This class merges multiple files into a single OpenType font, taking into
     account complexities such as OpenType layout (``GSUB``/``GPOS``) tables and
-    cross-font metrics (for example ``hhea.ascent`` is set to the maximum value across
-    all the fonts).
+    cross-font metrics (for example ``hhea.ascent`` is set to the maximum value
+    across all the fonts).
 
     If multiple glyphs map to the same Unicode value, and the glyphs are considered
     sufficiently different (that is, they differ in any of paths, widths, or
