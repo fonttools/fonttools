@@ -4,7 +4,7 @@ from fontTools.pens.pointPen import AbstractPointPen, SegmentToPointPen
 from fontTools.pens.recordingPen import RecordingPen, DecomposingRecordingPen
 from fontTools.misc.transform import Transform
 from collections import defaultdict, deque
-from math import sqrt, copysign, atan2, pi
+from math import sqrt, copysign, atan2, pi, inf
 from enum import Enum
 import itertools
 
@@ -195,9 +195,10 @@ def contour_vector_from_stats(stats):
     # Don't change the order of items here.
     # It's okay to add to the end, but otherwise, other
     # code depends on it. Search for "covariance".
+    # Other code assumes that signed area is at the beginning.
     size = sqrt(abs(stats.area))
     return (
-        copysign((size), stats.area),
+        copysign(size, stats.area),
         stats.meanX,
         stats.meanY,
         stats.stddevX * 2,

@@ -8,10 +8,17 @@ def test_starting_point(glyph0, glyph1, ix, tolerance, matching):
     contour1 = glyph1.isomorphisms[matching[ix]]
     m0Vectors = glyph0.greenVectors
     m1Vectors = [glyph1.greenVectors[i] for i in matching]
+    m0sign = 0 <= m0Vectors[ix][0]
+    m1sign = 0 <= m1Vectors[ix][0]
+    signMismatch = m0sign != m1sign
 
     c0 = contour0[0]
+    assert c0[2] == False  # Not reversed
     # Next few lines duplicated below.
-    costs = [vdiff_hypot2_complex(c0[0], c1[0]) for c1 in contour1]
+    costs = [
+        vdiff_hypot2_complex(c0[0], c1[0]) if c1[2] == signMismatch else inf
+        for c1 in contour1
+    ]
     min_cost_idx, min_cost = min(enumerate(costs), key=lambda x: x[1])
     first_cost = costs[0]
     proposed_point = contour1[min_cost_idx][1]
@@ -88,7 +95,12 @@ def test_starting_point(glyph0, glyph1, ix, tolerance, matching):
 
             # Next few lines duplicate from above.
             costs = [
-                vdiff_hypot2_complex(new_c0[0], new_c1[0]) for new_c1 in new_contour1
+                (
+                    vdiff_hypot2_complex(new_c0[0], new_c1[0])
+                    if new_c1[2] == signMismatch
+                    else inf
+                )
+                for new_c1 in new_contour1
             ]
             min_cost_idx, min_cost = min(enumerate(costs), key=lambda x: x[1])
             first_cost = costs[0]
