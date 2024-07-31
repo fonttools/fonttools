@@ -29,6 +29,10 @@ def polyline_orientation_angle_sum(points):
         v1 = p2 - p1
         v2 = p3 - p2
 
+        if not v1 or not v2:
+            # TODO: Why does this still happen?
+            continue
+
         angle = cmath.phase(v2 / v1)
         total_angle += angle
 
@@ -52,14 +56,19 @@ def test_starting_point(glyph0, glyph1, ix, tolerance, matching):
 
     orientation0 = polyline_orientation_angle_sum([complex(*pt) for pt, _ in points0])
     orientation1 = polyline_orientation_angle_sum([complex(*pt) for pt, _ in points1])
-    orientation_mismatch = orientation0 != orientation1
+    if 0 in (orientation0, orientation1):
+        orientation_mismatch = lambda reverse: False
+    elif orientation0 != orientation1:
+        orientation_mismatch = lambda reverse: reverse
+    else:
+        orientation_mismatch = lambda reverse: not reverse
 
     c0 = contour0[0]
     # Next few lines duplicated below.
     costs = [
         (
             vdiff_hypot2_complex(c0.vector, c1.vector)
-            if orientation_mismatch == c1.reverse
+            if orientation_mismatch(c1.reverse)
             else inf
         )
         for c1 in contour1
@@ -149,7 +158,7 @@ def test_starting_point(glyph0, glyph1, ix, tolerance, matching):
             costs = [
                 (
                     vdiff_hypot2_complex(new_c0.vector, new_c1.vector)
-                    if orientation_mismatch == new_c1.reverse
+                    if orientation_mismatch(new_c1.reverse)
                     else inf
                 )
                 for new_c1 in new_contour1
