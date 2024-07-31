@@ -1,21 +1,73 @@
 from .interpolatableHelpers import *
 
+import cmath
+
+
+def polyline_orientation_angle_sum(points):
+    """
+    Determine the orientation of a closed polyline using the angle sum method,
+    handling coincident consecutive points by skipping them.
+
+    Note: Does not handle cusp points (i.e. points where the polyline reverses direction).
+
+    :param points: List of complex numbers representing vertices of the polyline.
+    :return: +1, 0, or -1 depending on the orientation of the polyline.
+    """
+    # Remove consecutive duplicate points
+    filtered_points = []
+    for p in points:
+        if not filtered_points or filtered_points[-1] != p:
+            filtered_points.append(p)
+
+    n = len(filtered_points)
+    total_angle = 0
+    for i in range(n):
+        p1 = filtered_points[i]
+        p2 = filtered_points[(i + 1) % n]
+        p3 = filtered_points[(i + 2) % n]
+
+        v1 = p2 - p1
+        v2 = p3 - p2
+
+        angle = cmath.phase(v2 / v1)
+        total_angle += angle
+
+    # We expect total_angle to be roughly a multiple of 2*pi for a closed polyline.
+    # So, very relaxed check for near-zero:
+    if abs(total_angle) < 1:
+        return 0
+
+    return +1 if total_angle > 0 else -1
+
 
 def test_starting_point(glyph0, glyph1, ix, tolerance, matching):
     if matching is None:
         matching = list(range(len(glyph0.isomorphisms)))
     contour0 = glyph0.isomorphisms[ix]
     contour1 = glyph1.isomorphisms[matching[ix]]
+    points0 = glyph0.points[ix]
+    points1 = glyph1.points[matching[ix]]
     m0Vectors = glyph0.greenVectors
     m1Vectors = [glyph1.greenVectors[i] for i in matching]
 
+    orientation0 = polyline_orientation_angle_sum([complex(*pt) for pt, _ in points0])
+    orientation1 = polyline_orientation_angle_sum([complex(*pt) for pt, _ in points1])
+    orientation_mismatch = orientation0 != orientation1
+
     c0 = contour0[0]
     # Next few lines duplicated below.
-    costs = [vdiff_hypot2_complex(c0[0], c1[0]) for c1 in contour1]
+    costs = [
+        (
+            vdiff_hypot2_complex(c0.vector, c1.vector)
+            if orientation_mismatch == c1.reverse
+            else inf
+        )
+        for c1 in contour1
+    ]
     min_cost_idx, min_cost = min(enumerate(costs), key=lambda x: x[1])
     first_cost = costs[0]
-    proposed_point = contour1[min_cost_idx][1]
-    reverse = contour1[min_cost_idx][2]
+    proposed_point = contour1[min_cost_idx].start
+    reverse = contour1[min_cost_idx].reverse
 
     if min_cost < first_cost * tolerance:
         # c0 is the first isomorphism of the m0 master
@@ -72,23 +124,35 @@ def test_starting_point(glyph0, glyph1, ix, tolerance, matching):
                 transforms.append(trans)
 
             trans = transforms[0]
-            new_c0 = (
-                [complex(*trans.transformPoint((pt.real, pt.imag))) for pt in c0[0]],
-            ) + c0[1:]
+            new_c0 = Isomorphism(
+                [
+                    complex(*trans.transformPoint((pt.real, pt.imag)))
+                    for pt in c0.vector
+                ],
+                c0.start,
+                c0.reverse,
+            )
             trans = transforms[1]
             new_contour1 = []
             for c1 in contour1:
-                new_c1 = (
+                new_c1 = Isomorphism(
                     [
                         complex(*trans.transformPoint((pt.real, pt.imag)))
-                        for pt in c1[0]
+                        for pt in c1.vector
                     ],
-                ) + c1[1:]
+                    c1.start,
+                    c1.reverse,
+                )
                 new_contour1.append(new_c1)
 
             # Next few lines duplicate from above.
             costs = [
-                vdiff_hypot2_complex(new_c0[0], new_c1[0]) for new_c1 in new_contour1
+                (
+                    vdiff_hypot2_complex(new_c0.vector, new_c1.vector)
+                    if orientation_mismatch == new_c1.reverse
+                    else inf
+                )
+                for new_c1 in new_contour1
             ]
             min_cost_idx, min_cost = min(enumerate(costs), key=lambda x: x[1])
             first_cost = costs[0]

@@ -4,9 +4,10 @@ from fontTools.pens.pointPen import AbstractPointPen, SegmentToPointPen
 from fontTools.pens.recordingPen import RecordingPen, DecomposingRecordingPen
 from fontTools.misc.transform import Transform
 from collections import defaultdict, deque
-from math import sqrt, copysign, atan2, pi
+from math import sqrt, copysign, atan2, pi, inf
 from enum import Enum
 import itertools
+import dataclasses
 
 import logging
 
@@ -266,6 +267,13 @@ def points_complex_vector(points):
     return vector
 
 
+@dataclasses.dataclass(frozen=True)
+class Isomorphism:
+    vector: list
+    start: int
+    reverse: bool
+
+
 def add_isomorphisms(points, isomorphisms, reverse):
     reference_bits = points_characteristic_bits(points)
     n = len(points)
@@ -289,7 +297,9 @@ def add_isomorphisms(points, isomorphisms, reverse):
         b = ((bits << (n - i)) & mask) | (bits >> i)
         if b == reference_bits:
             isomorphisms.append(
-                (rot_list(vector, -i * mult), n - 1 - i if reverse else i, reverse)
+                Isomorphism(
+                    rot_list(vector, -i * mult), n - 1 - i if reverse else i, reverse
+                )
             )
 
 
