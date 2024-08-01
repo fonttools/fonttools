@@ -22,9 +22,9 @@ def polyline_orientation_angle_sum(points):
     n = len(filtered_points)
     total_angle = 0
     for i in range(n):
-        p1 = filtered_points[i]
-        p2 = filtered_points[(i + 1) % n]
-        p3 = filtered_points[(i + 2) % n]
+        p1 = filtered_points[i - 1]
+        p2 = filtered_points[i]
+        p3 = filtered_points[(i + 1) % n]
 
         v1 = p2 - p1
         v2 = p3 - p2
@@ -33,7 +33,12 @@ def polyline_orientation_angle_sum(points):
             # TODO: Why does this still happen?
             continue
 
-        angle = cmath.phase(v2 / v1)
+        turn = v2 / v1
+        angle = cmath.phase(turn)
+        if abs(abs(angle) - pi) < 1e-6:
+            # This is a cusp point. Can't determine orientation.
+            return 0
+
         total_angle += angle
 
     # We expect total_angle to be roughly a multiple of 2*pi for a closed polyline.
