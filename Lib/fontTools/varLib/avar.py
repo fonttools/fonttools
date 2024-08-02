@@ -150,7 +150,7 @@ def main(args=None):
 
     axisTags = [a.axisTag for a in font["fvar"].axes]
 
-    ds = load_designspace(options.designspace)
+    ds = load_designspace(options.designspace, require_sources=False)
 
     if "avar" in font:
         log.warning("avar table already present, overwriting.")
