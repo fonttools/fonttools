@@ -10,9 +10,10 @@ log = logging.getLogger("fontTools.varLib.avar")
 
 
 def _denormalize(v, axis):
-    return axis.defaultValue + v * (
-        (axis.maxValue if v >= 0 else axis.minValue) - axis.defaultValue
-    )
+    if v >= 0:
+        return axis.defaultValue + v * (axis.maxValue - axis.defaultValue)
+    else:
+        return axis.defaultValue + v * (axis.defaultValue - axis.minValue)
 
 
 def mappings_from_avar(font, denormalize=True):
@@ -29,7 +30,7 @@ def mappings_from_avar(font, denormalize=True):
         if seg and seg != {-1: -1, 0: 0, 1: 1}
     }
     mappings = []
-    poles = set()
+    poles = dict()  # Just using it as an ordered set
 
     if getattr(avar, "majorVersion", 1) == 2:
         varStore = avar.table.VarStore
@@ -54,7 +55,7 @@ def mappings_from_avar(font, denormalize=True):
                     corners.append(corner)
                 corners = set(product(*corners))
                 peakLocation = tuple(peakLocation)
-                poles.add(peakLocation)
+                poles[peakLocation] = None
                 inputLocations.add(peakLocation)
                 inputLocations.update(corners)
 
@@ -90,8 +91,8 @@ def mappings_from_avar(font, denormalize=True):
         model = VariationModel(inputLocations, axisTags)
         modelMapping = model.mapping
         modelSupports = model.supports
-        pins = set(poles)
-        for pole in poles:
+        pins = set(poles.keys())
+        for pole in poles.keys():
             location = dict(pole)
             i = inputLocations.index(location)
             i = modelMapping[i]
