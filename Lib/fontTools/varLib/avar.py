@@ -35,7 +35,7 @@ def mappings_from_avar(font, denormalize=True):
     if getattr(avar, "majorVersion", 1) == 2:
         varStore = avar.table.VarStore
         regions = varStore.VarRegionList.Region
-        inputLocations = set()
+        inputLocations = set({()})
         for varData in varStore.VarData:
             regionIndices = varData.VarRegionIndex
             for regionIndex in regionIndices:
@@ -87,7 +87,6 @@ def mappings_from_avar(font, denormalize=True):
 
         # Now we have all the mappings, find which ones are redundant
         # and remove them.
-        inputLocations.insert(0, {})
         model = VariationModel(inputLocations, axisTags)
         modelMapping = model.mapping
         modelSupports = model.supports
