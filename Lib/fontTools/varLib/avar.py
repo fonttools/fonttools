@@ -67,26 +67,8 @@ def mappings_from_avar(font, denormalize=True):
             )
         ]
 
-        varIdxMap = avar.table.VarIdxMap
-        instancer = VarStoreInstancer(varStore, fvarAxes)
-        for location in inputLocations:
-            instancer.setLocation(location)
-            outputLocation = {}
-            for axisIndex, axisTag in enumerate(axisTags):
-                varIdx = axisIndex
-                if varIdxMap is not None:
-                    varIdx = varIdxMap[varIdx]
-                delta = instancer[varIdx]
-                if delta != 0:
-                    v = location.get(axisTag, 0)
-                    v = v + fi2fl(delta, 14)
-                    # See https://github.com/fonttools/fonttools/pull/3598#issuecomment-2266082009
-                    # v = max(-1, min(1, v))
-                    outputLocation[axisTag] = v
-            mappings.append((location, outputLocation))
-
-        # Now we have all the mappings, find which ones are redundant
-        # and remove them.
+        # Now we have all the input locations, find which ones are
+        # not needed and remove them.
         model = VariationModel(inputLocations, axisTags)
         modelMapping = model.mapping
         modelSupports = model.supports
@@ -120,11 +102,26 @@ def mappings_from_avar(font, denormalize=True):
                             continue
                         if candidateLocation[axisTag] == v:
                             pins.add(tuple(candidateLocation.items()))
-        mappings = [
-            (inputLoc, outputLoc)
-            for inputLoc, outputLoc in mappings
-            if tuple(inputLoc.items()) in pins
-        ]
+        inputLocations = [dict(t) for t in pins]
+
+        # Find the output locations
+        varIdxMap = avar.table.VarIdxMap
+        instancer = VarStoreInstancer(varStore, fvarAxes)
+        for location in inputLocations:
+            instancer.setLocation(location)
+            outputLocation = {}
+            for axisIndex, axisTag in enumerate(axisTags):
+                varIdx = axisIndex
+                if varIdxMap is not None:
+                    varIdx = varIdxMap[varIdx]
+                delta = instancer[varIdx]
+                if delta != 0:
+                    v = location.get(axisTag, 0)
+                    v = v + fi2fl(delta, 14)
+                    # See https://github.com/fonttools/fonttools/pull/3598#issuecomment-2266082009
+                    # v = max(-1, min(1, v))
+                    outputLocation[axisTag] = v
+            mappings.append((location, outputLocation))
 
     if denormalize:
         for tag, seg in axisMaps.items():
@@ -195,7 +192,6 @@ def main(args=None):
         segments, mappings = mappings_from_avar(font)
         pprint(segments)
         pprint(mappings)
-        print(len(mappings))
         return
 
     axisTags = [a.axisTag for a in font["fvar"].axes]
