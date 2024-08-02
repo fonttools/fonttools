@@ -36,14 +36,14 @@ def mappings_from_avar(font, denormalize=True):
         for varData in varStore.VarData:
             regionIndices = varData.VarRegionIndex
             for regionIndex in regionIndices:
-                peakLocation = {}
+                peakLocation = []
                 corners = []
                 region = regions[regionIndex]
                 for axisIndex, axis in enumerate(region.VarRegionAxis):
                     if axis.PeakCoord == 0:
                         continue
                     axisTag = axisTags[axisIndex]
-                    peakLocation[axisTag] = axis.PeakCoord
+                    peakLocation.append((axisTag, axis.PeakCoord))
                     corner = []
                     if axis.StartCoord != 0:
                         corner.append((axisTag, axis.StartCoord))
@@ -51,6 +51,7 @@ def mappings_from_avar(font, denormalize=True):
                         corner.append((axisTag, axis.EndCoord))
                     corners.append(corner)
                 corners = set(product(*corners))
+                inputLocations.add(tuple(peakLocation))
                 inputLocations.update(corners)
 
         inputLocations = [
