@@ -78,8 +78,6 @@ def mappings_from_avar(font, denormalize=True):
                     # v = max(-1, min(1, v))
                     outputLocation[axisTag] = v
             mappings.append((location, outputLocation))
-        # Filter out empty mappings
-        mappings = [io for io in mappings if io[1]]
 
     if denormalize:
         for tag, seg in axisMaps.items():
