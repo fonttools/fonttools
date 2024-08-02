@@ -386,7 +386,7 @@ class VariationModel(object):
             locAxes = set(region.keys())
             # Walk over previous masters now
             for prev_region in regions[:i]:
-                # Master with extra axes do not participte
+                # Master with different axes do not participte
                 if set(prev_region.keys()) != locAxes:
                     continue
                 # If it's NOT in the current box, it does not participate

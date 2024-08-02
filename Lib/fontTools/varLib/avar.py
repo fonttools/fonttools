@@ -1,4 +1,5 @@
 from fontTools.varLib import _add_avar, load_designspace
+from fontTools.varLib.models import VariationModel
 from fontTools.varLib.varStore import VarStoreInstancer
 from fontTools.misc.fixedTools import fixedToFloat as fi2fl
 from fontTools.misc.cliTools import makeOutputFileName
@@ -28,6 +29,7 @@ def mappings_from_avar(font, denormalize=True):
         if seg and seg != {-1: -1, 0: 0, 1: 1}
     }
     mappings = []
+    poles = set()
 
     if getattr(avar, "majorVersion", 1) == 2:
         varStore = avar.table.VarStore
@@ -51,7 +53,9 @@ def mappings_from_avar(font, denormalize=True):
                         corner.append((axisTag, axis.EndCoord))
                     corners.append(corner)
                 corners = set(product(*corners))
-                inputLocations.add(tuple(peakLocation))
+                peakLocation = tuple(peakLocation)
+                poles.add(peakLocation)
+                inputLocations.add(peakLocation)
                 inputLocations.update(corners)
 
         inputLocations = [
@@ -79,6 +83,48 @@ def mappings_from_avar(font, denormalize=True):
                     # v = max(-1, min(1, v))
                     outputLocation[axisTag] = v
             mappings.append((location, outputLocation))
+
+        # Now we have all the mappings, find which ones are redundant
+        # and remove them.
+        inputLocations.insert(0, {})
+        model = VariationModel(inputLocations, axisTags)
+        modelMapping = model.mapping
+        modelSupports = model.supports
+        pins = set(poles)
+        for pole in poles:
+            location = dict(pole)
+            i = inputLocations.index(location)
+            i = modelMapping[i]
+            support = modelSupports[i]
+            supportAxes = set(support.keys())
+            for supportIndex, (axisTag, (minV, _, maxV)) in enumerate(support.items()):
+                for v in (minV, maxV):
+                    for pin in pins:
+                        pinLocation = dict(pin)
+                        pinAxes = set(pinLocation.keys())
+                        if pinAxes != supportAxes:
+                            continue
+                        if axisTag not in pinAxes:
+                            continue
+                        if pinLocation[axisTag] == v:
+                            break
+                else:
+                    # No pin found. Go through the previous masters
+                    # and find a suitable pin.
+                    for candidateIdx in range(supportIndex):
+                        candidate = modelSupports[candidateIdx]
+                        candidateAxes = set(candidate.keys())
+                        if candidateAxes != supportAxes:
+                            continue
+                        if axisTag not in candidateAxes:
+                            continue
+                        if candidateLocation[axisTag] == v:
+                            pins.add(tuple(candidateLocation.items()))
+        mappings = [
+            (inputLoc, outputLoc)
+            for inputLoc, outputLoc in mappings
+            if tuple(inputLoc.items()) in pins
+        ]
 
     if denormalize:
         for tag, seg in axisMaps.items():
@@ -146,7 +192,10 @@ def main(args=None):
     if options.designspace is None:
         from pprint import pprint
 
-        pprint(mappings_from_avar(font))
+        segments, mappings = mappings_from_avar(font)
+        pprint(segments)
+        pprint(mappings)
+        print(len(mappings))
         return
 
     axisTags = [a.axisTag for a in font["fvar"].axes]
