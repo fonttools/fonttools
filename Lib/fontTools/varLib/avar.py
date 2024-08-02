@@ -74,7 +74,8 @@ def mappings_from_avar(font, denormalize=True):
                 if delta != 0:
                     v = location.get(axisTag, 0)
                     v = v + fi2fl(delta, 14)
-                    v = max(-1, min(1, v))
+                    # See https://github.com/fonttools/fonttools/pull/3598#issuecomment-2266082009
+                    # v = max(-1, min(1, v))
                     outputLocation[axisTag] = v
             mappings.append((location, outputLocation))
         # Filter out empty mappings
