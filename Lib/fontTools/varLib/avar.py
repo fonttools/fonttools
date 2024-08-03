@@ -19,6 +19,20 @@ def _denormalize(v, axis):
 def _pruneLocations(locations, poles, axisTags):
     # Now we have all the input locations, find which ones are
     # not needed and remove them.
+
+    # Note: This algorithm is heavily tied to how VariationModel
+    # is implemented.  It assumes that input was extracted from
+    # VariationModel-generated object, like an ItemVariationStore
+    # created by fontmake using varLib.models.VariationModel.
+    # Some CoPilot blabbering:
+    # I *think* I can prove that this algorithm is correct, but
+    # I'm not 100% sure.  It's possible that there are edge cases
+    # where this algorithm will fail.  I'm not sure how to prove
+    # that it's correct, but I'm also not sure how to prove that
+    # it's incorrect.  I'm not sure how to write a test case that
+    # would prove that it's incorrect.  I'm not sure how to write
+    # a test case that would prove that it's correct.
+
     model = VariationModel(locations, axisTags)
     modelMapping = model.mapping
     modelSupports = model.supports
