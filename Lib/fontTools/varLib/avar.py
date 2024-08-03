@@ -30,7 +30,7 @@ def mappings_from_avar(font, denormalize=True):
         if seg and seg != {-1: -1, 0: 0, 1: 1}
     }
     mappings = []
-    poles = dict()  # Just using it as an ordered set
+    poles = {(): None}  # Just using it as an ordered set
 
     if getattr(avar, "majorVersion", 1) == 2:
         varStore = avar.table.VarStore
@@ -72,7 +72,7 @@ def mappings_from_avar(font, denormalize=True):
         model = VariationModel(inputLocations, axisTags)
         modelMapping = model.mapping
         modelSupports = model.supports
-        pins = set(poles.keys())
+        pins = poles.copy()
         for pole in poles.keys():
             location = dict(pole)
             i = inputLocations.index(location)
@@ -81,7 +81,7 @@ def mappings_from_avar(font, denormalize=True):
             supportAxes = set(support.keys())
             for supportIndex, (axisTag, (minV, _, maxV)) in enumerate(support.items()):
                 for v in (minV, maxV):
-                    for pin in pins:
+                    for pin in pins.keys():
                         pinLocation = dict(pin)
                         pinAxes = set(pinLocation.keys())
                         if pinAxes != supportAxes:
@@ -101,8 +101,8 @@ def mappings_from_avar(font, denormalize=True):
                         if axisTag not in candidateAxes:
                             continue
                         if candidateLocation[axisTag] == v:
-                            pins.add(tuple(candidateLocation.items()))
-        inputLocations = [dict(t) for t in pins]
+                            pins[tuple(candidateLocation.items())] = None
+        inputLocations = [dict(t) for t in pins.keys()]
 
         # Find the output locations
         varIdxMap = avar.table.VarIdxMap
@@ -122,6 +122,11 @@ def mappings_from_avar(font, denormalize=True):
                     # v = max(-1, min(1, v))
                     outputLocation[axisTag] = v
             mappings.append((location, outputLocation))
+
+    # Remove base master we added, if it mapped to the default location
+    assert mappings[0][0] == {}
+    if mappings[0][1] == {}:
+        mappings.pop(0)
 
     if denormalize:
         for tag, seg in axisMaps.items():
