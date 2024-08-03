@@ -16,6 +16,48 @@ def _denormalize(v, axis):
         return axis.defaultValue + v * (axis.defaultValue - axis.minValue)
 
 
+def _pruneLocations(locations, poles, axisTags):
+    # Now we have all the input locations, find which ones are
+    # not needed and remove them.
+    model = VariationModel(locations, axisTags)
+    modelMapping = model.mapping
+    modelSupports = model.supports
+    pins = poles.copy()
+    for pole in poles.keys():
+        location = dict(pole)
+        i = locations.index(location)
+        i = modelMapping[i]
+        support = modelSupports[i]
+        supportAxes = set(support.keys())
+        for supportIndex, (axisTag, (minV, _, maxV)) in enumerate(support.items()):
+            for v in (minV, maxV):
+                for pin in pins.keys():
+                    pinLocation = dict(pin)
+                    pinAxes = set(pinLocation.keys())
+                    if pinAxes != supportAxes:
+                        continue
+                    if axisTag not in pinAxes:
+                        continue
+                    if pinLocation[axisTag] == v:
+                        break
+            else:
+                # No pin found. Go through the previous masters
+                # and find a suitable pin.  Going backwards is
+                # better because it can find a pin that is close
+                # to the pole in more dimensions, and reducing
+                # the total number of pins needed.
+                for candidateIdx in range(supportIndex - 1, -1, -1):
+                    candidate = modelSupports[candidateIdx]
+                    candidateAxes = set(candidate.keys())
+                    if candidateAxes != supportAxes:
+                        continue
+                    if axisTag not in candidateAxes:
+                        continue
+                    if candidateLocation[axisTag] == v:
+                        pins[tuple(candidateLocation.items())] = None
+    return [dict(t) for t in pins.keys()]
+
+
 def mappings_from_avar(font, denormalize=True):
     fvarAxes = font["fvar"].axes
     axisMap = {a.axisTag: a for a in fvarAxes}
@@ -73,46 +115,7 @@ def mappings_from_avar(font, denormalize=True):
                 key=lambda t: (len(t), tuple(axisIndexes[tag] for tag, _ in t)),
             )
         ]
-
-        # Now we have all the input locations, find which ones are
-        # not needed and remove them.
-        model = VariationModel(inputLocations, axisTags)
-        modelMapping = model.mapping
-        modelSupports = model.supports
-        pins = poles.copy()
-        for pole in poles.keys():
-            location = dict(pole)
-            i = inputLocations.index(location)
-            i = modelMapping[i]
-            support = modelSupports[i]
-            supportAxes = set(support.keys())
-            for supportIndex, (axisTag, (minV, _, maxV)) in enumerate(support.items()):
-                for v in (minV, maxV):
-                    for pin in pins.keys():
-                        pinLocation = dict(pin)
-                        pinAxes = set(pinLocation.keys())
-                        if pinAxes != supportAxes:
-                            continue
-                        if axisTag not in pinAxes:
-                            continue
-                        if pinLocation[axisTag] == v:
-                            break
-                else:
-                    # No pin found. Go through the previous masters
-                    # and find a suitable pin.  Going backwards is
-                    # better because it can find a pin that is close
-                    # to the pole in more dimensions, and reducing
-                    # the total number of pins needed.
-                    for candidateIdx in range(supportIndex - 1, -1, -1):
-                        candidate = modelSupports[candidateIdx]
-                        candidateAxes = set(candidate.keys())
-                        if candidateAxes != supportAxes:
-                            continue
-                        if axisTag not in candidateAxes:
-                            continue
-                        if candidateLocation[axisTag] == v:
-                            pins[tuple(candidateLocation.items())] = None
-        inputLocations = [dict(t) for t in pins.keys()]
+        inputLocations = _pruneLocations(inputLocations, poles, axisTags)
 
         # Find the output locations, at input locations
         varIdxMap = avar.table.VarIdxMap
