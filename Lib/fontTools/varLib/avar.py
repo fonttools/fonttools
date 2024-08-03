@@ -30,11 +30,17 @@ def mappings_from_avar(font, denormalize=True):
         if seg and seg != {-1: -1, 0: 0, 1: 1}
     }
     mappings = []
-    poles = {(): None}  # Just using it as an ordered set
 
     if getattr(avar, "majorVersion", 1) == 2:
         varStore = avar.table.VarStore
         regions = varStore.VarRegionList.Region
+
+        # Find all the input locations; this finds "poles", that are
+        # locations of the peaks, and "corners", that are locations
+        # of the corners of the regions.  These two sets of locations
+        # together constitute inputLocations to consider.
+
+        poles = {(): None}  # Just using it as an ordered set
         inputLocations = set({()})
         for varData in varStore.VarData:
             regionIndices = varData.VarRegionIndex
@@ -59,6 +65,7 @@ def mappings_from_avar(font, denormalize=True):
                 inputLocations.add(peakLocation)
                 inputLocations.update(corners)
 
+        # Sort them by number of axes, then by axis order
         inputLocations = [
             dict(t)
             for t in sorted(
@@ -92,8 +99,11 @@ def mappings_from_avar(font, denormalize=True):
                             break
                 else:
                     # No pin found. Go through the previous masters
-                    # and find a suitable pin.
-                    for candidateIdx in range(supportIndex):
+                    # and find a suitable pin.  Going backwards is
+                    # better because it can find a pin that is close
+                    # to the pole in more dimensions, and reducing
+                    # the total number of pins needed.
+                    for candidateIdx in range(supportIndex - 1, -1, -1):
                         candidate = modelSupports[candidateIdx]
                         candidateAxes = set(candidate.keys())
                         if candidateAxes != supportAxes:
@@ -104,7 +114,7 @@ def mappings_from_avar(font, denormalize=True):
                             pins[tuple(candidateLocation.items())] = None
         inputLocations = [dict(t) for t in pins.keys()]
 
-        # Find the output locations
+        # Find the output locations, at input locations
         varIdxMap = avar.table.VarIdxMap
         instancer = VarStoreInstancer(varStore, fvarAxes)
         for location in inputLocations:
@@ -123,10 +133,10 @@ def mappings_from_avar(font, denormalize=True):
                     outputLocation[axisTag] = v
             mappings.append((location, outputLocation))
 
-    # Remove base master we added, if it mapped to the default location
-    assert mappings[0][0] == {}
-    if mappings[0][1] == {}:
-        mappings.pop(0)
+        # Remove base master we added, if it maps to the default location
+        assert mappings[0][0] == {}
+        if mappings[0][1] == {}:
+            mappings.pop(0)
 
     if denormalize:
         for tag, seg in axisMaps.items():
