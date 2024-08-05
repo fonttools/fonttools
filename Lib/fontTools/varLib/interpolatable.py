@@ -924,13 +924,13 @@ def main(args=None):
                         last_master_idxs = None
 
                     master_idxs = (
-                        (p["master_idx"])
+                        (p["master_idx"],)
                         if "master_idx" in p
                         else (p["master_1_idx"], p["master_2_idx"])
                     )
                     if master_idxs != last_master_idxs:
                         master_names = (
-                            (p["master"])
+                            (p["master"],)
                             if "master" in p
                             else (p["master_1"], p["master_2"])
                         )
