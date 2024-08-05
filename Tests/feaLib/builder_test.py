@@ -1112,12 +1112,12 @@ class BuilderTest(unittest.TestCase):
         var_region_list = font.tables["GDEF"].table.VarStore.VarRegionList
         var_region_axis_wght = var_region_list.Region[0].VarRegionAxis[0]
         var_region_axis_wdth = var_region_list.Region[0].VarRegionAxis[1]
-        assert self.get_region(var_region_axis_wght) == (0.0, 0.875, 0.875)
+        assert self.get_region(var_region_axis_wght) == (0.0, 0.875, 1.0)
         assert self.get_region(var_region_axis_wdth) == (0.0, 0.0, 0.0)
         var_region_axis_wght = var_region_list.Region[1].VarRegionAxis[0]
         var_region_axis_wdth = var_region_list.Region[1].VarRegionAxis[1]
-        assert self.get_region(var_region_axis_wght) == (0.0, 0.875, 0.875)
-        assert self.get_region(var_region_axis_wdth) == (0.0, 0.5, 0.5)
+        assert self.get_region(var_region_axis_wght) == (0.0, 0.875, 1.0)
+        assert self.get_region(var_region_axis_wdth) == (0.0, 0.5, 1.0)
 
         # With `avar`, shifting the wght axis' positive midpoint 0.5 a bit to
         # the right, but leaving the wdth axis alone:
@@ -1129,12 +1129,12 @@ class BuilderTest(unittest.TestCase):
         var_region_list = font.tables["GDEF"].table.VarStore.VarRegionList
         var_region_axis_wght = var_region_list.Region[0].VarRegionAxis[0]
         var_region_axis_wdth = var_region_list.Region[0].VarRegionAxis[1]
-        assert self.get_region(var_region_axis_wght) == (0.0, 0.90625, 0.90625)
+        assert self.get_region(var_region_axis_wght) == (0.0, 0.90625, 1.0)
         assert self.get_region(var_region_axis_wdth) == (0.0, 0.0, 0.0)
         var_region_axis_wght = var_region_list.Region[1].VarRegionAxis[0]
         var_region_axis_wdth = var_region_list.Region[1].VarRegionAxis[1]
-        assert self.get_region(var_region_axis_wght) == (0.0, 0.90625, 0.90625)
-        assert self.get_region(var_region_axis_wdth) == (0.0, 0.5, 0.5)
+        assert self.get_region(var_region_axis_wght) == (0.0, 0.90625, 1.0)
+        assert self.get_region(var_region_axis_wdth) == (0.0, 0.5, 1.0)
 
     def test_ligatureCaretByPos_variable_scalar(self):
         """Test that the `avar` table is consulted when normalizing user-space
@@ -1158,7 +1158,7 @@ class BuilderTest(unittest.TestCase):
 
         var_region_list = table.VarStore.VarRegionList
         var_region_axis = var_region_list.Region[0].VarRegionAxis[0]
-        assert self.get_region(var_region_axis) == (0.0, 0.875, 0.875)
+        assert self.get_region(var_region_axis) == (0.0, 0.875, 1.0)
 
 
 def generate_feature_file_test(name):
