@@ -252,14 +252,22 @@ class VariationModel(object):
         7: 0.6666666666666667}]
     """
 
-    def __init__(self, locations, axisOrder=None, extrapolate=False):
+    def __init__(
+        self, locations, axisOrder=None, extrapolate=False, *, axisRanges=None
+    ):
         if len(set(tuple(sorted(l.items())) for l in locations)) != len(locations):
             raise VariationModelError("Locations must be unique.")
 
         self.origLocations = locations
         self.axisOrder = axisOrder if axisOrder is not None else []
         self.extrapolate = extrapolate
-        self.axisRanges = self.computeAxisRanges(locations) if extrapolate else None
+        if axisRanges is None:
+            if extrapolate:
+                axisRanges = self.computeAxisRanges(locations)
+            else:
+                allAxes = {axis for loc in locations for axis in loc.keys()}
+                axisRanges = {axis: (-1, 1) for axis in allAxes}
+        self.axisRanges = axisRanges
 
         locations = [{k: v for k, v in loc.items() if v != 0.0} for loc in locations]
         keyFunc = self.getMasterLocationsSortKeyFunc(
@@ -425,23 +433,16 @@ class VariationModel(object):
 
     def _locationsToRegions(self):
         locations = self.locations
-        # Compute min/max across each axis, use it as total range.
-        # TODO Take this as input from outside?
-        minV = {}
-        maxV = {}
-        for l in locations:
-            for k, v in l.items():
-                minV[k] = min(v, minV.get(k, v))
-                maxV[k] = max(v, maxV.get(k, v))
+        axisRanges = self.axisRanges
 
         regions = []
         for loc in locations:
             region = {}
             for axis, locV in loc.items():
                 if locV > 0:
-                    region[axis] = (0, locV, maxV[axis])
+                    region[axis] = (0, locV, axisRanges[axis][1])
                 else:
-                    region[axis] = (minV[axis], locV, 0)
+                    region[axis] = (axisRanges[axis][0], locV, 0)
             regions.append(region)
         return regions
 
