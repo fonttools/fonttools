@@ -5,7 +5,7 @@
    :align: center
 
 
----fontTools Documentation---
+fontTools Documentation
 =======
 About
 -----
