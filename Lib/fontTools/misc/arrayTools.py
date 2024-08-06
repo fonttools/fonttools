@@ -208,7 +208,7 @@ def sectRect(rect1, rect2):
         min(xMax1, xMax2),
         min(yMax1, yMax2),
     )
-    if xMin >= xMax or yMin >= yMax:
+    if xMin > xMax or yMin > yMax:
         return False, (0, 0, 0, 0)
     return True, (xMin, yMin, xMax, yMax)
 
