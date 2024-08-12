@@ -1,0 +1,18 @@
+# https://github.com/fonttools/fonttools/issues/2946
+
+languagesystem DFLT dflt;
+languagesystem latn dflt;
+
+feature test {
+    lookup alt1 {
+	sub a by A;
+    } alt1;
+    lookup alt2 {
+        sub b by B;
+    } alt2;
+
+
+    script latn;
+    lookup alt1;
+
+} test;

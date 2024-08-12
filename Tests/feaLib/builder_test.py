@@ -48,6 +48,7 @@ def makeTTFont():
         grave acute dieresis macron circumflex cedilla umlaut ogonek caron
         damma hamza sukun kasratan lam_meem_jeem noon.final noon.initial
         by feature lookup sub table uni0327 uni0328 e.fina
+        idotbelow idotless iogonek acutecomb brevecomb ogonekcomb dotbelowcomb
     """.split()
     glyphs.extend("cid{:05d}".format(cid) for cid in range(800, 1001 + 1))
     font = TTFont()
@@ -81,7 +82,8 @@ class BuilderTest(unittest.TestCase):
         MultipleLookupsPerGlyph MultipleLookupsPerGlyph2 GSUB_6_formats
         GSUB_5_formats delete_glyph STAT_test STAT_test_elidedFallbackNameID
         variable_scalar_valuerecord variable_scalar_anchor variable_conditionset
-        variable_mark_anchor
+        variable_mark_anchor duplicate_lookup_reference
+        contextual_inline_multi_sub_format_2
     """.split()
 
     VARFONT_AXES = [
