@@ -2,7 +2,6 @@ import contextlib
 import logging
 import os
 from pathlib import Path
-from subprocess import run
 from typing import List, Optional, Tuple
 
 import pytest
@@ -28,18 +27,17 @@ def test_main(tmpdir: Path):
     input = tmpdir / "in.ttf"
     fb.save(str(input))
     output = tmpdir / "out.ttf"
-    run(
-        [
-            "fonttools",
-            "otlLib.optimize",
-            "--gpos-compression-level",
-            "5",
-            str(input),
-            "-o",
-            str(output),
-        ],
-        check=True,
-    )
+    args = [
+        "--gpos-compression-level",
+        "5",
+        str(input),
+        "-o",
+        str(output),
+    ]
+    from fontTools.otlLib.optimize import main
+
+    ret = main(args)
+    assert ret in (0, None)
     assert output.exists()
 
 
