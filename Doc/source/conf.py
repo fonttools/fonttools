@@ -40,7 +40,11 @@ extensions = [
 
 autodoc_mock_imports = ["gtk", "reportlab"]
 
-autodoc_default_options = {"members": True, "inherited-members": True, "show-inheritance": True}
+autodoc_default_options = {
+    "members": True,
+    "inherited-members": True,
+    "show-inheritance": True,
+}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
