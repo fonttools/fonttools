@@ -1,142 +1,112 @@
-:orphan:
-
 Optional Dependencies
 =====================
 
-The fonttools PyPI distribution also supports so-called "extras", i.e. a
-set of keywords that describe a group of additional dependencies, which can be
-used when installing via pip, or when specifying a requirement.
-For example:
+The FontTools PyPI distribution supports "extras", which are groups of additional dependencies that can be installed alongside FontTools via pip to enable specific features. For example:
 
 .. code:: sh
 
     pip install fonttools[ufo,lxml,woff,unicode]
 
-This command will install fonttools, as well as the optional dependencies that
-are required to unlock the extra features named "ufo", etc.
+This command installs FontTools along with the optional dependencies required for features like "ufo", "lxml", "woff", and "unicode".
 
-.. note::
+.. note:: sh
 
-    Optional dependencies are detailed by module in the list below with the ``Extra`` setting that automates ``pip`` dependency installation when this is supported.
-
-
+    Optional dependencies are listed by module below, along with the `Extra` setting that automates `pip` dependency installation when supported.
 
 :py:mod:`fontTools.misc.etree`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+--------------------
 
-The module exports a ElementTree-like API for reading/writing XML files, and allows to use as the backend either the built-in ``xml.etree`` module or `lxml <https://lxml.de>`__. The latter is preferred whenever present, as it is generally faster and more secure.
+This module provides an ElementTree-like API for reading and writing XML files. It supports two backend options:
 
-*Extra:* ``lxml``
+- Built-in `xml.etree` module
+- `lxml` preferred for improved speed and security.
 
+*Extra:* `lxml`
 
 :py:mod:`fontTools.ufoLib`
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------
 
-Package for reading and writing UFO source files; it requires:
+Package for reading and writing UFO source files. Dependencies include:
 
-* `fs <https://pypi.org/pypi/fs>`__: (aka ``pyfilesystem2``) filesystem abstraction layer.
+- `fs <https://pypi.org/pypi/fs>`__: (aka ``pyfilesystem2``) filesystem abstraction layer
+- `enum34 <https://pypi.org/pypi/enum34>`__ backport for the built-in ``enum`` module (module for Python versions < 3.4)
 
-* `enum34 <https://pypi.org/pypi/enum34>`__: backport for the built-in ``enum`` module (only required on Python < 3.4).
-
-*Extra:* ``ufo``
-
+*Extra:* `ufo`
 
 :py:mod:`fontTools.ttLib.woff2`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+---------------------
 
-Module to compress/decompress WOFF 2.0 web fonts; it requires:
+Module for compressing and decompressing WOFF 2.0 web fonts. Requires:
 
-* `brotli <https://pypi.python.org/pypi/Brotli>`__: Python bindings of the Brotli compression library.
+- `brotli <https://pypi.python.org/pypi/Brotli>`__: Python bindings for the Brotli compression library.
 
-*Extra:* ``woff``
-
+*Extra:* `woff`
 
 :py:mod:`fontTools.unicode`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-----------------
 
-To display the Unicode character names when dumping the ``cmap`` table
-with ``ttx`` we use the ``unicodedata`` module in the Standard Library.
+Displays Unicode character names when working with the `cmap` table dumps,with `ttx` we use the `unicodedata` module in the Standard Library. 
 The version included in there varies between different Python versions.
-To use the latest available data, you can install:
+To use the latest Unicode version, install:
 
-* `unicodedata2 <https://pypi.python.org/pypi/unicodedata2>`__: ``unicodedata`` backport for Python
-  3.x updated to the latest Unicode version 14.0. Note this is not necessary if you use Python 3.11
-  as the latter already comes with an up-to-date ``unicodedata``.
+- `unicodedata2 <https://pypi.python.org/pypi/unicodedata2>`__: backport of `unicodedata` for Python 3.x, updated to unicode 14.0. Not necessary with Python 3.11.
 
-*Extra:* ``unicode``
-
+*Extra:* `unicode`
 
 :py:mod:`fontTools.varLib.interpolatable`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------------
 
-Module for finding wrong contour/component order between different masters.
-It requires one of the following packages in order to solve the so-called
-"minimum weight perfect matching problem in bipartite graphs", or
-the Assignment problem:
+Module for resolving contour or component order between different masters. Requires following packages to solve 'minimum weight perfect matching problem in bipartite graphs':
 
-* `scipy <https://pypi.python.org/pypi/scipy>`__: the Scientific Library for Python, which internally
-  uses `NumPy <https://pypi.python.org/pypi/numpy>`__ arrays and hence is very fast;
-* `munkres <https://pypi.python.org/pypi/munkres>`__: a pure-Python module that implements the Hungarian
-  or Kuhn-Munkres algorithm.
+- `scipy <https://pypi.python.org/pypi/scipy>`__: Scientific Library for Python, uses `NumPy <https://pypi.python.org/pypi/numpy>`__ arrays for performance;
+- `munkres <https://pypi.python.org/pypi/munkres>`__: implementation of the Hungarian or Kuhn-Munkres algorithm.
 
-*Extra:* ``interpolatable``
-
+*Extra:* `interpolatable`
 
 :py:mod:`fontTools.varLib.plot`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------
 
-Module for visualizing DesignSpaceDocument and resulting VariationModel.
+Module for visualizing DesignSpaceDocument and resulting VariationModel. Requires:
 
-* `matplotlib <https://pypi.org/pypi/matplotlib>`__: 2D plotting library.
+- `matplotlib <https://pypi.org/pypi/matplotlib>`__: 2D plotting library.
 
-*Extra:* ``plot``
-
+*Extra:* `plot`
 
 :py:mod:`fontTools.misc.symfont`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------
 
-Advanced module for symbolic font statistics analysis; it requires:
+Advanced module for symbolic font statistics analysis. Requires:
 
-* `sympy <https://pypi.python.org/pypi/sympy>`__: the Python library for symbolic mathematics.
+- `sympy <https://pypi.python.org/pypi/sympy>`__: Python library for symbolic mathematics.
 
-*Extra:* ``symfont``
-
+*Extra:* `symfont`
 
 :py:mod:`fontTools.t1Lib`
-^^^^^^^^^^^^^^^^^^^^^^^^^
+---------------
 
-To get the file creator and type of Macintosh PostScript Type 1 fonts
-on Python 3 you need to install the following module, as the old ``MacOS``
-module is no longer included in Mac Python:
+Retrieves information about Macintosh PostScript Type 1 fonts on Python 3. Requires:
 
-* `xattr <https://pypi.python.org/pypi/xattr>`__: Python wrapper for extended filesystem attributes
-  (macOS platform only).
+- `xattr <https://pypi.python.org/pypi/xattr>`__: Python wrapper for extended filesystem attributes, macOS only.
 
-*Extra:* ``type1``
-
+*Extra:* `type1`
 
 :py:mod:`fontTools.pens.cocoaPen`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------
 
-Pen for drawing glyphs with Cocoa ``NSBezierPath``, requires:
+Pen for drawing glyphs with Cocoa `NSBezierPath`. Requires:
 
-* `PyObjC <https://pypi.python.org/pypi/pyobjc>`__: the bridge between Python and the Objective-C
-  runtime (macOS platform only).
-
+- `PyObjC <https://pypi.python.org/pypi/pyobjc>`__: Python - Objective-C bridge, macOS only.
 
 :py:mod:`fontTools.pens.qtPen`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+---------------------
 
-Pen for drawing glyphs with Qt's ``QPainterPath``, requires:
+Pen for drawing glyphs with Qt's `QPainterPath`. Requires:
 
-* `PyQt5 <https://pypi.python.org/pypi/PyQt5>`__: Python bindings for the Qt cross platform UI and
-  application toolkit.
-
+- `PyQt5 <https://pypi.python.org/pypi/PyQt5>`__: Python bindings for the Qt cross-platform UI and application toolkit.
 
 :py:mod:`fontTools.pens.reportLabPen`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+---------------------------
 
-Pen to drawing glyphs as PNG images, requires:
+Pen for drawing glyphs as PNG images. Requires:
 
-* `reportlab <https://pypi.python.org/pypi/reportlab>`__: Python toolkit for generating PDFs and
-  graphics.
+- `<https://pypi.python.org/pypi/reportlab>`__: Python toolkit for generating PDFs and graphics.
