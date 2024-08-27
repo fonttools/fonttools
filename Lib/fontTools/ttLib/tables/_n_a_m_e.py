@@ -1177,15 +1177,6 @@ class NameRecordVisitor(TTVisitor):
     (
         (otTables.FeatureParamsSize, ("SubfamilyID", "SubfamilyNameID")),
         (otTables.FeatureParamsStylisticSet, ("UINameID",)),
-        (
-            otTables.FeatureParamsCharacterVariants,
-            (
-                "FeatUILabelNameID",
-                "FeatUITooltipTextNameID",
-                "SampleTextNameID",
-                "FirstParamUILabelNameID",
-            ),
-        ),
         (otTables.STAT, ("ElidedFallbackNameID",)),
         (otTables.AxisRecord, ("AxisNameID",)),
         (otTables.AxisValue, ("ValueNameID",)),
@@ -1195,6 +1186,19 @@ class NameRecordVisitor(TTVisitor):
 )
 def visit(visitor, obj, attr, value):
     visitor.seen.add(value)
+
+
+@NameRecordVisitor.register(otTables.FeatureParamsCharacterVariants)
+def visit(visitor, obj):
+    for attr in ("FeatUILabelNameID", "FeatUITooltipTextNameID", "SampleTextNameID"):
+        value = getattr(obj, attr)
+        visitor.seen.add(value)
+    # also include the sequence of UI strings for individual variants, if any
+    if obj.FirstParamUILabelNameID == 0 or obj.NumNamedParameters == 0:
+        return
+    last_name_id = obj.FirstParamUILabelNameID + obj.NumNamedParameters - 1
+    if last_name_id >= 256 and last_namd_id <= 0x7FFF:
+        visitor.seen.update(range(obj.FirstParamUILabelNameID, last_name_id + 1))
 
 
 @NameRecordVisitor.register(ttLib.getTableClass("fvar"))
