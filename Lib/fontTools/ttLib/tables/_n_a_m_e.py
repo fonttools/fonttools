@@ -1175,7 +1175,7 @@ class NameRecordVisitor(TTVisitor):
 
 @NameRecordVisitor.register_attrs(
     (
-        (otTables.FeatureParamsSize, ("SubfamilyID", "SubfamilyNameID")),
+        (otTables.FeatureParamsSize, ("SubfamilyNameID",)),
         (otTables.FeatureParamsStylisticSet, ("UINameID",)),
         (otTables.STAT, ("ElidedFallbackNameID",)),
         (otTables.AxisRecord, ("AxisNameID",)),
