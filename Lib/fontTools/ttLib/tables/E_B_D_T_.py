@@ -790,7 +790,10 @@ class ComponentBitmapGlyph(BitmapGlyph):
             rowData = rowData | componentRowInt
         
         # mask out the bits that are out of bound
-        rowData = rowData & ((1 << (bitDepth * metrics.width)) - 1)
+        rowData = rowData & (
+            # 1 * bitDepth * metrics.width          , remaining 0
+            ((1 << (bitDepth * metrics.width)) - 1) << (8 * numBytesInRow - bitDepth * metrics.width)
+        )
 
         return rowData.to_bytes(numBytesInRow, 'big')
 
