@@ -770,6 +770,41 @@ class ComponentBitmapGlyph(BitmapGlyph):
                     else:
                         log.warning("'%s' being ignored in component array.", name)
 
+    def getRow(self, row: int, bitDepth=1, metrics=None, reverseBytes=False):
+        if metrics is None:
+            metrics = self.metrics
+        assert 0 <= row and row < metrics.height, "Illegal row access in bitmap"
+
+        numBytesInRow = (bitDepth * metrics.width + 7) // 8
+        rowData = int.from_bytes(bytes([0] * numBytesInRow))
+        for component in self.componentArray:
+            componentGlyph = self.ttFont["EBDT"].strikeData[self.strikeIndex][component.name]
+            # get the row after shifting xOffset
+            componentRow = componentGlyph.getRow(row + component.xOffset, bitDepth, metrics, reverseBytes)
+            # pad row until it is the same length as the rowData
+            componentRow = componentRow + bytes([0] * (numBytesInRow - len(componentRow) ))
+            # shift row to the right by yOffset, let out of bound bits be discarded
+            componentRowInt = int.from_bytes(componentRow) >> (component.yOffset * bitDepth)
+
+            # assume that the merging of two bits is done by ORing them
+            rowData = rowData | componentRowInt
+        
+        # mask out the bits that are out of bound
+        rowData = rowData & ((1 << (bitDepth * metrics.width)) - 1)
+
+        return rowData.to_bytes(numBytesInRow, 'big')
+
+    def setRows(self, *args, **kwargs):
+        raise NotImplementedError("setRows() is unavailable for component bitmap glyphs, use addComponent() instead")
+    
+    def addComponent(self, glyphName, xOffset=0, yOffset=0):
+        component = EbdtComponent()
+        assert glyphName in self.ttFont["EBDT"].strikeData[self.strikeIndex], "Glyph '%s' not in font strike." % glyphName
+        component.name = glyphName
+        component.xOffset = xOffset
+        component.yOffset = yOffset
+        self.componentArray.append(component)
+
 
 class ebdt_bitmap_format_8(BitmapPlusSmallMetricsMixin, ComponentBitmapGlyph):
     def decompile(self):
