@@ -63,7 +63,7 @@ class table_E_B_D_T_(DefaultTable.DefaultTable):
         # The actual bitmap data is stored in the EBDT.
         locator = ttFont[self.__class__.locatorName]
         self.strikeData = []
-        for curStrike in locator.strikes:
+        for strikeIndex, curStrike in enumerate(locator.strikes):
             bitmapGlyphDict = {}
             self.strikeData.append(bitmapGlyphDict)
             for indexSubTable in curStrike.indexSubTables:
@@ -78,7 +78,7 @@ class table_E_B_D_T_(DefaultTable.DefaultTable):
                         imageFormatClass = self.getImageFormatClass(
                             indexSubTable.imageFormat
                         )
-                        curGlyph = imageFormatClass(curGlyphData, ttFont)
+                        curGlyph = imageFormatClass(curGlyphData, ttFont, strikeIndex)
                         glyphDict[curLoc] = curGlyph
                     bitmapGlyphDict[curName] = curGlyph
 
@@ -178,7 +178,7 @@ class table_E_B_D_T_(DefaultTable.DefaultTable):
                     imageFormat = safeEval(name[len(_bitmapGlyphSubclassPrefix) :])
                     glyphName = attrs["name"]
                     imageFormatClass = self.getImageFormatClass(imageFormat)
-                    curGlyph = imageFormatClass(None, None)
+                    curGlyph = imageFormatClass(None, None, strikeIndex)
                     curGlyph.fromXML(name, attrs, content, ttFont)
                     assert glyphName not in bitmapGlyphDict, (
                         "Duplicate glyphs with the same name '%s' in the same strike."
@@ -443,9 +443,11 @@ class BitmapGlyph(object):
         "extfile": (_writeExtFileImageData, _readExtFileImageData),
     }
 
-    def __init__(self, data, ttFont):
+    def __init__(self, data, ttFont, strikeIndex):
         self.data = data
         self.ttFont = ttFont
+        # keep track which strike this glyph belong to, used for format 8/9 component finding
+        self.strikeIndex = strikeIndex
         # TODO Currently non-lazy decompilation is untested here...
         # if not ttFont.lazy:
         # 	self.decompile()
