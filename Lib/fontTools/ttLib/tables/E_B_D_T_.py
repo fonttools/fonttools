@@ -771,6 +771,14 @@ class ComponentBitmapGlyph(BitmapGlyph):
                         log.warning("'%s' being ignored in component array.", name)
 
     def getRow(self, row: int, bitDepth=1, metrics=None, reverseBytes=False):
+        """Returns the bits in a row of the bitmap glyph as bytes. The bits are merged from all components in the glyph. 
+        Components that contains bits offsetted out of bounds will be cropped to match metrics.
+        Overlapped bits between components will be merged by ORing them.
+        This function dynamically calculates the bitmap from the components in the glyph. It should not be viewed as raw bitmap data from the font file.
+
+        Params:
+        * row: the row index of the bitmap glyph to get, starting from 0 at the top.
+        """
         if metrics is None:
             metrics = self.metrics
         assert 0 <= row and row < metrics.height, "Illegal row access in bitmap"
@@ -778,22 +786,27 @@ class ComponentBitmapGlyph(BitmapGlyph):
         numBytesInRow = (bitDepth * metrics.width + 7) // 8
         rowData = int.from_bytes(bytes([0] * numBytesInRow))
         for component in self.componentArray:
+            if row + component.yOffset < 0 or row + component.yOffset >= metrics.height:
+                # skip out of bound component rows
+                continue
+
             componentGlyph = self.ttFont["EBDT"].strikeData[self.strikeIndex][component.name]
             # get the row after shifting xOffset
             componentRow = componentGlyph.getRow(row + component.xOffset, bitDepth, metrics, reverseBytes)
             # pad row until it is the same length as the rowData
             componentRow = componentRow + bytes([0] * (numBytesInRow - len(componentRow) ))
-            # shift row to the right by yOffset, let out of bound bits be discarded
-            componentRowInt = int.from_bytes(componentRow) >> (component.yOffset * bitDepth)
+            # shift row horizontally
+            if component.yOffset >= 0:
+                componentRowInt = int.from_bytes(componentRow) >> (component.yOffset * bitDepth)
+            else:
+                componentRowInt = int.from_bytes(componentRow) << (-component.yOffset * bitDepth)
 
             # assume that the merging of two bits is done by ORing them
             rowData = rowData | componentRowInt
         
         # mask out the bits that are out of bound
-        rowData = rowData & (
-            # 1 * bitDepth * metrics.width          , remaining 0
-            ((1 << (bitDepth * metrics.width)) - 1) << (8 * numBytesInRow - bitDepth * metrics.width)
-        )
+        rowBitMask = ((1 << (bitDepth * metrics.width)) - 1) << (8 * numBytesInRow - bitDepth * metrics.width)
+        rowData = rowData & rowBitMask
 
         return rowData.to_bytes(numBytesInRow, 'big')
 
