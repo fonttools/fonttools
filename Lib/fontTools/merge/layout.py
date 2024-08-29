@@ -197,7 +197,7 @@ def merge(self, m, tables):
         if table is None or table is NotImplemented:
             log.warning(
                 "Have non-identical duplicates to resolve for '%s' but no GSUB. Are duplicates intended?: %s",
-                m.fonts[i]._merger__name,
+                m.fonts[i]._merger__name or f"font {i}",
                 dups,
             )
             continue
