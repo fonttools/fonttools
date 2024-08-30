@@ -2071,5 +2071,28 @@ def test_prune_unused_user_name_IDs_with_keep_all(ttf_path):
     assert nameIDs == keepNameIDs
 
 
+def test_cvXX_feature_params_nameIDs_are_retained():
+    # https://github.com/fonttools/fonttools/issues/3616
+    font = TTFont()
+    ttx = pathlib.Path(__file__).parent / "data" / "Andika-Regular.subset.ttx"
+    font.importXML(ttx)
+
+    keepNameIDs = {n.nameID for n in font["name"].names}
+
+    options = subset.Options()
+    options.glyph_names = True
+    # that's where the FeatureParamsCharacteVariants are stored
+    options.layout_features.append("cv43")
+
+    subsetter = subset.Subsetter(options)
+    subsetter.populate(glyphs=font.getGlyphOrder())
+    subsetter.subset(font)
+
+    # we expect that all nameIDs are retained, including all the nameIDs
+    # used by the FeatureParamsCharacterVariants
+    nameIDs = {n.nameID for n in font["name"].names}
+    assert nameIDs == keepNameIDs
+
+
 if __name__ == "__main__":
     sys.exit(unittest.main())
