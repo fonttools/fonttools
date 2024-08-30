@@ -222,9 +222,9 @@ def main(args=None):
 
     # File validation
     if args.input_file is not None and not os.path.exists(args.input_file):
-        parser.error(f'Input font lists {args.input_file} through --input-file does not exist')
+        parser.error(f"Input font lists '{args.input_file}' through --input-file does not exist")
     if args.import_file is not None and not os.path.exists(args.import_file):
-        parser.error(f'Import TTC file {args.import_file} through --import-file does not exist')
+        parser.error(f"TTX file to import '{args.import_file}' through --import-file does not exist")
 
     if args.input_file:
         with open(args.input_file) as inputfile:
