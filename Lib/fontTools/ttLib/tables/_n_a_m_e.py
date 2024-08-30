@@ -1196,9 +1196,12 @@ def visit(visitor, obj):
     # also include the sequence of UI strings for individual variants, if any
     if obj.FirstParamUILabelNameID == 0 or obj.NumNamedParameters == 0:
         return
-    last_name_id = obj.FirstParamUILabelNameID + obj.NumNamedParameters - 1
-    if last_name_id >= 256 and last_namd_id <= 0x7FFF:
-        visitor.seen.update(range(obj.FirstParamUILabelNameID, last_name_id + 1))
+    visitor.seen.update(
+        range(
+            obj.FirstParamUILabelNameID,
+            obj.FirstParamUILabelNameID + obj.NumNamedParameters,
+        )
+    )
 
 
 @NameRecordVisitor.register(ttLib.getTableClass("fvar"))
