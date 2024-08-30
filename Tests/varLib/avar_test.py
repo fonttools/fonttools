@@ -1,5 +1,7 @@
+from fontTools.ttLib import TTFont
 from fontTools.varLib.models import VariationModel
-from fontTools.varLib.avar import _pruneLocations
+from fontTools.varLib.avar import _pruneLocations, mappings_from_avar
+import os
 import unittest
 import pytest
 
@@ -80,3 +82,13 @@ def test_roundtrip(locations, poles, expected):
         support2 = model2.supports[i]
 
         assert support1 == support2, (support1, support2)
+
+
+def test_mappings_from_avar():
+    CWD = os.path.abspath(os.path.dirname(__file__))
+    DATADIR = os.path.join(CWD, "..", "ttLib", "tables", "data")
+    varfont_path = os.path.join(DATADIR, "Amstelvar-avar2.subset.ttf")
+    font = TTFont(varfont_path)
+    mappings = mappings_from_avar(font)
+
+    assert len(mappings) == 2, mappings
