@@ -28,34 +28,34 @@ class TTFont(object):
 
     Example usage::
 
-            >> from fontTools import ttLib
-            >> tt = ttLib.TTFont("afont.ttf") # Load an existing font file
-            >> tt['maxp'].numGlyphs
+            >>> from fontTools import ttLib
+            >>> tt = ttLib.TTFont("afont.ttf") # Load an existing font file
+            >>> tt['maxp'].numGlyphs
             242
-            >> tt['OS/2'].achVendID
+            >>> tt['OS/2'].achVendID
             'B&H\000'
-            >> tt['head'].unitsPerEm
+            >>> tt['head'].unitsPerEm
             2048
 
     For details of the objects returned when accessing each table, see :ref:`tables`.
     To add a table to the font, use the :py:func:`newTable` function::
 
-            >> os2 = newTable("OS/2")
-            >> os2.version = 4
-            >> # set other attributes
-            >> font["OS/2"] = os2
+            >>> os2 = newTable("OS/2")
+            >>> os2.version = 4
+            >>> # set other attributes
+            >>> font["OS/2"] = os2
 
     TrueType fonts can also be serialized to and from XML format (see also the
     :ref:`ttx` binary)::
 
-            >> tt.saveXML("afont.ttx")
+            >>> tt.saveXML("afont.ttx")
             Dumping 'LTSH' table...
             Dumping 'OS/2' table...
             [...]
 
-            >> tt2 = ttLib.TTFont() # Create a new font object
-            >> tt2.importXML("afont.ttx")
-            >> tt2['maxp'].numGlyphs
+            >>> tt2 = ttLib.TTFont() # Create a new font object
+            >>> tt2.importXML("afont.ttx")
+            >>> tt2['maxp'].numGlyphs
             242
 
     The TTFont object may be used as a context manager; this will cause the file
