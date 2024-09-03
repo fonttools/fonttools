@@ -191,12 +191,11 @@ class FreeTypePen(BasePen):
         :Example:
             .. code-block::
 
-                >> pen = FreeTypePen(None)
-                >> glyph.draw(pen)
-                >> buf, size = pen.buffer(width=500, height=1000)
-                >> type(buf), len(buf), size
+                >>> pen = FreeTypePen(None)
+                >>> glyph.draw(pen)
+                >>> buf, size = pen.buffer(width=500, height=1000)
+                >>> type(buf), len(buf), size
                 (<class 'bytes'>, 500000, (500, 1000))
-
         """
         transform = transform or Transform()
         if not hasattr(transform, "transformPoint"):
@@ -282,10 +281,10 @@ class FreeTypePen(BasePen):
         :Example:
             .. code-block::
 
-                >> pen = FreeTypePen(None)
-                >> glyph.draw(pen)
-                >> arr = pen.array(width=500, height=1000)
-                >> type(a), a.shape
+                >>> pen = FreeTypePen(None)
+                >>> glyph.draw(pen)
+                >>> arr = pen.array(width=500, height=1000)
+                >>> type(a), a.shape
                 (<class 'numpy.ndarray'>, (1000, 500))
         """
         import numpy as np
@@ -331,9 +330,9 @@ class FreeTypePen(BasePen):
         :Example:
             .. code-block::
 
-                >> pen = FreeTypePen(None)
-                >> glyph.draw(pen)
-                >> pen.show(width=500, height=1000)
+                >>> pen = FreeTypePen(None)
+                >>> glyph.draw(pen)
+                >>> pen.show(width=500, height=1000)
         """
         from matplotlib import pyplot as plt
 
@@ -383,10 +382,10 @@ class FreeTypePen(BasePen):
         :Example:
             .. code-block::
 
-                >> pen = FreeTypePen(None)
-                >> glyph.draw(pen)
-                >> img = pen.image(width=500, height=1000)
-                >> type(img), img.size
+                >>> pen = FreeTypePen(None)
+                >>> glyph.draw(pen)
+                >>> img = pen.image(width=500, height=1000)
+                >>> type(img), img.size
                 (<class 'PIL.Image.Image'>, (500, 1000))
         """
         from PIL import Image
