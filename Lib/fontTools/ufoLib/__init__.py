@@ -1,26 +1,3 @@
-import os
-from copy import deepcopy
-from os import fsdecode
-import logging
-import zipfile
-import enum
-from collections import OrderedDict
-import fs
-import fs.base
-import fs.subfs
-import fs.errors
-import fs.copy
-import fs.osfs
-import fs.zipfs
-import fs.tempfs
-import fs.tools
-from fontTools.misc import plistlib
-from fontTools.ufoLib.validators import *
-from fontTools.ufoLib.filenames import userNameToFileName
-from fontTools.ufoLib.converters import convertUFO1OrUFO2KerningToUFO3Kerning
-from fontTools.ufoLib.errors import UFOLibError
-from fontTools.ufoLib.utils import numberTypes, _VersionTupleEnumMixin
-
 """
 A library for importing .ufo files and their descendants.
 Refer to http://unifiedfontobject.com for the UFO specification.
@@ -50,6 +27,29 @@ fontinfo.plist values between the possible format versions.
 	convertFontInfoValueForAttributeFromVersion2ToVersion3
 	convertFontInfoValueForAttributeFromVersion3ToVersion2
 """
+
+import os
+from copy import deepcopy
+from os import fsdecode
+import logging
+import zipfile
+import enum
+from collections import OrderedDict
+import fs
+import fs.base
+import fs.subfs
+import fs.errors
+import fs.copy
+import fs.osfs
+import fs.zipfs
+import fs.tempfs
+import fs.tools
+from fontTools.misc import plistlib
+from fontTools.ufoLib.validators import *
+from fontTools.ufoLib.filenames import userNameToFileName
+from fontTools.ufoLib.converters import convertUFO1OrUFO2KerningToUFO3Kerning
+from fontTools.ufoLib.errors import UFOLibError
+from fontTools.ufoLib.utils import numberTypes, _VersionTupleEnumMixin
 
 __all__ = [
     "makeUFOPath",
