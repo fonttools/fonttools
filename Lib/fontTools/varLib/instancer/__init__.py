@@ -5,7 +5,9 @@ create full instances (i.e. static fonts) from variable fonts, as well as "parti
 variable fonts that only contain a subset of the original variation space.
 
 For example, if you wish to pin the width axis to a given location while also
-restricting the weight axis to 400..700 range, you can do::
+restricting the weight axis to 400..700 range, you can do:
+
+.. code-block:: sh
 
     $ fonttools varLib.instancer ./NotoSans-VF.ttf wdth=85 wght=400:700
 
@@ -19,30 +21,30 @@ the VF axes were given an explicit coordinate.
 E.g. here's how to pin the wght axis at a given location in a wght+wdth variable
 font, keeping only the deltas associated with the wdth axis::
 
-| >>> from fontTools import ttLib
-| >>> from fontTools.varLib import instancer
-| >>> varfont = ttLib.TTFont("path/to/MyVariableFont.ttf")
-| >>> [a.axisTag for a in varfont["fvar"].axes]  # the varfont's current axes
-| ['wght', 'wdth']
-| >>> partial = instancer.instantiateVariableFont(varfont, {"wght": 300})
-| >>> [a.axisTag for a in partial["fvar"].axes]  # axes left after pinning 'wght'
-| ['wdth']
+    >>> from fontTools import ttLib
+    >>> from fontTools.varLib import instancer
+    >>> varfont = ttLib.TTFont("path/to/MyVariableFont.ttf")
+    >>> [a.axisTag for a in varfont["fvar"].axes]  # the varfont's current axes
+    ['wght', 'wdth']
+    >>> partial = instancer.instantiateVariableFont(varfont, {"wght": 300})
+    >>> [a.axisTag for a in partial["fvar"].axes]  # axes left after pinning 'wght'
+    ['wdth']
 
 If the input location specifies all the axes, the resulting instance is no longer
 'variable' (same as using fontools varLib.mutator):
 
-| >>> instance = instancer.instantiateVariableFont(
-| ...     varfont, {"wght": 700, "wdth": 67.5}
-| ... )
-| >>> "fvar" not in instance
-| True
+    >>> instance = instancer.instantiateVariableFont(
+    ...     varfont, {"wght": 700, "wdth": 67.5}
+    ... )
+    >>> "fvar" not in instance
+    True
 
 If one just want to drop an axis at the default location, without knowing in
 advance what the default value for that axis is, one can pass a `None` value:
 
-| >>> instance = instancer.instantiateVariableFont(varfont, {"wght": None})
-| >>> len(varfont["fvar"].axes)
-| 1
+    >>> instance = instancer.instantiateVariableFont(varfont, {"wght": None})
+    >>> len(varfont["fvar"].axes)
+    1
 
 From the console script, this is equivalent to passing `wght=drop` as input.
 
@@ -57,24 +59,24 @@ course be combined:
 L1
     dropping one or more axes while leaving the default tables unmodified;
 
-    | >>> font = instancer.instantiateVariableFont(varfont, {"wght": None})
+        >>> font = instancer.instantiateVariableFont(varfont, {"wght": None})
 
 L2
     dropping one or more axes while pinning them at non-default locations;
 
-    | >>> font = instancer.instantiateVariableFont(varfont, {"wght": 700})
+        >>> font = instancer.instantiateVariableFont(varfont, {"wght": 700})
 
 L3
     restricting the range of variation of one or more axes, by setting either
     a new minimum or maximum, potentially -- though not necessarily -- dropping
     entire regions of variations that fall completely outside this new range.
 
-    | >>> font = instancer.instantiateVariableFont(varfont, {"wght": (100, 300)})
+        >>> font = instancer.instantiateVariableFont(varfont, {"wght": (100, 300)})
 
 L4
     moving the default location of an axis, by specifying (min,defalt,max) values:
 
-    | >>> font = instancer.instantiateVariableFont(varfont, {"wght": (100, 300, 700)})
+        >>> font = instancer.instantiateVariableFont(varfont, {"wght": (100, 300, 700)})
 
 Currently only TrueType-flavored variable fonts (i.e. containing 'glyf' table)
 are supported, but support for CFF2 variable fonts will be added soon.
