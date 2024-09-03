@@ -10,9 +10,13 @@ ttf-interpolatable files for the masters and build a variable-font from
 them.  Such ttf-interpolatable and designspace files can be generated from
 a Glyphs source, eg., using noto-source as an example:
 
+    .. code-block:: sh
+
 	$ fontmake -o ttf-interpolatable -g NotoSansArabic-MM.glyphs
 
 Then you can make a variable-font this way:
+
+    .. code-block:: sh
 
 	$ fonttools varLib master_ufo/NotoSansArabic.designspace
 
