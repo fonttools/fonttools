@@ -37,14 +37,14 @@ class RecordingPen(AbstractPen):
 
             from fontTools.ttLib import TTFont
             from fontTools.pens.recordingPen import RecordingPen
-            
+
             glyph_name = 'dollar'
             font_path = 'MyFont.otf'
-            
+
             font = TTFont(font_path)
             glyphset = font.getGlyphSet()
             glyph = glyphset[glyph_name]
-            
+
             pen = RecordingPen()
             glyph.draw(pen)
             print(pen.value)
@@ -151,17 +151,17 @@ class RecordingPointPen(AbstractPointPen):
 
             from defcon import Font
             from fontTools.pens.recordingPen import RecordingPointPen
-            
+
             glyph_name = 'a'
             font_path = 'MyFont.ufo'
-            
+
             font = Font(font_path)
             glyph = font[glyph_name]
-            
+
             pen = RecordingPointPen()
             glyph.drawPoints(pen)
             print(pen.value)
-            
+
             new_glyph = font.newGlyph('b')
             pen.replay(new_glyph.getPointPen())
     """

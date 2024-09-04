@@ -67,15 +67,15 @@ class TransformPointPen(FilterPointPen):
         >>> pen.beginPath(identifier="contour-0")
         >>> next(v)
         ('beginPath', (), {'identifier': 'contour-0'})
-    
+
         >>> pen.addPoint((100, 100), "line")
         >>> next(v)
         ('addPoint', ((190, 205), 'line', False, None), {})
-    
+
         >>> pen.endPath()
         >>> next(v)
         ('endPath', (), {})
-    
+
         >>> pen.addComponent("a", (1, 0, 0, 1, -10, 5), identifier="component-0")
         >>> next(v)
         ('addComponent', ('a', <Transform [2 0 0 2 -30 15]>), {'identifier': 'component-0'})
