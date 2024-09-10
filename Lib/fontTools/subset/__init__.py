@@ -128,9 +128,9 @@ Examples::
 
     $ pyftsubset --glyph-names?
     Current setting for 'glyph-names' is: False
-    $ ./pyftsubset --name-IDs=?
+    $ pyftsubset --name-IDs=?
     Current setting for 'name-IDs' is: [0, 1, 2, 3, 4, 5, 6]
-    $ ./pyftsubset --hinting? --no-hinting --hinting?
+    $ pyftsubset --hinting? --no-hinting --hinting?
     Current setting for 'hinting' is: True
     Current setting for 'hinting' is: False
 
