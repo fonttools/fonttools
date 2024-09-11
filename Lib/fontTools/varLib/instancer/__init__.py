@@ -897,7 +897,18 @@ def _instantiateGvarGlyph(
         return
 
     if optimize:
+        # IUP semantics depend on point equality, and so round prior to
+        # optimization to ensure that comparisons that happen now will be the
+        # same as those that happen at render time. This is especially needed
+        # when floating point deltas have been applied to the default position.
+        #     See https://github.com/fonttools/fonttools/issues/3634
+        # Rounding must happen only after calculating glyf metrics above, to
+        # preserve backwards compatibility.
+        #     See 0010a3cd9aa25f84a3a6250dafb119743d32aa40
+        coordinates.toInt()
+
         isComposite = glyf[glyphname].isComposite()
+
         for var in tupleVarStore:
             var.optimize(coordinates, endPts, isComposite=isComposite)
 
