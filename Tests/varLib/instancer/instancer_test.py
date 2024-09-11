@@ -2390,3 +2390,41 @@ def test_set_ribbi_bits():
                 assert name_id_2 == "Italic", location
                 assert mac_style == 0b10, location
                 assert fs_selection == 0b0000001, location
+
+
+def test_rounds_before_iup():
+    """Regression test for fonttools/fonttools#3634, with TTX based on
+    reproduction process there."""
+
+    varfont = ttLib.TTFont()
+    varfont.importXML(os.path.join(TESTDATA, "3634-VF.ttx"))
+
+    # Instantiate at a new default position, sufficient to cause differences
+    # when unrounded but not when rounded.
+    partial = instancer.instantiateVariableFont(varfont, {"wght": (401, 401, 900)})
+
+    # Save and reload actual result to recalculate bounding box values, etc.
+    bytes_out = BytesIO()
+    partial.save(bytes_out)
+    bytes_out.seek(0)
+    partial = ttLib.TTFont(bytes_out)
+
+    # Load expected result, then save and reload to normalise TTX output.
+    expected = ttLib.TTFont()
+    expected.importXML(os.path.join(TESTDATA, "test_results", "3634-VF-partial.ttx"))
+
+    bytes_out = BytesIO()
+    expected.save(bytes_out)
+    bytes_out.seek(0)
+    expected = ttLib.TTFont(bytes_out)
+
+    # Serialise actual and expected to TTX strings, and compare.
+    string_out = StringIO()
+    partial.saveXML(string_out)
+    partial_ttx = stripVariableItemsFromTTX(string_out.getvalue())
+
+    string_out = StringIO()
+    expected.saveXML(string_out)
+    expected_ttx = stripVariableItemsFromTTX(string_out.getvalue())
+
+    assert partial_ttx == expected_ttx
