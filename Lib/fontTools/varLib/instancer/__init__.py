@@ -19,31 +19,37 @@ and returns a new TTFont representing either a partial VF, or full instance if a
 the VF axes were given an explicit coordinate.
 
 E.g. here's how to pin the wght axis at a given location in a wght+wdth variable
-font, keeping only the deltas associated with the wdth axis::
+font, keeping only the deltas associated with the wdth axis:
+.. code-block:: pycon
 
-    >>> from fontTools import ttLib
-    >>> from fontTools.varLib import instancer
-    >>> varfont = ttLib.TTFont("path/to/MyVariableFont.ttf")
-    >>> [a.axisTag for a in varfont["fvar"].axes]  # the varfont's current axes
+    >>>
+    >> from fontTools import ttLib
+    >> from fontTools.varLib import instancer
+    >> varfont = ttLib.TTFont("path/to/MyVariableFont.ttf")
+    >> [a.axisTag for a in varfont["fvar"].axes]  # the varfont's current axes
     ['wght', 'wdth']
-    >>> partial = instancer.instantiateVariableFont(varfont, {"wght": 300})
-    >>> [a.axisTag for a in partial["fvar"].axes]  # axes left after pinning 'wght'
+    >> partial = instancer.instantiateVariableFont(varfont, {"wght": 300})
+    >> [a.axisTag for a in partial["fvar"].axes]  # axes left after pinning 'wght'
     ['wdth']
 
 If the input location specifies all the axes, the resulting instance is no longer
 'variable' (same as using fontools varLib.mutator):
+.. code-block:: pycon
 
-    >>> instance = instancer.instantiateVariableFont(
+    >>>    
+    >> instance = instancer.instantiateVariableFont(
     ...     varfont, {"wght": 700, "wdth": 67.5}
     ... )
-    >>> "fvar" not in instance
+    >> "fvar" not in instance
     True
 
 If one just want to drop an axis at the default location, without knowing in
 advance what the default value for that axis is, one can pass a `None` value:
+.. code-block:: pycon
 
-    >>> instance = instancer.instantiateVariableFont(varfont, {"wght": None})
-    >>> len(varfont["fvar"].axes)
+    >>>
+    >> instance = instancer.instantiateVariableFont(varfont, {"wght": None})
+    >> len(varfont["fvar"].axes)
     1
 
 From the console script, this is equivalent to passing `wght=drop` as input.
@@ -58,25 +64,33 @@ course be combined:
 
 L1
     dropping one or more axes while leaving the default tables unmodified;
+    .. code-block:: pycon
 
-        >>> font = instancer.instantiateVariableFont(varfont, {"wght": None})
+        >>>
+        >> font = instancer.instantiateVariableFont(varfont, {"wght": None})
 
 L2
     dropping one or more axes while pinning them at non-default locations;
-
-        >>> font = instancer.instantiateVariableFont(varfont, {"wght": 700})
+    .. code-block:: pycon
+    
+        >>>
+        >> font = instancer.instantiateVariableFont(varfont, {"wght": 700})
 
 L3
     restricting the range of variation of one or more axes, by setting either
     a new minimum or maximum, potentially -- though not necessarily -- dropping
     entire regions of variations that fall completely outside this new range.
-
-        >>> font = instancer.instantiateVariableFont(varfont, {"wght": (100, 300)})
+    .. code-block:: pycon
+    
+        >>>
+        >> font = instancer.instantiateVariableFont(varfont, {"wght": (100, 300)})
 
 L4
     moving the default location of an axis, by specifying (min,defalt,max) values:
-
-        >>> font = instancer.instantiateVariableFont(varfont, {"wght": (100, 300, 700)})
+    .. code-block:: pycon
+    
+        >>>
+        >> font = instancer.instantiateVariableFont(varfont, {"wght": (100, 300, 700)})
 
 Currently only TrueType-flavored variable fonts (i.e. containing 'glyf' table)
 are supported, but support for CFF2 variable fonts will be added soon.
