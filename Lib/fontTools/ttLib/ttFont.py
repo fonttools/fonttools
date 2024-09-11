@@ -28,7 +28,7 @@ class TTFont(object):
 
     Example usage:
     .. code-block:: pycon
-    
+
         >>>
         >> from fontTools import ttLib
         >> tt = ttLib.TTFont("afont.ttf") # Load an existing font file
@@ -42,7 +42,7 @@ class TTFont(object):
     For details of the objects returned when accessing each table, see :ref:`tables`.
     To add a table to the font, use the :py:func:`newTable` function:
     .. code-block:: pycon
-    
+
         >>>
         >> os2 = newTable("OS/2")
         >> os2.version = 4
@@ -52,13 +52,13 @@ class TTFont(object):
     TrueType fonts can also be serialized to and from XML format (see also the
     :ref:`ttx` binary):
     .. code-block:: pycon
-    
+
         >>
         >> tt.saveXML("afont.ttx")
         Dumping 'LTSH' table...
         Dumping 'OS/2' table...
         [...]
-        
+
         >> tt2 = ttLib.TTFont() # Create a new font object
         >> tt2.importXML("afont.ttx")
         >> tt2['maxp'].numGlyphs
@@ -989,7 +989,7 @@ def tagToIdentifier(tag):
     result starts with a number (as the result of a hex escape), an
     extra underscore is prepended. Examples:
     .. code-block:: pycon
-    
+
         >>>
         >> tagToIdentifier('glyf')
         '_g_l_y_f'

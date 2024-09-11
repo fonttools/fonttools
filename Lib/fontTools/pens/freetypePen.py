@@ -289,7 +289,7 @@ class FreeTypePen(BasePen):
                 >> type(a), a.shape
                 (<class 'numpy.ndarray'>, (1000, 500))
         """
-        
+
         import numpy as np
 
         buf, size = self.buffer(
@@ -333,7 +333,7 @@ class FreeTypePen(BasePen):
         Example:
             .. code-block:: pycon
 
-                >>> 
+                >>>
                 >> pen = FreeTypePen(None)
                 >> glyph.draw(pen)
                 >> pen.show(width=500, height=1000)
