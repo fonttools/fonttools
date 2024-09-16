@@ -89,6 +89,9 @@ language = "en"
 # This patterns also effect to html_static_path and html_extra_path
 exclude_patterns = []
 
+# The programming language to be used by default in syntax highlighting.
+highlight_language = "python"
+
 # The name of the Pygments (syntax highlighting) style to use.
 # pygments_style = "sphinx" (the default sphinx docs style on RTD)
 pygments_style = "default"
