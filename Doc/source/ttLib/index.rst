@@ -1,6 +1,6 @@
-#############################################
-ttLib: Read/write OpenType and TrueType fonts
-#############################################
+#################################################
+ttLib: Read and write OpenType and TrueType fonts
+#################################################
 
 Most users of the fontTools library will be using it to generate or manipulate
 OpenType and TrueType fonts. (FontTools initially only supported TrueType fonts,

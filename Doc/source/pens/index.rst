@@ -1,6 +1,6 @@
-####
-pens
-####
+###########################################
+pens: Inspect and manipulate glyph outlines
+###########################################
 
 .. toctree::
    :maxdepth: 1

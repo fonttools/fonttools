@@ -1,13 +1,22 @@
-##################################
-cffLib: read/write Adobe CFF fonts
-##################################
+######################################
+cffLib: Read and write Adobe CFF fonts
+######################################
 
-.. automodule:: fontTools.cffLib
+This package contains modules for converting between CCF and CFF2:
 
-This package also contains two modules for manipulating CFF format glyphs:
+.. toctree::
+   :maxdepth: 1
+
+   CFFToCFF2
+   CFF2ToCFF
+
+and modules for manipulating CFF format glyphs:
 
 .. toctree::
    :maxdepth: 1
 
    specializer
    width
+
+.. automodule:: fontTools.cffLib
+
