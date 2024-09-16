@@ -7,25 +7,29 @@ of the specification.
 
 Sets that list the font info attribute names for the fontinfo.plist
 formats are available for external use. These are:
-	fontInfoAttributesVersion1
-	fontInfoAttributesVersion2
-	fontInfoAttributesVersion3
+
+- fontInfoAttributesVersion1
+- fontInfoAttributesVersion2
+- fontInfoAttributesVersion3
 
 A set listing the fontinfo.plist attributes that were deprecated
 in version 2 is available for external use:
-	deprecatedFontInfoAttributesVersion2
+
+- deprecatedFontInfoAttributesVersion2
 
 Functions that do basic validation on values for fontinfo.plist
 are available for external use. These are
-	validateFontInfoVersion2ValueForAttribute
-	validateFontInfoVersion3ValueForAttribute
+
+- validateFontInfoVersion2ValueForAttribute
+- validateFontInfoVersion3ValueForAttribute
 
 Value conversion functions are available for converting
 fontinfo.plist values between the possible format versions.
-	convertFontInfoValueForAttributeFromVersion1ToVersion2
-	convertFontInfoValueForAttributeFromVersion2ToVersion1
-	convertFontInfoValueForAttributeFromVersion2ToVersion3
-	convertFontInfoValueForAttributeFromVersion3ToVersion2
+
+- convertFontInfoValueForAttributeFromVersion1ToVersion2
+- convertFontInfoValueForAttributeFromVersion2ToVersion1
+- convertFontInfoValueForAttributeFromVersion2ToVersion3
+- convertFontInfoValueForAttributeFromVersion3ToVersion2
 """
 
 import os
