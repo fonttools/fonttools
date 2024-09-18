@@ -16,8 +16,8 @@ cffLib: Read and write Adobe CFF fonts
        :heading-level: 3
 
     cffLib contains submodules for converting between CCF and CFF2.
-    Each can be used within other Python code or run as a
-    command-line console script:
+    Each can be used within other Python scripts or run as a
+    subcommand of the ``fonttools`` command-line tool:
 
      .. toctree::
         :maxdepth: 1
