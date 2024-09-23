@@ -1,3 +1,6 @@
+4.54.0 (released 2024-09-23)
+----------------------------
+
 - [Docs] Small docs cleanups by @n8willis (#3611)
 - [Docs] cleanup code blocks by @n8willis (#3627)
 - [Docs] fix Sphinx builds by @n8willis (#3625)
