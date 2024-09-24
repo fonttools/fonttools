@@ -1,3 +1,6 @@
+- [unicodedata] Update to Unicode 16
+- [subset] Escape ``\\`` in doc string
+
 4.54.0 (released 2024-09-23)
 ----------------------------
 
