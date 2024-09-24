@@ -347,6 +347,16 @@ class OTTableReader(object):
     def readUInt24Array(self, count):
         return [self.readUInt24() for _ in range(count)]
 
+    def readFloat(self):
+        pos = self.pos
+        newpos = pos + 4
+        (value,) = struct.unpack("<f", self.data[pos:newpos])
+        self.pos = newpos
+        return value
+
+    def readFloatArray(self, count):
+        return [self.readFloat() for _ in range(count)]
+
     def readTag(self):
         pos = self.pos
         newpos = pos + 4
@@ -775,6 +785,13 @@ class OTTableWriter(object):
     def writeUInt24Array(self, values):
         for value in values:
             self.writeUInt24(value)
+
+    def writeFloat(self, value):
+        self.items.append(struct.pack("<f", value))
+
+    def writeFloatArray(self, values):
+        for value in values:
+            self.writeFloat(value)
 
     def writeTag(self, tag):
         tag = Tag(tag).tobytes()

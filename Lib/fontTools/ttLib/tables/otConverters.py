@@ -141,6 +141,7 @@ class BaseConverter(object):
             "BaseGlyphRecordCount",
             "LayerRecordCount",
             "AxisIndicesList",
+            "DeltasCount",
         ]
         self.description = description
 
@@ -455,6 +456,15 @@ class FloatValue(SimpleValue):
     def fromString(value):
         return float(value)
 
+
+class Float(FloatValue):
+    staticSize = 4
+
+    def read(self, reader, font, tableDict):
+        return reader.readFloat()
+
+    def write(self, writer, font, tableDict, value, repeatIndex=None):
+        writer.writeFloat(value)
 
 class DeciPoints(FloatValue):
     staticSize = 2
@@ -2021,6 +2031,7 @@ converterMapping = {
     "uint16": UShort,
     "uint24": UInt24,
     "uint32": ULong,
+    "float": Float,
     "char64": Char64,
     "Flags32": Flags32,
     "VarIndex": VarIndex,
