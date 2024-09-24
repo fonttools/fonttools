@@ -123,7 +123,7 @@ Other options
 
 For the other options listed below, to see the current value of the option,
 pass a value of '?' to it, with or without a '='. In some environments,
-you might need to escape the question mark, like this: '--glyph-names\?'.
+you might need to escape the question mark, like this: '--glyph-names\\?'.
 
 Examples::
 

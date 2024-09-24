@@ -182,6 +182,7 @@ def test_script_extension():
         "Taml",
         "Telu",
         "Tirh",
+        "Onao",
     }
 
 
