@@ -6397,4 +6397,96 @@ otData = [
             ("LOffset", "VarStore", None, "Version >= 0x00020000", ""),
         ],
     ),
+    (
+        "GlyphVariationDelta",
+        [
+            (
+                "uint32",
+                "SparseRegionIndex",
+                None,
+                None,
+                "Index into SparseVarRegionList",
+            ),
+            (
+                "float",
+                "XDeltas",
+                "DeltasCount",
+                0,
+                "Array of deltas for each point in the glyph",
+            ),
+            (
+                "float",
+                "YDeltas",
+                "DeltasCount",
+                0,
+                "Array of deltas for each point in the glyph",
+            ),
+        ],
+    ),
+    (
+        "GlyphVariationDeltas",
+        [
+            (
+                "uint16",
+                "DeltasCount",
+                None,
+                None,
+                "Number of points in the variation data",
+            ),
+            (
+                "uint16",
+                "DeltaSetCount",
+                None,
+                None,
+                "Number of delta sets for this glyph",
+            ),
+            (
+                "GlyphVariationDelta",
+                "GlyphVariationDelta",
+                "DeltaSetCount",
+                0,
+                "Array of delta sets",
+            ),
+        ],
+    ),
+    (
+        "HVAC",
+        [
+            (
+                "Version",
+                "Version",
+                None,
+                None,
+                "Version of the avar table- 0x00010000",
+            ),
+            (
+                "LOffset",
+                "SparseVarRegionList",
+                None,
+                None,
+                "Variation region list",
+            ),
+            (
+                "LOffset",
+                "Coverage",
+                None,
+                None,
+                'GlyphsCovered',
+            ),
+            (
+                "uint32",
+                "GlyphCount",
+                None,
+                None,
+                'Number of glyphs in the variations array',
+            ),
+            (
+                "LOffset",
+                "GlyphVariationDeltas",
+                "GlyphCount",
+                0,
+                "Per-glyph variation data",
+            ),
+        ],
+    ),
 ]

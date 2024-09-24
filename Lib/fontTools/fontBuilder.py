@@ -129,6 +129,7 @@ fb.save("test.otf")
 ```
 """
 
+from .ttLib.tables import otTables as ot
 from .ttLib import TTFont, newTable
 from .ttLib.tables._c_m_a_p import cmap_classes
 from .ttLib.tables._g_l_y_f import flagCubic
@@ -713,6 +714,53 @@ class FontBuilder(object):
         gvar.version = 1
         gvar.reserved = 0
         gvar.variations = variations
+
+    def setupHVAC(self, variations):
+        variations = {k: v for k, v in variations.items() if v}
+
+        hvac = self.font["HVAC"] = newTable("HVAC")
+        table = hvac.table = ot.HVAC()
+        table.Version = 0x00010000
+        table.populateDefaults()
+
+        from .otlLib.builder import buildCoverage
+        glyphMap = self.font.getReverseGlyphMap()
+        glyphs = list(variations.keys())
+        table.Coverage = buildCoverage(glyphs, glyphMap)
+        glyphOrder = table.Coverage.glyphs
+
+        from .varLib.builder import buildSparseVarRegionList
+        axisTags = [a.axisTag for a in self.font["fvar"].axes]
+        supports = []
+        # Collect all supports
+        for glyphName in glyphOrder:
+            glyphVariations = variations[glyphName]
+            for tupleVariation in glyphVariations:
+                region = tupleVariation.axes
+                if region not in supports:
+                    supports.append(region)
+        table.SparseVarRegionList = buildSparseVarRegionList(supports, axisTags)
+
+        table.GlyphCount = len(glyphOrder)
+        table.GlyphVariationDeltas = []
+
+        for glyphName in glyphOrder:
+            glyphDeltas = ot.GlyphVariationDeltas()
+            glyphDeltas.populateDefaults()
+            table.GlyphVariationDeltas.append(glyphDeltas)
+
+            glyphVariations = variations[glyphName]
+            glyphDeltas.Reserved = 0
+            glyphDeltas.NumPoints = len(glyphVariations[0].coordinates)
+            glyphDeltas.DeltaSetCount = len(glyphVariations)
+            glyphDeltas.GlyphVariationDelta = []
+            for deltaSet in glyphVariations:
+                deltas = ot.GlyphVariationDelta()
+                deltas.populateDefaults()
+                deltas.SparseRegionIndex = supports.index(deltaSet.axes)
+                deltas.XDeltas = [c[0] for c in deltaSet.coordinates]
+                deltas.YDeltas = [c[1] for c in deltaSet.coordinates]
+                glyphDeltas.GlyphVariationDelta.append(deltas)
 
     def calcGlyphBounds(self):
         """Calculate the bounding boxes of all glyphs in the `glyf` table.
