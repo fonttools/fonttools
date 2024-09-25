@@ -26,7 +26,7 @@ def _getLocationKey(loc):
 
 
 class OnlineMultiVarStoreBuilder(object):
-    def __init__(self, axisTags):
+    def __init__(self, axisTags, *, varDataFormat=1):
         self._axisTags = axisTags
         self._regionMap = {}
         self._regionList = buildSparseVarRegionList([], axisTags)
@@ -37,6 +37,7 @@ class OnlineMultiVarStoreBuilder(object):
         self._varDataIndices = {}
         self._varDataCaches = {}
         self._cache = None
+        self._varDataFormat = varDataFormat
 
     def setModel(self, model):
         self.setSupports(model.supports)
@@ -82,7 +83,7 @@ class OnlineMultiVarStoreBuilder(object):
                 varDataIdx = None
 
         if varDataIdx is None:
-            self._data = buildMultiVarData(regionIndices, [])
+            self._data = buildMultiVarData(regionIndices, [], format=self._varDataFormat)
             self._outer = len(self._store.MultiVarData)
             self._store.MultiVarData.append(self._data)
             self._varDataIndices[key] = self._outer
