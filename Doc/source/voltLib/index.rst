@@ -1,6 +1,6 @@
-####################################
-voltLib: Read/write MS VOLT projects
-####################################
+########################################
+voltLib: Read and write MS VOLT projects
+########################################
 
 .. toctree::
    :maxdepth: 2

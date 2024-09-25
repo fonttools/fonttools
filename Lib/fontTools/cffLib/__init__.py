@@ -1,7 +1,7 @@
 """cffLib: read/write Adobe CFF fonts
 
-OpenType fonts with PostScript outlines contain a completely independent
-font file, Adobe's *Compact Font Format*. So dealing with OpenType fonts
+OpenType fonts with PostScript outlines embed a completely independent
+font file in Adobe's *Compact Font Format*. So dealing with OpenType fonts
 requires also dealing with CFF. This module allows you to read and write
 fonts written in the CFF format.
 

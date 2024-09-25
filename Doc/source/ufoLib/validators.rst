@@ -1,7 +1,6 @@
-
-##########
-validators
-##########
+#####################################
+validators: Data-validation functions
+#####################################
 
 .. automodule:: fontTools.ufoLib.validators
    :inherited-members:

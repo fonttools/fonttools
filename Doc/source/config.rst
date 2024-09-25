@@ -1,5 +1,5 @@
 ###########################
-config: configure fontTools
+config: Configure fontTools
 ###########################
 
 .. automodule:: fontTools.config

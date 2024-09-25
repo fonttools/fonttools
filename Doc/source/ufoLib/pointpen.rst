@@ -1,9 +1,10 @@
+######################################################################
+pointPen: A pen for accessing points in a glyph contour *[deprecated]*
+######################################################################
 
-########
-pointPen
-########
-
-.. automodule:: fontTools.ufoLib.pointPen
-   :inherited-members:
-   :members:
-   :undoc-members:
+.. important::
+   
+    .. automodule:: fontTools.ufoLib.pointPen
+       :inherited-members:
+       :members:
+       :undoc-members:

@@ -1,7 +1,6 @@
-##################################
-varLib: OpenType Variation Support
-##################################
-
+#######################################
+varLib: Support for OpenType Variations
+#######################################
 
 .. toctree::
    :maxdepth: 2

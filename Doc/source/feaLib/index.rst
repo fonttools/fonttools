@@ -1,6 +1,6 @@
-#########################################
-feaLib: Read/write OpenType feature files
-#########################################
+#############################################
+feaLib: Read and write OpenType feature files
+#############################################
 
 fontTools' ``feaLib`` allows for the creation and parsing of Adobe
 Font Development Kit for OpenType feature (``.fea``) files. The syntax
