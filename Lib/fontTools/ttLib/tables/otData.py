@@ -3439,12 +3439,21 @@ otData = [
         ],
     ),
     (
-        "MultiVarData",
+        "MultiVarDataFormat1",
         [
             ("uint8", "Format", None, None, "Set to 1."),
             ("uint16", "VarRegionCount", None, None, ""),
             ("uint16", "VarRegionIndex", "VarRegionCount", 0, ""),
             ("TupleList", "Item", "", 0, ""),
+        ],
+    ),
+    (
+        "MultiVarDataFormat2",
+        [
+            ("uint8", "Format", None, None, "Set to 2."),
+            ("uint16", "VarRegionCount", None, None, ""),
+            ("uint16", "VarRegionIndex", "VarRegionCount", 0, ""),
+            ("FloatTupleList", "Item", "", 0, ""),
         ],
     ),
     (
