@@ -733,12 +733,14 @@ class FontBuilder(object):
         axisTags = [a.axisTag for a in self.font["fvar"].axes]
         supports = []
         # Collect all supports
+        done = set()
         for glyphName in glyphOrder:
             glyphVariations = variations[glyphName]
             for tupleVariation in glyphVariations:
                 region = tupleVariation.axes
-                if region not in supports:
+                if tuple(region.items()) not in done:
                     supports.append(region)
+                    done.add(tuple(region.items()))
         table.SparseVarRegionList = buildSparseVarRegionList(supports, axisTags)
 
         table.GlyphCount = len(glyphOrder)
