@@ -1830,14 +1830,21 @@ class TupleValues:
         xmlWriter.newline()
 
 
-class FloatTupleValues:
+class TypedTupleValues:
+    def __init__(self, format):
+        assert len(format) == 2
+        self.endian = format[0]
+        assert self.endian in ("<", ">")
+        self.format = format[1:]
+
     def read(self, data, font):
         assert len(data) % 4 == 0
-        format = "<" + "f" * (len(data) // 4)
+        format = self.endian + self.format * (len(data) // 4)
         return struct.unpack(format, data)
 
     def write(self, writer, font, tableDict, values, repeatIndex=None):
-        return b''.join(struct.pack("<f", value) for value in values)
+        format = self.endian + self.format * len(values)
+        return struct.pack(format, *values)
 
     def xmlRead(self, attrs, content, font):
         return safeEval(attrs["value"])
@@ -2075,7 +2082,8 @@ converterMapping = {
     "CompositeMode": CompositeMode,
     "STATFlags": STATFlags,
     "TupleList": partial(CFF2Index, itemConverterClass=TupleValues),
-    "FloatTupleList": partial(CFF2Index, itemConverterClass=FloatTupleValues),
+    "FloatTupleList": partial(CFF2Index, itemConverterClass=partial(TypedTupleValues, "<f")),
+    "Int16TupleList": partial(CFF2Index, itemConverterClass=partial(TypedTupleValues, ">h")),
     "VarCompositeGlyphList": partial(CFF2Index, itemClass=VarCompositeGlyph),
     # AAT
     "CIDGlyphMap": CIDGlyphMap,
