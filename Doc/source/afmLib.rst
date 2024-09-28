@@ -1,6 +1,6 @@
-###########################################
-afmLib: Read/write Adobe Font Metrics files
-###########################################
+###############################################
+afmLib: Read and write Adobe Font Metrics files
+###############################################
 
 .. automodule:: fontTools.afmLib
 

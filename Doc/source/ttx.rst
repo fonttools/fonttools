@@ -1,6 +1,6 @@
-###
-ttx
-###
+##################################
+ttx: Convert fonts to XML and back
+##################################
 
 
 TTX – From OpenType and TrueType to XML and Back
