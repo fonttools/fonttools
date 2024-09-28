@@ -1,9 +1,28 @@
+__doc__ = """
+Convert TrueType flavored fonts to CFF flavored fonts.
+
+INPUT_PATH argument can be a file or a directory. If it is a directory, all the TrueType
+flavored fonts found in the directory will be converted.
+
+Examples:
+
+    $ ttf2otf font.ttf
+    $ ttf2otf font.ttf -o output_dir
+    $ ttf2otf fonts_dir
+    $ ttf2otf fonts_dir -r
+    $ ttf2otf fonts_dir -o output_dir
+    $ ttf2otf fonts_dir -o output_dir --no-overwrite
+    $ ttf2otf fonts_dir -o output_dir --max-err 0.5
+    $ ttf2otf fonts_dir -o output_dir --new-upem 1000
+    $ ttf2otf fonts_dir -o output_dir --correct-contours
+"""
+
+import argparse
 import logging
 import sys
 import typing as t
 from pathlib import Path
 
-import click
 import pathops
 from cffsubr import subroutinize as subr
 from fontTools import configLogger
@@ -112,7 +131,7 @@ def simplify_path(path: pathops.Path, glyph_name: str, clockwise: bool) -> patho
 
 
 def quadratics_to_cubics(
-    font: TTFont, tolerance: float = 1.0, correct_contours: bool = True
+    font: TTFont, tolerance: float = 1.0, correct_contours: bool = False
 ) -> t.Dict[str, T2CharString]:
     """
     Get CFF charstrings using Qu2CuPen
@@ -140,6 +159,7 @@ def quadratics_to_cubics(
             qu2cu_charstrings[k] = t2_pen.getCharString()
 
         except NotImplementedError:
+            # Workaround for "oncurve-less contours with all_cubic not implemented"
             temp_t2_pen = T2CharStringPen(width=width, glyphSet=None)
             glyph_set[k].draw(temp_t2_pen)
             t2_charstring = temp_t2_pen.getCharString()
@@ -153,9 +173,9 @@ def quadratics_to_cubics(
             t2_pen = T2CharStringPen(width=width, glyphSet=None)
             qu2cu_pen = Qu2CuPen(t2_pen, max_err=tolerance, all_cubic=True, reverse_direction=True)
             tt_glyph.draw(pen=qu2cu_pen, glyfTable=None)
-            log.info(
-                f"Failed to convert glyph {k} to cubic at first attempt, but succeeded at second "
-                f"attempt."
+            log.warning(
+                f"Failed to convert glyph '{k}' to cubic at first attempt, but succeeded at second "
+                f"one."
             )
 
         charstring = t2_pen.getCharString()
@@ -305,6 +325,7 @@ def find_fonts(
         input_path (Path): The input file or directory.
         recursive (bool): If input_path is a directory, search for fonts recursively in
             subdirectories.
+        recalc_timestamp (bool): Weather to recalculate the font's timestamp on save.
 
     Returns:
         List[TTFont]: A list of TTFont objects.
@@ -332,75 +353,7 @@ def find_fonts(
     return fonts
 
 
-@click.command("ttf2otf", no_args_is_help=True)
-@click.argument("input_path", type=click.Path(exists=True, resolve_path=True, path_type=Path))
-@click.option(
-    "-r",
-    "--recursive",
-    is_flag=True,
-    default=False,
-    help="If INPUT_PATH is a directory, search for fonts recursively in subdirectories.",
-)
-@click.option(
-    "-o",
-    "--output-dir",
-    type=click.Path(file_okay=False, path_type=Path),
-    help="Specify a directory where the output files are to be saved. If the output directory "
-    "doesn't exist, it will be automatically created. If not specified, files will be saved to "
-    "the source directory.",
-)
-@click.option(
-    "--no-overwrite",
-    "overwrite",
-    is_flag=True,
-    default=True,
-    help="Do not overwrite the output file if it already exists.",
-)
-@click.option(
-    "-rt",
-    "--recalc-timestamp",
-    is_flag=True,
-    default=False,
-    help="Recalculate the font's timestamp.",
-)
-@click.option(
-    "--max-err",
-    type=float,
-    default=1.0,
-    help="The maximum error allowed when converting the font to TrueType.",
-)
-@click.option(
-    "--new-upem",
-    type=click.IntRange(min=16, max=16384),
-    help="The target UPM to scale the font to.",
-)
-@click.option(
-    "--correct-contours",
-    is_flag=True,
-    default=False,
-    help="""
-    If the TrueType contours fonts have overlaps contours or incorrect directions, set this flag to
-    correct them with pathops.
-    """,
-)
-@click.option(
-    "--no-subroutinize",
-    "subroutinize",
-    is_flag=True,
-    default=True,
-    help="Do not subroutinize the converted font.",
-)
-def main(
-    input_path: Path,
-    recursive: bool = False,
-    output_dir: t.Optional[Path] = None,
-    overwrite: bool = True,
-    recalc_timestamp: bool = False,
-    max_err: float = 1.0,
-    new_upem: t.Optional[int] = None,
-    correct_contours: bool = True,
-    subroutinize: bool = True,
-) -> None:
+def main(args=None) -> None:
     """
     Convert TrueType flavored fonts to CFF flavored fonts.
 
@@ -408,9 +361,77 @@ def main(
     flavored fonts found in the directory will be converted.
     """
 
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    parser.add_argument(
+        "input_path",
+        type=Path,
+        help="The input file or directory.",
+    )
+    parser.add_argument(
+        "-r",
+        "--recursive",
+        action="store_true",
+        help="Search for fonts recursively in subdirectories.",
+    )
+    parser.add_argument(
+        "-o",
+        "--output-dir",
+        type=Path,
+        help="Specify a directory where the output files are to be saved.",
+    )
+    parser.add_argument(
+        "--no-overwrite",
+        dest="overwrite",
+        action="store_false",
+        help="Do not overwrite the output file if it already exists.",
+    )
+    parser.add_argument(
+        "-rt",
+        "--recalc-timestamp",
+        action="store_true",
+        help="Recalculate the font's modified timestamp on save.",
+    )
+    parser.add_argument(
+        "--max-err",
+        type=float,
+        default=1.0,
+        help="The maximum error allowed when converting the font to TrueType."
+    )
+    parser.add_argument(
+        "--new-upem",
+        type=int,
+        help="The target UPM to scale the font to.",
+    )
+    parser.add_argument(
+        "--correct-contours",
+        action="store_true",
+        help="Correct contours with pathops.",
+    )
+    parser.add_argument(
+        "--no-subroutinize",
+        dest="subroutinize",
+        action="store_false",
+        help="Do not subroutinize the converted font.",
+    )
+
+    args = parser.parse_args(args)
+
+    input_path = args.input_path
+    recursive = args.recursive
+    output_dir = args.output_dir
+    overwrite = args.overwrite
+    recalc_timestamp = args.recalc_timestamp
+    max_err = args.max_err
+    new_upem = args.new_upem
+    correct_contours = args.correct_contours
+    subroutinize = args.subroutinize
+
     fonts = find_fonts(input_path, recursive=recursive, recalc_timestamp=recalc_timestamp)
     if not fonts:
-        log.error("No fonts found.")
+        log.error("No TrueType flavored fonts found.")
         return
 
     if output_dir and not output_dir.exists():
@@ -418,6 +439,9 @@ def main(
 
     for font in fonts:
         with font:
+            if font.sfntVersion != "\x00\x01\x00\x00":
+                log.error(f"Font {font.reader.file.name} is not a TrueType font.")
+                continue
             in_file = font.reader.file.name
             log.info(f"Converting {in_file}...")
 
@@ -432,6 +456,7 @@ def main(
             charstrings_dict = quadratics_to_cubics(
                 font, tolerance=max_err, correct_contours=correct_contours
             )
+
             ps_name = font["name"].getDebugName(6)
             font_info = build_font_info_dict(font=font)
             private_dict: t.Dict[str, t.Any] = {}
