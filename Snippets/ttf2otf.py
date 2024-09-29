@@ -47,7 +47,9 @@ def decomponentize_tt(font: TTFont) -> None:
     Decomposes all composite glyphs of a TrueType font.
     """
     if not font.sfntVersion == "\x00\x01\x00\x00":
-        raise NotImplementedError("Decomponentization is only supported for TrueType fonts.")
+        raise NotImplementedError(
+            "Decomponentization is only supported for TrueType fonts."
+        )
 
     glyph_set = font.getGlyphSet()
     glyf_table = font["glyf"]
@@ -84,7 +86,9 @@ def charstring_from_skia_path(path: pathops.Path, width: int) -> T2CharString:
     return t2_pen.getCharString()
 
 
-def round_path(path: pathops.Path, rounder: t.Callable[[float], float] = otRound) -> pathops.Path:
+def round_path(
+    path: pathops.Path, rounder: t.Callable[[float], float] = otRound
+) -> pathops.Path:
     """
     Rounds the points coordinate of a ``pathops.Path``
 
@@ -127,7 +131,9 @@ def simplify_path(path: pathops.Path, glyph_name: str, clockwise: bool) -> patho
         path = pathops.simplify(path, fix_winding=True, clockwise=clockwise)
         return path
     except pathops.PathOpsError as e:
-        raise pathops.PathOpsError(f"Failed to simplify path for glyph {glyph_name}: {e}")
+        raise pathops.PathOpsError(
+            f"Failed to simplify path for glyph {glyph_name}: {e}"
+        )
 
 
 def quadratics_to_cubics(
@@ -154,7 +160,9 @@ def quadratics_to_cubics(
 
         try:
             t2_pen = T2CharStringPen(width=width, glyphSet={k: v})
-            qu2cu_pen = Qu2CuPen(t2_pen, max_err=tolerance, all_cubic=True, reverse_direction=True)
+            qu2cu_pen = Qu2CuPen(
+                t2_pen, max_err=tolerance, all_cubic=True, reverse_direction=True
+            )
             glyph_set[k].draw(qu2cu_pen)
             qu2cu_charstrings[k] = t2_pen.getCharString()
 
@@ -166,12 +174,16 @@ def quadratics_to_cubics(
             t2_charstring.private = PrivateDict()
 
             tt_pen = TTGlyphPen(glyphSet=None)
-            cu2qu_pen = Cu2QuPen(other_pen=tt_pen, max_err=tolerance, reverse_direction=False)
+            cu2qu_pen = Cu2QuPen(
+                other_pen=tt_pen, max_err=tolerance, reverse_direction=False
+            )
             t2_charstring.draw(cu2qu_pen)
             tt_glyph = tt_pen.glyph()
 
             t2_pen = T2CharStringPen(width=width, glyphSet=None)
-            qu2cu_pen = Qu2CuPen(t2_pen, max_err=tolerance, all_cubic=True, reverse_direction=True)
+            qu2cu_pen = Qu2CuPen(
+                t2_pen, max_err=tolerance, all_cubic=True, reverse_direction=True
+            )
             tt_glyph.draw(pen=qu2cu_pen, glyfTable=None)
             log.warning(
                 f"Failed to convert glyph '{k}' to cubic at first attempt, but succeeded at second "
@@ -398,7 +410,7 @@ def main(args=None) -> None:
         "--max-err",
         type=float,
         default=1.0,
-        help="The maximum error allowed when converting the font to TrueType."
+        help="The maximum error allowed when converting the font to TrueType.",
     )
     parser.add_argument(
         "--new-upem",
@@ -429,7 +441,9 @@ def main(args=None) -> None:
     correct_contours = args.correct_contours
     subroutinize = args.subroutinize
 
-    fonts = find_fonts(input_path, recursive=recursive, recalc_timestamp=recalc_timestamp)
+    fonts = find_fonts(
+        input_path, recursive=recursive, recalc_timestamp=recalc_timestamp
+    )
     if not fonts:
         log.error("No TrueType flavored fonts found.")
         return
