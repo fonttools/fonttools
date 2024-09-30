@@ -1,4 +1,4 @@
 sphinx==8.0.2
 sphinx_rtd_theme==2.0.0
 reportlab==4.2.4
-freetype-py==2.4.0
+freetype-py==2.5.1
