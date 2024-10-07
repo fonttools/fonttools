@@ -35,13 +35,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.11", "3.12"]
+        # Oldest supported, 'Stable' supported, Newest supported
+        python-version: ["3.8", "3.12", "3.13"]
         platform: [ubuntu-latest]
         include: # Only test on the latest supported stable Python on macOS and Windows.
           - platform: macos-latest
-            python-version: 3.11
+            python-version: 3.12
           - platform: windows-latest
-            python-version: 3.11
+            python-version: 3.12
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python ${{ matrix.python-version }}

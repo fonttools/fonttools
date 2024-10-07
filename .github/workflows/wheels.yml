@@ -82,7 +82,7 @@ jobs:
     strategy:
       matrix:
         # aarch64 uses qemu so it's slow, build each py version in parallel jobs
-        python: [38, 39, 310, 311, 312]
+        python: [38, 39, 310, 311, 312, 313]
         arch: [aarch64]
     steps:
     - uses: actions/checkout@v4
