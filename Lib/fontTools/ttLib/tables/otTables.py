@@ -190,10 +190,8 @@ class VarComponent:
             numAxes = len(axisIndices)
 
         if flags & VarComponentFlags.HAVE_AXES:
-            format = ">" + "h" * numAxes
-            axisValues = struct.unpack(format, data[i : i + 2 * numAxes])
+            axisValues, i = TupleVariation.decompileDeltas_(numAxes, data, i)
             self.axisValues = tuple(fi2fl(v, 14) for v in axisValues)
-            i += 2 * numAxes
         else:
             self.axisValues = ()
         assert len(self.axisValues) == numAxes
@@ -255,12 +253,15 @@ class VarComponent:
             data.append(_write_uint32var(self.conditionIndex))
 
         numAxes = len(self.axisValues)
+
         if numAxes:
             flags |= VarComponentFlags.HAVE_AXES
             data.append(_write_uint32var(self.axisIndicesIndex))
-            format = ">" + "h" * numAxes
-            axisValues = [fl2fi(v, 14) for v in self.axisValues]
-            data.append(struct.pack(format, *axisValues))
+            data.append(
+                TupleVariation.compileDeltaValues_(
+                    [fl2fi(v, 14) for v in self.axisValues]
+                )
+            )
         else:
             flags &= ~VarComponentFlags.HAVE_AXES
 
