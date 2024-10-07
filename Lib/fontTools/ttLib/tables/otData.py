@@ -3486,7 +3486,7 @@ otData = [
     (
         "AxisIndicesList",
         [
-            ("Int16TupleList", "Item", "", 0, ""),
+            ("TupleList", "Item", "", 0, ""),
         ],
     ),
     (
