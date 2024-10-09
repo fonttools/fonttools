@@ -707,6 +707,37 @@ class GlyphComponentTest:
             '<component glyphName="a" firstPt="1" secondPt="2" flags="0x0"/>'
         ]
 
+    def test_compile_for_speed(self):
+        glyph = Glyph()
+        glyph.numberOfContours = 1
+        glyph.coordinates = GlyphCoordinates(
+            [(0, 0), (1, 0), (1, 0), (1, 1), (1, 1), (0, 1), (0, 1)]
+        )
+        glyph.flags = array.array("B", [flagOnCurve] + [flagCubic] * 6)
+        glyph.endPtsOfContours = [6]
+        glyph.program = ttProgram.Program()
+
+        glyph.expand(None)
+        sizeBytes = glyph.compile(None, optimizeSize=True)
+        glyph.expand(None)
+        speedBytes = glyph.compile(None, optimizeSize=False)
+
+        assert len(sizeBytes) < len(speedBytes)
+
+        for data in sizeBytes, speedBytes:
+            glyph = Glyph(data)
+
+            pen = RecordingPen()
+            glyph.draw(pen, None)
+
+            assert pen.value == [
+                ("moveTo", ((0, 0),)),
+                ("curveTo", ((1, 0), (1, 0), (1.0, 0.5))),
+                ("curveTo", ((1, 1), (1, 1), (0.5, 1.0))),
+                ("curveTo", ((0, 1), (0, 1), (0, 0))),
+                ("closePath", ()),
+            ]
+
     def test_fromXML_reference_points(self):
         comp = GlyphComponent()
         for name, attrs, content in parseXML(
