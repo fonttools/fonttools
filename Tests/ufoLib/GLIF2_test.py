@@ -429,7 +429,7 @@ class TestGLIF2(unittest.TestCase):
         self.assertRaises(GlifLibError, self.pyToGLIF, py)
         self.assertRaises(GlifLibError, self.glifToPy, glif)
 
-    def testGuidelines_illegal_x_missing(self):
+    def testGuidelines_x_missing(self):
         # x missing
         glif = """
 		<glyph name="a" format="2">
@@ -442,10 +442,14 @@ class TestGLIF2(unittest.TestCase):
 		glyph.name = "a"
 		glyph.guidelines = [{"angle" : 45, "y" : 1}]
 		"""
-        self.assertRaises(GlifLibError, self.pyToGLIF, py)
-        self.assertRaises(GlifLibError, self.glifToPy, glif)
+        result = self.pyToGLIF(py)
+        expected = '<glyph name="a" format="2">\n  <guideline y="1" angle="45"/>\n  <outline>\n  </outline>\n</glyph>'
+        self.assertEqual(result, expected)
+        result = self.glifToPy(glif)
+        expected = 'glyph.name = "a"\nglyph.guidelines = [{"angle" : 45, "y" : 1}]'
+        self.assertEqual(result, expected)
 
-    def testGuidelines_illegal_y_missing(self):
+    def testGuidelines_y_missing(self):
         # y missing
         glif = """
 		<glyph name="a" format="2">
@@ -458,10 +462,14 @@ class TestGLIF2(unittest.TestCase):
 		glyph.name = "a"
 		glyph.guidelines = [{"angle" : 45, "x" : 1}]
 		"""
-        self.assertRaises(GlifLibError, self.pyToGLIF, py)
-        self.assertRaises(GlifLibError, self.glifToPy, glif)
+        result = self.pyToGLIF(py)
+        expected = '<glyph name="a" format="2">\n  <guideline x="1" angle="45"/>\n  <outline>\n  </outline>\n</glyph>'
+        self.assertEqual(result, expected)
+        result = self.glifToPy(glif)
+        expected = 'glyph.name = "a"\nglyph.guidelines = [{"angle" : 45, "x" : 1}]'
+        self.assertEqual(result, expected)
 
-    def testGuidelines_illegal_angle_missing(self):
+    def testGuidelines_angle_missing(self):
         # angle missing
         glif = """
 		<glyph name="a" format="2">
@@ -474,8 +482,12 @@ class TestGLIF2(unittest.TestCase):
 		glyph.name = "a"
 		glyph.guidelines = [{"x" : 1, "y" : 1}]
 		"""
-        self.assertRaises(GlifLibError, self.pyToGLIF, py)
-        self.assertRaises(GlifLibError, self.glifToPy, glif)
+        result = self.pyToGLIF(py)
+        expected = '<glyph name="a" format="2">\n  <guideline x="1" y="1"/>\n  <outline>\n  </outline>\n</glyph>'
+        self.assertEqual(result, expected)
+        result = self.glifToPy(glif)
+        expected = 'glyph.name = "a"\nglyph.guidelines = [{"x" : 1, "y" : 1}]'
+        self.assertEqual(result, expected)
 
     def testGuidelines_illegal_angle_out_of_range(self):
         # angle out of range
