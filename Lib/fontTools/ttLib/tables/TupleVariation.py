@@ -12,6 +12,7 @@ import io
 import logging
 import struct
 import sys
+from os import getenv
 
 
 # https://www.microsoft.com/typography/otspec/otvarcommonformats.htm
@@ -362,6 +363,15 @@ class TupleVariation(object):
         """  # Explaining the format because the 'gvar' spec is hard to understand.
         if bytearr is None:
             bytearr = bytearray()
+
+        TVS = getenv("TVS")
+        assert TVS
+        if TVS == "quo":
+            optimizeSize = True
+        elif TVS == "speed":
+            optimizeSize = False
+        else:
+            assert False, TVS
 
         pos = 0
         numDeltas = len(deltas)

@@ -732,8 +732,15 @@ class Glyph(object):
         if self.isComposite():
             data = data + self.compileComponents(glyfTable)
         else:
-            if optimizeSize is None:
-                optimizeSize = getattr(glyfTable, "optimizeSize", True)
+            optimizeSize = getattr(glyfTable, "optimizeSize", True)
+            TVS = os.getenv("TVS")
+            assert TVS
+            if TVS == "quo":
+                optimizeSize = True
+            elif TVS == "speed":
+                optimizeSize = False
+            else:
+                assert False, TVS
             data = data + self.compileCoordinates(optimizeSize=optimizeSize)
         return data
 
