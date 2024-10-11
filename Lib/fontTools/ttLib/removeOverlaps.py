@@ -87,7 +87,8 @@ def ttfGlyphFromSkPath(path: pathops.Path) -> _g_l_y_f.Glyph:
 def _charString_from_SkPath(
     path: pathops.Path, charString: T2CharString
 ) -> T2CharString:
-    t2Pen = T2CharStringPen(width=charString.width, glyphSet=None)
+    width = charString.width - charString.private.nominalWidthX
+    t2Pen = T2CharStringPen(width=width, glyphSet=None)
     path.draw(t2Pen)
     return t2Pen.getCharString(charString.private, charString.globalSubrs)
 
