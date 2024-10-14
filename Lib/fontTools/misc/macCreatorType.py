@@ -52,5 +52,11 @@ def setMacCreatorAndType(path, fileCreator, fileType):
 
         if not all(len(s) == 4 for s in (fileCreator, fileType)):
             raise TypeError("arg must be string of 4 chars")
-        finderInfo = pad(bytesjoin([fileType, fileCreator]), 32)
+        try:
+            existingFinderInfo = xattr.getxattr(path, "com.apple.FinderInfo")
+        except (KeyError, IOError):
+            pass
+        else:
+            otherMetadata = existingFinderInfo[8:]
+        finderInfo = pad(bytesjoin([fileType, fileCreator, otherMetadata]), 32)
         xattr.setxattr(path, "com.apple.FinderInfo", finderInfo)
