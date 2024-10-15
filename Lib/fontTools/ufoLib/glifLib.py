@@ -1191,8 +1191,12 @@ def _readGlyphFromTreeFormat1(
             haveSeenAdvance = True
             _readAdvance(glyphObject, element)
         elif element.tag == "unicode":
+            v = element.get("hex")
+            if v is None:
+                raise GlifLibError(
+                    "A unicode element is missing its required hex attribute."
+                )
             try:
-                v = element.get("hex")
                 v = int(v, 16)
                 if v not in unicodes:
                     unicodes.append(v)
@@ -1254,8 +1258,12 @@ def _readGlyphFromTreeFormat2(
             haveSeenAdvance = True
             _readAdvance(glyphObject, element)
         elif element.tag == "unicode":
+            v = element.get("hex")
+            if v is None:
+                raise GlifLibError(
+                    "A unicode element is missing its required hex attribute."
+                )
             try:
-                v = element.get("hex")
                 v = int(v, 16)
                 if v not in unicodes:
                     unicodes.append(v)
