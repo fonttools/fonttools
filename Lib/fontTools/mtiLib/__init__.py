@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 # FontDame-to-FontTools for OpenType Layout tables
 #
