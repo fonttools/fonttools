@@ -693,7 +693,7 @@ def main(args=None):
 
     from fontTools import configLogger
 
-    configLogger(level=("INFO" if args.verbose else "ERROR"))
+    configLogger(level=("INFO" if args.verbose else "WARNING"))
     if args.debug:
         configLogger(level="DEBUG")
 
@@ -750,13 +750,13 @@ def main(args=None):
                 for k, vv in axis_triples.items()
             }
 
-        elif args.inputs[0].endswith(".ttf"):
+        elif args.inputs[0].endswith(".ttf") or args.inputs[0].endswith(".otf"):
             from fontTools.ttLib import TTFont
+            # Is variable font?
 
             font = TTFont(args.inputs[0])
             upem = font["head"].unitsPerEm
             if "gvar" in font:
-                # Is variable font
 
                 fvar = font["fvar"]
                 axisMapping = {}
@@ -830,8 +830,9 @@ def main(args=None):
                     names.append(name)
                     fonts.append(glyphsets[locTuple])
                     locations.append(dict(locTuple))
-                args.ignore_missing = True
-                args.inputs = []
+
+            args.ignore_missing = True
+            args.inputs = []
 
     if not locations:
         locations = [{} for _ in fonts]
@@ -853,6 +854,10 @@ def main(args=None):
             fonts.append(font)
 
         names.append(basename(filename).rsplit(".", 1)[0])
+
+    if len(fonts) < 2:
+        log.warning("Font file does not seem to be variable. Nothing to check.")
+        return
 
     glyphsets = []
     for font in fonts:
