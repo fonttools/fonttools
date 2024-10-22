@@ -70,12 +70,12 @@ class XMLReader(object):
         while True:
             chunk = file.read(BUFSIZE)
             if not chunk:
-                parser.Parse(chunk, isfinal=True)
+                parser.Parse(chunk, 1)
                 break
             pos = pos + len(chunk)
             if self.progress:
                 self.progress.set(pos // 100)
-            parser.Parse(chunk, isfinal=False)
+            parser.Parse(chunk, 0)
 
     def _startElementHandler(self, name, attrs):
         if self.stackSize == 1 and self.contentOnly:

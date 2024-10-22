@@ -1765,7 +1765,7 @@ class _BaseParser:
         parser = ParserCreate()
         parser.StartElementHandler = self.startElementHandler
         parser.EndElementHandler = self.endElementHandler
-        parser.Parse(text, isfinal=True)
+        parser.Parse(text, 1)
 
     def startElementHandler(self, name, attrs):
         self._elementStack.append(name)
