@@ -94,6 +94,33 @@ class InterpolatableTest(unittest.TestCase):
         otf_paths = self.get_file_list(self.tempdir, suffix)
         self.assertIsNone(interpolatable_main(otf_paths))
 
+    def test_interpolatable_cff2(self):
+        suffix = ".otf"
+        ttx_dir = self.get_test_input("variable_ttx_interpolatable_cff2")
+        ttx_path = os.path.abspath(os.path.join(ttx_dir, "interpolatable-test.ttx"))
+
+        self.temp_dir()
+        self.compile_font(ttx_path, suffix, self.tempdir)
+
+        otf_path = self.get_file_list(self.tempdir, suffix)[0]
+
+        problems = interpolatable_main([otf_path])
+        print(problems)
+        self.assertEqual(
+            problems["uni0408"],
+            [
+                {
+                    "type": "underweight",
+                    "contour": 0,
+                    "master_1": "'wght=200.0 opsz=20.0'",
+                    "master_2": "'wght=200.0 opsz=60.0'",
+                    "master_1_idx": 2,
+                    "master_2_idx": 3,
+                    "tolerance": 0.9184032411892079,
+                },
+            ],
+        )
+
     def test_interpolatable_ufo(self):
         ttx_dir = self.get_test_input("master_ufo")
         ufo_paths = self.get_file_list(ttx_dir, ".ufo", "TestFamily2-")
