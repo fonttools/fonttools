@@ -1,4 +1,4 @@
-|CI Build Status| |Coverage Status| |PyPI| |Gitter Chat|
+|CI Build Status| |Coverage Status| |PyPI| |Gitter Chat| |fontTools Guru|
 
 What is this?
 ~~~~~~~~~~~~~
@@ -298,3 +298,6 @@ Have fun!
 .. |Gitter Chat| image:: https://badges.gitter.im/fonttools-dev/Lobby.svg
    :alt: Join the chat at https://gitter.im/fonttools-dev/Lobby
    :target: https://gitter.im/fonttools-dev/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+.. |fontTools Guru| image:: https://img.shields.io/badge/Gurubase-Ask%20fontTools%20Guru-006BFF
+   :alt: Ask fontTools at https://gurubase.io/g/fonttools
+   :target: https://gurubase.io/g/fonttools
