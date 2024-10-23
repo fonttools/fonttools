@@ -1,0 +1,1545 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="OTTO" ttLibVersion="4.54">
+
+  <GlyphOrder>
+    <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
+    <GlyphID id="0" name=".notdef"/>
+    <GlyphID id="1" name="uni0408"/>
+  </GlyphOrder>
+
+  <head>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="1.0"/>
+    <fontRevision value="4.00499"/>
+    <checkSumAdjustment value="0x432a2c5b"/>
+    <magicNumber value="0x5f0f3cf5"/>
+    <flags value="00000000 00000011"/>
+    <unitsPerEm value="1000"/>
+    <created value="Fri Jan 20 19:39:02 2023"/>
+    <modified value="Fri Jan 20 18:40:30 2023"/>
+    <xMin value="-238"/>
+    <yMin value="-324"/>
+    <xMax value="2226"/>
+    <yMax value="1009"/>
+    <macStyle value="00000000 00000010"/>
+    <lowestRecPPEM value="3"/>
+    <fontDirectionHint value="2"/>
+    <indexToLocFormat value="0"/>
+    <glyphDataFormat value="0"/>
+  </head>
+
+  <hhea>
+    <tableVersion value="0x00010000"/>
+    <ascent value="1036"/>
+    <descent value="-335"/>
+    <lineGap value="0"/>
+    <advanceWidthMax value="2273"/>
+    <minLeftSideBearing value="-238"/>
+    <minRightSideBearing value="-320"/>
+    <xMaxExtent value="2226"/>
+    <caretSlopeRise value="1000"/>
+    <caretSlopeRun value="213"/>
+    <caretOffset value="-59"/>
+    <reserved0 value="0"/>
+    <reserved1 value="0"/>
+    <reserved2 value="0"/>
+    <reserved3 value="0"/>
+    <metricDataFormat value="0"/>
+    <numberOfHMetrics value="2"/>
+  </hhea>
+
+  <maxp>
+    <tableVersion value="0x5000"/>
+    <numGlyphs value="2"/>
+  </maxp>
+
+  <OS_2>
+    <!-- The fields 'usFirstCharIndex' and 'usLastCharIndex'
+         will be recalculated by the compiler -->
+    <version value="4"/>
+    <xAvgCharWidth value="532"/>
+    <usWeightClass value="400"/>
+    <usWidthClass value="5"/>
+    <fsType value="00000000 00000000"/>
+    <ySubscriptXSize value="650"/>
+    <ySubscriptYSize value="600"/>
+    <ySubscriptXOffset value="-16"/>
+    <ySubscriptYOffset value="75"/>
+    <ySuperscriptXSize value="650"/>
+    <ySuperscriptYSize value="600"/>
+    <ySuperscriptXOffset value="74"/>
+    <ySuperscriptYOffset value="350"/>
+    <yStrikeoutSize value="50"/>
+    <yStrikeoutPosition value="285"/>
+    <sFamilyClass value="0"/>
+    <panose>
+      <bFamilyType value="2"/>
+      <bSerifStyle value="4"/>
+      <bWeight value="5"/>
+      <bProportion value="3"/>
+      <bContrast value="4"/>
+      <bStrokeVariation value="4"/>
+      <bArmStyle value="5"/>
+      <bLetterForm value="2"/>
+      <bMidline value="2"/>
+      <bXHeight value="4"/>
+    </panose>
+    <ulUnicodeRange1 value="00000000 00000000 00000010 00000000"/>
+    <ulUnicodeRange2 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange3 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange4 value="00000000 00000000 00000000 00000000"/>
+    <achVendID value="ADBO"/>
+    <fsSelection value="00000000 00000001"/>
+    <usFirstCharIndex value="1032"/>
+    <usLastCharIndex value="1032"/>
+    <sTypoAscender value="1036"/>
+    <sTypoDescender value="-335"/>
+    <sTypoLineGap value="0"/>
+    <usWinAscent value="1036"/>
+    <usWinDescent value="335"/>
+    <ulCodePageRange1 value="00100000 00000000 00000001 10011111"/>
+    <ulCodePageRange2 value="00000000 00000000 00000000 00000000"/>
+    <sxHeight value="475"/>
+    <sCapHeight value="670"/>
+    <usDefaultChar value="0"/>
+    <usBreakChar value="32"/>
+    <usMaxContext value="3"/>
+  </OS_2>
+
+  <hmtx>
+    <mtx name=".notdef" width="640" lsb="89"/>
+    <mtx name="uni0408" width="350" lsb="-115"/>
+  </hmtx>
+
+  <cmap>
+    <tableVersion version="0"/>
+    <cmap_format_4 platformID="0" platEncID="3" language="0">
+      <map code="0x408" name="uni0408"/><!-- CYRILLIC CAPITAL LETTER JE -->
+    </cmap_format_4>
+    <cmap_format_4 platformID="3" platEncID="1" language="0">
+      <map code="0x408" name="uni0408"/><!-- CYRILLIC CAPITAL LETTER JE -->
+    </cmap_format_4>
+  </cmap>
+
+  <name>
+    <namerecord nameID="0" platformID="3" platEncID="1" langID="0x409">
+      © 2014 - 2023 Adobe (http://www.adobe.com/), with Reserved Font Name ‘Source’.
+    </namerecord>
+    <namerecord nameID="1" platformID="3" platEncID="1" langID="0x409">
+      Source Serif 4 Variable
+    </namerecord>
+    <namerecord nameID="2" platformID="3" platEncID="1" langID="0x409">
+      Italic
+    </namerecord>
+    <namerecord nameID="3" platformID="3" platEncID="1" langID="0x409">
+      4.005;ADBO;SourceSerif4Variable-Italic;ADOBE
+    </namerecord>
+    <namerecord nameID="4" platformID="3" platEncID="1" langID="0x409">
+      Source Serif 4 Variable Italic
+    </namerecord>
+    <namerecord nameID="5" platformID="3" platEncID="1" langID="0x409">
+      Version 4.005;hotconv 1.1.0;makeotfexe 2.6.0
+    </namerecord>
+    <namerecord nameID="6" platformID="3" platEncID="1" langID="0x409">
+      SourceSerif4Variable-Italic
+    </namerecord>
+    <namerecord nameID="260" platformID="3" platEncID="1" langID="0x409">
+      Italic
+    </namerecord>
+    <namerecord nameID="263" platformID="3" platEncID="1" langID="0x409">
+      Italic
+    </namerecord>
+    <namerecord nameID="264" platformID="3" platEncID="1" langID="0x409">
+      ExtraLight
+    </namerecord>
+    <namerecord nameID="265" platformID="3" platEncID="1" langID="0x409">
+      Light
+    </namerecord>
+    <namerecord nameID="266" platformID="3" platEncID="1" langID="0x409">
+      Regular
+    </namerecord>
+    <namerecord nameID="267" platformID="3" platEncID="1" langID="0x409">
+      Medium
+    </namerecord>
+    <namerecord nameID="268" platformID="3" platEncID="1" langID="0x409">
+      Semibold
+    </namerecord>
+    <namerecord nameID="269" platformID="3" platEncID="1" langID="0x409">
+      Bold
+    </namerecord>
+    <namerecord nameID="270" platformID="3" platEncID="1" langID="0x409">
+      ExtraBold
+    </namerecord>
+    <namerecord nameID="271" platformID="3" platEncID="1" langID="0x409">
+      Black
+    </namerecord>
+    <namerecord nameID="272" platformID="3" platEncID="1" langID="0x409">
+      Caption
+    </namerecord>
+    <namerecord nameID="273" platformID="3" platEncID="1" langID="0x409">
+      SmallText
+    </namerecord>
+    <namerecord nameID="274" platformID="3" platEncID="1" langID="0x409">
+      Text
+    </namerecord>
+    <namerecord nameID="275" platformID="3" platEncID="1" langID="0x409">
+      Subhead
+    </namerecord>
+    <namerecord nameID="276" platformID="3" platEncID="1" langID="0x409">
+      Display
+    </namerecord>
+    <namerecord nameID="277" platformID="3" platEncID="1" langID="0x409">
+      Italic
+    </namerecord>
+    <namerecord nameID="278" platformID="3" platEncID="1" langID="0x409">
+      Weight
+    </namerecord>
+    <namerecord nameID="279" platformID="3" platEncID="1" langID="0x409">
+      Optical Size
+    </namerecord>
+    <namerecord nameID="280" platformID="3" platEncID="1" langID="0x409">
+      Caption ExtraLight Italic
+    </namerecord>
+    <namerecord nameID="281" platformID="3" platEncID="1" langID="0x409">
+      SourceSerif4Variable-CaptionExtraLightItalic
+    </namerecord>
+    <namerecord nameID="282" platformID="3" platEncID="1" langID="0x409">
+      Caption Light Italic
+    </namerecord>
+    <namerecord nameID="283" platformID="3" platEncID="1" langID="0x409">
+      SourceSerif4Variable-CaptionLightItalic
+    </namerecord>
+    <namerecord nameID="284" platformID="3" platEncID="1" langID="0x409">
+      Caption Italic
+    </namerecord>
+    <namerecord nameID="285" platformID="3" platEncID="1" langID="0x409">
+      SourceSerif4Variable-CaptionRegularItalic
+    </namerecord>
+    <namerecord nameID="286" platformID="3" platEncID="1" langID="0x409">
+      Caption Semibold Italic
+    </namerecord>
+    <namerecord nameID="287" platformID="3" platEncID="1" langID="0x409">
+      SourceSerif4Variable-CaptionSemiboldItalic
+    </namerecord>
+    <namerecord nameID="288" platformID="3" platEncID="1" langID="0x409">
+      Caption Bold Italic
+    </namerecord>
+    <namerecord nameID="289" platformID="3" platEncID="1" langID="0x409">
+      SourceSerif4Variable-CaptionBoldItalic
+    </namerecord>
+    <namerecord nameID="290" platformID="3" platEncID="1" langID="0x409">
+      Caption Black Italic
+    </namerecord>
+    <namerecord nameID="291" platformID="3" platEncID="1" langID="0x409">
+      SourceSerif4Variable-CaptionBlackItalic
+    </namerecord>
+    <namerecord nameID="292" platformID="3" platEncID="1" langID="0x409">
+      SmText ExtraLight Italic
+    </namerecord>
+    <namerecord nameID="293" platformID="3" platEncID="1" langID="0x409">
+      SourceSerif4Variable-SmTextExtraLightItalic
+    </namerecord>
+    <namerecord nameID="294" platformID="3" platEncID="1" langID="0x409">
+      SmText Light Italic
+    </namerecord>
+    <namerecord nameID="295" platformID="3" platEncID="1" langID="0x409">
+      SourceSerif4Variable-SmTextLightItalic
+    </namerecord>
+    <namerecord nameID="296" platformID="3" platEncID="1" langID="0x409">
+      SmText Italic
+    </namerecord>
+    <namerecord nameID="297" platformID="3" platEncID="1" langID="0x409">
+      SourceSerif4Variable-SmTextRegularItalic
+    </namerecord>
+    <namerecord nameID="298" platformID="3" platEncID="1" langID="0x409">
+      SmText Semibold Italic
+    </namerecord>
+    <namerecord nameID="299" platformID="3" platEncID="1" langID="0x409">
+      SourceSerif4Variable-SmTextSemiboldItalic
+    </namerecord>
+    <namerecord nameID="300" platformID="3" platEncID="1" langID="0x409">
+      SmText Bold Italic
+    </namerecord>
+    <namerecord nameID="301" platformID="3" platEncID="1" langID="0x409">
+      SourceSerif4Variable-SmTextBoldItalic
+    </namerecord>
+    <namerecord nameID="302" platformID="3" platEncID="1" langID="0x409">
+      SmText Black Italic
+    </namerecord>
+    <namerecord nameID="303" platformID="3" platEncID="1" langID="0x409">
+      SourceSerif4Variable-SmTextBlackItalic
+    </namerecord>
+    <namerecord nameID="304" platformID="3" platEncID="1" langID="0x409">
+      ExtraLight Italic
+    </namerecord>
+    <namerecord nameID="305" platformID="3" platEncID="1" langID="0x409">
+      SourceSerif4Variable-ExtraLightItalic
+    </namerecord>
+    <namerecord nameID="306" platformID="3" platEncID="1" langID="0x409">
+      Light Italic
+    </namerecord>
+    <namerecord nameID="307" platformID="3" platEncID="1" langID="0x409">
+      SourceSerif4Variable-LightItalic
+    </namerecord>
+    <namerecord nameID="308" platformID="3" platEncID="1" langID="0x409">
+      SourceSerif4Variable-Italic
+    </namerecord>
+    <namerecord nameID="309" platformID="3" platEncID="1" langID="0x409">
+      Semibold Italic
+    </namerecord>
+    <namerecord nameID="310" platformID="3" platEncID="1" langID="0x409">
+      SourceSerif4Variable-SemiboldItalic
+    </namerecord>
+    <namerecord nameID="311" platformID="3" platEncID="1" langID="0x409">
+      Bold Italic
+    </namerecord>
+    <namerecord nameID="312" platformID="3" platEncID="1" langID="0x409">
+      SourceSerif4Variable-BoldItalic
+    </namerecord>
+    <namerecord nameID="313" platformID="3" platEncID="1" langID="0x409">
+      Black Italic
+    </namerecord>
+    <namerecord nameID="314" platformID="3" platEncID="1" langID="0x409">
+      SourceSerif4Variable-BlackItalic
+    </namerecord>
+    <namerecord nameID="315" platformID="3" platEncID="1" langID="0x409">
+      Subhead ExtraLight Italic
+    </namerecord>
+    <namerecord nameID="316" platformID="3" platEncID="1" langID="0x409">
+      SourceSerif4Variable-SubheadExtraLightItalic
+    </namerecord>
+    <namerecord nameID="317" platformID="3" platEncID="1" langID="0x409">
+      Subhead Light Italic
+    </namerecord>
+    <namerecord nameID="318" platformID="3" platEncID="1" langID="0x409">
+      SourceSerif4Variable-SubheadLightItalic
+    </namerecord>
+    <namerecord nameID="319" platformID="3" platEncID="1" langID="0x409">
+      Subhead Italic
+    </namerecord>
+    <namerecord nameID="320" platformID="3" platEncID="1" langID="0x409">
+      SourceSerif4Variable-SubheadRegularItalic
+    </namerecord>
+    <namerecord nameID="321" platformID="3" platEncID="1" langID="0x409">
+      Subhead Semibold Italic
+    </namerecord>
+    <namerecord nameID="322" platformID="3" platEncID="1" langID="0x409">
+      SourceSerif4Variable-SubheadSemiboldItalic
+    </namerecord>
+    <namerecord nameID="323" platformID="3" platEncID="1" langID="0x409">
+      Subhead Bold Italic
+    </namerecord>
+    <namerecord nameID="324" platformID="3" platEncID="1" langID="0x409">
+      SourceSerif4Variable-SubheadBoldItalic
+    </namerecord>
+    <namerecord nameID="325" platformID="3" platEncID="1" langID="0x409">
+      Subhead Black Italic
+    </namerecord>
+    <namerecord nameID="326" platformID="3" platEncID="1" langID="0x409">
+      SourceSerif4Variable-SubheadBlackItalic
+    </namerecord>
+    <namerecord nameID="327" platformID="3" platEncID="1" langID="0x409">
+      Display ExtraLight Italic
+    </namerecord>
+    <namerecord nameID="328" platformID="3" platEncID="1" langID="0x409">
+      SourceSerif4Variable-DisplayExtraLightItalic
+    </namerecord>
+    <namerecord nameID="329" platformID="3" platEncID="1" langID="0x409">
+      Display Light Italic
+    </namerecord>
+    <namerecord nameID="330" platformID="3" platEncID="1" langID="0x409">
+      SourceSerif4Variable-DisplayLightItalic
+    </namerecord>
+    <namerecord nameID="331" platformID="3" platEncID="1" langID="0x409">
+      Display Italic
+    </namerecord>
+    <namerecord nameID="332" platformID="3" platEncID="1" langID="0x409">
+      SourceSerif4Variable-DisplayRegularItalic
+    </namerecord>
+    <namerecord nameID="333" platformID="3" platEncID="1" langID="0x409">
+      Display Semibold Italic
+    </namerecord>
+    <namerecord nameID="334" platformID="3" platEncID="1" langID="0x409">
+      SourceSerif4Variable-DisplaySemiboldItalic
+    </namerecord>
+    <namerecord nameID="335" platformID="3" platEncID="1" langID="0x409">
+      Display Bold Italic
+    </namerecord>
+    <namerecord nameID="336" platformID="3" platEncID="1" langID="0x409">
+      SourceSerif4Variable-DisplayBoldItalic
+    </namerecord>
+    <namerecord nameID="337" platformID="3" platEncID="1" langID="0x409">
+      Display Black Italic
+    </namerecord>
+    <namerecord nameID="338" platformID="3" platEncID="1" langID="0x409">
+      SourceSerif4Variable-DisplayBlackItalic
+    </namerecord>
+  </name>
+
+  <post>
+    <formatType value="3.0"/>
+    <italicAngle value="-12.0"/>
+    <underlinePosition value="-50"/>
+    <underlineThickness value="50"/>
+    <isFixedPitch value="0"/>
+    <minMemType42 value="0"/>
+    <maxMemType42 value="0"/>
+    <minMemType1 value="0"/>
+    <maxMemType1 value="0"/>
+  </post>
+
+  <CFF2>
+    <major value="2"/>
+    <minor value="0"/>
+    <CFFFont name="CFF2Font">
+      <FontMatrix value="0.001 0 0 0.001 0 0"/>
+      <FDSelect format="3"/>
+      <FDArray>
+        <FontDict index="0">
+          <Private>
+            <BlueValues>
+                <blend value="-15 2 -5 -1 -1 -2 2 5 5"/>
+                <blend value="0 -2 5 1 1 2 -2 -5 -5"/>
+                <blend value="647 7 -23 1 0 -3 2 3 0"/>
+                <blend value="660 -1 3 -1 -1 1 1 1 1"/>
+            </BlueValues>
+            <OtherBlues value=""/>
+            <BlueScale>
+                <blend value="0.0375 0 0 0.009375 0 0 0 0 0"/>
+            </BlueScale>
+            <BlueShift value="7"/>
+            <BlueFuzz value="0"/>
+            <StdHW>
+                <blend value="46 -23 17 18 -22 -11 17 -1 -13"/>
+            </StdHW>
+            <StdVW>
+                <blend value="85 -57 105 11 -18 -7 14 3 -12"/>
+            </StdVW>
+            <StemSnapH>
+                <blend value="46 -23 17 18 -22 -11 17 -1 -13"/>
+            </StemSnapH>
+            <StemSnapV>
+                <blend value="85 -57 105 11 -18 -7 14 3 -12"/>
+            </StemSnapV>
+            <LanguageGroup value="0"/>
+            <ExpansionFactor value="0.06"/>
+          </Private>
+        </FontDict>
+        <FontDict index="1">
+          <Private>
+            <BlueValues>
+                <blend value="-424 -2 26 -10 3 4 -9 -23 -12"/>
+                <blend value="-409 0 0 0 0 0 0 0 0"/>
+                <blend value="1094 -38 -5 13 -33 -8 26 26 38"/>
+                <blend value="1109 0 0 0 0 0 0 0 0"/>
+            </BlueValues>
+            <OtherBlues value=""/>
+            <BlueScale>
+                <blend value="0.0375 0 0 0.009375 0 0 0 0 0"/>
+            </BlueScale>
+            <BlueShift value="7"/>
+            <BlueFuzz value="0"/>
+            <StdHW>
+                <blend value="46 -23 17 18 -22 -11 17 -1 -13"/>
+            </StdHW>
+            <StdVW>
+                <blend value="85 -57 105 11 -18 -7 14 3 -12"/>
+            </StdVW>
+            <StemSnapH>
+                <blend value="46 -23 17 18 -22 -11 17 -1 -13"/>
+            </StemSnapH>
+            <StemSnapV>
+                <blend value="85 -57 105 11 -18 -7 14 3 -12"/>
+            </StemSnapV>
+            <LanguageGroup value="0"/>
+            <ExpansionFactor value="0.06"/>
+          </Private>
+        </FontDict>
+      </FDArray>
+      <CharStrings>
+        <CharString name=".notdef" fdSelectIndex="0">
+          0 50 569 51 -28 20 0 1 0 -1 0 -1 63 -57 1 0 -1 0 -1 0 -29 19 -1 -1 1 1 1 1 3 blend
+          hstem
+          89 60 360 60 18 -6 17 13 -20 -19 6 7 -35 20 0 1 0 -1 0 -1 70 -40 0 -2 0 2 0 2 -35 20 0 1 0 -1 0 -1 4 blend
+          vstem
+          89 18 -6 17 13 -20 -19 6 7 1 blend
+          hmoveto
+          61 -36 39 -1 0 1 0 1 0 1 blend
+          hlineto
+          419 670 -61 36 -39 1 0 -1 0 -1 0 6 -18 0 0 0 0 0 0 36 -39 1 0 -1 0 -1 0 3 blend
+          0 -419 -670 -36 39 -1 0 1 0 1 0 -6 18 0 0 0 0 0 0 2 blend
+          rlineto
+          480 hmoveto
+          -419 670 -61 -36 39 -1 0 1 0 1 0 6 -18 0 0 0 0 0 0 36 -39 1 0 -1 0 -1 0 3 blend
+          0 419 -670 36 -39 1 0 -1 0 -1 0 -6 18 0 0 0 0 0 0 2 blend
+          rlineto
+          61 -36 39 -1 0 1 0 1 0 1 blend
+          hlineto
+          -420 50 -35 20 0 1 0 -1 0 -1 -28 20 0 1 0 -1 0 -1 2 blend
+          rmoveto
+          569 360 -569 -360 63 -57 1 0 -1 0 -1 0 70 -40 0 -2 0 2 0 2 -63 57 -1 0 1 0 1 0 -70 40 0 2 0 -2 0 -2 4 blend
+          vlineto
+          -60 -50 35 -20 0 -1 0 1 0 1 28 -20 0 -1 0 1 0 1 2 blend
+          rmoveto
+          480 670 6 -18 0 0 0 0 0 0 1 blend
+          -480 -670 -6 18 0 0 0 0 0 0 1 blend
+          hlineto
+        </CharString>
+        <CharString name="uni0408" fdSelectIndex="1">
+          -134 97 660.6587 46.3413 13 -18 2 -11 -2 12 -4 11 -43 40 -1 -11 0 1 3 -1 59.0837 -57.2318 -14.6587 47.5829 10.9163 -28.1159 2.2318 -0.9809 -23.0837 17.2318 13.6587 -25.5829 -8.9163 15.1159 -1.2318 -9.0191 4 blend
+          hstem
+          -115 502 26 -17 20 1 19 2 -4 -4 -18 57 18 -19 -41 -15 9 1 2 blend
+          vstem
+          -115 -83 26 -17 20 1 19 2 -4 -4 -5 0 3 -16 -5 9 -11 18 2 blend
+          rmoveto
+          -35 3 43 -16 46 12 -13 7 3 -1 3 -4 4 4 12 2 0 -9 -4 -2 -14 -13 -1 -14 -12 5 7 13 15 6 -5 -8 2 4 0 11 -11 1 8 16 -6 -20 -18 -1 3 5 blend
+          hhcurveto
+          64 77 54 100 43 12 19 50 -15 -37 -28 -31 -4 -4 -6 -21 -44 -5 9 21 13 13 -8 39 -38 -43 -10 -25 19 40 -22 -37 -68 -39 -39 30 32 -13 10 -11 -8 6 14 4 2 5 blend
+          hvcurveto
+          18 39 11 49 14 75 93 487 -5 24 15 45 -6 -3 -16 16 18 21 27 16 -28 -22 -24 17 -1 12 -6 5 15 14 15 9 -9 45 33 11 31 37 -29 64 8 20 12 27 -3 -25 -19 -37 44 91 58 126 -1 -121 -73 -173 -23 -20 -23 0 11 22 16 -2 -113 -127 -122 -36 82 143 125 30 8 blend
+          rcurveline
+          -90 58 -91 -6 20 4 -17 -9 -3 1 blend
+          hlineto
+          -15 -104 -20 -104 -18 -102 -30 -173 -9 -60 -14 -67 -15 -71 -24 -54 -42 -25 -9 -17 -6 -7 10 9 20 18 -30 -85 -20 -20 44 29 109 83 5 -8 -4 -7 3 -1 14 9 10 -18 -14 -22 -1 -9 37 21 5 3 -3 -4 -4 -5 0 -2 34 6 -22 -22 -20 -35 18 -8 13 20 17 0 -29 -9 -35 -4 85 113 93 -1 -171 -57 -185 -24 -10 1 -4 1 4 14 7 -5 -26 -1 -33 5 16 67 14 -13 -3 3 -4 7 5 6 6 -6 -21 -9 -8 36 48 34 4 -10 -11 7 -2 0 12 -2 4 -16 -63 11 -1 0 87 -9 6 -75 -19 12 0 -3 20 -19 3 -3 -11 3 15 -6 -6 6 -18 28 -37 28 11 -10 6 31 -6 1 2 -6 -13 4 10 -2 -11 -3 18 blend
+          rrcurveto
+          0 -12 31 0 0 30 0 -11 0 -16 -1 9 2 21 7 -15 -6 10 -4 -8 2 -85 -6 29 -7 -16 -3 3 blend
+          0 0 11 0 0 32 0 -25 0 13 1 -8 -1 -27 -6 21 6 -4 2 2 blend
+          rlineto
+          41 -54 -21 13 -23 -10 22 5 6 -15 -14 12 19 6 -5 16 6 11 14 22 7 8 -7 1 3 0 -4 -5 -5 -7 3 5 -3 0 3 7 -6 5 -14 -13 0 7 4 -4 12 5 blend
+          hhcurveto
+          -33 -30 -16 -30 -5 15 -11 -7 2 8 -3 1 6 16 0 7 7 -8 -2 -1 -6 7 -12 -4 -2 3 5 -8 8 18 -10 6 8 -6 -9 -2 0 0 -1 0 -1 1 3 2 -1 5 blend
+          hvcurveto
+          219 712 5 -6 -3 20 -24 -21 0 10 32 -36 -22 41 16 -24 13 -8 2 blend
+          rmoveto
+          126 -15 20 0 12 18 -12 -16 -3 -16 -13 8 0 15 3 -8 -2 0 -4 -6 25 8 1 -6 -1 43 30 3 blend
+          0 129 15 8 41 -275 -13 23 -7 -23 5 7 -19 -25 -8 0 -15 -3 8 2 0 4 -4 3 2 -5 0 3 1 -1 -21 18 19 -25 -11 15 -2 -10 19 -60 -19 34 17 -3 -8 8 5 blend
+          0 -8 -41 4 -3 -2 5 0 -3 -1 1 21 -18 -19 25 11 -15 2 10 2 blend
+          rlineto
+        </CharString>
+      </CharStrings>
+      <VarStore Format="1">
+        <Format value="1"/>
+        <VarRegionList>
+          <!-- RegionAxisCount=2 -->
+          <!-- RegionCount=8 -->
+          <Region index="0">
+            <VarRegionAxis index="0">
+              <StartCoord value="-1.0"/>
+              <PeakCoord value="-1.0"/>
+              <EndCoord value="0.0"/>
+            </VarRegionAxis>
+            <VarRegionAxis index="1">
+              <StartCoord value="0.0"/>
+              <PeakCoord value="0.0"/>
+              <EndCoord value="0.0"/>
+            </VarRegionAxis>
+          </Region>
+          <Region index="1">
+            <VarRegionAxis index="0">
+              <StartCoord value="0.0"/>
+              <PeakCoord value="1.0"/>
+              <EndCoord value="1.0"/>
+            </VarRegionAxis>
+            <VarRegionAxis index="1">
+              <StartCoord value="0.0"/>
+              <PeakCoord value="0.0"/>
+              <EndCoord value="0.0"/>
+            </VarRegionAxis>
+          </Region>
+          <Region index="2">
+            <VarRegionAxis index="0">
+              <StartCoord value="0.0"/>
+              <PeakCoord value="0.0"/>
+              <EndCoord value="0.0"/>
+            </VarRegionAxis>
+            <VarRegionAxis index="1">
+              <StartCoord value="-1.0"/>
+              <PeakCoord value="-1.0"/>
+              <EndCoord value="0.0"/>
+            </VarRegionAxis>
+          </Region>
+          <Region index="3">
+            <VarRegionAxis index="0">
+              <StartCoord value="0.0"/>
+              <PeakCoord value="0.0"/>
+              <EndCoord value="0.0"/>
+            </VarRegionAxis>
+            <VarRegionAxis index="1">
+              <StartCoord value="0.0"/>
+              <PeakCoord value="1.0"/>
+              <EndCoord value="1.0"/>
+            </VarRegionAxis>
+          </Region>
+          <Region index="4">
+            <VarRegionAxis index="0">
+              <StartCoord value="-1.0"/>
+              <PeakCoord value="-1.0"/>
+              <EndCoord value="0.0"/>
+            </VarRegionAxis>
+            <VarRegionAxis index="1">
+              <StartCoord value="-1.0"/>
+              <PeakCoord value="-1.0"/>
+              <EndCoord value="0.0"/>
+            </VarRegionAxis>
+          </Region>
+          <Region index="5">
+            <VarRegionAxis index="0">
+              <StartCoord value="-1.0"/>
+              <PeakCoord value="-1.0"/>
+              <EndCoord value="0.0"/>
+            </VarRegionAxis>
+            <VarRegionAxis index="1">
+              <StartCoord value="0.0"/>
+              <PeakCoord value="1.0"/>
+              <EndCoord value="1.0"/>
+            </VarRegionAxis>
+          </Region>
+          <Region index="6">
+            <VarRegionAxis index="0">
+              <StartCoord value="0.0"/>
+              <PeakCoord value="1.0"/>
+              <EndCoord value="1.0"/>
+            </VarRegionAxis>
+            <VarRegionAxis index="1">
+              <StartCoord value="-1.0"/>
+              <PeakCoord value="-1.0"/>
+              <EndCoord value="0.0"/>
+            </VarRegionAxis>
+          </Region>
+          <Region index="7">
+            <VarRegionAxis index="0">
+              <StartCoord value="0.0"/>
+              <PeakCoord value="1.0"/>
+              <EndCoord value="1.0"/>
+            </VarRegionAxis>
+            <VarRegionAxis index="1">
+              <StartCoord value="0.0"/>
+              <PeakCoord value="1.0"/>
+              <EndCoord value="1.0"/>
+            </VarRegionAxis>
+          </Region>
+        </VarRegionList>
+        <!-- VarDataCount=1 -->
+        <VarData index="0">
+          <!-- ItemCount=0 -->
+          <NumShorts value="0"/>
+          <!-- VarRegionCount=8 -->
+          <VarRegionIndex index="0" value="0"/>
+          <VarRegionIndex index="1" value="1"/>
+          <VarRegionIndex index="2" value="2"/>
+          <VarRegionIndex index="3" value="3"/>
+          <VarRegionIndex index="4" value="4"/>
+          <VarRegionIndex index="5" value="5"/>
+          <VarRegionIndex index="6" value="6"/>
+          <VarRegionIndex index="7" value="7"/>
+        </VarData>
+      </VarStore>
+    </CFFFont>
+
+    <GlobalSubrs>
+      <!-- The 'index' attribute is only for humans; it is ignored when parsed. -->
+    </GlobalSubrs>
+  </CFF2>
+
+  <GDEF>
+    <Version value="0x00010003"/>
+    <VarStore Format="1">
+      <Format value="1"/>
+      <VarRegionList>
+        <!-- RegionAxisCount=2 -->
+        <!-- RegionCount=6 -->
+        <Region index="0">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="1">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="-1.0"/>
+            <PeakCoord value="-1.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="2">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="3">
+          <VarRegionAxis index="0">
+            <StartCoord value="-1.0"/>
+            <PeakCoord value="-1.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="-1.0"/>
+            <PeakCoord value="-1.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="4">
+          <VarRegionAxis index="0">
+            <StartCoord value="-1.0"/>
+            <PeakCoord value="-1.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="5">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="-1.0"/>
+            <PeakCoord value="-1.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+        </Region>
+      </VarRegionList>
+      <!-- VarDataCount=1 -->
+      <VarData index="0">
+        <!-- ItemCount=1 -->
+        <NumShorts value="0"/>
+        <!-- VarRegionCount=6 -->
+        <VarRegionIndex index="0" value="0"/>
+        <VarRegionIndex index="1" value="1"/>
+        <VarRegionIndex index="2" value="2"/>
+        <VarRegionIndex index="3" value="3"/>
+        <VarRegionIndex index="4" value="4"/>
+        <VarRegionIndex index="5" value="5"/>
+        <Item index="0" value="[10, 10, 10, -30, -20, -10]"/>
+      </VarData>
+    </VarStore>
+  </GDEF>
+
+  <GPOS>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=4 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+      <ScriptRecord index="1">
+        <ScriptTag value="cyrl"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+      <ScriptRecord index="2">
+        <ScriptTag value="grek"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+      <ScriptRecord index="3">
+        <ScriptTag value="latn"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=1 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="kern"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="0"/>
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=1 -->
+      <Lookup index="0">
+        <LookupType value="9"/>
+        <LookupFlag value="8"/><!-- ignoreMarks -->
+        <!-- SubTableCount=2 -->
+        <ExtensionPos index="0" Format="1">
+          <ExtensionLookupType value="2"/>
+          <PairPos Format="1">
+            <Coverage>
+              <Glyph value="uni0408"/>
+            </Coverage>
+            <ValueFormat1 value="68"/>
+            <ValueFormat2 value="0"/>
+            <!-- PairSetCount=1 -->
+            <PairSet index="0">
+              <!-- PairValueCount=1 -->
+              <PairValueRecord index="0">
+                <SecondGlyph value="uni0408"/>
+                <Value1 XAdvance="-20">
+                  <XAdvDevice>
+                    <StartSize value="0"/>
+                    <EndSize value="0"/>
+                    <DeltaFormat value="32768"/>
+                  </XAdvDevice>
+                </Value1>
+              </PairValueRecord>
+            </PairSet>
+          </PairPos>
+        </ExtensionPos>
+        <ExtensionPos index="1" Format="1">
+          <ExtensionLookupType value="2"/>
+          <PairPos Format="2">
+            <Coverage>
+              <Glyph value="uni0408"/>
+            </Coverage>
+            <ValueFormat1 value="68"/>
+            <ValueFormat2 value="0"/>
+            <ClassDef1>
+            </ClassDef1>
+            <ClassDef2>
+              <ClassDef glyph="uni0408" class="1"/>
+            </ClassDef2>
+            <!-- Class1Count=1 -->
+            <!-- Class2Count=2 -->
+            <Class1Record index="0">
+              <Class2Record index="0">
+                <Value1 XAdvance="0"/>
+              </Class2Record>
+              <Class2Record index="1">
+                <Value1 XAdvance="0"/>
+              </Class2Record>
+            </Class1Record>
+          </PairPos>
+        </ExtensionPos>
+      </Lookup>
+    </LookupList>
+  </GPOS>
+
+  <GSUB>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=4 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=0 -->
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+      <ScriptRecord index="1">
+        <ScriptTag value="cyrl"/>
+        <Script>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+      <ScriptRecord index="2">
+        <ScriptTag value="grek"/>
+        <Script>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+      <ScriptRecord index="3">
+        <ScriptTag value="latn"/>
+        <Script>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=0 -->
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=0 -->
+    </LookupList>
+  </GSUB>
+
+  <HVAR>
+    <Version value="0x00010000"/>
+    <VarStore Format="1">
+      <Format value="1"/>
+      <VarRegionList>
+        <!-- RegionAxisCount=2 -->
+        <!-- RegionCount=7 -->
+        <Region index="0">
+          <VarRegionAxis index="0">
+            <StartCoord value="-1.0"/>
+            <PeakCoord value="-1.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="1">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="2">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="-1.0"/>
+            <PeakCoord value="-1.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="3">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="4">
+          <VarRegionAxis index="0">
+            <StartCoord value="-1.0"/>
+            <PeakCoord value="-1.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="-1.0"/>
+            <PeakCoord value="-1.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="5">
+          <VarRegionAxis index="0">
+            <StartCoord value="-1.0"/>
+            <PeakCoord value="-1.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="6">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="-1.0"/>
+            <PeakCoord value="-1.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+        </Region>
+      </VarRegionList>
+      <!-- VarDataCount=2 -->
+      <VarData index="0">
+        <!-- ItemCount=1 -->
+        <NumShorts value="0"/>
+        <!-- VarRegionCount=0 -->
+        <Item index="0" value="[]"/>
+      </VarData>
+      <VarData index="1">
+        <!-- ItemCount=1 -->
+        <NumShorts value="0"/>
+        <!-- VarRegionCount=7 -->
+        <VarRegionIndex index="0" value="0"/>
+        <VarRegionIndex index="1" value="1"/>
+        <VarRegionIndex index="2" value="2"/>
+        <VarRegionIndex index="3" value="3"/>
+        <VarRegionIndex index="4" value="4"/>
+        <VarRegionIndex index="5" value="5"/>
+        <VarRegionIndex index="6" value="6"/>
+        <Item index="0" value="[-9, 25, 21, -42, 21, 17, 4]"/>
+      </VarData>
+    </VarStore>
+    <AdvWidthMap>
+      <Map glyph=".notdef" outer="0" inner="0"/>
+      <Map glyph="uni0408" outer="1" inner="0"/>
+    </AdvWidthMap>
+  </HVAR>
+
+  <MVAR>
+    <Version value="0x00010000"/>
+    <Reserved value="0"/>
+    <ValueRecordSize value="8"/>
+    <!-- ValueRecordCount=3 -->
+    <VarStore Format="1">
+      <Format value="1"/>
+      <VarRegionList>
+        <!-- RegionAxisCount=2 -->
+        <!-- RegionCount=8 -->
+        <Region index="0">
+          <VarRegionAxis index="0">
+            <StartCoord value="-1.0"/>
+            <PeakCoord value="-1.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="1">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="2">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="-1.0"/>
+            <PeakCoord value="-1.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="3">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="4">
+          <VarRegionAxis index="0">
+            <StartCoord value="-1.0"/>
+            <PeakCoord value="-1.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="-1.0"/>
+            <PeakCoord value="-1.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="5">
+          <VarRegionAxis index="0">
+            <StartCoord value="-1.0"/>
+            <PeakCoord value="-1.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="6">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="-1.0"/>
+            <PeakCoord value="-1.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="7">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+        </Region>
+      </VarRegionList>
+      <!-- VarDataCount=1 -->
+      <VarData index="0">
+        <!-- ItemCount=3 -->
+        <NumShorts value="0"/>
+        <!-- VarRegionCount=8 -->
+        <VarRegionIndex index="0" value="0"/>
+        <VarRegionIndex index="1" value="1"/>
+        <VarRegionIndex index="2" value="2"/>
+        <VarRegionIndex index="3" value="3"/>
+        <VarRegionIndex index="4" value="4"/>
+        <VarRegionIndex index="5" value="5"/>
+        <VarRegionIndex index="6" value="6"/>
+        <VarRegionIndex index="7" value="7"/>
+        <Item index="0" value="[-5, 12, 33, -23, -3, 1, -4, -4]"/>
+        <Item index="1" value="[-3, 7, 19, -14, -1, 0, -2, -2]"/>
+        <Item index="2" value="[15, -7, 19, 10, -15, -17, 5, 7]"/>
+      </VarData>
+    </VarStore>
+    <ValueRecord index="0">
+      <ValueTag value="hcof"/>
+      <VarIdx value="2"/>
+    </ValueRecord>
+    <ValueRecord index="1">
+      <ValueTag value="stro"/>
+      <VarIdx value="1"/>
+    </ValueRecord>
+    <ValueRecord index="2">
+      <ValueTag value="xhgt"/>
+      <VarIdx value="0"/>
+    </ValueRecord>
+  </MVAR>
+
+  <STAT>
+    <Version value="0x00010001"/>
+    <DesignAxisRecordSize value="8"/>
+    <!-- DesignAxisCount=3 -->
+    <DesignAxisRecord>
+      <Axis index="0">
+        <AxisTag value="opsz"/>
+        <AxisNameID value="279"/>  <!-- Optical Size -->
+        <AxisOrdering value="0"/>
+      </Axis>
+      <Axis index="1">
+        <AxisTag value="wght"/>
+        <AxisNameID value="278"/>  <!-- Weight -->
+        <AxisOrdering value="1"/>
+      </Axis>
+      <Axis index="2">
+        <AxisTag value="ital"/>
+        <AxisNameID value="263"/>  <!-- Italic -->
+        <AxisOrdering value="2"/>
+      </Axis>
+    </DesignAxisRecord>
+    <!-- AxisValueCount=14 -->
+    <AxisValueArray>
+      <AxisValue index="0" Format="2">
+        <AxisIndex value="1"/>
+        <Flags value="0"/>
+        <ValueNameID value="264"/>  <!-- ExtraLight -->
+        <NominalValue value="200.0"/>
+        <RangeMinValue value="200.0"/>
+        <RangeMaxValue value="250.0"/>
+      </AxisValue>
+      <AxisValue index="1" Format="2">
+        <AxisIndex value="1"/>
+        <Flags value="0"/>
+        <ValueNameID value="265"/>  <!-- Light -->
+        <NominalValue value="300.0"/>
+        <RangeMinValue value="250.0"/>
+        <RangeMaxValue value="350.0"/>
+      </AxisValue>
+      <AxisValue index="2" Format="2">
+        <AxisIndex value="1"/>
+        <Flags value="2"/>  <!-- ElidableAxisValueName -->
+        <ValueNameID value="266"/>  <!-- Regular -->
+        <NominalValue value="400.0"/>
+        <RangeMinValue value="350.0"/>
+        <RangeMaxValue value="450.0"/>
+      </AxisValue>
+      <AxisValue index="3" Format="2">
+        <AxisIndex value="1"/>
+        <Flags value="0"/>
+        <ValueNameID value="267"/>  <!-- Medium -->
+        <NominalValue value="500.0"/>
+        <RangeMinValue value="450.0"/>
+        <RangeMaxValue value="550.0"/>
+      </AxisValue>
+      <AxisValue index="4" Format="2">
+        <AxisIndex value="1"/>
+        <Flags value="0"/>
+        <ValueNameID value="268"/>  <!-- Semibold -->
+        <NominalValue value="600.0"/>
+        <RangeMinValue value="550.0"/>
+        <RangeMaxValue value="650.0"/>
+      </AxisValue>
+      <AxisValue index="5" Format="2">
+        <AxisIndex value="1"/>
+        <Flags value="0"/>
+        <ValueNameID value="269"/>  <!-- Bold -->
+        <NominalValue value="700.0"/>
+        <RangeMinValue value="650.0"/>
+        <RangeMaxValue value="750.0"/>
+      </AxisValue>
+      <AxisValue index="6" Format="2">
+        <AxisIndex value="1"/>
+        <Flags value="0"/>
+        <ValueNameID value="270"/>  <!-- ExtraBold -->
+        <NominalValue value="775.0"/>
+        <RangeMinValue value="750.0"/>
+        <RangeMaxValue value="800.0"/>
+      </AxisValue>
+      <AxisValue index="7" Format="2">
+        <AxisIndex value="1"/>
+        <Flags value="0"/>
+        <ValueNameID value="271"/>  <!-- Black -->
+        <NominalValue value="900.0"/>
+        <RangeMinValue value="800.0"/>
+        <RangeMaxValue value="900.0"/>
+      </AxisValue>
+      <AxisValue index="8" Format="2">
+        <AxisIndex value="0"/>
+        <Flags value="0"/>
+        <ValueNameID value="272"/>  <!-- Caption -->
+        <NominalValue value="8.0"/>
+        <RangeMinValue value="8.0"/>
+        <RangeMaxValue value="12.0"/>
+      </AxisValue>
+      <AxisValue index="9" Format="2">
+        <AxisIndex value="0"/>
+        <Flags value="0"/>
+        <ValueNameID value="273"/>  <!-- SmallText -->
+        <NominalValue value="16.0"/>
+        <RangeMinValue value="12.0"/>
+        <RangeMaxValue value="18.0"/>
+      </AxisValue>
+      <AxisValue index="10" Format="2">
+        <AxisIndex value="0"/>
+        <Flags value="2"/>  <!-- ElidableAxisValueName -->
+        <ValueNameID value="274"/>  <!-- Text -->
+        <NominalValue value="20.0"/>
+        <RangeMinValue value="18.0"/>
+        <RangeMaxValue value="26.0"/>
+      </AxisValue>
+      <AxisValue index="11" Format="2">
+        <AxisIndex value="0"/>
+        <Flags value="0"/>
+        <ValueNameID value="275"/>  <!-- Subhead -->
+        <NominalValue value="32.0"/>
+        <RangeMinValue value="26.0"/>
+        <RangeMaxValue value="48.0"/>
+      </AxisValue>
+      <AxisValue index="12" Format="2">
+        <AxisIndex value="0"/>
+        <Flags value="0"/>
+        <ValueNameID value="276"/>  <!-- Display -->
+        <NominalValue value="60.0"/>
+        <RangeMinValue value="48.0"/>
+        <RangeMaxValue value="60.0"/>
+      </AxisValue>
+      <AxisValue index="13" Format="3">
+        <AxisIndex value="2"/>
+        <Flags value="0"/>
+        <ValueNameID value="277"/>  <!-- Italic -->
+        <Value value="1.0"/>
+        <LinkedValue value="0.0"/>
+      </AxisValue>
+    </AxisValueArray>
+    <ElidedFallbackNameID value="260"/>  <!-- Italic -->
+  </STAT>
+
+  <avar>
+    <version major="1" minor="0"/>
+    <segment axis="wght">
+      <mapping from="-1.0" to="-1.0"/>
+      <mapping from="-0.5" to="-0.6066"/>
+      <mapping from="0.0" to="0.0"/>
+      <mapping from="0.4" to="0.3581"/>
+      <mapping from="0.6" to="0.7162"/>
+      <mapping from="1.0" to="1.0"/>
+    </segment>
+    <segment axis="opsz">
+      <mapping from="-1.0" to="-1.0"/>
+      <mapping from="0.0" to="0.0"/>
+      <mapping from="1.0" to="1.0"/>
+    </segment>
+  </avar>
+
+  <fvar>
+
+    <!-- Weight -->
+    <Axis>
+      <AxisTag>wght</AxisTag>
+      <Flags>0x0</Flags>
+      <MinValue>200.0</MinValue>
+      <DefaultValue>400.0</DefaultValue>
+      <MaxValue>900.0</MaxValue>
+      <AxisNameID>278</AxisNameID>
+    </Axis>
+
+    <!-- Optical Size -->
+    <Axis>
+      <AxisTag>opsz</AxisTag>
+      <Flags>0x0</Flags>
+      <MinValue>8.0</MinValue>
+      <DefaultValue>20.0</DefaultValue>
+      <MaxValue>60.0</MaxValue>
+      <AxisNameID>279</AxisNameID>
+    </Axis>
+
+    <!-- Caption ExtraLight Italic -->
+    <!-- PostScript: SourceSerif4Variable-CaptionExtraLightItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="281" subfamilyNameID="280">
+      <coord axis="wght" value="200.0"/>
+      <coord axis="opsz" value="8.0"/>
+    </NamedInstance>
+
+    <!-- Caption Light Italic -->
+    <!-- PostScript: SourceSerif4Variable-CaptionLightItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="283" subfamilyNameID="282">
+      <coord axis="wght" value="300.0"/>
+      <coord axis="opsz" value="8.0"/>
+    </NamedInstance>
+
+    <!-- Caption Italic -->
+    <!-- PostScript: SourceSerif4Variable-CaptionRegularItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="285" subfamilyNameID="284">
+      <coord axis="wght" value="400.0"/>
+      <coord axis="opsz" value="8.0"/>
+    </NamedInstance>
+
+    <!-- Caption Semibold Italic -->
+    <!-- PostScript: SourceSerif4Variable-CaptionSemiboldItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="287" subfamilyNameID="286">
+      <coord axis="wght" value="600.0"/>
+      <coord axis="opsz" value="8.0"/>
+    </NamedInstance>
+
+    <!-- Caption Bold Italic -->
+    <!-- PostScript: SourceSerif4Variable-CaptionBoldItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="289" subfamilyNameID="288">
+      <coord axis="wght" value="700.0"/>
+      <coord axis="opsz" value="8.0"/>
+    </NamedInstance>
+
+    <!-- Caption Black Italic -->
+    <!-- PostScript: SourceSerif4Variable-CaptionBlackItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="291" subfamilyNameID="290">
+      <coord axis="wght" value="900.0"/>
+      <coord axis="opsz" value="8.0"/>
+    </NamedInstance>
+
+    <!-- SmText ExtraLight Italic -->
+    <!-- PostScript: SourceSerif4Variable-SmTextExtraLightItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="293" subfamilyNameID="292">
+      <coord axis="wght" value="200.0"/>
+      <coord axis="opsz" value="16.0"/>
+    </NamedInstance>
+
+    <!-- SmText Light Italic -->
+    <!-- PostScript: SourceSerif4Variable-SmTextLightItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="295" subfamilyNameID="294">
+      <coord axis="wght" value="300.0"/>
+      <coord axis="opsz" value="16.0"/>
+    </NamedInstance>
+
+    <!-- SmText Italic -->
+    <!-- PostScript: SourceSerif4Variable-SmTextRegularItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="297" subfamilyNameID="296">
+      <coord axis="wght" value="400.0"/>
+      <coord axis="opsz" value="16.0"/>
+    </NamedInstance>
+
+    <!-- SmText Semibold Italic -->
+    <!-- PostScript: SourceSerif4Variable-SmTextSemiboldItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="299" subfamilyNameID="298">
+      <coord axis="wght" value="600.0"/>
+      <coord axis="opsz" value="16.0"/>
+    </NamedInstance>
+
+    <!-- SmText Bold Italic -->
+    <!-- PostScript: SourceSerif4Variable-SmTextBoldItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="301" subfamilyNameID="300">
+      <coord axis="wght" value="700.0"/>
+      <coord axis="opsz" value="16.0"/>
+    </NamedInstance>
+
+    <!-- SmText Black Italic -->
+    <!-- PostScript: SourceSerif4Variable-SmTextBlackItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="303" subfamilyNameID="302">
+      <coord axis="wght" value="900.0"/>
+      <coord axis="opsz" value="16.0"/>
+    </NamedInstance>
+
+    <!-- ExtraLight Italic -->
+    <!-- PostScript: SourceSerif4Variable-ExtraLightItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="305" subfamilyNameID="304">
+      <coord axis="wght" value="200.0"/>
+      <coord axis="opsz" value="20.0"/>
+    </NamedInstance>
+
+    <!-- Light Italic -->
+    <!-- PostScript: SourceSerif4Variable-LightItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="307" subfamilyNameID="306">
+      <coord axis="wght" value="300.0"/>
+      <coord axis="opsz" value="20.0"/>
+    </NamedInstance>
+
+    <!-- Italic -->
+    <!-- PostScript: SourceSerif4Variable-Italic -->
+    <NamedInstance flags="0x0" postscriptNameID="308" subfamilyNameID="2">
+      <coord axis="wght" value="400.0"/>
+      <coord axis="opsz" value="20.0"/>
+    </NamedInstance>
+
+    <!-- Semibold Italic -->
+    <!-- PostScript: SourceSerif4Variable-SemiboldItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="310" subfamilyNameID="309">
+      <coord axis="wght" value="600.0"/>
+      <coord axis="opsz" value="20.0"/>
+    </NamedInstance>
+
+    <!-- Bold Italic -->
+    <!-- PostScript: SourceSerif4Variable-BoldItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="312" subfamilyNameID="311">
+      <coord axis="wght" value="700.0"/>
+      <coord axis="opsz" value="20.0"/>
+    </NamedInstance>
+
+    <!-- Black Italic -->
+    <!-- PostScript: SourceSerif4Variable-BlackItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="314" subfamilyNameID="313">
+      <coord axis="wght" value="900.0"/>
+      <coord axis="opsz" value="20.0"/>
+    </NamedInstance>
+
+    <!-- Subhead ExtraLight Italic -->
+    <!-- PostScript: SourceSerif4Variable-SubheadExtraLightItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="316" subfamilyNameID="315">
+      <coord axis="wght" value="200.0"/>
+      <coord axis="opsz" value="32.0"/>
+    </NamedInstance>
+
+    <!-- Subhead Light Italic -->
+    <!-- PostScript: SourceSerif4Variable-SubheadLightItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="318" subfamilyNameID="317">
+      <coord axis="wght" value="300.0"/>
+      <coord axis="opsz" value="32.0"/>
+    </NamedInstance>
+
+    <!-- Subhead Italic -->
+    <!-- PostScript: SourceSerif4Variable-SubheadRegularItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="320" subfamilyNameID="319">
+      <coord axis="wght" value="400.0"/>
+      <coord axis="opsz" value="32.0"/>
+    </NamedInstance>
+
+    <!-- Subhead Semibold Italic -->
+    <!-- PostScript: SourceSerif4Variable-SubheadSemiboldItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="322" subfamilyNameID="321">
+      <coord axis="wght" value="600.0"/>
+      <coord axis="opsz" value="32.0"/>
+    </NamedInstance>
+
+    <!-- Subhead Bold Italic -->
+    <!-- PostScript: SourceSerif4Variable-SubheadBoldItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="324" subfamilyNameID="323">
+      <coord axis="wght" value="700.0"/>
+      <coord axis="opsz" value="32.0"/>
+    </NamedInstance>
+
+    <!-- Subhead Black Italic -->
+    <!-- PostScript: SourceSerif4Variable-SubheadBlackItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="326" subfamilyNameID="325">
+      <coord axis="wght" value="900.0"/>
+      <coord axis="opsz" value="32.0"/>
+    </NamedInstance>
+
+    <!-- Display ExtraLight Italic -->
+    <!-- PostScript: SourceSerif4Variable-DisplayExtraLightItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="328" subfamilyNameID="327">
+      <coord axis="wght" value="200.0"/>
+      <coord axis="opsz" value="60.0"/>
+    </NamedInstance>
+
+    <!-- Display Light Italic -->
+    <!-- PostScript: SourceSerif4Variable-DisplayLightItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="330" subfamilyNameID="329">
+      <coord axis="wght" value="300.0"/>
+      <coord axis="opsz" value="60.0"/>
+    </NamedInstance>
+
+    <!-- Display Italic -->
+    <!-- PostScript: SourceSerif4Variable-DisplayRegularItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="332" subfamilyNameID="331">
+      <coord axis="wght" value="400.0"/>
+      <coord axis="opsz" value="60.0"/>
+    </NamedInstance>
+
+    <!-- Display Semibold Italic -->
+    <!-- PostScript: SourceSerif4Variable-DisplaySemiboldItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="334" subfamilyNameID="333">
+      <coord axis="wght" value="600.0"/>
+      <coord axis="opsz" value="60.0"/>
+    </NamedInstance>
+
+    <!-- Display Bold Italic -->
+    <!-- PostScript: SourceSerif4Variable-DisplayBoldItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="336" subfamilyNameID="335">
+      <coord axis="wght" value="700.0"/>
+      <coord axis="opsz" value="60.0"/>
+    </NamedInstance>
+
+    <!-- Display Black Italic -->
+    <!-- PostScript: SourceSerif4Variable-DisplayBlackItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="338" subfamilyNameID="337">
+      <coord axis="wght" value="900.0"/>
+      <coord axis="opsz" value="60.0"/>
+    </NamedInstance>
+  </fvar>
+
+</ttFont>
