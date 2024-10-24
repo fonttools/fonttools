@@ -2929,7 +2929,8 @@ def subset_glyphs(self, s):
                     for u, g in l
                     if g in s.glyphs_requested or u in s.unicodes_requested
                 ]
-                for v, l in t.uvsDict.items() if v in s.unicodes_requested
+                for v, l in t.uvsDict.items()
+                if v in s.unicodes_requested
             }
             t.uvsDict = {v: l for v, l in t.uvsDict.items() if l}
         elif t.isUnicode():
