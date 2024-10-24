@@ -179,6 +179,24 @@ class MutatorTest(unittest.TestCase):
         expected_ttx_path = self.get_test_output(expected_ttx_name + ".ttx")
         self.expect_ttx(new_font, expected_ttx_path, tables)
 
+    def test_varlib_mutator_CFF2_rounding(self):
+        from fontTools.pens.recordingPen import RecordingPen
+
+        varfont = TTFont(recalcBBoxes=False, recalcTimestamp=False)
+        varfont.importXML(self.get_test_input("TestCFF2VFRounding.ttx"))
+        font = make_instance(varfont, {"wght": float(600)})
+
+        charString = font["CFF2"].cff[0].CharStrings["glyph00001"]
+        pen = RecordingPen()
+        charString.draw(pen)
+
+        # Accumulated rounding errors can cause the last point of the contour to
+        # not to match first point, leading to rendering artifacts.
+        assert pen.value[0][0] == "moveTo"
+        assert pen.value[0][1][0] == (-219, -12)
+        assert pen.value[-2][0] == "curveTo"
+        assert pen.value[-2][1][2] == pen.value[0][1][0]
+
 
 if __name__ == "__main__":
     sys.exit(unittest.main())
