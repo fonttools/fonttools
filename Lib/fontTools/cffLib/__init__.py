@@ -867,7 +867,11 @@ class VarStoreData(object):
         if self.file:
             # read data in from file. Assume position is correct.
             length = readCard16(self.file)
-            self.data = self.file.read(length)
+            # https://github.com/fonttools/fonttools/issues/3673
+            if length == 65535:
+                self.data = self.file.read()
+            else:
+                self.data = self.file.read(length)
             globalState = {}
             reader = OTTableReader(self.data, globalState)
             self.otVarStore = ot.VarStore()
@@ -1956,7 +1960,8 @@ class VarStoreCompiler(object):
         self.parent = parent
         if not varStoreData.data:
             varStoreData.compile()
-        data = [packCard16(len(varStoreData.data)), varStoreData.data]
+        varStoreDataLen = min(0xFFFF, len(varStoreData.data))
+        data = [packCard16(varStoreDataLen), varStoreData.data]
         self.data = bytesjoin(data)
 
     def setPos(self, pos, endPos):
