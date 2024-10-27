@@ -822,26 +822,67 @@ if __name__ == "__main__":
         default=None,
         help="Number of variable-font regions for blend opertaions.",
     )
+    parser.add_argument(
+        "--font",
+        metavar="FONTFILE",
+        default=None,
+        help="CFF2 font to specialize.",
+    )
+    parser.add_argument(
+        "-o",
+        "--output-file",
+        type=str,
+        help="Output font file name.",
+    )
 
     options = parser.parse_args(sys.argv[1:])
 
-    getNumRegions = (
-        None
-        if options.num_regions is None
-        else lambda vsIndex: int(options.num_regions[0 if vsIndex is None else vsIndex])
-    )
+    if options.program:
+        getNumRegions = (
+            None
+            if options.num_regions is None
+            else lambda vsIndex: int(
+                options.num_regions[0 if vsIndex is None else vsIndex]
+            )
+        )
 
-    program = stringToProgram(options.program)
-    print("Program:")
-    print(programToString(program))
-    commands = programToCommands(program, getNumRegions)
-    print("Commands:")
-    print(commands)
-    program2 = commandsToProgram(commands)
-    print("Program from commands:")
-    print(programToString(program2))
-    assert program == program2
-    print("Generalized program:")
-    print(programToString(generalizeProgram(program, getNumRegions)))
-    print("Specialized program:")
-    print(programToString(specializeProgram(program, getNumRegions)))
+        program = stringToProgram(options.program)
+        print("Program:")
+        print(programToString(program))
+        commands = programToCommands(program, getNumRegions)
+        print("Commands:")
+        print(commands)
+        program2 = commandsToProgram(commands)
+        print("Program from commands:")
+        print(programToString(program2))
+        assert program == program2
+        print("Generalized program:")
+        print(programToString(generalizeProgram(program, getNumRegions)))
+        print("Specialized program:")
+        print(programToString(specializeProgram(program, getNumRegions)))
+
+    if options.font:
+        from fontTools.ttLib import TTFont
+
+        font = TTFont(options.font)
+        cff2 = font["CFF2"].cff.topDictIndex[0]
+        charstrings = cff2.CharStrings
+        for glyphName in charstrings.keys():
+            charstring = charstrings[glyphName]
+            charstring.decompile()
+            getNumRegions = charstring.private.getNumRegions
+            charstring.program = specializeProgram(
+                charstring.program, getNumRegions, maxstack=maxStackLimit
+            )
+
+        if options.output_file is None:
+            from fontTools.misc.cliTools import makeOutputFileName
+
+            outfile = makeOutputFileName(
+                options.font, overWrite=True, suffix=".specialized"
+            )
+        else:
+            outfile = options.output_file
+        if outfile:
+            print("Saving", outfile)
+            font.save(outfile)
