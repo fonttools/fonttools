@@ -2281,7 +2281,7 @@ class DictCompiler(object):
                 # For PrivateDict BlueValues, the default font
                 # values are absolute, not relative.
                 # Must convert these back to relative coordinates
-                # befor writing to CFF2.
+                # before writing to CFF2.
                 defaultValue = value[i][0]
                 firstList[i] = defaultValue - prevVal
                 prevVal = defaultValue
