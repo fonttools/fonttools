@@ -446,9 +446,9 @@ def _convertToBlendCmds(args):
     i = 0
     while i < num_args:
         arg = args[i]
+        i += 1
         if not isinstance(arg, list):
             new_args.append(arg)
-            i += 1
             stack_use += 1
         else:
             prev_stack_use = stack_use
@@ -458,7 +458,6 @@ def _convertToBlendCmds(args):
             # up to the max stack limit.
             num_sources = len(arg) - 1
             blendlist = [arg]
-            i += 1
             stack_use += 1 + num_sources  # 1 for the num_blends arg
             while (i < num_args) and isinstance(args[i], list):
                 blendlist.append(args[i])
