@@ -258,12 +258,6 @@ def reorderGlyphs(font: ttLib.TTFont, new_glyph_order: List[str]):
             f"* only in old: {set(old_glyph_order) - set(new_glyph_order)}"
         )
 
-    # Glyph 0 must be assigned to a .notdef glyph.
-    # https://learn.microsoft.com/en-us/typography/opentype/spec/recom#glyph-0-the-notdef-glyph
-    if ".notdef" in new_glyph_order:
-        new_glyph_order.remove(".notdef")
-        new_glyph_order.insert(0, ".notdef")
-
     # Changing the order of glyphs in a TTFont requires that all tables that use
     # glyph indexes have been fully.
     # Cf. https://github.com/fonttools/fonttools/issues/2060
