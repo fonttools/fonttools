@@ -1,3 +1,4 @@
+from fontTools.cffLib import maxStackLimit as maxStack
 from fontTools.cffLib.specializer import (
     programToString,
     stringToProgram,
@@ -20,6 +21,30 @@ def charstr_generalize(charstr, **kwargs):
 
 def charstr_specialize(charstr, **kwargs):
     return programToString(specializeProgram(stringToProgram(charstr), **kwargs))
+
+
+def charstr_stack_use(charstr, getNumRegions=None):
+    program = stringToProgram(charstr)
+
+    vsindex = None
+    maxStack = 0
+    stack = []
+    for token in program:
+        if token == vsindex:
+            vsindex = stack[-1]
+            stack = []
+        elif token == "blend":
+            numBlends = stack[-1]
+            numRegions = getNumRegions(vsindex)
+            numOperandsToPop = 1 + numBlends * numRegions
+            stack[-numOperandsToPop:] = []
+        elif type(token) is str:
+            stack = []
+        else:
+            stack.append(token)
+            maxStack = max(maxStack, len(stack))
+
+    return maxStack
 
 
 class CFFGeneralizeProgramTest:
@@ -557,6 +582,20 @@ class CFFSpecializeProgramTest:
         expected = (operands * 2 + operator + operands * 7 + operator).rstrip()
         specialized = charstr_specialize(charstr)
         assert specialized == expected, (specialized, expected)
+
+    # maxstack CFF2=513, specializer uses up to 512
+    def test_maxstack_blends(self):
+        getNumRegions = lambda iv: 15
+        blend_one = "0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 1 blend"
+        operands = " ".join([blend_one] * 6)
+        operator = "rrcurveto"
+        charstr = " ".join([operands, operator] * 10)
+        expected = charstr
+        specialized = charstr_specialize(
+            charstr, getNumRegions=getNumRegions, maxstack=maxStack
+        )
+        stack_use = charstr_stack_use(specialized, getNumRegions=getNumRegions)
+        assert stack_use < maxStack
 
 
 class CFF2VFTestSpecialize(DataFilesHandler):
