@@ -33,10 +33,6 @@ def get_specialized_charstr(charstr, **kwargs):
 class CFFGeneralizeProgramTest(unittest.TestCase):
     def __init__(self, methodName):
         unittest.TestCase.__init__(self, methodName)
-        # Python 3 renamed assertRaisesRegexp to assertRaisesRegex,
-        # and fires deprecation warnings if a program uses the old name.
-        if not hasattr(self, "assertRaisesRegex"):
-            self.assertRaisesRegex = self.assertRaisesRegexp
 
     # no arguments/operands
     def test_rmoveto_none(self):
@@ -537,10 +533,6 @@ class CFFGeneralizeProgramTest(unittest.TestCase):
 class CFFSpecializeProgramTest(unittest.TestCase):
     def __init__(self, methodName):
         unittest.TestCase.__init__(self, methodName)
-        # Python 3 renamed assertRaisesRegexp to assertRaisesRegex,
-        # and fires deprecation warnings if a program uses the old name.
-        if not hasattr(self, "assertRaisesRegex"):
-            self.assertRaisesRegex = self.assertRaisesRegexp
 
     # no arguments/operands
     def test_rmoveto_none(self):
