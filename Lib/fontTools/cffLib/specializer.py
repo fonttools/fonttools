@@ -509,6 +509,19 @@ def _addArgs(a, b):
     return a + b
 
 
+def _argsStackUse(args):
+    stackLen = 0
+    maxLen = 0
+    for arg in args:
+        if type(arg) is list:
+            # Blended arg
+            maxLen = max(maxLen, stackLen + _argsStackUse(arg))
+            stackLen += arg[-1]
+        else:
+            stackLen += 1
+    return max(stackLen, maxLen)
+
+
 def specializeCommands(
     commands,
     ignoreErrors=False,
@@ -751,7 +764,7 @@ def specializeCommands(
 
         # Make sure the stack depth does not exceed (maxstack - 1), so
         # that subroutinizer can insert subroutine calls at any point.
-        if new_op and len(args1) + len(args2) < maxstack:
+        if new_op and _argsStackUse(args1) + _argsStackUse(args2) < maxstack:
             commands[i - 1] = (new_op, args1 + args2)
             del commands[i]
 

@@ -585,17 +585,19 @@ class CFFSpecializeProgramTest:
 
     # maxstack CFF2=513, specializer uses up to 512
     def test_maxstack_blends(self):
-        getNumRegions = lambda iv: 15
-        blend_one = "0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 1 blend"
+        numRegions = 15
+        numOps = 2000
+        getNumRegions = lambda iv: numRegions
+        blend_one = " ".join([str(i) for i in range(1 + numRegions)] + ["1", "blend"])
         operands = " ".join([blend_one] * 6)
         operator = "rrcurveto"
-        charstr = " ".join([operands, operator] * 10)
+        charstr = " ".join([operands, operator] * numOps)
         expected = charstr
         specialized = charstr_specialize(
             charstr, getNumRegions=getNumRegions, maxstack=maxStack
         )
         stack_use = charstr_stack_use(specialized, getNumRegions=getNumRegions)
-        assert stack_use < maxStack
+        assert maxStack - numRegions < stack_use < maxStack
 
 
 class CFF2VFTestSpecialize(DataFilesHandler):
