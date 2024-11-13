@@ -80,8 +80,9 @@ def programToCommands(program, getNumRegions=None):
             numBlendArgs = numBlends * numSourceFonts + 1
             # replace first blend op by a list of the blend ops.
             stack[-numBlendArgs:] = [stack[-numBlendArgs:]]
-            lenBlendStack += numBlends + len(stack) - 1
-            lastBlendIndex = len(stack)
+            lenStack = len(stack)
+            lenBlendStack += numBlends + lenStack - 1
+            lastBlendIndex = lenStack
             # if a blend op exists, this is or will be a CFF2 charstring.
             continue
 
@@ -153,9 +154,10 @@ def commandsToProgram(commands):
 
 def _everyN(el, n):
     """Group the list el into groups of size n"""
-    if len(el) % n != 0:
+    l = len(el)
+    if l % n != 0:
         raise ValueError(el)
-    for i in range(0, len(el), n):
+    for i in range(0, l, n):
         yield el[i : i + n]
 
 
@@ -218,9 +220,10 @@ class _GeneralizerDecombinerCommandsMap(object):
 
     @staticmethod
     def hhcurveto(args):
-        if len(args) < 4 or len(args) % 4 > 1:
+        l = len(args)
+        if l < 4 or l % 4 > 1:
             raise ValueError(args)
-        if len(args) % 2 == 1:
+        if l % 2 == 1:
             yield ("rrcurveto", [args[1], args[0], args[2], args[3], args[4], 0])
             args = args[5:]
         for args in _everyN(args, 4):
@@ -228,9 +231,10 @@ class _GeneralizerDecombinerCommandsMap(object):
 
     @staticmethod
     def vvcurveto(args):
-        if len(args) < 4 or len(args) % 4 > 1:
+        l = len(args)
+        if l < 4 or l % 4 > 1:
             raise ValueError(args)
-        if len(args) % 2 == 1:
+        if l % 2 == 1:
             yield ("rrcurveto", [args[0], args[1], args[2], args[3], 0, args[4]])
             args = args[5:]
         for args in _everyN(args, 4):
@@ -238,11 +242,12 @@ class _GeneralizerDecombinerCommandsMap(object):
 
     @staticmethod
     def hvcurveto(args):
-        if len(args) < 4 or len(args) % 8 not in {0, 1, 4, 5}:
+        l = len(args)
+        if l < 4 or l % 8 not in {0, 1, 4, 5}:
             raise ValueError(args)
         last_args = None
-        if len(args) % 2 == 1:
-            lastStraight = len(args) % 8 == 5
+        if l % 2 == 1:
+            lastStraight = l % 8 == 5
             args, last_args = args[:-5], args[-5:]
         it = _everyN(args, 4)
         try:
@@ -262,11 +267,12 @@ class _GeneralizerDecombinerCommandsMap(object):
 
     @staticmethod
     def vhcurveto(args):
-        if len(args) < 4 or len(args) % 8 not in {0, 1, 4, 5}:
+        l = len(args)
+        if l < 4 or l % 8 not in {0, 1, 4, 5}:
             raise ValueError(args)
         last_args = None
-        if len(args) % 2 == 1:
-            lastStraight = len(args) % 8 == 5
+        if l % 2 == 1:
+            lastStraight = l % 8 == 5
             args, last_args = args[:-5], args[-5:]
         it = _everyN(args, 4)
         try:
@@ -286,7 +292,8 @@ class _GeneralizerDecombinerCommandsMap(object):
 
     @staticmethod
     def rcurveline(args):
-        if len(args) < 8 or len(args) % 6 != 2:
+        l = len(args)
+        if l < 8 or l % 6 != 2:
             raise ValueError(args)
         args, last_args = args[:-2], args[-2:]
         for args in _everyN(args, 6):
@@ -295,7 +302,8 @@ class _GeneralizerDecombinerCommandsMap(object):
 
     @staticmethod
     def rlinecurve(args):
-        if len(args) < 8 or len(args) % 2 != 0:
+        l = len(args)
+        if l < 8 or l % 2 != 0:
             raise ValueError(args)
         args, last_args = args[:-6], args[-6:]
         for args in _everyN(args, 2):
@@ -330,8 +338,9 @@ def _convertBlendOpToArgs(blendList):
     # comprehension. See calling context
     args = args[:-1]
 
-    numRegions = len(args) // numBlends - 1
-    if not (numBlends * (numRegions + 1) == len(args)):
+    l = len(args)
+    numRegions = l // numBlends - 1
+    if not (numBlends * (numRegions + 1) == l):
         raise ValueError(blendList)
 
     defaultArgs = [[arg] for arg in args[:numBlends]]
@@ -726,9 +735,10 @@ def specializeCommands(
             if op1 == op2:
                 new_op = op1
             else:
-                if op2 == "rrcurveto" and len(args2) == 6:
+                l = len(args2)
+                if op2 == "rrcurveto" and l == 6:
                     new_op = "rlinecurve"
-                elif len(args2) == 2:
+                elif l == 2:
                     new_op = "rcurveline"
 
         elif (op1, op2) in {("rlineto", "rlinecurve"), ("rrcurveto", "rcurveline")}:
@@ -783,9 +793,11 @@ def specializeCommands(
             continue
 
         if op[2:] == "curveto" and op[:2] not in {"rr", "hh", "vv", "vh", "hv"}:
+            l = len(args)
+
             op0, op1 = op[:2]
             if (op0 == "r") ^ (op1 == "r"):
-                assert len(args) % 2 == 1
+                assert l % 2 == 1
             if op0 == "0":
                 op0 = "h"
             if op1 == "0":
@@ -796,9 +808,9 @@ def specializeCommands(
                 op1 = _negateCategory(op0)
             assert {op0, op1} <= {"h", "v"}, (op0, op1)
 
-            if len(args) % 2:
+            if l % 2:
                 if op0 != op1:  # vhcurveto / hvcurveto
-                    if (op0 == "h") ^ (len(args) % 8 == 1):
+                    if (op0 == "h") ^ (l % 8 == 1):
                         # Swap last two args order
                         args = args[:-2] + args[-1:] + args[-2:-1]
                 else:  # hhcurveto / vvcurveto
