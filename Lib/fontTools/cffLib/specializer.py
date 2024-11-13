@@ -377,7 +377,7 @@ def generalizeCommands(commands, ignoreErrors=False):
                     raise
 
         func = getattr(mapping, op, None)
-        if not func:
+        if func is None:
             result.append((op, args))
             continue
         try:
