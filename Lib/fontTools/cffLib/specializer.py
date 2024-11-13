@@ -764,7 +764,17 @@ def specializeCommands(
 
         # Make sure the stack depth does not exceed (maxstack - 1), so
         # that subroutinizer can insert subroutine calls at any point.
-        if new_op and _argsStackUse(args1) + _argsStackUse(args2) < maxstack:
+        #
+        # The assumption is that args1, and args2, each individually
+        # can be successfully processed without a stack overflow.
+        # When combined, the stack depth to consider would be the
+        # number of items in args1 plus what it takes to build args2
+        # on top of args1, which will be already on the stack as
+        # len(args1) items.
+        #
+        # It's unfortunate that _argsStackUse() is O(n) in the number
+        # of args, but it's not a big deal hopefully.
+        if new_op and len(args1) + _argsStackUse(args2) < maxstack:
             commands[i - 1] = (new_op, args1 + args2)
             del commands[i]
 

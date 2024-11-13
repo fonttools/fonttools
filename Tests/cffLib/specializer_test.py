@@ -599,6 +599,20 @@ class CFFSpecializeProgramTest:
         stack_use = charstr_stack_use(specialized, getNumRegions=getNumRegions)
         assert maxStack - numRegions < stack_use < maxStack
 
+    def test_maxstack_blends2(self):
+        # See if two long blend sequences are merged into one
+        numRegions = 400
+        numOps = 2
+        getNumRegions = lambda iv: numRegions
+        blend_one = " ".join([str(i) for i in range(1 + numRegions)] + ["1", "blend"])
+        operands = " ".join([blend_one] * 6)
+        operator = "rrcurveto"
+        charstr = " ".join([operands, operator] * numOps)
+        specialized = charstr_specialize(
+            charstr, getNumRegions=getNumRegions, maxstack=maxStack
+        )
+        assert specialized.index("rrcurveto") == len(specialized) - len("rrcurveto")
+
 
 class CFF2VFTestSpecialize(DataFilesHandler):
     def test_blend_round_trip(self):
