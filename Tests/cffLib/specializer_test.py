@@ -599,8 +599,8 @@ class CFFSpecializeProgramTest:
         stack_use = charstr_stack_use(specialized, getNumRegions=getNumRegions)
         assert maxStack - numRegions < stack_use < maxStack
 
-    def test_maxstack_blends2(self):
-        # See if two long blend sequences are merged into one
+    def test_maxstack_commands(self):
+        # See if two commands with deep blends are merged into one
         numRegions = 400
         numOps = 2
         getNumRegions = lambda iv: numRegions

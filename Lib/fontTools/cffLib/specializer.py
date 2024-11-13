@@ -715,6 +715,7 @@ def specializeCommands(
             continue
 
     # 5. Combine adjacent operators when possible, minding not to go over max stack size.
+    stackUse = _argsStackUse(commands[-1][1]) if commands else 0
     for i in range(len(commands) - 1, 0, -1):
         op1, args1 = commands[i - 1]
         op2, args2 = commands[i]
@@ -764,19 +765,14 @@ def specializeCommands(
 
         # Make sure the stack depth does not exceed (maxstack - 1), so
         # that subroutinizer can insert subroutine calls at any point.
-        #
-        # The assumption is that args1, and args2, each individually
-        # can be successfully processed without a stack overflow.
-        # When combined, the stack depth to consider would be the
-        # number of items in args1 plus what it takes to build args2
-        # on top of args1, which will be already on the stack as
-        # len(args1) items.
-        #
-        # It's unfortunate that _argsStackUse() is O(n) in the number
-        # of args, but it's not a big deal hopefully.
-        if new_op and len(args1) + _argsStackUse(args2) < maxstack:
+        args1StackUse = _argsStackUse(args1)
+        combinedStackUse = max(args1StackUse, len(args1) + stackUse)
+        if new_op and combinedStackUse < maxstack:
             commands[i - 1] = (new_op, args1 + args2)
             del commands[i]
+            stackUse = combinedStackUse
+        else:
+            stackUse = args1StackUse
 
     # 6. Resolve any remaining made-up operators into real operators.
     for i in range(len(commands)):
