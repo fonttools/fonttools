@@ -592,7 +592,6 @@ class CFFSpecializeProgramTest:
         operands = " ".join([blend_one] * 6)
         operator = "rrcurveto"
         charstr = " ".join([operands, operator] * numOps)
-        expected = charstr
         specialized = charstr_specialize(
             charstr,
             getNumRegions=getNumRegions,
