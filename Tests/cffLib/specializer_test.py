@@ -594,7 +594,10 @@ class CFFSpecializeProgramTest:
         charstr = " ".join([operands, operator] * numOps)
         expected = charstr
         specialized = charstr_specialize(
-            charstr, getNumRegions=getNumRegions, maxstack=maxStack
+            charstr,
+            getNumRegions=getNumRegions,
+            maxstack=maxStack,
+            generalizeFirst=False,
         )
         stack_use = charstr_stack_use(specialized, getNumRegions=getNumRegions)
         assert maxStack - numRegions < stack_use < maxStack
@@ -609,7 +612,10 @@ class CFFSpecializeProgramTest:
         operator = "rrcurveto"
         charstr = " ".join([operands, operator] * numOps)
         specialized = charstr_specialize(
-            charstr, getNumRegions=getNumRegions, maxstack=maxStack
+            charstr,
+            getNumRegions=getNumRegions,
+            maxstack=maxStack,
+            generalizeFirst=False,
         )
         assert specialized.index("rrcurveto") == len(specialized) - len("rrcurveto")
 
