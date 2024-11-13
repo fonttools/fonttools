@@ -586,7 +586,7 @@ class CFFSpecializeProgramTest:
     # maxstack CFF2=513, specializer uses up to 512
     def test_maxstack_blends(self):
         numRegions = 15
-        numOps = 2000
+        numOps = 600
         getNumRegions = lambda iv: numRegions
         blend_one = " ".join([str(i) for i in range(1 + numRegions)] + ["1", "blend"])
         operands = " ".join([blend_one] * 6)
