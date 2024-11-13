@@ -23,9 +23,7 @@ def charstr_specialize(charstr, **kwargs):
     return programToString(specializeProgram(stringToProgram(charstr), **kwargs))
 
 
-def charstr_stack_use(charstr, getNumRegions=None):
-    program = stringToProgram(charstr)
-
+def program_stack_use(program, getNumRegions=None):
     vsindex = None
     maxStack = 0
     stack = []
@@ -586,18 +584,37 @@ class CFFSpecializeProgramTest:
     # maxstack CFF2=513, specializer uses up to 512
     def test_maxstack_blends(self):
         numRegions = 15
-        numOps = 2000
+        numOps = 600
         getNumRegions = lambda iv: numRegions
-        blend_one = " ".join([str(i) for i in range(1 + numRegions)] + ["1", "blend"])
-        operands = " ".join([blend_one] * 6)
+        blend_one = [i for i in range(1 + numRegions)] + [1, "blend"]
+        operands = blend_one * 6
         operator = "rrcurveto"
-        charstr = " ".join([operands, operator] * numOps)
-        expected = charstr
-        specialized = charstr_specialize(
-            charstr, getNumRegions=getNumRegions, maxstack=maxStack
+        program = (operands + [operator]) * numOps
+        specialized = specializeProgram(
+            program,
+            getNumRegions=getNumRegions,
+            maxstack=maxStack,
+            generalizeFirst=False,
         )
-        stack_use = charstr_stack_use(specialized, getNumRegions=getNumRegions)
+        stack_use = program_stack_use(specialized, getNumRegions=getNumRegions)
         assert maxStack - numRegions < stack_use < maxStack
+
+    def test_maxstack_commands(self):
+        # See if two commands with deep blends are merged into one
+        numRegions = 400
+        numOps = 2
+        getNumRegions = lambda iv: numRegions
+        blend_one = [i for i in range(1 + numRegions)] + [1, "blend"]
+        operands = blend_one * 6
+        operator = "rrcurveto"
+        program = (operands + [operator]) * numOps
+        specialized = specializeProgram(
+            program,
+            getNumRegions=getNumRegions,
+            maxstack=maxStack,
+            generalizeFirst=False,
+        )
+        assert specialized.index("rrcurveto") == len(specialized) - 1
 
 
 class CFF2VFTestSpecialize(DataFilesHandler):
