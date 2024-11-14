@@ -1,3 +1,6 @@
+4.55.0 (released 2024-11-14)
+----------------------------
+
 
 - [cffLib.specializer] Adjust stack use calculation (#3689)
 - [varLib] Lets not add mac names if the rest of name doesn't have them (#3688)
