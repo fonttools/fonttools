@@ -5,7 +5,6 @@
 - [cffLib.specializer] Add cmdline to specialize a CFF2 font (#3675, #3679)
 - [CFF2] Lift uint16 VariationStore.length limitation (#3674)
 - [subset] consider variation selectors subsetting cmap14 (#3672)
-- Introducing fontTools Guru on Gurubase.io (#3671)
 - [varLib.interpolatable] Support CFF2 fonts (#3670)
 - Set isfinal to true in XML parser for proper resource cleanup (#3669)
 - [removeOverlaps] Fix CFF CharString width (#3659)
