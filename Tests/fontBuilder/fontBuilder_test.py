@@ -236,7 +236,7 @@ def test_build_var(tmpdir):
     fb.setupHorizontalMetrics(metrics)
 
     fb.setupHorizontalHeader(ascent=824, descent=200)
-    fb.setupNameTable(nameStrings)
+    fb.setupNameTable(nameStrings, mac=False)
 
     axes = [
         ("LEFT", 0, 0, 100, "Left"),
