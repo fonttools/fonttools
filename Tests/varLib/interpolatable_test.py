@@ -119,7 +119,7 @@ class InterpolatableTest(unittest.TestCase):
                     "master_2": "'wght=200.0 opsz=60.0'",
                     "master_1_idx": 2,
                     "master_2_idx": 3,
-                    "tolerance": 0.9184032411892079,
+                    "tolerance": pytest.approx(0.9184032411892079),
                 },
             ],
         )
