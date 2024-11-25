@@ -10,11 +10,11 @@ zopfli==0.2.3.post1
 fs==2.4.16
 skia-pathops==0.8.0.post2; platform_python_implementation != "PyPy"
 # this is only required to run Tests/cu2qu/{ufo,cli}_test.py
-ufoLib2==0.16.1
+ufoLib2==0.17.0
 ufo2ft==3.3.1
 pyobjc==10.3.1; sys_platform == "darwin"
 freetype-py==2.5.1
-uharfbuzz==0.42.0
-glyphsLib==6.9.4 # this is only required to run Tests/varLib/interpolatable_test.py
+uharfbuzz==0.43.0
+glyphsLib==6.9.5 # this is only required to run Tests/varLib/interpolatable_test.py
 lxml==5.3.0
 sympy==1.13.3
