@@ -87,12 +87,10 @@ License
 
 fontTools is licensed under the `MIT license <https://github.com/fonttools/fonttools/blob/main/LICENSE>`_. Refer to the full text of the license for details.
 
-Table of Contents
------------------
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Library
+   :maxdepth: 1
+   :hidden:
 
    afmLib
    agl
@@ -108,6 +106,7 @@ Table of Contents
    mtiLib
    otlLib/index
    pens/index
+   qu2cu/index
    subset/index
    svgLib/index
    t1Lib
@@ -115,7 +114,6 @@ Table of Contents
    ttLib/index
    ttx
    ufoLib/index
-   unicode
    unicodedata/index
    varLib/index
    voltLib/index

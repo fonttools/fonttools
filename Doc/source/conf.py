@@ -38,14 +38,18 @@ extensions = [
     "sphinx.ext.autosectionlabel",
 ]
 
-autodoc_mock_imports = ["gtk", "reportlab"]
+autodoc_mock_imports = ["gtk", "reportlab", "Quartz"]
 
 autodoc_default_options = {
     "members": True,
-    "inherited-members": True,
+    "inherited-members": False,
     "show-inheritance": True,
     "member-order": "bysource",
 }
+
+# This option allows show-inheritace to work but not clutter up the output
+# with the (surplus) full inheritance stack.
+autodoc_inherit_docstrings = False
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
