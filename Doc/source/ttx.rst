@@ -57,6 +57,5 @@ It is possible that different glyphs use the same name. If this happens, we forc
 Because the order in which glyphs are stored inside the binary font is important, we maintain an ordered list of glyph names in the font.
 
 .. automodule:: fontTools.ttx
-   :inherited-members:
    :members:
    :undoc-members:

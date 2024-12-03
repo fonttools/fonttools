@@ -2,7 +2,18 @@
 tfmLib: Read TeX Font Metrics files
 ###########################################
 
-.. automodule:: fontTools.tfmLib
+.. rubric:: Overview
+   :heading-level: 2
 
-.. autoclass:: fontTools.tfmLib.TFM
-   :members:
+
+.. automodule:: fontTools.tfmLib
+   :members: TFM
+   :undoc-members:
+   :exclude-members: TFMException
+
+          
+    .. rubric:: Module contents:
+       :heading-level: 2
+
+		       
+.. autoexception:: fontTools.tfmLib.TFMException

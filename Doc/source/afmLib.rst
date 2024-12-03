@@ -2,7 +2,14 @@
 afmLib: Read and write Adobe Font Metrics files
 ###############################################
 
+.. rubric:: Overview:
+   :heading-level: 2
+		   
 .. automodule:: fontTools.afmLib
+   :members: 
+   :undoc-members:
 
-.. autoclass:: fontTools.afmLib.AFM
-   :members:
+
+    .. rubric:: Module members:
+       :heading-level: 2
+ 
