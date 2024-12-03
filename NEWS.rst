@@ -1,3 +1,6 @@
+4.55.1 (released 2024-12-02)
+----------------------------
+
 - [ttGlyphSet] Support VARC CFF2 fonts (#3683)
 - [DecomposedTransform] Document and implement always skewY == 0 (#3697)
 - [varLib] "Fix" cython iup issue? (#3704)
