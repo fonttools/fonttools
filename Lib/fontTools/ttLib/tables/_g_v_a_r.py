@@ -41,6 +41,16 @@ GVAR_HEADER_SIZE = sstruct.calcsize(GVAR_HEADER_FORMAT)
 
 
 class table__g_v_a_r(DefaultTable.DefaultTable):
+    """Glyph Variations table
+
+    The ``gvar`` table provides the per-glyph variation data that
+    describe how glyph outlines in the ``glyf`` table change across
+    the variation space that is defined for the font in the ``fvar``
+    table.
+
+    See also https://learn.microsoft.com/en-us/typography/opentype/spec/gvar
+    """
+
     dependencies = ["fvar", "glyf"]
 
     def __init__(self, tag=None):
