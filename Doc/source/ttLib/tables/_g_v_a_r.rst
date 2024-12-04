@@ -1,8 +1,9 @@
-``gvar``:  Glyph Variations Table
+``gvar``:  Glyph Variations table
 ---------------------------------
 
+The ``gvar`` table is an OpenType table.
+
 .. automodule:: fontTools.ttLib.tables._g_v_a_r
-   :inherited-members:
    :members:
    :undoc-members:
 
@@ -11,6 +12,5 @@ TupleVariation
 ^^^^^^^^^^^^^^
 
 .. automodule:: fontTools.ttLib.tables.TupleVariation
-   :inherited-members:
    :members:
    :undoc-members:

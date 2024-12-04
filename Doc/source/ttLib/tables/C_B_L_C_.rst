@@ -1,8 +1,9 @@
-``CBLC``: Color Bitmap Location Table
+``CBLC``: Color Bitmap Location table
 -------------------------------------
 
+The ``CBLC`` table is an OpenType table.
+
 .. automodule:: fontTools.ttLib.tables.C_B_L_C_
-   :inherited-members:
    :members:
    :undoc-members:
 

@@ -1,8 +1,9 @@
-``EBLC``: Embedded Bitmap Location Table
+``EBLC``: Embedded Bitmap Location table
 ----------------------------------------
 
+The ``EBLC`` table is an OpenType table.
+
 .. automodule:: fontTools.ttLib.tables.E_B_L_C_
-   :inherited-members:
    :members:
    :undoc-members:
 
@@ -12,7 +13,6 @@ BitmapGlyphMetrics
 
 .. automodule:: fontTools.ttLib.tables.BitmapGlyphMetrics
    :noindex:
-   :inherited-members:
    :members:
    :undoc-members:
 
