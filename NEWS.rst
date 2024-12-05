@@ -1,3 +1,7 @@
+- [Docs] update Sphinx config (#3712)
+- [designspaceLib] Allow axisOrdering to be set to zero (#3715)
+- [feaLib] Don’t modify variable anchors in place (#3717)
+
 4.55.1 (released 2024-12-02)
 ----------------------------
 
