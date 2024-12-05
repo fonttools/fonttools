@@ -3,22 +3,10 @@
 
 The ``sbix`` table is an OpenType table.
 
+This ``sbix`` table converter module depends on the
+:mod:`.sbixGlyph` and :mod:`.sbixStrike` modules.
+
+
 .. automodule:: fontTools.ttLib.tables._s_b_i_x
-   :members:
-   :undoc-members:
-
-
-
-sbixGlyph
-^^^^^^^^^
-
-.. automodule:: fontTools.ttLib.tables.sbixGlyph
-   :members:
-   :undoc-members:
-
-sbixStrike
-^^^^^^^^^^
-
-.. automodule:: fontTools.ttLib.tables.sbixStrike
    :members:
    :undoc-members:
