@@ -12,6 +12,7 @@ from fontTools.feaLib.lexer import Lexer
 from fontTools.fontBuilder import addFvar
 import difflib
 from io import StringIO
+from textwrap import dedent
 import os
 import re
 import shutil
@@ -1159,6 +1160,22 @@ class BuilderTest(unittest.TestCase):
         var_region_list = table.VarStore.VarRegionList
         var_region_axis = var_region_list.Region[0].VarRegionAxis[0]
         assert self.get_region(var_region_axis) == (0.0, 0.875, 1.0)
+
+    def test_variable_anchors_round_trip(self):
+        """Test that calling `addOpenTypeFeatures` with parsed feature file does
+        not discard variations from variable anchors."""
+        features = """\
+            feature curs {
+                pos cursive one <anchor 0 (wdth=100,wght=200:12 wdth=150,wght=900:42)> <anchor NULL>;
+            } curs;
+        """
+
+        f = StringIO(features)
+        feafile = Parser(f).parse()
+
+        font = self.make_mock_vf()
+        addOpenTypeFeatures(font, feafile)
+        assert dedent(str(feafile)) == dedent(features)
 
 
 def generate_feature_file_test(name):
