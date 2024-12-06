@@ -1,4 +1,3 @@
-# cython: language_level=3
 # distutils: define_macros=CYTHON_TRACE_NOGIL=1
 
 # Copyright 2015 Google Inc. All Rights Reserved.
@@ -17,7 +16,7 @@
 
 try:
     import cython
-except (AttributeError, ImportError):
+except ImportError:
     # if cython not installed, use mock module with no-op decorators and types
     from fontTools.misc import cython
 COMPILED = cython.compiled
