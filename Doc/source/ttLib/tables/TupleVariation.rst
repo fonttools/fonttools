@@ -2,6 +2,8 @@
 OpenType variations helper module
 #################################
 
+.. currentmodule:: fontTools.ttLib.tables.TupleVariation
+
 .. rubric:: Overview:
    :heading-level: 2
 
