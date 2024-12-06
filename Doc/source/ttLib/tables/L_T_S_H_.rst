@@ -1,8 +1,9 @@
-``LTSH``: Linear Threshold
---------------------------
+``LTSH``: Linear Threshold table
+--------------------------------
+
+The ``LTSH`` table is an OpenType table.
 
 .. automodule:: fontTools.ttLib.tables.L_T_S_H_
-   :inherited-members:
    :members:
    :undoc-members:
 

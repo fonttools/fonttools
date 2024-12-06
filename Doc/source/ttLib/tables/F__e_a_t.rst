@@ -1,8 +1,9 @@
-``Feat``: Graphite Feature Table
+``Feat``: Graphite Feature table
 --------------------------------
 
+The ``Feat`` table is a Graphite table.
+
 .. automodule:: fontTools.ttLib.tables.F__e_a_t
-   :inherited-members:
    :members:
    :undoc-members:
 

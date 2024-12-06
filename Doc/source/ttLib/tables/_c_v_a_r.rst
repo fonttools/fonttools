@@ -1,8 +1,9 @@
-``cvar``: CVT Variations Table
+``cvar``: CVT Variations table
 ------------------------------
 
+The ``cvar`` table is an OpenType table.
+
 .. automodule:: fontTools.ttLib.tables._c_v_a_r
-   :inherited-members:
    :members:
    :undoc-members:
 
@@ -12,6 +13,5 @@ TupleVariation
 
 .. automodule:: fontTools.ttLib.tables.TupleVariation
    :noindex:
-   :inherited-members:
    :members:
    :undoc-members:

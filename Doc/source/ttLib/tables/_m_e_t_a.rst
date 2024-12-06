@@ -1,8 +1,9 @@
-``meta``: Metadata Table
+``meta``: Metadata table
 ------------------------
 
+The ``meta`` table is an OpenType table.
+
 .. automodule:: fontTools.ttLib.tables._m_e_t_a
-   :inherited-members:
    :members:
    :undoc-members:
 
