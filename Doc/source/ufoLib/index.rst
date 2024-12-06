@@ -3,18 +3,18 @@ ufoLib: Read and write Unified Font Object files
 ################################################
 
 .. rubric:: Overview:
-   :heading-level: 3
+   :heading-level: 2
 
 .. automodule:: fontTools.ufoLib
-   :inherited-members:
+   :no-inherited-members:
    :members: 
    :undoc-members:
    :member-order: bysource
 
-    .. rubric:: Submodules:
-       :heading-level: 3
+    .. rubric:: Modules:
+       :heading-level: 2
 
-    ufoLib provides the following submodules:
+    ufoLib provides the following modules:
     
      .. toctree::
         :maxdepth: 1
@@ -28,16 +28,20 @@ ufoLib: Read and write Unified Font Object files
         utils
         validators
     	   
-    Two deprecated submodules are also currently included:
+    Three deprecated modules are also currently included:
     
      .. toctree::
         :maxdepth: 1
-    		  
+		   
+    	etree	  
         plistlib
         pointpen
 
+    Note also that :mod:`ufoLib` supports some :doc:`optional </optional>`
+    external libraries.
+    
     .. rubric:: Module members:
-       :heading-level: 3
+       :heading-level: 2
     		  
 .. autodata:: fontInfoAttributesVersion1
 .. autodata:: fontInfoAttributesVersion2

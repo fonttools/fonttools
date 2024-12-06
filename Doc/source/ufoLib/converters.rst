@@ -3,6 +3,6 @@ converters: Conversion functions for kerning and groups
 #######################################################
 
 .. automodule:: fontTools.ufoLib.converters
-   :inherited-members:
+   :no-inherited-members:
    :members:
    :undoc-members:
