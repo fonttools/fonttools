@@ -2,7 +2,10 @@
 reportLabPen
 ############
 
+    Note also that :mod:`reportLabPen` supports some :doc:`optional </optional>`
+    external libraries.
+
+
 .. automodule:: fontTools.pens.reportLabPen
-   :inherited-members:
    :members:
    :undoc-members:
