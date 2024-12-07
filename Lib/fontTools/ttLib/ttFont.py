@@ -40,7 +40,7 @@ class TTFont(object):
         >> tt['head'].unitsPerEm
         2048
 
-    For details of the objects returned when accessing each table, see the 
+    For details of the objects returned when accessing each table, see the
     :doc:`tables </ttLib/tables>` documentation.
     To add a table to the font, use the :py:func:`newTable` function:
 
