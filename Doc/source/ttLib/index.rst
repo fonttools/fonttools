@@ -16,10 +16,10 @@ unless we need to make a distinction.)
 
 The main entry point for such operations is the :py:mod:`fontTools.ttLib.ttFont`
 module, but other modules also provide useful functionality for handling OpenType
-fonts.
+fonts:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    ttFont
 

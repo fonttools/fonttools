@@ -20,21 +20,21 @@ font file, or it may be a member of a
 :class:`.TTCollection`. :class:`.TTFont` objects can also be
 constructed from scratch. 
 
+
+glyphSets and ttGlyphs
+----------------------
+
 In addition to font-wide data, :mod:`.ttLib.ttFont` provides access to
 individual glyphs through a :class:`.TTFont` instance's
-``glyphSet[]`` attribute. A ``glyphSet`` is a dict-like object that is
+``.glyphSet[]`` attribute. A ``.glyphSet`` is a dict-like object that is
 indexed by glyph names. Users can use the glyphSet to interact with
 each glyph's contours, components, points, and glyph metrics.
 
-
-ttGlyphs
---------
-
 Informally, some fontTools code or documentation will make reference to
-the individual glyphs in a ``glyphSet`` as a "ttGlyph" or the
+the individual glyphs in a ``.glyphSet`` as a "ttGlyph" or the
 like. This is convenient terminology, particularly for
 discussion. However, it is important to note that there is not a
-"ttGlyph" class. Instead, the ``glyphSet`` attribute of a
+"ttGlyph" class. Instead, the ``.glyphSet`` attribute of a
 :class:`.TTFont` serves as an abstraction layer that provides a
 uniform interface to the glyphs, regardless of whether the
 :class:`.TTFont` instance in use comes from a font file with
@@ -43,23 +43,23 @@ containing glyph contours) or a font with PostScript-flavored outlines
 (and, therefore, with a ``CFF`` or ``CFF2`` table containing the glyph
 contours).
 
-Regardless of the flavor, each "ttGlyph" entry in the ``glyphSet``
+Regardless of the flavor, each "ttGlyph" entry in the ``.glyphSet``
 includes the corresponding Bezier outlines and components from the
 ``glyf`` or ``CFF``/``CFF2`` table and the glyph's metrics. Horizontal
 metrics are drawn from the font's ``hmtx`` table, and vertical metrics
 (if any) are drawn from the ``vmtx`` table. These attributes are:
 
-width
-    The advance width of the glyph
-
-lsb
-    The left sidebearing of the glyph
-
-height
-    (For vertical-layout fonts) The advance height of the glyph
-
-tsb
-    (for vertical-layout fonts) The top sidebearing of the glyph
+    width
+        The advance width of the glyph
+    
+    lsb
+        The left sidebearing of the glyph
+    
+    height
+        (For vertical-layout fonts) The advance height of the glyph
+    
+    tsb
+        (for vertical-layout fonts) The top sidebearing of the glyph
 
 Note that these attributes do not describe the bounding box of the
 glyph filled shape, because the filled area might include negative
@@ -78,8 +78,8 @@ methods. See the :doc:`pens </pens/index>` package documenation
 for more.
 
 
-.. rubric:: Package contents:
-   :heading-level: 2
+Package contents
+----------------
  
 
 .. autoclass:: fontTools.ttLib.ttFont.TTFont
