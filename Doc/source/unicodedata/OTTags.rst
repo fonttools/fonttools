@@ -3,7 +3,6 @@ OTTags
 ######
 
 .. automodule:: fontTools.unicodedata.OTTags
-   :inherited-members:
    :members:
    :undoc-members:
 

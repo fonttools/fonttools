@@ -3,7 +3,6 @@ Scripts
 #######
 
 .. automodule:: fontTools.unicodedata.Scripts
-   :inherited-members:
    :members:
    :undoc-members:
 
