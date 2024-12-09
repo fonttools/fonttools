@@ -2,33 +2,67 @@
 voltLib: Read and write MS VOLT projects
 ########################################
 
+.. contents:: On this page:
+    :local:
+       
+.. rubric:: Overview:
+   :heading-level: 2
+
+:mod:`fontTools.voltLib` provides support for working with the project
+files from Microsoft's Visual OpenType Layout Tool (VOLT), a Windows
+GUI utility used to add and edit OpenType Layout tables in fonts.
+
+The primary interface is :mod:`fontTools.voltLib.voltToFea`, which
+enables conversion of of VOLT files to the Adobe .fea format:
+
 .. toctree::
    :maxdepth: 2
 
    voltToFea
 
-.. automodule:: fontTools.voltLib
 
-ast
----
+.. rubric:: Modules
+   :heading-level: 2
+
+voltLib also contains modules that implement lower-level parsing,
+lexing, and analysis of VOLT project files.
+
+
+fontTools.voltLib
+-----------------
+
+.. automodule:: fontTools.voltLib
+   :members:
+   :undoc-members:
+
+      
+fontTools.voltLib.ast
+---------------------
 
 .. automodule:: fontTools.voltLib.ast
+   :members:
    :undoc-members:
 
-error
------
+      
+fontTools.voltLib.error
+-----------------------
 
 .. automodule:: fontTools.voltLib.error
+   :members:
    :undoc-members:
 
-lexer
------
+      
+fontTools.voltLib.lexer
+-----------------------
 
 .. automodule:: fontTools.voltLib.lexer
+   :members:
    :undoc-members:
 
-parser
-------
+
+fontTools.voltLib.parser
+------------------------
 
 .. automodule:: fontTools.voltLib.parser
+   :members:
    :undoc-members:
