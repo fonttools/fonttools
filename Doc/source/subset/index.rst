@@ -8,6 +8,5 @@ subset: Generate subsets of fonts or optimize file sizes
    cff
 
 .. automodule:: fontTools.subset
-   :inherited-members:
    :members:
    :undoc-members:
