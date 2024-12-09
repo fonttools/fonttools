@@ -2,6 +2,8 @@
 ScriptExtensions
 ################
 
+.. currentmodule:: fontTools.unicodedata.ScriptExtensions
+
 .. automodule:: fontTools.unicodedata.ScriptExtensions
    :members:
    :undoc-members:

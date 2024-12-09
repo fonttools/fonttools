@@ -2,6 +2,8 @@
 voltLib: Read and write MS VOLT projects
 ########################################
 
+.. currentmodule:: fontTools.voltLib
+
 .. contents:: On this page:
     :local:
        
@@ -39,6 +41,8 @@ fontTools.voltLib
 fontTools.voltLib.ast
 ---------------------
 
+.. currentmodule:: fontTools.voltLib.ast
+
 .. automodule:: fontTools.voltLib.ast
    :members:
    :undoc-members:
@@ -46,6 +50,8 @@ fontTools.voltLib.ast
       
 fontTools.voltLib.error
 -----------------------
+
+.. currentmodule:: fontTools.voltLib.error
 
 .. automodule:: fontTools.voltLib.error
    :members:
@@ -55,6 +61,8 @@ fontTools.voltLib.error
 fontTools.voltLib.lexer
 -----------------------
 
+.. currentmodule:: fontTools.voltLib.lexer
+
 .. automodule:: fontTools.voltLib.lexer
    :members:
    :undoc-members:
@@ -62,6 +70,8 @@ fontTools.voltLib.lexer
 
 fontTools.voltLib.parser
 ------------------------
+
+.. currentmodule:: fontTools.voltLib.parser
 
 .. automodule:: fontTools.voltLib.parser
    :members:

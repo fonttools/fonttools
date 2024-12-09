@@ -2,6 +2,8 @@
 unicodedata: Interface to character and script data in Unicode and OpenType
 ###########################################################################
 
+.. currentmodule:: fontTools.unicodedata
+
 .. contents:: On this page:
     :local:
        

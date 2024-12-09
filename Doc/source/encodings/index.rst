@@ -2,6 +2,8 @@
 encodings: Support for OpenType-specific character encodings
 ############################################################
 
+.. currentmodule:: fontTools.encodings
+
 .. contents:: On this page:
     :local:
 
@@ -36,6 +38,8 @@ Encoding.
 fontTools.encodings.codecs
 --------------------------
 
+.. currentmodule:: fontTools.encodings.codecs
+
 .. automodule:: fontTools.encodings.codecs
    :members:
    :undoc-members:
@@ -44,12 +48,16 @@ fontTools.encodings.codecs
 fontTools.encodings.MacRoman
 ----------------------------
 
+.. currentmodule:: fontTools.encodings.MacRoman
+
 .. automodule:: fontTools.encodings.MacRoman
    :members:
    :undoc-members:
       
 fontTools.encodings.StandardEncoding
 ------------------------------------
+
+.. currentmodule:: fontTools.encodings.StandardEncoding
 
 .. automodule:: fontTools.encodings.StandardEncoding
    :members:

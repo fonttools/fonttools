@@ -2,6 +2,8 @@
 parser: Lexing and parsing OpenType feature files
 #################################################
 
+.. currentmodule:: fontTools.feaLib
+
 .. contents:: On this page:
     :local:
 
@@ -20,6 +22,8 @@ utility modules.
 Parsing
 -------
 
+.. currentmodule:: fontTools.feaLib.parser
+
 .. automodule:: fontTools.feaLib.parser
    :members:
    :undoc-members:
@@ -27,6 +31,8 @@ Parsing
 
 Lexing
 ------
+
+.. currentmodule:: fontTools.feaLib.lexer
 
 .. automodule:: fontTools.feaLib.lexer
    :members:
@@ -37,6 +43,8 @@ Lexing
 fontTools.feaLib.variableScalar
 -------------------------------
 
+.. currentmodule:: fontTools.feaLib.variableScalar
+
 .. automodule:: fontTools.feaLib.variableScalar
    :members:
    :undoc-members:
@@ -45,6 +53,8 @@ fontTools.feaLib.variableScalar
 
 fontTools.feaLib.location
 -------------------------
+
+.. currentmodule:: fontTools.feaLib.location
 
 .. automodule:: fontTools.feaLib.location
    :members:

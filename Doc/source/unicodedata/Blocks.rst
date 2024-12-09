@@ -2,6 +2,8 @@
 Blocks
 ######
 
+.. currentmodule:: fontTools.unicodedata.Blocks
+
 .. automodule:: fontTools.unicodedata.Blocks
    :members:
    :undoc-members:

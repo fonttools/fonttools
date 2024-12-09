@@ -2,6 +2,8 @@
 macRes: Tools for reading Mac resource forks
 ############################################
 
+.. currentmodule:: fontTools.misc.macRes
+
 .. rubric:: Overview:
    :heading-level: 2
 

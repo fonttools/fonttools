@@ -2,6 +2,8 @@
 feaLib: Read and write OpenType feature files
 #############################################
 
+.. currentmodule:: fontTools.feaLib
+
 .. contents:: On this page:
     :local:
 
@@ -42,6 +44,8 @@ using the classes in the :mod:`fontTools.feaLib.ast` module.
 fontTools.feaLib.builder
 ------------------------
 
+.. currentmodule:: fontTools.feaLib.builder
+
 .. automodule:: fontTools.feaLib.builder
    :members: addOpenTypeFeatures, addOpenTypeFeaturesFromString, Builder
    :undoc-members:
@@ -50,6 +54,8 @@ fontTools.feaLib.builder
 fontTools.feaLib.lookupDebugInfo
 --------------------------------
 
+.. currentmodule:: fontTools.feaLib.lookupDebugInfo
+
 .. automodule:: fontTools.feaLib.lookupDebugInfo
    :members:
    :undoc-members:
@@ -57,6 +63,8 @@ fontTools.feaLib.lookupDebugInfo
 
 fontTools.feaLib.error
 ----------------------
+
+.. currentmodule:: fontTools.feaLib.error
 
 .. automodule:: fontTools.feaLib.error
    :members:

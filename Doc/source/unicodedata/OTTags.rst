@@ -2,6 +2,8 @@
 OTTags
 ######
 
+.. currentmodule:: fontTools.unicodedata.OTTags
+
 .. automodule:: fontTools.unicodedata.OTTags
    :members:
    :undoc-members:

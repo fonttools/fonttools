@@ -2,6 +2,8 @@
 macCreatorType: Functions for working with Mac file attributes
 ##############################################################
 
+.. currentmodule:: fontTools.misc.macCreatorType
+
 .. rubric:: Overview:
    :heading-level: 2
 

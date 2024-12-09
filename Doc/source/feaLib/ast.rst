@@ -2,6 +2,8 @@
 ast: Interrogate and generate OpenType feature files
 ####################################################
 
+.. currentmodule:: fontTools.feaLib.astt
+
 .. rubric:: Overview:
    :heading-level: 2
 

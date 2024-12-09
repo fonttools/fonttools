@@ -2,6 +2,8 @@
 misc: Miscellaneous libraries helpful for font engineering
 ##########################################################
 
+.. currentmodule:: fontTools.misc
+
 .. rubric:: Overview:
    :heading-level: 2
 

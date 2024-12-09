@@ -2,6 +2,8 @@
 Scripts
 #######
 
+.. currentmodule:: fontTools.unicodedata.Scripts
+
 .. automodule:: fontTools.unicodedata.Scripts
    :members:
    :undoc-members:
