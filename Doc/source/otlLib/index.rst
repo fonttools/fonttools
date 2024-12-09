@@ -2,6 +2,10 @@
 otlLib: Routines for working with OpenType Layout
 #################################################
 
+.. contents:: On this page:
+    :local:
+       
+
 The ``fontTools.otlLib`` library provides routines to help you create the
 subtables and other data structures you need when you are editing a font's
 ``GSUB`` and ``GPOS`` tables: substitution and positioning rules, anchors,
