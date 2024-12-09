@@ -1,8 +1,7 @@
-#####
-psLib
-#####
+#############################################
+psLib: Tools for working with PostScript data
+#############################################
 
 .. automodule:: fontTools.misc.psLib
-   :inherited-members:
    :members:
    :undoc-members:

@@ -1,8 +1,7 @@
-#############
-psCharStrings
-#############
+#####################################################
+psCharStrings: Tools for working with CharString data
+#####################################################
 
 .. automodule:: fontTools.misc.psCharStrings
-   :inherited-members:
    :members:
    :undoc-members:

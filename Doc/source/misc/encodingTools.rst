@@ -1,8 +1,7 @@
-#############
-encodingTools
-#############
+###########################################
+encodingTools: Tools for OpenType encodings
+###########################################
 
 .. automodule:: fontTools.misc.encodingTools
-   :inherited-members:
    :members:
    :undoc-members:

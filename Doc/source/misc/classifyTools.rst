@@ -1,8 +1,7 @@
-#############
-classifyTools
-#############
+###########################################
+classifyTools: Tools for set classification
+###########################################
 
 .. automodule:: fontTools.misc.classifyTools
-   :inherited-members:
    :members:
    :undoc-members:

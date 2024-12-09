@@ -1,8 +1,7 @@
-#########
-textTools
-#########
+###########################################
+textTools: Tools for working with text data
+###########################################
 
 .. automodule:: fontTools.misc.textTools
-   :inherited-members:
    :members:
    :undoc-members:

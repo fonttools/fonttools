@@ -1,8 +1,7 @@
-#########
-xmlWriter
-#########
+#####################################
+xmlWriter: Tools for writing XML data
+#####################################
 
 .. automodule:: fontTools.misc.xmlWriter
-   :inherited-members:
    :members:
    :undoc-members:

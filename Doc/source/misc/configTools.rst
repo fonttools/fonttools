@@ -1,8 +1,9 @@
-###########
-configTools
-###########
+############################################################
+configTools: Tools for interfacing with Python configuration
+############################################################
+
+.. currentmodule:: fontTools.misc.configTools
 
 .. automodule:: fontTools.misc.configTools
-   :inherited-members:
    :members:
    :undoc-members:
