@@ -1,0 +1,6 @@
+feature test {
+    # we should only produce two lookups: one contextual, and one ligature,
+    # with the ligature containing `l o -> z` and `L o` -> Z
+    sub l' o' l by z;
+    sub L' o' L by Z;
+} test;
