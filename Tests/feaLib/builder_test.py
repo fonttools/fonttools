@@ -85,6 +85,7 @@ class BuilderTest(unittest.TestCase):
         variable_scalar_valuerecord variable_scalar_anchor variable_conditionset
         variable_mark_anchor duplicate_lookup_reference
         contextual_inline_multi_sub_format_2
+        contextual_inline_format_4
     """.split()
 
     VARFONT_AXES = [
