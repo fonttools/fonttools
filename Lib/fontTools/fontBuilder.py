@@ -714,6 +714,12 @@ class FontBuilder(object):
         gvar.reserved = 0
         gvar.variations = variations
 
+    def setupGVAR(self, variations):
+        gvar = self.font["GVAR"] = newTable("GVAR")
+        gvar.version = 1
+        gvar.reserved = 0
+        gvar.variations = variations
+
     def calcGlyphBounds(self):
         """Calculate the bounding boxes of all glyphs in the `glyf` table.
         This is usually not called explicitly by client code.
