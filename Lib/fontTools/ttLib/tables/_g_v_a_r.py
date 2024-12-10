@@ -23,19 +23,24 @@ log = logging.getLogger(__name__)
 # FreeType2 source code for parsing 'gvar':
 # http://git.savannah.gnu.org/cgit/freetype/freetype2.git/tree/src/truetype/ttgxvar.c
 
-GVAR_HEADER_FORMAT = """
+GVAR_HEADER_FORMAT_HEAD = """
 	> # big endian
 	version:			H
 	reserved:			H
 	axisCount:			H
 	sharedTupleCount:		H
 	offsetToSharedTuples:		I
-	glyphCount:			H
+"""
+# In between the HEAD and TAIL lies the glyphCount, which is
+# of different size: 2 bytes for gvar, and 3 bytes for GVAR.
+GVAR_HEADER_FORMAT_TAIL = """
+	> # big endian
 	flags:				H
 	offsetToGlyphVariationData:	I
 """
 
-GVAR_HEADER_SIZE = sstruct.calcsize(GVAR_HEADER_FORMAT)
+GVAR_HEADER_SIZE_HEAD = sstruct.calcsize(GVAR_HEADER_FORMAT_HEAD)
+GVAR_HEADER_SIZE_TAIL = sstruct.calcsize(GVAR_HEADER_FORMAT_TAIL)
 
 
 class table__g_v_a_r(DefaultTable.DefaultTable):
@@ -50,6 +55,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
     """
 
     dependencies = ["fvar", "glyf"]
+    gid_size = 2
 
     def __init__(self, tag=None):
         DefaultTable.DefaultTable.__init__(self, tag)
@@ -72,18 +78,22 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
         offsets.append(offset)
         compiledOffsets, tableFormat = self.compileOffsets_(offsets)
 
+        GVAR_HEADER_SIZE = GVAR_HEADER_SIZE_HEAD + self.gid_size + GVAR_HEADER_SIZE_TAIL
         header = {}
         header["version"] = self.version
         header["reserved"] = self.reserved
         header["axisCount"] = len(axisTags)
         header["sharedTupleCount"] = len(sharedTuples)
         header["offsetToSharedTuples"] = GVAR_HEADER_SIZE + len(compiledOffsets)
-        header["glyphCount"] = len(compiledGlyphs)
         header["flags"] = tableFormat
         header["offsetToGlyphVariationData"] = (
             header["offsetToSharedTuples"] + sharedTupleSize
         )
-        compiledHeader = sstruct.pack(GVAR_HEADER_FORMAT, header)
+        compiledHeader = b''.join([
+            sstruct.pack(GVAR_HEADER_FORMAT_HEAD, header),
+            int.to_bytes(len(compiledGlyphs), self.gid_size, "big"),
+            sstruct.pack(GVAR_HEADER_FORMAT_TAIL, header),
+        ])
 
         result = [compiledHeader, compiledOffsets]
         result.extend(sharedTuples)
@@ -114,7 +124,13 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
     def decompile(self, data, ttFont):
         axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
         glyphs = ttFont.getGlyphOrder()
-        sstruct.unpack(GVAR_HEADER_FORMAT, data[0:GVAR_HEADER_SIZE], self)
+
+        # Parse the header
+        GVAR_HEADER_SIZE = GVAR_HEADER_SIZE_HEAD + self.gid_size + GVAR_HEADER_SIZE_TAIL
+        sstruct.unpack(GVAR_HEADER_FORMAT_HEAD, data[:GVAR_HEADER_SIZE_HEAD], self)
+        self.glyphCount = int.from_bytes(data[GVAR_HEADER_SIZE_HEAD:GVAR_HEADER_SIZE_HEAD + self.gid_size], "big")
+        sstruct.unpack(GVAR_HEADER_FORMAT_TAIL, data[GVAR_HEADER_SIZE_HEAD + self.gid_size:GVAR_HEADER_SIZE], self)
+
         assert len(glyphs) == self.glyphCount
         assert len(axisTags) == self.axisCount
         sharedCoords = tv.decompileSharedTuples(
