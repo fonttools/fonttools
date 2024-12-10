@@ -285,6 +285,13 @@ class OTTableReader(object):
         offset = self.offset + offset
         return self.__class__(self.data, self.localState, offset, self.tableTag)
 
+    def fromBytes(self, size, signed):
+        pos = self.pos
+        newpos = pos + size
+        value = int.from_bytes(self.data[pos:newpos], "big", signed=signed)
+        self.pos = newpos
+        return value
+
     def readValue(self, typecode, staticSize):
         pos = self.pos
         newpos = pos + staticSize
@@ -302,47 +309,43 @@ class OTTableReader(object):
         return value.tolist()
 
     def readInt8(self):
-        return self.readValue("b", staticSize=1)
+        return self.fromBytes(1, signed=True)
 
     def readInt8Array(self, count):
         return self.readArray("b", staticSize=1, count=count)
 
     def readShort(self):
-        return self.readValue("h", staticSize=2)
+        return self.fromBytes(2, signed=True)
 
     def readShortArray(self, count):
         return self.readArray("h", staticSize=2, count=count)
 
     def readLong(self):
-        return self.readValue("i", staticSize=4)
+        return self.fromBytes(4, signed=True)
 
     def readLongArray(self, count):
         return self.readArray("i", staticSize=4, count=count)
 
     def readUInt8(self):
-        return self.readValue("B", staticSize=1)
+        return self.fromBytes(1, signed=False)
 
     def readUInt8Array(self, count):
         return self.readArray("B", staticSize=1, count=count)
 
     def readUShort(self):
-        return self.readValue("H", staticSize=2)
+        return self.fromBytes(2, signed=False)
 
     def readUShortArray(self, count):
         return self.readArray("H", staticSize=2, count=count)
 
     def readULong(self):
-        return self.readValue("I", staticSize=4)
+        return self.fromBytes(4, signed=False)
 
     def readULongArray(self, count):
         return self.readArray("I", staticSize=4, count=count)
 
     def readUInt24(self):
-        pos = self.pos
-        newpos = pos + 3
-        (value,) = struct.unpack(">l", b"\0" + self.data[pos:newpos])
-        self.pos = newpos
-        return value
+        return self.fromBytes(3, signed=False)
 
     def readUInt24Array(self, count):
         return [self.readUInt24() for _ in range(count)]
@@ -729,48 +732,47 @@ class OTTableWriter(object):
 
     def writeInt8(self, value):
         assert -128 <= value < 128, value
-        self.items.append(struct.pack(">b", value))
+        self.items.append(int.to_bytes(value, 1, "big", signed=True))
 
     def writeInt8Array(self, values):
         self.writeArray("b", values)
 
     def writeShort(self, value):
         assert -32768 <= value < 32768, value
-        self.items.append(struct.pack(">h", value))
+        self.items.append(int.to_bytes(value, 2, "big", signed=True))
 
     def writeShortArray(self, values):
         self.writeArray("h", values)
 
     def writeLong(self, value):
-        self.items.append(struct.pack(">i", value))
+        self.items.append(int.to_bytes(value, 4, "big", signed=True))
 
     def writeLongArray(self, values):
         self.writeArray("i", values)
 
     def writeUInt8(self, value):
         assert 0 <= value < 256, value
-        self.items.append(struct.pack(">B", value))
+        self.items.append(int.to_bytes(value, 1, "big", signed=False))
 
     def writeUInt8Array(self, values):
         self.writeArray("B", values)
 
     def writeUShort(self, value):
         assert 0 <= value < 0x10000, value
-        self.items.append(struct.pack(">H", value))
+        self.items.append(int.to_bytes(value, 2, "big", signed=False))
 
     def writeUShortArray(self, values):
         self.writeArray("H", values)
 
     def writeULong(self, value):
-        self.items.append(struct.pack(">I", value))
+        self.items.append(int.to_bytes(value, 4, "big", signed=False))
 
     def writeULongArray(self, values):
         self.writeArray("I", values)
 
     def writeUInt24(self, value):
         assert 0 <= value < 0x1000000, value
-        b = struct.pack(">L", value)
-        self.items.append(b[1:])
+        self.items.append(int.to_bytes(value, 3, "big", signed=False))
 
     def writeUInt24Array(self, values):
         for value in values:
