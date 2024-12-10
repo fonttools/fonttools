@@ -2,7 +2,9 @@
 cocoaPen
 ########
 
+    Note also that :mod:`cocoaPen` supports some :doc:`optional </optional>`
+    external libraries.
+
 .. automodule:: fontTools.pens.cocoaPen
-   :inherited-members:
    :members:
    :undoc-members:
