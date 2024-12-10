@@ -1,8 +1,9 @@
-###############################################################
-eexec: PostScript charstring encryption and decryption routines
-###############################################################
+###################################################################
+eexec: Routines for PostScript CharString encryption and decryption
+###################################################################
+
+.. currentmodule:: fontTools.misc.eexec
 
 .. automodule:: fontTools.misc.eexec
-   :inherited-members:
    :members:
    :undoc-members:
