@@ -1,3 +1,7 @@
+
+- [Docs] fill out ttLib table section [#3716]
+- [feaLib] More efficient inline format 4 lookups [#3726]
+
 4.55.2 (released 2024-12-05)
 ----------------------------
 
