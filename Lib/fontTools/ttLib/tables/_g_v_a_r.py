@@ -89,15 +89,14 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
         header["offsetToGlyphVariationData"] = (
             header["offsetToSharedTuples"] + sharedTupleSize
         )
-        compiledHeader = b"".join(
-            [
-                sstruct.pack(GVAR_HEADER_FORMAT_HEAD, header),
-                int.to_bytes(len(compiledGlyphs), self.gid_size, "big"),
-                sstruct.pack(GVAR_HEADER_FORMAT_TAIL, header),
-            ]
-        )
 
-        result = [compiledHeader, compiledOffsets]
+        result = [
+            sstruct.pack(GVAR_HEADER_FORMAT_HEAD, header),
+            int.to_bytes(len(compiledGlyphs), self.gid_size, "big"),
+            sstruct.pack(GVAR_HEADER_FORMAT_TAIL, header),
+        ]
+
+        result.append(compiledOffsets)
         result.extend(sharedTuples)
         result.extend(compiledGlyphs)
         return b"".join(result)
