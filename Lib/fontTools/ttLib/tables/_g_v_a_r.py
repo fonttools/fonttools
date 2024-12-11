@@ -330,6 +330,6 @@ def decompileGlyph_(dataOffsetSize, pointCount, sharedTuples, axisTags, data):
         pointCount,
         sharedTuples,
         data,
-        4,
+        2 + dataOffsetSize,
         offsetToData,
     )
