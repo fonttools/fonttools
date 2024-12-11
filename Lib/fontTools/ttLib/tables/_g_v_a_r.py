@@ -92,7 +92,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 
         result = [
             sstruct.pack(GVAR_HEADER_FORMAT_HEAD, header),
-            int.to_bytes(len(compiledGlyphs), self.gid_size, "big"),
+            len(compiledGlyphs).to_bytes(self.gid_size, "big"),
             sstruct.pack(GVAR_HEADER_FORMAT_TAIL, header),
         ]
 
