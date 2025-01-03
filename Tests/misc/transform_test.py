@@ -123,7 +123,6 @@ class TransformTest(object):
         assert d.translateX == 5
         assert d.translateY == 7
 
-    def test_decompose(self):
         t = Transform(-1, 0, 0, 1, 0, 0)
         d = t.toDecomposed()
         assert d.scaleX == -1
