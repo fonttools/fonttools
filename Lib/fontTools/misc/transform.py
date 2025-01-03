@@ -67,7 +67,7 @@ _ONE_EPSILON = 1 - _EPSILON
 _MINUS_ONE_EPSILON = -1 + _EPSILON
 
 
-def _normSinCos(v):
+def _normSinCos(v: float) -> float:
     if abs(v) < _EPSILON:
         v = 0
     elif v > _ONE_EPSILON:
@@ -243,7 +243,7 @@ class Transform(NamedTuple):
             y = x
         return self.transform((x, 0, 0, y, 0, 0))
 
-    def rotate(self, angle):
+    def rotate(self, angle: float):
         """Return a new transformation, rotated by 'angle' (radians).
 
         :Example:
@@ -334,7 +334,7 @@ class Transform(NamedTuple):
         dx, dy = -xx * dx - yx * dy, -xy * dx - yy * dy
         return self.__class__(xx, xy, yx, yy, dx, dy)
 
-    def toPS(self):
+    def toPS(self) -> str:
         """Return a PostScript representation
 
         :Example:
@@ -350,7 +350,7 @@ class Transform(NamedTuple):
         """Decompose into a DecomposedTransform."""
         return DecomposedTransform.fromTransform(self)
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         """Returns True if transform is not identity, False otherwise.
 
         :Example:
@@ -372,14 +372,14 @@ class Transform(NamedTuple):
         """
         return self != Identity
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "<%s [%g %g %g %g %g %g]>" % ((self.__class__.__name__,) + self)
 
 
 Identity = Transform()
 
 
-def Offset(x: float = 0, y: float = 0):
+def Offset(x: float = 0, y: float = 0) -> Transform:
     """Return the identity transformation offset by x, y.
 
     :Example:
@@ -390,7 +390,7 @@ def Offset(x: float = 0, y: float = 0):
     return Transform(1, 0, 0, 1, x, y)
 
 
-def Scale(x: float, y: float | None = None):
+def Scale(x: float, y: float | None = None) -> Transform:
     """Return the identity transformation scaled by x, y. The 'y' argument
     may be None, which implies to use the x value for y as well.
 
@@ -490,7 +490,7 @@ class DecomposedTransform:
             0,
         )
 
-    def toTransform(self):
+    def toTransform(self) -> Transform:
         """Return the Transform() equivalent of this transformation.
 
         :Example:
