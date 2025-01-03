@@ -52,6 +52,8 @@ translate, rotation, scale, skew, and transformation-center components.
 	>>>
 """
 
+from __future__ import annotations
+
 import math
 from typing import NamedTuple
 from dataclasses import dataclass
@@ -214,7 +216,7 @@ class Transform(NamedTuple):
         xx, xy, yx, yy = self[:4]
         return [(xx * dx + yx * dy, xy * dx + yy * dy) for dx, dy in vectors]
 
-    def translate(self, x=0, y=0):
+    def translate(self, x: float = 0, y: float = 0):
         """Return a new transformation, translated (offset) by x, y.
 
         :Example:
@@ -225,7 +227,7 @@ class Transform(NamedTuple):
         """
         return self.transform((1, 0, 0, 1, x, y))
 
-    def scale(self, x=1, y=None):
+    def scale(self, x: float = 1, y: float | None = None):
         """Return a new transformation, scaled by x, y. The 'y' argument
         may be None, which implies to use the x value for y as well.
 
@@ -257,7 +259,7 @@ class Transform(NamedTuple):
         s = _normSinCos(math.sin(angle))
         return self.transform((c, s, -s, c, 0, 0))
 
-    def skew(self, x=0, y=0):
+    def skew(self, x: float = 0, y: float = 0):
         """Return a new transformation, skewed by x and y.
 
         :Example:
@@ -381,7 +383,7 @@ class Transform(NamedTuple):
 Identity = Transform()
 
 
-def Offset(x=0, y=0):
+def Offset(x: float = 0, y: float = 0):
     """Return the identity transformation offset by x, y.
 
     :Example:
@@ -392,7 +394,7 @@ def Offset(x=0, y=0):
     return Transform(1, 0, 0, 1, x, y)
 
 
-def Scale(x, y=None):
+def Scale(x: float, y: float | None = None):
     """Return the identity transformation scaled by x, y. The 'y' argument
     may be None, which implies to use the x value for y as well.
 
