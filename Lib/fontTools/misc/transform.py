@@ -253,8 +253,6 @@ class Transform(NamedTuple):
                 <Transform [0 1 -1 0 0 0]>
                 >>>
         """
-        import math
-
         c = _normSinCos(math.cos(angle))
         s = _normSinCos(math.sin(angle))
         return self.transform((c, s, -s, c, 0, 0))
@@ -269,8 +267,6 @@ class Transform(NamedTuple):
                 <Transform [1 0 1 1 0 0]>
                 >>>
         """
-        import math
-
         return self.transform((1, math.tan(y), math.tan(x), 1, 0, 0))
 
     def transform(self, other):
