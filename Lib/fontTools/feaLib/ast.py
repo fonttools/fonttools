@@ -595,7 +595,7 @@ class MarkClassDefinition(Statement):
 class AlternateSubstStatement(Statement):
     """A ``sub ... from ...`` statement.
 
-    ``glyph`` and ``replacement`` should be `glyph-containing objects`_. 
+    ``glyph`` and ``replacement`` should be `glyph-containing objects`_.
     ``prefix`` and ``suffix`` should be lists of `glyph-containing objects`_."""
 
     def __init__(self, prefix, glyph, suffix, replacement, location=None):
