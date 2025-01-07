@@ -1,11 +1,11 @@
 """
-glifLib.py -- Generic module for reading and writing the .glif format.
+Generic module for reading and writing the .glif format.
 
 More info about the .glif format (GLyphInterchangeFormat) can be found here:
 
 	http://unifiedfontobject.org
 
-The main class in this module is GlyphSet. It manages a set of .glif files
+The main class in this module is :class:`GlyphSet`. It manages a set of .glif files
 in a folder. It offers two ways to read glyph data, and one way to write
 glyph data. See the class doc string for details.
 """
@@ -60,6 +60,13 @@ LAYERINFO_FILENAME = "layerinfo.plist"
 
 
 class GLIFFormatVersion(tuple, _VersionTupleEnumMixin, enum.Enum):
+    """Class representing the versions of the .glif format supported by the UFO version in use.
+
+    For a given :mod:`fontTools.ufoLib.UFOFormatVersion`, the :func:`supported_versions` method will
+    return the supported versions of the GLIF file format. If the UFO version is unspecified, the
+    :func:`supported_versions` method will return all available GLIF format versions.
+    """
+
     FORMAT_1_0 = (1, 0)
     FORMAT_2_0 = (2, 0)
 

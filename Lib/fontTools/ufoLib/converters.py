@@ -1,11 +1,33 @@
 """
-Conversion functions.
+Functions for converting UFO1 or UFO2 files into UFO3 format.
+
+Currently provides functionality for converting kerning rules
+and kerning groups. Conversion is only supported _from_ UFO1
+or UFO2, and _to_ UFO3.
 """
 
 # adapted from the UFO spec
 
 
 def convertUFO1OrUFO2KerningToUFO3Kerning(kerning, groups, glyphSet=()):
+    """Convert kerning data in UFO1 or UFO2 syntax into UFO3 syntax.
+
+    Args:
+      kerning:
+          A dictionary containing the kerning rules defined in
+          the UFO font, as used in :class:`.UFOReader` objects.
+      groups:
+          A dictionary containing the groups defined in the UFO
+          font, as used in :class:`.UFOReader` objects.
+      glyphSet:
+        Optional; a set of glyph objects to skip (default: None).
+
+    Returns:
+      1. A dictionary representing the converted kerning data.
+      2. A copy of the groups dictionary, with all groups renamed to UFO3 syntax.
+      3. A dictionary containing the mapping of old group names to new group names.
+
+    """
     # gather known kerning groups based on the prefixes
     firstReferencedGroups, secondReferencedGroups = findKnownKerningGroups(groups)
     # Make lists of groups referenced in kerning pairs.
@@ -63,35 +85,54 @@ def convertUFO1OrUFO2KerningToUFO3Kerning(kerning, groups, glyphSet=()):
 
 
 def findKnownKerningGroups(groups):
-    """
-    This will find kerning groups with known prefixes.
-    In some cases not all kerning groups will be referenced
-    by the kerning pairs. The algorithm for locating groups
-    in convertUFO1OrUFO2KerningToUFO3Kerning will miss these
-    unreferenced groups. By scanning for known prefixes
+    """Find all kerning groups in a UFO1 or UFO2 font that use known prefixes.
+
+    In some cases, not all kerning groups will be referenced
+    by the kerning pairs in a UFO. The algorithm for locating
+    groups in :func:`convertUFO1OrUFO2KerningToUFO3Kerning` will
+    miss these unreferenced groups. By scanning for known prefixes,
     this function will catch all of the prefixed groups.
 
-    These are the prefixes and sides that are handled:
+    The prefixes and sides by this function are:
+
     @MMK_L_ - side 1
     @MMK_R_ - side 2
 
-    >>> testGroups = {
-    ...     "@MMK_L_1" : None,
-    ...     "@MMK_L_2" : None,
-    ...     "@MMK_L_3" : None,
-    ...     "@MMK_R_1" : None,
-    ...     "@MMK_R_2" : None,
-    ...     "@MMK_R_3" : None,
-    ...     "@MMK_l_1" : None,
-    ...     "@MMK_r_1" : None,
-    ...     "@MMK_X_1" : None,
-    ...     "foo" : None,
-    ... }
-    >>> first, second = findKnownKerningGroups(testGroups)
-    >>> sorted(first) == ['@MMK_L_1', '@MMK_L_2', '@MMK_L_3']
-    True
-    >>> sorted(second) == ['@MMK_R_1', '@MMK_R_2', '@MMK_R_3']
-    True
+    as defined in the UFO1 specification.
+
+    Args:
+        groups:
+          A dictionary containing the groups defined in the UFO
+          font, as read by :class:`.UFOReader`.
+
+    Returns:
+        Two sets; the first containing the names of all
+        first-side kerning groups identified in the ``groups``
+        dictionary, and the second containing the names of all
+        second-side kerning groups identified.
+
+        "First-side" and "second-side" are with respect to the
+        writing direction of the script.
+
+        Example::
+
+          >>> testGroups = {
+          ...     "@MMK_L_1" : None,
+          ...     "@MMK_L_2" : None,
+          ...     "@MMK_L_3" : None,
+          ...     "@MMK_R_1" : None,
+          ...     "@MMK_R_2" : None,
+          ...     "@MMK_R_3" : None,
+          ...     "@MMK_l_1" : None,
+          ...     "@MMK_r_1" : None,
+          ...     "@MMK_X_1" : None,
+          ...     "foo" : None,
+          ... }
+          >>> first, second = findKnownKerningGroups(testGroups)
+          >>> sorted(first) == ['@MMK_L_1', '@MMK_L_2', '@MMK_L_3']
+          True
+          >>> sorted(second) == ['@MMK_R_1', '@MMK_R_2', '@MMK_R_3']
+          True
     """
     knownFirstGroupPrefixes = ["@MMK_L_"]
     knownSecondGroupPrefixes = ["@MMK_R_"]
@@ -110,6 +151,27 @@ def findKnownKerningGroups(groups):
 
 
 def makeUniqueGroupName(name, groupNames, counter=0):
+    """Make a kerning group name that will be unique within the set of group names.
+
+    If the requested kerning group name already exists within the set, this
+    will return a new name by adding an incremented counter to the end
+    of the requested name.
+
+    Args:
+        name:
+          The requested kerning group name.
+        groupNames:
+          A list of the existing kerning group names.
+        counter:
+          Optional; a counter of group names already seen (default: 0). If
+          :attr:`.counter` is not provided, the function will recurse,
+          incrementing the value of :attr:`.counter` until it finds the
+          first unused ``name+counter`` combination, and return that result.
+
+    Returns:
+        A unique kerning group name composed of the requested name suffixed
+        by the smallest available integer counter.
+    """
     # Add a number to the name if the counter is higher than zero.
     newName = name
     if counter > 0:
@@ -123,6 +185,8 @@ def makeUniqueGroupName(name, groupNames, counter=0):
 
 def test():
     """
+    Tests for :func:`.convertUFO1OrUFO2KerningToUFO3Kerning`.
+
     No known prefixes.
 
     >>> testKerning = {
