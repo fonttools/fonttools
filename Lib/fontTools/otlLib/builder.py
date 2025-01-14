@@ -2708,7 +2708,7 @@ AXIS_VALUE_POSITIVE_INFINITY = fixedToFloat(0x7FFFFFFF, 16)
 
 
 def buildStatTable(
-    ttFont, axes, locations=None, elidedFallbackName=2, windowsNames=True, macNames=True
+    ttFont, axes, locations=None, elidedFallbackName=2, windowsNames=True, macNames=False
 ):
     """Add a 'STAT' table to 'ttFont'.
 
@@ -2831,7 +2831,7 @@ def buildStatTable(
         statTable.AxisValueCount = len(axisValues)
 
 
-def _buildAxisRecords(axes, ttFont, windowsNames=True, macNames=True):
+def _buildAxisRecords(axes, ttFont, windowsNames=True, macNames=False):
     axisRecords = []
     axisValues = []
     for axisRecordIndex, axisDict in enumerate(axes):
@@ -2874,7 +2874,7 @@ def _buildAxisRecords(axes, ttFont, windowsNames=True, macNames=True):
     return axisRecords, axisValues
 
 
-def _buildAxisValuesFormat4(locations, axes, ttFont, windowsNames=True, macNames=True):
+def _buildAxisValuesFormat4(locations, axes, ttFont, windowsNames=True, macNames=False):
     axisTagToIndex = {}
     for axisRecordIndex, axisDict in enumerate(axes):
         axisTagToIndex[axisDict["tag"]] = axisRecordIndex
