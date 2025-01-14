@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="OTTO" ttLibVersion="4.51">
+
+  <GlyphOrder>
+    <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
+    <GlyphID id="0" name=".notdef"/>
+    <GlyphID id="1" name="glyph00001"/>
+  </GlyphOrder>
+
+  <head>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="1.0"/>
+    <fontRevision value="5.0"/>
+    <checkSumAdjustment value="0xbcbbec73"/>
+    <magicNumber value="0x5f0f3cf5"/>
+    <flags value="00000000 00000000"/>
+    <unitsPerEm value="4000"/>
+    <created value="Tue Apr  9 18:59:32 2024"/>
+    <modified value="Tue Apr  9 18:59:32 2024"/>
+    <xMin value="-4000"/>
+    <yMin value="-4000"/>
+    <xMax value="4000"/>
+    <yMax value="4000"/>
+    <macStyle value="00000000 00000010"/>
+    <lowestRecPPEM value="6"/>
+    <fontDirectionHint value="2"/>
+    <indexToLocFormat value="0"/>
+    <glyphDataFormat value="0"/>
+  </head>
+
+  <maxp>
+    <tableVersion value="0x5000"/>
+    <numGlyphs value="2"/>
+  </maxp>
+
+  <hmtx>
+    <mtx name=".notdef" width="4000" lsb="0"/>
+    <mtx name="glyph00001" width="4000" lsb="-228"/>
+  </hmtx>
+
+  <CFF2>
+    <major value="2"/>
+    <minor value="0"/>
+    <CFFFont name="CFF2Font">
+      <FontMatrix value="0.00025 0 0 0.00025 0 0"/>
+      <FDArray>
+        <FontDict index="0">
+          <Private>
+            <BlueScale value="0.039625"/>
+            <BlueShift value="7"/>
+            <BlueFuzz value="1"/>
+            <LanguageGroup value="0"/>
+            <ExpansionFactor value="0.06"/>
+          </Private>
+        </FontDict>
+      </FDArray>
+      <CharStrings>
+        <CharString name=".notdef">
+        </CharString>
+        <CharString name="glyph00001">
+          -216 -4 1 blend
+          -12 rmoveto
+          64 240 12 92 120 188 12 1 blend
+          -12 64 hhcurveto
+          24 12 60 8 1 blend
+          16 12 -4 12 -12 hvcurveto
+          -200 16 -48 8 68 vvcurveto
+          52 44 80 -8 1 blend
+          80 144 vhcurveto
+          908 1580 -40 -36 2 blend
+          8 0 80 -1048 4 -20 20 -8 3 blend
+          -68 rlineto
+          -500 8 156 -476 640 -140 20 148 156 -100 5 blend
+          hhcurveto
+          928 380 976 668 560 -268 336 -544 -472 -352 -276 -408 -212 24 24 -8 -20 8 -36 20 -24 60 40 84 40 -40 13 blend
+          hvcurveto
+          -12 hlineto
+          -16 204 -12 208 -12 220 4 -60 4 -48 4 -20 6 blend
+          rrcurveto
+          20 4 1 blend
+          -8 8 -16 -16 1 blend
+          -16 -100 -48 1 blend
+          -4 -8 -76 -4 -4 2 blend
+          vhcurveto
+          -20 -4 1 blend
+          -4 -8 -8 -8 -16 -372 -640 -360 -640 -380 -636 4 -4 -4 192 336 -160 -260 -28 -68 9 blend
+          -232 -388 -4 1 blend
+          -48 -8 8 1 blend
+          -212 -20 rrcurveto
+          -16 -16 -40 -8 1 blend
+          -36 -12 4 -12 8 hvcurveto
+          2508 80 -8 8 2 blend
+        </CharString>
+      </CharStrings>
+      <VarStore Format="1">
+        <Format value="1"/>
+        <VarRegionList>
+          <!-- RegionAxisCount=1 -->
+          <!-- RegionCount=1 -->
+          <Region index="0">
+            <VarRegionAxis index="0">
+              <StartCoord value="0.0"/>
+              <PeakCoord value="1.0"/>
+              <EndCoord value="1.0"/>
+            </VarRegionAxis>
+          </Region>
+        </VarRegionList>
+        <!-- VarDataCount=1 -->
+        <VarData index="0">
+          <!-- ItemCount=0 -->
+          <NumShorts value="0"/>
+          <!-- VarRegionCount=1 -->
+          <VarRegionIndex index="0" value="0"/>
+        </VarData>
+      </VarStore>
+    </CFFFont>
+
+    <GlobalSubrs>
+      <!-- The 'index' attribute is only for humans; it is ignored when parsed. -->
+    </GlobalSubrs>
+  </CFF2>
+
+  <avar>
+    <version major="1" minor="0"/>
+    <segment axis="wght">
+      <mapping from="-1.0" to="-1.0"/>
+      <mapping from="0.0" to="0.0"/>
+      <mapping from="0.3333" to="0.3"/>
+      <mapping from="0.6667" to="0.63336"/>
+      <mapping from="1.0" to="1.0"/>
+    </segment>
+  </avar>
+
+  <fvar>
+
+    <!-- Weight -->
+    <Axis>
+      <AxisTag>wght</AxisTag>
+      <Flags>0x0</Flags>
+      <MinValue>400.0</MinValue>
+      <DefaultValue>400.0</DefaultValue>
+      <MaxValue>700.0</MaxValue>
+      <AxisNameID>256</AxisNameID>
+    </Axis>
+  </fvar>
+
+</ttFont>
