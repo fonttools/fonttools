@@ -2708,7 +2708,12 @@ AXIS_VALUE_POSITIVE_INFINITY = fixedToFloat(0x7FFFFFFF, 16)
 
 
 def buildStatTable(
-    ttFont, axes, locations=None, elidedFallbackName=2, windowsNames=True, macNames=False
+    ttFont,
+    axes,
+    locations=None,
+    elidedFallbackName=2,
+    windowsNames=True,
+    macNames=False,
 ):
     """Add a 'STAT' table to 'ttFont'.
 
