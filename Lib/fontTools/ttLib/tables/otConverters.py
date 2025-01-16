@@ -229,7 +229,7 @@ class Align(BaseConverter):
     def read(self, reader, font, tableDict):
         pos = reader.pos - reader.offset
         padding = self.getPadding(pos)
-        reader.seek(pos + padding)
+        reader.readData(padding)
 
     def write(self, writer, font, tableDict, value, repeatIndex=None):
         pos = writer.getDataLength()
@@ -2042,6 +2042,8 @@ class IndexBase(BaseConverter):
     def xmlRead(self, attrs, content, font):
         if self._itemClass is not None:
             obj = self._itemClass()
+            if "Format" in attrs:
+                obj.Format = int(attrs["Format"])
             obj.fromXML(None, attrs, content, font)
             return obj
         elif self._converter is not None:
