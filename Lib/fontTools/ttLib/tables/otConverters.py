@@ -1834,6 +1834,7 @@ class TupleValues:
 
 class IndexBase(BaseConverter):
     offSize = None
+    alignment = 1
 
     def __init__(
         self,
@@ -1937,6 +1938,9 @@ class IndexBase(BaseConverter):
                 self._converter.write(writer, font, tableDict, item, i)
                 for i, item in enumerate(items)
             ]
+
+        if self.alignment > 1:
+            items = [pad(item, self.alignment) for item in items]
 
         offsets = [len(item) for item in items]
         offsets = list(accumulate(offsets, initial=1))
