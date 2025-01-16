@@ -1832,7 +1832,9 @@ class TupleValues:
         xmlWriter.newline()
 
 
-class CFF2Index(BaseConverter):
+class IndexBase(BaseConverter):
+    offSize = None
+
     def __init__(
         self,
         name,
@@ -1853,10 +1855,10 @@ class CFF2Index(BaseConverter):
         )
 
     def read(self, reader, font, tableDict):
-        count = reader.readULong()
+        count = self.getCount(reader)
         if count == 0:
             return []
-        offSize = reader.readUInt8()
+        offSize = self.getOffSize(reader)
 
         def getReadArray(reader, offSize):
             return {
@@ -1923,8 +1925,9 @@ class CFF2Index(BaseConverter):
     def write(self, writer, font, tableDict, values, repeatIndex=None):
         items = values
 
-        writer.writeULong(len(items))
-        if not len(items):
+        n = len(items)
+        self.setCount(writer, n)
+        if n == 0:
             return
 
         if self._itemClass is not None:
@@ -1939,16 +1942,19 @@ class CFF2Index(BaseConverter):
         offsets = list(accumulate(offsets, initial=1))
 
         lastOffset = offsets[-1]
-        offSize = (
-            1
-            if lastOffset < 0x100
-            else 2
-            if lastOffset < 0x10000
-            else 3
-            if lastOffset < 0x1000000
-            else 4
-        )
-        writer.writeUInt8(offSize)
+        if self.offSize is not None:
+            offSize = self.offSize
+        else:
+            offSize = (
+                1
+                if lastOffset < 0x100
+                else 2
+                if lastOffset < 0x10000
+                else 3
+                if lastOffset < 0x1000000
+                else 4
+            )
+            self.setOffSize(writer, offSize)
 
         writeArray = {
             1: writer.writeUInt8Array,
@@ -1982,6 +1988,20 @@ class CFF2Index(BaseConverter):
                 )
         else:
             raise NotImplementedError()
+
+
+class CFF2Index(IndexBase):
+    def getCount(self, reader):
+        return reader.readULong()
+
+    def getOffSize(self, reader):
+        return reader.readUInt8()
+
+    def setCount(self, writer, count):
+        writer.writeULong(count)
+
+    def setOffSize(self, writer, offSize):
+        writer.writeUInt8(offSize)
 
 
 class LookupFlag(UShort):
