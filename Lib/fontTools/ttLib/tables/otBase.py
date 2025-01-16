@@ -425,7 +425,7 @@ class OTTableWriter(object):
         """Return the length of this table in bytes, without subtables."""
         l = 0
         for item in self.items:
-            if hasattr(item, "getCountData"):
+            if isinstance(item, CountReference):
                 l += item.size
             elif isinstance(item, OffsetToWriter):
                 l += item.offsetSize
@@ -510,7 +510,7 @@ class OTTableWriter(object):
         items = self.items
         for i in range(len(items)):
             item = items[i]
-            if hasattr(item, "getCountData"):
+            if isinstance(item, CountReference):
                 items[i] = item.getCountData()
             elif isinstance(item, OffsetToWriter):
                 item.subWriter._doneWriting(
@@ -622,7 +622,7 @@ class OTTableWriter(object):
         for i, item in enumerate(self.items):
             if isinstance(item, OffsetToWriter):
                 pos = offset_pos
-            elif hasattr(item, "getCountData"):
+            elif isinstance(item, CountReference):
                 offset_pos += item.size
                 continue
             else:
