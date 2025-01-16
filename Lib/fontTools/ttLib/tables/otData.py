@@ -1,3 +1,15 @@
+class Multiply:
+    def __init__(self, mult):
+        self.mult = mult
+
+    def __radd__(self, value):
+        return value * self.mult
+
+    def __rsub__(self, value):
+        assert value % self.mult == 0, (value, self.mult)
+        return value // self.mult
+
+
 otData = [
     #
     # common
@@ -6399,15 +6411,35 @@ otData = [
     ),
     # `hvgl` table
     (
+        "hvglCoordinates",
+        [
+            ("float64le", "Coords", "SegmentCount", Multiply(4), "Coordinate data"),
+        ],
+    ),
+    (
+        "hvglDeltas",
+        [
+            (
+                "hvglCoordinates",
+                "Delta",
+                "AxisCount",
+                Multiply(2),
+                "Delta coordinate column",
+            ),
+        ],
+    ),
+    (
         "hvglPartFormat0",  # Shape
         [
             ("uint16le", "Flags", None, None, "0x0000 for shape"),
             ("uint16le", "AxisCount", None, None, "Number of axes"),
             ("uint16le", "PathCount", None, None, "Number of paths"),
             ("uint16le", "SegmentCount", None, None, "Total segment count for shape"),
-            ("uint16le", "SegmentsPerPath", "PathCount", 0, "Sizes of paths"),
+            ("uint16le", "SegmentCountPerPath", "PathCount", 0, "Sizes of paths"),
             ("uint8", "BlendTypes", "SegmentCount", 0, "Blend types for all segments"),
             ("Align(8)", "Padding", None, None, "Pad to Float64 alignment"),
+            ("hvglCoordinates", "Master", None, None, "Master coordinate vector"),
+            ("hvglDeltas", "Deltas", None, None, "Delta coordinate matrix"),
         ],
     ),
     (
@@ -6444,7 +6476,7 @@ otData = [
             ("uint32le", "Flags", None, None, "Flags; currently all zero"),
             (
                 "uint32le",
-                "PartsCount",
+                "PartCount",
                 None,
                 None,
                 "Number of all shapes and composites",

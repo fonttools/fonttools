@@ -144,7 +144,8 @@ class BaseConverter(object):
             "BaseGlyphRecordCount",
             "LayerRecordCount",
             "AxisIndicesList",
-            "PartsCount",
+            "PartCount",
+            "SegmentCount",
         ]
         self.description = description
 
@@ -288,6 +289,12 @@ class IntValue(SimpleValue):
         return int(value, 0)
 
 
+class FloatValue(SimpleValue):
+    @staticmethod
+    def fromString(value):
+        return float(value)
+
+
 class Long(IntValue):
     staticSize = 4
 
@@ -318,6 +325,38 @@ class ULong(IntValue):
 
     def writeArray(self, writer, font, tableDict, values):
         writer.writeULongArray(values, be=self.be)
+
+
+class Float32(FloatValue):
+    staticSize = 4
+
+    def read(self, reader, font, tableDict):
+        return reader.readFloat32(be=self.be)
+
+    def readArray(self, reader, font, tableDict, count):
+        return reader.readFloat32Array(count, be=self.be)
+
+    def write(self, writer, font, tableDict, value, repeatIndex=None):
+        writer.writeFloat32(value, be=self.be)
+
+    def writeArray(self, writer, font, tableDict, values):
+        writer.writeFloat32Array(values, be=self.be)
+
+
+class Float64(FloatValue):
+    staticSize = 8
+
+    def read(self, reader, font, tableDict):
+        return reader.readFloat64(be=self.be)
+
+    def readArray(self, reader, font, tableDict, count):
+        return reader.readFloat64Array(count, be=self.be)
+
+    def write(self, writer, font, tableDict, value, repeatIndex=None):
+        writer.writeFloat64(value, be=self.be)
+
+    def writeArray(self, writer, font, tableDict, values):
+        writer.writeFloat64Array(values, be=self.be)
 
 
 class Flags32(ULong):
@@ -487,12 +526,6 @@ class STATFlags(UShort):
             xmlWriter.write("  ")
             xmlWriter.comment(" ".join(flags))
         xmlWriter.newline()
-
-
-class FloatValue(SimpleValue):
-    @staticmethod
-    def fromString(value):
-        return float(value)
 
 
 class DeciPoints(FloatValue):
@@ -1926,6 +1959,7 @@ class IndexBase(BaseConverter):
         readArray = getReadArray(reader, offSize)
 
         lazy = font.lazy is not False and count > 8
+        lazy = False
         if not lazy:
             offsets = readArray(count + 1, be=self.be)
             startOffset = (
@@ -1941,6 +1975,9 @@ class IndexBase(BaseConverter):
             for offset in offsets:
                 assert lastOffset <= offset
                 item = reader.readData(offset - lastOffset)
+                assert (
+                    len(item) == offset - lastOffset
+                ), "read %d bytes, expected %d" % (len(item), offset - lastOffset)
 
                 if self._itemClass is not None:
                     obj = self._itemClass()
@@ -1968,6 +2005,12 @@ class IndexBase(BaseConverter):
                     offsets = readArray(2, be=self.be)
                     reader_copy.seek(data_pos + offsets[0])
                     item = reader_copy.readData(offsets[1] - offsets[0])
+                    assert (
+                        len(item) == offsets[1] - offsets[0]
+                    ), "read %d bytes, expected %d" % (
+                        len(item),
+                        offsets[1] - offsets[0],
+                    )
 
                     if self._itemClass is not None:
                         obj = self._itemClass()
@@ -2085,10 +2128,10 @@ class hvglIndex(IndexBase):
     be = False
 
     def getCount(self, reader):
-        return reader["PartsCount"]
+        return reader["PartCount"]
 
     def setCount(self, writer, count):
-        writer["PartsCount"] = count
+        writer["PartCount"] = count
 
 
 class LookupFlag(UShort):
@@ -2149,6 +2192,8 @@ converterMapping = {
     "uint24le": partial(UInt24, be=False),
     "uint32": ULong,
     "uint32le": partial(ULong, be=False),
+    "float32le": partial(Float32, be=False),
+    "float64le": partial(Float64, be=False),
     "char64": Char64,
     "Flags32": Flags32,
     "VarIndex": VarIndex,

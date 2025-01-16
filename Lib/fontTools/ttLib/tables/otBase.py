@@ -349,6 +349,18 @@ class OTTableReader(object):
     def readUInt24Array(self, count, *, be=True):
         return [self.readUInt24(be=be) for _ in range(count)]
 
+    def readFloat32(self, *, be=True):
+        return self.readValue("f", staticSize=4, be=be)
+
+    def readFloat32Array(self, count, *, be=True):
+        return self.readArray("f", staticSize=4, count=count, be=be)
+
+    def readFloat64(self, *, be=True):
+        return self.readValue("d", staticSize=8, be=be)
+
+    def readFloat64Array(self, count, *, be=True):
+        return self.readArray("d", staticSize=8, count=count, be=be)
+
     def readTag(self):
         pos = self.pos
         newpos = pos + 4
@@ -809,6 +821,18 @@ class OTTableWriter(object):
         for value in values:
             self.writeUInt24(value, be=be)
 
+    def writeFloat32(self, value, *, be=True):
+        self.items.append(struct.pack(">f" if be else "<f", value))
+
+    def writeFloat32Array(self, values, *, be=True):
+        self.writeArray("f", values, be=be)
+
+    def writeFloat64(self, value, *, be=True):
+        self.items.append(struct.pack(">d" if be else "<d", value))
+
+    def writeFloat64Array(self, values, *, be=True):
+        self.writeArray("d", values, be=be)
+
     def writeTag(self, tag):
         tag = Tag(tag).tobytes()
         assert len(tag) == 4, tag
@@ -1022,7 +1046,7 @@ class BaseTable(object):
                     else:
                         # conv.repeat is a propagated count
                         countValue = reader[conv.repeat]
-                    countValue += conv.aux
+                    countValue = countValue + conv.aux
                     table[conv.name] = conv.readArray(reader, font, table, countValue)
                 else:
                     if conv.aux and not eval(conv.aux, None, table):
