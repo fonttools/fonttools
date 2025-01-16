@@ -380,7 +380,6 @@ class OffsetToWriter(object):
         self.offsetSize = offsetSize
         assert alignment == 1, "Alignment not implemented"
         self.alignment = alignment
-        assert multiplier == 1, "Multiplier not implemented"
         self.multiplier = multiplier
 
     def __eq__(self, other):
@@ -442,11 +441,15 @@ class OTTableWriter(object):
             item = items[i]
 
             if isinstance(item, OffsetToWriter):
+                offsetValue = item.subWriter.pos - pos
+                assert offsetValue % item.multiplier == 0, offsetValue
+                offsetValue //= item.multiplier
+
                 if item.offsetSize == 4:
-                    items[i] = packULong(item.subWriter.pos - pos)
+                    items[i] = packULong(offsetValue)
                 elif item.offsetSize == 2:
                     try:
-                        items[i] = packUShort(item.subWriter.pos - pos)
+                        items[i] = packUShort(offsetValue)
                     except struct.error:
                         # provide data to fix overflow problem.
                         overflowErrorRecord = self.getOverflowErrorRecord(
@@ -455,7 +458,7 @@ class OTTableWriter(object):
 
                         raise OTLOffsetOverflowError(overflowErrorRecord)
                 elif item.offsetSize == 3:
-                    items[i] = packUInt24(item.subWriter.pos - pos)
+                    items[i] = packUInt24(offsetValue)
                 else:
                     raise ValueError(item.offsetSize)
 
