@@ -97,12 +97,12 @@ def buildConverters(tableSpec, tableNamespace):
             # also create reverse mapping
             for t in conv.lookupTypes.values():
                 for cls in t.values():
-                    convertersByName[cls.__name__] = Table(name, repeat, aux, cls)
+                    convertersByName[cls.__name__] = Table16(name, repeat, aux, cls)
         if name == "FeatureParams":
             conv.featureParamTypes = tableNamespace["featureParamTypes"]
             conv.defaultFeatureParams = tableNamespace["FeatureParams"]
             for cls in conv.featureParamTypes.values():
-                convertersByName[cls.__name__] = Table(name, repeat, aux, cls)
+                convertersByName[cls.__name__] = Table16(name, repeat, aux, cls)
         converters.append(conv)
         assert name not in convertersByName, name
         convertersByName[name] = conv
@@ -692,8 +692,7 @@ class StructWithLength(Struct):
         writer.items[lengthIndex] = lengthWriter.getAllData()
 
 
-class Table(Struct):
-    staticSize = 2
+class TableBase(Struct):
 
     def readOffset(self, reader):
         return int.from_bytes(reader.readData(self.staticSize), "big")
@@ -726,12 +725,18 @@ class Table(Struct):
             value.compile(subWriter, font)
 
 
-class Table32(Table):
+# Table pointed to by a 16-bit, 2-byte ulong offset
+class Table16(TableBase):
+    staticSize = 2
+
+
+# Table pointed to by a 32-bit, 4-byte ulong offset
+class Table32(TableBase):
     staticSize = 4
 
 
-# Table pointed to by a 24-bit, 3-byte long offset
-class Table24(Table):
+# Table pointed to by a 24-bit, 3-byte ulong offset
+class Table24(TableBase):
     staticSize = 3
 
 
@@ -747,7 +752,7 @@ class SubStruct(Struct):
         super(SubStruct, self).xmlWrite(xmlWriter, font, value, None, attrs)
 
 
-class SubTable(Table):
+class SubTable(Table16):
     def getConverter(self, tableType, lookupType):
         tableClass = self.lookupTypes[tableType][lookupType]
         return self.__class__(self.name, self.repeat, self.aux, tableClass)
@@ -759,10 +764,10 @@ class SubTable(Table):
 class ExtSubTable(Table32, SubTable):
     def write(self, writer, font, tableDict, value, repeatIndex=None):
         writer.Extension = True  # actually, mere presence of the field flags it as an Ext Subtable writer.
-        Table.write(self, writer, font, tableDict, value, repeatIndex)
+        Table16.write(self, writer, font, tableDict, value, repeatIndex)
 
 
-class FeatureParams(Table):
+class FeatureParams(Table16):
     def getConverter(self, featureTag):
         tableClass = self.featureParamTypes.get(featureTag, self.defaultFeatureParams)
         return self.__class__(self.name, self.repeat, self.aux, tableClass)
@@ -821,7 +826,7 @@ class AATLookup(BaseConverter):
         if issubclass(self.tableClass, SimpleValue):
             self.converter = self.tableClass(name="Value", repeat=None, aux=None)
         else:
-            self.converter = Table(
+            self.converter = Table16(
                 name="Value", repeat=None, aux=None, tableClass=self.tableClass
             )
 
@@ -2026,7 +2031,7 @@ converterMapping = {
     "Angle": Angle,
     "BiasedAngle": BiasedAngle,
     "struct": Struct,
-    "Offset": Table,
+    "Offset": Table16,
     "LOffset": Table32,
     "Offset24": Table24,
     "ValueRecord": ValueRecord,
@@ -2050,7 +2055,7 @@ converterMapping = {
     "AATLookup": lambda C: partial(AATLookup, tableClass=C),
     "AATLookupWithDataOffset": lambda C: partial(AATLookupWithDataOffset, tableClass=C),
     "STXHeader": lambda C: partial(STXHeader, tableClass=C),
-    "OffsetTo": lambda C: partial(Table, tableClass=C),
+    "OffsetTo": lambda C: partial(Table16, tableClass=C),
     "LOffsetTo": lambda C: partial(Table32, tableClass=C),
     "LOffset24To": lambda C: partial(Table24, tableClass=C),
 }
