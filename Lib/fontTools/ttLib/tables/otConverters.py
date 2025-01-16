@@ -696,10 +696,10 @@ class Table(Struct):
     staticSize = 2
 
     def readOffset(self, reader):
-        return reader.readUShort()
+        return int.from_bytes(reader.readData(self.staticSize), "big")
 
     def writeNullOffset(self, writer):
-        writer.writeUShort(0)
+        writer.writeData(int.to_bytes(0, self.staticSize, "big"))
 
     def read(self, reader, font, tableDict):
         offset = self.readOffset(reader)
@@ -729,22 +729,10 @@ class Table(Struct):
 class LTable(Table):
     staticSize = 4
 
-    def readOffset(self, reader):
-        return reader.readULong()
-
-    def writeNullOffset(self, writer):
-        writer.writeULong(0)
-
 
 # Table pointed to by a 24-bit, 3-byte long offset
 class Table24(Table):
     staticSize = 3
-
-    def readOffset(self, reader):
-        return reader.readUInt24()
-
-    def writeNullOffset(self, writer):
-        writer.writeUInt24(0)
 
 
 # TODO Clean / merge the SubTable and SubStruct
