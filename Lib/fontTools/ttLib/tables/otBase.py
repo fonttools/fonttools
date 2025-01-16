@@ -375,18 +375,27 @@ class OTTableReader(object):
 
 
 class OffsetToWriter(object):
-    def __init__(self, subWriter, offsetSize):
+    def __init__(self, subWriter, offsetSize, *, alignment=1, multiplier=1):
         self.subWriter = subWriter
         self.offsetSize = offsetSize
+        assert alignment == 1, "Alignment not implemented"
+        self.alignment = alignment
+        assert multiplier == 1, "Multiplier not implemented"
+        self.multiplier = multiplier
 
     def __eq__(self, other):
         if type(self) != type(other):
             return NotImplemented
-        return self.subWriter == other.subWriter and self.offsetSize == other.offsetSize
+        return (
+            self.subWriter == other.subWriter
+            and self.offsetSize == other.offsetSize
+            and self.alignment == other.alignment
+            and self.multiplier == other.multiplier
+        )
 
     def __hash__(self):
         # only works after self._doneWriting() has been called
-        return hash((self.subWriter, self.offsetSize))
+        return hash((self.subWriter, self.offsetSize, self.alignment, self.multiplier))
 
 
 class OTTableWriter(object):
@@ -627,6 +636,8 @@ class OTTableWriter(object):
             else:
                 child_idx = done[id(item.subWriter)]
 
+            assert item.alignment == 1, "Alignment not implemented"
+            assert item.multiplier == 1, "Multiplier not implemented"
             real_edge = (pos, item.offsetSize, child_idx)
             real_links.append(real_edge)
             offset_pos += item.offsetSize
@@ -781,8 +792,12 @@ class OTTableWriter(object):
         assert len(tag) == 4, tag
         self.items.append(tag)
 
-    def writeSubTable(self, subWriter, offsetSize):
-        self.items.append(OffsetToWriter(subWriter, offsetSize))
+    def writeSubTable(self, subWriter, offsetSize, *, alignment=1, multiplier=1):
+        self.items.append(
+            OffsetToWriter(
+                subWriter, offsetSize, alignment=alignment, multiplier=multiplier
+            )
+        )
 
     def writeCountReference(self, table, name, size=2, value=None):
         ref = CountReference(table, name, size=size, value=value)

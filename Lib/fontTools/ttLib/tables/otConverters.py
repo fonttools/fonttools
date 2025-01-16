@@ -694,8 +694,21 @@ class StructWithLength(Struct):
 
 class TableBase(Struct):
 
+    staticSize = NotImplemented
+    alignment = 1
+    multiplier = 1
+
+    def __init__(self, *args, **kwargs):
+        if "staticSize" in kwargs:
+            self.staticSize = kwargs.pop("staticSize")
+        if "alignment" in kwargs:
+            self.staticSize = kwargs.pop("alignment")
+        if "multiplier" in kwargs:
+            self.staticSize = kwargs.pop("multiplier")
+        super().__init__(*args, **kwargs)
+
     def readOffset(self, reader):
-        return int.from_bytes(reader.readData(self.staticSize), "big")
+        return int.from_bytes(reader.readData(self.staticSize), "big") * self.multiplier
 
     def writeNullOffset(self, writer):
         writer.writeData(int.to_bytes(0, self.staticSize, "big"))
@@ -721,7 +734,12 @@ class TableBase(Struct):
             subWriter.name = self.name
             if repeatIndex is not None:
                 subWriter.repeatIndex = repeatIndex
-            writer.writeSubTable(subWriter, offsetSize=self.staticSize)
+            writer.writeSubTable(
+                subWriter,
+                offsetSize=self.staticSize,
+                alignment=self.alignment,
+                multiplier=self.multiplier,
+            )
             value.compile(subWriter, font)
 
 
