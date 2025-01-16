@@ -6397,4 +6397,45 @@ otData = [
             ("LOffset", "VarStore", None, "Version >= 0x00020000", ""),
         ],
     ),
+    # `hvgl` table
+    (
+        "hvglPart",
+        [],
+    ),
+    (
+        "hvglParts",
+        [
+            ("hvglPartsIndex", "Parts", None, None, "Parts"),
+        ],
+    ),
+    (
+        "hvgl",
+        [
+            (
+                "uint16le",
+                "VersionMajor",
+                None,
+                None,
+                "Major version of the hvgl table, currently 3",
+            ),
+            (
+                "uint16le",
+                "VersionMinor",
+                None,
+                None,
+                "Minor version of the hvgl table, currently 1",
+            ),
+            ("uint32le", "Flags", None, None, "Flags; currently all zero"),
+            (
+                "uint32le",
+                "PartsCount",
+                None,
+                None,
+                "Number of all shapes and composites",
+            ),
+            ("LOffsetToLE(hvglParts)", "Parts", None, None, "Parts"),
+            ("uint32le", "numGlyphs", None, None, "Number of externally visible parts"),
+            ("uint32le", "Reserved", None, None, "Reserved; currently zero"),
+        ],
+    ),
 ]

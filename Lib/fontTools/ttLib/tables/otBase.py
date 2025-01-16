@@ -285,18 +285,19 @@ class OTTableReader(object):
         offset = self.offset + offset
         return self.__class__(self.data, self.localState, offset, self.tableTag)
 
-    def readValue(self, typecode, staticSize):
+    def readValue(self, typecode, staticSize, *, be=True):
         pos = self.pos
         newpos = pos + staticSize
-        (value,) = struct.unpack(f">{typecode}", self.data[pos:newpos])
+        byteorder = ">" if be else "<"
+        (value,) = struct.unpack(byteorder + typecode, self.data[pos:newpos])
         self.pos = newpos
         return value
 
-    def readArray(self, typecode, staticSize, count):
+    def readArray(self, typecode, staticSize, count, *, be=True):
         pos = self.pos
         newpos = pos + count * staticSize
         value = array.array(typecode, self.data[pos:newpos])
-        if sys.byteorder != "big":
+        if be is not None and sys.byteorder != ("big" if be else "little"):
             value.byteswap()
         self.pos = newpos
         return value.tolist()
@@ -305,47 +306,48 @@ class OTTableReader(object):
         return self.readValue("b", staticSize=1)
 
     def readInt8Array(self, count):
-        return self.readArray("b", staticSize=1, count=count)
+        return self.readArray("b", staticSize=1, count=count, be=None)
 
-    def readShort(self):
-        return self.readValue("h", staticSize=2)
+    def readShort(self, *, be=True):
+        return self.readValue("h", staticSize=2, be=be)
 
-    def readShortArray(self, count):
-        return self.readArray("h", staticSize=2, count=count)
+    def readShortArray(self, count, *, be=True):
+        return self.readArray("h", staticSize=2, count=count, be=be)
 
-    def readLong(self):
-        return self.readValue("i", staticSize=4)
+    def readLong(self, *, be=True):
+        return self.readValue("i", staticSize=4, be=be)
 
-    def readLongArray(self, count):
-        return self.readArray("i", staticSize=4, count=count)
+    def readLongArray(self, count, *, be=True):
+        return self.readArray("i", staticSize=4, count=count, be=be)
 
     def readUInt8(self):
         return self.readValue("B", staticSize=1)
 
     def readUInt8Array(self, count):
-        return self.readArray("B", staticSize=1, count=count)
+        return self.readArray("B", staticSize=1, count=count, be=None)
 
-    def readUShort(self):
-        return self.readValue("H", staticSize=2)
+    def readUShort(self, *, be=True):
+        return self.readValue("H", staticSize=2, be=be)
 
-    def readUShortArray(self, count):
-        return self.readArray("H", staticSize=2, count=count)
+    def readUShortArray(self, count, *, be=True):
+        return self.readArray("H", staticSize=2, count=count, be=be)
 
-    def readULong(self):
-        return self.readValue("I", staticSize=4)
+    def readULong(self, *, be=True):
+        return self.readValue("I", staticSize=4, be=be)
 
-    def readULongArray(self, count):
-        return self.readArray("I", staticSize=4, count=count)
+    def readULongArray(self, count, *, be=True):
+        return self.readArray("I", staticSize=4, count=count, be=be)
 
-    def readUInt24(self):
+    def readUInt24(self, *, be=True):
         pos = self.pos
         newpos = pos + 3
-        (value,) = struct.unpack(">l", b"\0" + self.data[pos:newpos])
+        byteorder = ">" if be else "<"
+        (value,) = struct.unpack(byteorder + "L", b"\0" + self.data[pos:newpos])
         self.pos = newpos
         return value
 
-    def readUInt24Array(self, count):
-        return [self.readUInt24() for _ in range(count)]
+    def readUInt24Array(self, count, *, be=True):
+        return [self.readUInt24(be=be) for _ in range(count)]
 
     def readTag(self):
         pos = self.pos
@@ -375,10 +377,11 @@ class OTTableReader(object):
 
 
 class OffsetToWriter(object):
-    def __init__(self, subWriter, offsetSize, *, multiplier=1):
+    def __init__(self, subWriter, offsetSize, *, multiplier=1, be=True):
         self.subWriter = subWriter
         self.offsetSize = offsetSize
         self.multiplier = multiplier
+        self.be = be
 
     def __eq__(self, other):
         if type(self) != type(other):
@@ -387,11 +390,12 @@ class OffsetToWriter(object):
             self.subWriter == other.subWriter
             and self.offsetSize == other.offsetSize
             and self.multiplier == other.multiplier
+            and self.be == other.be
         )
 
     def __hash__(self):
         # only works after self._doneWriting() has been called
-        return hash((self.subWriter, self.offsetSize, self.multiplier))
+        return hash((self.subWriter, self.offsetSize, self.multiplier, self.be))
 
 
 class OTTableWriter(object):
@@ -448,10 +452,10 @@ class OTTableWriter(object):
                 offsetValue //= item.multiplier
 
                 if item.offsetSize == 4:
-                    items[i] = packULong(offsetValue)
+                    items[i] = packULong(offsetValue, be=item.be)
                 elif item.offsetSize == 2:
                     try:
-                        items[i] = packUShort(offsetValue)
+                        items[i] = packUShort(offsetValue, be=item.be)
                     except struct.error:
                         # provide data to fix overflow problem.
                         overflowErrorRecord = self.getOverflowErrorRecord(
@@ -460,7 +464,7 @@ class OTTableWriter(object):
 
                         raise OTLOffsetOverflowError(overflowErrorRecord)
                 elif item.offsetSize == 3:
-                    items[i] = packUInt24(offsetValue)
+                    items[i] = packUInt24(offsetValue, be=item.be)
                 else:
                     raise ValueError(item.offsetSize)
 
@@ -746,74 +750,77 @@ class OTTableWriter(object):
         # But we just care about first one right now.
         return subwriter
 
-    def writeValue(self, typecode, value):
-        self.items.append(struct.pack(f">{typecode}", value))
+    def writeValue(self, typecode, value, *, be=True):
+        byteorder = ">" if be else "<"
+        self.items.append(struct.pack(byteorder + typecode, value))
 
-    def writeArray(self, typecode, values):
+    def writeArray(self, typecode, values, *, be=True):
         a = array.array(typecode, values)
-        if sys.byteorder != "big":
+        if be is not None and sys.byteorder != ("big" if be else "little"):
             a.byteswap()
         self.items.append(a.tobytes())
 
     def writeInt8(self, value):
         assert -128 <= value < 128, value
-        self.items.append(struct.pack(">b", value))
+        self.items.append(struct.pack("b", value))
 
     def writeInt8Array(self, values):
-        self.writeArray("b", values)
+        self.writeArray("b", values, be=None)
 
-    def writeShort(self, value):
+    def writeShort(self, value, *, be=True):
         assert -32768 <= value < 32768, value
-        self.items.append(struct.pack(">h", value))
+        self.items.append(struct.pack(">h" if be else "<h", value))
 
-    def writeShortArray(self, values):
-        self.writeArray("h", values)
+    def writeShortArray(self, values, *, be=True):
+        self.writeArray("h", values, be=be)
 
-    def writeLong(self, value):
-        self.items.append(struct.pack(">i", value))
+    def writeLong(self, value, *, be=True):
+        self.items.append(struct.pack(">i" if be else "<i", value))
 
-    def writeLongArray(self, values):
-        self.writeArray("i", values)
+    def writeLongArray(self, values, *, be=True):
+        self.writeArray("i", values, be=be)
 
     def writeUInt8(self, value):
         assert 0 <= value < 256, value
-        self.items.append(struct.pack(">B", value))
+        self.items.append(struct.pack("B", value))
 
     def writeUInt8Array(self, values):
-        self.writeArray("B", values)
+        self.writeArray("B", values, be=None)
 
-    def writeUShort(self, value):
+    def writeUShort(self, value, *, be=True):
         assert 0 <= value < 0x10000, value
-        self.items.append(struct.pack(">H", value))
+        self.items.append(struct.pack(">H" if be else "<H", value))
 
-    def writeUShortArray(self, values):
-        self.writeArray("H", values)
+    def writeUShortArray(self, values, *, be=True):
+        self.writeArray("H", values, be=be)
 
-    def writeULong(self, value):
-        self.items.append(struct.pack(">I", value))
+    def writeULong(self, value, *, be=True):
+        self.items.append(struct.pack(">I" if be else "<I", value))
 
-    def writeULongArray(self, values):
-        self.writeArray("I", values)
+    def writeULongArray(self, values, *, be=True):
+        self.writeArray("I", values, be=be)
 
-    def writeUInt24(self, value):
+    def writeUInt24(self, value, *, be=True):
         assert 0 <= value < 0x1000000, value
-        b = struct.pack(">L", value)
-        self.items.append(b[1:])
+        b = struct.pack(">L" if be else "<L", value)
+        self.items.append(b[1:] if be else b[:3])
 
-    def writeUInt24Array(self, values):
+    def writeUInt24Array(self, values, *, be=True):
         for value in values:
-            self.writeUInt24(value)
+            self.writeUInt24(value, be=be)
 
     def writeTag(self, tag):
         tag = Tag(tag).tobytes()
         assert len(tag) == 4, tag
         self.items.append(tag)
 
-    def writeSubTable(self, subWriter, offsetSize, *, multiplier=1):
-        self.items.append(OffsetToWriter(subWriter, offsetSize, multiplier=multiplier))
+    def writeSubTable(self, subWriter, offsetSize, *, multiplier=1, be=True):
+        self.items.append(
+            OffsetToWriter(subWriter, offsetSize, multiplier=multiplier, be=be)
+        )
 
-    def writeCountReference(self, table, name, size=2, value=None):
-        ref = CountReference(table, name, size=size, value=value)
+    def writeCountReference(self, table, name, size=2, value=None, *, be=True):
+        ref = CountReference(table, name, size=size, value=value, be=be)
         self.items.append(ref)
         return ref
 
@@ -863,10 +870,11 @@ class OTTableWriter(object):
 class CountReference(object):
     """A reference to a Count value, not a count of references."""
 
-    def __init__(self, table, name, size=None, value=None):
+    def __init__(self, table, name, size=None, value=None, *, be=True):
         self.table = table
         self.name = name
         self.size = size
+        self.be = be
         if value is not None:
             self.setValue(value)
 
@@ -885,25 +893,24 @@ class CountReference(object):
         v = self.table[self.name]
         if v is None:
             v = 0
-        return {1: packUInt8, 2: packUShort, 4: packULong}[self.size](v)
+        return {1: packUInt8, 2: packUShort, 4: packULong}[self.size](v, be=self.be)
 
 
-def packUInt8(value):
-    return struct.pack(">B", value)
+def packUInt8(value, be=True):
+    return struct.pack(">B" if be else "<B", value)
 
 
-def packUShort(value):
-    return struct.pack(">H", value)
+def packUShort(value, be=True):
+    return struct.pack(">H" if be else "<H", value)
 
 
-def packULong(value):
-    assert 0 <= value < 0x100000000, value
-    return struct.pack(">I", value)
+def packULong(value, be=True):
+    return struct.pack(">I" if be else "<I", value)
 
 
-def packUInt24(value):
+def packUInt24(value, be=True):
     assert 0 <= value < 0x1000000, value
-    return struct.pack(">I", value)[1:]
+    return struct.pack(">I" if be else "<I", value)[1:]
 
 
 class BaseTable(object):
@@ -988,6 +995,10 @@ class BaseTable(object):
                 if hasattr(conv, "DEFAULT"):
                     # OptionalValue converters (e.g. VarIndex)
                     setattr(self, conv.name, conv.DEFAULT)
+
+    def decompileData(self, data, font, *, localState=None):
+        reader = OTTableReader(data, localState=localState)
+        self.decompile(reader, font)
 
     def decompile(self, reader, font):
         self.readFormat(reader)
@@ -1103,7 +1114,9 @@ class BaseTable(object):
                     writer.writeData(ref)
                     table[conv.name] = ref.getValue()
                 else:
-                    ref = writer.writeCountReference(table, conv.name, conv.staticSize)
+                    ref = writer.writeCountReference(
+                        table, conv.name, conv.staticSize, be=conv.be
+                    )
                     table[conv.name] = None
                 if conv.isPropagated:
                     writer[conv.name] = ref

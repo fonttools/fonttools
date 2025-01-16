@@ -72,6 +72,7 @@ def _moduleFinderHint():
     from . import _h_e_a_d
     from . import _h_h_e_a
     from . import _h_m_t_x
+    from . import _h_v_g_l
     from . import _k_e_r_n
     from . import _l_c_a_r
     from . import _l_o_c_a

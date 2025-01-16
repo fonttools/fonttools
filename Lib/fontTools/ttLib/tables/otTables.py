@@ -166,7 +166,7 @@ class VarComponent:
         self.transformVarIndex = NO_VARIATION_INDEX
         self.transform = DecomposedTransform()
 
-    def decompile(self, data, font, localState):
+    def decompileData(self, data, font, localState):
         i = 0
         self.flags, i = _read_uint32var(data, i)
         flags = self.flags
@@ -405,11 +405,11 @@ class VarCompositeGlyph:
     def __init__(self, components=None):
         self.components = components if components is not None else []
 
-    def decompile(self, data, font, localState):
+    def decompileData(self, data, font, localState):
         self.components = []
         while data:
             component = VarComponent()
-            data = component.decompile(data, font, localState)
+            data = component.decompileData(data, font, localState)
             self.components.append(component)
 
     def compile(self, font):

@@ -31,6 +31,7 @@ from .otTables import (
     ExtendMode as _ExtendMode,
     CompositeMode as _CompositeMode,
     NO_VARIATION_INDEX,
+    hvglPart,
 )
 from itertools import zip_longest, accumulate
 from functools import partial
@@ -61,6 +62,8 @@ def buildConverters(tableSpec, tableNamespace):
                 "uint8": ComputedUInt8,
                 "uint16": ComputedUShort,
                 "uint32": ComputedULong,
+                "uint16le": partial(ComputedUShort, be=False),
+                "uint32le": partial(ComputedULong, be=False),
             }[tp]
         elif name == "SubTable":
             converterClass = SubTable
@@ -141,6 +144,7 @@ class BaseConverter(object):
             "BaseGlyphRecordCount",
             "LayerRecordCount",
             "AxisIndicesList",
+            "PartsCount",
         ]
         self.description = description
 
@@ -214,6 +218,13 @@ class BaseConverter(object):
 
 
 class SimpleValue(BaseConverter):
+    be = True
+
+    def __init__(self, *args, **kwargs):
+        if "be" in kwargs:
+            self.be = kwargs.pop("be")
+        super().__init__(*args, **kwargs)
+
     @staticmethod
     def toString(value):
         return value
@@ -255,32 +266,32 @@ class Long(IntValue):
     staticSize = 4
 
     def read(self, reader, font, tableDict):
-        return reader.readLong()
+        return reader.readLong(be=self.be)
 
     def readArray(self, reader, font, tableDict, count):
-        return reader.readLongArray(count)
+        return reader.readLongArray(count, be=self.be)
 
     def write(self, writer, font, tableDict, value, repeatIndex=None):
-        writer.writeLong(value)
+        writer.writeLong(value, be=self.be)
 
     def writeArray(self, writer, font, tableDict, values):
-        writer.writeLongArray(values)
+        writer.writeLongArray(values, be=self.be)
 
 
 class ULong(IntValue):
     staticSize = 4
 
     def read(self, reader, font, tableDict):
-        return reader.readULong()
+        return reader.readULong(be=self.be)
 
     def readArray(self, reader, font, tableDict, count):
-        return reader.readULongArray(count)
+        return reader.readULongArray(count, be=self.be)
 
     def write(self, writer, font, tableDict, value, repeatIndex=None):
-        writer.writeULong(value)
+        writer.writeULong(value, be=self.be)
 
     def writeArray(self, writer, font, tableDict, values):
-        writer.writeULongArray(values)
+        writer.writeULongArray(values, be=self.be)
 
 
 class Flags32(ULong):
@@ -297,32 +308,32 @@ class Short(IntValue):
     staticSize = 2
 
     def read(self, reader, font, tableDict):
-        return reader.readShort()
+        return reader.readShort(be=self.be)
 
     def readArray(self, reader, font, tableDict, count):
-        return reader.readShortArray(count)
+        return reader.readShortArray(count, be=self.be)
 
     def write(self, writer, font, tableDict, value, repeatIndex=None):
-        writer.writeShort(value)
+        writer.writeShort(value, be=self.be)
 
     def writeArray(self, writer, font, tableDict, values):
-        writer.writeShortArray(values)
+        writer.writeShortArray(values, be=self.be)
 
 
 class UShort(IntValue):
     staticSize = 2
 
     def read(self, reader, font, tableDict):
-        return reader.readUShort()
+        return reader.readUShort(be=self.be)
 
     def readArray(self, reader, font, tableDict, count):
-        return reader.readUShortArray(count)
+        return reader.readUShortArray(count, be=self.be)
 
     def write(self, writer, font, tableDict, value, repeatIndex=None):
-        writer.writeUShort(value)
+        writer.writeUShort(value, be=self.be)
 
     def writeArray(self, writer, font, tableDict, values):
-        writer.writeUShortArray(values)
+        writer.writeUShortArray(values, be=self.be)
 
 
 class Int8(IntValue):
@@ -361,10 +372,10 @@ class UInt24(IntValue):
     staticSize = 3
 
     def read(self, reader, font, tableDict):
-        return reader.readUInt24()
+        return reader.readUInt24(be=self.be)
 
     def write(self, writer, font, tableDict, value, repeatIndex=None):
-        writer.writeUInt24(value)
+        writer.writeUInt24(value, be=self.be)
 
 
 class ComputedInt(IntValue):
@@ -402,17 +413,19 @@ class GlyphID(SimpleValue):
 
     def readArray(self, reader, font, tableDict, count):
         return font.getGlyphNameMany(
-            reader.readArray(self.typecode, self.staticSize, count)
+            reader.readArray(self.typecode, self.staticSize, count, be=self.be)
         )
 
     def read(self, reader, font, tableDict):
-        return font.getGlyphName(reader.readValue(self.typecode, self.staticSize))
+        return font.getGlyphName(
+            reader.readValue(self.typecode, self.staticSize, be=self.be)
+        )
 
     def writeArray(self, writer, font, tableDict, values):
-        writer.writeArray(self.typecode, font.getGlyphIDMany(values))
+        writer.writeArray(self.typecode, font.getGlyphIDMany(values), be=self.be)
 
     def write(self, writer, font, tableDict, value, repeatIndex=None):
-        writer.writeValue(self.typecode, font.getGlyphID(value))
+        writer.writeValue(self.typecode, font.getGlyphID(value), be=self.be)
 
 
 class GlyphID32(GlyphID):
@@ -543,12 +556,12 @@ class Version(SimpleValue):
     staticSize = 4
 
     def read(self, reader, font, tableDict):
-        value = reader.readLong()
+        value = reader.readLong(be=self.be)
         return value
 
     def write(self, writer, font, tableDict, value, repeatIndex=None):
         value = fi2ve(value)
-        writer.writeLong(value)
+        writer.writeLong(value, be=self.be)
 
     @staticmethod
     def fromString(value):
@@ -696,6 +709,7 @@ class TableBase(Struct):
     staticSize = NotImplemented
     alignment = 1
     multiplier = 1
+    be = True
 
     def __init__(self, *args, **kwargs):
         if "staticSize" in kwargs:
@@ -704,13 +718,22 @@ class TableBase(Struct):
             self.staticSize = kwargs.pop("alignment")
         if "multiplier" in kwargs:
             self.staticSize = kwargs.pop("multiplier")
+        if "be" in kwargs:
+            self.be = kwargs.pop("be")
         super().__init__(*args, **kwargs)
 
     def readOffset(self, reader):
-        return int.from_bytes(reader.readData(self.staticSize), "big") * self.multiplier
+        return (
+            int.from_bytes(
+                reader.readData(self.staticSize), "big" if self.be else "little"
+            )
+            * self.multiplier
+        )
 
     def writeNullOffset(self, writer):
-        writer.writeData(int.to_bytes(0, self.staticSize, "big"))
+        writer.writeData(
+            int.to_bytes(0, self.staticSize, "big" if self.be else "little")
+        )
 
     def read(self, reader, font, tableDict):
         offset = self.readOffset(reader)
@@ -737,6 +760,7 @@ class TableBase(Struct):
                 subWriter,
                 offsetSize=self.staticSize,
                 multiplier=self.multiplier,
+                be=self.be,
             )
             value.compile(subWriter, font)
 
@@ -1834,6 +1858,7 @@ class TupleValues:
 
 class IndexBase(BaseConverter):
     offSize = None
+    startOffset = 0
     alignment = 1
 
     def __init__(
@@ -1859,7 +1884,7 @@ class IndexBase(BaseConverter):
         count = self.getCount(reader)
         if count == 0:
             return []
-        offSize = self.getOffSize(reader)
+        offSize = self.getOffSize(reader) if self.offSize is None else self.offSize
 
         def getReadArray(reader, offSize):
             return {
@@ -1876,7 +1901,9 @@ class IndexBase(BaseConverter):
             offsets = readArray(count + 1)
             items = []
             lastOffset = offsets.pop(0)
-            reader.readData(lastOffset - 1)  # In case first offset is not 1
+            reader.readData(
+                lastOffset - self.startOffset
+            )  # In case first offset is not 1
 
             for offset in offsets:
                 assert lastOffset <= offset
@@ -1884,7 +1911,7 @@ class IndexBase(BaseConverter):
 
                 if self._itemClass is not None:
                     obj = self._itemClass()
-                    obj.decompile(item, font, reader.localState)
+                    obj.decompileData(item, font, reader.localState)
                     item = obj
                 elif self._converter is not None:
                     item = self._converter.read(item, font)
@@ -1897,7 +1924,7 @@ class IndexBase(BaseConverter):
             def get_read_item():
                 reader_copy = reader.copy()
                 offset_pos = reader.pos
-                data_pos = offset_pos + (count + 1) * offSize - 1
+                data_pos = offset_pos + (count + 1) * offSize - self.startOffset
                 readArray = getReadArray(reader_copy, offSize)
 
                 def read_item(i):
@@ -1908,7 +1935,7 @@ class IndexBase(BaseConverter):
 
                     if self._itemClass is not None:
                         obj = self._itemClass()
-                        obj.decompile(item, font, reader_copy.localState)
+                        obj.decompileData(item, font, localState=reader_copy.localState)
                         item = obj
                     elif self._converter is not None:
                         item = self._converter.read(item, font)
@@ -1943,7 +1970,7 @@ class IndexBase(BaseConverter):
             items = [pad(item, self.alignment) for item in items]
 
         offsets = [len(item) for item in items]
-        offsets = list(accumulate(offsets, initial=1))
+        offsets = list(accumulate(offsets, initial=self.startOffset))
 
         lastOffset = offsets[-1]
         if self.offSize is not None:
@@ -1995,6 +2022,8 @@ class IndexBase(BaseConverter):
 
 
 class CFF2Index(IndexBase):
+    startOffset = 1
+
     def getCount(self, reader):
         return reader.readULong()
 
@@ -2006,6 +2035,16 @@ class CFF2Index(IndexBase):
 
     def setOffSize(self, writer, offSize):
         writer.writeUInt8(offSize)
+
+
+class hvglIndex(IndexBase):
+    offSize = 4
+
+    def getCount(self, reader):
+        return reader["PartsCount"]
+
+    def setCount(self, writer, count):
+        writer["PartsCount"] = count
 
 
 class LookupFlag(UShort):
@@ -2056,11 +2095,16 @@ converterMapping = {
     # type		class
     "int8": Int8,
     "int16": Short,
+    "int16le": partial(Short, be=False),
     "int32": Long,
+    "int32le": partial(Long, be=False),
     "uint8": UInt8,
     "uint16": UShort,
+    "uint16le": partial(UShort, be=False),
     "uint24": UInt24,
+    "uint24le": partial(UInt24, be=False),
     "uint32": ULong,
+    "uint32le": partial(ULong, be=False),
     "char64": Char64,
     "Flags32": Flags32,
     "VarIndex": VarIndex,
@@ -2078,6 +2122,9 @@ converterMapping = {
     "Offset": Table16,
     "LOffset": Table32,
     "Offset24": Table24,
+    "OffsetLE": partial(Table16, be=False),
+    "LOffsetLE": partial(Table32, be=False),
+    "LOffset24LE": partial(Table24, be=False),
     "ValueRecord": ValueRecord,
     "DeltaValue": DeltaValue,
     "VarIdxMapValue": VarIdxMapValue,
@@ -2102,4 +2149,9 @@ converterMapping = {
     "OffsetTo": lambda C: partial(Table16, tableClass=C),
     "LOffsetTo": lambda C: partial(Table32, tableClass=C),
     "LOffset24To": lambda C: partial(Table24, tableClass=C),
+    "OffsetToLE": lambda C: partial(Table16, tableClass=C, be=False),
+    "LOffsetToLE": lambda C: partial(Table32, tableClass=C, be=False),
+    "LOffset24ToLE": lambda C: partial(Table24, tableClass=C, be=False),
+    # hvgl
+    "hvglPartsIndex": partial(hvglIndex, itemClass=hvglPart),
 }
