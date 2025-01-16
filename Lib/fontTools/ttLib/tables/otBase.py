@@ -1276,10 +1276,7 @@ class FormatSwitchingBaseTable(BaseTable):
         return self.convertersByName[self.Format][name]
 
     def readFormat(self, reader):
-        try:
-            self.Format = reader.readUShort(be=self.be)
-        except struct.error:
-            self.Format = None
+        self.Format = reader.readUShort(be=self.be)
 
     def writeFormat(self, writer):
         writer.writeUShort(self.Format, be=self.be)

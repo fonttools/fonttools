@@ -218,7 +218,6 @@ class BaseConverter(object):
 
 
 class Align(BaseConverter):
-
     def __init__(self, *args, **kwargs):
         self.alignment = kwargs.pop("alignment")
         super().__init__(*args, **kwargs)
