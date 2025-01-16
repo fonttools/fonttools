@@ -6399,15 +6399,23 @@ otData = [
     ),
     # `hvgl` table
     (
-        "hvglPartFormat0",
+        "hvglPartFormat0", # Shape
         [
             ("uint16le", "Flags", None, None, "0x0000 for shape"),
-            ("uint16le", "axisCount", None, None, "Number of axes"),
-            ("uint16le", "pathCount", None, None, "Number of paths"),
-            ("uint16le", "segmentCount", None, None, "Total segment count for shape"),
-            ("uint16le", "segmentsPerPath", "pathCount", 0, "Sizes of paths"),
-            ("uint8", "blendTypes", "segmentCount", 0, "Blend types for all segments"),
+            ("uint16le", "AxisCount", None, None, "Number of axes"),
+            ("uint16le", "PathCount", None, None, "Number of paths"),
+            ("uint16le", "SegmentCount", None, None, "Total segment count for shape"),
+            ("uint16le", "SegmentsPerPath", "PathCount", 0, "Sizes of paths"),
+            ("uint8", "BlendTypes", "SegmentCount", 0, "Blend types for all segments"),
             ("Align(8)", "Padding", None, None, "Pad to Float64 alignment"),
+        ],
+    ),
+    (
+        "hvglPartFormat1", # Composite
+        [
+            ("uint16le", "Flags", None, None, "0x0001 for composite"),
+            ("uint16le", "AxisCount", None, None, "Number of axes"),
+            ("uint16le", "PartCount", None, None, "Number of subparts"),
         ],
     ),
     (
@@ -6442,7 +6450,7 @@ otData = [
                 "Number of all shapes and composites",
             ),
             ("LOffsetToLE(hvglParts)", "Parts", None, None, "Parts"),
-            ("uint32le", "numGlyphs", None, None, "Number of externally visible parts"),
+            ("uint32le", "NumGlyphs", None, None, "Number of externally visible parts"),
             ("uint32le", "Reserved", None, None, "Reserved; currently zero"),
         ],
     ),
