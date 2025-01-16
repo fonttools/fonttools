@@ -6421,7 +6421,7 @@ otData = [
     (
         "hvglParts",
         [
-            ("hvglPartsIndex", "Part", None, None, "Parts"),
+            ("hvglPartsIndex", "Part", "", None, "Parts"),
         ],
     ),
     (
