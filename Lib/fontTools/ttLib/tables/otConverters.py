@@ -726,7 +726,7 @@ class Table(Struct):
             value.compile(subWriter, font)
 
 
-class LTable(Table):
+class Table32(Table):
     staticSize = 4
 
 
@@ -756,7 +756,7 @@ class SubTable(Table):
         super(SubTable, self).xmlWrite(xmlWriter, font, value, None, attrs)
 
 
-class ExtSubTable(LTable, SubTable):
+class ExtSubTable(Table32, SubTable):
     def write(self, writer, font, tableDict, value, repeatIndex=None):
         writer.Extension = True  # actually, mere presence of the field flags it as an Ext Subtable writer.
         Table.write(self, writer, font, tableDict, value, repeatIndex)
@@ -2027,7 +2027,7 @@ converterMapping = {
     "BiasedAngle": BiasedAngle,
     "struct": Struct,
     "Offset": Table,
-    "LOffset": LTable,
+    "LOffset": Table32,
     "Offset24": Table24,
     "ValueRecord": ValueRecord,
     "DeltaValue": DeltaValue,
@@ -2051,6 +2051,6 @@ converterMapping = {
     "AATLookupWithDataOffset": lambda C: partial(AATLookupWithDataOffset, tableClass=C),
     "STXHeader": lambda C: partial(STXHeader, tableClass=C),
     "OffsetTo": lambda C: partial(Table, tableClass=C),
-    "LOffsetTo": lambda C: partial(LTable, tableClass=C),
+    "LOffsetTo": lambda C: partial(Table32, tableClass=C),
     "LOffset24To": lambda C: partial(Table24, tableClass=C),
 }
