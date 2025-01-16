@@ -413,7 +413,7 @@ class VarCompositeGlyph:
             data = component.decompileData(data, font, localState)
             self.components.append(component)
 
-    def compile(self, font):
+    def compileData(self, font):
         data = []
         for component in self.components:
             data.append(component.compile(font))
@@ -428,12 +428,10 @@ class VarCompositeGlyph:
         xmlWriter.newline()
 
     def fromXML(self, name, attrs, content, font):
-        content = [c for c in content if isinstance(c, tuple)]
-        for name, attrs, content in content:
-            assert name == "VarComponent"
-            component = VarComponent()
-            component.fromXML(name, attrs, content, font)
-            self.components.append(component)
+        assert name == "VarComponent"
+        component = VarComponent()
+        component.fromXML(name, attrs, content, font)
+        self.components.append(component)
 
 
 class AATStateTable(object):

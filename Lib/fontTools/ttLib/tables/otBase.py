@@ -302,11 +302,11 @@ class OTTableReader(object):
         self.pos = newpos
         return value.tolist()
 
-    def readInt8(self):
+    def readInt8(self, *, be=None):
         return self.readValue("b", staticSize=1)
 
-    def readInt8Array(self, count):
-        return self.readArray("b", staticSize=1, count=count, be=None)
+    def readInt8Array(self, count, *, be=None):
+        return self.readArray("b", staticSize=1, count=count, be=be)
 
     def readShort(self, *, be=True):
         return self.readValue("h", staticSize=2, be=be)
@@ -320,11 +320,11 @@ class OTTableReader(object):
     def readLongArray(self, count, *, be=True):
         return self.readArray("i", staticSize=4, count=count, be=be)
 
-    def readUInt8(self):
+    def readUInt8(self, *, be=None):
         return self.readValue("B", staticSize=1)
 
-    def readUInt8Array(self, count):
-        return self.readArray("B", staticSize=1, count=count, be=None)
+    def readUInt8Array(self, count, *, be=None):
+        return self.readArray("B", staticSize=1, count=count, be=be)
 
     def readUShort(self, *, be=True):
         return self.readValue("H", staticSize=2, be=be)
@@ -422,7 +422,6 @@ class OTTableWriter(object):
 
     # assembler interface
 
-    @staticmethod
     def getPadding(self, pos):
         align = self.alignment
         return (align - (pos % align)) % align
@@ -761,12 +760,12 @@ class OTTableWriter(object):
             a.byteswap()
         self.items.append(a.tobytes())
 
-    def writeInt8(self, value):
+    def writeInt8(self, value, *, be=None):
         assert -128 <= value < 128, value
         self.items.append(struct.pack("b", value))
 
-    def writeInt8Array(self, values):
-        self.writeArray("b", values, be=None)
+    def writeInt8Array(self, values, *, be=None):
+        self.writeArray("b", values, be=be)
 
     def writeShort(self, value, *, be=True):
         assert -32768 <= value < 32768, value
@@ -781,12 +780,12 @@ class OTTableWriter(object):
     def writeLongArray(self, values, *, be=True):
         self.writeArray("i", values, be=be)
 
-    def writeUInt8(self, value):
+    def writeUInt8(self, value, *, be=None):
         assert 0 <= value < 256, value
         self.items.append(struct.pack("B", value))
 
-    def writeUInt8Array(self, values):
-        self.writeArray("B", values, be=None)
+    def writeUInt8Array(self, values, *, be=None):
+        self.writeArray("B", values, be=be)
 
     def writeUShort(self, value, *, be=True):
         assert 0 <= value < 0x10000, value
@@ -1042,6 +1041,11 @@ class BaseTable(object):
             self.__dict__.update(table)
 
         del self.__rawTable  # succeeded, get rid of debugging info
+
+    def compileData(self, font):
+        writer = OTTableWriter()
+        self.compile(writer, font)
+        return writer.getAllData()
 
     def compile(self, writer, font):
         self.ensureDecompiled()

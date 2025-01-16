@@ -1995,7 +1995,7 @@ class IndexBase(BaseConverter):
             return
 
         if self._itemClass is not None:
-            items = [item.compile(font) for item in items]
+            items = [item.compileData(font) for item in items]
         elif self._converter is not None:
             items = [
                 self._converter.write(writer, font, tableDict, item, i)
@@ -2044,7 +2044,8 @@ class IndexBase(BaseConverter):
             obj = self._itemClass()
             if "Format" in attrs:
                 obj.Format = int(attrs["Format"])
-            obj.fromXML(None, attrs, content, font)
+            for eName, eAttrs, eContent in filter(istuple, content):
+                obj.fromXML(eName, eAttrs, eContent, font)
             return obj
         elif self._converter is not None:
             return self._converter.xmlRead(attrs, content, font)
