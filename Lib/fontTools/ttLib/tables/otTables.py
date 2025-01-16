@@ -2137,10 +2137,6 @@ class Paint(getFormatSwitchingBaseTableClass("uint8")):
         return cb
 
 
-class hvglPart(FormatSwitchingBaseTableLE):
-    pass
-
-
 # For each subtable format there is a class. However, we don't really distinguish
 # between "field name" and "format name": often these are the same. Yet there's
 # a whole bunch of fields with different names. The following dict is a mapping
@@ -2607,7 +2603,7 @@ def _buildClasses():
             name = m.group(1)
             # the first row of a format-switching otData table describes the Format;
             # the first column defines the type of the Format field.
-            # Currently this can be either 'uint16' or 'uint8'.
+            # Currently this can be either 'uint16', 'uint16le', or 'uint8'.
             formatType = table[0][0]
             baseClass = getFormatSwitchingBaseTableClass(formatType)
         if name not in namespace:

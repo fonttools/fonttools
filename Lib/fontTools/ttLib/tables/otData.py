@@ -6399,7 +6399,7 @@ otData = [
     ),
     # `hvgl` table
     (
-        "hvglPartFormat0", # Shape
+        "hvglPartFormat0",  # Shape
         [
             ("uint16le", "Flags", None, None, "0x0000 for shape"),
             ("uint16le", "AxisCount", None, None, "Number of axes"),
@@ -6411,7 +6411,7 @@ otData = [
         ],
     ),
     (
-        "hvglPartFormat1", # Composite
+        "hvglPartFormat1",  # Composite
         [
             ("uint16le", "Flags", None, None, "0x0001 for composite"),
             ("uint16le", "AxisCount", None, None, "Number of axes"),
