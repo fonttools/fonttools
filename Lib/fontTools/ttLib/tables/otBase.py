@@ -467,14 +467,10 @@ class OTTableWriter(object):
     def getDataForHarfbuzz(self):
         """Assemble the data for this writer/table with all offset field set to 0"""
         items = list(self.items)
-        packFuncs = {2: packUShort, 3: packUInt24, 4: packULong}
         for i, item in enumerate(items):
             if isinstance(item, OffsetToWriter):
                 # Offset value is not needed in harfbuzz repacker, so setting offset to 0 to avoid overflow here
-                if item.offsetSize in packFuncs:
-                    items[i] = packFuncs[item.offsetSize](0)
-                else:
-                    raise ValueError(item.offsetSize)
+                items[i] = int.to_bytes(0, item.offsetSize, "big")
 
         return bytesjoin(items)
 
