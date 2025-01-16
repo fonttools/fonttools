@@ -427,7 +427,7 @@ class OTTableWriter(object):
         for item in self.items:
             if hasattr(item, "getCountData"):
                 l += item.size
-            elif hasattr(item, "subWriter"):
+            elif isinstance(item, OffsetToWriter):
                 l += item.offsetSize
             else:
                 l = l + len(item)
@@ -441,7 +441,7 @@ class OTTableWriter(object):
         for i in range(numItems):
             item = items[i]
 
-            if hasattr(item, "subWriter"):
+            if isinstance(item, OffsetToWriter):
                 if item.offsetSize == 4:
                     items[i] = packULong(item.subWriter.pos - pos)
                 elif item.offsetSize == 2:
@@ -466,7 +466,7 @@ class OTTableWriter(object):
         items = list(self.items)
         packFuncs = {2: packUShort, 3: packUInt24, 4: packULong}
         for i, item in enumerate(items):
-            if hasattr(item, "subWriter"):
+            if isinstance(item, OffsetToWriter):
                 # Offset value is not needed in harfbuzz repacker, so setting offset to 0 to avoid overflow here
                 if item.offsetSize in packFuncs:
                     items[i] = packFuncs[item.offsetSize](0)
@@ -512,7 +512,7 @@ class OTTableWriter(object):
             item = items[i]
             if hasattr(item, "getCountData"):
                 items[i] = item.getCountData()
-            elif hasattr(item, "subWriter"):
+            elif isinstance(item, OffsetToWriter):
                 item.subWriter._doneWriting(
                     internedTables, shareExtension=shareExtension
                 )
@@ -560,7 +560,7 @@ class OTTableWriter(object):
             for i in range(numItems):
                 item = self.items[i]
                 if (
-                    hasattr(item, "subWriter")
+                    isinstance(item, OffsetToWriter)
                     and getattr(item.subWriter, "name", None) == "Coverage"
                 ):
                     sortCoverageLast = True
@@ -573,7 +573,7 @@ class OTTableWriter(object):
 
         for i in iRange:
             item = self.items[i]
-            if not hasattr(item, "subWriter"):
+            if not isinstance(item, OffsetToWriter):
                 continue
 
             if (
@@ -620,7 +620,7 @@ class OTTableWriter(object):
         child_idx = 0
         offset_pos = 0
         for i, item in enumerate(self.items):
-            if hasattr(item, "subWriter"):
+            if isinstance(item, OffsetToWriter):
                 pos = offset_pos
             elif hasattr(item, "getCountData"):
                 offset_pos += item.size
