@@ -1857,9 +1857,11 @@ class TupleValues:
 
 
 class IndexBase(BaseConverter):
+    countSize = None
     offSize = None
     startOffset = 0
     alignment = 1
+    be = True
 
     def __init__(
         self,
@@ -1881,6 +1883,7 @@ class IndexBase(BaseConverter):
         )
 
     def read(self, reader, font, tableDict):
+        init_pos = reader.pos
         count = self.getCount(reader)
         if count == 0:
             return []
@@ -1898,12 +1901,16 @@ class IndexBase(BaseConverter):
 
         lazy = font.lazy is not False and count > 8
         if not lazy:
-            offsets = readArray(count + 1)
+            offsets = readArray(count + 1, be=self.be)
+            startOffset = (
+                self.startOffset
+                if self.startOffset is not None
+                else reader.pos - init_pos
+            )
+
             items = []
             lastOffset = offsets.pop(0)
-            reader.readData(
-                lastOffset - self.startOffset
-            )  # In case first offset is not 1
+            reader.readData(lastOffset - startOffset)
 
             for offset in offsets:
                 assert lastOffset <= offset
@@ -1911,7 +1918,7 @@ class IndexBase(BaseConverter):
 
                 if self._itemClass is not None:
                     obj = self._itemClass()
-                    obj.decompileData(item, font, reader.localState)
+                    obj.decompileData(item, font, localState=reader.localState)
                     item = obj
                 elif self._converter is not None:
                     item = self._converter.read(item, font)
@@ -1924,12 +1931,15 @@ class IndexBase(BaseConverter):
             def get_read_item():
                 reader_copy = reader.copy()
                 offset_pos = reader.pos
-                data_pos = offset_pos + (count + 1) * offSize - self.startOffset
+                if self.startOffset is not None:
+                    data_pos = offset_pos + (count + 1) * offSize - self.startOffset
+                else:
+                    data_pos = init_pos
                 readArray = getReadArray(reader_copy, offSize)
 
                 def read_item(i):
                     reader_copy.seek(offset_pos + i * offSize)
-                    offsets = readArray(2)
+                    offsets = readArray(2, be=self.be)
                     reader_copy.seek(data_pos + offsets[0])
                     item = reader_copy.readData(offsets[1] - offsets[0])
 
@@ -1969,8 +1979,13 @@ class IndexBase(BaseConverter):
         if self.alignment > 1:
             items = [pad(item, self.alignment) for item in items]
 
+        startOffset = self.startOffset
+        if startOffset is None:
+            assert self.offSize is not None
+            startOffset = self.countSize + (len(items) + 1) * self.offSize
+
         offsets = [len(item) for item in items]
-        offsets = list(accumulate(offsets, initial=self.startOffset))
+        offsets = list(accumulate(offsets, initial=startOffset))
 
         lastOffset = offsets[-1]
         if self.offSize is not None:
@@ -1994,7 +2009,7 @@ class IndexBase(BaseConverter):
             4: writer.writeULongArray,
         }[offSize]
 
-        writeArray(offsets)
+        writeArray(offsets, be=self.be)
         for item in items:
             writer.writeData(item)
 
@@ -2022,6 +2037,7 @@ class IndexBase(BaseConverter):
 
 
 class CFF2Index(IndexBase):
+    countSize = 4
     startOffset = 1
 
     def getCount(self, reader):
@@ -2038,7 +2054,10 @@ class CFF2Index(IndexBase):
 
 
 class hvglIndex(IndexBase):
+    countSize = 0
+    startOffset = None
     offSize = 4
+    be = False
 
     def getCount(self, reader):
         return reader["PartsCount"]

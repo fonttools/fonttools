@@ -24,6 +24,7 @@ from fontTools.pens.transformPen import TransformPen
 from .otBase import (
     BaseTable,
     FormatSwitchingBaseTable,
+    FormatSwitchingBaseTableLE,
     ValueRecord,
     CountReference,
     getFormatSwitchingBaseTableClass,
@@ -2134,6 +2135,10 @@ class Paint(getFormatSwitchingBaseTableClass("uint8")):
         cb.Format = int(ClipBoxFormat.Static)
         cb.xMin, cb.yMin, cb.xMax, cb.yMax = quantizeRect(pen.bounds, quantization)
         return cb
+
+
+class hvglPart(FormatSwitchingBaseTableLE):
+    pass
 
 
 # For each subtable format there is a class. However, we don't really distinguish

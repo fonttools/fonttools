@@ -6399,8 +6399,11 @@ otData = [
     ),
     # `hvgl` table
     (
-        "hvglPart",
-        [],
+        "hvglPartFormat0",
+        [
+            ("uint16le", "Flags", None, None, "0x0000 for shape"),
+            ("uint16le", "axisCount", None, None, "Number of axes"),
+        ],
     ),
     (
         "hvglParts",

@@ -1253,6 +1253,8 @@ class FormatSwitchingBaseTable(BaseTable):
     """Minor specialization of BaseTable, for tables that have multiple
     formats, eg. CoverageFormat1 vs. CoverageFormat2."""
 
+    be = True
+
     @classmethod
     def getRecordSize(cls, reader):
         return NotImplemented
@@ -1273,10 +1275,13 @@ class FormatSwitchingBaseTable(BaseTable):
         return self.convertersByName[self.Format][name]
 
     def readFormat(self, reader):
-        self.Format = reader.readUShort()
+        try:
+            self.Format = reader.readUShort(be=self.be)
+        except struct.error:
+            self.Format = None
 
     def writeFormat(self, writer):
-        writer.writeUShort(self.Format)
+        writer.writeUShort(self.Format, be=self.be)
 
     def toXML(self, xmlWriter, font, attrs=None, name=None):
         BaseTable.toXML(self, xmlWriter, font, attrs, name)
@@ -1293,9 +1298,14 @@ class UInt8FormatSwitchingBaseTable(FormatSwitchingBaseTable):
         writer.writeUInt8(self.Format)
 
 
+class FormatSwitchingBaseTableLE(FormatSwitchingBaseTable):
+    be = False
+
+
 formatSwitchingBaseTables = {
-    "uint16": FormatSwitchingBaseTable,
     "uint8": UInt8FormatSwitchingBaseTable,
+    "uint16": FormatSwitchingBaseTable,
+    "uint16le": FormatSwitchingBaseTableLE,
 }
 
 
