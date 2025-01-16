@@ -6403,6 +6403,11 @@ otData = [
         [
             ("uint16le", "Flags", None, None, "0x0000 for shape"),
             ("uint16le", "axisCount", None, None, "Number of axes"),
+            ("uint16le", "pathCount", None, None, "Number of paths"),
+            ("uint16le", "segmentCount", None, None, "Total segment count for shape"),
+            ("uint16le", "segmentsPerPath", "pathCount", 0, "Sizes of paths"),
+            ("uint8", "blendTypes", "segmentCount", 0, "Blend types for all segments"),
+            ("Align(8)", "Padding", None, None, "Pad to Float64 alignment"),
         ],
     ),
     (

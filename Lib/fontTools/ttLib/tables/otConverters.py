@@ -217,6 +217,33 @@ class BaseConverter(object):
         return int(m.group(1))
 
 
+class Align(BaseConverter):
+
+    def __init__(self, *args, **kwargs):
+        self.alignment = kwargs.pop("alignment")
+        super().__init__(*args, **kwargs)
+
+    def getPadding(self, pos):
+        align = self.alignment
+        return (align - (pos % align)) % align
+
+    def read(self, reader, font, tableDict):
+        pos = reader.pos - reader.offset
+        padding = self.getPadding(pos)
+        reader.seek(pos + padding)
+
+    def write(self, writer, font, tableDict, value, repeatIndex=None):
+        pos = writer.getDataLength()
+        padding = self.getPadding(pos)
+        writer.writeData(b"\0" * padding)
+
+    def xmlRead(self, attrs, content, font):
+        return None
+
+    def xmlWrite(self, xmlWriter, font, value, name, attrs):
+        pass
+
+
 class SimpleValue(BaseConverter):
     be = True
 
@@ -2171,6 +2198,7 @@ converterMapping = {
     "OffsetToLE": lambda C: partial(Table16, tableClass=C, be=False),
     "LOffsetToLE": lambda C: partial(Table32, tableClass=C, be=False),
     "LOffset24ToLE": lambda C: partial(Table24, tableClass=C, be=False),
+    "Align": lambda alignment: partial(Align, alignment=alignment),
     # hvgl
     "hvglPartsIndex": partial(hvglIndex, itemClass=hvglPart),
 }

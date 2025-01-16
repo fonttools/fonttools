@@ -422,6 +422,7 @@ class OTTableWriter(object):
 
     # assembler interface
 
+    @staticmethod
     def getPadding(self, pos):
         align = self.alignment
         return (align - (pos % align)) % align
