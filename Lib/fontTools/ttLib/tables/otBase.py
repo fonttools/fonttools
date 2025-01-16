@@ -375,11 +375,9 @@ class OTTableReader(object):
 
 
 class OffsetToWriter(object):
-    def __init__(self, subWriter, offsetSize, *, alignment=1, multiplier=1):
+    def __init__(self, subWriter, offsetSize, *, multiplier=1):
         self.subWriter = subWriter
         self.offsetSize = offsetSize
-        assert alignment == 1, "Alignment not implemented"
-        self.alignment = alignment
         self.multiplier = multiplier
 
     def __eq__(self, other):
@@ -388,23 +386,23 @@ class OffsetToWriter(object):
         return (
             self.subWriter == other.subWriter
             and self.offsetSize == other.offsetSize
-            and self.alignment == other.alignment
             and self.multiplier == other.multiplier
         )
 
     def __hash__(self):
         # only works after self._doneWriting() has been called
-        return hash((self.subWriter, self.offsetSize, self.alignment, self.multiplier))
+        return hash((self.subWriter, self.offsetSize, self.multiplier))
 
 
 class OTTableWriter(object):
     """Helper class to gather and assemble data for OpenType tables."""
 
-    def __init__(self, localState=None, tableTag=None):
+    def __init__(self, localState=None, tableTag=None, *, alignment=1):
         self.items = []
         self.pos = None
         self.localState = localState
         self.tableTag = tableTag
+        self.alignment = alignment
         self.parent = None
 
     def __setitem__(self, name, value):
@@ -419,6 +417,10 @@ class OTTableWriter(object):
         del self.localState[name]
 
     # assembler interface
+
+    def getPadding(self, pos):
+        align = self.alignment
+        return (align - (pos % align)) % align
 
     def getDataLength(self):
         """Return the length of this table in bytes, without subtables."""
@@ -635,7 +637,6 @@ class OTTableWriter(object):
             else:
                 child_idx = done[id(item.subWriter)]
 
-            assert item.alignment == 1, "Alignment not implemented"
             assert item.multiplier == 1, "Multiplier not implemented"
             real_edge = (pos, item.offsetSize, child_idx)
             real_links.append(real_edge)
@@ -670,6 +671,7 @@ class OTTableWriter(object):
         # subtable are needed before the actual data can be assembled.
         pos = 0
         for table in tables:
+            assert table.alignment == 1, "Alignment not implemented"
             table.pos = pos
             pos = pos + table.getDataLength()
 
@@ -698,31 +700,47 @@ class OTTableWriter(object):
         # subtable are needed before the actual data can be assembled.
         pos = 0
         for table in tables:
+            pad = table.getPadding(pos)
+            pos += pad
             table.pos = pos
             pos = pos + table.getDataLength()
 
         for table in extTables:
+            pad = table.getPadding(pos)
+            pos += pad
             table.pos = pos
             pos = pos + table.getDataLength()
 
+        pos = 0
         data = []
         for table in tables:
+            pad = table.getPadding(pos)
+            if pad:
+                data.append(bytes(pad))
+                pos += pad
             tableData = table.getData()
             data.append(tableData)
+            pos += len(tableData)
 
         for table in extTables:
+            pad = table.getPadding(pos)
+            if pad:
+                data.append(bytes(pad))
+                pos += pad
             tableData = table.getData()
             data.append(tableData)
+            pos += len(tableData)
 
         return bytesjoin(data)
 
     # interface for gathering data, as used by table.compile()
 
-    def getSubWriter(self):
-        subwriter = self.__class__(self.localState, self.tableTag)
+    def getSubWriter(self, *, alignment=1):
+        subwriter = self.__class__(self.localState, self.tableTag, alignment=alignment)
         subwriter.parent = (
             self  # because some subtables have idential values, we discard
         )
+
         # the duplicates under the getAllData method. Hence some
         # subtable writers can have more than one parent writer.
         # But we just care about first one right now.
@@ -791,12 +809,8 @@ class OTTableWriter(object):
         assert len(tag) == 4, tag
         self.items.append(tag)
 
-    def writeSubTable(self, subWriter, offsetSize, *, alignment=1, multiplier=1):
-        self.items.append(
-            OffsetToWriter(
-                subWriter, offsetSize, alignment=alignment, multiplier=multiplier
-            )
-        )
+    def writeSubTable(self, subWriter, offsetSize, *, multiplier=1):
+        self.items.append(OffsetToWriter(subWriter, offsetSize, multiplier=multiplier))
 
     def writeCountReference(self, table, name, size=2, value=None):
         ref = CountReference(table, name, size=size, value=value)

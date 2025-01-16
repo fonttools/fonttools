@@ -693,7 +693,6 @@ class StructWithLength(Struct):
 
 
 class TableBase(Struct):
-
     staticSize = NotImplemented
     alignment = 1
     multiplier = 1
@@ -730,14 +729,13 @@ class TableBase(Struct):
         if value is None:
             self.writeNullOffset(writer)
         else:
-            subWriter = writer.getSubWriter()
+            subWriter = writer.getSubWriter(alignment=self.alignment)
             subWriter.name = self.name
             if repeatIndex is not None:
                 subWriter.repeatIndex = repeatIndex
             writer.writeSubTable(
                 subWriter,
                 offsetSize=self.staticSize,
-                alignment=self.alignment,
                 multiplier=self.multiplier,
             )
             value.compile(subWriter, font)
@@ -1944,7 +1942,11 @@ class CFF2Index(BaseConverter):
         offSize = (
             1
             if lastOffset < 0x100
-            else 2 if lastOffset < 0x10000 else 3 if lastOffset < 0x1000000 else 4
+            else 2
+            if lastOffset < 0x10000
+            else 3
+            if lastOffset < 0x1000000
+            else 4
         )
         writer.writeUInt8(offSize)
 
