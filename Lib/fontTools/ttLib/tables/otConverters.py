@@ -146,6 +146,12 @@ class BaseConverter(object):
             "AxisIndicesList",
             "PartCount",
             "SegmentCount",
+            "SparseMasterAxisValueCount",
+            "SparseExtremumAxisValueCount",
+            "SparseMasterTranslationCount",
+            "SparseMasterRotationCount",
+            "SparseExtremumTranslationCount",
+            "SparseExtremumRotationCount",
         ]
         self.description = description
 
