@@ -6515,6 +6515,18 @@ otData = [
         ],
     ),
     (
+        "hvglExtremumAxisValueDeltas",
+        [
+            (
+                "float32le",
+                "ExtremumAxisValueDelta",
+                "SparseExtremumAxisValueCount",
+                0,
+                "Extremum axis value deltas",
+            ),
+        ],
+    ),
+    (
         "hvglPartFormat1",  # Composite
         [
             ("uint16le", "Flags", None, None, "0x0001 for composite"),
@@ -6596,7 +6608,14 @@ otData = [
                 "MasterAxisValueDeltas",
                 None,
                 None,
-                "Offset to master axis deltas/4",
+                "Offset to master axis value deltas/4",
+            ),
+            (
+                "Offset16Mul4ToLE(hvglExtremumAxisValueDeltas)",
+                "ExtremumAxisValueDeltas",
+                None,
+                None,
+                "Offset to extremum axis value deltas/4",
             ),
         ],
     ),
