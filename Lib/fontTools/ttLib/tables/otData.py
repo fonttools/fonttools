@@ -6598,6 +6598,39 @@ otData = [
         ],
     ),
     (
+        "hvglAllRotations",
+        [
+            (
+                "float32le",
+                "MasterRotationDelta",
+                "SparseMasterRotationCount",
+                0,
+                "Master rotation deltas",
+            ),
+            (
+                "float32le",
+                "ExtremumRotationDelta",
+                "SparseExtremumRotationCount",
+                0,
+                "Extremum rotation deltas",
+            ),
+            (
+                "hvglMatrixIndex",
+                "ExtremumRotationIndex",
+                "SparseExtremumRotationCount",
+                0,
+                "Extremum rotation indices",
+            ),
+            (
+                "uint16le",
+                "MasterRotationIndex",
+                "SparseMasterRotationCount",
+                0,
+                "Master rotation indices",
+            ),
+        ],
+    ),
+    (
         "hvglPartFormat1",  # Composite
         [
             ("uint16le", "Flags", None, None, "0x0001 for composite"),
@@ -6694,6 +6727,13 @@ otData = [
                 None,
                 None,
                 "Offset to all translations/4",
+            ),
+            (
+                "Offset16Mul4ToLE(hvglAllRotations)",
+                "AllRotations",
+                None,
+                None,
+                "Offset to all rotations/4",
             ),
         ],
     ),
