@@ -6473,7 +6473,7 @@ otData = [
     (
         "hvglSubParts",
         [
-            ("hvglSubPart", "SubPart", "PartCount", 0, "Immediate subparts"),
+            ("hvglSubPart", "SubPart", "SubPartCount", 0, "Immediate subparts"),
         ],
     ),
     (
@@ -6638,7 +6638,7 @@ otData = [
         [
             ("uint16le", "Flags", None, None, "0x0001 for composite"),
             ("uint16le", "AxisCount", None, None, "Number of axes"),
-            ("uint16le", "PartCount", None, None, "Number of direct subparts"),
+            ("uint16le", "SubPartCount", None, None, "Number of direct subparts"),
             ("uint16le", "TotalNumParts", None, None, "Number of nodes including root"),
             (
                 "uint16le",

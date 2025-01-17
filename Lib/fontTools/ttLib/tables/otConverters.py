@@ -146,6 +146,7 @@ class BaseConverter(object):
             "AxisIndicesList",
             "PartCount",
             "SegmentCount",
+            "SubPartCount",
             "SparseMasterAxisValueCount",
             "SparseExtremumAxisValueCount",
             "SparseMasterTranslationCount",
