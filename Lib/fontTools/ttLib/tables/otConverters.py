@@ -2138,7 +2138,7 @@ class hvglIndex(IndexBase):
         return reader["PartCount"]
 
     def setCount(self, writer, count):
-        writer["PartCount"] = count
+        writer["PartCount"].setValue(count)
 
 
 class LookupFlag(UShort):
