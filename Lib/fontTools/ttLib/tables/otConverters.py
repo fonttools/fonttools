@@ -780,9 +780,9 @@ class TableBase(Struct):
         if "staticSize" in kwargs:
             self.staticSize = kwargs.pop("staticSize")
         if "alignment" in kwargs:
-            self.staticSize = kwargs.pop("alignment")
+            self.alignment = kwargs.pop("alignment")
         if "multiplier" in kwargs:
-            self.staticSize = kwargs.pop("multiplier")
+            self.multiplier = kwargs.pop("multiplier")
         if "be" in kwargs:
             self.be = kwargs.pop("be")
         super().__init__(*args, **kwargs)
