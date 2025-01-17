@@ -6439,7 +6439,7 @@ otData = [
             ("uint16le", "SegmentCount", None, None, "Total segment count for shape"),
             ("uint16le", "SegmentCountPerPath", "PathCount", 0, "Sizes of paths"),
             ("uint8", "BlendTypes", "SegmentCount", 0, "Blend types for all segments"),
-            ("Align(8)", "Padding", None, None, "Pad to Float64 alignment"),
+            ("Align(8)", "Padding", None, None, "Pad to float64le alignment"),
             ("hvglCoordinates", "Master", None, None, "Master coordinate vector"),
             ("hvglDeltas", "Deltas", None, None, "Delta coordinate matrix"),
         ],
@@ -6500,6 +6500,7 @@ otData = [
                 0,
                 "Extremum row indices",
             ),
+            ("Align(4)", "Padding", None, None, "Pad to uint32le alignment"),
         ],
     ),
     (
@@ -6595,6 +6596,7 @@ otData = [
                 0,
                 "Master translation indices",
             ),
+            ("Align(4)", "Padding", None, None, "Pad to float32le alignment"),
         ],
     ),
     (
@@ -6628,6 +6630,7 @@ otData = [
                 0,
                 "Master rotation indices",
             ),
+            ("Align(4)", "Padding", None, None, "Pad to float32le alignment"),
         ],
     ),
     (

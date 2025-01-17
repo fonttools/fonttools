@@ -460,7 +460,10 @@ class OTTableWriter(object):
 
             if isinstance(item, OffsetToWriter):
                 offsetValue = item.subWriter.pos - pos
-                assert offsetValue % item.multiplier == 0, offsetValue
+                assert offsetValue % item.multiplier == 0, (
+                    offsetValue,
+                    item.multiplier,
+                )
                 offsetValue //= item.multiplier
 
                 if item.offsetSize == 4:
