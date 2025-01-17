@@ -1,13 +1,15 @@
-class Multiply:
-    def __init__(self, mult):
-        self.mult = mult
+class MulAdd:
+    def __init__(self, mul, add):
+        self.mul = mul
+        self.add = add
 
     def __radd__(self, value):
-        return value * self.mult
+        return value * self.mul + self.add
 
     def __rsub__(self, value):
-        assert value % self.mult == 0, (value, self.mult)
-        return value // self.mult
+        value -= self.add
+        assert value % self.mul == 0, (value, self.mul)
+        return value // self.mul
 
 
 otData = [
@@ -6413,7 +6415,7 @@ otData = [
     (
         "hvglCoordinates",
         [
-            ("float64le", "Coords", "SegmentCount", Multiply(4), "Coordinate data"),
+            ("float64le", "Coords", "SegmentCount", MulAdd(4, 0), "Coordinate data"),
         ],
     ),
     (
@@ -6423,7 +6425,7 @@ otData = [
                 "hvglCoordinates",
                 "Delta",
                 "AxisCount",
-                Multiply(2),
+                MulAdd(2, 0),
                 "Delta coordinate column",
             ),
         ],
@@ -6472,6 +6474,32 @@ otData = [
         "hvglSubParts",
         [
             ("hvglSubPart", "SubPart", "PartCount", 0, "Immediate subparts"),
+        ],
+    ),
+    (
+        "hvglExtremumColumnStarts",
+        [
+            (
+                "uint16le",
+                "ExtremumColumnStart",
+                "AxisCount",
+                MulAdd(2, 1),
+                "Immediate subparts",
+            ),
+            (
+                "uint16le",
+                "MasterRowIndex",
+                "SparseMasterAxisValueCount",
+                0,
+                "Master row indices",
+            ),
+            (
+                "uint16le",
+                "ExtremumRowIndex",
+                "SparseExtremumAxisValueCount",
+                0,
+                "Extremum row indices",
+            ),
         ],
     ),
     (
@@ -6543,6 +6571,13 @@ otData = [
                 None,
                 None,
                 "Offset to subpart array/4",
+            ),
+            (
+                "Offset16Mul4ToLE(hvglExtremumColumnStarts)",
+                "ExtremumColumnStarts",
+                None,
+                None,
+                "Offset to extremum column starts/4",
             ),
         ],
     ),
