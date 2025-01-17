@@ -144,6 +144,12 @@ def test_splitCubicAtT():
     ]
 
 
+def test_splitCubicAtT_robustness():
+    segment = ((-103, -231), (-61, -240), (-31.009, -245), (6, -245))
+    (_, tail) = splitCubicAtT(*segment, 0.386637)
+    assert tail[-1] == segment[-1]
+
+
 def test_solveCubic():
     assert solveCubic(1, 1, -6, 0) == [-3.0, -0.0, 2.0]
     assert solveCubic(-10.0, -9.0, 48.0, -29.0) == [-2.9, 1.0, 1.0]
