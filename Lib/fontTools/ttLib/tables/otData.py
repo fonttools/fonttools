@@ -6443,6 +6443,38 @@ otData = [
         ],
     ),
     (
+        "hvglSubPart",
+        [
+            (
+                "uint32le",
+                "PartIndex",
+                None,
+                None,
+                "Index of part that this subpart renders",
+            ),
+            (
+                "uint16le",
+                "TreeTransformIndex",
+                None,
+                None,
+                "Row index of data in transform vector/matrix",
+            ),
+            (
+                "uint16le",
+                "TreeAxisIndex",
+                None,
+                None,
+                "Row index of data in axis vector/matrix",
+            ),
+        ],
+    ),
+    (
+        "hvglSubParts",
+        [
+            ("hvglSubPart", "SubPart", "PartCount", 0, "Immediate subparts"),
+        ],
+    ),
+    (
         "hvglPartFormat1",  # Composite
         [
             ("uint16le", "Flags", None, None, "0x0001 for composite"),
@@ -6504,6 +6536,13 @@ otData = [
                 None,
                 None,
                 "Count of non-zero extremum rotations",
+            ),
+            (
+                "Offset16Mul4ToLE(hvglSubParts)",
+                "SubParts",
+                None,
+                None,
+                "Offset to subpart array/4",
             ),
         ],
     ),
