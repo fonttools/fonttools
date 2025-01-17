@@ -6527,6 +6527,77 @@ otData = [
         ],
     ),
     (
+        "hvglTranslationDelta",
+        [
+            (
+                "float32le",
+                "x",
+                None,
+                None,
+                "Translation delta X",
+            ),
+            (
+                "float32le",
+                "y",
+                None,
+                None,
+                "Translation delta Y",
+            ),
+        ],
+    ),
+    (
+        "hvglMatrixIndex",
+        [
+            (
+                "int16le",
+                "row",
+                None,
+                None,
+                "Row index",
+            ),
+            (
+                "int16le",
+                "column",
+                None,
+                None,
+                "Column index",
+            ),
+        ],
+    ),
+    (
+        "hvglAllTranslations",
+        [
+            (
+                "hvglTranslationDelta",
+                "MasterTranslationDelta",
+                "SparseMasterTranslationCount",
+                0,
+                "Master translation deltas",
+            ),
+            (
+                "hvglTranslationDelta",
+                "ExtremumTranslationDelta",
+                "SparseExtremumTranslationCount",
+                0,
+                "Extremum translation deltas",
+            ),
+            (
+                "hvglMatrixIndex",
+                "ExtremumTranslationIndex",
+                "SparseExtremumTranslationCount",
+                0,
+                "Extremum translation indices",
+            ),
+            (
+                "uint16le",
+                "MasterTranslationIndex",
+                "SparseMasterTranslationCount",
+                0,
+                "Master translation indices",
+            ),
+        ],
+    ),
+    (
         "hvglPartFormat1",  # Composite
         [
             ("uint16le", "Flags", None, None, "0x0001 for composite"),
@@ -6616,6 +6687,13 @@ otData = [
                 None,
                 None,
                 "Offset to extremum axis value deltas/4",
+            ),
+            (
+                "Offset16Mul4ToLE(hvglAllTranslations)",
+                "AllTranslations",
+                None,
+                None,
+                "Offset to all translations/4",
             ),
         ],
     ),
