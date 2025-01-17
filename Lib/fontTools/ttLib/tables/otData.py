@@ -6484,7 +6484,7 @@ otData = [
                 "ExtremumColumnStart",
                 "AxisCount",
                 MulAdd(2, 1),
-                "Immediate subparts",
+                "Extremum column starts",
             ),
             (
                 "uint16le",
@@ -6499,6 +6499,18 @@ otData = [
                 "SparseExtremumAxisValueCount",
                 0,
                 "Extremum row indices",
+            ),
+        ],
+    ),
+    (
+        "hvglMasterAxisValueDeltas",
+        [
+            (
+                "float32le",
+                "MasterAxisValueDelta",
+                "SparseMasterAxisValueCount",
+                0,
+                "Master axis value deltas",
             ),
         ],
     ),
@@ -6578,6 +6590,13 @@ otData = [
                 None,
                 None,
                 "Offset to extremum column starts/4",
+            ),
+            (
+                "Offset16Mul4ToLE(hvglMasterAxisValueDeltas)",
+                "MasterAxisValueDeltas",
+                None,
+                None,
+                "Offset to master axis deltas/4",
             ),
         ],
     ),
