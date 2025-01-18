@@ -6550,14 +6550,14 @@ otData = [
         "hvglMatrixIndex",
         [
             (
-                "int16le",
+                "uint16le",
                 "row",
                 None,
                 None,
                 "Row index",
             ),
             (
-                "int16le",
+                "uint16le",
                 "column",
                 None,
                 None,
