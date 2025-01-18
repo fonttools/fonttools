@@ -2251,7 +2251,7 @@ converterMapping = {
     "Align": lambda alignment: partial(Align, alignment=alignment),
     # hvgl
     "hvglPartsIndex": partial(hvglIndex, itemClass=hvglPart),
-    "Offset16Mul4ToLE": lambda C: partial(
+    "Offset16LEMul4To": lambda C: partial(
         Table16, tableClass=C, be=False, multiplier=4
     ),
 }
