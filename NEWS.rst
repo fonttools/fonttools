@@ -1,6 +1,9 @@
+- [bezierTools] Fixed ``splitCubicAtT`` sometimes not returning identical start/end points as result of numerical precision (#3742, #3743).
+- [feaLib/ast] Fixed docstring of ``AlternateSubstStatement`` (#3735).
+- [transform] Typing fixes (#3734).
+
 4.55.3 (released 2024-12-10)
 ----------------------------
-
 
 - [Docs] fill out ttLib table section [#3716]
 - [feaLib] More efficient inline format 4 lookups [#3726]
@@ -23,7 +26,6 @@
 
 4.55.0 (released 2024-11-14)
 ----------------------------
-
 
 - [cffLib.specializer] Adjust stack use calculation (#3689)
 - [varLib] Lets not add mac names if the rest of name doesn't have them (#3688)
