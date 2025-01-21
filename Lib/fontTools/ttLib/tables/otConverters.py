@@ -1947,6 +1947,8 @@ class IndexBase(BaseConverter):
         self._converter = (
             itemConverterClass() if itemConverterClass is not None else None
         )
+        if itemClass is not None:
+            self.alignment = getattr(itemClass, "alignment", self.alignment)
 
     def read(self, reader, font, tableDict):
         init_pos = reader.pos
@@ -2052,6 +2054,7 @@ class IndexBase(BaseConverter):
                 for i, item in enumerate(items)
             ]
 
+        offsetsPad = 0
         if self.alignment > 1:
             items = [pad(item, self.alignment) for item in items]
 
@@ -2059,6 +2062,11 @@ class IndexBase(BaseConverter):
         if startOffset is None:
             assert self.offSize is not None
             startOffset = self.countSize + (len(items) + 1) * self.offSize
+            if self.alignment > 1:
+                offsetsPad = (
+                    self.alignment - (startOffset % self.alignment)
+                ) % self.alignment
+                startOffset += offsetsPad
 
         offsets = [len(item) for item in items]
         offsets = list(accumulate(offsets, initial=startOffset))
@@ -2082,6 +2090,7 @@ class IndexBase(BaseConverter):
         }[offSize]
 
         writeArray(offsets, be=self.be)
+        writer.writeData(offsetsPad * b"\0")
         for item in items:
             writer.writeData(item)
 
@@ -2132,6 +2141,7 @@ class hvglIndex(IndexBase):
     countSize = 0
     startOffset = None
     offSize = 4
+    alignment = 2
     be = False
 
     def getCount(self, reader):

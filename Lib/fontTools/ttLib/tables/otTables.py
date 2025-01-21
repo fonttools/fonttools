@@ -2610,6 +2610,11 @@ def _buildClasses():
             if name in ("GSUB", "GPOS"):
                 cls.DontShare = True
             namespace[name] = cls
+        alignments = {
+            "hvglPart": 4,
+        }
+        if name in alignments:
+            namespace[name].alignment = alignments[name]
 
     # link Var{Table} <-> {Table} (e.g. ColorStop <-> VarColorStop, etc.)
     for name, _ in otData:
