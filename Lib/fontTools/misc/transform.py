@@ -52,10 +52,8 @@ translate, rotation, scale, skew, and transformation-center components.
 	>>>
 """
 
-from __future__ import annotations
-
 import math
-from typing import NamedTuple
+from typing import NamedTuple, Optional
 from dataclasses import dataclass
 
 
@@ -227,7 +225,7 @@ class Transform(NamedTuple):
         """
         return self.transform((1, 0, 0, 1, x, y))
 
-    def scale(self, x: float = 1, y: float | None = None):
+    def scale(self, x: float = 1, y: Optional[float] = None):
         """Return a new transformation, scaled by x, y. The 'y' argument
         may be None, which implies to use the x value for y as well.
 
@@ -390,7 +388,7 @@ def Offset(x: float = 0, y: float = 0) -> Transform:
     return Transform(1, 0, 0, 1, x, y)
 
 
-def Scale(x: float, y: float | None = None) -> Transform:
+def Scale(x: float, y: Optional[float] = None) -> Transform:
     """Return the identity transformation scaled by x, y. The 'y' argument
     may be None, which implies to use the x value for y as well.
 
