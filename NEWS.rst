@@ -1,3 +1,6 @@
+4.55.4 (released 2025-01-21)
+----------------------------
+
 - [bezierTools] Fixed ``splitCubicAtT`` sometimes not returning identical start/end points as result of numerical precision (#3742, #3743).
 - [feaLib/ast] Fixed docstring of ``AlternateSubstStatement`` (#3735).
 - [transform] Typing fixes (#3734).
