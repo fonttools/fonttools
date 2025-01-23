@@ -92,6 +92,9 @@ jobs:
         submodules: true
     - uses: docker/setup-qemu-action@v3.3.0
       with:
+        # temporarily pin to qemu@v8 to workaround non-determininstic gcc segfaults
+        # https://github.com/docker/setup-qemu-action/issues/188
+        image: tonistiigi/binfmt:qemu-v8.1.5
         platforms: all
     - name: Install dependencies
       run: pip install cibuildwheel
