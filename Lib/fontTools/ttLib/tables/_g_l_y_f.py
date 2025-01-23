@@ -1187,7 +1187,7 @@ class Glyph(object):
         ):
             return
         try:
-            coords, endPts, flags = self.getCoordinates(glyfTable)
+            coords, endPts, flags = self.getCoordinates(glyfTable, round=otRound)
             self.xMin, self.yMin, self.xMax, self.yMax = coords.calcIntBounds()
         except NotImplementedError:
             pass
@@ -1241,7 +1241,7 @@ class Glyph(object):
         else:
             return self.numberOfContours == -1
 
-    def getCoordinates(self, glyfTable):
+    def getCoordinates(self, glyfTable, round=noRound):
         """Return the coordinates, end points and flags
 
         This method returns three values: A :py:class:`GlyphCoordinates` object,
@@ -1267,13 +1267,16 @@ class Glyph(object):
             for compo in self.components:
                 g = glyfTable[compo.glyphName]
                 try:
-                    coordinates, endPts, flags = g.getCoordinates(glyfTable)
+                    coordinates, endPts, flags = g.getCoordinates(
+                        glyfTable, round=round
+                    )
                 except RecursionError:
                     raise ttLib.TTLibError(
                         "glyph '%s' contains a recursive component reference"
                         % compo.glyphName
                     )
                 coordinates = GlyphCoordinates(coordinates)
+                coordinates.toInt(round=round)
                 if hasattr(compo, "firstPt"):
                     # component uses two reference points: we apply the transform _before_
                     # computing the offset between the points
