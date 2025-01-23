@@ -1,3 +1,6 @@
+- [glyf] Fixed recalcBounds of transformed components with unrounded coordinates (#3750).
+- [feaLib] Allow duplicate script/language statements (#3749).
+
 4.55.4 (released 2025-01-21)
 ----------------------------
 
