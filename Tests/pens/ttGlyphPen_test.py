@@ -3,6 +3,7 @@ import pytest
 import struct
 
 from fontTools import ttLib
+from fontTools.misc.roundTools import noRound
 from fontTools.pens.basePen import PenError
 from fontTools.pens.recordingPen import RecordingPen, RecordingPointPen
 from fontTools.pens.ttGlyphPen import TTGlyphPen, TTGlyphPointPen, MAX_F2DOT14
@@ -563,6 +564,55 @@ class TTGlyphPointPenTest(TTGlyphPenTestBase):
 
         uni0302_uni0300.recalcBounds(glyphSet)
         self.assertGlyphBoundsEqual(uni0302_uni0300, (-278, 745, 148, 1025))
+
+    def test_unrounded_coords_rounded_bounds(self):
+        # The following test case is taken from Faustina-Italic.glyphs.
+        # It reproduces a bug whereby the bounding boxes of composite glyphs that
+        # contain components with non trivial transformations, and in which the base
+        # glyphs of the transformed components still has un-rounded, floating-point
+        # coordinates, may be off-by-one compared to the correct bounds that should
+        # be computed from the rounded coordinates.
+        # https://github.com/googlefonts/fontc/issues/1206
+        glyphSet = {}
+        pen = TTGlyphPointPen(glyphSet)
+
+        pen.beginPath()
+        pen.addPoint((235, 680), "line")
+        pen.addPoint((292, 729), "line")
+        pen.addPoint((314.5, 748.5), None)
+        pen.addPoint((342.0, 780.75), None)
+        pen.addPoint((342.0, 792.0), "qcurve")
+        pen.addPoint((342.0, 800.0), None)
+        pen.addPoint((336.66666666666663, 815.9166666666666), None)
+        pen.addPoint((318.0, 829.5), None)
+        pen.addPoint((298.0, 834.0), "qcurve")
+        pen.addPoint((209, 702), "line")
+        pen.endPath()
+        pen.beginPath()
+        pen.addPoint((90, 680), "line")
+        pen.addPoint((147, 729), "line")
+        pen.addPoint((169.5, 748.5), None)
+        pen.addPoint((197.0, 780.75), None)
+        pen.addPoint((197.0, 792.0), "qcurve")
+        pen.addPoint((197.0, 800.0), None)
+        pen.addPoint((191.66666666666663, 815.9166666666666), None)
+        pen.addPoint((173.0, 829.5), None)
+        pen.addPoint((153.0, 834.0), "qcurve")
+        pen.addPoint((64, 702), "line")
+        pen.endPath()
+        # round=noRound forces floating-point coordinates to be kept un-rounded
+        glyphSet["hungarumlaut.case"] = pen.glyph(
+            dropImpliedOnCurves=True, round=noRound
+        )
+
+        # component has non-trivial transform (shear + reflection)
+        pen.addComponent("hungarumlaut.case", (-1, 0, 0.28108, 1, 196, 0))
+        compositeGlyph = pen.glyph(round=noRound)
+        glyphSet["dblgravecomb.case"] = compositeGlyph
+
+        compositeGlyph.recalcBounds(glyphSet)
+        # these are the expected bounds as computed from the rounded coordinates
+        self.assertGlyphBoundsEqual(compositeGlyph, (74, 680, 329, 834))
 
     def test_open_path_starting_with_move(self):
         # when a contour starts with a 'move' point, it signifies the beginnig
