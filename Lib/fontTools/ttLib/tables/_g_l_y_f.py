@@ -1258,7 +1258,11 @@ class Glyph(object):
         """
 
         if self.numberOfContours > 0:
-            return self.coordinates, self.endPtsOfContours, self.flags
+            coordinates = self.coordinates
+            if round is not noRound:
+                coordinates = GlyphCoordinates(coordinates)
+                coordinates.toInt(round=round)
+            return coordinates, self.endPtsOfContours, self.flags
         elif self.isComposite():
             # it's a composite
             allCoords = GlyphCoordinates()
@@ -1276,7 +1280,6 @@ class Glyph(object):
                         % compo.glyphName
                     )
                 coordinates = GlyphCoordinates(coordinates)
-                coordinates.toInt(round=round)
                 if hasattr(compo, "firstPt"):
                     # component uses two reference points: we apply the transform _before_
                     # computing the offset between the points
