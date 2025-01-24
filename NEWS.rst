@@ -1,3 +1,5 @@
+- [glyf] Fixed regression introduced in 4.55.5 when computing bounds of nested composite glyphs  with transformed components (#3752).
+
 4.55.5 (released 2025-01-23)
 ----------------------------
 
