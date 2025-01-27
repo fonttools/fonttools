@@ -181,8 +181,21 @@ classifiers = {
 with io.open("README.rst", "r", encoding="utf-8") as readme:
     long_description = readme.read()
 long_description += "\nChangelog\n~~~~~~~~~\n\n"
+# At the same time, we don't want the PyPI package description becoming too
+# long (some tools like Azure DevOps impose maximum length of 324KB) so we
+# trim it when we see a special rst comment
+changelog_limit_re = re.compile(r"^\.\. package description limit")
 with io.open("NEWS.rst", "r", encoding="utf-8") as changelog:
-    long_description += changelog.read()
+    short_changelog = []
+    for line in changelog:
+        if changelog_limit_re.match(line):
+            break
+        short_changelog.append(line)
+short_changelog.append(
+    "\\... see `here <https://github.com/fonttools/fonttools/blob/main/NEWS.rst>`__ "
+    "for earlier changes\n"
+)
+long_description += "".join(short_changelog)
 
 
 @contextlib.contextmanager
@@ -493,6 +506,7 @@ setup_params = dict(
     platforms=["Any"],
     python_requires=">=3.8",
     long_description=long_description,
+    long_description_content_type="text/x-rst",
     package_dir={"": "Lib"},
     packages=find_packages("Lib"),
     include_package_data=True,

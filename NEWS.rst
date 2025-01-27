@@ -1640,6 +1640,8 @@ Minor release to fix uploading wheels to PyPI.
 - [cffLib] Make sure glyph names are unique (#1699).
 - [feaLib] Fix feature parser to correctly handle octal numbers (#1700).
 
+.. package description limit
+
 3.44.0 (released 2019-08-02)
 ----------------------------
 
