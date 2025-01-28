@@ -1,3 +1,6 @@
+4.55.7 (released 2025-01-28)
+----------------------------
+
 - Shorten the changelog included in PyPI package description to accommodate maximum length limit imposed by Azure DevOps. No actual code changes since v4.55.6 (#3754).
 
 4.55.6 (released 2025-01-24)
