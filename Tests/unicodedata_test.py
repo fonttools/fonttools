@@ -155,6 +155,33 @@ def test_script():
 
 
 def test_script_extension():
+    assert unicodedata.script_extension("\u00B7") == {
+        "Avst",
+        "Cari",
+        "Copt",
+        "Dupl",
+        "Elba",
+        "Geor",
+        "Glag",
+        "Gong",
+        "Goth",
+        "Grek",
+        "Hani",
+        "Latn",
+        "Lydi",
+        "Mahj",
+        "Perm",
+        "Shaw",
+    }
+    assert unicodedata.script_extension("\u02BC") == {
+        "Beng",
+        "Cyrl",
+        "Deva",
+        "Latn",
+        "Lisu",
+        "Thai",
+        "Toto",
+    }
     assert unicodedata.script_extension("a") == {"Latn"}
     assert unicodedata.script_extension(chr(0)) == {"Zyyy"}
     assert unicodedata.script_extension(chr(0x0378)) == {"Zzzz"}
