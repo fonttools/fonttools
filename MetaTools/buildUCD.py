@@ -8,13 +8,12 @@ try:
     from urllib.request import urlopen
 except ImportError:
     from urllib2 import urlopen
-from contextlib import closing, contextmanager
 import re
-from codecs import iterdecode
 import logging
 import os
 from io import open
 from os.path import abspath, dirname, join as pjoin, pardir, sep
+from typing import List
 
 
 try:  # pragma: no cover
@@ -40,27 +39,26 @@ MAX_UNICODE = 0x10FFFF
 log = logging.getLogger()
 
 
-@contextmanager
-def open_unidata_file(filename):
+def open_unidata_file(filename) -> List[str]:
     """Open a text file from https://unicode.org/Public/UNIDATA/"""
     url = UNIDATA_URL + filename
-    with closing(urlopen(url)) as response:
-        yield iterdecode(response, encoding="utf-8")
+    return urlopen(url).read().decode("utf-8").splitlines()
 
 
-def parse_unidata_header(infile):
+def parse_unidata_header(file_lines: List[str]):
     """Read the top header of data files, until the first line
     that does not start with '#'.
     """
     header = []
-    line = next(infile)
-    while line.startswith("#"):
-        header.append(line)
-        line = next(infile)
-    return "".join(header)
+    for line in file_lines:
+        if line.startswith("#"):
+            header.append(line)
+        else:
+            break
+    return "\n".join(header)
 
 
-def parse_range_properties(infile, default=None, is_set=False):
+def parse_range_properties(infile: List[str], default=None, is_set=False):
     """Parse a Unicode data file containing a column with one character or
     a range of characters, and another column containing a property value
     separated by a semicolon. Comments after '#' are ignored.
@@ -180,14 +178,15 @@ def build_ranges(
 
     if local_ucd:
         log.info("loading '%s' from local directory '%s'", filename, local_ucd)
-        cm = open(pjoin(local_ucd, filename), "r", encoding="utf-8")
+        file_lines = [
+            l for l in open(pjoin(local_ucd, filename), "r", encoding="utf-8")
+        ]
     else:
         log.info("downloading '%s' from '%s'", filename, UNIDATA_URL)
-        cm = open_unidata_file(filename)
+        file_lines = open_unidata_file(filename)
 
-    with cm as f:
-        header = parse_unidata_header(f)
-        ranges = parse_range_properties(f, default=default, is_set=is_set)
+    header = parse_unidata_header(file_lines)
+    ranges = parse_range_properties(file_lines, default=default, is_set=is_set)
 
     if aliases:
         reversed_aliases = {normalize(v[0]): k for k, v in aliases.items()}
@@ -260,14 +259,14 @@ def parse_property_value_aliases(property_tag, local_ucd=None):
     filename = "PropertyValueAliases.txt"
     if local_ucd:
         log.info("loading '%s' from local directory '%s'", filename, local_ucd)
-        cm = open(pjoin(local_ucd, filename), "r", encoding="utf-8")
+        file_lines = [
+            l for l in open(pjoin(local_ucd, filename), "r", encoding="utf-8")
+        ]
     else:
         log.info("downloading '%s' from '%s'", filename, UNIDATA_URL)
-        cm = open_unidata_file(filename)
-
-    with cm as f:
-        header = parse_unidata_header(f)
-        data = parse_semicolon_separated_data(f)
+        file_lines = open_unidata_file(filename)
+    header = parse_unidata_header(file_lines)
+    data = parse_semicolon_separated_data(file_lines)
 
     aliases = {item[1]: item[2:] for item in data if item[0] == property_tag}
 
