@@ -1,3 +1,5 @@
+- [MetaTools] Fixed bug in buildUCD.py script whereby the first non-header line of some UCD text file was being skipped. This affected in particular the U+00B7 (MIDDLE DOT) entry of ScriptExtensions.txt (#3756).
+
 4.55.7 (released 2025-01-28)
 ----------------------------
 
