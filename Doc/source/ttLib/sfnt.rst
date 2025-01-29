@@ -1,8 +1,7 @@
-####
-sfnt
-####
+#########################################
+sfnt: Read and write the SFNT file format
+#########################################
 
 .. automodule:: fontTools.ttLib.sfnt
-   :inherited-members:
    :members:
    :undoc-members:
