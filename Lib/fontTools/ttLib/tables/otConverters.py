@@ -1681,7 +1681,7 @@ class DeltaValue(BaseConverter):
         StartSize = tableDict["StartSize"]
         EndSize = tableDict["EndSize"]
         DeltaFormat = tableDict["DeltaFormat"]
-        DeltaValue = value
+        DeltaValue = value[0]
         assert DeltaFormat in (1, 2, 3), "illegal DeltaFormat"
         nItems = EndSize - StartSize + 1
         nBits = 1 << DeltaFormat
