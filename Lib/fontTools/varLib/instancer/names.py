@@ -221,9 +221,18 @@ def _updateNameRecords(varfont, axisValues):
             getName(n, *platform).toUnicode() for n in ribbiNameIDs
         )
         if nonRibbiNameIDs:
-            typoSubFamilyName = " ".join(
-                getName(n, *platform).toUnicode() for n in axisValueNameIDs
-            )
+            try:
+                typoSubFamilyName = " ".join(
+                    getName(n, *platform).toUnicode() for n in axisValueNameIDs
+                )
+            # not every name ID exists for every plaform, so get this from another platform if needed
+            except AttributeError:
+                for nameID in axisValueNameIDs:
+                    for platform in platforms:
+                        if getName(nameID, *platform):
+                            typoSubFamilyName = getName(nameID, *platform).toUnicode()
+                            break
+
         else:
             typoSubFamilyName = None
 
@@ -235,9 +244,17 @@ def _updateNameRecords(varfont, axisValues):
             else:
                 typoSubFamilyName = getName(elidedNameID, *platform).toUnicode()
 
-        familyNameSuffix = " ".join(
-            getName(n, *platform).toUnicode() for n in nonRibbiNameIDs
-        )
+        try:
+            familyNameSuffix = " ".join(
+                getName(n, *platform).toUnicode() for n in nonRibbiNameIDs
+            )
+        # not every name ID exists for every plaform, so get this from another platform if needed
+        except AttributeError:
+            for nameID in nonRibbiNameIDs:
+                for platform in platforms:
+                    if getName(nameID, *platform):
+                        familyNameSuffix = getName(nameID, *platform).toUnicode()
+                        break
 
         _updateNameTableStyleRecords(
             varfont,
