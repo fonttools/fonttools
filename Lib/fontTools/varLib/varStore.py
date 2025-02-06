@@ -554,7 +554,11 @@ def VarStore_optimize(self, use_NO_VARIATION_INDEX=True, quantization=1):
     #
     # - Put all encodings into a "todo" list.
     #
-    # - Sort todo list by decreasing gain (for stability).
+    # - Sort todo list (for stability) by width_sort_key(), which is a tuple
+    #   of the following items:
+    #   * The "width" of the encoding.
+    #   * The characteristic bitmap of the encoding, with higher-numbered
+    #     columns compared first.
     #
     # - Make a priority-queue of the gain from combining each two
     #   encodings in the todo list. The priority queue is sorted by
@@ -575,16 +579,7 @@ def VarStore_optimize(self, use_NO_VARIATION_INDEX=True, quantization=1):
     #
     # The output is then sorted for stability, in the following way:
     # - The VarRegionList of the input is kept intact.
-    # - All encodings are sorted before the main algorithm, by
-    #   gain_key_sort(), which is a tuple of the following items:
-    #   * The gain of the encoding.
-    #   * The characteristic bitmap of the encoding, with higher-numbered
-    #     columns compared first.
-    # - The VarData is sorted by width_sort_key(), which is a tuple
-    #   of the following items:
-    #   * The "width" of the encoding.
-    #   * The characteristic bitmap of the encoding, with higher-numbered
-    #     columns compared first.
+    # - The VarData is sorted by the same width_sort_key() used at the beginning.
     # - Within each VarData, the items are sorted as vectors of numbers.
     #
     # Finally, each VarData is optimized to remove the empty columns and
@@ -626,7 +621,7 @@ def VarStore_optimize(self, use_NO_VARIATION_INDEX=True, quantization=1):
             front_mapping[(major << 16) + minor] = row
 
     # Prepare for the main algorithm.
-    todo = sorted(encodings.values(), key=_Encoding.gain_sort_key)
+    todo = sorted(encodings.values(), key=_Encoding.width_sort_key)
     del encodings
 
     # Repeatedly pick two best encodings to combine, and combine them.
