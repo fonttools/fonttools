@@ -1,4 +1,5 @@
 import pytest
+import random
 from io import StringIO
 from fontTools.misc.xmlWriter import XMLWriter
 from fontTools.misc.roundTools import noRound
@@ -45,6 +46,17 @@ from fontTools.ttLib.tables.otTables import VarStore
                 [100, 22000, 4000, 173000],
             ],
         ),
+        (
+            [{}, {"a": 1}, {"b": 1}, {"a": 1, "b": 1}],
+            [
+                [random.randint(-128, 127) for _ in range(4)],
+                [random.randint(-128, 127) for _ in range(4)],
+                [random.randint(-128, 127) for _ in range(4)],
+                [random.randint(-32768, 32767) for _ in range(4)],
+                [random.randint(-32768, 32767) for _ in range(4)],
+                [random.randint(-32768, 32767) for _ in range(4)],
+            ],
+        ),
     ],
 )
 def test_onlineVarStoreBuilder(locations, masterValues):
@@ -53,6 +65,8 @@ def test_onlineVarStoreBuilder(locations, masterValues):
     builder = OnlineVarStoreBuilder(axisTags)
     builder.setModel(model)
     varIdxs = []
+    # shuffle input order to ensure optimizer produces stable results
+    random.shuffle(masterValues)
     for masters in masterValues:
         _, varIdx = builder.storeMasters(masters)
         varIdxs.append(varIdx)
@@ -178,6 +192,7 @@ def test_optimize(numRegions, varData, expectedNumVarData, expectedBytes):
     builder = OnlineVarStoreBuilder(axisTags)
     builder.setModel(model)
 
+    random.shuffle(varData)
     for data in varData:
         if type(data) is dict:
             newData = [0] * numRegions
@@ -240,6 +255,7 @@ def test_quantize(quantization, expectedBytes):
     builder = OnlineVarStoreBuilder(axisTags)
     builder.setModel(model)
 
+    random.shuffle(varData)
     for data in varData:
         builder.storeMasters(data)
 
@@ -268,7 +284,9 @@ def test_optimize_overflow():
     builder = OnlineVarStoreBuilder(axisTags)
     builder.setModel(model)
 
-    for data in range(0, 0xFFFF * 2):
+    varData = list(range(0, 0xFFFF * 2))
+    random.shuffle(varData)
+    for data in varData:
         data = [0, data]
         builder.storeMasters(data, round=noRound)
 
