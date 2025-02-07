@@ -1,3 +1,6 @@
+4.56.0 (released 2025-02-07)
+----------------------------
+
 - [varStore] Sort the input todo list with the same sorting key used for the opimizer's output (#3767).
 - [otData] Fix DeviceTable's ``DeltaValue`` repeat value which caused a crash after importing from XML and then compiling a GPOS containing Device tables (#3758).
 - [feaLib] Make ``FeatureLibError`` pickleable, so client can e.g. use feaLib to can compile features in parallel with multiprocessing (#3762).
