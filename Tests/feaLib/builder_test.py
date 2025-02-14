@@ -84,7 +84,8 @@ class BuilderTest(unittest.TestCase):
         GSUB_5_formats delete_glyph STAT_test STAT_test_elidedFallbackNameID
         variable_scalar_valuerecord variable_scalar_anchor variable_conditionset
         variable_mark_anchor duplicate_lookup_reference
-        contextual_inline_multi_sub_format_2
+        contextual_inline_multi_sub_reuse
+        contextual_inline_reuse_rules
         contextual_inline_format_4
         duplicate_language_stmt
     """.split()
