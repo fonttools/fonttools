@@ -71,6 +71,12 @@ def main(args=None):
         default=None,
         help="Flavor of output font. 'woff' or 'woff2'.",
     )
+    parser.add_argument(
+        "--no-recalc-timestamp",
+        dest="recalcTimestamp",
+        action="store_false",
+        help="Keep the original font 'modified' timestamp.",
+    )
     options = parser.parse_args(args)
 
     fontNumber = int(options.y) if options.y is not None else None
@@ -78,11 +84,14 @@ def main(args=None):
     lazy = options.lazy
     flavor = options.flavor
     tables = options.table if options.table is not None else ["*"]
+    recalcTimestamp = options.recalcTimestamp
 
     fonts = []
     for f in options.font:
         try:
-            font = TTFont(f, fontNumber=fontNumber, lazy=lazy)
+            font = TTFont(
+                f, recalcTimestamp=recalcTimestamp, fontNumber=fontNumber, lazy=lazy
+            )
             fonts.append(font)
         except TTLibFileIsCollectionError:
             collection = TTCollection(f, lazy=lazy)
