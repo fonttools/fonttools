@@ -77,6 +77,12 @@ def main(args=None):
         action="store_false",
         help="Keep the original font 'modified' timestamp.",
     )
+    parser.add_argument(
+        "-b",
+        dest="recalcBBoxes",
+        action="store_false",
+        help="Don't recalc glyph bounding boxes: use the values in the original font.",
+    )
     options = parser.parse_args(args)
 
     fontNumber = int(options.y) if options.y is not None else None
@@ -84,13 +90,18 @@ def main(args=None):
     lazy = options.lazy
     flavor = options.flavor
     tables = options.table if options.table is not None else ["*"]
+    recalcBBoxes = options.recalcBBoxes
     recalcTimestamp = options.recalcTimestamp
 
     fonts = []
     for f in options.font:
         try:
             font = TTFont(
-                f, recalcTimestamp=recalcTimestamp, fontNumber=fontNumber, lazy=lazy
+                f,
+                recalcBBoxes=recalcBBoxes,
+                recalcTimestamp=recalcTimestamp,
+                fontNumber=fontNumber,
+                lazy=lazy,
             )
             fonts.append(font)
         except TTLibFileIsCollectionError:
