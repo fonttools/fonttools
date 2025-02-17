@@ -2055,13 +2055,6 @@ class IndexBase(BaseConverter):
                 for i, item in enumerate(items)
             ]
 
-        # Align items
-        for i in range(n):
-            alignTo = itemsAlignments[i + 1] if i + 1 < n else 1
-            alignTo = max(alignTo, selfAlignment)
-            if alignTo > 1:
-                items[i] = pad(items[i], alignTo)
-
         offsetsPad = 0
 
         startOffset = self.startOffset
@@ -2075,6 +2068,22 @@ class IndexBase(BaseConverter):
                     firstAlignment - (startOffset % firstAlignment)
                 ) % firstAlignment
                 startOffset += offsetsPad
+
+            # Align items
+            offset = startOffset
+            for i in range(n):
+                alignTo = itemsAlignments[i + 1] if i + 1 < n else 1
+                alignTo = max(alignTo, selfAlignment)
+                offset += len(items[i])
+                if alignTo > 1:
+                    padding = (alignTo - (offset % alignTo)) % alignTo
+                    if padding:
+                        items[i] += b"\0" * padding
+                        offset += padding
+        else:
+            # Alignment only makes sense with startOffset of None;
+            # Ie. "absolute" offsets relative to the start of the Index.
+            assert self._itemClass is None or not hasattr(self._itemClass, "alignment")
 
         offsets = [len(item) for item in items]
         offsets = list(accumulate(offsets, initial=startOffset))
