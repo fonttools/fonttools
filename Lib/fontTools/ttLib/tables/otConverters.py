@@ -1926,7 +1926,7 @@ class IndexBase(BaseConverter):
     countSize = None
     offSize = None
     startOffset = 0
-    alignment = 1
+    itemAlignment = 1
     be = True
 
     def __init__(
@@ -1947,8 +1947,6 @@ class IndexBase(BaseConverter):
         self._converter = (
             itemConverterClass() if itemConverterClass is not None else None
         )
-        if itemClass is not None:
-            self.alignment = getattr(itemClass, "alignment", self.alignment)
 
     def read(self, reader, font, tableDict):
         init_pos = reader.pos
@@ -2046,6 +2044,9 @@ class IndexBase(BaseConverter):
         if n == 0:
             return
 
+        selfAlignment = self.itemAlignment
+        itemsAlignments = [getattr(item, "alignment", 1) for item in items]
+
         if self._itemClass is not None:
             items = [item.compileData(font) for item in items]
         elif self._converter is not None:
@@ -2054,18 +2055,25 @@ class IndexBase(BaseConverter):
                 for i, item in enumerate(items)
             ]
 
+        # Align items
+        for i in range(n):
+            alignTo = itemsAlignments[i + 1] if i + 1 < n else 1
+            alignTo = max(alignTo, selfAlignment)
+            if alignTo > 1:
+                items[i] = pad(items[i], alignTo)
+
         offsetsPad = 0
-        if self.alignment > 1:
-            items = [pad(item, self.alignment) for item in items]
 
         startOffset = self.startOffset
         if startOffset is None:
             assert self.offSize is not None
             startOffset = self.countSize + (len(items) + 1) * self.offSize
-            if self.alignment > 1:
+
+            firstAlignment = max(itemsAlignments[0], selfAlignment)
+            if firstAlignment > 1:
                 offsetsPad = (
-                    self.alignment - (startOffset % self.alignment)
-                ) % self.alignment
+                    firstAlignment - (startOffset % firstAlignment)
+                ) % firstAlignment
                 startOffset += offsetsPad
 
         offsets = [len(item) for item in items]
@@ -2078,7 +2086,11 @@ class IndexBase(BaseConverter):
             offSize = (
                 1
                 if lastOffset < 0x100
-                else 2 if lastOffset < 0x10000 else 3 if lastOffset < 0x1000000 else 4
+                else 2
+                if lastOffset < 0x10000
+                else 3
+                if lastOffset < 0x1000000
+                else 4
             )
             self.setOffSize(writer, offSize)
 
@@ -2141,7 +2153,7 @@ class hvglIndex(IndexBase):
     countSize = 0
     startOffset = None
     offSize = 4
-    alignment = 2
+    itemAlignment = 2
     be = False
 
     def getCount(self, reader):

@@ -2135,6 +2135,16 @@ class Paint(getFormatSwitchingBaseTableClass("uint8")):
         return cb
 
 
+class hvglPart(FormatSwitchingBaseTableLE):
+    # Define .alignment attribute that depends on the format
+    @property
+    def alignment(self):
+        return {
+            0: 8,
+            1: 4,
+        }[self.Format]
+
+
 # For each subtable format there is a class. However, we don't really distinguish
 # between "field name" and "format name": often these are the same. Yet there's
 # a whole bunch of fields with different names. The following dict is a mapping
@@ -2610,11 +2620,6 @@ def _buildClasses():
             if name in ("GSUB", "GPOS"):
                 cls.DontShare = True
             namespace[name] = cls
-        alignments = {
-            "hvglPart": 4,
-        }
-        if name in alignments:
-            namespace[name].alignment = alignments[name]
 
     # link Var{Table} <-> {Table} (e.g. ColorStop <-> VarColorStop, etc.)
     for name, _ in otData:
