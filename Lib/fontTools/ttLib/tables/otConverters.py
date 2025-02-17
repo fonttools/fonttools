@@ -2264,16 +2264,22 @@ converterMapping = {
     "AATLookup": lambda C: partial(AATLookup, tableClass=C),
     "AATLookupWithDataOffset": lambda C: partial(AATLookupWithDataOffset, tableClass=C),
     "STXHeader": lambda C: partial(STXHeader, tableClass=C),
-    "OffsetTo": lambda C: partial(Table16, tableClass=C),
-    "LOffsetTo": lambda C: partial(Table32, tableClass=C),
-    "LOffset24To": lambda C: partial(Table24, tableClass=C),
-    "OffsetToLE": lambda C: partial(Table16, tableClass=C, be=False),
-    "LOffsetToLE": lambda C: partial(Table32, tableClass=C, be=False),
-    "LOffset24ToLE": lambda C: partial(Table24, tableClass=C, be=False),
+    "OffsetTo": lambda C, **kwargs: partial(Table16, tableClass=C, **kwargs),
+    "LOffsetTo": lambda C, **kwargs: partial(Table32, tableClass=C, **kwargs),
+    "LOffset24To": lambda C, **kwargs: partial(Table24, tableClass=C, **kwargs),
+    "OffsetToLE": lambda C, **kwargs: partial(
+        Table16, tableClass=C, be=False, **kwargs
+    ),
+    "LOffsetToLE": lambda C, **kwargs: partial(
+        Table32, tableClass=C, be=False, **kwargs
+    ),
+    "LOffset24ToLE": lambda C, **kwargs: partial(
+        Table24, tableClass=C, be=False, **kwargs
+    ),
     "Align": lambda alignment: partial(Align, alignment=alignment),
     # hvgl
     "hvglPartsIndex": partial(hvglIndex, itemClass=hvglPart),
-    "Offset16LEMul4To": lambda C: partial(
-        Table16, tableClass=C, be=False, multiplier=4
+    "Offset16LEMul4To": lambda C, **kwargs: partial(
+        Table16, tableClass=C, be=False, multiplier=4, **kwargs
     ),
 }

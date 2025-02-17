@@ -6771,7 +6771,7 @@ otData = [
                 None,
                 "Number of all shapes and composites",
             ),
-            ("LOffsetToLE(hvglParts)", "Parts", None, None, "Parts"),
+            ("LOffsetToLE(hvglParts, alignment=8)", "Parts", None, None, "Parts"),
             ("uint32le", "NumGlyphs", None, None, "Number of externally visible parts"),
             ("uint32le", "Reserved", None, None, "Reserved; currently zero"),
         ],
