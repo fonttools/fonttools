@@ -141,6 +141,17 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
                     result.setdefault(name, set()).add(codepoint)
         return result
 
+    def buildReversedMin(self):
+        result = {}
+        for subtable in self.tables:
+            if subtable.isUnicode():
+                for codepoint, name in subtable.cmap.items():
+                    if name in result:
+                        result[name] = min(result[name], codepoint)
+                    else:
+                        result[name] = codepoint
+        return result
+
     def decompile(self, data, ttFont):
         tableVersion, numSubTables = struct.unpack(">HH", data[:4])
         self.tableVersion = int(tableVersion)
