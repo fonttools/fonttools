@@ -114,6 +114,8 @@ def main(args=None):
         else:
             tables = ["*"]
     for font in fonts:
+        if "GlyphOrder" in tables:
+            font.getGlyphOrder()
         for table in tables if "*" not in tables else font.keys():
             font[table]  # Decompiles
 
