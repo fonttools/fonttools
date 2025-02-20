@@ -89,7 +89,7 @@ def main(args=None):
     outFile = options.output
     lazy = options.lazy
     flavor = options.flavor
-    tables = options.table if options.table is not None else ["*"]
+    tables = options.table
     recalcBBoxes = options.recalcBBoxes
     recalcTimestamp = options.recalcTimestamp
 
@@ -108,10 +108,14 @@ def main(args=None):
             collection = TTCollection(f, lazy=lazy)
             fonts.extend(collection.fonts)
 
-    if lazy is False:
-        for font in fonts:
-            for table in tables if "*" not in tables else font.keys():
-                font[table]  # Decompiles
+    if tables is None:
+        if lazy is True:
+            tables = []
+        else:
+            tables = ["*"]
+    for font in fonts:
+        for table in tables if "*" not in tables else font.keys():
+            font[table]  # Decompiles
 
     if outFile is not None:
         if len(fonts) == 1:
