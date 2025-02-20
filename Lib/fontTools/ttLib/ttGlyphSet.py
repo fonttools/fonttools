@@ -104,16 +104,6 @@ class _TTGlyphSetGlyf(_TTGlyphSet):
         return _TTGlyphGlyf(self, glyphName, recalcBounds=self.recalcBounds)
 
 
-class _TTGlyphSetGlyf(_TTGlyphSet):
-    def __init__(self, font, location, recalcBounds=True):
-        self.glyfTable = font["glyf"]
-        super().__init__(font, location, self.glyfTable, recalcBounds=recalcBounds)
-        self.gvarTable = font.get("gvar")
-
-    def __getitem__(self, glyphName):
-        return _TTGlyphGlyf(self, glyphName, recalcBounds=self.recalcBounds)
-
-
 class _TTGlyphSetCFF(_TTGlyphSet):
     def __init__(self, font, location):
         tableTag = "CFF2" if "CFF2" in font else "CFF "
