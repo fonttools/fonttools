@@ -1173,11 +1173,13 @@ class cmap_format_12_or_13(CmapSubtable):
         charCodes = []
         gids = []
         pos = 0
+        groups = array.array("I", data[: self.nGroups * 12])
+        if sys.byteorder != "big":
+            groups.byteswap()
         for i in range(self.nGroups):
-            startCharCode, endCharCode, glyphID = struct.unpack(
-                ">LLL", data[pos : pos + 12]
-            )
-            pos += 12
+            startCharCode = groups[i * 3]
+            endCharCode = groups[i * 3 + 1]
+            glyphID = groups[i * 3 + 2]
             lenGroup = 1 + endCharCode - startCharCode
             charCodes.extend(range(startCharCode, endCharCode + 1))
             gids.extend(self._computeGIDs(glyphID, lenGroup))
