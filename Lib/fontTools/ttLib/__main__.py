@@ -51,7 +51,7 @@ def main(args=None):
     )
     parser.add_argument("font", metavar="font", nargs="*", help="Font file.")
     parser.add_argument(
-        "-t", "--table", metavar="table", nargs="*", help="Tables to decompile."
+        "-t", "--table", metavar="table", action="append", help="Tables to decompile."
     )
     parser.add_argument(
         "-o", "--output", metavar="FILE", default=None, help="Output file."
