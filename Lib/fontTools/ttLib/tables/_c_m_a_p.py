@@ -1179,7 +1179,7 @@ class cmap_format_12_or_13(CmapSubtable):
             )
             pos += 12
             lenGroup = 1 + endCharCode - startCharCode
-            charCodes.extend(list(range(startCharCode, endCharCode + 1)))
+            charCodes.extend(range(startCharCode, endCharCode + 1))
             gids.extend(self._computeGIDs(glyphID, lenGroup))
         self.data = data = None
         self.cmap = _make_map(self.ttFont, charCodes, gids)
@@ -1310,7 +1310,7 @@ class cmap_format_12(cmap_format_12_or_13):
         cmap_format_12_or_13.__init__(self, format)
 
     def _computeGIDs(self, startingGlyph, numberOfGlyphs):
-        return list(range(startingGlyph, startingGlyph + numberOfGlyphs))
+        return range(startingGlyph, startingGlyph + numberOfGlyphs)
 
     def _IsInSameRun(self, glyphID, lastGlyphID, charCode, lastCharCode):
         return (glyphID == 1 + lastGlyphID) and (charCode == 1 + lastCharCode)
