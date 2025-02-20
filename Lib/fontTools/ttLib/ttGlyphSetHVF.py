@@ -93,7 +93,7 @@ class _TTGlyphHVF(_TTGlyph):
         coords = [0.0] * _partGetTotalNumAxes(part)
         fvarAxes = self.glyphSet.font["fvar"].axes
         location = self.glyphSet.location
-        for i, axis in enumerate(fvarAxes):
+        for i, axis in enumerate(fvarAxes[:len(coords)]):
             coords[i] = location.get(axis.axisTag, 0)
 
         transforms = [Transform() for _ in range(_partGetTotalNumParts(part))]
