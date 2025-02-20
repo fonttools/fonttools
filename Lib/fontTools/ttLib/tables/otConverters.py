@@ -1966,7 +1966,6 @@ class IndexBase(BaseConverter):
         readArray = getReadArray(reader, offSize)
 
         lazy = font.lazy is not False and count > 8
-        lazy = False
         if not lazy:
             offsets = readArray(count + 1, be=self.be)
             startOffset = (
