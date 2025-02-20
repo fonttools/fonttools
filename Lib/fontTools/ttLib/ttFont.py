@@ -782,6 +782,9 @@ class TTFont(object):
             glyphSet = _TTGlyphSetCFF(self, location)
         elif "glyf" in self:
             glyphSet = _TTGlyphSetGlyf(self, location, recalcBounds=recalcBounds)
+        elif "hvgl" in self:
+            from fontTools.ttLib.ttGlyphSetHVF import _TTGlyphSetHVF
+            glyphSet = _TTGlyphSetHVF(self, location)
         else:
             raise TTLibError("Font contains no outlines")
         if "VARC" in self:
