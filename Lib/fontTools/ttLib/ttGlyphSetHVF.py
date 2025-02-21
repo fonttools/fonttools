@@ -258,40 +258,40 @@ def _partCompositeApplyToCoords(part, outCoords, outCoordsOffset, coords):
 
 
 def _partCompositeApplyToTransforms(part, transforms, transformOffset, coords):
-    master_rotation_index = list(part.AllRotations.MasterRotationIndex)
+    master_rotation_indices = list(part.AllRotations.MasterRotationIndex)
     master_rotation_delta = list(part.AllRotations.MasterRotationDelta)
-    master_translation_index = list(part.AllTranslations.MasterTranslationIndex)
+    master_translation_indices = list(part.AllTranslations.MasterTranslationIndex)
     master_translation_delta = list(part.AllTranslations.MasterTranslationDelta)
-    extremum_translation_index = list(part.AllTranslations.ExtremumTranslationIndex)
+    extremum_translation_indices = list(part.AllTranslations.ExtremumTranslationIndex)
     extremum_translation_delta = list(part.AllTranslations.ExtremumTranslationDelta)
-    extremum_rotation_index = list(part.AllRotations.ExtremumRotationIndex)
+    extremum_rotation_indices = list(part.AllRotations.ExtremumRotationIndex)
     extremum_rotation_delta = list(part.AllRotations.ExtremumRotationDelta)
 
     while True:
         row = len(transforms) - transformOffset
-        if master_translation_index:
-            row = min(row, master_translation_index[0])
-        if master_rotation_index:
-            row = min(row, master_rotation_index[0])
-        if extremum_translation_index:
-            row = min(row, extremum_translation_index[0].row)
-        if extremum_rotation_index:
-            row = min(row, extremum_rotation_index[0].row)
+        if master_translation_indices:
+            row = min(row, master_translation_indices[0])
+        if master_rotation_indices:
+            row = min(row, master_rotation_indices[0])
+        if extremum_translation_indices:
+            row = min(row, extremum_translation_indices[0].row)
+        if extremum_rotation_indices:
+            row = min(row, extremum_rotation_indices[0].row)
         if row == len(transforms) - transformOffset:
             break
 
         transform = Transform()
 
-        if master_rotation_index and master_rotation_index[0] == row:
+        if master_rotation_indices and master_rotation_indices[0] == row:
             transform = transform.rotate(master_rotation_delta[0], True)
-            master_rotation_index.pop(0)
+            master_rotation_indices.pop(0)
             master_rotation_delta.pop(0)
 
-        if master_translation_index and master_translation_index[0] == row:
+        if master_translation_indices and master_translation_indices[0] == row:
             transform = transform.translate(
                 master_translation_delta[0].x, master_translation_delta[0].y, True
             )
-            master_translation_index.pop(0)
+            master_translation_indices.pop(0)
             master_translation_delta.pop(0)
 
         while True:
@@ -299,28 +299,28 @@ def _partCompositeApplyToTransforms(part, transforms, transformOffset, coords):
             rotation_delta = 0
 
             column = 2 * part.AxisCount
-            if extremum_translation_index and extremum_translation_index[0].row == row:
-                column = min(column, extremum_translation_index[0].column)
-            if extremum_rotation_index and extremum_rotation_index[0].row == row:
-                column = min(column, extremum_rotation_index[0].column)
+            if extremum_translation_indices and extremum_translation_indices[0].row == row:
+                column = min(column, extremum_translation_indices[0].column)
+            if extremum_rotation_indices and extremum_rotation_indices[0].row == row:
+                column = min(column, extremum_rotation_indices[0].column)
             if column == 2 * part.AxisCount:
                 break
 
             if (
-                extremum_translation_index
-                and extremum_translation_index[0].row == row
-                and extremum_translation_index[0].column == column
+                extremum_translation_indices
+                and extremum_translation_indices[0].row == row
+                and extremum_translation_indices[0].column == column
             ):
                 translation_delta = extremum_translation_delta[0]
-                extremum_translation_index.pop(0)
+                extremum_translation_indices.pop(0)
                 extremum_translation_delta.pop(0)
             if (
-                extremum_rotation_index
-                and extremum_rotation_index[0].row == row
-                and extremum_rotation_index[0].column == column
+                extremum_rotation_indices
+                and extremum_rotation_indices[0].row == row
+                and extremum_rotation_indices[0].column == column
             ):
                 rotation_delta = extremum_rotation_delta[0]
-                extremum_rotation_index.pop(0)
+                extremum_rotation_indices.pop(0)
                 extremum_rotation_delta.pop(0)
 
             axis_idx = column // 2
