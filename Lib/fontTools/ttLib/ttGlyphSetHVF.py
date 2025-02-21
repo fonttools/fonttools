@@ -8,68 +8,28 @@ from collections.abc import MutableSequence
 # Drawing logic ported from HarfBuzz hb-aat-var-hvgl.cc
 
 
-class ListSubView(MutableSequence):
-    def __init__(self, source_list, offset=None, length=None):
+class Segment():
+    def __init__(self, source_list, offset):
 
-        # Optimize SubView of SubView
-        typ = type(source_list)
-        if typ is ListSubView:
-            orig_offset = offset if offset is not None else 0
-            offset = source_list._offset + orig_offset
-            length = length if length is not None else source_list._length - orig_offset
-            source_list = source_list._source_list
-        elif not typ is list:
-            raise TypeError("source_list must be a list")
-
-        if offset is None:
-            offset = 0
-        if not (0 <= offset <= len(source_list)):
+        if not (4 <= offset + 4 <= len(source_list)):
             raise ValueError("offset must be within the bounds of the list")
-
-        if length is None:
-            length = len(source_list) - offset
-        if not (0 <= length <= len(source_list) - offset):
-            raise ValueError("length must be within valid range")
 
         self._source_list = source_list
         self._offset = offset
-        self._length = length
 
     def __getitem__(self, index):
-        if isinstance(index, slice):
-            start, stop, step = index.indices(self._length)
-            return [
-                self._source_list[self._offset + i] for i in range(start, stop, step)
-            ]
-        if 0 <= index < self._length:
+        if 0 <= index < 4:
             return self._source_list[self._offset + index]
         raise IndexError("index out of range")
 
     def __setitem__(self, index, value):
-        if 0 <= index < self._length:
+        if 0 <= index < 4:
             self._source_list[self._offset + index] = value
         else:
             raise IndexError("index out of range")
 
-    def __delitem__(self, index):
-        if 0 <= index < self._length:
-            del self._source_list[self._offset + index]
-            self._length -= 1
-        else:
-            raise IndexError("index out of range")
-
-    def insert(self, index, value):
-        if 0 <= index <= self._length:
-            self._source_list.insert(self._offset + index, value)
-            self._length += 1
-        else:
-            raise IndexError("index out of range")
-
-    def __len__(self):
-        return self._length
-
     def __repr__(self):
-        return f"ListSubView({self._source_list[self._offset:self._offset + self._length]})"
+        return f"Segment({self._source_list[self._offset:self._offset + 4]})"
 
 
 class _TTGlyphSetHVF(_TTGlyphSet):
@@ -193,11 +153,11 @@ def _drawPartShape(part, pen, _glyphSet, coords, transforms):
             continue
 
         # Resolve blend types
-        segment = ListSubView(v, (end - 1) * 4, 4)
+        segment = Segment(v, (end - 1) * 4)
         for i in range(start, end):
             blendType = part.BlendTypes[i]
             prev_segment = segment
-            segment = ListSubView(v, i * 4, 4)
+            segment = Segment(v, i * 4)
 
             if blendType == BlendType.CURVE:
 
@@ -236,7 +196,7 @@ def _drawPartShape(part, pen, _glyphSet, coords, transforms):
                 pass
             elif blendType == BlendType.TANGENT_PAIR_FIRST:
                 next_i = start if i == end - 1 else i + 1
-                next_segment = ListSubView(v, next_i * 4, 4)
+                next_segment = Segment(v, next_i * 4)
 
                 _project_on_curve_to_tangent(prev_segment, segment, next_segment)
                 _project_on_curve_to_tangent(prev_segment, next_segment, next_segment)
@@ -247,7 +207,7 @@ def _drawPartShape(part, pen, _glyphSet, coords, transforms):
                 raise NotImplementedError("Unknown blend type: %s" % blendType)
 
         # Draw
-        next_segment = ListSubView(v, start * 4, 4)
+        next_segment = Segment(v, start * 4)
         x0 = next_segment[SegmentPoint.ON_CURVE_X]
         y0 = next_segment[SegmentPoint.ON_CURVE_Y]
         p0 = transform.transformPoint((x0, y0))
@@ -255,7 +215,7 @@ def _drawPartShape(part, pen, _glyphSet, coords, transforms):
         for i in range(start, end):
             segment = next_segment
             next_i = start if i == end - 1 else i + 1
-            next_segment = ListSubView(v, next_i * 4, 4)
+            next_segment = Segment(v, next_i * 4)
 
             x1 = segment[SegmentPoint.OFF_CURVE_X]
             y1 = segment[SegmentPoint.OFF_CURVE_Y]
