@@ -295,7 +295,7 @@ class SFNTWriter(object):
         from fontTools.ttLib import getTableClass
 
         entry.alignment = getTableClass(tag).alignment
-        self.align (entry.alignment)
+        self.align(entry.alignment)
 
         entry.offset = self.file.tell()
 

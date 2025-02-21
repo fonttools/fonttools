@@ -784,6 +784,7 @@ class TTFont(object):
             glyphSet = _TTGlyphSetGlyf(self, location, recalcBounds=recalcBounds)
         elif "hvgl" in self:
             from fontTools.ttLib.ttGlyphSetHVF import _TTGlyphSetHVF
+
             glyphSet = _TTGlyphSetHVF(self, location)
         else:
             raise TTLibError("Font contains no outlines")
