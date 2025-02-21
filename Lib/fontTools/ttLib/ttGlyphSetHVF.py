@@ -9,6 +9,9 @@ from collections.abc import MutableSequence
 
 
 class Segment():
+
+    __slots__ = ("_source_list", "_offset")
+
     def __init__(self, source_list, offset):
 
         if not (4 <= offset + 4 <= len(source_list)):
