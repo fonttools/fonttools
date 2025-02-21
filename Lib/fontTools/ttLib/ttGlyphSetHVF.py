@@ -133,11 +133,10 @@ def _drawPartShape(part, pen, _glyphSet, coords, coordsOffset, transforms, trans
 
     v = list(part.Master.Coords)
 
-    coords = coords[coordsOffset:coordsOffset+part.AxisCount]
-
     # Apply deltas
     deltas = part.Deltas.Delta
-    for axis_index, coord in enumerate(coords):
+    for axis_index in range(part.AxisCount):
+        coord = coords[coordsOffset+axis_index]
         if coord == 0:
             continue
         pos = coord > 0
