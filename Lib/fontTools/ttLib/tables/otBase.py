@@ -294,13 +294,15 @@ class OTTableReader(object):
         return value
 
     def readArray(self, typecode, staticSize, count, *, be=True):
+        if count == 0:
+            return []
         pos = self.pos
         newpos = pos + count * staticSize
         value = array.array(typecode, self.data[pos:newpos])
         if be is not None and sys.byteorder != ("big" if be else "little"):
             value.byteswap()
         self.pos = newpos
-        return value.tolist()
+        return list(value)
 
     def readInt8(self, *, be=None):
         return self.readValue("b", staticSize=1)
