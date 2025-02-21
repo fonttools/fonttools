@@ -250,8 +250,8 @@ def _drawPartShape(part, pen, _glyphSet, coords, transforms):
         next_segment = ListSubView(v, start * 4, 4)
         x0 = next_segment[SegmentPoint.ON_CURVE_X]
         y0 = next_segment[SegmentPoint.ON_CURVE_Y]
-        (x0, y0) = transform.transformPoint((x0, y0))
-        pen.moveTo((x0, y0))
+        p0 = transform.transformPoint((x0, y0))
+        pen.moveTo(p0)
         for i in range(start, end):
             segment = next_segment
             next_i = start if i == end - 1 else i + 1
@@ -259,11 +259,11 @@ def _drawPartShape(part, pen, _glyphSet, coords, transforms):
 
             x1 = segment[SegmentPoint.OFF_CURVE_X]
             y1 = segment[SegmentPoint.OFF_CURVE_Y]
-            (x1, y1) = transform.transformPoint((x1, y1))
             x2 = next_segment[SegmentPoint.ON_CURVE_X]
             y2 = next_segment[SegmentPoint.ON_CURVE_Y]
-            (x2, y2) = transform.transformPoint((x2, y2))
-            pen.qCurveTo((x1, y1), (x2, y2))
+            p1 = transform.transformPoint((x1, y1))
+            p2 = transform.transformPoint((x2, y2))
+            pen.qCurveTo(p1, p2)
         pen.closePath()
 
         start = end
