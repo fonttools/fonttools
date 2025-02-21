@@ -231,13 +231,13 @@ def _drawPartShape(part, pen, _glyphSet, coords, coordsOffset, transforms, trans
         start = end
 
 
-def _partCompositeApplyToCoords(part, out_coords, coords):
+def _partCompositeApplyToCoords(part, outCoords, outCoordsOffset, coords):
     ecs = part.ExtremumColumnStarts  # Worst named member ever
 
     for row_index, delta in zip(
         ecs.MasterRowIndex, part.MasterAxisValueDeltas.MasterAxisValueDelta
     ):
-        out_coords[row_index] += delta
+        outCoords[outCoordsOffset+row_index] += delta
 
     for axis_idx, coord in enumerate(coords):
         if coord == 0:
@@ -252,7 +252,7 @@ def _partCompositeApplyToCoords(part, out_coords, coords):
             row = ecs.ExtremumRowIndex[row_idx]
             delta = part.ExtremumAxisValueDeltas.ExtremumAxisValueDelta[row_idx]
             if delta:
-                out_coords[row] += delta * scalar
+                outCoords[outCoordsOffset+row] += delta * scalar
 
 
 def _partCompositeApplyToTransforms(part, transforms, transformOffset, coords):
@@ -355,21 +355,22 @@ def _drawPartComposite(part, pen, glyphSet, coords, coordsOffset, transforms, tr
     hvgl = glyphSet.hvglTable
 
     coords_head = coords[coordsOffset:coordsOffset+part.AxisCount]
-    coords_tail = coords[coordsOffset+part.AxisCount:coordsOffset+part.TotalNumAxes]
-    del coords
+    coords_tailOffset = coordsOffset+part.AxisCount
 
-    _partCompositeApplyToCoords(part, coords_tail, coords_head)
+    _partCompositeApplyToCoords(part, coords, coords_tailOffset, coords_head)
 
-    transforms_head = transforms[transformOffset]
+    thisTransform = transforms[transformOffset]
 
     _partCompositeApplyToTransforms(part, transforms, transformOffset+1, coords_head)
 
     for subPart in part.SubParts.SubPart:
-        subpartTransformOffset = transformOffset+1+subPart.TreeTransformIndex
-        transforms[subpartTransformOffset] = transforms[subpartTransformOffset].transform(transforms_head, True)
         subpart = hvgl.Parts.Part[subPart.PartIndex]
+        subpartAxisOffset = coords_tailOffset+subPart.TreeAxisIndex
+        subpartTransformOffset = transformOffset+1+subPart.TreeTransformIndex
+
+        transforms[subpartTransformOffset] = transforms[subpartTransformOffset].transform(thisTransform, True)
         _drawPart(subpart, pen, glyphSet,
-                  coords_tail, subPart.TreeAxisIndex,
+                  coords, subpartAxisOffset,
                   transforms, subpartTransformOffset)
 
 
