@@ -289,7 +289,8 @@ def _partCompositeApplyToCoords(part, out_coords, coords):
         for row_idx in range(sparse_row_start, sparse_row_end):
             row = ecs.ExtremumRowIndex[row_idx]
             delta = part.ExtremumAxisValueDeltas.ExtremumAxisValueDelta[row_idx]
-            out_coords[row] += delta * scalar
+            if delta:
+                out_coords[row] += delta * scalar
 
 
 def _partCompositeApplyToTransforms(part, transforms, coords):
