@@ -294,18 +294,14 @@ def _partCompositeApplyToCoords(part, out_coords, coords):
 
 
 def _partCompositeApplyToTransforms(part, transforms, coords):
-    master_rotation_index = ListSubView(part.AllRotations.MasterRotationIndex)
-    master_rotation_delta = ListSubView(part.AllRotations.MasterRotationDelta)
-    master_translation_index = ListSubView(part.AllTranslations.MasterTranslationIndex)
-    master_translation_delta = ListSubView(part.AllTranslations.MasterTranslationDelta)
-    extremum_translation_index = ListSubView(
-        part.AllTranslations.ExtremumTranslationIndex
-    )
-    extremum_translation_delta = ListSubView(
-        part.AllTranslations.ExtremumTranslationDelta
-    )
-    extremum_rotation_index = ListSubView(part.AllRotations.ExtremumRotationIndex)
-    extremum_rotation_delta = ListSubView(part.AllRotations.ExtremumRotationDelta)
+    master_rotation_index = part.AllRotations.MasterRotationIndex
+    master_rotation_delta = part.AllRotations.MasterRotationDelta
+    master_translation_index = part.AllTranslations.MasterTranslationIndex
+    master_translation_delta = part.AllTranslations.MasterTranslationDelta
+    extremum_translation_index = part.AllTranslations.ExtremumTranslationIndex
+    extremum_translation_delta = part.AllTranslations.ExtremumTranslationDelta
+    extremum_rotation_index = part.AllRotations.ExtremumRotationIndex
+    extremum_rotation_delta = part.AllRotations.ExtremumRotationDelta
 
     while True:
         row = len(transforms)
