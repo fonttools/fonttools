@@ -256,7 +256,7 @@ def _partCompositeApplyToCoords(part, out_coords, coords):
                 out_coords[row] += delta * scalar
 
 
-def _partCompositeApplyToTransforms(part, transforms, coords):
+def _partCompositeApplyToTransforms(part, transforms, transformOffset, coords):
     master_rotation_index = list(part.AllRotations.MasterRotationIndex)
     master_rotation_delta = list(part.AllRotations.MasterRotationDelta)
     master_translation_index = list(part.AllTranslations.MasterTranslationIndex)
@@ -267,7 +267,7 @@ def _partCompositeApplyToTransforms(part, transforms, coords):
     extremum_rotation_delta = list(part.AllRotations.ExtremumRotationDelta)
 
     while True:
-        row = len(transforms)
+        row = len(transforms) - transformOffset
         if master_translation_index:
             row = min(row, master_translation_index[0])
         if master_rotation_index:
@@ -276,7 +276,7 @@ def _partCompositeApplyToTransforms(part, transforms, coords):
             row = min(row, extremum_translation_index[0].row)
         if extremum_rotation_index:
             row = min(row, extremum_rotation_index[0].row)
-        if row == len(transforms):
+        if row == len(transforms) - transformOffset:
             break
 
         transform = Transform()
@@ -349,7 +349,7 @@ def _partCompositeApplyToTransforms(part, transforms, coords):
                     translation_delta.y * scalar,
                 )
 
-        transforms[row] = transforms[row].transform(transform, True)
+        transforms[transformOffset+row] = transforms[transformOffset+row].transform(transform, True)
 
 
 def _drawPartComposite(part, pen, glyphSet, coords, coordsOffset, transforms, transformOffset):
@@ -362,19 +362,16 @@ def _drawPartComposite(part, pen, glyphSet, coords, coordsOffset, transforms, tr
     _partCompositeApplyToCoords(part, coords_tail, coords_head)
 
     transforms_head = transforms[transformOffset]
-    transforms_tail = transforms[transformOffset+1:transformOffset+part.TotalNumParts]
-    del transforms
 
-    _partCompositeApplyToTransforms(part, transforms_tail, coords_head)
+    _partCompositeApplyToTransforms(part, transforms, transformOffset+1, coords_head)
 
     for subPart in part.SubParts.SubPart:
-        transforms_tail[subPart.TreeTransformIndex] = transforms_tail[
-            subPart.TreeTransformIndex
-        ].transform(transforms_head, True)
+        subpartTransformOffset = transformOffset+1+subPart.TreeTransformIndex
+        transforms[subpartTransformOffset] = transforms[subpartTransformOffset].transform(transforms_head, True)
         subpart = hvgl.Parts.Part[subPart.PartIndex]
         _drawPart(subpart, pen, glyphSet,
                   coords_tail, subPart.TreeAxisIndex,
-                  transforms_tail, subPart.TreeTransformIndex)
+                  transforms, subpartTransformOffset)
 
 
 def _drawPart(part, pen, glyphSet, coords, coordsOffset, transforms, transformOffset):
