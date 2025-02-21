@@ -109,10 +109,10 @@ def main(args=None):
             fonts.extend(collection.fonts)
 
     if tables is None:
-        if lazy is True:
-            tables = []
-        else:
+        if lazy is False:
             tables = ["*"]
+        else:
+            tables = []
     for font in fonts:
         if "GlyphOrder" in tables:
             font.getGlyphOrder()
