@@ -170,7 +170,7 @@ def _drawPartShape(part, pen, _glyphSet, coords, transforms):
 
     v = list(part.Master.Coords)
 
-    coords = ListSubView(coords, 0, part.AxisCount)
+    coords = coords[:part.AxisCount]
 
     # Apply deltas
     deltas = part.Deltas.Delta
@@ -294,14 +294,14 @@ def _partCompositeApplyToCoords(part, out_coords, coords):
 
 
 def _partCompositeApplyToTransforms(part, transforms, coords):
-    master_rotation_index = part.AllRotations.MasterRotationIndex
-    master_rotation_delta = part.AllRotations.MasterRotationDelta
-    master_translation_index = part.AllTranslations.MasterTranslationIndex
-    master_translation_delta = part.AllTranslations.MasterTranslationDelta
-    extremum_translation_index = part.AllTranslations.ExtremumTranslationIndex
-    extremum_translation_delta = part.AllTranslations.ExtremumTranslationDelta
-    extremum_rotation_index = part.AllRotations.ExtremumRotationIndex
-    extremum_rotation_delta = part.AllRotations.ExtremumRotationDelta
+    master_rotation_index = list(part.AllRotations.MasterRotationIndex)
+    master_rotation_delta = list(part.AllRotations.MasterRotationDelta)
+    master_translation_index = list(part.AllTranslations.MasterTranslationIndex)
+    master_translation_delta = list(part.AllTranslations.MasterTranslationDelta)
+    extremum_translation_index = list(part.AllTranslations.ExtremumTranslationIndex)
+    extremum_translation_delta = list(part.AllTranslations.ExtremumTranslationDelta)
+    extremum_rotation_index = list(part.AllRotations.ExtremumRotationIndex)
+    extremum_rotation_delta = list(part.AllRotations.ExtremumRotationDelta)
 
     while True:
         row = len(transforms)
@@ -320,15 +320,15 @@ def _partCompositeApplyToTransforms(part, transforms, coords):
 
         if master_rotation_index and master_rotation_index[0] == row:
             transform = transform.rotate(master_rotation_delta[0], True)
-            master_rotation_index = ListSubView(master_rotation_index, 1)
-            master_rotation_delta = ListSubView(master_rotation_delta, 1)
+            master_rotation_index.pop(0)
+            master_rotation_delta.pop(0)
 
         if master_translation_index and master_translation_index[0] == row:
             transform = transform.translate(
                 master_translation_delta[0].x, master_translation_delta[0].y, True
             )
-            master_translation_index = ListSubView(master_translation_index, 1)
-            master_translation_delta = ListSubView(master_translation_delta, 1)
+            master_translation_index.pop(0)
+            master_translation_delta.pop(0)
 
         while True:
             translation_delta = hvglTranslationDelta()
@@ -348,16 +348,16 @@ def _partCompositeApplyToTransforms(part, transforms, coords):
                 and extremum_translation_index[0].column == column
             ):
                 translation_delta = extremum_translation_delta[0]
-                extremum_translation_index = ListSubView(extremum_translation_index, 1)
-                extremum_translation_delta = ListSubView(extremum_translation_delta, 1)
+                extremum_translation_index.pop(0)
+                extremum_translation_delta.pop(0)
             if (
                 extremum_rotation_index
                 and extremum_rotation_index[0].row == row
                 and extremum_rotation_index[0].column == column
             ):
                 rotation_delta = extremum_rotation_delta[0]
-                extremum_rotation_index = ListSubView(extremum_rotation_index, 1)
-                extremum_rotation_delta = ListSubView(extremum_rotation_delta, 1)
+                extremum_rotation_index.pop(0)
+                extremum_rotation_delta.pop(0)
 
             axis_idx = column // 2
             coord = coords[axis_idx]
@@ -392,15 +392,15 @@ def _partCompositeApplyToTransforms(part, transforms, coords):
 def _drawPartComposite(part, pen, glyphSet, coords, transforms):
     hvgl = glyphSet.hvglTable
 
-    coords = ListSubView(coords, 0, part.TotalNumAxes)
-    coords_head = ListSubView(coords, 0, part.AxisCount)
-    coords_tail = ListSubView(coords, part.AxisCount)
+    coords_head = coords[0:part.AxisCount]
+    coords_tail = coords[part.AxisCount:part.TotalNumAxes]
+    del coords
 
     _partCompositeApplyToCoords(part, coords_tail, coords_head)
 
-    transforms = ListSubView(transforms, 0, part.TotalNumParts)
     transforms_head = transforms[0]
-    transforms_tail = ListSubView(transforms, 1)
+    transforms_tail = transforms[1:part.TotalNumParts]
+    del transforms
 
     _partCompositeApplyToTransforms(part, transforms_tail, coords_head)
 
@@ -409,8 +409,8 @@ def _drawPartComposite(part, pen, glyphSet, coords, transforms):
             subPart.TreeTransformIndex
         ].transform(transforms_head, True)
         subpart = hvgl.Parts.Part[subPart.PartIndex]
-        subcoords = ListSubView(coords_tail, subPart.TreeAxisIndex)
-        subtransforms = ListSubView(transforms_tail, subPart.TreeTransformIndex)
+        subcoords = coords_tail[subPart.TreeAxisIndex:]
+        subtransforms = transforms_tail[subPart.TreeTransformIndex:]
         _drawPart(subpart, pen, glyphSet, subcoords, subtransforms)
 
 
