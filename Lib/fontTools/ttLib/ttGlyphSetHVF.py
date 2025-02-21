@@ -8,7 +8,7 @@ from collections.abc import MutableSequence
 # Drawing logic ported from HarfBuzz hb-aat-var-hvgl.cc
 
 
-class Segment():
+class Segment:
 
     __slots__ = ("_source_list", "_offset")
 
@@ -128,7 +128,9 @@ def _project_on_curve_to_tangent(offcurve1, oncurve, offcurve2):
     oncurve[SegmentPoint.ON_CURVE_Y] = y
 
 
-def _drawPartShape(part, pen, _glyphSet, coords, coordsOffset, transforms, transformOffset):
+def _drawPartShape(
+    part, pen, _glyphSet, coords, coordsOffset, transforms, transformOffset
+):
     transform = transforms[transformOffset]
 
     v = list(part.Master.Coords)
@@ -136,7 +138,7 @@ def _drawPartShape(part, pen, _glyphSet, coords, coordsOffset, transforms, trans
     # Apply deltas
     deltas = part.Deltas.Delta
     for axis_index in range(part.AxisCount):
-        coord = coords[coordsOffset+axis_index]
+        coord = coords[coordsOffset + axis_index]
         if coord == 0:
             continue
         pos = coord > 0
@@ -237,7 +239,7 @@ def _partCompositeApplyToCoords(part, outCoords, outCoordsOffset, coords):
     for row_index, delta in zip(
         ecs.MasterRowIndex, part.MasterAxisValueDeltas.MasterAxisValueDelta
     ):
-        outCoords[outCoordsOffset+row_index] += delta
+        outCoords[outCoordsOffset + row_index] += delta
 
     for axis_idx, coord in enumerate(coords):
         if coord == 0:
@@ -252,7 +254,7 @@ def _partCompositeApplyToCoords(part, outCoords, outCoordsOffset, coords):
             row = ecs.ExtremumRowIndex[row_idx]
             delta = part.ExtremumAxisValueDeltas.ExtremumAxisValueDelta[row_idx]
             if delta:
-                outCoords[outCoordsOffset+row] += delta * scalar
+                outCoords[outCoordsOffset + row] += delta * scalar
 
 
 def _partCompositeApplyToTransforms(part, transforms, transformOffset, coords):
@@ -348,36 +350,52 @@ def _partCompositeApplyToTransforms(part, transforms, transformOffset, coords):
                     translation_delta.y * scalar,
                 )
 
-        transforms[transformOffset+row] = transforms[transformOffset+row].transform(transform, True)
+        transforms[transformOffset + row] = transforms[transformOffset + row].transform(
+            transform, True
+        )
 
 
-def _drawPartComposite(part, pen, glyphSet, coords, coordsOffset, transforms, transformOffset):
+def _drawPartComposite(
+    part, pen, glyphSet, coords, coordsOffset, transforms, transformOffset
+):
     hvgl = glyphSet.hvglTable
 
-    coords_head = coords[coordsOffset:coordsOffset+part.AxisCount]
-    coords_tailOffset = coordsOffset+part.AxisCount
+    coords_head = coords[coordsOffset : coordsOffset + part.AxisCount]
+    coords_tailOffset = coordsOffset + part.AxisCount
 
     _partCompositeApplyToCoords(part, coords, coords_tailOffset, coords_head)
 
     thisTransform = transforms[transformOffset]
 
-    _partCompositeApplyToTransforms(part, transforms, transformOffset+1, coords_head)
+    _partCompositeApplyToTransforms(part, transforms, transformOffset + 1, coords_head)
 
     for subPart in part.SubParts.SubPart:
         subpart = hvgl.Parts.Part[subPart.PartIndex]
-        subpartAxisOffset = coords_tailOffset+subPart.TreeAxisIndex
-        subpartTransformOffset = transformOffset+1+subPart.TreeTransformIndex
+        subpartAxisOffset = coords_tailOffset + subPart.TreeAxisIndex
+        subpartTransformOffset = transformOffset + 1 + subPart.TreeTransformIndex
 
-        transforms[subpartTransformOffset] = transforms[subpartTransformOffset].transform(thisTransform, True)
-        _drawPart(subpart, pen, glyphSet,
-                  coords, subpartAxisOffset,
-                  transforms, subpartTransformOffset)
+        transforms[subpartTransformOffset] = transforms[
+            subpartTransformOffset
+        ].transform(thisTransform, True)
+        _drawPart(
+            subpart,
+            pen,
+            glyphSet,
+            coords,
+            subpartAxisOffset,
+            transforms,
+            subpartTransformOffset,
+        )
 
 
 def _drawPart(part, pen, glyphSet, coords, coordsOffset, transforms, transformOffset):
     if part.Format == 0:
-        _drawPartShape(part, pen, glyphSet, coords, coordsOffset, transforms, transformOffset)
+        _drawPartShape(
+            part, pen, glyphSet, coords, coordsOffset, transforms, transformOffset
+        )
     elif part.Format == 1:
-        _drawPartComposite(part, pen, glyphSet, coords, coordsOffset, transforms, transformOffset)
+        _drawPartComposite(
+            part, pen, glyphSet, coords, coordsOffset, transforms, transformOffset
+        )
     else:
         raise NotImplementedError("Unknown part flags: %s" % part.flags)
