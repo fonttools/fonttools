@@ -12,13 +12,13 @@ class ListSubView(MutableSequence):
     def __init__(self, source_list, offset=None, length=None):
 
         # Optimize SubView of SubView
-        if isinstance(source_list, ListSubView):
+        typ = type(source_list)
+        if typ is ListSubView:
             orig_offset = offset if offset is not None else 0
             offset = source_list._offset + orig_offset
             length = length if length is not None else source_list._length - orig_offset
             source_list = source_list._source_list
-
-        if not isinstance(source_list, list):
+        elif not typ is list:
             raise TypeError("source_list must be a list")
 
         if offset is None:
