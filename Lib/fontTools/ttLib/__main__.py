@@ -51,7 +51,7 @@ def main(args=None):
     )
     parser.add_argument("font", metavar="font", nargs="*", help="Font file.")
     parser.add_argument(
-        "-t", "--table", metavar="table", nargs="*", help="Tables to decompile."
+        "-t", "--table", metavar="table", action="append", help="Tables to decompile."
     )
     parser.add_argument(
         "-o", "--output", metavar="FILE", default=None, help="Output file."
@@ -89,7 +89,7 @@ def main(args=None):
     outFile = options.output
     lazy = options.lazy
     flavor = options.flavor
-    tables = options.table if options.table is not None else ["*"]
+    tables = options.table
     recalcBBoxes = options.recalcBBoxes
     recalcTimestamp = options.recalcTimestamp
 
@@ -108,10 +108,16 @@ def main(args=None):
             collection = TTCollection(f, lazy=lazy)
             fonts.extend(collection.fonts)
 
-    if lazy is False:
-        for font in fonts:
-            for table in tables if "*" not in tables else font.keys():
-                font[table]  # Decompiles
+    if tables is None:
+        if lazy is False:
+            tables = ["*"]
+        else:
+            tables = []
+    for font in fonts:
+        if "GlyphOrder" in tables:
+            font.getGlyphOrder()
+        for table in tables if "*" not in tables else font.keys():
+            font[table]  # Decompiles
 
     if outFile is not None:
         if len(fonts) == 1:
