@@ -61,7 +61,7 @@ class _TTGlyphHVF(_TTGlyph):
 
         transforms = [Transform() for _ in range(_partGetTotalNumParts(part))]
 
-        _drawPart(part, pen, self.glyphSet, coords, transforms)
+        _drawPart(part, pen, self.glyphSet, coords, 0, transforms, 0)
 
     def drawPoints(self, pen):
         """Draw the glyph onto ``pen``. See fontTools.pens.pointPen for details
@@ -128,12 +128,12 @@ def _project_on_curve_to_tangent(offcurve1, oncurve, offcurve2):
     oncurve[SegmentPoint.ON_CURVE_Y] = y
 
 
-def _drawPartShape(part, pen, _glyphSet, coords, transforms):
-    transform = transforms[0]
+def _drawPartShape(part, pen, _glyphSet, coords, coordsOffset, transforms, transformOffset):
+    transform = transforms[transformOffset]
 
     v = list(part.Master.Coords)
 
-    coords = coords[:part.AxisCount]
+    coords = coords[coordsOffset:coordsOffset+part.AxisCount]
 
     # Apply deltas
     deltas = part.Deltas.Delta
@@ -352,17 +352,17 @@ def _partCompositeApplyToTransforms(part, transforms, coords):
         transforms[row] = transforms[row].transform(transform, True)
 
 
-def _drawPartComposite(part, pen, glyphSet, coords, transforms):
+def _drawPartComposite(part, pen, glyphSet, coords, coordsOffset, transforms, transformOffset):
     hvgl = glyphSet.hvglTable
 
-    coords_head = coords[0:part.AxisCount]
-    coords_tail = coords[part.AxisCount:part.TotalNumAxes]
+    coords_head = coords[coordsOffset:coordsOffset+part.AxisCount]
+    coords_tail = coords[coordsOffset+part.AxisCount:coordsOffset+part.TotalNumAxes]
     del coords
 
     _partCompositeApplyToCoords(part, coords_tail, coords_head)
 
-    transforms_head = transforms[0]
-    transforms_tail = transforms[1:part.TotalNumParts]
+    transforms_head = transforms[transformOffset]
+    transforms_tail = transforms[transformOffset+1:transformOffset+part.TotalNumParts]
     del transforms
 
     _partCompositeApplyToTransforms(part, transforms_tail, coords_head)
@@ -372,15 +372,15 @@ def _drawPartComposite(part, pen, glyphSet, coords, transforms):
             subPart.TreeTransformIndex
         ].transform(transforms_head, True)
         subpart = hvgl.Parts.Part[subPart.PartIndex]
-        subcoords = coords_tail[subPart.TreeAxisIndex:]
-        subtransforms = transforms_tail[subPart.TreeTransformIndex:]
-        _drawPart(subpart, pen, glyphSet, subcoords, subtransforms)
+        _drawPart(subpart, pen, glyphSet,
+                  coords_tail, subPart.TreeAxisIndex,
+                  transforms_tail, subPart.TreeTransformIndex)
 
 
-def _drawPart(part, pen, glyphSet, coords, transforms):
+def _drawPart(part, pen, glyphSet, coords, coordsOffset, transforms, transformOffset):
     if part.Format == 0:
-        _drawPartShape(part, pen, glyphSet, coords, transforms)
+        _drawPartShape(part, pen, glyphSet, coords, coordsOffset, transforms, transformOffset)
     elif part.Format == 1:
-        _drawPartComposite(part, pen, glyphSet, coords, transforms)
+        _drawPartComposite(part, pen, glyphSet, coords, coordsOffset, transforms, transformOffset)
     else:
         raise NotImplementedError("Unknown part flags: %s" % part.flags)
