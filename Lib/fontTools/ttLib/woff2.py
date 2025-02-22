@@ -795,7 +795,8 @@ class WOFF2GlyfTable(getTableClass("glyf")):
         self.overlapSimpleBitmap = None
         if hasOverlapSimpleBitmap:
             overlapSimpleBitmapSize = (self.numGlyphs + 7) >> 3
-            self.overlapSimpleBitmap = array.array("B", data[:overlapSimpleBitmapSize])
+            self.overlapSimpleBitmap = array.array("B")
+            self.overlapSimpleBitmap.frombytes(data[:overlapSimpleBitmapSize])
             offset += overlapSimpleBitmapSize
 
         if offset != inputDataSize:
@@ -809,7 +810,9 @@ class WOFF2GlyfTable(getTableClass("glyf")):
         self.bboxBitmap = array.array("B", bboxBitmap)
         self.bboxStream = self.bboxStream[bboxBitmapSize:]
 
-        self.nContourStream = array.array("h", self.nContourStream)
+        nContourStream = array.array("h")
+        nContourStream.frombytes(self.nContourStream)
+        self.nContourStream = nContourStream
         if sys.byteorder != "big":
             self.nContourStream.byteswap()
         assert len(self.nContourStream) == self.numGlyphs

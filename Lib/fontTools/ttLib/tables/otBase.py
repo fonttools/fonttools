@@ -295,7 +295,8 @@ class OTTableReader(object):
     def readArray(self, typecode, staticSize, count):
         pos = self.pos
         newpos = pos + count * staticSize
-        value = array.array(typecode, self.data[pos:newpos])
+        value = array.array(typecode)
+        value.frombytes(self.data[pos:newpos])
         if sys.byteorder != "big":
             value.byteswap()
         self.pos = newpos

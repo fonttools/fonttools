@@ -11,9 +11,11 @@ safeEval = ast.literal_eval
 class Tag(str):
     @staticmethod
     def transcode(blob):
-        if isinstance(blob, bytes):
-            blob = blob.decode("latin-1")
-        return blob
+        if blob is None:
+            return None
+        if isinstance(blob, str):
+            return blob
+        return bytes(blob).decode("latin-1")
 
     def __new__(self, content):
         return str.__new__(self, self.transcode(content))
@@ -119,10 +121,10 @@ def pad(data, size):
 
 
 def tostr(s, encoding="ascii", errors="strict"):
-    if not isinstance(s, str):
-        return s.decode(encoding, errors)
-    else:
+    if isinstance(s, str):
         return s
+    else:
+        return bytes(s).decode(encoding, errors)
 
 
 def tobytes(s, encoding="ascii", errors="strict"):
@@ -137,7 +139,9 @@ def bytechr(n):
 
 
 def byteord(c):
-    return c if isinstance(c, int) else ord(c)
+    return (c if isinstance(c, int) else
+           ord(c) if isinstance(c[0], str) else
+           c[0])
 
 
 def strjoin(iterable, joiner=""):

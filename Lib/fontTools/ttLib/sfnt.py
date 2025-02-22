@@ -126,7 +126,8 @@ class SFNTReader(object):
         del self.tables[Tag(tag)]
 
     def close(self):
-        self.file.close()
+        if not isinstance(self.file, BytesIO):
+            self.file.close()
 
     # We define custom __getstate__ and __setstate__ to make SFNTReader pickle-able
     # and deepcopy-able. When a TTFont is loaded as lazy=True, SFNTReader holds a
@@ -278,7 +279,7 @@ class SFNTWriter(object):
         entry.tag = tag
         entry.offset = self.nextTableOffset
         if tag == "head":
-            entry.checkSum = calcChecksum(data[:8] + b"\0\0\0\0" + data[12:])
+            entry.checkSum = calcChecksum(bytes(data[:8]) + b"\0\0\0\0" + bytes(data[12:]))
             self.headTable = data
             entry.uncompressed = True
         else:
@@ -503,8 +504,14 @@ class DirectoryEntry(object):
             return "<%s at %x>" % (self.__class__.__name__, id(self))
 
     def loadData(self, file):
-        file.seek(self.offset)
-        data = file.read(self.length)
+        if isinstance(file, BytesIO):
+            mv = file.getbuffer()
+            data = mv[self.offset : self.offset + self.length]
+            mv.release()
+        else:
+            file.seek(self.offset)
+            data = file.read(self.length)
+
         assert len(data) == self.length
         if hasattr(self.__class__, "decodeData"):
             data = self.decodeData(data)
@@ -612,7 +619,7 @@ def calcChecksum(data):
     """
     remainder = len(data) % 4
     if remainder:
-        data += b"\0" * (4 - remainder)
+        data = bytes(data) + b"\0" * (4 - remainder)
     value = 0
     blockSize = 4096
     assert blockSize % 4 == 0
