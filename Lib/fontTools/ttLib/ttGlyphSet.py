@@ -502,19 +502,20 @@ if __name__ == "__main__":
         print("Usage: ttGlyphSet.py [-y fontNumber] [-n numGlyphs] fontfile.ttf")
         sys.exit(1)
 
-    fontNumber = None
-    if sys.argv[1] == "-y":
-        fontNumber = int(sys.argv[2])
-        del sys.argv[1:3]
+    # Convert to argparse reading
+    import argparse
 
-    numGlyphs = 10000000000000
-    if sys.argv[1] == "-n":
-        numGlyphs = int(sys.argv[2])
-        del sys.argv[1:3]
+    args = argparse.ArgumentParser()
+    args.add_argument("fontfile", help="font file to load")
+    args.add_argument("-y", type=int, help="font number to load")
+    args.add_argument("-n", type=int, help="number of glyphs to draw")
+    args = args.parse_args()
 
-    font = TTFont(sys.argv[1], fontNumber=fontNumber)
+    font = TTFont(args.fontfile, fontNumber=args.y)
     glyphSet = font.getGlyphSet()
-    for i, glyphName in enumerate(list(glyphSet.keys())[:numGlyphs]):
+    for i, glyphName in enumerate(
+        list(glyphSet.keys())[: args.n if args.n else 1000000000]
+    ):
         if i % 100 == 0:
             print("x", end="", flush=True)
         glyph = glyphSet[glyphName]
