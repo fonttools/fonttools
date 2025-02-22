@@ -4,7 +4,7 @@ import array
 import struct
 from collections import OrderedDict
 from fontTools.misc import sstruct
-from fontTools.misc.arrayTools import calcIntBounds
+from fontTools.misc.arrayTools import (arrayFromBytes, calcIntBounds)
 from fontTools.misc.textTools import Tag, bytechr, byteord, bytesjoin, pad
 from fontTools.ttLib import (
     TTFont,
@@ -750,9 +750,7 @@ class WOFF2LocaTable(getTableClass("loca")):
                 for i in range(len(self.locations)):
                     locations.append(self.locations[i] // 2)
             else:
-                locations = array.array("I", self.locations)
-            if sys.byteorder != "big":
-                locations.byteswap()
+                locations = arrayFromBytes("I", self.locations)
             data = locations.tobytes()
         else:
             # use the most compact indexFormat given the current glyph offsets
@@ -795,7 +793,8 @@ class WOFF2GlyfTable(getTableClass("glyf")):
         self.overlapSimpleBitmap = None
         if hasOverlapSimpleBitmap:
             overlapSimpleBitmapSize = (self.numGlyphs + 7) >> 3
-            self.overlapSimpleBitmap = array.array("B", data[:overlapSimpleBitmapSize])
+            self.overlapSimpleBitmap = array.array("B")
+            self.overlapSimpleBitmap.frombytes(data[:overlapSimpleBitmapSize])
             offset += overlapSimpleBitmapSize
 
         if offset != inputDataSize:
@@ -809,9 +808,7 @@ class WOFF2GlyfTable(getTableClass("glyf")):
         self.bboxBitmap = array.array("B", bboxBitmap)
         self.bboxStream = self.bboxStream[bboxBitmapSize:]
 
-        self.nContourStream = array.array("h", self.nContourStream)
-        if sys.byteorder != "big":
-            self.nContourStream.byteswap()
+        self.nContourStream = arrayFromBytes("h", self.nContourStream)
         assert len(self.nContourStream) == self.numGlyphs
 
         if "head" in ttFont:
@@ -1156,16 +1153,12 @@ class WOFF2HmtxTable(getTableClass("hmtx")):
         numberOfHMetrics = min(int(headerTable.numberOfHMetrics), numGlyphs)
 
         assert len(data) >= 2 * numberOfHMetrics
-        advanceWidthArray = array.array("H", data[: 2 * numberOfHMetrics])
-        if sys.byteorder != "big":
-            advanceWidthArray.byteswap()
+        advanceWidthArray = arrayFromBytes("H", data[: 2 * numberOfHMetrics])
         data = data[2 * numberOfHMetrics :]
 
         if hasLsbArray:
             assert len(data) >= 2 * numberOfHMetrics
-            lsbArray = array.array("h", data[: 2 * numberOfHMetrics])
-            if sys.byteorder != "big":
-                lsbArray.byteswap()
+            lsbArray = arrayFromBytes("h", data[: 2 * numberOfHMetrics])
             data = data[2 * numberOfHMetrics :]
         else:
             # compute (proportional) glyphs' lsb from their xMin
@@ -1180,9 +1173,7 @@ class WOFF2HmtxTable(getTableClass("hmtx")):
         numberOfSideBearings = numGlyphs - numberOfHMetrics
         if hasLeftSideBearingArray:
             assert len(data) >= 2 * numberOfSideBearings
-            leftSideBearingArray = array.array("h", data[: 2 * numberOfSideBearings])
-            if sys.byteorder != "big":
-                leftSideBearingArray.byteswap()
+            leftSideBearingArray = arrayFromBytes("h", data[: 2 * numberOfSideBearings])
             data = data[2 * numberOfSideBearings :]
         else:
             # compute (monospaced) glyphs' leftSideBearing from their xMin
@@ -1246,7 +1237,7 @@ class WOFF2HmtxTable(getTableClass("hmtx")):
 
         data = struct.pack(">B", flags)
 
-        advanceWidthArray = array.array(
+        advanceWidthArray = arrayFromBytes(
             "H",
             [
                 self.metrics[glyphName][0]
@@ -1254,12 +1245,10 @@ class WOFF2HmtxTable(getTableClass("hmtx")):
                 if i < numberOfHMetrics
             ],
         )
-        if sys.byteorder != "big":
-            advanceWidthArray.byteswap()
         data += advanceWidthArray.tobytes()
 
         if hasLsbArray:
-            lsbArray = array.array(
+            lsbArray = arrayFromBytes(
                 "h",
                 [
                     self.metrics[glyphName][1]
@@ -1267,20 +1256,16 @@ class WOFF2HmtxTable(getTableClass("hmtx")):
                     if i < numberOfHMetrics
                 ],
             )
-            if sys.byteorder != "big":
-                lsbArray.byteswap()
             data += lsbArray.tobytes()
 
         if hasLeftSideBearingArray:
-            leftSideBearingArray = array.array(
+            leftSideBearingArray = arrayFromBytes(
                 "h",
                 [
                     self.metrics[glyphOrder[i]][1]
                     for i in range(numberOfHMetrics, len(glyphOrder))
                 ],
             )
-            if sys.byteorder != "big":
-                leftSideBearingArray.byteswap()
             data += leftSideBearingArray.tobytes()
 
         return data

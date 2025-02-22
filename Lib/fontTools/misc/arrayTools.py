@@ -4,7 +4,9 @@ so on.
 
 from fontTools.misc.roundTools import otRound
 from fontTools.misc.vector import Vector as _Vector
+import array
 import math
+import sys
 import warnings
 
 
@@ -415,6 +417,27 @@ def _test():
     >>> intRect((0.9, 2.9, 3.1, 4.1))
     (0, 2, 4, 5)
     """
+
+
+def arrayFromBytes(itemFormat, data, be=True):
+    """Convert a byte string to an array of items.
+
+    Args:
+        itemFormat: A struct format string.
+        data: A byte string.
+        be: If true, interpret data as big-endian.
+
+    Returns:
+        A list of items.
+    """
+    if type(data) is list:
+        a = array.array(itemFormat, data)
+    else:
+        a = array.array(itemFormat)
+        a.frombytes(data)
+    if be != sys.byteorder == "big" and itemFormat not in "bB":
+        a.byteswap()
+    return a
 
 
 if __name__ == "__main__":

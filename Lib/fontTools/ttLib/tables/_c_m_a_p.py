@@ -1173,7 +1173,8 @@ class cmap_format_12_or_13(CmapSubtable):
         charCodes = []
         gids = []
         pos = 0
-        groups = array.array("I", data[: self.nGroups * 12])
+        groups = array.array("I")
+        groups.frombytes(data[: self.nGroups * 12])
         if sys.byteorder != "big":
             groups.byteswap()
         for i in range(self.nGroups):

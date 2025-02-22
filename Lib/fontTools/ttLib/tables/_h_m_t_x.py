@@ -1,5 +1,6 @@
 from fontTools.misc.roundTools import otRound
 from fontTools import ttLib
+from fontTools.misc.arrayTools import arrayFromBytes
 from fontTools.misc.textTools import safeEval
 from . import DefaultTable
 import sys
@@ -49,11 +50,9 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
         metrics = struct.unpack(metricsFmt, data[: 4 * numberOfMetrics])
         data = data[4 * numberOfMetrics :]
         numberOfSideBearings = numGlyphs - numberOfMetrics
-        sideBearings = array.array("h", data[: 2 * numberOfSideBearings])
+        sideBearings = arrayFromBytes("h", data[: 2 * numberOfSideBearings])
         data = data[2 * numberOfSideBearings :]
 
-        if sys.byteorder != "big":
-            sideBearings.byteswap()
         if data:
             log.warning("too much '%s' table data" % self.tableTag)
         self.metrics = {}
@@ -121,9 +120,7 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
                 )
             else:
                 raise
-        additionalMetrics = array.array("h", additionalMetrics)
-        if sys.byteorder != "big":
-            additionalMetrics.byteswap()
+        additionalMetrics = arrayFromBytes("h", additionalMetrics)
         data = data + additionalMetrics.tobytes()
         return data
 

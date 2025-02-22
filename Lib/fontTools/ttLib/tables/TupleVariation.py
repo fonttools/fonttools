@@ -5,6 +5,7 @@ from fontTools.misc.fixedTools import (
     strToFixedToFloat as str2fl,
     otRound,
 )
+from fontTools.misc.arrayTools import arrayFromBytes
 from fontTools.misc.textTools import safeEval
 import array
 from collections import Counter, defaultdict
@@ -485,17 +486,13 @@ class TupleVariation(object):
         runLength = pos - offset
         while runLength >= 64:
             bytearr.append(DELTAS_ARE_WORDS | 63)
-            a = array.array("h", deltas[offset : offset + 64])
-            if sys.byteorder != "big":
-                a.byteswap()
+            a = arrayFromBytes("h", deltas[offset : offset + 64])
             bytearr.extend(a)
             offset += 64
             runLength -= 64
         if runLength:
             bytearr.append(DELTAS_ARE_WORDS | (runLength - 1))
-            a = array.array("h", deltas[offset:pos])
-            if sys.byteorder != "big":
-                a.byteswap()
+            a = arrayFromBytes("h", deltas[offset:pos])
             bytearr.extend(a)
         return pos
 
@@ -511,17 +508,13 @@ class TupleVariation(object):
         runLength = pos - offset
         while runLength >= 64:
             bytearr.append(DELTAS_ARE_LONGS | 63)
-            a = array.array("i", deltas[offset : offset + 64])
-            if sys.byteorder != "big":
-                a.byteswap()
+            a = arrayFromBytes("i", deltas[offset : offset + 64])
             bytearr.extend(a)
             offset += 64
             runLength -= 64
         if runLength:
             bytearr.append(DELTAS_ARE_LONGS | (runLength - 1))
-            a = array.array("i", deltas[offset:pos])
-            if sys.byteorder != "big":
-                a.byteswap()
+            a = arrayFromBytes("i", deltas[offset:pos])
             bytearr.extend(a)
         return pos
 
