@@ -275,6 +275,10 @@ def _partCompositeApplyToTransforms(part, transforms, transformOffset, coords):
     extremum_rotation_index = 0
     extremum_rotation_count = len(extremum_rotation_indices)
 
+    # This implements the original algorithm from the HVF paper.
+    # HarfBuzz has departed from this algorithm to a slightly faster
+    # one that avoids the need for walking four iterators together.
+
     while True:
         row = len(transforms) - transformOffset
         if master_translation_index < master_translation_count:
