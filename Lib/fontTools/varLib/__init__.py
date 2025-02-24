@@ -543,10 +543,7 @@ def _add_VHVAR(font, masterModel, master_ttfs, axisTags, tableFields):
     )
 
     vhvar.VarStore = metricsStore
-    if advanceMapping is None:
-        setattr(vhvar, tableFields.advMapping, None)
-    else:
-        setattr(vhvar, tableFields.advMapping, advanceMapping)
+    setattr(vhvar, tableFields.advMapping, advanceMapping)
     if vOrigMapping is not None:
         setattr(vhvar, tableFields.vOrigMapping, vOrigMapping)
     setattr(vhvar, tableFields.sb1, None)
