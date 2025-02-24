@@ -41,7 +41,7 @@ class OnlineVarStoreBuilder(object):
     def setSupports(self, supports):
         self._model = None
         self._supports = list(supports)
-        if not self._supports[0]:
+        if self._supports and not self._supports[0]:
             del self._supports[0]  # Drop base master support
         self._cache = None
         self._data = None

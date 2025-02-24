@@ -12,13 +12,13 @@ a Glyphs source, eg., using noto-source as an example:
 
     .. code-block:: sh
 
-	$ fontmake -o ttf-interpolatable -g NotoSansArabic-MM.glyphs
+        $ fontmake -o ttf-interpolatable -g NotoSansArabic-MM.glyphs
 
 Then you can make a variable-font this way:
 
     .. code-block:: sh
 
-	$ fonttools varLib master_ufo/NotoSansArabic.designspace
+        $ fonttools varLib master_ufo/NotoSansArabic.designspace
 
 API *will* change in near future.
 """
@@ -479,7 +479,15 @@ def _merge_TTHinting(font, masterModel, master_ttfs):
 
 _MetricsFields = namedtuple(
     "_MetricsFields",
-    ["tableTag", "metricsTag", "sb1", "sb2", "advMapping", "vOrigMapping"],
+    [
+        "tableTag",
+        "metricsTag",
+        "sb1",
+        "sb2",
+        "advMapping",
+        "vOrigMapping",
+        "phantomIndex",
+    ],
 )
 
 HVAR_FIELDS = _MetricsFields(
@@ -489,6 +497,7 @@ HVAR_FIELDS = _MetricsFields(
     sb2="RsbMap",
     advMapping="AdvWidthMap",
     vOrigMapping=None,
+    phantomIndex=0,
 )
 
 VVAR_FIELDS = _MetricsFields(
@@ -498,6 +507,7 @@ VVAR_FIELDS = _MetricsFields(
     sb2="BsbMap",
     advMapping="AdvHeightMap",
     vOrigMapping="VOrgMap",
+    phantomIndex=1,
 )
 
 
