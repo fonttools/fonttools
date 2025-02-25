@@ -341,6 +341,7 @@ class Builder(object):
             table = self.font["head"] = newTable("head")
             table.decompile(b"\0" * 54, self.font)
             table.tableVersion = 1.0
+            table.magicNumber = 0x5F0F3CF5
             table.created = table.modified = 3406620153  # 2011-12-13 11:22:33
         table.fontRevision = self.fontRevision_
 
