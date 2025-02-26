@@ -24,7 +24,28 @@
                 <Coordinate value="0"/>
               </BaseCoord>
             </BaseValues>
-            <!-- BaseLangSysCount=0 -->
+            <DefaultMinMax>
+              <MinCoord Format="1">
+                <Coordinate value="-800"/>
+              </MinCoord>
+              <MaxCoord Format="1">
+                <Coordinate value="1200"/>
+              </MaxCoord>
+              <!-- FeatMinMaxCount=0 -->
+            </DefaultMinMax>
+            <!-- BaseLangSysCount=1 -->
+            <BaseLangSysRecord index="0">
+              <BaseLangSysTag value="RUS "/>
+              <MinMax>
+                <MinCoord Format="1">
+                  <Coordinate value="-1000"/>
+                </MinCoord>
+                <MaxCoord Format="1">
+                  <Coordinate value="1000"/>
+                </MaxCoord>
+                <!-- FeatMinMaxCount=0 -->
+              </MinMax>
+            </BaseLangSysRecord>
           </BaseScript>
         </BaseScriptRecord>
         <BaseScriptRecord index="1">

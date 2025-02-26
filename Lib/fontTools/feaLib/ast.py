@@ -1837,7 +1837,7 @@ class BaseAxis(Statement):
 
     def build(self, builder):
         """Calls the builder object's ``set_base_axis`` callback."""
-        builder.set_base_axis(self.bases, self.scripts, self.vertical)
+        builder.set_base_axis(self.bases, self.scripts, self.vertical, self.minmax)
 
     def asFea(self, indent=""):
         direction = "Vert" if self.vertical else "Horiz"
