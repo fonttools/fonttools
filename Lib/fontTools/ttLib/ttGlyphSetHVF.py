@@ -2,6 +2,7 @@ from .ttGlyphSet import _TTGlyphSet, _TTGlyph
 from fontTools.misc.transform import Transform
 from fontTools.ttLib.tables.otTables import hvglTranslationDelta
 
+import math
 from enum import IntEnum
 from collections.abc import MutableSequence
 
@@ -365,15 +366,27 @@ def _partCompositeApplyToTransforms(part, transforms, transformOffset, coords):
             scalar = abs(coord)
 
             if rotation_delta:
-                t = complex(translation_delta.x, translation_delta.y)
-                _1_minus_e_iangle = 1 - complex(0, 1) * rotation_delta
-                eigen = t / _1_minus_e_iangle
-                eigen_x = eigen.real
-                eigen_y = eigen.imag
+                center_x = translation_delta.x
+                center_y = translation_delta.y
+
+                # The paper has formula for this in terms of complex numbers.
+                # This is translated to real numbers, partly using ChatGPT.
+                if center_x or center_y:
+                    angle = rotation_delta
+                    s = math.sin(angle)
+                    c = math.cos(angle)
+                    _1_minus_c = 1 - c
+                    if _1_minus_c:
+                        s_over_1_minus_c = s / _1_minus_c
+                        new_center_x = (center_x - center_y * s_over_1_minus_c) * 0.5
+                        new_center_y = (center_y + center_x * s_over_1_minus_c) * 0.5
+                        center_x = new_center_x
+                        center_y = new_center_y
+
                 transform2 = Transform()
-                transform2.translate(-eigen_x, -eigen_y, True)
+                transform2.translate(-center_x, -center_y, True)
                 transform2.rotate(rotation_delta * scalar, True)
-                transform2.translate(eigen_x, eigen_y, True)
+                transform2.translate(center_x, center_y, True)
                 transform = transform.transform(transform2)
             else:
                 # No rotation, just scale the translate
