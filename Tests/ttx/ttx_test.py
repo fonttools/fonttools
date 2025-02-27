@@ -1058,6 +1058,19 @@ def test_roundtrip_DSIG_split_at_XML_parse_buffer_size(tmp_path):
     )
 
 
+def test_main_ttx_compile_optimize_font_speed(tmp_path):
+    inpath = Path("Tests") / "ttx" / "data" / "TestTTF.ttx"
+
+    size_optimized = tmp_path / "TestTTF-size.ttf"
+    ttx.main(["-o", str(size_optimized), str(inpath)])
+
+    speed_optimized = tmp_path / "TestTTF-speed.ttf"
+    ttx.main(["--optimize-font-speed", "-o", str(speed_optimized), str(inpath)])
+
+    # the speed-optimized font should end up larger than the size-optimized one
+    assert size_optimized.stat().st_size < speed_optimized.stat().st_size
+
+
 # ---------------------------
 # support functions for tests
 # ---------------------------
