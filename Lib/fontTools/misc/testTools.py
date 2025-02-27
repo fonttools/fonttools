@@ -46,7 +46,8 @@ def parseXmlInto(font, parseInto, xmlSnippet):
     parsed_xml = [e for e in parseXML(xmlSnippet.strip()) if not isinstance(e, str)]
     for name, attrs, content in parsed_xml:
         parseInto.fromXML(name, attrs, content, font)
-    parseInto.populateDefaults()
+    if hasattr(parseInto, "populateDefaults"):
+        parseInto.populateDefaults()
     return parseInto
 
 
