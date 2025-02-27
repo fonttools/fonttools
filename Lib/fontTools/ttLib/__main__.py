@@ -1,5 +1,5 @@
 import sys
-from fontTools.ttLib import TTLibError, TTLibFileIsCollectionError
+from fontTools.ttLib import OPTIMIZE_FONT_SPEED, TTLibError, TTLibFileIsCollectionError
 from fontTools.ttLib.ttFont import *
 from fontTools.ttLib.ttCollection import TTCollection
 
@@ -83,6 +83,14 @@ def main(args=None):
         action="store_false",
         help="Don't recalc glyph bounding boxes: use the values in the original font.",
     )
+    parser.add_argument(
+        "--optimize-font-speed",
+        action="store_true",
+        help=(
+            "Enable optimizations that prioritize speed over file size. This "
+            "mainly affects how glyf table and gvar / VARC tables are compiled."
+        ),
+    )
     options = parser.parse_args(args)
 
     fontNumber = int(options.y) if options.y is not None else None
@@ -92,6 +100,7 @@ def main(args=None):
     tables = options.table
     recalcBBoxes = options.recalcBBoxes
     recalcTimestamp = options.recalcTimestamp
+    optimizeFontSpeed = options.optimize_font_speed
 
     fonts = []
     for f in options.font:
@@ -103,6 +112,8 @@ def main(args=None):
                 fontNumber=fontNumber,
                 lazy=lazy,
             )
+            if optimizeFontSpeed:
+                font.cfg[OPTIMIZE_FONT_SPEED] = optimizeFontSpeed
             fonts.append(font)
         except TTLibFileIsCollectionError:
             collection = TTCollection(f, lazy=lazy)
@@ -111,6 +122,8 @@ def main(args=None):
     if tables is None:
         if lazy is False:
             tables = ["*"]
+        elif optimizeFontSpeed:
+            tables = {"glyf", "gvar", "VARC"}.intersection(font.keys())
         else:
             tables = []
     for font in fonts:

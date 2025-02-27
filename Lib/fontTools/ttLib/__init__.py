@@ -1,10 +1,14 @@
 """fontTools.ttLib -- a package for dealing with TrueType fonts."""
 
+from fontTools.config import OPTIONS
 from fontTools.misc.loggingTools import deprecateFunction
 import logging
 
 
 log = logging.getLogger(__name__)
+
+
+OPTIMIZE_FONT_SPEED = OPTIONS["fontTools.ttLib:OPTIMIZE_FONT_SPEED"]
 
 
 class TTLibError(Exception):

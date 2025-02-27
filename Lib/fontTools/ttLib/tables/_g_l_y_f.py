@@ -134,6 +134,8 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
             glyph.expand(self)
 
     def compile(self, ttFont):
+        optimizeSpeed = ttFont.cfg[ttLib.OPTIMIZE_FONT_SPEED]
+
         self.axisTags = (
             [axis.axisTag for axis in ttFont["fvar"].axes] if "fvar" in ttFont else []
         )
@@ -148,7 +150,12 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
         boundsDone = set()
         for glyphName in self.glyphOrder:
             glyph = self.glyphs[glyphName]
-            glyphData = glyph.compile(self, recalcBBoxes, boundsDone=boundsDone)
+            glyphData = glyph.compile(
+                self,
+                recalcBBoxes,
+                boundsDone=boundsDone,
+                optimizeSize=not optimizeSpeed,
+            )
             if padding > 1:
                 glyphData = pad(glyphData, size=padding)
             locations.append(currentLocation)
@@ -714,7 +721,7 @@ class Glyph(object):
             self.decompileCoordinates(data)
 
     def compile(
-        self, glyfTable, recalcBBoxes=True, *, boundsDone=None, optimizeSize=None
+        self, glyfTable, recalcBBoxes=True, *, boundsDone=None, optimizeSize=True
     ):
         if hasattr(self, "data"):
             if recalcBBoxes:
@@ -732,8 +739,6 @@ class Glyph(object):
         if self.isComposite():
             data = data + self.compileComponents(glyfTable)
         else:
-            if optimizeSize is None:
-                optimizeSize = getattr(glyfTable, "optimizeSize", True)
             data = data + self.compileCoordinates(optimizeSize=optimizeSize)
         return data
 
