@@ -12,13 +12,13 @@ a Glyphs source, eg., using noto-source as an example:
 
     .. code-block:: sh
 
-	$ fontmake -o ttf-interpolatable -g NotoSansArabic-MM.glyphs
+        $ fontmake -o ttf-interpolatable -g NotoSansArabic-MM.glyphs
 
 Then you can make a variable-font this way:
 
     .. code-block:: sh
 
-	$ fonttools varLib master_ufo/NotoSansArabic.designspace
+        $ fonttools varLib master_ufo/NotoSansArabic.designspace
 
 API *will* change in near future.
 """
@@ -479,7 +479,15 @@ def _merge_TTHinting(font, masterModel, master_ttfs):
 
 _MetricsFields = namedtuple(
     "_MetricsFields",
-    ["tableTag", "metricsTag", "sb1", "sb2", "advMapping", "vOrigMapping"],
+    [
+        "tableTag",
+        "metricsTag",
+        "sb1",
+        "sb2",
+        "advMapping",
+        "vOrigMapping",
+        "phantomIndex",
+    ],
 )
 
 HVAR_FIELDS = _MetricsFields(
@@ -489,6 +497,7 @@ HVAR_FIELDS = _MetricsFields(
     sb2="RsbMap",
     advMapping="AdvWidthMap",
     vOrigMapping=None,
+    phantomIndex=0,
 )
 
 VVAR_FIELDS = _MetricsFields(
@@ -498,108 +507,42 @@ VVAR_FIELDS = _MetricsFields(
     sb2="BsbMap",
     advMapping="AdvHeightMap",
     vOrigMapping="VOrgMap",
+    phantomIndex=1,
 )
 
 
 def _add_HVAR(font, masterModel, master_ttfs, axisTags):
-    _add_VHVAR(font, masterModel, master_ttfs, axisTags, HVAR_FIELDS)
+    getAdvanceMetrics = partial(
+        _get_advance_metrics, font, masterModel, master_ttfs, axisTags, HVAR_FIELDS
+    )
+    _add_VHVAR(font, axisTags, HVAR_FIELDS, getAdvanceMetrics)
 
 
 def _add_VVAR(font, masterModel, master_ttfs, axisTags):
-    _add_VHVAR(font, masterModel, master_ttfs, axisTags, VVAR_FIELDS)
+    getAdvanceMetrics = partial(
+        _get_advance_metrics, font, masterModel, master_ttfs, axisTags, VVAR_FIELDS
+    )
+    _add_VHVAR(font, axisTags, VVAR_FIELDS, getAdvanceMetrics)
 
 
-def _add_VHVAR(font, masterModel, master_ttfs, axisTags, tableFields):
+def _add_VHVAR(font, axisTags, tableFields, getAdvanceMetrics):
     tableTag = tableFields.tableTag
     assert tableTag not in font
+    glyphOrder = font.getGlyphOrder()
     log.info("Generating " + tableTag)
     VHVAR = newTable(tableTag)
     tableClass = getattr(ot, tableTag)
     vhvar = VHVAR.table = tableClass()
     vhvar.Version = 0x00010000
 
-    glyphOrder = font.getGlyphOrder()
+    vhAdvanceDeltasAndSupports, vOrigDeltasAndSupports = getAdvanceMetrics()
 
-    # Build list of source font advance widths for each glyph
-    metricsTag = tableFields.metricsTag
-    advMetricses = [m[metricsTag].metrics for m in master_ttfs]
-
-    # Build list of source font vertical origin coords for each glyph
-    if tableTag == "VVAR" and "VORG" in master_ttfs[0]:
-        vOrigMetricses = [m["VORG"].VOriginRecords for m in master_ttfs]
-        defaultYOrigs = [m["VORG"].defaultVertOriginY for m in master_ttfs]
-        vOrigMetricses = list(zip(vOrigMetricses, defaultYOrigs))
-    else:
-        vOrigMetricses = None
-
-    metricsStore, advanceMapping, vOrigMapping = _get_advance_metrics(
-        font,
-        masterModel,
-        master_ttfs,
-        axisTags,
-        glyphOrder,
-        advMetricses,
-        vOrigMetricses,
-    )
-
-    vhvar.VarStore = metricsStore
-    if advanceMapping is None:
-        setattr(vhvar, tableFields.advMapping, None)
-    else:
-        setattr(vhvar, tableFields.advMapping, advanceMapping)
-    if vOrigMapping is not None:
-        setattr(vhvar, tableFields.vOrigMapping, vOrigMapping)
-    setattr(vhvar, tableFields.sb1, None)
-    setattr(vhvar, tableFields.sb2, None)
-
-    font[tableTag] = VHVAR
-    return
-
-
-def _get_advance_metrics(
-    font,
-    masterModel,
-    master_ttfs,
-    axisTags,
-    glyphOrder,
-    advMetricses,
-    vOrigMetricses=None,
-):
-    vhAdvanceDeltasAndSupports = {}
-    vOrigDeltasAndSupports = {}
-    # HACK: we treat width 65535 as a sentinel value to signal that a glyph
-    # from a non-default master should not participate in computing {H,V}VAR,
-    # as if it were missing. Allows to variate other glyph-related data independently
-    # from glyph metrics
-    sparse_advance = 0xFFFF
-    for glyph in glyphOrder:
-        vhAdvances = [
-            (
-                metrics[glyph][0]
-                if glyph in metrics and metrics[glyph][0] != sparse_advance
-                else None
-            )
-            for metrics in advMetricses
-        ]
-        vhAdvanceDeltasAndSupports[glyph] = masterModel.getDeltasAndSupports(
-            vhAdvances, round=round
-        )
-
-    singleModel = models.allEqual(id(v[1]) for v in vhAdvanceDeltasAndSupports.values())
-
-    if vOrigMetricses:
+    if vOrigDeltasAndSupports:
         singleModel = False
-        for glyph in glyphOrder:
-            # We need to supply a vOrigs tuple with non-None default values
-            # for each glyph. vOrigMetricses contains values only for those
-            # glyphs which have a non-default vOrig.
-            vOrigs = [
-                metrics[glyph] if glyph in metrics else defaultVOrig
-                for metrics, defaultVOrig in vOrigMetricses
-            ]
-            vOrigDeltasAndSupports[glyph] = masterModel.getDeltasAndSupports(
-                vOrigs, round=round
-            )
+    else:
+        singleModel = models.allEqual(
+            id(v[1]) for v in vhAdvanceDeltasAndSupports.values()
+        )
 
     directStore = None
     if singleModel:
@@ -621,7 +564,7 @@ def _get_advance_metrics(
         storeBuilder.setSupports(supports)
         advMapping[glyphName] = storeBuilder.storeDeltas(deltas, round=noRound)
 
-    if vOrigMetricses:
+    if vOrigDeltasAndSupports:
         vOrigMap = {}
         for glyphName in glyphOrder:
             deltas, supports = vOrigDeltasAndSupports[glyphName]
@@ -633,7 +576,7 @@ def _get_advance_metrics(
     advMapping = [mapping2[advMapping[g]] for g in glyphOrder]
     advanceMapping = builder.buildVarIdxMap(advMapping, glyphOrder)
 
-    if vOrigMetricses:
+    if vOrigDeltasAndSupports:
         vOrigMap = [mapping2[vOrigMap[g]] for g in glyphOrder]
 
     useDirect = False
@@ -657,10 +600,70 @@ def _get_advance_metrics(
         advanceMapping = None
     else:
         metricsStore = indirectStore
-        if vOrigMetricses:
+        if vOrigDeltasAndSupports:
             vOrigMapping = builder.buildVarIdxMap(vOrigMap, glyphOrder)
 
-    return metricsStore, advanceMapping, vOrigMapping
+    vhvar.VarStore = metricsStore
+    setattr(vhvar, tableFields.advMapping, advanceMapping)
+    if vOrigMapping is not None:
+        setattr(vhvar, tableFields.vOrigMapping, vOrigMapping)
+    setattr(vhvar, tableFields.sb1, None)
+    setattr(vhvar, tableFields.sb2, None)
+
+    font[tableTag] = VHVAR
+    return
+
+
+def _get_advance_metrics(font, masterModel, master_ttfs, axisTags, tableFields):
+    tableTag = tableFields.tableTag
+    glyphOrder = font.getGlyphOrder()
+
+    # Build list of source font advance widths for each glyph
+    metricsTag = tableFields.metricsTag
+    advMetricses = [m[metricsTag].metrics for m in master_ttfs]
+
+    # Build list of source font vertical origin coords for each glyph
+    if tableTag == "VVAR" and "VORG" in master_ttfs[0]:
+        vOrigMetricses = [m["VORG"].VOriginRecords for m in master_ttfs]
+        defaultYOrigs = [m["VORG"].defaultVertOriginY for m in master_ttfs]
+        vOrigMetricses = list(zip(vOrigMetricses, defaultYOrigs))
+    else:
+        vOrigMetricses = None
+
+    vhAdvanceDeltasAndSupports = {}
+    vOrigDeltasAndSupports = {}
+    # HACK: we treat width 65535 as a sentinel value to signal that a glyph
+    # from a non-default master should not participate in computing {H,V}VAR,
+    # as if it were missing. Allows to variate other glyph-related data independently
+    # from glyph metrics
+    sparse_advance = 0xFFFF
+    for glyph in glyphOrder:
+        vhAdvances = [
+            (
+                metrics[glyph][0]
+                if glyph in metrics and metrics[glyph][0] != sparse_advance
+                else None
+            )
+            for metrics in advMetricses
+        ]
+        vhAdvanceDeltasAndSupports[glyph] = masterModel.getDeltasAndSupports(
+            vhAdvances, round=round
+        )
+
+    if vOrigMetricses:
+        for glyph in glyphOrder:
+            # We need to supply a vOrigs tuple with non-None default values
+            # for each glyph. vOrigMetricses contains values only for those
+            # glyphs which have a non-default vOrig.
+            vOrigs = [
+                metrics[glyph] if glyph in metrics else defaultVOrig
+                for metrics, defaultVOrig in vOrigMetricses
+            ]
+            vOrigDeltasAndSupports[glyph] = masterModel.getDeltasAndSupports(
+                vOrigs, round=round
+            )
+
+    return vhAdvanceDeltasAndSupports, vOrigDeltasAndSupports
 
 
 def _add_MVAR(font, masterModel, master_ttfs, axisTags):
