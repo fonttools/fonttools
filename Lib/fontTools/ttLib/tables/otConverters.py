@@ -1810,7 +1810,10 @@ class TupleValues:
         return TupleVariation.decompileDeltas_(None, data)[0]
 
     def write(self, writer, font, tableDict, values, repeatIndex=None):
-        return bytes(TupleVariation.compileDeltaValues_(values))
+        optimizeSpeed = font.cfg.get("fontTools.ttLib:OPTIMIZE_FONT_SPEED")
+        return bytes(
+            TupleVariation.compileDeltaValues_(values, optimizeSize=not optimizeSpeed)
+        )
 
     def xmlRead(self, attrs, content, font):
         return safeEval(attrs["value"])
