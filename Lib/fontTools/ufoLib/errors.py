@@ -10,6 +10,14 @@ class UnsupportedUFOFormat(UFOLibError):
 
 
 class GlifLibError(UFOLibError):
+    """An error raised by glifLib.
+
+    This class is a loose backport of PEP 678, adding a :attr:`.note`
+    attribute that can hold additional context for errors encountered.
+
+    It will be maintained until only Python 3.11-and-later are supported.
+    """
+
     def _add_note(self, note: str) -> None:
         # Loose backport of PEP 678 until we only support Python 3.11+, used for
         # adding additional context to errors.
