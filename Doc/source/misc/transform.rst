@@ -1,8 +1,9 @@
-#########
-transform
-#########
+#########################################################
+transform: Tools for working with transformation matrices
+#########################################################
+
+.. currentmodule:: fontTools.misc.transform
 
 .. automodule:: fontTools.misc.transform
-   :inherited-members:
    :members:
    :undoc-members:

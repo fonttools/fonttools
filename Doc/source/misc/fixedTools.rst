@@ -2,7 +2,8 @@
 fixedTools: Tools for working with fixed-point numbers
 ######################################################
 
+.. currentmodule:: fontTools.misc.fixedTools
+
 .. automodule:: fontTools.misc.fixedTools
-   :inherited-members:
    :members:
    :undoc-members:
