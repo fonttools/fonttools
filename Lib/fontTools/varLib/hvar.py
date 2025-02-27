@@ -27,7 +27,7 @@ def _get_advance_metrics(font, axisTags, tableFields):
     for glyphName in glyphOrder:
         supports = []
         deltas = []
-        variations = gvar.variations[glyphName]
+        variations = gvar.variations.get(glyphName, [])
 
         for tv in variations:
             supports.append(tv.axes)
