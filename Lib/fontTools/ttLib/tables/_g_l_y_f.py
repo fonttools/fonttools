@@ -1,7 +1,6 @@
 """_g_l_y_f.py -- Converter classes for the 'glyf' table."""
 
 from collections import namedtuple
-from fontTools import config
 from fontTools.misc import sstruct
 from fontTools import ttLib
 from fontTools import version
@@ -135,8 +134,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
             glyph.expand(self)
 
     def compile(self, ttFont):
-
-        optimizeSpeed = ttFont.cfg.get("fontTools.ttLib:OPTIMIZE_FONT_SPEED")
+        optimizeSpeed = ttFont.cfg[ttLib.OPTIMIZE_FONT_SPEED]
 
         self.axisTags = (
             [axis.axisTag for axis in ttFont["fvar"].axes] if "fvar" in ttFont else []

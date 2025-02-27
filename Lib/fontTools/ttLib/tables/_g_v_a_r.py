@@ -3,6 +3,7 @@ from functools import partial
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
 from fontTools.misc.lazyTools import LazyDict
+from fontTools.ttLib import OPTIMIZE_FONT_SPEED
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from . import DefaultTable
 import array
@@ -92,7 +93,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
         return b"".join(result)
 
     def compileGlyphs_(self, ttFont, axisTags, sharedCoordIndices):
-        optimizeSpeed = ttFont.cfg.get("fontTools.ttLib:OPTIMIZE_FONT_SPEED")
+        optimizeSpeed = ttFont.cfg[OPTIMIZE_FONT_SPEED]
         result = []
         glyf = ttFont["glyf"]
         for glyphName in ttFont.getGlyphOrder():

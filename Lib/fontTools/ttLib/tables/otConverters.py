@@ -10,7 +10,7 @@ from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools.misc.roundTools import nearestMultipleShortestRepr, otRound
 from fontTools.misc.textTools import bytesjoin, tobytes, tostr, pad, safeEval
 from fontTools.misc.lazyTools import LazyList
-from fontTools.ttLib import getSearchRange
+from fontTools.ttLib import OPTIMIZE_FONT_SPEED, getSearchRange
 from .otBase import (
     CountReference,
     FormatSwitchingBaseTable,
@@ -1810,7 +1810,7 @@ class TupleValues:
         return TupleVariation.decompileDeltas_(None, data)[0]
 
     def write(self, writer, font, tableDict, values, repeatIndex=None):
-        optimizeSpeed = font.cfg.get("fontTools.ttLib:OPTIMIZE_FONT_SPEED")
+        optimizeSpeed = font.cfg[OPTIMIZE_FONT_SPEED]
         return bytes(
             TupleVariation.compileDeltaValues_(values, optimizeSize=not optimizeSpeed)
         )
