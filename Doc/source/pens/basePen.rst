@@ -1,8 +1,7 @@
-#######
-basePen
-#######
+###############################################
+basePen: Base classes for segment-oriented pens
+###############################################
 
 .. automodule:: fontTools.pens.basePen
-   :inherited-members:
    :members:
    :undoc-members:
