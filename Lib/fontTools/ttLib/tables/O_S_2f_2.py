@@ -74,8 +74,8 @@ OS2_format_0 = """
 	sTypoAscender:          h       # typographic ascender
 	sTypoDescender:         h       # typographic descender
 	sTypoLineGap:           h       # typographic line gap
-	usWinAscent:            H       # Windows ascender
-	usWinDescent:           H       # Windows descender
+	usWinAscent:            h       # Windows ascender
+	usWinDescent:           h       # Windows descender
 """
 
 OS2_format_1_addition = """
