@@ -131,7 +131,7 @@ class VoltToFea:
             self._class_names[name] = res
         return self._class_names[name]
 
-    def _collectStatements(self, doc, tables):
+    def _collectStatements(self, doc, tables, ignore_unsupported_settings=False):
         # Collect and sort group definitions first, to make sure a group
         # definition that references other groups comes after them since VOLT
         # does not enforce such ordering, and feature file require it.
@@ -146,7 +146,7 @@ class VoltToFea:
                 if "GPOS" in tables:
                     self._anchorDefinition(statement)
             elif isinstance(statement, VAst.SettingDefinition):
-                self._settingDefinition(statement)
+                self._settingDefinition(statement, ignore_unsupported_settings)
             elif isinstance(statement, VAst.GroupDefinition):
                 pass  # Handled above
             elif isinstance(statement, VAst.ScriptDefinition):
@@ -230,7 +230,7 @@ class VoltToFea:
 
         return doc
 
-    def convert(self, tables=None):
+    def convert(self, tables=None, ignore_unsupported_settings=False):
         if self._doc is None:
             self._doc = VoltParser(self._file_or_path).parse()
         doc = self._doc
@@ -240,7 +240,7 @@ class VoltToFea:
         if self._font is not None:
             self._glyph_order = self._font.getGlyphOrder()
 
-        self._collectStatements(doc, tables)
+        self._collectStatements(doc, tables, ignore_unsupported_settings)
         fea = self._buildFeatureFile(tables)
         return fea.asFea()
 
@@ -322,10 +322,10 @@ class VoltToFea:
                 assert ltag not in self._features[ftag][stag]
                 self._features[ftag][stag][ltag] = lookups.keys()
 
-    def _settingDefinition(self, setting):
+    def _settingDefinition(self, setting, ignore_unsupported=False):
         if setting.name.startswith("COMPILER_"):
             self._settings[setting.name] = setting.value
-        else:
+        elif not ignore_unsupported:
             log.warning(f"Unsupported setting ignored: {setting.name}")
 
     def _adjustment(self, adjustment):
