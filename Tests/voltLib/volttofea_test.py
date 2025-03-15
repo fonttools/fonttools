@@ -1210,6 +1210,14 @@ class ToFeaTest(unittest.TestCase):
             fea,
         )
 
+    def test_group_nested_enum(self):
+        fea = self.parse(
+            'DEF_GROUP "foo"\n'
+            'ENUM ENUM GLYPH "foo" GLYPH "foo.1" GLYPH "foo.2" END_ENUM END_ENUM\n'
+            "END_GROUP"
+        )
+        self.assertEqual("# Glyph classes\n@foo = [foo foo.1 foo.2];", fea)
+
     def test_cli_vtp(self):
         vtp = DATADIR / "Nutso.vtp"
         fea = DATADIR / "Nutso.fea"
