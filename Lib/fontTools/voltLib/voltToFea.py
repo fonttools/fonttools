@@ -258,7 +258,7 @@ class VoltToFea:
             name = group
         return ast.GlyphClassName(self._glyphclasses[name.lower()])
 
-    def _coverage(self, coverage):
+    def _coverage(self, coverage, flatten=False):
         items = []
         for item in coverage:
             if isinstance(item, VAst.GlyphName):
@@ -266,7 +266,10 @@ class VoltToFea:
             elif isinstance(item, VAst.GroupName):
                 items.append(self._groupName(item))
             elif isinstance(item, VAst.Enum):
-                items.append(self._enum(item))
+                if flatten:
+                    items.extend(item.glyphSet())
+                else:
+                    items.append(self._enum(item))
             elif isinstance(item, VAst.Range):
                 items.append((item.start, item.end))
             else:
@@ -274,7 +277,7 @@ class VoltToFea:
         return items
 
     def _enum(self, enum):
-        return ast.GlyphClass(self._coverage(enum.enum))
+        return ast.GlyphClass(self._coverage(enum.enum, flatten=True))
 
     def _context(self, context):
         out = []
