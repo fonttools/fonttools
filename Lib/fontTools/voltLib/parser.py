@@ -325,7 +325,15 @@ class Parser(object):
                     mapping, location=location
                 )
             else:
-                sub = ast.SubstitutionSingleDefinition(mapping, location=location)
+                # Alternate substitutions are represented by adding multiple
+                # substitutions for the same glyph, so we detect that here
+                glyphs = [x.glyphSet() for cov in src for x in cov]  # flatten src
+                if len(set(glyphs)) != len(glyphs):  # src has duplicates
+                    sub = ast.SubstitutionAlternateDefinition(
+                        mapping, location=location
+                    )
+                else:
+                    sub = ast.SubstitutionSingleDefinition(mapping, location=location)
         elif max_src == 1 and max_dest > 1:
             sub = ast.SubstitutionMultipleDefinition(mapping, location=location)
         elif max_src > 1 and max_dest == 1:

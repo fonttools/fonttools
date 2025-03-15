@@ -814,6 +814,39 @@ class ToFeaTest(unittest.TestCase):
             fea,
         )
 
+    def test_substitution_alternate(self):
+        fea = self.parse(
+            'DEF_GROUP "b" ENUM GLYPH "b" END_ENUM END_GROUP\n'
+            'DEF_LOOKUP "test" PROCESS_BASE PROCESS_MARKS ALL '
+            "DIRECTION LTR\n"
+            "IN_CONTEXT\n"
+            "END_CONTEXT\n"
+            "AS_SUBSTITUTION\n"
+            'SUB GLYPH "a"\n'
+            'WITH GLYPH "a.alt1"\n'
+            "END_SUB\n"
+            'SUB GLYPH "a"\n'
+            'WITH GLYPH "a.alt2"\n'
+            "END_SUB\n"
+            'SUB GROUP "b"\n'
+            'WITH GROUP "b"\n'
+            "END_SUB\n"
+            'SUB GLYPH "b"\n'
+            'WITH GLYPH "b.alt"\n'
+            "END_SUB\n"
+            "END_SUBSTITUTION"
+        )
+        self.assertEqual(
+            "# Glyph classes\n"
+            "@b = [b];\n"
+            "\n# Lookups\n"
+            "lookup test {\n"
+            "    sub a from [a.alt1 a.alt2];\n"
+            "    sub b from [b b.alt];\n"
+            "} test;\n",
+            fea,
+        )
+
     # GPOS
     #  ATTACH_CURSIVE
     #  ATTACH
