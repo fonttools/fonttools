@@ -98,7 +98,10 @@ class VoltToFea:
     _NOT_CLASS_NAME_RE = re.compile(r"[^A-Za-z_0-9.\-]")
 
     def __init__(self, file_or_path, font=None):
-        self._file_or_path = file_or_path
+        if isinstance(file_or_path, VAst.VoltFile):
+            self._doc, self._file_or_path = file_or_path, None
+        else:
+            self._doc, self._file_or_path = None, file_or_path
         self._font = font
 
         self._glyph_map = {}
@@ -261,7 +264,9 @@ class VoltToFea:
         return doc
 
     def convert(self, tables=None):
-        doc = VoltParser(self._file_or_path).parse()
+        if self._doc is None:
+            self._doc = VoltParser(self._file_or_path).parse()
+        doc = self._doc
 
         if tables is None:
             tables = TABLES
