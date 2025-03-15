@@ -317,6 +317,10 @@ class SubstitutionLigatureDefinition(SubstitutionDefinition):
     pass
 
 
+class SubstitutionAlternateDefinition(SubstitutionDefinition):
+    pass
+
+
 class SubstitutionReverseChainingSingleDefinition(SubstitutionDefinition):
     pass
 
