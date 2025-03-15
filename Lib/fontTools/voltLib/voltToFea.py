@@ -545,6 +545,25 @@ class VoltToFea:
         statements = fealookup.statements
 
         sub = lookup.sub
+
+        # Alternate substitutions are represented by adding multiple
+        # substitutions for the same glyph, so we need to collect them into one
+        # to many mapping.
+        if isinstance(sub, VAst.SubstitutionAlternateDefinition):
+            alternates = {}
+            for key, val in sub.mapping.items():
+                glyphs = self._coverage(key)
+                replacements = self._coverage(val)
+                assert len(glyphs) == 1
+                alternates.setdefault(glyphs[0].glyph, []).extend(replacements)
+
+            for glyph, replacements in alternates.items():
+                statement = ast.AlternateSubstStatement(
+                    prefix, glyph, suffix, ast.GlyphClass(replacements), chain
+                )
+                statements.append(statement)
+            return
+
         for key, val in sub.mapping.items():
             if not key or not val:
                 path, line, column = sub.location
