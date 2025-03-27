@@ -53,12 +53,18 @@ def compact(font: TTFont, level: int) -> TTFont:
     #     are not grouped together first; instead each subtable is treated
     #     independently, so currently this step is:
     #     Split existing subtables into more smaller subtables
-    gpos = font["GPOS"]
+    gpos = font.get("GPOS")
+
+    # If the font does not contain a GPOS table, there is nothing to do.
+    if gpos is None:
+        return font
+
     for lookup in gpos.table.LookupList.Lookup:
         if lookup.LookupType == 2:
             compact_lookup(font, level, lookup)
         elif lookup.LookupType == 9 and lookup.SubTable[0].ExtensionLookupType == 2:
             compact_ext_lookup(font, level, lookup)
+
     return font
 
 
