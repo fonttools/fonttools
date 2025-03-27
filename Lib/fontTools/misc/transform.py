@@ -52,6 +52,8 @@ translate, rotation, scale, skew, and transformation-center components.
 	>>>
 """
 
+from __future__ import annotations
+
 import math
 from typing import NamedTuple
 from dataclasses import dataclass
@@ -65,7 +67,7 @@ _ONE_EPSILON = 1 - _EPSILON
 _MINUS_ONE_EPSILON = -1 + _EPSILON
 
 
-def _normSinCos(v):
+def _normSinCos(v: float) -> float:
     if abs(v) < _EPSILON:
         v = 0
     elif v > _ONE_EPSILON:
@@ -214,7 +216,7 @@ class Transform(NamedTuple):
         xx, xy, yx, yy = self[:4]
         return [(xx * dx + yx * dy, xy * dx + yy * dy) for dx, dy in vectors]
 
-    def translate(self, x=0, y=0):
+    def translate(self, x: float = 0, y: float = 0):
         """Return a new transformation, translated (offset) by x, y.
 
         :Example:
@@ -225,7 +227,7 @@ class Transform(NamedTuple):
         """
         return self.transform((1, 0, 0, 1, x, y))
 
-    def scale(self, x=1, y=None):
+    def scale(self, x: float = 1, y: float | None = None):
         """Return a new transformation, scaled by x, y. The 'y' argument
         may be None, which implies to use the x value for y as well.
 
@@ -241,7 +243,7 @@ class Transform(NamedTuple):
             y = x
         return self.transform((x, 0, 0, y, 0, 0))
 
-    def rotate(self, angle):
+    def rotate(self, angle: float):
         """Return a new transformation, rotated by 'angle' (radians).
 
         :Example:
@@ -251,13 +253,11 @@ class Transform(NamedTuple):
                 <Transform [0 1 -1 0 0 0]>
                 >>>
         """
-        import math
-
         c = _normSinCos(math.cos(angle))
         s = _normSinCos(math.sin(angle))
         return self.transform((c, s, -s, c, 0, 0))
 
-    def skew(self, x=0, y=0):
+    def skew(self, x: float = 0, y: float = 0):
         """Return a new transformation, skewed by x and y.
 
         :Example:
@@ -267,8 +267,6 @@ class Transform(NamedTuple):
                 <Transform [1 0 1 1 0 0]>
                 >>>
         """
-        import math
-
         return self.transform((1, math.tan(y), math.tan(x), 1, 0, 0))
 
     def transform(self, other):
@@ -336,7 +334,7 @@ class Transform(NamedTuple):
         dx, dy = -xx * dx - yx * dy, -xy * dx - yy * dy
         return self.__class__(xx, xy, yx, yy, dx, dy)
 
-    def toPS(self):
+    def toPS(self) -> str:
         """Return a PostScript representation
 
         :Example:
@@ -352,7 +350,7 @@ class Transform(NamedTuple):
         """Decompose into a DecomposedTransform."""
         return DecomposedTransform.fromTransform(self)
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         """Returns True if transform is not identity, False otherwise.
 
         :Example:
@@ -374,14 +372,14 @@ class Transform(NamedTuple):
         """
         return self != Identity
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "<%s [%g %g %g %g %g %g]>" % ((self.__class__.__name__,) + self)
 
 
 Identity = Transform()
 
 
-def Offset(x=0, y=0):
+def Offset(x: float = 0, y: float = 0) -> Transform:
     """Return the identity transformation offset by x, y.
 
     :Example:
@@ -392,7 +390,7 @@ def Offset(x=0, y=0):
     return Transform(1, 0, 0, 1, x, y)
 
 
-def Scale(x, y=None):
+def Scale(x: float, y: float | None = None) -> Transform:
     """Return the identity transformation scaled by x, y. The 'y' argument
     may be None, which implies to use the x value for y as well.
 
@@ -422,10 +420,35 @@ class DecomposedTransform:
     tCenterX: float = 0
     tCenterY: float = 0
 
+    def __bool__(self):
+        return (
+            self.translateX != 0
+            or self.translateY != 0
+            or self.rotation != 0
+            or self.scaleX != 1
+            or self.scaleY != 1
+            or self.skewX != 0
+            or self.skewY != 0
+            or self.tCenterX != 0
+            or self.tCenterY != 0
+        )
+
     @classmethod
     def fromTransform(self, transform):
+        """Return a DecomposedTransform() equivalent of this transformation.
+        The returned solution always has skewY = 0, and angle in the (-180, 180].
+
+        :Example:
+                >>> DecomposedTransform.fromTransform(Transform(3, 0, 0, 2, 0, 0))
+                DecomposedTransform(translateX=0, translateY=0, rotation=0.0, scaleX=3.0, scaleY=2.0, skewX=0.0, skewY=0.0, tCenterX=0, tCenterY=0)
+                >>> DecomposedTransform.fromTransform(Transform(0, 0, 0, 1, 0, 0))
+                DecomposedTransform(translateX=0, translateY=0, rotation=0.0, scaleX=0.0, scaleY=1.0, skewX=0.0, skewY=0.0, tCenterX=0, tCenterY=0)
+                >>> DecomposedTransform.fromTransform(Transform(0, 0, 1, 1, 0, 0))
+                DecomposedTransform(translateX=0, translateY=0, rotation=-45.0, scaleX=0.0, scaleY=1.4142135623730951, skewX=0.0, skewY=0.0, tCenterX=0, tCenterY=0)
+        """
         # Adapted from an answer on
         # https://math.stackexchange.com/questions/13150/extracting-rotation-scale-values-from-2d-transformation-matrix
+
         a, b, c, d, x, y = transform
 
         sx = math.copysign(1, a)
@@ -437,21 +460,20 @@ class DecomposedTransform:
 
         rotation = 0
         scaleX = scaleY = 0
-        skewX = skewY = 0
+        skewX = 0
 
         # Apply the QR-like decomposition.
         if a != 0 or b != 0:
             r = math.sqrt(a * a + b * b)
             rotation = math.acos(a / r) if b >= 0 else -math.acos(a / r)
             scaleX, scaleY = (r, delta / r)
-            skewX, skewY = (math.atan((a * c + b * d) / (r * r)), 0)
+            skewX = math.atan((a * c + b * d) / (r * r))
         elif c != 0 or d != 0:
             s = math.sqrt(c * c + d * d)
             rotation = math.pi / 2 - (
                 math.acos(-c / s) if d >= 0 else -math.acos(c / s)
             )
             scaleX, scaleY = (delta / s, s)
-            skewX, skewY = (0, math.atan((a * c + b * d) / (s * s)))
         else:
             # a = b = c = d = 0
             pass
@@ -463,12 +485,12 @@ class DecomposedTransform:
             scaleX * sx,
             scaleY,
             math.degrees(skewX) * sx,
-            math.degrees(skewY),
+            0.0,
             0,
             0,
         )
 
-    def toTransform(self):
+    def toTransform(self) -> Transform:
         """Return the Transform() equivalent of this transformation.
 
         :Example:

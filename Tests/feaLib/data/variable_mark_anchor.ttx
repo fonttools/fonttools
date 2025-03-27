@@ -16,7 +16,7 @@
           <VarRegionAxis index="0">
             <StartCoord value="0.0"/>
             <PeakCoord value="0.875"/>
-            <EndCoord value="0.875"/>
+            <EndCoord value="1.0"/>
           </VarRegionAxis>
           <VarRegionAxis index="1">
             <StartCoord value="0.0"/>

@@ -8,6 +8,14 @@ log = logging.getLogger(__name__)
 
 
 class table__l_o_c_a(DefaultTable.DefaultTable):
+    """Index to Location table
+
+    The ``loca`` table stores the offsets in the ``glyf`` table that correspond
+    to the descriptions of each glyph. The glyphs are references by Glyph ID.
+
+    See also https://learn.microsoft.com/en-us/typography/opentype/spec/loca
+    """
+
     dependencies = ["glyf"]
 
     def decompile(self, data, ttFont):
@@ -21,10 +29,7 @@ class table__l_o_c_a(DefaultTable.DefaultTable):
         if sys.byteorder != "big":
             locations.byteswap()
         if not longFormat:
-            l = array.array("I")
-            for i in range(len(locations)):
-                l.append(locations[i] * 2)
-            locations = l
+            locations = array.array("I", (2 * l for l in locations))
         if len(locations) < (ttFont["maxp"].numGlyphs + 1):
             log.warning(
                 "corrupt 'loca' table, or wrong numGlyphs in 'maxp': %d %d",

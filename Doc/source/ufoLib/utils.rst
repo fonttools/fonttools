@@ -1,7 +1,6 @@
-
-#####
-utils
-#####
+#####################################
+utils: Miscellaneous helper functions
+#####################################
 
 .. automodule:: fontTools.ufoLib.utils
    :inherited-members:

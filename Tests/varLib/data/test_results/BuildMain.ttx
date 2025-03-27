@@ -443,63 +443,6 @@
     <namerecord nameID="257" platformID="0" platEncID="4" langID="0x0">
       کنتراست
     </namerecord>
-    <namerecord nameID="256" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      Weight
-    </namerecord>
-    <namerecord nameID="257" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      Contrast
-    </namerecord>
-    <namerecord nameID="258" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      ExtraLight
-    </namerecord>
-    <namerecord nameID="259" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      TestFamily-ExtraLight
-    </namerecord>
-    <namerecord nameID="260" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      Light
-    </namerecord>
-    <namerecord nameID="261" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      TestFamily-Light
-    </namerecord>
-    <namerecord nameID="262" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      Regular
-    </namerecord>
-    <namerecord nameID="263" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      TestFamily-Regular
-    </namerecord>
-    <namerecord nameID="264" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      Semibold
-    </namerecord>
-    <namerecord nameID="265" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      TestFamily-Semibold
-    </namerecord>
-    <namerecord nameID="266" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      Bold
-    </namerecord>
-    <namerecord nameID="267" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      TestFamily-Bold
-    </namerecord>
-    <namerecord nameID="268" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      Black
-    </namerecord>
-    <namerecord nameID="269" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      TestFamily-Black
-    </namerecord>
-    <namerecord nameID="270" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      Black Medium Contrast
-    </namerecord>
-    <namerecord nameID="271" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      TestFamily-BlackMediumContrast
-    </namerecord>
-    <namerecord nameID="272" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      Black High Contrast
-    </namerecord>
-    <namerecord nameID="273" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      TestFamily-BlackHighContrast
-    </namerecord>
-    <namerecord nameID="257" platformID="1" platEncID="0" langID="0x2" unicode="True">
-      Kontrast
-    </namerecord>
     <namerecord nameID="257" platformID="3" platEncID="1" langID="0x407">
       Kontrast
     </namerecord>
@@ -546,39 +489,36 @@
       TestFamily-Light
     </namerecord>
     <namerecord nameID="262" platformID="3" platEncID="1" langID="0x409">
-      Regular
-    </namerecord>
-    <namerecord nameID="263" platformID="3" platEncID="1" langID="0x409">
       TestFamily-Regular
     </namerecord>
-    <namerecord nameID="264" platformID="3" platEncID="1" langID="0x409">
+    <namerecord nameID="263" platformID="3" platEncID="1" langID="0x409">
       Semibold
     </namerecord>
-    <namerecord nameID="265" platformID="3" platEncID="1" langID="0x409">
+    <namerecord nameID="264" platformID="3" platEncID="1" langID="0x409">
       TestFamily-Semibold
     </namerecord>
-    <namerecord nameID="266" platformID="3" platEncID="1" langID="0x409">
+    <namerecord nameID="265" platformID="3" platEncID="1" langID="0x409">
       Bold
     </namerecord>
-    <namerecord nameID="267" platformID="3" platEncID="1" langID="0x409">
+    <namerecord nameID="266" platformID="3" platEncID="1" langID="0x409">
       TestFamily-Bold
     </namerecord>
-    <namerecord nameID="268" platformID="3" platEncID="1" langID="0x409">
+    <namerecord nameID="267" platformID="3" platEncID="1" langID="0x409">
       Black
     </namerecord>
-    <namerecord nameID="269" platformID="3" platEncID="1" langID="0x409">
+    <namerecord nameID="268" platformID="3" platEncID="1" langID="0x409">
       TestFamily-Black
     </namerecord>
-    <namerecord nameID="270" platformID="3" platEncID="1" langID="0x409">
+    <namerecord nameID="269" platformID="3" platEncID="1" langID="0x409">
       Black Medium Contrast
     </namerecord>
-    <namerecord nameID="271" platformID="3" platEncID="1" langID="0x409">
+    <namerecord nameID="270" platformID="3" platEncID="1" langID="0x409">
       TestFamily-BlackMediumContrast
     </namerecord>
-    <namerecord nameID="272" platformID="3" platEncID="1" langID="0x409">
+    <namerecord nameID="271" platformID="3" platEncID="1" langID="0x409">
       Black High Contrast
     </namerecord>
-    <namerecord nameID="273" platformID="3" platEncID="1" langID="0x409">
+    <namerecord nameID="272" platformID="3" platEncID="1" langID="0x409">
       TestFamily-BlackHighContrast
     </namerecord>
   </name>
@@ -807,42 +747,42 @@
 
     <!-- Regular -->
     <!-- PostScript: TestFamily-Regular -->
-    <NamedInstance flags="0x0" postscriptNameID="263" subfamilyNameID="262">
+    <NamedInstance flags="0x0" postscriptNameID="262" subfamilyNameID="2">
       <coord axis="wght" value="394.0"/>
       <coord axis="cntr" value="0.0"/>
     </NamedInstance>
 
     <!-- Semibold -->
     <!-- PostScript: TestFamily-Semibold -->
-    <NamedInstance flags="0x0" postscriptNameID="265" subfamilyNameID="264">
+    <NamedInstance flags="0x0" postscriptNameID="264" subfamilyNameID="263">
       <coord axis="wght" value="600.0"/>
       <coord axis="cntr" value="0.0"/>
     </NamedInstance>
 
     <!-- Bold -->
     <!-- PostScript: TestFamily-Bold -->
-    <NamedInstance flags="0x0" postscriptNameID="267" subfamilyNameID="266">
+    <NamedInstance flags="0x0" postscriptNameID="266" subfamilyNameID="265">
       <coord axis="wght" value="824.0"/>
       <coord axis="cntr" value="0.0"/>
     </NamedInstance>
 
     <!-- Black -->
     <!-- PostScript: TestFamily-Black -->
-    <NamedInstance flags="0x0" postscriptNameID="269" subfamilyNameID="268">
+    <NamedInstance flags="0x0" postscriptNameID="268" subfamilyNameID="267">
       <coord axis="wght" value="1000.0"/>
       <coord axis="cntr" value="0.0"/>
     </NamedInstance>
 
     <!-- Black Medium Contrast -->
     <!-- PostScript: TestFamily-BlackMediumContrast -->
-    <NamedInstance flags="0x0" postscriptNameID="271" subfamilyNameID="270">
+    <NamedInstance flags="0x0" postscriptNameID="270" subfamilyNameID="269">
       <coord axis="wght" value="1000.0"/>
       <coord axis="cntr" value="50.0"/>
     </NamedInstance>
 
     <!-- Black High Contrast -->
     <!-- PostScript: TestFamily-BlackHighContrast -->
-    <NamedInstance flags="0x0" postscriptNameID="273" subfamilyNameID="272">
+    <NamedInstance flags="0x0" postscriptNameID="272" subfamilyNameID="271">
       <coord axis="wght" value="1000.0"/>
       <coord axis="cntr" value="100.0"/>
     </NamedInstance>

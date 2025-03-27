@@ -707,6 +707,37 @@ class GlyphComponentTest:
             '<component glyphName="a" firstPt="1" secondPt="2" flags="0x0"/>'
         ]
 
+    def test_compile_for_speed(self):
+        glyph = Glyph()
+        glyph.numberOfContours = 1
+        glyph.coordinates = GlyphCoordinates(
+            [(0, 0), (1, 0), (1, 0), (1, 1), (1, 1), (0, 1), (0, 1)]
+        )
+        glyph.flags = array.array("B", [flagOnCurve] + [flagCubic] * 6)
+        glyph.endPtsOfContours = [6]
+        glyph.program = ttProgram.Program()
+
+        glyph.expand(None)
+        sizeBytes = glyph.compile(None, optimizeSize=True)
+        glyph.expand(None)
+        speedBytes = glyph.compile(None, optimizeSize=False)
+
+        assert len(sizeBytes) < len(speedBytes)
+
+        for data in sizeBytes, speedBytes:
+            glyph = Glyph(data)
+
+            pen = RecordingPen()
+            glyph.draw(pen, None)
+
+            assert pen.value == [
+                ("moveTo", ((0, 0),)),
+                ("curveTo", ((1, 0), (1, 0), (1.0, 0.5))),
+                ("curveTo", ((1, 1), (1, 1), (0.5, 1.0))),
+                ("curveTo", ((0, 1), (0, 1), (0, 0))),
+                ("closePath", ()),
+            ]
+
     def test_fromXML_reference_points(self):
         comp = GlyphComponent()
         for name, attrs, content in parseXML(
@@ -718,65 +749,6 @@ class GlyphComponentTest:
         assert comp.flags == 0
         assert (comp.firstPt, comp.secondPt) == (1, 2)
         assert not hasattr(comp, "transform")
-
-    def test_trim_varComposite_glyph(self):
-        font_path = os.path.join(DATA_DIR, "..", "..", "data", "varc-ac00-ac01.ttf")
-        font = TTFont(font_path)
-        glyf = font["glyf"]
-
-        glyf.glyphs["uniAC00"].trim()
-        glyf.glyphs["uniAC01"].trim()
-
-        font_path = os.path.join(DATA_DIR, "..", "..", "data", "varc-6868.ttf")
-        font = TTFont(font_path)
-        glyf = font["glyf"]
-
-        glyf.glyphs["uni6868"].trim()
-
-    def test_varComposite_basic(self):
-        font_path = os.path.join(DATA_DIR, "..", "..", "data", "varc-ac00-ac01.ttf")
-        font = TTFont(font_path)
-        tables = [
-            table_tag
-            for table_tag in font.keys()
-            if table_tag not in {"head", "maxp", "hhea"}
-        ]
-        xml = StringIO()
-        font.saveXML(xml)
-        xml1 = StringIO()
-        font.saveXML(xml1, tables=tables)
-        xml.seek(0)
-        font = TTFont()
-        font.importXML(xml)
-        ttf = BytesIO()
-        font.save(ttf)
-        ttf.seek(0)
-        font = TTFont(ttf)
-        xml2 = StringIO()
-        font.saveXML(xml2, tables=tables)
-        assert xml1.getvalue() == xml2.getvalue()
-
-        font_path = os.path.join(DATA_DIR, "..", "..", "data", "varc-6868.ttf")
-        font = TTFont(font_path)
-        tables = [
-            table_tag
-            for table_tag in font.keys()
-            if table_tag not in {"head", "maxp", "hhea", "name", "fvar"}
-        ]
-        xml = StringIO()
-        font.saveXML(xml)
-        xml1 = StringIO()
-        font.saveXML(xml1, tables=tables)
-        xml.seek(0)
-        font = TTFont()
-        font.importXML(xml)
-        ttf = BytesIO()
-        font.save(ttf)
-        ttf.seek(0)
-        font = TTFont(ttf)
-        xml2 = StringIO()
-        font.saveXML(xml2, tables=tables)
-        assert xml1.getvalue() == xml2.getvalue()
 
 
 class GlyphCubicTest:

@@ -107,3 +107,11 @@ STAT Table Builder
 .. currentmodule:: fontTools.otlLib.builder
 
 .. autofunction:: buildStatTable
+
+------------------
+MATH Table Builder
+------------------
+
+.. currentmodule:: fontTools.otlLib.builder
+
+.. autofunction:: buildMathTable

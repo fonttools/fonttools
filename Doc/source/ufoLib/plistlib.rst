@@ -1,9 +1,10 @@
+#####################################################################
+plistlib: Support for reading and writing .plist files *[deprecated]*
+#####################################################################
 
-########
-plistlib
-########
-
-.. automodule:: fontTools.ufoLib.plistlib
-   :inherited-members:
-   :members:
-   :undoc-members:
+.. important::
+   
+    .. automodule:: fontTools.ufoLib.plistlib
+       :inherited-members:
+       :members:
+       :undoc-members:

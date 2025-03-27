@@ -1,8 +1,9 @@
-``VVAR``: Vertical Metrics Variations Table
+``VVAR``: Vertical Metrics Variations table
 -------------------------------------------
 
+The ``VVAR`` table is an OpenType table.
+
 .. automodule:: fontTools.ttLib.tables.V_V_A_R_
-   :inherited-members:
    :members:
    :undoc-members:
 

@@ -1,18 +1,12 @@
-``EBLC``: Embedded Bitmap Location Table
+``EBLC``: Embedded Bitmap Location table
 ----------------------------------------
 
+The ``EBLC`` table is an OpenType table.
+
+This ``EBLC`` table converter module depends on the
+:mod:`.BitmapGlyphMetrics` module, which it shares with the ``EBDT``,
+``CBDT``, and ``CBLC`` converters.
+
 .. automodule:: fontTools.ttLib.tables.E_B_L_C_
-   :inherited-members:
    :members:
    :undoc-members:
-
-
-BitmapGlyphMetrics
-^^^^^^^^^^^^^^^^^^
-
-.. automodule:: fontTools.ttLib.tables.BitmapGlyphMetrics
-   :noindex:
-   :inherited-members:
-   :members:
-   :undoc-members:
-

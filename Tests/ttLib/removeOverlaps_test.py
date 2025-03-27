@@ -1,9 +1,13 @@
 import logging
 import pytest
+from pathlib import Path
 
 pathops = pytest.importorskip("pathops")
 
-from fontTools.ttLib.removeOverlaps import _simplify, _round_path
+from fontTools.ttLib import TTFont
+from fontTools.ttLib.removeOverlaps import removeOverlaps, _simplify, _round_path
+
+DATA_DIR = Path(__file__).parent / "data"
 
 
 def test_pathops_simplify_bug_workaround(caplog):
@@ -49,3 +53,21 @@ def test_pathops_simplify_bug_workaround(caplog):
     expected.close()
 
     assert expected == _round_path(result, round=lambda v: round(v, 3))
+
+
+def test_CFF_CharString_width_nominalWidthX():
+    font_path = DATA_DIR / "IBMPlexSans-Bold.subset.otf"
+    font = TTFont(str(font_path))
+
+    assert font["hmtx"]["OE"][0] == 998
+
+    # calcBounds() has the side effect of setting the width attribute
+    font["CFF "].cff[0].CharStrings["OE"].calcBounds({})
+    assert font["CFF "].cff[0].CharStrings["OE"].width == font["hmtx"]["OE"][0]
+
+    removeOverlaps(font)
+
+    assert font["hmtx"]["OE"][0] == 998
+
+    font["CFF "].cff[0].CharStrings["OE"].calcBounds({})
+    assert font["CFF "].cff[0].CharStrings["OE"].width == font["hmtx"]["OE"][0]

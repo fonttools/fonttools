@@ -43,7 +43,15 @@ def _convertCFFToCFF2(cff, otFont):
     fdArray = topDict.FDArray if hasattr(topDict, "FDArray") else None
     charStrings = topDict.CharStrings
     globalSubrs = cff.GlobalSubrs
-    localSubrs = [getattr(fd.Private, "Subrs", []) for fd in fdArray] if fdArray else []
+    localSubrs = (
+        [getattr(fd.Private, "Subrs", []) for fd in fdArray]
+        if fdArray
+        else (
+            [topDict.Private.Subrs]
+            if hasattr(topDict, "Private") and hasattr(topDict.Private, "Subrs")
+            else []
+        )
+    )
 
     for glyphName in charStrings.keys():
         cs, fdIndex = charStrings.getItemAndSelector(glyphName)
@@ -65,17 +73,26 @@ def _convertCFFToCFF2(cff, otFont):
             program[min(i, j) :] = []
 
     # Clean up glyph charstrings
+    removeUnusedSubrs = False
     nominalWidthXError = _NominalWidthUsedError()
     for glyphName in charStrings.keys():
         cs, fdIndex = charStrings.getItemAndSelector(glyphName)
         program = cs.program
-        if fdIndex == None:
-            fdIndex = 0
+
+        thisLocalSubrs = (
+            localSubrs[fdIndex]
+            if fdIndex is not None
+            else (
+                getattr(topDict.Private, "Subrs", [])
+                if hasattr(topDict, "Private")
+                else []
+            )
+        )
 
         # Intentionally use custom type for nominalWidthX, such that any
         # CharString that has an explicit width encoded will throw back to us.
         extractor = T2WidthExtractor(
-            localSubrs[fdIndex] if localSubrs else [],
+            thisLocalSubrs,
             globalSubrs,
             nominalWidthXError,
             0,
@@ -86,22 +103,26 @@ def _convertCFFToCFF2(cff, otFont):
             # Program has explicit width. We want to drop it, but can't
             # just pop the first number since it may be a subroutine call.
             # Instead, when seeing that, we embed the subroutine and recurse.
-            # This has the problem that some subroutines might become unused.
-            # We don't currently prune those. Subset module has code for this
-            # kind of stuff, possibly plug it in here if pruning becomes needed.
-            while program[1] in ["callsubr", "callgsubr"]:
+            # If this ever happened, we later prune unused subroutines.
+            while len(program) >= 2 and program[1] in ["callsubr", "callgsubr"]:
+                removeUnusedSubrs = True
                 subrNumber = program.pop(0)
+                assert isinstance(subrNumber, int), subrNumber
                 op = program.pop(0)
                 bias = extractor.localBias if op == "callsubr" else extractor.globalBias
                 subrNumber += bias
-                subrSet = localSubrs[fdIndex] if op == "callsubr" else globalSubrs
+                subrSet = thisLocalSubrs if op == "callsubr" else globalSubrs
                 subrProgram = subrSet[subrNumber].program
                 program[:0] = subrProgram
             # Now pop the actual width
+            assert len(program) >= 1, program
             program.pop(0)
 
         if program and program[-1] == "endchar":
             program.pop()
+
+    if removeUnusedSubrs:
+        cff.remove_unused_subroutines()
 
     # Upconvert TopDict
 
@@ -172,6 +193,15 @@ def _convertCFFToCFF2(cff, otFont):
     # Now delete up the deprecated topDict operators from CFF 1.0
     for entry in topDictOperators:
         key = entry[1]
+        # We seem to need to keep the charset operator for now,
+        # or we fail to compile with some fonts, like AdditionFont.otf.
+        # I don't know which kind of CFF font those are. But keeping
+        # charset seems to work. It will be removed when we save and
+        # read the font again.
+        #
+        # AdditionFont.otf has <Encoding name="StandardEncoding"/>.
+        if key == "charset":
+            continue
         if key not in opOrder:
             if key in topDict.rawDict:
                 del topDict.rawDict[key]
@@ -183,6 +213,8 @@ def _convertCFFToCFF2(cff, otFont):
     # were loaded for CFF1, and we need to reload them for CFF2 to set varstore, etc
     # on them. At least that's what I understand. It's probably safe to remove this
     # and just set vstore where needed.
+    #
+    # See comment above about charset as well.
 
     # At this point, the Subrs and Charstrings are all still T2Charstring class
     # easiest to fix this by compiling, then decompiling again

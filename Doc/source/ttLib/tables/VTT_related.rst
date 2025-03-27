@@ -1,11 +1,17 @@
-Visual TrueType Private Tables
-==============================
+``VTT*`` Visual TrueType private tables
+=======================================
+
+The tables listed on this page are used by Microsoft's Visual TrueType
+application.
+
+.. contents:: On this page:
+    :local:
+
 
 ``TSI0``: Glyph Program Text Indices
 ------------------------------------
 
 .. automodule:: fontTools.ttLib.tables.T_S_I__0
-   :inherited-members:
    :members:
    :undoc-members:
 
@@ -13,7 +19,6 @@ Visual TrueType Private Tables
 --------------------------------------------
 
 .. automodule:: fontTools.ttLib.tables.T_S_I__1
-   :inherited-members:
    :members:
    :undoc-members:
 
@@ -21,7 +26,6 @@ Visual TrueType Private Tables
 -------------------------------
 
 .. automodule:: fontTools.ttLib.tables.T_S_I__2
-   :inherited-members:
    :members:
    :undoc-members:
 
@@ -29,7 +33,6 @@ Visual TrueType Private Tables
 ----------------------------------
 
 .. automodule:: fontTools.ttLib.tables.T_S_I__3
-   :inherited-members:
    :members:
    :undoc-members:
 
@@ -37,15 +40,13 @@ Visual TrueType Private Tables
 ----------------------------------
 
 .. automodule:: fontTools.ttLib.tables.T_S_I__5
-   :inherited-members:
    :members:
    :undoc-members:
 
-``TSIB``
---------
+``TSIB``: VTT BASE Table Text Source
+------------------------------------
 
 .. automodule:: fontTools.ttLib.tables.T_S_I_B_
-   :inherited-members:
    :members:
    :undoc-members:
 
@@ -53,7 +54,6 @@ Visual TrueType Private Tables
 -----------------------------------------
 
 .. automodule:: fontTools.ttLib.tables.T_S_I_C_
-   :inherited-members:
    :members:
    :undoc-members:
 
@@ -61,7 +61,6 @@ Visual TrueType Private Tables
 ------------------------------------
 
 .. automodule:: fontTools.ttLib.tables.T_S_I_D_
-   :inherited-members:
    :members:
    :undoc-members:
 
@@ -69,7 +68,6 @@ Visual TrueType Private Tables
 ------------------------------------
 
 .. automodule:: fontTools.ttLib.tables.T_S_I_J_
-   :inherited-members:
    :members:
    :undoc-members:
 
@@ -77,7 +75,6 @@ Visual TrueType Private Tables
 ------------------------------------
 
 .. automodule:: fontTools.ttLib.tables.T_S_I_P_
-   :inherited-members:
    :members:
    :undoc-members:
 
@@ -85,7 +82,6 @@ Visual TrueType Private Tables
 ------------------------------------
 
 .. automodule:: fontTools.ttLib.tables.T_S_I_S_
-   :inherited-members:
    :members:
    :undoc-members:
 
@@ -93,7 +89,6 @@ Visual TrueType Private Tables
 --------
 
 .. automodule:: fontTools.ttLib.tables.T_S_I_V_
-   :inherited-members:
    :members:
    :undoc-members:
 

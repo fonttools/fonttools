@@ -3,7 +3,8 @@ from pathlib import Path
 import pytest
 from fontTools.designspaceLib import DesignSpaceDocument
 from fontTools.designspaceLib.split import Range
-from fontTools.varLib.stat import getStatAxes, getStatLocations
+from fontTools.ttLib import TTFont, newTable
+from fontTools.varLib.stat import buildVFStatTable, getStatAxes, getStatLocations
 
 
 @pytest.fixture
@@ -189,3 +190,37 @@ def test_getStatLocations(datadir):
             "name": {"en": "Other"},
         },
     ]
+
+
+@pytest.mark.parametrize(
+    "with_mac_names",
+    [
+        pytest.param(True, id="with_mac_names"),
+        pytest.param(False, id="without_mac_names"),
+    ],
+)
+def test_buildVFStatTable(datadir, with_mac_names):
+    doc = DesignSpaceDocument.fromfile(datadir / "test_v5.designspace")
+    ttFont = TTFont()
+
+    nameTable = newTable("name")
+    nameTable.names = []
+    ttFont["name"] = nameTable
+
+    if with_mac_names:
+        # addName adds a name string for both Macintosh and Windows platforms by default
+        nameTable.addName("Regular")
+
+    buildVFStatTable(ttFont, doc, vfName="Test_WghtWdth")
+
+    assert "STAT" in ttFont
+
+    name_recs = ttFont["name"].names
+    assert len({nr.nameID for nr in name_recs}) == 15
+
+    # test that mac names don't get added if there weren't any before
+    mac_recs = [nr for nr in name_recs if nr.platformID == 1]
+    if with_mac_names:
+        assert len(mac_recs) > 1
+    else:
+        assert len(mac_recs) == 0

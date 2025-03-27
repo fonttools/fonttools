@@ -4,7 +4,7 @@ designspaceLib: Read, write, and edit designspace files
 
 Implements support for reading and manipulating ``designspace`` files.
 Allows the users to define axes, rules, sources, variable fonts and instances,
-and their STAT information.
+and their ``STAT`` information.
 
 .. toctree::
    :maxdepth: 1

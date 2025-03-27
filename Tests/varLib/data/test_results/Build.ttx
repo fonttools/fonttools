@@ -161,42 +161,42 @@
 
     <!-- Regular -->
     <!-- PostScript: TestFamily-Regular -->
-    <NamedInstance flags="0x0" postscriptNameID="263" subfamilyNameID="262">
+    <NamedInstance flags="0x0" postscriptNameID="262" subfamilyNameID="2">
       <coord axis="wght" value="394.0"/>
       <coord axis="cntr" value="0.0"/>
     </NamedInstance>
 
     <!-- Semibold -->
     <!-- PostScript: TestFamily-Semibold -->
-    <NamedInstance flags="0x0" postscriptNameID="265" subfamilyNameID="264">
+    <NamedInstance flags="0x0" postscriptNameID="264" subfamilyNameID="263">
       <coord axis="wght" value="600.0"/>
       <coord axis="cntr" value="0.0"/>
     </NamedInstance>
 
     <!-- Bold -->
     <!-- PostScript: TestFamily-Bold -->
-    <NamedInstance flags="0x0" postscriptNameID="267" subfamilyNameID="266">
+    <NamedInstance flags="0x0" postscriptNameID="266" subfamilyNameID="265">
       <coord axis="wght" value="824.0"/>
       <coord axis="cntr" value="0.0"/>
     </NamedInstance>
 
     <!-- Black -->
     <!-- PostScript: TestFamily-Black -->
-    <NamedInstance flags="0x0" postscriptNameID="269" subfamilyNameID="268">
+    <NamedInstance flags="0x0" postscriptNameID="268" subfamilyNameID="267">
       <coord axis="wght" value="1000.0"/>
       <coord axis="cntr" value="0.0"/>
     </NamedInstance>
 
     <!-- Black Medium Contrast -->
     <!-- PostScript: TestFamily-BlackMediumContrast -->
-    <NamedInstance flags="0x0" postscriptNameID="271" subfamilyNameID="270">
+    <NamedInstance flags="0x0" postscriptNameID="270" subfamilyNameID="269">
       <coord axis="wght" value="1000.0"/>
       <coord axis="cntr" value="50.0"/>
     </NamedInstance>
 
     <!-- Black High Contrast -->
     <!-- PostScript: TestFamily-BlackHighContrast -->
-    <NamedInstance flags="0x0" postscriptNameID="273" subfamilyNameID="272">
+    <NamedInstance flags="0x0" postscriptNameID="272" subfamilyNameID="271">
       <coord axis="wght" value="1000.0"/>
       <coord axis="cntr" value="100.0"/>
     </NamedInstance>

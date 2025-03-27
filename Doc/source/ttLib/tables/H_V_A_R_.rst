@@ -1,7 +1,8 @@
-``HVAR``:Horizontal Metrics Variations Table
---------------------------------------------
+``HVAR``: Horizontal Metrics Variations table
+---------------------------------------------
+
+The ``HVAR`` table is an OpenType table.
 
 .. automodule:: fontTools.ttLib.tables.H_V_A_R_
-   :inherited-members:
    :members:
    :undoc-members:

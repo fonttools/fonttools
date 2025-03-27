@@ -8,7 +8,7 @@ If you are unfamiliar with that, check out [opensource.guide](https://opensource
 We use Github's Issue Tracker to report, discuss and track bugs, map out future improvements, set priorities, and self-assign issues.
 If you find a bug, have an idea for a new feature, then please [create a new issue](https://github.com/fonttools/fonttools/issues) and we'll be happy to work with you on it!
 
-If you have a question or want to discuss usage from an end-user perspective, there is a mailing list at [groups.google.com/d/forum/fonttools](https://groups.google.com/d/forum/fonttools) mailing list.
+If you have a question or want to discuss usage from an end-user perspective, check out the [Discussions](https://github.com/fonttools/fonttools/discussions).
 
 If you would like to speak to someone directly, you can also email the project lead, Behdad Esfahbod, privately at <behdad@behdad.org>
 

@@ -1,3 +1,37 @@
+"""
+A library for importing .ufo files and their descendants.
+Refer to http://unifiedfontobject.org for the UFO specification.
+
+The main interfaces are the :class:`.UFOReader` and :class:`.UFOWriter`
+classes, which support versions 1, 2, and 3 of the UFO specification.
+
+Set variables are available for external use that list the font
+info attribute names for the `fontinfo.plist` formats. These are:
+
+- :obj:`.fontInfoAttributesVersion1`
+- :obj:`.fontInfoAttributesVersion2`
+- :obj:`.fontInfoAttributesVersion3`
+
+A set listing the `fontinfo.plist` attributes that were deprecated
+in version 2 is available for external use:
+
+- :obj:`.deprecatedFontInfoAttributesVersion2`
+
+Functions that do basic validation on values for `fontinfo.plist`
+are available for external use. These are
+
+- :func:`.validateFontInfoVersion2ValueForAttribute`
+- :func:`.validateFontInfoVersion3ValueForAttribute`
+
+Value conversion functions are available for converting
+`fontinfo.plist` values between the possible format versions.
+
+- :func:`.convertFontInfoValueForAttributeFromVersion1ToVersion2`
+- :func:`.convertFontInfoValueForAttributeFromVersion2ToVersion1`
+- :func:`.convertFontInfoValueForAttributeFromVersion2ToVersion3`
+- :func:`.convertFontInfoValueForAttributeFromVersion3ToVersion2`
+"""
+
 import os
 from copy import deepcopy
 from os import fsdecode
@@ -20,36 +54,6 @@ from fontTools.ufoLib.filenames import userNameToFileName
 from fontTools.ufoLib.converters import convertUFO1OrUFO2KerningToUFO3Kerning
 from fontTools.ufoLib.errors import UFOLibError
 from fontTools.ufoLib.utils import numberTypes, _VersionTupleEnumMixin
-
-"""
-A library for importing .ufo files and their descendants.
-Refer to http://unifiedfontobject.com for the UFO specification.
-
-The UFOReader and UFOWriter classes support versions 1, 2 and 3
-of the specification.
-
-Sets that list the font info attribute names for the fontinfo.plist
-formats are available for external use. These are:
-	fontInfoAttributesVersion1
-	fontInfoAttributesVersion2
-	fontInfoAttributesVersion3
-
-A set listing the fontinfo.plist attributes that were deprecated
-in version 2 is available for external use:
-	deprecatedFontInfoAttributesVersion2
-
-Functions that do basic validation on values for fontinfo.plist
-are available for external use. These are
-	validateFontInfoVersion2ValueForAttribute
-	validateFontInfoVersion3ValueForAttribute
-
-Value conversion functions are available for converting
-fontinfo.plist values between the possible format versions.
-	convertFontInfoValueForAttributeFromVersion1ToVersion2
-	convertFontInfoValueForAttributeFromVersion2ToVersion1
-	convertFontInfoValueForAttributeFromVersion2ToVersion3
-	convertFontInfoValueForAttributeFromVersion3ToVersion2
-"""
 
 __all__ = [
     "makeUFOPath",
@@ -197,8 +201,12 @@ class _UFOBaseIO:
 
 
 class UFOReader(_UFOBaseIO):
-    """
-    Read the various components of the .ufo.
+    """Read the various components of a .ufo.
+
+    Attributes:
+        path: An `os.PathLike` object pointing to the .ufo.
+        validate: A boolean indicating if the data read should be
+          validated. Defaults to `True`.
 
     By default read data is validated. Set ``validate`` to
     ``False`` to not validate the data.
@@ -880,20 +888,27 @@ class UFOReader(_UFOBaseIO):
 
 
 class UFOWriter(UFOReader):
-    """
-    Write the various components of the .ufo.
+    """Write the various components of a .ufo.
+
+    Attributes:
+        path: An `os.PathLike` object pointing to the .ufo.
+        formatVersion: the UFO format version as a tuple of integers (major, minor),
+            or as a single integer for the major digit only (minor is implied to be 0).
+            By default, the latest formatVersion will be used; currently it is 3.0,
+            which is equivalent to formatVersion=(3, 0).
+        fileCreator: The creator of the .ufo file. Defaults to
+            `com.github.fonttools.ufoLib`.
+        structure: The internal structure of the .ufo file: either `ZIP` or `PACKAGE`.
+        validate: A boolean indicating if the data read should be validated. Defaults
+            to `True`.
 
     By default, the written data will be validated before writing. Set ``validate`` to
     ``False`` if you do not want to validate the data. Validation can also be overriden
-    on a per method level if desired.
+    on a per-method level if desired.
 
-    The ``formatVersion`` argument allows to specify the UFO format version as a tuple
-    of integers (major, minor), or as a single integer for the major digit only (minor
-    is implied as 0). By default the latest formatVersion will be used; currently it's
-    3.0, which is equivalent to formatVersion=(3, 0).
-
-    An UnsupportedUFOFormat exception is raised if the requested UFO formatVersion is
-    not supported.
+    Raises:
+        UnsupportedUFOFormat: An exception indicating that the requested UFO
+            formatVersion is not supported.
     """
 
     def __init__(

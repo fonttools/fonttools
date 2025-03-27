@@ -1,6 +1,6 @@
-###
-ttx
-###
+##################################
+ttx: Convert fonts to XML and back
+##################################
 
 
 TTX – From OpenType and TrueType to XML and Back
@@ -39,10 +39,10 @@ The following tables are currently supported::
     FFTM, Feat, GDEF, GMAP, GPKG, GPOS, GSUB, Glat, Gloc, HVAR, JSTF,
     LTSH, MATH, META, MVAR, OS/2, SING, STAT, SVG, Silf, Sill, TSI0,
     TSI1, TSI2, TSI3, TSI5, TSIB, TSIC, TSID, TSIJ, TSIP, TSIS, TSIV,
-    TTFA, VDMX, VORG, VVAR, ankr, avar, bsln, cidg, cmap, cvar, cvt,
-    feat, fpgm, fvar, gasp, gcid, glyf, gvar, hdmx, head, hhea, hmtx,
-    kern, lcar, loca, ltag, maxp, meta, mort, morx, name, opbd, post,
-    prep, prop, sbix, trak, vhea and vmtx
+    TTFA, VARC, VDMX, VORG, VVAR, ankr, avar, bsln, cidg, cmap, cvar,
+    cvt, feat, fpgm, fvar, gasp, gcid, glyf, gvar, hdmx, head, hhea,
+    hmtx, kern, lcar, loca, ltag, maxp, meta, mort, morx, name, opbd,
+    post, prep, prop, sbix, trak, vhea and vmtx
 
 .. end table list
 
@@ -57,6 +57,5 @@ It is possible that different glyphs use the same name. If this happens, we forc
 Because the order in which glyphs are stored inside the binary font is important, we maintain an ordered list of glyph names in the font.
 
 .. automodule:: fontTools.ttx
-   :inherited-members:
    :members:
    :undoc-members:

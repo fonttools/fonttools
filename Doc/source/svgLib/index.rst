@@ -1,6 +1,6 @@
-######
-svgLib
-######
+############################################
+svgLib: Read and write SVG-in-OpenType fonts
+############################################
 
 .. toctree::
    :maxdepth: 1

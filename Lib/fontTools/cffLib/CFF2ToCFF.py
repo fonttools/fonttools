@@ -2,7 +2,13 @@
 
 from fontTools.ttLib import TTFont, newTable
 from fontTools.misc.cliTools import makeOutputFileName
-from fontTools.cffLib import TopDictIndex, buildOrder, topDictOperators
+from fontTools.cffLib import (
+    TopDictIndex,
+    buildOrder,
+    buildDefaults,
+    topDictOperators,
+    privateDictOperators,
+)
 from .width import optimizeWidths
 from collections import defaultdict
 import logging
@@ -26,9 +32,10 @@ def _convertCFF2ToCFF(cff, otFont):
 
     cff.major = 1
 
-    topDictData = TopDictIndex(None, isCFF2=True)
+    topDictData = TopDictIndex(None)
     for item in cff.topDictIndex:
         # Iterate over, such that all are decompiled
+        item.cff2GetGlyphOrder = None
         topDictData.append(item)
     cff.topDictIndex = topDictData
     topDict = topDictData[0]
@@ -36,15 +43,31 @@ def _convertCFF2ToCFF(cff, otFont):
     if hasattr(topDict, "VarStore"):
         raise ValueError("Variable CFF2 font cannot be converted to CFF format.")
 
-    if hasattr(topDict, "Private"):
-        privateDict = topDict.Private
-    else:
-        privateDict = None
     opOrder = buildOrder(topDictOperators)
     topDict.order = opOrder
+    for key in topDict.rawDict.keys():
+        if key not in opOrder:
+            del topDict.rawDict[key]
+            if hasattr(topDict, key):
+                delattr(topDict, key)
 
     fdArray = topDict.FDArray
     charStrings = topDict.CharStrings
+
+    defaults = buildDefaults(privateDictOperators)
+    order = buildOrder(privateDictOperators)
+    for fd in fdArray:
+        fd.setCFF2(False)
+        privateDict = fd.Private
+        privateDict.order = order
+        for key in order:
+            if key not in privateDict.rawDict and key in defaults:
+                privateDict.rawDict[key] = defaults[key]
+        for key in privateDict.rawDict.keys():
+            if key not in order:
+                del privateDict.rawDict[key]
+                if hasattr(privateDict, key):
+                    delattr(privateDict, key)
 
     for cs in charStrings.values():
         cs.decompile()
@@ -76,6 +99,21 @@ def _convertCFF2ToCFF(cff, otFont):
         width = metrics[glyphName][0]
         if width != private.defaultWidthX:
             cs.program.insert(0, width - private.nominalWidthX)
+
+    mapping = {
+        name: ("cid" + str(n) if n else ".notdef")
+        for n, name in enumerate(topDict.charset)
+    }
+    topDict.charset = [
+        "cid" + str(n) if n else ".notdef" for n in range(len(topDict.charset))
+    ]
+    charStrings.charStrings = {
+        mapping[name]: v for name, v in charStrings.charStrings.items()
+    }
+
+    # I'm not sure why the following is *not* necessary. And it breaks
+    # the output if I add it.
+    # topDict.ROS = ("Adobe", "Identity", 0)
 
 
 def convertCFF2ToCFF(font, *, updatePostTable=True):

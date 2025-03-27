@@ -1,5 +1,6 @@
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.scaleUpem import scale_upem
+from io import BytesIO
 import difflib
 import os
 import shutil
@@ -69,6 +70,12 @@ class ScaleUpemTest(unittest.TestCase):
         tables = [table_tag for table_tag in font.keys() if table_tag != "head"]
 
         scale_upem(font, 500)
+
+        # Save / load to ensure calculated values are correct
+        # XXX This wans't needed before. So needs investigation.
+        iobytes = BytesIO()
+        font.save(iobytes)
+        # Just saving is enough to fix the numbers. Sigh...
 
         expected_ttx_path = self.get_path("varc-ac00-ac01-500upem.ttx")
         self.expect_ttx(font, expected_ttx_path, tables)

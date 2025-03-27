@@ -1,7 +1,7 @@
 from fontTools.misc import sstruct
 from fontTools.misc.loggingTools import CapturingLogHandler
 from fontTools.misc.testTools import FakeFont
-from fontTools.misc.textTools import bytesjoin, tostr
+from fontTools.misc.textTools import bytesjoin, tostr, Tag
 from fontTools.misc.xmlWriter import XMLWriter
 from io import BytesIO
 import struct
@@ -27,6 +27,11 @@ def names(nameTable):
 
 
 class NameTableTest(unittest.TestCase):
+    def test_init(self):
+        table = table__n_a_m_e()
+        self.assertEqual(table.names, [])
+        self.assertTrue(type(table.tableTag) is Tag)
+
     def test_getDebugName(self):
         table = table__n_a_m_e()
         table.names = [

@@ -22,6 +22,8 @@ PRIVATE_POINT_NUMBERS = 0x2000
 
 DELTAS_ARE_ZERO = 0x80
 DELTAS_ARE_WORDS = 0x40
+DELTAS_ARE_LONGS = 0xC0
+DELTAS_SIZE_MASK = 0xC0
 DELTA_RUN_COUNT_MASK = 0x3F
 
 POINTS_ARE_WORDS = 0x80
@@ -127,7 +129,9 @@ class TupleVariation(object):
             else:
                 log.warning("bad delta format: %s" % ", ".join(sorted(attrs.keys())))
 
-    def compile(self, axisTags, sharedCoordIndices={}, pointData=None):
+    def compile(
+        self, axisTags, sharedCoordIndices={}, pointData=None, *, optimizeSize=True
+    ):
         assert set(self.axes.keys()) <= set(axisTags), (
             "Unknown axis tag found.",
             self.axes.keys(),
@@ -159,7 +163,7 @@ class TupleVariation(object):
             flags |= PRIVATE_POINT_NUMBERS
             auxData.append(pointData)
 
-        auxData.append(self.compileDeltas())
+        auxData.append(self.compileDeltas(optimizeSize=optimizeSize))
         auxData = b"".join(auxData)
 
         tupleData.insert(0, struct.pack(">HH", len(auxData), flags))
@@ -320,7 +324,7 @@ class TupleVariation(object):
             )
         return (result, pos)
 
-    def compileDeltas(self):
+    def compileDeltas(self, optimizeSize=True):
         deltaX = []
         deltaY = []
         if self.getCoordWidth() == 2:
@@ -335,12 +339,12 @@ class TupleVariation(object):
                     continue
                 deltaX.append(c)
         bytearr = bytearray()
-        self.compileDeltaValues_(deltaX, bytearr)
-        self.compileDeltaValues_(deltaY, bytearr)
+        self.compileDeltaValues_(deltaX, bytearr, optimizeSize=optimizeSize)
+        self.compileDeltaValues_(deltaY, bytearr, optimizeSize=optimizeSize)
         return bytearr
 
     @staticmethod
-    def compileDeltaValues_(deltas, bytearr=None):
+    def compileDeltaValues_(deltas, bytearr=None, *, optimizeSize=True):
         """[value1, value2, value3, ...] --> bytearray
 
         Emits a sequence of runs. Each run starts with a
@@ -358,16 +362,40 @@ class TupleVariation(object):
         """  # Explaining the format because the 'gvar' spec is hard to understand.
         if bytearr is None:
             bytearr = bytearray()
+
         pos = 0
         numDeltas = len(deltas)
-        while pos < numDeltas:
-            value = deltas[pos]
-            if value == 0:
+
+        if optimizeSize:
+            while pos < numDeltas:
+                value = deltas[pos]
+                if value == 0:
+                    pos = TupleVariation.encodeDeltaRunAsZeroes_(deltas, pos, bytearr)
+                elif -128 <= value <= 127:
+                    pos = TupleVariation.encodeDeltaRunAsBytes_(deltas, pos, bytearr)
+                elif -32768 <= value <= 32767:
+                    pos = TupleVariation.encodeDeltaRunAsWords_(deltas, pos, bytearr)
+                else:
+                    pos = TupleVariation.encodeDeltaRunAsLongs_(deltas, pos, bytearr)
+        else:
+            minVal, maxVal = min(deltas), max(deltas)
+            if minVal == 0 == maxVal:
                 pos = TupleVariation.encodeDeltaRunAsZeroes_(deltas, pos, bytearr)
-            elif -128 <= value <= 127:
-                pos = TupleVariation.encodeDeltaRunAsBytes_(deltas, pos, bytearr)
+            elif -128 <= minVal <= maxVal <= 127:
+                pos = TupleVariation.encodeDeltaRunAsBytes_(
+                    deltas, pos, bytearr, optimizeSize=False
+                )
+            elif -32768 <= minVal <= maxVal <= 32767:
+                pos = TupleVariation.encodeDeltaRunAsWords_(
+                    deltas, pos, bytearr, optimizeSize=False
+                )
             else:
-                pos = TupleVariation.encodeDeltaRunAsWords_(deltas, pos, bytearr)
+                pos = TupleVariation.encodeDeltaRunAsLongs_(
+                    deltas, pos, bytearr, optimizeSize=False
+                )
+
+        assert pos == numDeltas, (pos, numDeltas)
+
         return bytearr
 
     @staticmethod
@@ -385,7 +413,7 @@ class TupleVariation(object):
         return pos
 
     @staticmethod
-    def encodeDeltaRunAsBytes_(deltas, offset, bytearr):
+    def encodeDeltaRunAsBytes_(deltas, offset, bytearr, optimizeSize=True):
         pos = offset
         numDeltas = len(deltas)
         while pos < numDeltas:
@@ -400,7 +428,12 @@ class TupleVariation(object):
             # (04 0F 0F 00 0F 0F) when storing the zero value
             # literally, but 7 bytes (01 0F 0F 80 01 0F 0F)
             # when starting a new run.
-            if value == 0 and pos + 1 < numDeltas and deltas[pos + 1] == 0:
+            if (
+                optimizeSize
+                and value == 0
+                and pos + 1 < numDeltas
+                and deltas[pos + 1] == 0
+            ):
                 break
             pos += 1
         runLength = pos - offset
@@ -415,11 +448,12 @@ class TupleVariation(object):
         return pos
 
     @staticmethod
-    def encodeDeltaRunAsWords_(deltas, offset, bytearr):
+    def encodeDeltaRunAsWords_(deltas, offset, bytearr, optimizeSize=True):
         pos = offset
         numDeltas = len(deltas)
         while pos < numDeltas:
             value = deltas[pos]
+
             # Within a word-encoded run of deltas, it is easiest
             # to start a new run (with a different encoding)
             # whenever we encounter a zero value. For example,
@@ -427,7 +461,7 @@ class TupleVariation(object):
             # storing the zero literally (42 66 66 00 00 77 77),
             # and equally 7 bytes when starting a new run
             # (40 66 66 80 40 77 77).
-            if value == 0:
+            if optimizeSize and value == 0:
                 break
 
             # Within a word-encoded run of deltas, a single value
@@ -437,11 +471,16 @@ class TupleVariation(object):
             # the value literally (42 66 66 00 02 77 77), but 8 bytes
             # when starting a new run (40 66 66 00 02 40 77 77).
             if (
-                (-128 <= value <= 127)
+                optimizeSize
+                and (-128 <= value <= 127)
                 and pos + 1 < numDeltas
                 and (-128 <= deltas[pos + 1] <= 127)
             ):
                 break
+
+            if not (-32768 <= value <= 32767):
+                break
+
             pos += 1
         runLength = pos - offset
         while runLength >= 64:
@@ -461,18 +500,47 @@ class TupleVariation(object):
         return pos
 
     @staticmethod
-    def decompileDeltas_(numDeltas, data, offset):
+    def encodeDeltaRunAsLongs_(deltas, offset, bytearr, optimizeSize=True):
+        pos = offset
+        numDeltas = len(deltas)
+        while pos < numDeltas:
+            value = deltas[pos]
+            if optimizeSize and -32768 <= value <= 32767:
+                break
+            pos += 1
+        runLength = pos - offset
+        while runLength >= 64:
+            bytearr.append(DELTAS_ARE_LONGS | 63)
+            a = array.array("i", deltas[offset : offset + 64])
+            if sys.byteorder != "big":
+                a.byteswap()
+            bytearr.extend(a)
+            offset += 64
+            runLength -= 64
+        if runLength:
+            bytearr.append(DELTAS_ARE_LONGS | (runLength - 1))
+            a = array.array("i", deltas[offset:pos])
+            if sys.byteorder != "big":
+                a.byteswap()
+            bytearr.extend(a)
+        return pos
+
+    @staticmethod
+    def decompileDeltas_(numDeltas, data, offset=0):
         """(numDeltas, data, offset) --> ([delta, delta, ...], newOffset)"""
         result = []
         pos = offset
-        while len(result) < numDeltas:
+        while len(result) < numDeltas if numDeltas is not None else pos < len(data):
             runHeader = data[pos]
             pos += 1
             numDeltasInRun = (runHeader & DELTA_RUN_COUNT_MASK) + 1
-            if (runHeader & DELTAS_ARE_ZERO) != 0:
+            if (runHeader & DELTAS_SIZE_MASK) == DELTAS_ARE_ZERO:
                 result.extend([0] * numDeltasInRun)
             else:
-                if (runHeader & DELTAS_ARE_WORDS) != 0:
+                if (runHeader & DELTAS_SIZE_MASK) == DELTAS_ARE_LONGS:
+                    deltas = array.array("i")
+                    deltasSize = numDeltasInRun * 4
+                elif (runHeader & DELTAS_SIZE_MASK) == DELTAS_ARE_WORDS:
                     deltas = array.array("h")
                     deltasSize = numDeltasInRun * 2
                 else:
@@ -481,10 +549,10 @@ class TupleVariation(object):
                 deltas.frombytes(data[pos : pos + deltasSize])
                 if sys.byteorder != "big":
                     deltas.byteswap()
-                assert len(deltas) == numDeltasInRun
+                assert len(deltas) == numDeltasInRun, (len(deltas), numDeltasInRun)
                 pos += deltasSize
                 result.extend(deltas)
-        assert len(result) == numDeltas
+        assert numDeltas is None or len(result) == numDeltas
         return (result, pos)
 
     @staticmethod
@@ -639,7 +707,13 @@ def compileSharedTuples(
 
 
 def compileTupleVariationStore(
-    variations, pointCount, axisTags, sharedTupleIndices, useSharedPoints=True
+    variations,
+    pointCount,
+    axisTags,
+    sharedTupleIndices,
+    useSharedPoints=True,
+    *,
+    optimizeSize=True,
 ):
     # pointCount is actually unused. Keeping for API compat.
     del pointCount
@@ -695,7 +769,9 @@ def compileTupleVariationStore(
     ]
 
     for v, p in zip(variations, pointDatas):
-        thisTuple, thisData = v.compile(axisTags, sharedTupleIndices, pointData=p)
+        thisTuple, thisData = v.compile(
+            axisTags, sharedTupleIndices, pointData=p, optimizeSize=optimizeSize
+        )
 
         tuples.append(thisTuple)
         data.append(thisData)

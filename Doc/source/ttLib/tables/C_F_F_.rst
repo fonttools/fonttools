@@ -1,8 +1,9 @@
-``CFF``: Compact Font Format Table
+``CFF``: Compact Font Format table
 ----------------------------------
 
+The ``CFF`` table is an OpenType table.
+
 .. automodule:: fontTools.ttLib.tables.C_F_F_
-   :inherited-members:
    :members:
    :undoc-members:
 

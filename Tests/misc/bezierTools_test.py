@@ -144,6 +144,12 @@ def test_splitCubicAtT():
     ]
 
 
+def test_splitCubicAtT_robustness():
+    segment = ((-103, -231), (-61, -240), (-31.009, -245), (6, -245))
+    (_, tail) = splitCubicAtT(*segment, 0.386637)
+    assert tail[-1] == segment[-1]
+
+
 def test_solveCubic():
     assert solveCubic(1, 1, -6, 0) == [-3.0, -0.0, 2.0]
     assert solveCubic(-10.0, -9.0, 48.0, -29.0) == [-2.9, 1.0, 1.0]
@@ -205,6 +211,16 @@ def test_calcQuadraticArcLength():
             # https://github.com/fonttools/fonttools/issues/3502
             ((242, 402), (242, 403), (242, 399), (242, 399)),  # off by one unit
             3.32098765445,
+        ),
+        (
+            # https://github.com/fonttools/fonttools/issues/3514
+            (
+                (626.9918761593156, 1000.0),
+                (639.133178223544, 1000.0),
+                (650.1152019577394, 1000.0),
+                (626.9918761593156, 1000.0),
+            ),  # infinite recursion with Cython
+            27.06159516422008,
         ),
     ],
 )

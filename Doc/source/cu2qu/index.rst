@@ -1,6 +1,6 @@
-##########################################
-cu2qu: Cubic to quadratic curve conversion
-##########################################
+########################################
+cu2qu: Convert cubic curves to quadratic
+########################################
 
 Routines for converting cubic curves to quadratic splines, suitable for use
 in OpenType to TrueType outline conversion.

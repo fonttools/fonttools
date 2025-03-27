@@ -16,6 +16,7 @@ from fontTools.cffLib.specializer import specializeCommands, commandsToProgram
 from fontTools.ttLib import newTable
 from fontTools import varLib
 from fontTools.varLib.models import allEqual
+from fontTools.misc.loggingTools import deprecateFunction
 from fontTools.misc.roundTools import roundFunc
 from fontTools.misc.psCharStrings import T2CharString, T2OutlineExtractor
 from fontTools.pens.t2CharStringPen import T2CharStringPen
@@ -47,6 +48,13 @@ def addCFFVarStore(varFont, varModel, varDataList, masterSupports):
         for fontDict in fdArray:
             if hasattr(fontDict, "Private"):
                 fontDict.Private.vstore = topDict.VarStore
+
+
+@deprecateFunction("Use fontTools.cffLib.CFFToCFF2.convertCFFToCFF2 instead.")
+def convertCFFtoCFF2(varFont):
+    from fontTools.cffLib.CFFToCFF2 import convertCFFToCFF2
+
+    return convertCFFToCFF2(varFont)
 
 
 def conv_to_int(num):
@@ -88,7 +96,7 @@ def merge_PrivateDicts(top_dicts, vsindex_dict, var_model, fd_map):
 
     * step through each key in FontDict.Private.
     * For each key, step through each relevant source font Private dict, and
-            build a list of values to blend.
+      build a list of values to blend.
 
     The 'relevant' source fonts are selected by first getting the right
     submodel using ``vsindex_dict[vsindex]``. The indices of the

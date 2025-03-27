@@ -595,8 +595,8 @@ class MarkClassDefinition(Statement):
 class AlternateSubstStatement(Statement):
     """A ``sub ... from ...`` statement.
 
-    ``prefix``, ``glyph``, ``suffix`` and ``replacement`` should be lists of
-    `glyph-containing objects`_. ``glyph`` should be a `one element list`."""
+    ``glyph`` and ``replacement`` should be `glyph-containing objects`_.
+    ``prefix`` and ``suffix`` should be lists of `glyph-containing objects`_."""
 
     def __init__(self, prefix, glyph, suffix, replacement, location=None):
         Statement.__init__(self, location)
@@ -1828,15 +1828,16 @@ class BaseAxis(Statement):
     """An axis definition, being either a ``VertAxis.BaseTagList/BaseScriptList``
     pair or a ``HorizAxis.BaseTagList/BaseScriptList`` pair."""
 
-    def __init__(self, bases, scripts, vertical, location=None):
+    def __init__(self, bases, scripts, vertical, minmax=None, location=None):
         Statement.__init__(self, location)
         self.bases = bases  #: A list of baseline tag names as strings
         self.scripts = scripts  #: A list of script record tuplets (script tag, default baseline tag, base coordinate)
         self.vertical = vertical  #: Boolean; VertAxis if True, HorizAxis if False
+        self.minmax = []  #: A set of minmax record
 
     def build(self, builder):
         """Calls the builder object's ``set_base_axis`` callback."""
-        builder.set_base_axis(self.bases, self.scripts, self.vertical)
+        builder.set_base_axis(self.bases, self.scripts, self.vertical, self.minmax)
 
     def asFea(self, indent=""):
         direction = "Vert" if self.vertical else "Horiz"
@@ -1844,9 +1845,13 @@ class BaseAxis(Statement):
             "{} {} {}".format(a[0], a[1], " ".join(map(str, a[2])))
             for a in self.scripts
         ]
+        minmaxes = [
+            "\n{}Axis.MinMax {} {} {}, {};".format(direction, a[0], a[1], a[2], a[3])
+            for a in self.minmax
+        ]
         return "{}Axis.BaseTagList {};\n{}{}Axis.BaseScriptList {};".format(
             direction, " ".join(self.bases), indent, direction, ", ".join(scripts)
-        )
+        ) + "\n".join(minmaxes)
 
 
 class OS2Field(Statement):

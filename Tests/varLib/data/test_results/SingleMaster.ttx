@@ -68,9 +68,6 @@
   </gvar>
 
   <name>
-    <namerecord nameID="256" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      Weight
-    </namerecord>
     <namerecord nameID="1" platformID="3" platEncID="1" langID="0x409">
       Test Family
     </namerecord>

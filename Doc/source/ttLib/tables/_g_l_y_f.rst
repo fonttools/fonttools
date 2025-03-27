@@ -1,5 +1,7 @@
-``glyf``: Glyph Data
---------------------
+``glyf``: Glyph Data table
+--------------------------
+
+The ``glyf`` table is an OpenType table.
 
 .. autoclass:: fontTools.ttLib.tables._g_l_y_f.table__g_l_y_f
    :members:

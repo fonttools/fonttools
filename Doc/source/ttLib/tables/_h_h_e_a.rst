@@ -1,8 +1,9 @@
-``hhea``: Horizontal Header Table
+``hhea``: Horizontal Header table
 ---------------------------------
 
+The ``hhea`` table is an OpenType table.
+
 .. automodule:: fontTools.ttLib.tables._h_h_e_a
-   :inherited-members:
    :members:
    :undoc-members:
 

@@ -1,8 +1,7 @@
-########
-macUtils
-########
+##########################################
+macUtils: Access fonts in Mac file formats
+##########################################
 
 .. automodule:: fontTools.ttLib.macUtils
-   :inherited-members:
    :members:
    :undoc-members:

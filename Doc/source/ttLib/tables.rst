@@ -1,13 +1,131 @@
-###############################
-TrueType/OpenType Table Modules
-###############################
+#######################################
+tables: Access TrueType/OpenType tables
+#######################################
+
+.. contents:: On this page
+    :local:
+
+
+.. rubric:: Overview
+   :heading-level: 2
 
 This folder is a subpackage of :py:mod:`fontTools.ttLib`. Each module here is a
-specialized TT/OT table converter: they can convert raw data
-to Python objects and vice versa. Usually you don't need to
-use the modules directly: they are imported and used
-automatically when needed by :py:mod:`fontTools.ttLib`. The tables currently
-supported are:
+specialized TrueType/OpenType table converter: they can convert raw data
+to Python objects and vice versa. Usually you do not need to
+use these modules directly: they are imported and used
+automatically when needed by :py:mod:`fontTools.ttLib`.
+
+In addition to the tables defined in the official TrueType/OpenType
+specification documents, several specialty tables are supported that
+are used by specific vendors (including the Graphite shaping engine
+and Apple's AAT). Note that fontTools supports the tables that provide
+the core functionality of AAT, but does not guarantee everything.
+
+Similarly, fontTools supports some third-party tables used by external
+applications (such as FontForge and Microsoft's VTT), but may not
+support every private table employed by those applications.
+
+
+Accessing tables
+----------------
+
+The Python modules representing the tables have pretty strange names: this is due to the
+fact that we need to map TT/OT table tags (which are case sensitive)
+to filenames (which on macOS and Windows are not case sensitive) as well
+as to Python identifiers. The latter means that each table identifier
+can only contain ``[A-Za-z0-9_]`` and cannot start with a number.
+
+The convention adopted is that capital letters in a table tag are
+transformed into the letter followed by an underscore (e.g., ``A_``), while lowercase
+letters and numbers are preceded by an underscore (e.g., ``_a``).
+
+:py:mod:`fontTools.ttLib` provides functions to expand a tag into the format used here::
+
+    >>> from fontTools import ttLib
+    >>> ttLib.tagToIdentifier("FOO ")
+    'F_O_O_'
+    >>> ttLib.tagToIdentifier("cvt ")
+    '_c_v_t'
+    >>> ttLib.tagToIdentifier("OS/2")
+    'O_S_2f_2'
+    >>> ttLib.tagToIdentifier("glyf")
+    '_g_l_y_f'
+    >>>
+
+And vice versa::
+
+    >>> ttLib.identifierToTag("F_O_O_")
+    'FOO '
+    >>> ttLib.identifierToTag("_c_v_t")
+    'cvt '
+    >>> ttLib.identifierToTag("O_S_2f_2")
+    'OS/2'
+    >>> ttLib.identifierToTag("_g_l_y_f")
+    'glyf'
+    >>>
+
+Eg. the 'glyf' table converter lives in a Python file called::
+
+	_g_l_y_f.py
+
+The converter itself is a class, named ``table_`` + expandedtag. Eg::
+
+
+	class table__g_l_y_f:
+		etc.
+
+Note that if you _do_ need to use such modules or classes manually,
+there are two convenient API functions that let you find them by tag::
+
+    >>> ttLib.getTableModule('glyf')
+    <module 'ttLib.tables._g_l_y_f'>
+    >>> ttLib.getTableClass('glyf')
+    <class ttLib.tables._g_l_y_f.table__g_l_y_f at 645f400>
+    >>
+
+
+Helper modules
+--------------
+
+In addition to the core table-conversion implementations, a set of
+helper and utility modules is also found in this package. 
+You should not normally need to access these modules directly,
+but consulting them might be valuable if you need to add fontTools
+support for a new table type.
+ 
+In that case, a good place to start is with the documentation for
+the base table classes:
+ 
+.. toctree::
+   :maxdepth: 1
+ 
+   tables/table_api
+ 
+The modules that provide lower-level helper functionality
+include implementations of common OpenType data structures, support
+for OpenType font variations, and various classes needed for
+tables containing bitmap data or for tables used by the Graphite engine:
+ 	
+.. toctree::
+   :maxdepth: 1
+ 
+   tables/OpenType_related
+   tables/TupleVariation
+   tables/Bitmap_related
+   tables/grUtils
+ 
+A module is also included for assembling and disassembling
+TrueType bytecode:
+ 
+.. toctree::
+   :maxdepth: 1
+
+   tables/ttProgram
+       
+
+    
+Tables currently supported
+--------------------------
 
 .. toctree::
    :maxdepth: 1
@@ -84,106 +202,7 @@ supported are:
    tables/VTT_related
    tables/V_V_A_R_
 
-The Python modules representing the tables have pretty strange names: this is due to the
-fact that we need to map TT table tags (which are case sensitive)
-to filenames (which on Mac and Win aren't case sensitive) as well
-as to Python identifiers. The latter means it can only contain
-``[A-Za-z0-9_]`` and cannot start with a number.
-
-:py:mod:`fontTools.ttLib` provides functions to expand a tag into the format used here::
-
-    >>> from fontTools import ttLib
-    >>> ttLib.tagToIdentifier("FOO ")
-    'F_O_O_'
-    >>> ttLib.tagToIdentifier("cvt ")
-    '_c_v_t'
-    >>> ttLib.tagToIdentifier("OS/2")
-    'O_S_2f_2'
-    >>> ttLib.tagToIdentifier("glyf")
-    '_g_l_y_f'
-    >>>
-
-And vice versa::
-
-    >>> ttLib.identifierToTag("F_O_O_")
-    'FOO '
-    >>> ttLib.identifierToTag("_c_v_t")
-    'cvt '
-    >>> ttLib.identifierToTag("O_S_2f_2")
-    'OS/2'
-    >>> ttLib.identifierToTag("_g_l_y_f")
-    'glyf'
-    >>>
-
-Eg. the 'glyf' table converter lives in a Python file called::
-
-	_g_l_y_f.py
-
-The converter itself is a class, named ``table_`` + expandedtag. Eg::
-
-
-	class table__g_l_y_f:
-		etc.
-
-Note that if you _do_ need to use such modules or classes manually,
-there are two convenient API functions that let you find them by tag::
-
-    >>> ttLib.getTableModule('glyf')
-    <module 'ttLib.tables._g_l_y_f'>
-    >>> ttLib.getTableClass('glyf')
-    <class ttLib.tables._g_l_y_f.table__g_l_y_f at 645f400>
-    >>
-
-ttProgram: TrueType bytecode assembler/disassembler
----------------------------------------------------
-
-.. automodule:: fontTools.ttLib.tables.ttProgram
-   :inherited-members:
-   :members:
-   :undoc-members:
-
-Contributing your own table convertors
---------------------------------------
-
-To add support for a new font table that fontTools does not currently implement,
-you must subclass from :py:mod:`fontTools.ttLib.tables.DefaultTable.DefaultTable`.
-It provides some default behavior, as well as a constructor method (``__init__``)
-that you don't need to override.
-
-Your converter should minimally provide two methods::
-
-
-    class table_F_O_O_(DefaultTable.DefaultTable): # converter for table 'FOO '
-
-        def decompile(self, data, ttFont):
-            # 'data' is the raw table data. Unpack it into a
-            # Python data structure.
-            # 'ttFont' is a ttLib.TTfile instance, enabling you to
-            # refer to other tables. Do ***not*** keep a reference to
-            # it: it will cause a circular reference (ttFont saves
-            # a reference to us), and that means we'll be leaking
-            # memory. If you need to use it in other methods, just
-            # pass it around as a method argument.
-
-        def compile(self, ttFont):
-            # Return the raw data, as converted from the Python
-            # data structure.
-            # Again, 'ttFont' is there so you can access other tables.
-            # Same warning applies.
-
-
-If you want to support TTX import/export as well, you need to provide two
-additional methods::
-
-
-   def toXML(self, writer, ttFont):
-      # XXX
-
-   def fromXML(self, (name, attrs, content), ttFont):
-      # XXX
-
 .. automodule:: fontTools.ttLib.tables
-   :inherited-members:
    :members:
    :undoc-members:
 

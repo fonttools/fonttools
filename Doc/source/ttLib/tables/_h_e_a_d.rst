@@ -1,8 +1,9 @@
-``head``: Font Header Table
+``head``: Font Header table
 ---------------------------
 
+The ``head`` table is an OpenType table.
+
 .. automodule:: fontTools.ttLib.tables._h_e_a_d
-   :inherited-members:
    :members:
    :undoc-members:
 

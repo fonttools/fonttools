@@ -5,7 +5,9 @@ create full instances (i.e. static fonts) from variable fonts, as well as "parti
 variable fonts that only contain a subset of the original variation space.
 
 For example, if you wish to pin the width axis to a given location while also
-restricting the weight axis to 400..700 range, you can do::
+restricting the weight axis to 400..700 range, you can do:
+
+.. code-block:: sh
 
     $ fonttools varLib.instancer ./NotoSans-VF.ttf wdth=85 wght=400:700
 
@@ -17,32 +19,38 @@ and returns a new TTFont representing either a partial VF, or full instance if a
 the VF axes were given an explicit coordinate.
 
 E.g. here's how to pin the wght axis at a given location in a wght+wdth variable
-font, keeping only the deltas associated with the wdth axis::
+font, keeping only the deltas associated with the wdth axis:
+.. code-block:: pycon
 
-| >>> from fontTools import ttLib
-| >>> from fontTools.varLib import instancer
-| >>> varfont = ttLib.TTFont("path/to/MyVariableFont.ttf")
-| >>> [a.axisTag for a in varfont["fvar"].axes]  # the varfont's current axes
-| ['wght', 'wdth']
-| >>> partial = instancer.instantiateVariableFont(varfont, {"wght": 300})
-| >>> [a.axisTag for a in partial["fvar"].axes]  # axes left after pinning 'wght'
-| ['wdth']
+    >>>
+    >> from fontTools import ttLib
+    >> from fontTools.varLib import instancer
+    >> varfont = ttLib.TTFont("path/to/MyVariableFont.ttf")
+    >> [a.axisTag for a in varfont["fvar"].axes]  # the varfont's current axes
+    ['wght', 'wdth']
+    >> partial = instancer.instantiateVariableFont(varfont, {"wght": 300})
+    >> [a.axisTag for a in partial["fvar"].axes]  # axes left after pinning 'wght'
+    ['wdth']
 
 If the input location specifies all the axes, the resulting instance is no longer
 'variable' (same as using fontools varLib.mutator):
+.. code-block:: pycon
 
-| >>> instance = instancer.instantiateVariableFont(
-| ...     varfont, {"wght": 700, "wdth": 67.5}
-| ... )
-| >>> "fvar" not in instance
-| True
+    >>>    
+    >> instance = instancer.instantiateVariableFont(
+    ...     varfont, {"wght": 700, "wdth": 67.5}
+    ... )
+    >> "fvar" not in instance
+    True
 
 If one just want to drop an axis at the default location, without knowing in
 advance what the default value for that axis is, one can pass a `None` value:
+.. code-block:: pycon
 
-| >>> instance = instancer.instantiateVariableFont(varfont, {"wght": None})
-| >>> len(varfont["fvar"].axes)
-| 1
+    >>>
+    >> instance = instancer.instantiateVariableFont(varfont, {"wght": None})
+    >> len(varfont["fvar"].axes)
+    1
 
 From the console script, this is equivalent to passing `wght=drop` as input.
 
@@ -56,25 +64,33 @@ course be combined:
 
 L1
     dropping one or more axes while leaving the default tables unmodified;
+    .. code-block:: pycon
 
-    | >>> font = instancer.instantiateVariableFont(varfont, {"wght": None})
+        >>>
+        >> font = instancer.instantiateVariableFont(varfont, {"wght": None})
 
 L2
     dropping one or more axes while pinning them at non-default locations;
-
-    | >>> font = instancer.instantiateVariableFont(varfont, {"wght": 700})
+    .. code-block:: pycon
+    
+        >>>
+        >> font = instancer.instantiateVariableFont(varfont, {"wght": 700})
 
 L3
     restricting the range of variation of one or more axes, by setting either
     a new minimum or maximum, potentially -- though not necessarily -- dropping
     entire regions of variations that fall completely outside this new range.
-
-    | >>> font = instancer.instantiateVariableFont(varfont, {"wght": (100, 300)})
+    .. code-block:: pycon
+    
+        >>>
+        >> font = instancer.instantiateVariableFont(varfont, {"wght": (100, 300)})
 
 L4
     moving the default location of an axis, by specifying (min,defalt,max) values:
-
-    | >>> font = instancer.instantiateVariableFont(varfont, {"wght": (100, 300, 700)})
+    .. code-block:: pycon
+    
+        >>>
+        >> font = instancer.instantiateVariableFont(varfont, {"wght": (100, 300, 700)})
 
 Currently only TrueType-flavored variable fonts (i.e. containing 'glyf' table)
 are supported, but support for CFF2 variable fonts will be added soon.
@@ -112,6 +128,7 @@ from fontTools.varLib.varStore import OnlineVarStoreBuilder
 from .featureVars import instantiateFeatureVariations
 from fontTools.misc.cliTools import makeOutputFileName
 from fontTools.varLib.instancer import solver
+from fontTools.ttLib.tables.otTables import VarComponentFlags
 import collections
 import dataclasses
 from contextlib import contextmanager
@@ -479,6 +496,42 @@ class OverlapMode(IntEnum):
     KEEP_AND_SET_FLAGS = 1
     REMOVE = 2
     REMOVE_AND_IGNORE_ERRORS = 3
+
+
+def instantiateVARC(varfont, axisLimits):
+    log.info("Instantiating VARC tables")
+
+    # TODO(behdad) My confidence in this function is rather low;
+    # It needs more testing. Specially with partial-instancing,
+    # I don't think it currently works.
+
+    varc = varfont["VARC"].table
+    fvarAxes = varfont["fvar"].axes if "fvar" in varfont else []
+
+    location = axisLimits.pinnedLocation()
+    axisMap = [i for i, axis in enumerate(fvarAxes) if axis.axisTag not in location]
+    reverseAxisMap = {i: j for j, i in enumerate(axisMap)}
+
+    if varc.AxisIndicesList:
+        axisIndicesList = varc.AxisIndicesList.Item
+        for i, axisIndices in enumerate(axisIndicesList):
+            if any(fvarAxes[j].axisTag in axisLimits for j in axisIndices):
+                raise NotImplementedError(
+                    "Instancing across VarComponent axes is not supported."
+                )
+            axisIndicesList[i] = [reverseAxisMap[j] for j in axisIndices]
+
+    store = varc.MultiVarStore
+    if store:
+        for region in store.SparseVarRegionList.Region:
+            newRegionAxis = []
+            for regionRecord in region.SparseVarRegionAxis:
+                tag = fvarAxes[regionRecord.AxisIndex].axisTag
+                if tag in axisLimits:
+                    raise NotImplementedError(
+                        "Instancing across VarComponent axes is not supported."
+                    )
+                regionRecord.AxisIndex = reverseAxisMap[regionRecord.AxisIndex]
 
 
 def instantiateTupleVariationStore(
@@ -859,23 +912,6 @@ def _instantiateGvarGlyph(
         if defaultDeltas:
             coordinates += _g_l_y_f.GlyphCoordinates(defaultDeltas)
 
-    glyph = glyf[glyphname]
-    if glyph.isVarComposite():
-        for component in glyph.components:
-            newLocation = {}
-            for tag, loc in component.location.items():
-                if tag not in axisLimits:
-                    newLocation[tag] = loc
-                    continue
-                if component.flags & _g_l_y_f.VarComponentFlags.AXES_HAVE_VARIATION:
-                    raise NotImplementedError(
-                        "Instancing accross VarComposite axes with variation is not supported."
-                    )
-                limits = axisLimits[tag]
-                loc = limits.renormalizeValue(loc, extrapolate=False)
-                newLocation[tag] = loc
-            component.location = newLocation
-
     # _setCoordinates also sets the hmtx/vmtx advance widths and sidebearings from
     # the four phantom points and glyph bounding boxes.
     # We call it unconditionally even if a glyph has no variations or no deltas are
@@ -893,7 +929,18 @@ def _instantiateGvarGlyph(
         return
 
     if optimize:
+        # IUP semantics depend on point equality, and so round prior to
+        # optimization to ensure that comparisons that happen now will be the
+        # same as those that happen at render time. This is especially needed
+        # when floating point deltas have been applied to the default position.
+        #     See https://github.com/fonttools/fonttools/issues/3634
+        # Rounding must happen only after calculating glyf metrics above, to
+        # preserve backwards compatibility.
+        #     See 0010a3cd9aa25f84a3a6250dafb119743d32aa40
+        coordinates.toInt()
+
         isComposite = glyf[glyphname].isComposite()
+
         for var in tupleVarStore:
             var.optimize(coordinates, endPts, isComposite=isComposite)
 
@@ -926,7 +973,7 @@ def instantiateGvar(varfont, axisLimits, optimize=True):
         key=lambda name: (
             (
                 glyf[name].getCompositeMaxpValues(glyf).maxComponentDepth
-                if glyf[name].isComposite() or glyf[name].isVarComposite()
+                if glyf[name].isComposite()
                 else 0
             ),
             name,
@@ -1611,7 +1658,6 @@ def instantiateVariableFont(
 
     Args:
         varfont: a TTFont instance, which must contain at least an 'fvar' table.
-            Note that variable fonts with 'CFF2' table are not supported yet.
         axisLimits: a dict keyed by axis tags (str) containing the coordinates (float)
             along one or more axes where the desired instance will be located.
             If the value is `None`, the default coordinate as per 'fvar' table for
@@ -1669,6 +1715,9 @@ def instantiateVariableFont(
     if updateFontNames:
         log.info("Updating name table")
         names.updateNameTable(varfont, axisLimits)
+
+    if "VARC" in varfont:
+        instantiateVARC(varfont, normalizedLimits)
 
     if "CFF2" in varfont:
         instantiateCFF2(varfont, normalizedLimits, downgrade=downgradeCFF2)
@@ -1930,7 +1979,9 @@ def main(args=None):
     )
 
     isFullInstance = {
-        axisTag for axisTag, limit in axisLimits.items() if limit[0] == limit[2]
+        axisTag
+        for axisTag, limit in axisLimits.items()
+        if limit is None or limit[0] == limit[2]
     }.issuperset(axis.axisTag for axis in varfont["fvar"].axes)
 
     instantiateVariableFont(

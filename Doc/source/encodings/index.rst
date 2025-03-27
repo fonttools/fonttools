@@ -1,6 +1,6 @@
-##################################################
-encodings: Support for OpenType-specific encodings
-##################################################
+############################################################
+encodings: Support for OpenType-specific character encodings
+############################################################
 
 fontTools includes support for some character encodings found in legacy Mac
 TrueType fonts. Many of these legacy encodings have found their way into the

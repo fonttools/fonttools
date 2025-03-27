@@ -76,16 +76,16 @@ class GreenPen(BasePen):
         self.value = 0
 
     def _moveTo(self, p0):
-        self.__startPoint = p0
+        self._startPoint = p0
 
     def _closePath(self):
         p0 = self._getCurrentPoint()
-        if p0 != self.__startPoint:
-            self._lineTo(self.__startPoint)
+        if p0 != self._startPoint:
+            self._lineTo(self._startPoint)
 
     def _endPath(self):
         p0 = self._getCurrentPoint()
-        if p0 != self.__startPoint:
+        if p0 != self._startPoint:
             # Green theorem is not defined on open contours.
             raise NotImplementedError
 
@@ -121,13 +121,10 @@ def printGreenPen(penName, funcs, file=sys.stdout, docstring=None):
         """from fontTools.pens.basePen import BasePen, OpenContourError
 try:
 	import cython
-
-	COMPILED = cython.compiled
 except (AttributeError, ImportError):
 	# if cython not installed, use mock module with no-op decorators and types
 	from fontTools.misc import cython
-
-	COMPILED = False
+COMPILED = cython.compiled
 
 
 __all__ = ["%s"]
@@ -145,19 +142,18 @@ class %s(BasePen):
     print(
         """
 	def _moveTo(self, p0):
-		self.__startPoint = p0
+		self._startPoint = p0
 
 	def _closePath(self):
 		p0 = self._getCurrentPoint()
-		if p0 != self.__startPoint:
-			self._lineTo(self.__startPoint)
+		if p0 != self._startPoint:
+			self._lineTo(self._startPoint)
 
 	def _endPath(self):
 		p0 = self._getCurrentPoint()
-		if p0 != self.__startPoint:
-			# Green theorem is not defined on open contours.
+		if p0 != self._startPoint:
 			raise OpenContourError(
-							"Green theorem is not defined on open contours."
+							"Glyph statistics is not defined on open contours."
 			)
 """,
         end="",

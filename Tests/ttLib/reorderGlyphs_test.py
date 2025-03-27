@@ -59,6 +59,17 @@ def test_ttfont_reorder_glyphs():
     assert list(reversed(old_coverage2)) == new_coverage2
 
 
+def test_reorder_glyphs_cff():
+    font_path = DATA_DIR / "TestVGID-Regular.otf"
+    font = TTFont(str(font_path))
+    ga = font.getGlyphOrder()
+    ga = list(reversed(ga))
+    reorderGlyphs(font, ga)
+
+    assert list(font["CFF "].cff.topDictIndex[0].CharStrings.charStrings.keys()) == ga
+    assert font["CFF "].cff.topDictIndex[0].charset == ga
+
+
 def test_reorder_glyphs_bad_length(caplog):
     font_path = DATA_DIR / "Test-Regular.ttf"
     font = TTFont(str(font_path))

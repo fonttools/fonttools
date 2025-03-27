@@ -297,7 +297,7 @@ Example of all axis elements together
 
 
 ``<output>`` element
-...................
+....................
 
 -  Defines the output location of an axis mapping.
 -  Child element of ``<mapping>``

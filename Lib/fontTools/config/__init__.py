@@ -73,3 +73,18 @@ Config.register_option(
     parse=Option.parse_optional_bool,
     validate=Option.validate_optional_bool,
 )
+
+Config.register_option(
+    name="fontTools.ttLib:OPTIMIZE_FONT_SPEED",
+    help=dedent(
+        """\
+        Enable optimizations that prioritize speed over file size. This
+        mainly affects how glyf table and gvar / VARC tables are compiled.
+        The produced fonts will be larger, but rendering performance will
+        be improved with HarfBuzz and other text layout engines.
+        """
+    ),
+    default=False,
+    parse=Option.parse_optional_bool,
+    validate=Option.validate_optional_bool,
+)

@@ -1,7 +1,10 @@
-from collections import UserDict, deque
+from collections import deque
 from functools import partial
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
+from fontTools.misc.lazyTools import LazyDict
+from fontTools.ttLib import OPTIMIZE_FONT_SPEED
+from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from . import DefaultTable
 import array
 import itertools
@@ -10,10 +13,7 @@ import struct
 import sys
 import fontTools.ttLib.tables.TupleVariation as tv
 
-
 log = logging.getLogger(__name__)
-TupleVariation = tv.TupleVariation
-
 
 # https://www.microsoft.com/typography/otspec/gvar.htm
 # https://www.microsoft.com/typography/otspec/otvarcommonformats.htm
@@ -39,20 +39,17 @@ GVAR_HEADER_FORMAT = """
 GVAR_HEADER_SIZE = sstruct.calcsize(GVAR_HEADER_FORMAT)
 
 
-class _LazyDict(UserDict):
-    def __init__(self, data):
-        super().__init__()
-        self.data = data
-
-    def __getitem__(self, k):
-        v = self.data[k]
-        if callable(v):
-            v = v()
-            self.data[k] = v
-        return v
-
-
 class table__g_v_a_r(DefaultTable.DefaultTable):
+    """Glyph Variations table
+
+    The ``gvar`` table provides the per-glyph variation data that
+    describe how glyph outlines in the ``glyf`` table change across
+    the variation space that is defined for the font in the ``fvar``
+    table.
+
+    See also https://learn.microsoft.com/en-us/typography/opentype/spec/gvar
+    """
+
     dependencies = ["fvar", "glyf"]
 
     def __init__(self, tag=None):
@@ -61,6 +58,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
         self.variations = {}
 
     def compile(self, ttFont):
+
         axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
         sharedTuples = tv.compileSharedTuples(
             axisTags, itertools.chain(*self.variations.values())
@@ -95,6 +93,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
         return b"".join(result)
 
     def compileGlyphs_(self, ttFont, axisTags, sharedCoordIndices):
+        optimizeSpeed = ttFont.cfg[OPTIMIZE_FONT_SPEED]
         result = []
         glyf = ttFont["glyf"]
         for glyphName in ttFont.getGlyphOrder():
@@ -105,7 +104,11 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
             pointCountUnused = 0  # pointCount is actually unused by compileGlyph
             result.append(
                 compileGlyph_(
-                    variations, pointCountUnused, axisTags, sharedCoordIndices
+                    variations,
+                    pointCountUnused,
+                    axisTags,
+                    sharedCoordIndices,
+                    optimizeSize=not optimizeSpeed,
                 )
             )
         return result
@@ -116,11 +119,6 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
         sstruct.unpack(GVAR_HEADER_FORMAT, data[0:GVAR_HEADER_SIZE], self)
         assert len(glyphs) == self.glyphCount
         assert len(axisTags) == self.axisCount
-        offsets = self.decompileOffsets_(
-            data[GVAR_HEADER_SIZE:],
-            tableFormat=(self.flags & 1),
-            glyphCount=self.glyphCount,
-        )
         sharedCoords = tv.decompileSharedTuples(
             axisTags, self.sharedTupleCount, data, self.offsetToSharedTuples
         )
@@ -128,20 +126,35 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
         offsetToData = self.offsetToGlyphVariationData
         glyf = ttFont["glyf"]
 
-        def decompileVarGlyph(glyphName, gid):
-            gvarData = data[
-                offsetToData + offsets[gid] : offsetToData + offsets[gid + 1]
-            ]
-            if not gvarData:
-                return []
-            glyph = glyf[glyphName]
-            numPointsInGlyph = self.getNumPoints_(glyph)
-            return decompileGlyph_(numPointsInGlyph, sharedCoords, axisTags, gvarData)
+        def get_read_item():
+            reverseGlyphMap = ttFont.getReverseGlyphMap()
+            tableFormat = self.flags & 1
 
-        for gid in range(self.glyphCount):
-            glyphName = glyphs[gid]
-            variations[glyphName] = partial(decompileVarGlyph, glyphName, gid)
-        self.variations = _LazyDict(variations)
+            def read_item(glyphName):
+                gid = reverseGlyphMap[glyphName]
+                offsetSize = 2 if tableFormat == 0 else 4
+                startOffset = GVAR_HEADER_SIZE + offsetSize * gid
+                endOffset = startOffset + offsetSize * 2
+                offsets = table__g_v_a_r.decompileOffsets_(
+                    data[startOffset:endOffset],
+                    tableFormat=tableFormat,
+                    glyphCount=1,
+                )
+                gvarData = data[offsetToData + offsets[0] : offsetToData + offsets[1]]
+                if not gvarData:
+                    return []
+                glyph = glyf[glyphName]
+                numPointsInGlyph = self.getNumPoints_(glyph)
+                return decompileGlyph_(
+                    numPointsInGlyph, sharedCoords, axisTags, gvarData
+                )
+
+            return read_item
+
+        read_item = get_read_item()
+        l = LazyDict({glyphs[gid]: read_item for gid in range(self.glyphCount)})
+
+        self.variations = l
 
         if ttFont.lazy is False:  # Be lazy for None and True
             self.ensureDecompiled()
@@ -245,19 +258,16 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 
         if glyph.isComposite():
             return len(glyph.components) + NUM_PHANTOM_POINTS
-        elif glyph.isVarComposite():
-            count = 0
-            for component in glyph.components:
-                count += component.getPointCount()
-            return count + NUM_PHANTOM_POINTS
         else:
             # Empty glyphs (eg. space, nonmarkingreturn) have no "coordinates" attribute.
             return len(getattr(glyph, "coordinates", [])) + NUM_PHANTOM_POINTS
 
 
-def compileGlyph_(variations, pointCount, axisTags, sharedCoordIndices):
+def compileGlyph_(
+    variations, pointCount, axisTags, sharedCoordIndices, *, optimizeSize=True
+):
     tupleVariationCount, tuples, data = tv.compileTupleVariationStore(
-        variations, pointCount, axisTags, sharedCoordIndices
+        variations, pointCount, axisTags, sharedCoordIndices, optimizeSize=optimizeSize
     )
     if tupleVariationCount == 0:
         return b""
