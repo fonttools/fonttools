@@ -1,8 +1,13 @@
-#####
-etree
-#####
+##############################################
+etree: Tools for accessing the ElementTree API
+##############################################
+
+.. currentmodule:: fontTools.misc.etree
+
+Note also that :mod:`etree` supports some :doc:`optional </optional>`
+external libraries.
+
 
 .. automodule:: fontTools.misc.etree
-   :inherited-members:
    :members:
    :undoc-members:

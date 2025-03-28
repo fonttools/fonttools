@@ -1,8 +1,9 @@
-###########
-psOperators
-###########
+########################################################
+psOperators: Tools for working with PostScript operators
+########################################################
+
+.. currentmodule:: fontTools.misc.psOperators
 
 .. automodule:: fontTools.misc.psOperators
-   :inherited-members:
    :members:
    :undoc-members:

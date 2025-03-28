@@ -1,8 +1,9 @@
-#########
-timeTools
-#########
+#####################################################
+timeTools: Tools for working with OpenType timestamps
+#####################################################
+
+.. currentmodule:: fontTools.misc.timeTools
 
 .. automodule:: fontTools.misc.timeTools
-   :inherited-members:
    :members:
    :undoc-members:

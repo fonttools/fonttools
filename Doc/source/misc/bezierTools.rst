@@ -2,7 +2,8 @@
 bezierTools: Routines for working with Bezier curves
 ####################################################
 
+.. currentmodule:: fontTools.misc.bezierTools
+
 .. automodule:: fontTools.misc.bezierTools
-   :inherited-members:
    :members:
    :undoc-members:
