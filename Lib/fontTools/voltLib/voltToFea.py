@@ -57,15 +57,6 @@ log = logging.getLogger("fontTools.voltLib.voltToFea")
 TABLES = ["GDEF", "GSUB", "GPOS"]
 
 
-class MarkClassDefinition(ast.MarkClassDefinition):
-    def asFea(self, indent=""):
-        res = ""
-        if not getattr(self, "used", False):
-            res += "#"
-        res += ast.MarkClassDefinition.asFea(self, indent)
-        return res
-
-
 # For sorting voltLib.ast.GlyphDefinition, see its use below.
 class Group:
     def __init__(self, group):
@@ -361,18 +352,11 @@ class VoltToFea:
         glyphname = anchordef.glyph_name
         anchor = self._anchor(anchordef.pos)
 
-        if anchorname.startswith("MARK_"):
-            name = "_".join(anchorname.split("_")[1:])
-            markclass = ast.MarkClass(self._className(name))
-            glyph = self._glyphName(glyphname)
-            markdef = MarkClassDefinition(markclass, anchor, glyph)
-            self._markclasses[(glyphname, anchorname)] = markdef
-        else:
-            if glyphname not in self._anchors:
-                self._anchors[glyphname] = {}
-            if anchorname not in self._anchors[glyphname]:
-                self._anchors[glyphname][anchorname] = {}
-            self._anchors[glyphname][anchorname][anchordef.component] = anchor
+        if glyphname not in self._anchors:
+            self._anchors[glyphname] = {}
+        if anchorname not in self._anchors[glyphname]:
+            self._anchors[glyphname][anchorname] = {}
+        self._anchors[glyphname][anchorname][anchordef.component] = anchor
 
     def _gposLookup(self, lookup, fealookup):
         statements = fealookup.statements
@@ -411,22 +395,43 @@ class VoltToFea:
                 )
         elif isinstance(pos, VAst.PositionAttachDefinition):
             anchors = {}
-            for marks, classname in pos.coverage_to:
-                for mark in marks:
-                    # Set actually used mark classes. Basically a hack to get
-                    # around the feature file syntax limitation of making mark
-                    # classes global and not allowing mark positioning to
-                    # specify mark coverage.
-                    for name in mark.glyphSet():
-                        key = (name, "MARK_" + classname)
-                        self._markclasses[key].used = True
-                markclass = ast.MarkClass(self._className(classname))
+            allmarks = set()
+            for coverage, anchorname in pos.coverage_to:
+                # In feature files mark classes are global, but in VOLT they
+                # are defined per-lookup. If we output mark class definitions
+                # for all marks that use a given anchor, we might end up with a
+                # mark used in two different classes in the same lookup, which
+                # is causes feature file compilation error.
+                # At the expense of uglier feature code, we make the mark class
+                # name by appending the current lookup name not the anchor
+                # name, and output mark class definitions only for marks used
+                # in this lookup.
+                classname = self._className(f"{anchorname}.{lookup.name}")
+                markclass = ast.MarkClass(classname)
+
+                # We might still end in marks used in two different anchor
+                # classes, so we filter out already used marks.
+                marks = set()
+                for mark in coverage:
+                    marks.update(mark.glyphSet())
+                if not marks.isdisjoint(allmarks):
+                    marks.difference_update(allmarks)
+                    if not marks:
+                        continue
+                allmarks.update(marks)
+
+                for glyphname in marks:
+                    glyph = self._glyphName(glyphname)
+                    anchor = self._anchors[glyphname][f"MARK_{anchorname}"][1]
+                    markdef = ast.MarkClassDefinition(markclass, anchor, glyph)
+                    self._markclasses[(glyphname, classname)] = markdef
+
                 for base in pos.coverage:
                     for name in base.glyphSet():
                         if name not in anchors:
                             anchors[name] = []
-                        if classname not in anchors[name]:
-                            anchors[name].append(classname)
+                        if (anchorname, classname) not in anchors[name]:
+                            anchors[name].append((anchorname, classname))
 
             for name in anchors:
                 components = 1
@@ -434,8 +439,8 @@ class VoltToFea:
                     components = self._ligatures[name]
 
                 marks = []
-                for mark in anchors[name]:
-                    markclass = ast.MarkClass(self._className(mark))
+                for mark, classname in anchors[name]:
+                    markclass = ast.MarkClass(classname)
                     for component in range(1, components + 1):
                         if len(marks) < component:
                             marks.append([])
