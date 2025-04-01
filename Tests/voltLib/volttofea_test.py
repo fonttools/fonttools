@@ -10,6 +10,8 @@ DATADIR = pathlib.Path(__file__).parent / "data"
 
 
 class ToFeaTest(unittest.TestCase):
+    maxDiff = 10000000
+
     @classmethod
     def setup_class(cls):
         cls.tempdir = None
@@ -875,16 +877,16 @@ class ToFeaTest(unittest.TestCase):
         )
         self.assertEqual(
             "\n# Mark classes\n"
-            "markClass acutecomb <anchor 0 450> @top;\n"
-            "markClass gravecomb <anchor 0 450> @top;\n"
+            "markClass acutecomb <anchor 0 450> @top.anchor_top;\n"
+            "markClass gravecomb <anchor 0 450> @top.anchor_top;\n"
             "\n"
             "# Lookups\n"
             "lookup anchor_top {\n"
             "    lookupflag RightToLeft;\n"
             "    pos base a\n"
-            "        <anchor 210 450> mark @top;\n"
+            "        <anchor 210 450> mark @top.anchor_top;\n"
             "    pos base e\n"
-            "        <anchor 215 450> mark @top;\n"
+            "        <anchor 215 450> mark @top.anchor_top;\n"
             "} anchor_top;\n",
             fea,
         )
@@ -909,13 +911,13 @@ class ToFeaTest(unittest.TestCase):
         )
         self.assertEqual(
             "\n# Mark classes\n"
-            "markClass acutecomb <anchor 0 450> @top;\n"
+            "markClass acutecomb <anchor 0 450> @top.anchor_top;\n"
             "\n"
             "# Lookups\n"
             "lookup anchor_top {\n"
             "    lookupflag RightToLeft;\n"
             "    pos mark gravecomb\n"
-            "        <anchor 210 450> mark @top;\n"
+            "        <anchor 210 450> mark @top.anchor_top;\n"
             "} anchor_top;\n"
             "\n"
             "@GDEF_mark = [brevecomb gravecomb];\n"
@@ -945,13 +947,13 @@ class ToFeaTest(unittest.TestCase):
         )
         self.assertEqual(
             "\n# Mark classes\n"
-            "markClass acutecomb <anchor 0 450> @top;\n"
-            "markClass gravecomb <anchor 0 450> @top;\n"
+            "markClass acutecomb <anchor 0 450> @top.test;\n"
+            "markClass gravecomb <anchor 0 450> @top.test;\n"
             "\n"
             "# Lookups\n"
             "lookup test_target {\n"
             "    pos base a\n"
-            "        <anchor 210 450> mark @top;\n"
+            "        <anchor 210 450> mark @top.test;\n"
             "} test_target;\n"
             "\n"
             "lookup test {\n"
@@ -959,6 +961,83 @@ class ToFeaTest(unittest.TestCase):
             "    ignore pos a [acutecomb gravecomb]';\n"
             "    pos [acutecomb gravecomb]' lookup test_target;\n"
             "} test;\n",
+            fea,
+        )
+
+    def test_position_attach_overlapping_classes(self):
+        fea = self.parse(
+            'DEF_GROUP "above_marks"\n'
+            'ENUM GLYPH "acutecomb" GLYPH "gravecomb" END_ENUM\n'
+            "END_GROUP\n"
+            'DEF_LOOKUP "anchor_top" PROCESS_BASE PROCESS_MARKS ALL DIRECTION LTR\n'
+            "IN_CONTEXT\n"
+            "END_CONTEXT\n"
+            "AS_POSITION\n"
+            'ATTACH GLYPH "a" GLYPH "e"\n'
+            'TO GLYPH "gravecomb" AT ANCHOR "top2" GROUP "above_marks" AT ANCHOR "top"\n'
+            "END_ATTACH\n"
+            "END_POSITION\n"
+            'DEF_ANCHOR "MARK_top" ON 120 GLYPH acutecomb COMPONENT 1 AT POS DX 0 DY 450 END_POS END_ANCHOR\n'
+            'DEF_ANCHOR "MARK_top" ON 121 GLYPH gravecomb COMPONENT 1 AT POS DX 0 DY 450 END_POS END_ANCHOR\n'
+            'DEF_ANCHOR "MARK_top2" ON 121 GLYPH gravecomb COMPONENT 1 AT POS DX 0 DY 450 END_POS END_ANCHOR\n'
+            'DEF_ANCHOR "top" ON 31 GLYPH a COMPONENT 1 AT POS DX 210 DY 450 END_POS END_ANCHOR\n'
+            'DEF_ANCHOR "top" ON 35 GLYPH e COMPONENT 1 AT POS DX 215 DY 450 END_POS END_ANCHOR\n'
+            'DEF_ANCHOR "top2" ON 31 GLYPH a COMPONENT 1 AT POS DX 210 DY 550 END_POS END_ANCHOR\n'
+            'DEF_ANCHOR "top2" ON 35 GLYPH e COMPONENT 1 AT POS DX 215 DY 550 END_POS END_ANCHOR\n'
+        )
+        self.assertEqual(
+            "# Glyph classes\n"
+            "@above_marks = [acutecomb gravecomb];\n"
+            "\n# Mark classes\n"
+            "markClass acutecomb <anchor 0 450> @top.anchor_top;\n"
+            "markClass gravecomb <anchor 0 450> @top2.anchor_top;\n"
+            "\n"
+            "# Lookups\n"
+            "lookup anchor_top {\n"
+            "    pos base a\n"
+            "        <anchor 210 550> mark @top2.anchor_top\n"
+            "        <anchor 210 450> mark @top.anchor_top;\n"
+            "    pos base e\n"
+            "        <anchor 215 550> mark @top2.anchor_top\n"
+            "        <anchor 215 450> mark @top.anchor_top;\n"
+            "} anchor_top;\n",
+            fea,
+        )
+
+    def test_position_attach_overlapping_classes_dropped(self):
+        fea = self.parse(
+            'DEF_GROUP "above_marks"\n'
+            'ENUM GLYPH "gravecomb" END_ENUM\n'
+            "END_GROUP\n"
+            'DEF_LOOKUP "anchor_top" PROCESS_BASE PROCESS_MARKS ALL DIRECTION LTR\n'
+            "IN_CONTEXT\n"
+            "END_CONTEXT\n"
+            "AS_POSITION\n"
+            'ATTACH GLYPH "a" GLYPH "e"\n'
+            'TO GLYPH "gravecomb" AT ANCHOR "top2" GROUP "above_marks" AT ANCHOR "top"\n'
+            "END_ATTACH\n"
+            "END_POSITION\n"
+            'DEF_ANCHOR "MARK_top" ON 120 GLYPH acutecomb COMPONENT 1 AT POS DX 0 DY 450 END_POS END_ANCHOR\n'
+            'DEF_ANCHOR "MARK_top" ON 121 GLYPH gravecomb COMPONENT 1 AT POS DX 0 DY 450 END_POS END_ANCHOR\n'
+            'DEF_ANCHOR "MARK_top2" ON 121 GLYPH gravecomb COMPONENT 1 AT POS DX 0 DY 450 END_POS END_ANCHOR\n'
+            'DEF_ANCHOR "top" ON 31 GLYPH a COMPONENT 1 AT POS DX 210 DY 450 END_POS END_ANCHOR\n'
+            'DEF_ANCHOR "top" ON 35 GLYPH e COMPONENT 1 AT POS DX 215 DY 450 END_POS END_ANCHOR\n'
+            'DEF_ANCHOR "top2" ON 31 GLYPH a COMPONENT 1 AT POS DX 210 DY 550 END_POS END_ANCHOR\n'
+            'DEF_ANCHOR "top2" ON 35 GLYPH e COMPONENT 1 AT POS DX 215 DY 550 END_POS END_ANCHOR\n'
+        )
+        self.assertEqual(
+            "# Glyph classes\n"
+            "@above_marks = [gravecomb];\n"
+            "\n# Mark classes\n"
+            "markClass gravecomb <anchor 0 450> @top2.anchor_top;\n"
+            "\n"
+            "# Lookups\n"
+            "lookup anchor_top {\n"
+            "    pos base a\n"
+            "        <anchor 210 550> mark @top2.anchor_top;\n"
+            "    pos base e\n"
+            "        <anchor 215 550> mark @top2.anchor_top;\n"
+            "} anchor_top;\n",
             fea,
         )
 
@@ -1109,12 +1188,12 @@ class ToFeaTest(unittest.TestCase):
         )
         self.assertEqual(
             "\n# Mark classes\n"
-            "markClass acutecomb <anchor 0 450> @top;\n"
+            "markClass acutecomb <anchor 0 450> @top.TestLookup;\n"
             "\n"
             "# Lookups\n"
             "lookup TestLookup {\n"
             "    pos base a\n"
-            "        <anchor 250 450> mark @top;\n"
+            "        <anchor 250 450> mark @top.TestLookup;\n"
             "} TestLookup;\n",
             fea,
         )
@@ -1140,14 +1219,14 @@ class ToFeaTest(unittest.TestCase):
         )
         self.assertEqual(
             "\n# Mark classes\n"
-            "markClass acutecomb <anchor 0 0> @top;\n"
+            "markClass acutecomb <anchor 0 0> @top.TestLookup;\n"
             "\n"
             "# Lookups\n"
             "lookup TestLookup {\n"
             "    pos ligature f_f\n"
-            "            <anchor 250 450> mark @top\n"
+            "            <anchor 250 450> mark @top.TestLookup\n"
             "        ligComponent\n"
-            "            <anchor 450 450> mark @top;\n"
+            "            <anchor 450 450> mark @top.TestLookup;\n"
             "} TestLookup;\n"
             "\n"
             "@GDEF_ligature = [f_f];\n"
@@ -1161,12 +1240,26 @@ class ToFeaTest(unittest.TestCase):
         fea = self.parse(
             'DEF_ANCHOR "MARK_top" ON 123 GLYPH diacglyph '
             "COMPONENT 1 AT POS DX 0 DY 456 ADJUST_BY 12 AT 34 "
-            "ADJUST_BY 56 AT 78 END_POS END_ANCHOR"
+            "ADJUST_BY 56 AT 78 END_POS END_ANCHOR\n"
+            'DEF_ANCHOR "top" ON 121 GLYPH baseglyph '
+            "COMPONENT 1 AT POS DX 0 DY 0"
+            "END_POS END_ANCHOR\n"
+            'DEF_LOOKUP "test" PROCESS_BASE PROCESS_MARKS ALL DIRECTION LTR\n'
+            "AS_POSITION\n"
+            'ATTACH GLYPH "baseglyph"\n'
+            'TO GLYPH "diacglyph" AT ANCHOR "top"\n'
+            "END_ATTACH\n"
+            "END_POSITION"
         )
         self.assertEqual(
             "\n# Mark classes\n"
-            "#markClass diacglyph <anchor 0 456 <device NULL>"
-            " <device 34 12, 78 56>> @top;",
+            "markClass diacglyph <anchor 0 456 <device NULL>"
+            " <device 34 12, 78 56>> @top.test;\n"
+            "\n# Lookups\n"
+            "lookup test {\n"
+            "    pos base baseglyph\n"
+            "        <anchor 0 0> mark @top.test;\n"
+            "} test;\n",
             fea,
         )
 
