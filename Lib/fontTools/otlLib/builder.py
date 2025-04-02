@@ -786,6 +786,38 @@ class ChainContextSubstBuilder(ChainContextualBuilder):
                             )
         return result
 
+    def add_multi_sub_to_existing_rule(
+        self, prefix, glyph, suffix, replacements
+    ) -> bool:
+        """Helper for constructing multi sub chain rules.
+
+        Given a statement like `sub a [b c d]' e by f`, we decompose the input
+        sequence into single glyphs; this method tries recombining them.
+        """
+
+        for rule in self.rules[::-1]:
+            if rule.is_subtable_break:
+                return False
+            if (
+                len(rule.lookups) > 1
+                or not isinstance(rule.lookups[0], MultipleSubstBuilder)
+                or rule.prefix != prefix
+                or rule.suffix != suffix
+            ):
+                return False
+
+            lookup = rule.lookups[0]
+            # if the replacements already exist for another glyph, add us?
+            if (
+                any(replacements == value for value in lookup.mapping.values())
+                and lookup.mapping.get(glyph, replacements) == replacements
+            ):
+                lookup.mapping[glyph] = replacements
+                rule.glyphs[0].add(glyph)
+
+                return True
+        return False
+
     def find_chainable_subst(self, mapping, builder_class):
         """Helper for add_{single,multi}_subst_chained_()"""
         res = None
