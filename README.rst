@@ -266,7 +266,7 @@ Vincent Connare, David Corbett, Simon Cozens, Dave Crossland, Simon Daniels,
 Peter Dekkers, Behdad Esfahbod, Behnam Esfahbod, Hannes Famira, Sam Fishman,
 Matt Fontaine, Takaaki Fuji, Rob Hagemans, Yannis Haralambous, Greg Hitchcock,
 Jeremie Hornus, Khaled Hosny, John Hudson, Denis Moyogo Jacquerye, Jack Jansen,
-Tom Kacvinsky, Jens Kutilek, Antoine Leca, Werner Lemberg, Tal Leming, Peter
+Tom Kacvinsky, Jens Kutilek, Antoine Leca, Werner Lemberg, Tal Leming, Liang Hai, Peter
 Lofting, Cosimo Lupo, Olli Meier, Masaya Nakamura, Dave Opstad, Laurence Penney,
 Roozbeh Pournader, Garret Rieger, Read Roberts, Colin Rofls, Guido van Rossum,
 Just van Rossum, Andreas Seidel, Georg Seifert, Chris Simpkins, Miguel Sousa,
