@@ -1,3 +1,6 @@
+4.57.0 (released 2025-04-03)
+----------------------------
+
 - [ttLib.__main__] Add `--no-recalc-timestamp` flag (#3771)
 - [ttLib.__main__] Add `-b` (recalcBBoxes=False) flag (#3772)
 - [cmap] Speed up glyphOrder loading from cmap (#3774)
