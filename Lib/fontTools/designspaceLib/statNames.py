@@ -61,6 +61,10 @@ def getStatNames(
     localized names will be empty (family and style names), or the name will be
     None (PostScript name).
 
+    Note: this method does not consider info attached to the instance, like
+    family name. The user needs to override all names on an instance that STAT
+    information would compute differently than desired.
+
     .. versionadded:: 5.0
     """
     familyNames: Dict[str, str] = {}
