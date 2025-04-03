@@ -1,3 +1,13 @@
+- [ttLib.__main__] Add `--no-recalc-timestamp` flag (#3771)
+- [ttLib.__main__] Add `-b` (recalcBBoxes=False) flag (#3772)
+- [cmap] Speed up glyphOrder loading from cmap (#3774)
+- [ttLib.__main__] Improvements around the `-t` flag (#3776)
+- [Debg] Fix parsing from XML; add roundtrip tests (#3781)
+- [fealib] Support \*Base.MinMax tables (#3783, #3786)
+- [config] Add OPTIMIZE_FONT_SPEED (#3784)
+- [varLib.hvar] New module to add HVAR table to the font (#3780)
+- [otlLib.optimize] Fix crash when the provided TTF does not contain a `GPOS` (#3794)
+
 4.56.0 (released 2025-02-07)
 ----------------------------
 
