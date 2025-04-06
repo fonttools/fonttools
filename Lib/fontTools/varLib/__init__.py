@@ -555,6 +555,8 @@ def _add_VHVAR(font, axisTags, tableFields, getAdvanceMetrics):
             varData.addItem(vhAdvanceDeltasAndSupports[glyphName][0], round=noRound)
         varData.optimize()
         directStore = builder.buildVarStore(varTupleList, [varData])
+        # remove unused regions from VarRegionList
+        directStore.prune_regions()
 
     # Build optimized indirect mapping
     storeBuilder = varStore.OnlineVarStoreBuilder(axisTags)
