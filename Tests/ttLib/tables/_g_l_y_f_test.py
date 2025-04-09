@@ -1,4 +1,5 @@
 from fontTools.misc.fixedTools import otRound
+from fontTools.misc.roundTools import noRound
 from fontTools.misc.testTools import getXML, parseXML
 from fontTools.misc.transform import Transform
 from fontTools.pens.ttGlyphPen import TTGlyphPen
@@ -537,6 +538,37 @@ class GlyphTest:
                 270.7107,
             ]
         )
+
+    def test_get_components_nested(self):
+        # check that getCoordinates will correctly round with nested
+        glyphSet = {}
+
+        pen = TTGlyphPen(glyphSet)
+        pen.moveTo((372, 736))
+        pen.lineTo((68, 426))
+        pen.qCurveTo((68.0, 426.0), (64.25, 414.0), (62.5, 386.25), (64.0, 372.0))
+        pen.lineTo((0, 100))
+        pen.lineTo((372, 736))
+        pen.closePath()
+
+        # turn off rounding here; we're pretending that this glyph has been
+        # through cubic->quadratic conversion, which introduced some floats
+        glyphSet["base"] = pen.glyph(round=noRound)
+
+        pen = TTGlyphPen(glyphSet)
+        # this is a simple translation
+        pen.addComponent("base", (1, 0, 0, 1, 10, 10))
+        glyphSet["simpleXform"] = pen.glyph()
+
+        pen = TTGlyphPen(glyphSet)
+        # this is flipped on the y axis
+        pen.addComponent("simpleXform", (-1, 0, 0, -1, 834, 793))
+        glyphSet["nestedTrickyXForm"] = trickyXForm = pen.glyph()
+
+        coords, _, _ = trickyXForm.getCoordinates(glyphSet, round=otRound)
+        assert all(
+            (int(p[0]), int(p[1])) == p for p in coords
+        ), f"{[p for p in coords]}"
 
     def test_getCompositeMaxpValues(self):
         # https://github.com/fonttools/fonttools/issues/2044
