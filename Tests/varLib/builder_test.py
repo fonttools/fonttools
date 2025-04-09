@@ -1,3 +1,13 @@
+from io import StringIO
+from fontTools.designspaceLib import (
+    AxisDescriptor,
+    DesignSpaceDocument,
+    SourceDescriptor,
+)
+from fontTools.fontBuilder import FontBuilder
+from fontTools.misc.xmlWriter import XMLWriter
+from fontTools.pens.ttGlyphPen import TTGlyphPen
+from fontTools.varLib import build
 from fontTools.varLib.builder import buildVarData
 import pytest
 
@@ -148,6 +158,87 @@ def test_buildVarData_optimize(
     assert data.VarRegionCount == len(expected_regions)
     assert data.VarRegionIndex == expected_regions
     assert data.Item == expected_items
+
+
+def test_empty_vhvar_size():
+    """HVAR/VHVAR should be present but empty when there are no glyph metrics
+    variations, and should use a direct mapping for optimal encoding."""
+
+    # Make a designspace that varies the outlines of 'A' but not its advance.
+    doc = DesignSpaceDocument()
+
+    doc.addAxis(
+        AxisDescriptor(tag="wght", name="Weight", minimum=400, default=400, maximum=700)
+    )
+
+    for wght in (400, 700):
+        # Outlines depend on weight.
+        pen = TTGlyphPen(None)
+        pen.lineTo((0, wght))
+        pen.lineTo((wght, wght))
+        pen.lineTo((wght, 0))
+        pen.closePath()
+        glyphs = {"A": pen.glyph()}
+
+        fb = FontBuilder(unitsPerEm=1000)
+        fb.setupGlyphOrder(list(glyphs.keys()))
+        fb.setupGlyf(glyphs)
+
+        # Horizontal advance does not vary.
+        fb.setupHorizontalMetrics(
+            {name: (500, fb.font["glyf"][name].xMin) for name in glyphs}  # type: ignore
+        )
+        fb.setupHorizontalHeader(ascent=1000, descent=0)
+
+        # Vertical advance does not vary.
+        fb.setupVerticalMetrics(
+            {name: (500, 1000 - fb.font["glyf"][name].yMax) for name in glyphs}  # type: ignore
+        )
+        fb.setupVerticalHeader(ascent=1000, descent=0)
+
+        fb.setupNameTable({"familyName": "TestEmptyVhvar", "styleName": "Regular"})
+        fb.setupPost()
+        doc.addSource(SourceDescriptor(font=fb.font, location={"Weight": wght}))
+
+    # Compile.
+    vf, *_ = build(doc)
+
+    # Test both tables' encodings:
+    for table in ("HVAR", "VVAR"):
+        # Variable glyph metrics table should be built even when there are no
+        # glyph metrics variations.
+        assert table in vf
+
+        # The table should be empty, and use a direct mapping for optimal size.
+        expected = """
+<?xml version="1.0" encoding="UTF-8"?>
+<Version value="0x00010000"/>
+<VarStore Format="1">
+  <Format value="1"/>
+  <VarRegionList>
+    <!-- RegionAxisCount=1 -->
+    <!-- RegionCount=0 -->
+  </VarRegionList>
+  <!-- VarDataCount=1 -->
+  <VarData index="0">
+    <!-- ItemCount=1 -->
+    <NumShorts value="0"/>
+    <!-- VarRegionCount=0 -->
+    <Item index="0" value="[]"/>
+  </VarData>
+</VarStore>
+""".lstrip()
+
+        with StringIO() as buffer:
+            writer = XMLWriter(buffer)
+            vf[table].toXML(writer, vf)
+            actual = buffer.getvalue()
+        assert actual == expected
+
+        # The table should be encodable in at least this size.
+        # (VVAR has an extra Offset32 to point to a vertical origin mapping)
+        optimal_size = {"HVAR": 42, "VVAR": 46}[table]
+        assert len(vf[table].compile(vf)) <= optimal_size
 
 
 if __name__ == "__main__":
