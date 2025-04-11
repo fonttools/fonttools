@@ -78,7 +78,7 @@ class BuilderTest(unittest.TestCase):
         ZeroValue_PairPos_horizontal ZeroValue_PairPos_vertical
         ZeroValue_ChainSinglePos_horizontal ZeroValue_ChainSinglePos_vertical
         PairPosSubtable ChainSubstSubtable CursivePosSubtable SubstSubtable ChainPosSubtable 
-        LigatureSubtable AlternateSubtable MultipleSubstSubtable 
+        LigatureSubtable AlternateSubtable MarkBasePosSubtable MultipleSubstSubtable
         SingleSubstSubtable aalt_chain_contextual_subst AlternateChained 
         MultipleLookupsPerGlyph MultipleLookupsPerGlyph2 GSUB_6_formats
         GSUB_5_formats delete_glyph STAT_test STAT_test_elidedFallbackNameID

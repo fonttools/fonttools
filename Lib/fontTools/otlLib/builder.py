@@ -997,17 +997,25 @@ class MarkBasePosBuilder(LookupBuilder):
         LookupBuilder.__init__(self, font, location, "GPOS", 4)
         self.marks = {}  # glyphName -> (markClassName, anchor)
         self.bases = {}  # glyphName -> {markClassName: anchor}
+        self.subtables_ = []
+
+    def get_subtables_(self):
+        subtables_ = self.subtables_
+        if self.bases or self.marks:
+            subtables_.append((self.marks, self.bases))
+        return subtables_
 
     def equals(self, other):
         return (
             LookupBuilder.equals(self, other)
-            and self.marks == other.marks
-            and self.bases == other.bases
+            and self.get_subtables_() == other.get_subtables_()
         )
 
     def inferGlyphClasses(self):
-        result = {glyph: 1 for glyph in self.bases}
-        result.update({glyph: 3 for glyph in self.marks})
+        result = {}
+        for marks, bases in self.get_subtables_():
+            result.update({glyph: 1 for glyph in bases})
+            result.update({glyph: 3 for glyph in marks})
         return result
 
     def build(self):
@@ -1017,25 +1025,32 @@ class MarkBasePosBuilder(LookupBuilder):
             An ``otTables.Lookup`` object representing the mark-to-base
             positioning lookup.
         """
-        markClasses = self.buildMarkClasses_(self.marks)
-        marks = {}
-        for mark, (mc, anchor) in self.marks.items():
-            if mc not in markClasses:
-                raise ValueError(
-                    "Mark class %s not found for mark glyph %s" % (mc, mark)
-                )
-            marks[mark] = (markClasses[mc], anchor)
-        bases = {}
-        for glyph, anchors in self.bases.items():
-            bases[glyph] = {}
-            for mc, anchor in anchors.items():
+        subtables = []
+        for subtable in self.get_subtables_():
+            markClasses = self.buildMarkClasses_(subtable[0])
+            marks = {}
+            for mark, (mc, anchor) in subtable[0].items():
                 if mc not in markClasses:
                     raise ValueError(
-                        "Mark class %s not found for base glyph %s" % (mc, glyph)
+                        "Mark class %s not found for mark glyph %s" % (mc, mark)
                     )
-                bases[glyph][markClasses[mc]] = anchor
-        subtables = buildMarkBasePos(marks, bases, self.glyphMap)
+                marks[mark] = (markClasses[mc], anchor)
+            bases = {}
+            for glyph, anchors in subtable[1].items():
+                bases[glyph] = {}
+                for mc, anchor in anchors.items():
+                    if mc not in markClasses:
+                        raise ValueError(
+                            "Mark class %s not found for base glyph %s" % (mc, glyph)
+                        )
+                    bases[glyph][markClasses[mc]] = anchor
+            subtables.append(buildMarkBasePosSubtable(marks, bases, self.glyphMap))
         return self.buildLookup_(subtables)
+
+    def add_subtable_break(self, location):
+        self.subtables_.append((self.marks, self.bases))
+        self.marks = {}
+        self.bases = {}
 
 
 class MarkLigPosBuilder(LookupBuilder):
