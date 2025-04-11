@@ -15,6 +15,8 @@ except ImportError:  # pragma: no cover
     # fall back to built-in unicodedata (possibly outdated)
     from unicodedata import *
 
+from bidi.mirror import MIRRORED
+
 from . import Blocks, Scripts, ScriptExtensions, OTTags
 
 
@@ -43,6 +45,7 @@ __all__ = [
     "script_horizontal_direction",
     "ot_tags_from_script",
     "ot_tag_to_script",
+    "MIRRORED",
 ]
 
 
