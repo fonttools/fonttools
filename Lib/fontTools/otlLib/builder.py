@@ -1927,18 +1927,11 @@ def buildMarkArray(marks, glyphMap):
     return self
 
 
-def buildMarkBasePos(marks, bases, glyphMap):
-    """Build a list of MarkBasePos (GPOS4) subtables.
+def buildMarkBasePosSubtable(marks, bases, glyphMap):
+    """Build a single MarkBasePos (GPOS4) subtable.
 
-    This routine turns a set of marks and bases into a list of mark-to-base
-    positioning subtables. Currently the list will contain a single subtable
-    containing all marks and bases, although at a later date it may return the
-    optimal list of subtables subsetting the marks and bases into groups which
-    save space. See :func:`buildMarkBasePosSubtable` below.
-
-    Note that if you are implementing a layout compiler, you may find it more
-    flexible to use
-    :py:class:`fontTools.otlLib.lookupBuilders.MarkBasePosBuilder` instead.
+    This builds a mark-to-base lookup subtable containing all of the referenced
+    marks and bases.
 
     Example::
 
@@ -1946,42 +1939,7 @@ def buildMarkBasePos(marks, bases, glyphMap):
 
         marks = {"acute": (0, a1), "grave": (0, a1), "cedilla": (1, a2)}
         bases = {"a": {0: a3, 1: a5}, "b": {0: a4, 1: a5}}
-        markbaseposes = buildMarkBasePos(marks, bases, font.getReverseGlyphMap())
-
-    Args:
-        marks (dict): A dictionary mapping anchors to glyphs; the keys being
-            glyph names, and the values being a tuple of mark class number and
-            an ``otTables.Anchor`` object representing the mark's attachment
-            point. (See :func:`buildMarkArray`.)
-        bases (dict): A dictionary mapping anchors to glyphs; the keys being
-            glyph names, and the values being dictionaries mapping mark class ID
-            to the appropriate ``otTables.Anchor`` object used for attaching marks
-            of that class. (See :func:`buildBaseArray`.)
-        glyphMap: a glyph name to ID map, typically returned from
-            ``font.getReverseGlyphMap()``.
-
-    Returns:
-        A list of ``otTables.MarkBasePos`` objects.
-    """
-    # TODO: Consider emitting multiple subtables to save space.
-    # Partition the marks and bases into disjoint subsets, so that
-    # MarkBasePos rules would only access glyphs from a single
-    # subset. This would likely lead to smaller mark/base
-    # matrices, so we might be able to omit many of the empty
-    # anchor tables that we currently produce. Of course, this
-    # would only work if the MarkBasePos rules of real-world fonts
-    # allow partitioning into multiple subsets. We should find out
-    # whether this is the case; if so, implement the optimization.
-    # On the other hand, a very large number of subtables could
-    # slow down layout engines; so this would need profiling.
-    return [buildMarkBasePosSubtable(marks, bases, glyphMap)]
-
-
-def buildMarkBasePosSubtable(marks, bases, glyphMap):
-    """Build a single MarkBasePos (GPOS4) subtable.
-
-    This builds a mark-to-base lookup subtable containing all of the referenced
-    marks and bases. See :func:`buildMarkBasePos`.
+        markbaseposes = [buildMarkBasePosSubtable(marks, bases, font.getReverseGlyphMap())]
 
     Args:
         marks (dict): A dictionary mapping anchors to glyphs; the keys being
