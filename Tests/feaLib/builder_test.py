@@ -87,6 +87,7 @@ class BuilderTest(unittest.TestCase):
         contextual_inline_multi_sub_format_2
         contextual_inline_format_4
         duplicate_language_stmt
+        CursivePosSubtable
     """.split()
 
     VARFONT_AXES = [

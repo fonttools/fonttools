@@ -949,8 +949,20 @@ class CursivePosBuilder(LookupBuilder):
             An ``otTables.Lookup`` object representing the cursive
             positioning lookup.
         """
-        st = buildCursivePosSubtable(self.attachments, self.glyphMap)
-        return self.buildLookup_([st])
+        attachments = [{}]
+        for key in self.attachments:
+            if key[0] == self.SUBTABLE_BREAK_:
+                attachments.append({})
+            else:
+                attachments[-1][key] = self.attachments[key]
+        subtables = [buildCursivePosSubtable(s, self.glyphMap) for s in attachments]
+        return self.buildLookup_(subtables)
+
+    def add_subtable_break(self, location):
+        self.attachments[(self.SUBTABLE_BREAK_, location)] = (
+            self.SUBTABLE_BREAK_,
+            self.SUBTABLE_BREAK_,
+        )
 
 
 class MarkBasePosBuilder(LookupBuilder):
