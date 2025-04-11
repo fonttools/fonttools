@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont>
+
+  <GPOS>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=1 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=1 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="test"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="0"/>
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=1 -->
+      <Lookup index="0">
+        <LookupType value="3"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=4 -->
+        <CursivePos index="0" Format="1">
+          <Coverage>
+            <Glyph value="A"/>
+          </Coverage>
+          <!-- EntryExitCount=1 -->
+          <EntryExitRecord index="0">
+            <EntryAnchor Format="1">
+              <XCoordinate value="10"/>
+              <YCoordinate value="20"/>
+            </EntryAnchor>
+          </EntryExitRecord>
+        </CursivePos>
+        <CursivePos index="1" Format="1">
+          <Coverage>
+            <Glyph value="a"/>
+          </Coverage>
+          <!-- EntryExitCount=1 -->
+          <EntryExitRecord index="0">
+            <EntryAnchor Format="1">
+              <XCoordinate value="30"/>
+              <YCoordinate value="40"/>
+            </EntryAnchor>
+            <ExitAnchor Format="1">
+              <XCoordinate value="50"/>
+              <YCoordinate value="60"/>
+            </ExitAnchor>
+          </EntryExitRecord>
+        </CursivePos>
+        <CursivePos index="2" Format="1">
+          <Coverage>
+            <Glyph value="B"/>
+          </Coverage>
+          <!-- EntryExitCount=1 -->
+          <EntryExitRecord index="0">
+            <EntryAnchor Format="1">
+              <XCoordinate value="10"/>
+              <YCoordinate value="20"/>
+            </EntryAnchor>
+          </EntryExitRecord>
+        </CursivePos>
+        <CursivePos index="3" Format="1">
+          <Coverage>
+            <Glyph value="b"/>
+          </Coverage>
+          <!-- EntryExitCount=1 -->
+          <EntryExitRecord index="0">
+            <EntryAnchor Format="1">
+              <XCoordinate value="30"/>
+              <YCoordinate value="40"/>
+            </EntryAnchor>
+            <ExitAnchor Format="1">
+              <XCoordinate value="50"/>
+              <YCoordinate value="60"/>
+            </ExitAnchor>
+          </EntryExitRecord>
+        </CursivePos>
+      </Lookup>
+    </LookupList>
+  </GPOS>
+
+</ttFont>
