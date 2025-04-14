@@ -1198,6 +1198,34 @@ class ToFeaTest(unittest.TestCase):
             "} TestLookup;\n",
         )
 
+    def test_def_anchor_case_insensitive(self):
+        fea = self.parse(
+            'DEF_LOOKUP "TestLookup" PROCESS_BASE PROCESS_MARKS ALL '
+            "DIRECTION LTR\n"
+            "IN_CONTEXT\n"
+            "END_CONTEXT\n"
+            "AS_POSITION\n"
+            'ATTACH GLYPH "a"\n'
+            'TO GLYPH "acutecomb" AT ANCHOR "top"\n'
+            "END_ATTACH\n"
+            "END_POSITION\n"
+            'DEF_ANCHOR "top" ON 120 GLYPH a '
+            "COMPONENT 1 AT POS DX 250 DY 450 END_POS END_ANCHOR\n"
+            'DEF_ANCHOR "MARK_Top" ON 120 GLYPH acutecomb '
+            "COMPONENT 1 AT POS DX 0 DY 450 END_POS END_ANCHOR"
+        )
+        self.assertEqual(
+            fea,
+            "\n# Mark classes\n"
+            "markClass acutecomb <anchor 0 450> @top.TestLookup;\n"
+            "\n"
+            "# Lookups\n"
+            "lookup TestLookup {\n"
+            "    pos base a\n"
+            "        <anchor 250 450> mark @top.TestLookup;\n"
+            "} TestLookup;\n",
+        )
+
     def test_def_anchor_multi_component(self):
         fea = self.parse(
             'DEF_LOOKUP "TestLookup" PROCESS_BASE PROCESS_MARKS ALL '
