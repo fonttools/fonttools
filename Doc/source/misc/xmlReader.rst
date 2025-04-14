@@ -1,8 +1,9 @@
-#########
-xmlReader
-#########
+#####################################
+xmlReader: Tools for reading XML data
+#####################################
+
+.. currentmodule:: fontTools.misc.xmlReader
 
 .. automodule:: fontTools.misc.xmlReader
-   :inherited-members:
    :members:
    :undoc-members:

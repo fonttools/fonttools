@@ -1,8 +1,9 @@
-#######
-sstruct
-#######
+##################################################
+sstruct: Tools for working with Python struct data
+##################################################
+
+.. currentmodule:: fontTools.misc.sstruct
 
 .. automodule:: fontTools.misc.sstruct
-   :inherited-members:
    :members:
    :undoc-members:
