@@ -1,7 +1,7 @@
 #########
-filterPen
+quartzPen
 #########
 
-.. automodule:: fontTools.pens.filterPen
+.. automodule:: fontTools.pens.quartzPen
    :members:
    :undoc-members:

@@ -1,7 +1,7 @@
 ########
-cu2quPen
+cairoPen
 ########
 
-.. automodule:: fontTools.pens.cu2quPen
+.. automodule:: fontTools.pens.cairoPen
    :members:
    :undoc-members:
