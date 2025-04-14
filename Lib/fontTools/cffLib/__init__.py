@@ -26,7 +26,6 @@ from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables.otBase import OTTableWriter
 from fontTools.ttLib.tables.otBase import OTTableReader
 from fontTools.ttLib.tables import otTables as ot
-from io import BytesIO
 import struct
 import logging
 import re
@@ -36,9 +35,9 @@ DEBUG = logging.DEBUG - 1
 log = logging.getLogger(__name__)
 
 cffHeaderFormat = """
-	major:   B
-	minor:   B
-	hdrSize: B
+    major:   B
+    minor:   B
+    hdrSize: B
 """
 
 maxStackLimit = 513
