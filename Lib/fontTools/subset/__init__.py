@@ -16,7 +16,7 @@ from fontTools.subset.cff import *
 from fontTools.subset.svg import *
 from fontTools.varLib import varStore, multiVarStore  # For monkey-patching
 from fontTools.ttLib.tables._n_a_m_e import NameRecordVisitor
-from fontTools.unicodedata import MIRRORED
+from fontTools.unicodedata import mirrored
 import sys
 import struct
 import array
@@ -2875,7 +2875,7 @@ def closure_glyphs(self, s):
     if s.options.bidi_closure:
         additional_unicodes = set()
         for u in s.unicodes_requested:
-            mirror_u = MIRRORED.get(u)
+            mirror_u = mirrored(u)
             if mirror_u is not None:
                 additional_unicodes.add(mirror_u)
         s.unicodes_requested.update(additional_unicodes)
