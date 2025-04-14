@@ -3,6 +3,7 @@ import shutil
 import tempfile
 import unittest
 from io import StringIO
+from textwrap import dedent
 
 from fontTools.voltLib.voltToFea import VoltToFea
 
@@ -1195,6 +1196,41 @@ class ToFeaTest(unittest.TestCase):
             "    pos base a\n"
             "        <anchor 250 450> mark @top.TestLookup;\n"
             "} TestLookup;\n",
+            fea,
+        )
+
+    def test_def_anchor_case_insensitive(self):
+        fea = self.parse(
+            """
+            DEF_LOOKUP "TestLookup" PROCESS_BASE PROCESS_MARKS ALL DIRECTION LTR
+            IN_CONTEXT
+            END_CONTEXT
+            AS_POSITION
+            ATTACH ENUM GLYPH "a" GLYPH "f_i" END_ENUM
+            TO GLYPH "acutecomb" AT ANCHOR "top"
+            END_ATTACH
+            END_POSITION
+            DEF_ANCHOR "top" ON 1 GLYPH a COMPONENT 1 AT POS DX 250 DY 450 END_POS END_ANCHOR
+            DEF_ANCHOR "TOP" ON 2 GLYPH f_i COMPONENT 1 AT POS DX 250 DY 450 END_POS END_ANCHOR
+            DEF_ANCHOR "Top" ON 2 GLYPH f_i COMPONENT 2 AT POS DX 350 DY 450 END_POS END_ANCHOR
+            DEF_ANCHOR "MARK_Top" ON 3 GLYPH acutecomb COMPONENT 1 AT POS DX 0 DY 450 END_POS END_ANCHOR
+            """
+        )
+        self.assertEqual(
+            dedent(
+                """
+                # Mark classes
+                markClass acutecomb <anchor 0 450> @top.TestLookup;
+
+                # Lookups
+                lookup TestLookup {
+                    pos base a
+                        <anchor 250 450> mark @top.TestLookup;
+                    pos base f_i
+                        <anchor 250 450> mark @top.TestLookup;
+                } TestLookup;
+                """
+            ),
             fea,
         )
 

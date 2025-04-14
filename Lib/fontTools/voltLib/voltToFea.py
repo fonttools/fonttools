@@ -354,6 +354,10 @@ class VoltToFea:
 
         if glyphname not in self._anchors:
             self._anchors[glyphname] = {}
+        if anchorname.startswith("MARK_"):
+            anchorname = anchorname[:5] + anchorname[5:].lower()
+        else:
+            anchorname = anchorname.lower()
         if anchorname not in self._anchors[glyphname]:
             self._anchors[glyphname][anchorname] = {}
         self._anchors[glyphname][anchorname][anchordef.component] = anchor
@@ -408,6 +412,9 @@ class VoltToFea:
                 # in this lookup.
                 classname = self._className(f"{anchorname}.{lookup.name}")
                 markclass = ast.MarkClass(classname)
+
+                # Anchor names are case-insensitive in VOLT
+                anchorname = anchorname.lower()
 
                 # We might still end in marks used in two different anchor
                 # classes, so we filter out already used marks.
