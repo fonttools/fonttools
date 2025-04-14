@@ -1,26 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ttFont sfntVersion="OTTO" ttLibVersion="3.0">
+<ttFont sfntVersion="OTTO" ttLibVersion="4.57">
 
   <GlyphOrder>
     <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
     <GlyphID id="0" name=".notdef"/>
     <GlyphID id="1" name="parenleft"/>
-    <GlyphID id="2" name="A"/>
-    <GlyphID id="3" name="uni0302"/>
-    <GlyphID id="4" name="uni239B"/>
-    <GlyphID id="5" name="uni239C"/>
-    <GlyphID id="6" name="uni239D"/>
-    <GlyphID id="7" name="u1D400"/>
-    <GlyphID id="8" name="u1D435"/>
-    <GlyphID id="9" name="parenleft.size1"/>
-    <GlyphID id="10" name="uni0302.size1"/>
-    <GlyphID id="11" name="parenleft.size2"/>
-    <GlyphID id="12" name="uni0302.size2"/>
-    <GlyphID id="13" name="parenleft.size3"/>
-    <GlyphID id="14" name="uni0302.size3"/>
-    <GlyphID id="15" name="parenleft.size4"/>
-    <GlyphID id="16" name="uni0302.size4"/>
-    <GlyphID id="17" name="uni0302.size5"/>
+    <GlyphID id="2" name="parenright"/>
+    <GlyphID id="3" name="A"/>
+    <GlyphID id="4" name="uni0302"/>
+    <GlyphID id="5" name="uni239B"/>
+    <GlyphID id="6" name="uni239C"/>
+    <GlyphID id="7" name="uni239D"/>
+    <GlyphID id="8" name="uni239E"/>
+    <GlyphID id="9" name="uni239F"/>
+    <GlyphID id="10" name="uni23A0"/>
+    <GlyphID id="11" name="u1D400"/>
+    <GlyphID id="12" name="u1D435"/>
+    <GlyphID id="13" name="parenleft.size1"/>
+    <GlyphID id="14" name="parenright.size1"/>
+    <GlyphID id="15" name="uni0302.size1"/>
+    <GlyphID id="16" name="parenleft.size2"/>
+    <GlyphID id="17" name="parenright.size2"/>
+    <GlyphID id="18" name="uni0302.size2"/>
+    <GlyphID id="19" name="parenleft.size3"/>
+    <GlyphID id="20" name="parenright.size3"/>
+    <GlyphID id="21" name="uni0302.size3"/>
+    <GlyphID id="22" name="parenleft.size4"/>
+    <GlyphID id="23" name="parenright.size4"/>
+    <GlyphID id="24" name="uni0302.size4"/>
+    <GlyphID id="25" name="uni0302.size5"/>
   </GlyphOrder>
 
   <CFF>
@@ -174,6 +182,47 @@
           -355 -286 -253 -578 0 -673 0 -675 253 -577 355 -286 rrcurveto
           endchar
         </CharString>
+        <CharString name="parenright">
+          -268 656 20 hstem
+          199 86 vstem
+          29 660 rmoveto
+          145 -114 25 -115 0 -187 0 -194 -28 -94 -142 -117 rrcurveto
+          9 -16 rlineto
+          159 97 88 142 0 185 0 170 -91 167 -153 92 rrcurveto
+          endchar
+        </CharString>
+        <CharString name="parenright.size1">
+          -133 248 81 vstem
+          86 1036 rmoveto
+          90 -110 72 -169 0 -306 0 -303 -72 -172 -90 -110 rrcurveto
+          -30 vlineto
+          142 134 101 214 0 267 0 272 -101 209 -142 134 rrcurveto
+          endchar
+        </CharString>
+        <CharString name="parenright.size2">
+          7 383 95 vstem
+          114 1530 rmoveto
+          134 -165 135 -262 0 -460 0 -454 -135 -297 -134 -138 rrcurveto
+          -33 vlineto
+          213 171 151 351 0 400 0 409 -151 314 -213 200 rrcurveto
+          endchar
+        </CharString>
+        <CharString name="parenright.size3">
+          149 458 110 vstem
+          83 2018 rmoveto
+          178 -217 197 -351 0 -614 0 -606 -197 -396 -178 -184 rrcurveto
+          -44 vlineto
+          284 228 201 468 0 534 0 545 -201 418 -284 267 rrcurveto
+          endchar
+        </CharString>
+        <CharString name="parenright.size4">
+          207 554 130 vstem
+          76 2510 rmoveto
+          224 -232 254 -482 0 -766 0 -757 -254 -495 -224 -231 rrcurveto
+          -56 vlineto
+          355 286 253 585 0 667 0 681 -253 570 -355 286 rrcurveto
+          endchar
+        </CharString>
         <CharString name="u1D400">
           121 0 20 177 39 hstem
           689 hmoveto
@@ -243,6 +292,31 @@
           -172 197 -54 285 0 254 rrcurveto
           239 -124 -159 vlineto
           0 -303 89 -359 261 -184 rrcurveto
+          endchar
+        </CharString>
+        <CharString name="uni239E">
+          -151 276 124 vstem
+          400 hmoveto
+          159 vlineto
+          0 303 -89 359 -261 184 rrcurveto
+          -30 vlineto
+          172 -197 54 -285 0 -254 rrcurveto
+          -239 vlineto
+          endchar
+        </CharString>
+        <CharString name="uni239F">
+          -151 276 124 vstem
+          400 hmoveto
+          1010 -124 -1010 vlineto
+          endchar
+        </CharString>
+        <CharString name="uni23A0">
+          -151 276 124 vstem
+          400 1005 rmoveto
+          -124 -239 hlineto
+          0 -254 -54 -285 -172 -197 rrcurveto
+          -30 vlineto
+          261 184 89 359 0 303 rrcurveto
           endchar
         </CharString>
       </CharStrings>
@@ -468,9 +542,13 @@
       </MathTopAccentAttachment>
       <ExtendedShapeCoverage>
         <Glyph value="parenleft.size1"/>
+        <Glyph value="parenright.size1"/>
         <Glyph value="parenleft.size2"/>
+        <Glyph value="parenright.size2"/>
         <Glyph value="parenleft.size3"/>
+        <Glyph value="parenright.size3"/>
         <Glyph value="parenleft.size4"/>
+        <Glyph value="parenright.size4"/>
       </ExtendedShapeCoverage>
       <MathKernInfo>
         <MathKernCoverage>
@@ -524,11 +602,12 @@
       <MinConnectorOverlap value="50"/>
       <VertGlyphCoverage>
         <Glyph value="parenleft"/>
+        <Glyph value="parenright"/>
       </VertGlyphCoverage>
       <HorizGlyphCoverage>
         <Glyph value="uni0302"/>
       </HorizGlyphCoverage>
-      <!-- VertGlyphCount=1 -->
+      <!-- VertGlyphCount=2 -->
       <!-- HorizGlyphCount=1 -->
       <VertGlyphConstruction index="0">
         <GlyphAssembly>
@@ -580,6 +659,56 @@
           <AdvanceMeasurement value="3076"/>
         </MathGlyphVariantRecord>
       </VertGlyphConstruction>
+      <VertGlyphConstruction index="1">
+        <GlyphAssembly>
+          <ItalicsCorrection>
+            <Value value="0"/>
+          </ItalicsCorrection>
+          <!-- PartCount=3 -->
+          <PartRecords index="0">
+            <glyph value="uni23A0"/>
+            <StartConnectorLength value="0"/>
+            <EndConnectorLength value="150"/>
+            <FullAdvance value="1005"/>
+            <PartFlags value="0"/>
+          </PartRecords>
+          <PartRecords index="1">
+            <glyph value="uni239F"/>
+            <StartConnectorLength value="150"/>
+            <EndConnectorLength value="150"/>
+            <FullAdvance value="1010"/>
+            <PartFlags value="1"/>
+          </PartRecords>
+          <PartRecords index="2">
+            <glyph value="uni239E"/>
+            <StartConnectorLength value="150"/>
+            <EndConnectorLength value="0"/>
+            <FullAdvance value="1005"/>
+            <PartFlags value="0"/>
+          </PartRecords>
+        </GlyphAssembly>
+        <!-- VariantCount=5 -->
+        <MathGlyphVariantRecord index="0">
+          <VariantGlyph value="parenright"/>
+          <AdvanceMeasurement value="854"/>
+        </MathGlyphVariantRecord>
+        <MathGlyphVariantRecord index="1">
+          <VariantGlyph value="parenright.size1"/>
+          <AdvanceMeasurement value="1231"/>
+        </MathGlyphVariantRecord>
+        <MathGlyphVariantRecord index="2">
+          <VariantGlyph value="parenright.size2"/>
+          <AdvanceMeasurement value="1846"/>
+        </MathGlyphVariantRecord>
+        <MathGlyphVariantRecord index="3">
+          <VariantGlyph value="parenright.size3"/>
+          <AdvanceMeasurement value="2461"/>
+        </MathGlyphVariantRecord>
+        <MathGlyphVariantRecord index="4">
+          <VariantGlyph value="parenright.size4"/>
+          <AdvanceMeasurement value="3076"/>
+        </MathGlyphVariantRecord>
+      </VertGlyphConstruction>
       <HorizGlyphConstruction index="0">
         <!-- VariantCount=6 -->
         <MathGlyphVariantRecord index="0">
@@ -618,6 +747,11 @@
     <mtx name="parenleft.size2" width="589" lsb="139"/>
     <mtx name="parenleft.size3" width="750" lsb="182"/>
     <mtx name="parenleft.size4" width="808" lsb="124"/>
+    <mtx name="parenright" width="333" lsb="29"/>
+    <mtx name="parenright.size1" width="468" lsb="86"/>
+    <mtx name="parenright.size2" width="608" lsb="114"/>
+    <mtx name="parenright.size3" width="750" lsb="83"/>
+    <mtx name="parenright.size4" width="808" lsb="76"/>
     <mtx name="u1D400" width="722" lsb="9"/>
     <mtx name="u1D435" width="696" lsb="38"/>
     <mtx name="uni0302" width="0" lsb="-386"/>
@@ -629,6 +763,9 @@
     <mtx name="uni239B" width="450" lsb="50"/>
     <mtx name="uni239C" width="450" lsb="50"/>
     <mtx name="uni239D" width="450" lsb="50"/>
+    <mtx name="uni239E" width="450" lsb="50"/>
+    <mtx name="uni239F" width="450" lsb="276"/>
+    <mtx name="uni23A0" width="450" lsb="50"/>
   </hmtx>
 
 </ttFont>
