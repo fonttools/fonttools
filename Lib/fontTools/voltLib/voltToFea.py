@@ -609,6 +609,39 @@ class VoltToFea:
                 statement = ast.LigatureSubstStatement(
                     prefix, glyphs, suffix, replacements[0], chain
                 )
+
+                # If any of the input glyphs is a group, we need to
+                # explode the substitution into multiple ligature substitutions
+                # since feature file syntax does not support classes in
+                # ligature substitutions.
+                n = max(len(x.glyphSet()) for x in glyphs)
+                if n > 1:
+                    # All input should either be groups of the same length or single glyphs
+                    assert all(len(x.glyphSet()) in (n, 1) for x in glyphs)
+                    glyphs = [x.glyphSet() for x in glyphs]
+                    glyphs = [([x[0]] * n if len(x) == 1 else x) for x in glyphs]
+
+                    # In this case ligature replacements must be a group of the same length
+                    # as the input groups, or a single glyph. VOLT
+                    # allows the replacement glyphs to be longer and truncates them.
+                    # So well allow that and zip() below will do the truncation
+                    # for us.
+                    replacement = replacements[0].glyphSet()
+                    if len(replacement) == 1:
+                        replacement = [replacement[0]] * n
+                    assert len(replacement) >= n
+
+                    # Add the unexploded statement commented out for reference.
+                    statements.append(ast.Comment(f"# {statement}"))
+
+                    for zipped in zip(*glyphs, replacement):
+                        zipped = [self._glyphName(x) for x in zipped]
+                        statements.append(
+                            ast.LigatureSubstStatement(
+                                prefix, zipped[:-1], suffix, zipped[-1], chain
+                            )
+                        )
+                    continue
             else:
                 raise NotImplementedError(sub)
             statements.append(statement)

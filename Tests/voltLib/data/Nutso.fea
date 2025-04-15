@@ -116,8 +116,28 @@ lookup frac.dnom {
 } frac.dnom;
 
 lookup frac.noslash {
-    sub @numr slash by @numr;
-    sub @numr fraction by @numr;
+    # sub @numr slash by @numr;
+    sub zero.numr slash by zero.numr;
+    sub one.numr slash by one.numr;
+    sub two.numr slash by two.numr;
+    sub three.numr slash by three.numr;
+    sub four.numr slash by four.numr;
+    sub five.numr slash by five.numr;
+    sub six.numr slash by six.numr;
+    sub seven.numr slash by seven.numr;
+    sub eight.numr slash by eight.numr;
+    sub nine.numr slash by nine.numr;
+    # sub @numr fraction by @numr;
+    sub zero.numr fraction by zero.numr;
+    sub one.numr fraction by one.numr;
+    sub two.numr fraction by two.numr;
+    sub three.numr fraction by three.numr;
+    sub four.numr fraction by four.numr;
+    sub five.numr fraction by five.numr;
+    sub six.numr fraction by six.numr;
+    sub seven.numr fraction by seven.numr;
+    sub eight.numr fraction by eight.numr;
+    sub nine.numr fraction by nine.numr;
 } frac.noslash;
 
 lookup frac.fracinit {
