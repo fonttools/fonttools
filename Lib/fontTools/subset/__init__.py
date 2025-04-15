@@ -16,6 +16,7 @@ from fontTools.subset.cff import *
 from fontTools.subset.svg import *
 from fontTools.varLib import varStore, multiVarStore  # For monkey-patching
 from fontTools.ttLib.tables._n_a_m_e import NameRecordVisitor
+from fontTools.unicodedata import mirrored
 import sys
 import struct
 import array
@@ -2870,6 +2871,15 @@ def prune_post_subset(self, font, options):
 def closure_glyphs(self, s):
     tables = [t for t in self.tables if t.isUnicode()]
 
+    # Closure unicodes, which for now is pulling in bidi mirrored variants
+    if s.options.bidi_closure:
+        additional_unicodes = set()
+        for u in s.unicodes_requested:
+            mirror_u = mirrored(u)
+            if mirror_u is not None:
+                additional_unicodes.add(mirror_u)
+        s.unicodes_requested.update(additional_unicodes)
+
     # Close glyphs
     for table in tables:
         if table.format == 14:
@@ -3191,6 +3201,7 @@ class Options(object):
         self.font_number = -1
         self.pretty_svg = False
         self.lazy = True
+        self.bidi_closure = True
 
         self.set(**kwargs)
 
