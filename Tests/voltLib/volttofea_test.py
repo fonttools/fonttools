@@ -792,6 +792,33 @@ class ToFeaTest(unittest.TestCase):
             "} liga;\n",
         )
 
+    def test_substitution_multiple_to_single_with_groups(self):
+        fea = self.parse(
+            'DEF_GROUP "g1" ENUM GLYPH "i" GLYPH "t" END_ENUM END_GROUP\n'
+            'DEF_GROUP "g2" ENUM GLYPH "f_i" GLYPH "f_t" END_ENUM END_GROUP\n'
+            'DEF_LOOKUP "liga" PROCESS_BASE PROCESS_MARKS ALL '
+            "DIRECTION LTR\n"
+            "IN_CONTEXT\n"
+            "END_CONTEXT\n"
+            "AS_SUBSTITUTION\n"
+            'SUB GLYPH "f" GROUP "g1"\n'
+            'WITH GROUP "g2"\n'
+            "END_SUB\n"
+            "END_SUBSTITUTION"
+        )
+        self.assertEqual(
+            fea,
+            "# Glyph classes\n"
+            "@g1 = [i t];\n"
+            "@g2 = [f_i f_t];\n"
+            "\n# Lookups\n"
+            "lookup liga {\n"
+            "    # sub f @g1 by @g2;\n"
+            "    sub f i by f_i;\n"
+            "    sub f t by f_t;\n"
+            "} liga;\n",
+        )
+
     def test_substitution_reverse_chaining_single(self):
         fea = self.parse(
             'DEF_LOOKUP "numr" PROCESS_BASE PROCESS_MARKS ALL '

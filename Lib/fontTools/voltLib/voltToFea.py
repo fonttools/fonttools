@@ -609,6 +609,38 @@ class VoltToFea:
                 statement = ast.LigatureSubstStatement(
                     prefix, glyphs, suffix, replacements[0], chain
                 )
+
+                # If any of the input glyphs is a glyph class, we need to
+                # explode the substitution into multiple ligature substitutions
+                # since feature file syntax does not support classes in
+                # ligature substitutions.
+                if any(len(x.glyphSet()) > 1 for x in glyphs):
+                    # Add the unexploded statement commented out for reference.
+                    statements.append(ast.Comment(f"# {statement}"))
+
+                    # In this case ligature replacements must be a glyph class
+                    # as well.
+                    n = len(replacements[0].glyphSet())
+                    assert n > 1
+
+                    # All inputs must be either single glyphs or classes with
+                    # the same length as the replacements, except that VOLT
+                    # allows the replacements to be longer and truncates them.
+                    # So well allow that and zip() below will do the truncation
+                    # for us.
+                    assert all(len(x.glyphSet()) <= n for x in glyphs)
+
+                    glyphs = [
+                        ([x] * n if len(x.glyphSet()) == 1 else x.glyphSet())
+                        for x in glyphs
+                    ]
+                    for zipped in zip(*glyphs, replacements[0].glyphSet()):
+                        statements.append(
+                            ast.LigatureSubstStatement(
+                                prefix, zipped[:-1], suffix, zipped[-1], chain
+                            )
+                        )
+                    continue
             else:
                 raise NotImplementedError(sub)
             statements.append(statement)
