@@ -753,7 +753,7 @@ class ChainContextPosStatement(Statement):
             if len(self.suffix):
                 res += " " + " ".join(map(asFea, self.suffix))
         else:
-            res += " ".join(map(asFea, self.glyph))
+            res += " ".join(map(asFea, self.glyphs))
         res += ";"
         return res
 
@@ -811,7 +811,7 @@ class ChainContextSubstStatement(Statement):
             if len(self.suffix):
                 res += " " + " ".join(map(asFea, self.suffix))
         else:
-            res += " ".join(map(asFea, self.glyph))
+            res += " ".join(map(asFea, self.glyphs))
         res += ";"
         return res
 
