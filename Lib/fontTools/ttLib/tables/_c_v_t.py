@@ -21,6 +21,8 @@ class table__c_v_t(DefaultTable.DefaultTable):
         self.values = values
 
     def compile(self, ttFont):
+        if not hasattr(self, "values"):
+            return b""
         values = self.values[:]
         if sys.byteorder != "big":
             values.byteswap()
