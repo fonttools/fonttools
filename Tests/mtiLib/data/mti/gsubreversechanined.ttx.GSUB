@@ -3,6 +3,7 @@
   <Version value="0x00010000"/>
   <LookupList>
     <!-- LookupCount=1 -->
+    <!-- arabicReverse:  -->
     <Lookup index="0">
       <LookupType value="8"/>
       <LookupFlag value="9"/><!-- rightToLeft ignoreMarks -->

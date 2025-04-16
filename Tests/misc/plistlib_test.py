@@ -8,9 +8,6 @@ from numbers import Integral
 from fontTools.misc import etree
 from fontTools.misc import plistlib
 from fontTools.misc.textTools import tostr
-from fontTools.ufoLib.plistlib import (
-    readPlist, readPlistFromString, writePlist, writePlistToString,
-)
 import pytest
 from collections.abc import Mapping
 
@@ -30,8 +27,8 @@ def _test_pl(use_builtin_types):
         aList=["A", "B", 12, 32.5, [1, 2, 3]],
         aFloat=0.5,
         anInt=728,
-        aBigInt=2 ** 63 - 44,
-        aBigInt2=2 ** 63 + 44,
+        aBigInt=2**63 - 44,
+        aBigInt2=2**63 + 44,
         aNegativeInt=-5,
         aNegativeBigInt=-80000000000,
         aDict=dict(
@@ -112,16 +109,16 @@ def test_invalid_type():
     "pl",
     [
         0,
-        2 ** 8 - 1,
-        2 ** 8,
-        2 ** 16 - 1,
-        2 ** 16,
-        2 ** 32 - 1,
-        2 ** 32,
-        2 ** 63 - 1,
-        2 ** 64 - 1,
+        2**8 - 1,
+        2**8,
+        2**16 - 1,
+        2**16,
+        2**32 - 1,
+        2**32,
+        2**63 - 1,
+        2**64 - 1,
         1,
-        -2 ** 63,
+        -(2**63),
     ],
 )
 def test_int(pl):
@@ -133,9 +130,7 @@ def test_int(pl):
     assert data == data2
 
 
-@pytest.mark.parametrize(
-    "pl", [2 ** 64 + 1, 2 ** 127 - 1, -2 ** 64, -2 ** 127]
-)
+@pytest.mark.parametrize("pl", [2**64 + 1, 2**127 - 1, -(2**64), -(2**127)])
 def test_int_overflow(pl):
     with pytest.raises(OverflowError):
         plistlib.dumps(pl)
@@ -186,9 +181,7 @@ def test_indentation_array():
 
 
 def test_indentation_dict():
-    data = {
-        "1": {"2": {"3": {"4": {"5": {"6": {"7": {"8": {"9": "aaaaaa"}}}}}}}}
-    }
+    data = {"1": {"2": {"3": {"4": {"5": {"6": {"7": {"8": {"9": "aaaaaa"}}}}}}}}}
     assert plistlib.loads(plistlib.dumps(data)) == data
 
 
@@ -226,9 +219,7 @@ def test_bytesio(parametrized_pl):
     pl, use_builtin_types = parametrized_pl
     b = BytesIO()
     plistlib.dump(pl, b, use_builtin_types=use_builtin_types)
-    pl2 = plistlib.load(
-        BytesIO(b.getvalue()), use_builtin_types=use_builtin_types
-    )
+    pl2 = plistlib.load(BytesIO(b.getvalue()), use_builtin_types=use_builtin_types)
     assert pl == pl2
 
 
@@ -242,9 +233,7 @@ def test_keysort_bytesio(sort_keys):
     b = BytesIO()
 
     plistlib.dump(pl, b, sort_keys=sort_keys)
-    pl2 = plistlib.load(
-        BytesIO(b.getvalue()), dict_type=collections.OrderedDict
-    )
+    pl2 = plistlib.load(BytesIO(b.getvalue()), dict_type=collections.OrderedDict)
 
     assert dict(pl) == dict(pl2)
     if sort_keys:
@@ -362,9 +351,7 @@ def test_invalidarray():
         "<true/><key>key inside an array3</key>",
     ]:
         with pytest.raises(ValueError):
-            plistlib.loads(
-                ("<plist><array>%s</array></plist>" % i).encode("utf-8")
-            )
+            plistlib.loads(("<plist><array>%s</array></plist>" % i).encode("utf-8"))
 
 
 def test_invaliddict():
@@ -447,9 +434,7 @@ def test_no_pretty_print(use_builtin_types):
         use_builtin_types=use_builtin_types,
     )
     assert data == (
-        plistlib.XML_DECLARATION
-        + plistlib.PLIST_DOCTYPE
-        + b'<plist version="1.0">'
+        plistlib.XML_DECLARATION + plistlib.PLIST_DOCTYPE + b'<plist version="1.0">'
         b"<dict>"
         b"<key>data</key>"
         b"<data>aGVsbG8=</data>"
@@ -459,45 +444,51 @@ def test_no_pretty_print(use_builtin_types):
 
 
 def test_readPlist_from_path(pl):
+    old_plistlib = pytest.importorskip("fontTools.ufoLib.plistlib")
     path = os.path.join(datadir, "test.plist")
-    pl2 = readPlist(path)
+    pl2 = old_plistlib.readPlist(path)
     assert isinstance(pl2["someData"], plistlib.Data)
     assert pl2 == pl
 
 
 def test_readPlist_from_file(pl):
+    old_plistlib = pytest.importorskip("fontTools.ufoLib.plistlib")
     with open(os.path.join(datadir, "test.plist"), "rb") as f:
-        pl2 = readPlist(f)
+        pl2 = old_plistlib.readPlist(f)
         assert isinstance(pl2["someData"], plistlib.Data)
         assert pl2 == pl
         assert not f.closed
 
 
 def test_readPlistFromString(pl):
-    pl2 = readPlistFromString(TESTDATA)
+    old_plistlib = pytest.importorskip("fontTools.ufoLib.plistlib")
+    pl2 = old_plistlib.readPlistFromString(TESTDATA)
     assert isinstance(pl2["someData"], plistlib.Data)
     assert pl2 == pl
 
 
 def test_writePlist_to_path(tmpdir, pl_no_builtin_types):
+    old_plistlib = pytest.importorskip("fontTools.ufoLib.plistlib")
     testpath = tmpdir / "test.plist"
-    writePlist(pl_no_builtin_types, str(testpath))
+    old_plistlib.writePlist(pl_no_builtin_types, str(testpath))
     with testpath.open("rb") as fp:
         pl2 = plistlib.load(fp, use_builtin_types=False)
     assert pl2 == pl_no_builtin_types
 
 
 def test_writePlist_to_file(tmpdir, pl_no_builtin_types):
+    old_plistlib = pytest.importorskip("fontTools.ufoLib.plistlib")
     testpath = tmpdir / "test.plist"
     with testpath.open("wb") as fp:
-        writePlist(pl_no_builtin_types, fp)
+        old_plistlib.writePlist(pl_no_builtin_types, fp)
     with testpath.open("rb") as fp:
         pl2 = plistlib.load(fp, use_builtin_types=False)
     assert pl2 == pl_no_builtin_types
 
 
 def test_writePlistToString(pl_no_builtin_types):
-    data = writePlistToString(pl_no_builtin_types)
+    old_plistlib = pytest.importorskip("fontTools.ufoLib.plistlib")
+    data = old_plistlib.writePlistToString(pl_no_builtin_types)
     pl2 = plistlib.loads(data)
     assert pl2 == pl_no_builtin_types
 

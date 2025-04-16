@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="OTTO" ttLibVersion="4.41">
+
+  <GlyphOrder>
+    <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
+    <GlyphID id="0" name=".notdef"/>
+    <GlyphID id="1" name="e"/>
+  </GlyphOrder>
+
+  <head>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="1.0"/>
+    <fontRevision value="0.0"/>
+    <checkSumAdjustment value="0x263f439"/>
+    <magicNumber value="0x5f0f3cf5"/>
+    <flags value="00000000 00000011"/>
+    <unitsPerEm value="1000"/>
+    <created value="Wed Nov 21 11:49:03 2018"/>
+    <modified value="Wed Aug  2 11:47:17 2023"/>
+    <xMin value="40"/>
+    <yMin value="-18"/>
+    <xMax value="576"/>
+    <yMax value="513"/>
+    <macStyle value="00000000 00000000"/>
+    <lowestRecPPEM value="6"/>
+    <fontDirectionHint value="2"/>
+    <indexToLocFormat value="0"/>
+    <glyphDataFormat value="0"/>
+  </head>
+
+  <maxp>
+    <tableVersion value="0x5000"/>
+    <numGlyphs value="2"/>
+  </maxp>
+
+  <CFF>
+    <major value="1"/>
+    <minor value="0"/>
+    <CFFFont name="LayerFont-Regular">
+      <version value="0.0"/>
+      <Notice value=""/>
+      <Copyright value=""/>
+      <FullName value="Layer Font Regular"/>
+      <FamilyName value="Layer Font"/>
+      <isFixedPitch value="0"/>
+      <ItalicAngle value="0"/>
+      <UnderlinePosition value="-75"/>
+      <UnderlineThickness value="50"/>
+      <PaintType value="0"/>
+      <CharstringType value="2"/>
+      <FontMatrix value="0.001 0 0 0.001 0 0"/>
+      <FontBBox value="40 -18 576 513"/>
+      <StrokeWidth value="0"/>
+      <!-- charset is dumped separately as the 'GlyphOrder' element -->
+      <Encoding name="StandardEncoding"/>
+      <Private>
+        <BlueScale value="0.039625"/>
+        <BlueShift value="7"/>
+        <BlueFuzz value="1"/>
+        <ForceBold value="0"/>
+        <LanguageGroup value="0"/>
+        <ExpansionFactor value="0.06"/>
+        <initialRandomSeed value="0"/>
+        <defaultWidthX value="500"/>
+        <nominalWidthX value="500"/>
+      </Private>
+      <CharStrings>
+        <CharString name=".notdef">
+          endchar
+        </CharString>
+        <CharString name="e">
+          100 126 203 rmoveto
+          450 -4 rlineto
+          -5 106 rlineto
+          -255 208 rlineto
+          -276 -252 rlineto
+          148 -279 rlineto
+          338 63 rlineto
+          -19 112 rlineto
+          -243 -41 rlineto
+          -84 148 rlineto
+          138 123 rlineto
+          78 -90 rlineto
+          -271 1 rlineto
+          endchar
+        </CharString>
+      </CharStrings>
+    </CFFFont>
+
+    <GlobalSubrs>
+      <!-- The 'index' attribute is only for humans; it is ignored when parsed. -->
+    </GlobalSubrs>
+  </CFF>
+
+  <hmtx>
+    <mtx name=".notdef" width="65535" lsb="0"/>
+    <mtx name="e" width="600" lsb="40"/>
+  </hmtx>
+
+</ttFont>

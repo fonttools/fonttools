@@ -14,6 +14,7 @@ dist/
 *.egg-info/
 *.egg
 MANIFEST
+.idea
 
 # Installer logs
 pip-log.txt
@@ -57,3 +58,6 @@ Lib/**/*.c
 
 # Ctags
 tags
+
+# Documentation
+Doc/source/_build

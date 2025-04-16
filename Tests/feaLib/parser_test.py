@@ -44,7 +44,7 @@ GLYPHNAMES = (
     a.swash b.swash x.swash y.swash z.swash
     foobar foo.09 foo.1234 foo.9876
     one two five six acute grave dieresis umlaut cedilla ogonek macron
-    a_f_f_i o_f_f_i f_i f_f_i one.fitted one.oldstyle a.1 a.2 a.3 c_t
+    a_f_f_i o_f_f_i f_i f_l f_f_i one.fitted one.oldstyle a.1 a.2 a.3 c_t
     PRE SUF FIX BACK TRACK LOOK AHEAD ampersand ampersand.1 ampersand.2
     cid00001 cid00002 cid00003 cid00004 cid00005 cid00006 cid00007
     cid12345 cid78987 cid00999 cid01000 cid01001 cid00998 cid00995
@@ -54,6 +54,7 @@ GLYPHNAMES = (
 """
     ).split()
     + ["foo.%d" % i for i in range(1, 200)]
+    + ["G" * 600]
 )
 
 
@@ -316,7 +317,9 @@ class ParserTest(unittest.TestCase):
     def test_strict_glyph_name_check(self):
         self.parse("@bad = [a b ccc];", glyphNames=("a", "b", "ccc"))
 
-        with self.assertRaisesRegex(FeatureLibError, "missing from the glyph set: ccc"):
+        with self.assertRaisesRegex(
+            FeatureLibError, "(?s)missing from the glyph set:.*ccc"
+        ):
             self.parse("@bad = [a b ccc];", glyphNames=("a", "b"))
 
     def test_glyphclass(self):
@@ -325,12 +328,10 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(gc.glyphSet(), ("endash", "emdash", "figuredash"))
 
     def test_glyphclass_glyphNameTooLong(self):
-        self.assertRaisesRegex(
-            FeatureLibError,
-            "must not be longer than 63 characters",
-            self.parse,
-            "@GlyphClass = [%s];" % ("G" * 64),
-        )
+        gname = "G" * 600
+        [gc] = self.parse(f"@GlyphClass = [{gname}];").statements
+        self.assertEqual(gc.name, "GlyphClass")
+        self.assertEqual(gc.glyphSet(), (gname,))
 
     def test_glyphclass_bad(self):
         self.assertRaisesRegex(
@@ -704,6 +705,17 @@ class ParserTest(unittest.TestCase):
         self.assertIsInstance(s, ast.LigatureCaretByPosStatement)
         self.assertEqual(glyphstr([s.glyphs]), "f_i")
         self.assertEqual(s.carets, [400, 380])
+
+    def test_ligatureCaretByPos_variable_scalar(self):
+        doc = self.parse(
+            "table GDEF {LigatureCaretByPos f_i (wght=200:400 wght=900:1000) 380;} GDEF;"
+        )
+        s = doc.statements[0].statements[0]
+        self.assertIsInstance(s, ast.LigatureCaretByPosStatement)
+        self.assertEqual(glyphstr([s.glyphs]), "f_i")
+        self.assertEqual(len(s.carets), 2)
+        self.assertEqual(str(s.carets[0]), "(wght=200:400 wght=900:1000)")
+        self.assertEqual(s.carets[1], 380)
 
     def test_lookup_block(self):
         [lookup] = self.parse("lookup Ligatures {} Ligatures;").statements
@@ -1608,23 +1620,53 @@ class ParserTest(unittest.TestCase):
         doc = self.parse("lookup Look {substitute f_f_i by f f i;} Look;")
         sub = doc.statements[0].statements[0]
         self.assertIsInstance(sub, ast.MultipleSubstStatement)
-        self.assertEqual(sub.glyph, "f_f_i")
-        self.assertEqual(sub.replacement, ("f", "f", "i"))
+        self.assertEqual(glyphstr([sub.glyph]), "f_f_i")
+        self.assertEqual(glyphstr(sub.replacement), "f f i")
 
     def test_substitute_multiple_chained(self):  # chain to GSUB LookupType 2
         doc = self.parse("lookup L {sub [A-C] f_f_i' [X-Z] by f f i;} L;")
         sub = doc.statements[0].statements[0]
         self.assertIsInstance(sub, ast.MultipleSubstStatement)
-        self.assertEqual(sub.glyph, "f_f_i")
-        self.assertEqual(sub.replacement, ("f", "f", "i"))
+        self.assertEqual(glyphstr([sub.glyph]), "f_f_i")
+        self.assertEqual(glyphstr(sub.replacement), "f f i")
 
     def test_substitute_multiple_force_chained(self):
         doc = self.parse("lookup L {sub f_f_i' by f f i;} L;")
         sub = doc.statements[0].statements[0]
         self.assertIsInstance(sub, ast.MultipleSubstStatement)
-        self.assertEqual(sub.glyph, "f_f_i")
-        self.assertEqual(sub.replacement, ("f", "f", "i"))
+        self.assertEqual(glyphstr([sub.glyph]), "f_f_i")
+        self.assertEqual(glyphstr(sub.replacement), "f f i")
         self.assertEqual(sub.asFea(), "sub f_f_i' by f f i;")
+
+    def test_substitute_multiple_classes(self):
+        doc = self.parse("lookup Look {substitute [f_i f_l] by [f f] [i l];} Look;")
+        sub = doc.statements[0].statements[0]
+        self.assertIsInstance(sub, ast.MultipleSubstStatement)
+        self.assertEqual(glyphstr([sub.glyph]), "[f_i f_l]")
+        self.assertEqual(glyphstr(sub.replacement), "[f f] [i l]")
+
+    def test_substitute_multiple_classes_mixed(self):
+        doc = self.parse("lookup Look {substitute [f_i f_l] by f [i l];} Look;")
+        sub = doc.statements[0].statements[0]
+        self.assertIsInstance(sub, ast.MultipleSubstStatement)
+        self.assertEqual(glyphstr([sub.glyph]), "[f_i f_l]")
+        self.assertEqual(glyphstr(sub.replacement), "f [i l]")
+
+    def test_substitute_multiple_classes_mixed_singleton(self):
+        doc = self.parse("lookup Look {substitute [f_i f_l] by [f] [i l];} Look;")
+        sub = doc.statements[0].statements[0]
+        self.assertIsInstance(sub, ast.MultipleSubstStatement)
+        self.assertEqual(glyphstr([sub.glyph]), "[f_i f_l]")
+        self.assertEqual(glyphstr(sub.replacement), "f [i l]")
+
+    def test_substitute_multiple_classes_mismatch(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            'Expected a glyph class with 1 or 3 elements after "by", '
+            "but found a glyph class with 2 elements",
+            self.parse,
+            "lookup Look {substitute [f_i f_l f_f_i] by [f f_f] [i l i];} Look;",
+        )
 
     def test_substitute_multiple_by_mutliple(self):
         self.assertRaisesRegex(
@@ -2080,6 +2122,15 @@ class ParserTest(unittest.TestCase):
         include_dir = os.path.dirname(os.path.dirname(fea_path))
         doc = Parser(fea_path, includeDir=include_dir).parse()
         assert len(doc.statements) == 1 and doc.statements[0].text == "# Nothing"
+
+    def test_unmarked_ignore_statement(self):
+        with CapturingLogHandler("fontTools.feaLib.parser", level="WARNING") as caplog:
+            doc = self.parse("lookup foo { ignore sub A; } foo;")
+        self.assertEqual(doc.statements[0].statements[0].asFea(), "ignore sub A';")
+        self.assertEqual(len(caplog.records), 1)
+        caplog.assertRegex(
+            'Ambiguous "ignore sub", there should be least one marked glyph'
+        )
 
     def parse(self, text, glyphNames=GLYPHNAMES, followIncludes=True):
         featurefile = StringIO(text)

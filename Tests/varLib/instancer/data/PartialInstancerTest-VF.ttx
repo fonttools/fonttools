@@ -108,9 +108,9 @@
     <fsSelection value="00000000 01000000"/>
     <usFirstCharIndex value="32"/>
     <usLastCharIndex value="8722"/>
-    <sTypoAscender value="800"/>
+    <sTypoAscender value="1000"/>
     <sTypoDescender value="-200"/>
-    <sTypoLineGap value="200"/>
+    <sTypoLineGap value="0"/>
     <usWinAscent value="1000"/>
     <usWinDescent value="200"/>
     <ulCodePageRange1 value="00000000 00000000 00000000 00000001"/>
@@ -687,6 +687,7 @@
         <!-- VarRegionCount=1 -->
         <VarRegionIndex index="0" value="0"/>
         <Item index="0" value="[30]"/>
+        <Item index="1" value="[100]"/>
       </VarData>
     </VarStore>
     <ValueRecord index="0">
@@ -704,6 +705,10 @@
     <ValueRecord index="3">
       <ValueTag value="xhgt"/>
       <VarIdx value="65536"/>
+    </ValueRecord>
+    <ValueRecord index="3">
+      <ValueTag value="hasc"/>
+      <VarIdx value="65537"/>
     </ValueRecord>
   </MVAR>
 
@@ -728,7 +733,7 @@
         <AxisOrdering value="2"/>
       </Axis>
     </DesignAxisRecord>
-    <!-- AxisValueCount=5 -->
+    <!-- AxisValueCount=7 -->
     <AxisValueArray>
       <AxisValue index="0" Format="1">
         <AxisIndex value="0"/>
@@ -743,7 +748,13 @@
         <Value value="400.0"/>
         <LinkedValue value="700.0"/>
       </AxisValue>
-      <AxisValue index="2" Format="2">
+      <AxisValue index="2" Format="1">
+        <AxisIndex value="0"/>
+        <Flags value="0"/>
+        <ValueNameID value="262"/>  <!-- Medium -->
+        <Value value="500.0"/>
+      </AxisValue>
+      <AxisValue index="3" Format="2">
         <AxisIndex value="0"/>
         <Flags value="0"/>
         <ValueNameID value="266"/>  <!-- Black -->
@@ -751,7 +762,7 @@
         <RangeMinValue value="801.0"/>
         <RangeMaxValue value="900.0"/>
       </AxisValue>
-      <AxisValue index="3" Format="4">
+      <AxisValue index="4" Format="4">
         <!-- AxisCount=1 -->
         <Flags value="0"/>
         <ValueNameID value="279"/>  <!-- Condensed -->
@@ -760,14 +771,14 @@
           <Value value="79.0"/>
         </AxisValueRecord>
       </AxisValue>
-      <AxisValue index="4" Format="3">
+      <AxisValue index="5" Format="3">
         <AxisIndex value="2"/>
         <Flags value="2"/>
         <ValueNameID value="295"/>  <!-- Upright -->
         <Value value="0.0"/>
         <LinkedValue value="1.0"/>
       </AxisValue>
-      <AxisValue index="3" Format="4">
+      <AxisValue index="6" Format="4">
         <!-- AxisCount=1 -->
         <Flags value="2"/>
         <ValueNameID value="297"/>  <!-- Normal -->
@@ -781,6 +792,7 @@
   </STAT>
 
   <avar>
+    <version major="1" minor="0"/>
     <segment axis="wght">
       <mapping from="-1.0" to="-1.0"/>
       <mapping from="-0.6667" to="-0.7969"/>

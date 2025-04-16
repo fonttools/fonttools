@@ -1,0 +1,44 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<designspace format="5.0">
+  <axes>
+    <axis tag="wght" name="weight" minimum="300" maximum="700" default="300">
+      <map input="300" output="0"/>
+      <map input="500" output="500"/>
+      <map input="700" output="1000"/>
+    </axis>
+    <axis tag="wdth" name="width" minimum="50" maximum="200" default="50">
+      <map input="50" output="0"/>
+      <map input="100" output="500"/>
+      <map input="200" output="1000"/>
+    </axis>
+  </axes>
+  <sources>
+    <source filename="../MutatorSerifLightCondensed.ufo" familyname="MutatorMathTest" stylename="SerifLightCondensed">
+      <location>
+        <dimension name="weight" xvalue="0"/>
+        <dimension name="width" xvalue="0"/>
+      </location>
+    </source>
+    <source filename="../MutatorSerifLightWide.ufo" familyname="MutatorMathTest" stylename="SerifLightWide">
+      <location>
+        <dimension name="weight" xvalue="0"/>
+        <dimension name="width" xvalue="1000"/>
+      </location>
+    </source>
+  </sources>
+  <variable-fonts>
+    <variable-font name="MutatorSerifVariable_Width">
+      <axis-subsets>
+        <axis-subset name="width"/>
+      </axis-subsets>
+    </variable-font>
+  </variable-fonts>
+  <instances>
+    <instance name="MutatorMathTest Serif Light Condensed" familyname="MutatorMathTest" stylename="Serif Light Condensed" filename="MutatorMathTest-Serif Light Condensed.ttf" postscriptfontname="MutatorMathTest-SerifLightCondensed" stylemapfamilyname="MutatorMathTest Serif Light Condensed" stylemapstylename="regular">
+      <location>
+        <dimension name="weight" xvalue="0"/>
+        <dimension name="width" xvalue="0"/>
+      </location>
+    </instance>
+  </instances>
+</designspace>

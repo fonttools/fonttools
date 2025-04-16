@@ -8,7 +8,6 @@ __all__ = ["Vector"]
 
 
 class Vector(tuple):
-
     """A math-like vector.
 
     Represents an n-dimensional numeric vector. ``Vector`` objects support
@@ -133,6 +132,11 @@ class Vector(tuple):
         raise AttributeError(
             "can't set attribute, the 'values' attribute has been deprecated",
         )
+
+    def isclose(self, other: "Vector", **kwargs) -> bool:
+        """Return True if the vector is close to another Vector."""
+        assert len(self) == len(other)
+        return all(math.isclose(a, b, **kwargs) for a, b in zip(self, other))
 
 
 def _operator_rsub(a, b):

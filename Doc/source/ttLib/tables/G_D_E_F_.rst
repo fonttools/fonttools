@@ -1,8 +1,9 @@
-``GDEF``: Glyph Definition Table
+``GDEF``: Glyph Definition table
 --------------------------------
 
+The ``GDEF`` table is an OpenType table.
+
 .. automodule:: fontTools.ttLib.tables.G_D_E_F_
-   :inherited-members:
    :members:
    :undoc-members:
 

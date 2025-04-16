@@ -1,8 +1,9 @@
-``SVG``: SVG (Scalable Vector Graphics) Table
+``SVG``: SVG (Scalable Vector Graphics) table
 ---------------------------------------------
 
+The ``SVG`` table is an OpenType table.
+
 .. automodule:: fontTools.ttLib.tables.S_V_G_
-   :inherited-members:
    :members:
    :undoc-members:
 

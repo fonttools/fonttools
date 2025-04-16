@@ -1,9 +1,8 @@
-##################
-standardGlyphOrder
-##################
+###########################################################
+standardGlyphOrder: Interface with the Standard Glyph Order
+###########################################################
 
 .. automodule:: fontTools.ttLib.standardGlyphOrder
-   :inherited-members:
    :members:
    :undoc-members:
 

@@ -1,6 +1,8 @@
-######
-subset
-######
+########################################################
+subset: Generate subsets of fonts or optimize file sizes
+########################################################
+
+.. currentmodule:: fontTools.subset
 
 .. toctree::
    :maxdepth: 1
@@ -8,6 +10,5 @@ subset
    cff
 
 .. automodule:: fontTools.subset
-   :inherited-members:
    :members:
    :undoc-members:

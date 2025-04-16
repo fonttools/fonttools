@@ -21,75 +21,88 @@ import getopt
 import traceback
 from fontTools import ttx
 
-class Error(Exception): pass
+
+class Error(Exception):
+    pass
 
 
 def usage():
-	print(__doc__)
-	sys.exit(2)
+    print(__doc__)
+    sys.exit(2)
 
 
 def roundTrip(ttFile1, options, report):
-	fn = os.path.basename(ttFile1)
-	xmlFile1 = tempfile.mkstemp(".%s.ttx1" % fn)
-	ttFile2 = tempfile.mkstemp(".%s" % fn)
-	xmlFile2 = tempfile.mkstemp(".%s.ttx2" % fn)
-	
-	try:
-		ttx.ttDump(ttFile1, xmlFile1, options)
-		if options.onlyTables or options.skipTables:
-			options.mergeFile = ttFile1
-		ttx.ttCompile(xmlFile1, ttFile2, options)
-		options.mergeFile = None
-		ttx.ttDump(ttFile2, xmlFile2, options)
-		
-		diffcmd = 'diff -U2 -I ".*modified value\|checkSumAdjustment.*" "%s" "%s"' % (xmlFile1, xmlFile2)
-		output = os.popen(diffcmd, "r", 1)
-		lines = []
-		while True:
-			line = output.readline()
-			if not line:
-				break
-			sys.stdout.write(line)
-			lines.append(line)
-		if lines:
-			report.write("=============================================================\n")
-			report.write("  \"%s\" differs after round tripping\n" % ttFile1)
-			report.write("-------------------------------------------------------------\n")
-			report.writelines(lines)
-		else:
-			print("(TTX files are the same)")
-	finally:
-		for tmpFile in (xmlFile1, ttFile2, xmlFile2):
-			if os.path.exists(tmpFile):
-				os.remove(tmpFile)
+    fn = os.path.basename(ttFile1)
+    xmlFile1 = tempfile.mkstemp(".%s.ttx1" % fn)
+    ttFile2 = tempfile.mkstemp(".%s" % fn)
+    xmlFile2 = tempfile.mkstemp(".%s.ttx2" % fn)
+
+    try:
+        ttx.ttDump(ttFile1, xmlFile1, options)
+        if options.onlyTables or options.skipTables:
+            options.mergeFile = ttFile1
+        ttx.ttCompile(xmlFile1, ttFile2, options)
+        options.mergeFile = None
+        ttx.ttDump(ttFile2, xmlFile2, options)
+
+        diffcmd = 'diff -U2 -I ".*modified value\|checkSumAdjustment.*" "%s" "%s"' % (
+            xmlFile1,
+            xmlFile2,
+        )
+        output = os.popen(diffcmd, "r", 1)
+        lines = []
+        while True:
+            line = output.readline()
+            if not line:
+                break
+            sys.stdout.write(line)
+            lines.append(line)
+        if lines:
+            report.write(
+                "=============================================================\n"
+            )
+            report.write('  "%s" differs after round tripping\n' % ttFile1)
+            report.write(
+                "-------------------------------------------------------------\n"
+            )
+            report.writelines(lines)
+        else:
+            print("(TTX files are the same)")
+    finally:
+        for tmpFile in (xmlFile1, ttFile2, xmlFile2):
+            if os.path.exists(tmpFile):
+                os.remove(tmpFile)
 
 
 def main(args):
-	try:
-		rawOptions, files = getopt.getopt(args, "it:x:")
-	except getopt.GetoptError:
-		usage()
-	
-	if not files:
-		usage()
-	
-	with open("report.txt", "a+") as report:
-		options = ttx.Options(rawOptions, len(files))
-		for ttFile in files:
-			try:
-				roundTrip(ttFile, options, report)
-			except KeyboardInterrupt:
-				print("(Cancelled)")
-				break
-			except:
-				print("*** round tripping aborted ***")
-				traceback.print_exc()
-				report.write("=============================================================\n")
-				report.write("  An exception occurred while round tripping")
-				report.write("  \"%s\"\n" % ttFile)
-				traceback.print_exc(file=report)
-				report.write("-------------------------------------------------------------\n")
+    try:
+        rawOptions, files = getopt.getopt(args, "it:x:")
+    except getopt.GetoptError:
+        usage()
 
-	
+    if not files:
+        usage()
+
+    with open("report.txt", "a+") as report:
+        options = ttx.Options(rawOptions, len(files))
+        for ttFile in files:
+            try:
+                roundTrip(ttFile, options, report)
+            except KeyboardInterrupt:
+                print("(Cancelled)")
+                break
+            except:
+                print("*** round tripping aborted ***")
+                traceback.print_exc()
+                report.write(
+                    "=============================================================\n"
+                )
+                report.write("  An exception occurred while round tripping")
+                report.write('  "%s"\n' % ttFile)
+                traceback.print_exc(file=report)
+                report.write(
+                    "-------------------------------------------------------------\n"
+                )
+
+
 main(sys.argv[1:])

@@ -12,6 +12,7 @@ from fontTools.feaLib.lexer import Lexer
 from fontTools.fontBuilder import addFvar
 import difflib
 from io import StringIO
+from textwrap import dedent
 import os
 import re
 import shutil
@@ -19,6 +20,7 @@ import sys
 import tempfile
 import logging
 import unittest
+import warnings
 
 
 def makeTTFont():
@@ -47,6 +49,7 @@ def makeTTFont():
         grave acute dieresis macron circumflex cedilla umlaut ogonek caron
         damma hamza sukun kasratan lam_meem_jeem noon.final noon.initial
         by feature lookup sub table uni0327 uni0328 e.fina
+        idotbelow idotless iogonek acutecomb brevecomb ogonekcomb dotbelowcomb
     """.split()
     glyphs.extend("cid{:05d}".format(cid) for cid in range(800, 1001 + 1))
     font = TTFont()
@@ -66,10 +69,10 @@ class BuilderTest(unittest.TestCase):
         spec5f_ii_1 spec5f_ii_2 spec5f_ii_3 spec5f_ii_4
         spec5h1 spec6b_ii spec6d2 spec6e spec6f
         spec6h_ii spec6h_iii_1 spec6h_iii_3d spec8a spec8b spec8c spec8d
-        spec9a spec9b spec9c1 spec9c2 spec9c3 spec9d spec9e spec9f spec9g
-        spec10
+        spec9a spec9a2 spec9b spec9c1 spec9c2 spec9c3 spec9d spec9e spec9f
+        spec9g spec10
         bug453 bug457 bug463 bug501 bug502 bug504 bug505 bug506 bug509
-        bug512 bug514 bug568 bug633 bug1307 bug1459 bug2276
+        bug512 bug514 bug568 bug633 bug1307 bug1459 bug2276 variable_bug2772
         name size size2 multiple_feature_blocks omitted_GlyphClassDef
         ZeroValue_SinglePos_horizontal ZeroValue_SinglePos_vertical
         ZeroValue_PairPos_horizontal ZeroValue_PairPos_vertical
@@ -80,6 +83,10 @@ class BuilderTest(unittest.TestCase):
         MultipleLookupsPerGlyph MultipleLookupsPerGlyph2 GSUB_6_formats
         GSUB_5_formats delete_glyph STAT_test STAT_test_elidedFallbackNameID
         variable_scalar_valuerecord variable_scalar_anchor variable_conditionset
+        variable_mark_anchor duplicate_lookup_reference
+        contextual_inline_multi_sub_format_2
+        contextual_inline_format_4
+        duplicate_language_stmt
     """.split()
 
     VARFONT_AXES = [
@@ -225,6 +232,21 @@ class BuilderTest(unittest.TestCase):
             output.append(l)
         return output
 
+    def make_mock_vf(self):
+        font = makeTTFont()
+        font["name"] = newTable("name")
+        addFvar(font, self.VARFONT_AXES, [])
+        del font["name"]
+        return font
+
+    @staticmethod
+    def get_region(var_region_axis):
+        return (
+            var_region_axis.StartCoord,
+            var_region_axis.PeakCoord,
+            var_region_axis.EndCoord,
+        )
+
     def test_alternateSubst_multipleSubstitutionsForSameGlyph(self):
         self.assertRaisesRegex(
             FeatureLibError,
@@ -330,12 +352,10 @@ class BuilderTest(unittest.TestCase):
         )
 
     def test_feature_undefinedReference(self):
-        self.assertRaisesRegex(
-            FeatureLibError,
-            "Feature none has not been defined",
-            self.build,
-            "feature aalt { feature none; } aalt;",
-        )
+        with warnings.catch_warnings(record=True) as w:
+            self.build("feature aalt { feature none; } aalt;")
+            assert len(w) == 1
+            assert "Feature none has not been defined" in str(w[0].message)
 
     def test_GlyphClassDef_conflictingClasses(self):
         self.assertRaisesRegex(
@@ -954,15 +974,210 @@ class BuilderTest(unittest.TestCase):
             FeatureLibError,
             "Empty glyph class in mark class definition",
             self.build,
-            "markClass [] <anchor 150 -10> @TOPMARKS;"
+            "markClass [] <anchor 150 -10> @TOPMARKS;",
         )
         self.assertRaisesRegex(
             FeatureLibError,
             'Expected a glyph class with 1 elements after "by", but found a glyph class with 0 elements',
             self.build,
-            "feature test { sub a by []; test};"
+            "feature test { sub a by []; test};",
         )
 
+    def test_unmarked_ignore_statement(self):
+        name = "bug2949"
+        logger = logging.getLogger("fontTools.feaLib.parser")
+        with CapturingLogHandler(logger, level="WARNING") as captor:
+            self.check_feature_file(name)
+        self.check_fea2fea_file(name)
+
+        for line, sub in {(3, "sub"), (8, "pos"), (13, "sub")}:
+            captor.assertRegex(
+                f'{name}.fea:{line}:12: Ambiguous "ignore {sub}", there should be least one marked glyph'
+            )
+
+    def test_conditionset_multiple_features(self):
+        """Test that using the same `conditionset` for multiple features reuses the
+        `FeatureVariationRecord`."""
+
+        features = """
+            languagesystem DFLT dflt;
+
+            conditionset test {
+                wght 600 1000;
+                wdth 150 200;
+            } test;
+
+            variation ccmp test {
+                sub e by a;
+            } ccmp;
+
+            variation rlig test {
+                sub b by c;
+            } rlig;
+        """
+
+        def make_mock_vf():
+            font = makeTTFont()
+            font["name"] = newTable("name")
+            addFvar(
+                font,
+                [("wght", 0, 0, 1000, "Weight"), ("wdth", 100, 100, 200, "Width")],
+                [],
+            )
+            del font["name"]
+            return font
+
+        font = make_mock_vf()
+        addOpenTypeFeaturesFromString(font, features)
+
+        table = font["GSUB"].table
+        assert table.FeatureVariations.FeatureVariationCount == 1
+
+        fvr = table.FeatureVariations.FeatureVariationRecord[0]
+        assert fvr.FeatureTableSubstitution.SubstitutionCount == 2
+
+    def test_condition_set_avar(self):
+        """Test that the `avar` table is consulted when normalizing user-space
+        values."""
+
+        features = """
+            languagesystem DFLT dflt;
+
+            lookup conditional_sub {
+                sub e by a;
+            } conditional_sub;
+
+            conditionset test {
+                wght 600 1000;
+                wdth 150 200;
+            } test;
+
+            variation rlig test {
+                lookup conditional_sub;
+            } rlig;
+        """
+
+        def make_mock_vf():
+            font = makeTTFont()
+            font["name"] = newTable("name")
+            addFvar(
+                font,
+                [("wght", 0, 0, 1000, "Weight"), ("wdth", 100, 100, 200, "Width")],
+                [],
+            )
+            del font["name"]
+            return font
+
+        # Without `avar`:
+        font = make_mock_vf()
+        addOpenTypeFeaturesFromString(font, features)
+        condition_table = (
+            font.tables["GSUB"]
+            .table.FeatureVariations.FeatureVariationRecord[0]
+            .ConditionSet.ConditionTable
+        )
+        # user-space wdth=150 and wght=600:
+        assert condition_table[0].FilterRangeMinValue == 0.5
+        assert condition_table[1].FilterRangeMinValue == 0.6
+
+        # With `avar`, shifting the wght axis' positive midpoint 0.5 a bit to
+        # the right, but leaving the wdth axis alone:
+        font = make_mock_vf()
+        font["avar"] = newTable("avar")
+        font["avar"].segments = {"wght": {-1.0: -1.0, 0.0: 0.0, 0.5: 0.625, 1.0: 1.0}}
+        addOpenTypeFeaturesFromString(font, features)
+        condition_table = (
+            font.tables["GSUB"]
+            .table.FeatureVariations.FeatureVariationRecord[0]
+            .ConditionSet.ConditionTable
+        )
+        # user-space wdth=150 as before and wght=600 shifted to the right:
+        assert condition_table[0].FilterRangeMinValue == 0.5
+        assert condition_table[1].FilterRangeMinValue == 0.7
+
+    def test_variable_scalar_avar(self):
+        """Test that the `avar` table is consulted when normalizing user-space
+        values."""
+
+        features = """
+            languagesystem DFLT dflt;
+        
+            feature kern {
+                pos cursive one <anchor 0 (wght=200:12 wght=900:22 wdth=150,wght=900:42)> <anchor NULL>;
+                pos two <0 (wght=200:12 wght=900:22 wdth=150,wght=900:42) 0 0>;
+            } kern;
+        """
+
+        # Without `avar` (wght=200, wdth=100 is the default location):
+        font = self.make_mock_vf()
+        addOpenTypeFeaturesFromString(font, features)
+
+        var_region_list = font.tables["GDEF"].table.VarStore.VarRegionList
+        var_region_axis_wght = var_region_list.Region[0].VarRegionAxis[0]
+        var_region_axis_wdth = var_region_list.Region[0].VarRegionAxis[1]
+        assert self.get_region(var_region_axis_wght) == (0.0, 0.875, 1.0)
+        assert self.get_region(var_region_axis_wdth) == (0.0, 0.0, 0.0)
+        var_region_axis_wght = var_region_list.Region[1].VarRegionAxis[0]
+        var_region_axis_wdth = var_region_list.Region[1].VarRegionAxis[1]
+        assert self.get_region(var_region_axis_wght) == (0.0, 0.875, 1.0)
+        assert self.get_region(var_region_axis_wdth) == (0.0, 0.5, 1.0)
+
+        # With `avar`, shifting the wght axis' positive midpoint 0.5 a bit to
+        # the right, but leaving the wdth axis alone:
+        font = self.make_mock_vf()
+        font["avar"] = newTable("avar")
+        font["avar"].segments = {"wght": {-1.0: -1.0, 0.0: 0.0, 0.5: 0.625, 1.0: 1.0}}
+        addOpenTypeFeaturesFromString(font, features)
+
+        var_region_list = font.tables["GDEF"].table.VarStore.VarRegionList
+        var_region_axis_wght = var_region_list.Region[0].VarRegionAxis[0]
+        var_region_axis_wdth = var_region_list.Region[0].VarRegionAxis[1]
+        assert self.get_region(var_region_axis_wght) == (0.0, 0.90625, 1.0)
+        assert self.get_region(var_region_axis_wdth) == (0.0, 0.0, 0.0)
+        var_region_axis_wght = var_region_list.Region[1].VarRegionAxis[0]
+        var_region_axis_wdth = var_region_list.Region[1].VarRegionAxis[1]
+        assert self.get_region(var_region_axis_wght) == (0.0, 0.90625, 1.0)
+        assert self.get_region(var_region_axis_wdth) == (0.0, 0.5, 1.0)
+
+    def test_ligatureCaretByPos_variable_scalar(self):
+        """Test that the `avar` table is consulted when normalizing user-space
+        values."""
+
+        features = """
+            table GDEF {
+                LigatureCaretByPos f_i (wght=200:400 wght=900:1000) 380;
+            } GDEF;
+        """
+
+        font = self.make_mock_vf()
+        addOpenTypeFeaturesFromString(font, features)
+
+        table = font["GDEF"].table
+        lig_glyph = table.LigCaretList.LigGlyph[0]
+        assert lig_glyph.CaretValue[0].Format == 1
+        assert lig_glyph.CaretValue[0].Coordinate == 380
+        assert lig_glyph.CaretValue[1].Format == 3
+        assert lig_glyph.CaretValue[1].Coordinate == 400
+
+        var_region_list = table.VarStore.VarRegionList
+        var_region_axis = var_region_list.Region[0].VarRegionAxis[0]
+        assert self.get_region(var_region_axis) == (0.0, 0.875, 1.0)
+
+    def test_variable_anchors_round_trip(self):
+        """Test that calling `addOpenTypeFeatures` with parsed feature file does
+        not discard variations from variable anchors."""
+        features = """\
+            feature curs {
+                pos cursive one <anchor 0 (wdth=100,wght=200:12 wdth=150,wght=900:42)> <anchor NULL>;
+            } curs;
+        """
+
+        f = StringIO(features)
+        feafile = Parser(f).parse()
+
+        font = self.make_mock_vf()
+        addOpenTypeFeatures(font, feafile)
+        assert dedent(str(feafile)) == dedent(features)
 
 
 def generate_feature_file_test(name):

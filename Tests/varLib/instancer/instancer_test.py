@@ -1,4 +1,6 @@
 from fontTools.misc.fixedTools import floatToFixedToFloat
+from fontTools.misc.roundTools import noRound
+from fontTools.misc.testTools import stripVariableItemsFromTTX
 from fontTools.misc.textTools import Tag
 from fontTools import ttLib
 from fontTools import designspaceLib
@@ -50,7 +52,97 @@ def fvarAxes():
 def _get_coordinates(varfont, glyphname):
     # converts GlyphCoordinates to a list of (x, y) tuples, so that pytest's
     # assert will give us a nicer diff
-    return list(varfont["glyf"].getCoordinatesAndControls(glyphname, varfont)[0])
+    return list(
+        varfont["glyf"]._getCoordinatesAndControls(
+            glyphname,
+            varfont["hmtx"].metrics,
+            varfont["vmtx"].metrics,
+            # the tests expect float coordinates
+            round=noRound,
+        )[0]
+    )
+
+
+class InstantiateCFF2Test(object):
+    @pytest.mark.parametrize(
+        "location, expected",
+        [
+            (
+                {},
+                [
+                    44,
+                    256,
+                    6,
+                    -29,
+                    2,
+                    "blend",
+                    "rmoveto",
+                    239,
+                    35,
+                    -239,
+                    44,
+                    90,
+                    -44,
+                    3,
+                    "blend",
+                    "hlineto",
+                ],
+            ),
+            ({"wght": 0}, [44, 256, "rmoveto", 239, 35, -239, "hlineto"]),
+            ({"wght": 0.5}, [47, 242, "rmoveto", 261, 80, -261, "hlineto"]),
+            ({"wght": 1}, [50, 227, "rmoveto", 283, 125, -283, "hlineto"]),
+        ],
+    )
+    def test_pin_and_drop_axis(self, varfont, location, expected):
+
+        varfont = ttLib.TTFont()
+        varfont.importXML(os.path.join(TESTDATA, "CFF2Instancer-VF-1.ttx"))
+
+        location = instancer.NormalizedAxisLimits(location)
+
+        instancer.instantiateCFF2(varfont, location)
+        instancer.instantiateHVAR(varfont, location)
+
+        program = varfont["CFF2"].cff.topDictIndex[0].CharStrings.values()[1].program
+        assert program == expected
+
+    @pytest.mark.parametrize(
+        "source_ttx, expected_ttx",
+        [
+            ("CFF2Instancer-VF-1.ttx", "CFF2Instancer-VF-1-instance-400.ttx"),
+            ("CFF2Instancer-VF-2.ttx", "CFF2Instancer-VF-2-instance-400.ttx"),
+            ("CFF2Instancer-VF-3.ttx", "CFF2Instancer-VF-3-instance-400.ttx"),
+        ],
+    )
+    def test_full_instance(self, varfont, source_ttx, expected_ttx):
+        varfont = ttLib.TTFont()
+        varfont.importXML(os.path.join(TESTDATA, source_ttx))
+        s = BytesIO()
+        varfont.save(s)
+        s.seek(0)
+        varfont = ttLib.TTFont(s)
+
+        instance = instancer.instantiateVariableFont(varfont, {"wght": 400})
+        s = BytesIO()
+        instance.save(s)
+        s.seek(0)
+        instance = ttLib.TTFont(s)
+
+        s = StringIO()
+        instance.saveXML(s)
+        actual = stripVariableItemsFromTTX(s.getvalue())
+
+        expected = ttLib.TTFont()
+        expected.importXML(os.path.join(TESTDATA, "test_results", expected_ttx))
+        s = BytesIO()
+        expected.save(s)
+        s.seek(0)
+        expected = ttLib.TTFont(s)
+        s = StringIO()
+        expected.saveXML(s)
+        expected = stripVariableItemsFromTTX(s.getvalue())
+
+        assert actual == expected
 
 
 class InstantiateGvarTest(object):
@@ -111,6 +203,8 @@ class InstantiateGvarTest(object):
         ],
     )
     def test_pin_and_drop_axis(self, varfont, glyph_name, location, expected, optimize):
+        location = instancer.NormalizedAxisLimits(location)
+
         instancer.instantiateGvar(varfont, location, optimize=optimize)
 
         assert _get_coordinates(varfont, glyph_name) == expected[glyph_name]
@@ -123,9 +217,9 @@ class InstantiateGvarTest(object):
         )
 
     def test_full_instance(self, varfont, optimize):
-        instancer.instantiateGvar(
-            varfont, {"wght": 0.0, "wdth": -0.5}, optimize=optimize
-        )
+        location = instancer.NormalizedAxisLimits(wght=0.0, wdth=-0.5)
+
+        instancer.instantiateGvar(varfont, location, optimize=optimize)
 
         assert _get_coordinates(varfont, "hyphen") == [
             (33.5, 229),
@@ -168,7 +262,7 @@ class InstantiateGvarTest(object):
         assert hmtx["minus"] == (422, 40)
         assert vmtx["minus"] == (536, 229)
 
-        location = {"wght": -1.0, "wdth": -1.0}
+        location = instancer.NormalizedAxisLimits(wght=-1.0, wdth=-1.0)
 
         instancer.instantiateGvar(varfont, location)
 
@@ -205,6 +299,8 @@ class InstantiateCvarTest(object):
         ],
     )
     def test_pin_and_drop_axis(self, varfont, location, expected):
+        location = instancer.NormalizedAxisLimits(location)
+
         instancer.instantiateCvar(varfont, location)
 
         assert list(varfont["cvt "].values) == expected
@@ -216,7 +312,9 @@ class InstantiateCvarTest(object):
         )
 
     def test_full_instance(self, varfont):
-        instancer.instantiateCvar(varfont, {"wght": -0.5, "wdth": -0.5})
+        location = instancer.NormalizedAxisLimits(wght=-0.5, wdth=-0.5)
+
+        instancer.instantiateCvar(varfont, location)
 
         assert list(varfont["cvt "].values) == [500, -400, 165, 225]
 
@@ -271,6 +369,8 @@ class InstantiateMVARTest(object):
         assert mvar.VarStore.VarData[1].VarRegionCount == 1
         assert all(len(item) == 1 for item in mvar.VarStore.VarData[1].Item)
 
+        location = instancer.NormalizedAxisLimits(location)
+
         instancer.instantiateMVAR(varfont, location)
 
         for mvar_tag, expected_value in expected.items():
@@ -286,36 +386,68 @@ class InstantiateMVARTest(object):
         assert len(mvar.VarStore.VarData) == 1
 
     @pytest.mark.parametrize(
-        "location, expected",
+        "location, expected, sync_vmetrics",
         [
             pytest.param(
                 {"wght": 1.0, "wdth": 0.0},
-                {"strs": 100, "undo": -200, "unds": 150},
+                {"strs": 100, "undo": -200, "unds": 150, "hasc": 1100},
+                True,
                 id="wght=1.0,wdth=0.0",
             ),
             pytest.param(
                 {"wght": 0.0, "wdth": -1.0},
-                {"strs": 20, "undo": -100, "unds": 50},
+                {"strs": 20, "undo": -100, "unds": 50, "hasc": 1000},
+                True,
                 id="wght=0.0,wdth=-1.0",
             ),
             pytest.param(
                 {"wght": 0.5, "wdth": -0.5},
-                {"strs": 55, "undo": -145, "unds": 95},
+                {"strs": 55, "undo": -145, "unds": 95, "hasc": 1050},
+                True,
                 id="wght=0.5,wdth=-0.5",
             ),
             pytest.param(
                 {"wght": 1.0, "wdth": -1.0},
-                {"strs": 50, "undo": -180, "unds": 130},
+                {"strs": 50, "undo": -180, "unds": 130, "hasc": 1100},
+                True,
                 id="wght=0.5,wdth=-0.5",
+            ),
+            pytest.param(
+                {"wght": 1.0, "wdth": 0.0},
+                {"strs": 100, "undo": -200, "unds": 150, "hasc": 1100},
+                False,
+                id="wght=1.0,wdth=0.0,no_sync_vmetrics",
             ),
         ],
     )
-    def test_full_instance(self, varfont, location, expected):
+    def test_full_instance(self, varfont, location, sync_vmetrics, expected):
+        location = instancer.NormalizedAxisLimits(location)
+
+        # check vertical metrics are in sync before...
+        if sync_vmetrics:
+            assert varfont["OS/2"].sTypoAscender == varfont["hhea"].ascender
+            assert varfont["OS/2"].sTypoDescender == varfont["hhea"].descender
+            assert varfont["OS/2"].sTypoLineGap == varfont["hhea"].lineGap
+        else:
+            # force them not to be in sync
+            varfont["OS/2"].sTypoDescender -= 100
+            varfont["OS/2"].sTypoLineGap += 200
+
         instancer.instantiateMVAR(varfont, location)
 
         for mvar_tag, expected_value in expected.items():
             table_tag, item_name = MVAR_ENTRIES[mvar_tag]
             assert getattr(varfont[table_tag], item_name) == expected_value
+
+        # ... as well as after instancing, but only if they were already
+        # https://github.com/fonttools/fonttools/issues/3297
+        if sync_vmetrics:
+            assert varfont["OS/2"].sTypoAscender == varfont["hhea"].ascender
+            assert varfont["OS/2"].sTypoDescender == varfont["hhea"].descender
+            assert varfont["OS/2"].sTypoLineGap == varfont["hhea"].lineGap
+        else:
+            assert varfont["OS/2"].sTypoDescender != varfont["hhea"].descender
+            assert varfont["OS/2"].sTypoLineGap != varfont["hhea"].lineGap
 
         assert "MVAR" not in varfont
 
@@ -343,6 +475,8 @@ class InstantiateHVARTest(object):
         ],
     )
     def test_partial_instance(self, varfont, location, expectedRegions, expectedDeltas):
+        location = instancer.NormalizedAxisLimits(location)
+
         instancer.instantiateHVAR(varfont, location)
 
         assert "HVAR" in varfont
@@ -375,7 +509,9 @@ class InstantiateHVARTest(object):
         assert varStore.VarData[varIdx >> 16].Item[varIdx & 0xFFFF] == expectedDeltas
 
     def test_full_instance(self, varfont):
-        instancer.instantiateHVAR(varfont, {"wght": 0, "wdth": 0})
+        location = instancer.NormalizedAxisLimits(wght=0, wdth=0)
+
+        instancer.instantiateHVAR(varfont, location)
 
         assert "HVAR" not in varfont
 
@@ -389,7 +525,9 @@ class InstantiateHVARTest(object):
         axis.axisTag = "TEST"
         fvar.axes.append(axis)
 
-        instancer.instantiateHVAR(varfont, {"wght": 0, "wdth": 0})
+        location = instancer.NormalizedAxisLimits(wght=0, wdth=0)
+
+        instancer.instantiateHVAR(varfont, location)
 
         assert "HVAR" in varfont
 
@@ -451,12 +589,16 @@ class InstantiateItemVariationStoreTest(object):
     def test_instantiate_default_deltas(
         self, varStore, fvarAxes, location, expected_deltas, num_regions
     ):
+        location = instancer.NormalizedAxisLimits(location)
+
         defaultDeltas = instancer.instantiateItemVariationStore(
             varStore, fvarAxes, location
         )
 
         defaultDeltaArray = []
         for varidx, delta in sorted(defaultDeltas.items()):
+            if varidx == varStore.NO_VARIATION_INDEX:
+                continue
             major, minor = varidx >> 16, varidx & 0xFFFF
             if major == len(defaultDeltaArray):
                 defaultDeltaArray.append([])
@@ -501,8 +643,9 @@ class TupleVarStoreAdapterTest(object):
         adapter = instancer._TupleVarStoreAdapter(
             regions, axisOrder, tupleVarData, itemCounts=[2, 2]
         )
+        location = instancer.NormalizedAxisLimits(wght=0.5)
 
-        defaultDeltaArray = adapter.instantiate({"wght": 0.5})
+        defaultDeltaArray = adapter.instantiate(location)
 
         assert defaultDeltaArray == [[15, 45], [0, 0]]
         assert adapter.regions == [{"wdth": (-1.0, -1.0, 0)}]
@@ -744,6 +887,8 @@ class InstantiateOTLTest(object):
         vf = varfontGDEF
         assert "GDEF" in vf
 
+        location = instancer.NormalizedAxisLimits(location)
+
         instancer.instantiateOTL(vf, location)
 
         assert "GDEF" in vf
@@ -775,6 +920,8 @@ class InstantiateOTLTest(object):
         vf = varfontGDEF
         assert "GDEF" in vf
 
+        location = instancer.NormalizedAxisLimits(location)
+
         instancer.instantiateOTL(vf, location)
 
         assert "GDEF" in vf
@@ -802,6 +949,8 @@ class InstantiateOTLTest(object):
         vf = varfontGPOS
         assert "GDEF" in vf
         assert "GPOS" in vf
+
+        location = instancer.NormalizedAxisLimits(location)
 
         instancer.instantiateOTL(vf, location)
 
@@ -836,6 +985,8 @@ class InstantiateOTLTest(object):
         assert "GDEF" in vf
         assert "GPOS" in vf
 
+        location = instancer.NormalizedAxisLimits(location)
+
         instancer.instantiateOTL(vf, location)
 
         assert "GDEF" not in vf
@@ -866,6 +1017,8 @@ class InstantiateOTLTest(object):
         vf = varfontGPOS2
         assert "GDEF" in vf
         assert "GPOS" in vf
+
+        location = instancer.NormalizedAxisLimits(location)
 
         instancer.instantiateOTL(vf, location)
 
@@ -912,6 +1065,8 @@ class InstantiateOTLTest(object):
         assert "GDEF" in vf
         assert "GPOS" in vf
 
+        location = instancer.NormalizedAxisLimits(location)
+
         instancer.instantiateOTL(vf, location)
 
         v1, v2 = expected
@@ -952,7 +1107,7 @@ class InstantiateOTLTest(object):
 
         # check that MutatorMerger for ValueRecord doesn't raise AttributeError
         # when XAdvDevice is present but there's no corresponding XAdvance.
-        instancer.instantiateOTL(vf, {"wght": 0.5})
+        instancer.instantiateOTL(vf, instancer.NormalizedAxisLimits(wght=0.5))
 
         pairPos = vf["GPOS"].table.LookupList.Lookup[0].SubTable[0]
         assert pairPos.ValueFormat1 == 0x4
@@ -964,12 +1119,16 @@ class InstantiateOTLTest(object):
 class InstantiateAvarTest(object):
     @pytest.mark.parametrize("location", [{"wght": 0.0}, {"wdth": 0.0}])
     def test_pin_and_drop_axis(self, varfont, location):
+        location = instancer.AxisLimits(location)
+
         instancer.instantiateAvar(varfont, location)
 
         assert set(varfont["avar"].segments).isdisjoint(location)
 
     def test_full_instance(self, varfont):
-        instancer.instantiateAvar(varfont, {"wght": 0.0, "wdth": 0.0})
+        location = instancer.AxisLimits(wght=0.0, wdth=0.0)
+
+        instancer.instantiateAvar(varfont, location)
 
         assert "avar" not in varfont
 
@@ -1136,6 +1295,8 @@ class InstantiateAvarTest(object):
         ],
     )
     def test_limit_axes(self, varfont, axisLimits, expectedSegments):
+        axisLimits = instancer.AxisLimits(axisLimits)
+
         instancer.instantiateAvar(varfont, axisLimits)
 
         newSegments = varfont["avar"].segments
@@ -1159,8 +1320,10 @@ class InstantiateAvarTest(object):
     def test_drop_invalid_segment_map(self, varfont, invalidSegmentMap, caplog):
         varfont["avar"].segments["wght"] = invalidSegmentMap
 
+        axisLimits = instancer.AxisLimits(wght=(100, 400))
+
         with caplog.at_level(logging.WARNING, logger="fontTools.varLib.instancer"):
-            instancer.instantiateAvar(varfont, {"wght": (100, 400)})
+            instancer.instantiateAvar(varfont, axisLimits)
 
         assert "Invalid avar" in caplog.text
         assert "wght" not in varfont["avar"].segments
@@ -1207,6 +1370,8 @@ class InstantiateFvarTest(object):
         ],
     )
     def test_pin_and_drop_axis(self, varfont, location, instancesLeft):
+        location = instancer.AxisLimits(location)
+
         instancer.instantiateFvar(varfont, location)
 
         fvar = varfont["fvar"]
@@ -1221,9 +1386,35 @@ class InstantiateFvarTest(object):
         ] == instancesLeft
 
     def test_full_instance(self, varfont):
-        instancer.instantiateFvar(varfont, {"wght": 0.0, "wdth": 0.0})
+        location = instancer.AxisLimits({"wght": 0.0, "wdth": 0.0})
+
+        instancer.instantiateFvar(varfont, location)
 
         assert "fvar" not in varfont
+
+    @pytest.mark.parametrize(
+        "location, expected",
+        [
+            ({"wght": (30, 40, 700)}, (100, 100, 700)),
+            ({"wght": (30, 40, None)}, (100, 100, 900)),
+            ({"wght": (30, None, 700)}, (100, 400, 700)),
+            ({"wght": (None, 200, 700)}, (100, 200, 700)),
+            ({"wght": (40, None, None)}, (100, 400, 900)),
+            ({"wght": (None, 40, None)}, (100, 100, 900)),
+            ({"wght": (None, None, 700)}, (100, 400, 700)),
+            ({"wght": (None, None, None)}, (100, 400, 900)),
+        ],
+    )
+    def test_axis_limits(self, varfont, location, expected):
+        location = instancer.AxisLimits(location)
+
+        varfont = instancer.instantiateVariableFont(varfont, location)
+
+        fvar = varfont["fvar"]
+        axes = {a.axisTag: a for a in fvar.axes}
+        assert axes["wght"].minValue == expected[0]
+        assert axes["wght"].defaultValue == expected[1]
+        assert axes["wght"].maxValue == expected[2]
 
 
 class InstantiateSTATTest(object):
@@ -1231,10 +1422,15 @@ class InstantiateSTATTest(object):
         "location, expected",
         [
             ({"wght": 400}, ["Regular", "Condensed", "Upright", "Normal"]),
-            ({"wdth": 100}, ["Thin", "Regular", "Black", "Upright", "Normal"]),
+            (
+                {"wdth": 100},
+                ["Thin", "Regular", "Medium", "Black", "Upright", "Normal"],
+            ),
         ],
     )
     def test_pin_and_drop_axis(self, varfont, location, expected):
+        location = instancer.AxisLimits(location)
+
         instancer.instantiateSTAT(varfont, location)
 
         stat = varfont["STAT"].table
@@ -1253,7 +1449,7 @@ class InstantiateSTATTest(object):
     def test_skip_table_no_axis_value_array(self, varfont):
         varfont["STAT"].table.AxisValueArray = None
 
-        instancer.instantiateSTAT(varfont, {"wght": 100})
+        instancer.instantiateSTAT(varfont, instancer.AxisLimits(wght=100))
 
         assert len(varfont["STAT"].table.DesignAxisRecord.Axis) == 3
         assert varfont["STAT"].table.AxisValueArray is None
@@ -1315,7 +1511,9 @@ class InstantiateSTATTest(object):
         return result
 
     def test_limit_axes(self, varfont2):
-        instancer.instantiateSTAT(varfont2, {"wght": (400, 500), "wdth": (75, 100)})
+        axisLimits = instancer.AxisLimits({"wght": (400, 500), "wdth": (75, 100)})
+
+        instancer.instantiateSTAT(varfont2, axisLimits)
 
         assert len(varfont2["STAT"].table.AxisValueArray.AxisValue) == 5
         assert self.get_STAT_axis_values(varfont2["STAT"].table) == [
@@ -1341,11 +1539,11 @@ class InstantiateSTATTest(object):
             axisValue.AxisValueRecord.append(rec)
         stat.AxisValueArray.AxisValue.append(axisValue)
 
-        instancer.instantiateSTAT(varfont2, {"wght": (100, 600)})
+        instancer.instantiateSTAT(varfont2, instancer.AxisLimits(wght=(100, 600)))
 
         assert axisValue in varfont2["STAT"].table.AxisValueArray.AxisValue
 
-        instancer.instantiateSTAT(varfont2, {"wdth": (62.5, 87.5)})
+        instancer.instantiateSTAT(varfont2, instancer.AxisLimits(wdth=(62.5, 87.5)))
 
         assert axisValue not in varfont2["STAT"].table.AxisValueArray.AxisValue
 
@@ -1356,7 +1554,7 @@ class InstantiateSTATTest(object):
         stat.AxisValueArray.AxisValue.append(axisValue)
 
         with caplog.at_level(logging.WARNING, logger="fontTools.varLib.instancer"):
-            instancer.instantiateSTAT(varfont2, {"wght": 400})
+            instancer.instantiateSTAT(varfont2, instancer.AxisLimits(wght=400))
 
         assert "Unknown AxisValue table format (5)" in caplog.text
         assert axisValue in varfont2["STAT"].table.AxisValueArray.AxisValue
@@ -1386,10 +1584,6 @@ def test_setMacOverlapFlags():
     assert b.components[0].flags & flagOverlapCompound != 0
 
 
-def _strip_ttLibVersion(string):
-    return re.sub(' ttLibVersion=".*"', "", string)
-
-
 @pytest.fixture
 def varfont2():
     f = ttLib.TTFont(recalcTimestamp=False)
@@ -1412,7 +1606,7 @@ def _dump_ttx(ttFont):
     ttFont2 = ttLib.TTFont(tmp, recalcBBoxes=False, recalcTimestamp=False)
     s = StringIO()
     ttFont2.saveXML(s)
-    return _strip_ttLibVersion(s.getvalue())
+    return stripVariableItemsFromTTX(s.getvalue())
 
 
 def _get_expected_instance_ttx(
@@ -1428,7 +1622,7 @@ def _get_expected_instance_ttx(
         "r",
         encoding="utf-8",
     ) as fp:
-        return _strip_ttLibVersion(fp.read())
+        return stripVariableItemsFromTTX(fp.read())
 
 
 class InstantiateVariableFontTest(object):
@@ -1453,6 +1647,18 @@ class InstantiateVariableFontTest(object):
 
         assert _dump_ttx(instance) == expected
 
+    def test_move_weight_width_axis_default(self, varfont2):
+        # https://github.com/fonttools/fonttools/issues/2885
+        assert varfont2["OS/2"].usWeightClass == 400
+        assert varfont2["OS/2"].usWidthClass == 5
+
+        varfont = instancer.instantiateVariableFont(
+            varfont2, {"wght": (100, 500, 900), "wdth": 87.5}
+        )
+
+        assert varfont["OS/2"].usWeightClass == 500
+        assert varfont["OS/2"].usWidthClass == 4
+
     @pytest.mark.parametrize(
         "overlap, wght",
         [
@@ -1476,10 +1682,56 @@ class InstantiateVariableFontTest(object):
 
         assert _dump_ttx(instance) == expected
 
+    def test_singlepos(self):
+        varfont = ttLib.TTFont(recalcTimestamp=False)
+        varfont.importXML(os.path.join(TESTDATA, "SinglePos.ttx"))
+
+        location = {"wght": 280, "opsz": 18}
+
+        instance = instancer.instantiateVariableFont(
+            varfont,
+            location,
+        )
+
+        expected = _get_expected_instance_ttx("SinglePos", *location.values())
+
+        assert _dump_ttx(instance) == expected
+
+    def test_varComposite(self):
+        input_path = os.path.join(
+            TESTDATA, "..", "..", "..", "ttLib", "data", "varc-6868.ttf"
+        )
+        varfont = ttLib.TTFont(input_path)
+
+        location = {"wght": 600}
+
+        # We currently do not allow this either; although in theory
+        # it should be possible.
+        with pytest.raises(
+            NotImplementedError,
+            match="is not supported.",
+        ):
+            instance = instancer.instantiateVariableFont(
+                varfont,
+                location,
+            )
+
+        location = {"0000": 0.5}
+
+        with pytest.raises(
+            NotImplementedError,
+            match="is not supported.",
+        ):
+            instance = instancer.instantiateVariableFont(
+                varfont,
+                location,
+            )
+
 
 def _conditionSetAsDict(conditionSet, axisOrder):
     result = {}
-    for cond in conditionSet.ConditionTable:
+    conditionSets = conditionSet.ConditionTable if conditionSet is not None else []
+    for cond in conditionSets:
         assert cond.Format == 1
         axisTag = axisOrder[cond.AxisIndex]
         result[axisTag] = (cond.FilterRangeMinValue, cond.FilterRangeMaxValue)
@@ -1525,10 +1777,11 @@ class InstantiateFeatureVariationsTest(object):
             ({"wght": 0}, {}, [({"cntr": (0.75, 1.0)}, {"uni0041": "uni0061"})]),
             (
                 {"wght": -1.0},
-                {},
+                {"uni0061": "uni0041"},
                 [
                     ({"cntr": (0, 0.25)}, {"uni0061": "uni0041"}),
                     ({"cntr": (0.75, 1.0)}, {"uni0041": "uni0061"}),
+                    ({}, {}),
                 ],
             ),
             (
@@ -1538,7 +1791,8 @@ class InstantiateFeatureVariationsTest(object):
                     (
                         {"cntr": (0.75, 1.0)},
                         {"uni0024": "uni0024.nostroke", "uni0041": "uni0061"},
-                    )
+                    ),
+                    ({}, {}),
                 ],
             ),
             (
@@ -1556,7 +1810,66 @@ class InstantiateFeatureVariationsTest(object):
                     (
                         {"wght": (0.20886, 1.0)},
                         {"uni0024": "uni0024.nostroke", "uni0041": "uni0061"},
-                    )
+                    ),
+                    ({}, {}),
+                ],
+            ),
+            (
+                {"cntr": (-0.5, 0, 1.0)},
+                {},
+                [
+                    (
+                        {"wght": (0.20886, 1.0), "cntr": (0.75, 1)},
+                        {"uni0024": "uni0024.nostroke", "uni0041": "uni0061"},
+                    ),
+                    (
+                        {"wght": (-1.0, -0.45654), "cntr": (0, 0.25)},
+                        {"uni0061": "uni0041"},
+                    ),
+                    (
+                        {"cntr": (0.75, 1.0)},
+                        {"uni0041": "uni0061"},
+                    ),
+                    (
+                        {"wght": (0.20886, 1.0)},
+                        {"uni0024": "uni0024.nostroke"},
+                    ),
+                ],
+            ),
+            (
+                {"cntr": (0.8, 0.9, 1.0)},
+                {"uni0041": "uni0061"},
+                [
+                    (
+                        {"wght": (0.20886, 1.0)},
+                        {"uni0024": "uni0024.nostroke", "uni0041": "uni0061"},
+                    ),
+                    (
+                        {},
+                        {"uni0041": "uni0061"},
+                    ),
+                ],
+            ),
+            (
+                {"cntr": (0.7, 0.9, 1.0)},
+                {"uni0041": "uni0061"},
+                [
+                    (
+                        {"cntr": (-0.7499999999999999, 1.0), "wght": (0.20886, 1.0)},
+                        {"uni0024": "uni0024.nostroke", "uni0041": "uni0061"},
+                    ),
+                    (
+                        {"cntr": (-0.7499999999999999, 1.0)},
+                        {"uni0041": "uni0061"},
+                    ),
+                    (
+                        {"wght": (0.20886, 1.0)},
+                        {"uni0024": "uni0024.nostroke"},
+                    ),
+                    (
+                        {},
+                        {},
+                    ),
                 ],
             ),
         ],
@@ -1573,25 +1886,30 @@ class InstantiateFeatureVariationsTest(object):
             ]
         )
 
-        instancer.instantiateFeatureVariations(font, location)
+        limits = instancer.NormalizedAxisLimits(location)
+        instancer.instantiateFeatureVariations(font, limits)
 
         gsub = font["GSUB"].table
         featureVariations = gsub.FeatureVariations
 
         assert featureVariations.FeatureVariationCount == len(expectedRecords)
 
-        axisOrder = [a.axisTag for a in font["fvar"].axes if a.axisTag not in location]
+        axisOrder = [
+            a.axisTag
+            for a in font["fvar"].axes
+            if a.axisTag not in location or isinstance(location[a.axisTag], tuple)
+        ]
         for i, (expectedConditionSet, expectedSubs) in enumerate(expectedRecords):
             rec = featureVariations.FeatureVariationRecord[i]
             conditionSet = _conditionSetAsDict(rec.ConditionSet, axisOrder)
 
-            assert conditionSet == expectedConditionSet
+            assert conditionSet == expectedConditionSet, i
 
             subsRecord = rec.FeatureTableSubstitution.SubstitutionRecord[0]
             lookupIndices = subsRecord.Feature.LookupListIndex
             substitutions = _getSubstitutions(gsub, lookupIndices)
 
-            assert substitutions == expectedSubs
+            assert substitutions == expectedSubs, i
 
         appliedLookupIndices = gsub.FeatureList.FeatureRecord[0].Feature.LookupListIndex
 
@@ -1622,17 +1940,40 @@ class InstantiateFeatureVariationsTest(object):
                 ),
             ]
         )
+        gsub = font["GSUB"].table
+        assert gsub.FeatureVariations
+        assert gsub.Version == 0x00010001
+
+        location = instancer.NormalizedAxisLimits(location)
 
         instancer.instantiateFeatureVariations(font, location)
 
-        gsub = font["GSUB"].table
         assert not hasattr(gsub, "FeatureVariations")
+        assert gsub.Version == 0x00010000
 
         if appliedSubs:
             lookupIndices = gsub.FeatureList.FeatureRecord[0].Feature.LookupListIndex
             assert _getSubstitutions(gsub, lookupIndices) == appliedSubs
         else:
             assert not gsub.FeatureList.FeatureRecord
+
+    def test_null_conditionset(self):
+        # A null ConditionSet offset should be treated like an empty ConditionTable, i.e.
+        # all contexts are matched; see https://github.com/fonttools/fonttools/issues/3211
+        font = makeFeatureVarsFont(
+            [([{"wght": (-1.0, 1.0)}], {"uni0024": "uni0024.nostroke"})]
+        )
+        gsub = font["GSUB"].table
+        gsub.FeatureVariations.FeatureVariationRecord[0].ConditionSet = None
+
+        location = instancer.NormalizedAxisLimits({"wght": 0.5})
+        instancer.instantiateFeatureVariations(font, location)
+
+        assert not hasattr(gsub, "FeatureVariations")
+        assert gsub.Version == 0x00010000
+
+        lookupIndices = gsub.FeatureList.FeatureRecord[0].Feature.LookupListIndex
+        assert _getSubstitutions(gsub, lookupIndices) == {"uni0024": "uni0024.nostroke"}
 
     def test_unsupported_condition_format(self, caplog):
         font = makeFeatureVarsFont(
@@ -1649,7 +1990,9 @@ class InstantiateFeatureVariationsTest(object):
         rec1.ConditionSet.ConditionTable[0].Format = 2
 
         with caplog.at_level(logging.WARNING, logger="fontTools.varLib.instancer"):
-            instancer.instantiateFeatureVariations(font, {"wdth": 0})
+            instancer.instantiateFeatureVariations(
+                font, instancer.NormalizedAxisLimits(wdth=0)
+            )
 
         assert (
             "Condition table 0 of FeatureVariationRecord 0 "
@@ -1679,7 +2022,7 @@ class InstantiateFeatureVariationsTest(object):
 
 class LimitTupleVariationAxisRangesTest:
     def check_limit_single_var_axis_range(self, var, axisTag, axisRange, expected):
-        result = instancer.limitTupleVariationAxisRange(var, axisTag, axisRange)
+        result = instancer.changeTupleVariationAxisLimit(var, axisTag, axisRange)
         print(result)
 
         assert len(result) == len(expected)
@@ -1735,22 +2078,28 @@ class LimitTupleVariationAxisRangesTest:
                 TupleVariation({"wght": (0.0, 0.5, 1.0)}, [100, 100]),
                 "wght",
                 0.6,
-                [TupleVariation({"wght": (0.0, 0.833334, 1.666667)}, [100, 100])],
+                [
+                    TupleVariation({"wght": (0.0, 0.833334, 1.0)}, [100, 100]),
+                    TupleVariation({"wght": (0.833334, 1.0, 1.0)}, [80, 80]),
+                ],
             ),
             (
                 TupleVariation({"wght": (0.0, 0.2, 1.0)}, [100, 100]),
                 "wght",
                 0.4,
                 [
-                    TupleVariation({"wght": (0.0, 0.5, 1.99994)}, [100, 100]),
-                    TupleVariation({"wght": (0.5, 1.0, 1.0)}, [8.33333, 8.33333]),
+                    TupleVariation({"wght": (0.0, 0.5, 1.0)}, [100, 100]),
+                    TupleVariation({"wght": (0.5, 1.0, 1.0)}, [75, 75]),
                 ],
             ),
             (
                 TupleVariation({"wght": (0.0, 0.2, 1.0)}, [100, 100]),
                 "wght",
                 0.5,
-                [TupleVariation({"wght": (0.0, 0.4, 1.99994)}, [100, 100])],
+                [
+                    TupleVariation({"wght": (0.0, 0.4, 1)}, [100, 100]),
+                    TupleVariation({"wght": (0.4, 1, 1)}, [62.5, 62.5]),
+                ],
             ),
             (
                 TupleVariation({"wght": (0.5, 0.5, 1.0)}, [100, 100]),
@@ -1758,10 +2107,23 @@ class LimitTupleVariationAxisRangesTest:
                 0.5,
                 [TupleVariation({"wght": (1.0, 1.0, 1.0)}, [100, 100])],
             ),
+            # test case from https://github.com/fonttools/fonttools/issues/3453
+            (
+                TupleVariation(
+                    {
+                        "wght": (0.0, 1.0, 1.0),
+                        "ital": (0.0, 0.0, 1.0),  # no-op axis gets dropped
+                    },
+                    [100, 100],
+                ),
+                "ital",
+                0.0,
+                [TupleVariation({"wght": (0.0, 1.0, 1.0)}, [100, 100])],
+            ),
         ],
     )
     def test_positive_var(self, var, axisTag, newMax, expected):
-        axisRange = instancer.NormalizedAxisRange(0, newMax)
+        axisRange = instancer.NormalizedAxisTripleAndDistances(0, 0, newMax)
         self.check_limit_single_var_axis_range(var, axisTag, axisRange, expected)
 
     @pytest.mark.parametrize(
@@ -1814,22 +2176,28 @@ class LimitTupleVariationAxisRangesTest:
                 TupleVariation({"wght": (-1.0, -0.5, 0.0)}, [100, 100]),
                 "wght",
                 -0.6,
-                [TupleVariation({"wght": (-1.666667, -0.833334, 0.0)}, [100, 100])],
+                [
+                    TupleVariation({"wght": (-1.0, -0.833334, 0.0)}, [100, 100]),
+                    TupleVariation({"wght": (-1.0, -1.0, -0.833334)}, [80, 80]),
+                ],
             ),
             (
                 TupleVariation({"wght": (-1.0, -0.2, 0.0)}, [100, 100]),
                 "wght",
                 -0.4,
                 [
-                    TupleVariation({"wght": (-2.0, -0.5, -0.0)}, [100, 100]),
-                    TupleVariation({"wght": (-1.0, -1.0, -0.5)}, [8.33333, 8.33333]),
+                    TupleVariation({"wght": (-1.0, -0.5, -0.0)}, [100, 100]),
+                    TupleVariation({"wght": (-1.0, -1.0, -0.5)}, [75, 75]),
                 ],
             ),
             (
                 TupleVariation({"wght": (-1.0, -0.2, 0.0)}, [100, 100]),
                 "wght",
                 -0.5,
-                [TupleVariation({"wght": (-2.0, -0.4, 0.0)}, [100, 100])],
+                [
+                    TupleVariation({"wght": (-1.0, -0.4, 0.0)}, [100, 100]),
+                    TupleVariation({"wght": (-1.0, -1.0, -0.4)}, [62.5, 62.5]),
+                ],
             ),
             (
                 TupleVariation({"wght": (-1.0, -0.5, -0.5)}, [100, 100]),
@@ -1840,30 +2208,30 @@ class LimitTupleVariationAxisRangesTest:
         ],
     )
     def test_negative_var(self, var, axisTag, newMin, expected):
-        axisRange = instancer.NormalizedAxisRange(newMin, 0)
+        axisRange = instancer.NormalizedAxisTripleAndDistances(newMin, 0, 0, 1, 1)
         self.check_limit_single_var_axis_range(var, axisTag, axisRange, expected)
 
 
 @pytest.mark.parametrize(
-    "oldRange, newRange, expected",
+    "oldRange, newLimit, expected",
     [
-        ((1.0, -1.0), (-1.0, 1.0), None),  # invalid oldRange min > max
-        ((0.6, 1.0), (0, 0.5), None),
-        ((-1.0, -0.6), (-0.5, 0), None),
-        ((0.4, 1.0), (0, 0.5), (0.8, 1.0)),
-        ((-1.0, -0.4), (-0.5, 0), (-1.0, -0.8)),
-        ((0.4, 1.0), (0, 0.4), (1.0, 1.0)),
-        ((-1.0, -0.4), (-0.4, 0), (-1.0, -1.0)),
-        ((-0.5, 0.5), (-0.4, 0.4), (-1.0, 1.0)),
-        ((0, 1.0), (-1.0, 0), (0, 0)),  # or None?
-        ((-1.0, 0), (0, 1.0), (0, 0)),  # or None?
+        ((1.0, -1.0), (-1.0, 0, 1.0), None),  # invalid oldRange min > max
+        ((0.6, 1.0), (0, 0, 0.5), None),
+        ((-1.0, -0.6), (-0.5, 0, 0), None),
+        ((0.4, 1.0), (0, 0, 0.5), (0.8, 1.0)),
+        ((-1.0, -0.4), (-0.5, 0, 0), (-1.0, -0.8)),
+        ((0.4, 1.0), (0, 0, 0.4), (1.0, 1.0)),
+        ((-1.0, -0.4), (-0.4, 0, 0), (-1.0, -1.0)),
+        ((-0.5, 0.5), (-0.4, 0, 0.4), (-1.0, 1.0)),
+        ((0, 1.0), (-1.0, 0, 0), (0, 0)),  # or None?
+        ((-1.0, 0), (0, 0, 1.0), (0, 0)),  # or None?
     ],
 )
-def test_limitFeatureVariationConditionRange(oldRange, newRange, expected):
+def test_limitFeatureVariationConditionRange(oldRange, newLimit, expected):
     condition = featureVars.buildConditionTable(0, *oldRange)
 
-    result = instancer._limitFeatureVariationConditionRange(
-        condition, instancer.NormalizedAxisRange(*newRange)
+    result = instancer.featureVars._limitFeatureVariationConditionRange(
+        condition, instancer.NormalizedAxisTripleAndDistances(*newLimit, 1, 1)
     )
 
     assert result == expected
@@ -1874,12 +2242,33 @@ def test_limitFeatureVariationConditionRange(oldRange, newRange, expected):
     [
         (["wght=400", "wdth=100"], {"wght": 400, "wdth": 100}),
         (["wght=400:900"], {"wght": (400, 900)}),
-        (["slnt=11.4"], {"slnt": pytest.approx(11.399994)}),
+        (["wght=400:700:900"], {"wght": (400, 700, 900)}),
+        (["slnt=11.4"], {"slnt": 11.399994}),
         (["ABCD=drop"], {"ABCD": None}),
+        (["wght=:500:"], {"wght": (None, 500, None)}),
+        (["wght=::700"], {"wght": (None, None, 700)}),
+        (["wght=200::"], {"wght": (200, None, None)}),
+        (["wght=200:300:"], {"wght": (200, 300, None)}),
+        (["wght=:300:500"], {"wght": (None, 300, 500)}),
+        (["wght=300::700"], {"wght": (300, None, 700)}),
+        (["wght=300:700"], {"wght": (300, None, 700)}),
+        (["wght=:700"], {"wght": (None, None, 700)}),
+        (["wght=200:"], {"wght": (200, None, None)}),
     ],
 )
 def test_parseLimits(limits, expected):
-    assert instancer.parseLimits(limits) == expected
+    limits = instancer.parseLimits(limits)
+    expected = instancer.AxisLimits(expected)
+
+    assert limits.keys() == expected.keys()
+    for axis, triple in limits.items():
+        expected_triple = expected[axis]
+        if expected_triple is None:
+            assert triple is None
+        else:
+            assert isinstance(triple, instancer.AxisTriple)
+            assert isinstance(expected_triple, instancer.AxisTriple)
+            assert triple == pytest.approx(expected_triple)
 
 
 @pytest.mark.parametrize(
@@ -1890,27 +2279,35 @@ def test_parseLimits_invalid(limits):
         instancer.parseLimits(limits)
 
 
-def test_normalizeAxisLimits_tuple(varfont):
-    normalized = instancer.normalizeAxisLimits(varfont, {"wght": (100, 400)})
-    assert normalized == {"wght": (-1.0, 0)}
+@pytest.mark.parametrize(
+    "limits, expected",
+    [
+        # 300, 500 come from the font having 100,400,900 fvar axis limits.
+        ({"wght": (100, 400)}, {"wght": (-1.0, 0, 0, 300, 500)}),
+        ({"wght": (100, 400, 400)}, {"wght": (-1.0, 0, 0, 300, 500)}),
+        ({"wght": (100, 300, 400)}, {"wght": (-1.0, -0.5, 0, 300, 500)}),
+    ],
+)
+def test_normalizeAxisLimits(varfont, limits, expected):
+    limits = instancer.AxisLimits(limits)
 
+    normalized = limits.normalize(varfont)
 
-def test_normalizeAxisLimits_unsupported_range(varfont):
-    with pytest.raises(NotImplementedError, match="Unsupported range"):
-        instancer.normalizeAxisLimits(varfont, {"wght": (401, 700)})
+    assert normalized == instancer.NormalizedAxisLimits(expected)
 
 
 def test_normalizeAxisLimits_no_avar(varfont):
     del varfont["avar"]
 
-    normalized = instancer.normalizeAxisLimits(varfont, {"wght": (400, 500)})
+    limits = instancer.AxisLimits(wght=(400, 400, 500))
+    normalized = limits.normalize(varfont)
 
-    assert normalized["wght"] == pytest.approx((0, 0.2), 1e-4)
+    assert normalized["wght"] == pytest.approx((0, 0, 0.2, 300, 500), 1e-4)
 
 
 def test_normalizeAxisLimits_missing_from_fvar(varfont):
     with pytest.raises(ValueError, match="not present in fvar"):
-        instancer.normalizeAxisLimits(varfont, {"ZZZZ": 1000})
+        instancer.AxisLimits({"ZZZZ": 1000}).normalize(varfont)
 
 
 def test_sanityCheckVariableTables(varfont):
@@ -1961,3 +2358,73 @@ def test_main_exit_multiple_limits(varfont, tmpdir, capsys):
     captured = capsys.readouterr()
 
     assert "Specified multiple limits for the same axis" in captured.err
+
+
+def test_set_ribbi_bits():
+    varfont = ttLib.TTFont()
+    varfont.importXML(os.path.join(TESTDATA, "STATInstancerTest.ttx"))
+
+    for location in [instance.coordinates for instance in varfont["fvar"].instances]:
+        instance = instancer.instantiateVariableFont(
+            varfont, location, updateFontNames=True
+        )
+        name_id_2 = instance["name"].getDebugName(2)
+        mac_style = instance["head"].macStyle
+        fs_selection = instance["OS/2"].fsSelection & 0b1100001  # Just bits 0, 5, 6
+
+        if location["ital"] == 0:
+            if location["wght"] == 700:
+                assert name_id_2 == "Bold", location
+                assert mac_style == 0b01, location
+                assert fs_selection == 0b0100000, location
+            else:
+                assert name_id_2 == "Regular", location
+                assert mac_style == 0b00, location
+                assert fs_selection == 0b1000000, location
+        else:
+            if location["wght"] == 700:
+                assert name_id_2 == "Bold Italic", location
+                assert mac_style == 0b11, location
+                assert fs_selection == 0b0100001, location
+            else:
+                assert name_id_2 == "Italic", location
+                assert mac_style == 0b10, location
+                assert fs_selection == 0b0000001, location
+
+
+def test_rounds_before_iup():
+    """Regression test for fonttools/fonttools#3634, with TTX based on
+    reproduction process there."""
+
+    varfont = ttLib.TTFont()
+    varfont.importXML(os.path.join(TESTDATA, "3634-VF.ttx"))
+
+    # Instantiate at a new default position, sufficient to cause differences
+    # when unrounded but not when rounded.
+    partial = instancer.instantiateVariableFont(varfont, {"wght": (401, 401, 900)})
+
+    # Save and reload actual result to recalculate bounding box values, etc.
+    bytes_out = BytesIO()
+    partial.save(bytes_out)
+    bytes_out.seek(0)
+    partial = ttLib.TTFont(bytes_out)
+
+    # Load expected result, then save and reload to normalise TTX output.
+    expected = ttLib.TTFont()
+    expected.importXML(os.path.join(TESTDATA, "test_results", "3634-VF-partial.ttx"))
+
+    bytes_out = BytesIO()
+    expected.save(bytes_out)
+    bytes_out.seek(0)
+    expected = ttLib.TTFont(bytes_out)
+
+    # Serialise actual and expected to TTX strings, and compare.
+    string_out = StringIO()
+    partial.saveXML(string_out)
+    partial_ttx = stripVariableItemsFromTTX(string_out.getvalue())
+
+    string_out = StringIO()
+    expected.saveXML(string_out)
+    expected_ttx = stripVariableItemsFromTTX(string_out.getvalue())
+
+    assert partial_ttx == expected_ttx

@@ -30,12 +30,8 @@ class VarLibMergeError(VarLibError):
     def _master_name(self, ix):
         if self.merger is not None:
             ttf = self.merger.ttfs[ix]
-            if (
-                "name" in ttf
-                and ttf["name"].getDebugName(1)
-                and ttf["name"].getDebugName(2)
-            ):
-                return ttf["name"].getDebugName(1) + " " + ttf["name"].getDebugName(2)
+            if "name" in ttf and ttf["name"].getBestFullName():
+                return ttf["name"].getBestFullName()
             elif hasattr(ttf.reader, "file") and hasattr(ttf.reader.file, "name"):
                 return ttf.reader.file.name
         return f"master number {ix}"
@@ -46,7 +42,10 @@ class VarLibMergeError(VarLibError):
             index = [x == self.cause["expected"] for x in self.cause["got"]].index(
                 False
             )
-            return index, self._master_name(index)
+            master_name = self._master_name(index)
+            if "location" in self.cause:
+                master_name = f"{master_name} ({self.cause['location']})"
+            return index, master_name
         return None, None
 
     @property
@@ -54,7 +53,7 @@ class VarLibMergeError(VarLibError):
         if "expected" in self.cause and "got" in self.cause:
             offender_index, offender = self.offender
             got = self.cause["got"][offender_index]
-            return f"Expected to see {self.stack[0]}=={self.cause['expected']}, instead saw {got}\n"
+            return f"Expected to see {self.stack[0]}=={self.cause['expected']!r}, instead saw {got!r}\n"
         return ""
 
     def __str__(self):
@@ -76,11 +75,21 @@ class ShouldBeConstant(VarLibMergeError):
 
     @property
     def details(self):
+        basic_message = super().details
+
         if self.stack[0] != ".FeatureCount" or self.merger is None:
-            return super().details
-        offender_index, offender = self.offender
+            return basic_message
+
+        assert self.stack[0] == ".FeatureCount"
+        offender_index, _ = self.offender
         bad_ttf = self.merger.ttfs[offender_index]
-        good_ttf = self.merger.ttfs[offender_index - 1]
+        good_ttf = next(
+            ttf
+            for ttf in self.merger.ttfs
+            if self.stack[-1] in ttf
+            and ttf[self.stack[-1]].table.FeatureList.FeatureCount
+            == self.cause["expected"]
+        )
 
         good_features = [
             x.FeatureTag
@@ -90,7 +99,7 @@ class ShouldBeConstant(VarLibMergeError):
             x.FeatureTag
             for x in bad_ttf[self.stack[-1]].table.FeatureList.FeatureRecord
         ]
-        return (
+        return basic_message + (
             "\nIncompatible features between masters.\n"
             f"Expected: {', '.join(good_features)}.\n"
             f"Got: {', '.join(bad_features)}.\n"
@@ -102,13 +111,26 @@ class FoundANone(VarLibMergeError):
 
     @property
     def offender(self):
-        cause = self.argv[0]
-        index = [x is None for x in cause["got"]].index(True)
+        index = [x is None for x in self.cause["got"]].index(True)
         return index, self._master_name(index)
 
     @property
     def details(self):
-        cause, stack = self.args[0], self.args[1:]
+        cause, stack = self.cause, self.stack
+        return f"{stack[0]}=={cause['got']}\n"
+
+
+class NotANone(VarLibMergeError):
+    """one of the values in a list was not empty when it should have been"""
+
+    @property
+    def offender(self):
+        index = [x is not None for x in self.cause["got"]].index(True)
+        return index, self._master_name(index)
+
+    @property
+    def details(self):
+        cause, stack = self.cause, self.stack
         return f"{stack[0]}=={cause['got']}\n"
 
 
@@ -135,13 +157,20 @@ class InconsistentExtensions(VarLibMergeError):
 class UnsupportedFormat(VarLibMergeError):
     """an OpenType subtable (%s) had a format I didn't expect"""
 
+    def __init__(self, merger=None, **kwargs):
+        super().__init__(merger, **kwargs)
+        if not self.stack:
+            self.stack = [".Format"]
+
     @property
     def reason(self):
-        cause, stack = self.args[0], self.args[1:]
-        return self.__doc__ % cause["subtable"]
+        s = self.__doc__ % self.cause["subtable"]
+        if "value" in self.cause:
+            s += f" ({self.cause['value']!r})"
+        return s
 
 
-class UnsupportedFormat(UnsupportedFormat):
+class InconsistentFormats(UnsupportedFormat):
     """an OpenType subtable (%s) had inconsistent formats between masters"""
 
 

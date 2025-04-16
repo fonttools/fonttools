@@ -43,6 +43,32 @@ def empty_svg_font():
     return fb.font
 
 
+# 'simple' here means one svg document per glyph. The required 'id' attribute
+# containing the 'glyphXXX' indices can be either on a child of the root <svg>
+# or on the <svg> root itself, so we test with both.
+# see https://github.com/fonttools/fonttools/issues/2548
+
+
+def simple_svg_table_glyph_ids_on_children(empty_svg_font):
+    font = empty_svg_font
+    svg_docs = font["SVG "].docList
+    for i in range(1, 11):
+        svg = new_svg()
+        etree.SubElement(svg, "path", {"id": f"glyph{i}", "d": f"M{i},{i}"})
+        svg_docs.append((etree.tostring(svg).decode(), i, i))
+    return font
+
+
+def simple_svg_table_glyph_ids_on_roots(empty_svg_font):
+    font = empty_svg_font
+    svg_docs = font["SVG "].docList
+    for i in range(1, 11):
+        svg = new_svg(id=f"glyph{i}")
+        etree.SubElement(svg, "path", {"d": f"M{i},{i}"})
+        svg_docs.append((etree.tostring(svg).decode(), i, i))
+    return font
+
+
 def new_svg(**attrs):
     return etree.Element("svg", {"xmlns": NAMESPACES["svg"], **attrs})
 
@@ -52,10 +78,11 @@ def _lines(s):
 
 
 @pytest.mark.parametrize(
-    "gids, retain_gids, expected_xml",
+    "add_svg_table, gids, retain_gids, expected_xml",
     [
         # keep four glyphs in total, don't retain gids, which thus get remapped
         (
+            simple_svg_table_glyph_ids_on_children,
             "2,4-6",
             False,
             _lines(
@@ -75,8 +102,32 @@ def _lines(s):
                 """
             ),
         ),
+        # same as above but with glyph id attribute in the root <svg> element itself
+        # https://github.com/fonttools/fonttools/issues/2548
+        (
+            simple_svg_table_glyph_ids_on_roots,
+            "2,4-6",
+            False,
+            _lines(
+                """\
+                <svgDoc endGlyphID="1" startGlyphID="1">
+                  <![CDATA[<svg xmlns="http://www.w3.org/2000/svg" id="glyph1"><path d="M2,2"/></svg>]]>
+                </svgDoc>
+                <svgDoc endGlyphID="2" startGlyphID="2">
+                  <![CDATA[<svg xmlns="http://www.w3.org/2000/svg" id="glyph2"><path d="M4,4"/></svg>]]>
+                </svgDoc>
+                <svgDoc endGlyphID="3" startGlyphID="3">
+                  <![CDATA[<svg xmlns="http://www.w3.org/2000/svg" id="glyph3"><path d="M5,5"/></svg>]]>
+                </svgDoc>
+                <svgDoc endGlyphID="4" startGlyphID="4">
+                  <![CDATA[<svg xmlns="http://www.w3.org/2000/svg" id="glyph4"><path d="M6,6"/></svg>]]>
+                </svgDoc>
+                """
+            ),
+        ),
         # same four glyphs, but we now retain gids
         (
+            simple_svg_table_glyph_ids_on_children,
             "2,4-6",
             True,
             _lines(
@@ -96,18 +147,35 @@ def _lines(s):
                 """
             ),
         ),
+        # retain gids like above but with glyph id attribute in the root <svg> element itself
+        # https://github.com/fonttools/fonttools/issues/2548
+        (
+            simple_svg_table_glyph_ids_on_roots,
+            "2,4-6",
+            True,
+            _lines(
+                """\
+                <svgDoc endGlyphID="2" startGlyphID="2">
+                  <![CDATA[<svg xmlns="http://www.w3.org/2000/svg" id="glyph2"><path d="M2,2"/></svg>]]>
+                </svgDoc>
+                <svgDoc endGlyphID="4" startGlyphID="4">
+                  <![CDATA[<svg xmlns="http://www.w3.org/2000/svg" id="glyph4"><path d="M4,4"/></svg>]]>
+                </svgDoc>
+                <svgDoc endGlyphID="5" startGlyphID="5">
+                  <![CDATA[<svg xmlns="http://www.w3.org/2000/svg" id="glyph5"><path d="M5,5"/></svg>]]>
+                </svgDoc>
+                <svgDoc endGlyphID="6" startGlyphID="6">
+                  <![CDATA[<svg xmlns="http://www.w3.org/2000/svg" id="glyph6"><path d="M6,6"/></svg>]]>
+                </svgDoc>
+                """
+            ),
+        ),
     ],
 )
 def test_subset_single_glyph_per_svg(
-    empty_svg_font, tmp_path, gids, retain_gids, expected_xml
+    empty_svg_font, add_svg_table, tmp_path, gids, retain_gids, expected_xml
 ):
-    font = empty_svg_font
-
-    svg_docs = font["SVG "].docList
-    for i in range(1, 11):
-        svg = new_svg()
-        etree.SubElement(svg, "path", {"id": f"glyph{i}", "d": f"M{i},{i}"})
-        svg_docs.append((etree.tostring(svg).decode(), i, i))
+    font = add_svg_table(empty_svg_font)
 
     svg_font_path = tmp_path / "TestSVG.ttf"
     font.save(svg_font_path)

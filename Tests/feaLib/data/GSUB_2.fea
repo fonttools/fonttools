@@ -12,3 +12,24 @@ feature f2 {
     sub f_i by f i;
     sub f_f_i by f f i;
 } f2;
+
+feature f3 {
+    sub [f_i f_l f_f_i f_f_l] by f [i l f_i f_l];
+} f3;
+
+feature f4 {
+    sub [f_i f_l f_f_i f_f_l] by [f f f_f f_f] [i l i l];
+} f4;
+
+@class = [f_i f_l];
+lookup l1 {
+   sub @class by f [i l];
+} l1;
+
+feature f5 {
+   sub @class' lookup l1 [i l];
+} f5;
+
+feature f6 {
+    sub [f_i f_i]' j by [f f] [i i];
+} f6;

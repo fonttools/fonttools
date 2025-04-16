@@ -1,24 +1,45 @@
 import logging
+import os
 from collections import defaultdict, namedtuple
 from functools import reduce
 from itertools import chain
 from math import log2
 from typing import DefaultDict, Dict, Iterable, List, Sequence, Tuple
 
+from fontTools.config import OPTIONS
 from fontTools.misc.intTools import bit_count, bit_indices
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables import otBase, otTables
 
-# NOTE: activating this optimization via the environment variable is
-# experimental and may not be supported once an alternative mechanism
-# is in place. See: https://github.com/fonttools/fonttools/issues/2349
+log = logging.getLogger(__name__)
+
+COMPRESSION_LEVEL = OPTIONS[f"{__name__}:COMPRESSION_LEVEL"]
+
+# Kept because ufo2ft depends on it, to be removed once ufo2ft uses the config instead
+# https://github.com/fonttools/fonttools/issues/2592
 GPOS_COMPACT_MODE_ENV_KEY = "FONTTOOLS_GPOS_COMPACT_MODE"
-GPOS_COMPACT_MODE_DEFAULT = "0"
-
-log = logging.getLogger("fontTools.otlLib.optimize.gpos")
+GPOS_COMPACT_MODE_DEFAULT = str(COMPRESSION_LEVEL.default)
 
 
-def compact(font: TTFont, mode: str) -> TTFont:
+def _compression_level_from_env() -> int:
+    env_level = GPOS_COMPACT_MODE_DEFAULT
+    if GPOS_COMPACT_MODE_ENV_KEY in os.environ:
+        import warnings
+
+        warnings.warn(
+            f"'{GPOS_COMPACT_MODE_ENV_KEY}' environment variable is deprecated. "
+            "Please set the 'fontTools.otlLib.optimize.gpos:COMPRESSION_LEVEL' option "
+            "in TTFont.cfg.",
+            DeprecationWarning,
+        )
+
+        env_level = os.environ[GPOS_COMPACT_MODE_ENV_KEY]
+    if len(env_level) == 1 and env_level in "0123456789":
+        return int(env_level)
+    raise ValueError(f"Bad {GPOS_COMPACT_MODE_ENV_KEY}={env_level}")
+
+
+def compact(font: TTFont, level: int) -> TTFont:
     # Ideal plan:
     #  1. Find lookups of Lookup Type 2: Pair Adjustment Positioning Subtable
     #     https://docs.microsoft.com/en-us/typography/opentype/spec/gpos#lookup-type-2-pair-adjustment-positioning-subtable
@@ -32,24 +53,30 @@ def compact(font: TTFont, mode: str) -> TTFont:
     #     are not grouped together first; instead each subtable is treated
     #     independently, so currently this step is:
     #     Split existing subtables into more smaller subtables
-    gpos = font["GPOS"]
+    gpos = font.get("GPOS")
+
+    # If the font does not contain a GPOS table, there is nothing to do.
+    if gpos is None:
+        return font
+
     for lookup in gpos.table.LookupList.Lookup:
         if lookup.LookupType == 2:
-            compact_lookup(font, mode, lookup)
+            compact_lookup(font, level, lookup)
         elif lookup.LookupType == 9 and lookup.SubTable[0].ExtensionLookupType == 2:
-            compact_ext_lookup(font, mode, lookup)
+            compact_ext_lookup(font, level, lookup)
+
     return font
 
 
-def compact_lookup(font: TTFont, mode: str, lookup: otTables.Lookup) -> None:
-    new_subtables = compact_pair_pos(font, mode, lookup.SubTable)
+def compact_lookup(font: TTFont, level: int, lookup: otTables.Lookup) -> None:
+    new_subtables = compact_pair_pos(font, level, lookup.SubTable)
     lookup.SubTable = new_subtables
     lookup.SubTableCount = len(new_subtables)
 
 
-def compact_ext_lookup(font: TTFont, mode: str, lookup: otTables.Lookup) -> None:
+def compact_ext_lookup(font: TTFont, level: int, lookup: otTables.Lookup) -> None:
     new_subtables = compact_pair_pos(
-        font, mode, [ext_subtable.ExtSubTable for ext_subtable in lookup.SubTable]
+        font, level, [ext_subtable.ExtSubTable for ext_subtable in lookup.SubTable]
     )
     new_ext_subtables = []
     for subtable in new_subtables:
@@ -62,7 +89,7 @@ def compact_ext_lookup(font: TTFont, mode: str, lookup: otTables.Lookup) -> None
 
 
 def compact_pair_pos(
-    font: TTFont, mode: str, subtables: Sequence[otTables.PairPos]
+    font: TTFont, level: int, subtables: Sequence[otTables.PairPos]
 ) -> Sequence[otTables.PairPos]:
     new_subtables = []
     for subtable in subtables:
@@ -70,12 +97,12 @@ def compact_pair_pos(
             # Not doing anything to Format 1 (yet?)
             new_subtables.append(subtable)
         elif subtable.Format == 2:
-            new_subtables.extend(compact_class_pairs(font, mode, subtable))
+            new_subtables.extend(compact_class_pairs(font, level, subtable))
     return new_subtables
 
 
 def compact_class_pairs(
-    font: TTFont, mode: str, subtable: otTables.PairPos
+    font: TTFont, level: int, subtable: otTables.PairPos
 ) -> List[otTables.PairPos]:
     from fontTools.otlLib.builder import buildPairPosClassesSubtable
 
@@ -95,17 +122,9 @@ def compact_class_pairs(
                 getattr(class2, "Value1", None),
                 getattr(class2, "Value2", None),
             )
-
-    if len(mode) == 1 and mode in "123456789":
-        grouped_pairs = cluster_pairs_by_class2_coverage_custom_cost(
-            font, all_pairs, int(mode)
-        )
-        for pairs in grouped_pairs:
-            subtables.append(
-                buildPairPosClassesSubtable(pairs, font.getReverseGlyphMap())
-            )
-    else:
-        raise ValueError(f"Bad {GPOS_COMPACT_MODE_ENV_KEY}={mode}")
+    grouped_pairs = cluster_pairs_by_class2_coverage_custom_cost(font, all_pairs, level)
+    for pairs in grouped_pairs:
+        subtables.append(buildPairPosClassesSubtable(pairs, font.getReverseGlyphMap()))
     return subtables
 
 
@@ -121,6 +140,7 @@ Pairs = Dict[
     Tuple[Tuple[str, ...], Tuple[str, ...]],
     Tuple[otBase.ValueRecord, otBase.ValueRecord],
 ]
+
 
 # Adapted from https://github.com/fonttools/fonttools/blob/f64f0b42f2d1163b2d85194e0979def539f5dca3/Lib/fontTools/ttLib/tables/otTables.py#L935-L958
 def _getClassRanges(glyphIDs: Iterable[int]):
@@ -261,7 +281,7 @@ class Cluster:
         )
         merged_range_count = 0
         last = None
-        for (start, end) in ranges:
+        for start, end in ranges:
             if last is not None and start != last + 1:
                 merged_range_count += 1
             last = end

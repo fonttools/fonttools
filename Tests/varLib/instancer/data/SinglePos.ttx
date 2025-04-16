@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="4.31">
+
+  <GlyphOrder>
+    <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
+    <GlyphID id="0" name=".notdef"/>
+    <GlyphID id="1" name="glyph00001"/>
+  </GlyphOrder>
+
+  <head>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="1.0"/>
+    <fontRevision value="1.02"/>
+    <checkSumAdjustment value="0x80d638b3"/>
+    <magicNumber value="0x5f0f3cf5"/>
+    <flags value="00000000 00000011"/>
+    <unitsPerEm value="1000"/>
+    <created value="Tue Feb 22 10:53:52 2022"/>
+    <modified value="Sat Mar 19 18:41:47 2022"/>
+    <xMin value="-80"/>
+    <yMin value="-550"/>
+    <xMax value="13679"/>
+    <yMax value="1461"/>
+    <macStyle value="00000000 00000000"/>
+    <lowestRecPPEM value="6"/>
+    <fontDirectionHint value="2"/>
+    <indexToLocFormat value="0"/>
+    <glyphDataFormat value="0"/>
+  </head>
+
+  <maxp>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="0x10000"/>
+    <numGlyphs value="2"/>
+    <maxPoints value="1008"/>
+    <maxContours value="61"/>
+    <maxCompositePoints value="332"/>
+    <maxCompositeContours value="27"/>
+    <maxZones value="1"/>
+    <maxTwilightPoints value="0"/>
+    <maxStorage value="0"/>
+    <maxFunctionDefs value="0"/>
+    <maxInstructionDefs value="0"/>
+    <maxStackElements value="0"/>
+    <maxSizeOfInstructions value="0"/>
+    <maxComponentElements value="3"/>
+    <maxComponentDepth value="5"/>
+  </maxp>
+
+  <name>
+    <namerecord nameID="266" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Optical Size
+    </namerecord>
+    <namerecord nameID="267" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Weight
+    </namerecord>
+  </name>
+
+  <GDEF>
+    <Version value="0x00010003"/>
+    <VarStore Format="1">
+      <Format value="1"/>
+      <VarRegionList>
+        <!-- RegionAxisCount=2 -->
+        <!-- RegionCount=3 -->
+        <Region index="0">
+          <VarRegionAxis index="0">
+            <StartCoord value="-1.0"/>
+            <PeakCoord value="-1.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="1">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="2">
+          <VarRegionAxis index="0">
+            <StartCoord value="-1.0"/>
+            <PeakCoord value="-1.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+        </Region>
+      </VarRegionList>
+      <!-- VarDataCount=3 -->
+      <VarData index="0">
+        <!-- ItemCount=27 -->
+        <NumShorts value="0"/>
+        <!-- VarRegionCount=1 -->
+        <VarRegionIndex index="0" value="1"/>
+        <Item index="0" value="[-126]"/>
+        <Item index="1" value="[-67]"/>
+        <Item index="2" value="[-51]"/>
+        <Item index="3" value="[-50]"/>
+        <Item index="4" value="[-37]"/>
+        <Item index="5" value="[-36]"/>
+        <Item index="6" value="[-27]"/>
+        <Item index="7" value="[-24]"/>
+        <Item index="8" value="[-23]"/>
+        <Item index="9" value="[-22]"/>
+        <Item index="10" value="[-21]"/>
+        <Item index="11" value="[-19]"/>
+        <Item index="12" value="[-18]"/>
+        <Item index="13" value="[-17]"/>
+        <Item index="14" value="[-16]"/>
+        <Item index="15" value="[-10]"/>
+        <Item index="16" value="[-6]"/>
+        <Item index="17" value="[-5]"/>
+        <Item index="18" value="[-4]"/>
+        <Item index="19" value="[-2]"/>
+        <Item index="20" value="[-1]"/>
+        <Item index="21" value="[4]"/>
+        <Item index="22" value="[6]"/>
+        <Item index="23" value="[7]"/>
+        <Item index="24" value="[21]"/>
+        <Item index="25" value="[22]"/>
+        <Item index="26" value="[40]"/>
+      </VarData>
+      <VarData index="1">
+        <!-- ItemCount=19 -->
+        <NumShorts value="0"/>
+        <!-- VarRegionCount=3 -->
+        <VarRegionIndex index="0" value="0"/>
+        <VarRegionIndex index="1" value="1"/>
+        <VarRegionIndex index="2" value="2"/>
+        <Item index="0" value="[-70, -20, 20]"/>
+        <Item index="1" value="[-60, -50, 20]"/>
+        <Item index="2" value="[-60, -37, 20]"/>
+        <Item index="3" value="[-60, -36, 20]"/>
+        <Item index="4" value="[-60, -27, 20]"/>
+        <Item index="5" value="[-60, -24, 20]"/>
+        <Item index="6" value="[-60, -17, 20]"/>
+        <Item index="7" value="[-60, -2, 20]"/>
+        <Item index="8" value="[-60, -1, 20]"/>
+        <Item index="9" value="[-51, -51, 51]"/>
+        <Item index="10" value="[-51, -22, 9]"/>
+        <Item index="11" value="[-38, -24, 24]"/>
+        <Item index="12" value="[-38, -23, 23]"/>
+        <Item index="13" value="[-30, -22, 22]"/>
+        <Item index="14" value="[-30, -21, 21]"/>
+        <Item index="15" value="[-5, -5, 5]"/>
+        <Item index="16" value="[1, -6, -1]"/>
+        <Item index="17" value="[43, 25, -18]"/>
+        <Item index="18" value="[50, 22, -10]"/>
+      </VarData>
+      <VarData index="2">
+        <!-- ItemCount=3 -->
+        <NumShorts value="0"/>
+        <!-- VarRegionCount=3 -->
+        <VarRegionIndex index="0" value="0"/>
+        <VarRegionIndex index="1" value="1"/>
+        <VarRegionIndex index="2" value="2"/>
+        <Item index="0" value="[0, 6, -6]"/>
+        <Item index="1" value="[7, 0, -7]"/>
+        <Item index="2" value="[20, 8, 0]"/>
+      </VarData>
+    </VarStore>
+  </GDEF>
+
+  <GPOS>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=0 -->
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=0 -->
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=2 -->
+      <Lookup index="0">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SinglePos index="0" Format="1">
+          <Coverage>
+            <Glyph value="glyph00001"/>
+          </Coverage>
+          <ValueFormat value="1"/>
+          <Value XPlacement="-80"/>
+        </SinglePos>
+      </Lookup>
+      <Lookup index="1">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SinglePos index="0" Format="1">
+          <Coverage>
+            <Glyph value="glyph00001"/>
+          </Coverage>
+          <ValueFormat value="2"/>
+          <Value YPlacement="-260"/>
+        </SinglePos>
+      </Lookup>
+    </LookupList>
+  </GPOS>
+
+  <avar>
+    <version major="1" minor="0"/>
+    <segment axis="opsz">
+      <mapping from="-1.0" to="-1.0"/>
+      <mapping from="-0.01" to="-0.9"/>
+      <mapping from="0.0" to="0.0"/>
+      <mapping from="1.0" to="1.0"/>
+    </segment>
+    <segment axis="wght">
+      <mapping from="-1.0" to="-1.0"/>
+      <mapping from="0.0" to="0.0"/>
+      <mapping from="0.3333" to="0.4943"/>
+      <mapping from="1.0" to="1.0"/>
+    </segment>
+  </avar>
+
+  <fvar>
+    <Axis>
+      <AxisTag>opsz</AxisTag>
+      <Flags>0x0</Flags>
+      <MinValue>17.0</MinValue>
+      <DefaultValue>18.0</DefaultValue>
+      <MaxValue>18.0</MaxValue>
+      <AxisNameID>256</AxisNameID>
+    </Axis>
+    <Axis>
+      <AxisTag>wght</AxisTag>
+      <Flags>0x0</Flags>
+      <MinValue>400.0</MinValue>
+      <DefaultValue>400.0</DefaultValue>
+      <MaxValue>700.0</MaxValue>
+      <AxisNameID>257</AxisNameID>
+    </Axis>
+  </fvar>
+
+</ttFont>

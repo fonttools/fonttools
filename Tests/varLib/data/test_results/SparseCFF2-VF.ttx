@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="OTTO" ttLibVersion="4.42">
+
+  <GlyphOrder>
+    <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
+    <GlyphID id="0" name=".notdef"/>
+    <GlyphID id="1" name="a"/>
+    <GlyphID id="2" name="e"/>
+  </GlyphOrder>
+
+  <CFF2>
+    <major value="2"/>
+    <minor value="0"/>
+    <CFFFont name="CFF2Font">
+      <FontMatrix value="0.001 0 0 0.001 0 0"/>
+      <FDArray>
+        <FontDict index="0">
+          <Private>
+            <BlueScale value="0.039625"/>
+            <BlueShift value="7"/>
+            <BlueFuzz value="1"/>
+            <LanguageGroup value="0"/>
+            <ExpansionFactor value="0.06"/>
+          </Private>
+        </FontDict>
+      </FDArray>
+      <CharStrings>
+        <CharString name=".notdef">
+          50 -250 -100 1 blend
+          rmoveto
+          400 1000 -400 100 100 -100 3 blend
+          hlineto
+          50 -950 rmoveto
+          900 300 -900 vlineto
+        </CharString>
+        <CharString name="a">
+          468 -1 rmoveto
+          -21 435 -233 70 -205 -76 27 -91 -56 1 blend
+          172 60 155 -40 -59 2 2 blend
+          3 -360 56 1 blend
+          rlineto
+          12 266 59 -2 2 blend
+          rmoveto
+          -352 -23 3 -218 139 -34 221 83 -6 63 -222 -60 -75 52 15 40 13 37 -21 5 blend
+          2 46 294 35 -78 -30 2 blend
+          rlineto
+        </CharString>
+        <CharString name="e">
+          1 vsindex
+          127 228 -1 70 -25 1 2 blend
+          rmoveto
+          449 -2 1 -45 -2 -2 2 blend
+          -5 79 -255 208 -276 -252 148 -279 338 63 -17 84 -280 -54 -82 188 170 153 163 -124 -355 6 27 0 0 -27 0 36 0 -29 0 -34 0 31 0 -1 0 2 0 -45 -2 13 28 100 37 0 13 0 -2 55 -40 -54 -32 -86 -30 -57 -85 -60 34 57 84 146 -5 0 21 blend
+          rlineto
+        </CharString>
+      </CharStrings>
+      <VarStore Format="1">
+        <Format value="1"/>
+        <VarRegionList>
+          <!-- RegionAxisCount=1 -->
+          <!-- RegionCount=3 -->
+          <Region index="0">
+            <VarRegionAxis index="0">
+              <StartCoord value="0.0"/>
+              <PeakCoord value="1.0"/>
+              <EndCoord value="1.0"/>
+            </VarRegionAxis>
+          </Region>
+          <Region index="1">
+            <VarRegionAxis index="0">
+              <StartCoord value="0.0"/>
+              <PeakCoord value="0.36365"/>
+              <EndCoord value="1.0"/>
+            </VarRegionAxis>
+          </Region>
+          <Region index="2">
+            <VarRegionAxis index="0">
+              <StartCoord value="0.36365"/>
+              <PeakCoord value="1.0"/>
+              <EndCoord value="1.0"/>
+            </VarRegionAxis>
+          </Region>
+        </VarRegionList>
+        <!-- VarDataCount=2 -->
+        <VarData index="0">
+          <!-- ItemCount=0 -->
+          <NumShorts value="0"/>
+          <!-- VarRegionCount=1 -->
+          <VarRegionIndex index="0" value="0"/>
+        </VarData>
+        <VarData index="1">
+          <!-- ItemCount=0 -->
+          <NumShorts value="0"/>
+          <!-- VarRegionCount=2 -->
+          <VarRegionIndex index="0" value="1"/>
+          <VarRegionIndex index="1" value="2"/>
+        </VarData>
+      </VarStore>
+    </CFFFont>
+
+    <GlobalSubrs>
+      <!-- The 'index' attribute is only for humans; it is ignored when parsed. -->
+    </GlobalSubrs>
+  </CFF2>
+
+  <fvar>
+
+    <!-- Weight -->
+    <Axis>
+      <AxisTag>wght</AxisTag>
+      <Flags>0x0</Flags>
+      <MinValue>350.0</MinValue>
+      <DefaultValue>350.0</DefaultValue>
+      <MaxValue>625.0</MaxValue>
+      <AxisNameID>256</AxisNameID>
+    </Axis>
+  </fvar>
+
+  <hmtx>
+    <mtx name=".notdef" width="500" lsb="50"/>
+    <mtx name="a" width="600" lsb="9"/>
+    <mtx name="e" width="600" lsb="40"/>
+  </hmtx>
+
+  <HVAR>
+    <Version value="0x00010000"/>
+    <VarStore Format="1">
+      <Format value="1"/>
+      <VarRegionList>
+        <!-- RegionAxisCount=1 -->
+        <!-- RegionCount=1 -->
+        <Region index="0">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+        </Region>
+      </VarRegionList>
+      <!-- VarDataCount=1 -->
+      <VarData index="0">
+        <!-- ItemCount=2 -->
+        <NumShorts value="1"/>
+        <!-- VarRegionCount=1 -->
+        <VarRegionIndex index="0" value="0"/>
+        <Item index="0" value="[0]"/>
+        <Item index="1" value="[300]"/>
+      </VarData>
+    </VarStore>
+    <AdvWidthMap>
+      <Map glyph=".notdef" outer="0" inner="1"/>
+      <Map glyph="a" outer="0" inner="0"/>
+      <Map glyph="e" outer="0" inner="0"/>
+    </AdvWidthMap>
+  </HVAR>
+
+</ttFont>

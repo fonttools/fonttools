@@ -1,14 +1,10 @@
 """Variation fonts interpolation models."""
 
 __all__ = [
-    "nonNone",
-    "allNone",
-    "allEqual",
-    "allEqualTo",
-    "subList",
     "normalizeValue",
     "normalizeLocation",
     "supportScalar",
+    "piecewiseLinearMap",
     "VariationModel",
 ]
 
@@ -48,8 +44,9 @@ def subList(truth, lst):
     return [l for l, t in zip(lst, truth) if t]
 
 
-def normalizeValue(v, triple):
+def normalizeValue(v, triple, extrapolate=False):
     """Normalizes value based on a min/default/max triple.
+
     >>> normalizeValue(400, (100, 400, 900))
     0.0
     >>> normalizeValue(100, (100, 400, 900))
@@ -63,18 +60,24 @@ def normalizeValue(v, triple):
             f"Invalid axis values, must be minimum, default, maximum: "
             f"{lower:3.3f}, {default:3.3f}, {upper:3.3f}"
         )
-    v = max(min(v, upper), lower)
-    if v == default:
-        v = 0.0
-    elif v < default:
-        v = (v - default) / (default - lower)
+    if not extrapolate:
+        v = max(min(v, upper), lower)
+
+    if v == default or lower == upper:
+        return 0.0
+
+    if (v < default and lower != default) or (v > default and upper == default):
+        return (v - default) / (default - lower)
     else:
-        v = (v - default) / (upper - default)
-    return v
+        assert (v > default and upper != default) or (
+            v < default and lower == default
+        ), f"Ooops... v={v}, triple=({lower}, {default}, {upper})"
+        return (v - default) / (upper - default)
 
 
-def normalizeLocation(location, axes):
+def normalizeLocation(location, axes, extrapolate=False, *, validate=False):
     """Normalizes location based on axis min/default/max values from axes.
+
     >>> axes = {"wght": (100, 400, 900)}
     >>> normalizeLocation({"wght": 400}, axes)
     {'wght': 0.0}
@@ -111,35 +114,53 @@ def normalizeLocation(location, axes):
     >>> normalizeLocation({"wght": 1001}, axes)
     {'wght': 0.0}
     """
+    if validate:
+        assert set(location.keys()) <= set(axes.keys()), set(location.keys()) - set(
+            axes.keys()
+        )
     out = {}
     for tag, triple in axes.items():
         v = location.get(tag, triple[1])
-        out[tag] = normalizeValue(v, triple)
+        out[tag] = normalizeValue(v, triple, extrapolate=extrapolate)
     return out
 
 
-def supportScalar(location, support, ot=True):
+def supportScalar(location, support, ot=True, extrapolate=False, axisRanges=None):
     """Returns the scalar multiplier at location, for a master
     with support.  If ot is True, then a peak value of zero
     for support of an axis means "axis does not participate".  That
     is how OpenType Variation Font technology works.
-    >>> supportScalar({}, {})
-    1.0
-    >>> supportScalar({'wght':.2}, {})
-    1.0
-    >>> supportScalar({'wght':.2}, {'wght':(0,2,3)})
-    0.1
-    >>> supportScalar({'wght':2.5}, {'wght':(0,2,4)})
-    0.75
-    >>> supportScalar({'wght':2.5, 'wdth':0}, {'wght':(0,2,4), 'wdth':(-1,0,+1)})
-    0.75
-    >>> supportScalar({'wght':2.5, 'wdth':.5}, {'wght':(0,2,4), 'wdth':(-1,0,+1)}, ot=False)
-    0.375
-    >>> supportScalar({'wght':2.5, 'wdth':0}, {'wght':(0,2,4), 'wdth':(-1,0,+1)})
-    0.75
-    >>> supportScalar({'wght':2.5, 'wdth':.5}, {'wght':(0,2,4), 'wdth':(-1,0,+1)})
-    0.75
+
+    If extrapolate is True, axisRanges must be a dict that maps axis
+    names to (axisMin, axisMax) tuples.
+
+      >>> supportScalar({}, {})
+      1.0
+      >>> supportScalar({'wght':.2}, {})
+      1.0
+      >>> supportScalar({'wght':.2}, {'wght':(0,2,3)})
+      0.1
+      >>> supportScalar({'wght':2.5}, {'wght':(0,2,4)})
+      0.75
+      >>> supportScalar({'wght':2.5, 'wdth':0}, {'wght':(0,2,4), 'wdth':(-1,0,+1)})
+      0.75
+      >>> supportScalar({'wght':2.5, 'wdth':.5}, {'wght':(0,2,4), 'wdth':(-1,0,+1)}, ot=False)
+      0.375
+      >>> supportScalar({'wght':2.5, 'wdth':0}, {'wght':(0,2,4), 'wdth':(-1,0,+1)})
+      0.75
+      >>> supportScalar({'wght':2.5, 'wdth':.5}, {'wght':(0,2,4), 'wdth':(-1,0,+1)})
+      0.75
+      >>> supportScalar({'wght':3}, {'wght':(0,1,2)}, extrapolate=True, axisRanges={'wght':(0, 2)})
+      -1.0
+      >>> supportScalar({'wght':-1}, {'wght':(0,1,2)}, extrapolate=True, axisRanges={'wght':(0, 2)})
+      -1.0
+      >>> supportScalar({'wght':3}, {'wght':(0,2,2)}, extrapolate=True, axisRanges={'wght':(0, 2)})
+      1.5
+      >>> supportScalar({'wght':-1}, {'wght':(0,2,2)}, extrapolate=True, axisRanges={'wght':(0, 2)})
+      -0.5
     """
+    if extrapolate and axisRanges is None:
+        raise TypeError("axisRanges must be passed when extrapolate is True")
     scalar = 1.0
     for axis, (lower, peak, upper) in support.items():
         if ot:
@@ -156,9 +177,28 @@ def supportScalar(location, support, ot=True):
             v = location[axis]
         if v == peak:
             continue
+
+        if extrapolate:
+            axisMin, axisMax = axisRanges[axis]
+            if v < axisMin and lower <= axisMin:
+                if peak <= axisMin and peak < upper:
+                    scalar *= (v - upper) / (peak - upper)
+                    continue
+                elif axisMin < peak:
+                    scalar *= (v - lower) / (peak - lower)
+                    continue
+            elif axisMax < v and axisMax <= upper:
+                if axisMax <= peak and lower < peak:
+                    scalar *= (v - lower) / (peak - lower)
+                    continue
+                elif peak < axisMax:
+                    scalar *= (v - upper) / (peak - upper)
+                    continue
+
         if v <= lower or upper <= v:
             scalar = 0.0
             break
+
         if v < peak:
             scalar *= (v - lower) / (peak - lower)
         else:  # v > peak
@@ -167,12 +207,16 @@ def supportScalar(location, support, ot=True):
 
 
 class VariationModel(object):
+    """Locations must have the base master at the origin (ie. 0).
 
-    """
-  Locations must be in normalized space.  Ie. base master
-  is at origin (0)::
+    If axis-ranges are not provided, values are assumed to be normalized to
+    the range [-1, 1].
+
+    If the extrapolate argument is set to True, then values are extrapolated
+    outside the axis range.
 
       >>> from pprint import pprint
+      >>> axisRanges = {'wght': (-180, +180), 'wdth': (-1, +1)}
       >>> locations = [ \
       {'wght':100}, \
       {'wght':-100}, \
@@ -184,7 +228,7 @@ class VariationModel(object):
       {'wght':+180,'wdth':.3}, \
       {'wght':+180}, \
       ]
-      >>> model = VariationModel(locations, axisOrder=['wght'])
+      >>> model = VariationModel(locations, axisOrder=['wght'], axisRanges=axisRanges)
       >>> pprint(model.locations)
       [{},
        {'wght': -100},
@@ -210,14 +254,24 @@ class VariationModel(object):
         5: 0.6666666666666667,
         6: 0.4444444444444445,
         7: 0.6666666666666667}]
-	"""
+    """
 
-    def __init__(self, locations, axisOrder=None):
+    def __init__(
+        self, locations, axisOrder=None, extrapolate=False, *, axisRanges=None
+    ):
         if len(set(tuple(sorted(l.items())) for l in locations)) != len(locations):
             raise VariationModelError("Locations must be unique.")
 
         self.origLocations = locations
         self.axisOrder = axisOrder if axisOrder is not None else []
+        self.extrapolate = extrapolate
+        if axisRanges is None:
+            if extrapolate:
+                axisRanges = self.computeAxisRanges(locations)
+            else:
+                allAxes = {axis for loc in locations for axis in loc.keys()}
+                axisRanges = {axis: (-1, 1) for axis in allAxes}
+        self.axisRanges = axisRanges
 
         locations = [{k: v for k, v in loc.items() if v != 0.0} for loc in locations]
         keyFunc = self.getMasterLocationsSortKeyFunc(
@@ -233,6 +287,12 @@ class VariationModel(object):
         self._subModels = {}
 
     def getSubModel(self, items):
+        """Return a sub-model and the items that are not None.
+
+        The sub-model is necessary for working with the subset
+        of items when some are None.
+
+        The sub-model is cached."""
         if None not in items:
             return self, items
         key = tuple(v is not None for v in items)
@@ -241,6 +301,17 @@ class VariationModel(object):
             subModel = VariationModel(subList(key, self.origLocations), self.axisOrder)
             self._subModels[key] = subModel
         return subModel, subList(key, items)
+
+    @staticmethod
+    def computeAxisRanges(locations):
+        axisRanges = {}
+        allAxes = {axis for loc in locations for axis in loc.keys()}
+        for loc in locations:
+            for axis in allAxes:
+                value = loc.get(axis, 0)
+                axisMin, axisMax = axisRanges.get(axis, (value, value))
+                axisRanges[axis] = min(value, axisMin), max(value, axisMax)
+        return axisRanges
 
     @staticmethod
     def getMasterLocationsSortKeyFunc(locations, axisOrder=[]):
@@ -315,13 +386,13 @@ class VariationModel(object):
             locAxes = set(region.keys())
             # Walk over previous masters now
             for prev_region in regions[:i]:
-                # Master with extra axes do not participte
-                if not set(prev_region.keys()).issubset(locAxes):
+                # Master with different axes do not participte
+                if set(prev_region.keys()) != locAxes:
                     continue
                 # If it's NOT in the current box, it does not participate
                 relevant = True
                 for axis, (lower, peak, upper) in region.items():
-                    if axis not in prev_region or not (
+                    if not (
                         prev_region[axis][1] == peak
                         or lower < prev_region[axis][1] < upper
                     ):
@@ -366,23 +437,16 @@ class VariationModel(object):
 
     def _locationsToRegions(self):
         locations = self.locations
-        # Compute min/max across each axis, use it as total range.
-        # TODO Take this as input from outside?
-        minV = {}
-        maxV = {}
-        for l in locations:
-            for k, v in l.items():
-                minV[k] = min(v, minV.get(k, v))
-                maxV[k] = max(v, maxV.get(k, v))
+        axisRanges = self.axisRanges
 
         regions = []
         for loc in locations:
             region = {}
             for axis, locV in loc.items():
                 if locV > 0:
-                    region[axis] = (0, locV, maxV[axis])
+                    region[axis] = (0, locV, axisRanges[axis][1])
                 else:
-                    region[axis] = (minV[axis], locV, 0)
+                    region[axis] = (axisRanges[axis][0], locV, 0)
             regions.append(region)
         return regions
 
@@ -398,7 +462,10 @@ class VariationModel(object):
             self.deltaWeights.append(deltaWeight)
 
     def getDeltas(self, masterValues, *, round=noRound):
-        assert len(masterValues) == len(self.deltaWeights)
+        assert len(masterValues) == len(self.deltaWeights), (
+            len(masterValues),
+            len(self.deltaWeights),
+        )
         mapping = self.reverseMapping
         out = []
         for i, weights in enumerate(self.deltaWeights):
@@ -416,31 +483,76 @@ class VariationModel(object):
         return model.getDeltas(items, round=round), model.supports
 
     def getScalars(self, loc):
-        return [supportScalar(loc, support) for support in self.supports]
+        """Return scalars for each delta, for the given location.
+        If interpolating many master-values at the same location,
+        this function allows speed up by fetching the scalars once
+        and using them with interpolateFromMastersAndScalars()."""
+        return [
+            supportScalar(
+                loc, support, extrapolate=self.extrapolate, axisRanges=self.axisRanges
+            )
+            for support in self.supports
+        ]
+
+    def getMasterScalars(self, targetLocation):
+        """Return multipliers for each master, for the given location.
+        If interpolating many master-values at the same location,
+        this function allows speed up by fetching the scalars once
+        and using them with interpolateFromValuesAndScalars().
+
+        Note that the scalars used in interpolateFromMastersAndScalars(),
+        are *not* the same as the ones returned here. They are the result
+        of getScalars()."""
+        out = self.getScalars(targetLocation)
+        for i, weights in reversed(list(enumerate(self.deltaWeights))):
+            for j, weight in weights.items():
+                out[j] -= out[i] * weight
+
+        out = [out[self.mapping[i]] for i in range(len(out))]
+        return out
 
     @staticmethod
-    def interpolateFromDeltasAndScalars(deltas, scalars):
+    def interpolateFromValuesAndScalars(values, scalars):
+        """Interpolate from values and scalars coefficients.
+
+        If the values are master-values, then the scalars should be
+        fetched from getMasterScalars().
+
+        If the values are deltas, then the scalars should be fetched
+        from getScalars(); in which case this is the same as
+        interpolateFromDeltasAndScalars().
+        """
         v = None
-        assert len(deltas) == len(scalars)
-        for delta, scalar in zip(deltas, scalars):
+        assert len(values) == len(scalars)
+        for value, scalar in zip(values, scalars):
             if not scalar:
                 continue
-            contribution = delta * scalar
+            contribution = value * scalar
             if v is None:
                 v = contribution
             else:
                 v += contribution
         return v
 
+    @staticmethod
+    def interpolateFromDeltasAndScalars(deltas, scalars):
+        """Interpolate from deltas and scalars fetched from getScalars()."""
+        return VariationModel.interpolateFromValuesAndScalars(deltas, scalars)
+
     def interpolateFromDeltas(self, loc, deltas):
+        """Interpolate from deltas, at location loc."""
         scalars = self.getScalars(loc)
         return self.interpolateFromDeltasAndScalars(deltas, scalars)
 
     def interpolateFromMasters(self, loc, masterValues, *, round=noRound):
-        deltas = self.getDeltas(masterValues, round=round)
-        return self.interpolateFromDeltas(loc, deltas)
+        """Interpolate from master-values, at location loc."""
+        scalars = self.getMasterScalars(loc)
+        return self.interpolateFromValuesAndScalars(masterValues, scalars)
 
     def interpolateFromMastersAndScalars(self, masterValues, scalars, *, round=noRound):
+        """Interpolate from master-values, and scalars fetched from
+        getScalars(), which is useful when you want to interpolate
+        multiple master-values with the same location."""
         deltas = self.getDeltas(masterValues, round=round)
         return self.interpolateFromDeltasAndScalars(deltas, scalars)
 

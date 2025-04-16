@@ -1,0 +1,206 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<designspace format="5.0">
+  <axes elidedfallbackname="Regular">
+    <axis tag="SRIF" name="serif" values="0 1" default="0">
+      <labels>
+        <label uservalue="0" name="Sans"/>
+        <label uservalue="1" name="Serif"/>
+      </labels>
+    </axis>
+    <axis tag="wght" name="weight" minimum="300" maximum="700" default="300">
+      <map input="300" output="0"/>
+      <map input="500" output="500"/>
+      <map input="700" output="1000"/>
+      <labels>
+        <label uservalue="300" userminimum="300" usermaximum="400" name="Light"/>
+        <label uservalue="500" userminimum="400" usermaximum="600" name="Medium"/>
+        <label uservalue="700" userminimum="600" usermaximum="700" name="Bold"/>
+      </labels>
+    </axis>
+    <axis tag="wdth" name="width" minimum="50" maximum="200" default="50">
+      <map input="50" output="0"/>
+      <map input="100" output="500"/>
+      <map input="200" output="1000"/>
+      <labels>
+        <label uservalue="50" userminimum="50" usermaximum="75" name="Condensed"/>
+        <label uservalue="100" userminimum="75" usermaximum="125" name="Normal" elidable="true"/>
+        <label uservalue="200" userminimum="125" usermaximum="200" name="Extended"/>
+      </labels>
+    </axis>
+  </axes>
+  <labels>
+    <label name="S1">
+      <location>
+        <dimension name="width" uservalue="158.9044"/>
+        <dimension name="weight" uservalue="610.2436"/>
+      </location>
+    </label>
+    <label name="S2">
+      <location>
+        <dimension name="width" uservalue="159.1956"/>
+        <dimension name="weight" uservalue="642.2196"/>
+      </location>
+    </label>
+  </labels>
+  <rules>
+    <rule name="fold_I_serifs">
+      <conditionset>
+        <condition name="width" minimum="0" maximum="328"/>
+        <condition name="serif" minimum="0" maximum="0"/>
+      </conditionset>
+      <sub name="I" with="I.narrow"/>
+    </rule>
+    <rule name="fold_S_terminals">
+      <conditionset>
+        <condition name="width" minimum="0" maximum="1000"/>
+        <condition name="weight" minimum="0" maximum="500"/>
+        <condition name="serif" minimum="0" maximum="0.5"/>
+      </conditionset>
+      <sub name="S" with="S.closed"/>
+    </rule>
+  </rules>
+  <sources>
+    <source filename="MutatorSansLightCondensed.ufo" name="master.MutatorMathTest.LightCondensed.0" familyname="MutatorMathTest" stylename="LightCondensed">
+      <location>
+        <dimension name="width" xvalue="0"/>
+        <dimension name="weight" xvalue="0"/>
+      </location>
+    </source>
+    <source filename="MutatorSansBoldCondensed.ufo" name="master.MutatorMathTest.BoldCondensed.1" familyname="MutatorMathTest" stylename="BoldCondensed">
+      <location>
+        <dimension name="width" xvalue="0"/>
+        <dimension name="weight" xvalue="1000"/>
+      </location>
+    </source>
+    <source filename="MutatorSansLightWide.ufo" name="master.MutatorMathTest.LightWide.2" familyname="MutatorMathTest" stylename="LightWide">
+      <location>
+        <dimension name="width" xvalue="1000"/>
+        <dimension name="weight" xvalue="0"/>
+      </location>
+    </source>
+    <source filename="MutatorSansBoldWide.ufo" name="master.MutatorMathTest.BoldWide.3" familyname="MutatorMathTest" stylename="BoldWide">
+      <location>
+        <dimension name="width" xvalue="1000"/>
+        <dimension name="weight" xvalue="1000"/>
+      </location>
+    </source>
+    <source filename="MutatorSansLightCondensed.ufo" name="support.crossbar" layer="support.crossbar">
+      <location>
+        <dimension name="width" xvalue="0"/>
+        <dimension name="weight" xvalue="700"/>
+      </location>
+    </source>
+    <source filename="MutatorSansLightCondensed.ufo" name="support.S.wide" layer="support.S.wide">
+      <location>
+        <dimension name="width" xvalue="1000"/>
+        <dimension name="weight" xvalue="700"/>
+      </location>
+    </source>
+    <source filename="MutatorSansLightCondensed.ufo" name="support.S.middle" layer="support.S.middle">
+      <location>
+        <dimension name="width" xvalue="569.078000"/>
+        <dimension name="weight" xvalue="700"/>
+      </location>
+    </source>
+    <source filename="MutatorSerifLightCondensed.ufo" familyname="MutatorMathTest" stylename="SerifLightCondensed">
+      <location>
+        <dimension name="width" xvalue="0"/>
+        <dimension name="weight" xvalue="0"/>
+        <dimension name="serif" xvalue="1"/>
+      </location>
+    </source>
+    <source filename="MutatorSerifLightWide.ufo" familyname="MutatorMathTest" stylename="SerifLightWide">
+      <location>
+        <dimension name="width" xvalue="1000"/>
+        <dimension name="weight" xvalue="0"/>
+        <dimension name="serif" xvalue="1"/>
+      </location>
+    </source>
+  </sources>
+  <variable-fonts>
+    <variable-font name="MutatorSansVariable_Weight_Width">
+      <axis-subsets>
+        <axis-subset name="weight"/>
+        <axis-subset name="width"/>
+      </axis-subsets>
+    </variable-font>
+    <variable-font name="MutatorSansVariable_Weight">
+      <axis-subsets>
+        <axis-subset name="weight"/>
+      </axis-subsets>
+    </variable-font>
+    <variable-font name="MutatorSansVariable_Width">
+      <axis-subsets>
+        <axis-subset name="width"/>
+      </axis-subsets>
+    </variable-font>
+    <variable-font name="MutatorSerifVariable_Width">
+      <axis-subsets>
+        <axis-subset name="serif" uservalue="1"/>
+        <axis-subset name="width"/>
+      </axis-subsets>
+    </variable-font>
+  </variable-fonts>
+  <instances>
+    <instance>
+      <location>
+        <dimension name="width" xvalue="0"/>
+        <dimension name="weight" xvalue="0"/>
+      </location>
+    </instance>
+    <instance>
+      <location>
+        <dimension name="width" xvalue="0"/>
+        <dimension name="weight" xvalue="1000"/>
+      </location>
+    </instance>
+    <instance>
+      <location>
+        <dimension name="width" xvalue="1000"/>
+        <dimension name="weight" xvalue="0"/>
+      </location>
+    </instance>
+    <instance>
+      <location>
+        <dimension name="width" xvalue="1000"/>
+        <dimension name="weight" xvalue="1000"/>
+      </location>
+    </instance>
+    <instance>
+      <location>
+        <dimension name="width" xvalue="327"/>
+        <dimension name="weight" xvalue="500"/>
+      </location>
+    </instance>
+    <instance>
+      <location>
+        <dimension name="width" xvalue="327"/>
+        <dimension name="weight" xvalue="500"/>
+      </location>
+    </instance>
+    <instance>
+      <location>
+        <dimension name="width" xvalue="569.078"/>
+        <dimension name="weight" xvalue="1000"/>
+      </location>
+    </instance>
+    <instance>
+      <location>
+        <dimension name="width" xvalue="1000"/>
+        <dimension name="weight" xvalue="500"/>
+      </location>
+    </instance>
+    <instance>
+      <location>
+        <dimension name="width" xvalue="0"/>
+        <dimension name="serif" xvalue="0"/>
+      </location>
+    </instance>
+    <instance>
+      <location>
+        <dimension name="width" xvalue="0"/>
+        <dimension name="serif" xvalue="1"/>
+      </location>
+    </instance>
+  </instances>
+</designspace>

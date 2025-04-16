@@ -4,31 +4,21 @@ Tools to parse data files from the Unicode Character Database.
 """
 
 
-try:
-    from urllib.request import urlopen
-except ImportError:
-    from urllib2 import urlopen
-from contextlib import closing, contextmanager
+from urllib.request import urlopen
 import re
-from codecs import iterdecode
 import logging
 import os
-from io import open
 from os.path import abspath, dirname, join as pjoin, pardir, sep
-
-
-try:  # pragma: no cover
-    unicode
-except NameError:
-    unicode = str
+from typing import List
 
 
 UNIDATA_URL = "https://unicode.org/Public/UNIDATA/"
 UNIDATA_LICENSE_URL = "http://unicode.org/copyright.html#License"
 
 # by default save output files to ../Lib/fontTools/unicodedata/
-UNIDATA_PATH = pjoin(abspath(dirname(__file__)), pardir,
-                     "Lib", "fontTools", "unicodedata") + sep
+UNIDATA_PATH = (
+    pjoin(abspath(dirname(__file__)), pardir, "Lib", "fontTools", "unicodedata") + sep
+)
 
 SRC_ENCODING = "# -*- coding: utf-8 -*-\n"
 
@@ -39,27 +29,34 @@ MAX_UNICODE = 0x10FFFF
 log = logging.getLogger()
 
 
-@contextmanager
-def open_unidata_file(filename):
-    """Open a text file from https://unicode.org/Public/UNIDATA/"""
-    url = UNIDATA_URL + filename
-    with closing(urlopen(url)) as response:
-        yield iterdecode(response, encoding="utf-8")
+def read_unidata_file(filename, local_ucd_path=None) -> List[str]:
+    """Read a UCD file from https://unicode.org or optionally from a local directory.
+
+    Return the list of lines.
+    """
+    if local_ucd_path is not None:
+        with open(pjoin(local_ucd_path, filename), "r", encoding="utf-8") as f:
+            return f.readlines()
+    else:
+        url = UNIDATA_URL + filename
+        with urlopen(url) as response:
+            return response.read().decode("utf-8").splitlines(keepends=True)
 
 
-def parse_unidata_header(infile):
+def parse_unidata_header(file_lines: List[str]):
     """Read the top header of data files, until the first line
     that does not start with '#'.
     """
     header = []
-    line = next(infile)
-    while line.startswith("#"):
-        header.append(line)
-        line = next(infile)
+    for line in file_lines:
+        if line.startswith("#"):
+            header.append(line)
+        else:
+            break
     return "".join(header)
 
 
-def parse_range_properties(infile, default=None, is_set=False):
+def parse_range_properties(infile: List[str], default=None, is_set=False):
     """Parse a Unicode data file containing a column with one character or
     a range of characters, and another column containing a property value
     separated by a semicolon. Comments after '#' are ignored.
@@ -75,7 +72,8 @@ def parse_range_properties(infile, default=None, is_set=False):
         r"([0-9A-F]{4,6})"  # first character code
         r"(?:\.\.([0-9A-F]{4,6}))?"  # optional second character code
         r"\s*;\s*"
-        r"([^#]+)")  # everything up to the potential comment
+        r"([^#]+)"
+    )  # everything up to the potential comment
     for line in infile:
         match = line_regex.match(line)
         if not match:
@@ -93,9 +91,6 @@ def parse_range_properties(infile, default=None, is_set=False):
 
     ranges.sort()
 
-    if isinstance(default, unicode):
-        default = str(default)
-
     # fill the gaps between explicitly defined ranges
     last_start, last_end = -1, -1
     full_ranges = []
@@ -103,13 +98,13 @@ def parse_range_properties(infile, default=None, is_set=False):
         assert last_end < start
         assert start <= end
         if start - last_end > 1:
-            full_ranges.append((last_end+1, start-1, default))
+            full_ranges.append((last_end + 1, start - 1, default))
         if is_set:
             value = set(value.split())
         full_ranges.append((start, end, value))
         last_start, last_end = start, end
     if last_end != MAX_UNICODE:
-        full_ranges.append((last_end+1, MAX_UNICODE, default))
+        full_ranges.append((last_end + 1, MAX_UNICODE, default))
 
     # reduce total number of ranges by combining continuous ones
     last_start, last_end, last_value = full_ranges.pop(0)
@@ -118,14 +113,14 @@ def parse_range_properties(infile, default=None, is_set=False):
         if value == last_value:
             continue
         else:
-            merged_ranges.append((last_start, start-1, last_value))
+            merged_ranges.append((last_start, start - 1, last_value))
             last_start, line_end, last_value = start, end, value
     merged_ranges.append((last_start, MAX_UNICODE, last_value))
 
     # make sure that the ranges cover the full unicode repertoire
     assert merged_ranges[0][0] == 0
     for (cs, ce, cv), (ns, ne, nv) in zip(merged_ranges, merged_ranges[1:]):
-        assert ce+1 == ns
+        assert ce + 1 == ns
     assert merged_ranges[-1][1] == MAX_UNICODE
 
     return merged_ranges
@@ -140,21 +135,25 @@ def parse_semicolon_separated_data(infile):
     """
     data = []
     for line in infile:
-        line = line.split('#', 1)[0].strip()  # remove the comment
+        line = line.split("#", 1)[0].strip()  # remove the comment
         if not line:
             continue
-        fields = [str(field.strip()) for field in line.split(';')]
+        fields = [str(field.strip()) for field in line.split(";")]
         data.append(fields)
     return data
 
 
 def _set_repr(value):
-    return 'None' if value is None else "{{{}}}".format(
-        ", ".join(repr(v) for v in sorted(value)))
+    return (
+        "None"
+        if value is None
+        else "{{{}}}".format(", ".join(repr(v) for v in sorted(value)))
+    )
 
 
-def build_ranges(filename, local_ucd=None, output_path=None,
-                 default=None, is_set=False, aliases=None):
+def build_ranges(
+    filename, local_ucd=None, output_path=None, default=None, is_set=False, aliases=None
+):
     """Fetch 'filename' UCD data file from Unicode official website, parse
     the property ranges and values and write them as two Python lists
     to 'fontTools.unicodedata.<filename>.py'.
@@ -174,14 +173,12 @@ def build_ranges(filename, local_ucd=None, output_path=None,
 
     if local_ucd:
         log.info("loading '%s' from local directory '%s'", filename, local_ucd)
-        cm = open(pjoin(local_ucd, filename), "r", encoding="utf-8")
     else:
         log.info("downloading '%s' from '%s'", filename, UNIDATA_URL)
-        cm = open_unidata_file(filename)
 
-    with cm as f:
-        header = parse_unidata_header(f)
-        ranges = parse_range_properties(f, default=default, is_set=is_set)
+    file_lines = read_unidata_file(filename, local_ucd)
+    header = parse_unidata_header(file_lines)
+    ranges = parse_range_properties(file_lines, default=default, is_set=is_set)
 
     if aliases:
         reversed_aliases = {normalize(v[0]): k for k, v in aliases.items()}
@@ -196,12 +193,15 @@ def build_ranges(filename, local_ucd=None, output_path=None,
         f.write("# Source: {}{}\n".format(UNIDATA_URL, filename))
         f.write("# License: {}\n".format(UNIDATA_LICENSE_URL))
         f.write("#\n")
-        f.write(header+"\n\n")
+        f.write(header + "\n")
 
         f.write("RANGES = [\n")
         for first, last, value in ranges:
-            f.write("    0x{:0>4X},  # .. 0x{:0>4X} ; {}\n".format(
-                first, last, _set_repr(value) if is_set else value))
+            f.write(
+                "    0x{:0>4X},  # .. 0x{:0>4X} ; {}\n".format(
+                    first, last, _set_repr(value) if is_set else value
+                )
+            )
         f.write("]\n")
 
         f.write("\n")
@@ -216,8 +216,9 @@ def build_ranges(filename, local_ucd=None, output_path=None,
                     comment += " ; {}".format(value)
                     value = reversed_aliases[normalize(value)]
                 value_repr = "{!r},".format(value)
-            f.write("    {}  {}\n".format(
-                value_repr.ljust(max_value_length+1), comment))
+            f.write(
+                "    {}  {}\n".format(value_repr.ljust(max_value_length + 1), comment)
+            )
         f.write("]\n")
 
         if aliases:
@@ -232,6 +233,7 @@ def build_ranges(filename, local_ucd=None, output_path=None,
 
 
 _normalize_re = re.compile(r"[-_ ]+")
+
 
 def normalize(string):
     """Remove case, strip space, '-' and '_' for loose matching."""
@@ -249,17 +251,14 @@ def parse_property_value_aliases(property_tag, local_ucd=None):
     filename = "PropertyValueAliases.txt"
     if local_ucd:
         log.info("loading '%s' from local directory '%s'", filename, local_ucd)
-        cm = open(pjoin(local_ucd, filename), "r", encoding="utf-8")
     else:
         log.info("downloading '%s' from '%s'", filename, UNIDATA_URL)
-        cm = open_unidata_file(filename)
 
-    with cm as f:
-        header = parse_unidata_header(f)
-        data = parse_semicolon_separated_data(f)
+    file_lines = read_unidata_file(filename, local_ucd)
+    header = parse_unidata_header(file_lines)
+    data = parse_semicolon_separated_data(file_lines)
 
-    aliases = {item[1]: item[2:] for item in data
-               if item[0] == property_tag}
+    aliases = {item[1]: item[2:] for item in data if item[0] == property_tag}
 
     return aliases
 
@@ -268,10 +267,12 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="Generate fontTools.unicodedata from UCD data files")
+        description="Generate fontTools.unicodedata from UCD data files"
+    )
     parser.add_argument(
-        '--ucd-path', help="Path to local folder containing UCD data files")
-    parser.add_argument('-q', '--quiet', action="store_true")
+        "--ucd-path", help="Path to local folder containing UCD data files"
+    )
+    parser.add_argument("-q", "--quiet", action="store_true")
     options = parser.parse_args()
 
     level = "WARNING" if options.quiet else "INFO"
@@ -280,12 +281,16 @@ def main():
     build_ranges("Blocks.txt", local_ucd=options.ucd_path, default="No_Block")
 
     script_aliases = parse_property_value_aliases("sc", options.ucd_path)
-    build_ranges("Scripts.txt", local_ucd=options.ucd_path, default="Unknown",
-                 aliases=script_aliases)
-    build_ranges("ScriptExtensions.txt", local_ucd=options.ucd_path,
-                 is_set=True)
+    build_ranges(
+        "Scripts.txt",
+        local_ucd=options.ucd_path,
+        default="Unknown",
+        aliases=script_aliases,
+    )
+    build_ranges("ScriptExtensions.txt", local_ucd=options.ucd_path, is_set=True)
 
 
 if __name__ == "__main__":
     import sys
+
     sys.exit(main())

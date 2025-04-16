@@ -14,8 +14,11 @@ def ProcessTable(table):
     for rec in table.ScriptList.ScriptRecord:
         if rec.ScriptTag == "DFLT" and rec.Script.LangSysCount != 0:
             tags = [r.LangSysTag for r in rec.Script.LangSysRecord]
-            logging.info("Removing %d extraneous LangSys records: %s",
-                         rec.Script.LangSysCount, " ".join(tags))
+            logging.info(
+                "Removing %d extraneous LangSys records: %s",
+                rec.Script.LangSysCount,
+                " ".join(tags),
+            )
             rec.Script.LangSysRecord = []
             rec.Script.LangSysCount = 0
             found.update(tags)
@@ -29,8 +32,9 @@ def ProcessTable(table):
             found -= tags
 
         if found:
-            logging.warning("Records are missing from non-DFLT scripts: %s",
-                            " ".join(found))
+            logging.warning(
+                "Records are missing from non-DFLT scripts: %s", " ".join(found)
+            )
         return True
 
 
@@ -64,12 +68,13 @@ def ProcessFiles(filenames):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-            description="Fix LangSys records for DFLT script")
-    parser.add_argument("files", metavar="FILE", type=str, nargs="+",
-                        help="input font to process")
-    parser.add_argument("-s", "--silent", action='store_true',
-                        help="suppress normal messages")
+    parser = argparse.ArgumentParser(description="Fix LangSys records for DFLT script")
+    parser.add_argument(
+        "files", metavar="FILE", type=str, nargs="+", help="input font to process"
+    )
+    parser.add_argument(
+        "-s", "--silent", action="store_true", help="suppress normal messages"
+    )
 
     args = parser.parse_args()
 
@@ -80,6 +85,7 @@ def main():
         logging.basicConfig(format=logformat, level=logging.INFO)
 
     ProcessFiles(args.files)
+
 
 if __name__ == "__main__":
     sys.exit(main())

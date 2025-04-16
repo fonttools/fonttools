@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="4.33">
+
+  <GlyphOrder>
+    <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
+    <GlyphID id="0" name=".notdef"/>
+    <GlyphID id="1" name=".space"/>
+    <GlyphID id="2" name="A"/>
+    <GlyphID id="3" name="B"/>
+    <GlyphID id="4" name="A.0"/>
+  </GlyphOrder>
+
+  <fvar>
+
+    <!-- Weight -->
+    <Axis>
+      <AxisTag>wght</AxisTag>
+      <Flags>0x0</Flags>
+      <MinValue>400.0</MinValue>
+      <DefaultValue>400.0</DefaultValue>
+      <MaxValue>700.0</MaxValue>
+      <AxisNameID>256</AxisNameID>
+    </Axis>
+  </fvar>
+
+  <glyf>
+
+    <!-- The xMin, yMin, xMax and yMax values
+         will be recalculated by the compiler. -->
+
+    <TTGlyph name=".notdef" xMin="51" yMin="-250" xMax="461" yMax="950">
+      <contour>
+        <pt x="51" y="-250" on="1"/>
+        <pt x="51" y="950" on="1"/>
+        <pt x="461" y="950" on="1"/>
+        <pt x="461" y="-250" on="1"/>
+      </contour>
+      <contour>
+        <pt x="102" y="-199" on="1"/>
+        <pt x="410" y="-199" on="1"/>
+        <pt x="410" y="899" on="1"/>
+        <pt x="102" y="899" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name=".space"/><!-- contains no outline data -->
+
+    <TTGlyph name="A"/><!-- contains no outline data -->
+
+    <TTGlyph name="A.0" xMin="398" yMin="110" xMax="878" yMax="590">
+      <contour>
+        <pt x="878" y="350" on="1"/>
+        <pt x="878" y="416" on="0"/>
+        <pt x="813" y="525" on="0"/>
+        <pt x="704" y="590" on="0"/>
+        <pt x="638" y="590" on="1"/>
+        <pt x="571" y="590" on="0"/>
+        <pt x="462" y="525" on="0"/>
+        <pt x="398" y="416" on="0"/>
+        <pt x="398" y="350" on="1"/>
+        <pt x="398" y="284" on="0"/>
+        <pt x="462" y="175" on="0"/>
+        <pt x="571" y="110" on="0"/>
+        <pt x="638" y="110" on="1"/>
+        <pt x="704" y="110" on="0"/>
+        <pt x="813" y="175" on="0"/>
+        <pt x="878" y="284" on="0"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="B"/><!-- contains no outline data -->
+
+  </glyf>
+
+  <COLR>
+    <Version value="1"/>
+    <!-- BaseGlyphRecordCount=0 -->
+    <!-- LayerRecordCount=0 -->
+    <BaseGlyphList>
+      <!-- BaseGlyphCount=2 -->
+      <BaseGlyphPaintRecord index="0">
+        <BaseGlyph value="A"/>
+        <Paint Format="1"><!-- PaintColrLayers -->
+          <NumLayers value="3"/>
+          <FirstLayerIndex value="0"/>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="1">
+        <BaseGlyph value="B"/>
+        <Paint Format="1"><!-- PaintColrLayers -->
+          <NumLayers value="2"/>
+          <FirstLayerIndex value="3"/>
+        </Paint>
+      </BaseGlyphPaintRecord>
+    </BaseGlyphList>
+    <LayerList>
+      <!-- LayerCount=5 -->
+      <Paint index="0" Format="10"><!-- PaintGlyph -->
+        <Paint Format="2"><!-- PaintSolid -->
+          <PaletteIndex value="0"/>
+          <Alpha value="1.0"/>
+        </Paint>
+        <Glyph value="A.0"/>
+      </Paint>
+      <Paint index="1" Format="15"><!-- PaintVarTranslate -->
+        <Paint Format="10"><!-- PaintGlyph -->
+          <Paint Format="2"><!-- PaintSolid -->
+            <PaletteIndex value="2"/>
+            <Alpha value="1.0"/>
+          </Paint>
+          <Glyph value="A.0"/>
+        </Paint>
+        <dx value="0"/>
+        <dy value="-120"/>
+        <VarIndexBase value="0"/>
+      </Paint>
+      <Paint index="2" Format="14"><!-- PaintTranslate -->
+        <Paint Format="10"><!-- PaintGlyph -->
+          <Paint Format="2"><!-- PaintSolid -->
+            <PaletteIndex value="1"/>
+            <Alpha value="1.0"/>
+          </Paint>
+          <Glyph value="A.0"/>
+        </Paint>
+        <dx value="0"/>
+        <dy value="-240"/>
+      </Paint>
+      <Paint index="3" Format="14"><!-- PaintTranslate -->
+        <Paint Format="10"><!-- PaintGlyph -->
+          <Paint Format="3"><!-- PaintVarSolid -->
+            <PaletteIndex value="2"/>
+            <Alpha value="1.0"/>
+            <VarIndexBase value="2"/>
+          </Paint>
+          <Glyph value="A.0"/>
+        </Paint>
+        <dx value="0"/>
+        <dy value="-120"/>
+      </Paint>
+      <Paint index="4" Format="14"><!-- PaintTranslate -->
+        <Paint Format="10"><!-- PaintGlyph -->
+          <Paint Format="2"><!-- PaintSolid -->
+            <PaletteIndex value="1"/>
+            <Alpha value="1.0"/>
+          </Paint>
+          <Glyph value="A.0"/>
+        </Paint>
+        <dx value="0"/>
+        <dy value="-240"/>
+      </Paint>
+    </LayerList>
+    <ClipList Format="1">
+      <Clip>
+        <Glyph value="A"/>
+        <ClipBox Format="2">
+          <xMin value="380"/>
+          <yMin value="-140"/>
+          <xMax value="880"/>
+          <yMax value="600"/>
+          <VarIndexBase value="3"/>
+        </ClipBox>
+      </Clip>
+      <Clip>
+        <Glyph value="B"/>
+        <ClipBox Format="1">
+          <xMin value="380"/>
+          <yMin value="-140"/>
+          <xMax value="880"/>
+          <yMax value="480"/>
+        </ClipBox>
+      </Clip>
+    </ClipList>
+    <VarIndexMap Format="0">
+      <!-- Omitted values default to 0xFFFF/0xFFFF (no variations) -->
+      <Map index="0" outer="0" inner="1"/>
+      <Map index="1"/>
+      <Map index="2" outer="0" inner="0"/>
+      <Map index="3"/>
+      <Map index="4"/>
+      <Map index="5" outer="0" inner="1"/>
+      <Map index="6"/>
+    </VarIndexMap>
+    <VarStore Format="1">
+      <Format value="1"/>
+      <VarRegionList>
+        <!-- RegionAxisCount=1 -->
+        <!-- RegionCount=1 -->
+        <Region index="0">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+        </Region>
+      </VarRegionList>
+      <!-- VarDataCount=1 -->
+      <VarData index="0">
+        <!-- ItemCount=2 -->
+        <NumShorts value="1"/>
+        <!-- VarRegionCount=1 -->
+        <VarRegionIndex index="0" value="0"/>
+        <Item index="0" value="[-8192]"/>
+        <Item index="1" value="[100]"/>
+      </VarData>
+    </VarStore>
+  </COLR>
+
+  <CPAL>
+    <version value="0"/>
+    <numPaletteEntries value="3"/>
+    <palette index="0">
+      <color index="0" value="#0000FFFF"/>
+      <color index="1" value="#008000FF"/>
+      <color index="2" value="#FF0000FF"/>
+    </palette>
+  </CPAL>
+
+</ttFont>

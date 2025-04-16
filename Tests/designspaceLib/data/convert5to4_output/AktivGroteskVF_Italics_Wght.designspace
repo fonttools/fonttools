@@ -1,0 +1,114 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<designspace format="4.1">
+  <axes>
+    <axis tag="wght" name="Weight" minimum="100" maximum="900" default="400">
+      <map input="100" output="22"/>
+      <map input="200" output="38"/>
+      <map input="300" output="57"/>
+      <map input="400" output="84"/>
+      <map input="500" output="98"/>
+      <map input="600" output="115"/>
+      <map input="700" output="133"/>
+      <map input="800" output="158"/>
+      <map input="900" output="185"/>
+    </axis>
+  </axes>
+  <rules processing="last">
+    <rule name="BRACKET.CYR">
+      <sub name="ghe.loclSRB" with="ghe.ital.loclSRB"/>
+      <sub name="ghe.loclMKD" with="ghe.ital.loclMKD"/>
+      <sub name="de.loclMKDSRB" with="de.ital.loclMKDSRB"/>
+      <sub name="pe.loclMKDSRB" with="pe.ital.loclMKDSRB"/>
+      <sub name="te.loclMKDSRB" with="te.ital.loclMKDSRB"/>
+      <sub name="gje.loclMKD" with="gje.ital.loclMKD"/>
+      <sub name="sha.loclMKDSRB" with="sha.ital.loclMKDSRB"/>
+    </rule>
+  </rules>
+  <sources>
+    <source filename="../AktivGrotesk_HairIt.ufo" name="Aktiv Grotesk Hair Italic">
+      <location>
+        <dimension name="Weight" xvalue="22"/>
+      </location>
+    </source>
+    <source filename="../AktivGrotesk_It.ufo" name="Aktiv Grotesk Italic">
+      <location>
+        <dimension name="Weight" xvalue="84"/>
+      </location>
+    </source>
+    <source filename="../AktivGrotesk_It.ufo" name="Aktiv Grotesk Italic {126,100,1}" layer="{126,100,1}">
+      <location>
+        <dimension name="Weight" xvalue="133"/>
+      </location>
+    </source>
+    <source filename="../AktivGrotesk_BlkIt.ufo" name="Aktiv Grotesk Black Italic">
+      <location>
+        <dimension name="Weight" xvalue="185"/>
+      </location>
+    </source>
+  </sources>
+  <instances>
+    <instance name="Aktiv Grotesk Hair Italic" familyname="Aktiv Grotesk" stylename="Hair Italic" filename="../instances/AktivGrotesk_HairIt.ufo" postscriptfontname="AktivGrotesk-HairItalic" stylemapfamilyname="Aktiv Grotesk Hair" stylemapstylename="italic">
+      <location>
+        <dimension name="Weight" xvalue="22"/>
+      </location>
+      <kerning/>
+      <info/>
+    </instance>
+    <instance name="Aktiv Grotesk Thin Italic" familyname="Aktiv Grotesk" stylename="Thin Italic" filename="../instances/AktivGrotesk_ThIt.ufo" postscriptfontname="AktivGrotesk-ThinItalic" stylemapfamilyname="Aktiv Grotesk Thin" stylemapstylename="italic">
+      <location>
+        <dimension name="Weight" xvalue="38"/>
+      </location>
+      <kerning/>
+      <info/>
+    </instance>
+    <instance name="Aktiv Grotesk Light Italic" familyname="Aktiv Grotesk" stylename="Light Italic" filename="../instances/AktivGrotesk_LtIt.ufo" postscriptfontname="AktivGrotesk-LightItalic" stylemapfamilyname="Aktiv Grotesk Light" stylemapstylename="italic">
+      <location>
+        <dimension name="Weight" xvalue="57"/>
+      </location>
+      <kerning/>
+      <info/>
+    </instance>
+    <instance name="Aktiv Grotesk Italic" familyname="Aktiv Grotesk" stylename="Italic" filename="../instances/AktivGrotesk_It.ufo" postscriptfontname="AktivGrotesk-Italic" stylemapfamilyname="Aktiv Grotesk" stylemapstylename="italic">
+      <location>
+        <dimension name="Weight" xvalue="84"/>
+      </location>
+      <kerning/>
+      <info/>
+    </instance>
+    <instance name="Aktiv Grotesk Medium Italic" familyname="Aktiv Grotesk" stylename="Medium Italic" filename="../instances/AktivGrotesk_MdIt.ufo" postscriptfontname="AktivGrotesk-MediumItalic" stylemapfamilyname="Aktiv Grotesk Medium" stylemapstylename="italic">
+      <location>
+        <dimension name="Weight" xvalue="98"/>
+      </location>
+      <kerning/>
+      <info/>
+    </instance>
+    <instance name="Aktiv Grotesk SemiBold Italic" familyname="Aktiv Grotesk" stylename="SemiBold Italic" filename="../../build/instances/AktivGrotesk_SBdIt.ufo" postscriptfontname="AktivGrotesk-SemiBoldItalic" stylemapfamilyname="Aktiv Grotesk SemiBold" stylemapstylename="italic">
+      <location>
+        <dimension name="Weight" xvalue="115"/>
+      </location>
+      <kerning/>
+      <info/>
+    </instance>
+    <instance name="Aktiv Grotesk Bold Italic" familyname="Aktiv Grotesk" stylename="Bold Italic" filename="../instances/AktivGrotesk_BdIt.ufo" postscriptfontname="AktivGrotesk-BoldItalic" stylemapfamilyname="Aktiv Grotesk" stylemapstylename="bold italic">
+      <location>
+        <dimension name="Weight" xvalue="133"/>
+      </location>
+      <kerning/>
+      <info/>
+    </instance>
+    <instance name="Aktiv Grotesk XBold Italic" familyname="Aktiv Grotesk" stylename="XBold Italic" filename="../instances/AktivGrotesk_XBdIt.ufo" postscriptfontname="AktivGrotesk-XBoldItalic" stylemapfamilyname="Aktiv Grotesk XBold" stylemapstylename="italic">
+      <location>
+        <dimension name="Weight" xvalue="158"/>
+      </location>
+      <kerning/>
+      <info/>
+    </instance>
+    <instance name="Aktiv Grotesk Black Italic" familyname="Aktiv Grotesk" stylename="Black Italic" filename="../instances/AktivGrotesk_BlkIt.ufo" postscriptfontname="AktivGrotesk-BlackItalic" stylemapfamilyname="Aktiv Grotesk Black" stylemapstylename="italic">
+      <location>
+        <dimension name="Weight" xvalue="185"/>
+      </location>
+      <kerning/>
+      <info/>
+    </instance>
+  </instances>
+</designspace>

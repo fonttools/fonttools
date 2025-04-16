@@ -1,6 +1,6 @@
 import io
 import struct
-from fontTools.misc.fixedTools import floatToFixed
+from fontTools.misc.fixedTools import floatToFixed, fixedToFloat
 from fontTools.misc.testTools import getXML
 from fontTools.otlLib import builder, error
 from fontTools import ttLib
@@ -918,7 +918,6 @@ class BuilderTest(object):
                 ("A", "zero"): (d0, d50),
                 ("A", "one"): (None, d20),
                 ("B", "five"): (d8020, d50),
-
             },
             self.GLYPHMAP,
         )
@@ -1052,11 +1051,11 @@ class BuilderTest(object):
         func = lambda writer, font: value.toXML(writer, font, valueName="Val")
         assert getXML(func) == ['<Val XPlacement="7" YPlacement="23"/>']
 
-    def test_getLigatureKey(self):
+    def test_getLigatureSortKey(self):
         components = lambda s: [tuple(word) for word in s.split()]
         c = components("fi fl ff ffi fff")
-        c.sort(key=builder._getLigatureKey)
-        assert c == components("fff ffi ff fi fl")
+        c.sort(key=otTables.LigatureSubst._getLigatureSortKey)
+        assert c == components("ffi fff fi fl ff")
 
     def test_getSinglePosValueKey(self):
         device = builder.buildDevice({10: 1, 11: 3})
@@ -1081,7 +1080,7 @@ class ClassDefBuilderTest(object):
         b.add({"e", "f", "g", "h"})
         cdef = b.build()
         assert isinstance(cdef, otTables.ClassDef)
-        assert cdef.classDefs == {"a": 2, "b": 2, "c": 3, "aa": 1, "bb": 1}
+        assert cdef.classDefs == {"a": 1, "b": 1, "c": 3, "aa": 2, "bb": 2}
 
     def test_build_notUsingClass0(self):
         b = builder.ClassDefBuilder(useClass0=False)
@@ -1120,262 +1119,309 @@ class ClassDefBuilderTest(object):
 
 
 buildStatTable_test_data = [
-    ([
-        dict(
-            tag="wght",
-            name="Weight",
-            values=[
-                dict(value=100, name='Thin'),
-                dict(value=400, name='Regular', flags=0x2),
-                dict(value=900, name='Black')])], None, "Regular", [
-        '  <STAT>',
-        '    <Version value="0x00010001"/>',
-        '    <DesignAxisRecordSize value="8"/>',
-        '    <!-- DesignAxisCount=1 -->',
-        '    <DesignAxisRecord>',
-        '      <Axis index="0">',
-        '        <AxisTag value="wght"/>',
-        '        <AxisNameID value="257"/>  <!-- Weight -->',
-        '        <AxisOrdering value="0"/>',
-        '      </Axis>',
-        '    </DesignAxisRecord>',
-        '    <!-- AxisValueCount=3 -->',
-        '    <AxisValueArray>',
-        '      <AxisValue index="0" Format="1">',
-        '        <AxisIndex value="0"/>',
-        '        <Flags value="0"/>',
-        '        <ValueNameID value="258"/>  <!-- Thin -->',
-        '        <Value value="100.0"/>',
-        '      </AxisValue>',
-        '      <AxisValue index="1" Format="1">',
-        '        <AxisIndex value="0"/>',
-        '        <Flags value="2"/>  <!-- ElidableAxisValueName -->',
-        '        <ValueNameID value="256"/>  <!-- Regular -->',
-        '        <Value value="400.0"/>',
-        '      </AxisValue>',
-        '      <AxisValue index="2" Format="1">',
-        '        <AxisIndex value="0"/>',
-        '        <Flags value="0"/>',
-        '        <ValueNameID value="259"/>  <!-- Black -->',
-        '        <Value value="900.0"/>',
-        '      </AxisValue>',
-        '    </AxisValueArray>',
-        '    <ElidedFallbackNameID value="256"/>  <!-- Regular -->',
-        '  </STAT>']),
-    ([
-        dict(
-            tag="wght",
-            name=dict(en="Weight", nl="Gewicht"),
-            values=[
-                dict(value=100, name=dict(en='Thin', nl='Dun')),
-                dict(value=400, name='Regular', flags=0x2),
-                dict(value=900, name='Black'),
-            ]),
-        dict(
-            tag="wdth",
-            name="Width",
-            values=[
-                dict(value=50, name='Condensed'),
-                dict(value=100, name='Regular', flags=0x2),
-                dict(value=200, name='Extended')])], None, 2, [
-        '  <STAT>',
-        '    <Version value="0x00010001"/>',
-        '    <DesignAxisRecordSize value="8"/>',
-        '    <!-- DesignAxisCount=2 -->',
-        '    <DesignAxisRecord>',
-        '      <Axis index="0">',
-        '        <AxisTag value="wght"/>',
-        '        <AxisNameID value="256"/>  <!-- Weight -->',
-        '        <AxisOrdering value="0"/>',
-        '      </Axis>',
-        '      <Axis index="1">',
-        '        <AxisTag value="wdth"/>',
-        '        <AxisNameID value="260"/>  <!-- Width -->',
-        '        <AxisOrdering value="1"/>',
-        '      </Axis>',
-        '    </DesignAxisRecord>',
-        '    <!-- AxisValueCount=6 -->',
-        '    <AxisValueArray>',
-        '      <AxisValue index="0" Format="1">',
-        '        <AxisIndex value="0"/>',
-        '        <Flags value="0"/>',
-        '        <ValueNameID value="257"/>  <!-- Thin -->',
-        '        <Value value="100.0"/>',
-        '      </AxisValue>',
-        '      <AxisValue index="1" Format="1">',
-        '        <AxisIndex value="0"/>',
-        '        <Flags value="2"/>  <!-- ElidableAxisValueName -->',
-        '        <ValueNameID value="258"/>  <!-- Regular -->',
-        '        <Value value="400.0"/>',
-        '      </AxisValue>',
-        '      <AxisValue index="2" Format="1">',
-        '        <AxisIndex value="0"/>',
-        '        <Flags value="0"/>',
-        '        <ValueNameID value="259"/>  <!-- Black -->',
-        '        <Value value="900.0"/>',
-        '      </AxisValue>',
-        '      <AxisValue index="3" Format="1">',
-        '        <AxisIndex value="1"/>',
-        '        <Flags value="0"/>',
-        '        <ValueNameID value="261"/>  <!-- Condensed -->',
-        '        <Value value="50.0"/>',
-        '      </AxisValue>',
-        '      <AxisValue index="4" Format="1">',
-        '        <AxisIndex value="1"/>',
-        '        <Flags value="2"/>  <!-- ElidableAxisValueName -->',
-        '        <ValueNameID value="258"/>  <!-- Regular -->',
-        '        <Value value="100.0"/>',
-        '      </AxisValue>',
-        '      <AxisValue index="5" Format="1">',
-        '        <AxisIndex value="1"/>',
-        '        <Flags value="0"/>',
-        '        <ValueNameID value="262"/>  <!-- Extended -->',
-        '        <Value value="200.0"/>',
-        '      </AxisValue>',
-        '    </AxisValueArray>',
-        '    <ElidedFallbackNameID value="2"/>  <!-- missing from name table -->',
-        '  </STAT>']),
-    ([
-        dict(
-            tag="wght",
-            name="Weight",
-            values=[
-                dict(value=400, name='Regular', flags=0x2),
-                dict(value=600, linkedValue=650, name='Bold')])], None, 18, [
-        '  <STAT>',
-        '    <Version value="0x00010001"/>',
-        '    <DesignAxisRecordSize value="8"/>',
-        '    <!-- DesignAxisCount=1 -->',
-        '    <DesignAxisRecord>',
-        '      <Axis index="0">',
-        '        <AxisTag value="wght"/>',
-        '        <AxisNameID value="256"/>  <!-- Weight -->',
-        '        <AxisOrdering value="0"/>',
-        '      </Axis>',
-        '    </DesignAxisRecord>',
-        '    <!-- AxisValueCount=2 -->',
-        '    <AxisValueArray>',
-        '      <AxisValue index="0" Format="1">',
-        '        <AxisIndex value="0"/>',
-        '        <Flags value="2"/>  <!-- ElidableAxisValueName -->',
-        '        <ValueNameID value="257"/>  <!-- Regular -->',
-        '        <Value value="400.0"/>',
-        '      </AxisValue>',
-        '      <AxisValue index="1" Format="3">',
-        '        <AxisIndex value="0"/>',
-        '        <Flags value="0"/>',
-        '        <ValueNameID value="258"/>  <!-- Bold -->',
-        '        <Value value="600.0"/>',
-        '        <LinkedValue value="650.0"/>',
-        '      </AxisValue>',
-        '    </AxisValueArray>',
-        '    <ElidedFallbackNameID value="18"/>  <!-- missing from name table -->',
-        '  </STAT>']),
-    ([
-        dict(
-            tag="opsz",
-            name="Optical Size",
-            values=[
-                dict(nominalValue=6, rangeMaxValue=10, name='Small'),
-                dict(rangeMinValue=10, nominalValue=14, rangeMaxValue=24, name='Text', flags=0x2),
-                dict(rangeMinValue=24, nominalValue=600, name='Display')])], None, 2, [
-        '  <STAT>',
-        '    <Version value="0x00010001"/>',
-        '    <DesignAxisRecordSize value="8"/>',
-        '    <!-- DesignAxisCount=1 -->',
-        '    <DesignAxisRecord>',
-        '      <Axis index="0">',
-        '        <AxisTag value="opsz"/>',
-        '        <AxisNameID value="256"/>  <!-- Optical Size -->',
-        '        <AxisOrdering value="0"/>',
-        '      </Axis>',
-        '    </DesignAxisRecord>',
-        '    <!-- AxisValueCount=3 -->',
-        '    <AxisValueArray>',
-        '      <AxisValue index="0" Format="2">',
-        '        <AxisIndex value="0"/>',
-        '        <Flags value="0"/>',
-        '        <ValueNameID value="257"/>  <!-- Small -->',
-        '        <NominalValue value="6.0"/>',
-        '        <RangeMinValue value="-32768.0"/>',
-        '        <RangeMaxValue value="10.0"/>',
-        '      </AxisValue>',
-        '      <AxisValue index="1" Format="2">',
-        '        <AxisIndex value="0"/>',
-        '        <Flags value="2"/>  <!-- ElidableAxisValueName -->',
-        '        <ValueNameID value="258"/>  <!-- Text -->',
-        '        <NominalValue value="14.0"/>',
-        '        <RangeMinValue value="10.0"/>',
-        '        <RangeMaxValue value="24.0"/>',
-        '      </AxisValue>',
-        '      <AxisValue index="2" Format="2">',
-        '        <AxisIndex value="0"/>',
-        '        <Flags value="0"/>',
-        '        <ValueNameID value="259"/>  <!-- Display -->',
-        '        <NominalValue value="600.0"/>',
-        '        <RangeMinValue value="24.0"/>',
-        '        <RangeMaxValue value="32767.99998"/>',
-        '      </AxisValue>',
-        '    </AxisValueArray>',
-        '    <ElidedFallbackNameID value="2"/>  <!-- missing from name table -->',
-        '  </STAT>']),
-    ([
-        dict(
-            tag="wght",
-            name="Weight",
-            ordering=1,
-            values=[]),
-        dict(
-            tag="ABCD",
-            name="ABCDTest",
-            ordering=0,
-            values=[
-                dict(value=100, name="Regular", flags=0x2)])],
-     [dict(location=dict(wght=300, ABCD=100), name='Regular ABCD')], 18, [
-        '  <STAT>',
-        '    <Version value="0x00010002"/>',
-        '    <DesignAxisRecordSize value="8"/>',
-        '    <!-- DesignAxisCount=2 -->',
-        '    <DesignAxisRecord>',
-        '      <Axis index="0">',
-        '        <AxisTag value="wght"/>',
-        '        <AxisNameID value="256"/>  <!-- Weight -->',
-        '        <AxisOrdering value="1"/>',
-        '      </Axis>',
-        '      <Axis index="1">',
-        '        <AxisTag value="ABCD"/>',
-        '        <AxisNameID value="257"/>  <!-- ABCDTest -->',
-        '        <AxisOrdering value="0"/>',
-        '      </Axis>',
-        '    </DesignAxisRecord>',
-        '    <!-- AxisValueCount=2 -->',
-        '    <AxisValueArray>',
-        '      <AxisValue index="0" Format="4">',
-        '        <!-- AxisCount=2 -->',
-        '        <Flags value="0"/>',
-        '        <ValueNameID value="259"/>  <!-- Regular ABCD -->',
-        '        <AxisValueRecord index="0">',
-        '          <AxisIndex value="0"/>',
-        '          <Value value="300.0"/>',
-        '        </AxisValueRecord>',
-        '        <AxisValueRecord index="1">',
-        '          <AxisIndex value="1"/>',
-        '          <Value value="100.0"/>',
-        '        </AxisValueRecord>',
-        '      </AxisValue>',
-        '      <AxisValue index="1" Format="1">',
-        '        <AxisIndex value="1"/>',
-        '        <Flags value="2"/>  <!-- ElidableAxisValueName -->',
-        '        <ValueNameID value="258"/>  <!-- Regular -->',
-        '        <Value value="100.0"/>',
-        '      </AxisValue>',
-        '    </AxisValueArray>',
-        '    <ElidedFallbackNameID value="18"/>  <!-- missing from name table -->',
-        '  </STAT>']),
+    (
+        [
+            dict(
+                tag="wght",
+                name="Weight",
+                values=[
+                    dict(value=100, name="Thin"),
+                    dict(value=400, name="Regular", flags=0x2),
+                    dict(value=900, name="Black"),
+                ],
+            )
+        ],
+        None,
+        "Regular",
+        [
+            "  <STAT>",
+            '    <Version value="0x00010001"/>',
+            '    <DesignAxisRecordSize value="8"/>',
+            "    <!-- DesignAxisCount=1 -->",
+            "    <DesignAxisRecord>",
+            '      <Axis index="0">',
+            '        <AxisTag value="wght"/>',
+            '        <AxisNameID value="257"/>  <!-- Weight -->',
+            '        <AxisOrdering value="0"/>',
+            "      </Axis>",
+            "    </DesignAxisRecord>",
+            "    <!-- AxisValueCount=3 -->",
+            "    <AxisValueArray>",
+            '      <AxisValue index="0" Format="1">',
+            '        <AxisIndex value="0"/>',
+            '        <Flags value="0"/>',
+            '        <ValueNameID value="258"/>  <!-- Thin -->',
+            '        <Value value="100.0"/>',
+            "      </AxisValue>",
+            '      <AxisValue index="1" Format="1">',
+            '        <AxisIndex value="0"/>',
+            '        <Flags value="2"/>  <!-- ElidableAxisValueName -->',
+            '        <ValueNameID value="256"/>  <!-- Regular -->',
+            '        <Value value="400.0"/>',
+            "      </AxisValue>",
+            '      <AxisValue index="2" Format="1">',
+            '        <AxisIndex value="0"/>',
+            '        <Flags value="0"/>',
+            '        <ValueNameID value="259"/>  <!-- Black -->',
+            '        <Value value="900.0"/>',
+            "      </AxisValue>",
+            "    </AxisValueArray>",
+            '    <ElidedFallbackNameID value="256"/>  <!-- Regular -->',
+            "  </STAT>",
+        ],
+    ),
+    (
+        [
+            dict(
+                tag="wght",
+                name=dict(en="Weight", nl="Gewicht"),
+                values=[
+                    dict(value=100, name=dict(en="Thin", nl="Dun")),
+                    dict(value=400, name="Regular", flags=0x2),
+                    dict(value=900, name="Black"),
+                ],
+            ),
+            dict(
+                tag="wdth",
+                name="Width",
+                values=[
+                    dict(value=50, name="Condensed"),
+                    dict(value=100, name="Regular", flags=0x2),
+                    dict(value=200, name="Extended"),
+                ],
+            ),
+        ],
+        None,
+        2,
+        [
+            "  <STAT>",
+            '    <Version value="0x00010001"/>',
+            '    <DesignAxisRecordSize value="8"/>',
+            "    <!-- DesignAxisCount=2 -->",
+            "    <DesignAxisRecord>",
+            '      <Axis index="0">',
+            '        <AxisTag value="wght"/>',
+            '        <AxisNameID value="256"/>  <!-- Weight -->',
+            '        <AxisOrdering value="0"/>',
+            "      </Axis>",
+            '      <Axis index="1">',
+            '        <AxisTag value="wdth"/>',
+            '        <AxisNameID value="260"/>  <!-- Width -->',
+            '        <AxisOrdering value="1"/>',
+            "      </Axis>",
+            "    </DesignAxisRecord>",
+            "    <!-- AxisValueCount=6 -->",
+            "    <AxisValueArray>",
+            '      <AxisValue index="0" Format="1">',
+            '        <AxisIndex value="0"/>',
+            '        <Flags value="0"/>',
+            '        <ValueNameID value="257"/>  <!-- Thin -->',
+            '        <Value value="100.0"/>',
+            "      </AxisValue>",
+            '      <AxisValue index="1" Format="1">',
+            '        <AxisIndex value="0"/>',
+            '        <Flags value="2"/>  <!-- ElidableAxisValueName -->',
+            '        <ValueNameID value="258"/>  <!-- Regular -->',
+            '        <Value value="400.0"/>',
+            "      </AxisValue>",
+            '      <AxisValue index="2" Format="1">',
+            '        <AxisIndex value="0"/>',
+            '        <Flags value="0"/>',
+            '        <ValueNameID value="259"/>  <!-- Black -->',
+            '        <Value value="900.0"/>',
+            "      </AxisValue>",
+            '      <AxisValue index="3" Format="1">',
+            '        <AxisIndex value="1"/>',
+            '        <Flags value="0"/>',
+            '        <ValueNameID value="261"/>  <!-- Condensed -->',
+            '        <Value value="50.0"/>',
+            "      </AxisValue>",
+            '      <AxisValue index="4" Format="1">',
+            '        <AxisIndex value="1"/>',
+            '        <Flags value="2"/>  <!-- ElidableAxisValueName -->',
+            '        <ValueNameID value="258"/>  <!-- Regular -->',
+            '        <Value value="100.0"/>',
+            "      </AxisValue>",
+            '      <AxisValue index="5" Format="1">',
+            '        <AxisIndex value="1"/>',
+            '        <Flags value="0"/>',
+            '        <ValueNameID value="262"/>  <!-- Extended -->',
+            '        <Value value="200.0"/>',
+            "      </AxisValue>",
+            "    </AxisValueArray>",
+            '    <ElidedFallbackNameID value="2"/>  <!-- missing from name table -->',
+            "  </STAT>",
+        ],
+    ),
+    (
+        [
+            dict(
+                tag="wght",
+                name="Weight",
+                values=[
+                    dict(value=400, name="Regular", flags=0x2),
+                    dict(value=600, linkedValue=650, name="Bold"),
+                ],
+            )
+        ],
+        None,
+        18,
+        [
+            "  <STAT>",
+            '    <Version value="0x00010001"/>',
+            '    <DesignAxisRecordSize value="8"/>',
+            "    <!-- DesignAxisCount=1 -->",
+            "    <DesignAxisRecord>",
+            '      <Axis index="0">',
+            '        <AxisTag value="wght"/>',
+            '        <AxisNameID value="256"/>  <!-- Weight -->',
+            '        <AxisOrdering value="0"/>',
+            "      </Axis>",
+            "    </DesignAxisRecord>",
+            "    <!-- AxisValueCount=2 -->",
+            "    <AxisValueArray>",
+            '      <AxisValue index="0" Format="1">',
+            '        <AxisIndex value="0"/>',
+            '        <Flags value="2"/>  <!-- ElidableAxisValueName -->',
+            '        <ValueNameID value="257"/>  <!-- Regular -->',
+            '        <Value value="400.0"/>',
+            "      </AxisValue>",
+            '      <AxisValue index="1" Format="3">',
+            '        <AxisIndex value="0"/>',
+            '        <Flags value="0"/>',
+            '        <ValueNameID value="258"/>  <!-- Bold -->',
+            '        <Value value="600.0"/>',
+            '        <LinkedValue value="650.0"/>',
+            "      </AxisValue>",
+            "    </AxisValueArray>",
+            '    <ElidedFallbackNameID value="18"/>  <!-- missing from name table -->',
+            "  </STAT>",
+        ],
+    ),
+    (
+        [
+            dict(
+                tag="opsz",
+                name="Optical Size",
+                values=[
+                    dict(nominalValue=6, rangeMaxValue=10, name="Small"),
+                    dict(
+                        rangeMinValue=10,
+                        nominalValue=14,
+                        rangeMaxValue=24,
+                        name="Text",
+                        flags=0x2,
+                    ),
+                    dict(rangeMinValue=24, nominalValue=600, name="Display"),
+                ],
+            )
+        ],
+        None,
+        2,
+        [
+            "  <STAT>",
+            '    <Version value="0x00010001"/>',
+            '    <DesignAxisRecordSize value="8"/>',
+            "    <!-- DesignAxisCount=1 -->",
+            "    <DesignAxisRecord>",
+            '      <Axis index="0">',
+            '        <AxisTag value="opsz"/>',
+            '        <AxisNameID value="256"/>  <!-- Optical Size -->',
+            '        <AxisOrdering value="0"/>',
+            "      </Axis>",
+            "    </DesignAxisRecord>",
+            "    <!-- AxisValueCount=3 -->",
+            "    <AxisValueArray>",
+            '      <AxisValue index="0" Format="2">',
+            '        <AxisIndex value="0"/>',
+            '        <Flags value="0"/>',
+            '        <ValueNameID value="257"/>  <!-- Small -->',
+            '        <NominalValue value="6.0"/>',
+            '        <RangeMinValue value="-32768.0"/>',
+            '        <RangeMaxValue value="10.0"/>',
+            "      </AxisValue>",
+            '      <AxisValue index="1" Format="2">',
+            '        <AxisIndex value="0"/>',
+            '        <Flags value="2"/>  <!-- ElidableAxisValueName -->',
+            '        <ValueNameID value="258"/>  <!-- Text -->',
+            '        <NominalValue value="14.0"/>',
+            '        <RangeMinValue value="10.0"/>',
+            '        <RangeMaxValue value="24.0"/>',
+            "      </AxisValue>",
+            '      <AxisValue index="2" Format="2">',
+            '        <AxisIndex value="0"/>',
+            '        <Flags value="0"/>',
+            '        <ValueNameID value="259"/>  <!-- Display -->',
+            '        <NominalValue value="600.0"/>',
+            '        <RangeMinValue value="24.0"/>',
+            '        <RangeMaxValue value="32767.99998"/>',
+            "      </AxisValue>",
+            "    </AxisValueArray>",
+            '    <ElidedFallbackNameID value="2"/>  <!-- missing from name table -->',
+            "  </STAT>",
+        ],
+    ),
+    (
+        [
+            dict(tag="wght", name="Weight", ordering=1, values=[]),
+            dict(
+                tag="ABCD",
+                name="ABCDTest",
+                ordering=0,
+                values=[dict(value=100, name="Regular", flags=0x2)],
+            ),
+        ],
+        [dict(location=dict(wght=300, ABCD=100), name="Regular ABCD")],
+        18,
+        [
+            "  <STAT>",
+            '    <Version value="0x00010002"/>',
+            '    <DesignAxisRecordSize value="8"/>',
+            "    <!-- DesignAxisCount=2 -->",
+            "    <DesignAxisRecord>",
+            '      <Axis index="0">',
+            '        <AxisTag value="wght"/>',
+            '        <AxisNameID value="256"/>  <!-- Weight -->',
+            '        <AxisOrdering value="1"/>',
+            "      </Axis>",
+            '      <Axis index="1">',
+            '        <AxisTag value="ABCD"/>',
+            '        <AxisNameID value="257"/>  <!-- ABCDTest -->',
+            '        <AxisOrdering value="0"/>',
+            "      </Axis>",
+            "    </DesignAxisRecord>",
+            "    <!-- AxisValueCount=2 -->",
+            "    <AxisValueArray>",
+            '      <AxisValue index="0" Format="4">',
+            "        <!-- AxisCount=2 -->",
+            '        <Flags value="0"/>',
+            '        <ValueNameID value="259"/>  <!-- Regular ABCD -->',
+            '        <AxisValueRecord index="0">',
+            '          <AxisIndex value="0"/>',
+            '          <Value value="300.0"/>',
+            "        </AxisValueRecord>",
+            '        <AxisValueRecord index="1">',
+            '          <AxisIndex value="1"/>',
+            '          <Value value="100.0"/>',
+            "        </AxisValueRecord>",
+            "      </AxisValue>",
+            '      <AxisValue index="1" Format="1">',
+            '        <AxisIndex value="1"/>',
+            '        <Flags value="2"/>  <!-- ElidableAxisValueName -->',
+            '        <ValueNameID value="258"/>  <!-- Regular -->',
+            '        <Value value="100.0"/>',
+            "      </AxisValue>",
+            "    </AxisValueArray>",
+            '    <ElidedFallbackNameID value="18"/>  <!-- missing from name table -->',
+            "  </STAT>",
+        ],
+    ),
 ]
 
 
-@pytest.mark.parametrize("axes, axisValues, elidedFallbackName, expected_ttx", buildStatTable_test_data)
+@pytest.mark.parametrize(
+    "axes, axisValues, elidedFallbackName, expected_ttx", buildStatTable_test_data
+)
 def test_buildStatTable(axes, axisValues, elidedFallbackName, expected_ttx):
     font = ttLib.TTFont()
     font["name"] = ttLib.newTable("name")
@@ -1402,6 +1448,100 @@ def test_buildStatTable(axes, axisValues, elidedFallbackName, expected_ttx):
     assert expected_ttx == ttx
 
 
+def test_buildStatTable_platform_specific_names():
+    # PR: https://github.com/fonttools/fonttools/pull/2528
+    # Introduce new 'platform' feature for creating a STAT table.
+    # Set windowsNames and or macNames to create name table entries
+    # in the specified platforms
+    font_obj = ttLib.TTFont()
+    font_obj["name"] = ttLib.newTable("name")
+    font_obj["name"].names = []
+
+    wght_values = [
+        dict(nominalValue=200, rangeMinValue=200, rangeMaxValue=250, name="ExtraLight"),
+        dict(nominalValue=300, rangeMinValue=250, rangeMaxValue=350, name="Light"),
+        dict(
+            nominalValue=400,
+            rangeMinValue=350,
+            rangeMaxValue=450,
+            name="Regular",
+            flags=0x2,
+        ),
+        dict(nominalValue=500, rangeMinValue=450, rangeMaxValue=650, name="Medium"),
+        dict(nominalValue=700, rangeMinValue=650, rangeMaxValue=750, name="Bold"),
+        dict(nominalValue=800, rangeMinValue=750, rangeMaxValue=850, name="ExtraBold"),
+        dict(nominalValue=900, rangeMinValue=850, rangeMaxValue=900, name="Black"),
+    ]
+
+    AXES = [
+        dict(
+            tag="wght",
+            name="Weight",
+            ordering=1,
+            values=wght_values,
+        ),
+    ]
+
+    font_obj["name"].setName("ExtraLight", 260, 3, 1, 0x409)
+    font_obj["name"].setName("Light", 261, 3, 1, 0x409)
+    font_obj["name"].setName("Regular", 262, 3, 1, 0x409)
+    font_obj["name"].setName("Medium", 263, 3, 1, 0x409)
+    font_obj["name"].setName("Bold", 264, 3, 1, 0x409)
+    font_obj["name"].setName("ExtraBold", 265, 3, 1, 0x409)
+    font_obj["name"].setName("Black", 266, 3, 1, 0x409)
+
+    font_obj["name"].setName("Weight", 270, 3, 1, 0x409)
+
+    expected_names = [x.string for x in font_obj["name"].names]
+
+    builder.buildStatTable(font_obj, AXES, windowsNames=True, macNames=False)
+    actual_names = [x.string for x in font_obj["name"].names]
+
+    # no new name records were added by buildStatTable
+    # because windows-only names with the same strings were already present
+    assert expected_names == actual_names
+
+    font_obj["name"].removeNames(nameID=270)
+    expected_names = [x.string for x in font_obj["name"].names] + ["Weight"]
+
+    builder.buildStatTable(font_obj, AXES, windowsNames=True, macNames=False)
+    actual_names = [x.string for x in font_obj["name"].names]
+    # One new name records 'Weight' were added by buildStatTable
+    assert expected_names == actual_names
+
+    builder.buildStatTable(font_obj, AXES, windowsNames=True, macNames=True)
+    actual_names = [x.string for x in font_obj["name"].names]
+    expected_names = [
+        "Weight",
+        "Weight",
+        "Weight",
+        "ExtraLight",
+        "ExtraLight",
+        "ExtraLight",
+        "Light",
+        "Light",
+        "Light",
+        "Regular",
+        "Regular",
+        "Regular",
+        "Medium",
+        "Medium",
+        "Medium",
+        "Bold",
+        "Bold",
+        "Bold",
+        "ExtraBold",
+        "ExtraBold",
+        "ExtraBold",
+        "Black",
+        "Black",
+        "Black",
+    ]
+    # Because there is an inconsistency in the names add new name IDs
+    # for each platform -> windowsNames=True, macNames=True
+    assert sorted(expected_names) == sorted(actual_names)
+
+
 def test_stat_infinities():
     negInf = floatToFixed(builder.AXIS_VALUE_NEGATIVE_INFINITY, 16)
     assert struct.pack(">l", negInf) == b"\x80\x00\x00\x00"
@@ -1409,10 +1549,314 @@ def test_stat_infinities():
     assert struct.pack(">l", posInf) == b"\x7f\xff\xff\xff"
 
 
+def test_buildMathTable_empty():
+    ttFont = ttLib.TTFont()
+    ttFont.setGlyphOrder([])
+    builder.buildMathTable(ttFont)
+
+    assert "MATH" in ttFont
+    mathTable = ttFont["MATH"].table
+    assert mathTable.Version == 0x00010000
+
+    assert mathTable.MathConstants is None
+    assert mathTable.MathGlyphInfo is None
+    assert mathTable.MathVariants is None
+
+
+def test_buildMathTable_constants():
+    ttFont = ttLib.TTFont()
+    ttFont.setGlyphOrder([])
+    constants = {
+        "AccentBaseHeight": 516,
+        "AxisHeight": 262,
+        "DelimitedSubFormulaMinHeight": 1500,
+        "DisplayOperatorMinHeight": 2339,
+        "FlattenedAccentBaseHeight": 698,
+        "FractionDenomDisplayStyleGapMin": 198,
+        "FractionDenominatorDisplayStyleShiftDown": 698,
+        "FractionDenominatorGapMin": 66,
+        "FractionDenominatorShiftDown": 465,
+        "FractionNumDisplayStyleGapMin": 198,
+        "FractionNumeratorDisplayStyleShiftUp": 774,
+        "FractionNumeratorGapMin": 66,
+        "FractionNumeratorShiftUp": 516,
+        "FractionRuleThickness": 66,
+        "LowerLimitBaselineDropMin": 585,
+        "LowerLimitGapMin": 132,
+        "MathLeading": 300,
+        "OverbarExtraAscender": 66,
+        "OverbarRuleThickness": 66,
+        "OverbarVerticalGap": 198,
+        "RadicalDegreeBottomRaisePercent": 75,
+        "RadicalDisplayStyleVerticalGap": 195,
+        "RadicalExtraAscender": 66,
+        "RadicalKernAfterDegree": -556,
+        "RadicalKernBeforeDegree": 278,
+        "RadicalRuleThickness": 66,
+        "RadicalVerticalGap": 82,
+        "ScriptPercentScaleDown": 70,
+        "ScriptScriptPercentScaleDown": 55,
+        "SkewedFractionHorizontalGap": 66,
+        "SkewedFractionVerticalGap": 77,
+        "SpaceAfterScript": 42,
+        "StackBottomDisplayStyleShiftDown": 698,
+        "StackBottomShiftDown": 465,
+        "StackDisplayStyleGapMin": 462,
+        "StackGapMin": 198,
+        "StackTopDisplayStyleShiftUp": 774,
+        "StackTopShiftUp": 516,
+        "StretchStackBottomShiftDown": 585,
+        "StretchStackGapAboveMin": 132,
+        "StretchStackGapBelowMin": 132,
+        "StretchStackTopShiftUp": 165,
+        "SubSuperscriptGapMin": 264,
+        "SubscriptBaselineDropMin": 105,
+        "SubscriptShiftDown": 140,
+        "SubscriptTopMax": 413,
+        "SuperscriptBaselineDropMax": 221,
+        "SuperscriptBottomMaxWithSubscript": 413,
+        "SuperscriptBottomMin": 129,
+        "SuperscriptShiftUp": 477,
+        "SuperscriptShiftUpCramped": 358,
+        "UnderbarExtraDescender": 66,
+        "UnderbarRuleThickness": 66,
+        "UnderbarVerticalGap": 198,
+        "UpperLimitBaselineRiseMin": 165,
+        "UpperLimitGapMin": 132,
+    }
+    builder.buildMathTable(ttFont, constants=constants)
+    mathTable = ttFont["MATH"].table
+    assert mathTable.MathConstants
+    assert mathTable.MathGlyphInfo is None
+    assert mathTable.MathVariants is None
+    for k, v in constants.items():
+        r = getattr(mathTable.MathConstants, k)
+        try:
+            r = r.Value
+        except AttributeError:
+            pass
+        assert r == v
+
+
+def test_buildMathTable_italicsCorrection():
+    ttFont = ttLib.TTFont()
+    ttFont.setGlyphOrder(["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"])
+    italicsCorrections = {"A": 100, "C": 300, "D": 400, "E": 500}
+    builder.buildMathTable(ttFont, italicsCorrections=italicsCorrections)
+    mathTable = ttFont["MATH"].table
+    assert mathTable.MathConstants is None
+    assert mathTable.MathGlyphInfo
+    assert mathTable.MathVariants is None
+    assert set(
+        mathTable.MathGlyphInfo.MathItalicsCorrectionInfo.Coverage.glyphs
+    ) == set(italicsCorrections.keys())
+    for glyph, correction in zip(
+        mathTable.MathGlyphInfo.MathItalicsCorrectionInfo.Coverage.glyphs,
+        mathTable.MathGlyphInfo.MathItalicsCorrectionInfo.ItalicsCorrection,
+    ):
+        assert correction.Value == italicsCorrections[glyph]
+
+
+def test_buildMathTable_topAccentAttachment():
+    ttFont = ttLib.TTFont()
+    ttFont.setGlyphOrder(["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"])
+    topAccentAttachments = {"A": 10, "B": 20, "C": 30, "E": 50}
+    builder.buildMathTable(ttFont, topAccentAttachments=topAccentAttachments)
+    mathTable = ttFont["MATH"].table
+    assert mathTable.MathConstants is None
+    assert mathTable.MathGlyphInfo
+    assert mathTable.MathVariants is None
+    assert set(
+        mathTable.MathGlyphInfo.MathTopAccentAttachment.TopAccentCoverage.glyphs
+    ) == set(topAccentAttachments.keys())
+    for glyph, attachment in zip(
+        mathTable.MathGlyphInfo.MathTopAccentAttachment.TopAccentCoverage.glyphs,
+        mathTable.MathGlyphInfo.MathTopAccentAttachment.TopAccentAttachment,
+    ):
+        assert attachment.Value == topAccentAttachments[glyph]
+
+
+def test_buildMathTable_extendedShape():
+    ttFont = ttLib.TTFont()
+    ttFont.setGlyphOrder(["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"])
+    extendedShapes = {"A", "C", "E", "F"}
+    builder.buildMathTable(ttFont, extendedShapes=extendedShapes)
+    mathTable = ttFont["MATH"].table
+    assert mathTable.MathConstants is None
+    assert mathTable.MathGlyphInfo
+    assert mathTable.MathVariants is None
+    assert set(mathTable.MathGlyphInfo.ExtendedShapeCoverage.glyphs) == extendedShapes
+
+
+def test_buildMathTable_mathKern():
+    ttFont = ttLib.TTFont()
+    ttFont.setGlyphOrder(["A", "B"])
+    mathKerns = {
+        "A": {
+            "TopRight": ([10, 20], [10, 20, 30]),
+            "BottomRight": ([], [10]),
+            "TopLeft": ([10], [0, 20]),
+            "BottomLeft": ([-10, 0], [0, 10, 20]),
+        },
+    }
+    builder.buildMathTable(ttFont, mathKerns=mathKerns)
+    mathTable = ttFont["MATH"].table
+    assert mathTable.MathConstants is None
+    assert mathTable.MathGlyphInfo
+    assert mathTable.MathVariants is None
+    assert set(mathTable.MathGlyphInfo.MathKernInfo.MathKernCoverage.glyphs) == set(
+        mathKerns.keys()
+    )
+    for glyph, record in zip(
+        mathTable.MathGlyphInfo.MathKernInfo.MathKernCoverage.glyphs,
+        mathTable.MathGlyphInfo.MathKernInfo.MathKernInfoRecords,
+    ):
+        h, k = mathKerns[glyph]["TopRight"]
+        assert [v.Value for v in record.TopRightMathKern.CorrectionHeight] == h
+        assert [v.Value for v in record.TopRightMathKern.KernValue] == k
+        h, k = mathKerns[glyph]["BottomRight"]
+        assert [v.Value for v in record.BottomRightMathKern.CorrectionHeight] == h
+        assert [v.Value for v in record.BottomRightMathKern.KernValue] == k
+        h, k = mathKerns[glyph]["TopLeft"]
+        assert [v.Value for v in record.TopLeftMathKern.CorrectionHeight] == h
+        assert [v.Value for v in record.TopLeftMathKern.KernValue] == k
+        h, k = mathKerns[glyph]["BottomLeft"]
+        assert [v.Value for v in record.BottomLeftMathKern.CorrectionHeight] == h
+        assert [v.Value for v in record.BottomLeftMathKern.KernValue] == k
+
+
+def test_buildMathTable_vertVariants():
+    ttFont = ttLib.TTFont()
+    ttFont.setGlyphOrder(["A", "A.size1", "A.size2"])
+    vertGlyphVariants = {"A": [("A.size1", 100), ("A.size2", 200)]}
+    builder.buildMathTable(ttFont, vertGlyphVariants=vertGlyphVariants)
+    mathTable = ttFont["MATH"].table
+    assert mathTable.MathConstants is None
+    assert mathTable.MathGlyphInfo is None
+    assert mathTable.MathVariants
+    assert set(mathTable.MathVariants.VertGlyphCoverage.glyphs) == set(
+        vertGlyphVariants.keys()
+    )
+    for glyph, construction in zip(
+        mathTable.MathVariants.VertGlyphCoverage.glyphs,
+        mathTable.MathVariants.VertGlyphConstruction,
+    ):
+        assert [
+            (r.VariantGlyph, r.AdvanceMeasurement)
+            for r in construction.MathGlyphVariantRecord
+        ] == vertGlyphVariants[glyph]
+
+
+def test_buildMathTable_horizVariants():
+    ttFont = ttLib.TTFont()
+    ttFont.setGlyphOrder(["A", "A.size1", "A.size2"])
+    horizGlyphVariants = {"A": [("A.size1", 100), ("A.size2", 200)]}
+    builder.buildMathTable(ttFont, horizGlyphVariants=horizGlyphVariants)
+    mathTable = ttFont["MATH"].table
+    assert mathTable.MathConstants is None
+    assert mathTable.MathGlyphInfo is None
+    assert mathTable.MathVariants
+    assert set(mathTable.MathVariants.HorizGlyphCoverage.glyphs) == set(
+        horizGlyphVariants.keys()
+    )
+    for glyph, construction in zip(
+        mathTable.MathVariants.HorizGlyphCoverage.glyphs,
+        mathTable.MathVariants.HorizGlyphConstruction,
+    ):
+        assert [
+            (r.VariantGlyph, r.AdvanceMeasurement)
+            for r in construction.MathGlyphVariantRecord
+        ] == horizGlyphVariants[glyph]
+
+
+def test_buildMathTable_vertAssembly():
+    ttFont = ttLib.TTFont()
+    ttFont.setGlyphOrder(["A", "A.top", "A.middle", "A.bottom", "A.extender"])
+    vertGlyphAssembly = {
+        "A": [
+            [
+                ("A.bottom", 0, 0, 100, 200),
+                ("A.extender", 1, 50, 50, 100),
+                ("A.middle", 0, 100, 100, 200),
+                ("A.extender", 1, 50, 50, 100),
+                ("A.top", 0, 100, 0, 200),
+            ],
+            10,
+        ],
+    }
+    builder.buildMathTable(ttFont, vertGlyphAssembly=vertGlyphAssembly)
+    mathTable = ttFont["MATH"].table
+    assert mathTable.MathConstants is None
+    assert mathTable.MathGlyphInfo is None
+    assert mathTable.MathVariants
+    assert set(mathTable.MathVariants.VertGlyphCoverage.glyphs) == set(
+        vertGlyphAssembly.keys()
+    )
+    for glyph, construction in zip(
+        mathTable.MathVariants.VertGlyphCoverage.glyphs,
+        mathTable.MathVariants.VertGlyphConstruction,
+    ):
+        assert [
+            [
+                (
+                    r.glyph,
+                    r.PartFlags,
+                    r.StartConnectorLength,
+                    r.EndConnectorLength,
+                    r.FullAdvance,
+                )
+                for r in construction.GlyphAssembly.PartRecords
+            ],
+            construction.GlyphAssembly.ItalicsCorrection.Value,
+        ] == vertGlyphAssembly[glyph]
+
+
+def test_buildMathTable_horizAssembly():
+    ttFont = ttLib.TTFont()
+    ttFont.setGlyphOrder(["A", "A.top", "A.middle", "A.bottom", "A.extender"])
+    horizGlyphAssembly = {
+        "A": [
+            [
+                ("A.bottom", 0, 0, 100, 200),
+                ("A.extender", 1, 50, 50, 100),
+                ("A.middle", 0, 100, 100, 200),
+                ("A.extender", 1, 50, 50, 100),
+                ("A.top", 0, 100, 0, 200),
+            ],
+            10,
+        ],
+    }
+    builder.buildMathTable(ttFont, horizGlyphAssembly=horizGlyphAssembly)
+    mathTable = ttFont["MATH"].table
+    assert mathTable.MathConstants is None
+    assert mathTable.MathGlyphInfo is None
+    assert mathTable.MathVariants
+    assert set(mathTable.MathVariants.HorizGlyphCoverage.glyphs) == set(
+        horizGlyphAssembly.keys()
+    )
+    for glyph, construction in zip(
+        mathTable.MathVariants.HorizGlyphCoverage.glyphs,
+        mathTable.MathVariants.HorizGlyphConstruction,
+    ):
+        assert [
+            [
+                (
+                    r.glyph,
+                    r.PartFlags,
+                    r.StartConnectorLength,
+                    r.EndConnectorLength,
+                    r.FullAdvance,
+                )
+                for r in construction.GlyphAssembly.PartRecords
+            ],
+            construction.GlyphAssembly.ItalicsCorrection.Value,
+        ] == horizGlyphAssembly[glyph]
+
+
 class ChainContextualRulesetTest(object):
     def test_makeRulesets(self):
         font = ttLib.TTFont()
-        font.setGlyphOrder(["a","b","c","d","A","B","C","D","E"])
+        font.setGlyphOrder(["a", "b", "c", "d", "A", "B", "C", "D", "E"])
         sb = builder.ChainContextSubstBuilder(font, None)
         prefix, input_, suffix, lookups = [["a"], ["b"]], [["c"]], [], [None]
         sb.rules.append(builder.ChainContextualRule(prefix, input_, suffix, lookups))
@@ -1425,7 +1869,7 @@ class ChainContextualRulesetTest(object):
         # Second subtable has some glyph classes
         prefix, input_, suffix, lookups = [["A"]], [["E"]], [], [None]
         sb.rules.append(builder.ChainContextualRule(prefix, input_, suffix, lookups))
-        prefix, input_, suffix, lookups = [["A"]], [["C","D"]], [], [None]
+        prefix, input_, suffix, lookups = [["A"]], [["C", "D"]], [], [None]
         sb.rules.append(builder.ChainContextualRule(prefix, input_, suffix, lookups))
         prefix, input_, suffix, lookups = [["A", "B"]], [["E"]], [], [None]
         sb.rules.append(builder.ChainContextualRule(prefix, input_, suffix, lookups))
@@ -1435,7 +1879,7 @@ class ChainContextualRulesetTest(object):
         # Third subtable has no pre/post context
         prefix, input_, suffix, lookups = [], [["E"]], [], [None]
         sb.rules.append(builder.ChainContextualRule(prefix, input_, suffix, lookups))
-        prefix, input_, suffix, lookups = [], [["C","D"]], [], [None]
+        prefix, input_, suffix, lookups = [], [["C", "D"]], [], [None]
         sb.rules.append(builder.ChainContextualRule(prefix, input_, suffix, lookups))
 
         rulesets = sb.rulesets()
@@ -1443,7 +1887,7 @@ class ChainContextualRulesetTest(object):
         assert rulesets[0].hasPrefixOrSuffix
         assert not rulesets[0].hasAnyGlyphClasses
         cd = rulesets[0].format2ClassDefs()
-        assert set(cd[0].classes()[1:]) == set([("d",),("b",),("a",)])
+        assert set(cd[0].classes()[1:]) == set([("d",), ("b",), ("a",)])
         assert set(cd[1].classes()[1:]) == set([("c",)])
         assert set(cd[2].classes()[1:]) == set()
 
@@ -1456,7 +1900,7 @@ class ChainContextualRulesetTest(object):
         assert rulesets[2].format2ClassDefs()
         cd = rulesets[2].format2ClassDefs()
         assert set(cd[0].classes()[1:]) == set()
-        assert set(cd[1].classes()[1:]) == set([("C","D"), ("E",)])
+        assert set(cd[1].classes()[1:]) == set([("C", "D"), ("E",)])
         assert set(cd[2].classes()[1:]) == set()
 
 

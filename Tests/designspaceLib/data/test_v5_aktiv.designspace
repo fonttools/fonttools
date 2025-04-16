@@ -1,0 +1,621 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<designspace format="5.0">
+  <axes>
+    <axis tag="wght" name="Weight" minimum="100" maximum="900" default="400">
+      <map input="100" output="22"/>
+      <map input="200" output="38"/>
+      <map input="300" output="57"/>
+      <map input="400" output="84"/>
+      <map input="500" output="98"/>
+      <map input="600" output="115"/>
+      <map input="700" output="133"/>
+      <map input="800" output="158"/>
+      <map input="900" output="185"/>
+      <labels ordering="1">
+        <label uservalue="100" name="Hair"/>
+        <label uservalue="200" name="Thin"/>
+        <label uservalue="300" name="Light"/>
+        <label uservalue="400" name="Regular" elidable="true" linkeduservalue="700"/>
+        <label uservalue="500" name="Medium"/>
+        <label uservalue="600" name="SemiBold"/>
+        <label uservalue="700" name="Bold"/>
+        <label uservalue="800" name="XBold"/>
+        <label uservalue="900" name="Black"/>
+      </labels>
+    </axis>
+    <axis tag="wdth" name="Width" minimum="75" maximum="125" default="100">
+      <labels ordering="0">
+        <label uservalue="75" name="Cd"/>
+        <label uservalue="100" name="Normal" elidable="true"/>
+        <label uservalue="125" name="Ex"/>
+      </labels>
+    </axis>
+    <axis tag="ital" name="Italic" minimum="0" maximum="1" default="0">
+      <labels ordering="2">
+        <label uservalue="0" name="Upright" elidable="true" linkeduservalue="1"/>
+        <label uservalue="1" name="Italic"/>
+      </labels>
+    </axis>
+  </axes>
+
+  <rules processing="last">
+    <rule name="BRACKET.CYR">
+      <conditionset>
+        <condition name="Italic" minimum="0.1" maximum="1"/>
+      </conditionset>
+      <sub name="ghe.loclSRB" with="ghe.ital.loclSRB"/>
+      <sub name="ghe.loclMKD" with="ghe.ital.loclMKD"/>
+      <sub name="de.loclMKDSRB" with="de.ital.loclMKDSRB"/>
+      <sub name="pe.loclMKDSRB" with="pe.ital.loclMKDSRB"/>
+      <sub name="te.loclMKDSRB" with="te.ital.loclMKDSRB"/>
+      <sub name="gje.loclMKD" with="gje.ital.loclMKD"/>
+      <sub name="sha.loclMKDSRB" with="sha.ital.loclMKDSRB"/>
+    </rule>
+    <rule name="BRACKET.116.185">
+      <conditionset>
+        <condition name="Weight" minimum="116" maximum="185"/>
+        <condition name="Width" minimum="75" maximum="97.5"/>
+      </conditionset>
+      <sub name="cent" with="cent.BRACKET.130"/>
+      <sub name="dollar" with="dollar.BRACKET.130"/>
+    </rule>
+  </rules>
+
+  <sources>
+    <source filename="AktivGroteskCd_Hair.ufo" name="Aktiv Grotesk Cd Hair">
+      <location>
+        <dimension name="Weight" xvalue="22"/>
+        <dimension name="Width" xvalue="75"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </source>
+    <source filename="AktivGroteskCd_HairIt.ufo" name="Aktiv Grotesk Cd Hair Italic">
+      <location>
+        <dimension name="Weight" xvalue="22"/>
+        <dimension name="Width" xvalue="75"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </source>
+    <source filename="AktivGrotesk_Hair.ufo" name="Aktiv Grotesk Hair">
+      <location>
+        <dimension name="Weight" xvalue="22"/>
+        <dimension name="Width" xvalue="100"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </source>
+    <source filename="AktivGrotesk_HairIt.ufo" name="Aktiv Grotesk Hair Italic">
+      <location>
+        <dimension name="Weight" xvalue="22"/>
+        <dimension name="Width" xvalue="100"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </source>
+    <source filename="AktivGroteskEx_Hair.ufo" name="Aktiv Grotesk Ex Hair">
+      <location>
+        <dimension name="Weight" xvalue="22"/>
+        <dimension name="Width" xvalue="125"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </source>
+    <source filename="AktivGroteskEx_HairIt.ufo" name="Aktiv Grotesk Ex Hair Italic">
+      <location>
+        <dimension name="Weight" xvalue="22"/>
+        <dimension name="Width" xvalue="125"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </source>
+    <source filename="AktivGroteskCd_Rg.ufo" name="Aktiv Grotesk Cd">
+      <location>
+        <dimension name="Weight" xvalue="84"/>
+        <dimension name="Width" xvalue="75"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </source>
+    <source filename="AktivGroteskCd_It.ufo" name="Aktiv Grotesk Cd Italic">
+      <location>
+        <dimension name="Weight" xvalue="84"/>
+        <dimension name="Width" xvalue="75"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </source>
+    <source filename="AktivGrotesk_Rg.ufo" name="Aktiv Grotesk Regular" familyname="Aktiv Grotesk">
+      <location>
+        <dimension name="Weight" xvalue="84"/>
+        <dimension name="Width" xvalue="100"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </source>
+    <source filename="AktivGrotesk_Rg.ufo" name="Aktiv Grotesk Regular" layer="{126,100,0}">
+      <location>
+        <dimension name="Weight" xvalue="133"/>
+        <dimension name="Width" xvalue="100"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </source>
+    <source filename="AktivGrotesk_It.ufo" name="Aktiv Grotesk Italic">
+      <location>
+        <dimension name="Weight" xvalue="84"/>
+        <dimension name="Width" xvalue="100"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </source>
+    <source filename="AktivGrotesk_It.ufo" name="Aktiv Grotesk Italic {126,100,1}" layer="{126,100,1}">
+      <location>
+        <dimension name="Weight" xvalue="133"/>
+        <dimension name="Width" xvalue="100"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </source>
+    <source filename="AktivGroteskEx_Rg.ufo" name="Aktiv Grotesk Ex">
+      <location>
+        <dimension name="Weight" xvalue="84"/>
+        <dimension name="Width" xvalue="125"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </source>
+    <source filename="AktivGroteskEx_It.ufo" name="Aktiv Grotesk Ex Italic">
+      <location>
+        <dimension name="Weight" xvalue="84"/>
+        <dimension name="Width" xvalue="125"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </source>
+    <source filename="AktivGroteskCd_Blk.ufo" name="Aktiv Grotesk Cd Black">
+      <location>
+        <dimension name="Weight" xvalue="185"/>
+        <dimension name="Width" xvalue="75"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </source>
+    <source filename="AktivGroteskCd_BlkIt.ufo" name="Aktiv Grotesk Cd Black Italic">
+      <location>
+        <dimension name="Weight" xvalue="185"/>
+        <dimension name="Width" xvalue="75"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </source>
+    <source filename="AktivGrotesk_Blk.ufo" name="Aktiv Grotesk Black">
+      <location>
+        <dimension name="Weight" xvalue="185"/>
+        <dimension name="Width" xvalue="100"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </source>
+    <source filename="AktivGrotesk_BlkIt.ufo" name="Aktiv Grotesk Black Italic">
+      <location>
+        <dimension name="Weight" xvalue="185"/>
+        <dimension name="Width" xvalue="100"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </source>
+    <source filename="AktivGroteskEx_Blk.ufo" name="Aktiv Grotesk Ex Black">
+      <location>
+        <dimension name="Weight" xvalue="185"/>
+        <dimension name="Width" xvalue="125"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </source>
+    <source filename="AktivGroteskEx_BlkIt.ufo" name="Aktiv Grotesk Ex Black Italic">
+      <location>
+        <dimension name="Weight" xvalue="185"/>
+        <dimension name="Width" xvalue="125"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </source>
+  </sources>
+
+  <variable-fonts>
+    <variable-font name="AktivGroteskVF_WghtWdthItal">
+      <axis-subsets>
+        <axis-subset name="Weight"/>
+        <axis-subset name="Width"/>
+        <axis-subset name="Italic"/>
+      </axis-subsets>
+    </variable-font>
+    <variable-font name="AktivGroteskVF_WghtWdth">
+      <axis-subsets>
+        <axis-subset name="Weight"/>
+        <axis-subset name="Width"/>
+      </axis-subsets>
+    </variable-font>
+    <variable-font name="AktivGroteskVF_Wght">
+      <axis-subsets>
+        <axis-subset name="Weight"/>
+      </axis-subsets>
+    </variable-font>
+    <variable-font name="AktivGroteskVF_Italics_WghtWdth">
+      <axis-subsets>
+        <axis-subset name="Weight"/>
+        <axis-subset name="Width"/>
+        <axis-subset name="Italic" uservalue="1"/>
+      </axis-subsets>
+    </variable-font>
+    <variable-font name="AktivGroteskVF_Italics_Wght">
+      <axis-subsets>
+        <axis-subset name="Weight"/>
+        <axis-subset name="Italic" uservalue="1"/>
+      </axis-subsets>
+    </variable-font>
+  </variable-fonts>
+
+  <instances>
+    <instance filename="instances/AktivGroteskCd_Hair.ufo">
+      <location>
+        <dimension name="Weight" xvalue="22"/>
+        <dimension name="Width" xvalue="75"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGroteskCd_HairIt.ufo">
+      <location>
+        <dimension name="Weight" xvalue="22"/>
+        <dimension name="Width" xvalue="75"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGrotesk_Hair.ufo">
+      <location>
+        <dimension name="Weight" xvalue="22"/>
+        <dimension name="Width" xvalue="100"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGrotesk_HairIt.ufo">
+      <location>
+        <dimension name="Weight" xvalue="22"/>
+        <dimension name="Width" xvalue="100"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGroteskEx_Hair.ufo">
+      <location>
+        <dimension name="Weight" xvalue="22"/>
+        <dimension name="Width" xvalue="125"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGroteskEx_HairIt.ufo">
+      <location>
+        <dimension name="Weight" xvalue="22"/>
+        <dimension name="Width" xvalue="125"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGroteskCd_Th.ufo">
+      <location>
+        <dimension name="Weight" xvalue="38"/>
+        <dimension name="Width" xvalue="75"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGroteskCd_ThIt.ufo">
+      <location>
+        <dimension name="Weight" xvalue="38"/>
+        <dimension name="Width" xvalue="75"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGrotesk_Th.ufo">
+      <location>
+        <dimension name="Weight" xvalue="38"/>
+        <dimension name="Width" xvalue="100"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGrotesk_ThIt.ufo">
+      <location>
+        <dimension name="Weight" xvalue="38"/>
+        <dimension name="Width" xvalue="100"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGroteskEx_Th.ufo">
+      <location>
+        <dimension name="Weight" xvalue="38"/>
+        <dimension name="Width" xvalue="125"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGroteskEx_ThIt.ufo">
+      <location>
+        <dimension name="Weight" xvalue="38"/>
+        <dimension name="Width" xvalue="125"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGroteskCd_Lt.ufo">
+      <location>
+        <dimension name="Weight" xvalue="57"/>
+        <dimension name="Width" xvalue="75"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGroteskCd_LtIt.ufo">
+      <location>
+        <dimension name="Weight" xvalue="57"/>
+        <dimension name="Width" xvalue="75"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGrotesk_Lt.ufo">
+      <location>
+        <dimension name="Weight" xvalue="57"/>
+        <dimension name="Width" xvalue="100"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGrotesk_LtIt.ufo">
+      <location>
+        <dimension name="Weight" xvalue="57"/>
+        <dimension name="Width" xvalue="100"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGroteskEx_Lt.ufo">
+      <location>
+        <dimension name="Weight" xvalue="57"/>
+        <dimension name="Width" xvalue="125"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGroteskEx_LtIt.ufo">
+      <location>
+        <dimension name="Weight" xvalue="57"/>
+        <dimension name="Width" xvalue="125"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGroteskCd_Rg.ufo">
+      <location>
+        <dimension name="Weight" xvalue="84"/>
+        <dimension name="Width" xvalue="75"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGroteskCd_It.ufo">
+      <location>
+        <dimension name="Weight" xvalue="84"/>
+        <dimension name="Width" xvalue="75"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGrotesk_Rg.ufo">
+      <location>
+        <dimension name="Weight" xvalue="84"/>
+        <dimension name="Width" xvalue="100"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGrotesk_It.ufo">
+      <location>
+        <dimension name="Weight" xvalue="84"/>
+        <dimension name="Width" xvalue="100"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGroteskEx_Rg.ufo">
+      <location>
+        <dimension name="Weight" xvalue="84"/>
+        <dimension name="Width" xvalue="125"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGroteskEx_It.ufo">
+      <location>
+        <dimension name="Weight" xvalue="84"/>
+        <dimension name="Width" xvalue="125"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGroteskCd_Md.ufo">
+      <location>
+        <dimension name="Weight" xvalue="98"/>
+        <dimension name="Width" xvalue="75"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGroteskCd_MdIt.ufo">
+      <location>
+        <dimension name="Weight" xvalue="98"/>
+        <dimension name="Width" xvalue="75"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGrotesk_Md.ufo">
+      <location>
+        <dimension name="Weight" xvalue="98"/>
+        <dimension name="Width" xvalue="100"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGrotesk_MdIt.ufo">
+      <location>
+        <dimension name="Weight" xvalue="98"/>
+        <dimension name="Width" xvalue="100"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGroteskEx_Md.ufo">
+      <location>
+        <dimension name="Weight" xvalue="98"/>
+        <dimension name="Width" xvalue="125"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGroteskEx_MdIt.ufo">
+      <location>
+        <dimension name="Weight" xvalue="98"/>
+        <dimension name="Width" xvalue="125"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </instance>
+    <instance filename="../build/instances/AktivGroteskCd_SBd.ufo">
+      <location>
+        <dimension name="Weight" xvalue="115"/>
+        <dimension name="Width" xvalue="75"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </instance>
+    <instance filename="../build/instances/AktivGroteskCd_SBdIt.ufo">
+      <location>
+        <dimension name="Weight" xvalue="115"/>
+        <dimension name="Width" xvalue="75"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </instance>
+    <instance filename="../build/instances/AktivGrotesk_SBd.ufo">
+      <location>
+        <dimension name="Weight" xvalue="115"/>
+        <dimension name="Width" xvalue="100"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </instance>
+    <instance filename="../build/instances/AktivGrotesk_SBdIt.ufo">
+      <location>
+        <dimension name="Weight" xvalue="115"/>
+        <dimension name="Width" xvalue="100"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </instance>
+    <instance filename="../build/instances/AktivGroteskEx_SBd.ufo">
+      <location>
+        <dimension name="Weight" xvalue="115"/>
+        <dimension name="Width" xvalue="125"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </instance>
+    <instance filename="../build/instances/AktivGroteskEx_SBdIt.ufo">
+      <location>
+        <dimension name="Weight" xvalue="115"/>
+        <dimension name="Width" xvalue="125"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGroteskCd_Bd.ufo">
+      <location>
+        <dimension name="Weight" xvalue="133"/>
+        <dimension name="Width" xvalue="75"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGroteskCd_BdIt.ufo">
+      <location>
+        <dimension name="Weight" xvalue="133"/>
+        <dimension name="Width" xvalue="75"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGrotesk_Bd.ufo">
+      <location>
+        <dimension name="Weight" xvalue="133"/>
+        <dimension name="Width" xvalue="100"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGrotesk_BdIt.ufo">
+      <location>
+        <dimension name="Weight" xvalue="133"/>
+        <dimension name="Width" xvalue="100"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGroteskEx_Bd.ufo">
+      <location>
+        <dimension name="Weight" xvalue="133"/>
+        <dimension name="Width" xvalue="125"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGroteskEx_BdIt.ufo">
+      <location>
+        <dimension name="Weight" xvalue="133"/>
+        <dimension name="Width" xvalue="125"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGroteskCd_XBd.ufo">
+      <location>
+        <dimension name="Weight" xvalue="158"/>
+        <dimension name="Width" xvalue="75"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGroteskCd_XBdIt.ufo">
+      <location>
+        <dimension name="Weight" xvalue="158"/>
+        <dimension name="Width" xvalue="75"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGrotesk_XBd.ufo">
+      <location>
+        <dimension name="Weight" xvalue="158"/>
+        <dimension name="Width" xvalue="100"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGrotesk_XBdIt.ufo">
+      <location>
+        <dimension name="Weight" xvalue="158"/>
+        <dimension name="Width" xvalue="100"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGroteskEx_XBd.ufo">
+      <location>
+        <dimension name="Weight" xvalue="158"/>
+        <dimension name="Width" xvalue="125"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGroteskEx_XBdIt.ufo">
+      <location>
+        <dimension name="Weight" xvalue="158"/>
+        <dimension name="Width" xvalue="125"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGroteskCd_Blk.ufo">
+      <location>
+        <dimension name="Weight" xvalue="185"/>
+        <dimension name="Width" xvalue="75"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGroteskCd_BlkIt.ufo">
+      <location>
+        <dimension name="Weight" xvalue="185"/>
+        <dimension name="Width" xvalue="75"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGrotesk_Blk.ufo">
+      <location>
+        <dimension name="Weight" xvalue="185"/>
+        <dimension name="Width" xvalue="100"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGrotesk_BlkIt.ufo">
+      <location>
+        <dimension name="Weight" xvalue="185"/>
+        <dimension name="Width" xvalue="100"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGroteskEx_Blk.ufo">
+      <location>
+        <dimension name="Weight" xvalue="185"/>
+        <dimension name="Width" xvalue="125"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </instance>
+    <instance filename="instances/AktivGroteskEx_BlkIt.ufo">
+      <location>
+        <dimension name="Weight" xvalue="185"/>
+        <dimension name="Width" xvalue="125"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </instance>
+  </instances>
+</designspace>

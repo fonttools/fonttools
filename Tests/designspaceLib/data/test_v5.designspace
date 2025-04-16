@@ -1,0 +1,311 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<designspace format="5.0">
+  <axes elidedfallbackname="Regular">
+    <axis tag="wght" name="Weight" minimum="200" maximum="1000" default="200">
+      <labelname xml:lang="en">Wéíght</labelname>
+      <labelname xml:lang="fa-IR">قطر</labelname>
+      <map input="200" output="0"/>
+      <map input="300" output="100"/>
+      <map input="400" output="368"/>
+      <map input="600" output="600"/>
+      <map input="700" output="824"/>
+      <map input="900" output="1000"/>
+      <!-- All axes provide STAT information with the "labels" element. -->
+      <labels>
+        <label uservalue="200" userminimum="200" usermaximum="250" name="Extra Light">
+          <labelname xml:lang="de">Extraleicht</labelname>
+          <labelname xml:lang="fr">Extra léger</labelname>
+        </label>
+        <label uservalue="300" userminimum="250" usermaximum="350" name="Light"/>
+        <label uservalue="400" userminimum="350" usermaximum="450" name="Regular" elidable="true"/>
+        <label uservalue="600" userminimum="450" usermaximum="650" name="Semi Bold"/>
+        <label uservalue="700" userminimum="650" usermaximum="850" name="Bold"/>
+        <label uservalue="900" userminimum="850" usermaximum="900" name="Black"/>
+        <!--
+          Add "recursive" linked user values, see:
+          https://github.com/fonttools/fonttools/issues/2852
+          https://github.com/fonttools/fonttools/discussions/2790
+        -->
+        <label uservalue="400" name="Regular" elidable="true" linkeduservalue="700"/>
+        <label uservalue="700" name="Bold" linkeduservalue="400"/>
+      </labels>
+    </axis>
+
+    <axis tag="wdth" name="Width" minimum="50" maximum="150" default="100" hidden="1">
+      <labelname xml:lang="fr">Chasse</labelname>
+      <map input="50" output="10"/>
+      <map input="100" output="20"/>
+      <map input="125" output="66"/>
+      <map input="150" output="990"/>
+      <labels ordering="1">
+        <label uservalue="50" name="Condensed"/>
+        <label uservalue="100" name="Normal" elidable="true" oldersibling="true"/>
+        <label uservalue="125" name="Wide"/>
+        <!-- Allow specifying only one end of the range, the other is assumed to
+          be infinity as does otlLib buildStatTable -->
+        <label uservalue="150" userminimum="150" name="Extra Wide"/>
+      </labels>
+    </axis>
+
+    <!--
+      Discrete axes provide a list of discrete values.
+      No interpolation is allowed between these.
+    -->
+    <axis tag="ital" name="Italic" values="0 1" default="0">
+      <labels>
+        <!-- Discrete axes also provide STAT information. -->
+        <label uservalue="0" name="Roman" elidable="true" linkeduservalue="1"/>
+        <label uservalue="1" name="Italic"/>
+      </labels>
+    </axis>
+  </axes>
+
+  <!-- Freestanding labels are analogues of STAT format 4 entries.
+        They give names to freestyle locations. -->
+  <labels>
+    <label name="Some Style">
+      <labelname xml:lang="fr">Un Style</labelname>
+      <location>
+        <dimension name="Weight" uservalue="300"/>
+        <dimension name="Width" uservalue="50"/>
+        <dimension name="Italic" uservalue="0"/>
+      </location>
+    </label>
+    <label name="Other">
+      <location>
+        <dimension name="Weight" uservalue="700"/>
+        <dimension name="Width" uservalue="100"/>
+        <dimension name="Italic" uservalue="1"/>
+      </location>
+    </label>
+  </labels>
+
+  <rules processing="last">
+    <rule name="named.rule.1">
+      <conditionset>
+        <condition name="axisName_a" minimum="0" maximum="1"/>
+        <condition name="axisName_b" minimum="2" maximum="3"/>
+      </conditionset>
+      <sub name="a" with="a.alt"/>
+    </rule>
+  </rules>
+
+  <sources>
+    <source filename="masterTest1.ufo" name="master.ufo1" familyname="MasterFamilyName" stylename="MasterStyleNameOne">
+      <familyname xml:lang="fr">Montserrat</familyname>
+      <familyname xml:lang="ja">モンセラート</familyname>
+      <lib copy="1"/>
+      <features copy="1"/>
+      <info copy="1"/>
+      <glyph name="A" mute="1"/>
+      <glyph name="Z" mute="1"/>
+      <location>
+        <dimension name="Weight" xvalue="0"/>
+        <dimension name="Width" xvalue="20"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </source>
+    <source filename="masterTest2.ufo" name="master.ufo2" familyname="MasterFamilyName" stylename="MasterStyleNameTwo">
+      <kerning mute="1"/>
+      <location>
+        <dimension name="Weight" xvalue="1000"/>
+        <dimension name="Width" xvalue="20"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </source>
+    <source filename="masterTest2.ufo" name="master.ufo2" familyname="MasterFamilyName" stylename="Supports" layer="supports">
+      <location>
+        <dimension name="Weight" xvalue="1000"/>
+        <dimension name="Width" xvalue="20"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </source>
+    <source filename="masterTest2.ufo" name="master.ufo3" familyname="MasterFamilyName" stylename="FauxItalic">
+      <location>
+        <dimension name="Weight" xvalue="0"/>
+        <dimension name="Width" xvalue="100"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </source>
+  </sources>
+
+  <variable-fonts>
+    <!--
+      If this element is present, all output targets must be listed within it.
+      If it is not present, the full Designspace is the output, like in version 4.x.
+
+      Continuous axes can be included either:
+        * in full,
+        * or only on a reduced interval (different minimum-maximum),
+        * or only at 1 discrete location
+      Dicrete axes cannot be included in full, and we must specify a value
+      (or the compiler should assume the default value).
+    -->
+    <variable-font name="Test_WghtWdth" filename="Test_WghtWdth_different_from_name.ttf">
+      <!-- This one is the Roman (default location along ital),
+           with full range for the Weight axis. -->
+      <axis-subsets>
+        <axis-subset name="Weight"/>
+        <axis-subset name="Width"/>
+      </axis-subsets>
+      <lib>
+        <dict>
+          <key>com.vtt.source</key>
+          <string>sources/vtt/Test_WghtWdth.vtt</string>
+        </dict>
+      </lib>
+    </variable-font>
+    <variable-font name="Test_Wght">
+      <!-- This one is the Roman (default location along ital),
+           with full range for the Weight axis. -->
+      <axis-subsets>
+        <axis-subset name="Weight"/>
+      </axis-subsets>
+      <lib>
+        <dict>
+          <key>com.vtt.source</key>
+          <string>sources/vtt/Test_Wght.vtt</string>
+        </dict>
+      </lib>
+    </variable-font>
+    <variable-font name="TestCd_Wght">
+      <!-- This one is the Roman (default location along ital),
+           with full range for the Weight axis. -->
+      <axis-subsets>
+        <axis-subset name="Weight"/>
+        <axis-subset name="Width" uservalue="0"/>
+      </axis-subsets>
+    </variable-font>
+    <variable-font name="TestWd_Wght">
+      <!-- This one is the Roman (default location along ital),
+           with full range for the Weight axis. -->
+      <axis-subsets>
+        <axis-subset name="Weight"/>
+        <axis-subset name="Width" uservalue="1000"/>
+      </axis-subsets>
+    </variable-font>
+    <variable-font name="TestItalic_Wght">
+      <!-- This one is the Italic, with full range for the Weight axis. -->
+      <axis-subsets>
+        <axis-subset name="Weight"/>
+        <axis-subset name="Italic" uservalue="1"/>
+      </axis-subsets>
+    </variable-font>
+    <variable-font name="TestRB_Wght">
+      <!-- As an example, this would be the Roman with a reduced range. -->
+      <axis-subsets>
+        <axis-subset name="Weight" userminimum="400" usermaximum="700" userdefault="400"/>
+        <axis-subset name="Italic" uservalue="0"/>
+      </axis-subsets>
+    </variable-font>
+  </variable-fonts>
+
+  <instances>
+    <instance name="instance.ufo1" familyname="InstanceFamilyName" stylename="InstanceStyleName" filename="instances/instanceTest1.ufo" postscriptfontname="InstancePostscriptName" stylemapfamilyname="InstanceStyleMapFamilyName" stylemapstylename="InstanceStyleMapStyleName">
+      <stylename xml:lang="fr">Demigras</stylename>
+      <stylename xml:lang="ja">半ば</stylename>
+      <familyname xml:lang="fr">Montserrat</familyname>
+      <familyname xml:lang="ja">モンセラート</familyname>
+      <stylemapstylename xml:lang="de">Standard</stylemapstylename>
+      <stylemapfamilyname xml:lang="de">Montserrat Halbfett</stylemapfamilyname>
+      <stylemapfamilyname xml:lang="ja">モンセラート SemiBold</stylemapfamilyname>
+      <location>
+        <dimension name="Weight" xvalue="500"/>
+        <dimension name="Width" xvalue="20"/>
+      </location>
+
+      <!-- The following elements are deprecated in v5.0. They can still be
+           read, but they won't be written out again (they don't roundtrip). -->
+      <!-- ROUNDTRIP_TEST_REMOVE_ME_BEGIN -->
+      <glyphs>
+        <glyph mute="1" unicode="0x123 0x124 0x125" name="arrow"/>
+      </glyphs>
+      <kerning/>
+      <info/>
+      <!-- ROUNDTRIP_TEST_REMOVE_ME_END -->
+
+      <lib>
+        <dict>
+          <key>com.coolDesignspaceApp.binaryData</key>
+          <data>
+          PGJpbmFyeSBndW5rPg==
+          </data>
+          <key>com.coolDesignspaceApp.specimenText</key>
+          <string>Hamburgerwhatever</string>
+        </dict>
+      </lib>
+    </instance>
+    <instance name="instance.ufo2" familyname="InstanceFamilyName" stylename="InstanceStyleName" filename="instances/instanceTest2.ufo" postscriptfontname="InstancePostscriptName" stylemapfamilyname="InstanceStyleMapFamilyName" stylemapstylename="InstanceStyleMapStyleName">
+      <location>
+        <dimension name="Weight" xvalue="500"/>
+        <dimension name="Width" xvalue="400" yvalue="300"/>
+      </location>
+      <!-- ROUNDTRIP_TEST_REMOVE_ME_BEGIN -->
+      <glyphs>
+        <glyph unicode="0x65 0xc9 0x12d" name="arrow">
+          <location>
+            <dimension name="Weight" xvalue="120"/>
+            <dimension name="Width" xvalue="100"/>
+          </location>
+          <note>A note about this glyph</note>
+          <masters>
+            <master glyphname="BB" source="master.ufo1">
+              <location>
+                <dimension name="Weight" xvalue="20"/>
+                <dimension name="Width" xvalue="20"/>
+              </location>
+            </master>
+            <master glyphname="CC" source="master.ufo2">
+              <location>
+                <dimension name="Weight" xvalue="900"/>
+                <dimension name="Width" xvalue="900"/>
+              </location>
+            </master>
+          </masters>
+        </glyph>
+        <glyph name="arrow2"/>
+      </glyphs>
+      <kerning/>
+      <info/>
+      <!-- ROUNDTRIP_TEST_REMOVE_ME_END -->
+    </instance>
+
+    <!--
+      These instances will derive all their data from the data above.
+
+      Instances can specify their location either:
+        - using the name of a location label
+        - with design coordinates (xvalue="")
+        - with user coordinates (uservalue="")
+        - with a mix of both coordinate systems
+    -->
+    <instance location="Some Style"/>
+    <instance>
+      <location>
+        <dimension name="Weight" xvalue="600"/>
+        <dimension name="Width" xvalue="401" yvalue="420"/>
+      </location>
+    </instance>
+    <instance>
+      <location>
+        <dimension name="Weight" xvalue="10"/>
+        <dimension name="Width" uservalue="100"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </instance>
+    <instance>
+      <location>
+        <dimension name="Weight" uservalue="300"/>
+        <dimension name="Width" uservalue="130"/>
+        <dimension name="Italic" uservalue="1"/>
+      </location>
+    </instance>
+  </instances>
+
+  <lib>
+    <dict>
+      <key>com.coolDesignspaceApp.previewSize</key>
+      <integer>30</integer>
+    </dict>
+  </lib>
+</designspace>

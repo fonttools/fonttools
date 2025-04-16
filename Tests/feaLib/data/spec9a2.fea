@@ -1,0 +1,7 @@
+table BASE {
+   HorizAxis.BaseTagList ideo romn;
+   HorizAxis.BaseScriptList latn romn -120 0, cyrl romn -120 0, grek romn -120 0, hani ideo -120 0, kana ideo -120 0, hang ideo -120 0;
+   HorizAxis.MinMax cyrl dflt -800, 1200;
+   # Some comment
+   HorizAxis.MinMax cyrl RUS  -1000, 1000;
+} BASE;

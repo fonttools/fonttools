@@ -26,8 +26,7 @@ class OTTableReaderTest(unittest.TestCase):
 
     def test_readUShortArray(self):
         reader = OTTableReader(deHexStr("DE AD BE EF CA FE"))
-        self.assertEqual(list(reader.readUShortArray(3)),
-                         [0xDEAD, 0xBEEF, 0xCAFE])
+        self.assertEqual(list(reader.readUShortArray(3)), [0xDEAD, 0xBEEF, 0xCAFE])
         self.assertEqual(reader.pos, 6)
 
     def test_readUInt24(self):
@@ -91,4 +90,5 @@ class OTTableWriterTest(unittest.TestCase):
 
 if __name__ == "__main__":
     import sys
+
     sys.exit(unittest.main())

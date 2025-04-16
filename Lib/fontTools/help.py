@@ -20,14 +20,15 @@ def main():
             continue
         try:
             description = imports.main.__doc__
-            if description:
+            # Cython modules seem to return "main()" as the docstring
+            if description and description != "main()":
                 pkg = pkg.replace("fontTools.", "").replace(".__main__", "")
                 # show the docstring's first line only
                 descriptions[pkg] = description.splitlines()[0]
         except AttributeError as e:
             pass
     for pkg, description in descriptions.items():
-        print("fonttools %-12s %s" % (pkg, description), file=sys.stderr)
+        print("fonttools %-25s %s" % (pkg, description), file=sys.stderr)
 
 
 if __name__ == "__main__":

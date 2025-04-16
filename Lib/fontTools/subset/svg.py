@@ -7,13 +7,14 @@ from typing import Dict, Iterable, Iterator, List, Optional, Set, Tuple
 
 try:
     from lxml import etree
-except ModuleNotFoundError:
+except ImportError:
     # lxml is required for subsetting SVG, but we prefer to delay the import error
     # until subset_glyphs() is called (i.e. if font to subset has an 'SVG ' table)
     etree = None
 
 from fontTools import ttLib
 from fontTools.subset.util import _add_method
+from fontTools.ttLib.tables.S_V_G_ import SVGDocument
 
 
 __all__ = ["subset_glyphs"]
@@ -36,7 +37,10 @@ def xpath(path):
 
 
 def group_elements_by_id(tree: etree.Element) -> Dict[str, etree.Element]:
-    return {el.attrib["id"]: el for el in xpath(".//svg:*[@id]")(tree)}
+    # select all svg elements with 'id' attribute no matter where they are
+    # including the root element itself:
+    # https://github.com/fonttools/fonttools/issues/2548
+    return {el.attrib["id"]: el for el in xpath("//svg:*[@id]")(tree)}
 
 
 def parse_css_declarations(style_attr: str) -> Dict[str, str]:
@@ -73,7 +77,7 @@ def iter_referenced_ids(tree: etree.Element) -> Iterator[str]:
 
         attrs = el.attrib
         if "style" in attrs:
-            attrs = {**attrs, **parse_css_declarations(el.attrib["style"])}
+            attrs = {**dict(attrs), **parse_css_declarations(el.attrib["style"])}
         for attr in ("fill", "clip-path"):
             if attr in attrs:
                 value = attrs[attr]
@@ -189,7 +193,7 @@ def ranges(ints: Iterable[int]) -> Iterator[Tuple[int, int]]:
 @_add_method(ttLib.getTableClass("SVG "))
 def subset_glyphs(self, s) -> bool:
     if etree is None:
-        raise ModuleNotFoundError("No module named 'lxml', required to subset SVG")
+        raise ImportError("No module named 'lxml', required to subset SVG")
 
     # glyph names (before subsetting)
     glyph_order: List[str] = s.orig_glyph_order
@@ -198,10 +202,11 @@ def subset_glyphs(self, s) -> bool:
     # map from original to new glyph indices (after subsetting)
     glyph_index_map: Dict[int, int] = s.glyph_index_map
 
-    new_docs: List[Tuple[bytes, int, int]] = []
-    for doc, start, end in self.docList:
-
-        glyphs = {glyph_order[i] for i in range(start, end + 1)}.intersection(s.glyphs)
+    new_docs: List[SVGDocument] = []
+    for doc in self.docList:
+        glyphs = {
+            glyph_order[i] for i in range(doc.startGlyphID, doc.endGlyphID + 1)
+        }.intersection(s.glyphs)
         if not glyphs:
             # no intersection: we can drop the whole record
             continue
@@ -209,7 +214,7 @@ def subset_glyphs(self, s) -> bool:
         svg = etree.fromstring(
             # encode because fromstring dislikes xml encoding decl if input is str.
             # SVG xml encoding must be utf-8 as per OT spec.
-            doc.encode("utf-8"),
+            doc.data.encode("utf-8"),
             parser=etree.XMLParser(
                 # Disable libxml2 security restrictions to support very deep trees.
                 # Without this we would get an error like this:
@@ -219,6 +224,9 @@ def subset_glyphs(self, s) -> bool:
                 # ignore blank text as it's not meaningful in OT-SVG; it also prevents
                 # dangling tail text after removing an element when pretty_print=True
                 remove_blank_text=True,
+                # don't replace entities; we don't expect any in OT-SVG and they may
+                # be abused for XXE attacks
+                resolve_entities=False,
             ),
         )
 
@@ -238,7 +246,7 @@ def subset_glyphs(self, s) -> bool:
 
         new_gids = (glyph_index_map[i] for i in gids)
         for start, end in ranges(new_gids):
-            new_docs.append((new_doc, start, end))
+            new_docs.append(SVGDocument(new_doc, start, end, doc.compressed))
 
     self.docList = new_docs
 

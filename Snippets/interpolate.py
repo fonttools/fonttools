@@ -40,11 +40,12 @@ def AddFontVariations(font):
 
     # https://www.microsoft.com/typography/otspec/os2.htm#wtc
     for name, wght in (
-            ("Thin", 100),
-            ("Light", 300),
-            ("Regular", 400),
-            ("Bold", 700),
-            ("Black", 900)):
+        ("Thin", 100),
+        ("Light", 300),
+        ("Regular", 400),
+        ("Bold", 700),
+        ("Black", 900),
+    ):
         inst = NamedInstance()
         inst.nameID = AddName(font, name).nameID
         inst.coordinates = {"wght": wght}
@@ -72,19 +73,21 @@ def AddGlyphVariations(font, thin, regular, black):
         regularCoord = GetCoordinates(regular, glyphName)
         thinCoord = GetCoordinates(thin, glyphName)
         blackCoord = GetCoordinates(black, glyphName)
-        if not regularCoord or not blackCoord or not thinCoord:            
-            logging.warning("glyph %s not present in all input fonts",
-                            glyphName)
+        if not regularCoord or not blackCoord or not thinCoord:
+            logging.warning("glyph %s not present in all input fonts", glyphName)
             continue
-        if (len(regularCoord) != len(blackCoord) or
-            len(regularCoord) != len(thinCoord)):
-            logging.warning("glyph %s has not the same number of "
-                            "control points in all input fonts", glyphName)
+        if len(regularCoord) != len(blackCoord) or len(regularCoord) != len(thinCoord):
+            logging.warning(
+                "glyph %s has not the same number of "
+                "control points in all input fonts",
+                glyphName,
+            )
             continue
         thinDelta = []
         blackDelta = []
-        for ((regX, regY), (blackX, blackY), (thinX, thinY)) in \
-                zip(regularCoord, blackCoord, thinCoord):
+        for (regX, regY), (blackX, blackY), (thinX, thinY) in zip(
+            regularCoord, blackCoord, thinCoord
+        ):
             thinDelta.append(((thinX - regX, thinY - regY)))
             blackDelta.append((blackX - regX, blackY - regY))
         thinVar = TupleVariation({"wght": (-1.0, -1.0, 0.0)}, thinDelta)
@@ -111,7 +114,6 @@ def GetCoordinates(font, glyphName):
     # Add phantom points for (left, right, top, bottom) positions.
     horizontalAdvanceWidth, leftSideBearing = font["hmtx"].metrics[glyphName]
 
-
     leftSideX = glyph.xMin - leftSideBearing
     rightSideX = leftSideX + horizontalAdvanceWidth
 
@@ -119,10 +121,7 @@ def GetCoordinates(font, glyphName):
     topSideY = glyph.yMax
     bottomSideY = -glyph.yMin
 
-    coord.extend([(leftSideX, 0),
-                  (rightSideX, 0),
-                  (0, topSideY),
-                  (0, bottomSideY)])
+    coord.extend([(leftSideX, 0), (rightSideX, 0), (0, topSideY), (0, bottomSideY)])
     return coord
 
 
@@ -139,4 +138,5 @@ def main():
 
 if __name__ == "__main__":
     import sys
+
     sys.exit(main())

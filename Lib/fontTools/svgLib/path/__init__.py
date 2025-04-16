@@ -9,10 +9,12 @@ __all__ = [tostr(s) for s in ("SVGPath", "parse_path")]
 
 
 class SVGPath(object):
-    """ Parse SVG ``path`` elements from a file or string, and draw them
+    """Parse SVG ``path`` elements from a file or string, and draw them
     onto a glyph object that supports the FontTools Pen protocol.
 
     For example, reading from an SVG file and drawing to a Defcon Glyph:
+
+    .. code-block::
 
         import defcon
         glyph = defcon.Glyph()
@@ -22,6 +24,8 @@ class SVGPath(object):
 
     Or reading from a string containing SVG data, using the alternative
     'fromstring' (a class method):
+
+    .. code-block::
 
         data = '<?xml version="1.0" ...'
         svg = SVGPath.fromstring(data)

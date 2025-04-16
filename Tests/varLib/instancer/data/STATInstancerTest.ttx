@@ -1,0 +1,1831 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="4.33">
+
+  <GlyphOrder>
+    <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
+    <GlyphID id="0" name=".notdef"/>
+  </GlyphOrder>
+
+  <head>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="1.0"/>
+    <fontRevision value="0.0"/>
+    <checkSumAdjustment value="0xbc466984"/>
+    <magicNumber value="0x5f0f3cf5"/>
+    <flags value="00000000 00000011"/>
+    <unitsPerEm value="1000"/>
+    <created value="Tue Jul  5 13:33:16 2022"/>
+    <modified value="Tue Jul  5 13:33:42 2022"/>
+    <xMin value="50"/>
+    <yMin value="-200"/>
+    <xMax value="450"/>
+    <yMax value="800"/>
+    <macStyle value="00000000 00000000"/>
+    <lowestRecPPEM value="6"/>
+    <fontDirectionHint value="2"/>
+    <indexToLocFormat value="0"/>
+    <glyphDataFormat value="0"/>
+  </head>
+
+  <hhea>
+    <tableVersion value="0x00010000"/>
+    <ascent value="1000"/>
+    <descent value="-200"/>
+    <lineGap value="0"/>
+    <advanceWidthMax value="500"/>
+    <minLeftSideBearing value="50"/>
+    <minRightSideBearing value="50"/>
+    <xMaxExtent value="450"/>
+    <caretSlopeRise value="1"/>
+    <caretSlopeRun value="0"/>
+    <caretOffset value="0"/>
+    <reserved0 value="0"/>
+    <reserved1 value="0"/>
+    <reserved2 value="0"/>
+    <reserved3 value="0"/>
+    <metricDataFormat value="0"/>
+    <numberOfHMetrics value="1"/>
+  </hhea>
+
+  <maxp>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="0x10000"/>
+    <numGlyphs value="1"/>
+    <maxPoints value="8"/>
+    <maxContours value="2"/>
+    <maxCompositePoints value="0"/>
+    <maxCompositeContours value="0"/>
+    <maxZones value="1"/>
+    <maxTwilightPoints value="0"/>
+    <maxStorage value="0"/>
+    <maxFunctionDefs value="0"/>
+    <maxInstructionDefs value="0"/>
+    <maxStackElements value="0"/>
+    <maxSizeOfInstructions value="0"/>
+    <maxComponentElements value="0"/>
+    <maxComponentDepth value="0"/>
+  </maxp>
+
+  <OS_2>
+    <!-- The fields 'usFirstCharIndex' and 'usLastCharIndex'
+         will be recalculated by the compiler -->
+    <version value="4"/>
+    <xAvgCharWidth value="500"/>
+    <usWeightClass value="400"/>
+    <usWidthClass value="5"/>
+    <fsType value="00000000 00000100"/>
+    <ySubscriptXSize value="650"/>
+    <ySubscriptYSize value="600"/>
+    <ySubscriptXOffset value="0"/>
+    <ySubscriptYOffset value="75"/>
+    <ySuperscriptXSize value="650"/>
+    <ySuperscriptYSize value="600"/>
+    <ySuperscriptXOffset value="0"/>
+    <ySuperscriptYOffset value="350"/>
+    <yStrikeoutSize value="50"/>
+    <yStrikeoutPosition value="300"/>
+    <sFamilyClass value="0"/>
+    <panose>
+      <bFamilyType value="0"/>
+      <bSerifStyle value="0"/>
+      <bWeight value="0"/>
+      <bProportion value="0"/>
+      <bContrast value="0"/>
+      <bStrokeVariation value="0"/>
+      <bArmStyle value="0"/>
+      <bLetterForm value="0"/>
+      <bMidline value="0"/>
+      <bXHeight value="0"/>
+    </panose>
+    <ulUnicodeRange1 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange2 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange3 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange4 value="00000000 00000000 00000000 00000000"/>
+    <achVendID value="NONE"/>
+    <fsSelection value="00000000 01000000"/>
+    <usFirstCharIndex value="65535"/>
+    <usLastCharIndex value="65535"/>
+    <sTypoAscender value="800"/>
+    <sTypoDescender value="-200"/>
+    <sTypoLineGap value="200"/>
+    <usWinAscent value="1000"/>
+    <usWinDescent value="200"/>
+    <ulCodePageRange1 value="00000000 00000000 00000000 00000001"/>
+    <ulCodePageRange2 value="00000000 00000000 00000000 00000000"/>
+    <sxHeight value="500"/>
+    <sCapHeight value="700"/>
+    <usDefaultChar value="0"/>
+    <usBreakChar value="32"/>
+    <usMaxContext value="0"/>
+  </OS_2>
+
+  <hmtx>
+    <mtx name=".notdef" width="500" lsb="50"/>
+  </hmtx>
+
+  <cmap>
+    <tableVersion version="0"/>
+    <cmap_format_4 platformID="0" platEncID="3" language="0">
+    </cmap_format_4>
+    <cmap_format_4 platformID="3" platEncID="1" language="0">
+    </cmap_format_4>
+  </cmap>
+
+  <loca>
+    <!-- The 'loca' table will be calculated by the compiler -->
+  </loca>
+
+  <glyf>
+
+    <!-- The xMin, yMin, xMax and yMax values
+         will be recalculated by the compiler. -->
+
+    <TTGlyph name=".notdef" xMin="50" yMin="-200" xMax="450" yMax="800">
+      <contour>
+        <pt x="50" y="-200" on="1"/>
+        <pt x="50" y="800" on="1"/>
+        <pt x="450" y="800" on="1"/>
+        <pt x="450" y="-200" on="1"/>
+      </contour>
+      <contour>
+        <pt x="100" y="-150" on="1"/>
+        <pt x="400" y="-150" on="1"/>
+        <pt x="400" y="750" on="1"/>
+        <pt x="100" y="750" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+  </glyf>
+
+  <name>
+    <namerecord nameID="256" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Weight
+    </namerecord>
+    <namerecord nameID="257" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Width
+    </namerecord>
+    <namerecord nameID="258" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Italic
+    </namerecord>
+    <namerecord nameID="259" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Cd Hair
+    </namerecord>
+    <namerecord nameID="260" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-CdHair
+    </namerecord>
+    <namerecord nameID="261" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Cd Hair Italic
+    </namerecord>
+    <namerecord nameID="262" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-CdHairItalic
+    </namerecord>
+    <namerecord nameID="263" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Hair
+    </namerecord>
+    <namerecord nameID="264" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-Hair
+    </namerecord>
+    <namerecord nameID="265" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Hair Italic
+    </namerecord>
+    <namerecord nameID="266" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-HairItalic
+    </namerecord>
+    <namerecord nameID="267" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Ex Hair
+    </namerecord>
+    <namerecord nameID="268" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-ExHair
+    </namerecord>
+    <namerecord nameID="269" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Ex Hair Italic
+    </namerecord>
+    <namerecord nameID="270" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-ExHairItalic
+    </namerecord>
+    <namerecord nameID="271" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Cd Thin
+    </namerecord>
+    <namerecord nameID="272" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-CdThin
+    </namerecord>
+    <namerecord nameID="273" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Cd Thin Italic
+    </namerecord>
+    <namerecord nameID="274" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-CdThinItalic
+    </namerecord>
+    <namerecord nameID="275" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Thin
+    </namerecord>
+    <namerecord nameID="276" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-Thin
+    </namerecord>
+    <namerecord nameID="277" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Thin Italic
+    </namerecord>
+    <namerecord nameID="278" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-ThinItalic
+    </namerecord>
+    <namerecord nameID="279" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Ex Thin
+    </namerecord>
+    <namerecord nameID="280" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-ExThin
+    </namerecord>
+    <namerecord nameID="281" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Ex Thin Italic
+    </namerecord>
+    <namerecord nameID="282" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-ExThinItalic
+    </namerecord>
+    <namerecord nameID="283" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Cd Light
+    </namerecord>
+    <namerecord nameID="284" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-CdLight
+    </namerecord>
+    <namerecord nameID="285" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Cd Light Italic
+    </namerecord>
+    <namerecord nameID="286" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-CdLightItalic
+    </namerecord>
+    <namerecord nameID="287" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Light
+    </namerecord>
+    <namerecord nameID="288" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-Light
+    </namerecord>
+    <namerecord nameID="289" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Light Italic
+    </namerecord>
+    <namerecord nameID="290" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-LightItalic
+    </namerecord>
+    <namerecord nameID="291" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Ex Light
+    </namerecord>
+    <namerecord nameID="292" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-ExLight
+    </namerecord>
+    <namerecord nameID="293" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Ex Light Italic
+    </namerecord>
+    <namerecord nameID="294" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-ExLightItalic
+    </namerecord>
+    <namerecord nameID="295" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Cd
+    </namerecord>
+    <namerecord nameID="296" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-Cd
+    </namerecord>
+    <namerecord nameID="297" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Cd Italic
+    </namerecord>
+    <namerecord nameID="298" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-CdItalic
+    </namerecord>
+    <namerecord nameID="299" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      
+    </namerecord>
+    <namerecord nameID="300" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-
+    </namerecord>
+    <namerecord nameID="301" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-Italic
+    </namerecord>
+    <namerecord nameID="302" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Ex
+    </namerecord>
+    <namerecord nameID="303" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-Ex
+    </namerecord>
+    <namerecord nameID="304" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Ex Italic
+    </namerecord>
+    <namerecord nameID="305" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-ExItalic
+    </namerecord>
+    <namerecord nameID="306" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Cd Medium
+    </namerecord>
+    <namerecord nameID="307" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-CdMedium
+    </namerecord>
+    <namerecord nameID="308" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Cd Medium Italic
+    </namerecord>
+    <namerecord nameID="309" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-CdMediumItalic
+    </namerecord>
+    <namerecord nameID="310" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Medium
+    </namerecord>
+    <namerecord nameID="311" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-Medium
+    </namerecord>
+    <namerecord nameID="312" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Medium Italic
+    </namerecord>
+    <namerecord nameID="313" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-MediumItalic
+    </namerecord>
+    <namerecord nameID="314" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Ex Medium
+    </namerecord>
+    <namerecord nameID="315" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-ExMedium
+    </namerecord>
+    <namerecord nameID="316" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Ex Medium Italic
+    </namerecord>
+    <namerecord nameID="317" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-ExMediumItalic
+    </namerecord>
+    <namerecord nameID="318" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Cd SemiBold
+    </namerecord>
+    <namerecord nameID="319" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-CdSemiBold
+    </namerecord>
+    <namerecord nameID="320" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Cd SemiBold Italic
+    </namerecord>
+    <namerecord nameID="321" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-CdSemiBoldItalic
+    </namerecord>
+    <namerecord nameID="322" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      SemiBold
+    </namerecord>
+    <namerecord nameID="323" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-SemiBold
+    </namerecord>
+    <namerecord nameID="324" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      SemiBold Italic
+    </namerecord>
+    <namerecord nameID="325" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-SemiBoldItalic
+    </namerecord>
+    <namerecord nameID="326" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Ex SemiBold
+    </namerecord>
+    <namerecord nameID="327" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-ExSemiBold
+    </namerecord>
+    <namerecord nameID="328" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Ex SemiBold Italic
+    </namerecord>
+    <namerecord nameID="329" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-ExSemiBoldItalic
+    </namerecord>
+    <namerecord nameID="330" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Cd Bold
+    </namerecord>
+    <namerecord nameID="331" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-CdBold
+    </namerecord>
+    <namerecord nameID="332" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Cd Bold Italic
+    </namerecord>
+    <namerecord nameID="333" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-CdBoldItalic
+    </namerecord>
+    <namerecord nameID="334" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Bold
+    </namerecord>
+    <namerecord nameID="335" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-Bold
+    </namerecord>
+    <namerecord nameID="336" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Bold Italic
+    </namerecord>
+    <namerecord nameID="337" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-BoldItalic
+    </namerecord>
+    <namerecord nameID="338" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Ex Bold
+    </namerecord>
+    <namerecord nameID="339" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-ExBold
+    </namerecord>
+    <namerecord nameID="340" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Ex Bold Italic
+    </namerecord>
+    <namerecord nameID="341" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-ExBoldItalic
+    </namerecord>
+    <namerecord nameID="342" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Cd XBold
+    </namerecord>
+    <namerecord nameID="343" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-CdXBold
+    </namerecord>
+    <namerecord nameID="344" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Cd XBold Italic
+    </namerecord>
+    <namerecord nameID="345" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-CdXBoldItalic
+    </namerecord>
+    <namerecord nameID="346" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      XBold
+    </namerecord>
+    <namerecord nameID="347" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-XBold
+    </namerecord>
+    <namerecord nameID="348" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      XBold Italic
+    </namerecord>
+    <namerecord nameID="349" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-XBoldItalic
+    </namerecord>
+    <namerecord nameID="350" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Ex XBold
+    </namerecord>
+    <namerecord nameID="351" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-ExXBold
+    </namerecord>
+    <namerecord nameID="352" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Ex XBold Italic
+    </namerecord>
+    <namerecord nameID="353" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-ExXBoldItalic
+    </namerecord>
+    <namerecord nameID="354" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Cd Black
+    </namerecord>
+    <namerecord nameID="355" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-CdBlack
+    </namerecord>
+    <namerecord nameID="356" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Cd Black Italic
+    </namerecord>
+    <namerecord nameID="357" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-CdBlackItalic
+    </namerecord>
+    <namerecord nameID="358" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Black
+    </namerecord>
+    <namerecord nameID="359" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-Black
+    </namerecord>
+    <namerecord nameID="360" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Black Italic
+    </namerecord>
+    <namerecord nameID="361" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-BlackItalic
+    </namerecord>
+    <namerecord nameID="362" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Ex Black
+    </namerecord>
+    <namerecord nameID="363" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-ExBlack
+    </namerecord>
+    <namerecord nameID="364" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Ex Black Italic
+    </namerecord>
+    <namerecord nameID="365" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      NewFont-ExBlackItalic
+    </namerecord>
+    <namerecord nameID="366" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Regular
+    </namerecord>
+    <namerecord nameID="367" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Normal
+    </namerecord>
+    <namerecord nameID="368" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Upright
+    </namerecord>
+    <namerecord nameID="1" platformID="3" platEncID="1" langID="0x409">
+      New Font
+    </namerecord>
+    <namerecord nameID="2" platformID="3" platEncID="1" langID="0x409">
+      Regular
+    </namerecord>
+    <namerecord nameID="3" platformID="3" platEncID="1" langID="0x409">
+      0.000;NONE;NewFont-Regular
+    </namerecord>
+    <namerecord nameID="4" platformID="3" platEncID="1" langID="0x409">
+      New Font Regular
+    </namerecord>
+    <namerecord nameID="5" platformID="3" platEncID="1" langID="0x409">
+      Version 0.000
+    </namerecord>
+    <namerecord nameID="6" platformID="3" platEncID="1" langID="0x409">
+      NewFont-Regular
+    </namerecord>
+    <namerecord nameID="256" platformID="3" platEncID="1" langID="0x409">
+      Weight
+    </namerecord>
+    <namerecord nameID="257" platformID="3" platEncID="1" langID="0x409">
+      Width
+    </namerecord>
+    <namerecord nameID="258" platformID="3" platEncID="1" langID="0x409">
+      Italic
+    </namerecord>
+    <namerecord nameID="259" platformID="3" platEncID="1" langID="0x409">
+      Cd Hair
+    </namerecord>
+    <namerecord nameID="260" platformID="3" platEncID="1" langID="0x409">
+      NewFont-CdHair
+    </namerecord>
+    <namerecord nameID="261" platformID="3" platEncID="1" langID="0x409">
+      Cd Hair Italic
+    </namerecord>
+    <namerecord nameID="262" platformID="3" platEncID="1" langID="0x409">
+      NewFont-CdHairItalic
+    </namerecord>
+    <namerecord nameID="263" platformID="3" platEncID="1" langID="0x409">
+      Hair
+    </namerecord>
+    <namerecord nameID="264" platformID="3" platEncID="1" langID="0x409">
+      NewFont-Hair
+    </namerecord>
+    <namerecord nameID="265" platformID="3" platEncID="1" langID="0x409">
+      Hair Italic
+    </namerecord>
+    <namerecord nameID="266" platformID="3" platEncID="1" langID="0x409">
+      NewFont-HairItalic
+    </namerecord>
+    <namerecord nameID="267" platformID="3" platEncID="1" langID="0x409">
+      Ex Hair
+    </namerecord>
+    <namerecord nameID="268" platformID="3" platEncID="1" langID="0x409">
+      NewFont-ExHair
+    </namerecord>
+    <namerecord nameID="269" platformID="3" platEncID="1" langID="0x409">
+      Ex Hair Italic
+    </namerecord>
+    <namerecord nameID="270" platformID="3" platEncID="1" langID="0x409">
+      NewFont-ExHairItalic
+    </namerecord>
+    <namerecord nameID="271" platformID="3" platEncID="1" langID="0x409">
+      Cd Thin
+    </namerecord>
+    <namerecord nameID="272" platformID="3" platEncID="1" langID="0x409">
+      NewFont-CdThin
+    </namerecord>
+    <namerecord nameID="273" platformID="3" platEncID="1" langID="0x409">
+      Cd Thin Italic
+    </namerecord>
+    <namerecord nameID="274" platformID="3" platEncID="1" langID="0x409">
+      NewFont-CdThinItalic
+    </namerecord>
+    <namerecord nameID="275" platformID="3" platEncID="1" langID="0x409">
+      Thin
+    </namerecord>
+    <namerecord nameID="276" platformID="3" platEncID="1" langID="0x409">
+      NewFont-Thin
+    </namerecord>
+    <namerecord nameID="277" platformID="3" platEncID="1" langID="0x409">
+      Thin Italic
+    </namerecord>
+    <namerecord nameID="278" platformID="3" platEncID="1" langID="0x409">
+      NewFont-ThinItalic
+    </namerecord>
+    <namerecord nameID="279" platformID="3" platEncID="1" langID="0x409">
+      Ex Thin
+    </namerecord>
+    <namerecord nameID="280" platformID="3" platEncID="1" langID="0x409">
+      NewFont-ExThin
+    </namerecord>
+    <namerecord nameID="281" platformID="3" platEncID="1" langID="0x409">
+      Ex Thin Italic
+    </namerecord>
+    <namerecord nameID="282" platformID="3" platEncID="1" langID="0x409">
+      NewFont-ExThinItalic
+    </namerecord>
+    <namerecord nameID="283" platformID="3" platEncID="1" langID="0x409">
+      Cd Light
+    </namerecord>
+    <namerecord nameID="284" platformID="3" platEncID="1" langID="0x409">
+      NewFont-CdLight
+    </namerecord>
+    <namerecord nameID="285" platformID="3" platEncID="1" langID="0x409">
+      Cd Light Italic
+    </namerecord>
+    <namerecord nameID="286" platformID="3" platEncID="1" langID="0x409">
+      NewFont-CdLightItalic
+    </namerecord>
+    <namerecord nameID="287" platformID="3" platEncID="1" langID="0x409">
+      Light
+    </namerecord>
+    <namerecord nameID="288" platformID="3" platEncID="1" langID="0x409">
+      NewFont-Light
+    </namerecord>
+    <namerecord nameID="289" platformID="3" platEncID="1" langID="0x409">
+      Light Italic
+    </namerecord>
+    <namerecord nameID="290" platformID="3" platEncID="1" langID="0x409">
+      NewFont-LightItalic
+    </namerecord>
+    <namerecord nameID="291" platformID="3" platEncID="1" langID="0x409">
+      Ex Light
+    </namerecord>
+    <namerecord nameID="292" platformID="3" platEncID="1" langID="0x409">
+      NewFont-ExLight
+    </namerecord>
+    <namerecord nameID="293" platformID="3" platEncID="1" langID="0x409">
+      Ex Light Italic
+    </namerecord>
+    <namerecord nameID="294" platformID="3" platEncID="1" langID="0x409">
+      NewFont-ExLightItalic
+    </namerecord>
+    <namerecord nameID="295" platformID="3" platEncID="1" langID="0x409">
+      Cd
+    </namerecord>
+    <namerecord nameID="296" platformID="3" platEncID="1" langID="0x409">
+      NewFont-Cd
+    </namerecord>
+    <namerecord nameID="297" platformID="3" platEncID="1" langID="0x409">
+      Cd Italic
+    </namerecord>
+    <namerecord nameID="298" platformID="3" platEncID="1" langID="0x409">
+      NewFont-CdItalic
+    </namerecord>
+    <namerecord nameID="299" platformID="3" platEncID="1" langID="0x409">
+      
+    </namerecord>
+    <namerecord nameID="300" platformID="3" platEncID="1" langID="0x409">
+      NewFont-
+    </namerecord>
+    <namerecord nameID="301" platformID="3" platEncID="1" langID="0x409">
+      NewFont-Italic
+    </namerecord>
+    <namerecord nameID="302" platformID="3" platEncID="1" langID="0x409">
+      Ex
+    </namerecord>
+    <namerecord nameID="303" platformID="3" platEncID="1" langID="0x409">
+      NewFont-Ex
+    </namerecord>
+    <namerecord nameID="304" platformID="3" platEncID="1" langID="0x409">
+      Ex Italic
+    </namerecord>
+    <namerecord nameID="305" platformID="3" platEncID="1" langID="0x409">
+      NewFont-ExItalic
+    </namerecord>
+    <namerecord nameID="306" platformID="3" platEncID="1" langID="0x409">
+      Cd Medium
+    </namerecord>
+    <namerecord nameID="307" platformID="3" platEncID="1" langID="0x409">
+      NewFont-CdMedium
+    </namerecord>
+    <namerecord nameID="308" platformID="3" platEncID="1" langID="0x409">
+      Cd Medium Italic
+    </namerecord>
+    <namerecord nameID="309" platformID="3" platEncID="1" langID="0x409">
+      NewFont-CdMediumItalic
+    </namerecord>
+    <namerecord nameID="310" platformID="3" platEncID="1" langID="0x409">
+      Medium
+    </namerecord>
+    <namerecord nameID="311" platformID="3" platEncID="1" langID="0x409">
+      NewFont-Medium
+    </namerecord>
+    <namerecord nameID="312" platformID="3" platEncID="1" langID="0x409">
+      Medium Italic
+    </namerecord>
+    <namerecord nameID="313" platformID="3" platEncID="1" langID="0x409">
+      NewFont-MediumItalic
+    </namerecord>
+    <namerecord nameID="314" platformID="3" platEncID="1" langID="0x409">
+      Ex Medium
+    </namerecord>
+    <namerecord nameID="315" platformID="3" platEncID="1" langID="0x409">
+      NewFont-ExMedium
+    </namerecord>
+    <namerecord nameID="316" platformID="3" platEncID="1" langID="0x409">
+      Ex Medium Italic
+    </namerecord>
+    <namerecord nameID="317" platformID="3" platEncID="1" langID="0x409">
+      NewFont-ExMediumItalic
+    </namerecord>
+    <namerecord nameID="318" platformID="3" platEncID="1" langID="0x409">
+      Cd SemiBold
+    </namerecord>
+    <namerecord nameID="319" platformID="3" platEncID="1" langID="0x409">
+      NewFont-CdSemiBold
+    </namerecord>
+    <namerecord nameID="320" platformID="3" platEncID="1" langID="0x409">
+      Cd SemiBold Italic
+    </namerecord>
+    <namerecord nameID="321" platformID="3" platEncID="1" langID="0x409">
+      NewFont-CdSemiBoldItalic
+    </namerecord>
+    <namerecord nameID="322" platformID="3" platEncID="1" langID="0x409">
+      SemiBold
+    </namerecord>
+    <namerecord nameID="323" platformID="3" platEncID="1" langID="0x409">
+      NewFont-SemiBold
+    </namerecord>
+    <namerecord nameID="324" platformID="3" platEncID="1" langID="0x409">
+      SemiBold Italic
+    </namerecord>
+    <namerecord nameID="325" platformID="3" platEncID="1" langID="0x409">
+      NewFont-SemiBoldItalic
+    </namerecord>
+    <namerecord nameID="326" platformID="3" platEncID="1" langID="0x409">
+      Ex SemiBold
+    </namerecord>
+    <namerecord nameID="327" platformID="3" platEncID="1" langID="0x409">
+      NewFont-ExSemiBold
+    </namerecord>
+    <namerecord nameID="328" platformID="3" platEncID="1" langID="0x409">
+      Ex SemiBold Italic
+    </namerecord>
+    <namerecord nameID="329" platformID="3" platEncID="1" langID="0x409">
+      NewFont-ExSemiBoldItalic
+    </namerecord>
+    <namerecord nameID="330" platformID="3" platEncID="1" langID="0x409">
+      Cd Bold
+    </namerecord>
+    <namerecord nameID="331" platformID="3" platEncID="1" langID="0x409">
+      NewFont-CdBold
+    </namerecord>
+    <namerecord nameID="332" platformID="3" platEncID="1" langID="0x409">
+      Cd Bold Italic
+    </namerecord>
+    <namerecord nameID="333" platformID="3" platEncID="1" langID="0x409">
+      NewFont-CdBoldItalic
+    </namerecord>
+    <namerecord nameID="334" platformID="3" platEncID="1" langID="0x409">
+      Bold
+    </namerecord>
+    <namerecord nameID="335" platformID="3" platEncID="1" langID="0x409">
+      NewFont-Bold
+    </namerecord>
+    <namerecord nameID="336" platformID="3" platEncID="1" langID="0x409">
+      Bold Italic
+    </namerecord>
+    <namerecord nameID="337" platformID="3" platEncID="1" langID="0x409">
+      NewFont-BoldItalic
+    </namerecord>
+    <namerecord nameID="338" platformID="3" platEncID="1" langID="0x409">
+      Ex Bold
+    </namerecord>
+    <namerecord nameID="339" platformID="3" platEncID="1" langID="0x409">
+      NewFont-ExBold
+    </namerecord>
+    <namerecord nameID="340" platformID="3" platEncID="1" langID="0x409">
+      Ex Bold Italic
+    </namerecord>
+    <namerecord nameID="341" platformID="3" platEncID="1" langID="0x409">
+      NewFont-ExBoldItalic
+    </namerecord>
+    <namerecord nameID="342" platformID="3" platEncID="1" langID="0x409">
+      Cd XBold
+    </namerecord>
+    <namerecord nameID="343" platformID="3" platEncID="1" langID="0x409">
+      NewFont-CdXBold
+    </namerecord>
+    <namerecord nameID="344" platformID="3" platEncID="1" langID="0x409">
+      Cd XBold Italic
+    </namerecord>
+    <namerecord nameID="345" platformID="3" platEncID="1" langID="0x409">
+      NewFont-CdXBoldItalic
+    </namerecord>
+    <namerecord nameID="346" platformID="3" platEncID="1" langID="0x409">
+      XBold
+    </namerecord>
+    <namerecord nameID="347" platformID="3" platEncID="1" langID="0x409">
+      NewFont-XBold
+    </namerecord>
+    <namerecord nameID="348" platformID="3" platEncID="1" langID="0x409">
+      XBold Italic
+    </namerecord>
+    <namerecord nameID="349" platformID="3" platEncID="1" langID="0x409">
+      NewFont-XBoldItalic
+    </namerecord>
+    <namerecord nameID="350" platformID="3" platEncID="1" langID="0x409">
+      Ex XBold
+    </namerecord>
+    <namerecord nameID="351" platformID="3" platEncID="1" langID="0x409">
+      NewFont-ExXBold
+    </namerecord>
+    <namerecord nameID="352" platformID="3" platEncID="1" langID="0x409">
+      Ex XBold Italic
+    </namerecord>
+    <namerecord nameID="353" platformID="3" platEncID="1" langID="0x409">
+      NewFont-ExXBoldItalic
+    </namerecord>
+    <namerecord nameID="354" platformID="3" platEncID="1" langID="0x409">
+      Cd Black
+    </namerecord>
+    <namerecord nameID="355" platformID="3" platEncID="1" langID="0x409">
+      NewFont-CdBlack
+    </namerecord>
+    <namerecord nameID="356" platformID="3" platEncID="1" langID="0x409">
+      Cd Black Italic
+    </namerecord>
+    <namerecord nameID="357" platformID="3" platEncID="1" langID="0x409">
+      NewFont-CdBlackItalic
+    </namerecord>
+    <namerecord nameID="358" platformID="3" platEncID="1" langID="0x409">
+      Black
+    </namerecord>
+    <namerecord nameID="359" platformID="3" platEncID="1" langID="0x409">
+      NewFont-Black
+    </namerecord>
+    <namerecord nameID="360" platformID="3" platEncID="1" langID="0x409">
+      Black Italic
+    </namerecord>
+    <namerecord nameID="361" platformID="3" platEncID="1" langID="0x409">
+      NewFont-BlackItalic
+    </namerecord>
+    <namerecord nameID="362" platformID="3" platEncID="1" langID="0x409">
+      Ex Black
+    </namerecord>
+    <namerecord nameID="363" platformID="3" platEncID="1" langID="0x409">
+      NewFont-ExBlack
+    </namerecord>
+    <namerecord nameID="364" platformID="3" platEncID="1" langID="0x409">
+      Ex Black Italic
+    </namerecord>
+    <namerecord nameID="365" platformID="3" platEncID="1" langID="0x409">
+      NewFont-ExBlackItalic
+    </namerecord>
+    <namerecord nameID="366" platformID="3" platEncID="1" langID="0x409">
+      Regular
+    </namerecord>
+    <namerecord nameID="367" platformID="3" platEncID="1" langID="0x409">
+      Normal
+    </namerecord>
+    <namerecord nameID="368" platformID="3" platEncID="1" langID="0x409">
+      Upright
+    </namerecord>
+  </name>
+
+  <post>
+    <formatType value="2.0"/>
+    <italicAngle value="0.0"/>
+    <underlinePosition value="-75"/>
+    <underlineThickness value="50"/>
+    <isFixedPitch value="0"/>
+    <minMemType42 value="0"/>
+    <maxMemType42 value="0"/>
+    <minMemType1 value="0"/>
+    <maxMemType1 value="0"/>
+    <psNames>
+      <!-- This file uses unique glyph names based on the information
+           found in the 'post' table. Since these names might not be unique,
+           we have to invent artificial names in case of clashes. In order to
+           be able to retain the original information, we need a name to
+           ps name mapping for those cases where they differ. That's what
+           you see below.
+            -->
+    </psNames>
+    <extraNames>
+      <!-- following are the name that are not taken from the standard Mac glyph order -->
+    </extraNames>
+  </post>
+
+  <HVAR>
+    <Version value="0x00010000"/>
+    <VarStore Format="1">
+      <Format value="1"/>
+      <VarRegionList>
+        <!-- RegionAxisCount=3 -->
+        <!-- RegionCount=19 -->
+        <Region index="0">
+          <VarRegionAxis index="0">
+            <StartCoord value="-1.0"/>
+            <PeakCoord value="-1.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="2">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="1">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.48517"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="2">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="2">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.48517"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="2">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="3">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="-1.0"/>
+            <PeakCoord value="-1.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="2">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="4">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="2">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="5">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="2">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="6">
+          <VarRegionAxis index="0">
+            <StartCoord value="-1.0"/>
+            <PeakCoord value="-1.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="-1.0"/>
+            <PeakCoord value="-1.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="2">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="7">
+          <VarRegionAxis index="0">
+            <StartCoord value="-1.0"/>
+            <PeakCoord value="-1.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="2">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="8">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="-1.0"/>
+            <PeakCoord value="-1.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="2">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="9">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="2">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="10">
+          <VarRegionAxis index="0">
+            <StartCoord value="-1.0"/>
+            <PeakCoord value="-1.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="2">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="11">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.48517"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="2">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="12">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.48517"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="2">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="13">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="-1.0"/>
+            <PeakCoord value="-1.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="2">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="14">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="2">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="15">
+          <VarRegionAxis index="0">
+            <StartCoord value="-1.0"/>
+            <PeakCoord value="-1.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="-1.0"/>
+            <PeakCoord value="-1.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="2">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="16">
+          <VarRegionAxis index="0">
+            <StartCoord value="-1.0"/>
+            <PeakCoord value="-1.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="2">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="17">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="-1.0"/>
+            <PeakCoord value="-1.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="2">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="18">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="2">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+        </Region>
+      </VarRegionList>
+      <!-- VarDataCount=1 -->
+      <VarData index="0">
+        <!-- ItemCount=1 -->
+        <NumShorts value="0"/>
+        <!-- VarRegionCount=0 -->
+        <Item index="0" value="[]"/>
+      </VarData>
+    </VarStore>
+  </HVAR>
+
+  <STAT>
+    <Version value="0x00010001"/>
+    <DesignAxisRecordSize value="8"/>
+    <!-- DesignAxisCount=3 -->
+    <DesignAxisRecord>
+      <Axis index="0">
+        <AxisTag value="wght"/>
+        <AxisNameID value="256"/>  <!-- Weight -->
+        <AxisOrdering value="1"/>
+      </Axis>
+      <Axis index="1">
+        <AxisTag value="wdth"/>
+        <AxisNameID value="257"/>  <!-- Width -->
+        <AxisOrdering value="0"/>
+      </Axis>
+      <Axis index="2">
+        <AxisTag value="ital"/>
+        <AxisNameID value="258"/>  <!-- Italic -->
+        <AxisOrdering value="2"/>
+      </Axis>
+    </DesignAxisRecord>
+    <!-- AxisValueCount=14 -->
+    <AxisValueArray>
+      <AxisValue index="0" Format="1">
+        <AxisIndex value="0"/>
+        <Flags value="0"/>
+        <ValueNameID value="263"/>  <!-- Hair -->
+        <Value value="100.0"/>
+      </AxisValue>
+      <AxisValue index="1" Format="1">
+        <AxisIndex value="0"/>
+        <Flags value="0"/>
+        <ValueNameID value="275"/>  <!-- Thin -->
+        <Value value="200.0"/>
+      </AxisValue>
+      <AxisValue index="2" Format="1">
+        <AxisIndex value="0"/>
+        <Flags value="0"/>
+        <ValueNameID value="287"/>  <!-- Light -->
+        <Value value="300.0"/>
+      </AxisValue>
+      <AxisValue index="3" Format="3">
+        <AxisIndex value="0"/>
+        <Flags value="2"/>  <!-- ElidableAxisValueName -->
+        <ValueNameID value="366"/>  <!-- Regular -->
+        <Value value="400.0"/>
+        <LinkedValue value="700.0"/>
+      </AxisValue>
+      <AxisValue index="4" Format="1">
+        <AxisIndex value="0"/>
+        <Flags value="0"/>
+        <ValueNameID value="310"/>  <!-- Medium -->
+        <Value value="500.0"/>
+      </AxisValue>
+      <AxisValue index="5" Format="1">
+        <AxisIndex value="0"/>
+        <Flags value="0"/>
+        <ValueNameID value="322"/>  <!-- SemiBold -->
+        <Value value="600.0"/>
+      </AxisValue>
+      <AxisValue index="6" Format="1">
+        <AxisIndex value="0"/>
+        <Flags value="0"/>
+        <ValueNameID value="334"/>  <!-- Bold -->
+        <Value value="700.0"/>
+      </AxisValue>
+      <AxisValue index="7" Format="1">
+        <AxisIndex value="0"/>
+        <Flags value="0"/>
+        <ValueNameID value="346"/>  <!-- XBold -->
+        <Value value="800.0"/>
+      </AxisValue>
+      <AxisValue index="8" Format="1">
+        <AxisIndex value="0"/>
+        <Flags value="0"/>
+        <ValueNameID value="358"/>  <!-- Black -->
+        <Value value="900.0"/>
+      </AxisValue>
+      <AxisValue index="9" Format="1">
+        <AxisIndex value="1"/>
+        <Flags value="0"/>
+        <ValueNameID value="295"/>  <!-- Cd -->
+        <Value value="75.0"/>
+      </AxisValue>
+      <AxisValue index="10" Format="1">
+        <AxisIndex value="1"/>
+        <Flags value="2"/>  <!-- ElidableAxisValueName -->
+        <ValueNameID value="367"/>  <!-- Normal -->
+        <Value value="100.0"/>
+      </AxisValue>
+      <AxisValue index="11" Format="1">
+        <AxisIndex value="1"/>
+        <Flags value="0"/>
+        <ValueNameID value="302"/>  <!-- Ex -->
+        <Value value="125.0"/>
+      </AxisValue>
+      <AxisValue index="12" Format="3">
+        <AxisIndex value="2"/>
+        <Flags value="2"/>  <!-- ElidableAxisValueName -->
+        <ValueNameID value="368"/>  <!-- Upright -->
+        <Value value="0.0"/>
+        <LinkedValue value="1.0"/>
+      </AxisValue>
+      <AxisValue index="13" Format="1">
+        <AxisIndex value="2"/>
+        <Flags value="0"/>
+        <ValueNameID value="258"/>  <!-- Italic -->
+        <Value value="1.0"/>
+      </AxisValue>
+    </AxisValueArray>
+    <ElidedFallbackNameID value="2"/>  <!-- Regular -->
+  </STAT>
+
+  <avar>
+    <version major="1" minor="0"/>
+    <segment axis="wght">
+      <mapping from="-1.0" to="-1.0"/>
+      <mapping from="-0.6667" to="-0.74194"/>
+      <mapping from="-0.3333" to="-0.4355"/>
+      <mapping from="0.0" to="0.0"/>
+      <mapping from="0.2" to="0.1386"/>
+      <mapping from="0.4" to="0.30695"/>
+      <mapping from="0.6" to="0.48517"/>
+      <mapping from="0.8" to="0.73267"/>
+      <mapping from="1.0" to="1.0"/>
+    </segment>
+    <segment axis="wdth">
+      <mapping from="-1.0" to="-1.0"/>
+      <mapping from="0.0" to="0.0"/>
+      <mapping from="1.0" to="1.0"/>
+    </segment>
+    <segment axis="ital">
+      <mapping from="-1.0" to="-1.0"/>
+      <mapping from="0.0" to="0.0"/>
+      <mapping from="1.0" to="1.0"/>
+    </segment>
+  </avar>
+
+  <fvar>
+
+    <!-- Weight -->
+    <Axis>
+      <AxisTag>wght</AxisTag>
+      <Flags>0x0</Flags>
+      <MinValue>100.0</MinValue>
+      <DefaultValue>400.0</DefaultValue>
+      <MaxValue>900.0</MaxValue>
+      <AxisNameID>256</AxisNameID>
+    </Axis>
+
+    <!-- Width -->
+    <Axis>
+      <AxisTag>wdth</AxisTag>
+      <Flags>0x0</Flags>
+      <MinValue>75.0</MinValue>
+      <DefaultValue>100.0</DefaultValue>
+      <MaxValue>125.0</MaxValue>
+      <AxisNameID>257</AxisNameID>
+    </Axis>
+
+    <!-- Italic -->
+    <Axis>
+      <AxisTag>ital</AxisTag>
+      <Flags>0x0</Flags>
+      <MinValue>0.0</MinValue>
+      <DefaultValue>0.0</DefaultValue>
+      <MaxValue>1.0</MaxValue>
+      <AxisNameID>258</AxisNameID>
+    </Axis>
+
+    <!-- Cd Hair -->
+    <!-- PostScript: NewFont-CdHair -->
+    <NamedInstance flags="0x0" postscriptNameID="260" subfamilyNameID="259">
+      <coord axis="wght" value="100.0"/>
+      <coord axis="wdth" value="75.0"/>
+      <coord axis="ital" value="0.0"/>
+    </NamedInstance>
+
+    <!-- Cd Hair Italic -->
+    <!-- PostScript: NewFont-CdHairItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="262" subfamilyNameID="261">
+      <coord axis="wght" value="100.0"/>
+      <coord axis="wdth" value="75.0"/>
+      <coord axis="ital" value="1.0"/>
+    </NamedInstance>
+
+    <!-- Hair -->
+    <!-- PostScript: NewFont-Hair -->
+    <NamedInstance flags="0x0" postscriptNameID="264" subfamilyNameID="263">
+      <coord axis="wght" value="100.0"/>
+      <coord axis="wdth" value="100.0"/>
+      <coord axis="ital" value="0.0"/>
+    </NamedInstance>
+
+    <!-- Hair Italic -->
+    <!-- PostScript: NewFont-HairItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="266" subfamilyNameID="265">
+      <coord axis="wght" value="100.0"/>
+      <coord axis="wdth" value="100.0"/>
+      <coord axis="ital" value="1.0"/>
+    </NamedInstance>
+
+    <!-- Ex Hair -->
+    <!-- PostScript: NewFont-ExHair -->
+    <NamedInstance flags="0x0" postscriptNameID="268" subfamilyNameID="267">
+      <coord axis="wght" value="100.0"/>
+      <coord axis="wdth" value="125.0"/>
+      <coord axis="ital" value="0.0"/>
+    </NamedInstance>
+
+    <!-- Ex Hair Italic -->
+    <!-- PostScript: NewFont-ExHairItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="270" subfamilyNameID="269">
+      <coord axis="wght" value="100.0"/>
+      <coord axis="wdth" value="125.0"/>
+      <coord axis="ital" value="1.0"/>
+    </NamedInstance>
+
+    <!-- Cd Thin -->
+    <!-- PostScript: NewFont-CdThin -->
+    <NamedInstance flags="0x0" postscriptNameID="272" subfamilyNameID="271">
+      <coord axis="wght" value="200.0"/>
+      <coord axis="wdth" value="75.0"/>
+      <coord axis="ital" value="0.0"/>
+    </NamedInstance>
+
+    <!-- Cd Thin Italic -->
+    <!-- PostScript: NewFont-CdThinItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="274" subfamilyNameID="273">
+      <coord axis="wght" value="200.0"/>
+      <coord axis="wdth" value="75.0"/>
+      <coord axis="ital" value="1.0"/>
+    </NamedInstance>
+
+    <!-- Thin -->
+    <!-- PostScript: NewFont-Thin -->
+    <NamedInstance flags="0x0" postscriptNameID="276" subfamilyNameID="275">
+      <coord axis="wght" value="200.0"/>
+      <coord axis="wdth" value="100.0"/>
+      <coord axis="ital" value="0.0"/>
+    </NamedInstance>
+
+    <!-- Thin Italic -->
+    <!-- PostScript: NewFont-ThinItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="278" subfamilyNameID="277">
+      <coord axis="wght" value="200.0"/>
+      <coord axis="wdth" value="100.0"/>
+      <coord axis="ital" value="1.0"/>
+    </NamedInstance>
+
+    <!-- Ex Thin -->
+    <!-- PostScript: NewFont-ExThin -->
+    <NamedInstance flags="0x0" postscriptNameID="280" subfamilyNameID="279">
+      <coord axis="wght" value="200.0"/>
+      <coord axis="wdth" value="125.0"/>
+      <coord axis="ital" value="0.0"/>
+    </NamedInstance>
+
+    <!-- Ex Thin Italic -->
+    <!-- PostScript: NewFont-ExThinItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="282" subfamilyNameID="281">
+      <coord axis="wght" value="200.0"/>
+      <coord axis="wdth" value="125.0"/>
+      <coord axis="ital" value="1.0"/>
+    </NamedInstance>
+
+    <!-- Cd Light -->
+    <!-- PostScript: NewFont-CdLight -->
+    <NamedInstance flags="0x0" postscriptNameID="284" subfamilyNameID="283">
+      <coord axis="wght" value="300.0"/>
+      <coord axis="wdth" value="75.0"/>
+      <coord axis="ital" value="0.0"/>
+    </NamedInstance>
+
+    <!-- Cd Light Italic -->
+    <!-- PostScript: NewFont-CdLightItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="286" subfamilyNameID="285">
+      <coord axis="wght" value="300.0"/>
+      <coord axis="wdth" value="75.0"/>
+      <coord axis="ital" value="1.0"/>
+    </NamedInstance>
+
+    <!-- Light -->
+    <!-- PostScript: NewFont-Light -->
+    <NamedInstance flags="0x0" postscriptNameID="288" subfamilyNameID="287">
+      <coord axis="wght" value="300.0"/>
+      <coord axis="wdth" value="100.0"/>
+      <coord axis="ital" value="0.0"/>
+    </NamedInstance>
+
+    <!-- Light Italic -->
+    <!-- PostScript: NewFont-LightItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="290" subfamilyNameID="289">
+      <coord axis="wght" value="300.0"/>
+      <coord axis="wdth" value="100.0"/>
+      <coord axis="ital" value="1.0"/>
+    </NamedInstance>
+
+    <!-- Ex Light -->
+    <!-- PostScript: NewFont-ExLight -->
+    <NamedInstance flags="0x0" postscriptNameID="292" subfamilyNameID="291">
+      <coord axis="wght" value="300.0"/>
+      <coord axis="wdth" value="125.0"/>
+      <coord axis="ital" value="0.0"/>
+    </NamedInstance>
+
+    <!-- Ex Light Italic -->
+    <!-- PostScript: NewFont-ExLightItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="294" subfamilyNameID="293">
+      <coord axis="wght" value="300.0"/>
+      <coord axis="wdth" value="125.0"/>
+      <coord axis="ital" value="1.0"/>
+    </NamedInstance>
+
+    <!-- Cd -->
+    <!-- PostScript: NewFont-Cd -->
+    <NamedInstance flags="0x0" postscriptNameID="296" subfamilyNameID="295">
+      <coord axis="wght" value="400.0"/>
+      <coord axis="wdth" value="75.0"/>
+      <coord axis="ital" value="0.0"/>
+    </NamedInstance>
+
+    <!-- Cd Italic -->
+    <!-- PostScript: NewFont-CdItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="298" subfamilyNameID="297">
+      <coord axis="wght" value="400.0"/>
+      <coord axis="wdth" value="75.0"/>
+      <coord axis="ital" value="1.0"/>
+    </NamedInstance>
+    <!-- PostScript: NewFont- -->
+    <NamedInstance flags="0x0" postscriptNameID="300" subfamilyNameID="299">
+      <coord axis="wght" value="400.0"/>
+      <coord axis="wdth" value="100.0"/>
+      <coord axis="ital" value="0.0"/>
+    </NamedInstance>
+
+    <!-- Italic -->
+    <!-- PostScript: NewFont-Italic -->
+    <NamedInstance flags="0x0" postscriptNameID="301" subfamilyNameID="258">
+      <coord axis="wght" value="400.0"/>
+      <coord axis="wdth" value="100.0"/>
+      <coord axis="ital" value="1.0"/>
+    </NamedInstance>
+
+    <!-- Ex -->
+    <!-- PostScript: NewFont-Ex -->
+    <NamedInstance flags="0x0" postscriptNameID="303" subfamilyNameID="302">
+      <coord axis="wght" value="400.0"/>
+      <coord axis="wdth" value="125.0"/>
+      <coord axis="ital" value="0.0"/>
+    </NamedInstance>
+
+    <!-- Ex Italic -->
+    <!-- PostScript: NewFont-ExItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="305" subfamilyNameID="304">
+      <coord axis="wght" value="400.0"/>
+      <coord axis="wdth" value="125.0"/>
+      <coord axis="ital" value="1.0"/>
+    </NamedInstance>
+
+    <!-- Cd Medium -->
+    <!-- PostScript: NewFont-CdMedium -->
+    <NamedInstance flags="0x0" postscriptNameID="307" subfamilyNameID="306">
+      <coord axis="wght" value="500.0"/>
+      <coord axis="wdth" value="75.0"/>
+      <coord axis="ital" value="0.0"/>
+    </NamedInstance>
+
+    <!-- Cd Medium Italic -->
+    <!-- PostScript: NewFont-CdMediumItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="309" subfamilyNameID="308">
+      <coord axis="wght" value="500.0"/>
+      <coord axis="wdth" value="75.0"/>
+      <coord axis="ital" value="1.0"/>
+    </NamedInstance>
+
+    <!-- Medium -->
+    <!-- PostScript: NewFont-Medium -->
+    <NamedInstance flags="0x0" postscriptNameID="311" subfamilyNameID="310">
+      <coord axis="wght" value="500.0"/>
+      <coord axis="wdth" value="100.0"/>
+      <coord axis="ital" value="0.0"/>
+    </NamedInstance>
+
+    <!-- Medium Italic -->
+    <!-- PostScript: NewFont-MediumItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="313" subfamilyNameID="312">
+      <coord axis="wght" value="500.0"/>
+      <coord axis="wdth" value="100.0"/>
+      <coord axis="ital" value="1.0"/>
+    </NamedInstance>
+
+    <!-- Ex Medium -->
+    <!-- PostScript: NewFont-ExMedium -->
+    <NamedInstance flags="0x0" postscriptNameID="315" subfamilyNameID="314">
+      <coord axis="wght" value="500.0"/>
+      <coord axis="wdth" value="125.0"/>
+      <coord axis="ital" value="0.0"/>
+    </NamedInstance>
+
+    <!-- Ex Medium Italic -->
+    <!-- PostScript: NewFont-ExMediumItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="317" subfamilyNameID="316">
+      <coord axis="wght" value="500.0"/>
+      <coord axis="wdth" value="125.0"/>
+      <coord axis="ital" value="1.0"/>
+    </NamedInstance>
+
+    <!-- Cd SemiBold -->
+    <!-- PostScript: NewFont-CdSemiBold -->
+    <NamedInstance flags="0x0" postscriptNameID="319" subfamilyNameID="318">
+      <coord axis="wght" value="600.0"/>
+      <coord axis="wdth" value="75.0"/>
+      <coord axis="ital" value="0.0"/>
+    </NamedInstance>
+
+    <!-- Cd SemiBold Italic -->
+    <!-- PostScript: NewFont-CdSemiBoldItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="321" subfamilyNameID="320">
+      <coord axis="wght" value="600.0"/>
+      <coord axis="wdth" value="75.0"/>
+      <coord axis="ital" value="1.0"/>
+    </NamedInstance>
+
+    <!-- SemiBold -->
+    <!-- PostScript: NewFont-SemiBold -->
+    <NamedInstance flags="0x0" postscriptNameID="323" subfamilyNameID="322">
+      <coord axis="wght" value="600.0"/>
+      <coord axis="wdth" value="100.0"/>
+      <coord axis="ital" value="0.0"/>
+    </NamedInstance>
+
+    <!-- SemiBold Italic -->
+    <!-- PostScript: NewFont-SemiBoldItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="325" subfamilyNameID="324">
+      <coord axis="wght" value="600.0"/>
+      <coord axis="wdth" value="100.0"/>
+      <coord axis="ital" value="1.0"/>
+    </NamedInstance>
+
+    <!-- Ex SemiBold -->
+    <!-- PostScript: NewFont-ExSemiBold -->
+    <NamedInstance flags="0x0" postscriptNameID="327" subfamilyNameID="326">
+      <coord axis="wght" value="600.0"/>
+      <coord axis="wdth" value="125.0"/>
+      <coord axis="ital" value="0.0"/>
+    </NamedInstance>
+
+    <!-- Ex SemiBold Italic -->
+    <!-- PostScript: NewFont-ExSemiBoldItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="329" subfamilyNameID="328">
+      <coord axis="wght" value="600.0"/>
+      <coord axis="wdth" value="125.0"/>
+      <coord axis="ital" value="1.0"/>
+    </NamedInstance>
+
+    <!-- Cd Bold -->
+    <!-- PostScript: NewFont-CdBold -->
+    <NamedInstance flags="0x0" postscriptNameID="331" subfamilyNameID="330">
+      <coord axis="wght" value="700.0"/>
+      <coord axis="wdth" value="75.0"/>
+      <coord axis="ital" value="0.0"/>
+    </NamedInstance>
+
+    <!-- Cd Bold Italic -->
+    <!-- PostScript: NewFont-CdBoldItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="333" subfamilyNameID="332">
+      <coord axis="wght" value="700.0"/>
+      <coord axis="wdth" value="75.0"/>
+      <coord axis="ital" value="1.0"/>
+    </NamedInstance>
+
+    <!-- Bold -->
+    <!-- PostScript: NewFont-Bold -->
+    <NamedInstance flags="0x0" postscriptNameID="335" subfamilyNameID="334">
+      <coord axis="wght" value="700.0"/>
+      <coord axis="wdth" value="100.0"/>
+      <coord axis="ital" value="0.0"/>
+    </NamedInstance>
+
+    <!-- Bold Italic -->
+    <!-- PostScript: NewFont-BoldItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="337" subfamilyNameID="336">
+      <coord axis="wght" value="700.0"/>
+      <coord axis="wdth" value="100.0"/>
+      <coord axis="ital" value="1.0"/>
+    </NamedInstance>
+
+    <!-- Ex Bold -->
+    <!-- PostScript: NewFont-ExBold -->
+    <NamedInstance flags="0x0" postscriptNameID="339" subfamilyNameID="338">
+      <coord axis="wght" value="700.0"/>
+      <coord axis="wdth" value="125.0"/>
+      <coord axis="ital" value="0.0"/>
+    </NamedInstance>
+
+    <!-- Ex Bold Italic -->
+    <!-- PostScript: NewFont-ExBoldItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="341" subfamilyNameID="340">
+      <coord axis="wght" value="700.0"/>
+      <coord axis="wdth" value="125.0"/>
+      <coord axis="ital" value="1.0"/>
+    </NamedInstance>
+
+    <!-- Cd XBold -->
+    <!-- PostScript: NewFont-CdXBold -->
+    <NamedInstance flags="0x0" postscriptNameID="343" subfamilyNameID="342">
+      <coord axis="wght" value="800.0"/>
+      <coord axis="wdth" value="75.0"/>
+      <coord axis="ital" value="0.0"/>
+    </NamedInstance>
+
+    <!-- Cd XBold Italic -->
+    <!-- PostScript: NewFont-CdXBoldItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="345" subfamilyNameID="344">
+      <coord axis="wght" value="800.0"/>
+      <coord axis="wdth" value="75.0"/>
+      <coord axis="ital" value="1.0"/>
+    </NamedInstance>
+
+    <!-- XBold -->
+    <!-- PostScript: NewFont-XBold -->
+    <NamedInstance flags="0x0" postscriptNameID="347" subfamilyNameID="346">
+      <coord axis="wght" value="800.0"/>
+      <coord axis="wdth" value="100.0"/>
+      <coord axis="ital" value="0.0"/>
+    </NamedInstance>
+
+    <!-- XBold Italic -->
+    <!-- PostScript: NewFont-XBoldItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="349" subfamilyNameID="348">
+      <coord axis="wght" value="800.0"/>
+      <coord axis="wdth" value="100.0"/>
+      <coord axis="ital" value="1.0"/>
+    </NamedInstance>
+
+    <!-- Ex XBold -->
+    <!-- PostScript: NewFont-ExXBold -->
+    <NamedInstance flags="0x0" postscriptNameID="351" subfamilyNameID="350">
+      <coord axis="wght" value="800.0"/>
+      <coord axis="wdth" value="125.0"/>
+      <coord axis="ital" value="0.0"/>
+    </NamedInstance>
+
+    <!-- Ex XBold Italic -->
+    <!-- PostScript: NewFont-ExXBoldItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="353" subfamilyNameID="352">
+      <coord axis="wght" value="800.0"/>
+      <coord axis="wdth" value="125.0"/>
+      <coord axis="ital" value="1.0"/>
+    </NamedInstance>
+
+    <!-- Cd Black -->
+    <!-- PostScript: NewFont-CdBlack -->
+    <NamedInstance flags="0x0" postscriptNameID="355" subfamilyNameID="354">
+      <coord axis="wght" value="900.0"/>
+      <coord axis="wdth" value="75.0"/>
+      <coord axis="ital" value="0.0"/>
+    </NamedInstance>
+
+    <!-- Cd Black Italic -->
+    <!-- PostScript: NewFont-CdBlackItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="357" subfamilyNameID="356">
+      <coord axis="wght" value="900.0"/>
+      <coord axis="wdth" value="75.0"/>
+      <coord axis="ital" value="1.0"/>
+    </NamedInstance>
+
+    <!-- Black -->
+    <!-- PostScript: NewFont-Black -->
+    <NamedInstance flags="0x0" postscriptNameID="359" subfamilyNameID="358">
+      <coord axis="wght" value="900.0"/>
+      <coord axis="wdth" value="100.0"/>
+      <coord axis="ital" value="0.0"/>
+    </NamedInstance>
+
+    <!-- Black Italic -->
+    <!-- PostScript: NewFont-BlackItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="361" subfamilyNameID="360">
+      <coord axis="wght" value="900.0"/>
+      <coord axis="wdth" value="100.0"/>
+      <coord axis="ital" value="1.0"/>
+    </NamedInstance>
+
+    <!-- Ex Black -->
+    <!-- PostScript: NewFont-ExBlack -->
+    <NamedInstance flags="0x0" postscriptNameID="363" subfamilyNameID="362">
+      <coord axis="wght" value="900.0"/>
+      <coord axis="wdth" value="125.0"/>
+      <coord axis="ital" value="0.0"/>
+    </NamedInstance>
+
+    <!-- Ex Black Italic -->
+    <!-- PostScript: NewFont-ExBlackItalic -->
+    <NamedInstance flags="0x0" postscriptNameID="365" subfamilyNameID="364">
+      <coord axis="wght" value="900.0"/>
+      <coord axis="wdth" value="125.0"/>
+      <coord axis="ital" value="1.0"/>
+    </NamedInstance>
+  </fvar>
+
+  <gvar>
+    <version value="1"/>
+    <reserved value="0"/>
+  </gvar>
+
+</ttFont>

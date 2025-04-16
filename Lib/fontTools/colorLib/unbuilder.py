@@ -13,12 +13,12 @@ def unbuildColrV1(layerList, baseGlyphList):
     }
 
 
-def _flatten(lst):
-    for el in lst:
-        if isinstance(el, list):
-            yield from _flatten(el)
+def _flatten_layers(lst):
+    for paint in lst:
+        if paint["Format"] == ot.PaintFormat.PaintColrLayers:
+            yield from _flatten_layers(paint["Layers"])
         else:
-            yield el
+            yield paint
 
 
 class LayerListUnbuilder:
@@ -41,7 +41,7 @@ class LayerListUnbuilder:
         assert source["Format"] == ot.PaintFormat.PaintColrLayers
 
         layers = list(
-            _flatten(
+            _flatten_layers(
                 [
                     self.unbuildPaint(childPaint)
                     for childPaint in self.layers[

@@ -24,22 +24,29 @@ DATA_MAP_FORMAT = """
 
 
 class table__m_e_t_a(DefaultTable.DefaultTable):
+    """Metadata table
+
+    The ``meta`` table contains various metadata values for the font. Each
+    category of metadata in the table is identified by a four-character tag.
+
+    See also https://learn.microsoft.com/en-us/typography/opentype/spec/meta
+    """
+
     def __init__(self, tag=None):
         DefaultTable.DefaultTable.__init__(self, tag)
         self.data = {}
 
     def decompile(self, data, ttFont):
         headerSize = sstruct.calcsize(META_HEADER_FORMAT)
-        header = sstruct.unpack(META_HEADER_FORMAT, data[0 : headerSize])
+        header = sstruct.unpack(META_HEADER_FORMAT, data[0:headerSize])
         if header["version"] != 1:
-            raise TTLibError("unsupported 'meta' version %d" %
-                             header["version"])
+            raise TTLibError("unsupported 'meta' version %d" % header["version"])
         dataMapSize = sstruct.calcsize(DATA_MAP_FORMAT)
         for i in range(header["numDataMaps"]):
             dataMapOffset = headerSize + i * dataMapSize
             dataMap = sstruct.unpack(
-                DATA_MAP_FORMAT,
-                data[dataMapOffset : dataMapOffset + dataMapSize])
+                DATA_MAP_FORMAT, data[dataMapOffset : dataMapOffset + dataMapSize]
+            )
             tag = dataMap["tag"]
             offset = dataMap["dataOffset"]
             self.data[tag] = data[offset : offset + dataMap["dataLength"]]
@@ -50,12 +57,15 @@ class table__m_e_t_a(DefaultTable.DefaultTable):
         keys = sorted(self.data.keys())
         headerSize = sstruct.calcsize(META_HEADER_FORMAT)
         dataOffset = headerSize + len(keys) * sstruct.calcsize(DATA_MAP_FORMAT)
-        header = sstruct.pack(META_HEADER_FORMAT, {
+        header = sstruct.pack(
+            META_HEADER_FORMAT,
+            {
                 "version": 1,
                 "flags": 0,
                 "dataOffset": dataOffset,
-                "numDataMaps": len(keys)
-        })
+                "numDataMaps": len(keys),
+            },
+        )
         dataMaps = []
         dataBlocks = []
         for tag in keys:
@@ -63,11 +73,12 @@ class table__m_e_t_a(DefaultTable.DefaultTable):
                 data = self.data[tag].encode("utf-8")
             else:
                 data = self.data[tag]
-            dataMaps.append(sstruct.pack(DATA_MAP_FORMAT, {
-                "tag": tag,
-                "dataOffset": dataOffset,
-                "dataLength": len(data)
-            }))
+            dataMaps.append(
+                sstruct.pack(
+                    DATA_MAP_FORMAT,
+                    {"tag": tag, "dataOffset": dataOffset, "dataLength": len(data)},
+                )
+            )
             dataBlocks.append(data)
             dataOffset += len(data)
         return bytesjoin([header] + dataMaps + dataBlocks)

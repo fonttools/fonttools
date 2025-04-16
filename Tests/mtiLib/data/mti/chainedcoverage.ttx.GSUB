@@ -3,6 +3,7 @@
   <Version value="0x00010000"/>
   <LookupList>
     <!-- LookupCount=2 -->
+    <!-- slashcontext:  -->
     <Lookup index="0">
       <LookupType value="6"/>
       <LookupFlag value="0"/>
@@ -45,6 +46,7 @@
         </SubstLookupRecord>
       </ChainContextSubst>
     </Lookup>
+    <!-- slashTofraction:  -->
     <Lookup index="1">
       <LookupType value="1"/>
       <LookupFlag value="0"/>

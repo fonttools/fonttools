@@ -131,6 +131,8 @@ fb.save("test.otf")
 
 from .ttLib import TTFont, newTable
 from .ttLib.tables._c_m_a_p import cmap_classes
+from .ttLib.tables._g_l_y_f import flagCubic
+from .ttLib.tables.O_S_2f_2 import Panose
 from .misc.timeTools import timestampNow
 import struct
 from collections import OrderedDict
@@ -262,18 +264,7 @@ _nameIDs = dict(
 # to insert in setupNameTable doc string:
 # print("\n".join(("%s (nameID %s)" % (k, v)) for k, v in sorted(_nameIDs.items(), key=lambda x: x[1])))
 
-_panoseDefaults = dict(
-    bFamilyType=0,
-    bSerifStyle=0,
-    bWeight=0,
-    bProportion=0,
-    bContrast=0,
-    bStrokeVariation=0,
-    bArmStyle=0,
-    bLetterForm=0,
-    bMidline=0,
-    bXHeight=0,
-)
+_panoseDefaults = Panose()
 
 _OS2Defaults = dict(
     version=3,
@@ -319,7 +310,7 @@ _OS2Defaults = dict(
 
 
 class FontBuilder(object):
-    def __init__(self, unitsPerEm=None, font=None, isTTF=True):
+    def __init__(self, unitsPerEm=None, font=None, isTTF=True, glyphDataFormat=0):
         """Initialize a FontBuilder instance.
 
         If the `font` argument is not given, a new `TTFont` will be
@@ -327,15 +318,31 @@ class FontBuilder(object):
         the font will be a glyf-based TTF; if `isTTF` is False it will be
         a CFF-based OTF.
 
+        The `glyphDataFormat` argument corresponds to the `head` table field
+        that defines the format of the TrueType `glyf` table (default=0).
+        TrueType glyphs historically can only contain quadratic splines and static
+        components, but there's a proposal to add support for cubic Bezier curves as well
+        as variable composites/components at
+        https://github.com/harfbuzz/boring-expansion-spec/blob/main/glyf1.md
+        You can experiment with the new features by setting `glyphDataFormat` to 1.
+        A ValueError is raised if `glyphDataFormat` is left at 0 but glyphs are added
+        that contain cubic splines or varcomposites. This is to prevent accidentally
+        creating fonts that are incompatible with existing TrueType implementations.
+
         If `font` is given, it must be a `TTFont` instance and `unitsPerEm`
-        must _not_ be given. The `isTTF` argument will be ignored.
+        must _not_ be given. The `isTTF` and `glyphDataFormat` arguments will be ignored.
         """
         if font is None:
             self.font = TTFont(recalcTimestamp=False)
             self.isTTF = isTTF
             now = timestampNow()
             assert unitsPerEm is not None
-            self.setupHead(unitsPerEm=unitsPerEm, created=now, modified=now)
+            self.setupHead(
+                unitsPerEm=unitsPerEm,
+                created=now,
+                modified=now,
+                glyphDataFormat=glyphDataFormat,
+            )
             self.setupMaxp()
         else:
             assert unitsPerEm is None
@@ -391,7 +398,7 @@ class FontBuilder(object):
         sequence, but this is not policed.
         """
         subTables = []
-        highestUnicode = max(cmapping)
+        highestUnicode = max(cmapping) if cmapping else 0
         if highestUnicode > 0xFFFF:
             cmapping_3_1 = dict((k, v) for k, v in cmapping.items() if k < 0x10000)
             subTable_3_10 = buildCmapSubTable(cmapping, 12, 3, 10)
@@ -486,15 +493,12 @@ class FontBuilder(object):
         """Create a new `OS/2` table and initialize it with default values,
         which can be overridden by keyword arguments.
         """
-        if "xAvgCharWidth" not in values:
-            gs = self.font.getGlyphSet()
-            widths = [
-                gs[glyphName].width
-                for glyphName in gs.keys()
-                if gs[glyphName].width > 0
-            ]
-            values["xAvgCharWidth"] = int(round(sum(widths) / float(len(widths))))
         self._initTableWithValues("OS/2", _OS2Defaults, values)
+        if "xAvgCharWidth" not in values:
+            assert (
+                "hmtx" in self.font
+            ), "the 'hmtx' table must be setup before the 'OS/2' table"
+            self.font["OS/2"].recalcAvgCharWidth(self.font)
         if not (
             "ulUnicodeRange1" in values
             or "ulUnicodeRange2" in values
@@ -634,7 +638,7 @@ class FontBuilder(object):
         for fontDict in topDict.FDArray:
             fontDict.Private.vstore = vstore
 
-    def setupGlyf(self, glyphs, calcGlyphBounds=True):
+    def setupGlyf(self, glyphs, calcGlyphBounds=True, validateGlyphFormat=True):
         """Create the `glyf` table from a dict, that maps glyph names
         to `fontTools.ttLib.tables._g_l_y_f.Glyph` objects, for example
         as made by `fontTools.pens.ttGlyphPen.TTGlyphPen`.
@@ -642,8 +646,22 @@ class FontBuilder(object):
         If `calcGlyphBounds` is True, the bounds of all glyphs will be
         calculated. Only pass False if your glyph objects already have
         their bounding box values set.
+
+        If `validateGlyphFormat` is True, raise ValueError if any of the glyphs contains
+        cubic curves or is a variable composite but head.glyphDataFormat=0.
+        Set it to False to skip the check if you know in advance all the glyphs are
+        compatible with the specified glyphDataFormat.
         """
         assert self.isTTF
+
+        if validateGlyphFormat and self.font["head"].glyphDataFormat == 0:
+            for name, g in glyphs.items():
+                if g.numberOfContours > 0 and any(f & flagCubic for f in g.flags):
+                    raise ValueError(
+                        f"Glyph {name!r} has cubic Bezier outlines, but glyphDataFormat=0; "
+                        "either convert to quadratics with cu2qu or set glyphDataFormat=1."
+                    )
+
         self.font["loca"] = newTable("loca")
         self.font["glyf"] = newTable("glyf")
         self.font["glyf"].glyphs = glyphs
@@ -675,7 +693,7 @@ class FontBuilder(object):
 
         addFvar(self.font, axes, instances)
 
-    def setupAvar(self, axes):
+    def setupAvar(self, axes, mappings=None):
         """Adds an axis variations table to the font.
 
         Args:
@@ -683,10 +701,21 @@ class FontBuilder(object):
         """
         from .varLib import _add_avar
 
-        _add_avar(self.font, OrderedDict(enumerate(axes)))  # Only values are used
+        if "fvar" not in self.font:
+            raise KeyError("'fvar' table is missing; can't add 'avar'.")
+
+        axisTags = [axis.axisTag for axis in self.font["fvar"].axes]
+        axes = OrderedDict(enumerate(axes))  # Only values are used
+        _add_avar(self.font, axes, mappings, axisTags)
 
     def setupGvar(self, variations):
         gvar = self.font["gvar"] = newTable("gvar")
+        gvar.version = 1
+        gvar.reserved = 0
+        gvar.variations = variations
+
+    def setupGVAR(self, variations):
+        gvar = self.font["GVAR"] = newTable("GVAR")
         gvar.version = 1
         gvar.reserved = 0
         gvar.variations = variations
@@ -803,7 +832,7 @@ class FontBuilder(object):
         )
         self._initTableWithValues("DSIG", {}, values)
 
-    def addOpenTypeFeatures(self, features, filename=None, tables=None):
+    def addOpenTypeFeatures(self, features, filename=None, tables=None, debug=False):
         """Add OpenType features to the font from a string containing
         Feature File syntax.
 
@@ -813,11 +842,14 @@ class FontBuilder(object):
         The optional `tables` argument can be a list of OTL tables tags to
         build, allowing the caller to only build selected OTL tables. See
         `fontTools.feaLib` for details.
+
+        The optional `debug` argument controls whether to add source debugging
+        information to the font in the `Debg` table.
         """
         from .feaLib.builder import addOpenTypeFeaturesFromString
 
         addOpenTypeFeaturesFromString(
-            self.font, features, filename=filename, tables=tables
+            self.font, features, filename=filename, tables=tables, debug=debug
         )
 
     def addFeatureVariations(self, conditionalSubstitutions, featureTag="rvrn"):
@@ -841,6 +873,7 @@ class FontBuilder(object):
         varStore=None,
         varIndexMap=None,
         clipBoxes=None,
+        allowLayerReuse=True,
     ):
         """Build new COLR table using color layers dictionary.
 
@@ -856,6 +889,7 @@ class FontBuilder(object):
             varStore=varStore,
             varIndexMap=varIndexMap,
             clipBoxes=clipBoxes,
+            allowLayerReuse=allowLayerReuse,
         )
 
     def setupCPAL(
@@ -890,7 +924,15 @@ class FontBuilder(object):
         """
         from .otlLib.builder import buildStatTable
 
-        buildStatTable(self.font, axes, locations, elidedFallbackName)
+        assert "name" in self.font, "name must to be set up first"
+
+        buildStatTable(
+            self.font,
+            axes,
+            locations,
+            elidedFallbackName,
+            macNames=any(nr.platformID == 1 for nr in self.font["name"].names),
+        )
 
 
 def buildCmapSubTable(cmapping, format, platformID, platEncID):
@@ -909,6 +951,15 @@ def addFvar(font, axes, instances):
 
     fvar = newTable("fvar")
     nameTable = font["name"]
+
+    # if there are not currently any mac names don't add them here, that's inconsistent
+    # https://github.com/fonttools/fonttools/issues/683
+    macNames = any(nr.platformID == 1 for nr in getattr(nameTable, "names", ()))
+
+    # we have all the best ways to express mac names
+    platforms = ((3, 1, 0x409),)
+    if macNames:
+        platforms = ((1, 0, 0),) + platforms
 
     for axis_def in axes:
         axis = Axis()
@@ -929,11 +980,13 @@ def addFvar(font, axes, instances):
                 axis_def.maximum,
                 axis_def.name,
             )
+            if axis_def.hidden:
+                axis.flags = 0x0001  # HIDDEN_AXIS
 
         if isinstance(name, str):
             name = dict(en=name)
 
-        axis.axisNameID = nameTable.addMultilingualName(name, ttFont=font)
+        axis.axisNameID = nameTable.addMultilingualName(name, ttFont=font, mac=macNames)
         fvar.axes.append(axis)
 
     for instance in instances:
@@ -950,9 +1003,11 @@ def addFvar(font, axes, instances):
             name = dict(en=name)
 
         inst = NamedInstance()
-        inst.subfamilyNameID = nameTable.addMultilingualName(name, ttFont=font)
+        inst.subfamilyNameID = nameTable.addMultilingualName(
+            name, ttFont=font, mac=macNames
+        )
         if psname is not None:
-            inst.postscriptNameID = nameTable.addName(psname)
+            inst.postscriptNameID = nameTable.addName(psname, platforms=platforms)
         inst.coordinates = coordinates
         fvar.instances.append(inst)
 

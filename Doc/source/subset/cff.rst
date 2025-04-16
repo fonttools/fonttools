@@ -1,8 +1,9 @@
-###
-cff
-###
+############################################
+cff: Tools for subsetting CFF-flavored fonts
+############################################
+
+.. currentmodule:: fontTools.subset.cff
 
 .. automodule:: fontTools.subset.cff
-   :inherited-members:
    :members:
    :undoc-members:

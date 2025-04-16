@@ -7,17 +7,17 @@ import unittest
 # Apple's spec of the baseline table gives no example for 'bsln' format 0,
 # but the Apple Chancery font contains the following data.
 BSLN_FORMAT_0_DATA = deHexStr(
-    '0001 0000 0000 '       #  0: Version=1.0, Format=0
-    '0000 '                 #  6: DefaultBaseline=0 (Roman baseline)
-    '0000 01D1 0000 0541 '  #  8: Delta[0..3]=0, 465, 0, 1345
-    '01FB 0000 0000 0000 '  # 16: Delta[4..7]=507, 0, 0, 0
-    '0000 0000 0000 0000 '  # 24: Delta[8..11]=0, 0, 0, 0
-    '0000 0000 0000 0000 '  # 32: Delta[12..15]=0, 0, 0, 0
-    '0000 0000 0000 0000 '  # 40: Delta[16..19]=0, 0, 0, 0
-    '0000 0000 0000 0000 '  # 48: Delta[20..23]=0, 0, 0, 0
-    '0000 0000 0000 0000 '  # 56: Delta[24..27]=0, 0, 0, 0
-    '0000 0000 0000 0000 '  # 64: Delta[28..31]=0, 0, 0, 0
-)                           # 72: <end>
+    "0001 0000 0000 "  #  0: Version=1.0, Format=0
+    "0000 "  #  6: DefaultBaseline=0 (Roman baseline)
+    "0000 01D1 0000 0541 "  #  8: Delta[0..3]=0, 465, 0, 1345
+    "01FB 0000 0000 0000 "  # 16: Delta[4..7]=507, 0, 0, 0
+    "0000 0000 0000 0000 "  # 24: Delta[8..11]=0, 0, 0, 0
+    "0000 0000 0000 0000 "  # 32: Delta[12..15]=0, 0, 0, 0
+    "0000 0000 0000 0000 "  # 40: Delta[16..19]=0, 0, 0, 0
+    "0000 0000 0000 0000 "  # 48: Delta[20..23]=0, 0, 0, 0
+    "0000 0000 0000 0000 "  # 56: Delta[24..27]=0, 0, 0, 0
+    "0000 0000 0000 0000 "  # 64: Delta[28..31]=0, 0, 0, 0
+)  # 72: <end>
 assert len(BSLN_FORMAT_0_DATA) == 72
 
 
@@ -57,7 +57,7 @@ BSLN_FORMAT_0_XML = [
     '  <Delta index="29" value="0"/>',
     '  <Delta index="30" value="0"/>',
     '  <Delta index="31" value="0"/>',
-    '</Baseline>',
+    "</Baseline>",
 ]
 
 
@@ -66,21 +66,21 @@ BSLN_FORMAT_0_XML = [
 # The example in the AAT specification uses the value 270 for Seg[0].LastGlyph,
 # whereas we use the value 10 for testng to shorten the XML dump.
 BSLN_FORMAT_1_DATA = deHexStr(
-    '0001 0000 0001 '       #  0: Version=1.0, Format=1
-    '0001 '                 #  6: DefaultBaseline=1 (Ideographic baseline)
-    '0000 0357 0000 05F0 '  #  8: Delta[0..3]=0, 855, 0, 1520
-    '0000 0000 0000 0000 '  # 16: Delta[4..7]=0, 0, 0, 0
-    '0000 0000 0000 0000 '  # 24: Delta[8..11]=0, 0, 0, 0
-    '0000 0000 0000 0000 '  # 32: Delta[12..15]=0, 0, 0, 0
-    '0000 0000 0000 0000 '  # 40: Delta[16..19]=0, 0, 0, 0
-    '0000 0000 0000 0000 '  # 48: Delta[20..23]=0, 0, 0, 0
-    '0000 0000 0000 0000 '  # 56: Delta[24..27]=0, 0, 0, 0
-    '0000 0000 0000 0000 '  # 64: Delta[28..31]=0, 0, 0, 0
-    '0002 0006 0001 '       # 72: LookupFormat=2, UnitSize=6, NUnits=1
-    '0006 0000 0000 '       # 78: SearchRange=6, EntrySelector=0, RangeShift=0
-    '000A 0002 0000 '       # 84: Seg[0].LastGlyph=10 FirstGl=2 Value=0/Roman
-    'FFFF FFFF 0000 '       # 90: Seg[1]=<end>
-)                           # 96: <end>
+    "0001 0000 0001 "  #  0: Version=1.0, Format=1
+    "0001 "  #  6: DefaultBaseline=1 (Ideographic baseline)
+    "0000 0357 0000 05F0 "  #  8: Delta[0..3]=0, 855, 0, 1520
+    "0000 0000 0000 0000 "  # 16: Delta[4..7]=0, 0, 0, 0
+    "0000 0000 0000 0000 "  # 24: Delta[8..11]=0, 0, 0, 0
+    "0000 0000 0000 0000 "  # 32: Delta[12..15]=0, 0, 0, 0
+    "0000 0000 0000 0000 "  # 40: Delta[16..19]=0, 0, 0, 0
+    "0000 0000 0000 0000 "  # 48: Delta[20..23]=0, 0, 0, 0
+    "0000 0000 0000 0000 "  # 56: Delta[24..27]=0, 0, 0, 0
+    "0000 0000 0000 0000 "  # 64: Delta[28..31]=0, 0, 0, 0
+    "0002 0006 0001 "  # 72: LookupFormat=2, UnitSize=6, NUnits=1
+    "0006 0000 0000 "  # 78: SearchRange=6, EntrySelector=0, RangeShift=0
+    "000A 0002 0000 "  # 84: Seg[0].LastGlyph=10 FirstGl=2 Value=0/Roman
+    "FFFF FFFF 0000 "  # 90: Seg[1]=<end>
+)  # 96: <end>
 assert len(BSLN_FORMAT_1_DATA) == 96
 
 
@@ -120,7 +120,7 @@ BSLN_FORMAT_1_XML = [
     '  <Delta index="29" value="0"/>',
     '  <Delta index="30" value="0"/>',
     '  <Delta index="31" value="0"/>',
-    '  <BaselineValues>',
+    "  <BaselineValues>",
     '    <Lookup glyph="B" value="0"/>',
     '    <Lookup glyph="C" value="0"/>',
     '    <Lookup glyph="D" value="0"/>',
@@ -130,24 +130,24 @@ BSLN_FORMAT_1_XML = [
     '    <Lookup glyph="H" value="0"/>',
     '    <Lookup glyph="I" value="0"/>',
     '    <Lookup glyph="J" value="0"/>',
-    '  </BaselineValues>',
-    '</Baseline>',
+    "  </BaselineValues>",
+    "</Baseline>",
 ]
 
 
 BSLN_FORMAT_2_DATA = deHexStr(
-    '0001 0000 0002 '       #  0: Version=1.0, Format=2
-    '0004 '                 #  6: DefaultBaseline=4 (Math)
-    '0016 '                 #  8: StandardGlyph=22
-    '0050 0051 FFFF 0052 '  # 10: ControlPoint[0..3]=80, 81, <none>, 82
-    'FFFF FFFF FFFF FFFF '  # 18: ControlPoint[4..7]=<none>
-    'FFFF FFFF FFFF FFFF '  # 26: ControlPoint[8..11]=<none>
-    'FFFF FFFF FFFF FFFF '  # 34: ControlPoint[12..15]=<none>
-    'FFFF FFFF FFFF FFFF '  # 42: ControlPoint[16..19]=<none>
-    'FFFF FFFF FFFF FFFF '  # 50: ControlPoint[20..23]=<none>
-    'FFFF FFFF FFFF FFFF '  # 58: ControlPoint[24..27]=<none>
-    'FFFF FFFF FFFF FFFF '  # 66: ControlPoint[28..31]=<none>
-)                           # 74: <end>
+    "0001 0000 0002 "  #  0: Version=1.0, Format=2
+    "0004 "  #  6: DefaultBaseline=4 (Math)
+    "0016 "  #  8: StandardGlyph=22
+    "0050 0051 FFFF 0052 "  # 10: ControlPoint[0..3]=80, 81, <none>, 82
+    "FFFF FFFF FFFF FFFF "  # 18: ControlPoint[4..7]=<none>
+    "FFFF FFFF FFFF FFFF "  # 26: ControlPoint[8..11]=<none>
+    "FFFF FFFF FFFF FFFF "  # 34: ControlPoint[12..15]=<none>
+    "FFFF FFFF FFFF FFFF "  # 42: ControlPoint[16..19]=<none>
+    "FFFF FFFF FFFF FFFF "  # 50: ControlPoint[20..23]=<none>
+    "FFFF FFFF FFFF FFFF "  # 58: ControlPoint[24..27]=<none>
+    "FFFF FFFF FFFF FFFF "  # 66: ControlPoint[28..31]=<none>
+)  # 74: <end>
 assert len(BSLN_FORMAT_2_DATA) == 74
 
 
@@ -188,7 +188,7 @@ BSLN_FORMAT_2_XML = [
     '  <ControlPoint index="29" value="65535"/>',
     '  <ControlPoint index="30" value="65535"/>',
     '  <ControlPoint index="31" value="65535"/>',
-    '</Baseline>',
+    "</Baseline>",
 ]
 
 
@@ -197,22 +197,22 @@ BSLN_FORMAT_2_XML = [
 # The example in the AAT specification uses the value 270 for Seg[0].LastGlyph,
 # whereas we use the value 10 for testng to shorten the XML dump.
 BSLN_FORMAT_3_DATA = deHexStr(
-    '0001 0000 0003 '       #  0: Version=1.0, Format=3
-    '0001 '                 #  6: DefaultBaseline=1 (Ideographic)
-    '0016 '                 #  8: StandardGlyph=22
-    '0050 0051 FFFF 0052 '  # 10: ControlPoint[0..3]=80, 81, <none>, 82
-    'FFFF FFFF FFFF FFFF '  # 18: ControlPoint[4..7]=<none>
-    'FFFF FFFF FFFF FFFF '  # 26: ControlPoint[8..11]=<none>
-    'FFFF FFFF FFFF FFFF '  # 34: ControlPoint[12..15]=<none>
-    'FFFF FFFF FFFF FFFF '  # 42: ControlPoint[16..19]=<none>
-    'FFFF FFFF FFFF FFFF '  # 50: ControlPoint[20..23]=<none>
-    'FFFF FFFF FFFF FFFF '  # 58: ControlPoint[24..27]=<none>
-    'FFFF FFFF FFFF FFFF '  # 66: ControlPoint[28..31]=<none>
-    '0002 0006 0001 '       # 74: LookupFormat=2, UnitSize=6, NUnits=1
-    '0006 0000 0000 '       # 80: SearchRange=6, EntrySelector=0, RangeShift=0
-    '000A 0002 0000 '       # 86: Seg[0].LastGlyph=10 FirstGl=2 Value=0/Roman
-    'FFFF FFFF 0000 '       # 92: Seg[1]=<end>
-)                           # 98: <end>
+    "0001 0000 0003 "  #  0: Version=1.0, Format=3
+    "0001 "  #  6: DefaultBaseline=1 (Ideographic)
+    "0016 "  #  8: StandardGlyph=22
+    "0050 0051 FFFF 0052 "  # 10: ControlPoint[0..3]=80, 81, <none>, 82
+    "FFFF FFFF FFFF FFFF "  # 18: ControlPoint[4..7]=<none>
+    "FFFF FFFF FFFF FFFF "  # 26: ControlPoint[8..11]=<none>
+    "FFFF FFFF FFFF FFFF "  # 34: ControlPoint[12..15]=<none>
+    "FFFF FFFF FFFF FFFF "  # 42: ControlPoint[16..19]=<none>
+    "FFFF FFFF FFFF FFFF "  # 50: ControlPoint[20..23]=<none>
+    "FFFF FFFF FFFF FFFF "  # 58: ControlPoint[24..27]=<none>
+    "FFFF FFFF FFFF FFFF "  # 66: ControlPoint[28..31]=<none>
+    "0002 0006 0001 "  # 74: LookupFormat=2, UnitSize=6, NUnits=1
+    "0006 0000 0000 "  # 80: SearchRange=6, EntrySelector=0, RangeShift=0
+    "000A 0002 0000 "  # 86: Seg[0].LastGlyph=10 FirstGl=2 Value=0/Roman
+    "FFFF FFFF 0000 "  # 92: Seg[1]=<end>
+)  # 98: <end>
 assert len(BSLN_FORMAT_3_DATA) == 98
 
 
@@ -253,7 +253,7 @@ BSLN_FORMAT_3_XML = [
     '  <ControlPoint index="29" value="65535"/>',
     '  <ControlPoint index="30" value="65535"/>',
     '  <ControlPoint index="31" value="65535"/>',
-    '  <BaselineValues>',
+    "  <BaselineValues>",
     '    <Lookup glyph="B" value="0"/>',
     '    <Lookup glyph="C" value="0"/>',
     '    <Lookup glyph="D" value="0"/>',
@@ -263,26 +263,24 @@ BSLN_FORMAT_3_XML = [
     '    <Lookup glyph="H" value="0"/>',
     '    <Lookup glyph="I" value="0"/>',
     '    <Lookup glyph="J" value="0"/>',
-    '  </BaselineValues>',
-    '</Baseline>',
+    "  </BaselineValues>",
+    "</Baseline>",
 ]
 
 
 class BSLNTest(unittest.TestCase):
-
     @classmethod
     def setUpClass(cls):
         cls.maxDiff = None
-        cls.font = FakeFont(
-            ['.notdef'] + [g for g in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'])
+        cls.font = FakeFont([".notdef"] + [g for g in "ABCDEFGHIJKLMNOPQRSTUVWXYZ"])
 
     def decompileToXML(self, data, xml):
-        table = newTable('bsln')
+        table = newTable("bsln")
         table.decompile(data, self.font)
         self.assertEqual(getXML(table.toXML), xml)
 
     def compileFromXML(self, xml, data):
-        table = newTable('bsln')
+        table = newTable("bsln")
         for name, attrs, content in parseXML(xml):
             table.fromXML(name, attrs, content, font=self.font)
         self.assertEqual(hexStr(table.compile(self.font)), hexStr(data))
@@ -304,6 +302,7 @@ class BSLNTest(unittest.TestCase):
         self.compileFromXML(BSLN_FORMAT_3_XML, BSLN_FORMAT_3_DATA)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
+
     sys.exit(unittest.main())

@@ -1,0 +1,335 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="4.33">
+
+  <GlyphOrder>
+    <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
+    <GlyphID id="0" name=".notdef"/>
+    <GlyphID id="1" name=".space"/>
+    <GlyphID id="2" name="A"/>
+    <GlyphID id="3" name="B"/>
+    <GlyphID id="4" name="A.0"/>
+  </GlyphOrder>
+
+  <head>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="1.0"/>
+    <fontRevision value="1.0"/>
+    <checkSumAdjustment value="0x49d0234e"/>
+    <magicNumber value="0x5f0f3cf5"/>
+    <flags value="00000000 00000011"/>
+    <unitsPerEm value="1024"/>
+    <created value="Tue Jul  5 12:29:44 2022"/>
+    <modified value="Tue Jul  5 12:29:44 2022"/>
+    <xMin value="51"/>
+    <yMin value="-250"/>
+    <xMax value="878"/>
+    <yMax value="950"/>
+    <macStyle value="00000000 00000000"/>
+    <lowestRecPPEM value="6"/>
+    <fontDirectionHint value="2"/>
+    <indexToLocFormat value="0"/>
+    <glyphDataFormat value="0"/>
+  </head>
+
+  <hhea>
+    <tableVersion value="0x00010000"/>
+    <ascent value="950"/>
+    <descent value="-250"/>
+    <lineGap value="0"/>
+    <advanceWidthMax value="1275"/>
+    <minLeftSideBearing value="51"/>
+    <minRightSideBearing value="397"/>
+    <xMaxExtent value="878"/>
+    <caretSlopeRise value="1"/>
+    <caretSlopeRun value="0"/>
+    <caretOffset value="0"/>
+    <reserved0 value="0"/>
+    <reserved1 value="0"/>
+    <reserved2 value="0"/>
+    <reserved3 value="0"/>
+    <metricDataFormat value="0"/>
+    <numberOfHMetrics value="1"/>
+  </hhea>
+
+  <maxp>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="0x10000"/>
+    <numGlyphs value="5"/>
+    <maxPoints value="16"/>
+    <maxContours value="2"/>
+    <maxCompositePoints value="0"/>
+    <maxCompositeContours value="0"/>
+    <maxZones value="1"/>
+    <maxTwilightPoints value="0"/>
+    <maxStorage value="0"/>
+    <maxFunctionDefs value="0"/>
+    <maxInstructionDefs value="0"/>
+    <maxStackElements value="0"/>
+    <maxSizeOfInstructions value="0"/>
+    <maxComponentElements value="0"/>
+    <maxComponentDepth value="0"/>
+  </maxp>
+
+  <OS_2>
+    <!-- The fields 'usFirstCharIndex' and 'usLastCharIndex'
+         will be recalculated by the compiler -->
+    <version value="4"/>
+    <xAvgCharWidth value="1275"/>
+    <usWeightClass value="400"/>
+    <usWidthClass value="5"/>
+    <fsType value="00000000 00000100"/>
+    <ySubscriptXSize value="666"/>
+    <ySubscriptYSize value="614"/>
+    <ySubscriptXOffset value="0"/>
+    <ySubscriptYOffset value="77"/>
+    <ySuperscriptXSize value="666"/>
+    <ySuperscriptYSize value="614"/>
+    <ySuperscriptXOffset value="0"/>
+    <ySuperscriptYOffset value="358"/>
+    <yStrikeoutSize value="51"/>
+    <yStrikeoutPosition value="307"/>
+    <sFamilyClass value="0"/>
+    <panose>
+      <bFamilyType value="0"/>
+      <bSerifStyle value="0"/>
+      <bWeight value="0"/>
+      <bProportion value="0"/>
+      <bContrast value="0"/>
+      <bStrokeVariation value="0"/>
+      <bArmStyle value="0"/>
+      <bLetterForm value="0"/>
+      <bMidline value="0"/>
+      <bXHeight value="0"/>
+    </panose>
+    <ulUnicodeRange1 value="00000000 00000000 00000000 00000001"/>
+    <ulUnicodeRange2 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange3 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange4 value="00000000 00000000 00000000 00000000"/>
+    <achVendID value="NONE"/>
+    <fsSelection value="00000000 11000000"/>
+    <usFirstCharIndex value="32"/>
+    <usLastCharIndex value="66"/>
+    <sTypoAscender value="950"/>
+    <sTypoDescender value="-250"/>
+    <sTypoLineGap value="0"/>
+    <usWinAscent value="950"/>
+    <usWinDescent value="250"/>
+    <ulCodePageRange1 value="00000000 00000000 00000000 00000001"/>
+    <ulCodePageRange2 value="00000000 00000000 00000000 00000000"/>
+    <sxHeight value="512"/>
+    <sCapHeight value="717"/>
+    <usDefaultChar value="0"/>
+    <usBreakChar value="32"/>
+    <usMaxContext value="0"/>
+  </OS_2>
+
+  <hmtx>
+    <mtx name=".notdef" width="1275" lsb="51"/>
+    <mtx name=".space" width="1275" lsb="0"/>
+    <mtx name="A" width="1275" lsb="0"/>
+    <mtx name="A.0" width="1275" lsb="398"/>
+    <mtx name="B" width="1275" lsb="0"/>
+  </hmtx>
+
+  <cmap>
+    <tableVersion version="0"/>
+    <cmap_format_4 platformID="0" platEncID="3" language="0">
+      <map code="0x20" name=".space"/><!-- SPACE -->
+      <map code="0x41" name="A"/><!-- LATIN CAPITAL LETTER A -->
+      <map code="0x42" name="B"/><!-- LATIN CAPITAL LETTER B -->
+    </cmap_format_4>
+    <cmap_format_4 platformID="3" platEncID="1" language="0">
+      <map code="0x20" name=".space"/><!-- SPACE -->
+      <map code="0x41" name="A"/><!-- LATIN CAPITAL LETTER A -->
+      <map code="0x42" name="B"/><!-- LATIN CAPITAL LETTER B -->
+    </cmap_format_4>
+  </cmap>
+
+  <loca>
+    <!-- The 'loca' table will be calculated by the compiler -->
+  </loca>
+
+  <glyf>
+
+    <!-- The xMin, yMin, xMax and yMax values
+         will be recalculated by the compiler. -->
+
+    <TTGlyph name=".notdef" xMin="51" yMin="-250" xMax="461" yMax="950">
+      <contour>
+        <pt x="51" y="-250" on="1"/>
+        <pt x="51" y="950" on="1"/>
+        <pt x="461" y="950" on="1"/>
+        <pt x="461" y="-250" on="1"/>
+      </contour>
+      <contour>
+        <pt x="102" y="-199" on="1"/>
+        <pt x="410" y="-199" on="1"/>
+        <pt x="410" y="899" on="1"/>
+        <pt x="102" y="899" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name=".space"/><!-- contains no outline data -->
+
+    <TTGlyph name="A"/><!-- contains no outline data -->
+
+    <TTGlyph name="A.0" xMin="398" yMin="110" xMax="878" yMax="590">
+      <contour>
+        <pt x="878" y="350" on="1"/>
+        <pt x="878" y="416" on="0"/>
+        <pt x="813" y="525" on="0"/>
+        <pt x="704" y="590" on="0"/>
+        <pt x="638" y="590" on="1"/>
+        <pt x="571" y="590" on="0"/>
+        <pt x="462" y="525" on="0"/>
+        <pt x="398" y="416" on="0"/>
+        <pt x="398" y="350" on="1"/>
+        <pt x="398" y="284" on="0"/>
+        <pt x="462" y="175" on="0"/>
+        <pt x="571" y="110" on="0"/>
+        <pt x="638" y="110" on="1"/>
+        <pt x="704" y="110" on="0"/>
+        <pt x="813" y="175" on="0"/>
+        <pt x="878" y="284" on="0"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="B"/><!-- contains no outline data -->
+
+  </glyf>
+
+  <name>
+    <namerecord nameID="1" platformID="3" platEncID="1" langID="0x409">
+      An Emoji Family
+    </namerecord>
+    <namerecord nameID="2" platformID="3" platEncID="1" langID="0x409">
+      Regular
+    </namerecord>
+    <namerecord nameID="3" platformID="3" platEncID="1" langID="0x409">
+      1.000;NONE;AnEmojiFamily-Regular
+    </namerecord>
+    <namerecord nameID="4" platformID="3" platEncID="1" langID="0x409">
+      An Emoji Family Regular
+    </namerecord>
+    <namerecord nameID="5" platformID="3" platEncID="1" langID="0x409">
+      Version 1.000
+    </namerecord>
+    <namerecord nameID="6" platformID="3" platEncID="1" langID="0x409">
+      AnEmojiFamily-Regular
+    </namerecord>
+  </name>
+
+  <post>
+    <formatType value="2.0"/>
+    <italicAngle value="0.0"/>
+    <underlinePosition value="-77"/>
+    <underlineThickness value="51"/>
+    <isFixedPitch value="0"/>
+    <minMemType42 value="0"/>
+    <maxMemType42 value="0"/>
+    <minMemType1 value="0"/>
+    <maxMemType1 value="0"/>
+    <psNames>
+      <!-- This file uses unique glyph names based on the information
+           found in the 'post' table. Since these names might not be unique,
+           we have to invent artificial names in case of clashes. In order to
+           be able to retain the original information, we need a name to
+           ps name mapping for those cases where they differ. That's what
+           you see below.
+            -->
+    </psNames>
+    <extraNames>
+      <!-- following are the name that are not taken from the standard Mac glyph order -->
+      <psName name=".space"/>
+      <psName name="A.0"/>
+    </extraNames>
+  </post>
+
+  <COLR>
+    <Version value="1"/>
+    <!-- BaseGlyphRecordCount=0 -->
+    <!-- LayerRecordCount=0 -->
+    <BaseGlyphList>
+      <!-- BaseGlyphCount=2 -->
+      <BaseGlyphPaintRecord index="0">
+        <BaseGlyph value="A"/>
+        <Paint Format="1"><!-- PaintColrLayers -->
+          <NumLayers value="3"/>
+          <FirstLayerIndex value="0"/>
+        </Paint>
+      </BaseGlyphPaintRecord>
+      <BaseGlyphPaintRecord index="1">
+        <BaseGlyph value="B"/>
+        <Paint Format="1"><!-- PaintColrLayers -->
+          <NumLayers value="2"/>
+          <FirstLayerIndex value="1"/>
+        </Paint>
+      </BaseGlyphPaintRecord>
+    </BaseGlyphList>
+    <LayerList>
+      <!-- LayerCount=3 -->
+      <Paint index="0" Format="10"><!-- PaintGlyph -->
+        <Paint Format="2"><!-- PaintSolid -->
+          <PaletteIndex value="0"/>
+          <Alpha value="1.0"/>
+        </Paint>
+        <Glyph value="A.0"/>
+      </Paint>
+      <Paint index="1" Format="14"><!-- PaintTranslate -->
+        <Paint Format="10"><!-- PaintGlyph -->
+          <Paint Format="2"><!-- PaintSolid -->
+            <PaletteIndex value="2"/>
+            <Alpha value="1.0"/>
+          </Paint>
+          <Glyph value="A.0"/>
+        </Paint>
+        <dx value="0"/>
+        <dy value="-120"/>
+      </Paint>
+      <Paint index="2" Format="14"><!-- PaintTranslate -->
+        <Paint Format="10"><!-- PaintGlyph -->
+          <Paint Format="2"><!-- PaintSolid -->
+            <PaletteIndex value="1"/>
+            <Alpha value="1.0"/>
+          </Paint>
+          <Glyph value="A.0"/>
+        </Paint>
+        <dx value="0"/>
+        <dy value="-240"/>
+      </Paint>
+    </LayerList>
+    <ClipList Format="1">
+      <Clip>
+        <Glyph value="A"/>
+        <ClipBox Format="1">
+          <xMin value="380"/>
+          <yMin value="-140"/>
+          <xMax value="880"/>
+          <yMax value="600"/>
+        </ClipBox>
+      </Clip>
+      <Clip>
+        <Glyph value="B"/>
+        <ClipBox Format="1">
+          <xMin value="380"/>
+          <yMin value="-140"/>
+          <xMax value="880"/>
+          <yMax value="480"/>
+        </ClipBox>
+      </Clip>
+    </ClipList>
+  </COLR>
+
+  <CPAL>
+    <version value="0"/>
+    <numPaletteEntries value="3"/>
+    <palette index="0">
+      <color index="0" value="#0000FFFF"/>
+      <color index="1" value="#008000FF"/>
+      <color index="2" value="#FF0000FF"/>
+    </palette>
+  </CPAL>
+
+</ttFont>

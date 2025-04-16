@@ -3,6 +3,7 @@
   <Version value="0x00010000"/>
   <LookupList>
     <!-- LookupCount=1 -->
+    <!-- latinLigatures:  -->
     <Lookup index="0">
       <LookupType value="4"/>
       <LookupFlag value="0"/>
@@ -15,20 +16,20 @@
           <Ligature components="Jsmall" glyph="IJsmall"/>
         </LigatureSet>
         <LigatureSet glyph="f">
-          <Ligature components="f,b" glyph="ffb"/>
-          <Ligature components="f,h" glyph="ffh"/>
           <Ligature components="f,i" glyph="ffi"/>
-          <Ligature components="f,k" glyph="ffk"/>
           <Ligature components="f,l" glyph="ffl"/>
           <Ligature components="f,t" glyph="fft"/>
-          <Ligature components="b" glyph="fb"/>
-          <Ligature components="f" glyph="ff"/>
-          <Ligature components="h" glyph="fh"/>
+          <Ligature components="f,b" glyph="ffb"/>
+          <Ligature components="f,h" glyph="ffh"/>
+          <Ligature components="f,k" glyph="ffk"/>
           <Ligature components="i" glyph="fi"/>
-          <Ligature components="j" glyph="fj"/>
-          <Ligature components="k" glyph="fk"/>
           <Ligature components="l" glyph="fl"/>
+          <Ligature components="f" glyph="ff"/>
           <Ligature components="t" glyph="ft"/>
+          <Ligature components="b" glyph="fb"/>
+          <Ligature components="h" glyph="fh"/>
+          <Ligature components="k" glyph="fk"/>
+          <Ligature components="j" glyph="fj"/>
         </LigatureSet>
         <LigatureSet glyph="i">
           <Ligature components="j" glyph="ij"/>

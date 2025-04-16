@@ -11,6 +11,16 @@ feature F1 {
 # if glyph classes are detected in <glyph sequence>.  Thus, the above
 # example produces an identical representation in the font as if all
 # the sequences were manually enumerated by the font editor:
+#
+# NOTE(anthrotype): The previous sentence is no longer entirely true, since we
+# now preserve the order in which the ligatures (with same length and first glyph)
+# were specified in the feature file and do not sort them alphabetically
+# by the ligature component names. Therefore, the way this particular example from
+# the FEA spec is written will produce two slightly different representations
+# in the font in which the ligatures are enumerated differently, however the two
+# lookups are functionally equivalent.
+# See: https://github.com/fonttools/fonttools/issues/3428
+# https://github.com/adobe-type-tools/afdko/issues/1727
 feature F2 {
   sub one slash two by onehalf;
   sub one.oldstyle slash two by onehalf;

@@ -1,5 +1,6 @@
 from fontTools.voltLib.error import VoltLibError
 
+
 class Lexer(object):
     NUMBER = "NUMBER"
     STRING = "STRING"
@@ -13,8 +14,9 @@ class Lexer(object):
     CHAR_LC_LETTER_ = "abcdefghijklmnopqrstuvwxyz"
     CHAR_UNDERSCORE_ = "_"
     CHAR_PERIOD_ = "."
-    CHAR_NAME_START_ = CHAR_UC_LETTER_ + CHAR_LC_LETTER_ + CHAR_PERIOD_ + \
-        CHAR_UNDERSCORE_
+    CHAR_NAME_START_ = (
+        CHAR_UC_LETTER_ + CHAR_LC_LETTER_ + CHAR_PERIOD_ + CHAR_UNDERSCORE_
+    )
     CHAR_NAME_CONTINUATION_ = CHAR_NAME_START_ + CHAR_DIGIT_
 
     def __init__(self, text, filename):
@@ -58,7 +60,7 @@ class Lexer(object):
             self.line_start_ = self.pos_
             return (Lexer.NEWLINE, None, location)
         if cur_char == "\r":
-            self.pos_ += (2 if next_char == "\n" else 1)
+            self.pos_ += 2 if next_char == "\n" else 1
             self.line_ += 1
             self.line_start_ = self.pos_
             return (Lexer.NEWLINE, None, location)
@@ -67,24 +69,22 @@ class Lexer(object):
             self.scan_until_('"\r\n')
             if self.pos_ < self.text_length_ and self.text_[self.pos_] == '"':
                 self.pos_ += 1
-                return (Lexer.STRING, text[start + 1:self.pos_ - 1], location)
+                return (Lexer.STRING, text[start + 1 : self.pos_ - 1], location)
             else:
-                raise VoltLibError("Expected '\"' to terminate string",
-                                   location)
+                raise VoltLibError("Expected '\"' to terminate string", location)
         if cur_char in Lexer.CHAR_NAME_START_:
             self.pos_ += 1
             self.scan_over_(Lexer.CHAR_NAME_CONTINUATION_)
-            token = text[start:self.pos_]
+            token = text[start : self.pos_]
             return (Lexer.NAME, token, location)
         if cur_char in Lexer.CHAR_DIGIT_:
             self.scan_over_(Lexer.CHAR_DIGIT_)
-            return (Lexer.NUMBER, int(text[start:self.pos_], 10), location)
+            return (Lexer.NUMBER, int(text[start : self.pos_], 10), location)
         if cur_char == "-" and next_char in Lexer.CHAR_DIGIT_:
             self.pos_ += 1
             self.scan_over_(Lexer.CHAR_DIGIT_)
-            return (Lexer.NUMBER, int(text[start:self.pos_], 10), location)
-        raise VoltLibError("Unexpected character: '%s'" % cur_char,
-                           location)
+            return (Lexer.NUMBER, int(text[start : self.pos_], 10), location)
+        raise VoltLibError("Unexpected character: '%s'" % cur_char, location)
 
     def scan_over_(self, valid):
         p = self.pos_

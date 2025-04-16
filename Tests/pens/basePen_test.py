@@ -1,5 +1,9 @@
-from fontTools.pens.basePen import \
-    AbstractPen, BasePen, decomposeSuperBezierSegment, decomposeQuadraticSegment
+from fontTools.pens.basePen import (
+    AbstractPen,
+    BasePen,
+    decomposeSuperBezierSegment,
+    decomposeQuadraticSegment,
+)
 from fontTools.pens.pointPen import AbstractPointPen
 from fontTools.misc.loggingTools import CapturingLogHandler
 import unittest
@@ -23,10 +27,10 @@ class _TestPen(BasePen):
         self._commands.append("%s %s lineto" % (pt[0], pt[1]))
 
     def _curveToOne(self, bcp1, bcp2, pt):
-        self._commands.append("%s %s %s %s %s %s curveto" %
-                              (bcp1[0], bcp1[1],
-                               bcp2[0], bcp2[1],
-                               pt[0], pt[1]))
+        self._commands.append(
+            "%s %s %s %s %s %s curveto"
+            % (bcp1[0], bcp1[1], bcp2[0], bcp2[1], pt[0], pt[1])
+        )
 
     def _closePath(self):
         self._commands.append("closepath")
@@ -73,17 +77,19 @@ class BasePenTest(unittest.TestCase):
         pen = _TestPen()
         pen.moveTo((0.0, 0.0))
         pen.curveTo((6.0, 3.0), (3.0, 6.0))
-        self.assertEqual("0.0 0.0 moveto 4.0 2.0 5.0 4.0 3.0 6.0 curveto",
-                         repr(pen))
+        self.assertEqual("0.0 0.0 moveto 4.0 2.0 5.0 4.0 3.0 6.0 curveto", repr(pen))
         self.assertEqual((3.0, 6.0), pen.getCurrentPoint())
 
     def test_curveTo_manyPoints(self):
         pen = _TestPen()
         pen.moveTo((0.0, 0.0))
         pen.curveTo((1.0, 1.1), (2.0, 2.1), (3.0, 3.1), (4.0, 4.1))
-        self.assertEqual("0.0 0.0 moveto "
-                         "1.0 1.1 1.5 1.6 2.0 2.1 curveto "
-                         "2.5 2.6 3.0 3.1 4.0 4.1 curveto", repr(pen))
+        self.assertEqual(
+            "0.0 0.0 moveto "
+            "1.0 1.1 1.5 1.6 2.0 2.1 curveto "
+            "2.5 2.6 3.0 3.1 4.0 4.1 curveto",
+            repr(pen),
+        )
         self.assertEqual((4.0, 4.1), pen.getCurrentPoint())
 
     def test_qCurveTo_zeroPoints(self):
@@ -102,19 +108,21 @@ class BasePenTest(unittest.TestCase):
         pen = _TestPen()
         pen.moveTo((0.0, 0.0))
         pen.qCurveTo((6.0, 3.0), (3.0, 6.0))
-        self.assertEqual("0.0 0.0 moveto 4.0 2.0 5.0 4.0 3.0 6.0 curveto",
-                         repr(pen))
+        self.assertEqual("0.0 0.0 moveto 4.0 2.0 5.0 4.0 3.0 6.0 curveto", repr(pen))
         self.assertEqual((3.0, 6.0), pen.getCurrentPoint())
 
     def test_qCurveTo_onlyOffCurvePoints(self):
         pen = _TestPen()
         pen.moveTo((0.0, 0.0))
         pen.qCurveTo((6.0, -6.0), (12.0, 12.0), (18.0, -18.0), None)
-        self.assertEqual("0.0 0.0 moveto "
-                         "12.0 -12.0 moveto "
-                         "8.0 -8.0 7.0 -3.0 9.0 3.0 curveto "
-                         "11.0 9.0 13.0 7.0 15.0 -3.0 curveto "
-                         "17.0 -13.0 16.0 -16.0 12.0 -12.0 curveto", repr(pen))
+        self.assertEqual(
+            "0.0 0.0 moveto "
+            "12.0 -12.0 moveto "
+            "8.0 -8.0 7.0 -3.0 9.0 3.0 curveto "
+            "11.0 9.0 13.0 7.0 15.0 -3.0 curveto "
+            "17.0 -13.0 16.0 -16.0 12.0 -12.0 curveto",
+            repr(pen),
+        )
         self.assertEqual((12.0, -12.0), pen.getCurrentPoint())
 
     def test_closePath(self):
@@ -135,11 +143,14 @@ class BasePenTest(unittest.TestCase):
         pen = _TestPen()
         pen.glyphSet["oslash"] = _TestGlyph()
         pen.addComponent("oslash", (2, 3, 0.5, 2, -10, 0))
-        self.assertEqual("-10.0 0.0 moveto "
-                         "40.0 200.0 lineto "
-                         "127.5 300.0 131.25 290.0 125.0 265.0 curveto "
-                         "118.75 240.0 102.5 200.0 -10.0 0.0 curveto "
-                         "closepath", repr(pen))
+        self.assertEqual(
+            "-10.0 0.0 moveto "
+            "40.0 200.0 lineto "
+            "127.5 300.0 131.25 290.0 125.0 265.0 curveto "
+            "118.75 240.0 102.5 200.0 -10.0 0.0 curveto "
+            "closepath",
+            repr(pen),
+        )
         self.assertEqual(None, pen.getCurrentPoint())
 
     def test_addComponent_skip_missing(self):
@@ -155,24 +166,29 @@ class DecomposeSegmentTest(unittest.TestCase):
         self.assertRaises(AssertionError, decompose, [])
         self.assertRaises(AssertionError, decompose, [(0, 0)])
         self.assertRaises(AssertionError, decompose, [(0, 0), (1, 1)])
-        self.assertEqual([((0, 0), (1, 1), (2, 2))],
-                         decompose([(0, 0), (1, 1), (2, 2)]))
+        self.assertEqual(
+            [((0, 0), (1, 1), (2, 2))], decompose([(0, 0), (1, 1), (2, 2)])
+        )
         self.assertEqual(
             [((0, 0), (2, -2), (4, 0)), ((6, 2), (8, 8), (12, -12))],
-            decompose([(0, 0), (4, -4), (8, 8), (12, -12)]))
+            decompose([(0, 0), (4, -4), (8, 8), (12, -12)]),
+        )
 
     def test_decomposeQuadraticSegment(self):
         decompose = decomposeQuadraticSegment
         self.assertRaises(AssertionError, decompose, [])
         self.assertRaises(AssertionError, decompose, [(0, 0)])
-        self.assertEqual([((0,0), (4, 8))], decompose([(0, 0), (4, 8)]))
-        self.assertEqual([((0,0), (2, 4)), ((4, 8), (9, -9))],
-                         decompose([(0, 0), (4, 8), (9, -9)]))
+        self.assertEqual([((0, 0), (4, 8))], decompose([(0, 0), (4, 8)]))
+        self.assertEqual(
+            [((0, 0), (2, 4)), ((4, 8), (9, -9))], decompose([(0, 0), (4, 8), (9, -9)])
+        )
         self.assertEqual(
             [((0, 0), (2.0, 4.0)), ((4, 8), (6.5, -0.5)), ((9, -9), (10, 10))],
-            decompose([(0, 0), (4, 8), (9, -9), (10, 10)]))
+            decompose([(0, 0), (4, 8), (9, -9), (10, 10)]),
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
+
     sys.exit(unittest.main())

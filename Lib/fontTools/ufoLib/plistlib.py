@@ -1,7 +1,8 @@
 """DEPRECATED - This module is kept here only as a backward compatibility shim
-for the old ufoLib.plistlib module, which was moved to fontTools.misc.plistlib.
+for the old `ufoLib.plistlib` module, which was moved to :class:`fontTools.misc.plistlib`.
 Please use the latter instead.
 """
+
 from fontTools.misc.plistlib import dump, dumps, load, loads
 from fontTools.misc.textTools import tobytes
 

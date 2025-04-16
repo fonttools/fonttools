@@ -5,14 +5,18 @@ import copy
 import os
 import sys
 import unittest
+from io import BytesIO
 
 
 class CffLibTest(DataFilesHandler):
-
     def test_topDict_recalcFontBBox(self):
         topDict = TopDict()
         topDict.CharStrings = CharStrings(None, None, None, PrivateDict(), None, None)
-        topDict.CharStrings.fromXML(None, None, parseXML("""
+        topDict.CharStrings.fromXML(
+            None,
+            None,
+            parseXML(
+                """
             <CharString name=".notdef">
               endchar
             </CharString>
@@ -25,7 +29,9 @@ class CffLibTest(DataFilesHandler):
             <CharString name="baz"><!-- [-55.1, -55.1, 55.1, 55.1] -->
               -55.1 -55.1 rmoveto 110.2 hlineto 110.2 vlineto -110.2 hlineto endchar
             </CharString>
-        """))
+        """
+            ),
+        )
 
         topDict.recalcFontBBox()
         self.assertEqual(topDict.FontBBox, [-56, -100, 300, 200])
@@ -33,20 +39,26 @@ class CffLibTest(DataFilesHandler):
     def test_topDict_recalcFontBBox_empty(self):
         topDict = TopDict()
         topDict.CharStrings = CharStrings(None, None, None, PrivateDict(), None, None)
-        topDict.CharStrings.fromXML(None, None, parseXML("""
+        topDict.CharStrings.fromXML(
+            None,
+            None,
+            parseXML(
+                """
             <CharString name=".notdef">
               endchar
             </CharString>
             <CharString name="space">
               123 endchar
             </CharString>
-        """))
+        """
+            ),
+        )
 
         topDict.recalcFontBBox()
         self.assertEqual(topDict.FontBBox, [0, 0, 0, 0])
 
     def test_topDict_set_Encoding(self):
-        ttx_path = self.getpath('TestOTF.ttx')
+        ttx_path = self.getpath("TestOTF.ttx")
         font = TTFont(recalcBBoxes=False, recalcTimestamp=False)
         font.importXML(ttx_path)
 
@@ -54,9 +66,9 @@ class CffLibTest(DataFilesHandler):
         encoding = [".notdef"] * 256
         encoding[0x20] = "space"
         topDict.Encoding = encoding
-        
+
         self.temp_dir()
-        save_path = os.path.join(self.tempdir, 'TestOTF.otf')
+        save_path = os.path.join(self.tempdir, "TestOTF.otf")
         font.save(save_path)
 
         font2 = TTFont(save_path)
@@ -79,12 +91,12 @@ class CffLibTest(DataFilesHandler):
         copy.deepcopy(font)
 
     def test_FDSelect_format_4(self):
-        ttx_path = self.getpath('TestFDSelect4.ttx')
+        ttx_path = self.getpath("TestFDSelect4.ttx")
         font = TTFont(recalcBBoxes=False, recalcTimestamp=False)
         font.importXML(ttx_path)
 
         self.temp_dir()
-        save_path = os.path.join(self.tempdir, 'TestOTF.otf')
+        save_path = os.path.join(self.tempdir, "TestOTF.otf")
         font.save(save_path)
 
         font2 = TTFont(save_path)
@@ -93,19 +105,31 @@ class CffLibTest(DataFilesHandler):
         self.assertEqual(topDict2.FDSelect.gidArray, [0, 0, 1])
 
     def test_unique_glyph_names(self):
-        font_path = self.getpath('LinLibertine_RBI.otf')
+        font_path = self.getpath("LinLibertine_RBI.otf")
         font = TTFont(font_path, recalcBBoxes=False, recalcTimestamp=False)
 
         glyphOrder = font.getGlyphOrder()
         self.assertEqual(len(glyphOrder), len(set(glyphOrder)))
 
         self.temp_dir()
-        save_path = os.path.join(self.tempdir, 'TestOTF.otf')
+        save_path = os.path.join(self.tempdir, "TestOTF.otf")
         font.save(save_path)
 
         font2 = TTFont(save_path)
         glyphOrder = font2.getGlyphOrder()
         self.assertEqual(len(glyphOrder), len(set(glyphOrder)))
+
+
+class CFFToCFF2Test(DataFilesHandler):
+
+    def test_conversion(self):
+        font_path = self.getpath("CFFToCFF2-1.otf")
+        font = TTFont(font_path)
+        from fontTools.cffLib.CFFToCFF2 import convertCFFToCFF2
+
+        convertCFFToCFF2(font)
+        f = BytesIO()
+        font.save(f)
 
 
 if __name__ == "__main__":

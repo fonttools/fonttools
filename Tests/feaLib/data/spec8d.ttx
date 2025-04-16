@@ -2,34 +2,34 @@
 <ttFont>
 
   <name>
-    <namerecord nameID="256" platformID="3" platEncID="1" langID="0x409">
+    <namerecord nameID="256" platformID="1" platEncID="0" langID="0x0" unicode="True">
       uilabel simple a
     </namerecord>
-    <namerecord nameID="256" platformID="1" platEncID="0" langID="0x0" unicode="True">
+    <namerecord nameID="257" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      tool tip simple a
+    </namerecord>
+    <namerecord nameID="258" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      sample text simple a
+    </namerecord>
+    <namerecord nameID="259" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      param1 text simple a
+    </namerecord>
+    <namerecord nameID="260" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      param2 text simple a
+    </namerecord>
+    <namerecord nameID="256" platformID="3" platEncID="1" langID="0x409">
       uilabel simple a
     </namerecord>
     <namerecord nameID="257" platformID="3" platEncID="1" langID="0x409">
       tool tip simple a
     </namerecord>
-    <namerecord nameID="257" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      tool tip simple a
-    </namerecord>
     <namerecord nameID="258" platformID="3" platEncID="1" langID="0x409">
-      sample text simple a
-    </namerecord>
-    <namerecord nameID="258" platformID="1" platEncID="0" langID="0x0" unicode="True">
       sample text simple a
     </namerecord>
     <namerecord nameID="259" platformID="3" platEncID="1" langID="0x409">
       param1 text simple a
     </namerecord>
-    <namerecord nameID="259" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      param1 text simple a
-    </namerecord>
     <namerecord nameID="260" platformID="3" platEncID="1" langID="0x409">
-      param2 text simple a
-    </namerecord>
-    <namerecord nameID="260" platformID="1" platEncID="0" langID="0x0" unicode="True">
       param2 text simple a
     </namerecord>
   </name>

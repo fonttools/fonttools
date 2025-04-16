@@ -1,8 +1,9 @@
+from copy import deepcopy
 from fontTools.ttLib import newTable
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.colorLib import builder
 from fontTools.colorLib.geometry import round_start_circle_stable_containment, Circle
-from fontTools.colorLib.builder import LayerListBuilder, _build_n_ary_tree
+from fontTools.colorLib.builder import LayerListBuilder
 from fontTools.colorLib.table_builder import TableBuilder
 from fontTools.colorLib.errors import ColorLibError
 import pytest
@@ -1677,7 +1678,7 @@ class BuildCOLRTest(object):
             clipBoxes={
                 "a": (0, 0, 1000, 1000, 0),  # optional 5th: varIndexBase
                 "c": (-100.8, -200.4, 1100.1, 1200.5),  # floats get rounded
-                "e": (0, 0, 10, 10),  # missing base glyph 'e' is ignored
+                "e": (0, 0, 10, 10),  # 'e' does _not_ get ignored despite being missing
             },
         )
 
@@ -1688,9 +1689,38 @@ class BuildCOLRTest(object):
         ] == [
             ("a", (0, 0, 1000, 1000, 0)),
             ("c", (-101, -201, 1101, 1201)),
+            ("e", (0, 0, 10, 10)),
         ]
         assert clipBoxes["a"].Format == 2
         assert clipBoxes["c"].Format == 1
+        assert clipBoxes["e"].Format == 1
+
+    def test_duplicate_base_glyphs(self):
+        # If > 1 base glyphs refer to equivalent list of layers we expect them to share
+        # the same PaintColrLayers.
+        layers = {
+            "Format": ot.PaintFormat.PaintColrLayers,
+            "Layers": [
+                (ot.PaintFormat.PaintGlyph, (ot.PaintFormat.PaintSolid, 0), "d"),
+                (ot.PaintFormat.PaintGlyph, (ot.PaintFormat.PaintSolid, 1), "e"),
+            ],
+        }
+        # I copy the layers to ensure equality is by content, not by identity
+        colr = builder.buildCOLR(
+            {"a": layers, "b": deepcopy(layers), "c": deepcopy(layers)}
+        ).table
+
+        baseGlyphs = colr.BaseGlyphList.BaseGlyphPaintRecord
+        assert len(baseGlyphs) == 3
+
+        assert baseGlyphs[0].BaseGlyph == "a"
+        assert baseGlyphs[1].BaseGlyph == "b"
+        assert baseGlyphs[2].BaseGlyph == "c"
+
+        expected = {"Format": 1, "FirstLayerIndex": 0, "NumLayers": 2}
+        assert baseGlyphs[0].Paint.__dict__ == expected
+        assert baseGlyphs[1].Paint.__dict__ == expected
+        assert baseGlyphs[2].Paint.__dict__ == expected
 
 
 class TrickyRadialGradientTest:
@@ -1719,6 +1749,16 @@ class TrickyRadialGradientTest:
         r1 = 260.0072
         assert self.round_start_circle(c0, r0, c1, r1, inside=True) == ((386, 71), 0)
 
+    def test_noto_emoji_horns_sign_u1f918_1f3fc(self):
+        # This radial gradient is taken from noto-emoji's 'SIGNS OF THE HORNS'
+        # (1f918_1f3fc). We check that c0 is inside c1 both before and after rounding.
+        c0 = (-437.6789059060543, -2116.9237094478003)
+        r0 = 0.0
+        c1 = (-488.7330118252256, -1876.5036857045086)
+        r1 = 245.77147821915673
+        assert self.circle_inside_circle(c0, r0, c1, r1)
+        assert self.circle_inside_circle(c0, r0, c1, r1, rounded=True)
+
     @pytest.mark.parametrize(
         "c0, r0, c1, r1, inside, expected",
         [
@@ -1740,81 +1780,3 @@ class TrickyRadialGradientTest:
     )
     def test_nudge_start_circle_position(self, c0, r0, c1, r1, inside, expected):
         assert self.round_start_circle(c0, r0, c1, r1, inside) == expected
-
-
-@pytest.mark.parametrize(
-    "lst, n, expected",
-    [
-        ([0], 2, [0]),
-        ([0, 1], 2, [0, 1]),
-        ([0, 1, 2], 2, [[0, 1], 2]),
-        ([0, 1, 2], 3, [0, 1, 2]),
-        ([0, 1, 2, 3], 2, [[0, 1], [2, 3]]),
-        ([0, 1, 2, 3], 3, [[0, 1, 2], 3]),
-        ([0, 1, 2, 3, 4], 3, [[0, 1, 2], 3, 4]),
-        ([0, 1, 2, 3, 4, 5], 3, [[0, 1, 2], [3, 4, 5]]),
-        (list(range(7)), 3, [[0, 1, 2], [3, 4, 5], 6]),
-        (list(range(8)), 3, [[0, 1, 2], [3, 4, 5], [6, 7]]),
-        (list(range(9)), 3, [[0, 1, 2], [3, 4, 5], [6, 7, 8]]),
-        (list(range(10)), 3, [[[0, 1, 2], [3, 4, 5], [6, 7, 8]], 9]),
-        (list(range(11)), 3, [[[0, 1, 2], [3, 4, 5], [6, 7, 8]], 9, 10]),
-        (list(range(12)), 3, [[[0, 1, 2], [3, 4, 5], [6, 7, 8]], [9, 10, 11]]),
-        (list(range(13)), 3, [[[0, 1, 2], [3, 4, 5], [6, 7, 8]], [9, 10, 11], 12]),
-        (
-            list(range(14)),
-            3,
-            [[[0, 1, 2], [3, 4, 5], [6, 7, 8]], [[9, 10, 11], 12, 13]],
-        ),
-        (
-            list(range(15)),
-            3,
-            [[[0, 1, 2], [3, 4, 5], [6, 7, 8]], [9, 10, 11], [12, 13, 14]],
-        ),
-        (
-            list(range(16)),
-            3,
-            [[[0, 1, 2], [3, 4, 5], [6, 7, 8]], [[9, 10, 11], [12, 13, 14], 15]],
-        ),
-        (
-            list(range(23)),
-            3,
-            [
-                [[0, 1, 2], [3, 4, 5], [6, 7, 8]],
-                [[9, 10, 11], [12, 13, 14], [15, 16, 17]],
-                [[18, 19, 20], 21, 22],
-            ],
-        ),
-        (
-            list(range(27)),
-            3,
-            [
-                [[0, 1, 2], [3, 4, 5], [6, 7, 8]],
-                [[9, 10, 11], [12, 13, 14], [15, 16, 17]],
-                [[18, 19, 20], [21, 22, 23], [24, 25, 26]],
-            ],
-        ),
-        (
-            list(range(28)),
-            3,
-            [
-                [
-                    [[0, 1, 2], [3, 4, 5], [6, 7, 8]],
-                    [[9, 10, 11], [12, 13, 14], [15, 16, 17]],
-                    [[18, 19, 20], [21, 22, 23], [24, 25, 26]],
-                ],
-                27,
-            ],
-        ),
-        (list(range(257)), 256, [list(range(256)), 256]),
-        (list(range(258)), 256, [list(range(256)), 256, 257]),
-        (list(range(512)), 256, [list(range(256)), list(range(256, 512))]),
-        (list(range(512 + 1)), 256, [list(range(256)), list(range(256, 512)), 512]),
-        (
-            list(range(256 ** 2)),
-            256,
-            [list(range(k * 256, k * 256 + 256)) for k in range(256)],
-        ),
-    ],
-)
-def test_build_n_ary_tree(lst, n, expected):
-    assert _build_n_ary_tree(lst, n) == expected

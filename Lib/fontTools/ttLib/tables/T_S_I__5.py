@@ -2,6 +2,8 @@
 tool to store its hinting source data.
 
 TSI5 contains the VTT character groups.
+
+See also https://learn.microsoft.com/en-us/typography/tools/vtt/tsi-tables
 """
 
 import array
@@ -13,7 +15,6 @@ from . import DefaultTable
 
 
 class table_T_S_I__5(DefaultTable.DefaultTable):
-
     def decompile(self, data, ttFont):
         a = array.array("H")
         a.frombytes(data)

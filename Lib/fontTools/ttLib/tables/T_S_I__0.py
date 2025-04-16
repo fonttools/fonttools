@@ -4,6 +4,8 @@ tool to store its hinting source data.
 TSI0 is the index table containing the lengths and offsets for the glyph
 programs and 'extra' programs ('fpgm', 'prep', and 'cvt') that are contained
 in the TSI1 table.
+
+See also https://learn.microsoft.com/en-us/typography/tools/vtt/tsi-tables
 """
 
 import struct
@@ -18,7 +20,6 @@ def fixlongs(glyphID, textLength, textOffset):
 
 
 class table_T_S_I__0(DefaultTable.DefaultTable):
-
     dependencies = ["TSI1"]
 
     def decompile(self, data, ttFont):

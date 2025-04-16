@@ -1,6 +1,6 @@
 """Helpers for manipulating 2D points and vectors in COLR table."""
 
-from math import copysign, cos, hypot, pi
+from math import copysign, cos, hypot, isclose, pi
 from fontTools.misc.roundTools import otRound
 
 
@@ -19,9 +19,7 @@ def _unit_vector(vec):
     return (vec[0] / length, vec[1] / length)
 
 
-# This is the same tolerance used by Skia's SkTwoPointConicalGradient.cpp to detect
-# when a radial gradient's focal point lies on the end circle.
-_NEARLY_ZERO = 1 / (1 << 12)  # 0.000244140625
+_CIRCLE_INSIDE_TOLERANCE = 1e-4
 
 
 # The unit vector's X and Y components are respectively
@@ -64,10 +62,10 @@ class Circle:
     def round(self):
         return Circle(_round_point(self.centre), otRound(self.radius))
 
-    def inside(self, outer_circle):
+    def inside(self, outer_circle, tolerance=_CIRCLE_INSIDE_TOLERANCE):
         dist = self.radius + hypot(*_vector_between(self.centre, outer_circle.centre))
         return (
-            abs(outer_circle.radius - dist) <= _NEARLY_ZERO
+            isclose(outer_circle.radius, dist, rel_tol=_CIRCLE_INSIDE_TOLERANCE)
             or outer_circle.radius > dist
         )
 

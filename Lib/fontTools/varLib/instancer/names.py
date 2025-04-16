@@ -37,6 +37,9 @@ def getVariationNameIDs(varfont):
             used.append(axis.AxisNameID)
         for value in stat.AxisValueArray.AxisValue if stat.AxisValueArray else ():
             used.append(value.ValueNameID)
+        elidedFallbackNameID = getattr(stat, "ElidedFallbackNameID", None)
+        if elidedFallbackNameID is not None:
+            used.append(elidedFallbackNameID)
     # nameIDs <= 255 are reserved by OT spec so we don't touch them
     return {nameID for nameID in used if nameID > 255}
 
@@ -83,7 +86,7 @@ def updateNameTable(varfont, axisLimits):
 
     Example: Updating a partial variable font:
     | >>> ttFont = TTFont("OpenSans[wdth,wght].ttf")
-    | >>> updateNameTable(ttFont, {"wght": AxisRange(400, 900), "wdth": 75})
+    | >>> updateNameTable(ttFont, {"wght": (400, 900), "wdth": 75})
 
     The name table records will be updated in the following manner:
     NameID 1 familyName: "Open Sans" --> "Open Sans Condensed"
@@ -99,7 +102,7 @@ def updateNameTable(varfont, axisLimits):
     https://docs.microsoft.com/en-us/typography/opentype/spec/stat
     https://docs.microsoft.com/en-us/typography/opentype/spec/name#name-ids
     """
-    from . import AxisRange, axisValuesFromAxisLimits
+    from . import AxisLimits, axisValuesFromAxisLimits
 
     if "STAT" not in varfont:
         raise ValueError("Cannot update name table since there is no STAT table.")
@@ -110,17 +113,15 @@ def updateNameTable(varfont, axisLimits):
 
     # The updated name table will reflect the new 'zero origin' of the font.
     # If we're instantiating a partial font, we will populate the unpinned
-    # axes with their default axis values.
+    # axes with their default axis values from fvar.
+    axisLimits = AxisLimits(axisLimits).limitAxesAndPopulateDefaults(varfont)
+    partialDefaults = axisLimits.defaultLocation()
     fvarDefaults = {a.axisTag: a.defaultValue for a in fvar.axes}
-    defaultAxisCoords = deepcopy(axisLimits)
-    for axisTag, val in fvarDefaults.items():
-        if axisTag not in defaultAxisCoords or isinstance(
-            defaultAxisCoords[axisTag], AxisRange
-        ):
-            defaultAxisCoords[axisTag] = val
+    defaultAxisCoords = AxisLimits({**fvarDefaults, **partialDefaults})
+    assert all(v.minimum == v.maximum for v in defaultAxisCoords.values())
 
     axisValueTables = axisValuesFromAxisLimits(stat, defaultAxisCoords)
-    checkAxisValuesExist(stat, axisValueTables, defaultAxisCoords)
+    checkAxisValuesExist(stat, axisValueTables, defaultAxisCoords.pinnedLocation())
 
     # ignore "elidable" axis values, should be omitted in application font menus.
     axisValueTables = [
@@ -133,6 +134,14 @@ def updateNameTable(varfont, axisLimits):
 def checkAxisValuesExist(stat, axisValues, axisCoords):
     seen = set()
     designAxes = stat.DesignAxisRecord.Axis
+    hasValues = set()
+    for value in stat.AxisValueArray.AxisValue:
+        if value.Format in (1, 2, 3):
+            hasValues.add(designAxes[value.AxisIndex].AxisTag)
+        elif value.Format == 4:
+            for rec in value.AxisValueRecord:
+                hasValues.add(designAxes[rec.AxisIndex].AxisTag)
+
     for axisValueTable in axisValues:
         axisValueFormat = axisValueTable.Format
         if axisValueTable.Format in (1, 2, 3):
@@ -149,10 +158,10 @@ def checkAxisValuesExist(stat, axisValues, axisCoords):
                 if axisTag in axisCoords and rec.Value == axisCoords[axisTag]:
                     seen.add(axisTag)
 
-    missingAxes = set(axisCoords) - seen
+    missingAxes = (set(axisCoords) - seen) & hasValues
     if missingAxes:
-        missing = ", ".join(f"'{i}={axisCoords[i]}'" for i in missingAxes)
-        raise ValueError(f"Cannot find Axis Values [{missing}]")
+        missing = ", ".join(f"'{i}': {axisCoords[i]}" for i in missingAxes)
+        raise ValueError(f"Cannot find Axis Values {{{missing}}}")
 
 
 def _sortAxisValues(axisValues):

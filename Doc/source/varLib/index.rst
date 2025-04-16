@@ -1,10 +1,24 @@
-##################################
-varLib: OpenType Variation Support
-##################################
+#######################################
+varLib: Support for OpenType Variations
+#######################################
 
+.. contents:: On this page:
+    :local:
+       
+.. rubric:: Overview
+   :heading-level: 2
+
+The :py:mod:`fontTools.varLib` package contains a number of classes and routines
+for handling, building and interpolating variable font data. These routines
+rely on a common set of concepts, many of which are equivalent to concepts
+in the OpenType Specification, but some of which are unique to :py:mod:`varLib`.
+
+
+Supporting modules
+------------------
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    builder
    cff
@@ -21,10 +35,6 @@ varLib: OpenType Variation Support
    plot
    varStore
 
-The ``fontTools.varLib`` package contains a number of classes and routines
-for handling, building and interpolating variable font data. These routines
-rely on a common set of concepts, many of which are equivalent to concepts
-in the OpenType Specification, but some of which are unique to ``varLib``.
 
 Terminology
 -----------
@@ -109,7 +119,9 @@ support scalar
    0 below its minimum or above its maximum.
 
 
+Package contents
+----------------
+
 .. automodule:: fontTools.varLib
-   :inherited-members:
    :members:
    :undoc-members:

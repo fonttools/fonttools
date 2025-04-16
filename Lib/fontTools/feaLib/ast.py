@@ -595,8 +595,8 @@ class MarkClassDefinition(Statement):
 class AlternateSubstStatement(Statement):
     """A ``sub ... from ...`` statement.
 
-    ``prefix``, ``glyph``, ``suffix`` and ``replacement`` should be lists of
-    `glyph-containing objects`_. ``glyph`` should be a `one element list`."""
+    ``glyph`` and ``replacement`` should be `glyph-containing objects`_.
+    ``prefix`` and ``suffix`` should be lists of `glyph-containing objects`_."""
 
     def __init__(self, prefix, glyph, suffix, replacement, location=None):
         Statement.__init__(self, location)
@@ -753,7 +753,7 @@ class ChainContextPosStatement(Statement):
             if len(self.suffix):
                 res += " " + " ".join(map(asFea, self.suffix))
         else:
-            res += " ".join(map(asFea, self.glyph))
+            res += " ".join(map(asFea, self.glyphs))
         res += ";"
         return res
 
@@ -811,7 +811,7 @@ class ChainContextSubstStatement(Statement):
             if len(self.suffix):
                 res += " " + " ".join(map(asFea, self.suffix))
         else:
-            res += " ".join(map(asFea, self.glyph))
+            res += " ".join(map(asFea, self.glyphs))
         res += ";"
         return res
 
@@ -912,14 +912,11 @@ class IgnoreSubstStatement(Statement):
         contexts = []
         for prefix, glyphs, suffix in self.chainContexts:
             res = ""
-            if len(prefix) or len(suffix):
-                if len(prefix):
-                    res += " ".join(map(asFea, prefix)) + " "
-                res += " ".join(g.asFea() + "'" for g in glyphs)
-                if len(suffix):
-                    res += " " + " ".join(map(asFea, suffix))
-            else:
-                res += " ".join(map(asFea, glyphs))
+            if len(prefix):
+                res += " ".join(map(asFea, prefix)) + " "
+            res += " ".join(g.asFea() + "'" for g in glyphs)
+            if len(suffix):
+                res += " " + " ".join(map(asFea, suffix))
             contexts.append(res)
         return "ignore sub " + ", ".join(contexts) + ";"
 
@@ -1259,25 +1256,34 @@ class MultipleSubstStatement(Statement):
         """Calls the builder object's ``add_multiple_subst`` callback."""
         prefix = [p.glyphSet() for p in self.prefix]
         suffix = [s.glyphSet() for s in self.suffix]
-        if not self.replacement and hasattr(self.glyph, "glyphSet"):
-            for glyph in self.glyph.glyphSet():
+        if hasattr(self.glyph, "glyphSet"):
+            originals = self.glyph.glyphSet()
+        else:
+            originals = [self.glyph]
+        count = len(originals)
+        replaces = []
+        for r in self.replacement:
+            if hasattr(r, "glyphSet"):
+                replace = r.glyphSet()
+            else:
+                replace = [r]
+            if len(replace) == 1 and len(replace) != count:
+                replace = replace * count
+            replaces.append(replace)
+        replaces = list(zip(*replaces))
+
+        seen_originals = set()
+        for i, original in enumerate(originals):
+            if original not in seen_originals:
+                seen_originals.add(original)
                 builder.add_multiple_subst(
                     self.location,
                     prefix,
-                    glyph,
+                    original,
                     suffix,
-                    self.replacement,
+                    replaces and replaces[i] or (),
                     self.forceChain,
                 )
-        else:
-            builder.add_multiple_subst(
-                self.location,
-                prefix,
-                self.glyph,
-                suffix,
-                self.replacement,
-                self.forceChain,
-            )
 
     def asFea(self, indent=""):
         res = "sub "
@@ -1822,15 +1828,16 @@ class BaseAxis(Statement):
     """An axis definition, being either a ``VertAxis.BaseTagList/BaseScriptList``
     pair or a ``HorizAxis.BaseTagList/BaseScriptList`` pair."""
 
-    def __init__(self, bases, scripts, vertical, location=None):
+    def __init__(self, bases, scripts, vertical, minmax=None, location=None):
         Statement.__init__(self, location)
         self.bases = bases  #: A list of baseline tag names as strings
         self.scripts = scripts  #: A list of script record tuplets (script tag, default baseline tag, base coordinate)
         self.vertical = vertical  #: Boolean; VertAxis if True, HorizAxis if False
+        self.minmax = []  #: A set of minmax record
 
     def build(self, builder):
         """Calls the builder object's ``set_base_axis`` callback."""
-        builder.set_base_axis(self.bases, self.scripts, self.vertical)
+        builder.set_base_axis(self.bases, self.scripts, self.vertical, self.minmax)
 
     def asFea(self, indent=""):
         direction = "Vert" if self.vertical else "Horiz"
@@ -1838,9 +1845,13 @@ class BaseAxis(Statement):
             "{} {} {}".format(a[0], a[1], " ".join(map(str, a[2])))
             for a in self.scripts
         ]
+        minmaxes = [
+            "\n{}Axis.MinMax {} {} {}, {};".format(direction, a[0], a[1], a[2], a[3])
+            for a in self.minmax
+        ]
         return "{}Axis.BaseTagList {};\n{}{}Axis.BaseScriptList {};".format(
             direction, " ".join(self.bases), indent, direction, ", ".join(scripts)
-        )
+        ) + "\n".join(minmaxes)
 
 
 class OS2Field(Statement):
@@ -2068,7 +2079,7 @@ class ConditionsetStatement(Statement):
         self.conditions = conditions
 
     def build(self, builder):
-        builder.add_conditionset(self.name, self.conditions)
+        builder.add_conditionset(self.location, self.name, self.conditions)
 
     def asFea(self, res="", indent=""):
         res += indent + f"conditionset {self.name} " + "{\n"

@@ -3,7 +3,9 @@ import pytest
 import struct
 
 from fontTools import ttLib
+from fontTools.misc.roundTools import noRound
 from fontTools.pens.basePen import PenError
+from fontTools.pens.recordingPen import RecordingPen, RecordingPointPen
 from fontTools.pens.ttGlyphPen import TTGlyphPen, TTGlyphPointPen, MAX_F2DOT14
 
 
@@ -21,12 +23,11 @@ class TTGlyphPenTestBase:
 
         glyphSet = font.getGlyphSet()
         glyfTable = font["glyf"]
-        pen = self.penClass(font.getGlyphSet())
+        pen = self.penClass(glyphSet)
 
         for name in font.getGlyphOrder():
-            oldGlyph = glyphSet[name]
-            getattr(oldGlyph, self.drawMethod)(pen)
-            oldGlyph = oldGlyph._glyph
+            getattr(glyphSet[name], self.drawMethod)(pen)
+            oldGlyph = glyfTable[name]
             newGlyph = pen.glyph()
 
             if hasattr(oldGlyph, "program"):
@@ -295,6 +296,27 @@ class TTGlyphPenTest(TTGlyphPenTestBase):
         uni0302_uni0300.recalcBounds(glyphSet)
         self.assertGlyphBoundsEqual(uni0302_uni0300, (-278, 745, 148, 1025))
 
+    def test_outputImpliedClosingLine(self):
+        glyphSet = {}
+
+        pen = TTGlyphPen(glyphSet)
+        pen.moveTo((0, 0))
+        pen.lineTo((10, 0))
+        pen.lineTo((0, 10))
+        pen.lineTo((0, 0))
+        pen.closePath()
+        glyph = pen.glyph()
+        assert len(glyph.coordinates) == 3
+
+        pen = TTGlyphPen(glyphSet, outputImpliedClosingLine=True)
+        pen.moveTo((0, 0))
+        pen.lineTo((10, 0))
+        pen.lineTo((0, 10))
+        pen.lineTo((0, 0))
+        pen.closePath()
+        glyph = pen.glyph()
+        assert len(glyph.coordinates) == 4
+
 
 class TTGlyphPointPenTest(TTGlyphPenTestBase):
     penClass = TTGlyphPointPen
@@ -312,11 +334,11 @@ class TTGlyphPointPenTest(TTGlyphPenTestBase):
         assert glyph.numberOfContours == 1
         assert glyph.endPtsOfContours == [3]
 
-    def test_addPoint_errorOnCurve(self):
+    def test_addPoint_noErrorOnCurve(self):
         pen = TTGlyphPointPen(None)
         pen.beginPath()
-        with pytest.raises(NotImplementedError):
-            pen.addPoint((0, 0), "curve")
+        pen.addPoint((0, 0), "curve")
+        pen.endPath()
 
     def test_beginPath_beginPathOnOpenPath(self):
         pen = TTGlyphPointPen(None)
@@ -331,12 +353,6 @@ class TTGlyphPointPenTest(TTGlyphPenTestBase):
         pen.addPoint((0, 0))
         with pytest.raises(PenError):
             pen.glyph()
-
-    def test_glyph_errorOnEmptyContour(self):
-        pen = TTGlyphPointPen(None)
-        pen.beginPath()
-        with pytest.raises(PenError):
-            pen.endPath()
 
     def test_glyph_decomposes(self):
         componentName = "a"
@@ -549,6 +565,101 @@ class TTGlyphPointPenTest(TTGlyphPenTestBase):
         uni0302_uni0300.recalcBounds(glyphSet)
         self.assertGlyphBoundsEqual(uni0302_uni0300, (-278, 745, 148, 1025))
 
+    def test_unrounded_coords_rounded_bounds(self):
+        # The following test case is taken from Faustina-Italic.glyphs.
+        # It reproduces a bug whereby the bounding boxes of composite glyphs that
+        # contain components with non trivial transformations, and in which the base
+        # glyphs of the transformed components still has un-rounded, floating-point
+        # coordinates, may be off-by-one compared to the correct bounds that should
+        # be computed from the rounded coordinates.
+        # https://github.com/googlefonts/fontc/issues/1206
+        glyphSet = {}
+        pen = TTGlyphPointPen(glyphSet)
+
+        pen.beginPath()
+        pen.addPoint((235, 680), "line")
+        pen.addPoint((292, 729), "line")
+        pen.addPoint((314.5, 748.5), None)
+        pen.addPoint((342.0, 780.75), None)
+        pen.addPoint((342.0, 792.0), "qcurve")
+        pen.addPoint((342.0, 800.0), None)
+        pen.addPoint((336.66666666666663, 815.9166666666666), None)
+        pen.addPoint((318.0, 829.5), None)
+        pen.addPoint((298.0, 834.0), "qcurve")
+        pen.addPoint((209, 702), "line")
+        pen.endPath()
+        pen.beginPath()
+        pen.addPoint((90, 680), "line")
+        pen.addPoint((147, 729), "line")
+        pen.addPoint((169.5, 748.5), None)
+        pen.addPoint((197.0, 780.75), None)
+        pen.addPoint((197.0, 792.0), "qcurve")
+        pen.addPoint((197.0, 800.0), None)
+        pen.addPoint((191.66666666666663, 815.9166666666666), None)
+        pen.addPoint((173.0, 829.5), None)
+        pen.addPoint((153.0, 834.0), "qcurve")
+        pen.addPoint((64, 702), "line")
+        pen.endPath()
+        # round=noRound forces floating-point coordinates to be kept un-rounded
+        glyphSet["hungarumlaut.case"] = pen.glyph(
+            dropImpliedOnCurves=True, round=noRound
+        )
+
+        # component has non-trivial transform (shear + reflection)
+        pen.addComponent("hungarumlaut.case", (-1, 0, 0.28108, 1, 196, 0))
+        compositeGlyph = pen.glyph(round=noRound)
+        glyphSet["dblgravecomb.case"] = compositeGlyph
+
+        compositeGlyph.recalcBounds(glyphSet)
+        # these are the expected bounds as computed from the rounded coordinates
+        self.assertGlyphBoundsEqual(compositeGlyph, (74, 680, 329, 834))
+
+    def test_composite_bounds_with_nested_components(self):
+        # The following test case is taken from Joan.glyphs at
+        # https://github.com/PaoloBiagini/Joan
+        # There's a composite glyph 'bullet.sc' which contains a transformed
+        # component 'bullet', which in turn is a composite glyph referencing
+        # another transformed components ('period'). The two transformations
+        # combine to produce the final transformed coordinates, but the necessary
+        # rounding should only happen at the end, and not at each intermediate
+        # level of the nested component tree.
+        glyphSet = {}
+        pen = TTGlyphPointPen(glyphSet)
+
+        pen.beginPath()
+        pen.addPoint((141.0, -8.0), "qcurve")
+        pen.addPoint((168.0, -8.0), None)
+        pen.addPoint((205.0, 30.5), None)
+        pen.addPoint((205.0, 56.0), "qcurve")
+        pen.addPoint((205.0, 82.25), None)
+        pen.addPoint((168.0, 118.0), None)
+        pen.addPoint((141.0, 118.0), "qcurve")
+        pen.addPoint((114.0, 118.0), None)
+        pen.addPoint((78.0, 79.5), None)
+        pen.addPoint((78.0, 54.0), "qcurve")
+        pen.addPoint((78.0, 27.75), None)
+        pen.addPoint((114.0, -8.0), None)
+        pen.endPath()
+        glyphSet["period"] = pen.glyph()
+
+        pen.addComponent("period", (1.6, 0, 0, 1.6, -41, 140))
+        glyphSet["bullet"] = pen.glyph()
+
+        pen.addComponent("bullet", (0.9, 0, 0, 0.9, 9, 49))
+        compositeGlyph = glyphSet["bullet.sc"] = pen.glyph()
+
+        # this is the xMin of 'bullet.sc' glyph if coordinates were left unrounded
+        coords, _, _ = compositeGlyph.getCoordinates(glyphSet)
+        assert pytest.approx(min(x for x, y in coords)) == 84.42033
+
+        compositeGlyph.recalcBounds(glyphSet)
+
+        # if rounding happened at intermediate stages (i.e. after extracting transformed
+        # coordinates of 'period' component from 'bullet', before transforming 'bullet'
+        # component in 'bullet.sc'), the rounding errors would compound leading to xMin
+        # incorrectly be equal to 85. Whereas 84.42033 should round down to 84.
+        self.assertGlyphBoundsEqual(compositeGlyph, (84, 163, 267, 345))
+
     def test_open_path_starting_with_move(self):
         # when a contour starts with a 'move' point, it signifies the beginnig
         # of an open contour.
@@ -574,6 +685,221 @@ class TTGlyphPointPenTest(TTGlyphPenTestBase):
         assert pen1.points == pen2.points == [(0, 0), (10, 10), (20, 20), (20, 0)]
         assert pen1.types == pen2.types == [1, 1, 0, 1]
 
+    def test_skip_empty_contours(self):
+        pen = TTGlyphPointPen(None)
+        pen.beginPath()
+        pen.endPath()
+        pen.beginPath()
+        pen.endPath()
+        glyph = pen.glyph()
+        assert glyph.numberOfContours == 0
+
+
+class CubicGlyfTest:
+    def test_cubic_simple(self):
+        spen = TTGlyphPen(None)
+        spen.moveTo((0, 0))
+        spen.curveTo((0, 1), (1, 1), (1, 0))
+        spen.closePath()
+
+        ppen = TTGlyphPointPen(None)
+        ppen.beginPath()
+        ppen.addPoint((0, 0), "line")
+        ppen.addPoint((0, 1))
+        ppen.addPoint((1, 1))
+        ppen.addPoint((1, 0), "curve")
+        ppen.endPath()
+
+        for pen in (spen, ppen):
+            glyph = pen.glyph()
+
+            for i in range(2):
+                if i == 1:
+                    glyph.compile(None)
+
+                assert list(glyph.coordinates) == [(0, 0), (0, 1), (1, 1), (1, 0)]
+                assert list(glyph.flags) == [0x01, 0x80, 0x80, 0x01]
+
+                rpen = RecordingPen()
+                glyph.draw(rpen, None)
+                assert rpen.value == [
+                    ("moveTo", ((0, 0),)),
+                    (
+                        "curveTo",
+                        (
+                            (0, 1),
+                            (1, 1),
+                            (1, 0),
+                        ),
+                    ),
+                    ("closePath", ()),
+                ]
+
+    @pytest.mark.parametrize(
+        "dropImpliedOnCurves, segment_pen_commands, point_pen_commands, expected_coordinates, expected_flags, expected_endPts",
+        [
+            (  # Two curves that do NOT merge; request merging
+                True,
+                [
+                    ("moveTo", ((0, 0),)),
+                    ("curveTo", ((0, 1), (1, 2), (2, 2))),
+                    ("curveTo", ((3, 3), (4, 1), (4, 0))),
+                    ("closePath", ()),
+                ],
+                [
+                    ("beginPath", (), {}),
+                    ("addPoint", ((0, 0), "line", None, None), {}),
+                    ("addPoint", ((0, 1), None, None, None), {}),
+                    ("addPoint", ((1, 2), None, None, None), {}),
+                    ("addPoint", ((2, 2), "curve", None, None), {}),
+                    ("addPoint", ((3, 3), None, None, None), {}),
+                    ("addPoint", ((4, 1), None, None, None), {}),
+                    ("addPoint", ((4, 0), "curve", None, None), {}),
+                    ("endPath", (), {}),
+                ],
+                [(0, 0), (0, 1), (1, 2), (2, 2), (3, 3), (4, 1), (4, 0)],
+                [0x01, 0x80, 0x80, 0x01, 0x80, 0x80, 0x01],
+                [6],
+            ),
+            (  # Two curves that merge; request merging
+                True,
+                [
+                    ("moveTo", ((0, 0),)),
+                    ("curveTo", ((0, 1), (1, 2), (2, 2))),
+                    ("curveTo", ((3, 2), (4, 1), (4, 0))),
+                    ("closePath", ()),
+                ],
+                [
+                    ("beginPath", (), {}),
+                    ("addPoint", ((0, 0), "line", None, None), {}),
+                    ("addPoint", ((0, 1), None, None, None), {}),
+                    ("addPoint", ((1, 2), None, None, None), {}),
+                    ("addPoint", ((2, 2), "curve", None, None), {}),
+                    ("addPoint", ((3, 2), None, None, None), {}),
+                    ("addPoint", ((4, 1), None, None, None), {}),
+                    ("addPoint", ((4, 0), "curve", None, None), {}),
+                    ("endPath", (), {}),
+                ],
+                [(0, 0), (0, 1), (1, 2), (3, 2), (4, 1), (4, 0)],
+                [0x01, 0x80, 0x80, 0x80, 0x80, 0x01],
+                [5],
+            ),
+            (  # Two curves that merge; request NOT merging
+                False,
+                [
+                    ("moveTo", ((0, 0),)),
+                    ("curveTo", ((0, 1), (1, 2), (2, 2))),
+                    ("curveTo", ((3, 2), (4, 1), (4, 0))),
+                    ("closePath", ()),
+                ],
+                [
+                    ("beginPath", (), {}),
+                    ("addPoint", ((0, 0), "line", None, None), {}),
+                    ("addPoint", ((0, 1), None, None, None), {}),
+                    ("addPoint", ((1, 2), None, None, None), {}),
+                    ("addPoint", ((2, 2), "curve", None, None), {}),
+                    ("addPoint", ((3, 2), None, None, None), {}),
+                    ("addPoint", ((4, 1), None, None, None), {}),
+                    ("addPoint", ((4, 0), "curve", None, None), {}),
+                    ("endPath", (), {}),
+                ],
+                [(0, 0), (0, 1), (1, 2), (2, 2), (3, 2), (4, 1), (4, 0)],
+                [0x01, 0x80, 0x80, 0x01, 0x80, 0x80, 0x01],
+                [6],
+            ),
+            (  # Two (duplicate) contours
+                True,
+                [
+                    ("moveTo", ((0, 0),)),
+                    ("curveTo", ((0, 1), (1, 2), (2, 2))),
+                    ("curveTo", ((3, 2), (4, 1), (4, 0))),
+                    ("closePath", ()),
+                    ("moveTo", ((0, 0),)),
+                    ("curveTo", ((0, 1), (1, 2), (2, 2))),
+                    ("curveTo", ((3, 2), (4, 1), (4, 0))),
+                    ("closePath", ()),
+                ],
+                [
+                    ("beginPath", (), {}),
+                    ("addPoint", ((0, 0), "line", None, None), {}),
+                    ("addPoint", ((0, 1), None, None, None), {}),
+                    ("addPoint", ((1, 2), None, None, None), {}),
+                    ("addPoint", ((2, 2), "curve", None, None), {}),
+                    ("addPoint", ((3, 2), None, None, None), {}),
+                    ("addPoint", ((4, 1), None, None, None), {}),
+                    ("addPoint", ((4, 0), "curve", None, None), {}),
+                    ("endPath", (), {}),
+                    ("beginPath", (), {}),
+                    ("addPoint", ((0, 0), "line", None, None), {}),
+                    ("addPoint", ((0, 1), None, None, None), {}),
+                    ("addPoint", ((1, 2), None, None, None), {}),
+                    ("addPoint", ((2, 2), "curve", None, None), {}),
+                    ("addPoint", ((3, 2), None, None, None), {}),
+                    ("addPoint", ((4, 1), None, None, None), {}),
+                    ("addPoint", ((4, 0), "curve", None, None), {}),
+                    ("endPath", (), {}),
+                ],
+                [
+                    (0, 0),
+                    (0, 1),
+                    (1, 2),
+                    (3, 2),
+                    (4, 1),
+                    (4, 0),
+                    (0, 0),
+                    (0, 1),
+                    (1, 2),
+                    (3, 2),
+                    (4, 1),
+                    (4, 0),
+                ],
+                [
+                    0x01,
+                    0x80,
+                    0x80,
+                    0x80,
+                    0x80,
+                    0x01,
+                    0x01,
+                    0x80,
+                    0x80,
+                    0x80,
+                    0x80,
+                    0x01,
+                ],
+                [5, 11],
+            ),
+        ],
+    )
+    def test_cubic_topology(
+        self,
+        dropImpliedOnCurves,
+        segment_pen_commands,
+        point_pen_commands,
+        expected_coordinates,
+        expected_flags,
+        expected_endPts,
+    ):
+        spen = TTGlyphPen(None)
+        rpen = RecordingPen()
+        rpen.value = segment_pen_commands
+        rpen.replay(spen)
+
+        ppen = TTGlyphPointPen(None)
+        rpen = RecordingPointPen()
+        rpen.value = point_pen_commands
+        rpen.replay(ppen)
+
+        for pen in (spen, ppen):
+            glyph = pen.glyph(dropImpliedOnCurves=dropImpliedOnCurves)
+
+            assert list(glyph.coordinates) == expected_coordinates
+            assert list(glyph.flags) == expected_flags
+            assert list(glyph.endPtsOfContours) == expected_endPts
+
+            rpen = RecordingPen()
+            glyph.draw(rpen, None)
+            assert rpen.value == segment_pen_commands
 
 
 class _TestGlyph(object):

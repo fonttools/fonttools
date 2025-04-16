@@ -12,10 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from . import CUBIC_GLYPHS
 from fontTools.pens.pointPen import PointToSegmentPen, SegmentToPointPen
+from fontTools.ufoLib.glifLib import GlyphSet
 from math import isclose
+import os
 import unittest
+
+
+DATADIR = os.path.join(os.path.dirname(__file__), "data")
+CUBIC_GLYPHS = GlyphSet(os.path.join(DATADIR, "cubic"))
+QUAD_GLYPHS = GlyphSet(os.path.join(DATADIR, "quadratic"))
 
 
 class BaseDummyPen(object):
@@ -29,45 +35,45 @@ class BaseDummyPen(object):
         return _repr_pen_commands(self.commands)
 
     def addComponent(self, glyphName, transformation, **kwargs):
-        self.commands.append(('addComponent', (glyphName, transformation), kwargs))
+        self.commands.append(("addComponent", (glyphName, transformation), kwargs))
 
 
 class DummyPen(BaseDummyPen):
     """A SegmentPen that records the commands it's called with."""
 
     def moveTo(self, pt):
-        self.commands.append(('moveTo', (pt,), {}))
+        self.commands.append(("moveTo", (pt,), {}))
 
     def lineTo(self, pt):
-        self.commands.append(('lineTo', (pt,), {}))
+        self.commands.append(("lineTo", (pt,), {}))
 
     def curveTo(self, *points):
-        self.commands.append(('curveTo', points, {}))
+        self.commands.append(("curveTo", points, {}))
 
     def qCurveTo(self, *points):
-        self.commands.append(('qCurveTo', points, {}))
+        self.commands.append(("qCurveTo", points, {}))
 
     def closePath(self):
-        self.commands.append(('closePath', tuple(), {}))
+        self.commands.append(("closePath", tuple(), {}))
 
     def endPath(self):
-        self.commands.append(('endPath', tuple(), {}))
+        self.commands.append(("endPath", tuple(), {}))
 
 
 class DummyPointPen(BaseDummyPen):
     """A PointPen that records the commands it's called with."""
 
     def beginPath(self, **kwargs):
-        self.commands.append(('beginPath', tuple(), kwargs))
+        self.commands.append(("beginPath", tuple(), kwargs))
 
     def endPath(self):
-        self.commands.append(('endPath', tuple(), {}))
+        self.commands.append(("endPath", tuple(), {}))
 
     def addPoint(self, pt, segmentType=None, smooth=False, name=None, **kwargs):
-        kwargs['segmentType'] = str(segmentType) if segmentType else None
-        kwargs['smooth'] = smooth
-        kwargs['name'] = name
-        self.commands.append(('addPoint', (pt,), kwargs))
+        kwargs["segmentType"] = str(segmentType) if segmentType else None
+        kwargs["smooth"] = smooth
+        kwargs["name"] = name
+        self.commands.append(("addPoint", (pt,), kwargs))
 
 
 class DummyGlyph(object):
@@ -115,9 +121,9 @@ class DummyGlyph(object):
 
     def __eq__(self, other):
         """Return True if 'other' glyph's outline is the same as self."""
-        if hasattr(other, 'outline'):
+        if hasattr(other, "outline"):
             return self.outline == other.outline
-        elif hasattr(other, 'draw'):
+        elif hasattr(other, "draw"):
             return self.outline == self.__class__(other).outline
         return NotImplemented
 
@@ -126,9 +132,9 @@ class DummyGlyph(object):
         return not (self == other)
 
     def approx(self, other, rel_tol=1e-12):
-        if hasattr(other, 'outline'):
+        if hasattr(other, "outline"):
             outline2 == other.outline
-        elif hasattr(other, 'draw'):
+        elif hasattr(other, "draw"):
             outline2 = self.__class__(other).outline
         else:
             raise TypeError(type(other).__name__)
@@ -145,9 +151,8 @@ class DummyGlyph(object):
                     if not arg2 or not isinstance(arg2[0], tuple):
                         return False
                     for (x1, y1), (x2, y2) in zip(arg1, arg2):
-                        if (
-                            not isclose(x1, x2, rel_tol=rel_tol) or
-                            not isclose(y1, y2, rel_tol=rel_tol)
+                        if not isclose(x1, x2, rel_tol=rel_tol) or not isclose(
+                            y1, y2, rel_tol=rel_tol
                         ):
                             return False
                 elif arg1 != arg2:
@@ -227,13 +232,16 @@ def _repr_pen_commands(commands):
                 # cast float to int if there're no digits after decimal point,
                 # and round floats to 12 decimal digits (more than enough)
                 args = [
-                    tuple((int(v) if int(v) == v else round(v, 12)) for v in pt)
+                    (
+                        tuple((int(v) if int(v) == v else round(v, 12)) for v in pt)
+                        if pt is not None
+                        else None
+                    )
                     for pt in args
                 ]
             args = ", ".join(repr(a) for a in args)
         if kwargs:
-            kwargs = ", ".join("%s=%r" % (k, v)
-                               for k, v in sorted(kwargs.items()))
+            kwargs = ", ".join("%s=%r" % (k, v) for k, v in sorted(kwargs.items()))
         if args and kwargs:
             s.append("pen.%s(%s, %s)" % (cmd, args, kwargs))
         elif args:
@@ -246,11 +254,10 @@ def _repr_pen_commands(commands):
 
 
 class TestDummyGlyph(unittest.TestCase):
-
     def test_equal(self):
         # verify that the copy and the copy of the copy are equal to
         # the source glyph's outline, as well as to each other
-        source = CUBIC_GLYPHS['a']
+        source = CUBIC_GLYPHS["a"]
         copy = DummyGlyph(source)
         copy2 = DummyGlyph(copy)
         self.assertEqual(source, copy)
@@ -263,10 +270,9 @@ class TestDummyGlyph(unittest.TestCase):
 
 
 class TestDummyPointGlyph(unittest.TestCase):
-
     def test_equal(self):
         # same as above but using the PointPen protocol
-        source = CUBIC_GLYPHS['a']
+        source = CUBIC_GLYPHS["a"]
         copy = DummyPointGlyph(source)
         copy2 = DummyPointGlyph(copy)
         self.assertEqual(source, copy)

@@ -1,6 +1,6 @@
 # fontTools Documentation
 
-The fontTools project documentation updates continuously on Read the Docs as the project source changes.  
+The fontTools project documentation updates continuously on Read the Docs as the project source changes.
 
 The documentation is hosted at https://fonttools.readthedocs.io/.
 
@@ -19,7 +19,7 @@ You must have a Python 3 interpreter and the `pip` Python package manager instal
 Pull the fontTools project source files, create a Python virtual environment, and then install fontTools and the documentation build dependencies by executing the following commands in the root of the fontTools source repository:
 
 ```
-$ pip install -e . [all]
+$ pip install -e .[all]
 $ pip install -r Doc/docs-requirements.txt
 ```
 
@@ -112,7 +112,7 @@ Build a local set of HTML documentation files with the instructions above and re
 
 ### Submit a Pull Request
 
-Submit a Github pull request with your proposed improvements to the documentation.  
+Submit a Github pull request with your proposed improvements to the documentation.
 
 Thanks for your contribution!
 

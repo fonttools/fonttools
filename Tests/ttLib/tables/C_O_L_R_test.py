@@ -1,9 +1,14 @@
 from fontTools import ttLib
 from fontTools.misc.testTools import getXML, parseXML
+from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables.C_O_L_R_ import table_C_O_L_R_
 
+from pathlib import Path
 import binascii
 import pytest
+
+
+TEST_DATA_DIR = Path(__file__).parent / "data"
 
 
 COLR_V0_SAMPLE = (
@@ -111,7 +116,7 @@ COLR_V1_SAMPLE = (
     (b"\x00\x03", "LayerRecordCount (3)"),
     (b"\x00\x00\x00\x34", "Offset to BaseGlyphList from beginning of table (52)"),
     (b"\x00\x00\x00\x9f", "Offset to LayerList from beginning of table (159)"),
-    (b"\x00\x00\x01\x62", "Offset to ClipList (354)"),
+    (b"\x00\x00\x01\x66", "Offset to ClipList (358)"),
     (b"\x00\x00\x00\x00", "Offset to DeltaSetIndexMap (NULL)"),
     (b"\x00\x00\x00\x00", "Offset to VarStore (NULL)"),
     (b"\x00\x06", "BaseGlyphRecord[0].BaseGlyph (6)"),
@@ -151,7 +156,10 @@ COLR_V1_SAMPLE = (
     (b"\x00\x00\x08", "Offset to BackdropPaint from beginning of PaintComposite (8)"),
     (b"\x0d", "BaseGlyphPaintRecord[1].Paint.BackdropPaint.Format (13)"),
     (b"\x00\x00\x07", "Offset to Paint from beginning of PaintVarTransform (7)"),
-    (b"\x00\x00\x0a", "Offset to VarAffine2x3 from beginning of PaintVarTransform (10)"),
+    (
+        b"\x00\x00\x0a",
+        "Offset to VarAffine2x3 from beginning of PaintVarTransform (10)",
+    ),
     (b"\x0b", "BaseGlyphPaintRecord[1].Paint.BackdropPaint.Format (11)"),
     (b"\x00\x0a", "BaseGlyphPaintRecord[1].Paint.BackdropPaint.Glyph (10)"),
     (b"\x00\x01\x00\x00", "VarAffine2x3.xx (1.0)"),
@@ -179,22 +187,26 @@ COLR_V1_SAMPLE = (
     (b"\x00\x05", "ColorLine.ColorStop[1].PaletteIndex (5)"),
     (b"@\x00", "ColorLine.ColorStop[1].Alpha (1.0)"),
     # LayerList
-    (b"\x00\x00\x00\x04", "LayerList.LayerCount (4)"),
+    (b"\x00\x00\x00\x05", "LayerList.LayerCount (5)"),
     (
-        b"\x00\x00\x00\x14",
-        "First Offset to Paint table from beginning of LayerList (20)",
+        b"\x00\x00\x00\x18",
+        "First Offset to Paint table from beginning of LayerList (24)",
     ),
     (
-        b"\x00\x00\x00\x23",
-        "Second Offset to Paint table from beginning of LayerList (35)",
+        b"\x00\x00\x00\x27",
+        "Second Offset to Paint table from beginning of LayerList (39)",
     ),
     (
-        b"\x00\x00\x00\x4e",
-        "Third Offset to Paint table from beginning of LayerList (78)",
+        b"\x00\x00\x00\x52",
+        "Third Offset to Paint table from beginning of LayerList (82)",
     ),
     (
-        b"\x00\x00\x00\x9e",
-        "Fourth Offset to Paint table from beginning of LayerList (158)",
+        b"\x00\x00\x00\xa2",
+        "Fourth Offset to Paint table from beginning of LayerList (162)",
+    ),
+    (
+        b"\x00\x00\x00\xbc",
+        "Fifth Offset to Paint table from beginning of LayerList (188)",
     ),
     # BaseGlyphPaintRecord[2]
     (b"\x0a", "BaseGlyphPaintRecord[2].Paint.Format (10)"),
@@ -234,9 +246,15 @@ COLR_V1_SAMPLE = (
     (b"\x00\x0d", "LayerList.Paint[2].Glyph (13)"),
     (b"\x0c", "LayerList.Paint[2].Paint.Format (12)"),
     (b"\x00\x00\x07", "Offset to Paint subtable from beginning of PaintTransform (7)"),
-    (b"\x00\x00\x32", "Offset to Affine2x3 subtable from beginning of PaintTransform (50)"),
+    (
+        b"\x00\x00\x32",
+        "Offset to Affine2x3 subtable from beginning of PaintTransform (50)",
+    ),
     (b"\x07", "LayerList.Paint[2].Paint.Paint.Format (7)"),
-    (b"\x00\x00\x14", "Offset to ColorLine from beginning of PaintVarRadialGradient (20)"),
+    (
+        b"\x00\x00\x14",
+        "Offset to ColorLine from beginning of PaintVarRadialGradient (20)",
+    ),
     (b"\x00\x07", "Paint.x0.value (7)"),
     (b"\x00\x08", "Paint.y0.value (8)"),
     (b"\x00\t", "Paint.r0.value (9)"),
@@ -253,7 +271,6 @@ COLR_V1_SAMPLE = (
     (b"@\x00", "ColorLine.ColorStop[1].StopOffset.value (1.0)"),
     (b"\x00\x07", "ColorLine.ColorStop[1].PaletteIndex (7)"),
     (b"\x19\x9a", "ColorLine.ColorStop[1].Alpha.value (0.4)"),
-
     (b"\x00\x00\x00\x07", "VarIndexBase (7)"),
     (b"\xff\xf3\x00\x00", "Affine2x3.xx (-13)"),
     (b"\x00\x0e\x00\x00", "Affine2x3.xy (14)"),
@@ -261,13 +278,11 @@ COLR_V1_SAMPLE = (
     (b"\xff\xef\x00\x00", "Affine2x3.yy (-17)"),
     (b"\x00\x12\x00\x00", "Affine2x3.yy (18)"),
     (b"\x00\x13\x00\x00", "Affine2x3.yy (19)"),
-
     # PaintTranslate
     (b"\x0e", "LayerList.Paint[3].Format (14)"),
     (b"\x00\x00\x08", "Offset to Paint subtable from beginning of PaintTranslate (8)"),
     (b"\x01\x01", "dx (257)"),
     (b"\x01\x02", "dy (258)"),
-
     # PaintRotateAroundCenter
     (b"\x1a", "LayerList.Paint[3].Paint.Format (26)"),
     (
@@ -277,7 +292,6 @@ COLR_V1_SAMPLE = (
     (b"\x10\x00", "angle (0.25)"),
     (b"\x00\xff", "centerX (255)"),
     (b"\x01\x00", "centerY (256)"),
-
     # PaintSkew
     (b"\x1c", "LayerList.Paint[3].Paint.Paint.Format (28)"),
     (
@@ -286,39 +300,34 @@ COLR_V1_SAMPLE = (
     ),
     (b"\xfc\x17", "xSkewAngle (-0.0611)"),
     (b"\x01\xc7", "ySkewAngle (0.0278)"),
-
-    # PaintGlyph
+    # PaintGlyph glyph00011 (pointed to by both PaintSkew above and by LayerList[4] offset)
     (b"\x0a", "LayerList.Paint[3].Paint.Paint.Paint.Format (10)"),
     (b"\x00\x00\x06", "Offset to Paint subtable from beginning of PaintGlyph (6)"),
     (b"\x00\x0b", "LayerList.Paint[2].Glyph (11)"),
-
     # PaintSolid
     (b"\x02", "LayerList.Paint[0].Paint.Paint.Paint.Paint.Format (2)"),
     (b"\x00\x02", "Paint.PaletteIndex (2)"),
     (b" \x00", "Paint.Alpha (0.5)"),
-
     # ClipList
-    (b'\x01', "ClipList.Format (1)"),
-    (b'\x00\x00\x00\x02', "ClipList.ClipCount (2)"),
-    (b'\x00\x0a', "ClipRecord[0].StartGlyphID (10)"),
-    (b'\x00\x0a', "ClipRecord[0].EndGlyphID (10)"),
-    (b'\x00\x00\x13', "Offset to ClipBox subtable from beginning of ClipList (19)"),
-    (b'\x00\x0e', "ClipRecord[1].StartGlyphID (14)"),
-    (b'\x00\x0f', "ClipRecord[1].EndGlyphID (15)"),
-    (b'\x00\x00\x20', "Offset to ClipBox subtable from beginning of ClipList (32)"),
-
-    (b'\x02', "ClipBox.Format (2)"),
-    (b'\x00\x00', "ClipBox.xMin (0)"),
-    (b'\x00\x00', "ClipBox.yMin (0)"),
-    (b'\x01\xf4', "ClipBox.xMax (500)"),
-    (b'\x01\xf4', "ClipBox.yMax (500)"),
-    (b'\x00\x00\x00\t', "ClipBox.VarIndexBase (9)"),
-
-    (b'\x01', "ClipBox.Format (1)"),
-    (b'\x00\x00', "ClipBox.xMin (0)"),
-    (b'\x00\x00', "ClipBox.yMin (0)"),
-    (b'\x03\xe8', "ClipBox.xMax (1000)"),
-    (b'\x03\xe8', "ClipBox.yMax (1000)"),
+    (b"\x01", "ClipList.Format (1)"),
+    (b"\x00\x00\x00\x02", "ClipList.ClipCount (2)"),
+    (b"\x00\x0a", "ClipRecord[0].StartGlyphID (10)"),
+    (b"\x00\x0a", "ClipRecord[0].EndGlyphID (10)"),
+    (b"\x00\x00\x13", "Offset to ClipBox subtable from beginning of ClipList (19)"),
+    (b"\x00\x0e", "ClipRecord[1].StartGlyphID (14)"),
+    (b"\x00\x0f", "ClipRecord[1].EndGlyphID (15)"),
+    (b"\x00\x00\x20", "Offset to ClipBox subtable from beginning of ClipList (32)"),
+    (b"\x02", "ClipBox.Format (2)"),
+    (b"\x00\x00", "ClipBox.xMin (0)"),
+    (b"\x00\x00", "ClipBox.yMin (0)"),
+    (b"\x01\xf4", "ClipBox.xMax (500)"),
+    (b"\x01\xf4", "ClipBox.yMax (500)"),
+    (b"\x00\x00\x00\t", "ClipBox.VarIndexBase (9)"),
+    (b"\x01", "ClipBox.Format (1)"),
+    (b"\x00\x00", "ClipBox.xMin (0)"),
+    (b"\x00\x00", "ClipBox.yMin (0)"),
+    (b"\x03\xe8", "ClipBox.xMax (1000)"),
+    (b"\x03\xe8", "ClipBox.yMax (1000)"),
 )
 
 COLR_V1_DATA = b"".join(t[0] for t in COLR_V1_SAMPLE)
@@ -400,15 +409,15 @@ COLR_V1_XML = [
     "        </ColorLine>",
     '        <centerX value="259"/>',
     '        <centerY value="300"/>',
-    '        <startAngle value="45.0"/>',
-    '        <endAngle value="135.0"/>',
+    '        <startAngle value="225.0"/>',
+    '        <endAngle value="315.0"/>',
     "      </Paint>",
     '      <Glyph value="glyph00011"/>',
     "    </Paint>",
     "  </BaseGlyphPaintRecord>",
     "</BaseGlyphList>",
     "<LayerList>",
-    "  <!-- LayerCount=4 -->",
+    "  <!-- LayerCount=5 -->",
     '  <Paint index="0" Format="10"><!-- PaintGlyph -->',
     '    <Paint Format="3"><!-- PaintVarSolid -->',
     '      <PaletteIndex value="2"/>',
@@ -505,6 +514,13 @@ COLR_V1_XML = [
     '    <dx value="257"/>',
     '    <dy value="258"/>',
     "  </Paint>",
+    '  <Paint index="4" Format="10"><!-- PaintGlyph -->',
+    '    <Paint Format="2"><!-- PaintSolid -->',
+    '      <PaletteIndex value="2"/>',
+    '      <Alpha value="0.5"/>',
+    "    </Paint>",
+    '    <Glyph value="glyph00011"/>',
+    "  </Paint>",
     "</LayerList>",
     '<ClipList Format="1">',
     "  <Clip>",
@@ -532,17 +548,18 @@ COLR_V1_XML = [
 
 COLR_V1_VAR_XML = [
     '<VarIndexMap Format="0">',
-    '  <Map index="0" outer="1" inner="1"/>',
-    '  <Map index="1" outer="1" inner="0"/>',
-    '  <Map index="2" outer="1" inner="0"/>',
-    '  <Map index="3" outer="1" inner="1"/>',
-    '  <Map index="4" outer="1" inner="0"/>',
-    '  <Map index="5" outer="1" inner="0"/>',
+    "  <!-- Omitted values default to 0xFFFF/0xFFFF (no variations) -->",
+    '  <Map index="0" outer="1" inner="0"/>',
+    '  <Map index="1"/>',
+    '  <Map index="2"/>',
+    '  <Map index="3" outer="1" inner="0"/>',
+    '  <Map index="4"/>',
+    '  <Map index="5"/>',
     '  <Map index="6" outer="0" inner="2"/>',
     '  <Map index="7" outer="0" inner="0"/>',
     '  <Map index="8" outer="0" inner="1"/>',
-    '  <Map index="9" outer="1" inner="0"/>',
-    '  <Map index="10" outer="1" inner="0"/>',
+    '  <Map index="9"/>',
+    '  <Map index="10"/>',
     '  <Map index="11" outer="0" inner="3"/>',
     '  <Map index="12" outer="0" inner="3"/>',
     "</VarIndexMap>",
@@ -571,12 +588,11 @@ COLR_V1_VAR_XML = [
     '    <Item index="3" value="[500]"/>',
     "  </VarData>",
     '  <VarData index="1">',
-    "    <!-- ItemCount=2 -->",
+    "    <!-- ItemCount=1 -->",
     '    <NumShorts value="32769"/>',
     "    <!-- VarRegionCount=1 -->",
     '    <VarRegionIndex index="0" value="0"/>',
-    '    <Item index="0" value="[0]"/>',
-    '    <Item index="1" value="[65536]"/>',
+    '    <Item index="0" value="[65536]"/>',
     "  </VarData>",
     "</VarStore>",
 ]
@@ -610,6 +626,26 @@ class COLR_V1_Test(object):
         colr = table_C_O_L_R_()
         colr.decompile(compiled, font)
         assert getXML(colr.toXML, font) == COLR_V1_XML
+
+    @pytest.mark.parametrize("quantization", [1, 10, 100])
+    @pytest.mark.parametrize("flavor", ["glyf", "cff"])
+    def test_computeClipBoxes(self, flavor, quantization):
+        font = TTFont()
+        font.importXML(TEST_DATA_DIR / f"COLRv1-clip-boxes-{flavor}.ttx")
+        assert font["COLR"].table.ClipList is None
+
+        font["COLR"].table.computeClipBoxes(font.getGlyphSet(), quantization)
+
+        clipList = font["COLR"].table.ClipList
+        assert len(clipList.clips) > 0
+
+        expected = TTFont()
+        expected.importXML(
+            TEST_DATA_DIR / f"COLRv1-clip-boxes-q{quantization}-expected.ttx"
+        )
+        expectedClipList = expected["COLR"].table.ClipList
+
+        assert getXML(clipList.toXML) == getXML(expectedClipList.toXML)
 
 
 class COLR_V1_Variable_Test(object):

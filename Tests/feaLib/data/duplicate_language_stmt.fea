@@ -1,0 +1,19 @@
+languagesystem DFLT dflt;
+languagesystem latn NLD;
+
+feature locl {
+
+    script latn;
+    language NLD;
+    lookup one {
+        sub a by b;
+    } one;
+
+    # if we encounter a duplicate script/lang statement we want to combine them
+    # (lookups https://github.com/fonttools/fonttools/issues/3748)
+    script latn;
+    language NLD;
+    lookup two {
+        sub x by z;
+    } two;
+} locl;

@@ -1,0 +1,501 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="4.39">
+
+  <GlyphOrder>
+    <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
+    <GlyphID id="0" name=".notdef"/>
+    <GlyphID id="1" name="a"/>
+    <GlyphID id="2" name="e"/>
+    <GlyphID id="3" name="edotabove"/>
+    <GlyphID id="4" name="s"/>
+    <GlyphID id="5" name="dotabovecomb"/>
+  </GlyphOrder>
+
+  <head>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="1.0"/>
+    <fontRevision value="0.0"/>
+    <checkSumAdjustment value="0x193b520f"/>
+    <magicNumber value="0x5f0f3cf5"/>
+    <flags value="00000000 00000011"/>
+    <unitsPerEm value="1000"/>
+    <created value="Thu Apr  6 00:27:50 2023"/>
+    <modified value="Thu Apr  6 00:27:50 2023"/>
+    <xMin value="-37"/>
+    <yMin value="-250"/>
+    <xMax value="582"/>
+    <yMax value="750"/>
+    <macStyle value="00000000 00000000"/>
+    <lowestRecPPEM value="6"/>
+    <fontDirectionHint value="2"/>
+    <indexToLocFormat value="0"/>
+    <glyphDataFormat value="0"/>
+  </head>
+
+  <hhea>
+    <tableVersion value="0x00010000"/>
+    <ascent value="950"/>
+    <descent value="-250"/>
+    <lineGap value="0"/>
+    <advanceWidthMax value="600"/>
+    <minLeftSideBearing value="-37"/>
+    <minRightSideBearing value="-50"/>
+    <xMaxExtent value="582"/>
+    <caretSlopeRise value="1"/>
+    <caretSlopeRun value="0"/>
+    <caretOffset value="0"/>
+    <reserved0 value="0"/>
+    <reserved1 value="0"/>
+    <reserved2 value="0"/>
+    <reserved3 value="0"/>
+    <metricDataFormat value="0"/>
+    <numberOfHMetrics value="6"/>
+  </hhea>
+
+  <maxp>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="0x10000"/>
+    <numGlyphs value="6"/>
+    <maxPoints value="18"/>
+    <maxContours value="2"/>
+    <maxCompositePoints value="17"/>
+    <maxCompositeContours value="2"/>
+    <maxZones value="1"/>
+    <maxTwilightPoints value="0"/>
+    <maxStorage value="0"/>
+    <maxFunctionDefs value="0"/>
+    <maxInstructionDefs value="0"/>
+    <maxStackElements value="0"/>
+    <maxSizeOfInstructions value="0"/>
+    <maxComponentElements value="2"/>
+    <maxComponentDepth value="1"/>
+  </maxp>
+
+  <OS_2>
+    <!-- The fields 'usFirstCharIndex' and 'usLastCharIndex'
+         will be recalculated by the compiler -->
+    <version value="4"/>
+    <xAvgCharWidth value="580"/>
+    <usWeightClass value="350"/>
+    <usWidthClass value="5"/>
+    <fsType value="00000000 00000100"/>
+    <ySubscriptXSize value="650"/>
+    <ySubscriptYSize value="600"/>
+    <ySubscriptXOffset value="0"/>
+    <ySubscriptYOffset value="75"/>
+    <ySuperscriptXSize value="650"/>
+    <ySuperscriptYSize value="600"/>
+    <ySuperscriptXOffset value="0"/>
+    <ySuperscriptYOffset value="350"/>
+    <yStrikeoutSize value="50"/>
+    <yStrikeoutPosition value="300"/>
+    <sFamilyClass value="0"/>
+    <panose>
+      <bFamilyType value="0"/>
+      <bSerifStyle value="0"/>
+      <bWeight value="0"/>
+      <bProportion value="0"/>
+      <bContrast value="0"/>
+      <bStrokeVariation value="0"/>
+      <bArmStyle value="0"/>
+      <bLetterForm value="0"/>
+      <bMidline value="0"/>
+      <bXHeight value="0"/>
+    </panose>
+    <ulUnicodeRange1 value="00000000 00000000 00000000 01000101"/>
+    <ulUnicodeRange2 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange3 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange4 value="00000000 00000000 00000000 00000000"/>
+    <achVendID value="NONE"/>
+    <fsSelection value="00000000 01000000"/>
+    <usFirstCharIndex value="97"/>
+    <usLastCharIndex value="775"/>
+    <sTypoAscender value="750"/>
+    <sTypoDescender value="-250"/>
+    <sTypoLineGap value="200"/>
+    <usWinAscent value="950"/>
+    <usWinDescent value="250"/>
+    <ulCodePageRange1 value="00000000 00000000 00000000 00000001"/>
+    <ulCodePageRange2 value="00000000 00000000 00000000 00000000"/>
+    <sxHeight value="500"/>
+    <sCapHeight value="700"/>
+    <usDefaultChar value="0"/>
+    <usBreakChar value="32"/>
+    <usMaxContext value="0"/>
+  </OS_2>
+
+  <hmtx>
+    <mtx name=".notdef" width="500" lsb="50"/>
+    <mtx name="a" width="600" lsb="9"/>
+    <mtx name="dotabovecomb" width="0" lsb="-37"/>
+    <mtx name="e" width="600" lsb="40"/>
+    <mtx name="edotabove" width="600" lsb="40"/>
+    <mtx name="s" width="600" lsb="25"/>
+  </hmtx>
+
+  <cmap>
+    <tableVersion version="0"/>
+    <cmap_format_4 platformID="0" platEncID="3" language="0">
+      <map code="0x61" name="a"/><!-- LATIN SMALL LETTER A -->
+      <map code="0x65" name="e"/><!-- LATIN SMALL LETTER E -->
+      <map code="0x73" name="s"/><!-- LATIN SMALL LETTER S -->
+      <map code="0x117" name="edotabove"/><!-- LATIN SMALL LETTER E WITH DOT ABOVE -->
+      <map code="0x307" name="dotabovecomb"/><!-- COMBINING DOT ABOVE -->
+    </cmap_format_4>
+    <cmap_format_4 platformID="3" platEncID="1" language="0">
+      <map code="0x61" name="a"/><!-- LATIN SMALL LETTER A -->
+      <map code="0x65" name="e"/><!-- LATIN SMALL LETTER E -->
+      <map code="0x73" name="s"/><!-- LATIN SMALL LETTER S -->
+      <map code="0x117" name="edotabove"/><!-- LATIN SMALL LETTER E WITH DOT ABOVE -->
+      <map code="0x307" name="dotabovecomb"/><!-- COMBINING DOT ABOVE -->
+    </cmap_format_4>
+  </cmap>
+
+  <loca>
+    <!-- The 'loca' table will be calculated by the compiler -->
+  </loca>
+
+  <glyf>
+
+    <!-- The xMin, yMin, xMax and yMax values
+         will be recalculated by the compiler. -->
+
+    <TTGlyph name=".notdef" xMin="50" yMin="-250" xMax="450" yMax="750">
+      <contour>
+        <pt x="50" y="750" on="1"/>
+        <pt x="50" y="-250" on="1"/>
+        <pt x="450" y="-250" on="1"/>
+        <pt x="450" y="750" on="1"/>
+      </contour>
+      <contour>
+        <pt x="400" y="-200" on="1"/>
+        <pt x="100" y="-200" on="1"/>
+        <pt x="100" y="700" on="1"/>
+        <pt x="400" y="700" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="a" xMin="9" yMin="-12" xMax="468" yMax="504">
+      <contour>
+        <pt x="447" y="434" on="1"/>
+        <pt x="468" y="-1" on="1"/>
+        <pt x="366" y="-3" on="1"/>
+        <pt x="363" y="357" on="1"/>
+        <pt x="208" y="397" on="1"/>
+        <pt x="36" y="337" on="1"/>
+        <pt x="9" y="428" on="1"/>
+        <pt x="214" y="504" on="1"/>
+      </contour>
+      <contour>
+        <pt x="26" y="240" on="1"/>
+        <pt x="378" y="263" on="1"/>
+        <pt x="382" y="207" on="1"/>
+        <pt x="88" y="172" on="1"/>
+        <pt x="86" y="126" on="1"/>
+        <pt x="161" y="74" on="1"/>
+        <pt x="383" y="134" on="1"/>
+        <pt x="389" y="71" on="1"/>
+        <pt x="168" y="-12" on="1"/>
+        <pt x="29" y="22" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="dotabovecomb" xMin="-37" yMin="501" xMax="50" yMax="597">
+      <contour>
+        <pt x="-37" y="503" on="1"/>
+        <pt x="-21" y="597" on="1"/>
+        <pt x="50" y="589" on="1"/>
+        <pt x="41" y="501" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="e" xMin="40" yMin="-18" xMax="576" yMax="513">
+      <contour>
+        <pt x="576" y="226" on="1"/>
+        <pt x="127" y="228" on="1"/>
+        <pt x="125" y="298" on="1"/>
+        <pt x="480" y="292" on="1"/>
+        <pt x="317" y="416" on="1"/>
+        <pt x="147" y="263" on="1"/>
+        <pt x="229" y="75" on="1"/>
+        <pt x="509" y="129" on="1"/>
+        <pt x="526" y="45" on="1"/>
+        <pt x="188" y="-18" on="1"/>
+        <pt x="40" y="261" on="1"/>
+        <pt x="316" y="513" on="1"/>
+        <pt x="571" y="305" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="edotabove" xMin="40" yMin="-18" xMax="576" yMax="693">
+      <component glyphName="e" x="0" y="0" flags="0x204"/>
+      <component glyphName="dotabovecomb" x="313" y="96" flags="0x4"/>
+    </TTGlyph>
+
+    <TTGlyph name="s" xMin="25" yMin="-13" xMax="582" yMax="530">
+      <contour>
+        <pt x="324" y="530" on="1"/>
+        <pt x="559" y="459" on="1"/>
+        <pt x="539" y="376" on="1"/>
+        <pt x="326" y="442" on="1"/>
+        <pt x="213" y="366" on="1"/>
+        <pt x="582" y="174" on="1"/>
+        <pt x="304" y="-13" on="1"/>
+        <pt x="25" y="83" on="1"/>
+        <pt x="53" y="174" on="1"/>
+        <pt x="282" y="76" on="1"/>
+        <pt x="427" y="155" on="1"/>
+        <pt x="38" y="343" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+  </glyf>
+
+  <name>
+    <namerecord nameID="256" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Weight
+    </namerecord>
+    <namerecord nameID="1" platformID="3" platEncID="1" langID="0x409">
+      Sparse Masters
+    </namerecord>
+    <namerecord nameID="2" platformID="3" platEncID="1" langID="0x409">
+      Regular
+    </namerecord>
+    <namerecord nameID="3" platformID="3" platEncID="1" langID="0x409">
+      0.000;NONE;SparseMasters-Regular
+    </namerecord>
+    <namerecord nameID="4" platformID="3" platEncID="1" langID="0x409">
+      Sparse Masters Regular
+    </namerecord>
+    <namerecord nameID="5" platformID="3" platEncID="1" langID="0x409">
+      Version 0.000
+    </namerecord>
+    <namerecord nameID="6" platformID="3" platEncID="1" langID="0x409">
+      SparseMasters-Regular
+    </namerecord>
+    <namerecord nameID="256" platformID="3" platEncID="1" langID="0x409">
+      Weight
+    </namerecord>
+  </name>
+
+  <post>
+    <formatType value="2.0"/>
+    <italicAngle value="0.0"/>
+    <underlinePosition value="-75"/>
+    <underlineThickness value="50"/>
+    <isFixedPitch value="0"/>
+    <minMemType42 value="0"/>
+    <maxMemType42 value="0"/>
+    <minMemType1 value="0"/>
+    <maxMemType1 value="0"/>
+    <psNames>
+      <!-- This file uses unique glyph names based on the information
+           found in the 'post' table. Since these names might not be unique,
+           we have to invent artificial names in case of clashes. In order to
+           be able to retain the original information, we need a name to
+           ps name mapping for those cases where they differ. That's what
+           you see below.
+            -->
+    </psNames>
+    <extraNames>
+      <!-- following are the name that are not taken from the standard Mac glyph order -->
+      <psName name="edotabove"/>
+      <psName name="dotabovecomb"/>
+    </extraNames>
+  </post>
+
+  <HVAR>
+    <Version value="0x00010000"/>
+    <VarStore Format="1">
+      <Format value="1"/>
+      <VarRegionList>
+        <!-- RegionAxisCount=1 -->
+        <!-- RegionCount=3 -->
+        <Region index="0">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.36365"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="1">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.36365"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="2">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+        </Region>
+      </VarRegionList>
+      <!-- VarDataCount=1 -->
+      <VarData index="0">
+        <!-- ItemCount=1 -->
+        <NumShorts value="0"/>
+        <!-- VarRegionCount=0 -->
+        <Item index="0" value="[]"/>
+      </VarData>
+    </VarStore>
+    <AdvWidthMap>
+      <Map glyph=".notdef" outer="0" inner="0"/>
+      <Map glyph="a" outer="0" inner="0"/>
+      <Map glyph="dotabovecomb" outer="0" inner="0"/>
+      <Map glyph="e" outer="0" inner="0"/>
+      <Map glyph="edotabove" outer="0" inner="0"/>
+      <Map glyph="s" outer="0" inner="0"/>
+    </AdvWidthMap>
+  </HVAR>
+
+  <STAT>
+    <Version value="0x00010001"/>
+    <DesignAxisRecordSize value="8"/>
+    <!-- DesignAxisCount=1 -->
+    <DesignAxisRecord>
+      <Axis index="0">
+        <AxisTag value="wght"/>
+        <AxisNameID value="256"/>  <!-- Weight -->
+        <AxisOrdering value="0"/>
+      </Axis>
+    </DesignAxisRecord>
+    <!-- AxisValueCount=0 -->
+    <ElidedFallbackNameID value="2"/>  <!-- Regular -->
+  </STAT>
+
+  <fvar>
+
+    <!-- Weight -->
+    <Axis>
+      <AxisTag>wght</AxisTag>
+      <Flags>0x0</Flags>
+      <MinValue>350.0</MinValue>
+      <DefaultValue>350.0</DefaultValue>
+      <MaxValue>625.0</MaxValue>
+      <AxisNameID>256</AxisNameID>
+    </Axis>
+  </fvar>
+
+  <gvar>
+    <version value="1"/>
+    <reserved value="0"/>
+    <glyphVariations glyph="a">
+      <tuple>
+        <coord axis="wght" value="1.0"/>
+        <delta pt="0" x="0" y="0"/>
+        <delta pt="1" x="0" y="0"/>
+        <delta pt="2" x="-59" y="2"/>
+        <delta pt="3" x="-59" y="-54"/>
+        <delta pt="4" x="0" y="-56"/>
+        <delta pt="5" x="0" y="-56"/>
+        <delta pt="6" x="0" y="0"/>
+        <delta pt="7" x="0" y="0"/>
+        <delta pt="8" x="0" y="0"/>
+        <delta pt="9" x="0" y="0"/>
+        <delta pt="10" x="-1" y="-23"/>
+        <delta pt="11" x="77" y="7"/>
+        <delta pt="12" x="77" y="7"/>
+        <delta pt="13" x="40" y="28"/>
+        <delta pt="14" x="0" y="15"/>
+        <delta pt="15" x="0" y="0"/>
+        <delta pt="16" x="0" y="0"/>
+        <delta pt="17" x="0" y="0"/>
+        <delta pt="18" x="0" y="0"/>
+        <delta pt="19" x="0" y="0"/>
+        <delta pt="20" x="0" y="0"/>
+        <delta pt="21" x="0" y="0"/>
+      </tuple>
+    </glyphVariations>
+    <glyphVariations glyph="dotabovecomb">
+      <tuple>
+        <coord axis="wght" value="1.0"/>
+        <delta pt="0" x="-27" y="-20"/>
+        <delta pt="1" x="-8" y="28"/>
+        <delta pt="2" x="13" y="16"/>
+        <delta pt="3" x="17" y="-13"/>
+        <delta pt="4" x="0" y="0"/>
+        <delta pt="5" x="0" y="0"/>
+        <delta pt="6" x="0" y="0"/>
+        <delta pt="7" x="0" y="0"/>
+      </tuple>
+    </glyphVariations>
+    <glyphVariations glyph="e">
+      <tuple>
+        <coord axis="wght" min="0.0" value="0.36365" max="1.0"/>
+        <delta pt="0" x="0" y="-27"/>
+        <delta pt="1" x="-1" y="-25"/>
+        <delta pt="2" x="0" y="0"/>
+        <delta pt="3" x="-84" y="5"/>
+        <delta pt="4" x="1" y="-29"/>
+        <delta pt="5" x="33" y="1"/>
+        <delta pt="6" x="35" y="41"/>
+        <delta pt="7" x="-2" y="28"/>
+        <delta pt="8" x="0" y="0"/>
+        <delta pt="9" x="0" y="0"/>
+        <delta pt="10" x="0" y="0"/>
+        <delta pt="11" x="0" y="0"/>
+        <delta pt="12" x="0" y="0"/>
+        <delta pt="13" x="0" y="0"/>
+        <delta pt="14" x="0" y="0"/>
+        <delta pt="15" x="0" y="0"/>
+        <delta pt="16" x="0" y="0"/>
+      </tuple>
+      <tuple>
+        <coord axis="wght" min="0.36365" value="1.0" max="1.0"/>
+        <delta pt="0" x="25" y="-1"/>
+        <delta pt="1" x="70" y="1"/>
+        <delta pt="2" x="70" y="1"/>
+        <delta pt="3" x="-76" y="1"/>
+        <delta pt="4" x="-16" y="-56"/>
+        <delta pt="5" x="70" y="1"/>
+        <delta pt="6" x="15" y="55"/>
+        <delta pt="7" x="15" y="55"/>
+        <delta pt="8" x="2" y="-45"/>
+        <delta pt="9" x="0" y="0"/>
+        <delta pt="10" x="-31" y="1"/>
+        <delta pt="11" x="-2" y="35"/>
+        <delta pt="12" x="25" y="-1"/>
+        <delta pt="13" x="0" y="0"/>
+        <delta pt="14" x="0" y="0"/>
+        <delta pt="15" x="0" y="0"/>
+        <delta pt="16" x="0" y="0"/>
+      </tuple>
+    </glyphVariations>
+    <glyphVariations glyph="edotabove">
+      <tuple>
+        <coord axis="wght" value="1.0"/>
+        <delta pt="1" x="-6" y="91"/>
+      </tuple>
+    </glyphVariations>
+    <glyphVariations glyph="s">
+      <tuple>
+        <coord axis="wght" value="1.0"/>
+        <delta pt="0" x="0" y="0"/>
+        <delta pt="1" x="0" y="0"/>
+        <delta pt="2" x="-2" y="-40"/>
+        <delta pt="3" x="-2" y="-40"/>
+        <delta pt="4" x="55" y="-9"/>
+        <delta pt="5" x="26" y="-33"/>
+        <delta pt="6" x="-20" y="-45"/>
+        <delta pt="7" x="-18" y="-4"/>
+        <delta pt="8" x="-27" y="52"/>
+        <delta pt="9" x="-61" y="43"/>
+        <delta pt="10" x="-80" y="-6"/>
+        <delta pt="11" x="-22" y="55"/>
+        <delta pt="12" x="0" y="0"/>
+        <delta pt="13" x="0" y="0"/>
+        <delta pt="14" x="0" y="0"/>
+        <delta pt="15" x="0" y="0"/>
+      </tuple>
+    </glyphVariations>
+  </gvar>
+
+</ttFont>

@@ -21,31 +21,31 @@ import json
 from fontTools.cu2qu import curve_to_quadratic, curves_to_quadratic
 
 
-DATADIR = os.path.join(os.path.dirname(__file__), 'data')
+DATADIR = os.path.join(os.path.dirname(__file__), "data")
 
 MAX_ERR = 5
 
 
 class CurveToQuadraticTest(unittest.TestCase):
-
     @classmethod
     def setUpClass(cls):
         """Do the curve conversion ahead of time, and run tests on results."""
         with open(os.path.join(DATADIR, "curves.json"), "r") as fp:
             curves = json.load(fp)
 
-        cls.single_splines = [
-            curve_to_quadratic(c, MAX_ERR) for c in curves]
+        cls.single_splines = [curve_to_quadratic(c, MAX_ERR) for c in curves]
         cls.single_errors = [
-            cls.curve_spline_dist(c, s)
-            for c, s in zip(curves, cls.single_splines)]
+            cls.curve_spline_dist(c, s) for c, s in zip(curves, cls.single_splines)
+        ]
 
-        curve_groups = [curves[i:i + 3] for i in range(0, 300, 3)]
+        curve_groups = [curves[i : i + 3] for i in range(0, 300, 3)]
         cls.compat_splines = [
-            curves_to_quadratic(c, [MAX_ERR] * 3) for c in curve_groups]
+            curves_to_quadratic(c, [MAX_ERR] * 3) for c in curve_groups
+        ]
         cls.compat_errors = [
             [cls.curve_spline_dist(c, s) for c, s in zip(curve_group, splines)]
-            for curve_group, splines in zip(curve_groups, cls.compat_splines)]
+            for curve_group, splines in zip(curve_groups, cls.compat_splines)
+        ]
 
         cls.results = []
 
@@ -54,10 +54,16 @@ class CurveToQuadraticTest(unittest.TestCase):
         """Print stats from conversion, as determined during tests."""
 
         for tag, results in cls.results:
-            print('\n%s\n%s' % (
-                tag, '\n'.join(
-                    '%s: %s (%d)' % (k, '#' * (v // 10 + 1), v)
-                    for k, v in sorted(results.items()))))
+            print(
+                "\n%s\n%s"
+                % (
+                    tag,
+                    "\n".join(
+                        "%s: %s (%d)" % (k, "#" * (v // 10 + 1), v)
+                        for k, v in sorted(results.items())
+                    ),
+                )
+            )
 
     def test_results_unchanged(self):
         """Tests that the results of conversion haven't changed since the time
@@ -65,40 +71,30 @@ class CurveToQuadraticTest(unittest.TestCase):
         the conversion algorithm.
         """
 
-        expected = {
-            2: 6,
-            3: 26,
-            4: 82,
-            5: 232,
-            6: 360,
-            7: 266,
-            8: 28}
+        expected = {2: 6, 3: 26, 4: 82, 5: 232, 6: 360, 7: 266, 8: 28}
 
         results = collections.defaultdict(int)
         for spline in self.single_splines:
             n = len(spline) - 2
             results[n] += 1
         self.assertEqual(results, expected)
-        self.results.append(('single spline lengths', results))
+        self.results.append(("single spline lengths", results))
 
     def test_results_unchanged_multiple(self):
         """Test that conversion results are unchanged for multiple curves."""
 
-        expected = {
-            5: 11,
-            6: 35,
-            7: 49,
-            8: 5}
+        expected = {5: 11, 6: 35, 7: 49, 8: 5}
 
         results = collections.defaultdict(int)
         for splines in self.compat_splines:
             n = len(splines[0]) - 2
             for spline in splines[1:]:
-                self.assertEqual(len(spline) - 2, n,
-                    'Got incompatible conversion results')
+                self.assertEqual(
+                    len(spline) - 2, n, "Got incompatible conversion results"
+                )
             results[n] += 1
         self.assertEqual(results, expected)
-        self.results.append(('compatible spline lengths', results))
+        self.results.append(("compatible spline lengths", results))
 
     def test_does_not_exceed_tolerance(self):
         """Test that conversion results do not exceed given error tolerance."""
@@ -107,7 +103,7 @@ class CurveToQuadraticTest(unittest.TestCase):
         for error in self.single_errors:
             results[round(error, 1)] += 1
             self.assertLessEqual(error, MAX_ERR)
-        self.results.append(('single errors', results))
+        self.results.append(("single errors", results))
 
     def test_does_not_exceed_tolerance_multiple(self):
         """Test that error tolerance isn't exceeded for multiple curves."""
@@ -117,7 +113,7 @@ class CurveToQuadraticTest(unittest.TestCase):
             for error in errors:
                 results[round(error, 1)] += 1
                 self.assertLessEqual(error, MAX_ERR)
-        self.results.append(('compatible errors', results))
+        self.results.append(("compatible errors", results))
 
     @classmethod
     def curve_spline_dist(cls, bezier, spline, total_steps=20):
@@ -135,9 +131,13 @@ class CurveToQuadraticTest(unittest.TestCase):
                 p3 = spline[n + 2]
             segment = p1, p2, p3
             for j in range(steps):
-                error = max(error, cls.dist(
-                    cls.cubic_bezier_at(bezier, (j / steps + i) / n),
-                    cls.quadratic_bezier_at(segment, j / steps)))
+                error = max(
+                    error,
+                    cls.dist(
+                        cls.cubic_bezier_at(bezier, (j / steps + i) / n),
+                        cls.quadratic_bezier_at(segment, j / steps),
+                    ),
+                )
         return error
 
     @classmethod
@@ -157,8 +157,7 @@ class CurveToQuadraticTest(unittest.TestCase):
         t2 = t * t
         _t2 = _t * _t
         _2_t_t = 2 * t * _t
-        return (_t2 * x1 + _2_t_t * x2 + t2 * x3,
-                _t2 * y1 + _2_t_t * y2 + t2 * y3)
+        return (_t2 * x1 + _2_t_t * x2 + t2 * x3, _t2 * y1 + _2_t_t * y2 + t2 * y3)
 
     @classmethod
     def cubic_bezier_at(cls, b, t):
@@ -170,9 +169,24 @@ class CurveToQuadraticTest(unittest.TestCase):
         _t3 = _t * _t2
         _3_t2_t = 3 * t2 * _t
         _3_t_t2 = 3 * t * _t2
-        return (_t3 * x1 + _3_t_t2 * x2 + _3_t2_t * x3 + t3 * x4,
-                _t3 * y1 + _3_t_t2 * y2 + _3_t2_t * y3 + t3 * y4)
+        return (
+            _t3 * x1 + _3_t_t2 * x2 + _3_t2_t * x3 + t3 * x4,
+            _t3 * y1 + _3_t_t2 * y2 + _3_t2_t * y3 + t3 * y4,
+        )
 
 
-if __name__ == '__main__':
+class AllQuadraticFalseTest(unittest.TestCase):
+    def test_cubic(self):
+        cubic = [(0, 0), (0, 1), (2, 1), (2, 0)]
+        result = curve_to_quadratic(cubic, 0.1, all_quadratic=False)
+        assert result == cubic
+
+    def test_quadratic(self):
+        cubic = [(0, 0), (2, 2), (4, 2), (6, 0)]
+        result = curve_to_quadratic(cubic, 0.1, all_quadratic=False)
+        quadratic = [(0, 0), (3, 3), (6, 0)]
+        assert result == quadratic
+
+
+if __name__ == "__main__":
     unittest.main()

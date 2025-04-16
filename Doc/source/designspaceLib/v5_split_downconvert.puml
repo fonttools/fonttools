@@ -1,0 +1,147 @@
+@startuml v5_split_downconvert
+
+title
+How to split and down-convert a DesignSpace version 5
+<size:14>so that existing tools can work with it
+end title
+
+
+start
+
+#lightgrey:DesignSpace 5.0
+- with STAT data
+- optional instance names
+- with discrete axes
+- with multiple VFs]
+
+note left
+  - STAT data means that compilers will need
+  to write that data to the ouput TTFs
+  - optional instance names means that
+  compilers will need to generate any missing
+  names using the STAT data
+  - discrete axes mean that not all sources
+  are compatible for interpolation
+  - multiple VFs means that compilers will
+  need to output several TTFs for one DS
+end note
+
+split
+split again
+
+:""splitInterpolating()"";
+
+note left
+  - Create one DS document per interpolating
+  sub-space, for example: with a discrete
+  axis for Upright vs Italics, create 2
+  DesignSpaces, one for the Uprights, and
+  one for the Italics.
+  - Expand all missing instance names using
+  the STAT data.
+  - Drop all the STAT data because as we start
+  taking out discrete axes, the sub-documents
+  lose STAT data anyway (only the full
+  document at the start of the process should
+  be used to generate the STAT table)
+end note
+
+split
+
+  #lightgrey:DesignSpace 5.0
+  - (no STAT data)
+  - (explicit instance names)
+  - (at discrete location #1)
+  - with multiple VFs]
+
+  note left
+    All sources in this sub-space are
+    (supposed to be) compatible for
+    interpolation
+  end note
+
+split again
+
+  #lightgrey:DesignSpace 5.0
+  - (no STAT data)
+  - (explicit instance names)
+  - (at discrete location #2)
+  - with multiple VFs]
+  detach
+
+split again
+
+  #lightgrey:etc
+  ...]
+  detach
+
+end split
+
+:check compatibility;
+:build compatible master TTFs with cu2qu;
+
+:""splitVariableFonts()"";
+
+note left
+  Create one DS document per variable font,
+  for example: the above document may
+  describe a weight and width space, out of
+  which we'll build 3 variable fonts:
+  full weight + width, weight only, width only.
+end note
+
+split
+
+  #lightgrey:DesignSpace 5.0
+  - (no STAT data)
+  - (explicit instance names)
+  - (at discrete location #1)
+  - (describing just VF #1)]
+
+  note left
+    This document looks very much
+    like version 4.1, you can just
+    change the version number at
+    the top and feed it to a tool
+    that doesn't know about v5;
+    see ""convert5to4()"".
+  end note
+
+split again
+
+  #lightgrey:DesignSpace 5.0
+  - (no STAT data)
+  - (explicit instance names)
+  - (at discrete location #1)
+  - (describing just VF #2)]
+  detach
+
+split again
+
+  #lightgrey:etc
+  ...]
+  detach
+
+end split
+
+:""varLib.build()"";
+
+#lightgrey:Variable font TTF
+No STAT data]
+
+end split
+
+:""buildVFStatTable()"";
+
+note left
+Apply STAT data using the full document
+from the start of the process + filtering
+entries based on this VF's location
+end note
+
+#lightgrey:Variable font TTF
+With STAT data]
+
+end
+
+@enduml

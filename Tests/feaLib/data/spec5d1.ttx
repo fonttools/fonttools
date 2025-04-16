@@ -43,16 +43,16 @@
         <!-- SubTableCount=1 -->
         <LigatureSubst index="0">
           <LigatureSet glyph="one">
-            <Ligature components="fraction,two" glyph="onehalf"/>
-            <Ligature components="fraction,two.oldstyle" glyph="onehalf"/>
             <Ligature components="slash,two" glyph="onehalf"/>
             <Ligature components="slash,two.oldstyle" glyph="onehalf"/>
+            <Ligature components="fraction,two" glyph="onehalf"/>
+            <Ligature components="fraction,two.oldstyle" glyph="onehalf"/>
           </LigatureSet>
           <LigatureSet glyph="one.oldstyle">
-            <Ligature components="fraction,two" glyph="onehalf"/>
-            <Ligature components="fraction,two.oldstyle" glyph="onehalf"/>
             <Ligature components="slash,two" glyph="onehalf"/>
             <Ligature components="slash,two.oldstyle" glyph="onehalf"/>
+            <Ligature components="fraction,two" glyph="onehalf"/>
+            <Ligature components="fraction,two.oldstyle" glyph="onehalf"/>
           </LigatureSet>
         </LigatureSubst>
       </Lookup>
@@ -62,16 +62,16 @@
         <!-- SubTableCount=1 -->
         <LigatureSubst index="0">
           <LigatureSet glyph="one">
-            <Ligature components="fraction,two" glyph="onehalf"/>
-            <Ligature components="fraction,two.oldstyle" glyph="onehalf"/>
             <Ligature components="slash,two" glyph="onehalf"/>
+            <Ligature components="fraction,two" glyph="onehalf"/>
             <Ligature components="slash,two.oldstyle" glyph="onehalf"/>
+            <Ligature components="fraction,two.oldstyle" glyph="onehalf"/>
           </LigatureSet>
           <LigatureSet glyph="one.oldstyle">
-            <Ligature components="fraction,two" glyph="onehalf"/>
-            <Ligature components="fraction,two.oldstyle" glyph="onehalf"/>
             <Ligature components="slash,two" glyph="onehalf"/>
+            <Ligature components="fraction,two" glyph="onehalf"/>
             <Ligature components="slash,two.oldstyle" glyph="onehalf"/>
+            <Ligature components="fraction,two.oldstyle" glyph="onehalf"/>
           </LigatureSet>
         </LigatureSubst>
       </Lookup>

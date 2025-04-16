@@ -30,23 +30,25 @@
     <LookupList>
       <!-- LookupCount=2 -->
       <Lookup index="0">
-        <LookupType value="7"/>
+        <LookupType value="8"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <ContextPos index="0" Format="3">
-          <!-- GlyphCount=2 -->
-          <!-- PosCount=1 -->
-          <Coverage index="0">
+        <ChainContextPos index="0" Format="3">
+          <!-- BacktrackGlyphCount=0 -->
+          <!-- InputGlyphCount=2 -->
+          <InputCoverage index="0">
             <Glyph value="L"/>
-          </Coverage>
-          <Coverage index="1">
+          </InputCoverage>
+          <InputCoverage index="1">
             <Glyph value="quoteright"/>
-          </Coverage>
+          </InputCoverage>
+          <!-- LookAheadGlyphCount=0 -->
+          <!-- PosCount=1 -->
           <PosLookupRecord index="0">
             <SequenceIndex value="1"/>
             <LookupListIndex value="1"/>
           </PosLookupRecord>
-        </ContextPos>
+        </ChainContextPos>
       </Lookup>
       <Lookup index="1">
         <LookupType value="1"/>

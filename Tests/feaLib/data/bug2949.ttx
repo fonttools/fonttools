@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont>
+
+  <GSUB>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=1 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=1 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="test"/>
+        <Feature>
+          <!-- LookupCount=2 -->
+          <LookupListIndex index="0" value="0"/>
+          <LookupListIndex index="1" value="1"/>
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=2 -->
+      <Lookup index="0">
+        <LookupType value="6"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <ChainContextSubst index="0" Format="3">
+          <!-- BacktrackGlyphCount=0 -->
+          <!-- InputGlyphCount=1 -->
+          <InputCoverage index="0">
+            <Glyph value="three"/>
+          </InputCoverage>
+          <!-- LookAheadGlyphCount=1 -->
+          <LookAheadCoverage index="0">
+            <Glyph value="four"/>
+          </LookAheadCoverage>
+          <!-- SubstCount=0 -->
+        </ChainContextSubst>
+      </Lookup>
+      <Lookup index="1">
+        <LookupType value="6"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <ChainContextSubst index="0" Format="1">
+          <Coverage>
+            <Glyph value="one"/>
+            <Glyph value="three"/>
+          </Coverage>
+          <!-- ChainSubRuleSetCount=2 -->
+          <ChainSubRuleSet index="0">
+            <!-- ChainSubRuleCount=1 -->
+            <ChainSubRule index="0">
+              <!-- BacktrackGlyphCount=0 -->
+              <!-- InputGlyphCount=1 -->
+              <!-- LookAheadGlyphCount=1 -->
+              <LookAhead index="0" value="two"/>
+              <!-- SubstCount=0 -->
+            </ChainSubRule>
+          </ChainSubRuleSet>
+          <ChainSubRuleSet index="1">
+            <!-- ChainSubRuleCount=1 -->
+            <ChainSubRule index="0">
+              <!-- BacktrackGlyphCount=0 -->
+              <!-- InputGlyphCount=1 -->
+              <!-- LookAheadGlyphCount=1 -->
+              <LookAhead index="0" value="four"/>
+              <!-- SubstCount=0 -->
+            </ChainSubRule>
+          </ChainSubRuleSet>
+        </ChainContextSubst>
+      </Lookup>
+    </LookupList>
+  </GSUB>
+
+  <GPOS>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=1 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=1 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="test"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="0"/>
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=1 -->
+      <Lookup index="0">
+        <LookupType value="8"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <ChainContextPos index="0" Format="3">
+          <!-- BacktrackGlyphCount=0 -->
+          <!-- InputGlyphCount=1 -->
+          <InputCoverage index="0">
+            <Glyph value="three"/>
+          </InputCoverage>
+          <!-- LookAheadGlyphCount=1 -->
+          <LookAheadCoverage index="0">
+            <Glyph value="four"/>
+          </LookAheadCoverage>
+          <!-- PosCount=0 -->
+        </ChainContextPos>
+      </Lookup>
+    </LookupList>
+  </GPOS>
+
+</ttFont>

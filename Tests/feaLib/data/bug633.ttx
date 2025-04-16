@@ -43,10 +43,10 @@
           <ClassDef1>
           </ClassDef1>
           <ClassDef2>
-            <ClassDef glyph="C" class="2"/>
-            <ClassDef glyph="O" class="2"/>
-            <ClassDef glyph="V" class="1"/>
-            <ClassDef glyph="W" class="1"/>
+            <ClassDef glyph="C" class="1"/>
+            <ClassDef glyph="O" class="1"/>
+            <ClassDef glyph="V" class="2"/>
+            <ClassDef glyph="W" class="2"/>
           </ClassDef2>
           <!-- Class1Count=1 -->
           <!-- Class2Count=3 -->
@@ -55,10 +55,10 @@
               <Value1 XAdvance="0"/>
             </Class2Record>
             <Class2Record index="1">
-              <Value1 XAdvance="0"/>
+              <Value1 XAdvance="-20"/>
             </Class2Record>
             <Class2Record index="2">
-              <Value1 XAdvance="-20"/>
+              <Value1 XAdvance="0"/>
             </Class2Record>
           </Class1Record>
         </PairPos>

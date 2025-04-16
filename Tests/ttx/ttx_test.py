@@ -1,14 +1,18 @@
 from fontTools.misc.testTools import parseXML
 from fontTools.misc.timeTools import timestampSinceEpoch
 from fontTools.ttLib import TTFont, TTLibError
+from fontTools.ttLib.tables.DefaultTable import DefaultTable
 from fontTools import ttx
+import base64
 import getopt
 import logging
 import os
 import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
+from pathlib import Path
 
 import pytest
 
@@ -26,7 +30,6 @@ except ImportError:
 
 
 class TTXTest(unittest.TestCase):
-
     def __init__(self, methodName):
         unittest.TestCase.__init__(self, methodName)
         # Python 3 renamed assertRaisesRegexp to assertRaisesRegex,
@@ -69,9 +72,7 @@ class TTXTest(unittest.TestCase):
     def test_parseOptions_no_args(self):
         with self.assertRaises(getopt.GetoptError) as cm:
             ttx.parseOptions([])
-        self.assertTrue(
-            "Must specify at least one input file" in str(cm.exception)
-        )
+        self.assertTrue("Must specify at least one input file" in str(cm.exception))
 
     def test_parseOptions_invalid_path(self):
         file_path = "invalid_font_path"
@@ -151,9 +152,7 @@ class TTXTest(unittest.TestCase):
                 jobs[i][1:],
                 (
                     os.path.join(self.tempdir, file_names[i]),
-                    os.path.join(
-                        self.tempdir, file_names[i].split(".")[0] + ".ttx"
-                    ),
+                    os.path.join(self.tempdir, file_names[i].split(".")[0] + ".ttx"),
                 ),
             )
 
@@ -435,6 +434,7 @@ def test_options_m():
 def test_options_b():
     tto = ttx.Options([("-b", "")], 1)
     assert tto.recalcBBoxes is False
+
 
 def test_options_e():
     tto = ttx.Options([("-e", "")], 1)
@@ -961,18 +961,12 @@ def test_main_keyboard_interrupt(tmpdir, monkeypatch, caplog):
     assert "(Cancelled.)" in caplog.text
 
 
-@pytest.mark.skipif(
-    sys.platform == "win32",
-    reason="waitForKeyPress function causes test to hang on Windows platform",
-)
 def test_main_system_exit(tmpdir, monkeypatch):
     with pytest.raises(SystemExit):
         inpath = os.path.join("Tests", "ttx", "data", "TestTTF.ttx")
         outpath = tmpdir.join("TestTTF.ttf")
         args = ["-o", str(outpath), inpath]
-        monkeypatch.setattr(
-            ttx, "process", (lambda x, y: raise_exception(SystemExit))
-        )
+        monkeypatch.setattr(ttx, "process", (lambda x, y: raise_exception(SystemExit)))
         ttx.main(args)
 
 
@@ -991,10 +985,6 @@ def test_main_ttlib_error(tmpdir, monkeypatch, caplog):
     assert "Test error" in caplog.text
 
 
-@pytest.mark.skipif(
-    sys.platform == "win32",
-    reason="waitForKeyPress function causes test to hang on Windows platform",
-)
 def test_main_base_exception(tmpdir, monkeypatch, caplog):
     with pytest.raises(SystemExit):
         inpath = os.path.join("Tests", "ttx", "data", "TestTTF.ttx")
@@ -1008,6 +998,77 @@ def test_main_base_exception(tmpdir, monkeypatch, caplog):
         ttx.main(args)
 
     assert "Unhandled exception has occurred" in caplog.text
+
+
+def test_main_ttf_dump_stdin_to_stdout(tmp_path):
+    inpath = Path("Tests").joinpath("ttx", "data", "TestTTF.ttf")
+    outpath = tmp_path / "TestTTF.ttx"
+    args = [sys.executable, "-m", "fontTools.ttx", "-q", "-o", "-", "-"]
+    with inpath.open("rb") as infile, outpath.open("w", encoding="utf-8") as outfile:
+        subprocess.run(args, check=True, stdin=infile, stdout=outfile)
+    assert outpath.is_file()
+
+
+def test_main_ttx_compile_stdin_to_stdout(tmp_path):
+    inpath = Path("Tests").joinpath("ttx", "data", "TestTTF.ttx")
+    outpath = tmp_path / "TestTTF.ttf"
+    args = [sys.executable, "-m", "fontTools.ttx", "-q", "-o", "-", "-"]
+    with inpath.open("r", encoding="utf-8") as infile, outpath.open("wb") as outfile:
+        subprocess.run(args, check=True, stdin=infile, stdout=outfile)
+    assert outpath.is_file()
+
+
+def test_main_gnu_style_opts_and_args_intermixed(tmpdir):
+    # https://github.com/fonttools/fonttools/issues/3507
+    inpath = os.path.join("Tests", "ttx", "data", "TestTTF.ttf")
+    outpath = tmpdir.join("TestTTF.ttx")
+    args = ["-t", "cmap", inpath, "-o", str(outpath)]
+    ttx.main(args)
+    assert outpath.check(file=True)
+
+
+def test_roundtrip_DSIG_split_at_XML_parse_buffer_size(tmp_path):
+    inpath = Path("Tests").joinpath(
+        "ttx", "data", "roundtrip_DSIG_split_at_XML_parse_buffer_size.ttx"
+    )
+    font = TTFont()
+    font.importXML(inpath)
+    font["DMMY"] = DefaultTable(tag="DMMY")
+    # just enough dummy bytes to hit the cut off point whereby DSIG data gets
+    # split into two chunks and triggers the bug from
+    # https://github.com/fonttools/fonttools/issues/2614
+    font["DMMY"].data = b"\x01\x02\x03\x04" * 2438
+    font.saveXML(tmp_path / "roundtrip_DSIG_split_at_XML_parse_buffer_size.ttx")
+
+    outpath = tmp_path / "font.ttf"
+    args = [
+        sys.executable,
+        "-m",
+        "fontTools.ttx",
+        "-q",
+        "-o",
+        str(outpath),
+        str(tmp_path / "roundtrip_DSIG_split_at_XML_parse_buffer_size.ttx"),
+    ]
+    subprocess.run(args, check=True)
+
+    assert outpath.is_file()
+    assert TTFont(outpath)["DSIG"].signatureRecords[0].pkcs7 == base64.b64decode(
+        b"0000000100000000"
+    )
+
+
+def test_main_ttx_compile_optimize_font_speed(tmp_path):
+    inpath = Path("Tests") / "ttx" / "data" / "TestTTF.ttx"
+
+    size_optimized = tmp_path / "TestTTF-size.ttf"
+    ttx.main(["-o", str(size_optimized), str(inpath)])
+
+    speed_optimized = tmp_path / "TestTTF-speed.ttf"
+    ttx.main(["--optimize-font-speed", "-o", str(speed_optimized), str(inpath)])
+
+    # the speed-optimized font should end up larger than the size-optimized one
+    assert size_optimized.stat().st_size < speed_optimized.stat().st_size
 
 
 # ---------------------------

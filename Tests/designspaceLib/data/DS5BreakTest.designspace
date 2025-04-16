@@ -1,0 +1,56 @@
+<designspace format="4.0">
+    <axes>
+        <axis default="400" maximum="800" minimum="200" name="Weight" tag="wght">
+            <map input="200" output="0" />
+            <map input="400" output="250" />
+            <map input="800" output="1000" />
+        </axis>
+    </axes>
+
+    <sources>
+        <source familyname="DS5BreakTest" filename="DS5BreakTest-Extralight.ufo" stylename="ExtraLight Condensed">
+            <location>
+                <dimension name="Weight" xvalue="0" />
+            </location>
+        </source>
+        <source familyname="DS5BreakTest" filename="DS5BreakTest-Regular.ufo" stylename="Regular">
+            <location>
+                <dimension name="Weight" xvalue="250" />
+            </location>
+        </source>
+        <source familyname="DS5BreakTest" filename="DS5BreakTest-Extrabold.ufo" stylename="ExtraBold">
+            <location>
+                <dimension name="Weight" xvalue="1000" />
+            </location>
+        </source>
+    </sources>
+
+    <instances>
+        <instance familyname="DS5BreakTest" stylename="ExtraLight">
+            <location>
+                <dimension name="Weight" xvalue="0" />
+            </location>
+        </instance>
+        <instance familyname="DS5BreakTest" stylename="Regular">
+            <location>
+                <dimension name="Weight" xvalue="250" />
+            </location>
+        </instance>
+        <instance familyname="DS5BreakTest" stylename="Medium">
+            <location>
+                <dimension name="Weight" xvalue="400" />
+            </location>
+        </instance>
+        <instance familyname="DS5BreakTest" stylename="Bold">
+            <location>
+                <dimension name="Weight" xvalue="750" />
+            </location>
+        </instance>
+        <instance familyname="DS5BreakTest" stylename="ExtraBold">
+            <location>
+                <dimension name="Weight" xvalue="1000" />
+            </location>
+        </instance>
+    </instances>
+
+</designspace>
