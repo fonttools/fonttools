@@ -120,6 +120,11 @@ class VoltToFea:
         return self._class_names[name]
 
     def _collectStatements(self, doc, tables):
+        # Collect glyph difinitions first, as we need them to map VOLT glyph names to font glyph name.
+        for statement in doc.statements:
+            if isinstance(statement, VAst.GlyphDefinition):
+                self._glyphDefinition(statement)
+
         # Collect and sort group definitions first, to make sure a group
         # definition that references other groups comes after them since VOLT
         # does not enforce such ordering, and feature file require it.
@@ -128,14 +133,12 @@ class VoltToFea:
             self._groupDefinition(statement)
 
         for statement in doc.statements:
-            if isinstance(statement, VAst.GlyphDefinition):
-                self._glyphDefinition(statement)
-            elif isinstance(statement, VAst.AnchorDefinition):
+            if isinstance(statement, VAst.AnchorDefinition):
                 if "GPOS" in tables:
                     self._anchorDefinition(statement)
             elif isinstance(statement, VAst.SettingDefinition):
                 self._settingDefinition(statement)
-            elif isinstance(statement, VAst.GroupDefinition):
+            elif isinstance(statement, (VAst.GlyphDefinition, VAst.GroupDefinition)):
                 pass  # Handled above
             elif isinstance(statement, VAst.ScriptDefinition):
                 self._scriptDefinition(statement)
