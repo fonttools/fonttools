@@ -7,21 +7,32 @@ See also https://learn.microsoft.com/en-us/typography/tools/vtt/tsi-tables
 """
 
 import array
+import logging
 import sys
 
 from fontTools.misc.textTools import safeEval
 
 from . import DefaultTable
 
+log = logging.getLogger(__name__)
+
 
 class table_T_S_I__5(DefaultTable.DefaultTable):
     def decompile(self, data, ttFont):
+        numGlyphs = ttFont["maxp"].numGlyphs
         a = array.array("H")
         a.frombytes(data)
         if sys.byteorder != "big":
             a.byteswap()
         self.glyphGrouping = {}
-        for i in range(len(data) // 2):
+        numEntries = len(data) // 2
+        if numEntries != numGlyphs:
+            diff = numEntries - numGlyphs
+            log.warning(
+                "Number of entries differs from the number of glyphs in the font "
+                f"by {abs(diff)} ({numEntries} entries vs. {numGlyphs} glyphs)."
+            )
+        for i in range(numEntries):
             self.glyphGrouping[ttFont.getGlyphName(i)] = a[i]
 
     def compile(self, ttFont):

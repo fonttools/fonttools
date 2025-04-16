@@ -8,9 +8,12 @@ in the TSI1 table.
 See also https://learn.microsoft.com/en-us/typography/tools/vtt/tsi-tables
 """
 
+import logging
 import struct
 
 from . import DefaultTable
+
+log = logging.getLogger(__name__)
 
 tsi0Format = ">HHL"
 
@@ -23,10 +26,17 @@ class table_T_S_I__0(DefaultTable.DefaultTable):
     dependencies = ["TSI1"]
 
     def decompile(self, data, ttFont):
+        numGlyphs = ttFont["maxp"].numGlyphs
         indices = []
         size = struct.calcsize(tsi0Format)
         numEntries = len(data) // size
-        for i in range(numEntries):
+        if numEntries != numGlyphs + 5:
+            diff = numEntries - numGlyphs - 5
+            log.warning(
+                "Number of glyphPrograms differs from the number of glyphs in the font "
+                f"by {abs(diff)} ({numEntries - 5} programs vs. {numGlyphs} glyphs)."
+            )
+        for _ in range(numEntries):
             glyphID, textLength, textOffset = fixlongs(
                 *struct.unpack(tsi0Format, data[:size])
             )
