@@ -446,9 +446,11 @@ class VoltToFea:
                         if (anchorname, classname) not in anchors[name]:
                             anchors[name].append((anchorname, classname))
 
+            is_ligature = all(n in self._ligatures for n in anchors)
+            is_mark = all(n in self._marks for n in anchors)
             for name in anchors:
                 components = 1
-                if name in self._ligatures:
+                if is_ligature:
                     components = self._ligatures[name]
 
                 marks = [[] for _ in range(components)]
@@ -460,9 +462,9 @@ class VoltToFea:
                             marks[component - 1].append((anchor, markclass))
 
                 base = self._glyphName(name)
-                if name in self._marks:
+                if is_mark:
                     mark = ast.MarkMarkPosStatement(base, marks[0])
-                elif name in self._ligatures:
+                elif is_ligature:
                     mark = ast.MarkLigPosStatement(base, marks)
                 else:
                     mark = ast.MarkBasePosStatement(base, marks[0])

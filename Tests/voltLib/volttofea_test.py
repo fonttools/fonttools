@@ -1405,6 +1405,91 @@ class ToFeaTest(unittest.TestCase):
             fea,
         )
 
+    def test_def_anchor_ligature_in_base_lookup(self):
+        fea = self.parse(
+            """
+            DEF_LOOKUP "TestLookup" PROCESS_BASE PROCESS_MARKS ALL DIRECTION LTR
+            IN_CONTEXT
+            END_CONTEXT
+            AS_POSITION
+            ATTACH GLYPH "f_f" GLYPH "f"
+            TO GLYPH "acutecomb" AT ANCHOR "top"
+            END_ATTACH
+            END_POSITION
+            DEF_GLYPH "f" ID 120 TYPE BASE END_GLYPH
+            DEF_GLYPH "f_f" ID 121 TYPE LIGATURE COMPONENTS 2 END_GLYPH
+            DEF_ANCHOR "top" ON 120 GLYPH f COMPONENT 1 AT POS DX 250 DY 450 END_POS END_ANCHOR
+            DEF_ANCHOR "top" ON 120 GLYPH f_f COMPONENT 1 AT POS DX 250 DY 450 END_POS END_ANCHOR
+            DEF_ANCHOR "top" ON 120 GLYPH f_f COMPONENT 2 AT POS DX 450 DY 450 END_POS END_ANCHOR
+            DEF_ANCHOR "MARK_top" ON 120 GLYPH acutecomb COMPONENT 1 AT POS  END_POS END_ANCHOR
+            """
+        )
+        self.assertEqual(
+            dedent(
+                """
+                # Mark classes
+                markClass acutecomb <anchor 0 0> @top.TestLookup;
+
+                # Lookups
+                lookup TestLookup {
+                    pos base f_f
+                        <anchor 250 450> mark @top.TestLookup;
+                    pos base f
+                        <anchor 250 450> mark @top.TestLookup;
+                } TestLookup;
+
+                @GDEF_base = [f];
+                @GDEF_ligature = [f_f];
+                table GDEF {
+                    GlyphClassDef @GDEF_base, @GDEF_ligature, , ;
+                } GDEF;
+                """
+            ),
+            fea,
+        )
+
+    def test_def_anchor_mark_in_base_lookup(self):
+        fea = self.parse(
+            """
+            DEF_LOOKUP "TestLookup" PROCESS_BASE PROCESS_MARKS ALL DIRECTION LTR
+            IN_CONTEXT
+            END_CONTEXT
+            AS_POSITION
+            ATTACH GLYPH "acutecomb" GLYPH "f"
+            TO GLYPH "acutecomb" AT ANCHOR "top"
+            END_ATTACH
+            END_POSITION
+            DEF_GLYPH "f" ID 120 TYPE BASE END_GLYPH
+            DEF_GLYPH "acutecomb" ID 121 TYPE MARK END_GLYPH
+            DEF_ANCHOR "top" ON 120 GLYPH f COMPONENT 1 AT POS DX 250 DY 450 END_POS END_ANCHOR
+            DEF_ANCHOR "top" ON 120 GLYPH acutecomb COMPONENT 1 AT POS  END_POS END_ANCHOR
+            DEF_ANCHOR "MARK_top" ON 120 GLYPH acutecomb COMPONENT 1 AT POS  END_POS END_ANCHOR
+            """
+        )
+        self.assertEqual(
+            dedent(
+                """
+                # Mark classes
+                markClass acutecomb <anchor 0 0> @top.TestLookup;
+
+                # Lookups
+                lookup TestLookup {
+                    pos base acutecomb
+                        <anchor 0 0> mark @top.TestLookup;
+                    pos base f
+                        <anchor 250 450> mark @top.TestLookup;
+                } TestLookup;
+
+                @GDEF_base = [f];
+                @GDEF_mark = [acutecomb];
+                table GDEF {
+                    GlyphClassDef @GDEF_base, , @GDEF_mark, ;
+                } GDEF;
+                """
+            ),
+            fea,
+        )
+
     def test_anchor_adjust_device(self):
         fea = self.parse(
             'DEF_ANCHOR "MARK_top" ON 123 GLYPH diacglyph '
