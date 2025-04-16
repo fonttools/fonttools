@@ -257,7 +257,10 @@ class VoltToFea:
                 else:
                     items.append(self._enum(item))
             elif isinstance(item, VAst.Range):
-                items.append((item.start, item.end))
+                if flatten:
+                    items.extend(item.glyphSet())
+                else:
+                    items.append(ast.GlyphClass(item.glyphSet()))
             else:
                 raise NotImplementedError(item)
         return items
