@@ -1,9 +1,9 @@
 from types import SimpleNamespace
-from fontTools.misc.textTools import deHexStr
-from fontTools.misc.testTools import getXML
-from fontTools.ttLib.tables.T_S_I__0 import table_T_S_I__0
-import pytest
 
+import pytest
+from fontTools.misc.testTools import getXML
+from fontTools.misc.textTools import deHexStr
+from fontTools.ttLib.tables.T_S_I__0 import table_T_S_I__0
 
 # (gid, length, offset) for glyph programs
 TSI0_INDICES = [(0, 1, 0), (1, 5, 1), (2, 0, 1), (3, 0, 1), (4, 8, 6)]
