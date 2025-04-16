@@ -199,7 +199,7 @@ class ToFeaTest(unittest.TestCase):
         )
         self.assertEqual(
             "# Glyph classes\n"
-            "@KERN_lc_a_2ND = [a - atilde b c - cdotaccent];\n"
+            "@KERN_lc_a_2ND = [a agrave aacute acircumflex atilde b c ccaron ccedilla cdotaccent];\n"
             "@GDEF_base = [a agrave aacute acircumflex atilde c"
             " ccaron ccedilla cdotaccent];\n"
             "table GDEF {\n"
@@ -866,6 +866,26 @@ class ToFeaTest(unittest.TestCase):
 
     def test_substitution_reverse_chaining_single(self):
         fea = self.parse(
+            'DEF_GLYPH "zero" ID 163 UNICODE 48 TYPE BASE END_GLYPH\n'
+            'DEF_GLYPH "one" ID 194 UNICODE 49 TYPE BASE END_GLYPH\n'
+            'DEF_GLYPH "two" ID 195 UNICODE 50 TYPE BASE END_GLYPH\n'
+            'DEF_GLYPH "three" ID 196 UNICODE 51 TYPE BASE END_GLYPH\n'
+            'DEF_GLYPH "four" ID 197 UNICODE 52 TYPE BASE END_GLYPH\n'
+            'DEF_GLYPH "fize" ID 165 UNICODE 53 TYPE BASE END_GLYPH\n'
+            'DEF_GLYPH "six" ID 209 UNICODE 54 TYPE BASE END_GLYPH\n'
+            'DEF_GLYPH "seven" ID 210 UNICODE 55 TYPE BASE END_GLYPH\n'
+            'DEF_GLYPH "eight" ID 211 UNICODE 56 TYPE BASE END_GLYPH\n'
+            'DEF_GLYPH "nine" ID 212 UNICODE 57 TYPE BASE END_GLYPH\n'
+            'DEF_GLYPH "zero.numr" ID 213 TYPE BASE END_GLYPH\n'
+            'DEF_GLYPH "one.numr" ID 214 TYPE BASE END_GLYPH\n'
+            'DEF_GLYPH "two.numr" ID 215 TYPE BASE END_GLYPH\n'
+            'DEF_GLYPH "three.numr" ID 216 TYPE BASE END_GLYPH\n'
+            'DEF_GLYPH "four.numr" ID 217 TYPE BASE END_GLYPH\n'
+            'DEF_GLYPH "fize.numr" ID 218 TYPE BASE END_GLYPH\n'
+            'DEF_GLYPH "six.numr" ID 219 TYPE BASE END_GLYPH\n'
+            'DEF_GLYPH "seven.numr" ID 220 TYPE BASE END_GLYPH\n'
+            'DEF_GLYPH "eight.numr" ID 221 TYPE BASE END_GLYPH\n'
+            'DEF_GLYPH "nine.numr" ID 222 TYPE BASE END_GLYPH\n'
             'DEF_LOOKUP "numr" PROCESS_BASE PROCESS_MARKS ALL '
             "DIRECTION LTR REVERSAL\n"
             "IN_CONTEXT\n"
@@ -883,8 +903,14 @@ class ToFeaTest(unittest.TestCase):
         self.assertEqual(
             "\n# Lookups\n"
             "lookup numr {\n"
-            "    rsub zero - nine' [fraction zero.numr - nine.numr] by zero.numr - nine.numr;\n"
-            "} numr;\n",
+            "    rsub [zero one two three four fize six seven eight nine]' "
+            "[fraction zero.numr one.numr two.numr three.numr four.numr fize.numr six.numr seven.numr eight.numr nine.numr] by "
+            "[zero.numr one.numr two.numr three.numr four.numr fize.numr six.numr seven.numr eight.numr nine.numr];\n"
+            "} numr;\n"
+            "\n@GDEF_base = [zero one two three four fize six seven eight nine zero.numr one.numr two.numr three.numr four.numr fize.numr six.numr seven.numr eight.numr nine.numr];\n"
+            "table GDEF {\n"
+            "    GlyphClassDef @GDEF_base, , , ;\n"
+            "} GDEF;\n",
             fea,
         )
 
