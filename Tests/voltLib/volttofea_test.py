@@ -1343,6 +1343,42 @@ class ToFeaTest(unittest.TestCase):
             fea,
         )
 
+    def test_def_anchor_ligature_missing_component(self):
+        fea = self.parse(
+            'DEF_LOOKUP "TestLookup" PROCESS_BASE PROCESS_MARKS ALL '
+            "DIRECTION LTR\n"
+            "IN_CONTEXT\n"
+            "END_CONTEXT\n"
+            "AS_POSITION\n"
+            'ATTACH GLYPH "f_f"\n'
+            'TO GLYPH "acutecomb" AT ANCHOR "top"\n'
+            "END_ATTACH\n"
+            "END_POSITION\n"
+            'DEF_GLYPH "f_f" ID 120 TYPE LIGATURE COMPONENTS 2 END_GLYPH\n'
+            'DEF_ANCHOR "top" ON 120 GLYPH f_f '
+            "COMPONENT 1 AT POS DX 250 DY 450 END_POS END_ANCHOR\n"
+            'DEF_ANCHOR "MARK_top" ON 120 GLYPH acutecomb '
+            "COMPONENT 1 AT POS  END_POS END_ANCHOR"
+        )
+        self.assertEqual(
+            "\n# Mark classes\n"
+            "markClass acutecomb <anchor 0 0> @top.TestLookup;\n"
+            "\n"
+            "# Lookups\n"
+            "lookup TestLookup {\n"
+            "    pos ligature f_f\n"
+            "            <anchor 250 450> mark @top.TestLookup\n"
+            "        ligComponent\n"
+            "            <anchor NULL>;\n"
+            "} TestLookup;\n"
+            "\n"
+            "@GDEF_ligature = [f_f];\n"
+            "table GDEF {\n"
+            "    GlyphClassDef , @GDEF_ligature, , ;\n"
+            "} GDEF;\n",
+            fea,
+        )
+
     def test_anchor_adjust_device(self):
         fea = self.parse(
             'DEF_ANCHOR "MARK_top" ON 123 GLYPH diacglyph '
