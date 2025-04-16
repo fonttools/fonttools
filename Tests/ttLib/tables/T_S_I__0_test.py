@@ -72,6 +72,27 @@ def test_decompile(table, numGlyphs, data, expected_indices, expected_extra_indi
 
 
 @pytest.mark.parametrize(
+    "numGlyphs, data, expected_indices, expected_extra_indices",
+    [
+        (4, TSI0_DATA, TSI0_INDICES, TSI0_EXTRA_INDICES),
+        (6, TSI0_DATA, TSI0_INDICES, TSI0_EXTRA_INDICES),
+    ],
+    ids=["more entries than glyphs", "fewer entries than glyphs"],
+)
+def test_decompile_glyphs_mismatch(
+    table, numGlyphs, data, expected_indices, expected_extra_indices
+):
+    font = {"maxp": SimpleNamespace(numGlyphs=numGlyphs)}
+
+    table.decompile(data, font)
+
+    assert len(table.indices) == 5
+    assert table.indices == expected_indices
+    assert len(table.extra_indices) == 4
+    assert table.extra_indices == expected_extra_indices
+
+
+@pytest.mark.parametrize(
     "numGlyphs, indices, extra_indices, expected_data",
     [
         (5, TSI0_INDICES, TSI0_EXTRA_INDICES, TSI0_DATA),
