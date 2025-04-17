@@ -1021,6 +1021,16 @@ class ParserTest(unittest.TestCase):
         with self.assertRaisesRegex(FeatureLibError, "Positioning values are allowed"):
             doc = self.parse("feature kern {" "    pos a' b c 123 d;" "} kern;")
 
+    def test_gpos_type_1_null(self):
+        doc = self.parse("feature test {pos a <NULL>;} test;")
+        pos = doc.statements[0].statements[0]
+        self.assertEqual(pos.asFea(), "pos a <NULL>;")
+
+    def test_gpos_type_1_null_chained(self):
+        doc = self.parse("feature test {pos a' <NULL>;} test;")
+        pos = doc.statements[0].statements[0]
+        self.assertEqual(pos.asFea(), "pos a' <NULL>;")
+
     def test_gpos_type_2_format_a(self):
         doc = self.parse(
             "feature kern {" "    pos [T V] -60 [a b c] <1 2 3 4>;" "} kern;"

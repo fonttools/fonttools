@@ -1583,7 +1583,9 @@ class SinglePosStatement(Statement):
                 res += " ".join(map(asFea, self.prefix)) + " "
             res += " ".join(
                 [
-                    asFea(x[0]) + "'" + ((" " + x[1].asFea()) if x[1] else "")
+                    asFea(x[0])
+                    + "'"
+                    + ((" " + x[1].asFea()) if x[1] is not None else "")
                     for x in self.pos
                 ]
             )
@@ -1591,7 +1593,10 @@ class SinglePosStatement(Statement):
                 res += " " + " ".join(map(asFea, self.suffix))
         else:
             res += " ".join(
-                [asFea(x[0]) + " " + (x[1].asFea() if x[1] else "") for x in self.pos]
+                [
+                    asFea(x[0]) + " " + (x[1].asFea() if x[1] is not None else "")
+                    for x in self.pos
+                ]
             )
         res += ";"
         return res
