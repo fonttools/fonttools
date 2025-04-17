@@ -1,0 +1,8 @@
+# Both lookups should result in SinglePos lookup with a ValueFormat 0
+lookup test1 {
+    pos A <NULL>;
+} test1;
+
+lookup test2 {
+    pos B' <NULL>;
+} test2;

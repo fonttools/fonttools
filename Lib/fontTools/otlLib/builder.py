@@ -1545,6 +1545,8 @@ class SinglePosBuilder(LookupBuilder):
             otValueRection: A ``otTables.ValueRecord`` used to position the
                 glyph.
         """
+        if otValueRecord is None:
+            otValueRecord = ValueRecord()
         if not self.can_add(glyph, otValueRecord):
             otherLoc = self.locations[glyph]
             raise OpenTypeLibError(
