@@ -1471,7 +1471,9 @@ class Builder(object):
         lookup = self.get_lookup_(location, PairPosBuilder)
         v1 = self.makeOpenTypeValueRecord(location, value1, pairPosContext=True)
         v2 = self.makeOpenTypeValueRecord(location, value2, pairPosContext=True)
-        lookup.addClassPair(location, glyphclass1, v1, glyphclass2, v2)
+        cls1 = tuple(sorted(set(glyphclass1)))
+        cls2 = tuple(sorted(set(glyphclass2)))
+        lookup.addClassPair(location, cls1, v1, cls2, v2)
 
     def add_specific_pair_pos(self, location, glyph1, value1, glyph2, value2):
         if not glyph1 or not glyph2:
