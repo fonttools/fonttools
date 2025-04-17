@@ -1,0 +1,4 @@
+# This should result in a ValueFormat 0
+feature test {
+    pos [A A B C] [A A B C] -100;
+} test;
