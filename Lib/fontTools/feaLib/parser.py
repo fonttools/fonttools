@@ -1613,7 +1613,7 @@ class Parser(object):
             "HorizAxis.BaseScriptList",
             "VertAxis.BaseScriptList",
         ), self.cur_token_
-        scripts = [(self.parse_base_script_record_(count))]
+        scripts = [self.parse_base_script_record_(count)]
         while self.next_token_ == ",":
             self.expect_symbol_(",")
             scripts.append(self.parse_base_script_record_(count))
@@ -2065,19 +2065,37 @@ class Parser(object):
         # A multiple substitution may have a single destination, in which case
         # it will look just like a single substitution. So if there are both
         # multiple and single substitutions, upgrade all the single ones to
-        # multiple substitutions.
+        # multiple substitutions. Similarly, a ligature substitution may have a
+        # single source glyph, so if there are both ligature and single
+        # substitutions, upgrade all the single ones to ligature substitutions.
 
-        # Check if we have a mix of non-contextual singles and multiples.
+        # Check if we have a mix of non-contextual singles and multiples or
+        # ligatures.
         has_single = False
         has_multiple = False
+        has_ligature = False
         for s in statements:
             if isinstance(s, self.ast.SingleSubstStatement):
                 has_single = not any([s.prefix, s.suffix, s.forceChain])
             elif isinstance(s, self.ast.MultipleSubstStatement):
                 has_multiple = not any([s.prefix, s.suffix, s.forceChain])
+            elif isinstance(s, self.ast.LigatureSubstStatement):
+                has_ligature = not any([s.prefix, s.suffix, s.forceChain])
 
-        # Upgrade all single substitutions to multiple substitutions.
-        if has_single and has_multiple:
+        to_multiple = False
+        to_ligature = False
+
+        # If we have mixed single and multiple substitutions,
+        # upgrade all single substitutions to multiple substitutions.
+        if has_single and has_multiple and not has_ligature:
+            to_multiple = True
+
+        # If we have mixed single and ligature substitutions,
+        # upgrade all single substitutions to ligature substitutions.
+        elif has_single and has_ligature and not has_multiple:
+            to_ligature = True
+
+        if to_multiple or to_ligature:
             statements = []
             for s in block.statements:
                 if isinstance(s, self.ast.SingleSubstStatement):
@@ -2085,17 +2103,29 @@ class Parser(object):
                     replacements = s.replacements[0].glyphSet()
                     if len(replacements) == 1:
                         replacements *= len(glyphs)
-                    for i, glyph in enumerate(glyphs):
-                        statements.append(
-                            self.ast.MultipleSubstStatement(
-                                s.prefix,
-                                glyph,
-                                s.suffix,
-                                [replacements[i]],
-                                s.forceChain,
-                                location=s.location,
+                    for glyph, replacement in zip(glyphs, replacements):
+                        if to_multiple:
+                            statements.append(
+                                self.ast.MultipleSubstStatement(
+                                    s.prefix,
+                                    glyph,
+                                    s.suffix,
+                                    [replacement],
+                                    s.forceChain,
+                                    location=s.location,
+                                )
                             )
-                        )
+                        elif to_ligature:
+                            statements.append(
+                                self.ast.LigatureSubstStatement(
+                                    s.prefix,
+                                    [self.ast.GlyphName(glyph)],
+                                    s.suffix,
+                                    replacement,
+                                    s.forceChain,
+                                    location=s.location,
+                                )
+                            )
                 else:
                     statements.append(s)
             block.statements = statements

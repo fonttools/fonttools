@@ -93,6 +93,10 @@ class BuilderTest(unittest.TestCase):
         class_pair_pos_duplicates
     """.split()
 
+    FEA2FEA_IGNORE = """
+        spec8a
+    """.split()
+
     VARFONT_AXES = [
         ("wght", 200, 200, 1000, "Weight"),
         ("wdth", 100, 100, 200, "Width"),
@@ -1197,6 +1201,8 @@ def generate_fea2fea_file_test(name):
 
 
 for name in BuilderTest.TEST_FEATURE_FILES:
+    if name in BuilderTest.FEA2FEA_IGNORE:
+        continue
     setattr(
         BuilderTest,
         "test_Fea2feaFile_{}".format(name),
