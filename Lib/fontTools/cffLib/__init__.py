@@ -1674,15 +1674,18 @@ class EncodingConverter(SimpleConverter):
 
         if fmt == 0:
             encoding = parseEncoding0(
-                parent.charset, file, haveSupplement, parent.strings
+                parent.charset, file
             )
         elif fmt == 1:
             encoding = parseEncoding1(
-                parent.charset, file, haveSupplement, parent.strings
+                parent.charset, file
             )
         else:
             raise ValueError(f"Unknown Encoding format: {fmt}")
 
+        if haveSupplement:
+            parseEncodingSupplement(file, encoding, parent.strings)
+            
         return encoding
 
     def write(self, parent, value):
@@ -1742,8 +1745,7 @@ def parseEncodingSupplement(file, encoding, strings):
         name = strings[sid]
         encoding[code] = name
 
-
-def parseEncoding0(charset, file, haveSupplement, strings):
+def parseEncoding0(charset, file):
     """
     Format 0: simple list of codes.
     After reading the base table, optionally parse the supplement.
@@ -1755,13 +1757,12 @@ def parseEncoding0(charset, file, haveSupplement, strings):
         if code != 0:
             encoding[code] = charset[glyphID]
 
-    if haveSupplement:
-        parseEncodingSupplement(file, encoding, strings)
+
 
     return encoding
 
 
-def parseEncoding1(charset, file, haveSupplement, strings):
+def parseEncoding1(charset, file):
     """
     Format 1: range-based encoding.
     After reading the base ranges, optionally parse the supplement.
@@ -1777,8 +1778,6 @@ def parseEncoding1(charset, file, haveSupplement, strings):
             code += 1
             glyphID += 1
 
-    if haveSupplement:
-        parseEncodingSupplement(file, encoding, strings)
     
     return encoding
 
