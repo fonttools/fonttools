@@ -1734,13 +1734,13 @@ def parseEncoding1(charset, file, haveSupplement, strings):
     nRanges = readCard8(file)
     encoding = [".notdef"] * 256
     glyphID = 1
-    for i in range(nRanges):
+    for _ in range(nRanges):
         code = readCard8(file)
         nLeft = readCard8(file)
-        for glyphID in range(glyphID, glyphID + nLeft + 1):
+        for _ in range(nLeft + 1):
             encoding[code] = charset[glyphID]
-            code = code + 1
-        glyphID = glyphID + 1
+            code += 1
+            glyphID += 1
     return encoding
 
 
