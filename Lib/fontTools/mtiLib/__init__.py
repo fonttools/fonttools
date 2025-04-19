@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # FontDame-to-FontTools for OpenType Layout tables
 #
 # Source language spec is available at:
