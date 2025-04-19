@@ -1,0 +1,9 @@
+feature test {
+    pos cursive A <anchor 10 20> <anchor NULL>;
+    subtable;
+    pos cursive a <anchor 30 40> <anchor 50 60>;
+    subtable;
+    pos cursive B <anchor 10 20> <anchor NULL>;
+    subtable;
+    pos cursive b <anchor 30 40> <anchor 50 60>;
+} test;
