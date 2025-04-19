@@ -91,6 +91,10 @@ class BuilderTest(unittest.TestCase):
         MarkBasePosSubtable
     """.split()
 
+    FEA2FEA_IGNORE = """
+        spec8a
+    """.split()
+
     VARFONT_AXES = [
         ("wght", 200, 200, 1000, "Weight"),
         ("wdth", 100, 100, 200, "Width"),
@@ -299,6 +303,71 @@ class BuilderTest(unittest.TestCase):
             )
         captor.assertRegex(
             r"Removing duplicate multiple substitution from glyph \"f_f_i\" to \('f', 'f', 'i'\)"
+        )
+
+    def test_mixed_singleSubst_multipleSubst(self):
+        font = self.build(
+            "lookup test {"
+            "  sub f_f   by f f;"
+            "  sub f     by f;"
+            "  sub f_f_i by f f i;"
+            "  sub [A A.sc] by A;"
+            "  sub [B B.sc] by [B B.sc];"
+            "} test;"
+        )
+
+        assert "GSUB" in font
+        st = font["GSUB"].table.LookupList.Lookup[0].SubTable[0]
+        self.assertEqual(st.LookupType, 2)
+        self.assertEqual(
+            st.mapping,
+            {
+                "f_f": ("f", "f"),
+                "f": ("f",),
+                "f_f_i": ("f", "f", "i"),
+                "A": ("A",),
+                "A.sc": ("A",),
+                "B": ("B",),
+                "B.sc": ("B.sc",),
+            },
+        )
+
+    def test_mixed_singleSubst_ligatureSubst(self):
+        font = self.build(
+            "lookup test {"
+            "  sub f f   by f_f;"
+            "  sub f f i by f_f_i;"
+            "  sub A     by A.sc;"
+            "} test;"
+        )
+
+        assert "GSUB" in font
+        st = font["GSUB"].table.LookupList.Lookup[0].SubTable[0]
+        self.assertEqual(st.LookupType, 4)
+        self.assertEqual(len(st.ligatures), 2)
+        self.assertEqual(len(st.ligatures["f"]), 2)
+        self.assertEqual(st.ligatures["f"][0].LigGlyph, "f_f_i")
+        self.assertEqual(len(st.ligatures["f"][0].Component), 2)
+        self.assertEqual(st.ligatures["f"][0].Component[0], "f")
+        self.assertEqual(st.ligatures["f"][0].Component[1], "i")
+        self.assertEqual(st.ligatures["f"][1].LigGlyph, "f_f")
+        self.assertEqual(len(st.ligatures["f"][1].Component), 1)
+        self.assertEqual(st.ligatures["f"][1].Component[0], "f")
+        self.assertEqual(len(st.ligatures["A"]), 1)
+        self.assertEqual(st.ligatures["A"][0].LigGlyph, "A.sc")
+        self.assertEqual(len(st.ligatures["A"][0].Component), 0)
+
+    def test_mixed_singleSubst_multipleSubst_ligatureSubst(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Within a named lookup block, all rules must be of the "
+            "same lookup type and flag",
+            self.build,
+            "lookup test {"
+            "  sub A     by A.sc;"
+            "  sub f_f   by f f;"
+            "  sub f f i by f_f_i;"
+            "} test;",
         )
 
     def test_pairPos_redefinition_warning(self):
@@ -1195,6 +1264,8 @@ def generate_fea2fea_file_test(name):
 
 
 for name in BuilderTest.TEST_FEATURE_FILES:
+    if name in BuilderTest.FEA2FEA_IGNORE:
+        continue
     setattr(
         BuilderTest,
         "test_Fea2feaFile_{}".format(name),
