@@ -1944,6 +1944,18 @@ def buildMarkArray(marks, glyphMap):
     return self
 
 
+@deprecateFunction(
+    "use buildMarkBasePosSubtable() instead", category=DeprecationWarning
+)
+def buildMarkBasePos(marks, bases, glyphMap):
+    """Build a list of MarkBasePos (GPOS4) subtables.
+
+    .. deprecated:: 4.58.0
+           Use :func:`buildMarkBasePosSubtable` instead.
+    """
+    return [buildMarkBasePosSubtable(marks, bases, glyphMap)]
+
+
 def buildMarkBasePosSubtable(marks, bases, glyphMap):
     """Build a single MarkBasePos (GPOS4) subtable.
 
