@@ -162,6 +162,39 @@ class ToFeaTest(unittest.TestCase):
             fea,
         )
 
+    def test_def_group_groups_not_yet_defined_nested(self):
+        fea = self.parse(
+            """
+            DEF_GROUP "Group1"
+            ENUM GLYPH "a" GLYPH "b" GLYPH "c" GLYPH "d" END_ENUM
+            END_GROUP
+            DEF_GROUP "TestGroup1"
+            ENUM ENUM GROUP "Group1" GROUP "Group2" END_ENUM END_ENUM
+            END_GROUP
+            DEF_GROUP "TestGroup2"
+            ENUM ENUM ENUM ENUM GROUP "Group2" END_ENUM END_ENUM END_ENUM END_ENUM
+            END_GROUP
+            DEF_GROUP "TestGroup3"
+            ENUM GROUP "Group2" GROUP "Group1" END_ENUM
+            END_GROUP
+            DEF_GROUP "Group2"
+            ENUM GLYPH "e" GLYPH "f" GLYPH "g" GLYPH "h" END_ENUM
+            END_GROUP
+            """
+        )
+        self.assertEqual(
+            dedent(
+                """\
+                # Glyph classes
+                @Group1 = [a b c d];
+                @Group2 = [e f g h];
+                @TestGroup1 = [@Group1 @Group2];
+                @TestGroup2 = [@Group2];
+                @TestGroup3 = [@Group2 @Group1];"""
+            ),
+            fea,
+        )
+
     def test_def_group_glyphs_and_group(self):
         fea = self.parse(
             'DEF_GROUP "aaccented"\n'

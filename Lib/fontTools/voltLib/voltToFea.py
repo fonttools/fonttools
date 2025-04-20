@@ -46,6 +46,7 @@ Limitations
 import logging
 import re
 from io import StringIO
+from graphlib import TopologicalSorter
 
 from fontTools.feaLib import ast
 from fontTools.ttLib import TTFont, TTLibError
@@ -57,23 +58,33 @@ log = logging.getLogger("fontTools.voltLib.voltToFea")
 TABLES = ["GDEF", "GSUB", "GPOS"]
 
 
-# For sorting voltLib.ast.GlyphDefinition, see its use below.
-class Group:
-    def __init__(self, group):
-        self.name = group.name.lower()
-        self.groups = [
-            x.group.lower() for x in group.enum.enum if isinstance(x, VAst.GroupName)
-        ]
+def _flatten_group(group):
+    ret = []
+    if isinstance(group, (tuple, list)):
+        for item in group:
+            ret.extend(_flatten_group(item))
+    elif hasattr(group, "enum"):
+        ret.extend(_flatten_group(group.enum))
+    else:
+        ret.append(group)
+    return ret
 
-    def __lt__(self, other):
-        if self.name in other.groups:
-            return True
-        if other.name in self.groups:
-            return False
-        if self.groups and not other.groups:
-            return False
-        if not self.groups and other.groups:
-            return True
+
+# Topologically sort of group definitions to ensure that all groups are defined
+# before they are referenced. This is necessary because FEA requires it but
+# VOLT does not, see below.
+def sort_groups(groups):
+    group_map = {group.name.lower(): group for group in groups}
+    graph = {
+        group.name.lower(): [
+            x.group.lower()
+            for x in _flatten_group(group)
+            if isinstance(x, VAst.GroupName)
+        ]
+        for group in groups
+    }
+    sorter = TopologicalSorter(graph)
+    return [group_map[name] for name in sorter.static_order()]
 
 
 class VoltToFea:
@@ -129,8 +140,8 @@ class VoltToFea:
         # definition that references other groups comes after them since VOLT
         # does not enforce such ordering, and feature file require it.
         groups = [s for s in doc.statements if isinstance(s, VAst.GroupDefinition)]
-        for statement in sorted(groups, key=lambda x: Group(x)):
-            self._groupDefinition(statement)
+        for group in sort_groups(groups):
+            self._groupDefinition(group)
 
         for statement in doc.statements:
             if isinstance(statement, VAst.AnchorDefinition):
