@@ -1169,17 +1169,25 @@ class MarkMarkPosBuilder(LookupBuilder):
         LookupBuilder.__init__(self, font, location, "GPOS", 6)
         self.marks = {}  # glyphName -> (markClassName, anchor)
         self.baseMarks = {}  # glyphName -> {markClassName: anchor}
+        self.subtables_ = []
+
+    def get_subtables_(self):
+        subtables_ = self.subtables_
+        if self.baseMarks or self.marks:
+            subtables_.append((self.marks, self.baseMarks))
+        return subtables_
 
     def equals(self, other):
         return (
             LookupBuilder.equals(self, other)
-            and self.marks == other.marks
-            and self.baseMarks == other.baseMarks
+            and self.get_subtables_() == other.get_subtables_()
         )
 
     def inferGlyphClasses(self):
-        result = {glyph: 3 for glyph in self.baseMarks}
-        result.update({glyph: 3 for glyph in self.marks})
+        result = {}
+        for marks, baseMarks in self.get_subtables_():
+            result.update({glyph: 3 for glyph in baseMarks})
+            result.update({glyph: 3 for glyph in marks})
         return result
 
     def build(self):
@@ -1189,25 +1197,34 @@ class MarkMarkPosBuilder(LookupBuilder):
             An ``otTables.Lookup`` object representing the mark-to-mark
             positioning lookup.
         """
-        markClasses = self.buildMarkClasses_(self.marks)
-        markClassList = sorted(markClasses.keys(), key=markClasses.get)
-        marks = {
-            mark: (markClasses[mc], anchor) for mark, (mc, anchor) in self.marks.items()
-        }
+        subtables = []
+        for subtable in self.get_subtables_():
+            markClasses = self.buildMarkClasses_(subtable[0])
+            markClassList = sorted(markClasses.keys(), key=markClasses.get)
+            marks = {
+                mark: (markClasses[mc], anchor)
+                for mark, (mc, anchor) in subtable[0].items()
+            }
 
-        st = ot.MarkMarkPos()
-        st.Format = 1
-        st.ClassCount = len(markClasses)
-        st.Mark1Coverage = buildCoverage(marks, self.glyphMap)
-        st.Mark2Coverage = buildCoverage(self.baseMarks, self.glyphMap)
-        st.Mark1Array = buildMarkArray(marks, self.glyphMap)
-        st.Mark2Array = ot.Mark2Array()
-        st.Mark2Array.Mark2Count = len(st.Mark2Coverage.glyphs)
-        st.Mark2Array.Mark2Record = []
-        for base in st.Mark2Coverage.glyphs:
-            anchors = [self.baseMarks[base].get(mc) for mc in markClassList]
-            st.Mark2Array.Mark2Record.append(buildMark2Record(anchors))
-        return self.buildLookup_([st])
+            st = ot.MarkMarkPos()
+            st.Format = 1
+            st.ClassCount = len(markClasses)
+            st.Mark1Coverage = buildCoverage(marks, self.glyphMap)
+            st.Mark2Coverage = buildCoverage(subtable[1], self.glyphMap)
+            st.Mark1Array = buildMarkArray(marks, self.glyphMap)
+            st.Mark2Array = ot.Mark2Array()
+            st.Mark2Array.Mark2Count = len(st.Mark2Coverage.glyphs)
+            st.Mark2Array.Mark2Record = []
+            for base in st.Mark2Coverage.glyphs:
+                anchors = [subtable[1][base].get(mc) for mc in markClassList]
+                st.Mark2Array.Mark2Record.append(buildMark2Record(anchors))
+            subtables.append(st)
+        return self.buildLookup_(subtables)
+
+    def add_subtable_break(self, location):
+        self.subtables_.append((self.marks, self.baseMarks))
+        self.marks = {}
+        self.baseMarks = {}
 
 
 class ReverseChainSingleSubstBuilder(LookupBuilder):

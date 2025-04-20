@@ -90,6 +90,7 @@ class BuilderTest(unittest.TestCase):
         CursivePosSubtable
         MarkBasePosSubtable
         MarkLigPosSubtable
+        MarkMarkPosSubtable
     """.split()
 
     VARFONT_AXES = [
