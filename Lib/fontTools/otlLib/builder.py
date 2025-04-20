@@ -19,6 +19,7 @@ from fontTools.otlLib.optimize.gpos import (
     compact_lookup,
 )
 from fontTools.otlLib.error import OpenTypeLibError
+from fontTools.misc.loggingTools import deprecateFunction
 from functools import reduce
 import logging
 import copy
@@ -1982,14 +1983,21 @@ def buildMarkBasePosSubtable(marks, bases, glyphMap):
     return self
 
 
+@deprecateFunction("use buildMarkLigPosSubtable() instead", category=DeprecationWarning)
 def buildMarkLigPos(marks, ligs, glyphMap):
     """Build a list of MarkLigPos (GPOS5) subtables.
 
-    This routine turns a set of marks and ligatures into a list of mark-to-ligature
-    positioning subtables. Currently the list will contain a single subtable
-    containing all marks and ligatures, although at a later date it may return
-    the optimal list of subtables subsetting the marks and ligatures into groups
-    which save space. See :func:`buildMarkLigPosSubtable` below.
+    .. deprecated:: 4.58.0
+       Use :func:`buildMarkLigPosSubtable` instead.
+    """
+    return [buildMarkLigPosSubtable(marks, ligs, glyphMap)]
+
+
+def buildMarkLigPosSubtable(marks, ligs, glyphMap):
+    """Build a single MarkLigPos (GPOS5) subtable.
+
+    This builds a mark-to-base lookup subtable containing all of the referenced
+    marks and bases.
 
     Note that if you are implementing a layout compiler, you may find it more
     flexible to use
@@ -2010,36 +2018,8 @@ def buildMarkLigPos(marks, ligs, glyphMap):
                 ],
         #   "c_t": [{...}, {...}]
         }
-        markligposes = buildMarkLigPos(marks, ligs,
+        markligpose = buildMarkLigPosSubtable(marks, ligs,
             font.getReverseGlyphMap())
-
-    Args:
-        marks (dict): A dictionary mapping anchors to glyphs; the keys being
-            glyph names, and the values being a tuple of mark class number and
-            an ``otTables.Anchor`` object representing the mark's attachment
-            point. (See :func:`buildMarkArray`.)
-        ligs (dict): A mapping of ligature names to an array of dictionaries:
-            for each component glyph in the ligature, an dictionary mapping
-            mark class IDs to anchors. (See :func:`buildLigatureArray`.)
-        glyphMap: a glyph name to ID map, typically returned from
-            ``font.getReverseGlyphMap()``.
-
-    Returns:
-        A list of ``otTables.MarkLigPos`` objects.
-
-    """
-    # TODO: Consider splitting into multiple subtables to save space,
-    # as with MarkBasePos, this would be a trade-off that would need
-    # profiling. And, depending on how typical fonts are structured,
-    # it might not be worth doing at all.
-    return [buildMarkLigPosSubtable(marks, ligs, glyphMap)]
-
-
-def buildMarkLigPosSubtable(marks, ligs, glyphMap):
-    """Build a single MarkLigPos (GPOS5) subtable.
-
-    This builds a mark-to-base lookup subtable containing all of the referenced
-    marks and bases. See :func:`buildMarkLigPos`.
 
     Args:
         marks (dict): A dictionary mapping anchors to glyphs; the keys being
