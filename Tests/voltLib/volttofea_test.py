@@ -30,11 +30,11 @@ class ToFeaTest(unittest.TestCase):
     def test_def_glyph_base(self):
         fea = self.parse('DEF_GLYPH ".notdef" ID 0 TYPE BASE END_GLYPH')
         self.assertEqual(
-            fea,
             "@GDEF_base = [.notdef];\n"
             "table GDEF {\n"
             "    GlyphClassDef @GDEF_base, , , ;\n"
             "} GDEF;\n",
+            fea,
         )
 
     def test_def_glyph_base_2_components(self):
@@ -42,46 +42,46 @@ class ToFeaTest(unittest.TestCase):
             'DEF_GLYPH "glyphBase" ID 320 TYPE BASE COMPONENTS 2 END_GLYPH'
         )
         self.assertEqual(
-            fea,
             "@GDEF_base = [glyphBase];\n"
             "table GDEF {\n"
             "    GlyphClassDef @GDEF_base, , , ;\n"
             "} GDEF;\n",
+            fea,
         )
 
     def test_def_glyph_ligature_2_components(self):
         fea = self.parse('DEF_GLYPH "f_f" ID 320 TYPE LIGATURE COMPONENTS 2 END_GLYPH')
         self.assertEqual(
-            fea,
             "@GDEF_ligature = [f_f];\n"
             "table GDEF {\n"
             "    GlyphClassDef , @GDEF_ligature, , ;\n"
             "} GDEF;\n",
+            fea,
         )
 
     def test_def_glyph_mark(self):
         fea = self.parse('DEF_GLYPH "brevecomb" ID 320 TYPE MARK END_GLYPH')
         self.assertEqual(
-            fea,
             "@GDEF_mark = [brevecomb];\n"
             "table GDEF {\n"
             "    GlyphClassDef , , @GDEF_mark, ;\n"
             "} GDEF;\n",
+            fea,
         )
 
     def test_def_glyph_component(self):
         fea = self.parse('DEF_GLYPH "f.f_f" ID 320 TYPE COMPONENT END_GLYPH')
         self.assertEqual(
-            fea,
             "@GDEF_component = [f.f_f];\n"
             "table GDEF {\n"
             "    GlyphClassDef , , , @GDEF_component;\n"
             "} GDEF;\n",
+            fea,
         )
 
     def test_def_glyph_no_type(self):
         fea = self.parse('DEF_GLYPH "glyph20" ID 20 END_GLYPH')
-        self.assertEqual(fea, "")
+        self.assertEqual("", fea)
 
     def test_def_glyph_case_sensitive(self):
         fea = self.parse(
@@ -89,11 +89,11 @@ class ToFeaTest(unittest.TestCase):
             'DEF_GLYPH "a" ID 4 UNICODE 97 TYPE BASE END_GLYPH\n'
         )
         self.assertEqual(
-            fea,
             "@GDEF_base = [A a];\n"
             "table GDEF {\n"
             "    GlyphClassDef @GDEF_base, , , ;\n"
             "} GDEF;\n",
+            fea,
         )
 
     def test_def_group_glyphs(self):
@@ -105,10 +105,10 @@ class ToFeaTest(unittest.TestCase):
             "END_GROUP\n"
         )
         self.assertEqual(
-            fea,
             "# Glyph classes\n"
             "@aaccented = [aacute abreve acircumflex adieresis ae"
             " agrave amacron aogonek aring atilde];",
+            fea,
         )
 
     def test_def_group_groups(self):
@@ -124,11 +124,11 @@ class ToFeaTest(unittest.TestCase):
             "END_GROUP\n"
         )
         self.assertEqual(
-            fea,
             "# Glyph classes\n"
             "@Group1 = [a b c d];\n"
             "@Group2 = [e f g h];\n"
             "@TestGroup = [@Group1 @Group2];",
+            fea,
         )
 
     def test_def_group_groups_not_yet_defined(self):
@@ -150,13 +150,13 @@ class ToFeaTest(unittest.TestCase):
             "END_GROUP\n"
         )
         self.assertEqual(
-            fea,
             "# Glyph classes\n"
             "@Group1 = [a b c d];\n"
             "@Group2 = [e f g h];\n"
             "@TestGroup1 = [@Group1 @Group2];\n"
             "@TestGroup2 = [@Group2];\n"
             "@TestGroup3 = [@Group2 @Group1];",
+            fea,
         )
 
     def test_def_group_glyphs_and_group(self):
@@ -171,11 +171,11 @@ class ToFeaTest(unittest.TestCase):
             "END_GROUP"
         )
         self.assertEqual(
-            fea,
             "# Glyph classes\n"
             "@aaccented = [aacute abreve acircumflex adieresis ae"
             " agrave amacron aogonek aring atilde];\n"
             "@KERN_lc_a_2ND = [a @aaccented];",
+            fea,
         )
 
     def test_def_group_range(self):
@@ -195,7 +195,6 @@ class ToFeaTest(unittest.TestCase):
             "END_GROUP"
         )
         self.assertEqual(
-            fea,
             "# Glyph classes\n"
             "@KERN_lc_a_2ND = [a - atilde b c - cdotaccent];\n"
             "@GDEF_base = [a agrave aacute acircumflex atilde c"
@@ -203,11 +202,12 @@ class ToFeaTest(unittest.TestCase):
             "table GDEF {\n"
             "    GlyphClassDef @GDEF_base, , , ;\n"
             "} GDEF;\n",
+            fea,
         )
 
     def test_script_without_langsys(self):
         fea = self.parse('DEF_SCRIPT NAME "Latin" TAG "latn"\n' "END_SCRIPT")
-        self.assertEqual(fea, "")
+        self.assertEqual("", fea)
 
     def test_langsys_normal(self):
         fea = self.parse(
@@ -218,7 +218,7 @@ class ToFeaTest(unittest.TestCase):
             "END_LANGSYS\n"
             "END_SCRIPT"
         )
-        self.assertEqual(fea, "")
+        self.assertEqual("", fea)
 
     def test_langsys_no_script_name(self):
         fea = self.parse(
@@ -227,7 +227,7 @@ class ToFeaTest(unittest.TestCase):
             "END_LANGSYS\n"
             "END_SCRIPT"
         )
-        self.assertEqual(fea, "")
+        self.assertEqual("", fea)
 
     def test_langsys_lang_in_separate_scripts(self):
         fea = self.parse(
@@ -244,7 +244,7 @@ class ToFeaTest(unittest.TestCase):
             "END_LANGSYS\n"
             "END_SCRIPT"
         )
-        self.assertEqual(fea, "")
+        self.assertEqual("", fea)
 
     def test_langsys_no_lang_name(self):
         fea = self.parse(
@@ -253,7 +253,7 @@ class ToFeaTest(unittest.TestCase):
             "END_LANGSYS\n"
             "END_SCRIPT"
         )
-        self.assertEqual(fea, "")
+        self.assertEqual("", fea)
 
     def test_feature(self):
         fea = self.parse(
@@ -275,7 +275,6 @@ class ToFeaTest(unittest.TestCase):
             "END_SUBSTITUTION"
         )
         self.assertEqual(
-            fea,
             "\n# Lookups\n"
             "lookup fraclookup {\n"
             "    sub one slash two by one_slash_two.frac;\n"
@@ -287,6 +286,7 @@ class ToFeaTest(unittest.TestCase):
             "    language ROM exclude_dflt;\n"
             "    lookup fraclookup;\n"
             "} frac;\n",
+            fea,
         )
 
     def test_feature_sub_lookups(self):
@@ -319,7 +319,6 @@ class ToFeaTest(unittest.TestCase):
             "END_SUBSTITUTION"
         )
         self.assertEqual(
-            fea,
             "\n# Lookups\n"
             "lookup fraclookup {\n"
             "    lookupflag RightToLeft;\n"
@@ -336,6 +335,7 @@ class ToFeaTest(unittest.TestCase):
             "    language ROM exclude_dflt;\n"
             "    lookup fraclookup;\n"
             "} frac;\n",
+            fea,
         )
 
     def test_lookup_comment(self):
@@ -355,13 +355,13 @@ class ToFeaTest(unittest.TestCase):
             "END_SUBSTITUTION"
         )
         self.assertEqual(
-            fea,
             "\n# Lookups\n"
             "lookup smcp {\n"
             "    # Smallcaps lookup for testing\n"
             "    sub a by a.sc;\n"
             "    sub b by b.sc;\n"
             "} smcp;\n",
+            fea,
         )
 
     def test_substitution_single(self):
@@ -382,12 +382,12 @@ class ToFeaTest(unittest.TestCase):
             "END_SUBSTITUTION"
         )
         self.assertEqual(
-            fea,
             "\n# Lookups\n"
             "lookup smcp {\n"
             "    sub a by a.sc;\n"
             "    sub b by b.sc;\n"
             "} smcp;\n",
+            fea,
         )
 
     def test_substitution_single_in_context(self):
@@ -409,7 +409,6 @@ class ToFeaTest(unittest.TestCase):
             "END_SUBSTITUTION"
         )
         self.assertEqual(
-            fea,
             "# Glyph classes\n"
             "@Denominators = [one.dnom two.dnom];\n"
             "\n"
@@ -418,6 +417,7 @@ class ToFeaTest(unittest.TestCase):
             "    sub [@Denominators fraction] one' by one.dnom;\n"
             "    sub [@Denominators fraction] two' by two.dnom;\n"
             "} fracdnom;\n",
+            fea,
         )
 
     def test_substitution_single_in_contexts(self):
@@ -441,7 +441,6 @@ class ToFeaTest(unittest.TestCase):
             "END_SUBSTITUTION"
         )
         self.assertEqual(
-            fea,
             "# Glyph classes\n"
             "@Hebrew = [uni05D0 uni05D1];\n"
             "\n"
@@ -450,6 +449,7 @@ class ToFeaTest(unittest.TestCase):
             "    sub dollar' @Hebrew one.Hebr by dollar.Hebr;\n"
             "    sub @Hebrew one.Hebr dollar' by dollar.Hebr;\n"
             "} HebrewCurrency;\n",
+            fea,
         )
 
     def test_substitution_single_except_context(self):
@@ -473,7 +473,6 @@ class ToFeaTest(unittest.TestCase):
             "END_SUBSTITUTION"
         )
         self.assertEqual(
-            fea,
             "# Glyph classes\n"
             "@Hebrew = [uni05D0 uni05D1];\n"
             "\n"
@@ -482,6 +481,7 @@ class ToFeaTest(unittest.TestCase):
             "    ignore sub dollar' @Hebrew one.Hebr;\n"
             "    sub @Hebrew one.Hebr dollar' by dollar.Hebr;\n"
             "} HebrewCurrency;\n",
+            fea,
         )
 
     def test_substitution_skip_base(self):
@@ -499,7 +499,6 @@ class ToFeaTest(unittest.TestCase):
             "END_SUBSTITUTION"
         )
         self.assertEqual(
-            fea,
             "# Glyph classes\n"
             "@SomeMarks = [marka markb];\n"
             "\n"
@@ -508,6 +507,7 @@ class ToFeaTest(unittest.TestCase):
             "    lookupflag IgnoreBaseGlyphs;\n"
             "    sub A by A.c2sc;\n"
             "} SomeSub;\n",
+            fea,
         )
 
     def test_substitution_process_base(self):
@@ -525,7 +525,6 @@ class ToFeaTest(unittest.TestCase):
             "END_SUBSTITUTION"
         )
         self.assertEqual(
-            fea,
             "# Glyph classes\n"
             "@SomeMarks = [marka markb];\n"
             "\n"
@@ -533,6 +532,7 @@ class ToFeaTest(unittest.TestCase):
             "lookup SomeSub {\n"
             "    sub A by A.c2sc;\n"
             "} SomeSub;\n",
+            fea,
         )
 
     def test_substitution_process_marks_all(self):
@@ -550,7 +550,6 @@ class ToFeaTest(unittest.TestCase):
             "END_SUBSTITUTION"
         )
         self.assertEqual(
-            fea,
             "# Glyph classes\n"
             "@SomeMarks = [marka markb];\n"
             "\n"
@@ -558,6 +557,7 @@ class ToFeaTest(unittest.TestCase):
             "lookup SomeSub {\n"
             "    sub A by A.c2sc;\n"
             "} SomeSub;\n",
+            fea,
         )
 
     def test_substitution_process_marks_none(self):
@@ -575,7 +575,6 @@ class ToFeaTest(unittest.TestCase):
             "END_SUBSTITUTION"
         )
         self.assertEqual(
-            fea,
             "# Glyph classes\n"
             "@SomeMarks = [marka markb];\n"
             "\n"
@@ -584,6 +583,7 @@ class ToFeaTest(unittest.TestCase):
             "    lookupflag IgnoreMarks;\n"
             "    sub A by A.c2sc;\n"
             "} SomeSub;\n",
+            fea,
         )
 
     def test_substitution_skip_marks(self):
@@ -601,7 +601,6 @@ class ToFeaTest(unittest.TestCase):
             "END_SUBSTITUTION"
         )
         self.assertEqual(
-            fea,
             "# Glyph classes\n"
             "@SomeMarks = [marka markb];\n"
             "\n"
@@ -610,6 +609,7 @@ class ToFeaTest(unittest.TestCase):
             "    lookupflag IgnoreMarks;\n"
             "    sub A by A.c2sc;\n"
             "} SomeSub;\n",
+            fea,
         )
 
     def test_substitution_mark_attachment(self):
@@ -626,7 +626,6 @@ class ToFeaTest(unittest.TestCase):
             "END_SUBSTITUTION"
         )
         self.assertEqual(
-            fea,
             "# Glyph classes\n"
             "@SomeMarks = [acutecmb gravecmb];\n"
             "\n"
@@ -636,6 +635,7 @@ class ToFeaTest(unittest.TestCase):
             " @SomeMarks;\n"
             "    sub A by A.c2sc;\n"
             "} SomeSub;\n",
+            fea,
         )
 
     def test_substitution_mark_glyph_set(self):
@@ -652,7 +652,6 @@ class ToFeaTest(unittest.TestCase):
             "END_SUBSTITUTION"
         )
         self.assertEqual(
-            fea,
             "# Glyph classes\n"
             "@SomeMarks = [acutecmb gravecmb];\n"
             "\n"
@@ -662,6 +661,7 @@ class ToFeaTest(unittest.TestCase):
             " @SomeMarks;\n"
             "    sub A by A.c2sc;\n"
             "} SomeSub;\n",
+            fea,
         )
 
     def test_substitution_process_all_marks(self):
@@ -678,7 +678,6 @@ class ToFeaTest(unittest.TestCase):
             "END_SUBSTITUTION"
         )
         self.assertEqual(
-            fea,
             "# Glyph classes\n"
             "@SomeMarks = [acutecmb gravecmb];\n"
             "\n"
@@ -687,6 +686,7 @@ class ToFeaTest(unittest.TestCase):
             "    lookupflag RightToLeft;\n"
             "    sub A by A.c2sc;\n"
             "} SomeSub;\n",
+            fea,
         )
 
     def test_substitution_no_reversal(self):
@@ -704,11 +704,11 @@ class ToFeaTest(unittest.TestCase):
             "END_SUBSTITUTION"
         )
         self.assertEqual(
-            fea,
             "\n# Lookups\n"
             "lookup Lookup {\n"
             "    sub a' [a b] by a.alt;\n"
             "} Lookup;\n",
+            fea,
         )
 
     def test_substitution_reversal(self):
@@ -731,7 +731,6 @@ class ToFeaTest(unittest.TestCase):
             "END_SUBSTITUTION"
         )
         self.assertEqual(
-            fea,
             "# Glyph classes\n"
             "@DFLT_Num_standardFigures = [zero one two];\n"
             "@DFLT_Num_numerators = [zero.numr one.numr two.numr];\n"
@@ -740,6 +739,7 @@ class ToFeaTest(unittest.TestCase):
             "lookup RevLookup {\n"
             "    rsub @DFLT_Num_standardFigures' [a b] by @DFLT_Num_numerators;\n"
             "} RevLookup;\n",
+            fea,
         )
 
     def test_substitution_single_to_multiple(self):
@@ -758,12 +758,12 @@ class ToFeaTest(unittest.TestCase):
             "END_SUBSTITUTION"
         )
         self.assertEqual(
-            fea,
             "\n# Lookups\n"
             "lookup ccmp {\n"
             "    sub aacute by a acutecomb;\n"
             "    sub agrave by a gravecomb;\n"
             "} ccmp;\n",
+            fea,
         )
 
     def test_substitution_multiple_to_single(self):
@@ -782,12 +782,12 @@ class ToFeaTest(unittest.TestCase):
             "END_SUBSTITUTION"
         )
         self.assertEqual(
-            fea,
             "\n# Lookups\n"
             "lookup liga {\n"
             "    sub f i by f_i;\n"
             "    sub f t by f_t;\n"
             "} liga;\n",
+            fea,
         )
 
     def test_substitution_reverse_chaining_single(self):
@@ -807,11 +807,11 @@ class ToFeaTest(unittest.TestCase):
             "END_SUBSTITUTION"
         )
         self.assertEqual(
-            fea,
             "\n# Lookups\n"
             "lookup numr {\n"
             "    rsub zero - nine' [fraction zero.numr - nine.numr] by zero.numr - nine.numr;\n"
             "} numr;\n",
+            fea,
         )
 
     # GPOS
@@ -841,7 +841,6 @@ class ToFeaTest(unittest.TestCase):
             "AT POS DX 215 DY 450 END_POS END_ANCHOR\n"
         )
         self.assertEqual(
-            fea,
             "\n# Mark classes\n"
             "markClass acutecomb <anchor 0 450> @top;\n"
             "markClass gravecomb <anchor 0 450> @top;\n"
@@ -854,6 +853,7 @@ class ToFeaTest(unittest.TestCase):
             "    pos base e\n"
             "        <anchor 215 450> mark @top;\n"
             "} anchor_top;\n",
+            fea,
         )
 
     def test_position_attach_mkmk(self):
@@ -875,7 +875,6 @@ class ToFeaTest(unittest.TestCase):
             "AT POS DX 210 DY 450 END_POS END_ANCHOR\n"
         )
         self.assertEqual(
-            fea,
             "\n# Mark classes\n"
             "markClass acutecomb <anchor 0 450> @top;\n"
             "\n"
@@ -890,6 +889,7 @@ class ToFeaTest(unittest.TestCase):
             "table GDEF {\n"
             "    GlyphClassDef , , @GDEF_mark, ;\n"
             "} GDEF;\n",
+            fea,
         )
 
     def test_position_attach_in_context(self):
@@ -911,7 +911,6 @@ class ToFeaTest(unittest.TestCase):
             "AT POS DX 210 DY 450 END_POS END_ANCHOR\n"
         )
         self.assertEqual(
-            fea,
             "\n# Mark classes\n"
             "markClass acutecomb <anchor 0 450> @top;\n"
             "markClass gravecomb <anchor 0 450> @top;\n"
@@ -927,6 +926,7 @@ class ToFeaTest(unittest.TestCase):
             "    ignore pos a [acutecomb gravecomb]';\n"
             "    pos [acutecomb gravecomb]' lookup test_target;\n"
             "} test;\n",
+            fea,
         )
 
     def test_position_attach_cursive(self):
@@ -946,7 +946,6 @@ class ToFeaTest(unittest.TestCase):
             'DEF_ANCHOR "entry" ON 3 GLYPH c COMPONENT 1 AT POS END_POS END_ANCHOR\n'
         )
         self.assertEqual(
-            fea,
             "\n# Lookups\n"
             "lookup SomeLookup {\n"
             "    lookupflag RightToLeft;\n"
@@ -954,6 +953,7 @@ class ToFeaTest(unittest.TestCase):
             "    pos cursive c <anchor 0 0> <anchor NULL>;\n"
             "    pos cursive b <anchor NULL> <anchor 0 0>;\n"
             "} SomeLookup;\n",
+            fea,
         )
 
     def test_position_adjust_pair(self):
@@ -972,13 +972,13 @@ class ToFeaTest(unittest.TestCase):
             "END_POSITION\n"
         )
         self.assertEqual(
-            fea,
             "\n# Lookups\n"
             "lookup kern1 {\n"
             "    lookupflag RightToLeft;\n"
             "    enum pos A V -30;\n"
             "    enum pos V A -25;\n"
             "} kern1;\n",
+            fea,
         )
 
     def test_position_adjust_pair_in_context(self):
@@ -995,7 +995,6 @@ class ToFeaTest(unittest.TestCase):
             "END_POSITION\n"
         )
         self.assertEqual(
-            fea,
             "\n# Lookups\n"
             "lookup kern1_target {\n"
             "    enum pos V A -25;\n"
@@ -1005,6 +1004,7 @@ class ToFeaTest(unittest.TestCase):
             "    ignore pos A V' A';\n"
             "    pos V' lookup kern1_target A' lookup kern1_target;\n"
             "} kern1;\n",
+            fea,
         )
 
     def test_position_adjust_single(self):
@@ -1021,12 +1021,12 @@ class ToFeaTest(unittest.TestCase):
             "END_POSITION\n"
         )
         self.assertEqual(
-            fea,
             "\n# Lookups\n"
             "lookup TestLookup {\n"
             "    pos glyph1 <123 0 0 0>;\n"
             "    pos glyph2 <456 0 0 0>;\n"
             "} TestLookup;\n",
+            fea,
         )
 
     def test_position_adjust_single_in_context(self):
@@ -1045,7 +1045,6 @@ class ToFeaTest(unittest.TestCase):
             "END_POSITION\n"
         )
         self.assertEqual(
-            fea,
             "\n# Lookups\n"
             "lookup TestLookup_target {\n"
             "    pos glyph1 <123 0 0 0>;\n"
@@ -1056,6 +1055,7 @@ class ToFeaTest(unittest.TestCase):
             "    ignore pos leftGlyph [glyph1 glyph2]' rightGlyph;\n"
             "    pos [glyph1 glyph2]' lookup TestLookup_target;\n"
             "} TestLookup;\n",
+            fea,
         )
 
     def test_def_anchor(self):
@@ -1075,7 +1075,6 @@ class ToFeaTest(unittest.TestCase):
             "COMPONENT 1 AT POS DX 0 DY 450 END_POS END_ANCHOR"
         )
         self.assertEqual(
-            fea,
             "\n# Mark classes\n"
             "markClass acutecomb <anchor 0 450> @top;\n"
             "\n"
@@ -1084,6 +1083,7 @@ class ToFeaTest(unittest.TestCase):
             "    pos base a\n"
             "        <anchor 250 450> mark @top;\n"
             "} TestLookup;\n",
+            fea,
         )
 
     def test_def_anchor_multi_component(self):
@@ -1106,7 +1106,6 @@ class ToFeaTest(unittest.TestCase):
             "COMPONENT 1 AT POS  END_POS END_ANCHOR"
         )
         self.assertEqual(
-            fea,
             "\n# Mark classes\n"
             "markClass acutecomb <anchor 0 0> @top;\n"
             "\n"
@@ -1122,6 +1121,7 @@ class ToFeaTest(unittest.TestCase):
             "table GDEF {\n"
             "    GlyphClassDef , @GDEF_ligature, , ;\n"
             "} GDEF;\n",
+            fea,
         )
 
     def test_anchor_adjust_device(self):
@@ -1131,10 +1131,10 @@ class ToFeaTest(unittest.TestCase):
             "ADJUST_BY 56 AT 78 END_POS END_ANCHOR"
         )
         self.assertEqual(
-            fea,
             "\n# Mark classes\n"
             "#markClass diacglyph <anchor 0 456 <device NULL>"
             " <device 34 12, 78 56>> @top;",
+            fea,
         )
 
     def test_use_extension(self):
@@ -1154,18 +1154,18 @@ class ToFeaTest(unittest.TestCase):
             "COMPILER_USEEXTENSIONLOOKUPS\n"
         )
         self.assertEqual(
-            fea,
             "\n# Lookups\n"
             "lookup kern1 useExtension {\n"
             "    enum pos A V -30;\n"
             "    enum pos V A -25;\n"
             "} kern1;\n",
+            fea,
         )
 
     def test_unsupported_compiler_flags(self):
         with self.assertLogs(level="WARNING") as logs:
             fea = self.parse("CMAP_FORMAT 0 3 4")
-            self.assertEqual(fea, "")
+            self.assertEqual("", fea)
         self.assertEqual(
             logs.output,
             [
@@ -1183,7 +1183,6 @@ class ToFeaTest(unittest.TestCase):
             "AS_POSITION ADJUST_PAIR END_ADJUST END_POSITION\n"
         )
         self.assertEqual(
-            fea,
             "\n# Lookups\n"
             "lookup Test_Lookup {\n"
             "    \n"
@@ -1192,6 +1191,7 @@ class ToFeaTest(unittest.TestCase):
             "lookup Test_Lookup_ {\n"
             "    \n"
             "} Test_Lookup_;\n",
+            fea,
         )
 
     def test_sanitize_group_name(self):
@@ -1204,10 +1204,10 @@ class ToFeaTest(unittest.TestCase):
             "END_GROUP\n"
         )
         self.assertEqual(
-            fea,
             "# Glyph classes\n"
             "@aaccented_glyphs = [aacute abreve];\n"
             "@aaccented_glyphs_ = [aacute abreve];",
+            fea,
         )
 
     def test_cli_vtp(self):
