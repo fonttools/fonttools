@@ -258,6 +258,12 @@ class VoltToFea:
             name = group
         return ast.GlyphClassName(self._glyphclasses[name.lower()])
 
+    def _glyphSet(self, item):
+        return [
+            (self._glyphName(x) if isinstance(x, (str, VAst.GlyphName)) else x)
+            for x in item.glyphSet()
+        ]
+
     def _coverage(self, coverage, flatten=False):
         items = []
         for item in coverage:
@@ -266,37 +272,38 @@ class VoltToFea:
             elif isinstance(item, VAst.GroupName):
                 items.append(self._groupName(item))
             elif isinstance(item, VAst.Enum):
+                item = self._coverage(item.enum, flatten=True)
                 if flatten:
-                    items.extend(item.glyphSet())
+                    items.extend(item)
                 else:
-                    items.append(self._enum(item))
+                    items.append(ast.GlyphClass(item))
             elif isinstance(item, VAst.Range):
+                item = self._glyphSet(item)
                 if flatten:
-                    items.extend(item.glyphSet())
+                    items.extend(item)
                 else:
-                    items.append(ast.GlyphClass(item.glyphSet()))
+                    items.append(ast.GlyphClass(item))
             else:
                 raise NotImplementedError(item)
         return items
 
-    def _enum(self, enum):
-        return ast.GlyphClass(self._coverage(enum.enum, flatten=True))
-
     def _context(self, context):
         out = []
         for item in context:
-            coverage = self._coverage(item)
-            if not isinstance(coverage, (tuple, list)):
-                coverage = [coverage]
-            out.extend(coverage)
+            coverage = self._coverage(item, flatten=True)
+            if len(coverage) > 1:
+                coverage = ast.GlyphClass(coverage)
+            else:
+                coverage = coverage[0]
+            out.append(coverage)
         return out
 
     def _groupDefinition(self, group):
         name = self._className(group.name)
-        glyphs = self._enum(group.enum)
-        glyphclass = ast.GlyphClassDefinition(name, glyphs)
-
-        self._glyphclasses[group.name.lower()] = glyphclass
+        glyphs = self._coverage(group.enum.enum, flatten=True)
+        glyphclass = ast.GlyphClass(glyphs)
+        classdef = ast.GlyphClassDefinition(name, glyphclass)
+        self._glyphclasses[group.name.lower()] = classdef
 
     def _glyphDefinition(self, glyph):
         try:
@@ -539,7 +546,7 @@ class VoltToFea:
         elif isinstance(pos, VAst.PositionAdjustSingleDefinition):
             glyphs = [ast.GlyphClass()]
             for a, b in pos.adjust_single:
-                glyph = self._coverage(a)
+                glyph = self._coverage(a, flatten=True)
                 glyphs[0].extend(glyph)
 
             if ignore:
@@ -552,7 +559,7 @@ class VoltToFea:
         elif isinstance(pos, VAst.PositionAttachDefinition):
             glyphs = [ast.GlyphClass()]
             for coverage, _ in pos.coverage_to:
-                glyphs[0].extend(self._coverage(coverage))
+                glyphs[0].extend(self._coverage(coverage, flatten=True))
 
             if ignore:
                 statement = ast.IgnorePosStatement([(prefix, glyphs, suffix)])

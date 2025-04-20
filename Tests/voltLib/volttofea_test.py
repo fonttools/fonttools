@@ -1550,6 +1550,60 @@ class ToFeaTest(unittest.TestCase):
             fea,
         )
 
+    def test_nested_enum(self):
+        fea = self.parse(
+            """
+            DEF_GLYPH "a" ID 1 END_GLYPH
+            DEF_GLYPH "b" ID 2 END_GLYPH
+            DEF_GLYPH "c" ID 3 END_GLYPH
+            DEF_GLYPH "d" ID 4 END_GLYPH
+            DEF_GLYPH "e" ID 5 END_GLYPH
+            DEF_GLYPH "f" ID 6 END_GLYPH
+            DEF_GLYPH "g" ID 7 END_GLYPH
+            DEF_GLYPH "h" ID 8 END_GLYPH
+            DEF_GLYPH "i" ID 9 END_GLYPH
+            DEF_GLYPH "j" ID 10 END_GLYPH
+            DEF_GLYPH "k" ID 11 END_GLYPH
+            DEF_GLYPH "l" ID 12 END_GLYPH
+            DEF_GLYPH "m" ID 13 END_GLYPH
+            DEF_GLYPH "n" ID 14 END_GLYPH
+            DEF_GLYPH "o" ID 15 END_GLYPH
+            DEF_GLYPH "p" ID 16 END_GLYPH
+            DEF_GLYPH "q" ID 17 END_GLYPH
+            DEF_LOOKUP "lookup" PROCESS_BASE SKIP_MARKS DIRECTION RTL
+            IN_CONTEXT
+              RIGHT GLYPH "space"
+            END_CONTEXT
+            AS_POSITION
+            ADJUST_SINGLE
+              ENUM GLYPH "a" GLYPH "b" END_ENUM BY POS ADV -10 DX -10 END_POS
+              ENUM GLYPH "c" GLYPH "d" END_ENUM BY POS ADV -20 DX -20 END_POS
+              ENUM RANGE "e" TO "f" GLYPH "g" RANGE "h" TO "k" GLYPH "l" END_ENUM BY POS ADV -30 DX -40 END_POS
+              RANGE "m" TO "q" BY POS ADV -50 DX -60 END_POS
+            END_ADJUST
+            END_POSITION
+            """
+        )
+        self.assertEqual(
+            dedent(
+                """
+                # Lookups
+                lookup lookup_target {
+                    pos [a b] <-10 0 -10 0>;
+                    pos [c d] <-20 0 -20 0>;
+                    pos [e f g h i j k l] <-40 0 -30 0>;
+                    pos [m n o p q] <-60 0 -50 0>;
+                } lookup_target;
+
+                lookup lookup {
+                    lookupflag RightToLeft IgnoreMarks;
+                    pos [a b c d e f g h i j k l m n o p q]' lookup lookup_target space;
+                } lookup;
+                """
+            ),
+            fea,
+        )
+
     def test_use_extension(self):
         fea = self.parse(
             'DEF_LOOKUP "kern1" PROCESS_BASE PROCESS_MARKS ALL '
