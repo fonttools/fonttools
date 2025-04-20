@@ -1088,17 +1088,25 @@ class MarkLigPosBuilder(LookupBuilder):
         LookupBuilder.__init__(self, font, location, "GPOS", 5)
         self.marks = {}  # glyphName -> (markClassName, anchor)
         self.ligatures = {}  # glyphName -> [{markClassName: anchor}, ...]
+        self.subtables_ = []
+
+    def get_subtables_(self):
+        subtables_ = self.subtables_
+        if self.ligatures or self.marks:
+            subtables_.append((self.marks, self.ligatures))
+        return subtables_
 
     def equals(self, other):
         return (
             LookupBuilder.equals(self, other)
-            and self.marks == other.marks
-            and self.ligatures == other.ligatures
+            and self.get_subtables_() == other.get_subtables_()
         )
 
     def inferGlyphClasses(self):
-        result = {glyph: 2 for glyph in self.ligatures}
-        result.update({glyph: 3 for glyph in self.marks})
+        result = {}
+        for marks, ligatures in self.get_subtables_():
+            result.update({glyph: 2 for glyph in ligatures})
+            result.update({glyph: 3 for glyph in marks})
         return result
 
     def build(self):
@@ -1108,17 +1116,25 @@ class MarkLigPosBuilder(LookupBuilder):
             An ``otTables.Lookup`` object representing the mark-to-ligature
             positioning lookup.
         """
-        markClasses = self.buildMarkClasses_(self.marks)
-        marks = {
-            mark: (markClasses[mc], anchor) for mark, (mc, anchor) in self.marks.items()
-        }
-        ligs = {}
-        for lig, components in self.ligatures.items():
-            ligs[lig] = []
-            for c in components:
-                ligs[lig].append({markClasses[mc]: a for mc, a in c.items()})
-        subtables = buildMarkLigPos(marks, ligs, self.glyphMap)
+        subtables = []
+        for subtable in self.get_subtables_():
+            markClasses = self.buildMarkClasses_(subtable[0])
+            marks = {
+                mark: (markClasses[mc], anchor)
+                for mark, (mc, anchor) in subtable[0].items()
+            }
+            ligs = {}
+            for lig, components in subtable[1].items():
+                ligs[lig] = []
+                for c in components:
+                    ligs[lig].append({markClasses[mc]: a for mc, a in c.items()})
+            subtables.append(buildMarkLigPosSubtable(marks, ligs, self.glyphMap))
         return self.buildLookup_(subtables)
+
+    def add_subtable_break(self, location):
+        self.subtables_.append((self.marks, self.ligatures))
+        self.marks = {}
+        self.ligatures = {}
 
 
 class MarkMarkPosBuilder(LookupBuilder):
