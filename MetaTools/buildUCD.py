@@ -4,23 +4,12 @@ Tools to parse data files from the Unicode Character Database.
 """
 
 
-try:
-    from urllib.request import urlopen
-except ImportError:
-    from urllib2 import urlopen
-from contextlib import closing, contextmanager
+from urllib.request import urlopen
 import re
-from codecs import iterdecode
 import logging
 import os
-from io import open
 from os.path import abspath, dirname, join as pjoin, pardir, sep
-
-
-try:  # pragma: no cover
-    unicode
-except NameError:
-    unicode = str
+from typing import List
 
 
 UNIDATA_URL = "https://unicode.org/Public/UNIDATA/"
@@ -40,27 +29,34 @@ MAX_UNICODE = 0x10FFFF
 log = logging.getLogger()
 
 
-@contextmanager
-def open_unidata_file(filename):
-    """Open a text file from https://unicode.org/Public/UNIDATA/"""
-    url = UNIDATA_URL + filename
-    with closing(urlopen(url)) as response:
-        yield iterdecode(response, encoding="utf-8")
+def read_unidata_file(filename, local_ucd_path=None) -> List[str]:
+    """Read a UCD file from https://unicode.org or optionally from a local directory.
+
+    Return the list of lines.
+    """
+    if local_ucd_path is not None:
+        with open(pjoin(local_ucd_path, filename), "r", encoding="utf-8") as f:
+            return f.readlines()
+    else:
+        url = UNIDATA_URL + filename
+        with urlopen(url) as response:
+            return response.read().decode("utf-8").splitlines(keepends=True)
 
 
-def parse_unidata_header(infile):
+def parse_unidata_header(file_lines: List[str]):
     """Read the top header of data files, until the first line
     that does not start with '#'.
     """
     header = []
-    line = next(infile)
-    while line.startswith("#"):
-        header.append(line)
-        line = next(infile)
+    for line in file_lines:
+        if line.startswith("#"):
+            header.append(line)
+        else:
+            break
     return "".join(header)
 
 
-def parse_range_properties(infile, default=None, is_set=False):
+def parse_range_properties(infile: List[str], default=None, is_set=False):
     """Parse a Unicode data file containing a column with one character or
     a range of characters, and another column containing a property value
     separated by a semicolon. Comments after '#' are ignored.
@@ -94,9 +90,6 @@ def parse_range_properties(infile, default=None, is_set=False):
         ranges.append((first, last, data))
 
     ranges.sort()
-
-    if isinstance(default, unicode):
-        default = str(default)
 
     # fill the gaps between explicitly defined ranges
     last_start, last_end = -1, -1
@@ -180,14 +173,12 @@ def build_ranges(
 
     if local_ucd:
         log.info("loading '%s' from local directory '%s'", filename, local_ucd)
-        cm = open(pjoin(local_ucd, filename), "r", encoding="utf-8")
     else:
         log.info("downloading '%s' from '%s'", filename, UNIDATA_URL)
-        cm = open_unidata_file(filename)
 
-    with cm as f:
-        header = parse_unidata_header(f)
-        ranges = parse_range_properties(f, default=default, is_set=is_set)
+    file_lines = read_unidata_file(filename, local_ucd)
+    header = parse_unidata_header(file_lines)
+    ranges = parse_range_properties(file_lines, default=default, is_set=is_set)
 
     if aliases:
         reversed_aliases = {normalize(v[0]): k for k, v in aliases.items()}
@@ -202,7 +193,7 @@ def build_ranges(
         f.write("# Source: {}{}\n".format(UNIDATA_URL, filename))
         f.write("# License: {}\n".format(UNIDATA_LICENSE_URL))
         f.write("#\n")
-        f.write(header + "\n\n")
+        f.write(header + "\n")
 
         f.write("RANGES = [\n")
         for first, last, value in ranges:
@@ -260,14 +251,12 @@ def parse_property_value_aliases(property_tag, local_ucd=None):
     filename = "PropertyValueAliases.txt"
     if local_ucd:
         log.info("loading '%s' from local directory '%s'", filename, local_ucd)
-        cm = open(pjoin(local_ucd, filename), "r", encoding="utf-8")
     else:
         log.info("downloading '%s' from '%s'", filename, UNIDATA_URL)
-        cm = open_unidata_file(filename)
 
-    with cm as f:
-        header = parse_unidata_header(f)
-        data = parse_semicolon_separated_data(f)
+    file_lines = read_unidata_file(filename, local_ucd)
+    header = parse_unidata_header(file_lines)
+    data = parse_semicolon_separated_data(file_lines)
 
     aliases = {item[1]: item[2:] for item in data if item[0] == property_tag}
 

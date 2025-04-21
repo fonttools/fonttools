@@ -2,7 +2,13 @@
 otlLib: Routines for working with OpenType Layout
 #################################################
 
-The ``fontTools.otlLib`` library provides routines to help you create the
+.. currentmodule:: fontTools.otlLib
+
+.. contents:: On this page:
+    :local:
+       
+
+The :mod:`fontTools.otlLib` library provides routines to help you create the
 subtables and other data structures you need when you are editing a font's
 ``GSUB`` and ``GPOS`` tables: substitution and positioning rules, anchors,
 lookups, coverage tables and so on.
@@ -107,3 +113,11 @@ STAT Table Builder
 .. currentmodule:: fontTools.otlLib.builder
 
 .. autofunction:: buildStatTable
+
+------------------
+MATH Table Builder
+------------------
+
+.. currentmodule:: fontTools.otlLib.builder
+
+.. autofunction:: buildMathTable

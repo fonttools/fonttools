@@ -1,3 +1,9 @@
+"""
+    designSpaceDocument
+
+    - Read and write designspace files
+"""
+
 from __future__ import annotations
 
 import collections
@@ -15,11 +21,6 @@ from fontTools.misc import plistlib
 from fontTools.misc.loggingTools import LogMixin
 from fontTools.misc.textTools import tobytes, tostr
 
-"""
-    designSpaceDocument
-
-    - read and write designspace files
-"""
 
 __all__ = [
     "AxisDescriptor",
@@ -1595,7 +1596,7 @@ class BaseDocWriter(object):
                 mapElement.attrib["input"] = self.intOrFloat(inputValue)
                 mapElement.attrib["output"] = self.intOrFloat(outputValue)
                 axisElement.append(mapElement)
-        if axisObject.axisOrdering or axisObject.axisLabels:
+        if axisObject.axisOrdering is not None or axisObject.axisLabels:
             labelsElement = ET.Element("labels")
             if axisObject.axisOrdering is not None:
                 labelsElement.attrib["ordering"] = str(axisObject.axisOrdering)

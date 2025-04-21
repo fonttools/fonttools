@@ -2,6 +2,7 @@ from fontTools.misc.testTools import parseXML
 from fontTools.misc.textTools import deHexStr
 from fontTools.misc.xmlWriter import XMLWriter
 from fontTools.misc.fixedTools import floatToFixed as fl2fi
+from fontTools.pens.statisticsPen import StatisticsPen
 from fontTools.ttLib import TTFont, TTLibError
 import fontTools.ttLib.tables.otTables as otTables
 from fontTools.ttLib.tables._a_v_a_r import table__a_v_a_r
@@ -9,8 +10,11 @@ from fontTools.ttLib.tables._f_v_a_r import table__f_v_a_r, Axis
 import fontTools.varLib.models as models
 import fontTools.varLib.varStore as varStore
 from io import BytesIO
+import os
 import unittest
 
+
+DATA_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "data")
 
 TEST_DATA = deHexStr(
     "00 01 00 00 00 00 00 02 "
@@ -100,7 +104,7 @@ class AxisVariationTableTest(unittest.TestCase):
 
 
 class Avar2Test(unittest.TestCase):
-    def test(self):
+    def test_roundtrip(self):
         axisTags = ["wght", "wdth"]
         fvar = table__f_v_a_r()
         for tag in axisTags:
@@ -172,6 +176,28 @@ class Avar2Test(unittest.TestCase):
             avar.fromXML(name, attrs, content, ttFont=TTFont())
         assert avar.table.VarStore.VarRegionList.RegionAxisCount == 2
         assert avar.table.VarStore.VarRegionList.RegionCount == 1
+
+    def test_ttGlyphSet(self):
+        ttf = os.path.join(DATA_DIR, "Amstelvar-avar2.subset.ttf")
+        font = TTFont(ttf)
+
+        regular = font.getGlyphSet()
+        black = font.getGlyphSet(location={"wght": 900})
+        expanded = font.getGlyphSet(location={"wdth": 125})
+
+        regularStats = StatisticsPen()
+        blackStats = StatisticsPen()
+        expandedStats = StatisticsPen()
+
+        for glyph in "Test":
+            regular[glyph].draw(regularStats)
+            black[glyph].draw(blackStats)
+            expanded[glyph].draw(expandedStats)
+
+        assert abs(regularStats.area) < abs(blackStats.area)
+        assert abs(expandedStats.area) < abs(blackStats.area)
+
+        assert regularStats.meanX < expandedStats.meanX
 
 
 if __name__ == "__main__":

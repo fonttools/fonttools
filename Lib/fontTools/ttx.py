@@ -101,9 +101,15 @@ Compile options
 --with-zopfli
              Use Zopfli instead of Zlib to compress WOFF. The Python
              extension is available at https://pypi.python.org/pypi/zopfli
+--optimize-font-speed
+             Enable optimizations that prioritize speed over file size.
+             This mainly affects how glyf t able and gvar / VARC tables are
+             compiled. The produced fonts will be larger, but rendering
+             performance will be improved with HarfBuzz and other text
+             layout engines.
 """
 
-from fontTools.ttLib import TTFont, TTLibError
+from fontTools.ttLib import OPTIMIZE_FONT_SPEED, TTFont, TTLibError
 from fontTools.misc.macCreatorType import getMacCreatorAndType
 from fontTools.unicode import setUnicodeData
 from fontTools.misc.textTools import Tag, tostr
@@ -141,6 +147,7 @@ class Options(object):
     recalcTimestamp = None
     flavor = None
     useZopfli = False
+    optimizeFontSpeed = False
 
     def __init__(self, rawOptions, numFiles):
         self.onlyTables = []
@@ -229,6 +236,8 @@ class Options(object):
                 self.flavor = value
             elif option == "--with-zopfli":
                 self.useZopfli = True
+            elif option == "--optimize-font-speed":
+                self.optimizeFontSpeed = True
         if self.verbose and self.quiet:
             raise getopt.GetoptError("-q and -v options are mutually exclusive")
         if self.verbose:
@@ -324,6 +333,8 @@ def ttCompile(input, output, options):
         recalcBBoxes=options.recalcBBoxes,
         recalcTimestamp=options.recalcTimestamp,
     )
+    if options.optimizeFontSpeed:
+        ttf.cfg[OPTIMIZE_FONT_SPEED] = options.optimizeFontSpeed
     ttf.importXML(input)
 
     if options.recalcTimestamp is None and "head" in ttf and input is not sys.stdin:
@@ -375,7 +386,7 @@ def guessFileType(fileName):
 
 
 def parseOptions(args):
-    rawOptions, files = getopt.getopt(
+    rawOptions, files = getopt.gnu_getopt(
         args,
         "ld:o:fvqht:x:sgim:z:baey:",
         [
@@ -386,6 +397,7 @@ def parseOptions(args):
             "version",
             "with-zopfli",
             "newline=",
+            "optimize-font-speed",
         ],
     )
 

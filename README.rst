@@ -8,7 +8,7 @@ What is this?
   fonts to and from an XML text format, which is also called TTX. It
   supports TrueType, OpenType, AFM and to an extent Type 1 and some
   Mac-specific formats. The project has an `MIT open-source
-  licence <LICENSE>`__.
+  license <LICENSE>`__.
 | Among other things this means you can use it free of charge.
 
 `User documentation <https://fonttools.readthedocs.io/en/latest/>`_ and
@@ -232,7 +232,8 @@ How to make a new release
 2) Use semantic versioning to decide whether the new release will be a 'major',
    'minor' or 'patch' release. It's usually one of the latter two, depending on
    whether new backward compatible APIs were added, or simply some bugs were fixed.
-3) Run ``python setup.py release`` command from the tip of the ``main`` branch.
+3) From inside a venv, first do ``pip install -r dev-requirements.txt``, then run
+   the ``python setup.py release`` command from the tip of the ``main`` branch.
    By default this bumps the third or 'patch' digit only, unless you pass ``--major``
    or ``--minor`` to bump respectively the first or second digit.
    This bumps the package version string, extracts the changes since the latest
@@ -254,7 +255,7 @@ How to make a new release
    automate that too.
 
 
-Acknowledgements
+Acknowledgments
 ~~~~~~~~~~~~~~~~
 
 In alphabetical order:
@@ -265,7 +266,7 @@ Vincent Connare, David Corbett, Simon Cozens, Dave Crossland, Simon Daniels,
 Peter Dekkers, Behdad Esfahbod, Behnam Esfahbod, Hannes Famira, Sam Fishman,
 Matt Fontaine, Takaaki Fuji, Rob Hagemans, Yannis Haralambous, Greg Hitchcock,
 Jeremie Hornus, Khaled Hosny, John Hudson, Denis Moyogo Jacquerye, Jack Jansen,
-Tom Kacvinsky, Jens Kutilek, Antoine Leca, Werner Lemberg, Tal Leming, Peter
+Tom Kacvinsky, Jens Kutilek, Antoine Leca, Werner Lemberg, Tal Leming, Liang Hai, Peter
 Lofting, Cosimo Lupo, Olli Meier, Masaya Nakamura, Dave Opstad, Laurence Penney,
 Roozbeh Pournader, Garret Rieger, Read Roberts, Colin Rofls, Guido van Rossum,
 Just van Rossum, Andreas Seidel, Georg Seifert, Chris Simpkins, Miguel Sousa,

@@ -31,16 +31,25 @@ needs_sphinx = "1.3"
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    "sphinx.ext.napoleon",
     "sphinx.ext.autodoc",
     "sphinx.ext.viewcode",
-    "sphinx.ext.napoleon",
     "sphinx.ext.coverage",
     "sphinx.ext.autosectionlabel",
 ]
 
-autodoc_mock_imports = ["gtk", "reportlab"]
+autodoc_mock_imports = ["gtk", "reportlab", "Quartz"]
 
-autodoc_default_options = {"members": True, "inherited-members": True}
+autodoc_default_options = {
+    "members": True,
+    "inherited-members": False,
+    "show-inheritance": True,
+    "member-order": "bysource",
+}
+
+# This option allows show-inheritace to work but not clutter up the output
+# with the (surplus) full inheritance stack.
+autodoc_inherit_docstrings = False
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
@@ -78,12 +87,15 @@ release = "4.0"
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = "en"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
 exclude_patterns = []
+
+# The programming language to be used by default in syntax highlighting.
+highlight_language = "python"
 
 # The name of the Pygments (syntax highlighting) style to use.
 # pygments_style = "sphinx" (the default sphinx docs style on RTD)

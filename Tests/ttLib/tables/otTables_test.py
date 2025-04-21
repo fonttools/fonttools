@@ -4,6 +4,7 @@ from fontTools.misc.xmlWriter import XMLWriter
 from fontTools.ttLib.tables.otBase import OTTableReader, OTTableWriter
 import fontTools.ttLib.tables.otTables as otTables
 from io import StringIO
+from textwrap import dedent
 import unittest
 
 
@@ -733,6 +734,93 @@ class ColrV1Test(unittest.TestCase):
         visited = []
         paint.traverse(colr, lambda p: visited.append(p))
         assert len(visited) == 1
+
+
+def test_parse_Device_DeltaValue_from_XML_and_compile():
+    # https://github.com/fonttools/fonttools/pull/3757
+    font = FakeFont([".notdef", "five"])
+
+    gpos_xml = dedent(
+        """\
+        <Version value="0x00010000"/>
+        <ScriptList>
+          <!-- ScriptCount=1 -->
+          <ScriptRecord index="0">
+            <ScriptTag value="DFLT"/>
+            <Script>
+              <DefaultLangSys>
+                <ReqFeatureIndex value="65535"/>
+                <!-- FeatureCount=1 -->
+                <FeatureIndex index="0" value="0"/>
+              </DefaultLangSys>
+              <!-- LangSysCount=0 -->
+            </Script>
+          </ScriptRecord>
+        </ScriptList>
+        <FeatureList>
+          <!-- FeatureCount=1 -->
+          <FeatureRecord index="0">
+            <FeatureTag value="curs"/>
+            <Feature>
+              <!-- LookupCount=1 -->
+              <LookupListIndex index="0" value="0"/>
+            </Feature>
+          </FeatureRecord>
+        </FeatureList>
+        <LookupList>
+          <!-- LookupCount=1 -->
+          <Lookup index="0">
+            <LookupType value="3"/>
+            <LookupFlag value="0"/>
+            <!-- SubTableCount=1 -->
+            <CursivePos index="0" Format="1">
+              <Coverage>
+                <Glyph value="five"/>
+              </Coverage>
+              <!-- EntryExitCount=1 -->
+              <EntryExitRecord index="0">
+                <EntryAnchor Format="3">
+                  <XCoordinate value="124"/>
+                  <YCoordinate value="-4"/>
+                  <XDeviceTable>
+                    <StartSize value="8"/>
+                    <EndSize value="9"/>
+                    <DeltaFormat value="2"/>
+                    <DeltaValue value="[1, 2]"/>
+                  </XDeviceTable>
+                  <YDeviceTable>
+                    <StartSize value="7"/>
+                    <EndSize value="7"/>
+                    <DeltaFormat value="2"/>
+                    <DeltaValue value="[3]"/>
+                  </YDeviceTable>
+                </EntryAnchor>
+                <ExitAnchor Format="2">
+                  <XCoordinate value="3"/>
+                  <YCoordinate value="4"/>
+                  <AnchorPoint value="2"/>
+                </ExitAnchor>
+              </EntryExitRecord>
+            </CursivePos>
+          </Lookup>
+        </LookupList>"""
+    )
+
+    gpos = parseXmlInto(font, otTables.GPOS(), gpos_xml)
+
+    anchor = gpos.LookupList.Lookup[0].SubTable[0].EntryExitRecord[0].EntryAnchor
+    assert anchor.XDeviceTable.DeltaValue == [1, 2]
+    assert anchor.YDeviceTable.DeltaValue == [3]
+
+    writer = OTTableWriter()
+    gpos.compile(writer, font)
+    data = writer.getAllData()
+
+    reader = OTTableReader(data, tableTag="GPOS")
+    gpos2 = otTables.GPOS()
+    gpos2.decompile(reader, font)
+
+    assert dedent("\n".join(getXML(gpos2.toXML, font)[1:-1])) == gpos_xml
 
 
 if __name__ == "__main__":

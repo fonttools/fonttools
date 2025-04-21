@@ -9,13 +9,13 @@ from collections import namedtuple
 
 try:
     import cython
-
-    COMPILED = cython.compiled
 except (AttributeError, ImportError):
     # if cython not installed, use mock module with no-op decorators and types
     from fontTools.misc import cython
+COMPILED = cython.compiled
 
-    COMPILED = False
+
+EPSILON = 1e-9
 
 
 Intersection = namedtuple("Intersection", ["pt", "t1", "t2"])
@@ -92,7 +92,7 @@ def _split_cubic_into_two(p0, p1, p2, p3):
 def _calcCubicArcLengthCRecurse(mult, p0, p1, p2, p3):
     arch = abs(p0 - p3)
     box = abs(p0 - p1) + abs(p1 - p2) + abs(p2 - p3)
-    if arch * mult >= box:
+    if arch * mult + EPSILON >= box:
         return (arch + box) * 0.5
     else:
         one, two = _split_cubic_into_two(p0, p1, p2, p3)
@@ -631,7 +631,14 @@ def splitCubicAtT(pt1, pt2, pt3, pt4, *ts):
         ((77.3438, 56.25), (85.9375, 43.75), (93.75, 25), (100, 0))
     """
     a, b, c, d = calcCubicParameters(pt1, pt2, pt3, pt4)
-    return _splitCubicAtT(a, b, c, d, *ts)
+    split = _splitCubicAtT(a, b, c, d, *ts)
+
+    # the split impl can introduce floating point errors; we know the first
+    # segment should always start at pt1 and the last segment should end at pt4,
+    # so we set those values directly before returning.
+    split[0] = (pt1, *split[0][1:])
+    split[-1] = (*split[-1][:-1], pt4)
+    return split
 
 
 @cython.locals(

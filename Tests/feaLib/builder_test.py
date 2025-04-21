@@ -12,6 +12,7 @@ from fontTools.feaLib.lexer import Lexer
 from fontTools.fontBuilder import addFvar
 import difflib
 from io import StringIO
+from textwrap import dedent
 import os
 import re
 import shutil
@@ -48,6 +49,7 @@ def makeTTFont():
         grave acute dieresis macron circumflex cedilla umlaut ogonek caron
         damma hamza sukun kasratan lam_meem_jeem noon.final noon.initial
         by feature lookup sub table uni0327 uni0328 e.fina
+        idotbelow idotless iogonek acutecomb brevecomb ogonekcomb dotbelowcomb
     """.split()
     glyphs.extend("cid{:05d}".format(cid) for cid in range(800, 1001 + 1))
     font = TTFont()
@@ -67,8 +69,8 @@ class BuilderTest(unittest.TestCase):
         spec5f_ii_1 spec5f_ii_2 spec5f_ii_3 spec5f_ii_4
         spec5h1 spec6b_ii spec6d2 spec6e spec6f
         spec6h_ii spec6h_iii_1 spec6h_iii_3d spec8a spec8b spec8c spec8d
-        spec9a spec9b spec9c1 spec9c2 spec9c3 spec9d spec9e spec9f spec9g
-        spec10
+        spec9a spec9a2 spec9b spec9c1 spec9c2 spec9c3 spec9d spec9e spec9f
+        spec9g spec10
         bug453 bug457 bug463 bug501 bug502 bug504 bug505 bug506 bug509
         bug512 bug514 bug568 bug633 bug1307 bug1459 bug2276 variable_bug2772
         name size size2 multiple_feature_blocks omitted_GlyphClassDef
@@ -81,7 +83,12 @@ class BuilderTest(unittest.TestCase):
         MultipleLookupsPerGlyph MultipleLookupsPerGlyph2 GSUB_6_formats
         GSUB_5_formats delete_glyph STAT_test STAT_test_elidedFallbackNameID
         variable_scalar_valuerecord variable_scalar_anchor variable_conditionset
-        variable_mark_anchor
+        variable_mark_anchor duplicate_lookup_reference
+        contextual_inline_multi_sub_format_2
+        contextual_inline_format_4
+        duplicate_language_stmt
+        CursivePosSubtable
+        MarkBasePosSubtable
     """.split()
 
     VARFONT_AXES = [
@@ -1110,12 +1117,12 @@ class BuilderTest(unittest.TestCase):
         var_region_list = font.tables["GDEF"].table.VarStore.VarRegionList
         var_region_axis_wght = var_region_list.Region[0].VarRegionAxis[0]
         var_region_axis_wdth = var_region_list.Region[0].VarRegionAxis[1]
-        assert self.get_region(var_region_axis_wght) == (0.0, 0.875, 0.875)
+        assert self.get_region(var_region_axis_wght) == (0.0, 0.875, 1.0)
         assert self.get_region(var_region_axis_wdth) == (0.0, 0.0, 0.0)
         var_region_axis_wght = var_region_list.Region[1].VarRegionAxis[0]
         var_region_axis_wdth = var_region_list.Region[1].VarRegionAxis[1]
-        assert self.get_region(var_region_axis_wght) == (0.0, 0.875, 0.875)
-        assert self.get_region(var_region_axis_wdth) == (0.0, 0.5, 0.5)
+        assert self.get_region(var_region_axis_wght) == (0.0, 0.875, 1.0)
+        assert self.get_region(var_region_axis_wdth) == (0.0, 0.5, 1.0)
 
         # With `avar`, shifting the wght axis' positive midpoint 0.5 a bit to
         # the right, but leaving the wdth axis alone:
@@ -1127,12 +1134,12 @@ class BuilderTest(unittest.TestCase):
         var_region_list = font.tables["GDEF"].table.VarStore.VarRegionList
         var_region_axis_wght = var_region_list.Region[0].VarRegionAxis[0]
         var_region_axis_wdth = var_region_list.Region[0].VarRegionAxis[1]
-        assert self.get_region(var_region_axis_wght) == (0.0, 0.90625, 0.90625)
+        assert self.get_region(var_region_axis_wght) == (0.0, 0.90625, 1.0)
         assert self.get_region(var_region_axis_wdth) == (0.0, 0.0, 0.0)
         var_region_axis_wght = var_region_list.Region[1].VarRegionAxis[0]
         var_region_axis_wdth = var_region_list.Region[1].VarRegionAxis[1]
-        assert self.get_region(var_region_axis_wght) == (0.0, 0.90625, 0.90625)
-        assert self.get_region(var_region_axis_wdth) == (0.0, 0.5, 0.5)
+        assert self.get_region(var_region_axis_wght) == (0.0, 0.90625, 1.0)
+        assert self.get_region(var_region_axis_wdth) == (0.0, 0.5, 1.0)
 
     def test_ligatureCaretByPos_variable_scalar(self):
         """Test that the `avar` table is consulted when normalizing user-space
@@ -1156,7 +1163,23 @@ class BuilderTest(unittest.TestCase):
 
         var_region_list = table.VarStore.VarRegionList
         var_region_axis = var_region_list.Region[0].VarRegionAxis[0]
-        assert self.get_region(var_region_axis) == (0.0, 0.875, 0.875)
+        assert self.get_region(var_region_axis) == (0.0, 0.875, 1.0)
+
+    def test_variable_anchors_round_trip(self):
+        """Test that calling `addOpenTypeFeatures` with parsed feature file does
+        not discard variations from variable anchors."""
+        features = """\
+            feature curs {
+                pos cursive one <anchor 0 (wdth=100,wght=200:12 wdth=150,wght=900:42)> <anchor NULL>;
+            } curs;
+        """
+
+        f = StringIO(features)
+        feafile = Parser(f).parse()
+
+        font = self.make_mock_vf()
+        addOpenTypeFeatures(font, feafile)
+        assert dedent(str(feafile)) == dedent(features)
 
 
 def generate_feature_file_test(name):

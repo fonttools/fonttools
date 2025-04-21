@@ -14,8 +14,9 @@ from fontTools.misc.cliTools import makeOutputFileName
 from fontTools.subset.util import _add_method, _uniq_sort
 from fontTools.subset.cff import *
 from fontTools.subset.svg import *
-from fontTools.varLib import varStore  # for subset_varidxes
+from fontTools.varLib import varStore, multiVarStore  # For monkey-patching
 from fontTools.ttLib.tables._n_a_m_e import NameRecordVisitor
+from fontTools.unicodedata import mirrored
 import sys
 import struct
 import array
@@ -122,15 +123,16 @@ Other options
 ^^^^^^^^^^^^^
 
 For the other options listed below, to see the current value of the option,
-pass a value of '?' to it, with or without a '='.
+pass a value of '?' to it, with or without a '='. In some environments,
+you might need to escape the question mark, like this: '--glyph-names\\?'.
 
 Examples::
 
     $ pyftsubset --glyph-names?
     Current setting for 'glyph-names' is: False
-    $ ./pyftsubset --name-IDs=?
+    $ pyftsubset --name-IDs=?
     Current setting for 'name-IDs' is: [0, 1, 2, 3, 4, 5, 6]
-    $ ./pyftsubset --hinting? --no-hinting --hinting?
+    $ pyftsubset --hinting? --no-hinting --hinting?
     Current setting for 'hinting' is: True
     Current setting for 'hinting' is: False
 
@@ -2630,6 +2632,88 @@ def closure_glyphs(self, s):
     s.glyphs.update(variants)
 
 
+@_add_method(ttLib.getTableClass("VARC"))
+def subset_glyphs(self, s):
+    indices = self.table.Coverage.subset(s.glyphs)
+    self.table.VarCompositeGlyphs.VarCompositeGlyph = _list_subset(
+        self.table.VarCompositeGlyphs.VarCompositeGlyph, indices
+    )
+    return bool(self.table.VarCompositeGlyphs.VarCompositeGlyph)
+
+
+@_add_method(ttLib.getTableClass("VARC"))
+def closure_glyphs(self, s):
+    if self.table.VarCompositeGlyphs is None:
+        return
+
+    glyphMap = {glyphName: i for i, glyphName in enumerate(self.table.Coverage.glyphs)}
+    glyphRecords = self.table.VarCompositeGlyphs.VarCompositeGlyph
+
+    glyphs = s.glyphs
+    covered = set()
+    new = set(glyphs)
+    while new:
+        oldNew = new
+        new = set()
+        for glyphName in oldNew:
+            if glyphName in covered:
+                continue
+            idx = glyphMap.get(glyphName)
+            if idx is None:
+                continue
+            glyph = glyphRecords[idx]
+            for comp in glyph.components:
+                name = comp.glyphName
+                glyphs.add(name)
+                if name not in covered:
+                    new.add(name)
+
+
+@_add_method(ttLib.getTableClass("VARC"))
+def prune_post_subset(self, font, options):
+    table = self.table
+
+    store = table.MultiVarStore
+    if store is not None:
+        usedVarIdxes = set()
+        table.collect_varidxes(usedVarIdxes)
+        varidx_map = store.subset_varidxes(usedVarIdxes)
+        table.remap_varidxes(varidx_map)
+
+    axisIndicesList = table.AxisIndicesList.Item
+    if axisIndicesList is not None:
+        usedIndices = set()
+        for glyph in table.VarCompositeGlyphs.VarCompositeGlyph:
+            for comp in glyph.components:
+                if comp.axisIndicesIndex is not None:
+                    usedIndices.add(comp.axisIndicesIndex)
+        usedIndices = sorted(usedIndices)
+        table.AxisIndicesList.Item = _list_subset(axisIndicesList, usedIndices)
+        mapping = {old: new for new, old in enumerate(usedIndices)}
+        for glyph in table.VarCompositeGlyphs.VarCompositeGlyph:
+            for comp in glyph.components:
+                if comp.axisIndicesIndex is not None:
+                    comp.axisIndicesIndex = mapping[comp.axisIndicesIndex]
+
+    conditionList = table.ConditionList
+    if conditionList is not None:
+        conditionTables = conditionList.ConditionTable
+        usedIndices = set()
+        for glyph in table.VarCompositeGlyphs.VarCompositeGlyph:
+            for comp in glyph.components:
+                if comp.conditionIndex is not None:
+                    usedIndices.add(comp.conditionIndex)
+        usedIndices = sorted(usedIndices)
+        conditionList.ConditionTable = _list_subset(conditionTables, usedIndices)
+        mapping = {old: new for new, old in enumerate(usedIndices)}
+        for glyph in table.VarCompositeGlyphs.VarCompositeGlyph:
+            for comp in glyph.components:
+                if comp.conditionIndex is not None:
+                    comp.conditionIndex = mapping[comp.conditionIndex]
+
+    return True
+
+
 @_add_method(ttLib.getTableClass("MATH"))
 def closure_glyphs(self, s):
     if self.table.MathVariants:
@@ -2787,10 +2871,21 @@ def prune_post_subset(self, font, options):
 def closure_glyphs(self, s):
     tables = [t for t in self.tables if t.isUnicode()]
 
+    # Closure unicodes, which for now is pulling in bidi mirrored variants
+    if s.options.bidi_closure:
+        additional_unicodes = set()
+        for u in s.unicodes_requested:
+            mirror_u = mirrored(u)
+            if mirror_u is not None:
+                additional_unicodes.add(mirror_u)
+        s.unicodes_requested.update(additional_unicodes)
+
     # Close glyphs
     for table in tables:
         if table.format == 14:
-            for cmap in table.uvsDict.values():
+            for varSelector, cmap in table.uvsDict.items():
+                if varSelector not in s.unicodes_requested:
+                    continue
                 glyphs = {g for u, g in cmap if u in s.unicodes_requested}
                 if None in glyphs:
                     glyphs.remove(None)
@@ -2845,6 +2940,7 @@ def subset_glyphs(self, s):
                     if g in s.glyphs_requested or u in s.unicodes_requested
                 ]
                 for v, l in t.uvsDict.items()
+                if v in s.unicodes_requested
             }
             t.uvsDict = {v: l for v, l in t.uvsDict.items() if l}
         elif t.isUnicode():
@@ -2913,8 +3009,9 @@ def prune_post_subset(self, font, options):
     visitor = NameRecordVisitor()
     visitor.visit(font)
     nameIDs = set(options.name_IDs) | visitor.seen
-    if "*" not in options.name_IDs:
-        self.names = [n for n in self.names if n.nameID in nameIDs]
+    if "*" in options.name_IDs:
+        nameIDs |= {n.nameID for n in self.names if n.nameID < 256}
+    self.names = [n for n in self.names if n.nameID in nameIDs]
     if not options.name_legacy:
         # TODO(behdad) Sometimes (eg Apple Color Emoji) there's only a macroman
         # entry for Latin and no Unicode names.
@@ -3104,6 +3201,7 @@ class Options(object):
         self.font_number = -1
         self.pretty_svg = False
         self.lazy = True
+        self.bidi_closure = True
 
         self.set(**kwargs)
 
@@ -3297,20 +3395,6 @@ class Subsetter(object):
                     self.glyphs.add(font.getGlyphName(i))
                 log.info("Added first four glyphs to subset")
 
-        if self.options.layout_closure and "GSUB" in font:
-            with timer("close glyph list over 'GSUB'"):
-                log.info(
-                    "Closing glyph list over 'GSUB': %d glyphs before", len(self.glyphs)
-                )
-                log.glyphs(self.glyphs, font=font)
-                font["GSUB"].closure_glyphs(self)
-                self.glyphs.intersection_update(realGlyphs)
-                log.info(
-                    "Closed glyph list over 'GSUB': %d glyphs after", len(self.glyphs)
-                )
-                log.glyphs(self.glyphs, font=font)
-        self.glyphs_gsubed = frozenset(self.glyphs)
-
         if "MATH" in font:
             with timer("close glyph list over 'MATH'"):
                 log.info(
@@ -3324,6 +3408,20 @@ class Subsetter(object):
                 )
                 log.glyphs(self.glyphs, font=font)
         self.glyphs_mathed = frozenset(self.glyphs)
+
+        if self.options.layout_closure and "GSUB" in font:
+            with timer("close glyph list over 'GSUB'"):
+                log.info(
+                    "Closing glyph list over 'GSUB': %d glyphs before", len(self.glyphs)
+                )
+                log.glyphs(self.glyphs, font=font)
+                font["GSUB"].closure_glyphs(self)
+                self.glyphs.intersection_update(realGlyphs)
+                log.info(
+                    "Closed glyph list over 'GSUB': %d glyphs after", len(self.glyphs)
+                )
+                log.glyphs(self.glyphs, font=font)
+        self.glyphs_gsubed = frozenset(self.glyphs)
 
         for table in ("COLR", "bsln"):
             if table in font:
@@ -3343,6 +3441,20 @@ class Subsetter(object):
                     )
                     log.glyphs(self.glyphs, font=font)
             setattr(self, f"glyphs_{table.lower()}ed", frozenset(self.glyphs))
+
+        if "VARC" in font:
+            with timer("close glyph list over 'VARC'"):
+                log.info(
+                    "Closing glyph list over 'VARC': %d glyphs before", len(self.glyphs)
+                )
+                log.glyphs(self.glyphs, font=font)
+                font["VARC"].closure_glyphs(self)
+                self.glyphs.intersection_update(realGlyphs)
+                log.info(
+                    "Closed glyph list over 'VARC': %d glyphs after", len(self.glyphs)
+                )
+                log.glyphs(self.glyphs, font=font)
+        self.glyphs_glyfed = frozenset(self.glyphs)
 
         if "glyf" in font:
             with timer("close glyph list over 'glyf'"):
@@ -3699,6 +3811,8 @@ def main(args=None):
             for t in font["cmap"].tables:
                 if t.isUnicode():
                     unicodes.extend(t.cmap.keys())
+                    if t.format == 14:
+                        unicodes.extend(t.uvsDict.keys())
         assert "" not in glyphs
 
     log.info("Text: '%s'" % text)

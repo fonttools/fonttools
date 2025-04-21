@@ -54,6 +54,8 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
             cmap = newTable("cmap")
             cmap.tableVersion = 0
             cmap.tables = [cmap4_0_3]
+
+    See also https://learn.microsoft.com/en-us/typography/opentype/spec/cmap
     """
 
     def getcmap(self, platformID, platEncID):
@@ -137,6 +139,17 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
             if subtable.isUnicode():
                 for codepoint, name in subtable.cmap.items():
                     result.setdefault(name, set()).add(codepoint)
+        return result
+
+    def buildReversedMin(self):
+        result = {}
+        for subtable in self.tables:
+            if subtable.isUnicode():
+                for codepoint, name in subtable.cmap.items():
+                    if name in result:
+                        result[name] = min(result[name], codepoint)
+                    else:
+                        result[name] = codepoint
         return result
 
     def decompile(self, data, ttFont):
@@ -1160,13 +1173,15 @@ class cmap_format_12_or_13(CmapSubtable):
         charCodes = []
         gids = []
         pos = 0
+        groups = array.array("I", data[: self.nGroups * 12])
+        if sys.byteorder != "big":
+            groups.byteswap()
         for i in range(self.nGroups):
-            startCharCode, endCharCode, glyphID = struct.unpack(
-                ">LLL", data[pos : pos + 12]
-            )
-            pos += 12
+            startCharCode = groups[i * 3]
+            endCharCode = groups[i * 3 + 1]
+            glyphID = groups[i * 3 + 2]
             lenGroup = 1 + endCharCode - startCharCode
-            charCodes.extend(list(range(startCharCode, endCharCode + 1)))
+            charCodes.extend(range(startCharCode, endCharCode + 1))
             gids.extend(self._computeGIDs(glyphID, lenGroup))
         self.data = data = None
         self.cmap = _make_map(self.ttFont, charCodes, gids)
@@ -1297,7 +1312,7 @@ class cmap_format_12(cmap_format_12_or_13):
         cmap_format_12_or_13.__init__(self, format)
 
     def _computeGIDs(self, startingGlyph, numberOfGlyphs):
-        return list(range(startingGlyph, startingGlyph + numberOfGlyphs))
+        return range(startingGlyph, startingGlyph + numberOfGlyphs)
 
     def _IsInSameRun(self, glyphID, lastGlyphID, charCode, lastCharCode):
         return (glyphID == 1 + lastGlyphID) and (charCode == 1 + lastCharCode)

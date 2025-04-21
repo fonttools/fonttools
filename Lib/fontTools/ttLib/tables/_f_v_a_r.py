@@ -43,6 +43,14 @@ FVAR_INSTANCE_FORMAT = """
 
 
 class table__f_v_a_r(DefaultTable.DefaultTable):
+    """FonT Variations table
+
+    The ``fvar`` table contains records of the variation axes and of the
+    named instances in a variable font.
+
+    See also https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6fvar.html
+    """
+
     dependencies = ["name"]
 
     def __init__(self, tag=None):
@@ -109,6 +117,9 @@ class table__f_v_a_r(DefaultTable.DefaultTable):
             instance = NamedInstance()
             instance.fromXML(name, attrs, content, ttFont)
             self.instances.append(instance)
+
+    def getAxes(self):
+        return {a.axisTag: (a.minValue, a.defaultValue, a.maxValue) for a in self.axes}
 
 
 class Axis(object):

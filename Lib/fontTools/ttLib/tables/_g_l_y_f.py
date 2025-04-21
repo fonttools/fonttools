@@ -54,7 +54,7 @@ SCALE_COMPONENT_OFFSET_DEFAULT = 0  # 0 == MS, 1 == Apple
 
 
 class table__g_l_y_f(DefaultTable.DefaultTable):
-    """Glyph Data Table
+    """Glyph Data table
 
     This class represents the `glyf <https://docs.microsoft.com/en-us/typography/opentype/spec/glyf>`_
     table, which contains outlines for glyphs in TrueType format. In many cases,
@@ -134,6 +134,8 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
             glyph.expand(self)
 
     def compile(self, ttFont):
+        optimizeSpeed = ttFont.cfg[ttLib.OPTIMIZE_FONT_SPEED]
+
         self.axisTags = (
             [axis.axisTag for axis in ttFont["fvar"].axes] if "fvar" in ttFont else []
         )
@@ -148,7 +150,12 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
         boundsDone = set()
         for glyphName in self.glyphOrder:
             glyph = self.glyphs[glyphName]
-            glyphData = glyph.compile(self, recalcBBoxes, boundsDone=boundsDone)
+            glyphData = glyph.compile(
+                self,
+                recalcBBoxes,
+                boundsDone=boundsDone,
+                optimizeSize=not optimizeSpeed,
+            )
             if padding > 1:
                 glyphData = pad(glyphData, size=padding)
             locations.append(currentLocation)
@@ -424,29 +431,6 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
                     for c in glyph.components
                 ],
             )
-        elif glyph.isVarComposite():
-            coords = []
-            controls = []
-
-            for component in glyph.components:
-                (
-                    componentCoords,
-                    componentControls,
-                ) = component.getCoordinatesAndControls()
-                coords.extend(componentCoords)
-                controls.extend(componentControls)
-
-            coords = GlyphCoordinates(coords)
-
-            controls = _GlyphControls(
-                numberOfContours=glyph.numberOfContours,
-                endPts=list(range(len(coords))),
-                flags=None,
-                components=[
-                    (c.glyphName, getattr(c, "flags", None)) for c in glyph.components
-                ],
-            )
-
         else:
             coords, endPts, flags = glyph.getCoordinates(self)
             coords = coords.copy()
@@ -492,10 +476,6 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
             for p, comp in zip(coord, glyph.components):
                 if hasattr(comp, "x"):
                     comp.x, comp.y = p
-        elif glyph.isVarComposite():
-            for comp in glyph.components:
-                coord = comp.setCoordinates(coord)
-            assert not coord
         elif glyph.numberOfContours == 0:
             assert len(coord) == 0
         else:
@@ -737,12 +717,12 @@ class Glyph(object):
             return
         if self.isComposite():
             self.decompileComponents(data, glyfTable)
-        elif self.isVarComposite():
-            self.decompileVarComponents(data, glyfTable)
         else:
             self.decompileCoordinates(data)
 
-    def compile(self, glyfTable, recalcBBoxes=True, *, boundsDone=None):
+    def compile(
+        self, glyfTable, recalcBBoxes=True, *, boundsDone=None, optimizeSize=True
+    ):
         if hasattr(self, "data"):
             if recalcBBoxes:
                 # must unpack glyph in order to recalculate bounding box
@@ -758,10 +738,8 @@ class Glyph(object):
         data = sstruct.pack(glyphHeaderFormat, self)
         if self.isComposite():
             data = data + self.compileComponents(glyfTable)
-        elif self.isVarComposite():
-            data = data + self.compileVarComponents(glyfTable)
         else:
-            data = data + self.compileCoordinates()
+            data = data + self.compileCoordinates(optimizeSize=optimizeSize)
         return data
 
     def toXML(self, writer, ttFont):
@@ -769,10 +747,6 @@ class Glyph(object):
             for compo in self.components:
                 compo.toXML(writer, ttFont)
             haveInstructions = hasattr(self, "program")
-        elif self.isVarComposite():
-            for compo in self.components:
-                compo.toXML(writer, ttFont)
-            haveInstructions = False
         else:
             last = 0
             for i in range(self.numberOfContours):
@@ -842,15 +816,6 @@ class Glyph(object):
             component = GlyphComponent()
             self.components.append(component)
             component.fromXML(name, attrs, content, ttFont)
-        elif name == "varComponent":
-            if self.numberOfContours > 0:
-                raise ttLib.TTLibError("can't mix composites and contours in glyph")
-            self.numberOfContours = -2
-            if not hasattr(self, "components"):
-                self.components = []
-            component = GlyphVarComponent()
-            self.components.append(component)
-            component.fromXML(name, attrs, content, ttFont)
         elif name == "instructions":
             self.program = ttProgram.Program()
             for element in content:
@@ -860,7 +825,7 @@ class Glyph(object):
                 self.program.fromXML(name, attrs, content, ttFont)
 
     def getCompositeMaxpValues(self, glyfTable, maxComponentDepth=1):
-        assert self.isComposite() or self.isVarComposite()
+        assert self.isComposite()
         nContours = 0
         nPoints = 0
         initialMaxComponentDepth = maxComponentDepth
@@ -903,13 +868,6 @@ class Glyph(object):
                     "too much glyph data at the end of composite glyph: %d excess bytes",
                     len(data),
                 )
-
-    def decompileVarComponents(self, data, glyfTable):
-        self.components = []
-        while len(data) >= GlyphVarComponent.MIN_SIZE:
-            component = GlyphVarComponent()
-            data = component.decompile(data, glyfTable)
-            self.components.append(component)
 
     def decompileCoordinates(self, data):
         endPtsOfContours = array.array("H")
@@ -1027,10 +985,7 @@ class Glyph(object):
             data = data + struct.pack(">h", len(instructions)) + instructions
         return data
 
-    def compileVarComponents(self, glyfTable):
-        return b"".join(c.compile(glyfTable) for c in self.components)
-
-    def compileCoordinates(self):
+    def compileCoordinates(self, *, optimizeSize=True):
         assert len(self.coordinates) == len(self.flags)
         data = []
         endPtsOfContours = array.array("H", self.endPtsOfContours)
@@ -1045,9 +1000,12 @@ class Glyph(object):
         deltas.toInt()
         deltas.absoluteToRelative()
 
-        # TODO(behdad): Add a configuration option for this?
-        deltas = self.compileDeltasGreedy(self.flags, deltas)
-        # deltas = self.compileDeltasOptimal(self.flags, deltas)
+        if optimizeSize:
+            # TODO(behdad): Add a configuration option for this?
+            deltas = self.compileDeltasGreedy(self.flags, deltas)
+            # deltas = self.compileDeltasOptimal(self.flags, deltas)
+        else:
+            deltas = self.compileDeltasForSpeed(self.flags, deltas)
 
         data.extend(deltas)
         return b"".join(data)
@@ -1164,6 +1122,63 @@ class Glyph(object):
 
         return (compressedFlags, compressedXs, compressedYs)
 
+    def compileDeltasForSpeed(self, flags, deltas):
+        # uses widest representation needed, for all deltas.
+        compressedFlags = bytearray()
+        compressedXs = bytearray()
+        compressedYs = bytearray()
+
+        # Compute the necessary width for each axis
+        xs = [d[0] for d in deltas]
+        ys = [d[1] for d in deltas]
+        minX, minY, maxX, maxY = min(xs), min(ys), max(xs), max(ys)
+        xZero = minX == 0 and maxX == 0
+        yZero = minY == 0 and maxY == 0
+        xShort = -255 <= minX <= maxX <= 255
+        yShort = -255 <= minY <= maxY <= 255
+
+        lastflag = None
+        repeat = 0
+        for flag, (x, y) in zip(flags, deltas):
+            # Oh, the horrors of TrueType
+            # do x
+            if xZero:
+                flag = flag | flagXsame
+            elif xShort:
+                flag = flag | flagXShort
+                if x > 0:
+                    flag = flag | flagXsame
+                else:
+                    x = -x
+                compressedXs.append(x)
+            else:
+                compressedXs.extend(struct.pack(">h", x))
+            # do y
+            if yZero:
+                flag = flag | flagYsame
+            elif yShort:
+                flag = flag | flagYShort
+                if y > 0:
+                    flag = flag | flagYsame
+                else:
+                    y = -y
+                compressedYs.append(y)
+            else:
+                compressedYs.extend(struct.pack(">h", y))
+            # handle repeating flags
+            if flag == lastflag and repeat != 255:
+                repeat = repeat + 1
+                if repeat == 1:
+                    compressedFlags.append(flag)
+                else:
+                    compressedFlags[-2] = flag | flagRepeat
+                    compressedFlags[-1] = repeat
+            else:
+                repeat = 0
+                compressedFlags.append(flag)
+            lastflag = flag
+        return (compressedFlags, compressedXs, compressedYs)
+
     def recalcBounds(self, glyfTable, *, boundsDone=None):
         """Recalculates the bounds of the glyph.
 
@@ -1177,7 +1192,7 @@ class Glyph(object):
         ):
             return
         try:
-            coords, endPts, flags = self.getCoordinates(glyfTable)
+            coords, endPts, flags = self.getCoordinates(glyfTable, round=otRound)
             self.xMin, self.yMin, self.xMax, self.yMax = coords.calcIntBounds()
         except NotImplementedError:
             pass
@@ -1196,9 +1211,7 @@ class Glyph(object):
         Return True if bounds were calculated, False otherwise.
         """
         for compo in self.components:
-            if hasattr(compo, "firstPt") or hasattr(compo, "transform"):
-                return False
-            if not float(compo.x).is_integer() or not float(compo.y).is_integer():
+            if not compo._hasOnlyIntegerTranslate():
                 return False
 
         # All components are untransformed and have an integer x/y translate
@@ -1231,14 +1244,7 @@ class Glyph(object):
         else:
             return self.numberOfContours == -1
 
-    def isVarComposite(self):
-        """Test whether a glyph has variable components"""
-        if hasattr(self, "data"):
-            return struct.unpack(">h", self.data[:2])[0] == -2 if self.data else False
-        else:
-            return self.numberOfContours == -2
-
-    def getCoordinates(self, glyfTable):
+    def getCoordinates(self, glyfTable, *, round=noRound):
         """Return the coordinates, end points and flags
 
         This method returns three values: A :py:class:`GlyphCoordinates` object,
@@ -1264,13 +1270,27 @@ class Glyph(object):
             for compo in self.components:
                 g = glyfTable[compo.glyphName]
                 try:
-                    coordinates, endPts, flags = g.getCoordinates(glyfTable)
+                    coordinates, endPts, flags = g.getCoordinates(
+                        glyfTable, round=round
+                    )
                 except RecursionError:
                     raise ttLib.TTLibError(
                         "glyph '%s' contains a recursive component reference"
                         % compo.glyphName
                     )
                 coordinates = GlyphCoordinates(coordinates)
+                # if asked to round e.g. while computing bboxes, it's important we
+                # do it immediately before a component transform is applied to a
+                # simple glyph's coordinates in case these might still contain floats;
+                # however, if the referenced component glyph is another composite, we
+                # must not round here but only at the end, after all the nested
+                # transforms have been applied, or else rounding errors will compound.
+                if (
+                    round is not noRound
+                    and g.numberOfContours > 0
+                    and not compo._hasOnlyIntegerTranslate()
+                ):
+                    coordinates.toInt(round=round)
                 if hasattr(compo, "firstPt"):
                     # component uses two reference points: we apply the transform _before_
                     # computing the offset between the points
@@ -1308,8 +1328,6 @@ class Glyph(object):
                 allCoords.extend(coordinates)
                 allFlags.extend(flags)
             return allCoords, allEndPts, allFlags
-        elif self.isVarComposite():
-            raise NotImplementedError("use TTGlyphSet to draw VarComposite glyphs")
         else:
             return GlyphCoordinates(), [], bytearray()
 
@@ -1319,12 +1337,8 @@ class Glyph(object):
         This method can be used on simple glyphs (in which case it returns an
         empty list) or composite glyphs.
         """
-        if hasattr(self, "data") and self.isVarComposite():
-            # TODO(VarComposite) Add implementation without expanding glyph
-            self.expand(glyfTable)
-
         if not hasattr(self, "data"):
-            if self.isComposite() or self.isVarComposite():
+            if self.isComposite():
                 return [c.glyphName for c in self.components]
             else:
                 return []
@@ -1367,8 +1381,6 @@ class Glyph(object):
                 if self.isComposite():
                     if hasattr(self, "program"):
                         del self.program
-                elif self.isVarComposite():
-                    pass  # Doesn't have hinting
                 else:
                     self.program = ttProgram.Program()
                     self.program.fromBytecode([])
@@ -1450,13 +1462,6 @@ class Glyph(object):
                 i += 2 + instructionLen
             # Remove padding
             data = data[:i]
-        elif self.isVarComposite():
-            i = 0
-            MIN_SIZE = GlyphVarComponent.MIN_SIZE
-            while len(data[i : i + MIN_SIZE]) >= MIN_SIZE:
-                size = GlyphVarComponent.getSize(data[i : i + MIN_SIZE])
-                i += size
-            data = data[:i]
 
         self.data = data
 
@@ -1480,6 +1485,7 @@ class Glyph(object):
                 pen.addComponent(glyphName, transform)
             return
 
+        self.expand(glyfTable)
         coordinates, endPts, flags = self.getCoordinates(glyfTable)
         if offset:
             coordinates = coordinates.copy()
@@ -1941,390 +1947,17 @@ class GlyphComponent(object):
         result = self.__eq__(other)
         return result if result is NotImplemented else not result
 
+    def _hasOnlyIntegerTranslate(self):
+        """Return True if it's a 'simple' component.
 
-#
-# Variable Composite glyphs
-# https://github.com/harfbuzz/boring-expansion-spec/blob/main/glyf1.md
-#
-
-
-class VarComponentFlags(IntFlag):
-    USE_MY_METRICS = 0x0001
-    AXIS_INDICES_ARE_SHORT = 0x0002
-    UNIFORM_SCALE = 0x0004
-    HAVE_TRANSLATE_X = 0x0008
-    HAVE_TRANSLATE_Y = 0x0010
-    HAVE_ROTATION = 0x0020
-    HAVE_SCALE_X = 0x0040
-    HAVE_SCALE_Y = 0x0080
-    HAVE_SKEW_X = 0x0100
-    HAVE_SKEW_Y = 0x0200
-    HAVE_TCENTER_X = 0x0400
-    HAVE_TCENTER_Y = 0x0800
-    GID_IS_24BIT = 0x1000
-    AXES_HAVE_VARIATION = 0x2000
-    RESET_UNSPECIFIED_AXES = 0x4000
-
-
-VarComponentTransformMappingValues = namedtuple(
-    "VarComponentTransformMappingValues",
-    ["flag", "fractionalBits", "scale", "defaultValue"],
-)
-
-VAR_COMPONENT_TRANSFORM_MAPPING = {
-    "translateX": VarComponentTransformMappingValues(
-        VarComponentFlags.HAVE_TRANSLATE_X, 0, 1, 0
-    ),
-    "translateY": VarComponentTransformMappingValues(
-        VarComponentFlags.HAVE_TRANSLATE_Y, 0, 1, 0
-    ),
-    "rotation": VarComponentTransformMappingValues(
-        VarComponentFlags.HAVE_ROTATION, 12, 180, 0
-    ),
-    "scaleX": VarComponentTransformMappingValues(
-        VarComponentFlags.HAVE_SCALE_X, 10, 1, 1
-    ),
-    "scaleY": VarComponentTransformMappingValues(
-        VarComponentFlags.HAVE_SCALE_Y, 10, 1, 1
-    ),
-    "skewX": VarComponentTransformMappingValues(
-        VarComponentFlags.HAVE_SKEW_X, 12, -180, 0
-    ),
-    "skewY": VarComponentTransformMappingValues(
-        VarComponentFlags.HAVE_SKEW_Y, 12, 180, 0
-    ),
-    "tCenterX": VarComponentTransformMappingValues(
-        VarComponentFlags.HAVE_TCENTER_X, 0, 1, 0
-    ),
-    "tCenterY": VarComponentTransformMappingValues(
-        VarComponentFlags.HAVE_TCENTER_Y, 0, 1, 0
-    ),
-}
-
-
-class GlyphVarComponent(object):
-    MIN_SIZE = 5
-
-    def __init__(self):
-        self.location = {}
-        self.transform = DecomposedTransform()
-
-    @staticmethod
-    def getSize(data):
-        size = 5
-        flags = struct.unpack(">H", data[:2])[0]
-        numAxes = int(data[2])
-
-        if flags & VarComponentFlags.GID_IS_24BIT:
-            size += 1
-
-        size += numAxes
-        if flags & VarComponentFlags.AXIS_INDICES_ARE_SHORT:
-            size += 2 * numAxes
-        else:
-            axisIndices = array.array("B", data[:numAxes])
-            size += numAxes
-
-        for attr_name, mapping_values in VAR_COMPONENT_TRANSFORM_MAPPING.items():
-            if flags & mapping_values.flag:
-                size += 2
-
-        return size
-
-    def decompile(self, data, glyfTable):
-        flags = struct.unpack(">H", data[:2])[0]
-        self.flags = int(flags)
-        data = data[2:]
-
-        numAxes = int(data[0])
-        data = data[1:]
-
-        if flags & VarComponentFlags.GID_IS_24BIT:
-            glyphID = int(struct.unpack(">L", b"\0" + data[:3])[0])
-            data = data[3:]
-            flags ^= VarComponentFlags.GID_IS_24BIT
-        else:
-            glyphID = int(struct.unpack(">H", data[:2])[0])
-            data = data[2:]
-        self.glyphName = glyfTable.getGlyphName(int(glyphID))
-
-        if flags & VarComponentFlags.AXIS_INDICES_ARE_SHORT:
-            axisIndices = array.array("H", data[: 2 * numAxes])
-            if sys.byteorder != "big":
-                axisIndices.byteswap()
-            data = data[2 * numAxes :]
-            flags ^= VarComponentFlags.AXIS_INDICES_ARE_SHORT
-        else:
-            axisIndices = array.array("B", data[:numAxes])
-            data = data[numAxes:]
-        assert len(axisIndices) == numAxes
-        axisIndices = list(axisIndices)
-
-        axisValues = array.array("h", data[: 2 * numAxes])
-        if sys.byteorder != "big":
-            axisValues.byteswap()
-        data = data[2 * numAxes :]
-        assert len(axisValues) == numAxes
-        axisValues = [fi2fl(v, 14) for v in axisValues]
-
-        self.location = {
-            glyfTable.axisTags[i]: v for i, v in zip(axisIndices, axisValues)
-        }
-
-        def read_transform_component(data, values):
-            if flags & values.flag:
-                return (
-                    data[2:],
-                    fi2fl(struct.unpack(">h", data[:2])[0], values.fractionalBits)
-                    * values.scale,
-                )
-            else:
-                return data, values.defaultValue
-
-        for attr_name, mapping_values in VAR_COMPONENT_TRANSFORM_MAPPING.items():
-            data, value = read_transform_component(data, mapping_values)
-            setattr(self.transform, attr_name, value)
-
-        if flags & VarComponentFlags.UNIFORM_SCALE:
-            if flags & VarComponentFlags.HAVE_SCALE_X and not (
-                flags & VarComponentFlags.HAVE_SCALE_Y
-            ):
-                self.transform.scaleY = self.transform.scaleX
-                flags |= VarComponentFlags.HAVE_SCALE_Y
-            flags ^= VarComponentFlags.UNIFORM_SCALE
-
-        return data
-
-    def compile(self, glyfTable):
-        data = b""
-
-        if not hasattr(self, "flags"):
-            flags = 0
-            # Calculate optimal transform component flags
-            for attr_name, mapping in VAR_COMPONENT_TRANSFORM_MAPPING.items():
-                value = getattr(self.transform, attr_name)
-                if fl2fi(value / mapping.scale, mapping.fractionalBits) != fl2fi(
-                    mapping.defaultValue / mapping.scale, mapping.fractionalBits
-                ):
-                    flags |= mapping.flag
-        else:
-            flags = self.flags
-
-        if (
-            flags & VarComponentFlags.HAVE_SCALE_X
-            and flags & VarComponentFlags.HAVE_SCALE_Y
-            and fl2fi(self.transform.scaleX, 10) == fl2fi(self.transform.scaleY, 10)
-        ):
-            flags |= VarComponentFlags.UNIFORM_SCALE
-            flags ^= VarComponentFlags.HAVE_SCALE_Y
-
-        numAxes = len(self.location)
-
-        data = data + struct.pack(">B", numAxes)
-
-        glyphID = glyfTable.getGlyphID(self.glyphName)
-        if glyphID > 65535:
-            flags |= VarComponentFlags.GID_IS_24BIT
-            data = data + struct.pack(">L", glyphID)[1:]
-        else:
-            data = data + struct.pack(">H", glyphID)
-
-        axisIndices = [glyfTable.axisTags.index(tag) for tag in self.location.keys()]
-        if all(a <= 255 for a in axisIndices):
-            axisIndices = array.array("B", axisIndices)
-        else:
-            axisIndices = array.array("H", axisIndices)
-            if sys.byteorder != "big":
-                axisIndices.byteswap()
-            flags |= VarComponentFlags.AXIS_INDICES_ARE_SHORT
-        data = data + bytes(axisIndices)
-
-        axisValues = self.location.values()
-        axisValues = array.array("h", (fl2fi(v, 14) for v in axisValues))
-        if sys.byteorder != "big":
-            axisValues.byteswap()
-        data = data + bytes(axisValues)
-
-        def write_transform_component(data, value, values):
-            if flags & values.flag:
-                return data + struct.pack(
-                    ">h", fl2fi(value / values.scale, values.fractionalBits)
-                )
-            else:
-                return data
-
-        for attr_name, mapping_values in VAR_COMPONENT_TRANSFORM_MAPPING.items():
-            value = getattr(self.transform, attr_name)
-            data = write_transform_component(data, value, mapping_values)
-
-        return struct.pack(">H", flags) + data
-
-    def toXML(self, writer, ttFont):
-        attrs = [("glyphName", self.glyphName)]
-
-        if hasattr(self, "flags"):
-            attrs = attrs + [("flags", hex(self.flags))]
-
-        for attr_name, mapping in VAR_COMPONENT_TRANSFORM_MAPPING.items():
-            v = getattr(self.transform, attr_name)
-            if v != mapping.defaultValue:
-                attrs.append((attr_name, fl2str(v, mapping.fractionalBits)))
-
-        writer.begintag("varComponent", attrs)
-        writer.newline()
-
-        writer.begintag("location")
-        writer.newline()
-        for tag, v in self.location.items():
-            writer.simpletag("axis", [("tag", tag), ("value", fl2str(v, 14))])
-            writer.newline()
-        writer.endtag("location")
-        writer.newline()
-
-        writer.endtag("varComponent")
-        writer.newline()
-
-    def fromXML(self, name, attrs, content, ttFont):
-        self.glyphName = attrs["glyphName"]
-
-        if "flags" in attrs:
-            self.flags = safeEval(attrs["flags"])
-
-        for attr_name, mapping in VAR_COMPONENT_TRANSFORM_MAPPING.items():
-            if attr_name not in attrs:
-                continue
-            v = str2fl(safeEval(attrs[attr_name]), mapping.fractionalBits)
-            setattr(self.transform, attr_name, v)
-
-        for c in content:
-            if not isinstance(c, tuple):
-                continue
-            name, attrs, content = c
-            if name != "location":
-                continue
-            for c in content:
-                if not isinstance(c, tuple):
-                    continue
-                name, attrs, content = c
-                assert name == "axis"
-                assert not content
-                self.location[attrs["tag"]] = str2fl(safeEval(attrs["value"]), 14)
-
-    def getPointCount(self):
-        assert hasattr(self, "flags"), "VarComponent with variations must have flags"
-
-        count = 0
-
-        if self.flags & VarComponentFlags.AXES_HAVE_VARIATION:
-            count += len(self.location)
-
-        if self.flags & (
-            VarComponentFlags.HAVE_TRANSLATE_X | VarComponentFlags.HAVE_TRANSLATE_Y
-        ):
-            count += 1
-        if self.flags & VarComponentFlags.HAVE_ROTATION:
-            count += 1
-        if self.flags & (
-            VarComponentFlags.HAVE_SCALE_X | VarComponentFlags.HAVE_SCALE_Y
-        ):
-            count += 1
-        if self.flags & (VarComponentFlags.HAVE_SKEW_X | VarComponentFlags.HAVE_SKEW_Y):
-            count += 1
-        if self.flags & (
-            VarComponentFlags.HAVE_TCENTER_X | VarComponentFlags.HAVE_TCENTER_Y
-        ):
-            count += 1
-
-        return count
-
-    def getCoordinatesAndControls(self):
-        coords = []
-        controls = []
-
-        if self.flags & VarComponentFlags.AXES_HAVE_VARIATION:
-            for tag, v in self.location.items():
-                controls.append(tag)
-                coords.append((fl2fi(v, 14), 0))
-
-        if self.flags & (
-            VarComponentFlags.HAVE_TRANSLATE_X | VarComponentFlags.HAVE_TRANSLATE_Y
-        ):
-            controls.append("translate")
-            coords.append((self.transform.translateX, self.transform.translateY))
-        if self.flags & VarComponentFlags.HAVE_ROTATION:
-            controls.append("rotation")
-            coords.append((fl2fi(self.transform.rotation / 180, 12), 0))
-        if self.flags & (
-            VarComponentFlags.HAVE_SCALE_X | VarComponentFlags.HAVE_SCALE_Y
-        ):
-            controls.append("scale")
-            coords.append(
-                (fl2fi(self.transform.scaleX, 10), fl2fi(self.transform.scaleY, 10))
-            )
-        if self.flags & (VarComponentFlags.HAVE_SKEW_X | VarComponentFlags.HAVE_SKEW_Y):
-            controls.append("skew")
-            coords.append(
-                (
-                    fl2fi(self.transform.skewX / -180, 12),
-                    fl2fi(self.transform.skewY / 180, 12),
-                )
-            )
-        if self.flags & (
-            VarComponentFlags.HAVE_TCENTER_X | VarComponentFlags.HAVE_TCENTER_Y
-        ):
-            controls.append("tCenter")
-            coords.append((self.transform.tCenterX, self.transform.tCenterY))
-
-        return coords, controls
-
-    def setCoordinates(self, coords):
-        i = 0
-
-        if self.flags & VarComponentFlags.AXES_HAVE_VARIATION:
-            newLocation = {}
-            for tag in self.location:
-                newLocation[tag] = fi2fl(coords[i][0], 14)
-                i += 1
-            self.location = newLocation
-
-        self.transform = DecomposedTransform()
-        if self.flags & (
-            VarComponentFlags.HAVE_TRANSLATE_X | VarComponentFlags.HAVE_TRANSLATE_Y
-        ):
-            self.transform.translateX, self.transform.translateY = coords[i]
-            i += 1
-        if self.flags & VarComponentFlags.HAVE_ROTATION:
-            self.transform.rotation = fi2fl(coords[i][0], 12) * 180
-            i += 1
-        if self.flags & (
-            VarComponentFlags.HAVE_SCALE_X | VarComponentFlags.HAVE_SCALE_Y
-        ):
-            self.transform.scaleX, self.transform.scaleY = fi2fl(
-                coords[i][0], 10
-            ), fi2fl(coords[i][1], 10)
-            i += 1
-        if self.flags & (VarComponentFlags.HAVE_SKEW_X | VarComponentFlags.HAVE_SKEW_Y):
-            self.transform.skewX, self.transform.skewY = (
-                fi2fl(coords[i][0], 12) * -180,
-                fi2fl(coords[i][1], 12) * 180,
-            )
-            i += 1
-        if self.flags & (
-            VarComponentFlags.HAVE_TCENTER_X | VarComponentFlags.HAVE_TCENTER_Y
-        ):
-            self.transform.tCenterX, self.transform.tCenterY = coords[i]
-            i += 1
-
-        return coords[i:]
-
-    def __eq__(self, other):
-        if type(self) != type(other):
-            return NotImplemented
-        return self.__dict__ == other.__dict__
-
-    def __ne__(self, other):
-        result = self.__eq__(other)
-        return result if result is NotImplemented else not result
+        That is, it has no anchor points and no transform other than integer translate.
+        """
+        return (
+            not hasattr(self, "firstPt")
+            and not hasattr(self, "transform")
+            and float(self.x).is_integer()
+            and float(self.y).is_integer()
+        )
 
 
 class GlyphCoordinates(object):

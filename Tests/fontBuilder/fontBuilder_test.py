@@ -236,7 +236,7 @@ def test_build_var(tmpdir):
     fb.setupHorizontalMetrics(metrics)
 
     fb.setupHorizontalHeader(ascent=824, descent=200)
-    fb.setupNameTable(nameStrings)
+    fb.setupNameTable(nameStrings, mac=False)
 
     axes = [
         ("LEFT", 0, 0, 100, "Left"),
@@ -330,9 +330,9 @@ def test_build_cff_to_cff2(tmpdir):
     }
     fb.setupCFF("TestFont", {}, charStrings, {})
 
-    from fontTools.varLib.cff import convertCFFtoCFF2
+    from fontTools.cffLib.CFFToCFF2 import convertCFFToCFF2
 
-    convertCFFtoCFF2(fb.font)
+    convertCFFToCFF2(fb.font)
 
 
 def test_setupNameTable_no_mac():

@@ -5,6 +5,7 @@ import copy
 import os
 import sys
 import unittest
+from io import BytesIO
 
 
 class CffLibTest(DataFilesHandler):
@@ -117,6 +118,18 @@ class CffLibTest(DataFilesHandler):
         font2 = TTFont(save_path)
         glyphOrder = font2.getGlyphOrder()
         self.assertEqual(len(glyphOrder), len(set(glyphOrder)))
+
+
+class CFFToCFF2Test(DataFilesHandler):
+
+    def test_conversion(self):
+        font_path = self.getpath("CFFToCFF2-1.otf")
+        font = TTFont(font_path)
+        from fontTools.cffLib.CFFToCFF2 import convertCFFToCFF2
+
+        convertCFFToCFF2(font)
+        f = BytesIO()
+        font.save(f)
 
 
 if __name__ == "__main__":

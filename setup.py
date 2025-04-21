@@ -8,6 +8,7 @@ from os.path import isfile, join as pjoin
 from glob import glob
 from setuptools import setup, find_packages, Command, Extension
 from setuptools.command.build_ext import build_ext as _build_ext
+from setuptools.errors import SetupError
 from distutils import log
 from distutils.util import convert_path
 import subprocess as sp
@@ -33,7 +34,7 @@ if {"bdist_wheel"}.intersection(sys.argv):
     setup_requires.append("wheel")
 
 if {"release"}.intersection(sys.argv):
-    setup_requires.append("bump2version")
+    setup_requires.extend(["bump2version", "readme_renderer"])
 
 try:
     __import__("cython")
@@ -166,6 +167,7 @@ classifiers = {
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
         "Programming Language :: Python :: 3",
         "Topic :: Text Processing :: Fonts",
         "Topic :: Multimedia :: Graphics",
@@ -179,8 +181,21 @@ classifiers = {
 with io.open("README.rst", "r", encoding="utf-8") as readme:
     long_description = readme.read()
 long_description += "\nChangelog\n~~~~~~~~~\n\n"
+# At the same time, we don't want the PyPI package description becoming too
+# long (some tools like Azure DevOps impose maximum length of 324KB) so we
+# trim it when we see a special rst comment
+changelog_limit_re = re.compile(r"^\.\. package description limit")
 with io.open("NEWS.rst", "r", encoding="utf-8") as changelog:
-    long_description += changelog.read()
+    short_changelog = []
+    for line in changelog:
+        if changelog_limit_re.match(line):
+            break
+        short_changelog.append(line)
+short_changelog.append(
+    "\\... see `here <https://github.com/fonttools/fonttools/blob/main/NEWS.rst>`__ "
+    "for earlier changes\n"
+)
+long_description += "".join(short_changelog)
 
 
 @contextlib.contextmanager
@@ -266,7 +281,19 @@ class release(Command):
             raise DistutilsOptionError("--major/--minor are mutually exclusive")
         self.part = "major" if self.major else "minor" if self.minor else None
 
+    def check_long_description_syntax(self):
+        import readme_renderer.rst
+
+        result = readme_renderer.rst.render(long_description, stream=sys.stderr)
+        if result is None:
+            raise SetupError(
+                "`long_description` has syntax errors in markup"
+                " and would not be rendered on PyPI."
+            )
+
     def run(self):
+        self.check_long_description_syntax()
+
         if self.part is not None:
             log.info("bumping '%s' version" % self.part)
             self.bumpversion(self.part, commit=False)
@@ -468,7 +495,7 @@ if ext_modules:
 
 setup_params = dict(
     name="fonttools",
-    version="4.50.1.dev0",
+    version="4.57.1.dev0",
     description="Tools to manipulate font files",
     author="Just van Rossum",
     author_email="just@letterror.com",
@@ -479,6 +506,7 @@ setup_params = dict(
     platforms=["Any"],
     python_requires=">=3.8",
     long_description=long_description,
+    long_description_content_type="text/x-rst",
     package_dir={"": "Lib"},
     packages=find_packages("Lib"),
     include_package_data=True,

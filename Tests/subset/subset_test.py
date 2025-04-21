@@ -428,14 +428,14 @@ class SubsetTest:
     def test_varComposite(self):
         fontpath = self.getpath("..", "..", "ttLib", "data", "varc-ac00-ac01.ttf")
         origfont = TTFont(fontpath)
-        assert len(origfont.getGlyphOrder()) == 6
+        assert len(origfont.getGlyphOrder()) == 11
         subsetpath = self.temp_path(".ttf")
         subset.main([fontpath, "--unicodes=ac00", "--output-file=%s" % subsetpath])
         subsetfont = TTFont(subsetpath)
-        assert len(subsetfont.getGlyphOrder()) == 4
+        assert len(subsetfont.getGlyphOrder()) == 6
         subset.main([fontpath, "--unicodes=ac01", "--output-file=%s" % subsetpath])
         subsetfont = TTFont(subsetpath)
-        assert len(subsetfont.getGlyphOrder()) == 5
+        assert len(subsetfont.getGlyphOrder()) == 8
 
     def test_timing_publishes_parts(self):
         fontpath = self.compile_font(self.getpath("TestTTF-Regular.ttx"), ".ttf")
@@ -937,6 +937,34 @@ class SubsetTest:
         subset.main([fontpath, "--glyphs=a", "--output-file=%s" % subsetpath])
         subsetfont = TTFont(subsetpath)
         self.expect_ttx(subsetfont, self.getpath("CmapSubsetTest.subset.ttx"), ["cmap"])
+
+    def test_cmap_format14(self):
+        fontpath = self.compile_font(self.getpath("cmap14_font1.ttx"), ".otf")
+        subsetpath = self.temp_path(".otf")
+
+        subset.main([fontpath, "--unicodes=4e05", "--output-file=%s" % subsetpath])
+        subsetfont = TTFont(subsetpath)
+        self.expect_ttx(subsetfont, self.getpath("cmap14_font1.no_uvs.ttx"), ["cmap"])
+
+        subset.main(
+            [fontpath, "--unicodes=4e05,e0100", "--output-file=%s" % subsetpath]
+        )
+        subsetfont = TTFont(subsetpath)
+        self.expect_ttx(subsetfont, self.getpath("cmap14_font1.uvs.ttx"), ["cmap"])
+
+        subset.main([fontpath, "--unicodes=4e10", "--output-file=%s" % subsetpath])
+        subsetfont = TTFont(subsetpath)
+        self.expect_ttx(
+            subsetfont, self.getpath("cmap14_font1.no_uvs_non_default.ttx"), ["cmap"]
+        )
+
+        subset.main(
+            [fontpath, "--unicodes=4e10,e0100", "--output-file=%s" % subsetpath]
+        )
+        subsetfont = TTFont(subsetpath)
+        self.expect_ttx(
+            subsetfont, self.getpath("cmap14_font1.uvs_non_default.ttx"), ["cmap"]
+        )
 
     @pytest.mark.parametrize("text, n", [("!", 1), ("#", 2)])
     def test_GPOS_PairPos_Format2_useClass0(self, text, n):
@@ -1752,7 +1780,7 @@ def test_subset_COLRv1_drop_all_v0_glyphs(colrv1_path):
     assert colr.table.BaseGlyphRecordCount == 0
     assert colr.table.BaseGlyphRecordArray is None
     assert colr.table.LayerRecordArray is None
-    assert colr.table.LayerRecordCount is 0
+    assert colr.table.LayerRecordCount == 0
 
 
 def test_subset_COLRv1_no_ClipList(colrv1_path):
@@ -1915,10 +1943,6 @@ def test_subset_recalc_xAvgCharWidth(ttf_path):
     assert xAvgCharWidth_after == subset_font["OS/2"].xAvgCharWidth
 
 
-if __name__ == "__main__":
-    sys.exit(unittest.main())
-
-
 def test_subset_prune_gdef_markglyphsetsdef():
     # GDEF_MarkGlyphSetsDef
     fb = FontBuilder(unitsPerEm=1000, isTTF=True)
@@ -2023,3 +2047,80 @@ def test_subset_prune_gdef_markglyphsetsdef():
     assert lookups[1].MarkFilteringSet == None
     marksets = font["GDEF"].table.MarkGlyphSetsDef.Coverage
     assert marksets[0].glyphs == ["acutecomb"]
+
+
+def test_prune_user_name_IDs_with_keep_all(ttf_path):
+    font = TTFont(ttf_path)
+
+    keepNameIDs = {n.nameID for n in font["name"].names}
+
+    for i in range(10):
+        font["name"].addName(f"Test{i}")
+
+    options = subset.Options()
+    options.name_IDs = ["*"]
+    options.name_legacy = True
+    options.name_languages = ["*"]
+
+    subsetter = subset.Subsetter(options)
+    subsetter.populate(unicodes=font.getBestCmap().keys())
+    subsetter.subset(font)
+
+    nameIDs = {n.nameID for n in font["name"].names}
+    assert not any(n > 255 for n in nameIDs)
+    assert nameIDs == keepNameIDs
+
+
+def test_prune_unused_user_name_IDs_with_keep_all(ttf_path):
+    font = TTFont(ttf_path)
+
+    keepNameIDs = {n.nameID for n in font["name"].names}
+
+    for i in range(10):
+        font["name"].addName(f"Test{i}")
+
+    nameID = font["name"].addName("Test STAT")
+    keepNameIDs.add(nameID)
+
+    font["STAT"] = newTable("STAT")
+    font["STAT"].table = ot.STAT()
+    font["STAT"].table.ElidedFallbackNameID = nameID
+
+    options = subset.Options()
+    options.name_IDs = ["*"]
+    options.name_legacy = True
+    options.name_languages = ["*"]
+
+    subsetter = subset.Subsetter(options)
+    subsetter.populate(unicodes=font.getBestCmap().keys())
+    subsetter.subset(font)
+
+    nameIDs = {n.nameID for n in font["name"].names}
+    assert nameIDs == keepNameIDs
+
+
+def test_cvXX_feature_params_nameIDs_are_retained():
+    # https://github.com/fonttools/fonttools/issues/3616
+    font = TTFont()
+    ttx = pathlib.Path(__file__).parent / "data" / "Andika-Regular.subset.ttx"
+    font.importXML(ttx)
+
+    keepNameIDs = {n.nameID for n in font["name"].names}
+
+    options = subset.Options()
+    options.glyph_names = True
+    # that's where the FeatureParamsCharacteVariants are stored
+    options.layout_features.append("cv43")
+
+    subsetter = subset.Subsetter(options)
+    subsetter.populate(glyphs=font.getGlyphOrder())
+    subsetter.subset(font)
+
+    # we expect that all nameIDs are retained, including all the nameIDs
+    # used by the FeatureParamsCharacterVariants
+    nameIDs = {n.nameID for n in font["name"].names}
+    assert nameIDs == keepNameIDs
+
+
+if __name__ == "__main__":
+    sys.exit(unittest.main())

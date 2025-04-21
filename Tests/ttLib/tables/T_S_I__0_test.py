@@ -1,9 +1,9 @@
 from types import SimpleNamespace
-from fontTools.misc.textTools import deHexStr
-from fontTools.misc.testTools import getXML
-from fontTools.ttLib.tables.T_S_I__0 import table_T_S_I__0
-import pytest
 
+import pytest
+from fontTools.misc.testTools import getXML
+from fontTools.misc.textTools import deHexStr
+from fontTools.ttLib.tables.T_S_I__0 import table_T_S_I__0
 
 # (gid, length, offset) for glyph programs
 TSI0_INDICES = [(0, 1, 0), (1, 5, 1), (2, 0, 1), (3, 0, 1), (4, 8, 6)]
@@ -66,6 +66,27 @@ def test_decompile(table, numGlyphs, data, expected_indices, expected_extra_indi
     table.decompile(data, font)
 
     assert len(table.indices) == numGlyphs
+    assert table.indices == expected_indices
+    assert len(table.extra_indices) == 4
+    assert table.extra_indices == expected_extra_indices
+
+
+@pytest.mark.parametrize(
+    "numGlyphs, data, expected_indices, expected_extra_indices",
+    [
+        (4, TSI0_DATA, TSI0_INDICES, TSI0_EXTRA_INDICES),
+        (6, TSI0_DATA, TSI0_INDICES, TSI0_EXTRA_INDICES),
+    ],
+    ids=["more entries than glyphs", "fewer entries than glyphs"],
+)
+def test_decompile_glyphs_mismatch(
+    table, numGlyphs, data, expected_indices, expected_extra_indices
+):
+    font = {"maxp": SimpleNamespace(numGlyphs=numGlyphs)}
+
+    table.decompile(data, font)
+
+    assert len(table.indices) == 5
     assert table.indices == expected_indices
     assert len(table.extra_indices) == 4
     assert table.extra_indices == expected_extra_indices

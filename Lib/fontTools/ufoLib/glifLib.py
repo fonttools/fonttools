@@ -1,11 +1,11 @@
 """
-glifLib.py -- Generic module for reading and writing the .glif format.
+Generic module for reading and writing the .glif format.
 
 More info about the .glif format (GLyphInterchangeFormat) can be found here:
 
 	http://unifiedfontobject.org
 
-The main class in this module is GlyphSet. It manages a set of .glif files
+The main class in this module is :class:`GlyphSet`. It manages a set of .glif files
 in a folder. It offers two ways to read glyph data, and one way to write
 glyph data. See the class doc string for details.
 """
@@ -60,6 +60,13 @@ LAYERINFO_FILENAME = "layerinfo.plist"
 
 
 class GLIFFormatVersion(tuple, _VersionTupleEnumMixin, enum.Enum):
+    """Class representing the versions of the .glif format supported by the UFO version in use.
+
+    For a given :mod:`fontTools.ufoLib.UFOFormatVersion`, the :func:`supported_versions` method will
+    return the supported versions of the GLIF file format. If the UFO version is unspecified, the
+    :func:`supported_versions` method will return all available GLIF format versions.
+    """
+
     FORMAT_1_0 = (1, 0)
     FORMAT_2_0 = (2, 0)
 
@@ -1191,8 +1198,12 @@ def _readGlyphFromTreeFormat1(
             haveSeenAdvance = True
             _readAdvance(glyphObject, element)
         elif element.tag == "unicode":
+            v = element.get("hex")
+            if v is None:
+                raise GlifLibError(
+                    "A unicode element is missing its required hex attribute."
+                )
             try:
-                v = element.get("hex")
                 v = int(v, 16)
                 if v not in unicodes:
                     unicodes.append(v)
@@ -1254,8 +1265,12 @@ def _readGlyphFromTreeFormat2(
             haveSeenAdvance = True
             _readAdvance(glyphObject, element)
         elif element.tag == "unicode":
+            v = element.get("hex")
+            if v is None:
+                raise GlifLibError(
+                    "A unicode element is missing its required hex attribute."
+                )
             try:
-                v = element.get("hex")
                 v = int(v, 16)
                 if v not in unicodes:
                     unicodes.append(v)
@@ -1757,7 +1772,7 @@ class _BaseParser:
         parser = ParserCreate()
         parser.StartElementHandler = self.startElementHandler
         parser.EndElementHandler = self.endElementHandler
-        parser.Parse(text)
+        parser.Parse(text, 1)
 
     def startElementHandler(self, name, attrs):
         self._elementStack.append(name)

@@ -297,7 +297,7 @@ Example of all axis elements together
 
 
 ``<output>`` element
-...................
+....................
 
 -  Defines the output location of an axis mapping.
 -  Child element of ``<mapping>``
@@ -918,12 +918,12 @@ The ``<instances>`` element contains one or more ``<instance>`` elements.
 
 .. rubric:: Attributes
 
--  ``familyname``: required, string. The family name of the instance
-   font. Corresponds with ``font.info.familyName``
--  ``stylename``: required, string. The style name of the instance font.
-   Corresponds with ``font.info.styleName``
--  ``name``: required, string. A unique name that can be used to
-   identify this font if it needs to be referenced elsewhere.
+-  ``familyname``: string. Optional if the default source has it set. The family
+   name of the instance font. Corresponds with ``font.info.familyName``
+-  ``stylename``: string. Optional if all axes are fully labled. The style name
+   of the instance font. Corresponds with ``font.info.styleName``
+-  ``name``: string. Optional if all axes are fully labled. A unique name that
+   can be used to identify this font if it needs to be referenced elsewhere.
 -  ``filename``: string. Required for MutatorMath. A path to the
    instance file, relative to the root path of this document. The path
    can be at the same level as the document or lower.

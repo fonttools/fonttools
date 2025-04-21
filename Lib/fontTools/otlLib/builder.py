@@ -1,4 +1,5 @@
 from collections import namedtuple, OrderedDict
+import itertools
 import os
 from fontTools.misc.fixedTools import fixedToFloat
 from fontTools.misc.roundTools import otRound
@@ -544,6 +545,10 @@ class ChainContextualBuilder(LookupBuilder):
                 f"{classRuleAttr}Count",
                 getattr(setForThisRule, f"{classRuleAttr}Count") + 1,
             )
+        for i, classSet in enumerate(classSets):
+            if not getattr(classSet, classRuleAttr):
+                # class sets can be null so replace nop sets with None
+                classSets[i] = None
         setattr(st, self.ruleSetAttr_(format=2, chaining=chaining), classSets)
         setattr(
             st, self.ruleSetAttr_(format=2, chaining=chaining) + "Count", len(classSets)
@@ -781,15 +786,31 @@ class ChainContextSubstBuilder(ChainContextualBuilder):
                             )
         return result
 
-    def find_chainable_single_subst(self, mapping):
-        """Helper for add_single_subst_chained_()"""
+    def find_chainable_subst(self, mapping, builder_class):
+        """Helper for add_{single,multi}_subst_chained_()"""
         res = None
         for rule in self.rules[::-1]:
             if rule.is_subtable_break:
                 return res
             for sub in rule.lookups:
-                if isinstance(sub, SingleSubstBuilder) and not any(
+                if isinstance(sub, builder_class) and not any(
                     g in mapping and mapping[g] != sub.mapping[g] for g in sub.mapping
+                ):
+                    res = sub
+        return res
+
+    def find_chainable_ligature_subst(self, glyphs, replacement):
+        """Helper for add_ligature_subst_chained_()"""
+        res = None
+        for rule in self.rules[::-1]:
+            if rule.is_subtable_break:
+                return res
+            for sub in rule.lookups:
+                if not isinstance(sub, LigatureSubstBuilder):
+                    continue
+                if all(
+                    sub.ligatures.get(seq, replacement) == replacement
+                    for seq in itertools.product(*glyphs)
                 ):
                     res = sub
         return res
@@ -928,8 +949,20 @@ class CursivePosBuilder(LookupBuilder):
             An ``otTables.Lookup`` object representing the cursive
             positioning lookup.
         """
-        st = buildCursivePosSubtable(self.attachments, self.glyphMap)
-        return self.buildLookup_([st])
+        attachments = [{}]
+        for key in self.attachments:
+            if key[0] == self.SUBTABLE_BREAK_:
+                attachments.append({})
+            else:
+                attachments[-1][key] = self.attachments[key]
+        subtables = [buildCursivePosSubtable(s, self.glyphMap) for s in attachments]
+        return self.buildLookup_(subtables)
+
+    def add_subtable_break(self, location):
+        self.attachments[(self.SUBTABLE_BREAK_, location)] = (
+            self.SUBTABLE_BREAK_,
+            self.SUBTABLE_BREAK_,
+        )
 
 
 class MarkBasePosBuilder(LookupBuilder):
@@ -964,17 +997,25 @@ class MarkBasePosBuilder(LookupBuilder):
         LookupBuilder.__init__(self, font, location, "GPOS", 4)
         self.marks = {}  # glyphName -> (markClassName, anchor)
         self.bases = {}  # glyphName -> {markClassName: anchor}
+        self.subtables_ = []
+
+    def get_subtables_(self):
+        subtables_ = self.subtables_
+        if self.bases or self.marks:
+            subtables_.append((self.marks, self.bases))
+        return subtables_
 
     def equals(self, other):
         return (
             LookupBuilder.equals(self, other)
-            and self.marks == other.marks
-            and self.bases == other.bases
+            and self.get_subtables_() == other.get_subtables_()
         )
 
     def inferGlyphClasses(self):
-        result = {glyph: 1 for glyph in self.bases}
-        result.update({glyph: 3 for glyph in self.marks})
+        result = {}
+        for marks, bases in self.get_subtables_():
+            result.update({glyph: 1 for glyph in bases})
+            result.update({glyph: 3 for glyph in marks})
         return result
 
     def build(self):
@@ -984,25 +1025,32 @@ class MarkBasePosBuilder(LookupBuilder):
             An ``otTables.Lookup`` object representing the mark-to-base
             positioning lookup.
         """
-        markClasses = self.buildMarkClasses_(self.marks)
-        marks = {}
-        for mark, (mc, anchor) in self.marks.items():
-            if mc not in markClasses:
-                raise ValueError(
-                    "Mark class %s not found for mark glyph %s" % (mc, mark)
-                )
-            marks[mark] = (markClasses[mc], anchor)
-        bases = {}
-        for glyph, anchors in self.bases.items():
-            bases[glyph] = {}
-            for mc, anchor in anchors.items():
+        subtables = []
+        for subtable in self.get_subtables_():
+            markClasses = self.buildMarkClasses_(subtable[0])
+            marks = {}
+            for mark, (mc, anchor) in subtable[0].items():
                 if mc not in markClasses:
                     raise ValueError(
-                        "Mark class %s not found for base glyph %s" % (mc, glyph)
+                        "Mark class %s not found for mark glyph %s" % (mc, mark)
                     )
-                bases[glyph][markClasses[mc]] = anchor
-        subtables = buildMarkBasePos(marks, bases, self.glyphMap)
+                marks[mark] = (markClasses[mc], anchor)
+            bases = {}
+            for glyph, anchors in subtable[1].items():
+                bases[glyph] = {}
+                for mc, anchor in anchors.items():
+                    if mc not in markClasses:
+                        raise ValueError(
+                            "Mark class %s not found for base glyph %s" % (mc, glyph)
+                        )
+                    bases[glyph][markClasses[mc]] = anchor
+            subtables.append(buildMarkBasePosSubtable(marks, bases, self.glyphMap))
         return self.buildLookup_(subtables)
+
+    def add_subtable_break(self, location):
+        self.subtables_.append((self.marks, self.bases))
+        self.marks = {}
+        self.bases = {}
 
 
 class MarkLigPosBuilder(LookupBuilder):
@@ -1879,18 +1927,11 @@ def buildMarkArray(marks, glyphMap):
     return self
 
 
-def buildMarkBasePos(marks, bases, glyphMap):
-    """Build a list of MarkBasePos (GPOS4) subtables.
+def buildMarkBasePosSubtable(marks, bases, glyphMap):
+    """Build a single MarkBasePos (GPOS4) subtable.
 
-    This routine turns a set of marks and bases into a list of mark-to-base
-    positioning subtables. Currently the list will contain a single subtable
-    containing all marks and bases, although at a later date it may return the
-    optimal list of subtables subsetting the marks and bases into groups which
-    save space. See :func:`buildMarkBasePosSubtable` below.
-
-    Note that if you are implementing a layout compiler, you may find it more
-    flexible to use
-    :py:class:`fontTools.otlLib.lookupBuilders.MarkBasePosBuilder` instead.
+    This builds a mark-to-base lookup subtable containing all of the referenced
+    marks and bases.
 
     Example::
 
@@ -1898,42 +1939,7 @@ def buildMarkBasePos(marks, bases, glyphMap):
 
         marks = {"acute": (0, a1), "grave": (0, a1), "cedilla": (1, a2)}
         bases = {"a": {0: a3, 1: a5}, "b": {0: a4, 1: a5}}
-        markbaseposes = buildMarkBasePos(marks, bases, font.getReverseGlyphMap())
-
-    Args:
-        marks (dict): A dictionary mapping anchors to glyphs; the keys being
-            glyph names, and the values being a tuple of mark class number and
-            an ``otTables.Anchor`` object representing the mark's attachment
-            point. (See :func:`buildMarkArray`.)
-        bases (dict): A dictionary mapping anchors to glyphs; the keys being
-            glyph names, and the values being dictionaries mapping mark class ID
-            to the appropriate ``otTables.Anchor`` object used for attaching marks
-            of that class. (See :func:`buildBaseArray`.)
-        glyphMap: a glyph name to ID map, typically returned from
-            ``font.getReverseGlyphMap()``.
-
-    Returns:
-        A list of ``otTables.MarkBasePos`` objects.
-    """
-    # TODO: Consider emitting multiple subtables to save space.
-    # Partition the marks and bases into disjoint subsets, so that
-    # MarkBasePos rules would only access glyphs from a single
-    # subset. This would likely lead to smaller mark/base
-    # matrices, so we might be able to omit many of the empty
-    # anchor tables that we currently produce. Of course, this
-    # would only work if the MarkBasePos rules of real-world fonts
-    # allow partitioning into multiple subsets. We should find out
-    # whether this is the case; if so, implement the optimization.
-    # On the other hand, a very large number of subtables could
-    # slow down layout engines; so this would need profiling.
-    return [buildMarkBasePosSubtable(marks, bases, glyphMap)]
-
-
-def buildMarkBasePosSubtable(marks, bases, glyphMap):
-    """Build a single MarkBasePos (GPOS4) subtable.
-
-    This builds a mark-to-base lookup subtable containing all of the referenced
-    marks and bases. See :func:`buildMarkBasePos`.
+        markbaseposes = [buildMarkBasePosSubtable(marks, bases, font.getReverseGlyphMap())]
 
     Args:
         marks (dict): A dictionary mapping anchors to glyphs; the keys being

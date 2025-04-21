@@ -38,7 +38,7 @@ def parseXML(xmlSnippet):
             % type(xmlSnippet).__name__
         )
     xml += b"</root>"
-    reader.parser.Parse(xml, 0)
+    reader.parser.Parse(xml, 1)
     return reader.root[2]
 
 
@@ -46,7 +46,8 @@ def parseXmlInto(font, parseInto, xmlSnippet):
     parsed_xml = [e for e in parseXML(xmlSnippet.strip()) if not isinstance(e, str)]
     for name, attrs, content in parsed_xml:
         parseInto.fromXML(name, attrs, content, font)
-    parseInto.populateDefaults()
+    if hasattr(parseInto, "populateDefaults"):
+        parseInto.populateDefaults()
     return parseInto
 
 
@@ -57,6 +58,9 @@ class FakeFont:
         self.lazy = False
         self.tables = {}
         self.cfg = Config()
+
+    def __contains__(self, tag):
+        return tag in self.tables
 
     def __getitem__(self, tag):
         return self.tables[tag]

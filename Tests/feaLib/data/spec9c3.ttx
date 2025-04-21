@@ -6,7 +6,7 @@
     <tableVersion value="1.0"/>
     <fontRevision value="1.5"/>
     <checkSumAdjustment value="0x0"/>
-    <magicNumber value="0x0"/>
+    <magicNumber value="0x5f0f3cf5"/>
     <flags value="00000000 00000000"/>
     <unitsPerEm value="0"/>
     <created value="Tue Dec 13 11:22:33 2011"/>

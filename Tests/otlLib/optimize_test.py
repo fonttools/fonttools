@@ -2,7 +2,6 @@ import contextlib
 import logging
 import os
 from pathlib import Path
-from subprocess import run
 from typing import List, Optional, Tuple
 
 import pytest
@@ -28,18 +27,48 @@ def test_main(tmpdir: Path):
     input = tmpdir / "in.ttf"
     fb.save(str(input))
     output = tmpdir / "out.ttf"
-    run(
-        [
-            "fonttools",
-            "otlLib.optimize",
-            "--gpos-compression-level",
-            "5",
-            str(input),
-            "-o",
-            str(output),
-        ],
-        check=True,
-    )
+    args = [
+        "--gpos-compression-level",
+        "5",
+        str(input),
+        "-o",
+        str(output),
+    ]
+    from fontTools.otlLib.optimize import main
+
+    ret = main(args)
+    assert ret in (0, None)
+    assert output.exists()
+
+
+def test_no_crash_with_missing_gpos(tmpdir: Path):
+    """Test that the optimize script gracefully handles TTFs with no GPOS."""
+
+    # Create a test TTF.
+    glyphs = ".notdef space A Aacute B D".split()
+    fb = FontBuilder(1000)
+    fb.setupGlyphOrder(glyphs)
+
+    # Confirm that it has no GPOS.
+    assert "GPOS" not in fb.font
+
+    # Save, and feed to the optimize CLI.
+    input = tmpdir / "in.ttf"
+    fb.save(str(input))
+
+    output = tmpdir / "out.ttf"
+    args = [
+        "--gpos-compression-level",
+        "5",
+        str(input),
+        "-o",
+        str(output),
+    ]
+    from fontTools.otlLib.optimize import main
+
+    # Assert that we did not crash, and saved an output font.
+    ret = main(args)
+    assert ret in (0, None)
     assert output.exists()
 
 

@@ -5,15 +5,14 @@
    :align: center
 
 
-fontTools Docs
-==============
-
+---fontTools Documentation---
+=============================
 About
 -----
 
 fontTools is a family of libraries and utilities for manipulating fonts in Python.
 
-The project has an `MIT open-source license <https://github.com/fonttools/fonttools/blob/main/LICENSE>`_. Among other things this means you can use it free of charge.
+The project is licensed under the `MIT open-source license <https://github.com/fonttools/fonttools/blob/main/LICENSE>`_, allowing free usage.
 
 Installation
 ------------
@@ -22,101 +21,76 @@ Installation
 
     fontTools requires `Python <http://www.python.org/download/>`_ 3.8 or later.
 
-The package is listed in the Python Package Index (PyPI), so you can install it with `pip <https://pip.pypa.io/>`_::
+To install fontTools, use `pip <https://pip.pypa.io/>`_:
+
 
     pip install fonttools
-
-See the Optional Requirements section below for details about module-specific dependencies that must be installed in select cases.
 
 Utilities
 ---------
 
-fontTools installs four command-line utilities:
+fontTools includes the following command-line utilities:
 
-- ``pyftmerge``, a tool for merging fonts; see :py:mod:`fontTools.merge`
-- ``pyftsubset``, a tool for subsetting fonts; see :py:mod:`fontTools.subset`
-- ``ttx``, a tool for converting between OpenType binary fonts (OTF) and an XML representation (TTX); see :py:mod:`fontTools.ttx`
-- ``fonttools``, a "meta-tool" for accessing other components of the fontTools family.
+- ``pyftmerge``: Tool for merging fonts; see :py:mod:`fontTools.merge`
+- ``pyftsubset``: Tool for subsetting fonts; see :py:mod:`fontTools.subset`
+- ``ttx``: Tool for converting between OTF and XML representation; see :py:mod:`fontTools.ttx`
+- ``fonttools``: Meta-tool for accessing other fontTools components.
 
-This last utility takes a subcommand, which could be one of:
+For ``fonttools``, you can use subcommands like:
 
 - ``cffLib.width``: Calculate optimum defaultWidthX/nominalWidthX values
 - ``cu2qu``: Convert a UFO font from cubic to quadratic curves
 - ``feaLib``: Add features from a feature file (.fea) into a OTF font
-- ``help``: Show this help
 - ``merge``: Merge multiple fonts into one
-- ``mtiLib``: Convert a FontDame OTL file to TTX XML
 - ``subset``: OpenType font subsetter and optimizer
-- ``ttLib.woff2``: Compress and decompress WOFF2 fonts
 - ``ttx``: Convert OpenType fonts to XML and back
 - ``varLib``: Build a variable font from a designspace file and masters
-- ``varLib.instancer``: Partially instantiate a variable font.
-- ``varLib.interpolatable``: Test for interpolatability issues between fonts
-- ``varLib.interpolate_layout``: Interpolate GDEF/GPOS/GSUB tables for a point on a designspace
-- ``varLib.models``: Normalize locations on a given designspace
-- ``varLib.mutator``: Instantiate a variation font
-- ``varLib.varStore``: Optimize a font's GDEF variation store
+- ``varLib.instancer``: Partially instantiate a variable font
 - ``voltLib.voltToFea``: Convert MS VOLT to AFDKO feature files.
 
 Libraries
 ---------
 
-The main library you will want to access when using fontTools for font
-engineering is likely to be :py:mod:`fontTools.ttLib.ttFont`, which is the module
-for handling TrueType/OpenType fonts. However, there are many other
-libraries in the fontTools suite:
+The main library for font engineering is :py:mod:`fontTools.ttLib.ttFont`, which handles TrueType/OpenType fonts. Other libraries include:
 
-- :py:mod:`fontTools.afmLib`: Module for reading and writing AFM files
-- :py:mod:`fontTools.agl`: Access to the Adobe Glyph List
-- :py:mod:`fontTools.cffLib`: Read/write tools for Adobe CFF fonts
-- :py:mod:`fontTools.colorLib`: Module for handling colors in CPAL/COLR fonts
-- :py:mod:`fontTools.config`: Configure fontTools
-- :py:mod:`fontTools.cu2qu`: Module for cubic to quadratic conversion
+- :py:mod:`fontTools.afmLib`: Read and write AFM files
+- :py:mod:`fontTools.agl`: Access the Adobe Glyph List
+- :py:mod:`fontTools.cffLib`: Tools for Adobe CFF fonts
+- :py:mod:`fontTools.colorLib`: Handle colors in CPAL/COLR fonts
+- :py:mod:`fontTools.cu2qu`: Convert cubic to quadratic curves
 - :py:mod:`fontTools.designspaceLib`: Read and write designspace files
-- :py:mod:`fontTools.encodings`: Support for font-related character encodings
-- :py:mod:`fontTools.feaLib`: Read and read AFDKO feature files
+- :py:mod:`fontTools.encodings`: Support for font-related encodings
+- :py:mod:`fontTools.feaLib`: Read and write AFDKO feature files
 - :py:mod:`fontTools.fontBuilder`: Construct TTF/OTF fonts from scratch
 - :py:mod:`fontTools.merge`: Tools for merging font files
-- :py:mod:`fontTools.pens`: Various classes for manipulating glyph outlines
 - :py:mod:`fontTools.subset`: OpenType font subsetting and optimization
-- :py:mod:`fontTools.svgLib.path`: Library for drawing SVG paths onto glyphs
-- :py:mod:`fontTools.t1Lib`: Tools for PostScript Type 1 fonts (Python2 only)
-- :py:mod:`fontTools.tfmLib`: Module for reading TFM files
-- :py:mod:`fontTools.ttLib`: Module for reading/writing OpenType and Truetype fonts
-- :py:mod:`fontTools.ttx`: Module for converting between OTF and XML representation
-- :py:mod:`fontTools.ufoLib`: Module for reading and writing UFO files
-- :py:mod:`fontTools.unicodedata`: Convert between Unicode and OpenType script information
-- :py:mod:`fontTools.varLib`: Module for dealing with 'gvar'-style font variations
-- :py:mod:`fontTools.voltLib`: Module for dealing with Visual OpenType Layout Tool (VOLT) files
-
-A selection of sample Python programs using these libaries can be found in the `Snippets directory <https://github.com/fonttools/fonttools/blob/main/Snippets/>`_ of the fontTools repository.
+- :py:mod:`fontTools.svgLib.path`: Draw SVG paths onto glyphs
+- :py:mod:`fontTools.ttLib`: Read/write OpenType and TrueType fonts
+- :py:mod:`fontTools.ttx`: Convert between OTF and XML representation
+- :py:mod:`fontTools.ufoLib`: Read and write UFO files
+- :py:mod:`fontTools.unicodedata`: Convert between Unicode and OpenType script info
+- :py:mod:`fontTools.varLib`: Deal with 'gvar'-style font variations
+- :py:mod:`fontTools.voltLib`: Deal with Visual OpenType Layout Tool (VOLT) files
 
 Optional Dependencies
 ---------------------
 
-The fontTools package currently has no (required) external dependencies
-besides the modules included in the Python Standard Library.
-However, a few extra dependencies are required to unlock optional features
-in some of the library modules. See the :doc:`optional requirements <./optional>`
-page for more information.
+fontTools has no external dependencies besides the Python Standard Library. Some optional features require additional modules; see the :doc:`optional requirements </optional>` page for details.
 
-Developer information
+Developer Information
 ---------------------
 
-Information for developers can be found :doc:`here <./developer>`.
+For developer resources, refer to the :doc:`developer information </developer>`.
 
 License
 -------
 
-`MIT license <https://github.com/fonttools/fonttools/blob/main/LICENSE>`_.  See the full text of the license for details.
+fontTools is licensed under the `MIT license <https://github.com/fonttools/fonttools/blob/main/LICENSE>`_. Refer to the full text of the license for details.
 
-
-Table of Contents
------------------
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Library
+   :maxdepth: 1
+   :hidden:
 
    afmLib
    agl
@@ -132,6 +106,7 @@ Table of Contents
    mtiLib
    otlLib/index
    pens/index
+   qu2cu/index
    subset/index
    svgLib/index
    t1Lib
@@ -139,11 +114,9 @@ Table of Contents
    ttLib/index
    ttx
    ufoLib/index
-   unicode
    unicodedata/index
    varLib/index
    voltLib/index
-
 
 .. |Travis Build Status| image:: https://travis-ci.org/fonttools/fonttools.svg
    :target: https://travis-ci.org/fonttools/fonttools
