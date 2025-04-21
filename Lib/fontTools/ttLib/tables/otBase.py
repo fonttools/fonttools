@@ -398,6 +398,7 @@ class OTTableWriter(object):
         self.localState = localState
         self.tableTag = tableTag
         self.parent = None
+        self.name = "<none>"
 
     def __setitem__(self, name, value):
         state = self.localState.copy() if self.localState else dict()
