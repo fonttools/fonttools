@@ -1225,7 +1225,7 @@ class Glyph(object):
                 if boundsDone is not None:
                     boundsDone.add(glyphName)
             # empty components shouldn't update the bounds of the parent glyph
-            if g.numberOfContours == 0:
+            if g.yMin == g.yMax and g.xMin == g.xMax:
                 continue
 
             x, y = compo.x, compo.y
