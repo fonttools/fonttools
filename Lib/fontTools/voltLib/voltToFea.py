@@ -203,20 +203,34 @@ class VoltToFea:
             for feature_tag, scripts in features.items():
                 feature = ast.FeatureBlock(feature_tag)
                 script_tags = sorted(scripts, key=lambda k: 0 if k == "DFLT" else 1)
+                if feature_tag == "aalt" and len(script_tags) > 1:
+                    log.warning(
+                        "FEA syntax does not allow script statements in 'aalt' feature, "
+                        "so only lookups from the first script will be included."
+                    )
+                    script_tags = script_tags[:1]
                 for script_tag in script_tags:
-                    feature.statements.append(ast.ScriptStatement(script_tag))
+                    if feature_tag != "aalt":
+                        feature.statements.append(ast.ScriptStatement(script_tag))
                     language_tags = sorted(
                         scripts[script_tag],
                         key=lambda k: 0 if k == "dflt" else 1,
                     )
-                    for language_tag in language_tags:
-                        include_default = True if language_tag == "dflt" else False
-                        feature.statements.append(
-                            ast.LanguageStatement(
-                                language_tag,
-                                include_default=include_default,
-                            )
+                    if feature_tag == "aalt" and len(language_tags) > 1:
+                        log.warning(
+                            "FEA syntax does not allow language statements in 'aalt' feature, "
+                            "so only lookups from the first language will be included."
                         )
+                        language_tags = language_tags[:1]
+                    for language_tag in language_tags:
+                        if feature_tag != "aalt":
+                            include_default = True if language_tag == "dflt" else False
+                            feature.statements.append(
+                                ast.LanguageStatement(
+                                    language_tag,
+                                    include_default=include_default,
+                                )
+                            )
                         for name in scripts[script_tag][language_tag]:
                             lookup = self._lookups[name.lower()]
                             lookupref = ast.LookupReferenceStatement(lookup)

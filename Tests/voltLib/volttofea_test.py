@@ -1685,6 +1685,91 @@ class ToFeaTest(unittest.TestCase):
         )
         self.assertEqual("# Glyph classes\n@foo = [foo foo.1 foo.2];", fea)
 
+    def test_aalt_feature(self):
+        with self.assertLogs(level="WARNING") as logs:
+            fea = self.parse(
+                """
+                DEF_SCRIPT NAME "Latin" TAG "latn"
+                DEF_LANGSYS NAME "English" TAG "ENG "
+                DEF_FEATURE NAME "Access All Alternates" TAG "aalt"
+                LOOKUP "test1"
+                END_FEATURE
+                END_LANGSYS
+                END_SCRIPT
+                DEF_SCRIPT NAME "Default" TAG "DFLT"
+                DEF_LANGSYS NAME "English" TAG "ENG "
+                DEF_FEATURE NAME "Access All Alternates" TAG "aalt"
+                LOOKUP "test2"
+                END_FEATURE
+                END_LANGSYS
+                DEF_LANGSYS NAME "Default" TAG "dflt"
+                DEF_FEATURE NAME "Access All Alternates" TAG "aalt"
+                LOOKUP "test3"
+                END_FEATURE
+                END_LANGSYS
+                END_SCRIPT
+                DEF_LOOKUP "test1" PROCESS_BASE PROCESS_MARKS ALL DIRECTION LTR
+                IN_CONTEXT
+                END_CONTEXT
+                AS_SUBSTITUTION
+                SUB GLYPH "a"
+                WITH GLYPH "a.alt"
+                END_SUB
+                END_SUBSTITUTION
+                DEF_LOOKUP "test2" PROCESS_BASE PROCESS_MARKS ALL DIRECTION LTR
+                IN_CONTEXT
+                END_CONTEXT
+                AS_SUBSTITUTION
+                SUB GLYPH "b"
+                WITH GLYPH "b.alt"
+                END_SUB
+                END_SUBSTITUTION
+                DEF_LOOKUP "test3" PROCESS_BASE PROCESS_MARKS ALL DIRECTION LTR
+                IN_CONTEXT
+                END_CONTEXT
+                AS_SUBSTITUTION
+                SUB GLYPH "c"
+                WITH GLYPH "c.alt"
+                END_SUB
+                END_SUBSTITUTION
+                """
+            )
+        self.assertEqual(
+            dedent(
+                """
+            # Lookups
+            lookup test1 {
+                sub a by a.alt;
+            } test1;
+
+            lookup test2 {
+                sub b by b.alt;
+            } test2;
+
+            lookup test3 {
+                sub c by c.alt;
+            } test3;
+
+            # Features
+            feature aalt {
+                lookup test3;
+            } aalt;
+                """
+            ),
+            fea,
+        )
+        self.assertEqual(
+            logs.output,
+            [
+                "WARNING:fontTools.voltLib.voltToFea:FEA syntax does not allow script "
+                "statements in 'aalt' feature, so only lookups from the first script will be "
+                "included.",
+                "WARNING:fontTools.voltLib.voltToFea:FEA syntax does not allow language "
+                "statements in 'aalt' feature, so only lookups from the first language will be "
+                "included.",
+            ],
+        )
+
     def test_cli_vtp(self):
         vtp = DATADIR / "Nutso.vtp"
         fea = DATADIR / "Nutso.fea"
