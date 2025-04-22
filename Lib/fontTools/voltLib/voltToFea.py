@@ -186,30 +186,38 @@ class VoltToFea:
 
         # Prune features
         features = self._features.copy()
-        for ftag in features:
-            scripts = features[ftag]
-            for stag in scripts:
-                langs = scripts[stag]
-                for ltag in langs:
-                    langs[ltag] = [l for l in langs[ltag] if l.lower() in self._lookups]
-                scripts[stag] = {t: l for t, l in langs.items() if l}
-            features[ftag] = {t: s for t, s in scripts.items() if s}
+        for feature_tag in features:
+            scripts = features[feature_tag]
+            for script_tag in scripts:
+                langs = scripts[script_tag]
+                for language_tag in langs:
+                    langs[language_tag] = [
+                        l for l in langs[language_tag] if l.lower() in self._lookups
+                    ]
+                scripts[script_tag] = {t: l for t, l in langs.items() if l}
+            features[feature_tag] = {t: s for t, s in scripts.items() if s}
         features = {t: f for t, f in features.items() if f}
 
         if features:
             statements.append(ast.Comment("# Features"))
-            for ftag, scripts in features.items():
-                feature = ast.FeatureBlock(ftag)
-                stags = sorted(scripts, key=lambda k: 0 if k == "DFLT" else 1)
-                for stag in stags:
-                    feature.statements.append(ast.ScriptStatement(stag))
-                    ltags = sorted(scripts[stag], key=lambda k: 0 if k == "dflt" else 1)
-                    for ltag in ltags:
-                        include_default = True if ltag == "dflt" else False
+            for feature_tag, scripts in features.items():
+                feature = ast.FeatureBlock(feature_tag)
+                script_tags = sorted(scripts, key=lambda k: 0 if k == "DFLT" else 1)
+                for script_tag in script_tags:
+                    feature.statements.append(ast.ScriptStatement(script_tag))
+                    language_tags = sorted(
+                        scripts[script_tag],
+                        key=lambda k: 0 if k == "dflt" else 1,
+                    )
+                    for language_tag in language_tags:
+                        include_default = True if language_tag == "dflt" else False
                         feature.statements.append(
-                            ast.LanguageStatement(ltag, include_default=include_default)
+                            ast.LanguageStatement(
+                                language_tag,
+                                include_default=include_default,
+                            )
                         )
-                        for name in scripts[stag][ltag]:
+                        for name in scripts[script_tag][language_tag]:
                             lookup = self._lookups[name.lower()]
                             lookupref = ast.LookupReferenceStatement(lookup)
                             feature.statements.append(lookupref)
