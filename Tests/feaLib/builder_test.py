@@ -89,6 +89,8 @@ class BuilderTest(unittest.TestCase):
         duplicate_language_stmt
         CursivePosSubtable
         MarkBasePosSubtable
+        MarkLigPosSubtable
+        MarkMarkPosSubtable
     """.split()
 
     VARFONT_AXES = [

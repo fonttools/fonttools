@@ -1,0 +1,25 @@
+languagesystem DFLT dflt;
+
+markClass [acute grave] <anchor 111 -11> @TOP_MARKS;
+markClass macron <anchor 112 -12> @TOP_MARKS;
+markClass [cedilla] <anchor 222 22> @BOTTOM_MARKS;
+markClass [ogonek] <anchor 333 33> @SIDE_MARKS;
+
+feature test {
+    pos ligature f_f
+            <anchor 11 1> mark @TOP_MARKS
+            <anchor 12 -1> mark @BOTTOM_MARKS
+        ligComponent
+            <anchor 21 1> mark @TOP_MARKS
+            <anchor 22 -1> mark @BOTTOM_MARKS;
+    subtable;
+    pos ligature [f_i f_l]
+            <anchor 22 -2> mark @BOTTOM_MARKS
+        ligComponent
+            <anchor 32 -2> mark @BOTTOM_MARKS;
+    subtable;
+    pos ligature T_h
+            <anchor 33 3> mark @SIDE_MARKS
+        ligComponent
+            <anchor 43 3> mark @SIDE_MARKS;
+} test;
