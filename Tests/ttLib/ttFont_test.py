@@ -318,3 +318,21 @@ def test_unsupported_seek_operation_lazy_loading_fails():
     f = UnsupportedSeekFile()
     with pytest.raises(TTLibError, match="Input file must be seekable when lazy=True"):
         TTFont(f, lazy=True)
+
+
+@pytest.mark.parametrize(
+    "file_name",
+    [
+        "duplicate_glyph_name.ttf",
+        "duplicate_glyph_name.otf",
+    ],
+)
+def test_duplicate_glyph_names(file_name):
+    font_path = os.path.join(DATA_DIR, file_name)
+    font = TTFont(font_path)
+
+    assert font.getGlyphOrder() == [".notdef", "space", "A", "A.2", "A.1"]
+
+    if "CFF " not in font:
+        post = font["post"]
+        assert post.mapping == {"A.2": "A"}

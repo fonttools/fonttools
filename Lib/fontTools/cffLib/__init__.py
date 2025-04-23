@@ -1464,10 +1464,11 @@ class CharsetConverter(SimpleConverter):
                 if glyphName in allNames:
                     # make up a new glyphName that's unique
                     n = allNames[glyphName]
-                    while (glyphName + "#" + str(n)) in allNames:
+                    names = set(allNames) | set(charset)
+                    while (glyphName + "." + str(n)) in names:
                         n += 1
                     allNames[glyphName] = n + 1
-                    glyphName = glyphName + "#" + str(n)
+                    glyphName = glyphName + "." + str(n)
                 allNames[glyphName] = 1
                 newCharset.append(glyphName)
             charset = newCharset
