@@ -92,6 +92,7 @@ class BuilderTest(unittest.TestCase):
         MarkLigPosSubtable
         MarkMarkPosSubtable
         single_pos_NULL
+        class_pair_pos_duplicates
     """.split()
 
     VARFONT_AXES = [
