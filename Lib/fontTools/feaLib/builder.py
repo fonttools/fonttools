@@ -126,6 +126,7 @@ class Builder(object):
         self.script_ = None
         self.lookupflag_ = 0
         self.lookupflag_markFilterSet_ = None
+        self.use_extension_ = False
         self.language_systems = set()
         self.seen_non_DFLT_script_ = False
         self.named_lookups_ = {}
@@ -141,6 +142,7 @@ class Builder(object):
         self.aalt_features_ = []  # [(location, featureName)*], for 'aalt'
         self.aalt_location_ = None
         self.aalt_alternates_ = {}
+        self.aalt_use_extension_ = False
         # for 'featureNames'
         self.featureNames_ = set()
         self.featureNames_ids_ = {}
@@ -247,6 +249,7 @@ class Builder(object):
         result = builder_class(self.font, location)
         result.lookupflag = self.lookupflag_
         result.markFilterSet = self.lookupflag_markFilterSet_
+        result.extension = self.use_extension_
         self.lookups_.append(result)
         return result
 
@@ -272,6 +275,7 @@ class Builder(object):
         self.cur_lookup_ = builder_class(self.font, location)
         self.cur_lookup_.lookupflag = self.lookupflag_
         self.cur_lookup_.markFilterSet = self.lookupflag_markFilterSet_
+        self.cur_lookup_.extension = self.use_extension_
         self.lookups_.append(self.cur_lookup_)
         if self.cur_lookup_name_:
             # We are starting a lookup rule inside a named lookup block.
@@ -323,7 +327,7 @@ class Builder(object):
         }
         old_lookups = self.lookups_
         self.lookups_ = []
-        self.start_feature(self.aalt_location_, "aalt")
+        self.start_feature(self.aalt_location_, "aalt", self.aalt_use_extension_)
         if single:
             single_lookup = self.get_lookup_(location, SingleSubstBuilder)
             single_lookup.mapping = single
@@ -1054,15 +1058,22 @@ class Builder(object):
         else:
             return frozenset({("DFLT", "dflt")})
 
-    def start_feature(self, location, name):
+    def start_feature(self, location, name, use_extension=False):
+        if use_extension and name != "aalt":
+            raise FeatureLibError(
+                "'useExtension' keyword for feature blocks is allowed only for 'aalt' feature",
+                location,
+            )
         self.language_systems = self.get_default_language_systems_()
         self.script_ = "DFLT"
         self.cur_lookup_ = None
         self.cur_feature_name_ = name
         self.lookupflag_ = 0
         self.lookupflag_markFilterSet_ = None
+        self.use_extension_ = use_extension
         if name == "aalt":
             self.aalt_location_ = location
+            self.aalt_use_extension_ = use_extension
 
     def end_feature(self):
         assert self.cur_feature_name_ is not None
@@ -1071,8 +1082,9 @@ class Builder(object):
         self.cur_lookup_ = None
         self.lookupflag_ = 0
         self.lookupflag_markFilterSet_ = None
+        self.use_extension_ = False
 
-    def start_lookup_block(self, location, name):
+    def start_lookup_block(self, location, name, use_extension=False):
         if name in self.named_lookups_:
             raise FeatureLibError(
                 'Lookup "%s" has already been defined' % name, location
@@ -1086,6 +1098,7 @@ class Builder(object):
         self.cur_lookup_name_ = name
         self.named_lookups_[name] = None
         self.cur_lookup_ = None
+        self.use_extension_ = use_extension
         if self.cur_feature_name_ is None:
             self.lookupflag_ = 0
             self.lookupflag_markFilterSet_ = None
@@ -1094,6 +1107,7 @@ class Builder(object):
         assert self.cur_lookup_name_ is not None
         self.cur_lookup_name_ = None
         self.cur_lookup_ = None
+        self.use_extension_ = False
         if self.cur_feature_name_ is None:
             self.lookupflag_ = 0
             self.lookupflag_markFilterSet_ = None
