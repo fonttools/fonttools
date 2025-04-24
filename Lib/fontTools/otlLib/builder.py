@@ -74,7 +74,7 @@ LOOKUP_FLAG_IGNORE_MARKS = 0x0008
 LOOKUP_FLAG_USE_MARK_FILTERING_SET = 0x0010
 
 
-def buildLookup(subtables, flags=0, markFilterSet=None):
+def buildLookup(subtables, flags=0, markFilterSet=None, table=None, extension=False):
     """Turns a collection of rules into a lookup.
 
     A Lookup (as defined in the `OpenType Spec <https://docs.microsoft.com/en-gb/typography/opentype/spec/chapter2#lookupTbl>`__)
@@ -99,6 +99,8 @@ def buildLookup(subtables, flags=0, markFilterSet=None):
             lookup. If a mark filtering set is provided,
             `LOOKUP_FLAG_USE_MARK_FILTERING_SET` will be set on the lookup's
             flags.
+        table (str): The name of the table this lookup belongs to, e.g. "GPOS" or "GSUB".
+        extension (bool): ``True`` if this is an extension lookup, ``False`` otherwise.
 
     Returns:
         An ``otTables.Lookup`` object or ``None`` if there are no subtables
@@ -114,8 +116,21 @@ def buildLookup(subtables, flags=0, markFilterSet=None):
     ), "all subtables must have the same LookupType; got %s" % repr(
         [t.LookupType for t in subtables]
     )
+
+    if extension:
+        assert table in ("GPOS", "GSUB")
+        lookupType = 7 if table == "GSUB" else 9
+        extSubTableClass = ot.lookupTypes[table][lookupType]
+        for i, st in enumerate(subtables):
+            subtables[i] = extSubTableClass()
+            subtables[i].Format = 1
+            subtables[i].ExtSubTable = st
+            subtables[i].ExtensionLookupType = st.LookupType
+    else:
+        lookupType = subtables[0].LookupType
+
     self = ot.Lookup()
-    self.LookupType = subtables[0].LookupType
+    self.LookupType = lookupType
     self.LookupFlag = flags
     self.SubTable = subtables
     self.SubTableCount = len(self.SubTable)
@@ -134,7 +149,7 @@ def buildLookup(subtables, flags=0, markFilterSet=None):
 class LookupBuilder(object):
     SUBTABLE_BREAK_ = "SUBTABLE_BREAK"
 
-    def __init__(self, font, location, table, lookup_type):
+    def __init__(self, font, location, table, lookup_type, extension=False):
         self.font = font
         self.glyphMap = font.getReverseGlyphMap()
         self.location = location
@@ -142,6 +157,7 @@ class LookupBuilder(object):
         self.lookupflag = 0
         self.markFilterSet = None
         self.lookup_index = None  # assigned when making final tables
+        self.extension = extension
         assert table in ("GPOS", "GSUB")
 
     def equals(self, other):
@@ -150,6 +166,7 @@ class LookupBuilder(object):
             and self.table == other.table
             and self.lookupflag == other.lookupflag
             and self.markFilterSet == other.markFilterSet
+            and self.extension == other.extension
         )
 
     def inferGlyphClasses(self):
@@ -161,7 +178,13 @@ class LookupBuilder(object):
         return {}
 
     def buildLookup_(self, subtables):
-        return buildLookup(subtables, self.lookupflag, self.markFilterSet)
+        return buildLookup(
+            subtables,
+            self.lookupflag,
+            self.markFilterSet,
+            self.table,
+            self.extension,
+        )
 
     def buildMarkClasses_(self, marks):
         """{"cedilla": ("BOTTOM", ast.Anchor), ...} --> {"BOTTOM":0, "TOP":1}

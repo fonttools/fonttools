@@ -68,7 +68,7 @@ class BuilderTest(unittest.TestCase):
         spec4h1 spec4h2 spec5d1 spec5d2 spec5fi1 spec5fi2 spec5fi3 spec5fi4
         spec5f_ii_1 spec5f_ii_2 spec5f_ii_3 spec5f_ii_4
         spec5h1 spec6b_ii spec6d2 spec6e spec6f
-        spec6h_ii spec6h_iii_1 spec6h_iii_3d spec8a spec8b spec8c spec8d
+        spec6h_ii spec6h_iii_1 spec6h_iii_3d spec8a spec8a_2 spec8b spec8c spec8d
         spec9a spec9a2 spec9b spec9c1 spec9c2 spec9c3 spec9d spec9e spec9f
         spec9g spec10
         bug453 bug457 bug463 bug501 bug502 bug504 bug505 bug506 bug509
@@ -93,6 +93,7 @@ class BuilderTest(unittest.TestCase):
         MarkMarkPosSubtable
         single_pos_NULL
         class_pair_pos_duplicates
+        useExtension
     """.split()
 
     VARFONT_AXES = [
@@ -1249,6 +1250,14 @@ class BuilderTest(unittest.TestCase):
         font = self.make_mock_vf()
         addOpenTypeFeatures(font, feafile)
         assert dedent(str(feafile)) == dedent(features)
+
+    def test_feature_useExtension(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "'useExtension' keyword for feature blocks is allowed only for 'aalt' feature",
+            self.build,
+            "feature liga useExtension { sub f f by f_f; } liga;",
+        )
 
 
 def generate_feature_file_test(name):

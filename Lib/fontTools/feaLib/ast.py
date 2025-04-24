@@ -453,8 +453,7 @@ class FeatureBlock(Block):
     def build(self, builder):
         """Call the ``start_feature`` callback on the builder object, visit
         all the statements in this feature, and then call ``end_feature``."""
-        # TODO(sascha): Handle use_extension.
-        builder.start_feature(self.location, self.name)
+        builder.start_feature(self.location, self.name, self.use_extension)
         # language exclude_dflt statements modify builder.features_
         # limit them to this block with temporary builder.features_
         features = builder.features_
@@ -504,8 +503,7 @@ class LookupBlock(Block):
         self.name, self.use_extension = name, use_extension
 
     def build(self, builder):
-        # TODO(sascha): Handle use_extension.
-        builder.start_lookup_block(self.location, self.name)
+        builder.start_lookup_block(self.location, self.name, self.use_extension)
         Block.build(self, builder)
         builder.end_lookup_block()
 
@@ -2179,7 +2177,7 @@ class VariationBlock(Block):
     def build(self, builder):
         """Call the ``start_feature`` callback on the builder object, visit
         all the statements in this feature, and then call ``end_feature``."""
-        builder.start_feature(self.location, self.name)
+        builder.start_feature(self.location, self.name, self.use_extension)
         if (
             self.conditionset != "NULL"
             and self.conditionset not in builder.conditionsets_
