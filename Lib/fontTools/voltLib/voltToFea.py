@@ -715,13 +715,21 @@ class VoltToFea:
             lookupflags = ast.LookupFlagStatement(
                 flags, mark_attachement, mark_filtering
             )
+
+        use_extension = False
+        if self._settings.get("COMPILER_USEEXTENSIONLOOKUPS"):
+            use_extension = True
+
         if "\\" in lookup.name:
             # Merge sub lookups as subtables (lookups named “base\sub”),
             # makeotf/feaLib will issue a warning and ignore the subtable
             # statement if it is not a pairpos lookup, though.
             name = lookup.name.split("\\")[0]
             if name.lower() not in self._lookups:
-                fealookup = ast.LookupBlock(self._lookupName(name))
+                fealookup = ast.LookupBlock(
+                    self._lookupName(name),
+                    use_extension=use_extension,
+                )
                 if lookupflags is not None:
                     fealookup.statements.append(lookupflags)
                 fealookup.statements.append(ast.Comment("# " + lookup.name))
@@ -731,7 +739,10 @@ class VoltToFea:
                 fealookup.statements.append(ast.Comment("# " + lookup.name))
             self._lookups[name.lower()] = fealookup
         else:
-            fealookup = ast.LookupBlock(self._lookupName(lookup.name))
+            fealookup = ast.LookupBlock(
+                self._lookupName(lookup.name),
+                use_extension=use_extension,
+            )
             if lookupflags is not None:
                 fealookup.statements.append(lookupflags)
             self._lookups[lookup.name.lower()] = fealookup
@@ -759,12 +770,13 @@ class VoltToFea:
                 self._gsubLookup(lookup, prefix, suffix, ignore, chain, fealookup)
 
             if lookup.pos is not None:
-                if self._settings.get("COMPILER_USEEXTENSIONLOOKUPS"):
-                    fealookup.use_extension = True
                 if prefix or suffix or chain or ignore:
                     if not ignore and targetlookup is None:
                         targetname = self._lookupName(lookup.name + " target")
-                        targetlookup = ast.LookupBlock(targetname)
+                        targetlookup = ast.LookupBlock(
+                            targetname,
+                            use_extension=use_extension,
+                        )
                         fealookup.targets = getattr(fealookup, "targets", [])
                         fealookup.targets.append(targetlookup)
                         self._gposLookup(lookup, targetlookup)

@@ -1606,6 +1606,14 @@ class ToFeaTest(unittest.TestCase):
 
     def test_use_extension(self):
         fea = self.parse(
+            'DEF_LOOKUP "liga1" PROCESS_BASE PROCESS_MARKS ALL '
+            "DIRECTION LTR\n"
+            "IN_CONTEXT\n"
+            "END_CONTEXT\n"
+            "AS_SUBSTITUTION\n"
+            'SUB GLYPH "f" GLYPH "i" WITH GLYPH "f_i"\n'
+            "END_SUB\n"
+            "END_SUBSTITUTION\n"
             'DEF_LOOKUP "kern1" PROCESS_BASE PROCESS_MARKS ALL '
             "DIRECTION LTR\n"
             "IN_CONTEXT\n"
@@ -1622,6 +1630,10 @@ class ToFeaTest(unittest.TestCase):
         )
         self.assertEqual(
             "\n# Lookups\n"
+            "lookup liga1 useExtension {\n"
+            "    sub f i by f_i;\n"
+            "} liga1;\n"
+            "\n"
             "lookup kern1 useExtension {\n"
             "    enum pos A V -30;\n"
             "    enum pos V A -25;\n"
