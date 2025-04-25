@@ -1,6 +1,7 @@
 from collections import namedtuple, OrderedDict
 import itertools
 import os
+from typing import Dict, Union
 from fontTools.misc.fixedTools import fixedToFloat
 from fontTools.misc.roundTools import otRound
 from fontTools import ttLib
@@ -13,6 +14,7 @@ from fontTools.ttLib.tables.otBase import (
     CountReference,
 )
 from fontTools.ttLib.tables import otBase
+from fontTools.ttLib.ttFont import TTFont
 from fontTools.feaLib.ast import STATNameStatement
 from fontTools.otlLib.optimize.gpos import (
     _compression_level_from_env,
@@ -2741,10 +2743,18 @@ class ClassDefBuilder(object):
 AXIS_VALUE_NEGATIVE_INFINITY = fixedToFloat(-0x80000000, 16)
 AXIS_VALUE_POSITIVE_INFINITY = fixedToFloat(0x7FFFFFFF, 16)
 
+STATName = Union[int, str, Dict[str, str]]
+"""A raw name ID, English name, or multilingual name."""
+
 
 def buildStatTable(
-    ttFont, axes, locations=None, elidedFallbackName=2, windowsNames=True, macNames=True
-):
+    ttFont: TTFont,
+    axes,
+    locations=None,
+    elidedFallbackName: Union[STATName, STATNameStatement] = 2,
+    windowsNames: bool = True,
+    macNames: bool = True,
+) -> None:
     """Add a 'STAT' table to 'ttFont'.
 
     'axes' is a list of dictionaries describing axes and their
@@ -2935,7 +2945,13 @@ def _buildAxisValuesFormat4(locations, axes, ttFont, windowsNames=True, macNames
     return axisValues
 
 
-def _addName(ttFont, value, minNameID=0, windows=True, mac=True):
+def _addName(
+    ttFont: TTFont,
+    value: Union[STATName, STATNameStatement],
+    minNameID: int = 0,
+    windows: bool = True,
+    mac: bool = True,
+) -> int:
     nameTable = ttFont["name"]
     if isinstance(value, int):
         # Already a nameID
