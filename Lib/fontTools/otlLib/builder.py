@@ -1,6 +1,5 @@
 from collections import namedtuple, OrderedDict
 import itertools
-import os
 from typing import Dict, Union
 from fontTools.misc.fixedTools import fixedToFloat
 from fontTools.misc.roundTools import otRound
@@ -11,9 +10,7 @@ from fontTools.ttLib.tables.otBase import (
     valueRecordFormatDict,
     OTLOffsetOverflowError,
     OTTableWriter,
-    CountReference,
 )
-from fontTools.ttLib.tables import otBase
 from fontTools.ttLib.ttFont import TTFont
 from fontTools.feaLib.ast import STATNameStatement
 from fontTools.otlLib.optimize.gpos import (
