@@ -87,6 +87,12 @@ def sort_groups(groups):
     return [group_map[name] for name in sorter.static_order()]
 
 
+class Lookup(ast.LookupBlock):
+    def __init__(self, name, use_extension=False, location=None):
+        super().__init__(name, use_extension, location)
+        self.chained = []
+
+
 class VoltToFea:
     _NOT_LOOKUP_NAME_RE = re.compile(r"[^A-Za-z_0-9.]")
     _NOT_CLASS_NAME_RE = re.compile(r"[^A-Za-z_0-9.\-]")
@@ -181,7 +187,7 @@ class VoltToFea:
         if self._lookups:
             statements.append(ast.Comment("\n# Lookups"))
             for lookup in self._lookups.values():
-                statements.extend(getattr(lookup, "targets", []))
+                statements.extend(lookup.chained)
                 statements.append(lookup)
 
         # Prune features
@@ -541,9 +547,7 @@ class VoltToFea:
         else:
             raise NotImplementedError(pos)
 
-    def _gposContextLookup(
-        self, lookup, prefix, suffix, ignore, fealookup, targetlookup
-    ):
+    def _gposContextLookup(self, lookup, prefix, suffix, ignore, fealookup, chained):
         statements = fealookup.statements
 
         assert not lookup.reversal
@@ -560,22 +564,20 @@ class VoltToFea:
                 if ignore:
                     statement = ast.IgnorePosStatement([(prefix, glyphs, suffix)])
                 else:
-                    lookups = (targetlookup, targetlookup)
                     statement = ast.ChainContextPosStatement(
-                        prefix, glyphs, suffix, lookups
+                        prefix, glyphs, suffix, [chained, chained]
                     )
                 statements.append(statement)
         elif isinstance(pos, VAst.PositionAdjustSingleDefinition):
             glyphs = [ast.GlyphClass()]
-            for a, b in pos.adjust_single:
-                glyph = self._coverage(a, flatten=True)
-                glyphs[0].extend(glyph)
+            for a, _ in pos.adjust_single:
+                glyphs[0].extend(self._coverage(a, flatten=True))
 
             if ignore:
                 statement = ast.IgnorePosStatement([(prefix, glyphs, suffix)])
             else:
                 statement = ast.ChainContextPosStatement(
-                    prefix, glyphs, suffix, [targetlookup]
+                    prefix, glyphs, suffix, [chained]
                 )
             statements.append(statement)
         elif isinstance(pos, VAst.PositionAttachDefinition):
@@ -587,13 +589,13 @@ class VoltToFea:
                 statement = ast.IgnorePosStatement([(prefix, glyphs, suffix)])
             else:
                 statement = ast.ChainContextPosStatement(
-                    prefix, glyphs, suffix, [targetlookup]
+                    prefix, glyphs, suffix, [chained]
                 )
             statements.append(statement)
         else:
             raise NotImplementedError(pos)
 
-    def _gsubLookup(self, lookup, prefix, suffix, ignore, chain, fealookup):
+    def _gsubLookup(self, lookup, prefix, suffix, ignore, forceChain, fealookup):
         statements = fealookup.statements
 
         sub = lookup.sub
@@ -616,7 +618,7 @@ class VoltToFea:
 
             for glyph, replacements in alternates.items():
                 statement = ast.AlternateSubstStatement(
-                    prefix, glyph, suffix, ast.GlyphClass(replacements), chain
+                    prefix, glyph, suffix, ast.GlyphClass(replacements), forceChain
                 )
                 statements.append(statement)
             return
@@ -636,7 +638,7 @@ class VoltToFea:
                 assert len(glyphs) == 1
                 assert len(replacements) == 1
                 statement = ast.SingleSubstStatement(
-                    glyphs, replacements, prefix, suffix, chain
+                    glyphs, replacements, prefix, suffix, forceChain
                 )
             elif isinstance(sub, VAst.SubstitutionReverseChainingSingleDefinition):
                 assert len(glyphs) == 1
@@ -647,12 +649,12 @@ class VoltToFea:
             elif isinstance(sub, VAst.SubstitutionMultipleDefinition):
                 assert len(glyphs) == 1
                 statement = ast.MultipleSubstStatement(
-                    prefix, glyphs[0], suffix, replacements, chain
+                    prefix, glyphs[0], suffix, replacements, forceChain
                 )
             elif isinstance(sub, VAst.SubstitutionLigatureDefinition):
                 assert len(replacements) == 1
                 statement = ast.LigatureSubstStatement(
-                    prefix, glyphs, suffix, replacements[0], chain
+                    prefix, glyphs, suffix, replacements[0], forceChain
                 )
 
                 # If any of the input glyphs is a group, we need to
@@ -683,7 +685,7 @@ class VoltToFea:
                         zipped = [self._glyphName(x) for x in zipped]
                         statements.append(
                             ast.LigatureSubstStatement(
-                                prefix, zipped[:-1], suffix, zipped[-1], chain
+                                prefix, zipped[:-1], suffix, zipped[-1], forceChain
                             )
                         )
                     continue
@@ -726,7 +728,7 @@ class VoltToFea:
             # statement if it is not a pairpos lookup, though.
             name = lookup.name.split("\\")[0]
             if name.lower() not in self._lookups:
-                fealookup = ast.LookupBlock(
+                fealookup = Lookup(
                     self._lookupName(name),
                     use_extension=use_extension,
                 )
@@ -739,7 +741,7 @@ class VoltToFea:
                 fealookup.statements.append(ast.Comment("# " + lookup.name))
             self._lookups[name.lower()] = fealookup
         else:
-            fealookup = ast.LookupBlock(
+            fealookup = Lookup(
                 self._lookupName(lookup.name),
                 use_extension=use_extension,
             )
@@ -751,40 +753,38 @@ class VoltToFea:
             fealookup.statements.append(ast.Comment("# " + lookup.comments))
 
         contexts = []
-        if lookup.context:
-            for context in lookup.context:
-                prefix = self._context(context.left)
-                suffix = self._context(context.right)
-                ignore = context.ex_or_in == "EXCEPT_CONTEXT"
-                contexts.append([prefix, suffix, ignore, False])
-                # It seems that VOLT will create contextual substitution using
-                # only the input if there is no other contexts in this lookup.
-                if ignore and len(lookup.context) == 1:
-                    contexts.append([[], [], False, True])
-        else:
-            contexts.append([[], [], False, False])
+        for context in lookup.context:
+            prefix = self._context(context.left)
+            suffix = self._context(context.right)
+            ignore = context.ex_or_in == "EXCEPT_CONTEXT"
+            contexts.append([prefix, suffix, ignore, False])
+            # It seems that VOLT will create contextual substitution using
+            # only the input if there is no other contexts in this lookup.
+            if ignore and len(lookup.context) == 1:
+                contexts.append([[], [], False, True])
 
-        targetlookup = None
-        for prefix, suffix, ignore, chain in contexts:
-            if lookup.sub is not None:
-                self._gsubLookup(lookup, prefix, suffix, ignore, chain, fealookup)
-
+        if contexts:
             if lookup.pos is not None:
-                if prefix or suffix or chain or ignore:
-                    if not ignore and targetlookup is None:
-                        targetname = self._lookupName(lookup.name + " target")
-                        targetlookup = ast.LookupBlock(
-                            targetname,
-                            use_extension=use_extension,
-                        )
-                        fealookup.targets = getattr(fealookup, "targets", [])
-                        fealookup.targets.append(targetlookup)
-                        self._gposLookup(lookup, targetlookup)
-                    self._gposContextLookup(
-                        lookup, prefix, suffix, ignore, fealookup, targetlookup
+                chained = ast.LookupBlock(
+                    self._lookupName(lookup.name + " target"),
+                    use_extension=use_extension,
+                )
+                fealookup.chained.append(chained)
+                self._gposLookup(lookup, chained)
+            for prefix, suffix, ignore, forceChain in contexts:
+                if lookup.sub is not None:
+                    self._gsubLookup(
+                        lookup, prefix, suffix, ignore, forceChain, fealookup
                     )
-                else:
-                    self._gposLookup(lookup, fealookup)
+                elif lookup.pos is not None:
+                    self._gposContextLookup(
+                        lookup, prefix, suffix, ignore, fealookup, chained
+                    )
+        else:
+            if lookup.sub is not None:
+                self._gsubLookup(lookup, [], [], False, False, fealookup)
+            elif lookup.pos is not None:
+                self._gposLookup(lookup, fealookup)
 
 
 def main(args=None):
