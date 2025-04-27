@@ -550,8 +550,6 @@ class VoltToFea:
     def _gposContextLookup(self, lookup, prefix, suffix, ignore, fealookup, chained):
         statements = fealookup.statements
 
-        assert not lookup.reversal
-
         pos = lookup.pos
         if isinstance(pos, VAst.PositionAdjustPairDefinition):
             for (idx1, idx2), (pos1, pos2) in pos.adjust_pair.items():
@@ -711,8 +709,6 @@ class VoltToFea:
                 )
             fealookup.chained = []
             return
-
-        assert not lookup.reversal
 
         if not isinstance(
             sub,
