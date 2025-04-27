@@ -1673,19 +1673,15 @@ class EncodingConverter(SimpleConverter):
         fmt = fmt & 0x7F
 
         if fmt == 0:
-            encoding = parseEncoding0(
-                parent.charset, file
-            )
+            encoding = parseEncoding0(parent.charset, file)
         elif fmt == 1:
-            encoding = parseEncoding1(
-                parent.charset, file
-            )
+            encoding = parseEncoding1(parent.charset, file)
         else:
             raise ValueError(f"Unknown Encoding format: {fmt}")
 
         if haveSupplement:
             parseEncodingSupplement(file, encoding, parent.strings)
-            
+
         return encoding
 
     def write(self, parent, value):
@@ -1731,6 +1727,7 @@ def readSID(file):
         raise EOFError("Unexpected end of file while reading SID")
     return struct.unpack(">H", data)[0]  # big-endian uint16
 
+
 def parseEncodingSupplement(file, encoding, strings):
     """
     Parse the CFF Encoding supplement data:
@@ -1745,6 +1742,7 @@ def parseEncodingSupplement(file, encoding, strings):
         name = strings[sid]
         encoding[code] = name
 
+
 def parseEncoding0(charset, file):
     """
     Format 0: simple list of codes.
@@ -1756,8 +1754,6 @@ def parseEncoding0(charset, file):
         code = readCard8(file)
         if code != 0:
             encoding[code] = charset[glyphID]
-
-
 
     return encoding
 
@@ -1778,7 +1774,6 @@ def parseEncoding1(charset, file):
             code += 1
             glyphID += 1
 
-    
     return encoding
 
 
