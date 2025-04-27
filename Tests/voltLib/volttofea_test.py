@@ -291,6 +291,45 @@ class ToFeaTest(unittest.TestCase):
         )
         self.assertEqual("", fea)
 
+    def test_langsys_short_tag(self):
+        fea = self.parse(
+            """
+            DEF_SCRIPT NAME "Latin" TAG "latn"
+            DEF_LANGSYS NAME "Romanian" TAG "ROM"
+            DEF_FEATURE NAME "Fractions" TAG "frac"
+            LOOKUP "test"
+            END_FEATURE
+            END_LANGSYS
+            END_SCRIPT
+            DEF_LOOKUP "test" PROCESS_BASE PROCESS_MARKS ALL DIRECTION LTR
+            IN_CONTEXT
+            END_CONTEXT
+            AS_SUBSTITUTION
+            SUB GLYPH "one" GLYPH "slash" GLYPH "two"
+            WITH GLYPH "one_slash_two.frac"
+            END_SUB
+            END_SUBSTITUTION
+            """
+        )
+        self.assertEqual(
+            dedent(
+                """
+                # Lookups
+                lookup test {
+                    sub one slash two by one_slash_two.frac;
+                } test;
+
+                # Features
+                feature frac {
+                    script latn;
+                    language ROM exclude_dflt;
+                    lookup test;
+                } frac;
+                """
+            ),
+            fea,
+        )
+
     def test_feature(self):
         fea = self.parse(
             'DEF_SCRIPT NAME "Latin" TAG "latn"\n'

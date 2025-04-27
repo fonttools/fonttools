@@ -233,7 +233,7 @@ class VoltToFea:
                             include_default = True if language_tag == "dflt" else False
                             feature.statements.append(
                                 ast.LanguageStatement(
-                                    language_tag,
+                                    language_tag.ljust(4),
                                     include_default=include_default,
                                 )
                             )
