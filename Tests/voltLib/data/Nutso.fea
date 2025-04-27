@@ -111,8 +111,12 @@ lookup frac.numr {
     sub @numerals by @numr;
 } frac.numr;
 
+lookup frac.dnom_chained {
+    sub @numr by @dnom;
+} frac.dnom_chained;
+
 lookup frac.dnom {
-    sub [@slash @dnom] @numr' by @dnom;
+    sub [@slash @dnom] @numr' lookup frac.dnom_chained;
 } frac.dnom;
 
 lookup frac.noslash {
@@ -140,9 +144,13 @@ lookup frac.noslash {
     sub nine.numr fraction by nine.numr;
 } frac.noslash;
 
+lookup frac.fracinit_chained {
+    sub @numr by fracinit @numr;
+} frac.fracinit_chained;
+
 lookup frac.fracinit {
     ignore sub @numr @numr';
-    sub @numr' by fracinit @numr;
+    sub @numr' lookup frac.fracinit_chained;
 } frac.fracinit;
 
 lookup kern.numeral_to_fraction {
@@ -150,114 +158,114 @@ lookup kern.numeral_to_fraction {
     pos @dnom @numerals 140;
 } kern.numeral_to_fraction;
 
-lookup fracmark.init_1.10_target {
+lookup fracmark.init_1.10_chained {
     pos base fracinit
         <anchor 3150 0> mark @INIT.1.10.fracmark.init_1.10;
-} fracmark.init_1.10_target;
+} fracmark.init_1.10_chained;
 
-lookup fracmark.init_2.10_target {
+lookup fracmark.init_2.10_chained {
     pos base fracinit
         <anchor 2800 0> mark @INIT.2.10.fracmark.init_2.10;
-} fracmark.init_2.10_target;
+} fracmark.init_2.10_chained;
 
-lookup fracmark.init_3.10_target {
+lookup fracmark.init_3.10_chained {
     pos base fracinit
         <anchor 2450 0> mark @INIT.3.10.fracmark.init_3.10;
-} fracmark.init_3.10_target;
+} fracmark.init_3.10_chained;
 
-lookup fracmark.init_4.10_target {
+lookup fracmark.init_4.10_chained {
     pos base fracinit
         <anchor 2100 0> mark @INIT.4.10.fracmark.init_4.10;
-} fracmark.init_4.10_target;
+} fracmark.init_4.10_chained;
 
-lookup fracmark.init_5.10_target {
+lookup fracmark.init_5.10_chained {
     pos base fracinit
         <anchor 1750 0> mark @INIT.5.10.fracmark.init_5.10;
-} fracmark.init_5.10_target;
+} fracmark.init_5.10_chained;
 
-lookup fracmark.init_6.10_target {
+lookup fracmark.init_6.10_chained {
     pos base fracinit
         <anchor 1400 0> mark @INIT.6.10.fracmark.init_6.10;
-} fracmark.init_6.10_target;
+} fracmark.init_6.10_chained;
 
-lookup fracmark.init_7.10_target {
+lookup fracmark.init_7.10_chained {
     pos base fracinit
         <anchor 1050 0> mark @INIT.7.10.fracmark.init_7.10;
-} fracmark.init_7.10_target;
+} fracmark.init_7.10_chained;
 
-lookup fracmark.init_8.10_target {
+lookup fracmark.init_8.10_chained {
     pos base fracinit
         <anchor 700 0> mark @INIT.8.10.fracmark.init_8.10;
-} fracmark.init_8.10_target;
+} fracmark.init_8.10_chained;
 
-lookup fracmark.init_9.10_target {
+lookup fracmark.init_9.10_chained {
     pos base fracinit
         <anchor 350 0> mark @INIT.9.10.fracmark.init_9.10;
-} fracmark.init_9.10_target;
+} fracmark.init_9.10_chained;
 
 lookup fracmark.init {
     # fracmark.init\1.10
-    pos [@numr]' lookup fracmark.init_1.10_target @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_1.10_chained @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
     subtable;
     # fracmark.init\2.10
-    pos [@numr]' lookup fracmark.init_2.10_target @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_2.10_target @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_2.10_chained @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_2.10_chained @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
     subtable;
     # fracmark.init\3.10
-    pos [@numr]' lookup fracmark.init_3.10_target @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_3.10_target @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_3.10_target @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_3.10_chained @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_3.10_chained @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_3.10_chained @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
     subtable;
     # fracmark.init\4.10
-    pos [@numr]' lookup fracmark.init_4.10_target @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_4.10_target @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_4.10_target @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_4.10_target @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_4.10_chained @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_4.10_chained @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_4.10_chained @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_4.10_chained @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
     subtable;
     # fracmark.init\5.10
-    pos [@numr]' lookup fracmark.init_5.10_target @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_5.10_target @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_5.10_target @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_5.10_target @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_5.10_target @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_5.10_chained @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_5.10_chained @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_5.10_chained @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_5.10_chained @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_5.10_chained @dnom @dnom @dnom @dnom @dnom @dnom;
     subtable;
     # fracmark.init\6.10
-    pos [@numr]' lookup fracmark.init_6.10_target @numr @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_6.10_target @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_6.10_target @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_6.10_target @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_6.10_target @numr @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_6.10_target @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_6.10_chained @numr @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_6.10_chained @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_6.10_chained @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_6.10_chained @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_6.10_chained @numr @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_6.10_chained @dnom @dnom @dnom @dnom @dnom;
     subtable;
     # fracmark.init\7.10
-    pos [@numr]' lookup fracmark.init_7.10_target @numr @numr @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_7.10_target @numr @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_7.10_target @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_7.10_target @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_7.10_target @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_7.10_target @numr @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_7.10_target @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_7.10_chained @numr @numr @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_7.10_chained @numr @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_7.10_chained @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_7.10_chained @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_7.10_chained @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_7.10_chained @numr @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_7.10_chained @dnom @dnom @dnom @dnom;
     subtable;
     # fracmark.init\8.10
-    pos [@numr]' lookup fracmark.init_8.10_target @numr @numr @numr @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_8.10_target @numr @numr @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_8.10_target @numr @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_8.10_target @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_8.10_target @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_8.10_target @numr @numr @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_8.10_target @numr @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_8.10_target @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_8.10_chained @numr @numr @numr @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_8.10_chained @numr @numr @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_8.10_chained @numr @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_8.10_chained @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_8.10_chained @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_8.10_chained @numr @numr @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_8.10_chained @numr @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_8.10_chained @dnom @dnom @dnom;
     subtable;
     # fracmark.init\9.10
-    pos [@numr]' lookup fracmark.init_9.10_target @numr @numr @numr @numr @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_9.10_target @numr @numr @numr @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_9.10_target @numr @numr @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_9.10_target @numr @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_9.10_target @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_9.10_target @numr @numr @numr @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_9.10_target @numr @numr @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_9.10_target @numr @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_9.10_target @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_9.10_chained @numr @numr @numr @numr @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_9.10_chained @numr @numr @numr @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_9.10_chained @numr @numr @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_9.10_chained @numr @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_9.10_chained @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_9.10_chained @numr @numr @numr @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_9.10_chained @numr @numr @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_9.10_chained @numr @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_9.10_chained @dnom @dnom;
 } fracmark.init;
 
 lookup fracmkmk.numrspacing {

@@ -445,14 +445,22 @@ class ToFeaTest(unittest.TestCase):
             "END_SUBSTITUTION"
         )
         self.assertEqual(
-            "# Glyph classes\n"
-            "@Denominators = [one.dnom two.dnom];\n"
-            "\n"
-            "# Lookups\n"
-            "lookup fracdnom {\n"
-            "    sub [@Denominators fraction] one' by one.dnom;\n"
-            "    sub [@Denominators fraction] two' by two.dnom;\n"
-            "} fracdnom;\n",
+            dedent(
+                """\
+                # Glyph classes
+                @Denominators = [one.dnom two.dnom];
+
+                # Lookups
+                lookup fracdnom_chained {
+                    sub one by one.dnom;
+                    sub two by two.dnom;
+                } fracdnom_chained;
+
+                lookup fracdnom {
+                    sub [@Denominators fraction] [one two]' lookup fracdnom_chained;
+                } fracdnom;
+                """
+            ),
             fea,
         )
 
@@ -477,14 +485,22 @@ class ToFeaTest(unittest.TestCase):
             "END_SUBSTITUTION"
         )
         self.assertEqual(
-            "# Glyph classes\n"
-            "@Hebrew = [uni05D0 uni05D1];\n"
-            "\n"
-            "# Lookups\n"
-            "lookup HebrewCurrency {\n"
-            "    sub dollar' @Hebrew one.Hebr by dollar.Hebr;\n"
-            "    sub @Hebrew one.Hebr dollar' by dollar.Hebr;\n"
-            "} HebrewCurrency;\n",
+            dedent(
+                """\
+                # Glyph classes
+                @Hebrew = [uni05D0 uni05D1];
+
+                # Lookups
+                lookup HebrewCurrency_chained {
+                    sub dollar by dollar.Hebr;
+                } HebrewCurrency_chained;
+
+                lookup HebrewCurrency {
+                    sub dollar' lookup HebrewCurrency_chained @Hebrew one.Hebr;
+                    sub @Hebrew one.Hebr dollar' lookup HebrewCurrency_chained;
+                } HebrewCurrency;
+                """
+            ),
             fea,
         )
 
@@ -509,14 +525,22 @@ class ToFeaTest(unittest.TestCase):
             "END_SUBSTITUTION"
         )
         self.assertEqual(
-            "# Glyph classes\n"
-            "@Hebrew = [uni05D0 uni05D1];\n"
-            "\n"
-            "# Lookups\n"
-            "lookup HebrewCurrency {\n"
-            "    ignore sub dollar' @Hebrew one.Hebr;\n"
-            "    sub @Hebrew one.Hebr dollar' by dollar.Hebr;\n"
-            "} HebrewCurrency;\n",
+            dedent(
+                """\
+                # Glyph classes
+                @Hebrew = [uni05D0 uni05D1];
+
+                # Lookups
+                lookup HebrewCurrency_chained {
+                    sub dollar by dollar.Hebr;
+                } HebrewCurrency_chained;
+
+                lookup HebrewCurrency {
+                    ignore sub dollar' @Hebrew one.Hebr;
+                    sub @Hebrew one.Hebr dollar' lookup HebrewCurrency_chained;
+                } HebrewCurrency;
+                """
+            ),
             fea,
         )
 
@@ -740,10 +764,18 @@ class ToFeaTest(unittest.TestCase):
             "END_SUBSTITUTION"
         )
         self.assertEqual(
-            "\n# Lookups\n"
-            "lookup Lookup {\n"
-            "    sub a' [a b] by a.alt;\n"
-            "} Lookup;\n",
+            dedent(
+                """
+                # Lookups
+                lookup Lookup_chained {
+                    sub a by a.alt;
+                } Lookup_chained;
+
+                lookup Lookup {
+                    sub a' lookup Lookup_chained [a b];
+                } Lookup;
+                """
+            ),
             fea,
         )
 
@@ -1082,15 +1114,15 @@ class ToFeaTest(unittest.TestCase):
             "markClass gravecomb <anchor 0 450> @top.test;\n"
             "\n"
             "# Lookups\n"
-            "lookup test_target {\n"
+            "lookup test_chained {\n"
             "    pos base a\n"
             "        <anchor 210 450> mark @top.test;\n"
-            "} test_target;\n"
+            "} test_chained;\n"
             "\n"
             "lookup test {\n"
             "    lookupflag RightToLeft;\n"
             "    ignore pos a [acutecomb gravecomb]';\n"
-            "    pos [acutecomb gravecomb]' lookup test_target;\n"
+            "    pos [acutecomb gravecomb]' lookup test_chained;\n"
             "} test;\n",
             fea,
         )
@@ -1239,13 +1271,13 @@ class ToFeaTest(unittest.TestCase):
         )
         self.assertEqual(
             "\n# Lookups\n"
-            "lookup kern1_target {\n"
+            "lookup kern1_chained {\n"
             "    enum pos V A -25;\n"
-            "} kern1_target;\n"
+            "} kern1_chained;\n"
             "\n"
             "lookup kern1 {\n"
             "    ignore pos A V' A';\n"
-            "    pos V' lookup kern1_target A' lookup kern1_target;\n"
+            "    pos V' lookup kern1_chained A' lookup kern1_chained;\n"
             "} kern1;\n",
             fea,
         )
@@ -1289,14 +1321,14 @@ class ToFeaTest(unittest.TestCase):
         )
         self.assertEqual(
             "\n# Lookups\n"
-            "lookup TestLookup_target {\n"
+            "lookup TestLookup_chained {\n"
             "    pos glyph1 <123 0 0 0>;\n"
             "    pos glyph2 <456 0 0 0>;\n"
-            "} TestLookup_target;\n"
+            "} TestLookup_chained;\n"
             "\n"
             "lookup TestLookup {\n"
             "    ignore pos leftGlyph [glyph1 glyph2]' rightGlyph;\n"
-            "    pos [glyph1 glyph2]' lookup TestLookup_target;\n"
+            "    pos [glyph1 glyph2]' lookup TestLookup_chained;\n"
             "} TestLookup;\n",
             fea,
         )
@@ -1588,16 +1620,16 @@ class ToFeaTest(unittest.TestCase):
             dedent(
                 """
                 # Lookups
-                lookup lookup_target {
+                lookup lookup_chained {
                     pos [a b] <-10 0 -10 0>;
                     pos [c d] <-20 0 -20 0>;
                     pos [e f g h i j k l] <-40 0 -30 0>;
                     pos [m n o p q] <-60 0 -50 0>;
-                } lookup_target;
+                } lookup_chained;
 
                 lookup lookup {
                     lookupflag RightToLeft IgnoreMarks;
-                    pos [a b c d e f g h i j k l m n o p q]' lookup lookup_target space;
+                    pos [a b c d e f g h i j k l m n o p q]' lookup lookup_chained space;
                 } lookup;
                 """
             ),

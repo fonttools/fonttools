@@ -595,7 +595,7 @@ class VoltToFea:
         else:
             raise NotImplementedError(pos)
 
-    def _gsubLookup(self, lookup, prefix, suffix, ignore, forceChain, fealookup):
+    def _gsubLookup(self, lookup, fealookup):
         statements = fealookup.statements
 
         sub = lookup.sub
@@ -606,6 +606,10 @@ class VoltToFea:
         if isinstance(sub, VAst.SubstitutionAlternateDefinition):
             alternates = {}
             for key, val in sub.mapping.items():
+                if not key or not val:
+                    path, line, column = sub.location
+                    log.warning(f"{path}:{line}:{column}: Ignoring empty substitution")
+                    continue
                 glyphs = self._coverage(key)
                 replacements = self._coverage(val)
                 assert len(glyphs) == 1
@@ -618,7 +622,7 @@ class VoltToFea:
 
             for glyph, replacements in alternates.items():
                 statement = ast.AlternateSubstStatement(
-                    prefix, glyph, suffix, ast.GlyphClass(replacements), forceChain
+                    [], glyph, [], ast.GlyphClass(replacements)
                 )
                 statements.append(statement)
             return
@@ -628,33 +632,26 @@ class VoltToFea:
                 path, line, column = sub.location
                 log.warning(f"{path}:{line}:{column}: Ignoring empty substitution")
                 continue
-            statement = None
             glyphs = self._coverage(key)
             replacements = self._coverage(val)
-            if ignore:
-                chain_context = (prefix, glyphs, suffix)
-                statement = ast.IgnoreSubstStatement([chain_context])
-            elif isinstance(sub, VAst.SubstitutionSingleDefinition):
+            if isinstance(sub, VAst.SubstitutionSingleDefinition):
                 assert len(glyphs) == 1
                 assert len(replacements) == 1
-                statement = ast.SingleSubstStatement(
-                    glyphs, replacements, prefix, suffix, forceChain
+                statements.append(
+                    ast.SingleSubstStatement(glyphs, replacements, [], [], False)
                 )
             elif isinstance(sub, VAst.SubstitutionReverseChainingSingleDefinition):
-                assert len(glyphs) == 1
-                assert len(replacements) == 1
-                statement = ast.ReverseChainSingleSubstStatement(
-                    prefix, suffix, glyphs, replacements
-                )
+                # This is handled in gsubContextLookup()
+                pass
             elif isinstance(sub, VAst.SubstitutionMultipleDefinition):
                 assert len(glyphs) == 1
-                statement = ast.MultipleSubstStatement(
-                    prefix, glyphs[0], suffix, replacements, forceChain
+                statements.append(
+                    ast.MultipleSubstStatement([], glyphs[0], [], replacements)
                 )
             elif isinstance(sub, VAst.SubstitutionLigatureDefinition):
                 assert len(replacements) == 1
                 statement = ast.LigatureSubstStatement(
-                    prefix, glyphs, suffix, replacements[0], forceChain
+                    [], glyphs, [], replacements[0], False
                 )
 
                 # If any of the input glyphs is a group, we need to
@@ -685,13 +682,65 @@ class VoltToFea:
                         zipped = [self._glyphName(x) for x in zipped]
                         statements.append(
                             ast.LigatureSubstStatement(
-                                prefix, zipped[:-1], suffix, zipped[-1], forceChain
+                                [], zipped[:-1], [], zipped[-1], False
                             )
                         )
-                    continue
+                else:
+                    statements.append(statement)
             else:
                 raise NotImplementedError(sub)
-            statements.append(statement)
+
+    def _gsubContextLookup(self, lookup, prefix, suffix, ignore, fealookup, chained):
+        statements = fealookup.statements
+
+        sub = lookup.sub
+
+        if isinstance(sub, VAst.SubstitutionReverseChainingSingleDefinition):
+            # Reverse substitutions is a special case, it can’t use chained lookups.
+            for key, val in sub.mapping.items():
+                if not key or not val:
+                    path, line, column = sub.location
+                    log.warning(f"{path}:{line}:{column}: Ignoring empty substitution")
+                    continue
+                glyphs = self._coverage(key)
+                replacements = self._coverage(val)
+                statements.append(
+                    ast.ReverseChainSingleSubstStatement(
+                        prefix, suffix, glyphs, replacements
+                    )
+                )
+            fealookup.chained = []
+            return
+
+        assert not lookup.reversal
+
+        if not isinstance(
+            sub,
+            (
+                VAst.SubstitutionSingleDefinition,
+                VAst.SubstitutionMultipleDefinition,
+                VAst.SubstitutionLigatureDefinition,
+                VAst.SubstitutionAlternateDefinition,
+            ),
+        ):
+            raise NotImplementedError(type(sub))
+
+        glyphs = []
+        for key, val in sub.mapping.items():
+            if not key or not val:
+                path, line, column = sub.location
+                log.warning(f"{path}:{line}:{column}: Ignoring empty substitution")
+                continue
+            glyphs.extend(self._coverage(key, flatten=True))
+
+        if len(glyphs) > 1:
+            glyphs = [ast.GlyphClass(glyphs)]
+        if ignore:
+            statements.append(ast.IgnoreSubstStatement([(prefix, glyphs, suffix)]))
+        else:
+            statements.append(
+                ast.ChainContextSubstStatement(prefix, glyphs, suffix, [chained])
+            )
 
     def _lookupDefinition(self, lookup):
         mark_attachement = None
@@ -757,24 +806,26 @@ class VoltToFea:
             prefix = self._context(context.left)
             suffix = self._context(context.right)
             ignore = context.ex_or_in == "EXCEPT_CONTEXT"
-            contexts.append([prefix, suffix, ignore, False])
+            contexts.append([prefix, suffix, ignore])
             # It seems that VOLT will create contextual substitution using
             # only the input if there is no other contexts in this lookup.
             if ignore and len(lookup.context) == 1:
-                contexts.append([[], [], False, True])
+                contexts.append([[], [], False])
 
         if contexts:
-            if lookup.pos is not None:
-                chained = ast.LookupBlock(
-                    self._lookupName(lookup.name + " target"),
-                    use_extension=use_extension,
-                )
-                fealookup.chained.append(chained)
+            chained = ast.LookupBlock(
+                self._lookupName(lookup.name + " chained"),
+                use_extension=use_extension,
+            )
+            fealookup.chained.append(chained)
+            if lookup.sub is not None:
+                self._gsubLookup(lookup, chained)
+            elif lookup.pos is not None:
                 self._gposLookup(lookup, chained)
-            for prefix, suffix, ignore, forceChain in contexts:
+            for prefix, suffix, ignore in contexts:
                 if lookup.sub is not None:
-                    self._gsubLookup(
-                        lookup, prefix, suffix, ignore, forceChain, fealookup
+                    self._gsubContextLookup(
+                        lookup, prefix, suffix, ignore, fealookup, chained
                     )
                 elif lookup.pos is not None:
                     self._gposContextLookup(
@@ -782,7 +833,7 @@ class VoltToFea:
                     )
         else:
             if lookup.sub is not None:
-                self._gsubLookup(lookup, [], [], False, False, fealookup)
+                self._gsubLookup(lookup, fealookup)
             elif lookup.pos is not None:
                 self._gposLookup(lookup, fealookup)
 

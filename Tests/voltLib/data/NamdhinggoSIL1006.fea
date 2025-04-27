@@ -149,21 +149,21 @@ lookup IkarK {
     sub uni1921 uni193A by uni1921193A;
 } IkarK;
 
-lookup GlideIkar_target {
+lookup GlideIkar_chained {
     pos @YaWa -475;
-} GlideIkar_target;
+} GlideIkar_chained;
 
 lookup GlideIkar {
-    pos [@YaWa]' lookup GlideIkar_target @Ikar;
+    pos [@YaWa]' lookup GlideIkar_chained @Ikar;
 } GlideIkar;
 
-lookup IkarKWid_target {
+lookup IkarKWid_chained {
     pos uni1921193A 110;
-} IkarKWid_target;
+} IkarKWid_chained;
 
 lookup IkarKWid {
     # The IkarKWid lookup, applied to the Kern feature, adds 110 units of width to the IkarKemphreng ligature when followed by a consonant with akar on it. This prevents the akar from overprinting the rightmost dot of the kemphreng. (The dot overhangs to the right slightly, which is OK unless the following character has akar on it).
-    pos [uni1921193A]' lookup IkarKWid_target @Cons uni1920;
+    pos [uni1921193A]' lookup IkarKWid_chained @Cons uni1920;
 } IkarKWid;
 
 lookup Akar {
