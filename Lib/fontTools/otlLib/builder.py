@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections import namedtuple, OrderedDict
 import itertools
 from typing import Dict, Union
