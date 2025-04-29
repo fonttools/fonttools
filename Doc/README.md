@@ -12,32 +12,15 @@ The documentation is hosted at https://fonttools.readthedocs.io/.
 
 ## How to Build Local Documentation
 
-### Install Dependencies
+You must have a Python 3 interpreter and the `tox` command runner installed on your system to build the fontTools documentation.
 
-You must have a Python 3 interpreter and the `pip` Python package manager installed on your system to build the fontTools documentation.
-
-Pull the fontTools project source files, create a Python virtual environment, and then install fontTools and the documentation build dependencies by executing the following commands in the root of the fontTools source repository:
+Execute the following command in the root of the repository:
 
 ```
-$ pip install -e .[all]
-$ pip install -r Doc/docs-requirements.txt
+$ tox -e docs
 ```
 
-### Build Documentation
-
-**With `make`**: execute the following command in the root of the repository:
-
-```
-$ make docs
-```
-
-**Without `make`**: execute the following command in the **`Doc` directory**:
-
-```
-$ sphinx-build -b html source build
-```
-
-Open the `Doc/build/html/index.html` file in your browser to view the documentation home page.
+Open the `Doc/build/index.html` file in your browser to view the documentation home page.
 
 ## Contributing to the Documentation
 
