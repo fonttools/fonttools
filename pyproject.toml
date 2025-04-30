@@ -1,2 +1,118 @@
-[tool.black]
-target-version = ["py39"]
+[build-system]
+requires = ["setuptools>=64", "setuptools-scm>=8"]
+build-backend = "build_backend"
+backend-path = ["."]
+
+[project]
+name = "fonttools"
+description = "Tools to manipulate font files"
+requires-python = ">=3.9"
+license = "MIT"
+readme = "README.rst"
+authors = [
+    {name = "Just van Rossum", email = "just@letterror.com"},
+]
+maintainers = [
+    {name = "Behdad Esfahbod", email = "behdad@behdad.org"},
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Environment :: Other Environment",
+    "Intended Audience :: Developers",
+    "Intended Audience :: End Users/Desktop",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Multimedia :: Graphics",
+    "Topic :: Multimedia :: Graphics :: Graphics Conversion",
+    "Topic :: Text Processing :: Fonts",
+]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "http://github.com/fonttools/fonttools"
+Changelog = "https://github.com/fonttools/fonttools/blob/main/NEWS.rst"
+
+[project.optional-dependencies]
+ufo = [
+    "fs >= 2.2.0, < 3",
+]
+lxml = [
+    "lxml >= 4.0",
+]
+woff = [
+    "brotli >= 1.0.1; platform_python_implementation == 'CPython'",
+    "brotlicffi >= 0.8.0; platform_python_implementation != 'CPython'",
+    "zopfli >= 0.1.4",
+]
+unicode = [
+    "unicodedata2 >= 15.1.0; python_version <= '3.12'",
+]
+graphite = [
+    "lz4 >= 1.7.4.2",
+]
+interpolatable = [
+    "munkres; platform_python_implementation == 'PyPy'",
+    "pycairo",
+    "scipy; platform_python_implementation != 'PyPy'",
+]
+plot = [
+    "matplotlib",
+]
+symfont = [
+    "sympy",
+]
+type1 = [
+    "xattr; sys_platform == 'darwin'",
+]
+pathops = [
+    "skia-pathops >= 0.5.0",
+]
+repacker = [
+    "uharfbuzz >= 0.23.0",
+]
+all = [
+    "brotli >= 1.0.1; platform_python_implementation == 'CPython'",
+    "brotlicffi >= 0.8.0; platform_python_implementation != 'CPython'",
+    "fs >= 2.2.0, < 3",
+    "lxml >= 4.0",
+    "lz4 >= 1.7.4.2",
+    "matplotlib",
+    "munkres; platform_python_implementation == 'PyPy'",
+    "pycairo",
+    "scipy; platform_python_implementation != 'PyPy'",
+    "skia-pathops >= 0.5.0",
+    "sympy",
+    "uharfbuzz >= 0.23.0",
+    "unicodedata2 >= 15.1.0; python_version <= '3.12'",
+    "xattr; sys_platform == 'darwin'",
+    "zopfli >= 0.1.4",
+]
+
+[project.scripts]
+fonttools = "fontTools.__main__:main"
+pyftmerge = "fontTools.merge:main"
+pyftsubset = "fontTools.subset:main"
+ttx = "fontTools.ttx:main"
+
+[tool.setuptools.packages.find]
+where = ["Lib/"]
+
+[dependency-groups]
+dev = [
+    "pytest>=3.0",
+    "tox>=2.5",
+    "bump2version>=0.5.6",
+    "sphinx>=1.5.5",
+    "mypy>=0.782",
+    "readme_renderer[md]>=43.0",
+    "black",
+]
