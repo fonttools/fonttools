@@ -126,3 +126,13 @@ docs = [
     "reportlab >= 4.2.5",
     "freetype-py >= 2.5.1",
 ]
+test-additions = [
+    "ufoLib2",
+    "ufo2ft",
+    "freetype-py >= 2.5.1",
+    "glyphsLib",
+    "pyobjc ; sys_platform == 'darwin'",
+]
+twine = [
+    "twine >= 1.12.1"
+]
