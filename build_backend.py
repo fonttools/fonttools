@@ -8,6 +8,9 @@ def should_build_with_cython(config_settings) -> bool:
     if config_settings:
         value = config_settings.get("FONTTOOLS_WITH_CYTHON", "False")
         return str(value).lower() in {"1", "true", "yes"}
+    env = os.environ.get("FONTTOOLS_WITH_CYTHON")
+    if str(env).lower() in {"1", "true", "yes"}:
+        return True
     return False
 
 
