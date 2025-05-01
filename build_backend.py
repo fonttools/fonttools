@@ -3,13 +3,16 @@ import os
 from setuptools import build_meta as _orig
 from setuptools.build_meta import *
 
+USE_CYTHON_ENV_VAR = "FONTTOOLS_WITH_CYTHON"
+VAR_TRUTHY_VALUES = {"1", "true", "yes"}
+
 
 def should_build_with_cython(config_settings) -> bool:
     if config_settings:
-        value = config_settings.get("FONTTOOLS_WITH_CYTHON", "False")
-        return str(value).lower() in {"1", "true", "yes"}
-    env = os.environ.get("FONTTOOLS_WITH_CYTHON")
-    if str(env).lower() in {"1", "true", "yes"}:
+        value = config_settings.get(USE_CYTHON_ENV_VAR)
+        return str(value).lower() in VAR_TRUTHY_VALUES
+    env = os.environ.get(USE_CYTHON_ENV_VAR)
+    if str(env).lower() in VAR_TRUTHY_VALUES:
         return True
     return False
 
@@ -17,7 +20,7 @@ def should_build_with_cython(config_settings) -> bool:
 def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
     build_with_cython = should_build_with_cython(config_settings)
     if build_with_cython:
-        os.environ["FONTTOOLS_WITH_CYTHON"] = "True"
+        os.environ[USE_CYTHON_ENV_VAR] = "True"
     return _orig.build_wheel(wheel_directory, config_settings, metadata_directory)
 
 
