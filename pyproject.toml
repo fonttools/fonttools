@@ -136,3 +136,31 @@ test-additions = [
 twine = [
     "twine >= 1.12.1"
 ]
+
+
+[tool.coverage.run]
+branch = true
+parallel = true
+source = ["fontTools"]
+
+[tool.coverage.paths]
+source = [
+    "Lib/fontTools",
+    ".tox/*/lib/python*/site-packages/fontTools",
+    ".tox/pypy*/site-packages/fontTools",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    # keywords to use in inline comments to skip coverage
+    "pragma: no cover",
+
+    # don't complain if tests don't hit defensive assertion code
+    "raise AssertionError",
+    "raise NotImplementedError",
+
+    # don't complain if non-runnable code isn't run
+    "if 0:",
+    "if __name__ == .__main__.:",
+]
+ignore_errors = true
