@@ -103,11 +103,6 @@ pyftmerge = "fontTools.merge:main"
 pyftsubset = "fontTools.subset:main"
 ttx = "fontTools.ttx:main"
 
-[tool.setuptools_scm]
-
-[tool.setuptools.packages.find]
-where = ["Lib/"]
-
 [dependency-groups]
 dev = [
     "black == 24.10.0 ; python_version >= '3.9'",
@@ -137,6 +132,11 @@ twine = [
     "twine >= 1.12.1"
 ]
 
+[tool.setuptools_scm]
+write_to = "Lib/fontTools/_version.py"
+
+[tool.setuptools.packages.find]
+where = ["Lib/"]
 
 [tool.coverage.run]
 branch = true
