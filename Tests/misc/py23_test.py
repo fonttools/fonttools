@@ -60,15 +60,8 @@ class OpenFuncWrapperTest(unittest.TestCase):
             self.fail("Input and output data differ!")
 
     def test_binary_pipe_built_in_io_open(self):
-        if sys.version_info.major < 3 and sys.platform == "win32":
-            # On Windows Python 2.x, the piped input and output data are
-            # expected to be different when using io.open, because of issue
-            # https://bugs.python.org/issue10841.
-            expected = True
-        else:
-            expected = False
         result = self.diff_piped(TEST_BIN_DATA, "from io import open")
-        self.assertEqual(result, expected)
+        self.assertEqual(result, False)
 
 
 class Round2Test(unittest.TestCase):

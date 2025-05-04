@@ -94,9 +94,6 @@ class InterpolatableTest(unittest.TestCase):
         otf_paths = self.get_file_list(self.tempdir, suffix)
         self.assertIsNone(interpolatable_main(otf_paths))
 
-    @pytest.mark.skipif(
-        sys.version_info[:2] == (3, 8), reason="Fails on Python 3.8 for unknown reasons"
-    )
     def test_interpolatable_cff2(self):
         suffix = ".otf"
         ttx_dir = self.get_test_input("variable_ttx_interpolatable_cff2")

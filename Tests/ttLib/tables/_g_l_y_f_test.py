@@ -76,7 +76,6 @@ class GlyphCoordinatesTest(object):
         g2 = -g
         assert g2 == GlyphCoordinates([(-1, -2)])
 
-    @pytest.mark.skipif(sys.version_info[0] < 3, reason="__round___ requires Python 3")
     def test__round__(self):
         g = GlyphCoordinates([(-1.5, 2)])
         g2 = round(g)
