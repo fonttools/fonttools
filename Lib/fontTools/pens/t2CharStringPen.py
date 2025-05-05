@@ -124,29 +124,20 @@ class T2CharStringPointPen(PointToSegmentPen):
     def _addStemHints(self) -> None:
         # Collect all stem hints and put the corresponding commands at the beginning of
         # the charstring
-        hstems = set()
-        vstems = set()
+        stems: dict[str, set[tuple[float, float]]] = {"hstem": set(), "vstem": set()}
         for hintSet in self._hints.get("hintSetList", []):
             for stem in hintSet.get("stems", []):
-                cmd, *hint = stem.split()
-                if cmd == "hstem":
-                    hstems.add(tuple([self.round(float(h)) for h in hint]))
-                elif cmd == "vstem":
-                    vstems.add(tuple([self.round(float(h)) for h in hint]))
-                else:
-                    raise ValueError(f"Unknown stem command: '{cmd}'")
+                cmd, pos, size = stem.split()
+                stems[cmd].add((self.round(float(pos)), self.round(float(size))))
+
         p0: float = 0
-        hstem_values = []
-        for pos, width in sorted(hstems):
-            hstem_values.extend([pos - p0, width])
-            p0 += self.round(pos + width)
-        self.pen._commands.append(("hstem", hstem_values))
-        p0 = 0
-        vstem_values = []
-        for pos, width in sorted(vstems):
-            vstem_values.extend([pos - p0, width])
-            p0 += self.round(pos + width)
-        self.pen._commands.append(("vstem", vstem_values))
+        for direction in ("hstem", "vstem"):
+            p0 = 0
+            stem_values = []
+            for p, s in sorted(stems[direction]):
+                stem_values.extend([p - p0, s])
+                p0 += self.round(p + s)
+            self.pen._commands.append((direction, stem_values))
 
     def addPoint(
         self, pt, segmentType=None, smooth=False, name=None, identifier=None, **kwargs
