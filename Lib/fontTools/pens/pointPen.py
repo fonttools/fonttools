@@ -54,7 +54,7 @@ class AbstractPointPen:
 
     def addComponent(
         self,
-        baseGlyphName: str,
+        glyphName: str,
         transformation: Tuple[float, float, float, float, float, float],
         identifier: Optional[str] = None,
         **kwargs: Any,
@@ -259,10 +259,10 @@ class PointToSegmentPen(BasePointToSegmentPen):
         else:
             pen.endPath()
 
-    def addComponent(self, glyphName, transform, identifier=None, **kwargs):
+    def addComponent(self, glyphName, transformation, identifier=None, **kwargs):
         del identifier  # unused
         del kwargs  # unused
-        self.pen.addComponent(glyphName, transform)
+        self.pen.addComponent(glyphName, transformation)
 
 
 class SegmentToPointPen(AbstractPen):
@@ -337,10 +337,10 @@ class SegmentToPointPen(AbstractPen):
         self._flushContour()
         self.contour = None
 
-    def addComponent(self, glyphName, transform):
+    def addComponent(self, glyphName, transformation):
         if self.contour is not None:
             raise PenError("Components must be added before or after contours")
-        self.pen.addComponent(glyphName, transform)
+        self.pen.addComponent(glyphName, transformation)
 
 
 class GuessSmoothPointPen(AbstractPointPen):
@@ -571,7 +571,7 @@ class DecomposingPointPen(LogMixin, AbstractPointPen):
         )
         self.reverseFlipped = reverseFlipped
 
-    def addComponent(self, baseGlyphName, transformation, identifier=None, **kwargs):
+    def addComponent(self, glyphName, transformation, identifier=None, **kwargs):
         """Transform the points of the base glyph and draw it onto self.
 
         The `identifier` parameter and any extra kwargs are ignored.
@@ -579,13 +579,11 @@ class DecomposingPointPen(LogMixin, AbstractPointPen):
         from fontTools.pens.transformPen import TransformPointPen
 
         try:
-            glyph = self.glyphSet[baseGlyphName]
+            glyph = self.glyphSet[glyphName]
         except KeyError:
             if not self.skipMissingComponents:
-                raise MissingComponentError(baseGlyphName)
-            self.log.warning(
-                "glyph '%s' is missing from glyphSet; skipped" % baseGlyphName
-            )
+                raise MissingComponentError(glyphName)
+            self.log.warning("glyph '%s' is missing from glyphSet; skipped" % glyphName)
         else:
             pen = self
             if transformation != Identity:
