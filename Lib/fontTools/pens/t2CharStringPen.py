@@ -125,11 +125,14 @@ class T2CharStringPointPen(PointToSegmentPen):
         # Collect all stem hints and put the corresponding commands at the beginning of
         # the charstring
         stems: dict[str, set[tuple[float, float]]] = {"hstem": set(), "vstem": set()}
-        for hintSet in self._hints.get("hintSetList", []):
+        self._hintSetList = self._hints.get("hintSetList", [])
+        self._hintMasksUsed = len(self._hintSetList) > 1
+        for hintSet in self._hintSetList:
             for stem in hintSet.get("stems", []):
                 cmd, pos, size = stem.split()
                 stems[cmd].add((self.round(float(pos)), self.round(float(size))))
 
+        self._seenHstemHM = False
         p0: float = 0
         for direction in ("hstem", "vstem"):
             p0 = 0
@@ -137,6 +140,13 @@ class T2CharStringPointPen(PointToSegmentPen):
             for p, s in sorted(stems[direction]):
                 stem_values.extend([p - p0, s])
                 p0 += self.round(p + s)
+            if self._hintMasksUsed:
+                # (h|v)stemhm has the same meaning as (h|v)stem except that it must be
+                # used in place of (h|v)stem if the charstring contains one or more
+                # hintmask operators.
+                direction += "hm"
+                if direction == "hstemhm":
+                    self._seenHstemHM = True
             self.pen._commands.append((direction, stem_values))
 
     def addPoint(
@@ -144,6 +154,27 @@ class T2CharStringPointPen(PointToSegmentPen):
     ) -> None:
         if self.currentPath is None:
             raise PenError("Path not begun")
+
+        if name is not None and self._hintMasksUsed:
+            # Build the hint mask
+
+            # FIXME: By adding the hintmask commands manually, they are inserted before
+            # the contour is flushed, so they end up at the beginning of the program,
+            # not in the correct place connected to the point.
+            for hintSet in self._hintSetList:
+                args = []
+                if name == hintSet["pointTag"]:
+                    # Optimization: If hstem and vstem hints are both declared at the
+                    # beginning of a charstring, and this sequence is followed directly
+                    # by the hintmask or cntrmask operators, the vstem hint operator
+                    # need not be included.
+                    if self._seenHstemHM and self.pen._commands[-1][0] == "vstemhm":
+                        _, args = self.pen._commands.pop()
+                    self.pen._commands.append(("hintmask", args))
+                    # FIXME: Compute the actual hintmask
+                    self.pen._commands.append((b"\xd8", []))
+                    break
+
         self.currentPath.append((pt, segmentType, smooth, name, kwargs))
 
     def getCharString(
