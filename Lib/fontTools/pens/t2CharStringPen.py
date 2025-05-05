@@ -163,17 +163,17 @@ class T2CharStringPointPen(PointToSegmentPen):
         if segments[0][0] == "move":
             # It's an open path.
             closed = False
-            points = segments[0][1]
-            if len(points) != 1:
-                raise PenError(f"Illegal move segment point count: {len(points)}")
-            movePt, _, _, _ = points[0]
+            pointList = segments[0][1]
+            if len(pointList) != 1:
+                raise PenError(f"Illegal move segment point count: {len(pointList)}")
+            movePt, _, _, _ = pointList[0]
             del segments[0]
         else:
             # It's a closed path, do a moveTo to the last
             # point of the last segment.
             closed = True
-            segmentType, points = segments[-1]
-            movePt, _, _, _ = points[-1]
+            segmentType, pointList = segments[-1]
+            movePt, _, _, _ = pointList[-1]
         if movePt is None:
             # quad special case: a contour with no on-curve points contains
             # one "qcurve" segment that ends with a point that's None. We
@@ -185,8 +185,8 @@ class T2CharStringPointPen(PointToSegmentPen):
         nSegments = len(segments)
         lastPt = movePt
         for i in range(nSegments):
-            segmentType, points = segments[i]
-            points = [pt for pt, _, _, _ in points]
+            segmentType, pointList = segments[i]
+            points = [pt for pt, _, _, _ in pointList]
             if segmentType == "line":
                 if len(points) != 1:
                     raise PenError(f"Illegal line segment point count: {len(points)}")
