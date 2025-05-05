@@ -1,5 +1,6 @@
-from fontTools.pens.t2CharStringPen import T2CharStringPen
 import unittest
+
+from fontTools.pens.t2CharStringPen import T2CharStringPen, T2CharStringPointPen
 
 
 class T2CharStringPenTest(unittest.TestCase):
@@ -286,6 +287,125 @@ class T2CharStringPenTest(unittest.TestCase):
             None,
             {},
             roundTolerance=-0.1,
+        )
+
+
+class T2CharStringPointPenTest(unittest.TestCase):
+    def test_simple_hints(self):
+        pen = T2CharStringPointPen(
+            100,
+            {},
+            hints={
+                "hintSetList": [
+                    {
+                        "pointTag": "hr00",
+                        "stems": [
+                            "hstem -14 77",
+                            "hstem 439 83",
+                            "vstem 111 89",
+                            "vstem 464 82",
+                        ],
+                    }
+                ]
+            },
+        )
+        pen.beginPath()
+        pen.addPoint((111, 254), segmentType="curve", name="hr00")
+
+        pen.addPoint((111, 106))
+        pen.addPoint((208, -14))
+        pen.addPoint((328, -14), segmentType="curve")
+
+        pen.addPoint((448, -14))
+        pen.addPoint((546, 106))
+        pen.addPoint((546, 254), segmentType="curve")
+
+        pen.addPoint((546, 402))
+        pen.addPoint((448, 522))
+        pen.addPoint((328, 522), segmentType="curve")
+
+        pen.addPoint((208, 522))
+        pen.addPoint((111, 402))
+
+        pen.endPath()
+
+        pen.beginPath()
+        pen.addPoint((200, 249), segmentType="curve")
+
+        pen.addPoint((200, 381))
+        pen.addPoint((250, 439))
+        pen.addPoint((323, 439), segmentType="curve")
+
+        pen.addPoint((396, 439))
+        pen.addPoint((464, 378))
+        pen.addPoint((464, 249), segmentType="curve")
+
+        pen.addPoint((464, 118))
+        pen.addPoint((405, 63))
+        pen.addPoint((332, 63), segmentType="curve")
+
+        pen.addPoint((259, 63))
+        pen.addPoint((200, 132))
+
+        pen.endPath()
+        charstring = pen.getCharString(None, None)
+
+        self.assertEqual(
+            [
+                100,
+                -14,
+                77,
+                376,
+                83,
+                "hstem",
+                111,
+                89,
+                264,
+                82,
+                "vstem",
+                111,
+                254,
+                "rmoveto",
+                -148,
+                97,
+                -120,
+                120,
+                120,
+                98,
+                120,
+                148,
+                148,
+                -98,
+                120,
+                -120,
+                -120,
+                -97,
+                -120,
+                -148,
+                "vhcurveto",
+                89,
+                -5,
+                "rmoveto",
+                132,
+                50,
+                58,
+                73,
+                73,
+                68,
+                -61,
+                -129,
+                -131,
+                -59,
+                -55,
+                -73,
+                -73,
+                -59,
+                69,
+                117,
+                "vhcurveto",
+                "endchar",
+            ],
+            charstring.program,
         )
 
 
