@@ -149,6 +149,78 @@ class T2CharStringPointPen(PointToSegmentPen):
                     self._seenHstemHM = True
             self.pen._commands.append((direction, stem_values))
 
+    def _flushContour(
+        self,
+        segments: list[
+            tuple[str | None, list[tuple[tuple[float, float], bool, str | None, Any]]]
+        ],
+    ) -> None:
+        # Copied and patched from pointPen.PointToSegmentPen, so as to insert the
+        # hintmask commands in the proper places.
+        if not segments:
+            raise PenError("Must have at least one segment.")
+        pen = self.pen
+        if segments[0][0] == "move":
+            # It's an open path.
+            closed = False
+            points = segments[0][1]
+            if len(points) != 1:
+                raise PenError(f"Illegal move segment point count: {len(points)}")
+            movePt, _, _, _ = points[0]
+            del segments[0]
+        else:
+            # It's a closed path, do a moveTo to the last
+            # point of the last segment.
+            closed = True
+            segmentType, points = segments[-1]
+            movePt, _, _, _ = points[-1]
+        if movePt is None:
+            # quad special case: a contour with no on-curve points contains
+            # one "qcurve" segment that ends with a point that's None. We
+            # must not output a moveTo() in that case.
+            pass
+        else:
+            pen.moveTo(movePt)
+        outputImpliedClosingLine = self.outputImpliedClosingLine
+        nSegments = len(segments)
+        lastPt = movePt
+        for i in range(nSegments):
+            segmentType, points = segments[i]
+            points = [pt for pt, _, _, _ in points]
+            if segmentType == "line":
+                if len(points) != 1:
+                    raise PenError(f"Illegal line segment point count: {len(points)}")
+                pt = points[0]
+                # For closed contours, a 'lineTo' is always implied from the last oncurve
+                # point to the starting point, thus we can omit it when the last and
+                # starting point don't overlap.
+                # However, when the last oncurve point is a "line" segment and has same
+                # coordinates as the starting point of a closed contour, we need to output
+                # the closing 'lineTo' explicitly (regardless of the value of the
+                # 'outputImpliedClosingLine' option) in order to disambiguate this case from
+                # the implied closing 'lineTo', otherwise the duplicate point would be lost.
+                # See https://github.com/googlefonts/fontmake/issues/572.
+                if (
+                    i + 1 != nSegments
+                    or outputImpliedClosingLine
+                    or not closed
+                    or pt == lastPt
+                ):
+                    pen.lineTo(pt)
+                    lastPt = pt
+            elif segmentType == "curve":
+                pen.curveTo(*points)
+                lastPt = points[-1]
+            elif segmentType == "qcurve":
+                pen.qCurveTo(*points)
+                lastPt = points[-1]
+            else:
+                raise PenError(f"Illegal segmentType: {segmentType}")
+        if closed:
+            pen.closePath()
+        else:
+            pen.endPath()
+
     def addPoint(
         self, pt, segmentType=None, smooth=False, name=None, identifier=None, **kwargs
     ) -> None:
