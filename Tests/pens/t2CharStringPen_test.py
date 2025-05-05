@@ -431,14 +431,14 @@ class T2CharStringPointPenTest(unittest.TestCase):
             [
                 100,
                 21, -21, 404, 110, -14, -20, "hstemhm",
-                60, 133, 216, 144, "hintmask", b"\xd8",  # 0b11011000
+                60, 133, 216, 144, "hintmask", b"\xd8",  # 11011000
                 60, "hmoveto",
                 133, 297, "hlineto",
                 68, 30, 45, 39, 63, "hhcurveto",
                 55, 23, -34, -59, "hvcurveto",
                 -311, 144, 309, "vlineto",
                 127, -35, 78, -142, -90, -63, -39, -60, -30, "vhcurveto",
-                "hintmask", b"\xb8",  # 0b10111000
+                "hintmask", b"\xb8",  # 10111000
                 85, -133, "vlineto",
                 "endchar",
             ],
