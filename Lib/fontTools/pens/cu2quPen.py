@@ -216,9 +216,9 @@ class Cu2QuPointPen(BasePointToSegmentPen):
             pen.addPoint(pt, None, smooth, name, **kwargs)
         pen.endPath()
 
-    def addComponent(self, baseGlyphName, transformation):
+    def addComponent(self, glyphName, transformation):
         assert self.currentPath is None
-        self.pen.addComponent(baseGlyphName, transformation)
+        self.pen.addComponent(glyphName, transformation)
 
 
 class Cu2QuMultiPen:

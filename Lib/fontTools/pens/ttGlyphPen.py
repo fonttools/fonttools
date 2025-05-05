@@ -79,7 +79,7 @@ class _TTGlyphBasePen:
 
     def addComponent(
         self,
-        baseGlyphName: str,
+        glyphName: str,
         transformation: Tuple[float, float, float, float, float, float],
         identifier: Optional[str] = None,
         **kwargs: Any,
@@ -87,7 +87,7 @@ class _TTGlyphBasePen:
         """
         Add a sub glyph.
         """
-        self.components.append((baseGlyphName, transformation))
+        self.components.append((glyphName, transformation))
 
     def _buildComponents(self, componentFlags):
         if self.handleOverflowingTransforms:
