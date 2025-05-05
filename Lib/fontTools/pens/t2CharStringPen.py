@@ -9,7 +9,7 @@ from fontTools.cffLib.specializer import commandsToProgram, specializeCommands
 from fontTools.misc.psCharStrings import T2CharString
 from fontTools.misc.roundTools import otRound, roundFunc
 from fontTools.pens.basePen import BasePen, PenError
-from fontTools.pens.pointPen import PointToSegmentPen
+from fontTools.pens.pointPen import PointToSegmentPen, SegmentList
 from typing_extensions import NotRequired, TypedDict
 
 
@@ -149,12 +149,30 @@ class T2CharStringPointPen(PointToSegmentPen):
                     self._seenHstemHM = True
             self.pen._commands.append((direction, stem_values))
 
-    def _flushContour(
-        self,
-        segments: list[
-            tuple[str | None, list[tuple[tuple[float, float], bool, str | None, Any]]]
-        ],
-    ) -> None:
+    def _insertHintMask(self, names: list[str]) -> None:
+        assert len(names) == 1
+        name = names[0]
+        if name is not None and self._hintMasksUsed:
+            # Build the hint mask
+
+            # FIXME: By adding the hintmask commands manually, they are inserted before
+            # the contour is flushed, so they end up at the beginning of the program,
+            # not in the correct place connected to the point.
+            for hintSet in self._hintSetList:
+                args = []
+                if name == hintSet["pointTag"]:
+                    # Optimization: If hstem and vstem hints are both declared at the
+                    # beginning of a charstring, and this sequence is followed directly
+                    # by the hintmask or cntrmask operators, the vstem hint operator
+                    # need not be included.
+                    if self._seenHstemHM and self.pen._commands[-1][0] == "vstemhm":
+                        _, args = self.pen._commands.pop()
+                    self.pen._commands.append(("hintmask", args))
+                    # FIXME: Compute the actual hintmask
+                    self.pen._commands.append((b"\xd8", []))
+                    break
+
+    def _flushContour(self, segments: SegmentList) -> None:
         # Copied and patched from pointPen.PointToSegmentPen, so as to insert the
         # hintmask commands in the proper places.
         if not segments:
@@ -186,6 +204,11 @@ class T2CharStringPointPen(PointToSegmentPen):
         lastPt = movePt
         for i in range(nSegments):
             segmentType, pointList = segments[i]
+            # ----- begin addition for hintmasks -----
+            names = [name for _, _, name, _ in pointList if name is not None]
+            if names:
+                self._insertHintMask(names)
+            # ----- end addition for hintmasks -----
             points = [pt for pt, _, _, _ in pointList]
             if segmentType == "line":
                 if len(points) != 1:
@@ -220,34 +243,6 @@ class T2CharStringPointPen(PointToSegmentPen):
             pen.closePath()
         else:
             pen.endPath()
-
-    def addPoint(
-        self, pt, segmentType=None, smooth=False, name=None, identifier=None, **kwargs
-    ) -> None:
-        if self.currentPath is None:
-            raise PenError("Path not begun")
-
-        if name is not None and self._hintMasksUsed:
-            # Build the hint mask
-
-            # FIXME: By adding the hintmask commands manually, they are inserted before
-            # the contour is flushed, so they end up at the beginning of the program,
-            # not in the correct place connected to the point.
-            for hintSet in self._hintSetList:
-                args = []
-                if name == hintSet["pointTag"]:
-                    # Optimization: If hstem and vstem hints are both declared at the
-                    # beginning of a charstring, and this sequence is followed directly
-                    # by the hintmask or cntrmask operators, the vstem hint operator
-                    # need not be included.
-                    if self._seenHstemHM and self.pen._commands[-1][0] == "vstemhm":
-                        _, args = self.pen._commands.pop()
-                    self.pen._commands.append(("hintmask", args))
-                    # FIXME: Compute the actual hintmask
-                    self.pen._commands.append((b"\xd8", []))
-                    break
-
-        self.currentPath.append((pt, segmentType, smooth, name, kwargs))
 
     def getCharString(
         self,
