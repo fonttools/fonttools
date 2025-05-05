@@ -36,18 +36,23 @@ class T2CharStringPen(BasePen):
         self._commands: list[tuple[str, list[float]]] = []
         self._p0 = (0, 0)
 
-    def _p(self, pt) -> list[float]:
+    def _p(self, pt: tuple[float, float]) -> list[float]:
         p0 = self._p0
         pt = self._p0 = (self.round(pt[0]), self.round(pt[1]))
         return [pt[0] - p0[0], pt[1] - p0[1]]
 
-    def _moveTo(self, pt) -> None:
+    def _moveTo(self, pt: tuple[float, float]) -> None:
         self._commands.append(("rmoveto", self._p(pt)))
 
-    def _lineTo(self, pt) -> None:
+    def _lineTo(self, pt: tuple[float, float]) -> None:
         self._commands.append(("rlineto", self._p(pt)))
 
-    def _curveToOne(self, pt1, pt2, pt3) -> None:
+    def _curveToOne(
+        self,
+        pt1: tuple[float, float],
+        pt2: tuple[float, float],
+        pt3: tuple[float, float],
+    ) -> None:
         _p = self._p
         self._commands.append(("rrcurveto", _p(pt1) + _p(pt2) + _p(pt3)))
 
