@@ -32,10 +32,10 @@ __all__ = [
 
 # Some type aliases to make it easier below
 Point = Tuple[float, float]
-PointName = str | None
+PointName = Optional[str]
 # [(pt, smooth, name, kwargs)]
-SegmentPointList = List[Tuple[Point | None, bool, PointName, Any]]
-SegmentType = str | None
+SegmentPointList = List[Tuple[Optional[Point], bool, PointName, Any]]
+SegmentType = Optional[str]
 SegmentList = List[Tuple[SegmentType, SegmentPointList]]
 
 
@@ -286,7 +286,7 @@ class SegmentToPointPen(AbstractPen):
             self.pen = GuessSmoothPointPen(pointPen)
         else:
             self.pen = pointPen
-        self.contour: List[Tuple[Point, SegmentType]] | None = None
+        self.contour: Optional[List[Tuple[Point, SegmentType]]] = None
 
     def _flushContour(self) -> None:
         pen = self.pen
