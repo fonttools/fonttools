@@ -365,10 +365,86 @@ class T2CharStringPointPenTest(unittest.TestCase):
             charstring.program,
         )
         # fmt:on
+
+    def test_hint_replacement(self):
+        pen = T2CharStringPointPen(
+            100,
+            {},
+            hints={
+                "hintSetList": [
+                    {
+                        "pointTag": "hr00",
+                        "stems": [
+                            "hstem 21 -21",
+                            "hstem 404 110",
+                            "vstem 60 133",
+                            "vstem 409 144",
+                        ],
+                    },
+                    {
+                        "pointTag": "hr01",
+                        "stems": [
+                            "hstem 21 -21",
+                            "hstem 500 -20",
+                            "vstem 60 133",
+                            "vstem 409 144",
+                        ],
+                    },
+                ]
+            },
+        )
+        pen.beginPath()
+
+        pen.addPoint((60, 0), segmentType="line", name="hr00")
+        pen.addPoint((193, 0), segmentType="line")
+        pen.addPoint((193, 297), segmentType="line")
+
+        pen.addPoint((223, 365))
+        pen.addPoint((268, 404))
+        pen.addPoint((331, 404), segmentType="curve")
+
+        pen.addPoint((386, 404))
+        pen.addPoint((409, 370))
+        pen.addPoint((409, 311), segmentType="curve")
+
+        pen.addPoint((409, 0), segmentType="line")
+        pen.addPoint((553, 0), segmentType="line")
+        pen.addPoint((553, 309), segmentType="line")
+
+        pen.addPoint((553, 436))
+        pen.addPoint((518, 514))
+        pen.addPoint((376, 514), segmentType="curve")
+
+        pen.addPoint((286, 514))
+        pen.addPoint((223, 475))
+        pen.addPoint((193, 415), segmentType="curve")
+
+        pen.addPoint((193, 500), segmentType="line", name="hr01")
+        pen.addPoint((60, 500), segmentType="line")
+
+        pen.endPath()
+
+        charstring = pen.getCharString(None, None)
+
+        # fmt:off
+        self.assertEqual(
+            [
+                100,
+                21, -21, 404, 110, -14, -20, "hstemhm",
+                60, 133, 216, 144, "hintmask", b"\xd8",  # 0b11011000
+                60, "hmoveto",
+                133, 297, "hlineto",
+                68, 30, 45, 39, 63, "hhcurveto",
+                55, 23, -34, -59, "hvcurveto",
+                -311, 144, 309, "vlineto",
+                127, -35, 78, -142, -90, -63, -39, -60, -30, "vhcurveto",
+                "hintmask", b"\xb8",  # 0b10111000
+                85, -133, "vlineto",
                 "endchar",
             ],
             charstring.program,
         )
+        # fmt:on
 
 
 if __name__ == "__main__":
