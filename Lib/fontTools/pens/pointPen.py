@@ -604,7 +604,6 @@ class DecomposingPointPen(LogMixin, AbstractPointPen):
                 # if the transformation has a negative determinant, it will
                 # reverse the contour direction of the component
                 a, b, c, d = transformation[:4]
-                det = a * d - b * c
                 if a * d - b * c < 0:
                     pen = ReverseContourPointPen(pen)
             glyph.drawPoints(pen)
