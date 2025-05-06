@@ -5,124 +5,152 @@
 @slash = [slash fraction];
 
 # Mark classes
-markClass eight.numr <anchor 0 0> @INIT.1.10;
-markClass eight.numr <anchor 0 0> @INIT.2.10;
-markClass eight.numr <anchor 0 0> @INIT.3.10;
-markClass eight.numr <anchor 0 0> @INIT.4.10;
-markClass eight.numr <anchor 0 0> @INIT.5.10;
-markClass eight.numr <anchor 0 0> @INIT.6.10;
-markClass eight.numr <anchor 0 0> @INIT.7.10;
-markClass eight.numr <anchor 0 0> @INIT.8.10;
-markClass eight.numr <anchor 0 0> @INIT.9.10;
-markClass eight.numr <anchor 0 0> @NUMRNUMR;
-markClass five.numr <anchor 0 0> @INIT.1.10;
-markClass five.numr <anchor 0 0> @INIT.2.10;
-markClass five.numr <anchor 0 0> @INIT.3.10;
-markClass five.numr <anchor 0 0> @INIT.4.10;
-markClass five.numr <anchor 0 0> @INIT.5.10;
-markClass five.numr <anchor 0 0> @INIT.6.10;
-markClass five.numr <anchor 0 0> @INIT.7.10;
-markClass five.numr <anchor 0 0> @INIT.8.10;
-markClass five.numr <anchor 0 0> @INIT.9.10;
-markClass five.numr <anchor 0 0> @NUMRNUMR;
-markClass four.numr <anchor 0 0> @INIT.1.10;
-markClass four.numr <anchor 0 0> @INIT.2.10;
-markClass four.numr <anchor 0 0> @INIT.3.10;
-markClass four.numr <anchor 0 0> @INIT.4.10;
-markClass four.numr <anchor 0 0> @INIT.5.10;
-markClass four.numr <anchor 0 0> @INIT.6.10;
-markClass four.numr <anchor 0 0> @INIT.7.10;
-markClass four.numr <anchor 0 0> @INIT.8.10;
-markClass four.numr <anchor 0 0> @INIT.9.10;
-markClass four.numr <anchor 0 0> @NUMRNUMR;
-markClass nine.numr <anchor 0 0> @INIT.1.10;
-markClass nine.numr <anchor 0 0> @INIT.2.10;
-markClass nine.numr <anchor 0 0> @INIT.3.10;
-markClass nine.numr <anchor 0 0> @INIT.4.10;
-markClass nine.numr <anchor 0 0> @INIT.5.10;
-markClass nine.numr <anchor 0 0> @INIT.6.10;
-markClass nine.numr <anchor 0 0> @INIT.7.10;
-markClass nine.numr <anchor 0 0> @INIT.8.10;
-markClass nine.numr <anchor 0 0> @INIT.9.10;
-markClass nine.numr <anchor 0 0> @NUMRNUMR;
-markClass one.numr <anchor 0 0> @INIT.1.10;
-markClass one.numr <anchor 0 0> @INIT.2.10;
-markClass one.numr <anchor 0 0> @INIT.3.10;
-markClass one.numr <anchor 0 0> @INIT.4.10;
-markClass one.numr <anchor 0 0> @INIT.5.10;
-markClass one.numr <anchor 0 0> @INIT.6.10;
-markClass one.numr <anchor 0 0> @INIT.7.10;
-markClass one.numr <anchor 0 0> @INIT.8.10;
-markClass one.numr <anchor 0 0> @INIT.9.10;
-markClass one.numr <anchor 0 0> @NUMRNUMR;
-markClass seven.numr <anchor 0 0> @INIT.1.10;
-markClass seven.numr <anchor 0 0> @INIT.2.10;
-markClass seven.numr <anchor 0 0> @INIT.3.10;
-markClass seven.numr <anchor 0 0> @INIT.4.10;
-markClass seven.numr <anchor 0 0> @INIT.5.10;
-markClass seven.numr <anchor 0 0> @INIT.6.10;
-markClass seven.numr <anchor 0 0> @INIT.7.10;
-markClass seven.numr <anchor 0 0> @INIT.8.10;
-markClass seven.numr <anchor 0 0> @INIT.9.10;
-markClass seven.numr <anchor 0 0> @NUMRNUMR;
-markClass six.numr <anchor 0 0> @INIT.1.10;
-markClass six.numr <anchor 0 0> @INIT.2.10;
-markClass six.numr <anchor 0 0> @INIT.3.10;
-markClass six.numr <anchor 0 0> @INIT.4.10;
-markClass six.numr <anchor 0 0> @INIT.5.10;
-markClass six.numr <anchor 0 0> @INIT.6.10;
-markClass six.numr <anchor 0 0> @INIT.7.10;
-markClass six.numr <anchor 0 0> @INIT.8.10;
-markClass six.numr <anchor 0 0> @INIT.9.10;
-markClass six.numr <anchor 0 0> @NUMRNUMR;
-markClass three.numr <anchor 0 0> @INIT.1.10;
-markClass three.numr <anchor 0 0> @INIT.2.10;
-markClass three.numr <anchor 0 0> @INIT.3.10;
-markClass three.numr <anchor 0 0> @INIT.4.10;
-markClass three.numr <anchor 0 0> @INIT.5.10;
-markClass three.numr <anchor 0 0> @INIT.6.10;
-markClass three.numr <anchor 0 0> @INIT.7.10;
-markClass three.numr <anchor 0 0> @INIT.8.10;
-markClass three.numr <anchor 0 0> @INIT.9.10;
-markClass three.numr <anchor 0 0> @NUMRNUMR;
-markClass two.numr <anchor 0 0> @INIT.1.10;
-markClass two.numr <anchor 0 0> @INIT.2.10;
-markClass two.numr <anchor 0 0> @INIT.3.10;
-markClass two.numr <anchor 0 0> @INIT.4.10;
-markClass two.numr <anchor 0 0> @INIT.5.10;
-markClass two.numr <anchor 0 0> @INIT.6.10;
-markClass two.numr <anchor 0 0> @INIT.7.10;
-markClass two.numr <anchor 0 0> @INIT.8.10;
-markClass two.numr <anchor 0 0> @INIT.9.10;
-markClass two.numr <anchor 0 0> @NUMRNUMR;
-markClass zero.numr <anchor 0 0> @INIT.1.10;
-markClass zero.numr <anchor 0 0> @INIT.2.10;
-markClass zero.numr <anchor 0 0> @INIT.3.10;
-markClass zero.numr <anchor 0 0> @INIT.4.10;
-markClass zero.numr <anchor 0 0> @INIT.5.10;
-markClass zero.numr <anchor 0 0> @INIT.6.10;
-markClass zero.numr <anchor 0 0> @INIT.7.10;
-markClass zero.numr <anchor 0 0> @INIT.8.10;
-markClass zero.numr <anchor 0 0> @INIT.9.10;
-markClass zero.numr <anchor 0 0> @NUMRNUMR;
+markClass eight.numr <anchor 0 0> @INIT.1.10.fracmark.init_1.10;
+markClass eight.numr <anchor 0 0> @INIT.2.10.fracmark.init_2.10;
+markClass eight.numr <anchor 0 0> @INIT.3.10.fracmark.init_3.10;
+markClass eight.numr <anchor 0 0> @INIT.4.10.fracmark.init_4.10;
+markClass eight.numr <anchor 0 0> @INIT.5.10.fracmark.init_5.10;
+markClass eight.numr <anchor 0 0> @INIT.6.10.fracmark.init_6.10;
+markClass eight.numr <anchor 0 0> @INIT.7.10.fracmark.init_7.10;
+markClass eight.numr <anchor 0 0> @INIT.8.10.fracmark.init_8.10;
+markClass eight.numr <anchor 0 0> @INIT.9.10.fracmark.init_9.10;
+markClass eight.numr <anchor 0 0> @NUMRNUMR.fracmkmk.numrspacing;
+markClass five.numr <anchor 0 0> @INIT.1.10.fracmark.init_1.10;
+markClass five.numr <anchor 0 0> @INIT.2.10.fracmark.init_2.10;
+markClass five.numr <anchor 0 0> @INIT.3.10.fracmark.init_3.10;
+markClass five.numr <anchor 0 0> @INIT.4.10.fracmark.init_4.10;
+markClass five.numr <anchor 0 0> @INIT.5.10.fracmark.init_5.10;
+markClass five.numr <anchor 0 0> @INIT.6.10.fracmark.init_6.10;
+markClass five.numr <anchor 0 0> @INIT.7.10.fracmark.init_7.10;
+markClass five.numr <anchor 0 0> @INIT.8.10.fracmark.init_8.10;
+markClass five.numr <anchor 0 0> @INIT.9.10.fracmark.init_9.10;
+markClass five.numr <anchor 0 0> @NUMRNUMR.fracmkmk.numrspacing;
+markClass four.numr <anchor 0 0> @INIT.1.10.fracmark.init_1.10;
+markClass four.numr <anchor 0 0> @INIT.2.10.fracmark.init_2.10;
+markClass four.numr <anchor 0 0> @INIT.3.10.fracmark.init_3.10;
+markClass four.numr <anchor 0 0> @INIT.4.10.fracmark.init_4.10;
+markClass four.numr <anchor 0 0> @INIT.5.10.fracmark.init_5.10;
+markClass four.numr <anchor 0 0> @INIT.6.10.fracmark.init_6.10;
+markClass four.numr <anchor 0 0> @INIT.7.10.fracmark.init_7.10;
+markClass four.numr <anchor 0 0> @INIT.8.10.fracmark.init_8.10;
+markClass four.numr <anchor 0 0> @INIT.9.10.fracmark.init_9.10;
+markClass four.numr <anchor 0 0> @NUMRNUMR.fracmkmk.numrspacing;
+markClass nine.numr <anchor 0 0> @INIT.1.10.fracmark.init_1.10;
+markClass nine.numr <anchor 0 0> @INIT.2.10.fracmark.init_2.10;
+markClass nine.numr <anchor 0 0> @INIT.3.10.fracmark.init_3.10;
+markClass nine.numr <anchor 0 0> @INIT.4.10.fracmark.init_4.10;
+markClass nine.numr <anchor 0 0> @INIT.5.10.fracmark.init_5.10;
+markClass nine.numr <anchor 0 0> @INIT.6.10.fracmark.init_6.10;
+markClass nine.numr <anchor 0 0> @INIT.7.10.fracmark.init_7.10;
+markClass nine.numr <anchor 0 0> @INIT.8.10.fracmark.init_8.10;
+markClass nine.numr <anchor 0 0> @INIT.9.10.fracmark.init_9.10;
+markClass nine.numr <anchor 0 0> @NUMRNUMR.fracmkmk.numrspacing;
+markClass one.numr <anchor 0 0> @INIT.1.10.fracmark.init_1.10;
+markClass one.numr <anchor 0 0> @INIT.2.10.fracmark.init_2.10;
+markClass one.numr <anchor 0 0> @INIT.3.10.fracmark.init_3.10;
+markClass one.numr <anchor 0 0> @INIT.4.10.fracmark.init_4.10;
+markClass one.numr <anchor 0 0> @INIT.5.10.fracmark.init_5.10;
+markClass one.numr <anchor 0 0> @INIT.6.10.fracmark.init_6.10;
+markClass one.numr <anchor 0 0> @INIT.7.10.fracmark.init_7.10;
+markClass one.numr <anchor 0 0> @INIT.8.10.fracmark.init_8.10;
+markClass one.numr <anchor 0 0> @INIT.9.10.fracmark.init_9.10;
+markClass one.numr <anchor 0 0> @NUMRNUMR.fracmkmk.numrspacing;
+markClass seven.numr <anchor 0 0> @INIT.1.10.fracmark.init_1.10;
+markClass seven.numr <anchor 0 0> @INIT.2.10.fracmark.init_2.10;
+markClass seven.numr <anchor 0 0> @INIT.3.10.fracmark.init_3.10;
+markClass seven.numr <anchor 0 0> @INIT.4.10.fracmark.init_4.10;
+markClass seven.numr <anchor 0 0> @INIT.5.10.fracmark.init_5.10;
+markClass seven.numr <anchor 0 0> @INIT.6.10.fracmark.init_6.10;
+markClass seven.numr <anchor 0 0> @INIT.7.10.fracmark.init_7.10;
+markClass seven.numr <anchor 0 0> @INIT.8.10.fracmark.init_8.10;
+markClass seven.numr <anchor 0 0> @INIT.9.10.fracmark.init_9.10;
+markClass seven.numr <anchor 0 0> @NUMRNUMR.fracmkmk.numrspacing;
+markClass six.numr <anchor 0 0> @INIT.1.10.fracmark.init_1.10;
+markClass six.numr <anchor 0 0> @INIT.2.10.fracmark.init_2.10;
+markClass six.numr <anchor 0 0> @INIT.3.10.fracmark.init_3.10;
+markClass six.numr <anchor 0 0> @INIT.4.10.fracmark.init_4.10;
+markClass six.numr <anchor 0 0> @INIT.5.10.fracmark.init_5.10;
+markClass six.numr <anchor 0 0> @INIT.6.10.fracmark.init_6.10;
+markClass six.numr <anchor 0 0> @INIT.7.10.fracmark.init_7.10;
+markClass six.numr <anchor 0 0> @INIT.8.10.fracmark.init_8.10;
+markClass six.numr <anchor 0 0> @INIT.9.10.fracmark.init_9.10;
+markClass six.numr <anchor 0 0> @NUMRNUMR.fracmkmk.numrspacing;
+markClass three.numr <anchor 0 0> @INIT.1.10.fracmark.init_1.10;
+markClass three.numr <anchor 0 0> @INIT.2.10.fracmark.init_2.10;
+markClass three.numr <anchor 0 0> @INIT.3.10.fracmark.init_3.10;
+markClass three.numr <anchor 0 0> @INIT.4.10.fracmark.init_4.10;
+markClass three.numr <anchor 0 0> @INIT.5.10.fracmark.init_5.10;
+markClass three.numr <anchor 0 0> @INIT.6.10.fracmark.init_6.10;
+markClass three.numr <anchor 0 0> @INIT.7.10.fracmark.init_7.10;
+markClass three.numr <anchor 0 0> @INIT.8.10.fracmark.init_8.10;
+markClass three.numr <anchor 0 0> @INIT.9.10.fracmark.init_9.10;
+markClass three.numr <anchor 0 0> @NUMRNUMR.fracmkmk.numrspacing;
+markClass two.numr <anchor 0 0> @INIT.1.10.fracmark.init_1.10;
+markClass two.numr <anchor 0 0> @INIT.2.10.fracmark.init_2.10;
+markClass two.numr <anchor 0 0> @INIT.3.10.fracmark.init_3.10;
+markClass two.numr <anchor 0 0> @INIT.4.10.fracmark.init_4.10;
+markClass two.numr <anchor 0 0> @INIT.5.10.fracmark.init_5.10;
+markClass two.numr <anchor 0 0> @INIT.6.10.fracmark.init_6.10;
+markClass two.numr <anchor 0 0> @INIT.7.10.fracmark.init_7.10;
+markClass two.numr <anchor 0 0> @INIT.8.10.fracmark.init_8.10;
+markClass two.numr <anchor 0 0> @INIT.9.10.fracmark.init_9.10;
+markClass two.numr <anchor 0 0> @NUMRNUMR.fracmkmk.numrspacing;
+markClass zero.numr <anchor 0 0> @INIT.1.10.fracmark.init_1.10;
+markClass zero.numr <anchor 0 0> @INIT.2.10.fracmark.init_2.10;
+markClass zero.numr <anchor 0 0> @INIT.3.10.fracmark.init_3.10;
+markClass zero.numr <anchor 0 0> @INIT.4.10.fracmark.init_4.10;
+markClass zero.numr <anchor 0 0> @INIT.5.10.fracmark.init_5.10;
+markClass zero.numr <anchor 0 0> @INIT.6.10.fracmark.init_6.10;
+markClass zero.numr <anchor 0 0> @INIT.7.10.fracmark.init_7.10;
+markClass zero.numr <anchor 0 0> @INIT.8.10.fracmark.init_8.10;
+markClass zero.numr <anchor 0 0> @INIT.9.10.fracmark.init_9.10;
+markClass zero.numr <anchor 0 0> @NUMRNUMR.fracmkmk.numrspacing;
 
 # Lookups
 lookup frac.numr {
     sub @numerals by @numr;
 } frac.numr;
 
+lookup frac.dnom_chained {
+    sub @numr by @dnom;
+} frac.dnom_chained;
+
 lookup frac.dnom {
-    sub [@slash @dnom] @numr' by @dnom;
+    sub [@slash @dnom] @numr' lookup frac.dnom_chained;
 } frac.dnom;
 
 lookup frac.noslash {
-    sub @numr slash by @numr;
-    sub @numr fraction by @numr;
+    # sub @numr slash by @numr;
+    sub zero.numr slash by zero.numr;
+    sub one.numr slash by one.numr;
+    sub two.numr slash by two.numr;
+    sub three.numr slash by three.numr;
+    sub four.numr slash by four.numr;
+    sub five.numr slash by five.numr;
+    sub six.numr slash by six.numr;
+    sub seven.numr slash by seven.numr;
+    sub eight.numr slash by eight.numr;
+    sub nine.numr slash by nine.numr;
+    # sub @numr fraction by @numr;
+    sub zero.numr fraction by zero.numr;
+    sub one.numr fraction by one.numr;
+    sub two.numr fraction by two.numr;
+    sub three.numr fraction by three.numr;
+    sub four.numr fraction by four.numr;
+    sub five.numr fraction by five.numr;
+    sub six.numr fraction by six.numr;
+    sub seven.numr fraction by seven.numr;
+    sub eight.numr fraction by eight.numr;
+    sub nine.numr fraction by nine.numr;
 } frac.noslash;
+
+lookup frac.fracinit_chained {
+    sub @numr by fracinit @numr;
+} frac.fracinit_chained;
 
 lookup frac.fracinit {
     ignore sub @numr @numr';
-    sub @numr' by fracinit @numr;
+    sub @numr' lookup frac.fracinit_chained;
 } frac.fracinit;
 
 lookup kern.numeral_to_fraction {
@@ -130,137 +158,137 @@ lookup kern.numeral_to_fraction {
     pos @dnom @numerals 140;
 } kern.numeral_to_fraction;
 
-lookup fracmark.init_1.10_target {
+lookup fracmark.init_1.10_chained {
     pos base fracinit
-        <anchor 3150 0> mark @INIT.1.10;
-} fracmark.init_1.10_target;
+        <anchor 3150 0> mark @INIT.1.10.fracmark.init_1.10;
+} fracmark.init_1.10_chained;
 
-lookup fracmark.init_2.10_target {
+lookup fracmark.init_2.10_chained {
     pos base fracinit
-        <anchor 2800 0> mark @INIT.2.10;
-} fracmark.init_2.10_target;
+        <anchor 2800 0> mark @INIT.2.10.fracmark.init_2.10;
+} fracmark.init_2.10_chained;
 
-lookup fracmark.init_3.10_target {
+lookup fracmark.init_3.10_chained {
     pos base fracinit
-        <anchor 2450 0> mark @INIT.3.10;
-} fracmark.init_3.10_target;
+        <anchor 2450 0> mark @INIT.3.10.fracmark.init_3.10;
+} fracmark.init_3.10_chained;
 
-lookup fracmark.init_4.10_target {
+lookup fracmark.init_4.10_chained {
     pos base fracinit
-        <anchor 2100 0> mark @INIT.4.10;
-} fracmark.init_4.10_target;
+        <anchor 2100 0> mark @INIT.4.10.fracmark.init_4.10;
+} fracmark.init_4.10_chained;
 
-lookup fracmark.init_5.10_target {
+lookup fracmark.init_5.10_chained {
     pos base fracinit
-        <anchor 1750 0> mark @INIT.5.10;
-} fracmark.init_5.10_target;
+        <anchor 1750 0> mark @INIT.5.10.fracmark.init_5.10;
+} fracmark.init_5.10_chained;
 
-lookup fracmark.init_6.10_target {
+lookup fracmark.init_6.10_chained {
     pos base fracinit
-        <anchor 1400 0> mark @INIT.6.10;
-} fracmark.init_6.10_target;
+        <anchor 1400 0> mark @INIT.6.10.fracmark.init_6.10;
+} fracmark.init_6.10_chained;
 
-lookup fracmark.init_7.10_target {
+lookup fracmark.init_7.10_chained {
     pos base fracinit
-        <anchor 1050 0> mark @INIT.7.10;
-} fracmark.init_7.10_target;
+        <anchor 1050 0> mark @INIT.7.10.fracmark.init_7.10;
+} fracmark.init_7.10_chained;
 
-lookup fracmark.init_8.10_target {
+lookup fracmark.init_8.10_chained {
     pos base fracinit
-        <anchor 700 0> mark @INIT.8.10;
-} fracmark.init_8.10_target;
+        <anchor 700 0> mark @INIT.8.10.fracmark.init_8.10;
+} fracmark.init_8.10_chained;
 
-lookup fracmark.init_9.10_target {
+lookup fracmark.init_9.10_chained {
     pos base fracinit
-        <anchor 350 0> mark @INIT.9.10;
-} fracmark.init_9.10_target;
+        <anchor 350 0> mark @INIT.9.10.fracmark.init_9.10;
+} fracmark.init_9.10_chained;
 
 lookup fracmark.init {
     # fracmark.init\1.10
-    pos [@numr]' lookup fracmark.init_1.10_target @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_1.10_chained @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
     subtable;
     # fracmark.init\2.10
-    pos [@numr]' lookup fracmark.init_2.10_target @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_2.10_target @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_2.10_chained @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_2.10_chained @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
     subtable;
     # fracmark.init\3.10
-    pos [@numr]' lookup fracmark.init_3.10_target @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_3.10_target @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_3.10_target @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_3.10_chained @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_3.10_chained @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_3.10_chained @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
     subtable;
     # fracmark.init\4.10
-    pos [@numr]' lookup fracmark.init_4.10_target @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_4.10_target @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_4.10_target @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_4.10_target @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_4.10_chained @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_4.10_chained @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_4.10_chained @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_4.10_chained @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
     subtable;
     # fracmark.init\5.10
-    pos [@numr]' lookup fracmark.init_5.10_target @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_5.10_target @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_5.10_target @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_5.10_target @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_5.10_target @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_5.10_chained @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_5.10_chained @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_5.10_chained @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_5.10_chained @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_5.10_chained @dnom @dnom @dnom @dnom @dnom @dnom;
     subtable;
     # fracmark.init\6.10
-    pos [@numr]' lookup fracmark.init_6.10_target @numr @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_6.10_target @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_6.10_target @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_6.10_target @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_6.10_target @numr @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_6.10_target @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_6.10_chained @numr @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_6.10_chained @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_6.10_chained @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_6.10_chained @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_6.10_chained @numr @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_6.10_chained @dnom @dnom @dnom @dnom @dnom;
     subtable;
     # fracmark.init\7.10
-    pos [@numr]' lookup fracmark.init_7.10_target @numr @numr @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_7.10_target @numr @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_7.10_target @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_7.10_target @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_7.10_target @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_7.10_target @numr @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_7.10_target @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_7.10_chained @numr @numr @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_7.10_chained @numr @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_7.10_chained @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_7.10_chained @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_7.10_chained @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_7.10_chained @numr @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_7.10_chained @dnom @dnom @dnom @dnom;
     subtable;
     # fracmark.init\8.10
-    pos [@numr]' lookup fracmark.init_8.10_target @numr @numr @numr @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_8.10_target @numr @numr @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_8.10_target @numr @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_8.10_target @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_8.10_target @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_8.10_target @numr @numr @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_8.10_target @numr @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_8.10_target @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_8.10_chained @numr @numr @numr @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_8.10_chained @numr @numr @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_8.10_chained @numr @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_8.10_chained @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_8.10_chained @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_8.10_chained @numr @numr @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_8.10_chained @numr @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_8.10_chained @dnom @dnom @dnom;
     subtable;
     # fracmark.init\9.10
-    pos [@numr]' lookup fracmark.init_9.10_target @numr @numr @numr @numr @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_9.10_target @numr @numr @numr @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_9.10_target @numr @numr @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_9.10_target @numr @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_9.10_target @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_9.10_target @numr @numr @numr @dnom @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_9.10_target @numr @numr @dnom @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_9.10_target @numr @dnom @dnom @dnom;
-    pos [@numr]' lookup fracmark.init_9.10_target @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_9.10_chained @numr @numr @numr @numr @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_9.10_chained @numr @numr @numr @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_9.10_chained @numr @numr @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_9.10_chained @numr @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_9.10_chained @numr @numr @numr @numr @dnom @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_9.10_chained @numr @numr @numr @dnom @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_9.10_chained @numr @numr @dnom @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_9.10_chained @numr @dnom @dnom @dnom;
+    pos [@numr]' lookup fracmark.init_9.10_chained @dnom @dnom;
 } fracmark.init;
 
 lookup fracmkmk.numrspacing {
     pos mark zero.numr
-        <anchor 700 0> mark @NUMRNUMR;
+        <anchor 700 0> mark @NUMRNUMR.fracmkmk.numrspacing;
     pos mark one.numr
-        <anchor 700 0> mark @NUMRNUMR;
+        <anchor 700 0> mark @NUMRNUMR.fracmkmk.numrspacing;
     pos mark two.numr
-        <anchor 700 0> mark @NUMRNUMR;
+        <anchor 700 0> mark @NUMRNUMR.fracmkmk.numrspacing;
     pos mark three.numr
-        <anchor 700 0> mark @NUMRNUMR;
+        <anchor 700 0> mark @NUMRNUMR.fracmkmk.numrspacing;
     pos mark four.numr
-        <anchor 700 0> mark @NUMRNUMR;
+        <anchor 700 0> mark @NUMRNUMR.fracmkmk.numrspacing;
     pos mark five.numr
-        <anchor 700 0> mark @NUMRNUMR;
+        <anchor 700 0> mark @NUMRNUMR.fracmkmk.numrspacing;
     pos mark six.numr
-        <anchor 700 0> mark @NUMRNUMR;
+        <anchor 700 0> mark @NUMRNUMR.fracmkmk.numrspacing;
     pos mark seven.numr
-        <anchor 700 0> mark @NUMRNUMR;
+        <anchor 700 0> mark @NUMRNUMR.fracmkmk.numrspacing;
     pos mark eight.numr
-        <anchor 700 0> mark @NUMRNUMR;
+        <anchor 700 0> mark @NUMRNUMR.fracmkmk.numrspacing;
     pos mark nine.numr
-        <anchor 700 0> mark @NUMRNUMR;
+        <anchor 700 0> mark @NUMRNUMR.fracmkmk.numrspacing;
 } fracmkmk.numrspacing;
 
 # Features

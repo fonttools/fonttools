@@ -594,18 +594,18 @@ class ParserTest(unittest.TestCase):
             ).statements
 
     def test_substitution_invalid_reverse_chaining_single(self):
-        with self.assertRaisesRegex(VoltLibError, r"Invalid substitution type"):
-            [lookup] = self.parse(
-                'DEF_LOOKUP "invalid_substitution" PROCESS_BASE PROCESS_MARKS '
-                "ALL DIRECTION LTR REVERSAL\n"
-                "IN_CONTEXT\n"
-                "END_CONTEXT\n"
-                "AS_SUBSTITUTION\n"
-                'SUB GLYPH "f" GLYPH "i"\n'
-                'WITH GLYPH "f_i"\n'
-                "END_SUB\n"
-                "END_SUBSTITUTION"
-            ).statements
+        [lookup] = self.parse(
+            'DEF_LOOKUP "invalid_substitution" PROCESS_BASE PROCESS_MARKS '
+            "ALL DIRECTION LTR REVERSAL\n"
+            "IN_CONTEXT\n"
+            "END_CONTEXT\n"
+            "AS_SUBSTITUTION\n"
+            'SUB GLYPH "f" GLYPH "i"\n'
+            'WITH GLYPH "f_i"\n'
+            "END_SUB\n"
+            "END_SUBSTITUTION"
+        ).statements
+        self.assertIsInstance(lookup.sub, ast.SubstitutionLigatureDefinition)
 
     def test_substitution_invalid_mixed(self):
         with self.assertRaisesRegex(VoltLibError, r"Invalid substitution type"):
@@ -952,7 +952,27 @@ class ParserTest(unittest.TestCase):
         self.assertSubEqual(lookup.sub, [["f", "i"], ["f", "t"]], [["f_i"], ["f_t"]])
 
     def test_substitution_reverse_chaining_single(self):
-        [lookup] = self.parse(
+        lookup = self.parse(
+            'DEF_GLYPH "zero" ID 163 UNICODE 48 TYPE BASE END_GLYPH\n'
+            'DEF_GLYPH "one" ID 194 UNICODE 49 TYPE BASE END_GLYPH\n'
+            'DEF_GLYPH "two" ID 195 UNICODE 50 TYPE BASE END_GLYPH\n'
+            'DEF_GLYPH "three" ID 196 UNICODE 51 TYPE BASE END_GLYPH\n'
+            'DEF_GLYPH "four" ID 197 UNICODE 52 TYPE BASE END_GLYPH\n'
+            'DEF_GLYPH "fize" ID 165 UNICODE 53 TYPE BASE END_GLYPH\n'
+            'DEF_GLYPH "six" ID 209 UNICODE 54 TYPE BASE END_GLYPH\n'
+            'DEF_GLYPH "seven" ID 210 UNICODE 55 TYPE BASE END_GLYPH\n'
+            'DEF_GLYPH "eight" ID 211 UNICODE 56 TYPE BASE END_GLYPH\n'
+            'DEF_GLYPH "nine" ID 212 UNICODE 57 TYPE BASE END_GLYPH\n'
+            'DEF_GLYPH "zero.numr" ID 213 TYPE BASE END_GLYPH\n'
+            'DEF_GLYPH "one.numr" ID 214 TYPE BASE END_GLYPH\n'
+            'DEF_GLYPH "two.numr" ID 215 TYPE BASE END_GLYPH\n'
+            'DEF_GLYPH "three.numr" ID 216 TYPE BASE END_GLYPH\n'
+            'DEF_GLYPH "four.numr" ID 217 TYPE BASE END_GLYPH\n'
+            'DEF_GLYPH "fize.numr" ID 218 TYPE BASE END_GLYPH\n'
+            'DEF_GLYPH "six.numr" ID 219 TYPE BASE END_GLYPH\n'
+            'DEF_GLYPH "seven.numr" ID 220 TYPE BASE END_GLYPH\n'
+            'DEF_GLYPH "eight.numr" ID 221 TYPE BASE END_GLYPH\n'
+            'DEF_GLYPH "nine.numr" ID 222 TYPE BASE END_GLYPH\n'
             'DEF_LOOKUP "numr" PROCESS_BASE PROCESS_MARKS ALL '
             "DIRECTION LTR REVERSAL\n"
             "IN_CONTEXT\n"
@@ -966,7 +986,7 @@ class ParserTest(unittest.TestCase):
             'WITH RANGE "zero.numr" TO "nine.numr"\n'
             "END_SUB\n"
             "END_SUBSTITUTION"
-        ).statements
+        ).statements[-1]
 
         mapping = lookup.sub.mapping
         glyphs = [[(r.start, r.end) for r in v] for v in mapping.keys()]
