@@ -61,3 +61,5 @@ tags
 
 # Documentation
 Doc/source/_build
+
+_version.py

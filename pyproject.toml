@@ -1,2 +1,165 @@
-[tool.black]
-target-version = ["py39"]
+[build-system]
+requires = ["setuptools>=64", "setuptools-scm>=8"]
+build-backend = "build_backend"
+backend-path = ["."]
+
+[project]
+name = "fonttools"
+description = "Tools to manipulate font files"
+requires-python = ">=3.9"
+license = "MIT"
+readme = "README.rst"
+authors = [
+    {name = "Just van Rossum", email = "just@letterror.com"},
+]
+maintainers = [
+    {name = "Behdad Esfahbod", email = "behdad@behdad.org"},
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Environment :: Other Environment",
+    "Intended Audience :: Developers",
+    "Intended Audience :: End Users/Desktop",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Multimedia :: Graphics",
+    "Topic :: Multimedia :: Graphics :: Graphics Conversion",
+    "Topic :: Text Processing :: Fonts",
+]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "http://github.com/fonttools/fonttools"
+Changelog = "https://github.com/fonttools/fonttools/blob/main/NEWS.rst"
+
+[project.optional-dependencies]
+ufo = [
+    "fs >= 2.2.0, < 3",
+]
+lxml = [
+    "lxml >= 4.0",
+]
+woff = [
+    "brotli >= 1.0.1; platform_python_implementation == 'CPython'",
+    "brotlicffi >= 0.8.0; platform_python_implementation != 'CPython'",
+    "zopfli >= 0.1.4",
+]
+unicode = [
+    "unicodedata2 >= 15.1.0; python_version <= '3.12'",
+]
+graphite = [
+    "lz4 >= 1.7.4.2",
+]
+interpolatable = [
+    "munkres; platform_python_implementation == 'PyPy'",
+    "pycairo",
+    "scipy; platform_python_implementation != 'PyPy'",
+]
+plot = [
+    "matplotlib",
+]
+symfont = [
+    "sympy",
+]
+type1 = [
+    "xattr; sys_platform == 'darwin'",
+]
+pathops = [
+    "skia-pathops >= 0.5.0",
+]
+repacker = [
+    "uharfbuzz >= 0.23.0",
+]
+all = [
+    "brotli >= 1.0.1; platform_python_implementation == 'CPython'",
+    "brotlicffi >= 0.8.0; platform_python_implementation != 'CPython'",
+    "fs >= 2.2.0, < 3",
+    "lxml >= 4.0",
+    "lz4 >= 1.7.4.2",
+    "matplotlib",
+    "munkres; platform_python_implementation == 'PyPy'",
+    "pycairo",
+    "scipy; platform_python_implementation != 'PyPy'",
+    "skia-pathops >= 0.5.0",
+    "sympy",
+    "uharfbuzz >= 0.23.0",
+    "unicodedata2 >= 15.1.0; python_version <= '3.12'",
+    "xattr; sys_platform == 'darwin'",
+    "zopfli >= 0.1.4",
+]
+
+[project.scripts]
+fonttools = "fontTools.__main__:main"
+pyftmerge = "fontTools.merge:main"
+pyftsubset = "fontTools.subset:main"
+ttx = "fontTools.ttx:main"
+
+[dependency-groups]
+dev = [
+    "black == 24.10.0 ; python_version >= '3.9'",
+    "mypy >= 0.782",
+    "pytest > 8.0.2",
+    "pytest-randomly",
+    "pytest-cov",
+]
+codecov = [
+    "codecov",
+    "coverage >= 4.3",
+]
+docs = [
+    "sphinx >= 8.1.3 ; python_version >= '3.10'",
+    "sphinx_rtd_theme >= 3.0.2 ; python_version >= '3.10'",
+    "reportlab >= 4.2.5",
+    "freetype-py >= 2.5.1",
+]
+test-additions = [
+    "ufoLib2",
+    "ufo2ft",
+    "freetype-py >= 2.5.1",
+    "glyphsLib",
+    "pyobjc ; sys_platform == 'darwin'",
+]
+twine = [
+    "twine >= 1.12.1"
+]
+
+[tool.setuptools_scm]
+write_to = "Lib/fontTools/_version.py"
+
+[tool.setuptools.packages.find]
+where = ["Lib/"]
+
+[tool.coverage.run]
+branch = true
+parallel = true
+source = ["fontTools"]
+
+[tool.coverage.paths]
+source = [
+    "Lib/fontTools",
+    ".tox/*/lib/python*/site-packages/fontTools",
+    ".tox/pypy*/site-packages/fontTools",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    # keywords to use in inline comments to skip coverage
+    "pragma: no cover",
+
+    # don't complain if tests don't hit defensive assertion code
+    "raise AssertionError",
+    "raise NotImplementedError",
+
+    # don't complain if non-runnable code isn't run
+    "if 0:",
+    "if __name__ == .__main__.:",
+]
+ignore_errors = true
