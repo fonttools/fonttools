@@ -9,13 +9,9 @@ import pytest
 try:
     import unicodedata2
 except ImportError:
-    if sys.version_info[:2] < (3, 6):
-        unicodedata2 = None
-    else:
-        # on 3.6 the built-in unicodedata is the same as unicodedata2 backport
-        import unicodedata
+    import unicodedata
 
-        unicodedata2 = unicodedata
+    unicodedata2 = unicodedata
 
 
 # Font files in data/*.{o,t}tf; output gets compared to data/*.ttx.*
