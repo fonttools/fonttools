@@ -40,9 +40,10 @@ class OpenFuncWrapperTest(unittest.TestCase):
         script = self.make_temp("\n".join([import_statement, PIPE_SCRIPT]))
         datafile = self.make_temp(data)
         try:
-            with open(datafile, "rb") as infile, tempfile.NamedTemporaryFile(
-                delete=False
-            ) as outfile:
+            with (
+                open(datafile, "rb") as infile,
+                tempfile.NamedTemporaryFile(delete=False) as outfile,
+            ):
                 env = dict(os.environ)
                 env["PYTHONPATH"] = os.pathsep.join(sys.path)
                 check_call(
