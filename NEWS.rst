@@ -1,3 +1,6 @@
+4.58.0 (released 2025-05-10)
+----------------------------
+
 - Drop Python 3.8, require 3.9+ (#3819)
 - [HVAR, VVAR] Prune unused regions when using a direct mapping (#3797)
 - [Docs] Improvements to ufoLib documentation (#3721)
