@@ -1,3 +1,38 @@
+- Drop Python 3.8, require 3.9+ (#3819)
+- [HVAR, VVAR] Prune unused regions when using a direct mapping (#3797)
+- [Docs] Improvements to ufoLib documentation (#3721)
+- [Docs] Improvements to varLib documentation (#3727)
+- [Docs] Improvements to Pens and pen-module documentation (#3724)
+- [Docs] Miscellany updates to docs (misc modules and smaller modules) (#3730)
+- [subset] Close codepoints over BiDi mirror variants. (#3801)
+- [feaLib] Fix serializing ChainContextPosStatement and
+  ChainContextSubstStatement in some rare cases (#3788)
+- [designspaceLib] Clarify user expectations for getStatNames (#2892)
+- [GVAR] Add support for new `GVAR` table (#3728)
+- [TSI0, TSI5] Derive number of entries to decompile from data length (#2477)
+- [ttLib] Fix `AttributeError` when reporting table overflow (#3808)
+- [ttLib] Apply rounding more often in getCoordinates (#3798)
+- [ttLib] Ignore component bounds if empty (#3799)
+- [ttLib] Change the separator for duplicate glyph names from "#" to "." (#3809)
+- [feaLib] Support subtable breaks in CursivePos, MarkBasePos, MarkToLigPos and
+  MarkToMarkPos lookups (#3800, #3807)
+- [feaLib] If the same lookup has single substitutions and ligature
+  substitutions, upgrade single substitutions to ligature substitutions with
+  one input glyph (#3805)
+- [feaLib] Correctly handle <NULL> in single pos lookups (#3803)
+- [feaLib] Remove duplicates from class pair pos classes instead of raising an
+  error (#3804)
+- [feaLib] Support creating extension lookups using useExtenion lookup flag
+  instead of silently ignoring it (#3811)
+- [STAT] Add typing for the simpler STAT arguments (#3812)
+- [otlLib.builder] Add future import for annotations (#3814)
+- [cffLib] Fix reading supplement encoding (#3813)
+- [voltLib] Add some missing functionality and fixes to voltLib and VoltToFea,
+  making the conversion to feature files more robust. Add also `fonttools
+  voltLib` command line tool to compile VOLT sources directly (doing an
+  intermediate fea conversion internally) (#3818)
+- [pens] Add some PointPen annotations (#3820)
+
 4.57.0 (released 2025-04-03)
 ----------------------------
 
