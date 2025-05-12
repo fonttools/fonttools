@@ -3757,7 +3757,7 @@ def main(args=None):
             text += g[7:]
             continue
         if g.startswith("--text-file="):
-            with open(g[12:], encoding="utf-8") as f:
+            with open(g[12:], encoding="utf-8-sig") as f:
                 text += f.read().replace("\n", "")
             continue
         if g.startswith("--unicodes="):

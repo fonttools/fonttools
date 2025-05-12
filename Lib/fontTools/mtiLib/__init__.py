@@ -1375,7 +1375,7 @@ def main(args=None, font=None):
 
     for f in args.inputs:
         log.debug("Processing %s", f)
-        with open(f, "rt", encoding="utf-8") as f:
+        with open(f, "rt", encoding="utf-8-sig") as f:
             table = build(f, font, tableTag=args.tableTag)
         blob = table.compile(font)  # Make sure it compiles
         decompiled = table.__class__()
