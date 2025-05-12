@@ -131,7 +131,7 @@ def main(args=None):
 
         name = os.path.splitext(os.path.basename(svg_file))[0]
 
-    with open(svg_file, "r", encoding="utf-8") as f:
+    with open(svg_file, "r", encoding="utf-8-sig") as f:
         svg = f.read()
 
     glif = svg2glif(
