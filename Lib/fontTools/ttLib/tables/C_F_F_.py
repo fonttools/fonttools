@@ -1,6 +1,11 @@
 from io import BytesIO
 from fontTools import cffLib
 from . import DefaultTable
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from fontTools.ttLib import TTFont
+    from fontTools.misc.xmlWriter import XMLWriter
 
 
 class table_C_F_F_(DefaultTable.DefaultTable):
@@ -19,27 +24,30 @@ class table_C_F_F_(DefaultTable.DefaultTable):
     See also https://learn.microsoft.com/en-us/typography/opentype/spec/cff
     """
 
-    def __init__(self, tag=None):
+    cff: cffLib.CFFFontSet
+    _gaveGlyphOrder: bool
+
+    def __init__(self, tag: str | None = None) -> None:
         DefaultTable.DefaultTable.__init__(self, tag)
         self.cff = cffLib.CFFFontSet()
         self._gaveGlyphOrder = False
 
-    def decompile(self, data, otFont):
+    def decompile(self, data: bytes, otFont: 'TTFont') -> None:
         self.cff.decompile(BytesIO(data), otFont, isCFF2=False)
         assert len(self.cff) == 1, "can't deal with multi-font CFF tables."
 
-    def compile(self, otFont):
+    def compile(self, otFont: 'TTFont') -> bytes:
         f = BytesIO()
         self.cff.compile(f, otFont, isCFF2=False)
         return f.getvalue()
 
-    def haveGlyphNames(self):
+    def haveGlyphNames(self) -> bool:
         if hasattr(self.cff[self.cff.fontNames[0]], "ROS"):
             return False  # CID-keyed font
         else:
             return True
 
-    def getGlyphOrder(self):
+    def getGlyphOrder(self) -> List[str]:
         if self._gaveGlyphOrder:
             from fontTools import ttLib
 
@@ -47,15 +55,15 @@ class table_C_F_F_(DefaultTable.DefaultTable):
         self._gaveGlyphOrder = True
         return self.cff[self.cff.fontNames[0]].getGlyphOrder()
 
-    def setGlyphOrder(self, glyphOrder):
+    def setGlyphOrder(self, glyphOrder: List[str]) -> None:
         pass
         # XXX
         # self.cff[self.cff.fontNames[0]].setGlyphOrder(glyphOrder)
 
-    def toXML(self, writer, otFont):
+    def toXML(self, writer: 'XMLWriter', otFont: 'TTFont') -> None:
         self.cff.toXML(writer)
 
-    def fromXML(self, name, attrs, content, otFont):
+    def fromXML(self, name: str, attrs: Dict[str, str], content: List[Any], otFont: 'TTFont') -> None:
         if not hasattr(self, "cff"):
             self.cff = cffLib.CFFFontSet()
         self.cff.fromXML(name, attrs, content, otFont)

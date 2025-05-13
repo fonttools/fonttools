@@ -1,6 +1,5 @@
-from fontTools.misc.testTools import FakeFont, getXML, parseXML
+from fontTools.misc.testTools import getXML, parseXML
 from fontTools.misc.textTools import deHexStr, hexStr
-from fontTools.ttLib.tables._f_v_a_r import Axis
 from fontTools.ttLib import newTable, TTFont
 import unittest
 

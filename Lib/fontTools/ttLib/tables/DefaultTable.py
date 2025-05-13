@@ -1,11 +1,13 @@
 from fontTools.misc.textTools import Tag
-from fontTools.ttLib import getClassTag
 
 
 class DefaultTable(object):
     dependencies = []
 
     def __init__(self, tag=None):
+
+        from fontTools.ttLib import getClassTag
+
         if tag is None:
             tag = getClassTag(self.__class__)
         self.tableTag = Tag(tag)
@@ -40,7 +42,7 @@ class DefaultTable(object):
         return "<'%s' table at %x>" % (self.tableTag, id(self))
 
     def __eq__(self, other):
-        if type(self) != type(other):
+        if not isinstance(self, type(other)):
             return NotImplemented
         return self.__dict__ == other.__dict__
 

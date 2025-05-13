@@ -1,6 +1,9 @@
 from io import BytesIO
 from fontTools.ttLib.tables.C_F_F_ import table_C_F_F_
+from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from fontTools.ttLib import TTFont
 
 class table_C_F_F__2(table_C_F_F_):
     """Compact Font Format version 2 table
@@ -16,11 +19,11 @@ class table_C_F_F__2(table_C_F_F_):
     See also https://learn.microsoft.com/en-us/typography/opentype/spec/cff2
     """
 
-    def decompile(self, data, otFont):
+    def decompile(self, data: bytes, otFont: 'TTFont') -> None:
         self.cff.decompile(BytesIO(data), otFont, isCFF2=True)
         assert len(self.cff) == 1, "can't deal with multi-font CFF tables."
 
-    def compile(self, otFont):
+    def compile(self, otFont: 'TTFont') -> bytes:
         f = BytesIO()
         self.cff.compile(f, otFont, isCFF2=True)
         return f.getvalue()
