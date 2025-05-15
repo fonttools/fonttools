@@ -3,7 +3,6 @@
 from fontTools.pens.basePen import AbstractPen, DecomposingPen
 from fontTools.pens.pointPen import AbstractPointPen, DecomposingPointPen
 
-
 __all__ = [
     "replayRecording",
     "RecordingPen",
@@ -184,18 +183,18 @@ class RecordingPointPen(AbstractPointPen):
             kwargs["identifier"] = identifier
         self.value.append(("addPoint", (pt, segmentType, smooth, name), kwargs))
 
-    def addComponent(self, baseGlyphName, transformation, identifier=None, **kwargs):
+    def addComponent(self, glyphName, transformation, identifier=None, **kwargs):
         if identifier is not None:
             kwargs["identifier"] = identifier
-        self.value.append(("addComponent", (baseGlyphName, transformation), kwargs))
+        self.value.append(("addComponent", (glyphName, transformation), kwargs))
 
     def addVarComponent(
-        self, baseGlyphName, transformation, location, identifier=None, **kwargs
+        self, glyphName, transformation, location, identifier=None, **kwargs
     ):
         if identifier is not None:
             kwargs["identifier"] = identifier
         self.value.append(
-            ("addVarComponent", (baseGlyphName, transformation, location), kwargs)
+            ("addVarComponent", (glyphName, transformation, location), kwargs)
         )
 
     def replay(self, pointPen):
