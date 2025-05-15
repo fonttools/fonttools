@@ -53,6 +53,7 @@ def _glyphsAreSame(
             return False
     return True
 
+
 def computeMegaUvs(merger, uvsTables):
     """Returns merged UVS subtable (cmap format=14)."""
     uvsDict = {}
@@ -61,18 +62,19 @@ def computeMegaUvs(merger, uvsTables):
         for variationSelector, uvsMapping in table.uvsDict.items():
             if variationSelector not in uvsDict:
                 uvsDict[variationSelector] = {}
-            for (unicodeValue, glyphName) in uvsMapping:
+            for unicodeValue, glyphName in uvsMapping:
                 if cmap.get(unicodeValue) == glyphName:
                     # this is a default variation
                     glyphName = None
                     # prefer previous glyph id if both fonts defined UVS
                 if unicodeValue not in uvsDict[variationSelector]:
                     uvsDict[variationSelector][unicodeValue] = glyphName
-    
+
     for variationSelector in uvsDict:
         uvsDict[variationSelector] = [*uvsDict[variationSelector].items()]
-    
+
     return uvsDict
+
 
 # Valid (format, platformID, platEncID) triplets for cmap subtables containing
 # Unicode BMP-only and Unicode Full Repertoire semantics.
@@ -154,7 +156,7 @@ def computeMegaCmap(merger, cmapTables):
                     log.warning(
                         "Dropped mapping from codepoint %#06X to glyphId '%s'", uni, gid
                     )
-    
+
     merger.uvsDict = computeMegaUvs(merger, chosenUvsTables)
 
 

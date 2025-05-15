@@ -221,9 +221,7 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
                 chunk = table.compile(ttFont)
                 offset = done.get(chunk)
                 if offset is None:
-                    offset = seen[mapId] = done[chunk] = totalOffset + len(
-                        tableData
-                    )
+                    offset = seen[mapId] = done[chunk] = totalOffset + len(tableData)
                     tableData = tableData + chunk
             data = data + struct.pack(">HHl", table.platformID, table.platEncID, offset)
         return data + tableData

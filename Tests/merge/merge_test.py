@@ -142,7 +142,12 @@ class CmapMergeUnitTest(unittest.TestCase):
     def makeUvsSubtable(self, format, platformID, platEncID, uvsDict):
         module = ttLib.getTableModule("cmap")
         subtable = module.cmap_classes[format](format)
-        (subtable.platformID, subtable.platEncID, subtable.language, subtable.uvsDict) = (
+        (
+            subtable.platformID,
+            subtable.platEncID,
+            subtable.language,
+            subtable.uvsDict,
+        ) = (
             platformID,
             platEncID,
             0,
@@ -210,16 +215,19 @@ class CmapMergeUnitTest(unittest.TestCase):
         self.assertEqual(
             self.merger.duplicateGlyphsPerFont, [{}, {"space#0": "space#1"}]
         )
-    
+
     def test_cmap_merge_format_14(self):
         table1 = self.table1
         table2 = self.table2
         mergedTable = self.mergedTable
 
-        cmap1 = { 0x3404: 'uni3404' }
-        uvsDict1 = { 0xFE00: [(0x0030, 'uni0030.FE00')], 0xE0101: [(0x3404, 'uni3404')] }
-        table1.tables = [self.makeUvsSubtable(14, 0, 5, uvsDict1), self.makeSubtable(4, 3, 1, cmap1)]
-        uvsDict2 = { 0xFE00: [(0x20122, 'u2F803')], 0xE0102: [(0x34FF, 'uni34FF.var2')] }
+        cmap1 = {0x3404: "uni3404"}
+        uvsDict1 = {0xFE00: [(0x0030, "uni0030.FE00")], 0xE0101: [(0x3404, "uni3404")]}
+        table1.tables = [
+            self.makeUvsSubtable(14, 0, 5, uvsDict1),
+            self.makeSubtable(4, 3, 1, cmap1),
+        ]
+        uvsDict2 = {0xFE00: [(0x20122, "u2F803")], 0xE0102: [(0x34FF, "uni34FF.var2")]}
         table2.tables = [self.makeUvsSubtable(14, 0, 5, uvsDict2)]
 
         self.merger.duplicateGlyphsPerFont = [{}, {}]
@@ -229,33 +237,51 @@ class CmapMergeUnitTest(unittest.TestCase):
         (uvsTable, cmapTable) = mergedTable.tables
 
         self.assertEqual(
-            (uvsTable.format, uvsTable.platformID, uvsTable.platEncID, uvsTable.language),
+            (
+                uvsTable.format,
+                uvsTable.platformID,
+                uvsTable.platEncID,
+                uvsTable.language,
+            ),
             (14, 0, 5, 0),
         )
         self.assertEqual(
-            (cmapTable.format, cmapTable.platformID, cmapTable.platEncID, cmapTable.language),
+            (
+                cmapTable.format,
+                cmapTable.platformID,
+                cmapTable.platEncID,
+                cmapTable.language,
+            ),
             (4, 3, 1, 0),
         )
 
         expectedUvsDict = {
-            0xFE00: [(0x0030, 'uni0030.FE00'), (0x20122, 'u2F803')],
+            0xFE00: [(0x0030, "uni0030.FE00"), (0x20122, "u2F803")],
             0xE0101: [(0x3404, None)],
-            0xE0102: [(0x34FF, 'uni34FF.var2')]
+            0xE0102: [(0x34FF, "uni34FF.var2")],
         }
         self.assertEqual(uvsTable.uvsDict, expectedUvsDict)
 
-    
     def test_cmap_merge_format_14_dupes(self):
         table1 = self.table1
         table2 = self.table2
         mergedTable = self.mergedTable
 
-        cmap1 = { 0x2F803: 'u2F803#0' }
-        uvsDict1 = { 0xFE00: [(0x20122, 'u2F803#0')], 0xE0101: [(0x3404, 'uni3404')] }
-        table1.tables = [self.makeUvsSubtable(14, 0, 5, uvsDict1), self.makeSubtable(12, 3, 10, cmap1)]
-        cmap2 = { 0x2F803: 'u2F803#1' }
-        uvsDict2 = { 0xFE00: [(0x20122, 'u2F803#1')], 0xE0102: [(0x34FF, 'uni34FF.var2')] }
-        table2.tables = [self.makeUvsSubtable(14, 0, 5, uvsDict2), self.makeSubtable(12, 3, 10, cmap2)]
+        cmap1 = {0x2F803: "u2F803#0"}
+        uvsDict1 = {0xFE00: [(0x20122, "u2F803#0")], 0xE0101: [(0x3404, "uni3404")]}
+        table1.tables = [
+            self.makeUvsSubtable(14, 0, 5, uvsDict1),
+            self.makeSubtable(12, 3, 10, cmap1),
+        ]
+        cmap2 = {0x2F803: "u2F803#1"}
+        uvsDict2 = {
+            0xFE00: [(0x20122, "u2F803#1")],
+            0xE0102: [(0x34FF, "uni34FF.var2")],
+        }
+        table2.tables = [
+            self.makeUvsSubtable(14, 0, 5, uvsDict2),
+            self.makeSubtable(12, 3, 10, cmap2),
+        ]
 
         self.merger.duplicateGlyphsPerFont = [{}, {}]
         mergedTable.merge(self.merger, [table1, table2])
@@ -264,27 +290,43 @@ class CmapMergeUnitTest(unittest.TestCase):
         (uvsTable, cmap_4_3_1_Table, cmap_12_3_10_Table) = mergedTable.tables
 
         self.assertEqual(
-            (uvsTable.format, uvsTable.platformID, uvsTable.platEncID, uvsTable.language),
+            (
+                uvsTable.format,
+                uvsTable.platformID,
+                uvsTable.platEncID,
+                uvsTable.language,
+            ),
             (14, 0, 5, 0),
         )
         self.assertEqual(
-            (cmap_4_3_1_Table.format, cmap_4_3_1_Table.platformID, cmap_4_3_1_Table.platEncID, cmap_4_3_1_Table.language),
+            (
+                cmap_4_3_1_Table.format,
+                cmap_4_3_1_Table.platformID,
+                cmap_4_3_1_Table.platEncID,
+                cmap_4_3_1_Table.language,
+            ),
             (4, 3, 1, 0),
         )
         self.assertEqual(
-            (cmap_12_3_10_Table.format, cmap_12_3_10_Table.platformID, cmap_12_3_10_Table.platEncID, cmap_12_3_10_Table.language),
+            (
+                cmap_12_3_10_Table.format,
+                cmap_12_3_10_Table.platformID,
+                cmap_12_3_10_Table.platEncID,
+                cmap_12_3_10_Table.language,
+            ),
             (12, 3, 10, 0),
         )
 
         expectedUvsDict = {
-            0xFE00: [(0x20122, 'u2F803#0')],
-            0xE0101: [(0x3404, 'uni3404')],
-            0xE0102: [(0x34FF, 'uni34FF.var2')]
+            0xFE00: [(0x20122, "u2F803#0")],
+            0xE0101: [(0x3404, "uni3404")],
+            0xE0102: [(0x34FF, "uni34FF.var2")],
         }
         self.assertEqual(uvsTable.uvsDict, expectedUvsDict)
         self.assertEqual(
             self.merger.duplicateGlyphsPerFont, [{}, {"u2F803#0": "u2F803#1"}]
         )
+
 
 def _compile(ttFont):
     buf = io.BytesIO()
