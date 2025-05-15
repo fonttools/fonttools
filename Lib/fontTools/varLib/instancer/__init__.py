@@ -743,7 +743,7 @@ def instantiateCFF2(
 
     # Add charstring blend lists to VarStore so we can instantiate them
     for commands in allCommands:
-        vsindex = 0
+        vsindex = 0  # Ouch. This ought to be what set by private dict
         for command in commands:
             if command[0] == "vsindex":
                 vsindex = command[1][0]
@@ -752,7 +752,6 @@ def instantiateCFF2(
                 storeBlendsToVarStore(arg)
 
     # Add private blend lists to VarStore so we can instantiate values
-    vsindex = 0
     for opcode, name, arg_type, default, converter in privateDictOperators2:
         if arg_type not in ("number", "delta", "array"):
             continue
@@ -784,7 +783,7 @@ def instantiateCFF2(
     # Read back new charstring blends from the instantiated VarStore
     varDataCursor = [0] * len(varStore.VarData)
     for commands in allCommands:
-        vsindex = 0
+        vsindex = 0  # Ouch. This ought to be what set by private dict
         for command in commands:
             if command[0] == "vsindex":
                 vsindex = command[1][0]
@@ -799,9 +798,15 @@ def instantiateCFF2(
         if arg_type not in ("number", "delta", "array"):
             continue
 
+        vsindex = 0
         for private in privateDicts:
             if not hasattr(private, name):
                 continue
+
+            if name == "vsindex":
+                vsindex = values[0]
+                continue
+
             values = getattr(private, name)
             if arg_type == "number":
                 values = [values]
