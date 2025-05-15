@@ -259,7 +259,7 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
             return
         codes = set()
         for table in getattr(ttFont["cmap"], "tables", []):
-            if table.isUnicode():
+            if table.isUnicode() and not table.isUVS():
                 codes.update(table.cmap.keys())
         if codes:
             minCode = min(codes)
