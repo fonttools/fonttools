@@ -691,6 +691,8 @@ class StructWithLength(Struct):
         assert writer.items[lengthIndex] == b"\xde\xad\xbe\xef"[: conv.staticSize]
         writer.items[lengthIndex] = lengthWriter.getAllData()
 
+    def __repr__(self):
+        return "StructWithLength of " + repr(self.tableClass)
 
 class Table(Struct):
     staticSize = 2
@@ -725,6 +727,8 @@ class Table(Struct):
             writer.writeSubTable(subWriter, offsetSize=self.staticSize)
             value.compile(subWriter, font)
 
+    def __repr__(self):
+        return "Table of " + repr(self.tableClass)
 
 class LTable(Table):
     staticSize = 4
@@ -735,6 +739,9 @@ class LTable(Table):
     def writeNullOffset(self, writer):
         writer.writeULong(0)
 
+    def __repr__(self):
+        return "LTable of " + repr(self.tableClass)
+    
 
 # Table pointed to by a 24-bit, 3-byte long offset
 class Table24(Table):
@@ -746,6 +753,8 @@ class Table24(Table):
     def writeNullOffset(self, writer):
         writer.writeUInt24(0)
 
+    def __repr__(self):
+        return "Table24 of " + repr(self.tableClass)
 
 # TODO Clean / merge the SubTable and SubStruct
 
@@ -758,6 +767,9 @@ class SubStruct(Struct):
     def xmlWrite(self, xmlWriter, font, value, name, attrs):
         super(SubStruct, self).xmlWrite(xmlWriter, font, value, None, attrs)
 
+    def __repr__(self):
+        return "SubStruct of " + repr(self.tableClass)
+
 
 class SubTable(Table):
     def getConverter(self, tableType, lookupType):
@@ -767,17 +779,26 @@ class SubTable(Table):
     def xmlWrite(self, xmlWriter, font, value, name, attrs):
         super(SubTable, self).xmlWrite(xmlWriter, font, value, None, attrs)
 
+    def __repr__(self):
+        return "SubTable of " + repr(self.tableClass)
+
 
 class ExtSubTable(LTable, SubTable):
     def write(self, writer, font, tableDict, value, repeatIndex=None):
         writer.Extension = True  # actually, mere presence of the field flags it as an Ext Subtable writer.
         Table.write(self, writer, font, tableDict, value, repeatIndex)
 
+    def __repr__(self):
+        return "ExtSubTable of " + repr(self.tableClass)
+
 
 class FeatureParams(Table):
     def getConverter(self, featureTag):
         tableClass = self.featureParamTypes.get(featureTag, self.defaultFeatureParams)
         return self.__class__(self.name, self.repeat, self.aux, tableClass)
+
+    def __repr__(self):
+        return "FeatureParams of " + repr(self.tableClass)
 
 
 class ValueFormat(IntValue):
