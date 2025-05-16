@@ -109,6 +109,8 @@ def _add_fvar(font, axes, instances: List[InstanceDescriptor]):
         axis.flags = int(a.hidden)
         fvar.axes.append(axis)
 
+    default_coordinates = {axis.axisTag: axis.defaultValue for axis in fvar.axes}
+
     for instance in instances:
         # Filter out discrete axis locations
         coordinates = {
@@ -130,16 +132,26 @@ def _add_fvar(font, axes, instances: List[InstanceDescriptor]):
         psname = instance.postScriptFontName
 
         inst = NamedInstance()
+        inst.coordinates = {
+            axes[k].tag: axes[k].map_backward(v) for k, v in coordinates.items()
+        }
+
+    	# Instances should only reuse name ID 2 or 17 if they are at the default
+        # location across all axes. See
+        # https://github.com/fonttools/fonttools/issues/3825.
+        styleNameExists = nameTable.findMultilingualName(
+            localisedStyleName, windows=True, mac=macNames, minNameID=0
+        )
+        if styleNameExists in {2, 17} and inst.coordinates != default_coordinates:
+            minNameId = 256
+        else:
+            minNameId = 0
         inst.subfamilyNameID = nameTable.addMultilingualName(
-            localisedStyleName, mac=macNames
+            localisedStyleName, mac=macNames, minNameID=minNameId
         )
         if psname is not None:
             psname = tostr(psname)
             inst.postscriptNameID = nameTable.addName(psname, platforms=platforms)
-        inst.coordinates = {
-            axes[k].tag: axes[k].map_backward(v) for k, v in coordinates.items()
-        }
-        # inst.coordinates = {axes[k].tag:v for k,v in coordinates.items()}
         fvar.instances.append(inst)
 
     assert "fvar" not in font
