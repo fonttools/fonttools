@@ -312,7 +312,6 @@ def merge(self, m, tables):
 
 @add_method(ttLib.getTableClass("cmap"))
 def merge(self, m, tables):
-    # TODO Handle format=14.
     if not hasattr(m, "cmap"):
         computeMegaCmap(m, tables)
     cmap = m.cmap
@@ -336,6 +335,18 @@ def merge(self, m, tables):
     cmapTable.cmap = cmapBmpOnly
     # ordered by platform then encoding
     self.tables.insert(0, cmapTable)
+
+    uvsDict = m.uvsDict
+    if uvsDict:
+        # format-14
+        uvsTable = module.cmap_classes[14](14)
+        uvsTable.platformID = 0
+        uvsTable.platEncID = 5
+        uvsTable.language = 0
+        uvsTable.cmap = {}
+        uvsTable.uvsDict = uvsDict
+        # ordered by platform then encoding
+        self.tables.insert(0, uvsTable)
     self.tableVersion = 0
     self.numSubTables = len(self.tables)
     return self
