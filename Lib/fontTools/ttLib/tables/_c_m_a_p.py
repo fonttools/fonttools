@@ -351,7 +351,7 @@ class CmapSubtable(object):
 
     def isUVS(self):
         """Returns true if it is a UVS subtable"""
-        return self.platformID == 0 and self.platEncID == 5
+        return self.format == 14 and self.platformID == 0 and self.platEncID == 5
 
     def isSymbol(self):
         """Returns true if the subtable is for the Symbol encoding (3,0)"""
