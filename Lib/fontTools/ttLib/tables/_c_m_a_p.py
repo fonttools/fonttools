@@ -215,13 +215,14 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
             {}
         )  # Some tables are different objects, but compile to the same data chunk
         for table in self.tables:
-            mapId = id(table.uvsDict if table.isUVS() else table.cmap)
-            offset = seen.get(mapId)
+            offset = seen.get(id(table.cmap))
             if offset is None:
                 chunk = table.compile(ttFont)
                 offset = done.get(chunk)
                 if offset is None:
-                    offset = seen[mapId] = done[chunk] = totalOffset + len(tableData)
+                    offset = seen[id(table.cmap)] = done[chunk] = totalOffset + len(
+                        tableData
+                    )
                     tableData = tableData + chunk
             data = data + struct.pack(">HHl", table.platformID, table.platEncID, offset)
         return data + tableData
@@ -348,10 +349,6 @@ class CmapSubtable(object):
         return self.platformID == 0 or (
             self.platformID == 3 and self.platEncID in [0, 1, 10]
         )
-
-    def isUVS(self):
-        """Returns true if it is a UVS subtable"""
-        return self.format == 14 and self.platformID == 0 and self.platEncID == 5
 
     def isSymbol(self):
         """Returns true if the subtable is for the Symbol encoding (3,0)"""
