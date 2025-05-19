@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="4.57">
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="4.58">
 
   <GlyphOrder>
     <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
@@ -489,36 +489,39 @@
       TestFamily-Light
     </namerecord>
     <namerecord nameID="262" platformID="3" platEncID="1" langID="0x409">
-      TestFamily-Regular
+      Regular
     </namerecord>
     <namerecord nameID="263" platformID="3" platEncID="1" langID="0x409">
-      Semibold
+      TestFamily-Regular
     </namerecord>
     <namerecord nameID="264" platformID="3" platEncID="1" langID="0x409">
-      TestFamily-Semibold
+      Semibold
     </namerecord>
     <namerecord nameID="265" platformID="3" platEncID="1" langID="0x409">
-      Bold
+      TestFamily-Semibold
     </namerecord>
     <namerecord nameID="266" platformID="3" platEncID="1" langID="0x409">
-      TestFamily-Bold
+      Bold
     </namerecord>
     <namerecord nameID="267" platformID="3" platEncID="1" langID="0x409">
-      Black
+      TestFamily-Bold
     </namerecord>
     <namerecord nameID="268" platformID="3" platEncID="1" langID="0x409">
-      TestFamily-Black
+      Black
     </namerecord>
     <namerecord nameID="269" platformID="3" platEncID="1" langID="0x409">
-      Black Medium Contrast
+      TestFamily-Black
     </namerecord>
     <namerecord nameID="270" platformID="3" platEncID="1" langID="0x409">
-      TestFamily-BlackMediumContrast
+      Black Medium Contrast
     </namerecord>
     <namerecord nameID="271" platformID="3" platEncID="1" langID="0x409">
-      Black High Contrast
+      TestFamily-BlackMediumContrast
     </namerecord>
     <namerecord nameID="272" platformID="3" platEncID="1" langID="0x409">
+      Black High Contrast
+    </namerecord>
+    <namerecord nameID="273" platformID="3" platEncID="1" langID="0x409">
       TestFamily-BlackHighContrast
     </namerecord>
   </name>
@@ -740,42 +743,42 @@
 
     <!-- Regular -->
     <!-- PostScript: TestFamily-Regular -->
-    <NamedInstance flags="0x0" postscriptNameID="262" subfamilyNameID="2">
+    <NamedInstance flags="0x0" postscriptNameID="263" subfamilyNameID="262">
       <coord axis="wght" value="394.0"/>
       <coord axis="cntr" value="0.0"/>
     </NamedInstance>
 
     <!-- Semibold -->
     <!-- PostScript: TestFamily-Semibold -->
-    <NamedInstance flags="0x0" postscriptNameID="264" subfamilyNameID="263">
+    <NamedInstance flags="0x0" postscriptNameID="265" subfamilyNameID="264">
       <coord axis="wght" value="600.0"/>
       <coord axis="cntr" value="0.0"/>
     </NamedInstance>
 
     <!-- Bold -->
     <!-- PostScript: TestFamily-Bold -->
-    <NamedInstance flags="0x0" postscriptNameID="266" subfamilyNameID="265">
+    <NamedInstance flags="0x0" postscriptNameID="267" subfamilyNameID="266">
       <coord axis="wght" value="824.0"/>
       <coord axis="cntr" value="0.0"/>
     </NamedInstance>
 
     <!-- Black -->
     <!-- PostScript: TestFamily-Black -->
-    <NamedInstance flags="0x0" postscriptNameID="268" subfamilyNameID="267">
+    <NamedInstance flags="0x0" postscriptNameID="269" subfamilyNameID="268">
       <coord axis="wght" value="1000.0"/>
       <coord axis="cntr" value="0.0"/>
     </NamedInstance>
 
     <!-- Black Medium Contrast -->
     <!-- PostScript: TestFamily-BlackMediumContrast -->
-    <NamedInstance flags="0x0" postscriptNameID="270" subfamilyNameID="269">
+    <NamedInstance flags="0x0" postscriptNameID="271" subfamilyNameID="270">
       <coord axis="wght" value="1000.0"/>
       <coord axis="cntr" value="50.0"/>
     </NamedInstance>
 
     <!-- Black High Contrast -->
     <!-- PostScript: TestFamily-BlackHighContrast -->
-    <NamedInstance flags="0x0" postscriptNameID="272" subfamilyNameID="271">
+    <NamedInstance flags="0x0" postscriptNameID="273" subfamilyNameID="272">
       <coord axis="wght" value="1000.0"/>
       <coord axis="cntr" value="100.0"/>
     </NamedInstance>
