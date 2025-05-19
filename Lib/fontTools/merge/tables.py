@@ -343,6 +343,7 @@ def merge(self, m, tables):
         uvsTable.platformID = 0
         uvsTable.platEncID = 5
         uvsTable.language = 0
+        uvsTable.cmap = {}
         uvsTable.uvsDict = uvsDict
         # ordered by platform then encoding
         self.tables.insert(0, uvsTable)
