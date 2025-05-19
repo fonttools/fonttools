@@ -140,19 +140,8 @@ class CmapMergeUnitTest(unittest.TestCase):
         return subtable
 
     def makeUvsSubtable(self, format, platformID, platEncID, uvsDict):
-        module = ttLib.getTableModule("cmap")
-        subtable = module.cmap_classes[format](format)
-        (
-            subtable.platformID,
-            subtable.platEncID,
-            subtable.language,
-            subtable.uvsDict,
-        ) = (
-            platformID,
-            platEncID,
-            0,
-            uvsDict,
-        )
+        subtable = self.makeSubtable(format, platformID, platEncID, {})
+        subtable.uvsDict = uvsDict
         return subtable
 
     # 4-3-1 table merged with 12-3-10 table with no dupes with codepoints outside BMP
