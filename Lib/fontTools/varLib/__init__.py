@@ -136,7 +136,7 @@ def _add_fvar(font, axes, instances: List[InstanceDescriptor]):
             axes[k].tag: axes[k].map_backward(v) for k, v in coordinates.items()
         }
 
-    	# Instances should only reuse name ID 2 or 17 if they are at the default
+        # Instances should only reuse name ID 2 or 17 if they are at the default
         # location across all axes. See
         # https://github.com/fonttools/fonttools/issues/3825.
         styleNameExists = nameTable.findMultilingualName(
