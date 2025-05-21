@@ -1009,6 +1009,14 @@ class BuilderTest(unittest.TestCase):
             )
         captor.assertRegex("Already defined position for pair A V at")
 
+    def test_ligatureSubst_conflicting_rules(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Conflicting ligature sub",
+            self.build,
+            "feature test {" "    sub a b by one;" "    sub a b by two;" "} test;",
+        )
+
     def test_ignore_empty_lookup_block(self):
         # https://github.com/fonttools/fonttools/pull/2277
         font = self.build(
