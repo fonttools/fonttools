@@ -1387,6 +1387,13 @@ class Builder(object):
         # glyph classes, the implementation software will enumerate
         # all specific glyph sequences if glyph classes are detected"
         for g in itertools.product(*glyphs):
+            existing = lookup.ligatures.get(g, replacement)
+            if existing != replacement:
+                raise FeatureLibError(
+                    f"Conflicting ligature sub rules: '{g}' maps to '{existing}' and '{replacement}'",
+                    location,
+                )
+
             lookup.ligatures[g] = replacement
 
     # GSUB 5/6
@@ -1445,6 +1452,13 @@ class Builder(object):
             sub = self.get_chained_lookup_(location, LigatureSubstBuilder)
 
         for g in itertools.product(*glyphs):
+            existing = sub.ligatures.get(g, replacement)
+            if existing != replacement:
+                raise FeatureLibError(
+                    f"Conflicting ligature sub rules: '{g}' maps to '{existing}' and '{replacement}'",
+                    location,
+                )
+
             sub.ligatures[g] = replacement
 
         chain.rules.append(ChainContextualRule(prefix, glyphs, suffix, [sub]))
