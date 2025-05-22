@@ -284,11 +284,12 @@ class Timer(object):
     """
 
     # timeit.default_timer choses the most accurate clock for each platform
-    _time = timeit.default_timer
+    _time: Callable[[], float]
     default_msg = "elapsed time: %(time).3fs"
     default_format = "Took %(time).3fs to %(msg)s"
 
     def __init__(self, logger=None, msg=None, level=None, start=None):
+        self._time = timeit.default_timer
         self.reset(start)
         if logger is None:
             for arg in ("msg", "level"):
