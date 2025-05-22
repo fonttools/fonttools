@@ -136,19 +136,20 @@ def _add_fvar(font, axes, instances: List[InstanceDescriptor]):
             axes[k].tag: axes[k].map_backward(v) for k, v in coordinates.items()
         }
 
-        # Instances should only reuse name ID 2 or 17 if they are at the default
-        # location across all axes. See
-        # https://github.com/fonttools/fonttools/issues/3825.
-        styleNameExists = nameTable.findMultilingualName(
+        subfamilyNameID = nameTable.findMultilingualName(
             localisedStyleName, windows=True, mac=macNames, minNameID=0
         )
-        if styleNameExists in {2, 17} and inst.coordinates != default_coordinates:
-            minNameId = 256
+        if subfamilyNameID in {2, 17} and inst.coordinates != default_coordinates:
+            # Instances should only reuse name ID 2 or 17 if they are at the
+            # default location across all axes, so try again and only look at
+            # IDs >= 256. See
+            # https://github.com/fonttools/fonttools/issues/3825.
+            inst.subfamilyNameID = nameTable.addMultilingualName(
+                localisedStyleName, windows=True, mac=macNames, minNameID=256
+            )
         else:
-            minNameId = 0
-        inst.subfamilyNameID = nameTable.addMultilingualName(
-            localisedStyleName, mac=macNames, minNameID=minNameId
-        )
+            inst.subfamilyNameID = subfamilyNameID
+
         if psname is not None:
             psname = tostr(psname)
             inst.postscriptNameID = nameTable.addName(psname, platforms=platforms)
