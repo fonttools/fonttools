@@ -18,7 +18,7 @@ are available at `Read the Docs <https://fonttools.readthedocs.io/>`_.
 Installation
 ~~~~~~~~~~~~
 
-FontTools requires `Python <http://www.python.org/download/>`__ 3.8
+FontTools requires `Python <http://www.python.org/download/>`__ 3.9
 or later. We try to follow the same schedule of minimum Python version support as
 NumPy (see `NEP 29 <https://numpy.org/neps/nep-0029-deprecation_policy.html>`__).
 
@@ -87,9 +87,6 @@ are required to unlock the extra features named "ufo", etc.
 
   * `fs <https://pypi.org/pypi/fs>`__: (aka ``pyfilesystem2``) filesystem
     abstraction layer.
-
-  * `enum34 <https://pypi.org/pypi/enum34>`__: backport for the built-in ``enum``
-    module (only required on Python < 3.4).
 
   *Extra:* ``ufo``
 

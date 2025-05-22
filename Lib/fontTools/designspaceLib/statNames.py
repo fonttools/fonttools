@@ -12,14 +12,13 @@ instance:
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, Optional, Tuple, Union
+from typing import Dict, Literal, Optional, Tuple, Union
 import logging
 
 from fontTools.designspaceLib import (
     AxisDescriptor,
     AxisLabelDescriptor,
     DesignSpaceDocument,
-    DesignSpaceDocumentError,
     DiscreteAxisDescriptor,
     SimpleLocationDict,
     SourceDescriptor,
@@ -27,9 +26,13 @@ from fontTools.designspaceLib import (
 
 LOGGER = logging.getLogger(__name__)
 
-# TODO(Python 3.8): use Literal
-# RibbiStyleName = Union[Literal["regular"], Literal["bold"], Literal["italic"], Literal["bold italic"]]
-RibbiStyle = str
+RibbiStyleName = Union[
+    Literal["regular"],
+    Literal["bold"],
+    Literal["italic"],
+    Literal["bold italic"],
+]
+
 BOLD_ITALIC_TO_RIBBI_STYLE = {
     (False, False): "regular",
     (False, True): "italic",
@@ -46,7 +49,7 @@ class StatNames:
     styleNames: Dict[str, str]
     postScriptFontName: Optional[str]
     styleMapFamilyNames: Dict[str, str]
-    styleMapStyleName: Optional[RibbiStyle]
+    styleMapStyleName: Optional[RibbiStyleName]
 
 
 def getStatNames(
@@ -205,7 +208,7 @@ def _getAxisLabelsForUserLocation(
 
 def _getRibbiStyle(
     self: DesignSpaceDocument, userLocation: SimpleLocationDict
-) -> Tuple[RibbiStyle, SimpleLocationDict]:
+) -> Tuple[RibbiStyleName, SimpleLocationDict]:
     """Compute the RIBBI style name of the given user location,
     return the location of the matching Regular in the RIBBI group.
 

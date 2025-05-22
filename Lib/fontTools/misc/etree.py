@@ -56,21 +56,7 @@ except ImportError:
         from xml.etree.ElementTree import *
     _have_lxml = False
 
-    import sys
-
-    # dict is always ordered in python >= 3.6 and on pypy
-    PY36 = sys.version_info >= (3, 6)
-    try:
-        import __pypy__
-    except ImportError:
-        __pypy__ = None
-    _dict_is_ordered = bool(PY36 or __pypy__)
-    del PY36, __pypy__
-
-    if _dict_is_ordered:
-        _Attrib = dict
-    else:
-        from collections import OrderedDict as _Attrib
+    _Attrib = dict
 
     if isinstance(Element, type):
         _Element = Element
@@ -221,18 +207,9 @@ except ImportError:
     # characters, the surrogate blocks, FFFE, and FFFF:
     #   Char ::= #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]
     # Here we reversed the pattern to match only the invalid characters.
-    # For the 'narrow' python builds supporting only UCS-2, which represent
-    # characters beyond BMP as UTF-16 surrogate pairs, we need to pass through
-    # the surrogate block. I haven't found a more elegant solution...
-    UCS2 = sys.maxunicode < 0x10FFFF
-    if UCS2:
-        _invalid_xml_string = re.compile(
-            "[\u0000-\u0008\u000B-\u000C\u000E-\u001F\uFFFE-\uFFFF]"
-        )
-    else:
-        _invalid_xml_string = re.compile(
-            "[\u0000-\u0008\u000B-\u000C\u000E-\u001F\uD800-\uDFFF\uFFFE-\uFFFF]"
-        )
+    _invalid_xml_string = re.compile(
+        "[\u0000-\u0008\u000B-\u000C\u000E-\u001F\uD800-\uDFFF\uFFFE-\uFFFF]"
+    )
 
     def _tounicode(s):
         """Test if a string is valid user input and decode it to unicode string

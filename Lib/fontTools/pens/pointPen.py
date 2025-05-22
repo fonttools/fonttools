@@ -12,12 +12,14 @@ This allows the caller to provide more data for each point.
 For instance, whether or not a point is smooth, and its name.
 """
 
+from __future__ import annotations
+
 import math
-from typing import Any, Optional, Tuple, Dict
+from typing import Any, Dict, List, Optional, Tuple
 
 from fontTools.misc.loggingTools import LogMixin
-from fontTools.pens.basePen import AbstractPen, MissingComponentError, PenError
 from fontTools.misc.transform import DecomposedTransform, Identity
+from fontTools.pens.basePen import AbstractPen, MissingComponentError, PenError
 
 __all__ = [
     "AbstractPointPen",
@@ -27,6 +29,14 @@ __all__ = [
     "GuessSmoothPointPen",
     "ReverseContourPointPen",
 ]
+
+# Some type aliases to make it easier below
+Point = Tuple[float, float]
+PointName = Optional[str]
+# [(pt, smooth, name, kwargs)]
+SegmentPointList = List[Tuple[Optional[Point], bool, PointName, Any]]
+SegmentType = Optional[str]
+SegmentList = List[Tuple[SegmentType, SegmentPointList]]
 
 
 class AbstractPointPen:
@@ -88,7 +98,7 @@ class BasePointToSegmentPen(AbstractPointPen):
     care of all the edge cases.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.currentPath = None
 
     def beginPath(self, identifier=None, **kwargs):
@@ -96,7 +106,7 @@ class BasePointToSegmentPen(AbstractPointPen):
             raise PenError("Path already begun.")
         self.currentPath = []
 
-    def _flushContour(self, segments):
+    def _flushContour(self, segments: SegmentList) -> None:
         """Override this method.
 
         It will be called for each non-empty sub path with a list
@@ -124,7 +134,7 @@ class BasePointToSegmentPen(AbstractPointPen):
         """
         raise NotImplementedError
 
-    def endPath(self):
+    def endPath(self) -> None:
         if self.currentPath is None:
             raise PenError("Path not begun.")
         points = self.currentPath
@@ -134,7 +144,7 @@ class BasePointToSegmentPen(AbstractPointPen):
         if len(points) == 1:
             # Not much more we can do than output a single move segment.
             pt, segmentType, smooth, name, kwargs = points[0]
-            segments = [("move", [(pt, smooth, name, kwargs)])]
+            segments: SegmentList = [("move", [(pt, smooth, name, kwargs)])]
             self._flushContour(segments)
             return
         segments = []
@@ -162,7 +172,7 @@ class BasePointToSegmentPen(AbstractPointPen):
             else:
                 points = points[firstOnCurve + 1 :] + points[: firstOnCurve + 1]
 
-        currentSegment = []
+        currentSegment: SegmentPointList = []
         for pt, segmentType, smooth, name, kwargs in points:
             currentSegment.append((pt, smooth, name, kwargs))
             if segmentType is None:
@@ -189,7 +199,7 @@ class PointToSegmentPen(BasePointToSegmentPen):
     and kwargs.
     """
 
-    def __init__(self, segmentPen, outputImpliedClosingLine=False):
+    def __init__(self, segmentPen, outputImpliedClosingLine: bool = False) -> None:
         BasePointToSegmentPen.__init__(self)
         self.pen = segmentPen
         self.outputImpliedClosingLine = outputImpliedClosingLine
@@ -271,14 +281,14 @@ class SegmentToPointPen(AbstractPen):
     PointPen protocol.
     """
 
-    def __init__(self, pointPen, guessSmooth=True):
+    def __init__(self, pointPen, guessSmooth=True) -> None:
         if guessSmooth:
             self.pen = GuessSmoothPointPen(pointPen)
         else:
             self.pen = pointPen
-        self.contour = None
+        self.contour: Optional[List[Tuple[Point, SegmentType]]] = None
 
-    def _flushContour(self):
+    def _flushContour(self) -> None:
         pen = self.pen
         pen.beginPath()
         for pt, segmentType in self.contour:
@@ -594,7 +604,6 @@ class DecomposingPointPen(LogMixin, AbstractPointPen):
                 # if the transformation has a negative determinant, it will
                 # reverse the contour direction of the component
                 a, b, c, d = transformation[:4]
-                det = a * d - b * c
                 if a * d - b * c < 0:
                     pen = ReverseContourPointPen(pen)
             glyph.drawPoints(pen)

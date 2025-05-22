@@ -654,7 +654,7 @@ class UFOReader(_UFOBaseIO):
         The returned string is empty if the file is missing.
         """
         try:
-            with self.fs.open(FEATURES_FILENAME, "r", encoding="utf-8") as f:
+            with self.fs.open(FEATURES_FILENAME, "r", encoding="utf-8-sig") as f:
                 return f.read()
         except fs.errors.ResourceNotFound:
             return ""

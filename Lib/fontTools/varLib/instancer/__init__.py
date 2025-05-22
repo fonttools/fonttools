@@ -675,6 +675,7 @@ def instantiateCFF2(
             privateDicts.append(fd.Private)
 
     allCommands = []
+    allCommandPrivates = []
     for cs in charStrings:
         assert cs.private.vstore.otVarStore is varStore  # Or in many places!!
         commands = programToCommands(cs.program, getNumRegions=getNumRegions)
@@ -683,6 +684,7 @@ def instantiateCFF2(
         if specialize:
             commands = specializeCommands(commands, generalizeFirst=not generalize)
         allCommands.append(commands)
+        allCommandPrivates.append(cs.private)
 
     def storeBlendsToVarStore(arg):
         if not isinstance(arg, list):
@@ -742,8 +744,8 @@ def instantiateCFF2(
         assert varData.ItemCount == 0
 
     # Add charstring blend lists to VarStore so we can instantiate them
-    for commands in allCommands:
-        vsindex = 0
+    for commands, private in zip(allCommands, allCommandPrivates):
+        vsindex = getattr(private, "vsindex", 0)
         for command in commands:
             if command[0] == "vsindex":
                 vsindex = command[1][0]
@@ -752,7 +754,6 @@ def instantiateCFF2(
                 storeBlendsToVarStore(arg)
 
     # Add private blend lists to VarStore so we can instantiate values
-    vsindex = 0
     for opcode, name, arg_type, default, converter in privateDictOperators2:
         if arg_type not in ("number", "delta", "array"):
             continue
@@ -763,6 +764,7 @@ def instantiateCFF2(
                 continue
             values = getattr(private, name)
 
+            # This is safe here since "vsindex" is the first in the privateDictOperators2
             if name == "vsindex":
                 vsindex = values[0]
                 continue
@@ -783,8 +785,8 @@ def instantiateCFF2(
 
     # Read back new charstring blends from the instantiated VarStore
     varDataCursor = [0] * len(varStore.VarData)
-    for commands in allCommands:
-        vsindex = 0
+    for commands, private in zip(allCommands, allCommandPrivates):
+        vsindex = getattr(private, "vsindex", 0)
         for command in commands:
             if command[0] == "vsindex":
                 vsindex = command[1][0]
@@ -799,9 +801,16 @@ def instantiateCFF2(
         if arg_type not in ("number", "delta", "array"):
             continue
 
+        vsindex = 0
         for private in privateDicts:
             if not hasattr(private, name):
                 continue
+
+            # This is safe here since "vsindex" is the first in the privateDictOperators2
+            if name == "vsindex":
+                vsindex = values[0]
+                continue
+
             values = getattr(private, name)
             if arg_type == "number":
                 values = [values]
