@@ -361,6 +361,10 @@ class CFFSpecializeProgramTest:
             ("100 0 0 rmoveto", "100 0 hmoveto"),  # test_rmoveto_zero_width
             (".55 -.8 rmoveto", "0.55 -0.8 rmoveto"),  # test_rmoveto
             ("55 -8 rmoveto " * 3, "165 -24 rmoveto"),  # test_rmoveto_mult
+            (
+                "0.55 -0.8 rmoveto 10 20 1 blend 30 rmoveto",
+                "10.55 20 1 blend 29.2 rmoveto",
+            ),  # test_rmoveto_blend
             ("100.5 50 -5.8 rmoveto", None),  # test_rmoveto_width
             # rlineto
             ("0 0 rlineto", ""),  # test_rlineto_zero
@@ -568,8 +572,10 @@ class CFFSpecializeProgramTest:
     def test_specialize(self, charstr, expected):
         if expected is None:
             expected = charstr
+        numRegions = 2
+        getNumRegions = lambda iv: numRegions
         expected = expected.strip()
-        specialized = charstr_specialize(charstr)
+        specialized = charstr_specialize(charstr, getNumRegions=getNumRegions)
         assert specialized == expected, (specialized, expected)
 
     # maxstack CFF=48, specializer uses up to 47
