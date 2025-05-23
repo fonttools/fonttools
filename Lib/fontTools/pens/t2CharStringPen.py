@@ -1,10 +1,10 @@
 # Copyright (c) 2009 Type Supply LLC
 # Author: Tal Leming
 
-from fontTools.misc.roundTools import otRound, roundFunc
+from fontTools.cffLib.specializer import commandsToProgram, specializeCommands
 from fontTools.misc.psCharStrings import T2CharString
+from fontTools.misc.roundTools import otRound, roundFunc
 from fontTools.pens.basePen import BasePen
-from fontTools.cffLib.specializer import specializeCommands, commandsToProgram
 
 
 class T2CharStringPen(BasePen):
