@@ -136,7 +136,7 @@ def _add_fvar(font, axes, instances: List[InstanceDescriptor]):
             axes[k].tag: axes[k].map_backward(v) for k, v in coordinates.items()
         }
 
-        subfamilyNameID = nameTable.findMultilingualName(
+        subfamilyNameID = nameTable.addMultilingualName(
             localisedStyleName, windows=True, mac=macNames, minNameID=0
         )
         if subfamilyNameID in {2, 17} and inst.coordinates != default_coordinates:
