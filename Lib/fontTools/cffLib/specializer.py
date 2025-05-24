@@ -580,7 +580,10 @@ def specializeCommands(
     for i in range(len(commands) - 1, 0, -1):
         if "rmoveto" == commands[i][0] == commands[i - 1][0]:
             v1, v2 = commands[i - 1][1], commands[i][1]
-            commands[i - 1] = ("rmoveto", [v1[0] + v2[0], v1[1] + v2[1]])
+            commands[i - 1] = (
+                "rmoveto",
+                [_addArgs(v1[0], v2[0]), _addArgs(v1[1], v2[1])],
+            )
             del commands[i]
 
     # 2. Specialize rmoveto/rlineto/rrcurveto operators into horizontal/vertical variants.
