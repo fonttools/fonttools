@@ -61,7 +61,7 @@ def generate_svg(
 
     svg_lines = ""
     for angle, color in zip(angles, colors):
-        angle = -angle
+        angle = -angle + 90
         dx = np.cos(np.deg2rad(angle)) * length / 2
         dy = np.sin(np.deg2rad(angle)) * length / 2
         svg_lines += f"<line x1='{-dx}' y1='{-dy}' x2='{dx}' y2='{dy}' stroke='{color}' stroke-width='10'/>\n"
