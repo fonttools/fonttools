@@ -78,7 +78,7 @@ def generate_svg(
         if not np.isfinite(contrast):
             continue
         radius = contrast / max_contrast * (length / 2)
-        theta = np.deg2rad(-angle)
+        theta = np.deg2rad(-angle + 90)
         x = radius * np.cos(theta)
         y = radius * np.sin(theta)
         polar_path.append((x, y))
