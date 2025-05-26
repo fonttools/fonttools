@@ -32,7 +32,9 @@ def glyph_contrast_centered(glyph, angle_step=1):
         glyph.draw(TransformPen(momentX4_pen, transform))
         momentX4 = momentX4_pen.momentX4 / area
 
-        contrast = momentX4 / (varX**2) if varX > 0 else np.inf
+        kurtosis = momentX4 / (varX**2) if varX > 0 else np.inf
+
+        contrast = kurtosis if np.isfinite(kurtosis) else np.nan
 
         contrast_ratios.append((angle, contrast))
 
