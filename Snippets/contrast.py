@@ -21,13 +21,20 @@ def glyph_contrast_centered(glyph, angle_step=1):
         transform = (
             Identity
             .translate(-centroid_x, -centroid_y)
-            .rotate(np.deg2rad(-angle))  # rotate by negative of angle
+            .rotate(np.deg2rad(-angle))
         )
         pen_rot = StatisticsPen()
         glyph.draw(TransformPen(pen_rot, transform))
-        varX = pen_rot.varianceX
 
-        contrast_ratios.append((angle, varX))
+        varX = pen_rot.varianceX
+        varY = pen_rot.varianceY
+
+        if varY < 1e-6:
+            contrast = np.inf
+        else:
+            contrast = varX / varY
+
+        contrast_ratios.append((angle, contrast))
 
     best_angle, max_contrast = max(contrast_ratios, key=lambda x: x[1])
     worst_angle, min_contrast = min(contrast_ratios, key=lambda x: x[1])
@@ -54,26 +61,31 @@ def generate_svg(glyph, centroid, angles, colors, contrast_ratios, filename="gly
         dy = np.sin(np.deg2rad(angle)) * length / 2
         svg_lines += f"<line x1='{-dx}' y1='{-dy}' x2='{dx}' y2='{dy}' stroke='{color}' stroke-width='10'/>\n"
 
-    # Add contrast plot
-    plot_height = 100
-    plot_width = 180
-    plot_lines = []
-    max_contrast = max(c for _, c in contrast_ratios if np.isfinite(c))
+    # Polar contrast plot
+    finite_contrasts = [c for _, c in contrast_ratios if np.isfinite(c)]
+    if finite_contrasts:
+        max_contrast = max(finite_contrasts)
+    else:
+        max_contrast = 1.0
+
+    polar_path = []
     for angle, contrast in contrast_ratios:
-        if np.isinf(contrast):
+        if not np.isfinite(contrast):
             continue
-        x = angle / 180 * plot_width - length / 2
-        y = -length / 2 - (contrast / max_contrast * plot_height)
-        plot_lines.append((x, y))
+        radius = contrast / max_contrast * (length / 2)
+        theta = np.deg2rad(-angle)
+        x = radius * np.cos(theta)
+        y = radius * np.sin(theta)
+        polar_path.append((x, y))
 
-    contrast_path = "M " + " L ".join(f"{x:.2f},{y:.2f}" for x, y in plot_lines)
-    svg_plot = f"<path d='{contrast_path}' fill='none' stroke='blue' stroke-width='2'/>"
+    contrast_polar_path = "M " + " L ".join(f"{x:.2f},{y:.2f}" for x, y in polar_path) + " Z"
+    svg_polar = f"<path d='{contrast_polar_path}' fill='none' stroke='blue' stroke-width='2'/>"
 
-    svg_content = f"""<svg xmlns='http://www.w3.org/2000/svg' viewBox='{-length/2} {-length/2 - plot_height} {length} {length + plot_height}'>
+    svg_content = f"""<svg xmlns='http://www.w3.org/2000/svg' viewBox='{-length/2} {-length/2} {length} {length}'>
     <g>
         <path d='{path_data}' fill='black' stroke='black'/>
         {svg_lines.strip()}
-        {svg_plot}
+        {svg_polar}
     </g>
 </svg>"""
 
@@ -101,7 +113,7 @@ def main():
 
     best_angle, max_contrast, worst_angle, min_contrast, contrast_ratios, centroid = glyph_contrast_centered(glyph, args.step)
 
-    print(f"Glyph '{glyphname}' (char '{args.char}'):\n  Max spread at angle {best_angle}°, varX: {max_contrast:.2f}\n  Min spread at angle {worst_angle}°, varX: {min_contrast:.2f}")
+    print(f"Glyph '{glyphname}' (char '{args.char}'):\n  Max varX/varY at angle {best_angle}°, ratio: {max_contrast:.2f}\n  Min varX/varY at angle {worst_angle}°, ratio: {min_contrast:.2f}")
 
     generate_svg(glyph, centroid, [best_angle, worst_angle], ["red", "purple"], contrast_ratios, args.output)
     print(f"SVG saved as '{args.output}'")
