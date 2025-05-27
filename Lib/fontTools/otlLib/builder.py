@@ -883,6 +883,14 @@ class LigatureSubstBuilder(LookupBuilder):
         )
         return self.buildLookup_(subtables)
 
+    def getAlternateGlyphs(self):
+        # https://github.com/fonttools/fonttools/issues/3845
+        return {
+            components[0]: [ligature]
+            for components, ligature in self.ligatures.items()
+            if len(components) == 1
+        }
+
     def add_subtable_break(self, location):
         self.ligatures[(self.SUBTABLE_BREAK_, location)] = self.SUBTABLE_BREAK_
 
@@ -920,6 +928,14 @@ class MultipleSubstBuilder(LookupBuilder):
     def build(self):
         subtables = self.build_subst_subtables(self.mapping, buildMultipleSubstSubtable)
         return self.buildLookup_(subtables)
+
+    def getAlternateGlyphs(self):
+        # https://github.com/fonttools/fonttools/issues/3845
+        return {
+            glyph: replacements
+            for glyph, replacements in self.mapping.items()
+            if len(replacements) == 1
+        }
 
     def add_subtable_break(self, location):
         self.mapping[(self.SUBTABLE_BREAK_, location)] = self.SUBTABLE_BREAK_
