@@ -338,8 +338,8 @@ class BuildTest(unittest.TestCase):
         )
 
     def test_varlib_build_feature_variations_without_latn_dflt_feature(self):
-        """Test that a script gets a dflt language so that when we later add
-        variations, we can attach to something."""
+        """Test that when a script does not have a dflt language, it gets one
+        when we later add variations, we can attach them to it."""
 
         def add_features(font, savepath):
             features = """
