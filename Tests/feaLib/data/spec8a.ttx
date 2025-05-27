@@ -89,8 +89,6 @@
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <SingleSubst index="0">
-          <Substitution in="b" out="b.alt"/>
-          <Substitution in="c" out="c.mid"/>
           <Substitution in="e" out="e.mid"/>
         </SingleSubst>
       </Lookup>
@@ -103,6 +101,15 @@
             <Alternate glyph="a.alt1"/>
             <Alternate glyph="a.alt2"/>
             <Alternate glyph="a.alt3"/>
+            <Alternate glyph="A.sc"/>
+          </AlternateSet>
+          <AlternateSet glyph="b">
+            <Alternate glyph="b.alt"/>
+            <Alternate glyph="B.sc"/>
+          </AlternateSet>
+          <AlternateSet glyph="c">
+            <Alternate glyph="c.mid"/>
+            <Alternate glyph="C.sc"/>
           </AlternateSet>
           <AlternateSet glyph="d">
             <Alternate glyph="d.alt"/>

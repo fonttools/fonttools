@@ -333,6 +333,39 @@ class BuilderTest(unittest.TestCase):
             },
         )
 
+    def test_mixed_singleSubst_multipleSubst_aalt(self):
+        font = self.build(
+            dedent(
+                """
+                feature aalt {
+                  feature ccmp;
+                } aalt;
+
+                feature ccmp {
+                  sub f_f   by f f;
+                  sub f     by f;
+                  sub f_f_i by f f i;
+                  sub [A A.sc] by A;
+                  sub [B B.sc] by [B B.sc];
+                } ccmp;
+                """
+            )
+        )
+
+        assert "GSUB" in font
+        st = font["GSUB"].table.LookupList.Lookup[0].SubTable[0]
+        self.assertEqual(st.LookupType, 1)
+        self.assertEqual(
+            st.mapping,
+            {
+                "A": "A",
+                "A.sc": "A",
+                "B": "B",
+                "B.sc": "B.sc",
+                "f": "f",
+            },
+        )
+
     def test_mixed_singleSubst_ligatureSubst(self):
         font = self.build(
             "lookup test {"
@@ -357,6 +390,28 @@ class BuilderTest(unittest.TestCase):
         self.assertEqual(len(st.ligatures["A"]), 1)
         self.assertEqual(st.ligatures["A"][0].LigGlyph, "A.sc")
         self.assertEqual(len(st.ligatures["A"][0].Component), 0)
+
+    def test_mixed_singleSubst_ligatureSubst_aalt(self):
+        font = self.build(
+            dedent(
+                """
+                feature aalt {
+                  feature liga;
+                } aalt;
+
+                feature liga {
+                  sub f f   by f_f;
+                  sub f f i by f_f_i;
+                  sub A     by A.sc;
+                } liga;
+                """
+            )
+        )
+
+        assert "GSUB" in font
+        st = font["GSUB"].table.LookupList.Lookup[0].SubTable[0]
+        self.assertEqual(st.LookupType, 1)
+        self.assertEqual(st.mapping, {"A": "A.sc"})
 
     def test_mixed_singleSubst_multipleSubst_ligatureSubst(self):
         self.assertRaisesRegex(
