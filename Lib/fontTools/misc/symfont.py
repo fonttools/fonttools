@@ -235,6 +235,7 @@ if __name__ == '__main__':
 
 if __name__ == "__main__":
     import sys
+
     if sys.argv[1:]:
         penName = sys.argv[1]
         funcs = [(name, eval(f)) for name, f in zip(sys.argv[2::2], sys.argv[3::2])]

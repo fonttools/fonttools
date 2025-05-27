@@ -392,10 +392,13 @@ def addFeatureVariationsRaw(font, table, conditionalSubstitutions, featureTag="r
 
             for scriptRecord in table.ScriptList.ScriptRecord:
                 if scriptRecord.Script.DefaultLangSys is None:
-                    raise VarLibError(
-                        "Feature variations require that the script "
-                        f"'{scriptRecord.ScriptTag}' defines a default language system."
-                    )
+                    # We need to have a default LangSys to attach variations to.
+                    langSys = ot.LangSys()
+                    langSys.LookupOrder = None
+                    langSys.ReqFeatureIndex = 0xFFFF
+                    langSys.FeatureIndex = []
+                    langSys.FeatureCount = 0
+                    scriptRecord.Script.DefaultLangSys = langSys
                 langSystems = [lsr.LangSys for lsr in scriptRecord.Script.LangSysRecord]
                 for langSys in [scriptRecord.Script.DefaultLangSys] + langSystems:
                     langSys.FeatureIndex.append(varFeatureIndex)

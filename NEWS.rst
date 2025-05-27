@@ -1,3 +1,5 @@
+- [varLib] Create a dflt LangSys in a ScriptRecord when adding variations later, to fix an avoidable crash in an edge case (#3838).
+
 4.58.0 (released 2025-05-10)
 ----------------------------
 
