@@ -71,6 +71,8 @@ def interpolate_cff2_PrivateDict(topDict, interpolateFromDeltas):
 
 
 def interpolate_cff2_charstrings(topDict, interpolateFromDeltas, glyphOrder):
+    from fontTools.pens.t2CharStringPen import T2CharStringPen
+
     charstrings = topDict.CharStrings
     for gname in glyphOrder:
         # Interpolate charstring
@@ -102,7 +104,7 @@ def interpolate_cff2_charstrings(topDict, interpolateFromDeltas, glyphOrder):
                     next_ti = tuplei + num_regions
                     deltas = charstring.program[tuplei:next_ti]
                     delta = interpolateFromDeltas(vsindex, deltas)
-                    charstring.program[argi] += otRound(delta)
+                    charstring.program[argi] += delta
                     tuplei = next_ti
                     argi += 1
                 new_program.extend(charstring.program[last_i:end_args])
@@ -110,6 +112,12 @@ def interpolate_cff2_charstrings(topDict, interpolateFromDeltas, glyphOrder):
         if last_i != 0:
             new_program.extend(charstring.program[last_i:])
             charstring.program = new_program
+
+        # Rebuild charstring program by passing it through T2CharStringPen which
+        # will have the side effect of rounding coordinates.
+        t2Pen = T2CharStringPen(width=None, glyphSet=None)
+        charstring.draw(t2Pen)
+        charstring.program = t2Pen.getProgram(optimize=True)
 
 
 def interpolate_cff2_metrics(varfont, topDict, glyphOrder, loc):
