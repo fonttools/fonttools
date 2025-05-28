@@ -1,3 +1,6 @@
+4.58.1 (released 2025-05-28)
+----------------------------
+
 - [varLib] Make sure that fvar named instances only reuse name ID 2 or 17 if they are at the default location across all axes, to match OT spec requirement (#3831).
 - [feaLib] Improve single substitution promotion to multiple/ligature substitutions, fixing a few bugs as well (#3849).
 - [loggingTools] Make ``Timer._time`` a static method that doesn't take self, makes it easier to override (#3836).
