@@ -175,6 +175,15 @@ class BuildTest(unittest.TestCase):
             expected_ttx_name="Build",
         )
 
+    def test_varlib_build_ttf_reuse_nameid_2(self):
+        """Instances at the default location can reuse name ID 2 or 17."""
+        self._run_varlib_build_test(
+            designspace_name="BuildReuseNameId2",
+            font_name="TestFamily",
+            tables=["fvar"],
+            expected_ttx_name="BuildReuseNameId2",
+        )
+
     def test_varlib_build_no_axes_ttf(self):
         """Designspace file does not contain an <axes> element."""
         ds_path = self.get_test_input("InterpolateLayout3.designspace")

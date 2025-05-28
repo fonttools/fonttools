@@ -1,3 +1,4 @@
+- [varLib] Ensure that instances only reuse name ID 2 or 17 if they are at the default location across all axes (#3831).
 - [varLib] Create a dflt LangSys in a ScriptRecord when adding variations later, to fix an avoidable crash in an edge case (#3838).
 
 4.58.0 (released 2025-05-10)
