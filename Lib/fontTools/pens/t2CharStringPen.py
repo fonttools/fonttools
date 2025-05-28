@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from typing import Any, List, Tuple
+from typing import Any, Dict, List, Tuple
 
 from fontTools.cffLib.specializer import commandsToProgram, specializeCommands
 from fontTools.misc.psCharStrings import T2CharString
@@ -24,8 +24,8 @@ class T2CharStringPen(BasePen):
 
     def __init__(
         self,
-        width: float,
-        glyphSet: dict[str, Any] | None,
+        width: float | None,
+        glyphSet: Dict[str, Any] | None,
         roundTolerance: float = 0.5,
         CFF2: bool = False,
     ) -> None:
@@ -64,7 +64,7 @@ class T2CharStringPen(BasePen):
 
     def getCharString(
         self,
-        private: dict | None = None,
+        private: Dict | None = None,
         globalSubrs: List | None = None,
         optimize: bool = True,
     ) -> T2CharString:
