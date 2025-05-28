@@ -337,6 +337,35 @@ class BuildTest(unittest.TestCase):
             post_process_master=add_rclt,
         )
 
+    def test_varlib_build_feature_variations_without_latn_dflt_feature(self):
+        """Test that when a script does not have a dflt language, it gets one
+        when we later add variations, we can attach them to it."""
+
+        def add_features(font, savepath):
+            features = """
+            languagesystem DFLT dflt;
+            languagesystem latn dflt;
+            languagesystem latn CAT;
+
+            feature locl {
+                script latn;
+                # Intentionally skip defining anything for `language dflt;`.
+                language CAT;
+                sub uni0061 by uni0061;
+            } locl;
+            """
+            addOpenTypeFeaturesFromString(font, features)
+            font.save(savepath)
+
+        self._run_varlib_build_test(
+            designspace_name="FeatureVars",
+            font_name="TestFamily",
+            tables=["GSUB"],
+            expected_ttx_name="FeatureVars_latn_dflt_var",
+            save_before_dump=True,
+            post_process_master=add_features,
+        )
+
     def test_varlib_gvar_explicit_delta(self):
         """The variable font contains a composite glyph odieresis which does not
         need a gvar entry.

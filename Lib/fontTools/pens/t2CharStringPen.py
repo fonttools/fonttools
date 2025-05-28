@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, List, Tuple
 
 from fontTools.cffLib.specializer import commandsToProgram, specializeCommands
 from fontTools.misc.psCharStrings import T2CharString
@@ -46,25 +46,25 @@ class T2CharStringPen(BasePen):
         self.round = roundFunc(roundTolerance)
         self._CFF2 = CFF2
         self._width = width
-        self._commands: list[tuple[str, list[float]]] = []
+        self._commands: List[Tuple[str | bytes, List[float]]] = []
         self._p0 = (0, 0)
 
-    def _p(self, pt: tuple[float, float]) -> list[float]:
+    def _p(self, pt: Tuple[float, float]) -> List[float]:
         p0 = self._p0
         pt = self._p0 = (self.round(pt[0]), self.round(pt[1]))
         return [pt[0] - p0[0], pt[1] - p0[1]]
 
-    def _moveTo(self, pt: tuple[float, float]) -> None:
+    def _moveTo(self, pt: Tuple[float, float]) -> None:
         self._commands.append(("rmoveto", self._p(pt)))
 
-    def _lineTo(self, pt: tuple[float, float]) -> None:
+    def _lineTo(self, pt: Tuple[float, float]) -> None:
         self._commands.append(("rlineto", self._p(pt)))
 
     def _curveToOne(
         self,
-        pt1: tuple[float, float],
-        pt2: tuple[float, float],
-        pt3: tuple[float, float],
+        pt1: Tuple[float, float],
+        pt2: Tuple[float, float],
+        pt3: Tuple[float, float],
     ) -> None:
         _p = self._p
         self._commands.append(("rrcurveto", _p(pt1) + _p(pt2) + _p(pt3)))
@@ -78,7 +78,7 @@ class T2CharStringPen(BasePen):
     def getCharString(
         self,
         private: dict | None = None,
-        globalSubrs: list | None = None,
+        globalSubrs: List | None = None,
         optimize: bool = True,
     ) -> T2CharString:
         commands = self._commands
