@@ -1,3 +1,16 @@
+- [varLib] Make sure that fvar named instances only reuse name ID 2 or 17 if they are at the default location across all axes, to match OT spec requirement (#3831).
+- [feaLib] Improve single substitution promotion to multiple/ligature substitutions, fixing a few bugs as well (#3849).
+- [loggingTools] Make ``Timer._time`` a static method that doesn't take self, makes it easier to override (#3836).
+- [featureVars] Use ``None`` for empty ConditionSet, which translates to a null offset in the compiled table (#3850).
+- [feaLib] Raise an error on conflicting ligature substitution rules instead of silently taking the last one (#3835).
+- Add typing annotations to T2CharStringPen (#3837).
+- [feaLib] Add single substitutions that were promoted to multiple or ligature substitutions to ``aalt`` feature (#3847).
+- [featureVars] Create a default ``LangSys`` in a ``ScriptRecord`` if missing when adding feature variations to existing GSUB later in the build (#3838).
+- [symfont] Added a ``main()``.
+- [cffLib.specializer] Fix rmoveto merging when blends used (#3839, #3840).
+- [pyftmerge] Add support for cmap format 14 in the merge tool (#3830).
+- [varLib.instancer/cff2] Fix vsindex of Private dicts when instantiating (#3828, #3232).
+- Update text file read to use UTF-8 with optional BOM so it works with e.g. Windows Notepad.exe (#3824).
 - [varLib] Ensure that instances only reuse name ID 2 or 17 if they are at the default location across all axes (#3831).
 - [varLib] Create a dflt LangSys in a ScriptRecord when adding variations later, to fix an avoidable crash in an edge case (#3838).
 
