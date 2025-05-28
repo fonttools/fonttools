@@ -275,10 +275,11 @@ def reorderGlyphs(font: ttLib.TTFont, new_glyph_order: List[str]):
                 for reorder in _REORDER_RULES.get(reorder_key, []):
                     reorder.apply(font, value)
 
-    if "CFF " in font:
-        cff_table = font["CFF "]
-        charstrings = cff_table.cff.topDictIndex[0].CharStrings.charStrings
-        cff_table.cff.topDictIndex[0].charset = new_glyph_order
-        cff_table.cff.topDictIndex[0].CharStrings.charStrings = {
-            k: charstrings.get(k) for k in new_glyph_order
-        }
+    for tag in ["CFF ", "CFF2"]:
+        if tag in font:
+            cff_table = font[tag]
+            charstrings = cff_table.cff.topDictIndex[0].CharStrings.charStrings
+            cff_table.cff.topDictIndex[0].charset = new_glyph_order
+            cff_table.cff.topDictIndex[0].CharStrings.charStrings = {
+                k: charstrings.get(k) for k in new_glyph_order
+            }
