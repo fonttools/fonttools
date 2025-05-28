@@ -493,7 +493,7 @@ if ext_modules:
 
 setup_params = dict(
     name="fonttools",
-    version="4.58.1",
+    version="4.58.2.dev0",
     description="Tools to manipulate font files",
     author="Just van Rossum",
     author_email="just@letterror.com",
