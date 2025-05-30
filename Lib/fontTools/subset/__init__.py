@@ -2,6 +2,8 @@
 #
 # Google Author(s): Behdad Esfahbod
 
+from __future__ import annotations
+
 from fontTools import config
 from fontTools.misc.roundTools import otRound
 from fontTools import ttLib
@@ -14,6 +16,7 @@ from fontTools.misc.cliTools import makeOutputFileName
 from fontTools.subset.util import _add_method, _uniq_sort
 from fontTools.subset.cff import *
 from fontTools.subset.svg import *
+from fontTools.ttLib.ttVisitor import TTVisitor
 from fontTools.varLib import varStore, multiVarStore  # For monkey-patching
 from fontTools.ttLib.tables._n_a_m_e import NameRecordVisitor
 from fontTools.unicodedata import mirrored
@@ -3037,29 +3040,102 @@ def prune_post_subset(self, font, options):
     return True  # Required table
 
 
-def duplicate_select_name_ids(font, ids):
+def duplicate_select_name_ids(font: ttLib.TTFont, ids: set[int]) -> None:
     name = font["name"]
 
-    nameIdPlatforms = defaultdict(set)
+    # nameIdPlatforms = defaultdict(set)
+    # for record in name.names:
+    #     if record.nameID not in ids:
+    #         continue
+    #     nameIdPlatforms[record.nameID].add(
+    #         (record.platformID, record.platEncID, record.langID)
+    #     )
+
+    allIds = {n.nameID for n in name.names}
+    needRemapping = allIds.intersection(ids)
+    remapping = {}
+    for nameId in needRemapping:
+        nextId = name._findUnusedNameID()
+        remapping[nameId] = nextId
+
+    # 1. Rewrite records to use the new ID, they'd be dropped anyway.
     for record in name.names:
-        if record.nameID not in ids:
+        if record.nameID not in needRemapping:
             continue
-        nameIdPlatforms[record.nameID].add(
-            (record.platformID, record.platEncID, record.langID)
+        record.nameID = remapping[record.nameID]
+
+    # 2. Run NameRecordRemappingVisitor to rewrite the corresponding IDs in
+    #    other tables.
+
+
+class NameRecordRemappingVisitor(TTVisitor):
+    # Font tables that have NameIDs we need to collect.
+    TABLES = ("GSUB", "GPOS", "fvar", "CPAL", "STAT")
+
+    def __init__(self):
+        self.remapping = {}
+
+
+@NameRecordRemappingVisitor.register_attrs(
+    (
+        (otTables.FeatureParamsSize, ("SubfamilyNameID",)),
+        (otTables.FeatureParamsStylisticSet, ("UINameID",)),
+        (otTables.STAT, ("ElidedFallbackNameID",)),
+        (otTables.AxisRecord, ("AxisNameID",)),
+        (otTables.AxisValue, ("ValueNameID",)),
+        (otTables.FeatureName, ("FeatureNameID",)),
+        (otTables.Setting, ("SettingNameID",)),
+    )
+)
+def visit(visitor, obj, attr, value):
+    visitor.seen.add(value)
+
+
+@NameRecordRemappingVisitor.register(otTables.FeatureParamsCharacterVariants)
+def visit(visitor, obj):
+    for attr in ("FeatUILabelNameID", "FeatUITooltipTextNameID", "SampleTextNameID"):
+        value = getattr(obj, attr)
+        visitor.seen.add(value)
+    # also include the sequence of UI strings for individual variants, if any
+    if obj.FirstParamUILabelNameID == 0 or obj.NumNamedParameters == 0:
+        return
+    visitor.seen.update(
+        range(
+            obj.FirstParamUILabelNameID,
+            obj.FirstParamUILabelNameID + obj.NumNamedParameters,
         )
+    )
 
-    fvar = font.get("fvar")
-    for instance in fvar.instances:
-        if instance.subfamilyNameID not in ids:
-            continue
-        record_string = name.getDebugName(instance.subfamilyNameID)
-        platforms = nameIdPlatforms[instance.subfamilyNameID]
-        newNameId = name.addName(record_string, platforms)
-        instance.subfamilyNameID = newNameId
 
-    stat = font.get("STAT")
-    for axisValue in stat.table.AxisValueArray.AxisValue:
-        pass
+@NameRecordRemappingVisitor.register(ttLib.getTableClass("fvar"))
+def visit(visitor, obj):
+    for inst in obj.instances:
+        if inst.postscriptNameID != 0xFFFF:
+            visitor.seen.add(inst.postscriptNameID)
+        visitor.seen.add(inst.subfamilyNameID)
+
+    for axis in obj.axes:
+        visitor.seen.add(axis.axisNameID)
+
+
+@NameRecordRemappingVisitor.register(ttLib.getTableClass("CPAL"))
+def visit(visitor, obj):
+    if obj.version == 1:
+        visitor.seen.update(obj.paletteLabels)
+        visitor.seen.update(obj.paletteEntryLabels)
+
+
+@NameRecordRemappingVisitor.register(ttLib.TTFont)
+def visit(visitor, font, *args, **kwargs):
+    if hasattr(visitor, "font"):
+        return False
+
+    visitor.font = font
+    for tag in visitor.TABLES:
+        if tag in font:
+            visitor.visit(font[tag], *args, **kwargs)
+    del visitor.font
+    return False
 
 
 @_add_method(ttLib.getTableClass("head"))
