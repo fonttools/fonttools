@@ -3022,6 +3022,7 @@ def prune_post_subset(self, font, options):
         self.names = [n for n in self.names if n.langID in options.name_languages]
     if options.obfuscate_names:
         namerecs = []
+        duplicate_select_name_ids(font, {1, 2, 3, 4, 6, 16, 17, 18})
         for n in self.names:
             if n.nameID in [1, 4]:
                 n.string = ".\x7f".encode("utf_16_be") if n.isUnicode() else ".\x7f"
@@ -3034,6 +3035,31 @@ def prune_post_subset(self, font, options):
             namerecs.append(n)
         self.names = namerecs
     return True  # Required table
+
+
+def duplicate_select_name_ids(font, ids):
+    name = font["name"]
+
+    nameIdPlatforms = defaultdict(set)
+    for record in name.names:
+        if record.nameID not in ids:
+            continue
+        nameIdPlatforms[record.nameID].add(
+            (record.platformID, record.platEncID, record.langID)
+        )
+
+    fvar = font.get("fvar")
+    for instance in fvar.instances:
+        if instance.subfamilyNameID not in ids:
+            continue
+        record_string = name.getDebugName(instance.subfamilyNameID)
+        platforms = nameIdPlatforms[instance.subfamilyNameID]
+        newNameId = name.addName(record_string, platforms)
+        instance.subfamilyNameID = newNameId
+
+    stat = font.get("STAT")
+    for axisValue in stat.table.AxisValueArray.AxisValue:
+        pass
 
 
 @_add_method(ttLib.getTableClass("head"))
