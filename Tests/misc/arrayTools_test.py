@@ -89,6 +89,13 @@ def test_sectRect():
     assert rect == (5, 20, 20, 30)
 
 
+def test_sectRect_perpendicular():
+    # https://github.com/fonttools/fonttools/issues/3352
+    intersects, rect = sectRect((0.0, 0.0, 0.0, 1.0), (0.0, 0.5, 1.0, 0.5))
+    assert intersects
+    assert rect == (0.0, 0.5, 0.0, 0.5)
+
+
 def test_unionRect():
     assert unionRect((0, 10, 20, 30), (0, 40, 20, 50)) == (0, 10, 20, 50)
 
