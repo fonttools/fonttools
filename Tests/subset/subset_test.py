@@ -487,7 +487,7 @@ class SubsetTest:
             self.getpath("TestTTF-Regular_non_BMP_char.ttx"), ".ttf"
         )
         subsetpath = self.temp_path(".ttf")
-        text = tostr("A\U0001F6D2", encoding="utf-8")
+        text = tostr("A\U0001f6d2", encoding="utf-8")
 
         subset.main([fontpath, "--text=%s" % text, "--output-file=%s" % subsetpath])
         subsetfont = TTFont(subsetpath)
@@ -500,7 +500,7 @@ class SubsetTest:
             self.getpath("TestTTF-Regular_non_BMP_char.ttx"), ".ttf"
         )
         subsetpath = self.temp_path(".ttf")
-        text = tobytes("A\U0001F6D2", encoding="utf-8")
+        text = tobytes("A\U0001f6d2", encoding="utf-8")
         with tempfile.NamedTemporaryFile(delete=False) as tmp:
             tmp.write(text)
 
@@ -2137,9 +2137,12 @@ def test_preserve_name_ids_when_used_elsewhere():
     subsetter.populate(glyphs=font.getGlyphOrder())
     subsetter.subset(font)
 
+    # After obfuscation, all names should use an id >= 256, except for id 5,
+    # which is not obfuscated.
     visitor = NameRecordVisitor()
+    visitor.TABLES = ("STAT", "fvar")
     visitor.visit(font)
-    assert not visitor.seen.intersection(subset.NAME_IDS_TO_OBFUSCATE)
+    assert all(id >= 256 or id == 5 for id in visitor.seen)
 
 
 if __name__ == "__main__":
