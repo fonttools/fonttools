@@ -2,6 +2,8 @@
 #
 # Google Author(s): Behdad Esfahbod
 
+from __future__ import annotations
+
 from fontTools import config
 from fontTools.misc.roundTools import otRound
 from fontTools import ttLib
@@ -14,8 +16,9 @@ from fontTools.misc.cliTools import makeOutputFileName
 from fontTools.subset.util import _add_method, _uniq_sort
 from fontTools.subset.cff import *
 from fontTools.subset.svg import *
+from fontTools.ttLib.ttVisitor import TTVisitor
 from fontTools.varLib import varStore, multiVarStore  # For monkey-patching
-from fontTools.ttLib.tables._n_a_m_e import NameRecordVisitor
+from fontTools.ttLib.tables._n_a_m_e import NameRecordVisitor, makeName
 from fontTools.unicodedata import mirrored
 import sys
 import struct
@@ -3004,6 +3007,9 @@ def prune_pre_subset(self, font, options):
     return True
 
 
+NAME_IDS_TO_OBFUSCATE = {1, 2, 3, 4, 6, 16, 17, 18}
+
+
 @_add_method(ttLib.getTableClass("name"))
 def prune_post_subset(self, font, options):
     visitor = NameRecordVisitor()
@@ -3022,6 +3028,11 @@ def prune_post_subset(self, font, options):
         self.names = [n for n in self.names if n.langID in options.name_languages]
     if options.obfuscate_names:
         namerecs = []
+        # Preserve names to be scrambled or dropped elsewhere so that other
+        # parts of the font don't break.
+        needRemapping = visitor.seen.intersection(NAME_IDS_TO_OBFUSCATE)
+        if needRemapping:
+            remap_select_name_ids(font, needRemapping)
         for n in self.names:
             if n.nameID in [1, 4]:
                 n.string = ".\x7f".encode("utf_16_be") if n.isUnicode() else ".\x7f"
@@ -3034,6 +3045,135 @@ def prune_post_subset(self, font, options):
             namerecs.append(n)
         self.names = namerecs
     return True  # Required table
+
+
+def remap_select_name_ids(font: ttLib.TTFont, needRemapping: set[int]) -> None:
+    """Remap a set of IDs so that the originals can be safely scrambled or
+    dropped."""
+
+    name = font["name"]
+
+    # 1. Assign new IDs for names to be preserved.
+    existingIds = {record.nameID for record in name.names}
+    remapping = {}
+    nextId = name._findUnusedNameID() - 1  # Should skip gaps in name IDs.
+    for nameId in needRemapping:
+        nextId += 1  # We should have complete freedom until 32767.
+        assert nextId not in existingIds, "_findUnusedNameID did not skip gaps"
+        if nextId > 32767:
+            raise ValueError("Ran out of name IDs while trying to remap existing ones.")
+        remapping[nameId] = nextId
+
+    # 2. Copy records to use the new ID. We can't rewrite them in place, because
+    #    that could make IDs 1 to 6 "disappear" from code that follows. Some
+    #    tools that produce EOT fonts expect them to exist, even when they're
+    #    scrambled. See https://github.com/fonttools/fonttools/issues/165.
+    copiedRecords = []
+    for record in name.names:
+        if record.nameID not in needRemapping:
+            continue
+        recordCopy = makeName(
+            record.string,
+            remapping[record.nameID],
+            record.platformID,
+            record.platEncID,
+            record.langID,
+        )
+        copiedRecords.append(recordCopy)
+    name.names.extend(copiedRecords)
+
+    # 3. Run NameRecordRemappingVisitor to rewrite the corresponding IDs in
+    #    other tables.
+    visitor = NameRecordRemappingVisitor(remapping)
+    visitor.visit(font)
+
+
+class NameRecordRemappingVisitor(TTVisitor):
+    """Visitor for all places where name IDs are used, to rewrite them according
+    to a mapping.
+
+    Based on the name table's NameRecordVisitor.
+    """
+
+    # Font tables that have NameIDs we need to remap.
+    TABLES = ("GSUB", "GPOS", "fvar", "CPAL", "STAT")
+
+    def __init__(self, mapping):
+        assert (
+            self.TABLES == NameRecordVisitor.TABLES
+        ), "NameRecordVisitor and NameRecordRemappingVisitor must be kept in sync."
+        self.mapping = mapping
+
+
+@NameRecordRemappingVisitor.register_attrs(
+    (
+        (otTables.FeatureParamsSize, ("SubfamilyNameID",)),
+        (otTables.FeatureParamsStylisticSet, ("UINameID",)),
+        (otTables.STAT, ("ElidedFallbackNameID",)),
+        (otTables.AxisRecord, ("AxisNameID",)),
+        (otTables.AxisValue, ("ValueNameID",)),
+        (otTables.FeatureName, ("FeatureNameID",)),
+        (otTables.Setting, ("SettingNameID",)),
+    )
+)
+def visit(visitor, obj, attr, value):
+    setattr(obj, attr, visitor.mapping.get(value, value))
+
+
+@NameRecordRemappingVisitor.register(otTables.FeatureParamsCharacterVariants)
+def visit(visitor, obj):
+    for attr in ("FeatUILabelNameID", "FeatUITooltipTextNameID", "SampleTextNameID"):
+        value = getattr(obj, attr)
+        setattr(obj, attr, visitor.mapping.get(value, value))
+
+    # See explanation of these fields on
+    # https://learn.microsoft.com/en-us/typography/opentype/spec/features_ae#tag-cv01--cv99.
+    name_range = range(
+        obj.FirstParamUILabelNameID,
+        obj.FirstParamUILabelNameID + obj.NumNamedParameters,
+    )
+    if any(value in visitor.mapping for value in name_range):
+        raise Exception(
+            "Remapping of character variant name sequences is not currently supported. You may want to use name IDs >= 256 for them."
+        )
+
+
+@NameRecordRemappingVisitor.register(ttLib.getTableClass("fvar"))
+def visit(visitor, obj):
+    for inst in obj.instances:
+        if inst.postscriptNameID != 0xFFFF:
+            value = inst.postscriptNameID
+            inst.postscriptNameID = visitor.mapping.get(value, value)
+        value = inst.subfamilyNameID
+        inst.subfamilyNameID = visitor.mapping.get(value, value)
+
+    for axis in obj.axes:
+        value = axis.axisNameID
+        axis.axisNameID = visitor.mapping.get(value, value)
+
+
+@NameRecordRemappingVisitor.register(ttLib.getTableClass("CPAL"))
+def visit(visitor, obj):
+    if obj.version == 1:
+        obj.paletteLabels = [
+            visitor.mapping.get(value, value) for value in obj.paletteLabels
+        ]
+        obj.paletteEntryLabels = [
+            visitor.mapping.get(value, value) for value in obj.paletteEntryLabels
+        ]
+
+
+@NameRecordRemappingVisitor.register(ttLib.TTFont)
+def visit(visitor, font, *args, **kwargs):
+    if hasattr(visitor, "font"):
+        return False
+
+    visitor.font = font
+    for tag in visitor.TABLES:
+        if tag in font:
+            visitor.visit(font[tag], *args, **kwargs)
+    del visitor.font
+    return False
 
 
 @_add_method(ttLib.getTableClass("head"))

@@ -1,4 +1,5 @@
 import io
+from fontTools.ttLib.tables._n_a_m_e import NameRecordVisitor
 import fontTools.ttLib.tables.otBase
 from fontTools.misc.testTools import getXML, stripVariableItemsFromTTX
 from fontTools.misc.textTools import tobytes, tostr
@@ -2120,6 +2121,25 @@ def test_cvXX_feature_params_nameIDs_are_retained():
     # used by the FeatureParamsCharacterVariants
     nameIDs = {n.nameID for n in font["name"].names}
     assert nameIDs == keepNameIDs
+
+
+def test_preserve_name_ids_when_used_elsewhere():
+    font = TTFont()
+    ttx = pathlib.Path(__file__).parent / "data" / "PreserveSillyNamesTest.ttx"
+    font.importXML(ttx)
+
+    visitor = NameRecordVisitor()
+    visitor.visit(font)
+    assert visitor.seen.intersection(subset.NAME_IDS_TO_OBFUSCATE)
+
+    options = subset.Options(obfuscate_names=True)
+    subsetter = subset.Subsetter(options)
+    subsetter.populate(glyphs=font.getGlyphOrder())
+    subsetter.subset(font)
+
+    visitor = NameRecordVisitor()
+    visitor.visit(font)
+    assert not visitor.seen.intersection(subset.NAME_IDS_TO_OBFUSCATE)
 
 
 if __name__ == "__main__":
