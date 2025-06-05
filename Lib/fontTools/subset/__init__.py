@@ -473,7 +473,7 @@ timer = Timer(logger=logging.getLogger("fontTools.subset.timer"))
 
 
 def _dict_subset(d, glyphs):
-    return {g: d[g] for g in glyphs}
+    return {g: d[g] for g in glyphs if g in d}
 
 
 def _list_subset(l, indices):
