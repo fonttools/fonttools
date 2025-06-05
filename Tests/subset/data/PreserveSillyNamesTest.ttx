@@ -550,9 +550,4 @@
     </NamedInstance>
   </fvar>
 
-  <gvar>
-    <version value="1"/>
-    <reserved value="0"/>
-  </gvar>
-
 </ttFont>
