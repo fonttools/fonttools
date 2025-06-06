@@ -1,3 +1,6 @@
+4.58.2 (released 2025-06-06)
+----------------------------
+
 - [ttLib.reorderGlyphs] Handle CFF2 when reordering glyphs (#3852)
 - [subset] Copy name IDs in use before scrapping or scrambling them for webfonts (#3853)
 
