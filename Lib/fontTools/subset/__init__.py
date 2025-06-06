@@ -3031,7 +3031,7 @@ def prune_post_subset(self, font, options):
         # parts of the font don't break.
         needRemapping = visitor.seen.intersection(NAME_IDS_TO_OBFUSCATE)
         if needRemapping:
-            remap_select_name_ids(font, needRemapping)
+            _remap_select_name_ids(font, needRemapping)
         for n in self.names:
             if n.nameID in [1, 4]:
                 n.string = ".\x7f".encode("utf_16_be") if n.isUnicode() else ".\x7f"
@@ -3046,11 +3046,17 @@ def prune_post_subset(self, font, options):
     return True  # Required table
 
 
-def remap_select_name_ids(font: ttLib.TTFont, needRemapping: set[int]) -> None:
+def _remap_select_name_ids(font: ttLib.TTFont, needRemapping: set[int]) -> None:
     """Remap a set of IDs so that the originals can be safely scrambled or
-    dropped."""
+    dropped.
 
-    if "fvar" not in font:
+    For each name record whose name id is in the `needRemapping` set, make a copy
+    and allocate a new unused name id in the font-specific range (> 255).
+
+    Finally update references to these in the `fvar` and `STAT` tables.
+    """
+
+    if "fvar" not in font and "STAT" not in font:
         return
 
     name = font["name"]
@@ -3087,14 +3093,15 @@ def remap_select_name_ids(font: ttLib.TTFont, needRemapping: set[int]) -> None:
     # 3. Rewrite the corresponding IDs in other tables. For now, care only about
     #    STAT and fvar. If more tables need to be changed, consider adapting
     #    NameRecordVisitor to rewrite IDs wherever it finds them.
-    fvar = font["fvar"]
-    for axis in fvar.axes:
-        axis.axisNameID = remapping.get(axis.axisNameID, axis.axisNameID)
-    for instance in fvar.instances:
-        nameID = instance.subfamilyNameID
-        instance.subfamilyNameID = remapping.get(nameID, nameID)
-        nameID = instance.postscriptNameID
-        instance.postscriptNameID = remapping.get(nameID, nameID)
+    fvar = font.get("fvar")
+    if fvar is not None:
+        for axis in fvar.axes:
+            axis.axisNameID = remapping.get(axis.axisNameID, axis.axisNameID)
+        for instance in fvar.instances:
+            nameID = instance.subfamilyNameID
+            instance.subfamilyNameID = remapping.get(nameID, nameID)
+            nameID = instance.postscriptNameID
+            instance.postscriptNameID = remapping.get(nameID, nameID)
 
     stat = font.get("STAT")
     if stat is None:
