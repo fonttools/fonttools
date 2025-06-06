@@ -3108,10 +3108,12 @@ def _remap_select_name_ids(font: ttLib.TTFont, needRemapping: set[int]) -> None:
         return
     elidedNameID = stat.table.ElidedFallbackNameID
     stat.table.ElidedFallbackNameID = remapping.get(elidedNameID, elidedNameID)
-    for axis in stat.table.DesignAxisRecord.Axis:
-        axis.AxisNameID = remapping.get(axis.AxisNameID, axis.AxisNameID)
-    for value in stat.table.AxisValueArray.AxisValue:
-        value.ValueNameID = remapping.get(value.ValueNameID, value.ValueNameID)
+    if stat.table.DesignAxisRecord:
+        for axis in stat.table.DesignAxisRecord.Axis:
+            axis.AxisNameID = remapping.get(axis.AxisNameID, axis.AxisNameID)
+    if stat.table.AxisValueArray:
+        for value in stat.table.AxisValueArray.AxisValue:
+            value.ValueNameID = remapping.get(value.ValueNameID, value.ValueNameID)
 
 
 @_add_method(ttLib.getTableClass("head"))
