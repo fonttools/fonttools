@@ -438,7 +438,6 @@ class AxisLimits(_BaseAxisLimits):
         normalizedLimits = {}
 
         for axis_tag, triple in axes.items():
-
             if self[axis_tag] is None:  # Drop
                 normalizedLimits[axis_tag] = (0, 0, 0)
                 continue
@@ -1461,7 +1460,22 @@ def instantiateAvar(varfont, axisLimits, normalizedLimits):
     assert version == 2
     fvarAxes = varfont["fvar"].axes
     varStore = getattr(avar.table, "VarStore", None)
+
     if varStore is not None:
+        # Compute scalar for each region, based on the new axis limits
+        regionList = varStore.VarRegionList.Region
+        scalars = []
+        for region in regionList:
+            regionAxes = region.get_support(fvarAxes)
+            scalar = 1.0
+            for axisTag, axis in regionAxes.items():
+                if axis[1] == 0:
+                    continue
+                if axisTag in axisLimits:
+                    axisRange = axisLimits[axisTag]
+                    scalar *= (axisRange.maximum - axisRange.minimum) / 2.0
+            scalars.append(scalar)
+
         varIdxMap = getattr(avar.table, "VarIdxMap", None)
         varStoreBuilder = OnlineVarStoreBuilder([axis.axisTag for axis in fvarAxes])
         newVarIdxMapping = []
@@ -1474,12 +1488,15 @@ def instantiateAvar(varfont, axisLimits, normalizedLimits):
             if varIdx != varStore.NO_VARIATION_INDEX:
                 VarData = varStore.VarData[varIdx >> 16]
                 supports = [
-                    varStore.VarRegionList.Region[regionIndex].get_support(fvarAxes)
+                    regionList[regionIndex].get_support(fvarAxes)
                     for regionIndex in VarData.VarRegionIndex
                 ]
                 varStoreBuilder.setSupports(supports)
                 row = VarData.Item[varIdx & 0xFFFF]
-                # XXX Manipulate row
+                row = [
+                    delta / scalars[idx]
+                    for delta, idx in zip(row, VarData.VarRegionIndex)
+                ]
                 varIdx = varStoreBuilder.storeDeltas(row)
 
             newVarIdxMapping.append(varIdx)
