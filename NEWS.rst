@@ -1,3 +1,5 @@
+- [feaLib] Fixed iterable check for Python 3.13.4 and newer (#3854, #3855).
+
 4.58.2 (released 2025-06-06)
 ----------------------------
 
