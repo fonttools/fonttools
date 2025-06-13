@@ -1206,10 +1206,10 @@ class Builder(object):
 
     def set_lookup_flag(self, location, value, markAttach, markFilter):
         value = value & 0xFF
-        if markAttach:
+        if markAttach is not None:
             markAttachClass = self.getMarkAttachClass_(location, markAttach)
             value = value | (markAttachClass << 8)
-        if markFilter:
+        if markFilter is not None:
             markFilterSet = self.getMarkFilterSet_(location, markFilter)
             value = value | 0x10
             self.lookupflag_markFilterSet_ = markFilterSet
