@@ -95,6 +95,7 @@ class BuilderTest(unittest.TestCase):
         class_pair_pos_duplicates
         useExtension
         bug3846_1 bug3846_2
+        empty_filter_sets_and_mark_classes
     """.split()
 
     VARFONT_AXES = [
