@@ -1,3 +1,6 @@
+4.58.4 (released 2025-06-13)
+----------------------------
+
 - [feaLib] Allow for empty MarkFilter & MarkAttach sets (#3856).
 
 4.58.3 (released 2025-06-13)
