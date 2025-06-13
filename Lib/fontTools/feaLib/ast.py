@@ -719,7 +719,7 @@ class ChainContextPosStatement(Statement):
         for i, lookup in enumerate(lookups):
             if lookup:
                 try:
-                    (_ for _ in lookup)
+                    iter(lookup)
                 except TypeError:
                     self.lookups[i] = [lookup]
 
@@ -777,7 +777,7 @@ class ChainContextSubstStatement(Statement):
         for i, lookup in enumerate(lookups):
             if lookup:
                 try:
-                    (_ for _ in lookup)
+                    iter(lookup)
                 except TypeError:
                     self.lookups[i] = [lookup]
 
