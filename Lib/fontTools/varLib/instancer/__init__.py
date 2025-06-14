@@ -124,6 +124,7 @@ from fontTools.varLib import builder
 from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib.merger import MutatorMerger
 from fontTools.varLib.instancer import names
+from fontTools.varLib.varStore import OnlineVarStoreBuilder
 from .featureVars import instantiateFeatureVariations
 from fontTools.misc.cliTools import makeOutputFileName
 from fontTools.varLib.instancer import solver
@@ -359,6 +360,9 @@ class _BaseAxisLimits(Mapping[str, AxisTriple]):
     def __getitem__(self, key: str) -> AxisTriple:
         return self._data[key]
 
+    def __setitem__(self, key, value):
+        self._data[key] = value
+
     def __iter__(self) -> Iterable[str]:
         return iter(self._data)
 
@@ -431,20 +435,11 @@ class AxisLimits(_BaseAxisLimits):
             if a.axisTag in self
         }
 
-        avarSegments = {}
-        if usingAvar and "avar" in varfont:
-            avarSegments = varfont["avar"].segments
-
         normalizedLimits = {}
 
         for axis_tag, triple in axes.items():
-            distanceNegative = triple[1] - triple[0]
-            distancePositive = triple[2] - triple[1]
-
-            if self[axis_tag] is None:
-                normalizedLimits[axis_tag] = NormalizedAxisTripleAndDistances(
-                    0, 0, 0, distanceNegative, distancePositive
-                )
+            if self[axis_tag] is None:  # Drop
+                normalizedLimits[axis_tag] = (0, 0, 0)
                 continue
 
             minV, defaultV, maxV = self[axis_tag]
@@ -452,12 +447,33 @@ class AxisLimits(_BaseAxisLimits):
             if defaultV is None:
                 defaultV = triple[1]
 
-            avarMapping = avarSegments.get(axis_tag, None)
-            normalizedLimits[axis_tag] = NormalizedAxisTripleAndDistances(
-                *(normalize(v, triple, avarMapping) for v in (minV, defaultV, maxV)),
-                distanceNegative,
-                distancePositive,
+            normalizedLimits[axis_tag] = tuple(
+                normalize(v, triple) for v in (minV, defaultV, maxV)
             )
+
+        fvarAxes = fvar.getAxes()
+        for tag, triple in normalizedLimits.items():
+            minV, defaultV, maxV = fvarAxes[tag]
+            if defaultV is None:
+                defaultV = triple[1]
+            distanceNegative = defaultV - minV
+            distancePositive = maxV - defaultV
+
+            if triple is None:  # Drop
+                normalizedLimits[tag] = NormalizedAxisTripleAndDistances(
+                    0, 0, 0, distanceNegative, distancePositive
+                )
+                continue
+
+            normalizedLimits[tag] = NormalizedAxisTripleAndDistances(
+                *triple, distanceNegative, distancePositive
+            )
+
+        normalizedLimits = NormalizedAxisLimits(normalizedLimits)
+
+        if usingAvar and "avar" in varfont:
+            avar = varfont["avar"]
+            normalizedLimits = avar.renormalizeAxisLimits(normalizedLimits, varfont)
 
         return NormalizedAxisLimits(normalizedLimits)
 
@@ -1369,12 +1385,10 @@ def _isValidAvarSegmentMap(axisTag, segmentMap):
     return True
 
 
-def instantiateAvar(varfont, axisLimits):
+def instantiateAvar(varfont, axisLimits, normalizedLimits):
     # 'axisLimits' dict must contain user-space (non-normalized) coordinates.
 
     avar = varfont["avar"]
-    if getattr(avar, "majorVersion", 1) >= 2 and avar.table.VarStore:
-        raise NotImplementedError("avar table with VarStore is not supported")
 
     segments = avar.segments
 
@@ -1438,6 +1452,64 @@ def instantiateAvar(varfont, axisLimits):
         else:
             newSegments[axisTag] = mapping
     avar.segments = newSegments
+
+    version = getattr(avar, "majorVersion", 1)
+    if version == 1:
+        return
+
+    assert version == 2
+    fvarAxes = varfont["fvar"].axes
+    varStore = getattr(avar.table, "VarStore", None)
+
+    if varStore is not None:
+        # Compute scalar for each region, based on the new axis limits
+        regionList = varStore.VarRegionList.Region
+        scalars = []
+        for region in regionList:
+            regionAxes = region.get_support(fvarAxes)
+            scalar = 1.0
+            for axisTag, axis in regionAxes.items():
+                if axis[1] == 0:
+                    continue
+                if axisTag in axisLimits:
+                    axisRange = axisLimits[axisTag]
+                    scalar *= (axisRange.maximum - axisRange.minimum) / 2.0
+            scalars.append(scalar)
+
+        varIdxMap = getattr(avar.table, "VarIdxMap", None)
+        varStoreBuilder = OnlineVarStoreBuilder([axis.axisTag for axis in fvarAxes])
+        newVarIdxMapping = []
+        for i in range(len(fvarAxes)):
+            if i in pinnedAxes:
+                continue
+            varIdx = i
+            if varIdxMap:
+                varIdx = varIdxMap[varIdx]
+            if varIdx != varStore.NO_VARIATION_INDEX:
+                VarData = varStore.VarData[varIdx >> 16]
+                supports = [
+                    regionList[regionIndex].get_support(fvarAxes)
+                    for regionIndex in VarData.VarRegionIndex
+                ]
+                varStoreBuilder.setSupports(supports)
+                row = VarData.Item[varIdx & 0xFFFF]
+                row = [
+                    delta / scalars[idx]
+                    for delta, idx in zip(row, VarData.VarRegionIndex)
+                ]
+                varIdx = varStoreBuilder.storeDeltas(row)
+
+            newVarIdxMapping.append(varIdx)
+
+        varStore = avar.table.VarStore = varStoreBuilder.finish()
+        if varIdxMap is not None:
+            varIdxMap.mapping = newVarIdxMapping
+
+        # TODO: Optimize VarStore
+
+        defaultDeltas = instantiateItemVariationStore(
+            varStore, fvarAxes, normalizedLimits
+        )
 
 
 def isInstanceWithinAxisRanges(location, axisRanges):
@@ -1561,7 +1633,7 @@ def setMacOverlapFlags(glyfTable):
             glyph.flags[0] |= flagOverlapSimple
 
 
-def normalize(value, triple, avarMapping):
+def normalize(value, triple, avarMapping=None):
     value = normalizeValue(value, triple)
     if avarMapping:
         value = piecewiseLinearMap(value, avarMapping)
@@ -1679,7 +1751,7 @@ def instantiateVariableFont(
     instantiateFeatureVariations(varfont, normalizedLimits)
 
     if "avar" in varfont:
-        instantiateAvar(varfont, axisLimits)
+        instantiateAvar(varfont, axisLimits, normalizedLimits)
 
     with names.pruningUnusedNames(varfont):
         if "STAT" in varfont:
