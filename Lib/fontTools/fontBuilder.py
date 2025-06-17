@@ -522,7 +522,7 @@ class FontBuilder(object):
 
         assert not self.isTTF
         self.font.sfntVersion = "OTTO"
-        fontSet = CFFFontSet()
+        fontSet: CFFFontSet = CFFFontSet()
         fontSet.major = 1
         fontSet.minor = 0
         fontSet.otFont = self.font
