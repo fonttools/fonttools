@@ -1,9 +1,11 @@
 from fontTools.misc.testTools import parseXML
 from fontTools.misc.timeTools import timestampSinceEpoch
-from fontTools.ttLib import TTFont, TTLibError, newTable
+from fontTools.ttLib import TTFont, TTLibError
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
-from fontTools.ttLib.tables._g_l_y_f import Glyph
+from fontTools.fontBuilder import FontBuilder
 from fontTools.ttLib.tables._n_a_m_e import table__n_a_m_e
+from fontTools.ttLib.tables._g_l_y_f import Glyph
+
 from fontTools import ttx
 
 import base64
@@ -73,84 +75,39 @@ class TTXTest(unittest.TestCase):
     # -----
 
     def test_saveXML_escapes_control_characters(self):
-        # create font
-        font = TTFont()
+        # Set up a font with one glyph and a name record containing a control char
+        fb = FontBuilder(unitsPerEm=1000, isTTF=True)
+        fb.setupGlyphOrder([".notdef"])
+        fb.setupCharacterMap({})
+        fb.setupGlyf({".notdef": Glyph()})
+        fb.setupHorizontalMetrics({".notdef": (600, 0)})
+        fb.setupHorizontalHeader(ascent=800, descent=-200)
+        fb.setupOS2()
+        fb.setupPost()
 
-        font.setGlyphOrder([".notdef"])
-        font["head"] = newTable("head")
-        font["head"].tableVersion = 1.0
-        font["head"].fontRevision = 1.0
-        font["head"].checkSumAdjustment = 0
-        font["head"].magicNumber = 0x5F0F3CF5
-        font["head"].flags = 0
-        font["head"].unitsPerEm = 1000
-        font["head"].created = 0
-        font["head"].modified = 0
-        font["head"].xMin = 0
-        font["head"].yMin = 0
-        font["head"].xMax = 0
-        font["head"].yMax = 0
-        font["head"].macStyle = 0
-        font["head"].lowestRecPPEM = 8
-        font["head"].fontDirectionHint = 2
-        font["head"].indexToLocFormat = 0
-        font["head"].glyphDataFormat = 0
-
-        font["hhea"] = newTable("hhea")
-        font["hhea"].tableVersion = 0x00010000
-        font["hhea"].ascent = 800
-        font["hhea"].descent = -200
-        font["hhea"].lineGap = 200
-        font["hhea"].advanceWidthMax = 600
-        font["hhea"].minLeftSideBearing = 0
-        font["hhea"].minRightSideBearing = 0
-        font["hhea"].xMaxExtent = 600
-        font["hhea"].caretSlopeRise = 1
-        font["hhea"].caretSlopeRun = 0
-        font["hhea"].caretOffset = 0
-        font["hhea"].reserved0 = 0
-        font["hhea"].reserved1 = 0
-        font["hhea"].reserved2 = 0
-        font["hhea"].reserved3 = 0
-        font["hhea"].metricDataFormat = 0
-        font["hhea"].numberOfHMetrics = 1
-
-        font["maxp"] = newTable("maxp")
-        font["maxp"].numGlyphs = 1
-        font["maxp"].tableVersion = 0x00010000
-        font["maxp"].maxPoints = 0
-        font["maxp"].maxContours = 0
-        font["maxp"].maxCompositePoints = 0
-        font["maxp"].maxCompositeContours = 0
-        font["maxp"].maxZones = 1
-        font["maxp"].maxTwilightPoints = 0
-        font["maxp"].maxStorage = 0
-        font["maxp"].maxFunctionDefs = 0
-        font["maxp"].maxInstructionDefs = 0
-        font["maxp"].maxStackElements = 0
-        font["maxp"].maxSizeOfInstructions = 0
-        font["maxp"].maxComponentElements = 0
-        font["maxp"].maxComponentDepth = 0
-
-        font["glyf"] = newTable("glyf")
-        font["glyf"].glyphs = {".notdef": Glyph()}
-        font["glyf"].glyphOrder = [".notdef"]
-
-        font["hmtx"] = newTable("hmtx")
-        font["hmtx"].metrics = {".notdef": (600, 0)}
-
-        # Inject control character into name table
+        control_string = "Control\x01Char"
         name_table = table__n_a_m_e()
-        name_table.setName("Control\x01Char", 1, 3, 1, 0x409)
-        font["name"] = name_table
+        name_table.setName(control_string, 1, 3, 1, 0x409)
+        fb.font["name"] = name_table
 
-        # Save to XML
         self.temp_dir()
         ttx_path = Path(self.tempdir) / "test.ttx"
-        font.saveXML(str(ttx_path))
 
+        # Write to TTX
+        fb.font.saveXML(str(ttx_path))
+
+        # Ensure XML has the character escaped
         xml_content = ttx_path.read_text(encoding="utf-8")
         assert "&#x01;" in xml_content
+
+        # # Read back in from TTX
+        # font2 = TTFont()
+        # font2.importXML(str(ttx_path))
+
+        # # Check the name table round-tripped correctly
+        # recovered = font2["name"].getName(1, 3, 1, 0x409)
+        # assert recovered is not None
+        # assert recovered.toUnicode() == control_string
 
     def test_parseOptions_no_args(self):
         with self.assertRaises(getopt.GetoptError) as cm:
