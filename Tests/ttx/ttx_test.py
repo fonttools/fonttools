@@ -85,10 +85,7 @@ class TTXTest(unittest.TestCase):
         fb.setupOS2()
         fb.setupPost()
 
-        control_string = "Control\x01Char"
-        name_table = table__n_a_m_e()
-        name_table.setName(control_string, 1, 3, 1, 0x409)
-        fb.font["name"] = name_table
+        fb.setupNameTable({"familyName": "Control\x01Char"})
 
         self.temp_dir()
         ttx_path = Path(self.tempdir) / "test.ttx"
