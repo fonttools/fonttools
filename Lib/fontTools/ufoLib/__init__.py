@@ -870,10 +870,8 @@ class UFOReader(_UFOBaseIO):
         return data
 
     def close(self):
-        # FIXME: Filesystems don't need to be closed, only files from within?
-        pass
-        # if self._shouldClose:
-        #     del self.fs
+        if self._shouldClose and hasattr(self.fs, "close"):
+            self.fs.close()  # type: ignore
 
     def __enter__(self):
         return self
