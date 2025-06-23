@@ -35,6 +35,7 @@ Value conversion functions are available for converting
 import os
 from copy import deepcopy
 from os import fsdecode
+from datetime import datetime
 import logging
 from typing import cast
 import zipfile
@@ -115,6 +116,8 @@ class UFOFileStructure(enum.Enum):
 
 
 class _UFOBaseIO:
+    fs: DirFileSystem
+
     def getFileModificationTime(self, path):
         """
         Returns the modification time for the file at the given path, as a
@@ -123,11 +126,13 @@ class _UFOBaseIO:
         Returns None if the file does not exist.
         """
         try:
-            dt = self.fs.getinfo(fsdecode(path), namespaces=["details"]).modified
-        except (fs.errors.MissingInfoNamespace, fs.errors.ResourceNotFound):
+            dt = self.fs.info(fsdecode(path))
+            if date_time := dt["date_time"]:
+                return datetime(*date_time).timestamp()
+            else:
+                return dt["mtime"]
+        except ValueError:
             return None
-        else:
-            return dt.timestamp()
 
     def _getPlist(self, fileName, default=None):
         """
@@ -388,8 +393,8 @@ class UFOReader(_UFOBaseIO):
         Returns None if the file does not exist.
         """
         try:
-            return self.fs.readbytes(fsdecode(path))
-        except fs.errors.ResourceNotFound:
+            return self.fs.read_bytes(fsdecode(path))
+        except (OSError, ValueError):
             return None
 
     def getReadFileForPath(self, path, encoding=None):
@@ -865,8 +870,10 @@ class UFOReader(_UFOBaseIO):
         return data
 
     def close(self):
-        if self._shouldClose:
-            self.fs.close()
+        # FIXME: Filesystems don't need to be closed, only files from within?
+        pass
+        # if self._shouldClose:
+        #     del self.fs
 
     def __enter__(self):
         return self
