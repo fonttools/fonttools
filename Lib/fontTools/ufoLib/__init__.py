@@ -961,20 +961,15 @@ class UFOWriter(UFOReader):
                     )
             if structure is UFOFileStructure.ZIP:
                 if havePreviousFile:
-                    # we can't write a zip in-place, so we have to copy its
-                    # contents to a temporary location and work from there, then
-                    # upon closing UFOWriter we create the final zip file
-                    parentFS = fs.tempfs.TempFS()
-                    with fs.zipfs.ZipFS(path, encoding="utf-8") as origFS:
-                        fs.copy.copy_fs(origFS, parentFS)
+                    parentFS = fsspec.filesystem("zip", fo=path, mode="w")
                     # if output path is an existing zip, we require that it contains
                     # one, and only one, root directory (with arbitrary name), in turn
                     # containing all the existing UFO contents
                     rootDirs = [
-                        p.name
-                        for p in parentFS.scandir("/")
+                        p["name"]
+                        for p in parentFS.ls("/", detail=True)
                         # exclude macOS metadata contained in zip file
-                        if p.is_dir and p.name != "__MACOSX"
+                        if p["type"] == "directory" and p["name"] != "__MACOSX"
                     ]
                     if len(rootDirs) != 1:
                         raise UFOLibError(
@@ -984,16 +979,15 @@ class UFOWriter(UFOReader):
                     else:
                         # 'ClosingSubFS' ensures that the parent filesystem is closed
                         # when its root subdirectory is closed
-                        self.fs = parentFS.opendir(
-                            rootDirs[0], factory=fs.subfs.ClosingSubFS
-                        )
+                        rootDir = rootDirs[0]
+                        self.fs = fsspec.filesystem("dir", path=rootDir, fs=parentFS)
                 else:
                     # if the output zip file didn't exist, we create the root folder;
                     # we name it the same as input 'path', but with '.ufo' extension
                     rootDir = os.path.splitext(os.path.basename(path))[0] + ".ufo"
-                    parentFS = fs.zipfs.ZipFS(path, write=True, encoding="utf-8")
+                    parentFS: ZipFileSystem = fsspec.filesystem("zip", fo=path, mode="w")
                     parentFS.makedir(rootDir)
-                    self.fs = parentFS.opendir(rootDir, factory=fs.subfs.ClosingSubFS)
+                    self.fs = fsspec.filesystem("dir", path=rootDir, fs=parentFS)
             else:
                 self.fs = fs.osfs.OSFS(path, create=True)
             self._fileStructure = structure
