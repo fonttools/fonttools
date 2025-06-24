@@ -1,10 +1,18 @@
 """Generic visitor pattern implementation for Python objects."""
 
 import enum
+import weakref
 
 
 class Visitor(object):
     defaultStop = False
+
+    _visitors = {
+        # By default we skip visiting weak references to avoid recursion
+        # issues. Users can override this by registering a visit
+        # function for weakref.ProxyType.
+        weakref.ProxyType: {None: lambda self, obj, *args, **kwargs: False}
+    }
 
     @classmethod
     def _register(celf, clazzes_attrs):
