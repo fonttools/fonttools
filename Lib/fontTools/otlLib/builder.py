@@ -1376,6 +1376,30 @@ class AnySubstBuilder(LookupBuilder):
     def _add_to_ligature_subst(self, builder, key, value):
         builder.ligatures[key] = value[0]
 
+    def can_add_mapping(self, mapping) -> bool:
+        if mapping is None:
+            return True
+        # we can't combine ligature & multisub rules; it is uncommon that
+        # these are in the same set of rules, but it happens.
+        is_multi = any(len(v) > 1 for v in mapping.values())
+        is_liga = any(len(k) > 1 for k in mapping.keys())
+
+        has_existing_multi = False
+        has_existing_liga = False
+
+        for k, v in self.mapping.items():
+            if k[0] == self.SUBTABLE_BREAK_:
+                continue
+            if len(k) > 1:
+                has_existing_liga = True
+            if len(v) > 1:
+                has_existing_multi = True
+
+        can_reuse = not (
+            (has_existing_multi and is_liga) or (has_existing_liga and is_multi)
+        )
+        return can_reuse
+
     def promote_lookup_type(self, is_named_lookup):
         # https://github.com/fonttools/fonttools/issues/612
         # A multiple substitution may have a single destination, in which case
