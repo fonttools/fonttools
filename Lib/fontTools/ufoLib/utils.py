@@ -6,7 +6,8 @@ the module.
 """
 
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeVar, cast
+from collections.abc import Callable
 import warnings
 import functools
 
@@ -15,10 +16,11 @@ if TYPE_CHECKING:
     from fontTools.ufoLib import UFOFormatVersion
 
 
+F = TypeVar("F", bound=Callable[..., object])
 numberTypes = (int, float)
 
 
-def deprecated(msg=""):
+def deprecated(msg: str = "") -> Callable[[F], F]:
     """Decorator factory to mark functions as deprecated with given message.
 
     >>> @deprecated("Enough!")
@@ -31,7 +33,7 @@ def deprecated(msg=""):
     True
     """
 
-    def deprecated_decorator(func):
+    def deprecated_decorator(func: F) -> F:
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             warnings.warn(
@@ -41,7 +43,7 @@ def deprecated(msg=""):
             )
             return func(*args, **kwargs)
 
-        return wrapper
+        return cast(F, wrapper)
 
     return deprecated_decorator
 
