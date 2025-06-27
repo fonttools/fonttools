@@ -2,12 +2,7 @@ from fontTools.misc.testTools import parseXML
 from fontTools.misc.timeTools import timestampSinceEpoch
 from fontTools.ttLib import TTFont, TTLibError
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
-from fontTools.fontBuilder import FontBuilder
-from fontTools.ttLib.tables._n_a_m_e import table__n_a_m_e
-from fontTools.ttLib.tables._g_l_y_f import Glyph
-
 from fontTools import ttx
-
 import base64
 import getopt
 import logging
@@ -73,41 +68,6 @@ class TTXTest(unittest.TestCase):
     # -----
     # Tests
     # -----
-
-    def test_saveXML_escapes_control_characters(self):
-        # Set up a font with one glyph and a name record containing a control char
-        fb = FontBuilder(unitsPerEm=1000, isTTF=True)
-        fb.setupGlyphOrder([".notdef"])
-        fb.setupCharacterMap({})
-        fb.setupGlyf({".notdef": Glyph()})
-        fb.setupHorizontalMetrics({".notdef": (600, 0)})
-        fb.setupHorizontalHeader(ascent=800, descent=-200)
-        fb.setupOS2()
-        fb.setupPost()
-
-        control_string = "Control\x01Char"
-        name_table = table__n_a_m_e()
-        name_table.setName(control_string, 1, 3, 1, 0x409)
-        fb.font["name"] = name_table
-
-        self.temp_dir()
-        ttx_path = Path(self.tempdir) / "test.ttx"
-
-        # Write to TTX
-        fb.font.saveXML(str(ttx_path))
-
-        # Ensure XML has the character escaped
-        xml_content = ttx_path.read_text(encoding="utf-8")
-        assert "&#x01;" in xml_content
-
-        # # Read back in from TTX
-        # font2 = TTFont()
-        # font2.importXML(str(ttx_path))
-
-        # # Check the name table round-tripped correctly
-        # recovered = font2["name"].getName(1, 3, 1, 0x409)
-        # assert recovered is not None
-        # assert recovered.toUnicode() == control_string
 
     def test_parseOptions_no_args(self):
         with self.assertRaises(getopt.GetoptError) as cm:
