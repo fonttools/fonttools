@@ -5,8 +5,14 @@ define the :py:obj:`.deprecated` decorator that is used elsewhere in
 the module.
 """
 
+from __future__ import annotations
+from typing import TYPE_CHECKING
 import warnings
 import functools
+
+if TYPE_CHECKING:
+    from fontTools.annotations import UFOFormatVersionInput
+    from fontTools.ufoLib import UFOFormatVersion
 
 
 numberTypes = (int, float)
@@ -38,6 +44,19 @@ def deprecated(msg=""):
         return wrapper
 
     return deprecated_decorator
+
+
+def normalizeUFOFormatVersion(value: UFOFormatVersionInput) -> UFOFormatVersion:
+    # Needed for type safety of UFOFormatVersion input
+    if value is None:
+        return UFOFormatVersion.default()
+    if isinstance(value, UFOFormatVersion):
+        return value
+    if isinstance(value, int):
+        return UFOFormatVersion((value, 0))
+    if isinstance(value, tuple) and len(value) == 2:
+        return UFOFormatVersion(value)
+    raise ValueError(f"Unsupported UFO format: {value!r}")
 
 
 # To be mixed with enum.Enum in UFOFormatVersion and GLIFFormatVersion
