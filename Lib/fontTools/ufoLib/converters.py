@@ -1,3 +1,11 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING, Dict, List, Set, Tuple, Mapping, Optional, Any
+
+from fontTools.annotations import KerningNested
+
+if TYPE_CHECKING:
+    from fontTools.ufoLib.glifLib import GlyphSet
+
 """
 Functions for converting UFO1 or UFO2 files into UFO3 format.
 
@@ -9,7 +17,15 @@ or UFO2, and _to_ UFO3.
 # adapted from the UFO spec
 
 
-def convertUFO1OrUFO2KerningToUFO3Kerning(kerning, groups, glyphSet=()):
+def convertUFO1OrUFO2KerningToUFO3Kerning(
+    kerning: KerningNested,
+    groups: Dict[str, List[str]],
+    glyphSet: Optional[GlyphSet] = None,
+) -> Tuple[
+    KerningNested,
+    Dict[str, List[str]],
+    Dict[str, Dict[str, str]],
+]:
     """Convert kerning data in UFO1 or UFO2 syntax into UFO3 syntax.
 
     Args:
@@ -32,15 +48,15 @@ def convertUFO1OrUFO2KerningToUFO3Kerning(kerning, groups, glyphSet=()):
     firstReferencedGroups, secondReferencedGroups = findKnownKerningGroups(groups)
     # Make lists of groups referenced in kerning pairs.
     for first, seconds in list(kerning.items()):
-        if first in groups and first not in glyphSet:
+        if glyphSet and first in groups and first not in glyphSet:
             if not first.startswith("public.kern1."):
                 firstReferencedGroups.add(first)
         for second in list(seconds.keys()):
-            if second in groups and second not in glyphSet:
+            if glyphSet and second in groups and second not in glyphSet:
                 if not second.startswith("public.kern2."):
                     secondReferencedGroups.add(second)
     # Create new names for these groups.
-    firstRenamedGroups = {}
+    firstRenamedGroups: Dict[str, str] = {}
     for first in firstReferencedGroups:
         # Make a list of existing group names.
         existingGroupNames = list(groups.keys()) + list(firstRenamedGroups.keys())
@@ -52,7 +68,7 @@ def convertUFO1OrUFO2KerningToUFO3Kerning(kerning, groups, glyphSet=()):
         newName = makeUniqueGroupName(newName, existingGroupNames)
         # Store for use later.
         firstRenamedGroups[first] = newName
-    secondRenamedGroups = {}
+    secondRenamedGroups: Dict[str, str] = {}
     for second in secondReferencedGroups:
         # Make a list of existing group names.
         existingGroupNames = list(groups.keys()) + list(secondRenamedGroups.keys())
@@ -84,7 +100,7 @@ def convertUFO1OrUFO2KerningToUFO3Kerning(kerning, groups, glyphSet=()):
     return newKerning, groups, dict(side1=firstRenamedGroups, side2=secondRenamedGroups)
 
 
-def findKnownKerningGroups(groups):
+def findKnownKerningGroups(groups: Mapping[str, Any]) -> Tuple[Set[str], Set[str]]:
     """Find all kerning groups in a UFO1 or UFO2 font that use known prefixes.
 
     In some cases, not all kerning groups will be referenced
@@ -150,7 +166,7 @@ def findKnownKerningGroups(groups):
     return firstGroups, secondGroups
 
 
-def makeUniqueGroupName(name, groupNames, counter=0):
+def makeUniqueGroupName(name: str, groupNames: List[str], counter: int = 0) -> str:
     """Make a kerning group name that will be unique within the set of group names.
 
     If the requested kerning group name already exists within the set, this
