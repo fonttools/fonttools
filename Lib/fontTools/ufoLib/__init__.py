@@ -58,7 +58,7 @@ from logging import Logger
 from os import PathLike
 
 from fontTools.misc import plistlib
-from fontTools.annotations import K, V, UFOFormatVersionInput
+from fontTools.annotations import K, V, IntFloat, KerningNested, UFOFormatVersionInput
 from fontTools.ufoLib.validators import *
 from fontTools.ufoLib.filenames import userNameToFileName
 from fontTools.ufoLib.converters import convertUFO1OrUFO2KerningToUFO3Kerning
@@ -76,9 +76,7 @@ PathStr = Union[str, PathLike[str]]
 PathOrFS = Union[PathStr, FS]
 KerningGroupRenameMaps = Dict[str, Dict[str, str]]
 KerningPair = Tuple[str, str]
-IntFloat = Union[int, float]
 KerningDict = Dict[KerningPair, IntFloat]
-KerningNested = Dict[str, Dict[str, IntFloat]]
 LibDict = Dict[str, Any]
 LayerOrderList = Optional[list[Optional[str]]]
 AttributeDataDict = Dict[str, Any]
