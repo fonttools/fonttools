@@ -209,21 +209,21 @@ class _DecomposingFilterPenMixin:
         self.include = include
         self.decomposeNested = decomposeNested
 
-    def addComponent(self, baseGlyphName, transformation, **kwargs):
+    def addComponent(self, glyphName, transformation, **kwargs):
         # only decompose the component if it's included in the set
-        if self.include is None or baseGlyphName in self.include:
+        if self.include is None or glyphName in self.include:
             # if we're decomposing nested components, temporarily set include to None
             include_bak = self.include
             if self.decomposeNested and self.include:
                 self.include = None
             try:
-                super().addComponent(baseGlyphName, transformation, **kwargs)
+                super().addComponent(glyphName, transformation, **kwargs)
             finally:
                 if self.include != include_bak:
                     self.include = include_bak
         else:
             _PassThruComponentsMixin.addComponent(
-                self, baseGlyphName, transformation, **kwargs
+                self, glyphName, transformation, **kwargs
             )
 
 
