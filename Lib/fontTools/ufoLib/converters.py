@@ -1,10 +1,8 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Dict, List, Set, Tuple, Mapping, Optional, Any
+from typing import Mapping, Optional, Any
+from collections.abc import Container
 
 from fontTools.annotations import KerningNested
-
-if TYPE_CHECKING:
-    from fontTools.ufoLib.glifLib import GlyphSet
 
 """
 Functions for converting UFO1 or UFO2 files into UFO3 format.
@@ -19,12 +17,12 @@ or UFO2, and _to_ UFO3.
 
 def convertUFO1OrUFO2KerningToUFO3Kerning(
     kerning: KerningNested,
-    groups: Dict[str, List[str]],
-    glyphSet: Optional[GlyphSet] = None,
-) -> Tuple[
+    groups: dict[str, list[str]],
+    glyphSet: Optional[Container[str]] = None,
+) -> tuple[
     KerningNested,
-    Dict[str, List[str]],
-    Dict[str, Dict[str, str]],
+    dict[str, list[str]],
+    dict[str, dict[str, str]],
 ]:
     """Convert kerning data in UFO1 or UFO2 syntax into UFO3 syntax.
 
@@ -56,7 +54,7 @@ def convertUFO1OrUFO2KerningToUFO3Kerning(
                 if not second.startswith("public.kern2."):
                     secondReferencedGroups.add(second)
     # Create new names for these groups.
-    firstRenamedGroups: Dict[str, str] = {}
+    firstRenamedGroups: dict[str, str] = {}
     for first in firstReferencedGroups:
         # Make a list of existing group names.
         existingGroupNames = list(groups.keys()) + list(firstRenamedGroups.keys())
@@ -68,7 +66,7 @@ def convertUFO1OrUFO2KerningToUFO3Kerning(
         newName = makeUniqueGroupName(newName, existingGroupNames)
         # Store for use later.
         firstRenamedGroups[first] = newName
-    secondRenamedGroups: Dict[str, str] = {}
+    secondRenamedGroups: dict[str, str] = {}
     for second in secondReferencedGroups:
         # Make a list of existing group names.
         existingGroupNames = list(groups.keys()) + list(secondRenamedGroups.keys())
@@ -100,7 +98,7 @@ def convertUFO1OrUFO2KerningToUFO3Kerning(
     return newKerning, groups, dict(side1=firstRenamedGroups, side2=secondRenamedGroups)
 
 
-def findKnownKerningGroups(groups: Mapping[str, Any]) -> Tuple[Set[str], Set[str]]:
+def findKnownKerningGroups(groups: Mapping[str, Any]) -> tuple[set[str], set[str]]:
     """Find all kerning groups in a UFO1 or UFO2 font that use known prefixes.
 
     In some cases, not all kerning groups will be referenced
@@ -166,7 +164,7 @@ def findKnownKerningGroups(groups: Mapping[str, Any]) -> Tuple[Set[str], Set[str
     return firstGroups, secondGroups
 
 
-def makeUniqueGroupName(name: str, groupNames: List[str], counter: int = 0) -> str:
+def makeUniqueGroupName(name: str, groupNames: list[str], counter: int = 0) -> str:
     """Make a kerning group name that will be unique within the set of group names.
 
     If the requested kerning group name already exists within the set, this

@@ -33,6 +33,7 @@ Value conversion functions are available for converting
 """
 
 from __future__ import annotations
+
 import os
 from copy import deepcopy
 from os import fsdecode
@@ -40,6 +41,7 @@ import logging
 import zipfile
 import enum
 from collections import OrderedDict
+from typing import TYPE_CHECKING, cast, Any, IO, Optional, Union
 
 import fs
 import fs.base
@@ -51,36 +53,40 @@ import fs.tempfs
 import fs.tools
 import fs.errors
 
-from typing import TYPE_CHECKING, cast, Any, Dict, List, IO, Optional, Set, Tuple, Union
-from collections.abc import Callable
-from fs.base import FS
-from logging import Logger
-from os import PathLike
-
 from fontTools.misc import plistlib
-from fontTools.annotations import K, V, IntFloat, KerningNested, UFOFormatVersionInput
 from fontTools.ufoLib.validators import *
 from fontTools.ufoLib.filenames import userNameToFileName
 from fontTools.ufoLib.converters import convertUFO1OrUFO2KerningToUFO3Kerning
 from fontTools.ufoLib.errors import UFOLibError
 from fontTools.ufoLib.utils import (
     numberTypes,
-    normalizeUFOFormatVersion,
-    _VersionTupleEnumMixin,
+    normalizeFormatVersion,
+    BaseFormatVersion,
 )
 
 if TYPE_CHECKING:
+    from fs.base import FS
+    from logging import Logger
+    from os import PathLike
+    from fontTools.annotations import (
+        K,
+        V,
+        GlyphNameToFileNameFunc,
+        IntFloat,
+        KerningNested,
+        UFOFormatVersionInput,
+        PathStr,
+        PathOrFS,
+    )
     from fontTools.ufoLib.glifLib import GlyphSet
 
-PathStr = Union[str, PathLike[str]]
-PathOrFS = Union[PathStr, FS]
-KerningGroupRenameMaps = Dict[str, Dict[str, str]]
-KerningPair = Tuple[str, str]
-KerningDict = Dict[KerningPair, IntFloat]
-LibDict = Dict[str, Any]
+KerningGroupRenameMaps = dict[str, dict[str, str]]
+KerningPair = tuple[str, str]
+KerningDict = dict[KerningPair, IntFloat]
+LibDict = dict[str, Any]
 LayerOrderList = Optional[list[Optional[str]]]
-AttributeDataDict = Dict[str, Any]
-FontInfoAttributes = Dict[str, AttributeDataDict]
+AttributeDataDict = dict[str, Any]
+FontInfoAttributes = dict[str, AttributeDataDict]
 
 __all__: list[str] = [
     "makeUFOPath",
@@ -124,17 +130,10 @@ LAYERINFO_FILENAME: str = "layerinfo.plist"
 DEFAULT_LAYER_NAME: str = "public.default"
 
 
-class UFOFormatVersion(Tuple[int, int], _VersionTupleEnumMixin, enum.Enum):
+class UFOFormatVersion(BaseFormatVersion):
     FORMAT_1_0 = (1, 0)
     FORMAT_2_0 = (2, 0)
     FORMAT_3_0 = (3, 0)
-
-
-# python 3.11 doesn't like when a mixin overrides a dunder method like __str__
-# for some reasons it keep using Enum.__str__, see
-# https://github.com/fonttools/fonttools/pull/2655
-def __str__(self):
-    return _VersionTupleEnumMixin.__str__(self)
 
 
 class UFOFileStructure(enum.Enum):
@@ -152,7 +151,7 @@ class _UFOBaseIO:
         fs: FS
         _havePreviousFile: bool
 
-    def getFileModificationTime(self, path: PathLike[str]) -> Optional[float]:
+    def getFileModificationTime(self, path: PathStr) -> Optional[float]:
         """
         Returns the modification time for the file at the given path, as a
         floating point number giving the number of seconds since the epoch.
@@ -315,7 +314,7 @@ class UFOReader(_UFOBaseIO):
             )
         self._path: str = fsdecode(path)
         self._validate: bool = validate
-        self._upConvertedKerningData: Optional[Dict[str, Any]] = None
+        self._upConvertedKerningData: Optional[dict[str, Any]] = None
 
         try:
             self.readMetaInfo(validate=validate)
@@ -353,7 +352,7 @@ class UFOReader(_UFOBaseIO):
     )
 
     @property
-    def formatVersionTuple(self) -> Tuple[int, int]:
+    def formatVersionTuple(self) -> tuple[int, int]:
         """The (major, minor) format version of the UFO.
         This is determined by reading metainfo.plist during __init__.
         """
@@ -460,7 +459,7 @@ class UFOReader(_UFOBaseIO):
 
     # metainfo.plist
 
-    def _readMetaInfo(self, validate: Optional[bool] = None) -> Dict[str, Any]:
+    def _readMetaInfo(self, validate: Optional[bool] = None) -> dict[str, Any]:
         """
         Read metainfo.plist and return raw data. Only used for internal operations.
 
@@ -514,7 +513,7 @@ class UFOReader(_UFOBaseIO):
 
     # groups.plist
 
-    def _readGroups(self) -> Dict[str, List[str]]:
+    def _readGroups(self) -> dict[str, list[str]]:
         groups = self._getPlist(GROUPS_FILENAME, {})
         # remove any duplicate glyphs in a kerning group
         for groupName, glyphList in groups.items():
@@ -522,7 +521,7 @@ class UFOReader(_UFOBaseIO):
                 groups[groupName] = list(OrderedDict.fromkeys(glyphList))
         return groups
 
-    def readGroups(self, validate: Optional[bool] = None) -> Dict[str, List[str]]:
+    def readGroups(self, validate: Optional[bool] = None) -> dict[str, list[str]]:
         """
         Read groups.plist. Returns a dict.
         ``validate`` will validate the read data, by default it is set to the
@@ -573,7 +572,7 @@ class UFOReader(_UFOBaseIO):
 
     # fontinfo.plist
 
-    def _readInfo(self, validate: bool) -> Dict[str, Any]:
+    def _readInfo(self, validate: bool) -> dict[str, Any]:
         data = self._getPlist(FONTINFO_FILENAME, {})
         if validate and not isinstance(data, dict):
             raise UFOLibError("fontinfo.plist is not properly formatted.")
@@ -673,7 +672,7 @@ class UFOReader(_UFOBaseIO):
 
     # lib.plist
 
-    def readLib(self, validate: Optional[bool] = None) -> Dict[str, Any]:
+    def readLib(self, validate: Optional[bool] = None) -> dict[str, Any]:
         """
         Read lib.plist. Returns a dict.
 
@@ -704,7 +703,7 @@ class UFOReader(_UFOBaseIO):
 
     # glyph sets & layers
 
-    def _readLayerContents(self, validate: bool) -> List[Tuple[str, str]]:
+    def _readLayerContents(self, validate: bool) -> list[tuple[str, str]]:
         """
         Rebuild the layer contents list by checking what glyphsets
         are available on disk.
@@ -720,7 +719,7 @@ class UFOReader(_UFOBaseIO):
                 raise UFOLibError(error)
         return contents
 
-    def getLayerNames(self, validate: Optional[bool] = None) -> List[str]:
+    def getLayerNames(self, validate: Optional[bool] = None) -> list[str]:
         """
         Get the ordered layer names from layercontents.plist.
 
@@ -797,7 +796,7 @@ class UFOReader(_UFOBaseIO):
 
     def getCharacterMapping(
         self, layerName: Optional[str] = None, validate: Optional[bool] = None
-    ) -> Dict[int, List[str]]:
+    ) -> dict[int, list[str]]:
         """
         Return a dictionary that maps unicode values (ints) to
         lists of glyph names.
@@ -808,7 +807,7 @@ class UFOReader(_UFOBaseIO):
             layerName, validateRead=validate, validateWrite=True
         )
         allUnicodes = glyphSet.getUnicodes()
-        cmap: Dict[int, List[str]] = {}
+        cmap: dict[int, list[str]] = {}
         for glyphName, unicodes in allUnicodes.items():
             for code in unicodes:
                 if code in cmap:
@@ -819,7 +818,7 @@ class UFOReader(_UFOBaseIO):
 
     # /data
 
-    def getDataDirectoryListing(self) -> List[str]:
+    def getDataDirectoryListing(self) -> list[str]:
         """
         Returns a list of all files in the data directory.
         The returned paths will be relative to the UFO.
@@ -840,7 +839,7 @@ class UFOReader(_UFOBaseIO):
         except fs.errors.ResourceError:
             return []
 
-    def getImageDirectoryListing(self, validate: Optional[bool] = None) -> List[str]:
+    def getImageDirectoryListing(self, validate: Optional[bool] = None) -> list[str]:
         """
         Returns a list of all image file names in
         the images directory. Each of the images will
@@ -973,7 +972,7 @@ class UFOWriter(UFOReader):
     ) -> None:
         try:
             if formatVersion is not None:
-                formatVersion = normalizeUFOFormatVersion(formatVersion)
+                formatVersion = normalizeFormatVersion(formatVersion, UFOFormatVersion)
         except ValueError as e:
             from fontTools.ufoLib.errors import UnsupportedUFOFormat
 
@@ -1108,7 +1107,7 @@ class UFOWriter(UFOReader):
                     "that is trying to be written. This is not supported."
                 )
         # handle the layer contents
-        self.layerContents: Union[Dict[str, str], OrderedDict[str, str]] = {}
+        self.layerContents: Union[dict[str, str], OrderedDict[str, str]] = {}
         if previousFormatVersion is not None and previousFormatVersion.major >= 3:
             # already exists
             self.layerContents = OrderedDict(self._readLayerContents(validate))
@@ -1125,7 +1124,9 @@ class UFOWriter(UFOReader):
         if isinstance(value, UFOFormatVersion):
             return value
         try:
-            return normalizeUFOFormatVersion(value)  # relies on your _missing_ logic
+            return normalizeFormatVersion(
+                value, UFOFormatVersion
+            )  # relies on your _missing_ logic
         except ValueError:
             raise ValueError(f"Unsupported UFO format: {value!r}")
 
@@ -1300,7 +1301,7 @@ class UFOWriter(UFOReader):
 
     def writeGroups(
         self,
-        groups: Dict[str, Union[List[str], Tuple[str, ...]]],
+        groups: dict[str, Union[list[str], tuple[str, ...]]],
         validate: Optional[bool] = None,
     ) -> None:
         """
@@ -1514,7 +1515,7 @@ class UFOWriter(UFOReader):
         if self._formatVersion < UFOFormatVersion.FORMAT_3_0:
             return
         if layerOrder is not None:
-            newOrder: List[Optional[str]] = []
+            newOrder: list[Optional[str]] = []
             for layerName in layerOrder:
                 if layerName is None:
                     layerName = DEFAULT_LAYER_NAME
@@ -1553,7 +1554,7 @@ class UFOWriter(UFOReader):
         self,
         layerName: Optional[str] = None,
         defaultLayer: bool = True,
-        glyphNameToFileNameFunc: Optional[Callable[[str], str]] = None,
+        glyphNameToFileNameFunc: GlyphNameToFileNameFunc = None,
         validateRead: Optional[bool] = None,
         validateWrite: Optional[bool] = None,
         expectContentsFile: bool = False,
@@ -1617,9 +1618,9 @@ class UFOWriter(UFOReader):
 
     def _getDefaultGlyphSet(
         self,
-        validateRead: Optional[bool],
-        validateWrite: Optional[bool],
-        glyphNameToFileNameFunc: Optional[Callable[[str], str]] = None,
+        validateRead: bool,
+        validateWrite: bool,
+        glyphNameToFileNameFunc: GlyphNameToFileNameFunc = None,
         expectContentsFile: bool = False,
     ) -> GlyphSet:
 
@@ -1637,11 +1638,11 @@ class UFOWriter(UFOReader):
 
     def _getGlyphSetFormatVersion3(
         self,
-        validateRead: Optional[bool],
-        validateWrite: Optional[bool],
+        validateRead: bool,
+        validateWrite: bool,
         layerName: Optional[str] = None,
         defaultLayer: bool = True,
-        glyphNameToFileNameFunc: Optional[Callable[[str], str]] = None,
+        glyphNameToFileNameFunc: GlyphNameToFileNameFunc = None,
         expectContentsFile: bool = False,
     ) -> GlyphSet:
 
@@ -1929,7 +1930,7 @@ def validateFontInfoVersion2ValueForAttribute(attr: str, value: Any) -> bool:
     return isValidValue
 
 
-def validateInfoVersion2Data(infoData: Dict[str, Any]) -> Dict[str, Any]:
+def validateInfoVersion2Data(infoData: dict[str, Any]) -> dict[str, Any]:
     """
     This performs very basic validation of the value for infoData
     following the UFO 2 fontinfo.plist specification. The results
@@ -1976,7 +1977,7 @@ def validateFontInfoVersion3ValueForAttribute(attr: str, value: Any) -> bool:
     return isValidValue
 
 
-def validateInfoVersion3Data(infoData: Dict[str, Any]) -> Dict[str, Any]:
+def validateInfoVersion3Data(infoData: dict[str, Any]) -> dict[str, Any]:
     """
     This performs very basic validation of the value for infoData
     following the UFO 3 fontinfo.plist specification. The results
@@ -1998,18 +1999,18 @@ def validateInfoVersion3Data(infoData: Dict[str, Any]) -> Dict[str, Any]:
 
 # Value Options
 
-fontInfoOpenTypeHeadFlagsOptions = list(range(0, 15))
-fontInfoOpenTypeOS2SelectionOptions = [1, 2, 3, 4, 7, 8, 9]
-fontInfoOpenTypeOS2UnicodeRangesOptions = list(range(0, 128))
-fontInfoOpenTypeOS2CodePageRangesOptions = list(range(0, 64))
-fontInfoOpenTypeOS2TypeOptions = [0, 1, 2, 3, 8, 9]
+fontInfoOpenTypeHeadFlagsOptions: list[int] = list(range(0, 15))
+fontInfoOpenTypeOS2SelectionOptions: list[int] = [1, 2, 3, 4, 7, 8, 9]
+fontInfoOpenTypeOS2UnicodeRangesOptions: list[int] = list(range(0, 128))
+fontInfoOpenTypeOS2CodePageRangesOptions: list[int] = list(range(0, 64))
+fontInfoOpenTypeOS2TypeOptions: list[int] = [0, 1, 2, 3, 8, 9]
 
 # Version Attribute Definitions
 # This defines the attributes, types and, in some
 # cases the possible values, that can exist is
 # fontinfo.plist.
 
-fontInfoAttributesVersion1: Set[str] = {
+fontInfoAttributesVersion1: set[str] = {
     "familyName",
     "styleName",
     "fullName",
@@ -2194,7 +2195,7 @@ fontInfoAttributesVersion2ValueData: FontInfoAttributes = {
     "macintoshFONDFamilyID": dict(type=int),
     "macintoshFONDName": dict(type=str),
 }
-fontInfoAttributesVersion2: Set[str] = set(fontInfoAttributesVersion2ValueData.keys())
+fontInfoAttributesVersion2: set[str] = set(fontInfoAttributesVersion2ValueData.keys())
 
 fontInfoAttributesVersion3ValueData: FontInfoAttributes = deepcopy(
     fontInfoAttributesVersion2ValueData
@@ -2298,14 +2299,14 @@ for attr, dataDict in list(fontInfoAttributesVersion3ValueData.items()):
 # to version 2 or vice-versa.
 
 
-def _flipDict(d: Dict[K, V]) -> Dict[V, K]:
+def _flipDict(d: dict[K, V]) -> dict[V, K]:
     flipped = {}
     for key, value in list(d.items()):
         flipped[value] = key
     return flipped
 
 
-fontInfoAttributesVersion1To2: Dict[str, str] = {
+fontInfoAttributesVersion1To2: dict[str, str] = {
     "menuName": "styleMapFamilyName",
     "designer": "openTypeNameDesigner",
     "designerURL": "openTypeNameDesignerURL",
@@ -2337,17 +2338,17 @@ fontInfoAttributesVersion1To2: Dict[str, str] = {
 fontInfoAttributesVersion2To1 = _flipDict(fontInfoAttributesVersion1To2)
 deprecatedFontInfoAttributesVersion2 = set(fontInfoAttributesVersion1To2.keys())
 
-_fontStyle1To2: Dict[int, str] = {
+_fontStyle1To2: dict[int, str] = {
     64: "regular",
     1: "italic",
     32: "bold",
     33: "bold italic",
 }
-_fontStyle2To1: Dict[str, int] = _flipDict(_fontStyle1To2)
+_fontStyle2To1: dict[str, int] = _flipDict(_fontStyle1To2)
 # Some UFO 1 files have 0
 _fontStyle1To2[0] = "regular"
 
-_widthName1To2: Dict[str, int] = {
+_widthName1To2: dict[str, int] = {
     "Ultra-condensed": 1,
     "Extra-condensed": 2,
     "Condensed": 3,
@@ -2358,7 +2359,7 @@ _widthName1To2: Dict[str, int] = {
     "Extra-expanded": 8,
     "Ultra-expanded": 9,
 }
-_widthName2To1: Dict[int, str] = _flipDict(_widthName1To2)
+_widthName2To1: dict[int, str] = _flipDict(_widthName1To2)
 # FontLab's default width value is "Normal".
 # Many format version 1 UFOs will have this.
 _widthName1To2["Normal"] = 5
@@ -2370,7 +2371,7 @@ _widthName1To2["medium"] = 5
 # "Medium" appears in a lot of UFO 1 files.
 _widthName1To2["Medium"] = 5
 
-_msCharSet1To2: Dict[int, int] = {
+_msCharSet1To2: dict[int, int] = {
     0: 1,
     1: 2,
     2: 3,
@@ -2392,14 +2393,14 @@ _msCharSet1To2: Dict[int, int] = {
     238: 19,
     255: 20,
 }
-_msCharSet2To1: Dict[int, int] = _flipDict(_msCharSet1To2)
+_msCharSet2To1: dict[int, int] = _flipDict(_msCharSet1To2)
 
 # 1 <-> 2
 
 
 def convertFontInfoValueForAttributeFromVersion1ToVersion2(
     attr: str, value: Any
-) -> Tuple[str, Any]:
+) -> tuple[str, Any]:
     """
     Convert value from version 1 to version 2 format.
     Returns the new attribute name and the converted value.
@@ -2437,7 +2438,7 @@ def convertFontInfoValueForAttributeFromVersion1ToVersion2(
 
 def convertFontInfoValueForAttributeFromVersion2ToVersion1(
     attr: str, value: Any
-) -> Tuple[str, Any]:
+) -> tuple[str, Any]:
     """
     Convert value from version 2 to version 1 format.
     Returns the new attribute name and the converted value.
@@ -2454,7 +2455,7 @@ def convertFontInfoValueForAttributeFromVersion2ToVersion1(
     return attr, value
 
 
-def _convertFontInfoDataVersion1ToVersion2(data: Dict[str, Any]) -> Dict[str, Any]:
+def _convertFontInfoDataVersion1ToVersion2(data: dict[str, Any]) -> dict[str, Any]:
     converted = {}
     for attr, value in list(data.items()):
         # FontLab gives -1 for the weightValue
@@ -2478,7 +2479,7 @@ def _convertFontInfoDataVersion1ToVersion2(data: Dict[str, Any]) -> Dict[str, An
     return converted
 
 
-def _convertFontInfoDataVersion2ToVersion1(data: Dict[str, Any]) -> Dict[str, Any]:
+def _convertFontInfoDataVersion2ToVersion1(data: dict[str, Any]) -> dict[str, Any]:
     converted = {}
     for attr, value in list(data.items()):
         newAttr, newValue = convertFontInfoValueForAttributeFromVersion2ToVersion1(
@@ -2499,16 +2500,16 @@ def _convertFontInfoDataVersion2ToVersion1(data: Dict[str, Any]) -> Dict[str, An
 
 # 2 <-> 3
 
-_ufo2To3NonNegativeInt: Set[str] = {
+_ufo2To3NonNegativeInt: set[str] = {
     "versionMinor",
     "openTypeHeadLowestRecPPEM",
     "openTypeOS2WinAscent",
     "openTypeOS2WinDescent",
 }
-_ufo2To3NonNegativeIntOrFloat: Set[str] = {
+_ufo2To3NonNegativeIntOrFloat: set[str] = {
     "unitsPerEm",
 }
-_ufo2To3FloatToInt: Set[str] = {
+_ufo2To3FloatToInt: set[str] = {
     "openTypeHeadLowestRecPPEM",
     "openTypeHheaAscender",
     "openTypeHheaDescender",
@@ -2538,7 +2539,7 @@ _ufo2To3FloatToInt: Set[str] = {
 
 def convertFontInfoValueForAttributeFromVersion2ToVersion3(
     attr: str, value: Any
-) -> Tuple[str, Any]:
+) -> tuple[str, Any]:
     """
     Convert value from version 2 to version 3 format.
     Returns the new attribute name and the converted value.
@@ -2568,7 +2569,7 @@ def convertFontInfoValueForAttributeFromVersion2ToVersion3(
 
 def convertFontInfoValueForAttributeFromVersion3ToVersion2(
     attr: str, value: Any
-) -> Tuple[str, Any]:
+) -> tuple[str, Any]:
     """
     Convert value from version 3 to version 2 format.
     Returns the new attribute name and the converted value.
@@ -2577,7 +2578,7 @@ def convertFontInfoValueForAttributeFromVersion3ToVersion2(
     return attr, value
 
 
-def _convertFontInfoDataVersion3ToVersion2(data: Dict[str, Any]) -> Dict[str, Any]:
+def _convertFontInfoDataVersion3ToVersion2(data: dict[str, Any]) -> dict[str, Any]:
     converted = {}
     for attr, value in list(data.items()):
         newAttr, newValue = convertFontInfoValueForAttributeFromVersion3ToVersion2(
@@ -2589,7 +2590,7 @@ def _convertFontInfoDataVersion3ToVersion2(data: Dict[str, Any]) -> Dict[str, An
     return converted
 
 
-def _convertFontInfoDataVersion2ToVersion3(data: Dict[str, Any]) -> Dict[str, Any]:
+def _convertFontInfoDataVersion2ToVersion3(data: dict[str, Any]) -> dict[str, Any]:
     converted = {}
     for attr, value in list(data.items()):
         attr, value = convertFontInfoValueForAttributeFromVersion2ToVersion3(

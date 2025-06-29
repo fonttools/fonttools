@@ -6,17 +6,17 @@ the module.
 """
 
 from __future__ import annotations
-from typing import TYPE_CHECKING, TypeVar, cast
+
+from typing import Optional, Type, TypeVar, Union, cast
 from collections.abc import Callable
-import warnings
+import enum
 import functools
-
-if TYPE_CHECKING:
-    from fontTools.annotations import UFOFormatVersionInput
-    from fontTools.ufoLib import UFOFormatVersion
-
+import warnings
 
 F = TypeVar("F", bound=Callable[..., object])
+FormatVersion = TypeVar("FormatVersion", bound="BaseFormatVersion")
+FormatVersionInput = Optional[Union[int, tuple[int, int], FormatVersion]]
+
 numberTypes = (int, float)
 
 
@@ -48,49 +48,56 @@ def deprecated(msg: str = "") -> Callable[[F], F]:
     return deprecated_decorator
 
 
-def normalizeUFOFormatVersion(value: UFOFormatVersionInput) -> UFOFormatVersion:
-    # Needed for type safety of UFOFormatVersion input
+def normalizeFormatVersion(
+    value: FormatVersionInput, cls: Type[FormatVersion]
+) -> FormatVersion:
+    # Needed for type safety of UFOFormatVersion and GLIFFormatVersion input
     if value is None:
-        return UFOFormatVersion.default()
-    if isinstance(value, UFOFormatVersion):
+        return cls.default()
+    if isinstance(value, cls):
         return value
     if isinstance(value, int):
-        return UFOFormatVersion((value, 0))
+        return cls((value, 0))
     if isinstance(value, tuple) and len(value) == 2:
-        return UFOFormatVersion(value)
-    raise ValueError(f"Unsupported UFO format: {value!r}")
+        return cls(value)
+    raise ValueError(f"Unsupported format version: {value!r}")
 
 
-# To be mixed with enum.Enum in UFOFormatVersion and GLIFFormatVersion
-class _VersionTupleEnumMixin:
+# Base class for UFOFormatVersion and GLIFFormatVersion
+class BaseFormatVersion(tuple[int, int], enum.Enum):
+    value: Union[tuple[int, int]]
+
+    def __new__(cls: Type[FormatVersion], value: tuple[int, int]) -> BaseFormatVersion:
+        return super().__new__(cls, value)
+
     @property
-    def major(self):
+    def major(self) -> int:
         return self.value[0]
 
     @property
-    def minor(self):
+    def minor(self) -> int:
         return self.value[1]
 
     @classmethod
-    def _missing_(cls, value):
+    def _missing_(cls, value: object) -> BaseFormatVersion:
         # allow to initialize a version enum from a single (major) integer
         if isinstance(value, int):
             return cls((value, 0))
         # or from None to obtain the current default version
         if value is None:
             return cls.default()
-        return super()._missing_(value)
+        raise ValueError(f"{value!r} is not a valid {cls.__name__}")
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.major}.{self.minor}"
 
     @classmethod
-    def default(cls):
+    def default(cls: Type[FormatVersion]) -> FormatVersion:
         # get the latest defined version (i.e. the max of all versions)
         return max(cls.__members__.values())
 
     @classmethod
-    def supported_versions(cls):
+    def supported_versions(cls: Type[FormatVersion]) -> frozenset[FormatVersion]:
         return frozenset(cls.__members__.values())
 
 
