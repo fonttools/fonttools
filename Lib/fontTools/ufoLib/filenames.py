@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import Set
 
 """
 Convert user-provided internal UFO names to spec-compliant filenames.
@@ -32,7 +31,7 @@ by Tal Leming and is copyright (c) 2005-2016, The RoboFab Developers:
 #    inclusive.
 # 3. Various characters that (mostly) Windows and POSIX-y filesystems don't
 #    allow, plus "(" and ")", as per the specification.
-illegalCharacters: Set[str] = {
+illegalCharacters: set[str] = {
     "\x00",
     "\x01",
     "\x02",
@@ -81,7 +80,7 @@ illegalCharacters: Set[str] = {
     "|",
     "\x7f",
 }
-reservedFileNames: Set[str] = {
+reservedFileNames: set[str] = {
     "aux",
     "clock$",
     "com1",
