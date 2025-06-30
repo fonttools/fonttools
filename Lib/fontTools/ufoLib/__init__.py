@@ -72,7 +72,8 @@ if TYPE_CHECKING:
         K,
         V,
         GlyphNameToFileNameFunc,
-        IntFloat,
+        KerningDict,
+        KerningGroups,
         KerningNested,
         UFOFormatVersionInput,
         PathStr,
@@ -81,8 +82,6 @@ if TYPE_CHECKING:
     from fontTools.ufoLib.glifLib import GlyphSet
 
 KerningGroupRenameMaps = dict[str, dict[str, str]]
-KerningPair = tuple[str, str]
-KerningDict = dict[KerningPair, IntFloat]
 LibDict = dict[str, Any]
 LayerOrderList = Optional[list[Optional[str]]]
 AttributeDataDict = dict[str, Any]
@@ -1300,9 +1299,7 @@ class UFOWriter(UFOReader):
         self._downConversionKerningData = dict(groupRenameMap=remap)
 
     def writeGroups(
-        self,
-        groups: dict[str, Union[list[str], tuple[str, ...]]],
-        validate: Optional[bool] = None,
+        self, groups: KerningGroups, validate: Optional[bool] = None
     ) -> None:
         """
         Write groups.plist. This method requires a

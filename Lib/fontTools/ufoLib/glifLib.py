@@ -627,8 +627,9 @@ class GlyphSet(_UFOBaseIO):
         if glyphNames is None:
             glyphNames = self.contents.keys()
         for glyphName in glyphNames:
-            text = self.getGLIF(glyphName)
-            unicodes[glyphName] = _fetchUnicodes(text)
+            bytesText = self.getGLIF(glyphName)
+            strText = bytesText.decode(encoding="utf-8", errors="strict")
+            unicodes[glyphName] = _fetchUnicodes(strText)
         return unicodes
 
     def getComponentReferences(
@@ -644,8 +645,9 @@ class GlyphSet(_UFOBaseIO):
         if glyphNames is None:
             glyphNames = self.contents.keys()
         for glyphName in glyphNames:
-            text = self.getGLIF(glyphName)
-            components[glyphName] = _fetchComponentBases(text)
+            bytesText = self.getGLIF(glyphName)
+            strText = bytesText.decode(encoding="utf-8", errors="strict")
+            components[glyphName] = _fetchComponentBases(strText)
         return components
 
     def getImageReferences(
@@ -661,8 +663,9 @@ class GlyphSet(_UFOBaseIO):
         if glyphNames is None:
             glyphNames = self.contents.keys()
         for glyphName in glyphNames:
-            text = self.getGLIF(glyphName)
-            images[glyphName] = _fetchImageFileName(text)
+            bytesText = self.getGLIF(glyphName)
+            strText = bytesText.decode(encoding="utf-8", errors="strict")
+            images[glyphName] = _fetchImageFileName(strText)
         return images
 
     def close(self) -> None:
@@ -813,24 +816,28 @@ def _writeGlyphToBytes(
         glyphAttrs["formatMinor"] = repr(formatVersion.minor)
     root = etree.Element("glyph", glyphAttrs)
     identifiers: set[str] = set()
-    # advance
-    _writeAdvance(glyphObject, root, validate)
-    # unicodes
-    if getattr(glyphObject, "unicodes", None):
-        _writeUnicodes(glyphObject, root, validate)
-    # note
-    if getattr(glyphObject, "note", None):
-        _writeNote(glyphObject, root, validate)
-    # image
-    if formatVersion.major >= 2 and getattr(glyphObject, "image", None):
-        _writeImage(glyphObject, root, validate)
-    # guidelines
-    if formatVersion.major >= 2 and getattr(glyphObject, "guidelines", None):
-        _writeGuidelines(glyphObject, root, identifiers, validate)
-    # anchors
-    anchors = getattr(glyphObject, "anchors", None)
-    if formatVersion.major >= 2 and anchors:
-        _writeAnchors(glyphObject, root, identifiers, validate)
+    if glyphObject is not None:
+        # advance
+        _writeAdvance(glyphObject, root, validate)
+        # unicodes
+        if getattr(glyphObject, "unicodes", None):
+            _writeUnicodes(glyphObject, root, validate)
+        # note
+        if getattr(glyphObject, "note", None):
+            _writeNote(glyphObject, root, validate)
+        # image
+        if formatVersion.major >= 2 and getattr(glyphObject, "image", None):
+            _writeImage(glyphObject, root, validate)
+        # guidelines
+        if formatVersion.major >= 2 and getattr(glyphObject, "guidelines", None):
+            _writeGuidelines(glyphObject, root, identifiers, validate)
+        # anchors
+        anchors = getattr(glyphObject, "anchors", None)
+        if formatVersion.major >= 2 and anchors:
+            _writeAnchors(glyphObject, root, identifiers, validate)
+        # lib
+        if getattr(glyphObject, "lib", None):
+            _writeLib(glyphObject, root, validate)
     # outline
     if drawPointsFunc is not None:
         outline = etree.SubElement(root, "outline")
@@ -841,9 +848,6 @@ def _writeGlyphToBytes(
         # prevent lxml from writing self-closing tags
         if not len(outline):
             outline.text = "\n  "
-    # lib
-    if getattr(glyphObject, "lib", None):
-        _writeLib(glyphObject, root, validate)
     # return the text
     data = etree.tostring(
         root, encoding="UTF-8", xml_declaration=True, pretty_print=True
@@ -1235,6 +1239,9 @@ def _readGlyphFromTreeFormat1(
     unicodes = []
     haveSeenAdvance = haveSeenOutline = haveSeenLib = haveSeenNote = False
     for element in tree:
+        if glyphObject is None:
+            continue
+
         if element.tag == "outline":
             if validate:
                 if haveSeenOutline:
@@ -1247,8 +1254,6 @@ def _readGlyphFromTreeFormat1(
                     raise GlifLibError("Invalid outline structure.")
             haveSeenOutline = True
             buildOutlineFormat1(glyphObject, pointPen, element, validate)
-        elif glyphObject is None:
-            continue
         elif element.tag == "advance":
             if validate and haveSeenAdvance:
                 raise GlifLibError("The advance element occurs more than once.")
@@ -1303,6 +1308,8 @@ def _readGlyphFromTreeFormat2(
     )
     identifiers: set[str] = set()
     for element in tree:
+        if glyphObject is None:
+            continue
         if element.tag == "outline":
             if validate:
                 if haveSeenOutline:
@@ -1318,8 +1325,6 @@ def _readGlyphFromTreeFormat2(
                 buildOutlineFormat2(
                     glyphObject, pointPen, element, identifiers, validate
                 )
-        elif glyphObject is None:
-            continue
         elif element.tag == "advance":
             if validate and haveSeenAdvance:
                 raise GlifLibError("The advance element occurs more than once.")
