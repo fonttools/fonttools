@@ -626,9 +626,8 @@ class GlyphSet(_UFOBaseIO):
         if glyphNames is None:
             glyphNames = self.contents.keys()
         for glyphName in glyphNames:
-            bytesText = self.getGLIF(glyphName)
-            strText = bytesText.decode(encoding="utf-8", errors="strict")
-            unicodes[glyphName] = _fetchUnicodes(strText)
+            text = self.getGLIF(glyphName)
+            unicodes[glyphName] = _fetchUnicodes(text)
         return unicodes
 
     def getComponentReferences(
@@ -644,9 +643,8 @@ class GlyphSet(_UFOBaseIO):
         if glyphNames is None:
             glyphNames = self.contents.keys()
         for glyphName in glyphNames:
-            bytesText = self.getGLIF(glyphName)
-            strText = bytesText.decode(encoding="utf-8", errors="strict")
-            components[glyphName] = _fetchComponentBases(strText)
+            text = self.getGLIF(glyphName)
+            components[glyphName] = _fetchComponentBases(text)
         return components
 
     def getImageReferences(
@@ -662,9 +660,8 @@ class GlyphSet(_UFOBaseIO):
         if glyphNames is None:
             glyphNames = self.contents.keys()
         for glyphName in glyphNames:
-            bytesText = self.getGLIF(glyphName)
-            strText = bytesText.decode(encoding="utf-8", errors="strict")
-            images[glyphName] = _fetchImageFileName(strText)
+            text = self.getGLIF(glyphName)
+            images[glyphName] = _fetchImageFileName(text)
         return images
 
     def close(self) -> None:
@@ -1860,7 +1857,7 @@ class _BaseParser:
     def __init__(self) -> None:
         self._elementStack: list[str] = []
 
-    def parse(self, text: str):
+    def parse(self, text: bytes):
         from xml.parsers.expat import ParserCreate
 
         parser = ParserCreate()
@@ -1879,7 +1876,7 @@ class _BaseParser:
 # unicodes
 
 
-def _fetchUnicodes(glif: str) -> list[int]:
+def _fetchUnicodes(glif: bytes) -> list[int]:
     """
     Get a list of unicodes listed in glif.
     """
@@ -1913,7 +1910,7 @@ class _FetchUnicodesParser(_BaseParser):
 # image
 
 
-def _fetchImageFileName(glif: str) -> Optional[str]:
+def _fetchImageFileName(glif: bytes) -> Optional[str]:
     """
     The image file name (if any) from glif.
     """
@@ -1940,7 +1937,7 @@ class _FetchImageFileNameParser(_BaseParser):
 # component references
 
 
-def _fetchComponentBases(glif: str) -> list[str]:
+def _fetchComponentBases(glif: bytes) -> list[str]:
     """
     Get a list of component base glyphs listed in glif.
     """
