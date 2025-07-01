@@ -7,7 +7,7 @@ from io import open
 import fs.base
 import fs.osfs
 
-from collections.abc import Mapping, Sequence, Set
+from collections.abc import Mapping, Sequence
 from typing import Any, Type, Optional, Union
 
 from fontTools.annotations import IntFloat

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional, Union
-from collections.abc import Container
+from typing import Optional
 
 from fontTools.annotations import KerningPair, KerningDict, KerningGroups, IntFloat
 
