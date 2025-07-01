@@ -1,15 +1,14 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Any, Optional, Protocol, TypeVar, Union
+from typing import TYPE_CHECKING, Iterable, Optional, TypeVar, Union
+from collections.abc import Callable, Sequence
+from fs.base import FS
+from os import PathLike
+from xml.etree.ElementTree import Element as ElementTreeElement
+from lxml.etree import _Element as LxmlElement
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Sequence
-    from fs.base import FS
-    from os import PathLike
-    from xml.etree.ElementTree import Element as ElementTreeElement
-    from lxml.etree import _Element as LxmlElement
-
-    from fontTools.pens.pointPen import AbstractPointPen
     from fontTools.ufoLib import UFOFormatVersion
+    from fontTools.ufoLib.glifLib import GLIFFormatVersion
 
 
 T = TypeVar("T")  # Generic type
@@ -18,6 +17,10 @@ V = TypeVar("V")  # Generic dict value type
 
 GlyphNameToFileNameFunc = Optional[Callable[[str, set[str]], str]]
 ElementType = Union[ElementTreeElement, LxmlElement]
+FormatVersion = Union[int, tuple[int, int]]
+FormatVersions = Optional[Iterable[FormatVersion]]
+GLIFFormatVersionInput = Optional[Union[int, tuple[int, int], "GLIFFormatVersion"]]
+UFOFormatVersionInput = Optional[Union[int, tuple[int, int], "UFOFormatVersion"]]
 IntFloat = Union[int, float]
 KerningPair = tuple[str, str]
 KerningDict = dict[KerningPair, IntFloat]
@@ -25,4 +28,3 @@ KerningGroups = dict[str, Sequence[str]]
 KerningNested = dict[str, dict[str, IntFloat]]
 PathStr = Union[str, PathLike[str]]
 PathOrFS = Union[PathStr, FS]
-UFOFormatVersionInput = Optional[Union[int, tuple[int, int], UFOFormatVersion]]
