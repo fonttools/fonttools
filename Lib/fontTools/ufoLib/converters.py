@@ -1,5 +1,6 @@
 from __future__ import annotations
-from typing import Mapping, Optional, Any
+
+from typing import Mapping, Any
 from collections.abc import Container
 
 from fontTools.annotations import KerningNested
@@ -16,14 +17,8 @@ or UFO2, and _to_ UFO3.
 
 
 def convertUFO1OrUFO2KerningToUFO3Kerning(
-    kerning: KerningNested,
-    groups: dict[str, list[str]],
-    glyphSet: Optional[Container[str]] = None,
-) -> tuple[
-    KerningNested,
-    dict[str, list[str]],
-    dict[str, dict[str, str]],
-]:
+    kerning: KerningNested, groups: dict[str, list[str]], glyphSet: Container[str] = ()
+) -> tuple[KerningNested, dict[str, list[str]], dict[str, dict[str, str]]]:
     """Convert kerning data in UFO1 or UFO2 syntax into UFO3 syntax.
 
     Args:
@@ -46,11 +41,11 @@ def convertUFO1OrUFO2KerningToUFO3Kerning(
     firstReferencedGroups, secondReferencedGroups = findKnownKerningGroups(groups)
     # Make lists of groups referenced in kerning pairs.
     for first, seconds in list(kerning.items()):
-        if glyphSet and first in groups and first not in glyphSet:
+        if first in groups and first not in glyphSet:
             if not first.startswith("public.kern1."):
                 firstReferencedGroups.add(first)
         for second in list(seconds.keys()):
-            if glyphSet and second in groups and second not in glyphSet:
+            if second in groups and second not in glyphSet:
                 if not second.startswith("public.kern2."):
                     secondReferencedGroups.add(second)
     # Create new names for these groups.
