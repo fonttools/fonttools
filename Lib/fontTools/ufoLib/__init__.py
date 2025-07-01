@@ -970,8 +970,7 @@ class UFOWriter(UFOReader):
         validate: bool = True,
     ) -> None:
         try:
-            if formatVersion is not None:
-                formatVersion = normalizeFormatVersion(formatVersion, UFOFormatVersion)
+            formatVersion = normalizeFormatVersion(formatVersion, UFOFormatVersion)
         except ValueError as e:
             from fontTools.ufoLib.errors import UnsupportedUFOFormat
 
@@ -1118,17 +1117,6 @@ class UFOWriter(UFOReader):
         # write the new metainfo
         self._writeMetaInfo()
 
-    @staticmethod
-    def _normalizeUFOFormatVersion(value: UFOFormatVersionInput) -> UFOFormatVersion:
-        if isinstance(value, UFOFormatVersion):
-            return value
-        try:
-            return normalizeFormatVersion(
-                value, UFOFormatVersion
-            )  # relies on your _missing_ logic
-        except ValueError:
-            raise ValueError(f"Unsupported UFO format: {value!r}")
-
     # properties
 
     def _get_fileCreator(self) -> str:
@@ -1273,7 +1261,7 @@ class UFOWriter(UFOReader):
 
     # groups.plist
 
-    def setKerningGroupRenameMaps(self, maps: KerningGroupRenameMaps) -> None:
+    def setKerningGroupConversionRenameMaps(self, maps: KerningGroupRenameMaps) -> None:
         """
         Set maps defining the renaming that should be done
         when writing groups and kerning in UFO 1 and UFO 2.
