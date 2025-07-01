@@ -51,15 +51,14 @@ if TYPE_CHECKING:
     from logging import Logger
     from fontTools.annotations import (
         ElementType,
+        FormatVersion,
+        FormatVersions,
+        GLIFFormatVersionInput,
         GlyphNameToFileNameFunc,
         IntFloat,
         PathOrFS,
         UFOFormatVersionInput,
     )
-
-FormatVersion = Union[int, tuple[int, int]]
-FormatVersions = Optional[Iterable[FormatVersion]]
-GLIFFormatVersionInput = Optional[Union[int, tuple[int, int], "GLIFFormatVersion"]]
 
 
 __all__: list[str] = [
@@ -308,7 +307,7 @@ class GlyphSet(_UFOBaseIO):
 
     # layer info
 
-    def readLayerInfo(self, info: Any, validateRead: bool = False) -> None:
+    def readLayerInfo(self, info: Any, validateRead: Optional[bool] = None) -> None:
         """
         ``validateRead`` will validate the data, by default it is set to the
         class's ``validateRead`` value, can be overridden.
@@ -330,7 +329,7 @@ class GlyphSet(_UFOBaseIO):
                     % attr
                 )
 
-    def writeLayerInfo(self, info: Any, validateWrite: bool = False) -> None:
+    def writeLayerInfo(self, info: Any, validateWrite: Optional[bool] = None) -> None:
         """
         ``validateWrite`` will validate the data, by default it is set to the
         class's ``validateWrite`` value, can be overridden.
@@ -816,28 +815,24 @@ def _writeGlyphToBytes(
         glyphAttrs["formatMinor"] = repr(formatVersion.minor)
     root = etree.Element("glyph", glyphAttrs)
     identifiers: set[str] = set()
-    if glyphObject is not None:
-        # advance
-        _writeAdvance(glyphObject, root, validate)
-        # unicodes
-        if getattr(glyphObject, "unicodes", None):
-            _writeUnicodes(glyphObject, root, validate)
-        # note
-        if getattr(glyphObject, "note", None):
-            _writeNote(glyphObject, root, validate)
-        # image
-        if formatVersion.major >= 2 and getattr(glyphObject, "image", None):
-            _writeImage(glyphObject, root, validate)
-        # guidelines
-        if formatVersion.major >= 2 and getattr(glyphObject, "guidelines", None):
-            _writeGuidelines(glyphObject, root, identifiers, validate)
-        # anchors
-        anchors = getattr(glyphObject, "anchors", None)
-        if formatVersion.major >= 2 and anchors:
-            _writeAnchors(glyphObject, root, identifiers, validate)
-        # lib
-        if getattr(glyphObject, "lib", None):
-            _writeLib(glyphObject, root, validate)
+    # advance
+    _writeAdvance(glyphObject, root, validate)
+    # unicodes
+    if getattr(glyphObject, "unicodes", None):
+        _writeUnicodes(glyphObject, root, validate)
+    # note
+    if getattr(glyphObject, "note", None):
+        _writeNote(glyphObject, root, validate)
+    # image
+    if formatVersion.major >= 2 and getattr(glyphObject, "image", None):
+        _writeImage(glyphObject, root, validate)
+    # guidelines
+    if formatVersion.major >= 2 and getattr(glyphObject, "guidelines", None):
+        _writeGuidelines(glyphObject, root, identifiers, validate)
+    # anchors
+    anchors = getattr(glyphObject, "anchors", None)
+    if formatVersion.major >= 2 and anchors:
+        _writeAnchors(glyphObject, root, identifiers, validate)
     # outline
     if drawPointsFunc is not None:
         outline = etree.SubElement(root, "outline")
@@ -848,6 +843,9 @@ def _writeGlyphToBytes(
         # prevent lxml from writing self-closing tags
         if not len(outline):
             outline.text = "\n  "
+    # lib
+    if getattr(glyphObject, "lib", None):
+        _writeLib(glyphObject, root, validate)
     # return the text
     data = etree.tostring(
         root, encoding="UTF-8", xml_declaration=True, pretty_print=True
@@ -1108,15 +1106,16 @@ def validateLayerInfoVersion3ValueForAttribute(attr: str, value: Any) -> bool:
     validator = dataValidationDict.get("valueValidator")
     valueOptions = dataValidationDict.get("valueOptions")
     # have specific options for the validator
-
-    if not callable(validator):
-        return False
+    assert callable(validator)
     if valueOptions is not None:
-        return validator(value, valueOptions)
+        isValidValue = validator(value, valueOptions)
     # no specific options
-    if validator == genericTypeValidator:
-        return validator(value, valueType)
-    return validator(value)
+    else:
+        if validator == genericTypeValidator:
+            isValidValue = validator(value, valueType)
+        else:
+            isValidValue = validator(value)
+    return isValidValue
 
 
 def validateLayerInfoVersion3Data(infoData: dict[str, Any]) -> dict[str, Any]:
@@ -1559,12 +1558,11 @@ def _buildOutlineComponentFormat1(
     if validate and baseGlyphName is None:
         raise GlifLibError("The base attribute is not defined in the component.")
     assert baseGlyphName is not None
+    transformation = tuple(
+        _number(component.get(attr) or default) for attr, default in _transformationInfo
+    )
     transformation = cast(
-        tuple[float, float, float, float, float, float],
-        tuple(
-            float(_number(component.get(attr) or default))
-            for attr, default in _transformationInfo
-        ),
+        tuple[float, float, float, float, float, float], transformation
     )
     pen.addComponent(baseGlyphName, transformation)
 
@@ -1662,10 +1660,7 @@ def _buildOutlinePointsFormat2(
 
 
 def _buildOutlineComponentFormat2(
-    pen: AbstractPointPen,
-    component: ElementType,
-    identifiers: set[str],
-    validate: bool,
+    pen: AbstractPointPen, component: ElementType, identifiers: set[str], validate: bool
 ) -> None:
     if validate:
         if len(component):
@@ -1677,12 +1672,11 @@ def _buildOutlineComponentFormat2(
     if validate and baseGlyphName is None:
         raise GlifLibError("The base attribute is not defined in the component.")
     assert baseGlyphName is not None
+    transformation = tuple(
+        _number(component.get(attr) or default) for attr, default in _transformationInfo
+    )
     transformation = cast(
-        tuple[float, float, float, float, float, float],
-        tuple(
-            float(_number(component.get(attr) or default))
-            for attr, default in _transformationInfo
-        ),
+        tuple[float, float, float, float, float, float], transformation
     )
     identifier = component.get("identifier")
     if identifier is not None:
