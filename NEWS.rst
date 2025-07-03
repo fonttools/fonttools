@@ -1,3 +1,6 @@
+4.58.5 (released 2025-07-03)
+----------------------------
+
 - [feaLib] Don't try to combine ligature & multisub rules (#3874).
 - [feaLib/ast] Use weakref proxies to avoid cycles in visitor (#3873).
 - [varLib.instancer] Fixed instancing CFF2 fonts where VarData contains more than 64k items (#3858).
