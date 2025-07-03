@@ -116,8 +116,8 @@ class RoundingPointPen(FilterPointPen):
     def addComponent(self, baseGlyphName, transformation, identifier=None, **kwargs):
         xx, xy, yx, yy, dx, dy = transformation
         self._outPen.addComponent(
-            baseGlyphName=baseGlyphName,
-            transformation=Transform(
+            baseGlyphName,
+            Transform(
                 self.transformRoundFunc(xx),
                 self.transformRoundFunc(xy),
                 self.transformRoundFunc(yx),
