@@ -7,9 +7,10 @@ code, as well as the 'extra' programs 'fpgm', 'ppgm' (i.e. 'prep'), and 'cvt'.
 See also https://learn.microsoft.com/en-us/typography/tools/vtt/tsi-tables
 """
 
-from . import DefaultTable
 from fontTools.misc.loggingTools import LogMixin
 from fontTools.misc.textTools import strjoin, tobytes, tostr
+
+from . import DefaultTable
 
 
 class table_T_S_I__1(LogMixin, DefaultTable.DefaultTable):

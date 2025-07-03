@@ -1,32 +1,32 @@
-from io import BytesIO
-import sys
 import array
+import logging
 import struct
+import sys
 from collections import OrderedDict
+from io import BytesIO
+
 from fontTools.misc import sstruct
 from fontTools.misc.arrayTools import calcIntBounds
 from fontTools.misc.textTools import Tag, bytechr, byteord, bytesjoin, pad
 from fontTools.ttLib import (
     TTFont,
     TTLibError,
-    getTableModule,
-    getTableClass,
     getSearchRange,
+    getTableClass,
+    getTableModule,
 )
 from fontTools.ttLib.sfnt import (
+    DirectoryEntry,
+    SFNTDirectoryEntry,
     SFNTReader,
     SFNTWriter,
-    DirectoryEntry,
     WOFFFlavorData,
+    calcChecksum,
+    sfntDirectoryEntrySize,
     sfntDirectoryFormat,
     sfntDirectorySize,
-    SFNTDirectoryEntry,
-    sfntDirectoryEntrySize,
-    calcChecksum,
 )
-from fontTools.ttLib.tables import ttProgram, _g_l_y_f
-import logging
-
+from fontTools.ttLib.tables import _g_l_y_f, ttProgram
 
 log = logging.getLogger("fontTools.ttLib.woff2")
 
