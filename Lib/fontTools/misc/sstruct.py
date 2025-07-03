@@ -46,10 +46,12 @@ calcsize(fmt)
     it returns the size of the data in bytes.
 """
 
-from fontTools.misc.fixedTools import fixedToFloat as fi2fl, floatToFixed as fl2fi
-from fontTools.misc.textTools import tobytes, tostr
-import struct
 import re
+import struct
+
+from fontTools.misc.fixedTools import fixedToFloat as fi2fl
+from fontTools.misc.fixedTools import floatToFixed as fl2fi
+from fontTools.misc.textTools import tobytes, tostr
 
 __version__ = "1.2"
 __copyright__ = "Copyright 1998, Just van Rossum <just@letterror.com>"
