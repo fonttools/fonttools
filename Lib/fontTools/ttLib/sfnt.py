@@ -375,10 +375,9 @@ class SFNTWriter(object):
 
     def _calcMasterChecksum(self, directory):
         # calculate checkSumAdjustment
-        tags = list(self.tables.keys())
         checksums = []
-        for i in range(len(tags)):
-            checksums.append(self.tables[tags[i]].checkSum)
+        for tag in self.tables.keys():
+            checksums.append(self.tables[tag].checkSum)
 
         if self.DirectoryEntry != SFNTDirectoryEntry:
             # Create a SFNT directory for checksum calculation purposes

@@ -1,3 +1,4 @@
+import enum
 import logging
 import os
 import traceback
@@ -338,8 +339,7 @@ class TTFont(object):
         else:
             path, ext = os.path.splitext(writer.filename)
 
-        for i in range(numTables):
-            tag = tables[i]
+        for tag in tables:
             if splitTables:
                 tablePath = path + "." + tagToIdentifier(tag) + ext
                 tableWriter = xmlWriter.XMLWriter(
@@ -609,8 +609,7 @@ class TTFont(object):
         else:
             reversecmap = {}
         useCount = {}
-        for i in range(numGlyphs):
-            tempName = glyphOrder[i]
+        for i, tempName in enumerate(glyphOrder):
             if tempName in reversecmap:
                 # If a font maps both U+0041 LATIN CAPITAL LETTER A and
                 # U+0391 GREEK CAPITAL LETTER ALPHA to the same glyph,
@@ -867,8 +866,7 @@ class GlyphOrder(object):
             "The 'id' attribute is only for humans; " "it is ignored when parsed."
         )
         writer.newline()
-        for i in range(len(glyphOrder)):
-            glyphName = glyphOrder[i]
+        for i, glyphName in enumerate(glyphOrder):
             writer.simpletag("GlyphID", id=i, name=glyphName)
             writer.newline()
 
