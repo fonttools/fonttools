@@ -69,22 +69,21 @@
         <FeatureTag value="salt"/>
         <Feature>
           <!-- LookupCount=3 -->
-          <LookupListIndex index="0" value="4"/>
-          <LookupListIndex index="1" value="5"/>
-          <LookupListIndex index="2" value="7"/>
+          <LookupListIndex index="0" value="3"/>
+          <LookupListIndex index="1" value="4"/>
+          <LookupListIndex index="2" value="6"/>
         </Feature>
       </FeatureRecord>
       <FeatureRecord index="2">
         <FeatureTag value="smcp"/>
         <Feature>
-          <!-- LookupCount=2 -->
+          <!-- LookupCount=1 -->
           <LookupListIndex index="0" value="2"/>
-          <LookupListIndex index="1" value="3"/>
         </Feature>
       </FeatureRecord>
     </FeatureList>
     <LookupList>
-      <!-- LookupCount=8 -->
+      <!-- LookupCount=7 -->
       <Lookup index="0">
         <LookupType value="1"/>
         <LookupFlag value="0"/>
@@ -119,26 +118,25 @@
         </AlternateSubst>
       </Lookup>
       <Lookup index="2">
-        <LookupType value="1"/>
-        <LookupFlag value="0"/>
-        <!-- SubTableCount=1 -->
-        <SingleSubst index="0">
-          <Substitution in="a" out="A.sc"/>
-          <Substitution in="b" out="B.sc"/>
-          <Substitution in="c" out="C.sc"/>
-        </SingleSubst>
-      </Lookup>
-      <Lookup index="3">
         <LookupType value="4"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <LigatureSubst index="0">
+          <LigatureSet glyph="a">
+            <Ligature components="" glyph="A.sc"/>
+          </LigatureSet>
+          <LigatureSet glyph="b">
+            <Ligature components="" glyph="B.sc"/>
+          </LigatureSet>
+          <LigatureSet glyph="c">
+            <Ligature components="" glyph="C.sc"/>
+          </LigatureSet>
           <LigatureSet glyph="f">
             <Ligature components="i" glyph="f_i"/>
           </LigatureSet>
         </LigatureSubst>
       </Lookup>
-      <Lookup index="4">
+      <Lookup index="3">
         <LookupType value="3"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
@@ -150,7 +148,7 @@
           </AlternateSet>
         </AlternateSubst>
       </Lookup>
-      <Lookup index="5">
+      <Lookup index="4">
         <LookupType value="6"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
@@ -172,11 +170,11 @@
           <!-- SubstCount=1 -->
           <SubstLookupRecord index="0">
             <SequenceIndex value="0"/>
-            <LookupListIndex value="6"/>
+            <LookupListIndex value="5"/>
           </SubstLookupRecord>
         </ChainContextSubst>
       </Lookup>
-      <Lookup index="6">
+      <Lookup index="5">
         <LookupType value="1"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
@@ -186,7 +184,7 @@
           <Substitution in="e" out="e.mid"/>
         </SingleSubst>
       </Lookup>
-      <Lookup index="7">
+      <Lookup index="6">
         <LookupType value="1"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->

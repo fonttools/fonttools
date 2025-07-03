@@ -1225,7 +1225,7 @@ class Glyph(object):
                 if boundsDone is not None:
                     boundsDone.add(glyphName)
             # empty components shouldn't update the bounds of the parent glyph
-            if g.numberOfContours == 0:
+            if g.yMin == g.yMax and g.xMin == g.xMax:
                 continue
 
             x, y = compo.x, compo.y
@@ -1285,11 +1285,7 @@ class Glyph(object):
                 # however, if the referenced component glyph is another composite, we
                 # must not round here but only at the end, after all the nested
                 # transforms have been applied, or else rounding errors will compound.
-                if (
-                    round is not noRound
-                    and g.numberOfContours > 0
-                    and not compo._hasOnlyIntegerTranslate()
-                ):
+                if round is not noRound and g.numberOfContours > 0:
                     coordinates.toInt(round=round)
                 if hasattr(compo, "firstPt"):
                     # component uses two reference points: we apply the transform _before_

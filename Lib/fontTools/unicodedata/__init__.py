@@ -15,8 +15,7 @@ except ImportError:  # pragma: no cover
     # fall back to built-in unicodedata (possibly outdated)
     from unicodedata import *
 
-from . import Blocks, Scripts, ScriptExtensions, OTTags
-
+from . import Blocks, Mirrored, Scripts, ScriptExtensions, OTTags
 
 __all__ = [
     # names from built-in unicodedata module
@@ -44,6 +43,11 @@ __all__ = [
     "ot_tags_from_script",
     "ot_tag_to_script",
 ]
+
+
+def mirrored(code):
+    """If code (unicode codepoint) has a mirrored version returns it, otherwise None."""
+    return Mirrored.MIRRORED.get(code)
 
 
 def script(char):

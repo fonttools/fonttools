@@ -1,0 +1,32 @@
+languagesystem DFLT dflt;
+
+lookup liga1 useExtension {
+  sub f i by f_i;
+} liga1;
+
+lookup liga2 {
+  sub f l by f_l;
+} liga2;
+
+lookup liga3 useExtension {
+  sub a f' f' i' by f_f_i;
+} liga3;
+
+feature liga {
+  lookup liga1;
+  lookup liga2;
+  lookup liga3;
+} liga;
+
+lookup kern1 useExtension {
+  pos A V -100;
+} kern1;
+
+lookup kern2 {
+  pos V A -100;
+} kern2;
+
+feature kern {
+  lookup kern1;
+  lookup kern2;
+} kern;

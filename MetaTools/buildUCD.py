@@ -35,7 +35,7 @@ def read_unidata_file(filename, local_ucd_path=None) -> List[str]:
     Return the list of lines.
     """
     if local_ucd_path is not None:
-        with open(pjoin(local_ucd_path, filename), "r", encoding="utf-8") as f:
+        with open(pjoin(local_ucd_path, filename), "r", encoding="utf-8-sig") as f:
             return f.readlines()
     else:
         url = UNIDATA_URL + filename

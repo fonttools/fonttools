@@ -1,0 +1,5 @@
+feature blwf {
+    sub a b by c;
+    sub c by b a;
+} blwf;
+

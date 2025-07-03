@@ -1464,10 +1464,11 @@ class CharsetConverter(SimpleConverter):
                 if glyphName in allNames:
                     # make up a new glyphName that's unique
                     n = allNames[glyphName]
-                    while (glyphName + "#" + str(n)) in allNames:
+                    names = set(allNames) | set(charset)
+                    while (glyphName + "." + str(n)) in names:
                         n += 1
                     allNames[glyphName] = n + 1
-                    glyphName = glyphName + "#" + str(n)
+                    glyphName = glyphName + "." + str(n)
                 allNames[glyphName] = 1
                 newCharset.append(glyphName)
             charset = newCharset
@@ -1663,25 +1664,26 @@ class EncodingConverter(SimpleConverter):
             return "StandardEncoding"
         elif value == 1:
             return "ExpertEncoding"
+        # custom encoding at offset `value`
+        assert value > 1
+        file = parent.file
+        file.seek(value)
+        log.log(DEBUG, "loading Encoding at %s", value)
+        fmt = readCard8(file)
+        haveSupplement = bool(fmt & 0x80)
+        fmt = fmt & 0x7F
+
+        if fmt == 0:
+            encoding = parseEncoding0(parent.charset, file)
+        elif fmt == 1:
+            encoding = parseEncoding1(parent.charset, file)
         else:
-            assert value > 1
-            file = parent.file
-            file.seek(value)
-            log.log(DEBUG, "loading Encoding at %s", value)
-            fmt = readCard8(file)
-            haveSupplement = fmt & 0x80
-            if haveSupplement:
-                raise NotImplementedError("Encoding supplements are not yet supported")
-            fmt = fmt & 0x7F
-            if fmt == 0:
-                encoding = parseEncoding0(
-                    parent.charset, file, haveSupplement, parent.strings
-                )
-            elif fmt == 1:
-                encoding = parseEncoding1(
-                    parent.charset, file, haveSupplement, parent.strings
-                )
-            return encoding
+            raise ValueError(f"Unknown Encoding format: {fmt}")
+
+        if haveSupplement:
+            parseEncodingSupplement(file, encoding, parent.strings)
+
+        return encoding
 
     def write(self, parent, value):
         if value == "StandardEncoding":
@@ -1719,27 +1721,60 @@ class EncodingConverter(SimpleConverter):
         return encoding
 
 
-def parseEncoding0(charset, file, haveSupplement, strings):
+def readSID(file):
+    """Read a String ID (SID) — 2-byte unsigned integer."""
+    data = file.read(2)
+    if len(data) != 2:
+        raise EOFError("Unexpected end of file while reading SID")
+    return struct.unpack(">H", data)[0]  # big-endian uint16
+
+
+def parseEncodingSupplement(file, encoding, strings):
+    """
+    Parse the CFF Encoding supplement data:
+      - nSups: number of supplementary mappings
+      - each mapping: (code, SID) pair
+    and apply them to the `encoding` list in place.
+    """
+    nSups = readCard8(file)
+    for _ in range(nSups):
+        code = readCard8(file)
+        sid = readSID(file)
+        name = strings[sid]
+        encoding[code] = name
+
+
+def parseEncoding0(charset, file):
+    """
+    Format 0: simple list of codes.
+    After reading the base table, optionally parse the supplement.
+    """
     nCodes = readCard8(file)
     encoding = [".notdef"] * 256
     for glyphID in range(1, nCodes + 1):
         code = readCard8(file)
         if code != 0:
             encoding[code] = charset[glyphID]
+
     return encoding
 
 
-def parseEncoding1(charset, file, haveSupplement, strings):
+def parseEncoding1(charset, file):
+    """
+    Format 1: range-based encoding.
+    After reading the base ranges, optionally parse the supplement.
+    """
     nRanges = readCard8(file)
     encoding = [".notdef"] * 256
     glyphID = 1
-    for i in range(nRanges):
+    for _ in range(nRanges):
         code = readCard8(file)
         nLeft = readCard8(file)
-        for glyphID in range(glyphID, glyphID + nLeft + 1):
+        for _ in range(nLeft + 1):
             encoding[code] = charset[glyphID]
-            code = code + 1
-        glyphID = glyphID + 1
+            code += 1
+            glyphID += 1
+
     return encoding
 
 

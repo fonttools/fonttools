@@ -68,7 +68,7 @@ class BuilderTest(unittest.TestCase):
         spec4h1 spec4h2 spec5d1 spec5d2 spec5fi1 spec5fi2 spec5fi3 spec5fi4
         spec5f_ii_1 spec5f_ii_2 spec5f_ii_3 spec5f_ii_4
         spec5h1 spec6b_ii spec6d2 spec6e spec6f
-        spec6h_ii spec6h_iii_1 spec6h_iii_3d spec8a spec8b spec8c spec8d
+        spec6h_ii spec6h_iii_1 spec6h_iii_3d spec8a spec8a_2 spec8b spec8c spec8d
         spec9a spec9a2 spec9b spec9c1 spec9c2 spec9c3 spec9d spec9e spec9f
         spec9g spec10
         bug453 bug457 bug463 bug501 bug502 bug504 bug505 bug506 bug509
@@ -87,6 +87,16 @@ class BuilderTest(unittest.TestCase):
         contextual_inline_multi_sub_format_2
         contextual_inline_format_4
         duplicate_language_stmt
+        CursivePosSubtable
+        MarkBasePosSubtable
+        MarkLigPosSubtable
+        MarkMarkPosSubtable
+        single_pos_NULL
+        class_pair_pos_duplicates
+        useExtension
+        bug3846_1 bug3846_2
+        empty_filter_sets_and_mark_classes
+        combo_mult_and_lig_sub
     """.split()
 
     VARFONT_AXES = [
@@ -269,14 +279,12 @@ class BuilderTest(unittest.TestCase):
                 "    sub A by A.sc;"
                 "} test;"
             )
-        captor.assertRegex(
-            'Removing duplicate single substitution from glyph "A" to "A.sc"'
-        )
+        captor.assertRegex('Removing duplicate substitution from "A" to "A.sc"')
 
     def test_multipleSubst_multipleSubstitutionsForSameGlyph(self):
         self.assertRaisesRegex(
             FeatureLibError,
-            'Already defined substitution for glyph "f_f_i"',
+            'Already defined substitution for "f_f_i"',
             self.build,
             "feature test {"
             "    sub f_f_i by f f i;"
@@ -295,9 +303,161 @@ class BuilderTest(unittest.TestCase):
                 "    sub f_f_i by f f i;"
                 "} test;"
             )
-        captor.assertRegex(
-            r"Removing duplicate multiple substitution from glyph \"f_f_i\" to \('f', 'f', 'i'\)"
+        captor.assertRegex('Removing duplicate substitution from "f_f_i" to "f, f, i"')
+
+    def test_mixed_singleSubst_multipleSubst(self):
+        font = self.build(
+            "lookup test {"
+            "  sub f_f   by f f;"
+            "  sub f     by f;"
+            "  sub f_f_i by f f i;"
+            "  sub [A A.sc] by A;"
+            "  sub [B B.sc] by [B B.sc];"
+            "} test;"
         )
+
+        assert "GSUB" in font
+        st = font["GSUB"].table.LookupList.Lookup[0].SubTable[0]
+        self.assertEqual(st.LookupType, 2)
+        self.assertEqual(
+            st.mapping,
+            {
+                "f_f": ("f", "f"),
+                "f": ("f",),
+                "f_f_i": ("f", "f", "i"),
+                "A": ("A",),
+                "A.sc": ("A",),
+                "B": ("B",),
+                "B.sc": ("B.sc",),
+            },
+        )
+
+    def test_mixed_singleSubst_multipleSubst_aalt(self):
+        font = self.build(
+            dedent(
+                """
+                feature aalt {
+                  feature ccmp;
+                } aalt;
+
+                feature ccmp {
+                  sub f_f   by f f;
+                  sub f     by f;
+                  sub f_f_i by f f i;
+                  sub [A A.sc] by A;
+                  sub [B B.sc] by [B B.sc];
+                } ccmp;
+                """
+            )
+        )
+
+        assert "GSUB" in font
+        st = font["GSUB"].table.LookupList.Lookup[0].SubTable[0]
+        self.assertEqual(st.LookupType, 1)
+        self.assertEqual(
+            st.mapping,
+            {
+                "A": "A",
+                "A.sc": "A",
+                "B": "B",
+                "B.sc": "B.sc",
+                "f": "f",
+            },
+        )
+
+    def test_mixed_singleSubst_ligatureSubst(self):
+        font = self.build(
+            "lookup test {"
+            "  sub f f   by f_f;"
+            "  sub f f i by f_f_i;"
+            "  sub A     by A.sc;"
+            "} test;"
+        )
+
+        assert "GSUB" in font
+        st = font["GSUB"].table.LookupList.Lookup[0].SubTable[0]
+        self.assertEqual(st.LookupType, 4)
+        self.assertEqual(len(st.ligatures), 2)
+        self.assertEqual(len(st.ligatures["f"]), 2)
+        self.assertEqual(st.ligatures["f"][0].LigGlyph, "f_f_i")
+        self.assertEqual(len(st.ligatures["f"][0].Component), 2)
+        self.assertEqual(st.ligatures["f"][0].Component[0], "f")
+        self.assertEqual(st.ligatures["f"][0].Component[1], "i")
+        self.assertEqual(st.ligatures["f"][1].LigGlyph, "f_f")
+        self.assertEqual(len(st.ligatures["f"][1].Component), 1)
+        self.assertEqual(st.ligatures["f"][1].Component[0], "f")
+        self.assertEqual(len(st.ligatures["A"]), 1)
+        self.assertEqual(st.ligatures["A"][0].LigGlyph, "A.sc")
+        self.assertEqual(len(st.ligatures["A"][0].Component), 0)
+
+    def test_mixed_singleSubst_ligatureSubst_aalt(self):
+        font = self.build(
+            dedent(
+                """
+                feature aalt {
+                  feature liga;
+                } aalt;
+
+                feature liga {
+                  sub f f   by f_f;
+                  sub f f i by f_f_i;
+                  sub A     by A.sc;
+                } liga;
+                """
+            )
+        )
+
+        assert "GSUB" in font
+        st = font["GSUB"].table.LookupList.Lookup[0].SubTable[0]
+        self.assertEqual(st.LookupType, 1)
+        self.assertEqual(st.mapping, {"A": "A.sc"})
+
+    def test_mixed_singleSubst_multipleSubst_ligatureSubst_named_lookup(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Within a named lookup block, all rules must be of the "
+            "same lookup type and flag",
+            self.build,
+            "lookup test {"
+            "  sub A     by A.sc;"
+            "  sub f_f   by f f;"
+            "  sub f f i by f_f_i;"
+            "} test;",
+        )
+
+    def test_mixed_singleSubst_multipleSubst_ligatureSubst_feature(self):
+        font = self.build(
+            dedent(
+                """
+                feature test {
+                  sub A     by A.sc;
+                  sub f_f   by f f;
+                  sub f f i by f_f_i;
+                } test;
+                """
+            )
+        )
+
+        assert "GSUB" in font
+        lookups = font["GSUB"].table.LookupList.Lookup
+        self.assertEqual(len(lookups), 2)
+        st = lookups[0].SubTable[0]
+        # first should get promoted to multi
+        self.assertEqual(st.LookupType, 2)
+        self.assertEqual(st.mapping, {"A": ("A.sc",), "f_f": ("f", "f")})
+        # st = lookups[1].SubTable[0]
+        # self.assertEqual(st.LookupType, 2)
+        # self.assertEqual(st.mapping, {"f_f": ("f", "f")})
+        st = lookups[1].SubTable[0]
+        self.assertEqual(st.LookupType, 4)
+        self.assertEqual(len(st.ligatures), 1)
+        self.assertEqual(len(st.ligatures["f"]), 1)
+        self.assertEqual(st.ligatures["f"][0].LigGlyph, "f_f_i")
+
+        features = font["GSUB"].table.FeatureList.FeatureRecord
+        self.assertEqual(len(features), 1)
+        feat = features[0].Feature
+        self.assertEqual(feat.LookupListIndex, [0, 1])
 
     def test_pairPos_redefinition_warning(self):
         # https://github.com/fonttools/fonttools/issues/1147
@@ -327,7 +487,7 @@ class BuilderTest(unittest.TestCase):
     def test_singleSubst_multipleSubstitutionsForSameGlyph(self):
         self.assertRaisesRegex(
             FeatureLibError,
-            'Already defined rule for replacing glyph "e" by "E.sc"',
+            'Already defined substitution for "e"',
             self.build,
             "feature test {"
             "    sub [a-z] by [A.sc-Z.sc];"
@@ -937,6 +1097,14 @@ class BuilderTest(unittest.TestCase):
             )
         captor.assertRegex("Already defined position for pair A V at")
 
+    def test_ligatureSubst_conflicting_rules(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            'Already defined substitution for "a, b"',
+            self.build,
+            "feature test {" "    sub a b by one;" "    sub a b by two;" "} test;",
+        )
+
     def test_ignore_empty_lookup_block(self):
         # https://github.com/fonttools/fonttools/pull/2277
         font = self.build(
@@ -1178,6 +1346,14 @@ class BuilderTest(unittest.TestCase):
         font = self.make_mock_vf()
         addOpenTypeFeatures(font, feafile)
         assert dedent(str(feafile)) == dedent(features)
+
+    def test_feature_useExtension(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "'useExtension' keyword for feature blocks is allowed only for 'aalt' feature",
+            self.build,
+            "feature liga useExtension { sub f f by f_f; } liga;",
+        )
 
 
 def generate_feature_file_test(name):

@@ -2,7 +2,8 @@
 cliTools: Utilities for command-line interfaces and console scripts
 ###################################################################
 
+.. currentmodule:: fontTools.misc.cliTools
+
 .. automodule:: fontTools.misc.cliTools
-   :inherited-members:
    :members:
    :undoc-members:

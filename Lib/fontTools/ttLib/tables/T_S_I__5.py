@@ -1,4 +1,4 @@
-""" TSI{0,1,2,3,5} are private tables used by Microsoft Visual TrueType (VTT)
+"""TSI{0,1,2,3,5} are private tables used by Microsoft Visual TrueType (VTT)
 tool to store its hinting source data.
 
 TSI5 contains the VTT character groups.
@@ -6,22 +6,33 @@ TSI5 contains the VTT character groups.
 See also https://learn.microsoft.com/en-us/typography/tools/vtt/tsi-tables
 """
 
-from fontTools.misc.textTools import safeEval
-from . import DefaultTable
-import sys
 import array
+import logging
+import sys
+
+from fontTools.misc.textTools import safeEval
+
+from . import DefaultTable
+
+log = logging.getLogger(__name__)
 
 
 class table_T_S_I__5(DefaultTable.DefaultTable):
     def decompile(self, data, ttFont):
         numGlyphs = ttFont["maxp"].numGlyphs
-        assert len(data) == 2 * numGlyphs
         a = array.array("H")
         a.frombytes(data)
         if sys.byteorder != "big":
             a.byteswap()
         self.glyphGrouping = {}
-        for i in range(numGlyphs):
+        numEntries = len(data) // 2
+        if numEntries != numGlyphs:
+            diff = numEntries - numGlyphs
+            log.warning(
+                "Number of entries differs from the number of glyphs in the font "
+                f"by {abs(diff)} ({numEntries} entries vs. {numGlyphs} glyphs)."
+            )
+        for i in range(numEntries):
             self.glyphGrouping[ttFont.getGlyphName(i)] = a[i]
 
     def compile(self, ttFont):

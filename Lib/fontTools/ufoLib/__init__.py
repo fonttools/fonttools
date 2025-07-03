@@ -204,7 +204,7 @@ class UFOReader(_UFOBaseIO):
     """Read the various components of a .ufo.
 
     Attributes:
-        path: An `os.PathLike` object pointing to the .ufo.
+        path: An :class:`os.PathLike` object pointing to the .ufo.
         validate: A boolean indicating if the data read should be
           validated. Defaults to `True`.
 
@@ -654,7 +654,7 @@ class UFOReader(_UFOBaseIO):
         The returned string is empty if the file is missing.
         """
         try:
-            with self.fs.open(FEATURES_FILENAME, "r", encoding="utf-8") as f:
+            with self.fs.open(FEATURES_FILENAME, "r", encoding="utf-8-sig") as f:
                 return f.read()
         except fs.errors.ResourceNotFound:
             return ""
@@ -891,7 +891,7 @@ class UFOWriter(UFOReader):
     """Write the various components of a .ufo.
 
     Attributes:
-        path: An `os.PathLike` object pointing to the .ufo.
+        path: An :class:`os.PathLike` object pointing to the .ufo.
         formatVersion: the UFO format version as a tuple of integers (major, minor),
             or as a single integer for the major digit only (minor is implied to be 0).
             By default, the latest formatVersion will be used; currently it is 3.0,

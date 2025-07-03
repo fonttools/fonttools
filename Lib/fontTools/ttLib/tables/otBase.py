@@ -422,6 +422,7 @@ class OTTableWriter(object):
         self.tableTag = tableTag
         self.alignment = alignment
         self.parent = None
+        self.name = "<none>"
 
     def __setitem__(self, name, value):
         state = self.localState.copy() if self.localState else dict()

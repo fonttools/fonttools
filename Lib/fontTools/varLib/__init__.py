@@ -109,6 +109,8 @@ def _add_fvar(font, axes, instances: List[InstanceDescriptor]):
         axis.flags = int(a.hidden)
         fvar.axes.append(axis)
 
+    default_coordinates = {axis.axisTag: axis.defaultValue for axis in fvar.axes}
+
     for instance in instances:
         # Filter out discrete axis locations
         coordinates = {
@@ -130,16 +132,26 @@ def _add_fvar(font, axes, instances: List[InstanceDescriptor]):
         psname = instance.postScriptFontName
 
         inst = NamedInstance()
-        inst.subfamilyNameID = nameTable.addMultilingualName(
-            localisedStyleName, mac=macNames
-        )
-        if psname is not None:
-            psname = tostr(psname)
-            inst.postscriptNameID = nameTable.addName(psname, platforms=platforms)
         inst.coordinates = {
             axes[k].tag: axes[k].map_backward(v) for k, v in coordinates.items()
         }
-        # inst.coordinates = {axes[k].tag:v for k,v in coordinates.items()}
+
+        subfamilyNameID = nameTable.findMultilingualName(
+            localisedStyleName, windows=True, mac=macNames
+        )
+        if subfamilyNameID in {2, 17} and inst.coordinates == default_coordinates:
+            # Instances can only reuse an existing name ID 2 or 17 if they are at the
+            # default location across all axes, see:
+            # https://github.com/fonttools/fonttools/issues/3825.
+            inst.subfamilyNameID = subfamilyNameID
+        else:
+            inst.subfamilyNameID = nameTable.addMultilingualName(
+                localisedStyleName, windows=True, mac=macNames, minNameID=256
+            )
+
+        if psname is not None:
+            psname = tostr(psname)
+            inst.postscriptNameID = nameTable.addName(psname, platforms=platforms)
         fvar.instances.append(inst)
 
     assert "fvar" not in font
@@ -555,6 +567,8 @@ def _add_VHVAR(font, axisTags, tableFields, getAdvanceMetrics):
             varData.addItem(vhAdvanceDeltasAndSupports[glyphName][0], round=noRound)
         varData.optimize()
         directStore = builder.buildVarStore(varTupleList, [varData])
+        # remove unused regions from VarRegionList
+        directStore.prune_regions()
 
     # Build optimized indirect mapping
     storeBuilder = varStore.OnlineVarStoreBuilder(axisTags)

@@ -36,13 +36,13 @@ The TTX file format
 The following tables are currently supported::
 
     BASE, CBDT, CBLC, CFF, CFF2, COLR, CPAL, DSIG, Debg, EBDT, EBLC,
-    FFTM, Feat, GDEF, GMAP, GPKG, GPOS, GSUB, Glat, Gloc, HVAR, JSTF,
-    LTSH, MATH, META, MVAR, OS/2, SING, STAT, SVG, Silf, Sill, TSI0,
-    TSI1, TSI2, TSI3, TSI5, TSIB, TSIC, TSID, TSIJ, TSIP, TSIS, TSIV,
-    TTFA, VARC, VDMX, VORG, VVAR, ankr, avar, bsln, cidg, cmap, cvar,
-    cvt, feat, fpgm, fvar, gasp, gcid, glyf, gvar, hdmx, head, hhea,
-    hmtx, hvgl, kern, lcar, loca, ltag, maxp, meta, mort, morx, name,
-    opbd, post, prep, prop, sbix, trak, vhea and vmtx
+    FFTM, Feat, GDEF, GMAP, GPKG, GPOS, GSUB, GVAR, Glat, Gloc, HVAR,
+    JSTF, LTSH, MATH, META, MVAR, OS/2, SING, STAT, SVG, Silf, Sill,
+    TSI0, TSI1, TSI2, TSI3, TSI5, TSIB, TSIC, TSID, TSIJ, TSIP, TSIS,
+    TSIV, TTFA, VARC, VDMX, VORG, VVAR, ankr, avar, bsln, cidg, cmap,
+    cvar, cvt, feat, fpgm, fvar, gasp, gcid, glyf, gvar, hdmx, head,
+    hhea, hmtx, hvgl, kern, lcar, loca, ltag, maxp, meta, mort, morx,
+    name, opbd, post, prep, prop, sbix, trak, vhea and vmtx
 
 .. end table list
 

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont>
+
+  <GPOS>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=0 -->
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=0 -->
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=3 -->
+      <Lookup index="0">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SinglePos index="0" Format="1">
+          <Coverage>
+            <Glyph value="A"/>
+          </Coverage>
+          <ValueFormat value="0"/>
+        </SinglePos>
+      </Lookup>
+      <Lookup index="1">
+        <LookupType value="8"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <ChainContextPos index="0" Format="3">
+          <!-- BacktrackGlyphCount=0 -->
+          <!-- InputGlyphCount=1 -->
+          <InputCoverage index="0">
+            <Glyph value="B"/>
+          </InputCoverage>
+          <!-- LookAheadGlyphCount=0 -->
+          <!-- PosCount=1 -->
+          <PosLookupRecord index="0">
+            <SequenceIndex value="0"/>
+            <LookupListIndex value="2"/>
+          </PosLookupRecord>
+        </ChainContextPos>
+      </Lookup>
+      <Lookup index="2">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SinglePos index="0" Format="1">
+          <Coverage>
+            <Glyph value="B"/>
+          </Coverage>
+          <ValueFormat value="0"/>
+        </SinglePos>
+      </Lookup>
+    </LookupList>
+  </GPOS>
+
+</ttFont>

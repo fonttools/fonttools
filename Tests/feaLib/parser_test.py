@@ -1021,6 +1021,16 @@ class ParserTest(unittest.TestCase):
         with self.assertRaisesRegex(FeatureLibError, "Positioning values are allowed"):
             doc = self.parse("feature kern {" "    pos a' b c 123 d;" "} kern;")
 
+    def test_gpos_type_1_null(self):
+        doc = self.parse("feature test {pos a <NULL>;} test;")
+        pos = doc.statements[0].statements[0]
+        self.assertEqual(pos.asFea(), "pos a <NULL>;")
+
+    def test_gpos_type_1_null_chained(self):
+        doc = self.parse("feature test {pos a' <NULL>;} test;")
+        pos = doc.statements[0].statements[0]
+        self.assertEqual(pos.asFea(), "pos a' <NULL>;")
+
     def test_gpos_type_2_format_a(self):
         doc = self.parse(
             "feature kern {" "    pos [T V] -60 [a b c] <1 2 3 4>;" "} kern;"
@@ -1716,30 +1726,6 @@ class ParserTest(unittest.TestCase):
             "    sub a' lookup upper x x A' lookup lower;"
             "} test;",
         )
-
-    def test_substitute_mix_single_multiple(self):
-        doc = self.parse(
-            "lookup Look {"
-            "  sub f_f   by f f;"
-            "  sub f     by f;"
-            "  sub f_f_i by f f i;"
-            "  sub [a a.sc] by a;"
-            "  sub [a a.sc] by [b b.sc];"
-            "} Look;"
-        )
-        statements = doc.statements[0].statements
-        for sub in statements:
-            self.assertIsInstance(sub, ast.MultipleSubstStatement)
-        self.assertEqual(statements[1].glyph, "f")
-        self.assertEqual(statements[1].replacement, ["f"])
-        self.assertEqual(statements[3].glyph, "a")
-        self.assertEqual(statements[3].replacement, ["a"])
-        self.assertEqual(statements[4].glyph, "a.sc")
-        self.assertEqual(statements[4].replacement, ["a"])
-        self.assertEqual(statements[5].glyph, "a")
-        self.assertEqual(statements[5].replacement, ["b"])
-        self.assertEqual(statements[6].glyph, "a.sc")
-        self.assertEqual(statements[6].replacement, ["b.sc"])
 
     def test_substitute_from(self):  # GSUB LookupType 3
         doc = self.parse(

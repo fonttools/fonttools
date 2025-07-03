@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont>
+
+  <GSUB>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=1 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=1 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="liga"/>
+        <Feature>
+          <!-- LookupCount=3 -->
+          <LookupListIndex index="0" value="0"/>
+          <LookupListIndex index="1" value="1"/>
+          <LookupListIndex index="2" value="2"/>
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=4 -->
+      <Lookup index="0">
+        <LookupType value="7"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <ExtensionSubst index="0" Format="1">
+          <ExtensionLookupType value="4"/>
+          <LigatureSubst>
+            <LigatureSet glyph="f">
+              <Ligature components="i" glyph="f_i"/>
+            </LigatureSet>
+          </LigatureSubst>
+        </ExtensionSubst>
+      </Lookup>
+      <Lookup index="1">
+        <LookupType value="4"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <LigatureSubst index="0">
+          <LigatureSet glyph="f">
+            <Ligature components="l" glyph="f_l"/>
+          </LigatureSet>
+        </LigatureSubst>
+      </Lookup>
+      <Lookup index="2">
+        <LookupType value="7"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <ExtensionSubst index="0" Format="1">
+          <ExtensionLookupType value="6"/>
+          <ChainContextSubst Format="1">
+            <Coverage>
+              <Glyph value="f"/>
+            </Coverage>
+            <!-- ChainSubRuleSetCount=1 -->
+            <ChainSubRuleSet index="0">
+              <!-- ChainSubRuleCount=1 -->
+              <ChainSubRule index="0">
+                <!-- BacktrackGlyphCount=1 -->
+                <Backtrack index="0" value="a"/>
+                <!-- InputGlyphCount=3 -->
+                <Input index="0" value="f"/>
+                <Input index="1" value="i"/>
+                <!-- LookAheadGlyphCount=0 -->
+                <!-- SubstCount=1 -->
+                <SubstLookupRecord index="0">
+                  <SequenceIndex value="0"/>
+                  <LookupListIndex value="3"/>
+                </SubstLookupRecord>
+              </ChainSubRule>
+            </ChainSubRuleSet>
+          </ChainContextSubst>
+        </ExtensionSubst>
+      </Lookup>
+      <Lookup index="3">
+        <LookupType value="7"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <ExtensionSubst index="0" Format="1">
+          <ExtensionLookupType value="4"/>
+          <LigatureSubst>
+            <LigatureSet glyph="f">
+              <Ligature components="f,i" glyph="f_f_i"/>
+            </LigatureSet>
+          </LigatureSubst>
+        </ExtensionSubst>
+      </Lookup>
+    </LookupList>
+  </GSUB>
+
+  <GPOS>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=1 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=1 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="kern"/>
+        <Feature>
+          <!-- LookupCount=2 -->
+          <LookupListIndex index="0" value="0"/>
+          <LookupListIndex index="1" value="1"/>
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=2 -->
+      <Lookup index="0">
+        <LookupType value="9"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <ExtensionPos index="0" Format="1">
+          <ExtensionLookupType value="2"/>
+          <PairPos Format="1">
+            <Coverage>
+              <Glyph value="A"/>
+            </Coverage>
+            <ValueFormat1 value="4"/>
+            <ValueFormat2 value="0"/>
+            <!-- PairSetCount=1 -->
+            <PairSet index="0">
+              <!-- PairValueCount=1 -->
+              <PairValueRecord index="0">
+                <SecondGlyph value="V"/>
+                <Value1 XAdvance="-100"/>
+              </PairValueRecord>
+            </PairSet>
+          </PairPos>
+        </ExtensionPos>
+      </Lookup>
+      <Lookup index="1">
+        <LookupType value="2"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <PairPos index="0" Format="1">
+          <Coverage>
+            <Glyph value="V"/>
+          </Coverage>
+          <ValueFormat1 value="4"/>
+          <ValueFormat2 value="0"/>
+          <!-- PairSetCount=1 -->
+          <PairSet index="0">
+            <!-- PairValueCount=1 -->
+            <PairValueRecord index="0">
+              <SecondGlyph value="A"/>
+              <Value1 XAdvance="-100"/>
+            </PairValueRecord>
+          </PairSet>
+        </PairPos>
+      </Lookup>
+    </LookupList>
+  </GPOS>
+
+</ttFont>

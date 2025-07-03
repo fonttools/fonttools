@@ -392,10 +392,13 @@ def addFeatureVariationsRaw(font, table, conditionalSubstitutions, featureTag="r
 
             for scriptRecord in table.ScriptList.ScriptRecord:
                 if scriptRecord.Script.DefaultLangSys is None:
-                    raise VarLibError(
-                        "Feature variations require that the script "
-                        f"'{scriptRecord.ScriptTag}' defines a default language system."
-                    )
+                    # We need to have a default LangSys to attach variations to.
+                    langSys = ot.LangSys()
+                    langSys.LookupOrder = None
+                    langSys.ReqFeatureIndex = 0xFFFF
+                    langSys.FeatureIndex = []
+                    langSys.FeatureCount = 0
+                    scriptRecord.Script.DefaultLangSys = langSys
                 langSystems = [lsr.LangSys for lsr in scriptRecord.Script.LangSysRecord]
                 for langSys in [scriptRecord.Script.DefaultLangSys] + langSystems:
                     langSys.FeatureIndex.append(varFeatureIndex)
@@ -597,9 +600,12 @@ def buildFeatureRecord(featureTag, lookupListIndices):
 def buildFeatureVariationRecord(conditionTable, substitutionRecords):
     """Build a FeatureVariationRecord."""
     fvr = ot.FeatureVariationRecord()
-    fvr.ConditionSet = ot.ConditionSet()
-    fvr.ConditionSet.ConditionTable = conditionTable
-    fvr.ConditionSet.ConditionCount = len(conditionTable)
+    if len(conditionTable) != 0:
+        fvr.ConditionSet = ot.ConditionSet()
+        fvr.ConditionSet.ConditionTable = conditionTable
+        fvr.ConditionSet.ConditionCount = len(conditionTable)
+    else:
+        fvr.ConditionSet = None
     fvr.FeatureTableSubstitution = ot.FeatureTableSubstitution()
     fvr.FeatureTableSubstitution.Version = 0x00010000
     fvr.FeatureTableSubstitution.SubstitutionRecord = substitutionRecords

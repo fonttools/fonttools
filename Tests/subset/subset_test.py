@@ -1,4 +1,5 @@
 import io
+from fontTools.ttLib.tables._n_a_m_e import NameRecordVisitor
 import fontTools.ttLib.tables.otBase
 from fontTools.misc.testTools import getXML, stripVariableItemsFromTTX
 from fontTools.misc.textTools import tobytes, tostr
@@ -486,7 +487,7 @@ class SubsetTest:
             self.getpath("TestTTF-Regular_non_BMP_char.ttx"), ".ttf"
         )
         subsetpath = self.temp_path(".ttf")
-        text = tostr("A\U0001F6D2", encoding="utf-8")
+        text = tostr("A\U0001f6d2", encoding="utf-8")
 
         subset.main([fontpath, "--text=%s" % text, "--output-file=%s" % subsetpath])
         subsetfont = TTFont(subsetpath)
@@ -499,7 +500,7 @@ class SubsetTest:
             self.getpath("TestTTF-Regular_non_BMP_char.ttx"), ".ttf"
         )
         subsetpath = self.temp_path(".ttf")
-        text = tobytes("A\U0001F6D2", encoding="utf-8")
+        text = tobytes("A\U0001f6d2", encoding="utf-8")
         with tempfile.NamedTemporaryFile(delete=False) as tmp:
             tmp.write(text)
 
@@ -2120,6 +2121,28 @@ def test_cvXX_feature_params_nameIDs_are_retained():
     # used by the FeatureParamsCharacterVariants
     nameIDs = {n.nameID for n in font["name"].names}
     assert nameIDs == keepNameIDs
+
+
+def test_preserve_name_ids_when_used_elsewhere():
+    font = TTFont()
+    ttx = pathlib.Path(__file__).parent / "data" / "PreserveSillyNamesTest.ttx"
+    font.importXML(ttx)
+
+    visitor = NameRecordVisitor()
+    visitor.visit(font)
+    assert visitor.seen.intersection(subset.NAME_IDS_TO_OBFUSCATE)
+
+    options = subset.Options(obfuscate_names=True)
+    subsetter = subset.Subsetter(options)
+    subsetter.populate(glyphs=font.getGlyphOrder())
+    subsetter.subset(font)
+
+    # After obfuscation, all names should use an id >= 256, except for id 5,
+    # which is not obfuscated.
+    visitor = NameRecordVisitor()
+    visitor.TABLES = ("STAT", "fvar")
+    visitor.visit(font)
+    assert all(id >= 256 or id == 5 for id in visitor.seen)
 
 
 if __name__ == "__main__":

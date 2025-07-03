@@ -1,10 +1,14 @@
 # Copyright (c) 2009 Type Supply LLC
 # Author: Tal Leming
 
-from fontTools.misc.roundTools import otRound, roundFunc
+from __future__ import annotations
+
+from typing import Any, Dict, List, Tuple
+
+from fontTools.cffLib.specializer import commandsToProgram, specializeCommands
 from fontTools.misc.psCharStrings import T2CharString
+from fontTools.misc.roundTools import otRound, roundFunc
 from fontTools.pens.basePen import BasePen
-from fontTools.cffLib.specializer import specializeCommands, commandsToProgram
 
 
 class T2CharStringPen(BasePen):
@@ -18,36 +22,52 @@ class T2CharStringPen(BasePen):
     which are close to their integral part within the tolerated range.
     """
 
-    def __init__(self, width, glyphSet, roundTolerance=0.5, CFF2=False):
+    def __init__(
+        self,
+        width: float | None,
+        glyphSet: Dict[str, Any] | None,
+        roundTolerance: float = 0.5,
+        CFF2: bool = False,
+    ) -> None:
         super(T2CharStringPen, self).__init__(glyphSet)
         self.round = roundFunc(roundTolerance)
         self._CFF2 = CFF2
         self._width = width
-        self._commands = []
+        self._commands: List[Tuple[str | bytes, List[float]]] = []
         self._p0 = (0, 0)
 
-    def _p(self, pt):
+    def _p(self, pt: Tuple[float, float]) -> List[float]:
         p0 = self._p0
         pt = self._p0 = (self.round(pt[0]), self.round(pt[1]))
         return [pt[0] - p0[0], pt[1] - p0[1]]
 
-    def _moveTo(self, pt):
+    def _moveTo(self, pt: Tuple[float, float]) -> None:
         self._commands.append(("rmoveto", self._p(pt)))
 
-    def _lineTo(self, pt):
+    def _lineTo(self, pt: Tuple[float, float]) -> None:
         self._commands.append(("rlineto", self._p(pt)))
 
-    def _curveToOne(self, pt1, pt2, pt3):
+    def _curveToOne(
+        self,
+        pt1: Tuple[float, float],
+        pt2: Tuple[float, float],
+        pt3: Tuple[float, float],
+    ) -> None:
         _p = self._p
         self._commands.append(("rrcurveto", _p(pt1) + _p(pt2) + _p(pt3)))
 
-    def _closePath(self):
+    def _closePath(self) -> None:
         pass
 
-    def _endPath(self):
+    def _endPath(self) -> None:
         pass
 
-    def getCharString(self, private=None, globalSubrs=None, optimize=True):
+    def getCharString(
+        self,
+        private: Dict | None = None,
+        globalSubrs: List | None = None,
+        optimize: bool = True,
+    ) -> T2CharString:
         commands = self._commands
         if optimize:
             maxstack = 48 if not self._CFF2 else 513

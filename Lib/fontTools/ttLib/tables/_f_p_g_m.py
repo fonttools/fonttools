@@ -20,7 +20,9 @@ class table__f_p_g_m(DefaultTable.DefaultTable):
         self.program = program
 
     def compile(self, ttFont):
-        return self.program.getBytecode()
+        if hasattr(self, "program"):
+            return self.program.getBytecode()
+        return b""
 
     def toXML(self, writer, ttFont):
         self.program.toXML(writer, ttFont)

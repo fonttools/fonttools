@@ -175,6 +175,15 @@ class BuildTest(unittest.TestCase):
             expected_ttx_name="Build",
         )
 
+    def test_varlib_build_ttf_reuse_nameid_2(self):
+        """Instances at the default location can reuse name ID 2 or 17."""
+        self._run_varlib_build_test(
+            designspace_name="BuildReuseNameId2",
+            font_name="TestFamily",
+            tables=["fvar"],
+            expected_ttx_name="BuildReuseNameId2",
+        )
+
     def test_varlib_build_no_axes_ttf(self):
         """Designspace file does not contain an <axes> element."""
         ds_path = self.get_test_input("InterpolateLayout3.designspace")
@@ -335,6 +344,35 @@ class BuildTest(unittest.TestCase):
             expected_ttx_name="FeatureVars_rclt",
             save_before_dump=True,
             post_process_master=add_rclt,
+        )
+
+    def test_varlib_build_feature_variations_without_latn_dflt_feature(self):
+        """Test that when a script does not have a dflt language, it gets one
+        when we later add variations, we can attach them to it."""
+
+        def add_features(font, savepath):
+            features = """
+            languagesystem DFLT dflt;
+            languagesystem latn dflt;
+            languagesystem latn CAT;
+
+            feature locl {
+                script latn;
+                # Intentionally skip defining anything for `language dflt;`.
+                language CAT;
+                sub uni0061 by uni0061;
+            } locl;
+            """
+            addOpenTypeFeaturesFromString(font, features)
+            font.save(savepath)
+
+        self._run_varlib_build_test(
+            designspace_name="FeatureVars",
+            font_name="TestFamily",
+            tables=["GSUB"],
+            expected_ttx_name="FeatureVars_latn_dflt_var",
+            save_before_dump=True,
+            post_process_master=add_features,
         )
 
     def test_varlib_gvar_explicit_delta(self):

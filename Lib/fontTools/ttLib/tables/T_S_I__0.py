@@ -1,4 +1,4 @@
-""" TSI{0,1,2,3,5} are private tables used by Microsoft Visual TrueType (VTT)
+"""TSI{0,1,2,3,5} are private tables used by Microsoft Visual TrueType (VTT)
 tool to store its hinting source data.
 
 TSI0 is the index table containing the lengths and offsets for the glyph
@@ -8,8 +8,12 @@ in the TSI1 table.
 See also https://learn.microsoft.com/en-us/typography/tools/vtt/tsi-tables
 """
 
-from . import DefaultTable
+import logging
 import struct
+
+from . import DefaultTable
+
+log = logging.getLogger(__name__)
 
 tsi0Format = ">HHL"
 
@@ -25,7 +29,14 @@ class table_T_S_I__0(DefaultTable.DefaultTable):
         numGlyphs = ttFont["maxp"].numGlyphs
         indices = []
         size = struct.calcsize(tsi0Format)
-        for i in range(numGlyphs + 5):
+        numEntries = len(data) // size
+        if numEntries != numGlyphs + 5:
+            diff = numEntries - numGlyphs - 5
+            log.warning(
+                "Number of glyphPrograms differs from the number of glyphs in the font "
+                f"by {abs(diff)} ({numEntries - 5} programs vs. {numGlyphs} glyphs)."
+            )
+        for _ in range(numEntries):
             glyphID, textLength, textOffset = fixlongs(
                 *struct.unpack(tsi0Format, data[:size])
             )

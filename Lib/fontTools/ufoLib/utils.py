@@ -1,5 +1,8 @@
-"""The module contains miscellaneous helpers.
-It's not considered part of the public ufoLib API.
+"""This module contains miscellaneous helpers.
+
+It is not considered part of the public ufoLib API. It does, however,
+define the :py:obj:`.deprecated` decorator that is used elsewhere in
+the module.
 """
 
 import warnings

@@ -30,7 +30,6 @@ def test_max_ctx_calc_features():
         sub A B C by c;
         sub [A B] C by c;
         sub [A B] C [A B] by c;
-        sub A by A B;
         sub A' C by A B;
         sub a' by b;
         sub a' b by c;

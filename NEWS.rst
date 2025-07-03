@@ -1,3 +1,89 @@
+4.58.4 (released 2025-06-13)
+----------------------------
+
+- [feaLib] Allow for empty MarkFilter & MarkAttach sets (#3856).
+
+4.58.3 (released 2025-06-13)
+----------------------------
+
+- [feaLib] Fixed iterable check for Python 3.13.4 and newer (#3854, #3855).
+
+4.58.2 (released 2025-06-06)
+----------------------------
+
+- [ttLib.reorderGlyphs] Handle CFF2 when reordering glyphs (#3852)
+- [subset] Copy name IDs in use before scrapping or scrambling them for webfonts (#3853)
+
+4.58.1 (released 2025-05-28)
+----------------------------
+
+- [varLib] Make sure that fvar named instances only reuse name ID 2 or 17 if they are at the default location across all axes, to match OT spec requirement (#3831).
+- [feaLib] Improve single substitution promotion to multiple/ligature substitutions, fixing a few bugs as well (#3849).
+- [loggingTools] Make ``Timer._time`` a static method that doesn't take self, makes it easier to override (#3836).
+- [featureVars] Use ``None`` for empty ConditionSet, which translates to a null offset in the compiled table (#3850).
+- [feaLib] Raise an error on conflicting ligature substitution rules instead of silently taking the last one (#3835).
+- Add typing annotations to T2CharStringPen (#3837).
+- [feaLib] Add single substitutions that were promoted to multiple or ligature substitutions to ``aalt`` feature (#3847).
+- [featureVars] Create a default ``LangSys`` in a ``ScriptRecord`` if missing when adding feature variations to existing GSUB later in the build (#3838).
+- [symfont] Added a ``main()``.
+- [cffLib.specializer] Fix rmoveto merging when blends used (#3839, #3840).
+- [pyftmerge] Add support for cmap format 14 in the merge tool (#3830).
+- [varLib.instancer/cff2] Fix vsindex of Private dicts when instantiating (#3828, #3232).
+- Update text file read to use UTF-8 with optional BOM so it works with e.g. Windows Notepad.exe (#3824).
+- [varLib] Ensure that instances only reuse name ID 2 or 17 if they are at the default location across all axes (#3831).
+- [varLib] Create a dflt LangSys in a ScriptRecord when adding variations later, to fix an avoidable crash in an edge case (#3838).
+
+4.58.0 (released 2025-05-10)
+----------------------------
+
+- Drop Python 3.8, require 3.9+ (#3819)
+- [HVAR, VVAR] Prune unused regions when using a direct mapping (#3797)
+- [Docs] Improvements to ufoLib documentation (#3721)
+- [Docs] Improvements to varLib documentation (#3727)
+- [Docs] Improvements to Pens and pen-module documentation (#3724)
+- [Docs] Miscellany updates to docs (misc modules and smaller modules) (#3730)
+- [subset] Close codepoints over BiDi mirror variants. (#3801)
+- [feaLib] Fix serializing ChainContextPosStatement and
+  ChainContextSubstStatement in some rare cases (#3788)
+- [designspaceLib] Clarify user expectations for getStatNames (#2892)
+- [GVAR] Add support for new `GVAR` table (#3728)
+- [TSI0, TSI5] Derive number of entries to decompile from data length (#2477)
+- [ttLib] Fix `AttributeError` when reporting table overflow (#3808)
+- [ttLib] Apply rounding more often in getCoordinates (#3798)
+- [ttLib] Ignore component bounds if empty (#3799)
+- [ttLib] Change the separator for duplicate glyph names from "#" to "." (#3809)
+- [feaLib] Support subtable breaks in CursivePos, MarkBasePos, MarkToLigPos and
+  MarkToMarkPos lookups (#3800, #3807)
+- [feaLib] If the same lookup has single substitutions and ligature
+  substitutions, upgrade single substitutions to ligature substitutions with
+  one input glyph (#3805)
+- [feaLib] Correctly handle <NULL> in single pos lookups (#3803)
+- [feaLib] Remove duplicates from class pair pos classes instead of raising an
+  error (#3804)
+- [feaLib] Support creating extension lookups using useExtenion lookup flag
+  instead of silently ignoring it (#3811)
+- [STAT] Add typing for the simpler STAT arguments (#3812)
+- [otlLib.builder] Add future import for annotations (#3814)
+- [cffLib] Fix reading supplement encoding (#3813)
+- [voltLib] Add some missing functionality and fixes to voltLib and VoltToFea,
+  making the conversion to feature files more robust. Add also `fonttools
+  voltLib` command line tool to compile VOLT sources directly (doing an
+  intermediate fea conversion internally) (#3818)
+- [pens] Add some PointPen annotations (#3820)
+
+4.57.0 (released 2025-04-03)
+----------------------------
+
+- [ttLib.__main__] Add `--no-recalc-timestamp` flag (#3771)
+- [ttLib.__main__] Add `-b` (recalcBBoxes=False) flag (#3772)
+- [cmap] Speed up glyphOrder loading from cmap (#3774)
+- [ttLib.__main__] Improvements around the `-t` flag (#3776)
+- [Debg] Fix parsing from XML; add roundtrip tests (#3781)
+- [fealib] Support \*Base.MinMax tables (#3783, #3786)
+- [config] Add OPTIMIZE_FONT_SPEED (#3784)
+- [varLib.hvar] New module to add HVAR table to the font (#3780)
+- [otlLib.optimize] Fix crash when the provided TTF does not contain a `GPOS` (#3794)
+
 4.56.0 (released 2025-02-07)
 ----------------------------
 

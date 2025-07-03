@@ -1,4 +1,5 @@
 from fontTools.misc.fixedTools import otRound
+from fontTools.misc.roundTools import noRound
 from fontTools.misc.testTools import getXML, parseXML
 from fontTools.misc.transform import Transform
 from fontTools.pens.ttGlyphPen import TTGlyphPen
@@ -75,7 +76,6 @@ class GlyphCoordinatesTest(object):
         g2 = -g
         assert g2 == GlyphCoordinates([(-1, -2)])
 
-    @pytest.mark.skipif(sys.version_info[0] < 3, reason="__round___ requires Python 3")
     def test__round__(self):
         g = GlyphCoordinates([(-1.5, 2)])
         g2 = round(g)
@@ -538,6 +538,37 @@ class GlyphTest:
             ]
         )
 
+    def test_get_components_nested(self):
+        # check that getCoordinates will correctly round with nested
+        glyphSet = {}
+
+        pen = TTGlyphPen(glyphSet)
+        pen.moveTo((372, 736))
+        pen.lineTo((68, 426))
+        pen.qCurveTo((68.0, 426.0), (64.25, 414.0), (62.5, 386.25), (64.0, 372.0))
+        pen.lineTo((0, 100))
+        pen.lineTo((372, 736))
+        pen.closePath()
+
+        # turn off rounding here; we're pretending that this glyph has been
+        # through cubic->quadratic conversion, which introduced some floats
+        glyphSet["base"] = pen.glyph(round=noRound)
+
+        pen = TTGlyphPen(glyphSet)
+        # this is a simple translation
+        pen.addComponent("base", (1, 0, 0, 1, 10, 10))
+        glyphSet["simpleXform"] = pen.glyph()
+
+        pen = TTGlyphPen(glyphSet)
+        # this is flipped on the y axis
+        pen.addComponent("simpleXform", (-1, 0, 0, -1, 834, 793))
+        glyphSet["nestedTrickyXForm"] = trickyXForm = pen.glyph()
+
+        coords, _, _ = trickyXForm.getCoordinates(glyphSet, round=otRound)
+        assert all(
+            (int(p[0]), int(p[1])) == p for p in coords
+        ), f"{[p for p in coords]}"
+
     def test_getCompositeMaxpValues(self):
         # https://github.com/fonttools/fonttools/issues/2044
         glyphSet = {}
@@ -567,17 +598,75 @@ class GlyphTest:
         pen = TTGlyphPen(glyphSet)
         # empty simple glyph
         foo = glyphSet["foo"] = pen.glyph()
+
+        pen.moveTo((5, 5))
+        pen.lineTo((10, 10))
+        pen.lineTo((10, 5))
+        pen.lineTo((5, 5))
+        pen.closePath()
+
+        # non-empty simple glyph
+        doo = glyphSet["doo"] = pen.glyph()
+
+        pen = TTGlyphPen(glyphSet)
         # use the empty 'foo' glyph as a component in 'bar' with some x/y offsets
         pen.addComponent("foo", (1, 0, 0, 1, -80, 50))
+        # and use the non-empty 'doo' glyph at origin
+        pen.addComponent("doo", (1, 0, 0, 1, 0, 0))
         bar = glyphSet["bar"] = pen.glyph()
 
         foo.recalcBounds(glyphSet)
+        doo.recalcBounds(glyphSet)
         bar.recalcBounds(glyphSet)
 
-        # we expect both the empty simple glyph and the composite referencing it
-        # to have empty bounding boxes (0, 0, 0, 0) no matter the component's shift
         assert (foo.xMin, foo.yMin, foo.xMax, foo.yMax) == (0, 0, 0, 0)
-        assert (bar.xMin, bar.yMin, bar.xMax, bar.yMax) == (0, 0, 0, 0)
+        assert (doo.xMin, doo.yMin, doo.xMax, doo.yMax) == (5, 5, 10, 10)
+        # the composite should have bounds identical to 'doo';
+        # the empty foo glyph should do nothing
+        assert (bar.xMin, bar.yMin, bar.xMax, bar.yMax) == (5, 5, 10, 10)
+
+    def test_recalcBounds_empty_components_nested(self):
+        # this differs from the above in an important way: it has a 'foofoo'
+        # glyph, which is a composite glyph, where none of its components
+        # have any contours; we want to check that when this glyph is referenced
+        # it is also treated as not contributing to the parent's bounds.
+
+        glyphSet = {}
+        pen = TTGlyphPen(glyphSet)
+        # empty simple glyph
+        foo = glyphSet["foo"] = pen.glyph()
+
+        pen.addComponent("foo", (1, 0, 0, 1, 20, 20))
+        foofoo = glyphSet["foofoo"] = pen.glyph()
+
+        pen = TTGlyphPen(glyphSet)
+
+        pen.moveTo((5, 5))
+        pen.lineTo((10, 10))
+        pen.lineTo((10, 5))
+        pen.lineTo((5, 5))
+        pen.closePath()
+
+        # non-empty simple glyph
+        doo = glyphSet["doo"] = pen.glyph()
+
+        pen = TTGlyphPen(glyphSet)
+        # use the empty 'foo' glyph as a component in 'bar' with some x/y offsets
+        pen.addComponent("foofoo", (1, 0, 0, 1, 0, 0))
+        # and use the non-empty 'doo' glyph at origin
+        pen.addComponent("doo", (1, 0, 0, 1, 0, 0))
+        bar = glyphSet["bar"] = pen.glyph()
+
+        foo.recalcBounds(glyphSet)
+        foofoo.recalcBounds(glyphSet)
+        doo.recalcBounds(glyphSet)
+        bar.recalcBounds(glyphSet)
+
+        assert (foo.xMin, foo.yMin, foo.xMax, foo.yMax) == (0, 0, 0, 0)
+        assert (doo.xMin, doo.yMin, doo.xMax, doo.yMax) == (5, 5, 10, 10)
+        # the composite should have bounds identical to 'doo';
+        # the empty foo glyph should do nothing
+        assert (bar.xMin, bar.yMin, bar.xMax, bar.yMax) == (5, 5, 10, 10)
 
 
 class GlyphComponentTest:
