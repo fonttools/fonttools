@@ -2582,6 +2582,7 @@ def fixSubTableOverFlows(ttf, overflowRecord):
 
 def _buildClasses():
     import re
+
     from .otData import otData
 
     formatPat = re.compile(r"([A-Za-z0-9]+)Format(\d+)$")

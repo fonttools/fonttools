@@ -1540,6 +1540,7 @@ def decompress(input_file, output_file):
 def main(args=None):
     """Compress and decompress WOFF2 fonts"""
     import argparse
+
     from fontTools import configLogger
     from fontTools.ttx import makeOutputFileName
 
