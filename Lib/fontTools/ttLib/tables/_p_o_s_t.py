@@ -13,16 +13,16 @@ from . import DefaultTable
 log = logging.getLogger(__name__)
 
 postFormat = """
-	>
-	formatType:			16.16F
-	italicAngle:		16.16F		# italic angle in degrees
-	underlinePosition:	h
-	underlineThickness:	h
-	isFixedPitch:		L
-	minMemType42:		L			# minimum memory if TrueType font is downloaded
-	maxMemType42:		L			# maximum memory if TrueType font is downloaded
-	minMemType1:		L			# minimum memory if Type1 font is downloaded
-	maxMemType1:		L			# maximum memory if Type1 font is downloaded
+    >
+    formatType:			16.16F
+    italicAngle:		16.16F		# italic angle in degrees
+    underlinePosition:	h
+    underlineThickness:	h
+    isFixedPitch:		L
+    minMemType42:		L			# minimum memory if TrueType font is downloaded
+    maxMemType42:		L			# maximum memory if TrueType font is downloaded
+    minMemType1:		L			# minimum memory if Type1 font is downloaded
+    maxMemType1:		L			# maximum memory if Type1 font is downloaded
 """
 
 postFormatSize = sstruct.calcsize(postFormat)
