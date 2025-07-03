@@ -66,9 +66,6 @@ def pack(fmt, obj):
     elements = []
     if not isinstance(obj, dict):
         obj = obj.__dict__
-    string_index = formatstring
-    if formatstring.startswith(">"):
-        string_index = formatstring[1:]
     for ix, name in enumerate(names.keys()):
         value = obj[name]
         if name in fixes:
