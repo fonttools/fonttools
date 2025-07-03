@@ -313,9 +313,7 @@ class TTFont(object):
             if "GlyphOrder" not in self.keys():
                 tables = ["GlyphOrder"] + tables
             if skipTables:
-                for tag in skipTables:
-                    if tag in tables:
-                        tables.remove(tag)
+                tables = [tag for tag in tables if tag not in skipTables]
         numTables = len(tables)
 
         if writeVersion:
