@@ -641,9 +641,8 @@ woff2OverlapSimpleBitmapFlag = 0x0001
 
 def getKnownTagIndex(tag):
     """Return index of 'tag' in woff2KnownTags list. Return 63 if not found."""
-    for i in range(len(woff2KnownTags)):
-        if tag == woff2KnownTags[i]:
-            return i
+    if tag in woff2KnownTags:
+        return woff2KnownTags.index(tag)
     return woff2UnknownTagIndex
 
 

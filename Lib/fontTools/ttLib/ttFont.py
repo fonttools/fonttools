@@ -262,7 +262,7 @@ class TTFont(object):
             ]  # make sure 'head' is loaded so the recalculation is actually done
 
         tags = list(self.keys())
-        if "GlyphOrder" in tags:
+        if "GlyphOrder" in self.keys():
             tags.remove("GlyphOrder")
         numTables = len(tags)
         # write to a temporary stream to allow saving to unseekable streams
@@ -310,7 +310,7 @@ class TTFont(object):
         self.bitmapGlyphDataFormat = bitmapGlyphDataFormat
         if not tables:
             tables = list(self.keys())
-            if "GlyphOrder" not in tables:
+            if "GlyphOrder" not in self.keys():
                 tables = ["GlyphOrder"] + tables
             if skipTables:
                 for tag in skipTables:
