@@ -1,5 +1,6 @@
-from .interpolatableHelpers import *
 import logging
+
+from .interpolatableHelpers import *
 
 log = logging.getLogger("fontTools.varLib.interpolatable")
 

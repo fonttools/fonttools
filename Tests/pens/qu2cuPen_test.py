@@ -14,16 +14,14 @@
 
 import sys
 import unittest
+from textwrap import dedent
 
+import pytest
 from fontTools.pens.qu2cuPen import Qu2CuPen
 from fontTools.pens.recordingPen import RecordingPen
-from textwrap import dedent
-import pytest
 
 try:
-    from .utils import CUBIC_GLYPHS, QUAD_GLYPHS
-    from .utils import DummyGlyph
-    from .utils import DummyPen
+    from .utils import CUBIC_GLYPHS, QUAD_GLYPHS, DummyGlyph, DummyPen
 except ImportError as e:
     pytest.skip(str(e), allow_module_level=True)
 

@@ -1,6 +1,7 @@
-from fontTools.varLib.models import supportScalar
-from fontTools.misc.fixedTools import MAX_F2DOT14
 from functools import lru_cache
+
+from fontTools.misc.fixedTools import MAX_F2DOT14
+from fontTools.varLib.models import supportScalar
 
 __all__ = ["rebaseTent"]
 

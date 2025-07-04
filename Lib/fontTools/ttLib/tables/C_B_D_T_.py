@@ -3,21 +3,23 @@
 # Google Author(s): Matt Fontaine
 
 
-from fontTools.misc.textTools import bytesjoin
+import struct
+
 from fontTools.misc import sstruct
+from fontTools.misc.textTools import bytesjoin
+
 from . import E_B_D_T_
 from .BitmapGlyphMetrics import (
     BigGlyphMetrics,
-    bigGlyphMetricsFormat,
     SmallGlyphMetrics,
+    bigGlyphMetricsFormat,
     smallGlyphMetricsFormat,
 )
 from .E_B_D_T_ import (
     BitmapGlyph,
-    BitmapPlusSmallMetricsMixin,
     BitmapPlusBigMetricsMixin,
+    BitmapPlusSmallMetricsMixin,
 )
-import struct
 
 
 class table_C_B_D_T_(E_B_D_T_.table_E_B_D_T_):

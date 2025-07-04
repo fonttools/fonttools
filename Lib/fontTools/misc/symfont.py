@@ -1,8 +1,10 @@
-from fontTools.pens.basePen import BasePen
+import sys
 from functools import partial
 from itertools import count
+
 import sympy as sp
-import sys
+
+from fontTools.pens.basePen import BasePen
 
 n = 3  # Max Bezier degree; 3 for cubic, 2 for quadratic
 

@@ -1,13 +1,15 @@
 """Visualize DesignSpaceDocument and resulting VariationModel."""
 
-from fontTools.varLib.models import VariationModel, supportScalar
-from fontTools.designspaceLib import DesignSpaceDocument
+import logging
+import math
+import sys
+from itertools import cycle
+
 from matplotlib import pyplot
 from mpl_toolkits.mplot3d import axes3d
-from itertools import cycle
-import math
-import logging
-import sys
+
+from fontTools.designspaceLib import DesignSpaceDocument
+from fontTools.varLib.models import VariationModel, supportScalar
 
 log = logging.getLogger(__name__)
 

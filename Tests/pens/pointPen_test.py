@@ -3,10 +3,10 @@ import unittest
 from fontTools.pens.basePen import AbstractPen
 from fontTools.pens.pointPen import (
     AbstractPointPen,
-    PointToSegmentPen,
-    SegmentToPointPen,
     GuessSmoothPointPen,
+    PointToSegmentPen,
     ReverseContourPointPen,
+    SegmentToPointPen,
 )
 
 

@@ -1,18 +1,18 @@
+import os
+import unittest
+from io import BytesIO
+
+import fontTools.ttLib.tables.otTables as otTables
+import fontTools.varLib.models as models
+import fontTools.varLib.varStore as varStore
+from fontTools.misc.fixedTools import floatToFixed as fl2fi
 from fontTools.misc.testTools import parseXML
 from fontTools.misc.textTools import deHexStr
 from fontTools.misc.xmlWriter import XMLWriter
-from fontTools.misc.fixedTools import floatToFixed as fl2fi
 from fontTools.pens.statisticsPen import StatisticsPen
 from fontTools.ttLib import TTFont, TTLibError
-import fontTools.ttLib.tables.otTables as otTables
 from fontTools.ttLib.tables._a_v_a_r import table__a_v_a_r
-from fontTools.ttLib.tables._f_v_a_r import table__f_v_a_r, Axis
-import fontTools.varLib.models as models
-import fontTools.varLib.varStore as varStore
-from io import BytesIO
-import os
-import unittest
-
+from fontTools.ttLib.tables._f_v_a_r import Axis, table__f_v_a_r
 
 DATA_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "data")
 

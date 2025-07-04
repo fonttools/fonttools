@@ -1,7 +1,8 @@
-from fontTools.misc.textTools import safeEval
-from . import DefaultTable
 import struct
 
+from fontTools.misc.textTools import safeEval
+
+from . import DefaultTable
 
 GASP_SYMMETRIC_GRIDFIT = 0x0004
 GASP_SYMMETRIC_SMOOTHING = 0x0008

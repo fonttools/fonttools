@@ -1,13 +1,14 @@
-from fontTools.ttLib import TTFont
-from fontTools.ttLib.scaleUpem import scale_upem
-from io import BytesIO
 import difflib
 import os
 import shutil
 import sys
 import tempfile
 import unittest
+from io import BytesIO
+
 import pytest
+from fontTools.ttLib import TTFont
+from fontTools.ttLib.scaleUpem import scale_upem
 
 
 class ScaleUpemTest(unittest.TestCase):

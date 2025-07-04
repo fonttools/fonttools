@@ -1,16 +1,17 @@
-from fontTools.misc import sstruct
-from fontTools.misc.fixedTools import floatToFixedToStr, strToFixedToFloat
-from fontTools.misc.textTools import safeEval, num2binary, binary2num
-from fontTools.misc.timeTools import (
-    timestampFromString,
-    timestampToString,
-    timestampNow,
-)
-from fontTools.misc.timeTools import epoch_diff as mac_epoch_diff  # For backward compat
-from fontTools.misc.arrayTools import intRect, unionRect
-from . import DefaultTable
 import logging
 
+from fontTools.misc import sstruct
+from fontTools.misc.arrayTools import intRect, unionRect
+from fontTools.misc.fixedTools import floatToFixedToStr, strToFixedToFloat
+from fontTools.misc.textTools import binary2num, num2binary, safeEval
+from fontTools.misc.timeTools import epoch_diff as mac_epoch_diff  # For backward compat
+from fontTools.misc.timeTools import (
+    timestampFromString,
+    timestampNow,
+    timestampToString,
+)
+
+from . import DefaultTable
 
 log = logging.getLogger(__name__)
 

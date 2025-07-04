@@ -5,7 +5,6 @@ import argparse
 import hashlib
 import os
 import sys
-
 from os.path import basename
 
 from fontTools.ttLib import TTFont

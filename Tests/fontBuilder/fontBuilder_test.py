@@ -1,13 +1,14 @@
 import os
+
 import pytest
 from fontTools.designspaceLib import AxisDescriptor
-from fontTools.ttLib import TTFont
-from fontTools.pens.ttGlyphPen import TTGlyphPen
-from fontTools.pens.t2CharStringPen import T2CharStringPen
 from fontTools.fontBuilder import FontBuilder
-from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools.misc.psCharStrings import T2CharString
 from fontTools.misc.testTools import stripVariableItemsFromTTX
+from fontTools.pens.t2CharStringPen import T2CharStringPen
+from fontTools.pens.ttGlyphPen import TTGlyphPen
+from fontTools.ttLib import TTFont
+from fontTools.ttLib.tables.TupleVariation import TupleVariation
 
 
 def getTestData(fileName, mode="r"):

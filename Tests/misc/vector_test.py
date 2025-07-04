@@ -1,4 +1,5 @@
 import math
+
 import pytest
 from fontTools.misc.arrayTools import Vector as ArrayVector
 from fontTools.misc.vector import Vector

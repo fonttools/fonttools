@@ -1,4 +1,5 @@
-import struct, warnings
+import struct
+import warnings
 
 try:
     import lz4

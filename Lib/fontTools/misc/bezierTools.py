@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-"""fontTools.misc.bezierTools.py -- tools for working with Bezier path segments.
-"""
+"""fontTools.misc.bezierTools.py -- tools for working with Bezier path segments."""
 
-from fontTools.misc.arrayTools import calcBounds, sectRect, rectArea
-from fontTools.misc.transform import Identity
 import math
 from collections import namedtuple
+
+from fontTools.misc.arrayTools import calcBounds, rectArea, sectRect
+from fontTools.misc.transform import Identity
 
 try:
     import cython
@@ -809,7 +809,7 @@ def _splitCubicAtTC(a, b, c, d, *ts):
 # Equation solvers.
 #
 
-from math import sqrt, acos, cos, pi
+from math import acos, cos, pi, sqrt
 
 
 def solveQuadratic(a, b, c, sqrt=sqrt):
@@ -1491,7 +1491,7 @@ def printSegments(segments):
 
 
 if __name__ == "__main__":
-    import sys
     import doctest
+    import sys
 
     sys.exit(doctest.testmod().failed)

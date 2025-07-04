@@ -1,26 +1,27 @@
-from fontTools.misc.loggingTools import CapturingLogHandler
+import difflib
+import logging
+import os
+import re
+import shutil
+import sys
+import tempfile
+import unittest
+import warnings
+from io import StringIO
+from textwrap import dedent
+
+from fontTools.feaLib import ast
 from fontTools.feaLib.builder import (
     Builder,
     addOpenTypeFeatures,
     addOpenTypeFeaturesFromString,
 )
 from fontTools.feaLib.error import FeatureLibError
-from fontTools.ttLib import TTFont, newTable
-from fontTools.feaLib.parser import Parser
-from fontTools.feaLib import ast
 from fontTools.feaLib.lexer import Lexer
+from fontTools.feaLib.parser import Parser
 from fontTools.fontBuilder import addFvar
-import difflib
-from io import StringIO
-from textwrap import dedent
-import os
-import re
-import shutil
-import sys
-import tempfile
-import logging
-import unittest
-import warnings
+from fontTools.misc.loggingTools import CapturingLogHandler
+from fontTools.ttLib import TTFont, newTable
 
 
 def makeTTFont():

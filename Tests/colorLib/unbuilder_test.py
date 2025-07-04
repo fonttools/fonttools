@@ -1,8 +1,7 @@
-from fontTools.ttLib.tables import otTables as ot
+import pytest
 from fontTools.colorLib.builder import buildColrV1
 from fontTools.colorLib.unbuilder import unbuildColrV1
-import pytest
-
+from fontTools.ttLib.tables import otTables as ot
 
 TEST_COLOR_GLYPHS = {
     "glyph00010": {

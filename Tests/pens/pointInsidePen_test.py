@@ -1,6 +1,7 @@
-from io import StringIO
-from fontTools.pens.pointInsidePen import PointInsidePen
 import unittest
+from io import StringIO
+
+from fontTools.pens.pointInsidePen import PointInsidePen
 
 
 class PointInsidePenTest(unittest.TestCase):

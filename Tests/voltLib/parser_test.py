@@ -1,8 +1,9 @@
+import unittest
+from io import StringIO
+
 from fontTools.voltLib import ast
 from fontTools.voltLib.error import VoltLibError
 from fontTools.voltLib.parser import Parser
-from io import StringIO
-import unittest
 
 
 class ParserTest(unittest.TestCase):

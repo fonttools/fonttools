@@ -1,5 +1,4 @@
-""" fontTools.misc.classifyTools.py -- tools for classifying things.
-"""
+"""fontTools.misc.classifyTools.py -- tools for classifying things."""
 
 
 class Classifier(object):
@@ -165,6 +164,7 @@ def classify(list_of_sets, sort=True):
 
 
 if __name__ == "__main__":
-    import sys, doctest
+    import doctest
+    import sys
 
     sys.exit(doctest.testmod(optionflags=doctest.ELLIPSIS).failed)

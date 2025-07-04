@@ -1,8 +1,9 @@
-from fontTools.ttLib.ttFont import TTFont
-from fontTools.ttLib.sfnt import readTTCHeader, writeTTCHeader
-from io import BytesIO
-import struct
 import logging
+import struct
+from io import BytesIO
+
+from fontTools.ttLib.sfnt import readTTCHeader, writeTTCHeader
+from fontTools.ttLib.ttFont import TTFont
 
 log = logging.getLogger(__name__)
 

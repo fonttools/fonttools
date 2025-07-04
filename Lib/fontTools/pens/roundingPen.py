@@ -2,7 +2,6 @@ from fontTools.misc.roundTools import noRound, otRound
 from fontTools.misc.transform import Transform
 from fontTools.pens.filterPen import FilterPen, FilterPointPen
 
-
 __all__ = ["RoundingPen", "RoundingPointPen"]
 
 

@@ -1,5 +1,6 @@
 import unittest
-from fontTools.ufoLib.filenames import userNameToFileName, handleClash1, handleClash2
+
+from fontTools.ufoLib.filenames import handleClash1, handleClash2, userNameToFileName
 
 
 class TestFilenames(unittest.TestCase):

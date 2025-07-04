@@ -1,6 +1,6 @@
-from fontTools.pens.basePen import BasePen
 from reportlab.graphics.shapes import Path
 
+from fontTools.pens.basePen import BasePen
 
 __all__ = ["ReportLabPen"]
 
@@ -48,8 +48,9 @@ if __name__ == "__main__":
         )
         sys.exit(0)
 
-    from fontTools.ttLib import TTFont
     from reportlab.lib import colors
+
+    from fontTools.ttLib import TTFont
 
     path = sys.argv[1]
     glyphName = sys.argv[2]
@@ -66,7 +67,7 @@ if __name__ == "__main__":
 
     w, h = g.width, 1000
     from reportlab.graphics import renderPM
-    from reportlab.graphics.shapes import Group, Drawing, scale
+    from reportlab.graphics.shapes import Drawing, Group, scale
 
     # Everything is wrapped in a group to allow transformations.
     g = Group(pen.path)

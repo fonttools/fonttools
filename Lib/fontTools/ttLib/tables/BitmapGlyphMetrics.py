@@ -1,9 +1,9 @@
 # Since bitmap glyph metrics are shared between EBLC and EBDT
 # this class gets its own python file.
-from fontTools.misc import sstruct
-from fontTools.misc.textTools import safeEval
 import logging
 
+from fontTools.misc import sstruct
+from fontTools.misc.textTools import safeEval
 
 log = logging.getLogger(__name__)
 

@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from fontTools.misc.textTools import num2binary, binary2num, readHex, strjoin
 import array
+import logging
+import re
 from io import StringIO
 from typing import List
-import re
-import logging
 
+from fontTools.misc.textTools import binary2num, num2binary, readHex, strjoin
 
 log = logging.getLogger(__name__)
 
@@ -588,7 +588,7 @@ def _test():
 
 
 if __name__ == "__main__":
-    import sys
     import doctest
+    import sys
 
     sys.exit(doctest.testmod().failed)

@@ -1,24 +1,25 @@
 # -*- coding: utf-8 -*-
+import logging
+import struct
+
+import fontTools.ttLib.tables.otTables as otTables
+from fontTools import ttLib
 from fontTools.misc import sstruct
+from fontTools.misc.encodingTools import getEncoding
 from fontTools.misc.textTools import (
     bytechr,
     byteord,
     bytesjoin,
+    safeEval,
     strjoin,
     tobytes,
     tostr,
-    safeEval,
 )
-from fontTools.misc.encodingTools import getEncoding
 from fontTools.ttLib import newTable
-from fontTools.ttLib.ttVisitor import TTVisitor
-from fontTools import ttLib
-import fontTools.ttLib.tables.otTables as otTables
 from fontTools.ttLib.tables import C_P_A_L_
-from . import DefaultTable
-import struct
-import logging
+from fontTools.ttLib.ttVisitor import TTVisitor
 
+from . import DefaultTable
 
 log = logging.getLogger(__name__)
 

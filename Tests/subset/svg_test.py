@@ -1,14 +1,13 @@
-from string import ascii_letters
 import textwrap
-
-from fontTools.misc.testTools import getXML
-from fontTools import subset
-from fontTools.fontBuilder import FontBuilder
-from fontTools.pens.ttGlyphPen import TTGlyphPen
-from fontTools.ttLib import TTFont, newTable
-from fontTools.subset.svg import NAMESPACES, ranges
+from string import ascii_letters
 
 import pytest
+from fontTools import subset
+from fontTools.fontBuilder import FontBuilder
+from fontTools.misc.testTools import getXML
+from fontTools.pens.ttGlyphPen import TTGlyphPen
+from fontTools.subset.svg import NAMESPACES, ranges
+from fontTools.ttLib import TTFont, newTable
 
 etree = pytest.importorskip("lxml.etree")
 

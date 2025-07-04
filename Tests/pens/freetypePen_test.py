@@ -1,6 +1,6 @@
-import unittest
-import os
 import math
+import os
+import unittest
 
 try:
     from fontTools.pens.freetypePen import FreeTypePen
@@ -9,7 +9,7 @@ try:
 except ImportError:
     FREETYPE_PY_AVAILABLE = False
 
-from fontTools.misc.transform import Scale, Offset
+from fontTools.misc.transform import Offset, Scale
 
 DATA_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "data")
 

@@ -1,11 +1,12 @@
-from fontTools.misc.testTools import getXML, parseXML, parseXmlInto, FakeFont
+import unittest
+from io import StringIO
+from textwrap import dedent
+
+import fontTools.ttLib.tables.otTables as otTables
+from fontTools.misc.testTools import FakeFont, getXML, parseXML, parseXmlInto
 from fontTools.misc.textTools import deHexStr, hexStr
 from fontTools.misc.xmlWriter import XMLWriter
 from fontTools.ttLib.tables.otBase import OTTableReader, OTTableWriter
-import fontTools.ttLib.tables.otTables as otTables
-from io import StringIO
-from textwrap import dedent
-import unittest
 
 
 def makeCoverage(glyphs):

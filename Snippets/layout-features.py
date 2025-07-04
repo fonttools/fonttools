@@ -1,8 +1,9 @@
 #! /usr/bin/env python3
 
+import sys
+
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables import otTables
-import sys
 
 if len(sys.argv) != 2:
     print("usage: layout-features.py fontfile.ttf")

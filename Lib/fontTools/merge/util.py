@@ -2,12 +2,12 @@
 #
 # Google Author(s): Behdad Esfahbod, Roozbeh Pournader
 
+import logging
+import operator
+from functools import reduce
+
 from fontTools.misc.timeTools import timestampNow
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
-from functools import reduce
-import operator
-import logging
-
 
 log = logging.getLogger("fontTools.merge")
 

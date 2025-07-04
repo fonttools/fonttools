@@ -1,21 +1,21 @@
-from fontTools.misc.roundTools import noRound, otRound
+from collections import defaultdict
+from functools import partial
+from heapq import heappop, heappush
+
+import fontTools.varLib.varStore  # For monkey-patching
 from fontTools.misc.intTools import bit_count
+from fontTools.misc.iterTools import batched
+from fontTools.misc.roundTools import noRound, otRound
 from fontTools.misc.vector import Vector
 from fontTools.ttLib.tables import otTables as ot
-from fontTools.varLib.models import supportScalar
-import fontTools.varLib.varStore  # For monkey-patching
 from fontTools.varLib.builder import (
-    buildVarRegionList,
-    buildSparseVarRegionList,
-    buildSparseVarRegion,
-    buildMultiVarStore,
     buildMultiVarData,
+    buildMultiVarStore,
+    buildSparseVarRegion,
+    buildSparseVarRegionList,
+    buildVarRegionList,
 )
-from fontTools.misc.iterTools import batched
-from functools import partial
-from collections import defaultdict
-from heapq import heappush, heappop
-
+from fontTools.varLib.models import supportScalar
 
 NO_VARIATION_INDEX = ot.NO_VARIATION_INDEX
 ot.MultiVarStore.NO_VARIATION_INDEX = NO_VARIATION_INDEX

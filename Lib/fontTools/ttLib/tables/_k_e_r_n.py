@@ -1,12 +1,14 @@
-from fontTools.ttLib import getSearchRange
-from fontTools.misc.textTools import safeEval, readHex
-from fontTools.misc.fixedTools import fixedToFloat as fi2fl, floatToFixed as fl2fi
-from . import DefaultTable
-import struct
-import sys
 import array
 import logging
+import struct
+import sys
 
+from fontTools.misc.fixedTools import fixedToFloat as fi2fl
+from fontTools.misc.fixedTools import floatToFixed as fl2fi
+from fontTools.misc.textTools import readHex, safeEval
+from fontTools.ttLib import getSearchRange
+
+from . import DefaultTable
 
 log = logging.getLogger(__name__)
 

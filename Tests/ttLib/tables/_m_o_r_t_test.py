@@ -1,8 +1,8 @@
+import unittest
+
 from fontTools.misc.testTools import FakeFont, getXML, parseXML
 from fontTools.misc.textTools import deHexStr, hexStr
 from fontTools.ttLib import newTable
-import unittest
-
 
 # Glyph Metamorphosis Table Examples
 # Example 1: Non-contextual Glyph Substitution

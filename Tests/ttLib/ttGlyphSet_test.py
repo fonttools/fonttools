@@ -1,15 +1,15 @@
-from fontTools.ttLib import TTFont
-from fontTools.ttLib import ttGlyphSet
-from fontTools.ttLib.ttGlyphSet import LerpGlyphSet
-from fontTools.pens.recordingPen import (
-    RecordingPen,
-    RecordingPointPen,
-    DecomposingRecordingPen,
-)
+import os
+
+import pytest
 from fontTools.misc.roundTools import otRound
 from fontTools.misc.transform import DecomposedTransform
-import os
-import pytest
+from fontTools.pens.recordingPen import (
+    DecomposingRecordingPen,
+    RecordingPen,
+    RecordingPointPen,
+)
+from fontTools.ttLib import TTFont, ttGlyphSet
+from fontTools.ttLib.ttGlyphSet import LerpGlyphSet
 
 
 class TTGlyphSetTest(object):

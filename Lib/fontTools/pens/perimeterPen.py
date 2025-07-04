@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 """Calculate the perimeter of a glyph."""
 
-from fontTools.pens.basePen import BasePen
-from fontTools.misc.bezierTools import (
-    approximateQuadraticArcLengthC,
-    calcQuadraticArcLengthC,
-    approximateCubicArcLengthC,
-    calcCubicArcLengthC,
-)
 import math
 
+from fontTools.misc.bezierTools import (
+    approximateCubicArcLengthC,
+    approximateQuadraticArcLengthC,
+    calcCubicArcLengthC,
+    calcQuadraticArcLengthC,
+)
+from fontTools.pens.basePen import BasePen
 
 __all__ = ["PerimeterPen"]
 

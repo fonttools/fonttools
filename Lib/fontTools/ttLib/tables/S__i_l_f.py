@@ -1,13 +1,15 @@
+import re
+import struct
+import sys
+from array import array
+from functools import reduce
+
 from fontTools.misc import sstruct
 from fontTools.misc.fixedTools import floatToFixedToStr
 from fontTools.misc.textTools import byteord, safeEval
 
 # from itertools import *
-from . import DefaultTable
-from . import grUtils
-from array import array
-from functools import reduce
-import struct, re, sys
+from . import DefaultTable, grUtils
 
 Silf_hdr_format = """
     >

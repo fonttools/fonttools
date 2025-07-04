@@ -5,16 +5,18 @@ from collections.abc import Mapping
 from contextlib import contextmanager
 from copy import copy, deepcopy
 from types import SimpleNamespace
-from fontTools.misc.vector import Vector
-from fontTools.misc.fixedTools import otRound, fixedToFloat as fi2fl
+
+from fontTools.misc.fixedTools import fixedToFloat as fi2fl
+from fontTools.misc.fixedTools import otRound
 from fontTools.misc.loggingTools import deprecateFunction
-from fontTools.misc.transform import Transform, DecomposedTransform
-from fontTools.pens.transformPen import TransformPen, TransformPointPen
+from fontTools.misc.transform import DecomposedTransform, Transform
+from fontTools.misc.vector import Vector
 from fontTools.pens.recordingPen import (
     DecomposingRecordingPen,
     lerpRecordings,
     replayRecording,
 )
+from fontTools.pens.transformPen import TransformPen, TransformPointPen
 
 
 class _TTGlyphSet(Mapping):
@@ -232,8 +234,8 @@ class _TTGlyphGlyf(_TTGlyph):
         return glyph, offset
 
     def _getGlyphInstance(self):
-        from fontTools.varLib.iup import iup_delta
         from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
+        from fontTools.varLib.iup import iup_delta
         from fontTools.varLib.models import supportScalar
 
         glyphSet = self.glyphSet
@@ -323,8 +325,8 @@ class _TTGlyphVARC(_TTGlyph):
         how that works.
         """
         from fontTools.ttLib.tables.otTables import (
-            VarComponentFlags,
             NO_VARIATION_INDEX,
+            VarComponentFlags,
         )
 
         glyphSet = self.glyphSet

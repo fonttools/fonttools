@@ -1,11 +1,11 @@
 """cff2Lib_test.py -- unit test for Adobe CFF fonts."""
 
-from fontTools.ttLib import TTFont
-from io import StringIO
-import re
 import os
+import re
 import unittest
+from io import StringIO
 
+from fontTools.ttLib import TTFont
 
 CURR_DIR = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 DATA_DIR = os.path.join(CURR_DIR, "data")

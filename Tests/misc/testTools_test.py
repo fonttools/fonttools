@@ -1,5 +1,6 @@
-import fontTools.misc.testTools as testTools
 import unittest
+
+import fontTools.misc.testTools as testTools
 
 
 class TestToolsTest(unittest.TestCase):

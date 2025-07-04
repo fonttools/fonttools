@@ -2,10 +2,11 @@
 so on.
 """
 
-from fontTools.misc.roundTools import otRound
-from fontTools.misc.vector import Vector as _Vector
 import math
 import warnings
+
+from fontTools.misc.roundTools import otRound
+from fontTools.misc.vector import Vector as _Vector
 
 
 def calcBounds(array):
@@ -418,7 +419,7 @@ def _test():
 
 
 if __name__ == "__main__":
-    import sys
     import doctest
+    import sys
 
     sys.exit(doctest.testmod().failed)

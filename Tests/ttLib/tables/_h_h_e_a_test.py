@@ -1,11 +1,11 @@
-from fontTools.misc.loggingTools import CapturingLogHandler
-from fontTools.misc.testTools import parseXML, getXML
-from fontTools.misc.textTools import deHexStr
-from fontTools.ttLib import TTFont, newTable
-from fontTools.misc.fixedTools import log
 import os
 import unittest
 
+from fontTools.misc.fixedTools import log
+from fontTools.misc.loggingTools import CapturingLogHandler
+from fontTools.misc.testTools import getXML, parseXML
+from fontTools.misc.textTools import deHexStr
+from fontTools.ttLib import TTFont, newTable
 
 CURR_DIR = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 DATA_DIR = os.path.join(CURR_DIR, "data")

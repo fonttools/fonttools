@@ -19,15 +19,15 @@ python Snippets/compact_gpos.py MyFont.ttf > results.csv
 """
 
 import argparse
-from collections import defaultdict
 import csv
-import time
 import sys
+import time
+from collections import defaultdict
 from pathlib import Path
 from typing import Any, Iterable, List, Optional, Sequence, Tuple
 
-from fontTools.ttLib import TTFont
 from fontTools.otlLib.optimize import compact
+from fontTools.ttLib import TTFont
 
 MODES = [str(c) for c in range(1, 10)]
 
@@ -110,7 +110,7 @@ def woff_size(font: TTFont, path: Path) -> int:
 
 def write_csv(rows: List[Tuple[Any]]) -> None:
     sys.stdout.reconfigure(encoding="utf-8")
-    sys.stdout.write("\uFEFF")
+    sys.stdout.write("\ufeff")
     writer = csv.writer(sys.stdout, lineterminator="\n")
     writer.writerow(
         [

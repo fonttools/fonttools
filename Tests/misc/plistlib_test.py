@@ -1,16 +1,15 @@
-import sys
-import os
-import datetime
 import codecs
 import collections
+import datetime
+import os
+import sys
+from collections.abc import Mapping
 from io import BytesIO
 from numbers import Integral
-from fontTools.misc import etree
-from fontTools.misc import plistlib
-from fontTools.misc.textTools import tostr
-import pytest
-from collections.abc import Mapping
 
+import pytest
+from fontTools.misc import etree, plistlib
+from fontTools.misc.textTools import tostr
 
 # The testdata is generated using https://github.com/python/cpython/...
 # Mac/Tools/plistlib_generate_testdata.py

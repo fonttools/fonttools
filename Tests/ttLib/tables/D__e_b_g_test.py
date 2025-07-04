@@ -1,6 +1,5 @@
-from fontTools.misc.testTools import parseXmlInto, getXML
+from fontTools.misc.testTools import getXML, parseXmlInto
 from fontTools.ttLib.tables.D__e_b_g import table_D__e_b_g
-
 
 DEBG_DATA = {
     "com.github.fonttools.feaLib": {

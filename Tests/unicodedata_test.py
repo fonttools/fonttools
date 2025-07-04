@@ -1,6 +1,5 @@
-from fontTools import unicodedata
-
 import pytest
+from fontTools import unicodedata
 
 
 def test_script():
@@ -155,7 +154,7 @@ def test_script():
 
 
 def test_script_extension():
-    assert unicodedata.script_extension("\u00B7") == {
+    assert unicodedata.script_extension("\u00b7") == {
         "Avst",
         "Cari",
         "Copt",
@@ -173,7 +172,7 @@ def test_script_extension():
         "Perm",
         "Shaw",
     }
-    assert unicodedata.script_extension("\u02BC") == {
+    assert unicodedata.script_extension("\u02bc") == {
         "Beng",
         "Cyrl",
         "Deva",
@@ -242,11 +241,11 @@ def test_script_code():
 
 def test_block():
     assert unicodedata.block("\x00") == "Basic Latin"
-    assert unicodedata.block("\x7F") == "Basic Latin"
+    assert unicodedata.block("\x7f") == "Basic Latin"
     assert unicodedata.block("\x80") == "Latin-1 Supplement"
     assert unicodedata.block("\u1c90") == "Georgian Extended"
     assert unicodedata.block("\u0870") == "Arabic Extended-B"
-    assert unicodedata.block("\U00011B00") == "Devanagari Extended-A"
+    assert unicodedata.block("\U00011b00") == "Devanagari Extended-A"
 
 
 def test_ot_tags_from_script():

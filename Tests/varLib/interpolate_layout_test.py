@@ -1,15 +1,16 @@
-from fontTools.ttLib import TTFont
-from fontTools.varLib import build
-from fontTools.varLib.interpolate_layout import interpolate_layout
-from fontTools.varLib.interpolate_layout import main as interpolate_layout_main
-from fontTools.designspaceLib import DesignSpaceDocument, DesignSpaceDocumentError
-from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
 import difflib
 import os
 import shutil
 import sys
 import tempfile
 import unittest
+
+from fontTools.designspaceLib import DesignSpaceDocument, DesignSpaceDocumentError
+from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
+from fontTools.ttLib import TTFont
+from fontTools.varLib import build
+from fontTools.varLib.interpolate_layout import interpolate_layout
+from fontTools.varLib.interpolate_layout import main as interpolate_layout_main
 
 
 class InterpolateLayoutTest(unittest.TestCase):

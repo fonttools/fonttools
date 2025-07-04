@@ -1,8 +1,8 @@
+import unittest
+
 from fontTools.misc.testTools import FakeFont, getXML, parseXML
 from fontTools.misc.textTools import bytechr, bytesjoin, deHexStr, hexStr
 from fontTools.ttLib import newTable
-import unittest
-
 
 # A simple 'morx' table with non-contextual glyph substitution.
 # Unfortunately, the Apple spec for 'morx' does not contain a complete example.

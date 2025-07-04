@@ -1,12 +1,14 @@
-from fontTools import ttLib
-from fontTools.ttLib.standardGlyphOrder import standardGlyphOrder
-from fontTools.misc import sstruct
-from fontTools.misc.textTools import bytechr, byteord, tobytes, tostr, safeEval, readHex
-from . import DefaultTable
-import sys
-import struct
 import array
 import logging
+import struct
+import sys
+
+from fontTools import ttLib
+from fontTools.misc import sstruct
+from fontTools.misc.textTools import bytechr, byteord, readHex, safeEval, tobytes, tostr
+from fontTools.ttLib.standardGlyphOrder import standardGlyphOrder
+
+from . import DefaultTable
 
 log = logging.getLogger(__name__)
 

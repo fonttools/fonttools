@@ -1,9 +1,10 @@
 import io
 import os
 import re
+import unittest
+
 from fontTools import ttLib
 from fontTools.fontBuilder import FontBuilder
-import unittest
 from fontTools.ttLib.tables._c_m_a_p import CmapSubtable, table__c_m_a_p
 
 CURR_DIR = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))

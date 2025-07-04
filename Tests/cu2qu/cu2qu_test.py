@@ -13,13 +13,12 @@
 # limitations under the License.
 
 import collections
-import math
-import unittest
-import os
 import json
+import math
+import os
+import unittest
 
 from fontTools.cu2qu import curve_to_quadratic, curves_to_quadratic
-
 
 DATADIR = os.path.join(os.path.dirname(__file__), "data")
 

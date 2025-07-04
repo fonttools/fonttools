@@ -1,8 +1,9 @@
-from fontTools.misc.testTools import parseXML
-from fontTools.misc.xmlWriter import XMLWriter
-from io import BytesIO
 import struct
 import unittest
+from io import BytesIO
+
+from fontTools.misc.testTools import parseXML
+from fontTools.misc.xmlWriter import XMLWriter
 from fontTools.ttLib import newTable
 
 

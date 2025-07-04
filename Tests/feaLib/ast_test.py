@@ -1,5 +1,6 @@
-from fontTools.feaLib import ast
 import unittest
+
+from fontTools.feaLib import ast
 
 
 class AstTest(unittest.TestCase):

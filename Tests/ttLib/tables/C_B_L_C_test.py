@@ -5,7 +5,6 @@ import os
 from fontTools.misc.testTools import getXML
 from fontTools.ttLib import TTFont
 
-
 DATA_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "data")
 
 # This is a subset from NotoColorEmoji.ttf which contains an IndexTable format=3

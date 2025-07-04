@@ -1,8 +1,9 @@
 # coding: utf-8
-from fontTools.misc import etree
-from collections import OrderedDict
 import io
+from collections import OrderedDict
+
 import pytest
+from fontTools.misc import etree
 
 
 @pytest.mark.parametrize(
