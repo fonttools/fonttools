@@ -259,9 +259,7 @@ class TTFont(object):
                 "head"
             ]  # make sure 'head' is loaded so the recalculation is actually done
 
-        tags = list(self.keys())
-        if "GlyphOrder" in self.keys():
-            tags.remove("GlyphOrder")
+        tags = self.keys()[1:]  # skip GlyphOrder tag
         numTables = len(tags)
         # write to a temporary stream to allow saving to unseekable streams
         writer = SFNTWriter(
