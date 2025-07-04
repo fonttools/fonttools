@@ -5,5 +5,5 @@ sphinx>=1.5.5
 mypy>=0.782
 readme_renderer[md]>=43.0
 
-# Pin black as each version could change formatting, breaking CI randomly.
-black==24.10.0
+# Pin ruff as each version could change formatting, breaking CI randomly.
+ruff==0.12.2
