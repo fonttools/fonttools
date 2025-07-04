@@ -641,9 +641,10 @@ woff2OverlapSimpleBitmapFlag = 0x0001
 
 def getKnownTagIndex(tag):
     """Return index of 'tag' in woff2KnownTags list. Return 63 if not found."""
-    if tag in woff2KnownTags:
+    try:
         return woff2KnownTags.index(tag)
-    return woff2UnknownTagIndex
+    except ValueError:
+        return woff2UnknownTagIndex
 
 
 class WOFF2DirectoryEntry(DirectoryEntry):
