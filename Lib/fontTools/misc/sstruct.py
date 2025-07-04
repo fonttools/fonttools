@@ -23,27 +23,27 @@ the number of bits after the point. Fixed point numbers get
 converted to floats.
 
 pack(fmt, object):
-    'object' is either a dictionary or an instance (or actually
-    anything that has a __dict__ attribute). If it is a dictionary,
-    its keys are used for names. If it is an instance, it's
-    attributes are used to grab struct elements from. Returns
-    a string containing the data.
+	'object' is either a dictionary or an instance (or actually
+	anything that has a __dict__ attribute). If it is a dictionary,
+	its keys are used for names. If it is an instance, it's
+	attributes are used to grab struct elements from. Returns
+	a string containing the data.
 
 unpack(fmt, data, object=None)
-    If 'object' is omitted (or None), a new dictionary will be
-    returned. If 'object' is a dictionary, it will be used to add
-    struct elements to. If it is an instance (or in fact anything
-    that has a __dict__ attribute), an attribute will be added for
-    each struct element. In the latter two cases, 'object' itself
-    is returned.
+	If 'object' is omitted (or None), a new dictionary will be
+	returned. If 'object' is a dictionary, it will be used to add
+	struct elements to. If it is an instance (or in fact anything
+	that has a __dict__ attribute), an attribute will be added for
+	each struct element. In the latter two cases, 'object' itself
+	is returned.
 
 unpack2(fmt, data, object=None)
-    Convenience function. Same as unpack, except data may be longer
-    than needed. The returned value is a tuple: (object, leftoverdata).
+	Convenience function. Same as unpack, except data may be longer
+	than needed. The returned value is a tuple: (object, leftoverdata).
 
 calcsize(fmt)
-    like struct.calcsize(), but uses our own fmt strings:
-    it returns the size of the data in bytes.
+	like struct.calcsize(), but uses our own fmt strings:
+	it returns the size of the data in bytes.
 """
 
 import re
@@ -185,20 +185,20 @@ def getformat(fmt, keep_pad_byte=False):
 
 def _test():
     fmt = """
-        # comments are allowed
-        >  # big endian (see documentation for struct)
-        # empty lines are allowed:
-        
-        ashort: h
-        along: l
-        abyte: b	# a byte
-        achar: c
-        astr: 5s
-        afloat: f; adouble: d	# multiple "statements" are allowed
-        afixed: 16.16F
-        abool: ?
-        apad: x
-    """
+		# comments are allowed
+		>  # big endian (see documentation for struct)
+		# empty lines are allowed:
+
+		ashort: h
+		along: l
+		abyte: b	# a byte
+		achar: c
+		astr: 5s
+		afloat: f; adouble: d	# multiple "statements" are allowed
+		afixed: 16.16F
+		abool: ?
+		apad: x
+	"""
 
     print("size:", calcsize(fmt))
 
