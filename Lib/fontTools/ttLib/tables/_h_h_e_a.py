@@ -1,12 +1,11 @@
-from fontTools.misc import sstruct
-from fontTools.misc.textTools import safeEval
-from fontTools.misc.fixedTools import (
-    ensureVersionIsLong as fi2ve,
-    versionToFixed as ve2fi,
-)
-from . import DefaultTable
 import math
 
+from fontTools.misc import sstruct
+from fontTools.misc.fixedTools import ensureVersionIsLong as fi2ve
+from fontTools.misc.fixedTools import versionToFixed as ve2fi
+from fontTools.misc.textTools import safeEval
+
+from . import DefaultTable
 
 hheaFormat = """
 		>  # big endian

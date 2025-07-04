@@ -1,10 +1,10 @@
+import logging
+import os
+import sys
+
 from fontTools import ttLib
 from fontTools.misc.textTools import safeEval
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
-import sys
-import os
-import logging
-
 
 log = logging.getLogger(__name__)
 

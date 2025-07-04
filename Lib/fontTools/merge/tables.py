@@ -2,14 +2,14 @@
 #
 # Google Author(s): Behdad Esfahbod, Roozbeh Pournader
 
-from fontTools import ttLib, cffLib
-from fontTools.misc.psCharStrings import T2WidthExtractor
-from fontTools.ttLib.tables.DefaultTable import DefaultTable
+import logging
+
+from fontTools import cffLib, ttLib
 from fontTools.merge.base import add_method, mergeObjects
 from fontTools.merge.cmap import computeMegaCmap
 from fontTools.merge.util import *
-import logging
-
+from fontTools.misc.psCharStrings import T2WidthExtractor
+from fontTools.ttLib.tables.DefaultTable import DefaultTable
 
 log = logging.getLogger("fontTools.merge")
 

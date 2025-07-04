@@ -1,8 +1,10 @@
-from fontTools.misc import sstruct
-from fontTools.misc.textTools import bytesjoin, safeEval, readHex
-from . import DefaultTable
-import sys
 import array
+import sys
+
+from fontTools.misc import sstruct
+from fontTools.misc.textTools import bytesjoin, readHex, safeEval
+
+from . import DefaultTable
 
 GPKGFormat = """
 		>	# big endian

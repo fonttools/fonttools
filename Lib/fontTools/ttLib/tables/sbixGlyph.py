@@ -1,7 +1,7 @@
-from fontTools.misc import sstruct
-from fontTools.misc.textTools import readHex, safeEval
 import struct
 
+from fontTools.misc import sstruct
+from fontTools.misc.textTools import readHex, safeEval
 
 sbixGlyphHeaderFormat = """
 	>

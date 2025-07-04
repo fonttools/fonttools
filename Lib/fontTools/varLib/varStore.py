@@ -1,17 +1,17 @@
-from fontTools.misc.roundTools import noRound, otRound
+from collections import defaultdict
+from functools import partial
+from heapq import heappop, heappush
+
 from fontTools.misc.intTools import bit_count
+from fontTools.misc.roundTools import noRound, otRound
 from fontTools.ttLib.tables import otTables as ot
-from fontTools.varLib.models import supportScalar
 from fontTools.varLib.builder import (
+    buildVarData,
+    buildVarRegion,
     buildVarRegionList,
     buildVarStore,
-    buildVarRegion,
-    buildVarData,
 )
-from functools import partial
-from collections import defaultdict
-from heapq import heappush, heappop
-
+from fontTools.varLib.models import supportScalar
 
 NO_VARIATION_INDEX = ot.NO_VARIATION_INDEX
 ot.VarStore.NO_VARIATION_INDEX = NO_VARIATION_INDEX
@@ -688,6 +688,7 @@ ot.VarStore.optimize = VarStore_optimize
 def main(args=None):
     """Optimize a font's GDEF variation store"""
     from argparse import ArgumentParser
+
     from fontTools import configLogger
     from fontTools.ttLib import TTFont
     from fontTools.ttLib.tables.otBase import OTTableWriter

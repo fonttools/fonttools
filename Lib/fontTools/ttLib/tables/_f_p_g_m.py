@@ -1,5 +1,4 @@
-from . import DefaultTable
-from . import ttProgram
+from . import DefaultTable, ttProgram
 
 
 class table__f_p_g_m(DefaultTable.DefaultTable):
@@ -56,7 +55,7 @@ class table__f_p_g_m(DefaultTable.DefaultTable):
 
 
 if __name__ == "__main__":
-    import sys
     import doctest
+    import sys
 
     sys.exit(doctest.testmod().failed)

@@ -1,30 +1,27 @@
 from __future__ import annotations
 
-from collections import namedtuple, OrderedDict
+import copy
 import itertools
+import logging
+from collections import OrderedDict, namedtuple
+from functools import reduce
 from typing import Dict, Union
-from fontTools.misc.fixedTools import fixedToFloat
-from fontTools.misc.roundTools import otRound
+
 from fontTools import ttLib
+from fontTools.feaLib.ast import STATNameStatement
+from fontTools.misc.fixedTools import fixedToFloat
+from fontTools.misc.loggingTools import deprecateFunction
+from fontTools.misc.roundTools import otRound
+from fontTools.otlLib.error import OpenTypeLibError
+from fontTools.otlLib.optimize.gpos import _compression_level_from_env, compact_lookup
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables.otBase import (
-    ValueRecord,
-    valueRecordFormatDict,
     OTLOffsetOverflowError,
     OTTableWriter,
+    ValueRecord,
+    valueRecordFormatDict,
 )
 from fontTools.ttLib.ttFont import TTFont
-from fontTools.feaLib.ast import STATNameStatement
-from fontTools.otlLib.optimize.gpos import (
-    _compression_level_from_env,
-    compact_lookup,
-)
-from fontTools.otlLib.error import OpenTypeLibError
-from fontTools.misc.loggingTools import deprecateFunction
-from functools import reduce
-import logging
-import copy
-
 
 log = logging.getLogger(__name__)
 

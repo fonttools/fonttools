@@ -5,42 +5,41 @@ OpenType subtables.
 Most are constructed upon import from data in otData.py, all are populated with
 converter objects from otConverters.py.
 """
+import array
 import copy
-from enum import IntEnum
+import itertools
+import logging
+import struct
+import sys
+from collections import defaultdict, namedtuple
+from enum import IntEnum, IntFlag
 from functools import reduce
 from math import radians
-import itertools
-from collections import defaultdict, namedtuple
-from fontTools.ttLib import OPTIMIZE_FONT_SPEED
-from fontTools.ttLib.tables.TupleVariation import TupleVariation
-from fontTools.ttLib.tables.otTraverse import dfs_base_table
+from typing import TYPE_CHECKING, Iterator, List, Optional, Set
+
+from fontTools.feaLib.lookupDebugInfo import LOOKUP_DEBUG_INFO_KEY, LookupDebugInfo
 from fontTools.misc.arrayTools import quantizeRect
+from fontTools.misc.fixedTools import fixedToFloat as fi2fl
+from fontTools.misc.fixedTools import floatToFixed as fl2fi
+from fontTools.misc.fixedTools import floatToFixedToStr as fl2str
+from fontTools.misc.fixedTools import strToFixedToFloat as str2fl
 from fontTools.misc.roundTools import otRound
-from fontTools.misc.transform import Transform, Identity, DecomposedTransform
 from fontTools.misc.textTools import bytesjoin, pad, safeEval
+from fontTools.misc.transform import DecomposedTransform, Identity, Transform
 from fontTools.misc.vector import Vector
 from fontTools.pens.boundsPen import ControlBoundsPen
 from fontTools.pens.transformPen import TransformPen
+from fontTools.ttLib import OPTIMIZE_FONT_SPEED
+from fontTools.ttLib.tables.otTraverse import dfs_base_table
+from fontTools.ttLib.tables.TupleVariation import TupleVariation
+
 from .otBase import (
     BaseTable,
+    CountReference,
     FormatSwitchingBaseTable,
     ValueRecord,
-    CountReference,
     getFormatSwitchingBaseTableClass,
 )
-from fontTools.misc.fixedTools import (
-    fixedToFloat as fi2fl,
-    floatToFixed as fl2fi,
-    floatToFixedToStr as fl2str,
-    strToFixedToFloat as str2fl,
-)
-from fontTools.feaLib.lookupDebugInfo import LookupDebugInfo, LOOKUP_DEBUG_INFO_KEY
-import logging
-import struct
-import array
-import sys
-from enum import IntFlag
-from typing import TYPE_CHECKING, Iterator, List, Optional, Set
 
 if TYPE_CHECKING:
     from fontTools.ttLib.ttGlyphSet import _TTGlyphSet
@@ -2588,6 +2587,7 @@ def fixSubTableOverFlows(ttf, overflowRecord):
 
 def _buildClasses():
     import re
+
     from .otData import otData
 
     formatPat = re.compile(r"([A-Za-z0-9]+)Format(\d+)$")

@@ -2,21 +2,21 @@
 #
 # Google Author(s): Behdad Esfahbod, Roozbeh Pournader
 
-from fontTools import ttLib
+import logging
+import sys
+from functools import reduce
+
 import fontTools.merge.base
+import fontTools.merge.tables
+from fontTools import ttLib
 from fontTools.merge.cmap import (
-    computeMegaGlyphOrder,
     computeMegaCmap,
+    computeMegaGlyphOrder,
     renameCFFCharStrings,
 )
-from fontTools.merge.layout import layoutPreMerge, layoutPostMerge
+from fontTools.merge.layout import layoutPostMerge, layoutPreMerge
 from fontTools.merge.options import Options
-import fontTools.merge.tables
 from fontTools.misc.loggingTools import Timer
-from functools import reduce
-import sys
-import logging
-
 
 log = logging.getLogger("fontTools.merge")
 timer = Timer(logger=logging.getLogger(__name__ + ".timer"), level=logging.INFO)

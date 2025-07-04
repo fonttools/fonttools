@@ -1,20 +1,18 @@
-from fontTools.misc import sstruct
-from fontTools.misc.fixedTools import (
-    fixedToFloat as fi2fl,
-    floatToFixed as fl2fi,
-    floatToFixedToStr as fl2str,
-    strToFixedToFloat as str2fl,
-)
-from fontTools.misc.textTools import bytesjoin, safeEval
-from fontTools.misc.roundTools import otRound
-from fontTools.varLib.models import piecewiseLinearMap
-from fontTools.varLib.varStore import VarStoreInstancer, NO_VARIATION_INDEX
-from fontTools.ttLib import TTLibError
-from . import DefaultTable
-from . import otTables
-import struct
 import logging
+import struct
 
+from fontTools.misc import sstruct
+from fontTools.misc.fixedTools import fixedToFloat as fi2fl
+from fontTools.misc.fixedTools import floatToFixed as fl2fi
+from fontTools.misc.fixedTools import floatToFixedToStr as fl2str
+from fontTools.misc.fixedTools import strToFixedToFloat as str2fl
+from fontTools.misc.roundTools import otRound
+from fontTools.misc.textTools import bytesjoin, safeEval
+from fontTools.ttLib import TTLibError
+from fontTools.varLib.models import piecewiseLinearMap
+from fontTools.varLib.varStore import NO_VARIATION_INDEX, VarStoreInstancer
+
+from . import DefaultTable, otTables
 
 log = logging.getLogger(__name__)
 

@@ -2,13 +2,14 @@
 Interpolate OpenType Layout tables (GDEF / GPOS / GSUB).
 """
 
-from fontTools.ttLib import TTFont
-from fontTools.varLib import models, VarLibError, load_designspace, load_masters
-from fontTools.varLib.merger import InstancerMerger
-import os.path
 import logging
+import os.path
 from copy import deepcopy
 from pprint import pformat
+
+from fontTools.ttLib import TTFont
+from fontTools.varLib import VarLibError, load_designspace, load_masters, models
+from fontTools.varLib.merger import InstancerMerger
 
 log = logging.getLogger("fontTools.varLib.interpolate_layout")
 
@@ -61,9 +62,10 @@ def interpolate_layout(designspace, loc, master_finder=lambda s: s, mapped=False
 
 def main(args=None):
     """Interpolate GDEF/GPOS/GSUB tables for a point on a designspace"""
-    from fontTools import configLogger
     import argparse
     import sys
+
+    from fontTools import configLogger
 
     parser = argparse.ArgumentParser(
         "fonttools varLib.interpolate_layout",

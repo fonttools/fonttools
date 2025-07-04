@@ -3,31 +3,32 @@
 Functions for reading and writing raw Type 1 data:
 
 read(path)
-	reads any Type 1 font file, returns the raw data and a type indicator:
-	'LWFN', 'PFB' or 'OTHER', depending on the format of the file pointed
-	to by 'path'.
-	Raises an error when the file does not contain valid Type 1 data.
+    reads any Type 1 font file, returns the raw data and a type indicator:
+    'LWFN', 'PFB' or 'OTHER', depending on the format of the file pointed
+    to by 'path'.
+    Raises an error when the file does not contain valid Type 1 data.
 
 write(path, data, kind='OTHER', dohex=False)
-	writes raw Type 1 data to the file pointed to by 'path'.
-	'kind' can be one of 'LWFN', 'PFB' or 'OTHER'; it defaults to 'OTHER'.
-	'dohex' is a flag which determines whether the eexec encrypted
-	part should be written as hexadecimal or binary, but only if kind
-	is 'OTHER'.
+    writes raw Type 1 data to the file pointed to by 'path'.
+    'kind' can be one of 'LWFN', 'PFB' or 'OTHER'; it defaults to 'OTHER'.
+    'dohex' is a flag which determines whether the eexec encrypted
+    part should be written as hexadecimal or binary, but only if kind
+    is 'OTHER'.
 """
 
-import fontTools
-from fontTools.misc import eexec
-from fontTools.misc.macCreatorType import getMacCreatorAndType
-from fontTools.misc.textTools import bytechr, byteord, bytesjoin, tobytes
-from fontTools.misc.psOperators import (
-    _type1_pre_eexec_order,
-    _type1_fontinfo_order,
-    _type1_post_eexec_order,
-)
-from fontTools.encodings.StandardEncoding import StandardEncoding
 import os
 import re
+
+import fontTools
+from fontTools.encodings.StandardEncoding import StandardEncoding
+from fontTools.misc import eexec
+from fontTools.misc.macCreatorType import getMacCreatorAndType
+from fontTools.misc.psOperators import (
+    _type1_fontinfo_order,
+    _type1_post_eexec_order,
+    _type1_pre_eexec_order,
+)
+from fontTools.misc.textTools import bytechr, byteord, bytesjoin, tobytes
 
 __author__ = "jvr"
 __version__ = "1.0b3"
@@ -94,8 +95,7 @@ class T1Font(object):
         return self.font[key]
 
     def parse(self):
-        from fontTools.misc import psLib
-        from fontTools.misc import psCharStrings
+        from fontTools.misc import psCharStrings, psLib
 
         self.font = psLib.suckfont(self.data, self.encoding)
         charStrings = self.font["CharStrings"]

@@ -7,9 +7,9 @@
 # Copyright (c) 2013-2014 Lennart Regebro
 # License: MIT
 
-from .arc import EllipticalArc
 import re
 
+from .arc import EllipticalArc
 
 COMMANDS = set("MmZzLlHhVvCcSsQqTtAa")
 ARC_COMMANDS = set("Aa")

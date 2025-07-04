@@ -1,13 +1,13 @@
-from fontTools.feaLib.error import FeatureLibError
-from fontTools.feaLib.lexer import Lexer, IncludingLexer, NonIncludingLexer
-from fontTools.feaLib.variableScalar import VariableScalar
-from fontTools.misc.encodingTools import getEncoding
-from fontTools.misc.textTools import bytechr, tobytes, tostr
-import fontTools.feaLib.ast as ast
 import logging
 import os
 import re
 
+import fontTools.feaLib.ast as ast
+from fontTools.feaLib.error import FeatureLibError
+from fontTools.feaLib.lexer import IncludingLexer, Lexer, NonIncludingLexer
+from fontTools.feaLib.variableScalar import VariableScalar
+from fontTools.misc.encodingTools import getEncoding
+from fontTools.misc.textTools import bytechr, tobytes, tostr
 
 log = logging.getLogger(__name__)
 

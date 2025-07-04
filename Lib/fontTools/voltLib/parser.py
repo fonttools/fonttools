@@ -1,7 +1,8 @@
-import fontTools.voltLib.ast as ast
-from fontTools.voltLib.lexer import Lexer
-from fontTools.voltLib.error import VoltLibError
 from io import open
+
+import fontTools.voltLib.ast as ast
+from fontTools.voltLib.error import VoltLibError
+from fontTools.voltLib.lexer import Lexer
 
 PARSE_FUNCS = {
     "DEF_GLYPH": "parse_def_glyph_",

@@ -1,26 +1,27 @@
+import itertools
+import logging
+import os
+import struct
+
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import (
     bytechr,
     byteord,
     bytesjoin,
-    strjoin,
-    safeEval,
-    readHex,
-    hexStr,
     deHexStr,
+    hexStr,
+    readHex,
+    safeEval,
+    strjoin,
 )
+
+from . import DefaultTable
 from .BitmapGlyphMetrics import (
     BigGlyphMetrics,
-    bigGlyphMetricsFormat,
     SmallGlyphMetrics,
+    bigGlyphMetricsFormat,
     smallGlyphMetricsFormat,
 )
-from . import DefaultTable
-import itertools
-import os
-import struct
-import logging
-
 
 log = logging.getLogger(__name__)
 

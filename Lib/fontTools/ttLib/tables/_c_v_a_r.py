@@ -1,12 +1,12 @@
-from . import DefaultTable
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import bytesjoin
 from fontTools.ttLib.tables.TupleVariation import (
+    TupleVariation,
     compileTupleVariationStore,
     decompileTupleVariationStore,
-    TupleVariation,
 )
 
+from . import DefaultTable
 
 # https://www.microsoft.com/typography/otspec/cvar.htm
 # https://www.microsoft.com/typography/otspec/otvarcommonformats.htm

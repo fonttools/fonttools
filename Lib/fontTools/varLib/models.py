@@ -9,6 +9,7 @@ __all__ = [
 ]
 
 from fontTools.misc.roundTools import noRound
+
 from .errors import VariationModelError
 
 
@@ -579,8 +580,9 @@ def piecewiseLinearMap(v, mapping):
 
 def main(args=None):
     """Normalize locations on a given designspace"""
-    from fontTools import configLogger
     import argparse
+
+    from fontTools import configLogger
 
     parser = argparse.ArgumentParser(
         "fonttools varLib.models",
@@ -634,7 +636,8 @@ def main(args=None):
 
 
 if __name__ == "__main__":
-    import doctest, sys
+    import doctest
+    import sys
 
     if len(sys.argv) > 1:
         sys.exit(main())

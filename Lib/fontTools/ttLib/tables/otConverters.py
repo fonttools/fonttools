@@ -1,16 +1,23 @@
-from fontTools.misc.fixedTools import (
-    fixedToFloat as fi2fl,
-    floatToFixed as fl2fi,
-    floatToFixedToStr as fl2str,
-    strToFixedToFloat as str2fl,
-    ensureVersionIsLong as fi2ve,
-    versionToFixed as ve2fi,
-)
-from fontTools.ttLib.tables.TupleVariation import TupleVariation
-from fontTools.misc.roundTools import nearestMultipleShortestRepr, otRound
-from fontTools.misc.textTools import bytesjoin, tobytes, tostr, pad, safeEval
+import logging
+import re
+import struct
+from functools import partial
+from itertools import accumulate, zip_longest
+from types import SimpleNamespace
+from typing import Optional
+
+from fontTools.misc.fixedTools import ensureVersionIsLong as fi2ve
+from fontTools.misc.fixedTools import fixedToFloat as fi2fl
+from fontTools.misc.fixedTools import floatToFixed as fl2fi
+from fontTools.misc.fixedTools import floatToFixedToStr as fl2str
+from fontTools.misc.fixedTools import strToFixedToFloat as str2fl
+from fontTools.misc.fixedTools import versionToFixed as ve2fi
 from fontTools.misc.lazyTools import LazyList
+from fontTools.misc.roundTools import nearestMultipleShortestRepr, otRound
+from fontTools.misc.textTools import bytesjoin, pad, safeEval, tobytes, tostr
 from fontTools.ttLib import OPTIMIZE_FONT_SPEED, getSearchRange
+from fontTools.ttLib.tables.TupleVariation import TupleVariation
+
 from .otBase import (
     CountReference,
     FormatSwitchingBaseTable,
@@ -18,28 +25,17 @@ from .otBase import (
     OTTableWriter,
     ValueRecordFactory,
 )
+from .otTables import NO_VARIATION_INDEX, AATAction, AATState, AATStateTable
+from .otTables import CompositeMode as _CompositeMode
+from .otTables import ContextualMorphAction
+from .otTables import ExtendMode as _ExtendMode
 from .otTables import (
-    lookupTypes,
-    VarCompositeGlyph,
-    AATStateTable,
-    AATState,
-    AATAction,
-    ContextualMorphAction,
-    LigatureMorphAction,
     InsertionMorphAction,
+    LigatureMorphAction,
     MorxSubtable,
-    ExtendMode as _ExtendMode,
-    CompositeMode as _CompositeMode,
-    NO_VARIATION_INDEX,
+    VarCompositeGlyph,
+    lookupTypes,
 )
-from itertools import zip_longest, accumulate
-from functools import partial
-from types import SimpleNamespace
-import re
-import struct
-from typing import Optional
-import logging
-
 
 log = logging.getLogger(__name__)
 istuple = lambda t: isinstance(t, tuple)

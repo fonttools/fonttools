@@ -1,7 +1,9 @@
-from . import DefaultTable
+import struct
+
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
-import struct
+
+from . import DefaultTable
 
 VDMX_HeaderFmt = """
 	>                 # big endian

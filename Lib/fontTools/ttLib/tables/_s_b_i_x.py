@@ -1,8 +1,8 @@
 from fontTools.misc import sstruct
-from fontTools.misc.textTools import safeEval, num2binary, binary2num
+from fontTools.misc.textTools import binary2num, num2binary, safeEval
+
 from . import DefaultTable
 from .sbixStrike import Strike
-
 
 sbixHeaderFormat = """
 	>

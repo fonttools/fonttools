@@ -6,27 +6,29 @@ Call as:
 $ fonttools varLib.interpolatable font1 font2 ...
 """
 
+import logging
+import os
+from collections import defaultdict
+from functools import wraps
+from math import atan2, pi, sqrt
+from pprint import pformat
+from types import SimpleNamespace
+
+from fontTools.misc.fixedTools import floatToFixedToStr
+from fontTools.misc.transform import Transform
+from fontTools.pens.momentsPen import OpenContourError
+from fontTools.pens.recordingPen import (
+    DecomposingRecordingPen,
+    RecordingPen,
+    lerpRecordings,
+)
+from fontTools.pens.statisticsPen import StatisticsControlPen, StatisticsPen
+from fontTools.pens.transformPen import TransformPen
+from fontTools.varLib.models import normalizeLocation, piecewiseLinearMap
+
 from .interpolatableHelpers import *
 from .interpolatableTestContourOrder import test_contour_order
 from .interpolatableTestStartingPoint import test_starting_point
-from fontTools.pens.recordingPen import (
-    RecordingPen,
-    DecomposingRecordingPen,
-    lerpRecordings,
-)
-from fontTools.pens.transformPen import TransformPen
-from fontTools.pens.statisticsPen import StatisticsPen, StatisticsControlPen
-from fontTools.pens.momentsPen import OpenContourError
-from fontTools.varLib.models import piecewiseLinearMap, normalizeLocation
-from fontTools.misc.fixedTools import floatToFixedToStr
-from fontTools.misc.transform import Transform
-from collections import defaultdict
-from types import SimpleNamespace
-from functools import wraps
-from pprint import pformat
-from math import sqrt, atan2, pi
-import logging
-import os
 
 log = logging.getLogger("fontTools.varLib.interpolatable")
 
@@ -1134,7 +1136,7 @@ def main(args=None):
             if arg is None:
                 continue
             log.info("Writing %s to %s", p.upper(), arg)
-            from .interpolatablePlot import InterpolatablePS, InterpolatablePDF
+            from .interpolatablePlot import InterpolatablePDF, InterpolatablePS
 
             PlotterClass = InterpolatablePS if p == "ps" else InterpolatablePDF
 

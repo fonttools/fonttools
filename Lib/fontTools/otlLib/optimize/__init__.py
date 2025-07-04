@@ -1,4 +1,5 @@
 from argparse import RawTextHelpFormatter
+
 from fontTools.otlLib.optimize.gpos import COMPRESSION_LEVEL, compact
 from fontTools.ttLib import TTFont
 

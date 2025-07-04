@@ -1,5 +1,6 @@
-from fontTools.voltLib.error import VoltLibError
 from typing import NamedTuple
+
+from fontTools.voltLib.error import VoltLibError
 
 
 class Pos(NamedTuple):

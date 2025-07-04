@@ -1,37 +1,34 @@
 """_g_l_y_f.py -- Converter classes for the 'glyf' table."""
 
-from collections import namedtuple
-from fontTools.misc import sstruct
-from fontTools import ttLib
-from fontTools import version
-from fontTools.misc.transform import DecomposedTransform
-from fontTools.misc.textTools import tostr, safeEval, pad
-from fontTools.misc.arrayTools import updateBounds, pointInRect
-from fontTools.misc.bezierTools import calcQuadraticBounds
-from fontTools.misc.fixedTools import (
-    fixedToFloat as fi2fl,
-    floatToFixed as fl2fi,
-    floatToFixedToStr as fl2str,
-    strToFixedToFloat as str2fl,
-)
-from fontTools.misc.roundTools import noRound, otRound
-from fontTools.misc.vector import Vector
-from numbers import Number
-from . import DefaultTable
-from . import ttProgram
-import sys
-import struct
 import array
 import logging
 import math
 import os
-from fontTools.misc import xmlWriter
-from fontTools.misc.filenames import userNameToFileName
-from fontTools.misc.loggingTools import deprecateFunction
+import struct
+import sys
+from collections import namedtuple
 from enum import IntFlag
 from functools import partial
+from numbers import Number
 from types import SimpleNamespace
 from typing import Set
+
+from fontTools import ttLib, version
+from fontTools.misc import sstruct, xmlWriter
+from fontTools.misc.arrayTools import pointInRect, updateBounds
+from fontTools.misc.bezierTools import calcQuadraticBounds
+from fontTools.misc.filenames import userNameToFileName
+from fontTools.misc.fixedTools import fixedToFloat as fi2fl
+from fontTools.misc.fixedTools import floatToFixed as fl2fi
+from fontTools.misc.fixedTools import floatToFixedToStr as fl2str
+from fontTools.misc.fixedTools import strToFixedToFloat as str2fl
+from fontTools.misc.loggingTools import deprecateFunction
+from fontTools.misc.roundTools import noRound, otRound
+from fontTools.misc.textTools import pad, safeEval, tostr
+from fontTools.misc.transform import DecomposedTransform
+from fontTools.misc.vector import Vector
+
+from . import DefaultTable, ttProgram
 
 log = logging.getLogger(__name__)
 
@@ -2307,6 +2304,7 @@ class GlyphCoordinates(object):
 
 
 if __name__ == "__main__":
-    import doctest, sys
+    import doctest
+    import sys
 
     sys.exit(doctest.testmod().failed)

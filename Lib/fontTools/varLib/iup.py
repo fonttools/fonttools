@@ -5,13 +5,8 @@ except (AttributeError, ImportError):
     from fontTools.misc import cython
 COMPILED = cython.compiled
 
-from typing import (
-    Sequence,
-    Tuple,
-    Union,
-)
 from numbers import Integral, Real
-
+from typing import Sequence, Tuple, Union
 
 _Point = Tuple[Real, Real]
 _Delta = Tuple[Real, Real]

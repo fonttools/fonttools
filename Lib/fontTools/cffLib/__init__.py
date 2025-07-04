@@ -11,25 +11,24 @@ the demands of variable fonts. This module parses both original CFF and CFF2.
 
 """
 
-from fontTools.misc import sstruct
-from fontTools.misc import psCharStrings
-from fontTools.misc.arrayTools import unionRect, intRect
+import logging
+import re
+import struct
+from io import BytesIO
+
+from fontTools.misc import psCharStrings, sstruct
+from fontTools.misc.arrayTools import intRect, unionRect
 from fontTools.misc.textTools import (
     bytechr,
     byteord,
     bytesjoin,
+    safeEval,
     tobytes,
     tostr,
-    safeEval,
 )
 from fontTools.ttLib import TTFont
-from fontTools.ttLib.tables.otBase import OTTableWriter
-from fontTools.ttLib.tables.otBase import OTTableReader
 from fontTools.ttLib.tables import otTables as ot
-from io import BytesIO
-import struct
-import logging
-import re
+from fontTools.ttLib.tables.otBase import OTTableReader, OTTableWriter
 
 # mute cffLib debug messages when running ttx in verbose mode
 DEBUG = logging.DEBUG - 1

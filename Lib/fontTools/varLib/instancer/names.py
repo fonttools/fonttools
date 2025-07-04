@@ -1,9 +1,9 @@
 """Helpers for instantiating name table records."""
 
+import re
 from contextlib import contextmanager
 from copy import deepcopy
 from enum import IntEnum
-import re
 
 
 class NameID(IntEnum):

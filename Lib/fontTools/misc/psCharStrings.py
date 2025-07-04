@@ -2,6 +2,9 @@
 CFF dictionary data and Type1/Type2 CharStrings.
 """
 
+import logging
+import struct
+
 from fontTools.misc.fixedTools import (
     fixedToFloat,
     floatToFixed,
@@ -10,9 +13,6 @@ from fontTools.misc.fixedTools import (
 )
 from fontTools.misc.textTools import bytechr, byteord, bytesjoin, strjoin
 from fontTools.pens.boundsPen import BoundsPen
-import struct
-import logging
-
 
 log = logging.getLogger(__name__)
 

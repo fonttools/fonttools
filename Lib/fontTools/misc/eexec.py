@@ -12,7 +12,7 @@ the new key at the end of the operation.
 
 """
 
-from fontTools.misc.textTools import bytechr, bytesjoin, byteord
+from fontTools.misc.textTools import bytechr, byteord, bytesjoin
 
 
 def _decryptChar(cipher, R):
@@ -113,7 +113,7 @@ def deHexString(h):
 
 
 if __name__ == "__main__":
-    import sys
     import doctest
+    import sys
 
     sys.exit(doctest.testmod().failed)

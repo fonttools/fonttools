@@ -16,7 +16,6 @@ from fontTools import ttLib
 from fontTools.subset.util import _add_method
 from fontTools.ttLib.tables.S_V_G_ import SVGDocument
 
-
 __all__ = ["subset_glyphs"]
 
 

@@ -2,9 +2,9 @@
 #
 # Google Author(s): Behdad Esfahbod, Roozbeh Pournader
 
-from fontTools.ttLib.tables.DefaultTable import DefaultTable
 import logging
 
+from fontTools.ttLib.tables.DefaultTable import DefaultTable
 
 log = logging.getLogger("fontTools.merge")
 

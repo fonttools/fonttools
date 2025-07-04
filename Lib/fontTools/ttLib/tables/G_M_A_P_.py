@@ -1,5 +1,6 @@
 from fontTools.misc import sstruct
-from fontTools.misc.textTools import tobytes, tostr, safeEval
+from fontTools.misc.textTools import safeEval, tobytes, tostr
+
 from . import DefaultTable
 
 GMAPFormat = """

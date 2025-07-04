@@ -1,7 +1,8 @@
 """Pen calculating area, center of mass, variance and standard-deviation,
 covariance and correlation, and slant, of glyph shapes."""
 
-from math import sqrt, degrees, atan
+from math import atan, degrees, sqrt
+
 from fontTools.pens.basePen import BasePen, OpenContourError
 from fontTools.pens.momentsPen import MomentsPen
 
@@ -176,8 +177,8 @@ class StatisticsControlPen(StatisticsBase, BasePen):
 
 
 def _test(glyphset, upem, glyphs, quiet=False, *, control=False):
-    from fontTools.pens.transformPen import TransformPen
     from fontTools.misc.transform import Scale
+    from fontTools.pens.transformPen import TransformPen
 
     wght_sum = 0
     wght_sum_perceptual = 0

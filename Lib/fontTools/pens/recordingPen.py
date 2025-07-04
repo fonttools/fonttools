@@ -3,7 +3,6 @@
 from fontTools.pens.basePen import AbstractPen, DecomposingPen
 from fontTools.pens.pointPen import AbstractPointPen, DecomposingPointPen
 
-
 __all__ = [
     "replayRecording",
     "RecordingPen",

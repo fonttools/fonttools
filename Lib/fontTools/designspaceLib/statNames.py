@@ -11,9 +11,9 @@ instance:
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import Dict, Literal, Optional, Tuple, Union
-import logging
 
 from fontTools.designspaceLib import (
     AxisDescriptor,

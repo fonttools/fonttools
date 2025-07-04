@@ -24,19 +24,19 @@ the resulting splines are interpolation-compatible.
 """
 
 import logging
+
 from fontTools.pens.basePen import AbstractPen
 from fontTools.pens.pointPen import PointToSegmentPen
 from fontTools.pens.reverseContourPen import ReverseContourPen
 
 from . import curves_to_quadratic
 from .errors import (
-    UnequalZipLengthsError,
+    IncompatibleFontsError,
+    IncompatibleGlyphsError,
     IncompatibleSegmentNumberError,
     IncompatibleSegmentTypesError,
-    IncompatibleGlyphsError,
-    IncompatibleFontsError,
+    UnequalZipLengthsError,
 )
-
 
 __all__ = ["fonts_to_quadratic", "font_to_quadratic"]
 

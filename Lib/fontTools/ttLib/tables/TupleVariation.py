@@ -1,18 +1,16 @@
-from fontTools.misc.fixedTools import (
-    fixedToFloat as fi2fl,
-    floatToFixed as fl2fi,
-    floatToFixedToStr as fl2str,
-    strToFixedToFloat as str2fl,
-    otRound,
-)
-from fontTools.misc.textTools import safeEval
 import array
-from collections import Counter, defaultdict
 import io
 import logging
 import struct
 import sys
+from collections import Counter, defaultdict
 
+from fontTools.misc.fixedTools import fixedToFloat as fi2fl
+from fontTools.misc.fixedTools import floatToFixed as fl2fi
+from fontTools.misc.fixedTools import floatToFixedToStr as fl2str
+from fontTools.misc.fixedTools import otRound
+from fontTools.misc.fixedTools import strToFixedToFloat as str2fl
+from fontTools.misc.textTools import safeEval
 
 # https://www.microsoft.com/typography/otspec/otvarcommonformats.htm
 

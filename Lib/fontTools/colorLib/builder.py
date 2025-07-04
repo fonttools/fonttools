@@ -22,18 +22,17 @@ from typing import (
     TypeVar,
     Union,
 )
+
 from fontTools.misc.arrayTools import intRect
 from fontTools.misc.fixedTools import fixedToFloat
 from fontTools.misc.treeTools import build_n_ary_tree
-from fontTools.ttLib.tables import C_O_L_R_
-from fontTools.ttLib.tables import C_P_A_L_
-from fontTools.ttLib.tables import _n_a_m_e
+from fontTools.ttLib.tables import C_O_L_R_, C_P_A_L_, _n_a_m_e
 from fontTools.ttLib.tables import otTables as ot
-from fontTools.ttLib.tables.otTables import ExtendMode, CompositeMode
+from fontTools.ttLib.tables.otTables import CompositeMode, ExtendMode
+
 from .errors import ColorLibError
 from .geometry import round_start_circle_stable_containment
 from .table_builder import BuildCallback, TableBuilder
-
 
 # TODO move type aliases to colorLib.types?
 T = TypeVar("T")

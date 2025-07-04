@@ -129,14 +129,14 @@ fb.save("test.otf")
 ```
 """
 
+import struct
+from collections import OrderedDict
+
+from .misc.timeTools import timestampNow
 from .ttLib import TTFont, newTable
 from .ttLib.tables._c_m_a_p import cmap_classes
 from .ttLib.tables._g_l_y_f import flagCubic
 from .ttLib.tables.O_S_2f_2 import Panose
-from .misc.timeTools import timestampNow
-import struct
-from collections import OrderedDict
-
 
 _headDefaults = dict(
     tableVersion=1.0,
@@ -513,11 +513,11 @@ class FontBuilder(object):
     def setupCFF(self, psName, fontInfo, charStringsDict, privateDict):
         from .cffLib import (
             CFFFontSet,
-            TopDictIndex,
-            TopDict,
             CharStrings,
             GlobalSubrsIndex,
             PrivateDict,
+            TopDict,
+            TopDictIndex,
         )
 
         assert not self.isTTF
@@ -564,13 +564,13 @@ class FontBuilder(object):
     def setupCFF2(self, charStringsDict, fdArrayList=None, regions=None):
         from .cffLib import (
             CFFFontSet,
-            TopDictIndex,
-            TopDict,
             CharStrings,
-            GlobalSubrsIndex,
-            PrivateDict,
             FDArrayIndex,
             FontDict,
+            GlobalSubrsIndex,
+            PrivateDict,
+            TopDict,
+            TopDictIndex,
         )
 
         assert not self.isTTF
@@ -623,8 +623,8 @@ class FontBuilder(object):
             self.setupCFF2Regions(regions)
 
     def setupCFF2Regions(self, regions):
-        from .varLib.builder import buildVarRegionList, buildVarData, buildVarStore
         from .cffLib import VarStoreData
+        from .varLib.builder import buildVarData, buildVarRegionList, buildVarStore
 
         assert "fvar" in self.font, "fvar must to be set up first"
         assert "CFF2" in self.font, "CFF2 must to be set up first"

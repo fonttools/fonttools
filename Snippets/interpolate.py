@@ -21,11 +21,12 @@
 # $ ./interpolate.py && open Roboto.ttf
 
 
-from fontTools.ttLib import TTFont
-from fontTools.ttLib.tables._n_a_m_e import NameRecord
-from fontTools.ttLib.tables._f_v_a_r import table__f_v_a_r, Axis, NamedInstance
-from fontTools.ttLib.tables._g_v_a_r import table__g_v_a_r, TupleVariation
 import logging
+
+from fontTools.ttLib import TTFont
+from fontTools.ttLib.tables._f_v_a_r import Axis, NamedInstance, table__f_v_a_r
+from fontTools.ttLib.tables._g_v_a_r import TupleVariation, table__g_v_a_r
+from fontTools.ttLib.tables._n_a_m_e import NameRecord
 
 
 def AddFontVariations(font):

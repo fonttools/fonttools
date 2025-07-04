@@ -864,7 +864,7 @@ class MomentsPen(BasePen):
 
 
 if __name__ == "__main__":
-    from fontTools.misc.symfont import x, y, printGreenPen
+    from fontTools.misc.symfont import printGreenPen, x, y
 
     printGreenPen(
         "MomentsPen",

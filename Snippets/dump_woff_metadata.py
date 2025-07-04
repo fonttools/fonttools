@@ -1,6 +1,7 @@
 import sys
-from fontTools.ttx import makeOutputFileName
+
 from fontTools.ttLib import TTFont
+from fontTools.ttx import makeOutputFileName
 
 
 def main(args=None):

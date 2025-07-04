@@ -1,7 +1,8 @@
+import os
+import re
+
 from fontTools.feaLib.error import FeatureLibError, IncludedFeaNotFound
 from fontTools.feaLib.location import FeatureLibLocation
-import re
-import os
 
 try:
     import cython

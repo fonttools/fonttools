@@ -2,7 +2,6 @@
 
 from fontTools.pens.basePen import BasePen
 
-
 __all__ = ["CairoPen"]
 
 

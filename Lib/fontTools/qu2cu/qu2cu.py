@@ -23,15 +23,11 @@ except (AttributeError, ImportError):
     from fontTools.misc import cython
 COMPILED = cython.compiled
 
-from fontTools.misc.bezierTools import splitCubicAtTC
-from collections import namedtuple
 import math
-from typing import (
-    List,
-    Tuple,
-    Union,
-)
+from collections import namedtuple
+from typing import List, Tuple, Union
 
+from fontTools.misc.bezierTools import splitCubicAtTC
 
 __all__ = ["quadratic_to_curves"]
 
@@ -384,8 +380,8 @@ def spline_to_curves(q, costs, tolerance=0.5, all_cubic=False):
 
 
 def main():
-    from fontTools.cu2qu.benchmark import generate_curve
     from fontTools.cu2qu import curve_to_quadratic
+    from fontTools.cu2qu.benchmark import generate_curve
 
     tolerance = 0.05
     reconstruct_tolerance = tolerance * 1

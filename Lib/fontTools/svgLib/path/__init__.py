@@ -1,9 +1,9 @@
-from fontTools.pens.transformPen import TransformPen
 from fontTools.misc import etree
 from fontTools.misc.textTools import tostr
+from fontTools.pens.transformPen import TransformPen
+
 from .parser import parse_path
 from .shapes import PathBuilder
-
 
 __all__ = [tostr(s) for s in ("SVGPath", "parse_path")]
 

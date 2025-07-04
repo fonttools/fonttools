@@ -1,20 +1,21 @@
 """CFF to CFF2 converter."""
 
-from fontTools.ttLib import TTFont, newTable
-from fontTools.misc.cliTools import makeOutputFileName
-from fontTools.misc.psCharStrings import T2WidthExtractor
+import logging
+from io import BytesIO
+
 from fontTools.cffLib import (
-    TopDictIndex,
     FDArrayIndex,
     FontDict,
+    TopDictIndex,
     buildOrder,
-    topDictOperators,
     privateDictOperators,
-    topDictOperators2,
     privateDictOperators2,
+    topDictOperators,
+    topDictOperators2,
 )
-from io import BytesIO
-import logging
+from fontTools.misc.cliTools import makeOutputFileName
+from fontTools.misc.psCharStrings import T2WidthExtractor
+from fontTools.ttLib import TTFont, newTable
 
 __all__ = ["convertCFFToCFF2", "main"]
 

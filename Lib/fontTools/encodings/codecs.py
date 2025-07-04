@@ -1,5 +1,6 @@
 """Extend the Python codecs module with a few encodings that are used in OpenType (name table)
-but missing from Python.  See https://github.com/fonttools/fonttools/issues/236 for details."""
+but missing from Python.  See https://github.com/fonttools/fonttools/issues/236 for details.
+"""
 
 import codecs
 import encodings
@@ -60,23 +61,23 @@ _extended_encodings = {
     "x_mac_japanese_ttx": (
         "shift_jis",
         {
-            b"\xFC": chr(0x007C),
-            b"\x7E": chr(0x007E),
+            b"\xfc": chr(0x007C),
+            b"\x7e": chr(0x007E),
             b"\x80": chr(0x005C),
-            b"\xA0": chr(0x00A0),
-            b"\xFD": chr(0x00A9),
-            b"\xFE": chr(0x2122),
-            b"\xFF": chr(0x2026),
+            b"\xa0": chr(0x00A0),
+            b"\xfd": chr(0x00A9),
+            b"\xfe": chr(0x2122),
+            b"\xff": chr(0x2026),
         },
     ),
     "x_mac_trad_chinese_ttx": (
         "big5",
         {
             b"\x80": chr(0x005C),
-            b"\xA0": chr(0x00A0),
-            b"\xFD": chr(0x00A9),
-            b"\xFE": chr(0x2122),
-            b"\xFF": chr(0x2026),
+            b"\xa0": chr(0x00A0),
+            b"\xfd": chr(0x00A9),
+            b"\xfe": chr(0x2122),
+            b"\xff": chr(0x2026),
         },
     ),
     "x_mac_korean_ttx": (
@@ -86,18 +87,18 @@ _extended_encodings = {
             b"\x81": chr(0x20A9),
             b"\x82": chr(0x2014),
             b"\x83": chr(0x00A9),
-            b"\xFE": chr(0x2122),
-            b"\xFF": chr(0x2026),
+            b"\xfe": chr(0x2122),
+            b"\xff": chr(0x2026),
         },
     ),
     "x_mac_simp_chinese_ttx": (
         "gb2312",
         {
             b"\x80": chr(0x00FC),
-            b"\xA0": chr(0x00A0),
-            b"\xFD": chr(0x00A9),
-            b"\xFE": chr(0x2122),
-            b"\xFF": chr(0x2026),
+            b"\xa0": chr(0x00A0),
+            b"\xfd": chr(0x00A9),
+            b"\xfe": chr(0x2122),
+            b"\xff": chr(0x2026),
         },
     ),
 }

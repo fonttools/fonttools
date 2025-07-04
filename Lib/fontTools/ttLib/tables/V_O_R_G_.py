@@ -1,6 +1,8 @@
-from fontTools.misc.textTools import bytesjoin, safeEval
-from . import DefaultTable
 import struct
+
+from fontTools.misc.textTools import bytesjoin, safeEval
+
+from . import DefaultTable
 
 
 class table_V_O_R_G_(DefaultTable.DefaultTable):

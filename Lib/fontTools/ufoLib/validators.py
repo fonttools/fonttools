@@ -1,13 +1,13 @@
 """Various low level data validators."""
 
 import calendar
+from collections.abc import Mapping
 from io import open
+
 import fs.base
 import fs.osfs
 
-from collections.abc import Mapping
 from fontTools.ufoLib.utils import numberTypes
-
 
 # -------
 # Generic

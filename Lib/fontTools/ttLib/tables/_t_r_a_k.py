@@ -1,16 +1,15 @@
-from fontTools.misc import sstruct
-from fontTools.misc.fixedTools import (
-    fixedToFloat as fi2fl,
-    floatToFixed as fl2fi,
-    floatToFixedToStr as fl2str,
-    strToFixedToFloat as str2fl,
-)
-from fontTools.misc.textTools import bytesjoin, safeEval
-from fontTools.ttLib import TTLibError
-from . import DefaultTable
 import struct
 from collections.abc import MutableMapping
 
+from fontTools.misc import sstruct
+from fontTools.misc.fixedTools import fixedToFloat as fi2fl
+from fontTools.misc.fixedTools import floatToFixed as fl2fi
+from fontTools.misc.fixedTools import floatToFixedToStr as fl2str
+from fontTools.misc.fixedTools import strToFixedToFloat as str2fl
+from fontTools.misc.textTools import bytesjoin, safeEval
+from fontTools.ttLib import TTLibError
+
+from . import DefaultTable
 
 # Apple's documentation of 'trak':
 # https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6trak.html

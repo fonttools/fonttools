@@ -2,12 +2,14 @@
 #
 # Google Author(s): Behdad Esfahbod
 
-from fontTools.misc.textTools import bytesjoin, safeEval
-from . import DefaultTable
 import array
-from collections import namedtuple
 import struct
 import sys
+from collections import namedtuple
+
+from fontTools.misc.textTools import bytesjoin, safeEval
+
+from . import DefaultTable
 
 
 class table_C_P_A_L_(DefaultTable.DefaultTable):
