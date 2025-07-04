@@ -1,11 +1,12 @@
 import logging
-import pytest
 from pathlib import Path
+
+import pytest
 
 pathops = pytest.importorskip("pathops")
 
 from fontTools.ttLib import TTFont
-from fontTools.ttLib.removeOverlaps import removeOverlaps, _simplify, _round_path
+from fontTools.ttLib.removeOverlaps import _round_path, _simplify, removeOverlaps
 
 DATA_DIR = Path(__file__).parent / "data"
 

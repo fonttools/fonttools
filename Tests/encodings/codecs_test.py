@@ -1,4 +1,5 @@
 import unittest
+
 import fontTools.encodings.codecs  # Not to be confused with "import codecs"
 
 

@@ -1,10 +1,10 @@
+import pytest
 from fontTools.varLib.models import (
-    normalizeLocation,
-    supportScalar,
     VariationModel,
     VariationModelError,
+    normalizeLocation,
+    supportScalar,
 )
-import pytest
 
 
 def test_normalizeLocation():

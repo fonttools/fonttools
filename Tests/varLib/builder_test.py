@@ -1,4 +1,6 @@
 from io import StringIO
+
+import pytest
 from fontTools.designspaceLib import (
     AxisDescriptor,
     DesignSpaceDocument,
@@ -9,7 +11,6 @@ from fontTools.misc.xmlWriter import XMLWriter
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.varLib import build
 from fontTools.varLib.builder import buildVarData
-import pytest
 
 
 @pytest.mark.parametrize(

@@ -1,19 +1,20 @@
+import struct
+import unittest
+from io import BytesIO
+
 from fontTools.misc import sstruct
 from fontTools.misc.loggingTools import CapturingLogHandler
 from fontTools.misc.testTools import FakeFont
-from fontTools.misc.textTools import bytesjoin, tostr, Tag
+from fontTools.misc.textTools import Tag, bytesjoin, tostr
 from fontTools.misc.xmlWriter import XMLWriter
-from io import BytesIO
-import struct
-import unittest
 from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables._n_a_m_e import (
-    table__n_a_m_e,
     NameRecord,
+    log,
+    makeName,
     nameRecordFormat,
     nameRecordSize,
-    makeName,
-    log,
+    table__n_a_m_e,
 )
 
 

@@ -1,20 +1,20 @@
 import fontTools.misc.bezierTools as bezierTools
+import pytest
 from fontTools.misc.bezierTools import (
-    calcQuadraticBounds,
-    calcQuadraticArcLength,
-    calcCubicBounds,
     calcCubicArcLength,
-    curveLineIntersections,
+    calcCubicBounds,
+    calcQuadraticArcLength,
+    calcQuadraticBounds,
     curveCurveIntersections,
+    curveLineIntersections,
     segmentPointAtT,
+    solveCubic,
+    splitCubic,
+    splitCubicAtT,
     splitLine,
     splitQuadratic,
-    splitCubic,
     splitQuadraticAtT,
-    splitCubicAtT,
-    solveCubic,
 )
-import pytest
 
 
 def test_calcQuadraticBounds():

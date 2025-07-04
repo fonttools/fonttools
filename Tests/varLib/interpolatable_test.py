@@ -1,11 +1,12 @@
-from fontTools.ttLib import TTFont
-from fontTools.varLib.interpolatable import main as interpolatable_main
 import os
 import shutil
 import sys
 import tempfile
 import unittest
+
 import pytest
+from fontTools.ttLib import TTFont
+from fontTools.varLib.interpolatable import main as interpolatable_main
 
 try:
     import scipy

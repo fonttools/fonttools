@@ -1,7 +1,6 @@
+import pytest
 from fontTools.pens.recordingPen import RecordingPen
 from fontTools.pens.reverseContourPen import ReverseContourPen
-import pytest
-
 
 TEST_DATA = [
     (
@@ -502,8 +501,8 @@ def test_reverse_pen_outputImpliedClosingLine():
 @pytest.mark.parametrize("contour, outputImpliedClosingLine, expected", TEST_DATA)
 def test_reverse_point_pen(contour, outputImpliedClosingLine, expected):
     from fontTools.pens.pointPen import (
-        ReverseContourPointPen,
         PointToSegmentPen,
+        ReverseContourPointPen,
         SegmentToPointPen,
     )
 

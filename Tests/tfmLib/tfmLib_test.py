@@ -2,7 +2,6 @@ import glob
 import os
 
 import pytest
-
 from fontTools import tfmLib
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")

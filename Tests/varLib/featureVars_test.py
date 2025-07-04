@@ -1,13 +1,14 @@
 from collections import OrderedDict
+
+import pytest
+from fontTools import varLib
 from fontTools.designspaceLib import AxisDescriptor
 from fontTools.ttLib import TTFont, newTable
-from fontTools import varLib
 from fontTools.varLib.featureVars import (
     addFeatureVariations,
-    overlayFeatureVariations,
     overlayBox,
+    overlayFeatureVariations,
 )
-import pytest
 
 
 def makeVariableFont(glyphOrder, axes):

@@ -1,11 +1,11 @@
-import unittest
 import os
-import sys
-from fontTools import t1Lib
-from fontTools.pens.basePen import NullPen
-from fontTools.misc.psCharStrings import T1CharString
 import random
+import sys
+import unittest
 
+from fontTools import t1Lib
+from fontTools.misc.psCharStrings import T1CharString
+from fontTools.pens.basePen import NullPen
 
 CWD = os.path.abspath(os.path.dirname(__file__))
 DATADIR = os.path.join(CWD, "data")

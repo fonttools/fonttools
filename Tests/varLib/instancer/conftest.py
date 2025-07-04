@@ -1,7 +1,7 @@
 import os
-from fontTools import ttLib
-import pytest
 
+import pytest
+from fontTools import ttLib
 
 TESTDATA = os.path.join(os.path.dirname(__file__), "data")
 

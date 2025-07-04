@@ -1,12 +1,11 @@
+import binascii
+from pathlib import Path
+
+import pytest
 from fontTools import ttLib
 from fontTools.misc.testTools import getXML, parseXML
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables.C_O_L_R_ import table_C_O_L_R_
-
-from pathlib import Path
-import binascii
-import pytest
-
 
 TEST_DATA_DIR = Path(__file__).parent / "data"
 

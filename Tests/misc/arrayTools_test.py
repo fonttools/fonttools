@@ -1,21 +1,22 @@
+import math
+
 from fontTools.misc.arrayTools import (
+    asInt16,
     calcBounds,
     calcIntBounds,
-    updateBounds,
+    insetRect,
+    intRect,
+    normRect,
+    offsetRect,
     pointInRect,
     pointsInRect,
-    vectorLength,
-    asInt16,
-    normRect,
+    rectCenter,
     scaleRect,
-    offsetRect,
-    insetRect,
     sectRect,
     unionRect,
-    rectCenter,
-    intRect,
+    updateBounds,
+    vectorLength,
 )
-import math
 
 
 def test_calcBounds():

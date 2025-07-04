@@ -1,8 +1,8 @@
+from functools import partial
+
 from fontTools.misc.fixedTools import floatToFixedToFloat
 from fontTools.pens.recordingPen import RecordingPen, RecordingPointPen
 from fontTools.pens.roundingPen import RoundingPen, RoundingPointPen
-from functools import partial
-
 
 tt_scale_round = partial(floatToFixedToFloat, precisionBits=14)
 

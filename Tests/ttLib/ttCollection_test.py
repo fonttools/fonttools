@@ -1,7 +1,8 @@
 import os
 from pathlib import Path
-from fontTools.ttLib import TTCollection
+
 import pytest
+from fontTools.ttLib import TTCollection
 
 TTX_DATA_DIR = Path(__file__).parent.parent / "ttx" / "data"
 

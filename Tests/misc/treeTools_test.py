@@ -1,5 +1,5 @@
-from fontTools.misc.treeTools import build_n_ary_tree
 import pytest
+from fontTools.misc.treeTools import build_n_ary_tree
 
 
 @pytest.mark.parametrize(

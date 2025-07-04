@@ -1,16 +1,16 @@
-from fontTools.ufoLib import UFOReader, UFOWriter, UFOFileStructure
-from fontTools.ufoLib.errors import UFOLibError, GlifLibError
-from fontTools.misc import plistlib
-from fontTools.misc.textTools import tostr
-import sys
 import os
-import fs.osfs
-import fs.tempfs
-import fs.memoryfs
-import fs.copy
-import pytest
+import sys
 import warnings
 
+import fs.copy
+import fs.memoryfs
+import fs.osfs
+import fs.tempfs
+import pytest
+from fontTools.misc import plistlib
+from fontTools.misc.textTools import tostr
+from fontTools.ufoLib import UFOFileStructure, UFOReader, UFOWriter
+from fontTools.ufoLib.errors import GlifLibError, UFOLibError
 
 TESTDATA = fs.osfs.OSFS(os.path.join(os.path.dirname(__file__), "testdata"))
 TEST_UFO3 = "TestFont1 (UFO3).ufo"

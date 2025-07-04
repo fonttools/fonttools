@@ -1,5 +1,6 @@
-from fontTools.pens.t2CharStringPen import T2CharStringPen
 import unittest
+
+from fontTools.pens.t2CharStringPen import T2CharStringPen
 
 
 class T2CharStringPenTest(unittest.TestCase):

@@ -1,12 +1,11 @@
 import logging
 from types import MappingProxyType
 
+import pytest
 from fontTools.pens.basePen import MissingComponentError
 from fontTools.pens.filterPen import DecomposingFilterPen, DecomposingFilterPointPen
 from fontTools.pens.pointPen import PointToSegmentPen
 from fontTools.pens.recordingPen import RecordingPen, RecordingPointPen
-
-import pytest
 
 
 class SimpleGlyph:

@@ -1,9 +1,9 @@
 # coding: utf-8
+import unittest
+
 from fontTools.misc.testTools import FakeFont, getXML, parseXML
 from fontTools.misc.textTools import deHexStr, hexStr
 from fontTools.ttLib import newTable
-import unittest
-
 
 # This is the anchor points table of the first font file in
 # “/Library/Fonts/Devanagari Sangam MN.ttc” on macOS 10.12.6.

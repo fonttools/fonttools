@@ -1,11 +1,13 @@
 import unittest
+from itertools import islice
+
 from fontTools.ufoLib.glifLib import (
     GlifLibError,
     readGlyphFromString,
     writeGlyphToString,
 )
+
 from .testSupport import Glyph, stripText
-from itertools import islice
 
 # ----------
 # Test Cases

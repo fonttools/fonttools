@@ -1,10 +1,10 @@
-from fontTools.misc.testTools import parseXML, getXML
-from fontTools.misc.textTools import deHexStr
-from fontTools.ttLib import TTFont, TTLibError
-from fontTools.ttLib.tables._t_r_a_k import *
-from fontTools.ttLib.tables._n_a_m_e import table__n_a_m_e, NameRecord
 import unittest
 
+from fontTools.misc.testTools import getXML, parseXML
+from fontTools.misc.textTools import deHexStr
+from fontTools.ttLib import TTFont, TTLibError
+from fontTools.ttLib.tables._n_a_m_e import NameRecord, table__n_a_m_e
+from fontTools.ttLib.tables._t_r_a_k import *
 
 # /Library/Fonts/Osaka.ttf from OSX has trak table with both horiz and vertData
 OSAKA_TRAK_TABLE_DATA = deHexStr(

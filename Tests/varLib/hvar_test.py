@@ -1,9 +1,10 @@
-from fontTools.ttLib import TTFont
-from fontTools.varLib.hvar import add_HVAR
-from io import StringIO
 import os
 import unittest
+from io import StringIO
+
 import pytest
+from fontTools.ttLib import TTFont
+from fontTools.varLib.hvar import add_HVAR
 
 
 def test_roundtrip():

@@ -2,12 +2,11 @@ import gzip
 import io
 import struct
 
+import pytest
 from fontTools.misc import etree
 from fontTools.misc.testTools import getXML, parseXML
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables.S_V_G_ import table_S_V_G_
-
-import pytest
 
 
 def dump(table, ttFont=None):

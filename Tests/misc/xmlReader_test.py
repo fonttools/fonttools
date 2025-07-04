@@ -1,10 +1,11 @@
-from io import BytesIO
 import os
-import unittest
-from fontTools.ttLib import TTFont
-from fontTools.misc.textTools import strjoin
-from fontTools.misc.xmlReader import XMLReader, ProgressPrinter, BUFSIZE
 import tempfile
+import unittest
+from io import BytesIO
+
+from fontTools.misc.textTools import strjoin
+from fontTools.misc.xmlReader import BUFSIZE, ProgressPrinter, XMLReader
+from fontTools.ttLib import TTFont
 
 
 class TestXMLReader(unittest.TestCase):

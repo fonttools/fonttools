@@ -1,5 +1,6 @@
-from fontTools.pens.boundsPen import BoundsPen, ControlBoundsPen
 import unittest
+
+from fontTools.pens.boundsPen import BoundsPen, ControlBoundsPen
 
 
 def draw_(pen):

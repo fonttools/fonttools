@@ -1,8 +1,7 @@
-from fontTools.ttLib.tables import otTables
-from fontTools.otlLib.builder import buildStatTable
-from fontTools.varLib import instancer
-
 import pytest
+from fontTools.otlLib.builder import buildStatTable
+from fontTools.ttLib.tables import otTables
+from fontTools.varLib import instancer
 
 
 def test_pruningUnusedNames(varfont):

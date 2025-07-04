@@ -1,21 +1,20 @@
-from fontTools.misc.py23 import tobytes
-from fontTools.misc.textTools import deHexStr
 import filecmp
-from io import StringIO
-import tempfile
-from subprocess import check_call
-import sys
 import os
+import sys
+import tempfile
 import unittest
+from io import StringIO
+from subprocess import check_call
 
 from fontTools.misc.py23 import (
+    isclose,
+    redirect_stderr,
+    redirect_stdout,
     round2,
     round3,
-    isclose,
-    redirect_stdout,
-    redirect_stderr,
+    tobytes,
 )
-
+from fontTools.misc.textTools import deHexStr
 
 PIPE_SCRIPT = """\
 import sys

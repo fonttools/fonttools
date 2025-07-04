@@ -1,7 +1,6 @@
+import pytest
 from fontTools.pens.recordingPen import RecordingPen
 from fontTools.svgLib import parse_path
-
-import pytest
 
 
 @pytest.mark.parametrize(

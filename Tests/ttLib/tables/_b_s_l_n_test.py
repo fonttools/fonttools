@@ -1,8 +1,8 @@
+import unittest
+
 from fontTools.misc.testTools import FakeFont, getXML, parseXML
 from fontTools.misc.textTools import deHexStr, hexStr
 from fontTools.ttLib import newTable
-import unittest
-
 
 # Apple's spec of the baseline table gives no example for 'bsln' format 0,
 # but the Apple Chancery font contains the following data.

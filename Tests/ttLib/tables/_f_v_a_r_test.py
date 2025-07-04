@@ -1,12 +1,12 @@
+import unittest
+from io import BytesIO
+
 from fontTools.misc.testTools import parseXML
 from fontTools.misc.textTools import deHexStr
 from fontTools.misc.xmlWriter import XMLWriter
 from fontTools.ttLib import TTLibError
-from fontTools.ttLib.tables._f_v_a_r import table__f_v_a_r, Axis, NamedInstance
-from fontTools.ttLib.tables._n_a_m_e import table__n_a_m_e, NameRecord
-from io import BytesIO
-import unittest
-
+from fontTools.ttLib.tables._f_v_a_r import Axis, NamedInstance, table__f_v_a_r
+from fontTools.ttLib.tables._n_a_m_e import NameRecord, table__n_a_m_e
 
 FVAR_DATA = deHexStr(
     "00 01 00 00 00 10 00 02 00 02 00 14 00 02 00 0C "

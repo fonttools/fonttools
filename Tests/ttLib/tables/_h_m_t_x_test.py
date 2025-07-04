@@ -1,10 +1,11 @@
-from fontTools.misc.testTools import parseXML, getXML
-from fontTools.misc.textTools import deHexStr
-from fontTools.ttLib import TTFont, newTable, TTLibError
-from fontTools.misc.loggingTools import CapturingLogHandler
-from fontTools.ttLib.tables._h_m_t_x import table__h_m_t_x, log
 import struct
 import unittest
+
+from fontTools.misc.loggingTools import CapturingLogHandler
+from fontTools.misc.testTools import getXML, parseXML
+from fontTools.misc.textTools import deHexStr
+from fontTools.ttLib import TTFont, TTLibError, newTable
+from fontTools.ttLib.tables._h_m_t_x import log, table__h_m_t_x
 
 
 class HmtxTableTest(unittest.TestCase):

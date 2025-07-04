@@ -1,34 +1,36 @@
-from fontTools.colorLib.builder import buildCOLR
-from fontTools.ttLib import TTFont, newTable
-from fontTools.ttLib.tables import otTables as ot
-from fontTools.varLib import (
-    build,
-    build_many,
-    load_designspace,
-    _add_COLR,
-    addGSUBFeatureVariations,
-)
-from fontTools.varLib.errors import VarLibValidationError
-import fontTools.varLib.errors as varLibErrors
-from fontTools.varLib.models import VariationModel
-from fontTools.varLib.mutator import instantiateVariableFont
-from fontTools.varLib import main as varLib_main, load_masters
-from fontTools.varLib import set_default_weight_width_slant
-from fontTools.designspaceLib import (
-    DesignSpaceDocumentError,
-    DesignSpaceDocument,
-    SourceDescriptor,
-)
-from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
 import difflib
-from copy import deepcopy
-from io import BytesIO
 import os
 import shutil
 import sys
 import tempfile
 import unittest
+from copy import deepcopy
+from io import BytesIO
+
+import fontTools.varLib.errors as varLibErrors
 import pytest
+from fontTools.colorLib.builder import buildCOLR
+from fontTools.designspaceLib import (
+    DesignSpaceDocument,
+    DesignSpaceDocumentError,
+    SourceDescriptor,
+)
+from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
+from fontTools.ttLib import TTFont, newTable
+from fontTools.ttLib.tables import otTables as ot
+from fontTools.varLib import (
+    _add_COLR,
+    addGSUBFeatureVariations,
+    build,
+    build_many,
+    load_designspace,
+    load_masters,
+)
+from fontTools.varLib import main as varLib_main
+from fontTools.varLib import set_default_weight_width_slant
+from fontTools.varLib.errors import VarLibValidationError
+from fontTools.varLib.models import VariationModel
+from fontTools.varLib.mutator import instantiateVariableFont
 
 
 def reload_font(font):

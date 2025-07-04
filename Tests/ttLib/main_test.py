@@ -3,10 +3,8 @@ import sys
 import tempfile
 from pathlib import Path
 
-from fontTools.ttLib import __main__, TTFont, TTCollection
-
 import pytest
-
+from fontTools.ttLib import TTCollection, TTFont, __main__
 
 TEST_DATA = Path(__file__).parent / "data"
 

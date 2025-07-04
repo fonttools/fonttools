@@ -1,6 +1,7 @@
-from io import BytesIO
 import os
 import unittest
+from io import BytesIO
+
 from fontTools.misc.textTools import bytesjoin, tobytes
 from fontTools.misc.xmlWriter import XMLWriter
 

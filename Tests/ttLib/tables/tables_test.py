@@ -1,10 +1,11 @@
-from fontTools.ttLib import TTFont, tagToXML
-from io import StringIO
-import os
-import sys
-import re
 import contextlib
+import os
+import re
+import sys
+from io import StringIO
+
 import pytest
+from fontTools.ttLib import TTFont, tagToXML
 
 try:
     import unicodedata2

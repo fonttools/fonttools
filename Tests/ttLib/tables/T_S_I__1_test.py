@@ -1,10 +1,9 @@
+import pytest
 from fontTools.misc.loggingTools import CapturingLogHandler
 from fontTools.misc.textTools import tobytes
 from fontTools.ttLib import TTFont, TTLibError
 from fontTools.ttLib.tables.T_S_I__0 import table_T_S_I__0
 from fontTools.ttLib.tables.T_S_I__1 import table_T_S_I__1
-import pytest
-
 
 TSI1_DATA = b"""abcdefghijklmnopqrstuvxywz0123456789"""
 TSI1_UTF8_DATA = b"""abcd\xc3\xa9ghijklmnopqrstuvxywz0123456789"""

@@ -1,8 +1,8 @@
+import unittest
+
 from fontTools.misc.testTools import FakeFont, getXML, parseXML
 from fontTools.misc.textTools import deHexStr, hexStr
 from fontTools.ttLib import newTable
-import unittest
-
 
 # On macOS X 10.12.6, the first font in /System/Library/Fonts/PingFang.ttc
 # has a ‘cidg’ table with a similar structure as this test data, just larger.

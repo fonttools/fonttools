@@ -1,15 +1,15 @@
-from copy import deepcopy
 import string
-from fontTools.colorLib.builder import LayerListBuilder, buildCOLR, buildClipList
+from copy import deepcopy
+from io import BytesIO
+
+import pytest
+from fontTools.colorLib.builder import LayerListBuilder, buildClipList, buildCOLR
 from fontTools.misc.testTools import getXML
-from fontTools.varLib.merger import COLRVariationMerger
-from fontTools.varLib.models import VariationModel
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables.otBase import OTTableReader, OTTableWriter
-from io import BytesIO
-import pytest
-
+from fontTools.varLib.merger import COLRVariationMerger
+from fontTools.varLib.models import VariationModel
 
 NO_VARIATION_INDEX = ot.NO_VARIATION_INDEX
 

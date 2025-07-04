@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
-from fontTools.misc.loggingTools import CapturingLogHandler
-from fontTools.feaLib.error import FeatureLibError
-from fontTools.feaLib.parser import Parser, SymbolTable
-from io import StringIO
-import warnings
-import fontTools.feaLib.ast as ast
 import os
 import unittest
+import warnings
+from io import StringIO
+
+import fontTools.feaLib.ast as ast
+from fontTools.feaLib.error import FeatureLibError
+from fontTools.feaLib.parser import Parser, SymbolTable
+from fontTools.misc.loggingTools import CapturingLogHandler
 
 
 def glyphstr(glyphs):

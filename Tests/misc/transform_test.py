@@ -1,12 +1,13 @@
+import math
+
+import pytest
 from fontTools.misc.transform import (
-    Transform,
+    DecomposedTransform,
     Identity,
     Offset,
     Scale,
-    DecomposedTransform,
+    Transform,
 )
-import math
-import pytest
 
 
 class TransformTest(object):
