@@ -1,12 +1,12 @@
+import binascii
+from pathlib import Path
+
+import pytest
+
 from fontTools import ttLib
 from fontTools.misc.testTools import getXML, parseXML
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables.C_O_L_R_ import table_C_O_L_R_
-
-from pathlib import Path
-import binascii
-import pytest
-
 
 TEST_DATA_DIR = Path(__file__).parent / "data"
 
@@ -56,15 +56,15 @@ def diff_binary_fragments(font_bytes, expected_fragments):
         actual_bytes = font_bytes[pos : pos + len(expected_bytes)]
         if actual_bytes != expected_bytes:
             print(
-                f'{description} (previous "{prev_desc}", actual_bytes: {"".join("%02x" % v for v in actual_bytes)} bytes: {str(font_bytes[pos:pos+16])}'
+                f'{description} (previous "{prev_desc}", actual_bytes: {"".join("%02x" % v for v in actual_bytes)} bytes: {str(font_bytes[pos : pos + 16])}'
             )
             errors += 1
         pos += len(expected_bytes)
         prev_desc = description
     assert errors == 0
-    assert pos == len(
-        font_bytes
-    ), f"Leftover font bytes, used {pos} of {len(font_bytes)}"
+    assert pos == len(font_bytes), (
+        f"Leftover font bytes, used {pos} of {len(font_bytes)}"
+    )
 
 
 @pytest.fixture

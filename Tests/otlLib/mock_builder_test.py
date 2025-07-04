@@ -1,25 +1,27 @@
+import logging
+
+import pytest
+
+from fontTools.misc.loggingTools import CapturingLogHandler
 from fontTools.otlLib.builder import (
     AlternateSubstBuilder,
     ChainContextPosBuilder,
     ChainContextSubstBuilder,
-    LigatureSubstBuilder,
-    MultipleSubstBuilder,
+    ChainContextualRule,
+    ClassPairPosSubtableBuilder,
     CursivePosBuilder,
+    LigatureSubstBuilder,
     MarkBasePosBuilder,
     MarkLigPosBuilder,
     MarkMarkPosBuilder,
-    ReverseChainSingleSubstBuilder,
-    SingleSubstBuilder,
-    ClassPairPosSubtableBuilder,
+    MultipleSubstBuilder,
     PairPosBuilder,
+    ReverseChainSingleSubstBuilder,
     SinglePosBuilder,
-    ChainContextualRule,
+    SingleSubstBuilder,
 )
 from fontTools.otlLib.error import OpenTypeLibError
 from fontTools.ttLib import TTFont
-from fontTools.misc.loggingTools import CapturingLogHandler
-import logging
-import pytest
 
 
 @pytest.fixture

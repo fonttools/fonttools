@@ -1,7 +1,7 @@
 """
-    designSpaceDocument
+designSpaceDocument
 
-    - Read and write designspace files
+- Read and write designspace files
 """
 
 from __future__ import annotations
@@ -20,7 +20,6 @@ from fontTools.misc import etree as ET
 from fontTools.misc import plistlib
 from fontTools.misc.loggingTools import LogMixin
 from fontTools.misc.textTools import tobytes, tostr
-
 
 __all__ = [
     "AxisDescriptor",
@@ -1326,7 +1325,7 @@ class VariableFontDescriptor(SimpleDescriptor):
         """
         self.axisSubsets: List[
             Union[RangeAxisSubsetDescriptor, ValueAxisSubsetDescriptor]
-        ] = (axisSubsets or [])
+        ] = axisSubsets or []
         """Axis subsets to include in this variable font.
 
         If an axis is not mentioned, assume that we only want the default

@@ -3,18 +3,17 @@
 AAT and Graphite tables are not supported. CFF/CFF2 fonts
 are de-subroutinized."""
 
-from fontTools.ttLib.ttVisitor import TTVisitor
+import fontTools.cffLib.specializer as cffSpecializer
 import fontTools.ttLib as ttLib
 import fontTools.ttLib.tables.otBase as otBase
 import fontTools.ttLib.tables.otTables as otTables
 from fontTools.cffLib import VarStoreData
-import fontTools.cffLib.specializer as cffSpecializer
-from fontTools.varLib import builder  # for VarData.calculateNumShorts
-from fontTools.varLib.multiVarStore import OnlineMultiVarStoreBuilder
-from fontTools.misc.vector import Vector
 from fontTools.misc.fixedTools import otRound
 from fontTools.misc.iterTools import batched
-
+from fontTools.misc.vector import Vector
+from fontTools.ttLib.ttVisitor import TTVisitor
+from fontTools.varLib import builder  # for VarData.calculateNumShorts
+from fontTools.varLib.multiVarStore import OnlineMultiVarStoreBuilder
 
 __all__ = ["scale_upem", "ScalerVisitor"]
 
@@ -399,9 +398,10 @@ def main(args=None):
 
         args = sys.argv[1:]
 
-    from fontTools.ttLib import TTFont
-    from fontTools.misc.cliTools import makeOutputFileName
     import argparse
+
+    from fontTools.misc.cliTools import makeOutputFileName
+    from fontTools.ttLib import TTFont
 
     parser = argparse.ArgumentParser(
         "fonttools ttLib.scaleUpem", description="Change the units-per-EM of fonts"

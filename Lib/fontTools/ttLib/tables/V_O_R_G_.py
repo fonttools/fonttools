@@ -1,6 +1,8 @@
-from fontTools.misc.textTools import bytesjoin, safeEval
-from . import DefaultTable
 import struct
+
+from fontTools.misc.textTools import bytesjoin, safeEval
+
+from . import DefaultTable
 
 
 class table_V_O_R_G_(DefaultTable.DefaultTable):
@@ -28,9 +30,9 @@ class table_V_O_R_G_(DefaultTable.DefaultTable):
             self.defaultVertOriginY,
             self.numVertOriginYMetrics,
         ) = struct.unpack(">HHhH", data[:8])
-        assert (
-            self.majorVersion <= 1
-        ), "Major version of VORG table is higher than I know how to handle"
+        assert self.majorVersion <= 1, (
+            "Major version of VORG table is higher than I know how to handle"
+        )
         data = data[8:]
         vids = []
         gids = []

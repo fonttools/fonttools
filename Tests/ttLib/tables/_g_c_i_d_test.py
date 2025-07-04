@@ -1,8 +1,8 @@
+import unittest
+
 from fontTools.misc.testTools import FakeFont, getXML, parseXML
 from fontTools.misc.textTools import deHexStr, hexStr
 from fontTools.ttLib import newTable
-import unittest
-
 
 # On macOS X 10.12.3, the font /Library/Fonts/AppleGothic.ttf has a ‘gcid’
 # table with a similar structure as this test data, just more CIDs.
@@ -14,8 +14,7 @@ GCID_DATA = deHexStr(
     + ("00" * 59)
     + "0003 "  #  15: <padding>  #  74: Order=3
     "4B 6F 72 65 61 31 "  #  76: Order="Korea1"
-    + ("00" * 58)
-    + "0001 "  #  82: <padding>  # 140: SupplementVersion
+     + ("00" * 58) + "0001 "  #  82: <padding>  # 140: SupplementVersion
     "0004 "  # 142: Count
     "1234 "  # 144: CIDs[0/.notdef]=4660
     "FFFF "  # 146: CIDs[1/A]=None

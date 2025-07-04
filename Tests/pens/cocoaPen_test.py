@@ -1,9 +1,14 @@
 import unittest
 
 try:
+    from AppKit import (
+        NSBezierPathElementClosePath,
+        NSBezierPathElementCurveTo,
+        NSBezierPathElementLineTo,
+        NSBezierPathElementMoveTo,
+    )
+
     from fontTools.pens.cocoaPen import CocoaPen
-    from AppKit import NSBezierPathElementMoveTo, NSBezierPathElementLineTo
-    from AppKit import NSBezierPathElementCurveTo, NSBezierPathElementClosePath
 
     PATH_ELEMENTS = {
         # NSBezierPathElement key      desc

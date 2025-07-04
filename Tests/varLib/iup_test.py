@@ -1,6 +1,8 @@
-import fontTools.varLib.iup as iup
 import sys
+
 import pytest
+
+import fontTools.varLib.iup as iup
 
 
 class IupTest:

@@ -1,11 +1,12 @@
 import dataclasses
+
 import pytest
 
 from fontTools.misc.configTools import (
     AbstractConfig,
+    ConfigUnknownOptionError,
     Option,
     Options,
-    ConfigUnknownOptionError,
 )
 
 

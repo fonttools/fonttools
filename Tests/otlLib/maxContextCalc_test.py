@@ -1,8 +1,10 @@
 import os
+
 import pytest
-from fontTools.ttLib import TTFont
-from fontTools.otlLib.maxContextCalc import maxCtxFont
+
 from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
+from fontTools.otlLib.maxContextCalc import maxCtxFont
+from fontTools.ttLib import TTFont
 
 
 def test_max_ctx_calc_no_features():

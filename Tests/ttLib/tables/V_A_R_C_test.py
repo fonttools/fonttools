@@ -1,8 +1,10 @@
-from fontTools.ttLib import TTFont
-from io import StringIO, BytesIO
-import pytest
 import os
 import unittest
+from io import BytesIO, StringIO
+
+import pytest
+
+from fontTools.ttLib import TTFont
 
 CURR_DIR = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 DATA_DIR = os.path.join(CURR_DIR, "data")

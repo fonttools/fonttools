@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pytest
+
 from fontTools.designspaceLib import DesignSpaceDocument
 from fontTools.designspaceLib.split import Range
 from fontTools.ttLib import TTFont, newTable

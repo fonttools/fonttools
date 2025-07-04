@@ -1,35 +1,37 @@
+import array
+import itertools
+import os
+import re
+import sys
+import unittest
+from copy import deepcopy
+from io import BytesIO, StringIO
+
+import pytest
+
 from fontTools.misc.fixedTools import otRound
 from fontTools.misc.roundTools import noRound
 from fontTools.misc.testTools import getXML, parseXML
 from fontTools.misc.transform import Transform
-from fontTools.pens.ttGlyphPen import TTGlyphPen
-from fontTools.pens.recordingPen import RecordingPen, RecordingPointPen
 from fontTools.pens.pointPen import PointToSegmentPen
-from fontTools.ttLib import TTFont, newTable, TTLibError
+from fontTools.pens.recordingPen import RecordingPen, RecordingPointPen
+from fontTools.pens.ttGlyphPen import TTGlyphPen
+from fontTools.ttLib import TTFont, TTLibError, newTable
+from fontTools.ttLib.tables import ttProgram
 from fontTools.ttLib.tables._g_l_y_f import (
-    Glyph,
-    GlyphCoordinates,
-    GlyphComponent,
-    dropImpliedOnCurvePoints,
-    flagOnCurve,
-    flagCubic,
     ARGS_ARE_XY_VALUES,
     SCALED_COMPONENT_OFFSET,
     UNSCALED_COMPONENT_OFFSET,
     WE_HAVE_A_SCALE,
     WE_HAVE_A_TWO_BY_TWO,
     WE_HAVE_AN_X_AND_Y_SCALE,
+    Glyph,
+    GlyphComponent,
+    GlyphCoordinates,
+    dropImpliedOnCurvePoints,
+    flagCubic,
+    flagOnCurve,
 )
-from fontTools.ttLib.tables import ttProgram
-import sys
-import array
-from copy import deepcopy
-from io import StringIO, BytesIO
-import itertools
-import pytest
-import re
-import os
-import unittest
 
 
 class GlyphCoordinatesTest(object):
@@ -565,9 +567,9 @@ class GlyphTest:
         glyphSet["nestedTrickyXForm"] = trickyXForm = pen.glyph()
 
         coords, _, _ = trickyXForm.getCoordinates(glyphSet, round=otRound)
-        assert all(
-            (int(p[0]), int(p[1])) == p for p in coords
-        ), f"{[p for p in coords]}"
+        assert all((int(p[0]), int(p[1])) == p for p in coords), (
+            f"{[p for p in coords]}"
+        )
 
     def test_getCompositeMaxpValues(self):
         # https://github.com/fonttools/fonttools/issues/2044

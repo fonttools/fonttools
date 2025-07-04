@@ -320,9 +320,9 @@ def _cs_drop_hints(charstring):
             # Insert width back if needed
             if charstring.width != charstring.private.defaultWidthX:
                 # For CFF2 charstrings, this should never happen
-                assert (
-                    charstring.private.defaultWidthX is not None
-                ), "CFF2 CharStrings must not have an initial width value"
+                assert charstring.private.defaultWidthX is not None, (
+                    "CFF2 CharStrings must not have an initial width value"
+                )
                 charstring.program.insert(
                     0, charstring.width - charstring.private.nominalWidthX
                 )

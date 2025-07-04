@@ -2,9 +2,9 @@
 #
 # Google Author(s): Behdad Esfahbod, Roozbeh Pournader
 
-from fontTools.ttLib.tables.DefaultTable import DefaultTable
 import logging
 
+from fontTools.ttLib.tables.DefaultTable import DefaultTable
 
 log = logging.getLogger("fontTools.merge")
 
@@ -21,9 +21,9 @@ def add_method(*clazzes, **kwargs):
                 continue  # Support multiple names of a clazz
             done.append(clazz)
             assert allowDefault or clazz != DefaultTable, "Oops, table class not found."
-            assert (
-                method.__name__ not in clazz.__dict__
-            ), "Oops, class '%s' has method '%s'." % (clazz.__name__, method.__name__)
+            assert method.__name__ not in clazz.__dict__, (
+                "Oops, class '%s' has method '%s'." % (clazz.__name__, method.__name__)
+            )
             setattr(clazz, method.__name__, method)
         return None
 

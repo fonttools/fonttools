@@ -1,4 +1,5 @@
 import unittest
+
 from fontTools.misc.encodingTools import getEncoding
 
 

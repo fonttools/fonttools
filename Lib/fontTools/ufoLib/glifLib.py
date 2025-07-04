@@ -3,7 +3,7 @@ Generic module for reading and writing the .glif format.
 
 More info about the .glif format (GLyphInterchangeFormat) can be found here:
 
-	http://unifiedfontobject.org
+        http://unifiedfontobject.org
 
 The main class in this module is :class:`GlyphSet`. It manages a set of .glif files
 in a folder. It offers two ways to read glyph data, and one way to write
@@ -12,33 +12,33 @@ glyph data. See the class doc string for details.
 
 from __future__ import annotations
 
-import logging
 import enum
-from warnings import warn
+import logging
 from collections import OrderedDict
+from warnings import warn
+
 import fs
 import fs.base
 import fs.errors
 import fs.osfs
 import fs.path
+
+from fontTools.misc import etree, plistlib
 from fontTools.misc.textTools import tobytes
-from fontTools.misc import plistlib
 from fontTools.pens.pointPen import AbstractPointPen, PointToSegmentPen
+from fontTools.ufoLib import UFOFormatVersion, _UFOBaseIO
 from fontTools.ufoLib.errors import GlifLibError
 from fontTools.ufoLib.filenames import userNameToFileName
+from fontTools.ufoLib.utils import _VersionTupleEnumMixin, numberTypes
 from fontTools.ufoLib.validators import (
-    genericTypeValidator,
-    colorValidator,
-    guidelinesValidator,
     anchorsValidator,
+    colorValidator,
+    genericTypeValidator,
+    glyphLibValidator,
+    guidelinesValidator,
     identifierValidator,
     imageValidator,
-    glyphLibValidator,
 )
-from fontTools.misc import etree
-from fontTools.ufoLib import _UFOBaseIO, UFOFormatVersion
-from fontTools.ufoLib.utils import numberTypes, _VersionTupleEnumMixin
-
 
 __all__ = [
     "GlyphSet",

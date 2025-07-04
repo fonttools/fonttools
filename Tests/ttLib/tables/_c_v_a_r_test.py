@@ -1,10 +1,9 @@
+import unittest
+
 from fontTools.misc.testTools import getXML, parseXML
 from fontTools.misc.textTools import deHexStr, hexStr
 from fontTools.ttLib import TTLibError, getTableModule, newTable
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
-
-import unittest
-
 
 CVAR_DATA = deHexStr(
     "0001 0000 "  #  0: majorVersion=1 minorVersion=0

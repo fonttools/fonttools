@@ -1,5 +1,6 @@
-from fontTools.pens.perimeterPen import PerimeterPen
 import unittest
+
+from fontTools.pens.perimeterPen import PerimeterPen
 
 
 def draw1_(pen):

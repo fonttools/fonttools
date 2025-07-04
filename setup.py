@@ -1,23 +1,23 @@
 #! /usr/bin/env python3
 
 from __future__ import print_function
+
+import contextlib
 import io
-import sys
 import os
-from os.path import isfile, join as pjoin
-from glob import glob
-from setuptools import setup, find_packages, Command, Extension
-from setuptools.command.build_ext import build_ext as _build_ext
-from setuptools.errors import SetupError
+import py_compile
+import re
+import subprocess as sp
+import sys
 from distutils import log
 from distutils.util import convert_path
-import subprocess as sp
-import contextlib
-import re
+from glob import glob
+from os.path import isfile
+from os.path import join as pjoin
 
-# Force distutils to use py_compile.compile() function with 'doraise' argument
-# set to True, in order to raise an exception on compilation errors
-import py_compile
+from setuptools import Command, Extension, find_packages, setup
+from setuptools.command.build_ext import build_ext as _build_ext
+from setuptools.errors import SetupError
 
 orig_py_compile = py_compile.compile
 
@@ -26,6 +26,8 @@ def doraise_py_compile(file, cfile=None, dfile=None, doraise=False):
     orig_py_compile(file, cfile=cfile, dfile=dfile, doraise=True)
 
 
+# Force distutils to use py_compile.compile() function with 'doraise' argument
+# set to True, in order to raise an exception on compilation errors
 py_compile.compile = doraise_py_compile
 
 setup_requires = []
@@ -47,7 +49,7 @@ env_with_cython = os.environ.get("FONTTOOLS_WITH_CYTHON")
 with_cython = (
     True
     if env_with_cython in {"1", "true", "yes"}
-    else False if env_with_cython in {"0", "false", "no"} else None
+    else (False if env_with_cython in {"0", "false", "no"} else None)
 )
 # --with-cython/--without-cython options override environment variables
 opt_with_cython = {"--with-cython"}.intersection(sys.argv)

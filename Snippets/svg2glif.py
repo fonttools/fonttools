@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
-""" Convert SVG paths to UFO glyphs. """
-
+"""Convert SVG paths to UFO glyphs."""
 
 __requires__ = ["fontTools"]
 
 from types import SimpleNamespace
-from fontTools.svgLib import SVGPath
 
 from fontTools.pens.pointPen import SegmentToPointPen
+from fontTools.svgLib import SVGPath
 from fontTools.ufoLib.glifLib import writeGlyphToString
-
 
 __all__ = ["svg2glif"]
 
@@ -63,12 +61,12 @@ def parse_args(args):
     parser.add_argument(
         "infile",
         metavar="INPUT.svg",
-        help="Input SVG file containing " '<path> elements with "d" attributes.',
+        help='Input SVG file containing <path> elements with "d" attributes.',
     )
     parser.add_argument(
         "outfile",
         metavar="OUTPUT.glif",
-        help="Output GLIF file (default: " "print to stdout)",
+        help="Output GLIF file (default: print to stdout)",
         nargs="?",
     )
     parser.add_argument(
@@ -87,15 +85,14 @@ def parse_args(args):
     parser.add_argument(
         "-H",
         "--height",
-        help="The glyph vertical advance (optional if " '"width" is defined)',
+        help='The glyph vertical advance (optional if "width" is defined)',
         type=int,
         default=0,
     )
     parser.add_argument(
         "-u",
         "--unicodes",
-        help="List of Unicode code points as hexadecimal "
-        'numbers (e.g. -u "0041 0042")',
+        help='List of Unicode code points as hexadecimal numbers (e.g. -u "0041 0042")',
         type=unicode_hex_list,
     )
     parser.add_argument(

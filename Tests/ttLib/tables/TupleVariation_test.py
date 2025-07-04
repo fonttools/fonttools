@@ -1,19 +1,20 @@
+import random
+import unittest
+from io import BytesIO
+
 from fontTools.misc.loggingTools import CapturingLogHandler
 from fontTools.misc.testTools import parseXML
 from fontTools.misc.textTools import deHexStr, hexStr
 from fontTools.misc.xmlWriter import XMLWriter
 from fontTools.ttLib.tables.TupleVariation import (
-    log,
     TupleVariation,
     compileSharedTuples,
-    decompileSharedTuples,
     compileTupleVariationStore,
+    decompileSharedTuples,
     decompileTupleVariationStore,
     inferRegion_,
+    log,
 )
-from io import BytesIO
-import random
-import unittest
 
 
 def hexencode(s):
@@ -257,7 +258,7 @@ class TupleVariationTest(unittest.TestCase):
         # embeddedPeaks=[]; intermediateCoord=[]
         self.assertEqual("00 08 00 77", hexencode(tup))
         self.assertEqual(
-            "02 07 08 09 " "02 04 05 06",  # deltaX: [7, 8, 9]  # deltaY: [4, 5, 6]
+            "02 07 08 09 02 04 05 06",  # deltaX: [7, 8, 9]  # deltaY: [4, 5, 6]
             hexencode(deltas),
         )
 
@@ -272,7 +273,7 @@ class TupleVariationTest(unittest.TestCase):
         # embeddedPeak=[]; intermediateCoord=[(0.3, 0.1), (0.7, 0.9)]
         self.assertEqual("00 08 40 77 13 33 06 66 2C CD 39 9A", hexencode(tup))
         self.assertEqual(
-            "02 07 08 09 " "02 04 05 06",  # deltaX: [7, 8, 9]  # deltaY: [4, 5, 6]
+            "02 07 08 09 02 04 05 06",  # deltaX: [7, 8, 9]  # deltaY: [4, 5, 6]
             hexencode(deltas),
         )
 
@@ -319,7 +320,7 @@ class TupleVariationTest(unittest.TestCase):
         # embeddedPeak=[(0.5, 0.8)]; intermediateCoord=[]
         self.assertEqual("00 08 80 00 20 00 33 33", hexencode(tup))
         self.assertEqual(
-            "02 07 08 09 " "02 04 05 06",  # deltaX: [7, 8, 9]  # deltaY: [4, 5, 6]
+            "02 07 08 09 02 04 05 06",  # deltaX: [7, 8, 9]  # deltaY: [4, 5, 6]
             hexencode(deltas),
         )
 
@@ -344,7 +345,7 @@ class TupleVariationTest(unittest.TestCase):
             "00 08 C0 00 20 00 33 33 00 00 00 00 40 00 33 33", hexencode(tup)
         )
         self.assertEqual(
-            "02 07 08 09 " "02 04 05 06",  # deltaX: [7, 8, 9]  # deltaY: [4, 5, 6]
+            "02 07 08 09 02 04 05 06",  # deltaX: [7, 8, 9]  # deltaY: [4, 5, 6]
             hexencode(deltas),
         )
 
@@ -372,7 +373,7 @@ class TupleVariationTest(unittest.TestCase):
         # embeddedPeak=[(0.5, 0.8)]; intermediateCoord=[]
         self.assertEqual("00 05 A0 00 20 00 33 33", hexencode(tup))
         self.assertEqual(
-            "00 " "02 07 08 09",  # all points in glyph  # delta: [7, 8, 9]
+            "00 02 07 08 09",  # all points in glyph  # delta: [7, 8, 9]
             hexencode(deltas),
         )
 
@@ -406,7 +407,7 @@ class TupleVariationTest(unittest.TestCase):
             "00 05 E0 00 20 00 33 33 19 9A 2C CD 26 66 39 9A", hexencode(tup)
         )
         self.assertEqual(
-            "00 " "02 07 08 09",  # all points in glyph  # delta: [7, 8, 9]
+            "00 02 07 08 09",  # all points in glyph  # delta: [7, 8, 9]
             hexencode(deltas),
         )
 
@@ -953,7 +954,8 @@ class TupleVariationTest(unittest.TestCase):
 
         with self.assertRaises(AssertionError):
             TupleVariation({}, [(0, 0)] + [None] * 5).calcInferredDeltas(
-                [(0, 0)] * 6, [1, 0]  # endPts not in increasing order
+                [(0, 0)] * 6,
+                [1, 0],  # endPts not in increasing order
             )
 
     def test_optimize(self):

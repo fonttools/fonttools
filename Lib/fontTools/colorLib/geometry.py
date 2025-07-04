@@ -1,6 +1,7 @@
 """Helpers for manipulating 2D points and vectors in COLR table."""
 
 from math import copysign, cos, hypot, isclose, pi
+
 from fontTools.misc.roundTools import otRound
 
 

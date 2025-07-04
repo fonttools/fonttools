@@ -1,11 +1,13 @@
-import io
 import copy
+import io
 import pickle
 import tempfile
-from fontTools.ttLib import TTFont
-from fontTools.ttLib.sfnt import calcChecksum, SFNTReader, WOFFFlavorData
 from pathlib import Path
+
 import pytest
+
+from fontTools.ttLib import TTFont
+from fontTools.ttLib.sfnt import SFNTReader, WOFFFlavorData, calcChecksum
 
 TEST_DATA = Path(__file__).parent / "data"
 

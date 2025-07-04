@@ -23,33 +23,35 @@ the number of bits after the point. Fixed point numbers get
 converted to floats.
 
 pack(fmt, object):
-	'object' is either a dictionary or an instance (or actually
-	anything that has a __dict__ attribute). If it is a dictionary,
-	its keys are used for names. If it is an instance, it's
-	attributes are used to grab struct elements from. Returns
-	a string containing the data.
+        'object' is either a dictionary or an instance (or actually
+        anything that has a __dict__ attribute). If it is a dictionary,
+        its keys are used for names. If it is an instance, it's
+        attributes are used to grab struct elements from. Returns
+        a string containing the data.
 
 unpack(fmt, data, object=None)
-	If 'object' is omitted (or None), a new dictionary will be
-	returned. If 'object' is a dictionary, it will be used to add
-	struct elements to. If it is an instance (or in fact anything
-	that has a __dict__ attribute), an attribute will be added for
-	each struct element. In the latter two cases, 'object' itself
-	is returned.
+        If 'object' is omitted (or None), a new dictionary will be
+        returned. If 'object' is a dictionary, it will be used to add
+        struct elements to. If it is an instance (or in fact anything
+        that has a __dict__ attribute), an attribute will be added for
+        each struct element. In the latter two cases, 'object' itself
+        is returned.
 
 unpack2(fmt, data, object=None)
-	Convenience function. Same as unpack, except data may be longer
-	than needed. The returned value is a tuple: (object, leftoverdata).
+        Convenience function. Same as unpack, except data may be longer
+        than needed. The returned value is a tuple: (object, leftoverdata).
 
 calcsize(fmt)
-	like struct.calcsize(), but uses our own fmt strings:
-	it returns the size of the data in bytes.
+        like struct.calcsize(), but uses our own fmt strings:
+        it returns the size of the data in bytes.
 """
 
-from fontTools.misc.fixedTools import fixedToFloat as fi2fl, floatToFixed as fl2fi
-from fontTools.misc.textTools import tobytes, tostr
-import struct
 import re
+import struct
+
+from fontTools.misc.fixedTools import fixedToFloat as fi2fl
+from fontTools.misc.fixedTools import floatToFixed as fl2fi
+from fontTools.misc.textTools import tobytes, tostr
 
 __version__ = "1.2"
 __copyright__ = "Copyright 1998, Just van Rossum <just@letterror.com>"

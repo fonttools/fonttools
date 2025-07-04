@@ -2,42 +2,43 @@
 Merge OpenType Layout tables (GDEF / GPOS / GSUB).
 """
 
-import os
 import copy
 import enum
-from operator import ior
 import logging
+import os
+from functools import reduce
+from operator import ior
+
 from fontTools.colorLib.builder import MAX_PAINT_COLR_LAYER_COUNT, LayerReuseCache
 from fontTools.misc import classifyTools
 from fontTools.misc.roundTools import otRound
 from fontTools.misc.treeTools import build_n_ary_tree
-from fontTools.ttLib.tables import otTables as ot
-from fontTools.ttLib.tables import otBase as otBase
-from fontTools.ttLib.tables.otConverters import BaseFixedValue
-from fontTools.ttLib.tables.otTraverse import dfs_base_table
-from fontTools.ttLib.tables.DefaultTable import DefaultTable
-from fontTools.varLib import builder, models, varStore
-from fontTools.varLib.models import nonNone, allNone, allEqual, allEqualTo, subList
-from fontTools.varLib.varStore import VarStoreInstancer
-from functools import reduce
 from fontTools.otlLib.builder import buildSinglePos
 from fontTools.otlLib.optimize.gpos import (
     _compression_level_from_env,
     compact_pair_pos,
 )
+from fontTools.ttLib.tables import otBase as otBase
+from fontTools.ttLib.tables import otTables as ot
+from fontTools.ttLib.tables.DefaultTable import DefaultTable
+from fontTools.ttLib.tables.otConverters import BaseFixedValue
+from fontTools.ttLib.tables.otTraverse import dfs_base_table
+from fontTools.varLib import builder, models, varStore
+from fontTools.varLib.models import allEqual, allEqualTo, allNone, nonNone, subList
+from fontTools.varLib.varStore import VarStoreInstancer
 
 log = logging.getLogger("fontTools.varLib.merger")
 
 from .errors import (
-    ShouldBeConstant,
     FoundANone,
-    MismatchedTypes,
-    NotANone,
-    LengthsDiffer,
-    KeysDiffer,
-    InconsistentGlyphOrder,
     InconsistentExtensions,
     InconsistentFormats,
+    InconsistentGlyphOrder,
+    KeysDiffer,
+    LengthsDiffer,
+    MismatchedTypes,
+    NotANone,
+    ShouldBeConstant,
     UnsupportedFormat,
     VarLibMergeError,
 )
@@ -422,9 +423,9 @@ def merge(merger, self, lst):
 
 
 def _PairPosFormat1_merge(self, lst, merger):
-    assert allEqual(
-        [l.ValueFormat2 == 0 for l in lst if l.PairSet]
-    ), "Report bug against fonttools."
+    assert allEqual([l.ValueFormat2 == 0 for l in lst if l.PairSet]), (
+        "Report bug against fonttools."
+    )
 
     # Merge everything else; makes sure Format is the same.
     merger.mergeObjects(
@@ -588,9 +589,9 @@ def _PairPosFormat2_align_matrices(self, lst, font, transparent=False):
 
 
 def _PairPosFormat2_merge(self, lst, merger):
-    assert allEqual(
-        [l.ValueFormat2 == 0 for l in lst if l.Class1Record]
-    ), "Report bug against fonttools."
+    assert allEqual([l.ValueFormat2 == 0 for l in lst if l.Class1Record]), (
+        "Report bug against fonttools."
+    )
 
     merger.mergeObjects(
         self,
@@ -814,9 +815,9 @@ def _PairSet_flatten(lst, font):
 
 
 def _Lookup_PairPosFormat1_subtables_flatten(lst, font):
-    assert allEqual(
-        [l.ValueFormat2 == 0 for l in lst if l.PairSet]
-    ), "Report bug against fonttools."
+    assert allEqual([l.ValueFormat2 == 0 for l in lst if l.PairSet]), (
+        "Report bug against fonttools."
+    )
 
     self = ot.PairPos()
     self.Format = 1
@@ -839,9 +840,9 @@ def _Lookup_PairPosFormat1_subtables_flatten(lst, font):
 
 
 def _Lookup_PairPosFormat2_subtables_flatten(lst, font):
-    assert allEqual(
-        [l.ValueFormat2 == 0 for l in lst if l.Class1Record]
-    ), "Report bug against fonttools."
+    assert allEqual([l.ValueFormat2 == 0 for l in lst if l.Class1Record]), (
+        "Report bug against fonttools."
+    )
 
     self = ot.PairPos()
     self.Format = 2

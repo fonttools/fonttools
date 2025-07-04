@@ -11,53 +11,52 @@ used as dictionary keys.
 This module exports the following symbols:
 
 Transform
-	this is the main class
+        this is the main class
 Identity
-	Transform instance set to the identity transformation
+        Transform instance set to the identity transformation
 Offset
-	Convenience function that returns a translating transformation
+        Convenience function that returns a translating transformation
 Scale
-	Convenience function that returns a scaling transformation
+        Convenience function that returns a scaling transformation
 
 The DecomposedTransform class implements a transformation with separate
 translate, rotation, scale, skew, and transformation-center components.
 
 :Example:
 
-	>>> t = Transform(2, 0, 0, 3, 0, 0)
-	>>> t.transformPoint((100, 100))
-	(200, 300)
-	>>> t = Scale(2, 3)
-	>>> t.transformPoint((100, 100))
-	(200, 300)
-	>>> t.transformPoint((0, 0))
-	(0, 0)
-	>>> t = Offset(2, 3)
-	>>> t.transformPoint((100, 100))
-	(102, 103)
-	>>> t.transformPoint((0, 0))
-	(2, 3)
-	>>> t2 = t.scale(0.5)
-	>>> t2.transformPoint((100, 100))
-	(52.0, 53.0)
-	>>> import math
-	>>> t3 = t2.rotate(math.pi / 2)
-	>>> t3.transformPoint((0, 0))
-	(2.0, 3.0)
-	>>> t3.transformPoint((100, 100))
-	(-48.0, 53.0)
-	>>> t = Identity.scale(0.5).translate(100, 200).skew(0.1, 0.2)
-	>>> t.transformPoints([(0, 0), (1, 1), (100, 100)])
-	[(50.0, 100.0), (50.550167336042726, 100.60135501775433), (105.01673360427253, 160.13550177543362)]
-	>>>
+        >>> t = Transform(2, 0, 0, 3, 0, 0)
+        >>> t.transformPoint((100, 100))
+        (200, 300)
+        >>> t = Scale(2, 3)
+        >>> t.transformPoint((100, 100))
+        (200, 300)
+        >>> t.transformPoint((0, 0))
+        (0, 0)
+        >>> t = Offset(2, 3)
+        >>> t.transformPoint((100, 100))
+        (102, 103)
+        >>> t.transformPoint((0, 0))
+        (2, 3)
+        >>> t2 = t.scale(0.5)
+        >>> t2.transformPoint((100, 100))
+        (52.0, 53.0)
+        >>> import math
+        >>> t3 = t2.rotate(math.pi / 2)
+        >>> t3.transformPoint((0, 0))
+        (2.0, 3.0)
+        >>> t3.transformPoint((100, 100))
+        (-48.0, 53.0)
+        >>> t = Identity.scale(0.5).translate(100, 200).skew(0.1, 0.2)
+        >>> t.transformPoints([(0, 0), (1, 1), (100, 100)])
+        [(50.0, 100.0), (50.550167336042726, 100.60135501775433), (105.01673360427253, 160.13550177543362)]
+        >>>
 """
 
 from __future__ import annotations
 
 import math
-from typing import NamedTuple
 from dataclasses import dataclass
-
+from typing import NamedTuple
 
 __all__ = ["Transform", "Identity", "Offset", "Scale", "DecomposedTransform"]
 
@@ -510,7 +509,7 @@ class DecomposedTransform:
 
 
 if __name__ == "__main__":
-    import sys
     import doctest
+    import sys
 
     sys.exit(doctest.testmod().failed)

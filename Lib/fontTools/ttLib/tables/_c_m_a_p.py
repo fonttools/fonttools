@@ -1,13 +1,14 @@
-from fontTools.misc.textTools import bytesjoin, safeEval, readHex
-from fontTools.misc.encodingTools import getEncoding
-from fontTools.ttLib import getSearchRange
-from fontTools.unicode import Unicode
-from . import DefaultTable
-import sys
-import struct
 import array
 import logging
+import struct
+import sys
 
+from fontTools.misc.encodingTools import getEncoding
+from fontTools.misc.textTools import bytesjoin, readHex, safeEval
+from fontTools.ttLib import getSearchRange
+from fontTools.unicode import Unicode
+
+from . import DefaultTable
 
 log = logging.getLogger(__name__)
 
@@ -208,12 +209,8 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
         totalOffset = 4 + 8 * numSubTables
         data = struct.pack(">HH", self.tableVersion, numSubTables)
         tableData = b""
-        seen = (
-            {}
-        )  # Some tables are the same object reference. Don't compile them twice.
-        done = (
-            {}
-        )  # Some tables are different objects, but compile to the same data chunk
+        seen = {}  # Some tables are the same object reference. Don't compile them twice.
+        done = {}  # Some tables are different objects, but compile to the same data chunk
         for table in self.tables:
             offset = seen.get(id(table.cmap))
             if offset is None:
@@ -304,12 +301,13 @@ class CmapSubtable(object):
 
     def decompileHeader(self, data, ttFont):
         format, length, language = struct.unpack(">HHH", data[:6])
-        assert (
-            len(data) == length
-        ), "corrupt cmap table format %d (data length: %d, header length: %d)" % (
-            format,
-            len(data),
-            length,
+        assert len(data) == length, (
+            "corrupt cmap table format %d (data length: %d, header length: %d)"
+            % (
+                format,
+                len(data),
+                length,
+            )
         )
         self.format = int(format)
         self.length = int(length)
@@ -389,9 +387,9 @@ class cmap_format_0(CmapSubtable):
         if data is not None and ttFont is not None:
             self.decompileHeader(data, ttFont)
         else:
-            assert (
-                data is None and ttFont is None
-            ), "Need both data and ttFont arguments"
+            assert data is None and ttFont is None, (
+                "Need both data and ttFont arguments"
+            )
         data = (
             self.data
         )  # decompileHeader assigns the data after the header to self.data
@@ -476,9 +474,9 @@ class cmap_format_2(CmapSubtable):
         if data is not None and ttFont is not None:
             self.decompileHeader(data, ttFont)
         else:
-            assert (
-                data is None and ttFont is None
-            ), "Need both data and ttFont arguments"
+            assert data is None and ttFont is None, (
+                "Need both data and ttFont arguments"
+            )
 
         data = (
             self.data
@@ -670,9 +668,9 @@ class cmap_format_2(CmapSubtable):
                             charCode = subHeader.firstCode + index
                             subHeaderKeys[charCode] = 0
 
-                    assert subHeader.entryCount == len(
-                        subHeader.glyphIndexArray
-                    ), "Error - subhead entry count does not match len of glyphID subrange."
+                    assert subHeader.entryCount == len(subHeader.glyphIndexArray), (
+                        "Error - subhead entry count does not match len of glyphID subrange."
+                    )
                 # init new subheader
                 subHeader = SubHeader()
                 subHeader.firstCode = secondByte
@@ -709,8 +707,8 @@ class cmap_format_2(CmapSubtable):
         # charcode 0 and GID 0.
 
         idRangeOffset = (
-            len(subHeaderList) - 1
-        ) * 8 + 2  # offset to beginning of glyphIDArray from first subheader idRangeOffset.
+            (len(subHeaderList) - 1) * 8 + 2
+        )  # offset to beginning of glyphIDArray from first subheader idRangeOffset.
         subheadRangeLen = (
             len(subHeaderList) - 1
         )  # skip last special empty-set subheader; we've already hardocodes its idRangeOffset to 2.
@@ -879,9 +877,9 @@ class cmap_format_4(CmapSubtable):
         if data is not None and ttFont is not None:
             self.decompileHeader(data, ttFont)
         else:
-            assert (
-                data is None and ttFont is None
-            ), "Need both data and ttFont arguments"
+            assert data is None and ttFont is None, (
+                "Need both data and ttFont arguments"
+            )
 
         data = (
             self.data
@@ -1073,9 +1071,9 @@ class cmap_format_6(CmapSubtable):
         if data is not None and ttFont is not None:
             self.decompileHeader(data, ttFont)
         else:
-            assert (
-                data is None and ttFont is None
-            ), "Need both data and ttFont arguments"
+            assert data is None and ttFont is None, (
+                "Need both data and ttFont arguments"
+            )
 
         data = (
             self.data
@@ -1142,12 +1140,13 @@ class cmap_format_12_or_13(CmapSubtable):
 
     def decompileHeader(self, data, ttFont):
         format, reserved, length, language, nGroups = struct.unpack(">HHLLL", data[:16])
-        assert (
-            len(data) == (16 + nGroups * 12) == (length)
-        ), "corrupt cmap table format %d (data length: %d, header length: %d)" % (
-            self.format,
-            len(data),
-            length,
+        assert len(data) == (16 + nGroups * 12) == (length), (
+            "corrupt cmap table format %d (data length: %d, header length: %d)"
+            % (
+                self.format,
+                len(data),
+                length,
+            )
         )
         self.format = format
         self.reserved = reserved
@@ -1163,9 +1162,9 @@ class cmap_format_12_or_13(CmapSubtable):
         if data is not None and ttFont is not None:
             self.decompileHeader(data, ttFont)
         else:
-            assert (
-                data is None and ttFont is None
-            ), "Need both data and ttFont arguments"
+            assert data is None and ttFont is None, (
+                "Need both data and ttFont arguments"
+            )
 
         data = (
             self.data
@@ -1356,14 +1355,12 @@ class cmap_format_14(CmapSubtable):
         if data is not None and ttFont is not None:
             self.decompileHeader(data, ttFont)
         else:
-            assert (
-                data is None and ttFont is None
-            ), "Need both data and ttFont arguments"
+            assert data is None and ttFont is None, (
+                "Need both data and ttFont arguments"
+            )
         data = self.data
 
-        self.cmap = (
-            {}
-        )  # so that clients that expect this to exist in a cmap table won't fail.
+        self.cmap = {}  # so that clients that expect this to exist in a cmap table won't fail.
         uvsDict = {}
         recOffset = 0
         for n in range(self.numVarSelectorRecords):
@@ -1435,9 +1432,7 @@ class cmap_format_14(CmapSubtable):
     def fromXML(self, name, attrs, content, ttFont):
         self.language = 0xFF  # provide a value so that CmapSubtable.__lt__() won't fail
         if not hasattr(self, "cmap"):
-            self.cmap = (
-                {}
-            )  # so that clients that expect this to exist in a cmap table won't fail.
+            self.cmap = {}  # so that clients that expect this to exist in a cmap table won't fail.
         if not hasattr(self, "uvsDict"):
             self.uvsDict = {}
             uvsDict = self.uvsDict
@@ -1569,9 +1564,9 @@ class cmap_format_unknown(CmapSubtable):
         if data is not None and ttFont is not None:
             self.decompileHeader(data, ttFont)
         else:
-            assert (
-                data is None and ttFont is None
-            ), "Need both data and ttFont arguments"
+            assert data is None and ttFont is None, (
+                "Need both data and ttFont arguments"
+            )
 
     def compile(self, ttFont):
         if self.data:

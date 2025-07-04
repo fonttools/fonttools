@@ -1,13 +1,14 @@
-from fontTools.ttLib import newTable
-from fontTools.ttLib.tables._f_v_a_r import Axis as fvarAxis
+import logging
+import math
+from pprint import pformat
+
+from fontTools.misc.cliTools import makeOutputFileName
 from fontTools.pens.areaPen import AreaPen
 from fontTools.pens.basePen import NullPen
 from fontTools.pens.statisticsPen import StatisticsPen
-from fontTools.varLib.models import piecewiseLinearMap, normalizeValue
-from fontTools.misc.cliTools import makeOutputFileName
-import math
-import logging
-from pprint import pformat
+from fontTools.ttLib import newTable
+from fontTools.ttLib.tables._f_v_a_r import Axis as fvarAxis
+from fontTools.varLib.models import normalizeValue, piecewiseLinearMap
 
 __all__ = [
     "planWeightAxis",
@@ -808,9 +809,10 @@ def main(args=None):
 
         args = sys.argv[1:]
 
+    import argparse
+
     from fontTools import configLogger
     from fontTools.ttLib import TTFont
-    import argparse
 
     parser = argparse.ArgumentParser(
         "fonttools varLib.avarPlanner",

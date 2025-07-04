@@ -1,9 +1,10 @@
 import io
 import os
 import re
+import unittest
+
 from fontTools import ttLib
 from fontTools.fontBuilder import FontBuilder
-import unittest
 from fontTools.ttLib.tables._c_m_a_p import CmapSubtable, table__c_m_a_p
 
 CURR_DIR = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
@@ -73,9 +74,7 @@ class CmapSubtableTest(unittest.TestCase):
             subtable.cmap = {c: "cid%05d" % c for c in range(32, 8192)}
             font = ttLib.TTFont()
             font.setGlyphOrder([".notdef"] + list(subtable.cmap.values()))
-            font._reverseGlyphOrderDict = (
-                {}
-            )  # force first KeyError branch in subtable.compile()
+            font._reverseGlyphOrderDict = {}  # force first KeyError branch in subtable.compile()
             data = subtable.compile(font)
             subtable2 = CmapSubtable.newSubtable(fmt)
             subtable2.decompile(data, font)

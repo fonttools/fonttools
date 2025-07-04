@@ -1,6 +1,7 @@
+import pytest
+
 from fontTools.misc.transform import Identity
 from fontTools.pens.hashPointPen import HashPointPen
-import pytest
 
 
 class _TestGlyph(object):

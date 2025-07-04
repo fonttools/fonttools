@@ -1,13 +1,14 @@
 """Draw statistical shape of a glyph as an ellipse."""
 
-from fontTools.ttLib import TTFont
-from fontTools.pens.recordingPen import RecordingPen
-from fontTools.pens.cairoPen import CairoPen
-from fontTools.pens.statisticsPen import StatisticsPen
-import cairo
 import math
 import sys
 
+import cairo
+
+from fontTools.pens.cairoPen import CairoPen
+from fontTools.pens.recordingPen import RecordingPen
+from fontTools.pens.statisticsPen import StatisticsPen
+from fontTools.ttLib import TTFont
 
 font = TTFont(sys.argv[1])
 unicode = sys.argv[2]

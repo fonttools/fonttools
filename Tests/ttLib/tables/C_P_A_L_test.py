@@ -1,8 +1,8 @@
+import unittest
+
 from fontTools.misc.testTools import getXML, parseXML
 from fontTools.misc.textTools import deHexStr
 from fontTools.ttLib import getTableModule, newTable
-import unittest
-
 
 CPAL_DATA_V0 = deHexStr(
     "0000 0002 "  # version=0, numPaletteEntries=2

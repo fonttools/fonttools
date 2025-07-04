@@ -1,6 +1,7 @@
+from pathlib import Path
+
 import pytest
 
-from pathlib import Path
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.reorderGlyphs import reorderGlyphs
 

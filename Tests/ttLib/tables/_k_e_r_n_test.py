@@ -1,10 +1,11 @@
-from fontTools.ttLib import newTable
-from fontTools.ttLib.tables._k_e_r_n import KernTable_format_0, KernTable_format_unkown
-from fontTools.misc.textTools import deHexStr
-from fontTools.misc.testTools import FakeFont, getXML, parseXML
 import itertools
+
 import pytest
 
+from fontTools.misc.testTools import FakeFont, getXML, parseXML
+from fontTools.misc.textTools import deHexStr
+from fontTools.ttLib import newTable
+from fontTools.ttLib.tables._k_e_r_n import KernTable_format_0, KernTable_format_unkown
 
 KERN_VER_0_FMT_0_DATA = deHexStr(
     "0000 "  #  0: version=0
@@ -139,7 +140,7 @@ KERN_VER_0_FMT_0_OVERFLOWING_DATA = deHexStr(
 
 @pytest.fixture
 def font():
-    return FakeFont(list("ABCDEFGHIJKLMNOPQRSTUVWXYZ" "abcdefghijklmnopqrstuvwxyz"))
+    return FakeFont(list("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"))
 
 
 @pytest.fixture
@@ -375,8 +376,8 @@ class KernTable_format_0_Test(object):
             + b"\x01"
             + b"\x00"
             + b"\x01"
-            + b"\xFF"
-            + b"\xFF"
+            + b"\xff"
+            + b"\xff"
             + b"\x00"
             + b"\x02",
             font,

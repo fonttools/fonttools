@@ -76,9 +76,9 @@ class T2CharStringPen(BasePen):
             )
         program = commandsToProgram(commands)
         if self._width is not None:
-            assert (
-                not self._CFF2
-            ), "CFF2 does not allow encoding glyph width in CharString."
+            assert not self._CFF2, (
+                "CFF2 does not allow encoding glyph width in CharString."
+            )
             program.insert(0, otRound(self._width))
         if not self._CFF2:
             program.append("endchar")

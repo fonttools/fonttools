@@ -1,7 +1,8 @@
 import sys
+
 from fontTools.ttLib import OPTIMIZE_FONT_SPEED, TTLibError, TTLibFileIsCollectionError
-from fontTools.ttLib.ttFont import *
 from fontTools.ttLib.ttCollection import TTCollection
+from fontTools.ttLib.ttFont import *
 
 
 def main(args=None):

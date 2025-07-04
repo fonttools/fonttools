@@ -1,14 +1,16 @@
-from fontTools.misc.timeTools import (
-    asctime,
-    timestampNow,
-    timestampToString,
-    timestampFromString,
-    epoch_diff,
-)
+import locale
 import os
 import time
-import locale
+
 import pytest
+
+from fontTools.misc.timeTools import (
+    asctime,
+    epoch_diff,
+    timestampFromString,
+    timestampNow,
+    timestampToString,
+)
 
 
 def test_asctime():

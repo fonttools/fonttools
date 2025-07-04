@@ -1,7 +1,9 @@
-from fontTools.misc.textTools import bytesjoin, strjoin, tobytes, tostr, safeEval
-from fontTools.misc import sstruct
-from . import DefaultTable
 import base64
+
+from fontTools.misc import sstruct
+from fontTools.misc.textTools import bytesjoin, safeEval, strjoin, tobytes, tostr
+
+from . import DefaultTable
 
 DSIG_HeaderFormat = """
 	> # big endian

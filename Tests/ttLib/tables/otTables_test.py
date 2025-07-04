@@ -1,11 +1,12 @@
-from fontTools.misc.testTools import getXML, parseXML, parseXmlInto, FakeFont
+import unittest
+from io import StringIO
+from textwrap import dedent
+
+import fontTools.ttLib.tables.otTables as otTables
+from fontTools.misc.testTools import FakeFont, getXML, parseXML, parseXmlInto
 from fontTools.misc.textTools import deHexStr, hexStr
 from fontTools.misc.xmlWriter import XMLWriter
 from fontTools.ttLib.tables.otBase import OTTableReader, OTTableWriter
-import fontTools.ttLib.tables.otTables as otTables
-from io import StringIO
-from textwrap import dedent
-import unittest
 
 
 def makeCoverage(glyphs):
@@ -136,8 +137,7 @@ class MultipleSubstTest(unittest.TestCase):
     def test_fromXML(self):
         table = otTables.MultipleSubst()
         for name, attrs, content in parseXML(
-            '<Substitution in="c_t" out="c,t"/>'
-            '<Substitution in="f_f_i" out="f,f,i"/>'
+            '<Substitution in="c_t" out="c,t"/><Substitution in="f_f_i" out="f,f,i"/>'
         ):
             table.fromXML(name, attrs, content, self.font)
         self.assertEqual(table.mapping, {"c_t": ["c", "t"], "f_f_i": ["f", "f", "i"]})

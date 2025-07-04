@@ -5,12 +5,11 @@ import logging
 import os
 import sys
 
-from fontTools.pens.cu2quPen import Cu2QuPen
 from fontTools import configLogger
 from fontTools.misc.cliTools import makeOutputFileName
+from fontTools.pens.cu2quPen import Cu2QuPen
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.ttLib import TTFont, newTable
-
 
 log = logging.getLogger()
 
@@ -104,8 +103,7 @@ def main(args=None):
     if options.output and len(options.input) > 1:
         if not os.path.isdir(options.output):
             parser.error(
-                "-o/--output option must be a directory when "
-                "processing multiple fonts"
+                "-o/--output option must be a directory when processing multiple fonts"
             )
 
     for path in options.input:

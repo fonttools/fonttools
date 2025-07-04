@@ -1,16 +1,18 @@
-from fontTools.misc.loggingTools import (
-    LevelFormatter,
-    Timer,
-    configLogger,
-    ChannelsFilter,
-    LogMixin,
-)
-from io import StringIO
 import logging
+import re
 import textwrap
 import time
-import re
+from io import StringIO
+
 import pytest
+
+from fontTools.misc.loggingTools import (
+    ChannelsFilter,
+    LevelFormatter,
+    LogMixin,
+    Timer,
+    configLogger,
+)
 
 
 def logger_name_generator():

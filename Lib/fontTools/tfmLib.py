@@ -3,36 +3,36 @@
 The TFM format is described in the TFtoPL WEB source code, whose typeset form
 can be found on `CTAN <http://mirrors.ctan.org/info/knuth-pdf/texware/tftopl.pdf>`_.
 
-	>>> from fontTools.tfmLib import TFM
-	>>> tfm = TFM("Tests/tfmLib/data/cmr10.tfm")
-	>>>
-	>>> # Accessing an attribute gets you metadata.
-	>>> tfm.checksum
-	1274110073
-	>>> tfm.designsize
-	10.0
-	>>> tfm.codingscheme
-	'TeX text'
-	>>> tfm.family
-	'CMR'
-	>>> tfm.seven_bit_safe_flag
-	False
-	>>> tfm.face
-	234
-	>>> tfm.extraheader
-	{}
-	>>> tfm.fontdimens
-	{'SLANT': 0.0, 'SPACE': 0.33333396911621094, 'STRETCH': 0.16666698455810547, 'SHRINK': 0.11111164093017578, 'XHEIGHT': 0.4305553436279297, 'QUAD': 1.0000028610229492, 'EXTRASPACE': 0.11111164093017578}
-	>>> # Accessing a character gets you its metrics.
-	>>> # “width” is always available, other metrics are available only when
-	>>> # applicable. All values are relative to “designsize”.
-	>>> tfm.chars[ord("g")]
-	{'width': 0.5000019073486328, 'height': 0.4305553436279297, 'depth': 0.1944446563720703, 'italic': 0.013888359069824219}
-	>>> # Kerning and ligature can be accessed as well.
-	>>> tfm.kerning[ord("c")]
-	{104: -0.02777862548828125, 107: -0.02777862548828125}
-	>>> tfm.ligatures[ord("f")]
-	{105: ('LIG', 12), 102: ('LIG', 11), 108: ('LIG', 13)}
+        >>> from fontTools.tfmLib import TFM
+        >>> tfm = TFM("Tests/tfmLib/data/cmr10.tfm")
+        >>>
+        >>> # Accessing an attribute gets you metadata.
+        >>> tfm.checksum
+        1274110073
+        >>> tfm.designsize
+        10.0
+        >>> tfm.codingscheme
+        'TeX text'
+        >>> tfm.family
+        'CMR'
+        >>> tfm.seven_bit_safe_flag
+        False
+        >>> tfm.face
+        234
+        >>> tfm.extraheader
+        {}
+        >>> tfm.fontdimens
+        {'SLANT': 0.0, 'SPACE': 0.33333396911621094, 'STRETCH': 0.16666698455810547, 'SHRINK': 0.11111164093017578, 'XHEIGHT': 0.4305553436279297, 'QUAD': 1.0000028610229492, 'EXTRASPACE': 0.11111164093017578}
+        >>> # Accessing a character gets you its metrics.
+        >>> # “width” is always available, other metrics are available only when
+        >>> # applicable. All values are relative to “designsize”.
+        >>> tfm.chars[ord("g")]
+        {'width': 0.5000019073486328, 'height': 0.4305553436279297, 'depth': 0.1944446563720703, 'italic': 0.013888359069824219}
+        >>> # Kerning and ligature can be accessed as well.
+        >>> tfm.kerning[ord("c")]
+        {104: -0.02777862548828125, 107: -0.02777862548828125}
+        >>> tfm.ligatures[ord("f")]
+        {105: ('LIG', 12), 102: ('LIG', 11), 108: ('LIG', 13)}
 """
 
 from types import SimpleNamespace
@@ -161,10 +161,7 @@ class TFM:
 
     def __repr__(self):
         return (
-            f"<TFM"
-            f" for {self.family}"
-            f" in {self.codingscheme}"
-            f" at {self.designsize:g}pt>"
+            f"<TFM for {self.family} in {self.codingscheme} at {self.designsize:g}pt>"
         )
 
     def _read(self, file):
@@ -333,7 +330,7 @@ class TFM:
 
         self.fontdimens = {}
         for i in range(sizes.np):
-            name = f"PARAMETER{i+1}"
+            name = f"PARAMETER{i + 1}"
             if i <= 6:
                 name = BASE_PARAMS[i]
             elif self.fonttype == MATHSY and i <= 21:

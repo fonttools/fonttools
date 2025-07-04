@@ -1,6 +1,7 @@
 from types import SimpleNamespace
 
 import pytest
+
 from fontTools.misc.textTools import deHexStr
 from fontTools.ttLib.tables.T_S_I__5 import table_T_S_I__5
 

@@ -1,20 +1,26 @@
+import logging
+import struct
+
 from fontTools.misc import sstruct
 from fontTools.misc.fixedTools import (
     fixedToFloat as fi2fl,
+)
+from fontTools.misc.fixedTools import (
     floatToFixed as fl2fi,
+)
+from fontTools.misc.fixedTools import (
     floatToFixedToStr as fl2str,
+)
+from fontTools.misc.fixedTools import (
     strToFixedToFloat as str2fl,
 )
-from fontTools.misc.textTools import bytesjoin, safeEval
 from fontTools.misc.roundTools import otRound
-from fontTools.varLib.models import piecewiseLinearMap
-from fontTools.varLib.varStore import VarStoreInstancer, NO_VARIATION_INDEX
+from fontTools.misc.textTools import bytesjoin, safeEval
 from fontTools.ttLib import TTLibError
-from . import DefaultTable
-from . import otTables
-import struct
-import logging
+from fontTools.varLib.models import piecewiseLinearMap
+from fontTools.varLib.varStore import NO_VARIATION_INDEX, VarStoreInstancer
 
+from . import DefaultTable, otTables
 
 log = logging.getLogger(__name__)
 
@@ -144,7 +150,6 @@ class table__a_v_a_r(BaseTTXConverter):
             super().fromXML(name, attrs, content, ttFont)
 
     def renormalizeLocation(self, location, font):
-
         majorVersion = getattr(self, "majorVersion", 1)
 
         if majorVersion not in (1, 2):
@@ -173,7 +178,6 @@ class table__a_v_a_r(BaseTTXConverter):
 
         out = []
         for varIdx, v in enumerate(coords):
-
             if varIdxMap is not None:
                 varIdx = varIdxMap[varIdx]
 

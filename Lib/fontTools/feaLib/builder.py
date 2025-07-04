@@ -1,49 +1,49 @@
-from fontTools.misc import sstruct
-from fontTools.misc.textTools import Tag, tostr, binary2num, safeEval
+import copy
+import itertools
+import logging
+import os
+import warnings
+from collections import defaultdict
+from io import StringIO
+
+from fontTools.feaLib.ast import FeatureFile
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.feaLib.lookupDebugInfo import (
-    LookupDebugInfo,
-    LOOKUP_DEBUG_INFO_KEY,
     LOOKUP_DEBUG_ENV_VAR,
+    LOOKUP_DEBUG_INFO_KEY,
+    LookupDebugInfo,
 )
 from fontTools.feaLib.parser import Parser
-from fontTools.feaLib.ast import FeatureFile
 from fontTools.feaLib.variableScalar import VariableScalar
+from fontTools.misc import sstruct
+from fontTools.misc.textTools import Tag, binary2num, safeEval, tostr
 from fontTools.otlLib import builder as otl
-from fontTools.otlLib.maxContextCalc import maxCtxFont
-from fontTools.ttLib import newTable, getTableModule
-from fontTools.ttLib.tables import otBase, otTables
 from fontTools.otlLib.builder import (
     AlternateSubstBuilder,
+    AnySubstBuilder,
     ChainContextPosBuilder,
     ChainContextSubstBuilder,
-    LigatureSubstBuilder,
-    MultipleSubstBuilder,
+    ChainContextualRule,
+    ClassPairPosSubtableBuilder,
     CursivePosBuilder,
+    LigatureSubstBuilder,
     MarkBasePosBuilder,
     MarkLigPosBuilder,
     MarkMarkPosBuilder,
-    ReverseChainSingleSubstBuilder,
-    SingleSubstBuilder,
-    ClassPairPosSubtableBuilder,
+    MultipleSubstBuilder,
     PairPosBuilder,
+    ReverseChainSingleSubstBuilder,
     SinglePosBuilder,
-    ChainContextualRule,
-    AnySubstBuilder,
+    SingleSubstBuilder,
 )
 from fontTools.otlLib.error import OpenTypeLibError
-from fontTools.varLib.varStore import OnlineVarStoreBuilder
+from fontTools.otlLib.maxContextCalc import maxCtxFont
+from fontTools.ttLib import getTableModule, newTable
+from fontTools.ttLib.tables import otBase, otTables
 from fontTools.varLib.builder import buildVarDevTable
 from fontTools.varLib.featureVars import addFeatureVariationsRaw
 from fontTools.varLib.models import normalizeValue, piecewiseLinearMap
-from collections import defaultdict
-import copy
-import itertools
-from io import StringIO
-import logging
-import warnings
-import os
-
+from fontTools.varLib.varStore import OnlineVarStoreBuilder
 
 log = logging.getLogger(__name__)
 
@@ -1143,8 +1143,7 @@ class Builder(object):
             )
         if self.cur_feature_name_ is None:
             raise FeatureLibError(
-                "Language statements are not allowed "
-                "within standalone lookup blocks",
+                "Language statements are not allowed within standalone lookup blocks",
                 location,
             )
         self.cur_lookup_ = None
@@ -1227,7 +1226,7 @@ class Builder(object):
             )
         if self.cur_feature_name_ is None:
             raise FeatureLibError(
-                "Script statements are not allowed " "within standalone lookup blocks",
+                "Script statements are not allowed within standalone lookup blocks",
                 location,
             )
         if self.language_systems == {(script, "dflt")}:
@@ -1555,9 +1554,9 @@ class Builder(object):
         for baseAnchor, markClass in marks:
             otBaseAnchor = self.makeOpenTypeAnchor(location, baseAnchor)
             for baseMark in baseMarks:
-                builder.baseMarks.setdefault(baseMark, {})[
-                    markClass.name
-                ] = otBaseAnchor
+                builder.baseMarks.setdefault(baseMark, {})[markClass.name] = (
+                    otBaseAnchor
+                )
 
     # GPOS 7/8
     def add_chain_context_pos(self, location, prefix, glyphs, suffix, lookups):

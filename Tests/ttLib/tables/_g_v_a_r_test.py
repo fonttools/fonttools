@@ -1,9 +1,9 @@
+import unittest
+
 from fontTools.misc.testTools import FakeFont, getXML, parseXML
 from fontTools.misc.textTools import deHexStr, hexStr
 from fontTools.ttLib import TTLibError, getTableClass, getTableModule, newTable
-import unittest
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
-
 
 gvarClass = getTableClass("gvar")
 

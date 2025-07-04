@@ -1,11 +1,13 @@
 import io
 import struct
-from fontTools.misc.fixedTools import floatToFixed, fixedToFloat
+
+import pytest
+
+from fontTools import ttLib
+from fontTools.misc.fixedTools import fixedToFloat, floatToFixed
 from fontTools.misc.testTools import getXML
 from fontTools.otlLib import builder, error
-from fontTools import ttLib
 from fontTools.ttLib.tables import otTables
-import pytest
 
 
 class BuilderTest(object):

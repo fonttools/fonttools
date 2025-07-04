@@ -1,5 +1,7 @@
 from io import BytesIO
+
 from fontTools import cffLib
+
 from . import DefaultTable
 
 

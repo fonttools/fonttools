@@ -1,7 +1,8 @@
-import fontTools.voltLib.ast as ast
-from fontTools.voltLib.lexer import Lexer
-from fontTools.voltLib.error import VoltLibError
 from io import open
+
+import fontTools.voltLib.ast as ast
+from fontTools.voltLib.error import VoltLibError
+from fontTools.voltLib.lexer import Lexer
 
 PARSE_FUNCS = {
     "DEF_GLYPH": "parse_def_glyph_",
@@ -125,8 +126,7 @@ class Parser(object):
         tag = self.expect_string_()
         if self.scripts_.resolve(tag) is not None:
             raise VoltLibError(
-                'Script "%s" already defined, '
-                "script tags are case insensitive" % tag,
+                'Script "%s" already defined, script tags are case insensitive' % tag,
                 location,
             )
         self.langs_.enter_scope()
@@ -193,8 +193,7 @@ class Parser(object):
             )
         if self.lookups_.resolve(name) is not None:
             raise VoltLibError(
-                'Lookup "%s" already defined, '
-                "lookup names are case insensitive" % name,
+                'Lookup "%s" already defined, lookup names are case insensitive' % name,
                 location,
             )
         process_base = True
@@ -251,7 +250,7 @@ class Parser(object):
             pos = self.parse_position_()
         else:
             raise VoltLibError(
-                "Expected AS_SUBSTITUTION or AS_POSITION. " "Got %s" % (as_pos_or_sub),
+                "Expected AS_SUBSTITUTION or AS_POSITION. Got %s" % (as_pos_or_sub),
                 location,
             )
         def_lookup = ast.LookupDefinition(

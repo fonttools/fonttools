@@ -1,18 +1,26 @@
-from fontTools.misc.fixedTools import (
-    fixedToFloat as fi2fl,
-    floatToFixed as fl2fi,
-    floatToFixedToStr as fl2str,
-    strToFixedToFloat as str2fl,
-    otRound,
-)
-from fontTools.misc.textTools import safeEval
 import array
-from collections import Counter, defaultdict
 import io
 import logging
 import struct
 import sys
+from collections import Counter, defaultdict
 
+from fontTools.misc.fixedTools import (
+    fixedToFloat as fi2fl,
+)
+from fontTools.misc.fixedTools import (
+    floatToFixed as fl2fi,
+)
+from fontTools.misc.fixedTools import (
+    floatToFixedToStr as fl2str,
+)
+from fontTools.misc.fixedTools import (
+    otRound,
+)
+from fontTools.misc.fixedTools import (
+    strToFixedToFloat as str2fl,
+)
+from fontTools.misc.textTools import safeEval
 
 # https://www.microsoft.com/typography/otspec/otvarcommonformats.htm
 
@@ -588,7 +596,9 @@ class TupleVariation(object):
             (
                 None
                 if d is None
-                else d * scalar if coordWidth == 1 else (d[0] * scalar, d[1] * scalar)
+                else d * scalar
+                if coordWidth == 1
+                else (d[0] * scalar, d[1] * scalar)
             )
             for d in self.coordinates
         ]
@@ -599,7 +609,9 @@ class TupleVariation(object):
             (
                 None
                 if d is None
-                else otRound(d) if coordWidth == 1 else (otRound(d[0]), otRound(d[1]))
+                else otRound(d)
+                if coordWidth == 1
+                else (otRound(d[0]), otRound(d[1]))
             )
             for d in self.coordinates
         ]
@@ -738,9 +750,9 @@ def compileTupleVariationStore(
         return (0, b"", b"")
 
     n = len(variations[0].coordinates)
-    assert all(
-        len(v.coordinates) == n for v in variations
-    ), "Variation sets have different sizes"
+    assert all(len(v.coordinates) == n for v in variations), (
+        "Variation sets have different sizes"
+    )
 
     compiledPoints = {
         pointSet: TupleVariation.compilePoints(pointSet) for pointSet in pointSetCount

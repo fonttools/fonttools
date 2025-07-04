@@ -1,12 +1,13 @@
+import unittest
+
 from fontTools.misc.fixedTools import (
     fixedToFloat,
+    fixedToStr,
     floatToFixed,
     floatToFixedToStr,
-    fixedToStr,
     strToFixed,
     strToFixedToFloat,
 )
-import unittest
 
 
 class FixedToolsTest(unittest.TestCase):

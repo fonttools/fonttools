@@ -1,5 +1,6 @@
 from fontTools.misc import sstruct
-from fontTools.misc.textTools import tobytes, tostr, safeEval
+from fontTools.misc.textTools import safeEval, tobytes, tostr
+
 from . import DefaultTable
 
 GMAPFormat = """
@@ -93,9 +94,9 @@ class table_G_M_A_P_(DefaultTable.DefaultTable):
     def decompile(self, data, ttFont):
         dummy, newData = sstruct.unpack2(GMAPFormat, data, self)
         self.psFontName = tostr(newData[: self.fontNameLength])
-        assert (
-            self.recordsOffset % 4
-        ) == 0, "GMAP error: recordsOffset is not 32 bit aligned."
+        assert (self.recordsOffset % 4) == 0, (
+            "GMAP error: recordsOffset is not 32 bit aligned."
+        )
         newData = data[self.recordsOffset :]
         self.gmapRecords = []
         for i in range(self.recordsCount):

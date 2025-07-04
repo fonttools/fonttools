@@ -1,26 +1,27 @@
-from fontTools.misc.loggingTools import CapturingLogHandler
+import difflib
+import logging
+import os
+import re
+import shutil
+import sys
+import tempfile
+import unittest
+import warnings
+from io import StringIO
+from textwrap import dedent
+
+from fontTools.feaLib import ast
 from fontTools.feaLib.builder import (
     Builder,
     addOpenTypeFeatures,
     addOpenTypeFeaturesFromString,
 )
 from fontTools.feaLib.error import FeatureLibError
-from fontTools.ttLib import TTFont, newTable
-from fontTools.feaLib.parser import Parser
-from fontTools.feaLib import ast
 from fontTools.feaLib.lexer import Lexer
+from fontTools.feaLib.parser import Parser
 from fontTools.fontBuilder import addFvar
-import difflib
-from io import StringIO
-from textwrap import dedent
-import os
-import re
-import shutil
-import sys
-import tempfile
-import logging
-import unittest
-import warnings
+from fontTools.misc.loggingTools import CapturingLogHandler
+from fontTools.ttLib import TTFont, newTable
 
 
 def makeTTFont():
@@ -218,8 +219,9 @@ class BuilderTest(unittest.TestCase):
             ):
                 sys.stderr.write(line + "\n")
             self.fail(
-                "Fea2Fea output is different from expected. "
-                "Generated:\n{}\n".format("\n".join(actual))
+                "Fea2Fea output is different from expected. Generated:\n{}\n".format(
+                    "\n".join(actual)
+                )
             )
 
     def normal_fea(self, lines):
@@ -489,10 +491,7 @@ class BuilderTest(unittest.TestCase):
             FeatureLibError,
             'Already defined substitution for "e"',
             self.build,
-            "feature test {"
-            "    sub [a-z] by [A.sc-Z.sc];"
-            "    sub e by e.fina;"
-            "} test;",
+            "feature test {    sub [a-z] by [A.sc-Z.sc];    sub e by e.fina;} test;",
         )
 
     def test_singlePos_redefinition(self):
@@ -685,10 +684,7 @@ class BuilderTest(unittest.TestCase):
             "Within a named lookup block, all rules must be "
             "of the same lookup type and flag",
             self.build,
-            "lookup foo {"
-            "    sub f f i by f_f_i;"
-            "    sub A from [A.alt1 A.alt2];"
-            "} foo;",
+            "lookup foo {    sub f f i by f_f_i;    sub A from [A.alt1 A.alt2];} foo;",
         )
 
     def test_lookup_inside_feature_aalt(self):
@@ -1053,13 +1049,7 @@ class BuilderTest(unittest.TestCase):
     def test_unsupported_subtable_break(self):
         logger = logging.getLogger("fontTools.otlLib.builder")
         with CapturingLogHandler(logger, level="WARNING") as captor:
-            self.build(
-                "feature test {"
-                "    pos a 10;"
-                "    subtable;"
-                "    pos b 10;"
-                "} test;"
-            )
+            self.build("feature test {    pos a 10;    subtable;    pos b 10;} test;")
 
         captor.assertRegex(
             '<features>:1:32: unsupported "subtable" statement for lookup type'
@@ -1083,18 +1073,13 @@ class BuilderTest(unittest.TestCase):
             FeatureLibError,
             "Already defined different position for glyph",
             self.build,
-            "lookup foo {" "    pos A -45; " "    pos A 45; " "} foo;",
+            "lookup foo {    pos A -45;     pos A 45; } foo;",
         )
 
     def test_pairPos_enumRuleOverridenBySinglePair_DEBUG(self):
         logger = logging.getLogger("fontTools.otlLib.builder")
         with CapturingLogHandler(logger, "DEBUG") as captor:
-            self.build(
-                "feature test {"
-                "    enum pos A [V Y] -80;"
-                "    pos A V -75;"
-                "} test;"
-            )
+            self.build("feature test {    enum pos A [V Y] -80;    pos A V -75;} test;")
         captor.assertRegex("Already defined position for pair A V at")
 
     def test_ligatureSubst_conflicting_rules(self):
@@ -1102,13 +1087,13 @@ class BuilderTest(unittest.TestCase):
             FeatureLibError,
             'Already defined substitution for "a, b"',
             self.build,
-            "feature test {" "    sub a b by one;" "    sub a b by two;" "} test;",
+            "feature test {    sub a b by one;    sub a b by two;} test;",
         )
 
     def test_ignore_empty_lookup_block(self):
         # https://github.com/fonttools/fonttools/pull/2277
         font = self.build(
-            "lookup EMPTY { ; } EMPTY;" "feature ss01 { lookup EMPTY; } ss01;"
+            "lookup EMPTY { ; } EMPTY;feature ss01 { lookup EMPTY; } ss01;"
         )
         assert "GPOS" not in font
         assert "GSUB" not in font

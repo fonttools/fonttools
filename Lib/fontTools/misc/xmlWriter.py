@@ -1,9 +1,10 @@
 """xmlWriter.py -- Simple XML authoring class"""
 
-from fontTools.misc.textTools import byteord, strjoin, tobytes, tostr
-import sys
 import os
 import string
+import sys
+
+from fontTools.misc.textTools import byteord, strjoin, tobytes, tostr
 
 INDENT = "  "
 

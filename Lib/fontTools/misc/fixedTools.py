@@ -3,22 +3,23 @@ The `OpenType specification <https://docs.microsoft.com/en-us/typography/opentyp
 defines two fixed-point data types:
 
 ``Fixed``
-	A 32-bit signed fixed-point number with a 16 bit twos-complement
-	magnitude component and 16 fractional bits.
+        A 32-bit signed fixed-point number with a 16 bit twos-complement
+        magnitude component and 16 fractional bits.
 ``F2DOT14``
-	A 16-bit signed fixed-point number with a 2 bit twos-complement
-	magnitude component and 14 fractional bits.
+        A 16-bit signed fixed-point number with a 2 bit twos-complement
+        magnitude component and 14 fractional bits.
 
 To support reading and writing data with these data types, this module provides
 functions for converting between fixed-point, float and string representations.
 
 .. data:: MAX_F2DOT14
 
-	The maximum value that can still fit in an F2Dot14. (1.99993896484375)
+        The maximum value that can still fit in an F2Dot14. (1.99993896484375)
 """
 
-from .roundTools import otRound, nearestMultipleShortestRepr
 import logging
+
+from .roundTools import nearestMultipleShortestRepr, otRound
 
 log = logging.getLogger(__name__)
 
@@ -231,7 +232,7 @@ def ensureVersionIsLong(value):
     if value < 0x10000:
         newValue = floatToFixed(value, 16)
         log.warning(
-            "Table version value is a float: %.4f; " "fix to use hex instead: 0x%08x",
+            "Table version value is a float: %.4f; fix to use hex instead: 0x%08x",
             value,
             newValue,
         )

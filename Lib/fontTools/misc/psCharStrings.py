@@ -2,6 +2,9 @@
 CFF dictionary data and Type1/Type2 CharStrings.
 """
 
+import logging
+import struct
+
 from fontTools.misc.fixedTools import (
     fixedToFloat,
     floatToFixed,
@@ -10,9 +13,6 @@ from fontTools.misc.fixedTools import (
 )
 from fontTools.misc.textTools import bytechr, byteord, bytesjoin, strjoin
 from fontTools.pens.boundsPen import BoundsPen
-import struct
-import logging
-
 
 log = logging.getLogger(__name__)
 
@@ -575,9 +575,9 @@ class T2WidthExtractor(SimpleT2Decompiler):
         if not self.gotWidth:
             if evenOdd ^ (len(args) % 2):
                 # For CFF2 charstrings, this should never happen
-                assert (
-                    self.defaultWidthX is not None
-                ), "CFF2 CharStrings must not have an initial width value"
+                assert self.defaultWidthX is not None, (
+                    "CFF2 CharStrings must not have an initial width value"
+                )
                 self.width = self.nominalWidthX + args[0]
                 args = args[1:]
             else:

@@ -1,9 +1,10 @@
+import pytest
+
 from fontTools.pens.recordingPen import (
-    RecordingPen,
     DecomposingRecordingPen,
+    RecordingPen,
     RecordingPointPen,
 )
-import pytest
 
 
 class _TestGlyph(object):

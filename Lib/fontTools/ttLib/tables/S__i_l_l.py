@@ -1,9 +1,10 @@
+import struct
+
 from fontTools.misc import sstruct
 from fontTools.misc.fixedTools import floatToFixedToStr
 from fontTools.misc.textTools import safeEval
-from . import DefaultTable
-from . import grUtils
-import struct
+
+from . import DefaultTable, grUtils
 
 Sill_hdr = """
     >

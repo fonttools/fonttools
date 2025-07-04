@@ -1,6 +1,7 @@
-from fontTools.svgLib.path import shapes
-from fontTools.misc import etree
 import pytest
+
+from fontTools.misc import etree
+from fontTools.svgLib.path import shapes
 
 
 @pytest.mark.parametrize(

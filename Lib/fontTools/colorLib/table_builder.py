@@ -5,6 +5,8 @@ colorLib.table_builder: Generic helper for filling in BaseTable derivatives from
 
 import collections
 import enum
+
+from fontTools.misc.roundTools import otRound
 from fontTools.ttLib.tables.otBase import (
     BaseTable,
     FormatSwitchingBaseTable,
@@ -12,16 +14,15 @@ from fontTools.ttLib.tables.otBase import (
 )
 from fontTools.ttLib.tables.otConverters import (
     ComputedInt,
+    FloatValue,
+    IntValue,
+    OptionalValue,
+    Short,
     SimpleValue,
     Struct,
-    Short,
     UInt8,
     UShort,
-    IntValue,
-    FloatValue,
-    OptionalValue,
 )
-from fontTools.misc.roundTools import otRound
 
 
 class BuildCallback(enum.Enum):
@@ -64,9 +65,9 @@ def _split_format(cls, source):
     else:
         raise ValueError(f"Not sure how to populate {cls} from {source}")
 
-    assert isinstance(
-        fmt, collections.abc.Hashable
-    ), f"{cls} Format is not hashable: {fmt!r}"
+    assert isinstance(fmt, collections.abc.Hashable), (
+        f"{cls} Format is not hashable: {fmt!r}"
+    )
     assert fmt in cls.convertersByName, f"{cls} invalid Format: {fmt!r}"
 
     return fmt, remainder
@@ -147,9 +148,9 @@ class TableBuilder:
         # Convert sequence => mapping so before thunk only has to handle one format
         if _isNonStrSequence(source):
             # Sequence (typically list or tuple) assumed to match fields in declaration order
-            assert len(source) <= len(
-                convByName
-            ), f"Sequence of {len(source)} too long for {cls}; expected <= {len(convByName)} values"
+            assert len(source) <= len(convByName), (
+                f"Sequence of {len(source)} too long for {cls}; expected <= {len(convByName)} values"
+            )
             source = dict(zip(convByName.keys(), source))
 
         dest, source = self._callbackTable.get(

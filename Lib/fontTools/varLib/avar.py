@@ -1,10 +1,11 @@
+import logging
+from itertools import product
+
+from fontTools.misc.cliTools import makeOutputFileName
+from fontTools.misc.fixedTools import fixedToFloat as fi2fl
 from fontTools.varLib import _add_avar, load_designspace
 from fontTools.varLib.models import VariationModel
 from fontTools.varLib.varStore import VarStoreInstancer
-from fontTools.misc.fixedTools import fixedToFloat as fi2fl
-from fontTools.misc.cliTools import makeOutputFileName
-from itertools import product
-import logging
 
 log = logging.getLogger("fontTools.varLib.avar")
 
@@ -190,10 +191,11 @@ def main(args=None):
 
         args = sys.argv[1:]
 
-    from fontTools import configLogger
-    from fontTools.ttLib import TTFont
-    from fontTools.designspaceLib import DesignSpaceDocument
     import argparse
+
+    from fontTools import configLogger
+    from fontTools.designspaceLib import DesignSpaceDocument
+    from fontTools.ttLib import TTFont
 
     parser = argparse.ArgumentParser(
         "fonttools varLib.avar",

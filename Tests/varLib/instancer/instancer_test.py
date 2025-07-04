@@ -1,28 +1,23 @@
+import collections
+import logging
+import os
+import re
+from copy import deepcopy
+from io import BytesIO, StringIO
+from types import SimpleNamespace
+
+import pytest
+
+from fontTools import designspaceLib, ttLib, varLib
+from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
 from fontTools.misc.fixedTools import floatToFixedToFloat
 from fontTools.misc.roundTools import noRound
 from fontTools.misc.testTools import stripVariableItemsFromTTX
 from fontTools.misc.textTools import Tag
-from fontTools import ttLib
-from fontTools import designspaceLib
-from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
-from fontTools.ttLib.tables import _f_v_a_r, _g_l_y_f
-from fontTools.ttLib.tables import otTables
+from fontTools.ttLib.tables import _f_v_a_r, _g_l_y_f, otTables
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
-from fontTools import varLib
-from fontTools.varLib import instancer
+from fontTools.varLib import builder, featureVars, instancer, models
 from fontTools.varLib.mvar import MVAR_ENTRIES
-from fontTools.varLib import builder
-from fontTools.varLib import featureVars
-from fontTools.varLib import models
-import collections
-from copy import deepcopy
-from io import BytesIO, StringIO
-import logging
-import os
-import re
-from types import SimpleNamespace
-import pytest
-
 
 # see Tests/varLib/instancer/conftest.py for "varfont" fixture definition
 
@@ -94,7 +89,6 @@ class InstantiateCFF2Test(object):
         ],
     )
     def test_pin_and_drop_axis(self, varfont, location, expected):
-
         varfont = ttLib.TTFont()
         varfont.importXML(os.path.join(TESTDATA, "CFF2Instancer-VF-1.ttx"))
 

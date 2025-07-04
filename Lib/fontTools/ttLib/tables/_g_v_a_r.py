@@ -1,17 +1,19 @@
-from collections import deque
-from functools import partial
-from fontTools.misc import sstruct
-from fontTools.misc.textTools import safeEval
-from fontTools.misc.lazyTools import LazyDict
-from fontTools.ttLib import OPTIMIZE_FONT_SPEED
-from fontTools.ttLib.tables.TupleVariation import TupleVariation
-from . import DefaultTable
 import array
 import itertools
 import logging
 import struct
 import sys
+from collections import deque
+from functools import partial
+
 import fontTools.ttLib.tables.TupleVariation as tv
+from fontTools.misc import sstruct
+from fontTools.misc.lazyTools import LazyDict
+from fontTools.misc.textTools import safeEval
+from fontTools.ttLib import OPTIMIZE_FONT_SPEED
+from fontTools.ttLib.tables.TupleVariation import TupleVariation
+
+from . import DefaultTable
 
 log = logging.getLogger(__name__)
 
@@ -64,7 +66,6 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
         self.variations = {}
 
     def compile(self, ttFont):
-
         axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
         sharedTuples = tv.compileSharedTuples(
             axisTags, itertools.chain(*self.variations.values())

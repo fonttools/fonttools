@@ -2,7 +2,6 @@
 
 from fontTools.pens.basePen import AbstractPen
 
-
 __all__ = ["TeePen"]
 
 

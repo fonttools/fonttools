@@ -12,7 +12,6 @@ __all__ = ["MomentsPen"]
 
 
 class MomentsPen(BasePen):
-
     def __init__(self, glyphset=None):
         BasePen.__init__(self, glyphset)
 
@@ -864,7 +863,7 @@ class MomentsPen(BasePen):
 
 
 if __name__ == "__main__":
-    from fontTools.misc.symfont import x, y, printGreenPen
+    from fontTools.misc.symfont import printGreenPen, x, y
 
     printGreenPen(
         "MomentsPen",

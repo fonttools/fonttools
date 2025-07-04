@@ -109,19 +109,19 @@ Compile options
              layout engines.
 """
 
-from fontTools.ttLib import OPTIMIZE_FONT_SPEED, TTFont, TTLibError
+import getopt
+import logging
+import os
+import re
+import sys
+
+from fontTools.misc.cliTools import makeOutputFileName
+from fontTools.misc.loggingTools import Timer
 from fontTools.misc.macCreatorType import getMacCreatorAndType
-from fontTools.unicode import setUnicodeData
 from fontTools.misc.textTools import Tag, tostr
 from fontTools.misc.timeTools import timestampSinceEpoch
-from fontTools.misc.loggingTools import Timer
-from fontTools.misc.cliTools import makeOutputFileName
-import os
-import sys
-import getopt
-import re
-import logging
-
+from fontTools.ttLib import OPTIMIZE_FONT_SPEED, TTFont, TTLibError
+from fontTools.unicode import setUnicodeData
 
 log = logging.getLogger("fontTools.ttx")
 

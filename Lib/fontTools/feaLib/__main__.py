@@ -1,12 +1,12 @@
-from fontTools.ttLib import TTFont
-from fontTools.feaLib.builder import addOpenTypeFeatures, Builder
-from fontTools.feaLib.error import FeatureLibError
-from fontTools import configLogger
-from fontTools.misc.cliTools import makeOutputFileName
-import sys
 import argparse
 import logging
+import sys
 
+from fontTools import configLogger
+from fontTools.feaLib.builder import Builder, addOpenTypeFeatures
+from fontTools.feaLib.error import FeatureLibError
+from fontTools.misc.cliTools import makeOutputFileName
+from fontTools.ttLib import TTFont
 
 log = logging.getLogger("fontTools.feaLib")
 
@@ -46,7 +46,7 @@ def main(args=None):
     parser.add_argument(
         "-v",
         "--verbose",
-        help="Increase the logger verbosity. Multiple -v " "options are allowed.",
+        help="Increase the logger verbosity. Multiple -v options are allowed.",
         action="count",
         default=0,
     )

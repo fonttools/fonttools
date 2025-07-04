@@ -6,22 +6,22 @@ __author__ = "Rod Sheeter"
 # for details.
 
 
-from fontTools import ttLib
-from fontTools.ttLib.tables import otBase
-from fontTools.ttLib.tables import otTables as ot
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from collections import deque
+from dataclasses import dataclass
 from typing import (
-    Optional,
     Any,
     Callable,
     Deque,
     Iterable,
     List,
+    Optional,
     Tuple,
 )
 
+from fontTools import ttLib
+from fontTools.ttLib.tables import otBase
+from fontTools.ttLib.tables import otTables as ot
 
 _COVERAGE_ATTR = "Coverage"  # tables that have one coverage use this name
 
@@ -77,18 +77,18 @@ class ReorderCoverage(ReorderRule):
             parallel_list = None
             if self.parallel_list_attr:
                 parallel_list = _get_dotted_attr(value, self.parallel_list_attr)
-                assert (
-                    type(parallel_list) is list
-                ), f"{self.parallel_list_attr} should be a list"
+                assert type(parallel_list) is list, (
+                    f"{self.parallel_list_attr} should be a list"
+                )
                 assert len(parallel_list) == len(coverage.glyphs), "Nothing makes sense"
 
             _sort_by_gid(font.getGlyphID, coverage.glyphs, parallel_list)
 
         else:
             # A few tables have a list of coverage. No parallel list can exist.
-            assert (
-                not self.parallel_list_attr
-            ), f"Can't have multiple coverage AND a parallel list; {self}"
+            assert not self.parallel_list_attr, (
+                f"Can't have multiple coverage AND a parallel list; {self}"
+            )
             for coverage_entry in coverage:
                 _sort_by_gid(font.getGlyphID, coverage_entry.glyphs, None)
 

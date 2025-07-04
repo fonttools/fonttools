@@ -1,4 +1,5 @@
 from fontTools.ttLib.tables import otTables as ot
+
 from .table_builder import TableUnbuilder
 
 
@@ -59,8 +60,9 @@ class LayerListUnbuilder:
 
 
 if __name__ == "__main__":
-    from pprint import pprint
     import sys
+    from pprint import pprint
+
     from fontTools.ttLib import TTFont
 
     try:

@@ -1,5 +1,6 @@
-import fontTools
 import pytest
+
+import fontTools
 
 
 @pytest.fixture(autouse=True, scope="session")

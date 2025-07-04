@@ -2,9 +2,9 @@
 Various round-to-integer helpers.
 """
 
-import math
 import functools
 import logging
+import math
 
 log = logging.getLogger(__name__)
 

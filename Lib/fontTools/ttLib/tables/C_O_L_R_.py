@@ -3,6 +3,7 @@
 # Google Author(s): Behdad Esfahbod
 
 from fontTools.misc.textTools import safeEval
+
 from . import DefaultTable
 
 
@@ -42,8 +43,9 @@ class table_C_O_L_R_(DefaultTable.DefaultTable):
         return colorLayerLists
 
     def _toOTTable(self, ttFont):
-        from . import otTables
         from fontTools.colorLib.builder import populateCOLRv0
+
+        from . import otTables
 
         tableClass = getattr(otTables, self.tableTag)
         table = tableClass()
@@ -60,8 +62,8 @@ class table_C_O_L_R_(DefaultTable.DefaultTable):
         return table
 
     def decompile(self, data, ttFont):
-        from .otBase import OTTableReader
         from . import otTables
+        from .otBase import OTTableReader
 
         # We use otData to decompile, but we adapt the decompiled otTables to the
         # existing COLR v0 API for backward compatibility.

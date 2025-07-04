@@ -3,14 +3,13 @@
 Tools to parse data files from the Unicode Character Database.
 """
 
-
-from urllib.request import urlopen
-import re
 import logging
 import os
-from os.path import abspath, dirname, join as pjoin, pardir, sep
+import re
+from os.path import abspath, dirname, pardir, sep
+from os.path import join as pjoin
 from typing import List
-
+from urllib.request import urlopen
 
 UNIDATA_URL = "https://unicode.org/Public/UNIDATA/"
 UNIDATA_LICENSE_URL = "http://unicode.org/copyright.html#License"

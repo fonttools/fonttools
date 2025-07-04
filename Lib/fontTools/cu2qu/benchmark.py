@@ -1,8 +1,9 @@
 """Benchmark the cu2qu algorithm performance."""
 
-from .cu2qu import *
 import random
 import timeit
+
+from .cu2qu import *
 
 MAX_ERR = 0.05
 

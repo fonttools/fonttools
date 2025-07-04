@@ -1,26 +1,27 @@
+import itertools
+import logging
+import os
+import struct
+
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import (
     bytechr,
     byteord,
     bytesjoin,
-    strjoin,
-    safeEval,
-    readHex,
-    hexStr,
     deHexStr,
+    hexStr,
+    readHex,
+    safeEval,
+    strjoin,
 )
+
+from . import DefaultTable
 from .BitmapGlyphMetrics import (
     BigGlyphMetrics,
-    bigGlyphMetricsFormat,
     SmallGlyphMetrics,
+    bigGlyphMetricsFormat,
     smallGlyphMetricsFormat,
 )
-from . import DefaultTable
-import itertools
-import os
-import struct
-import logging
-
 
 log = logging.getLogger(__name__)
 
@@ -200,9 +201,9 @@ class table_E_B_D_T_(DefaultTable.DefaultTable):
             # format allows the strike index value to be out of order.
             if strikeIndex >= len(self.strikeData):
                 self.strikeData += [None] * (strikeIndex + 1 - len(self.strikeData))
-            assert (
-                self.strikeData[strikeIndex] is None
-            ), "Duplicate strike EBDT indices."
+            assert self.strikeData[strikeIndex] is None, (
+                "Duplicate strike EBDT indices."
+            )
             self.strikeData[strikeIndex] = bitmapGlyphDict
 
 

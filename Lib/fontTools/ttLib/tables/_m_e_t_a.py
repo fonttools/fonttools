@@ -1,6 +1,7 @@
 from fontTools.misc import sstruct
-from fontTools.misc.textTools import bytesjoin, strjoin, readHex
+from fontTools.misc.textTools import bytesjoin, readHex, strjoin
 from fontTools.ttLib import TTLibError
+
 from . import DefaultTable
 
 # Apple's documentation of 'meta':

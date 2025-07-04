@@ -1,14 +1,14 @@
-from fontTools.ttLib.ttGlyphSet import LerpGlyphSet
+import itertools
+import logging
+from collections import defaultdict, deque
+from enum import Enum
+from math import atan2, copysign, pi, sqrt
+
+from fontTools.misc.transform import Transform
 from fontTools.pens.basePen import AbstractPen, BasePen, DecomposingPen
 from fontTools.pens.pointPen import AbstractPointPen, SegmentToPointPen
-from fontTools.pens.recordingPen import RecordingPen, DecomposingRecordingPen
-from fontTools.misc.transform import Transform
-from collections import defaultdict, deque
-from math import sqrt, copysign, atan2, pi
-from enum import Enum
-import itertools
-
-import logging
+from fontTools.pens.recordingPen import DecomposingRecordingPen, RecordingPen
+from fontTools.ttLib.ttGlyphSet import LerpGlyphSet
 
 log = logging.getLogger("fontTools.varLib.interpolatable")
 
@@ -349,9 +349,9 @@ def find_parents_and_order(glyphsets, locations, *, discrete_axes=set()):
                     if j not in visited:
                         parents[j] = i
                         queue.append(j)
-            assert len(order) == len(
-                parents
-            ), "Not all masters are reachable; report an issue"
+            assert len(order) == len(parents), (
+                "Not all masters are reachable; report an issue"
+            )
 
         except ImportError:
             pass

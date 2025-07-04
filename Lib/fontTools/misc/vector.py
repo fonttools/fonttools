@@ -1,8 +1,7 @@
-from numbers import Number
 import math
 import operator
 import warnings
-
+from numbers import Number
 
 __all__ = ["Vector"]
 

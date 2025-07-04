@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
-from fontTools.misc.loggingTools import CapturingLogHandler
-from fontTools.feaLib.error import FeatureLibError
-from fontTools.feaLib.parser import Parser, SymbolTable
-from io import StringIO
-import warnings
-import fontTools.feaLib.ast as ast
 import os
 import unittest
+import warnings
+from io import StringIO
+
+import fontTools.feaLib.ast as ast
+from fontTools.feaLib.error import FeatureLibError
+from fontTools.feaLib.parser import Parser, SymbolTable
+from fontTools.misc.loggingTools import CapturingLogHandler
 
 
 def glyphstr(glyphs):
@@ -119,9 +120,7 @@ class ParserTest(unittest.TestCase):
 
     def test_anchor_format_a(self):
         doc = self.parse(
-            "feature test {"
-            "    pos cursive A <anchor 120 -20> <anchor NULL>;"
-            "} test;"
+            "feature test {    pos cursive A <anchor 120 -20> <anchor NULL>;} test;"
         )
         anchor = doc.statements[0].statements[0].entryAnchor
         self.assertEqual(type(anchor), ast.Anchor)
@@ -163,9 +162,7 @@ class ParserTest(unittest.TestCase):
 
     def test_anchor_format_d(self):
         doc = self.parse(
-            "feature test {"
-            "    pos cursive A <anchor 120 -20> <anchor NULL>;"
-            "} test;"
+            "feature test {    pos cursive A <anchor 120 -20> <anchor NULL>;} test;"
         )
         anchor = doc.statements[0].statements[0].exitAnchor
         self.assertIsNone(anchor)
@@ -544,7 +541,7 @@ class ParserTest(unittest.TestCase):
 
     def test_ignore_position(self):
         doc = self.parse(
-            "feature test {" "    ignore position f [a e] d' [a u]' [e y];" "} test;"
+            "feature test {    ignore position f [a e] d' [a u]' [e y];} test;"
         )
         sub = doc.statements[0].statements[0]
         self.assertIsInstance(sub, ast.IgnorePosStatement)
@@ -576,7 +573,7 @@ class ParserTest(unittest.TestCase):
 
     def test_ignore_substitute(self):
         doc = self.parse(
-            "feature test {" "    ignore substitute f [a e] d' [a u]' [e y];" "} test;"
+            "feature test {    ignore substitute f [a e] d' [a u]' [e y];} test;"
         )
         sub = doc.statements[0].statements[0]
         self.assertIsInstance(sub, ast.IgnoreSubstStatement)
@@ -643,9 +640,7 @@ class ParserTest(unittest.TestCase):
         self.assertFalse(s.required)
 
     def test_language_exclude_dflt_required(self):
-        doc = self.parse(
-            "feature test {" "  language DEU exclude_dflt required;" "} test;"
-        )
+        doc = self.parse("feature test {  language DEU exclude_dflt required;} test;")
         s = doc.statements[0].statements[0]
         self.assertEqual(type(s), ast.LanguageStatement)
         self.assertEqual(s.language, "DEU ")
@@ -661,9 +656,7 @@ class ParserTest(unittest.TestCase):
         self.assertFalse(s.required)
 
     def test_language_include_dflt_required(self):
-        doc = self.parse(
-            "feature test {" "  language DEU include_dflt required;" "} test;"
-        )
+        doc = self.parse("feature test {  language DEU include_dflt required;} test;")
         s = doc.statements[0].statements[0]
         self.assertEqual(type(s), ast.LanguageStatement)
         self.assertEqual(s.language, "DEU ")
@@ -735,11 +728,7 @@ class ParserTest(unittest.TestCase):
 
     def test_lookup_block_with_horizontal_valueRecordDef(self):
         doc = self.parse(
-            "feature liga {"
-            "  lookup look {"
-            "    valueRecordDef 123 foo;"
-            "  } look;"
-            "} liga;"
+            "feature liga {  lookup look {    valueRecordDef 123 foo;  } look;} liga;"
         )
         [liga] = doc.statements
         [look] = liga.statements
@@ -749,11 +738,7 @@ class ParserTest(unittest.TestCase):
 
     def test_lookup_block_with_vertical_valueRecordDef(self):
         doc = self.parse(
-            "feature vkrn {"
-            "  lookup look {"
-            "    valueRecordDef 123 foo;"
-            "  } look;"
-            "} vkrn;"
+            "feature vkrn {  lookup look {    valueRecordDef 123 foo;  } look;} vkrn;"
         )
         [vkrn] = doc.statements
         [look] = vkrn.statements
@@ -769,7 +754,7 @@ class ParserTest(unittest.TestCase):
 
     def test_lookup_reference(self):
         [foo, bar] = self.parse(
-            "lookup Foo {} Foo;" "feature Bar {lookup Foo;} Bar;"
+            "lookup Foo {} Foo;feature Bar {lookup Foo;} Bar;"
         ).statements
         [ref] = bar.statements
         self.assertEqual(type(ref), ast.LookupReferenceStatement)
@@ -777,7 +762,7 @@ class ParserTest(unittest.TestCase):
 
     def test_lookup_reference_to_lookup_inside_feature(self):
         [qux, bar] = self.parse(
-            "feature Qux {lookup Foo {} Foo;} Qux;" "feature Bar {lookup Foo;} Bar;"
+            "feature Qux {lookup Foo {} Foo;} Qux;feature Bar {lookup Foo;} Bar;"
         ).statements
         [foo] = qux.statements
         [ref] = bar.statements
@@ -998,7 +983,7 @@ class ParserTest(unittest.TestCase):
     def test_gpos_type_1_chained_exception1(self):
         with self.assertRaisesRegex(FeatureLibError, "Positioning values are allowed"):
             doc = self.parse(
-                "feature kern {" "    pos [A B]' [T Y]' comma a <0 0 0 0>;" "} kern;"
+                "feature kern {    pos [A B]' [T Y]' comma a <0 0 0 0>;} kern;"
             )
 
     def test_gpos_type_1_chained_exception2(self):
@@ -1012,14 +997,12 @@ class ParserTest(unittest.TestCase):
     def test_gpos_type_1_chained_exception3(self):
         with self.assertRaisesRegex(FeatureLibError, "Positioning cannot be applied"):
             doc = self.parse(
-                "feature kern {"
-                "    pos [A B] <0 0 0 0> [T Y]' comma a <0 0 0 0>;"
-                "} kern;"
+                "feature kern {    pos [A B] <0 0 0 0> [T Y]' comma a <0 0 0 0>;} kern;"
             )
 
     def test_gpos_type_1_chained_exception4(self):
         with self.assertRaisesRegex(FeatureLibError, "Positioning values are allowed"):
-            doc = self.parse("feature kern {" "    pos a' b c 123 d;" "} kern;")
+            doc = self.parse("feature kern {    pos a' b c 123 d;} kern;")
 
     def test_gpos_type_1_null(self):
         doc = self.parse("feature test {pos a <NULL>;} test;")
@@ -1032,9 +1015,7 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(pos.asFea(), "pos a' <NULL>;")
 
     def test_gpos_type_2_format_a(self):
-        doc = self.parse(
-            "feature kern {" "    pos [T V] -60 [a b c] <1 2 3 4>;" "} kern;"
-        )
+        doc = self.parse("feature kern {    pos [T V] -60 [a b c] <1 2 3 4>;} kern;")
         pos = doc.statements[0].statements[0]
         self.assertEqual(type(pos), ast.PairPosStatement)
         self.assertFalse(pos.enumerated)
@@ -1045,7 +1026,7 @@ class ParserTest(unittest.TestCase):
 
     def test_gpos_type_2_format_a_enumerated(self):
         doc = self.parse(
-            "feature kern {" "    enum pos [T V] -60 [a b c] <1 2 3 4>;" "} kern;"
+            "feature kern {    enum pos [T V] -60 [a b c] <1 2 3 4>;} kern;"
         )
         pos = doc.statements[0].statements[0]
         self.assertEqual(type(pos), ast.PairPosStatement)
@@ -1056,9 +1037,7 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(pos.valuerecord2.asFea(), "<1 2 3 4>")
 
     def test_gpos_type_2_format_a_with_null_first(self):
-        doc = self.parse(
-            "feature kern {" "    pos [T V] <NULL> [a b c] <1 2 3 4>;" "} kern;"
-        )
+        doc = self.parse("feature kern {    pos [T V] <NULL> [a b c] <1 2 3 4>;} kern;")
         pos = doc.statements[0].statements[0]
         self.assertEqual(type(pos), ast.PairPosStatement)
         self.assertFalse(pos.enumerated)
@@ -1070,9 +1049,7 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(pos.asFea(), "pos [T V] <NULL> [a b c] <1 2 3 4>;")
 
     def test_gpos_type_2_format_a_with_null_second(self):
-        doc = self.parse(
-            "feature kern {" "    pos [T V] <1 2 3 4> [a b c] <NULL>;" "} kern;"
-        )
+        doc = self.parse("feature kern {    pos [T V] <1 2 3 4> [a b c] <NULL>;} kern;")
         pos = doc.statements[0].statements[0]
         self.assertEqual(type(pos), ast.PairPosStatement)
         self.assertFalse(pos.enumerated)
@@ -1083,7 +1060,7 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(pos.asFea(), "pos [T V] [a b c] <1 2 3 4>;")
 
     def test_gpos_type_2_format_b(self):
-        doc = self.parse("feature kern {" "    pos [T V] [a b c] <1 2 3 4>;" "} kern;")
+        doc = self.parse("feature kern {    pos [T V] [a b c] <1 2 3 4>;} kern;")
         pos = doc.statements[0].statements[0]
         self.assertEqual(type(pos), ast.PairPosStatement)
         self.assertFalse(pos.enumerated)
@@ -1094,7 +1071,7 @@ class ParserTest(unittest.TestCase):
 
     def test_gpos_type_2_format_b_enumerated(self):
         doc = self.parse(
-            "feature kern {" "    enumerate position [T V] [a b c] <1 2 3 4>;" "} kern;"
+            "feature kern {    enumerate position [T V] [a b c] <1 2 3 4>;} kern;"
         )
         pos = doc.statements[0].statements[0]
         self.assertEqual(type(pos), ast.PairPosStatement)
@@ -1106,9 +1083,7 @@ class ParserTest(unittest.TestCase):
 
     def test_gpos_type_3(self):
         doc = self.parse(
-            "feature kern {"
-            "    position cursive A <anchor 12 -2> <anchor 2 3>;"
-            "} kern;"
+            "feature kern {    position cursive A <anchor 12 -2> <anchor 2 3>;} kern;"
         )
         pos = doc.statements[0].statements[0]
         self.assertEqual(type(pos), ast.CursivePosStatement)
@@ -1147,7 +1122,7 @@ class ParserTest(unittest.TestCase):
     def test_gpos_type_4_enumerated(self):
         self.assertRaisesRegex(
             FeatureLibError,
-            '"enumerate" is not allowed with ' "mark-to-base attachment positioning",
+            '"enumerate" is not allowed with mark-to-base attachment positioning',
             self.parse,
             "feature kern {"
             "    markClass cedilla <anchor 300 600> @BOTTOM_MARKS;"
@@ -1195,8 +1170,7 @@ class ParserTest(unittest.TestCase):
     def test_gpos_type_5_enumerated(self):
         self.assertRaisesRegex(
             FeatureLibError,
-            '"enumerate" is not allowed with '
-            "mark-to-ligature attachment positioning",
+            '"enumerate" is not allowed with mark-to-ligature attachment positioning',
             self.parse,
             "feature test {"
             "    markClass cedilla <anchor 300 600> @MARKS;"
@@ -1233,7 +1207,7 @@ class ParserTest(unittest.TestCase):
     def test_gpos_type_6_enumerated(self):
         self.assertRaisesRegex(
             FeatureLibError,
-            '"enumerate" is not allowed with ' "mark-to-mark attachment positioning",
+            '"enumerate" is not allowed with mark-to-mark attachment positioning',
             self.parse,
             "markClass damma <anchor 189 -103> @MARK_CLASS_1;"
             "feature test {"
@@ -1456,7 +1430,7 @@ class ParserTest(unittest.TestCase):
 
     def test_stat_design_axis(self):  # STAT DesignAxis
         doc = self.parse(
-            "table STAT { DesignAxis opsz 0 " '{name "Optical Size";}; } STAT;'
+            'table STAT { DesignAxis opsz 0 {name "Optical Size";}; } STAT;'
         )
         da = doc.statements[0].statements[0]
         self.assertIsInstance(da, ast.STATDesignAxisStatement)
@@ -1563,9 +1537,7 @@ class ParserTest(unittest.TestCase):
 
     def test_sub_single_format_b(self):  # GSUB LookupType 1
         doc = self.parse(
-            "feature smcp {"
-            "    substitute [one.fitted one.oldstyle] by one;"
-            "} smcp;"
+            "feature smcp {    substitute [one.fitted one.oldstyle] by one;} smcp;"
         )
         sub = doc.statements[0].statements[0]
         self.assertIsInstance(sub, ast.SingleSubstStatement)
@@ -1586,9 +1558,7 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(glyphstr(sub.suffix), "SUF FIX")
 
     def test_sub_single_format_c(self):  # GSUB LookupType 1
-        doc = self.parse(
-            "feature smcp {" "    substitute [a-d] by [A.sc-D.sc];" "} smcp;"
-        )
+        doc = self.parse("feature smcp {    substitute [a-d] by [A.sc-D.sc];} smcp;")
         sub = doc.statements[0].statements[0]
         self.assertIsInstance(sub, ast.SingleSubstStatement)
         self.assertEqual(
@@ -1599,7 +1569,7 @@ class ParserTest(unittest.TestCase):
 
     def test_sub_single_format_c_chained(self):  # chain to GSUB LookupType 1
         doc = self.parse(
-            "feature smcp {" "    substitute [a-d]' X Y [Z z] by [A.sc-D.sc];" "} smcp;"
+            "feature smcp {    substitute [a-d]' X Y [Z z] by [A.sc-D.sc];} smcp;"
         )
         sub = doc.statements[0].statements[0]
         self.assertIsInstance(sub, ast.SingleSubstStatement)
@@ -1692,7 +1662,7 @@ class ParserTest(unittest.TestCase):
             FeatureLibError,
             "Unsupported contextual target sequence",
             self.parse,
-            "feature test{" "    ignore pos a' x x A';" "} test;",
+            "feature test{    ignore pos a' x x A';} test;",
         )
         self.assertRaisesRegex(
             FeatureLibError,
@@ -1710,7 +1680,7 @@ class ParserTest(unittest.TestCase):
             FeatureLibError,
             "Unsupported contextual target sequence",
             self.parse,
-            "feature test {" "    ignore sub a' x x A';" "} test;",
+            "feature test {    ignore sub a' x x A';} test;",
         )
         self.assertRaisesRegex(
             FeatureLibError,
@@ -1728,9 +1698,7 @@ class ParserTest(unittest.TestCase):
         )
 
     def test_substitute_from(self):  # GSUB LookupType 3
-        doc = self.parse(
-            "feature test {" "  substitute a from [a.1 a.2 a.3];" "} test;"
-        )
+        doc = self.parse("feature test {  substitute a from [a.1 a.2 a.3];} test;")
         sub = doc.statements[0].statements[0]
         self.assertIsInstance(sub, ast.AlternateSubstStatement)
         self.assertEqual(glyphstr(sub.prefix), "")
@@ -1740,7 +1708,7 @@ class ParserTest(unittest.TestCase):
 
     def test_substitute_from_chained(self):  # chain to GSUB LookupType 3
         doc = self.parse(
-            "feature test {" "  substitute A B a' [Y y] Z from [a.1 a.2 a.3];" "} test;"
+            "feature test {  substitute A B a' [Y y] Z from [a.1 a.2 a.3];} test;"
         )
         sub = doc.statements[0].statements[0]
         self.assertIsInstance(sub, ast.AlternateSubstStatement)

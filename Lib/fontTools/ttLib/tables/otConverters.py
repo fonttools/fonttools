@@ -1,16 +1,35 @@
+import logging
+import re
+import struct
+from functools import partial
+from itertools import accumulate, zip_longest
+from types import SimpleNamespace
+from typing import Optional
+
+from fontTools.misc.fixedTools import (
+    ensureVersionIsLong as fi2ve,
+)
 from fontTools.misc.fixedTools import (
     fixedToFloat as fi2fl,
+)
+from fontTools.misc.fixedTools import (
     floatToFixed as fl2fi,
+)
+from fontTools.misc.fixedTools import (
     floatToFixedToStr as fl2str,
+)
+from fontTools.misc.fixedTools import (
     strToFixedToFloat as str2fl,
-    ensureVersionIsLong as fi2ve,
+)
+from fontTools.misc.fixedTools import (
     versionToFixed as ve2fi,
 )
-from fontTools.ttLib.tables.TupleVariation import TupleVariation
-from fontTools.misc.roundTools import nearestMultipleShortestRepr, otRound
-from fontTools.misc.textTools import bytesjoin, tobytes, tostr, pad, safeEval
 from fontTools.misc.lazyTools import LazyList
+from fontTools.misc.roundTools import nearestMultipleShortestRepr, otRound
+from fontTools.misc.textTools import bytesjoin, pad, safeEval, tobytes, tostr
 from fontTools.ttLib import OPTIMIZE_FONT_SPEED, getSearchRange
+from fontTools.ttLib.tables.TupleVariation import TupleVariation
+
 from .otBase import (
     CountReference,
     FormatSwitchingBaseTable,
@@ -19,27 +38,23 @@ from .otBase import (
     ValueRecordFactory,
 )
 from .otTables import (
-    lookupTypes,
-    VarCompositeGlyph,
-    AATStateTable,
-    AATState,
-    AATAction,
-    ContextualMorphAction,
-    LigatureMorphAction,
-    InsertionMorphAction,
-    MorxSubtable,
-    ExtendMode as _ExtendMode,
-    CompositeMode as _CompositeMode,
     NO_VARIATION_INDEX,
+    AATAction,
+    AATState,
+    AATStateTable,
+    ContextualMorphAction,
+    InsertionMorphAction,
+    LigatureMorphAction,
+    MorxSubtable,
+    VarCompositeGlyph,
+    lookupTypes,
 )
-from itertools import zip_longest, accumulate
-from functools import partial
-from types import SimpleNamespace
-import re
-import struct
-from typing import Optional
-import logging
-
+from .otTables import (
+    CompositeMode as _CompositeMode,
+)
+from .otTables import (
+    ExtendMode as _ExtendMode,
+)
 
 log = logging.getLogger(__name__)
 istuple = lambda t: isinstance(t, tuple)
@@ -876,12 +891,13 @@ class AATLookup(BaseConverter):
         pos = writer.getDataLength()
         writeMethod()
         actualSize = writer.getDataLength() - pos
-        assert (
-            actualSize == dataSize
-        ), "AATLookup format %d claimed to write %d bytes, but wrote %d" % (
-            lookupFormat,
-            dataSize,
-            actualSize,
+        assert actualSize == dataSize, (
+            "AATLookup format %d claimed to write %d bytes, but wrote %d"
+            % (
+                lookupFormat,
+                dataSize,
+                actualSize,
+            )
         )
 
     @staticmethod
@@ -1425,12 +1441,14 @@ class STXHeader(BaseConverter):
                 entryWriter = OTTableWriter()
                 transition.compile(entryWriter, font, actionIndex)
                 entryData = entryWriter.getAllData()
-                assert (
-                    len(entryData) == transition.staticSize
-                ), "%s has staticSize %d, " "but actually wrote %d bytes" % (
-                    repr(transition),
-                    transition.staticSize,
-                    len(entryData),
+                assert len(entryData) == transition.staticSize, (
+                    "%s has staticSize %d, "
+                    "but actually wrote %d bytes"
+                    % (
+                        repr(transition),
+                        transition.staticSize,
+                        len(entryData),
+                    )
                 )
                 entryIndex = entryIDs.get(entryData)
                 if entryIndex is None:
@@ -1933,7 +1951,11 @@ class CFF2Index(BaseConverter):
         offSize = (
             1
             if lastOffset < 0x100
-            else 2 if lastOffset < 0x10000 else 3 if lastOffset < 0x1000000 else 4
+            else 2
+            if lastOffset < 0x10000
+            else 3
+            if lastOffset < 0x1000000
+            else 4
         )
         writer.writeUInt8(offSize)
 

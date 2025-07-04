@@ -1,12 +1,14 @@
-from fontTools.misc.xmlWriter import XMLWriter
-from fontTools.ttLib import TTFont
-from fontTools.feaLib.lookupDebugInfo import LOOKUP_DEBUG_ENV_VAR
-from fontTools import mtiLib
 import difflib
-from io import StringIO
 import os
 import sys
+from io import StringIO
+
 import pytest
+
+from fontTools import mtiLib
+from fontTools.feaLib.lookupDebugInfo import LOOKUP_DEBUG_ENV_VAR
+from fontTools.misc.xmlWriter import XMLWriter
+from fontTools.ttLib import TTFont
 
 
 @pytest.fixture(autouse=True)

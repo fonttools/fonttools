@@ -1,17 +1,18 @@
+import itertools
+import logging
+import struct
+from collections import deque
+
 from fontTools.misc import sstruct
-from . import DefaultTable
 from fontTools.misc.textTools import bytesjoin, safeEval
+
+from . import DefaultTable
 from .BitmapGlyphMetrics import (
     BigGlyphMetrics,
-    bigGlyphMetricsFormat,
     SmallGlyphMetrics,
+    bigGlyphMetricsFormat,
     smallGlyphMetricsFormat,
 )
-import struct
-import itertools
-from collections import deque
-import logging
-
 
 log = logging.getLogger(__name__)
 
@@ -508,9 +509,9 @@ def _createOffsetArrayIndexSubTableMixin(formatStringForDataType):
             # First make sure that all the data lines up properly. Formats 1 and 3
             # must have all its data lined up consecutively. If not this will fail.
             for curLoc, nxtLoc in zip(self.locations, self.locations[1:]):
-                assert (
-                    curLoc[1] == nxtLoc[0]
-                ), "Data must be consecutive in indexSubTable offset formats"
+                assert curLoc[1] == nxtLoc[0], (
+                    "Data must be consecutive in indexSubTable offset formats"
+                )
 
             glyphIds = list(map(ttFont.getGlyphID, self.names))
             # Make sure that all ids are sorted strictly increasing.
@@ -608,9 +609,9 @@ class eblc_index_sub_table_2(FixedSizeIndexSubTableMixin, EblcIndexSubTable):
     def compile(self, ttFont):
         glyphIds = list(map(ttFont.getGlyphID, self.names))
         # Make sure all the ids are consecutive. This is required by Format 2.
-        assert glyphIds == list(
-            range(self.firstGlyphIndex, self.lastGlyphIndex + 1)
-        ), "Format 2 ids must be consecutive."
+        assert glyphIds == list(range(self.firstGlyphIndex, self.lastGlyphIndex + 1)), (
+            "Format 2 ids must be consecutive."
+        )
         self.imageDataOffset = min(next(iter(zip(*self.locations))))
 
         dataList = [EblcIndexSubTable.compile(self, ttFont)]
@@ -650,9 +651,9 @@ class eblc_index_sub_table_4(EblcIndexSubTable):
         # First make sure that all the data lines up properly. Format 4
         # must have all its data lined up consecutively. If not this will fail.
         for curLoc, nxtLoc in zip(self.locations, self.locations[1:]):
-            assert (
-                curLoc[1] == nxtLoc[0]
-            ), "Data must be consecutive in indexSubTable format 4"
+            assert curLoc[1] == nxtLoc[0], (
+                "Data must be consecutive in indexSubTable format 4"
+            )
 
         offsets = list(self.locations[0]) + [loc[1] for loc in self.locations[1:]]
         # Image data offset must be less than or equal to the minimum of locations.

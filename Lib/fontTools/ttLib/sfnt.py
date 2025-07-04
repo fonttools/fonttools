@@ -13,15 +13,15 @@ classes, since whenever the number of tables changes or whenever
 a table's length changes you need to rewrite the whole file anyway.
 """
 
-from io import BytesIO
-from types import SimpleNamespace
-from fontTools.misc.textTools import Tag
-from fontTools.misc import sstruct
-from fontTools.ttLib import TTLibError, TTLibFileIsCollectionError
+import logging
 import struct
 from collections import OrderedDict
-import logging
+from io import BytesIO
+from types import SimpleNamespace
 
+from fontTools.misc import sstruct
+from fontTools.misc.textTools import Tag
+from fontTools.ttLib import TTLibError, TTLibFileIsCollectionError
 
 log = logging.getLogger(__name__)
 
@@ -656,7 +656,7 @@ def writeTTCHeader(file, numFonts):
 
 
 if __name__ == "__main__":
-    import sys
     import doctest
+    import sys
 
     sys.exit(doctest.testmod().failed)

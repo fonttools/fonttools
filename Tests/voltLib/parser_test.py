@@ -1,8 +1,9 @@
+import unittest
+from io import StringIO
+
 from fontTools.voltLib import ast
 from fontTools.voltLib.error import VoltLibError
 from fontTools.voltLib.parser import Parser
-from io import StringIO
-import unittest
 
 
 class ParserTest(unittest.TestCase):
@@ -52,7 +53,7 @@ class ParserTest(unittest.TestCase):
 
     def test_def_glyph_base_with_unicodevalues(self):
         [def_glyph] = self.parse_(
-            'DEF_GLYPH "CR" ID 2 UNICODEVALUES "U+0009" ' "TYPE BASE END_GLYPH"
+            'DEF_GLYPH "CR" ID 2 UNICODEVALUES "U+0009" TYPE BASE END_GLYPH'
         ).statements
         self.assertEqual(
             (
@@ -67,7 +68,7 @@ class ParserTest(unittest.TestCase):
 
     def test_def_glyph_base_with_mult_unicodevalues(self):
         [def_glyph] = self.parse(
-            'DEF_GLYPH "CR" ID 2 UNICODEVALUES "U+0009,U+000D" ' "TYPE BASE END_GLYPH"
+            'DEF_GLYPH "CR" ID 2 UNICODEVALUES "U+0009,U+000D" TYPE BASE END_GLYPH'
         ).statements
         self.assertEqual(
             (
@@ -82,7 +83,7 @@ class ParserTest(unittest.TestCase):
 
     def test_def_glyph_base_with_empty_unicodevalues(self):
         [def_glyph] = self.parse_(
-            'DEF_GLYPH "i.locl" ID 269 UNICODEVALUES "" ' "TYPE BASE END_GLYPH"
+            'DEF_GLYPH "i.locl" ID 269 UNICODEVALUES "" TYPE BASE END_GLYPH'
         ).statements
         self.assertEqual(
             (
@@ -333,7 +334,7 @@ class ParserTest(unittest.TestCase):
     def test_group_duplicate(self):
         self.assertRaisesRegex(
             VoltLibError,
-            'Glyph group "dupe" already defined, ' "group names are case insensitive",
+            'Glyph group "dupe" already defined, group names are case insensitive',
             self.parse,
             'DEF_GROUP "dupe"\n'
             'ENUM GLYPH "a" GLYPH "b" END_ENUM\n'
@@ -346,7 +347,7 @@ class ParserTest(unittest.TestCase):
     def test_group_duplicate_case_insensitive(self):
         self.assertRaisesRegex(
             VoltLibError,
-            'Glyph group "Dupe" already defined, ' "group names are case insensitive",
+            'Glyph group "Dupe" already defined, group names are case insensitive',
             self.parse,
             'DEF_GROUP "dupe"\n'
             'ENUM GLYPH "a" GLYPH "b" END_ENUM\n'
@@ -358,7 +359,7 @@ class ParserTest(unittest.TestCase):
 
     def test_script_without_langsys(self):
         [script] = self.parse(
-            'DEF_SCRIPT NAME "Latin" TAG "latn"\n\n' "END_SCRIPT"
+            'DEF_SCRIPT NAME "Latin" TAG "latn"\n\nEND_SCRIPT'
         ).statements
         self.assertEqual((script.name, script.tag, script.langs), ("Latin", "latn", []))
 
@@ -400,7 +401,7 @@ class ParserTest(unittest.TestCase):
     def test_langsys_duplicate_script(self):
         with self.assertRaisesRegex(
             VoltLibError,
-            'Script "DFLT" already defined, ' "script tags are case insensitive",
+            'Script "DFLT" already defined, script tags are case insensitive',
         ):
             [langsys1, langsys2] = self.parse(
                 'DEF_SCRIPT NAME "Default" TAG "DFLT"\n\n'
@@ -503,7 +504,7 @@ class ParserTest(unittest.TestCase):
     def test_lookup_duplicate(self):
         with self.assertRaisesRegex(
             VoltLibError,
-            'Lookup "dupe" already defined, ' "lookup names are case insensitive",
+            'Lookup "dupe" already defined, lookup names are case insensitive',
         ):
             [lookup1, lookup2] = self.parse(
                 'DEF_LOOKUP "dupe"\n'
@@ -523,7 +524,7 @@ class ParserTest(unittest.TestCase):
     def test_lookup_duplicate_insensitive_case(self):
         with self.assertRaisesRegex(
             VoltLibError,
-            'Lookup "Dupe" already defined, ' "lookup names are case insensitive",
+            'Lookup "Dupe" already defined, lookup names are case insensitive',
         ):
             [lookup1, lookup2] = self.parse(
                 'DEF_LOOKUP "dupe"\n'
@@ -1244,7 +1245,7 @@ class ParserTest(unittest.TestCase):
     def test_def_anchor_duplicate(self):
         self.assertRaisesRegex(
             VoltLibError,
-            'Anchor "dupe" already defined, ' "anchor names are case insensitive",
+            'Anchor "dupe" already defined, anchor names are case insensitive',
             self.parse,
             'DEF_ANCHOR "dupe" ON 120 GLYPH a '
             "COMPONENT 1 AT  POS DX 250 DY 450 END_POS END_ANCHOR\n"
@@ -1282,7 +1283,7 @@ class ParserTest(unittest.TestCase):
 
     def test_ppem(self):
         [grid_ppem, pres_ppem, ppos_ppem] = self.parse(
-            "GRID_PPEM 20\n" "PRESENTATION_PPEM 72\n" "PPOSITIONING_PPEM 144"
+            "GRID_PPEM 20\nPRESENTATION_PPEM 72\nPPOSITIONING_PPEM 144"
         ).statements
         self.assertEqual(
             (
@@ -1295,7 +1296,7 @@ class ParserTest(unittest.TestCase):
 
     def test_compiler_flags(self):
         [setting1, setting2] = self.parse(
-            "COMPILER_USEEXTENSIONLOOKUPS\n" "COMPILER_USEPAIRPOSFORMAT2"
+            "COMPILER_USEEXTENSIONLOOKUPS\nCOMPILER_USEPAIRPOSFORMAT2"
         ).statements
         self.assertEqual(
             ((setting1.name, setting1.value), (setting2.name, setting2.value)),
@@ -1307,7 +1308,7 @@ class ParserTest(unittest.TestCase):
 
     def test_cmap(self):
         [cmap_format1, cmap_format2, cmap_format3] = self.parse(
-            "CMAP_FORMAT 0 3 4\n" "CMAP_FORMAT 1 0 6\n" "CMAP_FORMAT 3 1 4"
+            "CMAP_FORMAT 0 3 4\nCMAP_FORMAT 1 0 6\nCMAP_FORMAT 3 1 4"
         ).statements
         self.assertEqual(
             (
@@ -1324,10 +1325,7 @@ class ParserTest(unittest.TestCase):
 
     def test_do_not_touch_cmap(self):
         [option1, option2, option3, option4] = self.parse(
-            "DO_NOT_TOUCH_CMAP\n"
-            "CMAP_FORMAT 0 3 4\n"
-            "CMAP_FORMAT 1 0 6\n"
-            "CMAP_FORMAT 3 1 4"
+            "DO_NOT_TOUCH_CMAP\nCMAP_FORMAT 0 3 4\nCMAP_FORMAT 1 0 6\nCMAP_FORMAT 3 1 4"
         ).statements
         self.assertEqual(
             (

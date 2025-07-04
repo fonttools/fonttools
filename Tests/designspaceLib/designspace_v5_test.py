@@ -3,6 +3,7 @@ import shutil
 from pathlib import Path
 
 import pytest
+
 from fontTools.designspaceLib import (
     AxisDescriptor,
     AxisLabelDescriptor,
@@ -713,24 +714,32 @@ def test_instance_location_from_label(map_doc):
         "Weight": 800,
         "Width": 100,
         "Custom": 1.2,
-    }, "an instance with a locationLabel uses the user location from that label, empty values on the label use axis defaults"
+    }, (
+        "an instance with a locationLabel uses the user location from that label, empty values on the label use axis defaults"
+    )
     assert inst.getFullDesignLocation(map_doc) == {
         "Weight": 80,
         "Width": 10000,
         "Custom": 1.2,
-    }, "an instance with a locationLabel computes the design location from that label, empty values on the label use axis defaults"
+    }, (
+        "an instance with a locationLabel computes the design location from that label, empty values on the label use axis defaults"
+    )
 
     inst = InstanceDescriptor(locationLabel="Wonky", userLocation={"Width": 200})
     assert inst.getFullUserLocation(map_doc) == {
         "Weight": 800,
         "Width": 100,
         "Custom": 1.2,
-    }, "an instance with a locationLabel uses the user location from that label, other location values are ignored"
+    }, (
+        "an instance with a locationLabel uses the user location from that label, other location values are ignored"
+    )
     assert inst.getFullDesignLocation(map_doc) == {
         "Weight": 80,
         "Width": 10000,
         "Custom": 1.2,
-    }, "an instance with a locationLabel computes the design location from that label, other location values are ignored"
+    }, (
+        "an instance with a locationLabel computes the design location from that label, other location values are ignored"
+    )
 
 
 def test_instance_location_no_data(map_doc):
@@ -761,7 +770,9 @@ def test_instance_location_design_first(map_doc):
         "Weight": (60, 61),
         "Width": 11000,
         "Custom": 1.2,
-    }, "when both design and user location data are provided, design wins (incl. anisotropy)"
+    }, (
+        "when both design and user location data are provided, design wins (incl. anisotropy)"
+    )
 
 
 def test_instance_location_mix(map_doc):

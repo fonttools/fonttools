@@ -7,11 +7,11 @@ value do not need to specify their width in their charstring, saving bytes.
 This module determines the optimum ``defaultWidthX`` and ``nominalWidthX``
 values for a font, when provided with a list of glyph widths."""
 
-from fontTools.ttLib import TTFont
 from collections import defaultdict
-from operator import add
 from functools import reduce
+from operator import add
 
+from fontTools.ttLib import TTFont
 
 __all__ = ["optimizeWidths", "main"]
 

@@ -9,26 +9,26 @@ Interface to the Adobe Glyph List
 This module exists to convert glyph names from the Adobe Glyph List
 to their Unicode equivalents. Example usage:
 
-	>>> from fontTools.agl import toUnicode
-	>>> toUnicode("nahiragana")
-	'な'
+        >>> from fontTools.agl import toUnicode
+        >>> toUnicode("nahiragana")
+        'な'
 
 It also contains two dictionaries, ``UV2AGL`` and ``AGL2UV``, which map from
 Unicode codepoints to AGL names and vice versa:
 
-	>>> import fontTools
-	>>> fontTools.agl.UV2AGL[ord("?")]
-	'question'
-	>>> fontTools.agl.AGL2UV["wcircumflex"]
-	373
+        >>> import fontTools
+        >>> fontTools.agl.UV2AGL[ord("?")]
+        'question'
+        >>> fontTools.agl.AGL2UV["wcircumflex"]
+        373
 
 This is used by fontTools when it has to construct glyph names for a font which
 doesn't include any (e.g. format 3.0 post tables).
 """
 
-from fontTools.misc.textTools import tostr
 import re
 
+from fontTools.misc.textTools import tostr
 
 _aglText = """\
 # -----------------------------------------------------------

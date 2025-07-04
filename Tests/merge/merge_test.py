@@ -1,18 +1,21 @@
+import difflib
 import io
 import itertools
-from fontTools import ttLib
-from fontTools.ttLib.tables._g_l_y_f import Glyph
-from fontTools.fontBuilder import FontBuilder
-from fontTools.merge import Merger, main as merge_main
-import difflib
 import os
+import pathlib
 import re
 import shutil
 import sys
 import tempfile
 import unittest
-import pathlib
+
 import pytest
+
+from fontTools import ttLib
+from fontTools.fontBuilder import FontBuilder
+from fontTools.merge import Merger
+from fontTools.merge import main as merge_main
+from fontTools.ttLib.tables._g_l_y_f import Glyph
 
 
 class MergeIntegrationTest(unittest.TestCase):

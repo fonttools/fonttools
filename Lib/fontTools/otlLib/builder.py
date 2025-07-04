@@ -1,30 +1,30 @@
 from __future__ import annotations
 
-from collections import namedtuple, OrderedDict
+import copy
 import itertools
+import logging
+from collections import OrderedDict, namedtuple
+from functools import reduce
 from typing import Dict, Union
-from fontTools.misc.fixedTools import fixedToFloat
-from fontTools.misc.roundTools import otRound
+
 from fontTools import ttLib
-from fontTools.ttLib.tables import otTables as ot
-from fontTools.ttLib.tables.otBase import (
-    ValueRecord,
-    valueRecordFormatDict,
-    OTLOffsetOverflowError,
-    OTTableWriter,
-)
-from fontTools.ttLib.ttFont import TTFont
 from fontTools.feaLib.ast import STATNameStatement
+from fontTools.misc.fixedTools import fixedToFloat
+from fontTools.misc.loggingTools import deprecateFunction
+from fontTools.misc.roundTools import otRound
+from fontTools.otlLib.error import OpenTypeLibError
 from fontTools.otlLib.optimize.gpos import (
     _compression_level_from_env,
     compact_lookup,
 )
-from fontTools.otlLib.error import OpenTypeLibError
-from fontTools.misc.loggingTools import deprecateFunction
-from functools import reduce
-import logging
-import copy
-
+from fontTools.ttLib.tables import otTables as ot
+from fontTools.ttLib.tables.otBase import (
+    OTLOffsetOverflowError,
+    OTTableWriter,
+    ValueRecord,
+    valueRecordFormatDict,
+)
+from fontTools.ttLib.ttFont import TTFont
 
 log = logging.getLogger(__name__)
 
@@ -112,10 +112,9 @@ def buildLookup(subtables, flags=0, markFilterSet=None, table=None, extension=Fa
     subtables = [st for st in subtables if st is not None]
     if not subtables:
         return None
-    assert all(
-        t.LookupType == subtables[0].LookupType for t in subtables
-    ), "all subtables must have the same LookupType; got %s" % repr(
-        [t.LookupType for t in subtables]
+    assert all(t.LookupType == subtables[0].LookupType for t in subtables), (
+        "all subtables must have the same LookupType; got %s"
+        % repr([t.LookupType for t in subtables])
     )
 
     if extension:
@@ -1941,9 +1940,9 @@ def buildAnchor(x, y, point=None, deviceX=None, deviceY=None):
         self.AnchorPoint = point
         self.Format = 2
     if deviceX is not None or deviceY is not None:
-        assert (
-            self.Format == 1
-        ), "Either point, or both of deviceX/deviceY, must be None."
+        assert self.Format == 1, (
+            "Either point, or both of deviceX/deviceY, must be None."
+        )
         self.XDeviceTable = deviceX
         self.YDeviceTable = deviceY
         self.Format = 3

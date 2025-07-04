@@ -1,6 +1,8 @@
-from fontTools.misc.visitor import Visitor
 import enum
+
 import pytest
+
+from fontTools.misc.visitor import Visitor
 
 
 class E(enum.Enum):

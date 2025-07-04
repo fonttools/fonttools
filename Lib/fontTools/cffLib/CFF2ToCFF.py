@@ -1,18 +1,19 @@
 """CFF2 to CFF converter."""
 
-from fontTools.ttLib import TTFont, newTable
-from fontTools.misc.cliTools import makeOutputFileName
+import logging
+from collections import defaultdict
+
 from fontTools.cffLib import (
     TopDictIndex,
-    buildOrder,
     buildDefaults,
-    topDictOperators,
+    buildOrder,
     privateDictOperators,
+    topDictOperators,
 )
-from .width import optimizeWidths
-from collections import defaultdict
-import logging
+from fontTools.misc.cliTools import makeOutputFileName
+from fontTools.ttLib import TTFont, newTable
 
+from .width import optimizeWidths
 
 __all__ = ["convertCFF2ToCFF", "main"]
 

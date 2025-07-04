@@ -1,8 +1,13 @@
-from fontTools.misc.textTools import bytechr, byteord, bytesjoin, tobytes, tostr
+import logging
+import re
+from collections.abc import Callable
+from string import whitespace
+
 from fontTools.misc import eexec
+from fontTools.misc.textTools import bytechr, byteord, bytesjoin, tobytes, tostr
+
 from .psOperators import (
     PSOperators,
-    ps_StandardEncoding,
     ps_array,
     ps_boolean,
     ps_dict,
@@ -14,13 +19,9 @@ from .psOperators import (
     ps_procedure,
     ps_procmark,
     ps_real,
+    ps_StandardEncoding,
     ps_string,
 )
-import re
-from collections.abc import Callable
-from string import whitespace
-import logging
-
 
 log = logging.getLogger(__name__)
 
@@ -215,12 +216,7 @@ class PSInterpreter(PSOperators):
         except:
             if self.tokenizer is not None:
                 log.debug(
-                    "ps error:\n"
-                    "- - - - - - -\n"
-                    "%s\n"
-                    ">>>\n"
-                    "%s\n"
-                    "- - - - - - -",
+                    "ps error:\n- - - - - - -\n%s\n>>>\n%s\n- - - - - - -",
                     self.tokenizer.buf[self.tokenizer.pos - 50 : self.tokenizer.pos],
                     self.tokenizer.buf[self.tokenizer.pos : self.tokenizer.pos + 50],
                 )

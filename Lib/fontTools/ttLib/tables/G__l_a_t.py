@@ -1,13 +1,13 @@
+import struct
+
+# from itertools import *
+from functools import partial
+
 from fontTools.misc import sstruct
 from fontTools.misc.fixedTools import floatToFixedToStr
 from fontTools.misc.textTools import safeEval
 
-# from itertools import *
-from functools import partial
-from . import DefaultTable
-from . import grUtils
-import struct
-
+from . import DefaultTable, grUtils
 
 Glat_format_0 = """
     >        # big endian

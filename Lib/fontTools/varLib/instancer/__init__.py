@@ -1,4 +1,4 @@
-""" Partially instantiate a variable font.
+"""Partially instantiate a variable font.
 
 The module exports an `instantiateVariableFont` function and CLI that allow to
 create full instances (i.e. static fonts) from variable fonts, as well as "partial"
@@ -36,7 +36,7 @@ If the input location specifies all the axes, the resulting instance is no longe
 'variable' (same as using fontools varLib.mutator):
 .. code-block:: pycon
 
-    >>>    
+    >>>
     >> instance = instancer.instantiateVariableFont(
     ...     varfont, {"wght": 700, "wdth": 67.5}
     ... )
@@ -72,7 +72,7 @@ L1
 L2
     dropping one or more axes while pinning them at non-default locations;
     .. code-block:: pycon
-    
+
         >>>
         >> font = instancer.instantiateVariableFont(varfont, {"wght": 700})
 
@@ -81,14 +81,14 @@ L3
     a new minimum or maximum, potentially -- though not necessarily -- dropping
     entire regions of variations that fall completely outside this new range.
     .. code-block:: pycon
-    
+
         >>>
         >> font = instancer.instantiateVariableFont(varfont, {"wght": (100, 300)})
 
 L4
     moving the default location of an axis, by specifying (min,defalt,max) values:
     .. code-block:: pycon
-    
+
         >>>
         >> font = instancer.instantiateVariableFont(varfont, {"wght": (100, 300, 700)})
 
@@ -99,46 +99,47 @@ The discussion and implementation of these features are tracked at
 https://github.com/fonttools/fonttools/issues/1537
 """
 
-from fontTools.misc.fixedTools import (
-    floatToFixedToFloat,
-    strToFixedToFloat,
-    otRound,
-)
-from fontTools.varLib.models import normalizeValue, piecewiseLinearMap
-from fontTools.ttLib import TTFont, newTable
-from fontTools.ttLib.tables.TupleVariation import TupleVariation
-from fontTools.ttLib.tables import _g_l_y_f
-from fontTools import varLib
-
-# we import the `subset` module because we use the `prune_lookups` method on the GSUB
-# table class, and that method is only defined dynamically upon importing `subset`
-from fontTools import subset  # noqa: F401
-from fontTools.cffLib import privateDictOperators2
-from fontTools.cffLib.specializer import (
-    programToCommands,
-    commandsToProgram,
-    specializeCommands,
-    generalizeCommands,
-)
-from fontTools.varLib import builder
-from fontTools.varLib.mvar import MVAR_ENTRIES
-from fontTools.varLib.merger import MutatorMerger
-from fontTools.varLib.instancer import names
-from .featureVars import instantiateFeatureVariations
-from fontTools.misc.cliTools import makeOutputFileName
-from fontTools.varLib.instancer import solver
-from fontTools.ttLib.tables.otTables import VarComponentFlags
 import collections
 import dataclasses
-from contextlib import contextmanager
-from copy import deepcopy
-from enum import IntEnum
 import logging
 import os
 import re
-from typing import Dict, Iterable, Mapping, Optional, Sequence, Tuple, Union
 import warnings
+from contextlib import contextmanager
+from copy import deepcopy
+from enum import IntEnum
+from typing import Dict, Iterable, Mapping, Optional, Sequence, Tuple, Union
 
+# we import the `subset` module because we use the `prune_lookups` method on the GSUB
+# table class, and that method is only defined dynamically upon importing `subset`
+from fontTools import (
+    subset,  # noqa: F401
+    varLib,
+)
+from fontTools.cffLib import privateDictOperators2
+from fontTools.cffLib.specializer import (
+    commandsToProgram,
+    generalizeCommands,
+    programToCommands,
+    specializeCommands,
+)
+from fontTools.misc.cliTools import makeOutputFileName
+from fontTools.misc.fixedTools import (
+    floatToFixedToFloat,
+    otRound,
+    strToFixedToFloat,
+)
+from fontTools.ttLib import TTFont, newTable
+from fontTools.ttLib.tables import _g_l_y_f
+from fontTools.ttLib.tables.otTables import VarComponentFlags
+from fontTools.ttLib.tables.TupleVariation import TupleVariation
+from fontTools.varLib import builder
+from fontTools.varLib.instancer import names, solver
+from fontTools.varLib.merger import MutatorMerger
+from fontTools.varLib.models import normalizeValue, piecewiseLinearMap
+from fontTools.varLib.mvar import MVAR_ENTRIES
+
+from .featureVars import instantiateFeatureVariations
 
 log = logging.getLogger("fontTools.varLib.instancer")
 
@@ -1800,8 +1801,9 @@ def parseArgs(args):
         axis to min/max range.
         Axes locations are in user-space coordinates, as defined in the "fvar" table.
     """
-    from fontTools import configLogger
     import argparse
+
+    from fontTools import configLogger
 
     parser = argparse.ArgumentParser(
         "fonttools varLib.instancer",

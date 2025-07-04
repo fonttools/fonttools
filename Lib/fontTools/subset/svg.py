@@ -16,7 +16,6 @@ from fontTools import ttLib
 from fontTools.subset.util import _add_method
 from fontTools.ttLib.tables.S_V_G_ import SVGDocument
 
-
 __all__ = ["subset_glyphs"]
 
 
@@ -26,7 +25,7 @@ NAMESPACES = {
     "svg": "http://www.w3.org/2000/svg",
     "xlink": "http://www.w3.org/1999/xlink",
 }
-XLINK_HREF = f'{{{NAMESPACES["xlink"]}}}href'
+XLINK_HREF = f"{{{NAMESPACES['xlink']}}}href"
 
 
 # TODO(antrotype): Replace with functools.cache once we are 3.9+

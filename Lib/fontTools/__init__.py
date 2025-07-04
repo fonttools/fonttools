@@ -1,4 +1,5 @@
 import logging
+
 from fontTools.misc.loggingTools import configLogger
 
 log = logging.getLogger(__name__)

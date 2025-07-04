@@ -12,20 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 import sys
 import unittest
-
-from fontTools.pens.cu2quPen import Cu2QuPen, Cu2QuPointPen, Cu2QuMultiPen
-from fontTools.pens.recordingPen import RecordingPen, RecordingPointPen
-from fontTools.misc.loggingTools import CapturingLogHandler
 from textwrap import dedent
-import logging
+
 import pytest
 
+from fontTools.misc.loggingTools import CapturingLogHandler
+from fontTools.pens.cu2quPen import Cu2QuMultiPen, Cu2QuPen, Cu2QuPointPen
+from fontTools.pens.recordingPen import RecordingPen, RecordingPointPen
+
 try:
-    from .utils import CUBIC_GLYPHS, QUAD_GLYPHS
-    from .utils import DummyGlyph, DummyPointGlyph
-    from .utils import DummyPen, DummyPointPen
+    from .utils import (
+        CUBIC_GLYPHS,
+        QUAD_GLYPHS,
+        DummyGlyph,
+        DummyPen,
+        DummyPointGlyph,
+        DummyPointPen,
+    )
 except ImportError as e:
     pytest.skip(str(e), allow_module_level=True)
 

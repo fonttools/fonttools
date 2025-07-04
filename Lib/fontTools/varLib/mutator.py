@@ -6,30 +6,30 @@ Instantiate a variation font.  Run, eg:
     $ fonttools varLib.mutator ./NotoSansArabic-VF.ttf wght=140 wdth=85
 """
 
-from fontTools.misc.fixedTools import floatToFixedToFloat, floatToFixed
+import logging
+import os.path
+from io import BytesIO
+
+import fontTools.subset.cff
+from fontTools.misc.fixedTools import floatToFixed, floatToFixedToFloat
 from fontTools.misc.roundTools import otRound
 from fontTools.pens.boundsPen import BoundsPen
 from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables import ttProgram
 from fontTools.ttLib.tables._g_l_y_f import (
+    OVERLAP_COMPOUND,
     GlyphCoordinates,
     flagOverlapSimple,
-    OVERLAP_COMPOUND,
 )
+from fontTools.varLib.iup import iup_delta
+from fontTools.varLib.merger import MutatorMerger
 from fontTools.varLib.models import (
-    supportScalar,
     normalizeLocation,
     piecewiseLinearMap,
+    supportScalar,
 )
-from fontTools.varLib.merger import MutatorMerger
-from fontTools.varLib.varStore import VarStoreInstancer
 from fontTools.varLib.mvar import MVAR_ENTRIES
-from fontTools.varLib.iup import iup_delta
-import fontTools.subset.cff
-import os.path
-import logging
-from io import BytesIO
-
+from fontTools.varLib.varStore import VarStoreInstancer
 
 log = logging.getLogger("fontTools.varlib.mutator")
 
@@ -311,9 +311,9 @@ def instantiateVariableFont(varfont, location, inplace=False, overlap=True):
             if applies:
                 assert record.FeatureTableSubstitution.Version == 0x00010000
                 for rec in record.FeatureTableSubstitution.SubstitutionRecord:
-                    table.FeatureList.FeatureRecord[rec.FeatureIndex].Feature = (
-                        rec.Feature
-                    )
+                    table.FeatureList.FeatureRecord[
+                        rec.FeatureIndex
+                    ].Feature = rec.Feature
                 break
         del table.FeatureVariations
 
@@ -436,8 +436,9 @@ def instantiateVariableFont(varfont, location, inplace=False, overlap=True):
 
 def main(args=None):
     """Instantiate a variation font"""
-    from fontTools import configLogger
     import argparse
+
+    from fontTools import configLogger
 
     parser = argparse.ArgumentParser(
         "fonttools varLib.mutator", description="Instantiate a variable font"

@@ -242,7 +242,7 @@ class ToFeaTest(unittest.TestCase):
         )
 
     def test_script_without_langsys(self):
-        fea = self.parse('DEF_SCRIPT NAME "Latin" TAG "latn"\n' "END_SCRIPT")
+        fea = self.parse('DEF_SCRIPT NAME "Latin" TAG "latn"\nEND_SCRIPT')
         self.assertEqual("", fea)
 
     def test_langsys_normal(self):

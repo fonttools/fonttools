@@ -1,5 +1,6 @@
 from fontTools.misc import sstruct
-from fontTools.misc.textTools import bytechr, byteord, tobytes, tostr, safeEval
+from fontTools.misc.textTools import bytechr, byteord, safeEval, tobytes, tostr
+
 from . import DefaultTable
 
 SINGFormat = """

@@ -1,14 +1,16 @@
 import unittest
 
 try:
-    from fontTools.pens.quartzPen import QuartzPen
+    from Quartz.CoreGraphics import (
+        CGPathApply,
+        kCGPathElementAddCurveToPoint,
+        kCGPathElementAddLineToPoint,
+        kCGPathElementAddQuadCurveToPoint,
+        kCGPathElementCloseSubpath,
+        kCGPathElementMoveToPoint,
+    )
 
-    from Quartz.CoreGraphics import CGPathApply
-    from Quartz.CoreGraphics import kCGPathElementMoveToPoint
-    from Quartz.CoreGraphics import kCGPathElementAddLineToPoint
-    from Quartz.CoreGraphics import kCGPathElementAddQuadCurveToPoint
-    from Quartz.CoreGraphics import kCGPathElementAddCurveToPoint
-    from Quartz.CoreGraphics import kCGPathElementCloseSubpath
+    from fontTools.pens.quartzPen import QuartzPen
 
     PATH_ELEMENTS = {
         # CG constant key                    desc       num_points

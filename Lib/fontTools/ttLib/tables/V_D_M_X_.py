@@ -1,7 +1,9 @@
-from . import DefaultTable
+import struct
+
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
-import struct
+
+from . import DefaultTable
 
 VDMX_HeaderFmt = """
 	>                 # big endian
@@ -82,19 +84,21 @@ class table_V_D_M_X_(DefaultTable.DefaultTable):
             # make sure startsz and endsz match the calculated values
             minSize = min(group.keys())
             maxSize = max(group.keys())
-            assert (
-                startsz == minSize
-            ), "startsz (%s) must equal min yPelHeight (%s): group %d" % (
-                group.startsz,
-                minSize,
-                groupIndex,
+            assert startsz == minSize, (
+                "startsz (%s) must equal min yPelHeight (%s): group %d"
+                % (
+                    group.startsz,
+                    minSize,
+                    groupIndex,
+                )
             )
-            assert (
-                endsz == maxSize
-            ), "endsz (%s) must equal max yPelHeight (%s): group %d" % (
-                group.endsz,
-                maxSize,
-                groupIndex,
+            assert endsz == maxSize, (
+                "endsz (%s) must equal max yPelHeight (%s): group %d"
+                % (
+                    group.endsz,
+                    maxSize,
+                    groupIndex,
+                )
             )
             self.groups.append(group)
             # match the defined offsets with the current group's offset

@@ -140,8 +140,8 @@ def getVFUserRegion(doc: DesignSpaceDocument, vf: VariableFontDescriptor) -> Reg
     # Any axis not mentioned explicitly has a single location = default value
     for axis in doc.axes:
         if axis.name not in vfUserRegion:
-            assert isinstance(
-                axis.default, (int, float)
-            ), f"Axis '{axis.name}' has no valid default value."
+            assert isinstance(axis.default, (int, float)), (
+                f"Axis '{axis.name}' has no valid default value."
+            )
             vfUserRegion[axis.name] = axis.default
     return vfUserRegion

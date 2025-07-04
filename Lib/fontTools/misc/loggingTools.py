@@ -1,11 +1,10 @@
-import sys
 import logging
+import sys
 import timeit
-from functools import wraps
-from collections.abc import Mapping, Callable
 import warnings
+from collections.abc import Callable, Mapping
+from functools import wraps
 from logging import PercentStyle
-
 
 # default logging level used by Timer class
 TIME_LEVEL = logging.DEBUG
@@ -134,9 +133,7 @@ def configLogger(**kwargs):
     handlers = kwargs.pop("handlers", None)
     if handlers is None:
         if "stream" in kwargs and "filename" in kwargs:
-            raise ValueError(
-                "'stream' and 'filename' should not be " "specified together"
-            )
+            raise ValueError("'stream' and 'filename' should not be specified together")
     else:
         if "stream" in kwargs or "filename" in kwargs:
             raise ValueError(

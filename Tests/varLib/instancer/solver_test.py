@@ -1,6 +1,6 @@
-from fontTools.varLib.instancer import solver
-from fontTools.varLib.instancer import NormalizedAxisTripleAndDistances
 import pytest
+
+from fontTools.varLib.instancer import NormalizedAxisTripleAndDistances, solver
 
 
 class RebaseTentTest(object):

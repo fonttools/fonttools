@@ -1,8 +1,11 @@
 import io
 import os
-import re
 import random
+import re
 import tempfile
+
+import pytest
+
 from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
 from fontTools.ttLib import (
     TTFont,
@@ -12,10 +15,8 @@ from fontTools.ttLib import (
     unregisterCustomTableClass,
 )
 from fontTools.ttLib.standardGlyphOrder import standardGlyphOrder
-from fontTools.ttLib.tables.DefaultTable import DefaultTable
 from fontTools.ttLib.tables._c_m_a_p import CmapSubtable
-import pytest
-
+from fontTools.ttLib.tables.DefaultTable import DefaultTable
 
 DATA_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "data")
 

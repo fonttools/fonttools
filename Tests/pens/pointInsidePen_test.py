@@ -1,6 +1,7 @@
-from io import StringIO
-from fontTools.pens.pointInsidePen import PointInsidePen
 import unittest
+from io import StringIO
+
+from fontTools.pens.pointInsidePen import PointInsidePen
 
 
 class PointInsidePenTest(unittest.TestCase):
@@ -15,12 +16,12 @@ class PointInsidePenTest(unittest.TestCase):
             pen.closePath()
 
         self.assertEqual(
-            " *********" "   **    *" "     **  *" "       * *" "         *",
+            " *********   **    *     **  *       * *         *",
             self.render(draw_triangles, even_odd=True),
         )
 
         self.assertEqual(
-            " *********" "   *******" "     *****" "       ***" "         *",
+            " *********   *******     *****       ***         *",
             self.render(draw_triangles, even_odd=False),
         )
 
@@ -33,12 +34,12 @@ class PointInsidePenTest(unittest.TestCase):
             pen.closePath()
 
         self.assertEqual(
-            "***    ***" "****  ****" "***    ***" "****  ****" "***    ***",
+            "***    *******  *******    *******  *******    ***",
             self.render(draw_curves, even_odd=True),
         )
 
         self.assertEqual(
-            "***    ***" "**********" "**********" "**********" "***    ***",
+            "***    ************************************    ***",
             self.render(draw_curves, even_odd=False),
         )
 
@@ -51,12 +52,12 @@ class PointInsidePenTest(unittest.TestCase):
             pen.closePath()
 
         self.assertEqual(
-            "***     **" "****   ***" "***    ***" "***   ****" "**     ***",
+            "***     ******   ******    ******   ******     ***",
             self.render(draw_qCurves, even_odd=True),
         )
 
         self.assertEqual(
-            "***     **" "**********" "**********" "**********" "**     ***",
+            "***     **********************************     ***",
             self.render(draw_qCurves, even_odd=False),
         )
 

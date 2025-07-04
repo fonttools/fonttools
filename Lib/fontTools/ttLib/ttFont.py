@@ -1,20 +1,21 @@
+import logging
+import os
+import traceback
+from io import BytesIO, StringIO, UnsupportedOperation
+
 from fontTools.config import Config
 from fontTools.misc import xmlWriter
 from fontTools.misc.configTools import AbstractConfig
-from fontTools.misc.textTools import Tag, byteord, tostr
 from fontTools.misc.loggingTools import deprecateArgument
+from fontTools.misc.textTools import Tag, byteord, tostr
 from fontTools.ttLib import TTLibError
+from fontTools.ttLib.sfnt import SFNTReader, SFNTWriter
 from fontTools.ttLib.ttGlyphSet import (
     _TTGlyph,
     _TTGlyphSetCFF,
     _TTGlyphSetGlyf,
     _TTGlyphSetVARC,
 )
-from fontTools.ttLib.sfnt import SFNTReader, SFNTWriter
-from io import BytesIO, StringIO, UnsupportedOperation
-import os
-import logging
-import traceback
 
 log = logging.getLogger(__name__)
 
@@ -863,7 +864,7 @@ class GlyphOrder(object):
     def toXML(self, writer, ttFont):
         glyphOrder = ttFont.getGlyphOrder()
         writer.comment(
-            "The 'id' attribute is only for humans; " "it is ignored when parsed."
+            "The 'id' attribute is only for humans; it is ignored when parsed."
         )
         writer.newline()
         for i in range(len(glyphOrder)):

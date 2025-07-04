@@ -12,19 +12,19 @@ the new key at the end of the operation.
 
 """
 
-from fontTools.misc.textTools import bytechr, bytesjoin, byteord
+from fontTools.misc.textTools import bytechr, byteord, bytesjoin
 
 
 def _decryptChar(cipher, R):
     cipher = byteord(cipher)
-    plain = ((cipher ^ (R >> 8))) & 0xFF
+    plain = (cipher ^ (R >> 8)) & 0xFF
     R = ((cipher + R) * 52845 + 22719) & 0xFFFF
     return bytechr(plain), R
 
 
 def _encryptChar(plain, R):
     plain = byteord(plain)
-    cipher = ((plain ^ (R >> 8))) & 0xFF
+    cipher = (plain ^ (R >> 8)) & 0xFF
     R = ((cipher + R) * 52845 + 22719) & 0xFFFF
     return bytechr(cipher), R
 
@@ -113,7 +113,7 @@ def deHexString(h):
 
 
 if __name__ == "__main__":
-    import sys
     import doctest
+    import sys
 
     sys.exit(doctest.testmod().failed)

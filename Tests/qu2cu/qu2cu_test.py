@@ -12,16 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
+import os
 import unittest
+
 import pytest
 
-from fontTools.qu2cu import quadratic_to_curves
-from fontTools.qu2cu.qu2cu import main as qu2cu_main
-from fontTools.qu2cu.benchmark import main as benchmark_main
-
-import os
-import json
 from fontTools.cu2qu import curve_to_quadratic
+from fontTools.qu2cu import quadratic_to_curves
+from fontTools.qu2cu.benchmark import main as benchmark_main
+from fontTools.qu2cu.qu2cu import main as qu2cu_main
 
 
 class Qu2CuTest:

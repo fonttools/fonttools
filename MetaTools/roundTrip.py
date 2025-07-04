@@ -2,23 +2,23 @@
 
 """usage: ttroundtrip [options] font1 ... fontN
 
-    Dump each TT/OT font as a TTX file, compile again to TTF or OTF
-    and dump again. Then do a diff on the two TTX files. Append problems
-    and diffs to a file called "report.txt" in the current directory.
-    This is only for testing FontTools/TTX, the resulting files are
-    deleted afterwards.
+Dump each TT/OT font as a TTX file, compile again to TTF or OTF
+and dump again. Then do a diff on the two TTX files. Append problems
+and diffs to a file called "report.txt" in the current directory.
+This is only for testing FontTools/TTX, the resulting files are
+deleted afterwards.
 
-    This tool supports some of ttx's command line options (-i, -t
-    and -x). Specifying -t or -x implies ttx -m <originalfile> on
-    the way back.
+This tool supports some of ttx's command line options (-i, -t
+and -x). Specifying -t or -x implies ttx -m <originalfile> on
+the way back.
 """
 
-
-import sys
-import os
-import tempfile
 import getopt
+import os
+import sys
+import tempfile
 import traceback
+
 from fontTools import ttx
 
 

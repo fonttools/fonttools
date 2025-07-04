@@ -1,11 +1,13 @@
 import os
 import shutil
-import unittest
 import tempfile
+import unittest
 from io import open
-from fontTools.ufoLib import UFOReader, UFOWriter, UFOLibError
-from fontTools.ufoLib.glifLib import GlifLibError
+
 from fontTools.misc import plistlib
+from fontTools.ufoLib import UFOLibError, UFOReader, UFOWriter
+from fontTools.ufoLib.glifLib import GlifLibError
+
 from .testSupport import fontInfoVersion3
 
 

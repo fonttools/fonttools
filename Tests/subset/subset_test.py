@@ -1,24 +1,26 @@
-import io
-from fontTools.ttLib.tables._n_a_m_e import NameRecordVisitor
-import fontTools.ttLib.tables.otBase
-from fontTools.misc.testTools import getXML, stripVariableItemsFromTTX
-from fontTools.misc.textTools import tobytes, tostr
-from fontTools import subset
-from fontTools.fontBuilder import FontBuilder
-from fontTools.pens.ttGlyphPen import TTGlyphPen
-from fontTools.ttLib import TTFont, newTable
-from fontTools.ttLib.tables import otTables as ot
-from fontTools.misc.loggingTools import CapturingLogHandler
-from fontTools.subset.svg import etree
 import difflib
+import io
 import logging
 import os
+import pathlib
 import shutil
 import sys
 import tempfile
 import unittest
-import pathlib
+
 import pytest
+
+import fontTools.ttLib.tables.otBase
+from fontTools import subset
+from fontTools.fontBuilder import FontBuilder
+from fontTools.misc.loggingTools import CapturingLogHandler
+from fontTools.misc.testTools import getXML, stripVariableItemsFromTTX
+from fontTools.misc.textTools import tobytes, tostr
+from fontTools.pens.ttGlyphPen import TTGlyphPen
+from fontTools.subset.svg import etree
+from fontTools.ttLib import TTFont, newTable
+from fontTools.ttLib.tables import otTables as ot
+from fontTools.ttLib.tables._n_a_m_e import NameRecordVisitor
 
 
 class SubsetTest:

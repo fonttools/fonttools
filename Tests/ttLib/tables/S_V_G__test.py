@@ -2,12 +2,12 @@ import gzip
 import io
 import struct
 
+import pytest
+
 from fontTools.misc import etree
 from fontTools.misc.testTools import getXML, parseXML
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables.S_V_G_ import table_S_V_G_
-
-import pytest
 
 
 def dump(table, ttFont=None):
@@ -85,7 +85,7 @@ OTSVG_DATA = b"".join(
         + b"\x00\x04"  # startGlyphID (4)
         b"\x00\x04"  # endGlyphID (4)
         b"\x00\x00\x00\x26"  # svgDocOffset (38); records 0 and 2 point to same SVG doc
-        + struct.pack(">L", len(SVG_DOCS[0]))  # svgDocLength
+         + struct.pack(">L", len(SVG_DOCS[0]))  # svgDocLength
     ]
     + [SVG_DOCS[0], compress(SVG_DOCS[1])]
 )

@@ -1,8 +1,8 @@
+import unittest
+
 from fontTools.misc.testTools import FakeFont, getXML, parseXML
 from fontTools.misc.textTools import deHexStr, hexStr
 from fontTools.ttLib import newTable
-import unittest
-
 
 # On macOS X 10.12.6, the first font in /System/Library/Fonts/PingFang.ttc
 # has a ‘cidg’ table with a similar structure as this test data, just larger.
@@ -14,8 +14,7 @@ CIDG_DATA = deHexStr(
     + ("00" * 59)
     + "0002 "  #  15: <padding>  #  74: Order=2
     "43 4E 53 31 "  #  76: Order="CNS1"
-    + ("00" * 60)
-    + "0000 "  #  80: <padding>  # 140: SupplementVersion=0
+     + ("00" * 60) + "0000 "  #  80: <padding>  # 140: SupplementVersion=0
     "0004 "  # 142: Count
     "0000 "  # 144: GlyphID[0]=.notdef
     "FFFF "  # 146: CIDs[1]=<None>

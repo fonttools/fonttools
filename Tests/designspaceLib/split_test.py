@@ -3,6 +3,7 @@ import shutil
 from pathlib import Path
 
 import pytest
+
 from fontTools.designspaceLib import DesignSpaceDocument
 from fontTools.designspaceLib.split import (
     _conditionSetFrom,

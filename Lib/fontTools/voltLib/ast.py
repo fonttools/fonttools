@@ -1,5 +1,6 @@
-from fontTools.voltLib.error import VoltLibError
 from typing import NamedTuple
+
+from fontTools.voltLib.error import VoltLibError
 
 
 class Pos(NamedTuple):
@@ -261,7 +262,7 @@ class LookupDefinition(Statement):
 
     def __str__(self):
         res = f'DEF_LOOKUP "{self.name}"'
-        res += f' {self.process_base and "PROCESS_BASE" or "SKIP_BASE"}'
+        res += f" {self.process_base and 'PROCESS_BASE' or 'SKIP_BASE'}"
         if self.process_marks:
             res += " PROCESS_MARKS "
             if self.mark_glyph_set:

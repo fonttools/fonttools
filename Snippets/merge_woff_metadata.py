@@ -1,7 +1,8 @@
-import sys
 import os
-from fontTools.ttx import makeOutputFileName
+import sys
+
 from fontTools.ttLib import TTFont
+from fontTools.ttx import makeOutputFileName
 
 
 def main(args=None):
@@ -10,7 +11,7 @@ def main(args=None):
 
     if len(args) < 2:
         print(
-            "usage: merge_woff_metadata.py METADATA.xml " "INPUT.woff [OUTPUT.woff]",
+            "usage: merge_woff_metadata.py METADATA.xml INPUT.woff [OUTPUT.woff]",
             file=sys.stderr,
         )
         return 1

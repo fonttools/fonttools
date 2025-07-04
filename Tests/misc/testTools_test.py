@@ -1,5 +1,6 @@
-import fontTools.misc.testTools as testTools
 import unittest
+
+import fontTools.misc.testTools as testTools
 
 
 class TestToolsTest(unittest.TestCase):
@@ -57,13 +58,13 @@ class TestToolsTest(unittest.TestCase):
 
     def test_parseXML_str_list(self):
         self.assertEqual(
-            testTools.parseXML(['<Foo n="1"/>' '<Foo n="2"/>']),
+            testTools.parseXML(['<Foo n="1"/><Foo n="2"/>']),
             [("Foo", {"n": "1"}, []), ("Foo", {"n": "2"}, [])],
         )
 
     def test_parseXML_bytes_list(self):
         self.assertEqual(
-            testTools.parseXML([b'<Foo n="1"/>' b'<Foo n="2"/>']),
+            testTools.parseXML([b'<Foo n="1"/><Foo n="2"/>']),
             [("Foo", {"n": "1"}, []), ("Foo", {"n": "2"}, [])],
         )
 

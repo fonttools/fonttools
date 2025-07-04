@@ -21,11 +21,12 @@
 # $ ./interpolate.py && open Roboto.ttf
 
 
-from fontTools.ttLib import TTFont
-from fontTools.ttLib.tables._n_a_m_e import NameRecord
-from fontTools.ttLib.tables._f_v_a_r import table__f_v_a_r, Axis, NamedInstance
-from fontTools.ttLib.tables._g_v_a_r import table__g_v_a_r, TupleVariation
 import logging
+
+from fontTools.ttLib import TTFont
+from fontTools.ttLib.tables._f_v_a_r import Axis, NamedInstance, table__f_v_a_r
+from fontTools.ttLib.tables._g_v_a_r import TupleVariation, table__g_v_a_r
+from fontTools.ttLib.tables._n_a_m_e import NameRecord
 
 
 def AddFontVariations(font):
@@ -78,8 +79,7 @@ def AddGlyphVariations(font, thin, regular, black):
             continue
         if len(regularCoord) != len(blackCoord) or len(regularCoord) != len(thinCoord):
             logging.warning(
-                "glyph %s has not the same number of "
-                "control points in all input fonts",
+                "glyph %s has not the same number of control points in all input fonts",
                 glyphName,
             )
             continue

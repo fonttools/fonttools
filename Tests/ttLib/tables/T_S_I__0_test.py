@@ -1,6 +1,7 @@
 from types import SimpleNamespace
 
 import pytest
+
 from fontTools.misc.testTools import getXML
 from fontTools.misc.textTools import deHexStr
 from fontTools.ttLib.tables.T_S_I__0 import table_T_S_I__0

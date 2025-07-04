@@ -1,15 +1,16 @@
-from copy import deepcopy
 import string
-from fontTools.colorLib.builder import LayerListBuilder, buildCOLR, buildClipList
+from copy import deepcopy
+from io import BytesIO
+
+import pytest
+
+from fontTools.colorLib.builder import LayerListBuilder, buildClipList, buildCOLR
 from fontTools.misc.testTools import getXML
-from fontTools.varLib.merger import COLRVariationMerger
-from fontTools.varLib.models import VariationModel
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables.otBase import OTTableReader, OTTableWriter
-from io import BytesIO
-import pytest
-
+from fontTools.varLib.merger import COLRVariationMerger
+from fontTools.varLib.models import VariationModel
 
 NO_VARIATION_INDEX = ot.NO_VARIATION_INDEX
 
@@ -1852,9 +1853,10 @@ class SparsePositioningMergerTest:
         pytest.importorskip("ufo2ft")
         pytest.importorskip("ufoLib2")
 
-        from fontTools.designspaceLib import DesignSpaceDocument
         from ufo2ft import compileVariableTTF
         from ufoLib2 import Font
+
+        from fontTools.designspaceLib import DesignSpaceDocument
 
         ds = DesignSpaceDocument()
         ds.addAxisDescriptor(
@@ -1888,9 +1890,10 @@ class SparsePositioningMergerTest:
         pytest.importorskip("ufo2ft")
         pytest.importorskip("ufoLib2")
 
-        from fontTools.designspaceLib import DesignSpaceDocument
         from ufo2ft import compileVariableTTF
         from ufoLib2 import Font
+
+        from fontTools.designspaceLib import DesignSpaceDocument
 
         ds = DesignSpaceDocument()
         ds.addAxisDescriptor(
@@ -1903,9 +1906,7 @@ class SparsePositioningMergerTest:
         ds.sources[0].font.newGlyph("a").unicode = ord("a")
         ds.sources[0].font.newGlyph("b").unicode = ord("b")
         ds.sources[0].font.newGlyph("c").unicode = ord("c")
-        ds.sources[
-            0
-        ].font.features.text = """
+        ds.sources[0].font.features.text = """
         feature curs {
           position cursive a <anchor 400 20> <anchor 0 -20>;
           position cursive c <anchor NULL> <anchor 0 -20>;
@@ -1915,9 +1916,7 @@ class SparsePositioningMergerTest:
         ds.sources[1].font.newGlyph("a").unicode = ord("a")
         ds.sources[1].font.newGlyph("b").unicode = ord("b")
         ds.sources[1].font.newGlyph("c").unicode = ord("c")
-        ds.sources[
-            1
-        ].font.features.text = """
+        ds.sources[1].font.features.text = """
         feature curs {
           position cursive a <anchor 500 20> <anchor 0 -20>;
           position cursive b <anchor 50 22> <anchor 0 -10>;
@@ -1928,9 +1927,7 @@ class SparsePositioningMergerTest:
         ds.sources[2].font.newGlyph("a").unicode = ord("a")
         ds.sources[2].font.newGlyph("b").unicode = ord("b")
         ds.sources[2].font.newGlyph("c").unicode = ord("c")
-        ds.sources[
-            2
-        ].font.features.text = """
+        ds.sources[2].font.features.text = """
         feature curs {
           position cursive b <anchor 100 40> <anchor 0 -30>;
           position cursive c <anchor NULL> <anchor 0 -20>;

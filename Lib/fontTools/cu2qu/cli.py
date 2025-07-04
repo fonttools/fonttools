@@ -1,12 +1,13 @@
-import os
 import argparse
 import logging
-import shutil
 import multiprocessing as mp
+import os
+import shutil
 from contextlib import closing
 from functools import partial
 
 import fontTools
+
 from .ufo import font_to_quadratic, fonts_to_quadratic
 
 ufo_module = None

@@ -1,11 +1,11 @@
 #! /usr/bin/env python3
 
-import sys
-import os
 import glob
-from fontTools.ttLib import identifierToTag
+import os
+import sys
 import textwrap
 
+from fontTools.ttLib import identifierToTag
 
 fontToolsDir = os.path.dirname(os.path.dirname(os.path.join(os.getcwd(), sys.argv[0])))
 fontToolsDir = os.path.normpath(fontToolsDir)

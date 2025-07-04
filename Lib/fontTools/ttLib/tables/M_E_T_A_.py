@@ -1,9 +1,10 @@
-from fontTools.misc import sstruct
-from fontTools.misc.textTools import byteord, safeEval
-from . import DefaultTable
 import pdb
 import struct
 
+from fontTools.misc import sstruct
+from fontTools.misc.textTools import byteord, safeEval
+
+from . import DefaultTable
 
 METAHeaderFormat = """
 		>	# big endian
@@ -145,10 +146,9 @@ class table_M_E_T_A_(DefaultTable.DefaultTable):
             # the offset to the first StringRecord.
             stringOffset = stringRecsOffset
             for glyphRec in self.glyphRecords:
-                assert glyphRec.offset == len(
-                    metaData
-                ), "Glyph record offset did not compile correctly! for rec:" + str(
-                    glyphRec
+                assert glyphRec.offset == len(metaData), (
+                    "Glyph record offset did not compile correctly! for rec:"
+                    + str(glyphRec)
                 )
                 for stringRec in glyphRec.stringRecs:
                     stringRec.offset = stringOffset
@@ -172,10 +172,9 @@ class table_M_E_T_A_(DefaultTable.DefaultTable):
             # Its length should be the offset to the first string datum.
             for glyphRec in self.glyphRecords:
                 for stringRec in glyphRec.stringRecs:
-                    assert stringRec.offset == len(
-                        metaData
-                    ), "String offset did not compile correctly! for string:" + str(
-                        stringRec.string
+                    assert stringRec.offset == len(metaData), (
+                        "String offset did not compile correctly! for string:"
+                        + str(stringRec.string)
                     )
                     metaData = metaData + stringRec.string
 

@@ -1,15 +1,16 @@
+import unittest
+
 from fontTools.cffLib import PrivateDict
 from fontTools.cffLib.specializer import stringToProgram
-from fontTools.misc.testTools import getXML, parseXML
 from fontTools.misc.psCharStrings import (
     T2CharString,
-    encodeFloat,
     encodeFixed,
+    encodeFloat,
     read_fixed1616,
     read_realNumber,
 )
+from fontTools.misc.testTools import getXML, parseXML
 from fontTools.pens.recordingPen import RecordingPen
-import unittest
 
 
 def hexenc(s):
@@ -164,9 +165,9 @@ class T2CharStringTest(unittest.TestCase):
         cs = T2CharString()
         for name, attrs, content in parseXML(
             [
-                '<CharString name="period">' "  338.4 142.8 rmoveto",
+                '<CharString name="period">  338.4 142.8 rmoveto',
                 "  28 0 21.9 9 15.8 18 15.8 18 7.9 20.79959 0 23.6 rrcurveto",
-                "  endchar" "</CharString>",
+                "  endchar</CharString>",
             ]
         ):
             cs.fromXML(name, attrs, content)

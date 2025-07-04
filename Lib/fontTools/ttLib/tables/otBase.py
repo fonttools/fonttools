@@ -1,13 +1,15 @@
-from fontTools.config import OPTIONS
-from fontTools.misc.textTools import Tag, bytesjoin
-from .DefaultTable import DefaultTable
-from enum import IntEnum
-import sys
 import array
-import struct
 import logging
+import struct
+import sys
+from enum import IntEnum
 from functools import lru_cache
 from typing import Iterator, NamedTuple, Optional, Tuple
+
+from fontTools.config import OPTIONS
+from fontTools.misc.textTools import Tag, bytesjoin
+
+from .DefaultTable import DefaultTable
 
 log = logging.getLogger(__name__)
 
@@ -540,9 +542,9 @@ class OTTableWriter(object):
         selfTables = tables
 
         if isExtension:
-            assert (
-                extTables is not None
-            ), "Program or XML editing error. Extension subtables cannot contain extensions subtables"
+            assert extTables is not None, (
+                "Program or XML editing error. Extension subtables cannot contain extensions subtables"
+            )
             tables, extTables, done = extTables, None, {}
 
         # add Coverage table if it is sorted last.

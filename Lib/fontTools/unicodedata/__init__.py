@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-from fontTools.misc.textTools import byteord, tostr
-
 import re
 from bisect import bisect_right
 from typing import Literal, TypeVar, overload
 
+from fontTools.misc.textTools import byteord, tostr
 
 try:
     # use unicodedata backport compatible with python2:
@@ -15,7 +14,7 @@ except ImportError:  # pragma: no cover
     # fall back to built-in unicodedata (possibly outdated)
     from unicodedata import *
 
-from . import Blocks, Mirrored, Scripts, ScriptExtensions, OTTags
+from . import Blocks, Mirrored, OTTags, ScriptExtensions, Scripts
 
 __all__ = [
     # names from built-in unicodedata module

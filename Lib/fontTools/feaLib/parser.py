@@ -1,13 +1,13 @@
-from fontTools.feaLib.error import FeatureLibError
-from fontTools.feaLib.lexer import Lexer, IncludingLexer, NonIncludingLexer
-from fontTools.feaLib.variableScalar import VariableScalar
-from fontTools.misc.encodingTools import getEncoding
-from fontTools.misc.textTools import bytechr, tobytes, tostr
-import fontTools.feaLib.ast as ast
 import logging
 import os
 import re
 
+import fontTools.feaLib.ast as ast
+from fontTools.feaLib.error import FeatureLibError
+from fontTools.feaLib.lexer import IncludingLexer, Lexer, NonIncludingLexer
+from fontTools.feaLib.variableScalar import VariableScalar
+from fontTools.misc.encodingTools import getEncoding
+from fontTools.misc.textTools import bytechr, tobytes, tostr
 
 log = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ class Parser(object):
             deprecateArgument("glyphMap", "use 'glyphNames' (iterable) instead")
             if glyphNames:
                 raise TypeError(
-                    "'glyphNames' and (deprecated) 'glyphMap' are " "mutually exclusive"
+                    "'glyphNames' and (deprecated) 'glyphMap' are mutually exclusive"
                 )
             glyphNames = kwargs.pop("glyphMap")
         if kwargs:
@@ -770,7 +770,7 @@ class Parser(object):
         self.expect_keyword_("cursive")
         if enumerated:
             raise FeatureLibError(
-                '"enumerate" is not allowed with ' "cursive attachment positioning",
+                '"enumerate" is not allowed with cursive attachment positioning',
                 location,
             )
         glyphclass = self.parse_glyphclass_(accept_glyphname=True)
@@ -786,8 +786,7 @@ class Parser(object):
         self.expect_keyword_("base")
         if enumerated:
             raise FeatureLibError(
-                '"enumerate" is not allowed with '
-                "mark-to-base attachment positioning",
+                '"enumerate" is not allowed with mark-to-base attachment positioning',
                 location,
             )
         base = self.parse_glyphclass_(accept_glyphname=True)
@@ -817,8 +816,7 @@ class Parser(object):
         self.expect_keyword_("mark")
         if enumerated:
             raise FeatureLibError(
-                '"enumerate" is not allowed with '
-                "mark-to-mark attachment positioning",
+                '"enumerate" is not allowed with mark-to-mark attachment positioning',
                 location,
             )
         baseMarks = self.parse_glyphclass_(accept_glyphname=True)
@@ -1100,7 +1098,7 @@ class Parser(object):
                 continue
             else:
                 raise FeatureLibError(
-                    "Expected Attach, LigatureCaretByIndex, " "or LigatureCaretByPos",
+                    "Expected Attach, LigatureCaretByIndex, or LigatureCaretByPos",
                     self.cur_token_location_,
                 )
 
@@ -1142,7 +1140,7 @@ class Parser(object):
                 continue
             else:
                 raise FeatureLibError(
-                    "Expected CaretOffset, Ascender, " "Descender or LineGap",
+                    "Expected CaretOffset, Ascender, Descender or LineGap",
                     self.cur_token_location_,
                 )
 
@@ -1169,8 +1167,7 @@ class Parser(object):
                 continue
             else:
                 raise FeatureLibError(
-                    "Expected VertTypoAscender, "
-                    "VertTypoDescender or VertTypoLineGap",
+                    "Expected VertTypoAscender, VertTypoDescender or VertTypoLineGap",
                     self.cur_token_location_,
                 )
 
@@ -1424,7 +1421,7 @@ class Parser(object):
             else:
                 if self.cur_token_ != ";":
                     raise FeatureLibError(
-                        f"Unexpected token {self.cur_token_} " f"in ElidedFallbackName",
+                        f"Unexpected token {self.cur_token_} in ElidedFallbackName",
                         self.cur_token_location_,
                     )
         self.expect_symbol_("}")
@@ -1492,7 +1489,7 @@ class Parser(object):
                 continue
             else:
                 raise FeatureLibError(
-                    f"Unexpected token {self.cur_token_} " f"in AxisValue",
+                    f"Unexpected token {self.cur_token_} in AxisValue",
                     self.cur_token_location_,
                 )
         self.expect_symbol_("}")
@@ -1514,7 +1511,7 @@ class Parser(object):
                 tag = location.tag
                 if tag in format4_tags:
                     raise FeatureLibError(
-                        f"Axis tag {tag} already " "defined.", self.cur_token_location_
+                        f"Axis tag {tag} already defined.", self.cur_token_location_
                     )
                 format4_tags.append(tag)
 
@@ -1527,7 +1524,7 @@ class Parser(object):
         tag = self.expect_tag_()
         if len(tag.strip()) != 4:
             raise FeatureLibError(
-                f"Axis tag {self.cur_token_} must be 4 " "characters",
+                f"Axis tag {self.cur_token_} must be 4 characters",
                 self.cur_token_location_,
             )
 
@@ -1584,7 +1581,7 @@ class Parser(object):
                             # Tag must be defined in a DesignAxis before it
                             # can be referenced
                             raise FeatureLibError(
-                                "DesignAxis not defined for " f"{location.tag}.",
+                                f"DesignAxis not defined for {location.tag}.",
                                 self.cur_token_location_,
                             )
                     statements.append(axisValueRecord)
@@ -1931,8 +1928,7 @@ class Parser(object):
         self.expect_symbol_(";")
         if not (0xFFFFFF >= character >= 0):
             raise FeatureLibError(
-                "Character value must be between "
-                "{:#x} and {:#x}".format(0, 0xFFFFFF),
+                "Character value must be between {:#x} and {:#x}".format(0, 0xFFFFFF),
                 location,
             )
         return self.ast.CharacterStatement(character, tag, location=location)

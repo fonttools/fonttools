@@ -25,6 +25,7 @@ from pathlib import Path
 
 import pathops
 from cffsubr import subroutinize as subr
+
 from fontTools import configLogger
 from fontTools.cffLib import PrivateDict
 from fontTools.fontBuilder import FontBuilder

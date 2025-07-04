@@ -2,12 +2,14 @@
 #
 # Google Author(s): Behdad Esfahbod
 
-from fontTools.misc.textTools import bytesjoin, safeEval
-from . import DefaultTable
 import array
-from collections import namedtuple
 import struct
 import sys
+from collections import namedtuple
+
+from fontTools.misc.textTools import bytesjoin, safeEval
+
+from . import DefaultTable
 
 
 class table_C_P_A_L_(DefaultTable.DefaultTable):
@@ -38,9 +40,9 @@ class table_C_P_A_L_(DefaultTable.DefaultTable):
             numColorRecords,
             goffsetFirstColorRecord,
         ) = struct.unpack(">HHHHL", data[:12])
-        assert (
-            self.version <= 1
-        ), "Version of CPAL table is higher than I know how to handle"
+        assert self.version <= 1, (
+            "Version of CPAL table is higher than I know how to handle"
+        )
         self.palettes = []
         pos = 12
         for i in range(numPalettes):

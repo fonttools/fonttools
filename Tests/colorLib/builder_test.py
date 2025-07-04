@@ -1,13 +1,15 @@
 from copy import deepcopy
+from typing import List
+
+import pytest
+
+from fontTools.colorLib import builder
+from fontTools.colorLib.builder import LayerListBuilder
+from fontTools.colorLib.errors import ColorLibError
+from fontTools.colorLib.geometry import Circle, round_start_circle_stable_containment
+from fontTools.colorLib.table_builder import TableBuilder
 from fontTools.ttLib import newTable
 from fontTools.ttLib.tables import otTables as ot
-from fontTools.colorLib import builder
-from fontTools.colorLib.geometry import round_start_circle_stable_containment, Circle
-from fontTools.colorLib.builder import LayerListBuilder
-from fontTools.colorLib.table_builder import TableBuilder
-from fontTools.colorLib.errors import ColorLibError
-import pytest
-from typing import List
 
 
 def _build(cls, source):
@@ -1271,7 +1273,7 @@ def _paint_names(paints) -> List[str]:
             result.append(paint.Glyph)
         elif paint.Format == int(ot.PaintFormat.PaintColrLayers):
             result.append(
-                f"Layers[{paint.FirstLayerIndex}:{paint.FirstLayerIndex+paint.NumLayers}]"
+                f"Layers[{paint.FirstLayerIndex}:{paint.FirstLayerIndex + paint.NumLayers}]"
             )
     return result
 
