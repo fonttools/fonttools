@@ -216,7 +216,7 @@ class Transform(NamedTuple):
         xx, xy, yx, yy = self[:4]
         return [(xx * dx + yx * dy, xy * dx + yy * dy) for dx, dy in vectors]
 
-    def translate(self, x: float = 0, y: float = 0):
+    def translate(self, x: float = 0, y: float = 0, before=False):
         """Return a new transformation, translated (offset) by x, y.
 
         :Example:
@@ -225,7 +225,9 @@ class Transform(NamedTuple):
                 <Transform [1 0 0 1 20 30]>
                 >>>
         """
-        return self.transform((1, 0, 0, 1, x, y))
+        if before:
+            return self.transform((1, 0, 0, 1, x, y))
+        return self.transform((1, 0, 0, 1, 0, 0)).transform((1, 0, 0, 1, x, y))
 
     def scale(self, x: float = 1, y: float | None = None):
         """Return a new transformation, scaled by x, y. The 'y' argument
@@ -243,7 +245,7 @@ class Transform(NamedTuple):
             y = x
         return self.transform((x, 0, 0, y, 0, 0))
 
-    def rotate(self, angle: float):
+    def rotate(self, angle: float, before=False):
         """Return a new transformation, rotated by 'angle' (radians).
 
         :Example:
@@ -255,7 +257,7 @@ class Transform(NamedTuple):
         """
         c = _normSinCos(math.cos(angle))
         s = _normSinCos(math.sin(angle))
-        return self.transform((c, s, -s, c, 0, 0))
+        return self.transform((c, s, -s, c, 0, 0), before)
 
     def skew(self, x: float = 0, y: float = 0):
         """Return a new transformation, skewed by x and y.
@@ -269,7 +271,7 @@ class Transform(NamedTuple):
         """
         return self.transform((1, math.tan(y), math.tan(x), 1, 0, 0))
 
-    def transform(self, other):
+    def transform(self, other, before=False):
         """Return a new transformation, transformed by another
         transformation.
 
@@ -279,8 +281,8 @@ class Transform(NamedTuple):
                 <Transform [8 9 4 3 11 24]>
                 >>>
         """
-        xx1, xy1, yx1, yy1, dx1, dy1 = other
-        xx2, xy2, yx2, yy2, dx2, dy2 = self
+        xx1, xy1, yx1, yy1, dx1, dy1 = self if before else other
+        xx2, xy2, yx2, yy2, dx2, dy2 = other if before else self
         return self.__class__(
             xx1 * xx2 + xy1 * yx2,
             xx1 * xy2 + xy1 * yy2,
