@@ -29,8 +29,7 @@ class table__c_v_t(DefaultTable.DefaultTable):
         return values.tobytes()
 
     def toXML(self, writer, ttFont):
-        for i in range(len(self.values)):
-            value = self.values[i]
+        for i, value in enumerate(self.values):
             writer.simpletag("cv", value=value, index=i)
             writer.newline()
 

@@ -38,8 +38,8 @@ class table_T_S_I__5(DefaultTable.DefaultTable):
     def compile(self, ttFont):
         glyphNames = ttFont.getGlyphOrder()
         a = array.array("H")
-        for i in range(len(glyphNames)):
-            a.append(self.glyphGrouping.get(glyphNames[i], 0))
+        for glyphName in glyphNames:
+            a.append(self.glyphGrouping.get(glyphName, 0))
         if sys.byteorder != "big":
             a.byteswap()
         return a.tobytes()

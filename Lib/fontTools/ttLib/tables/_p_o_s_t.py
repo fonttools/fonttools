@@ -174,10 +174,9 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
         extraNames = self.extraNames = [
             n for n in self.extraNames if n not in standardGlyphOrder
         ]
-        for i in range(len(extraNames)):
-            extraDict[extraNames[i]] = i
-        for glyphID in range(numGlyphs):
-            glyphName = glyphOrder[glyphID]
+        for i, name in enumerate(extraNames):
+            extraDict[name] = i
+        for glyphName in glyphOrder:
             if glyphName in self.mapping:
                 psName = self.mapping[glyphName]
             else:

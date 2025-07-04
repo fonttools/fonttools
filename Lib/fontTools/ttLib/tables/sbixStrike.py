@@ -128,9 +128,9 @@ class Strike(object):
         xmlWriter.simpletag("resolution", value=self.resolution)
         xmlWriter.newline()
         glyphOrder = ttFont.getGlyphOrder()
-        for i in range(len(glyphOrder)):
-            if glyphOrder[i] in self.glyphs:
-                self.glyphs[glyphOrder[i]].toXML(xmlWriter, ttFont)
+        for glyphName in glyphOrder:
+            if glyphName in self.glyphs:
+                self.glyphs[glyphName].toXML(xmlWriter, ttFont)
                 # TODO: what if there are more glyph data records than (glyf table) glyphs?
         xmlWriter.endtag("strike")
         xmlWriter.newline()
