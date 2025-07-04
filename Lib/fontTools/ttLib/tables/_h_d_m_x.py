@@ -1,17 +1,14 @@
-import array
-import enum
-from collections.abc import Mapping
-
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import bytechr, byteord, strjoin
-
 from . import DefaultTable
+import array
+from collections.abc import Mapping
 
 hdmxHeaderFormat = """
-    >   # big endian!
-    version:	H
-    numRecords:	H
-    recordSize:	l
+	>   # big endian!
+	version:	H
+	numRecords:	H
+	recordSize:	l
 """
 
 

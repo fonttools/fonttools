@@ -1,9 +1,7 @@
-import struct
-
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
-
 from .sbixGlyph import Glyph
+import struct
 
 sbixStrikeHeaderFormat = """
 	>
