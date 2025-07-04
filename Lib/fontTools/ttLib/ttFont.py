@@ -305,12 +305,9 @@ class TTFont(object):
         self.disassembleInstructions = disassembleInstructions
         self.bitmapGlyphDataFormat = bitmapGlyphDataFormat
         if not tables:
-            tables = list(self.keys())
-            if "GlyphOrder" not in self.keys():
-                tables = ["GlyphOrder"] + tables
+            tables = self.keys()
             if skipTables:
                 tables = [tag for tag in tables if tag not in skipTables]
-        numTables = len(tables)
 
         if writeVersion:
             from fontTools import version
