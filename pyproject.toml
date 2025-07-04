@@ -1,2 +1,5 @@
 [tool.black]
 target-version = ["py39"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["fontTools"]
