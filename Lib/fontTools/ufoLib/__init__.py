@@ -35,19 +35,15 @@ Value conversion functions are available for converting
 import os
 from copy import deepcopy
 from os import fsdecode
+from datetime import datetime
 import logging
+from typing import cast
 import zipfile
 import enum
 from collections import OrderedDict
-import fs
-import fs.base
-import fs.subfs
-import fs.errors
-import fs.copy
-import fs.osfs
-import fs.zipfs
-import fs.tempfs
-import fs.tools
+import fsspec
+from fsspec.implementations.dirfs import DirFileSystem
+from fsspec.implementations.zip import ZipFileSystem
 from fontTools.misc import plistlib
 from fontTools.ufoLib.validators import *
 from fontTools.ufoLib.filenames import userNameToFileName
@@ -120,6 +116,8 @@ class UFOFileStructure(enum.Enum):
 
 
 class _UFOBaseIO:
+    fs: DirFileSystem
+
     def getFileModificationTime(self, path):
         """
         Returns the modification time for the file at the given path, as a
@@ -128,11 +126,13 @@ class _UFOBaseIO:
         Returns None if the file does not exist.
         """
         try:
-            dt = self.fs.getinfo(fsdecode(path), namespaces=["details"]).modified
-        except (fs.errors.MissingInfoNamespace, fs.errors.ResourceNotFound):
+            dt = self.fs.info(fsdecode(path))
+            if date_time := dt["date_time"]:
+                return datetime(*date_time).timestamp()
+            else:
+                return dt["mtime"]
+        except ValueError:
             return None
-        else:
-            return dt.timestamp()
 
     def _getPlist(self, fileName, default=None):
         """
@@ -218,64 +218,62 @@ class UFOReader(_UFOBaseIO):
 
         if isinstance(path, str):
             structure = _sniffFileStructure(path)
+            parentFS: DirFileSystem | ZipFileSystem
             try:
                 if structure is UFOFileStructure.ZIP:
-                    parentFS = fs.zipfs.ZipFS(path, write=False, encoding="utf-8")
+                    parentFS = fsspec.filesystem("zip", fo=path, mode="r")
                 else:
-                    parentFS = fs.osfs.OSFS(path)
-            except fs.errors.CreateFailed as e:
+                    parentFS = fsspec.filesystem("dir", path=path)
+            except ValueError as e:
                 raise UFOLibError(f"unable to open '{path}': {e}")
 
+            self.fs: DirFileSystem
             if structure is UFOFileStructure.ZIP:
                 # .ufoz zip files must contain a single root directory, with arbitrary
                 # name, containing all the UFO files
+                fileSystem = cast(ZipFileSystem, parentFS)
                 rootDirs = [
-                    p.name
-                    for p in parentFS.scandir("/")
+                    p["name"]
+                    for p in fileSystem.ls("/", detail=True)
                     # exclude macOS metadata contained in zip file
-                    if p.is_dir and p.name != "__MACOSX"
+                    if p["type"] == "directory" and p["name"] != "__MACOSX"
                 ]
                 if len(rootDirs) == 1:
                     # 'ClosingSubFS' ensures that the parent zip file is closed when
                     # its root subdirectory is closed
-                    self.fs = parentFS.opendir(
-                        rootDirs[0], factory=fs.subfs.ClosingSubFS
-                    )
+                    rootDir = rootDirs[0]
+                    self.fs = fsspec.filesystem("dir", path=rootDir, fs=parentFS)
                 else:
                     raise UFOLibError(
                         "Expected exactly 1 root directory, found %d" % len(rootDirs)
                     )
             else:
                 # normal UFO 'packages' are just a single folder
-                self.fs = parentFS
+                fileSystem = cast(DirFileSystem, parentFS)
+                self.fs = fileSystem
             # when passed a path string, we make sure we close the newly opened fs
             # upon calling UFOReader.close method or context manager's __exit__
             self._shouldClose = True
             self._fileStructure = structure
-        elif isinstance(path, fs.base.FS):
+
+            self._path = fsdecode(path)
+        elif isinstance(path, fsspec.spec.AbstractFileSystem):
             filesystem = path
-            try:
-                filesystem.check()
-            except fs.errors.FilesystemClosed:
-                raise UFOLibError("the filesystem '%s' is closed" % path)
-            else:
-                self.fs = filesystem
-            try:
-                path = filesystem.getsyspath("/")
-            except fs.errors.NoSysPath:
-                # network or in-memory FS may not map to the local one
-                path = str(filesystem)
+            self.fs = fsspec.filesystem("dir", fs=filesystem)
             # when user passed an already initialized fs instance, it is her
             # responsibility to close it, thus UFOReader.close/__exit__ are no-op
             self._shouldClose = False
             # default to a 'package' structure
             self._fileStructure = UFOFileStructure.PACKAGE
+
+            # FIXME: How to get at the path of an arbitrary filesystem in a
+            # generic way?
+            self._path = None
         else:
             raise TypeError(
                 "Expected a path string or fs.base.FS object, found '%s'"
                 % type(path).__name__
             )
-        self._path = fsdecode(path)
         self._validate = validate
         self._upConvertedKerningData = None
 
@@ -395,8 +393,8 @@ class UFOReader(_UFOBaseIO):
         Returns None if the file does not exist.
         """
         try:
-            return self.fs.readbytes(fsdecode(path))
-        except fs.errors.ResourceNotFound:
+            return self.fs.read_bytes(fsdecode(path))
+        except (OSError, ValueError):
             return None
 
     def getReadFileForPath(self, path, encoding=None):
@@ -872,8 +870,8 @@ class UFOReader(_UFOBaseIO):
         return data
 
     def close(self):
-        if self._shouldClose:
-            self.fs.close()
+        if self._shouldClose and hasattr(self.fs, "close"):
+            self.fs.close()  # type: ignore
 
     def __enter__(self):
         return self
@@ -963,20 +961,15 @@ class UFOWriter(UFOReader):
                     )
             if structure is UFOFileStructure.ZIP:
                 if havePreviousFile:
-                    # we can't write a zip in-place, so we have to copy its
-                    # contents to a temporary location and work from there, then
-                    # upon closing UFOWriter we create the final zip file
-                    parentFS = fs.tempfs.TempFS()
-                    with fs.zipfs.ZipFS(path, encoding="utf-8") as origFS:
-                        fs.copy.copy_fs(origFS, parentFS)
+                    parentFS = fsspec.filesystem("zip", fo=path, mode="w")
                     # if output path is an existing zip, we require that it contains
                     # one, and only one, root directory (with arbitrary name), in turn
                     # containing all the existing UFO contents
                     rootDirs = [
-                        p.name
-                        for p in parentFS.scandir("/")
+                        p["name"]
+                        for p in parentFS.ls("/", detail=True)
                         # exclude macOS metadata contained in zip file
-                        if p.is_dir and p.name != "__MACOSX"
+                        if p["type"] == "directory" and p["name"] != "__MACOSX"
                     ]
                     if len(rootDirs) != 1:
                         raise UFOLibError(
@@ -986,16 +979,15 @@ class UFOWriter(UFOReader):
                     else:
                         # 'ClosingSubFS' ensures that the parent filesystem is closed
                         # when its root subdirectory is closed
-                        self.fs = parentFS.opendir(
-                            rootDirs[0], factory=fs.subfs.ClosingSubFS
-                        )
+                        rootDir = rootDirs[0]
+                        self.fs = fsspec.filesystem("dir", path=rootDir, fs=parentFS)
                 else:
                     # if the output zip file didn't exist, we create the root folder;
                     # we name it the same as input 'path', but with '.ufo' extension
                     rootDir = os.path.splitext(os.path.basename(path))[0] + ".ufo"
-                    parentFS = fs.zipfs.ZipFS(path, write=True, encoding="utf-8")
+                    parentFS: ZipFileSystem = fsspec.filesystem("zip", fo=path, mode="w")
                     parentFS.makedir(rootDir)
-                    self.fs = parentFS.opendir(rootDir, factory=fs.subfs.ClosingSubFS)
+                    self.fs = fsspec.filesystem("dir", path=rootDir, fs=parentFS)
             else:
                 self.fs = fs.osfs.OSFS(path, create=True)
             self._fileStructure = structure

@@ -91,7 +91,7 @@ if with_cython is True or (with_cython is None and has_cython):
 extras_require = {
     # for fontTools.ufoLib: to read/write UFO fonts
     "ufo": [
-        "fs >= 2.2.0, < 3",
+        "fsspec",
     ],
     # for fontTools.misc.etree and fontTools.misc.plistlib: use lxml to
     # read/write XML files (faster/safer than built-in ElementTree)

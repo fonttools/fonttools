@@ -2,8 +2,7 @@
 
 import calendar
 from io import open
-import fs.base
-import fs.osfs
+import fsspec
 
 from collections.abc import Mapping
 from fontTools.ufoLib.utils import numberTypes

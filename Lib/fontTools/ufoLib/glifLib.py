@@ -16,11 +16,7 @@ import logging
 import enum
 from warnings import warn
 from collections import OrderedDict
-import fs
-import fs.base
-import fs.errors
-import fs.osfs
-import fs.path
+import fsspec
 from fontTools.misc.textTools import tobytes
 from fontTools.misc import plistlib
 from fontTools.pens.pointPen import AbstractPointPen, PointToSegmentPen
