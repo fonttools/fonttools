@@ -1330,7 +1330,8 @@ def _curve_curve_intersections_t(
         return 0.5 * (r[0] + r[1])
 
     # If they do overlap but they're tiny, approximate
-    if rectArea(bounds1) < precision and rectArea(bounds2) < precision:
+    precision2 = precision * precision
+    if rectArea(bounds1) < precision2 and rectArea(bounds2) < precision2:
         return [(midpoint(range1), midpoint(range2))]
 
     c11, c12 = _split_segment_at_t(curve1, 0.5)
@@ -1363,7 +1364,7 @@ def _curve_curve_intersections_t(
         )
     )
 
-    unique_key = lambda ts: (int(ts[0] / precision), int(ts[1] / precision))
+    unique_key = lambda ts: (round(ts[0] / precision), round(ts[1] / precision))
     seen = set()
     unique_values = []
 
@@ -1401,7 +1402,7 @@ def curveCurveIntersections(curve1, curve2):
         >>> len(intersections)
         3
         >>> intersections[0].pt
-        (81.7831487395506, 109.88904552375288)
+        (81.7904225872997, 109.89939633675462)
     """
     if _is_linelike(curve1):
         line1 = curve1[0], curve1[-1]
@@ -1440,7 +1441,7 @@ def segmentSegmentIntersections(seg1, seg2):
         >>> len(intersections)
         3
         >>> intersections[0].pt
-        (81.7831487395506, 109.88904552375288)
+        (81.7904225872997, 109.89939633675462)
         >>> curve3 = [ (100, 240), (30, 60), (210, 230), (160, 30) ]
         >>> line  = [ (25, 260), (230, 20) ]
         >>> intersections = segmentSegmentIntersections(curve3, line)
