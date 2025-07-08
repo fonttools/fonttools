@@ -3,36 +3,41 @@ from fontTools.ufoLib.errors import UFOLibError, GlifLibError
 from fontTools.misc import plistlib
 from fontTools.misc.textTools import tostr
 import sys
+import shutil
 import os
-import fs.osfs
-import fs.tempfs
-import fs.memoryfs
-import fs.copy
+import fsspec
 import pytest
 import warnings
+from pathlib import Path
 
 
-TESTDATA = fs.osfs.OSFS(os.path.join(os.path.dirname(__file__), "testdata"))
+TESTDATA_DIR = Path(__file__).parent / "testdata"
 TEST_UFO3 = "TestFont1 (UFO3).ufo"
 TEST_UFOZ = "TestFont1 (UFO3).ufoz"
 
 
 @pytest.fixture(params=[TEST_UFO3, TEST_UFOZ])
-def testufo(request):
-    name = request.param
-    with fs.tempfs.TempFS() as tmp:
-        if TESTDATA.isdir(name):
-            fs.copy.copy_dir(TESTDATA, name, tmp, name)
-        else:
-            fs.copy.copy_file(TESTDATA, name, tmp, name)
-        yield tmp.getsyspath(name)
+def testufo(request, tmp_path_factory):
+    path = request.param
+    tmp_dir = tmp_path_factory.mktemp(path)
+
+    test_data = TESTDATA_DIR / path
+    test_data_target = tmp_dir / path
+    if test_data.is_dir():
+        shutil.copytree(test_data, test_data_target)
+    else:
+        shutil.copy(test_data, test_data_target)
+
+    return test_data_target
 
 
 @pytest.fixture
-def testufoz():
-    with fs.tempfs.TempFS() as tmp:
-        fs.copy.copy_file(TESTDATA, TEST_UFOZ, tmp, TEST_UFOZ)
-        yield tmp.getsyspath(TEST_UFOZ)
+def testufoz(tmp_path_factory):
+    tmp_dir = tmp_path_factory.mktemp(TEST_UFOZ)
+    test_data = TESTDATA_DIR / TEST_UFOZ
+    test_data_target = tmp_dir / TEST_UFOZ
+    shutil.copy(test_data, test_data_target)
+    yield test_data_target
 
 
 class TestUFOZ:
@@ -54,7 +59,7 @@ def test_pathlike(testufo):
             self._path = s
 
         def __fspath__(self):
-            return tostr(self._path, sys.getfilesystemencoding())
+            return os.fspath(self._path)
 
     path = PathLike(testufo)
 
@@ -73,8 +78,8 @@ def test_path_attribute_deprecated(testufo):
 
 @pytest.fixture
 def memufo():
-    m = fs.memoryfs.MemoryFS()
-    fs.copy.copy_dir(TESTDATA, TEST_UFO3, m, "/")
+    m = fsspec.filesystem("memory")
+    m.put(TESTDATA_DIR / TEST_UFO3, "/", recursive=True)
     return m
 
 
@@ -85,7 +90,7 @@ class TestMemoryFS:
             assert reader.fileStructure == UFOFileStructure.PACKAGE
 
     def test_init_writer(self):
-        m = fs.memoryfs.MemoryFS()
+        m = fsspec.filesystem("memory")
         with UFOWriter(m) as writer:
             assert m.exists("metainfo.plist")
-            assert writer._path == "<memfs>"
+            assert writer._path is None
