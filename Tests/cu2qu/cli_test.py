@@ -1,13 +1,12 @@
 import os
 
-import pytest
 import py
+import pytest
 
 ufoLib2 = pytest.importorskip("ufoLib2")
 
-from fontTools.cu2qu.ufo import CURVE_TYPE_LIB_KEY
 from fontTools.cu2qu.cli import _main as main
-
+from fontTools.cu2qu.ufo import CURVE_TYPE_LIB_KEY
 
 DATADIR = os.path.join(os.path.dirname(__file__), "data")
 

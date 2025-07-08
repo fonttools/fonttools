@@ -1,10 +1,11 @@
-from fontTools.misc.xmlWriter import XMLWriter
-from fontTools.ttLib.tables.ttProgram import Program
-from fontTools.misc.textTools import deHexStr
 import array
-from io import StringIO
 import os
 import unittest
+from io import StringIO
+
+from fontTools.misc.textTools import deHexStr
+from fontTools.misc.xmlWriter import XMLWriter
+from fontTools.ttLib.tables.ttProgram import Program
 
 CURR_DIR = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 DATA_DIR = os.path.join(CURR_DIR, "data")

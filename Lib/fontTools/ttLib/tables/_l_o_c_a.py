@@ -1,8 +1,8 @@
-from . import DefaultTable
-import sys
 import array
 import logging
+import sys
 
+from . import DefaultTable
 
 log = logging.getLogger(__name__)
 

@@ -1,7 +1,8 @@
-import fontTools.ttLib as ttLib
-from fontTools.ttLib.ttVisitor import TTVisitor
-from fontTools.misc.textTools import Tag
 from array import array
+
+import fontTools.ttLib as ttLib
+from fontTools.misc.textTools import Tag
+from fontTools.ttLib.ttVisitor import TTVisitor
 
 
 class JsonVisitor(TTVisitor):
@@ -139,8 +140,9 @@ def visit(self, obj):
 
 
 if __name__ == "__main__":
-    from fontTools.ttLib import TTFont
     import sys
+
+    from fontTools.ttLib import TTFont
 
     if len(sys.argv) != 2:
         print("usage: print-json.py font")

@@ -6,12 +6,13 @@ libdir = os.path.join(
 )
 sys.path.insert(0, libdir)
 
-from fontTools.cffLib import TopDict, PrivateDict, CharStrings, CFFFontSet
-from fontTools.misc.testTools import parseXML, DataFilesHandler
-from fontTools.ttLib import TTFont
 import copy
 import unittest
 from io import BytesIO
+
+from fontTools.cffLib import CFFFontSet, CharStrings, PrivateDict, TopDict
+from fontTools.misc.testTools import DataFilesHandler, parseXML
+from fontTools.ttLib import TTFont
 
 
 class CffLibTest(DataFilesHandler):

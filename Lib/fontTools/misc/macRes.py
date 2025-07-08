@@ -1,9 +1,10 @@
-from io import BytesIO
 import struct
-from fontTools.misc import sstruct
-from fontTools.misc.textTools import bytesjoin, tostr
 from collections import OrderedDict
 from collections.abc import MutableMapping
+from io import BytesIO
+
+from fontTools.misc import sstruct
+from fontTools.misc.textTools import bytesjoin, tostr
 
 
 class ResourceError(Exception):

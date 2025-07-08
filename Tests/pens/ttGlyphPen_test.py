@@ -1,12 +1,12 @@
 import os
-import pytest
 import struct
 
+import pytest
 from fontTools import ttLib
 from fontTools.misc.roundTools import noRound
 from fontTools.pens.basePen import PenError
 from fontTools.pens.recordingPen import RecordingPen, RecordingPointPen
-from fontTools.pens.ttGlyphPen import TTGlyphPen, TTGlyphPointPen, MAX_F2DOT14
+from fontTools.pens.ttGlyphPen import MAX_F2DOT14, TTGlyphPen, TTGlyphPointPen
 
 
 class TTGlyphPenTestBase:

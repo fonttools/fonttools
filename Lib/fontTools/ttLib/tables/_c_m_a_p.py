@@ -1,13 +1,14 @@
-from fontTools.misc.textTools import bytesjoin, safeEval, readHex
-from fontTools.misc.encodingTools import getEncoding
-from fontTools.ttLib import getSearchRange
-from fontTools.unicode import Unicode
-from . import DefaultTable
-import sys
-import struct
 import array
 import logging
+import struct
+import sys
 
+from fontTools.misc.encodingTools import getEncoding
+from fontTools.misc.textTools import bytesjoin, readHex, safeEval
+from fontTools.ttLib import getSearchRange
+from fontTools.unicode import Unicode
+
+from . import DefaultTable
 
 log = logging.getLogger(__name__)
 

@@ -1,6 +1,7 @@
+import unittest
+
 from fontTools.misc.textTools import deHexStr
 from fontTools.ttLib.tables.otBase import OTTableReader, OTTableWriter
-import unittest
 
 
 class OTTableReaderTest(unittest.TestCase):

@@ -1,15 +1,16 @@
+import unittest
+
 from fontTools.cffLib import PrivateDict
 from fontTools.cffLib.specializer import stringToProgram
-from fontTools.misc.testTools import getXML, parseXML
 from fontTools.misc.psCharStrings import (
     T2CharString,
-    encodeFloat,
     encodeFixed,
+    encodeFloat,
     read_fixed1616,
     read_realNumber,
 )
+from fontTools.misc.testTools import getXML, parseXML
 from fontTools.pens.recordingPen import RecordingPen
-import unittest
 
 
 def hexenc(s):

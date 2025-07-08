@@ -13,12 +13,12 @@
 # limitations under the License.
 
 import operator
+
 from fontTools.cu2qu import curve_to_quadratic, curves_to_quadratic
 from fontTools.pens.basePen import decomposeSuperBezierSegment
 from fontTools.pens.filterPen import FilterPen
+from fontTools.pens.pointPen import BasePointToSegmentPen, ReverseContourPointPen
 from fontTools.pens.reverseContourPen import ReverseContourPen
-from fontTools.pens.pointPen import BasePointToSegmentPen
-from fontTools.pens.pointPen import ReverseContourPointPen
 
 
 class Cu2QuPen(FilterPen):

@@ -1,23 +1,21 @@
-""" Simplify TrueType glyphs by merging overlapping contours/components.
+"""Simplify TrueType glyphs by merging overlapping contours/components.
 
 Requires https://github.com/fonttools/skia-pathops
 """
 
 import itertools
 import logging
-from typing import Callable, Iterable, Optional, Mapping
-
-from fontTools.cffLib import CFFFontSet
-from fontTools.ttLib import ttFont
-from fontTools.ttLib.tables import _g_l_y_f
-from fontTools.ttLib.tables import _h_m_t_x
-from fontTools.misc.psCharStrings import T2CharString
-from fontTools.misc.roundTools import otRound, noRound
-from fontTools.pens.ttGlyphPen import TTGlyphPen
-from fontTools.pens.t2CharStringPen import T2CharStringPen
+from typing import Callable, Iterable, Mapping, Optional
 
 import pathops
 
+from fontTools.cffLib import CFFFontSet
+from fontTools.misc.psCharStrings import T2CharString
+from fontTools.misc.roundTools import noRound, otRound
+from fontTools.pens.t2CharStringPen import T2CharStringPen
+from fontTools.pens.ttGlyphPen import TTGlyphPen
+from fontTools.ttLib import ttFont
+from fontTools.ttLib.tables import _g_l_y_f, _h_m_t_x
 
 __all__ = ["removeOverlaps"]
 

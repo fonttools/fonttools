@@ -1,17 +1,18 @@
+import itertools
+import logging
+import struct
+from collections import deque
+
 from fontTools.misc import sstruct
-from . import DefaultTable
 from fontTools.misc.textTools import bytesjoin, safeEval
+
+from . import DefaultTable
 from .BitmapGlyphMetrics import (
     BigGlyphMetrics,
-    bigGlyphMetricsFormat,
     SmallGlyphMetrics,
+    bigGlyphMetricsFormat,
     smallGlyphMetricsFormat,
 )
-import struct
-import itertools
-from collections import deque
-import logging
-
 
 log = logging.getLogger(__name__)
 

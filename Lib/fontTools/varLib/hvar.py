@@ -1,13 +1,20 @@
+import logging
+from functools import partial
+
+from fontTools.misc.cliTools import makeOutputFileName
+from fontTools.misc.fixedTools import fixedToFloat as fi2fl
 from fontTools.misc.roundTools import noRound
 from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables.otBase import OTTableWriter
-from fontTools.varLib import HVAR_FIELDS, VVAR_FIELDS, _add_VHVAR
-from fontTools.varLib import builder, models, varStore
-from fontTools.misc.fixedTools import fixedToFloat as fi2fl
-from fontTools.misc.cliTools import makeOutputFileName
-from functools import partial
-import logging
+from fontTools.varLib import (
+    HVAR_FIELDS,
+    VVAR_FIELDS,
+    _add_VHVAR,
+    builder,
+    models,
+    varStore,
+)
 
 log = logging.getLogger("fontTools.varLib.avar")
 
@@ -69,9 +76,10 @@ def main(args=None):
 
         args = sys.argv[1:]
 
+    import argparse
+
     from fontTools import configLogger
     from fontTools.designspaceLib import DesignSpaceDocument
-    import argparse
 
     parser = argparse.ArgumentParser(
         "fonttools varLib.hvar",

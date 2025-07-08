@@ -3,6 +3,7 @@ try:
 except ImportError:
     AreaPen = None
 import unittest
+
 import pytest
 
 precision = 6

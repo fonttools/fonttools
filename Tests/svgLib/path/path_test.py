@@ -1,10 +1,9 @@
-from fontTools.misc.textTools import tobytes
-from fontTools.pens.recordingPen import RecordingPen
-from fontTools.svgLib import SVGPath
-
 import os
 from tempfile import NamedTemporaryFile
 
+from fontTools.misc.textTools import tobytes
+from fontTools.pens.recordingPen import RecordingPen
+from fontTools.svgLib import SVGPath
 
 SVG_DATA = """\
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>

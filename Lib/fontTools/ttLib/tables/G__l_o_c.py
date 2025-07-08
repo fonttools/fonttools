@@ -1,9 +1,10 @@
-from fontTools.misc import sstruct
-from fontTools.misc.textTools import safeEval
-from . import DefaultTable
 import array
 import sys
 
+from fontTools.misc import sstruct
+from fontTools.misc.textTools import safeEval
+
+from . import DefaultTable
 
 Gloc_header = """
     >        # big endian

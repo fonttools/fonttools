@@ -1,5 +1,6 @@
-from fontTools.pens.areaPen import AreaPen
 import unittest
+
+from fontTools.pens.areaPen import AreaPen
 
 precision = 6
 

@@ -1,18 +1,19 @@
+import os
+
+import pytest
 from fontTools.cffLib import maxStackLimit as maxStack
 from fontTools.cffLib.specializer import (
-    programToString,
-    stringToProgram,
-    generalizeProgram,
-    specializeProgram,
-    programToCommands,
     commandsToProgram,
     generalizeCommands,
+    generalizeProgram,
+    programToCommands,
+    programToString,
     specializeCommands,
+    specializeProgram,
+    stringToProgram,
 )
+from fontTools.misc.testTools import DataFilesHandler, parseXML
 from fontTools.ttLib import TTFont
-import os
-import pytest
-from fontTools.misc.testTools import parseXML, DataFilesHandler
 
 
 def charstr_generalize(charstr, **kwargs):

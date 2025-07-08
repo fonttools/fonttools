@@ -1,12 +1,13 @@
-from fontTools.misc.roundTools import otRound
-from fontTools import ttLib
-from fontTools.misc.textTools import safeEval
-from . import DefaultTable
-import sys
-import struct
 import array
 import logging
+import struct
+import sys
 
+from fontTools import ttLib
+from fontTools.misc.roundTools import otRound
+from fontTools.misc.textTools import safeEval
+
+from . import DefaultTable
 
 log = logging.getLogger(__name__)
 

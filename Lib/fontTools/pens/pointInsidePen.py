@@ -2,9 +2,8 @@
 for shapes.
 """
 
+from fontTools.misc.bezierTools import solveCubic, solveQuadratic
 from fontTools.pens.basePen import BasePen
-from fontTools.misc.bezierTools import solveQuadratic, solveCubic
-
 
 __all__ = ["PointInsidePen"]
 

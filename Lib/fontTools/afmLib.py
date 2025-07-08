@@ -7,36 +7,36 @@ implement the whole Adobe AFM specification [#f1]_ but, it should read most
 
 Here is an example of using `afmLib` to read, modify and write an AFM file:
 
-	>>> from fontTools.afmLib import AFM
-	>>> f = AFM("Tests/afmLib/data/TestAFM.afm")
-	>>>
-	>>> # Accessing a pair gets you the kern value
-	>>> f[("V","A")]
-	-60
-	>>>
-	>>> # Accessing a glyph name gets you metrics
-	>>> f["A"]
-	(65, 668, (8, -25, 660, 666))
-	>>> # (charnum, width, bounding box)
-	>>>
-	>>> # Accessing an attribute gets you metadata
-	>>> f.FontName
-	'TestFont-Regular'
-	>>> f.FamilyName
-	'TestFont'
-	>>> f.Weight
-	'Regular'
-	>>> f.XHeight
-	500
-	>>> f.Ascender
-	750
-	>>>
-	>>> # Attributes and items can also be set
-	>>> f[("A","V")] = -150 # Tighten kerning
-	>>> f.FontName = "TestFont Squished"
-	>>>
-	>>> # And the font written out again (remove the # in front)
-	>>> #f.write("testfont-squished.afm")
+    >>> from fontTools.afmLib import AFM
+    >>> f = AFM("Tests/afmLib/data/TestAFM.afm")
+    >>>
+    >>> # Accessing a pair gets you the kern value
+    >>> f[("V","A")]
+    -60
+    >>>
+    >>> # Accessing a glyph name gets you metrics
+    >>> f["A"]
+    (65, 668, (8, -25, 660, 666))
+    >>> # (charnum, width, bounding box)
+    >>>
+    >>> # Accessing an attribute gets you metadata
+    >>> f.FontName
+    'TestFont-Regular'
+    >>> f.FamilyName
+    'TestFont'
+    >>> f.Weight
+    'Regular'
+    >>> f.XHeight
+    500
+    >>> f.Ascender
+    750
+    >>>
+    >>> # Attributes and items can also be set
+    >>> f[("A","V")] = -150 # Tighten kerning
+    >>> f.FontName = "TestFont Squished"
+    >>>
+    >>> # And the font written out again (remove the # in front)
+    >>> #f.write("testfont-squished.afm")
 
 .. rubric:: Footnotes
 

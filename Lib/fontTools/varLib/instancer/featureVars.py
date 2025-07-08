@@ -1,7 +1,7 @@
-from fontTools.ttLib.tables import otTables as ot
-from copy import deepcopy
 import logging
+from copy import deepcopy
 
+from fontTools.ttLib.tables import otTables as ot
 
 log = logging.getLogger("fontTools.varLib.instancer")
 

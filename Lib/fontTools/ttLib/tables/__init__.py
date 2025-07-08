@@ -5,94 +5,97 @@ def _moduleFinderHint():
 
         >>> _moduleFinderHint()
     """
-    from . import B_A_S_E_
-    from . import C_B_D_T_
-    from . import C_B_L_C_
-    from . import C_F_F_
-    from . import C_F_F__2
-    from . import C_O_L_R_
-    from . import C_P_A_L_
-    from . import D_S_I_G_
-    from . import D__e_b_g
-    from . import E_B_D_T_
-    from . import E_B_L_C_
-    from . import F_F_T_M_
-    from . import F__e_a_t
-    from . import G_D_E_F_
-    from . import G_M_A_P_
-    from . import G_P_K_G_
-    from . import G_P_O_S_
-    from . import G_S_U_B_
-    from . import G_V_A_R_
-    from . import G__l_a_t
-    from . import G__l_o_c
-    from . import H_V_A_R_
-    from . import J_S_T_F_
-    from . import L_T_S_H_
-    from . import M_A_T_H_
-    from . import M_E_T_A_
-    from . import M_V_A_R_
-    from . import O_S_2f_2
-    from . import S_I_N_G_
-    from . import S_T_A_T_
-    from . import S_V_G_
-    from . import S__i_l_f
-    from . import S__i_l_l
-    from . import T_S_I_B_
-    from . import T_S_I_C_
-    from . import T_S_I_D_
-    from . import T_S_I_J_
-    from . import T_S_I_P_
-    from . import T_S_I_S_
-    from . import T_S_I_V_
-    from . import T_S_I__0
-    from . import T_S_I__1
-    from . import T_S_I__2
-    from . import T_S_I__3
-    from . import T_S_I__5
-    from . import T_T_F_A_
-    from . import V_A_R_C_
-    from . import V_D_M_X_
-    from . import V_O_R_G_
-    from . import V_V_A_R_
-    from . import _a_n_k_r
-    from . import _a_v_a_r
-    from . import _b_s_l_n
-    from . import _c_i_d_g
-    from . import _c_m_a_p
-    from . import _c_v_a_r
-    from . import _c_v_t
-    from . import _f_e_a_t
-    from . import _f_p_g_m
-    from . import _f_v_a_r
-    from . import _g_a_s_p
-    from . import _g_c_i_d
-    from . import _g_l_y_f
-    from . import _g_v_a_r
-    from . import _h_d_m_x
-    from . import _h_e_a_d
-    from . import _h_h_e_a
-    from . import _h_m_t_x
-    from . import _k_e_r_n
-    from . import _l_c_a_r
-    from . import _l_o_c_a
-    from . import _l_t_a_g
-    from . import _m_a_x_p
-    from . import _m_e_t_a
-    from . import _m_o_r_t
-    from . import _m_o_r_x
-    from . import _n_a_m_e
-    from . import _o_p_b_d
-    from . import _p_o_s_t
-    from . import _p_r_e_p
-    from . import _p_r_o_p
-    from . import _s_b_i_x
-    from . import _t_r_a_k
-    from . import _v_h_e_a
-    from . import _v_m_t_x
+    from . import (
+        B_A_S_E_,
+        C_B_D_T_,
+        C_B_L_C_,
+        C_F_F_,
+        C_F_F__2,
+        C_O_L_R_,
+        C_P_A_L_,
+        D_S_I_G_,
+        E_B_D_T_,
+        E_B_L_C_,
+        F_F_T_M_,
+        G_D_E_F_,
+        G_M_A_P_,
+        G_P_K_G_,
+        G_P_O_S_,
+        G_S_U_B_,
+        G_V_A_R_,
+        H_V_A_R_,
+        J_S_T_F_,
+        L_T_S_H_,
+        M_A_T_H_,
+        M_E_T_A_,
+        M_V_A_R_,
+        S_I_N_G_,
+        S_T_A_T_,
+        S_V_G_,
+        T_S_I__0,
+        T_S_I__1,
+        T_S_I__2,
+        T_S_I__3,
+        T_S_I__5,
+        T_S_I_B_,
+        T_S_I_C_,
+        T_S_I_D_,
+        T_S_I_J_,
+        T_S_I_P_,
+        T_S_I_S_,
+        T_S_I_V_,
+        T_T_F_A_,
+        V_A_R_C_,
+        V_D_M_X_,
+        V_O_R_G_,
+        V_V_A_R_,
+        D__e_b_g,
+        F__e_a_t,
+        G__l_a_t,
+        G__l_o_c,
+        O_S_2f_2,
+        S__i_l_f,
+        S__i_l_l,
+        _a_n_k_r,
+        _a_v_a_r,
+        _b_s_l_n,
+        _c_i_d_g,
+        _c_m_a_p,
+        _c_v_a_r,
+        _c_v_t,
+        _f_e_a_t,
+        _f_p_g_m,
+        _f_v_a_r,
+        _g_a_s_p,
+        _g_c_i_d,
+        _g_l_y_f,
+        _g_v_a_r,
+        _h_d_m_x,
+        _h_e_a_d,
+        _h_h_e_a,
+        _h_m_t_x,
+        _k_e_r_n,
+        _l_c_a_r,
+        _l_o_c_a,
+        _l_t_a_g,
+        _m_a_x_p,
+        _m_e_t_a,
+        _m_o_r_t,
+        _m_o_r_x,
+        _n_a_m_e,
+        _o_p_b_d,
+        _p_o_s_t,
+        _p_r_e_p,
+        _p_r_o_p,
+        _s_b_i_x,
+        _t_r_a_k,
+        _v_h_e_a,
+        _v_m_t_x,
+    )
 
 
 if __name__ == "__main__":
-    import doctest, sys
+    import doctest
+    import sys
 
     sys.exit(doctest.testmod().failed)

@@ -1,6 +1,7 @@
+import unittest
+
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.feaLib.location import FeatureLibLocation
-import unittest
 
 
 class FeatureLibErrorTest(unittest.TestCase):

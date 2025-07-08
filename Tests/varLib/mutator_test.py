@@ -1,13 +1,14 @@
-from fontTools.ttLib import TTFont
-from fontTools.varLib import build
-from fontTools.varLib.mutator import main as mutator
-from fontTools.varLib.mutator import instantiateVariableFont as make_instance
 import difflib
 import os
 import shutil
 import sys
 import tempfile
 import unittest
+
+from fontTools.ttLib import TTFont
+from fontTools.varLib import build
+from fontTools.varLib.mutator import instantiateVariableFont as make_instance
+from fontTools.varLib.mutator import main as mutator
 
 
 class MutatorTest(unittest.TestCase):

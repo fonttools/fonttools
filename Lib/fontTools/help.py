@@ -1,9 +1,10 @@
-import pkgutil
-import sys
-import fontTools
 import importlib
 import os
+import pkgutil
+import sys
 from pathlib import Path
+
+import fontTools
 
 
 def main():

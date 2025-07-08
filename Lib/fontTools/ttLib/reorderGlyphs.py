@@ -6,22 +6,14 @@ __author__ = "Rod Sheeter"
 # for details.
 
 
+from abc import ABC, abstractmethod
+from collections import deque
+from dataclasses import dataclass
+from typing import Any, Callable, Deque, Iterable, List, Optional, Tuple
+
 from fontTools import ttLib
 from fontTools.ttLib.tables import otBase
 from fontTools.ttLib.tables import otTables as ot
-from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from collections import deque
-from typing import (
-    Optional,
-    Any,
-    Callable,
-    Deque,
-    Iterable,
-    List,
-    Tuple,
-)
-
 
 _COVERAGE_ATTR = "Coverage"  # tables that have one coverage use this name
 

@@ -1,11 +1,11 @@
-from io import BytesIO
-import sys
 import os
+import sys
 import tempfile
 import unittest
-from fontTools.misc.textTools import deHexStr
-from fontTools.misc.macRes import ResourceReader
+from io import BytesIO
 
+from fontTools.misc.macRes import ResourceReader
+from fontTools.misc.textTools import deHexStr
 
 # test resource data in DeRez notation
 """

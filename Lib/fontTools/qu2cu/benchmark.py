@@ -1,9 +1,11 @@
 """Benchmark the qu2cu algorithm performance."""
 
-from .qu2cu import *
-from fontTools.cu2qu import curve_to_quadratic
 import random
 import timeit
+
+from fontTools.cu2qu import curve_to_quadratic
+
+from .qu2cu import *
 
 MAX_ERR = 0.5
 NUM_CURVES = 5

@@ -4,17 +4,18 @@
 # http://monotype.github.io/OpenType_Table_Source/otl_source.html
 # https://github.com/Monotype/OpenType_Table_Source/
 
-from fontTools import ttLib
-from fontTools.ttLib.tables._c_m_a_p import cmap_classes
-from fontTools.ttLib.tables import otTables as ot
-from fontTools.ttLib.tables.otBase import ValueRecord, valueRecordFormatDict
-from fontTools.otlLib import builder as otl
-from contextlib import contextmanager
-from fontTools.ttLib import newTable
-from fontTools.feaLib.lookupDebugInfo import LOOKUP_DEBUG_ENV_VAR, LOOKUP_DEBUG_INFO_KEY
-from operator import setitem
-import os
 import logging
+import os
+from contextlib import contextmanager
+from operator import setitem
+
+from fontTools import ttLib
+from fontTools.feaLib.lookupDebugInfo import LOOKUP_DEBUG_ENV_VAR, LOOKUP_DEBUG_INFO_KEY
+from fontTools.otlLib import builder as otl
+from fontTools.ttLib import newTable
+from fontTools.ttLib.tables import otTables as ot
+from fontTools.ttLib.tables._c_m_a_p import cmap_classes
+from fontTools.ttLib.tables.otBase import ValueRecord, valueRecordFormatDict
 
 
 class MtiLibError(Exception):
@@ -1329,6 +1330,7 @@ def main(args=None, font=None):
             args: Command line arguments (``--font``, ``--table``, input files).
     """
     import sys
+
     from fontTools import configLogger
     from fontTools.misc.testTools import MockFont
 

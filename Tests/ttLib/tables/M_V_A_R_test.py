@@ -1,9 +1,9 @@
-from fontTools.misc.testTools import FakeFont, getXML, parseXML
-from fontTools.misc.textTools import deHexStr, hexStr
-from fontTools.ttLib.tables._f_v_a_r import Axis
-from fontTools.ttLib import newTable, TTFont
 import unittest
 
+from fontTools.misc.testTools import FakeFont, getXML, parseXML
+from fontTools.misc.textTools import deHexStr, hexStr
+from fontTools.ttLib import TTFont, newTable
+from fontTools.ttLib.tables._f_v_a_r import Axis
 
 MVAR_DATA = deHexStr(
     "0001 0000 "  # 0:   version=1.0

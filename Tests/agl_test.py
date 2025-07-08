@@ -1,18 +1,19 @@
-from fontTools import agl
 import unittest
+
+from fontTools import agl
 
 
 class AglToUnicodeTest(unittest.TestCase):
     def test_spec_examples(self):
         # https://github.com/adobe-type-tools/agl-specification#3-examples
         self.assertEqual(agl.toUnicode("Lcommaaccent"), "Ļ")
-        self.assertEqual(agl.toUnicode("uni20AC0308"), "\u20AC\u0308")
-        self.assertEqual(agl.toUnicode("u1040C"), "\U0001040C")
+        self.assertEqual(agl.toUnicode("uni20AC0308"), "\u20ac\u0308")
+        self.assertEqual(agl.toUnicode("u1040C"), "\U0001040c")
         self.assertEqual(agl.toUnicode("uniD801DC0C"), "")
         self.assertEqual(agl.toUnicode("uni20ac"), "")
         self.assertEqual(
             agl.toUnicode("Lcommaaccent_uni20AC0308_u1040C.alternate"),
-            "\u013B\u20AC\u0308\U0001040C",
+            "\u013b\u20ac\u0308\U0001040c",
         )
         self.assertEqual(agl.toUnicode("Lcommaaccent_uni013B_u013B"), "ĻĻĻ")
         self.assertEqual(agl.toUnicode("foo"), "")
@@ -42,7 +43,7 @@ class AglToUnicodeTest(unittest.TestCase):
         # Interesting test case because "uni" is a prefix of "union".
         self.assertEqual(agl.toUnicode("union"), "∪")
         # U+222A U+FE00 is a Standardized Variant for UNION WITH SERIFS.
-        self.assertEqual(agl.toUnicode("union_uniFE00"), "\u222A\uFE00")
+        self.assertEqual(agl.toUnicode("union_uniFE00"), "\u222a\ufe00")
 
     def test_dingbats(self):
         self.assertEqual(agl.toUnicode("a20", isZapfDingbats=True), "✔")

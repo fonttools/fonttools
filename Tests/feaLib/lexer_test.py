@@ -1,11 +1,12 @@
-from fontTools.feaLib.error import FeatureLibError, IncludedFeaNotFound
-from fontTools.feaLib.lexer import IncludingLexer, Lexer
-from fontTools.misc.textTools import tobytes
-from io import StringIO
 import os
 import shutil
 import tempfile
 import unittest
+from io import StringIO
+
+from fontTools.feaLib.error import FeatureLibError, IncludedFeaNotFound
+from fontTools.feaLib.lexer import IncludingLexer, Lexer
+from fontTools.misc.textTools import tobytes
 
 
 def lex(s):

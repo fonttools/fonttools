@@ -1,9 +1,9 @@
 """fontTools.ttLib -- a package for dealing with TrueType fonts."""
 
-from fontTools.config import OPTIONS
-from fontTools.misc.loggingTools import deprecateFunction
 import logging
 
+from fontTools.config import OPTIONS
+from fontTools.misc.loggingTools import deprecateFunction
 
 log = logging.getLogger(__name__)
 
@@ -26,5 +26,5 @@ def debugmsg(msg):
     print(msg + time.strftime("  (%H:%M:%S)", time.localtime(time.time())))
 
 
-from fontTools.ttLib.ttFont import *
 from fontTools.ttLib.ttCollection import TTCollection
+from fontTools.ttLib.ttFont import *

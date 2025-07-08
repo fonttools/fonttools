@@ -1,6 +1,14 @@
 import collections.abc
 import re
+import warnings
+from base64 import b64decode, b64encode
+from datetime import datetime
+from functools import singledispatch
+from io import BytesIO
+from numbers import Integral
+from types import SimpleNamespace
 from typing import (
+    IO,
     Any,
     Callable,
     Dict,
@@ -11,20 +19,10 @@ from typing import (
     Sequence,
     Type,
     Union,
-    IO,
 )
-import warnings
-from io import BytesIO
-from datetime import datetime
-from base64 import b64encode, b64decode
-from numbers import Integral
-from types import SimpleNamespace
-from functools import singledispatch
 
 from fontTools.misc import etree
-
 from fontTools.misc.textTools import tostr
-
 
 # By default, we
 #  - deserialize <data> elements as bytes and

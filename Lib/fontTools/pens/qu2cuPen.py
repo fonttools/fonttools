@@ -13,10 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from fontTools.qu2cu import quadratic_to_curves
+import math
+
 from fontTools.pens.filterPen import ContourFilterPen
 from fontTools.pens.reverseContourPen import ReverseContourPen
-import math
+from fontTools.qu2cu import quadratic_to_curves
 
 
 class Qu2CuPen(ContourFilterPen):

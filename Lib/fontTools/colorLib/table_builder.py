@@ -5,6 +5,8 @@ colorLib.table_builder: Generic helper for filling in BaseTable derivatives from
 
 import collections
 import enum
+
+from fontTools.misc.roundTools import otRound
 from fontTools.ttLib.tables.otBase import (
     BaseTable,
     FormatSwitchingBaseTable,
@@ -12,16 +14,15 @@ from fontTools.ttLib.tables.otBase import (
 )
 from fontTools.ttLib.tables.otConverters import (
     ComputedInt,
+    FloatValue,
+    IntValue,
+    OptionalValue,
+    Short,
     SimpleValue,
     Struct,
-    Short,
     UInt8,
     UShort,
-    IntValue,
-    FloatValue,
-    OptionalValue,
 )
-from fontTools.misc.roundTools import otRound
 
 
 class BuildCallback(enum.Enum):

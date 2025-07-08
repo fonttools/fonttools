@@ -2,10 +2,10 @@
 #
 # Google Author(s): Behdad Esfahbod, Roozbeh Pournader
 
-from fontTools.merge.unicode import is_Default_Ignorable
-from fontTools.pens.recordingPen import DecomposingRecordingPen
 import logging
 
+from fontTools.merge.unicode import is_Default_Ignorable
+from fontTools.pens.recordingPen import DecomposingRecordingPen
 
 log = logging.getLogger("fontTools.merge")
 

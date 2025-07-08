@@ -1,6 +1,8 @@
-from fontTools.misc.textTools import bytesjoin, tobytes, safeEval
-from . import DefaultTable
 import struct
+
+from fontTools.misc.textTools import bytesjoin, safeEval, tobytes
+
+from . import DefaultTable
 
 # https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6ltag.html
 

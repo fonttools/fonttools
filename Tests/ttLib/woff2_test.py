@@ -1,42 +1,42 @@
-from fontTools import ttLib
+import copy
+import os
+import random
+import struct
+import unittest
+from collections import OrderedDict
+from functools import partial
+from io import BytesIO
+
+import pytest
+from fontTools import fontBuilder, ttLib
+from fontTools.misc import sstruct
+from fontTools.misc.textTools import Tag, bytechr, byteord
+from fontTools.pens.recordingPen import RecordingPen
+from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.ttLib import woff2
 from fontTools.ttLib.tables import _g_l_y_f
 from fontTools.ttLib.woff2 import (
-    WOFF2Reader,
-    woff2DirectorySize,
-    woff2DirectoryFormat,
-    woff2FlagsSize,
-    woff2UnknownTagSize,
-    woff2Base128MaxSize,
     WOFF2DirectoryEntry,
-    getKnownTagIndex,
-    packBase128,
-    base128Size,
-    woff2UnknownTagIndex,
     WOFF2FlavorData,
-    woff2TransformedTableTags,
     WOFF2GlyfTable,
-    WOFF2LocaTable,
     WOFF2HmtxTable,
+    WOFF2LocaTable,
+    WOFF2Reader,
     WOFF2Writer,
-    unpackBase128,
-    unpack255UShort,
+    base128Size,
+    getKnownTagIndex,
     pack255UShort,
+    packBase128,
+    unpack255UShort,
+    unpackBase128,
+    woff2Base128MaxSize,
+    woff2DirectoryFormat,
+    woff2DirectorySize,
+    woff2FlagsSize,
+    woff2TransformedTableTags,
+    woff2UnknownTagIndex,
+    woff2UnknownTagSize,
 )
-import unittest
-from fontTools.misc import sstruct
-from fontTools.misc.textTools import Tag, bytechr, byteord
-from fontTools import fontBuilder
-from fontTools.pens.ttGlyphPen import TTGlyphPen
-from fontTools.pens.recordingPen import RecordingPen
-from io import BytesIO
-import struct
-import os
-import random
-import copy
-from collections import OrderedDict
-from functools import partial
-import pytest
 
 haveBrotli = False
 try:
@@ -1167,7 +1167,7 @@ class WOFF2HmtxTableTest(object):
         with pytest.raises(
             ttLib.TTLibError, match="Bits 2-7 of 'hmtx' flags are reserved"
         ):
-            hmtxTable.reconstruct(b"\xFF", ttFont=None)
+            hmtxTable.reconstruct(b"\xff", ttFont=None)
 
     def test_reconstruct_flags_required_bits(self):
         hmtxTable = WOFF2HmtxTable()

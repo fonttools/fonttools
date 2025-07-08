@@ -1,34 +1,34 @@
 from collections import namedtuple
+from functools import partial
+from io import BytesIO
+
+from fontTools import varLib
 from fontTools.cffLib import (
-    maxStackLimit,
-    TopDictIndex,
-    buildOrder,
-    topDictOperators,
-    topDictOperators2,
-    privateDictOperators,
-    privateDictOperators2,
     FDArrayIndex,
     FontDict,
+    TopDictIndex,
     VarStoreData,
+    buildOrder,
+    maxStackLimit,
+    privateDictOperators,
+    privateDictOperators2,
+    topDictOperators,
+    topDictOperators2,
 )
-from io import BytesIO
-from fontTools.cffLib.specializer import specializeCommands, commandsToProgram
-from fontTools.ttLib import newTable
-from fontTools import varLib
-from fontTools.varLib.models import allEqual
+from fontTools.cffLib.specializer import commandsToProgram, specializeCommands
 from fontTools.misc.loggingTools import deprecateFunction
-from fontTools.misc.roundTools import roundFunc
 from fontTools.misc.psCharStrings import T2CharString, T2OutlineExtractor
+from fontTools.misc.roundTools import roundFunc
 from fontTools.pens.t2CharStringPen import T2CharStringPen
-from functools import partial
+from fontTools.ttLib import newTable
+from fontTools.varLib.models import allEqual
 
 from .errors import (
     VarLibCFFDictMergeError,
-    VarLibCFFPointTypeMergeError,
     VarLibCFFHintTypeMergeError,
+    VarLibCFFPointTypeMergeError,
     VarLibMergeError,
 )
-
 
 # Backwards compatibility
 MergeDictError = VarLibCFFDictMergeError

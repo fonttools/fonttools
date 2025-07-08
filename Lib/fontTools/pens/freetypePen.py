@@ -4,30 +4,30 @@
 
 __all__ = ["FreeTypePen"]
 
-import os
+import collections
 import ctypes
+import math
+import os
 import platform
 import subprocess
-import collections
-import math
 
 import freetype
-from freetype.raw import FT_Outline_Get_Bitmap, FT_Outline_Get_BBox, FT_Outline_Get_CBox
-from freetype.ft_types import FT_Pos
-from freetype.ft_structs import FT_Vector, FT_BBox, FT_Bitmap, FT_Outline
 from freetype.ft_enums import (
-    FT_OUTLINE_NONE,
-    FT_OUTLINE_EVEN_ODD_FILL,
-    FT_PIXEL_MODE_GRAY,
-    FT_CURVE_TAG_ON,
     FT_CURVE_TAG_CONIC,
     FT_CURVE_TAG_CUBIC,
+    FT_CURVE_TAG_ON,
+    FT_OUTLINE_EVEN_ODD_FILL,
+    FT_OUTLINE_NONE,
+    FT_PIXEL_MODE_GRAY,
 )
 from freetype.ft_errors import FT_Exception
+from freetype.ft_structs import FT_BBox, FT_Bitmap, FT_Outline, FT_Vector
+from freetype.ft_types import FT_Pos
+from freetype.raw import FT_Outline_Get_BBox, FT_Outline_Get_Bitmap, FT_Outline_Get_CBox
 
-from fontTools.pens.basePen import BasePen, PenError
 from fontTools.misc.roundTools import otRound
 from fontTools.misc.transform import Transform
+from fontTools.pens.basePen import BasePen, PenError
 
 Contour = collections.namedtuple("Contour", ("points", "tags"))
 

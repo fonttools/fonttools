@@ -1,6 +1,7 @@
+import unittest
+
 from fontTools.voltLib.error import VoltLibError
 from fontTools.voltLib.lexer import Lexer
-import unittest
 
 
 def lex(s):

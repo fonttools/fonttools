@@ -1,6 +1,7 @@
-from fontTools.ttLib import TTFont, newTable, getTableModule
-from fontTools.ttLib.tables.O_S_2f_2 import *
 import unittest
+
+from fontTools.ttLib import TTFont, getTableModule, newTable
+from fontTools.ttLib.tables.O_S_2f_2 import *
 
 
 class OS2TableTest(unittest.TestCase):

@@ -4,28 +4,28 @@
 
 from __future__ import annotations
 
-from fontTools import config
-from fontTools.misc.roundTools import otRound
-from fontTools import ttLib
-from fontTools.ttLib.tables import otTables
-from fontTools.ttLib.tables.otBase import USE_HARFBUZZ_REPACKER
-from fontTools.otlLib.maxContextCalc import maxCtxFont
-from fontTools.pens.basePen import NullPen
-from fontTools.misc.loggingTools import Timer
-from fontTools.misc.cliTools import makeOutputFileName
-from fontTools.subset.util import _add_method, _uniq_sort
-from fontTools.subset.cff import *
-from fontTools.subset.svg import *
-from fontTools.varLib import varStore, multiVarStore  # For monkey-patching
-from fontTools.ttLib.tables._n_a_m_e import NameRecordVisitor, makeName
-from fontTools.unicodedata import mirrored
-import sys
-import struct
 import array
 import logging
+import struct
+import sys
 from collections import Counter, defaultdict
 from functools import reduce
 from types import MethodType
+
+from fontTools import config, ttLib
+from fontTools.misc.cliTools import makeOutputFileName
+from fontTools.misc.loggingTools import Timer
+from fontTools.misc.roundTools import otRound
+from fontTools.otlLib.maxContextCalc import maxCtxFont
+from fontTools.pens.basePen import NullPen
+from fontTools.subset.cff import *
+from fontTools.subset.svg import *
+from fontTools.subset.util import _add_method, _uniq_sort
+from fontTools.ttLib.tables import otTables
+from fontTools.ttLib.tables._n_a_m_e import NameRecordVisitor, makeName
+from fontTools.ttLib.tables.otBase import USE_HARFBUZZ_REPACKER
+from fontTools.unicodedata import mirrored
+from fontTools.varLib import multiVarStore, varStore  # For monkey-patching
 
 __usage__ = "pyftsubset font-file [glyph...] [--option=value]..."
 
@@ -2494,8 +2494,8 @@ def closure_glyphs(self, s):
 
 @_add_method(ttLib.getTableClass("COLR"))
 def subset_glyphs(self, s):
-    from fontTools.colorLib.unbuilder import unbuildColrV1
     from fontTools.colorLib.builder import buildColrV1, populateCOLRv0
+    from fontTools.colorLib.unbuilder import unbuildColrV1
 
     # only include glyphs after COLR closure, which in turn comes after cmap and GSUB
     # closure, but importantly before glyf/CFF closures. COLR layers can refer to
@@ -3775,6 +3775,7 @@ def usage():
 def main(args=None):
     """OpenType font subsetter and optimizer"""
     from os.path import splitext
+
     from fontTools import configLogger
 
     if args is None:

@@ -5,9 +5,8 @@ define the :py:obj:`.deprecated` decorator that is used elsewhere in
 the module.
 """
 
-import warnings
 import functools
-
+import warnings
 
 numberTypes = (int, float)
 

@@ -1,29 +1,32 @@
-from .interpolatableHelpers import *
-from fontTools.ttLib import TTFont
-from fontTools.ttLib.ttGlyphSet import LerpGlyphSet
-from fontTools.pens.recordingPen import (
-    RecordingPen,
-    DecomposingRecordingPen,
-    RecordingPointPen,
-)
+import logging
+import math
+import os
+from functools import wraps
+from io import BytesIO
+from itertools import cycle
+
+import cairo
+
 from fontTools.pens.boundsPen import ControlBoundsPen
 from fontTools.pens.cairoPen import CairoPen
 from fontTools.pens.pointPen import (
-    SegmentToPointPen,
     PointToSegmentPen,
     ReverseContourPointPen,
+    SegmentToPointPen,
 )
+from fontTools.pens.recordingPen import (
+    DecomposingRecordingPen,
+    RecordingPen,
+    RecordingPointPen,
+)
+from fontTools.ttLib import TTFont
+from fontTools.ttLib.ttGlyphSet import LerpGlyphSet
 from fontTools.varLib.interpolatableHelpers import (
     PerContourOrComponentPen,
     SimpleRecordingPointPen,
 )
-from itertools import cycle
-from functools import wraps
-from io import BytesIO
-import cairo
-import math
-import os
-import logging
+
+from .interpolatableHelpers import *
 
 log = logging.getLogger("fontTools.varLib.interpolatable")
 

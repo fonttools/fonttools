@@ -1,12 +1,12 @@
-from fontTools.ttLib import TTFont
-from fontTools.feaLib.builder import addOpenTypeFeatures, Builder
-from fontTools.feaLib.error import FeatureLibError
-from fontTools import configLogger
-from fontTools.misc.cliTools import makeOutputFileName
-import sys
 import argparse
 import logging
+import sys
 
+from fontTools import configLogger
+from fontTools.feaLib.builder import Builder, addOpenTypeFeatures
+from fontTools.feaLib.error import FeatureLibError
+from fontTools.misc.cliTools import makeOutputFileName
+from fontTools.ttLib import TTFont
 
 log = logging.getLogger("fontTools.feaLib")
 

@@ -1,12 +1,12 @@
-import os
 import argparse
 import logging
+import os
+
+import fontTools
 from fontTools.misc.cliTools import makeOutputFileName
-from fontTools.ttLib import TTFont
 from fontTools.pens.qu2cuPen import Qu2CuPen
 from fontTools.pens.ttGlyphPen import TTGlyphPen
-import fontTools
-
+from fontTools.ttLib import TTFont
 
 logger = logging.getLogger("fontTools.qu2cu")
 

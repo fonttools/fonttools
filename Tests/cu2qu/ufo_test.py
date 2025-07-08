@@ -1,22 +1,20 @@
 import os
 
-from fontTools.misc.loggingTools import CapturingLogHandler
-from fontTools.cu2qu.ufo import (
-    fonts_to_quadratic,
-    font_to_quadratic,
-    glyphs_to_quadratic,
-    glyph_to_quadratic,
-    logger,
-    CURVE_TYPE_LIB_KEY,
-)
+import pytest
 from fontTools.cu2qu.errors import (
+    IncompatibleFontsError,
     IncompatibleSegmentNumberError,
     IncompatibleSegmentTypesError,
-    IncompatibleFontsError,
 )
-
-import pytest
-
+from fontTools.cu2qu.ufo import (
+    CURVE_TYPE_LIB_KEY,
+    font_to_quadratic,
+    fonts_to_quadratic,
+    glyph_to_quadratic,
+    glyphs_to_quadratic,
+    logger,
+)
+from fontTools.misc.loggingTools import CapturingLogHandler
 
 ufoLib2 = pytest.importorskip("ufoLib2")
 

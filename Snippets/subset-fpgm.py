@@ -1,7 +1,8 @@
 #! /usr/bin/env python3
 
-from fontTools.ttLib import TTFont
 import sys
+
+from fontTools.ttLib import TTFont
 
 if len(sys.argv) < 2:
     print("usage: subset-fpgm.py fontfile.ttf func-number...")

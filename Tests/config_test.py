@@ -1,4 +1,3 @@
-from fontTools.misc.configTools import AbstractConfig, Options
 import pytest
 from fontTools.config import (
     OPTIONS,
@@ -7,6 +6,7 @@ from fontTools.config import (
     ConfigValueParsingError,
     ConfigValueValidationError,
 )
+from fontTools.misc.configTools import AbstractConfig, Options
 from fontTools.ttLib import TTFont
 
 

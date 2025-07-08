@@ -1,11 +1,10 @@
-import sys
 import logging
+import sys
 import timeit
-from functools import wraps
-from collections.abc import Mapping, Callable
 import warnings
+from collections.abc import Callable, Mapping
+from functools import wraps
 from logging import PercentStyle
-
 
 # default logging level used by Timer class
 TIME_LEVEL = logging.DEBUG

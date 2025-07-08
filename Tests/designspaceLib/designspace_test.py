@@ -1,16 +1,16 @@
 # coding=utf-8
 
 import os
-from pathlib import Path
 import re
 import shutil
+from pathlib import Path
 
 import pytest
 from fontTools import ttLib
 from fontTools.designspaceLib import (
     AxisDescriptor,
-    AxisMappingDescriptor,
     AxisLabelDescriptor,
+    AxisMappingDescriptor,
     DesignSpaceDocument,
     DesignSpaceDocumentError,
     DiscreteAxisDescriptor,

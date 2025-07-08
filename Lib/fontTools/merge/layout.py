@@ -2,13 +2,13 @@
 #
 # Google Author(s): Behdad Esfahbod, Roozbeh Pournader
 
-from fontTools import ttLib
-from fontTools.ttLib.tables.DefaultTable import DefaultTable
-from fontTools.ttLib.tables import otTables
-from fontTools.merge.base import add_method, mergeObjects
-from fontTools.merge.util import *
 import logging
 
+from fontTools import ttLib
+from fontTools.merge.base import add_method, mergeObjects
+from fontTools.merge.util import *
+from fontTools.ttLib.tables import otTables
+from fontTools.ttLib.tables.DefaultTable import DefaultTable
 
 log = logging.getLogger("fontTools.merge")
 

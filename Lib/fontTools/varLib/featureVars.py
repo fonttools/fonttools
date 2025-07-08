@@ -4,13 +4,14 @@ https://docs.microsoft.com/en-us/typography/opentype/spec/chapter2#featurevariat
 NOTE: The API is experimental and subject to change.
 """
 
+from collections import OrderedDict
+
 from fontTools.misc.dictTools import hashdict
 from fontTools.misc.intTools import bit_count
+from fontTools.otlLib.builder import buildLookup, buildSingleSubstSubtable
 from fontTools.ttLib import newTable
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.ttVisitor import TTVisitor
-from fontTools.otlLib.builder import buildLookup, buildSingleSubstSubtable
-from collections import OrderedDict
 
 from .errors import VarLibError, VarLibValidationError
 
@@ -690,6 +691,7 @@ def _remapLangSys(langSys, featureRemap):
 
 
 if __name__ == "__main__":
-    import doctest, sys
+    import doctest
+    import sys
 
     sys.exit(doctest.testmod().failed)

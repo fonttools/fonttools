@@ -5,9 +5,9 @@ https://github.com/chromium/chromium/blob/93831f2/third_party/
 blink/renderer/core/svg/svg_path_parser.cc#L169-L278
 """
 
-from fontTools.misc.transform import Identity, Scale
 from math import atan2, ceil, cos, fabs, isfinite, pi, radians, sin, sqrt, tan
 
+from fontTools.misc.transform import Identity, Scale
 
 TWO_PI = 2 * pi
 PI_OVER_TWO = 0.5 * pi

@@ -1,12 +1,13 @@
+import unittest
+
+from fontTools.misc.loggingTools import CapturingLogHandler
 from fontTools.pens.basePen import (
     AbstractPen,
     BasePen,
-    decomposeSuperBezierSegment,
     decomposeQuadraticSegment,
+    decomposeSuperBezierSegment,
 )
 from fontTools.pens.pointPen import AbstractPointPen
-from fontTools.misc.loggingTools import CapturingLogHandler
-import unittest
 
 
 class _TestPen(BasePen):
