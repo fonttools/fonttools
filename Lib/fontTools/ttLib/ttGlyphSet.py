@@ -502,7 +502,6 @@ if __name__ == "__main__":
         print("Usage: ttGlyphSet.py [-y fontNumber] [-n numGlyphs] fontfile.ttf")
         sys.exit(1)
 
-    # Convert to argparse reading
     import argparse
 
     args = argparse.ArgumentParser()
