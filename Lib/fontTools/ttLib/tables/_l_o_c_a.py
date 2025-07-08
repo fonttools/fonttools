@@ -46,8 +46,8 @@ class table__l_o_c_a(DefaultTable.DefaultTable):
             max_location = 0
         if max_location < 0x20000 and all(l % 2 == 0 for l in self.locations):
             locations = array.array("H")
-            for i in range(len(self.locations)):
-                locations.append(self.locations[i] // 2)
+            for location in self.locations:
+                locations.append(location // 2)
             ttFont["head"].indexToLocFormat = 0
         else:
             locations = array.array("I", self.locations)

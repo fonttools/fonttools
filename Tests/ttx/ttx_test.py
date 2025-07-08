@@ -471,7 +471,7 @@ def test_options_recalc_timestamp():
     assert tto.recalcTimestamp is True
 
 
-def test_options_recalc_timestamp():
+def test_options_no_recalc_timestamp():
     tto = ttx.Options([("--no-recalc-timestamp", "")], 1)
     assert tto.recalcTimestamp is False
 

@@ -974,11 +974,10 @@ class Glyph(object):
         lastcomponent = len(self.components) - 1
         more = 1
         haveInstructions = 0
-        for i in range(len(self.components)):
+        for i, compo in enumerate(self.components):
             if i == lastcomponent:
                 haveInstructions = hasattr(self, "program")
                 more = 0
-            compo = self.components[i]
             data = data + compo.compile(more, haveInstructions, glyfTable)
         if haveInstructions:
             instructions = self.program.getBytecode()
@@ -2037,8 +2036,8 @@ class GlyphCoordinates(object):
         if round is noRound:
             return
         a = self._a
-        for i in range(len(a)):
-            a[i] = round(a[i])
+        for i, value in enumerate(a):
+            a[i] = round(value)
 
     def calcBounds(self):
         a = self._a
@@ -2168,8 +2167,8 @@ class GlyphCoordinates(object):
         """
         r = self.copy()
         a = r._a
-        for i in range(len(a)):
-            a[i] = -a[i]
+        for i, value in enumerate(a):
+            a[i] = -value
         return r
 
     def __round__(self, *, round=otRound):
@@ -2214,8 +2213,8 @@ class GlyphCoordinates(object):
             other = other._a
             a = self._a
             assert len(a) == len(other)
-            for i in range(len(a)):
-                a[i] += other[i]
+            for i, value in enumerate(other):
+                a[i] += value
             return self
         return NotImplemented
 
@@ -2238,8 +2237,8 @@ class GlyphCoordinates(object):
             other = other._a
             a = self._a
             assert len(a) == len(other)
-            for i in range(len(a)):
-                a[i] -= other[i]
+            for i, value in enumerate(other):
+                a[i] -= value
             return self
         return NotImplemented
 
