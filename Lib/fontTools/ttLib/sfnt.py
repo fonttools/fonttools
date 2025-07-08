@@ -281,6 +281,9 @@ class SFNTWriter(object):
 
     def __setitem__(self, tag, data):
         """Write raw table data to disk."""
+
+        from fontTools.ttLib import getTableClass
+
         if tag in self.tables:
             raise TTLibError("cannot rewrite '%s' table" % tag)
 
@@ -292,7 +295,6 @@ class SFNTWriter(object):
             entry.uncompressed = True
         else:
             entry.checkSum = calcChecksum(data)
-        from fontTools.ttLib import getTableClass
 
         entry.alignment = getTableClass(tag).alignment
         self.align(entry.alignment)
