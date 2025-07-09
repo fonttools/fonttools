@@ -306,7 +306,7 @@ def _partCompositeApplyToTransforms(part, transforms, transformOffset, coords):
             ty = extremum_translation_deltas[i].y * scalar
             transforms[transformOffset + row] = transforms[
                 transformOffset + row
-            ].translate(tx, ty, True)
+            ].translate(tx, ty, before=True)
     else:
         # General case: extremum translations + rotations
         i_translation = 0
@@ -393,16 +393,16 @@ def _partCompositeApplyToTransforms(part, transforms, transformOffset, coords):
                 else:
                     tx = translation_delta.x * scalar
                     ty = translation_delta.y * scalar
-                    transform = transform.translate(tx, ty, is_translate_only)
+                    transform = transform.translate(tx, ty, before=is_translate_only)
 
             if is_translate_only:
                 transforms[transformOffset + row] = transforms[
                     transformOffset + row
-                ].translate(transform.dx, transform.dy, True)
+                ].translate(transform.dx, transform.dy, before=True)
             else:
                 transforms[transformOffset + row] = transforms[
                     transformOffset + row
-                ].transform(transform, True)
+                ].transform(transform, before=True)
 
     # Master rotations
     for i, row in enumerate(master_rotation_indices):
@@ -410,7 +410,7 @@ def _partCompositeApplyToTransforms(part, transforms, transformOffset, coords):
             break
         angle = master_rotation_deltas[i]
         transforms[transformOffset + row] = transforms[transformOffset + row].rotate(
-            angle, True
+            angle, before=True
         )
 
     # Master translations
@@ -419,7 +419,7 @@ def _partCompositeApplyToTransforms(part, transforms, transformOffset, coords):
             break
         delta = master_translation_deltas[i]
         transforms[transformOffset + row] = transforms[transformOffset + row].translate(
-            delta.x, delta.y, True
+            delta.x, delta.y, before=True
         )
 
 
@@ -444,7 +444,7 @@ def _drawPartComposite(
 
         transforms[subpartTransformOffset] = transforms[
             subpartTransformOffset
-        ].transform(thisTransform, True)
+        ].transform(thisTransform, before=True)
         _drawPart(
             subpart,
             pen,

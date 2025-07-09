@@ -216,7 +216,7 @@ class Transform(NamedTuple):
         xx, xy, yx, yy = self[:4]
         return [(xx * dx + yx * dy, xy * dx + yy * dy) for dx, dy in vectors]
 
-    def translate(self, x: float = 0, y: float = 0, before=False):
+    def translate(self, x: float = 0, y: float = 0, *, before=False):
         """Return a new transformation, translated (offset) by x, y.
 
         :Example:
@@ -247,7 +247,7 @@ class Transform(NamedTuple):
             y = x
         return self.transform((x, 0, 0, y, 0, 0))
 
-    def rotate(self, angle: float, before=False, *, center_x=0, center_y=0):
+    def rotate(self, angle: float, *, before=False, center_x=0, center_y=0):
         """Return a new transformation, rotated by 'angle' (radians).
 
         :Example:
@@ -264,7 +264,7 @@ class Transform(NamedTuple):
             dy = -s * center_x + (1 - c) * center_y
         else:
             dx = dy = 0
-        return self.transform((c, s, -s, c, dx, dy), before)
+        return self.transform((c, s, -s, c, dx, dy), before=before)
 
     def skew(self, x: float = 0, y: float = 0):
         """Return a new transformation, skewed by x and y.
@@ -278,7 +278,7 @@ class Transform(NamedTuple):
         """
         return self.transform((1, math.tan(y), math.tan(x), 1, 0, 0))
 
-    def transform(self, other, before=False):
+    def transform(self, other, *, before=False):
         """Return a new transformation, transformed by another
         transformation.
 
