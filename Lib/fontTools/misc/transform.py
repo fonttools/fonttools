@@ -226,7 +226,9 @@ class Transform(NamedTuple):
                 >>>
         """
         if before:
-            return self.transform((1, 0, 0, 1, x, y))
+            return Transform(
+                self.xx, self.xy, self.yx, self.yy, self.dx + x, self.dy + y
+            )
         return self.transform((1, 0, 0, 1, 0, 0)).transform((1, 0, 0, 1, x, y))
 
     def scale(self, x: float = 1, y: float | None = None):
