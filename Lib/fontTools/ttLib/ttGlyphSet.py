@@ -498,10 +498,6 @@ if __name__ == "__main__":
     from fontTools.ttLib import TTFont
     from fontTools.pens.basePen import NullPen
 
-    if len(sys.argv) < 2:
-        print("Usage: ttGlyphSet.py [-y fontNumber] [-n numGlyphs] fontfile.ttf")
-        sys.exit(1)
-
     import argparse
 
     args = argparse.ArgumentParser()
