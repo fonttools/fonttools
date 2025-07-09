@@ -247,7 +247,7 @@ class Transform(NamedTuple):
             y = x
         return self.transform((x, 0, 0, y, 0, 0))
 
-    def rotate(self, angle: float, before=False):
+    def rotate(self, angle: float, before=False, *, center_x=0, center_y=0):
         """Return a new transformation, rotated by 'angle' (radians).
 
         :Example:
@@ -259,7 +259,12 @@ class Transform(NamedTuple):
         """
         c = _normSinCos(math.cos(angle))
         s = _normSinCos(math.sin(angle))
-        return self.transform((c, s, -s, c, 0, 0), before)
+        if center_x or center_y:
+            dx = (1 - c) * center_x + s * center_y
+            dy = -s * center_x + (1 - c) * center_y
+        else:
+            dx = dy = 0
+        return self.transform((c, s, -s, c, dx, dy), before)
 
     def skew(self, x: float = 0, y: float = 0):
         """Return a new transformation, skewed by x and y.

@@ -259,144 +259,167 @@ def _partCompositeApplyToCoords(part, outCoords, outCoordsOffset, coords):
 
 
 def _partCompositeApplyToTransforms(part, transforms, transformOffset, coords):
+    # This is a straight port from HarfBuzz's optimized algorithm.
+    #
+    # Note that the spec says walk four iterators together.
+    # But with careful consideration, we have figured out the order
+    # to walk two, then one, then one. This seems to work for all
+    # glyphs in PingFangUI just fine.
+    #
+    # Moreover, for walking the two (extremum ones), if there is
+    # no rotation, we use a separate, faster, loop that just walks
+    # extremum translations.
+
+    axis_count = part.AxisCount
+
     master_rotation_indices = list(part.AllRotations.MasterRotationIndex)
-    master_rotation_delta = list(part.AllRotations.MasterRotationDelta)
-    master_rotation_index = 0
-    master_rotation_count = len(master_rotation_indices)
+    master_rotation_deltas = list(part.AllRotations.MasterRotationDelta)
     master_translation_indices = list(part.AllTranslations.MasterTranslationIndex)
-    master_translation_delta = list(part.AllTranslations.MasterTranslationDelta)
-    master_translation_index = 0
-    master_translation_count = len(master_translation_indices)
+    master_translation_deltas = list(part.AllTranslations.MasterTranslationDelta)
     extremum_translation_indices = list(part.AllTranslations.ExtremumTranslationIndex)
-    extremum_translation_delta = list(part.AllTranslations.ExtremumTranslationDelta)
+    extremum_translation_deltas = list(part.AllTranslations.ExtremumTranslationDelta)
+    extremum_rotation_indices = list(part.AllRotations.ExtremumRotationIndex)
+    extremum_rotation_deltas = list(part.AllRotations.ExtremumRotationDelta)
+
     extremum_translation_index = 0
     extremum_translation_count = len(extremum_translation_indices)
-    extremum_rotation_indices = list(part.AllRotations.ExtremumRotationIndex)
-    extremum_rotation_delta = list(part.AllRotations.ExtremumRotationDelta)
     extremum_rotation_index = 0
     extremum_rotation_count = len(extremum_rotation_indices)
 
-    # This implements the original algorithm from the HVF paper.
-    # HarfBuzz has departed from this algorithm to a slightly faster
-    # one that avoids the need for walking four iterators together.
+    transform_len = len(transforms) - transformOffset
 
-    while True:
-        row = len(transforms) - transformOffset
-        if master_translation_index < master_translation_count:
-            row = min(row, master_translation_indices[master_translation_index])
-        if master_rotation_index < master_rotation_count:
-            row = min(row, master_rotation_indices[master_rotation_index])
-        if extremum_translation_index < extremum_translation_count:
-            row = min(row, extremum_translation_indices[extremum_translation_index].row)
-        if extremum_rotation_index < extremum_rotation_count:
-            row = min(row, extremum_rotation_indices[extremum_rotation_index].row)
-        if row == len(transforms) - transformOffset:
-            break
-
-        transform = Transform()
-
-        if (
-            master_rotation_index < master_rotation_count
-            and master_rotation_indices[master_rotation_index] == row
-        ):
-            transform = transform.rotate(
-                master_rotation_delta[master_rotation_index], True
-            )
-            master_rotation_index += 1
-
-        if (
-            master_translation_index < master_translation_count
-            and master_translation_indices[master_translation_index] == row
-        ):
-            transform = transform.translate(
-                master_translation_delta[master_translation_index].x,
-                master_translation_delta[master_translation_index].y,
-                True,
-            )
-            master_translation_index += 1
-
-        while True:
-            translation_delta = hvglTranslationDelta()
-            rotation_delta = 0
-
-            column = 2 * part.AxisCount
-            if (
-                extremum_translation_index < extremum_translation_count
-                and extremum_translation_indices[extremum_translation_index].row == row
-            ):
-                column = min(
-                    column,
-                    extremum_translation_indices[extremum_translation_index].column,
-                )
-            if (
-                extremum_rotation_index < extremum_rotation_count
-                and extremum_rotation_indices[extremum_rotation_index].row == row
-            ):
-                column = min(
-                    column, extremum_rotation_indices[extremum_rotation_index].column
-                )
-            if column == 2 * part.AxisCount:
-                break
-
-            if (
-                extremum_translation_index < extremum_translation_count
-                and extremum_translation_indices[extremum_translation_index].row == row
-                and extremum_translation_indices[extremum_translation_index].column
-                == column
-            ):
-                translation_delta = extremum_translation_delta[
-                    extremum_translation_index
-                ]
-                extremum_translation_index += 1
-            if (
-                extremum_rotation_index < extremum_rotation_count
-                and extremum_rotation_indices[extremum_rotation_index].row == row
-                and extremum_rotation_indices[extremum_rotation_index].column == column
-            ):
-                rotation_delta = extremum_rotation_delta[extremum_rotation_index]
-                extremum_rotation_index += 1
-
+    if extremum_rotation_count == 0:
+        # Fast path: extremum translations only
+        for i in range(extremum_translation_count):
+            column = extremum_translation_indices[i].column
             axis_idx = column // 2
             coord = coords[axis_idx]
             if coord == 0:
                 continue
-            pos = column & 1
-            if pos != (coord > 0):
+            if (column & 1) != (coord > 0):
                 continue
             scalar = abs(coord)
+            row = extremum_translation_indices[i].row
+            if row >= transform_len:
+                break
+            tx = extremum_translation_deltas[i].x * scalar
+            ty = extremum_translation_deltas[i].y * scalar
+            transforms[transformOffset + row] = transforms[
+                transformOffset + row
+            ].translate(tx, ty, True)
+    else:
+        # General case: extremum translations + rotations
+        i_translation = 0
+        i_rotation = 0
+        while True:
+            row = transform_len
+            if i_translation < extremum_translation_count:
+                row = min(row, extremum_translation_indices[i_translation].row)
+            if i_rotation < extremum_rotation_count:
+                row = min(row, extremum_rotation_indices[i_rotation].row)
+            if row == transform_len:
+                break
 
-            if rotation_delta:
-                center_x = translation_delta.x
-                center_y = translation_delta.y
+            transform = Transform()
+            is_translate_only = True
 
-                # The paper has formula for this in terms of complex numbers.
-                # This is translated to real numbers, partly using ChatGPT.
-                if center_x or center_y:
-                    angle = rotation_delta
-                    s = math.sin(angle)
-                    c = math.cos(angle)
-                    _1_minus_c = 1 - c
-                    if _1_minus_c:
-                        s_over_1_minus_c = s / _1_minus_c
-                        new_center_x = (center_x - center_y * s_over_1_minus_c) * 0.5
-                        new_center_y = (center_y + center_x * s_over_1_minus_c) * 0.5
-                        center_x = new_center_x
-                        center_y = new_center_y
-
-                transform2 = Transform()
-                transform2.translate(-center_x, -center_y, True)
-                transform2.rotate(rotation_delta * scalar, True)
-                transform2.translate(center_x, center_y, True)
-                transform = transform.transform(transform2)
-            else:
-                # No rotation, just scale the translate
-                transform = transform.translate(
-                    translation_delta.x * scalar,
-                    translation_delta.y * scalar,
+            while True:
+                has_row_translation = (
+                    i_translation < extremum_translation_count
+                    and extremum_translation_indices[i_translation].row == row
+                )
+                has_row_rotation = (
+                    i_rotation < extremum_rotation_count
+                    and extremum_rotation_indices[i_rotation].row == row
                 )
 
-        transforms[transformOffset + row] = transforms[transformOffset + row].transform(
-            transform, True
+                column = 2 * axis_count
+                if has_row_translation:
+                    column = min(
+                        column, extremum_translation_indices[i_translation].column
+                    )
+                if has_row_rotation:
+                    column = min(column, extremum_rotation_indices[i_rotation].column)
+                if column == 2 * axis_count:
+                    break
+
+                translation_delta = getattr(
+                    part,
+                    "hvglTranslationDelta",
+                    lambda: type("D", (), {"x": 0, "y": 0}),
+                )()
+                rotation_delta = 0.0
+
+                if (
+                    has_row_translation
+                    and extremum_translation_indices[i_translation].column == column
+                ):
+                    translation_delta = extremum_translation_deltas[i_translation]
+                    i_translation += 1
+                if (
+                    has_row_rotation
+                    and extremum_rotation_indices[i_rotation].column == column
+                ):
+                    rotation_delta = extremum_rotation_deltas[i_rotation]
+                    i_rotation += 1
+
+                axis_idx = column // 2
+                coord = coords[axis_idx]
+                if coord == 0:
+                    continue
+                if (column & 1) != (coord > 0):
+                    continue
+                scalar = abs(coord)
+
+                if rotation_delta:
+                    center_x = translation_delta.x
+                    center_y = translation_delta.y
+                    angle = rotation_delta
+                    if center_x or center_y:
+                        s = math.sin(angle)
+                        c = math.cos(angle)
+                        one_minus_c = 1 - c
+                        if one_minus_c:
+                            s_over = s / one_minus_c
+                            new_center_x = (center_x - center_y * s_over) * 0.5
+                            new_center_y = (center_y + center_x * s_over) * 0.5
+                            center_x = new_center_x
+                            center_y = new_center_y
+                    angle *= scalar
+                    transform = transform.rotate(
+                        angle, center_x=center_x, center_y=center_y
+                    )
+                    is_translate_only = False
+                else:
+                    tx = translation_delta.x * scalar
+                    ty = translation_delta.y * scalar
+                    transform = transform.translate(tx, ty, is_translate_only)
+
+            if is_translate_only:
+                transforms[transformOffset + row] = transforms[
+                    transformOffset + row
+                ].translate(transform.dx, transform.dy, True)
+            else:
+                transforms[transformOffset + row] = transforms[
+                    transformOffset + row
+                ].transform(transform, True)
+
+    # Master rotations
+    for i, row in enumerate(master_rotation_indices):
+        if row >= transform_len:
+            break
+        angle = master_rotation_deltas[i]
+        transforms[transformOffset + row] = transforms[transformOffset + row].rotate(
+            angle, True
+        )
+
+    # Master translations
+    for i, row in enumerate(master_translation_indices):
+        if row >= transform_len:
+            break
+        delta = master_translation_deltas[i]
+        transforms[transformOffset + row] = transforms[transformOffset + row].translate(
+            delta.x, delta.y, True
         )
 
 
