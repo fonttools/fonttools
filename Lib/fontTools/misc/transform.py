@@ -229,7 +229,7 @@ class Transform(NamedTuple):
             return Transform(
                 self.xx, self.xy, self.yx, self.yy, self.dx + x, self.dy + y
             )
-        return self.transform((1, 0, 0, 1, 0, 0)).transform((1, 0, 0, 1, x, y))
+        return self.transform(Offset(x, y))
 
     def scale(self, x: float = 1, y: float | None = None):
         """Return a new transformation, scaled by x, y. The 'y' argument
