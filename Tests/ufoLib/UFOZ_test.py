@@ -83,9 +83,11 @@ class TestMemoryFS:
         with UFOReader(memufo) as reader:
             assert reader.formatVersion == 3
             assert reader.fileStructure == UFOFileStructure.PACKAGE
+        assert not memufo.isclosed()
 
     def test_init_writer(self):
         m = fs.memoryfs.MemoryFS()
         with UFOWriter(m) as writer:
             assert m.exists("metainfo.plist")
             assert writer._path == "<memfs>"
+        assert not m.isclosed()

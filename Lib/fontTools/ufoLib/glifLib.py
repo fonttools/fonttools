@@ -3,7 +3,7 @@ Generic module for reading and writing the .glif format.
 
 More info about the .glif format (GLyphInterchangeFormat) can be found here:
 
-	http://unifiedfontobject.org
+        http://unifiedfontobject.org
 
 The main class in this module is :class:`GlyphSet`. It manages a set of .glif files
 in a folder. It offers two ways to read glyph data, and one way to write
@@ -206,7 +206,7 @@ class GlyphSet(_UFOBaseIO):
         # 'dirName' is kept for backward compatibility only, but it's DEPRECATED
         # as it's not guaranteed that it maps to an existing OSFS directory.
         # Client could use the FS api via the `self.fs` attribute instead.
-        self.dirName = fs.path.parts(path)[-1]
+        self.dirName = fs.path.basename(path)
         self.fs = filesystem
         # if glyphSet contains no 'contents.plist', we consider it empty
         self._havePreviousFile = filesystem.exists(CONTENTS_FILENAME)
