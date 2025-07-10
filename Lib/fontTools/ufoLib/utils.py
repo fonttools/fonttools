@@ -65,7 +65,7 @@ def normalizeFormatVersion(
 
 # Base class for UFOFormatVersion and GLIFFormatVersion
 class BaseFormatVersion(tuple[int, int], enum.Enum):
-    value: Union[tuple[int, int]]
+    value: tuple[int, int]
 
     def __new__(cls: Type[FormatVersion], value: tuple[int, int]) -> BaseFormatVersion:
         return super().__new__(cls, value)
