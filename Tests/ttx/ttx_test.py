@@ -74,8 +74,7 @@ class TTXTest(unittest.TestCase):
     # Tests
     # -----
 
-    def test_saveXML_escapes_control_characters(self):
-        # Set up a font with one glyph and a name record containing a control char
+    def test_saveXML_replace_control_characters(self):
         fb = FontBuilder(unitsPerEm=1000, isTTF=True)
         fb.setupGlyphOrder([".notdef"])
         fb.setupCharacterMap({})
@@ -84,27 +83,22 @@ class TTXTest(unittest.TestCase):
         fb.setupHorizontalHeader(ascent=800, descent=-200)
         fb.setupOS2()
         fb.setupPost()
-
-        fb.setupNameTable({"familyName": "Control\x01Char"})
-
+        # Setup name record with illegal control character
+        nameStr = "Control\x01Char"
+        replaced = nameStr.replace("\x01", "?")
+        fb.setupNameTable({"familyName": nameStr})
         self.temp_dir()
         ttx_path = Path(self.tempdir) / "test.ttx"
-
-        # Write to TTX
-        fb.font.saveXML(str(ttx_path))
-
-        # Ensure XML has the character escaped
+        # Capture logs
+        with self.assertLogs("fontTools.ttx", level="WARNING") as cm:
+            fb.font.saveXML(str(ttx_path))
+        # Test replacement
         xml_content = ttx_path.read_text(encoding="utf-8")
-        assert "&#x01;" in xml_content
-
-        # # Read back in from TTX
-        # font2 = TTFont()
-        # font2.importXML(str(ttx_path))
-
-        # # Check the name table round-tripped correctly
-        # recovered = font2["name"].getName(1, 3, 1, 0x409)
-        # assert recovered is not None
-        # assert recovered.toUnicode() == control_string
+        self.assertIn(replaced, xml_content)
+        self.assertNotIn("\x01", xml_content)
+        warnings = "\n".join(cm.output)
+        self.assertIn("Illegal XML character(s) found", warnings)
+        self.assertIn("\\x01", warnings)
 
     def test_parseOptions_no_args(self):
         with self.assertRaises(getopt.GetoptError) as cm:
