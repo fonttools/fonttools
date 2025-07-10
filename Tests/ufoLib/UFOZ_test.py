@@ -1,13 +1,18 @@
-from fontTools.ufoLib import UFOReader, UFOWriter, UFOFileStructure
+from fontTools.ufoLib import UFOReader, UFOWriter, UFOFileStructure, haveFS
 from fontTools.ufoLib.errors import UFOLibError, GlifLibError
 from fontTools.misc import plistlib
 from fontTools.misc.textTools import tostr
 import sys
 import os
-import fs.osfs
-import fs.tempfs
-import fs.memoryfs
-import fs.copy
+
+try:
+    import fs.osfs
+    import fs.tempfs
+    import fs.memoryfs
+    import fs.copy
+except ImportError:
+    import fontTools.misc.filesystem as fs
+
 import pytest
 import warnings
 
@@ -78,6 +83,7 @@ def memufo():
     return m
 
 
+@pytest.mark.skipif(not haveFS, reason="requires fs")
 class TestMemoryFS:
     def test_init_reader(self, memufo):
         with UFOReader(memufo) as reader:

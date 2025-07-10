@@ -39,15 +39,24 @@ import logging
 import zipfile
 import enum
 from collections import OrderedDict
-import fs
-import fs.base
-import fs.subfs
-import fs.errors
-import fs.copy
-import fs.osfs
-import fs.zipfs
-import fs.tempfs
-import fs.tools
+
+try:
+    import fs
+    import fs.base
+    import fs.subfs
+    import fs.errors
+    import fs.copy
+    import fs.osfs
+    import fs.zipfs
+    import fs.tempfs
+    import fs.tools
+except ImportError:
+    import fontTools.misc.filesystem as fs
+
+    haveFS = False
+else:
+    haveFS = True
+
 from fontTools.misc import plistlib
 from fontTools.ufoLib.validators import *
 from fontTools.ufoLib.filenames import userNameToFileName
