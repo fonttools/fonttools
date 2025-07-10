@@ -5,6 +5,7 @@ import sys
 import os
 import re
 import string
+import logging
 
 INDENT = "  "
 
@@ -168,17 +169,36 @@ class XMLWriter(object):
         return data
 
 
-# XML 1.0 allows only a few control characters (0x09, 0x0A, 0x0D).
-_illegal_xml_chars = re.compile("[\x00-\x08\x0b\x0c\x0e-\x1f\ufffe\uffff]")
-
-
 def escape(data):
     data = tostr(data, "utf_8")
     data = data.replace("&", "&amp;")
     data = data.replace("<", "&lt;")
     data = data.replace(">", "&gt;")
     data = data.replace("\r", "&#13;")
-    data = _illegal_xml_chars.sub(lambda m: f"&#x{ord(m.group(0)):02X};", data)
+
+    log = logging.getLogger("fontTools.ttx")
+    illegalXML = re.compile("[\x00-\x08\x0b\x0c\x0e-\x1f\ufffe\uffff]")
+    warned = False
+    original = data
+
+    def replacer(match):
+        nonlocal warned
+        if not warned:
+            maxLen = 10
+            replacement = "?"
+            preview = repr(original)
+            if len(original) > maxLen:
+                preview = repr(original[:maxLen])[1:-1] + "..."
+            log.warning(
+                "Illegal XML character(s) found; replacing offending "
+                "string %r with %r",
+                preview,
+                replacement,
+            )
+            warned = True
+        return replacement
+
+    data = illegalXML.sub(replacer, data)
     return data
 
 
