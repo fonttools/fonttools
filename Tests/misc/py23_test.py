@@ -387,7 +387,7 @@ class IsCloseTests(unittest.TestCase):
         self.assertAllNotClose(fraction_examples, rel_tol=1e-9)
 
 
-class TestRedirectStream:
+class _TestRedirectStream:
     redirect_stream = None
     orig_stream = None
 
@@ -436,12 +436,12 @@ class TestRedirectStream:
         self.assertEqual(s, "Hello World!\n")
 
 
-class TestRedirectStdout(TestRedirectStream, unittest.TestCase):
+class TestRedirectStdout(_TestRedirectStream, unittest.TestCase):
     redirect_stream = redirect_stdout
     orig_stream = "stdout"
 
 
-class TestRedirectStderr(TestRedirectStream, unittest.TestCase):
+class TestRedirectStderr(_TestRedirectStream, unittest.TestCase):
     redirect_stream = redirect_stderr
     orig_stream = "stderr"
 

@@ -259,9 +259,8 @@ class TTFont(object):
                 "head"
             ]  # make sure 'head' is loaded so the recalculation is actually done
 
-        tags = list(self.keys())
-        if "GlyphOrder" in tags:
-            tags.remove("GlyphOrder")
+        tags = self.keys()
+        tags.pop(0)  # skip GlyphOrder tag
         numTables = len(tags)
         # write to a temporary stream to allow saving to unseekable streams
         writer = SFNTWriter(
@@ -307,14 +306,9 @@ class TTFont(object):
         self.disassembleInstructions = disassembleInstructions
         self.bitmapGlyphDataFormat = bitmapGlyphDataFormat
         if not tables:
-            tables = list(self.keys())
-            if "GlyphOrder" not in tables:
-                tables = ["GlyphOrder"] + tables
+            tables = self.keys()
             if skipTables:
-                for tag in skipTables:
-                    if tag in tables:
-                        tables.remove(tag)
-        numTables = len(tables)
+                tables = [tag for tag in tables if tag not in skipTables]
 
         if writeVersion:
             from fontTools import version
@@ -337,8 +331,7 @@ class TTFont(object):
         else:
             path, ext = os.path.splitext(writer.filename)
 
-        for i in range(numTables):
-            tag = tables[i]
+        for tag in tables:
             if splitTables:
                 tablePath = path + "." + tagToIdentifier(tag) + ext
                 tableWriter = xmlWriter.XMLWriter(
@@ -608,8 +601,7 @@ class TTFont(object):
         else:
             reversecmap = {}
         useCount = {}
-        for i in range(numGlyphs):
-            tempName = glyphOrder[i]
+        for i, tempName in enumerate(glyphOrder):
             if tempName in reversecmap:
                 # If a font maps both U+0041 LATIN CAPITAL LETTER A and
                 # U+0391 GREEK CAPITAL LETTER ALPHA to the same glyph,
@@ -866,8 +858,7 @@ class GlyphOrder(object):
             "The 'id' attribute is only for humans; " "it is ignored when parsed."
         )
         writer.newline()
-        for i in range(len(glyphOrder)):
-            glyphName = glyphOrder[i]
+        for i, glyphName in enumerate(glyphOrder):
             writer.simpletag("GlyphID", id=i, name=glyphName)
             writer.newline()
 

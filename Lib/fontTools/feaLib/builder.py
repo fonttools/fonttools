@@ -259,12 +259,13 @@ class Builder(object):
             key = (script, lang, feature_name)
             self.features_.setdefault(key, []).append(lookup)
 
-    def get_lookup_(self, location, builder_class):
+    def get_lookup_(self, location, builder_class, mapping=None):
         if (
             self.cur_lookup_
             and type(self.cur_lookup_) == builder_class
             and self.cur_lookup_.lookupflag == self.lookupflag_
             and self.cur_lookup_.markFilterSet == self.lookupflag_markFilterSet_
+            and self.cur_lookup_.can_add_mapping(mapping)
         ):
             return self.cur_lookup_
         if self.cur_lookup_name_ and self.cur_lookup_:
@@ -1305,7 +1306,7 @@ class Builder(object):
     # GSUB rules
 
     def add_any_subst_(self, location, mapping):
-        lookup = self.get_lookup_(location, AnySubstBuilder)
+        lookup = self.get_lookup_(location, AnySubstBuilder, mapping=mapping)
         for key, value in mapping.items():
             if key in lookup.mapping:
                 if value == lookup.mapping[key]:

@@ -65,8 +65,8 @@ class table__h_d_m_x(DefaultTable.DefaultTable):
         items = sorted(self.hdmx.items())
         for ppem, widths in items:
             data = data + bytechr(ppem) + bytechr(max(widths.values()))
-            for glyphID in range(len(glyphOrder)):
-                width = widths[glyphOrder[glyphID]]
+            for glyphName in glyphOrder:
+                width = widths[glyphName]
                 data = data + bytechr(width)
             data = data + pad
         return data
@@ -123,5 +123,5 @@ class table__h_d_m_x(DefaultTable.DefaultTable):
                 glyphName = safeEval('"""' + glyphName + '"""')
             line = list(map(int, line[1:]))
             assert len(line) == len(ppems), "illegal hdmx format"
-            for i in range(len(ppems)):
-                hdmx[ppems[i]][glyphName] = line[i]
+            for i, ppem in enumerate(ppems):
+                hdmx[ppem][glyphName] = line[i]
