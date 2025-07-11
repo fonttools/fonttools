@@ -24,6 +24,7 @@ from fontTools.pens.transformPen import TransformPen
 from .otBase import (
     BaseTable,
     FormatSwitchingBaseTable,
+    FormatSwitchingBaseTableLE,
     ValueRecord,
     CountReference,
     getFormatSwitchingBaseTableClass,
@@ -166,7 +167,7 @@ class VarComponent:
         self.transformVarIndex = NO_VARIATION_INDEX
         self.transform = DecomposedTransform()
 
-    def decompile(self, data, font, localState):
+    def decompileData(self, data, font, localState):
         i = 0
         self.flags, i = _read_uint32var(data, i)
         flags = self.flags
@@ -405,14 +406,14 @@ class VarCompositeGlyph:
     def __init__(self, components=None):
         self.components = components if components is not None else []
 
-    def decompile(self, data, font, localState):
+    def decompileData(self, data, font, localState):
         self.components = []
         while data:
             component = VarComponent()
-            data = component.decompile(data, font, localState)
+            data = component.decompileData(data, font, localState)
             self.components.append(component)
 
-    def compile(self, font):
+    def compileData(self, font):
         data = []
         for component in self.components:
             data.append(component.compile(font))
@@ -427,12 +428,10 @@ class VarCompositeGlyph:
         xmlWriter.newline()
 
     def fromXML(self, name, attrs, content, font):
-        content = [c for c in content if isinstance(c, tuple)]
-        for name, attrs, content in content:
-            assert name == "VarComponent"
-            component = VarComponent()
-            component.fromXML(name, attrs, content, font)
-            self.components.append(component)
+        assert name == "VarComponent"
+        component = VarComponent()
+        component.fromXML(name, attrs, content, font)
+        self.components.append(component)
 
 
 class AATStateTable(object):
@@ -2132,6 +2131,16 @@ class Paint(getFormatSwitchingBaseTableClass("uint8")):
         return cb
 
 
+class hvglPart(FormatSwitchingBaseTableLE):
+    # Define .alignment attribute that depends on the format
+    @property
+    def alignment(self):
+        return {
+            0: 8,
+            1: 4,
+        }[self.Format]
+
+
 # For each subtable format there is a class. However, we don't really distinguish
 # between "field name" and "format name": often these are the same. Yet there's
 # a whole bunch of fields with different names. The following dict is a mapping
@@ -2597,7 +2606,7 @@ def _buildClasses():
             name = m.group(1)
             # the first row of a format-switching otData table describes the Format;
             # the first column defines the type of the Format field.
-            # Currently this can be either 'uint16' or 'uint8'.
+            # Currently this can be either 'uint16', 'uint16le', or 'uint8'.
             formatType = table[0][0]
             baseClass = getFormatSwitchingBaseTableClass(formatType)
         if name not in namespace:
