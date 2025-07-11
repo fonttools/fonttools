@@ -365,3 +365,9 @@ def test_GlyphSet_writeGlyph_formatVersion(tmp_path):
         match="Unsupported GLIF format version .*for UFO format version",
     ):
         dst.writeGlyph("A", glyph, formatVersion=(2, 0))
+
+
+def test_getGLIFModificationTime():
+    gs = GlyphSet(GLYPHSETDIR)
+    modified = gs.getGLIFModificationTime("a")
+    assert isinstance(modified, float)
