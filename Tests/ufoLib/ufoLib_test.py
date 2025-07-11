@@ -96,3 +96,18 @@ def test_UFOWriter_previous_higher_format_version(ufo_path):
         UnsupportedUFOFormat, match="UFO located at this path is a higher version"
     ):
         UFOWriter(ufo_path, formatVersion=(2, 0))
+
+
+def test_getFileModificationTime(ufo_path):
+    import time
+
+    with UFOWriter(ufo_path) as writer:
+        raw_metainfo = writer.readBytesFromPath("metainfo.plist")
+        modified = writer.getFileModificationTime("metainfo.plist")
+        assert isinstance(modified, float)
+        # writeBytesToPath only modifies a file if the content to be written is not the same
+        writer.writeBytesToPath("metainfo.plist", raw_metainfo)
+        assert writer.getFileModificationTime("metainfo.plist") == modified
+        time.sleep(0.1)
+        writer.writeBytesToPath("metainfo.plist", raw_metainfo + b"\n")
+        assert writer.getFileModificationTime("metainfo.plist") != modified
