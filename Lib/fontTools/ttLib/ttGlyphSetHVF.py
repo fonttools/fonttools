@@ -343,11 +343,8 @@ def _partCompositeApplyToTransforms(part, transforms, transformOffset, coords):
                 if column == 2 * axis_count:
                     break
 
-                translation_delta = getattr(
-                    part,
-                    "hvglTranslationDelta",
-                    lambda: type("D", (), {"x": 0, "y": 0}),
-                )()
+                translation_delta = hvglTranslationDelta()
+                translation_delta.x = translation_delta.y = 0.0
                 rotation_delta = 0.0
 
                 if (
