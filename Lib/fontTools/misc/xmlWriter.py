@@ -3,7 +3,9 @@
 from fontTools.misc.textTools import byteord, strjoin, tobytes, tostr
 import sys
 import os
+import re
 import string
+import logging
 
 INDENT = "  "
 
@@ -173,6 +175,30 @@ def escape(data):
     data = data.replace("<", "&lt;")
     data = data.replace(">", "&gt;")
     data = data.replace("\r", "&#13;")
+
+    log = logging.getLogger("fontTools.ttx")
+    illegalXML = re.compile("[\x00-\x08\x0b\x0c\x0e-\x1f\ufffe\uffff]")
+    warned = False
+    original = data
+
+    def replacer(match):
+        nonlocal warned
+        if not warned:
+            maxLen = 10
+            replacement = "?"
+            preview = repr(original)
+            if len(original) > maxLen:
+                preview = repr(original[:maxLen])[1:-1] + "..."
+            log.warning(
+                "Illegal XML character(s) found; replacing offending "
+                "string %r with %r",
+                preview,
+                replacement,
+            )
+            warned = True
+        return replacement
+
+    data = illegalXML.sub(replacer, data)
     return data
 
 
