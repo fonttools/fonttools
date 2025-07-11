@@ -46,6 +46,11 @@ class TestUFOZ:
             assert reader.fileStructure == UFOFileStructure.ZIP
             assert reader.formatVersion == 3
 
+    def test_getFileModificationTime(self, testufoz):
+        with UFOReader(testufoz) as reader:
+            modified = reader.getFileModificationTime("metainfo.plist")
+            assert isinstance(modified, float)
+
     def test_write(self, testufoz):
         with UFOWriter(testufoz, structure="zip") as writer:
             writer.writeLib({"hello world": 123})
