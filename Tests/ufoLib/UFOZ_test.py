@@ -45,6 +45,22 @@ class TestUFOZ:
         with UFOReader(testufoz) as reader:
             assert reader.fileStructure == UFOFileStructure.ZIP
             assert reader.formatVersion == 3
+            gs = reader.getGlyphSet()
+            a = gs.getGLIF("a").decode("utf-8")
+            assert a.splitlines() == [
+                '<?xml version="1.0" encoding="UTF-8"?>',
+                '<glyph name="a" format="2">',
+                '  <advance height="750" width="388"/>',
+                '  <unicode hex="0061"/>',
+                "  <outline>",
+                "    <contour>",
+                '      <point x="66" y="0" type="line"/>',
+                '      <point x="322" y="0" type="line"/>',
+                '      <point x="194" y="510" type="line"/>',
+                "    </contour>",
+                "  </outline>",
+                "</glyph>",
+            ]
 
     def test_getFileModificationTime(self, testufoz):
         with UFOReader(testufoz) as reader:
