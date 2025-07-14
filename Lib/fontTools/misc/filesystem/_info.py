@@ -2,7 +2,7 @@ from __future__ import annotations
 import typing
 from datetime import datetime, timezone
 
-from .errors import MissingInfoNamespace
+from ._errors import MissingInfoNamespace
 
 if typing.TYPE_CHECKING:
     from collections.abc import Mapping

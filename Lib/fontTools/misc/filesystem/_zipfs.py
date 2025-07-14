@@ -7,16 +7,16 @@ import typing
 import zipfile
 from datetime import datetime
 
-from .base import FS
-from .errors import FileExpected, ResourceNotFound, ResourceReadOnly
-from .info import Info
-from .tempfs import TempFS
-from .path import dirname, forcedir, normpath, relpath
+from ._base import FS
+from ._errors import FileExpected, ResourceNotFound, ResourceReadOnly
+from ._info import Info
+from ._tempfs import TempFS
+from ._path import dirname, forcedir, normpath, relpath
 
 if typing.TYPE_CHECKING:
     from collections.abc import Collection
     from typing import IO, Any
-    from .subfs import SubFS
+    from ._subfs import SubFS
 
 
 class ZipFS(FS):

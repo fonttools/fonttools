@@ -2,9 +2,9 @@ from __future__ import annotations
 import typing
 from abc import ABC, abstractmethod
 
-from .copy import copy_dir, copy_file
-from .walk import BoundWalker
-from .errors import (
+from ._copy import copy_dir, copy_file
+from ._walk import BoundWalker
+from ._errors import (
     DestinationExists,
     DirectoryExpected,
     FileExpected,
@@ -12,12 +12,12 @@ from .errors import (
     NoSysPath,
     ResourceNotFound,
 )
-from .path import dirname
+from ._path import dirname
 
 if typing.TYPE_CHECKING:
     from typing import Any, IO, Iterator, Collection, Self, Type
-    from .subfs import SubFS
-    from .info import Info
+    from ._subfs import SubFS
+    from ._info import Info
 
 
 class FS(ABC):
@@ -84,7 +84,7 @@ class FS(ABC):
     def opendir(self, path: str, *, factory: Type[SubFS] | None = None) -> SubFS:
         """Return a sub‑filesystem rooted at `path`."""
         if factory is None:
-            from .subfs import SubFS
+            from ._subfs import SubFS
 
             factory = SubFS
         return factory(self, path)

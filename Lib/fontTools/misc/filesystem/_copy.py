@@ -1,12 +1,12 @@
 from __future__ import annotations
 import typing
 
-from .errors import IllegalDestination
-from .path import combine, frombase, isbase
-from .tools import copy_file_data
+from ._errors import IllegalDestination
+from ._path import combine, frombase, isbase
+from ._tools import copy_file_data
 
 if typing.TYPE_CHECKING:
-    from .base import FS
+    from ._base import FS
 
 
 def copy_file(src_fs: FS, src_path: str, dst_fs: FS, dst_path: str):

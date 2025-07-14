@@ -7,8 +7,8 @@ import typing
 from os import PathLike
 from pathlib import Path
 
-from .base import FS
-from .errors import (
+from ._base import FS
+from ._errors import (
     CreateFailed,
     DirectoryExpected,
     DirectoryNotEmpty,
@@ -16,12 +16,12 @@ from .errors import (
     ResourceError,
     ResourceNotFound,
 )
-from .info import Info
+from ._info import Info
 
 if typing.TYPE_CHECKING:
     from collections.abc import Collection
     from typing import IO, Any
-    from .subfs import SubFS
+    from ._subfs import SubFS
 
 
 _WINDOWS_PLATFORM = platform.system() == "Windows"

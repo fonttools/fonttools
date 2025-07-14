@@ -2,10 +2,10 @@ from __future__ import annotations
 import typing
 from pathlib import PurePosixPath
 
-from .errors import DirectoryNotEmpty
+from ._errors import DirectoryNotEmpty
 
 if typing.TYPE_CHECKING:
-    from .base import FS
+    from ._base import FS
     from typing import IO
 
 

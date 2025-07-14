@@ -2,14 +2,9 @@
 
 import calendar
 from io import open
-
-try:
-    import fs.base
-    import fs.osfs
-except ImportError:
-    import fontTools.misc.filesystem as fs
-
 from collections.abc import Mapping
+
+import fontTools.misc.filesystem as fs
 from fontTools.ufoLib.utils import numberTypes
 
 

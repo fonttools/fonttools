@@ -3,14 +3,14 @@ import typing
 from collections import deque
 from collections.abc import Iterator, Collection
 
-from .path import combine
+from ._path import combine
 
 
 if typing.TYPE_CHECKING:
     from typing import Callable
 
-    from .base import FS
-    from .info import Info
+    from ._base import FS
+    from ._info import Info
 
 
 class BoundWalker:

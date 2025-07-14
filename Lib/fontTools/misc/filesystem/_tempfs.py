@@ -2,8 +2,8 @@ from __future__ import annotations
 import shutil
 import tempfile
 
-from .errors import OperationFailed
-from .osfs import OSFS
+from ._errors import OperationFailed
+from ._osfs import OSFS
 
 
 class TempFS(OSFS):

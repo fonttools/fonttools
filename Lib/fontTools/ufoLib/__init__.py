@@ -39,24 +39,7 @@ import logging
 import zipfile
 import enum
 from collections import OrderedDict
-
-try:
-    import fs
-    import fs.base
-    import fs.subfs
-    import fs.errors
-    import fs.copy
-    import fs.osfs
-    import fs.zipfs
-    import fs.tempfs
-    import fs.tools
-except ImportError:
-    import fontTools.misc.filesystem as fs
-
-    haveFS = False
-else:
-    haveFS = True
-
+from fontTools.misc import filesystem as fs
 from fontTools.misc import plistlib
 from fontTools.ufoLib.validators import *
 from fontTools.ufoLib.filenames import userNameToFileName
@@ -64,7 +47,11 @@ from fontTools.ufoLib.converters import convertUFO1OrUFO2KerningToUFO3Kerning
 from fontTools.ufoLib.errors import UFOLibError
 from fontTools.ufoLib.utils import numberTypes, _VersionTupleEnumMixin
 
+# client code can check this to see if the upstream `fs` package is being used
+haveFS = fs._haveFS
+
 __all__ = [
+    "haveFS",
     "makeUFOPath",
     "UFOLibError",
     "UFOReader",

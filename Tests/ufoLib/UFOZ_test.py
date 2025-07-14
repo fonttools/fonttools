@@ -1,20 +1,9 @@
 from fontTools.ufoLib import UFOReader, UFOWriter, UFOFileStructure, haveFS
-from fontTools.ufoLib.errors import UFOLibError, GlifLibError
-from fontTools.misc import plistlib
+from fontTools.misc import filesystem as fs
 from fontTools.misc.textTools import tostr
 import sys
 import os
-
-try:
-    import fs.osfs
-    import fs.tempfs
-    import fs.memoryfs
-    import fs.copy
-except ImportError:
-    import fontTools.misc.filesystem as fs
-
 import pytest
-import warnings
 
 
 TESTDATA = fs.osfs.OSFS(os.path.join(os.path.dirname(__file__), "testdata"))
@@ -99,6 +88,7 @@ def test_path_attribute_deprecated(testufo):
 
 @pytest.fixture
 def memufo():
+    fs = pytest.importorskip("fs")
     m = fs.memoryfs.MemoryFS()
     fs.copy.copy_dir(TESTDATA, TEST_UFO3, m, "/")
     return m
@@ -113,6 +103,7 @@ class TestMemoryFS:
         assert not memufo.isclosed()
 
     def test_init_writer(self):
+        fs = pytest.importorskip("fs")
         m = fs.memoryfs.MemoryFS()
         with UFOWriter(m) as writer:
             assert m.exists("metainfo.plist")
