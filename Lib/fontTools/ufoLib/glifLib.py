@@ -12,30 +12,28 @@ glyph data. See the class doc string for details.
 
 from __future__ import annotations
 
-import logging
 import enum
-from warnings import warn
+import logging
 from collections import OrderedDict
+from warnings import warn
 
 import fontTools.misc.filesystem as fs
+from fontTools.misc import etree, plistlib
 from fontTools.misc.textTools import tobytes
-from fontTools.misc import plistlib
 from fontTools.pens.pointPen import AbstractPointPen, PointToSegmentPen
+from fontTools.ufoLib import UFOFormatVersion, _UFOBaseIO
 from fontTools.ufoLib.errors import GlifLibError
 from fontTools.ufoLib.filenames import userNameToFileName
+from fontTools.ufoLib.utils import _VersionTupleEnumMixin, numberTypes
 from fontTools.ufoLib.validators import (
-    genericTypeValidator,
-    colorValidator,
-    guidelinesValidator,
     anchorsValidator,
+    colorValidator,
+    genericTypeValidator,
+    glyphLibValidator,
+    guidelinesValidator,
     identifierValidator,
     imageValidator,
-    glyphLibValidator,
 )
-from fontTools.misc import etree
-from fontTools.ufoLib import _UFOBaseIO, UFOFormatVersion
-from fontTools.ufoLib.utils import numberTypes, _VersionTupleEnumMixin
-
 
 __all__ = [
     "GlyphSet",

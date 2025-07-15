@@ -1,7 +1,6 @@
 import os
 import platform
 
-
 _WINDOWS_PLATFORM = platform.system() == "Windows"
 
 

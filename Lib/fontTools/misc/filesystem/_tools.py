@@ -1,12 +1,14 @@
 from __future__ import annotations
+
 import typing
 from pathlib import PurePosixPath
 
 from ._errors import DirectoryNotEmpty
 
 if typing.TYPE_CHECKING:
-    from ._base import FS
     from typing import IO
+
+    from ._base import FS
 
 
 def remove_empty(fs: FS, path: str):

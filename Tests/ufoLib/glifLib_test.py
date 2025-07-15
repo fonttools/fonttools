@@ -1,25 +1,28 @@
 import logging
 import os
-import tempfile
 import shutil
+import tempfile
 import unittest
-from pathlib import Path
 from io import open
-from .testSupport import getDemoFontGlyphSetPath
+from pathlib import Path
+
+import pytest
+
+from fontTools.misc.etree import XML_DECLARATION
+from fontTools.pens.recordingPen import RecordingPointPen
+from fontTools.ufoLib.errors import (
+    GlifLibError,
+    UnsupportedGLIFFormat,
+    UnsupportedUFOFormat,
+)
 from fontTools.ufoLib.glifLib import (
     GlyphSet,
     glyphNameToFileName,
     readGlyphFromString,
     writeGlyphToString,
 )
-from fontTools.ufoLib.errors import (
-    GlifLibError,
-    UnsupportedGLIFFormat,
-    UnsupportedUFOFormat,
-)
-from fontTools.misc.etree import XML_DECLARATION
-from fontTools.pens.recordingPen import RecordingPointPen
-import pytest
+
+from .testSupport import getDemoFontGlyphSetPath
 
 GLYPHSETDIR = getDemoFontGlyphSetPath()
 

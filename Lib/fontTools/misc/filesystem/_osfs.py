@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import errno
 import platform
 import shutil
@@ -21,6 +22,7 @@ from ._info import Info
 if typing.TYPE_CHECKING:
     from collections.abc import Collection
     from typing import IO, Any
+
     from ._subfs import SubFS
 
 

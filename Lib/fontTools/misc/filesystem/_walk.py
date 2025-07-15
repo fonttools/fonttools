@@ -1,10 +1,10 @@
 from __future__ import annotations
+
 import typing
 from collections import deque
-from collections.abc import Iterator, Collection
+from collections.abc import Collection, Iterator
 
 from ._path import combine
-
 
 if typing.TYPE_CHECKING:
     from typing import Callable

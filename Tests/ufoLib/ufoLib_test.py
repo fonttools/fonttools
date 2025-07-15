@@ -1,10 +1,11 @@
 import logging
 import shutil
 
-from fontTools.misc import plistlib
-from fontTools.ufoLib import UFOReader, UFOWriter, UFOFormatVersion
-from fontTools.ufoLib.errors import UFOLibError, UnsupportedUFOFormat
 import pytest
+
+from fontTools.misc import plistlib
+from fontTools.ufoLib import UFOFormatVersion, UFOReader, UFOWriter
+from fontTools.ufoLib.errors import UFOLibError, UnsupportedUFOFormat
 
 
 @pytest.fixture

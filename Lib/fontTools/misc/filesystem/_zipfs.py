@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import io
 import os
 import shutil
@@ -10,12 +11,13 @@ from datetime import datetime
 from ._base import FS
 from ._errors import FileExpected, ResourceNotFound, ResourceReadOnly
 from ._info import Info
-from ._tempfs import TempFS
 from ._path import dirname, forcedir, normpath, relpath
+from ._tempfs import TempFS
 
 if typing.TYPE_CHECKING:
     from collections.abc import Collection
     from typing import IO, Any
+
     from ._subfs import SubFS
 
 

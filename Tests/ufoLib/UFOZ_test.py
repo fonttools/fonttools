@@ -1,10 +1,11 @@
-from fontTools.ufoLib import UFOReader, UFOWriter, UFOFileStructure, haveFS
-from fontTools.misc import filesystem as fs
-from fontTools.misc.textTools import tostr
-import sys
 import os
+import sys
+
 import pytest
 
+from fontTools.misc import filesystem as fs
+from fontTools.misc.textTools import tostr
+from fontTools.ufoLib import UFOFileStructure, UFOReader, UFOWriter, haveFS
 
 TESTDATA = fs.osfs.OSFS(os.path.join(os.path.dirname(__file__), "testdata"))
 TEST_UFO3 = "TestFont1 (UFO3).ufo"

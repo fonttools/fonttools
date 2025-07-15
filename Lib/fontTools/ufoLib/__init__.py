@@ -32,20 +32,21 @@ Value conversion functions are available for converting
 - :func:`.convertFontInfoValueForAttributeFromVersion3ToVersion2`
 """
 
+import enum
+import logging
 import os
+import zipfile
+from collections import OrderedDict
 from copy import deepcopy
 from os import fsdecode
-import logging
-import zipfile
-import enum
-from collections import OrderedDict
+
 from fontTools.misc import filesystem as fs
 from fontTools.misc import plistlib
-from fontTools.ufoLib.validators import *
-from fontTools.ufoLib.filenames import userNameToFileName
 from fontTools.ufoLib.converters import convertUFO1OrUFO2KerningToUFO3Kerning
 from fontTools.ufoLib.errors import UFOLibError
-from fontTools.ufoLib.utils import numberTypes, _VersionTupleEnumMixin
+from fontTools.ufoLib.filenames import userNameToFileName
+from fontTools.ufoLib.utils import _VersionTupleEnumMixin, numberTypes
+from fontTools.ufoLib.validators import *
 
 # client code can check this to see if the upstream `fs` package is being used
 haveFS = fs._haveFS

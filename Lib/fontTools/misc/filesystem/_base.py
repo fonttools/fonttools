@@ -1,9 +1,9 @@
 from __future__ import annotations
+
 import typing
 from abc import ABC, abstractmethod
 
 from ._copy import copy_dir, copy_file
-from ._walk import BoundWalker
 from ._errors import (
     DestinationExists,
     DirectoryExpected,
@@ -13,11 +13,13 @@ from ._errors import (
     ResourceNotFound,
 )
 from ._path import dirname
+from ._walk import BoundWalker
 
 if typing.TYPE_CHECKING:
-    from typing import Any, IO, Iterator, Collection, Self, Type
-    from ._subfs import SubFS
+    from typing import IO, Any, Collection, Iterator, Self, Type
+
     from ._info import Info
+    from ._subfs import SubFS
 
 
 class FS(ABC):
