@@ -14,10 +14,12 @@ from ._errors import (
     DirectoryExpected,
     DirectoryNotEmpty,
     FileExpected,
+    IllegalDestination,
     ResourceError,
     ResourceNotFound,
 )
 from ._info import Info
+from ._path import isbase
 
 if typing.TYPE_CHECKING:
     from collections.abc import Collection
@@ -128,9 +130,29 @@ class OSFS(FS):
     def removetree(self, path: str):
         shutil.rmtree(self._abs(path))
 
-    def movedir(self, src: str, dst: str, create: bool = False):
-        # TODO create
-        self._abs(src).rename(self._abs(dst))
+    def movedir(self, src_dir: str, dst_dir: str, create: bool = False):
+        if isbase(src_dir, dst_dir):
+            raise IllegalDestination(f"cannot move {src_dir!r} to {dst_dir!r}")
+        src_path = self._abs(src_dir)
+        if not src_path.exists():
+            raise ResourceNotFound(f"Source {src_dir!r} does not exist")
+        elif not src_path.is_dir():
+            raise DirectoryExpected(f"Source {src_dir!r} should be a directory")
+        dst_path = self._abs(dst_dir)
+        if not create and not dst_path.exists():
+            raise ResourceNotFound(f"Destination {dst_dir!r} does not exist")
+        if dst_path.is_file():
+            raise DirectoryExpected(f"Destination {dst_dir!r} should be a directory")
+        if create:
+            dst_path.parent.mkdir(parents=True, exist_ok=True)
+        if dst_path.exists():
+            if list(dst_path.iterdir()):
+                raise DirectoryNotEmpty(f"Destination {dst_dir!r} is not empty")
+            elif _WINDOWS_PLATFORM:
+                # on Unix os.rename silently replaces an empty dst_dir whereas on
+                # Windows it always raises FileExistsError, empty or not.
+                dst_path.rmdir()
+        src_path.rename(dst_path)
 
     def getsyspath(self, path: str) -> str:
         return str(self._abs(path))
