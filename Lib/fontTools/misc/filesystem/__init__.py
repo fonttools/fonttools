@@ -1,4 +1,4 @@
-"""Minimal, stdlib-only replacement for `pyfilesystem2` API for use by `fontTools.ufoLib`.
+"""Minimal, stdlib-only replacement for [`pyfilesystem2`][1] API for use by `fontTools.ufoLib`.
 
 Note this only exports a **subset** of the `pyfilesystem2` API, in particular the modules,
 classes and functions that are currently used directly by `fontTools.ufoLib`.
@@ -6,8 +6,14 @@ classes and functions that are currently used directly by `fontTools.ufoLib`.
 It opportunistically tries to import the relevant modules from the upstream `fs` package
 when this is available. Otherwise it falls back to the replacement modules within this package.
 
-Client code that wishes to do the same could replace direct `import fs` with e.g.
-`from fontTools.misc import filesystem as fs` or equivalent.
+As of version 4.59.0, the `fonttools[ufo]` extra no longer requires the `fs` package, thus
+this `fontTools.misc.filesystem` package is used by default.
+
+Client code can either replace `import fs` with `from fontTools.misc import filesystem as fs`
+if that happens to work (no guarantee), or they can continue to use `fs` but they will have
+to specify it as an explicit dependency of their project.
+
+[1]: https://github.com/PyFilesystem/pyfilesystem2
 """
 
 from __future__ import annotations
