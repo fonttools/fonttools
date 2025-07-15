@@ -32,30 +32,27 @@ Value conversion functions are available for converting
 - :func:`.convertFontInfoValueForAttributeFromVersion3ToVersion2`
 """
 
+import enum
+import logging
 import os
+import zipfile
+from collections import OrderedDict
 from copy import deepcopy
 from os import fsdecode
-import logging
-import zipfile
-import enum
-from collections import OrderedDict
-import fs
-import fs.base
-import fs.subfs
-import fs.errors
-import fs.copy
-import fs.osfs
-import fs.zipfs
-import fs.tempfs
-import fs.tools
+
+from fontTools.misc import filesystem as fs
 from fontTools.misc import plistlib
-from fontTools.ufoLib.validators import *
-from fontTools.ufoLib.filenames import userNameToFileName
 from fontTools.ufoLib.converters import convertUFO1OrUFO2KerningToUFO3Kerning
 from fontTools.ufoLib.errors import UFOLibError
-from fontTools.ufoLib.utils import numberTypes, _VersionTupleEnumMixin
+from fontTools.ufoLib.filenames import userNameToFileName
+from fontTools.ufoLib.utils import _VersionTupleEnumMixin, numberTypes
+from fontTools.ufoLib.validators import *
+
+# client code can check this to see if the upstream `fs` package is being used
+haveFS = fs._haveFS
 
 __all__ = [
+    "haveFS",
     "makeUFOPath",
     "UFOLibError",
     "UFOReader",
@@ -184,7 +181,7 @@ class _UFOBaseIO:
                 return
             self.fs.writebytes(fileName, data)
         else:
-            with self.fs.openbin(fileName, mode="w") as fp:
+            with self.fs.open(fileName, mode="wb") as fp:
                 try:
                     plistlib.dump(obj, fp)
                 except Exception as e:
@@ -412,7 +409,7 @@ class UFOReader(_UFOBaseIO):
         path = fsdecode(path)
         try:
             if encoding is None:
-                return self.fs.openbin(path)
+                return self.fs.open(path, mode="rb")
             else:
                 return self.fs.open(path, mode="r", encoding=encoding)
         except fs.errors.ResourceNotFound:
@@ -818,7 +815,7 @@ class UFOReader(_UFOBaseIO):
                 # systems often have hidden directories
                 continue
             if validate:
-                with imagesFS.openbin(path.name) as fp:
+                with imagesFS.open(path.name, "rb") as fp:
                     valid, error = pngValidator(fileObj=fp)
                 if valid:
                     result.append(path.name)
@@ -984,18 +981,16 @@ class UFOWriter(UFOReader):
                             % len(rootDirs)
                         )
                     else:
-                        # 'ClosingSubFS' ensures that the parent filesystem is closed
-                        # when its root subdirectory is closed
-                        self.fs = parentFS.opendir(
-                            rootDirs[0], factory=fs.subfs.ClosingSubFS
-                        )
+                        rootDir = rootDirs[0]
                 else:
                     # if the output zip file didn't exist, we create the root folder;
                     # we name it the same as input 'path', but with '.ufo' extension
                     rootDir = os.path.splitext(os.path.basename(path))[0] + ".ufo"
                     parentFS = fs.zipfs.ZipFS(path, write=True, encoding="utf-8")
                     parentFS.makedir(rootDir)
-                    self.fs = parentFS.opendir(rootDir, factory=fs.subfs.ClosingSubFS)
+                # 'ClosingSubFS' ensures that the parent filesystem is closed
+                # when its root subdirectory is closed
+                self.fs = parentFS.opendir(rootDir, factory=fs.subfs.ClosingSubFS)
             else:
                 self.fs = fs.osfs.OSFS(path, create=True)
             self._fileStructure = structure

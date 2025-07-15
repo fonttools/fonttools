@@ -1,25 +1,28 @@
 import logging
 import os
-import tempfile
 import shutil
+import tempfile
 import unittest
-from pathlib import Path
 from io import open
-from .testSupport import getDemoFontGlyphSetPath
+from pathlib import Path
+
+import pytest
+
+from fontTools.misc.etree import XML_DECLARATION
+from fontTools.pens.recordingPen import RecordingPointPen
+from fontTools.ufoLib.errors import (
+    GlifLibError,
+    UnsupportedGLIFFormat,
+    UnsupportedUFOFormat,
+)
 from fontTools.ufoLib.glifLib import (
     GlyphSet,
     glyphNameToFileName,
     readGlyphFromString,
     writeGlyphToString,
 )
-from fontTools.ufoLib.errors import (
-    GlifLibError,
-    UnsupportedGLIFFormat,
-    UnsupportedUFOFormat,
-)
-from fontTools.misc.etree import XML_DECLARATION
-from fontTools.pens.recordingPen import RecordingPointPen
-import pytest
+
+from .testSupport import getDemoFontGlyphSetPath
 
 GLYPHSETDIR = getDemoFontGlyphSetPath()
 
@@ -365,3 +368,9 @@ def test_GlyphSet_writeGlyph_formatVersion(tmp_path):
         match="Unsupported GLIF format version .*for UFO format version",
     ):
         dst.writeGlyph("A", glyph, formatVersion=(2, 0))
+
+
+def test_getGLIFModificationTime():
+    gs = GlyphSet(GLYPHSETDIR)
+    modified = gs.getGLIFModificationTime("a")
+    assert isinstance(modified, float)
