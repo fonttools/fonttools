@@ -3,11 +3,20 @@
 from fontTools.misc.textTools import byteord, strjoin, tobytes, tostr
 import sys
 import os
-import re
 import string
 import logging
 
 INDENT = "  "
+TTX_LOG = logging.getLogger("fontTools.ttx")
+REPLACEMENT = "?"
+ILLEGAL_CHARS = dict.fromkeys(
+    [chr(c) for c in range(0x00, 0x09)]
+    + [chr(0x0B), chr(0x0C)]
+    + [chr(c) for c in range(0x0E, 0x20)]
+    + [chr(0xFFFE), chr(0xFFFF)],
+    REPLACEMENT,
+)
+ILLEGAL_TRANS = str.maketrans(ILLEGAL_CHARS)
 
 
 class XMLWriter(object):
@@ -176,30 +185,18 @@ def escape(data):
     data = data.replace(">", "&gt;")
     data = data.replace("\r", "&#13;")
 
-    log = logging.getLogger("fontTools.ttx")
-    illegalXML = re.compile("[\x00-\x08\x0b\x0c\x0e-\x1f\ufffe\uffff]")
-    warned = False
-    original = data
-
-    def replacer(match):
-        nonlocal warned
-        if not warned:
-            maxLen = 10
-            replacement = "?"
-            preview = repr(original)
-            if len(original) > maxLen:
-                preview = repr(original[:maxLen])[1:-1] + "..."
-            log.warning(
-                "Illegal XML character(s) found; replacing offending "
-                "string %r with %r",
-                preview,
-                replacement,
-            )
-            warned = True
-        return replacement
-
-    data = illegalXML.sub(replacer, data)
-    return data
+    newData = data.translate(ILLEGAL_TRANS)
+    if newData != data:
+        maxLen = 10
+        preview = repr(data)
+        if len(data) > maxLen:
+            preview = repr(data[:maxLen])[1:-1] + "..."
+        TTX_LOG.warning(
+            "Illegal XML character(s) found; replacing offending " "string %r with %r",
+            preview,
+            REPLACEMENT,
+        )
+    return newData
 
 
 def escapeattr(data):
