@@ -1,5 +1,8 @@
 """Minimal, stdlib-only replacement for [`pyfilesystem2`][1] API for use by `fontTools.ufoLib`.
 
+This package is a partial reimplementation of the `fs` package by Will McGugan, used under the
+MIT license. See LICENSE.external for details.
+
 Note this only exports a **subset** of the `pyfilesystem2` API, in particular the modules,
 classes and functions that are currently used directly by `fontTools.ufoLib`.
 
