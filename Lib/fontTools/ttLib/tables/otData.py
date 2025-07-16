@@ -1,3 +1,17 @@
+class MulAdd:
+    def __init__(self, mul, add):
+        self.mul = mul
+        self.add = add
+
+    def __radd__(self, value):
+        return value * self.mul + self.add
+
+    def __rsub__(self, value):
+        value -= self.add
+        assert value % self.mul == 0, (value, self.mul)
+        return value // self.mul
+
+
 otData = [
     #
     # common
@@ -6395,6 +6409,371 @@ otData = [
                 "",
             ),
             ("LOffset", "VarStore", None, "Version >= 0x00020000", ""),
+        ],
+    ),
+    # `hvgl` table
+    (
+        "hvglCoordinates",
+        [
+            ("float64le", "Coords", "SegmentCount", MulAdd(4, 0), "Coordinate data"),
+        ],
+    ),
+    (
+        "hvglDeltas",
+        [
+            (
+                "hvglCoordinates",
+                "Delta",
+                "AxisCount",
+                MulAdd(2, 0),
+                "Delta coordinate column",
+            ),
+        ],
+    ),
+    (
+        "hvglPartFormat0",  # Shape
+        [
+            ("uint16le", "Flags", None, None, "0x0000 for shape"),
+            ("uint16le", "AxisCount", None, None, "Number of axes"),
+            ("uint16le", "PathCount", None, None, "Number of paths"),
+            ("uint16le", "SegmentCount", None, None, "Total segment count for shape"),
+            ("uint16le", "SegmentCountPerPath", "PathCount", 0, "Sizes of paths"),
+            ("uint8", "BlendTypes", "SegmentCount", 0, "Blend types for all segments"),
+            ("Align(8)", "Padding", None, None, "Pad to float64le alignment"),
+            ("hvglCoordinates", "Master", None, None, "Master coordinate vector"),
+            ("hvglDeltas", "Deltas", None, None, "Delta coordinate matrix"),
+        ],
+    ),
+    (
+        "hvglSubPart",
+        [
+            (
+                "uint32le",
+                "PartIndex",
+                None,
+                None,
+                "Index of part that this subpart renders",
+            ),
+            (
+                "uint16le",
+                "TreeTransformIndex",
+                None,
+                None,
+                "Row index of data in transform vector/matrix",
+            ),
+            (
+                "uint16le",
+                "TreeAxisIndex",
+                None,
+                None,
+                "Row index of data in axis vector/matrix",
+            ),
+        ],
+    ),
+    (
+        "hvglSubParts",
+        [
+            ("hvglSubPart", "SubPart", "SubPartCount", 0, "Immediate subparts"),
+        ],
+    ),
+    (
+        "hvglExtremumColumnStarts",
+        [
+            (
+                "uint16le",
+                "ExtremumColumnStart",
+                "AxisCount",
+                MulAdd(2, 1),
+                "Extremum column starts",
+            ),
+            (
+                "uint16le",
+                "MasterRowIndex",
+                "SparseMasterAxisValueCount",
+                0,
+                "Master row indices",
+            ),
+            (
+                "uint16le",
+                "ExtremumRowIndex",
+                "SparseExtremumAxisValueCount",
+                0,
+                "Extremum row indices",
+            ),
+            ("Align(4)", "Padding", None, None, "Pad to uint32le alignment"),
+        ],
+    ),
+    (
+        "hvglMasterAxisValueDeltas",
+        [
+            (
+                "float32le",
+                "MasterAxisValueDelta",
+                "SparseMasterAxisValueCount",
+                0,
+                "Master axis value deltas",
+            ),
+        ],
+    ),
+    (
+        "hvglExtremumAxisValueDeltas",
+        [
+            (
+                "float32le",
+                "ExtremumAxisValueDelta",
+                "SparseExtremumAxisValueCount",
+                0,
+                "Extremum axis value deltas",
+            ),
+        ],
+    ),
+    (
+        "hvglTranslationDelta",
+        [
+            (
+                "float32le",
+                "x",
+                None,
+                None,
+                "Translation delta X",
+            ),
+            (
+                "float32le",
+                "y",
+                None,
+                None,
+                "Translation delta Y",
+            ),
+        ],
+    ),
+    (
+        "hvglMatrixIndex",
+        [
+            (
+                "uint16le",
+                "row",
+                None,
+                None,
+                "Row index",
+            ),
+            (
+                "uint16le",
+                "column",
+                None,
+                None,
+                "Column index",
+            ),
+        ],
+    ),
+    (
+        "hvglAllTranslations",
+        [
+            (
+                "hvglTranslationDelta",
+                "MasterTranslationDelta",
+                "SparseMasterTranslationCount",
+                0,
+                "Master translation deltas",
+            ),
+            (
+                "hvglTranslationDelta",
+                "ExtremumTranslationDelta",
+                "SparseExtremumTranslationCount",
+                0,
+                "Extremum translation deltas",
+            ),
+            (
+                "hvglMatrixIndex",
+                "ExtremumTranslationIndex",
+                "SparseExtremumTranslationCount",
+                0,
+                "Extremum translation indices",
+            ),
+            (
+                "uint16le",
+                "MasterTranslationIndex",
+                "SparseMasterTranslationCount",
+                0,
+                "Master translation indices",
+            ),
+            ("Align(4)", "Padding", None, None, "Pad to float32le alignment"),
+        ],
+    ),
+    (
+        "hvglAllRotations",
+        [
+            (
+                "float32le",
+                "MasterRotationDelta",
+                "SparseMasterRotationCount",
+                0,
+                "Master rotation deltas",
+            ),
+            (
+                "float32le",
+                "ExtremumRotationDelta",
+                "SparseExtremumRotationCount",
+                0,
+                "Extremum rotation deltas",
+            ),
+            (
+                "hvglMatrixIndex",
+                "ExtremumRotationIndex",
+                "SparseExtremumRotationCount",
+                0,
+                "Extremum rotation indices",
+            ),
+            (
+                "uint16le",
+                "MasterRotationIndex",
+                "SparseMasterRotationCount",
+                0,
+                "Master rotation indices",
+            ),
+            ("Align(4)", "Padding", None, None, "Pad to float32le alignment"),
+        ],
+    ),
+    (
+        "hvglPartFormat1",  # Composite
+        [
+            ("uint16le", "Flags", None, None, "0x0001 for composite"),
+            ("uint16le", "AxisCount", None, None, "Number of axes"),
+            ("uint16le", "SubPartCount", None, None, "Number of direct subparts"),
+            ("uint16le", "TotalNumParts", None, None, "Number of nodes including root"),
+            (
+                "uint16le",
+                "TotalNumAxes",
+                None,
+                None,
+                "Sum of axis count for all nodes including root",
+            ),
+            (
+                "uint16le",
+                "MaxNumExtremes",
+                None,
+                None,
+                "Maximum number of extremes (2*AxisCount) in all nodes",
+            ),
+            (
+                "uint16le",
+                "SparseMasterAxisValueCount",
+                None,
+                None,
+                "Count of non-zero axis value deltas for master",
+            ),
+            (
+                "uint16le",
+                "SparseExtremumAxisValueCount",
+                None,
+                None,
+                "Count of non-zero axis value deltas for extrema",
+            ),
+            (
+                "uint16le",
+                "SparseMasterTranslationCount",
+                None,
+                None,
+                "Count of non-zero master translations",
+            ),
+            (
+                "uint16le",
+                "SparseMasterRotationCount",
+                None,
+                None,
+                "Count of non-zero master rotations",
+            ),
+            (
+                "uint16le",
+                "SparseExtremumTranslationCount",
+                None,
+                None,
+                "Count of non-zero extremum translations",
+            ),
+            (
+                "uint16le",
+                "SparseExtremumRotationCount",
+                None,
+                None,
+                "Count of non-zero extremum rotations",
+            ),
+            (
+                "Offset16LEMul4To(hvglSubParts)",
+                "SubParts",
+                None,
+                None,
+                "Offset to subpart array/4",
+            ),
+            (
+                "Offset16LEMul4To(hvglExtremumColumnStarts)",
+                "ExtremumColumnStarts",
+                None,
+                None,
+                "Offset to extremum column starts/4",
+            ),
+            (
+                "Offset16LEMul4To(hvglMasterAxisValueDeltas)",
+                "MasterAxisValueDeltas",
+                None,
+                None,
+                "Offset to master axis value deltas/4",
+            ),
+            (
+                "Offset16LEMul4To(hvglExtremumAxisValueDeltas)",
+                "ExtremumAxisValueDeltas",
+                None,
+                None,
+                "Offset to extremum axis value deltas/4",
+            ),
+            (
+                "Offset16LEMul4To(hvglAllTranslations)",
+                "AllTranslations",
+                None,
+                None,
+                "Offset to all translations/4",
+            ),
+            (
+                "Offset16LEMul4To(hvglAllRotations)",
+                "AllRotations",
+                None,
+                None,
+                "Offset to all rotations/4",
+            ),
+        ],
+    ),
+    (
+        "hvglParts",
+        [
+            ("hvglPartsIndex", "Part", "", None, "Parts"),
+        ],
+    ),
+    (
+        "hvgl",
+        [
+            (
+                "uint16le",
+                "VersionMajor",
+                None,
+                None,
+                "Major version of the hvgl table, currently 3",
+            ),
+            (
+                "uint16le",
+                "VersionMinor",
+                None,
+                None,
+                "Minor version of the hvgl table, currently 1",
+            ),
+            ("uint32le", "Flags", None, None, "Flags; currently all zero"),
+            (
+                "uint32le",
+                "PartCount",
+                None,
+                None,
+                "Number of all shapes and composites",
+            ),
+            ("LOffsetToLE(hvglParts, alignment=8)", "Parts", None, None, "Parts"),
+            ("uint32le", "NumGlyphs", None, None, "Number of externally visible parts"),
+            ("uint32le", "Reserved", None, None, "Reserved; currently zero"),
         ],
     ),
 ]

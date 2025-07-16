@@ -14,10 +14,16 @@ Transform
 	this is the main class
 Identity
 	Transform instance set to the identity transformation
-Offset
+Translation
 	Convenience function that returns a translating transformation
+Offset
+	Older name for Translation
 Scale
 	Convenience function that returns a scaling transformation
+Rotation
+	Convenience function that returns a rotating transformation
+Skew
+    Convenience function that returns a skewing transformation
 
 The DecomposedTransform class implements a transformation with separate
 translate, rotation, scale, skew, and transformation-center components.
@@ -32,7 +38,7 @@ translate, rotation, scale, skew, and transformation-center components.
 	(200, 300)
 	>>> t.transformPoint((0, 0))
 	(0, 0)
-	>>> t = Offset(2, 3)
+	>>> t = Translation(2, 3)
 	>>> t.transformPoint((100, 100))
 	(102, 103)
 	>>> t.transformPoint((0, 0))
@@ -59,7 +65,16 @@ from typing import NamedTuple
 from dataclasses import dataclass
 
 
-__all__ = ["Transform", "Identity", "Offset", "Scale", "DecomposedTransform"]
+__all__ = [
+    "Transform",
+    "Identity",
+    "Translation",
+    "Offset",
+    "Scale",
+    "Rotation",
+    "Skew",
+    "DecomposedTransform",
+]
 
 
 _EPSILON = 1e-15
@@ -225,7 +240,19 @@ class Transform(NamedTuple):
                 <Transform [1 0 0 1 20 30]>
                 >>>
         """
-        return self.transform((1, 0, 0, 1, x, y))
+        return self.transform(Translation(x, y))
+
+    def pre_translate(self, x: float = 0, y: float = 0):
+        """Return a new transformation, translated (offset) by x, y,
+        before the current transformation.
+
+        :Example:
+                >>> t = Transform()
+                >>> t.pre_translate(20, 30)
+                <Transform [1 0 0 1 20 30]>
+                >>>
+        """
+        return Transform(self.xx, self.xy, self.yx, self.yy, self.dx + x, self.dy + y)
 
     def scale(self, x: float = 1, y: float | None = None):
         """Return a new transformation, scaled by x, y. The 'y' argument
@@ -243,7 +270,7 @@ class Transform(NamedTuple):
             y = x
         return self.transform((x, 0, 0, y, 0, 0))
 
-    def rotate(self, angle: float):
+    def rotate(self, angle: float, *, center_x=0, center_y=0):
         """Return a new transformation, rotated by 'angle' (radians).
 
         :Example:
@@ -253,9 +280,7 @@ class Transform(NamedTuple):
                 <Transform [0 1 -1 0 0 0]>
                 >>>
         """
-        c = _normSinCos(math.cos(angle))
-        s = _normSinCos(math.sin(angle))
-        return self.transform((c, s, -s, c, 0, 0))
+        return self.transform(Rotation(angle, center_x=center_x, center_y=center_y))
 
     def skew(self, x: float = 0, y: float = 0):
         """Return a new transformation, skewed by x and y.
@@ -267,7 +292,7 @@ class Transform(NamedTuple):
                 <Transform [1 0 1 1 0 0]>
                 >>>
         """
-        return self.transform((1, math.tan(y), math.tan(x), 1, 0, 0))
+        return self.transform(Skew(x, y))
 
     def transform(self, other):
         """Return a new transformation, transformed by another
@@ -363,11 +388,11 @@ class Transform(NamedTuple):
                 False
                 >>> bool(Scale(2))
                 True
-                >>> bool(Offset())
+                >>> bool(Translation())
                 False
-                >>> bool(Offset(0))
+                >>> bool(Translation(0))
                 False
-                >>> bool(Offset(2))
+                >>> bool(Translation(2))
                 True
         """
         return self != Identity
@@ -379,15 +404,18 @@ class Transform(NamedTuple):
 Identity = Transform()
 
 
-def Offset(x: float = 0, y: float = 0) -> Transform:
+def Translation(x: float = 0, y: float = 0) -> Transform:
     """Return the identity transformation offset by x, y.
 
     :Example:
-            >>> Offset(2, 3)
+            >>> Translation(2, 3)
             <Transform [1 0 0 1 2 3]>
             >>>
     """
     return Transform(1, 0, 0, 1, x, y)
+
+
+Offset = Translation  # Deprecated alias for Translation
 
 
 def Scale(x: float, y: float | None = None) -> Transform:
@@ -402,6 +430,39 @@ def Scale(x: float, y: float | None = None) -> Transform:
     if y is None:
         y = x
     return Transform(x, 0, 0, y, 0, 0)
+
+
+def Rotation(angle: float, *, center_x: float = 0, center_y: float = 0):
+    """Return a new transformation, rotated by 'angle' (radians).
+    The 'center_x' and 'center_y' arguments specify the center of rotation,
+    defaulting to origin.
+
+    :Example:
+            >>> import math
+            >>> Rotation(math.pi / 2)
+            <Transform [0 1 -1 0 0 0]>
+            >>>
+    """
+    c = _normSinCos(math.cos(angle))
+    s = _normSinCos(math.sin(angle))
+    if center_x or center_y:
+        dx = (1 - c) * center_x + s * center_y
+        dy = -s * center_x + (1 - c) * center_y
+    else:
+        dx = dy = 0
+    return Transform(c, s, -s, c, dx, dy)
+
+
+def Skew(x: float = 0, y: float = 0):
+    """Return the identity transformation, skewed by x and y.
+
+    :Example:
+            >>> import math
+            >>> Skew(math.pi / 4)
+            <Transform [1 0 1 1 0 0]>
+            >>>
+    """
+    return Transform(1, math.tan(y), math.tan(x), 1, 0, 0)
 
 
 @dataclass
