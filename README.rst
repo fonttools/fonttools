@@ -173,6 +173,17 @@ are required to unlock the extra features named "ufo", etc.
 
   *Extra:* ``pathops``
 
+- ``Lib/fontTools/ufoLib``
+
+  Package for reading and writing UFO source files; if available, it will use:
+
+  * `fs <https://pypi.org/pypi/fs>`__: (aka ``pyfilesystem2``) filesystem abstraction layer
+
+  for reading and writing UFOs to the local filesystem or zip files (.ufoz), instead of
+  the built-in ``fontTools.misc.filesystem`` package.
+  The reader and writer classes can in theory also accept any object compatible the
+  ``fs.base.FS`` interface, although not all have been tested.
+
 - ``Lib/fontTools/pens/cocoaPen.py`` and ``Lib/fontTools/pens/quartzPen.py``
 
   Pens for drawing glyphs with Cocoa ``NSBezierPath`` or ``CGPath`` require:
