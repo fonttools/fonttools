@@ -81,15 +81,6 @@ are required to unlock the extra features named "ufo", etc.
 
   *Extra:* ``lxml``
 
-- ``Lib/fontTools/ufoLib``
-
-  Package for reading and writing UFO source files; it requires:
-
-  * `fs <https://pypi.org/pypi/fs>`__: (aka ``pyfilesystem2``) filesystem
-    abstraction layer.
-
-  *Extra:* ``ufo``
-
 - ``Lib/fontTools/ttLib/woff2.py``
 
   Module to compress/decompress WOFF 2.0 web fonts; it requires:

@@ -29,16 +29,6 @@ The module exports a ElementTree-like API for reading/writing XML files, and all
 *Extra:* ``lxml``
 
 
-:py:mod:`fontTools.ufoLib`
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Package for reading and writing UFO source files; it requires:
-
-* `fs <https://pypi.org/pypi/fs>`__: (aka ``pyfilesystem2``) filesystem abstraction layer.
-
-*Extra:* ``ufo``
-
-
 :py:mod:`fontTools.ttLib.woff2`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
