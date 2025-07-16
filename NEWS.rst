@@ -1,3 +1,6 @@
+4.59.0 (released 2025-07-16)
+----------------------------
+
 - Removed hard-dependency on pyfilesystem2 (``fs`` package) from ``fonttools[ufo]`` extra.
   This is replaced by the `fontTools.misc.filesystem` package, a stdlib-only, drop-in
   replacement for the subset of the pyfilesystem2's API used by ``fontTools.ufoLib``.
