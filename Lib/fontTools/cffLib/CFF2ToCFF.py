@@ -8,6 +8,7 @@ from fontTools.cffLib import (
     buildDefaults,
     topDictOperators,
     privateDictOperators,
+    FDSelect,
 )
 from .specializer import specializeProgram
 from .width import optimizeWidths
@@ -52,8 +53,13 @@ def _convertCFF2ToCFF(cff, otFont):
             if hasattr(topDict, key):
                 delattr(topDict, key)
 
-    fdArray = topDict.FDArray
     charStrings = topDict.CharStrings
+
+    fdArray = topDict.FDArray
+    if not hasattr(topDict, "FDSelect"):
+        # FDSelect is optional in CFF2, but required in CFF.
+        fdSelect = topDict.FDSelect = FDSelect()
+        fdSelect.gidArray = [0] * len(charStrings.charStrings)
 
     defaults = buildDefaults(privateDictOperators)
     order = buildOrder(privateDictOperators)
