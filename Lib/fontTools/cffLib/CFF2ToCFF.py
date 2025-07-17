@@ -101,11 +101,11 @@ def _convertCFF2ToCFF(cff, otFont):
             cs.program.insert(0, width - private.nominalWidthX)
 
     mapping = {
-        name: ("cid" + str(n) if n else ".notdef")
+        name: ("cid" + str(n).zfill(5) if n else ".notdef")
         for n, name in enumerate(topDict.charset)
     }
     topDict.charset = [
-        "cid" + str(n) if n else ".notdef" for n in range(len(topDict.charset))
+        "cid" + str(n).zfill(5) if n else ".notdef" for n in range(len(topDict.charset))
     ]
     charStrings.charStrings = {
         mapping[name]: v for name, v in charStrings.charStrings.items()
