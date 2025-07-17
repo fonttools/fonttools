@@ -9,6 +9,7 @@ from fontTools.cffLib import (
     topDictOperators,
     privateDictOperators,
 )
+from .specializer import specializeProgram
 from .width import optimizeWidths
 from collections import defaultdict
 import logging
@@ -69,9 +70,11 @@ def _convertCFF2ToCFF(cff, otFont):
                 if hasattr(privateDict, key):
                     delattr(privateDict, key)
 
+    cff.desubroutinize()
+
     for cs in charStrings.values():
-        cs.decompile()
         cs.program.append("endchar")
+
     for subrSets in [cff.GlobalSubrs] + [
         getattr(fd.Private, "Subrs", []) for fd in fdArray
     ]:
@@ -99,6 +102,11 @@ def _convertCFF2ToCFF(cff, otFont):
         width = metrics[glyphName][0]
         if width != private.defaultWidthX:
             cs.program.insert(0, width - private.nominalWidthX)
+
+    # Specialize (via generalization) the CharStrings, to respect the
+    # lower CFF stack depth.
+    for cs in charStrings.values():
+        cs.program = specializeProgram(cs.program)
 
     mapping = {
         name: ("cid" + str(n).zfill(5) if n else ".notdef")
