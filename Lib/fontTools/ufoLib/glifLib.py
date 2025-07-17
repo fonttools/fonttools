@@ -26,7 +26,7 @@ from fontTools.pens.pointPen import AbstractPointPen, PointToSegmentPen
 from fontTools.ufoLib import UFOFormatVersion, _UFOBaseIO
 from fontTools.ufoLib.errors import GlifLibError
 from fontTools.ufoLib.filenames import userNameToFileName
-from fontTools.ufoLib.utils import _VersionTupleEnumMixin, numberTypes
+from fontTools.ufoLib.utils import numberTypes
 from fontTools.ufoLib.validators import (
     anchorsValidator,
     colorValidator,
@@ -46,7 +46,7 @@ from fontTools.ufoLib.utils import (
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable, Set
-    from fs.base import FS
+    from fontTools.misc.filesystem._base import FS
     from logging import Logger
     from fontTools.annotations import (
         ElementType,

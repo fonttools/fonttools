@@ -34,13 +34,10 @@ Value conversion functions are available for converting
 
 from __future__ import annotations
 
-import os
-from copy import deepcopy
-from os import fsdecode
+import enum
 import logging
 import os
 import zipfile
-import enum
 from collections import OrderedDict
 from copy import deepcopy
 from os import fsdecode
@@ -48,27 +45,19 @@ from os import fsdecode
 from fontTools.misc import filesystem as fs
 from typing import TYPE_CHECKING, cast, Any, IO, Optional, Union
 
-import fs
-import fs.base
-import fs.subfs
-import fs.copy
-import fs.osfs
-import fs.zipfs
-import fs.tempfs
-import fs.tools
-import fs.errors
-
 from fontTools.misc import plistlib
 from fontTools.ufoLib.converters import convertUFO1OrUFO2KerningToUFO3Kerning
 from fontTools.ufoLib.errors import UFOLibError
+from fontTools.ufoLib.filenames import userNameToFileName
 from fontTools.ufoLib.utils import (
     numberTypes,
     normalizeFormatVersion,
     BaseFormatVersion,
 )
+from fontTools.ufoLib.validators import *
 
 if TYPE_CHECKING:
-    from fs.base import FS
+    from fontTools.misc.filesystem._base import FS
     from logging import Logger
     from os import PathLike
     from fontTools.annotations import (
@@ -89,6 +78,9 @@ LibDict = dict[str, Any]
 LayerOrderList = Optional[list[Optional[str]]]
 AttributeDataDict = dict[str, Any]
 FontInfoAttributes = dict[str, AttributeDataDict]
+
+# client code can check this to see if the upstream `fs` package is being used
+haveFS = fs._haveFS
 
 __all__: list[str] = [
     "haveFS",
@@ -260,7 +252,7 @@ class UFOReader(_UFOBaseIO):
             parentFS: FS
             try:
                 if structure is UFOFileStructure.ZIP:
-                    parentFS = fs.zipfs.ZipFS(path, write=False, encoding="utf-8")
+                    parentFS = fs.zipfs.ZipFS(path, write=False, encoding="utf-8")  # type: ignore[abstract]
                 else:
                     parentFS = fs.osfs.OSFS(path)
             except fs.errors.CreateFailed as e:
@@ -1021,7 +1013,7 @@ class UFOWriter(UFOReader):
                     # contents to a temporary location and work from there, then
                     # upon closing UFOWriter we create the final zip file
                     parentFS: FS = fs.tempfs.TempFS()
-                    with fs.zipfs.ZipFS(path, encoding="utf-8") as origFS:
+                    with fs.zipfs.ZipFS(path, encoding="utf-8") as origFS:  # type: ignore[abstract]
                         fs.copy.copy_fs(origFS, parentFS)
                     # if output path is an existing zip, we require that it contains
                     # one, and only one, root directory (with arbitrary name), in turn
@@ -1043,7 +1035,7 @@ class UFOWriter(UFOReader):
                     # if the output zip file didn't exist, we create the root folder;
                     # we name it the same as input 'path', but with '.ufo' extension
                     rootDir = os.path.splitext(os.path.basename(path))[0] + ".ufo"
-                    parentFS = fs.zipfs.ZipFS(path, write=True, encoding="utf-8")
+                    parentFS = fs.zipfs.ZipFS(path, write=True, encoding="utf-8")  # type: ignore[abstract]
                     parentFS.makedir(rootDir)
                 # 'ClosingSubFS' ensures that the parent filesystem is closed
                 # when its root subdirectory is closed
@@ -1054,7 +1046,7 @@ class UFOWriter(UFOReader):
             self._havePreviousFile = havePreviousFile
             self._shouldClose = True
         elif isinstance(path, fs.base.FS):
-            filesystem = path
+            filesystem: FS = path
             try:
                 filesystem.check()
             except fs.errors.FilesystemClosed:
@@ -1830,7 +1822,7 @@ class UFOWriter(UFOReader):
             # if we are updating an existing zip file, we can now compress the
             # contents of the temporary filesystem in the destination path
             rootDir = os.path.splitext(os.path.basename(self._path))[0] + ".ufo"
-            with fs.zipfs.ZipFS(self._path, write=True, encoding="utf-8") as destFS:
+            with fs.zipfs.ZipFS(self._path, write=True, encoding="utf-8") as destFS:  # type: ignore[abstract]
                 fs.copy.copy_fs(self.fs, destFS.makedir(rootDir))
         super().close()
 

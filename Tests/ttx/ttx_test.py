@@ -2,7 +2,12 @@ from fontTools.misc.testTools import parseXML
 from fontTools.misc.timeTools import timestampSinceEpoch
 from fontTools.ttLib import TTFont, TTLibError
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
+from fontTools.fontBuilder import FontBuilder
+from fontTools.ttLib.tables._n_a_m_e import table__n_a_m_e
+from fontTools.ttLib.tables._g_l_y_f import Glyph
+
 from fontTools import ttx
+
 import base64
 import getopt
 import logging

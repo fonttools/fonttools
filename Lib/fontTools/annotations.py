@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Iterable, Optional, TypeVar, Union
 from collections.abc import Callable, Sequence
-from fs.base import FS
+from fontTools.misc.filesystem._base import FS
 from os import PathLike
 from xml.etree.ElementTree import Element as ElementTreeElement
 from lxml.etree import _Element as LxmlElement
