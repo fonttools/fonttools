@@ -27,16 +27,16 @@ from collections import Counter, defaultdict
 from functools import reduce
 from types import MethodType
 
-__usage__ = "pyftsubset font-file [glyph...] [--option=value]..."
+__usage__ = "fonttools subset font-file [glyph...] [--option=value]..."
 
 __doc__ = (
     """\
-pyftsubset -- OpenType font subsetter and optimizer
+fonttools subset -- OpenType font subsetter and optimizer
 
-pyftsubset is an OpenType font subsetter and optimizer, based on fontTools.
-It accepts any TT- or CFF-flavored OpenType (.otf or .ttf) or WOFF (.woff)
-font file. The subsetted glyph set is based on the specified glyphs
-or characters, and specified OpenType layout features.
+fonttools subset is an OpenType font subsetter and optimizer, based on
+fontTools. It accepts any TT- or CFF-flavored OpenType (.otf or .ttf)
+or WOFF (.woff) font file. The subsetted glyph set is based on the
+specified glyphs or characters, and specified OpenType layout features.
 
 The tool also performs some size-reducing optimizations, aimed for using
 subset fonts as webfonts.  Individual optimizations can be enabled or
@@ -130,11 +130,11 @@ you might need to escape the question mark, like this: '--glyph-names\\?'.
 
 Examples::
 
-    $ pyftsubset --glyph-names?
+    $ fonttools subset --glyph-names?
     Current setting for 'glyph-names' is: False
-    $ pyftsubset --name-IDs=?
+    $ fonttools subset --name-IDs=?
     Current setting for 'name-IDs' is: [0, 1, 2, 3, 4, 5, 6]
-    $ pyftsubset --hinting? --no-hinting --hinting?
+    $ fonttools subset --hinting? --no-hinting --hinting?
     Current setting for 'hinting' is: True
     Current setting for 'hinting' is: False
 
@@ -445,7 +445,7 @@ Example
 Produce a subset containing the characters ' !"#$%' without performing
 size-reducing optimizations::
 
-  $ pyftsubset font.ttf --unicodes="U+0020-0025" \\
+  $ fonttools subset font.ttf --unicodes="U+0020-0025" \\
     --layout-features=* --glyph-names --symbol-cmap --legacy-cmap \\
     --notdef-glyph --notdef-outline --recommended-glyphs \\
     --name-IDs=* --name-legacy --name-languages=*
@@ -3768,7 +3768,7 @@ def parse_glyphs(s):
 
 def usage():
     print("usage:", __usage__, file=sys.stderr)
-    print("Try pyftsubset --help for more information.\n", file=sys.stderr)
+    print("Try fonttools subset --help for more information.\n", file=sys.stderr)
 
 
 @timer("make one with everything (TOTAL TIME)")

@@ -7,6 +7,8 @@ scipy==1.13.1; platform_python_implementation != "PyPy" and python_version <= '3
 scipy==1.14.1; platform_python_implementation != "PyPy" and python_version >= '3.10'
 munkres==1.1.4; platform_python_implementation == "PyPy"
 zopfli==0.2.3.post1
+# fs is no longer required by the 'ufo' extra (only used if present) but we keep it in
+# here so that tox continues to install it for the tests
 fs==2.4.16
 skia-pathops==0.8.0.post2; platform_python_implementation != "PyPy"
 # this is only required to run Tests/cu2qu/{ufo,cli}_test.py

@@ -96,6 +96,7 @@ class BuilderTest(unittest.TestCase):
         useExtension
         bug3846_1 bug3846_2
         empty_filter_sets_and_mark_classes
+        combo_mult_and_lig_sub
     """.split()
 
     VARFONT_AXES = [
@@ -439,18 +440,24 @@ class BuilderTest(unittest.TestCase):
 
         assert "GSUB" in font
         lookups = font["GSUB"].table.LookupList.Lookup
-        self.assertEqual(len(lookups), 3)
+        self.assertEqual(len(lookups), 2)
         st = lookups[0].SubTable[0]
-        self.assertEqual(st.LookupType, 1)
-        self.assertEqual(st.mapping, {"A": "A.sc"})
-        st = lookups[1].SubTable[0]
+        # first should get promoted to multi
         self.assertEqual(st.LookupType, 2)
-        self.assertEqual(st.mapping, {"f_f": ("f", "f")})
-        st = lookups[2].SubTable[0]
+        self.assertEqual(st.mapping, {"A": ("A.sc",), "f_f": ("f", "f")})
+        # st = lookups[1].SubTable[0]
+        # self.assertEqual(st.LookupType, 2)
+        # self.assertEqual(st.mapping, {"f_f": ("f", "f")})
+        st = lookups[1].SubTable[0]
         self.assertEqual(st.LookupType, 4)
         self.assertEqual(len(st.ligatures), 1)
         self.assertEqual(len(st.ligatures["f"]), 1)
         self.assertEqual(st.ligatures["f"][0].LigGlyph, "f_f_i")
+
+        features = font["GSUB"].table.FeatureList.FeatureRecord
+        self.assertEqual(len(features), 1)
+        feat = features[0].Feature
+        self.assertEqual(feat.LookupListIndex, [0, 1])
 
     def test_pairPos_redefinition_warning(self):
         # https://github.com/fonttools/fonttools/issues/1147

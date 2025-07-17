@@ -69,6 +69,32 @@ class TTXTest(unittest.TestCase):
     # Tests
     # -----
 
+    def test_saveXML_replace_control_characters(self):
+        fb = FontBuilder(unitsPerEm=1000, isTTF=True)
+        fb.setupGlyphOrder([".notdef"])
+        fb.setupCharacterMap({})
+        fb.setupGlyf({".notdef": Glyph()})
+        fb.setupHorizontalMetrics({".notdef": (600, 0)})
+        fb.setupHorizontalHeader(ascent=800, descent=-200)
+        fb.setupOS2()
+        fb.setupPost()
+        # Setup name record with illegal control character
+        nameStr = "Control\x01Char"
+        replaced = nameStr.replace("\x01", "?")
+        fb.setupNameTable({"familyName": nameStr})
+        self.temp_dir()
+        ttx_path = Path(self.tempdir) / "test.ttx"
+        # Capture logs
+        with self.assertLogs("fontTools.ttx", level="WARNING") as cm:
+            fb.font.saveXML(str(ttx_path))
+        # Test replacement
+        xml_content = ttx_path.read_text(encoding="utf-8")
+        self.assertIn(replaced, xml_content)
+        self.assertNotIn("\x01", xml_content)
+        warnings = "\n".join(cm.output)
+        self.assertIn("Illegal XML character(s) found", warnings)
+        self.assertIn("\\x01", warnings)
+
     def test_parseOptions_no_args(self):
         with self.assertRaises(getopt.GetoptError) as cm:
             ttx.parseOptions([])
@@ -471,7 +497,7 @@ def test_options_recalc_timestamp():
     assert tto.recalcTimestamp is True
 
 
-def test_options_recalc_timestamp():
+def test_options_no_recalc_timestamp():
     tto = ttx.Options([("--no-recalc-timestamp", "")], 1)
     assert tto.recalcTimestamp is False
 

@@ -1,3 +1,28 @@
+4.59.0 (released 2025-07-16)
+----------------------------
+
+- Removed hard-dependency on pyfilesystem2 (``fs`` package) from ``fonttools[ufo]`` extra.
+  This is replaced by the `fontTools.misc.filesystem` package, a stdlib-only, drop-in
+  replacement for the subset of the pyfilesystem2's API used by ``fontTools.ufoLib``.
+  The latter should continue to work with the upstream ``fs`` (we even test with/without).
+  Clients who wish to continue using ``fs`` can do so by depending on it directly instead
+  of via the ``fonttools[ufo]`` extra (#3885, #3620).
+- [xmlWriter] Replace illegal XML characters (e.g. control or non-characters) with "?"
+  when dumping to ttx (#3868, #71).
+- [varLib.hvar] Fixed vertical metrics fields copy/pasta error (#3884).
+- Micro optimizations in ttLib and sstruct modules (#3878, #3879).
+- [unicodedata] Add Garay script to RTL_SCRIPTS (#3882).
+- [roundingPen] Remove unreliable kwarg usage. Argument names aren’t consistent among
+  point pens’ ``.addComponent()`` implementations, in particular ``baseGlyphName``
+  vs ``glyphName`` (#3880).
+
+4.58.5 (released 2025-07-03)
+----------------------------
+
+- [feaLib] Don't try to combine ligature & multisub rules (#3874).
+- [feaLib/ast] Use weakref proxies to avoid cycles in visitor (#3873).
+- [varLib.instancer] Fixed instancing CFF2 fonts where VarData contains more than 64k items (#3858).
+
 4.58.4 (released 2025-06-13)
 ----------------------------
 
