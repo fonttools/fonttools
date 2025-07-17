@@ -27,7 +27,7 @@ def _convertCFF2ToCFF(cff, otFont):
     The CFF2 font cannot be variable. (TODO Accept those and convert to the
     default instance?)
 
-    This assumes a decompiled CFF table. (i.e. that the object has been
+    This assumes a decompiled CFF2 table. (i.e. that the object has been
     filled via :meth:`decompile` and e.g. not loaded from XML.)"""
 
     cff.major = 1
@@ -117,6 +117,8 @@ def _convertCFF2ToCFF(cff, otFont):
 
 
 def convertCFF2ToCFF(font, *, updatePostTable=True):
+    if "CFF2" not in font:
+        raise ValueError("Input font does not contain a CFF2 table.")
     cff = font["CFF2"].cff
     _convertCFF2ToCFF(cff, font)
     del font["CFF2"]
@@ -131,7 +133,7 @@ def convertCFF2ToCFF(font, *, updatePostTable=True):
 
 
 def main(args=None):
-    """Convert CFF OTF font to CFF2 OTF font"""
+    """Convert CFF2 OTF font to CFF OTF font"""
     if args is None:
         import sys
 
@@ -140,8 +142,8 @@ def main(args=None):
     import argparse
 
     parser = argparse.ArgumentParser(
-        "fonttools cffLib.CFFToCFF2",
-        description="Upgrade a CFF font to CFF2.",
+        "fonttools cffLib.CFF2ToCFF",
+        description="Convert a non-variable CFF2 font to CFF.",
     )
     parser.add_argument(
         "input", metavar="INPUT.ttf", help="Input OTF file with CFF table."
