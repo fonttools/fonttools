@@ -111,9 +111,7 @@ def _convertCFF2ToCFF(cff, otFont):
         mapping[name]: v for name, v in charStrings.charStrings.items()
     }
 
-    # I'm not sure why the following is *not* necessary. And it breaks
-    # the output if I add it.
-    # topDict.ROS = ("Adobe", "Identity", 0)
+    topDict.ROS = ("Adobe", "Identity", 0)
 
 
 def convertCFF2ToCFF(font, *, updatePostTable=True):
