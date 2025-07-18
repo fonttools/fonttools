@@ -2,6 +2,7 @@
 
 from fontTools.ttLib import TTFont, newTable
 from fontTools.misc.cliTools import makeOutputFileName
+from fontTools.misc.psCharStrings import T2StackUseExtractor
 from fontTools.cffLib import (
     TopDictIndex,
     buildOrder,
@@ -10,6 +11,7 @@ from fontTools.cffLib import (
     privateDictOperators,
     FDSelect,
 )
+from .transforms import desubroutinizeCharString
 from .specializer import specializeProgram
 from .width import optimizeWidths
 from collections import defaultdict
@@ -76,11 +78,10 @@ def _convertCFF2ToCFF(cff, otFont):
                 if hasattr(privateDict, key):
                     delattr(privateDict, key)
 
-    cff.desubroutinize()
-
+    # Add ending operators
     for cs in charStrings.values():
+        cs.decompile()
         cs.program.append("endchar")
-
     for subrSets in [cff.GlobalSubrs] + [
         getattr(fd.Private, "Subrs", []) for fd in fdArray
     ]:
@@ -109,10 +110,25 @@ def _convertCFF2ToCFF(cff, otFont):
         if width != private.defaultWidthX:
             cs.program.insert(0, width - private.nominalWidthX)
 
-    # Specialize (via generalization) the CharStrings, to respect the
-    # lower CFF stack depth.
-    for cs in charStrings.values():
-        cs.program = specializeProgram(cs.program)
+    # Handle stack use since stack-depth is lower in CFF than in CFF2.
+    for glyphName in charStrings.keys():
+        cs, fdIndex = charStrings.getItemAndSelector(glyphName)
+        if fdIndex is None:
+            fdIndex = 0
+        private = fdArray[fdIndex].Private
+        extractor = T2StackUseExtractor(
+            getattr(private, "Subrs", []), cff.GlobalSubrs, private=private
+        )
+        stackUse = extractor.execute(cs)
+        if stackUse > 48:  # CFF stack depth is 48
+            desubroutinizeCharString(cs)
+            cs.program = specializeProgram(cs.program)
+
+    # Unused subroutines are still in CFF2 (ie. lacking 'return' operator)
+    # because they were not decompiled when we added the 'return'.
+    # Moreover, some used subroutines may have become unused after the
+    # stack-use fixup. So we remove all unused subroutines now.
+    cff.remove_unused_subroutines()
 
     mapping = {
         name: ("cid" + str(n).zfill(5) if n else ".notdef")
