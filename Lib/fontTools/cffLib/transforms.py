@@ -94,17 +94,22 @@ class _DesubroutinizingT2Decompiler(SimpleT2Decompiler):
             cs._patches.append((index, subr._desubroutinized))
 
 
+def desubroutinizeCharString(cs):
+    """Desubroutinize a charstring in-place."""
+    cs.decompile()
+    subrs = getattr(cs.private, "Subrs", [])
+    decompiler = _DesubroutinizingT2Decompiler(subrs, cs.globalSubrs, cs.private)
+    decompiler.execute(cs)
+    cs.program = cs._desubroutinized
+    del cs._desubroutinized
+
+
 def desubroutinize(cff):
     for fontName in cff.fontNames:
         font = cff[fontName]
         cs = font.CharStrings
         for c in cs.values():
-            c.decompile()
-            subrs = getattr(c.private, "Subrs", [])
-            decompiler = _DesubroutinizingT2Decompiler(subrs, c.globalSubrs, c.private)
-            decompiler.execute(c)
-            c.program = c._desubroutinized
-            del c._desubroutinized
+            desubroutinizeCharString(c)
         # Delete all the local subrs
         if hasattr(font, "FDArray"):
             for fd in font.FDArray:

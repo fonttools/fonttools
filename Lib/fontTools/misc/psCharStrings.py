@@ -338,7 +338,7 @@ class SimpleT2Decompiler(object):
         self.numRegions = 0
         self.vsIndex = 0
 
-    def execute(self, charString):
+    def execute(self, charString, *, pushToStack=None):
         self.callingStack.append(charString)
         needsDecompilation = charString.needsDecompilation()
         if needsDecompilation:
@@ -346,7 +346,8 @@ class SimpleT2Decompiler(object):
             pushToProgram = program.append
         else:
             pushToProgram = lambda x: None
-        pushToStack = self.operandStack.append
+        if pushToStack is None:
+            pushToStack = self.operandStack.append
         index = 0
         while True:
             token, isOperator, index = charString.getToken(index)
@@ -549,6 +550,20 @@ t1Operators = [
     ((12, 17), "pop"),
     ((12, 33), "setcurrentpoint"),
 ]
+
+
+class T2StackUseExtractor(SimpleT2Decompiler):
+
+    def execute(self, charString):
+        maxStackUse = 0
+
+        def pushToStack(value):
+            nonlocal maxStackUse
+            self.operandStack.append(value)
+            maxStackUse = max(maxStackUse, len(self.operandStack))
+
+        super().execute(charString, pushToStack=pushToStack)
+        return maxStackUse
 
 
 class T2WidthExtractor(SimpleT2Decompiler):

@@ -120,6 +120,7 @@ from fontTools.cffLib.specializer import (
     specializeCommands,
     generalizeCommands,
 )
+from fontTools.cffLib.CFF2ToCFF import convertCFF2ToCFF
 from fontTools.varLib import builder
 from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib.merger import MutatorMerger
@@ -136,6 +137,7 @@ from enum import IntEnum
 import logging
 import os
 import re
+import io
 from typing import Dict, Iterable, Mapping, Optional, Sequence, Tuple, Union
 import warnings
 
@@ -643,7 +645,11 @@ def instantiateCFF2(
     # the Private dicts.
     #
     # Then prune unused things and possibly drop the VarStore if it's empty.
-    # In which case, downgrade to CFF table if requested.
+    #
+    # If the downgrade parameter is True, no actual downgrading is done, but
+    # the function returns True if the VarStore was empty after instantiation,
+    # and hence a downgrade to CFF is possible. In all other cases it returns
+    # False.
 
     log.info("Instantiating CFF2 table")
 
@@ -882,9 +888,9 @@ def instantiateCFF2(
             del private.vstore
 
         if downgrade:
-            from fontTools.cffLib.CFF2ToCFF import convertCFF2ToCFF
+            return True
 
-            convertCFF2ToCFF(varfont)
+    return False
 
 
 def _instantiateGvarGlyph(
@@ -1377,6 +1383,52 @@ def _isValidAvarSegmentMap(axisTag, segmentMap):
     return True
 
 
+def downgradeCFF2ToCFF(varfont):
+
+    # Save these properties
+    recalcTimestamp = varfont.recalcTimestamp
+    recalcBBoxes = varfont.recalcBBoxes
+
+    # Disable them
+    varfont.recalcTimestamp = False
+    varfont.recalcBBoxes = False
+
+    # Save to memory, reload, downgrade and save again, reload.
+    # We do this dance because the convertCFF2ToCFF changes glyph
+    # names, so following save would fail if any other table was
+    # loaded and referencing glyph names.
+    #
+    # The second save+load is unfortunate but also necessary.
+
+    stream = io.BytesIO()
+    log.info("Saving CFF2 font to memory for downgrade")
+    varfont.save(stream)
+    stream.seek(0)
+    varfont = TTFont(stream, recalcTimestamp=False, recalcBBoxes=False)
+
+    convertCFF2ToCFF(varfont)
+
+    stream = io.BytesIO()
+    log.info("Saving downgraded CFF font to memory")
+    varfont.save(stream)
+    stream.seek(0)
+    varfont = TTFont(stream, recalcTimestamp=False, recalcBBoxes=False)
+
+    # Uncomment, to see test all tables can be loaded. This fails without
+    # the extra save+load above.
+    """
+    for tag in varfont.keys():
+        print("Loading", tag)
+        varfont[tag]
+    """
+
+    # Restore them
+    varfont.recalcTimestamp = recalcTimestamp
+    varfont.recalcBBoxes = recalcBBoxes
+
+    return varfont
+
+
 def instantiateAvar(varfont, axisLimits):
     # 'axisLimits' dict must contain user-space (non-normalized) coordinates.
 
@@ -1665,7 +1717,9 @@ def instantiateVariableFont(
         instantiateVARC(varfont, normalizedLimits)
 
     if "CFF2" in varfont:
-        instantiateCFF2(varfont, normalizedLimits, downgrade=downgradeCFF2)
+        downgradeCFF2 = instantiateCFF2(
+            varfont, normalizedLimits, downgrade=downgradeCFF2
+        )
 
     if "gvar" in varfont:
         instantiateGvar(varfont, normalizedLimits, optimize=optimize)
@@ -1719,6 +1773,12 @@ def instantiateVariableFont(
         # Set Regular/Italic/Bold/Bold Italic bits as appropriate, after the
         # name table has been updated.
         setRibbiBits(varfont)
+
+    if downgradeCFF2:
+        origVarfont = varfont
+        varfont = downgradeCFF2ToCFF(varfont)
+        if inplace:
+            origVarfont.__dict__ = varfont.__dict__.copy()
 
     return varfont
 
@@ -1929,7 +1989,7 @@ def main(args=None):
         if limit is None or limit[0] == limit[2]
     }.issuperset(axis.axisTag for axis in varfont["fvar"].axes)
 
-    instantiateVariableFont(
+    varfont = instantiateVariableFont(
         varfont,
         axisLimits,
         inplace=True,
