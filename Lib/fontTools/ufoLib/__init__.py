@@ -240,9 +240,7 @@ class UFOReader(_UFOBaseIO):
     ``False`` to not validate the data.
     """
 
-    def __init__(
-        self, path: Union[str, PathLike[str], FS], validate: bool = True
-    ) -> None:
+    def __init__(self, path: PathOrFS, validate: bool = True) -> None:
         # Only call __fspath__ if path is not already a str or FS object
         if not isinstance(path, (str, fs.base.FS)) and hasattr(path, "__fspath__"):
             path = path.__fspath__()
@@ -870,7 +868,7 @@ class UFOReader(_UFOBaseIO):
                 result.append(path.name)
         return result
 
-    def readData(self, fileName: Union[str, os.PathLike[str]]) -> bytes:
+    def readData(self, fileName: PathStr) -> bytes:
         """
         Return bytes for the file named 'fileName' inside the 'data/' directory.
         """
@@ -886,9 +884,7 @@ class UFOReader(_UFOBaseIO):
             raise UFOLibError(f"No data file named '{fileName}' on {self.fs}")
         return data
 
-    def readImage(
-        self, fileName: Union[str, os.PathLike[str]], validate: Optional[bool] = None
-    ) -> bytes:
+    def readImage(self, fileName: PathStr, validate: Optional[bool] = None) -> bytes:
         """
         Return image data for the file named fileName.
 
@@ -1742,14 +1738,14 @@ class UFOWriter(UFOReader):
         if layerName is not None:
             del self.layerContents[layerName]
 
-    def writeData(self, fileName: Union[str, PathLike[str]], data: bytes) -> None:
+    def writeData(self, fileName: PathStr, data: bytes) -> None:
         """
         Write data to fileName in the 'data' directory.
         The data must be a bytes string.
         """
         self.writeBytesToPath(f"{DATA_DIRNAME}/{fsdecode(fileName)}", data)
 
-    def removeData(self, fileName: Union[str, PathLike[str]]) -> None:
+    def removeData(self, fileName: PathStr) -> None:
         """
         Remove the file named fileName from the data directory.
         """
@@ -1759,7 +1755,7 @@ class UFOWriter(UFOReader):
 
     def writeImage(
         self,
-        fileName: Union[str, os.PathLike[str]],
+        fileName: PathStr,
         data: bytes,
         validate: Optional[bool] = None,
     ) -> None:
@@ -1782,7 +1778,7 @@ class UFOWriter(UFOReader):
 
     def removeImage(
         self,
-        fileName: Union[str, os.PathLike[str]],
+        fileName: PathStr,
         validate: Optional[bool] = None,
     ) -> None:  # XXX remove unused 'validate'?
         """
@@ -1798,8 +1794,8 @@ class UFOWriter(UFOReader):
     def copyImageFromReader(
         self,
         reader: UFOReader,
-        sourceFileName: Union[str, os.PathLike[str]],
-        destFileName: Union[str, os.PathLike[str]],
+        sourceFileName: PathStr,
+        destFileName: PathStr,
         validate: Optional[bool] = None,
     ) -> None:
         """
