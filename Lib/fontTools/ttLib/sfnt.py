@@ -252,15 +252,15 @@ class SFNTWriter(object):
             )
 
         self.directoryOffset = self.file.tell()
-        self.nextTableOffset = (
+        nextTableOffset = (
             self.directoryOffset
             + self.directorySize
             + numTables * self.DirectoryEntry.formatSize
         )
         # clear out directory area
-        self.file.seek(self.nextTableOffset)
+        self.file.seek(nextTableOffset)
         # make sure we're actually where we want to be. (old cStringIO bug)
-        self.file.write(b"\0" * (self.nextTableOffset - self.file.tell()))
+        self.file.write(b"\0" * (nextTableOffset - self.file.tell()))
         self.tables = OrderedDict()
 
     def setEntry(self, tag, entry):
@@ -269,33 +269,45 @@ class SFNTWriter(object):
 
         self.tables[tag] = entry
 
+    def align(self, alignment):
+
+        # Add NUL bytes to pad the table data to an alignment boundary.
+        # Don't depend on f.seek() as we need to add the padding even if no
+        # subsequent write follows (seek is lazy), ie. after the final table
+        # in the font.
+        pos = self.file.tell()
+        pad = (alignment - pos % alignment) % alignment
+        self.file.write(b"\0" * pad)
+
     def __setitem__(self, tag, data):
         """Write raw table data to disk."""
+
+        from fontTools.ttLib import getTableClass
+
         if tag in self.tables:
             raise TTLibError("cannot rewrite '%s' table" % tag)
 
         entry = self.DirectoryEntry()
         entry.tag = tag
-        entry.offset = self.nextTableOffset
         if tag == "head":
             entry.checkSum = calcChecksum(data[:8] + b"\0\0\0\0" + data[12:])
             self.headTable = data
             entry.uncompressed = True
         else:
             entry.checkSum = calcChecksum(data)
+
+        entry.alignment = getTableClass(tag).alignment
+        self.align(entry.alignment)
+
+        entry.offset = self.file.tell()
+
         entry.saveData(self.file, data)
 
         if self.flavor == "woff":
             entry.origOffset = self.origNextTableOffset
             self.origNextTableOffset += (entry.origLength + 3) & ~3
 
-        self.nextTableOffset = self.nextTableOffset + ((entry.length + 3) & ~3)
-        # Add NUL bytes to pad the table data to a 4-byte boundary.
-        # Don't depend on f.seek() as we need to add the padding even if no
-        # subsequent write follows (seek is lazy), ie. after the final table
-        # in the font.
-        self.file.write(b"\0" * (self.nextTableOffset - self.file.tell()))
-        assert self.nextTableOffset == self.file.tell()
+        self.align(4)
 
         self.setEntry(tag, entry)
 

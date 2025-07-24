@@ -2605,6 +2605,71 @@ def prune_post_subset(self, font, options):
     return bool(self.numPaletteEntries)
 
 
+@_add_method(ttLib.getTableClass("hvgl"))
+def closure_glyphs(self, s):
+    # We need to close all used parts, that are also glyphs.
+    # This is because glyph indices and part indices must
+    # be the same even after subsetting.
+
+    hvgl = self.table
+    partsIndex = hvgl.Parts.Part
+    reverseGlyphMap = s.reverseOrigGlyphMap
+    numGlyphs = len(reverseGlyphMap)
+
+    # Collect all used parts
+    allParts = {reverseGlyphMap[g] for g in s.glyphs}
+    decompose = set(allParts)
+    while decompose:
+        parts = set()
+        for part_idx in decompose:
+            part = partsIndex[part_idx]
+            if part.Format == 1:  # PartComposite
+                for subPart in part.SubParts.SubPart:
+                    sub_part_idx = subPart.PartIndex
+                    parts.add(sub_part_idx)
+                    if sub_part_idx < numGlyphs:
+                        s.glyphs.add(sub_part_idx)
+
+        parts -= allParts
+        allParts.update(parts)
+        decompose = parts
+
+
+@_add_method(ttLib.getTableClass("hvgl"))
+def subset_glyphs(self, s):
+    hvgl = self.table
+    partsIndex = hvgl.Parts.Part
+    reverseGlyphMap = s.reverseOrigGlyphMap
+
+    # Collect all used parts
+    allParts = {reverseGlyphMap[g] for g in s.glyphs}
+    decompose = set(allParts)
+    while decompose:
+        parts = set()
+        for part_idx in decompose:
+            part = partsIndex[part_idx]
+            if part.Format == 1:  # PartComposite
+                for subPart in part.SubParts.SubPart:
+                    parts.add(subPart.PartIndex)
+
+        parts -= allParts
+        allParts.update(parts)
+        decompose = parts
+    del parts
+
+    partsMapping = {old: new for new, old in enumerate(sorted(allParts))}
+    # Remap all parts
+    for part_idx in allParts:
+        part = partsIndex[part_idx]
+        if part.Format == 1:  # PartComposite
+            for subPart in part.SubParts.SubPart:
+                subPart.PartIndex = partsMapping[subPart.PartIndex]
+
+    # Remove unused parts
+    hvgl.Parts.Part = [partsIndex[part_idx] for part_idx in sorted(allParts)]
+    return bool(hvgl.Parts.Part)
+
+
 @_add_method(otTables.MathGlyphConstruction)
 def closure_glyphs(self, glyphs):
     variants = set()
