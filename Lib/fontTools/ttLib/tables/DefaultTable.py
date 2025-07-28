@@ -3,7 +3,6 @@ from fontTools.ttLib import getClassTag
 
 
 class DefaultTable(object):
-    alignment = 4
     dependencies = []
 
     def __init__(self, tag=None):
