@@ -488,31 +488,3 @@ class LerpGlyph:
         factor = self.glyphset.factor
 
         replayRecording(lerpRecordings(recording1.value, recording2.value, factor), pen)
-
-
-if __name__ == "__main__":
-
-    import sys
-
-    # Load font and draw all glyphs
-    from fontTools.ttLib import TTFont
-    from fontTools.pens.basePen import NullPen
-
-    import argparse
-
-    args = argparse.ArgumentParser()
-    args.add_argument("fontfile", help="font file to load")
-    args.add_argument("-y", type=int, help="font number to load")
-    args.add_argument("-n", type=int, help="number of glyphs to draw")
-    args = args.parse_args()
-
-    font = TTFont(args.fontfile, fontNumber=args.y)
-    glyphSet = font.getGlyphSet()
-    for i, glyphName in enumerate(
-        list(glyphSet.keys())[: args.n if args.n else 1000000000]
-    ):
-        if i % 100 == 0:
-            print("x", end="", flush=True)
-        glyph = glyphSet[glyphName]
-        pen = NullPen()
-        glyph.draw(pen)
