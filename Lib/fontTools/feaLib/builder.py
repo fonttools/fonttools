@@ -926,6 +926,11 @@ class Builder(object):
                     l.lookup_index for l in lookups if l.lookup_index is not None
                 )
             )
+            # order doesn't matter, but lookup_indices preserves it.
+            # We want to combine identical sets of lookups (order doesn't matter)
+            # but also respect the order provided by the user (although there's
+            # a reasonable argument to just sort and dedupe, which fontc does)
+            lookup_key = frozenset(lookup_indices)
 
             size_feature = tag == "GPOS" and feature_tag == "size"
             force_feature = self.any_feature_variations(feature_tag, tag)
@@ -943,7 +948,7 @@ class Builder(object):
                         "stash debug information. See fonttools#2065."
                     )
 
-            feature_key = (feature_tag, lookup_indices)
+            feature_key = (feature_tag, lookup_key)
             feature_index = feature_indices.get(feature_key)
             if feature_index is None:
                 feature_index = len(table.FeatureList.FeatureRecord)
