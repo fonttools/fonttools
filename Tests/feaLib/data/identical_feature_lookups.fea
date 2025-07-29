@@ -1,0 +1,19 @@
+
+languagesystem gujr dflt;
+languagesystem gjr2 dflt;
+
+feature abvs {
+    script gujr;
+    lookup one {
+        sub a by b;
+    } one;
+
+    lookup two {
+        sub x by y;
+    } two;
+
+    script gjr2;
+    # the same lookups but a different order; should reuse the feature record.
+    lookup two;
+    lookup one;
+} abvs;
