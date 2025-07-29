@@ -10,6 +10,7 @@ from fontTools.ttLib import newTable
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.ttVisitor import TTVisitor
 from fontTools.otlLib.builder import buildLookup, buildSingleSubstSubtable
+from fontTools.otlLib.maxContextCalc import maxCtxFont
 from collections import OrderedDict
 
 from .errors import VarLibError, VarLibValidationError
@@ -95,6 +96,9 @@ def addFeatureVariations(font, conditionalSubstitutions, featureTag="rvrn"):
 
     addFeatureVariationsRaw(font, font["GSUB"].table, conditionsAndLookups, featureTags)
 
+    # Recompute usMaxContext in case the font didn't have features before, but
+    # does now.
+    font["OS/2"].usMaxContext = maxCtxFont(font)
 
 def _existingVariableFeatures(table):
     existingFeatureVarsTags = set()
