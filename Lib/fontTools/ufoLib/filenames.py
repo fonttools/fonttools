@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from collections.abc import Iterable
+
 """
 Convert user-provided internal UFO names to spec-compliant filenames.
 
@@ -27,7 +31,7 @@ by Tal Leming and is copyright (c) 2005-2016, The RoboFab Developers:
 #    inclusive.
 # 3. Various characters that (mostly) Windows and POSIX-y filesystems don't
 #    allow, plus "(" and ")", as per the specification.
-illegalCharacters = {
+illegalCharacters: set[str] = {
     "\x00",
     "\x01",
     "\x02",
@@ -76,7 +80,7 @@ illegalCharacters = {
     "|",
     "\x7f",
 }
-reservedFileNames = {
+reservedFileNames: set[str] = {
     "aux",
     "clock$",
     "com1",
@@ -101,14 +105,16 @@ reservedFileNames = {
     "nul",
     "prn",
 }
-maxFileNameLength = 255
+maxFileNameLength: int = 255
 
 
 class NameTranslationError(Exception):
     pass
 
 
-def userNameToFileName(userName: str, existing=(), prefix="", suffix=""):
+def userNameToFileName(
+    userName: str, existing: Iterable[str] = (), prefix: str = "", suffix: str = ""
+) -> str:
     """Converts from a user name to a file name.
 
     Takes care to avoid illegal characters, reserved file names, ambiguity between
@@ -212,7 +218,9 @@ def userNameToFileName(userName: str, existing=(), prefix="", suffix=""):
     return fullName
 
 
-def handleClash1(userName, existing=[], prefix="", suffix=""):
+def handleClash1(
+    userName: str, existing: Iterable[str] = [], prefix: str = "", suffix: str = ""
+) -> str:
     """A helper function that resolves collisions with existing names when choosing a filename.
 
     This function attempts to append an unused integer counter to the filename.
@@ -278,7 +286,9 @@ def handleClash1(userName, existing=[], prefix="", suffix=""):
     return finalName
 
 
-def handleClash2(existing=[], prefix="", suffix=""):
+def handleClash2(
+    existing: Iterable[str] = [], prefix: str = "", suffix: str = ""
+) -> str:
     """A helper function that resolves collisions with existing names when choosing a filename.
 
     This function is a fallback to :func:`handleClash1`. It attempts to append an unused integer counter to the filename.
