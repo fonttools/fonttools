@@ -64,7 +64,6 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
         self.variations = {}
 
     def compile(self, ttFont):
-
         axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
         sharedTuples = tv.compileSharedTuples(
             axisTags, itertools.chain(*self.variations.values())
@@ -141,8 +140,12 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
             self,
         )
 
-        assert len(glyphs) == self.glyphCount
-        assert len(axisTags) == self.axisCount
+        assert len(glyphs) == self.glyphCount, (len(glyphs), self.glyphCount)
+        assert len(axisTags) == self.axisCount, (
+            len(axisTags),
+            self.axisCount,
+            axisTags,
+        )
         sharedCoords = tv.decompileSharedTuples(
             axisTags, self.sharedTupleCount, data, self.offsetToSharedTuples
         )
