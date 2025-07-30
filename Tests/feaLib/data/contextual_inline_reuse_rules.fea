@@ -1,0 +1,17 @@
+@abc = [a - c];
+@def = [d - e];
+
+# in both the cases below we should generate a single contextual rule,
+# and it should end up using format 3
+feature mult {
+    lookup test1 {
+        sub @abc' @def @abc by NULL;
+    } test1;
+} mult;
+
+feature sing {
+    lookup test2 {
+        sub @abc' @def @abc by X;
+    } test2;
+} sing;
+
