@@ -385,6 +385,10 @@ def cubic_approx_spline(cubic, n, tolerance, all_quadratic):
     """
 
     if n == 1:
+        if cubic[1] == cubic[2] and (cubic[0] == cubic[1] or cubic[3] == cubic[1]):
+            # a degenerate case: if control points are equal and fall on start or end,
+            # just drop a control point.
+            return [cubic[0], cubic[1], cubic[3]]
         return cubic_approx_quadratic(cubic, tolerance)
     if n == 2 and all_quadratic == False:
         return cubic
