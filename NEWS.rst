@@ -1,3 +1,9 @@
+- [varLib] Deprecate ``varLib.mutator`` in favor of ``varLib.instancer``. The latter
+  provides equivalent full (static font) instancing in addition to partial VF instancing.
+  CLI users should replace ``fonttools varLib.mutator`` with ``fonttools varLib.instancer``.
+  API users should migrate to ``fontTools.varLib.instancer.instantiateVariableFont`` (#2680).
+
+
 4.59.0 (released 2025-07-16)
 ----------------------------
 
