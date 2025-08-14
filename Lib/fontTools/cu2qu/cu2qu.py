@@ -273,7 +273,10 @@ def calc_intersect(a, b, c, d):
     try:
         h = dot(p, a - c) / dot(p, cd)
     except ZeroDivisionError:
-        if a == b == c == d:
+        # chained comparison operators don't seem to work in Cython, so we have to
+        # do it pairwise...
+        # if a == b == c == d:
+        if a == b and b == c and c == d:
             # all points are the same
             return a
         return complex(NAN, NAN)
