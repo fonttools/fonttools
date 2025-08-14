@@ -630,7 +630,6 @@ class UFOReader(_UFOBaseIO):
     # kerning.plist
 
     def _readKerning(self) -> KerningNested:
-
         data = self._getPlist(KERNING_FILENAME, {})
         return data
 
@@ -1597,7 +1596,6 @@ class UFOWriter(UFOReader):
         glyphNameToFileNameFunc: GlyphNameToFileNameFunc = None,
         expectContentsFile: bool = False,
     ) -> GlyphSet:
-
         from fontTools.ufoLib.glifLib import GlyphSet
 
         glyphSubFS = self.fs.makedir(DEFAULT_GLYPHS_DIRNAME, recreate=True)
@@ -1619,7 +1617,6 @@ class UFOWriter(UFOReader):
         glyphNameToFileNameFunc: GlyphNameToFileNameFunc = None,
         expectContentsFile: bool = False,
     ) -> GlyphSet:
-
         from fontTools.ufoLib.glifLib import GlyphSet
 
         # if the default flag is on, make sure that the default in the file
