@@ -1,3 +1,6 @@
+4.59.1 (released 2025-08-14)
+----------------------------
+
 - [featureVars] Update OS/2.usMaxContext if possible after addFeatureVariationsRaw (#3894).
 - [vhmtx] raise TTLibError('not enough data...') when hmtx/vmtx are truncated (#3843, #3901).
 - [feaLib] Combine duplicate features that have the same set of lookups regardless of the order in which those lookups are added to the feature (#3895).
