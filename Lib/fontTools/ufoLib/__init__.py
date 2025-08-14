@@ -59,7 +59,7 @@ from fontTools.ufoLib.validators import *
 if TYPE_CHECKING:
     from fontTools.misc.filesystem._base import FS
     from logging import Logger
-    from os import PathLike
+
     from fontTools.annotations import (
         K,
         V,
