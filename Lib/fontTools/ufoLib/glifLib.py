@@ -14,18 +14,21 @@ from __future__ import annotations
 
 import logging
 from collections import OrderedDict
-from typing import TYPE_CHECKING, cast, Any, Optional, Union
+from typing import TYPE_CHECKING, Any, Optional, Union, cast
 from warnings import warn
 
 import fontTools.misc.filesystem as fs
 from fontTools.misc import etree, plistlib
-
 from fontTools.misc.textTools import tobytes
 from fontTools.pens.pointPen import AbstractPointPen, PointToSegmentPen
 from fontTools.ufoLib import UFOFormatVersion, _UFOBaseIO
 from fontTools.ufoLib.errors import GlifLibError
 from fontTools.ufoLib.filenames import userNameToFileName
-from fontTools.ufoLib.utils import numberTypes
+from fontTools.ufoLib.utils import (
+    BaseFormatVersion,
+    normalizeFormatVersion,
+    numberTypes,
+)
 from fontTools.ufoLib.validators import (
     anchorsValidator,
     colorValidator,
@@ -35,18 +38,11 @@ from fontTools.ufoLib.validators import (
     identifierValidator,
     imageValidator,
 )
-from fontTools.misc import etree
-from fontTools.ufoLib import _UFOBaseIO, UFOFormatVersion
-from fontTools.ufoLib.utils import (
-    numberTypes,
-    normalizeFormatVersion,
-    BaseFormatVersion,
-)
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable, Set
-    from fontTools.misc.filesystem._base import FS
     from logging import Logger
+
     from fontTools.annotations import (
         ElementType,
         FormatVersion,
@@ -57,6 +53,7 @@ if TYPE_CHECKING:
         PathOrFS,
         UFOFormatVersionInput,
     )
+    from fontTools.misc.filesystem._base import FS
 
 
 __all__: list[str] = [
