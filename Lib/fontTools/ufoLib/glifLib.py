@@ -15,7 +15,6 @@ from __future__ import annotations
 import logging
 from collections import OrderedDict
 from typing import TYPE_CHECKING, cast, Any, Optional, Union
-from lxml import etree
 from warnings import warn
 
 import fontTools.misc.filesystem as fs
