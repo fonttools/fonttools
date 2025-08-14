@@ -188,5 +188,12 @@ class AllQuadraticFalseTest(unittest.TestCase):
         assert result == quadratic
 
 
+def test_cu2qu_degenerate():
+    # https://github.com/fonttools/fonttools/pull/3903
+    cubic = [(5, 5), (5, 5), (5, 5), (5, 5)]
+    result = curve_to_quadratic(cubic, 0.1, all_quadratic=True)
+    assert result == [(5, 5), (5, 5), (5, 5)]
+
+
 if __name__ == "__main__":
     unittest.main()

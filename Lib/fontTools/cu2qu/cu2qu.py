@@ -273,6 +273,9 @@ def calc_intersect(a, b, c, d):
     try:
         h = dot(p, a - c) / dot(p, cd)
     except ZeroDivisionError:
+        if a == b == c == d:
+            # all points are the same
+            return a
         return complex(NAN, NAN)
     return c + cd * h
 
