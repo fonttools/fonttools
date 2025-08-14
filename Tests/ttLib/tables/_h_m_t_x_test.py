@@ -58,13 +58,23 @@ class HmtxTableTest(unittest.TestCase):
         self.assertEqual(mtxTable["C"], (632, 54))
         self.assertEqual(mtxTable["D"], (632, -4))
 
-    def test_decompile_not_enough_data(self):
+    def test_decompile_not_enough_data_for_long_metrics(self):
         font = self.makeFont(numGlyphs=1, numberOfMetrics=1)
         mtxTable = newTable(self.tag)
         msg = "not enough '%s' table data" % self.tag
 
         with self.assertRaisesRegex(TTLibError, msg):
             mtxTable.decompile(b"\0\0\0", font)
+
+    def test_decompile_not_enough_data_for_sidebearings(self):
+        # we expect 1 long metric (advance + sidebearing) and 1 short metric
+        # (sb-only): 4 + 2 = 6 bytes total
+        font = self.makeFont(numGlyphs=2, numberOfMetrics=1)
+        mtxTable = newTable(self.tag)
+        msg = "not enough '%s' table data: expected 6 bytes, got 4" % self.tag
+
+        with self.assertRaisesRegex(TTLibError, msg):
+            mtxTable.decompile(b"\0\0\0\0", font)
 
     def test_decompile_too_much_data(self):
         font = self.makeFont(numGlyphs=1, numberOfMetrics=1)
