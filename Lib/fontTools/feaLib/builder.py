@@ -32,6 +32,7 @@ from fontTools.otlLib.builder import (
     AnySubstBuilder,
 )
 from fontTools.otlLib.error import OpenTypeLibError
+from fontTools.varLib.errors import VarLibError
 from fontTools.varLib.varStore import OnlineVarStoreBuilder
 from fontTools.varLib.builder import buildVarDevTable
 from fontTools.varLib.featureVars import addFeatureVariationsRaw
@@ -1728,9 +1729,14 @@ class Builder(object):
         if not varscalar.does_vary:
             return varscalar.default, None
 
-        default, index = varscalar.add_to_variation_store(
-            self.varstorebuilder, self.model_cache, self.font.get("avar")
-        )
+        try:
+            default, index = varscalar.add_to_variation_store(
+                self.varstorebuilder, self.model_cache, self.font.get("avar")
+            )
+        except VarLibError as e:
+            raise FeatureLibError(
+                "Failed to compute deltas for variable scalar", location
+            ) from e
 
         device = None
         if index is not None and index != 0xFFFFFFFF:

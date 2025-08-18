@@ -17,7 +17,12 @@ class VariableScalar:
     def __repr__(self):
         items = []
         for location, value in self.values.items():
-            loc = ",".join(["%s=%i" % (ax, loc) for ax, loc in location])
+            loc = ",".join(
+                [
+                    f"{ax}={int(coord) if float(coord).is_integer() else coord}"
+                    for ax, coord in location
+                ]
+            )
             items.append("%s:%i" % (loc, value))
         return "(" + (" ".join(items)) + ")"
 
