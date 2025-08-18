@@ -273,6 +273,12 @@ def calc_intersect(a, b, c, d):
     try:
         h = dot(p, a - c) / dot(p, cd)
     except ZeroDivisionError:
+        # if 3 or 4 points are equal, we do have an intersection despite the zero-div:
+        # return one of the off-curves so that the algorithm can attempt a one-curve
+        # solution if it's within tolerance:
+        # https://github.com/linebender/kurbo/pull/484
+        if b == c and (a == b or c == d):
+            return b
         return complex(NAN, NAN)
     return c + cd * h
 
