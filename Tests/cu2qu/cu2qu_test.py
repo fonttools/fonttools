@@ -188,11 +188,25 @@ class AllQuadraticFalseTest(unittest.TestCase):
         assert result == quadratic
 
 
-def test_cu2qu_degenerate():
+def test_cu2qu_degenerate_all_points_equal():
     # https://github.com/fonttools/fonttools/pull/3903
     cubic = [(5, 5), (5, 5), (5, 5), (5, 5)]
     result = curve_to_quadratic(cubic, 0.1, all_quadratic=True)
     assert result == [(5, 5), (5, 5), (5, 5)]
+
+
+def test_cu2qu_degenerate_3_points_equal_single_quad_within_tolerance():
+    cubic = [(5, 5), (5, 5), (5, 5), (5, 5.1)]
+    result = curve_to_quadratic(cubic, 0.1, all_quadratic=True)
+    # a single quadratic approximates this cubic for given tolerance
+    assert result == [(5, 5), (5, 5), (5, 5.1)]
+
+
+def test_cu2qu_degenerate_3_points_equal_exceeding_tolerance():
+    cubic = [(5, 5), (5, 5), (5, 5), (5, 5.1)]
+    result = curve_to_quadratic(cubic, 0.01, all_quadratic=True)
+    # 2 off-curves are required to approximate the same cubic given the smaller tolerance
+    assert result == [(5, 5), (5, 5), (5, 5.025), (5, 5.1)]
 
 
 if __name__ == "__main__":

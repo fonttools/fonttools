@@ -273,12 +273,12 @@ def calc_intersect(a, b, c, d):
     try:
         h = dot(p, a - c) / dot(p, cd)
     except ZeroDivisionError:
-        # chained comparison operators don't seem to work in Cython, so we have to
-        # do it pairwise...
-        # if a == b == c == d:
-        if a == b and b == c and c == d:
-            # all points are the same
-            return a
+        # if 3 or 4 points are equal, we do have an intersection despite the zero-div:
+        # return one of the off-curves so that the algorithm can attempt a one-curve
+        # solution if it's within tolerance:
+        # https://github.com/linebender/kurbo/pull/484
+        if b == c and (a == b or c == d):
+            return b
         return complex(NAN, NAN)
     return c + cd * h
 
