@@ -1887,6 +1887,12 @@ def parseArgs(args):
         help="Output instance TTF file (default: INPUT-instance.ttf).",
     )
     parser.add_argument(
+        "--static",
+        dest="static",
+        action="store_true",
+        help="Make a static font: pin unspecified axes to their default location.",
+    )
+    parser.add_argument(
         "--no-optimize",
         dest="optimize",
         action="store_false",
@@ -1982,6 +1988,18 @@ def main(args=None):
         recalcTimestamp=options.recalc_timestamp,
         recalcBBoxes=options.recalc_bounds,
     )
+
+    if options.static:
+        log.info("Pinning unspecified axes to default")
+        keys = list(axisLimits.keys())
+        for axis in varfont["fvar"].axes:
+            axisTag = axis.axisTag
+            if axisTag not in keys:
+                axisLimits[axisTag] = (
+                    axis.defaultValue,
+                    axis.defaultValue,
+                    axis.defaultValue,
+                )
 
     isFullInstance = {
         axisTag
