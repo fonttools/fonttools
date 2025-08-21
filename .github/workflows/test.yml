@@ -40,9 +40,9 @@ jobs:
         platform: [ubuntu-latest]
         include: # Only test on the latest supported stable Python on macOS and Windows.
           - platform: macos-latest
-            python-version: 3.12
+            python-version: 3.13
           - platform: windows-latest
-            python-version: 3.12
+            python-version: 3.13
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python ${{ matrix.python-version }}
