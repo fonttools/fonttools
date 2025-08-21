@@ -56,8 +56,10 @@ From the console script, this is equivalent to passing `wght=drop` as input.
 
 This module is similar to fontTools.varLib.mutator, which it's intended to supersede.
 Note that, unlike varLib.mutator, when an axis is not mentioned in the input
-location, the varLib.instancer will keep the axis and the corresponding deltas,
-whereas mutator implicitly drops the axis at its default coordinate.
+location, by default the varLib.instancer will keep the axis and the corresponding
+deltas, whereas mutator implicitly drops the axis at its default coordinate.
+To obtain the same behavior as mutator, pass the `static=True` parameter or
+the `--static` CLI option.
 
 The module supports all the following "levels" of instancing, which can of
 course be combined:
@@ -92,11 +94,7 @@ L4
         >>>
         >> font = instancer.instantiateVariableFont(varfont, {"wght": (100, 300, 700)})
 
-Currently only TrueType-flavored variable fonts (i.e. containing 'glyf' table)
-are supported, but support for CFF2 variable fonts will be added soon.
-
-The discussion and implementation of these features are tracked at
-https://github.com/fonttools/fonttools/issues/1537
+Both TrueType-flavored (glyf+gvar) variable and CFF2 variable fonts are supported.
 """
 
 from fontTools.misc.fixedTools import (
