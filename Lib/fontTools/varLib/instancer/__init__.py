@@ -1645,6 +1645,7 @@ def instantiateVariableFont(
     updateFontNames=False,
     *,
     downgradeCFF2=False,
+    static=False,
 ):
     """Instantiate variable font, either fully or partially.
 
@@ -1688,11 +1689,22 @@ def instantiateVariableFont(
             software that does not support CFF2. Defaults to False. Note that this
             operation also removes overlaps within glyph shapes, as CFF does not support
             overlaps but CFF2 does.
+        static (bool): if True, generate a full instance (static font) instead of a partial
+            instance (variable font).
     """
     # 'overlap' used to be bool and is now enum; for backward compat keep accepting bool
     overlap = OverlapMode(int(overlap))
 
     sanityCheckVariableTables(varfont)
+
+    if static:
+        unspecified = []
+        for axis in varfont["fvar"].axes:
+            if axis.axisTag not in axisLimits:
+                axisLimits[axis.axisTag] = None
+                unspecified.append(axis.axisTag)
+        if unspecified:
+            log.info("Pinning unspecified axes to default: %s", unspecified)
 
     axisLimits = AxisLimits(axisLimits).limitAxesAndPopulateDefaults(varfont)
 
@@ -1988,19 +2000,7 @@ def main(args=None):
         recalcBBoxes=options.recalc_bounds,
     )
 
-    if options.static:
-        log.info("Pinning unspecified axes to default")
-        keys = list(axisLimits.keys())
-        for axis in varfont["fvar"].axes:
-            axisTag = axis.axisTag
-            if axisTag not in keys:
-                axisLimits[axisTag] = (
-                    axis.defaultValue,
-                    axis.defaultValue,
-                    axis.defaultValue,
-                )
-
-    isFullInstance = {
+    isFullInstance = options.static or {
         axisTag
         for axisTag, limit in axisLimits.items()
         if limit is None or limit[0] == limit[2]
@@ -2014,6 +2014,7 @@ def main(args=None):
         overlap=options.overlap,
         updateFontNames=options.update_name_table,
         downgradeCFF2=options.downgrade_cff2,
+        static=options.static,
     )
 
     suffix = "-instance" if isFullInstance else "-partial"
