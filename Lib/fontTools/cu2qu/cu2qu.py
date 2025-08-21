@@ -37,7 +37,7 @@ NAN = float("NaN")
 @cython.cfunc
 @cython.inline
 @cython.returns(cython.double)
-@cython.locals(v1=cython.complex, v2=cython.complex)
+@cython.locals(v1=cython.complex, v2=cython.complex, result=cython.double)
 def dot(v1, v2):
     """Return the dot product of two vectors.
 
@@ -48,7 +48,16 @@ def dot(v1, v2):
     Returns:
         double: Dot product.
     """
-    return (v1 * v2.conjugate()).real
+    result = (v1 * v2.conjugate()).real
+    # When vectors are perpendicular (i.e. dot product is 0), the above expression may
+    # yield slightly different results when running in pure Python vs C/Cython,
+    # both of which are correct within IEEE-754 floating-point precision.
+    # It's probably due to the different order of operations and roundings in each
+    # implementation. Because we are using the result in a denominator and catching
+    # ZeroDivisionError (see `calc_intersect`), it's best to normalize the result here.
+    if abs(result) < 1e-15:
+        result = 0.0
+    return result
 
 
 @cython.cfunc
