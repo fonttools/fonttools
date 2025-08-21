@@ -1,4 +1,4 @@
-""" Partially instantiate a variable font.
+"""Partially instantiate a variable font.
 
 The module exports an `instantiateVariableFont` function and CLI that allow to
 create full instances (i.e. static fonts) from variable fonts, as well as "partial"
@@ -36,7 +36,7 @@ If the input location specifies all the axes, the resulting instance is no longe
 'variable' (same as using fontools varLib.mutator):
 .. code-block:: pycon
 
-    >>>    
+    >>>
     >> instance = instancer.instantiateVariableFont(
     ...     varfont, {"wght": 700, "wdth": 67.5}
     ... )
@@ -56,8 +56,10 @@ From the console script, this is equivalent to passing `wght=drop` as input.
 
 This module is similar to fontTools.varLib.mutator, which it's intended to supersede.
 Note that, unlike varLib.mutator, when an axis is not mentioned in the input
-location, the varLib.instancer will keep the axis and the corresponding deltas,
-whereas mutator implicitly drops the axis at its default coordinate.
+location, by default the varLib.instancer will keep the axis and the corresponding
+deltas, whereas mutator implicitly drops the axis at its default coordinate.
+To obtain the same behavior as mutator, pass the `static=True` parameter or
+the `--static` CLI option.
 
 The module supports all the following "levels" of instancing, which can of
 course be combined:
@@ -72,7 +74,7 @@ L1
 L2
     dropping one or more axes while pinning them at non-default locations;
     .. code-block:: pycon
-    
+
         >>>
         >> font = instancer.instantiateVariableFont(varfont, {"wght": 700})
 
@@ -81,22 +83,18 @@ L3
     a new minimum or maximum, potentially -- though not necessarily -- dropping
     entire regions of variations that fall completely outside this new range.
     .. code-block:: pycon
-    
+
         >>>
         >> font = instancer.instantiateVariableFont(varfont, {"wght": (100, 300)})
 
 L4
     moving the default location of an axis, by specifying (min,defalt,max) values:
     .. code-block:: pycon
-    
+
         >>>
         >> font = instancer.instantiateVariableFont(varfont, {"wght": (100, 300, 700)})
 
-Currently only TrueType-flavored variable fonts (i.e. containing 'glyf' table)
-are supported, but support for CFF2 variable fonts will be added soon.
-
-The discussion and implementation of these features are tracked at
-https://github.com/fonttools/fonttools/issues/1537
+Both TrueType-flavored (glyf+gvar) variable and CFF2 variable fonts are supported.
 """
 
 from fontTools.misc.fixedTools import (
@@ -1404,7 +1402,6 @@ def _isValidAvarSegmentMap(axisTag, segmentMap):
 
 
 def downgradeCFF2ToCFF(varfont):
-
     # Save these properties
     recalcTimestamp = varfont.recalcTimestamp
     recalcBBoxes = varfont.recalcBBoxes
@@ -1667,6 +1664,7 @@ def instantiateVariableFont(
     updateFontNames=False,
     *,
     downgradeCFF2=False,
+    static=False,
 ):
     """Instantiate variable font, either fully or partially.
 
@@ -1710,11 +1708,22 @@ def instantiateVariableFont(
             software that does not support CFF2. Defaults to False. Note that this
             operation also removes overlaps within glyph shapes, as CFF does not support
             overlaps but CFF2 does.
+        static (bool): if True, generate a full instance (static font) instead of a partial
+            instance (variable font).
     """
     # 'overlap' used to be bool and is now enum; for backward compat keep accepting bool
     overlap = OverlapMode(int(overlap))
 
     sanityCheckVariableTables(varfont)
+
+    if static:
+        unspecified = []
+        for axis in varfont["fvar"].axes:
+            if axis.axisTag not in axisLimits:
+                axisLimits[axis.axisTag] = None
+                unspecified.append(axis.axisTag)
+        if unspecified:
+            log.info("Pinning unspecified axes to default: %s", unspecified)
 
     axisLimits = AxisLimits(axisLimits).limitAxesAndPopulateDefaults(varfont)
 
@@ -2010,19 +2019,7 @@ def main(args=None):
         recalcBBoxes=options.recalc_bounds,
     )
 
-    if options.static:
-        log.info("Pinning unspecified axes to default")
-        keys = list(axisLimits.keys())
-        for axis in varfont["fvar"].axes:
-            axisTag = axis.axisTag
-            if axisTag not in keys:
-                axisLimits[axisTag] = (
-                    axis.defaultValue,
-                    axis.defaultValue,
-                    axis.defaultValue,
-                )
-
-    isFullInstance = {
+    isFullInstance = options.static or {
         axisTag
         for axisTag, limit in axisLimits.items()
         if limit is None or limit[0] == limit[2]
@@ -2036,6 +2033,7 @@ def main(args=None):
         overlap=options.overlap,
         updateFontNames=options.update_name_table,
         downgradeCFF2=options.downgrade_cff2,
+        static=options.static,
     )
 
     suffix = "-instance" if isFullInstance else "-partial"
