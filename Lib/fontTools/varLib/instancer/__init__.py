@@ -452,7 +452,7 @@ class AxisLimits(_BaseAxisLimits):
                     for tag, value in location.items()
                 }
                 return NormalizedAxisLimits(
-                    **avar.renormalizeLocation(location, varfont, False)
+                    **avar.renormalizeLocation(location, varfont, dropZeroes=False)
                 )
 
         normalizedLimits = {}
