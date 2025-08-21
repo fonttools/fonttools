@@ -433,7 +433,27 @@ class AxisLimits(_BaseAxisLimits):
 
         avarSegments = {}
         if usingAvar and "avar" in varfont:
-            avarSegments = varfont["avar"].segments
+            avar = varfont["avar"]
+            avarSegments = avar.segments
+
+            if getattr(avar, "majorVersion", 1) >= 2 and avar.table.VarStore:
+                pinnedAxes = set(self.pinnedLocation())
+                if not pinnedAxes.issuperset(avarSegments):
+                    raise NotImplementedError(
+                        "Partial-instancing avar2 table is not supported"
+                    )
+
+                # TODO: Merge this with the main codepath.
+
+                # Full instancing of avar2 font. Use avar table to normalize location and return.
+                location = self.pinnedLocation()
+                location = {
+                    tag: normalize(value, axes[tag], avarSegments.get(tag, None))
+                    for tag, value in location.items()
+                }
+                return NormalizedAxisLimits(
+                    **avar.renormalizeLocation(location, varfont, dropZeroes=False)
+                )
 
         normalizedLimits = {}
 
@@ -1430,8 +1450,6 @@ def instantiateAvar(varfont, axisLimits):
     # 'axisLimits' dict must contain user-space (non-normalized) coordinates.
 
     avar = varfont["avar"]
-    if getattr(avar, "majorVersion", 1) >= 2 and avar.table.VarStore:
-        raise NotImplementedError("avar table with VarStore is not supported")
 
     segments = avar.segments
 
@@ -1441,6 +1459,9 @@ def instantiateAvar(varfont, axisLimits):
         log.info("Dropping avar table")
         del varfont["avar"]
         return
+
+    if getattr(avar, "majorVersion", 1) >= 2 and avar.table.VarStore:
+        raise NotImplementedError("avar table with VarStore is not supported")
 
     log.info("Instantiating avar table")
     for axis in pinnedAxes:
