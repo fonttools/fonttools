@@ -1,5 +1,7 @@
 """fontTools.misc.textTools.py -- miscellaneous routines."""
 
+from __future__ import annotations
+
 import ast
 import string
 
@@ -118,14 +120,14 @@ def pad(data, size):
     return data
 
 
-def tostr(s, encoding="ascii", errors="strict"):
+def tostr(s: str | bytes, encoding: str = "ascii", errors: str = "strict") -> str:
     if not isinstance(s, str):
         return s.decode(encoding, errors)
     else:
         return s
 
 
-def tobytes(s, encoding="ascii", errors="strict"):
+def tobytes(s: str | bytes, encoding: str = "ascii", errors: str = "strict") -> bytes:
     if isinstance(s, str):
         return s.encode(encoding, errors)
     else:
