@@ -1530,6 +1530,7 @@ def subset_glyphs(self, s):
         if self.MarkFilteringSet not in s.used_mark_sets:
             self.MarkFilteringSet = None
             self.LookupFlag &= ~0x10
+            self.LookupFlag |= 0x8
         else:
             self.MarkFilteringSet = s.used_mark_sets.index(self.MarkFilteringSet)
     return bool(self.SubTableCount)
