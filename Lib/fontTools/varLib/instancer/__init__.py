@@ -1140,7 +1140,8 @@ def _instantiateVHVAR(varfont, axisLimits, tableFields, *, round=round):
                     varIdx = advMapping.mapping[glyphName]
                 else:
                     varIdx = varfont.getGlyphID(glyphName)
-                metrics[glyphName] = (advanceWidth + round(defaultDeltas[varIdx]), sb)
+                delta = round(defaultDeltas[varIdx])
+                metrics[glyphName] = (max(0, advanceWidth + delta), sb)
 
             if (
                 tableTag == "VVAR"
