@@ -1,3 +1,6 @@
+4.59.2 (released 2025-08-27)
+----------------------------
+
 - [varLib] Clear ``USE_MY_METRICS`` component flags when inconsistent across masters (#3912).
 - [varLib.instancer] Avoid negative advance width/height values when instatiating HVAR/VVAR,
   (unlikely in well-behaved fonts) (#3918).
