@@ -1,3 +1,14 @@
+- [varLib] Clear ``USE_MY_METRICS`` component flags when inconsistent across masters (#3912).
+- [varLib.instancer] Avoid negative advance width/height values when instatiating HVAR/VVAR,
+  (unlikely in well-behaved fonts) (#3918).
+- [subset] Fix shaping behaviour when pruning empty mark sets (#3915, harfbuzz/harfbuzz#5499).
+- [cu2qu] Fixed ``dot()`` product of perpendicular vectors not always returning exactly 0.0
+  in all Python implementations (#3911)
+- [varLib.instancer] Implemented fully-instantiating ``avar2`` fonts (#3909).
+- [feaLib] Allow float values in ``VariableScalar``'s axis locations (#3906, #3907).
+- [cu2qu] Handle special case in ``calc_intersect`` for degenerate cubic curves where 3 to 4
+  control points are equal (#3904).
+
 4.59.1 (released 2025-08-14)
 ----------------------------
 
