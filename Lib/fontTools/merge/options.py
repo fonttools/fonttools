@@ -10,6 +10,7 @@ class Options(object):
     def __init__(self, **kwargs):
         self.verbose = False
         self.timing = False
+        self.merge_names = False
         self.drop_tables = []
         self.input_file = None
         self.output_file = "merged.ttf"
