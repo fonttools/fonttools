@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="4.59">
+
+  <GlyphOrder>
+    <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
+    <GlyphID id="0" name=".notdef"/>
+    <GlyphID id="1" name="zero"/>
+    <GlyphID id="2" name="zero.tf"/>
+  </GlyphOrder>
+
+  <hmtx>
+    <mtx name=".notdef" width="500" lsb="50"/>
+    <mtx name="zero" width="600" lsb="86"/>
+    <mtx name="zero.tf" width="600" lsb="86"/>
+  </hmtx>
+
+  <glyf>
+
+    <!-- The xMin, yMin, xMax and yMax values
+         will be recalculated by the compiler. -->
+
+    <TTGlyph name=".notdef" xMin="50" yMin="-200" xMax="450" yMax="800">
+      <contour>
+        <pt x="50" y="-200" on="1"/>
+        <pt x="50" y="800" on="1"/>
+        <pt x="450" y="800" on="1"/>
+        <pt x="450" y="-200" on="1"/>
+      </contour>
+      <contour>
+        <pt x="100" y="-150" on="1"/>
+        <pt x="400" y="-150" on="1"/>
+        <pt x="400" y="750" on="1"/>
+        <pt x="100" y="750" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="zero" xMin="86" yMin="0" xMax="521" yMax="728">
+      <contour>
+        <pt x="304" y="0" on="1"/>
+        <pt x="259" y="0" on="0"/>
+        <pt x="180" y="57" on="0"/>
+        <pt x="120" y="157" on="0"/>
+        <pt x="86" y="289" on="0"/>
+        <pt x="86" y="364" on="1"/>
+        <pt x="86" y="439" on="0"/>
+        <pt x="120" y="571" on="0"/>
+        <pt x="180" y="671" on="0"/>
+        <pt x="259" y="728" on="0"/>
+        <pt x="304" y="728" on="1"/>
+        <pt x="349" y="728" on="0"/>
+        <pt x="428" y="671" on="0"/>
+        <pt x="487" y="571" on="0"/>
+        <pt x="521" y="439" on="0"/>
+        <pt x="521" y="364" on="1"/>
+        <pt x="521" y="289" on="0"/>
+        <pt x="487" y="157" on="0"/>
+        <pt x="428" y="57" on="0"/>
+        <pt x="349" y="0" on="0"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="zero.tf" xMin="86" yMin="0" xMax="521" yMax="728">
+      <component glyphName="zero" x="0" y="0" flags="0x4"/>
+    </TTGlyph>
+
+  </glyf>
+
+  <fvar>
+
+    <!-- Weight -->
+    <Axis>
+      <AxisTag>wght</AxisTag>
+      <Flags>0x0</Flags>
+      <MinValue>400.0</MinValue>
+      <DefaultValue>400.0</DefaultValue>
+      <MaxValue>700.0</MaxValue>
+      <AxisNameID>256</AxisNameID>
+    </Axis>
+  </fvar>
+
+  <HVAR>
+    <Version value="0x00010000"/>
+    <VarStore Format="1">
+      <Format value="1"/>
+      <VarRegionList>
+        <!-- RegionAxisCount=1 -->
+        <!-- RegionCount=1 -->
+        <Region index="0">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+        </Region>
+      </VarRegionList>
+      <!-- VarDataCount=1 -->
+      <VarData index="0">
+        <!-- ItemCount=3 -->
+        <NumShorts value="0"/>
+        <!-- VarRegionCount=1 -->
+        <VarRegionIndex index="0" value="0"/>
+        <Item index="0" value="[0]"/>
+        <Item index="1" value="[100]"/>
+        <Item index="2" value="[101]"/>
+      </VarData>
+    </VarStore>
+  </HVAR>
+
+</ttFont>

@@ -1076,6 +1076,15 @@ Expected to see .ScriptCount==1, instead saw 0""",
         self.expect_ttx(varfont, expected_ttx_path, tables)
         self.check_ttx_dump(varfont, expected_ttx_path, tables, ".ttf")
 
+    def test_varlib_build_inconsistent_use_my_metrics_flags(self):
+        self._run_varlib_build_test(
+            designspace_name="InconsistentUseMyMetrics",
+            font_name="InconsistentUseMyMetrics",
+            tables=["GlyphOrder", "hmtx", "glyf", "fvar", "HVAR"],
+            expected_ttx_name="InconsistentUseMyMetrics-VF",
+            save_before_dump=True,
+        )
+
 
 def test_load_masters_layerName_without_required_font():
     ds = DesignSpaceDocument()
