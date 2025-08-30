@@ -1890,18 +1890,17 @@ def validateFontInfoVersion2ValueForAttribute(attr: str, value: Any) -> bool:
     """
     dataValidationDict = fontInfoAttributesVersion2ValueData[attr]
     valueType = dataValidationDict.get("type")
-    validator = dataValidationDict.get("valueValidator")
+    validator = dataValidationDict.get("valueValidator", genericTypeValidator)
     valueOptions = dataValidationDict.get("valueOptions")
     # have specific options for the validator
-    if validator:
-        if valueOptions is not None:
-            isValidValue = validator(value, valueOptions)
-        # no specific options
+    if valueOptions is not None:
+        isValidValue = validator(value, valueOptions)
+    # no specific options
+    else:
+        if validator == genericTypeValidator:
+            isValidValue = validator(value, valueType)
         else:
-            if validator == genericTypeValidator:
-                isValidValue = validator(value, valueType)
-            else:
-                isValidValue = validator(value)
+            isValidValue = validator(value)
     return isValidValue
 
 
@@ -1937,18 +1936,17 @@ def validateFontInfoVersion3ValueForAttribute(attr: str, value: Any) -> bool:
     """
     dataValidationDict = fontInfoAttributesVersion3ValueData[attr]
     valueType = dataValidationDict.get("type")
-    validator = dataValidationDict.get("valueValidator")
+    validator = dataValidationDict.get("valueValidator", genericTypeValidator)
     valueOptions = dataValidationDict.get("valueOptions")
     # have specific options for the validator
-    if validator:
-        if valueOptions is not None:
-            isValidValue = validator(value, valueOptions)
-        # no specific options
+    if valueOptions is not None:
+        isValidValue = validator(value, valueOptions)
+    # no specific options
+    else:
+        if validator == genericTypeValidator:
+            isValidValue = validator(value, valueType)
         else:
-            if validator == genericTypeValidator:
-                isValidValue = validator(value, valueType)
-            else:
-                isValidValue = validator(value)
+            isValidValue = validator(value)
     return isValidValue
 
 
