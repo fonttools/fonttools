@@ -1,6 +1,20 @@
+from __future__ import annotations
+
+from typing import Optional
+
+from fontTools.annotations import KerningPair, KerningDict, KerningGroups, IntFloat
+
+StrDict = dict[str, str]
+
+
 def lookupKerningValue(
-    pair, kerning, groups, fallback=0, glyphToFirstGroup=None, glyphToSecondGroup=None
-):
+    pair: KerningPair,
+    kerning: KerningDict,
+    groups: KerningGroups,
+    fallback: IntFloat = 0,
+    glyphToFirstGroup: Optional[StrDict] = None,
+    glyphToSecondGroup: Optional[StrDict] = None,
+) -> IntFloat:
     """Retrieve the kerning value (if any) between a pair of elements.
 
     The elments can be either individual glyphs (by name) or kerning
@@ -72,11 +86,12 @@ def lookupKerningValue(
     # quickly check to see if the pair is in the kerning dictionary
     if pair in kerning:
         return kerning[pair]
+    # ensure both or no glyph-to-group mappings are provided
+    if (glyphToFirstGroup is None) != (glyphToSecondGroup is None):
+        raise ValueError(
+            "Must provide both 'glyphToFirstGroup' and 'glyphToSecondGroup', or neither."
+        )
     # create glyph to group mapping
-    if glyphToFirstGroup is not None:
-        assert glyphToSecondGroup is not None
-    if glyphToSecondGroup is not None:
-        assert glyphToFirstGroup is not None
     if glyphToFirstGroup is None:
         glyphToFirstGroup = {}
         glyphToSecondGroup = {}
@@ -87,25 +102,30 @@ def lookupKerningValue(
             elif group.startswith("public.kern2."):
                 for glyph in groupMembers:
                     glyphToSecondGroup[glyph] = group
+    # ensure type safety for mappings
+    assert glyphToFirstGroup is not None
+    assert glyphToSecondGroup is not None
     # get group names and make sure first and second are glyph names
     first, second = pair
     firstGroup = secondGroup = None
     if first.startswith("public.kern1."):
         firstGroup = first
-        first = None
+        firstGlyph = None
     else:
         firstGroup = glyphToFirstGroup.get(first)
+        firstGlyph = first
     if second.startswith("public.kern2."):
         secondGroup = second
-        second = None
+        secondGlyph = None
     else:
         secondGroup = glyphToSecondGroup.get(second)
+        secondGlyph = second
     # make an ordered list of pairs to look up
     pairs = [
-        (first, second),
-        (first, secondGroup),
-        (firstGroup, second),
-        (firstGroup, secondGroup),
+        (a, b)
+        for a in (firstGlyph, firstGroup)
+        for b in (secondGlyph, secondGroup)
+        if a is not None and b is not None
     ]
     # look up the pairs and return any matches
     for pair in pairs:
