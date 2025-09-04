@@ -41,36 +41,35 @@ import zipfile
 from collections import OrderedDict
 from copy import deepcopy
 from os import fsdecode
+from typing import IO, TYPE_CHECKING, Any, Optional, Union, cast
 
 from fontTools.misc import filesystem as fs
-from typing import TYPE_CHECKING, cast, Any, IO, Optional, Union
-
 from fontTools.misc import plistlib
 from fontTools.ufoLib.converters import convertUFO1OrUFO2KerningToUFO3Kerning
 from fontTools.ufoLib.errors import UFOLibError
 from fontTools.ufoLib.filenames import userNameToFileName
 from fontTools.ufoLib.utils import (
-    numberTypes,
-    normalizeFormatVersion,
     BaseFormatVersion,
+    normalizeFormatVersion,
+    numberTypes,
 )
 from fontTools.ufoLib.validators import *
 
 if TYPE_CHECKING:
-    from fontTools.misc.filesystem._base import FS
     from logging import Logger
-    from os import PathLike
+
     from fontTools.annotations import (
-        K,
-        V,
         GlyphNameToFileNameFunc,
+        K,
         KerningDict,
         KerningGroups,
         KerningNested,
-        UFOFormatVersionInput,
-        PathStr,
         PathOrFS,
+        PathStr,
+        UFOFormatVersionInput,
+        V,
     )
+    from fontTools.misc.filesystem._base import FS
     from fontTools.ufoLib.glifLib import GlyphSet
 
 KerningGroupRenameMaps = dict[str, dict[str, str]]
@@ -631,7 +630,6 @@ class UFOReader(_UFOBaseIO):
     # kerning.plist
 
     def _readKerning(self) -> KerningNested:
-
         data = self._getPlist(KERNING_FILENAME, {})
         return data
 
@@ -1598,7 +1596,6 @@ class UFOWriter(UFOReader):
         glyphNameToFileNameFunc: GlyphNameToFileNameFunc = None,
         expectContentsFile: bool = False,
     ) -> GlyphSet:
-
         from fontTools.ufoLib.glifLib import GlyphSet
 
         glyphSubFS = self.fs.makedir(DEFAULT_GLYPHS_DIRNAME, recreate=True)
@@ -1620,7 +1617,6 @@ class UFOWriter(UFOReader):
         glyphNameToFileNameFunc: GlyphNameToFileNameFunc = None,
         expectContentsFile: bool = False,
     ) -> GlyphSet:
-
         from fontTools.ufoLib.glifLib import GlyphSet
 
         # if the default flag is on, make sure that the default in the file

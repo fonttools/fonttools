@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 import calendar
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from io import open
 
 import fontTools.misc.filesystem as fs
-from collections.abc import Mapping, Sequence
 from typing import Any, Type, Optional, Union
 
 from fontTools.annotations import IntFloat
