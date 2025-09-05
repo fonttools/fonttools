@@ -1,6 +1,6 @@
 from fontTools.ttLib import TTFont
 from fontTools.varLib.models import VariationModel
-from fontTools.varLib.avar import _pruneLocations, mappings_from_avar
+from fontTools.varLib.avar.unbuild import _pruneLocations, mappings_from_avar
 import os
 import unittest
 import pytest
