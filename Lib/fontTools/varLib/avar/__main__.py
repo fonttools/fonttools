@@ -6,7 +6,6 @@ log = logging.getLogger("fontTools.varLib.avar")
 
 
 def main(args=None):
-    """Add `avar` table from designspace file to variable font."""
 
     from fontTools.ttLib import TTFont
     from fontTools.misc.cliTools import makeOutputFileName
