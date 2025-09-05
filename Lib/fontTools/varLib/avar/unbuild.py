@@ -2,7 +2,6 @@ from fontTools.varLib import _add_avar, load_designspace
 from fontTools.varLib.models import VariationModel
 from fontTools.varLib.varStore import VarStoreInstancer
 from fontTools.misc.fixedTools import fixedToFloat as fi2fl
-from fontTools.misc.cliTools import makeOutputFileName
 from itertools import product
 import sys
 
