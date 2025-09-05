@@ -1,6 +1,9 @@
-from fontTools.varLib import _add_avar, load_designspace
+from fontTools.varLib import _add_fvar, _add_avar, load_designspace
 from fontTools.misc.cliTools import makeOutputFileName
+from fontTools import configLogger
+from fontTools.ttLib import TTFont, newTable
 import logging
+import argparse
 
 log = logging.getLogger("fontTools.varLib.avar")
 
@@ -12,10 +15,6 @@ def main(args=None):
         import sys
 
         args = sys.argv[1:]
-
-    from fontTools import configLogger
-    from fontTools.ttLib import TTFont
-    import argparse
 
     parser = argparse.ArgumentParser(
         "fonttools varLib.avar",
@@ -44,9 +43,6 @@ def main(args=None):
     configLogger(level=("INFO" if options.verbose else "WARNING"))
 
     font = TTFont(options.font)
-    if not "fvar" in font:
-        log.error("Not a variable font.")
-        return 1
 
     if options.designspace is None:
         from .unbuild import unbuild
@@ -54,9 +50,14 @@ def main(args=None):
         unbuild(font)
         return 0
 
-    axisTags = [a.axisTag for a in font["fvar"].axes]
-
     ds = load_designspace(options.designspace, require_sources=False)
+
+    if not "fvar" in font:
+        # if "name" not in font:
+        font["name"] = newTable("name")
+        _add_fvar(font, ds.axes, ds.instances)
+
+    axisTags = [a.axisTag for a in font["fvar"].axes]
 
     if "avar" in font:
         log.warning("avar table already present, overwriting.")
