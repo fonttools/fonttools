@@ -1,8 +1,25 @@
+from fontTools.varLib import _add_fvar, _add_avar, load_designspace
+from fontTools.ttLib import newTable
 import logging
 
 log = logging.getLogger("fontTools.varLib.avar")
 
-# TODO Deprecate in favor of .build / .unbuild modules
+
+def build(font, designspace_file):
+    ds = load_designspace(designspace_file, require_sources=False)
+
+    if not "fvar" in font:
+        # if "name" not in font:
+        font["name"] = newTable("name")
+        _add_fvar(font, ds.axes, ds.instances)
+
+    axisTags = [a.axisTag for a in font["fvar"].axes]
+
+    if "avar" in font:
+        log.warning("avar table already present, overwriting.")
+        del font["avar"]
+
+    _add_avar(font, ds.axes, ds.axisMappings, axisTags)
 
 
 def main(args=None):
@@ -19,7 +36,7 @@ def main(args=None):
         args = sys.argv[1:]
 
     parser = argparse.ArgumentParser(
-        "fonttools varLib.avar",
+        "fonttools varLib.avar.build",
         description="Add `avar` table from designspace file to variable font.",
     )
     parser.add_argument("font", metavar="varfont.ttf", help="Variable-font file.")
@@ -27,7 +44,6 @@ def main(args=None):
         "designspace",
         metavar="family.designspace",
         help="Designspace file.",
-        nargs="?",
         default=None,
     )
     parser.add_argument(
@@ -45,14 +61,6 @@ def main(args=None):
     configLogger(level=("INFO" if options.verbose else "WARNING"))
 
     font = TTFont(options.font)
-
-    if options.designspace is None:
-        from .unbuild import unbuild
-
-        unbuild(font)
-        return 0
-
-    from .build import build
 
     build(font, options.designspace)
 
