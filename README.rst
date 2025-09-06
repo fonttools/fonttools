@@ -124,7 +124,11 @@ are required to unlock the extra features named "ufo", etc.
     for Python, which internally uses `NumPy <https://pypi.python.org/pypi/numpy>`__
     arrays and hence is very fast;
   * `munkres <https://pypi.python.org/pypi/munkres>`__: a pure-Python
-    module that implements the Hungarian or Kuhn-Munkres algorithm.
+    module that implements the Hungarian or Kuhn-Munkres algorithm. Slower than
+    SciPy, but useful for minimalistic systems where adding SciPy is undesirable.
+
+  This ensures both performance (via SciPy) and minimal footprint (via Munkres)
+  are possible.
 
   To plot the results to a PDF or HTML format, you also need to install:
 
