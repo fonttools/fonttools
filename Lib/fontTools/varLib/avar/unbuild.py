@@ -1,4 +1,3 @@
-from fontTools.varLib import _add_avar, load_designspace
 from fontTools.varLib.models import VariationModel
 from fontTools.varLib.varStore import VarStoreInstancer
 from fontTools.misc.fixedTools import fixedToFloat as fi2fl
@@ -213,7 +212,7 @@ def unbuild(font, f=sys.stdout):
                 k = int(k) if k == int(k) else k
                 v = int(v) if v == int(v) else v
                 print(f'      <map input="{k}" output="{v}"/>', file=f)
-            print(f"    </axis>", file=f)
+            print("    </axis>", file=f)
     if mappings:
         print("    <mappings>", file=f)
         for inputLoc, outputLoc in mappings:
@@ -259,7 +258,7 @@ def main(args=None):
     options = parser.parse_args(args)
 
     font = TTFont(options.font)
-    if not "fvar" in font:
+    if "fvar" not in font:
         print("Not a variable font.", file=sys.stderr)
         return 1
 

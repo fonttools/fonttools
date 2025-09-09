@@ -11,7 +11,6 @@ def _denormalize(v, triplet):
 def map(
     font, location, *, inputNormalized=False, outputNormalized=False, dropZeroes=False
 ):
-
     if "fvar" not in font:
         return None
 
@@ -69,6 +68,11 @@ def main(args=None):
 
     options = parser.parse_args(args)
 
+    if not options.coords:
+        parser.error(
+            "No coordinates provided. Please specify at least one axis coordinate (e.g., wght=500)"
+        )
+
     if options.font.endswith(".designspace"):
         from .build import build
 
@@ -76,6 +80,8 @@ def main(args=None):
         build(font, options.font)
     else:
         font = TTFont(options.font)
+        if "fvar" not in font:
+            parser.error(f"Font '{options.font}' does not contain an 'fvar' table.")
 
     location = {
         tag: float(value) for tag, value in (item.split("=") for item in options.coords)
@@ -88,6 +94,7 @@ def main(args=None):
         outputNormalized=options.o,
         dropZeroes=not options.f,
     )
+    assert mapped is not None
 
     for tag in mapped:
         v = mapped[tag]

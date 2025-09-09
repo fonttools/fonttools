@@ -704,7 +704,7 @@ def makeDesignspaceSnippet(axisTag, axisName, axisLimit, mapping):
 def addEmptyAvar(font):
     """Add an empty `avar` table to the font."""
     font["avar"] = avar = newTable("avar")
-    for axis in fvar.axes:
+    for axis in font["fvar"].axes:
         avar.segments[axis.axisTag] = {}
 
 
@@ -744,7 +744,7 @@ def processAxis(
         values = [float(w) for w in values.split()]
 
     if designLimits is not None and isinstance(designLimits, str):
-        designLimits = [float(d) for d in options.designLimits.split(":")]
+        designLimits = [float(d) for d in designLimits.split(":")]
         assert (
             len(designLimits) == 3
             and designLimits[0] <= designLimits[1] <= designLimits[2]
