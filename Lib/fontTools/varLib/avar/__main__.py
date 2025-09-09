@@ -2,19 +2,21 @@ import logging
 
 log = logging.getLogger("fontTools.varLib.avar")
 
-# TODO Deprecate in favor of .build / .unbuild modules
-
 
 def main(args=None):
-
     from fontTools.ttLib import TTFont
     from fontTools.misc.cliTools import makeOutputFileName
     from fontTools import configLogger
     import argparse
+    import sys
+
+    print(
+        "WARNING: This script is deprecated. Use `fonttools varLib.avar.build` "
+        "or `fonttools varLib.avar.unbuild` instead.\n",
+        file=sys.stderr,
+    )
 
     if args is None:
-        import sys
-
         args = sys.argv[1:]
 
     parser = argparse.ArgumentParser(
