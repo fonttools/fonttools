@@ -61,6 +61,23 @@ def dot(v1, v2):
 
 
 @cython.cfunc
+@cython.locals(z=cython.complex, den=cython.double)
+@cython.locals(zr=cython.double, zi=cython.double)
+def _complex_div_by_real(z, den):
+    """Divide complex by real using Python's method (two separate divisions).
+
+    This ensures bit-exact compatibility with Python's complex division,
+    avoiding C's multiply-by-reciprocal optimization that can cause 1 ULP differences
+    on some platforms/compilers (e.g. clang on macOS arm64).
+
+    https://github.com/fonttools/fonttools/issues/3928
+    """
+    zr = z.real
+    zi = z.imag
+    return complex(zr / den, zi / den)
+
+
+@cython.cfunc
 @cython.inline
 @cython.locals(a=cython.complex, b=cython.complex, c=cython.complex, d=cython.complex)
 @cython.locals(
@@ -68,8 +85,8 @@ def dot(v1, v2):
 )
 def calc_cubic_points(a, b, c, d):
     _1 = d
-    _2 = (c / 3.0) + d
-    _3 = (b + c) / 3.0 + _2
+    _2 = _complex_div_by_real(c, 3.0) + d
+    _3 = _complex_div_by_real(b + c, 3.0) + _2
     _4 = a + d + c + b
     return _1, _2, _3, _4
 

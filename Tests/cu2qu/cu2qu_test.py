@@ -233,5 +233,26 @@ def test_cu2qu_degenerate_curve_with_collinear_points():
         assert p1 == pytest.approx(p2), f"point {i} does not match"
 
 
+def test_cu2qu_complex_division_floating_point_precision():
+    # This test ensures that cu2qu produces identical results whether compiled with
+    # Cython or running in pure Python mode. The specific curves from Ojuju.glyphs
+    # ("brackeleft" glyph) below exposed a bug where Cython's complex division by
+    # a real number could differ by 1 ULP from Python's implementation due to
+    # compiler optimizations (multiply-by-reciprocal in C vs two separate divisions
+    # in Python).
+    # See: https://github.com/fonttools/fonttools/issues/3928
+
+    curves = [
+        [(87, 738), (90, 438), (90, 437), (90, 277)],
+        [(64, 738), (63, 586), (64, 442), (64, 277)],
+    ]
+
+    result = curves_to_quadratic(curves, max_errors=[1.0] * len(curves))
+
+    # Before the fix, when compiled with Cython, the Y coordinate of point at index 5
+    # of the second curve would be 326.5 instead of 326.49999999999994
+    assert result[1][5][1] == 326.49999999999994
+
+
 if __name__ == "__main__":
     unittest.main()
