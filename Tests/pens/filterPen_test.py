@@ -8,7 +8,7 @@ from fontTools.pens.filterPen import (
     FilterPointPen,
     OnCurveFirstPointPen,
 )
-from fontTools.pens.pointPen import PointToSegmentPen
+from fontTools.pens.pointPen import PointToSegmentPen, ReverseFlipped
 from fontTools.pens.recordingPen import RecordingPen, RecordingPointPen
 
 import pytest
@@ -310,3 +310,82 @@ class TestOnCurveFirstPointPen:
             ("addPoint", ((100, 100), "line", False, None), {"identifier": "line-id"}),
             ("endPath", (), {}),
         ]
+
+
+class SimpleGlyphStartingWithOffCurve:
+    def drawPoints(self, pen):
+        pen.beginPath()
+        pen.addPoint((0, 0), None)
+        pen.addPoint((50, 50), None)
+        pen.addPoint((100, 0), "qcurve")
+        pen.addPoint((50, -50), None)
+        pen.endPath()
+
+
+@pytest.mark.parametrize(
+    "reverseFlipped", [True, ReverseFlipped.KEEP_START, "keep_start"]
+)
+def test_decomposing_filter_point_pen_reverse_flipped_keep_start(reverseFlipped):
+    """Test DecomposingFilterPointPen with reverseFlipped='keep_start' enum value"""
+    from fontTools.pens.filterPen import DecomposingFilterPointPen
+    from fontTools.pens.recordingPen import RecordingPointPen
+
+    glyphSet = {"base": SimpleGlyphStartingWithOffCurve()}
+
+    rec = RecordingPointPen()
+    fpen = DecomposingFilterPointPen(rec, glyphSet, reverseFlipped=reverseFlipped)
+    # Add a flipped component (negative determinant)
+    fpen.addComponent("base", (-1, 0, 0, 1, 200, 0))
+
+    # The contour should be reversed but still start with off-curve (segmentType=None)
+    assert len(rec.value) == 6  # beginPath + 4 points + endPath
+    assert rec.value[0][0] == "beginPath"
+    first_point = rec.value[1]
+    assert first_point[0] == "addPoint"
+    assert first_point[1][:2] == ((200, 0), None)
+
+
+@pytest.mark.parametrize(
+    "reverseFlipped", [ReverseFlipped.ON_CURVE_FIRST, "on_curve_first"]
+)
+def test_decomposing_filter_point_pen_reverse_flipped_on_curve_first(reverseFlipped):
+    """Test DecomposingFilterPointPen with reverseFlipped='on_curve_first' enum value"""
+    from fontTools.pens.filterPen import DecomposingFilterPointPen
+    from fontTools.pens.recordingPen import RecordingPointPen
+
+    glyphSet = {"base": SimpleGlyphStartingWithOffCurve()}
+
+    rec = RecordingPointPen()
+    fpen = DecomposingFilterPointPen(rec, glyphSet, reverseFlipped=reverseFlipped)
+    # Add a flipped component (negative determinant)
+    fpen.addComponent("base", (-1, 0, 0, 1, 200, 0))
+
+    # The contour should be reversed AND rotated to start with on-curve
+    assert len(rec.value) == 6  # beginPath + 4 points + endPath
+    assert rec.value[0][0] == "beginPath"
+    # First point should now be on-curve
+    first_point = rec.value[1]
+    assert first_point[0] == "addPoint"
+    assert first_point[1][:2] == ((100, 0), "qcurve")
+
+
+@pytest.mark.parametrize("reverseFlipped", [False, ReverseFlipped.NO, "no"])
+def test_decomposing_filter_point_pen_reverse_flipped_no(reverseFlipped):
+    """Test DecomposingFilterPointPen with reverseFlipped='no' enum value"""
+    from fontTools.pens.filterPen import DecomposingFilterPointPen
+    from fontTools.pens.recordingPen import RecordingPointPen
+
+    glyphSet = {"base": SimpleGlyphStartingWithOffCurve()}
+
+    rec = RecordingPointPen()
+    fpen = DecomposingFilterPointPen(rec, glyphSet, reverseFlipped=reverseFlipped)
+    # Add a flipped component (negative determinant)
+    fpen.addComponent("base", (-1, 0, 0, 1, 200, 0))
+
+    # Should not be reversed, so should start with first off-curve but NOT reversed
+    assert len(rec.value) == 6
+    assert rec.value[0][0] == "beginPath"
+    # Check that it's NOT reversed - the points should be transformed but in original order
+    first_point = rec.value[1]
+    assert first_point[0] == "addPoint"
+    assert first_point[1][:2] == ((200, 0), None)
