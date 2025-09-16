@@ -116,7 +116,9 @@ public.skipExportGlyphs
 This lib key works the same as the UFO lib key with the same name. The
 difference is that applications using a Designspace as the corner stone of the
 font compilation process should use the lib key in that Designspace instead of
-any of the UFOs, if the lib key is present in the Designspace.
+any of the UFOs, if the lib key is present in the Designspace. This should be
+true even if the lib key is present but empty in the Designspace, so that it is
+possible to use the Designspace lib key as an override to UFO-level lib keys.
 
 If the lib key is not present in the Designspace but it is present in the origin
 source of the Designspace, the font compiler should use the lib key from that
