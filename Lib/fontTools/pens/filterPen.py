@@ -253,3 +253,74 @@ class DecomposingFilterPointPen(
     """Filter point pen that draws components as regular contours."""
 
     pass
+
+
+class ContourFilterPointPen(_PassThruComponentsMixin, AbstractPointPen):
+    """A "buffered" filter point pen that accumulates contour data, passes
+    it through a ``filterContour`` method when the contour is closed or ended,
+    and finally draws the result with the output point pen.
+
+    Components are passed through unchanged.
+
+    The ``filterContour`` method can modify the contour in-place (return None)
+    or return a new contour to replace it.
+    """
+
+    def __init__(self, outPen):
+        self._outPen = outPen
+        self.currentContour = None
+        self.currentContourKwargs = None
+
+    def beginPath(self, identifier=None, **kwargs):
+        if self.currentContour is not None:
+            raise ValueError("Path already begun")
+        kwargs = dict(kwargs)
+        if identifier is not None:
+            kwargs["identifier"] = identifier
+        self.currentContour = []
+        self.currentContourKwargs = kwargs
+
+    def endPath(self):
+        if self.currentContour is None:
+            raise ValueError("Path not begun")
+        self._flushContour()
+        self.currentContour = None
+        self.currentContourKwargs = None
+
+    def _flushContour(self):
+        """Flush the current contour to the output pen."""
+        result = self.filterContour(self.currentContour)
+        if result is not None:
+            self.currentContour = result
+
+        # Draw the filtered contour
+        self._outPen.beginPath(**self.currentContourKwargs)
+        for pt, segmentType, smooth, name, kwargs in self.currentContour:
+            self._outPen.addPoint(pt, segmentType, smooth, name, **kwargs)
+        self._outPen.endPath()
+
+    def filterContour(self, contour):
+        """Subclasses must override this to perform the filtering.
+
+        The contour is a list of (pt, segmentType, smooth, name, kwargs) tuples.
+        If the method doesn't return a value (i.e. returns None), it's
+        assumed that the contour was modified in-place.
+        Otherwise, the return value replaces the original contour.
+        """
+        return  # or return contour
+
+    def addPoint(
+        self,
+        pt,
+        segmentType=None,
+        smooth=False,
+        name=None,
+        identifier=None,
+        **kwargs,
+    ):
+        if self.currentContour is None:
+            raise ValueError("Path not begun")
+        kwargs = dict(kwargs)
+        if identifier is not None:
+            kwargs["identifier"] = identifier
+        self.currentContour.append((pt, segmentType, smooth, name, kwargs))
