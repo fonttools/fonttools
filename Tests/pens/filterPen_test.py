@@ -6,6 +6,7 @@ from fontTools.pens.filterPen import (
     DecomposingFilterPen,
     DecomposingFilterPointPen,
     FilterPointPen,
+    OnCurveFirstPointPen,
 )
 from fontTools.pens.pointPen import PointToSegmentPen
 from fontTools.pens.recordingPen import RecordingPen, RecordingPointPen
@@ -196,3 +197,116 @@ def test_decomposing_filter_pen_include_decomposeNested(
     glyph = GLYPHSET["flipped_component"]
     _draw(glyph, fpen)
     assert rec.value == expected
+
+
+class TestOnCurveFirstPointPen:
+    def test_closed_contour_starting_with_offcurve(self):
+        """Test that a closed contour starting with an off-curve point gets rotated."""
+        rec = RecordingPointPen()
+        pen = OnCurveFirstPointPen(rec)
+
+        # Draw a "closed" (not starting with 'move') contour, starting with off-curve
+        pen.beginPath()
+        pen.addPoint((0, 0), None)
+        pen.addPoint((100, 100), "line")  # first on-curve, should become start
+        pen.addPoint((200, 0), None)
+        pen.addPoint((300, 100), "curve")
+        pen.endPath()
+
+        assert rec.value == [
+            ("beginPath", (), {}),
+            ("addPoint", ((100, 100), "line", False, None), {}),
+            ("addPoint", ((200, 0), None, False, None), {}),
+            ("addPoint", ((300, 100), "curve", False, None), {}),
+            ("addPoint", ((0, 0), None, False, None), {}),
+            ("endPath", (), {}),
+        ]
+
+    def test_closed_contour_already_starting_with_oncurve(self):
+        """Test that a closed contour already starting with on-curve passes through
+        unchanged."""
+        rec = RecordingPointPen()
+        pen = OnCurveFirstPointPen(rec)
+
+        pen.beginPath()
+        pen.addPoint((100, 100), "line")
+        pen.addPoint((200, 0), None)
+        pen.addPoint((300, 100), "curve")
+        pen.endPath()
+
+        assert rec.value == [
+            ("beginPath", (), {}),
+            ("addPoint", ((100, 100), "line", False, None), {}),
+            ("addPoint", ((200, 0), None, False, None), {}),
+            ("addPoint", ((300, 100), "curve", False, None), {}),
+            ("endPath", (), {}),
+        ]
+
+    def test_open_contour(self):
+        """Test that open contours pass through unchanged."""
+        rec = RecordingPointPen()
+        pen = OnCurveFirstPointPen(rec)
+
+        # "Open" contour starts with "move"
+        pen.beginPath()
+        pen.addPoint((0, 0), "move")
+        pen.addPoint((100, 100), "line")
+        pen.addPoint((200, 200), "curve")
+        pen.endPath()
+
+        assert rec.value == [
+            ("beginPath", (), {}),
+            ("addPoint", ((0, 0), "move", False, None), {}),
+            ("addPoint", ((100, 100), "line", False, None), {}),
+            ("addPoint", ((200, 200), "curve", False, None), {}),
+            ("endPath", (), {}),
+        ]
+
+    def test_all_offcurve_points(self):
+        """Test contour with all off-curve points (TrueType special case)
+        passes through unchanged."""
+        rec = RecordingPointPen()
+        pen = OnCurveFirstPointPen(rec)
+
+        pen.beginPath()
+        pen.addPoint((0, 0), None)
+        pen.addPoint((100, 100), None)
+        pen.addPoint((200, 0), None)
+        pen.endPath()
+
+        # there's no on-curve to rotate to
+        assert rec.value == [
+            ("beginPath", (), {}),
+            ("addPoint", ((0, 0), None, False, None), {}),
+            ("addPoint", ((100, 100), None, False, None), {}),
+            ("addPoint", ((200, 0), None, False, None), {}),
+            ("endPath", (), {}),
+        ]
+
+    def test_components_pass_through(self):
+        """Test that components pass through unchanged."""
+        rec = RecordingPointPen()
+        pen = OnCurveFirstPointPen(rec)
+
+        pen.addComponent("a", (1, 0, 0, 1, 10, 20))
+
+        assert rec.value == [
+            ("addComponent", ("a", (1, 0, 0, 1, 10, 20)), {}),
+        ]
+
+    def test_positional_identifier(self):
+        """Test that positional identifier arguments are forwarded."""
+        rec = RecordingPointPen()
+        pen = OnCurveFirstPointPen(rec)
+
+        pen.beginPath("path1")
+        pen.addPoint((0, 0), "move", False, None, "start")
+        pen.addPoint((100, 100), "line", False, None, "line-id")
+        pen.endPath()
+
+        assert rec.value == [
+            ("beginPath", (), {"identifier": "path1"}),
+            ("addPoint", ((0, 0), "move", False, None), {"identifier": "start"}),
+            ("addPoint", ((100, 100), "line", False, None), {"identifier": "line-id"}),
+            ("endPath", (), {}),
+        ]

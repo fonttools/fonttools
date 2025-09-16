@@ -324,3 +324,51 @@ class ContourFilterPointPen(_PassThruComponentsMixin, AbstractPointPen):
         if identifier is not None:
             kwargs["identifier"] = identifier
         self.currentContour.append((pt, segmentType, smooth, name, kwargs))
+
+
+class OnCurveFirstPointPen(ContourFilterPointPen):
+    """Filter point pen that ensures closed contours start with an on-curve point.
+
+    If a closed contour starts with an off-curve point (segmentType=None), it rotates
+    the points list so that the first on-curve point (segmentType != None) becomes
+    the start point. Open contours and contours already starting with on-curve points
+    are passed through unchanged.
+
+    >>> from fontTools.pens.recordingPen import RecordingPointPen
+    >>> rec = RecordingPointPen()
+    >>> pen = OnCurveFirstPointPen(rec)
+    >>> # Closed contour starting with off-curve - will be rotated
+    >>> pen.beginPath()
+    >>> pen.addPoint((0, 0), None)  # off-curve
+    >>> pen.addPoint((100, 100), "line")  # on-curve - will become start
+    >>> pen.addPoint((200, 0), None)  # off-curve
+    >>> pen.addPoint((300, 100), "curve")  # on-curve
+    >>> pen.endPath()
+    >>> # The contour should now start with (100, 100) "line"
+    >>> rec.value[0]
+    ('beginPath', (), {})
+    >>> rec.value[1]
+    ('addPoint', ((100, 100), 'line', False, None), {})
+    >>> rec.value[2]
+    ('addPoint', ((200, 0), None, False, None), {})
+    >>> rec.value[3]
+    ('addPoint', ((300, 100), 'curve', False, None), {})
+    >>> rec.value[4]
+    ('addPoint', ((0, 0), None, False, None), {})
+    """
+
+    def filterContour(self, contour):
+        """Rotate closed contour to start with first on-curve point if needed."""
+        if not contour:
+            return
+
+        # Check if it's a closed contour (no "move" segmentType)
+        is_closed = contour[0][1] != "move"
+
+        if is_closed and contour[0][1] is None:
+            # Closed contour starting with off-curve - need to rotate
+            # Find the first on-curve point
+            for i, (pt, segmentType, smooth, name, kwargs) in enumerate(contour):
+                if segmentType is not None:
+                    # Rotate the points list so it starts with the first on-curve point
+                    return contour[i:] + contour[:i]
