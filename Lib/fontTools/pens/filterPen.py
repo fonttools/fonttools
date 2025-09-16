@@ -240,9 +240,9 @@ class _DecomposingFilterPenMixin(_DecomposingFilterMixinBase):
         decomposeNested: bool = True,
         **kwargs,
     ):
-        assert isinstance(reverseFlipped, bool), (
-            f"Expected bool, got {type(reverseFlipped).__name__}"
-        )
+        assert isinstance(
+            reverseFlipped, bool
+        ), f"Expected bool, got {type(reverseFlipped).__name__}"
         super().__init__(
             outPen=outPen,
             glyphSet=glyphSet,
