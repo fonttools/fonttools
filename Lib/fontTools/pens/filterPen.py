@@ -155,13 +155,27 @@ class FilterPointPen(_PassThruComponentsMixin, AbstractPointPen):
     def __init__(self, outPen):
         self._outPen = outPen
 
-    def beginPath(self, **kwargs):
+    def beginPath(self, identifier=None, **kwargs):
+        kwargs = dict(kwargs)
+        if identifier is not None:
+            kwargs['identifier'] = identifier
         self._outPen.beginPath(**kwargs)
 
     def endPath(self):
         self._outPen.endPath()
 
-    def addPoint(self, pt, segmentType=None, smooth=False, name=None, **kwargs):
+    def addPoint(
+        self,
+        pt,
+        segmentType=None,
+        smooth=False,
+        name=None,
+        identifier=None,
+        **kwargs,
+    ):
+        kwargs = dict(kwargs)
+        if identifier is not None:
+            kwargs['identifier'] = identifier
         self._outPen.addPoint(pt, segmentType, smooth, name, **kwargs)
 
 

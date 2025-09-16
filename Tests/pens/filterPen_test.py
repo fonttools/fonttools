@@ -2,7 +2,11 @@ import logging
 from types import MappingProxyType
 
 from fontTools.pens.basePen import MissingComponentError
-from fontTools.pens.filterPen import DecomposingFilterPen, DecomposingFilterPointPen
+from fontTools.pens.filterPen import (
+    DecomposingFilterPen,
+    DecomposingFilterPointPen,
+    FilterPointPen,
+)
 from fontTools.pens.pointPen import PointToSegmentPen
 from fontTools.pens.recordingPen import RecordingPen, RecordingPointPen
 
@@ -64,6 +68,21 @@ def _draw(glyph, pen):
     else:
         # segment pen
         glyph.draw(pen)
+
+
+def test_filter_point_pen_positional_identifier():
+    rec = RecordingPointPen()
+    pen = FilterPointPen(rec)
+
+    pen.beginPath("glyph1")
+    pen.addPoint((0, 0), "line", False, None, "pt1")
+    pen.endPath()
+
+    assert rec.value == [
+        ("beginPath", (), {"identifier": "glyph1"}),
+        ("addPoint", ((0, 0), "line", False, None), {"identifier": "pt1"}),
+        ("endPath", (), {}),
+    ]
 
 
 @pytest.fixture(params=[DecomposingFilterPen, DecomposingFilterPointPen])

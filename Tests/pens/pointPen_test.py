@@ -371,7 +371,7 @@ class TestReverseContourPointPen(unittest.TestCase):
         pen.addPoint((0, 0), segmentType="move")
         pen.endPath()
         self.assertEqual(
-            "beginPath() " "addPoint((0, 0), segmentType='move') " "endPath()",
+            "beginPath() addPoint((0, 0), segmentType='move') endPath()",
             repr(tpen),
         )
 
