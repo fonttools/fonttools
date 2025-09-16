@@ -18,6 +18,7 @@ import unittest
 import os
 import json
 
+import pytest
 from fontTools.cu2qu import curve_to_quadratic, curves_to_quadratic
 
 
@@ -186,6 +187,71 @@ class AllQuadraticFalseTest(unittest.TestCase):
         result = curve_to_quadratic(cubic, 0.1, all_quadratic=False)
         quadratic = [(0, 0), (3, 3), (6, 0)]
         assert result == quadratic
+
+
+def test_cu2qu_degenerate_all_points_equal():
+    # https://github.com/fonttools/fonttools/pull/3903
+    cubic = [(5, 5), (5, 5), (5, 5), (5, 5)]
+    result = curve_to_quadratic(cubic, 0.1, all_quadratic=True)
+    assert result == [(5, 5), (5, 5), (5, 5)]
+
+
+def test_cu2qu_degenerate_3_points_equal_single_quad_within_tolerance():
+    cubic = [(5, 5), (5, 5), (5, 5), (5, 5.1)]
+    result = curve_to_quadratic(cubic, 0.1, all_quadratic=True)
+    # a single quadratic approximates this cubic for given tolerance
+    assert result == [(5, 5), (5, 5), (5, 5.1)]
+
+
+def test_cu2qu_degenerate_3_points_equal_exceeding_tolerance():
+    cubic = [(5, 5), (5, 5), (5, 5), (5, 5.1)]
+    result = curve_to_quadratic(cubic, 0.01, all_quadratic=True)
+    # 2 off-curves are required to approximate the same cubic given the smaller tolerance
+    assert result == [(5, 5), (5, 5), (5, 5.025), (5, 5.1)]
+
+
+def test_cu2qu_degenerate_curve_with_collinear_points():
+    # this particular curve (from 'brevecomb_gravecomb.case' glyph of BilboPro.glyphs) is
+    # actually a straight line: the four control points are collinear, and the two
+    # off-curves are overlapping and exactly midway between the two on-curves.
+    # When computing the intersection of the cubic bezier's handles (in `calc_intersect`),
+    # a ZeroDivisionError may or may not be raised depending on whether cu2qu is running
+    # in pure-Python or compiled with Cython (due to insignificant floating-point
+    # rounding errors in our vector dot() product), which in turn can produce a different
+    # number of off-curves in the appoximated quadratic spline.
+    # Below we assert that both implementations produce the same result.
+    cubic = [(64.94, 550.998), (65.199, 550.032), (65.199, 550.032), (65.458, 549.066)]
+    result = curve_to_quadratic(cubic, 1.0, all_quadratic=True)
+    expected = [
+        (64.94, 550.998),
+        (65.13425, 550.2735),
+        (65.26375, 549.7905),
+        (65.458, 549.066),
+    ]
+    assert len(result) == len(expected)
+    for i, (p1, p2) in enumerate(zip(result, expected)):
+        assert p1 == pytest.approx(p2), f"point {i} does not match"
+
+
+def test_cu2qu_complex_division_floating_point_precision():
+    # This test ensures that cu2qu produces identical results whether compiled with
+    # Cython or running in pure Python mode. The specific curves from Ojuju.glyphs
+    # ("brackeleft" glyph) below exposed a bug where Cython's complex division by
+    # a real number could differ by 1 ULP from Python's implementation due to
+    # compiler optimizations (multiply-by-reciprocal in C vs two separate divisions
+    # in Python).
+    # See: https://github.com/fonttools/fonttools/issues/3928
+
+    curves = [
+        [(87, 738), (90, 438), (90, 437), (90, 277)],
+        [(64, 738), (63, 586), (64, 442), (64, 277)],
+    ]
+
+    result = curves_to_quadratic(curves, max_errors=[1.0] * len(curves))
+
+    # Before the fix, when compiled with Cython, the Y coordinate of point at index 5
+    # of the second curve would be 326.5 instead of 326.49999999999994
+    assert result[1][5][1] == 326.49999999999994
 
 
 if __name__ == "__main__":

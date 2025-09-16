@@ -990,8 +990,7 @@ class Coverage(FormatSwitchingBaseTable):
             if brokenOrder or len(ranges) * 3 < len(glyphs):  # 3 words vs. 1 word
                 # Format 2 is more compact
                 index = 0
-                for i in range(len(ranges)):
-                    start, end = ranges[i]
+                for i, (start, end) in enumerate(ranges):
                     r = RangeRecord()
                     r.StartID = start
                     r.Start = font.getGlyphName(start)
@@ -1404,8 +1403,7 @@ class ClassDef(FormatSwitchingBaseTable):
             glyphCount = endGlyph - startGlyph + 1
             if len(ranges) * 3 < glyphCount + 1:
                 # Format 2 is more compact
-                for i in range(len(ranges)):
-                    cls, start, startName, end, endName = ranges[i]
+                for i, (cls, start, startName, end, endName) in enumerate(ranges):
                     rec = ClassRangeRecord()
                     rec.Start = startName
                     rec.End = endName
@@ -1463,8 +1461,7 @@ class AlternateSubst(FormatSwitchingBaseTable):
         if alternates is None:
             alternates = self.alternates = {}
         items = list(alternates.items())
-        for i in range(len(items)):
-            glyphName, set = items[i]
+        for i, (glyphName, set) in enumerate(items):
             items[i] = font.getGlyphID(glyphName), glyphName, set
         items.sort()
         cov = Coverage()
@@ -1520,8 +1517,8 @@ class LigatureSubst(FormatSwitchingBaseTable):
             input = _getGlyphsFromCoverageTable(rawTable["Coverage"])
             ligSets = rawTable["LigatureSet"]
             assert len(input) == len(ligSets)
-            for i in range(len(input)):
-                ligatures[input[i]] = ligSets[i].Ligature
+            for i, inp in enumerate(input):
+                ligatures[inp] = ligSets[i].Ligature
         else:
             assert 0, "unknown format: %s" % self.Format
         self.ligatures = ligatures
@@ -1577,8 +1574,7 @@ class LigatureSubst(FormatSwitchingBaseTable):
             ligatures = newLigatures
 
         items = list(ligatures.items())
-        for i in range(len(items)):
-            glyphName, set = items[i]
+        for i, (glyphName, set) in enumerate(items):
             items[i] = font.getGlyphID(glyphName), glyphName, set
         items.sort()
         cov = Coverage()
@@ -2279,8 +2275,7 @@ def fixLookupOverFlows(ttf, overflowRecord):
         lookup = lookups[lookupIndex]
         if lookup.LookupType != extType:
             lookup.LookupType = extType
-            for si in range(len(lookup.SubTable)):
-                subTable = lookup.SubTable[si]
+            for si, subTable in enumerate(lookup.SubTable):
                 extSubTableClass = lookupTypes[overflowRecord.tableType][extType]
                 extSubTable = extSubTableClass()
                 extSubTable.Format = 1

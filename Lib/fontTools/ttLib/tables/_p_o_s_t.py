@@ -118,6 +118,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
     def build_psNameMapping(self, ttFont):
         mapping = {}
         allNames = {}
+        glyphOrderNames = set(self.glyphOrder)
         for i in range(ttFont["maxp"].numGlyphs):
             glyphName = psName = self.glyphOrder[i]
             if glyphName == "":
@@ -126,16 +127,15 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
             if glyphName in allNames:
                 # make up a new glyphName that's unique
                 n = allNames[glyphName]
-                # check if the exists in any of the seen names or later ones
-                names = set(allNames.keys()) | set(self.glyphOrder)
-                while (glyphName + "." + str(n)) in names:
+                # check if the glyph name exists in the glyph order
+                while f"{glyphName}.{n}" in glyphOrderNames:
                     n += 1
                 allNames[glyphName] = n + 1
-                glyphName = glyphName + "." + str(n)
+                glyphName = f"{glyphName}.{n}"
 
-            self.glyphOrder[i] = glyphName
             allNames[glyphName] = 1
             if glyphName != psName:
+                self.glyphOrder[i] = glyphName
                 mapping[glyphName] = psName
 
         self.mapping = mapping
@@ -174,10 +174,9 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
         extraNames = self.extraNames = [
             n for n in self.extraNames if n not in standardGlyphOrder
         ]
-        for i in range(len(extraNames)):
-            extraDict[extraNames[i]] = i
-        for glyphID in range(numGlyphs):
-            glyphName = glyphOrder[glyphID]
+        for i, name in enumerate(extraNames):
+            extraDict[name] = i
+        for glyphName in glyphOrder:
             if glyphName in self.mapping:
                 psName = self.mapping[glyphName]
             else:

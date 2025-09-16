@@ -1,3 +1,69 @@
+4.59.3.dev0
+-----------
+
+[typing] Annotate ufoLib (#3875).
+
+4.59.2 (released 2025-08-27)
+----------------------------
+
+- [varLib] Clear ``USE_MY_METRICS`` component flags when inconsistent across masters (#3912).
+- [varLib.instancer] Avoid negative advance width/height values when instatiating HVAR/VVAR,
+  (unlikely in well-behaved fonts) (#3918).
+- [subset] Fix shaping behaviour when pruning empty mark sets (#3915, harfbuzz/harfbuzz#5499).
+- [cu2qu] Fixed ``dot()`` product of perpendicular vectors not always returning exactly 0.0
+  in all Python implementations (#3911)
+- [varLib.instancer] Implemented fully-instantiating ``avar2`` fonts (#3909).
+- [feaLib] Allow float values in ``VariableScalar``'s axis locations (#3906, #3907).
+- [cu2qu] Handle special case in ``calc_intersect`` for degenerate cubic curves where 3 to 4
+  control points are equal (#3904).
+
+4.59.1 (released 2025-08-14)
+----------------------------
+
+- [featureVars] Update OS/2.usMaxContext if possible after addFeatureVariationsRaw (#3894).
+- [vhmtx] raise TTLibError('not enough data...') when hmtx/vmtx are truncated (#3843, #3901).
+- [feaLib] Combine duplicate features that have the same set of lookups regardless of the order in which those lookups are added to the feature (#3895).
+- [varLib] Deprecate ``varLib.mutator`` in favor of ``varLib.instancer``. The latter
+  provides equivalent full (static font) instancing in addition to partial VF instancing.
+  CLI users should replace ``fonttools varLib.mutator`` with ``fonttools varLib.instancer``.
+  API users should migrate to ``fontTools.varLib.instancer.instantiateVariableFont`` (#2680).
+
+
+4.59.0 (released 2025-07-16)
+----------------------------
+
+- Removed hard-dependency on pyfilesystem2 (``fs`` package) from ``fonttools[ufo]`` extra.
+  This is replaced by the `fontTools.misc.filesystem` package, a stdlib-only, drop-in
+  replacement for the subset of the pyfilesystem2's API used by ``fontTools.ufoLib``.
+  The latter should continue to work with the upstream ``fs`` (we even test with/without).
+  Clients who wish to continue using ``fs`` can do so by depending on it directly instead
+  of via the ``fonttools[ufo]`` extra (#3885, #3620).
+- [xmlWriter] Replace illegal XML characters (e.g. control or non-characters) with "?"
+  when dumping to ttx (#3868, #71).
+- [varLib.hvar] Fixed vertical metrics fields copy/pasta error (#3884).
+- Micro optimizations in ttLib and sstruct modules (#3878, #3879).
+- [unicodedata] Add Garay script to RTL_SCRIPTS (#3882).
+- [roundingPen] Remove unreliable kwarg usage. Argument names aren’t consistent among
+  point pens’ ``.addComponent()`` implementations, in particular ``baseGlyphName``
+  vs ``glyphName`` (#3880).
+
+4.58.5 (released 2025-07-03)
+----------------------------
+
+- [feaLib] Don't try to combine ligature & multisub rules (#3874).
+- [feaLib/ast] Use weakref proxies to avoid cycles in visitor (#3873).
+- [varLib.instancer] Fixed instancing CFF2 fonts where VarData contains more than 64k items (#3858).
+
+4.58.4 (released 2025-06-13)
+----------------------------
+
+- [feaLib] Allow for empty MarkFilter & MarkAttach sets (#3856).
+
+4.58.3 (released 2025-06-13)
+----------------------------
+
+- [feaLib] Fixed iterable check for Python 3.13.4 and newer (#3854, #3855).
+
 4.58.2 (released 2025-06-06)
 ----------------------------
 

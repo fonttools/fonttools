@@ -2198,7 +2198,7 @@ class Parser(object):
                 raise FeatureLibError(
                     "Expected an equals sign", self.cur_token_location_
                 )
-            value = self.expect_number_()
+            value = self.expect_integer_or_float_()
             location[axis] = value
             if self.next_token_type_ is Lexer.NAME and self.next_token_[0] == ":":
                 # Lexer has just read the value as a glyph name. We'll correct it later
@@ -2229,6 +2229,16 @@ class Parser(object):
         raise FeatureLibError(
             "Expected a floating-point number", self.cur_token_location_
         )
+
+    def expect_integer_or_float_(self):
+        if self.next_token_type_ == Lexer.FLOAT:
+            return self.expect_float_()
+        elif self.next_token_type_ is Lexer.NUMBER:
+            return self.expect_number_()
+        else:
+            raise FeatureLibError(
+                "Expected an integer or floating-point number", self.cur_token_location_
+            )
 
     def expect_decipoint_(self):
         if self.next_token_type_ == Lexer.FLOAT:

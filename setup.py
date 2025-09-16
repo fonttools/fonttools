@@ -89,9 +89,12 @@ if with_cython is True or (with_cython is None and has_cython):
     )
 
 extras_require = {
-    # for fontTools.ufoLib: to read/write UFO fonts
+    # for fontTools.ufoLib: to read/write UFO fonts (kept for backwards compatibility).
+    # NOTE: pyfilesystem2 is no longer maintained though it may still continue to work
+    # with fontTools.ufoLib for a while; however we no longer depend on it, and instead
+    # maintain our own drop-in replacement in fontTools.misc.filesystem.
     "ufo": [
-        "fs >= 2.2.0, < 3",
+        # "fs >= 2.2.0, < 3",
     ],
     # for fontTools.misc.etree and fontTools.misc.plistlib: use lxml to
     # read/write XML files (faster/safer than built-in ElementTree)
@@ -493,7 +496,7 @@ if ext_modules:
 
 setup_params = dict(
     name="fonttools",
-    version="4.58.3.dev0",
+    version="4.59.3.dev0",
     description="Tools to manipulate font files",
     author="Just van Rossum",
     author_email="just@letterror.com",

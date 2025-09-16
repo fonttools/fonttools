@@ -81,15 +81,6 @@ are required to unlock the extra features named "ufo", etc.
 
   *Extra:* ``lxml``
 
-- ``Lib/fontTools/ufoLib``
-
-  Package for reading and writing UFO source files; it requires:
-
-  * `fs <https://pypi.org/pypi/fs>`__: (aka ``pyfilesystem2``) filesystem
-    abstraction layer.
-
-  *Extra:* ``ufo``
-
 - ``Lib/fontTools/ttLib/woff2.py``
 
   Module to compress/decompress WOFF 2.0 web fonts; it requires:
@@ -133,7 +124,11 @@ are required to unlock the extra features named "ufo", etc.
     for Python, which internally uses `NumPy <https://pypi.python.org/pypi/numpy>`__
     arrays and hence is very fast;
   * `munkres <https://pypi.python.org/pypi/munkres>`__: a pure-Python
-    module that implements the Hungarian or Kuhn-Munkres algorithm.
+    module that implements the Hungarian or Kuhn-Munkres algorithm. Slower than
+    SciPy, but useful for minimalistic systems where adding SciPy is undesirable.
+
+  This ensures both performance (via SciPy) and minimal footprint (via Munkres)
+  are possible.
 
   To plot the results to a PDF or HTML format, you also need to install:
 
@@ -181,6 +176,17 @@ are required to unlock the extra features named "ufo", etc.
     operations on paths (union, intersection, etc.).
 
   *Extra:* ``pathops``
+
+- ``Lib/fontTools/ufoLib``
+
+  Package for reading and writing UFO source files; if available, it will use:
+
+  * `fs <https://pypi.org/pypi/fs>`__: (aka ``pyfilesystem2``) filesystem abstraction layer
+
+  for reading and writing UFOs to the local filesystem or zip files (.ufoz), instead of
+  the built-in ``fontTools.misc.filesystem`` package.
+  The reader and writer classes can in theory also accept any object compatible the
+  ``fs.base.FS`` interface, although not all have been tested.
 
 - ``Lib/fontTools/pens/cocoaPen.py`` and ``Lib/fontTools/pens/quartzPen.py``
 

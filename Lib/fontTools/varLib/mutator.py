@@ -4,9 +4,16 @@ Instantiate a variation font.  Run, eg:
 .. code-block:: sh
 
     $ fonttools varLib.mutator ./NotoSansArabic-VF.ttf wght=140 wdth=85
+
+.. warning::
+   ``fontTools.varLib.mutator`` is deprecated in favor of :mod:`fontTools.varLib.instancer`
+   which provides equivalent full instancing and also supports partial instancing.
+   Please migrate CLI usage to ``fonttools varLib.instancer`` and API usage to
+   :func:`fontTools.varLib.instancer.instantiateVariableFont`.
 """
 
 from fontTools.misc.fixedTools import floatToFixedToFloat, floatToFixed
+from fontTools.misc.loggingTools import deprecateFunction
 from fontTools.misc.roundTools import otRound
 from fontTools.pens.boundsPen import BoundsPen
 from fontTools.ttLib import TTFont, newTable
@@ -159,6 +166,10 @@ def interpolate_cff2_metrics(varfont, topDict, glyphOrder, loc):
             hmtx[gname] = tuple(entry)
 
 
+@deprecateFunction(
+    "use fontTools.varLib.instancer.instantiateVariableFont instead "
+    "for either full or partial instancing",
+)
 def instantiateVariableFont(varfont, location, inplace=False, overlap=True):
     """Generate a static instance from a variable TTFont and a dictionary
     defining the desired location along the variable font's axes.

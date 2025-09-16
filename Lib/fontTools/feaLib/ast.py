@@ -1,3 +1,4 @@
+import weakref
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.feaLib.location import FeatureLibLocation
 from fontTools.misc.encodingTools import getEncoding
@@ -529,7 +530,7 @@ class MarkClass(object):
     def addDefinition(self, definition):
         """Add a :class:`MarkClassDefinition` statement to this mark class."""
         assert isinstance(definition, MarkClassDefinition)
-        self.definitions.append(definition)
+        self.definitions.append(weakref.proxy(definition))
         for glyph in definition.glyphSet():
             if glyph in self.glyphs:
                 otherLoc = self.glyphs[glyph].location
@@ -719,7 +720,7 @@ class ChainContextPosStatement(Statement):
         for i, lookup in enumerate(lookups):
             if lookup:
                 try:
-                    (_ for _ in lookup)
+                    iter(lookup)
                 except TypeError:
                     self.lookups[i] = [lookup]
 
@@ -777,7 +778,7 @@ class ChainContextSubstStatement(Statement):
         for i, lookup in enumerate(lookups):
             if lookup:
                 try:
-                    (_ for _ in lookup)
+                    iter(lookup)
                 except TypeError:
                     self.lookups[i] = [lookup]
 

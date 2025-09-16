@@ -145,7 +145,8 @@ class table__a_v_a_r(BaseTTXConverter):
         else:
             super().fromXML(name, attrs, content, ttFont)
 
-    def renormalizeLocation(self, location, font):
+    def renormalizeLocation(self, location, font, dropZeroes=True):
+
         majorVersion = getattr(self, "majorVersion", 1)
 
         if majorVersion not in (1, 2):
@@ -185,7 +186,9 @@ class table__a_v_a_r(BaseTTXConverter):
             out.append(v)
 
         mappedLocation = {
-            axis.axisTag: fi2fl(v, 14) for v, axis in zip(out, axes) if v != 0
+            axis.axisTag: fi2fl(v, 14)
+            for v, axis in zip(out, axes)
+            if v != 0 or not dropZeroes
         }
 
         return mappedLocation
