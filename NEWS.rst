@@ -1,7 +1,22 @@
-4.59.3.dev0
------------
-
-[typing] Annotate ufoLib (#3875).
+- [pointPen] Allow ``reverseFlipped`` parameter of ``DecomposingPointPen`` to take a ``ReverseFlipped``
+  enum value to control whether/how to reverse contour direction of flipped components, in addition to
+  the existing True/False. This allows to set ``ReverseFlipped.ON_CURVE_FIRST`` to ensure that
+  the decomposed outline starts with an on-curve point before being reversed, for better consistency
+  with other segment-oriented contour transformations. The change is backward compatible, and the
+  default behavior hasn't changed (#3934).
+- [filterPen] Added ``ContourFilterPointPen``, base pen for buffered contour operations, and
+  ``OnCurveStartPointPen`` filter to ensure contours start with an on-curve point (#3934).
+- [cu2qu] Fixed difference in cython vs pure-python complex division by real number (#3930).
+- [varLib.avar] Refactored and added some new sub-modules and scripts (#3926).
+  * ``varLib.avar.build`` module to build avar (and a missing fvar) binaries into a possibly empty TTFont,
+  * ``varLib.avar.unbuild`` module to print a .designspace snippet that would generate the same avar binary,
+  * ``varLib.avar.map`` module to take TTFont and do the mapping, in user/normalized space,
+  * ``varLib.avar.plan`` module moved from ``varLib.avarPlanner``.
+  The bare ``fonttools varLib.avar`` script is deprecated, in favour of ``fonttools varLib.avar.build`` (or ``unbuild``).
+- [interpolatable] Clarify ``linear_sum_assignment`` backend options and minimal dependency
+  usage (#3927).
+- [post] Speed up ``build_psNameMapping`` (#3923).
+- [ufoLib] Added typing annotations to fontTools.ufoLib (#3875).
 
 4.59.2 (released 2025-08-27)
 ----------------------------
