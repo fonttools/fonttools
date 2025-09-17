@@ -120,7 +120,7 @@ any of the UFOs. If the lib key is present but empty in the Designspace, all
 glyphs should be exported, regardless of what the same lib key in any of the
 UFOs says.
 
-If the lib key is not present in the Designspace but it is present in the origin
+If the lib key is not present in the Designspace but it is present in the default
 source of the Designspace, the font compiler should use the lib key from that
 origin UFO, and it should apply that set of skipped glyphs to any fonts 
 compiled from the Designspace.
