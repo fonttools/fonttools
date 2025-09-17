@@ -122,7 +122,7 @@ UFOs says.
 
 If the lib key is not present in the Designspace but it is present in the default
 source of the Designspace, the font compiler should use the lib key from that
-origin UFO, and it should apply that set of skipped glyphs to any fonts 
+UFO, and it should apply that set of skipped glyphs to any fonts 
 compiled from the Designspace.
 
 
