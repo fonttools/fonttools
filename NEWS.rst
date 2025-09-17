@@ -1,3 +1,6 @@
+4.60.0 (released 2025-09-17)
+----------------------------
+
 - [pointPen] Allow ``reverseFlipped`` parameter of ``DecomposingPointPen`` to take a ``ReverseFlipped``
   enum value to control whether/how to reverse contour direction of flipped components, in addition to
   the existing True/False. This allows to set ``ReverseFlipped.ON_CURVE_FIRST`` to ensure that
