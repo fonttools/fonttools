@@ -89,7 +89,7 @@ jobs:
         # so that all artifacts are downloaded in the same directory specified by 'path'
         merge-multiple: true
         path: dist
-    - uses: pypa/gh-action-pypi-publish@v1.12.4
+    - uses: pypa/gh-action-pypi-publish@v1.13.0
       with:
         user: __token__
         password: ${{ secrets.PYPI_PASSWORD }}
