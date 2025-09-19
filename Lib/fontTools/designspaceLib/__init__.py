@@ -962,6 +962,9 @@ class AxisDescriptor(AbstractAxisDescriptor):
         doc.addAxis(a1)
     """
 
+    name: str | None
+    map: list[tuple[float, float]] | None
+
     _attrs = [
         "tag",
         "name",
