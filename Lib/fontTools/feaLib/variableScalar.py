@@ -1,10 +1,16 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Self
 
 from fontTools.designspaceLib import DesignSpaceDocument
 from fontTools.ttLib.ttFont import TTFont
 from fontTools.varLib.models import VariationModel, normalizeValue, piecewiseLinearMap
+
+import typing
+
+if typing.TYPE_CHECKING:
+    from typing import Self
 
 LocationTuple = tuple[tuple[str, float], ...]
 """A hashable location."""
