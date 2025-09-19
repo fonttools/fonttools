@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import Tag, tostr, binary2num, safeEval
 from fontTools.feaLib.error import FeatureLibError
