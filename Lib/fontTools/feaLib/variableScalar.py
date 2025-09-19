@@ -104,10 +104,10 @@ class VariableScalarBuilder:
                             axis.map_forward(axis.maximum),
                         ),
                     )
-                    for user, design in axis.map.items()
+                    for user, design in axis.map
                 }
                 for axis in doc.axes
-                if axis.map is not None
+                if axis.map
             },
             model_cache={},
         )
