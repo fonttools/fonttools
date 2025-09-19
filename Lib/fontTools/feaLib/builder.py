@@ -8,7 +8,7 @@ from fontTools.feaLib.lookupDebugInfo import (
 )
 from fontTools.feaLib.parser import Parser
 from fontTools.feaLib.ast import FeatureFile
-from fontTools.feaLib.variableScalar import VariableScalar
+from fontTools.feaLib.variableScalar import VariableScalar, VariableScalarBuilder
 from fontTools.otlLib import builder as otl
 from fontTools.otlLib.maxContextCalc import maxCtxFont
 from fontTools.ttLib import newTable, getTableModule
@@ -124,6 +124,7 @@ class Builder(object):
             self.varstorebuilder = OnlineVarStoreBuilder(
                 [ax.axisTag for ax in self.axes]
             )
+            self.scalar_builder = VariableScalarBuilder.from_ttf(font)
         self.default_language_systems_ = set()
         self.script_ = None
         self.lookupflag_ = 0
@@ -180,10 +181,6 @@ class Builder(object):
         self.stat_ = {}
         # for conditionsets
         self.conditionsets_ = {}
-        # We will often use exactly the same locations (i.e. the font's masters)
-        # for a large number of variable scalars. Instead of creating a model
-        # for each, let's share the models.
-        self.model_cache = {}
 
     def build(self, tables=None, debug=False):
         if self.parseTree is None:
@@ -805,7 +802,6 @@ class Builder(object):
                 gdef.remap_device_varidxes(varidx_map)
                 if "GPOS" in self.font:
                     self.font["GPOS"].table.remap_device_varidxes(varidx_map)
-            self.model_cache.clear()
         if any(
             (
                 gdef.GlyphClassDef,
@@ -1719,19 +1715,24 @@ class Builder(object):
 
         self.conditionsets_[key] = value
 
-    def makeVariablePos(self, location, varscalar):
-        if not self.varstorebuilder:
+    def makeVariablePos(
+        self, location, varscalar: VariableScalar
+    ) -> tuple[int, int | None]:
+        """Make a pos statement from a VariableScalar, returning the default
+        value, and optionally the variation index if the scalar genuinely
+        requires variation too."""
+
+        if self.varstorebuilder is None or self.scalar_builder is None:
             raise FeatureLibError(
                 "Can't define a variable scalar in a non-variable font", location
             )
 
-        varscalar.axes = self.axes
         if not varscalar.does_vary:
-            return varscalar.default, None
+            return self.scalar_builder.default_value(varscalar), None
 
         try:
-            default, index = varscalar.add_to_variation_store(
-                self.varstorebuilder, self.model_cache, self.font.get("avar")
+            default, index = self.scalar_builder.add_to_variation_store(
+                varscalar, self.varstorebuilder
             )
         except VarLibError as e:
             raise FeatureLibError(
