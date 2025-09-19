@@ -878,16 +878,19 @@ def tagForAxisName(name):
 
 
 class AbstractAxisDescriptor(SimpleDescriptor):
+    name: str | None
+    map: list[tuple[float, float]]
+
     flavor = "axis"
 
     def __init__(
         self,
         *,
         tag=None,
-        name=None,
+        name: str | None = None,
         labelNames=None,
         hidden=False,
-        map=None,
+        map: list[tuple[float, float]] | None = None,
         axisOrdering=None,
         axisLabels=None,
     ):
@@ -962,9 +965,6 @@ class AxisDescriptor(AbstractAxisDescriptor):
         doc.addAxis(a1)
     """
 
-    name: str | None
-    map: list[tuple[float, float]] | None
-
     _attrs = [
         "tag",
         "name",
@@ -980,13 +980,13 @@ class AxisDescriptor(AbstractAxisDescriptor):
         self,
         *,
         tag=None,
-        name=None,
+        name: str | None = None,
         labelNames=None,
         minimum=None,
         default=None,
         maximum=None,
         hidden=False,
-        map=None,
+        map: list[tuple[float, float]] | None = None,
         axisOrdering=None,
         axisLabels=None,
     ):
@@ -1087,12 +1087,12 @@ class DiscreteAxisDescriptor(AbstractAxisDescriptor):
         self,
         *,
         tag=None,
-        name=None,
+        name: str | None = None,
         labelNames=None,
         values=None,
         default=None,
         hidden=False,
-        map=None,
+        map: list[tuple[float, float]] | None = None,
         axisOrdering=None,
         axisLabels=None,
     ):
