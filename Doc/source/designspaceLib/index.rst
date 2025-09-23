@@ -125,6 +125,17 @@ source of the Designspace, the font compiler should use the lib key from that
 UFO, and it should apply that set of skipped glyphs to any fonts 
 compiled from the Designspace.
 
+With a hierarchy similar to 
+`public.fontInfo <https://fonttools.readthedocs.io/en/stable/designspaceLib/index.html#public-fontinfo>`, 
+``public.skipExportGlyphs`` should be inherited using the following order, in order of 
+descending priority:
+
+1. The ``public.skipExportGlyphs`` key in the ``<lib>`` element of the ``<variable-font>`` or ``<instance>`` elements.
+
+2. The ``public.skipExportGlyphs`` key found in the ``<lib>`` element of the designspace document’s root.
+
+3 The ``lib.plist`` in the UFO source at the origin of the interpolation space.
+
 
 public.fontInfo
 -----------------------
