@@ -113,29 +113,28 @@ Common Lib Key Registry
 public.skipExportGlyphs
 -----------------------
 
-This lib key works the same as the UFO lib key with the same name. The
-difference is that applications using a Designspace as the corner stone of the
-font compilation process should use the lib key in that Designspace instead of
-any of the UFOs. If the lib key is present but empty in the Designspace, all
-glyphs should be exported, regardless of what the same lib key in any of the
-UFOs says.
-
-If the lib key is not present in the Designspace but it is present in the default
-source of the Designspace, the font compiler should use the lib key from that
-UFO, and it should apply that set of skipped glyphs to any fonts 
-compiled from the Designspace.
+This lib key works the same as the UFO lib key with the same name.
 
 With a hierarchy similar to 
 `public.fontInfo <https://fonttools.readthedocs.io/en/stable/designspaceLib/index.html#public-fontinfo>`, 
-``public.skipExportGlyphs`` should be inherited using the following order, in order of 
-descending priority:
+``public.skipExportGlyphs`` should be inherited using the following order, in 
+order of descending priority:
 
-1. The ``public.skipExportGlyphs`` key in the ``<lib>`` element of the ``<variable-font>`` or ``<instance>`` elements.
+#. The ``public.skipExportGlyphs`` key in the ``<lib>`` element of the
+   ``<variable-font>`` or ``<instance>`` elements.
+#. The ``public.skipExportGlyphs`` key found in the ``<lib>`` element of the
+   designspace document’s root.
+#. The ``lib.plist`` in the UFO source at the origin of the interpolation space.
 
-2. The ``public.skipExportGlyphs`` key found in the ``<lib>`` element of the designspace document’s root.
-
-3 The ``lib.plist`` in the UFO source at the origin of the interpolation space.
-
+To give examples:
+-  If the lib key is defined in ``<variable-font>`` or ``<instance>`` elements,
+   it should be applied to each of those outputs specifically.
+-  If the lib key is present but empty in the Designspace, all glyphs should be
+   exported, regardless of what the same lib key in any of the UFOs says.
+-  If the lib key is not present in the Designspace but it is present in the
+   default source of the Designspace, the font compiler should use the lib key 
+   from that UFO, and it should apply that set of skipped glyphs to any fonts 
+   compiled from the Designspace.
 
 public.fontInfo
 -----------------------
