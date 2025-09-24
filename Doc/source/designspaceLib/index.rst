@@ -117,7 +117,7 @@ This lib key works the same as the UFO lib key with the same name.
 
 Similar to
 `public.fontInfo <https://fonttools.readthedocs.io/en/stable/designspaceLib/index.html#public-fontinfo>`, 
-``public.skipExportGlyphs`` should be inherited using the following order, in 
+``public.skipExportGlyphs`` must be inherited using the following order, in 
 order of descending priority:
 
 #. The ``public.skipExportGlyphs`` key in the ``<lib>`` element of the
