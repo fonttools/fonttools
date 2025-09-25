@@ -827,13 +827,26 @@ def subset_glyphs(self, s):
             self.MarkArray.MarkRecord, mark_indices
         )
         self.MarkArray.MarkCount = len(self.MarkArray.MarkRecord)
-        base_indices = self.BaseCoverage.subset(s.glyphs)
+        class_indices = _uniq_sort(v.Class for v in self.MarkArray.MarkRecord)
+
+        intersect_base_indices = self.BaseCoverage.intersect(s.glyphs)
+        base_records = self.BaseArray.BaseRecord
+        num_base_records = len(base_records)
+        base_indices = [
+            i
+            for i in intersect_base_indices
+            if i < num_base_records
+            and any(base_records[i].BaseAnchor[j] is not None for j in class_indices)
+        ]
+        if not base_indices:
+            return False
+
+        self.BaseCoverage.remap(base_indices)
         self.BaseArray.BaseRecord = _list_subset(
             self.BaseArray.BaseRecord, base_indices
         )
         self.BaseArray.BaseCount = len(self.BaseArray.BaseRecord)
         # Prune empty classes
-        class_indices = _uniq_sort(v.Class for v in self.MarkArray.MarkRecord)
         self.ClassCount = len(class_indices)
         for m in self.MarkArray.MarkRecord:
             m.Class = class_indices.index(m.Class)
