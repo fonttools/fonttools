@@ -81,10 +81,13 @@ class Visitor(object):
         attributes of the objects and calls any user-registered (via
         ``@register_attr()`` or ``@register_attrs()``) ``visit()`` functions.
 
-        If there is no user-registered visit function, or if there is and it
-        returns ``True``, or it returns ``None`` (or doesn't return anything)
-        and ``visitor.defaultStop`` is ``False`` (default), then the visitor
-        will proceed to call ``self.visitAttr()``."""
+        The visitor will proceed to call ``self.visitAttr()``, unless there is a
+        user-registered visit function and:
+
+        * It returns ``False``; or
+        * It returns ``None`` (or doesn't return anything) and
+          ``visitor.defaultStop`` is ``True`` (non-default).
+        """
 
         keys = sorted(vars(obj).keys())
         _visitors = self._visitorsFor(obj)
@@ -128,12 +131,17 @@ class Visitor(object):
         will be called, and ``(visitor, obj, *args, **kwargs)`` will be passed
         to the user visit function.
 
-        If there is no user-registered visit function, or if there is and it
-        returns ``True``, or it returns ``None`` (or doesn't return anything)
-        and ``visitor.defaultStop`` is ``False`` (default), then the visitor
-        will proceed to dispatch to one of  ``self.visitObject()``,
-        ``self.visitList()``, ``self.visitDict()``, or ``self.visitLeaf()`` (any
-        of which can be overriden in a subclass)."""
+        The visitor will not recurse if there is a user-registered visit
+        function and:
+
+        * It returns ``False``; or
+        * It returns ``None`` (or doesn't return anything) and
+          ``visitor.defaultStop`` is ``True`` (non-default)
+
+        Otherwise,  the visitor will proceed to dispatch to one of
+        ``self.visitObject()``, ``self.visitList()``, ``self.visitDict()``, or
+        ``self.visitLeaf()`` (any of which can be overriden in a subclass).
+        """
 
         visitorFunc = self._visitorsFor(obj).get(None, None)
         if visitorFunc is not None:
