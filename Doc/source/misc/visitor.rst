@@ -31,16 +31,26 @@ Commonly implemented operations include:
 .. _visitor pattern: https://en.wikipedia.org/wiki/Visitor_pattern
 
 
-Implementing
-------------
+Specialisations
+---------------
+
+The :mod:`ttLib.ttVisitor <fontTools.ttLib.ttVisitor>` module provides the
+:class:`TTVisitor <fontTools.ttLib.ttVisitor.TTVisitor>` class, which handles
+common edge cases when using visitors with :class:`TTFont
+<fontTools.ttLib.ttFont.TTFont>` objects. For this reason, it should be
+preferred in that scenario.
+
+
+Guide
+-----
 
 1. Create a new class extending :class:`Visitor <fontTools.misc.visitor.Visitor>`
 2. Register operations for specific types or attributes with the *register* annotations
 3. Instantiate the class and call :func:`visit() <fontTools.misc.visitor.Visitor>` on the target object
 
 
-Example
-^^^^^^^
+Example code
+^^^^^^^^^^^^
 
 One can create a visitor class that checks the case of feature names::
 
