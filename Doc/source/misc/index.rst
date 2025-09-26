@@ -38,5 +38,6 @@ be more generally useful.
    textTools
    timeTools
    transform
+   visitor
    xmlReader
    xmlWriter
