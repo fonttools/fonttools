@@ -24,14 +24,14 @@ Commonly targeted data structures in font projects and ``fonttools`` include:
 
 Commonly implemented operations include:
 
-* Summarising
+* Summarizing
 * Subsetting
 * Scaling
 
 .. _visitor pattern: https://en.wikipedia.org/wiki/Visitor_pattern
 
 
-Specialisations
+Specializations
 ---------------
 
 The :mod:`ttLib.ttVisitor <fontTools.ttLib.ttVisitor>` module provides the
