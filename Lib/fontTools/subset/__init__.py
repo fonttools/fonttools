@@ -880,13 +880,31 @@ def subset_glyphs(self, s):
             self.MarkArray.MarkRecord, mark_indices
         )
         self.MarkArray.MarkCount = len(self.MarkArray.MarkRecord)
-        ligature_indices = self.LigatureCoverage.subset(s.glyphs)
+        class_indices = _uniq_sort(v.Class for v in self.MarkArray.MarkRecord)
+
+        intersect_ligature_indices = self.LigatureCoverage.intersect(s.glyphs)
+        ligature_array = self.LigatureArray.LigatureAttach
+        num_ligatures = self.LigatureArray.LigatureCount
+
+        ligature_indices = [
+            i
+            for i in intersect_ligature_indices
+            if i < num_ligatures
+            and any(
+                any(component.LigatureAnchor[j] is not None for j in class_indices)
+                for component in ligature_array[i].ComponentRecord
+            )
+        ]
+
+        if not ligature_indices:
+            return False
+
+        self.LigatureCoverage.remap(ligature_indices)
         self.LigatureArray.LigatureAttach = _list_subset(
             self.LigatureArray.LigatureAttach, ligature_indices
         )
         self.LigatureArray.LigatureCount = len(self.LigatureArray.LigatureAttach)
         # Prune empty classes
-        class_indices = _uniq_sort(v.Class for v in self.MarkArray.MarkRecord)
         self.ClassCount = len(class_indices)
         for m in self.MarkArray.MarkRecord:
             m.Class = class_indices.index(m.Class)
@@ -928,13 +946,26 @@ def subset_glyphs(self, s):
             self.Mark1Array.MarkRecord, mark1_indices
         )
         self.Mark1Array.MarkCount = len(self.Mark1Array.MarkRecord)
-        mark2_indices = self.Mark2Coverage.subset(s.glyphs)
+        class_indices = _uniq_sort(v.Class for v in self.Mark1Array.MarkRecord)
+
+        intersect_mark2_indices = self.Mark2Coverage.intersect(s.glyphs)
+        mark2_records = self.Mark2Array.Mark2Record
+        num_mark2_records = len(mark2_records)
+        mark2_indices = [
+            i
+            for i in intersect_mark2_indices
+            if i < num_mark2_records
+            and any(mark2_records[i].Mark2Anchor[j] is not None for j in class_indices)
+        ]
+        if not mark2_indices:
+            return False
+
+        self.Mark2Coverage.remap(mark2_indices)
         self.Mark2Array.Mark2Record = _list_subset(
             self.Mark2Array.Mark2Record, mark2_indices
         )
         self.Mark2Array.MarkCount = len(self.Mark2Array.Mark2Record)
         # Prune empty classes
-        class_indices = _uniq_sort(v.Class for v in self.Mark1Array.MarkRecord)
         self.ClassCount = len(class_indices)
         for m in self.Mark1Array.MarkRecord:
             m.Class = class_indices.index(m.Class)
