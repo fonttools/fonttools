@@ -272,7 +272,7 @@ Font table options
   Specify (=), add to (+=) or exclude from (-=) the comma-separated
   set of tables that will be be dropped.
   By default, the following tables are dropped:
-  'BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC', 'PCLT', 'LTSH'
+  'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC', 'PCLT', 'LTSH'
   and Graphite tables: 'Feat', 'Glat', 'Gloc', 'Silf', 'Sill'.
   The tool will attempt to subset the remaining tables.
 
@@ -3311,7 +3311,6 @@ class Options(object):
 
     # spaces in tag names (e.g. "SVG ", "cvt ") are stripped by the argument parser
     _drop_tables_default = [
-        "BASE",
         "JSTF",
         "DSIG",
         "EBDT",
