@@ -534,7 +534,7 @@ class UFOReader(_UFOBaseIO):
                 raise UFOLibError(message)
         return groups
 
-    def getKerningGroupRenameMaps(
+    def getKerningGroupConversionRenameMaps(
         self, validate: Optional[bool] = None
     ) -> KerningGroupRenameMaps:
         """
@@ -1263,7 +1263,7 @@ class UFOWriter(UFOReader):
                 }
 
         This is the same form returned by UFOReader's
-        getKerningGroupRenameMaps method.
+        getKerningGroupConversionRenameMaps method.
         """
         if self._formatVersion >= UFOFormatVersion.FORMAT_3_0:
             return  # XXX raise an error here
