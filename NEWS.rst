@@ -1,3 +1,12 @@
+- [ufoLib] Reverted accidental method name change in ``UFOReader.getKerningGroupConversionRenameMaps``
+  that broke compatibility with downstream projects like defcon (#3948, #3947, robotools/defcon#478).
+- [ufoLib] Added test coverage for ``getKerningGroupConversionRenameMaps`` method (#3950).
+- [subset] Don't try to subset BASE table; pass it through by default instead (#3949).
+- [subset] Remove empty BaseRecord entries in MarkBasePos lookups (#3897, #3892).
+- [subset] Add pruning for MarkLigPos and MarkMarkPos lookups (#3946).
+- [subset] Remove duplicate features when subsetting (#3945).
+- [Docs] Added documentation for the visitor module (#3944).
+
 4.60.0 (released 2025-09-17)
 ----------------------------
 
