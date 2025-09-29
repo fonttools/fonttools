@@ -3322,6 +3322,7 @@ class Options(object):
     _drop_tables_default += ["Feat", "Glat", "Gloc", "Silf", "Sill"]  # Graphite
     _no_subset_tables_default = [
         "avar",
+        "BASE",
         "fvar",
         "gasp",
         "head",
