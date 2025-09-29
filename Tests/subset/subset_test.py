@@ -235,7 +235,7 @@ class SubsetTest:
         self.expect_ttx(subsetfont, self.getpath("expect_bsln_3.ttx"), ["bsln"])
 
     def test_subset_BASE(self):
-        _, fontpath = self.compile_font(self.getpath("TestBASE.ttx"), ".ttf")
+        fontpath = self.compile_font(self.getpath("TestBASE.ttx"), ".ttf")
         subsetpath = self.temp_path(".ttf")
         subset.main([fontpath, "--gids=2,3", "--output-file=%s" % subsetpath])
         subsetfont = TTFont(subsetpath)
