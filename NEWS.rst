@@ -1,3 +1,6 @@
+4.60.1 (released 2025-09-29)
+----------------------------
+
 - [ufoLib] Reverted accidental method name change in ``UFOReader.getKerningGroupConversionRenameMaps``
   that broke compatibility with downstream projects like defcon (#3948, #3947, robotools/defcon#478).
 - [ufoLib] Added test coverage for ``getKerningGroupConversionRenameMaps`` method (#3950).
