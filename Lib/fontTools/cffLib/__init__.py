@@ -71,7 +71,7 @@ class CFFFontSet(object):
 
     """
 
-    otFont: 'TTFont'
+    otFont: "TTFont"
     major: int
     minor: int
     hdrSize: int
@@ -82,7 +82,9 @@ class CFFFontSet(object):
     strings: IndexedStrings | None
     GlobalSubrs: GlobalSubrsIndex
 
-    def decompile(self, file: IO[bytes] | Any, otFont: 'TTFont', isCFF2: bool | None = None) -> None:
+    def decompile(
+        self, file: IO[bytes] | Any, otFont: "TTFont", isCFF2: bool | None = None
+    ) -> None:
         """Parse a binary CFF file into an internal representation. ``file``
         should be a file handle object. ``otFont`` is the top-level
         :py:class:`fontTools.ttLib.ttFont.TTFont` object containing this CFF file.
@@ -153,7 +155,9 @@ class CFFFontSet(object):
             raise TypeError(nameOrIndex)
         return self.topDictIndex[index]
 
-    def compile(self, file: IO[bytes] | Any, otFont: 'TTFont', isCFF2: bool | None = None) -> None:
+    def compile(
+        self, file: IO[bytes] | Any, otFont: "TTFont", isCFF2: bool | None = None
+    ) -> None:
         """Write the object back into binary representation onto the given file.
         ``file`` should be a file handle object. ``otFont`` is the top-level
         :py:class:`fontTools.ttLib.ttFont.TTFont` object containing this CFF file.
@@ -186,7 +190,9 @@ class CFFFontSet(object):
         else:
             strings = None
         writer = CFFWriter(isCFF2)
-        topCompiler: TopDictIndexCompiler = self.topDictIndex.getCompiler(strings, self, isCFF2=isCFF2)
+        topCompiler: TopDictIndexCompiler = self.topDictIndex.getCompiler(
+            strings, self, isCFF2=isCFF2
+        )
         if isCFF2:
             self.hdrSize = 5
             writer.add(sstruct.pack(cffHeaderFormat, self))
@@ -247,7 +253,13 @@ class CFFFontSet(object):
         xmlWriter.endtag("GlobalSubrs")
         xmlWriter.newline()
 
-    def fromXML(self, name: str, attrs: dict[str, str], content: list[Any], otFont: 'TTFont' | None = None) -> None:
+    def fromXML(
+        self,
+        name: str,
+        attrs: dict[str, str],
+        content: list[Any],
+        otFont: "TTFont" | None = None,
+    ) -> None:
         """Reads data from the XML element into the ``CFFFontSet`` object."""
         self.otFont = otFont
 
@@ -418,7 +430,13 @@ class IndexCompiler(object):
     items: list[Any]
     parent: Any
 
-    def __init__(self, items: Any, strings: IndexedStrings | None, parent: Any, isCFF2: bool | None = None) -> None:
+    def __init__(
+        self,
+        items: Any,
+        strings: IndexedStrings | None,
+        parent: Any,
+        isCFF2: bool | None = None,
+    ) -> None:
         if isCFF2 is None and hasattr(parent, "isCFF2"):
             isCFF2 = parent.isCFF2
             assert isCFF2 is not None
@@ -501,9 +519,12 @@ class IndexedStringsCompiler(IndexCompiler):
 
 class TopDictIndexCompiler(IndexCompiler):
     """Helper class for writing the TopDict to binary."""
+
     items: list[TopDictCompiler]
 
-    def getItems(self, items: TopDictIndex, strings: IndexedStrings | None) -> list[TopDictCompiler]:
+    def getItems(
+        self, items: TopDictIndex, strings: IndexedStrings | None
+    ) -> list[TopDictCompiler]:
         out: list[TopDictCompiler] = []
         item: TopDict
         for item in items:
@@ -545,7 +566,9 @@ class FDArrayIndexCompiler(IndexCompiler):
 
     items: list[FontDictCompiler]
 
-    def getItems(self, items: FDArrayIndex, strings: IndexedStrings | None) -> list[FontDictCompiler]:
+    def getItems(
+        self, items: FDArrayIndex, strings: IndexedStrings | None
+    ) -> list[FontDictCompiler]:
         out: list[FontDictCompiler] = []
         item: FontDict
         for item in items:
@@ -587,7 +610,11 @@ class GlobalSubrsCompiler(IndexCompiler):
     """Helper class for writing the `global subroutine INDEX <https://docs.microsoft.com/en-us/typography/opentype/spec/cff2#9-local-and-global-subr-indexes>`_
     to binary."""
 
-    def getItems(self, items: Iterable[psCharStrings.T2CharString], strings: IndexedStrings | None) -> list[bytes]:
+    def getItems(
+        self,
+        items: Iterable[psCharStrings.T2CharString],
+        strings: IndexedStrings | None,
+    ) -> list[bytes]:
         out: list[bytes] = []
         cs: psCharStrings.T2CharString
         for cs in items:
@@ -608,6 +635,7 @@ class SubrsCompiler(GlobalSubrsCompiler):
 class CharStringsCompiler(GlobalSubrsCompiler):
     """Helper class for writing the `CharStrings INDEX <https://docs.microsoft.com/en-us/typography/opentype/spec/cff2#9-local-and-global-subr-indexes>`_
     to binary."""
+
     # getItems inherited
 
     def setPos(self, pos: int, endPos: int) -> None:
@@ -626,7 +654,9 @@ class Index(object):
     _isCFF2: bool | None
     offsetBase: int
 
-    def __init__(self, file: IO[bytes] | Any | None = None, isCFF2: bool | None = None) -> None:
+    def __init__(
+        self, file: IO[bytes] | Any | None = None, isCFF2: bool | None = None
+    ) -> None:
         self.items: list[Any | None] = []
         offsets = []
         self.offsets: list[int] = offsets
@@ -661,7 +691,9 @@ class Index(object):
 
     def __getitem__(self, index: int) -> Any:
         item: Any = self.items[index]
-        assert isinstance(item, (BaseDict, str, type(None), psCharStrings.T2CharString))  # XX (gs) DEBUG
+        assert isinstance(
+            item, (BaseDict, str, type(None), psCharStrings.T2CharString)
+        )  # XX (gs) DEBUG
         if item is not None:
             return item
         offset = self.offsets[index] + self.offsetBase
@@ -679,7 +711,9 @@ class Index(object):
         self.items[index] = item
 
     # Type hint for produceItem depends heavily on subclasses
-    def produceItem(self, index: int, data: bytes, file: IO[bytes] | Any, offset: int) -> Any:
+    def produceItem(
+        self, index: int, data: bytes, file: IO[bytes] | Any, offset: int
+    ) -> Any:
         return data
 
     def append(self, item: Any) -> None:
@@ -687,7 +721,9 @@ class Index(object):
         self.items.append(item)
 
     # Return type depends on self.compilerClass
-    def getCompiler(self, strings: IndexedStrings | None, parent: Any, isCFF2: bool | None = None) -> IndexCompiler:
+    def getCompiler(
+        self, strings: IndexedStrings | None, parent: Any, isCFF2: bool | None = None
+    ) -> IndexCompiler:
         return self.compilerClass(self, strings, parent, isCFF2=isCFF2)
 
     def clear(self) -> None:
@@ -754,7 +790,9 @@ class GlobalSubrsIndex(Index):
         if fdArray is not None:
             self.fdArray = fdArray
 
-    def produceItem(self, index: int, data: bytes, file: IO[bytes] | Any, offset: int) -> psCharStrings.T2CharString:
+    def produceItem(
+        self, index: int, data: bytes, file: IO[bytes] | Any, offset: int
+    ) -> psCharStrings.T2CharString:
         if self.private is not None:
             private = self.private
         elif hasattr(self, "fdArray") and self.fdArray is not None:
@@ -800,7 +838,9 @@ class GlobalSubrsIndex(Index):
         subr.fromXML(name, attrs, content)
         self.append(subr)
 
-    def getItemAndSelector(self, index: int) -> tuple[psCharStrings.T2CharString, int | None]:
+    def getItemAndSelector(
+        self, index: int
+    ) -> tuple[psCharStrings.T2CharString, int | None]:
         sel: int | None = None
         if hasattr(self, "fdSelect"):
             sel = self.fdSelect[index]
@@ -828,6 +868,7 @@ class TopDictIndex(Index):
             # <fontTools.cffLib.TopDict object at 0x102ed6e50>
 
     """
+
     compilerClass: Type[TopDictIndexCompiler] = TopDictIndexCompiler
     cff2GetGlyphOrder: Callable[[], list[str]] | None
     items: list[Any | None]
@@ -841,7 +882,7 @@ class TopDictIndex(Index):
         file: IO[bytes] | Any | None = None,
         cff2GetGlyphOrder: Callable[[], list[str]] | None = None,
         topSize: int = 0,
-        isCFF2: bool | None = None
+        isCFF2: bool | None = None,
     ) -> None:
         self.cff2GetGlyphOrder = cff2GetGlyphOrder
         if file is not None and isCFF2:
@@ -861,7 +902,9 @@ class TopDictIndex(Index):
         else:
             super(TopDictIndex, self).__init__(file, isCFF2=isCFF2)
 
-    def produceItem(self, index: int, data: bytes, file: IO[bytes] | Any, offset: int) -> TopDict:
+    def produceItem(
+        self, index: int, data: bytes, file: IO[bytes] | Any, offset: int
+    ) -> TopDict:
         top = TopDict(
             self.strings,
             file,
@@ -885,6 +928,7 @@ class TopDictIndex(Index):
 
 class FDArrayIndex(Index):
     """Represents the Font DICT INDEX in CFF/CFF2."""
+
     compilerClass: Type[FDArrayIndexCompiler] = FDArrayIndexCompiler
     vstore: VarStoreData | None
     strings: IndexedStrings | None
@@ -898,14 +942,16 @@ class FDArrayIndex(Index):
             xmlWriter.endtag("FontDict")
             xmlWriter.newline()
 
-    def produceItem(self, index: int, data: bytes, file: IO[bytes] | Any, offset: int) -> FontDict:
+    def produceItem(
+        self, index: int, data: bytes, file: IO[bytes] | Any, offset: int
+    ) -> FontDict:
         fontDict = FontDict(
             self.strings,  # type: ignore
             file,
             offset,
             self.GlobalSubrs,
             isCFF2=self._isCFF2,
-            vstore=self.vstore
+            vstore=self.vstore,
         )
         fontDict.decompile(data)
         return fontDict
@@ -924,12 +970,17 @@ class FDArrayIndex(Index):
 
 class VarStoreData(object):
     """Wrapper for CFF2 VarStore data."""
+
     file: IO[bytes] | Any | None
     data: bytes | None
-    otVarStore: 'ot.VarStore' | None
-    font: 'TTFont'
+    otVarStore: "ot.VarStore" | None
+    font: "TTFont"
 
-    def __init__(self, file: IO[bytes] | Any | None = None, otVarStore: 'ot.VarStore' | None = None) -> None:
+    def __init__(
+        self,
+        file: IO[bytes] | Any | None = None,
+        otVarStore: "ot.VarStore" | None = None,
+    ) -> None:
         self.file = file
         self.data = None
         self.otVarStore = otVarStore
@@ -961,7 +1012,9 @@ class VarStoreData(object):
     def writeXML(self, xmlWriter: XMLWriter, name: str) -> None:
         self.otVarStore.toXML(xmlWriter, self.font)
 
-    def xmlRead(self, name: str, attrs: dict[str, str], content: list[Any], parent: Any) -> None:
+    def xmlRead(
+        self, name: str, attrs: dict[str, str], content: list[Any], parent: Any
+    ) -> None:
         self.otVarStore = ot.VarStore()
         for element in content:
             if isinstance(element, tuple):
@@ -984,10 +1037,16 @@ class VarStoreData(object):
 
 class FDSelect(object):
     """Represents the FDSelect structure (formats 0, 3, 4)."""
+
     format: int | None
     gidArray: list[int]
 
-    def __init__(self, file: IO[bytes] | Any | None = None, numGlyphs: int | None = None, format: int | None = None) -> None:
+    def __init__(
+        self,
+        file: IO[bytes] | Any | None = None,
+        numGlyphs: int | None = None,
+        format: int | None = None,
+    ) -> None:
         if file:
             # read data in from file
             self.format = readCard8(file)
@@ -1065,6 +1124,7 @@ class CharStrings(object):
     compile and interpret the glyph drawing instructions in the returned objects.
 
     """
+
     globalSubrs: GlobalSubrsIndex | None
     varStore: VarStoreData | None
     charStringsIndex: SubrsIndex | None  # If charStringsAreIndexed
@@ -1111,7 +1171,9 @@ class CharStrings(object):
         return list(self.charStrings.keys())
 
     # Return type depends on charStringsAreIndexed
-    def values(self) -> Any:  # More specific: SubrsIndex | list[psCharStrings.T2CharString]
+    def values(
+        self,
+    ) -> Any:  # More specific: SubrsIndex | list[psCharStrings.T2CharString]
         if self.charStringsAreIndexed:
             return self.charStringsIndex
         else:
@@ -1138,7 +1200,9 @@ class CharStrings(object):
         else:
             self.charStrings[name] = charString
 
-    def getItemAndSelector(self, name: str) -> tuple[psCharStrings.T2CharString, int | None]:
+    def getItemAndSelector(
+        self, name: str
+    ) -> tuple[psCharStrings.T2CharString, int | None]:
         if self.charStringsAreIndexed:
             index = self.charStrings[name]
             return self.charStringsIndex.getItemAndSelector(index)
@@ -1236,7 +1300,9 @@ def packCard32(value: int) -> bytes:
     return struct.pack(">L", value)
 
 
-def buildOperatorDict(table: list[tuple[Any, str, Any, Any, Any]]) -> dict[Any, tuple[str, Any]]:
+def buildOperatorDict(
+    table: list[tuple[Any, str, Any, Any, Any]]
+) -> dict[Any, tuple[str, Any]]:
     d: dict[Any, tuple[str, Any]] = {}
     for op, name, arg, default, conv in table:
         d[op] = (name, arg)
@@ -1244,7 +1310,9 @@ def buildOperatorDict(table: list[tuple[Any, str, Any, Any, Any]]) -> dict[Any, 
 
 
 # Type hint for 'table' depends on specific operator table structure
-def buildOpcodeDict(table: list[tuple[Any, str, Any, Any, Any]]) -> dict[str, tuple[bytes, Any]]:
+def buildOpcodeDict(
+    table: list[tuple[Any, str, Any, Any, Any]]
+) -> dict[str, tuple[bytes, Any]]:
     d: dict[str, tuple[bytes, Any]] = {}
     for op, name, arg, default, conv in table:
         op_bytes: bytes
@@ -1283,6 +1351,7 @@ def buildConverters(table: list[tuple[Any, str, Any, Any, Any]]) -> dict[str, An
 
 class SimpleConverter(object):
     """Base class for CFF data type converters."""
+
     def read(self, parent: Any, value: Any) -> Any:
         if not hasattr(parent, "file"):
             return self._read(parent, value)
@@ -1303,7 +1372,9 @@ class SimpleConverter(object):
         xmlWriter.simpletag(name, value=value)
         xmlWriter.newline()
 
-    def xmlRead(self, name: str, attrs: dict[str, str], content: list[Any], parent: Any) -> Any:
+    def xmlRead(
+        self, name: str, attrs: dict[str, str], content: list[Any], parent: Any
+    ) -> Any:
         return attrs["value"]
 
 
@@ -1318,7 +1389,9 @@ class ASCIIConverter(SimpleConverter):
         xmlWriter.simpletag(name, value=tostr(value, encoding="ascii"))
         xmlWriter.newline()
 
-    def xmlRead(self, name: str, attrs: dict[str, str], content: list[Any], parent: Any) -> bytes:
+    def xmlRead(
+        self, name: str, attrs: dict[str, str], content: list[Any], parent: Any
+    ) -> bytes:
         return tobytes(attrs["value"], encoding=("ascii"))
 
 
@@ -1336,7 +1409,9 @@ class Latin1Converter(SimpleConverter):
         xmlWriter.simpletag(name, value=value)
         xmlWriter.newline()
 
-    def xmlRead(self, name: str, attrs: dict[str, str], content: list[Any], parent: Any) -> bytes:
+    def xmlRead(
+        self, name: str, attrs: dict[str, str], content: list[Any], parent: Any
+    ) -> bytes:
         return tobytes(attrs["value"], encoding=("latin1"))
 
 
@@ -1363,7 +1438,9 @@ def parseBlendList(s: list[Any]) -> list[Any]:
 
 
 class NumberConverter(SimpleConverter):
-    def xmlWrite(self, xmlWriter: XMLWriter, name: str, value: int | float | list[int | float]) -> None:
+    def xmlWrite(
+        self, xmlWriter: XMLWriter, name: str, value: int | float | list[int | float]
+    ) -> None:
         if isinstance(value, list):
             xmlWriter.begintag(name)
             xmlWriter.newline()
@@ -1378,7 +1455,9 @@ class NumberConverter(SimpleConverter):
             xmlWriter.simpletag(name, value=value)
             xmlWriter.newline()
 
-    def xmlRead(self, name: str, attrs: dict[str, str], content: list[Any], parent: Any) -> int | float | list[Any]:
+    def xmlRead(
+        self, name: str, attrs: dict[str, str], content: list[Any], parent: Any
+    ) -> int | float | list[Any]:
         valueString = attrs.get("value", None)
         if valueString is None:
             value = parseBlendList(content)
@@ -1405,7 +1484,9 @@ class ArrayConverter(SimpleConverter):
             xmlWriter.simpletag(name, value=value)
             xmlWriter.newline()
 
-    def xmlRead(self, name: str, attrs: dict[str, str], content: list[Any], parent: Any) -> list[Any]:
+    def xmlRead(
+        self, name: str, attrs: dict[str, str], content: list[Any], parent: Any
+    ) -> list[Any]:
         valueString = attrs.get("value", None)
         if valueString is None:
             valueList = parseBlendList(content)
@@ -1427,7 +1508,9 @@ class TableConverter(SimpleConverter):
         xmlWriter.endtag(name)
         xmlWriter.newline()
 
-    def xmlRead(self, name: str, attrs: dict[str, str], content: list[Any], parent: Any) -> Any:
+    def xmlRead(
+        self, name: str, attrs: dict[str, str], content: list[Any], parent: Any
+    ) -> Any:
         ob = self.getClass()()
         for element in content:
             if isinstance(element, str):
@@ -1509,7 +1592,9 @@ class CharStringsConverter(TableConverter):
     def write(self, parent: Any, value: Any) -> int:
         return 0  # dummy value
 
-    def xmlRead(self, name: str, attrs: dict[str, str], content: list[Any], parent: TopDict) -> CharStrings:
+    def xmlRead(
+        self, name: str, attrs: dict[str, str], content: list[Any], parent: TopDict
+    ) -> CharStrings:
         if hasattr(parent, "FDArray"):
             # if it is a CID-keyed font, then the private Dict is extracted from the
             # parent.FDArray
@@ -1595,7 +1680,9 @@ class CharsetConverter(SimpleConverter):
         xmlWriter.comment("charset is dumped separately as the 'GlyphOrder' element")
         xmlWriter.newline()
 
-    def xmlRead(self, name: str, attrs: dict[str, str], content: list[Any], parent: Any) -> None:
+    def xmlRead(
+        self, name: str, attrs: dict[str, str], content: list[Any], parent: Any
+    ) -> None:
         pass
 
 
@@ -1603,7 +1690,9 @@ class CharsetCompiler(object):
     data: bytes
     parent: DictCompiler
 
-    def __init__(self, strings: IndexedStrings, charset: list[str], parent: DictCompiler) -> None:
+    def __init__(
+        self, strings: IndexedStrings, charset: list[str], parent: DictCompiler
+    ) -> None:
         assert charset[0] == ".notdef"
         isCID = hasattr(parent.dictObj, "ROS")
         data0 = packCharset0(charset, isCID, strings)
@@ -1704,7 +1793,9 @@ def packCharset(charset: list[str], isCID: bool, strings: IndexedStrings) -> byt
     return bytesjoin(data)
 
 
-def parseCharset0(numGlyphs: int, file: IO[bytes] | Any, strings: IndexedStrings, isCID: bool) -> list[str]:
+def parseCharset0(
+    numGlyphs: int, file: IO[bytes] | Any, strings: IndexedStrings, isCID: bool
+) -> list[str]:
     charset = [".notdef"]
     if isCID:
         for i in range(numGlyphs - 1):
@@ -1717,7 +1808,13 @@ def parseCharset0(numGlyphs: int, file: IO[bytes] | Any, strings: IndexedStrings
     return charset
 
 
-def parseCharset(numGlyphs: int, file: IO[bytes] | Any, strings: IndexedStrings, isCID: bool, fmt: int) -> list[str]:
+def parseCharset(
+    numGlyphs: int,
+    file: IO[bytes] | Any,
+    strings: IndexedStrings,
+    isCID: bool,
+    fmt: int,
+) -> list[str]:
     charset = [".notdef"]
     count = 1
     if fmt == 1:
@@ -1741,7 +1838,9 @@ class EncodingCompiler(object):
     data: bytes
     parent: DictCompiler
 
-    def __init__(self, strings: IndexedStrings, encoding: list[str], parent: DictCompiler) -> None:
+    def __init__(
+        self, strings: IndexedStrings, encoding: list[str], parent: DictCompiler
+    ) -> None:
         assert not isinstance(encoding, str)
         data0 = packEncoding0(parent.dictObj.charset, encoding, parent.strings)
         data1 = packEncoding1(parent.dictObj.charset, encoding, parent.strings)
@@ -1810,7 +1909,9 @@ class EncodingConverter(SimpleConverter):
         xmlWriter.endtag(name)
         xmlWriter.newline()
 
-    def xmlRead(self, name: str, attrs: dict[str, str], content: list[Any], parent: Any) -> str | list[str]:
+    def xmlRead(
+        self, name: str, attrs: dict[str, str], content: list[Any], parent: Any
+    ) -> str | list[str]:
         if "name" in attrs:
             return attrs["name"]
         encoding = [".notdef"] * 256
@@ -1881,7 +1982,9 @@ def parseEncoding1(charset: list[str], file: IO[bytes] | Any):
     return encoding
 
 
-def packEncoding0(charset: list[str], encoding: list[str], strings: IndexedStrings) -> bytes:
+def packEncoding0(
+    charset: list[str], encoding: list[str], strings: IndexedStrings
+) -> bytes:
     fmt = 0
     m = {}
     for code in range(len(encoding)):
@@ -1904,7 +2007,9 @@ def packEncoding0(charset: list[str], encoding: list[str], strings: IndexedStrin
     return bytesjoin(data)
 
 
-def packEncoding1(charset: list[str], encoding: list[str], strings: IndexedStrings) -> bytes:
+def packEncoding1(
+    charset: list[str], encoding: list[str], strings: IndexedStrings
+) -> bytes:
     fmt = 1
     m = {}
     for code in range(len(encoding)):
@@ -1958,7 +2063,9 @@ class FDArrayConverter(TableConverter):
     def write(self, parent: Any, value: Any) -> int:
         return 0  # dummy value
 
-    def xmlRead(self, name: str, attrs: dict[str, str], content: list[Any], parent: Any) -> FDArrayIndex:
+    def xmlRead(
+        self, name: str, attrs: dict[str, str], content: list[Any], parent: Any
+    ) -> FDArrayIndex:
         fdArray = FDArrayIndex()
         for element in content:
             if isinstance(element, str):
@@ -1984,7 +2091,9 @@ class FDSelectConverter(SimpleConverter):
         xmlWriter.simpletag(name, [("format", value.format)])
         xmlWriter.newline()
 
-    def xmlRead(self, name: str, attrs: dict[str, str], content: list[Any], parent: Any) -> FDSelect:
+    def xmlRead(
+        self, name: str, attrs: dict[str, str], content: list[Any], parent: Any
+    ) -> FDSelect:
         fmt = safeEval(attrs["format"])
         file = None
         numGlyphs = None
@@ -2008,7 +2117,9 @@ class VarStoreConverter(SimpleConverter):
     def xmlWrite(self, xmlWriter: XMLWriter, name: str, value: VarStoreData) -> None:
         value.writeXML(xmlWriter, name)
 
-    def xmlRead(self, name: str, attrs: dict[str, str], content: list[Any], parent: Any) -> VarStoreData:
+    def xmlRead(
+        self, name: str, attrs: dict[str, str], content: list[Any], parent: Any
+    ) -> VarStoreData:
         varStore: VarStoreData = VarStoreData()
         varStore.xmlRead(name, attrs, content, parent)
         return varStore
@@ -2123,7 +2234,9 @@ class VarStoreCompiler(object):
 
 
 class ROSConverter(SimpleConverter):
-    def xmlWrite(self, xmlWriter: XMLWriter, name: str, value: tuple[str, str, int]) -> None:
+    def xmlWrite(
+        self, xmlWriter: XMLWriter, name: str, value: tuple[str, str, int]
+    ) -> None:
         registry, order, supplement = value
         xmlWriter.simpletag(
             name,
@@ -2135,7 +2248,9 @@ class ROSConverter(SimpleConverter):
         )
         xmlWriter.newline()
 
-    def xmlRead(self, name: str, attrs: dict[str, str], content: list[Any], parent: Any) -> tuple[str, str, int]:
+    def xmlRead(
+        self, name: str, attrs: dict[str, str], content: list[Any], parent: Any
+    ) -> tuple[str, str, int]:
         return (attrs["Registry"], attrs["Order"], safeEval(attrs["Supplement"]))
 
 
@@ -2286,6 +2401,7 @@ class PrivateDictDecompiler(psCharStrings.DictDecompiler):
 
 class DictCompiler(object):
     """Base class for compiling CFF Dict data."""
+
     maxBlendStack: int = 0
     opcodes: dict[str, tuple[bytes, Any]]
     isCFF2: bool
@@ -2295,7 +2411,13 @@ class DictCompiler(object):
     rawDict: dict[str, Any]
     pos: int
 
-    def __init__(self, dictObj: BaseDict, strings: IndexedStrings | None, parent: Any, isCFF2: bool | None = None) -> None:
+    def __init__(
+        self,
+        dictObj: BaseDict,
+        strings: IndexedStrings | None,
+        parent: Any,
+        isCFF2: bool | None = None,
+    ) -> None:
         if strings:
             assert isinstance(strings, IndexedStrings)
         if isCFF2 is None and hasattr(parent, "isCFF2"):
@@ -2529,7 +2651,13 @@ class TopDictCompiler(DictCompiler):
 class FontDictCompiler(DictCompiler):
     opcodes = buildOpcodeDict(topDictOperators)
 
-    def __init__(self, dictObj: FontDict, strings: IndexedStrings | None, parent: Any, isCFF2: bool | None = None) -> None:
+    def __init__(
+        self,
+        dictObj: FontDict,
+        strings: IndexedStrings | None,
+        parent: Any,
+        isCFF2: bool | None = None,
+    ) -> None:
         super(FontDictCompiler, self).__init__(dictObj, strings, parent, isCFF2=isCFF2)
         #
         # We now take some effort to detect if there were any key/value pairs
@@ -2589,6 +2717,7 @@ class PrivateDictCompiler(DictCompiler):
 
 class BaseDict(object):
     """Base class for CFF Dictionaries (TopDict, FontDict, PrivateDict)."""
+
     rawDict: dict[str, Any]
     skipNames: list[str]
     strings: IndexedStrings | None
@@ -2601,7 +2730,13 @@ class BaseDict(object):
     decompilerClass: Type[psCharStrings.DictDecompiler]
     compilerClass: Type[DictCompiler]
 
-    def __init__(self, strings: IndexedStrings | None = None, file: IO[bytes] | Any | None = None, offset: int | None = None, isCFF2: bool | None = None) -> None:
+    def __init__(
+        self,
+        strings: IndexedStrings | None = None,
+        file: IO[bytes] | Any | None = None,
+        offset: int | None = None,
+        isCFF2: bool | None = None,
+    ) -> None:
         assert (isCFF2 is None) == (file is None)
         self.rawDict = {}
         self.skipNames = []
@@ -2624,7 +2759,9 @@ class BaseDict(object):
     def postDecompile(self) -> None:
         pass
 
-    def getCompiler(self, strings: IndexedStrings | None, parent: Any, isCFF2: bool | None = None) -> DictCompiler:
+    def getCompiler(
+        self, strings: IndexedStrings | None, parent: Any, isCFF2: bool | None = None
+    ) -> DictCompiler:
         return self.compilerClass(self, strings, parent, isCFF2=isCFF2)
 
     def __getattr__(self, name: str) -> Any:
@@ -2700,6 +2837,7 @@ class TopDict(BaseDict):
             # [-15, 0, 515, 515, 666, 666]
 
     """
+
     defaults = buildDefaults(topDictOperators)
     converters = buildConverters(topDictOperators)
     compilerClass: Type[TopDictCompiler] = TopDictCompiler
@@ -2846,6 +2984,7 @@ class FontDict(BaseDict):
 
 class PrivateDict(BaseDict):
     """Private DICT structure."""
+
     defaults = buildDefaults(privateDictOperators)
     converters = buildConverters(privateDictOperators)
     order = buildOrder(privateDictOperators)
@@ -2853,7 +2992,14 @@ class PrivateDict(BaseDict):
     compilerClass: Type[PrivateDictCompiler] = PrivateDictCompiler
     vstore: VarStoreData | None
 
-    def __init__(self, strings: IndexedStrings | None = None, file: IO[bytes] | Any | None = None, offset: int | None = None, isCFF2: bool | None = None, vstore: VarStoreData | None = None) -> None:
+    def __init__(
+        self,
+        strings: IndexedStrings | None = None,
+        file: IO[bytes] | Any | None = None,
+        offset: int | None = None,
+        isCFF2: bool | None = None,
+        vstore: VarStoreData | None = None,
+    ) -> None:
         super(PrivateDict, self).__init__(strings, file, offset, isCFF2=isCFF2)
         self.vstore = vstore
         if isCFF2:
@@ -2872,7 +3018,9 @@ class PrivateDict(BaseDict):
     def in_cff2(self) -> bool:
         return self._isCFF2 or False
 
-    def getNumRegions(self, vi: int | None = None) -> int:  # called from misc/psCharStrings.py
+    def getNumRegions(
+        self, vi: int | None = None
+    ) -> int:  # called from misc/psCharStrings.py
         # if getNumRegions is being called, we can assume that VarStore exists.
         if vi is None:
             if hasattr(self, "vsindex"):
@@ -2885,6 +3033,7 @@ class PrivateDict(BaseDict):
 
 class IndexedStrings(object):
     """SID -> string mapping."""
+
     strings: list[str]
     stringMapping: dict[str, int]
 

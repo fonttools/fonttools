@@ -694,6 +694,7 @@ class StructWithLength(Struct):
     def __repr__(self):
         return "StructWithLength of " + repr(self.tableClass)
 
+
 class Table(Struct):
     staticSize = 2
 
@@ -730,6 +731,7 @@ class Table(Struct):
     def __repr__(self):
         return "Table of " + repr(self.tableClass)
 
+
 class LTable(Table):
     staticSize = 4
 
@@ -741,7 +743,7 @@ class LTable(Table):
 
     def __repr__(self):
         return "LTable of " + repr(self.tableClass)
-    
+
 
 # Table pointed to by a 24-bit, 3-byte long offset
 class Table24(Table):
@@ -755,6 +757,7 @@ class Table24(Table):
 
     def __repr__(self):
         return "Table24 of " + repr(self.tableClass)
+
 
 # TODO Clean / merge the SubTable and SubStruct
 

@@ -105,6 +105,7 @@ class TTFont(object):
                     access only. If it is set to False, many data structures are loaded immediately.
                     The default is ``lazy=None`` which is somewhere in between.
     """
+
     tables: dict[Tag, DefaultTable]
     reader: SFNTReader | None
     sfntVersion: bytes
@@ -126,7 +127,9 @@ class TTFont(object):
 
     def __init__(
         self,
-        file: str | IO[bytes] | Any | None = None,  # Using Any for generic file-like objects
+        file: (
+            str | IO[bytes] | Any | None
+        ) = None,  # Using Any for generic file-like objects
         res_name_or_index: str | int | None = None,
         sfntVersion: bytes = b"\000\001\000\000",
         flavor: str | None = None,
@@ -182,7 +185,9 @@ class TTFont(object):
                     else:
                         current_file = open(file_path, "rb")
                 else:
-                    current_file = macUtils.SFNTResourceReader(file_path, res_name_or_index)
+                    current_file = macUtils.SFNTResourceReader(
+                        file_path, res_name_or_index
+                    )
             else:
                 current_file = open(file_path, "rb")
         else:
@@ -227,12 +232,13 @@ class TTFont(object):
         # Now current_file is either the original seekable file-like object,
         # an opened file handle, or a BytesIO stream.
         from fontTools.ttLib.sfnt import SFNTReader  # Import here or top with guard
+
         self.reader = SFNTReader(current_file, checkChecksums, fontNumber=fontNumber)
         self.sfntVersion = self.reader.sfntVersion
         self.flavor = self.reader.flavor
         self.flavorData = self.reader.flavorData
 
-    def __enter__(self) -> 'TTFont':
+    def __enter__(self) -> "TTFont":
         return self
 
     def __exit__(
@@ -249,7 +255,9 @@ class TTFont(object):
             self.reader.close()
             self.reader = None
 
-    def save(self, file: str | IO[bytes] | Any, reorderTables: bool | None = True) -> None:
+    def save(
+        self, file: str | IO[bytes] | Any, reorderTables: bool | None = True
+    ) -> None:
         """Save the font to disk.
 
         Args:
@@ -298,7 +306,9 @@ class TTFont(object):
 
         tmp.close()
 
-    def _save(self, file: IO[bytes], tableCache: dict[tuple[Tag, bytes], Any] | None = None) -> bool:
+    def _save(
+        self, file: IO[bytes], tableCache: dict[tuple[Tag, bytes], Any] | None = None
+    ) -> bool:
         """Internal function, to be shared by save() and TTCollection.save()"""
 
         if self.recalcTimestamp and "head" in self:
@@ -389,6 +399,7 @@ class TTFont(object):
         }
         if writeVersion:
             from fontTools import version as ft_version
+
             version_str = ".".join(ft_version.split(".")[:2])
             font_attrs["ttLibVersion"] = version_str
 
@@ -424,7 +435,13 @@ class TTFont(object):
         writer.endtag("ttFont")
         writer.newline()
 
-    def _tableToXML(self, writer: xmlWriter.XMLWriter, tag: str, quiet: bool | None = None, splitGlyphs: bool = False) -> None:
+    def _tableToXML(
+        self,
+        writer: xmlWriter.XMLWriter,
+        tag: str,
+        quiet: bool | None = None,
+        splitGlyphs: bool = False,
+    ) -> None:
         if quiet is not None:
             deprecateArgument("quiet", "configure logging instead")
 
@@ -455,7 +472,9 @@ class TTFont(object):
         writer.newline()
         writer.newline()
 
-    def importXML(self, fileOrPath: str | IO[str] | Any, quiet: bool | None = None) -> None:
+    def importXML(
+        self, fileOrPath: str | IO[str] | Any, quiet: bool | None = None
+    ) -> None:
         """Import a TTX file (an XML-based text format), so as to recreate
         a font object.
         """
@@ -779,7 +798,7 @@ class TTFont(object):
         tag: Tag,
         writer: SFNTWriter,
         done: list[Tag],  # Use list as original
-        tableCache: dict[tuple[Tag, bytes], Any] | None = None
+        tableCache: dict[tuple[Tag, bytes], Any] | None = None,
     ) -> None:
         """Internal helper function for self.save(). Keeps track of
         inter-table dependencies.
@@ -952,7 +971,9 @@ class GlyphOrder(object):
             writer.simpletag("GlyphID", id=i, name=glyphName)
             writer.newline()
 
-    def fromXML(self, name: str, attrs: dict[str, str], content: list[Any], ttFont: TTFont) -> None:
+    def fromXML(
+        self, name: str, attrs: dict[str, str], content: list[Any], ttFont: TTFont
+    ) -> None:
         if not hasattr(self, "glyphOrder"):
             self.glyphOrder = []
         if name == "GlyphID":
@@ -988,7 +1009,9 @@ def getTableModule(tag: str) -> ModuleType | None:
 _customTableRegistry: dict[Tag, tuple[str, str]] = {}
 
 
-def registerCustomTableClass(tag: str, moduleName: str, className: str | None = None) -> None:
+def registerCustomTableClass(
+    tag: str, moduleName: str, className: str | None = None
+) -> None:
     """Register a custom packer/unpacker class for a table.
 
     The 'moduleName' must be an importable module. If no 'className'
@@ -1173,7 +1196,9 @@ TTFTableOrder = [
 OTFTableOrder = ["head", "hhea", "maxp", "OS/2", "name", "cmap", "post", "CFF "]
 
 
-def sortedTagList(tagList: Sequence[str], tableOrder: list[str] | None = None) -> list[str]:
+def sortedTagList(
+    tagList: Sequence[str], tableOrder: list[str] | None = None
+) -> list[str]:
     """Return a sorted copy of tagList, sorted according to the OpenType
     specification, or according to a custom tableOrder. If given and not
     None, tableOrder needs to be a list of tag names.
@@ -1201,7 +1226,7 @@ def reorderFontTables(
     inFile: IO[bytes],  # Takes file-like object as per original
     outFile: IO[bytes],  # Takes file-like object
     tableOrder: list[str] | None = None,
-    checkChecksums: bool = False  # Keep param even if reader handles it
+    checkChecksums: bool = False,  # Keep param even if reader handles it
 ) -> None:
     """Rewrite a font file, ordering the tables as recommended by the
     OpenType specification 1.4.

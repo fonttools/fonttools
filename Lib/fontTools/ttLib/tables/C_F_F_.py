@@ -32,11 +32,11 @@ class table_C_F_F_(DefaultTable.DefaultTable):
         self.cff = cffLib.CFFFontSet()
         self._gaveGlyphOrder = False
 
-    def decompile(self, data: bytes, otFont: 'TTFont') -> None:
+    def decompile(self, data: bytes, otFont: "TTFont") -> None:
         self.cff.decompile(BytesIO(data), otFont, isCFF2=False)
         assert len(self.cff) == 1, "can't deal with multi-font CFF tables."
 
-    def compile(self, otFont: 'TTFont') -> bytes:
+    def compile(self, otFont: "TTFont") -> bytes:
         f = BytesIO()
         self.cff.compile(f, otFont, isCFF2=False)
         return f.getvalue()
@@ -60,10 +60,12 @@ class table_C_F_F_(DefaultTable.DefaultTable):
         # XXX
         # self.cff[self.cff.fontNames[0]].setGlyphOrder(glyphOrder)
 
-    def toXML(self, writer: 'XMLWriter', otFont: 'TTFont') -> None:
+    def toXML(self, writer: "XMLWriter", otFont: "TTFont") -> None:
         self.cff.toXML(writer)
 
-    def fromXML(self, name: str, attrs: Dict[str, str], content: List[Any], otFont: 'TTFont') -> None:
+    def fromXML(
+        self, name: str, attrs: Dict[str, str], content: List[Any], otFont: "TTFont"
+    ) -> None:
         if not hasattr(self, "cff"):
             self.cff = cffLib.CFFFontSet()
         self.cff.fromXML(name, attrs, content, otFont)
