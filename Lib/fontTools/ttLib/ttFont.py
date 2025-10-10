@@ -1,20 +1,22 @@
+import logging
+import os
+import traceback
+from io import BytesIO, StringIO, UnsupportedOperation
+from typing import Any, Literal, Union, overload
+
 from fontTools.config import Config
 from fontTools.misc import xmlWriter
 from fontTools.misc.configTools import AbstractConfig
-from fontTools.misc.textTools import Tag, byteord, tostr
 from fontTools.misc.loggingTools import deprecateArgument
+from fontTools.misc.textTools import Tag, byteord, tostr
 from fontTools.ttLib import TTLibError
+from fontTools.ttLib.sfnt import SFNTReader, SFNTWriter
+from fontTools.ttLib.tables import _n_a_m_e
 from fontTools.ttLib.ttGlyphSet import (
-    _TTGlyph,
     _TTGlyphSetCFF,
     _TTGlyphSetGlyf,
     _TTGlyphSetVARC,
 )
-from fontTools.ttLib.sfnt import SFNTReader, SFNTWriter
-from io import BytesIO, StringIO, UnsupportedOperation
-import os
-import logging
-import traceback
 
 log = logging.getLogger(__name__)
 
@@ -447,7 +449,7 @@ class TTFont(object):
     def __len__(self):
         return len(list(self.keys()))
 
-    def __getitem__(self, tag):
+    def __getitem__(self, tag: Union[str, bytes, Tag]):
         tag = Tag(tag)
         table = self.tables.get(tag)
         if table is None:
@@ -502,6 +504,14 @@ class TTFont(object):
             del self.tables[tag]
         if self.reader and tag in self.reader:
             del self.reader[tag]
+
+    @overload
+    def get(
+        self, tag: Literal["name", b"name"], default=None
+    ) -> Union[_n_a_m_e.table__n_a_m_e, None]: ...
+
+    @overload
+    def get(self, tag: Union[str, bytes, Tag], default=None) -> Any: ...
 
     def get(self, tag, default=None):
         """Returns the table if it exists or (optionally) a default if it doesn't."""
@@ -855,7 +865,7 @@ class GlyphOrder(object):
     def toXML(self, writer, ttFont):
         glyphOrder = ttFont.getGlyphOrder()
         writer.comment(
-            "The 'id' attribute is only for humans; " "it is ignored when parsed."
+            "The 'id' attribute is only for humans; it is ignored when parsed."
         )
         writer.newline()
         for i, glyphName in enumerate(glyphOrder):
