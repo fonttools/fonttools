@@ -4,19 +4,7 @@ import logging
 import os
 import traceback
 from io import BytesIO, StringIO, UnsupportedOperation
-from types import ModuleType, TracebackType
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    BinaryIO,
-    Literal,
-    Mapping,
-    Sequence,
-    TextIO,
-    TypedDict,
-    TypeVar,
-    overload,
-)
+from typing import TYPE_CHECKING, TypedDict, TypeVar, overload
 
 from fontTools.config import Config
 from fontTools.misc import xmlWriter
@@ -26,7 +14,7 @@ from fontTools.misc.textTools import Tag, byteord, tostr
 from fontTools.ttLib import TTLibError
 from fontTools.ttLib.sfnt import SFNTReader, SFNTWriter
 from fontTools.ttLib.ttGlyphSet import (
-    _TTGlyph,
+    _TTGlyph,  # noqa: F401
     _TTGlyphSet,
     _TTGlyphSetCFF,
     _TTGlyphSetGlyf,
@@ -35,6 +23,8 @@ from fontTools.ttLib.ttGlyphSet import (
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, MutableMapping
+    from types import ModuleType, TracebackType
+    from typing import Any, BinaryIO, Literal, Sequence, TextIO
 
     from typing_extensions import Self, Unpack
 
@@ -430,8 +420,8 @@ class TTFont(object):
     class XMLSavingOptions(TypedDict):
         writeVersion: bool
         quiet: bool | None
-        tables: list[str | bytes] | None
-        skipTables: list[str] | None
+        tables: Sequence[str | bytes] | None
+        skipTables: Sequence[str] | None
         splitTables: bool
         splitGlyphs: bool
         disassembleInstructions: bool
@@ -460,8 +450,8 @@ class TTFont(object):
         writer: xmlWriter.XMLWriter,
         writeVersion: bool = True,
         quiet: bool | None = None,  # Deprecated
-        tables: list[str | bytes] | None = None,
-        skipTables: list[str] | None = None,
+        tables: Sequence[str | bytes] | None = None,
+        skipTables: Sequence[str] | None = None,
         splitTables: bool = False,
         splitGlyphs: bool = False,
         disassembleInstructions: bool = True,
@@ -597,7 +587,7 @@ class TTFont(object):
 
     __contains__ = has_key
 
-    def keys(self) -> list[str | bytes]:
+    def keys(self) -> list[str]:
         """Returns the list of tables in the font, along with the ``GlyphOrder`` pseudo-table."""
         keys = list(self.tables.keys())
         if self.reader:
@@ -1556,7 +1546,7 @@ def tagToIdentifier(tag: str | bytes) -> str:
     return ident
 
 
-def identifierToTag(ident: str) -> Tag | str:
+def identifierToTag(ident: str) -> str:
     """the opposite of tagToIdentifier()"""
     if ident == "GlyphOrder":
         return ident
@@ -1595,7 +1585,7 @@ def tagToXML(tag: str | bytes) -> str:
         return tagToIdentifier(tag)
 
 
-def xmlToTag(tag: str) -> Tag | str:
+def xmlToTag(tag: str) -> str:
     """The opposite of tagToXML()"""
     if tag == "OS_2":
         return Tag("OS/2")
@@ -1633,7 +1623,7 @@ OTFTableOrder = ["head", "hhea", "maxp", "OS/2", "name", "cmap", "post", "CFF "]
 
 def sortedTagList(
     tagList: Sequence[str], tableOrder: Sequence[str] | None = None
-) -> list[str | bytes]:
+) -> list[str]:
     """Return a sorted copy of tagList, sorted according to the OpenType
     specification, or according to a custom tableOrder. If given and not
     None, tableOrder needs to be a list of tag names.
@@ -1660,7 +1650,7 @@ def sortedTagList(
 def reorderFontTables(
     inFile: BinaryIO,  # Takes file-like object as per original
     outFile: BinaryIO,  # Takes file-like object
-    tableOrder: list[Tag] | None = None,
+    tableOrder: Sequence[Tag] | None = None,
     checkChecksums: bool = False,  # Keep param even if reader handles it
 ) -> None:
     """Rewrite a font file, ordering the tables as recommended by the
