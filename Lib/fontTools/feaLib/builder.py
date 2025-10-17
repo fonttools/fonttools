@@ -1690,6 +1690,12 @@ class Builder(object):
                 location,
             )
 
+        if key in self.conditionsets_:
+            raise FeatureLibError(
+                f"Condition set '{key}' has the same name as a previous condition set",
+                location,
+            )
+
         # Normalize
         axisMap = {
             axis.axisTag: (axis.minValue, axis.defaultValue, axis.maxValue)
