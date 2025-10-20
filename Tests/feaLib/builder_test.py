@@ -1264,6 +1264,32 @@ class BuilderTest(unittest.TestCase):
         assert condition_table[0].FilterRangeMinValue == 0.5
         assert condition_table[1].FilterRangeMinValue == 0.7
 
+    def test_condition_set_duplicated(self):
+        """Test that overloading conditionset names raises an error."""
+
+        features = """
+            conditionset duplicated {
+                wght 600 1000;
+            } duplicated;
+
+            # Same name as previous condition set (should error).
+            conditionset duplicated {
+                wght 500 1000;
+            } duplicated;
+        """
+
+        # Boilerplate to construct a TTF.
+        font = makeTTFont()
+        font["name"] = newTable("name")
+        addFvar(font, [("wght", 0, 0, 1000, "Weight")], [])
+
+        # Compile the invalid FEA, and confirm the error.
+        with self.assertRaisesRegex(
+            FeatureLibError,
+            r"Condition set 'duplicated' has the same name as a previous condition set",
+        ):
+            addOpenTypeFeaturesFromString(font, features)
+
     def test_variable_scalar_avar(self):
         """Test that the `avar` table is consulted when normalizing user-space
         values."""
