@@ -1313,9 +1313,7 @@ class TTFont(object):
             glyphSet = _TTGlyphSetVARC(self, location, glyphSet)
         return glyphSet
 
-    def normalizeLocation(
-        self, location: Mapping[str, _NumberT]
-    ) -> dict[str, _NumberT]:
+    def normalizeLocation(self, location: Mapping[str, _NumberT]) -> dict[str, float]:
         """Normalize a ``location`` from the font's defined axes space (also
         known as user space) into the normalized (-1..+1) space. It applies
         ``avar`` mapping if the font contains an ``avar`` table.
