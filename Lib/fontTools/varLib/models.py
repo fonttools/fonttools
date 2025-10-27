@@ -10,9 +10,13 @@ __all__ = [
     "VariationModel",
 ]
 
-from typing import Mapping, Sequence
+from typing import TYPE_CHECKING
 from fontTools.misc.roundTools import noRound
 from .errors import VariationModelError
+
+
+if TYPE_CHECKING:
+    from typing import Mapping, Sequence
 
 
 def nonNone(lst):
@@ -336,9 +340,9 @@ class VariationModel(object):
             value = loc[axis]
             if axis not in axisPoints:
                 axisPoints[axis] = {0.0}
-            assert (
-                value not in axisPoints[axis]
-            ), 'Value "%s" in axisPoints["%s"] -->  %s' % (value, axis, axisPoints)
+            assert value not in axisPoints[axis], (
+                'Value "%s" in axisPoints["%s"] -->  %s' % (value, axis, axisPoints)
+            )
             axisPoints[axis].add(value)
 
         def getKey(axisPoints, axisOrder):
