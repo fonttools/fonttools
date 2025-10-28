@@ -23,11 +23,11 @@ jobs:
     steps:
     - uses: actions/checkout@v5
     - name: Install uv
-      uses: astral-sh/setup-uv@v6
+      uses: astral-sh/setup-uv@v7
     - name: Build source distribution and pure-python wheel
       run: |
         uv build
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v5
       with:
         name: pure
         path: |
@@ -70,7 +70,7 @@ jobs:
       env:
         CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
         CIBW_ARCHS: ${{ matrix.arch }}
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v5
       with:
         name: wheels-${{ matrix.os }}-${{ matrix.arch }}
         path: wheelhouse/*.whl
