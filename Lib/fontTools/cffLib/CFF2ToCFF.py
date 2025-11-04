@@ -189,6 +189,16 @@ def main(args=None):
         action="store_false",
         help="Don't set the output font's timestamp to the current time.",
     )
+    parser.add_argument(
+        "--remove-overlaps",
+        action="store_true",
+        help="Merge overlapping contours and components. Requires skia-pathops",
+    )
+    parser.add_argument(
+        "--ignore-overlap-errors",
+        action="store_true",
+        help="Don't crash if the remove-overlaps operation fails for some glyphs.",
+    )
     loggingGroup = parser.add_mutually_exclusive_group(required=False)
     loggingGroup.add_argument(
         "-v", "--verbose", action="store_true", help="Run more verbosely."
@@ -219,6 +229,21 @@ def main(args=None):
     font = TTFont(infile, recalcTimestamp=options.recalc_timestamp, recalcBBoxes=False)
 
     convertCFF2ToCFF(font)
+
+    if options.remove_overlaps:
+        from fontTools.ttLib.removeOverlaps import removeOverlaps
+        from io import BytesIO
+
+        log.debug("Removing overlaps")
+
+        stream = BytesIO()
+        font.save(stream)
+        stream.seek(0)
+        font = TTFont(stream, recalcTimestamp=False, recalcBBoxes=False)
+        removeOverlaps(
+            font,
+            ignoreErrors=options.ignore_overlap_errors,
+        )
 
     log.info(
         "Saving %s",
