@@ -146,7 +146,7 @@ extras_require = {
     ],
     # for packing GSUB/GPOS tables with Harfbuzz repacker
     "repacker": [
-        "uharfbuzz >= 0.23.0",
+        "uharfbuzz >= 0.45.0",
     ],
 }
 # use a special 'all' key as shorthand to includes all the extra dependencies
