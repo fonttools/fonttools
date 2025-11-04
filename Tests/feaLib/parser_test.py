@@ -1440,6 +1440,14 @@ class ParserTest(unittest.TestCase):
             "feature test {rsub f_i by f i;} test;",
         )
 
+    def test_rsub_deletion(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Reverse chaining substitutions do not support glyph deletion",
+            self.parse,
+            "lookup test { rsub a b c' e by NULL; } test;",
+        )
+
     def test_script(self):
         doc = self.parse("feature test {script cyrl;} test;")
         s = doc.statements[0].statements[0]

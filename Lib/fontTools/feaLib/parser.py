@@ -887,6 +887,11 @@ class Parser(object):
 
         is_deletion = False
         if len(new) == 1 and isinstance(new[0], ast.NullGlyph):
+            if reverse:
+                raise FeatureLibError(
+                    "Reverse chaining substitutions do not support glyph deletion",
+                    location,
+                )
             new = []  # Deletion
             is_deletion = True
 
