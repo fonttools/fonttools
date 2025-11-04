@@ -112,7 +112,7 @@ extras_require = {
     # of the Unicode Character Database instead of the built-in unicodedata
     # which varies between python versions and may be outdated.
     "unicode": [
-        "unicodedata2 >= 17.0.0",
+        "unicodedata2 >= 17.0.0; python_version <= '3.14'",
     ],
     # for graphite type tables in ttLib/tables (Silf, Glat, Gloc)
     "graphite": ["lz4 >= 1.7.4.2"],
