@@ -90,7 +90,7 @@ jobs:
       id-token: write # IMPORTANT: mandatory for trusted publishing
 
     steps:
-    - uses: actions/download-artifact@v5
+    - uses: actions/download-artifact@v6
       with:
         # so that all artifacts are downloaded in the same directory specified by 'path'
         merge-multiple: true
