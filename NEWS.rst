@@ -1,3 +1,5 @@
+- [unicodedata] Update to Unicode 17. Require ``unicodedata2 >= 17.0.0`` when installed with 'unicode' extra.
+
 4.60.1 (released 2025-09-29)
 ----------------------------
 
