@@ -1780,19 +1780,6 @@ def instantiateVariableFont(
 
         instantiateFvar(varfont, axisLimits)
 
-    if "fvar" not in varfont:
-        if "glyf" in varfont:
-            if overlap == OverlapMode.KEEP_AND_SET_FLAGS:
-                setMacOverlapFlags(varfont["glyf"])
-            elif overlap in (OverlapMode.REMOVE, OverlapMode.REMOVE_AND_IGNORE_ERRORS):
-                from fontTools.ttLib.removeOverlaps import removeOverlaps
-
-                log.info("Removing overlaps from glyf table")
-                removeOverlaps(
-                    varfont,
-                    ignoreErrors=(overlap == OverlapMode.REMOVE_AND_IGNORE_ERRORS),
-                )
-
     if "OS/2" in varfont:
         varfont["OS/2"].recalcAvgCharWidth(varfont)
 
@@ -1810,6 +1797,19 @@ def instantiateVariableFont(
         varfont = downgradeCFF2ToCFF(varfont)
         if inplace:
             origVarfont.__dict__ = varfont.__dict__.copy()
+
+    if "fvar" not in varfont:
+        if overlap == OverlapMode.KEEP_AND_SET_FLAGS:
+            if "glyf" in varfont:
+                setMacOverlapFlags(varfont["glyf"])
+        elif overlap in (OverlapMode.REMOVE, OverlapMode.REMOVE_AND_IGNORE_ERRORS):
+            from fontTools.ttLib.removeOverlaps import removeOverlaps
+
+            log.info("Removing glyph outlines overlaps")
+            removeOverlaps(
+                varfont,
+                ignoreErrors=(overlap == OverlapMode.REMOVE_AND_IGNORE_ERRORS),
+            )
 
     return varfont
 
