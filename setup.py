@@ -101,12 +101,25 @@ extras_require = {
     "lxml": [
         "lxml >= 4.0",
     ],
-    # for fontTools.sfnt and fontTools.woff2: to compress/uncompress
-    # WOFF 1.0 and WOFF 2.0 webfonts.
+    # for fontTools.sfnt and fontTools.woff2: to compress/uncompress WOFF 2.0 webfonts.
+    # WOFF 1.0 compression/decompression is supported without this. For better but
+    # slower WOFF 1.0 compression, this extra installs the zopfli library. To use zopfli
+    # instead of zlib, you also need to set fontTools.ttLib.sfnt.USE_ZOPFLI to True
+    # before compressing a WOFF 1.0 file.
     "woff": [
+        "fonttools[woff1-zopfli]",
+        "fonttools[woff2]",
+    ],
+    # for fontTools.sfnt: use zopfli for better WOFF 1.0 compression at the expense of
+    # compression speed. To use zopfli instead of zlib, you also need to set
+    # fontTools.ttLib.sfnt.USE_ZOPFLI to True before compressing a WOFF 1.0 file.
+    "woff1-zopfli": [
+        "zopfli >= 0.1.4",
+    ],
+    # for fontTools.sfnt and fontTools.woff2: to compress/uncompress WOFF 2.0 webfonts.
+    "woff2": [
         "brotli >= 1.0.1; platform_python_implementation == 'CPython'",
         "brotlicffi >= 0.8.0; platform_python_implementation != 'CPython'",
-        "zopfli >= 0.1.4",
     ],
     # for fontTools.unicode and fontTools.unicodedata: to use the latest version
     # of the Unicode Character Database instead of the built-in unicodedata
