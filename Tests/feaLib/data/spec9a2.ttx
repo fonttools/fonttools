@@ -33,7 +33,7 @@
               </MaxCoord>
               <!-- FeatMinMaxCount=0 -->
             </DefaultMinMax>
-            <!-- BaseLangSysCount=1 -->
+            <!-- BaseLangSysCount=2 -->
             <BaseLangSysRecord index="0">
               <BaseLangSysTag value="RUS "/>
               <MinMax>
@@ -42,6 +42,18 @@
                 </MinCoord>
                 <MaxCoord Format="1">
                   <Coordinate value="1000"/>
+                </MaxCoord>
+                <!-- FeatMinMaxCount=0 -->
+              </MinMax>
+            </BaseLangSysRecord>
+            <BaseLangSysRecord index="1">
+              <BaseLangSysTag value="SRB "/>
+              <MinMax>
+                <MinCoord Format="1">
+                  <Coordinate value="-999"/>
+                </MinCoord>
+                <MaxCoord Format="1">
+                  <Coordinate value="999"/>
                 </MaxCoord>
                 <!-- FeatMinMaxCount=0 -->
               </MinMax>

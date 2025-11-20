@@ -767,7 +767,7 @@ class Builder(object):
 
             for c in script[2]:
                 record.BaseScript.BaseValues.BaseCoord.append(self.buildBASECoord(c))
-            for language, min_coord, max_coord in minmax_for_script:
+            for language, min_coord, max_coord in sorted(minmax_for_script):
                 minmax_record = otTables.MinMax()
                 minmax_record.MinCoord = self.buildBASECoord(min_coord)
                 minmax_record.MaxCoord = self.buildBASECoord(max_coord)
