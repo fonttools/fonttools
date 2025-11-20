@@ -12,13 +12,13 @@ safeEval = ast.literal_eval
 
 class Tag(str):
     @staticmethod
-    def transcode(blob):
+    def transcode(blob: object):
         if isinstance(blob, bytes):
             blob = blob.decode("latin-1")
         return blob
 
-    def __new__(self, content):
-        return str.__new__(self, self.transcode(content))
+    def __new__(cls, content: object):
+        return str.__new__(cls, cls.transcode(content))
 
     def __ne__(self, other):
         return not self.__eq__(other)
