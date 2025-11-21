@@ -1323,6 +1323,11 @@ class VariableFontDescriptor(SimpleDescriptor):
         in the document**. The file may or may not exist.
 
         If not specified, the :attr:`name` will be used as a basename for the file.
+
+        .. note::
+            This is intended to be a simple filename (basename or stem) only.
+            Build tools will only use the basename component and ignore any
+            directory separators for security reasons.
         """
         self.axisSubsets: List[
             Union[RangeAxisSubsetDescriptor, ValueAxisSubsetDescriptor]
