@@ -1085,6 +1085,52 @@ Expected to see .ScriptCount==1, instead saw 0""",
             save_before_dump=True,
         )
 
+    def test_varlib_path_traversal_sanitized(self):
+        """Test that path traversal in <variable-font> filename is sanitized.
+
+        Only the basename should be used.
+        """
+        self.temp_dir()
+        ttx_dir = self.get_test_input("master_ttx_interpolatable_ttf")
+        ttf_dir = os.path.join(self.tempdir, "masters")
+        os.makedirs(ttf_dir)
+        for path in self.get_file_list(ttx_dir, ".ttx", "TestFamily-"):
+            self.compile_font(path, ".ttf", ttf_dir)
+
+        # Test path traversal: "../forbidden/evil.ttf" should become "evil.ttf"
+        ds_path = os.path.join(self.tempdir, "test.designspace")
+        with open(ds_path, "w", encoding="utf-8") as f:
+            f.write("""<?xml version='1.0' encoding='UTF-8'?>
+<designspace format="5.0">
+    <axes>
+        <axis tag="wght" name="Weight" minimum="300" maximum="700" default="300"/>
+    </axes>
+    <sources>
+        <source filename="masters/TestFamily-Master0.ttf" name="Light">
+            <location><dimension name="Weight" xvalue="300"/></location>
+        </source>
+        <source filename="masters/TestFamily-Master2.ttf" name="Bold">
+            <location><dimension name="Weight" xvalue="700"/></location>
+        </source>
+    </sources>
+    <variable-fonts>
+        <variable-font name="TestFamily" filename="../forbidden/evil.ttf">
+            <axis-subsets>
+                <axis-subset name="Weight"/>
+            </axis-subsets>
+        </variable-font>
+    </variable-fonts>
+</designspace>""")
+
+        # Run without --output-dir (defaults to designspace directory)
+        varLib_main([ds_path])
+
+        # Verify file is in same directory as designspace and not in ../forbidden/
+        self.assertTrue(os.path.isfile(os.path.join(self.tempdir, "evil.ttf")))
+        self.assertFalse(
+            os.path.exists(os.path.join(self.tempdir, "..", "forbidden", "evil.ttf"))
+        )
+
 
 def test_load_masters_layerName_without_required_font():
     ds = DesignSpaceDocument()
