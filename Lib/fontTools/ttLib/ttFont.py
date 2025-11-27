@@ -1648,7 +1648,7 @@ def sortedTagList(
 def reorderFontTables(
     inFile: BinaryIO,  # Takes file-like object as per original
     outFile: BinaryIO,  # Takes file-like object
-    tableOrder: Sequence[Tag] | None = None,
+    tableOrder: Sequence[str] | None = None,
     checkChecksums: bool = False,  # Keep param even if reader handles it
 ) -> None:
     """Rewrite a font file, ordering the tables as recommended by the
