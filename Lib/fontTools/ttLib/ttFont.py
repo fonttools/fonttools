@@ -371,7 +371,10 @@ class TTFont(object):
         ):
             if reorderTables is False:
                 # sort tables using the original font's order
-                assert self.reader is not None
+                if self.reader is None:
+                    raise TTLibError(
+                        "The original table order is unavailable because there isn't a font to read it from."
+                    )
                 tableOrder = list(self.reader.keys())
             else:
                 # use the recommended order from the OpenType specification
@@ -489,7 +492,10 @@ class TTFont(object):
         if not splitTables:
             writer.newline()
         else:
-            assert writer.filename is not None
+            if writer.filename is None:
+                raise TTLibError(
+                    "splitTables requires the file name to be a file system path, not a stream."
+                )
             path, ext = os.path.splitext(writer.filename)
 
         for tag in tables:
