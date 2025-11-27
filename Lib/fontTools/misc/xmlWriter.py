@@ -40,7 +40,10 @@ class XMLWriter(object):
             fileOrPath = sys.stdout
         self.filename: str | os.PathLike[str] | None
         if not hasattr(fileOrPath, "write"):
-            assert isinstance(fileOrPath, (str, os.PathLike))
+            if not isinstance(fileOrPath, (str, os.PathLike)):
+                raise TypeError(
+                    "fileOrPath must be a file path (str or PathLike) if it isn't an object with a `write` method."
+                )
             self.filename = fileOrPath
             self.file = open(fileOrPath, "wb")
             self._closeStream = True

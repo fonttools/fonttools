@@ -268,7 +268,10 @@ class TTFont(object):
             return
         seekable = True
         if not hasattr(file, "read"):
-            assert isinstance(file, (str, os.PathLike))
+            if not isinstance(file, (str, os.PathLike)):
+                raise TypeError(
+                    "fileOrPath must be a file path (str or PathLike) if it isn't an object with a `read` method."
+                )
             closeStream = True
             # assume file is a string
             if res_name_or_index is not None:
