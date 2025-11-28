@@ -1100,7 +1100,8 @@ Expected to see .ScriptCount==1, instead saw 0""",
         # Test path traversal: "../forbidden/evil.ttf" should become "evil.ttf"
         ds_path = os.path.join(self.tempdir, "test.designspace")
         with open(ds_path, "w", encoding="utf-8") as f:
-            f.write("""<?xml version='1.0' encoding='UTF-8'?>
+            f.write(
+                """<?xml version='1.0' encoding='UTF-8'?>
 <designspace format="5.0">
     <axes>
         <axis tag="wght" name="Weight" minimum="300" maximum="700" default="300"/>
@@ -1120,7 +1121,8 @@ Expected to see .ScriptCount==1, instead saw 0""",
             </axis-subsets>
         </variable-font>
     </variable-fonts>
-</designspace>""")
+</designspace>"""
+            )
 
         # Run without --output-dir (defaults to designspace directory)
         varLib_main([ds_path])
