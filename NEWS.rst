@@ -1,8 +1,7 @@
 - [varLib.main]: **SECURITY** Only use basename(vf.filename) to prevent path traversal attacks when
   running `fonttools varLib` command. Fixes CVE-2025-66034, see:
   https://github.com/fonttools/fonttools/security/advisories/GHSA-768j-98cg-p3fv.
-- [feaLib] Sort BavarLib: only use the basename(vf.filename)
-sLangSysRecords by tag (#3986).
+- [feaLib] Sort BaseLangSysRecords by tag (#3986).
 - Drop support for EOL Python 3.9 (#3982).
 - [instancer] Support --remove-overlaps for fonts with CFF2 table (#3975).
 - [CFF2ToCFF] Add --remove-overlaps option (#3976).
