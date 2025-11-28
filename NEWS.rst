@@ -1,3 +1,6 @@
+4.61.0 (released 2025-11-28)
+----------------------------
+
 - [varLib.main]: **SECURITY** Only use basename(vf.filename) to prevent path traversal attacks when
   running `fonttools varLib` command. Fixes CVE-2025-66034, see:
   https://github.com/fonttools/fonttools/security/advisories/GHSA-768j-98cg-p3fv.
