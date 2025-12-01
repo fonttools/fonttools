@@ -1,3 +1,4 @@
+import weakref
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.feaLib.location import FeatureLibLocation
 from fontTools.misc.encodingTools import getEncoding
@@ -337,76 +338,6 @@ class AnonymousBlock(Statement):
         return res
 
 
-def _upgrade_mixed_subst_statements(statements):
-    # https://github.com/fonttools/fonttools/issues/612
-    # A multiple substitution may have a single destination, in which case
-    # it will look just like a single substitution. So if there are both
-    # multiple and single substitutions, upgrade all the single ones to
-    # multiple substitutions. Similarly, a ligature substitution may have a
-    # single source glyph, so if there are both ligature and single
-    # substitutions, upgrade all the single ones to ligature substitutions.
-
-    has_single = False
-    has_multiple = False
-    has_ligature = False
-    for s in statements:
-        if isinstance(s, SingleSubstStatement):
-            has_single = not any([s.prefix, s.suffix, s.forceChain])
-        elif isinstance(s, MultipleSubstStatement):
-            has_multiple = not any([s.prefix, s.suffix, s.forceChain])
-        elif isinstance(s, LigatureSubstStatement):
-            has_ligature = not any([s.prefix, s.suffix, s.forceChain])
-
-    to_multiple = False
-    to_ligature = False
-
-    # If we have mixed single and multiple substitutions,
-    # upgrade all single substitutions to multiple substitutions.
-    if has_single and has_multiple and not has_ligature:
-        to_multiple = True
-
-    # If we have mixed single and ligature substitutions,
-    # upgrade all single substitutions to ligature substitutions.
-    elif has_single and has_ligature and not has_multiple:
-        to_ligature = True
-
-    if to_multiple or to_ligature:
-        ret = []
-        for s in statements:
-            if isinstance(s, SingleSubstStatement):
-                glyphs = s.glyphs[0].glyphSet()
-                replacements = s.replacements[0].glyphSet()
-                if len(replacements) == 1:
-                    replacements *= len(glyphs)
-                for glyph, replacement in zip(glyphs, replacements):
-                    if to_multiple:
-                        ret.append(
-                            MultipleSubstStatement(
-                                s.prefix,
-                                glyph,
-                                s.suffix,
-                                [replacement],
-                                s.forceChain,
-                                location=s.location,
-                            )
-                        )
-                    elif to_ligature:
-                        ret.append(
-                            LigatureSubstStatement(
-                                s.prefix,
-                                [GlyphName(glyph)],
-                                s.suffix,
-                                replacement,
-                                s.forceChain,
-                                location=s.location,
-                            )
-                        )
-            else:
-                ret.append(s)
-        return ret
-    return statements
-
-
 class Block(Statement):
     """A block of statements: feature, lookup, etc."""
 
@@ -418,8 +349,7 @@ class Block(Statement):
         """When handed a 'builder' object of comparable interface to
         :class:`fontTools.feaLib.builder`, walks the statements in this
         block, calling the builder callbacks."""
-        statements = _upgrade_mixed_subst_statements(self.statements)
-        for s in statements:
+        for s in self.statements:
             s.build(builder)
 
     def asFea(self, indent=""):
@@ -600,7 +530,7 @@ class MarkClass(object):
     def addDefinition(self, definition):
         """Add a :class:`MarkClassDefinition` statement to this mark class."""
         assert isinstance(definition, MarkClassDefinition)
-        self.definitions.append(definition)
+        self.definitions.append(weakref.proxy(definition))
         for glyph in definition.glyphSet():
             if glyph in self.glyphs:
                 otherLoc = self.glyphs[glyph].location
@@ -790,7 +720,7 @@ class ChainContextPosStatement(Statement):
         for i, lookup in enumerate(lookups):
             if lookup:
                 try:
-                    (_ for _ in lookup)
+                    iter(lookup)
                 except TypeError:
                     self.lookups[i] = [lookup]
 
@@ -848,7 +778,7 @@ class ChainContextSubstStatement(Statement):
         for i, lookup in enumerate(lookups):
             if lookup:
                 try:
-                    (_ for _ in lookup)
+                    iter(lookup)
                 except TypeError:
                     self.lookups[i] = [lookup]
 

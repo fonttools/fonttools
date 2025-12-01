@@ -948,7 +948,7 @@ class Pass(object):
         writer.newline()
         writer.begintag("rules")
         writer.newline()
-        for i in range(len(self.actions)):
+        for i, action in enumerate(self.actions):
             writer.begintag(
                 "rule",
                 index=i,
@@ -958,7 +958,7 @@ class Pass(object):
             writer.newline()
             if len(self.ruleConstraints[i]):
                 writecode("constraint", writer, self.ruleConstraints[i])
-            writecode("action", writer, self.actions[i])
+            writecode("action", writer, action)
             writer.endtag("rule")
             writer.newline()
         writer.endtag("rules")

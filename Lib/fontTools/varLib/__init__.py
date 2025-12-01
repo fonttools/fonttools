@@ -30,7 +30,11 @@ from fontTools.misc.fixedTools import floatToFixed as fl2fi
 from fontTools.misc.textTools import Tag, tostr
 from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables._f_v_a_r import Axis, NamedInstance
-from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates, dropImpliedOnCurvePoints
+from fontTools.ttLib.tables._g_l_y_f import (
+    GlyphCoordinates,
+    dropImpliedOnCurvePoints,
+    USE_MY_METRICS,
+)
 from fontTools.ttLib.tables.ttProgram import Program
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools.ttLib.tables import otTables as ot
@@ -109,6 +113,8 @@ def _add_fvar(font, axes, instances: List[InstanceDescriptor]):
         axis.flags = int(a.hidden)
         fvar.axes.append(axis)
 
+    default_coordinates = {axis.axisTag: axis.defaultValue for axis in fvar.axes}
+
     for instance in instances:
         # Filter out discrete axis locations
         coordinates = {
@@ -130,16 +136,26 @@ def _add_fvar(font, axes, instances: List[InstanceDescriptor]):
         psname = instance.postScriptFontName
 
         inst = NamedInstance()
-        inst.subfamilyNameID = nameTable.addMultilingualName(
-            localisedStyleName, mac=macNames
-        )
-        if psname is not None:
-            psname = tostr(psname)
-            inst.postscriptNameID = nameTable.addName(psname, platforms=platforms)
         inst.coordinates = {
             axes[k].tag: axes[k].map_backward(v) for k, v in coordinates.items()
         }
-        # inst.coordinates = {axes[k].tag:v for k,v in coordinates.items()}
+
+        subfamilyNameID = nameTable.findMultilingualName(
+            localisedStyleName, windows=True, mac=macNames
+        )
+        if subfamilyNameID in {2, 17} and inst.coordinates == default_coordinates:
+            # Instances can only reuse an existing name ID 2 or 17 if they are at the
+            # default location across all axes, see:
+            # https://github.com/fonttools/fonttools/issues/3825.
+            inst.subfamilyNameID = subfamilyNameID
+        else:
+            inst.subfamilyNameID = nameTable.addMultilingualName(
+                localisedStyleName, windows=True, mac=macNames, minNameID=256
+            )
+
+        if psname is not None:
+            psname = tostr(psname)
+            inst.postscriptNameID = nameTable.addName(psname, platforms=platforms)
         fvar.instances.append(inst)
 
     assert "fvar" not in font
@@ -475,6 +491,77 @@ def _merge_TTHinting(font, masterModel, master_ttfs):
         cvar = font["cvar"] = newTable("cvar")
         cvar.version = 1
         cvar.variations = variations
+
+
+def _has_inconsistent_use_my_metrics_flag(
+    master_glyf, glyph_name, flagged_components, expected_num_components
+) -> bool:
+    master_glyph = master_glyf.get(glyph_name)
+    # 'sparse' glyph master doesn't contribute. Besides when components don't match
+    # the VF build is going to fail anyway, so be lenient here.
+    if (
+        master_glyph is not None
+        and master_glyph.isComposite()
+        and len(master_glyph.components) == expected_num_components
+    ):
+        for i, base_glyph in flagged_components:
+            comp = master_glyph.components[i]
+            if comp.glyphName != base_glyph:
+                break
+            if not (comp.flags & USE_MY_METRICS):
+                return True
+    return False
+
+
+def _unset_inconsistent_use_my_metrics_flags(vf, master_fonts):
+    """Clear USE_MY_METRICS on composite components if inconsistent across masters.
+
+    If a composite glyph's component has USE_MY_METRICS set differently among
+    the masters, the flag is removed from the variable font's glyf table so that
+    advance widths are not determined by that single component's phantom points.
+    """
+    glyf = vf["glyf"]
+    master_glyfs = [m["glyf"] for m in master_fonts if "glyf" in m]
+    if not master_glyfs:
+        # Should not happen: at least the base master (as copied into vf) has glyf
+        return
+
+    for glyph_name in glyf.keys():
+        glyph = glyf[glyph_name]
+        if not glyph.isComposite():
+            continue
+
+        # collect indices of component(s) that carry the USE_MY_METRICS flag.
+        # This is supposed to be 1 component per composite, but you never know.
+        flagged_components = [
+            (i, comp.glyphName)
+            for i, comp in enumerate(glyph.components)
+            if (comp.flags & USE_MY_METRICS)
+        ]
+        if not flagged_components:
+            # Nothing to fix
+            continue
+
+        # Verify that for all master glyf tables that contribute this glyph, the
+        # corresponding component (same glyphName and index) also carries USE_MY_METRICS
+        # and unset the flag if not.
+        expected_num_components = len(glyph.components)
+        if any(
+            _has_inconsistent_use_my_metrics_flag(
+                master_glyf, glyph_name, flagged_components, expected_num_components
+            )
+            for master_glyf in master_glyfs
+        ):
+            comp_names = [name for _, name in flagged_components]
+            log.info(
+                "Composite glyph '%s' has inconsistent USE_MY_METRICS flags across "
+                "masters; clearing the flag on component%s %s",
+                glyph_name,
+                "s" if len(comp_names) > 1 else "",
+                comp_names if len(comp_names) > 1 else comp_names[0],
+            )
+            for i, _ in flagged_components:
+                glyph.components[i].flags &= ~USE_MY_METRICS
 
 
 _MetricsFields = namedtuple(
@@ -1193,6 +1280,10 @@ def build(
     if "DSIG" in vf:
         del vf["DSIG"]
 
+    # Clear USE_MY_METRICS composite flags if set inconsistently across masters.
+    if "glyf" in vf:
+        _unset_inconsistent_use_my_metrics_flags(vf, master_fonts)
+
     # TODO append masters as named-instances as well; needs .designspace change.
     fvar = _add_fvar(vf, ds.axes, ds.instances)
     if "STAT" not in exclude:
@@ -1471,7 +1562,11 @@ def main(args=None):
         vf_name_to_output_path[vfs_to_build[0].name] = options.outfile
     else:
         for vf in vfs_to_build:
-            filename = vf.filename if vf.filename is not None else vf.name + ".{ext}"
+            if vf.filename is not None:
+                # Only use basename to prevent path traversal attacks
+                filename = os.path.basename(vf.filename)
+            else:
+                filename = vf.name + ".{ext}"
             vf_name_to_output_path[vf.name] = os.path.join(output_dir, filename)
 
     finder = MasterFinder(options.master_finder)

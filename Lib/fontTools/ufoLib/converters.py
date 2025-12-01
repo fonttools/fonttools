@@ -1,3 +1,10 @@
+from __future__ import annotations
+
+from typing import Mapping, Any
+from collections.abc import Container
+
+from fontTools.annotations import KerningNested
+
 """
 Functions for converting UFO1 or UFO2 files into UFO3 format.
 
@@ -9,7 +16,9 @@ or UFO2, and _to_ UFO3.
 # adapted from the UFO spec
 
 
-def convertUFO1OrUFO2KerningToUFO3Kerning(kerning, groups, glyphSet=()):
+def convertUFO1OrUFO2KerningToUFO3Kerning(
+    kerning: KerningNested, groups: dict[str, list[str]], glyphSet: Container[str] = ()
+) -> tuple[KerningNested, dict[str, list[str]], dict[str, dict[str, str]]]:
     """Convert kerning data in UFO1 or UFO2 syntax into UFO3 syntax.
 
     Args:
@@ -40,7 +49,7 @@ def convertUFO1OrUFO2KerningToUFO3Kerning(kerning, groups, glyphSet=()):
                 if not second.startswith("public.kern2."):
                     secondReferencedGroups.add(second)
     # Create new names for these groups.
-    firstRenamedGroups = {}
+    firstRenamedGroups: dict[str, str] = {}
     for first in firstReferencedGroups:
         # Make a list of existing group names.
         existingGroupNames = list(groups.keys()) + list(firstRenamedGroups.keys())
@@ -52,7 +61,7 @@ def convertUFO1OrUFO2KerningToUFO3Kerning(kerning, groups, glyphSet=()):
         newName = makeUniqueGroupName(newName, existingGroupNames)
         # Store for use later.
         firstRenamedGroups[first] = newName
-    secondRenamedGroups = {}
+    secondRenamedGroups: dict[str, str] = {}
     for second in secondReferencedGroups:
         # Make a list of existing group names.
         existingGroupNames = list(groups.keys()) + list(secondRenamedGroups.keys())
@@ -84,7 +93,7 @@ def convertUFO1OrUFO2KerningToUFO3Kerning(kerning, groups, glyphSet=()):
     return newKerning, groups, dict(side1=firstRenamedGroups, side2=secondRenamedGroups)
 
 
-def findKnownKerningGroups(groups):
+def findKnownKerningGroups(groups: Mapping[str, Any]) -> tuple[set[str], set[str]]:
     """Find all kerning groups in a UFO1 or UFO2 font that use known prefixes.
 
     In some cases, not all kerning groups will be referenced
@@ -150,7 +159,7 @@ def findKnownKerningGroups(groups):
     return firstGroups, secondGroups
 
 
-def makeUniqueGroupName(name, groupNames, counter=0):
+def makeUniqueGroupName(name: str, groupNames: list[str], counter: int = 0) -> str:
     """Make a kerning group name that will be unique within the set of group names.
 
     If the requested kerning group name already exists within the set, this

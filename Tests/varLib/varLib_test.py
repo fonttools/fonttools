@@ -175,6 +175,15 @@ class BuildTest(unittest.TestCase):
             expected_ttx_name="Build",
         )
 
+    def test_varlib_build_ttf_reuse_nameid_2(self):
+        """Instances at the default location can reuse name ID 2 or 17."""
+        self._run_varlib_build_test(
+            designspace_name="BuildReuseNameId2",
+            font_name="TestFamily",
+            tables=["fvar"],
+            expected_ttx_name="BuildReuseNameId2",
+        )
+
     def test_varlib_build_no_axes_ttf(self):
         """Designspace file does not contain an <axes> element."""
         ds_path = self.get_test_input("InterpolateLayout3.designspace")
@@ -1066,6 +1075,63 @@ Expected to see .ScriptCount==1, instead saw 0""",
         expected_ttx_path = self.get_test_output("FeatureVars.ttx")
         self.expect_ttx(varfont, expected_ttx_path, tables)
         self.check_ttx_dump(varfont, expected_ttx_path, tables, ".ttf")
+
+    def test_varlib_build_inconsistent_use_my_metrics_flags(self):
+        self._run_varlib_build_test(
+            designspace_name="InconsistentUseMyMetrics",
+            font_name="InconsistentUseMyMetrics",
+            tables=["GlyphOrder", "hmtx", "glyf", "fvar", "HVAR"],
+            expected_ttx_name="InconsistentUseMyMetrics-VF",
+            save_before_dump=True,
+        )
+
+    def test_varlib_path_traversal_sanitized(self):
+        """Test that path traversal in <variable-font> filename is sanitized.
+
+        Only the basename should be used.
+        """
+        self.temp_dir()
+        ttx_dir = self.get_test_input("master_ttx_interpolatable_ttf")
+        ttf_dir = os.path.join(self.tempdir, "masters")
+        os.makedirs(ttf_dir)
+        for path in self.get_file_list(ttx_dir, ".ttx", "TestFamily-"):
+            self.compile_font(path, ".ttf", ttf_dir)
+
+        # Test path traversal: "../forbidden/evil.ttf" should become "evil.ttf"
+        ds_path = os.path.join(self.tempdir, "test.designspace")
+        with open(ds_path, "w", encoding="utf-8") as f:
+            f.write(
+                """<?xml version='1.0' encoding='UTF-8'?>
+<designspace format="5.0">
+    <axes>
+        <axis tag="wght" name="Weight" minimum="300" maximum="700" default="300"/>
+    </axes>
+    <sources>
+        <source filename="masters/TestFamily-Master0.ttf" name="Light">
+            <location><dimension name="Weight" xvalue="300"/></location>
+        </source>
+        <source filename="masters/TestFamily-Master2.ttf" name="Bold">
+            <location><dimension name="Weight" xvalue="700"/></location>
+        </source>
+    </sources>
+    <variable-fonts>
+        <variable-font name="TestFamily" filename="../forbidden/evil.ttf">
+            <axis-subsets>
+                <axis-subset name="Weight"/>
+            </axis-subsets>
+        </variable-font>
+    </variable-fonts>
+</designspace>"""
+            )
+
+        # Run without --output-dir (defaults to designspace directory)
+        varLib_main([ds_path])
+
+        # Verify file is in same directory as designspace and not in ../forbidden/
+        self.assertTrue(os.path.isfile(os.path.join(self.tempdir, "evil.ttf")))
+        self.assertFalse(
+            os.path.exists(os.path.join(self.tempdir, "..", "forbidden", "evil.ttf"))
+        )
 
 
 def test_load_masters_layerName_without_required_font():

@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 from fontTools.pens.basePen import AbstractPen, DecomposingPen
-from fontTools.pens.pointPen import AbstractPointPen, DecomposingPointPen
+from fontTools.pens.pointPen import (
+    AbstractPointPen,
+    DecomposingPointPen,
+    ReverseFlipped,
+)
 from fontTools.pens.recordingPen import RecordingPen
 
 
@@ -155,26 +159,61 @@ class FilterPointPen(_PassThruComponentsMixin, AbstractPointPen):
     def __init__(self, outPen):
         self._outPen = outPen
 
-    def beginPath(self, **kwargs):
+    def beginPath(self, identifier=None, **kwargs):
+        kwargs = dict(kwargs)
+        if identifier is not None:
+            kwargs["identifier"] = identifier
         self._outPen.beginPath(**kwargs)
 
     def endPath(self):
         self._outPen.endPath()
 
-    def addPoint(self, pt, segmentType=None, smooth=False, name=None, **kwargs):
+    def addPoint(
+        self,
+        pt,
+        segmentType=None,
+        smooth=False,
+        name=None,
+        identifier=None,
+        **kwargs,
+    ):
+        kwargs = dict(kwargs)
+        if identifier is not None:
+            kwargs["identifier"] = identifier
         self._outPen.addPoint(pt, segmentType, smooth, name, **kwargs)
 
 
-class _DecomposingFilterPenMixin:
-    """Mixin class that decomposes components as regular contours.
+class _DecomposingFilterMixinBase:
+    """Base mixin class with common `addComponent` logic for decomposing filter pens."""
 
-    Shared by both DecomposingFilterPen and DecomposingFilterPointPen.
+    def addComponent(self, baseGlyphName, transformation, **kwargs):
+        # only decompose the component if it's included in the set
+        if self.include is None or baseGlyphName in self.include:
+            # if we're decomposing nested components, temporarily set include to None
+            include_bak = self.include
+            if self.decomposeNested and self.include:
+                self.include = None
+            try:
+                super().addComponent(baseGlyphName, transformation, **kwargs)
+            finally:
+                if self.include != include_bak:
+                    self.include = include_bak
+        else:
+            _PassThruComponentsMixin.addComponent(
+                self, baseGlyphName, transformation, **kwargs
+            )
 
-    Takes two required parameters, another (segment or point) pen 'outPen' to draw
+
+class _DecomposingFilterPenMixin(_DecomposingFilterMixinBase):
+    """Mixin class that decomposes components as regular contours for segment pens.
+
+    Used by DecomposingFilterPen.
+
+    Takes two required parameters, another segment pen 'outPen' to draw
     with, and a 'glyphSet' dict of drawable glyph objects to draw components from.
 
     The 'skipMissingComponents' and 'reverseFlipped' optional arguments work the
-    same as in the DecomposingPen/DecomposingPointPen. Both are False by default.
+    same as in the DecomposingPen. reverseFlipped is bool only (True/False).
 
     In addition, the decomposing filter pens also take the following two options:
 
@@ -196,35 +235,69 @@ class _DecomposingFilterPenMixin:
         outPen,
         glyphSet,
         skipMissingComponents=None,
-        reverseFlipped=False,
+        reverseFlipped: bool = False,
         include: set[str] | None = None,
         decomposeNested: bool = True,
+        **kwargs,
+    ):
+        assert isinstance(
+            reverseFlipped, bool
+        ), f"Expected bool, got {type(reverseFlipped).__name__}"
+        super().__init__(
+            outPen=outPen,
+            glyphSet=glyphSet,
+            skipMissingComponents=skipMissingComponents,
+            reverseFlipped=reverseFlipped,
+            **kwargs,
+        )
+        self.include = include
+        self.decomposeNested = decomposeNested
+
+
+class _DecomposingFilterPointPenMixin(_DecomposingFilterMixinBase):
+    """Mixin class that decomposes components as regular contours for point pens.
+
+    Takes two required parameters, another point pen 'outPen' to draw
+    with, and a 'glyphSet' dict of drawable glyph objects to draw components from.
+
+    The 'skipMissingComponents' and 'reverseFlipped' optional arguments work the
+    same as in the DecomposingPointPen. reverseFlipped accepts bool | ReverseFlipped
+    (see DecomposingPointPen).
+
+    In addition, the decomposing filter pens also take the following two options:
+
+    'include' is an optional set of component base glyph names to consider for
+    decomposition; the default include=None means decompose all components no matter
+    the base glyph name).
+
+    'decomposeNested' (bool) controls whether to recurse decomposition into nested
+    components of components (this only matters when 'include' was also provided);
+    if False, only decompose top-level components included in the set, but not
+    also their children.
+    """
+
+    # raises MissingComponentError if base glyph is not found in glyphSet
+    skipMissingComponents = False
+
+    def __init__(
+        self,
+        outPen,
+        glyphSet,
+        skipMissingComponents=None,
+        reverseFlipped: bool | ReverseFlipped = False,
+        include: set[str] | None = None,
+        decomposeNested: bool = True,
+        **kwargs,
     ):
         super().__init__(
             outPen=outPen,
             glyphSet=glyphSet,
             skipMissingComponents=skipMissingComponents,
             reverseFlipped=reverseFlipped,
+            **kwargs,
         )
         self.include = include
         self.decomposeNested = decomposeNested
-
-    def addComponent(self, baseGlyphName, transformation, **kwargs):
-        # only decompose the component if it's included in the set
-        if self.include is None or baseGlyphName in self.include:
-            # if we're decomposing nested components, temporarily set include to None
-            include_bak = self.include
-            if self.decomposeNested and self.include:
-                self.include = None
-            try:
-                super().addComponent(baseGlyphName, transformation, **kwargs)
-            finally:
-                if self.include != include_bak:
-                    self.include = include_bak
-        else:
-            _PassThruComponentsMixin.addComponent(
-                self, baseGlyphName, transformation, **kwargs
-            )
 
 
 class DecomposingFilterPen(_DecomposingFilterPenMixin, DecomposingPen, FilterPen):
@@ -234,8 +307,127 @@ class DecomposingFilterPen(_DecomposingFilterPenMixin, DecomposingPen, FilterPen
 
 
 class DecomposingFilterPointPen(
-    _DecomposingFilterPenMixin, DecomposingPointPen, FilterPointPen
+    _DecomposingFilterPointPenMixin, DecomposingPointPen, FilterPointPen
 ):
     """Filter point pen that draws components as regular contours."""
 
     pass
+
+
+class ContourFilterPointPen(_PassThruComponentsMixin, AbstractPointPen):
+    """A "buffered" filter point pen that accumulates contour data, passes
+    it through a ``filterContour`` method when the contour is closed or ended,
+    and finally draws the result with the output point pen.
+
+    Components are passed through unchanged.
+
+    The ``filterContour`` method can modify the contour in-place (return None)
+    or return a new contour to replace it.
+    """
+
+    def __init__(self, outPen):
+        self._outPen = outPen
+        self.currentContour = None
+        self.currentContourKwargs = None
+
+    def beginPath(self, identifier=None, **kwargs):
+        if self.currentContour is not None:
+            raise ValueError("Path already begun")
+        kwargs = dict(kwargs)
+        if identifier is not None:
+            kwargs["identifier"] = identifier
+        self.currentContour = []
+        self.currentContourKwargs = kwargs
+
+    def endPath(self):
+        if self.currentContour is None:
+            raise ValueError("Path not begun")
+        self._flushContour()
+        self.currentContour = None
+        self.currentContourKwargs = None
+
+    def _flushContour(self):
+        """Flush the current contour to the output pen."""
+        result = self.filterContour(self.currentContour)
+        if result is not None:
+            self.currentContour = result
+
+        # Draw the filtered contour
+        self._outPen.beginPath(**self.currentContourKwargs)
+        for pt, segmentType, smooth, name, kwargs in self.currentContour:
+            self._outPen.addPoint(pt, segmentType, smooth, name, **kwargs)
+        self._outPen.endPath()
+
+    def filterContour(self, contour):
+        """Subclasses must override this to perform the filtering.
+
+        The contour is a list of (pt, segmentType, smooth, name, kwargs) tuples.
+        If the method doesn't return a value (i.e. returns None), it's
+        assumed that the contour was modified in-place.
+        Otherwise, the return value replaces the original contour.
+        """
+        return  # or return contour
+
+    def addPoint(
+        self,
+        pt,
+        segmentType=None,
+        smooth=False,
+        name=None,
+        identifier=None,
+        **kwargs,
+    ):
+        if self.currentContour is None:
+            raise ValueError("Path not begun")
+        kwargs = dict(kwargs)
+        if identifier is not None:
+            kwargs["identifier"] = identifier
+        self.currentContour.append((pt, segmentType, smooth, name, kwargs))
+
+
+class OnCurveFirstPointPen(ContourFilterPointPen):
+    """Filter point pen that ensures closed contours start with an on-curve point.
+
+    If a closed contour starts with an off-curve point (segmentType=None), it rotates
+    the points list so that the first on-curve point (segmentType != None) becomes
+    the start point. Open contours and contours already starting with on-curve points
+    are passed through unchanged.
+
+    >>> from fontTools.pens.recordingPen import RecordingPointPen
+    >>> rec = RecordingPointPen()
+    >>> pen = OnCurveFirstPointPen(rec)
+    >>> # Closed contour starting with off-curve - will be rotated
+    >>> pen.beginPath()
+    >>> pen.addPoint((0, 0), None)  # off-curve
+    >>> pen.addPoint((100, 100), "line")  # on-curve - will become start
+    >>> pen.addPoint((200, 0), None)  # off-curve
+    >>> pen.addPoint((300, 100), "curve")  # on-curve
+    >>> pen.endPath()
+    >>> # The contour should now start with (100, 100) "line"
+    >>> rec.value[0]
+    ('beginPath', (), {})
+    >>> rec.value[1]
+    ('addPoint', ((100, 100), 'line', False, None), {})
+    >>> rec.value[2]
+    ('addPoint', ((200, 0), None, False, None), {})
+    >>> rec.value[3]
+    ('addPoint', ((300, 100), 'curve', False, None), {})
+    >>> rec.value[4]
+    ('addPoint', ((0, 0), None, False, None), {})
+    """
+
+    def filterContour(self, contour):
+        """Rotate closed contour to start with first on-curve point if needed."""
+        if not contour:
+            return
+
+        # Check if it's a closed contour (no "move" segmentType)
+        is_closed = contour[0][1] != "move"
+
+        if is_closed and contour[0][1] is None:
+            # Closed contour starting with off-curve - need to rotate
+            # Find the first on-curve point
+            for i, (pt, segmentType, smooth, name, kwargs) in enumerate(contour):
+                if segmentType is not None:
+                    # Rotate the points list so it starts with the first on-curve point
+                    return contour[i:] + contour[:i]

@@ -196,7 +196,7 @@ def main(args=None):
 
     if len(fontfiles) < 1:
         print(
-            "usage: pyftmerge [font1 ... fontN] [--input-file=filelist.txt] [--output-file=merged.ttf] [--import-file=tables.ttx]",
+            "usage: fonttools merge [font1 ... fontN] [--input-file=filelist.txt] [--output-file=merged.ttf] [--import-file=tables.ttx]",
             file=sys.stderr,
         )
         print(

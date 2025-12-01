@@ -1,16 +1,11 @@
-from fontTools.ufoLib import UFOReader, UFOWriter, UFOFileStructure
-from fontTools.ufoLib.errors import UFOLibError, GlifLibError
-from fontTools.misc import plistlib
-from fontTools.misc.textTools import tostr
-import sys
 import os
-import fs.osfs
-import fs.tempfs
-import fs.memoryfs
-import fs.copy
-import pytest
-import warnings
+import sys
 
+import pytest
+
+from fontTools.misc import filesystem as fs
+from fontTools.misc.textTools import tostr
+from fontTools.ufoLib import UFOFileStructure, UFOReader, UFOWriter, haveFS
 
 TESTDATA = fs.osfs.OSFS(os.path.join(os.path.dirname(__file__), "testdata"))
 TEST_UFO3 = "TestFont1 (UFO3).ufo"
@@ -40,6 +35,27 @@ class TestUFOZ:
         with UFOReader(testufoz) as reader:
             assert reader.fileStructure == UFOFileStructure.ZIP
             assert reader.formatVersion == 3
+            gs = reader.getGlyphSet()
+            a = gs.getGLIF("a").decode("utf-8")
+            assert a.splitlines() == [
+                '<?xml version="1.0" encoding="UTF-8"?>',
+                '<glyph name="a" format="2">',
+                '  <advance height="750" width="388"/>',
+                '  <unicode hex="0061"/>',
+                "  <outline>",
+                "    <contour>",
+                '      <point x="66" y="0" type="line"/>',
+                '      <point x="322" y="0" type="line"/>',
+                '      <point x="194" y="510" type="line"/>',
+                "    </contour>",
+                "  </outline>",
+                "</glyph>",
+            ]
+
+    def test_getFileModificationTime(self, testufoz):
+        with UFOReader(testufoz) as reader:
+            modified = reader.getFileModificationTime("metainfo.plist")
+            assert isinstance(modified, float)
 
     def test_write(self, testufoz):
         with UFOWriter(testufoz, structure="zip") as writer:
@@ -73,19 +89,24 @@ def test_path_attribute_deprecated(testufo):
 
 @pytest.fixture
 def memufo():
+    fs = pytest.importorskip("fs")
     m = fs.memoryfs.MemoryFS()
     fs.copy.copy_dir(TESTDATA, TEST_UFO3, m, "/")
     return m
 
 
+@pytest.mark.skipif(not haveFS, reason="requires fs")
 class TestMemoryFS:
     def test_init_reader(self, memufo):
         with UFOReader(memufo) as reader:
             assert reader.formatVersion == 3
             assert reader.fileStructure == UFOFileStructure.PACKAGE
+        assert not memufo.isclosed()
 
     def test_init_writer(self):
+        fs = pytest.importorskip("fs")
         m = fs.memoryfs.MemoryFS()
         with UFOWriter(m) as writer:
             assert m.exists("metainfo.plist")
             assert writer._path == "<memfs>"
+        assert not m.isclosed()

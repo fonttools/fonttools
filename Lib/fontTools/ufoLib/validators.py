@@ -1,20 +1,25 @@
 """Various low level data validators."""
 
-import calendar
-from io import open
-import fs.base
-import fs.osfs
+from __future__ import annotations
 
-from collections.abc import Mapping
+import calendar
+from collections.abc import Mapping, Sequence
+from io import open
+
+import fontTools.misc.filesystem as fs
+from typing import Any, Type, Optional, Union
+
+from fontTools.annotations import IntFloat
 from fontTools.ufoLib.utils import numberTypes
 
+GenericDict = dict[str, tuple[Union[type, tuple[Type[Any], ...]], bool]]
 
 # -------
 # Generic
 # -------
 
 
-def isDictEnough(value):
+def isDictEnough(value: Any) -> bool:
     """
     Some objects will likely come in that aren't
     dicts but are dict-ish enough.
@@ -27,14 +32,14 @@ def isDictEnough(value):
     return True
 
 
-def genericTypeValidator(value, typ):
+def genericTypeValidator(value: Any, typ: Type[Any]) -> bool:
     """
     Generic. (Added at version 2.)
     """
     return isinstance(value, typ)
 
 
-def genericIntListValidator(values, validValues):
+def genericIntListValidator(values: Any, validValues: Sequence[int]) -> bool:
     """
     Generic. (Added at version 2.)
     """
@@ -50,7 +55,7 @@ def genericIntListValidator(values, validValues):
     return True
 
 
-def genericNonNegativeIntValidator(value):
+def genericNonNegativeIntValidator(value: Any) -> bool:
     """
     Generic. (Added at version 3.)
     """
@@ -61,7 +66,7 @@ def genericNonNegativeIntValidator(value):
     return True
 
 
-def genericNonNegativeNumberValidator(value):
+def genericNonNegativeNumberValidator(value: Any) -> bool:
     """
     Generic. (Added at version 3.)
     """
@@ -72,7 +77,7 @@ def genericNonNegativeNumberValidator(value):
     return True
 
 
-def genericDictValidator(value, prototype):
+def genericDictValidator(value: Any, prototype: GenericDict) -> bool:
     """
     Generic. (Added at version 3.)
     """
@@ -106,7 +111,7 @@ def genericDictValidator(value, prototype):
 # Data Validators
 
 
-def fontInfoStyleMapStyleNameValidator(value):
+def fontInfoStyleMapStyleNameValidator(value: Any) -> bool:
     """
     Version 2+.
     """
@@ -114,7 +119,7 @@ def fontInfoStyleMapStyleNameValidator(value):
     return value in options
 
 
-def fontInfoOpenTypeGaspRangeRecordsValidator(value):
+def fontInfoOpenTypeGaspRangeRecordsValidator(value: Any) -> bool:
     """
     Version 3+.
     """
@@ -123,7 +128,9 @@ def fontInfoOpenTypeGaspRangeRecordsValidator(value):
     if len(value) == 0:
         return True
     validBehaviors = [0, 1, 2, 3]
-    dictPrototype = dict(rangeMaxPPEM=(int, True), rangeGaspBehavior=(list, True))
+    dictPrototype: GenericDict = dict(
+        rangeMaxPPEM=(int, True), rangeGaspBehavior=(list, True)
+    )
     ppemOrder = []
     for rangeRecord in value:
         if not genericDictValidator(rangeRecord, dictPrototype):
@@ -142,7 +149,7 @@ def fontInfoOpenTypeGaspRangeRecordsValidator(value):
     return True
 
 
-def fontInfoOpenTypeHeadCreatedValidator(value):
+def fontInfoOpenTypeHeadCreatedValidator(value: Any) -> bool:
     """
     Version 2+.
     """
@@ -154,61 +161,61 @@ def fontInfoOpenTypeHeadCreatedValidator(value):
         return False
     if value.count(" ") != 1:
         return False
-    date, time = value.split(" ")
-    if date.count("/") != 2:
+    strDate, strTime = value.split(" ")
+    if strDate.count("/") != 2:
         return False
-    if time.count(":") != 2:
+    if strTime.count(":") != 2:
         return False
     # date
-    year, month, day = date.split("/")
-    if len(year) != 4:
+    strYear, strMonth, strDay = strDate.split("/")
+    if len(strYear) != 4:
         return False
-    if len(month) != 2:
+    if len(strMonth) != 2:
         return False
-    if len(day) != 2:
+    if len(strDay) != 2:
         return False
     try:
-        year = int(year)
-        month = int(month)
-        day = int(day)
+        intYear = int(strYear)
+        intMonth = int(strMonth)
+        intDay = int(strDay)
     except ValueError:
         return False
-    if month < 1 or month > 12:
+    if intMonth < 1 or intMonth > 12:
         return False
-    monthMaxDay = calendar.monthrange(year, month)[1]
-    if day < 1 or day > monthMaxDay:
+    monthMaxDay = calendar.monthrange(intYear, intMonth)[1]
+    if intDay < 1 or intDay > monthMaxDay:
         return False
     # time
-    hour, minute, second = time.split(":")
-    if len(hour) != 2:
+    strHour, strMinute, strSecond = strTime.split(":")
+    if len(strHour) != 2:
         return False
-    if len(minute) != 2:
+    if len(strMinute) != 2:
         return False
-    if len(second) != 2:
+    if len(strSecond) != 2:
         return False
     try:
-        hour = int(hour)
-        minute = int(minute)
-        second = int(second)
+        intHour = int(strHour)
+        intMinute = int(strMinute)
+        intSecond = int(strSecond)
     except ValueError:
         return False
-    if hour < 0 or hour > 23:
+    if intHour < 0 or intHour > 23:
         return False
-    if minute < 0 or minute > 59:
+    if intMinute < 0 or intMinute > 59:
         return False
-    if second < 0 or second > 59:
+    if intSecond < 0 or intSecond > 59:
         return False
     # fallback
     return True
 
 
-def fontInfoOpenTypeNameRecordsValidator(value):
+def fontInfoOpenTypeNameRecordsValidator(value: Any) -> bool:
     """
     Version 3+.
     """
     if not isinstance(value, list):
         return False
-    dictPrototype = dict(
+    dictPrototype: GenericDict = dict(
         nameID=(int, True),
         platformID=(int, True),
         encodingID=(int, True),
@@ -221,7 +228,7 @@ def fontInfoOpenTypeNameRecordsValidator(value):
     return True
 
 
-def fontInfoOpenTypeOS2WeightClassValidator(value):
+def fontInfoOpenTypeOS2WeightClassValidator(value: Any) -> bool:
     """
     Version 2+.
     """
@@ -232,7 +239,7 @@ def fontInfoOpenTypeOS2WeightClassValidator(value):
     return True
 
 
-def fontInfoOpenTypeOS2WidthClassValidator(value):
+def fontInfoOpenTypeOS2WidthClassValidator(value: Any) -> bool:
     """
     Version 2+.
     """
@@ -245,7 +252,7 @@ def fontInfoOpenTypeOS2WidthClassValidator(value):
     return True
 
 
-def fontInfoVersion2OpenTypeOS2PanoseValidator(values):
+def fontInfoVersion2OpenTypeOS2PanoseValidator(values: Any) -> bool:
     """
     Version 2.
     """
@@ -260,7 +267,7 @@ def fontInfoVersion2OpenTypeOS2PanoseValidator(values):
     return True
 
 
-def fontInfoVersion3OpenTypeOS2PanoseValidator(values):
+def fontInfoVersion3OpenTypeOS2PanoseValidator(values: Any) -> bool:
     """
     Version 3+.
     """
@@ -277,7 +284,7 @@ def fontInfoVersion3OpenTypeOS2PanoseValidator(values):
     return True
 
 
-def fontInfoOpenTypeOS2FamilyClassValidator(values):
+def fontInfoOpenTypeOS2FamilyClassValidator(values: Any) -> bool:
     """
     Version 2+.
     """
@@ -296,7 +303,7 @@ def fontInfoOpenTypeOS2FamilyClassValidator(values):
     return True
 
 
-def fontInfoPostscriptBluesValidator(values):
+def fontInfoPostscriptBluesValidator(values: Any) -> bool:
     """
     Version 2+.
     """
@@ -312,7 +319,7 @@ def fontInfoPostscriptBluesValidator(values):
     return True
 
 
-def fontInfoPostscriptOtherBluesValidator(values):
+def fontInfoPostscriptOtherBluesValidator(values: Any) -> bool:
     """
     Version 2+.
     """
@@ -328,7 +335,7 @@ def fontInfoPostscriptOtherBluesValidator(values):
     return True
 
 
-def fontInfoPostscriptStemsValidator(values):
+def fontInfoPostscriptStemsValidator(values: Any) -> bool:
     """
     Version 2+.
     """
@@ -342,7 +349,7 @@ def fontInfoPostscriptStemsValidator(values):
     return True
 
 
-def fontInfoPostscriptWindowsCharacterSetValidator(value):
+def fontInfoPostscriptWindowsCharacterSetValidator(value: Any) -> bool:
     """
     Version 2+.
     """
@@ -352,21 +359,21 @@ def fontInfoPostscriptWindowsCharacterSetValidator(value):
     return True
 
 
-def fontInfoWOFFMetadataUniqueIDValidator(value):
+def fontInfoWOFFMetadataUniqueIDValidator(value: Any) -> bool:
     """
     Version 3+.
     """
-    dictPrototype = dict(id=(str, True))
+    dictPrototype: GenericDict = dict(id=(str, True))
     if not genericDictValidator(value, dictPrototype):
         return False
     return True
 
 
-def fontInfoWOFFMetadataVendorValidator(value):
+def fontInfoWOFFMetadataVendorValidator(value: Any) -> bool:
     """
     Version 3+.
     """
-    dictPrototype = {
+    dictPrototype: GenericDict = {
         "name": (str, True),
         "url": (str, False),
         "dir": (str, False),
@@ -379,11 +386,11 @@ def fontInfoWOFFMetadataVendorValidator(value):
     return True
 
 
-def fontInfoWOFFMetadataCreditsValidator(value):
+def fontInfoWOFFMetadataCreditsValidator(value: Any) -> bool:
     """
     Version 3+.
     """
-    dictPrototype = dict(credits=(list, True))
+    dictPrototype: GenericDict = dict(credits=(list, True))
     if not genericDictValidator(value, dictPrototype):
         return False
     if not len(value["credits"]):
@@ -403,11 +410,11 @@ def fontInfoWOFFMetadataCreditsValidator(value):
     return True
 
 
-def fontInfoWOFFMetadataDescriptionValidator(value):
+def fontInfoWOFFMetadataDescriptionValidator(value: Any) -> bool:
     """
     Version 3+.
     """
-    dictPrototype = dict(url=(str, False), text=(list, True))
+    dictPrototype: GenericDict = dict(url=(str, False), text=(list, True))
     if not genericDictValidator(value, dictPrototype):
         return False
     for text in value["text"]:
@@ -416,11 +423,13 @@ def fontInfoWOFFMetadataDescriptionValidator(value):
     return True
 
 
-def fontInfoWOFFMetadataLicenseValidator(value):
+def fontInfoWOFFMetadataLicenseValidator(value: Any) -> bool:
     """
     Version 3+.
     """
-    dictPrototype = dict(url=(str, False), text=(list, False), id=(str, False))
+    dictPrototype: GenericDict = dict(
+        url=(str, False), text=(list, False), id=(str, False)
+    )
     if not genericDictValidator(value, dictPrototype):
         return False
     if "text" in value:
@@ -430,11 +439,11 @@ def fontInfoWOFFMetadataLicenseValidator(value):
     return True
 
 
-def fontInfoWOFFMetadataTrademarkValidator(value):
+def fontInfoWOFFMetadataTrademarkValidator(value: Any) -> bool:
     """
     Version 3+.
     """
-    dictPrototype = dict(text=(list, True))
+    dictPrototype: GenericDict = dict(text=(list, True))
     if not genericDictValidator(value, dictPrototype):
         return False
     for text in value["text"]:
@@ -443,11 +452,11 @@ def fontInfoWOFFMetadataTrademarkValidator(value):
     return True
 
 
-def fontInfoWOFFMetadataCopyrightValidator(value):
+def fontInfoWOFFMetadataCopyrightValidator(value: Any) -> bool:
     """
     Version 3+.
     """
-    dictPrototype = dict(text=(list, True))
+    dictPrototype: GenericDict = dict(text=(list, True))
     if not genericDictValidator(value, dictPrototype):
         return False
     for text in value["text"]:
@@ -456,11 +465,15 @@ def fontInfoWOFFMetadataCopyrightValidator(value):
     return True
 
 
-def fontInfoWOFFMetadataLicenseeValidator(value):
+def fontInfoWOFFMetadataLicenseeValidator(value: Any) -> bool:
     """
     Version 3+.
     """
-    dictPrototype = {"name": (str, True), "dir": (str, False), "class": (str, False)}
+    dictPrototype: GenericDict = {
+        "name": (str, True),
+        "dir": (str, False),
+        "class": (str, False),
+    }
     if not genericDictValidator(value, dictPrototype):
         return False
     if "dir" in value and value.get("dir") not in ("ltr", "rtl"):
@@ -468,11 +481,11 @@ def fontInfoWOFFMetadataLicenseeValidator(value):
     return True
 
 
-def fontInfoWOFFMetadataTextValue(value):
+def fontInfoWOFFMetadataTextValue(value: Any) -> bool:
     """
     Version 3+.
     """
-    dictPrototype = {
+    dictPrototype: GenericDict = {
         "text": (str, True),
         "language": (str, False),
         "dir": (str, False),
@@ -485,7 +498,7 @@ def fontInfoWOFFMetadataTextValue(value):
     return True
 
 
-def fontInfoWOFFMetadataExtensionsValidator(value):
+def fontInfoWOFFMetadataExtensionsValidator(value: Any) -> bool:
     """
     Version 3+.
     """
@@ -499,11 +512,13 @@ def fontInfoWOFFMetadataExtensionsValidator(value):
     return True
 
 
-def fontInfoWOFFMetadataExtensionValidator(value):
+def fontInfoWOFFMetadataExtensionValidator(value: Any) -> bool:
     """
     Version 3+.
     """
-    dictPrototype = dict(names=(list, False), items=(list, True), id=(str, False))
+    dictPrototype: GenericDict = dict(
+        names=(list, False), items=(list, True), id=(str, False)
+    )
     if not genericDictValidator(value, dictPrototype):
         return False
     if "names" in value:
@@ -516,11 +531,13 @@ def fontInfoWOFFMetadataExtensionValidator(value):
     return True
 
 
-def fontInfoWOFFMetadataExtensionItemValidator(value):
+def fontInfoWOFFMetadataExtensionItemValidator(value: Any) -> bool:
     """
     Version 3+.
     """
-    dictPrototype = dict(id=(str, False), names=(list, True), values=(list, True))
+    dictPrototype: GenericDict = dict(
+        id=(str, False), names=(list, True), values=(list, True)
+    )
     if not genericDictValidator(value, dictPrototype):
         return False
     for name in value["names"]:
@@ -532,11 +549,11 @@ def fontInfoWOFFMetadataExtensionItemValidator(value):
     return True
 
 
-def fontInfoWOFFMetadataExtensionNameValidator(value):
+def fontInfoWOFFMetadataExtensionNameValidator(value: Any) -> bool:
     """
     Version 3+.
     """
-    dictPrototype = {
+    dictPrototype: GenericDict = {
         "text": (str, True),
         "language": (str, False),
         "dir": (str, False),
@@ -549,11 +566,11 @@ def fontInfoWOFFMetadataExtensionNameValidator(value):
     return True
 
 
-def fontInfoWOFFMetadataExtensionValueValidator(value):
+def fontInfoWOFFMetadataExtensionValueValidator(value: Any) -> bool:
     """
     Version 3+.
     """
-    dictPrototype = {
+    dictPrototype: GenericDict = {
         "text": (str, True),
         "language": (str, False),
         "dir": (str, False),
@@ -571,7 +588,7 @@ def fontInfoWOFFMetadataExtensionValueValidator(value):
 # ----------
 
 
-def guidelinesValidator(value, identifiers=None):
+def guidelinesValidator(value: Any, identifiers: Optional[set[str]] = None) -> bool:
     """
     Version 3+.
     """
@@ -590,7 +607,7 @@ def guidelinesValidator(value, identifiers=None):
     return True
 
 
-_guidelineDictPrototype = dict(
+_guidelineDictPrototype: GenericDict = dict(
     x=((int, float), False),
     y=((int, float), False),
     angle=((int, float), False),
@@ -600,7 +617,7 @@ _guidelineDictPrototype = dict(
 )
 
 
-def guidelineValidator(value):
+def guidelineValidator(value: Any) -> bool:
     """
     Version 3+.
     """
@@ -641,7 +658,7 @@ def guidelineValidator(value):
 # -------
 
 
-def anchorsValidator(value, identifiers=None):
+def anchorsValidator(value: Any, identifiers: Optional[set[str]] = None) -> bool:
     """
     Version 3+.
     """
@@ -660,7 +677,7 @@ def anchorsValidator(value, identifiers=None):
     return True
 
 
-_anchorDictPrototype = dict(
+_anchorDictPrototype: GenericDict = dict(
     x=((int, float), False),
     y=((int, float), False),
     name=(str, False),
@@ -669,7 +686,7 @@ _anchorDictPrototype = dict(
 )
 
 
-def anchorValidator(value):
+def anchorValidator(value: Any) -> bool:
     """
     Version 3+.
     """
@@ -696,7 +713,7 @@ def anchorValidator(value):
 # ----------
 
 
-def identifierValidator(value):
+def identifierValidator(value: Any) -> bool:
     """
     Version 3+.
 
@@ -716,8 +733,8 @@ def identifierValidator(value):
     if len(value) > 100:
         return False
     for c in value:
-        c = ord(c)
-        if c < validCharactersMin or c > validCharactersMax:
+        i = ord(c)
+        if i < validCharactersMin or i > validCharactersMax:
             return False
     return True
 
@@ -727,7 +744,7 @@ def identifierValidator(value):
 # -----
 
 
-def colorValidator(value):
+def colorValidator(value: Any) -> bool:
     """
     Version 3+.
 
@@ -778,22 +795,21 @@ def colorValidator(value):
     for part in parts:
         part = part.strip()
         converted = False
+        number: IntFloat
         try:
-            part = int(part)
+            number = int(part)
             converted = True
         except ValueError:
             pass
         if not converted:
             try:
-                part = float(part)
+                number = float(part)
                 converted = True
             except ValueError:
                 pass
         if not converted:
             return False
-        if part < 0:
-            return False
-        if part > 1:
+        if not 0 <= number <= 1:
             return False
     return True
 
@@ -802,9 +818,9 @@ def colorValidator(value):
 # image
 # -----
 
-pngSignature = b"\x89PNG\r\n\x1a\n"
+pngSignature: bytes = b"\x89PNG\r\n\x1a\n"
 
-_imageDictPrototype = dict(
+_imageDictPrototype: GenericDict = dict(
     fileName=(str, True),
     xScale=((int, float), False),
     xyScale=((int, float), False),
@@ -832,7 +848,11 @@ def imageValidator(value):
     return True
 
 
-def pngValidator(path=None, data=None, fileObj=None):
+def pngValidator(
+    path: Optional[str] = None,
+    data: Optional[bytes] = None,
+    fileObj: Optional[Any] = None,
+) -> tuple[bool, Any]:
     """
     Version 3+.
 
@@ -858,7 +878,9 @@ def pngValidator(path=None, data=None, fileObj=None):
 # -------------------
 
 
-def layerContentsValidator(value, ufoPathOrFileSystem):
+def layerContentsValidator(
+    value: Any, ufoPathOrFileSystem: Union[str, fs.base.FS]
+) -> tuple[bool, Optional[str]]:
     """
     Check the validity of layercontents.plist.
     Version 3+.
@@ -932,7 +954,7 @@ def layerContentsValidator(value, ufoPathOrFileSystem):
 # ------------
 
 
-def groupsValidator(value):
+def groupsValidator(value: Any) -> tuple[bool, Optional[str]]:
     """
     Check the validity of the groups.
     Version 3+ (though it's backwards compatible with UFO 1 and UFO 2).
@@ -979,8 +1001,8 @@ def groupsValidator(value):
     bogusFormatMessage = "The group data is not in the correct format."
     if not isDictEnough(value):
         return False, bogusFormatMessage
-    firstSideMapping = {}
-    secondSideMapping = {}
+    firstSideMapping: dict[str, str] = {}
+    secondSideMapping: dict[str, str] = {}
     for groupName, glyphList in value.items():
         if not isinstance(groupName, (str)):
             return False, bogusFormatMessage
@@ -1024,7 +1046,7 @@ def groupsValidator(value):
 # -------------
 
 
-def kerningValidator(data):
+def kerningValidator(data: Any) -> tuple[bool, Optional[str]]:
     """
     Check the validity of the kerning data structure.
     Version 3+ (though it's backwards compatible with UFO 1 and UFO 2).
@@ -1070,7 +1092,7 @@ def kerningValidator(data):
 _bogusLibFormatMessage = "The lib data is not in the correct format: %s"
 
 
-def fontLibValidator(value):
+def fontLibValidator(value: Any) -> tuple[bool, Optional[str]]:
     """
     Check the validity of the lib.
     Version 3+ (though it's backwards compatible with UFO 1 and UFO 2).
@@ -1142,7 +1164,7 @@ def fontLibValidator(value):
 # --------
 
 
-def glyphLibValidator(value):
+def glyphLibValidator(value: Any) -> tuple[bool, Optional[str]]:
     """
     Check the validity of the lib.
     Version 3+ (though it's backwards compatible with UFO 1 and UFO 2).

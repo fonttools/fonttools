@@ -1,0 +1,700 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="4.4">
+
+  <GlyphOrder>
+    <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
+    <GlyphID id="0" name=".notdef"/>
+    <GlyphID id="1" name="space"/>
+    <GlyphID id="2" name="A"/>
+    <GlyphID id="3" name="uni5B89"/>
+    <GlyphID id="4" name="uni304B"/>
+  </GlyphOrder>
+
+  <head>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="1.0"/>
+    <fontRevision value="1.0"/>
+    <checkSumAdjustment value="0xf10ba20c"/>
+    <magicNumber value="0x5f0f3cf5"/>
+    <flags value="00000000 00000011"/>
+    <unitsPerEm value="1000"/>
+    <created value="Thu Mar 19 17:38:24 2020"/>
+    <modified value="Thu Mar 19 12:05:00 2020"/>
+    <xMin value="-2"/>
+    <yMin value="-200"/>
+    <xMax value="801"/>
+    <yMax value="800"/>
+    <macStyle value="00000000 00000000"/>
+    <lowestRecPPEM value="7"/>
+    <fontDirectionHint value="2"/>
+    <indexToLocFormat value="0"/>
+    <glyphDataFormat value="0"/>
+  </head>
+
+  <hhea>
+    <tableVersion value="0x00010000"/>
+    <ascent value="1096"/>
+    <descent value="-161"/>
+    <lineGap value="0"/>
+    <advanceWidthMax value="1000"/>
+    <minLeftSideBearing value="-2"/>
+    <minRightSideBearing value="0"/>
+    <xMaxExtent value="801"/>
+    <caretSlopeRise value="1"/>
+    <caretSlopeRun value="0"/>
+    <caretOffset value="0"/>
+    <reserved0 value="0"/>
+    <reserved1 value="0"/>
+    <reserved2 value="0"/>
+    <reserved3 value="0"/>
+    <metricDataFormat value="0"/>
+    <numberOfHMetrics value="4"/>
+  </hhea>
+
+  <maxp>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="0x10000"/>
+    <numGlyphs value="5"/>
+    <maxPoints value="73"/>
+    <maxContours value="10"/>
+    <maxCompositePoints value="0"/>
+    <maxCompositeContours value="0"/>
+    <maxZones value="1"/>
+    <maxTwilightPoints value="2"/>
+    <maxStorage value="30"/>
+    <maxFunctionDefs value="6"/>
+    <maxInstructionDefs value="0"/>
+    <maxStackElements value="100"/>
+    <maxSizeOfInstructions value="0"/>
+    <maxComponentElements value="0"/>
+    <maxComponentDepth value="0"/>
+  </maxp>
+
+  <OS_2>
+    <!-- The fields 'usFirstCharIndex' and 'usLastCharIndex'
+         will be recalculated by the compiler -->
+    <version value="3"/>
+    <xAvgCharWidth value="740"/>
+    <usWeightClass value="100"/>
+    <usWidthClass value="5"/>
+    <fsType value="00000000 00001000"/>
+    <ySubscriptXSize value="650"/>
+    <ySubscriptYSize value="600"/>
+    <ySubscriptXOffset value="0"/>
+    <ySubscriptYOffset value="75"/>
+    <ySuperscriptXSize value="650"/>
+    <ySuperscriptYSize value="600"/>
+    <ySuperscriptXOffset value="0"/>
+    <ySuperscriptYOffset value="350"/>
+    <yStrikeoutSize value="50"/>
+    <yStrikeoutPosition value="300"/>
+    <sFamilyClass value="0"/>
+    <panose>
+      <bFamilyType value="0"/>
+      <bSerifStyle value="0"/>
+      <bWeight value="2"/>
+      <bProportion value="0"/>
+      <bContrast value="0"/>
+      <bStrokeVariation value="0"/>
+      <bArmStyle value="0"/>
+      <bLetterForm value="0"/>
+      <bMidline value="0"/>
+      <bXHeight value="0"/>
+    </panose>
+    <ulUnicodeRange1 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange2 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange3 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange4 value="00000000 00000000 00000000 00000000"/>
+    <achVendID value="UKWN"/>
+    <fsSelection value="00000000 01000000"/>
+    <usFirstCharIndex value="32"/>
+    <usLastCharIndex value="23433"/>
+    <sTypoAscender value="1096"/>
+    <sTypoDescender value="-161"/>
+    <sTypoLineGap value="0"/>
+    <usWinAscent value="1096"/>
+    <usWinDescent value="161"/>
+    <ulCodePageRange1 value="00000000 00000000 00000000 00000001"/>
+    <ulCodePageRange2 value="00000000 00000000 00000000 00000000"/>
+    <sxHeight value="500"/>
+    <sCapHeight value="700"/>
+    <usDefaultChar value="0"/>
+    <usBreakChar value="32"/>
+    <usMaxContext value="0"/>
+  </OS_2>
+
+  <hmtx>
+    <mtx name=".notdef" width="500" lsb="93"/>
+    <mtx name="A" width="600" lsb="-2"/>
+    <mtx name="space" width="600" lsb="0"/>
+    <mtx name="uni304B" width="1000" lsb="199"/>
+    <mtx name="uni5B89" width="1000" lsb="198"/>
+  </hmtx>
+
+  <cmap>
+    <tableVersion version="0"/>
+    <cmap_format_4 platformID="0" platEncID="3" language="0">
+      <map code="0x20" name="space"/><!-- SPACE -->
+      <map code="0x41" name="A"/><!-- LATIN CAPITAL LETTER A -->
+      <map code="0x304b" name="uni304B"/><!-- HIRAGANA LETTER KA -->
+      <map code="0x5b89" name="uni5B89"/><!-- CJK UNIFIED IDEOGRAPH-5B89 -->
+    </cmap_format_4>
+    <cmap_format_4 platformID="3" platEncID="1" language="0">
+      <map code="0x20" name="space"/><!-- SPACE -->
+      <map code="0x41" name="A"/><!-- LATIN CAPITAL LETTER A -->
+      <map code="0x304b" name="uni304B"/><!-- HIRAGANA LETTER KA -->
+      <map code="0x5b89" name="uni5B89"/><!-- CJK UNIFIED IDEOGRAPH-5B89 -->
+    </cmap_format_4>
+  </cmap>
+
+  <loca>
+    <!-- The 'loca' table will be calculated by the compiler -->
+  </loca>
+
+  <glyf>
+
+    <!-- The xMin, yMin, xMax and yMax values
+         will be recalculated by the compiler. -->
+
+    <TTGlyph name=".notdef" xMin="93" yMin="-200" xMax="410" yMax="800">
+      <contour>
+        <pt x="410" y="800" on="1"/>
+        <pt x="410" y="-200" on="1"/>
+        <pt x="93" y="-200" on="1"/>
+        <pt x="93" y="800" on="1"/>
+      </contour>
+      <contour>
+        <pt x="333" y="733" on="1"/>
+        <pt x="168" y="733" on="1"/>
+        <pt x="168" y="700" on="1"/>
+        <pt x="233" y="700" on="1"/>
+        <pt x="233" y="663" on="1"/>
+        <pt x="167" y="663" on="1"/>
+        <pt x="167" y="630" on="1"/>
+        <pt x="333" y="630" on="1"/>
+        <pt x="333" y="663" on="1"/>
+        <pt x="267" y="663" on="1"/>
+        <pt x="267" y="700" on="1"/>
+        <pt x="333" y="700" on="1"/>
+      </contour>
+      <contour>
+        <pt x="267" y="604" on="1"/>
+        <pt x="167" y="604" on="1"/>
+        <pt x="167" y="500" on="1"/>
+        <pt x="333" y="500" on="1"/>
+        <pt x="333" y="534" on="1"/>
+        <pt x="267" y="534" on="1"/>
+      </contour>
+      <contour>
+        <pt x="233" y="570" on="1"/>
+        <pt x="233" y="534" on="1"/>
+        <pt x="200" y="534" on="1"/>
+        <pt x="200" y="570" on="1"/>
+      </contour>
+      <contour>
+        <pt x="333" y="473" on="1"/>
+        <pt x="167" y="473" on="1"/>
+        <pt x="167" y="440" on="1"/>
+        <pt x="233" y="440" on="1"/>
+        <pt x="233" y="403" on="1"/>
+        <pt x="167" y="403" on="1"/>
+        <pt x="167" y="370" on="1"/>
+        <pt x="267" y="370" on="1"/>
+        <pt x="267" y="440" on="1"/>
+        <pt x="333" y="440" on="1"/>
+      </contour>
+      <contour>
+        <pt x="333" y="413" on="1"/>
+        <pt x="300" y="413" on="1"/>
+        <pt x="300" y="347" on="1"/>
+        <pt x="167" y="347" on="1"/>
+        <pt x="167" y="313" on="1"/>
+        <pt x="333" y="313" on="1"/>
+      </contour>
+      <contour>
+        <pt x="333" y="291" on="1"/>
+        <pt x="233" y="291" on="1"/>
+        <pt x="233" y="235" on="1"/>
+        <pt x="267" y="235" on="1"/>
+        <pt x="267" y="258" on="1"/>
+        <pt x="300" y="258" on="1"/>
+        <pt x="300" y="211" on="1"/>
+        <pt x="200" y="211" on="1"/>
+        <pt x="200" y="291" on="1"/>
+        <pt x="167" y="291" on="1"/>
+        <pt x="167" y="178" on="1"/>
+        <pt x="333" y="178" on="1"/>
+      </contour>
+      <contour>
+        <pt x="333" y="118" on="1"/>
+        <pt x="167" y="118" on="1"/>
+        <pt x="167" y="5" on="1"/>
+        <pt x="333" y="5" on="1"/>
+      </contour>
+      <contour>
+        <pt x="300" y="85" on="1"/>
+        <pt x="300" y="38" on="1"/>
+        <pt x="200" y="38" on="1"/>
+        <pt x="200" y="85" on="1"/>
+      </contour>
+      <contour>
+        <pt x="333" y="-18" on="1"/>
+        <pt x="167" y="-18" on="1"/>
+        <pt x="167" y="-51" on="1"/>
+        <pt x="237" y="-51" on="1"/>
+        <pt x="167" y="-98" on="1"/>
+        <pt x="167" y="-131" on="1"/>
+        <pt x="333" y="-131" on="1"/>
+        <pt x="333" y="-98" on="1"/>
+        <pt x="231" y="-98" on="1"/>
+        <pt x="301" y="-51" on="1"/>
+        <pt x="333" y="-51" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="A" xMin="-2" yMin="0" xMax="600" yMax="700">
+      <contour>
+        <pt x="-2" y="700" on="1"/>
+        <pt x="600" y="700" on="1"/>
+        <pt x="600" y="0" on="1"/>
+        <pt x="-2" y="0" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="space"/><!-- contains no outline data -->
+
+    <TTGlyph name="uni304B" xMin="199" yMin="-20" xMax="801" yMax="630">
+      <contour>
+        <pt x="199" y="630" on="1"/>
+        <pt x="801" y="630" on="1"/>
+        <pt x="801" y="-20" on="1"/>
+        <pt x="199" y="-20" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="uni5B89" xMin="198" yMin="-51" xMax="800" yMax="649">
+      <contour>
+        <pt x="198" y="649" on="1"/>
+        <pt x="800" y="649" on="1"/>
+        <pt x="800" y="-51" on="1"/>
+        <pt x="198" y="-51" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+  </glyf>
+
+  <name>
+    <namerecord nameID="1" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      TestBASE
+    </namerecord>
+    <namerecord nameID="2" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Thin
+    </namerecord>
+    <namerecord nameID="3" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      1.000;UKWN;TestBASE-Thin
+    </namerecord>
+    <namerecord nameID="4" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      TestBASE Thin
+    </namerecord>
+    <namerecord nameID="5" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Version 1.000
+    </namerecord>
+    <namerecord nameID="6" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      TestBASE-Thin
+    </namerecord>
+    <namerecord nameID="1" platformID="3" platEncID="1" langID="0x409">
+      TestBASE Thin
+    </namerecord>
+    <namerecord nameID="2" platformID="3" platEncID="1" langID="0x409">
+      Regular
+    </namerecord>
+    <namerecord nameID="3" platformID="3" platEncID="1" langID="0x409">
+      1.000;UKWN;TestBASE-Thin
+    </namerecord>
+    <namerecord nameID="4" platformID="3" platEncID="1" langID="0x409">
+      TestBASE Thin
+    </namerecord>
+    <namerecord nameID="5" platformID="3" platEncID="1" langID="0x409">
+      Version 1.000
+    </namerecord>
+    <namerecord nameID="6" platformID="3" platEncID="1" langID="0x409">
+      TestBASE-Thin
+    </namerecord>
+    <namerecord nameID="16" platformID="3" platEncID="1" langID="0x409">
+      TestBASE
+    </namerecord>
+    <namerecord nameID="17" platformID="3" platEncID="1" langID="0x409">
+      Thin
+    </namerecord>
+  </name>
+
+  <post>
+    <formatType value="2.0"/>
+    <italicAngle value="0.0"/>
+    <underlinePosition value="-75"/>
+    <underlineThickness value="50"/>
+    <isFixedPitch value="0"/>
+    <minMemType42 value="0"/>
+    <maxMemType42 value="0"/>
+    <minMemType1 value="0"/>
+    <maxMemType1 value="0"/>
+    <psNames>
+      <!-- This file uses unique glyph names based on the information
+           found in the 'post' table. Since these names might not be unique,
+           we have to invent artificial names in case of clashes. In order to
+           be able to retain the original information, we need a name to
+           ps name mapping for those cases where they differ. That's what
+           you see below.
+            -->
+    </psNames>
+    <extraNames>
+      <!-- following are the name that are not taken from the standard Mac glyph order -->
+      <psName name="uni5B89"/>
+      <psName name="uni304B"/>
+    </extraNames>
+  </post>
+
+  <BASE>
+    <Version value="0x00010000"/>
+    <HorizAxis>
+      <BaseTagList>
+        <!-- BaseTagCount=5 -->
+        <BaselineTag index="0" value="icfb"/>
+        <BaselineTag index="1" value="icft"/>
+        <BaselineTag index="2" value="ideo"/>
+        <BaselineTag index="3" value="idtp"/>
+        <BaselineTag index="4" value="romn"/>
+      </BaseTagList>
+      <BaseScriptList>
+        <!-- BaseScriptCount=6 -->
+        <BaseScriptRecord index="0">
+          <BaseScriptTag value="DFLT"/>
+          <BaseScript>
+            <BaseValues>
+              <DefaultIndex value="2"/>
+              <!-- BaseCoordCount=5 -->
+              <BaseCoord index="0" Format="1">
+                <Coordinate value="-75"/>
+              </BaseCoord>
+              <BaseCoord index="1" Format="1">
+                <Coordinate value="835"/>
+              </BaseCoord>
+              <BaseCoord index="2" Format="1">
+                <Coordinate value="-120"/>
+              </BaseCoord>
+              <BaseCoord index="3" Format="1">
+                <Coordinate value="880"/>
+              </BaseCoord>
+              <BaseCoord index="4" Format="1">
+                <Coordinate value="0"/>
+              </BaseCoord>
+            </BaseValues>
+            <!-- BaseLangSysCount=0 -->
+          </BaseScript>
+        </BaseScriptRecord>
+        <BaseScriptRecord index="1">
+          <BaseScriptTag value="cyrl"/>
+          <BaseScript>
+            <BaseValues>
+              <DefaultIndex value="4"/>
+              <!-- BaseCoordCount=5 -->
+              <BaseCoord index="0" Format="1">
+                <Coordinate value="-75"/>
+              </BaseCoord>
+              <BaseCoord index="1" Format="1">
+                <Coordinate value="835"/>
+              </BaseCoord>
+              <BaseCoord index="2" Format="1">
+                <Coordinate value="-120"/>
+              </BaseCoord>
+              <BaseCoord index="3" Format="1">
+                <Coordinate value="880"/>
+              </BaseCoord>
+              <BaseCoord index="4" Format="1">
+                <Coordinate value="0"/>
+              </BaseCoord>
+            </BaseValues>
+            <!-- BaseLangSysCount=0 -->
+          </BaseScript>
+        </BaseScriptRecord>
+        <BaseScriptRecord index="2">
+          <BaseScriptTag value="grek"/>
+          <BaseScript>
+            <BaseValues>
+              <DefaultIndex value="4"/>
+              <!-- BaseCoordCount=5 -->
+              <BaseCoord index="0" Format="1">
+                <Coordinate value="-75"/>
+              </BaseCoord>
+              <BaseCoord index="1" Format="1">
+                <Coordinate value="835"/>
+              </BaseCoord>
+              <BaseCoord index="2" Format="1">
+                <Coordinate value="-120"/>
+              </BaseCoord>
+              <BaseCoord index="3" Format="1">
+                <Coordinate value="880"/>
+              </BaseCoord>
+              <BaseCoord index="4" Format="1">
+                <Coordinate value="0"/>
+              </BaseCoord>
+            </BaseValues>
+            <!-- BaseLangSysCount=0 -->
+          </BaseScript>
+        </BaseScriptRecord>
+        <BaseScriptRecord index="3">
+          <BaseScriptTag value="hani"/>
+          <BaseScript>
+            <BaseValues>
+              <DefaultIndex value="2"/>
+              <!-- BaseCoordCount=5 -->
+              <BaseCoord index="0" Format="1">
+                <Coordinate value="-75"/>
+              </BaseCoord>
+              <BaseCoord index="1" Format="1">
+                <Coordinate value="835"/>
+              </BaseCoord>
+              <BaseCoord index="2" Format="1">
+                <Coordinate value="-120"/>
+              </BaseCoord>
+              <BaseCoord index="3" Format="1">
+                <Coordinate value="880"/>
+              </BaseCoord>
+              <BaseCoord index="4" Format="1">
+                <Coordinate value="0"/>
+              </BaseCoord>
+            </BaseValues>
+            <!-- BaseLangSysCount=0 -->
+          </BaseScript>
+        </BaseScriptRecord>
+        <BaseScriptRecord index="4">
+          <BaseScriptTag value="kana"/>
+          <BaseScript>
+            <BaseValues>
+              <DefaultIndex value="2"/>
+              <!-- BaseCoordCount=5 -->
+              <BaseCoord index="0" Format="1">
+                <Coordinate value="-75"/>
+              </BaseCoord>
+              <BaseCoord index="1" Format="1">
+                <Coordinate value="835"/>
+              </BaseCoord>
+              <BaseCoord index="2" Format="1">
+                <Coordinate value="-120"/>
+              </BaseCoord>
+              <BaseCoord index="3" Format="1">
+                <Coordinate value="880"/>
+              </BaseCoord>
+              <BaseCoord index="4" Format="1">
+                <Coordinate value="0"/>
+              </BaseCoord>
+            </BaseValues>
+            <!-- BaseLangSysCount=0 -->
+          </BaseScript>
+        </BaseScriptRecord>
+        <BaseScriptRecord index="5">
+          <BaseScriptTag value="latn"/>
+          <BaseScript>
+            <BaseValues>
+              <DefaultIndex value="4"/>
+              <!-- BaseCoordCount=5 -->
+              <BaseCoord index="0" Format="1">
+                <Coordinate value="-75"/>
+              </BaseCoord>
+              <BaseCoord index="1" Format="1">
+                <Coordinate value="835"/>
+              </BaseCoord>
+              <BaseCoord index="2" Format="1">
+                <Coordinate value="-120"/>
+              </BaseCoord>
+              <BaseCoord index="3" Format="1">
+                <Coordinate value="880"/>
+              </BaseCoord>
+              <BaseCoord index="4" Format="1">
+                <Coordinate value="0"/>
+              </BaseCoord>
+            </BaseValues>
+            <!-- BaseLangSysCount=0 -->
+          </BaseScript>
+        </BaseScriptRecord>
+      </BaseScriptList>
+    </HorizAxis>
+    <VertAxis>
+      <BaseTagList>
+        <!-- BaseTagCount=5 -->
+        <BaselineTag index="0" value="icfb"/>
+        <BaselineTag index="1" value="icft"/>
+        <BaselineTag index="2" value="ideo"/>
+        <BaselineTag index="3" value="idtp"/>
+        <BaselineTag index="4" value="romn"/>
+      </BaseTagList>
+      <BaseScriptList>
+        <!-- BaseScriptCount=6 -->
+        <BaseScriptRecord index="0">
+          <BaseScriptTag value="DFLT"/>
+          <BaseScript>
+            <BaseValues>
+              <DefaultIndex value="2"/>
+              <!-- BaseCoordCount=5 -->
+              <BaseCoord index="0" Format="1">
+                <Coordinate value="45"/>
+              </BaseCoord>
+              <BaseCoord index="1" Format="1">
+                <Coordinate value="955"/>
+              </BaseCoord>
+              <BaseCoord index="2" Format="1">
+                <Coordinate value="0"/>
+              </BaseCoord>
+              <BaseCoord index="3" Format="1">
+                <Coordinate value="1000"/>
+              </BaseCoord>
+              <BaseCoord index="4" Format="1">
+                <Coordinate value="120"/>
+              </BaseCoord>
+            </BaseValues>
+            <!-- BaseLangSysCount=0 -->
+          </BaseScript>
+        </BaseScriptRecord>
+        <BaseScriptRecord index="1">
+          <BaseScriptTag value="cyrl"/>
+          <BaseScript>
+            <BaseValues>
+              <DefaultIndex value="4"/>
+              <!-- BaseCoordCount=5 -->
+              <BaseCoord index="0" Format="1">
+                <Coordinate value="45"/>
+              </BaseCoord>
+              <BaseCoord index="1" Format="1">
+                <Coordinate value="955"/>
+              </BaseCoord>
+              <BaseCoord index="2" Format="1">
+                <Coordinate value="0"/>
+              </BaseCoord>
+              <BaseCoord index="3" Format="1">
+                <Coordinate value="1000"/>
+              </BaseCoord>
+              <BaseCoord index="4" Format="1">
+                <Coordinate value="120"/>
+              </BaseCoord>
+            </BaseValues>
+            <!-- BaseLangSysCount=0 -->
+          </BaseScript>
+        </BaseScriptRecord>
+        <BaseScriptRecord index="2">
+          <BaseScriptTag value="grek"/>
+          <BaseScript>
+            <BaseValues>
+              <DefaultIndex value="4"/>
+              <!-- BaseCoordCount=5 -->
+              <BaseCoord index="0" Format="1">
+                <Coordinate value="45"/>
+              </BaseCoord>
+              <BaseCoord index="1" Format="1">
+                <Coordinate value="955"/>
+              </BaseCoord>
+              <BaseCoord index="2" Format="1">
+                <Coordinate value="0"/>
+              </BaseCoord>
+              <BaseCoord index="3" Format="1">
+                <Coordinate value="1000"/>
+              </BaseCoord>
+              <BaseCoord index="4" Format="1">
+                <Coordinate value="120"/>
+              </BaseCoord>
+            </BaseValues>
+            <!-- BaseLangSysCount=0 -->
+          </BaseScript>
+        </BaseScriptRecord>
+        <BaseScriptRecord index="3">
+          <BaseScriptTag value="hani"/>
+          <BaseScript>
+            <BaseValues>
+              <DefaultIndex value="2"/>
+              <!-- BaseCoordCount=5 -->
+              <BaseCoord index="0" Format="1">
+                <Coordinate value="45"/>
+              </BaseCoord>
+              <BaseCoord index="1" Format="1">
+                <Coordinate value="955"/>
+              </BaseCoord>
+              <BaseCoord index="2" Format="1">
+                <Coordinate value="0"/>
+              </BaseCoord>
+              <BaseCoord index="3" Format="1">
+                <Coordinate value="1000"/>
+              </BaseCoord>
+              <BaseCoord index="4" Format="1">
+                <Coordinate value="120"/>
+              </BaseCoord>
+            </BaseValues>
+            <!-- BaseLangSysCount=0 -->
+          </BaseScript>
+        </BaseScriptRecord>
+        <BaseScriptRecord index="4">
+          <BaseScriptTag value="kana"/>
+          <BaseScript>
+            <BaseValues>
+              <DefaultIndex value="2"/>
+              <!-- BaseCoordCount=5 -->
+              <BaseCoord index="0" Format="1">
+                <Coordinate value="45"/>
+              </BaseCoord>
+              <BaseCoord index="1" Format="1">
+                <Coordinate value="955"/>
+              </BaseCoord>
+              <BaseCoord index="2" Format="1">
+                <Coordinate value="0"/>
+              </BaseCoord>
+              <BaseCoord index="3" Format="1">
+                <Coordinate value="1000"/>
+              </BaseCoord>
+              <BaseCoord index="4" Format="1">
+                <Coordinate value="120"/>
+              </BaseCoord>
+            </BaseValues>
+            <!-- BaseLangSysCount=0 -->
+          </BaseScript>
+        </BaseScriptRecord>
+        <BaseScriptRecord index="5">
+          <BaseScriptTag value="latn"/>
+          <BaseScript>
+            <BaseValues>
+              <DefaultIndex value="4"/>
+              <!-- BaseCoordCount=5 -->
+              <BaseCoord index="0" Format="1">
+                <Coordinate value="45"/>
+              </BaseCoord>
+              <BaseCoord index="1" Format="1">
+                <Coordinate value="955"/>
+              </BaseCoord>
+              <BaseCoord index="2" Format="1">
+                <Coordinate value="0"/>
+              </BaseCoord>
+              <BaseCoord index="3" Format="1">
+                <Coordinate value="1000"/>
+              </BaseCoord>
+              <BaseCoord index="4" Format="1">
+                <Coordinate value="120"/>
+              </BaseCoord>
+            </BaseValues>
+            <!-- BaseLangSysCount=0 -->
+          </BaseScript>
+        </BaseScriptRecord>
+      </BaseScriptList>
+    </VertAxis>
+  </BASE>
+
+  <GSUB>
+    <Version value="0x00010000"/>
+  </GSUB>
+
+  <DSIG>
+    <!-- note that the Digital Signature will be invalid after recompilation! -->
+    <tableHeader flag="0x0" numSigs="0" version="1"/>
+  </DSIG>
+
+</ttFont>

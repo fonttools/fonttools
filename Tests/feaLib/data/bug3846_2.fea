@@ -1,0 +1,9 @@
+lookup ther {
+sub l by j;
+} ther;
+
+feature clig {
+    sub a by b;
+    sub e l l' lookup ther;
+    sub e l f by z;
+} clig;

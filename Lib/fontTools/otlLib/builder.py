@@ -170,6 +170,9 @@ class LookupBuilder(object):
             and self.extension == other.extension
         )
 
+    def promote_lookup_type(self, is_named_lookup):
+        return [self]
+
     def inferGlyphClasses(self):
         """Infers glyph glasses for the GDEF table, such as {"cedilla":3}."""
         return {}
@@ -252,6 +255,10 @@ class LookupBuilder(object):
                 'unsupported "subtable" statement for lookup type', location
             )
         )
+
+    def can_add_mapping(self, _mapping) -> bool:
+        # used by AnySubstBuilder,  below
+        return True
 
 
 class AlternateSubstBuilder(LookupBuilder):
@@ -1322,6 +1329,177 @@ class ReverseChainSingleSubstBuilder(LookupBuilder):
     def add_subtable_break(self, location):
         # Nothing to do here, each substitution is in its own subtable.
         pass
+
+
+class AnySubstBuilder(LookupBuilder):
+    """A temporary builder for Single, Multiple, or Ligature substitution lookup.
+
+    Users are expected to manually add substitutions to the ``mapping``
+    attribute after the object has been initialized, e.g.::
+
+        # sub x by y;
+        builder.mapping[("x",)] = ("y",)
+        # sub a by b c;
+        builder.mapping[("a",)] = ("b", "c")
+        # sub f i by f_i;
+        builder.mapping[("f", "i")] = ("f_i",)
+
+    Then call `promote_lookup_type()` to convert this builder into the
+    appropriate type of substitution lookup builder. This would promote single
+    substitutions to either multiple or ligature substitutions, depending on the
+    rest of the rules in the mapping.
+
+    Attributes:
+        font (``fontTools.TTLib.TTFont``): A font object.
+        location: A string or tuple representing the location in the original
+            source which produced this lookup.
+        mapping: An ordered dictionary mapping a tuple of glyph names to another
+            tuple of glyph names.
+        lookupflag (int): The lookup's flag
+        markFilterSet: Either ``None`` if no mark filtering set is used, or
+            an integer representing the filtering set to be used for this
+            lookup. If a mark filtering set is provided,
+            `LOOKUP_FLAG_USE_MARK_FILTERING_SET` will be set on the lookup's
+            flags.
+    """
+
+    def __init__(self, font, location):
+        LookupBuilder.__init__(self, font, location, "GSUB", 0)
+        self.mapping = OrderedDict()
+
+    def _add_to_single_subst(self, builder, key, value):
+        if key[0] != self.SUBTABLE_BREAK_:
+            key = key[0]
+        builder.mapping[key] = value[0]
+
+    def _add_to_multiple_subst(self, builder, key, value):
+        if key[0] != self.SUBTABLE_BREAK_:
+            key = key[0]
+        builder.mapping[key] = value
+
+    def _add_to_ligature_subst(self, builder, key, value):
+        builder.ligatures[key] = value[0]
+
+    def can_add_mapping(self, mapping) -> bool:
+        if mapping is None:
+            return True
+        # single sub rules can be treated as (degenerate) liga-or-multi sub
+        # rules, but multi and liga sub rules themselves have incompatible
+        # representations. It is uncommon that these are in the same set of
+        # rules, but it happens.
+        is_multi = any(len(v) > 1 for v in mapping.values())
+        is_liga = any(len(k) > 1 for k in mapping.keys())
+
+        has_existing_multi = False
+        has_existing_liga = False
+
+        for k, v in self.mapping.items():
+            if k[0] == self.SUBTABLE_BREAK_:
+                continue
+            if len(k) > 1:
+                has_existing_liga = True
+            if len(v) > 1:
+                has_existing_multi = True
+
+        can_reuse = not (has_existing_multi and is_liga) and not (
+            has_existing_liga and is_multi
+        )
+        return can_reuse
+
+    def promote_lookup_type(self, is_named_lookup):
+        # https://github.com/fonttools/fonttools/issues/612
+        # A multiple substitution may have a single destination, in which case
+        # it will look just like a single substitution. So if there are both
+        # multiple and single substitutions, upgrade all the single ones to
+        # multiple substitutions. Similarly, a ligature substitution may have a
+        # single source glyph, so if there are both ligature and single
+        # substitutions, upgrade all the single ones to ligature substitutions.
+        builder_classes = []
+        for key, value in self.mapping.items():
+            if key[0] == self.SUBTABLE_BREAK_:
+                builder_classes.append(None)
+            elif len(key) == 1 and len(value) == 1:
+                builder_classes.append(SingleSubstBuilder)
+            elif len(key) == 1 and len(value) != 1:
+                builder_classes.append(MultipleSubstBuilder)
+            elif len(key) > 1 and len(value) == 1:
+                builder_classes.append(LigatureSubstBuilder)
+            else:
+                assert False, "Should not happen"
+
+        has_multiple = any(b is MultipleSubstBuilder for b in builder_classes)
+        has_ligature = any(b is LigatureSubstBuilder for b in builder_classes)
+
+        # If we have mixed single and multiple substitutions,
+        # upgrade all single substitutions to multiple substitutions.
+        to_multiple = has_multiple and not has_ligature
+
+        # If we have mixed single and ligature substitutions,
+        # upgrade all single substitutions to ligature substitutions.
+        to_ligature = has_ligature and not has_multiple
+
+        # If we have only single substitutions, we can keep them as is.
+        to_single = not has_ligature and not has_multiple
+
+        ret = []
+        if to_single:
+            builder = SingleSubstBuilder(self.font, self.location)
+            for key, value in self.mapping.items():
+                self._add_to_single_subst(builder, key, value)
+            ret = [builder]
+        elif to_multiple:
+            builder = MultipleSubstBuilder(self.font, self.location)
+            for key, value in self.mapping.items():
+                self._add_to_multiple_subst(builder, key, value)
+            ret = [builder]
+        elif to_ligature:
+            builder = LigatureSubstBuilder(self.font, self.location)
+            for key, value in self.mapping.items():
+                self._add_to_ligature_subst(builder, key, value)
+            ret = [builder]
+        elif is_named_lookup:
+            # This is a named lookup with mixed substitutions that can’t be promoted,
+            # since we can’t split it into multiple lookups, we return None here to
+            # signal that to the caller
+            return None
+        else:
+            curr_builder = None
+            for builder_class, (key, value) in zip(
+                builder_classes, self.mapping.items()
+            ):
+                if curr_builder is None or type(curr_builder) is not builder_class:
+                    curr_builder = builder_class(self.font, self.location)
+                    ret.append(curr_builder)
+                if builder_class is SingleSubstBuilder:
+                    self._add_to_single_subst(curr_builder, key, value)
+                elif builder_class is MultipleSubstBuilder:
+                    self._add_to_multiple_subst(curr_builder, key, value)
+                elif builder_class is LigatureSubstBuilder:
+                    self._add_to_ligature_subst(curr_builder, key, value)
+                else:
+                    assert False, "Should not happen"
+
+        for builder in ret:
+            builder.extension = self.extension
+            builder.lookupflag = self.lookupflag
+            builder.markFilterSet = self.markFilterSet
+        return ret
+
+    def equals(self, other):
+        return LookupBuilder.equals(self, other) and self.mapping == other.mapping
+
+    def build(self):
+        assert False
+
+    def getAlternateGlyphs(self):
+        return {
+            key[0]: value
+            for key, value in self.mapping.items()
+            if len(key) == 1 and len(value) == 1
+        }
+
+    def add_subtable_break(self, location):
+        self.mapping[(self.SUBTABLE_BREAK_, location)] = self.SUBTABLE_BREAK_
 
 
 class SingleSubstBuilder(LookupBuilder):

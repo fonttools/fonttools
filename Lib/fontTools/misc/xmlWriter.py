@@ -4,8 +4,22 @@ from fontTools.misc.textTools import byteord, strjoin, tobytes, tostr
 import sys
 import os
 import string
+import logging
+import itertools
 
 INDENT = "  "
+TTX_LOG = logging.getLogger("fontTools.ttx")
+REPLACEMENT = "?"
+ILLEGAL_XML_CHARS = dict.fromkeys(
+    itertools.chain(
+        range(0x00, 0x09),
+        (0x0B, 0x0C),
+        range(0x0E, 0x20),
+        range(0xD800, 0xE000),
+        (0xFFFE, 0xFFFF),
+    ),
+    REPLACEMENT,
+)
 
 
 class XMLWriter(object):
@@ -168,12 +182,25 @@ class XMLWriter(object):
 
 
 def escape(data):
+    """Escape characters not allowed in `XML 1.0 <https://www.w3.org/TR/xml/#NT-Char>`_."""
     data = tostr(data, "utf_8")
     data = data.replace("&", "&amp;")
     data = data.replace("<", "&lt;")
     data = data.replace(">", "&gt;")
     data = data.replace("\r", "&#13;")
-    return data
+
+    newData = data.translate(ILLEGAL_XML_CHARS)
+    if newData != data:
+        maxLen = 10
+        preview = repr(data)
+        if len(data) > maxLen:
+            preview = repr(data[:maxLen])[1:-1] + "..."
+        TTX_LOG.warning(
+            "Illegal XML character(s) found; replacing offending " "string %r with %r",
+            preview,
+            REPLACEMENT,
+        )
+    return newData
 
 
 def escapeattr(data):

@@ -174,6 +174,9 @@ def min_cost_perfect_bipartite_matching_bruteforce(G):
     return best, best_cost
 
 
+# Prefer `scipy.optimize.linear_sum_assignment` for performance.
+# `Munkres` is also supported as a fallback for minimalistic systems
+# where installing SciPy is not feasible.
 try:
     from scipy.optimize import linear_sum_assignment
 

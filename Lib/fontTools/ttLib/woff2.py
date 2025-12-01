@@ -394,10 +394,9 @@ class WOFF2Writer(SFNTWriter):
 
     def _calcMasterChecksum(self):
         """Calculate checkSumAdjustment."""
-        tags = list(self.tables.keys())
         checksums = []
-        for i in range(len(tags)):
-            checksums.append(self.tables[tags[i]].checkSum)
+        for tag in self.tables.keys():
+            checksums.append(self.tables[tag].checkSum)
 
         # Create a SFNT directory for checksum calculation purposes
         self.searchRange, self.entrySelector, self.rangeShift = getSearchRange(
@@ -642,10 +641,10 @@ woff2OverlapSimpleBitmapFlag = 0x0001
 
 def getKnownTagIndex(tag):
     """Return index of 'tag' in woff2KnownTags list. Return 63 if not found."""
-    for i in range(len(woff2KnownTags)):
-        if tag == woff2KnownTags[i]:
-            return i
-    return woff2UnknownTagIndex
+    try:
+        return woff2KnownTags.index(tag)
+    except ValueError:
+        return woff2UnknownTagIndex
 
 
 class WOFF2DirectoryEntry(DirectoryEntry):
@@ -747,8 +746,8 @@ class WOFF2LocaTable(getTableClass("loca")):
                         "indexFormat is 0 but local offsets not multiples of 2"
                     )
                 locations = array.array("H")
-                for i in range(len(self.locations)):
-                    locations.append(self.locations[i] // 2)
+                for location in self.locations:
+                    locations.append(location // 2)
             else:
                 locations = array.array("I", self.locations)
             if sys.byteorder != "big":
@@ -1026,11 +1025,10 @@ class WOFF2GlyfTable(getTableClass("glyf")):
         lastcomponent = len(glyph.components) - 1
         more = 1
         haveInstructions = 0
-        for i in range(len(glyph.components)):
+        for i, component in enumerate(glyph.components):
             if i == lastcomponent:
                 haveInstructions = hasattr(glyph, "program")
                 more = 0
-            component = glyph.components[i]
             self.compositeStream += component.compile(more, haveInstructions, self)
         if haveInstructions:
             self._encodeInstructions(glyph)
@@ -1078,9 +1076,8 @@ class WOFF2GlyfTable(getTableClass("glyf")):
 
         flags = array.array("B")
         triplets = array.array("B")
-        for i in range(len(coordinates)):
+        for i, (x, y) in enumerate(coordinates):
             onCurve = glyph.flags[i] & _g_l_y_f.flagOnCurve
-            x, y = coordinates[i]
             absX = abs(x)
             absY = abs(y)
             onCurveBit = 0 if onCurve else 128

@@ -1,3 +1,139 @@
+4.61.0 (released 2025-11-28)
+----------------------------
+
+- [varLib.main]: **SECURITY** Only use basename(vf.filename) to prevent path traversal attacks when
+  running ``fonttools varLib`` command, or code which invokes ``fonttools.varLib.main()``.
+  Fixes CVE-2025-66034, see:
+  https://github.com/fonttools/fonttools/security/advisories/GHSA-768j-98cg-p3fv.
+- [feaLib] Sort BaseLangSysRecords by tag (#3986).
+- Drop support for EOL Python 3.9 (#3982).
+- [instancer] Support --remove-overlaps for fonts with CFF2 table (#3975).
+- [CFF2ToCFF] Add --remove-overlaps option (#3976).
+- [feaLib] Raise an error for rsub with NULL target (#3979).
+- [bezierTools] Fix logic bug in curveCurveIntersections (#3963).
+- [feaLib] Error when condition sets have the same name (#3958).
+- [cu2qu.ufo] skip processing empty glyphs to support sparse kerning masters (#3956).
+- [unicodedata] Update to Unicode 17. Require ``unicodedata2 >= 17.0.0`` when installed with 'unicode' extra.
+
+4.60.1 (released 2025-09-29)
+----------------------------
+
+- [ufoLib] Reverted accidental method name change in ``UFOReader.getKerningGroupConversionRenameMaps``
+  that broke compatibility with downstream projects like defcon (#3948, #3947, robotools/defcon#478).
+- [ufoLib] Added test coverage for ``getKerningGroupConversionRenameMaps`` method (#3950).
+- [subset] Don't try to subset BASE table; pass it through by default instead (#3949).
+- [subset] Remove empty BaseRecord entries in MarkBasePos lookups (#3897, #3892).
+- [subset] Add pruning for MarkLigPos and MarkMarkPos lookups (#3946).
+- [subset] Remove duplicate features when subsetting (#3945).
+- [Docs] Added documentation for the visitor module (#3944).
+
+4.60.0 (released 2025-09-17)
+----------------------------
+
+- [pointPen] Allow ``reverseFlipped`` parameter of ``DecomposingPointPen`` to take a ``ReverseFlipped``
+  enum value to control whether/how to reverse contour direction of flipped components, in addition to
+  the existing True/False. This allows to set ``ReverseFlipped.ON_CURVE_FIRST`` to ensure that
+  the decomposed outline starts with an on-curve point before being reversed, for better consistency
+  with other segment-oriented contour transformations. The change is backward compatible, and the
+  default behavior hasn't changed (#3934).
+- [filterPen] Added ``ContourFilterPointPen``, base pen for buffered contour operations, and
+  ``OnCurveStartPointPen`` filter to ensure contours start with an on-curve point (#3934).
+- [cu2qu] Fixed difference in cython vs pure-python complex division by real number (#3930).
+- [varLib.avar] Refactored and added some new sub-modules and scripts (#3926).
+  * ``varLib.avar.build`` module to build avar (and a missing fvar) binaries into a possibly empty TTFont,
+  * ``varLib.avar.unbuild`` module to print a .designspace snippet that would generate the same avar binary,
+  * ``varLib.avar.map`` module to take TTFont and do the mapping, in user/normalized space,
+  * ``varLib.avar.plan`` module moved from ``varLib.avarPlanner``.
+  The bare ``fonttools varLib.avar`` script is deprecated, in favour of ``fonttools varLib.avar.build`` (or ``unbuild``).
+- [interpolatable] Clarify ``linear_sum_assignment`` backend options and minimal dependency
+  usage (#3927).
+- [post] Speed up ``build_psNameMapping`` (#3923).
+- [ufoLib] Added typing annotations to fontTools.ufoLib (#3875).
+
+4.59.2 (released 2025-08-27)
+----------------------------
+
+- [varLib] Clear ``USE_MY_METRICS`` component flags when inconsistent across masters (#3912).
+- [varLib.instancer] Avoid negative advance width/height values when instatiating HVAR/VVAR,
+  (unlikely in well-behaved fonts) (#3918).
+- [subset] Fix shaping behaviour when pruning empty mark sets (#3915, harfbuzz/harfbuzz#5499).
+- [cu2qu] Fixed ``dot()`` product of perpendicular vectors not always returning exactly 0.0
+  in all Python implementations (#3911)
+- [varLib.instancer] Implemented fully-instantiating ``avar2`` fonts (#3909).
+- [feaLib] Allow float values in ``VariableScalar``'s axis locations (#3906, #3907).
+- [cu2qu] Handle special case in ``calc_intersect`` for degenerate cubic curves where 3 to 4
+  control points are equal (#3904).
+
+4.59.1 (released 2025-08-14)
+----------------------------
+
+- [featureVars] Update OS/2.usMaxContext if possible after addFeatureVariationsRaw (#3894).
+- [vhmtx] raise TTLibError('not enough data...') when hmtx/vmtx are truncated (#3843, #3901).
+- [feaLib] Combine duplicate features that have the same set of lookups regardless of the order in which those lookups are added to the feature (#3895).
+- [varLib] Deprecate ``varLib.mutator`` in favor of ``varLib.instancer``. The latter
+  provides equivalent full (static font) instancing in addition to partial VF instancing.
+  CLI users should replace ``fonttools varLib.mutator`` with ``fonttools varLib.instancer``.
+  API users should migrate to ``fontTools.varLib.instancer.instantiateVariableFont`` (#2680).
+
+
+4.59.0 (released 2025-07-16)
+----------------------------
+
+- Removed hard-dependency on pyfilesystem2 (``fs`` package) from ``fonttools[ufo]`` extra.
+  This is replaced by the `fontTools.misc.filesystem` package, a stdlib-only, drop-in
+  replacement for the subset of the pyfilesystem2's API used by ``fontTools.ufoLib``.
+  The latter should continue to work with the upstream ``fs`` (we even test with/without).
+  Clients who wish to continue using ``fs`` can do so by depending on it directly instead
+  of via the ``fonttools[ufo]`` extra (#3885, #3620).
+- [xmlWriter] Replace illegal XML characters (e.g. control or non-characters) with "?"
+  when dumping to ttx (#3868, #71).
+- [varLib.hvar] Fixed vertical metrics fields copy/pasta error (#3884).
+- Micro optimizations in ttLib and sstruct modules (#3878, #3879).
+- [unicodedata] Add Garay script to RTL_SCRIPTS (#3882).
+- [roundingPen] Remove unreliable kwarg usage. Argument names aren’t consistent among
+  point pens’ ``.addComponent()`` implementations, in particular ``baseGlyphName``
+  vs ``glyphName`` (#3880).
+
+4.58.5 (released 2025-07-03)
+----------------------------
+
+- [feaLib] Don't try to combine ligature & multisub rules (#3874).
+- [feaLib/ast] Use weakref proxies to avoid cycles in visitor (#3873).
+- [varLib.instancer] Fixed instancing CFF2 fonts where VarData contains more than 64k items (#3858).
+
+4.58.4 (released 2025-06-13)
+----------------------------
+
+- [feaLib] Allow for empty MarkFilter & MarkAttach sets (#3856).
+
+4.58.3 (released 2025-06-13)
+----------------------------
+
+- [feaLib] Fixed iterable check for Python 3.13.4 and newer (#3854, #3855).
+
+4.58.2 (released 2025-06-06)
+----------------------------
+
+- [ttLib.reorderGlyphs] Handle CFF2 when reordering glyphs (#3852)
+- [subset] Copy name IDs in use before scrapping or scrambling them for webfonts (#3853)
+
+4.58.1 (released 2025-05-28)
+----------------------------
+
+- [varLib] Make sure that fvar named instances only reuse name ID 2 or 17 if they are at the default location across all axes, to match OT spec requirement (#3831).
+- [feaLib] Improve single substitution promotion to multiple/ligature substitutions, fixing a few bugs as well (#3849).
+- [loggingTools] Make ``Timer._time`` a static method that doesn't take self, makes it easier to override (#3836).
+- [featureVars] Use ``None`` for empty ConditionSet, which translates to a null offset in the compiled table (#3850).
+- [feaLib] Raise an error on conflicting ligature substitution rules instead of silently taking the last one (#3835).
+- Add typing annotations to T2CharStringPen (#3837).
+- [feaLib] Add single substitutions that were promoted to multiple or ligature substitutions to ``aalt`` feature (#3847).
+- [featureVars] Create a default ``LangSys`` in a ``ScriptRecord`` if missing when adding feature variations to existing GSUB later in the build (#3838).
+- [symfont] Added a ``main()``.
+- [cffLib.specializer] Fix rmoveto merging when blends used (#3839, #3840).
+- [pyftmerge] Add support for cmap format 14 in the merge tool (#3830).
+- [varLib.instancer/cff2] Fix vsindex of Private dicts when instantiating (#3828, #3232).
+- Update text file read to use UTF-8 with optional BOM so it works with e.g. Windows Notepad.exe (#3824).
+- [varLib] Ensure that instances only reuse name ID 2 or 17 if they are at the default location across all axes (#3831).
 - [varLib] Create a dflt LangSys in a ScriptRecord when adding variations later, to fix an avoidable crash in an edge case (#3838).
 
 4.58.0 (released 2025-05-10)
