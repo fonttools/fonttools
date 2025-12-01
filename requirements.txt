@@ -10,7 +10,7 @@ zopfli==0.2.3.post1
 # fs is no longer required by the 'ufo' extra (only used if present) but we keep it in
 # here so that tox continues to install it for the tests
 fs==2.4.16
-skia-pathops==0.8.0.post2; platform_python_implementation != "PyPy"
+skia-pathops==0.9.0; platform_python_implementation != "PyPy"
 # this is only required to run Tests/cu2qu/{ufo,cli}_test.py
 ufoLib2==0.17.0
 ufo2ft==3.3.1
