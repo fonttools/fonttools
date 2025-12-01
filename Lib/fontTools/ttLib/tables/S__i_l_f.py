@@ -7,7 +7,9 @@ from . import DefaultTable
 from . import grUtils
 from array import array
 from functools import reduce
-import struct, re, sys
+import struct
+import re
+import sys
 
 Silf_hdr_format = """
     >
