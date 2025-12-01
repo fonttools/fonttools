@@ -2,7 +2,7 @@
 ----------------------------
 
 - [varLib.main]: **SECURITY** Only use basename(vf.filename) to prevent path traversal attacks when
-  running ``fonttools varLib`` command, or code which invokes `fonttools.varLib.main()`.
+  running ``fonttools varLib`` command, or code which invokes ``fonttools.varLib.main()``.
   Fixes CVE-2025-66034, see:
   https://github.com/fonttools/fonttools/security/advisories/GHSA-768j-98cg-p3fv.
 - [feaLib] Sort BaseLangSysRecords by tag (#3986).
