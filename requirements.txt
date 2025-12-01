@@ -6,7 +6,7 @@ unicodedata2==17.0.0
 scipy==1.14.1; platform_python_implementation != "PyPy" and python_version < '3.11'
 scipy==1.16.3; platform_python_implementation != "PyPy" and python_version >= '3.11'
 munkres==1.1.4; platform_python_implementation == "PyPy"
-zopfli==0.2.3.post1
+zopfli==0.4.0
 # fs is no longer required by the 'ufo' extra (only used if present) but we keep it in
 # here so that tox continues to install it for the tests
 fs==2.4.16
