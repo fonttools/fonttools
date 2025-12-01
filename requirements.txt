@@ -1,7 +1,7 @@
 # we use the official Brotli module on CPython and the CFFI-based
 # extension 'brotlipy' on PyPy
 brotli==1.2.0; platform_python_implementation != "PyPy"
-brotlicffi==1.1.0.0; platform_python_implementation == "PyPy"
+brotlicffi==1.2.0.0; platform_python_implementation == "PyPy"
 unicodedata2==17.0.0
 scipy==1.14.1; platform_python_implementation != "PyPy" and python_version < '3.11'
 scipy==1.16.3; platform_python_implementation != "PyPy" and python_version >= '3.11'
@@ -12,11 +12,11 @@ zopfli==0.4.0
 fs==2.4.16
 skia-pathops==0.9.0; platform_python_implementation != "PyPy"
 # this is only required to run Tests/cu2qu/{ufo,cli}_test.py
-ufoLib2==0.17.0
-ufo2ft==3.3.1
+ufoLib2==0.18.1
+ufo2ft==3.6.8
 pyobjc==12.1; sys_platform == "darwin"
 freetype-py==2.5.1
-uharfbuzz==0.51.7
-glyphsLib==6.9.5 # this is only required to run Tests/varLib/interpolatable_test.py
+uharfbuzz==0.52.0
+glyphsLib==6.12.4 # this is only required to run Tests/varLib/interpolatable_test.py
 lxml==6.0.2
-sympy==1.13.3
+sympy==1.14.0
