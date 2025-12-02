@@ -39,7 +39,7 @@ __all__ = [
 MAX_F2DOT14 = 0x7FFF / (1 << 14)
 
 
-def fixedToFloat(value, precisionBits):
+def fixedToFloat(value: float, precisionBits: int) -> float:
     """Converts a fixed-point number to a float given the number of
     precision bits.
 
