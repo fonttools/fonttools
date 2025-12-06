@@ -264,8 +264,6 @@ _nameIDs = dict(
 # to insert in setupNameTable doc string:
 # print("\n".join(("%s (nameID %s)" % (k, v)) for k, v in sorted(_nameIDs.items(), key=lambda x: x[1])))
 
-_panoseDefaults = Panose()
-
 _OS2Defaults = dict(
     version=3,
     xAvgCharWidth=0,
@@ -283,7 +281,7 @@ _OS2Defaults = dict(
     yStrikeoutSize=0,
     yStrikeoutPosition=0,
     sFamilyClass=0,
-    panose=_panoseDefaults,
+    panose=None,  # We cannot set the object as the default value, so we will initialize it later
     ulUnicodeRange1=0,
     ulUnicodeRange2=0,
     ulUnicodeRange3=0,
@@ -499,6 +497,8 @@ class FontBuilder(object):
                 "hmtx" in self.font
             ), "the 'hmtx' table must be setup before the 'OS/2' table"
             self.font["OS/2"].recalcAvgCharWidth(self.font)
+        if "panose" not in values:
+            self.font["OS/2"].panose = Panose()
         if not (
             "ulUnicodeRange1" in values
             or "ulUnicodeRange2" in values
