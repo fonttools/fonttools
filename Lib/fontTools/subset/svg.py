@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from functools import cache
+from functools import lru_cache
 from itertools import chain, count
 from typing import Dict, Iterable, Iterator, List, Optional, Set, Tuple
 
@@ -29,7 +29,8 @@ NAMESPACES = {
 XLINK_HREF = f'{{{NAMESPACES["xlink"]}}}href'
 
 
-@cache
+# TODO(antrotype): Replace with functools.cache once we are 3.9+
+@lru_cache(maxsize=None)
 def xpath(path):
     # compile XPath upfront, caching result to reuse on multiple elements
     return etree.XPath(path, namespaces=NAMESPACES)
