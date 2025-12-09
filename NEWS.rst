@@ -1,3 +1,9 @@
+4.60.2 (released 2025-12-09)
+----------------------------
+
+- **Backport release** Same as 4.61.0 but without "Drop support for EOL Python 3.9" change to allowa
+  downstream projects still on Python 3.9 to avail of the security fix for CVE-2025-66034 (#3994, #3999).
+
 4.61.0 (released 2025-11-28)
 ----------------------------
 
