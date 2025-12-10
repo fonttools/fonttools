@@ -448,7 +448,7 @@ class AxisLimits(_BaseAxisLimits):
                 # Full instancing of avar2 font. Use avar table to normalize location and return.
                 location = self.pinnedLocation()
                 location = {
-                    tag: normalize(value, axes[tag], avarSegments.get(tag, None))
+                    tag: normalize(value, axes[tag], None)
                     for tag, value in location.items()
                 }
                 return NormalizedAxisLimits(
