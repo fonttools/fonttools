@@ -9,6 +9,7 @@
   </axes>
   <rules>
     <rule name="fold_I_serifs">
+      <conditionset/>
       <sub name="I" with="I.narrow"/>
     </rule>
     <rule name="fold_S_terminals">
