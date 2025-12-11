@@ -1580,7 +1580,7 @@ class BaseDocWriter(object):
                     )
                 conditionsetElement.append(conditionElement)
             # Serialize the conditionset even if it is empty, as this is the
-            # canonical way of defining a rule that is always true. 
+            # canonical way of defining a rule that is always true.
             ruleElement.append(conditionsetElement)
         for sub in ruleObject.subs:
             subElement = ET.Element("sub")
