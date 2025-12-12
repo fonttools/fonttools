@@ -224,3 +224,6 @@ def run(argv: List[Text]) -> None:
         # the zero exit status code.
         if not has_diff:
             print("[*] There is no difference in the tested OpenType tables.")
+
+if __name__ == "__main__":  # pragma: no cover
+    main()
