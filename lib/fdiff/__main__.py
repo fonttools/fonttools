@@ -103,7 +103,7 @@ def run(argv: List[Text]) -> None:
             f"[*] ERROR: The file path '{args.PREFILE}' can not be found.{os.linesep}"
         )
         sys.exit(1)
-    if not args.PREFILE.startswith("http") and not file_exists(args.POSTFILE):
+    if not args.POSTFILE.startswith("http") and not file_exists(args.POSTFILE):
         sys.stderr.write(
             f"[*] ERROR: The file path '{args.POSTFILE}' can not be found.{os.linesep}"
         )
