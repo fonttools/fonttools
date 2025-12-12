@@ -37,6 +37,8 @@ def main() -> None:  # pragma: no cover
     # see: https://docs.python.org/3/library/signal.html#note-on-sigpipe
     try:
         run(sys.argv[1:])
+    except KeyboardInterrupt:
+        pass
     except BrokenPipeError:
         # Python flushes standard streams on exit; redirect remaining output
         # to devnull to avoid another BrokenPipeError at shutdown
