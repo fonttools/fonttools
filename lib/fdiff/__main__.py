@@ -84,11 +84,6 @@ def run(argv: List[Text]) -> None:
         help="Force ANSI escape code color formatting in all environments",
     )
     parser.add_argument(
-        "--nomp",
-        action="store_true",
-        help="Do not use multi process optimizations (default: on)",
-    )
-    parser.add_argument(
         "--nocolor",
         action="store_true",
         default=False,
@@ -147,10 +142,6 @@ def run(argv: List[Text]) -> None:
     include_list: Optional[List[Text]] = get_tables_argument_list(args.include)
     exclude_list: Optional[List[Text]] = get_tables_argument_list(args.exclude)
 
-    # flip logic of the command line flag for multi process
-    # optimization use
-    use_mp: bool = not args.nomp
-
     if args.external:
         # ------------------------------
         #  External executable tool diff
@@ -179,7 +170,7 @@ def run(argv: List[Text]) -> None:
                     args.POSTFILE,
                     include_tables=include_list,
                     exclude_tables=exclude_list,
-                    use_multiprocess=use_mp,
+                    use_multiprocess=True,
                 )
 
                 # write stdout from external tool
@@ -211,7 +202,7 @@ def run(argv: List[Text]) -> None:
                     context_lines=args.lines,
                     include_tables=include_list,
                     exclude_tables=exclude_list,
-                    use_multiprocess=use_mp,
+                    use_multiprocess=True,
                 )
             except Exception as e:
                 sys.stderr.write(f"[*] ERROR: {e}{os.linesep}")
