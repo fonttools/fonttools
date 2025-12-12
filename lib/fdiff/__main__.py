@@ -14,6 +14,7 @@ from .utils import file_exists, get_tables_argument_list
 try:
     from rich.console import Console  # type: ignore
 except ImportError:
+
     class Console:
         def status(self, *args, **kwargs):
             return self
@@ -49,10 +50,16 @@ def run(argv: List[Text]) -> None:
     # ------------------------------------------
     # argparse command line argument definitions
     # ------------------------------------------
-    parser = argparse.ArgumentParser(description="An OpenType table diff tool for fonts.")
+    parser = argparse.ArgumentParser(
+        description="An OpenType table diff tool for fonts."
+    )
     parser.add_argument("--version", action="version", version=f"fdiff v{__version__}")
     parser.add_argument(
-        "-l", "--lines", type=int, default=3, help="Number of context lines (default: 3)"
+        "-l",
+        "--lines",
+        type=int,
+        default=3,
+        help="Number of context lines (default: 3)",
     )
     parser.add_argument(
         "--include",
@@ -239,6 +246,7 @@ def run(argv: List[Text]) -> None:
         # the zero exit status code.
         if not has_diff:
             print("[*] There is no difference in the tested OpenType tables.")
+
 
 if __name__ == "__main__":  # pragma: no cover
     main()

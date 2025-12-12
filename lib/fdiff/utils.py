@@ -28,5 +28,6 @@ def get_tables_argument_list(table_string: Optional[Text]) -> Optional[List[Text
         return None
     else:
         return [
-            table + " " if len(table) == 3 else table for table in table_string.split(",")
+            table + " " if len(table) == 3 else table
+            for table in table_string.split(",")
         ]
