@@ -1,3 +1,6 @@
+4.61.1 (released 2025-12-12)
+----------------------------
+
 - [otlLib] buildCoverage: return empty Coverage instead of None (#4003, #4004).
 - [instancer] bug fix in ``avar2`` full instancing (#4002).
 - [designspaceLib] Preserve empty conditionsets when serializing to XML (#4001).
