@@ -5,13 +5,28 @@ import os
 import sys
 from typing import Iterable, Iterator, List, Optional, Text, Tuple
 
-from rich.console import Console  # type: ignore
-
 from . import __version__
 from .color import color_unified_diff_line
 from .diff import external_diff, u_diff
 from .textiter import head, tail
 from .utils import file_exists, get_tables_argument_list
+
+try:
+    from rich.console import Console  # type: ignore
+except ImportError:
+    class Console:
+        def status(self, *args, **kwargs):
+            return self
+
+        def __enter__(self):
+            pass
+
+        def __exit__(self, exc_type, exc_value, exc_traceback):
+            pass
+
+        @property
+        def is_terminal(self):
+            return sys.stdout.isatty()
 
 
 def main() -> None:  # pragma: no cover
