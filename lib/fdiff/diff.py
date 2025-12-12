@@ -12,7 +12,6 @@ from typing import Any, Iterable, Iterator, List, Optional, Text, Tuple
 from fontTools.ttLib import TTFont  # type: ignore
 
 from .exceptions import AIOError
-from .remote import _get_filepath_from_url, create_async_get_request_session_and_run
 from .utils import get_file_modtime
 
 #
@@ -23,6 +22,8 @@ from .utils import get_file_modtime
 
 
 def _async_fetch_files(dirpath: Text, urls: List[Text]) -> None:
+    from .remote import create_async_get_request_session_and_run
+
     loop = asyncio.get_event_loop()
     tasks = loop.run_until_complete(
         create_async_get_request_session_and_run(urls, dirpath)
@@ -77,6 +78,8 @@ def _get_pre_post_paths(
 ) -> Tuple[Text, Text, Text, Text]:
     urls: List[Text] = []
     if filepath_a.startswith("http"):
+        from .remote import _get_filepath_from_url
+
         urls.append(filepath_a)
         prepath = _get_filepath_from_url(filepath_a, dirpath)
         # keep URL as path name for remote file requests
@@ -85,6 +88,8 @@ def _get_pre_post_paths(
         prepath = filepath_a
         pre_pathname = filepath_a
     if filepath_b.startswith("http"):
+        from .remote import _get_filepath_from_url
+
         urls.append(filepath_b)
         postpath = _get_filepath_from_url(filepath_b, dirpath)
         # keep URL as path name for remote file requests
