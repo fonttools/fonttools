@@ -1,3 +1,10 @@
+- [otlLib] buildCoverage: return empty Coverage instead of None (#4003, #4004).
+- [instancer] bug fix in ``avar2`` full instancing (#4002).
+- [designspaceLib] Preserve empty conditionsets when serializing to XML (#4001).
+- [fontBu ilder] Fix FontBuilder ``setupOS2()`` default params globally polluted (#3996, #3997).
+- [ttFont] Add more typing annotations to ttFont, xmlWriter, sfnt, varLib.models and others (#3952, #3826).
+- Explicitly test and declare support for Python 3.14, even though we were already shipping pre-built wheels for it (#3990).
+
 4.60.2 (released 2025-12-09)
 ----------------------------
 
