@@ -53,18 +53,21 @@ def buildCoverage(glyphs, glyphMap):
             ``font.getReverseGlyphMap()``.
 
     Returns:
-        An ``otTables.Coverage`` object or ``None`` if there are no glyphs
-        supplied.
+        An ``otTables.Coverage`` object (empty if no glyphs supplied).
     """
-
-    if not glyphs:
-        return None
+    # Per the OpenType spec: "For cases in which subtable offset fields are not
+    # documented as permitting NULL values, font compilers must include a subtable
+    # of the indicated format, even if it is a header stub without further data
+    # (for example, a coverage table with no glyph IDs)."
+    # https://github.com/fonttools/fonttools/issues/4003
     self = ot.Coverage()
-    try:
-        self.glyphs = sorted(set(glyphs), key=glyphMap.__getitem__)
-    except KeyError as e:
-        raise ValueError(f"Could not find glyph {e} in font") from e
-
+    if glyphs:
+        try:
+            self.glyphs = sorted(set(glyphs), key=glyphMap.__getitem__)
+        except KeyError as e:
+            raise ValueError(f"Could not find glyph {e} in font") from e
+    else:
+        self.glyphs = []
     return self
 
 
