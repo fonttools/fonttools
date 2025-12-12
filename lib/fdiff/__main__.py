@@ -8,7 +8,6 @@ from typing import Iterable, Iterator, List, Optional, Text, Tuple
 from . import __version__
 from .color import color_unified_diff_line
 from .diff import external_diff, u_diff
-from .textiter import head, tail
 from .utils import file_exists, get_tables_argument_list
 
 try:
@@ -73,8 +72,6 @@ def run(argv: List[Text]) -> None:
         default=None,
         help="Comma separated list of tables to exclude",
     )
-    parser.add_argument("--head", type=int, help="Display first n lines of output")
-    parser.add_argument("--tail", type=int, help="Display last n lines of output")
     parser.add_argument("--external", type=str, help="Run external diff tool command")
     parser.add_argument(
         "-c",
@@ -146,14 +143,6 @@ def run(argv: List[Text]) -> None:
         # ------------------------------
         #  External executable tool diff
         # ------------------------------
-        # head and tail are not supported when external diff tool is called
-        if args.head or args.tail:
-            sys.stderr.write(
-                f"[ERROR] The head and tail options are not supported with external "
-                f"diff executable calls.{os.linesep}"
-            )
-            sys.exit(1)
-
         # lines of context filter is not supported when external diff tool is called
         if args.lines != 3:
             sys.stderr.write(
@@ -208,15 +197,6 @@ def run(argv: List[Text]) -> None:
                 sys.stderr.write(f"[*] ERROR: {e}{os.linesep}")
                 sys.exit(1)
 
-            # re-define the line contents of the diff iterable
-            # if head or tail is requested
-            if args.head:
-                iterable = head(uni_diff, args.head)
-            elif args.tail:
-                iterable = tail(uni_diff, args.tail)
-            else:
-                iterable = uni_diff
-
             # print unified diff results to standard output stream
             has_diff = False
             # format with color by default unless:
@@ -225,11 +205,11 @@ def run(argv: List[Text]) -> None:
             # Force formatting with color in all environments if the user includes
             # the `-c` / `--color` option
             if (not args.nocolor and console.is_terminal) or args.color:
-                for line in iterable:
+                for line in uni_diff:
                     has_diff = True
                     sys.stdout.write(color_unified_diff_line(line))
             else:
-                for line in iterable:
+                for line in uni_diff:
                     has_diff = True
                     sys.stdout.write(line)
 
