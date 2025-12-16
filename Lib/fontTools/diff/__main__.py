@@ -3,30 +3,52 @@
 import argparse
 import os
 import sys
+import shutil
+import subprocess
 from typing import Iterable, Iterator, List, Optional, Text, Tuple
 
 from . import __version__
 from .color import color_unified_diff_line
-from .diff import external_diff, u_diff
+from .diff import run_external_diff, u_diff
 from .utils import file_exists, get_tables_argument_list
 
-try:
-    from rich.console import Console  # type: ignore
-except ImportError:
 
-    class Console:
-        def status(self, *args, **kwargs):
-            return self
+def pipe_output(output: str) -> None:
+    """Pipes output to a pager if stdout is a TTY and a pager is available."""
 
-        def __enter__(self):
-            pass
+    if not output:
+        return
 
-        def __exit__(self, exc_type, exc_value, exc_traceback):
-            pass
+    if not sys.stdout.isatty():
+        sys.stdout.write(output)
+        return
 
-        @property
-        def is_terminal(self):
-            return sys.stdout.isatty()
+    pager = os.getenv("PAGER") or shutil.which("less")
+
+    if not pager:
+        sys.stdout.write(output)
+        return
+
+    pager_cmd = [pager]
+    if "less" in os.path.basename(pager):
+        pager_cmd.append("-R")
+
+    proc = subprocess.Popen(pager_cmd, stdin=subprocess.PIPE, text=True)
+    try:
+        proc.stdin.write(output)
+        proc.stdin.close()
+        proc.wait()
+    except (BrokenPipeError, KeyboardInterrupt):
+        # Pager process was terminated before all output was written.
+        # This is not an error. The main exception handler will deal with it.
+        if proc.stdin:
+            proc.stdin.close()
+        # The process might still be running, but we have closed our side of the
+        # pipe. The Popen destructor will send a SIGKILL to the child.
+    except Exception:
+        if proc.stdin:
+            proc.stdin.close()
+        raise
 
 
 def main() -> None:  # pragma: no cover
@@ -64,33 +86,38 @@ def run(argv: List[Text]) -> None:
         help="Number of context lines (default: 3)",
     )
     parser.add_argument(
+        "-t",
         "--include",
         type=str,
+        nargs="*",
         default=None,
-        help="Comma separated list of tables to include",
+        help="Font tables to include. Multiple options are allowed.",
     )
     parser.add_argument(
+        "-x",
         "--exclude",
         type=str,
+        nargs="*",
         default=None,
-        help="Comma separated list of tables to exclude",
+        help="Font tables to exclude. Multiple options are allowed.",
     )
-    parser.add_argument("--external", type=str, help="Run external diff tool command")
     parser.add_argument(
-        "-c",
+        "--diff", type=str, help="Run external diff tool command (default: diff)"
+    )
+    parser.add_argument(
+        "--diff-arg",
+        type=str,
+        default="-u",
+        help="External diff tool arguments (default: -u)",
+    )
+    parser.add_argument(
         "--color",
-        action="store_true",
-        default=False,
-        help="Force ANSI escape code color formatting in all environments",
+        choices=["auto", "never", "always"],
+        default="auto",
+        help="Whether to colorize output (default: auto)",
     )
-    parser.add_argument(
-        "--nocolor",
-        action="store_true",
-        default=False,
-        help="Do not use ANSI escape code colored diff (default: on)",
-    )
-    parser.add_argument("PREFILE", help="Font file path/URL 1")
-    parser.add_argument("POSTFILE", help="Font file path/URL 2")
+    parser.add_argument("FILE1", help="Font file path/URL 1")
+    parser.add_argument("FILE2", help="Font file path/URL 2")
 
     args: argparse.Namespace = parser.parse_args(argv)
 
@@ -115,14 +142,14 @@ def run(argv: List[Text]) -> None:
     #  File path argument validations
     # -------------------------------
 
-    if not args.PREFILE.startswith("http") and not file_exists(args.PREFILE):
+    if not args.FILE1.startswith("http") and not file_exists(args.FILE1):
         sys.stderr.write(
-            f"[*] ERROR: The file path '{args.PREFILE}' can not be found.{os.linesep}"
+            f"[*] ERROR: The file path '{args.FILE1}' can not be found.{os.linesep}"
         )
         sys.exit(1)
-    if not args.POSTFILE.startswith("http") and not file_exists(args.POSTFILE):
+    if not args.FILE2.startswith("http") and not file_exists(args.FILE2):
         sys.stderr.write(
-            f"[*] ERROR: The file path '{args.POSTFILE}' can not be found.{os.linesep}"
+            f"[*] ERROR: The file path '{args.FILE2}' can not be found.{os.linesep}"
         )
         sys.exit(1)
 
@@ -132,9 +159,6 @@ def run(argv: List[Text]) -> None:
     #
     # /////////////////////////////////////////////////////////
 
-    # instantiate a rich Console
-    console = Console()
-
     # parse explicitly included or excluded tables in
     # the command line arguments
     # set as a Python list if it was defined on the command line
@@ -142,7 +166,23 @@ def run(argv: List[Text]) -> None:
     include_list: Optional[List[Text]] = get_tables_argument_list(args.include)
     exclude_list: Optional[List[Text]] = get_tables_argument_list(args.exclude)
 
-    if args.external:
+    diff_tool = args.diff
+    color_output = args.color == "always" or (
+        args.color == "auto" and sys.stdout.isatty
+    )
+
+    if diff_tool is None:
+        diff_tool = shutil.which("diff")
+    elif diff_tool:
+        diff_tool = shutil.which(diff_tool)
+        if diff_tool is None:
+            sys.stderr.write(
+                f"[*] ERROR: The external diff tool executable "
+                f"'{args.diff}' was not found.{os.linesep}"
+            )
+            sys.exit(1)
+
+    if diff_tool:
         # ------------------------------
         #  External executable tool diff
         # ------------------------------
@@ -155,29 +195,30 @@ def run(argv: List[Text]) -> None:
             sys.exit(1)
 
         try:
-            with console.status("Processing...", spinner="dots10"):
-                ext_diff: Iterable[Tuple[Text, Optional[int]]] = external_diff(
-                    args.external,
-                    args.PREFILE,
-                    args.POSTFILE,
-                    include_tables=include_list,
-                    exclude_tables=exclude_list,
-                    use_multiprocess=True,
-                )
+            ext_diff: Iterable[Tuple[Text, Optional[int]]] = run_external_diff(
+                diff_tool,
+                args.diff_arg.split(),
+                args.FILE1,
+                args.FILE2,
+                include_tables=include_list,
+                exclude_tables=exclude_list,
+                use_multiprocess=True,
+            )
 
-                # write stdout from external tool
-                for line, exit_code in ext_diff:
-                    # format with color by default unless:
-                    #   (1) user entered the --nocolor option
-                    #   (2) we are not piping std output to a terminal
-                    # Force formatting with color in all environments if the user includes
-                    # the `-c` / `--color` option
-                    if (not args.nocolor and console.is_terminal) or args.color:
-                        sys.stdout.write(color_unified_diff_line(line))
-                    else:
-                        sys.stdout.write(line)
-                    if exit_code is not None:
-                        sys.exit(exit_code)
+            # write stdout from external tool
+            output_lines = []
+            exit_code = 0
+            for line, code in ext_diff:
+                if color_output:
+                    output_lines.append(color_unified_diff_line(line))
+                else:
+                    output_lines.append(line)
+                if code is not None:
+                    exit_code = code
+
+            pipe_output("".join(output_lines))
+            if exit_code is not None:
+                sys.exit(exit_code)
         except Exception as e:
             sys.stderr.write(f"[*] ERROR: {e}{os.linesep}")
             sys.exit(1)
@@ -186,40 +227,31 @@ def run(argv: List[Text]) -> None:
         #  Unified diff
         # ---------------
         # perform the unified diff analysis
-        with console.status("Processing...", spinner="dots10"):
-            try:
-                uni_diff: Iterator[Text] = u_diff(
-                    args.PREFILE,
-                    args.POSTFILE,
-                    context_lines=args.lines,
-                    include_tables=include_list,
-                    exclude_tables=exclude_list,
-                    use_multiprocess=True,
-                )
-            except Exception as e:
-                sys.stderr.write(f"[*] ERROR: {e}{os.linesep}")
-                sys.exit(1)
+        try:
+            uni_diff: Iterator[Text] = u_diff(
+                args.FILE1,
+                args.FILE2,
+                context_lines=args.lines,
+                include_tables=include_list,
+                exclude_tables=exclude_list,
+                use_multiprocess=True,
+            )
+        except Exception as e:
+            sys.stderr.write(f"[*] ERROR: {e}{os.linesep}")
+            sys.exit(1)
 
-            # print unified diff results to standard output stream
-            has_diff = False
-            # format with color by default unless:
-            #   (1) user entered the --nocolor option
-            #   (2) we are not piping std output to a terminal
-            # Force formatting with color in all environments if the user includes
-            # the `-c` / `--color` option
-            if (not args.nocolor and console.is_terminal) or args.color:
-                for line in uni_diff:
-                    has_diff = True
-                    sys.stdout.write(color_unified_diff_line(line))
-            else:
-                for line in uni_diff:
-                    has_diff = True
-                    sys.stdout.write(line)
-
-        # if no difference was found, tell the user in addition to the
-        # the zero exit status code.
-        if not has_diff:
-            print("[*] There is no difference in the tested OpenType tables.")
+        # print unified diff results to standard output stream
+        output_lines = []
+        has_diff = False
+        if color_output:
+            for line in uni_diff:
+                has_diff = True
+                output_lines.append(color_unified_diff_line(line))
+        else:
+            for line in uni_diff:
+                has_diff = True
+                output_lines.append(line)
+        pipe_output("".join(output_lines))
 
 
 if __name__ == "__main__":  # pragma: no cover

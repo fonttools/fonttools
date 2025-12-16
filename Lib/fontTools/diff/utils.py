@@ -19,15 +19,12 @@ def get_file_modtime(path: Union[bytes, str, "os.PathLike[Text]"]) -> Text:
     )
 
 
-def get_tables_argument_list(table_string: Optional[Text]) -> Optional[List[Text]]:
-    """Converts a comma separated OpenType table string into a Python list or
-    return None if the table_string was not defined (i.e., it was not included
+def get_tables_argument_list(table_list: Optional[List[Text]]) -> Optional[List[Text]]:
+    """Converts a list of OpenType table string into a Python list or
+    return None if the table_list was not defined (i.e., it was not included
     in an option on the command line). Tables that are composed of three
     characters must be right padded with a space."""
-    if table_string is None:
+    if table_list is None:
         return None
     else:
-        return [
-            table + " " if len(table) == 3 else table
-            for table in table_string.split(",")
-        ]
+        return [table.ljust(4) for table in table_list]
