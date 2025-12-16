@@ -4,6 +4,7 @@ import argparse
 import os
 import sys
 import shutil
+import subprocess
 from typing import Iterable, Iterator, List, Optional, Text, Tuple
 
 from . import __version__
@@ -28,6 +29,40 @@ except ImportError:
         @property
         def is_terminal(self):
             return sys.stdout.isatty()
+
+
+def pipe_output(output: str) -> None:
+    """Pipes output to a pager if stdout is a TTY and a pager is available."""
+    if not sys.stdout.isatty():
+        sys.stdout.write(output)
+        return
+
+    pager = os.getenv("PAGER") or shutil.which("less")
+
+    if not pager:
+        sys.stdout.write(output)
+        return
+
+    pager_cmd = [pager]
+    if "less" in os.path.basename(pager):
+        pager_cmd.append("-R")
+
+    proc = subprocess.Popen(pager_cmd, stdin=subprocess.PIPE, text=True)
+    try:
+        proc.stdin.write(output)
+        proc.stdin.close()
+        proc.wait()
+    except (BrokenPipeError, KeyboardInterrupt):
+        # Pager process was terminated before all output was written.
+        # This is not an error. The main exception handler will deal with it.
+        if proc.stdin:
+            proc.stdin.close()
+        # The process might still be running, but we have closed our side of the
+        # pipe. The Popen destructor will send a SIGKILL to the child.
+    except Exception:
+        if proc.stdin:
+            proc.stdin.close()
+        raise
 
 
 def main() -> None:  # pragma: no cover
@@ -186,15 +221,22 @@ def run(argv: List[Text]) -> None:
                 )
 
                 # write stdout from external tool
-                for line, exit_code in ext_diff:
-                    if args.color == "always" or (
-                        args.color == "auto" and console.is_terminal
-                    ):
-                        sys.stdout.write(color_unified_diff_line(line))
+                output_lines = []
+                exit_code = 0
+                color_output = args.color == "always" or (
+                    args.color == "auto" and console.is_terminal
+                )
+                for line, code in ext_diff:
+                    if color_output:
+                        output_lines.append(color_unified_diff_line(line))
                     else:
-                        sys.stdout.write(line)
-                    if exit_code is not None:
-                        sys.exit(exit_code)
+                        output_lines.append(line)
+                    if code is not None:
+                        exit_code = code
+
+                pipe_output("".join(output_lines))
+                if exit_code is not None:
+                    sys.exit(exit_code)
         except Exception as e:
             sys.stderr.write(f"[*] ERROR: {e}{os.linesep}")
             sys.exit(1)
@@ -218,20 +260,29 @@ def run(argv: List[Text]) -> None:
                 sys.exit(1)
 
             # print unified diff results to standard output stream
+            output_lines = []
             has_diff = False
-            if args.color == "always" or (args.color == "auto" and console.is_terminal):
+            color_output = args.color == "always" or (
+                args.color == "auto" and console.is_terminal
+            )
+            if color_output:
                 for line in uni_diff:
                     has_diff = True
-                    sys.stdout.write(color_unified_diff_line(line))
+                    output_lines.append(color_unified_diff_line(line))
             else:
                 for line in uni_diff:
                     has_diff = True
-                    sys.stdout.write(line)
+                    output_lines.append(line)
 
-        # if no difference was found, tell the user in addition to the
-        # the zero exit status code.
-        if not has_diff:
-            print("[*] There is no difference in the tested OpenType tables.")
+            # if no difference was found, tell the user in addition to the
+            # the zero exit status code.
+            if not has_diff:
+                output_lines.append(
+                    "[*] There is no difference in the tested OpenType tables."
+                    f"{os.linesep}"
+                )
+
+            pipe_output("".join(output_lines))
 
 
 if __name__ == "__main__":  # pragma: no cover
