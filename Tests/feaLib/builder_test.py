@@ -98,6 +98,7 @@ class BuilderTest(unittest.TestCase):
         empty_filter_sets_and_mark_classes
         combo_mult_and_lig_sub
         identical_feature_lookups
+        cvparam_null
     """.split()
 
     VARFONT_AXES = [
