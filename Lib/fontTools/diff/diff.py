@@ -54,8 +54,6 @@ def _get_fonts_and_save_xml(
     # instantiate left and right fontTools.ttLib.TTFont objects
     tt_left = TTFont(prepath)
     tt_right = TTFont(postpath)
-    _validate_table_includes(include_tables, tt_left, tt_right)
-    _validate_table_excludes(exclude_tables, tt_left, tt_right)
     left_ttxpath = os.path.join(tmpdirpath, "left.ttx")
     right_ttxpath = os.path.join(tmpdirpath, "right.ttx")
     _mp_save_ttx_xml(
@@ -139,39 +137,6 @@ def _ttfont_save_xml(
     """Writes TTX specification formatted XML to disk on filepath."""
     ttf.saveXML(filepath, tables=include_tables, skipTables=exclude_tables)
     return True
-
-
-def _validate_table_excludes(
-    exclude_tables: Optional[List[Text]], tt_left: Any, tt_right: Any
-) -> None:
-    # Validation: exclude_tables request should be for tables that are in one of
-    # the two fonts.  Mis-specified OT table definitions could otherwise result
-    # in the presence of a table in the diff when the request was to exclude it.
-    # For example, when an "OS/2" table request is entered as "OS2".
-    if exclude_tables is not None:
-        for table in exclude_tables:
-            if table not in tt_left and table not in tt_right:
-                raise KeyError(
-                    f"'{table}' table was not identified for exclusion in either font"
-                )
-
-
-def _validate_table_includes(
-    include_tables: Optional[List[Text]], tt_left: Any, tt_right: Any
-) -> None:
-    # Validation: include_tables request should be for tables that are in one of
-    # the two fonts. This otherwise silently passes with exit status code 0 which
-    # could lead to the interpretation of no diff between two files when the table
-    # entry is incorrectly defined or is a typo.  Let's be conservative and consider
-    # this an error, force user to use explicit definitions that include tables in
-    # one of the two files, and understand that the diff request was for one or more
-    # tables that are not present.
-    if include_tables is not None:
-        for table in include_tables:
-            if table not in tt_left and table not in tt_right:
-                raise KeyError(
-                    f"'{table}' table was not identified for inclusion in either font"
-                )
 
 
 #

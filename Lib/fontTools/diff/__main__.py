@@ -107,7 +107,7 @@ def run(argv: List[Text]) -> None:
     parser.add_argument(
         "--diff-arg",
         type=str,
-        default="-u",
+        default=None,
         help="External diff tool arguments (default: -u)",
     )
     parser.add_argument(
@@ -186,18 +186,20 @@ def run(argv: List[Text]) -> None:
         # ------------------------------
         #  External executable tool diff
         # ------------------------------
-        # lines of context filter is not supported when external diff tool is called
-        if args.lines != 3:
-            sys.stderr.write(
-                f"[ERROR] The lines option is not supported with external diff "
-                f"executable calls.{os.linesep}"
-            )
-            sys.exit(1)
+
+        diff_arg = args.diff_arg
+        if diff_arg is None:
+            if args.lines == 3:
+                diff_arg = ["-u"]
+            else:
+                diff_arg = ["-u{}".format(args.lines)]
+        else:
+            diff_arg = diff_arg.split()
 
         try:
             ext_diff: Iterable[Tuple[Text, Optional[int]]] = run_external_diff(
                 diff_tool,
-                args.diff_arg.split(),
+                diff_arg,
                 args.FILE1,
                 args.FILE2,
                 include_tables=include_list,
