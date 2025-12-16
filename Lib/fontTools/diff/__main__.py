@@ -89,8 +89,8 @@ def run(argv: List[Text]) -> None:
         default=False,
         help="Do not use ANSI escape code colored diff (default: on)",
     )
-    parser.add_argument("PREFILE", help="Font file path/URL 1")
-    parser.add_argument("POSTFILE", help="Font file path/URL 2")
+    parser.add_argument("FILE1", help="Font file path/URL 1")
+    parser.add_argument("FILE2", help="Font file path/URL 2")
 
     args: argparse.Namespace = parser.parse_args(argv)
 
@@ -115,14 +115,14 @@ def run(argv: List[Text]) -> None:
     #  File path argument validations
     # -------------------------------
 
-    if not args.PREFILE.startswith("http") and not file_exists(args.PREFILE):
+    if not args.FILE1.startswith("http") and not file_exists(args.FILE1):
         sys.stderr.write(
-            f"[*] ERROR: The file path '{args.PREFILE}' can not be found.{os.linesep}"
+            f"[*] ERROR: The file path '{args.FILE1}' can not be found.{os.linesep}"
         )
         sys.exit(1)
-    if not args.POSTFILE.startswith("http") and not file_exists(args.POSTFILE):
+    if not args.FILE2.startswith("http") and not file_exists(args.FILE2):
         sys.stderr.write(
-            f"[*] ERROR: The file path '{args.POSTFILE}' can not be found.{os.linesep}"
+            f"[*] ERROR: The file path '{args.FILE2}' can not be found.{os.linesep}"
         )
         sys.exit(1)
 
@@ -158,8 +158,8 @@ def run(argv: List[Text]) -> None:
             with console.status("Processing...", spinner="dots10"):
                 ext_diff: Iterable[Tuple[Text, Optional[int]]] = external_diff(
                     args.external,
-                    args.PREFILE,
-                    args.POSTFILE,
+                    args.FILE1,
+                    args.FILE2,
                     include_tables=include_list,
                     exclude_tables=exclude_list,
                     use_multiprocess=True,
@@ -189,8 +189,8 @@ def run(argv: List[Text]) -> None:
         with console.status("Processing...", spinner="dots10"):
             try:
                 uni_diff: Iterator[Text] = u_diff(
-                    args.PREFILE,
-                    args.POSTFILE,
+                    args.FILE1,
+                    args.FILE2,
                     context_lines=args.lines,
                     include_tables=include_list,
                     exclude_tables=exclude_list,
