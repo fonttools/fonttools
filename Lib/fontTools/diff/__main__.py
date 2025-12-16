@@ -64,16 +64,20 @@ def run(argv: List[Text]) -> None:
         help="Number of context lines (default: 3)",
     )
     parser.add_argument(
+        "-t",
         "--include",
         type=str,
+        nargs="*",
         default=None,
-        help="Comma separated list of tables to include",
+        help="List tables to include. Multiple -t options are allowed.",
     )
     parser.add_argument(
+        "-x",
         "--exclude",
         type=str,
+        nargs="*",
         default=None,
-        help="Comma separated list of tables to exclude",
+        help="List tables to exclude. Multiple -x options are allowed.",
     )
     parser.add_argument("--external", type=str, help="Run external diff tool command")
     parser.add_argument(
