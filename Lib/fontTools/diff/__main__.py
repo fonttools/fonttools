@@ -1,0 +1,226 @@
+#!/usr/bin/env python3
+
+import argparse
+import os
+import sys
+from typing import Iterable, Iterator, List, Optional, Text, Tuple
+
+from . import __version__
+from .color import color_unified_diff_line
+from .diff import external_diff, u_diff
+from .utils import file_exists, get_tables_argument_list
+
+try:
+    from rich.console import Console  # type: ignore
+except ImportError:
+
+    class Console:
+        def status(self, *args, **kwargs):
+            return self
+
+        def __enter__(self):
+            pass
+
+        def __exit__(self, exc_type, exc_value, exc_traceback):
+            pass
+
+        @property
+        def is_terminal(self):
+            return sys.stdout.isatty()
+
+
+def main() -> None:  # pragma: no cover
+    """Compare two fonts for differences"""
+    # try/except block rationale:
+    # handles "premature" socket closure exception that is
+    # raised by Python when stdout is piped to tools like
+    # the `head` executable and socket is closed early
+    # see: https://docs.python.org/3/library/signal.html#note-on-sigpipe
+    try:
+        run(sys.argv[1:])
+    except KeyboardInterrupt:
+        pass
+    except BrokenPipeError:
+        # Python flushes standard streams on exit; redirect remaining output
+        # to devnull to avoid another BrokenPipeError at shutdown
+        devnull = os.open(os.devnull, os.O_WRONLY)
+        os.dup2(devnull, sys.stdout.fileno())
+        sys.exit(0)
+
+
+def run(argv: List[Text]) -> None:
+    # ------------------------------------------
+    # argparse command line argument definitions
+    # ------------------------------------------
+    parser = argparse.ArgumentParser(
+        description="An OpenType table diff tool for fonts."
+    )
+    parser.add_argument("--version", action="version", version=f"fdiff v{__version__}")
+    parser.add_argument(
+        "-l",
+        "--lines",
+        type=int,
+        default=3,
+        help="Number of context lines (default: 3)",
+    )
+    parser.add_argument(
+        "--include",
+        type=str,
+        default=None,
+        help="Comma separated list of tables to include",
+    )
+    parser.add_argument(
+        "--exclude",
+        type=str,
+        default=None,
+        help="Comma separated list of tables to exclude",
+    )
+    parser.add_argument("--external", type=str, help="Run external diff tool command")
+    parser.add_argument(
+        "-c",
+        "--color",
+        action="store_true",
+        default=False,
+        help="Force ANSI escape code color formatting in all environments",
+    )
+    parser.add_argument(
+        "--nocolor",
+        action="store_true",
+        default=False,
+        help="Do not use ANSI escape code colored diff (default: on)",
+    )
+    parser.add_argument("PREFILE", help="Font file path/URL 1")
+    parser.add_argument("POSTFILE", help="Font file path/URL 2")
+
+    args: argparse.Namespace = parser.parse_args(argv)
+
+    # /////////////////////////////////////////////////////////
+    #
+    #  Validations
+    #
+    # /////////////////////////////////////////////////////////
+
+    # ----------------------------------
+    #  Incompatible argument validations
+    # ----------------------------------
+    #   --include and --exclude are mutually exclusive options
+    if args.include and args.exclude:
+        sys.stderr.write(
+            f"[*] Error: --include and --exclude are mutually exclusive options. "
+            f"Please use ONLY one of these options in your command.{os.linesep}"
+        )
+        sys.exit(1)
+
+    # -------------------------------
+    #  File path argument validations
+    # -------------------------------
+
+    if not args.PREFILE.startswith("http") and not file_exists(args.PREFILE):
+        sys.stderr.write(
+            f"[*] ERROR: The file path '{args.PREFILE}' can not be found.{os.linesep}"
+        )
+        sys.exit(1)
+    if not args.POSTFILE.startswith("http") and not file_exists(args.POSTFILE):
+        sys.stderr.write(
+            f"[*] ERROR: The file path '{args.POSTFILE}' can not be found.{os.linesep}"
+        )
+        sys.exit(1)
+
+    # /////////////////////////////////////////////////////////
+    #
+    #  Command line logic
+    #
+    # /////////////////////////////////////////////////////////
+
+    # instantiate a rich Console
+    console = Console()
+
+    # parse explicitly included or excluded tables in
+    # the command line arguments
+    # set as a Python list if it was defined on the command line
+    # or as None if it was not set on the command line
+    include_list: Optional[List[Text]] = get_tables_argument_list(args.include)
+    exclude_list: Optional[List[Text]] = get_tables_argument_list(args.exclude)
+
+    if args.external:
+        # ------------------------------
+        #  External executable tool diff
+        # ------------------------------
+        # lines of context filter is not supported when external diff tool is called
+        if args.lines != 3:
+            sys.stderr.write(
+                f"[ERROR] The lines option is not supported with external diff "
+                f"executable calls.{os.linesep}"
+            )
+            sys.exit(1)
+
+        try:
+            with console.status("Processing...", spinner="dots10"):
+                ext_diff: Iterable[Tuple[Text, Optional[int]]] = external_diff(
+                    args.external,
+                    args.PREFILE,
+                    args.POSTFILE,
+                    include_tables=include_list,
+                    exclude_tables=exclude_list,
+                    use_multiprocess=True,
+                )
+
+                # write stdout from external tool
+                for line, exit_code in ext_diff:
+                    # format with color by default unless:
+                    #   (1) user entered the --nocolor option
+                    #   (2) we are not piping std output to a terminal
+                    # Force formatting with color in all environments if the user includes
+                    # the `-c` / `--color` option
+                    if (not args.nocolor and console.is_terminal) or args.color:
+                        sys.stdout.write(color_unified_diff_line(line))
+                    else:
+                        sys.stdout.write(line)
+                    if exit_code is not None:
+                        sys.exit(exit_code)
+        except Exception as e:
+            sys.stderr.write(f"[*] ERROR: {e}{os.linesep}")
+            sys.exit(1)
+    else:
+        # ---------------
+        #  Unified diff
+        # ---------------
+        # perform the unified diff analysis
+        with console.status("Processing...", spinner="dots10"):
+            try:
+                uni_diff: Iterator[Text] = u_diff(
+                    args.PREFILE,
+                    args.POSTFILE,
+                    context_lines=args.lines,
+                    include_tables=include_list,
+                    exclude_tables=exclude_list,
+                    use_multiprocess=True,
+                )
+            except Exception as e:
+                sys.stderr.write(f"[*] ERROR: {e}{os.linesep}")
+                sys.exit(1)
+
+            # print unified diff results to standard output stream
+            has_diff = False
+            # format with color by default unless:
+            #   (1) user entered the --nocolor option
+            #   (2) we are not piping std output to a terminal
+            # Force formatting with color in all environments if the user includes
+            # the `-c` / `--color` option
+            if (not args.nocolor and console.is_terminal) or args.color:
+                for line in uni_diff:
+                    has_diff = True
+                    sys.stdout.write(color_unified_diff_line(line))
+            else:
+                for line in uni_diff:
+                    has_diff = True
+                    sys.stdout.write(line)
+
+        # if no difference was found, tell the user in addition to the
+        # the zero exit status code.
+        if not has_diff:
+            print("[*] There is no difference in the tested OpenType tables.")
+
+
+if __name__ == "__main__":  # pragma: no cover
+    main()
