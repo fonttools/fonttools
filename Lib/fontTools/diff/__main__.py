@@ -69,7 +69,7 @@ def run(argv: List[Text]) -> None:
         type=str,
         nargs="*",
         default=None,
-        help="List tables to include. Multiple -t options are allowed.",
+        help="Font tables to include. Multiple options are allowed.",
     )
     parser.add_argument(
         "-x",
@@ -77,21 +77,14 @@ def run(argv: List[Text]) -> None:
         type=str,
         nargs="*",
         default=None,
-        help="List tables to exclude. Multiple -x options are allowed.",
+        help="Font tables to exclude. Multiple options are allowed.",
     )
     parser.add_argument("--external", type=str, help="Run external diff tool command")
     parser.add_argument(
-        "-c",
         "--color",
-        action="store_true",
-        default=False,
-        help="Force ANSI escape code color formatting in all environments",
-    )
-    parser.add_argument(
-        "--nocolor",
-        action="store_true",
-        default=False,
-        help="Do not use ANSI escape code colored diff (default: on)",
+        choices=["auto", "never", "always"],
+        default="auto",
+        help="Whether to colorize output (default: auto)",
     )
     parser.add_argument("FILE1", help="Font file path/URL 1")
     parser.add_argument("FILE2", help="Font file path/URL 2")
@@ -171,12 +164,9 @@ def run(argv: List[Text]) -> None:
 
                 # write stdout from external tool
                 for line, exit_code in ext_diff:
-                    # format with color by default unless:
-                    #   (1) user entered the --nocolor option
-                    #   (2) we are not piping std output to a terminal
-                    # Force formatting with color in all environments if the user includes
-                    # the `-c` / `--color` option
-                    if (not args.nocolor and console.is_terminal) or args.color:
+                    if args.color == "always" or (
+                        args.color == "auto" and console.is_terminal
+                    ):
                         sys.stdout.write(color_unified_diff_line(line))
                     else:
                         sys.stdout.write(line)
@@ -206,12 +196,7 @@ def run(argv: List[Text]) -> None:
 
             # print unified diff results to standard output stream
             has_diff = False
-            # format with color by default unless:
-            #   (1) user entered the --nocolor option
-            #   (2) we are not piping std output to a terminal
-            # Force formatting with color in all environments if the user includes
-            # the `-c` / `--color` option
-            if (not args.nocolor and console.is_terminal) or args.color:
+            if args.color == "always" or (args.color == "auto" and console.is_terminal):
                 for line in uni_diff:
                     has_diff = True
                     sys.stdout.write(color_unified_diff_line(line))
