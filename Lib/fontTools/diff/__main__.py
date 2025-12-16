@@ -33,6 +33,10 @@ except ImportError:
 
 def pipe_output(output: str) -> None:
     """Pipes output to a pager if stdout is a TTY and a pager is available."""
+
+    if not output:
+        return
+
     if not sys.stdout.isatty():
         sys.stdout.write(output)
         return
