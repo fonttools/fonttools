@@ -2,7 +2,6 @@
 
 import asyncio
 import os
-import shlex
 import subprocess
 import tempfile
 from difflib import unified_diff
@@ -294,10 +293,8 @@ def external_diff(
             use_multiprocess,
         )
 
-        full_command = f"{command.strip()} {left_ttxpath} {right_ttxpath}"
-
         process = subprocess.Popen(
-            shlex.split(full_command),
+            command.split() + [left_ttxpath, right_ttxpath],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             encoding="utf8",
