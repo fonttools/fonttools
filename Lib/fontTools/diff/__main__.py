@@ -30,6 +30,7 @@ except ImportError:
 
 
 def main() -> None:  # pragma: no cover
+    """Compare two fonts for differences"""
     # try/except block rationale:
     # handles "premature" socket closure exception that is
     # raised by Python when stdout is piped to tools like
