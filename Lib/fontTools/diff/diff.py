@@ -247,8 +247,9 @@ def u_diff(
         )
 
 
-def external_diff(
-    command: Text,
+def run_external_diff(
+    diff_tool: Text,
+    diff_args: List[Text],
     filepath_a: Text,
     filepath_b: Text,
     include_tables: Optional[List[Text]] = None,
@@ -258,7 +259,8 @@ def external_diff(
     """Performs a unified diff on a TTX serialized data format dump of font binary data using
     an external diff executable that is requested by the caller via `command`
 
-    command: (string) command line executable string and arguments to define execution
+    diff_tool: (string) command line executable string
+    diff_args: (list of strings) arguments for the diff tool
     filepath_a: (string) pre-file local file path or URL path
     filepath_b: (string) post-file local file path or URL path
     include_tables: (list of str) Python list of OpenType tables to include in the diff
@@ -293,8 +295,9 @@ def external_diff(
             use_multiprocess,
         )
 
+        command = [diff_tool] + diff_args + [left_ttxpath, right_ttxpath]
         process = subprocess.Popen(
-            command.split() + [left_ttxpath, right_ttxpath],
+            command,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             encoding="utf8",

@@ -3,11 +3,12 @@
 import argparse
 import os
 import sys
+import shutil
 from typing import Iterable, Iterator, List, Optional, Text, Tuple
 
 from . import __version__
 from .color import color_unified_diff_line
-from .diff import external_diff, u_diff
+from .diff import run_external_diff, u_diff
 from .utils import file_exists, get_tables_argument_list
 
 try:
@@ -79,7 +80,15 @@ def run(argv: List[Text]) -> None:
         default=None,
         help="Font tables to exclude. Multiple options are allowed.",
     )
-    parser.add_argument("--external", type=str, help="Run external diff tool command")
+    parser.add_argument(
+        "--diff", type=str, help="Run external diff tool command (default: diff)"
+    )
+    parser.add_argument(
+        "--diff-arg",
+        type=str,
+        default="-u",
+        help="External diff tool arguments (default: -u)",
+    )
     parser.add_argument(
         "--color",
         choices=["auto", "never", "always"],
@@ -139,7 +148,20 @@ def run(argv: List[Text]) -> None:
     include_list: Optional[List[Text]] = get_tables_argument_list(args.include)
     exclude_list: Optional[List[Text]] = get_tables_argument_list(args.exclude)
 
-    if args.external:
+    diff_tool = args.diff
+
+    if diff_tool is None:
+        diff_tool = shutil.which("diff")
+    elif diff_tool:
+        diff_tool = shutil.which(diff_tool)
+        if diff_tool is None:
+            sys.stderr.write(
+                f"[*] ERROR: The external diff tool executable "
+                f"'{args.diff}' was not found.{os.linesep}"
+            )
+            sys.exit(1)
+
+    if diff_tool:
         # ------------------------------
         #  External executable tool diff
         # ------------------------------
@@ -153,8 +175,9 @@ def run(argv: List[Text]) -> None:
 
         try:
             with console.status("Processing...", spinner="dots10"):
-                ext_diff: Iterable[Tuple[Text, Optional[int]]] = external_diff(
-                    args.external,
+                ext_diff: Iterable[Tuple[Text, Optional[int]]] = run_external_diff(
+                    diff_tool,
+                    args.diff_arg.split(),
                     args.FILE1,
                     args.FILE2,
                     include_tables=include_list,
