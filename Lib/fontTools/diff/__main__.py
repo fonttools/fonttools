@@ -12,24 +12,6 @@ from .color import color_unified_diff_line
 from .diff import run_external_diff, u_diff
 from .utils import file_exists, get_tables_argument_list
 
-try:
-    from rich.console import Console  # type: ignore
-except ImportError:
-
-    class Console:
-        def status(self, *args, **kwargs):
-            return self
-
-        def __enter__(self):
-            pass
-
-        def __exit__(self, exc_type, exc_value, exc_traceback):
-            pass
-
-        @property
-        def is_terminal(self):
-            return sys.stdout.isatty()
-
 
 def pipe_output(output: str) -> None:
     """Pipes output to a pager if stdout is a TTY and a pager is available."""
@@ -177,9 +159,6 @@ def run(argv: List[Text]) -> None:
     #
     # /////////////////////////////////////////////////////////
 
-    # instantiate a rich Console
-    console = Console()
-
     # parse explicitly included or excluded tables in
     # the command line arguments
     # set as a Python list if it was defined on the command line
@@ -188,6 +167,9 @@ def run(argv: List[Text]) -> None:
     exclude_list: Optional[List[Text]] = get_tables_argument_list(args.exclude)
 
     diff_tool = args.diff
+    color_output = args.color == "always" or (
+        args.color == "auto" and sys.stdout.isatty
+    )
 
     if diff_tool is None:
         diff_tool = shutil.which("diff")
@@ -213,34 +195,30 @@ def run(argv: List[Text]) -> None:
             sys.exit(1)
 
         try:
-            with console.status("Processing...", spinner="dots10"):
-                ext_diff: Iterable[Tuple[Text, Optional[int]]] = run_external_diff(
-                    diff_tool,
-                    args.diff_arg.split(),
-                    args.FILE1,
-                    args.FILE2,
-                    include_tables=include_list,
-                    exclude_tables=exclude_list,
-                    use_multiprocess=True,
-                )
+            ext_diff: Iterable[Tuple[Text, Optional[int]]] = run_external_diff(
+                diff_tool,
+                args.diff_arg.split(),
+                args.FILE1,
+                args.FILE2,
+                include_tables=include_list,
+                exclude_tables=exclude_list,
+                use_multiprocess=True,
+            )
 
-                # write stdout from external tool
-                output_lines = []
-                exit_code = 0
-                color_output = args.color == "always" or (
-                    args.color == "auto" and console.is_terminal
-                )
-                for line, code in ext_diff:
-                    if color_output:
-                        output_lines.append(color_unified_diff_line(line))
-                    else:
-                        output_lines.append(line)
-                    if code is not None:
-                        exit_code = code
+            # write stdout from external tool
+            output_lines = []
+            exit_code = 0
+            for line, code in ext_diff:
+                if color_output:
+                    output_lines.append(color_unified_diff_line(line))
+                else:
+                    output_lines.append(line)
+                if code is not None:
+                    exit_code = code
 
-                pipe_output("".join(output_lines))
-                if exit_code is not None:
-                    sys.exit(exit_code)
+            pipe_output("".join(output_lines))
+            if exit_code is not None:
+                sys.exit(exit_code)
         except Exception as e:
             sys.stderr.write(f"[*] ERROR: {e}{os.linesep}")
             sys.exit(1)
@@ -249,35 +227,31 @@ def run(argv: List[Text]) -> None:
         #  Unified diff
         # ---------------
         # perform the unified diff analysis
-        with console.status("Processing...", spinner="dots10"):
-            try:
-                uni_diff: Iterator[Text] = u_diff(
-                    args.FILE1,
-                    args.FILE2,
-                    context_lines=args.lines,
-                    include_tables=include_list,
-                    exclude_tables=exclude_list,
-                    use_multiprocess=True,
-                )
-            except Exception as e:
-                sys.stderr.write(f"[*] ERROR: {e}{os.linesep}")
-                sys.exit(1)
-
-            # print unified diff results to standard output stream
-            output_lines = []
-            has_diff = False
-            color_output = args.color == "always" or (
-                args.color == "auto" and console.is_terminal
+        try:
+            uni_diff: Iterator[Text] = u_diff(
+                args.FILE1,
+                args.FILE2,
+                context_lines=args.lines,
+                include_tables=include_list,
+                exclude_tables=exclude_list,
+                use_multiprocess=True,
             )
-            if color_output:
-                for line in uni_diff:
-                    has_diff = True
-                    output_lines.append(color_unified_diff_line(line))
-            else:
-                for line in uni_diff:
-                    has_diff = True
-                    output_lines.append(line)
-            pipe_output("".join(output_lines))
+        except Exception as e:
+            sys.stderr.write(f"[*] ERROR: {e}{os.linesep}")
+            sys.exit(1)
+
+        # print unified diff results to standard output stream
+        output_lines = []
+        has_diff = False
+        if color_output:
+            for line in uni_diff:
+                has_diff = True
+                output_lines.append(color_unified_diff_line(line))
+        else:
+            for line in uni_diff:
+                has_diff = True
+                output_lines.append(line)
+        pipe_output("".join(output_lines))
 
 
 if __name__ == "__main__":  # pragma: no cover
