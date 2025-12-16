@@ -252,6 +252,7 @@ def run(argv: List[Text]) -> None:
                 has_diff = True
                 output_lines.append(line)
         pipe_output("".join(output_lines))
+        sys.exit(0 if not has_diff else 1)
 
 
 if __name__ == "__main__":  # pragma: no cover
