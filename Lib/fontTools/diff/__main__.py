@@ -277,15 +277,6 @@ def run(argv: List[Text]) -> None:
                 for line in uni_diff:
                     has_diff = True
                     output_lines.append(line)
-
-            # if no difference was found, tell the user in addition to the
-            # the zero exit status code.
-            if not has_diff:
-                output_lines.append(
-                    "[*] There is no difference in the tested OpenType tables."
-                    f"{os.linesep}"
-                )
-
             pipe_output("".join(output_lines))
 
 
