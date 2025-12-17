@@ -2,9 +2,10 @@ import asyncio
 import os
 import subprocess
 import tempfile
+from contextlib import contextmanager
 from difflib import unified_diff
 from multiprocessing import Pool, cpu_count
-from typing import Any, Iterable, Iterator, List, Optional, Text, Tuple
+from typing import Any, Callable, Iterable, Iterator, List, Optional, Text, Tuple
 
 from fontTools.ttLib import TTFont  # type: ignore
 
@@ -137,6 +138,57 @@ def _ttfont_save_xml(
     return True
 
 
+@contextmanager
+def _saved_ttx_files(
+    filepath_a: Text,
+    filepath_b: Text,
+    include_tables: Optional[List[Text]],
+    exclude_tables: Optional[List[Text]],
+    use_multiprocess: bool,
+) -> Iterator[Tuple[Text, Text, Text, Text, Text, Text]]:
+    with tempfile.TemporaryDirectory() as tmpdirpath:
+        yield _get_fonts_and_save_xml(
+            filepath_a,
+            filepath_b,
+            tmpdirpath,
+            include_tables,
+            exclude_tables,
+            use_multiprocess,
+        )
+
+
+def _diff_with_saved_ttx_files(
+    filepath_a: Text,
+    filepath_b: Text,
+    include_tables: Optional[List[Text]],
+    exclude_tables: Optional[List[Text]],
+    use_multiprocess: bool,
+    create_differ: Callable[[Text, Text, Text, Text, Text, Text], Iterable[Text]],
+) -> Iterator[Text]:
+    with _saved_ttx_files(
+        filepath_a,
+        filepath_b,
+        include_tables,
+        exclude_tables,
+        use_multiprocess,
+    ) as (
+        left_ttxpath,
+        right_ttxpath,
+        pre_pathname,
+        prepath,
+        post_pathname,
+        postpath,
+    ):
+        yield from create_differ(
+            left_ttxpath,
+            right_ttxpath,
+            pre_pathname,
+            prepath,
+            post_pathname,
+            postpath,
+        )
+
+
 #
 #
 #  Public functions
@@ -172,25 +224,14 @@ def u_diff(
              GET request for URL or file write
     :raises: fdiff.exceptions.AIOError if GET request to URL returned non-200 response
     status code"""
-    with tempfile.TemporaryDirectory() as tmpdirpath:
-        # define the file paths with either local file requests
-        # or HTTP GET requests of remote files based on the command line request
-        (
-            left_ttxpath,
-            right_ttxpath,
-            pre_pathname,
-            prepath,
-            post_pathname,
-            postpath,
-        ) = _get_fonts_and_save_xml(
-            filepath_a,
-            filepath_b,
-            tmpdirpath,
-            include_tables,
-            exclude_tables,
-            use_multiprocess,
-        )
-
+    def _create_unified_diff(
+        left_ttxpath: Text,
+        right_ttxpath: Text,
+        pre_pathname: Text,
+        prepath: Text,
+        post_pathname: Text,
+        postpath: Text,
+    ) -> Iterable[Text]:
         with open(left_ttxpath) as ff:
             fromlines = ff.readlines()
         with open(right_ttxpath) as tf:
@@ -199,7 +240,7 @@ def u_diff(
         fromdate = get_file_modtime(prepath)
         todate = get_file_modtime(postpath)
 
-        return unified_diff(
+        yield from unified_diff(
             fromlines,
             tolines,
             pre_pathname,
@@ -208,6 +249,15 @@ def u_diff(
             todate,
             n=context_lines,
         )
+
+    yield from _diff_with_saved_ttx_files(
+        filepath_a,
+        filepath_b,
+        include_tables,
+        exclude_tables,
+        use_multiprocess,
+        _create_unified_diff,
+    )
 
 
 def run_external_diff(
@@ -218,7 +268,7 @@ def run_external_diff(
     include_tables: Optional[List[Text]] = None,
     exclude_tables: Optional[List[Text]] = None,
     use_multiprocess: bool = True,
-) -> Iterable[Tuple[Text, Optional[int]]]:
+) -> Iterator[Text]:
     """Performs a unified diff on a TTX serialized data format dump of font binary data using
     an external diff executable that is requested by the caller via `command`
 
@@ -239,25 +289,14 @@ def run_external_diff(
     :raises: IOError if exception raised during execution of `command` on TTX files
     :raises: fdiff.exceptions.AIOError if GET request to URL returned non-200 response
     status code"""
-    with tempfile.TemporaryDirectory() as tmpdirpath:
-        # define the file paths with either local file requests
-        # or HTTP GET requests of remote files based on the command line request
-        (
-            left_ttxpath,
-            right_ttxpath,
-            pre_pathname,
-            prepath,
-            post_pathname,
-            postpath,
-        ) = _get_fonts_and_save_xml(
-            filepath_a,
-            filepath_b,
-            tmpdirpath,
-            include_tables,
-            exclude_tables,
-            use_multiprocess,
-        )
-
+    def _create_external_diff(
+        left_ttxpath: Text,
+        right_ttxpath: Text,
+        _pre_pathname: Text,
+        _prepath: Text,
+        _post_pathname: Text,
+        _postpath: Text,
+    ) -> Iterable[Text]:
         command = [diff_tool] + diff_args + [left_ttxpath, right_ttxpath]
         process = subprocess.Popen(
             command,
@@ -271,3 +310,12 @@ def run_external_diff(
         err = process.stderr.read()
         if err:
             raise IOError(err)
+
+    yield from _diff_with_saved_ttx_files(
+        filepath_a,
+        filepath_b,
+        include_tables,
+        exclude_tables,
+        use_multiprocess,
+        _create_external_diff,
+    )
