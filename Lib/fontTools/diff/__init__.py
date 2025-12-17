@@ -179,22 +179,18 @@ def run(argv: List[Text]):
             )
             return 2
 
-    if diff_tool:
-        # ------------------------------
-        #  External executable tool diff
-        # ------------------------------
-
-        diff_arg = args.diff_arg
-        if diff_arg is None:
-            if args.lines == 3:
-                diff_arg = ["-u"]
+    try:
+        if diff_tool:
+            diff_arg = args.diff_arg
+            if diff_arg is None:
+                if args.lines == 3:
+                    diff_arg = ["-u"]
+                else:
+                    diff_arg = ["-u{}".format(args.lines)]
             else:
-                diff_arg = ["-u{}".format(args.lines)]
-        else:
-            diff_arg = diff_arg.split()
+                diff_arg = diff_arg.split()
 
-        try:
-            ext_diff: Iterable[Tuple[Text]] = run_external_diff(
+            output = run_external_diff(
                 diff_tool,
                 diff_arg,
                 args.FILE1,
@@ -203,28 +199,8 @@ def run(argv: List[Text]):
                 exclude_tables=exclude_list,
                 use_multiprocess=True,
             )
-
-            # write stdout from external tool
-            output_lines = []
-            for line in ext_diff:
-                if color_output:
-                    output_lines.append(color_unified_diff_line(line))
-                else:
-                    output_lines.append(line)
-
-            pipe_output("".join(output_lines))
-            if output_lines:
-                return 1
-        except Exception as e:
-            sys.stderr.write(f"[*] ERROR: {e}{os.linesep}")
-            return 2
-    else:
-        # ---------------
-        #  Unified diff
-        # ---------------
-        # perform the unified diff analysis
-        try:
-            uni_diff: Iterator[Text] = u_diff(
+        else:
+            output = u_diff(
                 args.FILE1,
                 args.FILE2,
                 context_lines=args.lines,
@@ -232,22 +208,13 @@ def run(argv: List[Text]):
                 exclude_tables=exclude_list,
                 use_multiprocess=True,
             )
-        except Exception as e:
-            sys.stderr.write(f"[*] ERROR: {e}{os.linesep}")
-            return 2
 
-        # print unified diff results to standard output stream
-        output_lines = []
-        has_diff = False
         if color_output:
-            for line in uni_diff:
-                has_diff = True
-                output_lines.append(color_unified_diff_line(line))
-        else:
-            for line in uni_diff:
-                has_diff = True
-                output_lines.append(line)
-        pipe_output("".join(output_lines))
-        if has_diff:
-            return 1
-    return 0
+            output = [color_unified_diff_line(line) for line in output]
+
+        output = "".join(output)
+        pipe_output(output)
+        return 1 if output else 0
+
+    except Exception as e:
+        sys.stderr.write(f"[*] ERROR: {e}{os.linesep}")
