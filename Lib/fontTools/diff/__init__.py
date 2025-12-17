@@ -48,6 +48,81 @@ def pipe_output(output: str) -> None:
         raise
 
 
+def _iter_filtered_table_tags(
+    tags: Iterable[str],
+    include_tables: Optional[List[str]] = None,
+    exclude_tables: Optional[List[str]] = None,
+) -> Iterator[str]:
+    for tag in tags:
+        if include_tables is not None and tag not in include_tables:
+            continue
+        if exclude_tables is not None and tag in exclude_tables:
+            continue
+        yield tag
+
+
+def summarize(
+    file1: str,
+    file2: str,
+    include_tables: Optional[List[str]] = None,
+    exclude_tables: Optional[List[str]] = None,
+) -> Tuple[bool, str]:
+    from fontTools.ttLib import TTFont
+
+    with TTFont(file1, lazy=True) as font1, TTFont(file2, lazy=True) as font2:
+        tags1 = {str(tag) for tag in font1.reader.keys()}
+        tags2 = {str(tag) for tag in font2.reader.keys()}
+
+        all_tags = sorted(
+            set(
+                _iter_filtered_table_tags(
+                    tags1 | tags2,
+                    include_tables=include_tables,
+                    exclude_tables=exclude_tables,
+                )
+            )
+        )
+
+        only1 = [tag for tag in all_tags if tag in tags1 and tag not in tags2]
+        only2 = [tag for tag in all_tags if tag in tags2 and tag not in tags1]
+        both = [tag for tag in all_tags if tag in tags1 and tag in tags2]
+
+        identical = True
+        lines: List[str] = []
+
+        lines.append(f"Binary table summary:\n")
+        lines.append(f"  file1: {file1}\n")
+        lines.append(f"  file2: {file2}\n")
+
+        if only1:
+            identical = False
+            lines.append(f"\nTables only in file1 ({len(only1)}):\n")
+            for tag in only1:
+                lines.append(f"- {tag} ({len(font1.reader[tag])} bytes)\n")
+        if only2:
+            identical = False
+            lines.append(f"\nTables only in file2 ({len(only2)}):\n")
+            for tag in only2:
+                lines.append(f"+ {tag} ({len(font2.reader[tag])} bytes)\n")
+
+        lines.append(f"\nTables in both ({len(both)}):\n")
+        for tag in both:
+            data1 = font1.reader[tag]
+            data2 = font2.reader[tag]
+            if data1 == data2:
+                lines.append(f"  {tag}: SAME ({len(data1)} bytes)\n")
+            else:
+                identical = False
+                lines.append(f"* {tag}: DIFF ({len(data1)} vs {len(data2)} bytes)\n")
+
+        if identical:
+            lines.append("\nResult: SAME\n")
+        else:
+            lines.append("\nResult: DIFFERENT\n")
+
+        return identical, "".join(lines)
+
+
 def main():
     """Compare two fonts for differences"""
     # try/except block rationale:
@@ -77,10 +152,16 @@ def run(argv: List[Text]):
     )
     parser.add_argument(
         "-l",
+        "--summary",
+        action="store_true",
+        help="Report table presence and binary equality only",
+    )
+    parser.add_argument(
+        "-U",
         "--lines",
         type=int,
         default=3,
-        help="Number of context lines (default: 3)",
+        help="Number of context lines for unified diff (default: 3)",
     )
     parser.add_argument(
         "-t",
@@ -173,6 +254,22 @@ def run(argv: List[Text]):
     color_output = args.color == "always" or (
         args.color == "auto" and sys.stdout.isatty
     )
+
+    if args.summary:
+        try:
+            identical, output = summarize(
+                args.FILE1,
+                args.FILE2,
+                include_tables=include_list,
+                exclude_tables=exclude_list,
+            )
+            if not args.quiet:
+                sys.stdout.write(output)
+            return 0 if identical else 1
+        except Exception as e:
+            if not args.quiet:
+                sys.stderr.write(f"[*] ERROR: {e}{os.linesep}")
+            return 2
 
     if diff_tool is None:
         diff_tool = shutil.which("diff")
