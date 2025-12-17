@@ -116,8 +116,8 @@ def run(argv: List[Text]):
     parser.add_argument(
         "-q", "--quiet", action="store_true", help="Suppress all output"
     )
-    parser.add_argument("FILE1", help="Font file path/URL 1")
-    parser.add_argument("FILE2", help="Font file path/URL 2")
+    parser.add_argument("FILE1", help="Font file path 1")
+    parser.add_argument("FILE2", help="Font file path 2")
 
     args: argparse.Namespace = parser.parse_args(argv)
 
@@ -143,13 +143,13 @@ def run(argv: List[Text]):
     #  File path argument validations
     # -------------------------------
 
-    if not args.FILE1.startswith("http") and not file_exists(args.FILE1):
+    if not file_exists(args.FILE1):
         if not args.quiet:
             sys.stderr.write(
                 f"[*] ERROR: The file path '{args.FILE1}' can not be found.{os.linesep}"
             )
         return 2
-    if not args.FILE2.startswith("http") and not file_exists(args.FILE2):
+    if not file_exists(args.FILE2):
         if not args.quiet:
             sys.stderr.write(
                 f"[*] ERROR: The file path '{args.FILE2}' can not be found.{os.linesep}"

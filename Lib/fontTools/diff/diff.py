@@ -1,4 +1,3 @@
-import asyncio
 import os
 import subprocess
 import tempfile
@@ -9,7 +8,6 @@ from typing import Any, Callable, Iterable, Iterator, List, Optional, Text, Tupl
 
 from fontTools.ttLib import TTFont  # type: ignore
 
-from .exceptions import AIOError
 from .utils import get_file_modtime
 
 #
@@ -17,26 +15,6 @@ from .utils import get_file_modtime
 #  Private functions
 #
 #
-
-
-def _async_fetch_files(dirpath: Text, urls: List[Text]) -> None:
-    from .remote import create_async_get_request_session_and_run
-
-    loop = asyncio.get_event_loop()
-    tasks = loop.run_until_complete(
-        create_async_get_request_session_and_run(urls, dirpath)
-    )
-    for task in tasks:
-        if task.exception():
-            # raise exception here to notify calling code that something
-            # did not work
-            raise AIOError(f"{task.exception()}")
-        elif task.result().http_status != 200:
-            # handle non-200 HTTP response status codes + file write fails
-            raise AIOError(
-                f"failed to pull '{task.result().url}' with HTTP status "
-                f"code {task.result().http_status}"
-            )
 
 
 def _get_fonts_and_save_xml(
@@ -48,7 +26,7 @@ def _get_fonts_and_save_xml(
     use_multiprocess: bool,
 ) -> Tuple[Text, Text, Text, Text, Text, Text]:
     post_pathname, postpath, pre_pathname, prepath = _get_pre_post_paths(
-        filepath_a, filepath_b, tmpdirpath
+        filepath_a, filepath_b
     )
     # instantiate left and right fontTools.ttLib.TTFont objects
     tt_left = TTFont(prepath)
@@ -70,32 +48,11 @@ def _get_fonts_and_save_xml(
 def _get_pre_post_paths(
     filepath_a: Text,
     filepath_b: Text,
-    dirpath: Text,
 ) -> Tuple[Text, Text, Text, Text]:
-    urls: List[Text] = []
-    if filepath_a.startswith("http"):
-        from .remote import _get_filepath_from_url
-
-        urls.append(filepath_a)
-        prepath = _get_filepath_from_url(filepath_a, dirpath)
-        # keep URL as path name for remote file requests
-        pre_pathname = filepath_a
-    else:
-        prepath = filepath_a
-        pre_pathname = filepath_a
-    if filepath_b.startswith("http"):
-        from .remote import _get_filepath_from_url
-
-        urls.append(filepath_b)
-        postpath = _get_filepath_from_url(filepath_b, dirpath)
-        # keep URL as path name for remote file requests
-        post_pathname = filepath_b
-    else:
-        postpath = filepath_b
-        post_pathname = filepath_b
-    # Async IO fetch and write of any remote file requests
-    if len(urls) > 0:
-        _async_fetch_files(dirpath, urls)
+    prepath = filepath_a
+    postpath = filepath_b
+    pre_pathname = filepath_a
+    post_pathname = filepath_b
     return post_pathname, postpath, pre_pathname, prepath
 
 
@@ -207,8 +164,8 @@ def u_diff(
     """Performs a unified diff on a TTX serialized data format dump of font binary data using
     a modified version of the Python standard libary difflib module.
 
-    filepath_a: (string) pre-file local file path or URL path
-    filepath_b: (string) post-file local file path or URL path
+    filepath_a: (string) pre-file local file path
+    filepath_b: (string) post-file local file path
     context_lines: (int) number of context lines to include in the diff (default=3)
     include_tables: (list of str) Python list of OpenType tables to include in the diff
     exclude_tables: (list of str) Python list of OpentType tables to exclude from the diff
@@ -220,10 +177,8 @@ def u_diff(
     :returns: Generator of ordered diff line strings that include newline line endings
     :raises: KeyError if include_tables or exclude_tables includes a mis-specified table
     that is not included in filepath_a OR filepath_b
-    :raises: fdiff.exceptions.AIOError if exception raised during execution of async I/O
-             GET request for URL or file write
-    :raises: fdiff.exceptions.AIOError if GET request to URL returned non-200 response
-    status code"""
+    """
+
     def _create_unified_diff(
         left_ttxpath: Text,
         right_ttxpath: Text,
@@ -274,8 +229,8 @@ def run_external_diff(
 
     diff_tool: (string) command line executable string
     diff_args: (list of strings) arguments for the diff tool
-    filepath_a: (string) pre-file local file path or URL path
-    filepath_b: (string) post-file local file path or URL path
+    filepath_a: (string) pre-file local file path
+    filepath_b: (string) post-file local file path
     include_tables: (list of str) Python list of OpenType tables to include in the diff
     exclude_tables: (list of str) Python list of OpentType tables to exclude from the diff
     use_multiprocess: (bool) use multi-processor optimizations (default=True)
@@ -287,8 +242,8 @@ def run_external_diff(
     :raises: KeyError if include_tables or exclude_tables includes a mis-specified table
     that is not included in filepath_a OR filepath_b
     :raises: IOError if exception raised during execution of `command` on TTX files
-    :raises: fdiff.exceptions.AIOError if GET request to URL returned non-200 response
-    status code"""
+    """
+
     def _create_external_diff(
         left_ttxpath: Text,
         right_ttxpath: Text,

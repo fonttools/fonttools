@@ -1,2 +1,0 @@
-class AIOError(Exception):
-    pass
