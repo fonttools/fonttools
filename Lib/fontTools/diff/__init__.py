@@ -113,6 +113,9 @@ def run(argv: List[Text]):
         default="auto",
         help="Whether to colorize output (default: auto)",
     )
+    parser.add_argument(
+        "-q", "--quiet", action="store_true", help="Suppress all output"
+    )
     parser.add_argument("FILE1", help="Font file path/URL 1")
     parser.add_argument("FILE2", help="Font file path/URL 2")
 
@@ -129,10 +132,11 @@ def run(argv: List[Text]):
     # ----------------------------------
     #   --include and --exclude are mutually exclusive options
     if args.include and args.exclude:
-        sys.stderr.write(
-            f"[*] Error: --include and --exclude are mutually exclusive options. "
-            f"Please use ONLY one of these options in your command.{os.linesep}"
-        )
+        if not args.quiet:
+            sys.stderr.write(
+                f"[*] Error: --include and --exclude are mutually exclusive options. "
+                f"Please use ONLY one of these options in your command.{os.linesep}"
+            )
         return 2
 
     # -------------------------------
@@ -140,14 +144,16 @@ def run(argv: List[Text]):
     # -------------------------------
 
     if not args.FILE1.startswith("http") and not file_exists(args.FILE1):
-        sys.stderr.write(
-            f"[*] ERROR: The file path '{args.FILE1}' can not be found.{os.linesep}"
-        )
+        if not args.quiet:
+            sys.stderr.write(
+                f"[*] ERROR: The file path '{args.FILE1}' can not be found.{os.linesep}"
+            )
         return 2
     if not args.FILE2.startswith("http") and not file_exists(args.FILE2):
-        sys.stderr.write(
-            f"[*] ERROR: The file path '{args.FILE2}' can not be found.{os.linesep}"
-        )
+        if not args.quiet:
+            sys.stderr.write(
+                f"[*] ERROR: The file path '{args.FILE2}' can not be found.{os.linesep}"
+            )
         return 2
 
     # /////////////////////////////////////////////////////////
@@ -173,10 +179,11 @@ def run(argv: List[Text]):
     elif diff_tool:
         diff_tool = shutil.which(diff_tool)
         if diff_tool is None:
-            sys.stderr.write(
-                f"[*] ERROR: The external diff tool executable "
-                f"'{args.diff}' was not found.{os.linesep}"
-            )
+            if not args.quiet:
+                sys.stderr.write(
+                    f"[*] ERROR: The external diff tool executable "
+                    f"'{args.diff}' was not found.{os.linesep}"
+                )
             return 2
 
     try:
@@ -213,8 +220,11 @@ def run(argv: List[Text]):
             output = [color_unified_diff_line(line) for line in output]
 
         output = "".join(output)
-        pipe_output(output)
+        if not args.quiet:
+            pipe_output(output)
         return 1 if output else 0
 
     except Exception as e:
-        sys.stderr.write(f"[*] ERROR: {e}{os.linesep}")
+        if not args.quiet:
+            sys.stderr.write(f"[*] ERROR: {e}{os.linesep}")
+        return 2
