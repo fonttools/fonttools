@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 from typing import Dict, Text
 
 ansicolors: Dict[Text, Text] = {
