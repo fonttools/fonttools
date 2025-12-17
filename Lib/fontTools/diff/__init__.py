@@ -48,6 +48,22 @@ def pipe_output(output: str) -> None:
         raise
 
 
+def _is_gnu_diff(diff_tool: str) -> bool:
+    """Returns True if the provided diff executable is GNU diff."""
+    try:
+        proc = subprocess.run(
+            [diff_tool, "--version"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+    except OSError:
+        return False
+
+    version_output = (proc.stdout or "") + (proc.stderr or "")
+    return "GNU diffutils" in version_output
+
+
 def _iter_filtered_table_tags(
     tags: Iterable[str],
     include_tables: Optional[List[str]] = None,
@@ -387,6 +403,8 @@ def run(argv: List[Text]):
                     diff_arg = ["-u"]
                 else:
                     diff_arg = ["-u{}".format(args.lines)]
+                if _is_gnu_diff(diff_tool):
+                    diff_arg.append(r"-F^\s\s<")
             else:
                 diff_arg = diff_arg.split()
 
