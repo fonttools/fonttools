@@ -344,7 +344,12 @@ class SegmentToPointPen(AbstractPen):
     def closePath(self):
         if self.contour is None:
             raise PenError("Contour missing required initial moveTo")
-        if len(self.contour) > 1 and self.contour[0][0] == self.contour[-1][0]:
+        if (
+            len(self.contour) > 1
+            and (self.contour[0][0] == self.contour[-1][0])
+            and self.contour[0][1] is not None
+            and self.contour[-1][1] is not None
+        ):
             self.contour[0] = self.contour[-1]
             del self.contour[-1]
         else:
