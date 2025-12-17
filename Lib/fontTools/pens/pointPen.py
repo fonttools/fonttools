@@ -344,6 +344,11 @@ class SegmentToPointPen(AbstractPen):
     def closePath(self):
         if self.contour is None:
             raise PenError("Contour missing required initial moveTo")
+
+        # Remove the last point if it's a duplicate of the first, but only if both
+        # are on-curve points (segmentType is not None); for quad blobs
+        # (all off-curve) every point must be preserved:
+        # https://github.com/fonttools/fonttools/issues/4014
         if (
             len(self.contour) > 1
             and (self.contour[0][0] == self.contour[-1][0])
