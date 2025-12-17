@@ -128,6 +128,45 @@ def summarize(
         return identical, "".join(lines)
 
 
+def get_binary_exclude_tables(
+    file1: str,
+    file2: str,
+    include_tables: Optional[List[str]] = None,
+    exclude_tables: Optional[List[str]] = None,
+    font_number_1: int = -1,
+    font_number_2: int = -1,
+) -> Tuple[bool, str]:
+    from fontTools.ttLib import TTFont
+
+    with (
+        TTFont(file1, lazy=True, fontNumber=font_number_1) as font1,
+        TTFont(file2, lazy=True, fontNumber=font_number_2) as font2,
+    ):
+        tags1 = {str(tag) for tag in font1.reader.keys()}
+        tags2 = {str(tag) for tag in font2.reader.keys()}
+
+        all_tags = sorted(
+            set(
+                _iter_filtered_table_tags(
+                    tags1 | tags2,
+                    include_tables=include_tables,
+                    exclude_tables=exclude_tables,
+                )
+            )
+        )
+
+        both = [tag for tag in all_tags if tag in tags1 and tag in tags2]
+        out = []
+
+        for tag in both:
+            data1 = font1.reader[tag]
+            data2 = font2.reader[tag]
+            if data1 == data2:
+                out.append(tag)
+
+        return out
+
+
 def main():
     """Compare two fonts for differences"""
     # try/except block rationale:
@@ -214,6 +253,18 @@ def run(argv: List[Text]):
         help="Select font number for TrueType Collection (.ttc/.otc) FILE2, starting from 0",
     )
     parser.add_argument(
+        "-a",
+        "--all",
+        action="store_true",
+        help="Compare tables even if binary identical",
+    )
+    parser.add_argument(
+        "-b",
+        "--binary",
+        action="store_true",
+        help="Compare tables only if binaries differ (default)",
+    )
+    parser.add_argument(
         "-q", "--quiet", action="store_true", help="Suppress all output"
     )
     parser.add_argument("FILE1", help="Font file path 1")
@@ -230,6 +281,7 @@ def run(argv: List[Text]):
     # ----------------------------------
     #  Incompatible argument validations
     # ----------------------------------
+
     #   --include and --exclude are mutually exclusive options
     if args.include and args.exclude:
         if not args.quiet:
@@ -238,6 +290,16 @@ def run(argv: List[Text]):
                 f"Please use ONLY one of these options in your command.{os.linesep}"
             )
         return 2
+
+    if args.all and args.binary:
+        if not args.quiet:
+            sys.stderr.write(
+                f"[*] Error: --all and --binary are mutually exclusive options. "
+                f"Please use ONLY one of these options in your command.{os.linesep}"
+            )
+        return 2
+    if not args.all:
+        args.binary = True
 
     # -------------------------------
     #  File path argument validations
@@ -268,6 +330,19 @@ def run(argv: List[Text]):
     # or as None if it was not set on the command line
     include_list: Optional[List[Text]] = get_tables_argument_list(args.include)
     exclude_list: Optional[List[Text]] = get_tables_argument_list(args.exclude)
+
+    if args.binary:
+        excluded_binary_tables = get_binary_exclude_tables(
+            args.FILE1,
+            args.FILE2,
+            include_tables=include_list,
+            exclude_tables=exclude_list,
+            font_number_1=args.y1,
+            font_number_2=args.y2,
+        )
+        if exclude_list is None:
+            exclude_list = []
+        exclude_list.extend(excluded_binary_tables)
 
     diff_tool = args.diff
     color_output = args.color == "always" or (
