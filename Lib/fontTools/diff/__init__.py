@@ -194,7 +194,7 @@ def run(argv: List[Text]):
             diff_arg = diff_arg.split()
 
         try:
-            ext_diff: Iterable[Tuple[Text, Optional[int]]] = run_external_diff(
+            ext_diff: Iterable[Tuple[Text]] = run_external_diff(
                 diff_tool,
                 diff_arg,
                 args.FILE1,
@@ -206,20 +206,15 @@ def run(argv: List[Text]):
 
             # write stdout from external tool
             output_lines = []
-            exit_code = 0
-            for line, code in ext_diff:
+            for line in ext_diff:
                 if color_output:
                     output_lines.append(color_unified_diff_line(line))
                 else:
                     output_lines.append(line)
-                if code is not None:
-                    exit_code = code
 
             pipe_output("".join(output_lines))
             if output_lines:
-                exit_code = 1
-            if exit_code is not None:
-                return exit_code
+                return 1
         except Exception as e:
             sys.stderr.write(f"[*] ERROR: {e}{os.linesep}")
             return 2

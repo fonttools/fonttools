@@ -266,14 +266,8 @@ def run_external_diff(
             encoding="utf8",
         )
 
-        while True:
-            output = process.stdout.readline()  # type: ignore
-            exit_status = process.poll()
-            if len(output) == 0 and exit_status is not None:
-                err = process.stderr.read()  # type: ignore
-                if err:
-                    raise IOError(err)
-                yield output, exit_status
-                break
-            else:
-                yield output, None
+        for line in process.stdout:
+            yield line
+        err = process.stderr.read()
+        if err:
+            raise IOError(err)
