@@ -66,10 +66,15 @@ def summarize(
     file2: str,
     include_tables: Optional[List[str]] = None,
     exclude_tables: Optional[List[str]] = None,
+    font_number_1: int = -1,
+    font_number_2: int = -1,
 ) -> Tuple[bool, str]:
     from fontTools.ttLib import TTFont
 
-    with TTFont(file1, lazy=True) as font1, TTFont(file2, lazy=True) as font2:
+    with (
+        TTFont(file1, lazy=True, fontNumber=font_number_1) as font1,
+        TTFont(file2, lazy=True, fontNumber=font_number_2) as font2,
+    ):
         tags1 = {str(tag) for tag in font1.reader.keys()}
         tags2 = {str(tag) for tag in font2.reader.keys()}
 
@@ -195,6 +200,20 @@ def run(argv: List[Text]):
         help="Whether to colorize output (default: auto)",
     )
     parser.add_argument(
+        "--y1",
+        type=int,
+        default=-1,
+        metavar="NUMBER",
+        help="Select font number for TrueType Collection (.ttc/.otc) FILE1, starting from 0",
+    )
+    parser.add_argument(
+        "--y2",
+        type=int,
+        default=-1,
+        metavar="NUMBER",
+        help="Select font number for TrueType Collection (.ttc/.otc) FILE2, starting from 0",
+    )
+    parser.add_argument(
         "-q", "--quiet", action="store_true", help="Suppress all output"
     )
     parser.add_argument("FILE1", help="Font file path 1")
@@ -262,6 +281,8 @@ def run(argv: List[Text]):
                 args.FILE2,
                 include_tables=include_list,
                 exclude_tables=exclude_list,
+                font_number_1=args.y1,
+                font_number_2=args.y2,
             )
             if not args.quiet:
                 sys.stdout.write(output)
@@ -301,6 +322,8 @@ def run(argv: List[Text]):
                 args.FILE2,
                 include_tables=include_list,
                 exclude_tables=exclude_list,
+                font_number_a=args.y1,
+                font_number_b=args.y2,
                 use_multiprocess=True,
             )
         else:
@@ -310,6 +333,8 @@ def run(argv: List[Text]):
                 context_lines=args.lines,
                 include_tables=include_list,
                 exclude_tables=exclude_list,
+                font_number_a=args.y1,
+                font_number_b=args.y2,
                 use_multiprocess=True,
             )
 
