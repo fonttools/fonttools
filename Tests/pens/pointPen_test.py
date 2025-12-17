@@ -283,6 +283,7 @@ class TestSegmentToPointPen(unittest.TestCase):
         )
 
     def test_quad3(self):
+        # https://github.com/fonttools/fonttools/issues/4014
         tpen = _TestPointPen()
         pen = SegmentToPointPen(tpen)
         pen.qCurveTo((10, 20), (20, 20), (20, 10), (10, 10), (10, 20), None)
