@@ -298,15 +298,6 @@ def run(argv: List[Text]):
     #  Incompatible argument validations
     # ----------------------------------
 
-    #   --include and --exclude are mutually exclusive options
-    if args.include and args.exclude:
-        if not args.quiet:
-            sys.stderr.write(
-                f"[*] Error: --include and --exclude are mutually exclusive options. "
-                f"Please use ONLY one of these options in your command.{os.linesep}"
-            )
-        return 2
-
     if args.all and args.binary:
         if not args.quiet:
             sys.stderr.write(
