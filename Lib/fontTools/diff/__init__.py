@@ -270,7 +270,7 @@ def run(argv: List[Text]):
     )
     parser.add_argument(
         "-a",
-        "--all",
+        "--always",
         action="store_true",
         help="Compare tables even if binary identical",
     )
@@ -298,14 +298,14 @@ def run(argv: List[Text]):
     #  Incompatible argument validations
     # ----------------------------------
 
-    if args.all and args.binary:
+    if args.always and args.binary:
         if not args.quiet:
             sys.stderr.write(
-                f"[*] Error: --all and --binary are mutually exclusive options. "
+                f"[*] Error: --always and --binary are mutually exclusive options. "
                 f"Please use ONLY one of these options in your command.{os.linesep}"
             )
         return 2
-    if not args.all:
+    if not args.always:
         args.binary = True
 
     # -------------------------------
