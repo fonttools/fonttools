@@ -468,9 +468,9 @@ class TTFont(object):
 
         self.disassembleInstructions = disassembleInstructions
         self.bitmapGlyphDataFormat = bitmapGlyphDataFormat
-        if not tables:
+        if tables is None:
             tables = self.keys()
-            if skipTables:
+            if skipTables is not None:
                 tables = [tag for tag in tables if tag not in skipTables]
 
         if writeVersion:

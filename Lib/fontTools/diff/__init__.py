@@ -48,15 +48,31 @@ def pipe_output(output: str) -> None:
         raise
 
 
+def _is_gnu_diff(diff_tool: str) -> bool:
+    """Returns True if the provided diff executable is GNU diff."""
+    try:
+        proc = subprocess.run(
+            [diff_tool, "--version"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+    except OSError:
+        return False
+
+    version_output = (proc.stdout or "") + (proc.stderr or "")
+    return "GNU diffutils" in version_output
+
+
 def _iter_filtered_table_tags(
     tags: Iterable[str],
     include_tables: Optional[List[str]] = None,
     exclude_tables: Optional[List[str]] = None,
 ) -> Iterator[str]:
     for tag in tags:
-        if include_tables is not None and tag not in include_tables:
-            continue
         if exclude_tables is not None and tag in exclude_tables:
+            continue
+        if include_tables is not None and tag not in include_tables:
             continue
         yield tag
 
@@ -66,10 +82,15 @@ def summarize(
     file2: str,
     include_tables: Optional[List[str]] = None,
     exclude_tables: Optional[List[str]] = None,
+    font_number_1: int = -1,
+    font_number_2: int = -1,
 ) -> Tuple[bool, str]:
     from fontTools.ttLib import TTFont
 
-    with TTFont(file1, lazy=True) as font1, TTFont(file2, lazy=True) as font2:
+    with (
+        TTFont(file1, lazy=True, fontNumber=font_number_1) as font1,
+        TTFont(file2, lazy=True, fontNumber=font_number_2) as font2,
+    ):
         tags1 = {str(tag) for tag in font1.reader.keys()}
         tags2 = {str(tag) for tag in font2.reader.keys()}
 
@@ -121,6 +142,45 @@ def summarize(
             lines.append("\nResult: DIFFERENT\n")
 
         return identical, "".join(lines)
+
+
+def get_binary_exclude_tables(
+    file1: str,
+    file2: str,
+    include_tables: Optional[List[str]] = None,
+    exclude_tables: Optional[List[str]] = None,
+    font_number_1: int = -1,
+    font_number_2: int = -1,
+) -> Tuple[bool, str]:
+    from fontTools.ttLib import TTFont
+
+    with (
+        TTFont(file1, lazy=True, fontNumber=font_number_1) as font1,
+        TTFont(file2, lazy=True, fontNumber=font_number_2) as font2,
+    ):
+        tags1 = {str(tag) for tag in font1.reader.keys()}
+        tags2 = {str(tag) for tag in font2.reader.keys()}
+
+        all_tags = sorted(
+            set(
+                _iter_filtered_table_tags(
+                    tags1 | tags2,
+                    include_tables=include_tables,
+                    exclude_tables=exclude_tables,
+                )
+            )
+        )
+
+        both = [tag for tag in all_tags if tag in tags1 and tag in tags2]
+        out = set()
+
+        for tag in both:
+            data1 = font1.reader[tag]
+            data2 = font2.reader[tag]
+            if data1 == data2:
+                out.add(tag)
+
+        return out
 
 
 def main():
@@ -195,6 +255,32 @@ def run(argv: List[Text]):
         help="Whether to colorize output (default: auto)",
     )
     parser.add_argument(
+        "--y1",
+        type=int,
+        default=-1,
+        metavar="NUMBER",
+        help="Select font number for TrueType Collection (.ttc/.otc) FILE1, starting from 0",
+    )
+    parser.add_argument(
+        "--y2",
+        type=int,
+        default=-1,
+        metavar="NUMBER",
+        help="Select font number for TrueType Collection (.ttc/.otc) FILE2, starting from 0",
+    )
+    parser.add_argument(
+        "-a",
+        "--always",
+        action="store_true",
+        help="Compare tables even if binary identical",
+    )
+    parser.add_argument(
+        "-b",
+        "--binary",
+        action="store_true",
+        help="Compare tables only if binaries differ (default)",
+    )
+    parser.add_argument(
         "-q", "--quiet", action="store_true", help="Suppress all output"
     )
     parser.add_argument("FILE1", help="Font file path 1")
@@ -211,14 +297,16 @@ def run(argv: List[Text]):
     # ----------------------------------
     #  Incompatible argument validations
     # ----------------------------------
-    #   --include and --exclude are mutually exclusive options
-    if args.include and args.exclude:
+
+    if args.always and args.binary:
         if not args.quiet:
             sys.stderr.write(
-                f"[*] Error: --include and --exclude are mutually exclusive options. "
+                f"[*] Error: --always and --binary are mutually exclusive options. "
                 f"Please use ONLY one of these options in your command.{os.linesep}"
             )
         return 2
+    if not args.always:
+        args.binary = True
 
     # -------------------------------
     #  File path argument validations
@@ -250,11 +338,6 @@ def run(argv: List[Text]):
     include_list: Optional[List[Text]] = get_tables_argument_list(args.include)
     exclude_list: Optional[List[Text]] = get_tables_argument_list(args.exclude)
 
-    diff_tool = args.diff
-    color_output = args.color == "always" or (
-        args.color == "auto" and sys.stdout.isatty
-    )
-
     if args.summary:
         try:
             identical, output = summarize(
@@ -262,6 +345,8 @@ def run(argv: List[Text]):
                 args.FILE2,
                 include_tables=include_list,
                 exclude_tables=exclude_list,
+                font_number_1=args.y1,
+                font_number_2=args.y2,
             )
             if not args.quiet:
                 sys.stdout.write(output)
@@ -270,6 +355,29 @@ def run(argv: List[Text]):
             if not args.quiet:
                 sys.stderr.write(f"[*] ERROR: {e}{os.linesep}")
             return 2
+
+    if args.binary:
+        excluded_binary_tables = get_binary_exclude_tables(
+            args.FILE1,
+            args.FILE2,
+            include_tables=include_list,
+            exclude_tables=exclude_list,
+            font_number_1=args.y1,
+            font_number_2=args.y2,
+        )
+        if include_list is not None:
+            include_list = [
+                tag for tag in include_list if tag not in excluded_binary_tables
+            ]
+        else:
+            if exclude_list is None:
+                exclude_list = []
+            exclude_list.extend(sorted(excluded_binary_tables))
+
+    diff_tool = args.diff
+    color_output = args.color == "always" or (
+        args.color == "auto" and sys.stdout.isatty
+    )
 
     if diff_tool is None:
         diff_tool = shutil.which("diff")
@@ -291,6 +399,8 @@ def run(argv: List[Text]):
                     diff_arg = ["-u"]
                 else:
                     diff_arg = ["-u{}".format(args.lines)]
+                if _is_gnu_diff(diff_tool):
+                    diff_arg.append(r"-F^\s\s<")
             else:
                 diff_arg = diff_arg.split()
 
@@ -301,6 +411,8 @@ def run(argv: List[Text]):
                 args.FILE2,
                 include_tables=include_list,
                 exclude_tables=exclude_list,
+                font_number_a=args.y1,
+                font_number_b=args.y2,
                 use_multiprocess=True,
             )
         else:
@@ -310,6 +422,8 @@ def run(argv: List[Text]):
                 context_lines=args.lines,
                 include_tables=include_list,
                 exclude_tables=exclude_list,
+                font_number_a=args.y1,
+                font_number_b=args.y2,
                 use_multiprocess=True,
             )
 

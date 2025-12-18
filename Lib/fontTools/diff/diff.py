@@ -23,14 +23,16 @@ def _get_fonts_and_save_xml(
     tmpdirpath: Text,
     include_tables: Optional[List[Text]],
     exclude_tables: Optional[List[Text]],
+    font_number_a: int,
+    font_number_b: int,
     use_multiprocess: bool,
 ) -> Tuple[Text, Text, Text, Text, Text, Text]:
     post_pathname, postpath, pre_pathname, prepath = _get_pre_post_paths(
         filepath_a, filepath_b
     )
     # instantiate left and right fontTools.ttLib.TTFont objects
-    tt_left = TTFont(prepath)
-    tt_right = TTFont(postpath)
+    tt_left = TTFont(prepath, fontNumber=font_number_a)
+    tt_right = TTFont(postpath, fontNumber=font_number_b)
     left_ttxpath = os.path.join(tmpdirpath, "left.ttx")
     right_ttxpath = os.path.join(tmpdirpath, "right.ttx")
     _mp_save_ttx_xml(
@@ -101,6 +103,8 @@ def _saved_ttx_files(
     filepath_b: Text,
     include_tables: Optional[List[Text]],
     exclude_tables: Optional[List[Text]],
+    font_number_a: int,
+    font_number_b: int,
     use_multiprocess: bool,
 ) -> Iterator[Tuple[Text, Text, Text, Text, Text, Text]]:
     with tempfile.TemporaryDirectory() as tmpdirpath:
@@ -110,6 +114,8 @@ def _saved_ttx_files(
             tmpdirpath,
             include_tables,
             exclude_tables,
+            font_number_a,
+            font_number_b,
             use_multiprocess,
         )
 
@@ -119,6 +125,8 @@ def _diff_with_saved_ttx_files(
     filepath_b: Text,
     include_tables: Optional[List[Text]],
     exclude_tables: Optional[List[Text]],
+    font_number_a: int,
+    font_number_b: int,
     use_multiprocess: bool,
     create_differ: Callable[[Text, Text, Text, Text, Text, Text], Iterable[Text]],
 ) -> Iterator[Text]:
@@ -127,6 +135,8 @@ def _diff_with_saved_ttx_files(
         filepath_b,
         include_tables,
         exclude_tables,
+        font_number_a,
+        font_number_b,
         use_multiprocess,
     ) as (
         left_ttxpath,
@@ -159,6 +169,8 @@ def u_diff(
     context_lines: int = 3,
     include_tables: Optional[List[Text]] = None,
     exclude_tables: Optional[List[Text]] = None,
+    font_number_a: int = -1,
+    font_number_b: int = -1,
     use_multiprocess: bool = True,
 ) -> Iterator[Text]:
     """Performs a unified diff on a TTX serialized data format dump of font binary data using
@@ -210,6 +222,8 @@ def u_diff(
         filepath_b,
         include_tables,
         exclude_tables,
+        font_number_a,
+        font_number_b,
         use_multiprocess,
         _create_unified_diff,
     )
@@ -222,6 +236,8 @@ def run_external_diff(
     filepath_b: Text,
     include_tables: Optional[List[Text]] = None,
     exclude_tables: Optional[List[Text]] = None,
+    font_number_a: int = -1,
+    font_number_b: int = -1,
     use_multiprocess: bool = True,
 ) -> Iterator[Text]:
     """Performs a unified diff on a TTX serialized data format dump of font binary data using
@@ -271,6 +287,8 @@ def run_external_diff(
         filepath_b,
         include_tables,
         exclude_tables,
+        font_number_a,
+        font_number_b,
         use_multiprocess,
         _create_external_diff,
     )
