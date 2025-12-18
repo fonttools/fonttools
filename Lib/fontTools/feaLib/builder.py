@@ -392,6 +392,10 @@ class Builder(object):
                 return user_name_id
 
     def buildFeatureParams(self, tag):
+        # by convention, a missing name ID is represented by 0xffff.
+        # the spec says that these fields can be 'NULL', but 'NULL' is not
+        # well defined for the purpose of nameIDs?
+        NO_NAME_ID = 0xFFFF
         params = None
         if tag == "size":
             params = otTables.FeatureParamsSize()
@@ -418,17 +422,17 @@ class Builder(object):
             params = otTables.FeatureParamsCharacterVariants()
             params.Format = 0
             params.FeatUILabelNameID = self.cv_parameters_ids_.get(
-                (tag, "FeatUILabelNameID"), 0
+                (tag, "FeatUILabelNameID"), NO_NAME_ID
             )
             params.FeatUITooltipTextNameID = self.cv_parameters_ids_.get(
-                (tag, "FeatUITooltipTextNameID"), 0
+                (tag, "FeatUITooltipTextNameID"), NO_NAME_ID
             )
             params.SampleTextNameID = self.cv_parameters_ids_.get(
-                (tag, "SampleTextNameID"), 0
+                (tag, "SampleTextNameID"), NO_NAME_ID
             )
             params.NumNamedParameters = self.cv_num_named_params_.get(tag, 0)
             params.FirstParamUILabelNameID = self.cv_parameters_ids_.get(
-                (tag, "ParamUILabelNameID_0"), 0
+                (tag, "ParamUILabelNameID_0"), NO_NAME_ID
             )
             params.CharCount = len(self.cv_characters_[tag])
             params.Character = self.cv_characters_[tag]
