@@ -1335,6 +1335,28 @@ class BuilderTest(unittest.TestCase):
         assert self.get_region(var_region_axis_wght) == (0.0, 0.90625, 1.0)
         assert self.get_region(var_region_axis_wdth) == (0.0, 0.5, 1.0)
 
+    def test_variable_scalar_default(self):
+        """Test that missing axis name(s) in variable scaler means default location."""
+
+        features = """
+            feature kern {
+                pos two <0 (wght=900:22 12 wdth=150,wght=900:42) 0 0>;
+            } kern;
+        """
+
+        font = self.make_mock_vf()
+        addOpenTypeFeaturesFromString(font, features)
+
+        var_region_list = font.tables["GDEF"].table.VarStore.VarRegionList
+        var_region_axis_wght = var_region_list.Region[0].VarRegionAxis[0]
+        var_region_axis_wdth = var_region_list.Region[0].VarRegionAxis[1]
+        assert self.get_region(var_region_axis_wght) == (0.0, 0.875, 1.0)
+        assert self.get_region(var_region_axis_wdth) == (0.0, 0.0, 0.0)
+        var_region_axis_wght = var_region_list.Region[1].VarRegionAxis[0]
+        var_region_axis_wdth = var_region_list.Region[1].VarRegionAxis[1]
+        assert self.get_region(var_region_axis_wght) == (0.0, 0.875, 1.0)
+        assert self.get_region(var_region_axis_wdth) == (0.0, 0.5, 1.0)
+
     def test_ligatureCaretByPos_variable_scalar(self):
         """Test that the `avar` table is consulted when normalizing user-space
         values."""
