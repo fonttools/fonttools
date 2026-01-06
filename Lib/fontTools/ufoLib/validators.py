@@ -623,19 +623,8 @@ def guidelineValidator(value: Any) -> bool:
     """
     if not genericDictValidator(value, _guidelineDictPrototype):
         return False
-    x = value.get("x")
-    y = value.get("y")
+
     angle = value.get("angle")
-    # x or y must be present
-    if x is None and y is None:
-        return False
-    # if x or y are None, angle must not be present
-    if x is None or y is None:
-        if angle is not None:
-            return False
-    # if x and y are defined, angle must be defined
-    if x is not None and y is not None and angle is None:
-        return False
     # angle must be between 0 and 360
     if angle is not None:
         if angle < 0:

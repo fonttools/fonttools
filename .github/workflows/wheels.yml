@@ -21,13 +21,13 @@ jobs:
   build_pure:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: Install uv
       uses: astral-sh/setup-uv@v7
     - name: Build source distribution and pure-python wheel
       run: |
         uv build
-    - uses: actions/upload-artifact@v5
+    - uses: actions/upload-artifact@v6
       with:
         name: pure
         path: |
@@ -42,10 +42,10 @@ jobs:
         shell: bash
     strategy:
       fail-fast: false
-      # macos-13 runners are still x86_64, macos-14 (latest) are arm64; we want to build
+      # macos-15-intel runners are still x86_64, macos-14 (latest) are arm64; we want to build
       # the x86_64 wheel on/for x86_64 macs
       matrix:
-        os: [macos-13, windows-latest, ubuntu-latest]
+        os: [macos-15-intel, windows-latest, ubuntu-latest]
         arch: [auto64]
         include:
           - os: macos-latest
@@ -55,7 +55,7 @@ jobs:
           - os: ubuntu-24.04-arm
             arch: aarch64
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
       with:
         submodules: recursive
     - name: Set up Python
@@ -70,7 +70,7 @@ jobs:
       env:
         CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
         CIBW_ARCHS: ${{ matrix.arch }}
-    - uses: actions/upload-artifact@v5
+    - uses: actions/upload-artifact@v6
       with:
         name: wheels-${{ matrix.os }}-${{ matrix.arch }}
         path: wheelhouse/*.whl
@@ -90,7 +90,7 @@ jobs:
       id-token: write # IMPORTANT: mandatory for trusted publishing
 
     steps:
-    - uses: actions/download-artifact@v5
+    - uses: actions/download-artifact@v7
       with:
         # so that all artifacts are downloaded in the same directory specified by 'path'
         merge-multiple: true

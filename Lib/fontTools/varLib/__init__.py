@@ -1562,7 +1562,11 @@ def main(args=None):
         vf_name_to_output_path[vfs_to_build[0].name] = options.outfile
     else:
         for vf in vfs_to_build:
-            filename = vf.filename if vf.filename is not None else vf.name + ".{ext}"
+            if vf.filename is not None:
+                # Only use basename to prevent path traversal attacks
+                filename = os.path.basename(vf.filename)
+            else:
+                filename = vf.name + ".{ext}"
             vf_name_to_output_path[vf.name] = os.path.join(output_dir, filename)
 
     finder = MasterFinder(options.master_finder)

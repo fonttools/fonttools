@@ -65,8 +65,6 @@ class table__t_r_a_k(DefaultTable.DefaultTable):
     See also https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6trak.html
     """
 
-    dependencies = ["name"]
-
     def compile(self, ttFont):
         dataList = []
         offset = TRAK_HEADER_FORMAT_SIZE

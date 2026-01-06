@@ -1323,6 +1323,11 @@ class VariableFontDescriptor(SimpleDescriptor):
         in the document**. The file may or may not exist.
 
         If not specified, the :attr:`name` will be used as a basename for the file.
+
+        .. note::
+            This is intended to be a simple filename (basename or stem) only.
+            Build tools will only use the basename component and ignore any
+            directory separators for security reasons.
         """
         self.axisSubsets: List[
             Union[RangeAxisSubsetDescriptor, ValueAxisSubsetDescriptor]
@@ -1554,7 +1559,6 @@ class BaseDocWriter(object):
         return ("%f" % num).rstrip("0").rstrip(".")
 
     def _addRule(self, ruleObject):
-        # if none of the conditions have minimum or maximum values, do not add the rule.
         ruleElement = ET.Element("rule")
         if ruleObject.name is not None:
             ruleElement.attrib["name"] = ruleObject.name
@@ -1575,8 +1579,9 @@ class BaseDocWriter(object):
                         cond.get("maximum")
                     )
                 conditionsetElement.append(conditionElement)
-            if len(conditionsetElement):
-                ruleElement.append(conditionsetElement)
+            # Serialize the conditionset even if it is empty, as this is the
+            # canonical way of defining a rule that is always true.
+            ruleElement.append(conditionsetElement)
         for sub in ruleObject.subs:
             subElement = ET.Element("sub")
             subElement.attrib["name"] = sub[0]
