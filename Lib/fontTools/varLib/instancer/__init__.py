@@ -954,11 +954,8 @@ def _instantiateGvarGlyph(
         # preserve backwards compatibility.
         #     See 0010a3cd9aa25f84a3a6250dafb119743d32aa40
         coordinates.toInt()
-
-        isComposite = glyf[glyphname].isComposite()
-
         for var in tupleVarStore:
-            var.optimize(coordinates, endPts, isComposite=isComposite)
+            var.optimize(coordinates, endPts)
 
 
 def instantiateGvarGlyph(varfont, glyphname, axisLimits, optimize=True):
