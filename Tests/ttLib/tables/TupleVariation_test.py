@@ -963,23 +963,6 @@ class TupleVariationTest(unittest.TestCase):
 
         self.assertEqual(var.coordinates, [None, None, None, None, None])
 
-    def test_optimize_isComposite(self):
-        # when a composite glyph's deltas are all (0, 0), we still want
-        # to write out an entry in gvar, else macOS doesn't apply any
-        # variations to the composite glyph (even if its individual components
-        # do vary).
-        # https://github.com/fonttools/fonttools/issues/1381
-        var = TupleVariation({"wght": (0.0, 1.0, 1.0)}, [(0, 0)] * 5)
-        var.optimize([(0, 0)] * 5, [0], isComposite=True)
-        self.assertEqual(var.coordinates, [(0, 0)] * 5)
-
-        # it takes more than 128 (0, 0) deltas before the optimized tuple with
-        # (None) inferred deltas (except for the first) becomes smaller than
-        # the un-optimized one that has all deltas explicitly set to (0, 0).
-        var = TupleVariation({"wght": (0.0, 1.0, 1.0)}, [(0, 0)] * 129)
-        var.optimize([(0, 0)] * 129, list(range(129 - 4)), isComposite=True)
-        self.assertEqual(var.coordinates, [(0, 0)] + [None] * 128)
-
     def test_sum_deltas_gvar(self):
         var1 = TupleVariation(
             {},

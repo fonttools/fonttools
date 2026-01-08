@@ -382,25 +382,7 @@ def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
                 continue
             var = TupleVariation(support, delta)
             if optimize:
-                delta_opt = iup_delta_optimize(
-                    delta, origCoords, endPts, tolerance=tolerance
-                )
-
-                if None in delta_opt:
-                    # Use "optimized" version only if smaller...
-                    var_opt = TupleVariation(support, delta_opt)
-
-                    axis_tags = sorted(
-                        support.keys()
-                    )  # Shouldn't matter that this is different from fvar...?
-                    tupleData, auxData = var.compile(axis_tags)
-                    unoptimized_len = len(tupleData) + len(auxData)
-                    tupleData, auxData = var_opt.compile(axis_tags)
-                    optimized_len = len(tupleData) + len(auxData)
-
-                    if optimized_len < unoptimized_len:
-                        var = var_opt
-
+                var.optimize(origCoords, endPts, tolerance=tolerance)
             gvar.variations[glyph].append(var)
 
 
