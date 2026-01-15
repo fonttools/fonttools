@@ -69,17 +69,40 @@ if with_cython and not has_cython:
 
 ext_modules = []
 if with_cython is True or (with_cython is None and has_cython):
+    # On POSIX systems (Linux, macOS, etc.), math functions like sqrt, pow, fabs
+    # may require explicit linkage to libm. This is particularly needed on some
+    # Linux distributions (e.g., Amazon Linux with Clang) where libm is not
+    # automatically linked. On Windows, math functions are in msvcrt.
+    # See https://github.com/fonttools/fonttools/issues/4028
+    libraries = ["m"] if os.name == "posix" else []
+
     ext_modules.append(
-        Extension("fontTools.cu2qu.cu2qu", ["Lib/fontTools/cu2qu/cu2qu.py"]),
+        Extension(
+            "fontTools.cu2qu.cu2qu",
+            ["Lib/fontTools/cu2qu/cu2qu.py"],
+            libraries=libraries,
+        ),
     )
     ext_modules.append(
-        Extension("fontTools.qu2cu.qu2cu", ["Lib/fontTools/qu2cu/qu2cu.py"]),
+        Extension(
+            "fontTools.qu2cu.qu2cu",
+            ["Lib/fontTools/qu2cu/qu2cu.py"],
+            libraries=libraries,
+        ),
     )
     ext_modules.append(
-        Extension("fontTools.misc.bezierTools", ["Lib/fontTools/misc/bezierTools.py"]),
+        Extension(
+            "fontTools.misc.bezierTools",
+            ["Lib/fontTools/misc/bezierTools.py"],
+            libraries=libraries,
+        ),
     )
     ext_modules.append(
-        Extension("fontTools.pens.momentsPen", ["Lib/fontTools/pens/momentsPen.py"]),
+        Extension(
+            "fontTools.pens.momentsPen",
+            ["Lib/fontTools/pens/momentsPen.py"],
+            libraries=libraries,
+        ),
     )
     ext_modules.append(
         Extension("fontTools.varLib.iup", ["Lib/fontTools/varLib/iup.py"]),
