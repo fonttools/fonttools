@@ -157,7 +157,7 @@ instructions = [
 # fmt: on
 
 
-def bitRepr(value, bits):
+def bitRepr(value: int, bits: int) -> str:
     s = ""
     for i in range(bits):
         s = "01"[value & 0x1] + s
@@ -168,7 +168,9 @@ def bitRepr(value, bits):
 _mnemonicPat = re.compile(r"[A-Z][A-Z0-9]*$")
 
 
-def _makeDict(instructionList):
+def _makeDict(
+    instructionList: list[tuple[int, str, int, str, int, int]],
+) -> tuple[dict, dict]:
     opcodeDict = {}
     mnemonicDict = {}
     for op, mnemonic, argBits, name, pops, pushes in instructionList:
@@ -188,10 +190,10 @@ opcodeDict, mnemonicDict = _makeDict(instructions)
 
 
 class tt_instructions_error(Exception):
-    def __init__(self, error):
+    def __init__(self, error) -> None:
         self.error = error
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "TT instructions error: %s" % repr(self.error)
 
 
@@ -209,14 +211,14 @@ _indentRE = re.compile(r"^FDEF|IF|ELSE\[ \]\t.+")
 _unindentRE = re.compile(r"^ELSE|ENDF|EIF\[ \]\t.+")
 
 
-def _skipWhite(data, pos):
+def _skipWhite(data: str, pos: int) -> int:
     m = _whiteRE.match(data, pos)
     newPos = m.regs[0][1]
     assert newPos >= pos
     return newPos
 
 
-class Program(object):
+class Program:
     def __init__(self) -> None:
         pass
 
@@ -225,7 +227,7 @@ class Program(object):
         if hasattr(self, "assembly"):
             del self.assembly
 
-    def fromAssembly(self, assembly: List[str] | str) -> None:
+    def fromAssembly(self, assembly: list[str] | str) -> None:
         if isinstance(assembly, list):
             self.assembly = assembly
         elif isinstance(assembly, str):
