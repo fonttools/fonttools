@@ -1,7 +1,17 @@
-from fontTools.misc.textTools import bytesjoin, strjoin, tobytes, tostr, safeEval
-from fontTools.misc import sstruct
-from . import DefaultTable
+from __future__ import annotations
+
 import base64
+from typing import TYPE_CHECKING
+
+from fontTools.misc import sstruct
+from fontTools.misc.textTools import bytesjoin, safeEval, strjoin, tobytes, tostr
+
+from . import DefaultTable
+
+if TYPE_CHECKING:
+    from typing import Any
+
+    from fontTools.ttLib import TTFont
 
 DSIG_HeaderFormat = """
 	> # big endian
@@ -46,11 +56,12 @@ class table_D_S_I_G_(DefaultTable.DefaultTable):
     See also https://learn.microsoft.com/en-us/typography/opentype/spec/dsig
     """
 
-    def decompile(self, data, ttFont):
+    def decompile(self, data: bytes, ttFont: TTFont) -> None:
         dummy, newData = sstruct.unpack2(DSIG_HeaderFormat, data, self)
         assert self.ulVersion == 1, "DSIG ulVersion must be 1"
         assert self.usFlag & ~1 == 0, "DSIG usFlag must be 0x1 or 0x0"
-        self.signatureRecords = sigrecs = []
+        self.signatureRecords: list[SignatureRecord] = []
+        sigrecs = self.signatureRecords
         for n in range(self.usNumSigs):
             sigrec, newData = sstruct.unpack2(
                 DSIG_SignatureFormat, newData, SignatureRecord()
@@ -71,7 +82,7 @@ class table_D_S_I_G_(DefaultTable.DefaultTable):
             )
             sigrec.pkcs7 = newData[: sigrec.cbSignature]
 
-    def compile(self, ttFont):
+    def compile(self, ttFont: TTFont) -> bytes:
         packed = sstruct.pack(DSIG_HeaderFormat, self)
         headers = [packed]
         offset = len(packed) + self.usNumSigs * sstruct.calcsize(DSIG_SignatureFormat)
@@ -92,7 +103,7 @@ class table_D_S_I_G_(DefaultTable.DefaultTable):
             data.append(b"\0")
         return bytesjoin(headers + data)
 
-    def toXML(self, xmlWriter, ttFont):
+    def toXML(self, xmlWriter: Any, ttFont: TTFont, **kwargs: Any) -> None:
         xmlWriter.comment(
             "note that the Digital Signature will be invalid after recompilation!"
         )
