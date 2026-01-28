@@ -150,11 +150,11 @@ def b64encode(b):
     return strjoin(items)
 
 
-class SignatureRecord(object):
-    def __repr__(self):
+class SignatureRecord:
+    def __repr__(self) -> str:
         return "<%s: %s>" % (self.__class__.__name__, self.__dict__)
 
-    def toXML(self, writer, ttFont):
+    def toXML(self, writer, ttFont: TTFont) -> None:
         writer.begintag(self.__class__.__name__, format=self.ulFormat)
         writer.newline()
         writer.write_noindent("-----BEGIN PKCS7-----\n")
@@ -162,8 +162,10 @@ class SignatureRecord(object):
         writer.write_noindent("-----END PKCS7-----\n")
         writer.endtag(self.__class__.__name__)
 
-    def fromXML(self, name, attrs, content, ttFont):
-        self.ulFormat = safeEval(attrs["format"])
-        self.usReserved1 = safeEval(attrs.get("reserved1", "0"))
-        self.usReserved2 = safeEval(attrs.get("reserved2", "0"))
+    def fromXML(
+        self, name: str, attrs: dict[str, str], content: str, ttFont: TTFont
+    ) -> None:
+        self.ulFormat: int = safeEval(attrs["format"])
+        self.usReserved1: int = safeEval(attrs.get("reserved1", "0"))
+        self.usReserved2: int = safeEval(attrs.get("reserved2", "0"))
         self.pkcs7 = base64.b64decode(tobytes(strjoin(filter(pem_spam, content))))
