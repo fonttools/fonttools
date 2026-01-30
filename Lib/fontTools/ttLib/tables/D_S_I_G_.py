@@ -103,7 +103,7 @@ class table_D_S_I_G_(DefaultTable.DefaultTable):
             data.append(b"\0")
         return bytesjoin(headers + data)
 
-    def toXML(self, xmlWriter: Any, ttFont: TTFont, **kwargs: Any) -> None:
+    def toXML(self, xmlWriter: Any, ttFont: TTFont) -> None:
         xmlWriter.comment(
             "note that the Digital Signature will be invalid after recompilation!"
         )
