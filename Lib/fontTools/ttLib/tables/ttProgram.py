@@ -190,7 +190,7 @@ opcodeDict, mnemonicDict = _makeDict(instructions)
 
 
 class tt_instructions_error(Exception):
-    def __init__(self, error) -> None:
+    def __init__(self, error: str) -> None:
         self.error = error
 
     def __str__(self) -> str:
