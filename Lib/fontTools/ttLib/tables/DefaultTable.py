@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from fontTools.ttLib import TTFont
 
 
-class DefaultTable(object):
+class DefaultTable:
     dependencies: list[str] = []
 
     def __init__(self, tag: str | bytes | None = None) -> None:
