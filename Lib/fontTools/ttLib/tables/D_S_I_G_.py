@@ -9,8 +9,7 @@ from fontTools.misc.textTools import bytesjoin, safeEval, strjoin, tobytes, tost
 from . import DefaultTable
 
 if TYPE_CHECKING:
-    from typing import Any
-
+    from fontTools.misc.xmlWriter import XMLWriter
     from fontTools.ttLib import TTFont
 
 DSIG_HeaderFormat = """
@@ -103,7 +102,7 @@ class table_D_S_I_G_(DefaultTable.DefaultTable):
             data.append(b"\0")
         return bytesjoin(headers + data)
 
-    def toXML(self, xmlWriter: Any, ttFont: TTFont) -> None:
+    def toXML(self, xmlWriter: XMLWriter, ttFont: TTFont) -> None:
         xmlWriter.comment(
             "note that the Digital Signature will be invalid after recompilation!"
         )
