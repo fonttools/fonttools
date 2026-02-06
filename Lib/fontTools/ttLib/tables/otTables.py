@@ -1011,8 +1011,8 @@ class Coverage(FormatSwitchingBaseTable):
         return rawTable
 
     def toXML2(self, xmlWriter, font):
-        for glyphName in getattr(self, "glyphs", []):
-            xmlWriter.simpletag("Glyph", value=glyphName)
+        for i, glyphName in enumerate(getattr(self, "glyphs", [])):
+            xmlWriter.simpletag("Glyph", value=glyphName, index=i)
             xmlWriter.newline()
 
     def fromXML(self, name, attrs, content, font):
