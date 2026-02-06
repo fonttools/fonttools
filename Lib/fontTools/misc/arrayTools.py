@@ -2,13 +2,29 @@
 so on.
 """
 
-from fontTools.misc.roundTools import otRound
-from fontTools.misc.vector import Vector as _Vector
+from __future__ import annotations
+
 import math
 import warnings
+from collections.abc import Iterable, Sequence, Iterator
+from typing import Any, TYPE_CHECKING
+
+from fontTools.misc.roundTools import otRound
+from fontTools.misc.vector import Vector as _Vector
+
+if TYPE_CHECKING:
+    from fontTools.annotations import (
+        Point,
+        RectFloat,
+        RectInt,
+        T,
+        RoundFunc,
+        ExtremaFunc,
+        Vector as VectorType,
+    )
 
 
-def calcBounds(array):
+def calcBounds(array: Sequence[Point]) -> RectFloat:
     """Calculate the bounding rectangle of a 2D points array.
 
     Args:
@@ -24,7 +40,7 @@ def calcBounds(array):
     return min(xs), min(ys), max(xs), max(ys)
 
 
-def calcIntBounds(array, round=otRound):
+def calcIntBounds(array: Sequence[Point], round: RoundFunc = otRound) -> RectInt:
     """Calculate the integer bounding rectangle of a 2D points array.
 
     Values are rounded to closest integer towards ``+Infinity`` using the
@@ -39,10 +55,16 @@ def calcIntBounds(array, round=otRound):
         A four-item tuple of integers representing the bounding rectangle:
         ``(xMin, yMin, xMax, yMax)``.
     """
-    return tuple(round(v) for v in calcBounds(array))
+    xMin, yMin, xMax, yMax = calcBounds(array)
+    return (round(xMin), round(yMin), round(xMax), round(yMax))
 
 
-def updateBounds(bounds, p, min=min, max=max):
+def updateBounds(
+    bounds: RectFloat | None,
+    p: Point,
+    min: ExtremaFunc = min,
+    max: ExtremaFunc = max,
+) -> RectFloat:
     """Add a point to a bounding rectangle.
 
     Args:
@@ -61,7 +83,7 @@ def updateBounds(bounds, p, min=min, max=max):
     return min(xMin, x), min(yMin, y), max(xMax, x), max(yMax, y)
 
 
-def pointInRect(p, rect):
+def pointInRect(p: Point, rect: RectFloat) -> bool:
     """Test if a point is inside a bounding rectangle.
 
     Args:
@@ -77,7 +99,7 @@ def pointInRect(p, rect):
     return (xMin <= x <= xMax) and (yMin <= y <= yMax)
 
 
-def pointsInRect(array, rect):
+def pointsInRect(array: Sequence[Point], rect: RectFloat) -> list[bool]:
     """Determine which points are inside a bounding rectangle.
 
     Args:
@@ -94,7 +116,7 @@ def pointsInRect(array, rect):
     return [(xMin <= x <= xMax) and (yMin <= y <= yMax) for x, y in array]
 
 
-def vectorLength(vector):
+def vectorLength(vector: VectorType) -> float:
     """Calculate the length of the given vector.
 
     Args:
@@ -107,7 +129,7 @@ def vectorLength(vector):
     return math.sqrt(x**2 + y**2)
 
 
-def asInt16(array):
+def asInt16(array: Sequence[float]) -> list[int]:
     """Round a list of floats to 16-bit signed integers.
 
     Args:
@@ -119,7 +141,7 @@ def asInt16(array):
     return [int(math.floor(i + 0.5)) for i in array]
 
 
-def normRect(rect):
+def normRect(rect: RectFloat) -> RectFloat:
     """Normalize a bounding box rectangle.
 
     This function "turns the rectangle the right way up", so that the following
@@ -138,7 +160,7 @@ def normRect(rect):
     return min(xMin, xMax), min(yMin, yMax), max(xMin, xMax), max(yMin, yMax)
 
 
-def scaleRect(rect, x, y):
+def scaleRect(rect: RectFloat, x: float, y: float) -> RectFloat:
     """Scale a bounding box rectangle.
 
     Args:
@@ -154,7 +176,7 @@ def scaleRect(rect, x, y):
     return xMin * x, yMin * y, xMax * x, yMax * y
 
 
-def offsetRect(rect, dx, dy):
+def offsetRect(rect: RectFloat, dx: float, dy: float) -> RectFloat:
     """Offset a bounding box rectangle.
 
     Args:
@@ -170,7 +192,7 @@ def offsetRect(rect, dx, dy):
     return xMin + dx, yMin + dy, xMax + dx, yMax + dy
 
 
-def insetRect(rect, dx, dy):
+def insetRect(rect: RectFloat, dx: float, dy: float) -> RectFloat:
     """Inset a bounding box rectangle on all sides.
 
     Args:
@@ -186,7 +208,7 @@ def insetRect(rect, dx, dy):
     return xMin + dx, yMin + dy, xMax - dx, yMax - dy
 
 
-def sectRect(rect1, rect2):
+def sectRect(rect1: RectFloat, rect2: RectFloat) -> tuple[bool, RectFloat]:
     """Test for rectangle-rectangle intersection.
 
     Args:
@@ -213,7 +235,7 @@ def sectRect(rect1, rect2):
     return True, (xMin, yMin, xMax, yMax)
 
 
-def unionRect(rect1, rect2):
+def unionRect(rect1: RectFloat, rect2: RectFloat) -> RectFloat:
     """Determine union of bounding rectangles.
 
     Args:
@@ -236,7 +258,7 @@ def unionRect(rect1, rect2):
     return (xMin, yMin, xMax, yMax)
 
 
-def rectCenter(rect):
+def rectCenter(rect: RectFloat) -> Point:
     """Determine rectangle center.
 
     Args:
@@ -250,7 +272,7 @@ def rectCenter(rect):
     return (xMin + xMax) / 2, (yMin + yMax) / 2
 
 
-def rectArea(rect):
+def rectArea(rect: RectFloat) -> float:
     """Determine rectangle area.
 
     Args:
@@ -264,7 +286,7 @@ def rectArea(rect):
     return (yMax - yMin) * (xMax - xMin)
 
 
-def intRect(rect):
+def intRect(rect: RectFloat) -> tuple[int, int, int, int]:
     """Round a rectangle to integer values.
 
     Guarantees that the resulting rectangle is NOT smaller than the original.
@@ -284,7 +306,7 @@ def intRect(rect):
     return (xMin, yMin, xMax, yMax)
 
 
-def quantizeRect(rect, factor=1):
+def quantizeRect(rect: RectFloat, factor: int = 1) -> RectFloat:
     """
     >>> bounds = (72.3, -218.4, 1201.3, 919.1)
     >>> quantizeRect(bounds)
@@ -306,7 +328,7 @@ def quantizeRect(rect, factor=1):
 
 
 class Vector(_Vector):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         warnings.warn(
             "fontTools.misc.arrayTools.Vector has been deprecated, please use "
             "fontTools.misc.vector.Vector instead.",
@@ -314,7 +336,7 @@ class Vector(_Vector):
         )
 
 
-def pairwise(iterable, reverse=False):
+def pairwise(iterable: Sequence[T], reverse: bool = False) -> Iterable[tuple[Any, Any]]:
     """Iterate over current and next items in iterable.
 
     Args:
@@ -349,6 +371,7 @@ def pairwise(iterable, reverse=False):
     """
     if not iterable:
         return
+    it: Iterator[T]
     if reverse:
         it = reversed(iterable)
     else:
@@ -361,7 +384,7 @@ def pairwise(iterable, reverse=False):
     yield (a, first)
 
 
-def _test():
+def _test() -> None:
     """
     >>> import math
     >>> calcBounds([])
