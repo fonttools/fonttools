@@ -1,9 +1,12 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Iterable, Optional, TypeVar, Union
-from collections.abc import Callable, Sequence
-from fontTools.misc.filesystem._base import FS
+
+from typing import Any, Literal, TYPE_CHECKING, TypeVar
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from os import PathLike
 from xml.etree.ElementTree import Element as ElementTreeElement
+
+from fontTools.misc.filesystem._base import FS
+from fontTools.misc.transform import Transform
 
 if TYPE_CHECKING:
     from fontTools.ufoLib import UFOFormatVersion
@@ -11,20 +14,97 @@ if TYPE_CHECKING:
     from lxml.etree import _Element as LxmlElement
 
 
+# ---------------------------------------------------------------------
+# Generic type variables
 T = TypeVar("T")  # Generic type
 K = TypeVar("K")  # Generic dict key type
 V = TypeVar("V")  # Generic dict value type
 
-GlyphNameToFileNameFunc = Optional[Callable[[str, set[str]], str]]
-ElementType = Union[ElementTreeElement, "LxmlElement"]
-FormatVersion = Union[int, tuple[int, int]]
-FormatVersions = Optional[Iterable[FormatVersion]]
-GLIFFormatVersionInput = Optional[Union[int, tuple[int, int], "GLIFFormatVersion"]]
-UFOFormatVersionInput = Optional[Union[int, tuple[int, int], "UFOFormatVersion"]]
-IntFloat = Union[int, float]
-KerningPair = tuple[str, str]
+# ---------------------------------------------------------------------
+# Generic tuples
+Pair = tuple[T, T]
+Triple = tuple[T, T, T]
+Quadruple = tuple[T, T, T, T]
+Sixtuple = tuple[T, T, T, T, T, T]
+
+# ---------------------------------------------------------------------
+# Numeric types
+IntFloat = int | float
+NestedFloat = float | Iterable["NestedFloat"]
+
+# ---------------------------------------------------------------------
+# Names and strings
+Identifier = str | None
+PointName = str | None
+SegmentType = str | None
+
+# ---------------------------------------------------------------------
+# Paths and file systems
+PathStr = str | PathLike[str]
+PathOrFS = PathStr | FS
+
+# ---------------------------------------------------------------------
+# Points, vectors, lines, curves
+Point = Pair[float]
+OptionalPoint = Point | None
+Vector = Pair[float]
+LinePoints = Pair[Point]
+LineComplex = Pair[complex]
+
+QuadraticPoints = Triple[Point]
+QuadraticComplex = Triple[complex]
+CubicPoints = Quadruple[Point]
+CubicComplex = Quadruple[complex]
+CurvePoints = QuadraticPoints | CubicPoints
+
+# ---------------------------------------------------------------------
+# Rectangles
+RectFloat = Quadruple[float]
+RectInt = Quadruple[int]
+
+# ---------------------------------------------------------------------
+# Transform
+TransformFloat = Sixtuple[float]
+TransformInput = TransformFloat | Transform
+
+# ---------------------------------------------------------------------
+# Segments
+Smooth = bool
+PointRecord = tuple[OptionalPoint, SegmentType, Smooth, PointName, Any]
+PointRecordList = list[PointRecord]
+SegmentPointList = list[tuple[OptionalPoint, Smooth, PointName, Any]]
+SegmentList = list[tuple[SegmentType, SegmentPointList]]
+
+# ---------------------------------------------------------------------
+# Mapping
+DSLocation = dict[str, float]
+GlyphSetMapping = Mapping[str, Any]
+
+# ---------------------------------------------------------------------
+# Kerning
+KerningPair = Pair[str]
 KerningDict = dict[KerningPair, IntFloat]
 KerningGroups = dict[str, Sequence[str]]
 KerningNested = dict[str, dict[str, IntFloat]]
-PathStr = Union[str, PathLike[str]]
-PathOrFS = Union[PathStr, FS]
+
+# ---------------------------------------------------------------------
+# UFO / GLIF
+FormatVersion = int | Pair[int]
+FormatVersions = Iterable[FormatVersion] | None
+UFOFormatVersionInput = int | tuple[int, int] | Literal["UFOFormatVersion"] | None
+GLIFFormatVersionInput = int | tuple[int, int] | Literal["GLIFFormatVersion"] | None
+
+# ---------------------------------------------------------------------
+# XML
+ElementType = ElementTreeElement | Literal["LxmlElement"]
+
+# ---------------------------------------------------------------------
+# Functions
+GlyphNameToFileNameFunc = Callable[[str, set[str]], str] | None
+RoundFunc = Callable[[float], int]
+ExtremaFunc = Callable[[float, float], float]
+SqrtFunc = Callable[[float], float]
+
+
+# ---------------------------------------------------------------------
+# Protocols
