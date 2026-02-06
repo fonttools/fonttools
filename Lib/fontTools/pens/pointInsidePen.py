@@ -2,10 +2,14 @@
 for shapes.
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from fontTools.pens.basePen import BasePen
 from fontTools.misc.bezierTools import solveQuadratic, solveCubic
 
-
+if TYPE_CHECKING:
+    from fontTools.annotations import GlyphSetMapping, Point
 __all__ = ["PointInsidePen"]
 
 
@@ -38,25 +42,27 @@ class PointInsidePen(BasePen):
     #   http://graphics.cs.ucdavis.edu/~okreylos/TAship/Spring2000/PointInPolygon.html
     # I extended the principles outlined on that page to curves.
 
-    def __init__(self, glyphSet, testPoint, evenOdd=False):
+    def __init__(
+        self, glyphSet: GlyphSetMapping, testPoint: Point, evenOdd: bool = False
+    ) -> None:
         BasePen.__init__(self, glyphSet)
         self.setTestPoint(testPoint, evenOdd)
 
-    def setTestPoint(self, testPoint, evenOdd=False):
+    def setTestPoint(self, testPoint: Point, evenOdd: bool = False) -> None:
         """Set the point to test. Call this _before_ the outline gets drawn."""
         self.testPoint = testPoint
         self.evenOdd = evenOdd
-        self.firstPoint = None
-        self.intersectionCount = 0
+        self.firstPoint: Point | None = None
+        self.intersectionCount: int = 0
 
-    def getWinding(self):
+    def getWinding(self) -> int:
         if self.firstPoint is not None:
             # always make sure the sub paths are closed; the algorithm only works
             # for closed paths.
             self.closePath()
         return self.intersectionCount
 
-    def getResult(self):
+    def getResult(self) -> bool:
         """After the shape has been drawn, getResult() returns True if the test
         point lies within the (black) shape, and False if it doesn't.
         """
@@ -67,22 +73,25 @@ class PointInsidePen(BasePen):
             result = self.intersectionCount != 0
         return not not result
 
-    def _addIntersection(self, goingUp):
+    def _addIntersection(self, goingUp: bool) -> None:
         if self.evenOdd or goingUp:
             self.intersectionCount += 1
         else:
             self.intersectionCount -= 1
 
-    def _moveTo(self, point):
+    def _moveTo(self, point: Point) -> None:
         if self.firstPoint is not None:
             # always make sure the sub paths are closed; the algorithm only works
             # for closed paths.
             self.closePath()
         self.firstPoint = point
 
-    def _lineTo(self, point):
+    def _lineTo(self, point: Point) -> None:
+        currentPoint = self._getCurrentPoint()
+        if currentPoint is None:
+            return
         x, y = self.testPoint
-        x1, y1 = self._getCurrentPoint()
+        x1, y1 = currentPoint
         x2, y2 = point
 
         if x1 < x and x2 < x:
@@ -100,9 +109,12 @@ class PointInsidePen(BasePen):
             return
         self._addIntersection(y2 > y1)
 
-    def _curveToOne(self, bcp1, bcp2, point):
+    def _curveToOne(self, bcp1: Point, bcp2: Point, point: Point) -> None:
+        currentPoint = self._getCurrentPoint()
+        if currentPoint is None:
+            return
         x, y = self.testPoint
-        x1, y1 = self._getCurrentPoint()
+        x1, y1 = currentPoint
         x2, y2 = bcp1
         x3, y3 = bcp2
         x4, y4 = point
@@ -163,12 +175,15 @@ class PointInsidePen(BasePen):
                 # else:
                 #   we're not really intersecting, merely touching
 
-    def _qCurveToOne_unfinished(self, bcp, point):
+    def _qCurveToOne_unfinished(self, bcp: Point, point: Point) -> None:
         # XXX need to finish this, for now doing it through a cubic
         # (BasePen implements _qCurveTo in terms of a cubic) will
         # have to do.
+        currentPoint = self._getCurrentPoint()
+        if currentPoint is None:
+            return
         x, y = self.testPoint
-        x1, y1 = self._getCurrentPoint()
+        x1, y1 = currentPoint
         x2, y2 = bcp
         x3, y3 = point
         c = y1
@@ -182,11 +197,14 @@ class PointInsidePen(BasePen):
             return
         # XXX
 
-    def _closePath(self):
-        if self._getCurrentPoint() != self.firstPoint:
+    def _closePath(self) -> None:
+        currentPoint = self._getCurrentPoint()
+        if currentPoint is None or self.firstPoint is None:
+            return
+        if currentPoint != self.firstPoint:
             self.lineTo(self.firstPoint)
         self.firstPoint = None
 
-    def _endPath(self):
+    def _endPath(self) -> None:
         """Insideness is not defined for open contours."""
         raise NotImplementedError
