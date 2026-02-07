@@ -286,7 +286,7 @@ def rectArea(rect: RectFloat) -> float:
     return (yMax - yMin) * (xMax - xMin)
 
 
-def intRect(rect: RectFloat) -> tuple[int, int, int, int]:
+def intRect(rect: RectFloat) -> RectInt:
     """Round a rectangle to integer values.
 
     Guarantees that the resulting rectangle is NOT smaller than the original.
