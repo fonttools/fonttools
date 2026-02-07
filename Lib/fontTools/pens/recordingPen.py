@@ -1,8 +1,28 @@
 """Pen recording operations that can be accessed or replayed."""
 
+from __future__ import annotations
+
+from typing import Any, TYPE_CHECKING
+from collections.abc import Generator, Iterable, Sequence
+
 from fontTools.pens.basePen import AbstractPen, DecomposingPen
 from fontTools.pens.pointPen import AbstractPointPen, DecomposingPointPen
 
+if TYPE_CHECKING:
+    from fontTools.annotations import (
+        DSLocation,
+        Identifier,
+        Point,
+        PointName,
+        SegmentType,
+        TransformInput,
+    )
+    from fontTools.misc.transform import DecomposedTransform
+
+    RecordingOp = tuple[str, Sequence[Any]]
+    RecordingOps = Iterable[RecordingOp]
+    PenRecordingValue = list[tuple[str, tuple[Any, ...]]]
+    PointPenRecordingValue = list[tuple[str, tuple[Any, ...], dict[str, Any]]]
 
 __all__ = [
     "replayRecording",
@@ -14,7 +34,7 @@ __all__ = [
 ]
 
 
-def replayRecording(recording, pen):
+def replayRecording(recording: RecordingOps, pen: Any) -> None:
     """Replay a recording, as produced by RecordingPen or DecomposingRecordingPen,
     to a pen.
 
@@ -50,34 +70,36 @@ class RecordingPen(AbstractPen):
             print(pen.value)
     """
 
-    def __init__(self):
-        self.value = []
+    def __init__(self) -> None:
+        self.value: PenRecordingValue = []
 
-    def moveTo(self, p0):
+    def moveTo(self, p0: Point) -> None:
         self.value.append(("moveTo", (p0,)))
 
-    def lineTo(self, p1):
+    def lineTo(self, p1: Point) -> None:
         self.value.append(("lineTo", (p1,)))
 
-    def qCurveTo(self, *points):
+    def qCurveTo(self, *points: Point) -> None:  # type: ignore[override]
         self.value.append(("qCurveTo", points))
 
-    def curveTo(self, *points):
+    def curveTo(self, *points: Point) -> None:
         self.value.append(("curveTo", points))
 
-    def closePath(self):
+    def closePath(self) -> None:
         self.value.append(("closePath", ()))
 
-    def endPath(self):
+    def endPath(self) -> None:
         self.value.append(("endPath", ()))
 
-    def addComponent(self, glyphName, transformation):
+    def addComponent(self, glyphName: str, transformation: TransformInput) -> None:
         self.value.append(("addComponent", (glyphName, transformation)))
 
-    def addVarComponent(self, glyphName, transformation, location):
+    def addVarComponent(
+        self, glyphName: str, transformation: DecomposedTransform, location: DSLocation
+    ) -> None:
         self.value.append(("addVarComponent", (glyphName, transformation, location)))
 
-    def replay(self, pen):
+    def replay(self, pen: Any) -> None:
         replayRecording(self.value, pen)
 
     draw = replay
@@ -166,39 +188,56 @@ class RecordingPointPen(AbstractPointPen):
             pen.replay(new_glyph.getPointPen())
     """
 
-    def __init__(self):
-        self.value = []
+    def __init__(self) -> None:
+        self.value: PointPenRecordingValue = []
 
-    def beginPath(self, identifier=None, **kwargs):
+    def beginPath(self, identifier: Identifier = None, **kwargs: Any) -> None:
         if identifier is not None:
             kwargs["identifier"] = identifier
         self.value.append(("beginPath", (), kwargs))
 
-    def endPath(self):
+    def endPath(self) -> None:
         self.value.append(("endPath", (), {}))
 
     def addPoint(
-        self, pt, segmentType=None, smooth=False, name=None, identifier=None, **kwargs
-    ):
+        self,
+        pt: Point,
+        segmentType: SegmentType = None,
+        smooth: bool = False,
+        name: PointName = None,
+        identifier: Identifier = None,
+        **kwargs: Any,
+    ) -> None:
         if identifier is not None:
             kwargs["identifier"] = identifier
         self.value.append(("addPoint", (pt, segmentType, smooth, name), kwargs))
 
-    def addComponent(self, baseGlyphName, transformation, identifier=None, **kwargs):
+    def addComponent(
+        self,
+        baseGlyphName: str,
+        transformation: TransformInput,
+        identifier: Identifier = None,
+        **kwargs: Any,
+    ) -> None:
         if identifier is not None:
             kwargs["identifier"] = identifier
         self.value.append(("addComponent", (baseGlyphName, transformation), kwargs))
 
-    def addVarComponent(
-        self, baseGlyphName, transformation, location, identifier=None, **kwargs
-    ):
+    def addVarComponent(  # type: ignore[override]
+        self,
+        baseGlyphName: str,
+        transformation: DecomposedTransform,
+        location: DSLocation,
+        identifier: Identifier = None,
+        **kwargs: Any,
+    ) -> None:
         if identifier is not None:
             kwargs["identifier"] = identifier
         self.value.append(
             ("addVarComponent", (baseGlyphName, transformation, location), kwargs)
         )
 
-    def replay(self, pointPen):
+    def replay(self, pointPen: Any) -> None:
         for operator, args, kwargs in self.value:
             getattr(pointPen, operator)(*args, **kwargs)
 
@@ -296,7 +335,9 @@ class DecomposingRecordingPointPen(DecomposingPointPen, RecordingPointPen):
     skipMissingComponents = False
 
 
-def lerpRecordings(recording1, recording2, factor=0.5):
+def lerpRecordings(
+    recording1: PenRecordingValue, recording2: PenRecordingValue, factor: float = 0.5
+) -> Generator[RecordingOp]:
     """Linearly interpolate between two recordings. The recordings
     must be decomposed, i.e. they must not contain any components.
 
