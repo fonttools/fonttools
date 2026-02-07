@@ -12,7 +12,7 @@ __all__ = ["AreaPen"]
 
 
 class AreaPen(BasePen):
-    def __init__(self, glyphset: GlyphSetMapping | None = None):
+    def __init__(self, glyphset: GlyphSetMapping | None = None) -> None:
         BasePen.__init__(self, glyphset)
         self.value: float = 0
 
