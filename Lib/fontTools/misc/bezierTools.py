@@ -1183,11 +1183,14 @@ def cubicPointAtTC(
 
 def segmentPointAtT(seg: LinePoints | CurvePoints, t: float) -> Point:
     if len(seg) == 2:
-        return linePointAtT(*seg, t)
+        p0, p1 = seg
+        return linePointAtT(p0, p1, t)
     elif len(seg) == 3:
-        return quadraticPointAtT(*seg, t)
+        p0, p1, p2 = seg
+        return quadraticPointAtT(p0, p1, p2, t)
     elif len(seg) == 4:
-        return cubicPointAtT(*seg, t)
+        p0, p1, p2, p4 = seg
+        return cubicPointAtT(p0, p1, p2, p4, t)
     raise ValueError("Unknown curve degree")
 
 
@@ -1351,8 +1354,9 @@ def curveLineIntersections(curve: CurvePoints, line: LinePoints) -> list[Interse
         pt = pointFinder(*curve, t)
         # Back-project the point onto the line, to avoid problems with
         # numerical accuracy in the case of vertical and horizontal lines
-        line_t = _line_t_of_pt(*line, pt)
-        pt = linePointAtT(*line, line_t)
+        l0, l1 = line
+        line_t = _line_t_of_pt(l0, l1, pt)
+        pt = linePointAtT(l0, l1, line_t)
         intersections.append(Intersection(pt=pt, t1=t, t2=line_t))
     return intersections
 
@@ -1566,7 +1570,7 @@ def _segmentrepr(obj: "NestedFloat") -> str:
     '(1, (2, 3), (), ((2, (3, 4), (0.1, 2.2))))'
     """
     try:
-        it = iter(obj)  # type:ignore[arg-type]
+        it = iter(obj)
     except TypeError:
         return "%g" % cast(float, obj)
     else:
