@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
 from typing import Any, TYPE_CHECKING
 
 from fontTools.pens.basePen import AbstractPen, DecomposingPen
@@ -21,6 +20,7 @@ if TYPE_CHECKING:
         SegmentType,
         TransformInput,
     )
+    from fontTools.pens.recordingPen import PenRecordingValue
 
 
 class _PassThruComponentsMixin(object):
@@ -133,7 +133,7 @@ class ContourFilterPen(_PassThruComponentsMixin, RecordingPen):
         self.replay(self._outPen)
         self.value = []
 
-    def filterContour(self, contour: Sequence[Point]) -> None | Sequence[Point]:
+    def filterContour(self, contour: PenRecordingValue) -> None | PenRecordingValue:
         """Subclasses must override this to perform the filtering.
 
         The contour is a list of pen (operator, operands) tuples.

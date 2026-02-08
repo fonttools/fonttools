@@ -1570,7 +1570,7 @@ def _segmentrepr(obj: "NestedFloat") -> str:
     '(1, (2, 3), (), ((2, (3, 4), (0.1, 2.2))))'
     """
     try:
-        it = iter(obj)
+        it = iter(obj)  # type:ignore[arg-type]
     except TypeError:
         return "%g" % cast(float, obj)
     else:

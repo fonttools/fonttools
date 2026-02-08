@@ -19,10 +19,10 @@ if TYPE_CHECKING:
     )
     from fontTools.misc.transform import DecomposedTransform
 
-    RecordingOp = tuple[str, Sequence[Any]]
-    RecordingOps = Iterable[RecordingOp]
-    PenRecordingValue = list[tuple[str, tuple[Any, ...]]]
-    PointPenRecordingValue = list[tuple[str, tuple[Any, ...], dict[str, Any]]]
+RecordingOp = tuple[str, Sequence[Any]]
+RecordingOps = Iterable[RecordingOp]
+PenRecordingValue = list[tuple[str, tuple[Any, ...]]]
+PointPenRecordingValue = list[tuple[str, tuple[Any, ...], dict[str, Any]]]
 
 __all__ = [
     "replayRecording",
