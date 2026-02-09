@@ -345,7 +345,7 @@ def lerpRecordings(
     two recordings. Other values are possible, and can be useful to
     extrapolate. Defaults to 0.5.
 
-    Returns a Iterator with the new recording.
+    Returns a generator with the new recording.
     """
     if len(recording1) != len(recording2):
         raise ValueError(
