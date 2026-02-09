@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from fontTools.pens.recordingPen import PenRecording
+
 from fontTools.pens.filterPen import ContourFilterPen
 
 
@@ -87,7 +91,7 @@ class ExplicitClosingLinePen(ContourFilterPen):
      ('endPath', ())]
     """
 
-    def filterContour(self, contour):
+    def filterContour(self, contour: PenRecording) -> None:
         if (
             not contour
             or contour[0][0] != "moveTo"

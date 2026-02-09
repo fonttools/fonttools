@@ -72,8 +72,25 @@ TransformInput = TransformFloat | Transform
 Smooth = bool
 PointRecord = tuple[OptionalPoint, SegmentType, Smooth, PointName, Any]
 PointRecordList = list[PointRecord]
-SegmentPointList = list[tuple[OptionalPoint, Smooth, PointName, Any]]
+# Allows "implied" on-curve point as None
+SegmentPoint = tuple[OptionalPoint, Smooth, PointName, Any]
+SegmentPointList = list[SegmentPoint]
 SegmentList = list[tuple[SegmentType, SegmentPointList]]
+# Does not allow "implied" on-curve point (None)
+ResolvedSegmentPoint = tuple[Point, Smooth, PointName, Any]
+ResolvedSegmentPointList = list[ResolvedSegmentPoint]
+ResolvedSegmentList = list[tuple[SegmentType, ResolvedSegmentPointList]]
+
+# ---------------------------------------------------------------------
+# Pen recordnings
+PenOperator = str
+PenOperands = tuple[Any, ...]
+PointPenOperands = tuple[Any, ...]
+PointPenKwargs = dict[str, Any]
+PenRecordingOp = tuple[PenOperator, PenOperands]
+PointPenRecordingOp = tuple[PenOperator, PointPenOperands, PointPenKwargs]
+PenRecording = list[PenRecordingOp]
+PointPenRecording = list[PointPenRecordingOp]
 
 # ---------------------------------------------------------------------
 # Mapping
@@ -104,7 +121,3 @@ GlyphNameToFileNameFunc = Callable[[str, set[str]], str] | None
 RoundFunc = Callable[[float], int]
 ExtremaFunc = Callable[[float, float], float]
 SqrtFunc = Callable[[float], float]
-
-
-# ---------------------------------------------------------------------
-# Protocols

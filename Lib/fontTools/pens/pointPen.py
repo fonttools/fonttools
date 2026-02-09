@@ -71,7 +71,7 @@ class AbstractPointPen:
 
     def addPoint(
         self,
-        pt: Point,
+        pt: Point | None,
         segmentType: str | None = None,
         smooth: bool = False,
         name: str | None = None,
@@ -203,7 +203,7 @@ class BasePointToSegmentPen(AbstractPointPen):
 
     def addPoint(
         self,
-        pt: Point,
+        pt: Point | None,
         segmentType: str | None = None,
         smooth: bool = False,
         name: str | None = None,
@@ -477,7 +477,7 @@ class GuessSmoothPointPen(AbstractPointPen):
 
     def addPoint(
         self,
-        pt: Point,
+        pt: Point | None,
         segmentType: str | None = None,
         smooth: bool = False,
         name: str | None = None,
@@ -600,7 +600,7 @@ class ReverseContourPointPen(AbstractPointPen):
 
     def addPoint(
         self,
-        pt: Point,
+        pt: Point | None,
         segmentType: str | None = None,
         smooth: bool = False,
         name: str | None = None,

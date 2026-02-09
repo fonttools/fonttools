@@ -14,13 +14,13 @@ if TYPE_CHECKING:
     from fontTools.annotations import (
         GlyphSetMapping,
         Identifier,
+        PenRecording,
         Point,
         PointName,
         PointRecordList,
         SegmentType,
         TransformInput,
     )
-    from fontTools.pens.recordingPen import PenRecordingValue
 
 
 class _PassThruComponentsMixin(object):
@@ -133,7 +133,7 @@ class ContourFilterPen(_PassThruComponentsMixin, RecordingPen):
         self.replay(self._outPen)
         self.value = []
 
-    def filterContour(self, contour: PenRecordingValue) -> None | PenRecordingValue:
+    def filterContour(self, contour: PenRecording) -> None | PenRecording:
         """Subclasses must override this to perform the filtering.
 
         The contour is a list of pen (operator, operands) tuples.
@@ -188,7 +188,7 @@ class FilterPointPen(_PassThruComponentsMixin, AbstractPointPen):  # type:ignore
 
     def addPoint(
         self,
-        pt: Point,
+        pt: Point | None,
         segmentType: SegmentType = None,
         smooth: bool = False,
         name: PointName = None,
@@ -402,7 +402,7 @@ class ContourFilterPointPen(  # type:ignore[misc]
 
     def addPoint(
         self,
-        pt: Point,
+        pt: Point | None,
         segmentType: SegmentType = None,
         smooth: bool = False,
         name: PointName = None,

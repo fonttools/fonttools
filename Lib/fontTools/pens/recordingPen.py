@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from typing import Any, TYPE_CHECKING
-from collections.abc import Generator, Iterable, Sequence
+from collections.abc import Iterator
 
 from fontTools.pens.basePen import AbstractPen, DecomposingPen
 from fontTools.pens.pointPen import AbstractPointPen, DecomposingPointPen
@@ -16,13 +16,12 @@ if TYPE_CHECKING:
         PointName,
         SegmentType,
         TransformInput,
+        PenRecording,
+        PenRecordingOp,
+        PointPenRecording,
     )
     from fontTools.misc.transform import DecomposedTransform
 
-RecordingOp = tuple[str, Sequence[Any]]
-RecordingOps = Iterable[RecordingOp]
-PenRecordingValue = list[tuple[str, tuple[Any, ...]]]
-PointPenRecordingValue = list[tuple[str, tuple[Any, ...], dict[str, Any]]]
 
 __all__ = [
     "replayRecording",
@@ -34,7 +33,7 @@ __all__ = [
 ]
 
 
-def replayRecording(recording: RecordingOps, pen: Any) -> None:
+def replayRecording(recording: PenRecording, pen: Any) -> None:
     """Replay a recording, as produced by RecordingPen or DecomposingRecordingPen,
     to a pen.
 
@@ -71,7 +70,7 @@ class RecordingPen(AbstractPen):
     """
 
     def __init__(self) -> None:
-        self.value: PenRecordingValue = []
+        self.value: PenRecording = []
 
     def moveTo(self, p0: Point) -> None:
         self.value.append(("moveTo", (p0,)))
@@ -189,7 +188,7 @@ class RecordingPointPen(AbstractPointPen):
     """
 
     def __init__(self) -> None:
-        self.value: PointPenRecordingValue = []
+        self.value: PointPenRecording = []
 
     def beginPath(self, identifier: Identifier = None, **kwargs: Any) -> None:
         if identifier is not None:
@@ -201,7 +200,7 @@ class RecordingPointPen(AbstractPointPen):
 
     def addPoint(
         self,
-        pt: Point,
+        pt: Point | None,
         segmentType: SegmentType = None,
         smooth: bool = False,
         name: PointName = None,
@@ -336,8 +335,8 @@ class DecomposingRecordingPointPen(DecomposingPointPen, RecordingPointPen):
 
 
 def lerpRecordings(
-    recording1: PenRecordingValue, recording2: PenRecordingValue, factor: float = 0.5
-) -> Generator[RecordingOp]:
+    recording1: PenRecording, recording2: PenRecording, factor: float = 0.5
+) -> Iterator[PenRecordingOp]:
     """Linearly interpolate between two recordings. The recordings
     must be decomposed, i.e. they must not contain any components.
 
@@ -346,7 +345,7 @@ def lerpRecordings(
     two recordings. Other values are possible, and can be useful to
     extrapolate. Defaults to 0.5.
 
-    Returns a generator with the new recording.
+    Returns a Iterator with the new recording.
     """
     if len(recording1) != len(recording2):
         raise ValueError(
@@ -358,10 +357,10 @@ def lerpRecordings(
         if op1 == "addComponent":
             raise ValueError("Cannot interpolate components")
         else:
-            mid_args = [
+            mid_args = tuple(
                 (x1 + (x2 - x1) * factor, y1 + (y2 - y1) * factor)
                 for (x1, y1), (x2, y2) in zip(args1, args2)
-            ]
+            )
         yield (op1, mid_args)
 
 
