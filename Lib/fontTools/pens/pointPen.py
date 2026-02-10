@@ -186,7 +186,7 @@ class BasePointToSegmentPen(AbstractPointPen):
                 # Special case for quadratics: a contour with no on-curve
                 # points. Add a "None" point. (See also the Pen protocol's
                 # qCurveTo() method and fontTools.pens.basePen.py.)
-                points.append((None, "qcurve", False, None, None))
+                points.append((None, "qcurve", False, None, {}))
             else:
                 points = points[firstOnCurve + 1 :] + points[: firstOnCurve + 1]
 
