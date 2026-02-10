@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from fontTools.pens.recordingPen import PenRecording
-
 from fontTools.pens.filterPen import ContourFilterPen
 
 
