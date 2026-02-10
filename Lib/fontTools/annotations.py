@@ -70,14 +70,15 @@ TransformInput = TransformFloat | Transform
 # ---------------------------------------------------------------------
 # Segments
 Smooth = bool
-PointRecord = tuple[OptionalPoint, SegmentType, Smooth, PointName, Any]
+Kwargs = dict[str, Any]
+PointRecord = tuple[OptionalPoint, SegmentType, Smooth, PointName, Kwargs]
 PointRecordList = list[PointRecord]
 # Allows "implied" on-curve point as None
-SegmentPoint = tuple[OptionalPoint, Smooth, PointName, Any]
+SegmentPoint = tuple[OptionalPoint, Smooth, PointName, Kwargs]
 SegmentPointList = list[SegmentPoint]
 SegmentList = list[tuple[SegmentType, SegmentPointList]]
 # Does not allow "implied" on-curve point (None)
-ResolvedSegmentPoint = tuple[Point, Smooth, PointName, Any]
+ResolvedSegmentPoint = tuple[Point, Smooth, PointName, Kwargs]
 ResolvedSegmentPointList = list[ResolvedSegmentPoint]
 ResolvedSegmentList = list[tuple[SegmentType, ResolvedSegmentPointList]]
 
