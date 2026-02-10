@@ -1,6 +1,17 @@
 # Modified from https://github.com/adobe-type-tools/psautohint/blob/08b346865710ed3c172f1eb581d6ef243b203f99/python/psautohint/ufoFont.py#L800-L838
-import hashlib
+from __future__ import annotations
 
+import hashlib
+from typing import Any
+
+from fontTools.annotations import (
+    GlyphSetMapping,
+    Identifier,
+    Point,
+    PointName,
+    SegmentType,
+    TransformInput,
+)
 from fontTools.pens.basePen import MissingComponentError
 from fontTools.pens.pointPen import AbstractPointPen
 
@@ -47,43 +58,58 @@ class HashPointPen(AbstractPointPen):
     > assert ttf_hash_pen.hash == ufo_hash_pen.hash
     """
 
-    def __init__(self, glyphWidth=0, glyphSet=None):
+    def __init__(
+        self, glyphWidth: int = 0, glyphSet: GlyphSetMapping | None = None
+    ) -> None:
         self.glyphset = glyphSet
-        self.data = ["w%s" % round(glyphWidth, 9)]
+        self.data: list[str] = ["w%s" % round(glyphWidth, 9)]
 
     @property
-    def hash(self):
+    def hash(self) -> str:
         data = "".join(self.data)
         if len(data) >= 128:
             data = hashlib.sha512(data.encode("ascii")).hexdigest()
         return data
 
-    def beginPath(self, identifier=None, **kwargs):
+    def beginPath(self, identifier: Identifier = None, **kwargs: Any) -> None:
         pass
 
-    def endPath(self):
+    def endPath(self) -> None:
         self.data.append("|")
 
     def addPoint(
         self,
-        pt,
-        segmentType=None,
-        smooth=False,
-        name=None,
-        identifier=None,
-        **kwargs,
-    ):
+        pt: Point | None,
+        segmentType: SegmentType = None,
+        smooth: bool = False,
+        name: PointName = None,
+        identifier: Identifier = None,
+        **kwargs: Any,
+    ) -> None:
         if segmentType is None:
             pt_type = "o"  # offcurve
         else:
             pt_type = segmentType[0]
-        self.data.append(f"{pt_type}{pt[0]:g}{pt[1]:+g}")
 
-    def addComponent(self, baseGlyphName, transformation, identifier=None, **kwargs):
+        self.data.append(
+            # NOTE: Needs to handle implicit on-curves (None) or reject them.
+            f"{pt_type}None"
+            if pt is None
+            else f"{pt_type}{pt[0]:g}{pt[1]:+g}"
+        )
+
+    def addComponent(
+        self,
+        baseGlyphName: str,
+        transformation: TransformInput,
+        identifier: Identifier = None,
+        **kwargs: Any,
+    ):
         tr = "".join([f"{t:+}" for t in transformation])
         self.data.append("[")
-        try:
-            self.glyphset[baseGlyphName].drawPoints(self)
-        except KeyError:
-            raise MissingComponentError(baseGlyphName)
-        self.data.append(f"({tr})]")
+        if self.glyphset is not None:
+            try:
+                self.glyphset[baseGlyphName].drawPoints(self)
+            except KeyError:
+                raise MissingComponentError(baseGlyphName)
+            self.data.append(f"({tr})]")
