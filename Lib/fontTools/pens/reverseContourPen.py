@@ -1,16 +1,26 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
-from typing import TYPE_CHECKING
+from typing import Literal
 
+from fontTools.annotations import Point
+from fontTools.pens.basePen import AbstractPen
 from fontTools.misc.arrayTools import pairwise
 from fontTools.pens.filterPen import ContourFilterPen
 
 
-if TYPE_CHECKING:
-    from fontTools.annotations import PenRecording, PenRecordingOp
-    from fontTools.pens.basePen import AbstractPen
+OpName = Literal[
+    "moveTo",
+    "lineTo",
+    "curveTo",
+    "qCurveTo",
+    "closePath",
+    "endPath",
+]
 
+Args = tuple[Point | None, ...]
+SegmentOp = tuple[OpName, Args]
+Contour = list[SegmentOp]
 
 __all__ = ["reversedContour", "ReverseContourPen"]
 
@@ -31,14 +41,14 @@ class ReverseContourPen(ContourFilterPen):
         self.outputImpliedClosingLine = outputImpliedClosingLine
 
     def filterContour(  # type:ignore[override]
-        self, contour: PenRecording
-    ) -> Iterator[PenRecordingOp]:
+        self, contour: Contour
+    ) -> Iterator[SegmentOp]:
         return reversedContour(contour, self.outputImpliedClosingLine)
 
 
 def reversedContour(
-    contour: PenRecording, outputImpliedClosingLine: bool = False
-) -> Iterator[PenRecordingOp]:
+    contour: Contour, outputImpliedClosingLine: bool = False
+) -> Iterator[SegmentOp]:
     """Generator that takes a list of pen's (operator, operands) tuples,
     and yields them with the winding direction reversed.
     """
