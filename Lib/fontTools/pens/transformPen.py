@@ -1,15 +1,13 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Any, cast, TYPE_CHECKING
+from typing import Any, cast
 
+from fontTools.annotations import Point, TransformInput
+from fontTools.pens.basePen import AbstractPen
 from fontTools.pens.filterPen import FilterPen, FilterPointPen
+from fontTools.pens.pointPen import AbstractPointPen
 from fontTools.misc.transform import Transform
-
-if TYPE_CHECKING:
-    from fontTools.annotations import Point, TransformInput
-    from fontTools.pens.basePen import AbstractPen
-    from fontTools.pens.pointPen import AbstractPointPen
 
 __all__ = ["TransformPen", "TransformPointPen"]
 
@@ -45,10 +43,10 @@ class TransformPen(FilterPen):
     def qCurveTo(self, *points: Point | None) -> None:
         pointSeq: Sequence[Point | None]
         if points[-1] is None:
-            transformed = self._transformPoints(cast(Sequence["Point"], points[:-1]))
+            transformed = self._transformPoints(cast(Sequence[Point], points[:-1]))
             pointSeq = transformed + [None]
         else:
-            pointSeq = self._transformPoints(cast(Sequence["Point"], points))
+            pointSeq = self._transformPoints(cast(Sequence[Point], points))
         self._outPen.qCurveTo(*pointSeq)
 
     def _transformPoints(self, points: Sequence[Point]) -> list[Point]:
@@ -111,14 +109,18 @@ class TransformPointPen(FilterPointPen):
 
     def addPoint(  # type: ignore[override]
         self,
-        pt: Point,
+        pt: Point | None,
         segmentType: str | None = None,
         smooth: bool = False,
         name: str | None = None,
         **kwargs: Any,
     ) -> None:
         self._outPen.addPoint(
-            self._transformPoint(pt), segmentType, smooth, name, **kwargs
+            None if pt is None else self._transformPoint(pt),
+            segmentType,
+            smooth,
+            name,
+            **kwargs,
         )
 
     def addComponent(  # type: ignore[override]
