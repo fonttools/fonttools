@@ -39,13 +39,11 @@ sequence of length 2 will do.
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any, cast
 
+from fontTools.annotations import DSLocation, GlyphSetMapping, Point, TransformInput
 from fontTools.misc.loggingTools import LogMixin
 from fontTools.misc.transform import DecomposedTransform, Identity
-
-if TYPE_CHECKING:
-    from fontTools.annotations import DSLocation, GlyphSetMapping, Point, TransformInput
 
 
 __all__ = [
@@ -401,10 +399,10 @@ class BasePen(DecomposingPen):
             self._moveTo(impliedStartPoint)
 
             normalizedPoints = cast(
-                tuple["Point", ...], points[:-1] + (impliedStartPoint,)
+                tuple[Point, ...], points[:-1] + (impliedStartPoint,)
             )
         else:
-            normalizedPoints = cast(tuple["Point", ...], points)
+            normalizedPoints = cast(tuple[Point, ...], points)
 
         if n > 0:
             # Split the string of points into discrete quadratic curve

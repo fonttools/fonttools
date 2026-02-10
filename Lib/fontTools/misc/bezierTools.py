@@ -8,23 +8,23 @@ from collections import namedtuple
 from collections.abc import Generator, Sequence
 from typing import Any, cast, TYPE_CHECKING
 
+from fontTools.annotations import (
+    CubicComplex,
+    CubicPoints,
+    CurvePoints,
+    LinePoints,
+    NestedFloat,
+    Pair,
+    Point,
+    QuadraticPoints,
+    RectFloat,
+    SqrtFunc,
+    Vector,
+)
 from fontTools.misc.arrayTools import calcBounds, sectRect, rectArea
 from fontTools.misc.transform import Identity
 
 if TYPE_CHECKING:
-    from fontTools.annotations import (
-        CubicComplex,
-        CubicPoints,
-        CurvePoints,
-        LinePoints,
-        NestedFloat,
-        Pair,
-        Point,
-        QuadraticPoints,
-        RectFloat,
-        SqrtFunc,
-        Vector,
-    )
     from fontTools.misc.transform import Transform
 
 try:
@@ -1415,15 +1415,11 @@ def _curve_curve_intersections_t(
     c21: CurvePoints
     c22: CurvePoints
 
-    c11, c12 = cast(
-        tuple["CurvePoints", "CurvePoints"], _split_segment_at_t(curve1, 0.5)
-    )
+    c11, c12 = cast(tuple[CurvePoints, CurvePoints], _split_segment_at_t(curve1, 0.5))
     c11_range = (range1[0], midpoint(range1))
     c12_range = (midpoint(range1), range1[1])
 
-    c21, c22 = cast(
-        tuple["CurvePoints", "CurvePoints"], _split_segment_at_t(curve2, 0.5)
-    )
+    c21, c22 = cast(tuple[CurvePoints, CurvePoints], _split_segment_at_t(curve2, 0.5))
     c21_range = (range2[0], midpoint(range2))
     c22_range = (midpoint(range2), range2[1])
 

@@ -4,12 +4,10 @@ for shapes.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from fontTools.annotations import GlyphSetMapping, Point
 from fontTools.pens.basePen import BasePen
 from fontTools.misc.bezierTools import solveQuadratic, solveCubic
 
-if TYPE_CHECKING:
-    from fontTools.annotations import GlyphSetMapping, Point
 __all__ = ["PointInsidePen"]
 
 

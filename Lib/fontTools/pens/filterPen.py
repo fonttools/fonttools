@@ -1,7 +1,17 @@
 from __future__ import annotations
 
-from typing import Any, TYPE_CHECKING
+from typing import Any
 
+from fontTools.annotations import (
+    GlyphSetMapping,
+    Identifier,
+    PenRecording,
+    Point,
+    PointName,
+    PointRecordList,
+    SegmentType,
+    TransformInput,
+)
 from fontTools.pens.basePen import AbstractPen, DecomposingPen
 from fontTools.pens.pointPen import (
     AbstractPointPen,
@@ -9,18 +19,6 @@ from fontTools.pens.pointPen import (
     ReverseFlipped,
 )
 from fontTools.pens.recordingPen import RecordingPen
-
-if TYPE_CHECKING:
-    from fontTools.annotations import (
-        GlyphSetMapping,
-        Identifier,
-        PenRecording,
-        Point,
-        PointName,
-        PointRecordList,
-        SegmentType,
-        TransformInput,
-    )
 
 
 class _PassThruComponentsMixin(object):

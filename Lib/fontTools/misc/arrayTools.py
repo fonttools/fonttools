@@ -7,21 +7,19 @@ from __future__ import annotations
 import math
 import warnings
 from collections.abc import Iterable, Sequence, Iterator
-from typing import Any, TYPE_CHECKING
+from typing import Any
 
+from fontTools.annotations import (
+    Point,
+    RectFloat,
+    RectInt,
+    T,
+    RoundFunc,
+    ExtremaFunc,
+    Vector as VectorType,
+)
 from fontTools.misc.roundTools import otRound
 from fontTools.misc.vector import Vector as _Vector
-
-if TYPE_CHECKING:
-    from fontTools.annotations import (
-        Point,
-        RectFloat,
-        RectInt,
-        T,
-        RoundFunc,
-        ExtremaFunc,
-        Vector as VectorType,
-    )
 
 
 def calcBounds(array: Sequence[Point]) -> RectFloat:

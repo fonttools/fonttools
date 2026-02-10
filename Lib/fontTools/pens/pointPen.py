@@ -16,23 +16,22 @@ from __future__ import annotations
 
 import math
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, cast, Any
+from typing import cast, Any
 
+from fontTools.annotations import (
+    DSLocation,
+    GlyphSetMapping,
+    Point,
+    PointRecordList,
+    SegmentList,
+    SegmentPointList,
+    TransformInput,
+)
 from fontTools.misc.enumTools import StrEnum
 from fontTools.misc.loggingTools import LogMixin
 from fontTools.misc.transform import DecomposedTransform, Identity
 from fontTools.pens.basePen import AbstractPen, MissingComponentError, PenError
 
-if TYPE_CHECKING:
-    from fontTools.annotations import (
-        DSLocation,
-        GlyphSetMapping,
-        Point,
-        PointRecordList,
-        SegmentList,
-        SegmentPointList,
-        TransformInput,
-    )
 
 __all__ = [
     "AbstractPointPen",
@@ -287,7 +286,7 @@ class PointToSegmentPen(BasePointToSegmentPen):
                     pen.lineTo(pt)
                     lastPt = pt
             elif segmentType == "curve":
-                curvePoints = cast("tuple[Point, ...]", points)
+                curvePoints = cast(tuple[Point, ...], points)
                 pen.curveTo(*curvePoints)
                 lastPt = curvePoints[-1]
             elif segmentType == "qcurve":

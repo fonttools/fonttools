@@ -1,13 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
+from fontTools.annotations import GlyphSetMapping, Point, RectFloat
 from fontTools.misc.arrayTools import updateBounds, pointInRect, unionRect
 from fontTools.misc.bezierTools import calcCubicBounds, calcQuadraticBounds
 from fontTools.pens.basePen import BasePen
 
-if TYPE_CHECKING:
-    from fontTools.annotations import GlyphSetMapping, Point, RectFloat
 
 __all__ = ["BoundsPen", "ControlBoundsPen"]
 
